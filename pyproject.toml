@@ -1,7 +1,3 @@
-[build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "CSET"
 version = "0.0.1"
@@ -9,7 +5,14 @@ description = "Convective Scale Evaluation Tool for evaluation and investigation
 authors = [ {name="James Frost", email="james.frost@metoffice.gov.uk"} ]
 readme = "README.md"
 requires-python = ">=3.8"
+# classifiers = []
 dependencies = ["numpy", "iris"]
+
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 
 [tool.pytest.ini_options]
 addopts = [
@@ -22,7 +25,7 @@ pythonpath = [
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py37, py38, py39, py310, py311
+envlist = py38, py39, py310, py311
 isolated_build = True
 
 [testenv]
@@ -37,7 +40,9 @@ commands = pytest
 [testenv:docs]
 description = invoke sphinx-build to build the HTML docs
 basepython = python3
-deps = sphinx
+deps = 
+    sphinx
+    furo
 commands = sphinx-build -d "docs/build/doctree" docs/source "docs/build/html" --color -W -bhtml {posargs}
 
 [gh-actions]
