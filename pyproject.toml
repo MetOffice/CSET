@@ -40,7 +40,7 @@ commands = pytest
 [testenv:docs]
 description = invoke sphinx-build to build the HTML docs
 basepython = python3
-deps = 
+deps =
     sphinx
     furo
 commands = sphinx-build -d "docs/build/doctree" docs/source "docs/build/html" --color -W -bhtml {posargs}
