@@ -1,14 +1,10 @@
-name: Test Python Package
+name: Pull Request Checks
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
-  workflow_dispatch:
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -33,6 +29,8 @@ jobs:
       - uses: actions/checkout@v3
       - name: Set up Python
         uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
       - name: Set up pre-commit
         run: |
           python -m pip install pre-commit
@@ -43,3 +41,26 @@ jobs:
           key: pre-commit-3|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
       - name: Run pre-commit
         run: pre-commit run --show-diff-on-failure --color=always --all-files
+
+  build-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install tox tox-gh-actions
+      - name: Build docs with tox
+        run: |
+          tox -e docs
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: html-docs
+          path: docs/build/html/
+          retention-days: 5
+          if-no-files-found: error
