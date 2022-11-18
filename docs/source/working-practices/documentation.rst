@@ -7,8 +7,11 @@ we will be using the `Sphinx documentation build system`_ as it is very good.
 
 Documentation is written in `reStructuredText`_. This should allow us to
 maintain documentation within the version control system, and keep it up to
-date. The `Sphinx website`_ has a primer to using reStructuredText for
+date. The `Sphinx website`_ has a useful primer to using reStructuredText for
 documentation.
+
+Docstrings
+----------
 
 Documentation is also going to be extracted from docstrings in the code. This
 proximity will hopefully keep the detailed documentation close to what the code

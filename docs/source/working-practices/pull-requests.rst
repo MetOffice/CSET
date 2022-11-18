@@ -1,5 +1,5 @@
-Working Practices
-=================
+Pull Requests
+=============
 
 All code changes must go through a pull request. Pushing directly to the main
 branch has been disabled. Before being merged, code will have to go through
