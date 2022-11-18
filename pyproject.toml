@@ -1,0 +1,54 @@
+[project]
+name = "CSET"
+version = "0.0.1"
+description = "Convective Scale Evaluation Tool for evaluation and investigation of regional models."
+authors = [ {name="James Frost", email="james.frost@metoffice.gov.uk"} ]
+readme = "README.md"
+requires-python = ">=3.8"
+# classifiers = []
+dependencies = ["numpy", "iris"]
+
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+    ]
+pythonpath = [
+  "src"
+    ]
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py38, py39, py310, py311
+isolated_build = True
+
+[testenv]
+# install testing framework
+# ... or install anything else you might need for testing here
+deps = pytest
+
+# run the tests
+# ... or run any other command line tool you need to run here
+commands = pytest
+
+[testenv:docs]
+description = invoke sphinx-build to build the HTML docs
+basepython = python3
+deps =
+    sphinx
+    furo
+commands = sphinx-build -d "docs/build/doctree" docs/source "docs/build/html" --color -W -bhtml {posargs}
+
+[gh-actions]
+python =
+    3.8: py38
+    3.9: py39
+    3.10: py310
+    3.11: py311
+"""
