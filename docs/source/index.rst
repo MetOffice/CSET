@@ -10,6 +10,7 @@ CSET Documentation
    :hidden:
 
    working-practices/index
+   design/index
    operators
    genindex
 
