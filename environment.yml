@@ -1,0 +1,7 @@
+name: cset-dev
+channels:
+  - conda-forge
+dependencies:
+  - pre-commit
+  - tox
+  - black
