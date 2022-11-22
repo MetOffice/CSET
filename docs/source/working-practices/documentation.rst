@@ -10,15 +10,10 @@ maintain documentation within the version control system, and keep it up to
 date. The `Sphinx website`_ has a useful primer to using reStructuredText for
 documentation.
 
-You can build the documentation of CSET with the following command(s):
+You can build the documentation of CSET with the following command:
 
 .. code-block:: bash
 
-    # Set up a virtual environment and install tox if not yet done.
-    python3 -m venv venv
-    source venv/bin/activate
-    pip install tox
-    # Build the docs
     tox -e docs
 
 The documentation will be output to the docs/build directory.
