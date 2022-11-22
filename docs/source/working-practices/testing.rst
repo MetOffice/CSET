@@ -1,5 +1,5 @@
-Testing
-=======
+Automatic Testing
+=================
 
 Doing testing more frequently makes it easier, as it is much easier to narrow
 down what broke. Don't just test when it is time to release. Semi-regular
@@ -15,6 +15,11 @@ of the project.
 Having tooling to aid in comparing output to KGO is useful, especially if we
 want to get into automated functional testing.
 
+You can run the tests of CSET simply with the following command:
+
+.. code-block:: bash
+
+    tox
 
 Unit Testing
 ------------
@@ -67,7 +72,28 @@ would be a really nice thing to have.
 Documenting Tests
 -----------------
 
+.. attention::
+
+    🚧 Section under construction. 🚧
+
+
 Much like the rest of the codebase, tests need documenting. `This article`_ has
 some good points on writing docstrings for unit tests.
 
 .. _This article: https://jml.io/pages/test-docstrings.html
+
+Pre-commit Checks
+-----------------
+
+Some very quick checks to catch any very obvious mistakes. They are usually
+setup to run automatically when you make a commit. The checks are installed from
+.pre-commit-config.yaml, and currently involve blacking python code, linting
+with flake8, and checking all files are well formed (no trailing whitespace,
+etc.).
+
+.. code-block:: bash
+
+    # Install the pre-commit helper.
+    pip install pre-commit
+    # Install the checks into git
+    pre-commit install

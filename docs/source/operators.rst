@@ -1,12 +1,12 @@
 CSET Operators
 ==============
 
-This page describes the operators within CSET.
+This page details the operators contained within CSET.
 
-Module contents
----------------
+.. Module contents
+.. ---------------
 
-.. automodule:: CSET.operators
+.. .. automodule:: CSET.operators
    :members:
    :undoc-members:
    :show-inheritance:
