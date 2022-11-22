@@ -15,15 +15,10 @@ of the project.
 Having tooling to aid in comparing output to KGO is useful, especially if we
 want to get into automated functional testing.
 
-You can run the tests of CSET simply with the following command(s):
+You can run the tests of CSET simply with the following command:
 
 .. code-block:: bash
 
-    # Set up a virtual environment and install tox if not yet done.
-    python3 -m venv venv
-    source venv/bin/activate
-    pip install tox
-    # Run the tests
     tox
 
 Unit Testing
