@@ -1,0 +1,49 @@
+# Updates the conda lock file on a weekly basis.
+name: "Update conda lock file"
+
+on:
+  # schedule:
+  #   - cron: "37 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  create-conda-env:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v2.2.0
+        with:
+          auto-update-conda: true
+          activate-environment: cset-dev
+          environment-file: environment.yml
+      - name: Create conda environment
+        run: |
+          # Create a git branch and setup some variables.
+          branch="conda-lock-$(date +%s)"
+          git switch -c "$branch"
+          initial=$(sha256sum conda-linux-x86_64.lock)
+
+          conda list --explicit > conda-linux-x86_64.lock
+
+          # Only make a pull request if something has changed.
+          if [ -ne "$(sha256sum conda-linux-x86_64.lock)" "$initial" ]
+          then
+            # Push back to GitHub
+            git add *.lock
+            git commit -m "Update conda-linux-x86_64.lock"
+            git push --set-upstream origin "$branch"
+
+            # Create PR on GitHub.
+            gh pr create --base main --title "[CI] Update Conda lock" \
+            --body "Created automatically by GitHub Actions."
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
