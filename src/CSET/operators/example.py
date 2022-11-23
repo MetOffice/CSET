@@ -1,16 +1,21 @@
 """
-Example operator to show what they should look like.
+Example operators to show what they should look like, especially around
+documentation.
+
+Currently the operators are just functions, but we may instead want to use
+callable classes so they can have some setup done, or perhaps have some state
+(though state is something we want to minimise).
 """
 
 
-def example_operator(n):
+def example_increment_operator(n: float) -> float:
     """
     Increments the input by one.
 
     Parameters
     ----------
     n: int or float
-        The starting number which is added too.
+        The starting number which is incremented.
 
     Returns
     -------
@@ -25,11 +30,11 @@ def example_operator(n):
     Notes
     -----
     This is a simple function to demonstrate how they should be generally
-    written. It impliments addition [1]_
+    written. It implements addition. [1]_
 
     The operation of this function is described by the following equation:
 
-    .. math:: n_{final} = n_{inital} + \\int^{1}_{0} \\frac{x}{1} dx
+    .. math:: n_{final} = n_{initial} + \\int^{1}_{0} \\frac{x}{1} dx
 
     References
     ----------
@@ -38,7 +43,48 @@ def example_operator(n):
 
     Examples
     --------
-    >>> Example.example.add_one(3)
+    >>> Example.example.example_increment_operator(3)
     4
     """
     return n + 1
+
+
+def example_decrement_operator(n: float) -> float:
+    """
+    Decreases the input by one.
+
+    Parameters
+    ----------
+    n: int or float
+        The starting number which is decremented.
+
+    Returns
+    -------
+    int or float
+        The result of subtracting one.
+
+    Raises
+    ------
+    TypeError
+        If n is not a number.
+
+    Notes
+    -----
+    This is a simple function to demonstrate how they should be generally
+    written. It implements subtraction. [2]_
+
+    The operation of this function is described by the following equation:
+
+    .. math:: n_{final} = n_{initial} - \\int^{1}_{0} \\frac{x}{1} dx
+
+    References
+    ----------
+    .. [2] Wikipedia contributors, "Subtraction," Wikipedia, The Free Encyclopedia,
+        https://en.wikipedia.org/w/index.php?title=Subtraction&oldid=1121909623
+
+    Examples
+    --------
+    >>> Example.example.example_decrement_operator(3)
+    2
+    """
+    return n - 1

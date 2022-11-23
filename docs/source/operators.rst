@@ -3,24 +3,32 @@ CSET Operators
 
 This page details the operators contained within CSET.
 
-.. Module contents
-.. ---------------
+CSET.operators.read
+-------------------
 
-.. .. automodule:: CSET.operators
+.. automodule:: CSET.operators.read
    :members:
-   :undoc-members:
-   :show-inheritance:
 
+CSET.operators.write
+--------------------
 
-Operators
----------
+.. automodule:: CSET.operators.write
+   :members:
+
+CSET.operators.plot
+-------------------
+
+.. automodule:: CSET.operators.plot
+   :members:
+
+CSET.operators.average
+----------------------
+
+.. automodule:: CSET.operators.average
+   :members:
 
 CSET.operators.example
-~~~~~~~~~~~~~~~~~~~~~~
-
-Does some useful stuff that needs documenting.
+----------------------
 
 .. automodule:: CSET.operators.example
    :members:
-   :undoc-members:
-   :show-inheritance:
