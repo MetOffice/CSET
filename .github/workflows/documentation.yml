@@ -23,7 +23,7 @@ jobs:
           python -m pip install tox tox-gh-actions
       - name: Build docs with tox
         run: |
-          tox -e docs
+          tox -e docs --skip-missing-interpreters false
       - name: Upload build artifact
         uses: actions/upload-artifact@v3
         with:
