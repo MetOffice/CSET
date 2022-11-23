@@ -17,8 +17,8 @@ get started, and the links below go into more detail on specific topics.
     backwards-compatibility
 
 
-Getting Set-up
---------------
+Getting Started
+---------------
 
 Before you can get to coding, there are a few steps you need to do.
 
