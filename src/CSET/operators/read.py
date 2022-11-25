@@ -3,10 +3,10 @@ Operators for reading various types of files from disk.
 """
 
 from pathlib import Path
-import iris
+from iris.cube import CubeList
 
 
-def netCDF_to_cube(filename: Path) -> iris.cube.CubeList:
+def netCDF_to_cube(filename: Path) -> CubeList:
     """
     Read a netCDF file into an iris cube.
 

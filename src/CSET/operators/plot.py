@@ -3,11 +3,11 @@ Operators to produce various kinds of plots.
 """
 
 from pathlib import Path
-import iris
+from iris.cube import CubeList
 
 
 def spacial_plot_global(
-    cube: iris.cube.CubeList, field: str, filename: Path, overwrite: bool = False
+    cube: CubeList, field: str, filename: Path, overwrite: bool = False
 ) -> Path:
     """
     Plots a spacial variable onto a global map.
