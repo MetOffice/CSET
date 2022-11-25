@@ -11,5 +11,5 @@ from the artifacts section of the latest [Documentation
 action](https://github.com/MetOffice/CSET/actions).
 
 Once you have the documentation, visit the [Working
-Practices](https://www-nwp/~jfrost/2022/CSET/docs/working-practices/) page to
-get started.
+Practices](https://www-nwp/~jfrost/2022/CSET/docs/working-practices/#getting-started)
+page to get started.
