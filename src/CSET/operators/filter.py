@@ -4,10 +4,10 @@ Operators to perform various kind of filtering.
 # This file probably wants renaming as it clashes with the builtin filter
 # function.
 
-import iris
+from iris.cube import CubeList
 
 
-def extract_field(cube: iris.cube.CubeList, field: str) -> iris.cube.CubeList:
+def extract_field(cube: CubeList, field: str) -> CubeList:
     """
     Returns a cube containing only the specified field.
 

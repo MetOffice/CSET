@@ -25,22 +25,23 @@ pythonpath = [
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py38, py39, py310, py311
+requires =
+    tox-conda
+    tox-gh-actions
 isolated_build = True
 # Skip missing python versions. This is overridded for CI.
 skip_missing_interpreters = true
+envlist = py38, py39, py310, py311
 
 [testenv]
-# install testing framework
-# ... or install anything else you might need for testing here
-deps = pytest
-
-# run the tests
-# ... or run any other command line tool you need to run here
+conda_channels = conda-forge
+conda_deps =
+    pytest
+    iris
 commands = pytest
 
 [testenv:docs]
-description = invoke sphinx-build to build the HTML docs
+description = Invoke sphinx-build to build the HTML docs
 basepython = python3
 deps =
     sphinx
