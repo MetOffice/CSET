@@ -17,8 +17,8 @@ get started, and the links below go into more detail on specific topics.
     backwards-compatibility
 
 
-Getting Set-up
---------------
+Getting Started
+---------------
 
 Before you can get to coding, there are a few steps you need to do.
 
@@ -27,7 +27,8 @@ Setting up git
 
 git is a version control software, which makes collaborating on software much
 easier. If you are new to git you'll need to perform the steps in this
-subsection, and I'd recommend keeping a `git cheat sheet`_ handy. The following
+subsection, and I'd recommend keeping a `git cheat sheet`_ handy, and looking at
+the :doc:`git` page of this documentation.  The following
 command will set yourself up on git, and only have to be done once.
 
 .. code-block:: bash
