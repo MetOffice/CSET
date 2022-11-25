@@ -3,10 +3,12 @@ Operators for writing various types of files to disk.
 """
 
 from pathlib import Path
-from iris.cube import Cube
+import iris
 
 
-def cube_to_netCDF(filename: Path, cube: Cube, overwrite: bool = False) -> Path:
+def cube_to_netCDF(
+    filename: Path, cube: iris.cube.CubeList, overwrite: bool = False
+) -> Path:
     """
     Writes a netCDF file from an iris cube.
 
@@ -36,6 +38,7 @@ def cube_to_netCDF(filename: Path, cube: Cube, overwrite: bool = False) -> Path:
 
     Notes
     -----
-    The netCDF file will be read following the CF conventions.
+    The netCDF file will be written following the CF conventions.
     """
+    # To be written by James W.
     pass

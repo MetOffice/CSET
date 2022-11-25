@@ -54,6 +54,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install tox tox-gh-actions
+
+          # Dependencies for cartopy and cf-units.
+          sudo apt-get install -y libgeos-dev libudunits2-dev
       - name: Build docs with tox
         run: |
           tox -e docs --skip-missing-interpreters false

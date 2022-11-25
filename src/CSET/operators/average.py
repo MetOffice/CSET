@@ -2,13 +2,16 @@
 Operators to calculate various kinds of averages.
 """
 
-from iris.cube import Cube
+import iris
 from datetime import datetime
 
 
 def time_mean(
-    cube: Cube, field: str, start_time: datetime = None, end_time: datetime = None
-) -> Cube:
+    cube: iris.cube.CubeList,
+    field: str,
+    start_time: datetime = None,
+    end_time: datetime = None,
+) -> iris.cube.CubeList:
     """
     Averages a field over the time period specified.
 
