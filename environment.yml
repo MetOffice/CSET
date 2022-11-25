@@ -3,5 +3,6 @@ channels:
   - conda-forge
 dependencies:
   - pre-commit
-  - tox
   - black
+  - tox
+  - tox-conda
