@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.8", "3.9", "3.10"]
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
@@ -20,7 +20,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install tox tox-gh-actions
       - name: Test with tox
-        run: tox
+        run: tox --skip-missing-interpreters false
 
   # Copied here as we are prevented from using external actions.
   pre-commit:
@@ -30,11 +30,11 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.11
+          python-version: "3.10"
       - name: Set up pre-commit
         run: |
+          python -m pip install --upgrade pip
           python -m pip install pre-commit
-          python -m pip freeze --local
       - uses: actions/cache@v3
         with:
           path: ~/.cache/pre-commit
@@ -49,14 +49,14 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.11
+          python-version: "3.10"
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install tox tox-gh-actions
       - name: Build docs with tox
         run: |
-          tox -e docs
+          tox -e docs --skip-missing-interpreters false
       - name: Upload build artifact
         uses: actions/upload-artifact@v3
         with:
