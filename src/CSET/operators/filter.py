@@ -36,5 +36,6 @@ def filter_cubes(cubelist, stash, methodconstraint=None, levelconstraint=None):
     #cubes by 'cell_methods', levels etc. Some stash will return multiple cubes
     #with different time processing. E.g. wind gust stash (m01s03i463) has a 
     #cell method (CellMethod(method='maximum', coord_names=('time',), intervals=('1 hour',), comments=()),)
+    #We could base this around iris.constraints
 
     return filtered_cubes
