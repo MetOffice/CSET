@@ -6,31 +6,23 @@ from pathlib import Path
 from iris.cube import CubeList
 
 
-def netCDF_to_cube(filename: Path) -> CubeList:
-    """
-    Read a netCDF file into an iris cube.
+def read_cubes(loadpath):
 
-    Parameters
-    ----------
-    filename: Path or pathlike
-        The path of the file to read.
+    """
+    Read operator that takes a path string (can include wildcards), and uses
+    iris to load all the cubes and return an iris.cube.CubeList object.
+
+    Arguments
+    ---------
+
+    * **loadpath**  - an string containing a path to where .pp files are located.
 
     Returns
     -------
-    Cube
-        An iris cube of the data.
+    * **cubes** - an iris.cube.CubeList 
 
-    Raises
-    ------
-    FileNotFoundError
-        If the file cannot be found.
-
-    ValueError
-        If the file in not a valid netCDF file.
-
-    Notes
-    -----
-    The netCDF file will be read following the CF conventions.
     """
-    # To be written by James W.
-    pass
+
+    #TODO: validation that data exists
+
+    return iris.load(loadpath)
