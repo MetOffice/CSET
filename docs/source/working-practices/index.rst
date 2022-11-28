@@ -8,13 +8,11 @@ get started, and the links below go into more detail on specific topics.
 .. toctree::
     :maxdepth: 2
 
-    pull-requests
     git
     testing
     documentation
     code-review
     releases
-    backwards-compatibility
 
 
 Getting Started
