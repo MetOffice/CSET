@@ -26,11 +26,12 @@ def filter_cubes(cubelist: iris.cube.CubeList, stash: str, methodconstraint: tup
     # initialise empty cubelist to append filtered cubes too
     filtered_cubes = iris.cube.CubeList()
 
-    # Iterate over all cubes and check cell method
+    # Iterate over all cubes and check stash/cell method
     # TODO - need to add additional filtering/checking i.e. time/accum, pressure level...
     for cube in cubelist:
-        if cube.cell_methods == methodconstraint:
-            filtered_cubes.append(cube)
+        if cube.attributes['STASH'] == stash:
+            if cube.cell_methods == methodconstraint:
+                filtered_cubes.append(cube)
 
     # Check filtered cubes is a cubelist containing one cube.
     if len(filtered_cubes) == 1:
