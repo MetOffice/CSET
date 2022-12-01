@@ -5,7 +5,7 @@ Operators for writing various types of files to disk.
 import iris
 
 
-def write_cube_to_nc(cube, saver):
+def write_cube_to_nc(cube: iris.cube, saver: str) --> str:
 
     """
     A write operator that sits after the read operator. This operator expects
