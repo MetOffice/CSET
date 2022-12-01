@@ -7,7 +7,7 @@ Operators to perform various kind of filtering.
 import iris.cube
 
 
-def filter_cubes(cubelist, stash, methodconstraint=None, levelconstraint=None):
+def filter_cubes(cubelist, stash, methodconstraint):
 
     """
     Arguments
@@ -15,27 +15,26 @@ def filter_cubes(cubelist, stash, methodconstraint=None, levelconstraint=None):
 
     * **cubelist**          - an iris.cube.CubeList containing cubes to iterate over.
     * **stash**             - an string containing the stash code to extract.
-    * **methodconstraint**  - optional, an iris.constraint.
-    * **levelconstraint**   - optional, an iris.constraint.
+    * **methodconstraint**  - an tuple containining cube.cell_methods for filtering.
 
     Returns
     -------
-    * **cubes** - an iris.cube.CubeList 
+    * **cube** - an iris.cube
 
     """
 
     # initialise empty cubelist to append filtered cubes too
     filtered_cubes = iris.cube.CubeList()
 
-    # Iterate over all cubes
+    # Iterate over all cubes and check stash/cell method
+    # TODO - need to add additional filtering/checking i.e. time/accum, pressure level...
     for cube in cubelist:
         if cube.attributes['STASH'] == stash:
-            filtered_cubes.append(cube)    
+            if cube.cell_methods == methodconstraint:
+                filtered_cubes.append(cube)
 
-    #TODO - while okay for this example, we need to be able to futher filter
-    #cubes by 'cell_methods', levels etc. Some stash will return multiple cubes
-    #with different time processing. E.g. wind gust stash (m01s03i463) has a 
-    #cell method (CellMethod(method='maximum', coord_names=('time',), intervals=('1 hour',), comments=()),)
-    #We could base this around iris.constraints
-
-    return filtered_cubes
+    # Check filtered cubes is a cubelist containing one cube.
+    if len(filtered_cubes) == 1:
+        return filtered_cubes[0]
+    else:
+        print('Still multiple cubes, additional filtering required...')
