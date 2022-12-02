@@ -29,4 +29,7 @@ def read_cubes(loadpath: Path, stash: str) -> iris.cube.CubeList:
 
     # TODO: validation that data exists
 
-    return iris.load(loadpath, stash)
+    # Create name constriant for stash
+    stash_constraint = iris.NameConstraint(stash)
+
+    return iris.load(loadpath, stash_constraint)
