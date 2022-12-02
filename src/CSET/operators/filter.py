@@ -7,7 +7,9 @@ Operators to perform various kind of filtering.
 import iris.cube
 
 
-def filter_cubes(cubelist: iris.cube.CubeList, stash: str, methodconstraint: tuple) -> iris.cube:
+def filter_cubes(
+    cubelist: iris.cube.CubeList, stash: str, methodconstraint: tuple
+) -> iris.cube:
 
     """
     Arguments
@@ -39,4 +41,4 @@ def filter_cubes(cubelist: iris.cube.CubeList, stash: str, methodconstraint: tup
     if len(filtered_cubes) == 1:
         return filtered_cubes[0]
     else:
-        print('Still multiple cubes, additional filtering required...')
+        print("Still multiple cubes, additional filtering required...")
