@@ -4,7 +4,7 @@ Operators to perform various kind of filtering.
 # This file probably wants renaming as it clashes with the builtin filter
 # function.
 
-import iris.cube
+import iris
 
 
 def filter_cubes(
@@ -14,14 +14,17 @@ def filter_cubes(
     """
     Arguments
     ---------
-
-    * **cubelist**          - iris.cube.CubeList containing cubes to iterate over.
-    * **stash**             - string containing the stash code to extract.
-    * **methodconstraint**  - tuple containining cube.cell_methods for filtering.
+    cubelist: iris.cube.CubeList
+        Cubes to iterate over
+    stash: str
+        Stash code to extract
+    methodconstraint: tuple
+        cube.cell_methods for filtering
 
     Returns
     -------
-    * **cube** - an iris.cube
+    cube: iris.cube.Cube
+        Single variable
 
     """
 

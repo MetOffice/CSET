@@ -15,14 +15,16 @@ def read_cubes(loadpath: Path, stash: str) -> iris.cube.CubeList:
 
     Arguments
     ---------
+    loadpath: Path or str
+        Path to where .pp files are located
 
-    * **loadpath**  - string containing a path to where .pp files are located.
-    * **stash**     - string containing stash code to filter
+    stash: str
+        Stash code to filter
 
     Returns
     -------
-    * **cubes** - an iris.cube.CubeList
-
+    cubes: iris.cube.CubeList
+        Cubes extracted
     """
 
     # TODO: validation that data exists
