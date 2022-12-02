@@ -25,7 +25,6 @@ def filter_cubes(
     -------
     cube: iris.cube.Cube
         Single variable
-
     """
 
     # initialise empty cubelist to append filtered cubes too
