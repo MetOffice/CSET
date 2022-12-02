@@ -2,41 +2,35 @@
 Operators for writing various types of files to disk.
 """
 
+import iris
 from pathlib import Path
-from iris.cube import CubeList
 
 
-def cube_to_netCDF(filename: Path, cube: CubeList, overwrite: bool = False) -> Path:
+def write_cube_to_nc(cube: iris.cube, saver: Path) -> str:
+
     """
-    Writes a netCDF file from an iris cube.
+    A write operator that sits after the read operator. This operator expects
+    an iris.cube object that will then be passed to MET for further processing.
 
-    Parameters
-    ----------
-    filename: Path or pathlike
-        The path of the file to write.
+    Arguments
+    ---------
 
-    cube: Cube
-        An iris cube of the data to write.
-
-    overwrite: bool, default False
-        Whether to overwrite already existing files.
+    cube: iris.cube.Cube
+        Single variable to save
+    saver: Path
+        Path to save the cubes too
 
     Returns
     -------
-    Path
-        The path of the written file.
-
-    Raises
-    ------
-    FileExistsError
-        If the file already exists and `overwrite` is False
-
-    ValueError
-        If the cube does not map to a valid netCDF file.
-
-    Notes
-    -----
-    The netCDF file will be written following the CF conventions.
+    saver: str
+        Filepath to saved .nc
     """
-    # To be written by James W.
-    pass
+
+    # Append .nc to saver path
+    if not saver.endswith(".nc"):
+        saver = saver + ".nc"
+
+    # Save the file as nc compliant (iris should handle this)
+    iris.save(cube, saver)
+
+    return saver
