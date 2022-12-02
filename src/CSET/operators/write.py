@@ -24,11 +24,10 @@ def write_cube_to_nc(cube: iris.cube, saver: str) -> str:
     """
 
     # Append .nc to saver path
-    if not saver.endswith('.nc'):
-        saver = saver+'.nc'
+    if not saver.endswith(".nc"):
+        saver = saver + ".nc"
 
     # Save the file as nc compliant (iris should handle this)
     iris.save(cube, saver)
 
     return saver
-

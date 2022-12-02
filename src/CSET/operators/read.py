@@ -10,7 +10,7 @@ def read_cubes(loadpath: Path, stash: str) -> iris.cube.CubeList:
 
     """
     Read operator that takes a path string (can include wildcards), and uses
-    iris to load all the cubes matching stash and return an 
+    iris to load all the cubes matching stash and return an
     iris.cube.CubeList object.
 
     Arguments
@@ -21,10 +21,10 @@ def read_cubes(loadpath: Path, stash: str) -> iris.cube.CubeList:
 
     Returns
     -------
-    * **cubes** - an iris.cube.CubeList 
+    * **cubes** - an iris.cube.CubeList
 
     """
 
-    #TODO: validation that data exists
+    # TODO: validation that data exists
 
     return iris.load(loadpath, stash)
