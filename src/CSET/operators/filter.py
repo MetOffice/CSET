@@ -7,7 +7,7 @@ Operators to perform various kind of filtering.
 import iris.cube
 
 
-def filter_cubes(cubelist: iris.cube.CubeList, stash: str, methodconstraint: tuple) --> iris.cube:
+def filter_cubes(cubelist: iris.cube.CubeList, stash: str, methodconstraint: tuple) -> iris.cube:
 
     """
     Arguments

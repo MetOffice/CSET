@@ -6,7 +6,7 @@ import iris
 from pathlib import Path
 
 
-def read_cubes(loadpath: Path, stash: str) --> iris.cube.CubeList:
+def read_cubes(loadpath: Path, stash: str) -> iris.cube.CubeList:
 
     """
     Read operator that takes a path string (can include wildcards), and uses
