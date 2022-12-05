@@ -1,8 +1,6 @@
 """
 Operators to perform various kind of filtering.
 """
-# This file probably wants renaming as it clashes with the builtin filter
-# function.
 
 import iris
 
@@ -27,7 +25,7 @@ def filter_cubes(
         Single variable
     """
 
-    # initialise empty cubelist to append filtered cubes too
+    # Initialise empty cubelist to append filtered cubes to
     filtered_cubes = iris.cube.CubeList()
 
     # Initialise stash constraint
