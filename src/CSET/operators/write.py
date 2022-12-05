@@ -10,11 +10,10 @@ def write_cube_to_nc(cube: iris.cube, saver: Path) -> str:
 
     """
     A write operator that sits after the read operator. This operator expects
-    an iris.cube object that will then be passed to MET for further processing.
+    an iris cube object that will then be passed to MET for further processing.
 
     Arguments
     ---------
-
     cube: iris.cube.Cube
         Single variable to save
     saver: Path

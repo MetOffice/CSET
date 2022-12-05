@@ -10,14 +10,12 @@ def read_cubes(loadpath: Path, stash: str) -> iris.cube.CubeList:
 
     """
     Read operator that takes a path string (can include wildcards), and uses
-    iris to load all the cubes matching stash and return an
-    iris.cube.CubeList object.
+    iris to load all the cubes matching stash and return a CubeList object.
 
     Arguments
     ---------
     loadpath: Path or str
         Path to where .pp files are located
-
     stash: str
         Stash code to filter
 
@@ -29,7 +27,7 @@ def read_cubes(loadpath: Path, stash: str) -> iris.cube.CubeList:
 
     # TODO: validation that data exists
 
-    # Create name constriant for stash
+    # Create name constraint for stash
     stash_constraint = iris.NameConstraint(stash)
 
     return iris.load(loadpath, stash_constraint)
