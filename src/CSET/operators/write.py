@@ -2,19 +2,20 @@
 Operators for writing various types of files to disk.
 """
 
-import iris
 from pathlib import Path
 
+import iris
+import iris.cube
 
-def write_cube_to_nc(cube: iris.cube, saver: Path) -> str:
+
+def write_cube_to_nc(cube: iris.cube.Cube, saver: Path) -> str:
 
     """
     A write operator that sits after the read operator. This operator expects
-    an iris.cube object that will then be passed to MET for further processing.
+    an iris cube object that will then be passed to MET for further processing.
 
     Arguments
     ---------
-
     cube: iris.cube.Cube
         Single variable to save
     saver: Path
