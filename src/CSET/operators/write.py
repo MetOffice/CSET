@@ -6,7 +6,7 @@ import iris
 from pathlib import Path
 
 
-def write_cube_to_nc(cube: iris.cube, saver: Path) -> str:
+def write_cube_to_nc(cube: iris.cube.Cube, saver: Path) -> str:
 
     """
     A write operator that sits after the read operator. This operator expects
