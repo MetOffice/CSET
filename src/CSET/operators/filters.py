@@ -3,6 +3,7 @@ Operators to perform various kind of filtering.
 """
 
 import iris
+import iris.cube
 
 
 def filter_cubes(

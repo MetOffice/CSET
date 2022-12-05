@@ -2,8 +2,10 @@
 Operators for reading various types of files from disk.
 """
 
-import iris
 from pathlib import Path
+
+import iris
+import iris.cube
 
 
 def read_cubes(loadpath: Path, stash: str) -> iris.cube.CubeList:

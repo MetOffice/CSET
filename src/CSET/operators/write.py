@@ -2,8 +2,10 @@
 Operators for writing various types of files to disk.
 """
 
-import iris
 from pathlib import Path
+
+import iris
+import iris.cube
 
 
 def write_cube_to_nc(cube: iris.cube.Cube, saver: Path) -> str:
