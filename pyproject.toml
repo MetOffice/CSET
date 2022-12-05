@@ -38,6 +38,7 @@ conda_channels = conda-forge
 conda_deps =
     pytest
     iris
+    mo_pack  # For PP file handling
 commands = pytest
 
 [testenv:docs]

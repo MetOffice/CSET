@@ -13,7 +13,7 @@ from CSET.operators import read, write, filters
 input_file = sys.argv[1]
 output_file = sys.argv[2]
 
-# Hardcoded task chain
+# Hardcoded task chain to extract instantaneous air temperature.
 cubes = read.read_cubes(input_file)
-cube = filters.filter_cubes(cubes, "stash_code")
+cube = filters.filter_cubes(cubes, "m01s03i236", ())
 write.write_cube_to_nc(cube, output_file)
