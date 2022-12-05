@@ -1,18 +1,24 @@
 Using git and GitHub
 ====================
 
-.. attention::
+If you haven't used git before, it is worth spending some time learning it
+before getting stuck into development. git is the go-to code revision control
+system, and is useful whether you are working alone or with others.
 
-    🚧 Section under construction. 🚧
+A good place to start learning is this `git and GitHub tutorial`_. Once you have
+done that it is worth reading about the `GitHub flow`_, which is the approximate
+way you should be using GitHub, as well as this short article on writing `good
+commit messages`_.
 
-git clone
+For using git locally, you can use either the CLI git program, or git
+functionality built into many IDEs, such as VSCode or PyCharm. As you get
+started with git on the command line, you may find this `git cheat sheet`_
+helpful.
 
-Making a branch
-
-Committing your changes
-
-Writing good commit messages:
-https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
+.. _git and GitHub tutorial: https://glfmn.github.io/gh-slides/
+.. _GitHub flow: https://docs.github.com/en/get-started/quickstart/github-flow
+.. _good commit messages: https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
+.. _git cheat sheet: https://education.github.com/git-cheat-sheet-education.pdf
 
 Pull Requests
 -------------
