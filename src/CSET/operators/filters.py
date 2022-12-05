@@ -43,3 +43,4 @@ def filter_cubes(
         return filtered_cubes[0]
     else:
         print("Still multiple cubes, additional filtering required...")
+        print(filtered_cubes)
