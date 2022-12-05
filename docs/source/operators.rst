@@ -15,16 +15,10 @@ CSET.operators.write
 .. automodule:: CSET.operators.write
    :members:
 
-CSET.operators.plot
--------------------
-
-.. automodule:: CSET.operators.plot
-   :members:
-
-CSET.operators.average
+CSET.operators.filters
 ----------------------
 
-.. automodule:: CSET.operators.average
+.. automodule:: CSET.operators.filters
    :members:
 
 CSET.operators.example
