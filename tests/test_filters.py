@@ -2,6 +2,7 @@ from CSET.operators import read, filters
 
 
 def test_filters_operator():
+    """Filter cube and verify."""
     cubes = read.read_cubes("tests/test_data/air_temp.nc")
     cube = filters.filter_cubes(cubes, "m01s03i236", ())
     assert cube.cell_methods == ()

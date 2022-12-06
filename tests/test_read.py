@@ -2,6 +2,7 @@ from CSET.operators import read
 
 
 def test_read_cubes():
+    """Read cube and verify."""
     cubes = read.read_cubes("tests/test_data/air_temp.nc")
     assert len(cubes) == 3
     possible_cubes = [
