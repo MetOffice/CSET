@@ -20,6 +20,28 @@ helpful.
 .. _good commit messages: https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
 .. _git cheat sheet: https://education.github.com/git-cheat-sheet-education.pdf
 
+Authenticating git with GitHub
+------------------------------
+
+When you clone a private repository GitHub needs to verify you have permission
+to access it. There are two ways of authentication in git: via HTTPS, or via
+SSH.
+
+Cloning via HTTPS is good for when you are behind restrictive proxies that block
+all internet traffic except websites. You will have to setup the `Git Credential
+Manager`_, which may not be installed by default, or use the GitHub CLI to
+authenticate. In environments where you can't install software, use the SSH method.
+
+
+Cloning via SSH is good when you already have an SSH key, and it is simpler (and
+arguably more secure) than cloning via HTTPS. `GitHub's documentation
+covering setting up SSH`_. To access repositories within an enterprise
+environment you will also have to `setup single sign-on`_.
+
+.. _Git Credential Manager: https://github.com/GitCredentialManager/git-credential-manager/blob/main/README.md
+.. _GitHub's documentation covering setting up SSH: https://docs.github.com/en/authentication/connecting-to-github-with-ssh
+.. _setup single sign-on: https://docs.github.com/en/enterprise-cloud@latest/authentication/authenticating-with-saml-single-sign-on/authorizing-an-ssh-key-for-use-with-saml-single-sign-on
+
 Pull Requests
 -------------
 
