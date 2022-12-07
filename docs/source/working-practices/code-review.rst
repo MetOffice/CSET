@@ -56,10 +56,10 @@ Completeness of Contribution
 
 Alongside checking the actual code changes, a technical review should check that
 supporting material is also updated. This covers thing like making sure tests
-are passing (though this can and should be automated), making sure tests have
-been added/updated to cover new code. It also covers documentation, both that is
-has been added and that it is in sufficient detail/accuracy. This may also seep
-into the science review for documentation of metrics.
+are passing (though this can and should be automated), and making sure tests
+have been added/updated to cover new code. It also covers documentation, both
+that is has been added and that it is in sufficient detail/accuracy. This may
+also seep into the science review for documentation of metrics.
 
 
 Science Review
