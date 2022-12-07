@@ -1,7 +1,7 @@
 Automatic Testing
 =================
 
-Doing testing more frequently makes it easier, as it is much easier to narrow
+Doing testing more frequently makes it better, as it is much easier to narrow
 down what broke. Don't just test when it is time to release. Semi-regular
 testing outside of commit CI is useful to test for dependency changes. Regular
 testing makes everything better and easier! (especially when automated)
