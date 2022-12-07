@@ -28,18 +28,20 @@ to access it. There are two ways of authentication in git: via HTTPS, or via
 SSH.
 
 Cloning via HTTPS is good for when you are behind restrictive proxies that block
-all internet traffic except websites. You will have to setup the `Git Credential
-Manager`_, which may not be installed by default, or use the GitHub CLI to
-authenticate. In environments where you can't install software, use the SSH method.
-
+all internet traffic except websites. You will either have to setup the `Git
+Credential Manager`_, which may not be installed by default, or use the `GitHub
+CLI to authenticate`_, and `configure git to use it`_. In environments where you
+can't install additional software, use the SSH method instead.
 
 Cloning via SSH is good when you already have an SSH key, and it is simpler (and
-arguably more secure) than cloning via HTTPS. `GitHub's documentation
-covering setting up SSH`_. To access repositories within an enterprise
-environment you will also have to `setup single sign-on`_.
+arguably more secure) than cloning via HTTPS. `GitHub's documentation on SSH`_
+covers setting it up. To access repositories within an enterprise environment
+(such as this one) you will also have to `setup single sign-on`_.
 
 .. _Git Credential Manager: https://github.com/GitCredentialManager/git-credential-manager/blob/main/README.md
-.. _GitHub's documentation covering setting up SSH: https://docs.github.com/en/authentication/connecting-to-github-with-ssh
+.. _GitHub CLI to authenticate: https://cli.github.com/manual/gh_auth_login
+.. _configure git to use it: https://cli.github.com/manual/gh_auth_setup-git
+.. _GitHub's documentation on SSH: https://docs.github.com/en/authentication/connecting-to-github-with-ssh
 .. _setup single sign-on: https://docs.github.com/en/enterprise-cloud@latest/authentication/authenticating-with-saml-single-sign-on/authorizing-an-ssh-key-for-use-with-saml-single-sign-on
 
 Pull Requests
