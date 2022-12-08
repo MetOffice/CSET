@@ -31,6 +31,7 @@ html_static_path = ["_static"]
 
 # -- LaTeX output configuration ----------------------------------------------
 # https://www.sphinx-doc.org/en/master/latex.html
+
 # latex_engine = 'xelatex'
 latex_elements = {"papersize": "a4paper"}
 # latex_show_urls = 'footnote'

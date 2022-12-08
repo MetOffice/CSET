@@ -4,6 +4,9 @@ Script to chain together individual operators.
 
 Currently it is hard coded, but in future it will take an argument specifying a
 config file describing what operators to run in what order.
+
+It takes the input file as its first argument, and the output file as the second
+argument.
 """
 
 import sys
