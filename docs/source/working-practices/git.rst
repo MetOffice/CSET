@@ -20,6 +20,49 @@ helpful.
 .. _good commit messages: https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
 .. _git cheat sheet: https://education.github.com/git-cheat-sheet-education.pdf
 
+Setting up git
+--------------
+
+If you don't yet have it, git can be installed from the `official git website`_.
+On Linux it can be acquired through your package manager, though it is often
+installed by default. The command :code:`git help` can be used to check if it is
+installed, and will give you an overview of some common commands.
+
+Once installed, the following command will set up your identity on git, and only
+needs to be done once. These details will go alongside your commits.
+
+.. code-block:: bash
+
+    git config --global user.name "Your Name"
+    git config --global user.email "your-email@example.com"
+
+
+.. _official git website: https://git-scm.com/
+
+Authenticating git with GitHub
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When you clone a private repository GitHub needs to verify you have permission
+to access it. There are two ways of authentication in git: via HTTPS, or via
+SSH, with SSH being recommended.
+
+Cloning via HTTPS is good for when you are behind restrictive proxies that block
+all internet traffic except websites. You will either have to setup the `Git
+Credential Manager`_, which may not be installed by default, or use the `GitHub
+CLI to authenticate`_, and `configure git to use it`_. In environments where you
+can't install additional software, use the SSH method instead.
+
+Cloning via SSH is good when you already have an SSH key, and it is simpler (and
+arguably more secure) than cloning via HTTPS. `GitHub's documentation on SSH`_
+covers setting it up. To access repositories within an enterprise environment
+(such as this one) you will also have to `setup single sign-on`_.
+
+.. _Git Credential Manager: https://github.com/GitCredentialManager/git-credential-manager/blob/main/README.md
+.. _GitHub CLI to authenticate: https://cli.github.com/manual/gh_auth_login
+.. _configure git to use it: https://cli.github.com/manual/gh_auth_setup-git
+.. _GitHub's documentation on SSH: https://docs.github.com/en/authentication/connecting-to-github-with-ssh
+.. _setup single sign-on: https://docs.github.com/en/enterprise-cloud@latest/authentication/authenticating-with-saml-single-sign-on/authorizing-an-ssh-key-for-use-with-saml-single-sign-on
+
 Pull Requests
 -------------
 
@@ -67,7 +110,7 @@ more detail.
 
 The next step will be getting other people to look at your code. This involves
 three reviews, covering the technical, scientific, and portability aspects of
-your submission. A minor change, such as fixing a typo in the documentation,
+your submission. A minor change, such as fixing a typo or an obvious bug fix,
 would only require sign-off from the technical reviewer, and would be a lot
 quicker. More detail is on the :doc:`code-review` page.
 
