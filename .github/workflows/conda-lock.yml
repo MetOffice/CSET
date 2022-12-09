@@ -2,48 +2,56 @@
 name: "Update conda lock file"
 
 on:
-  # schedule:
-  #   - cron: "37 5 * * 1"
+  schedule:
+    - cron: "37 5 * * 1"
   workflow_dispatch:
+  # Just for testing this file.
+  pull_request:
 
 permissions:
   pull-requests: write
   contents: write
 
 jobs:
-  create-conda-env:
+  update-conda-lock-files:
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash -el {0}
     steps:
       - uses: actions/checkout@v3
-      - name: Setup Miniconda
-        uses: conda-incubator/setup-miniconda@v2.2.0
+      - uses: actions/setup-python@v4
         with:
-          auto-update-conda: true
-          activate-environment: cset-dev
-          environment-file: environment.yml
-      - name: Create conda environment
+          python-version: "3.x"
+
+      - name: Install dependencies
+        run: python3 -m pip install tox tox-conda
+
+      - name: Update conda
+        run: conda update conda
+
+      - name: Hash existing lock files
+        run: sha256sum requirements/locks/*.txt > ${{ runner.temp }}/lock_file_hashes
+
+      - name: Update lock files
         run: |
-          # Create a git branch and setup some variables.
-          branch="conda-lock-$(date +%s)"
-          git switch -c "$branch"
-          initial=$(sha256sum conda-linux-x86_64.lock)
+          conda --version
+          git config --local user.name "GitHub Actions (For James Frost)"
+          git config --local user.email "james.frost@metoffice.gov.uk"
+          git switch -c "conda-lock-$(sha256sum ${{ runner.temp }}/lock_file_hashes | head -c 8)"
+          tox -e py38-lock,py39-lock,py310-lock,py311-lock
 
-          conda list --explicit > conda-linux-x86_64.lock
-
-          # Only make a pull request if something has changed.
-          if [ -ne "$(sha256sum conda-linux-x86_64.lock)" "$initial" ]
-          then
-            # Push back to GitHub
-            git add *.lock
-            git commit -m "Update conda-linux-x86_64.lock"
-            git push --set-upstream origin "$branch"
-
-            # Create PR on GitHub.
-            gh pr create --base main --title "[CI] Update Conda lock" \
-            --body "Created automatically by GitHub Actions."
+      - name: Create pull requests
+        run: |
+          if $(sha256sum --status -c ${{ runner.temp }}/lock_file_hashes); then
+            echo "Lock files unchanged. Skipping pull request..."
+            exit 0
           fi
+          git add requirements/locks/*.txt
+          git commit -m "[CI] Update conda lock files."
+          git push --set-upstream origin "conda-lock-$(sha256sum ${{ runner.temp }}/lock_file_hashes | head -c 8)"
+          # Create PR on GitHub using GitHub CLI.
+          gh pr create --base main --title "[CI] Update conda lock files" \
+          --body "Created automatically by GitHub Actions."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

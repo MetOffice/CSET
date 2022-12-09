@@ -1,0 +1,26 @@
+name: cset-dev
+channels:
+  - conda-forge
+dependencies:
+  # Runtime dependencies
+  - numpy
+  - iris
+  - mo_pack # For handling pp files.
+
+  # Build dependencies
+  - setuptools>=61.0
+  - pip
+
+  # Development dependencies
+  - pip
+  - pre-commit
+  - black
+
+  # Testing dependencies
+  - tox
+  - tox-conda
+  - pytest
+
+  # Documentation dependencies
+  - sphinx
+  - furo
