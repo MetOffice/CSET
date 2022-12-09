@@ -21,25 +21,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup conda environment
-        run: |
-          cat ~/.bashrc
-          echo ===========
-          conda init bash
-          echo "" >> ~/.bashrc
-          echo 'TEST_VAR="If you can see this bashrc is working."' >> ~/.bashrc
-          echo ===========
-          cat ~/.bashrc
-          source ~/.bashrc
-          conda env create --file requirements/environment.yml
+      - name: Install dependencies
+        run: python -m pip install tox; echo 'TEST_VAR="Test value"' >> ~/.profile
 
       - name: Hash existing lock files
-        run: sha256sum requirements/locks/*.txt > ${{ runner.temp }}/lock_file_hashes
+        run: sha256sum requirements/locks/*.txt > ${{ runner.temp }}/lock_file_hashes; echo $TEST_VAR
 
       - name: Update lock files
         run: |
-          echo $TEST_VAR
-          conda activate cset-dev
           git switch -c "conda-lock-$(sha256sum ${{ runner.temp }}/lock_file_hashes | head -c 8)"
           tox -e py38-lock,py39-lock,py310-lock,py311-lock
 
