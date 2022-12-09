@@ -25,7 +25,7 @@ jobs:
           python-version: "3.x"
 
       - name: Install dependencies
-        run: python -m pip install tox
+        run: python3 -m pip install tox tox-conda
 
       - name: Hash existing lock files
         run: sha256sum requirements/locks/*.txt > ${{ runner.temp }}/lock_file_hashes
