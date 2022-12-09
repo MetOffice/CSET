@@ -23,7 +23,13 @@ jobs:
 
       - name: Setup conda environment
         run: |
-          conda init
+          cat ~/.bashrc
+          echo ===========
+          conda init bash
+          echo "" >> ~/.bashrc
+          echo 'TEST_VAR="If you can see this bashrc is working."' >> ~/.bashrc
+          echo ===========
+          cat ~/.bashrc
           source ~/.bashrc
           conda env create --file requirements/environment.yml
 
@@ -32,6 +38,7 @@ jobs:
 
       - name: Update lock files
         run: |
+          echo $TEST_VAR
           conda activate cset-dev
           git switch -c "conda-lock-$(sha256sum ${{ runner.temp }}/lock_file_hashes | head -c 8)"
           tox -e py38-lock,py39-lock,py310-lock,py311-lock
