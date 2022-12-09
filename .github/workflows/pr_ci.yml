@@ -14,7 +14,7 @@ jobs:
       - name: Install dependencies
         run: python3 -m pip install tox tox-conda
       - name: Run tests
-        run: tox -e py38-linux-tests,py39-linux-tests,py310-linux-tests,py311-linux-tests
+        run: tox -e py38-linux-tests,py39-linux-tests,py310-linux-tests
 
   pre-commit:
     runs-on: ubuntu-latest
