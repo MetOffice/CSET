@@ -1,12 +1,9 @@
-# Updates the conda lock file on a weekly basis.
-name: "Update conda lock file"
+name: "Update conda lock files"
 
 on:
   schedule:
     - cron: "37 5 * * 1"
   workflow_dispatch:
-  # Just for testing this file.
-  pull_request:
 
 permissions:
   pull-requests: write
@@ -35,8 +32,8 @@ jobs:
 
       - name: Update lock files
         run: |
-          conda --version
-          git config --local user.name "GitHub Actions (For James Frost)"
+          # These should be the details of whoever is maintaining this workflow.
+          git config --local user.name "GitHub Actions (for James Frost)"
           git config --local user.email "james.frost@metoffice.gov.uk"
           git switch -c "conda-lock-$(sha256sum ${{ runner.temp }}/lock_file_hashes | head -c 8)"
           tox -e py38-lock,py39-lock,py310-lock,py311-lock
