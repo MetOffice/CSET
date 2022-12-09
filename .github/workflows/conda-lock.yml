@@ -22,7 +22,10 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Setup conda environment
-        run: conda env create --file requirements/environment.yml
+        run: |
+          conda init
+          source ~/.bashrc
+          conda env create --file requirements/environment.yml
 
       - name: Hash existing lock files
         run: sha256sum requirements/locks/*.txt > ${{ runner.temp }}/lock_file_hashes
