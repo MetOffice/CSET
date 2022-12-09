@@ -1,28 +1,21 @@
-name: Pull Request Checks
+name: Pull request checks
 
 on:
   pull_request:
 
 jobs:
-  test:
+  tests:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.8", "3.9", "3.10"]
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.x"
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install tox tox-gh-actions
-      - name: Test with tox
-        run: tox --skip-missing-interpreters false
+        run: python3 -m pip install tox tox-conda
+      - name: Run tests
+        run: tox -e py38-linux-tests,py39-linux-tests,py310-linux-tests,py311-linux-tests
 
-  # Copied here as we are prevented from using external actions.
   pre-commit:
     runs-on: ubuntu-latest
     steps:
@@ -30,11 +23,9 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: "3.x"
       - name: Set up pre-commit
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install pre-commit
+        run: python3 -m pip install pre-commit
       - uses: actions/cache@v3
         with:
           path: ~/.cache/pre-commit
@@ -46,21 +37,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: "3.x"
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install tox tox-gh-actions
-      - name: Build docs with tox
-        run: |
-          tox -e docs --skip-missing-interpreters false
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v3
+        run: python3 -m pip install tox tox-conda
+      - name: Build documentation
+        run: tox -e py310-linux-docs
+      - uses: actions/upload-artifact@v3
         with:
           name: html-docs
           path: docs/build/html/
-          retention-days: 5
+          retention-days: 10
           if-no-files-found: error
