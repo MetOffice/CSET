@@ -27,11 +27,17 @@ jobs:
       - name: Install dependencies
         run: python3 -m pip install tox tox-conda
 
+      - name: Update conda
+        run: conda update conda
+
       - name: Hash existing lock files
         run: sha256sum requirements/locks/*.txt > ${{ runner.temp }}/lock_file_hashes
 
       - name: Update lock files
         run: |
+          conda --version
+          git config --local user.name "GitHub Actions (For James Frost)"
+          git config --local user.email "james.frost@metoffice.gov.uk"
           git switch -c "conda-lock-$(sha256sum ${{ runner.temp }}/lock_file_hashes | head -c 8)"
           tox -e py38-lock,py39-lock,py310-lock,py311-lock
 
