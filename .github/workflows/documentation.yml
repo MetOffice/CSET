@@ -21,6 +21,11 @@ jobs:
       - name: Install dependencies
         run: python3 -m pip install tox tox-conda
 
+      - uses: actions/cache@v3
+        with:
+          key: tox|docs|${{ runner.os }}-${{ runner.arch}}|${{ hashFiles('requirements/locks/*') }}
+          path: .tox
+
       - name: Build documentation
         run: tox -e py310-linux-docs
 
