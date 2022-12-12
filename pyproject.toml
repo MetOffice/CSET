@@ -67,5 +67,6 @@ conda_spec =
     py39-linux: {toxinidir}{/}requirements{/}locks{/}py39-lock-linux-64.txt
     py310-linux: {toxinidir}{/}requirements{/}locks{/}py310-lock-linux-64.txt
     py311-linux: {toxinidir}{/}requirements{/}locks{/}py311-lock-linux-64.txt
+usedevelop = true
 commands = sphinx-build -d "docs/build/doctree" docs/source "docs/build/html" --color -W -bhtml {posargs}
 '''
