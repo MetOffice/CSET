@@ -13,6 +13,10 @@ jobs:
           python-version: "3.x"
       - name: Install dependencies
         run: python3 -m pip install tox tox-conda
+      - uses: actions/cache@v3
+        with:
+          key: tox|tests|${{ runner.os }}-${{ runner.arch}}|${{ hashFiles('requirements/locks/*') }}
+          path: .tox
       - name: Run tests
         run: tox -e py38-linux-tests,py39-linux-tests,py310-linux-tests
 
@@ -28,8 +32,8 @@ jobs:
         run: python3 -m pip install pre-commit
       - uses: actions/cache@v3
         with:
-          path: ~/.cache/pre-commit
           key: pre-commit-3|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
+          path: ~/.cache/pre-commit
       - name: Run pre-commit
         run: pre-commit run --show-diff-on-failure --color=always --all-files
 
@@ -42,6 +46,10 @@ jobs:
           python-version: "3.x"
       - name: Install dependencies
         run: python3 -m pip install tox tox-conda
+      - uses: actions/cache@v3
+        with:
+          key: tox|docs|${{ runner.os }}-${{ runner.arch}}|${{ hashFiles('requirements/locks/*') }}
+          path: .tox
       - name: Build documentation
         run: tox -e py310-linux-docs
       - uses: actions/upload-artifact@v3
