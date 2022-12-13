@@ -117,3 +117,20 @@ quicker. More detail is on the :doc:`code-review` page.
 From the review you will probably receive feedback, and things to change and
 improve. Once these points have been addressed the code can be merged into the
 main branch, and become part of CSET proper.
+
+Specific git features
+---------------------
+
+git rebase
+~~~~~~~~~~
+
+A rebase changes the "base" upon which your changes are made. The rebase command
+ordinarily takes the form :code:`git rebase [branch-to-rebase-on-to]`, which
+starts a rebase. Your branch will be reset so it is the same as the new base,
+and the commits you have made will be applied in order to it. Git will try and
+do this automatically, however if you have changed a line that was deleted in
+the base, or in a few other cases, then a conflict can occur which needs to be
+manually resolved, before running :code:`git rebase --continue` to finish it.
+There is a good overview of rebasing in `these slides`_.
+
+.. _these slides: https://glfmn.github.io/gh-slides/#/rebase
