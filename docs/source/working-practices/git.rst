@@ -117,3 +117,53 @@ quicker. More detail is on the :doc:`code-review` page.
 From the review you will probably receive feedback, and things to change and
 improve. Once these points have been addressed the code can be merged into the
 main branch, and become part of CSET proper.
+
+Git terminology
+---------------
+
+**Repository**: A directory that contains a .git folder and all of your code. It
+contains everything related to git, and is entirely local.
+
+**Working Tree**: The current state of the tracked files within the repository.
+This is what you actually edit while coding.
+
+**Index**: AKA the staging area. The index will become the next commit, and is
+added to via the :code:`git add <file>` command. To unstage changes use the
+:code:`git restore --staged <file>` command. Having this index makes it easier
+to split a change into multiple commits if desired.
+
+**Commits**: The core unit of git. Each commit describes the state of the
+working tree at the point where it is committed. Contains information like a
+commit message, the date when the commit was made, and author information. It
+also contains a reference to any parent commits, which defines the repository
+history.
+
+**Branch**: A special reference to a particular commit. If a new child commit is
+created the reference moves to that new commit.
+
+**Tag**: A special a particular commit. Unlike a branch it doesn't
+move.
+
+git rebase
+~~~~~~~~~~
+
+A rebase changes the base commit from which your changes are made. The rebase
+command ordinarily takes the form :code:`git rebase [new-base-branch]`, which
+starts a rebase. Your branch will be reset so it is the same as the new base,
+and the changes you have made will be applied to it sequentially.
+
+Git will try and do this automatically, however if a conflict occurs it needs to
+be manually resolved before running :code:`git rebase --continue` to finish the
+rebase.
+
+There is a good overview of rebasing in `these slides`_, and the `official
+documentation on rebase`_ goes into a lot more detail.
+
+When rebasing or merging there are times when git cannot proceed. This is called
+a conflict and often occurs if you have changed a line that was also changed in
+the other branch. Git will stop and let you manually fix it. Read the
+`documentation on fixing merge conflicts`_ to find out how.
+
+.. _these slides: https://glfmn.github.io/gh-slides/#/rebase
+.. _official documentation on rebase: https://git-scm.com/book/en/v2/Git-Branching-Rebasing
+.. _documentation on fixing merge conflicts: https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging#_basic_merge_conflicts
