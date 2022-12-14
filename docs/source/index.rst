@@ -4,6 +4,7 @@ CSET Documentation
 .. toctree::
    :hidden:
 
+   usage/index
    working-practices/index
    design/index
    operators
