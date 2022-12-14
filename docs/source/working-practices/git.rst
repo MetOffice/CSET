@@ -118,8 +118,31 @@ From the review you will probably receive feedback, and things to change and
 improve. Once these points have been addressed the code can be merged into the
 main branch, and become part of CSET proper.
 
-Specific git features
----------------------
+Git terminology
+---------------
+
+**Repository**: A directory that contains a .git folder and all of your code. It
+contains everything related to git, and is entirely local.
+
+**Working Tree**: The current state of the tracked files within the repository.
+This is what you actually edit.
+
+**Index**: AKA staging area. The index will become the next commit, and is added
+to via the :code:`git add` command. To unstage changes use the :code:`git
+restore --staged <file>` command. Having this index makes it easier to split a
+change into multiple commits if desired.
+
+**Commits**: The core unit of git. Each commit describes the state of the
+working tree at the point where it is committed. Contains information like a
+commit message, the date when the commit was made, and author information. It
+also contains a reference to any parent commits, which is what allows the
+repository history to be built.
+
+**Branch**: A special name for a particular commit. If a new commit has the
+branch one as a parent the name moves to the new commit.
+
+**Tag**: A special name for a particular commit. Unlike a branch it doesn't
+move.
 
 git rebase
 ~~~~~~~~~~
