@@ -147,13 +147,23 @@ move.
 git rebase
 ~~~~~~~~~~
 
-A rebase changes the "base" upon which your changes are made. The rebase command
-ordinarily takes the form :code:`git rebase [branch-to-rebase-on-to]`, which
+A rebase changes the base commit from which your changes are made. The rebase
+command ordinarily takes the form :code:`git rebase [new-base-branch]`, which
 starts a rebase. Your branch will be reset so it is the same as the new base,
-and the commits you have made will be applied in order to it. Git will try and
-do this automatically, however if you have changed a line that was deleted in
-the base, or in a few other cases, then a conflict can occur which needs to be
-manually resolved, before running :code:`git rebase --continue` to finish it.
-There is a good overview of rebasing in `these slides`_.
+and the changes you have made will be applied to it sequentially.
+
+Git will try and do this automatically, however if a conflict occurs it needs to
+be manually resolved before running :code:`git rebase --continue` to finish the
+rebase.
+
+There is a good overview of rebasing in `these slides`_, and the `official
+documentation on rebase`_ goes into a lot more detail.
+
+When rebasing or merging there are times when git cannot proceed. This is called
+a conflict and often occurs if you have changed a line that was also changed in
+the other branch. Git will stop and let you manually fix it. Read the
+`documentation on fixing merge conflicts`_ to find out how.
 
 .. _these slides: https://glfmn.github.io/gh-slides/#/rebase
+.. _official documentation on rebase: https://git-scm.com/book/en/v2/Git-Branching-Rebasing
+.. _documentation on fixing merge conflicts: https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging#_basic_merge_conflicts
