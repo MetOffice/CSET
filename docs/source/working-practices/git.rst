@@ -125,23 +125,23 @@ Git terminology
 contains everything related to git, and is entirely local.
 
 **Working Tree**: The current state of the tracked files within the repository.
-This is what you actually edit.
+This is what you actually edit while coding.
 
-**Index**: AKA staging area. The index will become the next commit, and is added
-to via the :code:`git add` command. To unstage changes use the :code:`git
-restore --staged <file>` command. Having this index makes it easier to split a
-change into multiple commits if desired.
+**Index**: AKA the staging area. The index will become the next commit, and is
+added to via the :code:`git add <file>` command. To unstage changes use the
+:code:`git restore --staged <file>` command. Having this index makes it easier
+to split a change into multiple commits if desired.
 
 **Commits**: The core unit of git. Each commit describes the state of the
 working tree at the point where it is committed. Contains information like a
 commit message, the date when the commit was made, and author information. It
-also contains a reference to any parent commits, which is what allows the
-repository history to be built.
+also contains a reference to any parent commits, which defines the repository
+history.
 
-**Branch**: A special name for a particular commit. If a new commit has the
-branch one as a parent the name moves to the new commit.
+**Branch**: A special reference to a particular commit. If a new child commit is
+created the reference moves to that new commit.
 
-**Tag**: A special name for a particular commit. Unlike a branch it doesn't
+**Tag**: A special a particular commit. Unlike a branch it doesn't
 move.
 
 git rebase
