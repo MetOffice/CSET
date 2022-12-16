@@ -13,18 +13,12 @@ install.
 
 First make sure you have installed and activated the conda environment.
 
-.. attention::
+.. code-block::
 
-    Currently we are awaiting a `pull request
-    <https://github.com/MetOffice/CSET/pull/23>`_ being merged to have the
-    correct conda environment file. For now use the following command to
-    manually install the requirements:
+    conda create -n cset-dev -f requirements/locks/py310-lock-linux-64.txt
+    conda activate cset-dev
 
-    .. code-block:: bash
-
-        conda install pip setuptools iris mo_pack numpy
-
-From the root of the repository, CSET can be installed with :code:`pip install
+Then, from the root of the repository, CSET can be installed with :code:`pip install
 -e .`
 
 Usage
