@@ -23,35 +23,50 @@ pythonpath = [
     ]
 
 [tool.tox]
-legacy_tox_ini = """
+legacy_tox_ini = '''
 [tox]
-requires =
-    tox-conda
-    tox-gh-actions
+requires = tox-conda
 isolated_build = True
-# Skip missing python versions. This is overridded for CI.
-skip_missing_interpreters = true
-envlist = py38, py39, py310
+envlist =
+    py310-linux-tests
+    py10-linux-docs
 
-[testenv]
+[testenv:py{38,39,310,311}-lock]
+allowlist_externals = cp
 conda_channels = conda-forge
+conda_create_args = --override-channels
 conda_deps =
-    pytest
-    iris
-    mo_pack  # For PP file handling
-commands = pytest
+    pip
+    conda-lock
+description = Create explicit environment specification conda lock files for CSET dependencies.
+skip_install = true
+setenv =
+    LOCKDIR = {toxinidir}{/}requirements{/}locks{/}
+    TMPFILE = {envtmpdir}{/}environment.yml
+    YMLFILE = {toxinidir}{/}requirements{/}environment.yml
+commands =
+    cp "{env:YMLFILE}" "{env:TMPFILE}"
+    # Hacky script to avoid having to have per-python-version yaml files.
+    python3 -c 'from sys import version_info as v; fh = open("{env:TMPFILE}", "a"); fh.write(f"\n  - python =\{v.major\}.\{v.minor\}\n")'
+    conda-lock --channel conda-forge --kind explicit --file {env:TMPFILE} --platform linux-64 --filename-template "{env:LOCKDIR}{envname}-\{platform\}.txt" {posargs}
 
-[testenv:docs]
-description = Invoke sphinx-build to build the HTML docs
-basepython = python3
-deps =
-    sphinx
-    furo
+[testenv:py{38,39,310,311}-{linux,osx,win}-tests]
+description = Run unit and integration tests with PyTest.
+conda_spec =
+    py38-linux: {toxinidir}{/}requirements{/}locks{/}py38-lock-linux-64.txt
+    py39-linux: {toxinidir}{/}requirements{/}locks{/}py39-lock-linux-64.txt
+    py310-linux: {toxinidir}{/}requirements{/}locks{/}py310-lock-linux-64.txt
+    py311-linux: {toxinidir}{/}requirements{/}locks{/}py311-lock-linux-64.txt
+usedevelop = true
+commands = pytest {posargs}
+
+[testenv:py{38,39,310,311}-{linux,osx,win}-docs]
+description = Invoke sphinx-build to build the HTML docs.
+conda_spec =
+    py38-linux: {toxinidir}{/}requirements{/}locks{/}py38-lock-linux-64.txt
+    py39-linux: {toxinidir}{/}requirements{/}locks{/}py39-lock-linux-64.txt
+    py310-linux: {toxinidir}{/}requirements{/}locks{/}py310-lock-linux-64.txt
+    py311-linux: {toxinidir}{/}requirements{/}locks{/}py311-lock-linux-64.txt
+usedevelop = true
 commands = sphinx-build -d "docs/build/doctree" docs/source "docs/build/html" --color -W -bhtml {posargs}
-
-[gh-actions]
-python =
-    3.8: py38
-    3.9: py39
-    3.10: py310
-"""
+'''
