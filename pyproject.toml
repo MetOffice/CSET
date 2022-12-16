@@ -29,7 +29,7 @@ requires = tox-conda
 isolated_build = True
 envlist =
     py310-linux-tests
-    py10-linux-docs
+    py310-linux-docs
 
 [testenv:py{38,39,310,311}-lock]
 allowlist_externals = cp
