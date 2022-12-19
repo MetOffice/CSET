@@ -33,7 +33,7 @@ def generate_stash_constraints(stash: str) -> iris.AttributeConstraint:
         stash_constraint = iris.AttributeConstraint(STASH=stash)
         return stash_constraint
     else:
-        print('Further constraint conditions required...')
+        print("Further constraint conditions required...")
         
         
 def generate_var_constraints(varname: str) -> iris.Constraint:
@@ -52,13 +52,13 @@ def generate_var_constraints(varname: str) -> iris.Constraint:
     
     Returns
     -------
-    varname_constraint: iris.Constraint 
+    varname_constraint: iris.Constraint
     """
     
     # Need to load stash codes as type iris.Attribute as well as names as iris.Constraint
     if type(varname) == str:
-        varname_constraint  = iris.Constraint(name=varname)
+        varname_constraint = iris.Constraint(name=varname)
         return varname_constraint
     else:
-        print('Further constraint conditions required...')
+        print("Further constraint conditions required...")
         
