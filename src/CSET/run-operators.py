@@ -17,7 +17,7 @@ input_file = sys.argv[1]
 output_file = sys.argv[2]
 # "m01s03i236" for test purposes
 stash = sys.argv[3]
- # "test" for test purposes
+# "test" for test purposes
 varname = sys.argv[4]
 
 # Hardcoded task chain to extract instantaneous air temperature.
