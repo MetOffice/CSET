@@ -15,8 +15,10 @@ from CSET.operators import generate_constraints, read, write, filters
 # First argument is input file name, second is output file name.
 input_file = sys.argv[1]
 output_file = sys.argv[2]
-stash = sys.argv[3] # "m01s03i236" for test purposes
-varname = sys.argv[4] # "test" for test purposes
+# "m01s03i236" for test purposes
+stash = sys.argv[3]
+ # "test" for test purposes
+varname = sys.argv[4]
 
 # Hardcoded task chain to extract instantaneous air temperature.
 stash_constraint = generate_constraints.generate_stash_constraints(stash)
