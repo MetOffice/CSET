@@ -30,9 +30,8 @@ jobs:
 
       - name: Update lock files
         run: |
-          # These should be the details of whoever is maintaining this workflow.
-          git config --local user.name "GitHub Actions (for James Frost)"
-          git config --local user.email "james.frost@metoffice.gov.uk"
+          git config --local user.name "$GITHUB_ACTOR"
+          git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
           git switch -c "conda-lock-$(sha256sum ${{ runner.temp }}/lock_file_hashes | head -c 8)"
           tox -e py38-lock,py39-lock,py310-lock,py311-lock
 
