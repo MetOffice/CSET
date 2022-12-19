@@ -5,8 +5,9 @@ Operators to generate load constraints and pass into read operator.
 import iris
 import iris.cube
 
-# argument should be a list of stash codes that combined build the constraint
-def generate_stash_constraints(stash: str) -> iris.Constraint:
+# argument should be a list of stash codes that combined build 
+# the constraint
+def generate_stash_constraints(stash: str) -> iris.AttributeConstraint:
 
     """
     Operator that takes a stash string, 
@@ -27,7 +28,8 @@ def generate_stash_constraints(stash: str) -> iris.Constraint:
 
     """
 
-    # Need to load stash codes as type iris.Attribute as well as names as iris.Constraint
+    # Need to load stash codes as type iris.Attribute as well as names as 
+    # iris.Constraint
     if type(stash) == str:
         stash_constraint = iris.AttributeConstraint(STASH=stash)
         return stash_constraint
@@ -36,7 +38,8 @@ def generate_stash_constraints(stash: str) -> iris.Constraint:
 
 
 
-# argument should be a list of stash codes that combined build the constraint
+# argument should be a list of stash codes that combined build 
+# the constraint
 def generate_var_constraints(varname: str) -> iris.Constraint:
 
     """
@@ -58,7 +61,8 @@ def generate_var_constraints(varname: str) -> iris.Constraint:
 
     """
 
-    # Need to load stash codes as type iris.Attribute as well as names as iris.Constraint
+    # Need to load stash codes as type iris.Attribute as well as 
+    # names as iris.Constraint
     if type(varname) == str:
         varname_constraint  = iris.Constraint(name=varname)
         return varname_constraint
