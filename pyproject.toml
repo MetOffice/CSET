@@ -8,11 +8,13 @@ requires-python = ">=3.8"
 # classifiers = []
 dependencies = ["numpy", "scitools-iris"]
 
+[project.urls]
+Documentation = "https://metoffice.github.io/CSET"
+Source = "https://github.com/MetOffice/CSET"
 
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
-
 
 [tool.pytest.ini_options]
 addopts = [
