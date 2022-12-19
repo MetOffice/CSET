@@ -3,13 +3,8 @@
 Convective Scale Evaluation Tool for evaluation and investigation of regional
 models.
 
-The documentation is currently hosted on the [Met Office internal
-server](https://www-nwp/~jfrost/2022/CSET/docs/) and is updated whenever built
-locally. This is a temporary solution, and we should figure out a better place
-to host it. For those unable to view this, the built files can be downloaded
-from the artifacts section of the latest [Documentation
-action](https://github.com/MetOffice/CSET/actions/workflows/documentation.yml).
+Please read [the documentation to learn how to use CSET](https://upgraded-memory-5708c002.pages.github.io/).
 
-Once you have the documentation, visit the [Working
-Practices](https://www-nwp/~jfrost/2022/CSET/docs/working-practices/#getting-started)
-page to get started.
+To get started with developing CSET visit the [Working
+Practices](https://upgraded-memory-5708c002.pages.github.io/working-practices/#getting-started)
+page of the documentation.
