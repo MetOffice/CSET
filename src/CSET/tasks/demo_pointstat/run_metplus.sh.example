@@ -1,0 +1,13 @@
+#! /usr/bin/env bash
+
+# module load scitools/production-os45-1
+
+# Add METplus and libraries to PATH.
+export PATH=${PATH}:/path/to/METplus/ush:/path/to/MET/bin
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/path/to/MET/lib
+
+export ROSE_TASK_CYCLE_TIME="20220921T0300Z"
+DATESTAMP=$( rose date -c --print-f="%Y%m%d%H" )
+export DATESTAMP
+
+run_metplus.py -c Pointstat_METplus_UKV.conf -c Pointstat_UKV_Areas.conf -c user_system_local.conf

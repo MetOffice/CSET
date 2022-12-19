@@ -1,0 +1,22 @@
+[dir]
+# Input/Output locations
+INPUT_BASE_FORECAST = /path/to/forecast/data/
+INPUT_BASE_OBSERVATION = /path/to/obs/data/
+OUTPUT_BASE = /output/path
+OUTPUT_BASE_RES = /output/path/for/something/else
+
+# MET install locations
+MET_INSTALL_DIR = /path/to/MET/MET_Dev/
+MET_AREA_DIR = /path/to/MET/AreaMasks
+MET_STN_DIR = /path/to/MET/StationLists
+
+# TIMESTRING is linked to whattime in rose-app.conf, linked to the suite.rc so
+# that the time formats in the suite.rc and the METplus' PointStat.conf match
+# up. Any {ENV[]} variable is defined within [env] section of the rose-app.conf
+
+TIMESTRING = {ENV[DATESTAMP]}
+# FCAST_LEADS = {ENV[FCASTRANGE]}
+FCAST_LEADS =
+
+# Additional config files required to run Pointstat
+ADD_CONFIG = {ENV[PWD]}/Pointstat_MET_UKV.conf
