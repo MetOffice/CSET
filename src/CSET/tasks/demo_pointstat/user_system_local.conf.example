@@ -3,7 +3,7 @@
 INPUT_BASE_FORECAST = /path/to/forecast/data/
 INPUT_BASE_OBSERVATION = /path/to/obs/data/
 OUTPUT_BASE = /output/path
-OUTPUT_BASE_RES = /output/path/for/something/else
+OUTPUT_BASE_RES = /output/path/results
 
 # MET install locations
 MET_INSTALL_DIR = /path/to/MET/MET_Dev/
