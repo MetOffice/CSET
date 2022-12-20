@@ -8,7 +8,7 @@ def test_generate_constraints_operator():
     #    assert type(stash_constraint) == expected_stash_constraint
     expected_stash_constraint = "AttributeConstraint({'STASH': 'm01s03i236'})"
     assert repr(stash_constraint) == expected_stash_constraint
-    
+
     """generate iris cube constraint for str variable name."""
     var_constraint = generate_constraints.generate_var_constraints("test")
     # expected_var_constraint = "<class 'iris._constraints.Constraint'>"

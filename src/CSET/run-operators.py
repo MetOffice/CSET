@@ -26,4 +26,3 @@ var_constraint = generate_constraints.generate_var_constraints(varname)
 cubes = read.read_cubes(input_file, stash_constraint)
 cube = filters.filter_cubes(cubes, "m01s03i236", ())
 write.write_cube_to_nc(cube, output_file)
-
