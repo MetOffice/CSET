@@ -1,0 +1,18 @@
+#! /usr/bin/env bash
+
+# Setup environment.
+# module load scitools/production-os45-1
+
+# Add METplus and libraries to PATH.
+export PATH=${PATH}:/path/to/METplus/ush:/path/to/MET/bin
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/path/to/MET/lib
+# Leave blank to skip VerPy plotting.
+export VERPY_LOCATION=
+# Cycle start time.
+export ROSE_TASK_CYCLE_TIME="20220921T0300Z"
+export DATESTAMP="2022092103"
+
+run_metplus.py -c Pointstat_METplus_UKV.conf -c Pointstat_UKV_Areas.conf -c user_system_local.conf
+cd verpy
+# Replace the source flag here with your value of OUTPUT_BASE_RES/Output
+python3 plot_met_stats.py --plot_dir ${PWD} --start 2022092103 --end 2022092603 --source /output/path/results/Output --case_studies True --expids METO_UKV --model_names 'UKV - MET'
