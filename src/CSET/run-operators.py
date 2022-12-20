@@ -13,11 +13,12 @@ import sys
 from CSET.operators import generate_constraints, read, write, filters
 
 # First argument is input file name, second is output file name.
+# Third argument is (later optional) stash name and forth argument is
+# later optional) variable name to constrain loading of model data.
+# Currently using "m01s03i236" as stash name and "test" as variable name for test purposes.
 input_file = sys.argv[1]
 output_file = sys.argv[2]
-# "m01s03i236" for test purposes
 stash = sys.argv[3]
-# "test" for test purposes
 varname = sys.argv[4]
 
 # Hardcoded task chain to extract instantaneous air temperature.
