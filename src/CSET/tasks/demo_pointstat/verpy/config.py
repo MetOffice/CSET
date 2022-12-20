@@ -1,16 +1,14 @@
 """
-Set up choices of CSET verification configuration, e.g. thresholds etc.
-Should be aligned with operational verification and configuration from METplus apps
+Set up choices of CSET verification configuration, e.g. thresholds etc. Should
+be aligned with operational verification and configuration from METplus apps
 """
 
 # Settings below here are relevant for the verification part of CSET
-#
-# VerPy default settings, first Scale Series plots
-# Defaults chosen are suitable for use over the UK.
-# SS prefix => scale statistics options (fractional statistics, e.g.
-# Fractions Skill Score)
-# For fractional statistics, set the thresholds and neighbourhood scale sizes
-# required.
+
+# VerPy default settings, first Scale Series plots. Defaults chosen are suitable
+# for use over the UK. SS prefix => scale statistics options (fractional
+# statistics, e.g. Fractions Skill Score). For fractional statistics, set the
+# thresholds and neighbourhood scale sizes required.
 SS_SCALES = [1, 5, 25, 51, 101]
 SS_THRESH = [0.5, 1.0, 4.0, 8.0, 16.0, 32.0, 64.0]
 SS_FREQS = ["20%", "10%", "5%"]

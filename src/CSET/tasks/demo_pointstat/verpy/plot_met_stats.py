@@ -1,7 +1,11 @@
 import os
 import sys
 
-sys.path.append("/home/h02/cfsb/VerPy/latest")
+VerPy_location = os.getenv("VERPY_LOCATION")
+if not VerPy_location:
+    sys.exit(1)
+sys.path.append(VerPy_location)
+
 # Replace prelude() function if required
 import errno
 import datetime
