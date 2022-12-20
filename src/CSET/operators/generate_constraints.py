@@ -50,7 +50,6 @@ def generate_stash_constraints(stash: str) -> iris.AttributeConstraint:
 
 
 def generate_var_constraints(varname: str) -> iris.Constraint:
-
     """
     Operator that takes a CF compliant variable name string, and uses iris to generate
     a constraint to be passed into the read operator to minimize the CubeList the
