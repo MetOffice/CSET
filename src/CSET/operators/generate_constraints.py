@@ -21,7 +21,7 @@ def generate_stash_constraints(stash: str) -> iris.AttributeConstraint:
     Arguments
     ---------
     stash: str
-        stash code to build iris constrain
+        stash code to build iris constrain, currently using "m01s03i236"
 
     Returns
     -------
@@ -48,7 +48,7 @@ def generate_var_constraints(varname: str) -> iris.Constraint:
     Arguments
     ---------
     varname: str
-        CF compliant name of variable. Needed later for LFRic.
+        CF compliant name of variable. Needed later for LFRic. Currently using "test"
 
     Returns
     -------
