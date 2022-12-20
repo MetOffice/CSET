@@ -21,7 +21,6 @@ import iris.cube
 
 
 def generate_stash_constraints(stash: str) -> iris.AttributeConstraint:
-
     """
     Operator that takes a stash string, and uses iris to generate a constraint to be
     passed into the read operator to minimize the CubeList the
