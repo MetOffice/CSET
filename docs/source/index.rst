@@ -8,6 +8,7 @@ CSET Documentation
    working-practices/index
    operators
    genindex
+   GitHub <https://github.com/MetOffice/CSET>
 
 .. note::
 
