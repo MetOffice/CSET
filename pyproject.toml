@@ -2,7 +2,7 @@
 name = "CSET"
 version = "0.0.1"
 description = "Convective Scale Evaluation Tool for evaluation and investigation of regional models."
-authors = [ {name="James Frost", email="james.frost@metoffice.gov.uk"} ]
+authors = [ {name="Met Office"}, {name="NIWA"} ]
 readme = "README.md"
 requires-python = ">=3.8"
 # classifiers = []
