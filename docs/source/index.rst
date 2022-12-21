@@ -6,7 +6,6 @@ CSET Documentation
 
    usage/index
    working-practices/index
-   design/index
    operators
    genindex
 
