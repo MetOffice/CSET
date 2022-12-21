@@ -21,8 +21,9 @@ Currently it is hard coded, but in future it will take an argument specifying a
 config file describing what operators to run in what order.
 
 It takes the input file as its first argument, and the output file as the second
-argument. The third argument is stash name (currently "m01s03i236") and forth
-argument is variable name (currently "test") to constrain loading of model data.
+argument. The third argument is stash name (currently "m01s03i236", and
+optional) and forth argument is variable name (currently "test", and optional)
+to constrain loading of model data.
 """
 
 import sys
@@ -30,8 +31,14 @@ from CSET.operators import generate_constraints, read, write, filters
 
 input_file = sys.argv[1]
 output_file = sys.argv[2]
-stash = sys.argv[3]
-varname = sys.argv[4]
+try:
+    stash = sys.argv[3]
+except IndexError:
+    stash = "m01s03i236"
+try:
+    varname = sys.argv[4]
+except IndexError:
+    varname = "test"
 
 # Hardcoded task chain to extract instantaneous air temperature.
 stash_constraint = generate_constraints.generate_stash_constraints(stash)
