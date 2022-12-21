@@ -92,7 +92,7 @@ https://conda.anaconda.org/conda-forge/linux-64/markupsafe-2.1.1-py311hd4cff14_2
 https://conda.anaconda.org/conda-forge/noarch/mdurl-0.1.0-pyhd8ed1ab_0.tar.bz2#f8dab71fdc13b1bf29a01248b156d268
 https://conda.anaconda.org/conda-forge/noarch/munkres-1.1.4-pyh9f0ad1d_0.tar.bz2#2ba8498c1018c1e9c61eb99b973dfe19
 https://conda.anaconda.org/conda-forge/linux-64/mypy_extensions-0.4.3-py311h38be061_6.tar.bz2#6f53e53ab6a2f24299af0e56174777a2
-https://conda.anaconda.org/conda-forge/linux-64/numpy-1.23.5-py311h7d28db0_0.conda#de8cf17747d9efed488cafea2c39c9a1
+https://conda.anaconda.org/conda-forge/linux-64/numpy-1.24.0-py311hbde0eaa_0.conda#a557423cfc6da0f693127b4886fb8d6d
 https://conda.anaconda.org/conda-forge/linux-64/openjpeg-2.5.0-h7d73246_1.tar.bz2#a11b4df9271a8d7917686725aa04c8f2
 https://conda.anaconda.org/conda-forge/noarch/packaging-22.0-pyhd8ed1ab_0.conda#0e8e1bd93998978fc3125522266d12db
 https://conda.anaconda.org/conda-forge/noarch/pathspec-0.10.3-pyhd8ed1ab_0.conda#0f7d2186dd12ef3277e70fd85f9ff6a7
@@ -160,7 +160,7 @@ https://conda.anaconda.org/conda-forge/linux-64/pyproj-3.4.1-py311h7c961c7_0.con
 https://conda.anaconda.org/conda-forge/noarch/tox-3.27.1-pyhd8ed1ab_0.tar.bz2#62b743e1030b17163c70654601afb60d
 https://conda.anaconda.org/conda-forge/linux-64/ukkonen-1.0.1-py311h4dd048b_3.tar.bz2#dbfea4376856bf7bd2121e719cf816e5
 https://conda.anaconda.org/conda-forge/linux-64/cartopy-0.21.1-py311h5d490e5_0.conda#07f2848abf7dcbaf41e415db0f914629
-https://conda.anaconda.org/conda-forge/noarch/identify-2.5.10-pyhd8ed1ab_0.conda#f63fdec425e83ccfb1ddcb698781fd98
+https://conda.anaconda.org/conda-forge/noarch/identify-2.5.11-pyhd8ed1ab_0.conda#20d9fee9fd73a480ad7f264c07b4fcf8
 https://conda.anaconda.org/conda-forge/linux-64/netcdf4-1.6.0-nompi_py311hc29c2f0_103.conda#16b9b29705cae1f515d6864ac8ea871e
 https://conda.anaconda.org/conda-forge/noarch/pyopenssl-22.1.0-pyhd8ed1ab_0.tar.bz2#fbfa0a180d48c800f922a10a114a8632
 https://conda.anaconda.org/conda-forge/noarch/tox-conda-0.10.1-pyhd8ed1ab_0.tar.bz2#dfb66cb73e1b830a7cf59edcffc69816
