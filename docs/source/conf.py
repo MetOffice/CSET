@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "CSET"
-copyright = "2022, Met Office"
+copyright = "2022, Met Office and contributors."
 author = "Met Office and Partners"
 
 # -- General configuration ---------------------------------------------------
