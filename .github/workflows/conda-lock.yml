@@ -26,7 +26,7 @@ jobs:
         run: conda update -q conda
 
       - name: Hash existing lock files
-        run: sha256sum requirements/locks/*.txt > ${{ runner.temp }}/lock_file_hashes; echo $TEST_VAR
+        run: sha256sum requirements/locks/*.txt > ${{ runner.temp }}/lock_file_hashes
 
       - name: Update lock files
         run: |
