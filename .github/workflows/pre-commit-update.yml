@@ -1,0 +1,49 @@
+name: "Update pre-commit config"
+
+on:
+  schedule:
+    - cron: "37 5 * * 1"
+  workflow_dispatch:
+  pull_request:
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  update-pre-commit-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Install dependencies
+        run: python3 -m pip install pre-commit
+
+      - name: Hash existing config file
+        run: sha256sum .pre-commit-config.yaml > ${{ runner.temp }}/config_file_hashes
+
+      - name: Update pre-commit config
+        run: |
+          git config --local user.name "$GITHUB_ACTOR"
+          git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          git switch -c "pre-commit-$(sha256sum ${{ runner.temp }}/config_file_hashes | head -c 8)"
+          pre-commit autoupdate
+
+      - name: Create pull requests
+        run: |
+          if $(sha256sum --status -c ${{ runner.temp }}/config_file_hashes); then
+            echo "Config file unchanged. Skipping pull request..."
+            exit 0
+          fi
+          git add .pre-commit-config.yaml
+          git commit -m "[CI] Update .pre-commit-config.yaml"
+          git push --set-upstream origin "pre-commit-$(sha256sum ${{ runner.temp }}/config_file_hashes | head -c 8)"
+          # Create PR on GitHub using GitHub CLI.
+          gh pr create --base main --title "[CI] Update .pre-commit-config.yaml" \
+          --body "Created automatically by GitHub Actions."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
