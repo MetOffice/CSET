@@ -4,8 +4,10 @@ version = "0.0.1"
 description = "Convective Scale Evaluation Tool for evaluation and investigation of regional models."
 authors = [ {name="Met Office"}, {name="NIWA"} ]
 readme = "README.md"
+license = {file="LICENCE"}
 requires-python = ">=3.8"
-# classifiers = []
+classifiers = ["License :: OSI Approved :: Apache Software License",
+               "Topic :: Scientific/Engineering :: GIS"]
 dependencies = ["numpy", "scitools-iris"]
 
 [project.urls]
