@@ -91,7 +91,7 @@ https://conda.anaconda.org/conda-forge/linux-64/markupsafe-2.1.1-py38h0a891b7_2.
 https://conda.anaconda.org/conda-forge/noarch/mdurl-0.1.0-pyhd8ed1ab_0.tar.bz2#f8dab71fdc13b1bf29a01248b156d268
 https://conda.anaconda.org/conda-forge/noarch/munkres-1.1.4-pyh9f0ad1d_0.tar.bz2#2ba8498c1018c1e9c61eb99b973dfe19
 https://conda.anaconda.org/conda-forge/linux-64/mypy_extensions-0.4.3-py38h578d9bd_6.tar.bz2#9a0f6cef3ceb24d46200a0a38cdc2e84
-https://conda.anaconda.org/conda-forge/linux-64/numpy-1.23.5-py38h7042d01_0.conda#d5a3620cd8c1af4115120f21d678507a
+https://conda.anaconda.org/conda-forge/linux-64/numpy-1.24.0-py38hab0fcb9_0.conda#1545fed3d001902cce37651b6cf90a1e
 https://conda.anaconda.org/conda-forge/linux-64/openjpeg-2.5.0-h7d73246_1.tar.bz2#a11b4df9271a8d7917686725aa04c8f2
 https://conda.anaconda.org/conda-forge/noarch/packaging-22.0-pyhd8ed1ab_0.conda#0e8e1bd93998978fc3125522266d12db
 https://conda.anaconda.org/conda-forge/noarch/pathspec-0.10.3-pyhd8ed1ab_0.conda#0f7d2186dd12ef3277e70fd85f9ff6a7
@@ -160,7 +160,7 @@ https://conda.anaconda.org/conda-forge/linux-64/pyproj-3.4.1-py38hf928c62_0.cond
 https://conda.anaconda.org/conda-forge/noarch/tox-3.27.1-pyhd8ed1ab_0.tar.bz2#62b743e1030b17163c70654601afb60d
 https://conda.anaconda.org/conda-forge/linux-64/ukkonen-1.0.1-py38h43d8883_3.tar.bz2#82b3797d08a43a101b645becbb938e65
 https://conda.anaconda.org/conda-forge/linux-64/cartopy-0.21.1-py38h3d2c718_0.conda#55ba6e3a49c4293302262286a49607d8
-https://conda.anaconda.org/conda-forge/noarch/identify-2.5.10-pyhd8ed1ab_0.conda#f63fdec425e83ccfb1ddcb698781fd98
+https://conda.anaconda.org/conda-forge/noarch/identify-2.5.11-pyhd8ed1ab_0.conda#20d9fee9fd73a480ad7f264c07b4fcf8
 https://conda.anaconda.org/conda-forge/linux-64/netcdf4-1.6.0-nompi_py38h6b4b75c_103.conda#ea3d2204fc3a7db7d831daa437a58717
 https://conda.anaconda.org/conda-forge/noarch/pyopenssl-22.1.0-pyhd8ed1ab_0.tar.bz2#fbfa0a180d48c800f922a10a114a8632
 https://conda.anaconda.org/conda-forge/noarch/tox-conda-0.10.1-pyhd8ed1ab_0.tar.bz2#dfb66cb73e1b830a7cf59edcffc69816
