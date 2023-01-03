@@ -66,7 +66,9 @@ Contributing
 Contributions are readily welcome! In addition to reading the working practices
 linked above, the key recommendation is early communication. Open an `issue on
 Github`_ with your proposed change or addition in the design phase, and then
-others can provide guidance early, instead of possibly rejecting work at the
-review stage after you have spent weeks working on it.
+others can provide guidance early. It is also good to make a pull request early,
+even before your code is complete, using either the Draft pull request
+functionality of GitHub, or putting ``WIP`` in the title to indicate it is still
+a work in progress.
 
 .. _issue on GitHub: https://github.com/MetOffice/CSET/issues
