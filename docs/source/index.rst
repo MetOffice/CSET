@@ -28,7 +28,7 @@ Use the side bar to the left to access other pages of the documentation.
 Licence
 -------
 
-Copyright 2022 Met Office and contributors. CSET is distributed under the
+Copyright © 2022-2023 Met Office and contributors. CSET is distributed under the
 `Apache 2.0 License`_, in the hope that it will be useful.
 
 .. _Apache 2.0 License: https://www.apache.org/licenses/LICENSE-2.0
