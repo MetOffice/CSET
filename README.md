@@ -1,29 +1,25 @@
 # CSET
 
-Convective Scale Evaluation Tool for evaluation and investigation of regional
-models.
+CSET is a tool to aid in evaluating regional model configurations. It aims to
+replace the collection of bespoke scripts littering people’s home directories,
+reducing effort wasted on duplicating already existing code. This centralisation
+of diagnostics should also make evaluations more consistent and comparable.
+Development takes place in the CSET repository on GitHub.
 
-Please read [the documentation to learn how to use CSET](https://metoffice.github.io/CSET).
+Please read [the documentation](https://metoffice.github.io/CSET) to learn more
+about CSET, and how to use it.
 
-To get started with developing CSET visit the [Working
+## Contributing
+
+Contributions are readily welcomed! To get started with developing CSET visit
+the [Working
 Practices](https://metoffice.github.io/CSET/working-practices/#getting-started)
-page of the documentation.
+section of the documentation.
 
-<!-- ## Contributing
-State if you are open to contributions and what your requirements are for
-accepting them.
-For people who want to make changes to your project, it's helpful to have some
-documentation on how to get started. Perhaps there is a script that they should
-run or some environment variables that they need to set. Make these steps
-explicit. These instructions could also be useful to your future self.
-You can also document commands to lint the code or run tests. These steps help
-to ensure high code quality and reduce the likelihood that the changes
-inadvertently break something. Having instructions for running tests is
-especially helpful if it requires external setup, such as starting a Selenium
-server for testing in a browser. -->
-
-<!-- ## Acknowledgements
-Show your appreciation to those who have contributed to the project. -->
+In addition to reading the working practices, the key
+recommendation is early communication. Open an [issue on
+Github](https://github.com/MetOffice/CSET/issues) with your proposed change or
+addition in the design phase, and then others can provide guidance early.
 
 ## Licence
 
