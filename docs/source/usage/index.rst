@@ -15,7 +15,7 @@ First make sure you have installed and activated the conda environment.
 
 .. code-block::
 
-    conda create -n cset-dev -f requirements/locks/py310-lock-linux-64.txt
+    conda create -n cset-dev --file requirements/locks/py310-lock-linux-64.txt
     conda activate cset-dev
 
 Then, from the root of the repository, CSET can be installed with :code:`pip install

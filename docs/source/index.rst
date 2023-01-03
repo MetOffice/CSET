@@ -6,9 +6,9 @@ CSET Documentation
 
    usage/index
    working-practices/index
-   design/index
    operators
    genindex
+   GitHub <https://github.com/MetOffice/CSET>
 
 .. note::
 
