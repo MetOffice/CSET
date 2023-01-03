@@ -27,7 +27,7 @@ Show your appreciation to those who have contributed to the project. -->
 
 ## Licence
 
-Copyright 2022 Met Office and contributors.
+Copyright © 2022-2023 Met Office and contributors.
 
 Licensed under the [Apache License, Version 2.0](LICENCE) (the "License"); You
 may obtain a copy of the License at
