@@ -28,6 +28,7 @@ exclude_patterns = []
 
 html_theme = "furo"
 html_static_path = ["_static"]
+html_favicon = "_static/favicon.ico"
 
 # -- LaTeX output configuration ----------------------------------------------
 # https://www.sphinx-doc.org/en/master/latex.html
