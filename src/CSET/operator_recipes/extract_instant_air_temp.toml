@@ -1,0 +1,23 @@
+name = "Extract Instant Air Temperature"
+description = """
+This is a longer description. It should detail what the task takes in and
+outputs.
+"""
+
+[[steps]]
+  operator = "read.read_cubes"
+  [steps.args]
+    [steps.args.stash]
+      operator = "generate_constraints.generate_stash_constraints"
+      input = "m01s03i236"
+
+[[steps]]
+  operator = "filters.filter_cubes"
+  [steps.args]
+    cell_methods = []
+    [steps.args.stash]
+      operator = "generate_constraints.generate_stash_constraints"
+      input = "m01s03i236"
+
+[[steps]]
+  operator = "write.write_cube_to_nc"
