@@ -50,7 +50,7 @@ def hardcoded_recipe(input_file, output_file):
     stash_constraint = generate_constraints.generate_stash_constraints(stash)
     # var_constraint = generate_constraints.generate_var_constraints(varname)
     cubes = read.read_cubes(input_file, stash_constraint)
-    cube = filters.filter_cubes(cubes, stash, ())
+    cube = filters.filter_cubes(cubes, stash, [])
     write.write_cube_to_nc(cube, output_file)
 
 
