@@ -23,17 +23,43 @@ config file describing what operators to run in what order.
 
 import argparse
 from pathlib import Path
+import sys
+
+try:
+    import tomllib
+except ImportError:
+    # tomllib is in standard library from 3.11.
+    import tomli as tomllib
 
 
-def parse_recipe(recipe: str):
-    """
-    Parses the operator recipe and returns a function that runs the required
-    operators.
-    """
-    if recipe is None:
-        return hardcoded_recipe
-    else:
-        raise NotImplementedError
+def recipe_parser(recipe):
+    pass
+
+
+def step_parser(step):
+    pass
+
+
+def args_parser(args: dict) -> str:
+    args_string = []
+    for arg in args:
+        pass
+    return "".join(args_string)
+
+
+class Recipe:
+    def __init__(self, recipe_file_path: Path) -> None:
+        with open(recipe_file_path, encoding="UTF-8") as f:
+            self.recipe = tomllib.loads(f.read())
+
+        if self.recipe == {}:
+            # Remove once the recipe parser is implemented.
+            self.function = hardcoded_recipe
+        else:
+            self.function = recipe_parser(self.recipe)
+
+    def __call__(self, input_file, output_file):
+        return self.function(input_file, output_file)
 
 
 def hardcoded_recipe(input_file, output_file):
@@ -60,7 +86,6 @@ if __name__ == "__main__":
     parser.add_argument("output_file", type=Path, help="output file to write")
     parser.add_argument("recipe", type=Path, help="recipe file to execute")
     args = parser.parse_args()
-    with open(args.recipe, encoding="UTF-8") as f:
-        recipe = f.read()
-    operator_task = parse_recipe(recipe)
-    operator_task(args.input_file, args.output_file)
+
+    operator_task = Recipe(args.recipe)
+    sys.exit(operator_task(args.input_file, args.output_file))
