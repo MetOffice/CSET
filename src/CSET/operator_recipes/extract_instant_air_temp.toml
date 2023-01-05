@@ -5,18 +5,19 @@ outputs.
 """
 
 [[steps]]
-  operator = "generate_constraints.generate_stash_constraints"
-
-[[steps]]
   operator = "read.read_cubes"
+  [steps.args]
+    [steps.args.stash]
+      operator = "generate_constraints.generate_stash_constraints"
+      input = "m01s03i236"
 
 [[steps]]
   operator = "filters.filter_cubes"
-  [steps.extra_args]
+  [steps.args]
     cell_methods = []
-    [steps.extra_args.stash]
+    [steps.args.stash]
       operator = "generate_constraints.generate_stash_constraints"
-      input = "stash"
+      input = "m01s03i236"
 
 [[steps]]
   operator = "write.write_cube_to_nc"
