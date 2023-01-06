@@ -8,7 +8,7 @@ license = {file="LICENCE"}
 requires-python = ">=3.8"
 classifiers = ["License :: OSI Approved :: Apache Software License",
                "Topic :: Scientific/Engineering :: GIS"]
-dependencies = ["numpy", "scitools-iris"]
+dependencies = ["numpy", "scitools-iris", "tomli >= 1.1.0 ; python_version < '3.11'"]
 
 [project.urls]
 Documentation = "https://metoffice.github.io/CSET"

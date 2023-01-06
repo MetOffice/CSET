@@ -6,6 +6,7 @@ dependencies:
   - numpy
   - iris
   - mo_pack # For handling pp files.
+  - tomli >= 1.1.0 ; python_version < "3.11" # tomllib is std library in 3.11
 
   # Build dependencies
   - setuptools>=61.0
