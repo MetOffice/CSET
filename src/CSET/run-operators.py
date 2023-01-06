@@ -57,7 +57,7 @@ class Recipe:
                         args_string.append(
                             f"{key} = {repr(step_parser(step['args'][key]))}"
                         )
-                    elif key == "output_file_path":
+                    elif key == "output_file_path" and step[key] == "output_file_path":
                         args_string.append(f"{key} = output_file_path")
                     else:
                         args_string.append(f"{key} = {repr(step['args'][key])}")
