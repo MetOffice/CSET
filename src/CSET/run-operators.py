@@ -52,7 +52,6 @@ class Recipe:
 
                 step_io = input_file_path
                 exec(recipe_code)
-                return step_io
 
             return operator_task
 
@@ -124,4 +123,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     operator_task = Recipe(args.recipe)
-    sys.exit(operator_task(args.input_file, args.output_file))
+    operator_task(args.input_file, args.output_file)
