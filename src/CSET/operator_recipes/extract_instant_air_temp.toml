@@ -21,3 +21,6 @@ outputs.
 
 [[steps]]
   operator = "operators.write.write_cube_to_nc"
+  [steps.args]
+    # This is a magic key+value becomes the output file path.
+    output_file_path = "output_file_path"
