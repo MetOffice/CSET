@@ -47,9 +47,9 @@ class Recipe:
             )
 
             def operator_task(input_file_path, output_file_path):
-                import CSET.operators as operators
+                import CSET.operators as operators  # noqa: F401
 
-                step_io = input_file_path
+                step_io = input_file_path  # noqa: F841
                 exec(recipe_code)
 
             return operator_task
