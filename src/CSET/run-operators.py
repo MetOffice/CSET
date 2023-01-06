@@ -22,6 +22,7 @@ config file describing what operators to run in what order.
 """
 
 import argparse
+import logging
 from pathlib import Path
 
 try:
@@ -38,13 +39,7 @@ class Recipe:
             for step in recipe["steps"]:
                 recipe_code.append(step_parser(step, primary=True))
             recipe_code = "\n".join(recipe_code)
-            print(
-                "───┤ Generated Code ├───────────────────────────────────────"
-                + "───────────────────\n\n"
-                + recipe_code
-                + "\n\n──────────────────────────────────────────────────────"
-                + "─────────────────────────"
-            )
+            logging.info("Generated Code:\n" + recipe_code)
 
             def operator_task(input_file_path, output_file_path):
                 import CSET.operators as operators  # noqa: F401
@@ -89,7 +84,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "recipe", type=Path, help="recipe file to execute", default="/dev/null"
     )
+    parser.add_argument(
+        "--verbose", "-v", action="count", default=0, help="increase output verbosity"
+    )
     args = parser.parse_args()
-
+    if args.verbose >= 2:
+        logging.basicConfig(level=logging.DEBUG)
+    elif args.verbose >= 1:
+        logging.basicConfig(level=logging.INFO)
     operator_task = Recipe(args.recipe)
     operator_task(args.input_file, args.output_file)
