@@ -50,6 +50,7 @@ class Recipe:
             return operator_task
 
         def step_parser(step) -> str:
+            args = ""
             if "args" in step:
                 args_string = []
                 for key in step["args"].keys():
@@ -57,7 +58,10 @@ class Recipe:
                         args_string.append(
                             f"{key} = {repr(step_parser(step['args'][key]))}"
                         )
-                    elif key == "output_file_path" and step[key] == "output_file_path":
+                    elif (
+                        key == "output_file_path"
+                        and step.get(key) == "output_file_path"
+                    ):
                         args_string.append(f"{key} = output_file_path")
                     else:
                         args_string.append(f"{key} = {repr(step['args'][key])}")
@@ -69,7 +73,7 @@ class Recipe:
                     step_input = repr(step["input"])
             else:
                 step_input = "step_io"
-            return f"step_io = {step.operator}({step_input}, {args})"
+            return f"step_io = {step['operator']}({step_input}, {args})"
 
         with open(recipe_file_path, encoding="UTF-8") as f:
             self.recipe = tomllib.loads(f.read())
