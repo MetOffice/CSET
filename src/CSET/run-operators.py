@@ -84,33 +84,10 @@ class Recipe:
 
         with open(recipe_file_path, encoding="UTF-8") as f:
             self.recipe = tomllib.loads(f.read())
-
-        if self.recipe == {}:
-            # Remove once the recipe parser is implemented.
-            self.function = hardcoded_recipe
-        else:
-            self.function = recipe_parser(self.recipe)
+        self.function = recipe_parser(self.recipe)
 
     def __call__(self, input_file, output_file):
         return self.function(input_file, output_file)
-
-
-def hardcoded_recipe(input_file, output_file):
-    """
-    Hardcoded task chain to extract instantaneous air temperature.
-
-    TODO: Replace with recipe file.
-    """
-    from CSET.operators import generate_constraints, read, write, filters
-
-    stash = "m01s03i236"
-    # varname = "test"
-
-    stash_constraint = generate_constraints.generate_stash_constraints(stash)
-    # var_constraint = generate_constraints.generate_var_constraints(varname)
-    cubes = read.read_cubes(input_file, stash_constraint)
-    cube = filters.filter_cubes(cubes, stash, [])
-    write.write_cube_to_nc(cube, output_file)
 
 
 if __name__ == "__main__":
