@@ -37,7 +37,7 @@ class Recipe:
         def recipe_parser(recipe) -> callable:
             recipe_code = []
             for step in recipe["steps"]:
-                recipe_code.append(step_parser(step))
+                recipe_code.append(step_parser(step, primary=True))
             recipe_code = "\n".join(recipe_code)
             print(recipe_code)
 
@@ -49,14 +49,14 @@ class Recipe:
 
             return operator_task
 
-        def step_parser(step) -> str:
+        def step_parser(step, primary=False) -> str:
             args = ""
             if "args" in step:
                 args_string = []
                 for key in step["args"].keys():
                     if type(step["args"][key]) == dict:
                         args_string.append(
-                            f"{key} = {repr(step_parser(step['args'][key]))}"
+                            f"{key} = {(step_parser(step['args'][key]))}"
                         )
                     elif (
                         key == "output_file_path"
@@ -65,7 +65,7 @@ class Recipe:
                         args_string.append(f"{key} = output_file_path")
                     else:
                         args_string.append(f"{key} = {repr(step['args'][key])}")
-                args = "".join(args_string)
+                args = ", ".join(args_string)
             if "input" in step:
                 if type(step["input"]) == dict:
                     step_input = repr(step_parser(step["input"]))
@@ -73,7 +73,11 @@ class Recipe:
                     step_input = repr(step["input"])
             else:
                 step_input = "step_io"
-            return f"step_io = {step['operator']}({step_input}, {args})"
+            if primary:
+                output_variable = "step_io = "
+            else:
+                output_variable = ""
+            return f"{output_variable}{step['operator']}({step_input}, {args})"
 
         with open(recipe_file_path, encoding="UTF-8") as f:
             self.recipe = tomllib.loads(f.read())
