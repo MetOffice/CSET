@@ -23,7 +23,7 @@ import iris.cube
 
 
 def read_cubes(
-    loadpath: Path, constraint: iris.Constraint = None
+    loadpath: Path, constraint: iris.Constraint = None, **kwargs
 ) -> iris.cube.CubeList:
 
     """
