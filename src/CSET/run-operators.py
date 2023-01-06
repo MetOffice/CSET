@@ -39,7 +39,13 @@ class Recipe:
             for step in recipe["steps"]:
                 recipe_code.append(step_parser(step, primary=True))
             recipe_code = "\n".join(recipe_code)
-            print(recipe_code)
+            print(
+                "───┤ Generated Code ├───────────────────────────────────────"
+                + "───────────────────\n\n"
+                + recipe_code
+                + "\n\n──────────────────────────────────────────────────────"
+                + "─────────────────────────"
+            )
 
             def operator_task(input_file_path, output_file_path):
                 import CSET.operators as operators
