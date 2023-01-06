@@ -55,31 +55,24 @@ class Recipe:
             return operator_task
 
         def step_parser(step, primary=False) -> str:
-            args = ""
-            if "args" in step:
-                args_string = []
-                for key in step["args"].keys():
-                    if type(step["args"][key]) == dict:
-                        args_string.append(
-                            f"{key} = {(step_parser(step['args'][key]))}"
-                        )
-                    elif step["args"][key] == "MAGIC_OUTPUT_PATH":
-                        args_string.append(f"{key} = output_file_path")
-                    else:
-                        args_string.append(f"{key} = {repr(step['args'][key])}")
-                args = ", ".join(args_string)
             if "input" in step:
                 if type(step["input"]) == dict:
-                    step_input = repr(step_parser(step["input"]))
+                    step_input = step_parser(step["input"])
                 else:
                     step_input = repr(step["input"])
             else:
                 step_input = "step_io"
-            if primary:
-                output_variable = "step_io = "
-            else:
-                output_variable = ""
-            return f"{output_variable}{step['operator']}({step_input}, {args})"
+            args = []
+            if "args" in step:
+                for key in step["args"].keys():
+                    if type(step["args"][key]) == dict:
+                        args.append(f"{key}={(step_parser(step['args'][key]))}")
+                    elif step["args"][key] == "MAGIC_OUTPUT_PATH":
+                        args.append(f"{key}=output_file_path")
+                    else:
+                        args.append(f"{key}={repr(step['args'][key])}")
+            args = ", ".join(args)
+            return f"{'step_io = ' if primary else ''}{step['operator']}({step_input}, {args})"
 
         with open(recipe_file_path, encoding="UTF-8") as f:
             self.recipe = tomllib.loads(f.read())
