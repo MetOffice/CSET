@@ -21,7 +21,7 @@ import iris.cube
 
 
 def filter_cubes(
-    cubelist: iris.cube.CubeList, stash: str, methodconstraint: list
+    cubelist: iris.cube.CubeList, stash: str, cell_methods: list
 ) -> iris.cube:
 
     """
@@ -31,7 +31,7 @@ def filter_cubes(
         Cubes to iterate over
     stash: str
         Stash code to extract
-    methodconstraint: list
+    cell_methods: list
         cube.cell_methods for filtering
 
     Returns
@@ -49,7 +49,7 @@ def filter_cubes(
     # Iterate over all cubes and check stash/cell method
     # TODO - need to add additional filtering/checking i.e. time/accum, pressure level...
     for cube in cubelist.extract(stash_constraint):
-        if cube.cell_methods == tuple(methodconstraint):
+        if cube.cell_methods == tuple(cell_methods):
             filtered_cubes.append(cube)
 
     # Check filtered cubes is a cubelist containing one cube.
