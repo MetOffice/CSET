@@ -23,7 +23,6 @@ config file describing what operators to run in what order.
 
 import argparse
 from pathlib import Path
-import sys
 
 try:
     import tomllib
