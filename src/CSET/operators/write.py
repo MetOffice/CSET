@@ -22,7 +22,7 @@ import iris
 import iris.cube
 
 
-def write_cube_to_nc(cube: iris.cube.Cube, output_file_path: Path) -> str:
+def write_cube_to_nc(cube: iris.cube.Cube, file_path: Path) -> str:
 
     """
     A write operator that sits after the read operator. This operator expects
@@ -32,16 +32,16 @@ def write_cube_to_nc(cube: iris.cube.Cube, output_file_path: Path) -> str:
     ---------
     cube: iris.cube.Cube
         Single variable to save
-    output_file_path: Path
+    file_path: Path
         Path to save the cubes too
 
     Returns
     -------
-    output_file_path: Path
+    file_path: Path
         Filepath to saved .nc
     """
     # Ensure that output_file_path is a Path with a .nc suffix
-    output_file_path = Path(output_file_path).with_suffix(".nc")
+    file_path = Path(file_path).with_suffix(".nc")
     # Save the file as nc compliant (iris should handle this)
-    iris.save(cube, output_file_path)
-    return output_file_path
+    iris.save(cube, file_path)
+    return file_path
