@@ -26,7 +26,7 @@ from pathlib import Path
 
 try:
     import tomllib
-except ImportError:
+except ModuleNotFoundError:
     # tomllib is in standard library from 3.11.
     import tomli as tomllib
 
