@@ -63,7 +63,7 @@ class Recipe:
                         args_string.append(f"{key} = {repr(step['args'][key])}")
                 args = "".join(args_string)
             if "input" in step:
-                if type(step("input")) == dict:
+                if type(step["input"]) == dict:
                     step_input = repr(step_parser(step["input"]))
                 else:
                     step_input = repr(step["input"])
