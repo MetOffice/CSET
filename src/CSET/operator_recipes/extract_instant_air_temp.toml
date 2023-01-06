@@ -7,7 +7,7 @@ outputs.
 [[steps]]
   operator = "operators.read.read_cubes"
   [steps.args]
-    [steps.args.stash]
+    [steps.args.constraint]
       operator = "operators.generate_constraints.generate_stash_constraints"
       input = "m01s03i236"
 
