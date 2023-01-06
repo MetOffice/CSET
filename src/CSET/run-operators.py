@@ -65,10 +65,7 @@ class Recipe:
                         args_string.append(
                             f"{key} = {(step_parser(step['args'][key]))}"
                         )
-                    elif (
-                        key == "output_file_path"
-                        and step.get(key) == "output_file_path"
-                    ):
+                    elif step["args"][key] == "MAGIC_OUTPUT_PATH":
                         args_string.append(f"{key} = output_file_path")
                     else:
                         args_string.append(f"{key} = {repr(step['args'][key])}")
