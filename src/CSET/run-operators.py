@@ -32,23 +32,45 @@ except ImportError:
     import tomli as tomllib
 
 
-def recipe_parser(recipe):
-    pass
-
-
-def step_parser(step):
-    pass
-
-
-def args_parser(args: dict) -> str:
-    args_string = []
-    for arg in args:
-        pass
-    return "".join(args_string)
-
-
 class Recipe:
     def __init__(self, recipe_file_path: Path) -> None:
+        def recipe_parser(recipe) -> callable:
+            recipe_code = []
+            for step in recipe["steps"]:
+                recipe_code.append(step_parser(step))
+            recipe_code = "\n".join(recipe_code)
+            print(recipe_code)
+
+            def operator_task(input_file_path, output_file_path):
+                import CSET.operators as operators
+
+                step_io = input_file_path
+                exec(recipe_code)
+
+            return operator_task
+
+        def step_parser(step) -> str:
+            if "args" in step:
+                args_string = []
+                for key in step["args"].keys():
+                    if type(step["args"][key]) == dict:
+                        args_string.append(
+                            f"{key} = {repr(step_parser(step['args'][key]))}"
+                        )
+                    elif key == "output_file_path":
+                        args_string.append(f"{key} = output_file_path")
+                    else:
+                        args_string.append(f"{key} = {repr(step['args'][key])}")
+                args = "".join(args_string)
+            if "input" in step:
+                if type(step("input")) == dict:
+                    step_input = repr(step_parser(step["input"]))
+                else:
+                    step_input = repr(step["input"])
+            else:
+                step_input = "step_io"
+            return f"step_io = {step.operator}({step_input}, {args})"
+
         with open(recipe_file_path, encoding="UTF-8") as f:
             self.recipe = tomllib.loads(f.read())
 
@@ -84,7 +106,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run an operator chain.")
     parser.add_argument("input_file", type=Path, help="input file to read")
     parser.add_argument("output_file", type=Path, help="output file to write")
-    parser.add_argument("recipe", type=Path, help="recipe file to execute")
+    parser.add_argument(
+        "recipe", type=Path, help="recipe file to execute", default="/dev/null"
+    )
     args = parser.parse_args()
 
     operator_task = Recipe(args.recipe)
