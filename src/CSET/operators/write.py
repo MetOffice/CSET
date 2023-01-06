@@ -40,9 +40,8 @@ def write_cube_to_nc(cube: iris.cube.Cube, output_file_path: Path) -> str:
     output_file_path: Path
         Filepath to saved .nc
     """
-    # Ensure that output_file_path is a Path incase it's a string.
-    output_file_path = Path(output_file_path)
-    output_file_path.with_suffix(".nc")
+    # Ensure that output_file_path is a Path with a .nc suffix
+    output_file_path = Path(output_file_path).with_suffix(".nc")
     # Save the file as nc compliant (iris should handle this)
     iris.save(cube, output_file_path)
     return output_file_path

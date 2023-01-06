@@ -52,6 +52,7 @@ class Recipe:
 
                 step_io = input_file_path
                 exec(recipe_code)
+                return step_io
 
             return operator_task
 
