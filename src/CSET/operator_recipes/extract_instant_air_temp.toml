@@ -5,22 +5,22 @@ to a new one.
 """
 
 [[steps]]
-  operator = "operators.read.read_cubes"
+  operator = "read.read_cubes"
   [steps.args]
     [steps.args.constraint]
-      operator = "operators.generate_constraints.generate_stash_constraints"
+      operator = "generate_constraints.generate_stash_constraints"
       input = "m01s03i236"
 
 [[steps]]
-  operator = "operators.filters.filter_cubes"
+  operator = "filters.filter_cubes"
   [steps.args]
     cell_methods = []
     [steps.args.stash]
-      operator = "operators.generate_constraints.generate_stash_constraints"
+      operator = "generate_constraints.generate_stash_constraints"
       input = "m01s03i236"
 
 [[steps]]
-  operator = "operators.write.write_cube_to_nc"
+  operator = "write.write_cube_to_nc"
   [steps.args]
     # This is a magic value that becomes the runtime output file path.
     file_path = "MAGIC_OUTPUT_PATH"
