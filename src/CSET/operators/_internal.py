@@ -1,5 +1,3 @@
-#! /usr/bin/env python3
-
 # Copyright 2022-2023 Met Office and contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,14 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Script to chain together individual operators.
+"""Internal functions used to run operators."""
 
-Currently it is hard coded, but in future it will take an argument specifying a
-config file describing what operators to run in what order.
-"""
-
-import argparse
 import logging
 from pathlib import Path
 
@@ -32,6 +24,44 @@ except ModuleNotFoundError:
     import tomli as tomllib
 
 import CSET.operators
+
+
+def get_operator(name: str):
+    """
+    Increments the input by one.
+
+    Parameters
+    ----------
+    name: str
+        The name of the desired operator.
+
+    Returns
+    -------
+    function
+        The named operator.
+
+    Raises
+    ------
+    ValueError
+        If name is not an operator.
+
+    Examples
+    --------
+    >>> CSET.operators.get_operator("read.read_cubes")
+    <function read_cubes at 0x7fcf9353c8b0>
+    """
+    if name == "read.read_cubes":
+        return CSET.operators.read.read_cubes
+    if name == "write.write_cube_to_nc":
+        return CSET.operators.write.write_cube_to_nc
+    if name == "filters.filter_cubes":
+        return CSET.operators.filters.filter_cubes
+    if name == "generate_constraints.generate_stash_constraints":
+        return CSET.operators.generate_constraints.generate_stash_constraints
+    if name == "generate_constraints.generate_var_constraints":
+        return CSET.operators.generate_constraints.generate_var_constraints
+    else:
+        raise ValueError(f"Unknown operator: {name}")
 
 
 def execute_recipe(recipe_file: Path, input_file: Path, output_file: Path) -> None:
@@ -78,7 +108,7 @@ def execute_recipe(recipe_file: Path, input_file: Path, output_file: Path) -> No
                     args[key] = output_file_path
                 else:
                     args[key] = step["args"][key]
-        operator = CSET.operators.get_operator(step["operator"])
+        operator = CSET.operators._internal.get_operator(step["operator"])
         logging.info(f"operator = {step['operator']}")
         logging.debug(f"step_input = {step_io}")
         logging.debug(f"args = {args}")
@@ -89,21 +119,3 @@ def execute_recipe(recipe_file: Path, input_file: Path, output_file: Path) -> No
     step_io = input_file
     for step in recipe["steps"]:
         step_io = step_parser(step, step_io, output_file)
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run an operator chain.")
-    parser.add_argument("input_file", type=Path, help="input file to read")
-    parser.add_argument("output_file", type=Path, help="output file to write")
-    parser.add_argument(
-        "recipe_file", type=Path, help="recipe file to execute", default="/dev/null"
-    )
-    parser.add_argument(
-        "--verbose", "-v", action="count", default=0, help="increase output verbosity"
-    )
-    args = parser.parse_args()
-    if args.verbose >= 2:
-        logging.basicConfig(level=logging.DEBUG)
-    elif args.verbose >= 1:
-        logging.basicConfig(level=logging.INFO)
-    execute_recipe(args.recipe_file, args.input_file, args.output_file)
