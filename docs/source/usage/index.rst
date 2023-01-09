@@ -5,6 +5,11 @@ Usage Guide
 
     🚧 Section under construction. 🚧
 
+.. toctree::
+    :maxdepth: 2
+
+    operator-recipes
+
 Installation
 ------------
 
@@ -25,4 +30,4 @@ Usage
 -----
 
 The chain of operators can be run with :code:`python3 -m
-CSET.run-operators path/to/input.pp path/to/output.nc`
+CSET.operators /path/to/recipe path/to/input.pp path/to/output.nc`
