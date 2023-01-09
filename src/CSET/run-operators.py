@@ -31,51 +31,7 @@ except ModuleNotFoundError:
     # tomllib is in standard library from 3.11.
     import tomli as tomllib
 
-
-class Recipe:
-    def __init__(self, recipe_file_path: Path) -> None:
-        def recipe_parser(recipe) -> callable:
-            recipe_code = []
-            for step in recipe["steps"]:
-                recipe_code.append(step_parser(step, primary=True))
-            recipe_code = "\n".join(recipe_code)
-            logging.info("Generated Code:\n" + recipe_code)
-
-            def operator_task(input_file_path, output_file_path):
-                import CSET.operators as operators  # noqa: F401
-
-                step_io = input_file_path  # noqa: F841
-                # ! exec is BAD!
-                exec(recipe_code)
-
-            return operator_task
-
-        def step_parser(step, primary=False) -> str:
-            if "input" in step:
-                if type(step["input"]) == dict:
-                    step_input = step_parser(step["input"])
-                else:
-                    step_input = repr(step["input"])
-            else:
-                step_input = "step_io"
-            args = []
-            if "args" in step:
-                for key in step["args"].keys():
-                    if type(step["args"][key]) == dict:
-                        args.append(f"{key}={(step_parser(step['args'][key]))}")
-                    elif step["args"][key] == "MAGIC_OUTPUT_PATH":
-                        args.append(f"{key}=output_file_path")
-                    else:
-                        args.append(f"{key}={repr(step['args'][key])}")
-            args = ", ".join(args)
-            return f"{'step_io = ' if primary else ''}{step['operator']}({step_input}, {args})"
-
-        with open(recipe_file_path, encoding="UTF-8") as f:
-            self.recipe = tomllib.loads(f.read())
-        self.function = recipe_parser(self.recipe)
-
-    def __call__(self, input_file, output_file):
-        return self.function(input_file, output_file)
+import CSET.operators
 
 
 def execute_recipe(recipe_file: Path, input_file: Path, output_file: Path) -> None:
@@ -103,41 +59,36 @@ def execute_recipe(recipe_file: Path, input_file: Path, output_file: Path) -> No
         The recipe file is not well formed.
     """
 
-    def step_parser(step) -> str:
+    def step_parser(step, step_io, output_file_path: Path) -> str:
         if "input" in step:
             if type(step["input"]) == dict:
                 logging.debug(f"Recursing into input: {step['input']}")
-                step_input = step_parser(step["input"])()
+                step_io = step_parser(step["input"], step_io, output_file_path)
             else:
-                step_input = repr(step["input"])
-        else:
-            step_input = "step_io"
-        args = []
+                step_io = step["input"]
+        args = {}
         if "args" in step:
             for key in step["args"].keys():
                 if type(step["args"][key]) == dict:
                     logging.debug(f"Recursing into args: {step['args']}")
-                    args.append(f"{key}={step_parser(step['args'][key])()}")
+                    args[key] = step_parser(
+                        step["args"][key], step_io, output_file_path
+                    )
                 elif step["args"][key] == "MAGIC_OUTPUT_PATH":
-                    args.append(f"{key}=output_file_path")
+                    args[key] = output_file_path
                 else:
-                    args.append(f"{key}={repr(step['args'][key])}")
-        args = ", ".join(args)
-
-        def step_function(step_io):
-            # TODO remove use of exec
-            exec(f"{step['operator']}({step_input}, {args})")
-
-        return step_function
+                    args[key] = step["args"][key]
+        operator = CSET.operators.get_operator(step["operator"])
+        logging.info(f"operator = {step['operator']}")
+        logging.debug(f"step_input = {step_io}")
+        logging.debug(f"args = {args}")
+        return operator(step_io, **args)
 
     with open(recipe_file, encoding="UTF-8") as f:
         recipe = tomllib.loads(f.read())
-
-    import CSET.operators as operators
-
     step_io = input_file
     for step in recipe["steps"]:
-        step_io = step_parser(step)(step_io)
+        step_io = step_parser(step, step_io, output_file)
 
 
 if __name__ == "__main__":
@@ -155,6 +106,4 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.DEBUG)
     elif args.verbose >= 1:
         logging.basicConfig(level=logging.INFO)
-    # operator_task = Recipe(args.recipe_file)
-    # operator_task(args.input_file, args.output_file)
     execute_recipe(args.recipe_file, args.input_file, args.output_file)
