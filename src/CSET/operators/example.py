@@ -22,7 +22,7 @@ callable classes so they can have some setup done, or perhaps have some state
 """
 
 
-def example_increment_operator(n: float) -> float:
+def example_increment_operator(n: float, **kwargs) -> float:
     """
     Increments the input by one.
 
@@ -63,7 +63,7 @@ def example_increment_operator(n: float) -> float:
     return n + 1
 
 
-def example_decrement_operator(n: float) -> float:
+def example_decrement_operator(n: float, **kwargs) -> float:
     """
     Decreases the input by one.
 
