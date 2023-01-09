@@ -22,7 +22,7 @@ import iris
 import iris.cube
 
 
-def write_cube_to_nc(cube: iris.cube.Cube, file_path: Path) -> str:
+def write_cube_to_nc(cube: iris.cube.Cube, file_path: Path, **kwargs) -> str:
 
     """
     A write operator that sits after the read operator. This operator expects

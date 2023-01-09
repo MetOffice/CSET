@@ -21,7 +21,7 @@ import iris.cube
 
 
 def filter_cubes(
-    cubelist: iris.cube.CubeList, stash: str, cell_methods: list
+    cubelist: iris.cube.CubeList, stash: str, cell_methods: list, **kwargs
 ) -> iris.cube:
 
     """
