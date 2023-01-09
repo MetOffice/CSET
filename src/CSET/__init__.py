@@ -12,10 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""This subpackage contains all of CSET's operators."""
-from . import read, write, filters, generate_constraints
-
-# Stop iris giving a warning whenever it loads something.
-from iris import FUTURE
-
-FUTURE.datum_support = True
+"""
+CSET: Convective Scale Evaluation Tool
+"""
