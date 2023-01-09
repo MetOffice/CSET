@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""This subpackage contains all of CSET's operators."""
-from . import RECIPES, read, write, filters, generate_constraints
+"""
+This module has an attribute for each recipe, holding the Path to that recipe.
+"""
 
-# Stop iris giving a warning whenever it loads something.
-from iris import FUTURE
+from pathlib import Path
 
-FUTURE.datum_support = True
+extract_instant_air_temp = (
+    Path(__file__).with_name("extract_instant_air_temp.toml").resolve()
+)
