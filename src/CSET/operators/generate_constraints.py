@@ -20,7 +20,7 @@ import iris
 import iris.cube
 
 
-def generate_stash_constraints(stash: str) -> iris.AttributeConstraint:
+def generate_stash_constraints(stash: str, **kwargs) -> iris.AttributeConstraint:
     """
     Operator that takes a stash string, and uses iris to generate a constraint to be
     passed into the read operator to minimize the CubeList the
@@ -41,12 +41,8 @@ def generate_stash_constraints(stash: str) -> iris.AttributeConstraint:
     stash_constraint: iris.AttributeConstraint
     """
 
-    # Load stash codes as type iris.Attribute as well as names as iris.Constraint
-    if type(stash) == str:
-        stash_constraint = iris.AttributeConstraint(STASH=stash)
-        return stash_constraint
-    else:
-        print("Further constraint conditions required...")
+    stash_constraint = iris.AttributeConstraint(STASH=stash)
+    return stash_constraint
 
 
 def generate_var_constraints(varname: str, **kwargs) -> iris.Constraint:
@@ -67,9 +63,5 @@ def generate_var_constraints(varname: str, **kwargs) -> iris.Constraint:
     varname_constraint: iris.Constraint
     """
 
-    # Need to load stash codes as type iris.Attribute as well as names as iris.Constraint
-    if type(varname) == str:
-        varname_constraint = iris.Constraint(name=varname)
-        return varname_constraint
-    else:
-        print("Further constraint conditions required...")
+    varname_constraint = iris.Constraint(name=varname)
+    return varname_constraint
