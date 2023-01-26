@@ -25,7 +25,6 @@ import iris.cube
 def read_cubes(
     loadpath: Path, constraint: iris.Constraint = None, **kwargs
 ) -> iris.cube.CubeList:
-
     """
     Read operator that takes a path string (can include wildcards), and uses
     iris to load all the cubes matching stash and return a CubeList object.
