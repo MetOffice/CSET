@@ -16,6 +16,8 @@
 Operators to perform various kind of filtering.
 """
 
+import logging
+
 import iris
 import iris.cube
 
@@ -23,7 +25,6 @@ import iris.cube
 def filter_cubes(
     cubelist: iris.cube.CubeList, stash: str, cell_methods: list, **kwargs
 ) -> iris.cube:
-
     """
     Arguments
     ---------
@@ -56,5 +57,4 @@ def filter_cubes(
     if len(filtered_cubes) == 1:
         return filtered_cubes[0]
     else:
-        print("Still multiple cubes, additional filtering required...")
-        print(filtered_cubes)
+        logging.error(f"Multiple cubes satisfy constrains.\n{filtered_cubes}")

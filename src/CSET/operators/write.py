@@ -23,7 +23,6 @@ import iris.cube
 
 
 def write_cube_to_nc(cube: iris.cube.Cube, file_path: Path, **kwargs) -> str:
-
     """
     A write operator that sits after the read operator. This operator expects
     an iris cube object that will then be passed to MET for further processing.
@@ -40,6 +39,7 @@ def write_cube_to_nc(cube: iris.cube.Cube, file_path: Path, **kwargs) -> str:
     file_path: Path
         Filepath to saved .nc
     """
+
     # Ensure that output_file_path is a Path with a .nc suffix
     file_path = Path(file_path).with_suffix(".nc")
     # Save the file as nc compliant (iris should handle this)
