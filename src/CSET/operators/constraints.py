@@ -16,8 +16,6 @@
 Operators to generate constraints to filter with.
 """
 
-import logging
-
 import iris
 import iris.cube
 
