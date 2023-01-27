@@ -34,7 +34,9 @@ def main():
         help="increase output verbosity, may be specified multiple times",
     )
     # https://docs.python.org/3/library/argparse.html#sub-commands
-    subparsers = parser.add_subparsers(title="subcommands")
+    subparsers = parser.add_subparsers(title="subcommands", dest="subparser")
+
+    # Run operator chain
     parser_operators = subparsers.add_parser(
         "operators", help="run a chain of operators"
     )
@@ -44,16 +46,29 @@ def main():
         "recipe_file", type=Path, help="recipe file to execute"
     )
     parser_operators.set_defaults(func=run_operators)
+
+    # Run task
+    parser_task = subparsers.add_parser("task", help="run a MET task")
+    parser_task.set_defaults(func=run_task)
+
     args = parser.parse_args()
     # Logging verbosity
     if args.verbose >= 2:
         logging.basicConfig(level=logging.DEBUG)
     elif args.verbose >= 1:
         logging.basicConfig(level=logging.INFO)
-    args.func(args)
+
+    if args.subparser:
+        args.func(args)
+    else:
+        parser.print_help()
 
 
 def run_operators(args):
     from .operators._internal import execute_recipe
 
     execute_recipe(args.recipe_file, args.input_file, args.output_file)
+
+
+def run_task(args):
+    raise NotImplementedError
