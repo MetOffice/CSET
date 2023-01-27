@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Operators to generate load constraints and pass into read operator.
+Operators to generate constraints to filter with.
 """
 
 import logging
