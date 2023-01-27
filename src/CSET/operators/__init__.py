@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """This subpackage contains all of CSET's operators."""
-from . import RECIPES, read, write, filters, generate_constraints
+from . import RECIPES, constraints, read, write, filters
 from ._internal import execute_recipe
 
 # Stop iris giving a warning whenever it loads something.

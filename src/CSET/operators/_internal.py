@@ -56,10 +56,14 @@ def get_operator(name: str):
         return CSET.operators.write.write_cube_to_nc
     if name == "filters.filter_cubes":
         return CSET.operators.filters.filter_cubes
-    if name == "generate_constraints.generate_stash_constraints":
-        return CSET.operators.generate_constraints.generate_stash_constraints
-    if name == "generate_constraints.generate_var_constraints":
-        return CSET.operators.generate_constraints.generate_var_constraints
+    if name == "constraints.generate_stash_constraint":
+        return CSET.operators.constraints.generate_stash_constraint
+    if name == "constraints.generate_var_constraint":
+        return CSET.operators.constraints.generate_var_constraint
+    if name == "constraints.generate_cell_methods_constraint":
+        return CSET.operators.constraints.generate_cell_methods_constraint
+    if name == "constraints.combine_constraints":
+        return CSET.operators.constraints.combine_constraints
     else:
         raise ValueError(f"Unknown operator: {name}")
 
@@ -114,8 +118,8 @@ def execute_recipe(recipe_file: Path, input_file: Path, output_file: Path) -> No
         logging.debug(f"args = {args}")
         return operator(step_io, **args)
 
-    with open(recipe_file, encoding="UTF-8") as f:
-        recipe = tomllib.loads(f.read())
+    with open(recipe_file, "rb") as f:
+        recipe = tomllib.load(f)
     step_io = input_file
     for step in recipe["steps"]:
         step_io = step_parser(step, step_io, output_file)
