@@ -35,7 +35,7 @@ similar to INI.
     operator = "filters.filter_cubes"
     [steps.args]  # Can specify extra keyword arguments in a sub-table.
       cell_methods = []  # Specify the name of the argument, and its value.
-      [steps.args.stash]
+      [steps.args.constraint]
         # Can nest in another step to use its output as an argument.
         operator = "generate_constraints.generate_stash_constraints"
         # Input implicitly taken from the previous step, but can be overridden.
@@ -47,5 +47,25 @@ similar to INI.
       # This is a magic value that becomes the runtime output file path.
       file_path = "MAGIC_OUTPUT_PATH"
 
+There are a couple of subtle points to keep in mind. While the example above is
+indented for clarity, indentation does not matter. The double square brackets
+around ``[[steps]]`` are significant, as they mean that the steps are ordered
+(specifically they are an `array of tables`_). The below code block shows how
+you can nest multiple levels deep.
+
+.. code-block:: toml
+
+    [[steps]]
+    operator = "filters.filter_cubes"
+    [steps.args]
+      [steps.args.constraint]
+          operator = "constraints.combine_constraints"
+          [steps.args.constraint.args.constraint1]
+            operator = "constraints.generate_stash_constraint"
+            input = "m01s03i236"
+          [steps.args.constraint.args.constraint2]
+            operator = "constraints.generate_cell_methods_constraint"
+            input = []
 
 .. _TOML: https://toml.io/
+.. _array of tables: https://toml.io/en/v1.0.0#array-of-tables

@@ -22,8 +22,8 @@ CSET.operators.filters
 .. automodule:: CSET.operators.filters
    :members:
 
-CSET.operators.example
-----------------------
+CSET.operators.constraints
+--------------------------
 
-.. automodule:: CSET.operators.example
+.. automodule:: CSET.operators.constraints
    :members:
