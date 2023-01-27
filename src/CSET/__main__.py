@@ -12,10 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""This subpackage contains all of CSET's operators."""
-from . import RECIPES, constraints, read, write, filters
+import sys
+from . import main
 
-# Stop iris giving a warning whenever it loads something.
-from iris import FUTURE
-
-FUTURE.datum_support = True
+sys.exit(main())
