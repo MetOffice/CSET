@@ -50,20 +50,16 @@ def get_operator(name: str):
     >>> CSET.operators.get_operator("read.read_cubes")
     <function read_cubes at 0x7fcf9353c8b0>
     """
-    if name == "read.read_cubes":
-        return CSET.operators.read.read_cubes
-    if name == "write.write_cube_to_nc":
-        return CSET.operators.write.write_cube_to_nc
-    if name == "filters.filter_cubes":
-        return CSET.operators.filters.filter_cubes
-    if name == "constraints.generate_stash_constraint":
-        return CSET.operators.constraints.generate_stash_constraint
-    if name == "constraints.generate_var_constraint":
-        return CSET.operators.constraints.generate_var_constraint
-    if name == "constraints.generate_cell_methods_constraint":
-        return CSET.operators.constraints.generate_cell_methods_constraint
-    if name == "constraints.combine_constraints":
-        return CSET.operators.constraints.combine_constraints
+
+    name_sections = name.split(".")
+    operator = CSET.operators
+    for section in name_sections:
+        try:
+            operator = getattr(operator, section)
+        except (AttributeError, TypeError):
+            raise ValueError(f"Unknown operator: {name}")
+    if callable(operator):
+        return operator
     else:
         raise ValueError(f"Unknown operator: {name}")
 
