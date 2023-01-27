@@ -6,8 +6,8 @@ chained together with *operator recipes*. A recipe is a config file that details
 what operators to run, in what order, and with what extra arguments. Each recipe
 forms a complete chain processing an input file and producing an output file.
 
-Operator recipes can be run either from the command line with :code:`python3 -m
-CSET.operators`, or from a python script.
+Operator recipes can be run either from the command line with ``python3 -m
+CSET.operators``, or from a python script.
 
 .. code-block:: python
 
