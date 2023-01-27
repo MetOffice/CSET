@@ -49,7 +49,7 @@ To be able to run the tests or build the documentation you need some
 prerequisite software. The easiest way to get this is with conda. The following
 command will setup a conda environment for you to use. When subsequently
 returning to the code after closing your terminal, you may need to rerun the
-:code:`conda activate cset-dev` command.
+``conda activate cset-dev`` command.
 
 .. code-block:: bash
 
