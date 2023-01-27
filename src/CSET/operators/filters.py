@@ -16,8 +16,6 @@
 Operators to perform various kind of filtering.
 """
 
-import logging
-
 import iris
 import iris.cube
 
@@ -45,5 +43,6 @@ def filter_cubes(
     if len(filtered_cubes) == 1:
         return filtered_cubes[0]
     else:
-        logging.error(f"Multiple cubes satisfy constrains.\n{filtered_cubes}")
-        raise ValueError(f"Constraint doesn't produce single cube. {constraint}")
+        raise ValueError(
+            f"Constraint doesn't produce single cube. {constraint}\n{filtered_cubes}"
+        )
