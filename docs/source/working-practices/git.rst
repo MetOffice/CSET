@@ -25,7 +25,7 @@ Setting up git
 
 If you don't yet have it, git can be installed from the `official git website`_.
 On Linux it can be acquired through your package manager, though it is often
-installed by default. The command :code:`git help` can be used to check if it is
+installed by default. The command ``git help`` can be used to check if it is
 installed, and will give you an overview of some common commands.
 
 Once installed, the following command will set up your identity on git, and only
@@ -128,8 +128,8 @@ contains everything related to git, and is entirely local.
 This is what you actually edit while coding.
 
 **Index**: AKA the staging area. The index will become the next commit, and is
-added to via the :code:`git add <file>` command. To unstage changes use the
-:code:`git restore --staged <file>` command. Having this index makes it easier
+added to via the ``git add <file>`` command. To unstage changes use the
+``git restore --staged <file>`` command. Having this index makes it easier
 to split a change into multiple commits if desired.
 
 **Commits**: The core unit of git. Each commit describes the state of the
@@ -148,12 +148,12 @@ git rebase
 ~~~~~~~~~~
 
 A rebase changes the base commit from which your changes are made. The rebase
-command ordinarily takes the form :code:`git rebase [new-base-branch]`, which
+command ordinarily takes the form ``git rebase [new-base-branch]``, which
 starts a rebase. Your branch will be reset so it is the same as the new base,
 and the changes you have made will be applied to it sequentially.
 
 Git will try and do this automatically, however if a conflict occurs it needs to
-be manually resolved before running :code:`git rebase --continue` to finish the
+be manually resolved before running ``git rebase --continue`` to finish the
 rebase.
 
 There is a good overview of rebasing in `these slides`_, and the `official
