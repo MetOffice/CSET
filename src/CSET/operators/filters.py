@@ -23,17 +23,15 @@ import iris.cube
 
 
 def filter_cubes(
-    cubelist: iris.cube.CubeList, stash: str, cell_methods: list, **kwargs
-) -> iris.cube:
+    cubelist: iris.cube.CubeList, constraint: iris.Constraint, **kwargs
+) -> iris.cube.Cube:
     """
     Arguments
     ---------
     cubelist: iris.cube.CubeList
         Cubes to iterate over
-    stash: str
-        Stash code to extract
-    cell_methods: list
-        cube.cell_methods for filtering
+    constraint: iris.Constraint
+        Constraint to extract
 
     Returns
     -------
@@ -41,20 +39,11 @@ def filter_cubes(
         Single variable
     """
 
-    # Initialise empty cubelist to append filtered cubes to
-    filtered_cubes = iris.cube.CubeList()
-
-    # Initialise stash constraint
-    stash_constraint = iris.AttributeConstraint(STASH=stash)
-
-    # Iterate over all cubes and check stash/cell method
-    # TODO - need to add additional filtering/checking i.e. time/accum, pressure level...
-    for cube in cubelist.extract(stash_constraint):
-        if cube.cell_methods == tuple(cell_methods):
-            filtered_cubes.append(cube)
+    filtered_cubes = cubelist.extract(constraint)
 
     # Check filtered cubes is a cubelist containing one cube.
     if len(filtered_cubes) == 1:
         return filtered_cubes[0]
     else:
         logging.error(f"Multiple cubes satisfy constrains.\n{filtered_cubes}")
+        raise ValueError(f"Constraint doesn't produce single cube. {constraint}")
