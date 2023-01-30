@@ -16,10 +16,10 @@ to a new one.
   [steps.args]
     [steps.args.constraint]
         operator = "constraints.combine_constraints"
-        [steps.args.constraint.args.constraint1]
+        [steps.args.constraint.input]
           operator = "constraints.generate_stash_constraint"
           input = "m01s03i236"
-        [steps.args.constraint.args.constraint2]
+        [steps.args.constraint.args.additional_argument]
           operator = "constraints.generate_cell_methods_constraint"
           input = []
 
