@@ -19,9 +19,8 @@ def test_filters_operator():
     """Filter cube and verify."""
     cubes = read.read_cubes("tests/test_data/air_temp.nc")
     constraint = constraints.combine_constraints(
-        "",
-        a=constraints.generate_stash_constraint("m01s03i236"),
-        b=constraints.generate_cell_methods_constraint([]),
+        constraints.generate_stash_constraint("m01s03i236"),
+        a=constraints.generate_cell_methods_constraint([]),
     )
     cube = filters.filter_cubes(cubes, constraint)
     assert cube.cell_methods == ()
