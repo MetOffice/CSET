@@ -88,6 +88,7 @@ def generate_cell_methods_constraint(cell_methods: list, **kwargs) -> iris.Const
     return cell_methods_constraint
 
 
+# Is there any way to avoid this unused_positional_argument?
 def combine_constraints(unused_positional_argument, **kwargs) -> iris.Constraint:
     """
     Operator that combines multiple constraints into one.

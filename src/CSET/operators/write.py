@@ -22,15 +22,17 @@ import iris
 import iris.cube
 
 
-def write_cube_to_nc(cube: iris.cube.Cube, file_path: Path, **kwargs) -> str:
+def write_cube_to_nc(
+    cube: iris.cube.Cube or iris.cube.CubeList, file_path: Path, **kwargs
+) -> str:
     """
     A write operator that sits after the read operator. This operator expects
     an iris cube object that will then be passed to MET for further processing.
 
     Arguments
     ---------
-    cube: iris.cube.Cube
-        Single variable to save
+    cube: iris.cube.Cube or iris.cube.CubeList
+        Data to save
     file_path: Path
         Path to save the cubes too
 
