@@ -41,18 +41,16 @@ def test_combine_constraints():
     stash_constraint = constraints.generate_stash_constraint("m01s03i236")
     var_constraint = constraints.generate_var_constraint("test")
     combined_constraint = constraints.combine_constraints(
-        "",
-        a=stash_constraint,
-        b=var_constraint,
+        stash_constraint,
+        a=var_constraint,
     )
     expected_combined_constraint = "ConstraintCombination(ConstraintCombination(Constraint(), AttributeConstraint({'STASH': 'm01s03i236'}), <built-in function and_>), Constraint(name='test'), <built-in function and_>)"
     assert repr(combined_constraint) == expected_combined_constraint
     var_constraint_2 = constraints.generate_var_constraint("test_2")
     combined_constraint = constraints.combine_constraints(
-        "",
-        a=stash_constraint,
-        b=var_constraint,
-        c=var_constraint_2,
+        stash_constraint,
+        a=var_constraint,
+        b=var_constraint_2,
     )
     expected_combined_constraint = "ConstraintCombination(ConstraintCombination(ConstraintCombination(Constraint(), AttributeConstraint({'STASH': 'm01s03i236'}), <built-in function and_>), Constraint(name='test'), <built-in function and_>), Constraint(name='test_2'), <built-in function and_>)"
     assert repr(combined_constraint) == expected_combined_constraint
