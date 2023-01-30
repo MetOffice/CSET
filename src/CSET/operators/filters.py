@@ -41,7 +41,7 @@ def filter_cubes(
 
     filtered_cubes = cubelist.extract(constraint)
 
-    # Check filtered cubes is a cubelist containing one cube.
+    # Check filtered cubes is a CubeList containing one cube.
     if len(filtered_cubes) == 1:
         return filtered_cubes[0]
     else:
