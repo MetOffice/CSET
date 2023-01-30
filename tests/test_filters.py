@@ -12,13 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from CSET.operators import read, filters
+from CSET.operators import read, filters, constraints
 
 
 def test_filters_operator():
     """Filter cube and verify."""
     cubes = read.read_cubes("tests/test_data/air_temp.nc")
-    cube = filters.filter_cubes(cubes, "m01s03i236", ())
+    constraint = constraints.combine_constraints(
+        "",
+        a=constraints.generate_stash_constraint("m01s03i236"),
+        b=constraints.generate_cell_methods_constraint([]),
+    )
+    cube = filters.filter_cubes(cubes, constraint)
     assert cube.cell_methods == ()
     expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>"
     assert repr(cube) == expected_cube
