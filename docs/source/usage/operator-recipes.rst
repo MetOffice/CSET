@@ -6,8 +6,8 @@ chained together with *operator recipes*. A recipe is a config file that details
 what operators to run, in what order, and with what extra arguments. Each recipe
 forms a complete chain processing an input file and producing an output file.
 
-Operator recipes can be run either from the command line with ``python3 -m
-CSET.operators``, or from a python script.
+Operator recipes can be run either with the ``cset operators`` command, or from
+a python script.
 
 .. code-block:: python
 
@@ -19,8 +19,9 @@ CSET.operators``, or from a python script.
 Recipe format
 -------------
 
-The recipes are written in `TOML`_, a configuration language that is very
-similar to INI.
+The recipes are text files written in `TOML`_, a configuration language that is
+very similar to INI. They are saved with the ``.toml`` extension. Below is a
+commented example recipe:
 
 .. code-block:: toml
 
