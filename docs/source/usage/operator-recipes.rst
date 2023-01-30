@@ -34,10 +34,10 @@ commented example recipe:
 
     [[steps]]
     operator = "filters.filter_cubes"
-    [steps.args]  # Can specify extra keyword arguments in a sub-table.
-      cell_methods = []  # Specify the name of the argument, and its value.
+    # Can specify extra keyword arguments in an args sub-table.
+    [steps.args]
       [steps.args.constraint]
-        # Can nest in another step to use its output as an argument.
+        # Can nest in another operator to use its output as an argument.
         operator = "generate_constraints.generate_stash_constraints"
         # Input implicitly taken from the previous step, but can be overridden.
         input = "m01s03i236"
@@ -45,14 +45,17 @@ commented example recipe:
     [[steps]]
     operator = "write.write_cube_to_nc"
     [steps.args]
-      # This is a magic value that becomes the runtime output file path.
+      # Specify the name of the argument, and its value.
       file_path = "MAGIC_OUTPUT_PATH"
+      # "MAGIC_OUTPUT_PATH" is special and becomes the runtime output file path.
+
 
 There are a couple of subtle points to keep in mind. While the example above is
 indented for clarity, indentation does not matter. The double square brackets
 around ``[[steps]]`` are significant, as they mean that the steps are ordered
 (specifically they are an `array of tables`_). The below code block shows how
-you can nest multiple levels deep.
+you can nest operators multiple levels deep. For details of the specific
+operators involved see the :doc:`/operators` page.
 
 .. code-block:: toml
 
@@ -61,11 +64,13 @@ you can nest multiple levels deep.
     [steps.args]
       [steps.args.constraint]
           operator = "constraints.combine_constraints"
-          [steps.args.constraint.args.constraint1]
+          # Even the input override can be another operator.
+          [steps.args.constraint.args.input]
             operator = "constraints.generate_stash_constraint"
             input = "m01s03i236"
-          [steps.args.constraint.args.constraint2]
+          [steps.args.constraint.args.constraint1]
             operator = "constraints.generate_cell_methods_constraint"
+            # Filtering for unprocessed value, i.e. no methods applied.
             input = []
 
 .. _TOML: https://toml.io/
