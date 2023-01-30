@@ -34,7 +34,8 @@ commented example recipe:
 
     [[steps]]
     operator = "filters.filter_cubes"
-    [steps.args]  # Can specify extra keyword arguments in a sub-table.
+    # Can specify extra keyword arguments in an args sub-table.
+    [steps.args]
       [steps.args.constraint]
         # Can nest in another operator to use its output as an argument.
         operator = "generate_constraints.generate_stash_constraints"
