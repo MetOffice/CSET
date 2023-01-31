@@ -16,8 +16,7 @@
 This module has an attribute for each recipe, holding the Path to that recipe.
 """
 
-from pathlib import Path
+from importlib.resources import files
+import CSET.operators.RECIPES as recipes
 
-extract_instant_air_temp = (
-    Path(__file__).with_name("extract_instant_air_temp.toml").resolve()
-)
+extract_instant_air_temp = files(recipes).joinpath("extract_instant_air_temp.toml")
