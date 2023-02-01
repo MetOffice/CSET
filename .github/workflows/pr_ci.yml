@@ -18,7 +18,7 @@ jobs:
           key: tox|tests|${{ runner.os }}-${{ runner.arch}}|${{ hashFiles('requirements/locks/*') }}
           path: .tox
       - name: Run tests
-        run: tox -e py38-linux-tests,py39-linux-tests,py310-linux-tests
+        run: tox -e py38-linux-tests,py39-linux-tests,py310-linux-tests,py311-linux-tests
 
   pre-commit:
     runs-on: ubuntu-latest
