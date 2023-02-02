@@ -6,8 +6,11 @@ dependencies:
   - numpy
   - iris
   - mo_pack # For handling pp files.
-  - tomli >= 1.1.0 ; python_version < "3.11" # tomllib is std library in 3.11
-  - importlib_resources >= 3.0.0 ; python_version < "3.9" # stdlib from 3.9
+  # Unfortunately selectors are not supported by conda currently, so unused
+  # dependencies are included. See https://github.com/conda/conda/issues/8089
+  # for current status.
+  - tomli >= 1.1.0 # in std library from 3.11
+  - importlib_resources >= 3.0.0 # in stdlib from 3.9
 
   # Build dependencies
   - setuptools>=61.0
