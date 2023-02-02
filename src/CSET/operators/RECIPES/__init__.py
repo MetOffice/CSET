@@ -15,8 +15,11 @@
 """
 This module has an attribute for each recipe, holding the Path to that recipe.
 """
-
-from importlib.resources import files
+try:
+    from importlib.resources import files
+except ImportError:
+    # importlib has the files API from python 3.9
+    from importlib_resources import files
 import CSET.operators.RECIPES as recipes
 
 extract_instant_air_temp = files(recipes).joinpath("extract_instant_air_temp.toml")
