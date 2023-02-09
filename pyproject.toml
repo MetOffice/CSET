@@ -65,7 +65,7 @@ conda_spec =
     py310-linux: {toxinidir}{/}requirements{/}locks{/}py310-lock-linux-64.txt
     py311-linux: {toxinidir}{/}requirements{/}locks{/}py311-lock-linux-64.txt
 usedevelop = true
-commands = pytest {posargs}
+commands = pytest --cov {posargs}
 
 [testenv:py{38,39,310,311}-{linux,osx,win}-docs]
 description = Invoke sphinx-build to build the HTML docs.
