@@ -25,6 +25,7 @@ dependencies:
   - tox
   - tox-conda
   - pytest
+  - pytest-cov
 
   # Documentation dependencies
   - sphinx
