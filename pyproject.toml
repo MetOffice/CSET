@@ -2,13 +2,20 @@
 name = "CSET"
 version = "0.0.1"
 description = "Convective Scale Evaluation Tool for evaluation and investigation of regional models."
-authors = [ {name="Met Office"}, {name="NIWA"} ]
+authors = [{ name = "Met Office" }, { name = "NIWA" }]
 readme = "README.md"
-license = {file="LICENCE"}
+license = { file = "LICENCE" }
 requires-python = ">=3.8"
-classifiers = ["License :: OSI Approved :: Apache Software License",
-               "Topic :: Scientific/Engineering :: GIS"]
-dependencies = ["numpy", "scitools-iris", "tomli >= 1.1.0 ; python_version < '3.11'", "importlib_resources >= 3.0.0 ; python_version < '3.9'"]
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Topic :: Scientific/Engineering :: GIS",
+]
+dependencies = [
+    "numpy",
+    "scitools-iris",
+    "tomli >= 1.1.0 ; python_version < '3.11'",
+    "importlib_resources >= 3.0.0 ; python_version < '3.9'",
+]
 
 [project.urls]
 Documentation = "https://metoffice.github.io/CSET"
@@ -22,12 +29,9 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
-addopts = [
-    "--import-mode=importlib",
-    ]
-pythonpath = [
-  "src"
-    ]
+addopts = ["--import-mode=importlib"]
+pythonpath = ["src"]
+filterwarnings = ['ignore::DeprecationWarning:pytest']
 
 [tool.tox]
 legacy_tox_ini = '''
@@ -65,7 +69,7 @@ conda_spec =
     py310-linux: {toxinidir}{/}requirements{/}locks{/}py310-lock-linux-64.txt
     py311-linux: {toxinidir}{/}requirements{/}locks{/}py311-lock-linux-64.txt
 usedevelop = true
-commands = pytest {posargs}
+commands = pytest --cov {posargs}
 
 [testenv:py{38,39,310,311}-{linux,osx,win}-docs]
 description = Invoke sphinx-build to build the HTML docs.
