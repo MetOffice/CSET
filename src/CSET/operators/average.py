@@ -25,7 +25,7 @@ def time_mean(
     field: str,
     start_time: datetime = None,
     end_time: datetime = None,
-    **kwargs
+    **kwargs,
 ) -> CubeList:
     """
     Averages a field over the time period specified.

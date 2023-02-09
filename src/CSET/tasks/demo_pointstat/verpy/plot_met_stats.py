@@ -250,7 +250,6 @@ def main():
             comp["output"] = output
 
         if output == "timeseries":
-
             for comp in components:
                 comp["jobid"] += "TS"
                 comp["diffopts"] = ["True", "split diff"]
