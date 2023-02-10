@@ -28,6 +28,9 @@ jobs:
   coverage-report:
     runs-on: ubuntu-latest
     needs: tests
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -46,6 +49,17 @@ jobs:
           path: htmlcov/
           retention-days: 10
           if-no-files-found: error
+      - name: Add report to PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # This will link to a hosted version of the HTML report when I get
+          # that sorted.
+          report_url="https://www.example.com"
+
+          echo "[![Coverage](https://img.shields.io/badge/coverage-$(coverage json --fail-under=0 -qo - | jq -r .totals.percent_covered_display)%25-blue?style=for-the-badge)](${report_url})
+          [Code coverage report](${report_url})" > ${{ runner.temp }}/cov-report.md
+          gh pr comment ${{ github.head_ref }} --body-file ${{ runner.temp }}/cov-report.md
 
   pre-commit:
     runs-on: ubuntu-latest

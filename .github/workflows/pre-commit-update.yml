@@ -33,6 +33,8 @@ jobs:
           pre-commit autoupdate
 
       - name: Create pull requests
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           if $(sha256sum --status -c ${{ runner.temp }}/config_file_hashes); then
             echo "Config file unchanged. Skipping pull request..."
@@ -44,5 +46,3 @@ jobs:
           # Create PR on GitHub using GitHub CLI.
           gh pr create --base main --title "[CI] Update .pre-commit-config.yaml" \
           --body "Created automatically by GitHub Actions."
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
