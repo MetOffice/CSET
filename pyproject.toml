@@ -29,9 +29,18 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
-addopts = ["--import-mode=importlib"]
+addopts = ["--import-mode=importlib", "--cov"]
 pythonpath = ["src"]
 filterwarnings = ['ignore::DeprecationWarning:pytest']
+
+[tool.coverage.run]
+branch = true
+relative_files = true
+source = ["src"]
+
+[tool.coverage.report]
+# This should be steadily increased to ~95% as we add more tests.
+fail_under = 70.0
 
 [tool.tox]
 legacy_tox_ini = '''
@@ -69,7 +78,7 @@ conda_spec =
     py310-linux: {toxinidir}{/}requirements{/}locks{/}py310-lock-linux-64.txt
     py311-linux: {toxinidir}{/}requirements{/}locks{/}py311-lock-linux-64.txt
 usedevelop = true
-commands = pytest --cov {posargs}
+commands = pytest {posargs}
 
 [testenv:py{38,39,310,311}-{linux,osx,win}-docs]
 description = Invoke sphinx-build to build the HTML docs.
