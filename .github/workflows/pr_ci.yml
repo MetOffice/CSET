@@ -19,6 +19,29 @@ jobs:
           path: .tox
       - name: Run tests
         run: tox -e py38-linux-tests,py39-linux-tests,py310-linux-tests,py311-linux-tests
+      - uses: actions/upload-artifact@v3
+        with:
+          name: coverage-data
+          path: .coverage
+          retention-days: 1
+
+  coverage-report:
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: coverage-data
+      - name: Install dependencies
+        run: python3 -m pip install coverage
+      - name: Generate coverage report
+        run: coverage html
+      - uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: htmlcov/
+          retention-days: 10
+          if-no-files-found: error
 
   pre-commit:
     runs-on: ubuntu-latest
