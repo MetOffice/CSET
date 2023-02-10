@@ -48,6 +48,7 @@ legacy_tox_ini = '''
 requires = tox-conda
 isolated_build = True
 envlist =
+    coverage-clean
     py310-linux-tests
     py310-linux-docs
 
@@ -78,7 +79,8 @@ conda_spec =
     py310-linux: {toxinidir}{/}requirements{/}locks{/}py310-lock-linux-64.txt
     py311-linux: {toxinidir}{/}requirements{/}locks{/}py311-lock-linux-64.txt
 usedevelop = true
-commands = pytest {posargs}
+depends = coverage-clean
+commands = pytest --cov-append {posargs}
 
 [testenv:py{38,39,310,311}-{linux,osx,win}-docs]
 description = Invoke sphinx-build to build the HTML docs.
@@ -89,4 +91,9 @@ conda_spec =
     py311-linux: {toxinidir}{/}requirements{/}locks{/}py311-lock-linux-64.txt
 usedevelop = true
 commands = sphinx-build -d "docs/build/doctree" docs/source "docs/build/html" --color -W -bhtml {posargs}
+
+[testenv:coverage-clean]
+deps = coverage
+skip_install = true
+commands = coverage erase
 '''
