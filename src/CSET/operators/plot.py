@@ -21,7 +21,7 @@ from iris.cube import CubeList
 
 
 def spacial_plot_global(
-    cube: CubeList, field: str, filename: Path, overwrite: bool = False
+    cube: CubeList, field: str, filename: Path, overwrite: bool = False, **kwargs
 ) -> Path:
     """
     Plots a spacial variable onto a global map.

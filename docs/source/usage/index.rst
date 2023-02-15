@@ -5,6 +5,11 @@ Usage Guide
 
     🚧 Section under construction. 🚧
 
+.. toctree::
+    :maxdepth: 2
+
+    operator-recipes
+
 Installation
 ------------
 
@@ -24,5 +29,19 @@ Then, from the root of the repository, CSET can be installed with :code:`pip ins
 Usage
 -----
 
-The chain of operators can be run with :code:`python3 -m
-CSET.run-operators path/to/input.pp path/to/output.nc`
+cset operators
+~~~~~~~~~~~~~~
+
+The chain of operators can be run with ``cset operators path/to/input.pp
+path/to/output.nc /path/to/recipe``. Additional help is available with the
+``--help`` option. The recipe format is described on the :doc:`operator-recipes`
+page.
+
+cset task
+~~~~~~~~~
+
+.. attention::
+
+    🚧 Currently unimplemented. 🚧
+
+``cset task [something...]``
