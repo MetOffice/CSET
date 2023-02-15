@@ -97,7 +97,7 @@ def combine_constraints(input_constraint: iris.Constraint, **kwargs) -> iris.Con
     input_constraint: iris.Constraint
         First constraint to combine.
     additional_constraint_1: iris.Constraint
-        Seconds constraint to combine. This must be a named argument.
+        Second constraint to combine. This must be a named argument.
     additional_constraint_2: iris.Constraint
         There can be any number of additional constraint, they just need unique
         names.

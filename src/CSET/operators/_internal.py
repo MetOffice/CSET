@@ -96,23 +96,23 @@ def execute_recipe(recipe_file: Path, input_file: Path, output_file: Path) -> No
                 step_io = step_parser(step["input"], step_io, output_file_path)
             else:
                 step_io = step["input"]
-        args = {}
+        kwargs = {}
         if "args" in step:
             for key in step["args"].keys():
                 if type(step["args"][key]) == dict:
                     logging.debug(f"Recursing into args: {step['args']}")
-                    args[key] = step_parser(
+                    kwargs[key] = step_parser(
                         step["args"][key], step_io, output_file_path
                     )
                 elif step["args"][key] == "MAGIC_OUTPUT_PATH":
-                    args[key] = output_file_path
+                    kwargs[key] = output_file_path
                 else:
-                    args[key] = step["args"][key]
+                    kwargs[key] = step["args"][key]
         operator = get_operator(step["operator"])
         logging.info(f"operator = {step['operator']}")
         logging.debug(f"step_input = {step_io}")
-        logging.debug(f"args = {args}")
-        return operator(step_io, **args)
+        logging.debug(f"args = {kwargs}")
+        return operator(step_io, **kwargs)
 
     with open(recipe_file, "rb") as f:
         recipe = tomllib.load(f)
