@@ -46,11 +46,6 @@ def main():
         "recipe_file", type=Path, help="recipe file to execute"
     )
     parser_operators.set_defaults(func=run_operators)
-
-    # Run task
-    parser_task = subparsers.add_parser("task", help="run a MET task")
-    parser_task.set_defaults(func=run_task)
-
     args = parser.parse_args()
     # Logging verbosity
     if args.verbose >= 2:
@@ -68,7 +63,3 @@ def run_operators(args):
     from .operators._internal import execute_recipe
 
     execute_recipe(args.recipe_file, args.input_file, args.output_file)
-
-
-def run_task(args):
-    raise NotImplementedError
