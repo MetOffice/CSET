@@ -42,7 +42,7 @@ jobs:
             exit 0
           fi
           git add requirements/locks/*.txt
-          git commit -m "[CI] Update conda lock files."
+          git commit -m "[CI] Update conda lock files"
           git push --set-upstream origin "conda-lock-$(sha256sum ${{ runner.temp }}/lock_file_hashes | head -c 8)"
           # Create PR on GitHub using GitHub CLI.
           gh pr create --base main --title "[CI] Update conda lock files" \
