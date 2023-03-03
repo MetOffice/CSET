@@ -43,21 +43,21 @@ jobs:
           name: coverage-data
       - name: Generate coverage report
         run: coverage html
-      - uses: actions/upload-artifact@v3
-        with:
-          name: coverage-report
-          path: htmlcov/
-          retention-days: 10
-          if-no-files-found: error
+      # - uses: actions/upload-artifact@v3
+      #   with:
+      #     name: coverage-report
+      #     path: htmlcov/
+      #     retention-days: 10
+      #     if-no-files-found: error
       - name: Add report to PR
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # This will link to a hosted version of the HTML report when I get
-          # that sorted.
-          report_url="https://www.example.com"
-
-          echo "[![Coverage](https://img.shields.io/badge/coverage-$(coverage json --fail-under=0 -qo - | jq -r .totals.percent_covered_display)%25-blue?style=for-the-badge)](${report_url})
+          # This links to a hosted version of the HTML report.
+          tar -czf coverage-report.tar.gz htmlcov/
+          report_url=$(curl --data-binary @coverage-report.tar.gz https://tmpweb.net)
+          badge_options=$(coverage json --fail-under=0 -qo - | jq -r .totals.percent_covered_display)%25-blue?style=for-the-badge)
+          echo "[![Coverage](https://img.shields.io/badge/coverage-${badge_options}](${report_url})
           [Code coverage report](${report_url})" > ${{ runner.temp }}/cov-report.md
           gh pr comment ${{ github.head_ref }} --body-file ${{ runner.temp }}/cov-report.md
 
