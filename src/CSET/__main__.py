@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-from . import main
+import sys  # pragma: no cover
+from . import main  # pragma: no cover
 
-sys.exit(main())
+sys.exit(main())  # pragma: no cover
