@@ -41,6 +41,14 @@ def test_get_operator():
         exception_occurred = True
     assert exception_occurred
 
+    # Test exception if operator isn't a function.
+    exception_occurred = False
+    try:
+        internal.get_operator("RECIPES.extract_instant_air_temp")
+    except ValueError:
+        exception_occurred = True
+    assert exception_occurred
+
 
 def test_execute_recipe():
     """Execute recipe and test exceptions"""
