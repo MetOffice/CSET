@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from pathlib import Path
-import sys
 import tempfile
 
 import CSET.operators.RECIPES as RECIPES
@@ -67,23 +66,10 @@ def test_execute_recipe():
 
     # Test happy case (this is really an integration test).
     with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
-        exception_happened = False
         recipe_file = RECIPES.extract_instant_air_temp
-        try:
-            internal.execute_recipe(recipe_file, input_file, output_file.name)
-        except Exception as e:
-            print(e, file=sys.stderr)
-            exception_happened = True
-        assert not exception_happened
+        internal.execute_recipe(recipe_file, input_file, output_file.name)
 
     # Test weird edge cases. (also tests paths not being pathlib Paths)
     with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
-        exception_happened = False
-        try:
-            internal.execute_recipe(
-                "tests/test_recipe.toml", input_file, output_file.name
-            )
-        except Exception as e:
-            print(e, file=sys.stderr)
-            exception_happened = True
-        assert not exception_happened
+        recipe_file = "tests/test_data/test_recipe.toml"
+        internal.execute_recipe(recipe_file, input_file, output_file.name)
