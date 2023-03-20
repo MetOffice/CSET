@@ -31,7 +31,7 @@ def read_cubes(
 
     Arguments
     ---------
-    loadpath: Path or str
+    loadpath: pathlike
         Path to where .pp/.nc files are located
     constraint: iris.Constraint or iris.ConstraintCombination, optional
         Constraints to filter by

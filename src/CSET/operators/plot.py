@@ -34,7 +34,7 @@ def spacial_plot_global(
     field: str
         The variable to plot.
 
-    filename: Path or pathlike
+    filename: pathlike
         The path of the plot to write.
 
     overwrite: bool, default False
