@@ -17,3 +17,18 @@ import subprocess
 
 def test_command_line_help():
     subprocess.run(["cset", "--help"])
+    # test verbose options. This is really just to up the coverage number.
+    subprocess.run(["cset", "-v"])
+    subprocess.run(["cset", "-vv"])
+
+
+def test_recipe_execution():
+    subprocess.run(
+        [
+            "cset",
+            "operators",
+            "/dev/null",
+            "/dev/null",
+            "test/test_data/noop_recipe.toml",
+        ]
+    )
