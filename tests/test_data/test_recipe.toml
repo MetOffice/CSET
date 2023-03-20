@@ -6,4 +6,4 @@ test coverage. It doesn't read any data or write anything.
 [[steps]]
   operator = "constraints.generate_stash_constraint"
   input = "m01s03i236"
-  other_variable = "Banana"
+  args.other_variable = "Banana"
