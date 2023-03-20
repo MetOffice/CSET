@@ -40,7 +40,7 @@ source = ["src"]
 
 [tool.coverage.report]
 # This should be steadily increased to ~95% as we add more tests.
-fail_under = 70.0
+fail_under = 80.0
 
 [tool.tox]
 legacy_tox_ini = '''

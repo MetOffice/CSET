@@ -17,13 +17,14 @@ Operators for writing various types of files to disk.
 """
 
 from pathlib import Path
+from typing import Union
 
 import iris
 import iris.cube
 
 
 def write_cube_to_nc(
-    cube: iris.cube.Cube or iris.cube.CubeList, file_path: Path, **kwargs
+    cube: Union[iris.cube.Cube, iris.cube.CubeList], file_path: Path, **kwargs
 ) -> str:
     """
     A write operator that sits after the read operator. This operator expects
@@ -31,7 +32,7 @@ def write_cube_to_nc(
 
     Arguments
     ---------
-    cube: iris.cube.Cube or iris.cube.CubeList
+    cube: iris.cube.Cube | iris.cube.CubeList
         Data to save
     file_path: Path
         Path to save the cubes too

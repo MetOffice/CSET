@@ -13,8 +13,7 @@
 # limitations under the License.
 
 from pathlib import Path
-from secrets import token_hex
-import sys
+import tempfile
 
 import CSET.operators.RECIPES as RECIPES
 import CSET.operators._internal as internal
@@ -41,26 +40,36 @@ def test_get_operator():
         exception_occurred = True
     assert exception_occurred
 
+    # Test exception if operator isn't a function.
+    exception_occurred = False
+    try:
+        internal.get_operator("RECIPES.extract_instant_air_temp")
+    except ValueError:
+        exception_occurred = True
+    assert exception_occurred
+
 
 def test_execute_recipe():
     """Execute recipe and test exceptions"""
-    recipe_file = RECIPES.extract_instant_air_temp
     input_file = Path("tests/test_data/air_temp.nc")
-    output_file = Path(f"/tmp/{token_hex(4)}_cset_test_output.nc")
 
-    # Test exception for unfound file.
-    exception_happened = False
-    try:
-        internal.execute_recipe(Path("/non-existant/path"), input_file, output_file)
-    except FileNotFoundError:
-        exception_happened = True
-    assert exception_happened
+    with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
+        # Test exception for unfound file.
+        exception_happened = False
+        try:
+            internal.execute_recipe(
+                Path("/non-existant/path"), input_file, output_file.name
+            )
+        except FileNotFoundError:
+            exception_happened = True
+        assert exception_happened
 
     # Test happy case (this is really an integration test).
-    exception_happened = False
-    try:
-        internal.execute_recipe(recipe_file, input_file, output_file)
-    except Exception as e:
-        print(e, file=sys.stderr)
-        exception_happened = True
-    assert not exception_happened
+    with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
+        recipe_file = RECIPES.extract_instant_air_temp
+        internal.execute_recipe(recipe_file, input_file, output_file.name)
+
+    # Test weird edge cases. (also tests paths not being pathlib Paths)
+    with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
+        recipe_file = "tests/test_data/test_recipe.toml"
+        internal.execute_recipe(recipe_file, input_file, output_file.name)

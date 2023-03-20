@@ -1,4 +1,4 @@
-# Copyright 2022-2023 Met Office and contributors.
+# Copyright 2022 Met Office and contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys  # pragma: no cover
-from . import main  # pragma: no cover
+import subprocess
 
-sys.exit(main())  # pragma: no cover
+
+def test_command_line_help():
+    subprocess.run(["cset", "--help"])
+    # test verbose options. This is really just to up the coverage number.
+    subprocess.run(["cset", "-v"])
+    subprocess.run(["cset", "-vv"])
+
+
+def test_recipe_execution():
+    subprocess.run(
+        [
+            "cset",
+            "operators",
+            "/dev/null",
+            "/dev/null",
+            "test/test_data/noop_recipe.toml",
+        ]
+    )

@@ -26,3 +26,11 @@ def test_filters_operator():
     assert cube.cell_methods == ()
     expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>"
     assert repr(cube) == expected_cube
+    # Test for exception when multiple cubes returned.
+    constraint = constraints.generate_stash_constraint("m01s03i236")
+    except_occurred = False
+    try:
+        cube = filters.filter_cubes(cubes, constraint)
+    except ValueError:
+        except_occurred = True
+    assert except_occurred
