@@ -19,12 +19,16 @@ from pathlib import Path
 
 def test_write_cube_to_nc():
     """Write cube to Path and string path and verify."""
-    cubes = read.read_cubes("tests/test_data/air_temp.nc")
+    cube = read.read_cubes("tests/test_data/air_temp.nc")[0]
+    # Write to string
     filename = f"/tmp/{token_hex(4)}_write_test_cube.nc"
-    write.write_cube_to_nc(cubes, filename)
+    write.write_cube_to_nc(cube, filename)
+    # Write to Path
     filepath = Path(f"/tmp/{token_hex(4)}_write_test_cube.nc")
-    write.write_cube_to_nc(cubes, filepath)
-    written_cubes = read.read_cubes(filepath)
-    assert written_cubes == cubes
+    write.write_cube_to_nc(cube, filepath)
+    # Check that the cube was written correctly
+    written_cube = read.read_cubes(filepath)[0]
+    assert written_cube == cube
+    # Clean up written files
     filepath.unlink()
     Path(filename).unlink()
