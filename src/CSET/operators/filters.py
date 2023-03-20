@@ -37,6 +37,11 @@ def filter_cubes(
     -------
     cube: iris.cube.Cube
         Single variable
+
+    Raises
+    ------
+    ValueError
+        If the constraint doesn't produce a single cube.
     """
 
     filtered_cubes = cubelist.extract(constraint)
