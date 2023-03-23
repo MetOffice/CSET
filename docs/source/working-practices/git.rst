@@ -164,6 +164,6 @@ a conflict and often occurs if you have changed a line that was also changed in
 the other branch. Git will stop and let you manually fix it. Read the
 `documentation on fixing merge conflicts`_ to find out how.
 
-.. _these slides: https://glfmn.github.io/gh-slides/#/rebase
+.. _these slides: https://aaronosher.io/github-workshop/#/rebase
 .. _official documentation on rebase: https://git-scm.com/book/en/v2/Git-Branching-Rebasing
 .. _documentation on fixing merge conflicts: https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging#_basic_merge_conflicts
