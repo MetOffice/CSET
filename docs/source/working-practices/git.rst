@@ -15,7 +15,7 @@ functionality built into many IDEs, such as VSCode or PyCharm. As you get
 started with git on the command line, you may find this `git cheat sheet`_
 helpful.
 
-.. _git and GitHub tutorial: https://glfmn.github.io/gh-slides/
+.. _git and GitHub tutorial: https://aaronosher.io/github-workshop/
 .. _GitHub flow: https://docs.github.com/en/get-started/quickstart/github-flow
 .. _good commit messages: https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
 .. _git cheat sheet: https://education.github.com/git-cheat-sheet-education.pdf
@@ -164,6 +164,6 @@ a conflict and often occurs if you have changed a line that was also changed in
 the other branch. Git will stop and let you manually fix it. Read the
 `documentation on fixing merge conflicts`_ to find out how.
 
-.. _these slides: https://glfmn.github.io/gh-slides/#/rebase
+.. _these slides: https://aaronosher.io/github-workshop/#/rebase
 .. _official documentation on rebase: https://git-scm.com/book/en/v2/Git-Branching-Rebasing
 .. _documentation on fixing merge conflicts: https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging#_basic_merge_conflicts
