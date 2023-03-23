@@ -15,7 +15,7 @@ functionality built into many IDEs, such as VSCode or PyCharm. As you get
 started with git on the command line, you may find this `git cheat sheet`_
 helpful.
 
-.. _git and GitHub tutorial: https://glfmn.github.io/gh-slides/
+.. _git and GitHub tutorial: https://aaronosher.io/github-workshop/
 .. _GitHub flow: https://docs.github.com/en/get-started/quickstart/github-flow
 .. _good commit messages: https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
 .. _git cheat sheet: https://education.github.com/git-cheat-sheet-education.pdf
