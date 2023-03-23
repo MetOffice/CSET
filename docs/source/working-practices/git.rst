@@ -141,7 +141,7 @@ history.
 **Branch**: A special reference to a particular commit. If a new child commit is
 created the reference moves to that new commit.
 
-**Tag**: A special a particular commit. Unlike a branch it doesn't
+**Tag**: A special reference to a a particular commit. Unlike a branch it doesn't
 move.
 
 git rebase
