@@ -18,6 +18,7 @@ Operators to generate constraints to filter with.
 
 import iris
 import iris.cube
+from datetime import datetime
 
 
 def generate_stash_constraint(stash: str, **kwargs) -> iris.AttributeConstraint:
@@ -85,6 +86,36 @@ def generate_cell_methods_constraint(cell_methods: list, **kwargs) -> iris.Const
 
     cell_methods_constraint = iris.Constraint(cube_func=check_cell_methods)
     return cell_methods_constraint
+
+
+def generate_time_constraint(
+    time_start: str, time_end: str = None, **kwargs
+) -> iris.AttributeConstraint:
+    """
+    Operator that takes one or two ISO 8601 date strings, and returns a
+    constraint that selects values between those dates (inclusive).
+
+    Arguments
+    ---------
+    time_start: str | datetime.datetime
+        ISO date for lower bound
+
+    time_end: str | datetime.datetime
+        ISO date for upper bound. If omitted it defaults to the same as
+        time_start
+
+    Returns
+    -------
+    time_constraint: iris.Constraint
+    """
+    if type(time_start) == str:
+        time_start = datetime.fromisoformat(time_start)
+    if time_end is None:
+        time_end = time_start
+    elif type(time_end) == str:
+        time_end = datetime.fromisoformat(time_end)
+    time_constraint = iris.Constraint(time=lambda t: time_start <= t.point <= time_end)
+    return time_constraint
 
 
 def combine_constraints(input_constraint: iris.Constraint, **kwargs) -> iris.Constraint:

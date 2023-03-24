@@ -36,6 +36,27 @@ def test_generate_cell_methods_constraint():
     assert expected_cell_methods_constraint in repr(cell_methods_constraint)
 
 
+def test_generate_time_constraint():
+    """generate iris cube constraint for dates."""
+    from datetime import datetime
+
+    # Try with str dates
+    time_constraint = constraints.generate_time_constraint(
+        "2023-03-24T00:00", "2023-03-24T06:00"
+    )
+    expected_time_constraint = "Constraint(coord_values={'time': <function generate_time_constraint.<locals>.<lambda> at "
+    assert expected_time_constraint in repr(time_constraint)
+    # Try with datatime.datatime dates
+    time_constraint = constraints.generate_time_constraint(
+        datetime.fromisoformat("2023-03-24T00:00"),
+        datetime.fromisoformat("2023-03-24T06:00"),
+    )
+    assert expected_time_constraint in repr(time_constraint)
+    # Try with implicit end
+    time_constraint = constraints.generate_time_constraint("2023-03-24T00:00")
+    assert expected_time_constraint in repr(time_constraint)
+
+
 def test_combine_constraints():
     """combine constraint"""
     stash_constraint = constraints.generate_stash_constraint("m01s03i236")
