@@ -51,8 +51,7 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
     Arguments
     ---------
     varname: str
-        CF compliant name of variable. Needed later for LFRic. Currently using
-        "test"
+        CF compliant name of variable. Needed later for LFRic.
 
     Returns
     -------
