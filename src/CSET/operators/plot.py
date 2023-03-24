@@ -17,25 +17,33 @@ Operators to produce various kinds of plots.
 """
 
 from pathlib import Path
-from iris.cube import Cube
+import iris
+import iris.cube
 import iris.quickplot as qplt
 import matplotlib.pyplot as plt
 
 
-def spacial_plot(cube: Cube, filename: Path, **kwargs) -> Path:
+def spacial_contour_plot(cube: iris.cube.Cube, file_path: Path, **kwargs) -> Path:
     """
-    Plots a spacial variable onto a global map.
+    Plots a spacial variable onto a map.
+
     Parameters
     ----------
     cube: Cube
         An iris cube of the data to plot. It should be 2 dimensional (lat and lon).
-    filename: pathlike
+    file_path: pathlike
         The path of the plot to write.
+
     Returns
     -------
     Path
         The path of the resultant plot.
+
+    Raises
+    ------
+    ValueError
+        If the cube doesn't have the right dimensions.
     """
     qplt.contourf(cube)
-    plt.savefig(filename)
-    return filename
+    plt.savefig(file_path)
+    return file_path
