@@ -2,7 +2,7 @@ name: "Update pre-commit config"
 
 on:
   schedule:
-    - cron: "37 5 * * 1"
+    - cron: "48 3 * * 1"
   workflow_dispatch:
 
 permissions:
