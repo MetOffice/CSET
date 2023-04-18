@@ -45,5 +45,6 @@ def spacial_contour_plot(cube: iris.cube.Cube, file_path: Path, **kwargs) -> Pat
         If the cube doesn't have the right dimensions.
     """
     qplt.contourf(cube)
+    file_path = Path(file_path).with_suffix(".svg")
     plt.savefig(file_path)
     return file_path
