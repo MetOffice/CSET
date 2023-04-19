@@ -22,5 +22,4 @@ def test_spacial_plot():
     input_file = Path("tests/test_data/air_temp.nc")
     recipe_file = Path("tests/test_data/plot_instant_air_temp.toml")
     with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
-        output_filename = output_file.name + ".pdf"
-        internal.execute_recipe(recipe_file, input_file, output_filename)
+        internal.execute_recipe(recipe_file, input_file, output_file)
