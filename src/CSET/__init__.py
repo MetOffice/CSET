@@ -45,7 +45,7 @@ def main():
     parser_operators.add_argument(
         "recipe_file", type=Path, help="recipe file to execute"
     )
-    parser_operators.set_defaults(func=run_operators)
+    parser_operators.set_defaults(func=_run_operators)
     args = parser.parse_args()
     # Logging verbosity
     if args.verbose >= 2:
@@ -59,7 +59,7 @@ def main():
         parser.print_help()
 
 
-def run_operators(args):
-    from .operators._internal import execute_recipe
+def _run_operators(args):
+    from .operators import execute_recipe
 
     execute_recipe(args.recipe_file, args.input_file, args.output_file)
