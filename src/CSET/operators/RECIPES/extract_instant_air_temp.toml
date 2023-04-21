@@ -4,7 +4,7 @@ Extracts out the instantaneous 1.5m air temperature from a file and writes it
 to a new one.
 """
 section = "Grid Stat"
-major_cat ="Major Category 1"
+major_cat = "Major Category 1"
 minor_cat = "Minor Category 1"
 
 [[steps]]
