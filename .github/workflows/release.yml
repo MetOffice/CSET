@@ -1,0 +1,59 @@
+name: Publish packages
+
+on:
+  release:
+    types: [released]
+
+# Allow only one concurrent deployment
+concurrency:
+  group: "release"
+  cancel-in-progress: false
+
+jobs:
+  build-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+            python-version: "3.x"
+
+      - name: Install dependencies
+        run: python3 -m pip install tox tox-conda
+
+      - uses: actions/cache@v3
+        with:
+            key: tox|build-package|${{ runner.os }}-${{ runner.arch}}|${{ hashFiles('requirements/locks/*') }}
+            path: .tox
+
+      - name: Build documentation
+        run: tox -e build-package
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: packages
+          path: dist
+          retention-days: 10
+          if-no-files-found: error
+
+  pypi-publish:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    needs: build-package
+    environment:
+      name: release
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: packages
+
+      - name: List files
+        run: ls *
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/

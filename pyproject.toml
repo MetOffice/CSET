@@ -92,6 +92,12 @@ conda_spec =
 usedevelop = true
 commands = sphinx-build -d "docs/build/doctree" docs/source "docs/build/html" --color -W -bhtml {posargs}
 
+[testenv:build-package]
+description = Build sdist and wheel packages.
+deps = build
+skip_install = true
+commands = python3 -m build
+
 [testenv:coverage-clean]
 deps = coverage
 skip_install = true
