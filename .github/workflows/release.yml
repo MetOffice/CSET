@@ -22,10 +22,10 @@ jobs:
       - name: Install dependencies
         run: python3 -m pip install tox tox-conda
 
-      # - uses: actions/cache@v3
-      #   with:
-      #       key: tox|build-package|${{ runner.os }}-${{ runner.arch}}|${{ hashFiles('requirements/locks/*') }}
-      #       path: .tox
+      - uses: actions/cache@v3
+        with:
+            key: tox|build-package|${{ runner.os }}-${{ runner.arch}}|${{ hashFiles('requirements/locks/*') }}
+            path: .tox
 
       - name: Build package
         run: tox -e build-package
