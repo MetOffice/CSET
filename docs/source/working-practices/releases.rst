@@ -38,3 +38,31 @@ Some things to consider:
 * How long depreciation periods should be for different sizes of change.
 * How the changes will be communicated with users.
 * Guidance on avoiding making backwards incompatible changes where possible.
+
+Making a Release
+----------------
+
+Making a release is mostly automated. The only thing that needs to be done in
+the code is to ensure that the version number in ``pyproject.toml`` has been
+incremented since the last release.
+
+To create a release you should use the GitHub web UI. Go to the "Releases" page,
+and press "Create a new release".
+
+.. image:: release_page.png
+    :alt: The GitHub release making page.
+
+On this page you will need to add several things.
+
+* A human readable release title, which should include the version number.
+* The target branch to create the release from. (This might be ``main`` most of
+  the time.)
+* A tag, which should be the version number prefixed with the letter ``v``. For
+  example version 1.2.3 should have the tag ``v1.2.3``.
+* A description of the changes in the release. Pressing the "Generate release
+  notes" button will include the titles of all merged pull requests, which is a
+  good starting point. It is especially important to highlight any changes that
+  might break backwards compatibility.
+
+Once that is all written you simply need to press "Publish release". A release
+will be automatically made, and the package will be pushed to PyPI and beyond.
