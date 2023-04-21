@@ -51,16 +51,11 @@ jobs:
           name: packages
           path: dist/
 
-      - name: List files
-        run: ls -RA
-
       # External actions are disabled via organization policies therefore we
       # must instead manually implement it.
       # https://docs.pypi.org/trusted-publishers/using-a-publisher/#the-manual-way
       # - name: Publish package distributions to PyPI
       #   uses: pypa/gh-action-pypi-publish@release/v1
-      #   with:
-      #     repository-url: https://test.pypi.org/legacy/
 
       - uses: actions/setup-python@v4
         with:
@@ -76,5 +71,4 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-          TWINE_REPOSITORY: testpypi
         run: python3 -m twine upload --disable-progress-bar --verbose --non-interactive dist/*
