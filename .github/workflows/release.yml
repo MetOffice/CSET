@@ -22,10 +22,10 @@ jobs:
       - name: Install dependencies
         run: python3 -m pip install tox tox-conda
 
-      - uses: actions/cache@v3
-        with:
-            key: tox|build-package|${{ runner.os }}-${{ runner.arch}}|${{ hashFiles('requirements/locks/*') }}
-            path: .tox
+      # - uses: actions/cache@v3
+      #   with:
+      #       key: tox|build-package|${{ runner.os }}-${{ runner.arch}}|${{ hashFiles('requirements/locks/*') }}
+      #       path: .tox
 
       - name: Build package
         run: tox -e build-package
@@ -33,7 +33,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: packages
-          path: dist
+          path: dist/
           retention-days: 10
           if-no-files-found: error
 
@@ -49,9 +49,10 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: packages
+          path: dist/
 
       - name: List files
-        run: ls *
+        run: ls -RA
 
       # External actions are disabled via organization policies therefore we
       # must instead manually implement it.
