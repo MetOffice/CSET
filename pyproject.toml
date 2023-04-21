@@ -1,10 +1,10 @@
 [project]
 name = "CSET"
-version = "0.0.2"
+version = "0.0.3"
 description = "Convective Scale Evaluation Tool for evaluation and investigation of regional models."
 authors = [{ name = "Met Office" }, { name = "NIWA" }]
 readme = "README.md"
-license = { file = "LICENCE" }
+license = { text = "Apache-2.0" }
 requires-python = ">=3.8"
 classifiers = [
     "License :: OSI Approved :: Apache Software License",

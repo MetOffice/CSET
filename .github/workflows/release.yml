@@ -3,8 +3,6 @@ name: Publish packages
 on:
   release:
     types: [released]
-  # Just for testing
-  pull_request:
 
 # Allow only one concurrent deployment
 concurrency:
@@ -74,30 +72,9 @@ jobs:
       - name: Check package metadata
         run: python -m twine check --strict dist/*
 
-      # - name: Mint API token
-      #   id: mint-token
-      #   run: |
-      #     # retrieve the ambient OIDC token
-      #     resp=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-      #       "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=pypi")
-      #     oidc_token=$(jq '.value' <<< "${resp}")
-
-      #     # exchange the OIDC token for an API token
-      #     resp=$(curl -s -X POST https://pypi.org/_/oidc/github/mint-token -d "{\"token\": \"${oidc_token}\"}")
-      #     api_token=$(jq '.token' <<< "${resp}")
-
-      #     # mask the newly minted API token, so that we don't accidentally leak it
-      #     echo "::add-mask::${api_token}"
-
-      #     # see the next step in the workflow for an example of using this step output
-      #     echo "api-token=${api_token}" >> "${GITHUB_OUTPUT}"
-
       - name: Upload to PyPI
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
           TWINE_REPOSITORY: testpypi
-        run: |
-          echo $TWINE_USERNAME
-          echo $TWINE_PASSWORD | sha256sum
-          python3 -m twine upload --disable-progress-bar --verbose --non-interactive dist/*
+        run: python3 -m twine upload --disable-progress-bar --verbose --non-interactive dist/*
