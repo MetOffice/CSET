@@ -17,7 +17,6 @@ dependencies:
   - pip
 
   # Development dependencies
-  - pip
   - pre-commit
   - black
 
