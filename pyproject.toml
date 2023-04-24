@@ -1,10 +1,10 @@
 [project]
 name = "CSET"
-version = "0.0.2"
+version = "0.1.0"
 description = "Convective Scale Evaluation Tool for evaluation and investigation of regional models."
 authors = [{ name = "Met Office" }, { name = "NIWA" }]
 readme = "README.md"
-license = { file = "LICENCE" }
+license = { text = "Apache-2.0" }
 requires-python = ">=3.8"
 classifiers = [
     "License :: OSI Approved :: Apache Software License",
@@ -91,6 +91,12 @@ conda_spec =
     py311-linux: {toxinidir}{/}requirements{/}locks{/}py311-lock-linux-64.txt
 usedevelop = true
 commands = sphinx-build -d "docs/build/doctree" docs/source "docs/build/html" --color -W -bhtml {posargs}
+
+[testenv:build-package]
+description = Build sdist and wheel packages.
+deps = build
+skip_install = true
+commands = python3 -m build
 
 [testenv:coverage-clean]
 deps = coverage
