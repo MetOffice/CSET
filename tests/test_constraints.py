@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from CSET.operators import constraints
+from datetime import datetime
 
 
 def test_generate_stash_constraint():
@@ -34,6 +35,25 @@ def test_generate_cell_methods_constraint():
     cell_methods_constraint = constraints.generate_cell_methods_constraint([])
     expected_cell_methods_constraint = "Constraint(cube_func=<function generate_cell_methods_constraint.<locals>.check_cell_methods at"
     assert expected_cell_methods_constraint in repr(cell_methods_constraint)
+
+
+def test_generate_time_constraint():
+    """generate iris cube constraint for dates."""
+    # Try with str dates
+    time_constraint = constraints.generate_time_constraint(
+        "2023-03-24T00:00", "2023-03-24T06:00"
+    )
+    expected_time_constraint = "Constraint(coord_values={'time': <function generate_time_constraint.<locals>.<lambda> at "
+    assert expected_time_constraint in repr(time_constraint)
+    # Try with datatime.datatime dates
+    time_constraint = constraints.generate_time_constraint(
+        datetime.fromisoformat("2023-03-24T00:00"),
+        datetime.fromisoformat("2023-03-24T06:00"),
+    )
+    assert expected_time_constraint in repr(time_constraint)
+    # Try with implicit end
+    time_constraint = constraints.generate_time_constraint("2023-03-24T00:00")
+    assert expected_time_constraint in repr(time_constraint)
 
 
 def test_combine_constraints():

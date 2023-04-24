@@ -1,4 +1,4 @@
-# Copyright 2022-2023 Met Office and contributors.
+# Copyright 2022 Met Office and contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""This subpackage contains all of CSET's operators."""
-from . import RECIPES, constraints, read, write, filters, plot, misc
-from ._internal import execute_recipe
+"""
+Miscellaneous operators.
+"""
 
-# Stop iris giving a warning whenever it loads something.
-from iris import FUTURE
 
-FUTURE.datum_support = True
+def noop(x, **kwargs):
+    """
+    Returns its input without doing anything to it. Useful for constructing
+    diagnostic chains.
+
+    Arguments
+    ---------
+    x: Any
+        Input to return.
+
+    Returns
+    -------
+    x: Any
+        The input that was given.
+    """
+    return x
