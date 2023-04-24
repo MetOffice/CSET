@@ -28,7 +28,7 @@ operator = "filters.filter_cubes"
       time_end = 2022-09-21T03:30:00
 
 [[steps]]
-operator = "plot.spacial_contour_plot"
+operator = "plot.spatial_contour_plot"
   [steps.args]
   # This is a magic value that becomes the runtime output file path.
   file_path = "MAGIC_OUTPUT_PATH"
