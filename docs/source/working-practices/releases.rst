@@ -46,8 +46,8 @@ Making a release is mostly automated. The only thing that needs to be done in
 the code is to ensure that the version number in ``pyproject.toml`` has been
 incremented since the last release.
 
-To create a release you should use the GitHub web UI. Go to the "Releases" page,
-and press "Create a new release".
+To create a release you should use the GitHub web UI. Go to the `Releases`_
+page, and press `Draft a new release`_.
 
 .. image:: release_page.png
     :alt: The GitHub release making page.
@@ -66,3 +66,6 @@ On this page you will need to add several things.
 
 Once that is all written you simply need to press "Publish release". A release
 will be automatically made, and the package will be pushed to PyPI and beyond.
+
+.. _Releases: https://github.com/MetOffice/CSET/releases
+.. _Draft a new release: https://github.com/MetOffice/CSET/releases/new
