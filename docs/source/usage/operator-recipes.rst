@@ -20,8 +20,8 @@ Recipe format
 -------------
 
 The recipes are text files written in `TOML`_, a configuration language that is
-very similar to INI. They are saved with the ``.toml`` extension. Below is a
-commented example recipe:
+similar to INI, but better defined. They are saved with the ``.toml`` extension.
+Below is a commented example recipe:
 
 .. code-block:: toml
 
