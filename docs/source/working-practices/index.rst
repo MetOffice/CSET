@@ -14,6 +14,7 @@ get started, and the links below go into more detail on specific topics.
     code-review
     releases
 
+.. _working_practices_getting_started:
 
 Getting Started
 ---------------
@@ -46,10 +47,9 @@ Setting up tooling
 ~~~~~~~~~~~~~~~~~~
 
 To be able to run the tests or build the documentation you need some
-prerequisite software. The easiest way to get this is with conda. The following
-command will setup a conda environment for you to use. Change into your CSET directory and then follow the commands below.  When subsequently
-returning to the code after closing your terminal, you may need to rerun the
-``conda activate cset-dev`` command.
+prerequisite software. The easiest way to get this is with `conda_`. The
+following commands, when run from within the CSET directory, will setup a conda
+environment for you to use.
 
 .. code-block:: bash
 
@@ -59,6 +59,13 @@ returning to the code after closing your terminal, you may need to rerun the
     conda activate cset-dev
     # Adds extra checks when you commit something with git.
     pre-commit install
+    # Make CSET runnable for manual testing
+    pip install -e .
+
+When subsequently returning to the code after closing your terminal, you may
+need to rerun the ``conda activate cset-dev`` command.
+
+.. _conda: https://docs.conda.io/en/latest/
 
 Contributing
 ------------

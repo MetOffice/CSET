@@ -18,21 +18,9 @@ The recommended way to install CSET is via conda. It is packaged on
 cset``.
 
 If you instead want to run a development version that has yet to be released,
-the easiest way is via an editable install. First make sure you have cloned the
-repository onto your computer, then install the conda environment.
-
-.. code-block::
-
-    # If using SSH authentication
-    git clone git@github.com:MetOffice/CSET-workflow.git
-    # If not
-    # git clone https://github.com/MetOffice/CSET-workflow.git
-    cd CSET-workflow
-    conda create -n cset-dev --file requirements/locks/py310-lock-linux-64.txt
-    conda activate cset-dev
-
-Then, from the root of the repository, CSET can be installed with ``pip install
--e .``
+the easiest way is via an editable install. You can learn how to do this in the
+:ref:`working_practices_getting_started` section of the
+:doc:`../working-practices/index`.
 
 .. _conda-forge: https://anaconda.org/conda-forge/cset
 
