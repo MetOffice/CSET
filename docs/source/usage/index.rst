@@ -13,20 +13,14 @@ Usage Guide
 Installation
 ------------
 
-CSET is packaged on `conda-forge`_, so the easiest way to use it is via a simple
-``conda install cset``.
+The recommended way to install CSET is via conda. It is packaged on
+`conda-forge`_ and can be installed with a simple ``conda install -c conda-forge
+cset``.
 
-If you want to run a development version that has yet to be released the easiest
-way is via an editable install. First make sure you have installed and activated
-the conda environment.
-
-.. code-block::
-
-    conda create -n cset-dev --file requirements/locks/py310-lock-linux-64.txt
-    conda activate cset-dev
-
-Then, from the root of the repository, CSET can be installed with :code:`pip
-install -e .`
+If you instead want to run a development version that has yet to be released,
+the easiest way is via an editable install. You can learn how to do this in the
+:ref:`working_practices_getting_started` section of the
+:doc:`../working-practices/index`.
 
 .. _conda-forge: https://anaconda.org/conda-forge/cset
 
