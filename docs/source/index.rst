@@ -23,6 +23,23 @@ Development takes place in the `CSET repository on GitHub`_.
 
 Use the side bar to the left to access other pages of the documentation.
 
+Why use CSET?
+-------------
+
+When evaluating weather models you are trying to figure out what processes are
+happening inside the model, and how that compares to other models and reality.
+This is a very iterative process, and each step of evaluation unveils more
+questions that need investigations.
+
+CSET aids in this by providing a quick way to interrogate model data, using
+diagnostics that can be quickly created by the combination of :doc:`operators`
+in an :doc:`usage/operator-recipe`.
+
+CSET also is a centralised place for custom diagnostics to live, with well
+defined :doc:`working-practices/index` to ensure that they stay maintained. By
+constributing diagnostics to CSET you ensure that they outlive the paper they
+were written for, and benifit the entire modelling community.
+
 .. _CSET repository on GitHub: https://github.com/MetOffice/CSET
 
 Licence
