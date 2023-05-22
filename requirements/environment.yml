@@ -4,7 +4,7 @@ channels:
 dependencies:
   # Runtime dependencies
   - numpy
-  - iris
+  - iris >= 3.5
   - mo_pack # For handling pp files.
   # Unfortunately selectors are not supported by conda currently, so unused
   # dependencies are included. See https://github.com/conda/conda/issues/8089
@@ -21,11 +21,11 @@ dependencies:
   - black
 
   # Testing dependencies
-  - tox
+  - tox >= 4.0
   - tox-conda
-  - pytest
+  - pytest >= 7.0
   - pytest-cov
 
   # Documentation dependencies
-  - sphinx
+  - sphinx >= 7.0
   - furo
