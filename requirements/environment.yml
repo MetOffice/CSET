@@ -27,5 +27,5 @@ dependencies:
   - pytest-cov
 
   # Documentation dependencies
-  - sphinx >= 7.0
+  - sphinx >= 6.0
   - furo
