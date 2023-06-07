@@ -118,13 +118,13 @@ def generate_time_constraint(
     return time_constraint
 
 
-def combine_constraints(input_constraint: iris.Constraint, **kwargs) -> iris.Constraint:
+def combine_constraints(constraint1: iris.Constraint, **kwargs) -> iris.Constraint:
     """
     Operator that combines multiple constraints into one.
 
     Arguments
     ---------
-    input_constraint: iris.Constraint
+    con1: iris.Constraint
         First constraint to combine.
     additional_constraint_1: iris.Constraint
         Second constraint to combine. This must be a named argument.
@@ -142,7 +142,7 @@ def combine_constraints(input_constraint: iris.Constraint, **kwargs) -> iris.Con
         If the provided arguments are not constraints.
     """
 
-    combined_constraint = input_constraint
+    combined_constraint = constraint1
     for constraint in kwargs.values():
         combined_constraint = combined_constraint & constraint
     return combined_constraint
