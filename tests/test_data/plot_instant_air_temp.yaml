@@ -14,7 +14,7 @@ steps:
       operator: constraints.combine_constraints
       stash_constraint:
         operator: constraints.generate_stash_constraint
-        input: m01s03i236
+        stash: m01s03i236
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
