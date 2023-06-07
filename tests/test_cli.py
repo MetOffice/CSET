@@ -29,6 +29,6 @@ def test_recipe_execution():
             "operators",
             "/dev/null",
             "/dev/null",
-            "test/test_data/noop_recipe.toml",
+            "test/test_data/noop_recipe.yaml",
         ]
     )

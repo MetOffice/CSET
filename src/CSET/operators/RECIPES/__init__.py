@@ -22,4 +22,4 @@ except ImportError:
     from importlib_resources import files
 import CSET.operators.RECIPES as recipes
 
-extract_instant_air_temp = files(recipes).joinpath("extract_instant_air_temp.toml")
+extract_instant_air_temp = files(recipes).joinpath("extract_instant_air_temp.yaml")

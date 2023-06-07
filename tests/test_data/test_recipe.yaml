@@ -1,0 +1,9 @@
+name: Minimal Test Recipe
+description: |
+  This recipe exists only to cover weird edge cases so that we obtain maximal code
+  test coverage. It doesn't read any data or write anything.
+
+steps:
+  operator: constraints.generate_stash_constraint
+  stash: m01s03i236
+  other_variable: Banana

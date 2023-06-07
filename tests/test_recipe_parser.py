@@ -54,7 +54,7 @@ def test_execute_recipe():
     input_file = Path("tests/test_data/air_temp.nc")
 
     with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
-        # Test exception for unfound file.
+        # Test exception for file not found.
         exception_happened = False
         try:
             internal.execute_recipe(
@@ -71,5 +71,5 @@ def test_execute_recipe():
 
     # Test weird edge cases. (also tests paths not being pathlib Paths)
     with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
-        recipe_file = "tests/test_data/test_recipe.toml"
+        recipe_file = "tests/test_data/test_recipe.yaml"
         internal.execute_recipe(recipe_file, input_file, output_file.name)
