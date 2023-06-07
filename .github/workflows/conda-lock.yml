@@ -26,7 +26,7 @@ jobs:
         run: |
           conda update -q conda
           # Install and use libmamba solver as it is much faster.
-          conda install -n base conda-libmamba-solver
+          conda install -q -n base conda-libmamba-solver
           conda config --set solver libmamba
 
       - name: Hash existing lock files
