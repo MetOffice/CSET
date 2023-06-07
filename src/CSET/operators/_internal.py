@@ -90,7 +90,7 @@ def execute_recipe(recipe_file: Path, input_file: Path, output_file: Path) -> No
             if key == "operator":
                 operator = get_operator(step["operator"])
                 logging.info(f"operator: {step['operator']}")
-            elif type(step[key]) == dict:
+            elif type(step[key]) == dict and "operator" in step[key]:
                 logging.debug(f"Recursing into argument: {key}")
                 kwargs[key] = step_parser(step[key], step_input, output_file_path)
             elif step[key] == "CSET_OUTPUT_PATH":
