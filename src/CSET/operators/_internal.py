@@ -16,13 +16,8 @@
 
 import logging
 from pathlib import Path
-
-try:
-    import tomllib
-except ModuleNotFoundError:
-    # tomllib is in standard library from 3.11.
-    import tomli as tomllib
-
+import inspect
+from ruamel.yaml import YAML
 import CSET.operators
 
 
@@ -70,8 +65,7 @@ def execute_recipe(recipe_file: Path, input_file: Path, output_file: Path) -> No
     Parameters
     ----------
     recipe_file: Path
-        Pathlike to a configuration file indicating the operators that need
-        running.
+        Pathlike to a recipe file describing the operators that need running.
 
     input_file: Path
         Pathlike to netCDF (or something else that iris read) file to be used as
@@ -89,33 +83,38 @@ def execute_recipe(recipe_file: Path, input_file: Path, output_file: Path) -> No
         The recipe file is not well formed.
     """
 
-    def step_parser(step, step_io, output_file_path: Path) -> str:
-        if "input" in step:
-            if type(step["input"]) == dict:
-                logging.debug(f"Recursing into input: {step['input']}")
-                step_io = step_parser(step["input"], step_io, output_file_path)
-            else:
-                step_io = step["input"]
+    def step_parser(step: dict, step_input: any, output_file_path: Path) -> str:
+        logging.debug(f"Executing step: {step}")
         kwargs = {}
-        if "args" in step:
-            for key in step["args"].keys():
-                if type(step["args"][key]) == dict:
-                    logging.debug(f"Recursing into args: {step['args']}")
-                    kwargs[key] = step_parser(
-                        step["args"][key], step_io, output_file_path
-                    )
-                elif step["args"][key] == "MAGIC_OUTPUT_PATH":
-                    kwargs[key] = output_file_path
-                else:
-                    kwargs[key] = step["args"][key]
-        operator = get_operator(step["operator"])
-        logging.info(f"operator = {step['operator']}")
-        logging.debug(f"step_input = {step_io}")
-        logging.debug(f"args = {kwargs}")
-        return operator(step_io, **kwargs)
+        for key in step.keys():
+            if key == "operator":
+                operator = get_operator(step["operator"])
+                logging.info(f"operator: {step['operator']}")
+            elif type(step[key]) == dict:
+                logging.debug(f"Recursing into argument: {key}")
+                kwargs[key] = step_parser(step[key], step_input, output_file_path)
+            elif step[key] == "CSET_OUTPUT_PATH":
+                kwargs[key] = output_file_path
+            else:
+                kwargs[key] = step[key]
 
-    with open(recipe_file, "rb") as f:
-        recipe = tomllib.load(f)
-    step_io = input_file
+        logging.debug(f"args: {kwargs}")
+        logging.debug(f"step_input: {step_input}")
+
+        # If first argument of operator is explicitly defined, use that rather
+        # than step_input. This is known through introspection of the operator.
+        first_arg = next(iter(inspect.signature(operator).parameters.keys()))
+        logging.debug(f"first_arg: {first_arg}")
+        if first_arg not in kwargs:
+            return operator(step_input, **kwargs)
+        else:
+            return operator(**kwargs)
+
+    with open(recipe_file, "rb") as file:
+        with YAML(typ="safe", pure=True) as yaml:
+            recipe = yaml.load(file)
+    logging.debug(recipe)
+    step_input = input_file
     for step in recipe["steps"]:
-        step_io = step_parser(step, step_io, output_file)
+        step_input = step_parser(step, step_input, output_file)
+    logging.info(f"Recipe output: {step_input}")
