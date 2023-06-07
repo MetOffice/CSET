@@ -15,6 +15,9 @@
 from CSET.operators import write, read
 from secrets import token_hex
 from pathlib import Path
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 def test_write_cube_to_nc():

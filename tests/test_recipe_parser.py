@@ -17,6 +17,9 @@ import tempfile
 
 import CSET.operators.RECIPES as RECIPES
 import CSET.operators._internal as internal
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 def test_get_operator():

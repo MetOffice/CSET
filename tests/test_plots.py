@@ -16,6 +16,9 @@ from pathlib import Path
 from uuid import uuid4
 import tempfile
 import CSET.operators._internal as internal
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 def test_spacial_plot():

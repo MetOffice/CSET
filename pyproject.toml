@@ -29,9 +29,10 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
-addopts = ["--import-mode=importlib", "--verbose", "--cov"]
+addopts = ["--import-mode=importlib", "--verbose", "--cov", "--cov-append"]
 pythonpath = ["src"]
 filterwarnings = ['ignore::DeprecationWarning:pytest']
+log_level = "DEBUG"
 
 [tool.coverage.run]
 branch = true
@@ -80,7 +81,7 @@ conda_spec =
     py311-linux: {toxinidir}{/}requirements{/}locks{/}py311-lock-linux-64.txt
 usedevelop = true
 depends = coverage-clean
-commands = pytest --cov-append {posargs}
+commands = pytest {posargs}
 
 [testenv:py{38,39,310,311}-{linux,osx,win}-docs]
 description = Invoke sphinx-build to build the HTML docs.
