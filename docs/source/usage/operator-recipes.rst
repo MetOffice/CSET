@@ -19,7 +19,7 @@ a python script.
 Recipe format
 -------------
 
-The recipes are text files written in `TOML`_, a configuration language that is
+The recipes are text files written in `YAML 1.2`_, a configuration language that is
 similar to INI, but better defined. They are saved with the ``.toml`` extension.
 Below is a commented example recipe:
 
@@ -73,5 +73,5 @@ operators involved see the :doc:`/operators` page.
             # Filtering for unprocessed value, i.e. no methods applied.
             input = []
 
-.. _TOML: https://toml.io/
+.. _YAML 1.2: https://yaml.org/
 .. _array of tables: https://toml.io/en/v1.0.0#array-of-tables
