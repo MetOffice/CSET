@@ -21,7 +21,7 @@ import iris.cube
 from datetime import datetime
 
 
-def generate_stash_constraint(stash: str, **kwargs) -> iris.AttributeConstraint:
+def generate_stash_constraint(stash: str) -> iris.AttributeConstraint:
     """
     Operator that takes a stash string, and uses iris to generate a constraint
     to be passed into the read operator to minimize the CubeList the read
@@ -43,7 +43,7 @@ def generate_stash_constraint(stash: str, **kwargs) -> iris.AttributeConstraint:
     return stash_constraint
 
 
-def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
+def generate_var_constraint(varname: str) -> iris.Constraint:
     """
     Operator that takes a CF compliant variable name string, and uses iris to
     generate a constraint to be passed into the read operator to minimize the
@@ -63,7 +63,7 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
     return varname_constraint
 
 
-def generate_cell_methods_constraint(cell_methods: list, **kwargs) -> iris.Constraint:
+def generate_cell_methods_constraint(cell_methods: list) -> iris.Constraint:
     """
     Operator that takes a list of cell methods and generates a constraint from
     that.
@@ -89,7 +89,7 @@ def generate_cell_methods_constraint(cell_methods: list, **kwargs) -> iris.Const
 
 
 def generate_time_constraint(
-    time_start: str, time_end: str = None, **kwargs
+    time_start: str, time_end: str = None
 ) -> iris.AttributeConstraint:
     """
     Operator that takes one or two ISO 8601 date strings, and returns a

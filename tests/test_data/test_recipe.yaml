@@ -6,5 +6,3 @@ description: |
 steps:
   - operator: constraints.generate_stash_constraint
     stash: m01s03i236
-    other_variable: Banana
-    dict_variable: {"key": "value"}
