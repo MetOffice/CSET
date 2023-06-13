@@ -12,7 +12,7 @@ steps:
   - operator: filters.filter_cubes
     constraint:
       operator: constraints.combine_constraints
-      stash_constraint:
+      constraint:
         operator: constraints.generate_stash_constraint
         stash: m01s03i236
       cell_methods_constraint:

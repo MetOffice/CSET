@@ -74,5 +74,5 @@ def test_execute_recipe():
 
     # Test weird edge cases. (also tests paths not being pathlib Paths)
     with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
-        recipe_file = "test/test_data/noop_recipe.yaml"
+        recipe_file = "tests/test_data/noop_recipe.yaml"
         internal.execute_recipe(recipe_file, str(input_file), output_file.name)
