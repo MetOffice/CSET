@@ -3,3 +3,5 @@ description: A recipe that does nothing. Only used for testing.
 
 steps:
   - operator: misc.noop
+    test_argument: Banana
+    dict_argument: {"key": "value"}

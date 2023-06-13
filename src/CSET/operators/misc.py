@@ -27,6 +27,8 @@ def noop(x, **kwargs):
     x: Any
         Input to return.
 
+    Will silently accept any additional keyword arguments for testing purposes.
+
     Returns
     -------
     x: Any
