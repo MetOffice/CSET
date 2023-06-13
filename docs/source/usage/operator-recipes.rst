@@ -19,59 +19,60 @@ a python script.
 Recipe format
 -------------
 
-The recipes are text files written in `YAML 1.2`_, a configuration language that is
-similar to INI, but better defined. They are saved with the ``.toml`` extension.
-Below is a commented example recipe:
+The recipes are text files written in `YAML 1.2`_, a configuration language that
+is widely used. They are saved with the ``.yaml`` extension. Below is a
+commented example recipe:
 
-.. code-block:: toml
+.. code-block:: yaml
 
-    name = "Name of recipe"
-    description = """Extended description"""
+    name: Name of recipe
+    description: |
+      Extended description that can
+      go across multiple lines.
 
-    [[steps]]
-    # Specify the operator to run in each step.
-    operator = "read.read_cubes"
+    steps:
+      # Specify the operator to run in each step.
+      - operator: read.read_cubes
 
-    [[steps]]
-    operator = "filters.filter_cubes"
-    # Can specify extra keyword arguments in an args sub-table.
-    [steps.args]
-      [steps.args.constraint]
+    - operator: filters.filter_cubes
+      # Can specify extra keyword arguments as sub-maps.
+      constraint:
         # Can nest in another operator to use its output as an argument.
-        operator = "generate_constraints.generate_stash_constraints"
-        # Input implicitly taken from the previous step, but can be overridden.
-        input = "m01s03i236"
+        operator: generate_constraints.generate_stash_constraints
+        # Input implicitly taken from the previous step, but can be overridden
+        # by using the appropriate keyword argument.
+        stash: m01s03i236
 
-    [[steps]]
-    operator = "write.write_cube_to_nc"
-    [steps.args]
+    - operator: write.write_cube_to_nc
       # Specify the name of the argument, and its value.
-      file_path = "MAGIC_OUTPUT_PATH"
+      file_path: MAGIC_OUTPUT_PATH
       # "MAGIC_OUTPUT_PATH" is special and becomes the runtime output file path.
 
+The name and description keys provide a human readable description of what the
+recipe does. They are currently not used anywhere, but it is good practice to
+include them for future users of the recipe.
 
-There are a couple of subtle points to keep in mind. While the example above is
-indented for clarity, indentation does not matter. The double square brackets
-around ``[[steps]]`` are significant, as they mean that the steps are ordered
-(specifically they are an `array of tables`_). The below code block shows how
-you can nest operators multiple levels deep. For details of the specific
-operators involved see the :doc:`/operators` page.
+The steps keys specifies a list of processing steps. The steps are run from top
+to bottom, with each step specifying an operator to run, and optionally any
+additional inputs to that operator. A step is denoted by a ``-`` under the
+``steps:`` key. The operators are specified on the operator key. Its value
+should be a string of the form ``file.function``. For additional inputs the key
+should be the name of the argument.
 
-.. code-block:: toml
+The below code block shows how you can nest operators multiple levels deep. For
+details of the specific operators involved, and the arguments that can take, see
+the :doc:`/operators` page.
 
-    [[steps]]
-    operator = "filters.filter_cubes"
-    [steps.args]
-      [steps.args.constraint]
-          operator = "constraints.combine_constraints"
-          # Even the input override can be another operator.
-          [steps.args.constraint.args.input]
-            operator = "constraints.generate_stash_constraint"
-            input = "m01s03i236"
-          [steps.args.constraint.args.constraint1]
-            operator = "constraints.generate_cell_methods_constraint"
-            # Filtering for unprocessed value, i.e. no methods applied.
-            input = []
+.. code-block:: yaml
+
+  - operator: filters.filter_cubes
+    constraint:
+      operator: constraints.combine_constraints
+      stash_constraint:
+        operator: constraints.generate_stash_constraint
+        stash: m01s03i236
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
 
 .. _YAML 1.2: https://yaml.org/
-.. _array of tables: https://toml.io/en/v1.0.0#array-of-tables

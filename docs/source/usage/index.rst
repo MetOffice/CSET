@@ -30,7 +30,7 @@ Usage
 cset operators
 ~~~~~~~~~~~~~~
 
-The chain of operators can be run with ``cset operators /path/to/recipe
+The chain of operators can be run with ``cset operators /path/to/recipe.yaml
 path/to/input.pp path/to/output.nc``. Additional help is available with the
 ``--help`` option. The recipe format is described on the :doc:`operator-recipes`
 page.
