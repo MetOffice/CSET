@@ -69,8 +69,8 @@ def _run_operators(args):
     from CSET.operators import execute_recipe
 
     if args.recipe_file:
-        recipe_stream = open(args.recipe_file, "rb")
+        recipe = Path(args.recipe_file)
     else:
-        recipe_stream = os.getenv("CSET_RECIPE")
+        recipe = os.getenv("CSET_RECIPE")
 
-    execute_recipe(recipe_stream, args.input_file, args.output_file)
+    execute_recipe(recipe, args.input_file, args.output_file)

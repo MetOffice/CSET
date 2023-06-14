@@ -16,8 +16,9 @@
 
 import logging
 from pathlib import Path
+from typing import Union
 import inspect
-from ruamel.yaml import YAML
+import ruamel.yaml
 import CSET.operators
 
 
@@ -59,14 +60,17 @@ def get_operator(name: str):
         raise ValueError(f"Unknown operator: {name}")
 
 
-def execute_recipe(recipe_yaml: str, input_file: Path, output_file: Path) -> None:
+def execute_recipe(
+    recipe_yaml: Union[Path, str], input_file: Path, output_file: Path
+) -> None:
     """Parses and executes a recipe file.
 
     Parameters
     ----------
-    recipe_yaml: stream
-        Stream (such as a str or opened file) of a recipe's YAML describing the
-        operators that need running.
+    recipe_yaml: Path or str
+        Path to a file containing, or string of, a recipe's YAML describing the
+        operators that need running. If a Path is provided it is opened and
+        read.
 
     input_file: Path
         Pathlike to netCDF (or something else that iris read) file to be used as
@@ -81,7 +85,10 @@ def execute_recipe(recipe_yaml: str, input_file: Path, output_file: Path) -> Non
         The recipe or input file cannot be found.
 
     ValueError
-        The recipe file is not well formed.
+        The recipe is not well formed.
+
+    TypeError
+        The provided recipe is not a stream or Path.
     """
 
     def step_parser(step: dict, step_input: any, output_file_path: Path) -> str:
@@ -111,10 +118,19 @@ def execute_recipe(recipe_yaml: str, input_file: Path, output_file: Path) -> Non
         else:
             return operator(**kwargs)
 
-    with YAML(typ="safe", pure=True) as yaml:
-        recipe = yaml.load(recipe_yaml)
+    with ruamel.yaml.YAML(typ="safe", pure=True) as yaml:
+        try:
+            recipe = yaml.load(recipe_yaml)
+        except ruamel.yaml.parser.ParserError:
+            raise ValueError("ParserError: Invalid YAML")
+        except ruamel.yaml.error.YAMLStreamError:
+            raise TypeError("Must provide a stream (with a read method)")
+
     logging.debug(recipe)
     step_input = input_file
-    for step in recipe["steps"]:
-        step_input = step_parser(step, step_input, output_file)
+    try:
+        for step in recipe["steps"]:
+            step_input = step_parser(step, step_input, output_file)
+    except KeyError as err:
+        raise ValueError("Invalid Recipe:", err)
     logging.info(f"Recipe output: {step_input}")

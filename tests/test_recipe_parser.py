@@ -19,6 +19,7 @@ import CSET.operators.RECIPES as RECIPES
 import CSET.operators._internal as internal
 import logging
 
+
 logging.basicConfig(level=logging.DEBUG)
 
 
@@ -57,7 +58,7 @@ def test_execute_recipe():
     input_file = Path("tests/test_data/air_temp.nc")
 
     with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
-        # Test exception for file not found.
+        # Test exception for non-existant file.
         exception_happened = False
         try:
             internal.execute_recipe(
@@ -67,12 +68,41 @@ def test_execute_recipe():
             exception_happened = True
         assert exception_happened
 
+    with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
+        # Test exception for incorrect type.
+        exception_happened = False
+        try:
+            internal.execute_recipe(True, input_file, output_file.name)
+        except TypeError:
+            exception_happened = True
+        assert exception_happened
+
+    with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
+        # Test exception for invalid YAML.
+        exception_happened = False
+        try:
+            internal.execute_recipe(
+                '"Inside quotes" outside of quotes', input_file, output_file.name
+            )
+        except ValueError:
+            exception_happened = True
+        assert exception_happened
+
+    with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
+        # Test exception for valid YAML but invalid recipe.
+        exception_happened = False
+        try:
+            internal.execute_recipe("a: 1", input_file, output_file.name)
+        except ValueError:
+            exception_happened = True
+        assert exception_happened
+
     # Test happy case (this is really an integration test).
     with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
-        recipe_file = RECIPES.extract_instant_air_temp
-        internal.execute_recipe(recipe_file, input_file, output_file.name)
+        with open(RECIPES.extract_instant_air_temp, "rb") as recipe:
+            internal.execute_recipe(recipe, input_file, output_file.name)
 
     # Test weird edge cases. (also tests paths not being pathlib Paths)
     with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
-        recipe_file = "tests/test_data/noop_recipe.yaml"
-        internal.execute_recipe(recipe_file, str(input_file), output_file.name)
+        with open("tests/test_data/noop_recipe.yaml") as recipe:
+            internal.execute_recipe(recipe, str(input_file), output_file.name)
