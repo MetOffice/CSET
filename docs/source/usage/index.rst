@@ -33,16 +33,18 @@ cset operators
 The chain of operators can be run with ``cset operators /path/to/recipe.yaml
 path/to/input.pp path/to/output.nc``. Additional help is available with the
 ``--help`` option. The recipe format is described on the :doc:`operator-recipes`
-page.
+page. If recipe_file is omitted from the command line, the recipe will
+be read from the ``CSET_RECIPE`` environment variable instead. This environment
+variable should contain the YAML text that you want executed.
 
 .. code-block:: text
 
-    usage: cset operators [-h] recipe_file input_file output_file
+    usage: cset operators [-h] input_file output_file [recipe_file]
 
     positional arguments:
-    recipe_file  recipe file to execute
     input_file   input file to read
     output_file  output file to write
+    recipe_file  recipe file to execute
 
     options:
     -h, --help     show this help message and exit
