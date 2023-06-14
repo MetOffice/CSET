@@ -59,13 +59,14 @@ def get_operator(name: str):
         raise ValueError(f"Unknown operator: {name}")
 
 
-def execute_recipe(recipe_file: Path, input_file: Path, output_file: Path) -> None:
+def execute_recipe(recipe_yaml: str, input_file: Path, output_file: Path) -> None:
     """Parses and executes a recipe file.
 
     Parameters
     ----------
-    recipe_file: Path
-        Pathlike to a recipe file describing the operators that need running.
+    recipe_yaml: stream
+        Stream (such as a str or opened file) of a recipe's YAML describing the
+        operators that need running.
 
     input_file: Path
         Pathlike to netCDF (or something else that iris read) file to be used as
@@ -110,9 +111,8 @@ def execute_recipe(recipe_file: Path, input_file: Path, output_file: Path) -> No
         else:
             return operator(**kwargs)
 
-    with open(recipe_file, "rb") as file:
-        with YAML(typ="safe", pure=True) as yaml:
-            recipe = yaml.load(file)
+    with YAML(typ="safe", pure=True) as yaml:
+        recipe = yaml.load(recipe_yaml)
     logging.debug(recipe)
     step_input = input_file
     for step in recipe["steps"]:

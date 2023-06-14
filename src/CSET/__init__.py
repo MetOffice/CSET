@@ -19,6 +19,7 @@ CSET: Convective Scale Evaluation Tool
 import argparse
 import logging
 from pathlib import Path
+import os
 
 
 def main():
@@ -40,11 +41,15 @@ def main():
     parser_operators = subparsers.add_parser(
         "operators", help="run a chain of operators"
     )
-    parser_operators.add_argument(
-        "recipe_file", type=Path, help="recipe file to execute"
-    )
     parser_operators.add_argument("input_file", type=Path, help="input file to read")
     parser_operators.add_argument("output_file", type=Path, help="output file to write")
+    parser_operators.add_argument(
+        "recipe_file",
+        type=Path,
+        nargs="?",
+        help="recipe file to execute. If omitted reads from CSET_RECIPE environment variable",
+        default=None,
+    )
     parser_operators.set_defaults(func=_run_operators)
     args = parser.parse_args()
 
@@ -61,6 +66,11 @@ def main():
 
 
 def _run_operators(args):
-    from .operators import execute_recipe
+    from CSET.operators import execute_recipe
 
-    execute_recipe(args.recipe_file, args.input_file, args.output_file)
+    if args.recipe_file:
+        recipe_stream = open(args.recipe_file, "rb")
+    else:
+        recipe_stream = os.getenv("CSET_RECIPE")
+
+    execute_recipe(recipe_stream, args.input_file, args.output_file)
