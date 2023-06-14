@@ -99,8 +99,8 @@ def test_execute_recipe():
 
     # Test happy case (this is really an integration test).
     with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
-        with open(RECIPES.extract_instant_air_temp, "rb") as recipe:
-            internal.execute_recipe(recipe, input_file, output_file.name)
+        recipe_file = RECIPES.extract_instant_air_temp
+        internal.execute_recipe(recipe_file, input_file, output_file.name)
 
     # Test weird edge cases. (also tests paths not being pathlib Paths)
     with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
