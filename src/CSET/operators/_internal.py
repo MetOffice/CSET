@@ -129,6 +129,8 @@ def execute_recipe(
     logging.debug(recipe)
     step_input = input_file
     try:
+        if len(recipe["steps"]) < 1:
+            raise ValueError("Recipe must have at least 1 step.")
         for step in recipe["steps"]:
             step_input = step_parser(step, step_input, output_file)
     except KeyError as err:

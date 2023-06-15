@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from pathlib import Path
+import logging
 import tempfile
 
 import CSET.operators.RECIPES as RECIPES
 import CSET.operators._internal as internal
-import logging
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -57,52 +58,55 @@ def test_execute_recipe():
     """Execute recipe and test exceptions"""
     input_file = Path("tests/test_data/air_temp.nc")
 
-    with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
-        # Test exception for non-existant file.
-        exception_happened = False
-        try:
-            internal.execute_recipe(
-                Path("/non-existant/path"), input_file, output_file.name
-            )
-        except FileNotFoundError:
-            exception_happened = True
-        assert exception_happened
+    # Test exception for non-existant file.
+    exception_happened = False
+    try:
+        internal.execute_recipe(Path("/non-existant/path"), os.devnull, os.devnull)
+    except FileNotFoundError:
+        exception_happened = True
+    assert exception_happened
 
-    with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
-        # Test exception for incorrect type.
-        exception_happened = False
-        try:
-            internal.execute_recipe(True, input_file, output_file.name)
-        except TypeError:
-            exception_happened = True
-        assert exception_happened
+    # Test exception for incorrect type.
+    exception_happened = False
+    try:
+        internal.execute_recipe(True, os.devnull, os.devnull)
+    except TypeError:
+        exception_happened = True
+    assert exception_happened
 
-    with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
-        # Test exception for invalid YAML.
-        exception_happened = False
-        try:
-            internal.execute_recipe(
-                '"Inside quotes" outside of quotes', input_file, output_file.name
-            )
-        except ValueError:
-            exception_happened = True
-        assert exception_happened
+    # Test exception for invalid YAML.
+    exception_happened = False
+    try:
+        internal.execute_recipe(
+            '"Inside quotes" outside of quotes', os.devnull, os.devnull
+        )
+    except ValueError:
+        exception_happened = True
+    assert exception_happened
 
-    with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
-        # Test exception for valid YAML but invalid recipe.
-        exception_happened = False
-        try:
-            internal.execute_recipe("a: 1", input_file, output_file.name)
-        except ValueError:
-            exception_happened = True
-        assert exception_happened
+    # Test exception for valid YAML but invalid recipe.
+    exception_happened = False
+    try:
+        internal.execute_recipe("a: 1", os.devnull, os.devnull)
+    except ValueError:
+        exception_happened = True
+    assert exception_happened
+
+    # Test exception for blank recipe.
+    exception_happened = False
+    try:
+        internal.execute_recipe("", os.devnull, os.devnull)
+    except ValueError:
+        exception_happened = True
+    assert exception_happened
 
     # Test happy case (this is really an integration test).
     with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
         recipe_file = RECIPES.extract_instant_air_temp
         internal.execute_recipe(recipe_file, input_file, output_file.name)
 
-    # Test weird edge cases. (also tests paths not being pathlib Paths)
+    # Test weird edge cases. Also tests paths not being pathlib Paths, and
+    # directly passing in a stream for a recipe file.
     with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
-        with open("tests/test_data/noop_recipe.yaml") as recipe:
+        with open("tests/test_data/noop_recipe.yaml", "rb") as recipe:
             internal.execute_recipe(recipe, str(input_file), output_file.name)
