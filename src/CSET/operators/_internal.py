@@ -138,5 +138,6 @@ def execute_recipe(
     except TypeError as err:
         if recipe is None:
             raise ValueError("Recipe must have at least 1 step.")
-        raise err
+        # This should never be reached.
+        raise err  # pragma: no cover
     logging.info(f"Recipe output: {step_input}")
