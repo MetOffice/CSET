@@ -135,4 +135,8 @@ def execute_recipe(
             step_input = step_parser(step, step_input, output_file)
     except KeyError as err:
         raise ValueError("Invalid Recipe:", err)
+    except TypeError as err:
+        if recipe is None:
+            raise ValueError("Recipe must have at least 1 step.")
+        raise err
     logging.info(f"Recipe output: {step_input}")

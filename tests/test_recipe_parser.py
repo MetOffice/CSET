@@ -16,6 +16,7 @@ import os
 from pathlib import Path
 import logging
 import tempfile
+from uuid import uuid4
 
 import CSET.operators.RECIPES as RECIPES
 import CSET.operators._internal as internal
@@ -101,12 +102,14 @@ def test_execute_recipe():
     assert exception_happened
 
     # Test happy case (this is really an integration test).
-    with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
-        recipe_file = RECIPES.extract_instant_air_temp
-        internal.execute_recipe(recipe_file, input_file, output_file.name)
+    output_file = Path(f"{tempfile.gettempdir()}/{uuid4()}.nc")
+    recipe_file = RECIPES.extract_instant_air_temp
+    internal.execute_recipe(recipe_file, input_file, output_file)
+    output_file.unlink()
 
     # Test weird edge cases. Also tests paths not being pathlib Paths, and
     # directly passing in a stream for a recipe file.
-    with tempfile.NamedTemporaryFile(prefix="cset_test_") as output_file:
-        with open("tests/test_data/noop_recipe.yaml", "rb") as recipe:
-            internal.execute_recipe(recipe, str(input_file), output_file.name)
+    output_file = f"{tempfile.gettempdir()}/{uuid4()}.nc"
+    with open("tests/test_data/noop_recipe.yaml", "rb") as recipe:
+        internal.execute_recipe(recipe, str(input_file), output_file)
+    # The output_file doesn't actually get written, so doesn't need removing.
