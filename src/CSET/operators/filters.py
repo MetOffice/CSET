@@ -21,7 +21,7 @@ import iris.cube
 
 
 def filter_cubes(
-    cubelist: iris.cube.CubeList, constraint: iris.Constraint, **kwargs
+    cubelist: iris.cube.CubeList, constraint: iris.Constraint
 ) -> iris.cube.Cube:
     """
     Filters a cubelist down to a single cube based on a constraint.

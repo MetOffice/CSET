@@ -30,16 +30,20 @@ Usage
 cset operators
 ~~~~~~~~~~~~~~
 
-The chain of operators can be run with ``cset operators path/to/input.pp
-path/to/output.nc /path/to/recipe``. Additional help is available with the
+The chain of operators can be run with ``cset operators /path/to/recipe.yaml
+path/to/input.pp path/to/output.nc``. Additional help is available with the
 ``--help`` option. The recipe format is described on the :doc:`operator-recipes`
 page.
 
-cset task
-~~~~~~~~~
+.. code-block:: text
 
-.. attention::
+    usage: cset operators [-h] recipe_file input_file output_file
 
-    🚧 Currently unimplemented. 🚧
+    positional arguments:
+    recipe_file  recipe file to execute
+    input_file   input file to read
+    output_file  output file to write
 
-``cset task [something...]``
+    options:
+    -h, --help     show this help message and exit
+    -v, --verbose  increase output verbosity, may be specified multiple times

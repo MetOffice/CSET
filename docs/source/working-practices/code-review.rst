@@ -33,13 +33,14 @@ impersonal, avoid accusatory or too direct language, and perhaps use emoji or
 similar to lighten the mood. 😊 Another good idea is to point out examples of
 particularly good code, as it can help foster a more supportive atmosphere.
 
-The SSE CoP code review exchange is useful for getting advice on something you
-don't have experience/expertise with if you encounter it during a review.
-
 Checklists and developer guides are really useful, as they allow both reviewer
 and reviewee to know what is expected of them. They also help in preventing
 things being missed. Having a structured and documented process for reviewing
 makes it much more manageable and easier for everyone to follow.
+
+(Met Office specific) The SSE CoP code review exchange is useful for getting
+advice on something you don't have experience/expertise with if you encounter it
+during a review.
 
 .. _code review pyramid: https://www.morling.dev/blog/the-code-review-pyramid/
 

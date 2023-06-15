@@ -13,6 +13,9 @@
 # limitations under the License.
 
 from CSET.operators import read
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 def test_read_cubes():

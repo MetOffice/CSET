@@ -69,8 +69,6 @@ below.
     """
     return n + 1
 
-
-
 .. _Sphinx documentation build system: https://www.sphinx-doc.org/
 .. _reStructuredText: https://docutils.sourceforge.io/docs/user/rst/quickref.html
 .. _Sphinx website: https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html

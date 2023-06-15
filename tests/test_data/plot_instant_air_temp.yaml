@@ -1,0 +1,28 @@
+name: Extract Instant Air Temperature
+description: |
+  Extracts out the instantaneous 1.5m air temperature from a file and writes it
+  to a new one.
+
+steps:
+  - operator: read.read_cubes
+    constraint:
+      operator: constraints.generate_stash_constraint
+      stash: m01s03i236
+
+  - operator: filters.filter_cubes
+    constraint:
+      operator: constraints.combine_constraints
+      constraint:
+        operator: constraints.generate_stash_constraint
+        stash: m01s03i236
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+      time_constraint:
+        operator: constraints.generate_time_constraint
+        time_start: 2022-09-21T03:00:00
+        time_end: 2022-09-21T03:30:00
+
+  - operator: plot.spatial_contour_plot
+    # This is a magic value that becomes the runtime output file path.
+    file_path: CSET_OUTPUT_PATH

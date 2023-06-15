@@ -16,12 +16,15 @@ from pathlib import Path
 from uuid import uuid4
 import tempfile
 import CSET.operators._internal as internal
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 def test_spacial_plot():
     """Plot spacial contour plot of instant air temp."""
     input_file = Path("tests/test_data/air_temp.nc")
-    recipe_file = Path("tests/test_data/plot_instant_air_temp.toml")
+    recipe_file = Path("tests/test_data/plot_instant_air_temp.yaml")
     output_file = Path(f"{tempfile.gettempdir()}/{uuid4()}")
     internal.execute_recipe(recipe_file, input_file, output_file)
     actual_output_file = output_file.with_suffix(".svg")

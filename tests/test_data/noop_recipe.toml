@@ -1,5 +1,0 @@
-name = "Noop"
-description = """A recipe that does nothing. Only used for testing."""
-
-[[steps]]
-  operator = "misc.noop"
