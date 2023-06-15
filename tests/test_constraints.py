@@ -50,12 +50,12 @@ def test_generate_time_constraint():
     assert expected_time_constraint in repr(time_constraint)
     # Try with datatime.datatime dates
     time_constraint = constraints.generate_time_constraint(
-        datetime.fromisoformat("2023-03-24T00:00"),
-        datetime.fromisoformat("2023-03-24T06:00"),
+        datetime.fromisoformat("2023-03-24T00:00:00+00:00"),
+        datetime.fromisoformat("2023-03-24T06:00:00+00:00"),
     )
     assert expected_time_constraint in repr(time_constraint)
     # Try with implicit end
-    time_constraint = constraints.generate_time_constraint("2023-03-24T00:00")
+    time_constraint = constraints.generate_time_constraint("2023-03-24T00:00:00+00:00")
     assert expected_time_constraint in repr(time_constraint)
 
 

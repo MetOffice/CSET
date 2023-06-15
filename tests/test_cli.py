@@ -28,8 +28,8 @@ def test_recipe_execution():
         [
             "cset",
             "operators",
-            "/dev/null",
-            "/dev/null",
+            os.devnull,
+            os.devnull,
             "test/test_data/noop_recipe.yaml",
         ]
     )
@@ -46,7 +46,7 @@ def test_environ_var_recipe():
         [
             "cset",
             "operators",
-            "/dev/null",
-            "/dev/null",
+            os.devnull,
+            os.devnull,
         ]
     )

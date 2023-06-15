@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from CSET.operators import write, read
-from secrets import token_hex
 from pathlib import Path
 import logging
+import tempfile
+
+from CSET.operators import write, read
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -23,15 +24,18 @@ logging.basicConfig(level=logging.DEBUG)
 def test_write_cube_to_nc():
     """Write cube to Path and string path and verify."""
     cube = read.read_cubes("tests/test_data/air_temp.nc")[0]
+
     # Write to string
-    filename = f"/tmp/{token_hex(4)}_write_test_cube.nc"
-    write.write_cube_to_nc(cube, filename)
+    with tempfile.NamedTemporaryFile(prefix="cset_test_") as file:
+        write.write_cube_to_nc(cube, file.name)
+        # Check that the cube was written correctly
+        written_cube = read.read_cubes(file.name)[0]
+        assert written_cube == cube
+
     # Write to Path
-    filepath = Path(f"/tmp/{token_hex(4)}_write_test_cube.nc")
-    write.write_cube_to_nc(cube, filepath)
-    # Check that the cube was written correctly
-    written_cube = read.read_cubes(filepath)[0]
-    assert written_cube == cube
-    # Clean up written files
-    filepath.unlink()
-    Path(filename).unlink()
+    with tempfile.NamedTemporaryFile(prefix="cset_test_") as file:
+        filepath = Path(file.name)
+        write.write_cube_to_nc(cube, filepath)
+        # Check that the cube was written correctly
+        written_cube = read.read_cubes(filepath)[0]
+        assert written_cube == cube
