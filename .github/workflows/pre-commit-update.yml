@@ -30,7 +30,7 @@ jobs:
           git config --local user.name "$GITHUB_ACTOR"
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
           git switch -c "pre-commit-$(sha256sum ${{ runner.temp }}/config_file_hashes | head -c 8)"
-          pre-commit autoupdate
+          pre-commit autoupdate --freeze
 
       - name: Create pull requests
         env:
