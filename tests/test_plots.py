@@ -21,8 +21,8 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 
-def test_spacial_plot():
-    """Plot spacial contour plot of instant air temp."""
+def test_spatial_plot():
+    """Plot spatial contour plot of instant air temp."""
     input_file = Path("tests/test_data/air_temp.nc")
     output_file = Path(f"{tempfile.gettempdir()}/{uuid4()}")
     recipe_file = Path("tests/test_data/plot_instant_air_temp.yaml")
