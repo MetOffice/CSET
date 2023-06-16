@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import subprocess
+import os
 
 
 def test_command_line_help():
@@ -27,8 +28,25 @@ def test_recipe_execution():
         [
             "cset",
             "operators",
+            os.devnull,
+            os.devnull,
             "test/test_data/noop_recipe.yaml",
-            "/dev/null",
-            "/dev/null",
+        ]
+    )
+
+
+def test_environ_var_recipe():
+    os.environ[
+        "CSET_RECIPE"
+    ] = """
+        steps:
+          - operator: misc.noop
+        """
+    subprocess.run(
+        [
+            "cset",
+            "operators",
+            os.devnull,
+            os.devnull,
         ]
     )

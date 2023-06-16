@@ -13,8 +13,7 @@ a python script.
 
     import CSET.operators
 
-    recipe = CSET.operators.RECIPES.extract_instant_air_temp
-    CSET.operators.execute_recipe(recipe, "/input/file/path.nc", "/output/file/path.nc")
+    CSET.operators.execute_recipe("/path/to/recipe_file.yaml", "/path/to/input_file.nc", "/path/to/output_file.nc")
 
 Recipe format
 -------------
