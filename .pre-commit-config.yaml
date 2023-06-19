@@ -5,17 +5,17 @@ ci:
 
 repos:
   - repo: https://github.com/psf/black
-    rev: 23.3.0
+    rev: bf7a16254ec96b084a6caf3d435ec18f0f245cc7  # frozen: 23.3.0
     hooks:
       - id: black
 
   - repo: https://github.com/PyCQA/flake8
-    rev: 6.0.0
+    rev: c838a5e98878f17889cfce311e1406d252f87ec5  # frozen: 6.0.0
     hooks:
       - id: flake8
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: f71fa2c1f9cf5cb705f73dffe4b21f7c61470ba9  # frozen: v4.4.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
