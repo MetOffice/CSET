@@ -92,6 +92,7 @@ def execute_recipe(
     """
 
     def step_parser(step: dict, step_input: any, output_file_path: Path) -> str:
+        """Executes a recipe step, recursively executing any sub-steps."""
         logging.debug(f"Executing step: {step}")
         kwargs = {}
         for key in step.keys():
@@ -105,10 +106,8 @@ def execute_recipe(
                 kwargs[key] = output_file_path
             else:
                 kwargs[key] = step[key]
-
         logging.debug(f"args: {kwargs}")
         logging.debug(f"step_input: {step_input}")
-
         # If first argument of operator is explicitly defined, use that rather
         # than step_input. This is known through introspection of the operator.
         first_arg = next(iter(inspect.signature(operator).parameters.keys()))
@@ -126,18 +125,25 @@ def execute_recipe(
         except ruamel.yaml.error.YAMLStreamError:
             raise TypeError("Must provide a stream (with a read method)")
 
+    # Checking that the recipe actually has some steps, and providing helpful
+    # error messages otherwise.
     logging.debug(recipe)
-    step_input = input_file
     try:
         if len(recipe["steps"]) < 1:
             raise ValueError("Recipe must have at least 1 step.")
-        for step in recipe["steps"]:
-            step_input = step_parser(step, step_input, output_file)
     except KeyError as err:
         raise ValueError("Invalid Recipe:", err)
     except TypeError as err:
         if recipe is None:
             raise ValueError("Recipe must have at least 1 step.")
+        if type(recipe) != dict:
+            raise ValueError("Recipe must either be YAML, or a Path.")
         # This should never be reached.
         raise err  # pragma: no cover
+
+    # Execute the recipe.
+    step_input = input_file
+    for step in recipe["steps"]:
+        step_input = step_parser(step, step_input, output_file)
+
     logging.info(f"Recipe output: {step_input}")
