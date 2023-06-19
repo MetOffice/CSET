@@ -146,7 +146,7 @@ def combine_constraints(
     """
     # If the first argument is not a constraint, it is ignored. This handles the
     # automatic passing of the previous step's output.
-    if type(constraint) == iris.Constraint:
+    if isinstance(constraint, iris.Constraint):
         combined_constraint = constraint
     else:
         combined_constraint = iris.Constraint()
