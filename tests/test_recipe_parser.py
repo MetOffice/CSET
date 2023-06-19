@@ -109,6 +109,14 @@ def test_execute_recipe():
         exception_happened = True
     assert exception_happened
 
+    # Test exception for recipe that parses to a non-dict.
+    exception_happened = False
+    try:
+        internal.execute_recipe("[]", os.devnull, os.devnull)
+    except ValueError:
+        exception_happened = True
+    assert exception_happened
+
     # Test happy case (this is really an integration test).
     output_file = Path(f"{tempfile.gettempdir()}/{uuid4()}.nc")
     recipe_file = RECIPES.extract_instant_air_temp
