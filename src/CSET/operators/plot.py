@@ -23,7 +23,7 @@ import iris.quickplot as qplt
 import matplotlib.pyplot as plt
 
 
-def spatial_contour_plot(cube: iris.cube.Cube, file_path: Path) -> Path:
+def spatial_contour_plot(cube: iris.cube.Cube, file_path: Path, **kwargs) -> Path:
     """
     Plots a spatial variable onto a map.
 

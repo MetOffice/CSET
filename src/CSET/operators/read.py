@@ -23,7 +23,7 @@ import iris.cube
 
 
 def read_cubes(
-    loadpath: Path, constraint: iris.Constraint = None
+    loadpath: Path, constraint: iris.Constraint = None, **kwargs
 ) -> iris.cube.CubeList:
     """
     Read operator that takes a path string (can include wildcards), and uses
