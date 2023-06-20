@@ -5,3 +5,5 @@ steps:
   - operator: misc.noop
     test_argument: Banana
     dict_argument: {"key": "value"}
+    substep:
+      operator: constraints.combine_constraints

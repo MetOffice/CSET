@@ -12,7 +12,7 @@ steps:
   - operator: filters.filter_cubes
     constraint:
       operator: constraints.combine_constraints
-      constraint:
+      stash_constraint:
         operator: constraints.generate_stash_constraint
         stash: m01s03i236
       cell_methods_constraint:
@@ -23,6 +23,9 @@ steps:
         time_start: 2022-09-21T03:00:00
         time_end: 2022-09-21T03:30:00
 
-  - operator: plot.spatial_contour_plot
+  - operator: write.write_cube_to_nc
     # This is a magic value that becomes the runtime output file path.
     file_path: CSET_OUTPUT_PATH
+    plot_data_as_well:
+      operator: plot.spatial_contour_plot
+      file_path: CSET_OUTPUT_PATH

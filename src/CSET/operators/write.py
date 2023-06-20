@@ -24,7 +24,7 @@ import iris.cube
 
 
 def write_cube_to_nc(
-    cube: Union[iris.cube.Cube, iris.cube.CubeList], file_path: Path
+    cube: Union[iris.cube.Cube, iris.cube.CubeList], file_path: Path, **kwargs
 ) -> str:
     """
     A write operator that sits after the read operator. This operator expects
