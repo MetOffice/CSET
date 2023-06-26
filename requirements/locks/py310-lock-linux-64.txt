@@ -66,7 +66,7 @@ https://conda.anaconda.org/conda-forge/linux-64/krb5-1.20.1-h81ceb04_0.conda#89a
 https://conda.anaconda.org/conda-forge/linux-64/libcblas-3.9.0-17_linux64_openblas.conda#7ef0969b00fe3d6eef56a8151d3afb29
 https://conda.anaconda.org/conda-forge/linux-64/liblapack-3.9.0-17_linux64_openblas.conda#a2103882c46492e26500fcb56c03de8b
 https://conda.anaconda.org/conda-forge/linux-64/libtiff-4.5.1-h8b53f26_0.conda#8ad377fb60abab446a9f02c62b3c2190
-https://conda.anaconda.org/conda-forge/linux-64/python-3.10.11-he550d4f_0_cpython.conda#7439c9d24378a82b73a7a53868dacdf1
+https://conda.anaconda.org/conda-forge/linux-64/python-3.10.12-hd12c33a_0_cpython.conda#eb6f1df105f37daedd6dca78523baa75
 https://conda.anaconda.org/conda-forge/linux-64/sqlite-3.42.0-h2c6b66d_0.conda#1192f6ec654a5bc4ee1d64bdc4a3e5cc
 https://conda.anaconda.org/conda-forge/linux-64/udunits2-2.2.28-hc3e0081_0.tar.bz2#d4c341e0379c31e9e781d4f204726867
 https://conda.anaconda.org/conda-forge/noarch/alabaster-0.7.13-pyhd8ed1ab_0.conda#06006184e203b61d3525f90de394471e
@@ -110,7 +110,7 @@ https://conda.anaconda.org/conda-forge/linux-64/python-xxhash-3.2.0-py310h1fa729
 https://conda.anaconda.org/conda-forge/noarch/pytz-2023.3-pyhd8ed1ab_0.conda#d3076b483092a435832603243567bc31
 https://conda.anaconda.org/conda-forge/linux-64/pyyaml-6.0-py310h5764c6d_5.tar.bz2#9e68d2ff6d98737c855b65f48dd3c597
 https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml.clib-0.2.7-py310h1fa729e_1.conda#2f9b517412af46255cef5e53a22c264e
-https://conda.anaconda.org/conda-forge/noarch/setuptools-67.7.2-pyhd8ed1ab_0.conda#3b68bc43ec6baa48f7354a446267eefe
+https://conda.anaconda.org/conda-forge/noarch/setuptools-68.0.0-pyhd8ed1ab_0.conda#5a7739d0f57ee64133c9d32e6507c46d
 https://conda.anaconda.org/conda-forge/noarch/six-1.16.0-pyh6c4a22f_0.tar.bz2#e5f25f8dbc060e9a8d912e432202afc2
 https://conda.anaconda.org/conda-forge/noarch/snowballstemmer-2.2.0-pyhd8ed1ab_0.tar.bz2#4d22a9315e78c6827f806065957d566e
 https://conda.anaconda.org/conda-forge/noarch/soupsieve-2.3.2.post1-pyhd8ed1ab_0.tar.bz2#146f4541d643d48fc8a75cacf69f03ae
@@ -146,7 +146,7 @@ https://conda.anaconda.org/conda-forge/linux-64/pillow-9.5.0-py310h582fbeb_1.con
 https://conda.anaconda.org/conda-forge/noarch/pip-23.1.2-pyhd8ed1ab_0.conda#7288da0d36821349cf1126e8670292df
 https://conda.anaconda.org/conda-forge/linux-64/proj-9.2.1-ha643af7_0.conda#e992387307f4403ba0ec07d009032550
 https://conda.anaconda.org/conda-forge/noarch/pyproject-api-1.5.2-pyhd8ed1ab_0.conda#04e8f327eb1d5b09388a85ae38af39e8
-https://conda.anaconda.org/conda-forge/noarch/pytest-7.3.2-pyhd8ed1ab_1.conda#f2465696f4396245eca4613f6e924796
+https://conda.anaconda.org/conda-forge/noarch/pytest-7.4.0-pyhd8ed1ab_0.conda#3cfe9b9e958e7238a386933c75d190db
 https://conda.anaconda.org/conda-forge/noarch/python-dateutil-2.8.2-pyhd8ed1ab_0.tar.bz2#dd999d1cc9f79e67dbb855c8924c7984
 https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml-0.17.32-py310h2372a71_0.conda#9a03abf74d5069bda767c1bce7a41e0b
 https://conda.anaconda.org/conda-forge/linux-64/shapely-2.0.1-py310h056c13c_1.conda#32d925cfd330e0cbb72b7618558a44e8
@@ -156,7 +156,7 @@ https://conda.anaconda.org/conda-forge/linux-64/cf-units-3.2.0-py310h278f3c1_0.c
 https://conda.anaconda.org/conda-forge/noarch/importlib_metadata-6.7.0-hd8ed1ab_0.conda#27a4cec373ec84d1c1aa02a1e37f8eaf
 https://conda.anaconda.org/conda-forge/linux-64/libnetcdf-4.9.2-nompi_h0f3d0bb_105.conda#b5d412441b84305460e9df8a016a3392
 https://conda.anaconda.org/conda-forge/linux-64/matplotlib-base-3.7.1-py310he60537e_0.conda#68b2dd34c69d08b05a9db5e3596fe3ee
-https://conda.anaconda.org/conda-forge/noarch/platformdirs-3.6.0-pyhd8ed1ab_0.conda#741384b21c1b512617f4ee4ea8457c5d
+https://conda.anaconda.org/conda-forge/noarch/platformdirs-3.8.0-pyhd8ed1ab_0.conda#3e4aca765371893ad848397794600632
 https://conda.anaconda.org/conda-forge/linux-64/pyproj-3.6.0-py310h24ef57a_1.conda#a689e86d7bbab67f889fc384aa72b088
 https://conda.anaconda.org/conda-forge/noarch/pytest-cov-4.1.0-pyhd8ed1ab_0.conda#06eb685a3a0b146347a58dda979485da
 https://conda.anaconda.org/conda-forge/noarch/requests-2.31.0-pyhd8ed1ab_0.conda#a30144e4156cdbb236f99ebb49828f8b
