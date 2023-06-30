@@ -103,3 +103,7 @@ deps = coverage
 skip_install = true
 commands = coverage erase
 '''
+
+[tool.codespell]
+ignore-words-list = "lazyness,meaned"
+skip = "build,*.css,*.ipynb,*.js,*.html,*.svg,*.xml,.git"
