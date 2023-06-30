@@ -13,6 +13,6 @@
 # limitations under the License.
 
 import sys  # pragma: no cover
-from . import main  # pragma: no cover
+from CSET import main  # pragma: no cover
 
 sys.exit(main())  # pragma: no cover
