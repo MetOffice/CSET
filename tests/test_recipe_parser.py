@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 from pathlib import Path
 import logging
 import tempfile
@@ -27,6 +26,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 def test_get_operator():
     """Get operator and test exceptions"""
+
     read_operator = recipe_parsing.get_operator("read.read_cubes")
     assert callable(read_operator)
 
@@ -55,16 +55,22 @@ def test_get_operator():
     assert exception_occurred
 
 
-def test_execute_recipe():
+def test_parse_recipe():
     """Execute recipe and test exceptions"""
-    input_file = Path("tests/test_data/air_temp.nc")
+
+    # Check happy case.
+    valid_recipe = """\
+    steps:
+        operator: misc.noop
+        arg1: Hello
+    """
+    parsed = recipe_parsing.parse_recipe(valid_recipe)
+    assert parsed == {"steps": {"operator": "misc.noop", "arg1": "Hello"}}
 
     # Test exception for non-existent file.
     exception_happened = False
     try:
-        recipe_parsing.execute_recipe(
-            Path("/non-existent/path"), os.devnull, os.devnull
-        )
+        recipe_parsing.parse_recipe(Path("/non-existent/path"))
     except FileNotFoundError:
         exception_happened = True
     assert exception_happened
@@ -72,7 +78,7 @@ def test_execute_recipe():
     # Test exception for incorrect type.
     exception_happened = False
     try:
-        recipe_parsing.execute_recipe(True, os.devnull, os.devnull)
+        recipe_parsing.parse_recipe(True)
     except TypeError:
         exception_happened = True
     assert exception_happened
@@ -80,9 +86,7 @@ def test_execute_recipe():
     # Test exception for invalid YAML.
     exception_happened = False
     try:
-        recipe_parsing.execute_recipe(
-            '"Inside quotes" outside of quotes', os.devnull, os.devnull
-        )
+        recipe_parsing.parse_recipe('"Inside quotes" outside of quotes')
     except ValueError:
         exception_happened = True
     assert exception_happened
@@ -90,7 +94,7 @@ def test_execute_recipe():
     # Test exception for valid YAML but invalid recipe.
     exception_happened = False
     try:
-        recipe_parsing.execute_recipe("a: 1", os.devnull, os.devnull)
+        recipe_parsing.parse_recipe("a: 1")
     except ValueError:
         exception_happened = True
     assert exception_happened
@@ -98,7 +102,7 @@ def test_execute_recipe():
     # Test exception for blank recipe.
     exception_happened = False
     try:
-        recipe_parsing.execute_recipe("", os.devnull, os.devnull)
+        recipe_parsing.parse_recipe("")
     except ValueError:
         exception_happened = True
     assert exception_happened
@@ -106,7 +110,7 @@ def test_execute_recipe():
     # Test exception for recipe without any steps.
     exception_happened = False
     try:
-        recipe_parsing.execute_recipe("steps: []", os.devnull, os.devnull)
+        recipe_parsing.parse_recipe("steps: []")
     except ValueError:
         exception_happened = True
     assert exception_happened
@@ -114,10 +118,16 @@ def test_execute_recipe():
     # Test exception for recipe that parses to a non-dict.
     exception_happened = False
     try:
-        recipe_parsing.execute_recipe("[]", os.devnull, os.devnull)
+        recipe_parsing.parse_recipe("[]")
     except ValueError:
         exception_happened = True
     assert exception_happened
+
+
+def test_execute_recipe():
+    """Execute recipe"""
+
+    input_file = Path("tests/test_data/air_temp.nc")
 
     # Test happy case (this is really an integration test).
     output_file = Path(f"{tempfile.gettempdir()}/{uuid4()}.nc")
