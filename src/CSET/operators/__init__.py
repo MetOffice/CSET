@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """This subpackage contains all of CSET's operators."""
-from . import RECIPES, constraints, read, write, filters, plot, misc
+from CSET.operators import RECIPES, constraints, read, write, filters, plot, misc
 
 # Stop iris giving a warning whenever it loads something.
 from iris import FUTURE
