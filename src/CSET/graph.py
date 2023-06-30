@@ -14,5 +14,45 @@
 
 import logging
 from pathlib import Path
+from typing import Union
+import tempfile
+from uuid import uuid4
+import subprocess
 
-raise NotImplementedError("cset graph is currently not implemented.")
+from CSET._recipe_parsing import parse_recipe
+
+
+def save_graph(
+    recipe_file: Union[Path, str], save_path: Path = None, auto_open: bool = False
+):
+    """
+    Draws out the graph of a recipe, and saves it to a file.
+
+    Parameters
+    ----------
+    recipe_file: Path | str
+        The recipe to be graphed.
+
+    save_path: Path
+        Path where to save the generated image. Defaults to a temporary file.
+
+    auto_open: bool
+        Whether to automatically open the graph with the default image viewer.
+    """
+
+    recipe = parse_recipe(recipe_file)
+    logging.debug("Parsed recipe: %s", recipe)
+    if not save_path:
+        save_path = Path(f"{tempfile.gettempdir()}/{uuid4()}.svg")
+    logging.info("Saving graph to %s", save_path)
+
+    # Placeholder of graph making while work in progress. This should be
+    # replaced by usage of pygraphvis to generate an SVG.
+    save_path.write_text(str(recipe["steps"]), "utf-8")
+
+    if auto_open:
+        # Stderr is redirected here to suppress gvfs-open deprecation warning.
+        # See https://bugs.python.org/issue30219 for an example.
+        subprocess.run(
+            ("xdg-open", str(save_path)), check=True, stderr=subprocess.DEVNULL
+        )
