@@ -47,6 +47,7 @@ def get_operator(name: str):
     <function read_cubes at 0x7fcf9353c8b0>
     """
 
+    logging.debug("get_operator(%s)", name)
     try:
         name_sections = name.split(".")
         operator = CSET.operators
@@ -58,6 +59,61 @@ def get_operator(name: str):
             raise AttributeError
     except (AttributeError, TypeError):
         raise ValueError(f"Unknown operator: {name}")
+
+
+def parse_recipe(recipe_yaml: Union[Path, str]):
+    """
+    Parses a recipe into a python dictionary.
+
+    Parameters
+    ----------
+    recipe_yaml: Path | str
+        Path to recipe file, or the recipe YAML directly.
+
+    Returns
+    -------
+    recipe: dict
+        The recipe as a python dictionary.
+
+    Raises
+    ------
+    ValueError
+        If the recipe is invalid. E.g. invalid YAML, missing any steps, etc.
+
+    TypeError
+        If recipe_yaml isn't a Path or string.
+
+    Examples
+    --------
+    >>> CSET._recipe_parsing.parse_recipe(Path("myrecipe.yaml"))
+    {'steps': [{'operator': 'misc.noop'}]}
+    """
+
+    with ruamel.yaml.YAML(typ="safe", pure=True) as yaml:
+        try:
+            recipe = yaml.load(recipe_yaml)
+        except ruamel.yaml.parser.ParserError:
+            raise ValueError("ParserError: Invalid YAML")
+        except ruamel.yaml.error.YAMLStreamError:
+            raise TypeError("Must provide a stream (with a read method)")
+
+    # Checking that the recipe actually has some steps, and providing helpful
+    # error messages otherwise.
+    logging.debug(recipe)
+    try:
+        if len(recipe["steps"]) < 1:
+            raise ValueError("Recipe must have at least 1 step.")
+    except KeyError as err:
+        raise ValueError("Invalid Recipe:", err)
+    except TypeError as err:
+        if recipe is None:
+            raise ValueError("Recipe must have at least 1 step.")
+        if type(recipe) != dict:
+            raise ValueError("Recipe must either be YAML, or a Path.")
+        # This should never be reached; it's a bug if it is.
+        raise err  # pragma: no cover
+
+    return recipe
 
 
 def execute_recipe(
@@ -106,44 +162,22 @@ def execute_recipe(
                 kwargs[key] = output_file_path
             else:
                 kwargs[key] = step[key]
-        logging.debug(f"args: {kwargs}")
-        logging.debug(f"step_input: {step_input}")
+        logging.debug("args: %s", kwargs)
+        logging.debug("step_input: %s", step_input)
         # If first argument of operator is explicitly defined, use that rather
         # than step_input. This is known through introspection of the operator.
         first_arg = next(iter(inspect.signature(operator).parameters.keys()))
-        logging.debug(f"first_arg: {first_arg}")
+        logging.debug("first_arg: %s", first_arg)
         if first_arg not in kwargs:
             return operator(step_input, **kwargs)
         else:
             return operator(**kwargs)
 
-    with ruamel.yaml.YAML(typ="safe", pure=True) as yaml:
-        try:
-            recipe = yaml.load(recipe_yaml)
-        except ruamel.yaml.parser.ParserError:
-            raise ValueError("ParserError: Invalid YAML")
-        except ruamel.yaml.error.YAMLStreamError:
-            raise TypeError("Must provide a stream (with a read method)")
-
-    # Checking that the recipe actually has some steps, and providing helpful
-    # error messages otherwise.
-    logging.debug(recipe)
-    try:
-        if len(recipe["steps"]) < 1:
-            raise ValueError("Recipe must have at least 1 step.")
-    except KeyError as err:
-        raise ValueError("Invalid Recipe:", err)
-    except TypeError as err:
-        if recipe is None:
-            raise ValueError("Recipe must have at least 1 step.")
-        if type(recipe) != dict:
-            raise ValueError("Recipe must either be YAML, or a Path.")
-        # This should never be reached.
-        raise err  # pragma: no cover
+    recipe = parse_recipe(recipe_yaml)
 
     # Execute the recipe.
     step_input = input_file
     for step in recipe["steps"]:
         step_input = step_parser(step, step_input, output_file)
 
-    logging.info(f"Recipe output: {step_input}")
+    logging.info("Recipe output: %s", step_input)
