@@ -14,7 +14,6 @@
 
 """This subpackage contains all of CSET's operators."""
 from . import RECIPES, constraints, read, write, filters, plot, misc
-from ._internal import execute_recipe
 
 # Stop iris giving a warning whenever it loads something.
 from iris import FUTURE
