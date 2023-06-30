@@ -25,3 +25,10 @@ repos:
       - id: check-added-large-files
       - id: check-case-conflict
       - id: check-merge-conflict
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: 355e50e14fd03fe83e4ed9aa0489824b150b3b58  # frozen: v2.2.5
+    hooks:
+    - id: codespell
+      additional_dependencies:
+        - tomli
