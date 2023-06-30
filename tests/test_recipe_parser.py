@@ -30,10 +30,10 @@ def test_get_operator():
     read_operator = internal.get_operator("read.read_cubes")
     assert callable(read_operator)
 
-    # Test exception for non-existant operators.
+    # Test exception for non-existent operators.
     exception_occurred = False
     try:
-        internal.get_operator("non-existant.operator")
+        internal.get_operator("non-existent.operator")
     except ValueError:
         exception_occurred = True
     assert exception_occurred
@@ -59,10 +59,10 @@ def test_execute_recipe():
     """Execute recipe and test exceptions"""
     input_file = Path("tests/test_data/air_temp.nc")
 
-    # Test exception for non-existant file.
+    # Test exception for non-existent file.
     exception_happened = False
     try:
-        internal.execute_recipe(Path("/non-existant/path"), os.devnull, os.devnull)
+        internal.execute_recipe(Path("/non-existent/path"), os.devnull, os.devnull)
     except FileNotFoundError:
         exception_happened = True
     assert exception_happened
