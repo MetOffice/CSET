@@ -21,6 +21,9 @@ jobs:
           key: tox|tests|${{ runner.os }}-${{ runner.arch}}|${{ hashFiles('requirements/locks/*') }}
           path: .tox
       - name: Run tests
+        env:
+          PY_COLORS: "1"
+          TOX_PARALLEL_NO_SPINNER: "1"
         run: tox -e py38-linux-tests,py39-linux-tests,py310-linux-tests,py311-linux-tests
       - uses: actions/upload-artifact@v3
         with:
