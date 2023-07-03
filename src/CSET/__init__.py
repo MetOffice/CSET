@@ -102,6 +102,6 @@ def _run_graph(args):
     save_graph(
         args.recipe,
         args.output_path,
-        auto_open=bool(args.output_path),
+        auto_open=not bool(args.output_path),
         detailed=args.detailed,
     )
