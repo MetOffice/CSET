@@ -40,7 +40,15 @@ def test_cli_interface():
     # Run with details
     output_file = Path(tempfile.gettempdir(), f"{uuid4()}.svg")
     subprocess.run(
-        ("cset", "graph", "--detailed", "tests/test_data/noop_recipe.yaml"), check=True
+        (
+            "cset",
+            "graph",
+            "--detailed",
+            "-o",
+            str(output_file),
+            "tests/test_data/noop_recipe.yaml",
+        ),
+        check=True,
     )
     assert output_file.exists()
     output_file.unlink()
