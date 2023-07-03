@@ -21,7 +21,8 @@ import CSET.graph
 
 
 def test_save_graph():
-    """Directly tests generating a graph from a recipe file."""
+    """Directly tests generating a graph from a recipe file without the output
+    specified."""
     CSET.graph.save_graph(Path("tests/test_data/plot_instant_air_temp.yaml"))
 
 
@@ -36,7 +37,14 @@ def test_cli_interface():
     assert output_file.exists()
     output_file.unlink()
 
-    # Run with details and no output specified
+    # Run with details
+    output_file = Path(tempfile.gettempdir(), f"{uuid4()}.svg")
     subprocess.run(
         ("cset", "graph", "--detailed", "tests/test_data/noop_recipe.yaml"), check=True
     )
+    assert output_file.exists()
+    output_file.unlink()
+
+    # We can't easily test running without the output specified from the CLI, as
+    # the call to xdg-open breaks in CI, due to it not being a graphical
+    # environment.
