@@ -91,9 +91,9 @@ def save_graph(
     graph.draw(save_path, format="svg", prog="dot")
     print(f"Graph rendered to {save_path}")
 
-    if auto_open:
+    if auto_open:  # pragma: no cover (xdg-open breaks in CI)
         # Stderr is redirected here to suppress gvfs-open deprecation warning.
         # See https://bugs.python.org/issue30219 for an example.
         subprocess.run(
-            ("xdg-open", str(save_path)), check=True, stderr=subprocess.DEVNULL
+            ("xdg-open", str(save_path)), check=False, stderr=subprocess.DEVNULL
         )

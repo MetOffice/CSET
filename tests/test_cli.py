@@ -21,6 +21,8 @@ def test_command_line_help():
     # test verbose options. This is really just to up the coverage number.
     subprocess.run(["cset", "-v"])
     subprocess.run(["cset", "-vv"])
+    # Gain coverage of __main__.py
+    subprocess.run(["python3", "-m", "CSET", "-h"])
 
 
 def test_recipe_execution():

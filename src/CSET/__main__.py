@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys  # pragma: no cover
-from CSET import main  # pragma: no cover
+import sys
+from CSET import main
 
-sys.exit(main())  # pragma: no cover
+sys.exit(main())
