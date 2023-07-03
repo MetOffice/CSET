@@ -31,28 +31,28 @@ def test_get_operator():
     assert callable(read_operator)
 
     # Test exception for non-existent operators.
-    exception_occurred = False
     try:
         recipe_parsing.get_operator("non-existent.operator")
     except ValueError:
-        exception_occurred = True
-    assert exception_occurred
+        assert True
+    else:
+        assert False
 
     # Test exception if wrong type provided.
-    exception_occurred = False
     try:
         recipe_parsing.get_operator(["Not", b"a", "string", 1])
     except ValueError:
-        exception_occurred = True
-    assert exception_occurred
+        assert True
+    else:
+        assert False
 
     # Test exception if operator isn't a function.
-    exception_occurred = False
     try:
         recipe_parsing.get_operator("RECIPES.extract_instant_air_temp")
     except ValueError:
-        exception_occurred = True
-    assert exception_occurred
+        assert True
+    else:
+        assert False
 
 
 def test_parse_recipe():
@@ -68,60 +68,60 @@ def test_parse_recipe():
     assert parsed == {"steps": {"operator": "misc.noop", "arg1": "Hello"}}
 
     # Test exception for non-existent file.
-    exception_happened = False
     try:
         recipe_parsing.parse_recipe(Path("/non-existent/path"))
     except FileNotFoundError:
-        exception_happened = True
-    assert exception_happened
+        assert True
+    else:
+        assert False
 
     # Test exception for incorrect type.
-    exception_happened = False
     try:
         recipe_parsing.parse_recipe(True)
     except TypeError:
-        exception_happened = True
-    assert exception_happened
+        assert True
+    else:
+        assert False
 
     # Test exception for invalid YAML.
-    exception_happened = False
     try:
         recipe_parsing.parse_recipe('"Inside quotes" outside of quotes')
     except ValueError:
-        exception_happened = True
-    assert exception_happened
+        assert True
+    else:
+        assert False
 
     # Test exception for valid YAML but invalid recipe.
-    exception_happened = False
     try:
         recipe_parsing.parse_recipe("a: 1")
     except ValueError:
-        exception_happened = True
-    assert exception_happened
+        assert True
+    else:
+        assert False
 
     # Test exception for blank recipe.
-    exception_happened = False
     try:
         recipe_parsing.parse_recipe("")
     except ValueError:
-        exception_happened = True
-    assert exception_happened
+        assert True
+    else:
+        assert False
 
     # Test exception for recipe without any steps.
-    exception_happened = False
     try:
         recipe_parsing.parse_recipe("steps: []")
     except ValueError:
-        exception_happened = True
-    assert exception_happened
+        assert True
+    else:
+        assert False
 
     # Test exception for recipe that parses to a non-dict.
-    exception_happened = False
     try:
         recipe_parsing.parse_recipe("[]")
     except ValueError:
-        exception_happened = True
-    assert exception_happened
+        assert True
+    else:
+        assert False
 
 
 def test_execute_recipe():
