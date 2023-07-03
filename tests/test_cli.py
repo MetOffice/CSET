@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import subprocess
+from pathlib import Path
+from uuid import uuid4
 import os
+import subprocess
+import tempfile
 
 
 def test_command_line_help():
@@ -38,6 +41,7 @@ def test_recipe_execution():
 
 
 def test_environ_var_recipe():
+    """Test recipe coming from environment variable."""
     os.environ[
         "CSET_RECIPE"
     ] = """
@@ -52,3 +56,38 @@ def test_environ_var_recipe():
             os.devnull,
         ]
     )
+
+
+def test_graph_creation():
+    """Generates a graph with the command line interface."""
+
+    # We can't easily test running without the output specified from the CLI, as
+    # the call to xdg-open breaks in CI, due to it not being a graphical
+    # environment.
+
+    # Run with output path specified
+    output_file = Path(tempfile.gettempdir(), f"{uuid4()}.svg")
+    subprocess.run(
+        ("cset", "graph", "-o", str(output_file), "tests/test_data/noop_recipe.yaml"),
+        check=True,
+    )
+    assert output_file.exists()
+    output_file.unlink()
+
+
+def test_graph_details():
+    """Run with details."""
+    output_file = Path(tempfile.gettempdir(), f"{uuid4()}.svg")
+    subprocess.run(
+        (
+            "cset",
+            "graph",
+            "--detailed",
+            "-o",
+            str(output_file),
+            "tests/test_data/noop_recipe.yaml",
+        ),
+        check=True,
+    )
+    assert output_file.exists()
+    output_file.unlink()

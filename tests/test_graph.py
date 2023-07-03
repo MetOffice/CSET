@@ -13,9 +13,6 @@
 # limitations under the License.
 
 from pathlib import Path
-import subprocess
-import tempfile
-from uuid import uuid4
 
 import CSET.graph
 
@@ -37,36 +34,3 @@ def test_save_graph():
         assert True
     else:
         assert False
-
-
-def test_cli_interface():
-    """Generates a graph with the command line interface"""
-
-    # We can't easily test running without the output specified from the CLI, as
-    # the call to xdg-open breaks in CI, due to it not being a graphical
-    # environment.
-
-    # Run with output path specified
-    output_file = Path(tempfile.gettempdir(), f"{uuid4()}.svg")
-    subprocess.run(
-        ("cset", "graph", "-o", str(output_file), "tests/test_data/noop_recipe.yaml"),
-        check=True,
-    )
-    assert output_file.exists()
-    output_file.unlink()
-
-    # Run with details
-    output_file = Path(tempfile.gettempdir(), f"{uuid4()}.svg")
-    subprocess.run(
-        (
-            "cset",
-            "graph",
-            "--detailed",
-            "-o",
-            str(output_file),
-            "tests/test_data/noop_recipe.yaml",
-        ),
-        check=True,
-    )
-    assert output_file.exists()
-    output_file.unlink()

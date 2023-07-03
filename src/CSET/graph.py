@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Visualise recipe into a graph."""
+
 import logging
 from pathlib import Path
 from typing import Union
@@ -21,7 +23,7 @@ import subprocess
 
 import pygraphviz as pgz
 
-from CSET._recipe_parsing import parse_recipe
+from CSET.run import parse_recipe
 
 
 def save_graph(

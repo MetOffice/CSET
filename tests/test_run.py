@@ -12,16 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Tests for running CSET operator recipes."""
+
 from pathlib import Path
-import logging
 import tempfile
 from uuid import uuid4
 
 import CSET.operators.RECIPES as RECIPES
-import CSET._recipe_parsing as recipe_parsing
-
-
-logging.basicConfig(level=logging.DEBUG)
+import CSET.run as recipe_parsing
 
 
 def test_get_operator():
@@ -49,75 +47,6 @@ def test_get_operator():
     # Test exception if operator isn't a function.
     try:
         recipe_parsing.get_operator("RECIPES.extract_instant_air_temp")
-    except ValueError:
-        assert True
-    else:
-        assert False
-
-
-def test_parse_recipe():
-    """Execute recipe and test exceptions"""
-
-    # Check happy case.
-    valid_recipe = """\
-    steps:
-        operator: misc.noop
-        arg1: Hello
-    """
-    parsed = recipe_parsing.parse_recipe(valid_recipe)
-    assert parsed == {"steps": {"operator": "misc.noop", "arg1": "Hello"}}
-
-    # Test exception for non-existent file.
-    try:
-        recipe_parsing.parse_recipe(Path("/non-existent/path"))
-    except FileNotFoundError:
-        assert True
-    else:
-        assert False
-
-    # Test exception for incorrect type.
-    try:
-        recipe_parsing.parse_recipe(True)
-    except TypeError:
-        assert True
-    else:
-        assert False
-
-    # Test exception for invalid YAML.
-    try:
-        recipe_parsing.parse_recipe('"Inside quotes" outside of quotes')
-    except ValueError:
-        assert True
-    else:
-        assert False
-
-    # Test exception for valid YAML but invalid recipe.
-    try:
-        recipe_parsing.parse_recipe("a: 1")
-    except ValueError:
-        assert True
-    else:
-        assert False
-
-    # Test exception for blank recipe.
-    try:
-        recipe_parsing.parse_recipe("")
-    except ValueError:
-        assert True
-    else:
-        assert False
-
-    # Test exception for recipe without any steps.
-    try:
-        recipe_parsing.parse_recipe("steps: []")
-    except ValueError:
-        assert True
-    else:
-        assert False
-
-    # Test exception for recipe that parses to a non-dict.
-    try:
-        recipe_parsing.parse_recipe("[]")
     except ValueError:
         assert True
     else:

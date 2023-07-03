@@ -15,7 +15,7 @@
 from pathlib import Path
 from uuid import uuid4
 import tempfile
-import CSET._recipe_parsing as recipe_parsing
+import CSET.run as recipe_parsing
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
