@@ -25,9 +25,27 @@ def test_save_graph():
     specified."""
     CSET.graph.save_graph(Path("tests/test_data/plot_instant_air_temp.yaml"))
 
+    # Test exception for recipe without an operator in a step.
+    try:
+        CSET.graph.save_graph(
+            """\
+            steps:
+                - argument: no_operators
+            """
+        )
+    except ValueError:
+        assert True
+    else:
+        assert False
+
 
 def test_cli_interface():
     """Generates a graph with the command line interface"""
+
+    # We can't easily test running without the output specified from the CLI, as
+    # the call to xdg-open breaks in CI, due to it not being a graphical
+    # environment.
+
     # Run with output path specified
     output_file = Path(tempfile.gettempdir(), f"{uuid4()}.svg")
     subprocess.run(
@@ -52,7 +70,3 @@ def test_cli_interface():
     )
     assert output_file.exists()
     output_file.unlink()
-
-    # We can't easily test running without the output specified from the CLI, as
-    # the call to xdg-open breaks in CI, due to it not being a graphical
-    # environment.
