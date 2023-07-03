@@ -65,7 +65,7 @@ def main():
         "--output_path",
         type=Path,
         nargs="?",
-        help="file in which to save the graph image. Defaults to a temporary file",
+        help="file in which to save the graph image, otherwise uses a temporary file. When specified the file is not automatically opened",
         default=None,
     )
     parser_graph.add_argument(
@@ -99,4 +99,9 @@ def _run_operators(args):
 def _run_graph(args):
     from CSET.graph import save_graph
 
-    save_graph(args.recipe, args.output_path, auto_open=True, detailed=args.detailed)
+    save_graph(
+        args.recipe,
+        args.output_path,
+        auto_open=bool(args.output_path),
+        detailed=args.detailed,
+    )

@@ -21,18 +21,12 @@ import CSET.graph
 
 
 def test_save_graph():
-    """Tests generating a graph from a recipe file."""
+    """Directly tests generating a graph from a recipe file."""
     CSET.graph.save_graph(Path("tests/test_data/plot_instant_air_temp.yaml"))
 
 
 def test_cli_interface():
     """Generates a graph with the command line interface"""
-    # Normal run
-    subprocess.run(("cset", "graph", "tests/test_data/noop_recipe.yaml"), check=True)
-    # Run with details
-    subprocess.run(
-        ("cset", "graph", "--detailed", "tests/test_data/noop_recipe.yaml"), check=True
-    )
     # Run with output path specified
     output_file = Path(tempfile.gettempdir(), f"{uuid4()}.svg")
     subprocess.run(
@@ -41,3 +35,8 @@ def test_cli_interface():
     )
     assert output_file.exists()
     output_file.unlink()
+
+    # Run with details and no output specified
+    subprocess.run(
+        ("cset", "graph", "--detailed", "tests/test_data/noop_recipe.yaml"), check=True
+    )
