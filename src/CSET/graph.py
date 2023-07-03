@@ -19,11 +19,16 @@ import tempfile
 from uuid import uuid4
 import subprocess
 
+import pygraphviz as pgz
+
 from CSET._recipe_parsing import parse_recipe
 
 
 def save_graph(
-    recipe_file: Union[Path, str], save_path: Path = None, auto_open: bool = False
+    recipe_file: Union[Path, str],
+    save_path: Path = None,
+    auto_open: bool = False,
+    detailed: bool = False,
 ):
     """
     Draws out the graph of a recipe, and saves it to a file.
@@ -38,17 +43,53 @@ def save_graph(
 
     auto_open: bool
         Whether to automatically open the graph with the default image viewer.
+
+    detailed: bool
+        Whether to include operator arguments on the graph.
+
+    Raises
+    ------
+    ValueError
+        Recipe is invalid.
     """
 
     recipe = parse_recipe(recipe_file)
-    logging.debug("Parsed recipe: %s", recipe)
     if not save_path:
         save_path = Path(f"{tempfile.gettempdir()}/{uuid4()}.svg")
-    logging.info("Saving graph to %s", save_path)
 
-    # Placeholder of graph making while work in progress. This should be
-    # replaced by usage of pygraphvis to generate an SVG.
-    save_path.write_text(str(recipe["steps"]), "utf-8")
+    graph = pgz.AGraph(directed=True)
+
+    def step_parser(step: dict, prev_node: str) -> str:
+        """Parses recipe to add nodes to graph and link them with edges."""
+        logging.debug(f"Executing step: {step}")
+        node = str(uuid4())
+        graph.add_node(node, label=step["operator"])
+        kwargs = {}
+        for key in step.keys():
+            if type(step[key]) == dict and "operator" in step[key]:
+                logging.debug(f"Recursing into argument: {key}")
+                sub_node = step_parser(step[key], prev_node)
+                graph.add_edge(sub_node, node)
+            elif key != "operator":
+                kwargs[key] = step[key]
+        graph.add_edge(prev_node, node)
+
+        if detailed:
+            graph.get_node(node).attr["label"] = f'{step["operator"]}\n' + "".join(
+                f"<{key}: {kwargs[key]}>\n" for key in kwargs
+            )
+        return node
+
+    prev_node = "START"
+    graph.add_node(prev_node)
+    try:
+        for step in recipe["steps"]:
+            prev_node = step_parser(step, prev_node)
+    except KeyError as err:
+        raise ValueError("Invalid recipe") from err
+
+    graph.draw(save_path, format="svg", prog="dot")
+    print(f"Graph rendered to {save_path}")
 
     if auto_open:
         # Stderr is redirected here to suppress gvfs-open deprecation warning.

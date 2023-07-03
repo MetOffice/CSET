@@ -68,6 +68,12 @@ def main():
         help="file in which to save the graph image. Defaults to a temporary file",
         default=None,
     )
+    parser_graph.add_argument(
+        "-d",
+        "--detailed",
+        action="store_true",
+        help="include operator arguments in output",
+    )
     parser_graph.set_defaults(func=_run_graph)
 
     args = parser.parse_args()
@@ -93,4 +99,4 @@ def _run_operators(args):
 def _run_graph(args):
     from CSET.graph import save_graph
 
-    save_graph(args.recipe, args.output_path, auto_open=True)
+    save_graph(args.recipe, args.output_path, auto_open=True, detailed=args.detailed)
