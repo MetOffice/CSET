@@ -15,7 +15,7 @@
 from pathlib import Path
 from uuid import uuid4
 import tempfile
-import CSET.run as recipe_parsing
+import CSET.run as run
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
@@ -26,7 +26,7 @@ def test_spatial_plot():
     input_file = Path("tests/test_data/air_temp.nc")
     output_file = Path(f"{tempfile.gettempdir()}/{uuid4()}")
     recipe_file = Path("tests/test_data/plot_instant_air_temp.yaml")
-    recipe_parsing.execute_recipe(recipe_file, input_file, output_file)
+    run.execute_recipe(recipe_file, input_file, output_file)
     actual_output_file = output_file.with_suffix(".svg")
     assert actual_output_file.exists()
     actual_output_file.unlink()

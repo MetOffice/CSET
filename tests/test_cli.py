@@ -32,7 +32,7 @@ def test_recipe_execution():
     subprocess.run(
         [
             "cset",
-            "operators",
+            "run",
             os.devnull,
             os.devnull,
             "test/test_data/noop_recipe.yaml",
@@ -51,7 +51,7 @@ def test_environ_var_recipe():
     subprocess.run(
         [
             "cset",
-            "operators",
+            "run",
             os.devnull,
             os.devnull,
         ]
@@ -76,7 +76,7 @@ def test_graph_creation():
 
 
 def test_graph_details():
-    """Run with details."""
+    """Generate a graph with details with details."""
     output_file = Path(tempfile.gettempdir(), f"{uuid4()}.svg")
     subprocess.run(
         (
