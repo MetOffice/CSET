@@ -59,8 +59,6 @@ def save_graph(
     if not save_path:
         save_path = Path(f"{tempfile.gettempdir()}/{uuid4()}.svg")
 
-    graph = pgz.AGraph(directed=True)
-
     def step_parser(step: dict, prev_node: str) -> str:
         """Parses recipe to add nodes to graph and link them with edges."""
         logging.debug(f"Executing step: {step}")
@@ -81,6 +79,8 @@ def save_graph(
                 f"<{key}: {kwargs[key]}>\n" for key in kwargs
             )
         return node
+
+    graph = pgz.AGraph(directed=True)
 
     prev_node = "START"
     graph.add_node(prev_node)
