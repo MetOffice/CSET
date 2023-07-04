@@ -81,7 +81,7 @@ def main():
         "recipe_dir",
         type=Path,
         nargs="?",
-        help='directory to save recipes. If omitted creates "recipes" directory in $PWD',
+        help="directory to save recipes. If omitted creates directory in $PWD",
         default=None,
     )
     parser_unpack.set_defaults(func=_unpack_recipes)
