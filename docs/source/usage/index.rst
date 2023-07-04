@@ -27,8 +27,8 @@ the easiest way is via an editable install. You can learn how to do this in the
 Usage
 -----
 
-cset operators
-~~~~~~~~~~~~~~
+cset run
+~~~~~~~~
 
 Used to run a recipe on some data. The recipe, input file, and a path to an
 output file must be provided. Additional help is available with the ``--help``
@@ -39,16 +39,15 @@ contain the YAML text that you want executed.
 
 .. code-block:: text
 
-    usage: cset operators [-h] input_file output_file [recipe_file]
+    usage: cset run [-h] input_file output_file [recipe_file]
 
     positional arguments:
     input_file   input file to read
     output_file  output file to write
-    recipe_file  recipe file to execute
+    recipe_file  recipe file to execute. If omitted reads from CSET_RECIPE environment variable
 
     options:
-    -h, --help     show this help message and exit
-    -v, --verbose  increase output verbosity, may be specified multiple times
+    -h, --help   show this help message and exit
 
 cset graph
 ~~~~~~~~~~

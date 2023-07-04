@@ -38,9 +38,7 @@ def main():
     subparsers = parser.add_subparsers(title="subcommands", dest="subparser")
 
     # Run operator chain
-    parser_operators = subparsers.add_parser(
-        "operators", help="run a chain of operators"
-    )
+    parser_operators = subparsers.add_parser("run", help="run a recipe file")
     parser_operators.add_argument("input_file", type=Path, help="input file to read")
     parser_operators.add_argument("output_file", type=Path, help="output file to write")
     parser_operators.add_argument(
@@ -74,7 +72,7 @@ def main():
         action="store_true",
         help="include operator arguments in output",
     )
-    parser_graph.set_defaults(func=_run_graph)
+    parser_graph.set_defaults(func=_render_graph)
 
     args = parser.parse_args()
 
@@ -96,7 +94,7 @@ def _run_operators(args):
     execute_recipe(args.recipe_file, args.input_file, args.output_file)
 
 
-def _run_graph(args):
+def _render_graph(args):
     from CSET.graph import save_graph
 
     save_graph(
