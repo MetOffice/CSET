@@ -18,7 +18,6 @@ from pathlib import Path
 import tempfile
 from uuid import uuid4
 
-import CSET.operators.RECIPES as RECIPES
 import CSET.run as run
 
 
@@ -51,7 +50,7 @@ def test_get_operator_exception_type():
 def test_get_operator_exception_not_callable():
     """Test exception if operator isn't a function."""
     try:
-        run.get_operator("RECIPES.extract_instant_air_temp")
+        run.get_operator("misc.__doc__")
     except ValueError:
         assert True
     else:
@@ -62,7 +61,7 @@ def test_execute_recipe():
     """Execute recipe to test happy case (this is really an integration test)."""
     input_file = Path("tests/test_data/air_temp.nc")
     output_file = Path(f"{tempfile.gettempdir()}/{uuid4()}.nc")
-    recipe_file = RECIPES.extract_instant_air_temp
+    recipe_file = Path("tests/test_data/plot_instant_air_temp.yaml")
     run.execute_recipe(recipe_file, input_file, output_file)
     output_file.unlink()
 
