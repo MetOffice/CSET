@@ -1,10 +1,6 @@
 Usage Guide
 ===========
 
-.. attention::
-
-    🚧 Section under construction. 🚧
-
 .. toctree::
     :maxdepth: 2
 
