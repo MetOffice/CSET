@@ -14,9 +14,6 @@
 
 from CSET.operators import constraints
 from datetime import datetime
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
 
 
 def test_generate_stash_constraint():

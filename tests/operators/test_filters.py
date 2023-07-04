@@ -13,9 +13,6 @@
 # limitations under the License.
 
 from CSET.operators import read, filters, constraints
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
 
 
 def test_filters_operator():

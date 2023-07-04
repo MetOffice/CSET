@@ -13,21 +13,16 @@
 # limitations under the License.
 
 from pathlib import Path
-import logging
 import tempfile
 from uuid import uuid4
 import os
 
 from CSET.operators import write, read
 
-logging.basicConfig(level=logging.DEBUG)
 
-
-def test_write_cube_to_nc():
-    """Write cube to Path and string path and verify."""
+def test_write_cube_to_nc_string():
+    """Write cube to string path and verify."""
     cube = read.read_cubes("tests/test_data/air_temp.nc")[0]
-
-    # Write to string
     filename = f"{tempfile.gettempdir()}/{uuid4()}.nc"
     write.write_cube_to_nc(cube, filename)
     # Check that the cube was written correctly
@@ -35,7 +30,10 @@ def test_write_cube_to_nc():
     assert written_cube == cube
     os.unlink(filename)
 
-    # Write to Path
+
+def test_write_cube_to_nc_path():
+    """Write cube to Path and verify."""
+    cube = read.read_cubes("tests/test_data/air_temp.nc")[0]
     filepath = Path(f"{tempfile.gettempdir()}/{uuid4()}.nc")
     write.write_cube_to_nc(cube, filepath)
     # Check that the cube was written correctly
