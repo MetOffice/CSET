@@ -1,4 +1,4 @@
-name: cset-dev
+name: cset-run
 channels:
   - conda-forge
 dependencies:
@@ -22,7 +22,7 @@ dependencies:
   - black
 
   # Testing dependencies
-  - tox >= 4.0
+  - tox < 4.0
   - tox-conda
   - pytest >= 7.0
   - pytest-cov
