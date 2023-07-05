@@ -54,7 +54,7 @@ environment for you to use.
 .. code-block:: bash
 
     # Creates a conda environment. This command can be slow.
-    conda env create --file requirements/environment.yml
+    conda env create --file requirements/development.yaml
     # Activates the conda environment.
     conda activate cset-dev
     # Adds extra checks when you commit something with git.
