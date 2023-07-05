@@ -13,9 +13,6 @@
 # limitations under the License.
 
 from CSET.operators import read, filters, constraints
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
 
 
 def test_filters_operator():
@@ -31,9 +28,9 @@ def test_filters_operator():
     assert repr(cube) == expected_cube
     # Test for exception when multiple cubes returned.
     constraint = constraints.generate_stash_constraint("m01s03i236")
-    except_occurred = False
     try:
         cube = filters.filter_cubes(cubes, constraint)
     except ValueError:
-        except_occurred = True
-    assert except_occurred
+        assert True
+    else:
+        assert False

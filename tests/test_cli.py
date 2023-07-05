@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import subprocess
+from pathlib import Path
+from uuid import uuid4
 import os
+import subprocess
+import tempfile
 
 
 def test_command_line_help():
@@ -21,13 +24,15 @@ def test_command_line_help():
     # test verbose options. This is really just to up the coverage number.
     subprocess.run(["cset", "-v"])
     subprocess.run(["cset", "-vv"])
+    # Gain coverage of __main__.py
+    subprocess.run(["python3", "-m", "CSET", "-h"])
 
 
 def test_recipe_execution():
     subprocess.run(
         [
             "cset",
-            "operators",
+            "run",
             os.devnull,
             os.devnull,
             "test/test_data/noop_recipe.yaml",
@@ -36,6 +41,7 @@ def test_recipe_execution():
 
 
 def test_environ_var_recipe():
+    """Test recipe coming from environment variable."""
     os.environ[
         "CSET_RECIPE"
     ] = """
@@ -45,8 +51,43 @@ def test_environ_var_recipe():
     subprocess.run(
         [
             "cset",
-            "operators",
+            "run",
             os.devnull,
             os.devnull,
         ]
     )
+
+
+def test_graph_creation():
+    """Generates a graph with the command line interface."""
+
+    # We can't easily test running without the output specified from the CLI, as
+    # the call to xdg-open breaks in CI, due to it not being a graphical
+    # environment.
+
+    # Run with output path specified
+    output_file = Path(tempfile.gettempdir(), f"{uuid4()}.svg")
+    subprocess.run(
+        ("cset", "graph", "-o", str(output_file), "tests/test_data/noop_recipe.yaml"),
+        check=True,
+    )
+    assert output_file.exists()
+    output_file.unlink()
+
+
+def test_graph_details():
+    """Generate a graph with details with details."""
+    output_file = Path(tempfile.gettempdir(), f"{uuid4()}.svg")
+    subprocess.run(
+        (
+            "cset",
+            "graph",
+            "--detailed",
+            "-o",
+            str(output_file),
+            "tests/test_data/noop_recipe.yaml",
+        ),
+        check=True,
+    )
+    assert output_file.exists()
+    output_file.unlink()

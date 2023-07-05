@@ -13,20 +13,24 @@
 # limitations under the License.
 
 from pathlib import Path
-from uuid import uuid4
-import tempfile
-import CSET.operators._internal as internal
-import logging
 
-logging.basicConfig(level=logging.DEBUG)
+import CSET.graph
 
 
-def test_spatial_plot():
-    """Plot spatial contour plot of instant air temp."""
-    input_file = Path("tests/test_data/air_temp.nc")
-    output_file = Path(f"{tempfile.gettempdir()}/{uuid4()}")
-    recipe_file = Path("tests/test_data/plot_instant_air_temp.yaml")
-    internal.execute_recipe(recipe_file, input_file, output_file)
-    actual_output_file = output_file.with_suffix(".svg")
-    assert actual_output_file.exists()
-    actual_output_file.unlink()
+def test_save_graph():
+    """Directly tests generating a graph from a recipe file without the output
+    specified."""
+    CSET.graph.save_graph(Path("tests/test_data/plot_instant_air_temp.yaml"))
+
+    # Test exception for recipe without an operator in a step.
+    try:
+        CSET.graph.save_graph(
+            """\
+            steps:
+                - argument: no_operators
+            """
+        )
+    except ValueError:
+        assert True
+    else:
+        assert False

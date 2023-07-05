@@ -6,14 +6,19 @@ chained together with *operator recipes*. A recipe is a config file that details
 what operators to run, in what order, and with what extra arguments. Each recipe
 forms a complete chain processing an input file and producing an output file.
 
-Operator recipes can be run either with the ``cset operators`` command, or from
+Operator recipes can be run either with the ``cset run`` command, or from
 a python script.
 
 .. code-block:: python
 
-    import CSET.operators
+    from pathlib import Path
+    import CSET.run
 
-    CSET.operators.execute_recipe("/path/to/recipe_file.yaml", "/path/to/input_file.nc", "/path/to/output_file.nc")
+    CSET.run.execute_recipe(
+        Path("/path/to/recipe_file.yaml"),
+        Path("/path/to/input_file.nc"),
+        Path("/path/to/output_file.nc")
+    )
 
 Recipe format
 -------------
@@ -44,8 +49,8 @@ commented example recipe:
 
     - operator: write.write_cube_to_nc
       # Specify the name of the argument, and its value.
-      file_path: MAGIC_OUTPUT_PATH
-      # "MAGIC_OUTPUT_PATH" is special and becomes the runtime output file path.
+      file_path: CSET_OUTPUT_PATH
+      # "CSET_OUTPUT_PATH" is special and becomes the runtime output file path.
 
 The name and description keys provide a human readable description of what the
 recipe does. They are currently not used anywhere, but it is good practice to
