@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Tests for the command line interface. In many ways these are integration tests.
+"""
+
 from pathlib import Path
 from uuid import uuid4
 import os
@@ -91,3 +95,20 @@ def test_graph_details():
     )
     assert output_file.exists()
     output_file.unlink()
+
+
+def test_cookbook_cwd():
+    """Unpacking the recipes into the current working directory."""
+    old_cwd = Path.cwd()
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.chdir(tmpdir)
+        subprocess.run(["cset", "cookbook"], check=True)
+        assert Path.cwd().joinpath("recipes/extract_instant_air_temp.yaml").exists()
+        os.chdir(old_cwd)
+
+
+def test_cookbook_path():
+    """Unpacking the recipes into a specified directory."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        subprocess.run(["cset", "cookbook", tmpdir], check=True)
+        assert Path(tmpdir, "extract_instant_air_temp.yaml").exists()
