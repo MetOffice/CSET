@@ -1,7 +1,7 @@
 [project]
 name = "CSET"
 version = "0.2.0"
-description = "Convective Scale Evaluation Tool for evaluation and investigation of regional models."
+description = "Toolkit for evaluation and investigation of numerical models for weather and climate applications."
 authors = [{ name = "Met Office" }, { name = "NIWA" }]
 readme = "README.md"
 license = { text = "Apache-2.0" }
