@@ -1,10 +1,11 @@
 # CSET
 
-CSET is a tool to aid in evaluating regional model configurations. It aims to
-replace the collection of bespoke scripts littering people’s home directories,
-reducing effort wasted on duplicating already existing code. This centralisation
-of diagnostics should also make evaluations more consistent and comparable.
-Development takes place in the CSET repository on GitHub.
+CSET is a toolkit for evaluation and investigation of numerical models for
+weather and climate applications. It aims to replace the collection of bespoke
+scripts littering people’s home directories, reducing effort wasted on
+duplicating already existing code. This centralisation of diagnostics should
+also make evaluations more consistent and comparable. Development takes place in
+the CSET repository on GitHub.
 
 Please read [the documentation](https://metoffice.github.io/CSET) to learn more
 about CSET, and how to use it.
