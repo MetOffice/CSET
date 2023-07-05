@@ -81,7 +81,7 @@ def main():
         "recipe_dir",
         type=Path,
         nargs="?",
-        help="directory to save recipes. If omitted creates directory in $PWD",
+        help="directory to save recipes. If omitted uses $PWD/recipes",
         default=Path.cwd().joinpath("recipes"),
     )
     parser_cookbook.set_defaults(func=_cookbook_command)
