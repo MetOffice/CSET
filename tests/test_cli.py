@@ -20,23 +20,24 @@ import tempfile
 
 
 def test_command_line_help():
-    subprocess.run(["cset", "--help"])
+    subprocess.run(["cset", "--help"], check=True)
     # test verbose options. This is really just to up the coverage number.
-    subprocess.run(["cset", "-v"])
-    subprocess.run(["cset", "-vv"])
+    subprocess.run(["cset", "-v"], check=True)
+    subprocess.run(["cset", "-vv"], check=True)
     # Gain coverage of __main__.py
-    subprocess.run(["python3", "-m", "CSET", "-h"])
+    subprocess.run(["python3", "-m", "CSET", "-h"], check=True)
 
 
 def test_recipe_execution():
     subprocess.run(
         [
             "cset",
-            "run",
+            "bake",
             os.devnull,
             os.devnull,
-            "test/test_data/noop_recipe.yaml",
-        ]
+            "tests/test_data/noop_recipe.yaml",
+        ],
+        check=True,
     )
 
 
@@ -51,10 +52,11 @@ def test_environ_var_recipe():
     subprocess.run(
         [
             "cset",
-            "run",
+            "bake",
             os.devnull,
             os.devnull,
-        ]
+        ],
+        check=True,
     )
 
 
