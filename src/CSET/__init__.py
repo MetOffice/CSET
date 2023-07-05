@@ -101,7 +101,7 @@ def main():
 
 
 def _run_operators(args):
-    from CSET.run import execute_recipe
+    from CSET.operators import execute_recipe
 
     execute_recipe(args.recipe_file, args.input_file, args.output_file)
 

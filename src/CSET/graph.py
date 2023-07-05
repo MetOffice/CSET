@@ -23,7 +23,7 @@ import subprocess
 
 import pygraphviz as pgz
 
-from CSET.run import parse_recipe
+from CSET._common import parse_recipe
 
 
 def save_graph(

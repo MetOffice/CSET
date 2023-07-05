@@ -12,9 +12,9 @@ a python script.
 .. code-block:: python
 
     from pathlib import Path
-    import CSET.run
+    import CSET.operators
 
-    CSET.run.execute_recipe(
+    CSET.operators.execute_recipe(
         Path("/path/to/recipe_file.yaml"),
         Path("/path/to/input_file.nc"),
         Path("/path/to/output_file.nc")
