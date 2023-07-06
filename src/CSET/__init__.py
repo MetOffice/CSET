@@ -74,6 +74,18 @@ def main():
     )
     parser_graph.set_defaults(func=_render_graph)
 
+    parser_unpack = subparsers.add_parser(
+        "unpack-recipes", help="unpack default recipe files to a folder"
+    )
+    parser_unpack.add_argument(
+        "recipe_dir",
+        type=Path,
+        nargs="?",
+        help='directory to save recipes. If omitted creates "recipes" directory in $PWD',
+        default=None,
+    )
+    parser_unpack.set_defaults(func=_unpack_recipes)
+
     args = parser.parse_args()
 
     # Logging verbosity
@@ -89,7 +101,7 @@ def main():
 
 
 def _run_operators(args):
-    from CSET.run import execute_recipe
+    from CSET.operators import execute_recipe
 
     execute_recipe(args.recipe_file, args.input_file, args.output_file)
 
@@ -103,3 +115,11 @@ def _render_graph(args):
         auto_open=not bool(args.output_path),
         detailed=args.detailed,
     )
+
+
+def _unpack_recipes(args):
+    from CSET.recipes import unpack
+
+    if not args.recipe_dir:
+        args.recipe_dir = Path.cwd().joinpath("recipes")
+    unpack(args.recipe_dir)
