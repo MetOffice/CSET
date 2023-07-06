@@ -25,6 +25,8 @@ def test_unpack():
     with tempfile.TemporaryDirectory() as tmpdir:
         CSET.recipes._unpack_recipes_from_dir(Path("tests"), Path(tmpdir))
         assert Path(tmpdir, "test_data/noop_recipe.yaml").exists()
+        # Run again to check that warnings are produced when files collide.
+        CSET.recipes._unpack_recipes_from_dir(Path("tests"), Path(tmpdir))
 
 
 def test_unpack_recipes_exception_collision():

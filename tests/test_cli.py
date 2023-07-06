@@ -100,7 +100,6 @@ def test_graph_details():
 
 def test_cookbook_cwd():
     """Unpacking the recipes into the current working directory."""
-    # with tempfile.TemporaryDirectory() as tmpdir:
     subprocess.run(["cset", "cookbook"], check=True)
     assert Path.cwd().joinpath("recipes/extract_instant_air_temp.yaml").exists()
     shutil.rmtree(Path.cwd().joinpath("recipes"))
