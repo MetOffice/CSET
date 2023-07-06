@@ -45,6 +45,23 @@ contain the YAML text that you want executed.
     options:
     -h, --help   show this help message and exit
 
+cset cookbook
+~~~~~~~~~~~~~
+
+Saves the included recipe files to a local directory. This allows access to
+pre-created recipes for many common tasks. See [LINK TO DOCUMENTATION PAGE ON
+RECIPES] for descriptions of available recipes.
+
+.. code-block:: text
+
+    usage: cset cookbook [-h] [recipe_dir]
+
+    positional arguments:
+    recipe_dir  directory to save recipes. If omitted uses $PWD/recipes
+
+    options:
+    -h, --help  show this help message and exit
+
 cset graph
 ~~~~~~~~~~
 

@@ -72,19 +72,19 @@ def main():
         action="store_true",
         help="include operator arguments in output",
     )
-    parser_graph.set_defaults(func=_render_graph)
+    parser_graph.set_defaults(func=_graph_command)
 
-    parser_unpack = subparsers.add_parser(
-        "unpack-recipes", help="unpack default recipe files to a folder"
+    parser_cookbook = subparsers.add_parser(
+        "cookbook", help="unpack included recipes to a folder"
     )
-    parser_unpack.add_argument(
+    parser_cookbook.add_argument(
         "recipe_dir",
         type=Path,
         nargs="?",
-        help='directory to save recipes. If omitted creates "recipes" directory in $PWD',
+        help="directory to save recipes. If omitted uses $PWD/recipes",
         default=None,
     )
-    parser_unpack.set_defaults(func=_unpack_recipes)
+    parser_cookbook.set_defaults(func=_cookbook_command)
 
     args = parser.parse_args()
 
@@ -109,7 +109,7 @@ def _bake_command(args):
     execute_recipe(args.recipe_file, args.input_file, args.output_file)
 
 
-def _render_graph(args):
+def _graph_command(args):
     from CSET.graph import save_graph
 
     if not args.recipe:
@@ -123,9 +123,10 @@ def _render_graph(args):
     )
 
 
-def _unpack_recipes(args):
-    from CSET.recipes import unpack
+def _cookbook_command(args):
+    from CSET.recipes import unpack_recipes
 
     if not args.recipe_dir:
         args.recipe_dir = Path.cwd().joinpath("recipes")
-    unpack(args.recipe_dir)
+
+    unpack_recipes(args.recipe_dir)

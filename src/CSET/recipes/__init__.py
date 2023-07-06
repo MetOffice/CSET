@@ -17,6 +17,7 @@ This module has an attribute for each recipe, holding the Path to that recipe.
 """
 
 from pathlib import Path
+import logging
 
 try:
     from importlib.resources import files
@@ -24,12 +25,29 @@ except ImportError:
     # importlib has the files API from python 3.9
     from importlib_resources import files
 
-import CSET.recipes
-
-extract_instant_air_temp = files(CSET.recipes).joinpath("extract_instant_air_temp.yaml")
+import CSET.recipes as recipes
 
 
-def unpack(recipe_dir: Path):
+def _unpack_recipes_from_dir(input_dir: Path, output_dir: Path):
+    """
+    Loop over all recipes (excludes non-recipes) in input_dir and write them to
+    output_dir.
+    """
+    for file in input_dir.iterdir():
+        output_dir.mkdir(parents=True, exist_ok=True)
+        if file.is_file() and file.suffix == ".yaml":
+            if output_dir.joinpath(file.name).exists():
+                logging.warn(
+                    "%s already exists in target directory, skipping.", file.name
+                )
+            else:
+                logging.info("Unpacking %s", file.name)
+                output_dir.joinpath(file.name).write_bytes(file.read_bytes())
+        elif file.is_dir() and file.name[0] != "_":  # Excludes __pycache__
+            _unpack_recipes_from_dir(file, output_dir.joinpath(file.name))
+
+
+def unpack_recipes(recipe_dir: Path):
     """
     Unpacks recipes files into a directory, creating it if it doesn't exist.
 
@@ -48,11 +66,4 @@ def unpack(recipe_dir: Path):
         lack of space.
     """
 
-    raise NotImplementedError
-
-    recipe_dir.mkdir(parents=True, exist_ok=True)
-    for file in files(CSET.recipes):
-        # Loop over all recipes and write them to disk
-        if file:  # Test file is a YAML one to avoid copying this code file.
-            # Copy to recipe_dir
-            pass
+    _unpack_recipes_from_dir(files(recipes), recipe_dir)
