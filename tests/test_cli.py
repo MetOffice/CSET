@@ -20,6 +20,7 @@ from pathlib import Path
 from uuid import uuid4
 import os
 import subprocess
+import shutil
 import tempfile
 
 
@@ -99,9 +100,10 @@ def test_graph_details():
 
 def test_cookbook_cwd():
     """Unpacking the recipes into the current working directory."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        subprocess.run(["cset", "cookbook"], cwd=tmpdir, check=True)
-        assert Path(tmpdir, "recipes/extract_instant_air_temp.yaml").exists()
+    # with tempfile.TemporaryDirectory() as tmpdir:
+    subprocess.run(["cset", "cookbook"], check=True)
+    assert Path.cwd().joinpath("recipes/extract_instant_air_temp.yaml").exists()
+    shutil.rmtree(Path.cwd().joinpath("recipes"))
 
 
 def test_cookbook_path():
