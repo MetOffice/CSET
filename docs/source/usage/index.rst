@@ -23,8 +23,8 @@ the easiest way is via an editable install. You can learn how to do this in the
 Usage
 -----
 
-cset run
-~~~~~~~~
+cset bake
+~~~~~~~~~
 
 Used to run a recipe on some data. The recipe, input file, and a path to an
 output file must be provided. Additional help is available with the ``--help``
@@ -35,7 +35,7 @@ contain the YAML text that you want executed.
 
 .. code-block:: text
 
-    usage: cset run [-h] input_file output_file [recipe_file]
+    usage: cset bake [-h] input_file output_file [recipe_file]
 
     positional arguments:
     input_file   input file to read

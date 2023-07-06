@@ -68,11 +68,10 @@ def test_execute_recipe():
 
 def test_execute_recipe_edge_cases():
     """
-    Test weird edge cases. Also tests paths not being pathlib Paths, and
-    directly passing in a stream for a recipe file.
+    Test weird edge cases. Also tests data paths not being pathlib Paths.
     """
     input_file = "tests/test_data/air_temp.nc"
     output_file = f"{tempfile.gettempdir()}/{uuid4()}.nc"
-    with open("tests/test_data/noop_recipe.yaml", "rb") as recipe:
-        CSET.operators.execute_recipe(recipe, input_file, output_file)
+    recipe = Path("tests/test_data/noop_recipe.yaml")
+    CSET.operators.execute_recipe(recipe, input_file, output_file)
     # The output_file doesn't actually get written, so doesn't need removing.

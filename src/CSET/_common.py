@@ -17,6 +17,8 @@
 import logging
 from pathlib import Path
 from typing import Union
+import io
+
 import ruamel.yaml
 
 
@@ -48,13 +50,19 @@ def parse_recipe(recipe_yaml: Union[Path, str]):
     {'steps': [{'operator': 'misc.noop'}]}
     """
 
+    # Check the type provided explicitly.
+    if isinstance(recipe_yaml, str):
+        recipe_yaml = io.StringIO(recipe_yaml)
+    elif not isinstance(recipe_yaml, Path):
+        raise TypeError("recipe_yaml must be a str or Path.")
+
     with ruamel.yaml.YAML(typ="safe", pure=True) as yaml:
         try:
             recipe = yaml.load(recipe_yaml)
         except ruamel.yaml.parser.ParserError:
             raise ValueError("ParserError: Invalid YAML")
         except ruamel.yaml.error.YAMLStreamError:
-            raise TypeError("Must provide a stream (with a read method)")
+            raise TypeError("Must provide a file object (with a read method)")
 
     # Checking that the recipe actually has some steps, and providing helpful
     # error messages otherwise.

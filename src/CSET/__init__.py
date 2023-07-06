@@ -38,17 +38,17 @@ def main():
     subparsers = parser.add_subparsers(title="subcommands", dest="subparser")
 
     # Run operator chain
-    parser_operators = subparsers.add_parser("run", help="run a recipe file")
-    parser_operators.add_argument("input_file", type=Path, help="input file to read")
-    parser_operators.add_argument("output_file", type=Path, help="output file to write")
-    parser_operators.add_argument(
+    parser_bake = subparsers.add_parser("bake", help="run a recipe file")
+    parser_bake.add_argument("input_file", type=Path, help="input file to read")
+    parser_bake.add_argument("output_file", type=Path, help="output file to write")
+    parser_bake.add_argument(
         "recipe_file",
         type=Path,
         nargs="?",
         help="recipe file to execute. If omitted reads from CSET_RECIPE environment variable",
-        default=os.getenv("CSET_RECIPE"),
+        default=None,
     )
-    parser_operators.set_defaults(func=_run_operators)
+    parser_bake.set_defaults(func=_bake_command)
 
     parser_graph = subparsers.add_parser("graph", help="visualise a recipe file")
     parser_graph.add_argument(
@@ -56,7 +56,7 @@ def main():
         type=Path,
         nargs="?",
         help="recipe file to read. If omitted reads from CSET_RECIPE environment variable",
-        default=os.getenv("CSET_RECIPE"),
+        default=None,
     )
     parser_graph.add_argument(
         "-o",
@@ -100,14 +100,20 @@ def main():
         parser.print_help()
 
 
-def _run_operators(args):
+def _bake_command(args):
     from CSET.operators import execute_recipe
+
+    if not args.recipe_file:
+        args.recipe_file = os.getenv("CSET_RECIPE")
 
     execute_recipe(args.recipe_file, args.input_file, args.output_file)
 
 
 def _render_graph(args):
     from CSET.graph import save_graph
+
+    if not args.recipe:
+        args.recipe = os.getenv("CSET_RECIPE")
 
     save_graph(
         args.recipe,
