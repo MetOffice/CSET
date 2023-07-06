@@ -46,7 +46,7 @@ def main():
         type=Path,
         nargs="?",
         help="recipe file to execute. If omitted reads from CSET_RECIPE environment variable",
-        default=os.getenv("CSET_RECIPE"),
+        default=None,
     )
     parser_bake.set_defaults(func=_bake_command)
 
@@ -56,7 +56,7 @@ def main():
         type=Path,
         nargs="?",
         help="recipe file to read. If omitted reads from CSET_RECIPE environment variable",
-        default=os.getenv("CSET_RECIPE"),
+        default=None,
     )
     parser_graph.add_argument(
         "-o",
@@ -103,11 +103,17 @@ def main():
 def _bake_command(args):
     from CSET.operators import execute_recipe
 
+    if not args.recipe_file:
+        args.recipe_file = os.getenv("CSET_RECIPE")
+
     execute_recipe(args.recipe_file, args.input_file, args.output_file)
 
 
 def _render_graph(args):
     from CSET.graph import save_graph
+
+    if not args.recipe:
+        args.recipe = os.getenv("CSET_RECIPE")
 
     save_graph(
         args.recipe,
