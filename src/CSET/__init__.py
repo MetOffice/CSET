@@ -82,7 +82,7 @@ def main():
         type=Path,
         nargs="?",
         help="directory to save recipes. If omitted uses $PWD/recipes",
-        default=Path.cwd().joinpath("recipes"),
+        default=None,
     )
     parser_cookbook.set_defaults(func=_cookbook_command)
 
@@ -119,5 +119,8 @@ def _graph_command(args):
 
 def _cookbook_command(args):
     from CSET.recipes import unpack_recipes
+
+    if not args.recipe_dir:
+        args.recipe_dir = Path.cwd().joinpath("recipes")
 
     unpack_recipes(args.recipe_dir)
