@@ -65,7 +65,7 @@ should be the name of the argument.
 
 The below code block shows how you can nest operators multiple levels deep. For
 details of the specific operators involved, and the arguments that can take, see
-the :doc:`/operators` page.
+the :doc:`/reference/operators` page.
 
 .. code-block:: yaml
 

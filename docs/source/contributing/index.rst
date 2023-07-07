@@ -1,5 +1,5 @@
-Working Practices
-=================
+Contributing to CSET
+====================
 
 To aid in the development of CSET we are adopting some working practices so
 everyone involved knows what to expect. On this page is everything you need to

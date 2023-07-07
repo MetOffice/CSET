@@ -20,18 +20,14 @@ extensions = [
     "sphinx.ext.doctest",
 ]
 
-templates_path = ["_templates"]
-exclude_patterns = []
-
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "furo"
-html_static_path = ["_static"]
 
 # -- LaTeX output configuration ----------------------------------------------
 # https://www.sphinx-doc.org/en/master/latex.html
 
-# latex_engine = 'xelatex'
+latex_engine = "xelatex"
 latex_elements = {"papersize": "a4paper"}
-# latex_show_urls = 'footnote'
+latex_show_urls = "footnote"
