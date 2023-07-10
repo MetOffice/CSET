@@ -9,3 +9,4 @@ components.
 
     cli
     operators
+    recipe-format

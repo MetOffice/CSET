@@ -1,6 +1,8 @@
 CLI Usage
 =========
 
+.. _cset-bake-command:
+
 cset bake
 ~~~~~~~~~
 
@@ -23,6 +25,8 @@ contain the YAML text that you want executed.
     options:
     -h, --help   show this help message and exit
 
+.. _cset-cookbook-command:
+
 cset cookbook
 ~~~~~~~~~~~~~
 
@@ -39,6 +43,8 @@ RECIPES] for descriptions of available recipes.
 
     options:
     -h, --help  show this help message and exit
+
+.. _cset-graph-command:
 
 cset graph
 ~~~~~~~~~~
