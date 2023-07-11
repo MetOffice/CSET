@@ -3,7 +3,7 @@ CSET Operators
 
 This page details the operators contained within CSET. It is automatically
 generated from the code and its docstrings. Operators should be used via
-:doc:`usage/operator-recipes`.
+:doc:`/usage/operator-recipes`.
 
 CSET.operators.constraints
 --------------------------
@@ -16,7 +16,6 @@ CSET.operators.filters
 
 .. automodule:: CSET.operators.filters
    :members:
-
 
 CSET.operators.misc
 -------------------

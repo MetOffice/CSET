@@ -1,28 +1,12 @@
-Working Practices
-=================
-
-To aid in the development of CSET we are adopting some working practices so
-everyone involved knows what to expect. On this page is everything you need to
-get started, and the links below go into more detail on specific topics.
-
-.. toctree::
-    :maxdepth: 2
-
-    git
-    testing
-    documentation
-    code-review
-    releases
-
 .. _working_practices_getting_started:
 
 Getting Started
----------------
+===============
 
 Before you can get to coding, there are a few steps you need to do.
 
 Getting the code
-~~~~~~~~~~~~~~~~
+----------------
 
 Git is a version control software, which makes collaborating on software much
 easier. If you are new to git have a look at the :doc:`git` page to get started.
@@ -44,7 +28,7 @@ of its history onto your computer. From there we need to setup a few things
 before we can develop.
 
 Setting up tooling
-~~~~~~~~~~~~~~~~~~
+------------------
 
 To be able to run the tests or build the documentation you need some
 prerequisite software. The easiest way to get this is with `conda_`. The
