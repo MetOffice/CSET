@@ -37,7 +37,7 @@ def _unpack_recipes_from_dir(input_dir: Path, output_dir: Path):
         output_dir.mkdir(parents=True, exist_ok=True)
         if file.is_file() and file.suffix == ".yaml":
             if output_dir.joinpath(file.name).exists():
-                logging.warn(
+                logging.warning(
                     "%s already exists in target directory, skipping.", file.name
                 )
             else:
