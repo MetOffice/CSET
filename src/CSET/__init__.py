@@ -20,6 +20,7 @@ import argparse
 import logging
 from pathlib import Path
 import os
+from importlib.metadata import version
 
 
 def main():
@@ -34,6 +35,10 @@ def main():
         default=0,
         help="increase output verbosity, may be specified multiple times",
     )
+    parser.add_argument(
+        "--version", action="version", version=f"CSET v{version('CSET')}"
+    )
+
     # https://docs.python.org/3/library/argparse.html#sub-commands
     subparsers = parser.add_subparsers(title="subcommands", dest="subparser")
 
