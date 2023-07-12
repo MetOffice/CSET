@@ -12,9 +12,10 @@ classifiers = [
 ]
 dependencies = [
     "numpy",
-    "scitools-iris",
+    "scitools-iris >= 3.6",
     "ruamel.yaml >= 0.17",
     "importlib_resources >= 3.0.0 ; python_version < '3.9'",
+    "pygraphviz >= 1.11"
 ]
 
 [project.urls]
