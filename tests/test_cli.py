@@ -25,15 +25,20 @@ import tempfile
 
 
 def test_command_line_help():
+    """Check that help commands work."""
+
     subprocess.run(["cset", "--help"], check=True)
     # test verbose options. This is really just to up the coverage number.
     subprocess.run(["cset", "-v"], check=True)
     subprocess.run(["cset", "-vv"], check=True)
+    subprocess.run(["cset", "--version"], check=True)
     # Gain coverage of __main__.py
     subprocess.run(["python3", "-m", "CSET", "-h"], check=True)
 
 
 def test_recipe_execution():
+    """Test running CSET recipe from the command line."""
+
     subprocess.run(
         [
             "cset",
@@ -48,6 +53,7 @@ def test_recipe_execution():
 
 def test_environ_var_recipe():
     """Test recipe coming from environment variable."""
+
     os.environ[
         "CSET_RECIPE"
     ] = """
@@ -82,8 +88,28 @@ def test_graph_creation():
     output_file.unlink()
 
 
+def test_graph_creation_env_var():
+    """
+    Generates a graph with the command line interface from an environment
+    variable.
+    """
+
+    os.environ[
+        "CSET_RECIPE"
+    ] = """
+        steps:
+          - operator: misc.noop
+        """
+    # Run with output path specified
+    output_file = Path(tempfile.gettempdir(), f"{uuid4()}.svg")
+    subprocess.run(("cset", "graph", "-o", str(output_file)), check=True)
+    assert output_file.exists()
+    output_file.unlink()
+
+
 def test_graph_details():
     """Generate a graph with details with details."""
+
     output_file = Path(tempfile.gettempdir(), f"{uuid4()}.svg")
     subprocess.run(
         (
@@ -102,6 +128,7 @@ def test_graph_details():
 
 def test_cookbook_cwd():
     """Unpacking the recipes into the current working directory."""
+
     subprocess.run(["cset", "cookbook"], check=True)
     assert Path.cwd().joinpath("recipes/extract_instant_air_temp.yaml").exists()
     shutil.rmtree(Path.cwd().joinpath("recipes"))
@@ -109,6 +136,7 @@ def test_cookbook_cwd():
 
 def test_cookbook_path():
     """Unpacking the recipes into a specified directory."""
+
     with tempfile.TemporaryDirectory() as tmpdir:
         subprocess.run(["cset", "cookbook", tmpdir], check=True)
         assert Path(tmpdir, "extract_instant_air_temp.yaml").exists()
