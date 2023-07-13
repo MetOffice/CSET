@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from CSET.operators import read
+from CSET.operators import read, constraints
+import iris.cube
 
 
 def test_read_cubes():
@@ -25,3 +26,40 @@ def test_read_cubes():
     ]
     for cube in cubes:
         assert repr(cube) in expected_cubes
+
+
+def test_read_cubes_ensemble_with_realization_coord():
+    """Read ensemble data from a single file with a realization dimension."""
+    cubes = read.read_cubes("tests/test_data/exeter_ensemble_single_file.nc")
+    # Check ensemble members have been merged into a single cube.
+    assert len(cubes) == 1
+    cube = cubes[0]
+    # Check realization is an integer.
+    for point in cube.coord("realization").points:
+        assert isinstance(int(point), int)
+
+
+def test_read_cubes_ensemble_separate_files():
+    """
+    Read ensemble data from multiple files with the member number in the
+    filename.
+    """
+    cubes = read.read_cubes(
+        "tests/test_data/",
+        constraint=constraints.generate_stash_constraint("m01s03i236"),
+        filename_pattern="exeter_em*.nc",
+    )
+    # Check ensemble members have been merged into a single cube.
+    assert len(cubes) == 1
+    cube = cubes[0]
+    # Check realization is an integer.
+    for point in cube.coord("realization").points:
+        assert isinstance(int(point), int)
+
+
+def test_fieldsfile_ensemble_naming():
+    """Extracting the realization from the fields file naming convention."""
+    cube = iris.cube.Cube([0])
+    filename = "myfieldsfile_enuk_um_001/enukaa_pd000"
+    read._ensemble_callback(cube, None, filename)
+    assert cube.coord("realization").points[0] == 1
