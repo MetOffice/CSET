@@ -18,10 +18,13 @@ Operators to perform various kind of filtering.
 
 import iris
 import iris.cube
+from typing import Union
 
 
 def filter_cubes(
-    cube: iris.cube.Cube, constraint: iris.Constraint, **kwargs
+    cube: Union[iris.cube.Cube, iris.cube.CubeList],
+    constraint: iris.Constraint,
+    **kwargs,
 ) -> iris.cube.Cube:
     """
     Filters a cubelist down to a single cube based on a constraint.
@@ -35,8 +38,7 @@ def filter_cubes(
 
     Returns
     -------
-    filtered_cube: iris.cube.Cube
-        Filtered cube
+    iris.cube.Cube
 
     Raises
     ------
