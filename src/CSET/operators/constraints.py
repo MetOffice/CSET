@@ -30,7 +30,7 @@ def generate_stash_constraint(stash: str, **kwargs) -> iris.AttributeConstraint:
     Arguments
     ---------
     stash: str
-        stash code to build iris constraint, currently using "m01s03i236"
+        stash code to build iris constraint, such as "m01s03i236"
 
     Returns
     -------

@@ -18,25 +18,27 @@ Operators to perform various kind of filtering.
 
 import iris
 import iris.cube
+from typing import Union
 
 
 def filter_cubes(
-    cubelist: iris.cube.CubeList, constraint: iris.Constraint, **kwargs
+    cube: Union[iris.cube.Cube, iris.cube.CubeList],
+    constraint: iris.Constraint,
+    **kwargs,
 ) -> iris.cube.Cube:
     """
     Filters a cubelist down to a single cube based on a constraint.
 
     Arguments
     ---------
-    cubelist: iris.cube.CubeList
-        Cubes to iterate over
+    cube: iris.cube.Cube | iris.cube.CubeList
+        Cube(s) to iterate over
     constraint: iris.Constraint
         Constraint to extract
 
     Returns
     -------
-    cube: iris.cube.Cube
-        Single variable
+    iris.cube.Cube
 
     Raises
     ------
@@ -44,7 +46,7 @@ def filter_cubes(
         If the constraint doesn't produce a single cube.
     """
 
-    filtered_cubes = cubelist.extract(constraint)
+    filtered_cubes = cube.extract(constraint)
 
     # Check filtered cubes is a CubeList containing one cube.
     if len(filtered_cubes) == 1:

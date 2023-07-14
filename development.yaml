@@ -1,9 +1,0 @@
-name: cset-dev
-channels:
-  - conda-forge
-dependencies:
-  # Just the dependencies needed during development. Others are pulled in by
-  # tox.
-  - pre-commit
-  - black
-  - tox-conda
