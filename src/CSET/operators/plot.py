@@ -52,9 +52,9 @@ def spatial_contour_plot(cube: iris.cube.Cube, file_path: Path, **kwargs) -> Pat
     return file_path
 
 
-def postage_stamp_plot(cube: iris.cube.Cube, file_path: Path, **kwargs) -> Path:
+def postage_stamp_contour_plot(cube: iris.cube.Cube, file_path: Path, **kwargs) -> Path:
     """
-    Plots postage stamp plots from an ensemble.
+    Plots postage stamp contour plots from an ensemble.
 
     Parameters
     ----------
@@ -88,6 +88,6 @@ def postage_stamp_plot(cube: iris.cube.Cube, file_path: Path, **kwargs) -> Path:
     # Make an axes to put the shared colorbar in.
     colorbar_axes = plt.gcf().add_axes([0.15, 0.07, 0.7, 0.03])
     colorbar = plt.colorbar(plot, colorbar_axes, orientation="horizontal")
-    colorbar.set_label("Metric / Units")
+    colorbar.set_label(f"{cube.name()} / {cube.units}")
     file_path = Path(file_path).with_suffix(".svg")
     plt.savefig(file_path)
