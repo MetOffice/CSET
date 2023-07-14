@@ -48,3 +48,27 @@ def spatial_contour_plot(cube: iris.cube.Cube, file_path: Path, **kwargs) -> Pat
     file_path = Path(file_path).with_suffix(".svg")
     plt.savefig(file_path)
     return file_path
+
+
+def postage_stamp_plot(cube: iris.cube.Cube, file_path: Path, **kwargs) -> Path:
+    """
+    Plots postage stamp plots from an ensemble.
+
+    Parameters
+    ----------
+    cube: Cube
+        Iris cube of data to be plotted. It must have a realization coordinate.
+    file_path: pathlike
+        The path of the plot to write.
+
+    Returns
+    -------
+    Path
+        The path of the resultant plot.
+
+    Raises
+    ------
+    ValueError
+        If the cube doesn't have the right dimensions.
+    """
+    raise NotImplementedError
