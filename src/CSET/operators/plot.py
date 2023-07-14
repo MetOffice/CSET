@@ -16,7 +16,9 @@
 Operators to produce various kinds of plots.
 """
 
+import math
 from pathlib import Path
+
 import iris
 import iris.cube
 import iris.quickplot as qplt
@@ -71,4 +73,21 @@ def postage_stamp_plot(cube: iris.cube.Cube, file_path: Path, **kwargs) -> Path:
     ValueError
         If the cube doesn't have the right dimensions.
     """
-    raise NotImplementedError
+
+    if not cube.coord("realization"):
+        raise ValueError("Cube must have a realization dimension.")
+
+    # Use the smallest square grid that will fit the members.
+    grid_size = int(math.ceil(math.sqrt(len(cube.coord("realization").points))))
+    plt.figure(figsize=(10, 10))
+    for member in cube.slices(["latitude", "longitude"]):
+        plt.subplot(grid_size, grid_size, member.coord("realization").points[0])
+        plot = qplt.contourf(member)
+        plt.axis("off")
+
+    # Make an axes to put the shared colorbar in.
+    colorbar_axes = plt.gcf().add_axes([0.15, 0.07, 0.7, 0.03])
+    colorbar = plt.colorbar(plot, colorbar_axes, orientation="horizontal")
+    colorbar.set_label("Metric / Units")
+    file_path = Path(file_path).with_suffix(".svg")
+    plt.savefig(file_path)
