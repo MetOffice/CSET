@@ -15,7 +15,7 @@
 """This subpackage contains all of CSET's operators."""
 
 # Import operators here so they are exported for use by recipes.
-from CSET.operators import constraints, read, write, filters, plot, misc
+from CSET.operators import constraints, read, write, filters, aggregate, plot, misc
 
 
 from pathlib import Path
