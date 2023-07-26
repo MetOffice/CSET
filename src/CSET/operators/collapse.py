@@ -107,3 +107,8 @@ def collapse_cube_2dim(
     )
 
     return collapsed_cube
+
+
+# TODO
+# collapse function that calculates means, medians etc across members of an ensemble or stratified groups.
+# Need to allow collapse over realisation dimension for fixed time. Hence will require reading in of CubeList
