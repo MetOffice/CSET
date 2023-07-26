@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Operators to perform various kind of aggregation on either 1 or 2 dimensions.
+Operators to perform various kind of collapse on either 1 or 2 dimensions.
 """
 
 import iris
@@ -21,22 +21,22 @@ import iris.cube
 import iris.analysis
 
 
-def aggregate_1dim(
+def collapse_1dim(
     cube: iris.cube.Cube, coordinate: str, method: str, **kwargs
 ) -> iris.cube.Cube:
     """
-    Aggregates similar (stash) fields in a cube into a cube aggregating around the specified coordinate and method.
-    This could be a (weighted) mean or an accumulation.
+    Collapses similar (stash) fields in a cube into a cube collapsing around the specified coordinate and method.
+    This could be a (weighted) mean or percentile.
 
     Arguments
     ---------
     cube: iris.cube.Cube
-         Cube to aggregate and iterate over one dimension
+         Cube to collapse and iterate over one dimension
     coordinate: str
-         Coordinate to aggregate over i.e.
+         Coordinate to collapse over i.e.
          'time', 'longitude', 'latitude','model_level_number'
     method: str
-         Type of aggregation i.e. method: 'MEAN', 'MAX', 'MIN', 'MEDIAN', 'PERCENTILE'
+         Type of collapse i.e. method: 'MEAN', 'MAX', 'MIN', 'MEDIAN', 'PERCENTILE'
          getattr creates iris.analysis.MEAN, etc
          For PERCENTILE YAML file requires i.e.
          method: 'PERCENTILE'
@@ -55,30 +55,30 @@ def aggregate_1dim(
     """
 
     if method != "PERCENTILE":
-        aggregated_cube = cube.collapsed(coordinate, getattr(iris.analysis, method))
+        collapsed_cube = cube.collapsed(coordinate, getattr(iris.analysis, method))
     if method == "PERCENTILE":
         for num in kwargs.values():
-            aggregated_cube = cube.collapsed(
+            collapsed_cube = cube.collapsed(
                 coordinate, getattr(iris.analysis, method), percent=num
             )
 
-    return aggregated_cube
+    return collapsed_cube
 
 
-def aggregate_cube_2dim(
+def collapse_cube_2dim(
     cube: iris.cube.Cube, coordinate1: str, coordinate2: str, method: str, **kargs
 ) -> iris.cube.Cube:
     """
-    Aggregates similar (stash) fields in a cube into a 2D field in a cube based on 2 coordinates and method to aggregated. This could include time and vertical coordinate for instance.
+    Collapses similar (stash) fields in a cube into a 2D field in a cube based on 2 coordinates and method to collapsed. This could include time and vertical coordinate for instance.
     This could be a (weighted) mean or an accumulation.
 
     Arguments
     ---------
     cube: iris.cube.Cube
-         Cube to aggregate and iterate over one dimension
+         Cube to collapse and iterate over one dimension
     coordinate: str
-         Coordinate to aggregate over
-    method: Type of aggregation i.e. method: 'MEAN', 'MAX', 'MIN', 'MEDIAN', 'PERCENTILE'
+         Coordinate to collapse over
+    method: Type of collapse i.e. method: 'MEAN', 'MAX', 'MIN', 'MEDIAN', 'PERCENTILE'
          getattr creates iris.analysis.MEAN, etc
          For PERCENTILE YAML file requires i.e.
          method: 'PERCENTILE'
@@ -88,7 +88,7 @@ def aggregate_cube_2dim(
     Returns
     -------
     cube: iris.cube.Cube
-         Single variable but several methods of aggregation such as mean, median, max, min, percentile
+         Single variable but several methods of collapse such as mean, median, max, min, percentile
 
 
     Raises
@@ -97,13 +97,13 @@ def aggregate_cube_2dim(
     If the constraint doesn't produce a single cube containing a field.
     """
 
-    # aggregate cube over single dimension
+    # collapse cube over single dimension
     # dimensions: 2 of i.e. 'time', 'longitude', 'latitude'
     # method: iris.analysis.MEAN, iris.analysis.MAX, iris.analysis.MIN
     # ensure that time is passed in as 'time'
-    # aggregated_cube = cube.collapsed("time", iris.analysis.MEAN)
-    aggregated_cube = cube.collapsed(
+    # collapsed_cube = cube.collapsed("time", iris.analysis.MEAN)
+    collapsed_cube = cube.collapsed(
         [coordinate2, coordinate2], getattr(iris.analysis, method)
     )
 
-    return aggregated_cube
+    return collapsed_cube

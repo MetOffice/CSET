@@ -18,7 +18,7 @@ import iris.analysis
 from CSET.operators import read, filters, constraints
 
 
-def test_aggregate_1dim():
+def test_collapse_1dim():
     """Reduces dimension of cube."""
     cubes = read.read_cubes("tests/test_data/air_temp.nc")
     constraint = constraints.combine_constraints(
@@ -26,7 +26,7 @@ def test_aggregate_1dim():
         a=constraints.generate_cell_methods_constraint([]),
     )
     cube = filters.filter_cubes(cubes, constraint)
-    aggregated_cube = cube.collapsed("time", iris.analysis.MEAN)
-    assert aggregated_cube.cell_methods == ()
+    collapsed_cube = cube.collapsed("time", iris.analysis.MEAN)
+    assert collapsed_cube.cell_methods == ()
     expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 1; grid_latitude: 17; grid_longitude: 13)>"
-    assert repr(aggregated_cube) == expected_cube
+    assert repr(collapsed_cube) == expected_cube

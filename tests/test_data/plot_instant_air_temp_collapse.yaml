@@ -23,7 +23,7 @@ steps:
 #        time_start: 2022-09-21T03:00:00
 #        time_end: 2022-09-21T03:30:00
 
-  - operator: aggregate.aggregate_1dim
+  - operator: collapse.collapse_1dim
     coordinate: 'time'
     method: 'MEAN'
     additional_percent: 90
