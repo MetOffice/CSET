@@ -21,7 +21,6 @@ from uuid import uuid4
 import os
 import subprocess
 import shutil
-import tempfile
 
 
 def test_command_line_help():
@@ -71,7 +70,7 @@ def test_environ_var_recipe():
     )
 
 
-def test_graph_creation():
+def test_graph_creation(tmp_path: Path):
     """Generates a graph with the command line interface."""
 
     # We can't easily test running without the output specified from the CLI, as
@@ -79,7 +78,7 @@ def test_graph_creation():
     # environment.
 
     # Run with output path specified
-    output_file = Path(tempfile.gettempdir(), f"{uuid4()}.svg")
+    output_file = tmp_path / f"{uuid4()}.svg"
     subprocess.run(
         ("cset", "graph", "-o", str(output_file), "tests/test_data/noop_recipe.yaml"),
         check=True,
@@ -88,7 +87,7 @@ def test_graph_creation():
     output_file.unlink()
 
 
-def test_graph_creation_env_var():
+def test_graph_creation_env_var(tmp_path: Path):
     """
     Generates a graph with the command line interface from an environment
     variable.
@@ -101,16 +100,16 @@ def test_graph_creation_env_var():
           - operator: misc.noop
         """
     # Run with output path specified
-    output_file = Path(tempfile.gettempdir(), f"{uuid4()}.svg")
+    output_file = tmp_path / f"{uuid4()}.svg"
     subprocess.run(("cset", "graph", "-o", str(output_file)), check=True)
     assert output_file.exists()
     output_file.unlink()
 
 
-def test_graph_details():
+def test_graph_details(tmp_path: Path):
     """Generate a graph with details with details."""
 
-    output_file = Path(tempfile.gettempdir(), f"{uuid4()}.svg")
+    output_file = tmp_path / f"{uuid4()}.svg"
     subprocess.run(
         (
             "cset",
@@ -134,9 +133,8 @@ def test_cookbook_cwd():
     shutil.rmtree(Path.cwd().joinpath("recipes"))
 
 
-def test_cookbook_path():
+def test_cookbook_path(tmp_path: Path):
     """Unpacking the recipes into a specified directory."""
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        subprocess.run(["cset", "cookbook", tmpdir], check=True)
-        assert Path(tmpdir, "extract_instant_air_temp.yaml").exists()
+    subprocess.run(["cset", "cookbook", tmp_path], check=True)
+    assert (tmp_path / "extract_instant_air_temp.yaml").exists()

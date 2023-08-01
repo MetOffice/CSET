@@ -15,28 +15,26 @@
 """Recipe tests."""
 
 from pathlib import Path
-import tempfile
 
 import pytest
 
 import CSET.recipes
 
 
-def test_unpack():
+def test_unpack(tmp_path: Path):
     """Unpack directory containing sub-directories."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        CSET.recipes._unpack_recipes_from_dir(Path("tests"), Path(tmpdir))
-        assert Path(tmpdir, "test_data/noop_recipe.yaml").exists()
-        # Run again to check that warnings are produced when files collide.
-        CSET.recipes._unpack_recipes_from_dir(Path("tests"), Path(tmpdir))
+    CSET.recipes._unpack_recipes_from_dir(Path("tests"), tmp_path)
+    assert Path(tmp_path, "test_data/noop_recipe.yaml").exists()
+    # Run again to check that warnings are produced when files collide.
+    CSET.recipes._unpack_recipes_from_dir(Path("tests"), tmp_path)
 
 
-def test_unpack_recipes_exception_collision():
+def test_unpack_recipes_exception_collision(tmp_path: Path):
     """Output path already exists and is not a directory."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        Path(tmpdir, "regular_file").touch()
-        with pytest.raises(FileExistsError):
-            CSET.recipes.unpack_recipes(Path(tmpdir, "regular_file"))
+    file_path = tmp_path / "regular_file"
+    file_path.touch()
+    with pytest.raises(FileExistsError):
+        CSET.recipes.unpack_recipes(file_path)
 
 
 def test_unpack_recipes_exception_permission():
