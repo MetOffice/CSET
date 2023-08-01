@@ -75,7 +75,7 @@ def parse_recipe(recipe_yaml: Union[Path, str]):
     except TypeError as err:
         if recipe is None:
             raise ValueError("Recipe must have at least 1 step.")
-        if type(recipe) != dict:
+        if not isinstance(recipe, dict):
             raise ValueError("Recipe must either be YAML, or a Path.")
         # This should never be reached; it's a bug if it is.
         raise err  # pragma: no cover

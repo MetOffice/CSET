@@ -5,7 +5,7 @@ description = "Toolkit for evaluation and investigation of numerical models for 
 authors = [{ name = "Met Office" }, { name = "NIWA" }]
 readme = "README.md"
 license = { text = "Apache-2.0" }
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Topic :: Scientific/Engineering :: GIS",
@@ -14,7 +14,6 @@ dependencies = [
     "numpy",
     "scitools-iris >= 3.6",
     "ruamel.yaml >= 0.17",
-    "importlib_resources >= 3.0.0 ; python_version < '3.9'",
     "pygraphviz >= 1.11"
 ]
 
@@ -50,10 +49,10 @@ requires = tox-conda
 isolated_build = True
 envlist =
     coverage-clean
-    py310-linux-tests
-    py310-linux-docs
+    py311-linux-tests
+    py311-linux-docs
 
-[testenv:py{38,39,310,311}-lock]
+[testenv:py{39,310,311}-lock]
 allowlist_externals = cp
 conda_channels = conda-forge
 conda_create_args = --override-channels
@@ -72,10 +71,9 @@ commands =
     python3 -c 'from sys import version_info as v; fh = open("{env:TMPFILE}", "a"); fh.write(f"\n  - python =\{v.major\}.\{v.minor\}\n")'
     conda-lock --channel conda-forge --kind explicit --file {env:TMPFILE} --platform linux-64 --filename-template "{env:LOCKDIR}{envname}-\{platform\}.txt" {posargs}
 
-[testenv:py{38,39,310,311}-{linux,osx,win}-tests]
+[testenv:py{39,310,311}-{linux,osx,win}-tests]
 description = Run unit and integration tests with PyTest.
 conda_spec =
-    py38-linux: {toxinidir}{/}requirements{/}locks{/}py38-lock-linux-64.txt
     py39-linux: {toxinidir}{/}requirements{/}locks{/}py39-lock-linux-64.txt
     py310-linux: {toxinidir}{/}requirements{/}locks{/}py310-lock-linux-64.txt
     py311-linux: {toxinidir}{/}requirements{/}locks{/}py311-lock-linux-64.txt
@@ -86,7 +84,6 @@ commands = pytest {posargs}
 [testenv:py{38,39,310,311}-{linux,osx,win}-docs]
 description = Invoke sphinx-build to build the HTML docs.
 conda_spec =
-    py38-linux: {toxinidir}{/}requirements{/}locks{/}py38-lock-linux-64.txt
     py39-linux: {toxinidir}{/}requirements{/}locks{/}py39-lock-linux-64.txt
     py310-linux: {toxinidir}{/}requirements{/}locks{/}py310-lock-linux-64.txt
     py311-linux: {toxinidir}{/}requirements{/}locks{/}py311-lock-linux-64.txt

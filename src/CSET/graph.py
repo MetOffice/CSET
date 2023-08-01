@@ -66,7 +66,7 @@ def save_graph(
         graph.add_node(node, label=step["operator"])
         kwargs = {}
         for key in step.keys():
-            if type(step[key]) == dict and "operator" in step[key]:
+            if isinstance(step[key], dict) and "operator" in step[key]:
                 logging.debug(f"Recursing into argument: {key}")
                 sub_node = step_parser(step[key], prev_node)
                 graph.add_edge(sub_node, node)

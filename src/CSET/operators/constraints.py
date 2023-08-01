@@ -108,11 +108,11 @@ def generate_time_constraint(
     -------
     time_constraint: iris.Constraint
     """
-    if type(time_start) == str:
+    if isinstance(time_start, str):
         time_start = datetime.fromisoformat(time_start)
     if time_end is None:
         time_end = time_start
-    elif type(time_end) == str:
+    elif isinstance(time_end, str):
         time_end = datetime.fromisoformat(time_end)
     time_constraint = iris.Constraint(time=lambda t: time_start <= t.point <= time_end)
     return time_constraint

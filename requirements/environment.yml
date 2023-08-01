@@ -7,10 +7,6 @@ dependencies:
   - iris >= 3.5
   - ruamel.yaml >= 0.17
   - mo_pack # For handling pp files.
-  # Unfortunately selectors are not supported by conda currently, so unused
-  # dependencies are included. See https://github.com/conda/conda/issues/8089
-  # for current status.
-  - importlib_resources >= 3.0.0 # in stdlib from 3.9
   - pygraphviz
 
   # Build dependencies
