@@ -26,10 +26,3 @@ steps:
 
   - operator: plot.postage_stamp
     file_path: CSET_OUTPUT_PATH
-
-  - operator: aggregate.aggregate
-    dimension: realization
-    method: iris.analysis.mean
-
-  - operator: plot.spatial_plot
-    file_path: CSET_OUTPUT_PATH
