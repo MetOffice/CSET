@@ -17,6 +17,8 @@
 from pathlib import Path
 import tempfile
 
+import pytest
+
 import CSET.recipes
 
 
@@ -33,12 +35,8 @@ def test_unpack_recipes_exception_collision():
     """Output path already exists and is not a directory."""
     with tempfile.TemporaryDirectory() as tmpdir:
         Path(tmpdir, "regular_file").touch()
-        try:
+        with pytest.raises(FileExistsError):
             CSET.recipes.unpack_recipes(Path(tmpdir, "regular_file"))
-        except FileExistsError:
-            assert True
-        else:
-            assert False
 
 
 def test_unpack_recipes_exception_permission():
@@ -46,9 +44,5 @@ def test_unpack_recipes_exception_permission():
     Insufficient permission to create output directory. Will always fail if
     tests are run as root, but no one should be doing that, right?
     """
-    try:
+    with pytest.raises(OSError):
         CSET.recipes.unpack_recipes(Path("/usr/bin/cset"))
-    except OSError:
-        assert True
-    else:
-        assert False

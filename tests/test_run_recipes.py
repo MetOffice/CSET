@@ -18,6 +18,8 @@ from pathlib import Path
 import tempfile
 from uuid import uuid4
 
+import pytest
+
 import CSET.operators
 
 
@@ -29,32 +31,20 @@ def test_get_operator():
 
 def test_get_operator_exception_missing():
     """Test exception for non-existent operators."""
-    try:
+    with pytest.raises(ValueError):
         CSET.operators.get_operator("non-existent.operator")
-    except ValueError:
-        assert True
-    else:
-        assert False
 
 
 def test_get_operator_exception_type():
     """Test exception if wrong type provided."""
-    try:
+    with pytest.raises(ValueError):
         CSET.operators.get_operator(["Not", b"a", "string", 1])
-    except ValueError:
-        assert True
-    else:
-        assert False
 
 
 def test_get_operator_exception_not_callable():
     """Test exception if operator isn't a function."""
-    try:
+    with pytest.raises(ValueError):
         CSET.operators.get_operator("misc.__doc__")
-    except ValueError:
-        assert True
-    else:
-        assert False
 
 
 def test_execute_recipe():

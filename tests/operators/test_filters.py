@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pytest
+
 from CSET.operators import read, filters, constraints
 
 
@@ -28,9 +30,5 @@ def test_filters_operator():
     assert repr(cube) == expected_cube
     # Test for exception when multiple cubes returned.
     constraint = constraints.generate_stash_constraint("m01s03i236")
-    try:
+    with pytest.raises(ValueError):
         cube = filters.filter_cubes(cubes, constraint)
-    except ValueError:
-        assert True
-    else:
-        assert False
