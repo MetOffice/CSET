@@ -24,7 +24,7 @@ jobs:
         env:
           PY_COLORS: "1"
           TOX_PARALLEL_NO_SPINNER: "1"
-        run: tox -e py38-linux-tests,py39-linux-tests,py310-linux-tests,py311-linux-tests
+        run: tox -e py39-linux-tests,py310-linux-tests,py311-linux-tests
       - uses: actions/upload-artifact@v3
         with:
           name: coverage-data
