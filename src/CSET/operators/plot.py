@@ -22,9 +22,40 @@ import logging
 
 import iris
 import iris.cube
+import iris.exceptions
 import iris.quickplot as qplt
 import iris.plot as iplt
 import matplotlib.pyplot as plt
+
+
+def _check_single_cube(cube: iris.cube.Cube | iris.cube.CubeList) -> iris.cube.Cube:
+    """Ensures a single cube is given.
+
+    If a CubeList of length one is given that the contained cube is returned,
+    otherwise an error is raised.
+
+    Parameters
+    ----------
+    cube: Cube | CubeList
+        The cube to check.
+
+    Returns
+    -------
+    cube: Cube
+        The checked cube.
+
+    Raises
+    ------
+    TypeError
+        If the input cube is not a Cube or CubeList of a single Cube.
+    """
+
+    if isinstance(cube, iris.cube.Cube):
+        return cube
+    if isinstance(cube, iris.cube.CubeList):
+        if len(cube) == 1:
+            return cube[0]
+    raise TypeError("Must have a single cube", cube)
 
 
 def spatial_contour_plot(
@@ -52,12 +83,8 @@ def spatial_contour_plot(
     TypeError
         If cube isn't a Cube.
     """
-    if isinstance(cube, iris.cube.CubeList):
-        if len(cube) == 1:
-            cube = cube[0]
-        else:
-            raise TypeError("Must have a single cube")
 
+    cube = _check_single_cube(cube)
     qplt.contourf(cube)
     file_path = Path(file_path).with_suffix(".svg")
     plt.savefig(file_path)
@@ -91,14 +118,12 @@ def postage_stamp_contour_plot(
         If cube isn't a Cube.
     """
 
-    if isinstance(cube, iris.cube.CubeList):
-        if len(cube) == 1:
-            cube = cube[0]
-        else:
-            raise TypeError("Must have a single cube", cube)
-
-    if not cube.coord("realization"):
-        raise ValueError("Cube must have a realization dimension.")
+    # Validate input is in the right form.
+    cube = _check_single_cube(cube)
+    try:
+        cube.coord("realization")
+    except iris.exceptions.CoordinateNotFoundError as err:
+        raise ValueError("Cube must have a realization dimension.") from err
 
     # Use the smallest square grid that will fit the members.
     grid_size = int(math.ceil(math.sqrt(len(cube.coord("realization").points))))
