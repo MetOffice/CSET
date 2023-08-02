@@ -1,6 +1,6 @@
 [project]
 name = "CSET"
-version = "0.3.0"
+version = "0.4.0"
 description = "Toolkit for evaluation and investigation of numerical models for weather and climate applications."
 authors = [{ name = "Met Office" }, { name = "NIWA" }]
 readme = "README.md"
