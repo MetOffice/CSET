@@ -1,0 +1,28 @@
+steps:
+  - operator: read.read_cubes
+    filename_pattern: "*_UK_Fog_PEG_1p5km_L90_RAL3p1_em??_pa0??.pp"
+    constraint:
+      operator: constraints.combine_constraints
+      stash_constraint:
+        operator: constraints.generate_stash_constraint
+        stash: m01s03i236
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+
+  - operator: aggregate.aggregate
+    dimension: time
+    method: mean
+    interval: PT3H
+
+  - operator: aggregate.aggregate
+    dimension: lat
+    method: iris.analysis.weighted_mean
+    size: 0.5 degree
+
+  - operator: write.write_cube_to_nc
+    # This is a magic value that becomes the runtime output file path.
+    file_path: CSET_OUTPUT_PATH
+
+  - operator: plot.postage_stamp
+    file_path: CSET_OUTPUT_PATH
