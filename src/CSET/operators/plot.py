@@ -19,6 +19,7 @@ Operators to produce various kinds of plots.
 import math
 from pathlib import Path
 import logging
+from typing import Union
 
 import iris
 import iris.cube
@@ -28,7 +29,9 @@ import iris.plot as iplt
 import matplotlib.pyplot as plt
 
 
-def _check_single_cube(cube: iris.cube.Cube | iris.cube.CubeList) -> iris.cube.Cube:
+def _check_single_cube(
+    cube: Union[iris.cube.Cube, iris.cube.CubeList]
+) -> iris.cube.Cube:
     """Ensures a single cube is given.
 
     If a CubeList of length one is given that the contained cube is returned,
