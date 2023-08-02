@@ -31,4 +31,8 @@ def test_spatial_plot():
 
 def test_postage_stamp_plots(tmp_path: Path):
     """Plot postage stamp plots of ensemble data."""
-    pass
+    input_file = Path("tests/test_data/")
+    output_file = tmp_path / f"{uuid4()}.svg"
+    recipe_file = Path("tests/test_data/ensemble_air_temp.yaml")
+    CSET.operators.execute_recipe(recipe_file, input_file, output_file)
+    assert output_file.exists()
