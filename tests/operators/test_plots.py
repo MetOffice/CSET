@@ -27,3 +27,8 @@ def test_spatial_plot():
     actual_output_file = output_file.with_suffix(".svg")
     assert actual_output_file.exists()
     actual_output_file.unlink()
+
+
+def test_postage_stamp_plots(tmp_path: Path):
+    """Plot postage stamp plots of ensemble data."""
+    pass
