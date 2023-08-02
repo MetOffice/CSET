@@ -13,9 +13,8 @@ about CSET, and how to use it.
 ## Contributing
 
 Contributions are readily welcomed! To get started with developing CSET visit
-the [Working
-Practices](https://metoffice.github.io/CSET/working-practices/#getting-started)
-section of the documentation.
+the [Contributing](https://metoffice.github.io/CSET/contributing/) section of
+the documentation.
 
 In addition to reading the working practices, the key
 recommendation is early communication. Open an [issue on
