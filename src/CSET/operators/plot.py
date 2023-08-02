@@ -110,6 +110,7 @@ def postage_stamp_contour_plot(
         plot = iplt.contourf(member)
         plt.title(f"Member #{member.coord('realization').points[0]}")
         plt.axis("off")
+        plt.gca().coastlines()
         subplot += 1
 
     # Make an axes to put the shared colorbar in.
