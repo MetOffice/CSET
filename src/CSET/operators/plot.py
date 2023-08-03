@@ -133,7 +133,7 @@ def postage_stamp_contour_plot(
 
     plt.figure(figsize=(10, 10))
     subplot = 1
-    for member in cube.slices(["grid_latitude", "grid_longitude"]):
+    for member in cube.slices_over("realization"):
         plt.subplot(grid_size, grid_size, subplot)
         plot = iplt.contourf(member)
         plt.title(f"Member #{member.coord('realization').points[0]}")
