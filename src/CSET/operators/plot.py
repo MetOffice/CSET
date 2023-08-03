@@ -92,7 +92,7 @@ def spatial_contour_plot(
     file_path = Path(file_path).with_suffix(".svg")
     plt.savefig(file_path)
     logging.info("Saved contour plot to %s", file_path)
-    return file_path
+    return cube
 
 
 def postage_stamp_contour_plot(
