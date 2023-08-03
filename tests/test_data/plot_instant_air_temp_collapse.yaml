@@ -18,10 +18,6 @@ steps:
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
-#      time_constraint:
-#        operator: constraints.generate_time_constraint
-#        time_start: 2022-09-21T03:00:00
-#        time_end: 2022-09-21T03:30:00
 
   - operator: collapse.collapse_1dim
     coordinate: 'time'
