@@ -22,7 +22,7 @@ import iris.analysis
 
 
 def collapse_1dim(
-    cube: iris.cube.Cube, coordinate: str, method: str, **kwargs
+    cube: iris.cube.Cube, coordinate: str, method: str, additional_percent: float = None, **kwargs
 ) -> iris.cube.Cube:
     """
     Collapses similar (stash) fields in a cube into a cube collapsing around the specified coordinate and method.
