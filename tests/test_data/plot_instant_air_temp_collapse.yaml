@@ -18,7 +18,7 @@ steps:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
 
-  - operator: collapse.collapse_1dim
+  - operator: collapse.collapse
     coordinate: 'time'
     method: 'MEAN'
     additional_percent: 90
