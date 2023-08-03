@@ -96,10 +96,9 @@ def spatial_contour_plot(
 
 
 def postage_stamp_contour_plot(
-    cube: iris.cube.Cube, file_path: Path, **kwargs
+    cube: iris.cube.Cube, file_path: Path, coordinate: str = "realization", **kwargs
 ) -> iris.cube.Cube:
-    """
-    Plots postage stamp contour plots from an ensemble.
+    """Plots postage stamp contour plots from an ensemble.
 
     Parameters
     ----------
@@ -107,6 +106,8 @@ def postage_stamp_contour_plot(
         Iris cube of data to be plotted. It must have a realization coordinate.
     file_path: pathlike
         The path of the plot to write.
+    coordinate: str
+        The coordinate that becomes different plots. Defaults to "realization".
 
     Returns
     -------
@@ -124,19 +125,19 @@ def postage_stamp_contour_plot(
     # Validate input is in the right form.
     cube = _check_single_cube(cube)
     try:
-        cube.coord("realization")
+        cube.coord(coordinate)
     except iris.exceptions.CoordinateNotFoundError as err:
-        raise ValueError("Cube must have a realization dimension.") from err
+        raise ValueError(f"Cube must have a {coordinate} dimension.") from err
 
     # Use the smallest square grid that will fit the members.
-    grid_size = int(math.ceil(math.sqrt(len(cube.coord("realization").points))))
+    grid_size = int(math.ceil(math.sqrt(len(cube.coord(coordinate).points))))
 
     plt.figure(figsize=(10, 10))
     subplot = 1
-    for member in cube.slices(["grid_latitude", "grid_longitude"]):
+    for member in cube.slices_over(coordinate):
         plt.subplot(grid_size, grid_size, subplot)
         plot = iplt.contourf(member)
-        plt.title(f"Member #{member.coord('realization').points[0]}")
+        plt.title(f"Member #{member.coord(coordinate).points[0]}")
         plt.axis("off")
         plt.gca().coastlines()
         subplot += 1
