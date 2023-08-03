@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import iris
-import iris.cube
 import iris.analysis
 from CSET.operators import read, filters, constraints
 
