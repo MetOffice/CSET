@@ -54,14 +54,14 @@ def collapse_1dim(
     If the constraint doesn't produce a single cube containing a field.
     """
 
-    if method != "PERCENTILE":
-        collapsed_cube = cube.collapsed(coordinate, getattr(iris.analysis, method))
     if method == "PERCENTILE":
-        for num in kwargs.values():
-            collapsed_cube = cube.collapsed(
-                coordinate, getattr(iris.analysis, method), percent=num
-            )
-
+        if not additional_percent:
+            raise ValueError("Must specify additional_percent")
+        collapsed_cube = cube.collapsed(
+            coordinate, iris.analysis.PERCENTILE, percent=additional_percent
+        )
+        return collapsed_cube
+    collapsed_cube = cube.collapsed(coordinate, getattr(iris.analysis, method))
     return collapsed_cube
 
 
