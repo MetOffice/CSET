@@ -39,12 +39,12 @@ def write_cube_to_nc(
 
     Returns
     -------
-    file_path: Path
-        Filepath to saved .nc
+    Cube | CubeList
+        The inputted cube(list) (so further operations can be applied)
     """
 
     # Ensure that output_file_path is a Path with a .nc suffix
     file_path = Path(file_path).with_suffix(".nc")
     # Save the file as nc compliant (iris should handle this)
     iris.save(cube, file_path)
-    return file_path
+    return cube
