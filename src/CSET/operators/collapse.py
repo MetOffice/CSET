@@ -55,8 +55,8 @@ def collapse(
 
     Raises
     ------
-    ValueError If the constraint doesn't produce a single cube containing a
-    field.
+    ValueError
+        If additional_percent wasn't supplied while using PERCENTILE method.
     """
 
     if method == "PERCENTILE":
