@@ -16,42 +16,47 @@
 Operators to perform various kind of collapse on either 1 or 2 dimensions.
 """
 
+from typing import Union
+
 import iris
 import iris.cube
 import iris.analysis
 
 
-def collapse_1dim(
-    cube: iris.cube.Cube, coordinate: str, method: str, additional_percent: float = None, **kwargs
+def collapse(
+    cube: iris.cube.Cube,
+    coordinate: Union[str, list[str]],
+    method: str,
+    additional_percent: float = None,
+    **kwargs,
 ) -> iris.cube.Cube:
-    """
-    Collapses similar (stash) fields in a cube into a cube collapsing around the specified coordinate and method.
-    This could be a (weighted) mean or percentile.
+    """Collapse coordinate(s) of a cube.
+
+    Collapses similar (stash) fields in a cube into a cube collapsing around the
+    specified coordinate(s) and method. This could be a (weighted) mean or
+    percentile.
 
     Arguments
     ---------
     cube: iris.cube.Cube
          Cube to collapse and iterate over one dimension
-    coordinate: str
-         Coordinate to collapse over i.e.
-         'time', 'longitude', 'latitude','model_level_number'
+    coordinate: str | list[str]
+         Coordinate(s) to collapse over i.e. 'time', 'longitude', 'latitude',
+         'model_level_number'. A list of multiple coordinates can be given.
     method: str
-         Type of collapse i.e. method: 'MEAN', 'MAX', 'MIN', 'MEDIAN', 'PERCENTILE'
-         getattr creates iris.analysis.MEAN, etc
-         For PERCENTILE YAML file requires i.e.
-         method: 'PERCENTILE'
-         additional_percent: 90
+         Type of collapse i.e. method: 'MEAN', 'MAX', 'MIN', 'MEDIAN',
+         'PERCENTILE' getattr creates iris.analysis.MEAN, etc For PERCENTILE
+         YAML file requires i.e. method: 'PERCENTILE' additional_percent: 90
 
     Returns
     -------
     cube: iris.cube.Cube
          Single variable but several methods of aggregation
 
-
     Raises
     ------
-    ValueError
-    If the constraint doesn't produce a single cube containing a field.
+    ValueError If the constraint doesn't produce a single cube containing a
+    field.
     """
 
     if method == "PERCENTILE":
@@ -65,50 +70,7 @@ def collapse_1dim(
     return collapsed_cube
 
 
-def collapse_cube_2dim(
-    cube: iris.cube.Cube, coordinate1: str, coordinate2: str, method: str, **kargs
-) -> iris.cube.Cube:
-    """
-    Collapses similar (stash) fields in a cube into a 2D field in a cube based on 2 coordinates and method to collapsed. This could include time and vertical coordinate for instance.
-    This could be a (weighted) mean or an accumulation.
-
-    Arguments
-    ---------
-    cube: iris.cube.Cube
-         Cube to collapse and iterate over one dimension
-    coordinate: str
-         Coordinate to collapse over
-    method: Type of collapse i.e. method: 'MEAN', 'MAX', 'MIN', 'MEDIAN', 'PERCENTILE'
-         getattr creates iris.analysis.MEAN, etc
-         For PERCENTILE YAML file requires i.e.
-         method: 'PERCENTILE'
-         additional_percent: 90
-
-
-    Returns
-    -------
-    cube: iris.cube.Cube
-         Single variable but several methods of collapse such as mean, median, max, min, percentile
-
-
-    Raises
-    ------
-    ValueError
-    If the constraint doesn't produce a single cube containing a field.
-    """
-
-    # collapse cube over single dimension
-    # dimensions: 2 of i.e. 'time', 'longitude', 'latitude'
-    # method: iris.analysis.MEAN, iris.analysis.MAX, iris.analysis.MIN
-    # ensure that time is passed in as 'time'
-    # collapsed_cube = cube.collapsed("time", iris.analysis.MEAN)
-    collapsed_cube = cube.collapsed(
-        [coordinate2, coordinate2], getattr(iris.analysis, method)
-    )
-
-    return collapsed_cube
-
-
 # TODO
-# collapse function that calculates means, medians etc across members of an ensemble or stratified groups.
-# Need to allow collapse over realisation dimension for fixed time. Hence will require reading in of CubeList
+# Collapse function that calculates means, medians etc across members of an
+# ensemble or stratified groups. Need to allow collapse over realisation
+# dimension for fixed time. Hence will require reading in of CubeList
