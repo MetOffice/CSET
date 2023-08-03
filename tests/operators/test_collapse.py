@@ -23,7 +23,16 @@ def test_collapse():
         a=constraints.generate_cell_methods_constraint([]),
     )
     cube = filters.filter_cubes(cubes, constraint)
+
+    # Test collapsing a single coordinate.
     collapsed_cube = collapse.collapse(cube, "time", "MEAN")
     assert collapsed_cube.cell_methods == ()
     expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 1; grid_latitude: 17; grid_longitude: 13)>"
+    assert repr(collapsed_cube) == expected_cube
+
+    # Test collapsing two coordinates.
+    collapsed_cube = collapse.collapse(
+        cube, ["grid_latitude", "grid_longitude"], "MEAN"
+    )
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 1; grid_longitude: 1)>"
     assert repr(collapsed_cube) == expected_cube
