@@ -12,12 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import iris
-import iris.analysis
-from CSET.operators import read, filters, constraints
+from CSET.operators import read, filters, constraints, collapse
 
 
-def test_collapse_1dim():
+def test_collapse():
     """Reduces dimension of cube."""
     cubes = read.read_cubes("tests/test_data/air_temp.nc")
     constraint = constraints.combine_constraints(
@@ -25,7 +23,7 @@ def test_collapse_1dim():
         a=constraints.generate_cell_methods_constraint([]),
     )
     cube = filters.filter_cubes(cubes, constraint)
-    collapsed_cube = cube.collapsed("time", iris.analysis.MEAN)
+    collapsed_cube = collapse.collapse(cube, "time", "MEAN")
     assert collapsed_cube.cell_methods == ()
     expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 1; grid_latitude: 17; grid_longitude: 13)>"
     assert repr(collapsed_cube) == expected_cube
