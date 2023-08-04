@@ -8,5 +8,6 @@ components.
     :maxdepth: 2
 
     cli
-    operators
     recipe-format
+    operators
+    internal
