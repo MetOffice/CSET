@@ -16,6 +16,8 @@
 
 from pathlib import Path
 
+import pytest
+
 import CSET._common as common
 
 
@@ -52,69 +54,41 @@ def test_parse_recipe_path():
 
 def test_parse_recipe_exception_missing():
     """Test exception for non-existent file."""
-    try:
+    with pytest.raises(FileNotFoundError):
         common.parse_recipe(Path("/non-existent/path"))
-    except FileNotFoundError:
-        assert True
-    else:
-        assert False
 
 
 def test_parse_recipe_exception_type():
     """Test exception for incorrect type."""
-    try:
+    with pytest.raises(TypeError):
         common.parse_recipe(True)
-    except TypeError:
-        assert True
-    else:
-        assert False
 
 
 def test_parse_recipe_exception_invalid_yaml():
     """Test exception for invalid YAML."""
-    try:
+    with pytest.raises(ValueError):
         common.parse_recipe('"Inside quotes" outside of quotes')
-    except ValueError:
-        assert True
-    else:
-        assert False
 
 
 def test_parse_recipe_exception_invalid_recipe():
     """Test exception for valid YAML but invalid recipe."""
-    try:
+    with pytest.raises(ValueError):
         common.parse_recipe("a: 1")
-    except ValueError:
-        assert True
-    else:
-        assert False
 
 
 def test_parse_recipe_exception_blank():
     """Test exception for blank recipe."""
-    try:
+    with pytest.raises(ValueError):
         common.parse_recipe("")
-    except ValueError:
-        assert True
-    else:
-        assert False
 
 
 def test_parse_recipe_exception_no_steps():
     """Test exception for recipe without any steps."""
-    try:
+    with pytest.raises(ValueError):
         common.parse_recipe("steps: []")
-    except ValueError:
-        assert True
-    else:
-        assert False
 
 
 def test_parse_recipe_exception_non_dict():
     """Test exception for recipe that parses to a non-dict."""
-    try:
+    with pytest.raises(ValueError):
         common.parse_recipe("[]")
-    except ValueError:
-        assert True
-    else:
-        assert False

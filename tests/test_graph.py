@@ -14,6 +14,8 @@
 
 from pathlib import Path
 
+import pytest
+
 import CSET.graph
 
 
@@ -23,14 +25,10 @@ def test_save_graph():
     CSET.graph.save_graph(Path("tests/test_data/plot_instant_air_temp.yaml"))
 
     # Test exception for recipe without an operator in a step.
-    try:
+    with pytest.raises(ValueError):
         CSET.graph.save_graph(
             """\
             steps:
                 - argument: no_operators
             """
         )
-    except ValueError:
-        assert True
-    else:
-        assert False

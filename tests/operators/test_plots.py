@@ -14,7 +14,6 @@
 
 from pathlib import Path
 from uuid import uuid4
-import tempfile
 
 import iris.cube
 import pytest
@@ -22,11 +21,11 @@ import pytest
 import CSET.operators
 
 
-def test_spatial_plot():
+def test_spatial_plot(tmp_path: Path):
     """Plot spatial contour plot of instant air temp."""
 
     input_file = Path("tests/test_data/air_temp.nc")
-    output_file = Path(f"{tempfile.gettempdir()}/{uuid4()}")
+    output_file = tmp_path / f"{uuid4()}"
     recipe_file = Path("tests/test_data/plot_instant_air_temp.yaml")
     CSET.operators.execute_recipe(recipe_file, input_file, output_file)
     actual_output_file = output_file.with_suffix(".svg")
