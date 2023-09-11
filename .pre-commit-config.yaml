@@ -4,8 +4,8 @@ ci:
   autoupdate_schedule: monthly
 
 repos:
-  - repo: https://github.com/psf/black
-    rev: 193ee766ca496871f93621d6b58d57a6564ff81b  # frozen: 23.7.0
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 4370d6583b214bf1936e445fa1ce1bf08a61200e  # frozen: 23.9.1
     hooks:
       - id: black
 
