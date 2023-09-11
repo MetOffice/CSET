@@ -5,7 +5,7 @@ ci:
 
 repos:
   - repo: https://github.com/psf/black
-    rev: 193ee766ca496871f93621d6b58d57a6564ff81b  # frozen: 23.7.0
+    rev: e87737140f32d3cd7c44ede75f02dcd58e55820e  # frozen: 23.9.1
     hooks:
       - id: black
 
