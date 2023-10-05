@@ -25,7 +25,7 @@ jobs:
         env:
           PY_COLORS: "1"
           TOX_PARALLEL_NO_SPINNER: "1"
-        run: tox -e py39-linux-tests,py310-linux-tests,py311-linux-tests
+        run: tox -e py39-linux-tests,py310-linux-tests,py311-linux-tests,py312-linux-tests
       - uses: actions/upload-artifact@v3
         with:
           name: coverage-data
@@ -96,7 +96,7 @@ jobs:
           key: tox|docs|${{ runner.os }}-${{ runner.arch}}|${{ hashFiles('requirements/locks/*') }}
           path: .tox
       - name: Build documentation
-        run: tox -e py310-linux-docs
+        run: tox -e py311-linux-docs
       - uses: actions/upload-artifact@v3
         with:
           name: html-docs
