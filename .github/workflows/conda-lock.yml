@@ -36,7 +36,7 @@ jobs:
         run: |
           git config --local user.name "$GITHUB_ACTOR"
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
-          git switch -c "conda-lock-$(sha256sum ${{ runner.temp }}/lock_file_hashes | head -c 8)"
+          git switch -c "conda-lock-files"
           tox -e py39-lock,py310-lock,py311-lock
 
       - name: Create pull requests
@@ -47,9 +47,10 @@ jobs:
             echo "Lock files unchanged. Skipping pull request..."
             exit 0
           fi
+          # Update lock_file_hashes so pushed branch name is unique.
+          sha256sum requirements/* > ${{ runner.temp }}/lock_file_hashes
           git add requirements/locks/*.txt
           git commit -m "[CI] Update conda lock files"
-          git push --set-upstream origin "conda-lock-$(sha256sum ${{ runner.temp }}/lock_file_hashes | head -c 8)"
+          git push --set-upstream origin "conda-lock-files:conda-lock-$(sha256sum ${{ runner.temp }}/lock_file_hashes | head -c 8)"
           # Create PR on GitHub using GitHub CLI.
-          gh pr create --base main --title "[CI] Update conda lock files" \
-          --body "Created automatically by GitHub Actions."
+          gh pr create --base main --title "[CI] Update conda lock files" --body "Created automatically by GitHub Actions."
