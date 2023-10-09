@@ -15,7 +15,7 @@ repos:
       - id: flake8
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: f71fa2c1f9cf5cb705f73dffe4b21f7c61470ba9  # frozen: v4.4.0
+    rev: c4a0b883114b00d8d76b479c820ce7950211c99b  # frozen: v4.5.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -27,7 +27,7 @@ repos:
       - id: check-merge-conflict
 
   - repo: https://github.com/codespell-project/codespell
-    rev: 355e50e14fd03fe83e4ed9aa0489824b150b3b58  # frozen: v2.2.5
+    rev: 6e41aba91fb32e9feb741a6258eefeb9c6e4a482  # frozen: v2.2.6
     hooks:
     - id: codespell
       additional_dependencies:
