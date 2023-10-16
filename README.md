@@ -14,7 +14,7 @@ peer reviewed evaluation tools and provides a legacy for diagnostics and
 observations. It offers flexible evaluation code that users can easily adapt
 according to their needs. It is build on a modern software stack using Python3
 and Met+ in a conda environment to support portability. Clear documentation,
-working practices, automatic testing,  and open access ensure developers can
+working practices, automatic testing, and open access ensure developers can
 easily use and contribute to this system. 
 
 Please read [the documentation](https://metoffice.github.io/CSET) to learn more
