@@ -1,7 +1,7 @@
 # CSET (Convective and turbulence scale Evaluation and verification Toolkit)
 
 CSET is a toolkit for verification, evaluation and investigation of convective-
-and turbulence-scale numerical models for weather and climate applications
+and turbulence-scale numerical models for weather and climate applications,
 cutting across time and space scales.
 
 It aligns parametrisation development, diagnostic development and evaluation
