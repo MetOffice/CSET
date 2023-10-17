@@ -11,14 +11,15 @@ CSET Documentation
    background/index
    contributing/index
 
-:abbr:`CSET (Acronym meaning contested)` is a tool to aid in verifying and
-evaluating :abbr:`ESM (Earth System Model)` configurations. It aims to replace
-the :abbr:`RES (Regional Evaluation Suite)`, :abbr:`RMED (Regional Model
-Evaluation & Development)` Toolbox and the collections of bespoke scripts
-littering people's home directories. By centralising these in CSET the effort
-spent on duplicate code can be reduced, and give a chance for code review to
-catch any bugs. This will make evaluations more consistent, reproducible and
-comparable. For more, see :doc:`/background/why-cset`
+:abbr:`CSET (Convective and turbulence scale Evaluation and verification
+Toolkit)` is a tool to aid in verifying and evaluating :abbr:`ESM (Earth System
+Model)` configurations. It aims to replace the :abbr:`RES (Regional Evaluation
+Suite)`, :abbr:`RMED (Regional Model Evaluation & Development)` Toolbox and the
+collections of bespoke scripts littering people's home directories. By
+centralising these in CSET the effort spent on duplicate code can be reduced,
+and give a chance for code review to catch any bugs. This will make evaluations
+more consistent, reproducible and comparable. For more, see
+:doc:`/background/why-cset`
 
 Use the side bar to the left to access other pages of the documentation.
 

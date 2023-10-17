@@ -15,8 +15,7 @@ CSET is a centralised place for custom diagnostics to live, with well defined
 :doc:`/contributing/index` to ensure that they stay maintained. By contributing
 diagnostics to CSET you ensure that they outlive the paper they were written
 for, and benefit the entire modelling community. Furthermore, any operators that
-the community finds especially useful will be contributed back to
-METplus_, so they can serve an
-even wider community.
+the community finds especially useful will be contributed back to METplus_, so
+they can serve an even wider community.
 
 .. _METplus: https://dtcenter.org/community-code/metplus
