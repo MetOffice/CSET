@@ -1,7 +1,5 @@
-.. _working_practices_getting_started:
-
-Getting Started
-===============
+Getting Started with Contributing
+=================================
 
 Before you can get to coding, there are a few steps you need to do.
 
