@@ -5,7 +5,7 @@ ci:
 
 repos:
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 4370d6583b214bf1936e445fa1ce1bf08a61200e  # frozen: 23.9.1
+    rev: 91867dbada8a528dcc51a369d95a9d11a81a26a8  # frozen: 23.10.0
     hooks:
       - id: black
 
