@@ -1,4 +1,4 @@
-Run a pre-existing recipe
-=========================
+Visualising a recipe graphically
+================================
 
-.. Tutorial saying how to run a pre-existing recipe
+.. Tutorial on cset graph.
