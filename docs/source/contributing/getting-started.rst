@@ -9,9 +9,10 @@ Getting the code
 Git is a version control software, which makes collaborating on software much
 easier. If you are new to git have a look at the :doc:`git` page to get started.
 
-To get the code onto your computer, you need to clone it with git. Most IDEs
-include the ability to do this in their interfaces, but from the command line it
-can be done with one of the following commands:
+To get the code onto your computer, you need to clone it with git. Most
+:abbr:`IDEs (Integrated Development Environments)` include the ability to do
+this in their interfaces, but from the command line it can be done with one of
+the following commands:
 
 .. code-block:: bash
 
