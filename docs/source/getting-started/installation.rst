@@ -10,9 +10,9 @@ Installation
     :doc:`/contributing/getting-started`.
 
 The recommended way to install CSET is via conda_. It is packaged on
-`conda-forge`_ and can be installed from the ``cset`` package. The following
-command will install CSET into its own conda environment, which is the
-recommended.
+`conda-forge`_ in the ``cset`` package. The following command will install CSET
+into its own conda environment, which is recommended to avoid possible package
+conflicts.
 
 .. code-block:: bash
 
@@ -25,6 +25,11 @@ activate`` command.
 
     conda activate cset
 
+.. note::
+
+    You will have to rerun the ``conda activate cset`` command whenever you use
+    a new terminal.
+
 Once that is done, CSET should be ready to use. This can be verified by running
 a simple command.
 
@@ -34,11 +39,6 @@ a simple command.
 
 This command should output the installed version of CSET. This will look
 something like ``CSET v0.4.0``.
-
-.. note::
-
-    You will have to rerun the ``conda activate cset`` command whenever you use
-    a new terminal.
 
 You now have CSET installed, so try another tutorial.
 

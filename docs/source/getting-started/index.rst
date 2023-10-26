@@ -10,5 +10,5 @@ that you do them in order.
 
     installation
     run-recipe
-    create-first-recipe
     visualise-recipe
+    create-first-recipe
