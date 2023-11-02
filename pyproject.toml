@@ -14,7 +14,7 @@ dependencies = [
     "numpy",
     "scitools-iris >= 3.6",
     "ruamel.yaml >= 0.17",
-    "pygraphviz >= 1.11"
+    "pygraphviz >= 1.11",
 ]
 
 [project.urls]
@@ -107,3 +107,18 @@ commands = coverage erase
 [tool.codespell]
 ignore-words-list = "lazyness,meaned"
 skip = "build,*.css,*.ipynb,*.js,*.html,*.svg,*.xml,.git"
+
+[tool.ruff]
+# TODO: Remove and fix issue (adding imports to __all__).
+ignore = ["F401"]
+# TODO: Enable along with fixing issues.
+# extend-select = ["B", "D", "I"]
+ignore-init-module-imports = true
+line-length = 88
+src = ["src", "test"]
+
+show-source = true
+
+
+[tool.ruff.pydocstyle]
+convention = "numpy"

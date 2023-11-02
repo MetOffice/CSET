@@ -4,31 +4,33 @@ ci:
   autoupdate_schedule: monthly
 
 repos:
-  - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 34974913abb598ee76541db1900f24fde7dd1d76  # frozen: 23.11.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.1.3
     hooks:
-      - id: black
-
-  - repo: https://github.com/PyCQA/flake8
-    rev: 10f4af6dbcf93456ba7df762278ae61ba3120dc6  # frozen: 6.1.0
-    hooks:
-      - id: flake8
-
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: c4a0b883114b00d8d76b479c820ce7950211c99b  # frozen: v4.5.0
-    hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: debug-statements
-      - id: check-toml
-      - id: check-yaml
-      - id: check-added-large-files
-      - id: check-case-conflict
-      - id: check-merge-conflict
+      - id: ruff
+        args: [ --fix, --exit-non-zero-on-fix ]
 
   - repo: https://github.com/codespell-project/codespell
     rev: 6e41aba91fb32e9feb741a6258eefeb9c6e4a482  # frozen: v2.2.6
     hooks:
     - id: codespell
+      # Additional dependency needed until Python 3.11 is our minimum version.
       additional_dependencies:
         - tomli
+
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 34974913abb598ee76541db1900f24fde7dd1d76  # frozen: 23.11.0
+    hooks:
+      - id: black
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: c4a0b883114b00d8d76b479c820ce7950211c99b  # frozen: v4.5.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-json
+      - id: check-toml
+      - id: check-yaml
+      - id: end-of-file-fixer
