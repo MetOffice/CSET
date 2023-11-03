@@ -109,8 +109,6 @@ ignore-words-list = "lazyness,meaned"
 skip = "build,*.css,*.ipynb,*.js,*.html,*.svg,*.xml,.git"
 
 [tool.ruff]
-# TODO: Remove and fix issue (adding imports to __all__).
-ignore = ["F401"]
 # TODO: Enable along with fixing issues.
 # extend-select = ["B", "D", "I"]
 ignore-init-module-imports = true
