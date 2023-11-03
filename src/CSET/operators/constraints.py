@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Operators to generate constraints to filter with.
-"""
+"""Operators to generate constraints to filter with."""
 
 from datetime import datetime
 
@@ -23,7 +21,8 @@ import iris.cube
 
 
 def generate_stash_constraint(stash: str, **kwargs) -> iris.AttributeConstraint:
-    """
+    """Generate constraint from STASH code.
+
     Operator that takes a stash string, and uses iris to generate a constraint
     to be passed into the read operator to minimize the CubeList the read
     operator loads and speed up loading.
@@ -37,7 +36,6 @@ def generate_stash_constraint(stash: str, **kwargs) -> iris.AttributeConstraint:
     -------
     stash_constraint: iris.AttributeConstraint
     """
-
     # At a later stage str list an option to combine constraints. Arguments
     # could be a list of stash codes that combined build the constraint.
     stash_constraint = iris.AttributeConstraint(STASH=stash)
@@ -45,7 +43,8 @@ def generate_stash_constraint(stash: str, **kwargs) -> iris.AttributeConstraint:
 
 
 def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
-    """
+    """Generate constraint from variable name.
+
     Operator that takes a CF compliant variable name string, and uses iris to
     generate a constraint to be passed into the read operator to minimize the
     CubeList the read operator loads and speed up loading.
@@ -59,13 +58,13 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
     -------
     varname_constraint: iris.Constraint
     """
-
     varname_constraint = iris.Constraint(name=varname)
     return varname_constraint
 
 
 def generate_cell_methods_constraint(cell_methods: list, **kwargs) -> iris.Constraint:
-    """
+    """Generate constraint from cell methods.
+
     Operator that takes a list of cell methods and generates a constraint from
     that.
 
@@ -92,7 +91,8 @@ def generate_cell_methods_constraint(cell_methods: list, **kwargs) -> iris.Const
 def generate_time_constraint(
     time_start: str, time_end: str = None, **kwargs
 ) -> iris.AttributeConstraint:
-    """
+    """Generate constraint between times.
+
     Operator that takes one or two ISO 8601 date strings, and returns a
     constraint that selects values between those dates (inclusive).
 

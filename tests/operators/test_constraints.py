@@ -12,41 +12,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Test constraint operators."""
+
 from datetime import datetime
 
 from CSET.operators import constraints
 
 
 def test_generate_stash_constraint():
-    """generate iris cube constraint for UM STASH code."""
+    """Generate iris cube constraint for UM STASH code."""
     stash_constraint = constraints.generate_stash_constraint("m01s03i236")
     expected_stash_constraint = "AttributeConstraint({'STASH': 'm01s03i236'})"
     assert repr(stash_constraint) == expected_stash_constraint
 
 
 def test_generate_var_constraint():
-    """generate iris cube constraint for str variable name."""
+    """Generate iris cube constraint for str variable name."""
     var_constraint = constraints.generate_var_constraint("test")
     expected_var_constraint = "Constraint(name='test')"
     assert repr(var_constraint) == expected_var_constraint
 
 
 def test_generate_cell_methods_constraint():
-    """generate iris cube constraint for cell methods."""
+    """Generate iris cube constraint for cell methods."""
     cell_methods_constraint = constraints.generate_cell_methods_constraint([])
     expected_cell_methods_constraint = "Constraint(cube_func=<function generate_cell_methods_constraint.<locals>.check_cell_methods at"
     assert expected_cell_methods_constraint in repr(cell_methods_constraint)
 
 
 def test_generate_time_constraint():
-    """generate iris cube constraint for dates."""
+    """Generate iris cube constraint for dates."""
     # Try with str dates
     time_constraint = constraints.generate_time_constraint(
         "2023-03-24T00:00", "2023-03-24T06:00"
     )
     expected_time_constraint = "Constraint(coord_values={'time': <function generate_time_constraint.<locals>.<lambda> at "
     assert expected_time_constraint in repr(time_constraint)
-    # Try with datatime.datatime dates
+    # Try with datetime.datetime dates
     time_constraint = constraints.generate_time_constraint(
         datetime.fromisoformat("2023-03-24T00:00:00+00:00"),
         datetime.fromisoformat("2023-03-24T06:00:00+00:00"),
@@ -58,7 +60,7 @@ def test_generate_time_constraint():
 
 
 def test_combine_constraints():
-    """combine constraint"""
+    """Combine constraint."""
     stash_constraint = constraints.generate_stash_constraint("m01s03i236")
     var_constraint = constraints.generate_var_constraint("test")
     combined_constraint = constraints.combine_constraints(

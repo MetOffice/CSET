@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Reading operator tests."""
+
 import iris.cube
 
 from CSET.operators import constraints, read
@@ -41,10 +43,7 @@ def test_read_cubes_ensemble_with_realization_coord():
 
 
 def test_read_cubes_ensemble_separate_files():
-    """
-    Read ensemble data from multiple files with the member number in the
-    filename.
-    """
+    """Read ensemble from multiple files with the member number in filename."""
     cubes = read.read_cubes(
         "tests/test_data/",
         constraint=constraints.generate_stash_constraint("m01s03i236"),

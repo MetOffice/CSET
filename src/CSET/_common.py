@@ -24,7 +24,7 @@ import ruamel.yaml
 
 def parse_recipe(recipe_yaml: Union[Path, str]):
     """
-    Parses a recipe into a python dictionary.
+    Parse a recipe into a python dictionary.
 
     Parameters
     ----------
@@ -49,7 +49,6 @@ def parse_recipe(recipe_yaml: Union[Path, str]):
     >>> CSET._recipe_parsing.parse_recipe(Path("myrecipe.yaml"))
     {'steps': [{'operator': 'misc.noop'}]}
     """
-
     # Check the type provided explicitly.
     if isinstance(recipe_yaml, str):
         recipe_yaml = io.StringIO(recipe_yaml)

@@ -109,9 +109,7 @@ ignore-words-list = "lazyness,meaned"
 skip = "build,*.css,*.ipynb,*.js,*.html,*.svg,*.xml,.git"
 
 [tool.ruff]
-# TODO: Enable along with fixing issues.
-extend-select = ["B", "I"]
-# extend-select = ["B", "D", "I"]
+extend-select = ["B", "D", "I"]
 ignore-init-module-imports = true
 line-length = 88
 src = ["src", "test"]

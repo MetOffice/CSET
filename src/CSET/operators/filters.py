@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Operators to perform various kind of filtering.
-"""
+"""Operators to perform various kind of filtering."""
 
 from typing import Union
 
@@ -28,7 +26,7 @@ def filter_cubes(
     **kwargs,
 ) -> iris.cube.Cube:
     """
-    Filters a cubelist down to a single cube based on a constraint.
+    Filter a cubelist down to a single cube based on a constraint.
 
     Arguments
     ---------
@@ -46,7 +44,6 @@ def filter_cubes(
     ValueError
         If the constraint doesn't produce a single cube.
     """
-
     filtered_cubes = cube.extract(constraint)
 
     # Check filtered cubes is a CubeList containing one cube.

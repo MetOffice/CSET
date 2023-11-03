@@ -54,13 +54,12 @@ def save_graph(
     ValueError
         Recipe is invalid.
     """
-
     recipe = parse_recipe(recipe_file)
     if not save_path:
         save_path = Path(f"{tempfile.gettempdir()}/{uuid4()}.svg")
 
     def step_parser(step: dict, prev_node: str) -> str:
-        """Parses recipe to add nodes to graph and link them with edges."""
+        """Parse recipe to add nodes to graph and link them with edges."""
         logging.debug(f"Executing step: {step}")
         node = str(uuid4())
         graph.add_node(node, label=step["operator"])

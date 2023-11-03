@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Operators to produce various kinds of plots.
-"""
+"""Operators to produce various kinds of plots."""
 
 import logging
 import math
@@ -32,7 +30,7 @@ import matplotlib.pyplot as plt
 def _check_single_cube(
     cube: Union[iris.cube.Cube, iris.cube.CubeList]
 ) -> iris.cube.Cube:
-    """Ensures a single cube is given.
+    """Ensure a single cube is given.
 
     If a CubeList of length one is given that the contained cube is returned,
     otherwise an error is raised.
@@ -52,7 +50,6 @@ def _check_single_cube(
     TypeError
         If the input cube is not a Cube or CubeList of a single Cube.
     """
-
     if isinstance(cube, iris.cube.Cube):
         return cube
     if isinstance(cube, iris.cube.CubeList):
@@ -65,7 +62,7 @@ def spatial_contour_plot(
     cube: iris.cube.Cube, file_path: Path, **kwargs
 ) -> iris.cube.Cube:
     """
-    Plots a spatial variable onto a map.
+    Plot a spatial variable onto a map.
 
     Parameters
     ----------
@@ -86,7 +83,6 @@ def spatial_contour_plot(
     TypeError
         If cube isn't a Cube.
     """
-
     cube = _check_single_cube(cube)
     qplt.contourf(cube)
     file_path = Path(file_path).with_suffix(".svg")
@@ -98,7 +94,7 @@ def spatial_contour_plot(
 def postage_stamp_contour_plot(
     cube: iris.cube.Cube, file_path: Path, coordinate: str = "realization", **kwargs
 ) -> iris.cube.Cube:
-    """Plots postage stamp contour plots from an ensemble.
+    """Plot postage stamp contour plots from an ensemble.
 
     Parameters
     ----------
@@ -121,7 +117,6 @@ def postage_stamp_contour_plot(
     TypeError
         If cube isn't a Cube.
     """
-
     # Validate input is in the right form.
     cube = _check_single_cube(cube)
     try:

@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Operators for writing various types of files to disk.
-"""
+"""Operators for writing various types of files to disk."""
 
 from pathlib import Path
 from typing import Union
@@ -26,9 +24,10 @@ import iris.cube
 def write_cube_to_nc(
     cube: Union[iris.cube.Cube, iris.cube.CubeList], file_path: Path, **kwargs
 ) -> str:
-    """
-    A write operator that sits after the read operator. This operator expects
-    an iris cube object that will then be passed to MET for further processing.
+    """Write a cube to a NetCDF file.
+
+    This operator expects an iris cube object that will then be passed to MET
+    for further processing.
 
     Arguments
     ---------
@@ -42,7 +41,6 @@ def write_cube_to_nc(
     Cube | CubeList
         The inputted cube(list) (so further operations can be applied)
     """
-
     # Ensure that output_file_path is a Path with a .nc suffix
     file_path = Path(file_path).with_suffix(".nc")
     # Save the file as nc compliant (iris should handle this)

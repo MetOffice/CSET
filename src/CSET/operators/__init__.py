@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""This subpackage contains all of CSET's operators."""
+"""Subpackage contains all of CSET's operators."""
 
 # Import operators here so they are exported for use by recipes.
 import inspect
@@ -32,7 +32,7 @@ FUTURE.datum_support = True
 
 def get_operator(name: str):
     """
-    Gets an operator by its name.
+    Get an operator by its name.
 
     Parameters
     ----------
@@ -54,7 +54,6 @@ def get_operator(name: str):
     >>> CSET.operators.get_operator("read.read_cubes")
     <function read_cubes at 0x7fcf9353c8b0>
     """
-
     logging.debug("get_operator(%s)", name)
     try:
         name_sections = name.split(".")
@@ -72,7 +71,7 @@ def get_operator(name: str):
 def execute_recipe(
     recipe_yaml: Union[Path, str], input_file: Path, output_file: Path
 ) -> None:
-    """Parses and executes a recipe file.
+    """Parse and executes a recipe file.
 
     Parameters
     ----------
@@ -101,7 +100,7 @@ def execute_recipe(
     """
 
     def step_parser(step: dict, step_input: any, output_file_path: Path) -> str:
-        """Executes a recipe step, recursively executing any sub-steps."""
+        """Execute a recipe step, recursively executing any sub-steps."""
         logging.debug(f"Executing step: {step}")
         kwargs = {}
         for key in step.keys():

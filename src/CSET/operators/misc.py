@@ -12,15 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Miscellaneous operators.
-"""
+"""Miscellaneous operators."""
 
 
 def noop(x, **kwargs):
-    """
-    Returns its input without doing anything to it. Useful for constructing
-    diagnostic chains.
+    """Return its input without doing anything to it.
+
+    Useful for constructing diagnostic chains.
 
     Arguments
     ---------
@@ -32,5 +30,4 @@ def noop(x, **kwargs):
     x: Any
         The input that was given.
     """
-
     return x
