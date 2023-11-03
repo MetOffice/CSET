@@ -65,8 +65,8 @@ def get_operator(name: str):
             return operator
         else:
             raise AttributeError
-    except (AttributeError, TypeError):
-        raise ValueError(f"Unknown operator: {name}")
+    except (AttributeError, TypeError) as err:
+        raise ValueError(f"Unknown operator: {name}") from err
 
 
 def execute_recipe(

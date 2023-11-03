@@ -59,10 +59,10 @@ def parse_recipe(recipe_yaml: Union[Path, str]):
     with ruamel.yaml.YAML(typ="safe", pure=True) as yaml:
         try:
             recipe = yaml.load(recipe_yaml)
-        except ruamel.yaml.parser.ParserError:
-            raise ValueError("ParserError: Invalid YAML")
-        except ruamel.yaml.error.YAMLStreamError:
-            raise TypeError("Must provide a file object (with a read method)")
+        except ruamel.yaml.parser.ParserError as err:
+            raise ValueError("ParserError: Invalid YAML") from err
+        except ruamel.yaml.error.YAMLStreamError as err:
+            raise TypeError("Must provide a file object (with a read method)") from err
 
     # Checking that the recipe actually has some steps, and providing helpful
     # error messages otherwise.
@@ -71,12 +71,12 @@ def parse_recipe(recipe_yaml: Union[Path, str]):
         if len(recipe["steps"]) < 1:
             raise ValueError("Recipe must have at least 1 step.")
     except KeyError as err:
-        raise ValueError("Invalid Recipe:", err)
+        raise ValueError("Invalid Recipe.") from err
     except TypeError as err:
         if recipe is None:
-            raise ValueError("Recipe must have at least 1 step.")
+            raise ValueError("Recipe must have at least 1 step.") from err
         if not isinstance(recipe, dict):
-            raise ValueError("Recipe must either be YAML, or a Path.")
+            raise ValueError("Recipe must either be YAML, or a Path.") from err
         # This should never be reached; it's a bug if it is.
         raise err  # pragma: no cover
 
