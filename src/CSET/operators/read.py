@@ -16,13 +16,12 @@
 Operators for reading various types of files from disk.
 """
 
-from pathlib import Path
 import logging
+from pathlib import Path
 
 import iris
-import iris.cube
 import iris.coords
-
+import iris.cube
 import numpy as np
 
 

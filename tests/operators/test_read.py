@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from CSET.operators import read, constraints
 import iris.cube
+
+from CSET.operators import constraints, read
 
 
 def test_read_cubes():

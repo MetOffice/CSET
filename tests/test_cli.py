@@ -16,11 +16,11 @@
 Tests for the command line interface. In many ways these are integration tests.
 """
 
+import os
+import shutil
+import subprocess
 from pathlib import Path
 from uuid import uuid4
-import os
-import subprocess
-import shutil
 
 
 def test_command_line_help():

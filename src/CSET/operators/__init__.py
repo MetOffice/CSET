@@ -15,19 +15,17 @@
 """This subpackage contains all of CSET's operators."""
 
 # Import operators here so they are exported for use by recipes.
-from CSET.operators import constraints, read, write, filters, collapse, plot, misc
-
-
-from pathlib import Path
-from typing import Union
 import inspect
 import logging
-
-import CSET.operators
-from CSET._common import parse_recipe
+from pathlib import Path
+from typing import Union
 
 # Stop iris giving a warning whenever it loads something.
 from iris import FUTURE
+
+import CSET.operators
+from CSET._common import parse_recipe
+from CSET.operators import collapse, constraints, filters, misc, plot, read, write
 
 FUTURE.datum_support = True
 

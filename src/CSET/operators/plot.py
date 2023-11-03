@@ -16,16 +16,16 @@
 Operators to produce various kinds of plots.
 """
 
+import logging
 import math
 from pathlib import Path
-import logging
 from typing import Union
 
 import iris
 import iris.cube
 import iris.exceptions
-import iris.quickplot as qplt
 import iris.plot as iplt
+import iris.quickplot as qplt
 import matplotlib.pyplot as plt
 
 

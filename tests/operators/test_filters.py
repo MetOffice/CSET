@@ -14,7 +14,7 @@
 
 import pytest
 
-from CSET.operators import read, filters, constraints
+from CSET.operators import constraints, filters, read
 
 
 def test_filters_operator():

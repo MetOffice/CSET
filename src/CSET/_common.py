@@ -14,10 +14,10 @@
 
 """Common functionality used across CSET."""
 
+import io
 import logging
 from pathlib import Path
 from typing import Union
-import io
 
 import ruamel.yaml
 

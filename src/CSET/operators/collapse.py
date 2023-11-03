@@ -19,8 +19,8 @@ Operators to perform various kind of collapse on either 1 or 2 dimensions.
 from typing import Union
 
 import iris
-import iris.cube
 import iris.analysis
+import iris.cube
 
 
 def collapse(

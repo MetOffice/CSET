@@ -16,9 +16,9 @@
 This module has an attribute for each recipe, holding the Path to that recipe.
 """
 
+import logging
 from importlib.resources import files
 from pathlib import Path
-import logging
 
 import CSET.recipes as recipes
 

@@ -110,6 +110,7 @@ skip = "build,*.css,*.ipynb,*.js,*.html,*.svg,*.xml,.git"
 
 [tool.ruff]
 # TODO: Enable along with fixing issues.
+extend-select = ["I"]
 # extend-select = ["B", "D", "I"]
 ignore-init-module-imports = true
 line-length = 88

@@ -16,9 +16,10 @@
 Operators to generate constraints to filter with.
 """
 
+from datetime import datetime
+
 import iris
 import iris.cube
-from datetime import datetime
 
 
 def generate_stash_constraint(stash: str, **kwargs) -> iris.AttributeConstraint:

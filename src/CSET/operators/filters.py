@@ -16,9 +16,10 @@
 Operators to perform various kind of filtering.
 """
 
+from typing import Union
+
 import iris
 import iris.cube
-from typing import Union
 
 
 def filter_cubes(

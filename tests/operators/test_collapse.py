@@ -14,7 +14,7 @@
 
 import pytest
 
-from CSET.operators import read, filters, constraints, collapse
+from CSET.operators import collapse, constraints, filters, read
 
 
 def test_collapse():

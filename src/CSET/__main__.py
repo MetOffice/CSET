@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sys
+
 from CSET import main
 
 sys.exit(main())

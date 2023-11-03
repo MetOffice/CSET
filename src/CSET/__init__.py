@@ -18,9 +18,9 @@ CSET: Convective Scale Evaluation Tool
 
 import argparse
 import logging
-from pathlib import Path
 import os
 from importlib.metadata import version
+from pathlib import Path
 
 
 def main():

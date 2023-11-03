@@ -15,11 +15,11 @@
 """Visualise recipe into a graph."""
 
 import logging
+import subprocess
+import tempfile
 from pathlib import Path
 from typing import Union
-import tempfile
 from uuid import uuid4
-import subprocess
 
 import pygraphviz as pgz
 
