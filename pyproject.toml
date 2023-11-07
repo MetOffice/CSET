@@ -112,10 +112,8 @@ skip = "build,*.css,*.ipynb,*.js,*.html,*.svg,*.xml,.git"
 extend-select = ["B", "D", "I"]
 ignore-init-module-imports = true
 line-length = 88
-src = ["src", "test"]
-
 show-source = true
-
+src = ["src", "test"]
 
 [tool.ruff.pydocstyle]
 convention = "numpy"
