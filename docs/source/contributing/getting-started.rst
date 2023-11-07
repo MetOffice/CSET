@@ -27,6 +27,11 @@ This will download a copy of the repository (where the code is stored), and all
 of its history onto your computer. From there we need to setup a few things
 before we can develop.
 
+.. note::
+
+    If you have previously cloned the repository you can update it with the
+    latest changes. Ensure all changes are committed, then run ``git pull``.
+
 Setting up tooling
 ------------------
 
