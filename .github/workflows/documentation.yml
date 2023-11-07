@@ -36,7 +36,7 @@ jobs:
         with:
           name: html-docs
           path: docs/build/html/
-          retention-days: 10
+          retention-days: 1
           if-no-files-found: error
 
   pages-deploy:
