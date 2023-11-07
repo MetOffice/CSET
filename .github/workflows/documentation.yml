@@ -30,7 +30,7 @@ jobs:
           path: .tox
 
       - name: Build documentation
-        run: tox -e py310-linux-docs
+        run: tox -e py311-linux-docs
 
       - uses: actions/upload-artifact@v3
         with:
