@@ -1,11 +1,11 @@
 # CSET (Convective and turbulence scale Evaluation and verification Toolkit)
 
-CSET is a toolkit for verification, evaluation and investigation of convective-
+CSET is a toolkit for evaluation, verification and investigation of convective-
 and turbulence-scale numerical models for weather and climate applications,
 cutting across time and space scales.
 
 It aligns parametrisation development, diagnostic development and evaluation
-research, feeding back into RAL (Regional Atmosphere and Land) development
+research, feeding back into Regional Atmosphere and Land model development
 across the Met Office and UM partnership.
 
 Apart from verification capabilities it provides a centralised source of tools
