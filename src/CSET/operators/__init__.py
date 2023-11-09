@@ -25,7 +25,16 @@ from iris import FUTURE
 
 import CSET.operators
 from CSET._common import parse_recipe
-from CSET.operators import collapse, constraints, filters, misc, plot, read, write
+from CSET.operators import (
+    aggregate,
+    collapse,
+    constraints,
+    filters,
+    misc,
+    plot,
+    read,
+    write,
+)
 
 FUTURE.datum_support = True
 
@@ -136,13 +145,14 @@ def execute_recipe(
 
 
 __all__ = [
+    "aggregate",
+    "collapse",
     "constraints",
+    "execute_recipe",
+    "filters",
+    "get_operator",
+    "misc",
+    "plot",
     "read",
     "write",
-    "filters",
-    "collapse",
-    "plot",
-    "misc",
-    "get_operator",
-    "execute_recipe",
 ]

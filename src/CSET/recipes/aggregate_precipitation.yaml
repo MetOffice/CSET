@@ -1,0 +1,32 @@
+title: Extract sub-hourly or hourly ppn and aggregate to user defined intervals
+description: |
+  Extracts out the sub-hourly or hourly stratiform rainfall rate from a file
+  and aggregates it up to new intervals and writes it to a new one.
+section: Grid Stat
+major_cat: Major Category 1
+minor_cat: Minor Category 1
+
+steps:
+  - operator: read.read_cubes
+
+  - operator: filters.filter_cubes
+    constraint:
+      operator: constraints.combine_constraints
+      stash_constraint:
+        operator: constraints.generate_stash_constraint
+        stash: m01s04i203
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+
+  - operator: aggregate.aggregate
+    coordinate: time
+    method: SUM
+    interval: 2
+
+  - operator: plot.spatial_contour_plot
+    file_path: CSET_OUTPUT_PATH
+
+  - operator: write.write_cube_to_nc
+    # This is a magic value that becomes the runtime output file path.
+    file_path: CSET_OUTPUT_PATH
