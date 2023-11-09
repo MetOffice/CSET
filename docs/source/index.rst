@@ -12,7 +12,7 @@ CSET Documentation
    contributing/index
 
 :abbr:`CSET (Convective and turbulence scale Evaluation and verification
-Toolkit)` toolkit for evaluation, verification and investigation of convective-
+Toolkit)` is a toolkit for evaluation, verification and investigation of convective-
 and turbulence-scale numerical models for weather and climate applications,
 cutting across time and space scales.
 
