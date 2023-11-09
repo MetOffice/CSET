@@ -15,8 +15,8 @@ diagnostics that can be quickly created by the combination of operators in
 regridding are provided to reduce duplication of effort.
 
 CSET provides a legacy for user-developed evaluation methods and diagnostics to
-be shared and documented, with well-defined working practices and review
-processes :doc:`/contributing/index` to ensure best practice for evaluation and
+be shared and documented, with :doc:`well-defined working practices and review
+processes</contributing/index>` to ensure best practice for evaluation and
 verification linked to convective- and turbulence-scale model configurations.
 Therefore, it provides many benefits in reproducibility, portability,
 accessibility, maintainability, and quality assurance. By contributing newly
