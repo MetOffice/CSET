@@ -14,7 +14,7 @@ CSET Documentation
 :abbr:`CSET (Convective and turbulence scale Evaluation and verification
 Toolkit)` toolkit for evaluation, verification and investigation of convective- and turbulence-scale numerical models for weather and climate applications, cutting across time and space scales.
 
-It aligns parametrisation development, diagnostic development and evaluation research, feeding back into RAL (Regional Atmosphere and Land) development across the Met Office and UM partnership.
+It aligns parametrisation development, diagnostic development and evaluation research, feeding back into Regional Atmosphere and Land (RAL) model development across the Met Office and UM partnership.
 
 Apart from verification capabilities it provides a centralised source of tools to aid process-oriented evaluation for UM and LFRic models, supporting both deterministic and ensembles.
 
