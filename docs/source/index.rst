@@ -12,13 +12,27 @@ CSET Documentation
    contributing/index
 
 :abbr:`CSET (Convective and turbulence scale Evaluation and verification
-Toolkit)` is a tool to aid in verifying and evaluating :abbr:`ESM (Earth System
-Model)` configurations. It aims to replace the :abbr:`RES (Regional Evaluation
-Suite)`, :abbr:`RMED (Regional Model Evaluation & Development)` Toolbox and the
-collections of bespoke scripts littering people's home directories. By
-centralising these in CSET the effort spent on duplicate code can be reduced,
-and give a chance for code review to catch any bugs. This will make evaluations
-more consistent, reproducible and comparable. For more, see
+Toolkit)` toolkit for evaluation, verification and investigation of convective-
+and turbulence-scale numerical models for weather and climate applications,
+cutting across time and space scales.
+
+It aligns parametrisation development, diagnostic development and evaluation
+research, feeding back into Regional Atmosphere and Land (RAL) model development
+across the Met Office and UM partnership.
+
+Apart from verification capabilities it provides a centralised source of tools
+to aid process-oriented evaluation for UM and LFRic models, supporting both
+deterministic and ensembles.
+
+For model developers CSET offers well documented and peer reviewed evaluation
+tools and flexible evaluation code that can adapt to users needs.
+
+For diagnostic developers it provides a legacy for diagnostics and observations.
+It is build on a modern software stack using python 3 and METplus. Clear
+documentation, working practices, automatic testing, and open access promote
+contributions.
+
+For more information on how to use it and get involved as a developer, see
 :doc:`/background/why-cset`
 
 Use the side bar to the left to access other pages of the documentation.
