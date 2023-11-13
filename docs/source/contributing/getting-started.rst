@@ -1,5 +1,5 @@
-Getting Started with Contributing
-=================================
+Before you Contribute
+=====================
 
 Before you can get to coding, there are a few steps you need to do.
 
