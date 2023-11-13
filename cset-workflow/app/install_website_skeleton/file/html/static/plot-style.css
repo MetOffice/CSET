@@ -1,0 +1,136 @@
+/* Stable CSS for plot pages to use. */
+
+/* Start CSS Reset */
+/* Modified version of https://piccalil.li/blog/a-modern-css-reset/ */
+/* Remove default margin */
+body,
+h1,
+h2,
+h3,
+h4,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+/* Set core body defaults */
+body {
+  line-height: 1.5;
+}
+
+/* a elements that don't have a class get default styles */
+a:not([class]) {
+  text-decoration-skip-ink: auto;
+}
+
+/* Make images easier to work with */
+img,
+picture {
+  display: block;
+}
+
+/* Inherit fonts for inputs and buttons */
+input,
+button,
+textarea,
+address,
+select {
+  font: inherit;
+}
+
+/* Remove all animations, transitions and smooth scroll for people that prefer
+not to see them. Based on https://web.dev/prefers-reduced-motion/ */
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-delay: -1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    background-attachment: initial !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
+}
+
+/* End CSS Reset */
+
+body {
+  font-family: sans-serif;
+}
+
+.hidden {
+  display: none;
+}
+
+.horizontal-scroll {
+  overflow-x: auto;
+  width: 50%;
+  padding: 0.5em 1em;
+  background-color: lightgrey;
+  border-radius: 5px;
+  box-shadow: 4px 4px 4px grey;
+  outline: grey solid 1px;
+}
+
+.horizontal-scroll > * {
+  display: block;
+  width: max-content;
+}
+
+.diagnostic {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin: 1em 0;
+}
+
+.plot-container {
+  width: 800px;
+  min-width: 350px;
+  max-width: 100%;
+  margin: 1em auto;
+}
+
+.plot-container > img {
+  /* This is the actual plot */
+  width: 100%;
+  margin-bottom: 1em;
+}
+
+.plot-container > footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+}
+
+.plot-container > footer * {
+  margin: auto 0;
+}
+
+#description-container {
+  max-width: 80ch;
+  width: fit-content;
+  height: fit-content;
+  background-color: whitesmoke;
+  box-shadow: 4px 4px 4px grey;
+  outline: darkgrey solid 1px;
+  padding: 1em;
+  margin: 1em auto;
+  border-radius: 10px;
+  overflow: auto;
+  max-height: 800px;
+}
+
+.body-text {
+  margin: 1em auto;
+  width: 80ch;
+  max-width: 97%;
+}

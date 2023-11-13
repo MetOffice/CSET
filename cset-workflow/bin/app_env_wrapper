@@ -1,0 +1,48 @@
+#! /bin/bash
+
+# This is simple wrapper script for apps in this suite,
+# designed to set up the appropriate Python environment.
+#
+# Usage: app_env_wrapper CMD [cmd_opts]
+
+set -euo pipefail
+
+# Check that environment is sourced in at least one way
+if [[ "$CSET_ENV_USE_MODULES" == False ]] && [[ "$CSET_ENV_USE_CONDA" == False ]]
+then
+  echo '[ERROR] At least one way of specifying environment needed'
+  exit 1
+fi
+
+# Load modules
+if [[ $CSET_ENV_USE_MODULES == True ]]
+then
+  if [[ "$MODULES_PURGE" ]]; then
+    module purge
+  fi
+  for module in $MODULES_LIST; do
+    module load "$module"
+  done
+  module list
+fi
+
+# Activate conda environment
+if [[ "$CSET_ENV_USE_CONDA" == True ]]
+then
+  echo "Using conda environment $CONDA_VENV_LOCATION"
+  source "$(conda info --base)/etc/profile.d/conda.sh"
+  set +u
+  conda activate "$CONDA_VENV_LOCATION"
+  set -u
+  export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$CONDA_PREFIX/lib"
+fi
+
+# Add separately maintained METplus to PATH.
+if [[ "$CSET_ENV_SEPARATE_MET" == True ]]
+then
+  echo "Using separate installation of METplus."
+  export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$MET_LIBRARIES/lib"
+  export PATH="${METPLUS_BASE}/ush:${MET_BUILD_BASE}/bin:${PATH}"
+fi
+
+exec "$@"

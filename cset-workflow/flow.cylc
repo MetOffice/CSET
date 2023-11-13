@@ -1,0 +1,151 @@
+#!jinja2
+[meta]
+title = CSET
+description = Workflow for running CSET and METplus.
+URL = https://metoffice.github.io/CSET-workflow
+
+
+[scheduling]
+    cycling mode = integer
+    initial cycle point = 1
+    final cycle point = 1
+
+    [[graph]]
+    # Only runs on the first cycle.
+    R1/^ = """
+    build_conda => install_website_skeleton
+    build_conda => install_local_cset => db
+    """
+
+    # Runs every cycle. Include files get inserted into this graph.
+    P1 = """
+    db[1]:ready => fetch_fcst => recipe_start
+    recipe_start => recipe_finish
+    recipe_finish => populate_website => housekeeping
+    install_website_skeleton[1] => populate_website
+    populate_website[-P1] => populate_website
+    """
+
+    # Only runs on the final cycle.
+    R1/$ = """
+    populate_website => shutdown_db => send_email
+    populate_website => finish_website
+    """
+
+
+[runtime]
+    [[root]]
+    script = rose task-run -v
+    execution time limit = PT15M
+        [[[environment]]]
+        # Load modules/conda environment for dependencies.
+        CSET_ENV_USE_MODULES = {{CSET_ENV_USE_MODULES}}
+        {% if CSET_ENV_USE_MODULES %}
+        MODULES_LIST = {{MODULES_LIST}}
+        MODULES_PURGE = {{MODULES_PURGE}}
+        {% endif %}
+        CSET_ENV_USE_CONDA = {{CSET_ENV_USE_CONDA}}
+        {% if CSET_ENV_USE_CONDA %}
+        CONDA_VENV_LOCATION = {{CONDA_VENV_LOCATION}}
+        {% endif %}
+        CSET_ENV_USE_LOCAL_CSET = {{CSET_ENV_USE_LOCAL_CSET}}
+        {% if CSET_ENV_USE_LOCAL_CSET %}
+        CSET_LOCAL_CSET_PATH = {{CSET_LOCAL_CSET_PATH}}
+        {% endif %}
+        CSET_ENV_SEPARATE_MET = {{CSET_ENV_SEPARATE_MET}}
+        {% if CSET_ENV_SEPARATE_MET %}
+        CONDA_METPLUS_VENV_LOCATION = {{CONDA_METPLUS_VENV_LOCATION}}
+        MET_INSTALL_DIR = {{MET_INSTALL_DIR}}
+        MET_BUILD_BASE = {{MET_BUILD_BASE}}
+        METPLUS_BASE = {{METPLUS_BASE}}
+        MET_LIBRARIES = {{MET_LIBRARIES}}
+        {% endif %}
+
+    [[build_conda]]
+    execution time limit = PT30M
+        [[[environment]]]
+        CONDA_VENV_CREATE = {{CONDA_VENV_CREATE}}
+        CONDA_PATH = {{CONDA_PATH}}
+
+    [[install_local_cset]]
+    execution time limit = PT5M
+        [[[environment]]]
+        CSET_ENV_USE_LOCAL_CSET = {{CSET_ENV_USE_LOCAL_CSET}}
+
+    [[db]]
+    {% if DB_LONG_JOB %}
+    execution time limit = PT3D
+    {% else %}
+    execution time limit = PT6H
+    {% endif %}
+        [[[outputs]]]
+        ready = "Database ready"
+
+    [[install_website_skeleton]]
+    # Copies the static files that make up the web interface.
+        [[[environment]]]
+        WEB_DIR = {{WEB_DIR}}
+        CLEAN_WEB_DIR = {{CLEAN_WEB_DIR}}
+
+    [[finish_website]]
+    # Updates the workflow info in the web interface.
+    platform = localhost
+        [[[environment]]]
+        WEB_DIR = {{WEB_DIR}}
+
+    [[fetch_fcst]]
+    # Fetch data from disk or a file based archival system.
+        [[[environment]]]
+        ROSE_APP_OPT_CONF_KEYS = {{FETCH_FCST_OPT_CONF}}
+        FILE_PATH = {{CSET_INPUT_FILE_PATH}}
+
+    [[populate_website]]
+    # Fill the web interface with content from the DB.
+    execution time limit = PT5M
+        [[[environment]]]
+        WEB_DIR = {{WEB_DIR}}
+
+    [[recipe_start]]
+    platform = localhost
+    script = true
+
+    [[recipe_finish]]
+    platform = localhost
+    script = true
+
+    [[shutdown_db]]
+    platform = localhost
+
+    [[send_email]]
+    # Send email to notify that the workflow is complete.
+    platform = localhost
+        [[[environment]]]
+        WEB_ADDR = {{WEB_ADDR}}
+        WEB_DIR = {{WEB_DIR}}
+
+    [[clean_web_dir]]
+    # Removes any files in the web dir.
+    platform = localhost
+        [[[environment]]]
+        WEB_DIR = {{WEB_DIR}}
+
+    [[housekeeping]]
+        [[[environment]]]
+        HOUSEKEEPING_MODE = {{HOUSEKEEPING_MODE}}
+
+
+# Include files bring their own graph and runtime sections.
+{% if METPLUS_POINT_STAT %}
+{% include 'includes/point_stat.cylc' %}
+{% endif %}
+{% if DETERMINISTIC_PLOT_SURFACE_AIR_TEMP %}
+{% include 'includes/deterministic_plot_surface_air_temp.cylc' %}
+{% endif %}
+{% if ENSEMBLE_PLOT_SURFACE_AIR_TEMP %}
+{% include 'includes/ensemble_plot_surface_air_temp.cylc' %}
+{% endif %}
+
+{# Site-specific details that add to (or override) the core suite definition #}
+{% if SITE %}
+{% include 'site/' ~ SITE ~ '.cylc' %}
+{% endif %}
