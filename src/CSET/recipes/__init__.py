@@ -12,21 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-This module has an attribute for each recipe, holding the Path to that recipe.
-"""
+"""Module has an attribute for each recipe, holding the Path to that recipe."""
 
+import logging
 from importlib.resources import files
 from pathlib import Path
-import logging
 
 import CSET.recipes as recipes
 
 
 def _unpack_recipes_from_dir(input_dir: Path, output_dir: Path):
-    """
-    Loop over all recipes (excludes non-recipes) in input_dir and write them to
-    output_dir.
+    """Copy recipe files from input to output directories.
+
+    Loops over all recipes (excludes non-recipes) in input_dir and writes them
+    to output_dir.
     """
     for file in input_dir.iterdir():
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -60,5 +59,4 @@ def unpack_recipes(recipe_dir: Path):
         If recipe_dir cannot be created, such as insufficient permissions, or
         lack of space.
     """
-
     _unpack_recipes_from_dir(files(recipes), recipe_dir)

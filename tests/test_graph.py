@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Graph tests."""
+
 from pathlib import Path
 
 import pytest
@@ -20,8 +22,7 @@ import CSET.graph
 
 
 def test_save_graph():
-    """Directly tests generating a graph from a recipe file without the output
-    specified."""
+    """Generate a graph from a recipe file without the output specified."""
     CSET.graph.save_graph(Path("tests/test_data/plot_instant_air_temp.yaml"))
 
     # Test exception for recipe without an operator in a step.

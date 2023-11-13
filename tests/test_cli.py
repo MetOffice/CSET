@@ -12,20 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Tests for the command line interface. In many ways these are integration tests.
+"""Tests for the command line interface.
+
+In many ways these are integration tests.
 """
 
+import os
+import shutil
+import subprocess
 from pathlib import Path
 from uuid import uuid4
-import os
-import subprocess
-import shutil
 
 
 def test_command_line_help():
     """Check that help commands work."""
-
     subprocess.run(["cset", "--help"], check=True)
     # test verbose options. This is really just to up the coverage number.
     subprocess.run(["cset", "-v"], check=True)
@@ -37,7 +37,6 @@ def test_command_line_help():
 
 def test_recipe_execution():
     """Test running CSET recipe from the command line."""
-
     subprocess.run(
         [
             "cset",
@@ -52,7 +51,6 @@ def test_recipe_execution():
 
 def test_environ_var_recipe():
     """Test recipe coming from environment variable."""
-
     os.environ[
         "CSET_RECIPE"
     ] = """
@@ -72,7 +70,6 @@ def test_environ_var_recipe():
 
 def test_graph_creation(tmp_path: Path):
     """Generates a graph with the command line interface."""
-
     # We can't easily test running without the output specified from the CLI, as
     # the call to xdg-open breaks in CI, due to it not being a graphical
     # environment.
@@ -88,11 +85,7 @@ def test_graph_creation(tmp_path: Path):
 
 
 def test_graph_creation_env_var(tmp_path: Path):
-    """
-    Generates a graph with the command line interface from an environment
-    variable.
-    """
-
+    """Generates a graph with the command line interface from an env var."""
     os.environ[
         "CSET_RECIPE"
     ] = """
@@ -108,7 +101,6 @@ def test_graph_creation_env_var(tmp_path: Path):
 
 def test_graph_details(tmp_path: Path):
     """Generate a graph with details with details."""
-
     output_file = tmp_path / f"{uuid4()}.svg"
     subprocess.run(
         (
@@ -127,7 +119,6 @@ def test_graph_details(tmp_path: Path):
 
 def test_cookbook_cwd():
     """Unpacking the recipes into the current working directory."""
-
     subprocess.run(["cset", "cookbook"], check=True)
     assert Path.cwd().joinpath("recipes/extract_instant_air_temp.yaml").exists()
     shutil.rmtree(Path.cwd().joinpath("recipes"))
@@ -135,6 +126,5 @@ def test_cookbook_cwd():
 
 def test_cookbook_path(tmp_path: Path):
     """Unpacking the recipes into a specified directory."""
-
     subprocess.run(["cset", "cookbook", tmp_path], check=True)
     assert (tmp_path / "extract_instant_air_temp.yaml").exists()

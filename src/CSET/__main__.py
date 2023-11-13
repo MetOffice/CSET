@@ -12,7 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Command line entrypoint.
+
+This is only used when running ``python3 -m cset``.
+"""
+
 import sys
+
 from CSET import main
 
 sys.exit(main())

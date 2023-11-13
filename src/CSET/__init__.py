@@ -12,15 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-CSET: Convective Scale Evaluation Tool
-"""
+"""CSET: Convective Scale Evaluation Tool."""
 
 import argparse
 import logging
-from pathlib import Path
 import os
 from importlib.metadata import version
+from pathlib import Path
 
 
 def main():

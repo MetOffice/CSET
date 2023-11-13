@@ -23,7 +23,6 @@ import CSET._common as common
 
 def test_parse_recipe_string():
     """Happy case for loading and parsing of a YAML recipe from a string."""
-
     valid_recipe = """\
     steps:
         operator: misc.noop
@@ -35,7 +34,6 @@ def test_parse_recipe_string():
 
 def test_parse_recipe_path():
     """Happy case for loading and parsing of a YAML recipe from a Path."""
-
     parsed = common.parse_recipe(Path("tests/test_data/noop_recipe.yaml"))
     expected = {
         "name": "Noop",

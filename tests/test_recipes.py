@@ -38,9 +38,10 @@ def test_unpack_recipes_exception_collision(tmp_path: Path):
 
 
 def test_unpack_recipes_exception_permission():
-    """
-    Insufficient permission to create output directory. Will always fail if
-    tests are run as root, but no one should be doing that, right?
+    """Insufficient permission to create output directory.
+
+    Will always fail if tests are run as root, but no one should be doing that,
+    right?
     """
     with pytest.raises(OSError):
         CSET.recipes.unpack_recipes(Path("/usr/bin/cset"))

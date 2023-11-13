@@ -23,7 +23,7 @@ import CSET.operators
 
 
 def test_get_operator():
-    """Happy case"""
+    """Happy case."""
     read_operator = CSET.operators.get_operator("read.read_cubes")
     assert callable(read_operator)
 
@@ -56,9 +56,7 @@ def test_execute_recipe(tmp_path: Path):
 
 
 def test_execute_recipe_edge_cases(tmp_path: Path):
-    """
-    Test weird edge cases. Also tests data paths not being pathlib Paths.
-    """
+    """Test weird edge cases. Also tests data paths not being pathlib Paths."""
     input_file = "tests/test_data/air_temp.nc"
     output_file = tmp_path / f"{uuid4()}.nc"
     recipe = Path("tests/test_data/noop_recipe.yaml")

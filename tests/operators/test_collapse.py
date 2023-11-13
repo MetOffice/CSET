@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Test collapse operators."""
+
 import pytest
 
-from CSET.operators import read, filters, constraints, collapse
+from CSET.operators import collapse, constraints, filters, read
 
 
 def test_collapse():
@@ -43,7 +45,6 @@ def test_collapse():
 
 def test_collapse_percentile():
     """Reduce dimension of a cube with a PERCENTILE aggregation."""
-
     cubes = read.read_cubes("tests/test_data/air_temp.nc")
     constraint = constraints.combine_constraints(
         constraints.generate_stash_constraint("m01s03i236"),

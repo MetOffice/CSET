@@ -12,15 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Operators to perform various kind of collapse on either 1 or 2 dimensions.
-"""
+"""Operators to perform various kind of collapse on either 1 or 2 dimensions."""
 
 from typing import Union
 
 import iris
-import iris.cube
 import iris.analysis
+import iris.cube
 
 
 def collapse(
@@ -58,7 +56,6 @@ def collapse(
     ValueError
         If additional_percent wasn't supplied while using PERCENTILE method.
     """
-
     if method == "PERCENTILE":
         if not additional_percent:
             raise ValueError("Must specify additional_percent")
