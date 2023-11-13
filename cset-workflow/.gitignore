@@ -1,0 +1,3 @@
+# Exclude site-specific files that are held in a seperate private repo.
+site/
+opt/
