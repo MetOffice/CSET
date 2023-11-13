@@ -40,8 +40,7 @@ FUTURE.datum_support = True
 
 
 def get_operator(name: str):
-    """
-    Get an operator by its name.
+    """Get an operator by its name.
 
     Parameters
     ----------
