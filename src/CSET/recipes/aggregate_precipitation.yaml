@@ -2,9 +2,6 @@ title: Extract sub-hourly or hourly ppn and aggregate to user defined intervals
 description: |
   Extracts out the sub-hourly or hourly stratiform rainfall rate from a file
   and aggregates it up to new intervals and writes it to a new one.
-section: Grid Stat
-major_cat: Major Category 1
-minor_cat: Minor Category 1
 
 steps:
   - operator: read.read_cubes

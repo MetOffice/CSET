@@ -27,8 +27,6 @@ following command:
 
     conda activate cset-dev
 
-
-
 Unit Testing
 ------------
 

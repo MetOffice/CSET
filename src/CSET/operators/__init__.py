@@ -14,7 +14,6 @@
 
 """Subpackage contains all of CSET's operators."""
 
-# Import operators here so they are exported for use by recipes.
 import inspect
 import logging
 from pathlib import Path
@@ -23,6 +22,7 @@ from typing import Union
 # Stop iris giving a warning whenever it loads something.
 from iris import FUTURE
 
+# Import operators here so they are exported for use by recipes.
 import CSET.operators
 from CSET._common import parse_recipe
 from CSET.operators import (

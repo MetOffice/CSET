@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Operators to perform various kind of aggregate on either 1 or 2 dimensions.
-"""
+"""Operators to perform various kind of aggregate on either 1 or 2 dimensions."""
 from typing import Union
 import iris
 import iris.cube
@@ -75,7 +73,6 @@ def aggregate(
         cube, "interval", "time", lambda coord, cell: cell // interval * interval
     )
 
-    print(cube)
 
     # calculate hourly aggregated data using SUM
     aggregated_cube = cube.aggregated_by("interval", getattr(iris.analysis, "SUM"))
