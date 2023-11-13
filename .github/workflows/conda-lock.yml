@@ -36,7 +36,7 @@ jobs:
         run: |
           git config --local user.name "$GITHUB_ACTOR"
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
-          git switch -c "conda-lock-$(sha256sum ${{ runner.temp }}/lock_file_hashes | head -c 8)"
+          git switch -c conda-lock-files
           tox -e py39-lock,py310-lock,py311-lock,py312-lock
 
       - name: Create pull requests
