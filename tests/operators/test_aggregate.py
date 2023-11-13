@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Test aggregate operators."""
 
-from CSET.operators import read, filters, constraints, aggregate
+from CSET.operators import aggregate, constraints, filters, read
 
 
 def test_aggregate():
+    """Aggregate time to 2 hour intervals."""
     # Set test interval to 2 hours
     interval = 2
 

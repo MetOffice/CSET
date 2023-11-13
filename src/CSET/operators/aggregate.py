@@ -12,69 +12,65 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Operators to perform various kind of aggregate on either 1 or 2 dimensions."""
-from typing import Union
+"""Operators to aggregate across either 1 or 2 dimensions."""
+
 import iris
-import iris.cube
 import iris.analysis
 import iris.coord_categorisation
+import iris.cube
 
 
 def aggregate(
     cube: iris.cube.Cube,
-    coordinate: Union[str, list[str]],
+    coordinate: str,
     method: str,
     interval,
     **kwargs,
 ) -> iris.cube.Cube:
-    """
-    Aggregates similar (stash) fields in a cube for the specified coordinate and using
-    the method supplied.
-    The aggregated cube will keep the coordinate in most cases and add a further
-    coordinate with the aggregated end time points.
-    Examples are:
-    1.) generating hourly or 6-hourly precipitation accummulations given an interval for
-        the new time coordinate.
-    We use the lambda function to pass coord and interval into the callable category function
-    in add_categorised to allow users to define their own sub-daily intervals for the new
-    time coordinate.
+    """Aggregate a coordinate into bins of a field.
 
+    Aggregates similar (stash) fields in a cube for the specified coordinate and
+    using the method supplied. The aggregated cube will keep the coordinate in
+    most cases and add a further coordinate with the aggregated end time points.
 
+    Examples are: 1. Generating hourly or 6-hourly precipitation accumulations
+    given an interval for the new time coordinate.
+
+    We use the lambda function to pass coord and interval into the callable
+    category function in add_categorised to allow users to define their own
+    sub-daily intervals for the new time coordinate.
 
     Arguments
     ---------
     cube: iris.cube.Cube
-         Cube to aggregate and iterate over one dimension
+        Cube to aggregate and iterate over one dimension
     coordinate: str
-         Coordinate to aggregate over i.e.
-         'time', 'longitude', 'latitude','model_level_number'
+        Coordinate to aggregate over i.e. 'time', 'longitude',
+        'latitude','model_level_number'.
     method: str
-         Type of aggregate i.e. method: 'SUM',
-         getattr creates iris.analysis.MEAN, etc For PERCENTILE
-         YAML file requires i.e. method: 'PERCENTILE' additional_percent: 90
+        Type of aggregate i.e. method: 'SUM', getattr creates
+        iris.analysis.MEAN, etc For PERCENTILE YAML file requires i.e. method:
+        'PERCENTILE' additional_percent: 90.
     interval: int
-         Interval to aggregate over
+        Interval to aggregate over.
 
     Returns
     -------
     cube: iris.cube.Cube
-         Single variable but several methods of aggregation
-
+        Single variable but several methods of aggregation
 
     Raises
     ------
     ValueError
-    If the constraint doesn't produce a single cube containing a field.
+        If the constraint doesn't produce a single cube containing a field.
     """
-
     # add time categorisation overwriting hourly increment via lambda coord
     # https://scitools-iris.readthedocs.io/en/latest/_modules/iris/coord_categorisation.html
     iris.coord_categorisation.add_categorised_coord(
-        cube, "interval", "time", lambda coord, cell: cell // interval * interval
+        cube, "interval", coordinate, lambda coord, cell: cell // interval * interval
     )
 
-
-    # calculate hourly aggregated data using SUM
-    aggregated_cube = cube.aggregated_by("interval", getattr(iris.analysis, "SUM"))
-
+    # Calculate hourly aggregated data using SUM.
+    aggregated_cube = cube.aggregated_by("interval", getattr(iris.analysis, method))
+    aggregated_cube.remove_coord("interval")
     return aggregated_cube
