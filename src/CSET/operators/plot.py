@@ -61,8 +61,7 @@ def _check_single_cube(
 def spatial_contour_plot(
     cube: iris.cube.Cube, filename: Path, **kwargs
 ) -> iris.cube.Cube:
-    """
-    Plot a spatial variable onto a map.
+    """Plot a spatial variable onto a map.
 
     Parameters
     ----------
@@ -147,3 +146,30 @@ def postage_stamp_contour_plot(
     logging.info("Saved contour postage stamp plot to %s", filename)
 
     return cube
+
+
+def time_series_contour_plot(
+    cube: iris.cube.Cube, filename: Path, **kwargs
+) -> iris.cube.Cube:
+    """Plot a spatial variable for all time values.
+
+    The files are named sequentially, e.g. 1.svg, 2.svg, ...
+
+    Parameters
+    ----------
+    cube: Cube
+        An iris cube of the data to plot. It should be 2 dimensional (lat and lon).
+
+    Returns
+    -------
+    Cube
+        The inputted cube (so further operations can be applied)
+
+    Raises
+    ------
+    ValueError
+        If the cube doesn't have the right dimensions.
+    TypeError
+        If cube isn't a Cube.
+    """
+    raise NotImplementedError
