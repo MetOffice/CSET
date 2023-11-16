@@ -1,7 +1,8 @@
 title: Extract sub-hourly or hourly ppn and aggregate to user defined intervals
 description: |
-  Extracts out the sub-hourly or hourly stratiform rainfall rate from a file
-  and aggregates it up to new intervals and writes it to a new one.
+  Extracts out the sub-hourly or hourly
+  LARGE SCALE RAINFALL RATE (KG/M2/S) (stash m01s04i203) from a file
+  and aggregates it up to new intervals and writes it to a new time coordinate.
 
 steps:
   - operator: read.read_cubes
@@ -19,7 +20,7 @@ steps:
   - operator: aggregate.aggregate
     coordinate: time
     method: SUM
-    interval: 2
+    interval_iso: PT2H
 
   - operator: plot.spatial_contour_plot
     file_path: CSET_OUTPUT_PATH

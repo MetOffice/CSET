@@ -18,13 +18,14 @@ import iris
 import iris.analysis
 import iris.coord_categorisation
 import iris.cube
+import isodate
 
 
 def aggregate(
     cube: iris.cube.Cube,
     coordinate: str,
     method: str,
-    interval,
+    interval_iso: str,
     **kwargs,
 ) -> iris.cube.Cube:
     """Aggregate a coordinate into bins of a field.
@@ -35,6 +36,9 @@ def aggregate(
 
     Examples are: 1. Generating hourly or 6-hourly precipitation accumulations
     given an interval for the new time coordinate.
+
+    We use the isodate class to convert ISO 8601 timedeltas into time intervals
+    for creating a new time coordinate for aggregation.
 
     We use the lambda function to pass coord and interval into the callable
     category function in add_categorised to allow users to define their own
@@ -51,7 +55,7 @@ def aggregate(
         Type of aggregate i.e. method: 'SUM', getattr creates
         iris.analysis.MEAN, etc For PERCENTILE YAML file requires i.e. method:
         'PERCENTILE' additional_percent: 90.
-    interval: int
+    interval_iso: isodate timedelta ISO 8601 object i.e PT6H (6 hours), PT30M (30 mins)
         Interval to aggregate over.
 
     Returns
@@ -64,6 +68,15 @@ def aggregate(
     ValueError
         If the constraint doesn't produce a single cube containing a field.
     """
+    # duration of ISO timedelta
+    timedelta = isodate.parse_duration(interval_iso)
+
+    # convert interval format to hours
+    interval = timedelta.total_seconds() / 3600
+
+    # round to nearest hour
+    interval = int(interval)
+
     # add time categorisation overwriting hourly increment via lambda coord
     # https://scitools-iris.readthedocs.io/en/latest/_modules/iris/coord_categorisation.html
     iris.coord_categorisation.add_categorised_coord(

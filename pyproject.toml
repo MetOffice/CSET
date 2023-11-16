@@ -15,6 +15,7 @@ dependencies = [
     "scitools-iris >= 3.6",
     "ruamel.yaml >= 0.17",
     "pygraphviz >= 1.11",
+    "isodate"
 ]
 
 [project.urls]
