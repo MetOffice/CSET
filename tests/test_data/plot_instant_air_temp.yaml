@@ -24,7 +24,7 @@ steps:
         time_end: 2022-09-21T03:30:00
 
   - operator: write.write_cube_to_nc
-    file_path: processed_data.nc
+    filename: processed_data.nc
 
   - operator: plot.spatial_contour_plot
-    file_path: plot.svg
+    filename: plot.svg

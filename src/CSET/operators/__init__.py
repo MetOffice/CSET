@@ -133,22 +133,22 @@ def execute_recipe(
             return operator(**kwargs)
 
     recipe = parse_recipe(recipe_yaml)
-
-    original_working_directory = Path.cwd()
+    step_input = Path(input_file).absolute()
     try:
         output_directory.mkdir(parents=True, exist_ok=True)
     except FileExistsError as err:
         logging.error("Output directory is a file. %s", output_directory)
         raise err
+
+    original_working_directory = Path.cwd()
     os.chdir(output_directory)
-
-    # Execute the recipe.
-    step_input = input_file
-    for step in recipe["steps"]:
-        step_input = step_parser(step, step_input)
-    logging.info("Recipe output: %s", step_input)
-
-    os.chdir(original_working_directory)
+    try:
+        # Execute the recipe.
+        for step in recipe["steps"]:
+            step_input = step_parser(step, step_input)
+        logging.info("Recipe output: %s", step_input)
+    finally:
+        os.chdir(original_working_directory)
 
 
 __all__ = [

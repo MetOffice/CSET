@@ -20,6 +20,7 @@ In many ways these are integration tests.
 import os
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 from uuid import uuid4
 
@@ -27,7 +28,7 @@ from uuid import uuid4
 def test_command_line_help():
     """Check that help commands work."""
     subprocess.run(["cset", "--help"], check=True)
-    # test verbose options. This is really just to up the coverage number.
+    # Test verbose options. This is really just to up the coverage number.
     subprocess.run(["cset", "-v"], check=True)
     subprocess.run(["cset", "-vv"], check=True)
     subprocess.run(["cset", "--version"], check=True)
@@ -42,7 +43,7 @@ def test_recipe_execution():
             "cset",
             "bake",
             os.devnull,
-            os.devnull,
+            tempfile.gettempdir(),
             "tests/test_data/noop_recipe.yaml",
         ],
         check=True,
@@ -62,7 +63,7 @@ def test_environ_var_recipe():
             "cset",
             "bake",
             os.devnull,
-            os.devnull,
+            tempfile.gettempdir(),
         ],
         check=True,
     )
