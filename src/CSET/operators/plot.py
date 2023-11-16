@@ -59,7 +59,7 @@ def _check_single_cube(
 
 
 def spatial_contour_plot(
-    cube: iris.cube.Cube, file_path: Path, **kwargs
+    cube: iris.cube.Cube, filename: Path, **kwargs
 ) -> iris.cube.Cube:
     """
     Plot a spatial variable onto a map.
@@ -68,7 +68,7 @@ def spatial_contour_plot(
     ----------
     cube: Cube
         An iris cube of the data to plot. It should be 2 dimensional (lat and lon).
-    file_path: pathlike
+    filename: pathlike
         The path of the plot to write.
 
     Returns
@@ -85,14 +85,14 @@ def spatial_contour_plot(
     """
     cube = _check_single_cube(cube)
     qplt.contourf(cube)
-    file_path = Path(file_path).with_suffix(".svg")
-    plt.savefig(file_path)
-    logging.info("Saved contour plot to %s", file_path)
+    filename = Path(filename).with_suffix(".svg")
+    plt.savefig(filename)
+    logging.info("Saved contour plot to %s", filename)
     return cube
 
 
 def postage_stamp_contour_plot(
-    cube: iris.cube.Cube, file_path: Path, coordinate: str = "realization", **kwargs
+    cube: iris.cube.Cube, filename: Path, coordinate: str = "realization", **kwargs
 ) -> iris.cube.Cube:
     """Plot postage stamp contour plots from an ensemble.
 
@@ -100,7 +100,7 @@ def postage_stamp_contour_plot(
     ----------
     cube: Cube
         Iris cube of data to be plotted. It must have a realization coordinate.
-    file_path: pathlike
+    filename: pathlike
         The path of the plot to write.
     coordinate: str
         The coordinate that becomes different plots. Defaults to "realization".
@@ -142,8 +142,8 @@ def postage_stamp_contour_plot(
     colorbar = plt.colorbar(plot, colorbar_axes, orientation="horizontal")
     colorbar.set_label(f"{cube.name()} / {cube.units}")
 
-    file_path = Path(file_path).with_suffix(".svg")
-    plt.savefig(file_path)
-    logging.info("Saved contour postage stamp plot to %s", file_path)
+    filename = Path(filename).with_suffix(".svg")
+    plt.savefig(filename)
+    logging.info("Saved contour postage stamp plot to %s", filename)
 
     return cube

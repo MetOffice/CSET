@@ -27,8 +27,7 @@ commented example recipe:
 
     - operator: write.write_cube_to_nc
       # Specify the name of the argument, and its value.
-      file_path: CSET_OUTPUT_PATH
-      # "CSET_OUTPUT_PATH" is special and becomes the runtime output file path.
+      filename: processed_data.nc
 
 The name and description keys provide a human readable description of what the
 recipe does. They are currently not used anywhere, but it is good practice to

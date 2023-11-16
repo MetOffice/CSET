@@ -22,7 +22,7 @@ import iris.cube
 
 
 def write_cube_to_nc(
-    cube: Union[iris.cube.Cube, iris.cube.CubeList], file_path: Path, **kwargs
+    cube: Union[iris.cube.Cube, iris.cube.CubeList], filename: Path, **kwargs
 ) -> str:
     """Write a cube to a NetCDF file.
 
@@ -33,7 +33,7 @@ def write_cube_to_nc(
     ---------
     cube: iris.cube.Cube | iris.cube.CubeList
         Data to save
-    file_path: Path
+    filename: Path
         Path to save the cubes too
 
     Returns
@@ -41,8 +41,8 @@ def write_cube_to_nc(
     Cube | CubeList
         The inputted cube(list) (so further operations can be applied)
     """
-    # Ensure that output_file_path is a Path with a .nc suffix
-    file_path = Path(file_path).with_suffix(".nc")
+    # Ensure that output filename is a Path with a .nc suffix
+    filename = Path(filename).with_suffix(".nc")
     # Save the file as nc compliant (iris should handle this)
-    iris.save(cube, file_path)
+    iris.save(cube, filename)
     return cube

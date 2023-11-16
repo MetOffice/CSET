@@ -43,7 +43,7 @@ def main():
     # Run operator chain
     parser_bake = subparsers.add_parser("bake", help="run a recipe file")
     parser_bake.add_argument("input_file", type=Path, help="input file to read")
-    parser_bake.add_argument("output_file", type=Path, help="output file to write")
+    parser_bake.add_argument("output_dir", type=Path, help="directory to write output")
     parser_bake.add_argument(
         "recipe_file",
         type=Path,
@@ -109,7 +109,7 @@ def _bake_command(args):
     if not args.recipe_file:
         args.recipe_file = os.getenv("CSET_RECIPE")
 
-    execute_recipe(args.recipe_file, args.input_file, args.output_file)
+    execute_recipe(args.recipe_file, args.input_file, args.output_dir)
 
 
 def _graph_command(args):

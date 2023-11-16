@@ -26,21 +26,20 @@ import CSET.operators
 def test_spatial_plot(tmp_path: Path):
     """Plot spatial contour plot of instant air temp."""
     input_file = Path("tests/test_data/air_temp.nc")
-    output_file = tmp_path / f"{uuid4()}"
+    output_dir = tmp_path / f"{uuid4()}"
     recipe_file = Path("tests/test_data/plot_instant_air_temp.yaml")
-    CSET.operators.execute_recipe(recipe_file, input_file, output_file)
-    actual_output_file = output_file.with_suffix(".svg")
-    assert actual_output_file.exists()
-    actual_output_file.unlink()
+    CSET.operators.execute_recipe(recipe_file, input_file, output_dir)
+    actual_output_file = output_dir / "plot.svg"
+    assert actual_output_file.is_file()
 
 
 def test_postage_stamp_plots(tmp_path: Path):
     """Plot postage stamp plots of ensemble data."""
     input_file = Path("tests/test_data/")
-    output_file = tmp_path / f"{uuid4()}.svg"
+    output_dir = tmp_path / f"{uuid4()}"
     recipe_file = Path("tests/test_data/ensemble_air_temp.yaml")
-    CSET.operators.execute_recipe(recipe_file, input_file, output_file)
-    assert output_file.exists()
+    CSET.operators.execute_recipe(recipe_file, input_file, output_dir)
+    assert output_dir.joinpath("plot.svg").is_file()
 
 
 def test_postage_stamp_realization_check(tmp_path: Path):

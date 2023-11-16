@@ -19,7 +19,7 @@ contain the YAML text that you want executed.
 
     positional arguments:
     input_file   input file to read
-    output_file  output file to write
+    output_dir   directory to write output
     recipe_file  recipe file to execute. If omitted reads from CSET_RECIPE environment variable
 
     options:
