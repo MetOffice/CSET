@@ -34,8 +34,8 @@ def test_aggregate():
     # Test adding further coordinate
     aggregated_cube = aggregate.aggregate(cube, "time", "SUM", interval)
 
-    """ check if number of aux coords on aggregated cube is
-    by 1 greater than original cube"""
+    # Check if number of aux coords on aggregated cube is
+    # by 1 greater than original cube.
     assert (
         len(aggregated_cube.aux_coords) == len(cube.aux_coords) + 1
     ), "aggregated cube does not have additional aux coordinate"
