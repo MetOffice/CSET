@@ -22,8 +22,8 @@ def test_aggregate():
     # Set test interval to 2 hours.
     interval = "PT2H"
 
-    """Introduces new coordinate for cube based on existing
-       coordinate which has equal or less increments."""
+    # Introduces new coordinate for cube based on existing
+    # coordinate which has equal or less increments.
     cubes = read.read_cubes("tests/test_data/air_temp.nc")
     constraint = constraints.combine_constraints(
         constraints.generate_stash_constraint("m01s03i236"),
