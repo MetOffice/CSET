@@ -26,18 +26,17 @@ def test_aggregate():
     # coordinate which has equal or less increments.
     cubes = read.read_cubes("tests/test_data/air_temp.nc")
     constraint = constraints.combine_constraints(
-        constraints.generate_stash_constraint("m01s03i236"),
-        a=constraints.generate_cell_methods_constraint([]),
+        a=constraints.generate_stash_constraint("m01s03i236"),
+        b=constraints.generate_cell_methods_constraint([]),
     )
     cube = filters.filter_cubes(cubes, constraint)
 
     # Test adding further coordinate.
     aggregated_cube = aggregate.time_aggregate(
-        cube, method="SUM", interval_iso=interval
+        cube.copy(), method="SUM", interval_iso=interval
     )
 
-    # Check if number of aux coords on aggregated cube is
-    # by 1 greater than original cube.
-    assert (
-        len(aggregated_cube.aux_coords) == len(cube.aux_coords) + 1
+    # Check if number of coords on aggregated cube is same as original cube.
+    assert len(aggregated_cube.coords()) == len(
+        cube.coords()
     ), "aggregated cube does not have additional aux coordinate"
