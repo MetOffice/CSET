@@ -31,8 +31,8 @@ def aggregate(
     """Aggregate a coordinate into bins of a field.
 
     Aggregates similar (stash) fields in a cube for the specified coordinate and
-    using the method supplied. The aggregated cube will keep the coordinate in
-    most cases and add a further coordinate with the aggregated end time points.
+    using the method supplied. The aggregated cube will keep the coordinate and
+    add a further coordinate with the aggregated end time points.
 
     Examples are: 1. Generating hourly or 6-hourly precipitation accumulations
     given an interval for the new time coordinate.
