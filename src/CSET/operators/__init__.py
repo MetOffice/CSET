@@ -14,7 +14,6 @@
 
 """Subpackage contains all of CSET's operators."""
 
-# Import operators here so they are exported for use by recipes.
 import inspect
 import logging
 from pathlib import Path
@@ -23,16 +22,25 @@ from typing import Union
 # Stop iris giving a warning whenever it loads something.
 from iris import FUTURE
 
+# Import operators here so they are exported for use by recipes.
 import CSET.operators
 from CSET._common import parse_recipe
-from CSET.operators import collapse, constraints, filters, misc, plot, read, write
+from CSET.operators import (
+    aggregate,
+    collapse,
+    constraints,
+    filters,
+    misc,
+    plot,
+    read,
+    write,
+)
 
 FUTURE.datum_support = True
 
 
 def get_operator(name: str):
-    """
-    Get an operator by its name.
+    """Get an operator by its name.
 
     Parameters
     ----------
@@ -136,13 +144,14 @@ def execute_recipe(
 
 
 __all__ = [
+    "aggregate",
+    "collapse",
     "constraints",
+    "execute_recipe",
+    "filters",
+    "get_operator",
+    "misc",
+    "plot",
     "read",
     "write",
-    "filters",
-    "collapse",
-    "plot",
-    "misc",
-    "get_operator",
-    "execute_recipe",
 ]

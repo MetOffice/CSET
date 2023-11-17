@@ -8,6 +8,7 @@ dependencies:
   - ruamel.yaml >= 0.17
   - mo_pack # For handling pp files.
   - pygraphviz
+  - isodate
 
   # Build dependencies
   - setuptools>=61.0

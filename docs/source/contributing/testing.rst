@@ -21,6 +21,15 @@ You can run the tests of CSET simply with the following command:
 
     tox
 
+.. note::
+
+    You might need to load the conda environment beforehand with the
+    following command:
+
+    .. code-block:: bash
+
+        conda activate cset-dev
+
 Unit Testing
 ------------
 
