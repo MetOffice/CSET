@@ -21,7 +21,7 @@ import iris.cube
 import isodate
 
 
-def aggregate(
+def time_aggregate(
     cube: iris.cube.Cube,
     coordinate: str,
     method: str,
