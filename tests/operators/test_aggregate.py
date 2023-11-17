@@ -19,7 +19,7 @@ from CSET.operators import aggregate, constraints, filters, read
 
 def test_aggregate():
     """Aggregate time to 2 hour intervals."""
-    # Set test interval to 2 hours
+    # Set test interval to 2 hours.
     interval = "PT2H"
 
     """Introduces new coordinate for cube based on existing
