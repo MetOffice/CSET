@@ -90,10 +90,10 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
        object identification algorithm applied to convection-allowing
        forecasts." Weather and Forecasting, vol. 27, 1090–1113, doi:
        10.1175/WAF-D-11-00147.1
-    .. [2] Flack, D.L.A., Lehnert, M., Lean, H.W., and Willington, S. (in
-       review) "Characteristics of Diagnostics for Identifying Elevated
+    .. [2] Flack, D.L.A., Lehnert, M., Lean, H.W., and Willington, S. (2023)
+       "Characteristics of Diagnostics for Identifying Elevated
        Convection over the British Isles in a Convection-Allowing Model."
-       Weather and Forecasting.
+       Weather and Forecasting. 38: 1079-1094. doi: 10.1175/WAF-D-22-0219.1
 
     Examples
     --------
