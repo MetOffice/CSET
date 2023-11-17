@@ -52,8 +52,7 @@ def time_aggregate(
         'latitude','model_level_number'.
     method: str
         Type of aggregate i.e. method: 'SUM', getattr creates
-        iris.analysis.MEAN, etc For PERCENTILE YAML file requires i.e. method:
-        'PERCENTILE' additional_percent: 90.
+        iris.analysis.MEAN, etc
     interval_iso: isodate timedelta ISO 8601 object i.e PT6H (6 hours), PT30M (30 mins)
         Interval to aggregate over.
 
