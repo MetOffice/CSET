@@ -37,7 +37,7 @@ def aggregate(
     Examples are: 1. Generating hourly or 6-hourly precipitation accumulations
     given an interval for the new time coordinate.
 
-    We use the isodate class to convert ISO 8601 timedeltas into time intervals
+    We use the isodate class to convert ISO 8601 durations into time intervals
     for creating a new time coordinate for aggregation.
 
     We use the lambda function to pass coord and interval into the callable
