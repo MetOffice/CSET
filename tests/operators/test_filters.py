@@ -26,6 +26,7 @@ def test_filters_operator():
         constraints.generate_stash_constraint("m01s03i236"),
         a=constraints.generate_cell_methods_constraint([]),
     )
+    # Test filtering a CubeList.
     cube = filters.filter_cubes(cubes, constraint)
     assert cube.cell_methods == ()
     expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>"
@@ -34,3 +35,6 @@ def test_filters_operator():
     constraint = constraints.generate_stash_constraint("m01s03i236")
     with pytest.raises(ValueError):
         cube = filters.filter_cubes(cubes, constraint)
+    # Test filtering a Cube.
+    single_cube = filters.filter_cubes(cube, constraint)
+    assert repr(cube) == repr(single_cube)

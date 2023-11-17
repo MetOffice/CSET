@@ -45,7 +45,9 @@ def filter_cubes(
         If the constraint doesn't produce a single cube.
     """
     filtered_cubes = cube.extract(constraint)
-
+    # Return directly if already a cube.
+    if isinstance(filtered_cubes, iris.cube.Cube):
+        return filtered_cubes
     # Check filtered cubes is a CubeList containing one cube.
     if len(filtered_cubes) == 1:
         return filtered_cubes[0]
