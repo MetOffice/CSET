@@ -32,7 +32,9 @@ def test_aggregate():
     cube = filters.filter_cubes(cubes, constraint)
 
     # Test adding further coordinate.
-    aggregated_cube = aggregate.time_aggregate(cube, method="SUM", interval_iso=interval)
+    aggregated_cube = aggregate.time_aggregate(
+        cube, method="SUM", interval_iso=interval
+    )
 
     # Check if number of aux coords on aggregated cube is
     # by 1 greater than original cube.
