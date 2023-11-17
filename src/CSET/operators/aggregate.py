@@ -23,12 +23,11 @@ import isodate
 
 def time_aggregate(
     cube: iris.cube.Cube,
-    coordinate: str,
     method: str,
     interval_iso: str,
     **kwargs,
 ) -> iris.cube.Cube:
-    """Aggregate a coordinate into bins of a field.
+    """Aggregate cube by its time coordinate.
 
     Aggregates similar (stash) fields in a cube for the specified coordinate and
     using the method supplied. The aggregated cube will keep the coordinate and
@@ -68,22 +67,19 @@ def time_aggregate(
     ValueError
         If the constraint doesn't produce a single cube containing a field.
     """
-    # duration of ISO timedelta
+    # Duration of ISO timedelta.
     timedelta = isodate.parse_duration(interval_iso)
 
-    # convert interval format to hours
-    interval = timedelta.total_seconds() / 3600
+    # Convert interval format to whole hours.
+    interval = int(timedelta.total_seconds() / 3600)
 
-    # round to nearest hour
-    interval = int(interval)
-
-    # add time categorisation overwriting hourly increment via lambda coord
+    # Add time categorisation overwriting hourly increment via lambda coord.
     # https://scitools-iris.readthedocs.io/en/latest/_modules/iris/coord_categorisation.html
     iris.coord_categorisation.add_categorised_coord(
-        cube, "interval", coordinate, lambda coord, cell: cell // interval * interval
+        cube, "interval", "time", lambda coord, cell: cell // interval * interval
     )
 
-    # Calculate hourly aggregated data using SUM.
+    # Aggregate cube using supplied method.
     aggregated_cube = cube.aggregated_by("interval", getattr(iris.analysis, method))
     aggregated_cube.remove_coord("interval")
     return aggregated_cube
