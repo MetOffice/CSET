@@ -62,6 +62,26 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
     return varname_constraint
 
 
+def generate_model_level_constraint(model_level_name: str, **kwargs) -> iris.Constraint:
+    """Generate constraint from variable name.
+
+    Operator that takes a CF compliant model_level_number string, and uses iris to
+    generate a constraint to be passed into the read operator to minimize the
+    CubeList the read operator loads and speed up loading.
+
+    Arguments
+    ---------
+    model_level_name: str
+        CF compliant model level name of variable. Needed later for LFRic.
+
+    Returns
+    -------
+    model_level_number_constraint: iris.Constraint
+    """
+    model_level_number_constraint = iris.Constraint(model_level_number=model_level_name)
+    return model_level_number_constraint
+
+
 def generate_cell_methods_constraint(cell_methods: list, **kwargs) -> iris.Constraint:
     """Generate constraint from cell methods.
 
