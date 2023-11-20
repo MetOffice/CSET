@@ -15,6 +15,7 @@
 """Subpackage contains all of CSET's operators."""
 
 import inspect
+import json
 import logging
 import os
 from pathlib import Path
@@ -75,6 +76,17 @@ def get_operator(name: str):
             raise AttributeError
     except (AttributeError, TypeError) as err:
         raise ValueError(f"Unknown operator: {name}") from err
+
+
+def _write_metadata(recipe: dict):
+    """Write a meta.json file in the CWD, with all recipe keys except steps."""
+    metadata = recipe.copy()
+    del metadata["steps"]
+    with open("meta.json", "wt", encoding="UTF-8") as fp:
+        json.dump(metadata, fp)
+    os.sync()
+    # Stat directory to force NFS to synchronise metadata.
+    os.stat(Path.cwd())
 
 
 def execute_recipe(
@@ -142,6 +154,8 @@ def execute_recipe(
 
     original_working_directory = Path.cwd()
     os.chdir(output_directory)
+    # Create metadata file used by some steps.
+    _write_metadata(recipe)
     try:
         # Execute the recipe.
         for step in recipe["steps"]:
