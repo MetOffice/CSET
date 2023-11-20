@@ -68,6 +68,7 @@ can be linked, and so on. A little bit of unusual syntax here is ``description:
 a multiline string, so you can have as many lines as you want, provided they are
 all indented with at least two spaces.
 
+.. _markdown: https://commonmark.org/help/
 
 Recipe Steps
 ------------
@@ -128,4 +129,10 @@ Making a new recipe
 
 .. TODO: Write section.
 
-.. Do a contour plot of a single timestamp.
+.. Convert the above example into a step by step tutorial. Do it sequentially, and have the full recipe at the end.
+
+We will now create a recipe from scratch. This recipe will plot a specific
+timestamp of the example air temperature data.
+
+Start by opening a new file in your favourite text editor, and save it as
+``single_timestep_surface_air_temperature_spacial_plot.yaml``.
