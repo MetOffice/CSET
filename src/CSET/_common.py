@@ -15,7 +15,9 @@
 """Common functionality used across CSET."""
 
 import io
+import json
 import logging
+import re
 from pathlib import Path
 from typing import Union
 
@@ -80,3 +82,18 @@ def parse_recipe(recipe_yaml: Union[Path, str]):
         raise err  # pragma: no cover
 
     return recipe
+
+
+def slugify(s: str) -> str:
+    """Turn a string into a version that can be used everywhere.
+
+    The resultant string will only consist of a-z, 0-9, dots, dashes, and
+    underscores.
+    """
+    return re.sub(r"[^a-z0-9\._-]+", "_", s.casefold()).strip("_")
+
+
+def get_recipe_title_slug():
+    """Get the slug of the recipe title for use in file names."""
+    with open("meta.json", "rt", encoding="UTF-8") as fp:
+        return slugify(json.load(fp)["title"])

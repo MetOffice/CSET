@@ -26,6 +26,8 @@ import iris.plot as iplt
 import iris.quickplot as qplt
 import matplotlib.pyplot as plt
 
+from CSET._common import get_recipe_title_slug
+
 
 def _check_single_cube(
     cube: Union[iris.cube.Cube, iris.cube.CubeList]
@@ -59,7 +61,7 @@ def _check_single_cube(
 
 
 def spatial_contour_plot(
-    cube: iris.cube.Cube, filename: Path, **kwargs
+    cube: iris.cube.Cube, filename: Path = None, **kwargs
 ) -> iris.cube.Cube:
     """Plot a spatial variable onto a map.
 
@@ -82,16 +84,21 @@ def spatial_contour_plot(
     TypeError
         If cube isn't a Cube.
     """
+    if not filename:
+        filename = get_recipe_title_slug()
+    filename = Path(filename).with_suffix(".svg")
     cube = _check_single_cube(cube)
     qplt.contourf(cube)
-    filename = Path(filename).with_suffix(".svg")
     plt.savefig(filename)
     logging.info("Saved contour plot to %s", filename)
     return cube
 
 
 def postage_stamp_contour_plot(
-    cube: iris.cube.Cube, filename: Path, coordinate: str = "realization", **kwargs
+    cube: iris.cube.Cube,
+    filename: Path = None,
+    coordinate: str = "realization",
+    **kwargs,
 ) -> iris.cube.Cube:
     """Plot postage stamp contour plots from an ensemble.
 
@@ -116,6 +123,10 @@ def postage_stamp_contour_plot(
     TypeError
         If cube isn't a Cube.
     """
+    if not filename:
+        filename = get_recipe_title_slug()
+    filename = Path(filename).with_suffix(".svg")
+
     # Validate input is in the right form.
     cube = _check_single_cube(cube)
     try:
@@ -141,7 +152,6 @@ def postage_stamp_contour_plot(
     colorbar = plt.colorbar(plot, colorbar_axes, orientation="horizontal")
     colorbar.set_label(f"{cube.name()} / {cube.units}")
 
-    filename = Path(filename).with_suffix(".svg")
     plt.savefig(filename)
     logging.info("Saved contour postage stamp plot to %s", filename)
 
@@ -149,7 +159,7 @@ def postage_stamp_contour_plot(
 
 
 def time_series_contour_plot(
-    cube: iris.cube.Cube, filename: Path, **kwargs
+    cube: iris.cube.Cube, filename: Path = None, **kwargs
 ) -> iris.cube.Cube:
     """Plot a spatial variable for all time values.
 
@@ -172,4 +182,6 @@ def time_series_contour_plot(
     TypeError
         If cube isn't a Cube.
     """
+    if not filename:
+        filename = get_recipe_title_slug()
     raise NotImplementedError

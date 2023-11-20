@@ -1,9 +1,0 @@
-steps:
-  - operator: read.read_cubes
-    filename_pattern: "*_em*.nc"
-    constraint:
-      operator: constraints.generate_stash_constraint
-      stash: m01s03i236
-
-  - operator: plot.postage_stamp_contour_plot
-    filename: plot.svg

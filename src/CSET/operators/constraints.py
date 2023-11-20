@@ -155,7 +155,7 @@ def combine_constraints(
     Arguments
     ---------
     constraint: iris.Constraint
-        First constraint to combine. This must be named "constraint".
+        First constraint to combine.
     additional_constraint_1: iris.Constraint
         Second constraint to combine. This must be a named argument.
     additional_constraint_2: iris.Constraint

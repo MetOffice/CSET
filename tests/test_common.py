@@ -90,3 +90,17 @@ def test_parse_recipe_exception_non_dict():
     """Test exception for recipe that parses to a non-dict."""
     with pytest.raises(ValueError):
         common.parse_recipe("[]")
+
+
+def test_slugify():
+    """Test slugify removes special characters."""
+    assert common.slugify("Test") == "test"
+    assert (
+        common.slugify("Mean Surface Air Temperature Spatial Plot")
+        == "mean_surface_air_temperature_spatial_plot"
+    )
+    assert common.slugify("file-name.yaml") == "file-name.yaml"
+    assert common.slugify("First Line\nSecond Line") == "first_line_second_line"
+    assert common.slugify("greekαβγδchars") == "greek_chars"
+    assert common.slugify("  ABC ") == "abc"
+    assert common.slugify("あいうえお") == ""
