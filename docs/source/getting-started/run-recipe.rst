@@ -1,8 +1,7 @@
 Run a pre-existing recipe
 =========================
 
-.. Tutorial saying how to run a pre-existing recipe.
-.. Covers cset cookbook and cset bake.
+.. Tutorial on running a pre-existing recipe, covering cookbook and bake.
 
 CSET works by running recipes that describe how to transform and and visualise
 data. It comes with a collection of pre-written recipes to get you started. In
@@ -19,9 +18,9 @@ Try the following:
 
     cset cookbook
 
-Inside that interface find the "Mean Air Temperature Spatial Plot" recipe, and
-click the button to use it. This will write out a ``.yaml`` file to your current
-directory containing your selected recipe.
+This will write out a recipes folder contain recipe ``.yaml`` files to your
+current directory. We will use the
+``mean_surface_air_temperature_spatial_plot.yaml`` recipe.
 
 Now you need to find some data to process. You can `download an example file
 here`_, or with the following command.
@@ -36,7 +35,7 @@ output should be a directory, but it will be created if it does not exist.
 
 .. code-block:: bash
 
-    cset bake air_temp.nc output/ mean-air-temp-spacial-plot.yaml
+    cset bake air_temp.nc output/ recipes/mean-air-temp-spacial-plot.yaml
 
 This will run the recipe and leave its output in the specified output directory.
 
