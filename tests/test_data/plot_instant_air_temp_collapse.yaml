@@ -24,7 +24,5 @@ steps:
     additional_percent: 90
 
   - operator: write.write_cube_to_nc
-    filename: processed_data.nc
 
   - operator: plot.spatial_contour_plot
-    filename: plot.svg
