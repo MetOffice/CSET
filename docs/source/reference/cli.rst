@@ -68,4 +68,4 @@ exactly what ran.
     -h, --help            show this help message and exit
     -o [OUTPUT_PATH], --output_path [OUTPUT_PATH]
                             file in which to save the graph image, otherwise uses a temporary file. When specified the file is not automatically opened
-    -d, --detailed        include operator arguments in output
+    -d, --details         include operator arguments in output

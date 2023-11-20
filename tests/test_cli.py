@@ -106,7 +106,7 @@ def test_graph_details(tmp_path: Path):
         (
             "cset",
             "graph",
-            "--detailed",
+            "--details",
             "-o",
             str(output_file),
             "tests/test_data/noop_recipe.yaml",
