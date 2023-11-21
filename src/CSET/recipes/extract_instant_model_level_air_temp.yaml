@@ -20,7 +20,7 @@ steps:
         varname: air_temperature
       model_level_number_constraint:
         operator: constraints.generate_model_level_constraint
-        model_level_name: 2
+        model_level_number: 2
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []

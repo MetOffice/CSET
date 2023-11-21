@@ -62,7 +62,9 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
     return varname_constraint
 
 
-def generate_model_level_constraint(model_level_name: str, **kwargs) -> iris.Constraint:
+def generate_model_level_constraint(
+    model_level_number: str, **kwargs
+) -> iris.Constraint:
     """Generate constraint from variable name.
 
     Operator that takes a CF compliant model_level_number string, and uses iris to
@@ -71,14 +73,16 @@ def generate_model_level_constraint(model_level_name: str, **kwargs) -> iris.Con
 
     Arguments
     ---------
-    model_level_name: str
+    model_level_number: str
         CF compliant model level name of variable. Needed later for LFRic.
 
     Returns
     -------
     model_level_number_constraint: iris.Constraint
     """
-    model_level_number_constraint = iris.Constraint(model_level_number=model_level_name)
+    model_level_number_constraint = iris.Constraint(
+        model_level_number=model_level_number
+    )
     return model_level_number_constraint
 
 
