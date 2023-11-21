@@ -33,8 +33,8 @@ from CSET._common import get_recipe_metadata, slugify
 def _make_plot_html_page(plot_filename: str) -> None:
     """Create a HTML page to display a plot image."""
     meta = get_recipe_metadata()
-    title = meta["title"]
-    description = MarkdownIt().render(meta["description"])
+    title = meta.get("title", "Untitled")
+    description = MarkdownIt().render(meta.get("description", ""))
 
     # Template stylesheet so we don't have to escape the {}.
     stylesheet = """body {
@@ -148,7 +148,7 @@ def spatial_contour_plot(
         If cube isn't a Cube.
     """
     if not filename:
-        filename = slugify(get_recipe_metadata()["title"])
+        filename = slugify(get_recipe_metadata().get("title", "Untitled"))
     filename = Path(filename).with_suffix(".svg")
     cube = _check_single_cube(cube)
     qplt.contourf(cube)
@@ -188,7 +188,7 @@ def postage_stamp_contour_plot(
         If cube isn't a Cube.
     """
     if not filename:
-        filename = slugify(get_recipe_metadata()["title"])
+        filename = slugify(get_recipe_metadata().get("title", "Untitled"))
     filename = Path(filename).with_suffix(".svg")
 
     # Validate input is in the right form.
@@ -247,5 +247,5 @@ def time_series_contour_plot(
         If cube isn't a Cube.
     """
     if not filename:
-        filename = slugify(get_recipe_metadata()["title"])
+        filename = slugify(get_recipe_metadata().get("title", "Untitled"))
     raise NotImplementedError
