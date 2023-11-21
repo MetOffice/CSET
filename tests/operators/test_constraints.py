@@ -34,7 +34,7 @@ def test_generate_var_constraint():
 
 
 def test_generate_model_level_constraint():
-    """Generate iris cube constraint for str variable name."""
+    """Generate iris cube constraint for model level number."""
     var_constraint = constraints.generate_model_level_constraint("2")
     expected_model_level_constraint = (
         "Constraint(coord_values={'model_level_number': 2})"
