@@ -56,7 +56,7 @@ Description
 
 Following the title we have the description. This is a long-form description of
 what the recipe does, considerations around its use, and what science it is
-based on. The description is `Markdown`_, so some formatting can be used were
+based on. The description is `Markdown`_, so some formatting can be used where
 helpful, papers can be linked, and so on. A little bit of unusual syntax here is
 ``description: |``, with the pipe after the key. This means the indented block
 that follows is a multiline string, so you can have as many lines as you want,
@@ -76,7 +76,7 @@ Recipe Steps
 
 Just as in baking you would follow a recipe step-by-step, so does CSET. The
 steps of the recipe are all under the ``steps`` key. Each block prefixed with a
-``-`` (which makes a list in YAML) is a step, and they are run in order.
+``-`` (which makes a list in YAML) is a step, and they are run in order from top to bottom.
 
 Each step has an ``operator`` key, which specifies which operator to use. A
 `complete list of operators is in the documentation`_, but for this tutorial we
@@ -84,7 +84,7 @@ will describe them here.
 
 .. _complete list of operators is in the documentation: https://metoffice.github.io/CSET/reference/operators
 
-The first step we want is to read in the model data. This is done with the
+The first step reads in the model data. This is done with the
 ``read.read_cubes`` operator. The first step is special, and receives the path
 to the input data as its implicit input.
 
@@ -93,9 +93,9 @@ to the input data as its implicit input.
     steps:
       - operator: read.read_cubes
 
-Once we have read the data, we need to filter it to just that we want.
-``filter.filter_cubes`` is the operator for that. It also has the
-additional effect of turning the CubeList returned by ``read.read_cubes`` into a
+Once we have read the data, we need to filter them down to the data we require for our computations.
+``filter.filter_cubes`` is the operator for that. It also ensures that the
+CubeList returned by ``read.read_cubes`` is turned into a
 Cube.
 
 .. code-block:: yaml
@@ -113,16 +113,16 @@ Cube.
 
 Unlike the ``read.read_cubes`` operator, we have many key-value pairs in this
 step. The other keys in the step are the named arguments that operator takes.
-Each operator implicitly takes its first argument from previous step, but this
+Each operator implicitly takes its first argument from the previous step, but this
 can be overridden by explicitly providing it.
 
-The other thing to note is that the arguments of operators can themselves be
+Note that arguments of operators can themselves be
 operators. This allows nesting operators to use their output as arguments to
 other operators.
 
 
-Next we want to reduce the dimensionality of the data ahead of plotting. In this
-case we want the mean of the time coordinate. The ``collapse.collapse`` operator
+Next we reduce the dimensionality of the data ahead of plotting. In this
+case we chose the mean of the time coordinate. The ``collapse.collapse`` operator
 allows us to do this, and takes as parameters the coordinate to collapse, and
 the method by which it is done.
 
@@ -133,7 +133,7 @@ the method by which it is done.
         coordinate: time
         method: MEAN
 
-Finally we can actually plot the model data, using the
+Finally we plot the model data, using the
 ``plot.spatial_contour_plot`` operator, and then save the processed data with
 the ``write.write_cube_to_nc`` operator. This finishes up our recipe.
 
