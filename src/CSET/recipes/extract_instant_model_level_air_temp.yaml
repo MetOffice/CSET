@@ -2,9 +2,6 @@ title: Meaned Model Level Air Temperature Spatial Plot
 description: |
   Extracts out the instantaneous model level air temperature from a file and writes it
   to a new one.
-section: Grid Stat
-major_cat: Major Category 1
-minor_cat: Minor Category 1
 
 steps:
   - operator: read.read_cubes
