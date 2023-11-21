@@ -196,7 +196,7 @@ Use ``cset bake`` to run your newly created recipe.
 
 .. code-block:: bash
 
-    cset bake air_temp.nc output/ single_timestep_surface_air_temperature_spacial_plot.yaml
+    cset bake air_temp.nc output/ single_timestep_surface_air_temperature_spatial_plot.yaml
 
 You can investigate the created plot and data file in the specified ``output``
 directory.
