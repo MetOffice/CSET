@@ -28,10 +28,13 @@ repos:
     rev: c4a0b883114b00d8d76b479c820ce7950211c99b  # frozen: v4.5.0
     hooks:
       - id: check-added-large-files
+        args: ['--maxkb=10240']
       - id: check-case-conflict
       - id: check-merge-conflict
       - id: check-json
       - id: check-toml
       - id: check-yaml
       - id: end-of-file-fixer
+        # Prevent PP files being inappropriately "fixed".
+        exclude: ^.+\.pp$
       - id: trailing-whitespace
