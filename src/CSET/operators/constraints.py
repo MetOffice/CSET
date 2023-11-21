@@ -70,7 +70,7 @@ def generate_model_level_constraint(model_level_name: str, **kwargs) -> iris.Con
 
     Arguments
     ---------
-    model_level_name: str
+    model_level_number: str
         CF compliant model level name of variable. Needed later for LFRic.
 
     Returns
