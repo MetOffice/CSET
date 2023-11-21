@@ -20,7 +20,7 @@ from typing import Union
 import iris
 import iris.cube
 
-from CSET._common import get_recipe_title_slug
+from CSET._common import get_recipe_metadata, slugify
 
 
 def write_cube_to_nc(
@@ -44,7 +44,7 @@ def write_cube_to_nc(
         The inputted cube(list) (so further operations can be applied)
     """
     if not filename:
-        filename = get_recipe_title_slug()
+        filename = slugify(get_recipe_metadata()["title"])
     # Ensure that output filename is a Path with a .nc suffix
     filename = Path(filename).with_suffix(".nc")
     # Save the file as nc compliant (iris should handle this)

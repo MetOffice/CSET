@@ -25,8 +25,71 @@ import iris.exceptions
 import iris.plot as iplt
 import iris.quickplot as qplt
 import matplotlib.pyplot as plt
+from markdown_it import MarkdownIt
 
-from CSET._common import get_recipe_title_slug
+from CSET._common import get_recipe_metadata, slugify
+
+
+def _make_plot_html_page(plot_filename: str) -> None:
+    """Create a HTML page to display a plot image."""
+    meta = get_recipe_metadata()
+    title = meta["title"]
+    description = MarkdownIt().render(meta["description"])
+
+    # Template stylesheet so we don't have to escape the {}.
+    stylesheet = """body {
+  font-family: sans-serif;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+}
+
+.hidden {
+  display: none;
+}
+
+.plot-container {
+  width: min(95vw, 95vh);
+  > img {
+    width: 100%;
+  }
+}
+
+#description-container {
+  flex: 30ch;
+  max-height: 90vh;
+  max-width: 80ch;
+  margin: 1em;
+  padding: 0 1em;
+  background-color: whitesmoke;
+  box-shadow: 4px 4px 4px grey;
+  outline: darkgrey solid 1px;
+  overflow: auto;
+}
+"""
+
+    html = rf"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+    <style>
+        {stylesheet}
+    </style>
+</head>
+<body>
+    <main class="plot-container">
+        <img src="{plot_filename}" alt="plot">
+    </main>
+    <aside id="description-container">
+        <h1>{title}</h1>
+        {description}
+    </aside>
+</body>
+"""
+    with open("index.html", "wt", encoding="UTF-8") as fp:
+        fp.write(html)
 
 
 def _check_single_cube(
@@ -85,12 +148,13 @@ def spatial_contour_plot(
         If cube isn't a Cube.
     """
     if not filename:
-        filename = get_recipe_title_slug()
+        filename = slugify(get_recipe_metadata()["title"])
     filename = Path(filename).with_suffix(".svg")
     cube = _check_single_cube(cube)
     qplt.contourf(cube)
     plt.savefig(filename)
     logging.info("Saved contour plot to %s", filename)
+    _make_plot_html_page(filename)
     return cube
 
 
@@ -124,7 +188,7 @@ def postage_stamp_contour_plot(
         If cube isn't a Cube.
     """
     if not filename:
-        filename = get_recipe_title_slug()
+        filename = slugify(get_recipe_metadata()["title"])
     filename = Path(filename).with_suffix(".svg")
 
     # Validate input is in the right form.
@@ -154,7 +218,7 @@ def postage_stamp_contour_plot(
 
     plt.savefig(filename)
     logging.info("Saved contour postage stamp plot to %s", filename)
-
+    _make_plot_html_page(filename)
     return cube
 
 
@@ -183,5 +247,5 @@ def time_series_contour_plot(
         If cube isn't a Cube.
     """
     if not filename:
-        filename = get_recipe_title_slug()
+        filename = slugify(get_recipe_metadata()["title"])
     raise NotImplementedError

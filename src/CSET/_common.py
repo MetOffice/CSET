@@ -93,7 +93,7 @@ def slugify(s: str) -> str:
     return re.sub(r"[^a-z0-9\._-]+", "_", s.casefold()).strip("_")
 
 
-def get_recipe_title_slug():
-    """Get the slug of the recipe title for use in file names."""
+def get_recipe_metadata() -> dict:
+    """Get the metadata of the running recipe."""
     with open("meta.json", "rt", encoding="UTF-8") as fp:
-        return slugify(json.load(fp)["title"])
+        return json.load(fp)
