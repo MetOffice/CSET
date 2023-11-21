@@ -32,7 +32,7 @@ We will now create a recipe from scratch. This recipe will plot a specific
 timestamp of the example air temperature data.
 
 Start by opening a new file in your favourite text editor, and save it somewhere
-accessible as ``single_timestep_surface_air_temperature_spacial_plot.yaml``.
+accessible as ``single_timestep_surface_air_temperature_spatial_plot.yaml``.
 
 Recipe Metadata
 ---------------
