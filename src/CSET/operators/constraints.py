@@ -77,6 +77,8 @@ def generate_model_level_constraint(model_level_name: str, **kwargs) -> iris.Con
     -------
     model_level_number_constraint: iris.Constraint
     """
+    # Cast to string in case an integer is given.
+    model_level_number = str(model_level_number)
     model_level_number_constraint = iris.Constraint(model_level_number=model_level_name)
     return model_level_number_constraint
 
