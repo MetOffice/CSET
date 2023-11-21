@@ -3,15 +3,45 @@ Installation
 
 .. Tutorial saying how to install CSET. For edge cases should link elsewhere.
 
-The recommended way to install CSET is via conda. It is packaged on
-`conda-forge`_ and can be installed with a simple ``conda create --name=cset
---channel=conda-forge cset``. This will install CSET into its own conda
-environment, which is the recommended way to use it, but it is also possible to
-install it into an existing environment.
+For a user of CSET the recommended way to install CSET is via conda_. It is packaged on
+`conda-forge`_ in the ``cset`` package. The following command will install CSET
+into its own conda environment, which is recommended to avoid possible package
+conflicts.
 
-If you instead want to run a development version that has yet to be released,
-the easiest way is via an editable install. You can learn how to do this in the
-:ref:`working_practices_getting_started` section of the
-:doc:`/contributing/index`.
+.. code-block:: bash
 
+    conda create --name=cset --channel=conda-forge cset
+
+To use CSET, you need to activate the conda environment with the ``conda
+activate`` command.
+
+.. code-block:: bash
+
+    conda activate cset
+
+.. note::
+
+    You will have to rerun the ``conda activate cset`` command whenever you use
+    a new terminal.
+
+Once that is done, CSET should be ready to use. This can be verified by running
+a simple command.
+
+.. code-block:: bash
+
+    cset --version
+
+This command should output the installed version of CSET. This will look
+something like ``CSET v0.4.0``.
+
+You now have CSET installed, so try another tutorial.
+
+.. note::
+
+    This page details installing a released version of CSET. If you instead want
+    to run a development version that has yet to be released, see
+    :doc:`/contributing/getting-started`.
+
+
+.. _conda: https://docs.conda.io/en/latest/
 .. _conda-forge: https://anaconda.org/conda-forge/cset

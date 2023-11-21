@@ -71,7 +71,7 @@ def main():
     )
     parser_graph.add_argument(
         "-d",
-        "--detailed",
+        "--details",
         action="store_true",
         help="include operator arguments in output",
     )
@@ -122,7 +122,7 @@ def _graph_command(args):
         args.recipe,
         args.output_path,
         auto_open=not bool(args.output_path),
-        detailed=args.detailed,
+        detailed=args.details,
     )
 
 
