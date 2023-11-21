@@ -6,9 +6,8 @@ Visualising a recipe graphically
 In this tutorial we will investigate what is going on inside of a recipe, and
 visualise the *operators* inside.
 
-Using the ``cset cookbook`` command find the "Mean Air Temperature Spatial Plot"
-recipe, and click the button to use it. This will write out a ``.yaml`` file to
-your current directory containing your selected recipe.
+As in the previous tutorial use the ``cset cookbook`` command to find the "Mean
+Air Temperature Spatial Plot" recipe.
 
 We will now visualise the steps inside the recipe using the ``cset graph``
 command.

@@ -16,6 +16,13 @@ string, a number, or even more key-value pairs by indenting them below the key.
 It is important to note that, like in python, indentation is significant in
 YAML. Indentation should be done with two spaces.
 
+.. code-block:: yaml
+
+  # Simple YAML example.
+  key: value
+  key2:
+    key-as-value: value
+
 .. _YAML 1.2: https://en.wikipedia.org/wiki/YAML
 
 Making a new recipe
@@ -49,13 +56,13 @@ Description
 
 Following the title we have the description. This is a long-form description of
 what the recipe does, considerations around its use, and what science it is
-based on. The description is `markdown`_, so some formatting can be used were
+based on. The description is `Markdown`_, so some formatting can be used were
 helpful, papers can be linked, and so on. A little bit of unusual syntax here is
 ``description: |``, with the pipe after the key. This means the indented block
 that follows is a multiline string, so you can have as many lines as you want,
 provided they are all indented with at least two spaces.
 
-.. _markdown: https://commonmark.org/help/
+.. _Markdown: https://commonmark.org/help/
 
 .. code-block:: yaml
 
@@ -93,6 +100,7 @@ Cube.
 
 .. code-block:: yaml
 
+    # Filter operator
       - operator: filters.filter_cubes
         constraint:
           operator: constraints.combine_constraints
@@ -104,9 +112,9 @@ Cube.
             cell_methods: []
 
 Unlike the ``read.read_cubes`` operator, we have many key-value pairs in this
-step. The other keys the step are the named arguments that operator takes. Each
-operator implicitly takes its first argument from previous step, but this can be
-overridden by explicitly providing it.
+step. The other keys in the step are the named arguments that operator takes.
+Each operator implicitly takes its first argument from previous step, but this
+can be overridden by explicitly providing it.
 
 The other thing to note is that the arguments of operators can themselves be
 operators. This allows nesting operators to use their output as arguments to
@@ -120,6 +128,7 @@ the method by which it is done.
 
 .. code-block:: yaml
 
+    # Collapse operator
       - operator: collapse.collapse
         coordinate: time
         method: MEAN
@@ -132,6 +141,7 @@ the ``write.write_cube_to_nc`` operator. This finishes up our recipe.
 
 .. code-block:: yaml
 
+    # Plotting and writing operators
       - operator: plot.spatial_contour_plot
         filename: CSET_OUTPUT_PATH
 
@@ -177,8 +187,8 @@ After following this far your recipe should look like this:
 Running the Recipe
 ------------------
 
-We can run this recipe using `the same data`_ as was used for :doc:`the first
-tutorial <run-recipe>`.
+We can run this recipe using `the same data`_ as was used for the
+:doc:`run-recipe` tutorial.
 
 .. _the same data: https://github.com/MetOffice/CSET/raw/main/tests/test_data/air_temp.nc
 
