@@ -1,4 +1,4 @@
-title: Extract Meaned Model level Air Temperature
+title: Meaned Model Level Air Temperature Spatial Plot
 description: |
   Extracts out the instantaneous model level air temperature from a file and writes it
   to a new one.
