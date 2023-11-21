@@ -65,7 +65,7 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
 def generate_model_level_constraint(
     model_level_number: str, **kwargs
 ) -> iris.Constraint:
-    """Generate constraint from variable name.
+    """Generate constraint for a particular model level number.
 
     Operator that takes a CF compliant model_level_number string, and uses iris to
     generate a constraint to be passed into the read operator to minimize the
@@ -74,12 +74,14 @@ def generate_model_level_constraint(
     Arguments
     ---------
     model_level_number: str
-        CF compliant model level name of variable. Needed later for LFRic.
+        CF compliant model level number.
 
     Returns
     -------
     model_level_number_constraint: iris.Constraint
     """
+    # Cast to string in case an integer is given.
+    model_level_number = str(model_level_number)
     model_level_number_constraint = iris.Constraint(
         model_level_number=model_level_number
     )
