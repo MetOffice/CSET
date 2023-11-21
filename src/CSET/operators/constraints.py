@@ -66,8 +66,7 @@ def generate_model_level_constraint(model_level_name: str, **kwargs) -> iris.Con
     """Generate constraint from variable name.
 
     Operator that takes a CF compliant model_level_number string, and uses iris to
-    generate a constraint to be passed into the read operator to minimize the
-    CubeList the read operator loads and speed up loading.
+    generate a constraint to constraint a cube to just that model level.
 
     Arguments
     ---------
