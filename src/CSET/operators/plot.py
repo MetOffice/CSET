@@ -42,24 +42,22 @@ def _make_plot_html_page(plot_filename: str) -> None:
   display: flex;
   flex-wrap: wrap;
   justify-content: space-around;
+  margin: 0;
 }
-
 .hidden {
   display: none;
 }
-
 .plot-container {
   width: min(95vw, 95vh);
-  > img {
-    width: 100%;
-  }
 }
-
+.plot-container>img {
+  width: 100%;
+}
 #description-container {
   flex: 30ch;
   max-height: 90vh;
   max-width: 80ch;
-  margin: 1em;
+  margin: min(1em, 5vh);
   padding: 0 1em;
   background-color: whitesmoke;
   box-shadow: 4px 4px 4px grey;
