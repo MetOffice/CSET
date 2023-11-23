@@ -235,7 +235,7 @@ def time_series_contour_plot(
     Returns
     -------
     Cube
-        The inputted cube (so further operations can be applied)
+        The input cube (so further operations can be applied)
 
     Raises
     ------
