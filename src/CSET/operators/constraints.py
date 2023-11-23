@@ -63,7 +63,7 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
 
 
 def generate_model_level_constraint(
-    model_level_number: str, **kwargs
+    model_level_number: int | str, **kwargs
 ) -> iris.Constraint:
     """Generate constraint for a particular model level number.
 
