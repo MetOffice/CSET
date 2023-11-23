@@ -5,6 +5,12 @@ This page details the operators contained within CSET. It is automatically
 generated from the code and its docstrings. Operators should be used via
 :doc:`/usage/operator-recipes`.
 
+CSET.operators.aggregate
+------------------------
+
+.. automodule:: CSET.operators.aggregate
+   :members:
+
 CSET.operators.collapse
 -----------------------
 
