@@ -20,9 +20,11 @@ from typing import Union
 import iris
 import iris.cube
 
+from CSET._common import get_recipe_metadata, slugify
+
 
 def write_cube_to_nc(
-    cube: Union[iris.cube.Cube, iris.cube.CubeList], file_path: Path, **kwargs
+    cube: Union[iris.cube.Cube, iris.cube.CubeList], filename: Path = None, **kwargs
 ) -> str:
     """Write a cube to a NetCDF file.
 
@@ -32,17 +34,19 @@ def write_cube_to_nc(
     Arguments
     ---------
     cube: iris.cube.Cube | iris.cube.CubeList
-        Data to save
-    file_path: Path
-        Path to save the cubes too
+        Data to save.
+    filename: Path, optional
+        Path to save the cubes too. Defaults to the recipe title + .nc
 
     Returns
     -------
     Cube | CubeList
         The inputted cube(list) (so further operations can be applied)
     """
-    # Ensure that output_file_path is a Path with a .nc suffix
-    file_path = Path(file_path).with_suffix(".nc")
+    if not filename:
+        filename = slugify(get_recipe_metadata().get("title", "Untitled"))
+    # Ensure that output filename is a Path with a .nc suffix
+    filename = Path(filename).with_suffix(".nc")
     # Save the file as nc compliant (iris should handle this)
-    iris.save(cube, file_path)
+    iris.save(cube, filename, zlib=True)
     return cube

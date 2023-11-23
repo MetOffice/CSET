@@ -6,4 +6,4 @@ steps:
       stash: m01s03i236
 
   - operator: plot.postage_stamp_contour_plot
-    file_path: CSET_OUTPUT_PATH
+    filename: plot.svg

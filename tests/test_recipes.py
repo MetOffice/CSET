@@ -24,7 +24,7 @@ import CSET.recipes
 def test_unpack(tmp_path: Path):
     """Unpack directory containing sub-directories."""
     CSET.recipes._unpack_recipes_from_dir(Path("tests"), tmp_path)
-    assert Path(tmp_path, "test_data/noop_recipe.yaml").exists()
+    assert Path(tmp_path, "test_data/noop_recipe.yaml").is_file()
     # Run again to check that warnings are produced when files collide.
     CSET.recipes._unpack_recipes_from_dir(Path("tests"), tmp_path)
 

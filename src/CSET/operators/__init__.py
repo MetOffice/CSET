@@ -15,7 +15,9 @@
 """Subpackage contains all of CSET's operators."""
 
 import inspect
+import json
 import logging
+import os
 from pathlib import Path
 from typing import Union
 
@@ -76,8 +78,19 @@ def get_operator(name: str):
         raise ValueError(f"Unknown operator: {name}") from err
 
 
+def _write_metadata(recipe: dict):
+    """Write a meta.json file in the CWD, with all recipe keys except steps."""
+    metadata = recipe.copy()
+    del metadata["steps"]
+    with open("meta.json", "wt", encoding="UTF-8") as fp:
+        json.dump(metadata, fp)
+    os.sync()
+    # Stat directory to force NFS to synchronise metadata.
+    os.stat(Path.cwd())
+
+
 def execute_recipe(
-    recipe_yaml: Union[Path, str], input_file: Path, output_file: Path
+    recipe_yaml: Union[Path, str], input_file: Path, output_directory: Path
 ) -> None:
     """Parse and executes a recipe file.
 
@@ -92,7 +105,7 @@ def execute_recipe(
         Pathlike to netCDF (or something else that iris read) file to be used as
         input.
 
-    output_file: Path
+    output_directory: Path
         Pathlike indicating desired location of output.
 
     Raises
@@ -107,7 +120,7 @@ def execute_recipe(
         The provided recipe is not a stream or Path.
     """
 
-    def step_parser(step: dict, step_input: any, output_file_path: Path) -> str:
+    def step_parser(step: dict, step_input: any) -> str:
         """Execute a recipe step, recursively executing any sub-steps."""
         logging.debug(f"Executing step: {step}")
         kwargs = {}
@@ -117,9 +130,7 @@ def execute_recipe(
                 logging.info(f"operator: {step['operator']}")
             elif isinstance(step[key], dict) and "operator" in step[key]:
                 logging.debug(f"Recursing into argument: {key}")
-                kwargs[key] = step_parser(step[key], step_input, output_file_path)
-            elif step[key] == "CSET_OUTPUT_PATH":
-                kwargs[key] = output_file_path
+                kwargs[key] = step_parser(step[key], step_input)
             else:
                 kwargs[key] = step[key]
         logging.debug("args: %s", kwargs)
@@ -134,13 +145,24 @@ def execute_recipe(
             return operator(**kwargs)
 
     recipe = parse_recipe(recipe_yaml)
+    step_input = Path(input_file).absolute()
+    try:
+        output_directory.mkdir(parents=True, exist_ok=True)
+    except FileExistsError as err:
+        logging.error("Output directory is a file. %s", output_directory)
+        raise err
 
-    # Execute the recipe.
-    step_input = input_file
-    for step in recipe["steps"]:
-        step_input = step_parser(step, step_input, output_file)
-
-    logging.info("Recipe output: %s", step_input)
+    original_working_directory = Path.cwd()
+    os.chdir(output_directory)
+    # Create metadata file used by some steps.
+    _write_metadata(recipe)
+    try:
+        # Execute the recipe.
+        for step in recipe["steps"]:
+            step_input = step_parser(step, step_input)
+        logging.info("Recipe output: %s", step_input)
+    finally:
+        os.chdir(original_working_directory)
 
 
 __all__ = [

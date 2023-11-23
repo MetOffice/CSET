@@ -49,16 +49,14 @@ def test_get_operator_exception_not_callable():
 def test_execute_recipe(tmp_path: Path):
     """Execute recipe to test happy case (this is really an integration test)."""
     input_file = Path("tests/test_data/air_temp.nc")
-    output_file = tmp_path / f"{uuid4()}.nc"
+    output_dir = tmp_path / f"{uuid4()}"
     recipe_file = Path("tests/test_data/plot_instant_air_temp.yaml")
-    CSET.operators.execute_recipe(recipe_file, input_file, output_file)
-    output_file.unlink()
+    CSET.operators.execute_recipe(recipe_file, input_file, output_dir)
 
 
 def test_execute_recipe_edge_cases(tmp_path: Path):
     """Test weird edge cases. Also tests data paths not being pathlib Paths."""
     input_file = "tests/test_data/air_temp.nc"
-    output_file = tmp_path / f"{uuid4()}.nc"
+    output_dir = tmp_path / f"{uuid4()}"
     recipe = Path("tests/test_data/noop_recipe.yaml")
-    CSET.operators.execute_recipe(recipe, input_file, output_file)
-    # The output_file doesn't actually get written, so doesn't need removing.
+    CSET.operators.execute_recipe(recipe, input_file, output_dir)

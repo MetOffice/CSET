@@ -23,8 +23,5 @@ steps:
     interval_iso: PT2H
 
   - operator: plot.spatial_contour_plot
-    file_path: CSET_OUTPUT_PATH
 
   - operator: write.write_cube_to_nc
-    # This is a magic value that becomes the runtime output file path.
-    file_path: CSET_OUTPUT_PATH
