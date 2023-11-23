@@ -130,13 +130,13 @@ def spatial_contour_plot(
     ----------
     cube: Cube
         An iris cube of the data to plot. It should be 2 dimensional (lat and lon).
-    filename: pathlike
-        The path of the plot to write.
+    filename: pathlike, optional
+        The path of the plot to write. Defaults to the recipe name.
 
     Returns
     -------
     Cube
-        The inputted cube (so further operations can be applied)
+        The original cube (so further operations can be applied)
 
     Raises
     ------
@@ -168,15 +168,15 @@ def postage_stamp_contour_plot(
     ----------
     cube: Cube
         Iris cube of data to be plotted. It must have a realization coordinate.
-    filename: pathlike
-        The path of the plot to write.
+    filename: pathlike, optional
+        The path of the plot to write. Defaults to the recipe name.
     coordinate: str
         The coordinate that becomes different plots. Defaults to "realization".
 
     Returns
     -------
     Cube
-        The inputted cube (so further operations can be applied)
+        The original cube (so further operations can be applied)
 
     Raises
     ------
@@ -230,12 +230,15 @@ def time_series_contour_plot(
     Parameters
     ----------
     cube: Cube
-        An iris cube of the data to plot. It should be 2 dimensional (lat and lon).
+        An iris cube of the data to plot. It should be 2 dimensional (lat and
+        lon).
+    filename: pathlike, optional
+        Common component of the plot filenames. Defaults to the recipe name.
 
     Returns
     -------
     Cube
-        The input cube (so further operations can be applied)
+        The original cube (so further operations can be applied)
 
     Raises
     ------
