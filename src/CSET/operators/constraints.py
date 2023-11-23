@@ -15,6 +15,7 @@
 """Operators to generate constraints to filter with."""
 
 from datetime import datetime
+from typing import Union
 
 import iris
 import iris.cube
@@ -60,6 +61,32 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
     """
     varname_constraint = iris.Constraint(name=varname)
     return varname_constraint
+
+
+def generate_model_level_constraint(
+    model_level_number: Union[int, str], **kwargs
+) -> iris.Constraint:
+    """Generate constraint for a particular model level number.
+
+    Operator that takes a CF compliant model_level_number string, and uses iris to
+    generate a constraint to be passed into the read operator to minimize the
+    CubeList the read operator loads and speed up loading.
+
+    Arguments
+    ---------
+    model_level_number: str
+        CF compliant model level number.
+
+    Returns
+    -------
+    model_level_number_constraint: iris.Constraint
+    """
+    # Cast to int in case a string is given.
+    model_level_number = int(model_level_number)
+    model_level_number_constraint = iris.Constraint(
+        model_level_number=model_level_number
+    )
+    return model_level_number_constraint
 
 
 def generate_cell_methods_constraint(cell_methods: list, **kwargs) -> iris.Constraint:
