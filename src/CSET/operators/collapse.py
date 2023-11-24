@@ -39,8 +39,9 @@ def collapse(
     cube: iris.cube.Cube
          Cube to collapse and iterate over one dimension
     coordinate: str | list[str]
-         Coordinate(s) to collapse over i.e. 'time', 'longitude', 'latitude',
-         'model_level_number'. A list of multiple coordinates can be given.
+         Coordinate(s) to collapse over e.g. 'time', 'longitude', 'latitude',
+         'model_level_number', 'realization'. A list of multiple coordinates can
+         be given.
     method: str
          Type of collapse i.e. method: 'MEAN', 'MAX', 'MIN', 'MEDIAN',
          'PERCENTILE' getattr creates iris.analysis.MEAN, etc For PERCENTILE

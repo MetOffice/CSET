@@ -23,7 +23,6 @@ import iris
 import iris.cube
 import iris.exceptions
 import iris.plot as iplt
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 from markdown_it import MarkdownIt
 
@@ -164,7 +163,7 @@ def spatial_contour_plot(
     # plt.rc('ytick',labelsize=22)
 
     # Filled contour plot of the field.
-    iplt.contourf(cube, cmap=mpl.cm.magma)
+    iplt.contourf(cube)
 
     # Add coastlines.
     plt.gca().coastlines(resolution="10m")
@@ -243,7 +242,7 @@ def postage_stamp_contour_plot(
     colorbar = plt.colorbar(plot, colorbar_axes, orientation="horizontal")
     colorbar.set_label(f"{cube.name()} / {cube.units}")
 
-    plt.savefig(filename)
+    plt.savefig(filename, bbox_inches="tight")
     logging.info("Saved contour postage stamp plot to %s", filename)
     _make_plot_html_page(filename)
     return cube
