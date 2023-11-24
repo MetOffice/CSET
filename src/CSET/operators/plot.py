@@ -23,7 +23,6 @@ import iris
 import iris.cube
 import iris.exceptions
 import iris.plot as iplt
-import iris.quickplot as qplt
 import matplotlib.pyplot as plt
 from markdown_it import MarkdownIt
 
@@ -49,9 +48,11 @@ def _make_plot_html_page(plot_filename: str) -> None:
 }
 .plot-container {
   width: min(95vw, 95vh);
+  height: 99vh;
 }
 .plot-container>img {
   width: 100%;
+  height: 100%;
 }
 #description-container {
   flex: 30ch;
@@ -145,12 +146,39 @@ def spatial_contour_plot(
     TypeError
         If cube isn't a Cube.
     """
+    title = get_recipe_metadata().get("title", "Untitled")
     if not filename:
-        filename = slugify(get_recipe_metadata().get("title", "Untitled"))
+        filename = slugify(title)
     filename = Path(filename).with_suffix(".svg")
     cube = _check_single_cube(cube)
-    qplt.contourf(cube)
-    plt.savefig(filename)
+
+    # with mpl.rc_context({"figure.labelsize": 22}):
+
+    # Setup plot details, size, resolution, etc.
+    # Set label size.
+    plt.figure(num=1, figsize=(15, 15), facecolor="w", edgecolor="k")
+    # fig.tight_layout(pad=0)
+
+    # plt.rc('xtick',labelsize=22)
+    # plt.rc('ytick',labelsize=22)
+
+    # Filled contour plot of the field.
+    iplt.contourf(cube)
+
+    # Add coastlines.
+    plt.gca().coastlines(resolution="10m")
+
+    # Set plotting limits.
+    # plt.xlim(points_x)
+    # plt.ylim(points_y)
+
+    # Add title.
+    plt.title(title, fontsize=16)
+    cbar = plt.colorbar()
+    cbar.set_label(label=f"{cube.name()} ({cube.units})", size=20)
+
+    plt.savefig(filename, bbox_inches="tight")
+
     logging.info("Saved contour plot to %s", filename)
     _make_plot_html_page(filename)
     return cube
@@ -214,7 +242,7 @@ def postage_stamp_contour_plot(
     colorbar = plt.colorbar(plot, colorbar_axes, orientation="horizontal")
     colorbar.set_label(f"{cube.name()} / {cube.units}")
 
-    plt.savefig(filename)
+    plt.savefig(filename, bbox_inches="tight")
     logging.info("Saved contour postage stamp plot to %s", filename)
     _make_plot_html_page(filename)
     return cube
