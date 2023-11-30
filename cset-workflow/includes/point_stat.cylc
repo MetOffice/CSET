@@ -1,7 +1,7 @@
 [scheduling]
     [[graph]]
     P1 = """
-    recipe_start => metplus_ascii2nc => metplus_point_stat => recipe_finish
+    metplus_ascii2nc => metplus_point_stat => housekeeping
     """
 
 [runtime]

@@ -29,10 +29,20 @@ fi
 # Activate conda environment
 if [[ "$CSET_ENV_USE_CONDA" == True ]]
 then
+  # Ensure CONDA_PATH is defined.
+  if [[ -d "$CONDA_PATH" ]]; then
+    echo "Sourcing conda on path: ${CONDA_PATH}"
+  else
+    CONDA_PATH=""
+  fi
+  # Use default location if CONDA_VENV_LOCATION is not specified.
+  if [[ -z "$CONDA_VENV_LOCATION" ]]; then
+    CONDA_VENV_LOCATION="${CYLC_WORKFLOW_SHARE_DIR}/cset_conda_env"
+  fi
   echo "Using conda environment $CONDA_VENV_LOCATION"
-  source "$(conda info --base)/etc/profile.d/conda.sh"
+  source "$("${CONDA_PATH}conda" info --base)/etc/profile.d/conda.sh"
   set +u
-  conda activate "$CONDA_VENV_LOCATION"
+  "${CONDA_PATH}conda" activate "$CONDA_VENV_LOCATION"
   set -u
   export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$CONDA_PREFIX/lib"
 fi

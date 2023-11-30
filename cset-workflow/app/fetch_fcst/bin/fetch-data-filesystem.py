@@ -18,7 +18,7 @@ if any(s in os.getenv("FILE_PATH") for s in ("*", "?")):
 else:
     local_file_path = f"{folder}/{path.name}"
 for file in path.parent.glob(path.name):
-    shutil.copyfile(file, local_file_path)
+    shutil.copy(file, local_file_path)
 
 # Then write out data path to "input_path" file
 with open(

@@ -1,35 +1,35 @@
 [scheduling]
     [[graph]]
     P1 = """
-    recipe_start => deterministic_plot_surface_air_temp => recipe_finish
+    recipe_start => deterministic_plot_model_level_air_temp => recipe_finish
     """
 
 [runtime]
-    [[deterministic_plot_surface_air_temp]]
+    [[deterministic_plot_model_level_air_temp]]
     script = rose task-run -v --app-key=run_cset_recipe
     execution time limit = PT15M
         [[[environment]]]
         CSET_RECIPE = """
-title: Plot Instant Air Temperature
+title: Plot Instant Model Level Air Temperature
 description: |
-  <p>Extracts and plots the instantaneous 1.5m air temperature from a file.</p>
+  <p>Extracts and plots the instantaneous model level air temperature from a file.</p>
   <p>The time coordinate is meaned.</p>
-  <p>These descriptions are HTML, so you can do things like <b>bold</b>,
-  <i>italics</i>, <span style=\"color: red; font-family: cursive;\">and more</span>.
-  </p>
 
 steps:
   - operator: read.read_cubes
     constraint:
-      operator: constraints.generate_stash_constraint
-      stash: m01s03i236
+      operator: constraints.generate_var_constraint
+      varname: air_temperature
 
   - operator: filters.filter_cubes
     constraint:
       operator: constraints.combine_constraints
-      constraint:
-        operator: constraints.generate_stash_constraint
-        stash: m01s03i236
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: air_temperature
+      model_level_number_constraint:
+        operator: constraints.generate_model_level_constraint
+        model_level_number: 2
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []

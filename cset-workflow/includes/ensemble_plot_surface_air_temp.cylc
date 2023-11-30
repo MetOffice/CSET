@@ -10,11 +10,11 @@
     execution time limit = PT15M
         [[[environment]]]
         CSET_RECIPE = """
-title: Plot Mean Surface Air Temperature Ensemble
+title: Plot Instant Air Temperature Ensemble
 description: |
-  Extracts and plots the instantaneous 1.5m air temperature from a file.
-  The time coordinate is meaned, and each postage stamp plot shows a
-  different ensemble member.
+  <p>Extracts and plots the instantaneous 1.5m air temperature from a file.</p>
+  <p>The time coordinate is meaned, and each postage stamp plot shows a
+  different ensemble member.</p>
 
 steps:
   - operator: read.read_cubes

@@ -3,6 +3,11 @@
 set -euo pipefail
 IFS="$(printf '\n\t')"
 
+# Use default location if CONDA_VENV_LOCATION is not specified.
+if [[ -z "$CONDA_VENV_LOCATION" ]]; then
+  CONDA_VENV_LOCATION="${CYLC_WORKFLOW_SHARE_DIR}/cset_conda_env"
+fi
+
 # Decide if the environment needs building.
 if [[ "$CONDA_VENV_CREATE" == True ]]; then
   true
@@ -15,7 +20,7 @@ else
 fi
 
 # Find environment definition file, abort if not found.
-env_lock_file="$CYLC_WORKFLOW_RUN_DIR/requirements/locks/py311-lock-linux-64.txt"
+env_lock_file="${CYLC_WORKFLOW_RUN_DIR}/requirements/locks/py311-lock-linux-64.txt"
 if [[ -f "$env_lock_file" ]]; then
   echo "Using environment file $env_lock_file"
 else
@@ -23,8 +28,8 @@ else
   exit 1
 fi
 
-if [[ -f "$CONDA_VENV_LOCATION/cset_env_hash" ]]; then
-  if [[ "$(cat "$CONDA_VENV_LOCATION/cset_env_hash")" == "$(sha256sum "$env_lock_file" | head -c 64)" ]]
+if [[ -f "${CONDA_VENV_LOCATION}/cset_env_hash" ]]; then
+  if [[ "$(cat "${CONDA_VENV_LOCATION}/cset_env_hash")" == "$(sha256sum "$env_lock_file" | head -c 64)" ]]
   then
     echo "Conda environment already exist, no build required"
     exit 0
@@ -65,4 +70,4 @@ echo "${CONDA_PATH}conda create -p $CONDA_VENV_LOCATION --file $env_lock_file --
 "${CONDA_PATH}conda" create -p "$CONDA_VENV_LOCATION" --file "$env_lock_file" --yes --force --quiet
 
 # Create hash file for next run.
-sha256sum "$env_lock_file"  | head -c 64 > "$CONDA_VENV_LOCATION/cset_env_hash"
+sha256sum "$env_lock_file"  | head -c 64 > "${CONDA_VENV_LOCATION}/cset_env_hash"
