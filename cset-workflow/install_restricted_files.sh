@@ -7,8 +7,7 @@ echo This script downloads and install Momentum Partnership restricted files and
 echo code for use in CSET. To use it make sure you have git cloning via SSH
 echo setup for the repository at https://github.com/MetOffice/CSET-workflow
 
-echo "WARNING: This script will overwrite any restricted files."
-read -rp 'Continue? [Y/n]: ' choice
+read -rp 'Restricted files will be overwritten. Continue? [Y/n]: ' choice
 if [[ "$choice" == [^Yy]* ]]; then
   echo "Aborted"
   exit 1
@@ -27,12 +26,10 @@ then
 fi
 
 # Copy most files from there into workflow directory, clobering existing ones.
-# Don't copy some files, like README.md or hidden files.
-rm "$tempdir"/README.md
+# Don't copy some files, like README.md or top-level hidden files.
+rm "${tempdir}/README.md"
 
-# TODO: Swapout rsync for cp. Left as dry-run for testing.
-# cp -rv "${tempdir}"/* .
-rsync -rv --dry-run "${tempdir}"/* .
+cp -rv "${tempdir}"/* .
 
 # Clean up
-rm -rf "$tempdir"
+rm -rf "${tempdir}"
