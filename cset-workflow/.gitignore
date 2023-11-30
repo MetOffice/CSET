@@ -1,11 +1,8 @@
 # Exclude site-specific files that are held in a seperate private repo.
 /site/
 /opt/
+restricted*
+/app/demo_pointstat/
 
-# User configuration for workflow.
+# User workflow configuration.
 /rose-suite.conf
-
-# Site-specific app configs.
-/app/fetch_fcst/
-/app/metplus_ascii2nc/
-/app/metplus_point_stat/
