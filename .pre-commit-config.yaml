@@ -9,7 +9,7 @@ repos:
     rev: 75d1925b523dd109cc200d1b29142ff36ec785ad  # frozen: v0.1.6
     hooks:
       - id: ruff
-        args: [ --fix, --exit-non-zero-on-fix ]
+        args: [ --fix, --show-fixes, --exit-non-zero-on-fix ]
 
   - repo: https://github.com/codespell-project/codespell
     rev: 6e41aba91fb32e9feb741a6258eefeb9c6e4a482  # frozen: v2.2.6
