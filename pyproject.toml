@@ -54,8 +54,8 @@ requires = tox-conda
 isolated_build = True
 envlist =
     coverage-clean
-    py311-linux-tests
-    py311-linux-docs
+    py312-linux-tests
+    py312-linux-docs
 
 [testenv:py{39,310,311,312}-lock]
 allowlist_externals = cp
@@ -87,7 +87,7 @@ usedevelop = true
 depends = coverage-clean
 commands = pytest {posargs}
 
-[testenv:py{38,39,310,311,312}-{linux,osx,win}-docs]
+[testenv:py{39,310,311,312}-{linux,osx,win}-docs]
 description = Invoke sphinx-build to build the HTML docs.
 conda_spec =
     py39-linux: {toxinidir}{/}requirements{/}locks{/}py39-lock-linux-64.txt
