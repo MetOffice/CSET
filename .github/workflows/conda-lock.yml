@@ -20,7 +20,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: python3 -m pip install tox tox-conda
+        run: python3 -m pip install tox tox-conda conda-lock
 
       - name: Update conda
         run: |
@@ -30,14 +30,27 @@ jobs:
           conda config --set solver libmamba
 
       - name: Hash existing lock files
-        run: sha256sum requirements/locks/*.txt > ${{ runner.temp }}/lock_file_hashes
+        run: sha256sum **/locks/*.txt > ${{ runner.temp }}/lock_file_hashes
 
-      - name: Update lock files
+      - name: Switch branch
         run: |
           git config --local user.name "$GITHUB_ACTOR"
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
           git switch -c conda-lock-files
-          tox -e py39-lock,py310-lock,py311-lock,py312-lock
+
+      - name: Update CSET lock files
+        run: tox --parallel -e py39-lock,py310-lock,py311-lock,py312-lock
+
+      - name: Update workflow lock files
+        run: |
+          py_vers="3.9 3.10 3.11 3.12"
+          for py_ver in $py_vers
+          do
+            cp "cset-workflow/requirements/environment.yml" "${{ runner.temp }}/${py_ver}_environment.yml"
+            echo -e "\n  - python = $py_ver" >> "${{ runner.temp }}/${py_ver}_environment.yml"
+            conda-lock --channel conda-forge --kind explicit --file "${{ runner.temp }}/${py_ver}_environment.yml" --platform linux-64 --filename-template "cset-workflow/requirements/locks/py$(echo $py_ver | sed 's/\.//')-lock-linux-64.txt" &
+          done
+          wait
 
       - name: Create pull requests
         env:
@@ -48,7 +61,7 @@ jobs:
             exit 0
           fi
           # Update lock_file_hashes so pushed branch name is unique.
-          sha256sum requirements/locks/*.txt > ${{ runner.temp }}/lock_file_hashes
+          sha256sum **/locks/*.txt > ${{ runner.temp }}/lock_file_hashes
           git add requirements/locks/*.txt
           git commit -m "[CI] Update conda lock files"
           git push --set-upstream origin "conda-lock-files:conda-lock-$(sha256sum ${{ runner.temp }}/lock_file_hashes | head -c 8)"
