@@ -44,8 +44,7 @@ relative_files = true
 source = ["src"]
 
 [tool.coverage.report]
-# This should be steadily increased to ~95% as we add more tests.
-fail_under = 80.0
+fail_under = 95
 
 [tool.tox]
 legacy_tox_ini = '''
