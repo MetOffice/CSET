@@ -1,7 +1,30 @@
 Before you Contribute
 =====================
 
-Before you can get to coding, there are a few steps you need to do.
+Contributing
+------------
+
+Contributions are readily welcome! In addition to reading the `working
+practices`_, the key recommendation is early communication. Open an issue on
+Github with your proposed change or addition in the design phase, and then
+others can provide guidance early. To create an issue:
+
+- Go to the `issue tracker on GitHub`_,
+- Search for existing issues that cover what you want changed,
+- If none exist the use the green "New Issue" button in the top right corner to
+  create a new one.
+
+It is also good to make a :ref:`Pull Request (PR) <pull-request>` early, even
+before your code is complete. You can indicate it is still a work in progress
+with the `draft pull request functionality of GitHub`_, or putting ``WIP`` in the
+PR title.
+
+.. _issue tracker on GitHub: https://github.com/MetOffice/CSET-workflow/issues
+.. _working practices: https://metoffice.github.io/CSET/contributing/
+.. _draft pull request functionality of GitHub: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests#draft-pull-requests
+
+Before you get to coding, there are a few steps you need to do to setup the
+development environment.
 
 Getting the code
 ----------------
@@ -42,7 +65,7 @@ environment for you to use.
 .. code-block:: bash
 
     # Creates a conda environment named "cset-dev".
-    conda create -n cset-dev --file requirements/locks/py311-lock-linux-64.txt
+    conda create -n cset-dev --file requirements/locks/py312-lock-linux-64.txt
     # Activates the conda environment.
     conda activate cset-dev
     # Adds extra checks when you commit something with git.
@@ -50,20 +73,7 @@ environment for you to use.
     # Make CSET runnable for manual testing
     pip install -e .
 
-When subsequently returning to the code after closing your terminal, you may
+When subsequently returning to the code after closing your terminal, you will
 need to rerun the ``conda activate cset-dev`` command.
 
 .. _conda: https://docs.conda.io/en/latest/
-
-Contributing
-------------
-
-Contributions are readily welcome! In addition to reading the working practices
-linked above, the key recommendation is early communication. Open an `issue on
-Github`_ with your proposed change or addition in the design phase, and then
-others can provide guidance early. It is also good to make a pull request early,
-even before your code is complete, using either the Draft pull request
-functionality of GitHub, or putting ``WIP`` in the title to indicate it is still
-a work in progress.
-
-.. _issue on GitHub: https://github.com/MetOffice/CSET/issues
