@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Copies the static files for the web interface into the correct location,
+# optionally removing previous files there.
+
 set -euo pipefail
 IFS="$(printf '\n\t')"
 

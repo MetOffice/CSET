@@ -1,6 +1,10 @@
 #! /usr/bin/env python3
 
-"""Write finished status to website front page."""
+"""Write finished status to website front page.
+
+Does the final update to the workflow status on the front page of the web
+interface.
+"""
 
 import fcntl
 import json

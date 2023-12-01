@@ -1,6 +1,10 @@
 #! /usr/bin/env python3
 
-"""Send a notification email linking to the output page."""
+"""Send a notification email linking to the output page.
+
+Sends a notification email to the user of the workflow when it has completed,
+with a link to the output webpage.
+"""
 
 import os
 import subprocess
