@@ -39,7 +39,7 @@ jobs:
           git switch -c conda-lock-files
 
       - name: Update CSET lock files
-        run: tox --parallel -e py39-lock,py310-lock,py311-lock,py312-lock
+        run: tox -e py39-lock,py310-lock,py311-lock,py312-lock
 
       - name: Update workflow lock files
         run: |
