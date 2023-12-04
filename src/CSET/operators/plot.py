@@ -84,6 +84,8 @@ def _make_plot_html_page(plot_filename: str) -> None:
     <aside id="description-container">
         <h1>{title}</h1>
         {description}
+        <hr>
+        <p><a href="diagnostic.zip" download="{slugify(title)}.zip">💾 Save Diagnostic</a></p>
     </aside>
 </body>
 """
