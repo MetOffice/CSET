@@ -155,9 +155,18 @@ def execute_recipe(
 
     original_working_directory = Path.cwd()
     os.chdir(output_directory)
-    # Create metadata file used by some steps.
-    _write_metadata(recipe)
     try:
+        logger = logging.getLogger()
+        diagnostic_log = logging.FileHandler(
+            filename="CSET.log", mode="w", encoding="UTF-8"
+        )
+        diagnostic_log.addFilter(lambda record: record.levelno >= logging.INFO)
+        diagnostic_log.setFormatter(
+            logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+        )
+        logger.addHandler(diagnostic_log)
+        # Create metadata file used by some steps.
+        _write_metadata(recipe)
         # Execute the recipe.
         for step in recipe["steps"]:
             step_input = step_parser(step, step_input)

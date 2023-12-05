@@ -88,15 +88,23 @@ def main():
         default=None,
     )
     parser_cookbook.set_defaults(func=_cookbook_command)
-
     args = parser.parse_args()
 
-    # Logging verbosity
+    # Setup logging.
     if args.verbose >= 2:
-        logging.basicConfig(level=logging.DEBUG)
-    elif args.verbose >= 1:
-        logging.basicConfig(level=logging.INFO)
+        loglevel = logging.DEBUG
+    elif args.verbose == 1:
+        loglevel = logging.INFO
+    else:
+        loglevel = logging.WARNING
+    logger = logging.getLogger()
+    logger.setLevel(min(loglevel, logging.INFO))
+    stderr_log = logging.StreamHandler()
+    stderr_log.addFilter(lambda record: record.levelno >= loglevel)
+    stderr_log.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
+    logger.addHandler(stderr_log)
 
+    # Execute the specified subcommand.
     if args.subparser:
         args.func(args)
     else:
