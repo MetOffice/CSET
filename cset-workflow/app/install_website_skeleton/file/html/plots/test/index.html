@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Plot</title>
+    <style>
+body {
+  font-family: sans-serif;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  margin: 0;
+}
+.hidden {
+  display: none;
+}
+.plot-container {
+  width: min(95vw, 95vh);
+}
+.plot-container>img {
+  width: 100%;
+}
+#description-container {
+  flex: 30ch;
+  max-height: 90vh;
+  max-width: 80ch;
+  margin: min(1em, 5vh);
+  padding: 0 1em;
+  background-color: whitesmoke;
+  box-shadow: 4px 4px 4px grey;
+  outline: darkgrey solid 1px;
+  overflow: auto;
+}
+    </style>
+</head>
+
+<body>
+    <main class="plot-container">
+        <img src="plot.png" alt="plot">
+    </main>
+    <aside id="description-container">
+        <h1>Example Diagnostic</h1>
+        <p>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam efficitur metus a faucibus ultricies.
+            Nullam vel sem nec quam gravida efficitur. Vivamus at diam id nulla ultricies ultrices. Vestibulum
+            eros lorem, facilisis quis luctus ac, convallis nec massa. Nulla odio nunc, scelerisque vel dui vel,
+            accumsan posuere nibh. Maecenas libero lorem, tempor sed elementum porta, volutpat a orci. Praesent
+            commodo iaculis mauris eget dictum. Sed interdum non elit sit amet tincidunt.
+        </p>
+        <p>
+            Integer feugiat pretium leo, ac finibus quam. Nam eu nunc vitae nibh varius pharetra in vel justo.
+            Duis sagittis eleifend felis eget dictum. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+            Praesent eu felis leo. Proin purus ante, fermentum semper magna vel, venenatis interdum dolor. In
+            hac habitasse platea dictumst.
+        </p>
+        <p>
+            Maecenas eleifend non nunc nec sollicitudin. Donec hendrerit tortor non pulvinar consequat. Praesent
+            maximus congue mauris, ac aliquet leo volutpat ac. Donec sit amet posuere risus. Pellentesque
+            accumsan, mauris quis venenatis finibus, nisl risus tempor lectus, non viverra erat velit ultrices
+            augue. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.
+            Aenean accumsan vestibulum tempus. Aliquam eget eleifend neque, et tincidunt tortor. Morbi turpis
+            nisi, maximus suscipit semper ut, interdum eu nisi.
+        </p>
+        <p>
+            Quisque eget consequat purus. Sed in quam vel nisl mollis tempus. In nec massa neque. Praesent
+            luctus, elit eleifend ultrices pharetra, risus quam mollis urna, nec maximus dolor ex in dolor.
+            Etiam tempus posuere ex, sed volutpat nisl. Vivamus sed pharetra magna. Integer ultrices rutrum
+            urna, ac luctus nisl. Quisque sagittis finibus ex, vel pharetra risus tincidunt vitae. Nam lorem
+            sem, tincidunt non tellus nec, interdum lacinia est. Mauris a pellentesque justo. Donec fermentum
+            cursus tellus sed rhoncus. Cras vitae dui luctus, malesuada est nec, vulputate turpis. Etiam non
+            dictum leo, at ornare nibh. Etiam pulvinar velit et metus aliquam, quis ultrices velit imperdiet.
+            Suspendisse id maximus nisl.
+        </p>
+        <p>
+            Pellentesque ultrices ut tellus sit amet bibendum. Integer a dui semper, faucibus quam non, sodales
+            libero. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec
+            euismod hendrerit tincidunt. Duis nisi neque, pellentesque sed turpis non, maximus faucibus purus.
+            Nullam pellentesque orci orci, sit amet pharetra mauris venenatis a. Nunc nec nibh sapien. Ut sit
+            amet metus ipsum. Vivamus velit purus, feugiat in diam at, auctor porttitor magna. Duis viverra,
+            eros nec mollis dictum, ipsum lorem dictum justo, at pretium risus sapien aliquet est. Quisque at
+            lacus mattis, scelerisque ante in, vulputate enim. Praesent varius iaculis luctus. Nullam molestie
+            laoreet sagittis. Suspendisse potenti. Curabitur nec ornare diam.
+        </p>
+    </aside>
+</body>

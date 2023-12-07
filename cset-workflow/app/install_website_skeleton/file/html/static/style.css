@@ -1,0 +1,273 @@
+/* Start CSS Reset */
+/* Modified version of https://piccalil.li/blog/a-modern-css-reset/ */
+/* Remove default margin */
+body,
+h1,
+h2,
+h3,
+h4,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+/* Set core body defaults */
+body {
+  line-height: 1.5;
+}
+
+/* a elements that don't have a class get default styles */
+a:not([class]) {
+  text-decoration-skip-ink: auto;
+}
+
+/* Make images easier to work with */
+img,
+picture {
+  display: block;
+}
+
+/* Inherit fonts for inputs and buttons */
+input,
+button,
+textarea,
+address,
+select {
+  font: inherit;
+}
+
+/* Remove all animations, transitions and smooth scroll for people that prefer
+not to see them. Based on https://web.dev/prefers-reduced-motion/ */
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-delay: -1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    background-attachment: initial !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
+}
+
+/* End CSS Reset */
+
+body {
+  margin: 0 auto;
+  font-family: sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a:focus,
+a:hover {
+  text-decoration-skip-ink: none;
+  text-decoration-thickness: max(3px, 0.12em);
+}
+
+.topbar {
+  background-color: darkgrey;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  box-shadow: 0 4px 4px grey;
+  padding: 0.5em 1em;
+}
+
+.topbar > menu {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: start;
+  padding: 0;
+  margin: auto 2em;
+  flex-grow: 1;
+}
+
+.topbar > menu button {
+  margin: 0 1em;
+}
+
+.controls {
+  margin: auto 0;
+  display: flex;
+}
+
+.controls > button {
+  margin: auto 1em;
+}
+
+.body-text {
+  margin: 1em auto;
+  width: 80ch;
+  max-width: 97%;
+}
+
+.dropdown > summary {
+  margin: auto 1em;
+  padding: 3px 5px;
+  border-radius: 5px;
+  background-color: #c4e90c;
+  outline: solid darkgrey 1px;
+  max-width: fit-content;
+  cursor: pointer;
+  list-style: none;
+}
+
+.dropdown > summary.left {
+  background-color: #0f79be;
+  color: white;
+}
+
+.dropdown > summary.right {
+  background-color: #cf4922;
+  color: white;
+}
+
+.dropdown > summary:hover {
+  color: white;
+  background-color: #2a2a2a;
+  outline: solid black 1px;
+}
+
+.dropdown > .dropdown-content {
+  position: absolute;
+  left: 0;
+  margin: 0 2em;
+  padding: 1em;
+  width: calc(100% - 6em);
+  min-height: 2em;
+  z-index: 1;
+  background-color: lightgrey;
+  outline: darkgrey solid 1px;
+  box-shadow: 4px 4px 4px grey;
+}
+
+.dropdown > .dropdown-content > .dropdown-close {
+  position: absolute;
+  right: 1em;
+}
+
+.dropdown > .dropdown-content .plot-selector {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(20em, 1fr));
+}
+
+.dropdown-content section {
+  background-color: whitesmoke;
+  border: 1px solid darkgrey;
+}
+
+.dropdown-content menu > li {
+  margin: 1em;
+  list-style: none;
+}
+
+/* Invisible background behind dropdown that can be clicked on to close it. */
+.dropdown > .background {
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  top: 0;
+  left: 0;
+  z-index: 0;
+}
+
+/* CSS for tab functionality in dropdown. */
+.tabset > input[type="radio"] {
+  position: absolute;
+  left: -200vw;
+}
+
+.tabset .tab-panel {
+  display: none;
+}
+
+.tabset > input:first-child:checked ~ .tab-panels > .tab-panel:first-child,
+.tabset > input:nth-child(3):checked ~ .tab-panels > .tab-panel:nth-child(2),
+.tabset > input:nth-child(5):checked ~ .tab-panels > .tab-panel:nth-child(3),
+.tabset > input:nth-child(7):checked ~ .tab-panels > .tab-panel:nth-child(4),
+.tabset > input:nth-child(9):checked ~ .tab-panels > .tab-panel:nth-child(5),
+.tabset > input:nth-child(11):checked ~ .tab-panels > .tab-panel:nth-child(6),
+.tabset > input:nth-child(13):checked ~ .tab-panels > .tab-panel:nth-child(7),
+.tabset > input:nth-child(15):checked ~ .tab-panels > .tab-panel:nth-child(8),
+.tabset > input:nth-child(17):checked ~ .tab-panels > .tab-panel:nth-child(9),
+.tabset > input:nth-child(19):checked ~ .tab-panels > .tab-panel:nth-child(10) {
+  display: block;
+}
+
+/* Tab Styling */
+.tabset > label {
+  position: relative;
+  display: inline-block;
+  padding: 1em;
+  font-weight: bold;
+  cursor: pointer;
+  background-color: lightgrey;
+}
+
+input:focus-visible + label {
+  outline: 2px solid rgba(0, 102, 204, 1);
+  border-radius: 3px;
+}
+
+.tabset > label:hover,
+.tabset > input:focus + label,
+.tabset > input:checked + label {
+  color: #00e;
+}
+
+.tabset > input:checked + label {
+  border: 1px solid darkgrey;
+  background-color: whitesmoke;
+  border-bottom: 1px solid whitesmoke;
+  margin-bottom: -1px;
+}
+
+.tab-panel {
+  padding: 30px 0;
+  border-top: 1px solid darkgrey;
+}
+
+.vsplit {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  justify-content: stretch;
+  align-items: stretch;
+}
+
+.hsplit {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  flex-direction: column;
+  justify-content: stretch;
+  align-items: stretch;
+}
+
+.websplit-container {
+  display: flex;
+  flex-direction: column;
+  outline: solid 1px #1b1b1b;
+}
+
+.frame {
+  border: none;
+  height: 100%;
+  width: 100%;
+}
+
+main {
+  display: grid;
+  justify-content: stretch;
+  align-items: stretch;
+  flex: auto;
+}

@@ -6,7 +6,7 @@ following them you should learn the basics of using CSET. It is recommended that
 you do them in order.
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
 
     installation
     run-recipe

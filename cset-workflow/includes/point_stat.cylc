@@ -1,0 +1,20 @@
+[scheduling]
+    [[graph]]
+    P1 = """
+    metplus_ascii2nc => metplus_point_stat => housekeeping
+    """
+
+[runtime]
+    [[metplus_ascii2nc]]
+    # Runs METplus wrappers for ASCII to nc ingestion of obs.
+        inherit = METPLUS
+        [[[environment]]]
+        METPLUS_OBS_DIR = {{METPLUS_OBS_DIR}}
+        ROSE_APP_OPT_CONF_KEYS = {{METPLUS_OPT_CONFIG_KEYS}}
+
+    [[metplus_point_stat]]
+    # Runs METplus wrappers for point stat calculations.
+        inherit = METPLUS
+        [[[environment]]]
+        METPLUS_FCST_DIR = {{METPLUS_FCST_DIR}}
+        ROSE_APP_OPT_CONF_KEYS = {{METPLUS_OPT_CONFIG_KEYS}}

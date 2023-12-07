@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSET Single Plot</title>
+    <link rel="stylesheet" href="static/style.css">
+    <link rel="icon" href="static/favicon.ico" type="image/x-icon">
+    <script src="static/script.js" defer></script>
+</head>
+
+<body>
+    <nav class="topbar">
+        <div>
+            <h1>CSET</h1>
+            <div>TODO: Think of a tagline</div>
+        </div>
+        <menu>
+            <li><a href="index.html"><button>Home</button></a></li>
+            <li><a href="single.html"><button>Single plot</button></a></li>
+            <li><a href="double.html"><button>Side by side</button></a></li>
+        </menu>
+        <div class="controls">
+            <button id="description-toggle">⇲ Toggle Description</button>
+            <details class="dropdown">
+                <summary>
+                    Select Plot ▼
+                </summary>
+                <div class="dropdown-content">
+                    <button class="dropdown-close">❌</button>
+                    <div class="tabset">
+                        <div class="tab-panels"></div>
+                    </div>
+                </div>
+                <div class="background"></div>
+            </details>
+        </div>
+    </nav>
+    <main>
+        <iframe class="frame" id=plot_frame_1 src="placeholder.html"></iframe>
+    </main>
+</body>
+
+</html>

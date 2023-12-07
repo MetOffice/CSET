@@ -10,11 +10,12 @@ CSET Documentation
    reference/index
    background/index
    contributing/index
+   GitHub <https://github.com/MetOffice/CSET>
 
-:abbr:`CSET (Convective and turbulence scale Evaluation and verification
-Toolkit)` is a toolkit for evaluation, verification and investigation of convective-
-and turbulence-scale numerical models for weather and climate applications,
-cutting across time and space scales.
+:abbr:`CSET (Convective and turbulence scale Evaluation and verification Tool)`
+is a toolkit for evaluation, verification and investigation of convective- and
+turbulence-scale numerical models for weather and climate applications, cutting
+across time and space scales.
 
 It aligns parametrisation development, diagnostic development and evaluation
 research, feeding back into Regional Atmosphere and Land (RAL) model development

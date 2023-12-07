@@ -1,0 +1,34 @@
+[scheduling]
+    [[graph]]
+    P1 = """
+    recipe_start => mean_hourly_accumulated_precip_ensemble_postage_stamp_plot => recipe_finish
+    """
+
+[runtime]
+    [[mean_hourly_accumulated_precip_ensemble_postage_stamp_plot]]
+    script = rose task-run -v --app-key=run_cset_recipe
+    execution time limit = PT15M
+        [[[environment]]]
+        CSET_RECIPE = """
+title: Mean Hourly Accumulated Precipitation Ensemble Postage Stamp Plot
+description: |
+  Plots the time-meaned *hourly accumulated precipitation*.
+
+  Each ensemble member is plotted.
+
+steps:
+  - operator: read.read_cubes
+
+  - operator: filters.filter_cubes
+    constraint:
+      operator: constraints.generate_stash_constraint
+      stash: m01s4i201
+
+  - operator: collapse.collapse
+    coordinate: time
+    method: MEAN
+
+  - operator: plot.postage_stamp_contour_plot
+
+  - operator: write.write_cube_to_nc
+"""

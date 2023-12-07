@@ -1,4 +1,4 @@
-name: cset-run
+name: cset-dev
 channels:
   - conda-forge
 dependencies:

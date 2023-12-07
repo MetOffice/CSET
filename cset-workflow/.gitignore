@@ -1,0 +1,8 @@
+# Exclude site-specific files that are held in a seperate private repo.
+/site/
+/opt/
+restricted*
+/app/demo_pointstat/
+
+# User workflow configuration.
+/rose-suite.conf

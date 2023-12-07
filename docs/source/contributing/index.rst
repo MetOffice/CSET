@@ -6,7 +6,7 @@ everyone involved knows what to expect. Linked from this page is everything you
 need to get started, and the links below go into more detail on specific topics.
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
 
     getting-started
     git
