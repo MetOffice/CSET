@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
             python-version: "3.x"
 
@@ -57,7 +57,7 @@ jobs:
       # - name: Publish package distributions to PyPI
       #   uses: pypa/gh-action-pypi-publish@release/v1
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
             python-version: "3.x"
 
