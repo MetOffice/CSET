@@ -36,7 +36,14 @@ fi
 # Don't copy some files, like README.md or top-level hidden files.
 rm "${tempdir}/README.md"
 
-cp -rv "${tempdir}"/* .
+if [[ -z "${1-}" ]]
+then
+  target_directory="$PWD"
+else
+  target_directory="$1"
+fi
 
-# Clean up
+cp -rv "${tempdir}"/* "${target_directory}"
+
+# Clean up, must force here to remove .git folder.
 rm -rf "${tempdir}"
