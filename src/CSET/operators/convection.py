@@ -55,7 +55,7 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
 
     Returns
     -------
-    ndarray
+    cube
 
     Notes
     -----

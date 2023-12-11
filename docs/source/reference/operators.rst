@@ -5,6 +5,9 @@ This page details the operators contained within CSET. It is automatically
 generated from the code and its docstrings. Operators should be used via
 :doc:`/usage/operator-recipes`.
 
+Generic Operators
+~~~~~~~~~~~~~~~~~
+
 CSET.operators.aggregate
 ------------------------
 
@@ -51,4 +54,13 @@ CSET.operators.write
 --------------------
 
 .. automodule:: CSET.operators.write
+   :members:
+
+Convection Operators
+~~~~~~~~~~~~~~~~~~~~
+
+CSET.operators.convection
+-------------------------
+
+.. automodule:: CSET.operators.convection
    :members:

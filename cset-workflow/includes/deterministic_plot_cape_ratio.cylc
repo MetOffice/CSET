@@ -38,7 +38,7 @@ steps:
   - operator: filters.filter_cubes
     constraint:
         operator: constraints.generate_time_constraint
-        time_start: 2022-10-28T06:00Z
+        time_start: 2020-07-30T13:00Z
 
   - operator: plot.postage_stamp_contour_plot
 
