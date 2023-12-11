@@ -17,8 +17,6 @@
 The diagnostics are calculated from output from the Unified Model, although
 precalculated values in the required input form may also be used.
 
-The diagnostics are defined in this module:
-- cape_ratio - this takes the ratio between the SBCAPE and the MUCAPE,
 """
 ################################################################################
 #####                        LOAD PYTHON LIBRARIES                         #####
@@ -59,7 +57,7 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
 
     Notes
     -----
-    This diagnostic is based on Clark et al. [1]_. It is based around the idea
+    This diagnostic is based on Clark et al. (2012) [1]_. It is based around the idea
     that for elevated convection the convective instability is not based at the
     surface. This utilises two flavours of CAPE: the surface-based CAPE (SBCAPE)
     and the most-unstable CAPE (MUCAPE). The MUCAPE is filtered by the MUCIN
@@ -81,11 +79,22 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
     surface-based convection is more likely.
 
     Further details about this diagnostic for elevated convection identification
-    can be found in [2]_.
+    can be found in Flack et al. (2023)[2]_.
+
+    Expected applicability ranges: Convective-scale models will be noisier than
+    parametrized models as they are more responsive to the convection, and thus
+    it may be more sensible to view as a larger spatial average rather than
+    grid point.
+
+    Interpretation notes: UM stash for CAPE and CIN are calculated at the end of
+    the timestep. Therefore this diagnostic is applicable after precipitation has
+    occurred, not before as is the usual interpretation of CAPE related diagnostics.
 
     You might encounter ``RuntimeWarning: divide by zero encountered in divide``
     or ``RuntimeWarning: invalid value encountered in divide`` this is expected
     for when CAPE is zero. The data will be replaced by NaNs.
+
+
 
     References
     ----------
