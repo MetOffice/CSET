@@ -79,7 +79,7 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
     surface-based convection is more likely.
 
     Further details about this diagnostic for elevated convection identification
-    can be found in Flack et al. (2023)[2]_.
+    can be found in Flack et al. (2023) [2]_.
 
     Expected applicability ranges: Convective-scale models will be noisier than
     parametrized models as they are more responsive to the convection, and thus
