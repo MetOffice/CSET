@@ -18,17 +18,10 @@ The diagnostics are calculated from output from the Unified Model, although
 precalculated values in the required input form may also be used.
 
 """
-################################################################################
-#####                        LOAD PYTHON LIBRARIES                         #####
-################################################################################
 
 import copy
 
 import numpy as np
-
-################################################################################
-#####                  DIAGNOSTIC 1: 1 - (SBCAPE/MUCAPE)                   #####
-################################################################################
 
 
 def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
@@ -94,8 +87,6 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
     or ``RuntimeWarning: invalid value encountered in divide`` this is expected
     for when CAPE is zero. The data will be replaced by NaNs.
 
-
-
     References
     ----------
     .. [1] Clark, A. J., Kain J. S., Marsh P. T., Correia J., Xue M., and Kong
@@ -127,9 +118,6 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
     >>> plt.colorbar()
     >>> plt.show()
     """
-    # Setup new arrays so do not overwrite cubes.
-    SBCAPE_data = np.zeros(np.shape(SBCAPE.data))
-    MUCAPE_data = np.zeros(np.shape(MUCAPE.data))
     # Load in the data into the new arrays.
     SBCAPE_data = copy.deepcopy(SBCAPE.data)
     MUCAPE_data = copy.deepcopy(MUCAPE.data)
