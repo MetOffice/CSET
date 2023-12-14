@@ -81,15 +81,30 @@ def main():
         "cookbook", help="unpack included recipes to a folder"
     )
     parser_cookbook.add_argument(
-        "recipe_dir",
+        "-o",
+        "--output_dir",
         type=Path,
+        help="directory to save recipes. If omitted uses $PWD",
+        default=Path.cwd(),
+    )
+    parser_cookbook.add_argument(
+        "-l",
+        "--list",
+        action="store_true",
+        help="list available recipes. If recipe supplied it is detailed.",
+    )
+    parser_cookbook.add_argument(
+        "recipe",
+        type=str,
         nargs="?",
-        help="directory to save recipes. If omitted uses $PWD/recipes",
-        default=None,
+        help="recipe to output or detail. Omit for all.",
+        default="",
     )
     parser_cookbook.set_defaults(func=_cookbook_command)
 
     args = parser.parse_args()
+
+    logging.captureWarnings(True)
 
     # Logging verbosity
     if args.verbose >= 2:
@@ -127,9 +142,12 @@ def _graph_command(args):
 
 
 def _cookbook_command(args):
-    from CSET.recipes import unpack_recipes
+    from CSET.recipes import detail_recipe, list_available_recipes, unpack_recipes
 
-    if not args.recipe_dir:
-        args.recipe_dir = Path.cwd().joinpath("recipes")
-
-    unpack_recipes(args.recipe_dir)
+    if args.list:
+        if args.recipe:
+            detail_recipe(args.recipe)
+        else:
+            list_available_recipes()
+    else:
+        unpack_recipes(args.output_dir, args.recipe)

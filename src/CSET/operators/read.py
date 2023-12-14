@@ -74,7 +74,7 @@ def read_cubes(
 
     logging.info("Loading file(s): %s", loadpath)
 
-    if constraint:
+    if constraint is not None:
         cubes = iris.load(loadpath, constraint)
     else:
         cubes = iris.load(loadpath)

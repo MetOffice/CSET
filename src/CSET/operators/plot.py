@@ -147,7 +147,7 @@ def spatial_contour_plot(
         If cube isn't a Cube.
     """
     title = get_recipe_metadata().get("title", "Untitled")
-    if not filename:
+    if filename is None:
         filename = slugify(title)
     filename = Path(filename).with_suffix(".svg")
     cube = _check_single_cube(cube)
@@ -213,7 +213,7 @@ def postage_stamp_contour_plot(
     TypeError
         If cube isn't a Cube.
     """
-    if not filename:
+    if filename is None:
         filename = slugify(get_recipe_metadata().get("title", "Untitled"))
     filename = Path(filename).with_suffix(".svg")
 
@@ -275,6 +275,6 @@ def time_series_contour_plot(
     TypeError
         If cube isn't a Cube.
     """
-    if not filename:
+    if filename is None:
         filename = slugify(get_recipe_metadata().get("title", "Untitled"))
     raise NotImplementedError

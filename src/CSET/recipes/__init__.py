@@ -12,36 +12,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module has an attribute for each recipe, holding the Path to that recipe."""
+"""Operations on recipes."""
 
 import logging
+import warnings
 from importlib.resources import files
 from pathlib import Path
+from typing import Iterable
+
+import ruamel.yaml
 
 import CSET.recipes as recipes
 
 
-def _unpack_recipes_from_dir(input_dir: Path, output_dir: Path):
-    """Copy recipe files from input to output directories.
-
-    Loops over all recipes (excludes non-recipes) in input_dir and writes them
-    to output_dir.
-    """
+def _recipe_files_in_tree(
+    recipe_name: str = None, input_dir: Path = None
+) -> Iterable[Path]:
+    """Yield recipe file paths matching the recipe name."""
+    if recipe_name is None:
+        recipe_name = ""
+    if input_dir is None:
+        input_dir = files(recipes)
     for file in input_dir.iterdir():
-        output_dir.mkdir(parents=True, exist_ok=True)
-        if file.is_file() and file.suffix == ".yaml":
-            if output_dir.joinpath(file.name).exists():
-                logging.warning(
-                    "%s already exists in target directory, skipping.", file.name
-                )
-            else:
-                logging.info("Unpacking %s", file.name)
-                output_dir.joinpath(file.name).write_bytes(file.read_bytes())
+        if recipe_name in file.name and file.is_file() and file.suffix == ".yaml":
+            yield file
         elif file.is_dir() and file.name[0] != "_":  # Excludes __pycache__
-            _unpack_recipes_from_dir(file, output_dir.joinpath(file.name))
+            yield from _recipe_files_in_tree(recipe_name, file)
 
 
-def unpack_recipes(recipe_dir: Path):
+def unpack_recipes(recipe_dir: Path, recipe_name: str = None) -> None:
     """
     Unpacks recipes files into a directory, creating it if it doesn't exist.
 
@@ -59,4 +58,37 @@ def unpack_recipes(recipe_dir: Path):
         If recipe_dir cannot be created, such as insufficient permissions, or
         lack of space.
     """
-    _unpack_recipes_from_dir(files(recipes), recipe_dir)
+    recipe_dir.mkdir(parents=True, exist_ok=True)
+    for file in _recipe_files_in_tree(recipe_name):
+        if recipe_dir.joinpath(file.name).exists():
+            warnings.warn(
+                f"{file.name} already exists in target directory, skipping.",
+                stacklevel=2,
+            )
+        else:
+            logging.info("Unpacking %s", file.name)
+            recipe_dir.joinpath(file.name).write_bytes(file.read_bytes())
+
+
+def list_available_recipes() -> None:
+    """List available recipes to stdout."""
+    print("Available recipes:")
+    for file in _recipe_files_in_tree():
+        print(f"\t{file.stem}")
+
+
+def detail_recipe(recipe_name: str) -> None:
+    """Detail the recipe to stdout.
+
+    If multiple recipes match the given name they will all be displayed.
+
+    Parameters
+    ----------
+    recipe_name: str
+        Partial match for the recipe name.
+    """
+    for file in _recipe_files_in_tree(recipe_name):
+        with ruamel.yaml.YAML(typ="safe", pure=True) as yaml:
+            recipe = yaml.load(file)
+        print(f"\n\t{file.stem}\n\t{''.join('─' * len(file.stem))}\n")
+        print(recipe.get("description"))

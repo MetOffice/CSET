@@ -18,7 +18,6 @@ In many ways these are integration tests.
 """
 
 import os
-import shutil
 import subprocess
 import tempfile
 from pathlib import Path
@@ -117,14 +116,34 @@ def test_graph_details(tmp_path: Path):
     assert output_file.is_file()
 
 
-def test_cookbook_cwd():
+def test_cookbook_cwd(tmp_path: Path):
     """Unpacking the recipes into the current working directory."""
+    cwd = Path.cwd()
+    os.chdir(tmp_path)
     subprocess.run(["cset", "cookbook"], check=True)
-    assert Path.cwd().joinpath("recipes/extract_instant_air_temp.yaml").is_file()
-    shutil.rmtree(Path.cwd().joinpath("recipes"))
+    assert Path("extract_instant_air_temp.yaml").is_file()
+    os.chdir(cwd)
 
 
 def test_cookbook_path(tmp_path: Path):
     """Unpacking the recipes into a specified directory."""
-    subprocess.run(["cset", "cookbook", tmp_path], check=True)
+    subprocess.run(["cset", "cookbook", "--output_dir", tmp_path], check=True)
     assert (tmp_path / "extract_instant_air_temp.yaml").is_file()
+
+
+def test_cookbook_list_available_recipes():
+    """List all available recipes."""
+    proc = subprocess.run(
+        ["cset", "cookbook", "--list"], capture_output=True, check=True
+    )
+    assert proc.stdout.startswith(b"Available recipes:\n")
+
+
+def test_cookbook_detail_recipe():
+    """Show detail of a recipe."""
+    proc = subprocess.run(
+        ["cset", "cookbook", "--list", "extract_instant_air_temp"],
+        capture_output=True,
+        check=True,
+    )
+    assert proc.stdout.startswith(b"\n\textract_instant_air_temp")

@@ -58,7 +58,7 @@ def collapse(
         If additional_percent wasn't supplied while using PERCENTILE method.
     """
     if method == "PERCENTILE":
-        if not additional_percent:
+        if additional_percent is None:
             raise ValueError("Must specify additional_percent")
         collapsed_cube = cube.collapsed(
             coordinate, iris.analysis.PERCENTILE, percent=additional_percent
