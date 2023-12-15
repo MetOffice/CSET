@@ -29,15 +29,15 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
 
     Parameters
     ----------
-    SBCAPE: cube
+    SBCAPE: Cube
         Surface-based convective available potential energy as calculated by the
         model.
         Stash: m01s20i114
-    MUCAPE: cube
+    MUCAPE: Cube
         Most-unstable convective available potential energy as calculated by the
         model.
         Stash: m01s20i112
-    MUCIN: cube
+    MUCIN: Cube
         Most-unstable convective inhibition associated with the most-unstable
         ascent as calculated by the model.
         Stash: m01s20i113
@@ -46,7 +46,7 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
 
     Returns
     -------
-    cube
+    Cube
 
     Notes
     -----
