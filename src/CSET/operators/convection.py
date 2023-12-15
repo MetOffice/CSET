@@ -77,7 +77,7 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
     Expected applicability ranges: Convective-scale models will be noisier than
     parametrized models as they are more responsive to the convection, and thus
     it may be more sensible to view as a larger spatial average rather than
-    grid point.
+    on the native resolution.
 
     Interpretation notes: UM stash for CAPE and CIN are calculated at the end of
     the timestep. Therefore this diagnostic is applicable after precipitation has
@@ -126,8 +126,9 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
     # Now calculate the main diagnostic
     EC_Flagb = 1 - (SBCAPE_data / MUCAPE_data)
     # Filter to reduce NaN values and -inf values for plotting ease.
+    # There are multiple types of NaN values so need to convert them all to same type.
     EC_Flagb[np.isnan(EC_Flagb)] = np.nan
-    EC_Flagb[np.abs(EC_Flagb) == np.inf] = np.nan
+    EC_Flagb[np.isinf(EC_Flagb)] = np.nan
     # Take the coordinates from an existing cube and replace the data.
     cape_ratio_cube = SBCAPE.copy()
     cape_ratio_cube.data = EC_Flagb

@@ -33,7 +33,7 @@ steps:
         constraint:
             operator: constraints.generate_stash_constraint
             stash: m01s20i113
-    MUCIN_thresh: -30
+    MUCIN_thresh: -75
 
   - operator: filters.filter_cubes
     constraint:
