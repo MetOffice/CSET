@@ -118,6 +118,9 @@ URL = https://metoffice.github.io/CSET-workflow
 {% if DETERMINISTIC_PLOT_AGGREGATE_PRECIPITATION %}
 {% include 'includes/deterministic_plot_aggregate_precipitation.cylc' %}
 {% endif %}
+{% if DETERMINISTIC_PLOT_CAPE_RATIO %}
+{% include 'includes/deterministic_plot_cape_ratio.cylc' %}
+{% endif %}
 {% if DETERMINISTIC_PLOT_MODEL_LEVEL_AIR_TEMP %}
 {% include 'includes/deterministic_plot_model_level_air_temp.cylc' %}
 {% endif %}
@@ -127,6 +130,7 @@ URL = https://metoffice.github.io/CSET-workflow
 {% if MEAN_HOURLY_ACCUMULATED_PRECIPITATION_ENSEMBLE_POSTAGE_STAMP_PLOT %}
 {% include 'includes/mean_hourly_accumulated_precip_ensemble_postage_stamp_plot.cylc' %}
 {% endif %}
+
 
 {# Site-specific details that add to (or override) the core suite definition #}
 {% if SITE %}
