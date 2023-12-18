@@ -102,7 +102,7 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
 
     Examples
     --------
-    >>> CAPE_ratios_filter=elevated_convection_diagnostics.cape_ratio(
+    >>> CAPE_ratios=convection.cape_ratio(
             SBCAPE,MUCAPE,MUCIN)
     >>> iplt.pcolormesh(CAPE_ratios[0,:,:],cmap=mpl.cm.RdBu)
     >>> plt.gca().coastlines('10m')
@@ -110,9 +110,9 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
     >>> plt.clim(0,1)
     >>> plt.show()
 
-    >>> CAPE_ratios_filter=elevated_convection_diagnostics.cape_ratio(
+    >>> CAPE_ratios=convection.cape_ratio(
             SBCAPE,MUCAPE,MUCIN,MUCIN_thresh=-1.5)
-    >>> iplt.pcolormesh(CAPE_ratios_filter[0,:,:],cmap=mpl.cm.RdBu)
+    >>> iplt.pcolormesh(CAPE_ratios[0,:,:],cmap=mpl.cm.RdBu)
     >>> plt.gca().coastlines('10m')
     >>> plt.clim(0,1)
     >>> plt.colorbar()
