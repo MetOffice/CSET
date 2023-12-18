@@ -14,12 +14,13 @@
 
 """Common functionality used across CSET."""
 
+import copy
 import io
 import json
 import logging
 import re
 from pathlib import Path
-from typing import Union
+from typing import Any, List, Union
 
 import ruamel.yaml
 
@@ -42,7 +43,6 @@ def parse_recipe(recipe_yaml: Union[Path, str]):
     ------
     ValueError
         If the recipe is invalid. E.g. invalid YAML, missing any steps, etc.
-
     TypeError
         If recipe_yaml isn't a Path or string.
 
@@ -97,3 +97,88 @@ def get_recipe_metadata() -> dict:
     """Get the metadata of the running recipe."""
     with open("meta.json", "rt", encoding="UTF-8") as fp:
         return json.load(fp)
+
+
+def parse_variable_options(arguments: List[str]) -> dict:
+    """Parse a list of arguments into a dictionary of variables.
+
+    The variables arguments start with two hyphen-minus (`--`), consisting of
+    only capital letters (`A`-`Z`) and underscores (`_`).
+
+    Parameters
+    ----------
+    arguments: List[str]
+        List of arguments, e.g: `["--LEVEL", "2", "--STASH=m01s01i001"]`
+
+    Returns
+    -------
+    recipe_variables: dict
+        Dictionary keyed with the variable names.
+
+    Raises
+    ------
+    ValueError
+        If any arguments cannot be parsed.
+    """
+    recipe_variables = {}
+    i = 0
+    while i < len(arguments):
+        if re.match(r"^--[A-Z_]+=.*$", arguments[i]):
+            key, value = arguments[i].split("=", 1)
+        elif re.match(r"^--[A-Z_]+$", arguments[i]):
+            try:
+                key = arguments[i].strip("-")
+                value = arguments[i + 1]
+            except IndexError as err:
+                raise ValueError(f"No value for variable {arguments[i]}") from err
+            i += 1
+        else:
+            raise ValueError(f"Unknown argument: {arguments[i]}")
+        try:
+            recipe_variables[key.strip("-")] = json.loads(value)
+        except json.JSONDecodeError:
+            recipe_variables[key.strip("-")] = value
+        i += 1
+    return recipe_variables
+
+
+def is_variable(var: Any) -> bool:
+    """Check if recipe value is a variable."""
+    if isinstance(var, str) and re.match(r"^\$[A-Z_]+$", var):
+        return True
+    return False
+
+
+def template_variables(recipe: Union[dict, list], variables: dict) -> dict:
+    """Insert variables into recipe.
+
+    Parameters
+    ----------
+    recipe: dict | list
+        The recipe as a python dictionary.
+    variables: dict
+        Dictionary of variables for the recipe.
+
+    Returns
+    -------
+    recipe: dict
+        Filled recipe as a python dictionary.
+
+    Raises
+    ------
+    KeyError
+        If needed recipe variables are not supplied.
+    """
+    recipe = copy.deepcopy(recipe)
+    if isinstance(recipe, dict):
+        index = recipe.keys()
+    elif isinstance(recipe, list):
+        index = range(len(recipe))
+    else:
+        raise TypeError("recipe must be a dict or list.")
+    for i in index:
+        if isinstance(recipe[i], (dict, list)):
+            recipe[i] = template_variables(recipe[i], variables)
+        if is_variable(recipe[i]):
+            recipe[i] = variables[recipe[i].removeprefix("$")]
+    return recipe

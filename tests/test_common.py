@@ -104,3 +104,43 @@ def test_slugify():
     assert common.slugify("greekαβγδchars") == "greek_chars"
     assert common.slugify("  ABC ") == "abc"
     assert common.slugify("あいうえお") == ""
+
+
+def test_is_variable():
+    """Recipe variables are correctly identified."""
+    assert common.is_variable("$VARIABLE_NAME")
+    assert common.is_variable("$V")
+    assert not common.is_variable("VARIABLE_NAME")
+    assert not common.is_variable("$VARIABLE-NAME")
+    assert not common.is_variable("$Variable_name")
+
+
+def test_parse_variable_options():
+    """Variable arguments are parsed correctly."""
+    args = ("--STASH=m01s01i001", "--COUNT", "3", "--CELL_METHODS=[]")
+    expected = {"STASH": "m01s01i001", "COUNT": 3, "CELL_METHODS": []}
+    actual = common.parse_variable_options(args)
+    assert actual == expected
+    # Not valid variable name.
+    with pytest.raises(ValueError):
+        common.parse_variable_options(("--lowercase=False",))
+    # Missing variable value.
+    with pytest.raises(ValueError):
+        common.parse_variable_options(("--VARIABLE",))
+
+
+def test_template_variables():
+    """Variables are correctly templated into recipes."""
+    recipe = {"steps": [{"operator": "misc.noop", "variable": "$VAR"}]}
+    variables = {"VAR": 42}
+    expected = {"steps": [{"operator": "misc.noop", "variable": 42}]}
+    actual = common.template_variables(recipe, variables)
+    assert actual == expected
+    with pytest.raises(KeyError):
+        common.template_variables(recipe, {})
+
+
+def test_template_variables_wrong_recipe_type():
+    """Give wrong type for recipe."""
+    with pytest.raises(TypeError):
+        common.template_variables(1, {})

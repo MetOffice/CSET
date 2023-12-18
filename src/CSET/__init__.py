@@ -114,10 +114,10 @@ def main():
     )
     parser_cookbook.set_defaults(func=_cookbook_command)
 
-    args = parser.parse_args()
+    args, unparsed_args = parser.parse_known_args()
 
+    # Log any raised warnings.
     logging.captureWarnings(True)
-
     # Logging verbosity
     if args.verbose >= 2:
         logging.basicConfig(level=logging.DEBUG)
@@ -126,7 +126,7 @@ def main():
 
     if args.subparser:
         try:
-            args.func(args)
+            args.func(args, unparsed_args)
         except ValueError:
             parser.print_usage()
             sys.exit(2)
@@ -134,13 +134,16 @@ def main():
         parser.print_help()
 
 
-def _bake_command(args):
+def _bake_command(args, unparsed_args):
+    from CSET._common import parse_variable_options
     from CSET.operators import execute_recipe
 
-    execute_recipe(args.recipe, args.input_dir, args.output_dir)
+    recipe_variables = parse_variable_options(unparsed_args)
+
+    execute_recipe(args.recipe, args.input_dir, args.output_dir, recipe_variables)
 
 
-def _graph_command(args):
+def _graph_command(args, unparsed_args):
     from CSET.graph import save_graph
 
     save_graph(
@@ -151,7 +154,7 @@ def _graph_command(args):
     )
 
 
-def _cookbook_command(args):
+def _cookbook_command(args, unparsed_args):
     from CSET.recipes import detail_recipe, list_available_recipes, unpack_recipes
 
     if args.list:
