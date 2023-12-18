@@ -91,7 +91,7 @@ def _write_metadata(recipe: dict):
 
 
 def execute_recipe(
-    recipe_yaml: Union[Path, str], input_file: Path, output_directory: Path
+    recipe_yaml: Union[Path, str], input_directory: Path, output_directory: Path
 ) -> None:
     """Parse and executes a recipe file.
 
@@ -101,11 +101,9 @@ def execute_recipe(
         Path to a file containing, or string of, a recipe's YAML describing the
         operators that need running. If a Path is provided it is opened and
         read.
-
     input_file: Path
         Pathlike to netCDF (or something else that iris read) file to be used as
         input.
-
     output_directory: Path
         Pathlike indicating desired location of output.
 
@@ -113,10 +111,10 @@ def execute_recipe(
     ------
     FileNotFoundError
         The recipe or input file cannot be found.
-
+    FileExistsError
+        The output directory as actually a file.
     ValueError
         The recipe is not well formed.
-
     TypeError
         The provided recipe is not a stream or Path.
     """
@@ -146,7 +144,7 @@ def execute_recipe(
             return operator(**kwargs)
 
     recipe = parse_recipe(recipe_yaml)
-    step_input = Path(input_file).absolute()
+    step_input = Path(input_directory).absolute()
     try:
         output_directory.mkdir(parents=True, exist_ok=True)
     except FileExistsError as err:

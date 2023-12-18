@@ -16,7 +16,7 @@
 
 import argparse
 import logging
-import os
+import sys
 from importlib.metadata import version
 from pathlib import Path
 
@@ -42,28 +42,40 @@ def main():
 
     # Run operator chain
     parser_bake = subparsers.add_parser("bake", help="run a recipe file")
-    parser_bake.add_argument("input_file", type=Path, help="input file to read")
-    parser_bake.add_argument("output_dir", type=Path, help="directory to write output")
     parser_bake.add_argument(
-        "recipe_file",
+        "-r",
+        "--recipe",
         type=Path,
-        nargs="?",
-        help="recipe file to execute. If omitted reads from CSET_RECIPE environment variable",
-        default=None,
+        required=True,
+        help="recipe file to read",
+    )
+    parser_bake.add_argument(
+        "-i",
+        "--input-dir",
+        type=Path,
+        required=True,
+        help="directory containing input data",
+    )
+    parser_bake.add_argument(
+        "-o",
+        "--output-dir",
+        type=Path,
+        required=True,
+        help="directory to write output",
     )
     parser_bake.set_defaults(func=_bake_command)
 
     parser_graph = subparsers.add_parser("graph", help="visualise a recipe file")
     parser_graph.add_argument(
-        "recipe",
+        "-r",
+        "--recipe",
         type=Path,
-        nargs="?",
-        help="recipe file to read. If omitted reads from CSET_RECIPE environment variable",
-        default=None,
+        required=True,
+        help="recipe file to read",
     )
     parser_graph.add_argument(
         "-o",
-        "--output_path",
+        "--output-path",
         type=Path,
         nargs="?",
         help="file in which to save the graph image, otherwise uses a temporary file. When specified the file is not automatically opened",
@@ -82,7 +94,7 @@ def main():
     )
     parser_cookbook.add_argument(
         "-o",
-        "--output_dir",
+        "--output-dir",
         type=Path,
         help="directory to save recipes. If omitted uses $PWD",
         default=Path.cwd(),
@@ -91,7 +103,7 @@ def main():
         "-l",
         "--list",
         action="store_true",
-        help="list available recipes. If recipe supplied it is detailed.",
+        help="list available recipes. Supplied recipes are detailed.",
     )
     parser_cookbook.add_argument(
         "recipe",
@@ -113,7 +125,11 @@ def main():
         logging.basicConfig(level=logging.INFO)
 
     if args.subparser:
-        args.func(args)
+        try:
+            args.func(args)
+        except ValueError:
+            parser.print_usage()
+            sys.exit(2)
     else:
         parser.print_help()
 
@@ -121,22 +137,16 @@ def main():
 def _bake_command(args):
     from CSET.operators import execute_recipe
 
-    if not args.recipe_file:
-        args.recipe_file = os.getenv("CSET_RECIPE")
-
-    execute_recipe(args.recipe_file, args.input_file, args.output_dir)
+    execute_recipe(args.recipe, args.input_dir, args.output_dir)
 
 
 def _graph_command(args):
     from CSET.graph import save_graph
 
-    if not args.recipe:
-        args.recipe = os.getenv("CSET_RECIPE")
-
     save_graph(
         args.recipe,
         args.output_path,
-        auto_open=not bool(args.output_path),
+        auto_open=not args.output_path,
         detailed=args.details,
     )
 

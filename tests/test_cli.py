@@ -23,6 +23,8 @@ import tempfile
 from pathlib import Path
 from uuid import uuid4
 
+import pytest
+
 
 def test_command_line_help():
     """Check that help commands work."""
@@ -31,6 +33,7 @@ def test_command_line_help():
     subprocess.run(["cset", "-v"], check=True)
     subprocess.run(["cset", "-vv"], check=True)
     subprocess.run(["cset", "--version"], check=True)
+
     # Gain coverage of __main__.py
     subprocess.run(["python3", "-m", "CSET", "-h"], check=True)
 
@@ -41,28 +44,9 @@ def test_recipe_execution():
         [
             "cset",
             "bake",
-            os.devnull,
-            tempfile.gettempdir(),
-            "tests/test_data/noop_recipe.yaml",
-        ],
-        check=True,
-    )
-
-
-def test_environ_var_recipe():
-    """Test recipe coming from environment variable."""
-    os.environ[
-        "CSET_RECIPE"
-    ] = """
-        steps:
-          - operator: misc.noop
-        """
-    subprocess.run(
-        [
-            "cset",
-            "bake",
-            os.devnull,
-            tempfile.gettempdir(),
+            f"--input-dir={os.devnull}",
+            f"--output-dir={tempfile.gettempdir()}",
+            "--recipe=tests/test_data/noop_recipe.yaml",
         ],
         check=True,
     )
@@ -77,24 +61,15 @@ def test_graph_creation(tmp_path: Path):
     # Run with output path specified
     output_file = tmp_path / f"{uuid4()}.svg"
     subprocess.run(
-        ("cset", "graph", "-o", str(output_file), "tests/test_data/noop_recipe.yaml"),
+        (
+            "cset",
+            "graph",
+            "-o",
+            str(output_file),
+            "--recipe=tests/test_data/noop_recipe.yaml",
+        ),
         check=True,
     )
-    assert output_file.is_file()
-    output_file.unlink()
-
-
-def test_graph_creation_env_var(tmp_path: Path):
-    """Generates a graph with the command line interface from an env var."""
-    os.environ[
-        "CSET_RECIPE"
-    ] = """
-        steps:
-          - operator: misc.noop
-        """
-    # Run with output path specified
-    output_file = tmp_path / f"{uuid4()}.svg"
-    subprocess.run(("cset", "graph", "-o", str(output_file)), check=True)
     assert output_file.is_file()
     output_file.unlink()
 
@@ -109,7 +84,7 @@ def test_graph_details(tmp_path: Path):
             "--details",
             "-o",
             str(output_file),
-            "tests/test_data/noop_recipe.yaml",
+            "--recipe=tests/test_data/noop_recipe.yaml",
         ),
         check=True,
     )
@@ -127,7 +102,7 @@ def test_cookbook_cwd(tmp_path: Path):
 
 def test_cookbook_path(tmp_path: Path):
     """Unpacking the recipes into a specified directory."""
-    subprocess.run(["cset", "cookbook", "--output_dir", tmp_path], check=True)
+    subprocess.run(["cset", "cookbook", "--output-dir", tmp_path], check=True)
     assert (tmp_path / "extract_instant_air_temp.yaml").is_file()
 
 
@@ -147,3 +122,19 @@ def test_cookbook_detail_recipe():
         check=True,
     )
     assert proc.stdout.startswith(b"\n\textract_instant_air_temp")
+
+
+def test_bake_invalid_args():
+    """Invalid arguments give non-zero exit code."""
+    with pytest.raises(subprocess.CalledProcessError):
+        subprocess.run(
+            [
+                "cset",
+                "bake",
+                "--recipe=foo",
+                "--input-dir=/tmp",
+                "--output-dir=/tmp",
+                "--not-a-real-option",
+            ],
+            check=True,
+        )

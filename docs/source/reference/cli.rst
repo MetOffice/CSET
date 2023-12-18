@@ -6,6 +6,8 @@ CLI Usage
 cset bake
 ~~~~~~~~~
 
+.. TODO: Rewrite this sections to bring it up to date.
+
 Used to run a recipe on some data. The recipe, input file, and a path to an
 output file must be provided. Additional help is available with the ``--help``
 option. The recipe format is described on the :doc:`/usage/operator-recipes` page. If
