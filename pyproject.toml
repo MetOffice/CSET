@@ -32,7 +32,13 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
-addopts = ["--import-mode=importlib", "--verbose", "--cov", "--cov-append"]
+addopts = [
+    "--import-mode=importlib",
+    "--verbose",
+    "--cov",
+    "--cov-append",
+    "--cov-config=pyproject.toml",
+]
 filterwarnings = ['ignore::DeprecationWarning:pytest']
 minversion = "7"
 pythonpath = ["src"]
