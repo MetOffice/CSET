@@ -16,18 +16,11 @@
 
 import pytest
 
-from CSET.operators import collapse, constraints, filters, read
+from CSET.operators import collapse
 
 
-def test_collapse():
+def test_collapse(cube):
     """Reduces dimension of cube."""
-    cubes = read.read_cubes("tests/test_data/air_temp.nc")
-    constraint = constraints.combine_constraints(
-        constraints.generate_stash_constraint("m01s03i236"),
-        a=constraints.generate_cell_methods_constraint([]),
-    )
-    cube = filters.filter_cubes(cubes, constraint)
-
     # Test collapsing a single coordinate.
     collapsed_cube = collapse.collapse(cube, "time", "MEAN")
     expected_cube = (
@@ -43,15 +36,8 @@ def test_collapse():
     assert repr(collapsed_cube) == expected_cube
 
 
-def test_collapse_percentile():
+def test_collapse_percentile(cube):
     """Reduce dimension of a cube with a PERCENTILE aggregation."""
-    cubes = read.read_cubes("tests/test_data/air_temp.nc")
-    constraint = constraints.combine_constraints(
-        constraints.generate_stash_constraint("m01s03i236"),
-        a=constraints.generate_cell_methods_constraint([]),
-    )
-    cube = filters.filter_cubes(cubes, constraint)
-
     with pytest.raises(ValueError):
         collapse.collapse(cube, "time", "PERCENTILE")
 

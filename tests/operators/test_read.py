@@ -16,7 +16,7 @@
 
 import iris.cube
 
-from CSET.operators import constraints, read
+from CSET.operators import read
 
 
 def test_read_cubes():
@@ -44,6 +44,8 @@ def test_read_cubes_ensemble_with_realization_coord():
 
 def test_read_cubes_ensemble_separate_files():
     """Read ensemble from multiple files with the member number in filename."""
+    from CSET.operators import constraints
+
     cubes = read.read_cubes(
         "tests/test_data/",
         constraint=constraints.generate_stash_constraint("m01s03i236"),

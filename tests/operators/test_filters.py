@@ -16,16 +16,12 @@
 
 import pytest
 
-from CSET.operators import constraints, filters, read
+from CSET.operators import constraints, filters
 
 
-def test_filters_operator():
+def test_filters_operator(cubes):
     """Filter cube and verify."""
-    cubes = read.read_cubes("tests/test_data/air_temp.nc")
-    constraint = constraints.combine_constraints(
-        constraints.generate_stash_constraint("m01s03i236"),
-        a=constraints.generate_cell_methods_constraint([]),
-    )
+    constraint = constraints.generate_cell_methods_constraint([])
     # Test filtering a CubeList.
     cube = filters.filter_cubes(cubes, constraint)
     assert cube.cell_methods == ()
@@ -35,6 +31,6 @@ def test_filters_operator():
     constraint = constraints.generate_stash_constraint("m01s03i236")
     with pytest.raises(ValueError):
         cube = filters.filter_cubes(cubes, constraint)
-    # Test filtering a Cube.
+    # Test filtering a single Cube.
     single_cube = filters.filter_cubes(cube, constraint)
     assert repr(cube) == repr(single_cube)
