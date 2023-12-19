@@ -91,13 +91,10 @@ def test_graph_details(tmp_path: Path):
     assert output_file.is_file()
 
 
-def test_cookbook_cwd(tmp_path: Path):
+def test_cookbook_cwd(tmp_working_dir):
     """Unpacking the recipes into the current working directory."""
-    cwd = Path.cwd()
-    os.chdir(tmp_path)
     subprocess.run(["cset", "cookbook"], check=True)
     assert Path("extract_instant_air_temp.yaml").is_file()
-    os.chdir(cwd)
 
 
 def test_cookbook_path(tmp_path: Path):
@@ -121,7 +118,7 @@ def test_cookbook_detail_recipe():
         capture_output=True,
         check=True,
     )
-    assert proc.stdout.startswith(b"\n\textract_instant_air_temp")
+    assert proc.stdout.startswith(b"\n\textract_instant_air_temp\n")
 
 
 def test_bake_invalid_args():
