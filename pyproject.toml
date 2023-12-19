@@ -49,9 +49,6 @@ branch = true
 relative_files = true
 source = ["src"]
 
-[tool.coverage.report]
-fail_under = 95
-
 [tool.tox]
 legacy_tox_ini = '''
 [tox]

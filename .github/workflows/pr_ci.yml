@@ -69,6 +69,8 @@ jobs:
           if ! gh pr comment --edit-last ${{ github.head_ref }} --body-file ${{ runner.temp }}/cov-report.md ; then
             gh pr comment ${{ github.head_ref }} --body-file ${{ runner.temp }}/cov-report.md
           fi
+      - name: Check 95% minimum coverage
+        run: coverage report --fail-under=95
 
   pre-commit:
     runs-on: ubuntu-latest
