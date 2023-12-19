@@ -30,7 +30,7 @@ jobs:
       - name: Build package
         run: tox -e build-package
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: packages
           path: dist/
@@ -46,7 +46,7 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: packages
           path: dist/

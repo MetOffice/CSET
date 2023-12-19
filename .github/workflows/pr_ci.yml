@@ -31,7 +31,7 @@ jobs:
           PY_COLORS: "1"
           TOX_PARALLEL_NO_SPINNER: "1"
         run: tox -e py39-linux-tests,py310-linux-tests,py311-linux-tests,py312-linux-tests
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: coverage-data
           path: .coverage
@@ -51,7 +51,7 @@ jobs:
           python-version: "3.x"
       - name: Install dependencies
         run: python3 -m pip install coverage
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: coverage-data
       - name: Generate coverage report
@@ -113,7 +113,7 @@ jobs:
         run: python3 -m pip install tox tox-conda
       - name: Build documentation
         run: tox -e py312-linux-docs
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: html-docs
           path: docs/build/html/
