@@ -21,12 +21,12 @@ steps:
         constraint:
             operator: constraints.generate_stash_constraint
             stash: m01s20i113
-    MUCIN_thresh: -30
+    MUCIN_thresh: -75
 
   - operator: filters.filter_cubes
     constraint:
         operator: constraints.generate_time_constraint
-        time_start: 2022-10-28T06:00Z
+        time_start: $TIME
 
   - operator: plot.postage_stamp_contour_plot
 
