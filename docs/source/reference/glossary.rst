@@ -1,5 +1,5 @@
-Terminology
-===========
+Glossary
+========
 
 This page describes specific terminology and concepts used within CSET.
 

@@ -7,7 +7,7 @@ components.
 .. toctree::
     :maxdepth: 1
 
-    terminology
+    glossary
     cli
     recipe-format
     operators
