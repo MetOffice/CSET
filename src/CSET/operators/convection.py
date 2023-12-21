@@ -20,6 +20,7 @@ precalculated values in the required input form may also be used.
 """
 
 import copy
+import logging
 
 import numpy as np
 
@@ -136,3 +137,107 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
     cape_ratio_cube.var_name = "cape_ratio"
     cape_ratio_cube.attributes.pop("STASH", None)
     return cape_ratio_cube
+
+
+def inflow_layer_properties(EIB, BLheight, Orography):
+    r"""Filter one value by another to create a binary mask to identify elevated convection.
+
+    Parameters
+    ----------
+    EIB: Cube
+        Effective inflow layer base as identified by the model.
+        Stash: m01s20i119
+    BLheight: Cube
+        Boundary layer height as identified by the model.
+        Stash: m01s00i025
+    Orography: Cube
+        Model orography, expected to be 2 dimensional. If 3 or 4 dimensional
+        cube given converts to 2 dimensions assuming static orography field
+        in ensemble realization and time.
+        Stash: m01s00i033
+
+    Returns
+    -------
+    Cube
+
+    Notes
+    -----
+    This diagnostic is based on the concept of an effective inflow layer.
+    This concept was first introduced by Thompson et al. (2007) [1]_. The
+    inflow layer defined the region of air that is most likely to be ingested
+    into the convective event. It is defined by thresholding the CAPE and CIN
+    values: CAPE > 100 J/kg and |CIN| < 250 J/kg.
+
+    To turn this into a diagnostic for elevated convection the inflow layer
+    base is filtered against the boundary layer height. The model orography
+    is added to the boundary layer height to ensure reference height
+    consistency as the BL height is defined above ground level and the
+    inflow layer base is defined above sea level in the model output.
+
+    .. math:: EIB > BLheight + Orography
+
+    This is a binary diagnostic. It has a value of 0 to imply the environment
+    is suitable for surface-based convection. It has a value of 1 to indicate
+    the environment is suitable to produce elevated convection.
+
+    Further details about this diagnostic for elevated convection
+    identification can be found in Flack et al. (2023) [2]_.
+
+    Expected applicability ranges: Convective-scale models will be noisier than
+    parametrized models as they are more responsive to the convection, and thus
+    it may be more sensible to view as a larger spatial average rather than
+    at native resolution.
+
+    Interpretation notes: The effective inflow layer base diagnostic from UM STASH
+    is dependent upon the UM CAPE and CIN diagnostics. These diagnostics are
+    calculated at the end of the timestep. Therefore this diagnostic is applicable
+    after precipitation has occurred, not before as is the usual interpretation of
+    CAPE related diagnostics.
+
+    You might encounter warnings with the following text ``Orography assumed not
+    to vary with time or ensemble member.`` or ``Orography assumed not to vary with
+    time and ensemble member.`` these warnings are expected when the orography files
+    are not 2-dimensional, and do not cause any problems.
+
+    References
+    ----------
+    .. [1] Thompson, R. L. Mead, C. M., and Edwards, R., (2007) "Effective
+       Storm-Relative Helicity and Bulk Shear in Supercell Thunderstorm
+       Environments." Weather and Forecasting, vol. 22, 102-115,
+       doi: 10.1175/WAF969.1
+    .. [2] Flack, D.L.A., Lehnert, M., Lean, H.W., and Willington, S. (XXXX)
+       "Characteristics of Diagnostics for Identifying Elevated
+       Convection over the British Isles in a Convection-Allowing Model."
+       Weather and Forecasting, vol. 30, 1079-1094, doi:
+       10.1175/WAF-D-22-0219.1
+
+    Examples
+    --------
+    >>> Inflow_properties=convection.inflow_layer_properties(EIB,BLheight,Orography)
+    >>> iplt.pcolormesh(Inflow_properties[0,:,:],cmap=mpl.cm.Purples)
+    >>> plt.gca().coastlines('10m')
+    >>> plt.colorbar()
+    >>> plt.clim(0,1)
+    >>> plt.show()
+
+    """
+    # Setup new array for output of the diagnostic.
+    EC_Flagd = np.zeros(np.shape(EIB.data))
+    # Check dimensions for Orography cube and replace with 2D array.
+    if Orography.ndim == 3:
+        Orography = Orography[0, :, :]
+        logging.warning("Orography assumed not to vary with time or ensemble member.")
+    elif Orography.ndim == 4:
+        logging.warning("Orography assumed not to vary with time and ensemble member.")
+        Orography = Orography[0, 0, :, :]
+    # Change points where Effective inflow layer base is larger than boundary
+    # layer height to 1 implying elevated convection.
+    EC_Flagd[EIB.data > (BLheight.data + Orography.data)] = 1.0
+    # Take the coordinates from an existing cube and replace the data.
+    inflow_properties_cube = EIB.copy()
+    inflow_properties_cube.data = EC_Flagd
+    # Rename and remove STASH code.
+    inflow_properties_cube.var_name = "inflow_layer_properties"
+    inflow_properties_cube.attributes.pop("STASH", None)
+    # Return the cube.
+    return EC_Flagd
