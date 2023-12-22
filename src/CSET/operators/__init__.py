@@ -150,6 +150,7 @@ def execute_recipe(
         recipe_variables = {}
 
     recipe = parse_recipe(recipe_yaml)
+    logging.debug("Recipe variables: %s", recipe_variables)
     recipe = template_variables(recipe, recipe_variables)
     step_input = Path(input_directory).absolute()
     try:

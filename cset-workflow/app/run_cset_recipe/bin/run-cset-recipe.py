@@ -66,7 +66,7 @@ output_directory = Path.cwd() / plot_id
 # Takes recipe from CSET_RECIPE environment variable if not given.
 cset_recipe = os.getenv("CSET_RECIPE_NAME")
 if cset_recipe:
-    subprocess.run(("cset", "cookbook", cset_recipe), check=True)
+    subprocess.run(("cset", "-v", "cookbook", cset_recipe), check=True)
 else:
     cset_recipe = Path("recipe.yaml")
     cset_recipe.write_bytes(os.getenvb("CSET_RECIPE"))
@@ -90,7 +90,6 @@ title = recipe_meta.get("title", "Unknown")
 # TODO: Save model in meta.json. Currently this always returns "Unknown".
 source_model = recipe_meta.get("model", "Unknown")
 
-# TODO: Give archive a meaningful name, probably a slugified title.
 archive_path = output_directory / "diagnostic.zip"
 with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
     for path in output_directory.rglob("*"):

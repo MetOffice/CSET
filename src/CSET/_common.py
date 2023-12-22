@@ -180,5 +180,6 @@ def template_variables(recipe: Union[dict, list], variables: dict) -> dict:
         if isinstance(recipe[i], (dict, list)):
             recipe[i] = template_variables(recipe[i], variables)
         if is_variable(recipe[i]):
+            logging.debug("Templating %s", recipe[i])
             recipe[i] = variables[recipe[i].removeprefix("$")]
     return recipe

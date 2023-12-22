@@ -34,6 +34,7 @@ def _recipe_files_in_tree(
     if input_dir is None:
         input_dir = files(recipes)
     for file in input_dir.iterdir():
+        logging.debug("Testing %s", file)
         if recipe_name in file.name and file.is_file() and file.suffix == ".yaml":
             yield file
         elif file.is_dir() and file.name[0] != "_":  # Excludes __pycache__
@@ -58,16 +59,18 @@ def unpack_recipes(recipe_dir: Path, recipe_name: str = None) -> None:
         If recipe_dir cannot be created, such as insufficient permissions, or
         lack of space.
     """
+    logging.debug("Saving recipes to %s", recipe_dir)
     recipe_dir.mkdir(parents=True, exist_ok=True)
     for file in _recipe_files_in_tree(recipe_name):
+        logging.debug("Saving %s", file.name)
         if recipe_dir.joinpath(file.name).exists():
             warnings.warn(
                 f"{file.name} already exists in target directory, skipping.",
                 stacklevel=2,
             )
         else:
-            logging.info("Unpacking %s", file.name)
-            recipe_dir.joinpath(file.name).write_bytes(file.read_bytes())
+            logging.info("Unpacking %s to %s", file.name, recipe_dir / file.name)
+            (recipe_dir / file.name).write_bytes(file.read_bytes())
 
 
 def list_available_recipes() -> None:
