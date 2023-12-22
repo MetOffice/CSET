@@ -16,6 +16,7 @@
 
 import argparse
 import logging
+import os
 import sys
 from importlib.metadata import version
 from pathlib import Path
@@ -114,7 +115,8 @@ def main():
     )
     parser_cookbook.set_defaults(func=_cookbook_command)
 
-    args, unparsed_args = parser.parse_known_args()
+    cli_args = sys.argv[1:] + os.getenv("CSET_ADDOPTS", "").split()
+    args, unparsed_args = parser.parse_known_args(cli_args)
 
     # Setup logging.
     logging.captureWarnings(True)
@@ -139,7 +141,8 @@ def main():
             parser.print_usage()
             sys.exit(2)
     else:
-        parser.print_help()
+        parser.print_usage()
+        sys.exit(2)
 
 
 def _bake_command(args, unparsed_args):

@@ -29,13 +29,14 @@ import pytest
 def test_command_line_help():
     """Check that help commands work."""
     subprocess.run(["cset", "--help"], check=True)
-    # Test verbose options. This is really just to up the coverage number.
-    subprocess.run(["cset", "-v"], check=True)
-    subprocess.run(["cset", "-vv"], check=True)
     subprocess.run(["cset", "--version"], check=True)
 
     # Gain coverage of __main__.py
     subprocess.run(["python3", "-m", "CSET", "-h"], check=True)
+
+    # Test verbose options. This is really just to up the coverage number.
+    subprocess.run(["cset", "-v"])
+    subprocess.run(["cset", "-vv"])
 
 
 def test_recipe_execution():
