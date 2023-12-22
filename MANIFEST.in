@@ -1,0 +1,3 @@
+prune .github
+prune cset-workflow
+exclude .gitignore .pre-commit-config.yaml .git-blame-ignore-revs
