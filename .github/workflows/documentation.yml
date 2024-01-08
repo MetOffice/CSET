@@ -53,7 +53,7 @@ jobs:
         with:
           name: html-docs
 
-      - uses: actions/upload-pages-artifact@v2
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: "."
 
