@@ -135,9 +135,9 @@ jobs:
         if: steps.conda-cache.outputs.cache-hit != 'true'
         run: |
           conda create --name=cset --file=requirements/locks/py312-lock-linux-64.txt
-          echo "${{ env.CONDA }}/envs/cset/bin" >> $GITHUB_PATH
+          echo "${CONDA}/envs/cset/bin" >> $GITHUB_PATH
           conda env list
-          echo "conda_base = ${{ env.CONDA }}"
+          echo "conda_base = ${CONDA}"
 
       - name: Build documentation with Sphinx
         run: |
