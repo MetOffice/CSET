@@ -134,8 +134,7 @@ jobs:
       - name: Create conda environment
         if: steps.conda-cache.outputs.cache-hit != 'true'
         run: |
-          conda create --name=cset
-          --file=requirements/locks/py312-lock-linux-64.txt
+          conda create --name=cset --file=requirements/locks/py312-lock-linux-64.txt
           echo "${{ env.CONDA }}"
           conda env list
           echo "${{ env.CONDA }}/envs/cset/bin" >> $GITHUB_PATH
