@@ -168,7 +168,7 @@ def inflow_layer_properties(EIB, BLheight, Orography):
     This concept was first introduced by Thompson et al. (2007) [Thompsonetal2007]_. The
     inflow layer defined the region of air that is most likely to be ingested
     into the convective event. It is defined by thresholding the CAPE and CIN
-    values: CAPE > 100 J/kg and |CIN| < 250 J/kg.
+    values: CAPE > 100 J/kg and \|CIN\| < 250 J/kg.
 
     To turn this into a diagnostic for elevated convection the inflow layer
     base is filtered against the boundary layer height. The model orography
