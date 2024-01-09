@@ -12,25 +12,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
+
       - name: Get week number
         id: week
         run: echo "week=$(date '+W%V')" >> $GITHUB_OUTPUT
+
       - uses: actions/cache@v3
         with:
           key: tests|${{ runner.os }}-${{ runner.arch}}|${{ steps.week.outputs.week }}|${{ hashFiles('requirements/locks/*') }}
           path: |
             .tox
             ~/.cache/pip
+
       - name: Install dependencies
         run: python3 -m pip install tox tox-conda
+
       - name: Run tests
         env:
           PY_COLORS: "1"
           TOX_PARALLEL_NO_SPINNER: "1"
         run: tox -e py39-linux-tests,py310-linux-tests,py311-linux-tests,py312-linux-tests
+
       - uses: actions/upload-artifact@v4
         with:
           name: coverage-data
@@ -45,17 +51,32 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
-      - name: Install dependencies
+
+      - name: Get week number for cache
+        id: week
+        run: echo "week=$(date '+W%V')" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v3
+
+        with:
+          key: coverage-report|${{ env.pythonLocation }}|${{ steps.week.outputs.week }}
+          path: ~/.cache/pip
+
+      - name: Install coverage
         run: python3 -m pip install coverage
+
+      - uses: actions/checkout@v4
+
       - uses: actions/download-artifact@v4
         with:
           name: coverage-data
+
       - name: Generate coverage report
         run: coverage html
+
       - name: Add report to PR
         env:
           GH_TOKEN: ${{ github.token }}
@@ -73,22 +94,27 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
-      - name: Get week number
+
+      - name: Get week number for cache
         id: week
         run: echo "week=$(date '+W%V')" >> $GITHUB_OUTPUT
+
       - uses: actions/cache@v3
         with:
           key: pre-commit|${{ env.pythonLocation }}|${{ steps.week.outputs.week }}|${{ hashFiles('.pre-commit-config.yaml') }}
           path: |
             ~/.cache/pip
             ~/.cache/pre-commit
+
       - name: Set up pre-commit
         run: python3 -m pip install pre-commit
+
+      - uses: actions/checkout@v4
+
       - name: Run pre-commit
         run: pre-commit run --show-diff-on-failure --color=always --all-files
 
@@ -96,24 +122,26 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
+      - name: Cache conda environment
+        uses: actions/cache@v3
+        id: conda-cache
+        with:
+          key: conda|${{ runner.os }}-${{ runner.arch}}|${{ hashFiles('requirements/locks/*') }}
+          path: ${{ env.CONDA }}/envs
+
+      - name: Create conda environment
+        if: steps.conda-cache.outputs.cache-hit != 'true'
+        run: |
+          conda create --name=cset --file=requirements/locks/py312-lock-linux-64.txt
+          echo "${{ env.CONDA }}/envs/cset/bin" >> "$GITHUB_PATH"
+
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-      - name: Get week number
-        id: week
-        run: echo "week=$(date '+W%V')" >> $GITHUB_OUTPUT
-      - uses: actions/cache@v3
-        with:
-          key: docs|${{ runner.os }}-${{ runner.arch}}|${{ steps.week.outputs.week }}|${{ hashFiles('requirements/locks/*') }}
-          path: |
-            .tox
-            ~/.cache/pip
-      - name: Install dependencies
-        run: python3 -m pip install tox tox-conda
-      - name: Build documentation
-        run: tox -e py312-linux-docs
-      - uses: actions/upload-artifact@v4
+
+      - name: Build documentation with Sphinx
+        run: sphinx-build -d "docs/build/doctree" "docs/source" "docs/build/html" --color -W -bhtml
+
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v4
         with:
           name: html-docs
           path: docs/build/html/
