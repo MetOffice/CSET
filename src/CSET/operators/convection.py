@@ -165,7 +165,7 @@ def inflow_layer_properties(EIB, BLheight, Orography):
     Notes
     -----
     This diagnostic is based on the concept of an effective inflow layer.
-    This concept was first introduced by Thompson et al. (2007) [1]_. The
+    This concept was first introduced by Thompson et al. (2007) [Thompsonetal2007]_. The
     inflow layer defined the region of air that is most likely to be ingested
     into the convective event. It is defined by thresholding the CAPE and CIN
     values: CAPE > 100 J/kg and |CIN| < 250 J/kg.
@@ -183,7 +183,7 @@ def inflow_layer_properties(EIB, BLheight, Orography):
     the environment is suitable to produce elevated convection.
 
     Further details about this diagnostic for elevated convection
-    identification can be found in Flack et al. (2023) [2]_.
+    identification can be found in Flack et al. (2023) [Flackinf2023]_.
 
     Expected applicability ranges: Convective-scale models will be noisier than
     parametrized models as they are more responsive to the convection, and thus
@@ -204,11 +204,11 @@ def inflow_layer_properties(EIB, BLheight, Orography):
 
     References
     ----------
-    .. [1] Thompson, R. L. Mead, C. M., and Edwards, R., (2007) "Effective
+    .. [Thompsonetal2007] Thompson, R. L. Mead, C. M., and Edwards, R., (2007) "Effective
        Storm-Relative Helicity and Bulk Shear in Supercell Thunderstorm
        Environments." Weather and Forecasting, vol. 22, 102-115,
        doi: 10.1175/WAF969.1
-    .. [2] Flack, D.L.A., Lehnert, M., Lean, H.W., and Willington, S. (2023)
+    .. [Flackinf2023] Flack, D.L.A., Lehnert, M., Lean, H.W., and Willington, S. (2023)
        "Characteristics of Diagnostics for Identifying Elevated
        Convection over the British Isles in a Convection-Allowing Model."
        Weather and Forecasting, vol. 30, 1079-1094, doi:
