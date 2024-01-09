@@ -34,3 +34,15 @@ def test_cape_ratio():
         convection.cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-1.5).data.all()
         == precalculated_2.data.all()
     )
+
+
+def test_inflow_layer_properties():
+    """Compare with precalculated properties."""
+    precalculated = iris.load_cube("tests/test_data/convection/ECFlagD.nc")
+    EIB = iris.load_cube("tests/test_data/convection/EIB.nc")
+    BLheight = iris.load_cube("tests/test_data/convection/BLheight.nc")
+    Orography = iris.load_cube("tests/test_data/convection/Orography.nc")
+    assert (
+        convection.inflow_layer_properties(EIB, BLheight, Orography).all()
+        == precalculated.data.all()
+    )
