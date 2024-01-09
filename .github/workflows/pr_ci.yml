@@ -127,14 +127,15 @@ jobs:
       - name: Cache conda environment
         uses: actions/cache@v3
         with:
-          key: conda|${{ runner.os }}-${{ runner.arch}}|${{ hashFiles('requirements/locks/*') }}
-          path: ${{ env.CONDA }}/envs
+          key: conda|${{runner.os}}-${{runner.arch}}|${{hashFiles('requirements/locks/*')}}
+          path: ${{env.CONDA}}/envs
 
       - name: Create conda environment
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
           conda create --name=cset --file=requirements/locks/py312-lock-linux-64.txt
           echo "${CONDA}/envs/cset/bin" >> $GITHUB_PATH
+          echo "GH=${{env.CONDA}}/envs"
 
       - name: Build documentation with Sphinx
         run: |
