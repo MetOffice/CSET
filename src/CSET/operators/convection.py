@@ -198,7 +198,7 @@ def inflow_layer_properties(EIB, BLheight, Orography):
 
     You might encounter warnings with the following text ``Orography assumed not
     to vary with time or ensemble member.`` or ``Orography assumed not to vary with
-    time and ensemble member. `` these warnings are expected when the orography files
+    time and ensemble member.`` these warnings are expected when the orography files
     are not 2-dimensional, and do not cause any problems unless ordering is not as
     expected.
 
@@ -208,7 +208,7 @@ def inflow_layer_properties(EIB, BLheight, Orography):
        Storm-Relative Helicity and Bulk Shear in Supercell Thunderstorm
        Environments." Weather and Forecasting, vol. 22, 102-115,
        doi: 10.1175/WAF969.1
-    .. [2] Flack, D.L.A., Lehnert, M., Lean, H.W., and Willington, S. (XXXX)
+    .. [2] Flack, D.L.A., Lehnert, M., Lean, H.W., and Willington, S. (2023)
        "Characteristics of Diagnostics for Identifying Elevated
        Convection over the British Isles in a Convection-Allowing Model."
        Weather and Forecasting, vol. 30, 1079-1094, doi:
@@ -246,4 +246,4 @@ def inflow_layer_properties(EIB, BLheight, Orography):
     inflow_properties_cube.var_name = "inflow_layer_properties"
     inflow_properties_cube.attributes.pop("STASH", None)
     # Return the cube.
-    return EC_Flagd
+    return inflow_properties_cube
