@@ -36,15 +36,15 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
     SBCAPE: Cube
         Surface-based convective available potential energy as calculated by the
         model.
-        Stash: m01s20i114
+        If using the UM please use STASH ``m01s20i114``
     MUCAPE: Cube
         Most-unstable convective available potential energy as calculated by the
         model.
-        Stash: m01s20i112
+        If using the UM please use STASH ``m01s20i112``
     MUCIN: Cube
         Most-unstable convective inhibition associated with the most-unstable
         ascent as calculated by the model.
-        Stash: m01s20i113
+        If using the UM please use STASH ``m01s20i113``
     MUCIN_thresh: float, optional, default is -75. J/kg.
         Threshold to filter the MUCAPE by values are realistically realisable.
 
@@ -54,7 +54,7 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
 
     Notes
     -----
-    This diagnostic is based on Clark et al. (2012) [1]_. It is based around the idea
+    This diagnostic is based on Clark et al. (2012) [Clarketal2012]_. It is based around the idea
     that for elevated convection the convective instability is not based at the
     surface. This utilises two flavours of CAPE: the surface-based CAPE (SBCAPE)
     and the most-unstable CAPE (MUCAPE). The MUCAPE is filtered by the MUCIN
@@ -76,7 +76,7 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
     surface-based convection is more likely.
 
     Further details about this diagnostic for elevated convection identification
-    can be found in Flack et al. (2023) [2]_.
+    can be found in Flack et al. (2023) [FlackCAPE2023]_.
 
     Expected applicability ranges: Convective-scale models will be noisier than
     parametrized models as they are more responsive to the convection, and thus
@@ -89,12 +89,12 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
 
     References
     ----------
-    .. [1] Clark, A. J., Kain J. S., Marsh P. T., Correia J., Xue M., and Kong
+    .. [Clarketal2012] Clark, A. J., Kain J. S., Marsh P. T., Correia J., Xue M., and Kong
        F., (2012) "Forecasting tornado pathlengths using a three-dimensional
        object identification algorithm applied to convection-allowing
        forecasts." Weather and Forecasting, vol. 27, 1090–1113, doi:
        10.1175/WAF-D-11-00147.1
-    .. [2] Flack, D.L.A., Lehnert, M., Lean, H.W., and Willington, S. (2023)
+    .. [FlackCAPE2023] Flack, D.L.A., Lehnert, M., Lean, H.W., and Willington, S. (2023)
        "Characteristics of Diagnostics for Identifying Elevated
        Convection over the British Isles in a Convection-Allowing Model."
        Weather and Forecasting, vol. 30, 1079-1094, doi:
@@ -236,6 +236,9 @@ def inflow_layer_properties(EIB, BLheight, Orography):
     elif Orography.ndim == 4:
         Orography = Orography.slices_over(("time", "realization")).next()
         logging.warning("Orography assumed not to vary with time or ensemble member. ")
+    # Masked arrays are not respected, so convert masked values into NaNs.
+    if isinstance(EIB.data, np.ma.MaskedArray):
+        EIB.data = EIB.data.filled(np.nan)
     # Change points where Effective inflow layer base is larger than boundary
     # layer height to 1 implying elevated convection.
     EC_Flagd[EIB.data > (BLheight.data + Orography.data)] = 1.0
