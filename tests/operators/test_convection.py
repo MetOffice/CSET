@@ -42,7 +42,4 @@ def test_inflow_layer_properties():
     EIB = iris.load_cube("tests/test_data/convection/EIB.nc")
     BLheight = iris.load_cube("tests/test_data/convection/BLheight.nc")
     Orography = iris.load_cube("tests/test_data/convection/Orography.nc")
-    assert (
-        convection.inflow_layer_properties(EIB, BLheight, Orography).data.all()
-        == precalculated.data.all()
-    )
+    assert np.allclose(convection.inflow_layer_properties(EIB, BLheight, Orography).data, precalculated.data)
