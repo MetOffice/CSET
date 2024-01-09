@@ -126,22 +126,21 @@ jobs:
 
       - name: Cache conda environment
         uses: actions/cache@v3
-        id: conda-cache
         with:
           key: conda|${{ runner.os }}-${{ runner.arch}}|${{ hashFiles('requirements/locks/*') }}
           path: ${{ env.CONDA }}/envs
 
       - name: Create conda environment
-        if: steps.conda-cache.outputs.cache-hit != 'true'
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           conda create --name=cset --file=requirements/locks/py312-lock-linux-64.txt
           echo "${CONDA}/envs/cset/bin" >> $GITHUB_PATH
-          conda env list
-          echo "conda_base = ${CONDA}"
 
       - name: Build documentation with Sphinx
         run: |
-          echo "$PATH"
+          # Install module so it can be imported during docs generation.
+          python3 -m pip install .
+          # Generate the documentation
           sphinx-build -d "docs/build/doctree" "docs/source" "docs/build/html" --color -W -bhtml
 
       - name: Upload documentation artifact
