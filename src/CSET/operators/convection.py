@@ -119,15 +119,18 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
     >>> plt.show()
     """
     # Load in the data into the new arrays.
-    SBCAPE_data = copy.deepcopy(SBCAPE.data)
     MUCAPE_data = copy.deepcopy(MUCAPE.data)
-    # Filter MUCAPE by MUCIN to all for possible (realistic) MUCAPE.
-    MUCAPE_data[MUCIN.data <= MUCIN_thresh] = 0.0
+    if isinstance(MUCAPE_data, np.ma.MaskedArray):
+        MUCAPE_data = MUCAPE_data.filled(np.nan)
+    # Remove all MUCAPE below MUCIN threshold.
+    MUCAPE_data[MUCIN.data <= MUCIN_thresh] = np.nan
     with warnings.catch_warnings():
         # Ignore possible divide by zero warnings, as they are replaced by NaNs.
         warnings.filterwarnings("ignore", category=RuntimeWarning)
-        # Now calculate the main diagnostic
-        EC_Flagb = 1 - (SBCAPE_data / MUCAPE_data)
+        # Now calculate the main diagnostic.
+        EC_Flagb = 1 - (SBCAPE.data / MUCAPE_data)
+        if isinstance(EC_Flagb, np.ma.MaskedArray):
+            EC_Flagb = EC_Flagb.filled(np.nan)
     # Filter to reduce NaN values and -inf values for plotting ease.
     # There are multiple types of NaN values so need to convert them all to same type.
     EC_Flagb[np.isnan(EC_Flagb)] = np.nan
@@ -248,5 +251,4 @@ def inflow_layer_properties(EIB, BLheight, Orography):
     # Rename and remove STASH code.
     inflow_properties_cube.var_name = "inflow_layer_properties"
     inflow_properties_cube.attributes.pop("STASH", None)
-    # Return the cube.
     return inflow_properties_cube
