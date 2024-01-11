@@ -123,10 +123,10 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
     MUCAPE_data = copy.deepcopy(MUCAPE.data)
     # Filter MUCAPE by MUCIN to all for possible (realistic) MUCAPE.
     MUCAPE_data[MUCIN.data <= MUCIN_thresh] = 0.0
-    # Now calculate the main diagnostic
     with warnings.catch_warnings():
         # Ignore possible divide by zero warnings, as they are replaced by NaNs.
-        warnings.simplefilter("ignore", RuntimeWarning)
+        warnings.filterwarnings("ignore", category=RuntimeWarning)
+        # Now calculate the main diagnostic
         EC_Flagb = 1 - (SBCAPE_data / MUCAPE_data)
     # Filter to reduce NaN values and -inf values for plotting ease.
     # There are multiple types of NaN values so need to convert them all to same type.
