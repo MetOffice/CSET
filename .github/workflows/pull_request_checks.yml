@@ -23,7 +23,10 @@ jobs:
           path: ~/conda-env
       - name: Create conda environment
         if: steps.conda-env-cache.outputs.cache-hit != 'true'
-        run: conda create --prefix="${HOME}/conda-env" --file=requirements/locks/${{ matrix.py-ver }}-lock-linux-64.txt
+        run: |
+          # Check cache hasn't pulled a partial key match.
+          test ! -e "${HOME}/conda-env"
+          conda create --prefix="${HOME}/conda-env" --file=requirements/locks/${{ matrix.py-ver }}-lock-linux-64.txt
       - name: Add conda environment to PATH
         run: echo "${HOME}/conda-env/bin" >> $GITHUB_PATH
       - name: Run tests
@@ -117,7 +120,10 @@ jobs:
           path: ~/conda-env
       - name: Create conda environment
         if: steps.conda-env-cache.outputs.cache-hit != 'true'
-        run: conda create --prefix="${HOME}/conda-env" --file=requirements/locks/py312-lock-linux-64.txt
+        run: |
+          # Check cache hasn't pulled a partial key match.
+          test ! -e "${HOME}/conda-env"
+          conda create --prefix="${HOME}/conda-env" --file=requirements/locks/py312-lock-linux-64.txt
       - name: Add conda environment to PATH
         run: echo "${HOME}/conda-env/bin" >> $GITHUB_PATH
       - name: Build documentation with Sphinx
