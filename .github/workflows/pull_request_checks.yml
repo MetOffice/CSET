@@ -10,30 +10,33 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        py-ver: ["py39", "py310", "py311", "py312"]
     steps:
       - uses: actions/checkout@v4
       - name: Cache conda environment
         id: conda-env-cache
         uses: actions/cache@v3
         with:
-          key: conda|${{runner.os}}-${{runner.arch}}|${{hashFiles('requirements/locks/py312-lock-linux-64.txt')}}
+          key: conda|${{runner.os}}-${{runner.arch}}|${{ hashFiles('requirements/locks/${{ matrix.py-ver }}-lock-linux-64.txt') }}
           path: ~/conda-env
       - name: Create conda environment
         if: steps.conda-env-cache.outputs.cache-hit != 'true'
-        run: conda create --prefix="${HOME}/conda-env" --file=requirements/locks/py312-lock-linux-64.txt
+        run: conda create --prefix="${HOME}/conda-env" --file=requirements/locks/${{ matrix.py-ver }}-lock-linux-64.txt
       - name: Add conda environment to PATH
         run: echo "${HOME}/conda-env/bin" >> $GITHUB_PATH
       - name: Run tests
         env:
           PY_COLORS: "1"
-          TOX_PARALLEL_NO_SPINNER: "1"
         run: |
           python3 -m pip install -e .
-          pytest --verbose --cov --cov-append
+          pytest --verbose --cov
+          mv .coverage ".coverage.${{ matrix.py-ver }}"
       - uses: actions/upload-artifact@v4
         with:
-          name: coverage-data
-          path: .coverage
+          name: coverage-data-${{ matrix.py-ver }}
+          path: .coverage.*
           retention-days: 1
 
   coverage-report:
@@ -59,9 +62,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: coverage-data
+          pattern: coverage-data-*
+          merge-multiple: true
       - name: Generate coverage report
-        run: coverage html
+        run: |
+          coverage combine
+          coverage html
       - name: Add report to PR
         env:
           GH_TOKEN: ${{ github.token }}
