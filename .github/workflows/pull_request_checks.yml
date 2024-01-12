@@ -62,7 +62,7 @@ jobs:
         run: |
           # This links to a hosted version of the HTML report.
           tar -czf coverage-report.tar.gz htmlcov/
-          report_url="$(curl --data-binary @coverage-report.tar.gz https://tmpweb.net)"
+          report_url="$(curl -sSf --data-binary @coverage-report.tar.gz https://tmpweb.net)"
           badge_options="$(coverage json --fail-under=0 -qo - | jq -r .totals.percent_covered_display)%25-blue?style=for-the-badge"
           echo "[![Coverage](https://img.shields.io/badge/coverage-${badge_options})](${report_url})" >> ${{ runner.temp }}/cov-report.md
           # Edit last comment if it exists, else create new one.
