@@ -22,16 +22,17 @@ jobs:
 
       - name: Create conda environment
         if: steps.conda-env-cache.outputs.cache-hit != 'true'
-        run: |
-          conda create --prefix="${HOME}/conda-env" --file=requirements/locks/py312-lock-linux-64.txt
-          echo "${HOME}/conda-env/bin" >> $GITHUB_PATH
+        run: conda create --prefix="${HOME}/conda-env" --file=requirements/locks/py312-lock-linux-64.txt
+
+      - name: Add conda environment to PATH
+        run: echo "${HOME}/conda-env/bin" >> $GITHUB_PATH
 
       - name: Run tests
         env:
           PY_COLORS: "1"
           TOX_PARALLEL_NO_SPINNER: "1"
         run: |
-          pip install -e .
+          python3 -m pip install -e .
           pytest --verbose --cov --cov-append
 
       - uses: actions/upload-artifact@v4
@@ -129,9 +130,10 @@ jobs:
 
       - name: Create conda environment
         if: steps.conda-env-cache.outputs.cache-hit != 'true'
-        run: |
-          conda create --prefix="${HOME}/conda-env" --file=requirements/locks/py312-lock-linux-64.txt
-          echo "${HOME}/conda-env/bin" >> $GITHUB_PATH
+        run: conda create --prefix="${HOME}/conda-env" --file=requirements/locks/py312-lock-linux-64.txt
+
+      - name: Add conda environment to PATH
+        run: echo "${HOME}/conda-env/bin" >> $GITHUB_PATH
 
       - name: Build documentation with Sphinx
         run: |
