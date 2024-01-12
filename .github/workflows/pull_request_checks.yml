@@ -19,7 +19,7 @@ jobs:
         id: conda-env-cache
         uses: actions/cache@v3
         with:
-          key: conda|${{runner.os}}-${{runner.arch}}|${{ hashFiles('requirements/locks/${{ matrix.py-ver }}-lock-linux-64.txt') }}
+          key: conda|${{runner.os}}-${{runner.arch}}|${{ hashFiles(format('requirements/locks/{0}-lock-linux-64.txt', matrix.py-ver)) }}
           path: ~/conda-env
       - name: Create conda environment
         if: steps.conda-env-cache.outputs.cache-hit != 'true'
