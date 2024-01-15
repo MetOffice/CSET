@@ -62,7 +62,7 @@ def main():
         "--output-dir",
         type=Path,
         required=True,
-        help="directory to write output",
+        help="directory to write output into",
     )
     parser_bake.set_defaults(func=_bake_command)
 
