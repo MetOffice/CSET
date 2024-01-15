@@ -14,12 +14,13 @@
 
 """Test filter operators."""
 
+import iris.cube
 import pytest
 
 from CSET.operators import constraints, filters, read
 
 
-def test_filters_operator():
+def test_filter_cubes():
     """Filter cube and verify."""
     cubes = read.read_cubes("tests/test_data/air_temp.nc")
     constraint = constraints.combine_constraints(
@@ -34,7 +35,55 @@ def test_filters_operator():
     # Test for exception when multiple cubes returned.
     constraint = constraints.generate_stash_constraint("m01s03i236")
     with pytest.raises(ValueError):
-        cube = filters.filter_cubes(cubes, constraint)
+        filters.filter_cubes(cubes, constraint)
     # Test filtering a Cube.
     single_cube = filters.filter_cubes(cube, constraint)
     assert repr(cube) == repr(single_cube)
+
+
+def test_filter_multiple_cubes():
+    """Filter multiple cubes and verify."""
+    raw_cubes = read.read_cubes("tests/test_data/air_temp.nc")
+
+    # Test to a CubeList of a single Cube.
+    constraint_single = constraints.combine_constraints(
+        constraints.generate_stash_constraint("m01s03i236"),
+        a=constraints.generate_cell_methods_constraint([]),
+    )
+    filtered_cubes = filters.filter_multiple_cubes(raw_cubes, c=constraint_single)
+    assert isinstance(filtered_cubes, iris.cube.CubeList)
+    assert len(filtered_cubes) == 1
+    assert filtered_cubes[0].cell_methods == ()
+
+    # Test filtering a Cube.
+    filtered_cube = filters.filter_multiple_cubes(
+        filtered_cubes[0], c=constraint_single
+    )
+    assert isinstance(filtered_cube, iris.cube.CubeList)
+    assert len(filtered_cube) == 1
+
+    # Test filtering for multiple Cubes.
+    constraint_single_2 = constraints.combine_constraints(
+        constraints.generate_stash_constraint("m01s03i236"),
+        a=constraints.generate_cell_methods_constraint(
+            [
+                iris.coords.CellMethod(
+                    method="minimum", coords="time", intervals="1 hour"
+                )
+            ]
+        ),
+    )
+    filtered_multi_cubes = filters.filter_multiple_cubes(
+        raw_cubes, c1=constraint_single, c2=constraint_single_2
+    )
+    assert len(filtered_multi_cubes) == 2
+
+    # Test exception when multiple cubes returned.
+    constraint_multiple = constraints.generate_stash_constraint("m01s03i236")
+    with pytest.raises(ValueError):
+        filters.filter_multiple_cubes(raw_cubes, c=constraint_multiple)
+
+    # Test exception when no Cubes returned.
+    constraint_none = constraints.generate_stash_constraint("m01s01i001")
+    with pytest.raises(ValueError):
+        filters.filter_multiple_cubes(raw_cubes, c=constraint_none)

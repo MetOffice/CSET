@@ -18,6 +18,7 @@ from typing import Union
 
 import iris
 import iris.cube
+import iris.exceptions
 
 
 def filter_cubes(
@@ -25,13 +26,12 @@ def filter_cubes(
     constraint: iris.Constraint,
     **kwargs,
 ) -> iris.cube.Cube:
-    """
-    Filter a cubelist down to a single cube based on a constraint.
+    """Filter a CubeList down to a single Cube based on a constraint.
 
     Arguments
     ---------
     cube: iris.cube.Cube | iris.cube.CubeList
-        Cube(s) to iterate over
+        Cube(s) to filter
     constraint: iris.Constraint
         Constraint to extract
 
@@ -55,3 +55,38 @@ def filter_cubes(
         raise ValueError(
             f"Constraint doesn't produce single cube. {constraint}\n{filtered_cubes}"
         )
+
+
+def filter_multiple_cubes(
+    cubes: Union[iris.cube.Cube, iris.cube.CubeList],
+    **kwargs,
+) -> iris.cube.CubeList:
+    """Filter a CubeList on multiple constraints, returning another CubeList.
+
+    Arguments
+    ---------
+    cube: iris.cube.Cube | iris.cube.CubeList
+        Cube(s) to filter
+    constraint: iris.Constraint
+        Constraint to extract. This must be a named argument. There can be any
+        number of additional constraints, they just need unique names.
+
+    Returns
+    -------
+    iris.cube.CubeList
+
+    Raises
+    ------
+    ValueError
+        The constraints don't produce a single cube per constraint.
+    """
+    # Ensure input is a CubeList.
+    if isinstance(cubes, iris.cube.Cube):
+        cubes = iris.cube.CubeList((cubes,))
+    if len(kwargs) < 1:
+        raise ValueError("Must have at least one constraint.")
+    try:
+        filtered_cubes = cubes.extract_cubes(kwargs.values())
+    except iris.exceptions.ConstraintMismatchError as err:
+        raise ValueError() from err
+    return filtered_cubes
