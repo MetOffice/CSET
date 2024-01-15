@@ -15,6 +15,7 @@
 """Reading operator tests."""
 
 import iris.cube
+import pytest
 
 from CSET.operators import read
 
@@ -65,3 +66,20 @@ def test_fieldsfile_ensemble_naming():
     filename = "myfieldsfile_enuk_um_001/enukaa_pd000"
     read._ensemble_callback(cube, None, filename)
     assert cube.coord("realization").points[0] == 1
+
+
+def test_read_cube():
+    """Returns a Cube rather than CubeList."""
+    from CSET.operators import constraints
+
+    cube = read.read_cube(
+        "tests/test_data/air_temp.nc",
+        constraint=constraints.generate_cell_methods_constraint([]),
+    )
+    assert isinstance(cube, iris.cube.Cube)
+
+
+def test_read_cube_unconstrained():
+    """Error for multiple cubes read."""
+    with pytest.raises(ValueError):
+        read.read_cube("tests/test_data/air_temp.nc")

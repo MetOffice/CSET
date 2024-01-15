@@ -6,7 +6,7 @@ ci:
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: d7c4946c7c152163ce34efe35be4e1015d053edd  # frozen: v0.1.8
+    rev: abe8946973726245279f972c708ebcd6ae0ec272  # frozen: v0.1.13
     hooks:
       - id: ruff
         args: [ --fix, --show-fixes, --exit-non-zero-on-fix ]
@@ -20,7 +20,7 @@ repos:
         - tomli
 
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 05ba3518b6946b81f87b8c61f5025412e7c819dd  # frozen: 23.12.0
+    rev: 3de533c80a7e95bb6efb213169d269267e9b234b  # frozen: 23.12.1
     hooks:
       - id: black
 

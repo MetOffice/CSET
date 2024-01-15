@@ -29,7 +29,7 @@ jobs:
         run: |
           git config --local user.name "$GITHUB_ACTOR"
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
-          git switch -c "pre-commit-$(sha256sum ${{ runner.temp }}/config_file_hashes | head -c 8)"
+          git switch -c "pre-commit-update"
           pre-commit autoupdate --freeze
 
       - name: Create pull requests
@@ -42,7 +42,7 @@ jobs:
           fi
           git add .pre-commit-config.yaml
           git commit -m "[CI] Update .pre-commit-config.yaml"
-          git push --set-upstream origin "pre-commit-$(sha256sum ${{ runner.temp }}/config_file_hashes | head -c 8)"
+          git push --set-upstream origin "pre-commit-update:pre-commit-$(sha256sum .pre-commit-config.yaml | head -c 8)"
           # Create PR on GitHub using GitHub CLI.
           gh pr create --base main --title "[CI] Update .pre-commit-config.yaml" \
           --body "Created automatically by GitHub Actions."
