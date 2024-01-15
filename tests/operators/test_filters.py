@@ -78,6 +78,10 @@ def test_filter_multiple_cubes():
     )
     assert len(filtered_multi_cubes) == 2
 
+    # Test exception when no constraints given.
+    with pytest.raises(ValueError):
+        filters.filter_multiple_cubes(raw_cubes)
+
     # Test exception when multiple cubes returned.
     constraint_multiple = constraints.generate_stash_constraint("m01s03i236")
     with pytest.raises(ValueError):
