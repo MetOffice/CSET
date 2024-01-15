@@ -60,3 +60,13 @@ def test_execute_recipe_edge_cases(tmp_path: Path):
     output_dir = tmp_path / f"{uuid4()}"
     recipe = Path("tests/test_data/noop_recipe.yaml")
     CSET.operators.execute_recipe(recipe, input_file, output_dir)
+
+
+def test_execute_recipe_invalid_args(tmp_path: Path):
+    """Test exception is correctly raised for invalid output path."""
+    recipe = '{"steps":[{"operator": misc.noop}]}'
+    input_file = Path("tests/test_data/air_temp.nc")
+    output_dir = tmp_path / "actually_a_file"
+    output_dir.touch()
+    with pytest.raises(FileExistsError):
+        CSET.operators.execute_recipe(recipe, input_file, output_dir)
