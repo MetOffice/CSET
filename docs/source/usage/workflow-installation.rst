@@ -2,7 +2,7 @@ Install and run the CSET workflow
 =================================
 
 CSET is typically run through a `cylc workflow`_. The first thing you will need
-to do is to download the CSET workflow. The easiest way to do that is via the
+to do is download the CSET workflow. The easiest way to do that is via the
 `Releases`_ page on GitHub, or you can clone the repository. Once downloaded the
 tarball or zip can be unpacked to a location of your choosing.
 
