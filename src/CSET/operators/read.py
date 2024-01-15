@@ -23,6 +23,60 @@ import iris.cube
 import numpy as np
 
 
+def read_cube(
+    loadpath: Path,
+    constraint: iris.Constraint = None,
+    filename_pattern: str = "*",
+    **kwargs,
+) -> iris.cube.Cube:
+    """Read a single cube from files.
+
+    Read operator that takes a path string (can include wildcards), and uses
+    iris to load the cube matching the constraint.
+
+    If the loaded data is split across multiple files, a filename_pattern can be
+    specified to select the read files using Unix shell-style wildcards. In this
+    case the loadpath should point to the directory containing the data.
+
+    Ensemble data can also be loaded. If it has a realization coordinate
+    already, it will be directly used. If not, it will have its member number
+    guessed from the filename, based on one of several common patterns. For
+    example the pattern *emXX*, where XX is the realization.
+
+    Deterministic data will be loaded with a realization of 0, allowing it to be
+    processed in the same way as ensemble data.
+
+    Arguments
+    ---------
+    loadpath: pathlike
+        Path to where .pp/.nc files are located
+    constraint: iris.Constraint | iris.ConstraintCombination
+        Constraints to filter data by
+    filename_pattern: str, optional
+        Unix shell-style pattern to match filenames to. Defaults to "*"
+
+    Returns
+    -------
+    cubes: iris.cube.Cube
+        Cube loaded
+
+    Raises
+    ------
+    FileNotFoundError
+        If the provided path does not exist
+    ValueError
+        If the constraint doesn't produce a single cube.
+    """
+    cubes = read_cubes(loadpath, constraint, filename_pattern)
+    # Check filtered cubes is a CubeList containing one cube.
+    if len(cubes) == 1:
+        return cubes[0]
+    else:
+        raise ValueError(
+            f"Constraint doesn't produce single cube. {constraint}\n{cubes}"
+        )
+
+
 def read_cubes(
     loadpath: Path,
     constraint: iris.Constraint = None,
