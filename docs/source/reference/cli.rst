@@ -13,16 +13,16 @@ page.
 
 .. code-block:: text
 
-    usage: cset bake [-h] -r RECIPE -i INPUT_DIR -o OUTPUT_DIR
+    usage: cset bake [-h] -i INPUT_DIR -o OUTPUT_DIR -r RECIPE
 
     options:
     -h, --help            show this help message and exit
-    -r RECIPE, --recipe RECIPE
-                            recipe file to read
     -i INPUT_DIR, --input-dir INPUT_DIR
                             directory containing input data
     -o OUTPUT_DIR, --output-dir OUTPUT_DIR
-                            directory to write output
+                            directory to write output into
+    -r RECIPE, --recipe RECIPE
+                            recipe file to read
 
 .. _cset-cookbook-command:
 
@@ -35,16 +35,16 @@ for descriptions of available recipes.
 
 .. code-block:: text
 
-    usage: cset cookbook [-h] [-o OUTPUT_DIR] [-l] [recipe]
+    usage: cset cookbook [-h] [-l] [-o OUTPUT_DIR] [recipe]
 
     positional arguments:
     recipe                recipe to output or detail. Omit for all.
 
     options:
     -h, --help            show this help message and exit
+    -l, --list            list available recipes. Supplied recipes are detailed.
     -o OUTPUT_DIR, --output-dir OUTPUT_DIR
                             directory to save recipes. If omitted uses $PWD
-    -l, --list            list available recipes. Supplied recipes are detailed.
 
 .. _cset-graph-command:
 
@@ -58,15 +58,15 @@ exactly what ran.
 
 .. code-block:: text
 
-    usage: cset graph [-h] -r RECIPE [-o [OUTPUT_PATH]] [-d]
+    usage: cset graph [-h] [-d] [-o [OUTPUT_PATH]] -r RECIPE
 
     options:
     -h, --help            show this help message and exit
+    -d, --details         include operator arguments in output
+    -o [OUTPUT_PATH], --output-path [OUTPUT_PATH]
+                            persistent file to save the graph. Otherwise the file is opened
     -r RECIPE, --recipe RECIPE
                             recipe file to read
-    -o [OUTPUT_PATH], --output-path [OUTPUT_PATH]
-                            file in which to save the graph image, otherwise uses a temporary file. When specified the file is not automatically opened
-    -d, --details         include operator arguments in output
 
 .. image:: recipe-graph.svg
     :alt: A graph visualising a recipe. The nodes are linked with directed edges showing the flow of data.

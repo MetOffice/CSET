@@ -44,13 +44,6 @@ def main():
     # Run operator chain
     parser_bake = subparsers.add_parser("bake", help="run a recipe file")
     parser_bake.add_argument(
-        "-r",
-        "--recipe",
-        type=Path,
-        required=True,
-        help="recipe file to read",
-    )
-    parser_bake.add_argument(
         "-i",
         "--input-dir",
         type=Path,
@@ -64,9 +57,30 @@ def main():
         required=True,
         help="directory to write output into",
     )
+    parser_bake.add_argument(
+        "-r",
+        "--recipe",
+        type=Path,
+        required=True,
+        help="recipe file to read",
+    )
     parser_bake.set_defaults(func=_bake_command)
 
     parser_graph = subparsers.add_parser("graph", help="visualise a recipe file")
+    parser_graph.add_argument(
+        "-d",
+        "--details",
+        action="store_true",
+        help="include operator arguments in output",
+    )
+    parser_graph.add_argument(
+        "-o",
+        "--output-path",
+        type=Path,
+        nargs="?",
+        help="persistent file to save the graph. Otherwise the file is opened",
+        default=None,
+    )
     parser_graph.add_argument(
         "-r",
         "--recipe",
@@ -74,24 +88,16 @@ def main():
         required=True,
         help="recipe file to read",
     )
-    parser_graph.add_argument(
-        "-o",
-        "--output-path",
-        type=Path,
-        nargs="?",
-        help="file in which to save the graph image, otherwise uses a temporary file. When specified the file is not automatically opened",
-        default=None,
-    )
-    parser_graph.add_argument(
-        "-d",
-        "--details",
-        action="store_true",
-        help="include operator arguments in output",
-    )
     parser_graph.set_defaults(func=_graph_command)
 
     parser_cookbook = subparsers.add_parser(
         "cookbook", help="unpack included recipes to a folder"
+    )
+    parser_cookbook.add_argument(
+        "-l",
+        "--list",
+        action="store_true",
+        help="list available recipes. Supplied recipes are detailed.",
     )
     parser_cookbook.add_argument(
         "-o",
@@ -99,12 +105,6 @@ def main():
         type=Path,
         help="directory to save recipes. If omitted uses $PWD",
         default=Path.cwd(),
-    )
-    parser_cookbook.add_argument(
-        "-l",
-        "--list",
-        action="store_true",
-        help="list available recipes. Supplied recipes are detailed.",
     )
     parser_cookbook.add_argument(
         "recipe",
