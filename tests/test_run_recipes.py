@@ -64,9 +64,9 @@ def test_execute_recipe_edge_cases(tmp_path: Path):
 
 def test_execute_recipe_invalid_output_dir(tmp_path: Path):
     """Exception raised if output directory can't be created."""
-    recipe_file = Path("tests/test_data/plot_instant_air_temp.yaml")
+    recipe = '{"steps":[{"operator": misc.noop}]}'
     input_file = Path("tests/test_data/air_temp.nc")
-    output_dir = tmp_path / "file"
+    output_dir = tmp_path / "actually_a_file"
     output_dir.touch()
     with pytest.raises(FileExistsError):
-        CSET.operators.execute_recipe(recipe_file, input_file, output_dir)
+        CSET.operators.execute_recipe(recipe, input_file, output_dir)
