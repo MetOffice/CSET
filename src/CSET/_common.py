@@ -26,8 +26,7 @@ import ruamel.yaml
 
 
 def parse_recipe(recipe_yaml: Union[Path, str]):
-    """
-    Parse a recipe into a python dictionary.
+    """Parse a recipe into a python dictionary.
 
     Parameters
     ----------
@@ -102,8 +101,9 @@ def get_recipe_metadata() -> dict:
 def parse_variable_options(arguments: List[str]) -> dict:
     """Parse a list of arguments into a dictionary of variables.
 
-    The variables arguments start with two hyphen-minus (`--`), consisting of
-    only capital letters (`A`-`Z`) and underscores (`_`).
+    The variable name arguments start with two hyphen-minus (`--`), consisting
+    of only capital letters (`A`-`Z`) and underscores (`_`). While the variable
+    name is restricted, the value of the variable can be any string.
 
     Parameters
     ----------
