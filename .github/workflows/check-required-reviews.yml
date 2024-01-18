@@ -1,0 +1,58 @@
+name: Check required reviews
+
+on:
+  pull_request:
+    types: [labeled, unlabeled]
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  check-reviews:
+    if: contains(github.event.pull_request.labels.*.name, 'full_review')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Check reviews
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: python
+        run: |
+          """Check there are enough approving reviews."""
+          import json
+          import os
+          import re
+          import subprocess
+          import sys
+
+          REQUIRED_REVIEWS = 2
+
+          repo = "${{ github.repository }}"
+          pr_number = "${{ github.event.pull_request.number }}"
+
+          # Get info on PR labels and reviews.
+          pr_info = json.loads(
+              subprocess.run(
+                  ("gh", "pr", "--json", "reviews", "--repo", repo, "view", pr_number),
+                  check=True,
+                  capture_output=True,
+                  timeout=60,
+                  text=True,
+              ).stdout
+          )
+
+          # Check for enough reviews. Newer reviews invalidate older ones.
+          approving_reviewers = set()
+          for review in sorted(pr_info["reviews"], key=lambda r: r["submittedAt"]):
+              if review["state"] == "APPROVED":
+                  approving_reviewers.add(review["author"]["login"])
+              elif review["state"] == "CHANGES_REQUESTED":
+                  approving_reviewers.discard(review["author"]["login"])
+
+          if len(approving_reviewers) < REQUIRED_REVIEWS:
+              print(f"\033[31m❌ Not enough reviews.\033[0m ({len(approving_reviewers)}/{REQUIRED_REVIEWS})")
+              sys.exit(1)
+          print(f"\033[32m✔ Sufficient reviews.\033[0m ({len(approving_reviewers)}/{REQUIRED_REVIEWS})")
