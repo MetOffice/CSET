@@ -27,11 +27,11 @@ sections under "suite conf" and fill in the config. Help text can be viewed by
 clicking on the name of a variable. Once you have configured CSET, you can save
 and close rose edit.
 
-Opening a command line inside the root of the CSET folder, you navigate to the 
-``cset-workflow`` directory and then you can run it with
-the command ``cylc vip .``, which will cause cylc to submit the job to your
-site's batch processing system, and run it. You can view the job's progress with
-the cylc gui, accessible with the command ``cylc gui``.
+Opening a command line inside the root of the CSET folder, you navigate to the
+``cset-workflow`` directory and then you can run it with the command ``cylc vip
+.``, which will cause cylc to submit the job to your site's batch processing
+system, and run it. You can view the job's progress with the cylc gui,
+accessible with the command ``cylc gui``.
 
 Once CSET has finished running you will receive an email containing a link to
 the output page.
