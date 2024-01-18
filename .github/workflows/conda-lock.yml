@@ -50,7 +50,7 @@ jobs:
 
       - name: Create pull requests
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if $(sha256sum --status -c ${{ runner.temp }}/lock_file_hashes); then
             echo "Lock files unchanged. Skipping pull request..."
