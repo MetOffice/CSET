@@ -151,7 +151,7 @@ def spatial_contour_plot(
     title = get_recipe_metadata().get("title", "Untitled")
     if filename is None:
         filename = slugify(title)
-    filename = Path(filename).with_suffix(".svg")
+    filename = Path(filename).with_suffix(".png")
     cube = _check_single_cube(cube)
 
     # with mpl.rc_context({"figure.labelsize": 22}):
@@ -179,7 +179,7 @@ def spatial_contour_plot(
     cbar = plt.colorbar()
     cbar.set_label(label=f"{cube.name()} ({cube.units})", size=20)
 
-    plt.savefig(filename, bbox_inches="tight")
+    plt.savefig(filename, bbox_inches="tight", dpi=150)
 
     logging.info("Saved contour plot to %s", filename)
     _make_plot_html_page(filename)
@@ -217,7 +217,7 @@ def postage_stamp_contour_plot(
     """
     if filename is None:
         filename = slugify(get_recipe_metadata().get("title", "Untitled"))
-    filename = Path(filename).with_suffix(".svg")
+    filename = Path(filename).with_suffix(".png")
 
     # Validate input is in the right form.
     cube = _check_single_cube(cube)
@@ -244,7 +244,7 @@ def postage_stamp_contour_plot(
     colorbar = plt.colorbar(plot, colorbar_axes, orientation="horizontal")
     colorbar.set_label(f"{cube.name()} / {cube.units}")
 
-    plt.savefig(filename, bbox_inches="tight")
+    plt.savefig(filename, bbox_inches="tight", dpi=150)
     logging.info("Saved contour postage stamp plot to %s", filename)
     _make_plot_html_page(filename)
     return cube
@@ -255,7 +255,7 @@ def time_series_contour_plot(
 ) -> iris.cube.Cube:
     """Plot a spatial variable for all time values.
 
-    The files are named sequentially, e.g. 1.svg, 2.svg, ...
+    The files are named sequentially, e.g. 1.png, 2.png, ...
 
     Parameters
     ----------
