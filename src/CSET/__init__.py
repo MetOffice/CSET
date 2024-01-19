@@ -21,9 +21,7 @@ import sys
 from importlib.metadata import version
 from pathlib import Path
 
-
-class ArgumentError(ValueError):
-    """Indicates provided arguments are not understood."""
+from CSET._common import ArgumentError
 
 
 def main():
@@ -155,11 +153,7 @@ def _bake_command(args, unparsed_args):
     from CSET._common import parse_variable_options
     from CSET.operators import execute_recipe
 
-    try:
-        recipe_variables = parse_variable_options(unparsed_args)
-    except ValueError as err:
-        raise ArgumentError from err
-
+    recipe_variables = parse_variable_options(unparsed_args)
     execute_recipe(args.recipe, args.input_dir, args.output_dir, recipe_variables)
 
 
