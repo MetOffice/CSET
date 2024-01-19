@@ -25,6 +25,10 @@ from typing import Any, List, Union
 import ruamel.yaml
 
 
+class ArgumentError(ValueError):
+    """Indicates provided arguments are not understood."""
+
+
 def parse_recipe(recipe_yaml: Union[Path, str]):
     """Parse a recipe into a python dictionary.
 
@@ -130,10 +134,10 @@ def parse_variable_options(arguments: List[str]) -> dict:
                 key = arguments[i].strip("-")
                 value = arguments[i + 1]
             except IndexError as err:
-                raise ValueError(f"No value for variable {arguments[i]}") from err
+                raise ArgumentError(f"No value for variable {arguments[i]}") from err
             i += 1
         else:
-            raise ValueError(f"Unknown argument: {arguments[i]}")
+            raise ArgumentError(f"Unknown argument: {arguments[i]}")
         try:
             recipe_variables[key.strip("-")] = json.loads(value)
         except json.JSONDecodeError:

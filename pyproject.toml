@@ -18,6 +18,7 @@ dependencies = [
     "mo_pack >= 0.3.0",
     "isodate",
     "markdown-it-py >= 3.0",
+    "simple_template >= 1"
 ]
 
 [project.urls]

@@ -1,4 +1,4 @@
-title: Surface Air Temperature Spatial Plot
+title: Surface Air Temperature Spatial Plot Time Series
 description: |
   Extracts and plots the 1.5m air temperature from a file.
 
@@ -19,5 +19,6 @@ steps:
         cell_methods: []
 
   - operator: plot.spatial_contour_plot
+    sequence_coordinate: time
 
   - operator: write.write_cube_to_nc
