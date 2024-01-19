@@ -27,4 +27,4 @@ steps:
     filename: processed_data.nc
 
   - operator: plot.spatial_contour_plot
-    filename: plot.svg
+    filename: plot.png

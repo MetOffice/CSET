@@ -28,7 +28,7 @@ def test_spatial_plot(tmp_path: Path):
     output_dir = tmp_path / "output"
     recipe_file = Path("tests/test_data/plot_instant_air_temp.yaml")
     execute_recipe(recipe_file, input_file, output_dir)
-    actual_output_file = output_dir / "plot.svg"
+    actual_output_file = output_dir / "plot.png"
     assert actual_output_file.is_file()
 
 
@@ -38,13 +38,13 @@ def test_postage_stamp_plots(tmp_path: Path):
     output_dir = tmp_path / "output"
     recipe_file = Path("tests/test_data/ensemble_air_temp.yaml")
     execute_recipe(recipe_file, input_file, output_dir)
-    assert output_dir.joinpath("plot.svg").is_file()
+    assert output_dir.joinpath("plot.png").is_file()
 
 
 def test_postage_stamp_realization_check(tmp_path: Path, cube):
     """Check error when cube has no realization coordinate."""
     cube.remove_coord("realization")
-    plot_path = tmp_path / "plot.svg"
+    plot_path = tmp_path / "plot.png"
     with pytest.raises(ValueError):
         plot.postage_stamp_contour_plot(cube, plot_path)
 
