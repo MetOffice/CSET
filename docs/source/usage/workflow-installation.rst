@@ -19,13 +19,14 @@ You will then need to edit the configuration to set up your job. Start by making
 a copy of the ``rose-suite.conf.example`` file called ``rose-suite.conf``. This
 needs further amendments, which are done using `rose edit`_, a GUI configuration
 tool. Within rose edit go through the sections under "suite conf" and fill in
-the config. Help can be viewed by clicking on the name of a variable. Once
-you have configured CSET, you can save and close rose edit.
+the config. Help can be viewed by clicking on the name of a variable. Once you
+have configured CSET, you can save and close rose edit.
 
-Opening a command line inside ``the cset-workflow`` folder you can run the
-workflow with the command ``cylc vip .``, which will cause cylc to submit the
-job to your site's batch processing system, and run it. You can view the job's
-progress with the cylc gui, accessible with the command ``cylc gui``.
+Opening a command line inside the root of the CSET folder, you navigate to the
+``cset-workflow`` directory and then you can run it with the command ``cylc vip
+.``, which will cause cylc to submit the job to your site's batch processing
+system, and run it. You can view the job's progress with the cylc gui,
+accessible with the command ``cylc gui``.
 
 Once CSET has finished running you will receive an email containing a link to
 the output page.
