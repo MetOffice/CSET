@@ -9,4 +9,4 @@
     script = rose task-run -v --app-key=run_cset_recipe
     execution time limit = PT15M
         [[[environment]]]
-        CSET_RECIPE_NAME = "surface_air_temperature_spatial_plot.yaml"
+        CSET_RECIPE_NAME = "surface_air_temperature_spatial_plot_time_series.yaml"
