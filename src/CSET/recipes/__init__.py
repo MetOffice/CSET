@@ -22,8 +22,6 @@ from typing import Iterable
 
 import ruamel.yaml
 
-import CSET.recipes as recipes
-
 
 def _recipe_files_in_tree(
     recipe_name: str = None, input_dir: Path = None
@@ -32,7 +30,7 @@ def _recipe_files_in_tree(
     if recipe_name is None:
         recipe_name = ""
     if input_dir is None:
-        input_dir = files(recipes)
+        input_dir = files()
     for file in input_dir.iterdir():
         logging.debug("Testing %s", file)
         if recipe_name in file.name and file.is_file() and file.suffix == ".yaml":
