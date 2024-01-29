@@ -61,3 +61,11 @@ def test_check_single_cube():
         plot._check_single_cube(long_cubelist)
     with pytest.raises(TypeError):
         plot._check_single_cube(non_cube)
+
+
+def test_contour_plot_sequence(cube, tmp_working_dir):
+    """Plot sequence of contour plots."""
+    plot.spatial_contour_plot(cube, sequence_coordinate="time")
+    assert Path("untitled_1.png").is_file()
+    assert Path("untitled_2.png").is_file()
+    assert Path("untitled_3.png").is_file()
