@@ -98,8 +98,14 @@ def slugify(s: str) -> str:
 
 def get_recipe_metadata() -> dict:
     """Get the metadata of the running recipe."""
-    with open("meta.json", "rt", encoding="UTF-8") as fp:
-        return json.load(fp)
+    try:
+        with open("meta.json", "rt", encoding="UTF-8") as fp:
+            return json.load(fp)
+    except FileNotFoundError:
+        meta = {}
+        with open("meta.json", "wt", encoding="UTF-8") as fp:
+            json.dump(meta, fp)
+        return {}
 
 
 def parse_variable_options(arguments: List[str]) -> dict:
