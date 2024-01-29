@@ -24,6 +24,7 @@ import pytest
 def tmp_working_dir(tmp_path, monkeypatch):
     """Change the working directory for a test."""
     monkeypatch.chdir(tmp_path)
+    return tmp_path
 
 
 @pytest.fixture(scope="session")
