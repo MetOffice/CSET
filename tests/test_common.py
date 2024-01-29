@@ -144,3 +144,15 @@ def test_template_variables_wrong_recipe_type():
     """Give wrong type for recipe."""
     with pytest.raises(TypeError):
         common.template_variables(1, {})
+
+
+def test_get_recipe_meta(tmp_working_dir):
+    """Reading metadata from disk."""
+    # Default for missing file.
+    meta_file = Path("meta.json")
+    assert not meta_file.exists()
+    assert common.get_recipe_metadata() == {}
+    assert meta_file.exists()
+    # Reads existing file.
+    meta_file.write_text('{"title": "Example Title"}', encoding="UTF-8")
+    assert common.get_recipe_metadata()["title"] == "Example Title"
