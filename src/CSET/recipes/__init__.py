@@ -14,9 +14,10 @@
 
 """Operations on recipes."""
 
+import importlib.resources
 import logging
+import sys
 import warnings
-from importlib.resources import files
 from pathlib import Path
 from typing import Iterable
 
@@ -30,7 +31,13 @@ def _recipe_files_in_tree(
     if recipe_name is None:
         recipe_name = ""
     if input_dir is None:
-        input_dir = files()
+        # Importlib behaviour changed in 3.12 to avoid circular dependencies.
+        if sys.version_info.minor >= 12:
+            input_dir = importlib.resources.files()
+        else:
+            import CSET.recipes
+
+            input_dir = importlib.resources.files(CSET.recipes)
     for file in input_dir.iterdir():
         logging.debug("Testing %s", file)
         if recipe_name in file.name and file.is_file() and file.suffix == ".yaml":

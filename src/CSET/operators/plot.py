@@ -19,6 +19,7 @@ import importlib.resources
 import json
 import logging
 import math
+import sys
 from pathlib import Path
 from typing import Iterable, Union
 
@@ -43,7 +44,14 @@ def _make_plot_html_page(plots: Union[str, Iterable]):
     if not isinstance(plots, Iterable):
         plots = [plots]
 
-    template_file = importlib.resources.files().joinpath("_plot_page_template.html")
+    # Importlib behaviour changed in 3.12 to avoid circular dependencies.
+    if sys.version_info.minor >= 12:
+        operator_files = importlib.resources.files()
+    else:
+        import CSET.operators
+
+        operator_files = importlib.resources.files(CSET.operators)
+    template_file = operator_files.joinpath("_plot_page_template.html")
     variables = {
         "title": title,
         "description": description,
