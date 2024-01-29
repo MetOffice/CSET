@@ -20,7 +20,7 @@ repos:
         - tomli
 
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 3de533c80a7e95bb6efb213169d269267e9b234b  # frozen: 23.12.1
+    rev: ababb58801592720e6291c8718da55caabbe6670  # frozen: 24.1.1
     hooks:
       - id: black
 
