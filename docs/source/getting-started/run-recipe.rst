@@ -16,7 +16,7 @@ Try the following:
 
 .. code-block:: bash
 
-    cset cookbook
+    cset cookbook -o recipes
 
 This will write out a recipes folder containing recipe ``.yaml`` files to your
 current directory. We will use the
@@ -35,7 +35,7 @@ output should be a directory, but it will be created if it does not exist.
 
 .. code-block:: bash
 
-    cset bake air_temp.nc output/ recipes/mean-air-temp-spacial-plot.yaml
+    cset bake -i air_temp.nc -o output/ -r recipes/mean-air-temp-spacial-plot.yaml
 
 This will run the recipe and leave its output in the specified output directory.
 

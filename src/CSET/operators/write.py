@@ -43,7 +43,7 @@ def write_cube_to_nc(
     Cube | CubeList
         The inputted cube(list) (so further operations can be applied)
     """
-    if not filename:
+    if filename is None:
         filename = slugify(get_recipe_metadata().get("title", "Untitled"))
     # Ensure that output filename is a Path with a .nc suffix
     filename = Path(filename).with_suffix(".nc")

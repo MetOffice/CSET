@@ -62,8 +62,8 @@ def test_execute_recipe_edge_cases(tmp_path: Path):
     CSET.operators.execute_recipe(recipe, input_file, output_dir)
 
 
-def test_execute_recipe_invalid_args(tmp_path: Path):
-    """Test exception is correctly raised for invalid output path."""
+def test_execute_recipe_invalid_output_dir(tmp_path: Path):
+    """Exception raised if output directory can't be created."""
     recipe = '{"steps":[{"operator": misc.noop}]}'
     input_file = Path("tests/test_data/air_temp.nc")
     output_dir = tmp_path / "actually_a_file"

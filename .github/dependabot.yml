@@ -5,12 +5,6 @@
 
 version: 2
 updates:
-  # Check for python dependency updates.
-  - package-ecosystem: "pip" # See documentation for possible values
-    directory: "/" # Location of package manifests
-    schedule:
-      interval: "weekly"
-
   # Check for GitHub Actions updates.
   - package-ecosystem: "github-actions"
     directory: "/"

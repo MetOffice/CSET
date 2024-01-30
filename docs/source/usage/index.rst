@@ -9,3 +9,4 @@ This section contains guides on how to do specific things with CSET.
     operator-recipes
     workflow-installation
     add-diagnostic
+    recipe-variables

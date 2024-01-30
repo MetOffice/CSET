@@ -18,22 +18,25 @@ In many ways these are integration tests.
 """
 
 import os
-import shutil
 import subprocess
 import tempfile
 from pathlib import Path
 from uuid import uuid4
 
+import pytest
+
 
 def test_command_line_help():
     """Check that help commands work."""
     subprocess.run(["cset", "--help"], check=True)
-    # Test verbose options. This is really just to up the coverage number.
-    subprocess.run(["cset", "-v"], check=True)
-    subprocess.run(["cset", "-vv"], check=True)
     subprocess.run(["cset", "--version"], check=True)
+
     # Gain coverage of __main__.py
     subprocess.run(["python3", "-m", "CSET", "-h"], check=True)
+
+    # Test verbose options. This is really just to up the coverage number.
+    subprocess.run(["cset", "-v"])
+    subprocess.run(["cset", "-vv"])
 
 
 def test_recipe_execution():
@@ -42,28 +45,9 @@ def test_recipe_execution():
         [
             "cset",
             "bake",
-            os.devnull,
-            tempfile.gettempdir(),
-            "tests/test_data/noop_recipe.yaml",
-        ],
-        check=True,
-    )
-
-
-def test_environ_var_recipe():
-    """Test recipe coming from environment variable."""
-    os.environ[
-        "CSET_RECIPE"
-    ] = """
-        steps:
-          - operator: misc.noop
-        """
-    subprocess.run(
-        [
-            "cset",
-            "bake",
-            os.devnull,
-            tempfile.gettempdir(),
+            f"--input-dir={os.devnull}",
+            f"--output-dir={tempfile.gettempdir()}",
+            "--recipe=tests/test_data/noop_recipe.yaml",
         ],
         check=True,
     )
@@ -78,24 +62,15 @@ def test_graph_creation(tmp_path: Path):
     # Run with output path specified
     output_file = tmp_path / f"{uuid4()}.svg"
     subprocess.run(
-        ("cset", "graph", "-o", str(output_file), "tests/test_data/noop_recipe.yaml"),
+        (
+            "cset",
+            "graph",
+            "-o",
+            str(output_file),
+            "--recipe=tests/test_data/noop_recipe.yaml",
+        ),
         check=True,
     )
-    assert output_file.is_file()
-    output_file.unlink()
-
-
-def test_graph_creation_env_var(tmp_path: Path):
-    """Generates a graph with the command line interface from an env var."""
-    os.environ[
-        "CSET_RECIPE"
-    ] = """
-        steps:
-          - operator: misc.noop
-        """
-    # Run with output path specified
-    output_file = tmp_path / f"{uuid4()}.svg"
-    subprocess.run(("cset", "graph", "-o", str(output_file)), check=True)
     assert output_file.is_file()
     output_file.unlink()
 
@@ -110,21 +85,54 @@ def test_graph_details(tmp_path: Path):
             "--details",
             "-o",
             str(output_file),
-            "tests/test_data/noop_recipe.yaml",
+            "--recipe=tests/test_data/noop_recipe.yaml",
         ),
         check=True,
     )
     assert output_file.is_file()
 
 
-def test_cookbook_cwd():
+def test_cookbook_cwd(tmp_working_dir):
     """Unpacking the recipes into the current working directory."""
     subprocess.run(["cset", "cookbook"], check=True)
-    assert Path.cwd().joinpath("recipes/extract_instant_air_temp.yaml").is_file()
-    shutil.rmtree(Path.cwd().joinpath("recipes"))
+    assert Path("extract_instant_air_temp.yaml").is_file()
 
 
 def test_cookbook_path(tmp_path: Path):
     """Unpacking the recipes into a specified directory."""
-    subprocess.run(["cset", "cookbook", tmp_path], check=True)
+    subprocess.run(["cset", "cookbook", "--output-dir", tmp_path], check=True)
     assert (tmp_path / "extract_instant_air_temp.yaml").is_file()
+
+
+def test_cookbook_list_available_recipes():
+    """List all available recipes."""
+    proc = subprocess.run(
+        ["cset", "cookbook", "--list"], capture_output=True, check=True
+    )
+    assert proc.stdout.startswith(b"Available recipes:\n")
+
+
+def test_cookbook_detail_recipe():
+    """Show detail of a recipe."""
+    proc = subprocess.run(
+        ["cset", "cookbook", "--list", "extract_instant_air_temp"],
+        capture_output=True,
+        check=True,
+    )
+    assert proc.stdout.startswith(b"\n\textract_instant_air_temp\n")
+
+
+def test_bake_invalid_args():
+    """Invalid arguments give non-zero exit code."""
+    with pytest.raises(subprocess.CalledProcessError):
+        subprocess.run(
+            [
+                "cset",
+                "bake",
+                "--recipe=foo",
+                "--input-dir=/tmp",
+                "--output-dir=/tmp",
+                "--not-a-real-option",
+            ],
+            check=True,
+        )

@@ -21,12 +21,19 @@ import pytest
 import CSET.recipes
 
 
+def test_recipe_files_in_tree():
+    """Get recipes in directory containing sub-directories."""
+    files = list(CSET.recipes._recipe_files_in_tree(input_dir=Path("tests")))
+    assert Path("tests/test_data/noop_recipe.yaml") in files
+
+
 def test_unpack(tmp_path: Path):
-    """Unpack directory containing sub-directories."""
-    CSET.recipes._unpack_recipes_from_dir(Path("tests"), tmp_path)
-    assert Path(tmp_path, "test_data/noop_recipe.yaml").is_file()
-    # Run again to check that warnings are produced when files collide.
-    CSET.recipes._unpack_recipes_from_dir(Path("tests"), tmp_path)
+    """Unpack recipes."""
+    CSET.recipes.unpack_recipes(tmp_path, "extract_instant_air_temp")
+    assert (tmp_path / "extract_instant_air_temp.yaml").is_file()
+    # Unpack everything and check a warning is produced when files collide.
+    with pytest.warns():
+        CSET.recipes.unpack_recipes(tmp_path)
 
 
 def test_unpack_recipes_exception_collision(tmp_path: Path):

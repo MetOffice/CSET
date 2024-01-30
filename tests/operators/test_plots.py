@@ -15,20 +15,19 @@
 """Test plotting operators."""
 
 from pathlib import Path
-from uuid import uuid4
 
 import iris.cube
 import pytest
 
-import CSET.operators
+from CSET.operators import execute_recipe, plot
 
 
 def test_spatial_plot(tmp_path: Path):
     """Plot spatial contour plot of instant air temp."""
     input_file = Path("tests/test_data/air_temp.nc")
-    output_dir = tmp_path / f"{uuid4()}"
+    output_dir = tmp_path / "output"
     recipe_file = Path("tests/test_data/plot_instant_air_temp.yaml")
-    CSET.operators.execute_recipe(recipe_file, input_file, output_dir)
+    execute_recipe(recipe_file, input_file, output_dir)
     actual_output_file = output_dir / "plot.svg"
     assert actual_output_file.is_file()
 
@@ -36,19 +35,18 @@ def test_spatial_plot(tmp_path: Path):
 def test_postage_stamp_plots(tmp_path: Path):
     """Plot postage stamp plots of ensemble data."""
     input_file = Path("tests/test_data/")
-    output_dir = tmp_path / f"{uuid4()}"
+    output_dir = tmp_path / "output"
     recipe_file = Path("tests/test_data/ensemble_air_temp.yaml")
-    CSET.operators.execute_recipe(recipe_file, input_file, output_dir)
+    execute_recipe(recipe_file, input_file, output_dir)
     assert output_dir.joinpath("plot.svg").is_file()
 
 
-def test_postage_stamp_realization_check(tmp_path: Path):
+def test_postage_stamp_realization_check(tmp_path: Path, cube):
     """Check error when cube has no realization coordinate."""
-    cube = CSET.operators.read.read_cubes("tests/test_data/air_temp.nc")[0]
     cube.remove_coord("realization")
     plot_path = tmp_path / "plot.svg"
     with pytest.raises(ValueError):
-        CSET.operators.plot.postage_stamp_contour_plot(cube, plot_path)
+        plot.postage_stamp_contour_plot(cube, plot_path)
 
 
 def test_check_single_cube():
@@ -57,9 +55,9 @@ def test_check_single_cube():
     cubelist = iris.cube.CubeList([cube])
     long_cubelist = iris.cube.CubeList([cube, cube])
     non_cube = 1
-    assert CSET.operators.plot._check_single_cube(cube) == cube
-    assert CSET.operators.plot._check_single_cube(cubelist) == cube
+    assert plot._check_single_cube(cube) == cube
+    assert plot._check_single_cube(cubelist) == cube
     with pytest.raises(TypeError):
-        CSET.operators.plot._check_single_cube(long_cubelist)
+        plot._check_single_cube(long_cubelist)
     with pytest.raises(TypeError):
-        CSET.operators.plot._check_single_cube(non_cube)
+        plot._check_single_cube(non_cube)

@@ -22,7 +22,7 @@ import CSET._common as common
 
 
 def test_parse_recipe_string():
-    """Happy case for loading and parsing of a YAML recipe from a string."""
+    """Loading and parsing of a YAML recipe from a string."""
     valid_recipe = """\
     steps:
         operator: misc.noop
@@ -33,7 +33,7 @@ def test_parse_recipe_string():
 
 
 def test_parse_recipe_path():
-    """Happy case for loading and parsing of a YAML recipe from a Path."""
+    """Loading and parsing of a YAML recipe from a Path."""
     parsed = common.parse_recipe(Path("tests/test_data/noop_recipe.yaml"))
     expected = {
         "name": "Noop",
@@ -51,49 +51,49 @@ def test_parse_recipe_path():
 
 
 def test_parse_recipe_exception_missing():
-    """Test exception for non-existent file."""
+    """Exception for non-existent file."""
     with pytest.raises(FileNotFoundError):
         common.parse_recipe(Path("/non-existent/path"))
 
 
 def test_parse_recipe_exception_type():
-    """Test exception for incorrect type."""
+    """Exception for incorrect type."""
     with pytest.raises(TypeError):
         common.parse_recipe(True)
 
 
 def test_parse_recipe_exception_invalid_yaml():
-    """Test exception for invalid YAML."""
+    """Exception for invalid YAML."""
     with pytest.raises(ValueError):
         common.parse_recipe('"Inside quotes" outside of quotes')
 
 
 def test_parse_recipe_exception_invalid_recipe():
-    """Test exception for valid YAML but invalid recipe."""
+    """Exception for valid YAML but invalid recipe."""
     with pytest.raises(ValueError):
         common.parse_recipe("a: 1")
 
 
 def test_parse_recipe_exception_blank():
-    """Test exception for blank recipe."""
+    """Exception for blank recipe."""
     with pytest.raises(ValueError):
         common.parse_recipe("")
 
 
 def test_parse_recipe_exception_no_steps():
-    """Test exception for recipe without any steps."""
+    """Exception for recipe without any steps."""
     with pytest.raises(ValueError):
         common.parse_recipe("steps: []")
 
 
 def test_parse_recipe_exception_non_dict():
-    """Test exception for recipe that parses to a non-dict."""
+    """Exception for recipe that parses to a non-dict."""
     with pytest.raises(ValueError):
         common.parse_recipe("[]")
 
 
 def test_slugify():
-    """Test slugify removes special characters."""
+    """Slugify removes special characters."""
     assert common.slugify("Test") == "test"
     assert (
         common.slugify("Mean Surface Air Temperature Spatial Plot")
@@ -104,3 +104,43 @@ def test_slugify():
     assert common.slugify("greekαβγδchars") == "greek_chars"
     assert common.slugify("  ABC ") == "abc"
     assert common.slugify("あいうえお") == ""
+
+
+def test_is_variable():
+    """Recipe variables are correctly identified."""
+    assert common.is_variable("$VARIABLE_NAME")
+    assert common.is_variable("$V")
+    assert not common.is_variable("VARIABLE_NAME")
+    assert not common.is_variable("$VARIABLE-NAME")
+    assert not common.is_variable("$Variable_name")
+
+
+def test_parse_variable_options():
+    """Variable arguments are parsed correctly."""
+    args = ("--STASH=m01s01i001", "--COUNT", "3", "--CELL_METHODS=[]")
+    expected = {"STASH": "m01s01i001", "COUNT": 3, "CELL_METHODS": []}
+    actual = common.parse_variable_options(args)
+    assert actual == expected
+    # Not valid variable name.
+    with pytest.raises(ValueError):
+        common.parse_variable_options(("--lowercase=False",))
+    # Missing variable value.
+    with pytest.raises(ValueError):
+        common.parse_variable_options(("--VARIABLE",))
+
+
+def test_template_variables():
+    """Variables are correctly templated into recipes."""
+    recipe = {"steps": [{"operator": "misc.noop", "variable": "$VAR"}]}
+    variables = {"VAR": 42}
+    expected = {"steps": [{"operator": "misc.noop", "variable": 42}]}
+    actual = common.template_variables(recipe, variables)
+    assert actual == expected
+    with pytest.raises(KeyError):
+        common.template_variables(recipe, {})
+
+
+def test_template_variables_wrong_recipe_type():
+    """Give wrong type for recipe."""
+    with pytest.raises(TypeError):
+        common.template_variables(1, {})

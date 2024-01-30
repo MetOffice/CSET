@@ -55,7 +55,7 @@ def save_graph(
         Recipe is invalid.
     """
     recipe = parse_recipe(recipe_file)
-    if not save_path:
+    if save_path is None:
         save_path = Path(f"{tempfile.gettempdir()}/{uuid4()}.svg")
 
     def step_parser(step: dict, prev_node: str) -> str:

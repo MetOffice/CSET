@@ -53,7 +53,7 @@ def append_to_index(index_path: Path, record: dict):
         json.dump(index, fp)
 
 
-input_file = (
+input_path = (
     Path(
         f"{os.getenv('CYLC_WORKFLOW_SHARE_DIR')}/cycle/{os.getenv('CYLC_TASK_CYCLE_POINT')}/input_path"
     )
@@ -63,8 +63,25 @@ input_file = (
 plot_id = str(uuid4())
 output_directory = Path.cwd() / plot_id
 
-# Takes recipe from CSET_RECIPE environment variable.
-subprocess.run(("cset", "-v", "bake", input_file, output_directory), check=True)
+# Takes recipe from CSET_RECIPE environment variable if not given.
+cset_recipe = os.getenv("CSET_RECIPE_NAME")
+if cset_recipe:
+    subprocess.run(("cset", "-v", "cookbook", cset_recipe), check=True)
+else:
+    cset_recipe = Path("recipe.yaml")
+    cset_recipe.write_bytes(os.getenvb("CSET_RECIPE"))
+
+subprocess.run(
+    (
+        "cset",
+        "-v",
+        "bake",
+        f"--recipe={cset_recipe}",
+        f"--input-dir={input_path}",
+        f"--output-dir={output_directory}",
+    ),
+    check=True,
+)
 
 with open(output_directory / "meta.json", "rt", encoding="UTF=8") as fp:
     recipe_meta = json.load(fp)
@@ -73,7 +90,6 @@ title = recipe_meta.get("title", "Unknown")
 # TODO: Save model in meta.json. Currently this always returns "Unknown".
 source_model = recipe_meta.get("model", "Unknown")
 
-# TODO: Give archive a meaningful name, probably a slugified title.
 archive_path = output_directory / "diagnostic.zip"
 with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
     for path in output_directory.rglob("*"):

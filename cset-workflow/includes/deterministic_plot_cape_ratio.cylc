@@ -9,38 +9,5 @@
     script = rose task-run -v --app-key=run_cset_recipe
     execution time limit = PT15M
         [[[environment]]]
-        CSET_RECIPE = """
-title: CAPE ratio plot
-description: |
-  Extracts data required for, and calculates the CAPE ratio diagnostic, plotting on a map.
-
-steps:
-  - operator: read.read_cubes
-
-  - operator: convection.cape_ratio
-    SBCAPE:
-        operator: filters.filter_cubes
-        constraint:
-            operator: constraints.generate_stash_constraint
-            stash: m01s20i114
-    MUCAPE:
-        operator: filters.filter_cubes
-        constraint:
-            operator: constraints.generate_stash_constraint
-            stash: m01s20i112
-    MUCIN:
-        operator: filters.filter_cubes
-        constraint:
-            operator: constraints.generate_stash_constraint
-            stash: m01s20i113
-    MUCIN_thresh: -75
-
-  - operator: filters.filter_cubes
-    constraint:
-        operator: constraints.generate_time_constraint
-        time_start: 2020-07-30T13:00Z
-
-  - operator: plot.postage_stamp_contour_plot
-
-  - operator: write.write_cube_to_nc
-"""
+        CSET_RECIPE_NAME = "CAPE_ratio_plot.yaml"
+        CSET_ADDOPTS = "--TIME={{CAPE_RATIO_TIME}}"

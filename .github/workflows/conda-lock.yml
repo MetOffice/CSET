@@ -23,11 +23,7 @@ jobs:
         run: python3 -m pip install tox tox-conda conda-lock
 
       - name: Update conda
-        run: |
-          conda update -q conda
-          # Install and use libmamba solver as it is much faster.
-          conda install -q -n base conda-libmamba-solver
-          conda config --set solver libmamba
+        run: conda update -q conda
 
       - name: Hash existing lock files
         run: sha256sum **/locks/*.txt > ${{ runner.temp }}/lock_file_hashes

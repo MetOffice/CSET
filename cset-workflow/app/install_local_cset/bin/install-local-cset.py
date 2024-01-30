@@ -35,5 +35,5 @@ if os.getenv("CSET_ENV_USE_LOCAL_CSET") == "True":
                 check=True,
             )
 
-print("Using CSET version:")
-subprocess.run(("cset", "--version"), check=True)
+result = subprocess.run(("cset", "--version"), check=True, capture_output=True)
+print(f"Using CSET version: {result.stdout}")

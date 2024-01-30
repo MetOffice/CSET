@@ -21,12 +21,11 @@ import os
 from pathlib import Path
 from typing import Union
 
-# Stop iris giving a warning whenever it loads something.
 from iris import FUTURE
 
 # Import operators here so they are exported for use by recipes.
 import CSET.operators
-from CSET._common import parse_recipe
+from CSET._common import parse_recipe, template_variables
 from CSET.operators import (
     aggregate,
     collapse,
@@ -39,6 +38,7 @@ from CSET.operators import (
     write,
 )
 
+# Stop iris giving a warning whenever it loads something.
 FUTURE.datum_support = True
 
 
@@ -90,8 +90,36 @@ def _write_metadata(recipe: dict):
     os.stat(Path.cwd())
 
 
+def _step_parser(step: dict, step_input: any) -> str:
+    """Execute a recipe step, recursively executing any sub-steps."""
+    logging.debug(f"Executing step: {step}")
+    kwargs = {}
+    for key in step.keys():
+        if key == "operator":
+            operator = get_operator(step["operator"])
+            logging.info(f"operator: {step['operator']}")
+        elif isinstance(step[key], dict) and "operator" in step[key]:
+            logging.debug(f"Recursing into argument: {key}")
+            kwargs[key] = _step_parser(step[key], step_input)
+        else:
+            kwargs[key] = step[key]
+    logging.debug("args: %s", kwargs)
+    logging.debug("step_input: %s", step_input)
+    # If first argument of operator is explicitly defined, use that rather
+    # than step_input. This is known through introspection of the operator.
+    first_arg = next(iter(inspect.signature(operator).parameters.keys()))
+    logging.debug("first_arg: %s", first_arg)
+    if first_arg not in kwargs:
+        return operator(step_input, **kwargs)
+    else:
+        return operator(**kwargs)
+
+
 def execute_recipe(
-    recipe_yaml: Union[Path, str], input_file: Path, output_directory: Path
+    recipe_yaml: Union[Path, str],
+    input_directory: Path,
+    output_directory: Path,
+    recipe_variables: dict = None,
 ) -> None:
     """Parse and executes a recipe file.
 
@@ -101,11 +129,9 @@ def execute_recipe(
         Path to a file containing, or string of, a recipe's YAML describing the
         operators that need running. If a Path is provided it is opened and
         read.
-
     input_file: Path
         Pathlike to netCDF (or something else that iris read) file to be used as
         input.
-
     output_directory: Path
         Pathlike indicating desired location of output.
 
@@ -113,40 +139,20 @@ def execute_recipe(
     ------
     FileNotFoundError
         The recipe or input file cannot be found.
-
+    FileExistsError
+        The output directory as actually a file.
     ValueError
         The recipe is not well formed.
-
     TypeError
         The provided recipe is not a stream or Path.
     """
-
-    def step_parser(step: dict, step_input: any) -> str:
-        """Execute a recipe step, recursively executing any sub-steps."""
-        logging.debug(f"Executing step: {step}")
-        kwargs = {}
-        for key in step.keys():
-            if key == "operator":
-                operator = get_operator(step["operator"])
-                logging.info(f"operator: {step['operator']}")
-            elif isinstance(step[key], dict) and "operator" in step[key]:
-                logging.debug(f"Recursing into argument: {key}")
-                kwargs[key] = step_parser(step[key], step_input)
-            else:
-                kwargs[key] = step[key]
-        logging.debug("args: %s", kwargs)
-        logging.debug("step_input: %s", step_input)
-        # If first argument of operator is explicitly defined, use that rather
-        # than step_input. This is known through introspection of the operator.
-        first_arg = next(iter(inspect.signature(operator).parameters.keys()))
-        logging.debug("first_arg: %s", first_arg)
-        if first_arg not in kwargs:
-            return operator(step_input, **kwargs)
-        else:
-            return operator(**kwargs)
+    if recipe_variables is None:
+        recipe_variables = {}
 
     recipe = parse_recipe(recipe_yaml)
-    step_input = Path(input_file).absolute()
+    logging.debug("Recipe variables: %s", recipe_variables)
+    recipe = template_variables(recipe, recipe_variables)
+    step_input = Path(input_directory).absolute()
     try:
         output_directory.mkdir(parents=True, exist_ok=True)
     except FileExistsError as err:
@@ -155,12 +161,21 @@ def execute_recipe(
 
     original_working_directory = Path.cwd()
     os.chdir(output_directory)
-    # Create metadata file used by some steps.
-    _write_metadata(recipe)
     try:
+        logger = logging.getLogger()
+        diagnostic_log = logging.FileHandler(
+            filename="CSET.log", mode="w", encoding="UTF-8"
+        )
+        diagnostic_log.addFilter(lambda record: record.levelno >= logging.INFO)
+        diagnostic_log.setFormatter(
+            logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+        )
+        logger.addHandler(diagnostic_log)
+        # Create metadata file used by some steps.
+        _write_metadata(recipe)
         # Execute the recipe.
         for step in recipe["steps"]:
-            step_input = step_parser(step, step_input)
+            step_input = _step_parser(step, step_input)
         logging.info("Recipe output: %s", step_input)
     finally:
         os.chdir(original_working_directory)

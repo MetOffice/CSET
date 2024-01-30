@@ -14,11 +14,9 @@
 
 """Command line entrypoint.
 
-This is only used when running ``python3 -m cset``.
+This is only used when running ``python3 -m CSET``.
 """
-
-import sys
 
 from CSET import main
 
-sys.exit(main())
+main()

@@ -18,18 +18,25 @@ from pathlib import Path
 
 import pytest
 
-import CSET.graph
+from CSET import graph
 
 
 def test_save_graph():
     """Generate a graph from a recipe file without the output specified."""
-    CSET.graph.save_graph(Path("tests/test_data/plot_instant_air_temp.yaml"))
+    graph.save_graph(Path("tests/test_data/plot_instant_air_temp.yaml"))
 
-    # Test exception for recipe without an operator in a step.
+
+def test_save_graph_detailed(tmp_path: Path):
+    """Generate a graph from a recipe file with the output specified."""
+    graph.save_graph(
+        Path("tests/test_data/plot_instant_air_temp.yaml"),
+        tmp_path / "graph.svg",
+        detailed=True,
+    )
+
+
+def test_save_graph_no_operators_exception():
+    """Exception raised from recipe with no operators."""
     with pytest.raises(ValueError):
-        CSET.graph.save_graph(
-            """\
-            steps:
-                - argument: no_operators
-            """
-        )
+        # Inline YAML form used.
+        graph.save_graph('{"steps": [{"argument": "no_operators"}]}')

@@ -84,6 +84,8 @@ def _make_plot_html_page(plot_filename: str) -> None:
     <aside id="description-container">
         <h1>{title}</h1>
         {description}
+        <hr>
+        <p><a href="diagnostic.zip" download="{slugify(title)}.zip">💾 Save Diagnostic</a></p>
     </aside>
 </body>
 """
@@ -147,7 +149,7 @@ def spatial_contour_plot(
         If cube isn't a Cube.
     """
     title = get_recipe_metadata().get("title", "Untitled")
-    if not filename:
+    if filename is None:
         filename = slugify(title)
     filename = Path(filename).with_suffix(".svg")
     cube = _check_single_cube(cube)
@@ -213,7 +215,7 @@ def postage_stamp_contour_plot(
     TypeError
         If cube isn't a Cube.
     """
-    if not filename:
+    if filename is None:
         filename = slugify(get_recipe_metadata().get("title", "Untitled"))
     filename = Path(filename).with_suffix(".svg")
 
@@ -275,6 +277,6 @@ def time_series_contour_plot(
     TypeError
         If cube isn't a Cube.
     """
-    if not filename:
+    if filename is None:
         filename = slugify(get_recipe_metadata().get("title", "Untitled"))
     raise NotImplementedError

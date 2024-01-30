@@ -14,22 +14,16 @@
 
 """Test aggregate operators."""
 
-from CSET.operators import aggregate, constraints, filters, read
+from CSET.operators import aggregate
 
 
-def test_aggregate():
+def test_aggregate(cube):
     """Aggregate time to 2 hour intervals."""
     # Set test interval to 2 hours.
     interval = "PT2H"
 
     # Introduces new coordinate for cube based on existing
     # coordinate which has equal or less increments.
-    cubes = read.read_cubes("tests/test_data/air_temp.nc")
-    constraint = constraints.combine_constraints(
-        a=constraints.generate_stash_constraint("m01s03i236"),
-        b=constraints.generate_cell_methods_constraint([]),
-    )
-    cube = filters.filter_cubes(cubes, constraint)
 
     # Test adding further coordinate.
     aggregated_cube = aggregate.time_aggregate(

@@ -133,20 +133,16 @@ the method by which it is done.
         coordinate: time
         method: MEAN
 
-Finally we plot the model data, using the
-``plot.spatial_contour_plot`` operator, and then save the processed data with
-the ``write.write_cube_to_nc`` operator. This finishes up our recipe.
-
-.. TODO: Remove filename argument.
+Finally we plot the model data, using the ``plot.spatial_contour_plot``
+operator, and then save the processed data with the ``write.write_cube_to_nc``
+operator. This finishes up our recipe.
 
 .. code-block:: yaml
 
     # Plotting and writing operators
       - operator: plot.spatial_contour_plot
-        filename: CSET_OUTPUT_PATH
 
       - operator: write.write_cube_to_nc
-        filename: CSET_OUTPUT_PATH
 
 
 Complete Recipe
@@ -179,10 +175,8 @@ After following this far your recipe should look like this:
         method: MEAN
 
       - operator: plot.spatial_contour_plot
-        filename: CSET_OUTPUT_PATH
 
       - operator: write.write_cube_to_nc
-        filename: CSET_OUTPUT_PATH
 
 Running the Recipe
 ------------------
@@ -196,7 +190,7 @@ Use ``cset bake`` to run your newly created recipe.
 
 .. code-block:: bash
 
-    cset bake air_temp.nc output/ single_timestep_surface_air_temperature_spatial_plot.yaml
+    cset bake -i air_temp.nc -o output/ -r single_timestep_surface_air_temperature_spatial_plot.yaml
 
 You can investigate the created plot and data file in the specified ``output``
 directory.

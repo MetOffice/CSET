@@ -14,6 +14,7 @@
 
 """Operators to perform various kind of collapse on either 1 or 2 dimensions."""
 
+import warnings
 from typing import Union
 
 import iris
@@ -57,14 +58,21 @@ def collapse(
     ValueError
         If additional_percent wasn't supplied while using PERCENTILE method.
     """
-    if method == "PERCENTILE":
-        if not additional_percent:
-            raise ValueError("Must specify additional_percent")
-        collapsed_cube = cube.collapsed(
-            coordinate, iris.analysis.PERCENTILE, percent=additional_percent
+    if method == "PERCENTILE" and additional_percent is None:
+        raise ValueError("Must specify additional_percent")
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore", "Cannot check if coordinate is contiguous", UserWarning
         )
-        return collapsed_cube
-    collapsed_cube = cube.collapsed(coordinate, getattr(iris.analysis, method))
+        warnings.filterwarnings(
+            "ignore", "Collapsing spatial coordinate.+without weighting", UserWarning
+        )
+        if method == "PERCENTILE":
+            collapsed_cube = cube.collapsed(
+                coordinate, getattr(iris.analysis, method), percent=additional_percent
+            )
+        else:
+            collapsed_cube = cube.collapsed(coordinate, getattr(iris.analysis, method))
     return collapsed_cube
 
 
