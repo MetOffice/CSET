@@ -69,7 +69,7 @@ if cset_recipe:
     subprocess.run(("cset", "-v", "cookbook", cset_recipe), check=True)
 else:
     cset_recipe = Path("recipe.yaml")
-    cset_recipe.write_bytes(os.getenvb("CSET_RECIPE"))
+    cset_recipe.write_bytes(os.getenvb(b"CSET_RECIPE"))
 
 subprocess.run(
     (
