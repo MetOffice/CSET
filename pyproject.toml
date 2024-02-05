@@ -113,8 +113,8 @@ skip = "build,*.css,*.ipynb,*.js,*.html,*.svg,*.xml,.git"
 
 [tool.ruff]
 line-length = 88
-show-source = true
 src = ["src", "test"]
+output-format = "full"
 
 [tool.ruff.lint]
 extend-select = ["B", "D", "I"]
