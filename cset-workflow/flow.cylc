@@ -109,6 +109,9 @@ URL = https://metoffice.github.io/CSET-workflow
 
 
 # Include files bring their own graph and runtime sections.
+{% if PLOT_SPATIAL_SURFACE_MODEL_FIELD %}
+{% include 'includes/plot_spatial_surface_model_field.cylc' %}
+{% endif %}
 {% if METPLUS_POINT_STAT %}
 {% include 'includes/point_stat.cylc' %}
 {% endif %}

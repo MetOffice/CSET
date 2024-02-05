@@ -1,0 +1,17 @@
+title: Surface Model Field Plot Sequence
+description: Extracts and plots a surface model field from a file.
+
+steps:
+  - operator: read.read_cube
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+
+  - operator: write.write_cube_to_nc
+
+  - operator: plot.spatial_contour_plot
