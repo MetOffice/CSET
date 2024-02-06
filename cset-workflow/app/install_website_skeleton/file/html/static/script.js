@@ -157,8 +157,8 @@ function setup_plots_dropdown() {
             for (plot in data[model]) {
               // Create a link to the plot.
               const link = document.createElement("a");
-              link.href = `plots/${data[model][plot]}`;
-              link.textContent = plot;
+              link.href = `plots/${plot}`;
+              link.textContent = data[model][plot];
               // Add a callback updating the iframe when the link is clicked.
               const frame_id = `plot_frame_${dropdown_number}`;
               link.addEventListener("click", (event) => {

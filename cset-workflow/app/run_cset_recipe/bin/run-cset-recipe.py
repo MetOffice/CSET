@@ -19,7 +19,6 @@ def combine_dicts(d1: dict, d2: dict) -> dict:
 
     Duplicate atoms favour the second dictionary.
     """
-    # TODO: Test this function, as I'm not sure it is 100% correct.
     # Update existing keys.
     for key in d1.keys() & d2.keys():
         if isinstance(d1[key], dict):
@@ -35,7 +34,7 @@ def combine_dicts(d1: dict, d2: dict) -> dict:
 def append_to_index(index_path: Path, record: dict):
     """Append the plot record to the index file.
 
-    Record should have the form {"Model Name": {"Plot Name": "directory-uuid"}}
+    Record should have the form {"Model Name": {"directory-uuid": "Plot Name"}}
     """
     with open(index_path, "a+t", encoding="UTF-8") as fp:
         # Lock file until closed.
@@ -100,5 +99,4 @@ with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as arc
 # Symbolic link to output from plots directory.
 webdir_path = Path(f"{os.getenv('WEB_DIR')}/plots/{plot_id}")
 webdir_path.symlink_to(output_directory, target_is_directory=True)
-# TODO: Consider making plot_id the key to handle duplicated titles.
-append_to_index(webdir_path.parent / "index.json", {source_model: {title: plot_id}})
+append_to_index(webdir_path.parent / "index.json", {source_model: {plot_id: title}})
