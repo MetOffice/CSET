@@ -34,7 +34,7 @@ def combine_dicts(d1: dict, d2: dict) -> dict:
 def append_to_index(index_path: Path, record: dict):
     """Append the plot record to the index file.
 
-    Record should have the form {"Model Name": {"directory-uuid": "Plot Name"}}
+    Record should have the form {"Category Name": {"directory-uuid": "Plot Name"}}
     """
     with open(index_path, "a+t", encoding="UTF-8") as fp:
         # Lock file until closed.
@@ -86,8 +86,7 @@ with open(output_directory / "meta.json", "rt", encoding="UTF=8") as fp:
     recipe_meta = json.load(fp)
 
 title = recipe_meta.get("title", "Unknown")
-# TODO: Save model in meta.json. Currently this always returns "Unknown".
-source_model = recipe_meta.get("model", "Unknown")
+category = recipe_meta.get("category", "Unknown")
 
 archive_path = output_directory / "diagnostic.zip"
 with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
@@ -99,4 +98,4 @@ with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as arc
 # Symbolic link to output from plots directory.
 webdir_path = Path(f"{os.getenv('WEB_DIR')}/plots/{plot_id}")
 webdir_path.symlink_to(output_directory, target_is_directory=True)
-append_to_index(webdir_path.parent / "index.json", {source_model: {plot_id: title}})
+append_to_index(webdir_path.parent / "index.json", {category: {plot_id: title}})
