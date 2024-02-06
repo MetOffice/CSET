@@ -19,6 +19,7 @@ from typing import Union
 
 import iris
 import iris.cube
+import iris.exceptions
 
 
 def generate_stash_constraint(stash: str, **kwargs) -> iris.AttributeConstraint:
@@ -89,6 +90,39 @@ def generate_model_level_constraint(
     return model_level_number_constraint
 
 
+def generate_pressure_level_constraint(
+    pressure_levels: list[int], **kwargs
+) -> iris.Constraint:
+    """Generate constraint for the specified pressure_levels.
+
+    If no pressure levels are specified then any cube with a pressure coordinate
+    is rejected.
+
+    Arguments
+    ---------
+    pressure_levels: list
+        List of integer pressure levels in hPa.
+
+    Returns
+    -------
+    pressure_constraint: iris.Constraint
+    """
+    if len(pressure_levels) == 0:
+        # If none specified reject cubes with pressure level coordinate.
+        def no_pressure_coordinate(cube):
+            try:
+                cube.coord("pressure")
+            except iris.exceptions.CoordinateNotFoundError:
+                return True
+            return False
+
+        pressure_constraint = iris.Constraint(cube_func=no_pressure_coordinate)
+    else:
+        pressure_constraint = iris.Constraint(pressure=pressure_levels)
+
+    return pressure_constraint
+
+
 def generate_cell_methods_constraint(cell_methods: list, **kwargs) -> iris.Constraint:
     """Generate constraint from cell methods.
 
@@ -106,10 +140,7 @@ def generate_cell_methods_constraint(cell_methods: list, **kwargs) -> iris.Const
     """
 
     def check_cell_methods(cube: iris.cube.Cube):
-        if cube.cell_methods == tuple(cell_methods):
-            return True
-        else:
-            return False
+        return cube.cell_methods == tuple(cell_methods)
 
     cell_methods_constraint = iris.Constraint(cube_func=check_cell_methods)
     return cell_methods_constraint

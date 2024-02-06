@@ -48,6 +48,25 @@ def test_filter_cubes_multiple_returned_exception(cubes):
         filters.filter_cubes(cubes, constraint)
 
 
+def test_filter_cubes_pressure_coord(cube):
+    """Test a cube without a pressure coordinate is passed through."""
+    pressure_constraint = constraints.generate_pressure_level_constraint(
+        pressure_levels=[]
+    )
+    assert filters.filter_cubes(cube, pressure_constraint)
+
+
+def test_filter_cubes_pressure_coord_none_returned(cube):
+    """Test exception when pressure coordinate is excluded."""
+    pressure_constraint = constraints.generate_pressure_level_constraint(
+        pressure_levels=[]
+    )
+    cube = cube.copy()
+    cube.add_aux_coord(iris.coords.DimCoord(100, var_name="pressure"))
+    with pytest.raises(ValueError):
+        filters.filter_cubes(cube, pressure_constraint)
+
+
 def test_filter_multiple_cubes(cubes):
     """Test to a CubeList of a single Cube."""
     filtered_cubes = filters.filter_multiple_cubes(cubes, c=constraint_single)

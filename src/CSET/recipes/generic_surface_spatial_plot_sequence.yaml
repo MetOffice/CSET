@@ -11,7 +11,11 @@ steps:
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
+      pressure_level_constraint:
+        operator: constraints.generate_pressure_level_constraint
+        pressure_levels: []
 
   - operator: write.write_cube_to_nc
 
   - operator: plot.spatial_contour_plot
+    sequence_coordinate: time
