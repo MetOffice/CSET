@@ -31,11 +31,13 @@ def combine_dicts(d1: dict, d2: dict) -> dict:
     return d1
 
 
-def append_to_index(index_path: Path, record: dict):
+def append_to_index(record: dict):
     """Append the plot record to the index file.
 
     Record should have the form {"Category Name": {"plot_id": "Plot Name"}}
     """
+    # Plot index is at {run}/share/plots/index.json
+    index_path = Path(os.getenv("CYLC_WORKFLOW_SHARE_DIR"), "plots/index.json")
     with open(index_path, "a+t", encoding="UTF-8") as fp:
         # Lock file until closed.
         fcntl.flock(fp, fcntl.LOCK_EX)
@@ -52,11 +54,12 @@ def append_to_index(index_path: Path, record: dict):
         json.dump(index, fp)
 
 
-# Takes recipe from CSET_RECIPE environment variable if not given.
+# Ready recipe file to disk.
 cset_recipe = os.getenv("CSET_RECIPE_NAME")
 if cset_recipe:
     subprocess.run(("cset", "-v", "cookbook", cset_recipe), check=True)
 else:
+    # Read recipe YAML from environment variable.
     cset_recipe = Path("recipe.yaml")
     with open(cset_recipe, "wb") as fp:
         fp.write(os.getenvb(b"CSET_RECIPE"))
@@ -67,22 +70,22 @@ else:
 #     plot_id = hashlib.sha256(fp.read()).hexdigest()
 plot_id = str(uuid4())
 
-output_directory = Path.cwd() / plot_id
-# TODO: I think we might be able to presume the input path.
-with open(
-    f"{os.getenv('CYLC_WORKFLOW_SHARE_DIR')}/cycle/{os.getenv('CYLC_TASK_CYCLE_POINT')}/input_path",
-    "rt",
-    encoding="UTF-8",
-) as fp:
-    input_path = Path(fp.read().strip())
+data_directory = Path(
+    os.getenv("CYLC_WORKFLOW_SHARE_DIR"),
+    "cycle",
+    os.getenv("CYLC_TASK_CYCLE_POINT"),
+    "data",
+)
+output_directory = Path(os.getenv("CYLC_WORKFLOW_SHARE_DIR"), "plots", plot_id)
 
+# Run the recipe to process the data and produce any plots.
 subprocess.run(
     (
         "cset",
         "-v",
         "bake",
         f"--recipe={cset_recipe}",
-        f"--input-dir={input_path}",
+        f"--input-dir={data_directory}",
         f"--output-dir={output_directory}",
     ),
     check=True,
@@ -91,10 +94,10 @@ subprocess.run(
 # Create archive for easy download of plots and data.
 archive_path = output_directory / "diagnostic.zip"
 with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-    for path in output_directory.rglob("*"):
+    for file in output_directory.rglob("*"):
         # Check the archive doesn't add itself.
-        if not path.samefile(archive_path):
-            archive.write(path, arcname=path.relative_to(output_directory))
+        if not file.samefile(archive_path):
+            archive.write(file, arcname=file.relative_to(output_directory))
 
 # Get metadata needed for index.
 with open(output_directory / "meta.json", "rt", encoding="UTF-8") as fp:
@@ -102,10 +105,5 @@ with open(output_directory / "meta.json", "rt", encoding="UTF-8") as fp:
 title = recipe_meta.get("title", "Unknown")
 category = recipe_meta.get("category", "Unknown")
 
-# Symbolic link to output from plots directory.
-# NOTE: I'm a little dubious, as it means `cylc clean` removes plots.
-webdir_path = Path(f"{os.getenv('WEB_DIR')}/plots/{plot_id}")
-webdir_path.symlink_to(output_directory, target_is_directory=True)
-
 # Add plot to plot index.
-append_to_index(webdir_path.parent / "index.json", {category: {plot_id: title}})
+append_to_index({category: {plot_id: title}})
