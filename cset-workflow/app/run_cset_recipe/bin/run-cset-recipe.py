@@ -34,7 +34,7 @@ def combine_dicts(d1: dict, d2: dict) -> dict:
 def append_to_index(index_path: Path, record: dict):
     """Append the plot record to the index file.
 
-    Record should have the form {"Category Name": {"directory-uuid": "Plot Name"}}
+    Record should have the form {"Category Name": {"plot_id": "Plot Name"}}
     """
     with open(index_path, "a+t", encoding="UTF-8") as fp:
         # Lock file until closed.
@@ -52,23 +52,29 @@ def append_to_index(index_path: Path, record: dict):
         json.dump(index, fp)
 
 
-input_path = (
-    Path(
-        f"{os.getenv('CYLC_WORKFLOW_SHARE_DIR')}/cycle/{os.getenv('CYLC_TASK_CYCLE_POINT')}/input_path"
-    )
-    .read_text(encoding="utf-8")
-    .strip()
-)
-plot_id = str(uuid4())
-output_directory = Path.cwd() / plot_id
-
 # Takes recipe from CSET_RECIPE environment variable if not given.
 cset_recipe = os.getenv("CSET_RECIPE_NAME")
 if cset_recipe:
     subprocess.run(("cset", "-v", "cookbook", cset_recipe), check=True)
 else:
     cset_recipe = Path("recipe.yaml")
-    cset_recipe.write_bytes(os.getenvb(b"CSET_RECIPE"))
+    with open(cset_recipe, "wb") as fp:
+        fp.write(os.getenvb(b"CSET_RECIPE"))
+
+# TODO: Make plot ID deterministically generated.
+# Hashing the recipe here doesn't work as the templating hasn't yet happened.
+# with open(cset_recipe, "rb") as fp:
+#     plot_id = hashlib.sha256(fp.read()).hexdigest()
+plot_id = str(uuid4())
+
+output_directory = Path.cwd() / plot_id
+# TODO: I think we might be able to presume the input path.
+with open(
+    f"{os.getenv('CYLC_WORKFLOW_SHARE_DIR')}/cycle/{os.getenv('CYLC_TASK_CYCLE_POINT')}/input_path",
+    "rt",
+    encoding="UTF-8",
+) as fp:
+    input_path = Path(fp.read().strip())
 
 subprocess.run(
     (
@@ -82,12 +88,7 @@ subprocess.run(
     check=True,
 )
 
-with open(output_directory / "meta.json", "rt", encoding="UTF=8") as fp:
-    recipe_meta = json.load(fp)
-
-title = recipe_meta.get("title", "Unknown")
-category = recipe_meta.get("category", "Unknown")
-
+# Create archive for easy download of plots and data.
 archive_path = output_directory / "diagnostic.zip"
 with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
     for path in output_directory.rglob("*"):
@@ -95,7 +96,16 @@ with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as arc
         if not path.samefile(archive_path):
             archive.write(path, arcname=path.relative_to(output_directory))
 
+# Get metadata needed for index.
+with open(output_directory / "meta.json", "rt", encoding="UTF-8") as fp:
+    recipe_meta = json.load(fp)
+title = recipe_meta.get("title", "Unknown")
+category = recipe_meta.get("category", "Unknown")
+
 # Symbolic link to output from plots directory.
+# NOTE: I'm a little dubious, as it means `cylc clean` removes plots.
 webdir_path = Path(f"{os.getenv('WEB_DIR')}/plots/{plot_id}")
 webdir_path.symlink_to(output_directory, target_is_directory=True)
+
+# Add plot to plot index.
 append_to_index(webdir_path.parent / "index.json", {category: {plot_id: title}})
