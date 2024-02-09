@@ -14,13 +14,12 @@
 
 """Common functionality used across CSET."""
 
-import copy
 import io
 import json
 import logging
 import re
 from pathlib import Path
-from typing import Any, List, Union
+from typing import List, Union
 
 import ruamel.yaml
 
@@ -152,20 +151,13 @@ def parse_variable_options(arguments: List[str]) -> dict:
     return recipe_variables
 
 
-def is_variable(var: Any) -> bool:
-    """Check if recipe value is a variable."""
-    if isinstance(var, str) and re.match(r"^\$[A-Z_]+$", var):
-        return True
-    return False
-
-
 def template_variables(recipe: Union[dict, list], variables: dict) -> dict:
     """Insert variables into recipe.
 
     Parameters
     ----------
     recipe: dict | list
-        The recipe as a python dictionary.
+        The recipe as a python dictionary. It is updated in-place.
     variables: dict
         Dictionary of variables for the recipe.
 
@@ -179,17 +171,33 @@ def template_variables(recipe: Union[dict, list], variables: dict) -> dict:
     KeyError
         If needed recipe variables are not supplied.
     """
-    recipe = copy.deepcopy(recipe)
     if isinstance(recipe, dict):
         index = recipe.keys()
     elif isinstance(recipe, list):
+        # We have to handle lists for when we have one inside a recipe.
         index = range(len(recipe))
     else:
-        raise TypeError("recipe must be a dict or list.")
+        raise TypeError("recipe must be a dict or list.", recipe)
+
     for i in index:
         if isinstance(recipe[i], (dict, list)):
             recipe[i] = template_variables(recipe[i], variables)
-        if is_variable(recipe[i]):
-            logging.debug("Templating %s", recipe[i])
-            recipe[i] = variables[recipe[i].removeprefix("$")]
+        elif isinstance(recipe[i], str):
+            recipe[i] = replace_template_variable(recipe[i], variables)
     return recipe
+
+
+def replace_template_variable(s: str, variables):
+    """Fill all variable placeholders in the string."""
+    for var_name, var_value in variables.items():
+        placeholder = f"${var_name}"
+        # If the value is just the placeholder we directly overwrite it
+        # to keep the value type.
+        if s == placeholder:
+            s = var_value
+            break
+        else:
+            s = s.replace(placeholder, str(var_value))
+    if isinstance(s, str) and re.match(r"^.*\$[A-Z_].*", s):
+        raise KeyError("Variable without a value.", s)
+    return s
