@@ -85,14 +85,14 @@ function setup_description_toggle_button() {
 function setup_plots_dropdown() {
   const dropdown_background = document.querySelectorAll(".dropdown > .background");
   // Skip if there is no dropdown on page.
-  if (!dropdown_background) {
+  if (dropdown_background.length === 0) {
     return;
   }
 
   // Closing of dropdown.
   function close_dropdowns(event) {
     if (event instanceof KeyboardEvent) {
-      if (event.key != "Escape") {
+      if (event.key !== "Escape") {
         return;
       }
     }
