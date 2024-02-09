@@ -38,32 +38,57 @@ def test_check_single_cube():
 
 def test_spatial_contour_plot(cube, tmp_working_dir):
     """Plot spatial contour plot of instant air temp."""
-    plot_file = Path("plot.png")
-    cube_2d = cube.slices_over("time").next()
-    plot.spatial_contour_plot(cube_2d, filename=plot_file)
-    assert plot_file.is_file()
-
-
-def test_postage_stamp_plots(monkeypatch, tmp_path):
-    """Plot postage stamp plots of ensemble data."""
-    ensemble_cube = read.read_cube("tests/test_data/exeter_em*.nc")
-    ensemble_cube_3d = ensemble_cube.slices_over("time").next()
-    monkeypatch.chdir(tmp_path)
-    plot_file = Path("plot.png")
-    plot.postage_stamp_contour_plot(ensemble_cube_3d, filename=plot_file)
-    assert plot_file.is_file()
-
-
-def test_postage_stamp_realization_check(cube, tmp_working_dir):
-    """Check error when cube has no realization coordinate."""
+    # Remove realization coord to increase coverage, and as its not needed.
+    cube = cube.copy()
     cube.remove_coord("realization")
-    with pytest.raises(ValueError):
-        plot.postage_stamp_contour_plot(cube)
+    cube_2d = cube.slices_over("time").next()
+    plot.spatial_contour_plot(cube_2d, filename="plot")
+    assert Path("plot_462147.0.png").is_file()
 
 
 def test_contour_plot_sequence(cube, tmp_working_dir):
     """Plot sequence of contour plots."""
     plot.spatial_contour_plot(cube, sequence_coordinate="time")
-    assert Path("untitled_1.png").is_file()
-    assert Path("untitled_2.png").is_file()
-    assert Path("untitled_3.png").is_file()
+    assert Path("untitled_462147.0.png").is_file()
+    assert Path("untitled_462148.0.png").is_file()
+    assert Path("untitled_462149.0.png").is_file()
+
+
+def test_postage_stamp_contour_plot(monkeypatch, tmp_path):
+    """Plot postage stamp plots of ensemble data."""
+    ensemble_cube = read.read_cube("tests/test_data/exeter_em*.nc")
+    # Get a single time step.
+    ensemble_cube_3d = next(ensemble_cube.slices_over("time"))
+    monkeypatch.chdir(tmp_path)
+    plot.spatial_contour_plot(ensemble_cube_3d)
+    assert Path("untitled_463858.0.png").is_file()
+
+
+def test_postage_stamp_contour_plot_sequence_coord_check(cube, tmp_working_dir):
+    """Check error when cube has no time coordinate."""
+    # What does this even physically mean? No data?
+    cube = cube.copy()
+    cube.remove_coord("time")
+    with pytest.raises(ValueError):
+        plot.spatial_contour_plot(cube)
+
+
+# Deprecated functionality.
+def test_postage_stamp_plots_deprecated(monkeypatch, tmp_path):
+    """Plot postage stamp plots of ensemble data."""
+    ensemble_cube = read.read_cube("tests/test_data/exeter_em*.nc")
+    ensemble_cube_3d = ensemble_cube.slices_over("time").next()
+    monkeypatch.chdir(tmp_path)
+    plot_file = Path("plot.png")
+    with pytest.deprecated_call():
+        plot.postage_stamp_contour_plot(ensemble_cube_3d, filename=plot_file.name)
+    assert plot_file.is_file()
+
+
+def test_postage_stamp_realization_check_deprecated(cube, tmp_working_dir):
+    """Check error when cube has no realization coordinate."""
+    cube = cube.copy()
+    cube.remove_coord("realization")
+    with pytest.deprecated_call():
+        with pytest.raises(ValueError):
+            plot.postage_stamp_contour_plot(cube)
