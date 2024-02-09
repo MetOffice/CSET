@@ -1,6 +1,6 @@
 category: Quick Look
-title: Surface Model Field Plot Sequence
-description: Extracts and plots a surface model field from a file.
+title: Surface $VARNAME
+description: Extracts and plots the surface $VARNAME from a file.
 
 steps:
   - operator: read.read_cube
