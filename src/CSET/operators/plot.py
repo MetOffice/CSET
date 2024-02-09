@@ -20,8 +20,8 @@ import json
 import logging
 import math
 import sys
-from pathlib import Path
-from typing import Iterable, Union
+import warnings
+from typing import Union
 
 import iris
 import iris.cube
@@ -35,15 +35,12 @@ from markdown_it import MarkdownIt
 from CSET._common import get_recipe_metadata, slugify
 
 
-def _make_plot_html_page(plots: Union[str, Iterable]):
+def _make_plot_html_page(plots: list):
     """Create a HTML page to display a plot image."""
-    meta = get_recipe_metadata()
-    title = meta.get("title", "Untitled")
-    description = MarkdownIt().render(meta.get("description", "*No description.*"))
-    # Wrap in a list if a single plot has been given for consistent usage.
-    if not isinstance(plots, Iterable):
-        plots = [plots]
+    # Check that plots actually contains some strings.
+    assert isinstance(plots[0], str)
 
+    # Load HTML template file.
     # Importlib behaviour changed in 3.12 to avoid circular dependencies.
     if sys.version_info.minor >= 12:
         operator_files = importlib.resources.files()
@@ -52,6 +49,13 @@ def _make_plot_html_page(plots: Union[str, Iterable]):
 
         operator_files = importlib.resources.files(CSET.operators)
     template_file = operator_files.joinpath("_plot_page_template.html")
+
+    # Get some metadata.
+    meta = get_recipe_metadata()
+    title = meta.get("title", "Untitled")
+    description = MarkdownIt().render(meta.get("description", "*No description.*"))
+
+    # Prepare template variables.
     variables = {
         "title": title,
         "description": description,
@@ -59,7 +63,11 @@ def _make_plot_html_page(plots: Union[str, Iterable]):
         "plots": plots,
         "title_slug": slugify(title),
     }
+
+    # Render template.
     html = simple_template.render_file(template_file, **variables)
+
+    # Save completed HTML.
     with open("index.html", "wt", encoding="UTF-8") as fp:
         fp.write(html)
 
@@ -95,7 +103,9 @@ def _check_single_cube(
     raise TypeError("Must have a single cube", cube)
 
 
-def _plot_and_save_contour_plot(cube: iris.cube.Cube, filename: str, title: str):
+def _plot_and_save_contour_plot(
+    cube: iris.cube.Cube, filename: str, title: str, **kwargs
+):
     """Plot and save a contour plot.
 
     Parameters
@@ -103,7 +113,7 @@ def _plot_and_save_contour_plot(cube: iris.cube.Cube, filename: str, title: str)
     cube: Cube
         2 dimensional (lat and lon) Cube of the data to plot.
     filename: str
-        Path of the plot to write.
+        Filename of the plot to write.
     title: str
         Plot title.
 
@@ -136,26 +146,79 @@ def _plot_and_save_contour_plot(cube: iris.cube.Cube, filename: str, title: str)
     logging.info("Saved contour plot to %s", filename)
 
 
-def spatial_contour_plot(
+def _plot_and_save_postage_stamp_contour_plot(
     cube: iris.cube.Cube,
-    filename: str = None,
-    sequence_coordinate: str = None,
+    filename: str,
+    stamp_coordinate: str,
     **kwargs,
-) -> iris.cube.Cube:
-    """Plot a spatial variable onto a map. Optionally plot a sequence.
+):
+    """Plot postage stamp contour plots from an ensemble.
 
     Parameters
     ----------
     cube: Cube
-        Iris cube of the data to plot. It should either be 2 dimensional (lat
-        and lon), or also have a third dimension and specify a sequence
-        coordinate.
+        Iris cube of data to be plotted. It must have the stamp coordinate.
+    filename: str
+        Filename of the plot to write.
+    stamp_coordinate: str
+        Coordinate that becomes different plots.
+
+    Raises
+    ------
+    ValueError
+        If the cube doesn't have the right dimensions.
+    """
+    # Use the smallest square grid that will fit the members.
+    grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
+
+    plt.figure(figsize=(10, 10))
+    # Make a subplot for each member.
+    subplot = 1
+    for member in cube.slices_over(stamp_coordinate):
+        plt.subplot(grid_size, grid_size, subplot)
+        plot = iplt.contourf(member)
+        plt.title(f"Member #{member.coord(stamp_coordinate).points[0]}")
+        plt.axis("off")
+        plt.gca().coastlines()
+        subplot += 1
+
+    # Put the shared colorbar in its own axes.
+    colorbar_axes = plt.gcf().add_axes([0.15, 0.07, 0.7, 0.03])
+    colorbar = plt.colorbar(plot, colorbar_axes, orientation="horizontal")
+    colorbar.set_label(f"{cube.name()} / {cube.units}")
+
+    plt.savefig(filename, bbox_inches="tight", dpi=150)
+    logging.info("Saved contour postage stamp plot to %s", filename)
+
+
+def spatial_contour_plot(
+    cube: iris.cube.Cube,
+    filename: str = None,
+    sequence_coordinate: str = "time",
+    stamp_coordinate: str = "realization",
+    **kwargs,
+) -> iris.cube.Cube:
+    """Plot a spatial variable onto a map from a 2D, 3D, or 4D cube.
+
+    A 2D spatial field can be plotted, but if the sequence_coordinate is present
+    then a sequence of plots will be produced. Similarly if the stamp_coordinate
+    is present then postage stamp plots will be produced.
+
+    Parameters
+    ----------
+    cube: Cube
+        Iris cube of the data to plot. It should have two spatial dimensions,
+        such as lat and lon, and may also have a another two dimension to be
+        plotted sequentially and/or as postage stamp plots.
     filename: str, optional
         Name of the plot to write, used as a prefix for plot sequences. Defaults
         to the recipe name.
     sequence_coordinate: str, optional
-        Coordinate about which to make a plot sequence. This coordinate must
-        exist in the cube.
+        Coordinate about which to make a plot sequence. Defaults to ``"time"``.
+        This coordinate must exist in the cube.
+    stamp_coordinate: str, optional
+        Coordinate about which to plot postage stamp plots. Defaults to
+        ``"realization"``.
 
     Returns
     -------
@@ -167,52 +230,77 @@ def spatial_contour_plot(
     ValueError
         If the cube doesn't have the right dimensions.
     TypeError
-        If cube isn't a Cube.
+        If the cube isn't a single cube.
     """
     title = get_recipe_metadata().get("title", "Untitled")
-    cube = _check_single_cube(cube)
+
+    # Ensure we have a name for the plot file.
     if filename is None:
         filename = slugify(title)
 
-    # Single plot.
-    if sequence_coordinate is None:
-        # Cube should be 2 dimensional.
-        plot_filename = Path(filename).with_suffix(".png")
-        _plot_and_save_contour_plot(cube, plot_filename, title)
-        _make_plot_html_page(plot_filename)
-    # Plot sequence.
-    else:
-        # Cube should be 3 dimensional.
-        padding_zeros = len(str(cube.coord(sequence_coordinate).shape[0]))
-        plot_number = 1
-        plot_index = []
-        for cube_slice in cube.slices_over(sequence_coordinate):
-            plot_filename = (
-                f"{filename.rsplit('.', 1)[0]}_{plot_number:0{padding_zeros}}.png"
-            )
-            _plot_and_save_contour_plot(cube_slice, plot_filename, title)
-            plot_index.append(plot_filename)
-            plot_number += 1
-        _make_plot_html_page(plot_index)
-        with open("meta.json", "r+t", encoding="UTF-8") as fp:
-            fcntl.flock(fp, fcntl.LOCK_EX)
-            fp.seek(0)
-            meta = json.load(fp)
-            meta["plots"] = plot_index
-            fp.seek(0)
-            fp.truncate()
-            json.dump(meta, fp)
+    # Ensure we've got a single cube.
+    cube = _check_single_cube(cube)
+
+    # Make postage stamp plots if stamp_coordinate exists and has more than a
+    # single point.
+    plotting_func = _plot_and_save_contour_plot
+    try:
+        if cube.coord(stamp_coordinate).shape[0] > 1:
+            plotting_func = _plot_and_save_postage_stamp_contour_plot
+    except iris.exceptions.CoordinateNotFoundError:
+        pass
+
+    try:
+        cube.coord(sequence_coordinate)
+    except iris.exceptions.CoordinateNotFoundError as err:
+        # TODO: Should this be an error, or should it just do the right thing?
+        raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
+
+    # Create a plot for each value of the sequence coordinate.
+    plot_index = []
+    for cube_slice in cube.slices_over(sequence_coordinate):
+        # Use sequence value so multiple sequences can merge.
+        sequence_value = cube_slice.coord(sequence_coordinate).points[0]
+        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
+        # Do the actual plotting.
+        plotting_func(
+            cube_slice,
+            plot_filename,
+            stamp_coordinate=stamp_coordinate,
+            title=title,
+        )
+        plot_index.append(plot_filename)
+
+    # Add list of plots to plot metadata.
+    # NOTE: It is not currently use for anything there. (2024-02-12)
+    # TODO: Refactor this out into a common function.
+    with open("meta.json", "r+t", encoding="UTF-8") as fp:
+        fcntl.flock(fp, fcntl.LOCK_EX)
+        fp.seek(0)
+        meta = json.load(fp)
+        complete_plot_index = meta.get("plots", [])
+        complete_plot_index = complete_plot_index + plot_index
+        meta["plots"] = complete_plot_index
+        fp.seek(0)
+        fp.truncate()
+        json.dump(meta, fp)
+
+    # Make a page to display the plots.
+    _make_plot_html_page(complete_plot_index)
 
     return cube
 
 
 def postage_stamp_contour_plot(
     cube: iris.cube.Cube,
-    filename: Path = None,
+    filename: str = None,
     coordinate: str = "realization",
     **kwargs,
 ) -> iris.cube.Cube:
     """Plot postage stamp contour plots from an ensemble.
+
+    Depreciated. Use spatial_contour_plot with a stamp_coordinate argument
+    instead.
 
     Parameters
     ----------
@@ -235,36 +323,24 @@ def postage_stamp_contour_plot(
     TypeError
         If cube isn't a Cube.
     """
+    warnings.warn(
+        "postage_stamp_contour_plot is depreciated. Use spatial_contour_plot with a stamp_coordinate argument instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    # Get suitable filename.
     if filename is None:
         filename = slugify(get_recipe_metadata().get("title", "Untitled"))
-    filename = Path(filename).with_suffix(".png")
+    if not filename.endswith(".png"):
+        filename = filename + ".png"
 
-    # Validate input is in the right form.
+    # Check cube is suitable.
     cube = _check_single_cube(cube)
     try:
         cube.coord(coordinate)
     except iris.exceptions.CoordinateNotFoundError as err:
-        raise ValueError(f"Cube must have a {coordinate} dimension.") from err
+        raise ValueError(f"Cube must have a {coordinate} coordinate.") from err
 
-    # Use the smallest square grid that will fit the members.
-    grid_size = int(math.ceil(math.sqrt(len(cube.coord(coordinate).points))))
-
-    plt.figure(figsize=(10, 10))
-    subplot = 1
-    for member in cube.slices_over(coordinate):
-        plt.subplot(grid_size, grid_size, subplot)
-        plot = iplt.contourf(member)
-        plt.title(f"Member #{member.coord(coordinate).points[0]}")
-        plt.axis("off")
-        plt.gca().coastlines()
-        subplot += 1
-
-    # Make an axes to put the shared colorbar in.
-    colorbar_axes = plt.gcf().add_axes([0.15, 0.07, 0.7, 0.03])
-    colorbar = plt.colorbar(plot, colorbar_axes, orientation="horizontal")
-    colorbar.set_label(f"{cube.name()} / {cube.units}")
-
-    plt.savefig(filename, bbox_inches="tight", dpi=150)
-    logging.info("Saved contour postage stamp plot to %s", filename)
-    _make_plot_html_page(filename)
+    _plot_and_save_postage_stamp_contour_plot(cube, filename, coordinate)
+    _make_plot_html_page([filename])
     return cube
