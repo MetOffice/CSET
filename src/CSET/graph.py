@@ -93,7 +93,7 @@ def save_graph(
     graph.draw(save_path, format="svg", prog="dot")
     print(f"Graph rendered to {save_path}")
 
-    if auto_open:  # pragma: no cover (xdg-open breaks in CI)
+    if auto_open:
         try:
             # Stderr is redirected here to suppress gvfs-open deprecation warning.
             # See https://bugs.python.org/issue30219 for an example.
