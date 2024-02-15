@@ -7,7 +7,7 @@ commented example recipe:
 
 .. code-block:: yaml
 
-    name: Name of recipe
+    title: Name of recipe
     description: |
       Extended description that can
       go across multiple lines.
@@ -29,7 +29,7 @@ commented example recipe:
       # Specify the name of the argument, and its value.
       filename: processed_data.nc
 
-The name and description keys provide a human readable description of what the
+The title and description keys provide a human readable description of what the
 recipe does. They are currently not used anywhere, but it is good practice to
 include them for future users of the recipe.
 

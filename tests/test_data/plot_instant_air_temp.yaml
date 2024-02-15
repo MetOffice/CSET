@@ -1,4 +1,4 @@
-name: Extract Instant Air Temperature
+title: Extract Instant Air Temperature
 description: |
   Extracts out the instantaneous 1.5m air temperature from a file and writes it
   to a new one.
