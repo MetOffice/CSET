@@ -30,8 +30,8 @@ commented example recipe:
       filename: processed_data.nc
 
 The title and description keys provide a human readable description of what the
-recipe does. They are currently not used anywhere, but it is good practice to
-include them for future users of the recipe.
+recipe does. The title is also used to derive the ID of the running recipe, used
+when running the recipe in a workflow.
 
 The steps keys specifies a list of processing steps. The steps are run from top
 to bottom, with each step specifying an operator to run, and optionally any

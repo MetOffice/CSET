@@ -36,7 +36,7 @@ def test_parse_recipe_path():
     """Loading and parsing of a YAML recipe from a Path."""
     parsed = common.parse_recipe(Path("tests/test_data/noop_recipe.yaml"))
     expected = {
-        "name": "Noop",
+        "title": "Noop",
         "description": "A recipe that does nothing. Only used for testing.",
         "steps": [
             {

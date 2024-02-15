@@ -117,6 +117,16 @@ def main():
     )
     parser_cookbook.set_defaults(func=_cookbook_command)
 
+    parser_recipe_id = subparsers.add_parser("recipe-id", help="get the ID of a recipe")
+    parser_recipe_id.add_argument(
+        "-r",
+        "--recipe",
+        type=Path,
+        required=True,
+        help="recipe file to read",
+    )
+    parser_recipe_id.set_defaults(func=_recipe_id_command)
+
     cli_args = sys.argv[1:] + os.getenv("CSET_ADDOPTS", "").split()
     args, unparsed_args = parser.parse_known_args(cli_args)
 
@@ -178,3 +188,25 @@ def _cookbook_command(args, unparsed_args):
             list_available_recipes()
     else:
         unpack_recipes(args.output_dir, args.recipe)
+
+
+def _recipe_id_command(args, unparsed_args):
+    from uuid import uuid4
+
+    from CSET._common import (
+        parse_recipe,
+        parse_variable_options,
+        slugify,
+        template_variables,
+    )
+
+    recipe_variables = parse_variable_options(unparsed_args)
+    recipe = parse_recipe(args.recipe)
+    recipe = template_variables(recipe, recipe_variables)
+    try:
+        recipe_id = slugify(recipe["title"])
+    except KeyError:
+        logging.warning("Recipe has no title; Falling back to random recipe_id.")
+        recipe_id = str(uuid4())
+
+    print(recipe_id)

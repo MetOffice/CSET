@@ -136,3 +136,24 @@ def test_bake_invalid_args():
             ],
             check=True,
         )
+
+
+def test_recipe_id():
+    """Get recipe ID for a recipe."""
+    p = subprocess.run(
+        ["cset", "recipe-id", "-r", "tests/test_data/noop_recipe.yaml"],
+        check=True,
+        capture_output=True,
+    )
+    assert p.stdout == b"noop\n"
+
+
+def test_recipe_id_no_title():
+    """Get recipe id for recipe without a title."""
+    p = subprocess.run(
+        ["cset", "recipe-id", "-r", "tests/test_data/ensemble_air_temp.yaml"],
+        check=True,
+        capture_output=True,
+    )
+    # UUID output + newline.
+    assert len(p.stdout) == 37
