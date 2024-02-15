@@ -9,7 +9,6 @@ import os
 import subprocess
 import zipfile
 from pathlib import Path
-from uuid import uuid4
 
 logging.basicConfig(level=logging.INFO)
 
@@ -34,7 +33,7 @@ def combine_dicts(d1: dict, d2: dict) -> dict:
 def append_to_index(record: dict):
     """Append the plot record to the index file.
 
-    Record should have the form {"Category Name": {"plot_id": "Plot Name"}}
+    Record should have the form {"Category Name": {"recipe_id": "Plot Name"}}
     """
     # Plot index is at {run}/share/plots/index.json
     index_path = Path(os.getenv("CYLC_WORKFLOW_SHARE_DIR"), "plots/index.json")
@@ -54,6 +53,15 @@ def append_to_index(record: dict):
         json.dump(index, fp)
 
 
+def get_recipe_id(recipe: Path):
+    """Get the ID for the recipe."""
+    p = subprocess.run(
+        ("cset", "recipe-id", "--recipe", cset_recipe), check=True, capture_output=True
+    )
+    recipe_id = p.stdout.decode("UTF-8").strip()
+    return recipe_id
+
+
 # Ready recipe file to disk.
 cset_recipe = os.getenv("CSET_RECIPE_NAME")
 if cset_recipe:
@@ -64,19 +72,14 @@ else:
     with open(cset_recipe, "wb") as fp:
         fp.write(os.getenvb(b"CSET_RECIPE"))
 
-# TODO: Make plot ID deterministically generated.
-# Hashing the recipe here doesn't work as the templating hasn't yet happened.
-# with open(cset_recipe, "rb") as fp:
-#     plot_id = hashlib.sha256(fp.read()).hexdigest()
-plot_id = str(uuid4())
-
+recipe_id = get_recipe_id(cset_recipe)
 data_directory = Path(
     os.getenv("CYLC_WORKFLOW_SHARE_DIR"),
     "cycle",
     os.getenv("CYLC_TASK_CYCLE_POINT"),
     "data",
 )
-output_directory = Path(os.getenv("CYLC_WORKFLOW_SHARE_DIR"), "plots", plot_id)
+output_directory = Path(os.getenv("CYLC_WORKFLOW_SHARE_DIR"), "plots", recipe_id)
 
 # Run the recipe to process the data and produce any plots.
 subprocess.run(
@@ -106,4 +109,4 @@ title = recipe_meta.get("title", "Unknown")
 category = recipe_meta.get("category", "Unknown")
 
 # Add plot to plot index.
-append_to_index({category: {plot_id: title}})
+append_to_index({category: {recipe_id: title}})
