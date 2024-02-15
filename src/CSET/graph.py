@@ -16,12 +16,13 @@
 
 import logging
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 from typing import Union
 from uuid import uuid4
 
-import pygraphviz as pgz
+import pygraphviz
 
 from CSET._common import parse_recipe
 
@@ -79,7 +80,7 @@ def save_graph(
             )
         return node
 
-    graph = pgz.AGraph(directed=True)
+    graph = pygraphviz.AGraph(directed=True)
 
     prev_node = "START"
     graph.add_node(prev_node)
@@ -93,8 +94,15 @@ def save_graph(
     print(f"Graph rendered to {save_path}")
 
     if auto_open:  # pragma: no cover (xdg-open breaks in CI)
-        # Stderr is redirected here to suppress gvfs-open deprecation warning.
-        # See https://bugs.python.org/issue30219 for an example.
-        subprocess.run(
-            ("xdg-open", str(save_path)), check=False, stderr=subprocess.DEVNULL
-        )
+        try:
+            # Stderr is redirected here to suppress gvfs-open deprecation warning.
+            # See https://bugs.python.org/issue30219 for an example.
+            subprocess.run(
+                ("xdg-open", str(save_path)), check=True, stderr=subprocess.DEVNULL
+            )
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            # Using print rather than logging as this is run interactively.
+            print(
+                "Cannot automatically display graph. Specify an output with -o instead.",
+                file=sys.stderr,
+            )
