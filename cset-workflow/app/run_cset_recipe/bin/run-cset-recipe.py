@@ -63,7 +63,7 @@ def get_recipe_id(recipe: Path):
 
 
 # Ready recipe file to disk.
-cset_recipe = os.getenv("CSET_RECIPE_NAME")
+cset_recipe = Path(os.getenv("CSET_RECIPE_NAME"))
 if cset_recipe:
     subprocess.run(("cset", "-v", "cookbook", cset_recipe), check=True)
 else:
@@ -71,6 +71,9 @@ else:
     cset_recipe = Path("recipe.yaml")
     with open(cset_recipe, "wb") as fp:
         fp.write(os.getenvb(b"CSET_RECIPE"))
+
+# Debug check that recipe has been retrieved.
+assert cset_recipe.exists()
 
 recipe_id = get_recipe_id(cset_recipe)
 data_directory = Path(
