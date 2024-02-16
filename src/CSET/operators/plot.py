@@ -37,7 +37,7 @@ from CSET._common import get_recipe_metadata, slugify
 
 def _make_plot_html_page(plots: list):
     """Create a HTML page to display a plot image."""
-    # Check that plots actually contains some strings.
+    # Debug check that plots actually contains some strings.
     assert isinstance(plots[0], str)
 
     # Load HTML template file.

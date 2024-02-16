@@ -26,7 +26,7 @@ import ruamel.yaml
 
 
 class ArgumentError(ValueError):
-    """Indicates provided arguments are not understood."""
+    """Provided arguments are not understood."""
 
 
 def parse_recipe(recipe_yaml: Union[Path, str]):
