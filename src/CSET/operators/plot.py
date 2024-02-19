@@ -54,7 +54,7 @@ def _append_to_plot_index(plot_index: list) -> list:
 
 
 def _check_single_cube(
-    cube: Union[iris.cube.Cube, iris.cube.CubeList]
+    cube: Union[iris.cube.Cube, iris.cube.CubeList],
 ) -> iris.cube.Cube:
     """Ensure a single cube is given.
 
