@@ -1,0 +1,18 @@
+[scheduling]
+    [[graph]]
+    P1 = """
+{% for model_field in SURFACE_MODEL_FIELDS %}
+    recipe_start => domain_mean_surface_time_series_{{model_field}} => recipe_finish
+{% endfor %}
+    """
+
+[runtime]
+# TODO: Take validity times from cycle instead.
+{% for model_field in SURFACE_MODEL_FIELDS %}
+    [[domain_mean_surface_time_series_{{model_field}}]]
+    script = rose task-run -v --app-key=run_cset_recipe
+    execution time limit = PT15M
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_surface_domain_mean_time_series.yaml"
+        CSET_ADDOPTS = "--VARNAME={{model_field}} --VALIDITY_TIME=2024-01-01T00:00Z"
+{% endfor %}
