@@ -96,10 +96,10 @@ def main():
         "cookbook", help="unpack included recipes to a folder"
     )
     parser_cookbook.add_argument(
-        "-l",
-        "--list",
+        "-d",
+        "--details",
         action="store_true",
-        help="list available recipes. Supplied recipes are detailed.",
+        help="list available recipes. Supplied recipes are detailed",
     )
     parser_cookbook.add_argument(
         "-o",
@@ -112,7 +112,7 @@ def main():
         "recipe",
         type=str,
         nargs="?",
-        help="recipe to output or detail. Omit for all.",
+        help="recipe to output or detail",
         default="",
     )
     parser_cookbook.set_defaults(func=_cookbook_command)
@@ -179,15 +179,19 @@ def _graph_command(args, unparsed_args):
 
 
 def _cookbook_command(args, unparsed_args):
-    from CSET.recipes import detail_recipe, list_available_recipes, unpack_recipes
+    from CSET.recipes import detail_recipe, list_available_recipes, unpack_recipe
 
-    if args.list:
-        if args.recipe:
+    if args.recipe:
+        if args.details:
             detail_recipe(args.recipe)
         else:
-            list_available_recipes()
+            try:
+                unpack_recipe(args.output_dir, args.recipe)
+            except FileNotFoundError:
+                logging.error("Recipe %s does not exist.", args.recipe)
+                sys.exit(1)
     else:
-        unpack_recipes(args.output_dir, args.recipe)
+        list_available_recipes()
 
 
 def _recipe_id_command(args, unparsed_args):

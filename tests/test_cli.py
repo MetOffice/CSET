@@ -94,32 +94,38 @@ def test_graph_details(tmp_path: Path):
 
 def test_cookbook_cwd(tmp_working_dir):
     """Unpacking the recipes into the current working directory."""
-    subprocess.run(["cset", "cookbook"], check=True)
+    subprocess.run(["cset", "cookbook", "extract_instant_air_temp.yaml"], check=True)
     assert Path("extract_instant_air_temp.yaml").is_file()
 
 
 def test_cookbook_path(tmp_path: Path):
     """Unpacking the recipes into a specified directory."""
-    subprocess.run(["cset", "cookbook", "--output-dir", tmp_path], check=True)
+    subprocess.run(
+        ["cset", "cookbook", "--output-dir", tmp_path, "extract_instant_air_temp.yaml"],
+        check=True,
+    )
     assert (tmp_path / "extract_instant_air_temp.yaml").is_file()
 
 
 def test_cookbook_list_available_recipes():
     """List all available recipes."""
     proc = subprocess.run(
-        ["cset", "cookbook", "--list"], capture_output=True, check=True
+        ["cset", "cookbook", "--details"], capture_output=True, check=True
     )
+    # Check start.
     assert proc.stdout.startswith(b"Available recipes:\n")
+    # Check has some recipes.
+    assert len(proc.stdout.splitlines()) > 3
 
 
 def test_cookbook_detail_recipe():
     """Show detail of a recipe."""
     proc = subprocess.run(
-        ["cset", "cookbook", "--list", "extract_instant_air_temp"],
+        ["cset", "cookbook", "--details", "extract_instant_air_temp.yaml"],
         capture_output=True,
         check=True,
     )
-    assert proc.stdout.startswith(b"\n\textract_instant_air_temp\n")
+    assert proc.stdout.startswith(b"\n\textract_instant_air_temp.yaml\n")
 
 
 def test_bake_invalid_args():

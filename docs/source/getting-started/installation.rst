@@ -32,7 +32,7 @@ a simple command.
     cset --version
 
 This command should output the installed version of CSET. This will look
-something like ``CSET v0.4.0``.
+something like ``CSET vX.Y.Z``.
 
 You now have CSET installed, so try another tutorial.
 
