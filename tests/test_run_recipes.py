@@ -68,5 +68,5 @@ def test_execute_recipe_invalid_output_dir(tmp_path: Path):
     input_file = Path("tests/test_data/air_temp.nc")
     output_dir = tmp_path / "actually_a_file"
     output_dir.touch()
-    with pytest.raises(FileExistsError):
+    with pytest.raises((FileExistsError, NotADirectoryError)):
         CSET.operators.execute_recipe(recipe, input_file, output_dir)
