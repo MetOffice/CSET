@@ -18,7 +18,6 @@ dependencies:
 
   # Development dependencies
   - pre-commit
-  - black
   - ruff
 
   # Testing dependencies

@@ -4,13 +4,6 @@ ci:
   autoupdate_schedule: monthly
 
 repos:
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    # Ruff version.
-    rev: 1bd02b3569e3ac5cc66552b1336a96a8880d1bae  # frozen: v0.2.1
-    hooks:
-      - id: ruff
-        args: [ --fix, --show-fixes, --exit-non-zero-on-fix ]
-
   - repo: https://github.com/codespell-project/codespell
     rev: 6e41aba91fb32e9feb741a6258eefeb9c6e4a482  # frozen: v2.2.6
     hooks:
@@ -19,10 +12,13 @@ repos:
       additional_dependencies:
         - tomli
 
-  - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: ababb58801592720e6291c8718da55caabbe6670  # frozen: 24.1.1
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: cc575a3e5800b42ffbb5182b53d87203b2c4fc26  # frozen: v0.2.2
     hooks:
-      - id: black
+      - id: ruff
+        args: [ --fix, --show-fixes, --exit-non-zero-on-fix ]
+      - id: ruff-format
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: c4a0b883114b00d8d76b479c820ce7950211c99b  # frozen: v4.5.0

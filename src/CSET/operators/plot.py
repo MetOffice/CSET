@@ -94,7 +94,7 @@ def _make_plot_html_page(plot_filename: str) -> None:
 
 
 def _check_single_cube(
-    cube: Union[iris.cube.Cube, iris.cube.CubeList]
+    cube: Union[iris.cube.Cube, iris.cube.CubeList],
 ) -> iris.cube.Cube:
     """Ensure a single cube is given.
 
