@@ -29,10 +29,9 @@ import iris.exceptions
 import iris.plot as iplt
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import simple_template
 from markdown_it import MarkdownIt
 
-from CSET._common import get_recipe_metadata, slugify
+from CSET._common import get_recipe_metadata, render_file, slugify
 
 
 def _make_plot_html_page(plots: list):
@@ -65,7 +64,7 @@ def _make_plot_html_page(plots: list):
     }
 
     # Render template.
-    html = simple_template.render_file(template_file, **variables)
+    html = render_file(template_file, **variables)
 
     # Save completed HTML.
     with open("index.html", "wt", encoding="UTF-8") as fp:
