@@ -28,13 +28,15 @@ class ArgumentError(ValueError):
     """Provided arguments are not understood."""
 
 
-def parse_recipe(recipe_yaml: Union[Path, str]):
+def parse_recipe(recipe_yaml: Union[Path, str], variables: dict = None):
     """Parse a recipe into a python dictionary.
 
     Parameters
     ----------
     recipe_yaml: Path | str
         Path to recipe file, or the recipe YAML directly.
+    variables: dict
+        Dictionary of recipe variables. If None templating is not attempted.
 
     Returns
     -------
@@ -47,6 +49,8 @@ def parse_recipe(recipe_yaml: Union[Path, str]):
         If the recipe is invalid. E.g. invalid YAML, missing any steps, etc.
     TypeError
         If recipe_yaml isn't a Path or string.
+    KeyError
+        If needed recipe variables are not supplied.
 
     Examples
     --------
@@ -82,6 +86,9 @@ def parse_recipe(recipe_yaml: Union[Path, str]):
             raise ValueError("Recipe must either be YAML, or a Path.") from err
         # This should never be reached; it's a bug if it is.
         raise err  # pragma: no cover
+
+    if variables is not None:
+        recipe = template_variables(recipe, variables)
 
     return recipe
 
@@ -184,6 +191,7 @@ def template_variables(recipe: Union[dict, list], variables: dict) -> dict:
             recipe[i] = template_variables(recipe[i], variables)
         elif isinstance(recipe[i], str):
             recipe[i] = replace_template_variable(recipe[i], variables)
+    logging.debug("Recipe variables: %s", variables)
     return recipe
 
 

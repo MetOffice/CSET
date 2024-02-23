@@ -25,7 +25,7 @@ from iris import FUTURE
 
 # Import operators here so they are exported for use by recipes.
 import CSET.operators
-from CSET._common import parse_recipe, template_variables
+from CSET._common import parse_recipe
 from CSET.operators import (
     aggregate,
     collapse,
@@ -115,51 +115,8 @@ def _step_parser(step: dict, step_input: any) -> str:
         return operator(**kwargs)
 
 
-def execute_recipe(
-    recipe_yaml: Union[Path, str],
-    input_directory: Path,
-    output_directory: Path,
-    recipe_variables: dict = None,
-) -> None:
-    """Parse and executes a recipe file.
-
-    Parameters
-    ----------
-    recipe_yaml: Path or str
-        Path to a file containing, or string of, a recipe's YAML describing the
-        operators that need running. If a Path is provided it is opened and
-        read.
-    input_file: Path
-        Pathlike to netCDF (or something else that iris read) file to be used as
-        input.
-    output_directory: Path
-        Pathlike indicating desired location of output.
-
-    Raises
-    ------
-    FileNotFoundError
-        The recipe or input file cannot be found.
-    FileExistsError
-        The output directory as actually a file.
-    ValueError
-        The recipe is not well formed.
-    TypeError
-        The provided recipe is not a stream or Path.
-    """
-    if recipe_variables is None:
-        recipe_variables = {}
-
-    recipe = parse_recipe(recipe_yaml)
-    logging.debug("Recipe variables: %s", recipe_variables)
-    recipe = template_variables(recipe, recipe_variables)
-    step_input = Path(input_directory).absolute()
-    try:
-        # Create output directory, and an inter-cycle intermediate directory.
-        (output_directory / "intermediate").mkdir(parents=True, exist_ok=True)
-    except (FileExistsError, NotADirectoryError) as err:
-        logging.error("Output directory is a file. %s", output_directory)
-        raise err
-
+def _run_steps(recipe, steps, step_input, output_directory: Path):
+    """Execute the steps in a recipe."""
     original_working_directory = Path.cwd()
     os.chdir(output_directory)
     try:
@@ -175,11 +132,87 @@ def execute_recipe(
         # Create metadata file used by some steps.
         _write_metadata(recipe)
         # Execute the recipe.
-        for step in recipe["steps"]:
+        for step in steps:
             step_input = _step_parser(step, step_input)
-        logging.info("Recipe output: %s", step_input)
+        logging.info("Recipe output:\n%s", step_input)
     finally:
         os.chdir(original_working_directory)
+
+
+def execute_recipe_steps(
+    recipe_yaml: Union[Path, str],
+    input_directory: Path,
+    output_directory: Path,
+    recipe_variables: dict = None,
+) -> None:
+    """Parse and executes the initial steps from a recipe file.
+
+    Parameters
+    ----------
+    recipe_yaml: Path or str
+        Path to a file containing, or string of, a recipe's YAML describing the
+        operators that need running. If a Path is provided it is opened and
+        read.
+    input_file: Path
+        Pathlike to netCDF (or something else that iris read) file to be used as
+        input.
+    output_directory: Path
+        Pathlike indicating desired location of output.
+    recipe_variables: dict
+        Dictionary of variables for the recipe.
+
+    Raises
+    ------
+    FileNotFoundError
+        The recipe or input file cannot be found.
+    FileExistsError
+        The output directory as actually a file.
+    ValueError
+        The recipe is not well formed.
+    TypeError
+        The provided recipe is not a stream or Path.
+    """
+    if recipe_variables is None:
+        recipe_variables = {}
+    recipe = parse_recipe(recipe_yaml, recipe_variables)
+    step_input = Path(input_directory).absolute()
+    # Create output directory, and an inter-cycle intermediate directory.
+    try:
+        (output_directory / "intermediate").mkdir(parents=True, exist_ok=True)
+    except (FileExistsError, NotADirectoryError) as err:
+        logging.error("Output directory is a file. %s", output_directory)
+        raise err
+    _run_steps(recipe, recipe["steps"], step_input, output_directory)
+
+
+def execute_recipe_post_steps(
+    recipe_yaml: Union[Path, str], output_directory: Path, recipe_variables: dict = None
+) -> None:
+    """Parse and execute the collation steps from a recipe file.
+
+    Parameters
+    ----------
+    recipe_yaml: Path or str
+        Path to a file containing, or string of, a recipe's YAML describing the
+        operators that need running. If a Path is provided it is opened and
+        read.
+    output_directory: Path
+        Pathlike indicating desired location of output. Must already exist.
+    recipe_variables: dict
+        Dictionary of variables for the recipe.
+
+    Raises
+    ------
+    ValueError
+        The recipe is not well formed.
+    TypeError
+        The provided recipe is not a stream or Path.
+    """
+    if recipe_variables is None:
+        recipe_variables = {}
+    output_directory = Path(output_directory).absolute()
+    recipe = parse_recipe(recipe_yaml, recipe_variables)
+    _run_steps(recipe, recipe["post-steps"], output_directory, output_directory)
 
 
 __all__ = [
@@ -187,7 +220,7 @@ __all__ = [
     "collapse",
     "constraints",
     "convection",
-    "execute_recipe",
+    "execute_recipe_steps",
     "filters",
     "get_operator",
     "misc",

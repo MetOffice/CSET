@@ -44,7 +44,7 @@ def main():
     subparsers = parser.add_subparsers(title="subcommands", dest="subparser")
 
     # Run operator chain
-    parser_bake = subparsers.add_parser("bake", help="run a recipe file")
+    parser_bake = subparsers.add_parser("bake", help="run steps from a recipe file")
     parser_bake.add_argument(
         "-i",
         "--input-dir",
@@ -67,6 +67,25 @@ def main():
         help="recipe file to read",
     )
     parser_bake.set_defaults(func=_bake_command)
+
+    parser_post_bake_collation = subparsers.add_parser(
+        "collate", help="collate processed data after running bake"
+    )
+    parser_post_bake_collation.add_argument(
+        "-o",
+        "--output-dir",
+        type=Path,
+        required=True,
+        help="directory to write output into",
+    )
+    parser_post_bake_collation.add_argument(
+        "-r",
+        "--recipe",
+        type=Path,
+        required=True,
+        help="recipe file to read",
+    )
+    parser_post_bake_collation.set_defaults(func=_post_bake_collation_command)
 
     parser_graph = subparsers.add_parser("graph", help="visualise a recipe file")
     parser_graph.add_argument(
@@ -161,10 +180,18 @@ def main():
 
 def _bake_command(args, unparsed_args):
     from CSET._common import parse_variable_options
-    from CSET.operators import execute_recipe
+    from CSET.operators import execute_recipe_steps
 
     recipe_variables = parse_variable_options(unparsed_args)
-    execute_recipe(args.recipe, args.input_dir, args.output_dir, recipe_variables)
+    execute_recipe_steps(args.recipe, args.input_dir, args.output_dir, recipe_variables)
+
+
+def _post_bake_collation_command(args, unparsed_args):
+    from CSET._common import parse_variable_options
+    from CSET.operators import execute_recipe_post_steps
+
+    recipe_variables = parse_variable_options(unparsed_args)
+    execute_recipe_post_steps(args.recipe, args.output_dir, recipe_variables)
 
 
 def _graph_command(args, unparsed_args):
@@ -197,16 +224,10 @@ def _cookbook_command(args, unparsed_args):
 def _recipe_id_command(args, unparsed_args):
     from uuid import uuid4
 
-    from CSET._common import (
-        parse_recipe,
-        parse_variable_options,
-        slugify,
-        template_variables,
-    )
+    from CSET._common import parse_recipe, parse_variable_options, slugify
 
     recipe_variables = parse_variable_options(unparsed_args)
-    recipe = parse_recipe(args.recipe)
-    recipe = template_variables(recipe, recipe_variables)
+    recipe = parse_recipe(args.recipe, recipe_variables)
     try:
         recipe_id = slugify(recipe["title"])
     except KeyError:

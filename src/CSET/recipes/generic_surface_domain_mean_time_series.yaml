@@ -41,9 +41,5 @@ post-steps:
   - operator: plot.plot_time_series
 
 # To make this recipe a reality:
-# TODO: Check filename can contain a directory.
-# TODO: Add include file passing in validity time.
-# TODO: Implement something to run the post-steps.
-
 # TODO: Retrieve data based on validity time.
 # TODO: Cycle on validity time.

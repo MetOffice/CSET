@@ -26,6 +26,24 @@ page.
 
 .. _cset-cookbook-command:
 
+cset collate
+~~~~~~~~~~~~
+
+Used to collate the result of multiple cset bake runs, running the recipe's
+`post-steps` on the collated data.
+
+.. code-block:: text
+
+    usage: cset collate [-h] -o OUTPUT_DIR -r RECIPE
+
+    options:
+    -h, --help            show this help message and exit
+    -o OUTPUT_DIR, --output-dir OUTPUT_DIR
+                            directory to write output into
+    -r RECIPE, --recipe RECIPE
+                            recipe file to read
+
+
 cset cookbook
 ~~~~~~~~~~~~~
 
