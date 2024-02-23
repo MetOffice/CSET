@@ -56,7 +56,7 @@ def append_to_index(record: dict):
 def get_recipe_id(recipe: Path):
     """Get the ID for the recipe."""
     p = subprocess.run(
-        ("cset", "recipe-id", "--recipe", cset_recipe), check=True, capture_output=True
+        ("cset", "recipe-id", "--recipe", recipe), check=True, capture_output=True
     )
     recipe_id = p.stdout.decode("UTF-8").strip()
     return recipe_id
