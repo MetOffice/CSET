@@ -3,10 +3,10 @@ Installation
 
 .. Tutorial saying how to install CSET. For edge cases should link elsewhere.
 
-For a user of CSET the recommended way to install CSET is via conda_. It is packaged on
-`conda-forge`_ in the ``cset`` package. The following command will install CSET
-into its own conda environment, which is recommended to avoid possible package
-conflicts.
+For a user of CSET the recommended way to install CSET is via conda_. It is
+packaged on `conda-forge`_ in the ``cset`` package. The following command will
+install CSET into its own conda environment, which is recommended to avoid
+possible package conflicts.
 
 .. code-block:: bash
 
