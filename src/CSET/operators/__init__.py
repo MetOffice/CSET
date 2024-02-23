@@ -212,7 +212,9 @@ def execute_recipe_post_steps(
         recipe_variables = {}
     output_directory = Path(output_directory).absolute()
     recipe = parse_recipe(recipe_yaml, recipe_variables)
-    _run_steps(recipe, recipe["post-steps"], output_directory, output_directory)
+    # If post-steps doesn't exist treat it as having no steps.
+    steps = recipe.get("post-steps", tuple())
+    _run_steps(recipe, steps, output_directory, output_directory)
 
 
 __all__ = [
