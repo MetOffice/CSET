@@ -2,6 +2,7 @@
 
 """Install development version of CSET into the conda environment if needed."""
 
+import locale
 import logging
 import os
 import subprocess
@@ -36,4 +37,4 @@ if os.getenv("CSET_ENV_USE_LOCAL_CSET") == "True":
             )
 
 result = subprocess.run(("cset", "--version"), check=True, capture_output=True)
-print(f"Using CSET version: {result.stdout}")
+print(f"Using CSET version: {result.stdout.decode(locale.getencoding())}")
