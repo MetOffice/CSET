@@ -24,6 +24,7 @@ import warnings
 from typing import Union
 
 import iris
+import iris.coords
 import iris.cube
 import iris.exceptions
 import iris.plot as iplt
@@ -236,7 +237,7 @@ def _plot_and_save_postage_stamp_contour_plot(
 
 
 def _plot_and_save_line_series(
-    cube: iris.cube.Cube, coord: str, filename: str, title: str, **kwargs
+    cube: iris.cube.Cube, coord: iris.coords.Coord, filename: str, title: str, **kwargs
 ):
     """Plot and save a 1D line series.
 
@@ -244,8 +245,8 @@ def _plot_and_save_line_series(
     ----------
     cube: Cube
         1 dimensional (lat and lon) Cube of the data to plot on y-axis.
-    coord: str
-        Coordinate name to plot on x-axis.
+    coord: Coord
+        Coordinate to plot on x-axis.
     filename: str
         Filename of the plot to write.
     title: str
@@ -470,7 +471,7 @@ def plot_line_series(
     plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
 
     # Do the actual plotting.
-    _plot_and_save_line_series(cube, coordinate, plot_filename, title)
+    _plot_and_save_line_series(cube, coord, plot_filename, title)
 
     # Add list of plots to plot metadata.
     plot_index = _append_to_plot_index([plot_filename])
