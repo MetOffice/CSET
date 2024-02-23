@@ -10,7 +10,6 @@ dependencies:
   - pygraphviz
   - isodate
   - markdown-it-py >= 3.0
-  - simple_template >= 1.0
 
   # Build dependencies
   - setuptools>=64
