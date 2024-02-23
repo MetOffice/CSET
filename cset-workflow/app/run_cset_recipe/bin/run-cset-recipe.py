@@ -84,14 +84,29 @@ data_directory = Path(
 )
 output_directory = Path(os.getenv("CYLC_WORKFLOW_SHARE_DIR"), "plots", recipe_id)
 
-# Run the recipe to process the data and produce any plots.
+if not (output_directory / "intermediate").exists():
+    # If not intermediate directory exists then this is a simple
+    # non-parallelised recipe, and we need to run cset bake to process the data
+    # and produce any plots.
+    subprocess.run(
+        (
+            "cset",
+            "-v",
+            "bake",
+            f"--recipe={cset_recipe}",
+            f"--input-dir={data_directory}",
+            f"--output-dir={output_directory}",
+        ),
+        check=True,
+    )
+
+# Collate intermediate data and produce plots.
 subprocess.run(
     (
         "cset",
         "-v",
-        "bake",
+        "collate",
         f"--recipe={cset_recipe}",
-        f"--input-dir={data_directory}",
         f"--output-dir={output_directory}",
     ),
     check=True,
