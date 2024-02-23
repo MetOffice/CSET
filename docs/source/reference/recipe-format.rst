@@ -64,7 +64,7 @@ Using Recipe Variables
 A CSET recipe may contain variables. These are values filled in at runtime. They
 allow making generic recipes that can handle multiple cases. This prevents the
 need to have hundreds of recipes for very similar tasks where only minor changes
-are required such as switching from mean to median or iterating over a number of 
+are required such as switching from mean to median or iterating over a number of
 variable names.
 
 A variable can be added to a recipe by setting a parameter's value to the
