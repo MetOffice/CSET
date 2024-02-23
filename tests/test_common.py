@@ -103,6 +103,7 @@ def test_slugify():
     assert common.slugify("First Line\nSecond Line") == "first_line_second_line"
     assert common.slugify("greekαβγδchars") == "greek_chars"
     assert common.slugify("  ABC ") == "abc"
+    # Multi-byte unicode characters are removed.
     assert common.slugify("あいうえお") == ""
 
 
