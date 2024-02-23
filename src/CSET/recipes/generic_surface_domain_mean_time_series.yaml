@@ -32,13 +32,13 @@ steps:
 # Reads in intermediate cube and plots it.
 post-steps:
   - operator: read.read_cube
-    filename: intermediate/*.nc
+    filename_pattern: intermediate/*.nc
 
   # Make a single NetCDF with all the data inside it.
   - operator: write.write_cube_to_nc
 
   # Plot the data.
-  - operator: plot.plot_time_series
+  - operator: plot.plot_line_series
 
 # To make this recipe a reality:
 # TODO: Retrieve data based on validity time.
