@@ -128,6 +128,15 @@ def test_cookbook_detail_recipe():
     assert proc.stdout.startswith(b"\n\textract_instant_air_temp.yaml\n")
 
 
+def test_cookbook_non_existent_recipe(tmp_path):
+    """Non-existent recipe give non-zero exit code."""
+    with pytest.raises(subprocess.CalledProcessError):
+        subprocess.run(
+            ["cset", "cookbook", "--output-dir", tmp_path, "non-existent.yaml"],
+            check=True,
+        )
+
+
 def test_bake_invalid_args():
     """Invalid arguments give non-zero exit code."""
     with pytest.raises(subprocess.CalledProcessError):
@@ -139,21 +148,6 @@ def test_bake_invalid_args():
                 "--input-dir=/tmp",
                 "--output-dir=/tmp",
                 "--not-a-real-option",
-            ],
-            check=True,
-        )
-
-
-def test_bake_non_existent_recipe():
-    """Non-existent recipe give non-zero exit code."""
-    with pytest.raises(subprocess.CalledProcessError):
-        subprocess.run(
-            [
-                "cset",
-                "bake",
-                "--recipe=non-existent.yaml",
-                "--input-dir=/tmp",
-                "--output-dir=/tmp",
             ],
             check=True,
         )
