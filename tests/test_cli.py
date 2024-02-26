@@ -144,6 +144,21 @@ def test_bake_invalid_args():
         )
 
 
+def test_bake_non_existent_recipe():
+    """Non-existent recipe give non-zero exit code."""
+    with pytest.raises(subprocess.CalledProcessError):
+        subprocess.run(
+            [
+                "cset",
+                "bake",
+                "--recipe=non-existent.yaml",
+                "--input-dir=/tmp",
+                "--output-dir=/tmp",
+            ],
+            check=True,
+        )
+
+
 def test_recipe_id():
     """Get recipe ID for a recipe."""
     p = subprocess.run(
