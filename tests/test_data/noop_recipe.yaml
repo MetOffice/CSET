@@ -7,3 +7,6 @@ steps:
     dict_argument: {"key": "value"}
     substep:
       operator: constraints.combine_constraints
+
+post-steps:
+  - operator: misc.noop

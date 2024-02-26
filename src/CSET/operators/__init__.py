@@ -214,6 +214,7 @@ def execute_recipe_post_steps(
     recipe = parse_recipe(recipe_yaml, recipe_variables)
     # If post-steps doesn't exist treat it as having no steps.
     steps = recipe.get("post-steps", tuple())
+    assert output_directory.is_dir()
     _run_steps(recipe, steps, output_directory, output_directory)
 
 
