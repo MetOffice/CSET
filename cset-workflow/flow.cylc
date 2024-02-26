@@ -4,31 +4,39 @@ title = CSET
 description = Workflow for running CSET and METplus.
 URL = https://metoffice.github.io/CSET-workflow
 
+[scheduler]
+    UTC mode = True
 
 [scheduling]
-    cycling mode = integer
-    initial cycle point = 1
-    final cycle point = 1
+    initial cycle point = 2024-01-01T00Z
+    final cycle point = 2024-01-02T00Z
 
     [[graph]]
     # Only runs on the first cycle.
     R1/^ = """
     build_conda => install_website_skeleton
     build_conda => install_local_cset
+    install_website_skeleton & install_local_cset => fetch_fcst
+    install_website_skeleton & install_local_cset => PROCESS_DATA
+    install_website_skeleton & install_local_cset => COLLATE_PROCESSED_DATA
     """
 
     # Runs every cycle. Include files get inserted into this graph.
-    P1 = """
-    install_local_cset[1] => fetch_fcst
-    install_website_skeleton[1] => recipe_start
-    fetch_fcst => recipe_start
-    recipe_start => recipe_finish
-    recipe_finish => housekeeping
+    PT1H = """
+    fetch_fcst => PROCESS_DATA
+    """
+
+    PT3H = """
+    COLLATE_PROCESSED_DATA[-PT3H]:succeed-all => COLLATE_PROCESSED_DATA
+    PROCESS_DATA[-PT2H]:succeed-all => COLLATE_PROCESSED_DATA
+    PROCESS_DATA[-PT1H]:succeed-all => COLLATE_PROCESSED_DATA
+    PROCESS_DATA:succeed-all => COLLATE_PROCESSED_DATA
+    COLLATE_PROCESSED_DATA:succeed-all => housekeeping
     """
 
     # Only runs on the final cycle.
     R1/$ = """
-    recipe_finish => finish_website => send_email
+    COLLATE_PROCESSED_DATA:succeed-all => finish_website => send_email
     """
 
 
@@ -60,6 +68,12 @@ URL = https://metoffice.github.io/CSET-workflow
 
         WEB_DIR = {{WEB_DIR}}
 
+    [[PROCESS_DATA]]
+    script = rose task-run -v app-key=process_with_cset_bake
+
+    [[COLLATE_PROCESSED_DATA]]
+    script = rose task-run -v app-key=run_cset_recipe
+
     [[build_conda]]
     execution time limit = PT30M
         [[[environment]]]
@@ -78,34 +92,25 @@ URL = https://metoffice.github.io/CSET-workflow
         [[[environment]]]
         CLEAN_WEB_DIR = {{CLEAN_WEB_DIR}}
 
-    [[finish_website]]
-    # Updates the workflow info in the web interface.
-    platform = localhost
-        [[[environment]]]
-
     [[fetch_fcst]]
     # Fetch data from disk or a file based archival system.
         [[[environment]]]
         ROSE_APP_OPT_CONF_KEYS = {{FETCH_FCST_OPT_CONF}}
         FILE_PATH = {{CSET_INPUT_FILE_PATH}}
 
-    [[recipe_start]]
-    platform = localhost
-    script = true
+    [[housekeeping]]
+        [[[environment]]]
+        HOUSEKEEPING_MODE = {{HOUSEKEEPING_MODE}}
 
-    [[recipe_finish]]
+    [[finish_website]]
+    # Updates the workflow info in the web interface.
     platform = localhost
-    script = true
 
     [[send_email]]
     # Send email to notify that the workflow is complete.
     platform = localhost
         [[[environment]]]
         WEB_ADDR = {{WEB_ADDR}}
-
-    [[housekeeping]]
-        [[[environment]]]
-        HOUSEKEEPING_MODE = {{HOUSEKEEPING_MODE}}
 
 
 # Include files bring their own graph and runtime sections.

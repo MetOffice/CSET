@@ -1,24 +1,15 @@
-[scheduling]
-    [[graph]]
-{% for model_field in SURFACE_MODEL_FIELDS %}
-    P1 = """
-    recipe_start => pre_process_domain_mean_surface_time_series_{{model_field}} => collate_domain_mean_surface_time_series_{{model_field}} => recipe_finish
-    """
-{% endfor %}
-
 [runtime]
-# TODO: Take validity times from cycle instead.
 {% for model_field in SURFACE_MODEL_FIELDS %}
     [[pre_process_domain_mean_surface_time_series_{{model_field}}]]
-    script = rose task-run -v --app-key=process_with_cset_bake
+    inherit = PROCESS_DATA
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_surface_domain_mean_time_series.yaml"
-        CSET_ADDOPTS = "--VARNAME={{model_field}} --VALIDITY_TIME=2024-01-01T00:00Z"
+        CSET_ADDOPTS = "--VARNAME={{model_field}}"
 
     [[collate_domain_mean_surface_time_series_{{model_field}}]]
-    script = rose task-run -v --app-key=run_cset_recipe
+    inherit = COLLATE_PROCESSED_DATA
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_surface_domain_mean_time_series.yaml"
-        CSET_ADDOPTS = "--VARNAME={{model_field}} --VALIDITY_TIME=2024-01-01T00:00Z"
+        CSET_ADDOPTS = "--VARNAME={{model_field}}"
 
 {% endfor %}

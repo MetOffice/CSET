@@ -32,14 +32,22 @@ else:
 # Debug check that recipe has been retrieved.
 assert cset_recipe.exists()
 
+
 recipe_id = get_recipe_id(cset_recipe)
+cycle_point = os.getenv("CYLC_TASK_CYCLE_POINT")
 data_directory = Path(
     os.getenv("CYLC_WORKFLOW_SHARE_DIR"),
     "cycle",
-    os.getenv("CYLC_TASK_CYCLE_POINT"),
+    cycle_point,
     "data",
 )
-output_directory = Path(os.getenv("CYLC_WORKFLOW_SHARE_DIR"), "plots", recipe_id)
+output_directory = Path(os.getenv("CYLC_WORKFLOW_SHARE_DIR")) / "plots" / recipe_id
+subprocess_environment = {
+    # Add validity time based on cycle point.
+    "CSET_ADDOPTS": f"{os.getenv("CSET_ADDOPTS")} --VALIDITY_TIME={cycle_point}",
+    # Standard environment variables that CSET uses.
+    "TMPDIR": os.getenv("TMPDIR"),
+}
 
 # Run the recipe to process the data and produce any plots.
 subprocess.run(
@@ -52,4 +60,5 @@ subprocess.run(
         f"--output-dir={output_directory}",
     ),
     check=True,
+    env=subprocess_environment,
 )

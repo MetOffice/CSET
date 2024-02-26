@@ -76,18 +76,25 @@ else:
 assert cset_recipe.exists()
 
 recipe_id = get_recipe_id(cset_recipe)
+cycle_point = os.getenv("CYLC_TASK_CYCLE_POINT")
 data_directory = Path(
     os.getenv("CYLC_WORKFLOW_SHARE_DIR"),
     "cycle",
-    os.getenv("CYLC_TASK_CYCLE_POINT"),
+    cycle_point,
     "data",
 )
 output_directory = Path(os.getenv("CYLC_WORKFLOW_SHARE_DIR"), "plots", recipe_id)
+subprocess_environment = {
+    # Add validity time based on cycle point.
+    "CSET_ADDOPTS": f"{os.getenv("CSET_ADDOPTS")} --VALIDITY_TIME={cycle_point}",
+    # Standard environment variables that CSET uses.
+    "TMPDIR": os.getenv("TMPDIR"),
+}
 
+# If intermediate directory doesn't exists then this is a simple
+# non-parallelised recipe, and we need to run cset bake to process the data and
+# produce any plots.
 if not (output_directory / "intermediate").exists():
-    # If not intermediate directory exists then this is a simple
-    # non-parallelised recipe, and we need to run cset bake to process the data
-    # and produce any plots.
     subprocess.run(
         (
             "cset",
@@ -98,6 +105,7 @@ if not (output_directory / "intermediate").exists():
             f"--output-dir={output_directory}",
         ),
         check=True,
+        env=subprocess_environment,
     )
 
 # Collate intermediate data and produce plots.
@@ -110,6 +118,7 @@ subprocess.run(
         f"--output-dir={output_directory}",
     ),
     check=True,
+    env=subprocess_environment,
 )
 
 # Create archive for easy download of plots and data.
