@@ -18,8 +18,8 @@ import importlib.resources
 import logging
 import sys
 import warnings
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 import ruamel.yaml
 

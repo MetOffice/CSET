@@ -19,7 +19,7 @@ import json
 import logging
 import re
 from pathlib import Path
-from typing import List, Union
+from typing import Union
 
 import ruamel.yaml
 
@@ -114,7 +114,7 @@ def get_recipe_metadata() -> dict:
         return {}
 
 
-def parse_variable_options(arguments: List[str]) -> dict:
+def parse_variable_options(arguments: list[str]) -> dict:
     """Parse a list of arguments into a dictionary of variables.
 
     The variable name arguments start with two hyphen-minus (`--`), consisting
@@ -123,7 +123,7 @@ def parse_variable_options(arguments: List[str]) -> dict:
 
     Parameters
     ----------
-    arguments: List[str]
+    arguments: list[str]
         List of arguments, e.g: `["--LEVEL", "2", "--STASH=m01s01i001"]`
 
     Returns
