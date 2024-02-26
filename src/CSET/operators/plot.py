@@ -213,7 +213,7 @@ def _plot_and_save_line_series(
     Parameters
     ----------
     cube: Cube
-        1 dimensional (lat and lon) Cube of the data to plot on y-axis.
+        1 dimensional Cube of the data to plot on y-axis.
     coord: Coord
         Coordinate to plot on x-axis.
     filename: str
