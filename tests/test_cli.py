@@ -19,7 +19,6 @@ In many ways these are integration tests.
 
 import os
 import subprocess
-import tempfile
 from pathlib import Path
 from uuid import uuid4
 
@@ -39,18 +38,34 @@ def test_command_line_help():
     subprocess.run(["cset", "-vv"])
 
 
-def test_recipe_execution():
+def test_bake_recipe_execution(tmp_path):
     """Test running CSET recipe from the command line."""
     subprocess.run(
         [
             "cset",
             "bake",
             f"--input-dir={os.devnull}",
-            f"--output-dir={tempfile.gettempdir()}",
+            f"--output-dir={tmp_path}",
             "--recipe=tests/test_data/noop_recipe.yaml",
         ],
         check=True,
     )
+
+
+def test_bake_invalid_args():
+    """Invalid arguments give non-zero exit code."""
+    with pytest.raises(subprocess.CalledProcessError):
+        subprocess.run(
+            [
+                "cset",
+                "bake",
+                "--recipe=foo",
+                "--input-dir=/tmp",
+                "--output-dir=/tmp",
+                "--not-a-real-option",
+            ],
+            check=True,
+        )
 
 
 def test_graph_creation(tmp_path: Path):
@@ -137,22 +152,6 @@ def test_cookbook_non_existent_recipe(tmp_path):
         )
 
 
-def test_bake_invalid_args():
-    """Invalid arguments give non-zero exit code."""
-    with pytest.raises(subprocess.CalledProcessError):
-        subprocess.run(
-            [
-                "cset",
-                "bake",
-                "--recipe=foo",
-                "--input-dir=/tmp",
-                "--output-dir=/tmp",
-                "--not-a-real-option",
-            ],
-            check=True,
-        )
-
-
 def test_recipe_id():
     """Get recipe ID for a recipe."""
     p = subprocess.run(
@@ -172,3 +171,16 @@ def test_recipe_id_no_title():
     )
     # UUID output + newline.
     assert len(p.stdout) == 37
+
+
+def test_collate(tmp_path):
+    """Run recipe post-steps from the command line."""
+    subprocess.run(
+        [
+            "cset",
+            "collate",
+            f"--output-dir={tmp_path}",
+            "--recipe=tests/test_data/noop_recipe.yaml",
+        ],
+        check=True,
+    )
