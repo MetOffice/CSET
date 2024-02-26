@@ -122,37 +122,6 @@ def _make_plot_html_page(plots: list):
         fp.write(html)
 
 
-def _check_single_cube(
-    cube: Union[iris.cube.Cube, iris.cube.CubeList],
-) -> iris.cube.Cube:
-    """Ensure a single cube is given.
-
-    If a CubeList of length one is given that the contained cube is returned,
-    otherwise an error is raised.
-
-    Parameters
-    ----------
-    cube: Cube | CubeList
-        The cube to check.
-
-    Returns
-    -------
-    cube: Cube
-        The checked cube.
-
-    Raises
-    ------
-    TypeError
-        If the input cube is not a Cube or CubeList of a single Cube.
-    """
-    if isinstance(cube, iris.cube.Cube):
-        return cube
-    if isinstance(cube, iris.cube.CubeList):
-        if len(cube) == 1:
-            return cube[0]
-    raise TypeError("Must have a single cube", cube)
-
-
 def _plot_and_save_contour_plot(
     cube: iris.cube.Cube, filename: str, title: str, **kwargs
 ):
