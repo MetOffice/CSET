@@ -38,13 +38,70 @@ def regrid_onto_cube(incube: iris.cube.Cube, targetcube: iris.cube.Cube, methodp
 
     Returns
     -------
-    regriddedcube: Cube
+    iris.cube.Cube
         An iris cube of the data that has been regridded.
     """
 
-    # TODO: Can iris recognise both 'latitude' and 'grid_latitude'? For cell stats there
-    # was a function to identify x,y coordinate names.
-
     return incube.regrid(targetcube, methodplaceholder)
+
+
+def regrid_onto_xyspacing(incube: iris.cube.Cube, xspacing: int, yspacing: int, methodplaceholder,
+                          **kwargs) -> iris.cube.Cube:
+    """Regrid cube onto a set x,y spacing. This could be a useful case where there
+       is no cube to regrid onto? This only supports linear spacing for now...
+
+    Parameters
+    ----------
+    incube: Cube
+        An iris cube of the data to regrid. As a minimum, it needs to be 2D with a latitude,
+        longitude coordinates.
+    xspacing: integer
+        Spacing of points in longitude direction (could be degrees, meters etc.)
+    yspacing: integer
+        Spacing of points in latitude direction (could be degrees, meters etc.)
+    methodplaceholder: iris.analysis
+        Method used to regrid onto, such as iris.analysis.Linear()
+
+    Returns
+    -------
+    cube_rgd: Cube
+        An iris cube of the data that has been regridded.
+    """
+
+    # Usual names for spatial coordinates
+    X_COORD_NAMES = ["longitude", "grid_longitude",
+                     "projection_x_coordinate", "x"]
+    Y_COORD_NAMES = ["latitude", "grid_latitude",
+                     "projection_y_coordinate", "y"]
+
+    # Get a list of coordinate names for the cube
+    coord_names = [coord.name() for coord in incube.coords()]
+
+    # Check which x-coordinate we have, if any
+    x_coords = [coord for coord in coord_names if coord in X_COORD_NAMES]
+    if len(x_coords) != 1:
+        raise ValueError("Could not identify a unique x-coordinate in cube")
+    x_coord = incube.coord(x_coords[0])
+
+    # Check which y-coordinate we have, if any
+    y_coords = [coord for coord in coord_names if coord in Y_COORD_NAMES]
+    if len(y_coords) != 1:
+        raise ValueError("Could not identify a unique y-coordinate in cube")
+    y_coord = incube.coord(y_coords[0])
+
+    # Get axis
+    lat,lon = x_wind.coord(y_coord),x_wind.coord(x_coord)
+
+    # Get bounds
+    lat_min,lon_min = lat.points.min(),lon.points.min()
+    lat_max,lon_max = lat.points.max(),lon.points.max()
+
+    # Generate new mesh
+    latout = np.arange(lat_min, lat_max, yspacing)
+    lonout = np.arange(lon_min, lon_max, xspacing)
+    cube_rgd = incube.interpolate([(y_coord, latout), (x_coord, lonout)],
+                                     methodplaceholder)
+
+    return cube_rgd
 
 
