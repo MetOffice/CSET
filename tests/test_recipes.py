@@ -53,3 +53,21 @@ def test_unpack_recipes_exception_permission():
         CSET.recipes.unpack_recipe(
             Path("/usr/bin/cset"), "extract_instant_air_temp.yaml"
         )
+
+
+def test_get_recipe_file():
+    """Get a recipe file from a specific location."""
+    file = CSET.recipes._get_recipe_file("noop_recipe.yaml", Path("tests/test_data"))
+    assert file.is_file()
+
+
+def test_get_recipe_file_missing():
+    """Exception raised when recipe file not in location."""
+    with pytest.raises(FileNotFoundError):
+        CSET.recipes._get_recipe_file("non-existent", Path("tests/test_data"))
+
+
+def test_get_recipe_file_in_package():
+    """Get a recipe file from a the default location inside the package."""
+    file = CSET.recipes._get_recipe_file("CAPE_ratio_plot.yaml")
+    assert file.is_file()
