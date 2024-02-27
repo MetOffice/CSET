@@ -93,7 +93,7 @@ def regrid_onto_xyspacing(incube: iris.cube.Cube, xspacing: int, yspacing: int, 
     y_coord = incube.coord(y_coords[0])
 
     # Get axis
-    lat,lon = x_wind.coord(y_coord),x_wind.coord(x_coord)
+    lat,lon = incube.coord(y_coord),incube.coord(x_coord)
 
     # Get bounds
     lat_min,lon_min = lat.points.min(),lon.points.min()
