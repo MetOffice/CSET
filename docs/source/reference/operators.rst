@@ -50,6 +50,12 @@ CSET.operators.read
 .. automodule:: CSET.operators.read
    :members:
 
+CSET.operators.regrid
+-------------------
+
+.. automodule:: CSET.operators.regrid
+   :members:
+
 CSET.operators.write
 --------------------
 
