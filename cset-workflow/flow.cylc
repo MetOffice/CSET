@@ -8,9 +8,9 @@ URL = https://metoffice.github.io/CSET
     UTC mode = True
 
 [scheduling]
+    runahead limit = P1
     initial cycle point = 2024-01-01T00Z
     final cycle point = 2024-01-02T00Z
-
     [[graph]]
     # Only runs on the first cycle.
     R1/^ = """
@@ -23,6 +23,7 @@ URL = https://metoffice.github.io/CSET
 
     # Runs every cycle. Include files get inserted into this graph.
     PT1H = """
+    install_website_skeleton[^] & install_local_cset[^] => FETCH_DATA
     FETCH_DATA:succeed-all => PROCESS_DATA:succeed-all => housekeeping_raw
     """
 
@@ -102,12 +103,12 @@ URL = https://metoffice.github.io/CSET
         FILE_PATH = {{CSET_INPUT_FILE_PATH}}
 
     [[housekeeping_raw]]
-    script = rose task-run -v housekeeping
+    script = rose task-run -v --app-key=housekeeping
         [[[environment]]]
         HOUSEKEEPING_MODE = {{[HOUSEKEEPING_MODE, 1]|min}}
 
     [[housekeeping_full]]
-    script = rose task-run -v housekeeping
+    script = rose task-run -v --app-key=housekeeping
         [[[environment]]]
         HOUSEKEEPING_MODE = {{[HOUSEKEEPING_MODE, 2]|min}}
 
