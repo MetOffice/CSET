@@ -21,7 +21,7 @@ import iris
 import iris.cube
 
 
-def regrid_onto_cube(incube: iris.cube.Cube, targetcube: iris.cube.Cube, methodplaceholder,
+def regrid_onto_cube(incube: iris.cube.Cube, targetcube: iris.cube.Cube, regridmethod: str,
                      **kwargs) -> iris.cube.Cube:
     """Regrid cube using another cube as a target.
 
@@ -33,8 +33,8 @@ def regrid_onto_cube(incube: iris.cube.Cube, targetcube: iris.cube.Cube, methodp
     targetcube: Cube
         An iris cube of the data to regrid onto. It needs to be 2D with a latitude,
         longitude coordinate, though I think more dims are acceptable and are ignored.
-    methodplaceholder: iris.analysis
-        Method used to regrid onto, such as iris.analysis.Linear()
+    regridmethod: str
+        Method used to regrid onto, etc. Linear will use iris.analysis.Linear()
 
     Returns
     -------
@@ -42,10 +42,13 @@ def regrid_onto_cube(incube: iris.cube.Cube, targetcube: iris.cube.Cube, methodp
         An iris cube of the data that has been regridded.
     """
 
-    return incube.regrid(targetcube, methodplaceholder)
+    if regridmethod == 'Linear':
+        return incube.regrid(targetcube, iris.analysis.Linear)
+    else:
+        print('regrid operator',regridmethod,'not supported')
 
 
-def regrid_onto_xyspacing(incube: iris.cube.Cube, xspacing: int, yspacing: int, methodplaceholder,
+def regrid_onto_xyspacing(incube: iris.cube.Cube, xspacing: int, yspacing: int, regridmethod: str,
                           **kwargs) -> iris.cube.Cube:
     """Regrid cube onto a set x,y spacing. This could be a useful case where there
        is no cube to regrid onto? This only supports linear spacing for now...
@@ -59,8 +62,8 @@ def regrid_onto_xyspacing(incube: iris.cube.Cube, xspacing: int, yspacing: int, 
         Spacing of points in longitude direction (could be degrees, meters etc.)
     yspacing: integer
         Spacing of points in latitude direction (could be degrees, meters etc.)
-    methodplaceholder: iris.analysis
-        Method used to regrid onto, such as iris.analysis.Linear()
+    regridmethod: str
+        Method used to regrid onto, etc. Linear will use iris.analysis.Linear()
 
     Returns
     -------
@@ -99,8 +102,12 @@ def regrid_onto_xyspacing(incube: iris.cube.Cube, xspacing: int, yspacing: int, 
     # Generate new mesh
     latout = np.arange(lat_min, lat_max, yspacing)
     lonout = np.arange(lon_min, lon_max, xspacing)
-    cube_rgd = incube.interpolate([(y_coord, latout), (x_coord, lonout)],
-                                     methodplaceholder)
+
+    if regridmethod == 'Linear':
+        cube_rgd = incube.interpolate([(y_coord, latout), (x_coord, lonout)],
+                                         methodplaceholder)
+    else:
+        print('regrid operator',regridmethod,'not supported')
 
     return cube_rgd
 
