@@ -2,7 +2,7 @@
 [meta]
 title = CSET
 description = Workflow for running CSET and METplus.
-URL = https://metoffice.github.io/CSET-workflow
+URL = https://metoffice.github.io/CSET
 
 [scheduler]
     UTC mode = True
@@ -16,14 +16,14 @@ URL = https://metoffice.github.io/CSET-workflow
     R1/^ = """
     build_conda => install_website_skeleton
     build_conda => install_local_cset
-    install_website_skeleton & install_local_cset => fetch_fcst
+    install_website_skeleton & install_local_cset => FETCH_DATA
     install_website_skeleton & install_local_cset => PROCESS_DATA
     install_website_skeleton & install_local_cset => COLLATE_PROCESSED_DATA
     """
 
     # Runs every cycle. Include files get inserted into this graph.
     PT1H = """
-    fetch_fcst => PROCESS_DATA
+    FETCH_DATA:succeed-all => PROCESS_DATA:succeed-all => housekeeping_raw
     """
 
     PT3H = """
@@ -31,12 +31,12 @@ URL = https://metoffice.github.io/CSET-workflow
     PROCESS_DATA[-PT2H]:succeed-all => COLLATE_PROCESSED_DATA
     PROCESS_DATA[-PT1H]:succeed-all => COLLATE_PROCESSED_DATA
     PROCESS_DATA:succeed-all => COLLATE_PROCESSED_DATA
-    COLLATE_PROCESSED_DATA:succeed-all => housekeeping
     """
 
     # Only runs on the final cycle.
     R1/$ = """
     COLLATE_PROCESSED_DATA:succeed-all => finish_website => send_email
+    COLLATE_PROCESSED_DATA:succeed-all => housekeeping_full
     """
 
 
@@ -74,6 +74,8 @@ URL = https://metoffice.github.io/CSET-workflow
     [[COLLATE_PROCESSED_DATA]]
     script = rose task-run -v app-key=run_cset_recipe
 
+    [[FETCH_DATA]]
+
     [[build_conda]]
     execution time limit = PT30M
         [[[environment]]]
@@ -93,14 +95,21 @@ URL = https://metoffice.github.io/CSET-workflow
         CLEAN_WEB_DIR = {{CLEAN_WEB_DIR}}
 
     [[fetch_fcst]]
+    inherit = FETCH_DATA
     # Fetch data from disk or a file based archival system.
         [[[environment]]]
         ROSE_APP_OPT_CONF_KEYS = {{FETCH_FCST_OPT_CONF}}
         FILE_PATH = {{CSET_INPUT_FILE_PATH}}
 
-    [[housekeeping]]
+    [[housekeeping_raw]]
+    script = rose task-run -v housekeeping
         [[[environment]]]
-        HOUSEKEEPING_MODE = {{HOUSEKEEPING_MODE}}
+        HOUSEKEEPING_MODE = {{[HOUSEKEEPING_MODE, 1]|min}}
+
+    [[housekeeping_full]]
+    script = rose task-run -v housekeeping
+        [[[environment]]]
+        HOUSEKEEPING_MODE = {{[HOUSEKEEPING_MODE, 2]|min}}
 
     [[finish_website]]
     # Updates the workflow info in the web interface.
