@@ -19,6 +19,7 @@ from typing import Union
 
 import iris
 import iris.cube
+import numpy as np
 
 
 def regrid_onto_cube(incube: iris.cube.Cube, targetcube: iris.cube.Cube, regridmethod: str,
@@ -43,7 +44,7 @@ def regrid_onto_cube(incube: iris.cube.Cube, targetcube: iris.cube.Cube, regridm
     """
 
     if regridmethod == 'Linear':
-        return incube.regrid(targetcube, iris.analysis.Linear)
+        return incube.regrid(targetcube, iris.analysis.Linear())
     else:
         print('regrid operator',regridmethod,'not supported')
 
@@ -105,7 +106,7 @@ def regrid_onto_xyspacing(incube: iris.cube.Cube, xspacing: int, yspacing: int, 
 
     if regridmethod == 'Linear':
         cube_rgd = incube.interpolate([(y_coord, latout), (x_coord, lonout)],
-                                         methodplaceholder)
+                                         iris.analysis.Linear())
     else:
         print('regrid operator',regridmethod,'not supported')
 
