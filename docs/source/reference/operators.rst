@@ -51,7 +51,7 @@ CSET.operators.read
    :members:
 
 CSET.operators.regrid
--------------------
+---------------------
 
 .. automodule:: CSET.operators.regrid
    :members:
