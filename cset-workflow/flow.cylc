@@ -17,27 +17,18 @@ URL = https://metoffice.github.io/CSET
     build_conda => install_website_skeleton
     build_conda => install_local_cset
     install_website_skeleton & install_local_cset => FETCH_DATA
-    install_website_skeleton & install_local_cset => PROCESS_DATA
-    install_website_skeleton & install_local_cset => COLLATE_PROCESSED_DATA
     """
 
-    # Runs every cycle. Include files get inserted into this graph.
+    # Should run every cycle.
+    # TODO: Find out how to run on every cycle.
     PT1H = """
     install_website_skeleton[^] & install_local_cset[^] => FETCH_DATA
-    FETCH_DATA:succeed-all => PROCESS_DATA:succeed-all => housekeeping_raw
-    """
-
-    PT3H = """
-    COLLATE_PROCESSED_DATA[-PT3H]:succeed-all => COLLATE_PROCESSED_DATA
-    PROCESS_DATA[-PT2H]:succeed-all => COLLATE_PROCESSED_DATA
-    PROCESS_DATA[-PT1H]:succeed-all => COLLATE_PROCESSED_DATA
-    PROCESS_DATA:succeed-all => COLLATE_PROCESSED_DATA
     """
 
     # Only runs on the final cycle.
     R1/$ = """
-    COLLATE_PROCESSED_DATA:succeed-all => finish_website => send_email
     COLLATE_PROCESSED_DATA:succeed-all => housekeeping_full
+    COLLATE_PROCESSED_DATA:succeed-all => finish_website => send_email
     """
 
 

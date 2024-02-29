@@ -1,5 +1,12 @@
-[runtime]
 {% for model_field in SURFACE_MODEL_FIELDS %}
+[scheduling]
+    [[graph]]
+    PT1H = """
+    FETCH_DATA => generic_spatial_plot_time_series_{{model_field}} => housekeeping_full
+    generic_spatial_plot_time_series_{{model_field}}[-PT1H] => generic_spatial_plot_time_series_{{model_field}}
+    """
+
+[runtime]
     [[generic_spatial_plot_time_series_{{model_field}}]]
     inherit = COLLATE_PROCESSED_DATA
         [[[environment]]]
