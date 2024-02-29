@@ -70,10 +70,10 @@ URL = https://metoffice.github.io/CSET
         WEB_DIR = {{WEB_DIR}}
 
     [[PROCESS_DATA]]
-    script = rose task-run -v app-key=process_with_cset_bake
+    script = rose task-run -v --app-key=process_with_cset_bake
 
     [[COLLATE_PROCESSED_DATA]]
-    script = rose task-run -v app-key=run_cset_recipe
+    script = rose task-run -v --app-key=run_cset_recipe
 
     [[FETCH_DATA]]
 
