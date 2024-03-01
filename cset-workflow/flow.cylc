@@ -8,9 +8,10 @@ URL = https://metoffice.github.io/CSET
     UTC mode = True
 
 [scheduling]
+    # TODO: Unhardcode.
     runahead limit = P1
     initial cycle point = 2024-01-01T00Z
-    final cycle point = 2024-01-02T00Z
+    final cycle point = 2024-01-01T05Z
     [[graph]]
     # Only runs on the first cycle.
     R1/^ = """

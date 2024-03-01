@@ -53,46 +53,46 @@ def append_to_index(record: dict):
         json.dump(index, fp)
 
 
-def get_recipe_id(recipe: Path):
+def get_recipe_id(recipe: Path, env: dict):
     """Get the ID for the recipe."""
     p = subprocess.run(
-        ("cset", "recipe-id", "--recipe", recipe), check=True, capture_output=True
+        ("cset", "recipe-id", "--recipe", recipe),
+        check=True,
+        capture_output=True,
+        env=env,
     )
     recipe_id = p.stdout.decode("UTF-8").strip()
     return recipe_id
 
 
 # Ready recipe file to disk.
-cset_recipe = Path(os.getenv("CSET_RECIPE_NAME"))
+cset_recipe = os.getenv("CSET_RECIPE_NAME")
 if cset_recipe:
     subprocess.run(("cset", "-v", "cookbook", cset_recipe), check=True)
 else:
     # Read recipe YAML from environment variable.
-    cset_recipe = Path("recipe.yaml")
+    cset_recipe = "recipe.yaml"
     with open(cset_recipe, "wb") as fp:
         fp.write(os.getenvb(b"CSET_RECIPE"))
 
 # Debug check that recipe has been retrieved.
-assert cset_recipe.exists()
+assert Path(cset_recipe).is_file()
 
-recipe_id = get_recipe_id(cset_recipe)
+# Setup required variables.
 cycle_point = os.getenv("CYLC_TASK_CYCLE_POINT")
-data_directory = Path(
-    os.getenv("CYLC_WORKFLOW_SHARE_DIR"),
-    "cycle",
-    cycle_point,
-    "data",
-)
-output_directory = Path(os.getenv("CYLC_WORKFLOW_SHARE_DIR"), "plots", recipe_id)
+data_directory = f"{os.getenv("CYLC_WORKFLOW_SHARE_DIR")}/cycle/{cycle_point}/data"
 subprocess_environment = dict(os.environ)
-subprocess_environment["CSET_ADDOPTS"] = (
-    # Add validity time based on cycle point.
-    f"{os.getenv("CSET_ADDOPTS", '')} --VALIDITY_TIME={cycle_point}",
-)
+# Add validity time based on cycle point.
+subprocess_environment[
+    "CSET_ADDOPTS"
+] = f"{os.getenv("CSET_ADDOPTS", '')} --VALIDITY_TIME={cycle_point}"
+recipe_id = get_recipe_id(cset_recipe, subprocess_environment)
+output_directory = f"{os.getenv("CYLC_WORKFLOW_SHARE_DIR")}/plots/{recipe_id}"
+
 # If intermediate directory doesn't exists then this is a simple
 # non-parallelised recipe, and we need to run cset bake to process the data and
 # produce any plots.
-if not (output_directory / "intermediate").exists():
+if not Path(output_directory, "intermediate").exists():
     subprocess.run(
         (
             "cset",
@@ -119,6 +119,7 @@ subprocess.run(
     env=subprocess_environment,
 )
 
+output_directory - Path(output_directory)
 # Create archive for easy download of plots and data.
 archive_path = output_directory / "diagnostic.zip"
 with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
