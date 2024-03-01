@@ -19,12 +19,6 @@ URL = https://metoffice.github.io/CSET
     install_website_skeleton & install_local_cset => FETCH_DATA
     """
 
-    # Should run every cycle.
-    # TODO: Find out how to run on every cycle.
-    PT1H = """
-    install_website_skeleton[^] & install_local_cset[^] => FETCH_DATA
-    """
-
     # Only runs on the final cycle.
     R1/$ = """
     COLLATE_PROCESSED_DATA:succeed-all => housekeeping_full
