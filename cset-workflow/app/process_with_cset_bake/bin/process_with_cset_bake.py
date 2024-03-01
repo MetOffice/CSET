@@ -42,12 +42,11 @@ data_directory = Path(
     "data",
 )
 output_directory = Path(os.getenv("CYLC_WORKFLOW_SHARE_DIR")) / "plots" / recipe_id
-subprocess_environment = {
+subprocess_environment = dict(os.environ)
+subprocess_environment["CSET_ADDOPTS"] = (
     # Add validity time based on cycle point.
-    "CSET_ADDOPTS": f"{os.getenv("CSET_ADDOPTS")} --VALIDITY_TIME={cycle_point}",
-    # Standard environment variables that CSET uses.
-    "TMPDIR": os.getenv("TMPDIR"),
-}
+    f"{os.getenv("CSET_ADDOPTS", '')} --VALIDITY_TIME={cycle_point}",
+)
 
 # Run the recipe to process the data and produce any plots.
 subprocess.run(
