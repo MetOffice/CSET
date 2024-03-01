@@ -105,19 +105,20 @@ if not Path(output_directory, "intermediate").exists():
         check=True,
         env=subprocess_environment,
     )
-
-# Collate intermediate data and produce plots.
-subprocess.run(
-    (
-        "cset",
-        "-v",
-        "collate",
-        f"--recipe={cset_recipe}",
-        f"--output-dir={output_directory}",
-    ),
-    check=True,
-    env=subprocess_environment,
-)
+else:
+    # Collate intermediate data and produce plots.
+    subprocess.run(
+        (
+            "cset",
+            "-v",
+            "bake",
+            f"--recipe={cset_recipe}",
+            f"--output-dir={output_directory}",
+            "--post-only",
+        ),
+        check=True,
+        env=subprocess_environment,
+    )
 
 output_directory - Path(output_directory)
 # Create archive for easy download of plots and data.

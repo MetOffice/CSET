@@ -49,7 +49,6 @@ def main():
         "-i",
         "--input-dir",
         type=Path,
-        required=True,
         help="directory containing input data",
     )
     parser_bake.add_argument(
@@ -66,26 +65,14 @@ def main():
         required=True,
         help="recipe file to read",
     )
+    bake_step_control = parser_bake.add_mutually_exclusive_group()
+    bake_step_control.add_argument(
+        "--pre-only", action="store_true", help="only run pre-processing steps"
+    )
+    bake_step_control.add_argument(
+        "--post-only", action="store_true", help="only run post-processing steps"
+    )
     parser_bake.set_defaults(func=_bake_command)
-
-    parser_post_bake_collation = subparsers.add_parser(
-        "collate", help="collate processed data after running bake"
-    )
-    parser_post_bake_collation.add_argument(
-        "-o",
-        "--output-dir",
-        type=Path,
-        required=True,
-        help="directory to write output into",
-    )
-    parser_post_bake_collation.add_argument(
-        "-r",
-        "--recipe",
-        type=Path,
-        required=True,
-        help="recipe file to read",
-    )
-    parser_post_bake_collation.set_defaults(func=_post_bake_collation_command)
 
     parser_graph = subparsers.add_parser("graph", help="visualise a recipe file")
     parser_graph.add_argument(
@@ -180,18 +167,18 @@ def main():
 
 def _bake_command(args, unparsed_args):
     from CSET._common import parse_variable_options
-    from CSET.operators import execute_recipe_steps
+    from CSET.operators import execute_recipe_post_steps, execute_recipe_steps
 
     recipe_variables = parse_variable_options(unparsed_args)
-    execute_recipe_steps(args.recipe, args.input_dir, args.output_dir, recipe_variables)
-
-
-def _post_bake_collation_command(args, unparsed_args):
-    from CSET._common import parse_variable_options
-    from CSET.operators import execute_recipe_post_steps
-
-    recipe_variables = parse_variable_options(unparsed_args)
-    execute_recipe_post_steps(args.recipe, args.output_dir, recipe_variables)
+    if not args.post_only:
+        # Input dir is needed for pre-steps, but not post-steps.
+        if not args.input_dir:
+            raise ArgumentError("the following arguments are required: -i/--input-dir")
+        execute_recipe_steps(
+            args.recipe, args.input_dir, args.output_dir, recipe_variables
+        )
+    if not args.pre_only:
+        execute_recipe_post_steps(args.recipe, args.output_dir, recipe_variables)
 
 
 def _graph_command(args, unparsed_args):

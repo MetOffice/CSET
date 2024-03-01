@@ -52,6 +52,35 @@ def test_bake_recipe_execution(tmp_path):
     )
 
 
+def test_bake_pre_only(tmp_path):
+    """Run recipe pre-steps from the command line."""
+    subprocess.run(
+        [
+            "cset",
+            "bake",
+            f"--input-dir={os.devnull}",
+            f"--output-dir={tmp_path}",
+            "--recipe=tests/test_data/noop_recipe.yaml",
+            "--pre-only",
+        ],
+        check=True,
+    )
+
+
+def test_bake_post_only(tmp_path):
+    """Run recipe post-steps from the command line."""
+    subprocess.run(
+        [
+            "cset",
+            "bake",
+            f"--output-dir={tmp_path}",
+            "--recipe=tests/test_data/noop_recipe.yaml",
+            "--post-only",
+        ],
+        check=True,
+    )
+
+
 def test_bake_invalid_args():
     """Invalid arguments give non-zero exit code."""
     with pytest.raises(subprocess.CalledProcessError):
@@ -171,16 +200,3 @@ def test_recipe_id_no_title():
     )
     # UUID output + newline.
     assert len(p.stdout) == 37
-
-
-def test_collate(tmp_path):
-    """Run recipe post-steps from the command line."""
-    subprocess.run(
-        [
-            "cset",
-            "collate",
-            f"--output-dir={tmp_path}",
-            "--recipe=tests/test_data/noop_recipe.yaml",
-        ],
-        check=True,
-    )

@@ -13,7 +13,7 @@ page.
 
 .. code-block:: text
 
-    usage: cset bake [-h] -i INPUT_DIR -o OUTPUT_DIR -r RECIPE
+    usage: cset bake [-h] [-i INPUT_DIR] -o OUTPUT_DIR -r RECIPE [--pre-only | --post-only]
 
     options:
     -h, --help            show this help message and exit
@@ -23,26 +23,10 @@ page.
                             directory to write output into
     -r RECIPE, --recipe RECIPE
                             recipe file to read
+    --pre-only            only run pre-processing steps
+    --post-only           only run post-processing steps
 
 .. _cset-cookbook-command:
-
-cset collate
-~~~~~~~~~~~~
-
-Used to collate the result of multiple cset bake runs, running the recipe's
-`post-steps` on the collated data.
-
-.. code-block:: text
-
-    usage: cset collate [-h] -o OUTPUT_DIR -r RECIPE
-
-    options:
-    -h, --help            show this help message and exit
-    -o OUTPUT_DIR, --output-dir OUTPUT_DIR
-                            directory to write output into
-    -r RECIPE, --recipe RECIPE
-                            recipe file to read
-
 
 cset cookbook
 ~~~~~~~~~~~~~

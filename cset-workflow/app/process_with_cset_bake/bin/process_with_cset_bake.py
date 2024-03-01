@@ -56,6 +56,7 @@ subprocess.run(
         f"--recipe={cset_recipe}",
         f"--input-dir={data_directory}",
         f"--output-dir={output_directory}",
+        "--pre-only",
     ),
     check=True,
     env=subprocess_environment,
