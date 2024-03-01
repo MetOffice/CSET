@@ -3,7 +3,7 @@
     [[graph]]
     PT1H = """
     install_website_skeleton[^] & install_local_cset[^] => FETCH_DATA
-    FETCH_DATA => pre_process_domain_mean_surface_time_series_{{model_field}} => housekeeping_raw
+    FETCH_DATA:succeed-all => pre_process_domain_mean_surface_time_series_{{model_field}} => housekeeping_raw
     """
 
     PT3H = """
