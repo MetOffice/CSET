@@ -36,10 +36,7 @@ post-steps:
 
   # Make a single NetCDF with all the data inside it.
   - operator: write.write_cube_to_nc
+    overwrite: True
 
   # Plot the data.
   - operator: plot.plot_line_series
-
-# To make this recipe a reality:
-# TODO: Retrieve data based on validity time.
-# TODO: Cycle on validity time.
