@@ -1,7 +1,8 @@
 [scheduling]
     [[graph]]
-    P1 = """
-    recipe_start => deterministic_plot_surface_air_temp => recipe_finish
+    PT1H = """
+    install_website_skeleton[^] & install_local_cset[^] => FETCH_DATA
+    FETCH_DATA:succeed-all => deterministic_plot_surface_air_temp => housekeeping_raw
     """
 
 [runtime]
