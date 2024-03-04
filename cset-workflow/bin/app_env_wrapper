@@ -44,14 +44,14 @@ then
   set +u
   "${CONDA_PATH}conda" activate "$CONDA_VENV_LOCATION"
   set -u
-  export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$CONDA_PREFIX/lib"
+  export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 fi
 
 # Add separately maintained METplus to PATH.
 if [[ "$CSET_ENV_SEPARATE_MET" == True ]]
 then
   echo "Using separate installation of METplus."
-  export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$MET_LIBRARIES/lib"
+  export LD_LIBRARY_PATH="${MET_LIBRARIES}/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
   export PATH="${METPLUS_BASE}/ush:${MET_BUILD_BASE}/bin:${PATH}"
 fi
 
