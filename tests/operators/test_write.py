@@ -23,12 +23,12 @@ from CSET.operators import write
 def test_write_cube(tmp_path: Path, cube):
     """Write cube and verify it was written."""
     file_path = tmp_path / "cube.nc"
-    write.write_cube_to_nc(cube, file_path)
+    write.write_cube_to_nc(cube, file_path, overwrite=True)
     assert file_path.is_file()
 
 
 def test_write_cube_default_filename(cube, tmp_working_dir):
     """Write cube without specifying a filename."""
     Path("meta.json").write_text("{}", encoding="UTF-8")
-    write.write_cube_to_nc(cube)
+    write.write_cube_to_nc(cube, overwrite=True)
     assert Path.cwd().joinpath("untitled.nc").is_file()
