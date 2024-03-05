@@ -20,11 +20,8 @@ URL = https://metoffice.github.io/CSET
     """
 
     # Only runs on the final cycle.
-    # TODO: We also want to add a dependency on the previous collate task.
     R1/$ = """
-    install_website_skeleton[^] & install_local_cset[^] =>
-    FETCH_DATA:succeed-all => COLLATE_PROCESSED_DATA:succeed-all =>
-    housekeeping_full & finish_website => send_email
+    housekeeping_full:started => finish_website => send_email
     """
 
 [runtime]

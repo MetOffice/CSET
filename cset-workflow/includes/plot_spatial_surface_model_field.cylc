@@ -4,7 +4,8 @@
     PT1H = """
     install_website_skeleton[^] & install_local_cset[^] => FETCH_DATA
     FETCH_DATA:succeed-all & generic_spatial_plot_time_series_{{model_field}}[-PT1H] =>
-    generic_spatial_plot_time_series_{{model_field}} => housekeeping_raw
+    generic_spatial_plot_time_series_{{model_field}} =>
+    housekeeping_raw & housekeeping_full[$]
     """
 
 [runtime]

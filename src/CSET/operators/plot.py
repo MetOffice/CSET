@@ -389,10 +389,15 @@ def postage_stamp_contour_plot(
     return cube
 
 
+# TODO: Expand function to handle ensemble data.
+# line_coordinate: str, optional
+#     Coordinate about which to plot multiple lines. Defaults to
+#     ``"realization"``.
 def plot_line_series(
     cube: iris.cube.Cube,
     filename: str = None,
-    coordinate: str = "time",
+    series_coordinate: str = "time",
+    # line_coordinate: str = "realization",
     **kwargs,
 ) -> iris.cube.Cube:
     """Plot a line plot for the specified coordinate.
@@ -406,7 +411,7 @@ def plot_line_series(
     filename: str, optional
         Name of the plot to write, used as a prefix for plot sequences. Defaults
         to the recipe name.
-    coordinate: str, optional
+    series_coordinate: str, optional
         Coordinate about which to make a series. Defaults to ``"time"``. This
         coordinate must exist in the cube.
 
@@ -425,11 +430,11 @@ def plot_line_series(
     # Check cube is right shape.
     cube = _check_single_cube(cube)
     try:
-        coord = cube.coord(coordinate)
+        coord = cube.coord(series_coordinate)
     except iris.exceptions.CoordinateNotFoundError as err:
-        raise ValueError(f"Cube must have a {coordinate} coordinate.") from err
+        raise ValueError(f"Cube must have a {series_coordinate} coordinate.") from err
     if len(coord.points.shape) > 1:
-        raise ValueError(f"{coordinate} coordinate must be 1D.")
+        raise ValueError(f"{series_coordinate} coordinate must be 1D.")
 
     # Ensure we have a name for the plot file.
     title = get_recipe_metadata().get("title", "Untitled")
