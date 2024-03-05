@@ -33,8 +33,8 @@ jobs:
 
       - name: Switch branch
         run: |
-          git config --local user.name "$GITHUB_ACTOR"
-          git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          git config --local user.name "GitHub Actions"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -c conda-lock-files
 
       - name: Update CSET lock files
@@ -51,9 +51,16 @@ jobs:
           done
           wait
 
+      - name: Generate GitHub App Token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.AUTH_APP_ID }}
+          private-key: ${{ secrets.AUTH_APP_PRIVATE_KEY }}
+
       - name: Create pull requests
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           shopt -s globstar
           git diff --name-status
