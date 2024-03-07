@@ -72,6 +72,14 @@ jobs:
           sha256sum **/locks/*.txt > ${{ runner.temp }}/lock_file_hashes
           git add **/locks/*.txt
           git commit -m "[CI] Update conda lock files"
-          git push --set-upstream origin "conda-lock-files:conda-lock-$(sha256sum ${{ runner.temp }}/lock_file_hashes | head -c 8)"
-          # Create PR on GitHub using GitHub CLI.
-          gh pr create --base main --title "[CI] Update conda lock files" --body "Created automatically by GitHub Actions."
+          remote_branch_name=conda-lock-$(sha256sum ${{ runner.temp }}/lock_file_hashes | head -c 8)
+          git push --set-upstream origin "conda-lock-files:${remote_branch_name}"
+          # Create PR on GitHub using GitHub REST API.
+          request_body='{"title":"[CI] Update conda lock files","body":"Created automatically by GitHub Actions.","base":"main","head":"'"${remote_branch_name}"'"}'
+          curl -LsSf \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer "$GH_TOKEN"" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/${{ github.repository }}/pulls \
+            -d "$request_body"
