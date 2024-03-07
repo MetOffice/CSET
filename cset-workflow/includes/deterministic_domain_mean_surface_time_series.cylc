@@ -11,13 +11,10 @@
     pre_process_domain_mean_surface_time_series_{{model_field}}[-PT2H] &
     pre_process_domain_mean_surface_time_series_{{model_field}}[-PT1H] &
     pre_process_domain_mean_surface_time_series_{{model_field}} =>
-    collate_domain_mean_surface_time_series_{{model_field}} # => collate_domain_mean_surface_time_series_{{model_field}}[$]
+    collate_domain_mean_surface_time_series_{{model_field}}
     """
 
     R1/$ = """
-    pre_process_domain_mean_surface_time_series_{{model_field}}[-PT2H] &
-    pre_process_domain_mean_surface_time_series_{{model_field}}[-PT1H] &
-    pre_process_domain_mean_surface_time_series_{{model_field}} =>
     collate_domain_mean_surface_time_series_{{model_field}} => housekeeping_full
     """
 

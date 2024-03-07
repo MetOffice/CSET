@@ -11,6 +11,12 @@ URL = https://metoffice.github.io/CSET
     runahead limit = P{{CSET_RUNAHEAD_LIMIT}}
     initial cycle point = {{CSET_INITIAL_CYCLE_POINT}}
     final cycle point = {{CSET_FINAL_CYCLE_POINT}}
+
+    # For now we restrict cycling to multiples of three hours. See
+    # https://github.com/MetOffice/CSET/issues/322#issuecomment-1976826299
+    initial cycle point constraints = T00, T03, T06, T09, T12, T15, T18, T21
+    final cycle point constraints = T00, T03, T06, T09, T12, T15, T18, T21
+
     [[graph]]
     # Only runs on the first cycle.
     R1/^ = """
