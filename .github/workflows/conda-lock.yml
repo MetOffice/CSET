@@ -2,7 +2,7 @@ name: "Update conda lock files"
 
 on:
   schedule:
-    - cron: "37 5 1 * *"
+    - cron: "37 5 * * 1"
   workflow_dispatch:
 
 permissions:
@@ -33,8 +33,8 @@ jobs:
 
       - name: Switch branch
         run: |
-          git config --local user.name "$GITHUB_ACTOR"
-          git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git switch -c conda-lock-files
 
       - name: Update CSET lock files
@@ -51,9 +51,14 @@ jobs:
           done
           wait
 
+      - name: Generate GitHub App Token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.AUTH_APP_ID }}
+          private-key: ${{ secrets.AUTH_APP_PRIVATE_KEY }}
+
       - name: Create pull requests
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           shopt -s globstar
           git diff --name-status
@@ -65,6 +70,14 @@ jobs:
           sha256sum **/locks/*.txt > ${{ runner.temp }}/lock_file_hashes
           git add **/locks/*.txt
           git commit -m "[CI] Update conda lock files"
-          git push --set-upstream origin "conda-lock-files:conda-lock-$(sha256sum ${{ runner.temp }}/lock_file_hashes | head -c 8)"
-          # Create PR on GitHub using GitHub CLI.
-          gh pr create --base main --title "[CI] Update conda lock files" --body "Created automatically by GitHub Actions."
+          remote_branch_name="conda-lock-$(sha256sum ${{ runner.temp }}/lock_file_hashes | head -c 8)"
+          git push --set-upstream origin "conda-lock-files:${remote_branch_name}"
+          # Create PR on GitHub using GitHub REST API.
+          request_body='{"title":"[CI] Update conda lock files","body":"Created automatically by GitHub Actions.","base":"main","head":"'"${remote_branch_name}"'"}'
+          curl -LsS --fail-with-body \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ steps.app-token.outputs.token }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/${{ github.repository }}/pulls \
+            -d "$request_body"
