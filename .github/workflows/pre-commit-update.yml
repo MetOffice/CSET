@@ -42,7 +42,7 @@ jobs:
 
       - name: Create pull requests
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           if $(sha256sum --status -c ${{ runner.temp }}/config_file_hashes); then
             echo "Config file unchanged. Skipping pull request..."
