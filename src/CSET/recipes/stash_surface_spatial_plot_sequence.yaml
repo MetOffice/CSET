@@ -12,9 +12,6 @@ steps:
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
-      pressure_level_constraint:
-        operator: constraints.generate_pressure_level_constraint
-        pressure_levels: []
       validity_time_constraint:
         operator: constraints.generate_time_constraint
         time_start: $VALIDITY_TIME

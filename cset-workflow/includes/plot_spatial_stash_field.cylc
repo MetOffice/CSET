@@ -17,6 +17,6 @@
     inherit = COLLATE_PROCESSED_DATA
         [[[environment]]]
         CSET_RECIPE_NAME = "stash_surface_spatial_plot_sequence.yaml"
-        CSET_ADDOPTS = "--VARNAME={{stash}}"
+        CSET_ADDOPTS = "--STASH={{stash}}"
 
 {% endfor %}
