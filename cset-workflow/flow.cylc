@@ -93,7 +93,10 @@ URL = https://metoffice.github.io/CSET
     # Fetch data from disk or a file based archival system.
         [[[environment]]]
         ROSE_APP_OPT_CONF_KEYS = {{FETCH_FCST_OPT_CONF}}
-        FILE_PATH = {{CSET_INPUT_FILE_PATH}}
+        CSET_INPUT_FILE_PATH = {{CSET_INPUT_FILE_PATH}}
+        CSET_CYCLE_PERIOD = {{CSET_CYCLE_PERIOD}}
+        CSET_TIMES_PER_FILE = {{CSET_TIMES_PER_FILE}}
+        CSET_FILE_TIME_OFFSET = {{CSET_FILE_TIME_OFFSET}}
 
     [[housekeeping_raw]]
     script = rose task-run -v --app-key=housekeeping
