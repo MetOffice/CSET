@@ -1,0 +1,34 @@
+{% for stash in STASH_CODES %}
+[scheduling]
+    [[graph]]
+    PT1H = """
+    install_website_skeleton[^] & install_local_cset[^] => FETCH_DATA
+    FETCH_DATA:succeed-all => pre_process_stash_surface_domain_mean_time_series_{{stash}} => housekeeping_raw
+    """
+
+    PT3H = """
+    collate_stash_surface_domain_mean_time_series_{{stash}}[-PT3H] &
+    pre_process_stash_surface_domain_mean_time_series_{{stash}}[-PT2H] &
+    pre_process_stash_surface_domain_mean_time_series_{{stash}}[-PT1H] &
+    pre_process_stash_surface_domain_mean_time_series_{{stash}} =>
+    collate_stash_surface_domain_mean_time_series_{{stash}}
+    """
+
+    R1/$ = """
+    collate_stash_surface_domain_mean_time_series_{{stash}} => housekeeping_full
+    """
+
+[runtime]
+    [[pre_process_stash_surface_domain_mean_time_series_{{stash}}]]
+    inherit = PROCESS_DATA
+        [[[environment]]]
+        CSET_RECIPE_NAME = "stash_surface_domain_mean_time_series.yaml"
+        CSET_ADDOPTS = "--STASH={{stash}}"
+
+    [[collate_stash_surface_domain_mean_time_series_{{stash}}]]
+    inherit = COLLATE_PROCESSED_DATA
+        [[[environment]]]
+        CSET_RECIPE_NAME = "stash_surface_domain_mean_time_series.yaml"
+        CSET_ADDOPTS = "--VARNAME={{stash}}"
+
+{% endfor %}

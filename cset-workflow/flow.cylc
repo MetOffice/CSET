@@ -148,7 +148,12 @@ URL = https://metoffice.github.io/CSET
 {% if DOMAIN_MEAN_SURFACE_TIME_SERIES %}
 {% include 'includes/deterministic_domain_mean_surface_time_series.cylc' %}
 {% endif %}
-
+{% if PLOT_SPATIAL_STASH_FIELD %}
+{% include 'includes/plot_spatial_stash_field.cylc' %}
+{% endif %}
+{% if DOMAIN_MEAN_TIME_SERIES_STASH %}
+{% include 'includes/domain_mean_time_series_stash.cylc' %}
+{% endif %}
 
 {# Site-specific details that add to (or override) the core suite definition #}
 {% if SITE %}

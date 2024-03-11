@@ -1,0 +1,22 @@
+{% for stash in STASH_CODES %}
+[scheduling]
+    [[graph]]
+    PT1H = """
+    install_website_skeleton[^] & install_local_cset[^] => FETCH_DATA
+    FETCH_DATA:succeed-all & stash_surface_spatial_plot_sequence_{{stash}}[-PT1H] =>
+    stash_surface_spatial_plot_sequence_{{stash}} => housekeeping_raw
+    """
+
+    R1/$ = """
+    stash_surface_spatial_plot_sequence_{{stash}} => housekeeping_full
+    """
+
+
+[runtime]
+    [[stash_surface_spatial_plot_sequence_{{stash}}]]
+    inherit = COLLATE_PROCESSED_DATA
+        [[[environment]]]
+        CSET_RECIPE_NAME = "stash_surface_spatial_plot_sequence.yaml"
+        CSET_ADDOPTS = "--VARNAME={{stash}}"
+
+{% endfor %}

@@ -1,0 +1,25 @@
+category: Quick Look
+title: Spatial plot of $STASH
+description: Extracts and plots STASH $STASH from a file.
+
+steps:
+  - operator: read.read_cube
+    constraint:
+      operator: constraints.combine_constraints
+      stash_constraint:
+        operator: constraints.generate_stash_constraint
+        stash: $STASH
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+      pressure_level_constraint:
+        operator: constraints.generate_pressure_level_constraint
+        pressure_levels: []
+      validity_time_constraint:
+        operator: constraints.generate_time_constraint
+        time_start: $VALIDITY_TIME
+
+  - operator: write.write_cube_to_nc
+
+  - operator: plot.spatial_contour_plot
+    sequence_coordinate: time
