@@ -8,8 +8,6 @@ from datetime import datetime, timedelta
 
 import isodate
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-
 
 def word_month_to_num(month: str) -> int:
     """Convert a string month into the corresponding number.
@@ -153,6 +151,7 @@ def create_validity_time_tester(
     * ``{lead_hour}``
     """
     # Check that the pattern has sufficient information.
+    logging.debug("Original pattern: %s", pattern)
     if all_validity_info(pattern):
         logging.info("Taking validity time directly from filename.")
         calc_validity_time = validity_time_direct

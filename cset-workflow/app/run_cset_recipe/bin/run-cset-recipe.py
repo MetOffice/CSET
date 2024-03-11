@@ -7,6 +7,7 @@ import json
 import logging
 import os
 import subprocess
+import sys
 import zipfile
 from functools import cache
 from pathlib import Path
@@ -143,7 +144,44 @@ def collate():
     # and produce any plots. So we actually get some usage out of it, we are
     # using the non-restricted form of bake, so it runs both the processing and
     # collation steps.
-    if not Path(output_directory(), "intermediate").exists():
+    try:
+        if not Path(output_directory(), "intermediate").exists():
+            subprocess.run(
+                (
+                    "cset",
+                    "-v",
+                    "bake",
+                    f"--recipe={recipe_file()}",
+                    f"--input-dir={data_directory()}",
+                    f"--output-dir={output_directory()}",
+                ),
+                check=True,
+                env=subprocess_env(),
+            )
+        else:
+            # Collate intermediate data and produce plots.
+            subprocess.run(
+                (
+                    "cset",
+                    "-v",
+                    "bake",
+                    f"--recipe={recipe_file()}",
+                    f"--output-dir={output_directory()}",
+                    "--post-only",
+                ),
+                check=True,
+                env=subprocess_env(),
+            )
+    except subprocess.CalledProcessError:
+        logging.error("cset bake exited non-zero while collating.")
+        sys.exit(1)
+    create_diagnostic_archive(output_directory())
+    add_to_diagnostic_index(output_directory(), recipe_id())
+
+
+def process():
+    """Process raw data."""
+    try:
         subprocess.run(
             (
                 "cset",
@@ -152,43 +190,14 @@ def collate():
                 f"--recipe={recipe_file()}",
                 f"--input-dir={data_directory()}",
                 f"--output-dir={output_directory()}",
+                "--pre-only",
             ),
             check=True,
             env=subprocess_env(),
         )
-    else:
-        # Collate intermediate data and produce plots.
-        subprocess.run(
-            (
-                "cset",
-                "-v",
-                "bake",
-                f"--recipe={recipe_file()}",
-                f"--output-dir={output_directory()}",
-                "--post-only",
-            ),
-            check=True,
-            env=subprocess_env(),
-        )
-    create_diagnostic_archive(output_directory())
-    add_to_diagnostic_index(output_directory(), recipe_id())
-
-
-def process():
-    """Process raw data."""
-    subprocess.run(
-        (
-            "cset",
-            "-v",
-            "bake",
-            f"--recipe={recipe_file()}",
-            f"--input-dir={data_directory()}",
-            f"--output-dir={output_directory()}",
-            "--pre-only",
-        ),
-        check=True,
-        env=subprocess_env(),
-    )
+    except subprocess.CalledProcessError:
+        logging.error("cset bake exited non-zero while processing.")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
