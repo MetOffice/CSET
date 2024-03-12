@@ -12,7 +12,9 @@ import zipfile
 from functools import cache
 from pathlib import Path
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logging.basicConfig(
+    level=os.getenv("LOGLEVEL", "INFO"), format="%(asctime)s %(levelname)s %(message)s"
+)
 
 
 def combine_dicts(d1: dict, d2: dict) -> dict:

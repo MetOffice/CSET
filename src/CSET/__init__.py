@@ -138,12 +138,7 @@ def main():
 
     # Setup logging.
     logging.captureWarnings(True)
-    if args.verbose >= 2:
-        loglevel = logging.DEBUG
-    elif args.verbose == 1:
-        loglevel = logging.INFO
-    else:
-        loglevel = logging.WARNING
+    loglevel = calculate_loglevel(args)
     logger = logging.getLogger()
     logger.setLevel(min(loglevel, logging.INFO))
     stderr_log = logging.StreamHandler()
@@ -163,6 +158,25 @@ def main():
         logging.error(err)
         parser.print_usage()
         sys.exit(3)
+
+
+def calculate_loglevel(args) -> int:
+    """Calculate the logging level to apply.
+
+    Level is based on verbose argument and the LOGLEVEL environment variable.
+    """
+    # Level from CLI flags.
+    if args.verbose >= 2:
+        loglevel = logging.DEBUG
+    elif args.verbose == 1:
+        loglevel = logging.INFO
+    else:
+        loglevel = logging.WARNING
+    return min(
+        loglevel,
+        # Level from environment variable.
+        logging.getLevelNamesMapping().get(os.getenv("LOGLEVEL"), logging.ERROR),
+    )
 
 
 def _bake_command(args, unparsed_args):

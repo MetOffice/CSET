@@ -56,6 +56,7 @@ URL = https://metoffice.github.io/CSET
         MET_LIBRARIES = {{MET_LIBRARIES}}
         {% endif %}
 
+        LOGLEVEL = {{LOGLEVEL}}
         WEB_DIR = {{WEB_DIR}}
 
     [[PROCESS_DATA]]
