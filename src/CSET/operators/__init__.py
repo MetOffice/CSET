@@ -92,14 +92,14 @@ def _write_metadata(recipe: dict):
 
 def _step_parser(step: dict, step_input: any) -> str:
     """Execute a recipe step, recursively executing any sub-steps."""
-    logging.debug(f"Executing step: {step}")
+    logging.debug("Executing step: %s", step)
     kwargs = {}
     for key in step.keys():
         if key == "operator":
             operator = get_operator(step["operator"])
-            logging.info(f"operator: {step['operator']}")
+            logging.info("operator: %s", step["operator"])
         elif isinstance(step[key], dict) and "operator" in step[key]:
-            logging.debug(f"Recursing into argument: {key}")
+            logging.debug("Recursing into argument: %s", key)
             kwargs[key] = _step_parser(step[key], step_input)
         else:
             kwargs[key] = step[key]

@@ -234,5 +234,4 @@ def _recipe_id_command(args, unparsed_args):
     except KeyError:
         logging.warning("Recipe has no title; Falling back to random recipe_id.")
         recipe_id = str(uuid4())
-
     print(recipe_id)

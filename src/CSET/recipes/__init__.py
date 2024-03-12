@@ -59,7 +59,7 @@ def _get_recipe_file(recipe_name: str, input_dir: Path = None) -> Path:
     if input_dir is None:
         input_dir = _version_agnostic_importlib_resources_file()
     file = input_dir / recipe_name
-    logging.debug("Getting recipe:", file)
+    logging.debug("Getting recipe: %s", file)
     if not file.is_file():
         raise FileNotFoundError("Recipe file does not exist.", recipe_name)
     return file

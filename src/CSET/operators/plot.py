@@ -237,7 +237,7 @@ def _plot_and_save_line_series(
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=150)
-    logging.info("Saved contour plot to %s", filename)
+    logging.info("Saved line plot to %s", filename)
 
 
 ####################
