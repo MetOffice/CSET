@@ -182,6 +182,7 @@ def create_validity_time_tester(
     }
     for key in replacements:
         pattern = pattern.replace(key, replacements[key])
+    pattern = r".*/?" + pattern
     logging.info("Regex: %s", pattern)
 
     # After converting to datetime remove the timezone so we can just compare
@@ -195,11 +196,22 @@ def create_validity_time_tester(
         """Whether the filename contains the validity time."""
         match = re.match(pattern, filename)
         if match is None:
+            logging.debug("Filename did not match pattern. %s", filename)
             return False
         times = match.groupdict()
-        logging.debug(times)
+        logging.debug("Extracted times: %s", times)
         file_time_start = calc_validity_time(times) - start_offset
         file_time_end = file_time_start + end_offset
+        # Extra logic to handle case where first file in a forecast has extra
+        # time steps.
+        if (
+            target_validity_time < file_time_start
+            and int(times.get("lead_hour", 1)) == 0
+        ):
+            logging.info(
+                "Initial forecast file may have extra time steps. Retaining despite appearing before file start."
+            )
+            return True
         return (
             file_time_start <= target_validity_time
             and target_validity_time < file_time_end
