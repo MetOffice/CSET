@@ -80,9 +80,8 @@ def get_operator(name: str):
 
 
 def _write_metadata(recipe: dict):
-    """Write a meta.json file in the CWD, with all recipe keys except steps."""
+    """Write a meta.json file in the CWD."""
     metadata = recipe.copy()
-    del metadata["steps"]
     with open("meta.json", "wt", encoding="UTF-8") as fp:
         json.dump(metadata, fp)
     os.sync()
