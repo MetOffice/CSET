@@ -22,5 +22,5 @@ then
     # Housekeeping: Standard
     echo 'Removing intermediate data.'
     rm -rfv -- "$CYLC_WORKFLOW_SHARE_DIR"/cycle/*/data \
-              "$CYLC_WORKFLOW_SHARE_DIR"/plot/*/intermediate
+              "$CYLC_WORKFLOW_SHARE_DIR"/plots/*/intermediate
 fi
