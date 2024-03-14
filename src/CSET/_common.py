@@ -88,6 +88,7 @@ def parse_recipe(recipe_yaml: Union[Path, str], variables: dict = None):
         raise err  # pragma: no cover
 
     if variables is not None:
+        logging.debug("Recipe variables: %s", variables)
         recipe = template_variables(recipe, variables)
 
     return recipe
@@ -191,7 +192,6 @@ def template_variables(recipe: Union[dict, list], variables: dict) -> dict:
             recipe[i] = template_variables(recipe[i], variables)
         elif isinstance(recipe[i], str):
             recipe[i] = replace_template_variable(recipe[i], variables)
-    logging.debug("Recipe variables: %s", variables)
     return recipe
 
 
