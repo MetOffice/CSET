@@ -20,6 +20,14 @@ steps:
         time_start: $VALIDITY_TIME
 
   - operator: write.write_cube_to_nc
+    filename: intermediate/surface_field
+
+post-steps:
+  - operator: read.read_cube
+    filename_pattern: intermediate/*.nc
 
   - operator: plot.spatial_contour_plot
     sequence_coordinate: time
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
