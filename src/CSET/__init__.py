@@ -165,6 +165,12 @@ def calculate_loglevel(args) -> int:
 
     Level is based on verbose argument and the LOGLEVEL environment variable.
     """
+    try:
+        name_to_level = logging.getLevelNamesMapping()
+    except AttributeError:
+        # logging.getLevelNamesMapping() is python 3.11 or newer. Using
+        # implementation detail for older versions.
+        name_to_level = logging._nameToLevel
     # Level from CLI flags.
     if args.verbose >= 2:
         loglevel = logging.DEBUG
@@ -175,7 +181,7 @@ def calculate_loglevel(args) -> int:
     return min(
         loglevel,
         # Level from environment variable.
-        logging.getLevelNamesMapping().get(os.getenv("LOGLEVEL"), logging.ERROR),
+        name_to_level.get(os.getenv("LOGLEVEL"), logging.ERROR),
     )
 
 
