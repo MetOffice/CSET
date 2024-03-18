@@ -20,8 +20,8 @@ steps:
         cell_methods: []
       time_constraint:
         operator: constraints.generate_time_constraint
-        time_start: 2022-09-21T03:00:00
-        time_end: 2022-09-21T03:30:00
+        time_start: 2022-09-21T03:00:00Z
+        time_end: 2022-09-21T03:30:00Z
 
   - operator: write.write_cube_to_nc
     filename: processed_data.nc
