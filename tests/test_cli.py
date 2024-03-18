@@ -97,6 +97,14 @@ def test_bake_invalid_args():
         )
 
 
+def test_bake_invalid_args_input_dir():
+    """Missing required input-dir argument for pre-steps."""
+    with pytest.raises(subprocess.CalledProcessError):
+        subprocess.run(
+            ["cset", "bake", "--recipe=foo", "--output-dir=/tmp"], check=True
+        )
+
+
 def test_graph_creation(tmp_path: Path):
     """Generates a graph with the command line interface."""
     # We can't easily test running without the output specified from the CLI, as
