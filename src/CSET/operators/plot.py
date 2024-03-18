@@ -433,8 +433,8 @@ def plot_line_series(
         coord = cube.coord(series_coordinate)
     except iris.exceptions.CoordinateNotFoundError as err:
         raise ValueError(f"Cube must have a {series_coordinate} coordinate.") from err
-    if len(coord.points.shape) > 1:
-        raise ValueError(f"{series_coordinate} coordinate must be 1D.")
+    if cube.ndim > 1:
+        raise ValueError("Cube must be 1D.")
 
     # Ensure we have a name for the plot file.
     title = get_recipe_metadata().get("title", "Untitled")
