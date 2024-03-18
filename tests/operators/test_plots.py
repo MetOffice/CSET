@@ -19,7 +19,7 @@ from pathlib import Path
 import iris.cube
 import pytest
 
-from CSET.operators import plot, read
+from CSET.operators import collapse, plot, read
 
 
 def test_check_single_cube():
@@ -92,3 +92,10 @@ def test_postage_stamp_realization_check_deprecated(cube, tmp_working_dir):
     with pytest.deprecated_call():
         with pytest.raises(ValueError):
             plot.postage_stamp_contour_plot(cube)
+
+
+def test_plot_line_series(cube, tmp_working_dir):
+    """Save a line series plot."""
+    cube = collapse.collapse(cube, ["grid_latitude", "grid_longitude"], "MEAN")
+    plot.plot_line_series(cube)
+    assert Path("untitled.png").is_file()
