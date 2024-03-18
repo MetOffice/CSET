@@ -101,6 +101,15 @@ def test_plot_line_series(cube, tmp_working_dir):
     assert Path("untitled.png").is_file()
 
 
+def test_plot_line_series_with_filename(cube, tmp_working_dir):
+    """Save a line series plot with specific filename and series coordinate."""
+    cube = collapse.collapse(cube, ["time", "grid_longitude"], "MEAN")
+    plot.plot_line_series(
+        cube, filename="latitude_average.ext", series_coordinate="grid_latitude"
+    )
+    assert Path("latitude_average.png").is_file()
+
+
 def test_plot_line_series_no_series_coordinate(tmp_working_dir):
     """Error when cube is missing series coordinate (time)."""
     cube = iris.cube.Cube([], var_name="nothing")
