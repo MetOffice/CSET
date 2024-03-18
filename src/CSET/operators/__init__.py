@@ -82,6 +82,9 @@ def get_operator(name: str):
 def _write_metadata(recipe: dict):
     """Write a meta.json file in the CWD."""
     metadata = recipe.copy()
+    # Remove steps, as not needed, and might contain non-serialisable types.
+    metadata.pop("steps", None)
+    metadata.pop("post-steps", None)
     with open("meta.json", "wt", encoding="UTF-8") as fp:
         json.dump(metadata, fp)
     os.sync()
