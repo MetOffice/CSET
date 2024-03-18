@@ -99,3 +99,16 @@ def test_plot_line_series(cube, tmp_working_dir):
     cube = collapse.collapse(cube, ["grid_latitude", "grid_longitude"], "MEAN")
     plot.plot_line_series(cube)
     assert Path("untitled.png").is_file()
+
+
+def test_plot_line_series_no_series_coordinate(tmp_working_dir):
+    """Error when cube is missing series coordinate (time)."""
+    cube = iris.cube.Cube([], var_name="nothing")
+    with pytest.raises(ValueError):
+        plot.plot_line_series(cube)
+
+
+def test_plot_line_series_too_many_dimensions(cube, tmp_working_dir):
+    """Error when cube has more than one dimension."""
+    with pytest.raises(ValueError):
+        plot.plot_line_series(cube)
