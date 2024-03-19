@@ -26,11 +26,13 @@ URL = https://metoffice.github.io/CSET
     finish_website => send_email => housekeeping_full
     """
 
+    {% if CSET_INCREMENTAL_OUTPUT %}
     # Runs every so often to update output plots during runtime.
     {{CSET_OUTPUT_UPDATE_PERIOD}} = """
     COLLATE_PROCESSED_DATA[-{{CSET_OUTPUT_UPDATE_PERIOD}}]:finish-all &
     process_finish => COLLATE_PROCESSED_DATA
     """
+    {% endif %}
 
 [runtime]
     [[root]]
