@@ -1,7 +1,7 @@
 #!jinja2
 [meta]
 title = CSET
-description = Workflow for running CSET and METplus.
+description = Workflow for running CSET.
 URL = https://metoffice.github.io/CSET
 
 [scheduler]
