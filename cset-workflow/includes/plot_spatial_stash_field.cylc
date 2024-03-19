@@ -2,15 +2,11 @@
 [scheduling]
     [[graph]]
     PT1H = """
-    install_website_skeleton[^] & install_local_cset[^] => FETCH_DATA
-    FETCH_DATA:succeed-all & stash_surface_spatial_plot_sequence_{{stash}}[-PT1H] =>
-    stash_surface_spatial_plot_sequence_{{stash}} => housekeeping_raw
+    install_website_skeleton[^] & install_local_cset[^] => FETCH_DATA:succeed-all =>
+    stash_surface_spatial_plot_sequence_{{stash}} =>
+    housekeeping_raw => process_finish
+    process_finish[-PT1H] => process_finish
     """
-
-    R1/$ = """
-    stash_surface_spatial_plot_sequence_{{stash}} => housekeeping_full
-    """
-
 
 [runtime]
     [[stash_surface_spatial_plot_sequence_{{stash}}]]

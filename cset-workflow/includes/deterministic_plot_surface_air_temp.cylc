@@ -1,8 +1,10 @@
 [scheduling]
     [[graph]]
     PT1H = """
-    install_website_skeleton[^] & install_local_cset[^] => FETCH_DATA
-    FETCH_DATA:succeed-all => deterministic_plot_surface_air_temp => housekeeping_raw
+    install_website_skeleton[^] & install_local_cset[^] => FETCH_DATA:succeed-all =>
+    deterministic_plot_surface_air_temp =>
+    housekeeping_raw => process_finish
+    process_finish[-PT1H] => process_finish
     """
 
 [runtime]

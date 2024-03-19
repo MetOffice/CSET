@@ -2,20 +2,10 @@
 [scheduling]
     [[graph]]
     PT1H = """
-    install_website_skeleton[^] & install_local_cset[^] => FETCH_DATA
-    FETCH_DATA:succeed-all => pre_process_stash_surface_domain_mean_time_series_{{stash}} => housekeeping_raw
-    """
-
-    PT3H = """
-    collate_stash_surface_domain_mean_time_series_{{stash}}[-PT3H] &
-    pre_process_stash_surface_domain_mean_time_series_{{stash}}[-PT2H] &
-    pre_process_stash_surface_domain_mean_time_series_{{stash}}[-PT1H] &
+    install_website_skeleton[^] & install_local_cset[^] => FETCH_DATA:succeed-all =>
     pre_process_stash_surface_domain_mean_time_series_{{stash}} =>
-    collate_stash_surface_domain_mean_time_series_{{stash}}
-    """
-
-    R1/$ = """
-    collate_stash_surface_domain_mean_time_series_{{stash}} => housekeeping_full
+    housekeeping_raw => process_finish
+    process_finish[-PT1H] => process_finish
     """
 
 [runtime]
