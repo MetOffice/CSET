@@ -2,21 +2,11 @@
 [scheduling]
     [[graph]]
     PT1H = """
-    install_website_skeleton[^] & install_local_cset[^] => FETCH_DATA
-    FETCH_DATA:succeed-all =>
-    generic_spatial_plot_time_series_{{model_field}} => housekeeping_raw
-    """
-
-    # TODO: With a high run-ahead limit the last run might finish before
-    # the previous one, leading to their data not being collated.
-    # It would be really nice if there was a way to delay the final cycle point
-    # to after all other cycles.
-    R1/$ = """
+    install_website_skeleton[^] & install_local_cset[^] => FETCH_DATA:succeed-all =>
     generic_spatial_plot_time_series_{{model_field}} =>
-    generic_spatial_plot_time_series_collation_{{model_field}} =>
-    housekeeping_full
+    process_finish => housekeeping_raw
+    process_finish[-PT1H] => process_finish
     """
-
 
 [runtime]
     [[generic_spatial_plot_time_series_{{model_field}}]]

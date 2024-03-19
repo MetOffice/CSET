@@ -12,11 +12,6 @@ URL = https://metoffice.github.io/CSET
     initial cycle point = {{CSET_INITIAL_CYCLE_POINT}}
     final cycle point = {{CSET_FINAL_CYCLE_POINT}}
 
-    # For now we restrict cycling to multiples of three hours. See
-    # https://github.com/MetOffice/CSET/issues/322#issuecomment-1976826299
-    initial cycle point constraints = T00, T03, T06, T09, T12, T15, T18, T21
-    final cycle point constraints = T00, T03, T06, T09, T12, T15, T18, T21
-
     [[graph]]
     # Only runs on the first cycle.
     R1/^ = """
@@ -27,7 +22,14 @@ URL = https://metoffice.github.io/CSET
 
     # Only runs on the final cycle.
     R1/$ = """
-    housekeeping_full:started => finish_website => send_email
+    process_finish => COLLATE_PROCESSED_DATA:succeed-all =>
+    finish_website => send_email => housekeeping_full
+    """
+
+    # Runs every so often to update output plots during runtime.
+    {{CSET_OUTPUT_UPDATE_PERIOD}} = """
+    COLLATE_PROCESSED_DATA[-{{CSET_OUTPUT_UPDATE_PERIOD}}]:finish-all &
+    process_finish => COLLATE_PROCESSED_DATA
     """
 
 [runtime]
@@ -71,12 +73,19 @@ URL = https://metoffice.github.io/CSET
 
     [[FETCH_DATA]]
 
+    [[process_finish]]
+    # Dummy task needed for workflow scheduling.
+    script = true
+    platform = localhost
+
     [[build_conda]]
+    # Create the conda environment if it does not yet exist.
     execution time limit = PT30M
         [[[environment]]]
         CONDA_VENV_CREATE = {{CONDA_VENV_CREATE}}
 
     [[install_local_cset]]
+    # Install CSET from source.
     execution time limit = PT5M
         [[[environment]]]
         CSET_ENV_USE_LOCAL_CSET = {{CSET_ENV_USE_LOCAL_CSET}}
@@ -90,8 +99,8 @@ URL = https://metoffice.github.io/CSET
         CLEAN_WEB_DIR = {{CLEAN_WEB_DIR}}
 
     [[fetch_fcst]]
-    inherit = FETCH_DATA
     # Fetch data from disk or a file based archival system.
+    inherit = FETCH_DATA
         [[[environment]]]
         ROSE_APP_OPT_CONF_KEYS = {{FETCH_FCST_OPT_CONF}}
         CSET_INPUT_FILE_PATH = {{CSET_INPUT_FILE_PATH}}
@@ -101,11 +110,13 @@ URL = https://metoffice.github.io/CSET
         CSET_FILE_TIME_OFFSET = {{CSET_FILE_TIME_OFFSET}}
 
     [[housekeeping_raw]]
+    # Housekeep unprocessed data files.
     script = rose task-run -v --app-key=housekeeping
         [[[environment]]]
         HOUSEKEEPING_MODE = {{[HOUSEKEEPING_MODE, 1]|min}}
 
     [[housekeeping_full]]
+    # Housekeep processed intermediate files too.
     script = rose task-run -v --app-key=housekeeping
         [[[environment]]]
         HOUSEKEEPING_MODE = {{[HOUSEKEEPING_MODE, 2]|min}}
