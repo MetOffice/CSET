@@ -261,6 +261,9 @@ def spatial_contour_plot(
         # Use sequence value so multiple sequences can merge.
         sequence_value = cube_slice.coord(sequence_coordinate).points[0]
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
+        time_coord = cube_slice.coord(sequence_coordinate)
+        times = time_coord.units.num2date(time_coord.points[0])
+        title = f"{("{:04d}{:02d}{:02d} {:02d}:{:02d}".format(times.year, times.month, times.day, times.hour, times.minute))}"
         # Do the actual plotting.
         plotting_func(
             cube_slice,
