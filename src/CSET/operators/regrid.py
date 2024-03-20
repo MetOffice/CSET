@@ -23,8 +23,7 @@ import numpy as np
 def regrid_onto_cube(
     incube: iris.cube.Cube, targetcube: iris.cube.Cube, regridmethod: str, **kwargs
 ) -> iris.cube.Cube:
-    """
-    Regrid a cube using target cube to project onto.
+    """Regrid a cube, projecting onto a target cube.
 
     Cube must have minimum 2 dimensions, but can have more dimensions.
 
