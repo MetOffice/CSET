@@ -138,10 +138,15 @@ to split a change into multiple commits if desired.
 working tree at the point where it is committed. Contains information like a
 commit message, the date when the commit was made, and author information. It
 also contains a reference to any parent commits, which defines the repository
-history.
+history. Use the ``git commit`` command and include the ticket number 
+in the commit message. 
 
 **Branch**: A special reference to a particular commit. If a new child commit is
-created the reference moves to that new commit.
+created the reference moves to that new commit. 
+List your local branches with the command ``git branch``.
+Switch between local branches with the command ``git switch <branch-name>``. You 
+will need to commit your changes before switching.
+
 
 **Tag**: A special reference to a a particular commit. Unlike a branch it doesn't
 move.
