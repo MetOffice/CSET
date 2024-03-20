@@ -1,9 +1,9 @@
-Getting Started
-===============
+Getting Started as a Code User 
+=========================
 
 This section contains tutorials suitable for getting started with CSET. By
 following them you should learn the basics of using CSET. It is recommended that
-you do them in order.
+you do them in order. For Developers please see the instructions under Contributing.
 
 .. toctree::
     :maxdepth: 1
