@@ -1,5 +1,5 @@
-Before you Contribute
-=====================
+Set-up code and tooling
+=======================
 
 Contributing
 ------------

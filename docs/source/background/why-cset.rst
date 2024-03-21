@@ -2,12 +2,12 @@ Why use CSET?
 =============
 
 When evaluating weather and climate models we are trying to understand the
-characteristics of our model configurations, the physical processes that lead
-to biases, and how they compares to other models (physical and machine learned),
-model configurations and observations. This is an iterative process, and
-each step of evaluation unveils more questions that need investigations.
-Evaluation often follows an individual approach by researchers spending
-significant resource on scientific and technical development.
+characteristics of our model configurations, the physical processes that lead to
+biases, and how they compares to other models (physical and machine learned),
+model configurations and observations. This is an iterative process, and each
+step of evaluation unveils more questions that need investigations. Evaluation
+often follows an individual approach by researchers spending significant
+resource on scientific and technical development.
 
 CSET aids in this by providing a flexible way to interrogate model data, using
 diagnostics that can be quickly created by the combination of operators in

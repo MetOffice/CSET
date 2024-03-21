@@ -20,5 +20,7 @@ from a python script.
         Path("/path/to/output_file.nc")
     )
 
+The format of recipe files is described in :doc:`/reference/recipe-format`.
+
 There are number of included recipe files you can use before having to create
 your own. These can be retrieved with the :ref:`cset-cookbook-command` command.
