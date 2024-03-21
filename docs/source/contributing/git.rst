@@ -138,8 +138,15 @@ to split a change into multiple commits if desired.
 working tree at the point where it is committed. Contains information like a
 commit message, the date when the commit was made, and author information. It
 also contains a reference to any parent commits, which defines the repository
-history. Use the ``git commit`` command and include the ticket number 
-in the commit message. 
+history. Create a new commit with the ``git commit`` command. When fixing
+an issue include the issue number in the commit message body, e.g.:
+
+.. code-block:: text
+
+    Stop foo doing bar
+    
+    Description of why this change was made.
+    Fixes #123
 
 **Branch**: A special reference to a particular commit. If a new child commit is
 created the reference moves to that new commit. 
