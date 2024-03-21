@@ -149,9 +149,11 @@ an issue include the issue number in the commit message body, e.g.:
     Fixes #123
 
 **Branch**: A special reference to a particular commit. If a new child commit is
-created the reference moves to that new commit. 
-List your local branches with the command ``git branch``.
-Switch between local branches with the command ``git switch <branch-name>``. You 
+created the reference moves to that new commit.
+
+* List your local branches with the command ``git branch``.
+* Create a new branch with ``git switch -c <branch-name>``.
+* Switch between local branches with the command ``git switch <branch-name>``. You
 will need to commit your changes before switching.
 
 
