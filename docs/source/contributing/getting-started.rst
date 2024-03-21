@@ -1,4 +1,4 @@
-Set-up code and Tooling
+Set-up code and tooling
 =======================
 
 Contributing
