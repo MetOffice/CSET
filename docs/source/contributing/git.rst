@@ -144,7 +144,7 @@ an issue include the issue number in the commit message body, e.g.:
 .. code-block:: text
 
     Stop foo doing bar
-    
+
     Description of why this change was made.
     Fixes #123
 
@@ -154,7 +154,7 @@ created the reference moves to that new commit.
 * List your local branches with the command ``git branch``.
 * Create a new branch with ``git switch -c <branch-name>``.
 * Switch between local branches with the command ``git switch <branch-name>``. You
-will need to commit your changes before switching.
+  will need to commit your changes before switching.
 
 
 **Tag**: A special reference to a a particular commit. Unlike a branch it doesn't
