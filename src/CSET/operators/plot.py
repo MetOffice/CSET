@@ -231,11 +231,11 @@ def spatial_contour_plot(
     TypeError
         If the cube isn't a single cube.
     """
-    title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", "Untitled")
 
     # Ensure we have a name for the plot file.
     if filename is None:
-        filename = slugify(title)
+        filename = slugify(recipe_title)
 
     # Ensure we've got a single cube.
     cube = _check_single_cube(cube)
@@ -261,9 +261,9 @@ def spatial_contour_plot(
         # Use sequence value so multiple sequences can merge.
         sequence_value = cube_slice.coord(sequence_coordinate).points[0]
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
-        time_coord = cube_slice.coord(sequence_coordinate)
-        time = time_coord.units.num2date(time_coord.points[0])
-        title = time.isoformat()
+        coord = cube_slice.coord(sequence_coordinate)
+        # Format the coordinate value in a unit appropriate way.
+        title = coord.units.title(coord.points[0])
         # Do the actual plotting.
         plotting_func(
             cube_slice,
