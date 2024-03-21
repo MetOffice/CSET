@@ -14,7 +14,6 @@
 
 """Writing operator tests."""
 
-
 from pathlib import Path
 
 from CSET.operators import write

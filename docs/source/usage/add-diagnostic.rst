@@ -4,9 +4,9 @@ Add a new diagnostic
 In CSET diagnostics are defined as a collections of steps in a `recipe file`_.
 
 New built-in recipes should be added to the CSET CLI, then added as include
-files into the includes/ directory of the workflow. They should then
-be added to meta/rose-meta.conf so they appear in rose edit, and flow.cylc, so
-they are included in the workflow.
+files into the includes/ directory of the workflow. They should then be added to
+meta/rose-meta.conf so they appear in rose edit, and flow.cylc, so they are
+included in the workflow.
 
 Custom recipes should be directly included in include files. They should be
 saved to the environment variable ``CSET_RECIPE``. Similarly they should then be
