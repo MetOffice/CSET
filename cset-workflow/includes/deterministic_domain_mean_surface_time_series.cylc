@@ -1,13 +1,4 @@
 {% for model_field in SURFACE_MODEL_FIELDS %}
-[scheduling]
-    [[graph]]
-    PT1H = """
-    install_website_skeleton[^] & install_local_cset[^] => FETCH_DATA:succeed-all =>
-    pre_process_domain_mean_surface_time_series_{{model_field}} =>
-    housekeeping_raw => process_finish
-    process_finish[-PT1H] => process_finish
-    """
-
 [runtime]
     [[pre_process_domain_mean_surface_time_series_{{model_field}}]]
     inherit = PROCESS_DATA
