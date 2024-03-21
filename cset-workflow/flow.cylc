@@ -26,6 +26,17 @@ URL = https://metoffice.github.io/CSET
     finish_website => send_email => housekeeping_full
     """
 
+    # Runs every cycle to process the data.
+    {{CSET_CYCLE_PERIOD}} = """
+    install_website_skeleton[^] & install_local_cset[^] =>
+    FETCH_DATA:succeed-all => PROCESS_DATA:succeed-all =>
+    process_finish => housekeeping_raw
+
+    # Intercycle dependence with this task ensures the collate step waits for
+    # the required data.
+    process_finish[-{{CSET_CYCLE_PERIOD}}] => process_finish
+    """
+
     {% if CSET_INCREMENTAL_OUTPUT %}
     # Runs every so often to update output plots during runtime.
     {{CSET_OUTPUT_UPDATE_PERIOD}} = """
