@@ -25,7 +25,7 @@ def regrid_onto_cube(
 ) -> iris.cube.Cube:
     """Regrid a cube, projecting onto a target cube.
 
-    Cube must have minimum 2 dimensions, but can have more dimensions.
+    Cube must have at least 2 dimensions.
 
     Arguments
     ----------
