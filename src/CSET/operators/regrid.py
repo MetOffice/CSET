@@ -83,9 +83,7 @@ def regrid_onto_cube(
     if method == "Linear":
         return incube.regrid(target, iris.analysis.Linear())
     else:
-        raise NotImplementedError(
-            f"Does not currently support {method} regrid method"
-        )
+        raise NotImplementedError(f"Does not currently support {method} regrid method")
 
 
 def regrid_onto_xyspacing(
@@ -140,11 +138,11 @@ def regrid_onto_xyspacing(
 
     # List of supported grids - check if it is compatible
     supported_grids = [iris.coord_systems.GeogCS]
-    if type(incube.coord(x_coord).coord_system) not in supported_grids:
+    if isinstance(incube.coord(x_coord).coord_system, supported_grids):
         raise NotImplementedError(
             f"Does not currently support {incube.coord(x_coord).coord_system} regrid method"
         )
-    elif type(incube.coord(y_coord).coord_system) not in supported_grids:
+    if isinstance(incube.coord(y_coord).coord_system, supported_grids):
         raise NotImplementedError(
             f"Does not currently support {incube.coord(y_coord).coord_system} regrid method"
         )
@@ -165,8 +163,6 @@ def regrid_onto_xyspacing(
             [(y_coord, latout), (x_coord, lonout)], iris.analysis.Linear()
         )
     else:
-        raise NotImplementedError(
-            f"Does not currently support {method} regrid method"
-        )
+        raise NotImplementedError(f"Does not currently support {method} regrid method")
 
     return cube_rgd
