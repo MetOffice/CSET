@@ -34,7 +34,7 @@ def regrid_onto_cube(
         longitude coordinates.
     targetcube: Cube
         An iris cube of the data to regrid onto. It needs to be 2D with a latitude,
-        longitude coordinate, though I think more dims are acceptable and are ignored.
+        longitude coordinate.
     regridmethod: str
         Method used to regrid onto, etc. Linear will use iris.analysis.Linear()
 
