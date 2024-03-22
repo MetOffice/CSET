@@ -118,6 +118,8 @@ once in the ``src/CSET/recipes`` directory. This way we can run recipes with the
 
 - ``rose-suite.conf``: add option for new recipe
 
+- ``CSET/scr/CSET.egg-info/SOURCES.txt``: add the new YAML recipe file path 
+
 Built recipe into CSET CLI
 --------------------------
 
