@@ -21,7 +21,7 @@ import numpy as np
 
 
 def regrid_onto_cube(
-    incube: iris.cube.Cube, targetcube: iris.cube.Cube, regridmethod: str, **kwargs
+    incube: iris.cube.Cube, target: iris.cube.Cube, method: str, **kwargs
 ) -> iris.cube.Cube:
     """Regrid a cube, projecting onto a target cube.
 
@@ -32,10 +32,10 @@ def regrid_onto_cube(
     incube: Cube
         An iris cube of the data to regrid. As a minimum, it needs to be 2D with a latitude,
         longitude coordinates.
-    targetcube: Cube
+    target: Cube
         An iris cube of the data to regrid onto. It needs to be 2D with a latitude,
         longitude coordinate.
-    regridmethod: str
+    method: str
         Method used to regrid onto, etc. Linear will use iris.analysis.Linear()
 
     Returns
@@ -80,16 +80,16 @@ def regrid_onto_cube(
             f"Does not currently support {incube.coord(y_coord).coord_system} regrid method"
         )
 
-    if regridmethod == "Linear":
-        return incube.regrid(targetcube, iris.analysis.Linear())
+    if method == "Linear":
+        return incube.regrid(target, iris.analysis.Linear())
     else:
         raise NotImplementedError(
-            f"Does not currently support {regridmethod} regrid method"
+            f"Does not currently support {method} regrid method"
         )
 
 
 def regrid_onto_xyspacing(
-    incube: iris.cube.Cube, xspacing: int, yspacing: int, regridmethod: str, **kwargs
+    incube: iris.cube.Cube, xspacing: int, yspacing: int, method: str, **kwargs
 ) -> iris.cube.Cube:
     """Regrid cube onto a set x,y spacing.
 
@@ -104,7 +104,7 @@ def regrid_onto_xyspacing(
         Spacing of points in longitude direction (could be degrees, meters etc.)
     yspacing: integer
         Spacing of points in latitude direction (could be degrees, meters etc.)
-    regridmethod: str
+    method: str
         Method used to regrid onto, etc. Linear will use iris.analysis.Linear()
 
     Returns
@@ -160,13 +160,13 @@ def regrid_onto_xyspacing(
     latout = np.arange(lat_min, lat_max, yspacing)
     lonout = np.arange(lon_min, lon_max, xspacing)
 
-    if regridmethod == "Linear":
+    if method == "Linear":
         cube_rgd = incube.interpolate(
             [(y_coord, latout), (x_coord, lonout)], iris.analysis.Linear()
         )
     else:
         raise NotImplementedError(
-            f"Does not currently support {regridmethod} regrid method"
+            f"Does not currently support {method} regrid method"
         )
 
     return cube_rgd
