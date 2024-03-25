@@ -27,23 +27,40 @@ should target one feature release a month, so things are not stuck on the trunk
 for too long, though quiet periods (e.g: Summer, Christmas) may see a release
 missed.
 
-Backwards Compatibility Policy
-------------------------------
+Deprecation policy
+------------------
 
-As soon as we have users for CSET maintaining a certain level of backwards
-compatibility becomes important, as they will want their use of CSET to continue
-to work in future. As such it is useful to define a backwards compatibility
-policy that sets expectations about the way backwards incompatible (AKA
-"breaking") changes are made.
+Any change to CSET that removes or significantly alters user-visible behavior
+that is described in the CSET documentation will be deprecated for a minimum of
+6 months before the change occurs.
 
-Some things to consider:
+Certain changes may be fast tracked and have a deprecation period of 3 months.
+This requires at least two members of the CSET team to be in favor of doing so,
+and no maintainers opposing.
 
-* How quickly backwards incompatible changes can be made.
-* How long deprecation periods should be for different sizes of change.
-* How the changes will be communicated with users.
-* Guidance on avoiding making backwards incompatible changes where possible.
+Deprecation will take the form of a warning being issued by CSET when the
+feature is used. Longer deprecation periods, or deprecation warnings for
+behavior changes that would not normally be covered by this policy, are also
+possible depending on circumstances, but this is at the discretion of the
+maintainers.
 
-Making a Release
+Note that the documentation is the sole reference for what counts as agreed
+behavior. If something isn’t explicitly mentioned in the documentation, it can
+be changed without warning, or any deprecation period, in a release. However, we
+are aware that the documentation isn’t always complete - PRs that document
+existing behavior with the intention of covering that behavior with the above
+deprecation process are always acceptable, and will be considered on their
+merits.
+
+Python Support Policy
+---------------------
+
+CSET follows `NEP 29`_, supporting all python versions released in the prior 42
+months.
+
+.. _NEP 29: https://numpy.org/neps/nep-0029-deprecation_policy.html
+
+Making a release
 ----------------
 
 Making a release is mostly automated. With the use of `setuptools_scm`_ you
