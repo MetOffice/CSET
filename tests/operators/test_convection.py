@@ -33,7 +33,6 @@ def test_cape_ratio():
     precalculated_1p5 = iris.load_cube("tests/test_data/convection/ECFlagB_2.nc")
     assert np.allclose(cape_1p5.data, precalculated_1p5.data, atol=1e-5, equal_nan=True)
 
-
 def test_inflow_layer_properties():
     """Compare with precalculated properties."""
     EIB = iris.load_cube("tests/test_data/convection/EIB.nc")
