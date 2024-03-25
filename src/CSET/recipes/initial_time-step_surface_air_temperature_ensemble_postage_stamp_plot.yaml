@@ -15,6 +15,6 @@ steps:
     method: MIN
 
   - operator: plot.postage_stamp_contour_plot
-    filename: plot.svg
+    filename: plot.png
 
   - operator: write.write_cube_to_nc

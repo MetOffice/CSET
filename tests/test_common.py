@@ -144,3 +144,74 @@ def test_template_variables_wrong_recipe_type():
     """Give wrong type for recipe."""
     with pytest.raises(TypeError):
         common.template_variables(1, {})
+
+
+def test_get_recipe_meta(tmp_working_dir):
+    """Reading metadata from disk."""
+    # Default for missing file.
+    meta_file = Path("meta.json")
+    assert not meta_file.exists()
+    assert common.get_recipe_metadata() == {}
+    assert meta_file.exists()
+    # Reads existing file.
+    meta_file.write_text('{"title": "Example Title"}', encoding="UTF-8")
+    assert common.get_recipe_metadata()["title"] == "Example Title"
+
+
+def test_simple_placeholder():
+    """Simple case of a single placeholder being templated."""
+    template = "<p>{{greeting}} World!</p>"
+    actual = common.render(template, greeting="Hello")
+    expected = "<p>Hello World!</p>"
+    assert actual == expected
+
+
+def test_multiple_placeholders():
+    """Templating of multiple different placeholders."""
+    template = "<p>{{greeting}} {{who}}!</p>"
+    actual = common.render(template, greeting="Hello", who="World")
+    expected = "<p>Hello World!</p>"
+    assert actual == expected
+
+
+def test_repeated_placeholders():
+    """Templating of repeated placeholders."""
+    template = "<p>{{who}} says {{greeting}} {{ who }}!</p>"
+    actual = common.render(template, greeting="Hello", who="World")
+    expected = "<p>World says Hello World!</p>"
+    assert actual == expected
+
+
+def test_template_with_no_placeholders():
+    """Trivial case with no placeholders."""
+    template = "<p>Hello World!</p>"
+    assert common.render(template) == template
+
+
+def test_extra_arguments():
+    """Give unneeded keyword arguments to ensure they are ignored."""
+    template = "<p>{{greeting}} World!</p>"
+    actual = common.render(template, greeting="Hello", extra="Ignored")
+    expected = "<p>Hello World!</p>"
+    assert actual == expected
+
+
+def test_missing_argument_exception():
+    """Exception raised if template is missing a value."""
+    template = "<p>{{greeting}} World!</p>"
+    with pytest.raises(common.TemplateError):
+        common.render(template)
+
+
+def test_improper_template_type_exception():
+    """Exception raised if template isn't a string."""
+    template = 3.14159265
+    with pytest.raises(TypeError):
+        common.render(template)
+
+
+def test_render_file():
+    """Render a template in a file."""
+    actual = common.render_file("tests/test_data/template_file.html", greeting="Hello")
+    expected = "<p>Hello World!</p>\n"
+    assert actual == expected

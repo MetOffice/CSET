@@ -1,7 +1,6 @@
-name: Extract Instant Air Temperature
+title: Surface Air Temperature Spatial Plot Time Sequence
 description: |
-  Extracts out the instantaneous 1.5m air temperature from a file and writes it
-  to a new one.
+  Extracts and plots the 1.5m air temperature from a file.
 
 steps:
   - operator: read.read_cubes
@@ -18,13 +17,8 @@ steps:
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
-      time_constraint:
-        operator: constraints.generate_time_constraint
-        time_start: 2022-09-21T03:00:00
-        time_end: 2022-09-21T03:30:00
-
-  - operator: write.write_cube_to_nc
-    filename: processed_data.nc
 
   - operator: plot.spatial_contour_plot
-    filename: plot.png
+    sequence_coordinate: time
+
+  - operator: write.write_cube_to_nc

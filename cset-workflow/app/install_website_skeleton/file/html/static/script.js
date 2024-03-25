@@ -8,7 +8,7 @@ function update_workflow_status() {
   if (!workflow_status) {
     return;
   }
-  fetch("status.json")
+  fetch("status.html")
     .then((response) => {
       if (!response.ok) {
         const message = `There was a problem fetching the index. Status Code: ${response.status}`;
@@ -16,13 +16,13 @@ function update_workflow_status() {
         window.alert(message);
         return;
       }
-      response.json().then((data) => {
+      response.text().then((html) => {
         if (window.Sanitizer) {
           // Sanitizer API is supported
-          workflow_status.setHTML(data.status);
+          workflow_status.setHTML(html);
         } else {
           // Fallback where it isn't
-          workflow_status.innerHTML = data.status;
+          workflow_status.innerHTML = html;
         }
       });
     })

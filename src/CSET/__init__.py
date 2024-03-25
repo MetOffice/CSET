@@ -21,6 +21,8 @@ import sys
 from importlib.metadata import version
 from pathlib import Path
 
+from CSET._common import ArgumentError
+
 
 def main():
     """CLI entrypoint."""
@@ -133,16 +135,18 @@ def main():
     stderr_log.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
     logger.addHandler(stderr_log)
 
-    # Execute the specified subcommand.
-    if args.subparser:
-        try:
-            args.func(args, unparsed_args)
-        except ValueError:
-            parser.print_usage()
-            sys.exit(2)
-    else:
+    if args.subparser is None:
+        print("Please choose a command.", file=sys.stderr)
         parser.print_usage()
-        sys.exit(2)
+        sys.exit(127)
+
+    try:
+        # Execute the specified subcommand.
+        args.func(args, unparsed_args)
+    except ArgumentError as err:
+        logging.error(err)
+        parser.print_usage()
+        sys.exit(3)
 
 
 def _bake_command(args, unparsed_args):
@@ -150,7 +154,6 @@ def _bake_command(args, unparsed_args):
     from CSET.operators import execute_recipe
 
     recipe_variables = parse_variable_options(unparsed_args)
-
     execute_recipe(args.recipe, args.input_dir, args.output_dir, recipe_variables)
 
 

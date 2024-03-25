@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+    <style>
+        body {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            margin: 0;
+            font-family: sans-serif;
+        }
+
+        input:invalid {
+            box-shadow: 0 0 2px 2px red;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .visually-hidden {
+            position: absolute;
+            left: -9999px;
+        }
+
+        main {
+            flex: 30em;
+            height: 100vh;
+        }
+
+        main>img {
+            width: 100%;
+            height: calc(100% - 3em);
+            object-fit: contain;
+        }
+
+        #sequence_controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0.5em 0;
+            border: none;
+            padding: 0;
+        }
+
+        #sequence_controls input[type="number"] {
+            width: 6em;
+        }
+
+        #sequence_controls input[type="range"] {
+            width: min(60em, calc(100% - 16em));
+            margin: 0 1em;
+        }
+
+        #description-container {
+            flex: 20em;
+            max-height: calc(100vh - min(1em, 5vh));
+            max-width: 50em;
+            margin: min(1em, 5vh);
+            padding: 0 1em;
+            background-color: whitesmoke;
+            box-shadow: 4px 4px 4px grey;
+            outline: darkgrey solid 1px;
+            overflow: auto;
+        }
+    </style>
+    <script type="module">
+        "use strict";
+
+        function update_displayed_plot(event) {
+            const plot_img = document.querySelector("#plot");
+            plot_img.src = plot_urls[event.srcElement.value - 1];
+        }
+
+        function display_sequence_controls(plot_urls) {
+            // Only show sequence controls if there are multiple plots.
+            if (plot_urls == undefined || plot_urls.length < 2) {
+                return;
+            }
+
+            // Enable sequence controls.
+            const sequence_controls = document.querySelector("#sequence_controls");
+            sequence_controls.removeAttribute("disabled");
+
+            // Wire up the controls.
+            const sequence_range = document.querySelector("#sequence_range");
+            sequence_range.max = plot_urls.length;
+            sequence_range.addEventListener("input", () => {
+                sequence_number.value = sequence_range.value;
+            });
+            sequence_range.addEventListener("input", update_displayed_plot);
+
+            const sequence_number = document.querySelector("#sequence_number");
+            sequence_number.max = plot_urls.length;
+            sequence_number.addEventListener("input", () => {
+                sequence_range.value = sequence_number.value;
+            });
+            sequence_number.addEventListener("change", update_displayed_plot);
+        }
+
+        const plot_urls = {{plots}}
+        display_sequence_controls(plot_urls);
+    </script>
+</head>
+
+<body>
+    <main>
+        <fieldset id="sequence_controls" disabled>
+            <span>Select plot:</span>
+            <label class="visually-hidden" for="sequence_range">Select plot</label>
+            <label class="visually-hidden" for="sequence_number">Select plot</label>
+            <input type="range" id="sequence_range" value="1" min="1" max="1">
+            <input type="number" id="sequence_number" value="1" min="1" max="1">
+        </fieldset>
+        <img id="plot" src="{{initial_plot}}" alt="plot">
+    </main>
+    <aside id="description-container">
+        <h1>{{title}}</h1>
+        {{description}}
+        <hr>
+        <p><a href="diagnostic.zip" download="{{title_slug}}.zip">💾 Save Diagnostic</a></p>
+    </aside>
+</body>
