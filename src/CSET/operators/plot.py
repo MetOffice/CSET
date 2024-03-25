@@ -29,8 +29,9 @@ import iris.exceptions
 import iris.plot as iplt
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from markdown_it import MarkdownIt
 
-from CSET._common import MarkdownIt, get_recipe_metadata, render_file, slugify
+from CSET._common import get_recipe_metadata, render_file, slugify
 
 
 def _make_plot_html_page(plots: list):
