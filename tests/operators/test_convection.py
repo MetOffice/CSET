@@ -28,10 +28,11 @@ def test_cape_ratio():
     cape_75 = convection.cape_ratio(SBCAPE, MUCAPE, MUCIN)
     precalculated_75 = iris.load_cube("tests/test_data/convection/ECFlagB.nc")
     assert np.allclose(cape_75.data, precalculated_75.data, atol=1e-5, equal_nan=True)
-    
+
     cape_1p5 = convection.cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-1.5)
     precalculated_1p5 = iris.load_cube("tests/test_data/convection/ECFlagB_2.nc")
     assert np.allclose(cape_1p5.data, precalculated_1p5.data, atol=1e-5, equal_nan=True)
+
 
 def test_inflow_layer_properties():
     """Compare with precalculated properties."""
