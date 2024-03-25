@@ -1,0 +1,21 @@
+[scheduling]
+    [[graph]]
+    P1 = """
+{% for model_field in PRESSURE_LEVEL_MODEL_FIELDS %}
+   {% for plevel in PRESSURE_LEVELS %}
+       recipe_start => generic_plevel_spatial_plot_sequence_{{model_field}}_{{plevel}} => recipe_finish
+   {% endfor %}
+{% endfor %}
+    """
+
+[runtime]
+{% for model_field in PRESSURE_LEVEL_MODEL_FIELDS %}
+   {% for plevel in PRESSURE_LEVELS %}
+    [[generic_plevel_spatial_plot_sequence_{{model_field}}_{{plevel}}]]
+    script = rose task-run -v --app-key=run_cset_recipe
+    execution time limit = PT15M
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_plevel_spatial_plot_sequence.yaml"
+        CSET_ADDOPTS = "--VARNAME={{model_field}} --PLEVEL={{plevel}}"
+   {% endfor %}
+{% endfor %}

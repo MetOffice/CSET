@@ -91,7 +91,7 @@ def generate_model_level_constraint(
 
 
 def generate_pressure_level_constraint(
-    pressure_levels: list[int], **kwargs
+    pressure_levels: Union[int, list[int]], **kwargs
 ) -> iris.Constraint:
     """Generate constraint for the specified pressure_levels.
 
@@ -100,13 +100,17 @@ def generate_pressure_level_constraint(
 
     Arguments
     ---------
-    pressure_levels: list
-        List of integer pressure levels in hPa.
+    pressure_levels: int|list
+        List of integer pressure levels in hPa either as single integer
+        for a single level or a list of multiple integers. If pressure_level is
+        an integer it is converted into a list with single integer.
 
     Returns
     -------
     pressure_constraint: iris.Constraint
     """
+    if isinstance(pressure_levels, int):
+        pressure_levels = [pressure_levels]
     if len(pressure_levels) == 0:
         # If none specified reject cubes with pressure level coordinate.
         def no_pressure_coordinate(cube):
