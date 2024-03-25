@@ -10,7 +10,7 @@ CSET uses **cylc 8**, so you must ensure that is the version of cylc configured
 for usage. For the Met Office installation this involves setting an environment
 variable before running cylc with the following commands:
 
-.. code-block::bash
+.. code-block:: bash
 
    export CYLC_VERSION=8
    cylc --version  # Check version starts in 8
