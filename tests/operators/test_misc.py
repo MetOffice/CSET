@@ -36,7 +36,7 @@ def test_addition(cube):
 
 
 def test_addition_failure(cube):
-    """Tests arrays of different shapes produces an error."""
+    """Tests arrays of different units produces an error."""
     a = read.read_cube("tests/test_data/convection/ECFlagB.nc")
     with pytest.raises(iris.exceptions.NotYetImplementedError):
         misc.addition(cube, a)
@@ -50,7 +50,7 @@ def test_subtraction(cube):
 
 
 def test_subtraction_failure(cube):
-    """Tests arrays of different shapes produces an error."""
+    """Tests arrays of different units produces an error."""
     a = read.read_cube("tests/test_data/convection/ECFlagB.nc")
     with pytest.raises(iris.exceptions.NotYetImplementedError):
         misc.subtraction(cube, a)
