@@ -33,14 +33,14 @@ def noop(x, **kwargs):
     return x
 
 
-def addition(a, b):
+def addition(addend_1, addend_2):
     r"""Addition of two fields.
 
     Parameters
     ----------
-    a: Cube
+    addend_1: Cube
         Any field to have another field added to it.
-    b: Cube
+    addend_2: Cube
         Any field to be added to another field.
 
     Returns
@@ -64,19 +64,19 @@ def addition(a, b):
 
     """
     # Add the two fields together by copying a and adding b.
-    c = a.copy()
-    c += b
+    c = addend_1.copy()
+    c += addend_2
     return c
 
 
-def subtraction(a, b):
+def subtraction(minuend, subtrahend):
     r"""Subtraction of two fields.
 
     Parameters
     ----------
-    a: Cube
+    minuend: Cube
         Any field to have another field subtracted from it.
-    b: Cube
+    subtrahend: Cube
         Any field to be subtracted from to another field.
 
     Returns
@@ -102,19 +102,19 @@ def subtraction(a, b):
 
     """
     # Subtract the two fields together by copying a and subtracting b.
-    c = a.copy()
-    c -= b
+    c = minuend.copy()
+    c -= subtrahend
     return c
 
 
-def division(a, b):
+def division(numerator, denominator):
     r"""Division of two fields.
 
     Parameters
     ----------
-    a: Cube
+    numerator: Cube
         Any field to have the ratio taken with respect to another field.
-    b: Cube
+    denominator: Cube
         Any field used to divide another field or provide the reference
         value in a ratio.
 
@@ -139,19 +139,19 @@ def division(a, b):
 
     """
     # Divide the two fields together by copying a and dividing by b.
-    c = a.copy()
-    c /= b
+    c = numerator.copy()
+    c /= denominator
     return c
 
 
-def multiplication(a, b):
+def multiplication(multiplicand, multiplier):
     r"""Multiplication of two fields.
 
     Parameters
     ----------
-    a: Cube
+    multiplicand: Cube
         Any field to be multiplied by another field.
-    b: Cube
+    multiplier: Cube
         Any field to be multiplied to another field.
 
     Returns
@@ -175,6 +175,6 @@ def multiplication(a, b):
 
     """
     # Multiply the two fields together by copying a and multiplying by b.
-    c = a.copy()
-    c *= b
+    c = multiplicand.copy()
+    c *= multiplier
     return c
