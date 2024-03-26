@@ -85,7 +85,7 @@ def addition(addend_1, addend_2):
 
     Raises
     ------
-    ValueError
+    ValueError, iris.exceptions.NotYetImplementedError
         When the cubes are not compatible.
 
     Notes
@@ -117,7 +117,7 @@ def subtraction(minuend, subtrahend):
 
     Raises
     ------
-    ValueError
+    ValueError, iris.exceptions.NotYetImplementedError
         When the cubes are not compatible.
 
     Notes
@@ -182,6 +182,10 @@ def multiplication(multiplicand, multiplier):
     -------
     Cube
 
+    Raises
+    ------
+    ValueError
+        When the cubes are not compatible.
 
     Notes
     -----
