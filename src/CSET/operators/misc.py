@@ -49,7 +49,7 @@ def addition(a, b):
 
     Raises
     ------
-    ValueError
+    ValueError, iris.exceptions.NotYetImplementedError
         When the cubes are not compatible.
 
     Notes
@@ -85,7 +85,7 @@ def subtraction(a, b):
 
     Raises
     ------
-    ValueError
+    ValueError, iris.exceptions.NotYetImplementedError
         When the cubes are not compatible.
 
     Notes
@@ -158,6 +158,10 @@ def multiplication(a, b):
     -------
     Cube
 
+    Raises
+    ------
+    ValueError
+        When the cubes are not compatible.
 
     Notes
     -----
