@@ -35,7 +35,10 @@ jobs:
         env:
           PY_COLORS: "1"
         run: |
+          # Install package and run pytest.
+          echo '::group::Installing local package'
           python3 -m pip install -e .
+          echo '::endgroup::'
           pytest --verbose --cov --cov-append --cov-config=pyproject.toml
           mv .coverage ".coverage.${{ matrix.py-ver }}"
       - uses: actions/upload-artifact@v4
