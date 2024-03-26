@@ -34,7 +34,7 @@ def noop(x, **kwargs):
 
 
 def addition(addend_1, addend_2):
-    r"""Addition of two fields.
+    """Addition of two fields.
 
     Parameters
     ----------
@@ -59,8 +59,7 @@ def addition(addend_1, addend_2):
 
     Examples
     --------
-    >>> Field_addition=misc.addition(
-            Kinetic_energy_u,Kinetic_energy_v)
+    >>> field_addition = misc.addition(kinetic_energy_u, kinetic_energy_v)
 
     """
     # Add the two fields together by copying a and adding b.
@@ -70,7 +69,7 @@ def addition(addend_1, addend_2):
 
 
 def subtraction(minuend, subtrahend):
-    r"""Subtraction of two fields.
+    """Subtraction of two fields.
 
     Parameters
     ----------
@@ -97,8 +96,7 @@ def subtraction(minuend, subtrahend):
 
     Examples
     --------
-    >>> Model_difference=misc.subtraction(
-            Temperature_model_A,Temperature_model_B)
+    >>> model_diff = misc.subtraction(temperature_model_A, temperature_model_B)
 
     """
     # Subtract the two fields together by copying a and subtracting b.
@@ -108,7 +106,7 @@ def subtraction(minuend, subtrahend):
 
 
 def division(numerator, denominator):
-    r"""Division of two fields.
+    """Division of two fields.
 
     Parameters
     ----------
@@ -134,8 +132,7 @@ def division(numerator, denominator):
 
     Examples
     --------
-    >>> Bowen_ratio=misc.division(
-            sensible_heat_flux,latent_heat_flux)
+    >>> bowen_ratio = misc.division(sensible_heat_flux, latent_heat_flux)
 
     """
     # Divide the two fields together by copying a and dividing by b.
@@ -145,7 +142,7 @@ def division(numerator, denominator):
 
 
 def multiplication(multiplicand, multiplier):
-    r"""Multiplication of two fields.
+    """Multiplication of two fields.
 
     Parameters
     ----------
@@ -170,8 +167,7 @@ def multiplication(multiplicand, multiplier):
 
     Examples
     --------
-    >>> Filtered_CAPE_ratio=misc.multiplication(
-            CAPE_ratio,Inflow_layer_properties)
+    >>> filtered_CAPE_ratio = misc.multiplication(CAPE_ratio, inflow_layer_properties)
 
     """
     # Multiply the two fields together by copying a and multiplying by b.
