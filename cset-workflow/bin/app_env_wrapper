@@ -25,7 +25,7 @@ then
   for module in $MODULES_LIST; do
     module load "$module"
   done
-  IFS=$IFS_SAVE
+  IFS="$IFS_SAVE"
   module list
 fi
 
