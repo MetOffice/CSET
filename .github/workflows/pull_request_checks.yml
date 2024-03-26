@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        py-ver: ["py39", "py310", "py311", "py312"]
+        py-ver: ["py310", "py311", "py312"]
     steps:
       - uses: actions/checkout@v4
       - name: Cache conda environment
