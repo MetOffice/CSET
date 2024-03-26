@@ -40,6 +40,8 @@ from CSET.operators import (
 
 # Stop iris giving a warning whenever it loads something.
 FUTURE.datum_support = True
+# Stop iris giving a warning whenever it saves something.
+FUTURE.save_split_attrs = True
 
 
 def get_operator(name: str):
