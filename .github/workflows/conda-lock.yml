@@ -38,11 +38,11 @@ jobs:
           git switch -c conda-lock-files
 
       - name: Update CSET lock files
-        run: tox -e py39-lock,py310-lock,py311-lock,py312-lock
+        run: tox -e py310-lock,py311-lock,py312-lock
 
       - name: Update workflow lock files
         run: |
-          py_vers="3.9 3.10 3.11 3.12"
+          py_vers="3.10 3.11 3.12"
           for py_ver in $py_vers
           do
             cp "cset-workflow/requirements/environment.yml" "${{ runner.temp }}/${py_ver}_environment.yml"
