@@ -44,7 +44,7 @@ jobs:
         run: |
           # Install package and run pytest.
           echo '::group::Installing local package'
-          python3 -m pip install -e .
+          python3 -m pip install .
           echo '::endgroup::'
           pytest --verbose --cov --cov-append --cov-config=pyproject.toml
           mv .coverage ".coverage.${{ matrix.py-ver }}"
