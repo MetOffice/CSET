@@ -53,7 +53,7 @@ if [[ $CSET_ENV_USE_MODULES == True ]]; then
       # a module to make conda available. This is to simplify the logic.
       module load "$build_module"
     done
-    IFS=$IFS_SAVE
+    IFS="$IFS_SAVE"
     echo "sourcing conda via modules:"
     module list
   fi
