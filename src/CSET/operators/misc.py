@@ -62,10 +62,7 @@ def addition(addend_1, addend_2):
     >>> field_addition = misc.addition(kinetic_energy_u, kinetic_energy_v)
 
     """
-    # Add the two fields together by copying a and adding b.
-    c = addend_1.copy()
-    c += addend_2
-    return c
+    return addend_1 + addend_2
 
 
 def subtraction(minuend, subtrahend):
@@ -99,10 +96,7 @@ def subtraction(minuend, subtrahend):
     >>> model_diff = misc.subtraction(temperature_model_A, temperature_model_B)
 
     """
-    # Subtract the two fields together by copying a and subtracting b.
-    c = minuend.copy()
-    c -= subtrahend
-    return c
+    return minuend - subtrahend
 
 
 def division(numerator, denominator):
@@ -135,10 +129,7 @@ def division(numerator, denominator):
     >>> bowen_ratio = misc.division(sensible_heat_flux, latent_heat_flux)
 
     """
-    # Divide the two fields together by copying a and dividing by b.
-    c = numerator.copy()
-    c /= denominator
-    return c
+    return numerator / denominator
 
 
 def multiplication(multiplicand, multiplier):
@@ -170,7 +161,4 @@ def multiplication(multiplicand, multiplier):
     >>> filtered_CAPE_ratio = misc.multiplication(CAPE_ratio, inflow_layer_properties)
 
     """
-    # Multiply the two fields together by copying a and multiplying by b.
-    c = multiplicand.copy()
-    c *= multiplier
-    return c
+    return multiplicand * multiplier
