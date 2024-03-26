@@ -121,6 +121,9 @@ URL = https://metoffice.github.io/CSET-workflow
 {% if DETERMINISTIC_PLOT_CAPE_RATIO %}
 {% include 'includes/deterministic_plot_cape_ratio.cylc' %}
 {% endif %}
+{% if DETERMINISTIC_PLOT_INFLOW_PROPERTIES %}
+{% include 'includes/deterministic_plot_inflow_properties.cylc' %}
+{% endif %}
 {% if DETERMINISTIC_PLOT_MODEL_LEVEL_AIR_TEMP %}
 {% include 'includes/deterministic_plot_model_level_air_temp.cylc' %}
 {% endif %}
