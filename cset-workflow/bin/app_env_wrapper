@@ -17,12 +17,15 @@ fi
 # Load modules
 if [[ $CSET_ENV_USE_MODULES == True ]]
 then
+  IFS_SAVE=$IFS
+  IFS=' '
   if [[ "$MODULES_PURGE" ]]; then
     module purge
   fi
   for module in $MODULES_LIST; do
     module load "$module"
   done
+  IFS="$IFS_SAVE"
   module list
 fi
 
