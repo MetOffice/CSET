@@ -15,12 +15,20 @@
 """Operators for reading various types of files from disk."""
 
 import logging
+from collections.abc import Iterable
 from pathlib import Path
 
 import iris
 import iris.coords
 import iris.cube
 import numpy as np
+
+
+def _iter_maybe(thing) -> Iterable:
+    """Make thing into an Iterable."""
+    if isinstance(thing, Iterable):
+        return thing
+    return (thing,)
 
 
 def read_cube(
@@ -126,7 +134,9 @@ def read_cubes(
     if loadpath.is_dir():
         loadpath = sorted(loadpath.glob(filename_pattern))
 
-    logging.info("Loading file(s): %s", loadpath)
+    logging.info(
+        "Loading files:\n%s", "\n".join(str(path) for path in _iter_maybe(loadpath))
+    )
 
     if constraint is not None:
         cubes = iris.load(loadpath, constraint)
