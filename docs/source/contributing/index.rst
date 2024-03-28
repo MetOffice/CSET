@@ -1,5 +1,5 @@
-Contributing to CSET
-====================
+Contributing to CSET as a developer
+===================================
 
 To aid in the development of CSET we are adopting some working practices so
 everyone involved knows what to expect. Linked from this page is everything you
