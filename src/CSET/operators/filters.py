@@ -49,7 +49,7 @@ def filter_cubes(
     if isinstance(filtered_cubes, iris.cube.Cube):
         return filtered_cubes
     # Check filtered cubes is a CubeList containing one cube.
-    if len(filtered_cubes) == 1:
+    if isinstance(filtered_cubes, iris.cube.CubeList) and len(filtered_cubes) == 1:
         return filtered_cubes[0]
     else:
         raise ValueError(

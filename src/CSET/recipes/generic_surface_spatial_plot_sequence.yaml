@@ -1,0 +1,22 @@
+category: Quick Look
+title: Surface $VARNAME
+description: Extracts and plots the surface $VARNAME from a file.
+
+steps:
+  - operator: read.read_cube
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+      pressure_level_constraint:
+        operator: constraints.generate_pressure_level_constraint
+        pressure_levels: []
+
+  - operator: write.write_cube_to_nc
+
+  - operator: plot.spatial_contour_plot
+    sequence_coordinate: time

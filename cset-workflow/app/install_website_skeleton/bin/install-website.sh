@@ -17,6 +17,9 @@ echo "Installing website files to $WEB_DIR"
 # Copy static HTML/CSS/JS.
 if mkdir -v "$WEB_DIR"; then
   cp -rv html/* "$WEB_DIR"
+  # Create symbolic link to plots directory.
+  # NOTE: While its good for space, it means `cylc clean` removes plots.
+  ln -s "${CYLC_WORKFLOW_SHARE_DIR}/plots" "${WEB_DIR}/plots"
 else
   # Fail task if directory already exists.
   >&2 echo "Web directory already exists, refusing to overwrite."
