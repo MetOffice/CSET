@@ -1,0 +1,16 @@
+{% if DOMAIN_MEAN_SURFACE_TIME_SERIES %}
+{% for model_field in SURFACE_MODEL_FIELDS %}
+[runtime]
+    [[pre_process_domain_mean_surface_time_series_{{model_field}}]]
+    inherit = PROCESS_DATA
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_surface_domain_mean_time_series.yaml"
+        CSET_ADDOPTS = "--VARNAME={{model_field}}"
+
+    [[collate_domain_mean_surface_time_series_{{model_field}}]]
+    inherit = COLLATE_PROCESSED_DATA
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_surface_domain_mean_time_series.yaml"
+        CSET_ADDOPTS = "--VARNAME={{model_field}}"
+{% endfor %}
+{% endif %}

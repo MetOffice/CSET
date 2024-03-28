@@ -1,3 +1,4 @@
+{% if DETERMINISTIC_PLOT_AGGREGATE_PRECIPITATION %}
 [scheduling]
     [[graph]]
     P1 = """
@@ -41,3 +42,4 @@ steps:
     # This is a magic value that becomes the runtime output file path.
     file_path: CSET_OUTPUT_PATH
 """
+{% endif %}

@@ -1,0 +1,16 @@
+{% if DOMAIN_MEAN_TIME_SERIES_STASH %}
+{% for stash in STASH_CODES %}
+[runtime]
+    [[pre_process_stash_surface_domain_mean_time_series_{{stash}}]]
+    inherit = PROCESS_DATA
+        [[[environment]]]
+        CSET_RECIPE_NAME = "stash_surface_domain_mean_time_series.yaml"
+        CSET_ADDOPTS = "--STASH={{stash}}"
+
+    [[collate_stash_surface_domain_mean_time_series_{{stash}}]]
+    inherit = COLLATE_PROCESSED_DATA
+        [[[environment]]]
+        CSET_RECIPE_NAME = "stash_surface_domain_mean_time_series.yaml"
+        CSET_ADDOPTS = "--STASH={{stash}}"
+{% endfor %}
+{% endif %}

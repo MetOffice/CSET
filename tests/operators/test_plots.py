@@ -19,7 +19,7 @@ from pathlib import Path
 import iris.cube
 import pytest
 
-from CSET.operators import plot, read
+from CSET.operators import collapse, plot, read
 
 
 def test_check_single_cube():
@@ -92,3 +92,32 @@ def test_postage_stamp_realization_check_deprecated(cube, tmp_working_dir):
     with pytest.deprecated_call():
         with pytest.raises(ValueError):
             plot.postage_stamp_contour_plot(cube)
+
+
+def test_plot_line_series(cube, tmp_working_dir):
+    """Save a line series plot."""
+    cube = collapse.collapse(cube, ["grid_latitude", "grid_longitude"], "MEAN")
+    plot.plot_line_series(cube)
+    assert Path("untitled.png").is_file()
+
+
+def test_plot_line_series_with_filename(cube, tmp_working_dir):
+    """Save a line series plot with specific filename and series coordinate."""
+    cube = collapse.collapse(cube, ["time", "grid_longitude"], "MEAN")
+    plot.plot_line_series(
+        cube, filename="latitude_average.ext", series_coordinate="grid_latitude"
+    )
+    assert Path("latitude_average.png").is_file()
+
+
+def test_plot_line_series_no_series_coordinate(tmp_working_dir):
+    """Error when cube is missing series coordinate (time)."""
+    cube = iris.cube.Cube([], var_name="nothing")
+    with pytest.raises(ValueError):
+        plot.plot_line_series(cube)
+
+
+def test_plot_line_series_too_many_dimensions(cube, tmp_working_dir):
+    """Error when cube has more than one dimension."""
+    with pytest.raises(ValueError):
+        plot.plot_line_series(cube)

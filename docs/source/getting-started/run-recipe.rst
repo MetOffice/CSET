@@ -16,9 +16,9 @@ Try the following:
 
 .. code-block:: bash
 
-    cset cookbook -o recipes
+    cset cookbook -o recipes mean_surface_air_temperature_spatial_plot.yaml
 
-This will write out a recipes folder containing recipe ``.yaml`` files to your
+This will write out a recipes folder containing recipe ``.yaml`` file to your
 current directory. We will use the
 ``mean_surface_air_temperature_spatial_plot.yaml`` recipe.
 

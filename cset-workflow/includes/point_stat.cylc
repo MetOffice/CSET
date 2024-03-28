@@ -1,3 +1,4 @@
+{% if METPLUS_POINT_STAT %}
 [scheduling]
     [[graph]]
     P1 = """
@@ -18,3 +19,4 @@
         [[[environment]]]
         METPLUS_FCST_DIR = {{METPLUS_FCST_DIR}}
         ROSE_APP_OPT_CONF_KEYS = {{METPLUS_OPT_CONFIG_KEYS}}
+{% endif %}
