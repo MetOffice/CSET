@@ -1,9 +1,10 @@
+{% if DETERMINISTIC_PLOT_SURFACE_AIR_TEMP %}
 [scheduling]
     [[graph]]
     PT1H = """
     install_website_skeleton[^] & install_local_cset[^] => FETCH_DATA:succeed-all =>
     deterministic_plot_surface_air_temp =>
-    housekeeping_raw => process_finish
+    process_finish => housekeeping_raw
     process_finish[-PT1H] => process_finish
     """
 
@@ -13,3 +14,4 @@
     execution time limit = PT15M
         [[[environment]]]
         CSET_RECIPE_NAME = "surface_air_temperature_spatial_plot_time_sequence.yaml"
+{% endif %}

@@ -148,41 +148,9 @@ URL = https://metoffice.github.io/CSET
 
 
 # Include files bring their own graph and runtime sections.
-{% if PLOT_SPATIAL_SURFACE_MODEL_FIELD %}
-{% include 'includes/plot_spatial_surface_model_field.cylc' %}
-{% endif %}
-{% if METPLUS_POINT_STAT %}
-{% include 'includes/point_stat.cylc' %}
-{% endif %}
-{% if DETERMINISTIC_PLOT_SURFACE_AIR_TEMP %}
-{% include 'includes/deterministic_plot_surface_air_temp.cylc' %}
-{% endif %}
-{% if DETERMINISTIC_PLOT_AGGREGATE_PRECIPITATION %}
-{% include 'includes/deterministic_plot_aggregate_precipitation.cylc' %}
-{% endif %}
-{% if DETERMINISTIC_PLOT_CAPE_RATIO %}
-{% include 'includes/deterministic_plot_cape_ratio.cylc' %}
-{% endif %}
-{% if DETERMINISTIC_PLOT_MODEL_LEVEL_AIR_TEMP %}
-{% include 'includes/deterministic_plot_model_level_air_temp.cylc' %}
-{% endif %}
-{% if ENSEMBLE_PLOT_SURFACE_AIR_TEMP %}
-{% include 'includes/ensemble_plot_surface_air_temp.cylc' %}
-{% endif %}
-{% if MEAN_HOURLY_ACCUMULATED_PRECIPITATION_ENSEMBLE_POSTAGE_STAMP_PLOT %}
-{% include 'includes/mean_hourly_accumulated_precip_ensemble_postage_stamp_plot.cylc' %}
-{% endif %}
-{% if DOMAIN_MEAN_SURFACE_TIME_SERIES %}
-{% include 'includes/deterministic_domain_mean_surface_time_series.cylc' %}
-{% endif %}
-{% if PLOT_SPATIAL_STASH_FIELD %}
-{% include 'includes/plot_spatial_stash_field.cylc' %}
-{% endif %}
-{% if DOMAIN_MEAN_TIME_SERIES_STASH %}
-{% include 'includes/domain_mean_time_series_stash.cylc' %}
-{% endif %}
+{% for include_file in glob("includes/*.cylc") %}
+{% include include_file %}
+{% endfor %}
 
 {# Site-specific details that add to (or override) the core suite definition #}
-{% if SITE %}
 {% include 'site/' ~ SITE ~ '.cylc' %}
-{% endif %}

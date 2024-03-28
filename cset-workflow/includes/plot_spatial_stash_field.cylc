@@ -1,10 +1,11 @@
+{% if PLOT_SPATIAL_STASH_FIELD %}
 {% for stash in STASH_CODES %}
 [scheduling]
     [[graph]]
     PT1H = """
     install_website_skeleton[^] & install_local_cset[^] => FETCH_DATA:succeed-all =>
     stash_surface_spatial_plot_sequence_{{stash}} =>
-    housekeeping_raw => process_finish
+    process_finish => housekeeping_raw
     process_finish[-PT1H] => process_finish
     """
 
@@ -14,5 +15,5 @@
         [[[environment]]]
         CSET_RECIPE_NAME = "stash_surface_spatial_plot_sequence.yaml"
         CSET_ADDOPTS = "--STASH={{stash}}"
-
 {% endfor %}
+{% endif %}
