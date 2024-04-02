@@ -12,24 +12,9 @@ assignees: ''
 
 
 ### Describe the solution you'd like
-<!-- Description of what you want to happen. -->
+<!-- Description of what you want to happen. If applicable, add screenshots or examples to help explain your request. -->
 
 
 
 ### Describe alternatives you've considered
 <!-- Description of any alternative solutions or features you've considered. -->
-
-
-
-### Additional context
-<!-- Add any other context, screenshots, or example plots about the feature request here. -->
-
-
-
-### What kind of request is this?
-<!-- Tick all that apply, or add your own. -->
-
-- [ ] Scientific (Affects diagnostic output)
-- [ ] Portability (Ensuring functionality at other sites)
-- [ ] Documentation (Changes the documentation)
-- [ ] Technical (Everything else)
