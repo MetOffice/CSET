@@ -89,7 +89,7 @@ def regrid_onto_cube(
         )
 
     if callable(getattr(iris.analysis, method)):
-        return incube.regrid(target, getattr(iris.analysis, method))
+        return incube.regrid(target, getattr(iris.analysis, method)())
     else:
         raise NotImplementedError(f"Does not currently support {method} regrid method")
 
@@ -177,7 +177,7 @@ def regrid_onto_xyspacing(
 
     if callable(getattr(iris.analysis, method)):
         cube_rgd = incube.interpolate(
-            [(y_coord, latout), (x_coord, lonout)], getattr(iris.analysis, method)
+            [(y_coord, latout), (x_coord, lonout)], getattr(iris.analysis, method)()
         )
     else:
         raise NotImplementedError(f"Does not currently support {method} regrid method")
