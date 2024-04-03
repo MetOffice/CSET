@@ -71,11 +71,11 @@ def regrid_onto_cube(
 
     # List of supported grids - check if it is compatible
     supported_grids = (iris.coord_systems.GeogCS,)
-    if isinstance(incube.coord(x_coord).coord_system, supported_grids):
+    if not isinstance(incube.coord(x_coord).coord_system, supported_grids):
         raise NotImplementedError(
             f"Does not currently support {incube.coord(x_coord).coord_system} regrid method"
         )
-    elif isinstance(incube.coord(y_coord).coord_system, supported_grids):
+    if not isinstance(incube.coord(y_coord).coord_system, supported_grids):
         raise NotImplementedError(
             f"Does not currently support {incube.coord(y_coord).coord_system} regrid method"
         )
@@ -138,11 +138,11 @@ def regrid_onto_xyspacing(
 
     # List of supported grids - check if it is compatible
     supported_grids = (iris.coord_systems.GeogCS,)
-    if isinstance(incube.coord(x_coord).coord_system, supported_grids):
+    if not isinstance(incube.coord(x_coord).coord_system, supported_grids):
         raise NotImplementedError(
             f"Does not currently support {incube.coord(x_coord).coord_system} regrid method"
         )
-    if isinstance(incube.coord(y_coord).coord_system, supported_grids):
+    if not isinstance(incube.coord(y_coord).coord_system, supported_grids):
         raise NotImplementedError(
             f"Does not currently support {incube.coord(y_coord).coord_system} regrid method"
         )
