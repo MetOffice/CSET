@@ -49,8 +49,16 @@ def regrid_onto_cube(
         If a unique x/y coordinate cannot be found
     NotImplementedError
         If the cubes grid, or the method for regridding, is not yet supported.
+
+    Notes
+    -----
+    The acceptable coordinate names for X and Y coordinates are currently described
+    in X_COORD_NAMES and Y_COORD_NAMES. These cover commonly used coordinate types,
+    though a user can append new ones.
+    Currently rectlinear grids (uniform) are supported.
     """
     # Usual names for spatial coordinates
+    # TODO can we determine grid coord names in a more intelligent way?
     X_COORD_NAMES = ["longitude", "grid_longitude", "projection_x_coordinate", "x"]
     Y_COORD_NAMES = ["latitude", "grid_latitude", "projection_y_coordinate", "y"]
 
@@ -116,8 +124,17 @@ def regrid_onto_xyspacing(
         If a unique x/y coordinate cannot be found
     NotImplementedError
         If the cubes grid, or the method for regridding, is not yet supported.
+
+    Notes
+    -----
+    The acceptable coordinate names for X and Y coordinates are currently described
+    in X_COORD_NAMES and Y_COORD_NAMES. These cover commonly used coordinate types,
+    though a user can append new ones.
+    Currently rectlinear grids (uniform) are supported.
+
     """
-    # Usual names for spatial coordinates
+    # Usual names for spatial coordinates.
+    # TODO can we determine grid coord names in a more intelligent way?
     X_COORD_NAMES = ["longitude", "grid_longitude", "projection_x_coordinate", "x"]
     Y_COORD_NAMES = ["latitude", "grid_latitude", "projection_y_coordinate", "y"]
 
