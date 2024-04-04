@@ -39,8 +39,8 @@ URL = https://metoffice.github.io/CSET
 
     {% if CSET_INCREMENTAL_OUTPUT %}
     # Runs every so often to update output plots during runtime.
-    {{CSET_OUTPUT_UPDATE_PERIOD}} = """
-    COLLATE_PROCESSED_DATA[-{{CSET_OUTPUT_UPDATE_PERIOD}}]:finish-all &
+    {{CSET_INCREMENTAL_OUTPUT_PERIOD}} = """
+    COLLATE_PROCESSED_DATA[-{{CSET_INCREMENTAL_OUTPUT_PERIOD}}]:finish-all &
     process_finish => COLLATE_PROCESSED_DATA
     """
     {% endif %}
