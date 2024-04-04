@@ -14,7 +14,6 @@
 
 """Operators to regrid cubes."""
 
-
 import iris
 import iris.cube
 import numpy as np
