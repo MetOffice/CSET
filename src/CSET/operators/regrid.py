@@ -18,6 +18,11 @@ import iris
 import iris.cube
 import numpy as np
 
+# Usual names for spatial coordinates.
+# TODO can we determine grid coord names in a more intelligent way?
+X_COORD_NAMES = ["longitude", "grid_longitude", "projection_x_coordinate", "x"]
+Y_COORD_NAMES = ["latitude", "grid_latitude", "projection_y_coordinate", "y"]
+
 
 def regrid_onto_cube(
     incube: iris.cube.Cube, target: iris.cube.Cube, method: str, **kwargs
@@ -56,11 +61,6 @@ def regrid_onto_cube(
     though a user can append new ones.
     Currently rectlinear grids (uniform) are supported.
     """
-    # Usual names for spatial coordinates
-    # TODO can we determine grid coord names in a more intelligent way?
-    X_COORD_NAMES = ["longitude", "grid_longitude", "projection_x_coordinate", "x"]
-    Y_COORD_NAMES = ["latitude", "grid_latitude", "projection_y_coordinate", "y"]
-
     # Get a list of coordinate names for the cube
     coord_names = [coord.name() for coord in incube.coords()]
 
@@ -132,11 +132,6 @@ def regrid_onto_xyspacing(
     Currently rectlinear grids (uniform) are supported.
 
     """
-    # Usual names for spatial coordinates.
-    # TODO can we determine grid coord names in a more intelligent way?
-    X_COORD_NAMES = ["longitude", "grid_longitude", "projection_x_coordinate", "x"]
-    Y_COORD_NAMES = ["latitude", "grid_latitude", "projection_y_coordinate", "y"]
-
     # Get a list of coordinate names for the cube
     coord_names = [coord.name() for coord in incube.coords()]
 
