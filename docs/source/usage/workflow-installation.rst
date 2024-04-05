@@ -15,16 +15,34 @@ variable before running cylc with the following commands:
    export CYLC_VERSION=8
    cylc --version  # Check version starts in 8
 
-You will then need to edit the configuration to set up your job. Within the
-``cset-workflow`` directory, start by making a copy of the
-``rose-suite.conf.example`` file called ``rose-suite.conf``. This needs further
-amendments, which are done using `rose edit`_, a GUI configuration tool. Within
-rose edit go through the sections under "suite conf" and fill in the config.
-Rose edit can be opened with the following command from within the
-``cset-workflow`` directory:
+The workflow lives within the ``cset-workflow`` directory, and all the following
+commands assume you are within it.
 
 .. code-block:: bash
 
+  # From within your CSET repository, change into the workflow directory.
+  cd cset-workflow
+
+First up, if are at a specific site, you will want to install the site specific
+configuration. This is done by running the ``install_restricted_files.sh``
+script, and pressing enter a couple times to accept the default options.
+
+.. code-block:: bash
+
+  ./install_restricted_files.sh
+  # Then accept the defaults.
+
+You will then need to edit the configuration to set up your job. Start by making
+a copy of the ``rose-suite.conf.example`` file called ``rose-suite.conf``. This
+needs further amendments, which are done using `rose edit`_, a GUI configuration
+tool. Within rose edit go through the sections under "suite conf" and fill in
+the config.
+
+.. code-block:: bash
+
+    # Copy the example configuration.
+    cp rose-suite.conf.example rose-suite.conf
+    # Edit rose-suite.conf with the rose edit GUI.
     rose edit &
 
 .. image:: rose-edit.png
@@ -47,9 +65,9 @@ Rose edit can be opened with the following command from within the
 Help for each variable can be viewed by clicking on the variable's name. Once
 you have configured CSET you can save and close rose edit.
 
-To run the workflow,  run ``cylc vip .``  from within the ``cset-workflow``
-directory. This submits the workflow to a cylc scheduler to run it. You can view
-the job's progress with the cylc GUI, accessible with the command ``cylc gui``.
+To run the workflow, use ``cylc vip .``. This submits the workflow to a cylc
+scheduler. You can view the job's progress with the cylc GUI, accessible with
+the command ``cylc gui``.
 
 .. code-block:: bash
 
