@@ -15,11 +15,12 @@ variable before running cylc with the following commands:
    export CYLC_VERSION=8
    cylc --version  # Check version starts in 8
 
-You will then need to edit the configuration to set up your job. Start by making
-a copy of the ``rose-suite.conf.example`` file called ``rose-suite.conf``. This
-needs further amendments, which are done using `rose edit`_, a GUI configuration
-tool. Within rose edit go through the sections under "suite conf" and fill in
-the config. Rose edit can be opened with the following command from within the
+You will then need to edit the configuration to set up your job. Within the
+``cset-workflow`` directory, start by making a copy of the
+``rose-suite.conf.example`` file called ``rose-suite.conf``. This needs further
+amendments, which are done using `rose edit`_, a GUI configuration tool. Within
+rose edit go through the sections under "suite conf" and fill in the config.
+Rose edit can be opened with the following command from within the
 ``cset-workflow`` directory:
 
 .. code-block:: bash
@@ -46,10 +47,9 @@ the config. Rose edit can be opened with the following command from within the
 Help for each variable can be viewed by clicking on the variable's name. Once
 you have configured CSET you can save and close rose edit.
 
-To run the workflow, open a command line inside the ``cset-workflow`` directory
-and run ``cylc vip .``. This submits the workflow to a cylc scheduler to run it.
-You can view the job's progress with the cylc GUI, accessible with the command
-``cylc gui``.
+To run the workflow,  run ``cylc vip .``  from within the ``cset-workflow``
+directory. This submits the workflow to a cylc scheduler to run it. You can view
+the job's progress with the cylc GUI, accessible with the command ``cylc gui``.
 
 .. code-block:: bash
 
