@@ -80,11 +80,11 @@ def regrid_onto_cube(
     supported_grids = (iris.coord_systems.GeogCS,)
     if not isinstance(incube.coord(x_coord).coord_system, supported_grids):
         raise NotImplementedError(
-            f"Does not currently support {incube.coord(x_coord).coord_system} regrid method"
+            f"Does not currently support {incube.coord(x_coord).coord_system} coordinate system"
         )
     if not isinstance(incube.coord(y_coord).coord_system, supported_grids):
         raise NotImplementedError(
-            f"Does not currently support {incube.coord(y_coord).coord_system} regrid method"
+            f"Does not currently support {incube.coord(y_coord).coord_system} coordinate system"
         )
 
     if callable(getattr(iris.analysis, method)):
