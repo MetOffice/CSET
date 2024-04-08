@@ -23,7 +23,7 @@ commands assume you are within it.
   # From within your CSET repository, change into the workflow directory.
   cd cset-workflow
 
-First up, if are at a specific site, you will want to install the site specific
+First up, if you are at a specific site, you need to install the site specific
 configuration. This is done by running the ``install_restricted_files.sh``
 script, and pressing enter a couple times to accept the default options.
 
