@@ -31,7 +31,7 @@ def word_month_to_num(month: str) -> int:
         "sep": 9,
         "oct": 10,
         "nov": 11,
-        "doc": 12,
+        "dec": 12,
     }
     # Leave exceptions to caller.
     month_number = month_mappings[month.lower()[:3]]
