@@ -103,16 +103,8 @@ def test_slugify():
     assert common.slugify("First Line\nSecond Line") == "first_line_second_line"
     assert common.slugify("greekαβγδchars") == "greek_chars"
     assert common.slugify("  ABC ") == "abc"
+    # Multi-byte unicode characters are removed.
     assert common.slugify("あいうえお") == ""
-
-
-def test_is_variable():
-    """Recipe variables are correctly identified."""
-    assert common.is_variable("$VARIABLE_NAME")
-    assert common.is_variable("$V")
-    assert not common.is_variable("VARIABLE_NAME")
-    assert not common.is_variable("$VARIABLE-NAME")
-    assert not common.is_variable("$Variable_name")
 
 
 def test_parse_variable_options():
@@ -130,14 +122,31 @@ def test_parse_variable_options():
 
 
 def test_template_variables():
-    """Variables are correctly templated into recipes."""
-    recipe = {"steps": [{"operator": "misc.noop", "variable": "$VAR"}]}
-    variables = {"VAR": 42}
-    expected = {"steps": [{"operator": "misc.noop", "variable": 42}]}
+    """Multiple variables are correctly templated into recipe."""
+    recipe = {"steps": [{"operator": "misc.noop", "v1": "$VAR_A", "v2": "$VAR_B"}]}
+    variables = {"VAR_A": 42, "VAR_B": 3.14}
+    expected = {"steps": [{"operator": "misc.noop", "v1": 42, "v2": 3.14}]}
     actual = common.template_variables(recipe, variables)
     assert actual == expected
+    assert recipe == expected
+
+
+def test_replace_template_variable():
+    """Placeholders are correctly substituted."""
+    # Test direct substitution.
+    vars = {"VAR": 1}
+    expected = 1
+    actual = common.replace_template_variable("$VAR", vars)
+    assert actual == expected
+
+    # Insertion into a larger string.
+    expected = "The number 1"
+    actual = common.replace_template_variable("The number $VAR", vars)
+    assert actual == expected
+
+    # Error when variable not provided.
     with pytest.raises(KeyError):
-        common.template_variables(recipe, {})
+        common.replace_template_variable("$VAR", {})
 
 
 def test_template_variables_wrong_recipe_type():

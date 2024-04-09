@@ -85,14 +85,14 @@ function setup_description_toggle_button() {
 function setup_plots_dropdown() {
   const dropdown_background = document.querySelectorAll(".dropdown > .background");
   // Skip if there is no dropdown on page.
-  if (!dropdown_background) {
+  if (dropdown_background.length === 0) {
     return;
   }
 
   // Closing of dropdown.
   function close_dropdowns(event) {
     if (event instanceof KeyboardEvent) {
-      if (event.key != "Escape") {
+      if (event.key !== "Escape") {
         return;
       }
     }
@@ -130,7 +130,7 @@ function setup_plots_dropdown() {
         for (const dropdown_tab_content of dropdowns) {
           // Number of the tab within the dropdown.
           let tab_number = 0;
-          for (model in data) {
+          for (category in data) {
             // Control for tab.
             const input_element = document.createElement("input");
             input_element.type = "radio";
@@ -142,7 +142,7 @@ function setup_plots_dropdown() {
             // Label for tab
             const label_element = document.createElement("label");
             label_element.htmlFor = `tab_${dropdown_number}_${tab_number}`;
-            label_element.textContent = model;
+            label_element.textContent = category;
             dropdown_tab_content.insertAdjacentElement("beforebegin", label_element);
 
             // Tab panel with links to plots
@@ -154,11 +154,11 @@ function setup_plots_dropdown() {
             const tab_section_menu = document.createElement("menu");
             tab_section_menu.className = "plot-selector";
             // Populate with links.
-            for (plot in data[model]) {
+            for (plot in data[category]) {
               // Create a link to the plot.
               const link = document.createElement("a");
-              link.href = `plots/${data[model][plot]}`;
-              link.textContent = plot;
+              link.href = `plots/${plot}`;
+              link.textContent = data[category][plot];
               // Add a callback updating the iframe when the link is clicked.
               const frame_id = `plot_frame_${dropdown_number}`;
               link.addEventListener("click", (event) => {

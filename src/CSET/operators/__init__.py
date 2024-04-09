@@ -152,6 +152,7 @@ def execute_recipe(
     recipe = parse_recipe(recipe_yaml)
     logging.debug("Recipe variables: %s", recipe_variables)
     recipe = template_variables(recipe, recipe_variables)
+    # TODO: This is where we could calculate the plot ID deterministically.
     step_input = Path(input_directory).absolute()
     try:
         output_directory.mkdir(parents=True, exist_ok=True)
