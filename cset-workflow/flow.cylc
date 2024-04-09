@@ -1,36 +1,49 @@
 #!jinja2
 [meta]
 title = CSET
-description = Workflow for running CSET and METplus.
-URL = https://metoffice.github.io/CSET-workflow
+description = Workflow for running CSET.
+URL = https://metoffice.github.io/CSET
 
+[scheduler]
+    UTC mode = True
 
 [scheduling]
-    cycling mode = integer
-    initial cycle point = 1
-    final cycle point = 1
+    runahead limit = P{{CSET_RUNAHEAD_LIMIT}}
+    initial cycle point = {{CSET_INITIAL_CYCLE_POINT}}
+    final cycle point = {{CSET_FINAL_CYCLE_POINT}}
 
     [[graph]]
     # Only runs on the first cycle.
     R1/^ = """
     build_conda => install_website_skeleton
     build_conda => install_local_cset
-    """
-
-    # Runs every cycle. Include files get inserted into this graph.
-    P1 = """
-    install_local_cset[1] => fetch_fcst
-    install_website_skeleton[1] => recipe_start
-    fetch_fcst => recipe_start
-    recipe_start => recipe_finish
-    recipe_finish => housekeeping
+    install_website_skeleton & install_local_cset => FETCH_DATA
     """
 
     # Only runs on the final cycle.
     R1/$ = """
-    recipe_finish => finish_website => send_email
+    process_finish => COLLATE_PROCESSED_DATA:succeed-all =>
+    finish_website => send_email => housekeeping_full
     """
 
+    # Runs every cycle to process the data.
+    {{CSET_CYCLE_PERIOD}} = """
+    install_website_skeleton[^] & install_local_cset[^] =>
+    FETCH_DATA:succeed-all => PROCESS_DATA:succeed-all =>
+    process_finish => housekeeping_raw
+
+    # Intercycle dependence with this task ensures the collate step waits for
+    # the required data.
+    process_finish[-{{CSET_CYCLE_PERIOD}}] => process_finish
+    """
+
+    {% if CSET_INCREMENTAL_OUTPUT %}
+    # Runs every so often to update output plots during runtime.
+    {{CSET_INCREMENTAL_OUTPUT_PERIOD}} = """
+    COLLATE_PROCESSED_DATA[-{{CSET_INCREMENTAL_OUTPUT_PERIOD}}]:finish-all &
+    process_finish => COLLATE_PROCESSED_DATA
+    """
+    {% endif %}
 
 [runtime]
     [[root]]
@@ -58,14 +71,34 @@ URL = https://metoffice.github.io/CSET-workflow
         MET_LIBRARIES = {{MET_LIBRARIES}}
         {% endif %}
 
+        LOGLEVEL = {{LOGLEVEL}}
         WEB_DIR = {{WEB_DIR}}
 
+    [[PROCESS_DATA]]
+    script = rose task-run -v --app-key=run_cset_recipe
+    [[[environment]]]
+        CSET_BAKE_MODE = process
+
+    [[COLLATE_PROCESSED_DATA]]
+    script = rose task-run -v --app-key=run_cset_recipe
+    [[[environment]]]
+        CSET_BAKE_MODE = collate
+
+    [[FETCH_DATA]]
+
+    [[process_finish]]
+    # Dummy task needed for workflow scheduling.
+    script = true
+    platform = localhost
+
     [[build_conda]]
+    # Create the conda environment if it does not yet exist.
     execution time limit = PT30M
         [[[environment]]]
         CONDA_VENV_CREATE = {{CONDA_VENV_CREATE}}
 
     [[install_local_cset]]
+    # Install CSET from source.
     execution time limit = PT5M
         [[[environment]]]
         CSET_ENV_USE_LOCAL_CSET = {{CSET_ENV_USE_LOCAL_CSET}}
@@ -78,24 +111,34 @@ URL = https://metoffice.github.io/CSET-workflow
         [[[environment]]]
         CLEAN_WEB_DIR = {{CLEAN_WEB_DIR}}
 
+    [[fetch_fcst]]
+    # Fetch data from disk or a file based archival system.
+    inherit = FETCH_DATA
+        [[[environment]]]
+        ROSE_APP_OPT_CONF_KEYS = {{FETCH_FCST_OPT_CONF}}
+        CSET_INPUT_FILE_PATH = {{CSET_INPUT_FILE_PATH}}
+        {% if CSET_INCREMENTAL_DATA_FETCH %}
+        CSET_FILE_NAME_METADATA_PATTERN = {{CSET_FILE_NAME_METADATA_PATTERN}}
+        CSET_CYCLE_PERIOD = {{CSET_CYCLE_PERIOD}}
+        CSET_TIMES_PER_FILE = {{CSET_TIMES_PER_FILE}}
+        CSET_FILE_TIME_OFFSET = {{CSET_FILE_TIME_OFFSET}}
+        {% endif %}
+
+    [[housekeeping_raw]]
+    # Housekeep unprocessed data files.
+    script = rose task-run -v --app-key=housekeeping
+        [[[environment]]]
+        HOUSEKEEPING_MODE = {{[HOUSEKEEPING_MODE, 1]|min}}
+
+    [[housekeeping_full]]
+    # Housekeep processed intermediate files too.
+    script = rose task-run -v --app-key=housekeeping
+        [[[environment]]]
+        HOUSEKEEPING_MODE = {{[HOUSEKEEPING_MODE, 2]|min}}
+
     [[finish_website]]
     # Updates the workflow info in the web interface.
     platform = localhost
-        [[[environment]]]
-
-    [[fetch_fcst]]
-    # Fetch data from disk or a file based archival system.
-        [[[environment]]]
-        ROSE_APP_OPT_CONF_KEYS = {{FETCH_FCST_OPT_CONF}}
-        FILE_PATH = {{CSET_INPUT_FILE_PATH}}
-
-    [[recipe_start]]
-    platform = localhost
-    script = true
-
-    [[recipe_finish]]
-    platform = localhost
-    script = true
 
     [[send_email]]
     # Send email to notify that the workflow is complete.
@@ -103,39 +146,11 @@ URL = https://metoffice.github.io/CSET-workflow
         [[[environment]]]
         WEB_ADDR = {{WEB_ADDR}}
 
-    [[housekeeping]]
-        [[[environment]]]
-        HOUSEKEEPING_MODE = {{HOUSEKEEPING_MODE}}
-
 
 # Include files bring their own graph and runtime sections.
-{% if PLOT_SPATIAL_SURFACE_MODEL_FIELD %}
-{% include 'includes/plot_spatial_surface_model_field.cylc' %}
-{% endif %}
-{% if METPLUS_POINT_STAT %}
-{% include 'includes/point_stat.cylc' %}
-{% endif %}
-{% if DETERMINISTIC_PLOT_SURFACE_AIR_TEMP %}
-{% include 'includes/deterministic_plot_surface_air_temp.cylc' %}
-{% endif %}
-{% if DETERMINISTIC_PLOT_AGGREGATE_PRECIPITATION %}
-{% include 'includes/deterministic_plot_aggregate_precipitation.cylc' %}
-{% endif %}
-{% if DETERMINISTIC_PLOT_CAPE_RATIO %}
-{% include 'includes/deterministic_plot_cape_ratio.cylc' %}
-{% endif %}
-{% if DETERMINISTIC_PLOT_MODEL_LEVEL_AIR_TEMP %}
-{% include 'includes/deterministic_plot_model_level_air_temp.cylc' %}
-{% endif %}
-{% if ENSEMBLE_PLOT_SURFACE_AIR_TEMP %}
-{% include 'includes/ensemble_plot_surface_air_temp.cylc' %}
-{% endif %}
-{% if MEAN_HOURLY_ACCUMULATED_PRECIPITATION_ENSEMBLE_POSTAGE_STAMP_PLOT %}
-{% include 'includes/mean_hourly_accumulated_precip_ensemble_postage_stamp_plot.cylc' %}
-{% endif %}
-
+{% for include_file in glob("includes/*.cylc") %}
+{% include include_file %}
+{% endfor %}
 
 {# Site-specific details that add to (or override) the core suite definition #}
-{% if SITE %}
 {% include 'site/' ~ SITE ~ '.cylc' %}
-{% endif %}

@@ -24,6 +24,7 @@ import warnings
 from typing import Union
 
 import iris
+import iris.coords
 import iris.cube
 import iris.exceptions
 import iris.plot as iplt
@@ -32,6 +33,56 @@ import matplotlib.pyplot as plt
 from markdown_it import MarkdownIt
 
 from CSET._common import get_recipe_metadata, render_file, slugify
+
+############################
+# Private helper functions #
+############################
+
+
+def _append_to_plot_index(plot_index: list) -> list:
+    """Add plots into the plot index, returning the complete plot index."""
+    with open("meta.json", "r+t", encoding="UTF-8") as fp:
+        fcntl.flock(fp, fcntl.LOCK_EX)
+        fp.seek(0)
+        meta = json.load(fp)
+        complete_plot_index = meta.get("plots", [])
+        complete_plot_index = complete_plot_index + plot_index
+        meta["plots"] = complete_plot_index
+        fp.seek(0)
+        fp.truncate()
+        json.dump(meta, fp)
+    return complete_plot_index
+
+
+def _check_single_cube(
+    cube: Union[iris.cube.Cube, iris.cube.CubeList],
+) -> iris.cube.Cube:
+    """Ensure a single cube is given.
+
+    If a CubeList of length one is given that the contained cube is returned,
+    otherwise an error is raised.
+
+    Parameters
+    ----------
+    cube: Cube | CubeList
+        The cube to check.
+
+    Returns
+    -------
+    cube: Cube
+        The checked cube.
+
+    Raises
+    ------
+    TypeError
+        If the input cube is not a Cube or CubeList of a single Cube.
+    """
+    if isinstance(cube, iris.cube.Cube):
+        return cube
+    if isinstance(cube, iris.cube.CubeList):
+        if len(cube) == 1:
+            return cube[0]
+    raise TypeError("Must have a single cube", cube)
 
 
 def _make_plot_html_page(plots: list):
@@ -71,37 +122,6 @@ def _make_plot_html_page(plots: list):
         fp.write(html)
 
 
-def _check_single_cube(
-    cube: Union[iris.cube.Cube, iris.cube.CubeList],
-) -> iris.cube.Cube:
-    """Ensure a single cube is given.
-
-    If a CubeList of length one is given that the contained cube is returned,
-    otherwise an error is raised.
-
-    Parameters
-    ----------
-    cube: Cube | CubeList
-        The cube to check.
-
-    Returns
-    -------
-    cube: Cube
-        The checked cube.
-
-    Raises
-    ------
-    TypeError
-        If the input cube is not a Cube or CubeList of a single Cube.
-    """
-    if isinstance(cube, iris.cube.Cube):
-        return cube
-    if isinstance(cube, iris.cube.CubeList):
-        if len(cube) == 1:
-            return cube[0]
-    raise TypeError("Must have a single cube", cube)
-
-
 def _plot_and_save_contour_plot(
     cube: iris.cube.Cube, filename: str, title: str, **kwargs
 ):
@@ -115,11 +135,6 @@ def _plot_and_save_contour_plot(
         Filename of the plot to write.
     title: str
         Plot title.
-
-    Raises
-    ------
-    ValueError
-        If the cube doesn't have the right dimensions.
     """
     # Setup plot details, size, resolution, etc.
     fig = plt.figure(figsize=(15, 15), facecolor="w", edgecolor="k")
@@ -190,6 +205,46 @@ def _plot_and_save_postage_stamp_contour_plot(
     logging.info("Saved contour postage stamp plot to %s", filename)
 
 
+def _plot_and_save_line_series(
+    cube: iris.cube.Cube, coord: iris.coords.Coord, filename: str, title: str, **kwargs
+):
+    """Plot and save a 1D line series.
+
+    Parameters
+    ----------
+    cube: Cube
+        1 dimensional Cube of the data to plot on y-axis.
+    coord: Coord
+        Coordinate to plot on x-axis.
+    filename: str
+        Filename of the plot to write.
+    title: str
+        Plot title.
+    """
+    fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
+    iplt.plot(coord, cube, "o-")
+
+    # Add some labels and tweak the style.
+    ax = fig.gca()
+    ax.set(
+        xlabel=f"{coord.name()} / {coord.units}",
+        ylabel=f"{cube.name()} / {cube.units}",
+        title=title,
+    )
+    ax.ticklabel_format(axis="y", useOffset=False)
+    ax.tick_params(axis="x", labelrotation=15)
+    ax.autoscale()
+
+    # Save plot.
+    fig.savefig(filename, bbox_inches="tight", dpi=150)
+    logging.info("Saved line plot to %s", filename)
+
+
+####################
+# Public functions #
+####################
+
+
 def spatial_contour_plot(
     cube: iris.cube.Cube,
     filename: str = None,
@@ -252,7 +307,6 @@ def spatial_contour_plot(
     try:
         cube.coord(sequence_coordinate)
     except iris.exceptions.CoordinateNotFoundError as err:
-        # TODO: Should this be an error, or should it just do the right thing?
         raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
 
     # Create a plot for each value of the sequence coordinate.
@@ -274,18 +328,7 @@ def spatial_contour_plot(
         plot_index.append(plot_filename)
 
     # Add list of plots to plot metadata.
-    # NOTE: It is not currently use for anything there. (2024-02-12)
-    # TODO: Refactor this out into a common function.
-    with open("meta.json", "r+t", encoding="UTF-8") as fp:
-        fcntl.flock(fp, fcntl.LOCK_EX)
-        fp.seek(0)
-        meta = json.load(fp)
-        complete_plot_index = meta.get("plots", [])
-        complete_plot_index = complete_plot_index + plot_index
-        meta["plots"] = complete_plot_index
-        fp.seek(0)
-        fp.truncate()
-        json.dump(meta, fp)
+    complete_plot_index = _append_to_plot_index(plot_index)
 
     # Make a page to display the plots.
     _make_plot_html_page(complete_plot_index)
@@ -293,6 +336,7 @@ def spatial_contour_plot(
     return cube
 
 
+# Deprecated
 def postage_stamp_contour_plot(
     cube: iris.cube.Cube,
     filename: str = None,
@@ -345,4 +389,71 @@ def postage_stamp_contour_plot(
 
     _plot_and_save_postage_stamp_contour_plot(cube, filename, coordinate)
     _make_plot_html_page([filename])
+    return cube
+
+
+# TODO: Expand function to handle ensemble data.
+# line_coordinate: str, optional
+#     Coordinate about which to plot multiple lines. Defaults to
+#     ``"realization"``.
+def plot_line_series(
+    cube: iris.cube.Cube,
+    filename: str = None,
+    series_coordinate: str = "time",
+    # line_coordinate: str = "realization",
+    **kwargs,
+) -> iris.cube.Cube:
+    """Plot a line plot for the specified coordinate.
+
+    The cube must be 1D.
+
+    Parameters
+    ----------
+    cube: Cube
+        Iris cube of the data to plot. It should have a single dimension.
+    filename: str, optional
+        Name of the plot to write, used as a prefix for plot sequences. Defaults
+        to the recipe name.
+    series_coordinate: str, optional
+        Coordinate about which to make a series. Defaults to ``"time"``. This
+        coordinate must exist in the cube.
+
+    Returns
+    -------
+    Cube
+        The original cube (so further operations can be applied).
+
+    Raises
+    ------
+    ValueError
+        If the cube doesn't have the right dimensions.
+    TypeError
+        If the cube isn't a single cube.
+    """
+    # Check cube is right shape.
+    cube = _check_single_cube(cube)
+    try:
+        coord = cube.coord(series_coordinate)
+    except iris.exceptions.CoordinateNotFoundError as err:
+        raise ValueError(f"Cube must have a {series_coordinate} coordinate.") from err
+    if cube.ndim > 1:
+        raise ValueError("Cube must be 1D.")
+
+    # Ensure we have a name for the plot file.
+    title = get_recipe_metadata().get("title", "Untitled")
+    if filename is None:
+        filename = slugify(title)
+
+    # Add file extension.
+    plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
+
+    # Do the actual plotting.
+    _plot_and_save_line_series(cube, coord, plot_filename, title)
+
+    # Add list of plots to plot metadata.
+    plot_index = _append_to_plot_index([plot_filename])
+
+    # Make a page to display the plots.
+    _make_plot_html_page(plot_index)
+
     return cube

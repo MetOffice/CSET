@@ -1,7 +1,8 @@
 category: Quick Look
-title: Surface $VARNAME
-description: Extracts and plots the surface $VARNAME from a file.
+title: Domain mean surface $VARNAME time series
+description: Plots a time series of the domain mean surface $VARNAME.
 
+# Pre-processing steps.
 steps:
   - operator: read.read_cube
     constraint:
@@ -19,15 +20,23 @@ steps:
         operator: constraints.generate_time_constraint
         time_start: $VALIDITY_TIME
 
-  - operator: write.write_cube_to_nc
-    filename: intermediate/surface_field
+  - operator: collapse.collapse
+    coordinate: [grid_latitude, grid_longitude]
+    method: MEAN
 
+  # Save domain meaned variable to a file per validity time.
+  - operator: write.write_cube_to_nc
+    filename: intermediate/domain_mean
+
+# Collation steps.
+# Reads in intermediate cube and plots it.
 post-steps:
   - operator: read.read_cube
     filename_pattern: intermediate/*.nc
 
-  - operator: plot.spatial_contour_plot
-    sequence_coordinate: time
-
+  # Make a single NetCDF with all the data inside it.
   - operator: write.write_cube_to_nc
     overwrite: True
+
+  # Plot the data.
+  - operator: plot.plot_line_series
