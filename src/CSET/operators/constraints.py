@@ -102,13 +102,13 @@ def generate_pressure_level_constraint(
     ---------
     pressure_levels: int|list
         List of integer pressure levels in hPa either as single integer
-        for a single level or a list of multiple integers. If pressure_level is
-        an integer it is converted into a list with single integer.
+        for a single level or a list of multiple integers.
 
     Returns
     -------
     pressure_constraint: iris.Constraint
     """
+    # If pressure_level is an integer it is converted into a list.
     if isinstance(pressure_levels, int):
         pressure_levels = [pressure_levels]
     if len(pressure_levels) == 0:

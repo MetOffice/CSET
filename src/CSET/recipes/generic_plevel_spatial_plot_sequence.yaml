@@ -1,7 +1,7 @@
 category: Quick Look
 title: $VARNAME $PLEVEL Level Spatial Plot
 description: |
-  Extracts ands plots the $PLEVELNAME from a file
+  Extracts ands plots the $PLEVELNAME from a file at pressure level $PLEVEL
 
 steps:
   - operator: read.read_cubes
