@@ -1,20 +1,18 @@
 category: Quick Look
 title: $VARNAME $PLEVEL Level Spatial Plot
 description: |
-  Extracts ands plots the $PLEVELNAME from a file at pressure level $PLEVEL
+  Extracts ands plots the $PLEVELNAME from a file at pressure level $PLEVEL.
 
 steps:
   - operator: read.read_cubes
     constraint:
-      operator: constraints.generate_var_constraint
-      varname: 'air_temperature'
-
-  - operator: filters.filter_multiple_cubes
-    select_single_cube:
       operator: constraints.combine_constraints
-      varname_constraint:
+      variable_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
+      validity_time_constraint:
+        operator: constraints.generate_time_constraint
+        time_start: $VALIDITY_TIME
       pressure_level_constraint:
         operator: constraints.generate_pressure_level_constraint
         pressure_levels: $PLEVEL
@@ -23,3 +21,13 @@ steps:
 
   - operator: plot.spatial_contour_plot
     sequence_coordinate: time
+
+  - operator: write.write_cube_to_nc
+    filename: intermediate/pressure_level_field
+
+post-steps:
+  - operator: read.read_cube
+    filename_pattern: intermediate/*.nc
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

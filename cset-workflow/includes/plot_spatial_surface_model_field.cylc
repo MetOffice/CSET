@@ -1,18 +1,16 @@
-[scheduling]
-    [[graph]]
-    P1 = """
+{% if PLOT_SPATIAL_SURFACE_MODEL_FIELD %}
 {% for model_field in SURFACE_MODEL_FIELDS %}
-    recipe_start => generic_spatial_plot_time_series_{{model_field}} => recipe_finish
-{% endfor %}
-    """
-
 [runtime]
-{% for model_field in SURFACE_MODEL_FIELDS %}
     [[generic_spatial_plot_time_series_{{model_field}}]]
-    script = rose task-run -v --app-key=run_cset_recipe
-    execution time limit = PT15M
+    inherit = PROCESS_DATA
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_surface_spatial_plot_sequence.yaml"
         CSET_ADDOPTS = "--VARNAME={{model_field}}"
 
+    [[generic_spatial_plot_time_series_collation_{{model_field}}]]
+    inherit = COLLATE_PROCESSED_DATA
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_surface_spatial_plot_sequence.yaml"
+        CSET_ADDOPTS = "--VARNAME={{model_field}}"
 {% endfor %}
+{% endif %}

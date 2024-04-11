@@ -15,8 +15,19 @@ steps:
       pressure_level_constraint:
         operator: constraints.generate_pressure_level_constraint
         pressure_levels: []
+      validity_time_constraint:
+        operator: constraints.generate_time_constraint
+        time_start: $VALIDITY_TIME
 
   - operator: write.write_cube_to_nc
+    filename: intermediate/surface_field
+
+post-steps:
+  - operator: read.read_cube
+    filename_pattern: intermediate/*.nc
 
   - operator: plot.spatial_contour_plot
     sequence_coordinate: time
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

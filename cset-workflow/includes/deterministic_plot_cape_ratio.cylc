@@ -1,3 +1,4 @@
+{% if DETERMINISTIC_PLOT_CAPE_RATIO %}
 [scheduling]
     [[graph]]
     P1 = """
@@ -11,3 +12,4 @@
         [[[environment]]]
         CSET_RECIPE_NAME = "CAPE_ratio_plot.yaml"
         CSET_ADDOPTS = "--TIME={{CAPE_RATIO_TIME}}"
+{% endif %}

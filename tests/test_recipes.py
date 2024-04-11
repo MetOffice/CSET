@@ -29,11 +29,11 @@ def test_recipe_files_in_tree():
 
 def test_unpack(tmp_path: Path):
     """Unpack recipes."""
-    CSET.recipes.unpack_recipes(tmp_path, "extract_instant_air_temp")
+    CSET.recipes.unpack_recipe(tmp_path, "extract_instant_air_temp.yaml")
     assert (tmp_path / "extract_instant_air_temp.yaml").is_file()
     # Unpack everything and check a warning is produced when files collide.
     with pytest.warns():
-        CSET.recipes.unpack_recipes(tmp_path)
+        CSET.recipes.unpack_recipe(tmp_path, "extract_instant_air_temp.yaml")
 
 
 def test_unpack_recipes_exception_collision(tmp_path: Path):
@@ -41,14 +41,33 @@ def test_unpack_recipes_exception_collision(tmp_path: Path):
     file_path = tmp_path / "regular_file"
     file_path.touch()
     with pytest.raises(FileExistsError):
-        CSET.recipes.unpack_recipes(file_path)
+        CSET.recipes.unpack_recipe(file_path, "extract_instant_air_temp.yaml")
 
 
 def test_unpack_recipes_exception_permission():
     """Insufficient permission to create output directory.
 
-    Will always fail if tests are run as root, but no one should be doing that,
-    right?
+    Will fail if tests are run as root, but no one should do that, right?
     """
     with pytest.raises(OSError):
-        CSET.recipes.unpack_recipes(Path("/usr/bin/cset"))
+        CSET.recipes.unpack_recipe(
+            Path("/usr/bin/cset"), "extract_instant_air_temp.yaml"
+        )
+
+
+def test_get_recipe_file():
+    """Get a recipe file from a specific location."""
+    file = CSET.recipes._get_recipe_file("noop_recipe.yaml", Path("tests/test_data"))
+    assert file.is_file()
+
+
+def test_get_recipe_file_missing():
+    """Exception raised when recipe file not in location."""
+    with pytest.raises(FileNotFoundError):
+        CSET.recipes._get_recipe_file("non-existent", Path("tests/test_data"))
+
+
+def test_get_recipe_file_in_package():
+    """Get a recipe file from a the default location inside the package."""
+    file = CSET.recipes._get_recipe_file("CAPE_ratio_plot.yaml")
+    assert file.is_file()
