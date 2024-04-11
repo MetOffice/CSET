@@ -15,7 +15,6 @@
 """Operators for reading various types of files from disk."""
 
 import logging
-from collections.abc import Iterable
 from pathlib import Path
 
 import iris
@@ -23,12 +22,7 @@ import iris.coords
 import iris.cube
 import numpy as np
 
-
-def _iter_maybe(thing) -> Iterable:
-    """Make thing into an Iterable."""
-    if isinstance(thing, Iterable):
-        return thing
-    return (thing,)
+from CSET._common import iter_maybe
 
 
 def read_cube(
@@ -135,7 +129,7 @@ def read_cubes(
         loadpath = sorted(loadpath.glob(filename_pattern))
 
     logging.info(
-        "Loading files:\n%s", "\n".join(str(path) for path in _iter_maybe(loadpath))
+        "Loading files:\n%s", "\n".join(str(path) for path in iter_maybe(loadpath))
     )
 
     if constraint is not None:
