@@ -1,5 +1,5 @@
-Getting Started as a Code User 
-=========================
+Getting Started
+===============
 
 This section contains tutorials suitable for getting started with CSET. By
 following them you should learn the basics of using CSET. It is recommended that
