@@ -1,0 +1,18 @@
+{% if PLOT_SPATIAL_PRESSURE_LEVEL_MODEL_FIELD %}
+[runtime]
+{% for model_field in PRESSURE_LEVEL_MODEL_FIELDS %}
+{% for plevel in PRESSURE_LEVELS %}
+    [[process_generic_plevel_spatial_plot_sequence_{{model_field}}_{{plevel}}]]
+    inherit = PROCESS_DATA
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_plevel_spatial_plot_sequence.yaml"
+        CSET_ADDOPTS = "--VARNAME={{model_field}} --PLEVEL={{plevel}}"
+
+    [[collate_generic_plevel_spatial_plot_sequence_{{model_field}}_{{plevel}}]]
+    inherit = COLLATE_PROCESSED_DATA
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_plevel_spatial_plot_sequence.yaml"
+        CSET_ADDOPTS = "--VARNAME={{model_field}} --PLEVEL={{plevel}}"
+{% endfor %}
+{% endfor %}
+{% endif %}
