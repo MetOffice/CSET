@@ -16,7 +16,6 @@
 
 import fcntl
 import importlib.resources
-import itertools
 import json
 import logging
 import math
@@ -139,11 +138,12 @@ def _plot_and_save_contour_plot(
     """
     # Setup plot details, size, resolution, etc.
     fig = plt.figure(figsize=(15, 15), facecolor="w", edgecolor="k")
-    axes = fig.subplots()
 
     # Filled contour plot of the field.
     cmap = mpl.colormaps["viridis"]
-    iplt.contourf(cube, cmap=cmap, axes=axes)
+    contours = iplt.contourf(cube, cmap=cmap)
+    # Using pyplot interface here as we need iris to generate a cartopy GeoAxes.
+    axes = plt.gca()
 
     # Add coastlines.
     axes.coastlines(resolution="10m")
@@ -152,7 +152,7 @@ def _plot_and_save_contour_plot(
     axes.set_title(title, fontsize=16)
 
     # Add colour bar.
-    cbar = fig.colorbar()
+    cbar = fig.colorbar(contours)
     cbar.set_label(label=f"{cube.name()} ({cube.units})", size=20)
 
     # Save plot.
@@ -188,13 +188,15 @@ def _plot_and_save_postage_stamp_contour_plot(
     grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
 
     fig = plt.figure(figsize=(10, 10))
-    # Make a subplot for each member. This returns a 2D array, which we turn
-    # into a 1D iterable.
-    axes = itertools.chain.from_iterable(
-        fig.subplots(grid_size, grid_size, squeeze=False)
-    )
-    for ax, member in zip(axes, cube.slices_over(stamp_coordinate)):
-        plot = iplt.contourf(member, axes=ax)
+    # Make a subplot for each member.
+    for member, subplot in zip(
+        cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1)
+    ):
+        # Implicit interface is much easier here, due to needing to have the
+        # cartopy GeoAxes generated.
+        plt.subplot(grid_size, grid_size, subplot)
+        plot = iplt.contourf(member)
+        ax = plt.gca()
         ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
         ax.set_axis_off()
         ax.coastlines()
@@ -229,8 +231,8 @@ def _plot_and_save_line_series(
         Plot title.
     """
     fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
-    ax = fig.subplots()
-    iplt.plot(coord, cube, "o-", axes=ax)
+    iplt.plot(coord, cube, "o-")
+    ax = plt.gca()
 
     # Add some labels and tweak the style.
     ax.set(
