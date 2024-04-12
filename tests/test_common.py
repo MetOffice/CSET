@@ -88,6 +88,12 @@ def test_parse_recipe_exception_no_parallel():
         common.parse_recipe("parallel: []")
 
 
+def test_parse_recipe_exception_parallel_not_sequence():
+    """Exception for recipe with parallel containing an atom."""
+    with pytest.raises(ValueError):
+        common.parse_recipe("parallel: 7")
+
+
 def test_parse_recipe_deprecated_steps():
     """Deprecation warning when falling back to steps key."""
     with pytest.warns(DeprecationWarning):
