@@ -22,14 +22,14 @@ URL = https://metoffice.github.io/CSET
 
     # Only runs on the final cycle.
     R1/$ = """
-    process_finish => COLLATE_PROCESSED_DATA:succeed-all =>
+    process_finish => COLLATE:succeed-all =>
     finish_website => send_email => housekeeping_full
     """
 
     # Runs every cycle to process the data in parallel.
     {{CSET_CYCLE_PERIOD}} = """
     install_website_skeleton[^] & install_local_cset[^] =>
-    FETCH_DATA:succeed-all => PROCESS_DATA:succeed-all =>
+    FETCH_DATA:succeed-all => PARALLEL:succeed-all =>
     process_finish => housekeeping_raw
 
     # Intercycle dependence with this task ensures the collate step waits for
@@ -40,8 +40,8 @@ URL = https://metoffice.github.io/CSET
     {% if CSET_INCREMENTAL_OUTPUT %}
     # Runs every so often to update output plots during runtime.
     {{CSET_INCREMENTAL_OUTPUT_PERIOD}} = """
-    COLLATE_PROCESSED_DATA[-{{CSET_INCREMENTAL_OUTPUT_PERIOD}}]:finish-all &
-    process_finish => COLLATE_PROCESSED_DATA
+    COLLATE[-{{CSET_INCREMENTAL_OUTPUT_PERIOD}}]:finish-all &
+    process_finish => COLLATE
     """
     {% endif %}
 
@@ -74,12 +74,12 @@ URL = https://metoffice.github.io/CSET
         LOGLEVEL = {{LOGLEVEL}}
         WEB_DIR = {{WEB_DIR}}
 
-    [[PROCESS_DATA]]
+    [[PARALLEL]]
     script = rose task-run -v --app-key=run_cset_recipe
     [[[environment]]]
         CSET_BAKE_MODE = parallel
 
-    [[COLLATE_PROCESSED_DATA]]
+    [[COLLATE]]
     script = rose task-run -v --app-key=run_cset_recipe
     [[[environment]]]
         CSET_BAKE_MODE = collate
