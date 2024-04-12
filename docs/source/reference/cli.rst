@@ -16,15 +16,15 @@ page.
     usage: cset bake [-h] [-i INPUT_DIR] -o OUTPUT_DIR -r RECIPE [--pre-only | --post-only]
 
     options:
-    -h, --help            show this help message and exit
+    -h, --help              show this help message and exit
     -i INPUT_DIR, --input-dir INPUT_DIR
                             directory containing input data
     -o OUTPUT_DIR, --output-dir OUTPUT_DIR
                             directory to write output into
     -r RECIPE, --recipe RECIPE
                             recipe file to read
-    --pre-only            only run pre-processing steps
-    --post-only           only run post-processing steps
+    --parallel-only         only run parallel steps
+    --collate-only          only run collation steps
 
 .. _cset-cookbook-command:
 

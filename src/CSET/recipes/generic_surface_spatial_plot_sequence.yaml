@@ -2,7 +2,7 @@ category: Quick Look
 title: Surface $VARNAME
 description: Extracts and plots the surface $VARNAME from a file.
 
-steps:
+parallel:
   - operator: read.read_cube
     constraint:
       operator: constraints.combine_constraints

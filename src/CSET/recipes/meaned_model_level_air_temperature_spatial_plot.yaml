@@ -3,7 +3,7 @@ description: |
   Extracts out the instantaneous model level air temperature from a file and writes it
   to a new one.
 
-steps:
+parallel:
   - operator: read.read_cubes
     constraint:
       operator: constraints.generate_var_constraint

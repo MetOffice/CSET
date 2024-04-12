@@ -12,7 +12,7 @@ commented example recipe:
       Extended description that can
       go across multiple lines.
 
-    steps:
+    parallel:
       # Specify the operator to run in each step.
       - operator: read.read_cubes
 
@@ -46,15 +46,15 @@ The title and description keys provide a human readable description of what the
 recipe does. The title is also used to derive the ID of the running recipe, used
 when running the recipe in a workflow.
 
-The steps keys specifies a list of processing steps. The steps are run from top
-to bottom, with each step specifying an operator to run, and optionally any
-additional inputs to that operator. A step is denoted by a ``-`` under the
-``steps:`` key. The operators are specified on the operator key. Its value
-should be a string of the form ``module.function``. For additional inputs the key
-should be the name of the argument.
+The ``parallel`` and ``collate`` keys specify lists of processing steps. The
+steps are run from top to bottom, with each step specifying an operator to run,
+and optionally any additional inputs to that operator. A parallel step is
+denoted by a ``-`` under the ``parallel:`` key. The operators are specified on
+the operator key. Its value should be a string of the form ``module.function``.
+For additional inputs the key should be the name of the argument.
 
 The ``collate:`` key is used for collating together the output of the
-processing steps to produce the final output. This allows for the expensive
+parallel steps to produce the final output. This allows for the expensive
 processing to be parallelised over many compute nodes, with just the final
 visualisation of the data done in a single job to ensure it has all of the data.
 

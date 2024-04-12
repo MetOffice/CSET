@@ -1,7 +1,7 @@
 title: Noop
 description: A recipe that does nothing. Only used for testing.
 
-steps:
+parallel:
   - operator: misc.noop
     test_argument: Banana
     dict_argument: {"key": "value"}

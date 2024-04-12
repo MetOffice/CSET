@@ -2,7 +2,7 @@ title: CAPE ratio plot
 description: |
   Extracts data required for, and calculates the CAPE ratio diagnostic, plotting on a map.
 
-steps:
+parallel:
   - operator: read.read_cubes
 
   - operator: convection.cape_ratio

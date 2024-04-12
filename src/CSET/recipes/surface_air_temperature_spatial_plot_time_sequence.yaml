@@ -2,7 +2,7 @@ title: Surface Air Temperature Spatial Plot Time Sequence
 description: |
   Extracts and plots the 1.5m air temperature from a file.
 
-steps:
+parallel:
   - operator: read.read_cubes
     constraint:
       operator: constraints.generate_stash_constraint

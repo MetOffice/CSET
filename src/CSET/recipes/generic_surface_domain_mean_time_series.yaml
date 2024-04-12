@@ -2,8 +2,8 @@ category: Quick Look
 title: Domain mean surface $VARNAME time series
 description: Plots a time series of the domain mean surface $VARNAME.
 
-# Pre-processing steps.
-steps:
+# Parallel steps.
+parallel:
   - operator: read.read_cube
     constraint:
       operator: constraints.combine_constraints

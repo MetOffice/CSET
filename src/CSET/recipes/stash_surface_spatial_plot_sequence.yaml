@@ -2,7 +2,7 @@ category: Quick Look
 title: Spatial plot of $STASH
 description: Extracts and plots STASH $STASH from a file.
 
-steps:
+parallel:
   - operator: read.read_cube
     constraint:
       operator: constraints.combine_constraints

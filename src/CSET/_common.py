@@ -18,6 +18,7 @@ import io
 import json
 import logging
 import re
+import warnings
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Union
@@ -55,15 +56,16 @@ def parse_recipe(recipe_yaml: Union[Path, str], variables: dict = None):
 
     Examples
     --------
-    >>> CSET._recipe_parsing.parse_recipe(Path("myrecipe.yaml"))
-    {'steps': [{'operator': 'misc.noop'}]}
+    >>> CSET._common.parse_recipe(Path("myrecipe.yaml"))
+    {'parallel': [{'operator': 'misc.noop'}]}
     """
-    # Check the type provided explicitly.
+    # Ensure recipe_yaml is something the YAML parser can read.
     if isinstance(recipe_yaml, str):
         recipe_yaml = io.StringIO(recipe_yaml)
     elif not isinstance(recipe_yaml, Path):
         raise TypeError("recipe_yaml must be a str or Path.")
 
+    # Parse the recipe YAML.
     with ruamel.yaml.YAML(typ="safe", pure=True) as yaml:
         try:
             recipe = yaml.load(recipe_yaml)
@@ -72,27 +74,55 @@ def parse_recipe(recipe_yaml: Union[Path, str], variables: dict = None):
         except ruamel.yaml.error.YAMLStreamError as err:
             raise TypeError("Must provide a file object (with a read method)") from err
 
-    # Checking that the recipe actually has some steps, and providing helpful
-    # error messages otherwise.
     logging.debug(recipe)
-    try:
-        if len(recipe["steps"]) < 1:
-            raise ValueError("Recipe must have at least 1 step.")
-    except KeyError as err:
-        raise ValueError("Invalid Recipe.") from err
-    except TypeError as err:
-        if recipe is None:
-            raise ValueError("Recipe must have at least 1 step.") from err
-        if not isinstance(recipe, dict):
-            raise ValueError("Recipe must either be YAML, or a Path.") from err
-        # This should never be reached; it's a bug if it is.
-        raise err  # pragma: no cover
+    check_recipe_has_steps(recipe)
 
     if variables is not None:
         logging.debug("Recipe variables: %s", variables)
         recipe = template_variables(recipe, variables)
 
     return recipe
+
+
+def check_recipe_has_steps(recipe: dict):
+    """Check a recipe has the minimum required steps.
+
+    Checking that the recipe actually has some steps, and providing helpful
+    error messages otherwise. We must have at least a parallel step, as that
+    reads the raw data.
+
+    Parameters
+    ----------
+    recipe: dict
+        The recipe as a python dictionary.
+
+    Raises
+    ------
+    ValueError
+        If the recipe is invalid. E.g. invalid YAML, missing any steps, etc.
+    TypeError
+        If recipe isn't a dict.
+    KeyError
+        If needed recipe variables are not supplied.
+    """
+    parallel_steps_key = "parallel"
+    if not isinstance(recipe, dict):
+        raise TypeError("Recipe must contain a mapping.")
+    if "parallel" not in recipe:
+        if "steps" in recipe:
+            warnings.warn(
+                "'steps' recipe key is deprecated, use 'parallel' instead.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+            parallel_steps_key = "steps"
+        else:
+            raise ValueError("Recipe must contain a 'parallel' key.")
+    try:
+        if len(recipe[parallel_steps_key]) < 1:
+            raise ValueError("Recipe must have at least 1 parallel step.")
+    except TypeError as err:
+        raise ValueError("'parallel' key must contain a sequence of steps.") from err
 
 
 def slugify(s: str) -> str:

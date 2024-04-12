@@ -6,7 +6,7 @@ section: Grid Stat
 major_cat: Major Category 1
 minor_cat: Minor Category 1
 
-steps:
+parallel:
   - operator: read.read_cubes
     constraint:
       operator: constraints.generate_stash_constraint
