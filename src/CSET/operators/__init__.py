@@ -194,7 +194,7 @@ def execute_recipe_parallel(
     try:
         steps = recipe["parallel"]
     except KeyError:
-        if "post-steps" in recipe:
+        if "steps" in recipe:
             warnings.warn(
                 "'steps' recipe key is deprecated. Use 'parallel' instead.",
                 DeprecationWarning,
