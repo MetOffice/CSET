@@ -191,7 +191,7 @@ def _bake_command(args, unparsed_args):
 
     recipe_variables = parse_variable_options(unparsed_args)
     if not args.post_only:
-        # Input dir is needed for pre-steps, but not post-steps.
+        # Input dir is needed for pre-steps, but not collate.
         if not args.input_dir:
             raise ArgumentError("the following arguments are required: -i/--input-dir")
         execute_recipe_steps(

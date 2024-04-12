@@ -32,7 +32,7 @@ commented example recipe:
         # that needs collating.
 
     # Steps to collate processed data into output.
-    post-steps:
+    collate:
       - operator: read.read_cube
         filename: intermediate/*.nc
 
@@ -53,7 +53,7 @@ additional inputs to that operator. A step is denoted by a ``-`` under the
 should be a string of the form ``module.function``. For additional inputs the key
 should be the name of the argument.
 
-The ``post-steps:`` key is used for collating together the output of the
+The ``collate:`` key is used for collating together the output of the
 processing steps to produce the final output. This allows for the expensive
 processing to be parallelised over many compute nodes, with just the final
 visualisation of the data done in a single job to ensure it has all of the data.

@@ -47,7 +47,7 @@ def test_parse_recipe_path():
                 "substep": {"operator": "constraints.combine_constraints"},
             }
         ],
-        "post-steps": [{"operator": "misc.noop"}],
+        "collate": [{"operator": "misc.noop"}],
     }
     assert parsed == expected
 

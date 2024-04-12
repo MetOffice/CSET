@@ -73,7 +73,7 @@ def test_execute_recipe_steps_invalid_output_dir(tmp_path: Path):
 
 
 def test_execute_recipe_post_steps(tmp_path):
-    """Execute post-steps from a recipe."""
+    """Execute collate from a recipe."""
     output_dir = tmp_path
     recipe_file = Path("tests/test_data/noop_recipe.yaml")
     CSET.operators.execute_recipe_post_steps(recipe_file, output_dir)

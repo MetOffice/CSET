@@ -68,7 +68,7 @@ def test_bake_pre_only(tmp_path):
 
 
 def test_bake_post_only(tmp_path):
-    """Run recipe post-steps from the command line."""
+    """Run recipe collate from the command line."""
     subprocess.run(
         [
             "cset",

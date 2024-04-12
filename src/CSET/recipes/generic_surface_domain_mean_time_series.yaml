@@ -30,7 +30,7 @@ steps:
 
 # Collation steps.
 # Reads in intermediate cube and plots it.
-post-steps:
+collate:
   - operator: read.read_cube
     filename_pattern: intermediate/*.nc
 

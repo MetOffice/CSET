@@ -86,7 +86,7 @@ def _write_metadata(recipe: dict):
     metadata = recipe.copy()
     # Remove steps, as not needed, and might contain non-serialisable types.
     metadata.pop("steps", None)
-    metadata.pop("post-steps", None)
+    metadata.pop("collate", None)
     with open("meta.json", "wt", encoding="UTF-8") as fp:
         json.dump(metadata, fp)
     os.sync()
@@ -216,8 +216,8 @@ def execute_recipe_post_steps(
         recipe_variables = {}
     output_directory = Path(output_directory).absolute()
     recipe = parse_recipe(recipe_yaml, recipe_variables)
-    # If post-steps doesn't exist treat it as having no steps.
-    steps = recipe.get("post-steps", tuple())
+    # If collate doesn't exist treat it as having no steps.
+    steps = recipe.get("collate", tuple())
     assert output_directory.is_dir()
     _run_steps(recipe, steps, output_directory, output_directory)
 

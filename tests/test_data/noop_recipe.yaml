@@ -8,5 +8,5 @@ steps:
     substep:
       operator: constraints.combine_constraints
 
-post-steps:
+collate:
   - operator: misc.noop

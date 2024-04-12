@@ -25,7 +25,7 @@ steps:
   - operator: write.write_cube_to_nc
     filename: intermediate/pressure_level_field
 
-post-steps:
+collate:
   - operator: read.read_cube
     filename_pattern: intermediate/*.nc
 
