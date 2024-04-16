@@ -170,7 +170,7 @@ def parallel():
 def collate():
     """Collate processed data together and produce output plot.
 
-    If intermediate directory doesn't exists then we are running a simple
+    If the intermediate directory doesn't exist then we are running a simple
     non-parallelised recipe, and we need to run cset bake to process the data
     and produce any plots. So we actually get some usage out of it, we are using
     the non-restricted form of bake, so it runs both the processing and
