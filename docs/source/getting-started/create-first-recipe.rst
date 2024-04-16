@@ -74,12 +74,12 @@ provided they are all indented with at least two spaces.
 Recipe Steps
 ------------
 
-Just as in baking you would follow a recipe step-by-step, so does CSET. The
-steps of the recipe are contained within one of two keys. The ``parallel`` key
-for independent tasks that process the raw data, and the ``collate`` key for
-sequential tasks that bring together the processed data into the final output.
-Each block prefixed with a ``-`` (which makes a list in YAML) is an individual
-step, and they are run in order from top to bottom.
+When baking you follow a recipe step-by-step, CSET does the same with its
+recipes. The steps of the recipe are contained within one of two keys. The
+``parallel`` key for independent tasks that process the raw data, and the
+``collate`` key for sequential tasks that bring together the processed data into
+the final output. Each block prefixed with a ``-`` (which makes a list in YAML)
+is an individual step, and they are run in order from top to bottom.
 
 Each step has an ``operator`` key, which specifies which operator to use. A
 `complete list of operators is in the documentation`_, but for this tutorial we
