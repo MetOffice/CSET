@@ -53,7 +53,8 @@ def filter_cubes(
         return filtered_cubes[0]
     else:
         raise ValueError(
-            f"Constraint doesn't produce single cube. {constraint}\n{filtered_cubes}"
+            f"Constraint doesn't produce single cube. Constraint: {constraint}"
+            f"\nSource: {cube}\nResult: {filtered_cubes}"
         )
 
 
@@ -88,5 +89,7 @@ def filter_multiple_cubes(
     try:
         filtered_cubes = cubes.extract_cubes(kwargs.values())
     except iris.exceptions.ConstraintMismatchError as err:
-        raise ValueError() from err
+        raise ValueError(
+            "The constraints don't produce a single cube per constraint."
+        ) from err
     return filtered_cubes

@@ -18,8 +18,10 @@ steps:
         time_start: $VALIDITY_TIME
 
   # Remove source stash attribute, as it can be encoded in different orders.
+  # Remove uuid and timeStamp, as these are only relevant to output files, not
+  # the data in them.
   - operator: misc.remove_attribute
-    attribute: um_stash_source
+    attribute: ["um_stash_source", "uuid", "timeStamp"]
 
   # Use a filter to merge the time slices into a single cube.
   - operator: filters.filter_cubes

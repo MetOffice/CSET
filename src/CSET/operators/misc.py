@@ -14,6 +14,7 @@
 
 """Miscellaneous operators."""
 
+from collections.abc import Iterable
 from typing import Union
 
 from iris.cube import Cube, CubeList
@@ -40,7 +41,7 @@ def noop(x, **kwargs):
 
 
 def remove_attribute(
-    cubes: Union[Cube, CubeList], attribute: str, **kwargs
+    cubes: Union[Cube, CubeList], attribute: Union[str, Iterable], **kwargs
 ) -> CubeList:
     """Remove a cube attribute.
 
@@ -50,8 +51,8 @@ def remove_attribute(
     ---------
     cubes: Cube | CubeList
         One or more cubes to remove the attribute from.
-    attribute: str
-        Name of attribute to remove.
+    attribute: str | Iterable
+        Name of attribute (or Iterable of names) to remove.
 
     Returns
     -------
@@ -61,6 +62,8 @@ def remove_attribute(
     # Ensure cubes is a CubeList.
     if not isinstance(cubes, CubeList):
         cubes = CubeList(iter_maybe(cubes))
+
     for cube in cubes:
-        cube.attributes.pop(attribute, None)
+        for attr in iter_maybe(attribute):
+            cube.attributes.pop(attr, None)
     return cubes

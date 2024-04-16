@@ -300,7 +300,7 @@ def render_file(template_path: str, /, **variables) -> str:
 
 
 def iter_maybe(thing) -> Iterable:
-    """Make thing into an Iterable."""
-    if isinstance(thing, Iterable):
+    """Ensure thing is Iterable. Strings count as atoms."""
+    if isinstance(thing, Iterable) and not isinstance(thing, str):
         return thing
     return (thing,)
