@@ -18,6 +18,7 @@ import io
 import json
 import logging
 import re
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Union
 
@@ -296,3 +297,10 @@ def render_file(template_path: str, /, **variables) -> str:
     with open(template_path, "rt", encoding="UTF-8") as fp:
         template = fp.read()
     return render(template, **variables)
+
+
+def iter_maybe(thing) -> Iterable:
+    """Ensure thing is Iterable. Strings count as atoms."""
+    if isinstance(thing, Iterable) and not isinstance(thing, str):
+        return thing
+    return (thing,)

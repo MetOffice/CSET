@@ -14,6 +14,13 @@
 
 """Miscellaneous operators."""
 
+from collections.abc import Iterable
+from typing import Union
+
+from iris.cube import Cube, CubeList
+
+from CSET._common import iter_maybe
+
 
 def noop(x, **kwargs):
     """Return its input without doing anything to it.
@@ -31,3 +38,32 @@ def noop(x, **kwargs):
         The input that was given.
     """
     return x
+
+
+def remove_attribute(
+    cubes: Union[Cube, CubeList], attribute: Union[str, Iterable], **kwargs
+) -> CubeList:
+    """Remove a cube attribute.
+
+    If the attribute is not on the cube, the cube is passed through unchanged.
+
+    Arguments
+    ---------
+    cubes: Cube | CubeList
+        One or more cubes to remove the attribute from.
+    attribute: str | Iterable
+        Name of attribute (or Iterable of names) to remove.
+
+    Returns
+    -------
+    cubes: CubeList
+        CubeList of cube(s) with the attribute removed.
+    """
+    # Ensure cubes is a CubeList.
+    if not isinstance(cubes, CubeList):
+        cubes = CubeList(iter_maybe(cubes))
+
+    for cube in cubes:
+        for attr in iter_maybe(attribute):
+            cube.attributes.pop(attr, None)
+    return cubes

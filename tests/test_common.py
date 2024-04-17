@@ -14,6 +14,7 @@
 
 """Tests for common functionality across CSET."""
 
+from collections.abc import Iterable
 from pathlib import Path
 
 import pytest
@@ -225,3 +226,31 @@ def test_render_file():
     actual = common.render_file("tests/test_data/template_file.html", greeting="Hello")
     expected = "<p>Hello World!</p>\n"
     assert actual == expected
+
+
+def test_iter_maybe_iterable():
+    """Pass an iterable unchanged though iter_maybe."""
+    actual = [1, 2, 3]
+    expected = common.iter_maybe(actual)
+    # The same object is returned.
+    assert expected is actual
+
+
+def test_iter_maybe_atom():
+    """Convert an atom into an iterable."""
+    atom = 7
+    created_iterable = common.iter_maybe(atom)
+    assert isinstance(created_iterable, Iterable)
+    for value in created_iterable:
+        # The same object is inside the iterable.
+        assert value is atom
+
+
+def test_iter_maybe_string():
+    """String is wrapped inside of an iterable instead being a char iterator."""
+    atom = "A string"
+    created_iterable = common.iter_maybe(atom)
+    assert isinstance(created_iterable, Iterable)
+    for value in created_iterable:
+        # The same object is inside the iterable.
+        assert value is atom
