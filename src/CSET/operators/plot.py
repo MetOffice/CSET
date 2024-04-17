@@ -139,31 +139,33 @@ def _plot_and_save_contour_plot(
     # Setup plot details, size, resolution, etc.
     fig = plt.figure(figsize=(15, 15), facecolor="w", edgecolor="k")
 
-    cmap = mpl.colormaps["viridis"]
-
     # Filled contour plot of the field.
-    iplt.contourf(cube, cmap=cmap)
-    axes = fig.gca()
+    cmap = mpl.colormaps["viridis"]
+    contours = iplt.contourf(cube, cmap=cmap)
+    # Using pyplot interface here as we need iris to generate a cartopy GeoAxes.
+    axes = plt.gca()
 
     # Add coastlines.
     axes.coastlines(resolution="10m")
 
     # Add title.
-    plt.title(title, fontsize=16)
+    axes.set_title(title, fontsize=16)
 
     # Add colour bar.
-    cbar = plt.colorbar()
+    cbar = fig.colorbar(contours)
     cbar.set_label(label=f"{cube.name()} ({cube.units})", size=20)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=150)
     logging.info("Saved contour plot to %s", filename)
+    plt.close(fig)
 
 
 def _plot_and_save_postage_stamp_contour_plot(
     cube: iris.cube.Cube,
     filename: str,
     stamp_coordinate: str,
+    title: str,
     **kwargs,
 ):
     """Plot postage stamp contour plots from an ensemble.
@@ -185,24 +187,31 @@ def _plot_and_save_postage_stamp_contour_plot(
     # Use the smallest square grid that will fit the members.
     grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
 
-    plt.figure(figsize=(10, 10))
+    fig = plt.figure(figsize=(10, 10))
     # Make a subplot for each member.
-    subplot = 1
-    for member in cube.slices_over(stamp_coordinate):
+    for member, subplot in zip(
+        cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1)
+    ):
+        # Implicit interface is much easier here, due to needing to have the
+        # cartopy GeoAxes generated.
         plt.subplot(grid_size, grid_size, subplot)
         plot = iplt.contourf(member)
-        plt.title(f"Member #{member.coord(stamp_coordinate).points[0]}")
-        plt.axis("off")
-        plt.gca().coastlines()
-        subplot += 1
+        ax = plt.gca()
+        ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
+        ax.set_axis_off()
+        ax.coastlines()
 
     # Put the shared colorbar in its own axes.
-    colorbar_axes = plt.gcf().add_axes([0.15, 0.07, 0.7, 0.03])
-    colorbar = plt.colorbar(plot, colorbar_axes, orientation="horizontal")
+    colorbar_axes = fig.add_axes([0.15, 0.07, 0.7, 0.03])
+    colorbar = fig.colorbar(plot, colorbar_axes, orientation="horizontal")
     colorbar.set_label(f"{cube.name()} / {cube.units}")
 
-    plt.savefig(filename, bbox_inches="tight", dpi=150)
+    # Overall figure title.
+    fig.suptitle(title)
+
+    fig.savefig(filename, bbox_inches="tight", dpi=150)
     logging.info("Saved contour postage stamp plot to %s", filename)
+    plt.close(fig)
 
 
 def _plot_and_save_line_series(
@@ -223,9 +232,9 @@ def _plot_and_save_line_series(
     """
     fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
     iplt.plot(coord, cube, "o-")
+    ax = plt.gca()
 
     # Add some labels and tweak the style.
-    ax = fig.gca()
     ax.set(
         xlabel=f"{coord.name()} / {coord.units}",
         ylabel=f"{cube.name()} / {cube.units}",
@@ -238,6 +247,7 @@ def _plot_and_save_line_series(
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=150)
     logging.info("Saved line plot to %s", filename)
+    plt.close(fig)
 
 
 ####################
@@ -387,7 +397,7 @@ def postage_stamp_contour_plot(
     except iris.exceptions.CoordinateNotFoundError as err:
         raise ValueError(f"Cube must have a {coordinate} coordinate.") from err
 
-    _plot_and_save_postage_stamp_contour_plot(cube, filename, coordinate)
+    _plot_and_save_postage_stamp_contour_plot(cube, filename, coordinate, title="")
     _make_plot_html_page([filename])
     return cube
 
