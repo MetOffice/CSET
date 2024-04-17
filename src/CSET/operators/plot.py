@@ -317,7 +317,7 @@ def spatial_contour_plot(
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
         coord = cube_slice.coord(sequence_coordinate)
         # Format the coordinate value in a unit appropriate way.
-        title = coord.units.title(coord.points[0])
+        title = f"{recipe_title} | {coord.units.title(coord.points[0])}"
         # Do the actual plotting.
         plotting_func(
             cube_slice,
