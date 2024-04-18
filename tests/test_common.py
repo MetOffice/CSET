@@ -14,6 +14,7 @@
 
 """Tests for common functionality across CSET."""
 
+from collections.abc import Iterable
 from pathlib import Path
 
 import pytest
@@ -36,7 +37,7 @@ def test_parse_recipe_path():
     """Loading and parsing of a YAML recipe from a Path."""
     parsed = common.parse_recipe(Path("tests/test_data/noop_recipe.yaml"))
     expected = {
-        "name": "Noop",
+        "title": "Noop",
         "description": "A recipe that does nothing. Only used for testing.",
         "steps": [
             {
@@ -46,6 +47,7 @@ def test_parse_recipe_path():
                 "substep": {"operator": "constraints.combine_constraints"},
             }
         ],
+        "post-steps": [{"operator": "misc.noop"}],
     }
     assert parsed == expected
 
@@ -103,16 +105,8 @@ def test_slugify():
     assert common.slugify("First Line\nSecond Line") == "first_line_second_line"
     assert common.slugify("greekαβγδchars") == "greek_chars"
     assert common.slugify("  ABC ") == "abc"
+    # Multi-byte unicode characters are removed.
     assert common.slugify("あいうえお") == ""
-
-
-def test_is_variable():
-    """Recipe variables are correctly identified."""
-    assert common.is_variable("$VARIABLE_NAME")
-    assert common.is_variable("$V")
-    assert not common.is_variable("VARIABLE_NAME")
-    assert not common.is_variable("$VARIABLE-NAME")
-    assert not common.is_variable("$Variable_name")
 
 
 def test_parse_variable_options():
@@ -130,14 +124,31 @@ def test_parse_variable_options():
 
 
 def test_template_variables():
-    """Variables are correctly templated into recipes."""
-    recipe = {"steps": [{"operator": "misc.noop", "variable": "$VAR"}]}
-    variables = {"VAR": 42}
-    expected = {"steps": [{"operator": "misc.noop", "variable": 42}]}
+    """Multiple variables are correctly templated into recipe."""
+    recipe = {"steps": [{"operator": "misc.noop", "v1": "$VAR_A", "v2": "$VAR_B"}]}
+    variables = {"VAR_A": 42, "VAR_B": 3.14}
+    expected = {"steps": [{"operator": "misc.noop", "v1": 42, "v2": 3.14}]}
     actual = common.template_variables(recipe, variables)
     assert actual == expected
+    assert recipe == expected
+
+
+def test_replace_template_variable():
+    """Placeholders are correctly substituted."""
+    # Test direct substitution.
+    vars = {"VAR": 1}
+    expected = 1
+    actual = common.replace_template_variable("$VAR", vars)
+    assert actual == expected
+
+    # Insertion into a larger string.
+    expected = "The number 1"
+    actual = common.replace_template_variable("The number $VAR", vars)
+    assert actual == expected
+
+    # Error when variable not provided.
     with pytest.raises(KeyError):
-        common.template_variables(recipe, {})
+        common.replace_template_variable("$VAR", {})
 
 
 def test_template_variables_wrong_recipe_type():
@@ -215,3 +226,31 @@ def test_render_file():
     actual = common.render_file("tests/test_data/template_file.html", greeting="Hello")
     expected = "<p>Hello World!</p>\n"
     assert actual == expected
+
+
+def test_iter_maybe_iterable():
+    """Pass an iterable unchanged though iter_maybe."""
+    actual = [1, 2, 3]
+    expected = common.iter_maybe(actual)
+    # The same object is returned.
+    assert expected is actual
+
+
+def test_iter_maybe_atom():
+    """Convert an atom into an iterable."""
+    atom = 7
+    created_iterable = common.iter_maybe(atom)
+    assert isinstance(created_iterable, Iterable)
+    for value in created_iterable:
+        # The same object is inside the iterable.
+        assert value is atom
+
+
+def test_iter_maybe_string():
+    """String is wrapped inside of an iterable instead being a char iterator."""
+    atom = "A string"
+    created_iterable = common.iter_maybe(atom)
+    assert isinstance(created_iterable, Iterable)
+    for value in created_iterable:
+        # The same object is inside the iterable.
+        assert value is atom

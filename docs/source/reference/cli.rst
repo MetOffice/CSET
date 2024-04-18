@@ -13,7 +13,7 @@ page.
 
 .. code-block:: text
 
-    usage: cset bake [-h] -i INPUT_DIR -o OUTPUT_DIR -r RECIPE
+    usage: cset bake [-h] [-i INPUT_DIR] -o OUTPUT_DIR -r RECIPE [--pre-only | --post-only]
 
     options:
     -h, --help            show this help message and exit
@@ -23,26 +23,28 @@ page.
                             directory to write output into
     -r RECIPE, --recipe RECIPE
                             recipe file to read
+    --pre-only            only run pre-processing steps
+    --post-only           only run post-processing steps
 
 .. _cset-cookbook-command:
 
 cset cookbook
 ~~~~~~~~~~~~~
 
-Saves the included recipe files to a local directory. This allows access to
-pre-created recipes for many common tasks. See :doc:`/usage/operator-recipes`
-for descriptions of available recipes.
+Saves an included recipe file to a local directory. This allows access to
+pre-created recipes for many common tasks. See :doc:`/usage/operator-recipes`,
+or use ``--details`` for descriptions of available recipes.
 
 .. code-block:: text
 
-    usage: cset cookbook [-h] [-l] [-o OUTPUT_DIR] [recipe]
+    usage: cset cookbook [-h] [-d] [-o OUTPUT_DIR] [recipe]
 
     positional arguments:
-    recipe                recipe to output or detail. Omit for all.
+    recipe                recipe to output or detail
 
     options:
     -h, --help            show this help message and exit
-    -l, --list            list available recipes. Supplied recipes are detailed.
+    -d, --details         list available recipes. Supplied recipes are detailed.
     -o OUTPUT_DIR, --output-dir OUTPUT_DIR
                             directory to save recipes. If omitted uses $PWD
 

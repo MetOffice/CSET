@@ -1,4 +1,4 @@
-name: Plot average air temperature
+title: Plot average air temperature
 description: |
   Plots the mean 1.5m air temperature over an area.
 

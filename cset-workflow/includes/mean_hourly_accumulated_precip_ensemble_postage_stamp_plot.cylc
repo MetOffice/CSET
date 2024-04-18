@@ -1,3 +1,4 @@
+{% if MEAN_HOURLY_ACCUMULATED_PRECIPITATION_ENSEMBLE_POSTAGE_STAMP_PLOT %}
 [scheduling]
     [[graph]]
     P1 = """
@@ -32,3 +33,4 @@ steps:
 
   - operator: write.write_cube_to_nc
 """
+{% endif %}

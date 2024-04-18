@@ -33,8 +33,10 @@ It is build on a modern software stack using python 3 and METplus. Clear
 documentation, working practices, automatic testing, and open access promote
 contributions.
 
-For more information on how to use it and get involved as a developer, see
-:doc:`/background/why-cset`
+For information on how to use CSET, see :doc:`getting-started/index`.
+
+For information on getting involved as a developer, see
+:doc:`contributing/index`.
 
 Use the side bar to the left to access other pages of the documentation.
 
@@ -50,7 +52,7 @@ Useful Links
 Licence
 -------
 
-Copyright © 2022-2023 Met Office and contributors. CSET is distributed under the
+Copyright © 2022-2024 Met Office and contributors. CSET is distributed under the
 `Apache 2.0 License`_, in the hope that it will be useful.
 
 .. _Apache 2.0 License: https://www.apache.org/licenses/LICENSE-2.0

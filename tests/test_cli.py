@@ -19,7 +19,6 @@ In many ways these are integration tests.
 
 import os
 import subprocess
-import tempfile
 from pathlib import Path
 from uuid import uuid4
 
@@ -39,18 +38,71 @@ def test_command_line_help():
     subprocess.run(["cset", "-vv"])
 
 
-def test_recipe_execution():
+def test_bake_recipe_execution(tmp_path):
     """Test running CSET recipe from the command line."""
     subprocess.run(
         [
             "cset",
             "bake",
             f"--input-dir={os.devnull}",
-            f"--output-dir={tempfile.gettempdir()}",
+            f"--output-dir={tmp_path}",
             "--recipe=tests/test_data/noop_recipe.yaml",
         ],
         check=True,
     )
+
+
+def test_bake_pre_only(tmp_path):
+    """Run recipe pre-steps from the command line."""
+    subprocess.run(
+        [
+            "cset",
+            "bake",
+            f"--input-dir={os.devnull}",
+            f"--output-dir={tmp_path}",
+            "--recipe=tests/test_data/noop_recipe.yaml",
+            "--pre-only",
+        ],
+        check=True,
+    )
+
+
+def test_bake_post_only(tmp_path):
+    """Run recipe post-steps from the command line."""
+    subprocess.run(
+        [
+            "cset",
+            "bake",
+            f"--output-dir={tmp_path}",
+            "--recipe=tests/test_data/noop_recipe.yaml",
+            "--post-only",
+        ],
+        check=True,
+    )
+
+
+def test_bake_invalid_args():
+    """Invalid arguments give non-zero exit code."""
+    with pytest.raises(subprocess.CalledProcessError):
+        subprocess.run(
+            [
+                "cset",
+                "bake",
+                "--recipe=foo",
+                "--input-dir=/tmp",
+                "--output-dir=/tmp",
+                "--not-a-real-option",
+            ],
+            check=True,
+        )
+
+
+def test_bake_invalid_args_input_dir():
+    """Missing required input-dir argument for pre-steps."""
+    with pytest.raises(subprocess.CalledProcessError):
+        subprocess.run(
+            ["cset", "bake", "--recipe=foo", "--output-dir=/tmp"], check=True
+        )
 
 
 def test_graph_creation(tmp_path: Path):
@@ -94,45 +146,65 @@ def test_graph_details(tmp_path: Path):
 
 def test_cookbook_cwd(tmp_working_dir):
     """Unpacking the recipes into the current working directory."""
-    subprocess.run(["cset", "cookbook"], check=True)
+    subprocess.run(["cset", "cookbook", "extract_instant_air_temp.yaml"], check=True)
     assert Path("extract_instant_air_temp.yaml").is_file()
 
 
 def test_cookbook_path(tmp_path: Path):
     """Unpacking the recipes into a specified directory."""
-    subprocess.run(["cset", "cookbook", "--output-dir", tmp_path], check=True)
+    subprocess.run(
+        ["cset", "cookbook", "--output-dir", tmp_path, "extract_instant_air_temp.yaml"],
+        check=True,
+    )
     assert (tmp_path / "extract_instant_air_temp.yaml").is_file()
 
 
 def test_cookbook_list_available_recipes():
     """List all available recipes."""
     proc = subprocess.run(
-        ["cset", "cookbook", "--list"], capture_output=True, check=True
+        ["cset", "cookbook", "--details"], capture_output=True, check=True
     )
+    # Check start.
     assert proc.stdout.startswith(b"Available recipes:\n")
+    # Check has some recipes.
+    assert len(proc.stdout.splitlines()) > 3
 
 
 def test_cookbook_detail_recipe():
     """Show detail of a recipe."""
     proc = subprocess.run(
-        ["cset", "cookbook", "--list", "extract_instant_air_temp"],
+        ["cset", "cookbook", "--details", "extract_instant_air_temp.yaml"],
         capture_output=True,
         check=True,
     )
-    assert proc.stdout.startswith(b"\n\textract_instant_air_temp\n")
+    assert proc.stdout.startswith(b"\n\textract_instant_air_temp.yaml\n")
 
 
-def test_bake_invalid_args():
-    """Invalid arguments give non-zero exit code."""
+def test_cookbook_non_existent_recipe(tmp_path):
+    """Non-existent recipe give non-zero exit code."""
     with pytest.raises(subprocess.CalledProcessError):
         subprocess.run(
-            [
-                "cset",
-                "bake",
-                "--recipe=foo",
-                "--input-dir=/tmp",
-                "--output-dir=/tmp",
-                "--not-a-real-option",
-            ],
+            ["cset", "cookbook", "--output-dir", tmp_path, "non-existent.yaml"],
             check=True,
         )
+
+
+def test_recipe_id():
+    """Get recipe ID for a recipe."""
+    p = subprocess.run(
+        ["cset", "recipe-id", "-r", "tests/test_data/noop_recipe.yaml"],
+        check=True,
+        capture_output=True,
+    )
+    assert p.stdout == b"noop\n"
+
+
+def test_recipe_id_no_title():
+    """Get recipe id for recipe without a title."""
+    p = subprocess.run(
+        ["cset", "recipe-id", "-r", "tests/test_data/ensemble_air_temp.yaml"],
+        check=True,
+        capture_output=True,
+    )
+    # UUID output + newline.
+    assert len(p.stdout) == 37

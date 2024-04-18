@@ -22,3 +22,21 @@ def test_noop_operator():
     a = 7
     b = misc.noop(a)
     assert a == b
+
+
+def test_remove_attribute_cube(cube):
+    """Remove attribute from a Cube."""
+    cube = cube.copy()
+    assert "STASH" in cube.attributes
+    cube = misc.remove_attribute(cube, "STASH")[0]
+    assert "STASH" not in cube.attributes
+
+
+def test_remove_attribute_cubelist(cubes):
+    """Remove attribute from a CubeList."""
+    cubes = cubes.copy()
+    for cube in cubes:
+        assert "STASH" in cube.attributes
+    cubes = misc.remove_attribute(cubes, "STASH")
+    for cube in cubes:
+        assert "STASH" not in cube.attributes

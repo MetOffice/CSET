@@ -1,26 +1,32 @@
 #! /usr/bin/env python3
 
-"""Fetch forecast data from a mounted filesystem."""
+"""Retrieve the files from the filesystem for the current cycle point."""
 
+import glob
+import logging
 import os
 import shutil
-from pathlib import Path
-from uuid import uuid4
 
-# Create unique folder for data retrieval to prevent filename collisions.
-folder = f"{os.getcwd()}/{uuid4()}"
-os.mkdir(folder)
+import validity_time_tester
 
-# Pull data from file system.
-source_path = Path(os.getenv("FILE_PATH"))
-for file in source_path.parent.glob(source_path.name):
-    print(f"Copying {file}")
-    shutil.copy(file, folder + "/" + file.name)
+logging.basicConfig(
+    level=os.getenv("LOGLEVEL", "INFO"), format="%(asctime)s %(levelname)s %(message)s"
+)
 
-# Then write out data path to "input_path" file
-with open(
-    f"{os.getenv('CYLC_WORKFLOW_SHARE_DIR')}/cycle/{os.getenv('CYLC_TASK_CYCLE_POINT')}/input_path",
-    "wt",
-    encoding="utf-8",
-) as fp:
-    fp.write(folder)
+cycle_share_data_dir = f"{os.getenv('CYLC_WORKFLOW_SHARE_DIR')}/cycle/{os.getenv('CYLC_TASK_CYCLE_POINT')}/data"
+os.makedirs(cycle_share_data_dir, exist_ok=True)
+if os.getenv("CSET_FILE_NAME_METADATA_PATTERN"):
+    test_filename = validity_time_tester.create_validity_time_tester(
+        pattern=os.getenv("CSET_FILE_NAME_METADATA_PATTERN"),
+        validity_time=os.getenv("CYLC_TASK_CYCLE_POINT"),
+        period_length=os.getenv("CSET_CYCLE_PERIOD"),
+        times_per_file=int(os.getenv("CSET_TIMES_PER_FILE")),
+        time_offset=int(os.getenv("CSET_FILE_TIME_OFFSET")),
+    )
+else:
+    # Let all non-empty filenames through.
+    test_filename = None
+
+for file in filter(test_filename, glob.iglob(os.getenv("CSET_INPUT_FILE_PATH"))):
+    logging.info("Copying %s", file)
+    shutil.copy(file, cycle_share_data_dir)

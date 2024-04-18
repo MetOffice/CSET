@@ -14,14 +14,13 @@
 
 """Common functionality used across CSET."""
 
-import copy
 import io
 import json
 import logging
 import re
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, List, Union
+from typing import Union
 
 import ruamel.yaml
 
@@ -30,13 +29,15 @@ class ArgumentError(ValueError):
     """Provided arguments are not understood."""
 
 
-def parse_recipe(recipe_yaml: Union[Path, str]):
+def parse_recipe(recipe_yaml: Union[Path, str], variables: dict = None):
     """Parse a recipe into a python dictionary.
 
     Parameters
     ----------
     recipe_yaml: Path | str
         Path to recipe file, or the recipe YAML directly.
+    variables: dict
+        Dictionary of recipe variables. If None templating is not attempted.
 
     Returns
     -------
@@ -49,6 +50,8 @@ def parse_recipe(recipe_yaml: Union[Path, str]):
         If the recipe is invalid. E.g. invalid YAML, missing any steps, etc.
     TypeError
         If recipe_yaml isn't a Path or string.
+    KeyError
+        If needed recipe variables are not supplied.
 
     Examples
     --------
@@ -85,6 +88,10 @@ def parse_recipe(recipe_yaml: Union[Path, str]):
         # This should never be reached; it's a bug if it is.
         raise err  # pragma: no cover
 
+    if variables is not None:
+        logging.debug("Recipe variables: %s", variables)
+        recipe = template_variables(recipe, variables)
+
     return recipe
 
 
@@ -109,7 +116,7 @@ def get_recipe_metadata() -> dict:
         return {}
 
 
-def parse_variable_options(arguments: List[str]) -> dict:
+def parse_variable_options(arguments: list[str]) -> dict:
     """Parse a list of arguments into a dictionary of variables.
 
     The variable name arguments start with two hyphen-minus (`--`), consisting
@@ -118,7 +125,7 @@ def parse_variable_options(arguments: List[str]) -> dict:
 
     Parameters
     ----------
-    arguments: List[str]
+    arguments: list[str]
         List of arguments, e.g: `["--LEVEL", "2", "--STASH=m01s01i001"]`
 
     Returns
@@ -153,20 +160,13 @@ def parse_variable_options(arguments: List[str]) -> dict:
     return recipe_variables
 
 
-def is_variable(var: Any) -> bool:
-    """Check if recipe value is a variable."""
-    if isinstance(var, str) and re.match(r"^\$[A-Z_]+$", var):
-        return True
-    return False
-
-
 def template_variables(recipe: Union[dict, list], variables: dict) -> dict:
     """Insert variables into recipe.
 
     Parameters
     ----------
     recipe: dict | list
-        The recipe as a python dictionary.
+        The recipe as a python dictionary. It is updated in-place.
     variables: dict
         Dictionary of variables for the recipe.
 
@@ -180,20 +180,36 @@ def template_variables(recipe: Union[dict, list], variables: dict) -> dict:
     KeyError
         If needed recipe variables are not supplied.
     """
-    recipe = copy.deepcopy(recipe)
     if isinstance(recipe, dict):
         index = recipe.keys()
     elif isinstance(recipe, list):
+        # We have to handle lists for when we have one inside a recipe.
         index = range(len(recipe))
     else:
-        raise TypeError("recipe must be a dict or list.")
+        raise TypeError("recipe must be a dict or list.", recipe)
+
     for i in index:
         if isinstance(recipe[i], (dict, list)):
             recipe[i] = template_variables(recipe[i], variables)
-        if is_variable(recipe[i]):
-            logging.debug("Templating %s", recipe[i])
-            recipe[i] = variables[recipe[i].removeprefix("$")]
+        elif isinstance(recipe[i], str):
+            recipe[i] = replace_template_variable(recipe[i], variables)
     return recipe
+
+
+def replace_template_variable(s: str, variables):
+    """Fill all variable placeholders in the string."""
+    for var_name, var_value in variables.items():
+        placeholder = f"${var_name}"
+        # If the value is just the placeholder we directly overwrite it
+        # to keep the value type.
+        if s == placeholder:
+            s = var_value
+            break
+        else:
+            s = s.replace(placeholder, str(var_value))
+    if isinstance(s, str) and re.match(r"^.*\$[A-Z_].*", s):
+        raise KeyError("Variable without a value.", s)
+    return s
 
 
 ################################################################################
@@ -284,7 +300,7 @@ def render_file(template_path: str, /, **variables) -> str:
 
 
 def iter_maybe(thing) -> Iterable:
-    """Make thing into an Iterable."""
-    if isinstance(thing, Iterable):
+    """Ensure thing is Iterable. Strings count as atoms."""
+    if isinstance(thing, Iterable) and not isinstance(thing, str):
         return thing
     return (thing,)

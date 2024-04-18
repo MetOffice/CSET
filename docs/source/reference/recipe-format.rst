@@ -7,7 +7,7 @@ commented example recipe:
 
 .. code-block:: yaml
 
-    name: Name of recipe
+    title: Name of recipe
     description: |
       Extended description that can
       go across multiple lines.
@@ -16,29 +16,47 @@ commented example recipe:
       # Specify the operator to run in each step.
       - operator: read.read_cubes
 
-    - operator: filters.filter_cubes
-      # Can specify extra keyword arguments as sub-maps.
-      constraint:
-        # Can nest in another operator to use its output as an argument.
-        operator: generate_constraints.generate_stash_constraints
-        # Input implicitly taken from the previous step, but can be overridden
-        # by using the appropriate keyword argument.
-        stash: m01s03i236
+      - operator: filters.filter_cubes
+        # Can specify extra keyword arguments as sub-maps.
+        constraint:
+          # Can nest in another operator to use its output as an argument.
+          operator: generate_constraints.generate_stash_constraints
+          # Input implicitly taken from the previous step, but can be overridden
+          # by using the appropriate keyword argument.
+          stash: m01s03i236
 
-    - operator: write.write_cube_to_nc
-      # Specify the name of the argument, and its value.
-      filename: processed_data.nc
+      - operator: write.write_cube_to_nc
+        # Specify the name of the argument, and its value.
+        filename: intermediate/processed_data
+        # intermediate is a slightly special folder for partially processed data
+        # that needs collating.
 
-The name and description keys provide a human readable description of what the
-recipe does. They are currently not used anywhere, but it is good practice to
-include them for future users of the recipe.
+    # Steps to collate processed data into output.
+    post-steps:
+      - operator: read.read_cube
+        filename: intermediate/*.nc
+
+      # Save a sequence of plots, one per time.
+      - operator: plot.plot_spatial_plot
+
+      # Save a single cube with all the processed data.
+      - operator: write.write_cube_to_nc
+
+The title and description keys provide a human readable description of what the
+recipe does. The title is also used to derive the ID of the running recipe, used
+when running the recipe in a workflow.
 
 The steps keys specifies a list of processing steps. The steps are run from top
 to bottom, with each step specifying an operator to run, and optionally any
 additional inputs to that operator. A step is denoted by a ``-`` under the
 ``steps:`` key. The operators are specified on the operator key. Its value
-should be a string of the form ``file.function``. For additional inputs the key
+should be a string of the form ``module.function``. For additional inputs the key
 should be the name of the argument.
+
+The ``post-steps:`` key is used for collating together the output of the
+processing steps to produce the final output. This allows for the expensive
+processing to be parallelised over many compute nodes, with just the final
+visualisation of the data done in a single job to ensure it has all of the data.
 
 The below code block shows how you can nest operators multiple levels deep. For
 details of the specific operators involved, and the arguments that can take, see

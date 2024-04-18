@@ -68,6 +68,33 @@ def test_generate_time_constraint():
     assert expected_time_constraint in repr(time_constraint)
 
 
+def test_generate_pressure_level_constraint_single_level():
+    """Generate constraint for a single pressure level."""
+    pressure_constraint = constraints.generate_pressure_level_constraint(
+        pressure_levels=1000
+    )
+    expected_pressure_constraint = "Constraint(coord_values={'pressure': [1000]})"
+    assert expected_pressure_constraint in repr(pressure_constraint)
+
+
+def test_generate_pressure_level_constraint_multi_level():
+    """Generate constraint for multiple pressure levels."""
+    pressure_constraint = constraints.generate_pressure_level_constraint(
+        pressure_levels=[200, 800]
+    )
+    expected_pressure_constraint = "Constraint(coord_values={'pressure': [200, 800]})"
+    assert expected_pressure_constraint in repr(pressure_constraint)
+
+
+def test_generate_pressure_level_constraint_no_pressure():
+    """Generate constraint for not having pressure levels."""
+    pressure_constraint = constraints.generate_pressure_level_constraint(
+        pressure_levels=[]
+    )
+    expected_pressure_constraint = "Constraint(cube_func=<function generate_pressure_level_constraint.<locals>.no_pressure_coordinate at"
+    assert expected_pressure_constraint in repr(pressure_constraint)
+
+
 def test_combine_constraints():
     """Combine constraint."""
     stash_constraint = constraints.generate_stash_constraint("m01s03i236")

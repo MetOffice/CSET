@@ -49,11 +49,12 @@ def filter_cubes(
     if isinstance(filtered_cubes, iris.cube.Cube):
         return filtered_cubes
     # Check filtered cubes is a CubeList containing one cube.
-    if len(filtered_cubes) == 1:
+    if isinstance(filtered_cubes, iris.cube.CubeList) and len(filtered_cubes) == 1:
         return filtered_cubes[0]
     else:
         raise ValueError(
-            f"Constraint doesn't produce single cube. {constraint}\n{filtered_cubes}"
+            f"Constraint doesn't produce single cube. Constraint: {constraint}"
+            f"\nSource: {cube}\nResult: {filtered_cubes}"
         )
 
 
@@ -88,5 +89,7 @@ def filter_multiple_cubes(
     try:
         filtered_cubes = cubes.extract_cubes(kwargs.values())
     except iris.exceptions.ConstraintMismatchError as err:
-        raise ValueError() from err
+        raise ValueError(
+            "The constraints don't produce a single cube per constraint."
+        ) from err
     return filtered_cubes

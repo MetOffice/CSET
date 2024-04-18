@@ -153,6 +153,9 @@ def read_cubes(
                     np.int32(0), standard_name="realization", units="1"
                 )
             )
+    logging.debug("Loaded cubes: %s", cubes)
+    if len(cubes) == 0:
+        logging.warning("No cubes loaded, check your constraints!")
     return cubes
 
 
