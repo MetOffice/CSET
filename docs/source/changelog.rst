@@ -12,6 +12,8 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@jfrost-mo`_ added GitHub Issue and Pull Request templates, and a detailed
+  contribution checklist to the documentation in :pr:`465`
 * `@jfrost-mo`_ added a changelog in :pr:`468`
 * `@jfrost-mo`_ documented the ``category`` recipe key in :pr:`499`
 * `@jfrost-mo`_ renamed the ``steps`` and ``post-steps`` keys to ``parallel``
