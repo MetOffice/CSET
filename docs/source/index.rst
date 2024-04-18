@@ -10,6 +10,7 @@ CSET Documentation
    reference/index
    background/index
    contributing/index
+   changelog
    GitHub <https://github.com/MetOffice/CSET>
 
 :abbr:`CSET (Convective and turbulence scale Evaluation and verification Tool)`
