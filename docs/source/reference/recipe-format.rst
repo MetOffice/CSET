@@ -7,6 +7,7 @@ commented example recipe:
 
 .. code-block:: yaml
 
+    category: Category of recipe
     title: Name of recipe
     description: |
       Extended description that can
@@ -42,9 +43,10 @@ commented example recipe:
       # Save a single cube with all the processed data.
       - operator: write.write_cube_to_nc
 
-The title and description keys provide a human readable description of what the
-recipe does. The title is also used to derive the ID of the running recipe, used
-when running the recipe in a workflow.
+The ``title`` and ``description`` keys provide a human readable description of
+what the recipe does. The ``title`` is also used to derive the ID of the running
+recipe, used when running the recipe in a workflow. The ``category`` is used to
+group the produced diagnostics in the output website.
 
 The ``parallel`` and ``collate`` keys specify lists of processing steps. The
 steps are run from top to bottom, with each step specifying an operator to run,
