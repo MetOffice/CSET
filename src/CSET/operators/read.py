@@ -22,6 +22,8 @@ import iris.coords
 import iris.cube
 import numpy as np
 
+from CSET._common import iter_maybe
+
 
 def read_cube(
     loadpath: Path,
@@ -126,7 +128,9 @@ def read_cubes(
     if loadpath.is_dir():
         loadpath = sorted(loadpath.glob(filename_pattern))
 
-    logging.info("Loading file(s): %s", loadpath)
+    logging.info(
+        "Loading files:\n%s", "\n".join(str(path) for path in iter_maybe(loadpath))
+    )
 
     if constraint is not None:
         logging.debug("Constraint: %s", constraint)
