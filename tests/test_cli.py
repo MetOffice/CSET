@@ -52,8 +52,8 @@ def test_bake_recipe_execution(tmp_path):
     )
 
 
-def test_bake_pre_only(tmp_path):
-    """Run recipe pre-steps from the command line."""
+def test_bake_parallel_only(tmp_path):
+    """Run recipe parallel steps from the command line."""
     subprocess.run(
         [
             "cset",
@@ -61,21 +61,21 @@ def test_bake_pre_only(tmp_path):
             f"--input-dir={os.devnull}",
             f"--output-dir={tmp_path}",
             "--recipe=tests/test_data/noop_recipe.yaml",
-            "--pre-only",
+            "--parallel-only",
         ],
         check=True,
     )
 
 
 def test_bake_post_only(tmp_path):
-    """Run recipe post-steps from the command line."""
+    """Run recipe collate steps from the command line."""
     subprocess.run(
         [
             "cset",
             "bake",
             f"--output-dir={tmp_path}",
             "--recipe=tests/test_data/noop_recipe.yaml",
-            "--post-only",
+            "--collate-only",
         ],
         check=True,
     )
@@ -98,7 +98,7 @@ def test_bake_invalid_args():
 
 
 def test_bake_invalid_args_input_dir():
-    """Missing required input-dir argument for pre-steps."""
+    """Missing required input-dir argument for parallel."""
     with pytest.raises(subprocess.CalledProcessError):
         subprocess.run(
             ["cset", "bake", "--recipe=foo", "--output-dir=/tmp"], check=True

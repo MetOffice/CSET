@@ -18,6 +18,7 @@ import inspect
 import json
 import logging
 import os
+import warnings
 from pathlib import Path
 from typing import Union
 
@@ -83,9 +84,12 @@ def get_operator(name: str):
 
 def _write_metadata(recipe: dict):
     """Write a meta.json file in the CWD."""
+    # TODO: Investigate whether we might be better served by an SQLite database.
     metadata = recipe.copy()
     # Remove steps, as not needed, and might contain non-serialisable types.
+    metadata.pop("parallel", None)
     metadata.pop("steps", None)
+    metadata.pop("collate", None)
     metadata.pop("post-steps", None)
     with open("meta.json", "wt", encoding="UTF-8") as fp:
         json.dump(metadata, fp)
@@ -143,13 +147,13 @@ def _run_steps(recipe, steps, step_input, output_directory: Path):
         os.chdir(original_working_directory)
 
 
-def execute_recipe_steps(
+def execute_recipe_parallel(
     recipe_yaml: Union[Path, str],
     input_directory: Path,
     output_directory: Path,
     recipe_variables: dict = None,
 ) -> None:
-    """Parse and executes the initial steps from a recipe file.
+    """Parse and executes the parallel steps from a recipe file.
 
     Parameters
     ----------
@@ -186,10 +190,21 @@ def execute_recipe_steps(
     except (FileExistsError, NotADirectoryError) as err:
         logging.error("Output directory is a file. %s", output_directory)
         raise err
-    _run_steps(recipe, recipe["steps"], step_input, output_directory)
+    # If parallel doesn't exist try steps.
+    try:
+        steps = recipe["parallel"]
+    except KeyError:
+        if "steps" in recipe:
+            warnings.warn(
+                "'steps' recipe key is deprecated. Use 'parallel' instead.",
+                DeprecationWarning,
+                stacklevel=1,
+            )
+        steps = recipe["steps"]
+    _run_steps(recipe, steps, step_input, output_directory)
 
 
-def execute_recipe_post_steps(
+def execute_recipe_collate(
     recipe_yaml: Union[Path, str], output_directory: Path, recipe_variables: dict = None
 ) -> None:
     """Parse and execute the collation steps from a recipe file.
@@ -214,11 +229,20 @@ def execute_recipe_post_steps(
     """
     if recipe_variables is None:
         recipe_variables = {}
-    output_directory = Path(output_directory).absolute()
-    recipe = parse_recipe(recipe_yaml, recipe_variables)
-    # If post-steps doesn't exist treat it as having no steps.
-    steps = recipe.get("post-steps", tuple())
+    output_directory = Path(output_directory).resolve()
     assert output_directory.is_dir()
+    recipe = parse_recipe(recipe_yaml, recipe_variables)
+    # If collate doesn't exist try post-steps, else treat it as having no steps.
+    try:
+        steps = recipe["collate"]
+    except KeyError:
+        if "post-steps" in recipe:
+            warnings.warn(
+                "'post-steps' recipe key is deprecated. Use 'collate' instead.",
+                DeprecationWarning,
+                stacklevel=1,
+            )
+        steps = recipe.get("post-steps", tuple())
     _run_steps(recipe, steps, output_directory, output_directory)
 
 
@@ -227,7 +251,8 @@ __all__ = [
     "collapse",
     "constraints",
     "convection",
-    "execute_recipe_steps",
+    "execute_recipe_parallel",
+    "execute_recipe_collate",
     "filters",
     "get_operator",
     "misc",

@@ -3,7 +3,7 @@ description: |
   Plots the first time-step from a set of ensemble air temperature files with a
   filename containing the ensemble member in the form `\*_em\*.nc`.
 
-steps:
+parallel:
   - operator: read.read_cubes
     filename_pattern: "*_em*.nc"
     constraint:

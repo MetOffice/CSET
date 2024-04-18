@@ -3,7 +3,7 @@ title: Domain mean surface $VARNAME time series
 description: Plots a time series of the domain mean surface $VARNAME.
 
 # Pre-processing steps.
-steps:
+parallel:
   - operator: read.read_cubes
     constraint:
       operator: constraints.combine_constraints
@@ -39,7 +39,7 @@ steps:
 
 # Collation steps.
 # Reads in intermediate cube and plots it.
-post-steps:
+collate:
   - operator: read.read_cube
     filename_pattern: intermediate/*.nc
 

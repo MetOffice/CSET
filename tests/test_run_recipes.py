@@ -46,34 +46,34 @@ def test_get_operator_exception_not_callable():
         CSET.operators.get_operator("misc.__doc__")
 
 
-def test_execute_recipe_steps(tmp_path: Path):
+def test_execute_recipe_parallel(tmp_path: Path):
     """Execute recipe to test happy case (this is really an integration test)."""
     input_file = Path("tests/test_data/air_temp.nc")
     output_dir = tmp_path / f"{uuid4()}"
     recipe_file = Path("tests/test_data/plot_instant_air_temp.yaml")
-    CSET.operators.execute_recipe_steps(recipe_file, input_file, output_dir)
+    CSET.operators.execute_recipe_parallel(recipe_file, input_file, output_dir)
 
 
-def test_execute_recipe_steps_edge_cases(tmp_path: Path):
+def test_execute_recipe_parallel_edge_cases(tmp_path: Path):
     """Test weird edge cases. Also tests data paths not being pathlib Paths."""
     input_file = "tests/test_data/air_temp.nc"
     output_dir = tmp_path / f"{uuid4()}"
     recipe = Path("tests/test_data/noop_recipe.yaml")
-    CSET.operators.execute_recipe_steps(recipe, input_file, output_dir)
+    CSET.operators.execute_recipe_parallel(recipe, input_file, output_dir)
 
 
-def test_execute_recipe_steps_invalid_output_dir(tmp_path: Path):
+def test_execute_recipe_parallel_invalid_output_dir(tmp_path: Path):
     """Exception raised if output directory can't be created."""
-    recipe = '{"steps":[{"operator": misc.noop}]}'
+    recipe = '{"parallel":[{"operator": misc.noop}]}'
     input_file = Path("tests/test_data/air_temp.nc")
     output_dir = tmp_path / "actually_a_file"
     output_dir.touch()
     with pytest.raises((FileExistsError, NotADirectoryError)):
-        CSET.operators.execute_recipe_steps(recipe, input_file, output_dir)
+        CSET.operators.execute_recipe_parallel(recipe, input_file, output_dir)
 
 
-def test_execute_recipe_post_steps(tmp_path):
-    """Execute post-steps from a recipe."""
+def test_execute_recipe_collate(tmp_path):
+    """Execute collate from a recipe."""
     output_dir = tmp_path
     recipe_file = Path("tests/test_data/noop_recipe.yaml")
-    CSET.operators.execute_recipe_post_steps(recipe_file, output_dir)
+    CSET.operators.execute_recipe_collate(recipe_file, output_dir)

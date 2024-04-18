@@ -2,7 +2,7 @@ category: Quick Look
 title: Surface $VARNAME
 description: Extracts and plots the surface $VARNAME from a file.
 
-steps:
+parallel:
   - operator: read.read_cube
     constraint:
       operator: constraints.combine_constraints
@@ -22,7 +22,7 @@ steps:
   - operator: write.write_cube_to_nc
     filename: intermediate/surface_field
 
-post-steps:
+collate:
   - operator: read.read_cube
     filename_pattern: intermediate/*.nc
 

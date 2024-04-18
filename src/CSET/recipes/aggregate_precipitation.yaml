@@ -4,7 +4,7 @@ description: |
   LARGE SCALE RAINFALL RATE (KG/M2/S) (stash m01s04i203) from a file
   and aggregates it up to new intervals and writes it to a new time coordinate.
 
-steps:
+parallel:
   - operator: read.read_cubes
 
   - operator: filters.filter_cubes

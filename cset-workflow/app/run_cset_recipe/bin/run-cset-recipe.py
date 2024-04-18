@@ -145,8 +145,8 @@ def add_to_diagnostic_index(output_directory, recipe_id):
     append_to_index({category: {recipe_id: title}})
 
 
-def process():
-    """Process raw data."""
+def parallel():
+    """Process raw data in parallel."""
     logging.info("Pre-processing data into intermediate form.")
     try:
         subprocess.run(
@@ -157,7 +157,7 @@ def process():
                 f"--recipe={recipe_file()}",
                 f"--input-dir={data_directory()}",
                 f"--output-dir={output_directory()}",
-                "--pre-only",
+                "--parallel-only",
             ),
             check=True,
             env=subprocess_env(),
@@ -168,41 +168,28 @@ def process():
 
 
 def collate():
-    """Collate processed data together and produce output plot."""
-    # If intermediate directory doesn't exists then we are running a simple
-    # non-parallelised recipe, and we need to run cset bake to process the data
-    # and produce any plots. So we actually get some usage out of it, we are
-    # using the non-restricted form of bake, so it runs both the processing and
-    # collation steps.
+    """Collate processed data together and produce output plot.
+
+    If the intermediate directory doesn't exist then we are running a simple
+    non-parallelised recipe, and we need to run cset bake to process the data
+    and produce any plots. So we actually get some usage out of it, we are using
+    the non-restricted form of bake, so it runs both the processing and
+    collation steps.
+    """
     try:
-        if not Path(output_directory(), "intermediate").exists():
-            logging.info("Pre-processing data and saving output.")
-            subprocess.run(
-                (
-                    "cset",
-                    "-v",
-                    "bake",
-                    f"--recipe={recipe_file()}",
-                    f"--input-dir={data_directory()}",
-                    f"--output-dir={output_directory()}",
-                ),
-                check=True,
-                env=subprocess_env(),
-            )
-        else:
-            logging.info("Collating intermediate data and saving output.")
-            subprocess.run(
-                (
-                    "cset",
-                    "-v",
-                    "bake",
-                    f"--recipe={recipe_file()}",
-                    f"--output-dir={output_directory()}",
-                    "--post-only",
-                ),
-                check=True,
-                env=subprocess_env(),
-            )
+        logging.info("Collating intermediate data and saving output.")
+        subprocess.run(
+            (
+                "cset",
+                "-v",
+                "bake",
+                f"--recipe={recipe_file()}",
+                f"--output-dir={output_directory()}",
+                "--collate-only",
+            ),
+            check=True,
+            env=subprocess_env(),
+        )
     except subprocess.CalledProcessError:
         logging.error("cset bake exited non-zero while collating.")
         sys.exit(1)
@@ -211,9 +198,9 @@ def collate():
 
 
 if __name__ == "__main__":
-    # Check if we are running in process or collate mode.
+    # Check if we are running in parallel or collate mode.
     bake_mode = os.getenv("CSET_BAKE_MODE")
-    if bake_mode == "process":
-        process()
+    if bake_mode == "parallel":
+        parallel()
     elif bake_mode == "collate":
         collate()
