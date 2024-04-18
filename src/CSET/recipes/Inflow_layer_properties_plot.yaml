@@ -2,7 +2,7 @@ title: Inflow layer properties plot
 description: |
   Extracts data required for, and calculates the Inflow properties diagnostic, plotting on a map.
 
-steps:
+parallel:
   - operator: read.read_cubes
 
   - operator: convection.inflow_layer_properties
