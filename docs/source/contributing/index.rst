@@ -18,13 +18,13 @@ need to get started, and the links below go into more detail on specific topics.
 Contributing checklist
 ----------------------
 
-If you have just opened a PR, then these are the things you need to do ahead of
+If you have just opened a PR (Pull Request), then these are the things you need to do ahead of
 a :doc:`code review <code-review>`.
 
 Documentation has been updated to reflect change
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you've added a new function has it been documented? If you changed the name
+If you've added a new function check whether it has been documented? If you changed the name
 of a setting have you changed it everywhere in the documentation?
 
 New code has tests, and affected old tests have been updated
@@ -40,7 +40,8 @@ All tests and CI lints pass
 
 All of the pre-existing tests should pass, as should the formatting and linting
 checks. If they are not, click on "Details" next to the failing check and it
-will show you what failed.
+will show you what failed. Some of the errors are auto-corrected. In that case 
+you need to add the file again with git add and rerun the commit.
 
 .. image:: failing_pr_check.png
     :alt: Pull request checks, with a couple failing. The details link is highlighted.
