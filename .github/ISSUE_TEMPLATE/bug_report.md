@@ -12,13 +12,13 @@ assignees: ''
 
 
 ### How to reproduce
-Steps to reproduce the behavior:
+Steps to reproduce the behaviour:
 
 1.
 2.
 3.
 
-### Expected behavior
+### Expected behaviour
 <!-- Description of what you expected to happen. If applicable, add screenshots or logs to help explain your problem. -->
 
 
