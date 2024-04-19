@@ -190,7 +190,7 @@ def _plot_and_save_postage_stamp_contour_plot(
     fig = plt.figure(figsize=(10, 10))
     # Make a subplot for each member.
     for member, subplot in zip(
-        cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1)
+        cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1), strict=False
     ):
         # Implicit interface is much easier here, due to needing to have the
         # cartopy GeoAxes generated.
