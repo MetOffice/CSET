@@ -1,5 +1,5 @@
 category: Quick Look
-title: Spatial plot of $STASH
+title: Spatial plot sequence of $STASH
 description: Extracts and plots STASH $STASH from a file.
 
 parallel:
@@ -17,6 +17,14 @@ parallel:
         time_start: $VALIDITY_TIME
 
   - operator: write.write_cube_to_nc
+    filename: intermediate/stash
+
+collate:
+  - operator: read.read_cube
+    filename_pattern: intermediate/*.nc
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
 
   - operator: plot.spatial_contour_plot
     sequence_coordinate: time
