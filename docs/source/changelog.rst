@@ -14,6 +14,8 @@ Unreleased
 
 * `@Sylviabohnenstengel` and `@jfrost-mo` redid the rose-meta sort orders so
   that workflow configuration makes more sense in :pr:`504`
+* `@jfrost-mo`_ updated the example rose-suite.conf to reflect what a modern
+  version should look like in :pr:`508`
 
 24.4.1 (2024-04-19)
 -------------------
