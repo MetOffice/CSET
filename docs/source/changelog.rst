@@ -12,6 +12,9 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@Sylviabohnenstengel` and `@jfrost-mo` redid the rose-meta sort orders so
+  that workflow configuration makes more sense in :pr:`504`
+
 24.4.1 (2024-04-19)
 -------------------
 
