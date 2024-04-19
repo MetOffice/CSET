@@ -39,9 +39,15 @@ WARNING No cubes loaded, check your constraints!
 
 If the workflow complains that no cubes could be loaded this normally requires you to
 check your constraints. One constraint that is easily overlooked is the time constraint.
-Check that the data you are processing align with your start cycle point 
+Check that the data you are processing align with your chosen start cycle point 
 (CSET_INITIAL_CYCLE_POINT). You can change this in the rose gui under the section 
-"Data and cycling". One problem we have encountered is when we are looping over several 
-fields using a single recipe, but the different fields have different starting times.
+"Data and cycling". The cycling does not work if we are looping over several 
+fields using a single recipe, but the different fields have different starting times. In this
+case we would be trying to plot outside of the time range for some fields causing an error message
+that cubes could not be loaded or constraint. 
 At the moment the only solution is to run these variables in different recipes i.e. group 
-similar cyclign times in the same recipe together.
+similar cycling times in the same recipe together.
+Another issue occurs when the data processed in the same CSET workflow have different time intervals.
+For example field1 has 1hourly data, whereas field2 has 3 hourly data. We either need to set the CSET_CYCLE_PERIOD to 
+PT3H or, if we intend to process the 1hourly data with a CSET_CCLE_PERIOD of 1 hour we need to run 
+two different CSET workflows instead.
