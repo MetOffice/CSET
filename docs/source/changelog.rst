@@ -12,12 +12,21 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+24.4.1 (2024-04-19)
+-------------------
+
+This release contains a large generalisation of the CSET workflow, allowing use
+of templating to use the same recipe for multiple variables. It also adds
+cycling to the workflow, so a long workflow can be efficiently processed in
+parallel.
+
 * `@jfrost-mo`_ added GitHub Issue and Pull Request templates, and a detailed
   contribution checklist to the documentation in :pr:`465`
 * `@jfrost-mo`_ added a changelog in :pr:`468`
 * `@jfrost-mo`_ documented the ``category`` recipe key in :pr:`499`
 * `@jfrost-mo`_ renamed the ``steps`` and ``post-steps`` keys to ``parallel``
-  and ``collate`` in :pr:`484`. This makes them more meaningful.
+  and ``collate`` in :pr:`484`. This makes them more meaningful, but is a
+  **breaking change**.
 * `@daflack`_ added some generic arithmetic operators in :pr:`452`
 * `@jfrost-mo`_ made the log output of the read operator nicer in :pr:`461`
 * `@jfrost-mo`_ added links to share feedback to the output page in :pr:`442`
