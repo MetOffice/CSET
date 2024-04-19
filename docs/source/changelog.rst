@@ -12,6 +12,8 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@Sylviabohnenstengel` and `@jfrost-mo` redid the rose-meta sort orders so
+  that workflow configuration makes more sense in :pr:`504`
 * `@jfrost-mo`_ updated the example rose-suite.conf to reflect what a modern
   version should look like in :pr:`508`
 
