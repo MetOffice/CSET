@@ -16,7 +16,9 @@
 
 import logging
 import warnings
+from collections.abc import Iterable
 from pathlib import Path
+from typing import Union
 
 import iris
 import iris.coords
@@ -137,6 +139,8 @@ def read_cubes(
         "Loading files:\n%s", "\n".join(str(path) for path in iter_maybe(loadpath))
     )
 
+    _verify_paths(loadpath)
+
     if constraint is not None:
         logging.debug("Constraint: %s", constraint)
         cubes = iris.load(loadpath, constraint)
@@ -210,3 +214,10 @@ def _ensemble_callback(cube, field, filename: str):
             member = np.int32(filename[-15:-13])
 
         cube.add_aux_coord(iris.coords.AuxCoord(member, standard_name="realization"))
+
+
+def _verify_paths(files: Union[Path, Iterable[Path]]):
+    """Verify file exists, warning otherwise."""
+    for file in iter_maybe(files):
+        if not file.is_file():
+            warnings.warn(f"File does not exist: {file}", RuntimeWarning, stacklevel=2)
