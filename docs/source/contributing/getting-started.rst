@@ -77,3 +77,21 @@ When subsequently returning to the code after closing your terminal, you will
 need to rerun the ``conda activate cset-dev`` command.
 
 .. _conda: https://docs.conda.io/en/latest/
+
+Updating tooling
+------------------
+
+If you have been running with your conda environment for some time it might be worth
+re-installing conda and recreate it again from newer lock files.
+
+.. code-block:: bash
+
+    # List all your conda environments
+    conda info --envs
+    # Remove old conda environments.
+    conda remove -n cset-dev --all -y
+
+Then follow steps under Setting up tooling again.
+
+
+
