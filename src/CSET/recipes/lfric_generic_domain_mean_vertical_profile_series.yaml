@@ -1,6 +1,11 @@
 category: Quick Look
+<<<<<<< HEAD
 title: Domain mean $VARNAME vertical profile as series
 description: Plots a time series of the vertical profile of domain mean $VARNAME using a log pressure coordinate.
+=======
+title: Domain mean horizontal $VARNAME vertical profile as series
+description: Plots a time series of the domain mean surface $VARNAME.
+>>>>>>> Linking new recipe into workflow, including rose meta information and rose config infromation. Adding recipe and flow files.
 
 # Pre-processing steps.
 parallel:
@@ -12,18 +17,41 @@ parallel:
         varname: $VARNAME
       pressure_level_constraint:
         operator: constraints.generate_pressure_level_constraint
+<<<<<<< HEAD
         pressure_levels: $PLEVEL
+=======
+        pressure_levels: []
+>>>>>>> Linking new recipe into workflow, including rose meta information and rose config infromation. Adding recipe and flow files.
       validity_time_constraint:
         operator: constraints.generate_time_constraint
         time_start: $VALIDITY_TIME
 
+<<<<<<< HEAD
+=======
+  # Remove source stash attribute, as it can be encoded in different orders.
+  # Remove uuid and timeStamp, as these are only relevant to output files, not
+  # the data in them.
+  - operator: misc.remove_attribute
+    attribute: ["um_stash_source", "uuid", "timeStamp"]
+
+  # Use a filter to merge the time slices into a single cube.
+  - operator: filters.filter_cubes
+    constraint:
+      operator: constraints.generate_var_constraint
+      varname: $VARNAME
+
+>>>>>>> Linking new recipe into workflow, including rose meta information and rose config infromation. Adding recipe and flow files.
   - operator: collapse.collapse
     coordinate: [grid_latitude, grid_longitude]
     method: MEAN
 
   # Save domain meaned variable to a file per validity time.
   - operator: write.write_cube_to_nc
+<<<<<<< HEAD
     filename: intermediate/pressure_level_domain_mean
+=======
+    filename: intermediate/domain_mean
+>>>>>>> Linking new recipe into workflow, including rose meta information and rose config infromation. Adding recipe and flow files.
 
 # Collation steps.
 # Reads in intermediate cube and plots it.
@@ -31,6 +59,7 @@ collate:
   - operator: read.read_cube
     filename_pattern: intermediate/*.nc
 
+<<<<<<< HEAD
 # plot the vertical line series
   - operator: plot.plot_vertical_line_series
     series_coordinate: pressure
@@ -39,3 +68,11 @@ collate:
 # Make a single NetCDF with all the data inside it.
   - operator: write.write_cube_to_nc
     overwrite: True
+=======
+  # Make a single NetCDF with all the data inside it.
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+  # Plot the data.
+  - operator: plot.plot_line_series
+>>>>>>> Linking new recipe into workflow, including rose meta information and rose config infromation. Adding recipe and flow files.
