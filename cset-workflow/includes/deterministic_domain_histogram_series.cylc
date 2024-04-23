@@ -1,0 +1,18 @@
+{% if DOMAIN_HISTOGRAM_SERIES_FIELD %}
+[runtime]
+{% for model_field in PRESSURE_LEVEL_MODEL_FIELDS %}
+{% for plevel in PRESSURE_LEVELS %}
+    [[pre_process_deterministic_domain_histogram_series_{{model_field}}_{{plevel}}]]
+    inherit = PARALLEL
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_histogram_series.yaml"
+        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --PLEVEL='{{plevel}}'"
+
+    [[collate_deterministic_domain_histogram_series_{{model_field}}_{{plevel}}]]
+    inherit = COLLATE
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_histogram_series.yaml"
+        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --PLEVEL='{{plevel}}'"
+{% endfor %}
+{% endfor %}
+{% endif %}

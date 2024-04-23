@@ -402,8 +402,8 @@ def _plot_and_save_vertical_line_series(
         # Set y-axis limits and ticks.
         ax.set_ylim(1100, 100)
 
-    # test if series_coordinate is model level data. The um data uses model_level_number
-    # and lfric uses full_levels as coordinate.
+    # Test if series_coordinate is model level data. The UM data uses
+    # model_level_number and lfric uses full_levels as coordinate.
     elif series_coordinate in ("model_level_number", "full_levels", "half_levels"):
         # Define y-ticks and labels for vertical axis.
         y_ticks = cube.coord(series_coordinate).points
@@ -422,6 +422,9 @@ def _plot_and_save_vertical_line_series(
         xlabel=f"{cube.name()} / {cube.units}",
         title=title,
     )
+    ax.ticklabel_format(axis="x")
+    ax.tick_params(axis="y")
+    ax.autoscale()
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=150)
@@ -660,6 +663,7 @@ def spatial_contour_plot(
     except iris.exceptions.CoordinateNotFoundError:
         pass
 
+    # Must have a sequence coordinate.
     try:
         cube.coord(sequence_coordinate)
     except iris.exceptions.CoordinateNotFoundError as err:
@@ -811,23 +815,24 @@ def plot_vertical_line_series(
     except iris.exceptions.CoordinateNotFoundError as err:
         raise ValueError(f"Cube must have a {series_coordinate} coordinate.") from err
 
-    # If several individual vertical lines are plotted with time as sequence_coordinate
-    # for the time slider option.
     try:
-        cube.coord(sequence_coordinate)
+        if cube.ndim > 1:
+            cube.coord(sequence_coordinate)
     except iris.exceptions.CoordinateNotFoundError as err:
-        raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
+        raise ValueError(
+            f"Cube must have a {sequence_coordinate} coordinate or be 1D."
+        ) from err
 
     # Ensure we have a name for the plot file.
     recipe_title = get_recipe_metadata().get("title", "Untitled")
     if filename is None:
         filename = slugify(recipe_title)
 
-    # set the lower and upper limit for the x-axis to ensure all plots
-    # have same range. This needs to read the whole cube over the range of
-    # the sequence and if applicable postage stamp coordinate.
-    # This only works if the plotting is done in the collate section of a
-    # recipe and not in the parallel section of a recipe.
+    # Set the lower and upper limit for the x-axis to ensure all plots have same
+    # range. This needs to read the whole cube over the range of the sequence
+    # and if applicable postage stamp coordinate. This only works if the
+    # plotting is done in the collate section of a recipe and not in the
+    # parallel section of a recipe.
     vmin = np.floor(cube.data.min())
     vmax = np.ceil(cube.data.max())
 
@@ -874,10 +879,10 @@ def plot_histogram_series(
 
     A histogram plot can be plotted, but if the sequence_coordinate (i.e. time)
     is present then a sequence of plots will be produced using the time slider
-    functionality to scroll through histograms against time.
-    If a stamp_coordinate is present then postage stamp plots will be produced.
-    If stamp_coordinate and single_plot is True,
-    all postage stamp plots will be plotted in a single plot instead of separate postage stamp plots.
+    functionality to scroll through histograms against time. If a
+    stamp_coordinate is present then postage stamp plots will be produced. If
+    stamp_coordinate and single_plot is True, all postage stamp plots will be
+    plotted in a single plot instead of separate postage stamp plots.
 
     Parameters
     ----------
@@ -889,18 +894,19 @@ def plot_histogram_series(
         to the recipe name.
     sequence_coordinate: str, optional
         Coordinate about which to make a plot sequence. Defaults to ``"time"``.
-        This coordinate must exist in the cube and will be used for the time slider.
+        This coordinate must exist in the cube and will be used for the time
+        slider.
     stamp_coordinate: str, optional
         Coordinate about which to plot postage stamp plots. Defaults to
         ``"realization"``.
     single_plot: bool, optional
-        If True, all postage stamp plots will be plotted in a single plot.
-        If False, each postage stamp plot will be plotted separately.
-        Is only valid if stamp_coordinate exists and has more than a single point.
+        If True, all postage stamp plots will be plotted in a single plot. If
+        False, each postage stamp plot will be plotted separately. Is only valid
+        if stamp_coordinate exists and has more than a single point.
     histtype: str, optional
-        The type of histogram to plot. Options are "step" for a line
-        histogram or "barstacked", "stepfilled". "Step" is the default option,
-        but can be changed in the rose-suite.conf configuration.
+        The type of histogram to plot. Options are "step" for a line histogram
+        or "barstacked", "stepfilled". "Step" is the default option, but can be
+        changed in the rose-suite.conf configuration.
 
     Returns
     -------
@@ -947,11 +953,11 @@ def plot_histogram_series(
     except iris.exceptions.CoordinateNotFoundError as err:
         raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
 
-    # Set the lower and upper limit for the colorbar to ensure all plots
-    # have same range. This needs to read the whole cube over the range of
-    # the sequence and if applicable postage stamp coordinate.
-    # This only works if the plotting is done in the collate section of a
-    # recipe and not in the parallel section of a recipe.
+    # Set the lower and upper limit for the colorbar to ensure all plots have
+    # same range. This needs to read the whole cube over the range of the
+    # sequence and if applicable postage stamp coordinate. This only works if
+    # the plotting is done in the collate section of a recipe and not in the
+    # parallel section of a recipe.
     vmin = np.floor((cube.data.min()))
     vmax = np.ceil((cube.data.max()))
 
