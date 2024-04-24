@@ -180,6 +180,27 @@ def generate_time_constraint(
     time_constraint = iris.Constraint(time=lambda t: time_start <= t.point <= time_end)
     return time_constraint
 
+def generate_area_constraint(
+    lat_start: float, lat_end: float, lon_start: float, lon_end: float, **kwargs
+)-> iris.AttributeConstraint:
+    """Generate an area constraint between latitude/longitude limits.
+
+    Operator that takes a set of latitude and longitude limits and returns a
+    constraint that selects values only inside that area.
+
+    Arguments
+    ---------
+    lat_start: float
+        Latitude value for lower bound
+
+    Returns
+    -------
+    area_constraint: iris.Constraint
+    """
+    lat_constraint = iris.Constraint(coord_values={'latitude':lambda cell: lat_start < cell < lat_end})
+    lon_constraint = iris.Constraint(coord_values={'longitude':lambda cell: lon_start < cell < lon_end})
+    area_constraint = lat_constraint & lon_constraint
+    return area_constraint
 
 def combine_constraints(
     constraint: iris.Constraint = None, **kwargs
