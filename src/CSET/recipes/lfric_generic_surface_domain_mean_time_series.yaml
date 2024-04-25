@@ -18,9 +18,9 @@ parallel:
         time_start: $VALIDITY_TIME
       area_constraint:
         operator: constraints.generate_area_constraint
-        lat_start: 0.9
-        lat_end: 3.0
-        lon_start: 0.5
+        lat_start: 0.0
+        lat_end: 2.0
+        lon_start: 0.0
         lon_end: 3.0
 
   # Remove source stash attribute, as it can be encoded in different orders.
