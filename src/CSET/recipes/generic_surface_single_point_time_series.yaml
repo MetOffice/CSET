@@ -10,25 +10,33 @@ parallel:
       varname_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
-      cell_methods_constraint:   # *** We had to comment this constraint out
-                                 #     while "baking".
-        operator: constraints.generate_cell_methods_constraint
-        cell_methods: []
       pressure_level_constraint:
         operator: constraints.generate_pressure_level_constraint
         pressure_levels: []
-      validity_time_constraint:   # *** We had to comment this constraint out
-                                  #     while "baking".
+      validity_time_constraint:
         operator: constraints.generate_time_constraint
         time_start: $VALIDITY_TIME
 
-# *** We added this section to use the single-point regrid.
-  - operator: regrid.regrid_to_single_point
-    lat_pt: -0.8
-    lon_pt: 1.5    #**** Input point, hard-wired at the moment.
-    method: Nearest
+  # Remove source stash attribute, as it can be encoded in different orders.
+  # Remove uuid and timeStamp, as these are only relevant to output files, not
+  # the data in them.
+  - operator: misc.remove_attribute
+    attribute: ["um_stash_source", "uuid", "timeStamp"]
 
-  # Save domain meaned variable to a file per validity time.
+  # Use a filter to merge the time slices into a single cube.
+  - operator: filters.filter_cubes
+    constraint:
+      operator: constraints.generate_var_constraint
+      varname: $VARNAME
+
+  - operator: regrid.regrid_to_single_point
+    lat_pt: $LATITUDE_POINT
+    lon_pt: $LONGITUDE_POINT
+    method: Nearest
+## TO DO: the "lat_pt" and "lon_pt" are hard-wired values at the moment --
+#   these need to be upgraded to inputs.
+
+  # Save single-point variable to a file per validity time.
   - operator: write.write_cube_to_nc
     filename: intermediate/single_point_values
 
@@ -42,6 +50,5 @@ collate:
   - operator: write.write_cube_to_nc
     overwrite: True
 
-###*** PLOTTING COMMANDS REMOVED TEMPORARILY
-##  # Plot the data.
-##  - operator: plot.plot_line_series
+  # Plot the data.
+  - operator: plot.plot_line_series

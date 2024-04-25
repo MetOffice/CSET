@@ -148,8 +148,6 @@ def regrid_onto_xyspacing(
     return cube_rgd
 
 
-# ***** We created this new Operator as a modified version of the one above.
-#      We added the "lon_pt" and "lat_pt" as new inputs specifying the chosen point.
 def regrid_to_single_point(
     incube: iris.cube.Cube, lat_pt: float, lon_pt: float, method: str, **kwargs
 ) -> iris.cube.Cube:
@@ -213,9 +211,9 @@ def regrid_to_single_point(
     y_coord = incube.coord(y_coords[0])
 
     # List of supported grids - check if it is compatible
+    # NOTE: The "RotatedGeogCS" option below seems to be required for rotated grids --
+    #  this may need to be added in other places in these Operators.
     supported_grids = (iris.coord_systems.GeogCS, iris.coord_systems.RotatedGeogCS)
-    # **** We added the RotatedGeogCS grid to the list above
-    #      so that it works with rotated grids.
     if not isinstance(incube.coord(x_coord).coord_system, supported_grids):
         raise NotImplementedError(
             f"Does not currently support {incube.coord(x_coord).coord_system} regrid method"
@@ -240,15 +238,12 @@ def regrid_to_single_point(
         or (lon_pt > lon_max)
     ):
         raise ValueError("Selected point is outside the domain.")
-    # **** We added these criteria to check that the point is within the domain.
 
     regrid_method = getattr(iris.analysis, method, None)
     if callable(regrid_method):
         cube_rgd = incube.interpolate(
-            [(y_coord, lat_pt), (x_coord, lon_pt)], regrid_method
+            [(y_coord, lat_pt), (x_coord, lon_pt)], regrid_method()
         )
-        # **** This is then the updated interpolation method, reflects exactly the same
-        #     as the version above ("regrid_onto_xyspacing").
     else:
         raise NotImplementedError(f"Does not currently support {method} regrid method")
 
