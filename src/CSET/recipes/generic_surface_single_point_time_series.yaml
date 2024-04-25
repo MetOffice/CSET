@@ -1,0 +1,47 @@
+category: Quick Look
+title: Time series of $VARNAME at a selected gridpoint.
+description: Plots a time series of the surface $VARNAME at a selected gridpoint.
+
+# Parallel steps.
+parallel:
+  - operator: read.read_cube
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:   # *** We had to comment this constraint out
+                                 #     while "baking".
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+      pressure_level_constraint:
+        operator: constraints.generate_pressure_level_constraint
+        pressure_levels: []
+      validity_time_constraint:   # *** We had to comment this constraint out
+                                  #     while "baking".
+        operator: constraints.generate_time_constraint
+        time_start: $VALIDITY_TIME
+
+# *** We added this section to use the single-point regrid.
+  - operator: regrid.regrid_to_single_point
+    lat_pt: -0.8
+    lon_pt: 1.5    #**** Input point, hard-wired at the moment.
+    method: Nearest
+
+  # Save domain meaned variable to a file per validity time.
+  - operator: write.write_cube_to_nc
+    filename: intermediate/single_point_values
+
+# Collation steps.
+# Reads in intermediate cube and plots it.
+collate:
+  - operator: read.read_cube
+    filename_pattern: intermediate/*.nc
+
+  # Make a single NetCDF with all the data inside it.
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+###*** PLOTTING COMMANDS REMOVED TEMPORARILY
+##  # Plot the data.
+##  - operator: plot.plot_line_series
