@@ -4,10 +4,10 @@ description: Plots a time series of the domain mean surface $VARNAME.
 
 # Pre-processing steps.
 parallel:
-  - operator: read.read_cubes
+  - operator: read.read_cube
     constraint:
       operator: constraints.combine_constraints
-      varname_constraint:
+      variable_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
       pressure_level_constraint:
@@ -17,18 +17,6 @@ parallel:
         operator: constraints.generate_time_constraint
         time_start: $VALIDITY_TIME
 
-  # Remove source stash attribute, as it can be encoded in different orders.
-  # Remove uuid and timeStamp, as these are only relevant to output files, not
-  # the data in them.
-  - operator: misc.remove_attribute
-    attribute: ["um_stash_source", "uuid", "timeStamp"]
-
-  # Use a filter to merge the time slices into a single cube
-  - operator: filters.filter_cubes
-    constraint:
-      operator: constraints.generate_var_constraint
-      varname: $VARNAME
-
 
   - operator: collapse.collapse
     coordinate: [grid_latitude, grid_longitude]
@@ -36,7 +24,7 @@ parallel:
 
   # Save domain meaned variable to a file per validity time.
   - operator: write.write_cube_to_nc
-    filename: intermediate/domain_mean
+    filename: intermediate/pressure_level_domain_mean
 
 # Collation steps.
 # Reads in intermediate cube and plots it.
