@@ -36,6 +36,7 @@ from CSET.operators import (
     misc,
     plot,
     read,
+    regrid,
     write,
 )
 
@@ -258,5 +259,6 @@ __all__ = [
     "misc",
     "plot",
     "read",
+    "regrid",
     "write",
 ]
