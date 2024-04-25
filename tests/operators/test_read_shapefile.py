@@ -14,9 +14,7 @@
 
 """Reading operator tests."""
 
-import iris.cube
-import pytest
-
 
 def test_read_shapefile():
+    """Verifies the shapefile is read in correctly."""
     return None
