@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Operators to regrid cubes."""
+"""Operators to extract a cross section given a tuple of xy coords to start/finish."""
 
 from math import atan2, cos, radians, sin, sqrt
 
