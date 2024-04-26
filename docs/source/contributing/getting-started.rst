@@ -19,7 +19,7 @@ before your code is complete. You can indicate it is still a work in progress
 with the `draft pull request functionality of GitHub`_, or putting ``WIP`` in the
 PR title.
 
-.. _issue tracker on GitHub: https://github.com/MetOffice/CSET-workflow/issues
+.. _issue tracker on GitHub: https://github.com/MetOffice/CSET/issues
 .. _working practices: https://metoffice.github.io/CSET/contributing/
 .. _draft pull request functionality of GitHub: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests#draft-pull-requests
 
