@@ -84,7 +84,7 @@ Updating tooling
 ------------------
 
 If you have been running with your conda environment for some time it might be worth
-re-installing conda and recreate it again from newer lock files.
+recreating your it from newer lock files to get the latest tools.
 
 .. code-block:: bash
 
