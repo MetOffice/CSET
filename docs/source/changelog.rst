@@ -12,6 +12,8 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@jfrost-mo`_ added setuptools as an explicit dependency of the workflow in
+  :pr:`543`
 * `@Ashfinn_` fixed a typo in the documentation in :pr:`573`. This was their
   first contribution 🎉
 * `@jfrost-mo`_ fixed how arguments from the ``CSET_ADDOPTS`` environment
