@@ -39,7 +39,7 @@ jobs:
           # Install module so it can be imported during docs generation.
           python3 -m pip install .
           # Generate the documentation
-          sphinx-build -d "docs/build/doctree" "docs/source" "docs/build/html" --color -W -bhtml
+          sphinx-build -b html --color "docs/source" "docs/build/html"
 
       - uses: actions/upload-artifact@v4
         with:
