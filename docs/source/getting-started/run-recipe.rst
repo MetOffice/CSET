@@ -35,7 +35,7 @@ output should be a directory, but it will be created if it does not exist.
 
 .. code-block:: bash
 
-    cset bake -i air_temp.nc -o output/ -r recipes/mean-air-temp-spacial-plot.yaml
+    cset bake -i air_temp.nc -o output/ -r recipes/mean_surface_air_temperature_spatial_plot.yaml
 
 This will run the recipe and leave its output in the specified output directory.
 
