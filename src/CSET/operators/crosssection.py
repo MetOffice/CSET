@@ -16,6 +16,7 @@
 
 from math import atan2, cos, radians, sin, sqrt
 
+import iris
 import numpy as np
 
 # Usual names for spatial coordinates.
@@ -49,6 +50,12 @@ def calc_dist(coord_1, coord_2):
 
 def calc_crosssection(cube, startxy, endxy, coord="latitude"):
     """Compute cross section."""
+    # Get local cutout so we can get proper xmin/ymin spacing.
+    cube = cube.intersection(
+        latitude=(startxy[0] - 0.5, endxy[0] + 0.5),
+        longitude=(startxy[1] - 0.5, endxy[1] + 0.5),
+    )
+
     # Compute minimum gap between coords - in case variable res, default to minimum.
     xmin = np.min(
         cube.coord("longitude").points[1:] - cube.coord("longitude").points[:-1]
@@ -57,106 +64,83 @@ def calc_crosssection(cube, startxy, endxy, coord="latitude"):
         cube.coord("latitude").points[1:] - cube.coord("latitude").points[:-1]
     )
 
-    # For scenarios where coord is at 90 degree (no latitude/longitude change).
-    if xmin == 0:
-        latslice_only = True
-        deltamin = ymin
-    else:
-        latslice_only = False
-        deltamin = np.min([xmin, ymin])
-
-    if ymin == 0:
-        lonslice_only = True
-        deltamin = xmin
-    else:
-        lonslice_only = False
-        deltamin = np.min([xmin, ymin])
-
     # Compute vector distance between start and end points in degrees.
     dist_deg = np.sqrt(((startxy[0] - endxy[0]) ** 2) + ((startxy[1] - endxy[1]) ** 2))
 
-    # Compute number of steps to interpolate
-    nsteps = dist_deg / deltamin
+    # For scenarios where coord is at 90 degree (no latitude/longitude change).
+    # Only xmin or ymin will be zero, not both (otherwise startxy and endxy the same).
+    if startxy[1] - endxy[1] == 0:
+        latslice_only = True
+    else:
+        latslice_only = False
 
-    for i in range(0, int(nsteps) + 1):
-        print(i)
+    if startxy[0] - endxy[0] == 0:
+        lonslice_only = True
+    else:
+        lonslice_only = False
 
-        print(latslice_only, lonslice_only)
-        # Put in a tuple - faster, and pass directly to interpolator.
+    if latslice_only:
+        xpnts = np.repeat(startxy[1], int(dist_deg / ymin))
+        ypnts = np.linspace(startxy[0], endxy[0], int(dist_deg / ymin))
+    elif lonslice_only:
+        xpnts = np.linspace(startxy[1], endxy[1], int(dist_deg / xmin))
+        ypnts = np.repeat(startxy[0], int(dist_deg / xmin))
+    else:
+        # Else use the smallest grid space in x or y direction.
+        xpnts = np.linspace(startxy[1], endxy[1], int(dist_deg / np.min([xmin, ymin])))
+        ypnts = np.linspace(startxy[0], endxy[0], int(dist_deg / np.min([xmin, ymin])))
 
+    interpolated_cubes = iris.cube.CubeList()
+    for i in range(0, xpnts.shape[0]):
+        print(i, "/", xpnts.shape[0])
 
-#        cube_slice = cube.interpolate(
-#            [
-#                ("latitude", startxy[0] + (step * i)),
-#                ("longitude", startxy[1] + (step * i)),
-#            ],
-#            iris.analysis.Linear(),
-#        )
+        # Get point along transect.
+        cube_slice = cube.interpolate(
+            [("latitude", ypnts[i]), ("longitude", xpnts[i])], iris.analysis.Linear()
+        )
 
+        if coord == "distance":
+            # one step at end potentially at end and add to cube after merge.
+            dist = calc_dist((startxy[0], startxy[1]), (ypnts[i], xpnts[i]))
+            dist_coord = iris.coords.AuxCoord(dist, long_name="distance", units="m")
+            cube_slice.add_aux_coord(dist_coord)
+            cube_slice = iris.util.new_axis(cube_slice, scalar_coord="distance")
+            cube_slice.remove_coord("latitude")
+            cube_slice.remove_coord("longitude")
+        elif coord == "latitude":
+            cube_slice.remove_coord("latitude")
+            cube_slice.remove_coord("longitude")
+            dist_coord = iris.coords.AuxCoord(
+                ypnts[i], long_name="latitude", units="degrees"
+            )
+            cube_slice.add_aux_coord(dist_coord)
+            cube_slice = iris.util.new_axis(cube_slice, scalar_coord="latitude")
+        elif coord == "longitude":
+            cube_slice.remove_coord("latitude")
+            cube_slice.remove_coord("longitude")
+            dist_coord = iris.coords.AuxCoord(
+                xpnts[i], long_name="longitude", units="degrees"
+            )
+            cube_slice.add_aux_coord(dist_coord)
+            cube_slice = iris.util.new_axis(cube_slice, scalar_coord="longitude")
 
-#    if coord == 'distance':
-#        # one step at end potentially at end and add to cube after merge.
-#        dist = calc_dist((start_xy[0],start_xy[1]), (start_xy[0]+(step*i),start_xy[1]+(step*i)))
-#        dist_coord = iris.coords.AuxCoord(dist, long_name='distance', units='m')
+        interpolated_cubes.append(cube_slice)
 
-#        cube_slice.add_aux_coord(dist_coord)
-#        cube_slice = iris.util.new_axis(cube_slice,scalar_coord='distance')
-#        cube_slice.remove_coord('latitude')
-#        cube_slice.remove_coord('longitude')
+    interpolated_cubes = interpolated_cubes.concatenate()
 
-#        interpolated_cubes.append(cube_slice)
-
-
-#    print(nsteps)
-
-#    quit()
-
-#    # Check if case of cross section across latitude with no change in longitude.
-#    if xmin != 0:
-#        xpnts = np.arange(startxy[1],endxy[1],ymin)
-#    else:
-#        xpnts = startxy[1]
-
-#    # Check if case of cross section across longitude with no change in latitude.
-#    if ymin != 0:
-#        ypnts = np.arange(startxy[0],endxy[0],ymin)
-#    else:
-#        ypnts = startxy[0]
-
-#    print(xpnts.shape)
-#    print(ypnts.shape)
-#    quit()
-#
-#   # interpolated_cubes = iris.cube.CubeList()
-#    cube_slice = cube.interpolate([('latitude',ypnts),('longitude',xpnts)], iris.analysis.Linear())
-
-##    print(ypnts)
-
-#    quit()
-
-#    # this could go to infinite
-#    step = np.min([np.min(cube.coord('latitude').points[1:]-cube.coord('latitude').points[:-1]),
-#                   np.min(cube.coord('longitude').points[1:]-cube.coord('longitude').points[:-1])])
-
-
-#    dist_deg = np.sqrt(((start_xy[0]-end_xy[0])**2)+((start_xy[1]-end_xy[1])**2))
-
-#
+    if len(interpolated_cubes) == 1:
+        return interpolated_cubes[0]
+    else:
+        raise ValueError("Can't merge into a single cube")
 
 
-#        #
-
-
-#        print(cube_slice)
-#        print(cube_slice.shape)
-#        print(cube_slice.coord('distance'))
-
-#    print(iris.util.describe_diff(interpolated_cubes[0],interpolated_cubes[1]))
-#    print(interpolated_cubes.merge())
-#    print(interpolated_cubes.concatenate()[0])
-#    print(interpolated_cubes.concatenate()[0].coord('distance'))
-
-
-# calc_crosssection(cube=iris.load_cube('/scratch/jawarner/tmp_2304/20210422T0600Z_Regn1_resn_1_RA2T_pz024.pp','air_temperature')[4,10,:,:],
-#                  startxy=(-2,35),
-#                  endxy=(7,38))
+cube = calc_crosssection(
+    cube=iris.load_cube(
+        "/scratch/jawarner/tmp_2304/20210422T0600Z_Regn1_resn_1_RA2T_pz024.pp",
+        "air_temperature",
+    )[4, 10, :, :],
+    startxy=(-2, 38),
+    endxy=(7, 39),
+    coord="longitude",
+)
+print(cube)
