@@ -54,11 +54,13 @@ before we can develop.
     If you have previously cloned the repository you can update it with the
     latest changes. Ensure all changes are committed, then run ``git pull``.
 
+.. _setup_tooling:
+
 Setting up tooling
 ------------------
 
 To be able to run the tests or build the documentation you need some
-prerequisite software. The easiest way to get this is with `conda_`. The
+prerequisite software. The easiest way to get this is with `conda`_. The
 following commands, when run from within the CSET directory, will setup a conda
 environment for you to use.
 
@@ -88,7 +90,7 @@ re-installing conda and recreate it again from newer lock files.
 
     # List all your conda environments
     conda info --envs
-    # Remove old conda environments.
+    # Remove old conda environment.
     conda remove -n cset-dev --all -y
 
-Then follow steps under Setting up tooling again.
+Then follow the steps under :ref:`setup_tooling` again.
