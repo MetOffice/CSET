@@ -59,11 +59,12 @@ instead.
 
 AttributeError: 'CubeList' object has no attribute 'collapsed'
 --------------------------------------------------------------
-the operator read.read_cubes does allow to output a CubeList and not only 
-a cube. Most other operators can operate either on cubes or on Cubelist. If 
-you get this error message it is likely that the operator reading in the 
-Cubelist can not perform operations yet on CubeLists. In this case try switching 
-to read.read_cube, which forces a cube as output and not a CubeList. The downside 
-of this is that all metadata, etc. need to match up to allow forming a cube. 
-This requires often working on the constraints.
 
+The operator ``read.read_cubes`` outputs a CubeList rather than only a Cube.
+Most other operators can operate either on a single Cube or a CubeList of any
+number of Cubes. If you get this error message it is likely that the operator
+reading in the CubeList can not perform operations yet on CubeLists.
+
+In this case try switching to ``read.read_cube``, which forces a single Cube as
+output and not a CubeList. This requires that all metadata, etc. match up to
+allow forming a single Cube, often requiring refinement of the constraints.
