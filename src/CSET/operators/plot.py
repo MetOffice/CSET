@@ -30,6 +30,7 @@ import iris.exceptions
 import iris.plot as iplt
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 from markdown_it import MarkdownIt
 
 from CSET._common import get_recipe_metadata, render_file, slugify
@@ -37,6 +38,11 @@ from CSET._common import get_recipe_metadata, render_file, slugify
 ############################
 # Private helper functions #
 ############################
+
+colorbar = {
+    "air_pressure_at_mean_sea_level": {"max": 102000, "min": 99600},
+    "fog_fraction_at_sea_level": {"max": 100, "min": 0},
+}
 
 
 def _append_to_plot_index(plot_index: list) -> list:
@@ -123,7 +129,7 @@ def _make_plot_html_page(plots: list):
 
 
 def _plot_and_save_contour_plot(
-    cube: iris.cube.Cube, filename: str, title: str, **kwargs
+    cube: iris.cube.Cube, filename: str, title: str, varname: str, **kwargs
 ):
     """Plot and save a contour plot.
 
@@ -141,7 +147,12 @@ def _plot_and_save_contour_plot(
 
     # Filled contour plot of the field.
     cmap = mpl.colormaps["viridis"]
-    contours = iplt.contourf(cube, cmap=cmap)
+    vmin = colorbar[varname]["min"]
+    vmax = colorbar[varname]["max"]
+    print(cube.data)
+    print(varname, vmin, vmax)
+    levels = np.linspace(vmin, vmax, 10)
+    contours = iplt.contourf(cube, cmap=cmap, levels=levels)
     # Using pyplot interface here as we need iris to generate a cartopy GeoAxes.
     axes = plt.gca()
 
@@ -157,7 +168,7 @@ def _plot_and_save_contour_plot(
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=150)
-    logging.info("Saved contour plot to %s", filename)
+    logging.info("Saved new contour plot to %s", filename)
     plt.close(fig)
 
 
@@ -166,6 +177,7 @@ def _plot_and_save_postage_stamp_contour_plot(
     filename: str,
     stamp_coordinate: str,
     title: str,
+    varname: str,
     **kwargs,
 ):
     """Plot postage stamp contour plots from an ensemble.
@@ -260,6 +272,7 @@ def spatial_contour_plot(
     filename: str = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
+    varname: str = "model_name",
     **kwargs,
 ) -> iris.cube.Cube:
     """Plot a spatial variable onto a map from a 2D, 3D, or 4D cube.
@@ -334,6 +347,7 @@ def spatial_contour_plot(
             plot_filename,
             stamp_coordinate=stamp_coordinate,
             title=title,
+            varname=varname,
         )
         plot_index.append(plot_filename)
 
