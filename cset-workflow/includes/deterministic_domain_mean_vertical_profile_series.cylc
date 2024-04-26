@@ -1,31 +1,18 @@
 {% if DOMAIN_MEAN_VERTICAL_PROFILE_SERIES %}
-<<<<<<< HEAD
 [runtime]
-{% for model_field in PRESSURE_LEVEL_MODEL_FIELDS %}
-=======
 {% for model_field in PRESSURE_LEVEL_MODEL_FIELDS %}
 {% for plevel in PRESSURE_LEVELS %}
-[runtime]
->>>>>>>  new recipe to calculate spatial mean on vertical levels
     [[pre_process_domain_mean_vertical_profile_series_{{model_field}}]]
     inherit = PARALLEL
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_domain_mean_vertical_profile_series.yaml"
-<<<<<<< HEAD
         CSET_ADDOPTS = "--VARNAME='{{model_field}}' --PLEVEL='{{PRESSURE_LEVELS}}'"
-=======
-        CSET_ADDOPTS = "--VARNAME={{model_field}} --PLEVEL={{plevel}}"
->>>>>>>  new recipe to calculate spatial mean on vertical levels
 
     [[collate_domain_mean_vertical_profile_series_{{model_field}}]]
     inherit = COLLATE
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_domain_mean_vertical_profile_series.yaml"
-<<<<<<< HEAD
         CSET_ADDOPTS = "--VARNAME='{{model_field}}' --PLEVEL='{{PRESSURE_LEVELS}}'"
-=======
-        CSET_ADDOPTS = "--VARNAME={{model_field}} --PLEVEL={{plevel}}"
 {% endfor %}
->>>>>>>  new recipe to calculate spatial mean on vertical levels
 {% endfor %}
 {% endif %}
