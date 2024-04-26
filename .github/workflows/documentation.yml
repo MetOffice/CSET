@@ -37,9 +37,13 @@ jobs:
       - name: Build documentation
         run: |
           # Install module so it can be imported during docs generation.
+          echo '::group::Installing local package'
           python3 -m pip install .
+          echo '::endgroup::'
           # Generate the documentation
+          echo '::group::Building the documentation'
           sphinx-build -b html --color "docs/source" "docs/build/html"
+          echo '::endgroup::'
 
       - uses: actions/upload-artifact@v4
         with:
