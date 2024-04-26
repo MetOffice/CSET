@@ -43,3 +43,11 @@ collate:
   # Make a single NetCDF with all the data inside it.
   - operator: write.write_cube_to_nc
     overwrite: True
+<<<<<<< HEAD
+=======
+
+  # Plot the data.
+  - operator: plot.plot_vertical_line_series
+    series_coordinate: pressure
+    sequence_coordinate: time
+>>>>>>> include vertical line plot operator and internal function.
