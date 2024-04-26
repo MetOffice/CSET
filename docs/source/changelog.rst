@@ -12,6 +12,7 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@jfrost-mo`_ fixed some outdated documentation examples in :pr:`546`
 * `@Sylviabohnenstengel`_ documented how to update your conda environment in
   :pr:`519`
 * `@Sylviabohnenstengel`_ documented the common error of no cubes being loaded
