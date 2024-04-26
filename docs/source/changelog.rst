@@ -12,6 +12,7 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@jfrost-mo`_ added a dead link checker to the documentation in :pr:`556`
 * `@Sylviabohnenstengel`_ documented the common error of operating on a CubeList
   instead of a Cube in :pr:`541`
 * `@Sylviabohnenstengel`_ documented how to update your conda environment in
