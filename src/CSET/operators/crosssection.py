@@ -16,6 +16,8 @@
 
 from math import atan2, cos, radians, sin, sqrt
 
+import numpy as np
+
 # Usual names for spatial coordinates.
 # TODO can we determine grid coord names in a more intelligent way?
 X_COORD_NAMES = ["longitude", "grid_longitude", "projection_x_coordinate", "x"]
@@ -45,158 +47,116 @@ def calc_dist(coord_1, coord_2):
     return distance * 1000
 
 
-# def regrid_onto_cube(
-#    incube: iris.cube.Cube, target: iris.cube.Cube, method: str, **kwargs
-# ) -> iris.cube.Cube:
-#    """Regrid a cube, projecting onto a target cube.
+def calc_crosssection(cube, startxy, endxy, coord="latitude"):
+    """Compute cross section."""
+    # Compute minimum gap between coords - in case variable res, default to minimum.
+    xmin = np.min(
+        cube.coord("longitude").points[1:] - cube.coord("longitude").points[:-1]
+    )
+    ymin = np.min(
+        cube.coord("latitude").points[1:] - cube.coord("latitude").points[:-1]
+    )
 
-#    Cube must have at least 2 dimensions.
+    # For scenarios where coord is at 90 degree (no latitude/longitude change).
+    if xmin == 0:
+        latslice_only = True
+        deltamin = ymin
+    else:
+        latslice_only = False
+        deltamin = np.min([xmin, ymin])
 
-#    Arguments
-#    ----------
-#    incube: Cube
-#        An iris cube of the data to regrid. As a minimum, it needs to be 2D with a latitude,
-#        longitude coordinates.
-#    target: Cube
-#        An iris cube of the data to regrid onto. It needs to be 2D with a latitude,
-#        longitude coordinate.
-#    method: str
-#        Method used to regrid onto, etc. Linear will use iris.analysis.Linear()
+    if ymin == 0:
+        lonslice_only = True
+        deltamin = xmin
+    else:
+        lonslice_only = False
+        deltamin = np.min([xmin, ymin])
 
-#    Returns
-#    -------
-#    iris.cube.Cube
-#        An iris cube of the data that has been regridded.
+    # Compute vector distance between start and end points in degrees.
+    dist_deg = np.sqrt(((startxy[0] - endxy[0]) ** 2) + ((startxy[1] - endxy[1]) ** 2))
 
-#    Raises
-#    ------
-#    ValueError
-#        If a unique x/y coordinate cannot be found
-#    NotImplementedError
-#        If the cubes grid, or the method for regridding, is not yet supported.
+    # Compute number of steps to interpolate
+    nsteps = dist_deg / deltamin
 
-#    Notes
-#    -----
-#    The acceptable coordinate names for X and Y coordinates are currently described
-#    in X_COORD_NAMES and Y_COORD_NAMES. These cover commonly used coordinate types,
-#    though a user can append new ones.
-#    Currently rectlinear grids (uniform) are supported.
-#    """
-#    # Get a list of coordinate names for the cube
-#    coord_names = [coord.name() for coord in incube.coords()]
+    for i in range(0, int(nsteps) + 1):
+        print(i)
 
-#    # Check which x-coordinate we have, if any
-#    x_coords = [coord for coord in coord_names if coord in X_COORD_NAMES]
-#    if len(x_coords) != 1:
-#        raise ValueError("Could not identify a unique x-coordinate in cube")
-#    x_coord = incube.coord(x_coords[0])
+        print(latslice_only, lonslice_only)
+        # Put in a tuple - faster, and pass directly to interpolator.
 
-#    # Check which y-coordinate we have, if any
-#    y_coords = [coord for coord in coord_names if coord in Y_COORD_NAMES]
-#    if len(y_coords) != 1:
-#        raise ValueError("Could not identify a unique y-coordinate in cube")
-#    y_coord = incube.coord(y_coords[0])
 
-#    # List of supported grids - check if it is compatible
-#    supported_grids = (iris.coord_systems.GeogCS,)
-#    if not isinstance(incube.coord(x_coord).coord_system, supported_grids):
-#        raise NotImplementedError(
-#            f"Does not currently support {incube.coord(x_coord).coord_system} coordinate system"
-#        )
-#    if not isinstance(incube.coord(y_coord).coord_system, supported_grids):
-#        raise NotImplementedError(
-#            f"Does not currently support {incube.coord(y_coord).coord_system} coordinate system"
+#        cube_slice = cube.interpolate(
+#            [
+#                ("latitude", startxy[0] + (step * i)),
+#                ("longitude", startxy[1] + (step * i)),
+#            ],
+#            iris.analysis.Linear(),
 #        )
 
-#    regrid_method = getattr(iris.analysis, method, None)
-#    if callable(regrid_method):
-#        return incube.regrid(target, regrid_method())
+
+#    if coord == 'distance':
+#        # one step at end potentially at end and add to cube after merge.
+#        dist = calc_dist((start_xy[0],start_xy[1]), (start_xy[0]+(step*i),start_xy[1]+(step*i)))
+#        dist_coord = iris.coords.AuxCoord(dist, long_name='distance', units='m')
+
+#        cube_slice.add_aux_coord(dist_coord)
+#        cube_slice = iris.util.new_axis(cube_slice,scalar_coord='distance')
+#        cube_slice.remove_coord('latitude')
+#        cube_slice.remove_coord('longitude')
+
+#        interpolated_cubes.append(cube_slice)
+
+
+#    print(nsteps)
+
+#    quit()
+
+#    # Check if case of cross section across latitude with no change in longitude.
+#    if xmin != 0:
+#        xpnts = np.arange(startxy[1],endxy[1],ymin)
 #    else:
-#        raise NotImplementedError(f"Does not currently support {method} regrid method")
+#        xpnts = startxy[1]
 
-
-# def regrid_onto_xyspacing(
-#    incube: iris.cube.Cube, xspacing: int, yspacing: int, method: str, **kwargs
-# ) -> iris.cube.Cube:
-#    """Regrid cube onto a set x,y spacing.
-
-#    Regrid cube using specified x,y spacing, which is performed linearly.
-
-#    Parameters
-#    ----------
-#    incube: Cube
-#        An iris cube of the data to regrid. As a minimum, it needs to be 2D with a latitude,
-#        longitude coordinates.
-#    xspacing: integer
-#        Spacing of points in longitude direction (could be degrees, meters etc.)
-#    yspacing: integer
-#        Spacing of points in latitude direction (could be degrees, meters etc.)
-#    method: str
-#        Method used to regrid onto, etc. Linear will use iris.analysis.Linear()
-
-#    Returns
-#    -------
-#    cube_rgd: Cube
-#        An iris cube of the data that has been regridded.
-
-#    Raises
-#    ------
-#    ValueError
-#        If a unique x/y coordinate cannot be found
-#    NotImplementedError
-#        If the cubes grid, or the method for regridding, is not yet supported.
-
-#    Notes
-#    -----
-#    The acceptable coordinate names for X and Y coordinates are currently described
-#    in X_COORD_NAMES and Y_COORD_NAMES. These cover commonly used coordinate types,
-#    though a user can append new ones.
-#    Currently rectlinear grids (uniform) are supported.
-
-#    """
-#    # Get a list of coordinate names for the cube
-#    coord_names = [coord.name() for coord in incube.coords()]
-
-#    # Check which x-coordinate we have, if any
-#    x_coords = [coord for coord in coord_names if coord in X_COORD_NAMES]
-#    if len(x_coords) != 1:
-#        raise ValueError("Could not identify a unique x-coordinate in cube")
-#    x_coord = incube.coord(x_coords[0])
-
-#    # Check which y-coordinate we have, if any
-#    y_coords = [coord for coord in coord_names if coord in Y_COORD_NAMES]
-#    if len(y_coords) != 1:
-#        raise ValueError("Could not identify a unique y-coordinate in cube")
-#    y_coord = incube.coord(y_coords[0])
-
-#    # List of supported grids - check if it is compatible
-#    supported_grids = (iris.coord_systems.GeogCS,)
-#    if not isinstance(incube.coord(x_coord).coord_system, supported_grids):
-#        raise NotImplementedError(
-#            f"Does not currently support {incube.coord(x_coord).coord_system} regrid method"
-#        )
-#    if not isinstance(incube.coord(y_coord).coord_system, supported_grids):
-#        raise NotImplementedError(
-#            f"Does not currently support {incube.coord(y_coord).coord_system} regrid method"
-#        )
-
-#    # Get axis
-#    lat, lon = incube.coord(y_coord), incube.coord(x_coord)
-
-#    # Get bounds
-#    lat_min, lon_min = lat.points.min(), lon.points.min()
-#    lat_max, lon_max = lat.points.max(), lon.points.max()
-
-#    # Generate new mesh
-#    latout = np.arange(lat_min, lat_max, yspacing)
-#    lonout = np.arange(lon_min, lon_max, xspacing)
-
-#    regrid_method = getattr(iris.analysis, method, None)
-#    if callable(regrid_method):
-#        cube_rgd = incube.interpolate(
-#            [(y_coord, latout), (x_coord, lonout)], regrid_method()
-#        )
+#    # Check if case of cross section across longitude with no change in latitude.
+#    if ymin != 0:
+#        ypnts = np.arange(startxy[0],endxy[0],ymin)
 #    else:
-#        raise NotImplementedError(f"Does not currently support {method} regrid method")
+#        ypnts = startxy[0]
 
-#    return cube_rgd
+#    print(xpnts.shape)
+#    print(ypnts.shape)
+#    quit()
+#
+#   # interpolated_cubes = iris.cube.CubeList()
+#    cube_slice = cube.interpolate([('latitude',ypnts),('longitude',xpnts)], iris.analysis.Linear())
+
+##    print(ypnts)
+
+#    quit()
+
+#    # this could go to infinite
+#    step = np.min([np.min(cube.coord('latitude').points[1:]-cube.coord('latitude').points[:-1]),
+#                   np.min(cube.coord('longitude').points[1:]-cube.coord('longitude').points[:-1])])
+
+
+#    dist_deg = np.sqrt(((start_xy[0]-end_xy[0])**2)+((start_xy[1]-end_xy[1])**2))
+
+#
+
+
+#        #
+
+
+#        print(cube_slice)
+#        print(cube_slice.shape)
+#        print(cube_slice.coord('distance'))
+
+#    print(iris.util.describe_diff(interpolated_cubes[0],interpolated_cubes[1]))
+#    print(interpolated_cubes.merge())
+#    print(interpolated_cubes.concatenate()[0])
+#    print(interpolated_cubes.concatenate()[0].coord('distance'))
+
+
+# calc_crosssection(cube=iris.load_cube('/scratch/jawarner/tmp_2304/20210422T0600Z_Regn1_resn_1_RA2T_pz024.pp','air_temperature')[4,10,:,:],
+#                  startxy=(-2,35),
+#                  endxy=(7,38))
