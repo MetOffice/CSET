@@ -83,8 +83,8 @@ need to rerun the ``conda activate cset-dev`` command.
 Updating tooling
 ------------------
 
-If you have been running with your conda environment for some time it might be worth
-recreating your it from newer lock files to get the latest tools.
+If it has been some time since you created your conda environment it might be
+worth recreating it to get the latest tools and dependencies.
 
 .. code-block:: bash
 
