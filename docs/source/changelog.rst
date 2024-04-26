@@ -12,6 +12,8 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@jfrost-mo`_ added setuptools as an explicit dependency of the workflow in
+  :pr:`543`
 * `@Sylviabohnenstengel`_ documented how to update your conda environment in
   :pr:`519`
 * `@Sylviabohnenstengel`_ documented the common error of no cubes being loaded
