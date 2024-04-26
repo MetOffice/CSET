@@ -1,7 +1,7 @@
 {% if DOMAIN_MEAN_VERTICAL_PROFILE_SERIES %}
+[runtime]
 {% for model_field in PRESSURE_LEVEL_MODEL_FIELDS %}
 {% for plevel in PRESSURE_LEVELS %}
-[runtime]
     [[pre_process_domain_mean_vertical_profile_series_{{model_field}}]]
     inherit = PARALLEL
         [[[environment]]]
