@@ -39,6 +39,7 @@ collate:
   - operator: plot.spatial_contour_plot
     sequence_coordinate: time
     varname: $VARNAME
+    colorbar_file: $COLORBAR_FILE
 
   - operator: write.write_cube_to_nc
     overwrite: True

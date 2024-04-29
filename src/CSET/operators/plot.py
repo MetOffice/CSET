@@ -39,10 +39,10 @@ from CSET._common import get_recipe_metadata, render_file, slugify
 # Private helper functions #
 ############################
 
-colorbar = {
-    "air_pressure_at_mean_sea_level": {"max": 102000, "min": 99600},
-    "fog_fraction_at_sea_level": {"max": 100, "min": 0},
-}
+# colorbar = {
+#    "air_pressure_at_mean_sea_level": {"max": 102000, "min": 99600},
+#    "fog_fraction_at_sea_level": {"max": 100, "min": 0},
+# }
 
 
 def _append_to_plot_index(plot_index: list) -> list:
@@ -129,7 +129,12 @@ def _make_plot_html_page(plots: list):
 
 
 def _plot_and_save_contour_plot(
-    cube: iris.cube.Cube, filename: str, title: str, varname: str, **kwargs
+    cube: iris.cube.Cube,
+    filename: str,
+    title: str,
+    varname: str,
+    colorbar_file: str,
+    **kwargs,
 ):
     """Plot and save a contour plot.
 
@@ -145,14 +150,42 @@ def _plot_and_save_contour_plot(
     # Setup plot details, size, resolution, etc.
     fig = plt.figure(figsize=(15, 15), facecolor="w", edgecolor="k")
 
+    try:
+        with open(colorbar_file, "r+t", encoding="UTF-8") as fp:
+            fcntl.flock(fp, fcntl.LOCK_EX)
+            fp.seek(0)
+            colorbar = json.load(fp)
+
+            # Specify the colormap for this variable
+            try:
+                cmap = colorbar[varname]["cmap"]
+                print("From color_bar dictionary: Using cmap")
+            except KeyError:
+                cmap = mpl.colormaps["viridis"]
+
+            # Specify the colorbar levels for this variable
+            try:
+                levels = colorbar[varname]["levels"]
+                print("From color_bar dictionary: Using levels")
+            except KeyError:
+                try:
+                    vminmax = colorbar[varname]["minmax"]
+                    print("From color_bar dictionary: Using min and max")
+                    vmin = vminmax[0]
+                    vmax = vminmax[1]
+                    levels = np.linspace(vmin, vmax, 10)
+                except KeyError:
+                    levels = None
+
+    except FileNotFoundError:
+        print("color bar file" + colorbar_file)
+        print("The color bar file does not exist. Setting default values.")
+        levels = None
+        cmap = mpl.colormaps["viridis"]
+
     # Filled contour plot of the field.
-    cmap = mpl.colormaps["viridis"]
-    vmin = colorbar[varname]["min"]
-    vmax = colorbar[varname]["max"]
-    print(cube.data)
-    print(varname, vmin, vmax)
-    levels = np.linspace(vmin, vmax, 10)
     contours = iplt.contourf(cube, cmap=cmap, levels=levels)
+
     # Using pyplot interface here as we need iris to generate a cartopy GeoAxes.
     axes = plt.gca()
 
@@ -272,7 +305,8 @@ def spatial_contour_plot(
     filename: str = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
-    varname: str = "model_name",
+    varname: str = "variable_name",
+    colorbar_file: str = "file_name",
     **kwargs,
 ) -> iris.cube.Cube:
     """Plot a spatial variable onto a map from a 2D, 3D, or 4D cube.
@@ -348,6 +382,7 @@ def spatial_contour_plot(
             stamp_coordinate=stamp_coordinate,
             title=title,
             varname=varname,
+            colorbar_file=colorbar_file,
         )
         plot_index.append(plot_filename)
 

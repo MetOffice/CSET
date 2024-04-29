@@ -1,0 +1,14 @@
+{ "air_pressure_at_mean_sea_level" :
+  {
+  "minmax" : [99600, 102000]
+   },
+  "fog_fraction_at_sea_level" :
+  {
+  "minmax" : [0,100]
+  },
+  "precipitation" :
+  {
+  "levels" : [0, 1.0, 10.0],
+  "cmap" : "jet"
+  }
+}
