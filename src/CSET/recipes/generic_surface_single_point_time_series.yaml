@@ -32,9 +32,7 @@ parallel:
   - operator: regrid.regrid_to_single_point
     lat_pt: $LATITUDE_POINT
     lon_pt: $LONGITUDE_POINT
-    method: Nearest
-## TO DO: the "lat_pt" and "lon_pt" are hard-wired values at the moment --
-#   these need to be upgraded to inputs.
+    method: $SINGLE_POINT_METHOD
 
   # Save single-point variable to a file per validity time.
   - operator: write.write_cube_to_nc
