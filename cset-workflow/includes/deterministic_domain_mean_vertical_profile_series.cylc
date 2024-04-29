@@ -5,12 +5,12 @@
     inherit = PARALLEL
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_domain_mean_vertical_profile_series.yaml"
-        CSET_ADDOPTS = "--VARNAME={{model_field}} --PLEVEL={{PRESSURE_LEVELS}}"
+        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --PLEVEL='{{PRESSURE_LEVELS}}'"
 
     [[collate_domain_mean_vertical_profile_series_{{model_field}}]]
     inherit = COLLATE
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_domain_mean_vertical_profile_series.yaml"
-        CSET_ADDOPTS = "--VARNAME={{model_field}} --PLEVEL={{PRESSURE_LEVELS}}"
+        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --PLEVEL='{{PRESSURE_LEVELS}}'"
 {% endfor %}
 {% endif %}
