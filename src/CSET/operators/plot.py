@@ -332,7 +332,6 @@ def _plot_and_save_line_series(
 
 
 def _plot_and_save_vertical_line_series(
-<<<<<<< HEAD
     cube: iris.cube.Cube,
     coord: iris.coords.Coord,
     filename: str,
@@ -342,11 +341,6 @@ def _plot_and_save_vertical_line_series(
     **kwargs,
 ):
     """Plot and save a 1D line series in vertical.
-=======
-    cube: iris.cube.Cube, coord: iris.coords.Coord, filename: str, title: str, **kwargs
-):
-    """Plot and save a 1D line series.
->>>>>>> include vertical line plot operator and internal function.
 
     Parameters
     ----------
@@ -358,7 +352,6 @@ def _plot_and_save_vertical_line_series(
         Filename of the plot to write.
     title: str
         Plot title.
-<<<<<<< HEAD
     vmin: float
         Minimum value for the x-axis.
     vmax: float
@@ -394,12 +387,6 @@ def _plot_and_save_vertical_line_series(
 
     # set x-axis limits
     ax.set_xlim(vmin, vmax)
-=======
-    """
-    fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
-    iplt.plot(cube, coord, "o-")
-    ax = plt.gca()
->>>>>>> include vertical line plot operator and internal function.
 
     # Add some labels and tweak the style.
     ax.set(
@@ -407,12 +394,9 @@ def _plot_and_save_vertical_line_series(
         xlabel=f"{cube.name()} / {cube.units}",
         title=title,
     )
-<<<<<<< HEAD
-=======
     ax.ticklabel_format(axis="x")  # , labelrotation=15)
     ax.tick_params(axis="y")  # , useOffset=False)
     ax.autoscale()
->>>>>>> include vertical line plot operator and internal function.
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=150)
@@ -652,10 +636,6 @@ def plot_vertical_line_series(
     A 1D line plot with y-axis as pressure coordinate can be plotted, but if the sequence_coordinate is present
     then a sequence of plots will be produced.
 
-<<<<<<< HEAD
-=======
-
->>>>>>> include vertical line plot operator and internal function.
     The cube must be 1D.
 
     Parameters
@@ -666,13 +646,8 @@ def plot_vertical_line_series(
         Name of the plot to write, used as a prefix for plot sequences. Defaults
         to the recipe name.
     series_coordinate: str, optional
-<<<<<<< HEAD
-        Coordinate to plot on the y-axis. Defaults to ``pressure``.
+        Coordinate about which to make a series. Defaults to ``"pressure"``.
         This coordinate must exist in the cube.
-=======
-        Coordinate about which to make a series. Defaults to ``"pressure"``. This
-        coordinate must exist in the cube.
->>>>>>> include vertical line plot operator and internal function.
     sequence_coordinate: str, optional
         Coordinate about which to make a plot sequence. Defaults to ``"time"``.
         This coordinate must exist in the cube.
@@ -689,20 +664,14 @@ def plot_vertical_line_series(
     TypeError
         If the cube isn't a single cube.
     """
-<<<<<<< HEAD
     # Ensure we've got a single cube.
     cube = _check_single_cube(cube)
 
     # Test if series coordinate i.e. pressure level exist for any cube with cube.ndim >=1.
-=======
-    # Check cube is right shape.
-    cube = _check_single_cube(cube)
->>>>>>> include vertical line plot operator and internal function.
     try:
         coord = cube.coord(series_coordinate)
     except iris.exceptions.CoordinateNotFoundError as err:
         raise ValueError(f"Cube must have a {series_coordinate} coordinate.") from err
-<<<<<<< HEAD
 
     # If several individual vertical lines are plotted with time as sequence_coordinate
     # for the time slider option.
@@ -710,10 +679,9 @@ def plot_vertical_line_series(
         cube.coord(sequence_coordinate)
     except iris.exceptions.CoordinateNotFoundError as err:
         raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
-=======
+
     if cube.ndim > 1:
         raise ValueError("Cube must be 1D.")
->>>>>>> include vertical line plot operator and internal function.
 
     # Ensure we have a name for the plot file.
     recipe_title = get_recipe_metadata().get("title", "Untitled")
@@ -723,7 +691,6 @@ def plot_vertical_line_series(
     # Make vertical line plot
     plotting_func = _plot_and_save_vertical_line_series
 
-<<<<<<< HEAD
     # set the lower and upper limit for the x-axis to ensure all plots
     # have same range. This needs to read the whole cube over the range of
     # the sequence and if applicable postage stamp coordinate.
@@ -731,14 +698,6 @@ def plot_vertical_line_series(
     # recipe and not in the parallel section of a recipe.
     vmin = np.floor((cube.data.min()))
     vmax = np.ceil((cube.data.max()))
-=======
-    # If several individual vertical lines are plotted with time as sequence_coordinate
-    # for the time slider option.
-    try:
-        cube.coord(sequence_coordinate)
-    except iris.exceptions.CoordinateNotFoundError as err:
-        raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
->>>>>>> include vertical line plot operator and internal function.
 
     # Create a plot for each value of the sequence coordinate.
     plot_index = []
@@ -755,11 +714,8 @@ def plot_vertical_line_series(
             coord,
             plot_filename,
             title=title,
-<<<<<<< HEAD
             vmin=vmin,
             vmax=vmax,
-=======
->>>>>>> include vertical line plot operator and internal function.
         )
         plot_index.append(plot_filename)
 
@@ -769,19 +725,4 @@ def plot_vertical_line_series(
     # Make a page to display the plots.
     _make_plot_html_page(complete_plot_index)
 
-<<<<<<< HEAD
-=======
-    ##   # Add file extension.
-    ##   plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
-
-    ##    # Do the actual plotting.
-    ##    _plot_and_save_vertical_line_series(cube, coord, plot_filename, title)
-
-    ##    # Add list of plots to plot metadata.
-    ##    plot_index = _append_to_plot_index([plot_filename])
-
-    ##    # Make a page to display the plots.
-    ##    _make_plot_html_page(plot_index)
-
->>>>>>> include vertical line plot operator and internal function.
     return cube
