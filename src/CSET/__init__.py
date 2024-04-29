@@ -17,6 +17,7 @@
 import argparse
 import logging
 import os
+import shlex
 import sys
 from importlib.metadata import version
 from pathlib import Path
@@ -133,7 +134,7 @@ def main():
     )
     parser_recipe_id.set_defaults(func=_recipe_id_command)
 
-    cli_args = sys.argv[1:] + os.getenv("CSET_ADDOPTS", "").split()
+    cli_args = sys.argv[1:] + shlex.split(os.getenv("CSET_ADDOPTS", ""))
     args, unparsed_args = parser.parse_known_args(cli_args)
 
     # Setup logging.
