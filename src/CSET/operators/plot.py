@@ -173,6 +173,7 @@ def _plot_and_save_contour_plot(
                     print("From color_bar dictionary: Using min and max")
                     vmin = vminmax[0]
                     vmax = vminmax[1]
+
                     levels = np.linspace(vmin, vmax, 10)
                 except KeyError:
                     levels = None
