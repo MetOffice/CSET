@@ -148,6 +148,10 @@ def _colorbar_map_levels(
             # Specify the colorbar levels for this variable
             try:
                 levels = colorbar[varname]["levels"]
+
+                actual_cmap = mpl.cm.get_cmap(cmap)
+
+                norm = mpl.colors.BoundaryNorm(levels, ncolors=actual_cmap.N)
                 print("From color_bar dictionary: Using levels")
             except KeyError:
                 try:
@@ -157,8 +161,10 @@ def _colorbar_map_levels(
                     vmax = vminmax[1]
 
                     levels = np.linspace(vmin, vmax, 10)
+                    norm = None
                 except KeyError:
                     levels = None
+                    norm = None
 
     except FileNotFoundError:
         print("color bar file" + colorbar_file)
@@ -166,7 +172,7 @@ def _colorbar_map_levels(
         levels = None
         cmap = mpl.colormaps["viridis"]
 
-    return cmap, levels
+    return cmap, levels, norm
 
 
 def _plot_and_save_contour_plot(
@@ -196,10 +202,10 @@ def _plot_and_save_contour_plot(
     fig = plt.figure(figsize=(15, 15), facecolor="w", edgecolor="k")
 
     # Specify the color bar
-    cmap, levels = _colorbar_map_levels(colorbar_file, varname)
+    cmap, levels, norm = _colorbar_map_levels(colorbar_file, varname)
 
     # Filled contour plot of the field.
-    contours = iplt.contourf(cube, cmap=cmap, levels=levels)
+    contours = iplt.contourf(cube, cmap=cmap, levels=levels, norm=norm)
 
     # Using pyplot interface here as we need iris to generate a cartopy GeoAxes.
     axes = plt.gca()
@@ -255,7 +261,7 @@ def _plot_and_save_postage_stamp_contour_plot(
     fig = plt.figure(figsize=(10, 10))
 
     # Specify the color bar
-    cmap, levels = _colorbar_map_levels(colorbar_file, varname)
+    cmap, levels, norm = _colorbar_map_levels(colorbar_file, varname)
 
     # Make a subplot for each member.
     for member, subplot in zip(
@@ -264,7 +270,7 @@ def _plot_and_save_postage_stamp_contour_plot(
         # Implicit interface is much easier here, due to needing to have the
         # cartopy GeoAxes generated.
         plt.subplot(grid_size, grid_size, subplot)
-        plot = iplt.contourf(member, cmap=cmap, levels=levels)
+        plot = iplt.contourf(member, cmap=cmap, levels=levels, norm=norm)
         ax = plt.gca()
         ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
         ax.set_axis_off()

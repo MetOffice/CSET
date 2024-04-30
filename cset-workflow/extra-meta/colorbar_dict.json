@@ -52,11 +52,13 @@
     },
 "surface_microphysical_precipitation_rate" :
     {
-    "minmax" : [0,0.03]
+    "levels" : [0,0.1,0.25,0.5,1,2,4,8,16,32,64,200],
+    "cmap" : "jet"
     },
 "surface_microphysical_rainfall_rate" :
     {
-    "minmax" : [0,0.03]
+    "levels" : [0,0.1,0.25,0.5,1,2,4,8,16,32,64,200],
+    "cmap" : "jet"
     },
 "surface_microphysical_snowfall_rate" :
     {
