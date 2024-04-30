@@ -39,11 +39,6 @@ from CSET._common import get_recipe_metadata, render_file, slugify
 # Private helper functions #
 ############################
 
-# colorbar = {
-#    "air_pressure_at_mean_sea_level": {"max": 102000, "min": 99600},
-#    "fog_fraction_at_sea_level": {"max": 100, "min": 0},
-# }
-
 
 def _append_to_plot_index(plot_index: list) -> list:
     """Add plots into the plot index, returning the complete plot index."""
@@ -217,7 +212,7 @@ def _plot_and_save_contour_plot(
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=150)
-    logging.info("Saved new contour plot to %s", filename)
+    logging.info("Saved contour plot to %s", filename)
     plt.close(fig)
 
 
