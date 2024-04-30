@@ -20,7 +20,7 @@
     },
 "dew_point_temperature_at_screen_level" :
     {
-    "minmax" : [260,290],
+    "minmax" : [260,340],
     "cmap" : "jet"
     },
 "fog_fraction_at_screen_level" :
@@ -93,7 +93,7 @@
     },
 "temperature_at_screen_level" :
     {
-    "minmax" : [260, 290],
+    "minmax" : [260, 340],
     "cmap" : "jet"
     },
 "atmosphere_mass_of_air_per_unit_area" :

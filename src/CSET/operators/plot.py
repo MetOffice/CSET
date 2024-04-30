@@ -128,32 +128,19 @@ def _make_plot_html_page(plots: list):
         fp.write(html)
 
 
-def _plot_and_save_contour_plot(
-    cube: iris.cube.Cube,
-    filename: str,
-    title: str,
-    varname: str,
-    colorbar_file: str,
+def _colorbar_map_levels(
+    colorbar_file,
+    varname,
     **kwargs,
 ):
-    """Plot and save a contour plot.
-
-    Parameters
-    ----------
-    cube: Cube
-        2 dimensional (lat and lon) Cube of the data to plot.
-    filename: str
-        Filename of the plot to write.
-    title: str
-        Plot title.
     """
-    # Setup plot details, size, resolution, etc.
-    fig = plt.figure(figsize=(15, 15), facecolor="w", edgecolor="k")
+    Specify the color map and levels.
 
+    For the given variable name varname, from a colorbar dictionary file.
+
+    """
     try:
-        with open(colorbar_file, "r+t", encoding="UTF-8") as fp:
-            fcntl.flock(fp, fcntl.LOCK_EX)
-            fp.seek(0)
+        with open(colorbar_file, "rt", encoding="UTF-8") as fp:
             colorbar = json.load(fp)
 
             # Specify the colormap for this variable
@@ -184,6 +171,34 @@ def _plot_and_save_contour_plot(
         levels = None
         cmap = mpl.colormaps["viridis"]
 
+    return cmap, levels
+
+
+def _plot_and_save_contour_plot(
+    cube: iris.cube.Cube,
+    filename: str,
+    title: str,
+    varname: str,
+    colorbar_file: str,
+    **kwargs,
+):
+    """Plot and save a contour plot.
+
+    Parameters
+    ----------
+    cube: Cube
+        2 dimensional (lat and lon) Cube of the data to plot.
+    filename: str
+        Filename of the plot to write.
+    title: str
+        Plot title.
+    """
+    # Setup plot details, size, resolution, etc.
+    fig = plt.figure(figsize=(15, 15), facecolor="w", edgecolor="k")
+
+    # Specify the color bar
+    cmap, levels = _colorbar_map_levels(colorbar_file, varname)
+
     # Filled contour plot of the field.
     contours = iplt.contourf(cube, cmap=cmap, levels=levels)
 
@@ -212,6 +227,7 @@ def _plot_and_save_postage_stamp_contour_plot(
     stamp_coordinate: str,
     title: str,
     varname: str,
+    colorbar_file: str,
     **kwargs,
 ):
     """Plot postage stamp contour plots from an ensemble.
@@ -234,6 +250,10 @@ def _plot_and_save_postage_stamp_contour_plot(
     grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
 
     fig = plt.figure(figsize=(10, 10))
+
+    # Specify the color bar
+    cmap, levels = _colorbar_map_levels(colorbar_file, varname)
+
     # Make a subplot for each member.
     for member, subplot in zip(
         cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1)
@@ -241,7 +261,7 @@ def _plot_and_save_postage_stamp_contour_plot(
         # Implicit interface is much easier here, due to needing to have the
         # cartopy GeoAxes generated.
         plt.subplot(grid_size, grid_size, subplot)
-        plot = iplt.contourf(member)
+        plot = iplt.contourf(member, cmap=cmap, levels=levels)
         ax = plt.gca()
         ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
         ax.set_axis_off()
