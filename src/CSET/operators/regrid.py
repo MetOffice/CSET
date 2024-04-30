@@ -14,6 +14,8 @@
 
 """Operators to regrid cubes."""
 
+import logging
+
 import iris
 import iris.cube
 import numpy as np
@@ -230,6 +232,12 @@ def regrid_to_single_point(
     lat_min, lon_min = lat.points.min(), lon.points.min()
     lat_max, lon_max = lat.points.max(), lon.points.max()
 
+    # Get bounds
+    # Boundaries of frame to avoid selecting gridpoint close to domain edge
+    # Currently hardwired to 8 but could be a user input
+    lat_min_bound, lon_min_bound = lat.points[7], lon.points[7]
+    lat_max_bound, lon_max_bound = lat.points[-8], lon.points[-8]
+
     # Check to see if selected point is outside the domain
     if (
         (lat_pt < lat_min)
@@ -238,6 +246,16 @@ def regrid_to_single_point(
         or (lon_pt > lon_max)
     ):
         raise ValueError("Selected point is outside the domain.")
+    else:
+        if (
+            (lat_pt < lat_min_bound)
+            or (lat_pt > lat_max_bound)
+            or (lon_pt < lon_min_bound)
+            or (lon_pt > lon_max_bound)
+        ):
+            logging.warning(
+                "Warning.  Selected point is within 8 gridlengths of the domain edge."
+            )
 
     regrid_method = getattr(iris.analysis, method, None)
     if callable(regrid_method):
