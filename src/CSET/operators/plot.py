@@ -170,6 +170,7 @@ def _colorbar_map_levels(
         print("color bar file" + colorbar_file)
         print("The color bar file does not exist. Setting default values.")
         levels = None
+        norm = None
         cmap = mpl.colormaps["viridis"]
 
     return cmap, levels, norm
