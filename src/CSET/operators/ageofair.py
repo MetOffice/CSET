@@ -19,6 +19,7 @@ This determines how old air is since it entered through the lateral boundary at 
 """
 
 import datetime
+import logging
 import multiprocessing
 import os
 import tempfile
@@ -103,7 +104,7 @@ def aoa_core(
     """
     # Initialise empty array to store age of air for this latitude strip.
     ageofair_local = np.zeros((x_arr.shape[0], x_arr.shape[2]))
-    print("Working on ", lon_pnt)
+    logging.info("Working on ", lon_pnt)
 
     # Ignore leadtime 0 as this is trivial.
     for leadtime in range(1, x_arr.shape[0]):
@@ -259,7 +260,7 @@ def compute_ageofair(
 
     # Set up temporary directory to store intermediate age of air slices.
     tmpdir = tempfile.mkdtemp()
-    print("Made tmpdir", tmpdir)
+    logging.info("Made tmpdir", tmpdir)
 
     # Check that all cubes are of same size (will catch different dimension orders too).
     if not XWIND.shape == YWIND.shape == WWIND.shape == GEOPOT.shape:
@@ -272,7 +273,7 @@ def compute_ageofair(
         raise NotImplementedError("Unsupported time base")
 
     # Make data non-lazy to speed up code.
-    print("Making data non-lazy...")
+    logging.info("Making data non-lazy...")
     x_arr = XWIND.data
     y_arr = YWIND.data
     z_arr = WWIND.data
@@ -280,7 +281,7 @@ def compute_ageofair(
 
     # Smooth vertical velocity if using, to 2sigma (standard for 0.5 degree).
     if incW:
-        print("Smoothing vertical velocity...")
+        logging.info("Smoothing vertical velocity...")
         for t in range(0, z_arr.shape[0]):
             for p in range(0, z_arr.shape[1]):
                 z_arr[t, p, :, :] = gaussian_filter(
@@ -325,7 +326,7 @@ def compute_ageofair(
         ],
     )
 
-    print("STARTING AOA DIAG...")
+    logging.info("STARTING AOA DIAG...")
     start = datetime.datetime.now()
     if multicore is not None:
         # Multiprocessing on each longitude slice
@@ -365,7 +366,9 @@ def compute_ageofair(
             )
 
     # Verbose for time taken to run, and collate tmp ndarrays into final cube, and return
-    print("AOA DIAG DONE, took", (datetime.datetime.now() - start).total_seconds(), "s")
+    logging.info(
+        "AOA DIAG DONE, took", (datetime.datetime.now() - start).total_seconds(), "s"
+    )
     for i in range(0, XWIND.shape[3]):
         ageofair_cube.data[:, :, i] = np.load(
             tmpdir + "/aoa_frag_" + str(i).zfill(4) + ".npy"
