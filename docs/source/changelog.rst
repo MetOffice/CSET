@@ -30,6 +30,9 @@ Unreleased
 * `@jfrost-mo`_ updated the example rose-suite.conf to reflect what a modern
   version should look like in :pr:`508`
 
+.. _@JKPShonk: https://github.com/JKPShonk
+.. _@cehalliwell: https://github.com/cehalliwell
+
 24.4.1 (2024-04-19)
 -------------------
 
