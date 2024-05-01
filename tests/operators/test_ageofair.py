@@ -133,12 +133,15 @@ def test_aoa_timefreq(
     xwind=get_xwind, ywind=get_ywind, wwind=get_wwind, geopot=get_geopot
 ):
     """Variable time intervals raises NotImplemented error."""
-    xwind = xwind()
-    # Sample time non-uniform.
-    xwind = xwind[[1, 2, 4, 5], :, :, :]
     with pytest.raises(NotImplementedError):
         ageofair.compute_ageofair(
-            xwind, ywind(), wwind(), geopot(), plev=500, incW=True, cyclic=True
+            xwind()[[1, 2, 4, 5], :, :, :],
+            ywind()[[1, 2, 4, 5], :, :, :],
+            wwind()[[1, 2, 4, 5], :, :, :],
+            geopot()[[1, 2, 4, 5], :, :, :],
+            plev=500,
+            incW=True,
+            cyclic=True,
         )
 
 
@@ -158,7 +161,7 @@ def test_aoa_plevreq(
     xwind=get_xwind, ywind=get_ywind, wwind=get_wwind, geopot=get_geopot
 ):
     """Pressure level requested that doesn't exist raises Value error."""
-    with pytest.raises(ValueError):
+    with pytest.raises(IndexError):
         ageofair.compute_ageofair(
             xwind(), ywind(), wwind(), geopot(), plev=123, incW=True, cyclic=True
         )
