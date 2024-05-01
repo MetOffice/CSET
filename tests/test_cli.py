@@ -208,3 +208,16 @@ def test_recipe_id_no_title():
     )
     # UUID output + newline.
     assert len(p.stdout) == 37
+
+
+def test_cset_addopts():
+    """Lists in CSET_ADDOPTS environment variable don't crash the parser."""
+    environment = dict(os.environ)
+    environment["CSET_ADDOPTS"] = "--LIST='[1, 2, 3]'"
+    p = subprocess.run(
+        ["cset", "recipe-id", "-r", "tests/test_data/addopts_test_recipe.yaml"],
+        check=True,
+        capture_output=True,
+        env=environment,
+    )
+    assert p.stdout == b"list_1_2_3\n"

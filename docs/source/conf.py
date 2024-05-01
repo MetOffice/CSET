@@ -41,3 +41,8 @@ extlinks = {
     "issue": ("https://github.com/MetOffice/CSET/issues/%s", "Issue #%s"),
     "pr": ("https://github.com/MetOffice/CSET/pull/%s", "PR #%s"),
 }
+
+# Ignore GitHub links as we have many and don't want to be rate limited.
+linkcheck_ignore = [
+    r"https://github.com/.+/(issues|pull)/\d+",
+]

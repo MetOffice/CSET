@@ -15,6 +15,14 @@ Unreleased
 * `@JKPShonk`_ and `@cehalliwell`_ added functionality to CSET to allow it to
    generate time series plots from model data mapped on to a selected
    longitude/latitude location in :pr:`577`
+* `@jfrost-mo`_ fixed how arguments from the ``CSET_ADDOPTS`` environment
+  variable are parsed in :pr:`569`. This fixes issues with passing lists into
+  recipes.
+* `@jfrost-mo`_ added a dead link checker to the documentation in :pr:`556`
+* `@Sylviabohnenstengel`_ documented the common error of operating on a CubeList
+  instead of a Cube in :pr:`541`
+* `@Sylviabohnenstengel`_ documented how to update your conda environment in
+  :pr:`519`
 * `@Sylviabohnenstengel`_ documented the common error of no cubes being loaded
   in :pr:`513`
 * `@Sylviabohnenstengel` and `@jfrost-mo` redid the rose-meta sort orders so

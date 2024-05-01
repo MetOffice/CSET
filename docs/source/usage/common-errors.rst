@@ -56,3 +56,15 @@ have different time intervals. For example ``field1`` has hourly data, whereas
 ``PT3H`` or, if we intend to process the hourly data with a
 ``CSET_CYCLE_PERIOD`` of 1 hour we need to run two different CSET workflows
 instead.
+
+AttributeError: 'CubeList' object has no attribute 'collapsed'
+--------------------------------------------------------------
+
+The operator ``read.read_cubes`` outputs a CubeList rather than only a Cube.
+Most other operators can operate either on a single Cube or a CubeList of any
+number of Cubes. If you get this error message it is likely that the operator
+reading in the CubeList can not perform operations yet on CubeLists.
+
+In this case try switching to ``read.read_cube``, which forces a single Cube as
+output and not a CubeList. This requires that all metadata, etc. match up to
+allow forming a single Cube, often requiring refinement of the constraints.
