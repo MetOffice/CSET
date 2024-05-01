@@ -1,0 +1,15 @@
+{% if AOA_DIAG %}
+[scheduling]
+    [[graph]]
+    P1 = """
+    recipe_start => aoa_diag => recipe_finish
+    """
+
+[runtime]
+    [[aoa_diag]]
+    script = rose task-run -v --app-key=run_cset_recipe
+    execution time limit = PT60M
+        [[[environment]]]
+        CSET_RECIPE_NAME = "ageofair_plot.yaml"
+        CSET_ADDOPTS = "--AOA_PLEV={{AOA_PLEV}} --AOA_INCW={{AOA_INCW}} --AOA_CYCLIC={{AOA_CYCLIC}}"
+{% endif %}
