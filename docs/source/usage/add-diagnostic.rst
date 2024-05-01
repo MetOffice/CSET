@@ -21,7 +21,7 @@ Open issues
 Open a new issue on the CSET repository and assign yourself. It can be helpful
 to @mention any other interested parties to discuss the design at this stage.
 
-Create a branches
+Create a branch
 -----------------
 
 You can directly create the respective code branch from the issues on the GitHub
