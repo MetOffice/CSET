@@ -134,3 +134,45 @@ def test_regrid_to_single_point(cube):
     regrid_cube = regrid.regrid_to_single_point(cube, 0.5, 358.5, "Nearest")
     expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3)>"
     assert repr(regrid_cube) == expected_cube
+
+
+def test_regrid_to_single_point_missing_coord(cube):
+    """Missing coordinate raises error."""
+    # Missing X coordinate.
+    source = cube.copy()
+    source.remove_coord("grid_longitude")
+    with pytest.raises(ValueError):
+        regrid.regrid_to_single_point(source, 0.5, 358.5, "Nearest")
+
+    # Missing Y coordinate.
+    source = cube.copy()
+    source.remove_coord("grid_latitude")
+    with pytest.raises(ValueError):
+        regrid.regrid_to_single_point(source, 0.5, 358.5, "Nearest")
+
+
+def test_regrid_to_single_point_unknown_crs(cube):
+    """Coordinate reference system is unrecognised."""
+    # Exchange X to unsupported coordinate system.
+    source_changed_x = cube.copy()
+    source_changed_x.coord("grid_longitude").coord_system = iris.coord_systems.OSGB()
+    with pytest.raises(NotImplementedError):
+        regrid.regrid_to_single_point(source_changed_x, 0.5, 358.5, "Nearest")
+
+    # Exchange Y to unsupported coordinate system.
+    source_changed_y = cube.copy()
+    source_changed_y.coord("grid_latitude").coord_system = iris.coord_systems.OSGB()
+    with pytest.raises(NotImplementedError):
+        regrid.regrid_to_single_point(source_changed_y, 0.5, 358.5, "Nearest")
+
+
+def test_regrid_to_single_point_outside_domain(cube):
+    """Error if coordinates are outside the model domain."""
+    with pytest.raises(ValueError):
+        regrid.regrid_to_single_point(cube, 0.5, 178.5, "Nearest")
+
+
+def test_regrid_to_single_point_unknown_method(cube):
+    """Method does not exist."""
+    with pytest.raises(NotImplementedError):
+        regrid.regrid_to_single_point(cube, 0.5, 358.5, method="nonexistent")
