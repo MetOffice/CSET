@@ -30,8 +30,6 @@ import iris.cube
 import numpy as np
 from scipy.ndimage import gaussian_filter
 
-iris.FUTURE.datum_support = True
-
 
 def calc_dist(coord_1, coord_2):
     """Haversine distance in meters."""
