@@ -305,15 +305,16 @@ def compute_ageofair(
     time = XWIND.coord("time").points
 
     # Get array index for user specified pressure level.
-    try:
-        plev_idx = np.where(XWIND.coord("pressure").points == plev)[0][0]
-    except IndexError:
-        print(
+    if plev not in XWIND.coord("pressure").points:
+        raise IndexError(
             "Can't find plev ",
             str(plev),
             " in ",
             XWIND.coord("pressure").points,
         )
+
+    # Find corresponding pressure level index
+    plev_idx = np.where(XWIND.coord("pressure").points == plev)[0][0]
 
     # Initialise cube containing age of air.
     ageofair_cube = iris.cube.Cube(
