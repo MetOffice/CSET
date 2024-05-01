@@ -101,6 +101,9 @@ to come.
 * `@jfrost-mo`_ updated the example rose-suite.conf to reflect what a modern
   version should look like in :pr:`508`
 
+.. _@JKPShonk: https://github.com/JKPShonk
+.. _@cehalliwell: https://github.com/cehalliwell
+
 .. _CSET discussion forum: https://github.com/MetOffice/simulation-systems/discussions/categories/cset-toolkit
 .. _@dasha-shchep: https://github.com/dasha-shchep
 .. _@cjohnson-pi: https://github.com/cjohnson-pi
