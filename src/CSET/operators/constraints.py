@@ -187,12 +187,18 @@ def generate_area_constraint(
     """Generate an area constraint between latitude/longitude limits.
 
     Operator that takes a set of latitude and longitude limits and returns a
-    constraint that selects values only inside that area.
+    constraint that selects grid values only inside that area.
 
     Arguments
     ---------
     lat_start: float
         Latitude value for lower bound
+    lat_end: float
+        Latitude value for top bound
+    lon_start: float
+        Longitude value for left bound
+    lon_end: float
+        Longitude value for right bound
 
     Returns
     -------
@@ -205,7 +211,6 @@ def generate_area_constraint(
         coord_values={"grid_longitude": lambda cell: lon_start < cell < lon_end}
     )
     area_constraint = lat_constraint & lon_constraint
-    print(type(area_constraint))
     return area_constraint
 
 
