@@ -122,7 +122,6 @@ def test_aoa_mismatched_size(
     xwind=get_xwind, ywind=get_ywind, wwind=get_wwind, geopot=get_geopot
 ):
     """Mismatched array size raises error."""
-    # Missing X coordinate.
     ywind = ywind()[:, :, 1:, :]
     with pytest.raises(ValueError):
         ageofair.compute_ageofair(
@@ -134,9 +133,9 @@ def test_aoa_timefreq(
     xwind=get_xwind, ywind=get_ywind, wwind=get_wwind, geopot=get_geopot
 ):
     """Variable time intervals raises NotImplemented error."""
-    # Missing X coordinate.
     xwind = xwind()
-    xwind.coord("time").points[3] = xwind.coord("time").points[3] + 0.5
+    # Sample time non-uniform.
+    xwind = xwind[[1, 2, 4, 5], :, :, :]
     with pytest.raises(NotImplementedError):
         ageofair.compute_ageofair(
             xwind, ywind(), wwind(), geopot(), plev=500, incW=True, cyclic=True
@@ -147,7 +146,6 @@ def test_aoa_timeunits(
     xwind=get_xwind, ywind=get_ywind, wwind=get_wwind, geopot=get_geopot
 ):
     """Time intervals that are not hourly raises NotImplemented error."""
-    # Missing X coordinate.
     xwind = xwind()
     xwind.coord("time").units = "days since 1970-01-01 00:00:00"
     with pytest.raises(NotImplementedError):
