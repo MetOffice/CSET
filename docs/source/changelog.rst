@@ -12,6 +12,8 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@dasha-shchep`_ added ``generate_area_constraint`` operator and added to
+  LFRic recipes in :pr:`522`. This was their first contribution 🎉
 * `@jfrost-mo`_ dropped python 3.9 support in :pr:`448` The minimum required
   python is now 3.10.
 * `@jfrost-mo`_ fixed some outdated documentation examples in :pr:`546`
@@ -38,6 +40,7 @@ Unreleased
 * `@jfrost-mo`_ updated the example rose-suite.conf to reflect what a modern
   version should look like in :pr:`508`
 
+.. _@dasha-shchep: https://github.com/dasha-shchep
 .. _@cjohnson-pi: https://github.com/cjohnson-pi
 .. _@Ashfinn: https://github.com/Ashfinn
 
