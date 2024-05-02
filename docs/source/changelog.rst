@@ -12,6 +12,8 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@Ashfinn_` fixed a typo in the documentation in :pr:`573`. This was their
+  first contribution 🎉
 * `@jfrost-mo`_ fixed how arguments from the ``CSET_ADDOPTS`` environment
   variable are parsed in :pr:`569`. This fixes issues with passing lists into
   recipes.
@@ -26,6 +28,8 @@ Unreleased
   that workflow configuration makes more sense in :pr:`504`
 * `@jfrost-mo`_ updated the example rose-suite.conf to reflect what a modern
   version should look like in :pr:`508`
+
+.. _@Ashfinn: https://github.com/Ashfinn
 
 24.4.1 (2024-04-19)
 -------------------
