@@ -74,7 +74,7 @@ the command ``cylc gui``.
     # Run workflow
     cylc vip .
     # View workflow progress and don't use & at the end to enable
-    # interactive mode. Ideally run the command in a separate terminal 
+    # interactive mode. Ideally run the command in a separate terminal
     # that you can minimise.
     cylc gui
 
