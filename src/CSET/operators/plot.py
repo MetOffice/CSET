@@ -155,10 +155,8 @@ def _colorbar_map_levels(
                 print("From color_bar dictionary: Using levels")
             except KeyError:
                 try:
-                    vminmax = colorbar[varname]["minmax"]
+                    vmin, vmax = colorbar[varname]["min"], colorbar[varname]["max"]
                     print("From color_bar dictionary: Using min and max")
-                    vmin = vminmax[0]
-                    vmax = vminmax[1]
 
                     levels = np.linspace(vmin, vmax, 10)
                     norm = None
