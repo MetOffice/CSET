@@ -131,7 +131,14 @@ def _colorbar_map_levels(
     """
     Specify the color map and levels.
 
-    For the given variable name varname, from a colorbar dictionary file.
+    For the given variable name, from a colorbar dictionary file.
+
+    Parameters
+    ----------
+    colorbar_file: str
+        Filename of the colorbar dictionary to read.
+    varname: str
+        Variable name to extract from the dictionary
 
     """
     try:
@@ -177,9 +184,8 @@ def _colorbar_map_levels(
 def _plot_and_save_contour_plot(
     cube: iris.cube.Cube,
     filename: str,
-    varname: str,
-    colorbar_file: str,
     title: str,
+    colorbar_file="file_name",
     **kwargs,
 ):
     """Plot and save a contour plot.
@@ -190,18 +196,17 @@ def _plot_and_save_contour_plot(
         2 dimensional (lat and lon) Cube of the data to plot.
     filename: str
         Filename of the plot to write.
-    varname: str
-        Name of the variable to plot
-    colorbar_file: str
-        Filename of the colorbar dictionary
     title: str
         Plot title.
+    colorbar_file: str
+        Filename of the colorbar dictionary
+
     """
     # Setup plot details, size, resolution, etc.
     fig = plt.figure(figsize=(15, 15), facecolor="w", edgecolor="k")
 
     # Specify the color bar
-    cmap, levels, norm = _colorbar_map_levels(colorbar_file, varname)
+    cmap, levels, norm = _colorbar_map_levels(colorbar_file, cube.name())
 
     # Filled contour plot of the field.
     contours = iplt.contourf(cube, cmap=cmap, levels=levels, norm=norm)
@@ -229,9 +234,8 @@ def _plot_and_save_postage_stamp_contour_plot(
     cube: iris.cube.Cube,
     filename: str,
     stamp_coordinate: str,
-    varname: str,
-    colorbar_file: str,
     title: str,
+    colorbar_file="file_name",
     **kwargs,
 ):
     """Plot postage stamp contour plots from an ensemble.
@@ -244,8 +248,6 @@ def _plot_and_save_postage_stamp_contour_plot(
         Filename of the plot to write.
     stamp_coordinate: str
         Coordinate that becomes different plots.
-    varname: str
-        Name of the variable to plot
     colorbar_file:
         Filename of the colorbar dictionary
 
@@ -260,7 +262,7 @@ def _plot_and_save_postage_stamp_contour_plot(
     fig = plt.figure(figsize=(10, 10))
 
     # Specify the color bar
-    cmap, levels, norm = _colorbar_map_levels(colorbar_file, varname)
+    cmap, levels, norm = _colorbar_map_levels(colorbar_file, cube.name())
 
     # Make a subplot for each member.
     for member, subplot in zip(
@@ -334,7 +336,6 @@ def spatial_contour_plot(
     filename: str = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
-    varname: str = "variable_name",
     colorbar_file: str = "file_name",
     **kwargs,
 ) -> iris.cube.Cube:
@@ -359,8 +360,6 @@ def spatial_contour_plot(
     stamp_coordinate: str, optional
         Coordinate about which to plot postage stamp plots. Defaults to
         ``"realization"``.
-    varname: str, optional
-        Name of the variable to plot.
     colorbar_file: str, optional
         Filename of the colorbar dictionary.
 
@@ -413,9 +412,8 @@ def spatial_contour_plot(
             cube_slice,
             plot_filename,
             stamp_coordinate=stamp_coordinate,
-            varname=varname,
-            colorbar_file=colorbar_file,
             title=title,
+            colorbar_file=colorbar_file,
         )
         plot_index.append(plot_filename)
 
@@ -433,8 +431,6 @@ def postage_stamp_contour_plot(
     cube: iris.cube.Cube,
     filename: str = None,
     coordinate: str = "realization",
-    varname: str = "variable_name",
-    colorbar_file: str = "file_name",
     **kwargs,
 ) -> iris.cube.Cube:
     """Plot postage stamp contour plots from an ensemble.
@@ -450,10 +446,6 @@ def postage_stamp_contour_plot(
         The path of the plot to write. Defaults to the recipe name.
     coordinate: str
         The coordinate that becomes different plots. Defaults to "realization".
-    varname: str, optional
-        Name of the variable to plot.
-    colorbar_file: str, optional
-        Filename of the colorbar dictionary.
 
     Returns
     -------
@@ -485,9 +477,7 @@ def postage_stamp_contour_plot(
     except iris.exceptions.CoordinateNotFoundError as err:
         raise ValueError(f"Cube must have a {coordinate} coordinate.") from err
 
-    _plot_and_save_postage_stamp_contour_plot(
-        cube, filename, coordinate, varname, colorbar_file, title=""
-    )
+    _plot_and_save_postage_stamp_contour_plot(cube, filename, coordinate, title="")
     _make_plot_html_page([filename])
     return cube
 
