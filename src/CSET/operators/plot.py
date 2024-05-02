@@ -618,14 +618,21 @@ def plot_vertical_line_series(
     TypeError
         If the cube isn't a single cube.
     """
-    # Check cube is right shape.
+    # Ensure we've got a single cube.
     cube = _check_single_cube(cube)
+
     try:
         coord = cube.coord(series_coordinate)
     except iris.exceptions.CoordinateNotFoundError as err:
         raise ValueError(f"Cube must have a {series_coordinate} coordinate.") from err
+
     if cube.ndim > 1:
-        raise ValueError("Cube must be 1D.")
+        try:
+            cube.coord(sequence_coordinate)
+        except iris.exceptions.CoordinateNotFoundError as err:
+            raise ValueError(
+                f"Cube must be 1D. If it is not 1D check if it has a {sequence_coordinate} to use for slider function."
+            ) from err
 
     # Ensure we have a name for the plot file.
     recipe_title = get_recipe_metadata().get("title", "Untitled")
