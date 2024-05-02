@@ -155,13 +155,13 @@ def regrid_to_single_point(
 ) -> iris.cube.Cube:
     """Select data at a single point by longitude and latitude.
 
-    Selection is performed by a regrid function, selecting the nearest gridpoint to
-    the selected longitude and latitude values.
+    Selection of model grid point is performed by a regrid function, selecting the nearest 
+    gridpoint to the selected longitude and latitude values.
 
     Parameters
     ----------
     incube: Cube
-        An iris cube of the data to regrid. As a minimum, it needs to be 2D with a latitude,
+        An iris cube of the data to regrid. As a minimum, it needs to be 2D with latitude,
         longitude coordinates.
     lon_pt: float
         Selected value of longitude.
