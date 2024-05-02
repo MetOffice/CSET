@@ -22,7 +22,7 @@ Open a new issue on the CSET repository and assign yourself. It can be helpful
 to @mention any other interested parties to discuss the design at this stage.
 
 Create a branch
------------------
+---------------
 
 You can directly create the respective code branch from the issues on the GitHub
 code repository pages, or from the git CLI.
