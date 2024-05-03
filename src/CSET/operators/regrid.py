@@ -14,13 +14,21 @@
 
 """Operators to regrid cubes."""
 
-import logging
+import warnings
 
 import iris
 import iris.cube
 import numpy as np
 
 from CSET.operators._utils import get_cube_yxcoordname
+
+
+class BoundaryWarning(UserWarning):
+    """Selected gridpoint is close to the domain edge.
+
+    In many cases gridpoints near the domain boundary contain non-physical
+    values, so caution is advised when interpreting them.
+    """
 
 
 def regrid_onto_cube(
@@ -194,7 +202,7 @@ def regrid_to_single_point(
     The acceptable coordinate names for X and Y coordinates are currently described
     in X_COORD_NAMES and Y_COORD_NAMES. These cover commonly used coordinate types,
     though a user can append new ones.
-    Currently rectlinear grids (uniform) are supported.
+    Currently rectilinear grids (uniform) are supported.
 
     """
     # Get a list of coordinate names for the cube
@@ -253,8 +261,10 @@ def regrid_to_single_point(
             or (lon_pt < lon_min_bound)
             or (lon_pt > lon_max_bound)
         ):
-            logging.warning(
-                "Warning.  Selected point is within 8 gridlengths of the domain edge."
+            warnings.warn(
+                "Selected point is within 8 gridlengths of the domain edge.",
+                category=BoundaryWarning,
+                stacklevel=2,
             )
 
     regrid_method = getattr(iris.analysis, method, None)
