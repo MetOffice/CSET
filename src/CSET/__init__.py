@@ -72,6 +72,9 @@ def main():
     bake_step_control.add_argument(
         "--collate-only", action="store_true", help="only run collation steps"
     )
+    parser_bake.add_argument(
+        "-s", "--style-file", type=Path, help="colour bar definition to use"
+    )
     parser_bake.set_defaults(func=_bake_command)
 
     parser_graph = subparsers.add_parser("graph", help="visualise a recipe file")
@@ -195,10 +198,16 @@ def _bake_command(args, unparsed_args):
         if not args.input_dir:
             raise ArgumentError("the following arguments are required: -i/--input-dir")
         execute_recipe_parallel(
-            args.recipe, args.input_dir, args.output_dir, recipe_variables
+            args.recipe,
+            args.input_dir,
+            args.output_dir,
+            recipe_variables,
+            args.style_file,
         )
     if not args.parallel_only:
-        execute_recipe_collate(args.recipe, args.output_dir, recipe_variables)
+        execute_recipe_collate(
+            args.recipe, args.output_dir, recipe_variables, args.style_file
+        )
 
 
 def _graph_command(args, unparsed_args):

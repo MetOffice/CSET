@@ -38,7 +38,6 @@ collate:
   # TODO: Figure out how to get plotting into the parallel steps.
   - operator: plot.spatial_contour_plot
     sequence_coordinate: time
-    colorbar_file: $COLORBAR_FILE
 
   - operator: write.write_cube_to_nc
     overwrite: True
