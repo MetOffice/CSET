@@ -184,7 +184,7 @@ def regrid_to_single_point(
     Returns
     -------
     cube_rgd: Cube
-        An iris cube of the data at the specified point (this will have time
+        An iris cube of the data at the specified point (this may have time
         and/or height dimensions).
 
     Raises
