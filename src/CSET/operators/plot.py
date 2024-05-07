@@ -146,35 +146,34 @@ def _colorbar_map_levels(varname: str, **kwargs):
         with open(colorbar_file, "rt", encoding="UTF-8") as fp:
             colorbar = json.load(fp)
 
-            # Specify the colormap for this variable
+        # Specify the colormap for this variable
+        try:
+            cmap = colorbar[varname]["cmap"]
+            logging.debug("From color_bar dictionary: Using cmap")
+        except KeyError:
+            cmap = mpl.colormaps["viridis"]
+
+        # Specify the colorbar levels for this variable
+        try:
+            levels = colorbar[varname]["levels"]
+
+            actual_cmap = mpl.cm.get_cmap(cmap)
+
+            norm = mpl.colors.BoundaryNorm(levels, ncolors=actual_cmap.N)
+            logging.debug("From color_bar dictionary: Using levels")
+        except KeyError:
             try:
-                cmap = colorbar[varname]["cmap"]
-                print("From color_bar dictionary: Using cmap")
+                vmin, vmax = colorbar[varname]["min"], colorbar[varname]["max"]
+                logging.debug("From color_bar dictionary: Using min and max")
+                levels = np.linspace(vmin, vmax, 10)
+                norm = None
             except KeyError:
-                cmap = mpl.colormaps["viridis"]
-
-            # Specify the colorbar levels for this variable
-            try:
-                levels = colorbar[varname]["levels"]
-
-                actual_cmap = mpl.cm.get_cmap(cmap)
-
-                norm = mpl.colors.BoundaryNorm(levels, ncolors=actual_cmap.N)
-                print("From color_bar dictionary: Using levels")
-            except KeyError:
-                try:
-                    vmin, vmax = colorbar[varname]["min"], colorbar[varname]["max"]
-                    print("From color_bar dictionary: Using min and max")
-
-                    levels = np.linspace(vmin, vmax, 10)
-                    norm = None
-                except KeyError:
-                    levels = None
-                    norm = None
+                levels = None
+                norm = None
 
     except FileNotFoundError:
-        print("color bar file" + colorbar_file)
-        print("The color bar file does not exist. Setting default values.")
+        logging.debug("Colour bar file: %s", colorbar_file)
+        logging.info("Colour bar file does not exist. Using default values.")
         levels = None
         norm = None
         cmap = mpl.colormaps["viridis"]
