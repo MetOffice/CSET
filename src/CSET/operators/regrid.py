@@ -163,8 +163,9 @@ def regrid_to_single_point(
 ) -> iris.cube.Cube:
     """Select data at a single point by longitude and latitude.
 
-    Selection of model grid point is performed by a regrid function, selecting the nearest
-    gridpoint to the selected longitude and latitude values.
+    Selection of model grid point is performed by a regrid function, either selecting the
+    nearest gridpoint to the selected longitude and latitude values or using linear
+    interpolation across the surrounding points.
 
     Parameters
     ----------
@@ -192,8 +193,6 @@ def regrid_to_single_point(
     ValueError
         If a unique x/y coordinate cannot be found; also if, for selecting a single
         gridpoint, the chosen longitude and latitude point is outside the domain.
-    [TO DO: these limits may need updating to exclude selecting points too near the
-    boundaries.]
     NotImplementedError
         If the cubes grid, or the method for regridding, is not yet supported.
 
@@ -203,6 +202,8 @@ def regrid_to_single_point(
     in X_COORD_NAMES and Y_COORD_NAMES. These cover commonly used coordinate types,
     though a user can append new ones.
     Currently rectilinear grids (uniform) are supported.
+    Warnings are raised if the selected gridpoint is within eight gridlengths of the
+    domain boundary as data here is potentially unreliable.
 
     """
     # Get a list of coordinate names for the cube
