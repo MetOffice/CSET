@@ -129,7 +129,7 @@ def test_regrid_onto_xyspacing_unknown_method(regrid_source_cube):
 
 
 def test_regrid_to_single_point(cube):
-    """Regrids to single point."""
+    """Regrid to single point."""
     # Test extracting a single point.
     regrid_cube = regrid.regrid_to_single_point(cube, 0.5, 358.5, "Nearest")
     expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3)>"
