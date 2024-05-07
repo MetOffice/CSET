@@ -1,5 +1,5 @@
 category: Quick Look
-title: Time series of $VARNAME at [$LATITUDE_POINT,$LONGITUDE_POINT]
+title: Time series of $VARNAME at $LATITUDE_POINT N, $LONGITUDE_POINT E
 description: Plots a time series of the surface $VARNAME at a selected gridpoint.
 
 # Parallel steps.
