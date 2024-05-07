@@ -12,6 +12,9 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@JKPShonk`_ and `@cehalliwell`_ added functionality to CSET to allow it to
+   generate time series plots from model data mapped on to a selected
+   longitude/latitude location in :pr:`577`
 * `@Ashfinn_` fixed a typo in the documentation in :pr:`573`. This was their
   first contribution 🎉
 * `@jfrost-mo`_ fixed how arguments from the ``CSET_ADDOPTS`` environment
@@ -29,6 +32,8 @@ Unreleased
 * `@jfrost-mo`_ updated the example rose-suite.conf to reflect what a modern
   version should look like in :pr:`508`
 
+.. _@JKPShonk: https://github.com/JKPShonk
+.. _@cehalliwell: https://github.com/cehalliwell
 .. _@Ashfinn: https://github.com/Ashfinn
 
 24.4.1 (2024-04-19)

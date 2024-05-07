@@ -1,0 +1,16 @@
+{% if SURFACE_SINGLE_POINT_TIME_SERIES %}
+{% for model_field in SURFACE_MODEL_FIELDS %}
+[runtime]
+    [[pre_process_surface_single_point_time_series_{{model_field}}]]
+    inherit = PARALLEL
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_surface_single_point_time_series.yaml"
+        CSET_ADDOPTS = "--VARNAME={{model_field}} --LONGITUDE_POINT={{LONGITUDE_POINT}} --LATITUDE_POINT={{LATITUDE_POINT}} --SINGLE_POINT_METHOD={{SINGLE_POINT_METHOD}}"
+
+    [[collate_surface_single_point_time_series_{{model_field}}]]
+    inherit = COLLATE
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_surface_single_point_time_series.yaml"
+        CSET_ADDOPTS = "--VARNAME={{model_field}} --LONGITUDE_POINT={{LONGITUDE_POINT}} --LATITUDE_POINT={{LATITUDE_POINT}} --SINGLE_POINT_METHOD={{SINGLE_POINT_METHOD}}"
+{% endfor %}
+{% endif %}
