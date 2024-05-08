@@ -12,6 +12,7 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@Sylviabohnenstengel`_ documentation: removed necessity to add new recipe to flow.cylc.
 * `@Ashfinn_` fixed a typo in the documentation in :pr:`573`. This was their
   first contribution 🎉
 * `@jfrost-mo`_ fixed how arguments from the ``CSET_ADDOPTS`` environment
