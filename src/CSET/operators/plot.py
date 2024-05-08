@@ -123,11 +123,7 @@ def _make_plot_html_page(plots: list):
         fp.write(html)
 
 
-def _colorbar_map_levels(
-    colorbar_file,
-    varname,
-    **kwargs,
-):
+def _colorbar_map_levels(varname: str, **kwargs):
     """
     Specify the color map and levels.
 
@@ -141,39 +137,43 @@ def _colorbar_map_levels(
         Variable name to extract from the dictionary
 
     """
+    # Grab the colour bar file from the recipe global metadata. A non-existent
+    # placeholder path is used if not found.
+    colorbar_file = get_recipe_metadata().get(
+        "style_file_path", "/non-existent/NO_FILE_SPECIFIED"
+    )
     try:
         with open(colorbar_file, "rt", encoding="UTF-8") as fp:
             colorbar = json.load(fp)
 
-            # Specify the colormap for this variable
+        # Specify the colormap for this variable
+        try:
+            cmap = colorbar[varname]["cmap"]
+            logging.debug("From color_bar dictionary: Using cmap")
+        except KeyError:
+            cmap = mpl.colormaps["viridis"]
+
+        # Specify the colorbar levels for this variable
+        try:
+            levels = colorbar[varname]["levels"]
+
+            actual_cmap = mpl.cm.get_cmap(cmap)
+
+            norm = mpl.colors.BoundaryNorm(levels, ncolors=actual_cmap.N)
+            logging.debug("From color_bar dictionary: Using levels")
+        except KeyError:
             try:
-                cmap = colorbar[varname]["cmap"]
-                print("From color_bar dictionary: Using cmap")
+                vmin, vmax = colorbar[varname]["min"], colorbar[varname]["max"]
+                logging.debug("From color_bar dictionary: Using min and max")
+                levels = np.linspace(vmin, vmax, 10)
+                norm = None
             except KeyError:
-                cmap = mpl.colormaps["viridis"]
-
-            # Specify the colorbar levels for this variable
-            try:
-                levels = colorbar[varname]["levels"]
-
-                actual_cmap = mpl.cm.get_cmap(cmap)
-
-                norm = mpl.colors.BoundaryNorm(levels, ncolors=actual_cmap.N)
-                print("From color_bar dictionary: Using levels")
-            except KeyError:
-                try:
-                    vmin, vmax = colorbar[varname]["min"], colorbar[varname]["max"]
-                    print("From color_bar dictionary: Using min and max")
-
-                    levels = np.linspace(vmin, vmax, 10)
-                    norm = None
-                except KeyError:
-                    levels = None
-                    norm = None
+                levels = None
+                norm = None
 
     except FileNotFoundError:
-        print("color bar file" + colorbar_file)
-        print("The color bar file does not exist. Setting default values.")
+        logging.debug("Colour bar file: %s", colorbar_file)
+        logging.info("Colour bar file does not exist. Using default values.")
         levels = None
         norm = None
         cmap = mpl.colormaps["viridis"]
@@ -185,7 +185,6 @@ def _plot_and_save_contour_plot(
     cube: iris.cube.Cube,
     filename: str,
     title: str,
-    colorbar_file="file_name",
     **kwargs,
 ):
     """Plot and save a contour plot.
@@ -198,15 +197,13 @@ def _plot_and_save_contour_plot(
         Filename of the plot to write.
     title: str
         Plot title.
-    colorbar_file: str
-        Filename of the colorbar dictionary
 
     """
     # Setup plot details, size, resolution, etc.
     fig = plt.figure(figsize=(15, 15), facecolor="w", edgecolor="k")
 
     # Specify the color bar
-    cmap, levels, norm = _colorbar_map_levels(colorbar_file, cube.name())
+    cmap, levels, norm = _colorbar_map_levels(cube.name())
 
     # Filled contour plot of the field.
     contours = iplt.contourf(cube, cmap=cmap, levels=levels, norm=norm)
@@ -235,7 +232,6 @@ def _plot_and_save_postage_stamp_contour_plot(
     filename: str,
     stamp_coordinate: str,
     title: str,
-    colorbar_file="file_name",
     **kwargs,
 ):
     """Plot postage stamp contour plots from an ensemble.
@@ -248,8 +244,6 @@ def _plot_and_save_postage_stamp_contour_plot(
         Filename of the plot to write.
     stamp_coordinate: str
         Coordinate that becomes different plots.
-    colorbar_file:
-        Filename of the colorbar dictionary
 
     Raises
     ------
@@ -262,7 +256,7 @@ def _plot_and_save_postage_stamp_contour_plot(
     fig = plt.figure(figsize=(10, 10))
 
     # Specify the color bar
-    cmap, levels, norm = _colorbar_map_levels(colorbar_file, cube.name())
+    cmap, levels, norm = _colorbar_map_levels(cube.name())
 
     # Make a subplot for each member.
     for member, subplot in zip(
@@ -336,7 +330,6 @@ def spatial_contour_plot(
     filename: str = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
-    colorbar_file: str = "file_name",
     **kwargs,
 ) -> iris.cube.Cube:
     """Plot a spatial variable onto a map from a 2D, 3D, or 4D cube.
@@ -360,8 +353,6 @@ def spatial_contour_plot(
     stamp_coordinate: str, optional
         Coordinate about which to plot postage stamp plots. Defaults to
         ``"realization"``.
-    colorbar_file: str, optional
-        Filename of the colorbar dictionary.
 
     Returns
     -------
@@ -413,7 +404,6 @@ def spatial_contour_plot(
             plot_filename,
             stamp_coordinate=stamp_coordinate,
             title=title,
-            colorbar_file=colorbar_file,
         )
         plot_index.append(plot_filename)
 
