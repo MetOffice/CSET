@@ -24,10 +24,10 @@ Unreleased
 * `@Sylviabohnenstengel`_ added new recipe for plotting spatial lfric data on model levels.
 * `@Sylviabohnenstengel`_ added a vertical line plotting operator that plots
   vertical profiles using an optional series coordinate and an optional sequence
-  coordinate. The series coordinate is currently tested for "pressure" and the
+  coordinate. The series coordinate is currently tested for pressure and the
   sequence coordinate allows displaying vertical profiles over time using the
   time slider functionality. Further added a recipe to plot vertical profiles
-  and test functions for the vertical plot operator.Fixes :pr: `494`.
+  and test functions for the vertical plot operator.Fixes :pr: `494`
 
 24.6.0 (2024-06-17)
 -------------------
