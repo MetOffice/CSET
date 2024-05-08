@@ -35,6 +35,12 @@ Unreleased
   :pr:`603`
 * `@dasha-shchep`_ added ``generate_area_constraint`` operator and added to
   LFRic recipes in :pr:`522`. This was their first contribution 🎉
+* `@Sylviabohnenstengel`_ added a vertical line plotting operator that plots
+  vertical profiles using an optional series coordinate and an optional sequence
+  coordinate in :pr:`567`. The series coordinate is currently tested for
+  pressure and the sequence coordinate allows displaying vertical profiles over
+  time using the time slider functionality. Furthermore added a recipe to plot
+  vertical profiles and test functions for the vertical plot operator.
 * `@jfrost-mo`_ dropped python 3.9 support in :pr:`448` The minimum required
   python is now 3.10.
 * `@jfrost-mo`_ fixed some outdated documentation examples in :pr:`546`
