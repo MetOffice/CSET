@@ -41,3 +41,13 @@ def cube(cubes):
     from CSET.operators import constraints, filters
 
     return filters.filter_cubes(cubes, constraints.generate_cell_methods_constraint([]))
+
+
+@pytest.fixture(scope="session")
+def vertical_profile_cube():
+    """Get a vertical profile Cube."""
+    from CSET.operators import read
+
+    return read.read_cube(
+        "tests/test_data/air_temperature_vertical_profile_as_series.nc"
+    )
