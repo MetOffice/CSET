@@ -1,0 +1,52 @@
+category: Quick Look
+title: Domain mean horizontal $VARNAME vertical profile as series
+description: Plots a time series of the domain mean surface $VARNAME.
+
+# Pre-processing steps.
+parallel:
+  - operator: read.read_cubes
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      pressure_level_constraint:
+        operator: constraints.generate_pressure_level_constraint
+        pressure_levels: $PLEVEL
+      validity_time_constraint:
+        operator: constraints.generate_time_constraint
+        time_start: $VALIDITY_TIME
+
+  # Remove source stash attribute, as it can be encoded in different orders.
+  # Remove uuid and timeStamp, as these are only relevant to output files, not
+  # the data in them.
+  - operator: misc.remove_attribute
+    attribute: ["um_stash_source", "uuid", "timeStamp"]
+
+  # Use a filter to merge the time slices into a single cube
+  - operator: filters.filter_cubes
+    constraint:
+      operator: constraints.generate_var_constraint
+      varname: $VARNAME
+
+
+  - operator: collapse.collapse
+    coordinate: [grid_latitude, grid_longitude]
+    method: MEAN
+
+  # Save domain meaned variable to a file per validity time.
+  - operator: write.write_cube_to_nc
+    filename: intermediate/domain_mean
+
+# Collation steps.
+# Reads in intermediate cube and plots it.
+collate:
+  - operator: read.read_cube
+    filename_pattern: intermediate/*.nc
+
+  # Make a single NetCDF with all the data inside it.
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+  # Plot the data.
+#  - operator: plot.plot_line_series
