@@ -15,6 +15,17 @@ Unreleased
 * `@cjohnson-pi`_ added support for custom plotting styles in :pr:`570`. This
   avoids many issues of side-by-side plots having different scales, or extreme
   values causing plots to saturate.
+* `@Sylviabohnenstengel`_ documentation: removed necessity to add new recipe to flow.cylc.
+* `@Ashfinn_` fixed a typo in the documentation in :pr:`573`. This was their
+  first contribution 🎉
+* `@jfrost-mo`_ fixed how arguments from the ``CSET_ADDOPTS`` environment
+  variable are parsed in :pr:`569`. This fixes issues with passing lists into
+  recipes.
+* `@jfrost-mo`_ added a dead link checker to the documentation in :pr:`556`
+* `@Sylviabohnenstengel`_ documented the common error of operating on a CubeList
+  instead of a Cube in :pr:`541`
+* `@Sylviabohnenstengel`_ documented how to update your conda environment in
+  :pr:`519`
 * `@Sylviabohnenstengel`_ documented the common error of no cubes being loaded
   in :pr:`513`
 * `@Sylviabohnenstengel` and `@jfrost-mo` redid the rose-meta sort orders so
@@ -23,6 +34,7 @@ Unreleased
   version should look like in :pr:`508`
 
 .. _@cjohnson-pi: https://github.com/cjohnson-pi
+.. _@Ashfinn: https://github.com/Ashfinn
 
 24.4.1 (2024-04-19)
 -------------------

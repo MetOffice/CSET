@@ -21,8 +21,8 @@ Open issues
 Open a new issue on the CSET repository and assign yourself. It can be helpful
 to @mention any other interested parties to discuss the design at this stage.
 
-Create a branches
------------------
+Create a branch
+---------------
 
 You can directly create the respective code branch from the issues on the GitHub
 code repository pages, or from the git CLI.
@@ -105,8 +105,6 @@ once in the ``src/CSET/recipes`` directory. This way we can run recipes with the
 
 - Include recipe in a `cylc` include file into
   ``cset-workflow/includes/<new_operator_include_file>.cylc``
-
-- Add ``<new_operator_include_file.cylc>`` to ``flow.cylc``
 
 - ``meta/rose-meta.conf``: to add section for toggle button to allow selection
   of new recipe file

@@ -119,9 +119,16 @@ jobs:
       - name: Build documentation with Sphinx
         run: |
           # Install module so it can be imported during docs generation.
+          echo '::group::Installing local package'
           python3 -m pip install .
+          echo '::endgroup::'
           # Generate the documentation
-          sphinx-build -d "docs/build/doctree" "docs/source" "docs/build/html" --color -W -bhtml
+          echo '::group::Building the documentation'
+          sphinx-build -b html --color -W --keep-going "docs/source" "docs/build/html"
+          echo '::endgroup::'
+          echo '::group::Checking for broken hyperlinks'
+          sphinx-build -b linkcheck --color -W --keep-going "docs/source" "docs/build/linkcheck"
+          echo '::endgroup::'
       - name: Upload documentation artifact
         uses: actions/upload-artifact@v4
         with:
