@@ -12,12 +12,17 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@cjohnson-pi`_ added support for custom plotting styles in :pr:`570`. This
+  avoids many issues of side-by-side plots having different scales, or extreme
+  values causing plots to saturate.
 * `@Sylviabohnenstengel`_ documented the common error of no cubes being loaded
   in :pr:`513`
 * `@Sylviabohnenstengel` and `@jfrost-mo` redid the rose-meta sort orders so
   that workflow configuration makes more sense in :pr:`504`
 * `@jfrost-mo`_ updated the example rose-suite.conf to reflect what a modern
   version should look like in :pr:`508`
+
+.. _@cjohnson-pi: https://github.com/cjohnson-pi
 
 24.4.1 (2024-04-19)
 -------------------
