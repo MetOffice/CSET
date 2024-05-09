@@ -138,8 +138,8 @@ def _run_steps(recipe, steps, step_input, output_directory: Path, style_file: Pa
         )
         logger.addHandler(diagnostic_log)
         # Create metadata file used by some steps.
-        # TODO: Do this nicer with a proper metadata solution in future.
-        recipe["style_file_path"] = str(style_file)
+        if style_file:
+            recipe["style_file_path"] = str(style_file)
         _write_metadata(recipe)
         # Execute the recipe.
         for step in steps:
