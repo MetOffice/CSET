@@ -13,7 +13,7 @@ page.
 
 .. code-block:: text
 
-    usage: cset bake [-h] [-i INPUT_DIR] -o OUTPUT_DIR -r RECIPE [--pre-only | --post-only]
+    usage: cset bake [-h] [-i INPUT_DIR] -o OUTPUT_DIR -r RECIPE [--pre-only | --post-only] [-s STYLE_FILE]
 
     options:
     -h, --help              show this help message and exit
@@ -25,6 +25,8 @@ page.
                             recipe file to read
     --parallel-only         only run parallel steps
     --collate-only          only run collation steps
+    -s STYLE_FILE, --style-file STYLE_FILE
+                            colour bar definition to use
 
 .. _cset-cookbook-command:
 
