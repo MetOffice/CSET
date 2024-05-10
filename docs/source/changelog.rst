@@ -12,6 +12,7 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@jfrost-mo`_ fixed some outdated documentation examples in :pr:`546`
 * `@jfrost-mo`_ added setuptools as an explicit dependency of the workflow in
   :pr:`543`
 * `@cjohnson-pi`_ added support for custom plotting styles in :pr:`570`. This
