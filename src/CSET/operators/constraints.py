@@ -204,13 +204,12 @@ def generate_area_constraint(
     -------
     area_constraint: iris.Constraint
     """
-    lat_constraint = iris.Constraint(
-        coord_values={"grid_latitude": lambda cell: lat_start < cell < lat_end}
+    area_constraint = iris.Constraint(
+        coord_values={
+            "grid_latitude": lambda cell: lat_start < cell < lat_end,
+            "grid_longitude": lambda cell: lon_start < cell < lon_end
+            }
     )
-    lon_constraint = iris.Constraint(
-        coord_values={"grid_longitude": lambda cell: lon_start < cell < lon_end}
-    )
-    area_constraint = lat_constraint & lon_constraint
     return area_constraint
 
 
