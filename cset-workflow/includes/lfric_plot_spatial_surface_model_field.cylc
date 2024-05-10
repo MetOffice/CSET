@@ -17,8 +17,12 @@
     inherit = COLLATE
         [[[environment]]]
         CSET_RECIPE_NAME = "lfric_generic_surface_spatial_plot_sequence.yaml"
-        CSET_ADDOPTS = """--VARNAME={{model_field}} --SUBAREA_LAT_BOUND_BOTTOM={{SUBAREA_LAT_BOUND_BOTTOM}}
-                      --SUBAREA_LAT_BOUND_TOP={{SUBAREA_LAT_BOUND_TOP}} --SUBAREA_LON_BOUND_RIGHT={{SUBAREA_LON_BOUND_RIGHT}}
-                      --SUBAREA_LON_BOUND_LEFT={{SUBAREA_LON_BOUND_LEFT}}"""
+        CSET_ADDOPTS = """
+        --VARNAME={{model_field}}
+        --SUBAREA_LAT_BOUND_BOTTOM={{SUBAREA_LAT_BOUND_BOTTOM}}
+        --SUBAREA_LAT_BOUND_TOP={{SUBAREA_LAT_BOUND_TOP}}
+        --SUBAREA_LON_BOUND_RIGHT={{SUBAREA_LON_BOUND_RIGHT}}
+        --SUBAREA_LON_BOUND_LEFT={{SUBAREA_LON_BOUND_LEFT}}
+        """
 {% endfor %}
 {% endif %}
