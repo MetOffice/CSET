@@ -95,6 +95,13 @@ def test_generate_pressure_level_constraint_no_pressure():
     assert expected_pressure_constraint in repr(pressure_constraint)
 
 
+def test_generate_area_constraint():
+    """Generate area constraint with lat-lon limits."""
+    area_constraint = constraints.generate_area_constraint(0.0, 0.0, 0.1, 0.1)
+    expected_area_constraint = "Constraint(coord_values={'grid_latitude': <function generate_area_constraint.<locals>.<lambda> at"
+    assert expected_area_constraint in repr(area_constraint)
+
+
 def test_combine_constraints():
     """Combine constraint."""
     stash_constraint = constraints.generate_stash_constraint("m01s03i236")
