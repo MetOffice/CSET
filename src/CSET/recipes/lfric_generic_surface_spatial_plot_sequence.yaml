@@ -4,6 +4,7 @@ description: Extracts and plots the surface $VARNAME from a file.
 
 parallel:
   - operator: read.read_cubes
+    filename_pattern: lfric*
     constraint:
       operator: constraints.combine_constraints
       varname_constraint:
