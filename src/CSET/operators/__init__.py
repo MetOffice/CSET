@@ -124,7 +124,7 @@ def _step_parser(step: dict, step_input: any) -> str:
         return operator(**kwargs)
 
 
-def _run_steps(recipe, steps, step_input, output_directory: Path):
+def _run_steps(recipe, steps, step_input, output_directory: Path, style_file: Path):
     """Execute the steps in a recipe."""
     original_working_directory = Path.cwd()
     os.chdir(output_directory)
@@ -139,6 +139,8 @@ def _run_steps(recipe, steps, step_input, output_directory: Path):
         )
         logger.addHandler(diagnostic_log)
         # Create metadata file used by some steps.
+        if style_file:
+            recipe["style_file_path"] = str(style_file)
         _write_metadata(recipe)
         # Execute the recipe.
         for step in steps:
@@ -153,6 +155,7 @@ def execute_recipe_parallel(
     input_directory: Path,
     output_directory: Path,
     recipe_variables: dict = None,
+    style_file: Path = None,
 ) -> None:
     """Parse and executes the parallel steps from a recipe file.
 
@@ -202,11 +205,14 @@ def execute_recipe_parallel(
                 stacklevel=1,
             )
         steps = recipe["steps"]
-    _run_steps(recipe, steps, step_input, output_directory)
+    _run_steps(recipe, steps, step_input, output_directory, style_file)
 
 
 def execute_recipe_collate(
-    recipe_yaml: Union[Path, str], output_directory: Path, recipe_variables: dict = None
+    recipe_yaml: Union[Path, str],
+    output_directory: Path,
+    recipe_variables: dict = None,
+    style_file: Path = None,
 ) -> None:
     """Parse and execute the collation steps from a recipe file.
 
@@ -244,7 +250,7 @@ def execute_recipe_collate(
                 stacklevel=1,
             )
         steps = recipe.get("post-steps", tuple())
-    _run_steps(recipe, steps, output_directory, output_directory)
+    _run_steps(recipe, steps, output_directory, output_directory, style_file)
 
 
 __all__ = [

@@ -14,6 +14,10 @@ Unreleased
 
 * `@jfrost-mo`_ added setuptools as an explicit dependency of the workflow in
   :pr:`543`
+* `@cjohnson-pi`_ added support for custom plotting styles in :pr:`570`. This
+  avoids many issues of side-by-side plots having different scales, or extreme
+  values causing plots to saturate.
+* `@Sylviabohnenstengel`_ documentation: removed necessity to add new recipe to flow.cylc.
 * `@Ashfinn_` fixed a typo in the documentation in :pr:`573`. This was their
   first contribution 🎉
 * `@jfrost-mo`_ fixed how arguments from the ``CSET_ADDOPTS`` environment
@@ -31,6 +35,7 @@ Unreleased
 * `@jfrost-mo`_ updated the example rose-suite.conf to reflect what a modern
   version should look like in :pr:`508`
 
+.. _@cjohnson-pi: https://github.com/cjohnson-pi
 .. _@Ashfinn: https://github.com/Ashfinn
 
 24.4.1 (2024-04-19)
