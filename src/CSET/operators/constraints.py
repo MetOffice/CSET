@@ -187,7 +187,8 @@ def generate_area_constraint(
     """Generate an area constraint between latitude/longitude limits.
 
     Operator that takes a set of latitude and longitude limits and returns a
-    constraint that selects grid values only inside that area.
+    constraint that selects grid values only inside that area. Works with the
+    data's native grid so is defined within the rotated pole CRS.
 
     Arguments
     ---------
@@ -207,8 +208,8 @@ def generate_area_constraint(
     area_constraint = iris.Constraint(
         coord_values={
             "grid_latitude": lambda cell: lat_start < cell < lat_end,
-            "grid_longitude": lambda cell: lon_start < cell < lon_end
-            }
+            "grid_longitude": lambda cell: lon_start < cell < lon_end,
+        }
     )
     return area_constraint
 
