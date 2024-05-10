@@ -21,7 +21,7 @@ Unreleased
   avoids many issues of side-by-side plots having different scales, or extreme
   values causing plots to saturate.
 * `@Sylviabohnenstengel`_ documentation: removed necessity to add new recipe to flow.cylc.
-* `@Ashfinn_` fixed a typo in the documentation in :pr:`573`. This was their
+* `@Ashfinn`_ fixed a typo in the documentation in :pr:`573`. This was their
   first contribution 🎉
 * `@jfrost-mo`_ fixed how arguments from the ``CSET_ADDOPTS`` environment
   variable are parsed in :pr:`569`. This fixes issues with passing lists into
@@ -33,7 +33,7 @@ Unreleased
   :pr:`519`
 * `@Sylviabohnenstengel`_ documented the common error of no cubes being loaded
   in :pr:`513`
-* `@Sylviabohnenstengel` and `@jfrost-mo` redid the rose-meta sort orders so
+* `@Sylviabohnenstengel`_ and `@jfrost-mo`_ redid the rose-meta sort orders so
   that workflow configuration makes more sense in :pr:`504`
 * `@jfrost-mo`_ updated the example rose-suite.conf to reflect what a modern
   version should look like in :pr:`508`
