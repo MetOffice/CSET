@@ -25,12 +25,11 @@ commands assume you are within it.
 
 First up, if you are at a specific site, you need to install the site specific
 configuration. This is done by running the ``install_restricted_files.sh``
-script, and pressing enter a couple times to accept the default options.
+script.
 
 .. code-block:: bash
 
   ./install_restricted_files.sh
-  # Then accept the defaults.
 
 You will then need to edit the configuration to set up your job. Start by making
 a copy of the ``rose-suite.conf.example`` file called ``rose-suite.conf``. This
