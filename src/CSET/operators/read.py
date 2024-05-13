@@ -15,6 +15,7 @@
 """Operators for reading various types of files from disk."""
 
 import logging
+import warnings
 from pathlib import Path
 
 import iris
@@ -23,6 +24,10 @@ import iris.cube
 import numpy as np
 
 from CSET._common import iter_maybe
+
+
+class NoDataWarning(UserWarning):
+    """Warning that no data has been loaded."""
 
 
 def read_cube(
@@ -155,7 +160,9 @@ def read_cubes(
             )
     logging.debug("Loaded cubes: %s", cubes)
     if len(cubes) == 0:
-        logging.warning("No cubes loaded, check your constraints!")
+        warnings.warn(
+            "No cubes loaded, check your constraints!", NoDataWarning, stacklevel=2
+        )
     return cubes
 
 
