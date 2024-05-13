@@ -12,6 +12,8 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@jfrost-mo`_ removed some old recipes that are now redundant in :pr:`512`
+* `@Sylviabohnenstengel` and `@jfrost-mo` redid the rose-meta sort orders so
 * `@jfrost-mo`_ added a git cheat sheet to the documentation in :pr:`598`
 * `@jfrost-mo`_ added a warning when input files don't exist in :pr:`518`. This
   makes it easier to see if configuration mistakes were made.

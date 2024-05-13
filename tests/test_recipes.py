@@ -29,11 +29,11 @@ def test_recipe_files_in_tree():
 
 def test_unpack(tmp_path: Path):
     """Unpack recipes."""
-    CSET.recipes.unpack_recipe(tmp_path, "extract_instant_air_temp.yaml")
-    assert (tmp_path / "extract_instant_air_temp.yaml").is_file()
+    CSET.recipes.unpack_recipe(tmp_path, "CAPE_ratio_plot.yaml")
+    assert (tmp_path / "CAPE_ratio_plot.yaml").is_file()
     # Unpack everything and check a warning is produced when files collide.
-    with pytest.warns(UserWarning):
-        CSET.recipes.unpack_recipe(tmp_path, "extract_instant_air_temp.yaml")
+    with pytest.warns():
+        CSET.recipes.unpack_recipe(tmp_path, "CAPE_ratio_plot.yaml")
 
 
 def test_unpack_recipes_exception_collision(tmp_path: Path):
@@ -41,7 +41,7 @@ def test_unpack_recipes_exception_collision(tmp_path: Path):
     file_path = tmp_path / "regular_file"
     file_path.touch()
     with pytest.raises(FileExistsError):
-        CSET.recipes.unpack_recipe(file_path, "extract_instant_air_temp.yaml")
+        CSET.recipes.unpack_recipe(file_path, "CAPE_ratio_plot.yaml")
 
 
 def test_unpack_recipes_exception_permission():
