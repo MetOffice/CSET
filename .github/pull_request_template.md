@@ -1,7 +1,4 @@
-### Description
-<!-- Thank you for contributing! Please add a short description of your change. -->
-
-
+<!-- Thanks for contributing! Please add a short description of your change. -->
 
 <!-- Link to an issue, e.g. "Fixes #123" -->
 Fixes #
