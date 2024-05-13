@@ -12,6 +12,8 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@jfrost-mo`_ made the ``install_restricted_files.sh`` script non-interactive
+  in :pr:`606`. This should make it less confusing to use.
 * `@dasha-shchep`_ added ``generate_area_constraint`` operator and added to
   LFRic recipes in :pr:`522`. This was their first contribution 🎉
 * `@jfrost-mo`_ dropped python 3.9 support in :pr:`448` The minimum required
