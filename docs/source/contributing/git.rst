@@ -65,8 +65,8 @@ covers setting it up. To access repositories within an enterprise environment
 
 .. _pull-request:
 
-Pull Requests
--------------
+Pull Request
+------------
 
 A pull request is how you submit code for inclusion in CSET. All code changes
 must go through a pull request. Pushing directly to the main branch has been
