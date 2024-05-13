@@ -32,7 +32,7 @@ def test_unpack(tmp_path: Path):
     CSET.recipes.unpack_recipe(tmp_path, "extract_instant_air_temp.yaml")
     assert (tmp_path / "extract_instant_air_temp.yaml").is_file()
     # Unpack everything and check a warning is produced when files collide.
-    with pytest.warns():
+    with pytest.warns(UserWarning):
         CSET.recipes.unpack_recipe(tmp_path, "extract_instant_air_temp.yaml")
 
 
