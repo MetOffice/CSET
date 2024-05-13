@@ -21,19 +21,13 @@ Open issues
 Open a new issue on the CSET repository and assign yourself. It can be helpful
 to @mention any other interested parties to discuss the design at this stage.
 
-Create a branch
----------------
+Check-out code branch
+---------------------
 
-You can directly create the respective code branch from the issues on the GitHub
-code repository pages, or from the git CLI.
+Follow the :ref:`instructions to download the CSET code <getting-the-code>`. You
+should have a directory called ``CSET``.
 
-Check-out code
---------------
-
-Follow instructions to download CSET code. You should have a directory called
-``CSET``.
-
-In ``CSET`` switch to your development branch and check it out.
+Inside the ``CSET`` directory switch to your development branch.
 
 .. code-block:: bash
 
