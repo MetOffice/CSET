@@ -12,6 +12,8 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@jfrost-mo`_ added a warning when input files don't exist in :pr:`518`. This
+  makes it easier to see where any configuration mistakes were made.
 * `@jfrost-mo`_ improved the documentation for adding a new diagnostic in
   :pr:`603`
 * `@dasha-shchep`_ added ``generate_area_constraint`` operator and added to
