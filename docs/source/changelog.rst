@@ -12,6 +12,9 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@jfrost-mo` replaced how the encoding of subprocess output is determined in
+  :pr:`604`. This adds support for python before 3.11, and more accurately
+  reflects the encoding.
 * `@dasha-shchep`_ added ``generate_area_constraint`` operator and added to
   LFRic recipes in :pr:`522`. This was their first contribution 🎉
 * `@jfrost-mo`_ dropped python 3.9 support in :pr:`448` The minimum required
