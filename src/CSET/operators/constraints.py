@@ -181,6 +181,39 @@ def generate_time_constraint(
     return time_constraint
 
 
+def generate_area_constraint(
+    lat_start: float, lat_end: float, lon_start: float, lon_end: float, **kwargs
+) -> iris.Constraint:
+    """Generate an area constraint between latitude/longitude limits.
+
+    Operator that takes a set of latitude and longitude limits and returns a
+    constraint that selects grid values only inside that area. Works with the
+    data's native grid so is defined within the rotated pole CRS.
+
+    Arguments
+    ---------
+    lat_start: float
+        Latitude value for lower bound
+    lat_end: float
+        Latitude value for top bound
+    lon_start: float
+        Longitude value for left bound
+    lon_end: float
+        Longitude value for right bound
+
+    Returns
+    -------
+    area_constraint: iris.Constraint
+    """
+    area_constraint = iris.Constraint(
+        coord_values={
+            "grid_latitude": lambda cell: lat_start < cell < lat_end,
+            "grid_longitude": lambda cell: lon_start < cell < lon_end,
+        }
+    )
+    return area_constraint
+
+
 def combine_constraints(
     constraint: iris.Constraint = None, **kwargs
 ) -> iris.Constraint:
