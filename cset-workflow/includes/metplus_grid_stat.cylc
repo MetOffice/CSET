@@ -1,4 +1,4 @@
-{% if METPLqUS_POINT_STAT %}
+{% if METPLUS_GRID_STAT %}
 [scheduling]
     [[graph]]
     P1 = """
