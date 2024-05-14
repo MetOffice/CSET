@@ -429,6 +429,39 @@ def _plot_and_save_vertical_line_series(
     plt.close(fig)
 
 
+def _plot_and_save_histogram_series(
+    cube: iris.cube.Cube, filename: str, title: str, **kwargs
+):
+    """Plot and save a histogram series.
+
+    Parameters
+    ----------
+    cube: Cube
+        2 dimensional Cube of the data to plot as histogram
+    filename: str
+        Filename of the plot to write.
+    title: str
+        Plot title.
+    """
+    fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
+    iplt.hist(cube)
+    ax = plt.gca()
+
+    # try seaborn for a box whisker plot:
+    # https://python-graph-gallery.com/34-grouped-boxplot/
+
+    # Add some labels and tweak the style.
+    ax.set(
+        title=title,
+    )
+    ax.autoscale()
+
+    # Save plot.
+    fig.savefig(filename, bbox_inches="tight", dpi=150)
+    logging.info("Saved line plot to %s", filename)
+    plt.close(fig)
+
+
 ####################
 # Public functions #
 ####################
@@ -693,5 +726,108 @@ def plot_vertical_line_series(
 
     # Make a page to display the plots.
     _make_plot_html_page(complete_plot_index)
+
+    return cube
+
+
+def plot_histogram_series(
+    cube: iris.cube.Cube,
+    filename: str = None,
+    series_coordinate: str = "pressure",
+    sequence_coordinate: str = "time",
+    # line_coordinate: str = "realization",
+    **kwargs,
+) -> iris.cube.Cube:
+    """Plot a histogram plot for each vertical level.
+
+    A histogram plot can be plotted, but if the sequence_coordinate (i.e. time)
+    is present
+    then a sequence of plots will be produced. If the series_coordinate (i.e. pressure)
+    is present then several histograms will be plotted for each element of the series
+    coordinate.
+
+
+    The cube must be 1D.
+
+    Parameters
+    ----------
+    cube: Cube
+        Iris cube of the data to plot. It should have a single dimension.
+    filename: str, optional
+        Name of the plot to write, used as a prefix for plot sequences. Defaults
+        to the recipe name.
+    series_coordinate: str, optional
+        Coordinate about which to make a series. Defaults to ``"pressure"``. This
+        coordinate must exist in the cube.
+    sequence_coordinate: str, optional
+        Coordinate about which to make a plot sequence. Defaults to ``"time"``.
+        This coordinate must exist in the cube.
+
+    Returns
+    -------
+    Cube
+        The original cube (so further operations can be applied).
+
+    Raises
+    ------
+    ValueError
+        If the cube doesn't have the right dimensions.
+    TypeError
+        If the cube isn't a single cube.
+    """
+    try:
+        coord = cube.coord(series_coordinate)
+    except iris.exceptions.CoordinateNotFoundError as err:
+        raise ValueError(f"Cube must have a {series_coordinate} coordinate.") from err
+
+    # Ensure we have a name for the plot file.
+    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    if filename is None:
+        filename = slugify(recipe_title)
+
+    # Create box whisker plot
+    plotting_func = _plot_and_save_histogram_series
+
+    # If several box whiskers are plotted with time as sequence_coordinate
+    # for the time slider option.
+    try:
+        cube.coord(sequence_coordinate)
+    except iris.exceptions.CoordinateNotFoundError as err:
+        raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
+
+    # Create a plot for each value of the sequence coordinate.
+    plot_index = []
+    for cube_slice in cube.slices_over(sequence_coordinate):
+        # Use sequence value so multiple sequences can merge.
+        sequence_value = cube_slice.coord(sequence_coordinate).points[0]
+        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
+        coord = cube_slice.coord(series_coordinate)
+        # Format the coordinate value in a unit appropriate way.
+        title = f"{recipe_title} | {coord.units.title(coord.points[0])}"
+        # Do the actual plotting.
+        plotting_func(
+            cube_slice,
+            plot_filename,
+            title=title,
+        )
+        plot_index.append(plot_filename)
+
+    # Add list of plots to plot metadata.
+    complete_plot_index = _append_to_plot_index(plot_index)
+
+    # Make a page to display the plots.
+    _make_plot_html_page(complete_plot_index)
+
+    ##   # Add file extension.
+    ##   plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
+
+    ##    # Do the actual plotting.
+    ##    _plot_and_save_vertical_line_series(cube, coord, plot_filename, title)
+
+    ##    # Add list of plots to plot metadata.
+    ##    plot_index = _append_to_plot_index([plot_filename])
+
+    ##    # Make a page to display the plots.
+    ##    _make_plot_html_page(plot_index)
 
     return cube
