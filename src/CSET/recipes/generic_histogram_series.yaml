@@ -18,17 +18,16 @@ parallel:
         pressure_levels: $PLEVEL
 
   - operator: write.write_cube_to_nc
-
-  - operator: write.write_cube_to_nc
     filename: intermediate/histogram
-
-  - operator: plot.plot_histogram_series
-    sequence_coordinate: time
 
 
 collate:
   - operator: read.read_cube
     filename_pattern: intermediate/*.nc
+
+  - operator: plot.plot_histogram_series
+    series_coordinate: pressure
+    sequence_coordinate: time
 
   - operator: write.write_cube_to_nc
     overwrite: True
