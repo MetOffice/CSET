@@ -1,16 +1,18 @@
-{% if DOMAIN_MEAN_VERTICAL_PROFILE_SERIES %}
+{% if DOMAIN_HISTOGRAM_SERIES_FIELD %}
 [runtime]
 {% for model_field in PRESSURE_LEVEL_MODEL_FIELDS %}
-    [[pre_process_domain_mean_vertical_profile_series_{{model_field}}]]
+{% for plevel in PRESSURE_LEVELS %}
+    [[pre_process_deterministic_domain_histogram_series_{{model_field}}_{{plevel}}]]
     inherit = PARALLEL
         [[[environment]]]
-        CSET_RECIPE_NAME = "generic_domain_mean_vertical_profile_series.yaml"
-        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --PLEVEL='{{PRESSURE_LEVELS}}'"
+        CSET_RECIPE_NAME = "generic_histogram_series.yaml"
+        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --PLEVEL='{{plevel}}'"
 
-    [[collate_domain_mean_vertical_profile_series_{{model_field}}]]
+    [[collate_deterministic_domain_histogram_series_{{model_field}}_{{plevel}}]]
     inherit = COLLATE
         [[[environment]]]
-        CSET_RECIPE_NAME = "generic_domain_mean_vertical_profile_series.yaml"
-        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --PLEVEL='{{PRESSURE_LEVELS}}'"
+        CSET_RECIPE_NAME = "generic_histogram_series.yaml"
+        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --PLEVEL='{{plevel}}'"
+{% endfor %}
 {% endfor %}
 {% endif %}
