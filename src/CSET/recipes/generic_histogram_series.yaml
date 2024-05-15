@@ -1,5 +1,5 @@
 category: Quick Look
-title: $VARNAME $PLEVEL Level Spatial Plot
+title: $VARNAME $PLEVEL Level Histogram Plot
 description: |
   Extracts ands plots the $PLEVELNAME from a file at pressure level $PLEVEL.
 
@@ -20,14 +20,15 @@ parallel:
   - operator: write.write_cube_to_nc
     filename: intermediate/histogram
 
+  - operator: plot.plot_histogram_series
+    series_coordinate: pressure
+    sequence_coordinate: time
+
 
 collate:
   - operator: read.read_cube
     filename_pattern: intermediate/*.nc
 
-  - operator: plot.plot_histogram_series
-    series_coordinate: pressure
-    sequence_coordinate: time
 
   - operator: write.write_cube_to_nc
     overwrite: True

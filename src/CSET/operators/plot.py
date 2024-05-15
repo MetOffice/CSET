@@ -706,7 +706,7 @@ def plot_vertical_line_series(
         # Use sequence value so multiple sequences can merge.
         sequence_value = cube_slice.coord(sequence_coordinate).points[0]
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
-        coord = cube_slice.coord(series_coordinate)
+        coord = cube_slice.coord(sequence_coordinate)
         # Format the coordinate value in a unit appropriate way.
         title = f"{recipe_title} | {coord.units.title(coord.points[0])}"
         # Do the actual plotting.
@@ -733,18 +733,16 @@ def plot_vertical_line_series(
 def plot_histogram_series(
     cube: iris.cube.Cube,
     filename: str = None,
-    series_coordinate: str = "pressure",
     sequence_coordinate: str = "time",
     # line_coordinate: str = "realization",
     **kwargs,
 ) -> iris.cube.Cube:
-    """Plot a histogram plot for each vertical level.
+    """Plot a histogram plot for each vertical level provided.
 
     A histogram plot can be plotted, but if the sequence_coordinate (i.e. time)
     is present
-    then a sequence of plots will be produced. If the series_coordinate (i.e. pressure)
-    is present then several histograms will be plotted for each element of the series
-    coordinate.
+    then a sequence of plots will be produced using the time slider
+    functionality to scroll through histograms against time.
 
 
     The cube must be 1D.
@@ -756,12 +754,9 @@ def plot_histogram_series(
     filename: str, optional
         Name of the plot to write, used as a prefix for plot sequences. Defaults
         to the recipe name.
-    series_coordinate: str, optional
-        Coordinate about which to make a series. Defaults to ``"pressure"``. This
-        coordinate must exist in the cube.
     sequence_coordinate: str, optional
         Coordinate about which to make a plot sequence. Defaults to ``"time"``.
-        This coordinate must exist in the cube.
+        This coordinate must exist in the cube and will be used for the time slider.
 
     Returns
     -------
@@ -775,20 +770,24 @@ def plot_histogram_series(
     TypeError
         If the cube isn't a single cube.
     """
-    try:
-        coord = cube.coord(series_coordinate)
-    except iris.exceptions.CoordinateNotFoundError as err:
-        raise ValueError(f"Cube must have a {series_coordinate} coordinate.") from err
+    recipe_title = get_recipe_metadata().get("title", "Untitled")
 
     # Ensure we have a name for the plot file.
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
     if filename is None:
         filename = slugify(recipe_title)
 
-    # Create box whisker plot
+    # Ensure we've got a single cube.
+    cube = _check_single_cube(cube)
+
+    try:
+        cube.coord(sequence_coordinate)
+    except iris.exceptions.CoordinateNotFoundError as err:
+        raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
+
+    # Create histogram plot
     plotting_func = _plot_and_save_histogram_series
 
-    # If several box whiskers are plotted with time as sequence_coordinate
+    # If several histograms are plotted with time as sequence_coordinate
     # for the time slider option.
     try:
         cube.coord(sequence_coordinate)
