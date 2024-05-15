@@ -437,24 +437,38 @@ def _plot_and_save_histogram_series(
     Parameters
     ----------
     cube: Cube
-        2 dimensional Cube of the data to plot as histogram
+        2 dimensional Cube of the data to plot as histogram.
+        Plotting options are fixed:
+        density=True, histtype='bar',stacked=True to ensure that
+        a probability density is plotted using matplotlib.pyplot.hist
+        to plot the probability density so that the area under
+        the histogram integrates to 1.
+        stacked is set to True so the sum of the histograms is
+        normalized to 1.
+        ax.autoscale is switched off and the ylim range
+        is preset as (0,1) to make figures comparable.
     filename: str
         Filename of the plot to write.
     title: str
         Plot title.
     """
     fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
-    iplt.hist(cube)
+    # reshape cube data into a single array to allow for a single histogram.
+    # Otherwise we plot xdim histograms stacked.
+    cube_data_1d = (cube.data).flatten()
+    plt.hist(cube_data_1d, density=True, histtype="bar", stacked=True)
     ax = plt.gca()
-
     # try seaborn for a box whisker plot:
     # https://python-graph-gallery.com/34-grouped-boxplot/
 
     # Add some labels and tweak the style.
     ax.set(
         title=title,
+        xlabel=f"{cube.name()} / {cube.units}",
+        ylabel="normalised probability density",
+        ylim=(0, 1),
     )
-    ax.autoscale()
+    #    ax.autoscale()
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=150)
