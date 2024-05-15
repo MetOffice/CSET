@@ -476,6 +476,69 @@ def _plot_and_save_histogram_series(
     plt.close(fig)
 
 
+def _plot_and_save_postage_stamp_histogram_series(
+    cube: iris.cube.Cube, filename: str, title: str, stamp_coordinate: str, **kwargs
+):
+    """Plot and save postage (ensemble members) stamps for a histogram series.
+
+    Parameters
+    ----------
+    cube: Cube
+        2 dimensional Cube of the data to plot as histogram.
+        Plotting options are fixed:
+        density=True, histtype='bar',stacked=True to ensure that
+        a probability density is plotted using matplotlib.pyplot.hist
+        to plot the probability density so that the area under
+        the histogram integrates to 1.
+        stacked is set to True so the sum of the histograms is
+        normalized to 1.
+        ax.autoscale is switched off and the ylim range
+        is preset as (0,1) to make figures comparable.
+    filename: str
+        Filename of the plot to write.
+    title: str
+        Plot title.
+    stamp_coordinate: str
+        Coordinate that becomes different plots.
+
+    """
+    # Use the smallest square grid that will fit the members.
+    grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
+
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+    # Make a subplot for each member.
+    for member, subplot in zip(
+        cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1)
+    ):
+        # Implicit interface is much easier here, due to needing to have the
+        # cartopy GeoAxes generated.
+        plt.subplot(grid_size, grid_size, subplot)
+        # reshape cube data into a single array to allow for a single histogram.
+        # Otherwise we plot xdim histograms stacked.
+        member_data_1d = (member.data).flatten()
+        plot = plt.hist(member_data_1d, density=True, histtype="bar", stacked=True)
+        ax = plt.gca()
+        ax.set_title(
+            f"Normalised probability density function Member #{member.coord(stamp_coordinate).points[0]}"
+        )
+        ax.set_axis_off()
+        ax.coastlines()
+        ax.set_ylim(0, 1)
+
+    # Put the shared colorbar in its own axes.
+    # Put the shared colorbar in its own axes.
+    colorbar_axes = fig.add_axes([0.15, 0.07, 0.7, 0.03])
+    colorbar = fig.colorbar(plot, colorbar_axes, orientation="horizontal")
+    colorbar.set_label(f"{cube.name()} / {cube.units}")
+
+    # Overall figure title.
+    fig.suptitle(title)
+
+    fig.savefig(filename, bbox_inches="tight", dpi=150)
+    logging.info("Saved contour postage stamp plot to %s", filename)
+    plt.close(fig)
+
+
 ####################
 # Public functions #
 ####################
@@ -748,7 +811,7 @@ def plot_histogram_series(
     cube: iris.cube.Cube,
     filename: str = None,
     sequence_coordinate: str = "time",
-    # line_coordinate: str = "realization",
+    stamp_coordinate: str = "realization",
     **kwargs,
 ) -> iris.cube.Cube:
     """Plot a histogram plot for each vertical level provided.
@@ -771,6 +834,9 @@ def plot_histogram_series(
     sequence_coordinate: str, optional
         Coordinate about which to make a plot sequence. Defaults to ``"time"``.
         This coordinate must exist in the cube and will be used for the time slider.
+    stamp_coordinate: str, optional
+        Coordinate about which to plot postage stamp plots. Defaults to
+        ``"realization"``.
 
     Returns
     -------
@@ -792,6 +858,15 @@ def plot_histogram_series(
 
     # Ensure we've got a single cube.
     cube = _check_single_cube(cube)
+
+    # Make postage stamp plots if stamp_coordinate exists and has more than a
+    # single point.
+    plotting_func = _plot_and_save_histogram_series
+    try:
+        if cube.coord(stamp_coordinate).shape[0] > 1:
+            plotting_func = _plot_and_save_contour_plot
+    except iris.exceptions.CoordinateNotFoundError:
+        pass
 
     try:
         cube.coord(sequence_coordinate)
@@ -821,6 +896,7 @@ def plot_histogram_series(
         plotting_func(
             cube_slice,
             plot_filename,
+            stamp_coordinate=stamp_coordinate,
             title=title,
         )
         plot_index.append(plot_filename)
