@@ -102,7 +102,7 @@ on the command line with the `cset bake` command and without running the whole
 workflow. This is a useful step for testing new operators or recipes during
 development.
 
-Now we are linking the ``src/CSET/recipes/<new_recipe_name.yml>``.
+Now we are linking the ``src/CSET/recipes/<new_recipe_name.yml>`` into the workflow.
 
 * ``src/CSET/operators/__init__.py``: include operator module into import line
   and ``__all__`` list.
