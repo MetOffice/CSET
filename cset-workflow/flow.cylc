@@ -87,10 +87,19 @@ URL = https://metoffice.github.io/CSET
 
     [[FETCH_DATA]]
 
+    # Dummy tasks needed for workflow scheduling.
     [[process_finish]]
-    # Dummy task needed for workflow scheduling.
     script = true
     platform = localhost
+
+    [[dummy_collate]]
+    inherit = COLLATE
+    script = true
+
+    [[dummy_parallel]]
+    inherit = PARALLEL
+    script = true
+
 
     [[build_conda]]
     # Create the conda environment if it does not yet exist.
