@@ -21,6 +21,8 @@ import pytest
 import CSET._common_operators as common_operators
 
 
+# Session scope fixtures, so the test data only has to be loaded once.
+@pytest.fixture(scope="session")
 def source_cube() -> iris.cube.Cube:
     """Get a cube to test with."""
     return iris.load_cube(
