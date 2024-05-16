@@ -50,6 +50,14 @@ Useful Links
 .. _Issue Tracker: https://github.com/MetOffice/CSET/issues
 .. _Releases: https://github.com/MetOffice/CSET/releases
 
+Code of Conduct
+---------------
+
+All contributors to CSET must follow the `Met Office Simulation Systems Code of
+Conduct`_.
+
+.. _Met Office Simulation Systems Code of Conduct: https://metoffice.github.io/simulation-systems/FurtherDetails/code_of_conduct
+
 Licence
 -------
 
