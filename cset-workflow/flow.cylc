@@ -95,6 +95,7 @@ URL = https://metoffice.github.io/CSET
     [[dummy_collate]]
     inherit = COLLATE
     script = true
+    platform = localhost
 
     [[dummy_parallel]]
     inherit = PARALLEL
