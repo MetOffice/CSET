@@ -47,7 +47,8 @@ def test_missing_coord_get_cube_xycoordname(source_cube):
 
 def test_get_cube_xycoordname(source_cube):
     """Check that function returns tuple containing horizontal dimension names."""
-    assert (common_operators.get_cube_xycoordname(source_cube())) == (
+    source = source_cube.copy()
+    assert (common_operators.get_cube_xycoordname(source)) == (
         "latitude",
         "longitude",
     )
