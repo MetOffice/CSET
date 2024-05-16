@@ -12,6 +12,8 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@jfrost-mo`_ fixed some rose edit metadata so the subarea selectors show up
+  when enabled in :pr:`612`
 * `@jfrost-mo`_ removed some old recipes that are now redundant in :pr:`512`
 * `@jfrost-mo`_ added a git cheat sheet to the documentation in :pr:`598`
 * `@jfrost-mo`_ added a warning when input files don't exist in :pr:`518`. This
