@@ -26,6 +26,8 @@ PR title.
 Before you get to coding, there are a few steps you need to do to setup the
 development environment.
 
+.. _getting-the-code:
+
 Getting the code
 ----------------
 

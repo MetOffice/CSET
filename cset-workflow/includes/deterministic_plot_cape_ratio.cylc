@@ -1,15 +1,12 @@
 {% if DETERMINISTIC_PLOT_CAPE_RATIO %}
-[scheduling]
-    [[graph]]
-    P1 = """
-    recipe_start => deterministic_plot_cape_ratio => recipe_finish
-    """
-
 [runtime]
-    [[deterministic_plot_cape_ratio]]
-    script = rose task-run -v --app-key=run_cset_recipe
-    execution time limit = PT15M
+    [[parallel_plot_cape_ratio]]
+    inherit = PARALLEL
         [[[environment]]]
         CSET_RECIPE_NAME = "CAPE_ratio_plot.yaml"
-        CSET_ADDOPTS = "--TIME={{CAPE_RATIO_TIME}}"
+
+    [[collate_plot_cape_ratio]]
+    inherit = COLLATE
+        [[[environment]]]
+        CSET_RECIPE_NAME = "CAPE_ratio_plot.yaml"
 {% endif %}
