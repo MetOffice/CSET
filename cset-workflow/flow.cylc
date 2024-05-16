@@ -100,7 +100,7 @@ URL = https://metoffice.github.io/CSET
     [[dummy_parallel]]
     inherit = PARALLEL
     script = true
-
+    platform = localhost
 
     [[build_conda]]
     # Create the conda environment if it does not yet exist.
