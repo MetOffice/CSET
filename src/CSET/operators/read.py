@@ -238,8 +238,8 @@ def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
     has been converted to look like UM data.
     """
     # Remove unwanted attributes.
-    cube.attributes.pop("timeStamp")
-    cube.attributes.pop("uuid")
+    cube.attributes.pop("timeStamp", None)
+    cube.attributes.pop("uuid", None)
 
     # Sort STASH code list.
     stash_list = cube.attributes.get("um_stash_source")
