@@ -12,6 +12,7 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@jwarner8`_ use common operator to identify x/y coord names in regrid operator :pr:`626`
 * `@jwarner8`_ added generic cube util for common functions so all operators can
   use to reduce repetition in :pr:`620`
 * `@jfrost-mo`_ added a code of conduct in :pr:`618`
