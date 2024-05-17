@@ -14,18 +14,16 @@
 
 """Operators for reading various types of files from disk."""
 
+import ast
 import logging
 import warnings
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Union
 
 import iris
 import iris.coords
 import iris.cube
 import numpy as np
-
-from CSET._common import iter_maybe
 
 
 class NoDataWarning(UserWarning):
@@ -59,10 +57,10 @@ def read_cube(
     ---------
     loadpath: pathlike
         Path to where .pp/.nc files are located
-    constraint: iris.Constraint | iris.ConstraintCombination
-        Constraints to filter data by
+    constraint: iris.Constraint | iris.ConstraintCombination, optional
+        Constraints to filter data by. Defaults to unconstrained.
     filename_pattern: str, optional
-        Unix shell-style pattern to match filenames to. Defaults to "*"
+        Unix shell-style glob pattern to match filenames to. Defaults to "*"
 
     Returns
     -------
@@ -110,14 +108,17 @@ def read_cubes(
     Deterministic data will be loaded with a realization of 0, allowing it to be
     processed in the same way as ensemble data.
 
+    Data output by XIOS (such as LFRic) has its per-file metadata removed so
+    that the cubes merge across files.
+
     Arguments
     ---------
     loadpath: pathlike
         Path to where .pp/.nc files are located
     constraint: iris.Constraint | iris.ConstraintCombination, optional
-        Constraints to filter data by
+        Constraints to filter data by. Defaults to unconstrained.
     filename_pattern: str, optional
-        Unix shell-style pattern to match filenames to. Defaults to "*"
+        Unix shell-style glob pattern to match filenames to. Defaults to "*"
 
     Returns
     -------
@@ -129,39 +130,19 @@ def read_cubes(
     FileNotFoundError
         If the provided path does not exist
     """
-    if isinstance(loadpath, str):
-        loadpath = Path(loadpath)
-
-    if loadpath.is_dir():
-        loadpath = sorted(loadpath.glob(filename_pattern))
-
-    logging.info(
-        "Loading files:\n%s", "\n".join(str(path) for path in iter_maybe(loadpath))
-    )
-
-    _verify_paths(loadpath)
-
-    if constraint is not None:
-        logging.debug("Constraint: %s", constraint)
-        cubes = iris.load(loadpath, constraint)
-    else:
-        cubes = iris.load(loadpath)
+    input_files = _check_input_files(loadpath, filename_pattern)
+    # A constraint of None lets everything be loaded.
+    logging.debug("Constraint: %s", constraint)
+    # Load the data, then reload with correct handling if it is ensemble data.
+    callback = _create_callback(is_ensemble=False)
+    cubes = iris.load(input_files, constraint, callback=callback)
     if _is_ensemble(cubes):
-        logging.info("Ensemble data, reloading with correct handling.")
-        if constraint:
-            cubes = iris.load(loadpath, constraint, callback=_ensemble_callback)
-        else:
-            cubes = iris.load(loadpath, callback=_ensemble_callback)
-        cubes.merge()
-    else:
-        # Give deterministic a realization of 0 so they can be handled in the
-        # same way as ensembles.
-        for cube in cubes:
-            cube.add_aux_coord(
-                iris.coords.AuxCoord(
-                    np.int32(0), standard_name="realization", units="1"
-                )
-            )
+        callback = _create_callback(is_ensemble=True)
+        cubes = iris.load(input_files, constraint, callback=callback)
+
+    # Merge cubes now metadata has been fixed.
+    cubes.merge()
+
     logging.debug("Loaded cubes: %s", cubes)
     if len(cubes) == 0:
         warnings.warn(
@@ -171,7 +152,7 @@ def read_cubes(
 
 
 def _is_ensemble(cubelist: iris.cube.CubeList) -> bool:
-    """Test if a cubelist is likely to be ensemble data.
+    """Test if a CubeList is likely to be ensemble data.
 
     If cubes either have a realization dimension, or there are multiple files
     for the same time-step, we can assume it is ensemble data.
@@ -180,29 +161,47 @@ def _is_ensemble(cubelist: iris.cube.CubeList) -> bool:
     for cube in cubelist:
         if cube.coords("realization"):
             return True
-        # Compare XML representation of cube structure to see if there are
-        # duplicates.
+        # Compare XML representation of cube structure check for duplicates.
         cube_content = cube.xml()
         if cube_content in unique_cubes:
+            logging.info("Ensemble data loaded.")
             logging.debug("Cube Contents: %s", unique_cubes)
             return True
         else:
             unique_cubes.add(cube_content)
+    logging.info("Deterministic data loaded.")
     logging.debug("Cube Contents: %s", unique_cubes)
     return False
 
 
-def _ensemble_callback(cube, field, filename: str):
+def _create_callback(is_ensemble: bool) -> callable:
+    """Compose together the needed callbacks into a single function."""
+
+    def callback(cube: iris.cube.Cube, field, filename: str):
+        if is_ensemble:
+            _ensemble_callback(cube, field, filename)
+        else:
+            _deterministic_callback(cube, field, filename)
+        _lfric_normalise_callback(cube, field, filename)
+
+    return callback
+
+
+def _ensemble_callback(cube, field, filename):
     """Add a realization coordinate to a cube.
 
     Uses the filename to add an ensemble member ('realization') to each cube.
     Assumes data is formatted enuk_um_0XX/enukaa_pd0HH.pp where XX is the
     ensemble member.
 
-    Args:
-        cube - ensemble member cube
-
-        filename - filename of ensemble member data
+    Arguments
+    ---------
+    cube: Cube
+        ensemble member cube
+    field
+        Raw data variable, unused.
+    filename: str
+        filename of ensemble member data
     """
     if not cube.coords("realization"):
         if "em" in filename:
@@ -216,8 +215,75 @@ def _ensemble_callback(cube, field, filename: str):
         cube.add_aux_coord(iris.coords.AuxCoord(member, standard_name="realization"))
 
 
-def _verify_paths(files: Union[Path, Iterable[Path]]):
-    """Verify file exists, warning otherwise."""
-    for file in iter_maybe(files):
-        if not file.is_file():
-            warnings.warn(f"File does not exist: {file}", RuntimeWarning, stacklevel=2)
+def _deterministic_callback(cube, field, filename):
+    """Give deterministic cubes a realization of 0.
+
+    This means they can be handled in the same way as ensembles through the rest
+    of the code.
+    """
+    cube.add_aux_coord(
+        iris.coords.AuxCoord(np.int32(0), standard_name="realization", units="1")
+    )
+
+
+def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
+    """Normalise attributes that prevents LFRic cube from merging.
+
+    The uuid and timeStamp relate to the output file, as saved by XIOS, and has
+    no relation to the data contained. These attributes are removed.
+
+    The um_stash_source is a list of STASH codes for when an LFRic field maps to
+    multiple UM fields, however it can be encoded in any order. This attribute
+    is sorted to prevent this. This attribute is only present in LFRic data that
+    has been converted to look like UM data.
+    """
+    # Remove unwanted attributes.
+    cube.attributes.pop("timeStamp")
+    cube.attributes.pop("uuid")
+
+    # Sort STASH code list.
+    stash_list = cube.attributes.get("um_stash_source")
+    if stash_list:
+        # Parse the string as a list, sort, then re-encode as a string.
+        cube.attributes["um_stash_source"] = str(sorted(ast.literal_eval(stash_list)))
+
+
+def _check_input_files(input_path: Path | str, filename_pattern: str) -> Iterable[Path]:
+    """Get an iterable of files to load, and check that they all exist.
+
+    Arguments
+    ---------
+    input_path: Path | str
+        Path to an input file or directory.
+
+    filename_pattern: str
+        Shell-style glob pattern to match inside the input directory.
+
+    Returns
+    -------
+    Iterable[Path]
+        A list of files to load.
+
+    Raises
+    ------
+    FileNotFoundError:
+        If the provided arguments don't resolve to at least one existing file.
+    """
+    # Convert string paths into Path objects.
+    if isinstance(input_path, str):
+        input_path = Path(input_path)
+
+    # Get the list of files in the directory, or use it directly. Error if no
+    # files found.
+    if input_path.is_dir():
+        files = sorted(input_path.glob(filename_pattern))
+        if len(files) == 0:
+            raise FileNotFoundError(
+                f"No files found matching glob {filename_pattern} within {input_path}"
+            )
+    elif input_path.is_file():
+        files = [input_path]
+    else:
+        raise FileNotFoundError(f"{input_path} does not exist!")
+    logging.info("Loading files:\n%s", "\n".join(str(path) for path in files))
+    return files
