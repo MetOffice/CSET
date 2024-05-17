@@ -137,6 +137,7 @@ def read_cubes(
     callback = _create_callback(is_ensemble=False)
     cubes = iris.load(input_files, constraint, callback=callback)
     if _is_ensemble(cubes):
+        pass
         callback = _create_callback(is_ensemble=True)
         cubes = iris.load(input_files, constraint, callback=callback)
 
@@ -159,7 +160,8 @@ def _is_ensemble(cubelist: iris.cube.CubeList) -> bool:
     """
     unique_cubes = set()
     for cube in cubelist:
-        if cube.coords("realization"):
+        # Ignore realization of 0, as that is given to deterministic data.
+        if cube.coords("realization") and any(cube.coord("realization").points != 0):
             return True
         # Compare XML representation of cube structure check for duplicates.
         cube_content = cube.xml()
@@ -221,9 +223,11 @@ def _deterministic_callback(cube, field, filename):
     This means they can be handled in the same way as ensembles through the rest
     of the code.
     """
-    cube.add_aux_coord(
-        iris.coords.AuxCoord(np.int32(0), standard_name="realization", units="1")
-    )
+    # Only add if realization coordinate does not exist.
+    if not cube.coords("realization"):
+        cube.add_aux_coord(
+            iris.coords.AuxCoord(np.int32(0), standard_name="realization", units="1")
+        )
 
 
 def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
@@ -276,13 +280,13 @@ def _check_input_files(input_path: Path | str, filename_pattern: str) -> Iterabl
     # Get the list of files in the directory, or use it directly. Error if no
     # files found.
     if input_path.is_dir():
-        files = sorted(input_path.glob(filename_pattern))
+        files = tuple(sorted(input_path.glob(filename_pattern)))
         if len(files) == 0:
             raise FileNotFoundError(
                 f"No files found matching glob {filename_pattern} within {input_path}"
             )
     elif input_path.is_file():
-        files = [input_path]
+        files = (input_path,)
     else:
         raise FileNotFoundError(f"{input_path} does not exist!")
     logging.info("Loading files:\n%s", "\n".join(str(path) for path in files))
