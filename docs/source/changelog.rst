@@ -12,6 +12,7 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@jfrost-mo`_ added a Generative AI policy in :pr:`624`
 * `@jfrost-mo`_ added a code of conduct in :pr:`618`
 * `@jfrost-mo`_ fixed some rose edit metadata so the subarea selectors show up
   when enabled in :pr:`612`
