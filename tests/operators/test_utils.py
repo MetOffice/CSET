@@ -18,7 +18,7 @@ import iris
 import iris.cube
 import pytest
 
-import CSET._common_operators as common_operators
+import CSET.operators._utils as common_operators
 
 
 # Session scope fixtures, so the test data only has to be loaded once.
