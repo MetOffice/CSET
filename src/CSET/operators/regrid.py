@@ -17,7 +17,8 @@
 import iris
 import iris.cube
 import numpy as np
-from _utils import get_cube_xycoordname
+
+from CSET.operators._utils import get_cube_xycoordname
 
 
 def regrid_onto_cube(
