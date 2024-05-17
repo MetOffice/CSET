@@ -23,7 +23,7 @@ import iris
 import iris.cube
 
 
-def get_cube_xycoordname(cube: iris.cube.Cube, **kwargs) -> tuple:
+def get_cube_xycoordname(cube: iris.cube.Cube) -> tuple[str, str]:
     """
     Return horizontal coordinate name(s) from a given cube.
 
