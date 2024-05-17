@@ -12,6 +12,7 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@jfrost-mo`_ linked to the `CSET discussion forum`_ in :pr:`625`
 * `@jfrost-mo`_ added a code of conduct in :pr:`618`
 * `@jfrost-mo`_ fixed some rose edit metadata so the subarea selectors show up
   when enabled in :pr:`612`
@@ -49,6 +50,7 @@ Unreleased
 * `@jfrost-mo`_ updated the example rose-suite.conf to reflect what a modern
   version should look like in :pr:`508`
 
+.. _CSET discussion forum: https://github.com/MetOffice/simulation-systems/discussions/categories/cset-toolkit
 .. _@dasha-shchep: https://github.com/dasha-shchep
 .. _@cjohnson-pi: https://github.com/cjohnson-pi
 .. _@Ashfinn: https://github.com/Ashfinn
