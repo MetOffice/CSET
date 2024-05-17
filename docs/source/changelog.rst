@@ -14,6 +14,7 @@ Unreleased
 
 * `@jwarner8`_ added generic cube util for common functions so all operators can
   use to reduce repetition in :pr:`620`
+* `@jfrost-mo`_ added a code of conduct in :pr:`618`
 * `@jfrost-mo`_ fixed some rose edit metadata so the subarea selectors show up
   when enabled in :pr:`612`
 * `@jfrost-mo`_ removed some old recipes that are now redundant in :pr:`512`
