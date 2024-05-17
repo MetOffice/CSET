@@ -17,11 +17,7 @@
 import iris
 import iris.cube
 import numpy as np
-
-# Usual names for spatial coordinates.
-# TODO can we determine grid coord names in a more intelligent way?
-X_COORD_NAMES = ["longitude", "grid_longitude", "projection_x_coordinate", "x"]
-Y_COORD_NAMES = ["latitude", "grid_latitude", "projection_y_coordinate", "y"]
+from _utils import get_cube_xycoordname
 
 
 def regrid_onto_cube(
@@ -56,25 +52,10 @@ def regrid_onto_cube(
 
     Notes
     -----
-    The acceptable coordinate names for X and Y coordinates are currently described
-    in X_COORD_NAMES and Y_COORD_NAMES. These cover commonly used coordinate types,
-    though a user can append new ones.
     Currently rectlinear grids (uniform) are supported.
     """
-    # Get a list of coordinate names for the cube
-    coord_names = [coord.name() for coord in incube.coords()]
-
-    # Check which x-coordinate we have, if any
-    x_coords = [coord for coord in coord_names if coord in X_COORD_NAMES]
-    if len(x_coords) != 1:
-        raise ValueError("Could not identify a unique x-coordinate in cube")
-    x_coord = incube.coord(x_coords[0])
-
-    # Check which y-coordinate we have, if any
-    y_coords = [coord for coord in coord_names if coord in Y_COORD_NAMES]
-    if len(y_coords) != 1:
-        raise ValueError("Could not identify a unique y-coordinate in cube")
-    y_coord = incube.coord(y_coords[0])
+    # Get x,y coord names
+    x_coord, y_coord = get_cube_xycoordname(incube)
 
     # List of supported grids - check if it is compatible
     supported_grids = (iris.coord_systems.GeogCS,)
@@ -127,26 +108,11 @@ def regrid_onto_xyspacing(
 
     Notes
     -----
-    The acceptable coordinate names for X and Y coordinates are currently described
-    in X_COORD_NAMES and Y_COORD_NAMES. These cover commonly used coordinate types,
-    though a user can append new ones.
     Currently rectlinear grids (uniform) are supported.
 
     """
-    # Get a list of coordinate names for the cube
-    coord_names = [coord.name() for coord in incube.coords()]
-
-    # Check which x-coordinate we have, if any
-    x_coords = [coord for coord in coord_names if coord in X_COORD_NAMES]
-    if len(x_coords) != 1:
-        raise ValueError("Could not identify a unique x-coordinate in cube")
-    x_coord = incube.coord(x_coords[0])
-
-    # Check which y-coordinate we have, if any
-    y_coords = [coord for coord in coord_names if coord in Y_COORD_NAMES]
-    if len(y_coords) != 1:
-        raise ValueError("Could not identify a unique y-coordinate in cube")
-    y_coord = incube.coord(y_coords[0])
+    # Get x,y coord names
+    x_coord, y_coord = get_cube_xycoordname(incube)
 
     # List of supported grids - check if it is compatible
     supported_grids = (iris.coord_systems.GeogCS,)
