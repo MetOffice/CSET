@@ -258,7 +258,8 @@ def _check_input_files(input_path: Path | str, filename_pattern: str) -> Iterabl
     Arguments
     ---------
     input_path: Path | str
-        Path to an input file or directory.
+        Path to an input file or directory. The path may itself contain glob
+        patterns, but unlike in shells it will match directly first.
 
     filename_pattern: str
         Shell-style glob pattern to match inside the input directory.
@@ -288,6 +289,9 @@ def _check_input_files(input_path: Path | str, filename_pattern: str) -> Iterabl
     elif input_path.is_file():
         files = (input_path,)
     else:
-        raise FileNotFoundError(f"{input_path} does not exist!")
+        # Handle input_path containing a glob pattern.
+        files = tuple(sorted(input_path.parent.glob(input_path.name)))
+        if len(files) == 0:
+            raise FileNotFoundError(f"{input_path} does not exist!")
     logging.info("Loading files:\n%s", "\n".join(str(path) for path in files))
     return files
