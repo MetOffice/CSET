@@ -124,6 +124,17 @@ def test_check_input_files_direct_path_glob(tmp_path):
     assert actual == expected
 
 
+def test_check_input_files_direct_path_match_glob_like_file(tmp_path):
+    """Get a iterable of a single file from a glob-like direct path."""
+    file1_path = tmp_path / "file1"
+    glob_like_path = tmp_path / "file*"
+    file1_path.touch()
+    glob_like_path.touch()
+    actual = read._check_input_files(glob_like_path, "*")
+    expected = (glob_like_path,)
+    assert actual == expected
+
+
 def test_check_input_files_input_directory(tmp_path):
     """Get a iterable of files in an input directory."""
     file1_path = tmp_path / "file1"
