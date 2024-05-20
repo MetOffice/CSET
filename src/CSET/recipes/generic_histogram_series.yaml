@@ -25,10 +25,9 @@ collate:
   - operator: read.read_cube
     filename_pattern: intermediate/*.nc
 
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
   - operator: plot.plot_histogram_series
     series_coordinate: pressure
     sequence_coordinate: time
-
-
-  - operator: write.write_cube_to_nc
-    overwrite: True
