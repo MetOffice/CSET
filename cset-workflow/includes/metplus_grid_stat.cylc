@@ -1,8 +1,8 @@
 {% if METPLUS_GRID_STAT %}
 [scheduling]
     [[graph]]
-    P1 = """
-    metplus_grid_stat => housekeeping
+    {{CSET_CYCLE_PERIOD}} = """
+    metplus_grid_stat => housekeeping_full
     """
 
 [runtime]
