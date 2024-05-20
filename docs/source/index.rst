@@ -13,8 +13,8 @@ CSET Documentation
    changelog
    GitHub <https://github.com/MetOffice/CSET>
 
-:abbr:`CSET (Convective and turbulence scale Evaluation and verification Tool)`
-is a toolkit for evaluation, verification and investigation of convective- and
+CSET (Convective- and turbulence-scale Evaluation and verification Toolkit) is a
+toolkit for evaluation, verification and investigation of convective- and
 turbulence-scale numerical models for weather and climate applications, cutting
 across time and space scales.
 
@@ -44,11 +44,12 @@ Use the side bar to the left to access other pages of the documentation.
 Useful Links
 ------------
 
-`Source Code`_ | `Issue Tracker`_ | Releases_
+`Source Code`_ | `Issue Tracker`_ | Releases_ | `Discussion Forum`_
 
 .. _Source Code: https://github.com/MetOffice/CSET
 .. _Issue Tracker: https://github.com/MetOffice/CSET/issues
 .. _Releases: https://github.com/MetOffice/CSET/releases
+.. _Discussion Forum: https://github.com/MetOffice/simulation-systems/discussions/categories/cset-toolkit
 
 Code of Conduct
 ---------------

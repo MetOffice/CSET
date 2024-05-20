@@ -12,6 +12,7 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@jfrost-mo`_ linked to the `CSET discussion forum`_ in :pr:`625`
 * `@jwarner8`_ use common operator to identify x/y coord names in regrid operator :pr:`626`
 * `@jwarner8`_ added generic cube util for common functions so all operators can
   use to reduce repetition in :pr:`620`
@@ -52,6 +53,7 @@ Unreleased
 * `@jfrost-mo`_ updated the example rose-suite.conf to reflect what a modern
   version should look like in :pr:`508`
 
+.. _CSET discussion forum: https://github.com/MetOffice/simulation-systems/discussions/categories/cset-toolkit
 .. _@dasha-shchep: https://github.com/dasha-shchep
 .. _@cjohnson-pi: https://github.com/cjohnson-pi
 .. _@Ashfinn: https://github.com/Ashfinn
