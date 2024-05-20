@@ -23,26 +23,31 @@ import CSET.operators._utils as common_operators
 
 # Session scope fixtures, so the test data only has to be loaded once.
 @pytest.fixture(scope="session")
-def source_cube() -> iris.cube.Cube:
+def source_cube_readonly() -> iris.cube.Cube:
     """Get a cube to test with."""
     return iris.load_cube(
         "tests/test_data/regrid/regrid_rectilinearGeogCS.nc", "surface_altitude"
     )
 
 
-def test_missing_coord_get_cube_xycoordname(source_cube):
-    """Missing coordinate raises error."""
-    # Missing X coordinate.
-    source = source_cube.copy()
-    source.remove_coord("longitude")
-    with pytest.raises(ValueError):
-        common_operators.get_cube_xycoordname(source)
+@pytest.fixture()
+def source_cube(source_cube_readonly) -> iris.cube.Cube:
+    """Get a cube to test with."""
+    return source_cube_readonly.copy()
 
-    # Missing Y coordinate.
-    source = source_cube.copy()
-    source.remove_coord("latitude")
+
+def test_missing_coord_get_cube_x_coord_name(source_cube):
+    """Missing X coordinate raises error."""
+    source_cube.remove_coord("longitude")
     with pytest.raises(ValueError):
-        common_operators.get_cube_xycoordname(source)
+        common_operators.get_cube_xycoordname(source_cube)
+
+
+def test_missing_coord_get_cube_y_coord_name(source_cube):
+    """Missing Y coordinate raises error."""
+    source_cube.remove_coord("latitude")
+    with pytest.raises(ValueError):
+        common_operators.get_cube_xycoordname(source_cube)
 
 
 def test_get_cube_xycoordname(source_cube):
