@@ -168,3 +168,21 @@ def test_check_input_files_no_file_in_directory(tmp_path):
     """Error when input directory doesn't contain any files."""
     with pytest.raises(FileNotFoundError):
         read._check_input_files(tmp_path, "*")
+
+
+def test_lfric_normalise_callback_remove_attrs(cube):
+    """Correctly remove unneeded attributes."""
+    cube.attributes["uuid"] = "87096862-89c3-4749-9c6c-0be91c2a7954"
+    cube.attributes["timeStamp"] = "2024-May-20 12:29:21 GMT"
+    read._lfric_normalise_callback(cube, None, None)
+    assert "uuid" not in cube.attributes
+    assert "timeStamp" not in cube.attributes
+
+
+def test_lfric_normalise_callback_sort_stash(cube):
+    """Correctly sort STASH code lists."""
+    cube.attributes["um_stash_source"] = "['m01s03i025', 'm01s00i025']"
+    read._lfric_normalise_callback(cube, None, None)
+    actual = cube.attributes["um_stash_source"]
+    expected = "['m01s00i025', 'm01s03i025']"
+    assert actual == expected
