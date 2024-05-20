@@ -885,11 +885,6 @@ def plot_histogram_series(
     except iris.exceptions.CoordinateNotFoundError:
         pass
 
-    try:
-        cube.coord(sequence_coordinate)
-    except iris.exceptions.CoordinateNotFoundError as err:
-        raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
-
     # If several histograms are plotted with time as sequence_coordinate
     # for the time slider option.
     try:
