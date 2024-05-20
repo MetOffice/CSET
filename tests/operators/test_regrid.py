@@ -25,11 +25,17 @@ import CSET.operators.regrid as regrid
 
 # Session scope fixtures, so the test data only has to be loaded once.
 @pytest.fixture(scope="session")
-def regrid_source_cube() -> iris.cube.Cube:
+def regrid_source_cube_read_only() -> iris.cube.Cube:
     """Get a cube to regrid."""
     return iris.load_cube(
         "tests/test_data/regrid/regrid_rectilinearGeogCS.nc", "surface_altitude"
     )
+
+
+@pytest.fixture()
+def regrid_source_cube(regrid_source_cube_read_only) -> iris.cube.Cube:
+    """Get a cube to regrid."""
+    return regrid_source_cube_read_only.copy()
 
 
 @pytest.fixture(scope="session")
@@ -51,19 +57,18 @@ def test_regrid_onto_cube(regrid_source_cube, regrid_test_cube):
     )
 
 
-def test_regrid_onto_cube_unknown_crs(regrid_source_cube, regrid_test_cube):
-    """Coordinate reference system is unrecognised."""
-    # Exchange X to unsupported coordinate system.
-    source_changed_x = regrid_source_cube.copy()
-    source_changed_x.coord("longitude").coord_system = iris.coord_systems.OSGB()
+def test_regrid_onto_cube_unknown_crs_x(regrid_source_cube, regrid_test_cube):
+    """Coordinate reference system on X coordinate is unrecognised."""
+    regrid_source_cube.coord("longitude").coord_system = iris.coord_systems.OSGB()
     with pytest.raises(NotImplementedError):
-        regrid.regrid_onto_cube(source_changed_x, regrid_test_cube, method="Linear")
+        regrid.regrid_onto_cube(regrid_source_cube, regrid_test_cube, method="Linear")
 
-    # Exchange Y to unsupported coordinate system.
-    source_changed_y = regrid_source_cube.copy()
-    source_changed_y.coord("latitude").coord_system = iris.coord_systems.OSGB()
+
+def test_regrid_onto_cube_unknown_crs_y(regrid_source_cube, regrid_test_cube):
+    """Coordinate reference system on Y coordinate is unrecognised."""
+    regrid_source_cube.coord("latitude").coord_system = iris.coord_systems.OSGB()
     with pytest.raises(NotImplementedError):
-        regrid.regrid_onto_cube(source_changed_y, regrid_test_cube, method="Linear")
+        regrid.regrid_onto_cube(regrid_source_cube, regrid_test_cube, method="Linear")
 
 
 def test_regrid_onto_cube_non_callable_method(regrid_source_cube, regrid_test_cube):
@@ -93,22 +98,21 @@ def test_regrid_onto_xyspacing(regrid_source_cube, regrid_test_cube):
     )
 
 
-def test_regrid_onto_xyspacing_unknown_crs(regrid_source_cube):
-    """Coordinate reference system is unrecognised."""
-    # Exchange X to unsupported coordinate system.
-    source_changed_x = regrid_source_cube.copy()
-    source_changed_x.coord("longitude").coord_system = iris.coord_systems.OSGB()
+def test_regrid_onto_x_spacing_unknown_crs(regrid_source_cube):
+    """Coordinate reference system on X coordinate is unrecognised."""
+    regrid_source_cube.coord("longitude").coord_system = iris.coord_systems.OSGB()
     with pytest.raises(NotImplementedError):
         regrid.regrid_onto_xyspacing(
-            source_changed_x, xspacing=0.5, yspacing=0.5, method="Linear"
+            regrid_source_cube, xspacing=0.5, yspacing=0.5, method="Linear"
         )
 
-    # Exchange Y to unsupported coordinate system.
-    source_changed_y = regrid_source_cube.copy()
-    source_changed_y.coord("latitude").coord_system = iris.coord_systems.OSGB()
+
+def test_regrid_onto_y_spacing_unknown_crs(regrid_source_cube):
+    """Coordinate reference system on Y coordinate is unrecognised."""
+    regrid_source_cube.coord("latitude").coord_system = iris.coord_systems.OSGB()
     with pytest.raises(NotImplementedError):
         regrid.regrid_onto_xyspacing(
-            source_changed_y, xspacing=0.5, yspacing=0.5, method="Linear"
+            regrid_source_cube, xspacing=0.5, yspacing=0.5, method="Linear"
         )
 
 
