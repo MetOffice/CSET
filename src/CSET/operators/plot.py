@@ -430,7 +430,7 @@ def _plot_and_save_vertical_line_series(
 
 
 def _plot_and_save_histogram_series(
-    cube: iris.cube.Cube, filename: str, title: str, **kwargs
+    cube: iris.cube.Cube, filename: str, title: str, vmin: float, vmax: float, **kwargs
 ):
     """Plot and save a histogram series.
 
@@ -451,6 +451,10 @@ def _plot_and_save_histogram_series(
         Filename of the plot to write.
     title: str
         Plot title.
+    vmin: float
+        minimum for colourbar
+    vmax: float
+        maximum for colourbar
     """
     fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
     # reshape cube data into a single array to allow for a single histogram.
@@ -467,6 +471,7 @@ def _plot_and_save_histogram_series(
         xlabel=f"{cube.name()} / {cube.units}",
         ylabel="normalised probability density",
         ylim=(0, 1),
+        xlim=(vmin, vmax),
     )
     #    ax.autoscale()
 
@@ -477,7 +482,13 @@ def _plot_and_save_histogram_series(
 
 
 def _plot_and_save_postage_stamp_histogram_series(
-    cube: iris.cube.Cube, filename: str, title: str, stamp_coordinate: str, **kwargs
+    cube: iris.cube.Cube,
+    filename: str,
+    title: str,
+    stamp_coordinate: str,
+    vmin: float,
+    vmax: float,
+    **kwargs,
 ):
     """Plot and save postage (ensemble members) stamps for a histogram series.
 
@@ -500,7 +511,10 @@ def _plot_and_save_postage_stamp_histogram_series(
         Plot title.
     stamp_coordinate: str
         Coordinate that becomes different plots.
-
+    vmin: float
+        minimum for colourbar
+    vmax: float
+        maximum for colourbar
     """
     # Use the smallest square grid that will fit the members.
     grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
@@ -524,6 +538,7 @@ def _plot_and_save_postage_stamp_histogram_series(
         ax.set_axis_off()
         ax.coastlines()
         ax.set_ylim(0, 1)
+        ax.set_xlim(vmin, vmax)
 
     # Put the shared colorbar in its own axes.
     # Put the shared colorbar in its own axes.
@@ -859,12 +874,14 @@ def plot_histogram_series(
     # Ensure we've got a single cube.
     cube = _check_single_cube(cube)
 
+    # Call internal plotting function
+    plotting_func = _plot_and_save_histogram_series
+
     # Make postage stamp plots if stamp_coordinate exists and has more than a
     # single point.
-    plotting_func = _plot_and_save_histogram_series
     try:
         if cube.coord(stamp_coordinate).shape[0] > 1:
-            plotting_func = _plot_and_save_contour_plot
+            plotting_func = _plot_and_save_postage_stamp_histogram_series
     except iris.exceptions.CoordinateNotFoundError:
         pass
 
@@ -873,15 +890,21 @@ def plot_histogram_series(
     except iris.exceptions.CoordinateNotFoundError as err:
         raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
 
-    # Create histogram plot
-    plotting_func = _plot_and_save_histogram_series
-
     # If several histograms are plotted with time as sequence_coordinate
     # for the time slider option.
     try:
         cube.coord(sequence_coordinate)
     except iris.exceptions.CoordinateNotFoundError as err:
         raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
+
+    # set the lower and upper limit for the colorbar to ensure all plots
+    # have same range. This needs to read the whole cube over the range of
+    # the sequence and if applicable postage stamp coordinate.
+    # This only works if the plotting is done in the collate section of a
+    # recipe and not in the parallel section of a recipe.
+
+    vmin = np.min(cube)
+    vmax = np.max(cube)
 
     # Create a plot for each value of the sequence coordinate.
     plot_index = []
@@ -898,6 +921,8 @@ def plot_histogram_series(
             plot_filename,
             stamp_coordinate=stamp_coordinate,
             title=title,
+            vmin=vmin,
+            vmax=vmax,
         )
         plot_index.append(plot_filename)
 
