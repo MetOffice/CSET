@@ -29,7 +29,8 @@ def tmp_working_dir(tmp_path, monkeypatch):
     return tmp_path
 
 
-# Session scope fixtures, so the test data only has to be loaded once.
+# Session scope fixtures, so the test data only has to be loaded from disk
+# once, then make an in-memory copy whenever it is reused.
 @pytest.fixture(scope="session")
 def cubes_readonly():
     """Get an iris CubeList. NOT safe to modify."""
