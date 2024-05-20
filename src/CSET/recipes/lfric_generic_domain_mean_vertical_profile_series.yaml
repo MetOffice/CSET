@@ -49,4 +49,6 @@ collate:
     overwrite: True
 
   # Plot the data.
-#  - operator: plot.plot_line_series
+  - operator: plot.plot_vertical_line_series
+    series_coordinate: pressure
+    sequence_coordinate: time
