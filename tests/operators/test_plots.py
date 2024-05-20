@@ -148,3 +148,18 @@ def test_plot_vertical_line_series_no_sequence_coordinate(
     vertical_profile_cube.remove_coord("time")
     with pytest.raises(ValueError, match="Cube must have a time coordinate."):
         plot.plot_vertical_line_series(vertical_profile_cube)
+
+
+def test_plot_vertical_line_series_too_many_dimensions(cube, tmp_working_dir):
+    """Error when cube has more than one dimension."""
+    with pytest.raises(ValueError):
+        plot.plot_vertical_line_series(cube)
+
+
+def test_plot_histogram_sequence_coordinate(tmp_working_dir):
+    """Plot sequence of contour plots."""
+    cube = read.read_cube(
+        "tests/test_data/air_temperature_1000_hpa_level_histogram_plot.nc"
+    )
+    plot.plot_histogram_series(cube, sequence_coordinate="time")
+    assert Path("air_temperature_1000_hpa_level_histogram_plot_473718.0.png").is_file()
