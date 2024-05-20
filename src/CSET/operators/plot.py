@@ -902,9 +902,8 @@ def plot_histogram_series(
     # the sequence and if applicable postage stamp coordinate.
     # This only works if the plotting is done in the collate section of a
     # recipe and not in the parallel section of a recipe.
-
-    vmin = np.min(cube)
-    vmax = np.max(cube)
+    vmin = np.floor((cube.data.min()))
+    vmax = np.ceil((cube.data.max()))
 
     # Create a plot for each value of the sequence coordinate.
     plot_index = []
