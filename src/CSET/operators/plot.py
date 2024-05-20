@@ -600,7 +600,9 @@ def plot_vertical_line_series(
         Name of the plot to write, used as a prefix for plot sequences. Defaults
         to the recipe name.
     series_coordinate: str, optional
-        Coordinate about which to make a series. Defaults to ``"pressure"``. This
+        Coordinate about which to make a series. In this case the series defaults
+        to ``"pressure"`` for the y-axis. Normally the series coordinate refers
+        to ``"time"`` on the x-axis. This
         coordinate must exist in the cube.
     sequence_coordinate: str, optional
         Coordinate about which to make a plot sequence. Defaults to ``"time"``.
@@ -621,17 +623,20 @@ def plot_vertical_line_series(
     # Ensure we've got a single cube.
     cube = _check_single_cube(cube)
 
+    # test if series coordinate i.e. pressure level exist for any cube with cube.ndim >=1.
     try:
         coord = cube.coord(series_coordinate)
     except iris.exceptions.CoordinateNotFoundError as err:
         raise ValueError(f"Cube must have a {series_coordinate} coordinate.") from err
 
+    # If cube has more than 1 dimension ensure that it has a sequence coordinate
+    # i.e. ``"time``" for the slider function.
     if cube.ndim > 1:
         try:
             cube.coord(sequence_coordinate)
         except iris.exceptions.CoordinateNotFoundError as err:
             raise ValueError(
-                f"Cube must be 1D. If it is not 1D check if it has a {sequence_coordinate} to use for slider function."
+                f"Cube is greater than 1D and should have a {sequence_coordinate} to use for slider function."
             ) from err
 
     # Ensure we have a name for the plot file.
