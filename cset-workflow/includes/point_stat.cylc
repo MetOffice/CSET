@@ -1,7 +1,7 @@
 {% if METPLUS_POINT_STAT %}
 [scheduling]
     [[graph]]
-     {{CSET_CYCLE_PERIOD}} = """
+    {{CSET_CYCLE_PERIOD}} = """
     metplus_ascii2nc => metplus_point_stat => housekeeping_full
     """
 
