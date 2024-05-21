@@ -26,9 +26,8 @@ import tempfile
 from functools import partial
 from math import atan2, cos, radians, sin, sqrt
 
-import iris
-import iris.cube
 import numpy as np
+from iris.cube import Cube
 from scipy.ndimage import gaussian_filter
 
 from CSET.operators._utils import get_cube_xycoordname
@@ -200,10 +199,10 @@ def aoa_core(
 
 
 def compute_ageofair(
-    XWIND: iris.cube.Cube,
-    YWIND: iris.cube.Cube,
-    WWIND: iris.cube.Cube,
-    GEOPOT: iris.cube.Cube,
+    XWIND: Cube,
+    YWIND: Cube,
+    WWIND: Cube,
+    GEOPOT: Cube,
     plev: int,
     incW: bool,
     cyclic: bool,
@@ -217,19 +216,19 @@ def compute_ageofair(
 
     Arguments
     ----------
-    XWIND: iris.cube.Cube
+    XWIND: Cube
         An iris cube containing the x component of wind on pressure levels, on a 0p5 degree grid.
         Requires 4 dimensions, ordered time, pressure, latitude and longitude. Must contain at
         least 2 time points to compute back trajectory.
-    YWIND: iris.cube.Cube
+    YWIND: Cube
         An iris cube containing the y component of wind on pressure levels, on a 0p5 degree grid.
         Requires 4 dimensions, ordered time, pressure, latitude and longitude. Must contain at
         least 2 time points to compute back trajectory.
-    WWIND: iris.cube.Cube
+    WWIND: Cube
         An iris cube containing the w component of wind on pressure levels, on a 0p5 degree grid.
         Requires 4 dimensions, ordered time, pressure, latitude and longitude. Must contain at
         least 2 time points to compute back trajectory.
-    GEOPOT: iris.cube.Cube
+    GEOPOT: Cube
         An iris cube containing geopotential height on pressure levels, on a 0p5 degree grid.
         Requires 4 dimensions, ordered time, pressure, latitude and longitude. Must contain at
         least 2 time points to compute back trajectory.
@@ -253,7 +252,7 @@ def compute_ageofair(
 
     Returns
     -------
-    iris.cube.Cube
+    Cube
         An iris cube of the age of air data, with 3 dimensions (time, latitude, longitude).
 
     """
@@ -319,7 +318,7 @@ def compute_ageofair(
     plev_idx = np.where(XWIND.coord("pressure").points == plev)[0][0]
 
     # Initialise cube containing age of air.
-    ageofair_cube = iris.cube.Cube(
+    ageofair_cube = Cube(
         np.zeros((len(time), len(lats), len(lons))),
         long_name="age_of_air",
         dim_coords_and_dims=[
