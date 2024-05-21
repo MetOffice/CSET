@@ -32,7 +32,7 @@ def test_calc_dist():
     london_coords = (51.51, -0.13)
     johanbg_coords = (-26.21, 28.03)
 
-    dist = ageofair.calc_dist(london_coords, johanbg_coords)
+    dist = ageofair._calc_dist(london_coords, johanbg_coords)
     actual_distance = 9068670  # Air line according to Google?!
 
     assert np.allclose(dist, actual_distance, rtol=1e-06, atol=20000)

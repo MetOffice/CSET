@@ -33,7 +33,7 @@ from scipy.ndimage import gaussian_filter
 from CSET.operators._utils import get_cube_xycoordname
 
 
-def calc_dist(coord_1, coord_2):
+def _calc_dist(coord_1, coord_2):
     """Haversine distance in meters."""
     # Approximate radius of earth in km
     R = 6378.0
@@ -117,21 +117,21 @@ def aoa_core(
 
             # If final column, look at dist from prev column, otherwise look at next column.
             if lon_pnt == len(lons) - 1:
-                ew_spacing = calc_dist(
+                ew_spacing = _calc_dist(
                     (lats[lat_pnt], lons[lon_pnt]), (lats[lat_pnt], lons[lon_pnt - 1])
                 )
             else:
-                ew_spacing = calc_dist(
+                ew_spacing = _calc_dist(
                     (lats[lat_pnt], lons[lon_pnt]), (lats[lat_pnt], lons[lon_pnt + 1])
                 )
 
             # If final row, look at dist from row column, otherwise look at next row.
             if lat_pnt == len(lats) - 1:
-                ns_spacing = calc_dist(
+                ns_spacing = _calc_dist(
                     (lats[lat_pnt], lons[lon_pnt]), (lats[lat_pnt - 1], lons[lon_pnt])
                 )
             else:
-                ns_spacing = calc_dist(
+                ns_spacing = _calc_dist(
                     (lats[lat_pnt], lons[lon_pnt]), (lats[lat_pnt + 1], lons[lon_pnt])
                 )
 
