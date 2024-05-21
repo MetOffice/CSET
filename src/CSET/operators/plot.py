@@ -631,13 +631,21 @@ def plot_vertical_line_series(
 
     # If cube has more than 1 dimension ensure that it has a sequence coordinate
     # i.e. ``"time``" for the slider function.
-    if cube.ndim > 1:
-        try:
+    try:
+        if cube.ndim > 1:
             cube.coord(sequence_coordinate)
-        except iris.exceptions.CoordinateNotFoundError as err:
-            raise ValueError(
-                f"Cube is greater than 1D and should have a {sequence_coordinate} to use for slider function."
-            ) from err
+    except iris.exceptions.CoordinateNotFoundError as err:
+        raise ValueError(
+            f"Cube is greater than 1D and should have a {sequence_coordinate} to use for slider function."
+        ) from err
+
+    #    if cube.ndim > 1:
+    #        try:
+    #            cube.coord(sequence_coordinate)
+    #        except iris.exceptions.CoordinateNotFoundError as err:
+    #            raise ValueError(
+    #                f"Cube is greater than 1D and should have a {sequence_coordinate} to use for slider function."
+    #            ) from err
 
     # Ensure we have a name for the plot file.
     recipe_title = get_recipe_metadata().get("title", "Untitled")
