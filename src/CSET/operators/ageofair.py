@@ -34,7 +34,7 @@ from CSET.operators._utils import get_cube_xycoordname
 
 
 def _calc_dist(coord_1, coord_2):
-    """Haversine distance in meters."""
+    """Haversine distance in metres."""
     # Approximate radius of earth in km
     R = 6378.0
 
