@@ -137,7 +137,6 @@ def read_cubes(
     callback = _create_callback(is_ensemble=False)
     cubes = iris.load(input_files, constraint, callback=callback)
     if _is_ensemble(cubes):
-        pass
         callback = _create_callback(is_ensemble=True)
         cubes = iris.load(input_files, constraint, callback=callback)
 
