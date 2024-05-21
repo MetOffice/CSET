@@ -7,6 +7,8 @@
 
 set -euo pipefail
 
+echo "app_env_wrapper running in $(hostname)"
+
 # Check that environment is sourced in at least one way
 if [[ "$CSET_ENV_USE_MODULES" == False ]] && [[ "$CSET_ENV_USE_CONDA" == False ]]
 then
