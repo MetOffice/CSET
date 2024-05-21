@@ -2,8 +2,8 @@ category: Quick Look
 title: Domain mean time series of $STASH
 description: Plots a time series of the domain mean for STASH $STASH.
 
-# Pre-processing steps.
-steps:
+# Pre-processing parallel.
+parallel:
   - operator: read.read_cube
     constraint:
       operator: constraints.combine_constraints
@@ -25,9 +25,9 @@ steps:
   - operator: write.write_cube_to_nc
     filename: intermediate/domain_mean
 
-# Collation steps.
+# Collation parallel.
 # Reads in intermediate cube and plots it.
-post-steps:
+collate:
   - operator: read.read_cube
     filename_pattern: intermediate/*.nc
 

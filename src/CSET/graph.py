@@ -85,7 +85,8 @@ def save_graph(
     prev_node = "START"
     graph.add_node(prev_node)
     try:
-        for step in recipe["steps"]:
+        # TODO: Expand to cover collate too.
+        for step in recipe["parallel"]:
             prev_node = step_parser(step, prev_node)
     except KeyError as err:
         raise ValueError("Invalid recipe") from err

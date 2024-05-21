@@ -5,3 +5,5 @@ dependencies:
   # Runtime dependencies
   - cset
   - pip
+  - setuptools>=64
+  - setuptools_scm>=8

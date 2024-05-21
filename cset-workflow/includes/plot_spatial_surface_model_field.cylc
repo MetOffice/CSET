@@ -2,13 +2,13 @@
 {% for model_field in SURFACE_MODEL_FIELDS %}
 [runtime]
     [[generic_spatial_plot_time_series_{{model_field}}]]
-    inherit = PROCESS_DATA
+    inherit = PARALLEL
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_surface_spatial_plot_sequence.yaml"
         CSET_ADDOPTS = "--VARNAME={{model_field}}"
 
     [[generic_spatial_plot_time_series_collation_{{model_field}}]]
-    inherit = COLLATE_PROCESSED_DATA
+    inherit = COLLATE
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_surface_spatial_plot_sequence.yaml"
         CSET_ADDOPTS = "--VARNAME={{model_field}}"

@@ -17,6 +17,7 @@
 import argparse
 import logging
 import os
+import shlex
 import sys
 from importlib.metadata import version
 from pathlib import Path
@@ -67,10 +68,13 @@ def main():
     )
     bake_step_control = parser_bake.add_mutually_exclusive_group()
     bake_step_control.add_argument(
-        "--pre-only", action="store_true", help="only run pre-processing steps"
+        "--parallel-only", action="store_true", help="only run parallel steps"
     )
     bake_step_control.add_argument(
-        "--post-only", action="store_true", help="only run post-processing steps"
+        "--collate-only", action="store_true", help="only run collation steps"
+    )
+    parser_bake.add_argument(
+        "-s", "--style-file", type=Path, help="colour bar definition to use"
     )
     parser_bake.set_defaults(func=_bake_command)
 
@@ -133,7 +137,7 @@ def main():
     )
     parser_recipe_id.set_defaults(func=_recipe_id_command)
 
-    cli_args = sys.argv[1:] + os.getenv("CSET_ADDOPTS", "").split()
+    cli_args = sys.argv[1:] + shlex.split(os.getenv("CSET_ADDOPTS", ""))
     args, unparsed_args = parser.parse_known_args(cli_args)
 
     # Setup logging.
@@ -187,18 +191,24 @@ def calculate_loglevel(args) -> int:
 
 def _bake_command(args, unparsed_args):
     from CSET._common import parse_variable_options
-    from CSET.operators import execute_recipe_post_steps, execute_recipe_steps
+    from CSET.operators import execute_recipe_collate, execute_recipe_parallel
 
     recipe_variables = parse_variable_options(unparsed_args)
-    if not args.post_only:
-        # Input dir is needed for pre-steps, but not post-steps.
+    if not args.collate_only:
+        # Input dir is needed for parallel steps, but not collate steps.
         if not args.input_dir:
             raise ArgumentError("the following arguments are required: -i/--input-dir")
-        execute_recipe_steps(
-            args.recipe, args.input_dir, args.output_dir, recipe_variables
+        execute_recipe_parallel(
+            args.recipe,
+            args.input_dir,
+            args.output_dir,
+            recipe_variables,
+            args.style_file,
         )
-    if not args.pre_only:
-        execute_recipe_post_steps(args.recipe, args.output_dir, recipe_variables)
+    if not args.parallel_only:
+        execute_recipe_collate(
+            args.recipe, args.output_dir, recipe_variables, args.style_file
+        )
 
 
 def _graph_command(args, unparsed_args):

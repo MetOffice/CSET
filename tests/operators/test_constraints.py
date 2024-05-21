@@ -68,8 +68,17 @@ def test_generate_time_constraint():
     assert expected_time_constraint in repr(time_constraint)
 
 
-def test_generate_pressure_level_constraint():
-    """Generate constraint for a specific pressure level."""
+def test_generate_pressure_level_constraint_single_level():
+    """Generate constraint for a single pressure level."""
+    pressure_constraint = constraints.generate_pressure_level_constraint(
+        pressure_levels=1000
+    )
+    expected_pressure_constraint = "Constraint(coord_values={'pressure': [1000]})"
+    assert expected_pressure_constraint in repr(pressure_constraint)
+
+
+def test_generate_pressure_level_constraint_multi_level():
+    """Generate constraint for multiple pressure levels."""
     pressure_constraint = constraints.generate_pressure_level_constraint(
         pressure_levels=[200, 800]
     )
@@ -84,6 +93,13 @@ def test_generate_pressure_level_constraint_no_pressure():
     )
     expected_pressure_constraint = "Constraint(cube_func=<function generate_pressure_level_constraint.<locals>.no_pressure_coordinate at"
     assert expected_pressure_constraint in repr(pressure_constraint)
+
+
+def test_generate_area_constraint():
+    """Generate area constraint with lat-lon limits."""
+    area_constraint = constraints.generate_area_constraint(0.0, 0.0, 0.1, 0.1)
+    expected_area_constraint = "Constraint(coord_values={'grid_latitude': <function generate_area_constraint.<locals>.<lambda> at"
+    assert expected_area_constraint in repr(area_constraint)
 
 
 def test_combine_constraints():

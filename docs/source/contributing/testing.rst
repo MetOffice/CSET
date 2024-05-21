@@ -96,9 +96,8 @@ Pre-commit Checks
 
 Some very quick checks to catch any very obvious mistakes. They are usually
 setup to run automatically when you make a commit. The checks are installed from
-.pre-commit-config.yaml, and currently involve blacking python code, linting
-with flake8, and checking all files are well formed (no trailing whitespace,
-etc.).
+.pre-commit-config.yaml, and currently involve formatting python code, linting,
+and checking all files are well formed (no trailing whitespace, etc.).
 
 .. code-block:: bash
 

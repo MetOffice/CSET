@@ -19,12 +19,14 @@ before your code is complete. You can indicate it is still a work in progress
 with the `draft pull request functionality of GitHub`_, or putting ``WIP`` in the
 PR title.
 
-.. _issue tracker on GitHub: https://github.com/MetOffice/CSET-workflow/issues
+.. _issue tracker on GitHub: https://github.com/MetOffice/CSET/issues
 .. _working practices: https://metoffice.github.io/CSET/contributing/
 .. _draft pull request functionality of GitHub: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests#draft-pull-requests
 
 Before you get to coding, there are a few steps you need to do to setup the
 development environment.
+
+.. _getting-the-code:
 
 Getting the code
 ----------------
@@ -54,11 +56,13 @@ before we can develop.
     If you have previously cloned the repository you can update it with the
     latest changes. Ensure all changes are committed, then run ``git pull``.
 
+.. _setup_tooling:
+
 Setting up tooling
 ------------------
 
 To be able to run the tests or build the documentation you need some
-prerequisite software. The easiest way to get this is with `conda_`. The
+prerequisite software. The easiest way to get this is with `conda`_. The
 following commands, when run from within the CSET directory, will setup a conda
 environment for you to use.
 
@@ -77,3 +81,18 @@ When subsequently returning to the code after closing your terminal, you will
 need to rerun the ``conda activate cset-dev`` command.
 
 .. _conda: https://docs.conda.io/en/latest/
+
+Updating tooling
+------------------
+
+If it has been some time since you created your conda environment it might be
+worth recreating it to get the latest tools and dependencies.
+
+.. code-block:: bash
+
+    # List all your conda environments
+    conda info --envs
+    # Remove old conda environment.
+    conda remove -n cset-dev --all -y
+
+Then follow the steps under :ref:`setup_tooling` again.

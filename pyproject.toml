@@ -5,10 +5,21 @@ description = "Toolkit for evaluation and investigation of numerical models for 
 authors = [{ name = "Met Office" }, { name = "NIWA" }]
 readme = "README.md"
 license = { text = "Apache-2.0" }
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
     "License :: OSI Approved :: Apache Software License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python",
+    "Topic :: Scientific/Engineering :: Atmospheric Science",
     "Topic :: Scientific/Engineering :: GIS",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Topic :: Scientific/Engineering",
 ]
 dependencies = [
     "numpy",
@@ -59,7 +70,7 @@ envlist =
     py312-linux-tests
     py312-linux-docs
 
-[testenv:py{39,310,311,312}-lock]
+[testenv:py{310,311,312}-lock]
 allowlist_externals = cp
 conda_channels = conda-forge
 conda_create_args = --override-channels
@@ -78,10 +89,9 @@ commands =
     python3 -c 'from sys import version_info as v; fh = open("{env:TMPFILE}", "a"); fh.write(f"\n  - python =\{v.major\}.\{v.minor\}\n")'
     conda-lock --channel conda-forge --kind explicit --file {env:TMPFILE} --platform linux-64 --filename-template "{env:LOCKDIR}{envname}-\{platform\}.txt" {posargs}
 
-[testenv:py{39,310,311,312}-{linux,osx,win}-tests]
+[testenv:py{310,311,312}-{linux,osx,win}-tests]
 description = Run unit and integration tests with PyTest.
 conda_spec =
-    py39-linux: {toxinidir}{/}requirements{/}locks{/}py39-lock-linux-64.txt
     py310-linux: {toxinidir}{/}requirements{/}locks{/}py310-lock-linux-64.txt
     py311-linux: {toxinidir}{/}requirements{/}locks{/}py311-lock-linux-64.txt
     py312-linux: {toxinidir}{/}requirements{/}locks{/}py312-lock-linux-64.txt
@@ -89,10 +99,9 @@ usedevelop = true
 depends = coverage-clean
 commands = pytest {posargs}
 
-[testenv:py{39,310,311,312}-{linux,osx,win}-docs]
+[testenv:py{310,311,312}-{linux,osx,win}-docs]
 description = Invoke sphinx-build to build the HTML docs.
 conda_spec =
-    py39-linux: {toxinidir}{/}requirements{/}locks{/}py39-lock-linux-64.txt
     py310-linux: {toxinidir}{/}requirements{/}locks{/}py310-lock-linux-64.txt
     py311-linux: {toxinidir}{/}requirements{/}locks{/}py311-lock-linux-64.txt
     py312-linux: {toxinidir}{/}requirements{/}locks{/}py312-lock-linux-64.txt

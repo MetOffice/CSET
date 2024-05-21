@@ -20,6 +20,7 @@ precalculated values in the required input form may also be used.
 """
 
 import copy
+import warnings
 
 import numpy as np
 
@@ -83,10 +84,6 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
     the timestep. Therefore this diagnostic is applicable after precipitation has
     occurred, not before as is the usual interpretation of CAPE related diagnostics.
 
-    You might encounter ``RuntimeWarning: divide by zero encountered in divide``
-    or ``RuntimeWarning: invalid value encountered in divide`` this is expected
-    for when CAPE is zero. The data will be replaced by NaNs.
-
     References
     ----------
     .. [1] Clark, A. J., Kain J. S., Marsh P. T., Correia J., Xue M., and Kong
@@ -124,7 +121,10 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
     # Filter MUCAPE by MUCIN to all for possible (realistic) MUCAPE.
     MUCAPE_data[MUCIN.data <= MUCIN_thresh] = 0.0
     # Now calculate the main diagnostic
-    EC_Flagb = 1 - (SBCAPE_data / MUCAPE_data)
+    with warnings.catch_warnings():
+        # Ignore possible divide by zero warnings, as they are replaced by NaNs.
+        warnings.simplefilter("ignore", RuntimeWarning)
+        EC_Flagb = 1 - (SBCAPE_data / MUCAPE_data)
     # Filter to reduce NaN values and -inf values for plotting ease.
     # There are multiple types of NaN values so need to convert them all to same type.
     EC_Flagb[np.isnan(EC_Flagb)] = np.nan

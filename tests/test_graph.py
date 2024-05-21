@@ -41,7 +41,7 @@ def test_save_graph_no_operators_exception():
     """Exception raised from recipe with no operators."""
     with pytest.raises(ValueError):
         # Inline YAML form used.
-        graph.save_graph('{"steps": [{"argument": "no_operators"}]}')
+        graph.save_graph('{"parallel": [{"argument": "no_operators"}]}')
 
 
 def test_save_graph_auto_open_xdg_open(tmp_path: Path, monkeypatch):

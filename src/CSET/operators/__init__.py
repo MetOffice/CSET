@@ -18,6 +18,7 @@ import inspect
 import json
 import logging
 import os
+import warnings
 from pathlib import Path
 from typing import Union
 
@@ -35,11 +36,31 @@ from CSET.operators import (
     misc,
     plot,
     read,
+    regrid,
     write,
 )
 
+# Exported operators & functions to use elsewhere.
+__all__ = [
+    "aggregate",
+    "collapse",
+    "constraints",
+    "convection",
+    "execute_recipe_parallel",
+    "execute_recipe_collate",
+    "filters",
+    "get_operator",
+    "misc",
+    "plot",
+    "read",
+    "regrid",
+    "write",
+]
+
 # Stop iris giving a warning whenever it loads something.
 FUTURE.datum_support = True
+# Stop iris giving a warning whenever it saves something.
+FUTURE.save_split_attrs = True
 
 
 def get_operator(name: str):
@@ -81,9 +102,12 @@ def get_operator(name: str):
 
 def _write_metadata(recipe: dict):
     """Write a meta.json file in the CWD."""
+    # TODO: Investigate whether we might be better served by an SQLite database.
     metadata = recipe.copy()
     # Remove steps, as not needed, and might contain non-serialisable types.
+    metadata.pop("parallel", None)
     metadata.pop("steps", None)
+    metadata.pop("collate", None)
     metadata.pop("post-steps", None)
     with open("meta.json", "wt", encoding="UTF-8") as fp:
         json.dump(metadata, fp)
@@ -117,7 +141,7 @@ def _step_parser(step: dict, step_input: any) -> str:
         return operator(**kwargs)
 
 
-def _run_steps(recipe, steps, step_input, output_directory: Path):
+def _run_steps(recipe, steps, step_input, output_directory: Path, style_file: Path):
     """Execute the steps in a recipe."""
     original_working_directory = Path.cwd()
     os.chdir(output_directory)
@@ -132,6 +156,8 @@ def _run_steps(recipe, steps, step_input, output_directory: Path):
         )
         logger.addHandler(diagnostic_log)
         # Create metadata file used by some steps.
+        if style_file:
+            recipe["style_file_path"] = str(style_file)
         _write_metadata(recipe)
         # Execute the recipe.
         for step in steps:
@@ -141,13 +167,14 @@ def _run_steps(recipe, steps, step_input, output_directory: Path):
         os.chdir(original_working_directory)
 
 
-def execute_recipe_steps(
+def execute_recipe_parallel(
     recipe_yaml: Union[Path, str],
     input_directory: Path,
     output_directory: Path,
     recipe_variables: dict = None,
+    style_file: Path = None,
 ) -> None:
-    """Parse and executes the initial steps from a recipe file.
+    """Parse and executes the parallel steps from a recipe file.
 
     Parameters
     ----------
@@ -184,11 +211,25 @@ def execute_recipe_steps(
     except (FileExistsError, NotADirectoryError) as err:
         logging.error("Output directory is a file. %s", output_directory)
         raise err
-    _run_steps(recipe, recipe["steps"], step_input, output_directory)
+    # If parallel doesn't exist try steps.
+    try:
+        steps = recipe["parallel"]
+    except KeyError:
+        if "steps" in recipe:
+            warnings.warn(
+                "'steps' recipe key is deprecated. Use 'parallel' instead.",
+                DeprecationWarning,
+                stacklevel=1,
+            )
+        steps = recipe["steps"]
+    _run_steps(recipe, steps, step_input, output_directory, style_file)
 
 
-def execute_recipe_post_steps(
-    recipe_yaml: Union[Path, str], output_directory: Path, recipe_variables: dict = None
+def execute_recipe_collate(
+    recipe_yaml: Union[Path, str],
+    output_directory: Path,
+    recipe_variables: dict = None,
+    style_file: Path = None,
 ) -> None:
     """Parse and execute the collation steps from a recipe file.
 
@@ -212,24 +253,18 @@ def execute_recipe_post_steps(
     """
     if recipe_variables is None:
         recipe_variables = {}
-    output_directory = Path(output_directory).absolute()
-    recipe = parse_recipe(recipe_yaml, recipe_variables)
-    # If post-steps doesn't exist treat it as having no steps.
-    steps = recipe.get("post-steps", tuple())
+    output_directory = Path(output_directory).resolve()
     assert output_directory.is_dir()
-    _run_steps(recipe, steps, output_directory, output_directory)
-
-
-__all__ = [
-    "aggregate",
-    "collapse",
-    "constraints",
-    "convection",
-    "execute_recipe_steps",
-    "filters",
-    "get_operator",
-    "misc",
-    "plot",
-    "read",
-    "write",
-]
+    recipe = parse_recipe(recipe_yaml, recipe_variables)
+    # If collate doesn't exist try post-steps, else treat it as having no steps.
+    try:
+        steps = recipe["collate"]
+    except KeyError:
+        if "post-steps" in recipe:
+            warnings.warn(
+                "'post-steps' recipe key is deprecated. Use 'collate' instead.",
+                DeprecationWarning,
+                stacklevel=1,
+            )
+        steps = recipe.get("post-steps", tuple())
+    _run_steps(recipe, steps, output_directory, output_directory, style_file)

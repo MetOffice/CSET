@@ -52,8 +52,8 @@ def test_bake_recipe_execution(tmp_path):
     )
 
 
-def test_bake_pre_only(tmp_path):
-    """Run recipe pre-steps from the command line."""
+def test_bake_parallel_only(tmp_path):
+    """Run recipe parallel steps from the command line."""
     subprocess.run(
         [
             "cset",
@@ -61,21 +61,21 @@ def test_bake_pre_only(tmp_path):
             f"--input-dir={os.devnull}",
             f"--output-dir={tmp_path}",
             "--recipe=tests/test_data/noop_recipe.yaml",
-            "--pre-only",
+            "--parallel-only",
         ],
         check=True,
     )
 
 
 def test_bake_post_only(tmp_path):
-    """Run recipe post-steps from the command line."""
+    """Run recipe collate steps from the command line."""
     subprocess.run(
         [
             "cset",
             "bake",
             f"--output-dir={tmp_path}",
             "--recipe=tests/test_data/noop_recipe.yaml",
-            "--post-only",
+            "--collate-only",
         ],
         check=True,
     )
@@ -98,7 +98,7 @@ def test_bake_invalid_args():
 
 
 def test_bake_invalid_args_input_dir():
-    """Missing required input-dir argument for pre-steps."""
+    """Missing required input-dir argument for parallel."""
     with pytest.raises(subprocess.CalledProcessError):
         subprocess.run(
             ["cset", "bake", "--recipe=foo", "--output-dir=/tmp"], check=True
@@ -146,17 +146,17 @@ def test_graph_details(tmp_path: Path):
 
 def test_cookbook_cwd(tmp_working_dir):
     """Unpacking the recipes into the current working directory."""
-    subprocess.run(["cset", "cookbook", "extract_instant_air_temp.yaml"], check=True)
-    assert Path("extract_instant_air_temp.yaml").is_file()
+    subprocess.run(["cset", "cookbook", "CAPE_ratio_plot.yaml"], check=True)
+    assert Path("CAPE_ratio_plot.yaml").is_file()
 
 
 def test_cookbook_path(tmp_path: Path):
     """Unpacking the recipes into a specified directory."""
     subprocess.run(
-        ["cset", "cookbook", "--output-dir", tmp_path, "extract_instant_air_temp.yaml"],
+        ["cset", "cookbook", "--output-dir", tmp_path, "CAPE_ratio_plot.yaml"],
         check=True,
     )
-    assert (tmp_path / "extract_instant_air_temp.yaml").is_file()
+    assert (tmp_path / "CAPE_ratio_plot.yaml").is_file()
 
 
 def test_cookbook_list_available_recipes():
@@ -173,11 +173,16 @@ def test_cookbook_list_available_recipes():
 def test_cookbook_detail_recipe():
     """Show detail of a recipe."""
     proc = subprocess.run(
-        ["cset", "cookbook", "--details", "extract_instant_air_temp.yaml"],
+        [
+            "cset",
+            "cookbook",
+            "--details",
+            "CAPE_ratio_plot.yaml",
+        ],
         capture_output=True,
         check=True,
     )
-    assert proc.stdout.startswith(b"\n\textract_instant_air_temp.yaml\n")
+    assert proc.stdout.startswith(b"\n\tCAPE_ratio_plot.yaml\n")
 
 
 def test_cookbook_non_existent_recipe(tmp_path):
@@ -208,3 +213,16 @@ def test_recipe_id_no_title():
     )
     # UUID output + newline.
     assert len(p.stdout) == 37
+
+
+def test_cset_addopts():
+    """Lists in CSET_ADDOPTS environment variable don't crash the parser."""
+    environment = dict(os.environ)
+    environment["CSET_ADDOPTS"] = "--LIST='[1, 2, 3]'"
+    p = subprocess.run(
+        ["cset", "recipe-id", "-r", "tests/test_data/addopts_test_recipe.yaml"],
+        check=True,
+        capture_output=True,
+        env=environment,
+    )
+    assert p.stdout == b"list_1_2_3\n"

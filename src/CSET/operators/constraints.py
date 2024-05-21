@@ -91,7 +91,7 @@ def generate_model_level_constraint(
 
 
 def generate_pressure_level_constraint(
-    pressure_levels: list[int], **kwargs
+    pressure_levels: Union[int, list[int]], **kwargs
 ) -> iris.Constraint:
     """Generate constraint for the specified pressure_levels.
 
@@ -100,13 +100,17 @@ def generate_pressure_level_constraint(
 
     Arguments
     ---------
-    pressure_levels: list
-        List of integer pressure levels in hPa.
+    pressure_levels: int|list
+        List of integer pressure levels in hPa either as single integer
+        for a single level or a list of multiple integers.
 
     Returns
     -------
     pressure_constraint: iris.Constraint
     """
+    # If pressure_level is an integer it is converted into a list.
+    if isinstance(pressure_levels, int):
+        pressure_levels = [pressure_levels]
     if len(pressure_levels) == 0:
         # If none specified reject cubes with pressure level coordinate.
         def no_pressure_coordinate(cube):
@@ -175,6 +179,39 @@ def generate_time_constraint(
         time_end = datetime.fromisoformat(time_end)
     time_constraint = iris.Constraint(time=lambda t: time_start <= t.point <= time_end)
     return time_constraint
+
+
+def generate_area_constraint(
+    lat_start: float, lat_end: float, lon_start: float, lon_end: float, **kwargs
+) -> iris.Constraint:
+    """Generate an area constraint between latitude/longitude limits.
+
+    Operator that takes a set of latitude and longitude limits and returns a
+    constraint that selects grid values only inside that area. Works with the
+    data's native grid so is defined within the rotated pole CRS.
+
+    Arguments
+    ---------
+    lat_start: float
+        Latitude value for lower bound
+    lat_end: float
+        Latitude value for top bound
+    lon_start: float
+        Longitude value for left bound
+    lon_end: float
+        Longitude value for right bound
+
+    Returns
+    -------
+    area_constraint: iris.Constraint
+    """
+    area_constraint = iris.Constraint(
+        coord_values={
+            "grid_latitude": lambda cell: lat_start < cell < lat_end,
+            "grid_longitude": lambda cell: lon_start < cell < lon_end,
+        }
+    )
+    return area_constraint
 
 
 def combine_constraints(

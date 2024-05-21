@@ -14,6 +14,7 @@
 
 """Tests for common functionality across CSET."""
 
+from collections.abc import Iterable
 from pathlib import Path
 
 import pytest
@@ -24,12 +25,12 @@ import CSET._common as common
 def test_parse_recipe_string():
     """Loading and parsing of a YAML recipe from a string."""
     valid_recipe = """\
-    steps:
+    parallel:
         operator: misc.noop
         arg1: Hello
     """
     parsed = common.parse_recipe(valid_recipe)
-    assert parsed == {"steps": {"operator": "misc.noop", "arg1": "Hello"}}
+    assert parsed == {"parallel": {"operator": "misc.noop", "arg1": "Hello"}}
 
 
 def test_parse_recipe_path():
@@ -38,7 +39,7 @@ def test_parse_recipe_path():
     expected = {
         "title": "Noop",
         "description": "A recipe that does nothing. Only used for testing.",
-        "steps": [
+        "parallel": [
             {
                 "operator": "misc.noop",
                 "test_argument": "Banana",
@@ -46,7 +47,7 @@ def test_parse_recipe_path():
                 "substep": {"operator": "constraints.combine_constraints"},
             }
         ],
-        "post-steps": [{"operator": "misc.noop"}],
+        "collate": [{"operator": "misc.noop"}],
     }
     assert parsed == expected
 
@@ -77,19 +78,31 @@ def test_parse_recipe_exception_invalid_recipe():
 
 def test_parse_recipe_exception_blank():
     """Exception for blank recipe."""
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         common.parse_recipe("")
 
 
-def test_parse_recipe_exception_no_steps():
-    """Exception for recipe without any steps."""
+def test_parse_recipe_exception_no_parallel():
+    """Exception for recipe without any parallel steps."""
     with pytest.raises(ValueError):
-        common.parse_recipe("steps: []")
+        common.parse_recipe("parallel: []")
+
+
+def test_parse_recipe_exception_parallel_not_sequence():
+    """Exception for recipe with parallel containing an atom."""
+    with pytest.raises(ValueError):
+        common.parse_recipe("parallel: 7")
+
+
+def test_parse_recipe_deprecated_steps():
+    """Deprecation warning when falling back to steps key."""
+    with pytest.warns(DeprecationWarning):
+        common.parse_recipe('steps: [{"operator": "misc.noop"}]')
 
 
 def test_parse_recipe_exception_non_dict():
     """Exception for recipe that parses to a non-dict."""
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         common.parse_recipe("[]")
 
 
@@ -124,9 +137,9 @@ def test_parse_variable_options():
 
 def test_template_variables():
     """Multiple variables are correctly templated into recipe."""
-    recipe = {"steps": [{"operator": "misc.noop", "v1": "$VAR_A", "v2": "$VAR_B"}]}
+    recipe = {"parallel": [{"operator": "misc.noop", "v1": "$VAR_A", "v2": "$VAR_B"}]}
     variables = {"VAR_A": 42, "VAR_B": 3.14}
-    expected = {"steps": [{"operator": "misc.noop", "v1": 42, "v2": 3.14}]}
+    expected = {"parallel": [{"operator": "misc.noop", "v1": 42, "v2": 3.14}]}
     actual = common.template_variables(recipe, variables)
     assert actual == expected
     assert recipe == expected
@@ -225,3 +238,31 @@ def test_render_file():
     actual = common.render_file("tests/test_data/template_file.html", greeting="Hello")
     expected = "<p>Hello World!</p>\n"
     assert actual == expected
+
+
+def test_iter_maybe_iterable():
+    """Pass an iterable unchanged though iter_maybe."""
+    actual = [1, 2, 3]
+    expected = common.iter_maybe(actual)
+    # The same object is returned.
+    assert expected is actual
+
+
+def test_iter_maybe_atom():
+    """Convert an atom into an iterable."""
+    atom = 7
+    created_iterable = common.iter_maybe(atom)
+    assert isinstance(created_iterable, Iterable)
+    for value in created_iterable:
+        # The same object is inside the iterable.
+        assert value is atom
+
+
+def test_iter_maybe_string():
+    """String is wrapped inside of an iterable instead being a char iterator."""
+    atom = "A string"
+    created_iterable = common.iter_maybe(atom)
+    assert isinstance(created_iterable, Iterable)
+    for value in created_iterable:
+        # The same object is inside the iterable.
+        assert value is atom

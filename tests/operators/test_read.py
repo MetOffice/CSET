@@ -14,6 +14,8 @@
 
 """Reading operator tests."""
 
+import warnings
+
 import iris.cube
 import pytest
 
@@ -30,6 +32,13 @@ def test_read_cubes():
     ]
     for cube in cubes:
         assert repr(cube) in expected_cubes
+
+
+def test_read_cubes_no_cubes_warning():
+    """Warning emitted when constraint gives no cubes."""
+    with pytest.warns(UserWarning, match="No cubes loaded"):
+        cubes = read.read_cubes("tests/test_data/air_temp.nc", "non-existent")
+    assert len(cubes) == 0
 
 
 def test_read_cubes_ensemble_with_realization_coord():
@@ -83,3 +92,20 @@ def test_read_cube_unconstrained():
     """Error for multiple cubes read."""
     with pytest.raises(ValueError):
         read.read_cube("tests/test_data/air_temp.nc")
+
+
+def test_verify_paths(tmp_path):
+    """Verify a file exists."""
+    path = tmp_path / "file"
+    path.touch()
+    # Doesn't raise a warning.
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        read._verify_paths(path)
+
+
+def test_verify_failure(tmp_path):
+    """Warn when file doesn't exist."""
+    path = tmp_path / "file"
+    with pytest.warns(RuntimeWarning):
+        read._verify_paths(path)

@@ -1,0 +1,9 @@
+title: "List: $LIST"
+description: A recipe that has a list templated. Only used for testing.
+
+parallel:
+  - operator: misc.noop
+    argument: $LIST
+
+collate:
+  - operator: misc.noop

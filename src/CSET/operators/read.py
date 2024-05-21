@@ -15,12 +15,21 @@
 """Operators for reading various types of files from disk."""
 
 import logging
+import warnings
+from collections.abc import Iterable
 from pathlib import Path
+from typing import Union
 
 import iris
 import iris.coords
 import iris.cube
 import numpy as np
+
+from CSET._common import iter_maybe
+
+
+class NoDataWarning(UserWarning):
+    """Warning that no data has been loaded."""
 
 
 def read_cube(
@@ -105,7 +114,7 @@ def read_cubes(
     ---------
     loadpath: pathlike
         Path to where .pp/.nc files are located
-    constraint: iris.Constraint or iris.ConstraintCombination, optional
+    constraint: iris.Constraint | iris.ConstraintCombination, optional
         Constraints to filter data by
     filename_pattern: str, optional
         Unix shell-style pattern to match filenames to. Defaults to "*"
@@ -126,9 +135,14 @@ def read_cubes(
     if loadpath.is_dir():
         loadpath = sorted(loadpath.glob(filename_pattern))
 
-    logging.info("Loading file(s): %s", loadpath)
+    logging.info(
+        "Loading files:\n%s", "\n".join(str(path) for path in iter_maybe(loadpath))
+    )
+
+    _verify_paths(loadpath)
 
     if constraint is not None:
+        logging.debug("Constraint: %s", constraint)
         cubes = iris.load(loadpath, constraint)
     else:
         cubes = iris.load(loadpath)
@@ -148,6 +162,11 @@ def read_cubes(
                     np.int32(0), standard_name="realization", units="1"
                 )
             )
+    logging.debug("Loaded cubes: %s", cubes)
+    if len(cubes) == 0:
+        warnings.warn(
+            "No cubes loaded, check your constraints!", NoDataWarning, stacklevel=2
+        )
     return cubes
 
 
@@ -195,3 +214,10 @@ def _ensemble_callback(cube, field, filename: str):
             member = np.int32(filename[-15:-13])
 
         cube.add_aux_coord(iris.coords.AuxCoord(member, standard_name="realization"))
+
+
+def _verify_paths(files: Union[Path, Iterable[Path]]):
+    """Verify file exists, warning otherwise."""
+    for file in iter_maybe(files):
+        if not file.is_file():
+            warnings.warn(f"File does not exist: {file}", RuntimeWarning, stacklevel=2)

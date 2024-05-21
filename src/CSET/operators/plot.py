@@ -30,6 +30,7 @@ import iris.exceptions
 import iris.plot as iplt
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 from markdown_it import MarkdownIt
 
 from CSET._common import get_recipe_metadata, render_file, slugify
@@ -122,8 +123,69 @@ def _make_plot_html_page(plots: list):
         fp.write(html)
 
 
+def _colorbar_map_levels(varname: str, **kwargs):
+    """
+    Specify the color map and levels.
+
+    For the given variable name, from a colorbar dictionary file.
+
+    Parameters
+    ----------
+    colorbar_file: str
+        Filename of the colorbar dictionary to read.
+    varname: str
+        Variable name to extract from the dictionary
+
+    """
+    # Grab the colour bar file from the recipe global metadata. A non-existent
+    # placeholder path is used if not found.
+    colorbar_file = get_recipe_metadata().get(
+        "style_file_path", "/non-existent/NO_FILE_SPECIFIED"
+    )
+    try:
+        with open(colorbar_file, "rt", encoding="UTF-8") as fp:
+            colorbar = json.load(fp)
+
+        # Specify the colormap for this variable
+        try:
+            cmap = colorbar[varname]["cmap"]
+            logging.debug("From color_bar dictionary: Using cmap")
+        except KeyError:
+            cmap = mpl.colormaps["viridis"]
+
+        # Specify the colorbar levels for this variable
+        try:
+            levels = colorbar[varname]["levels"]
+
+            actual_cmap = mpl.cm.get_cmap(cmap)
+
+            norm = mpl.colors.BoundaryNorm(levels, ncolors=actual_cmap.N)
+            logging.debug("From color_bar dictionary: Using levels")
+        except KeyError:
+            try:
+                vmin, vmax = colorbar[varname]["min"], colorbar[varname]["max"]
+                logging.debug("From color_bar dictionary: Using min and max")
+                levels = np.linspace(vmin, vmax, 10)
+                norm = None
+            except KeyError:
+                levels = None
+                norm = None
+
+    except FileNotFoundError:
+        logging.debug("Colour bar file: %s", colorbar_file)
+        logging.info("Colour bar file does not exist. Using default values.")
+        levels = None
+        norm = None
+        cmap = mpl.colormaps["viridis"]
+
+    return cmap, levels, norm
+
+
 def _plot_and_save_contour_plot(
-    cube: iris.cube.Cube, filename: str, title: str, **kwargs
+    cube: iris.cube.Cube,
+    filename: str,
+    title: str,
+    **kwargs,
 ):
     """Plot and save a contour plot.
 
@@ -135,35 +197,41 @@ def _plot_and_save_contour_plot(
         Filename of the plot to write.
     title: str
         Plot title.
+
     """
     # Setup plot details, size, resolution, etc.
     fig = plt.figure(figsize=(15, 15), facecolor="w", edgecolor="k")
 
-    cmap = mpl.colormaps["viridis"]
+    # Specify the color bar
+    cmap, levels, norm = _colorbar_map_levels(cube.name())
 
     # Filled contour plot of the field.
-    iplt.contourf(cube, cmap=cmap)
-    axes = fig.gca()
+    contours = iplt.contourf(cube, cmap=cmap, levels=levels, norm=norm)
+
+    # Using pyplot interface here as we need iris to generate a cartopy GeoAxes.
+    axes = plt.gca()
 
     # Add coastlines.
     axes.coastlines(resolution="10m")
 
     # Add title.
-    plt.title(title, fontsize=16)
+    axes.set_title(title, fontsize=16)
 
     # Add colour bar.
-    cbar = plt.colorbar()
+    cbar = fig.colorbar(contours)
     cbar.set_label(label=f"{cube.name()} ({cube.units})", size=20)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=150)
     logging.info("Saved contour plot to %s", filename)
+    plt.close(fig)
 
 
 def _plot_and_save_postage_stamp_contour_plot(
     cube: iris.cube.Cube,
     filename: str,
     stamp_coordinate: str,
+    title: str,
     **kwargs,
 ):
     """Plot postage stamp contour plots from an ensemble.
@@ -185,24 +253,35 @@ def _plot_and_save_postage_stamp_contour_plot(
     # Use the smallest square grid that will fit the members.
     grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
 
-    plt.figure(figsize=(10, 10))
+    fig = plt.figure(figsize=(10, 10))
+
+    # Specify the color bar
+    cmap, levels, norm = _colorbar_map_levels(cube.name())
+
     # Make a subplot for each member.
-    subplot = 1
-    for member in cube.slices_over(stamp_coordinate):
+    for member, subplot in zip(
+        cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1), strict=False
+    ):
+        # Implicit interface is much easier here, due to needing to have the
+        # cartopy GeoAxes generated.
         plt.subplot(grid_size, grid_size, subplot)
-        plot = iplt.contourf(member)
-        plt.title(f"Member #{member.coord(stamp_coordinate).points[0]}")
-        plt.axis("off")
-        plt.gca().coastlines()
-        subplot += 1
+        plot = iplt.contourf(member, cmap=cmap, levels=levels, norm=norm)
+        ax = plt.gca()
+        ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
+        ax.set_axis_off()
+        ax.coastlines()
 
     # Put the shared colorbar in its own axes.
-    colorbar_axes = plt.gcf().add_axes([0.15, 0.07, 0.7, 0.03])
-    colorbar = plt.colorbar(plot, colorbar_axes, orientation="horizontal")
+    colorbar_axes = fig.add_axes([0.15, 0.07, 0.7, 0.03])
+    colorbar = fig.colorbar(plot, colorbar_axes, orientation="horizontal")
     colorbar.set_label(f"{cube.name()} / {cube.units}")
 
-    plt.savefig(filename, bbox_inches="tight", dpi=150)
+    # Overall figure title.
+    fig.suptitle(title)
+
+    fig.savefig(filename, bbox_inches="tight", dpi=150)
     logging.info("Saved contour postage stamp plot to %s", filename)
+    plt.close(fig)
 
 
 def _plot_and_save_line_series(
@@ -223,9 +302,9 @@ def _plot_and_save_line_series(
     """
     fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
     iplt.plot(coord, cube, "o-")
+    ax = plt.gca()
 
     # Add some labels and tweak the style.
-    ax = fig.gca()
     ax.set(
         xlabel=f"{coord.name()} / {coord.units}",
         ylabel=f"{cube.name()} / {cube.units}",
@@ -238,6 +317,7 @@ def _plot_and_save_line_series(
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=150)
     logging.info("Saved line plot to %s", filename)
+    plt.close(fig)
 
 
 ####################
@@ -317,7 +397,7 @@ def spatial_contour_plot(
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
         coord = cube_slice.coord(sequence_coordinate)
         # Format the coordinate value in a unit appropriate way.
-        title = coord.units.title(coord.points[0])
+        title = f"{recipe_title} | {coord.units.title(coord.points[0])}"
         # Do the actual plotting.
         plotting_func(
             cube_slice,
@@ -387,7 +467,7 @@ def postage_stamp_contour_plot(
     except iris.exceptions.CoordinateNotFoundError as err:
         raise ValueError(f"Cube must have a {coordinate} coordinate.") from err
 
-    _plot_and_save_postage_stamp_contour_plot(cube, filename, coordinate)
+    _plot_and_save_postage_stamp_contour_plot(cube, filename, coordinate, title="")
     _make_plot_html_page([filename])
     return cube
 
