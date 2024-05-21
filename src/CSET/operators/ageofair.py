@@ -31,6 +31,8 @@ import iris.cube
 import numpy as np
 from scipy.ndimage import gaussian_filter
 
+from CSET.operators._utils import get_cube_xycoordname
+
 
 def calc_dist(coord_1, coord_2):
     """Haversine distance in meters."""
@@ -299,8 +301,9 @@ def compute_ageofair(
         raise NotImplementedError("Time not monotonically increasing, not supported")
 
     # Get coord points
-    lats = XWIND.coord("latitude").points
-    lons = XWIND.coord("longitude").points
+    lat_name, lon_name = get_cube_xycoordname(XWIND)
+    lats = XWIND.coord(lat_name).points
+    lons = XWIND.coord(lon_name).points
     time = XWIND.coord("time").points
 
     # Get array index for user specified pressure level.
@@ -321,8 +324,8 @@ def compute_ageofair(
         long_name="age_of_air",
         dim_coords_and_dims=[
             (XWIND.coord("time"), 0),
-            (XWIND.coord("latitude"), 1),
-            (XWIND.coord("longitude"), 2),
+            (XWIND.coord(lat_name), 1),
+            (XWIND.coord(lon_name), 2),
         ],
     )
 
