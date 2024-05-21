@@ -24,7 +24,7 @@ import multiprocessing
 import os
 import tempfile
 from functools import partial
-from math import atan2, cos, radians, sin, sqrt
+from math import asin, cos, radians, sin, sqrt
 
 import numpy as np
 from iris.cube import Cube
@@ -35,8 +35,9 @@ from CSET.operators._utils import get_cube_xycoordname
 
 def _calc_dist(coord_1, coord_2):
     """Haversine distance in metres."""
-    # Approximate radius of earth in km
-    radius = 6378.0
+    # Approximate radius of earth in m
+    # Source: https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
+    radius = 6378000
 
     # extract coordinates and convert to radians
     lat1 = radians(coord_1[0])
@@ -50,10 +51,10 @@ def _calc_dist(coord_1, coord_2):
 
     # Compute distance
     a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    c = 2 * asin(sqrt(a))
     distance = radius * c
 
-    return distance * 1000
+    return distance
 
 
 def aoa_core(
