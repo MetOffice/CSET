@@ -12,6 +12,8 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@jfrost-mo`_ made the ``install_restricted_files.sh`` script non-interactive
+  in :pr:`606`. This should make it less confusing to use.
 * `@Sylviabohnenstengel`_ added information to rose-meta for colorbar selection
   and provided path to example JSON file in :pr:`632`
 * `@jfrost-mo`_ added a Generative AI policy in :pr:`624`
