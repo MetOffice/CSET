@@ -71,8 +71,7 @@ def aoa_core(
     tmpdir: str,
     lon_pnt: int,
 ):
-    """
-    AOA multiprocessing core.
+    """AOA multiprocessing core.
 
     Runs the core age of air code on a specific longitude point (all latitudes) for
     parallelisation.
