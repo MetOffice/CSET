@@ -24,6 +24,10 @@ from pathlib import Path
 import ruamel.yaml
 
 
+class FileExistsWarning(UserWarning):
+    """Warning a file already exists, and some unusual action shall be taken."""
+
+
 def _version_agnostic_importlib_resources_file() -> Path:
     """Transitional wrapper to importlib.resources.files().
 
@@ -91,7 +95,9 @@ def unpack_recipe(recipe_dir: Path, recipe_name: str) -> None:
     logging.debug("Saving recipe to %s", output_file)
     if output_file.exists():
         warnings.warn(
-            f"{file.name} already exists in target directory, skipping.", stacklevel=2
+            f"{file.name} already exists in target directory, skipping.",
+            FileExistsWarning,
+            stacklevel=2,
         )
         return
     logging.info("Unpacking %s to %s", file.name, output_file)

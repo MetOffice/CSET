@@ -14,6 +14,22 @@ Unreleased
 
 * `@jfrost-mo`_ made the ``install_restricted_files.sh`` script non-interactive
   in :pr:`606`. This should make it less confusing to use.
+* `@Sylviabohnenstengel`_ added information to rose-meta for colorbar selection
+  and provided path to example JSON file in :pr:`632`
+* `@jfrost-mo`_ added a Generative AI policy in :pr:`624`
+* `@jfrost-mo`_ linked to the `CSET discussion forum`_ in :pr:`625`
+* `@jwarner8`_ use common operator to identify x/y coord names in regrid operator :pr:`626`
+* `@jwarner8`_ added generic cube util for common functions so all operators can
+  use to reduce repetition in :pr:`620`
+* `@jfrost-mo`_ added a code of conduct in :pr:`618`
+* `@jfrost-mo`_ fixed some rose edit metadata so the subarea selectors show up
+  when enabled in :pr:`612`
+* `@jfrost-mo`_ removed some old recipes that are now redundant in :pr:`512`
+* `@jfrost-mo`_ added a git cheat sheet to the documentation in :pr:`598`
+* `@jfrost-mo`_ added a warning when input files don't exist in :pr:`518`. This
+  makes it easier to see if configuration mistakes were made.
+* `@jfrost-mo`_ improved the documentation for adding a new diagnostic in
+  :pr:`603`
 * `@dasha-shchep`_ added ``generate_area_constraint`` operator and added to
   LFRic recipes in :pr:`522`. This was their first contribution 🎉
 * `@jfrost-mo`_ dropped python 3.9 support in :pr:`448` The minimum required
@@ -42,6 +58,7 @@ Unreleased
 * `@jfrost-mo`_ updated the example rose-suite.conf to reflect what a modern
   version should look like in :pr:`508`
 
+.. _CSET discussion forum: https://github.com/MetOffice/simulation-systems/discussions/categories/cset-toolkit
 .. _@dasha-shchep: https://github.com/dasha-shchep
 .. _@cjohnson-pi: https://github.com/cjohnson-pi
 .. _@Ashfinn: https://github.com/Ashfinn

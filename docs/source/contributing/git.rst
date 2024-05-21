@@ -63,10 +63,37 @@ covers setting it up. To access repositories within an enterprise environment
 .. _GitHub's documentation on SSH: https://docs.github.com/en/authentication/connecting-to-github-with-ssh
 .. _setup single sign-on: https://docs.github.com/en/enterprise-cloud@latest/authentication/authenticating-with-saml-single-sign-on/authorizing-an-ssh-key-for-use-with-saml-single-sign-on
 
+Useful git commands
+-------------------
+
+While git has many commands, for most things you will find the following list of
+commands sufficient. More detail on each of these commands can be found in the
+`git reference documentation`_.
+
+.. csv-table::
+    :header: "Command", "Description"
+    :widths: auto
+
+    "``git status``", "Status of repository, showing changed files, etc."
+    "``git clone <repo-url>``", "Download code"
+    "``git add <filename>``", "Add a modified or new file to your next commit"
+    "``git branch``", "List local branches"
+    "``git switch <branch>``", "Switch to an existing branch"
+    "``git switch -c <branch>``", "Create a new branch in your local repository"
+    "``git commit``", "Commit changes to local repository"
+    "``git push``", "Push changes or new branch up to the remote repository (GitHub)"
+    "``git log``", "Log of previous commits in current branch"
+    "``git diff``", "Show changes since last commit in local directory"
+    "``git fetch``", "Fetch remote changes from GitHub, but don't apply them"
+    "``git merge <src-branch>``", "Merge changes from another branch into the current one"
+    "``git pull``", "Update local branch with remote changes (a combined fetch and merge)"
+
+.. _git reference documentation: https://git-scm.com/docs
+
 .. _pull-request:
 
-Pull Requests
--------------
+Pull Request
+------------
 
 A pull request is how you submit code for inclusion in CSET. All code changes
 must go through a pull request. Pushing directly to the main branch has been
