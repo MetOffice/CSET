@@ -156,11 +156,8 @@ def test_plot_vertical_line_series_too_many_dimensions(cube, tmp_working_dir):
         plot.plot_vertical_line_series(cube)
 
 
-def test_plot_histogram_sequence_coordinate(tmp_working_dir):
+def test_plot_histogram_sequence_coordinate(histogram_cube, tmp_working_dir):
     """Plot sequence of contour plots."""
-    cube = read.read_cube(
-        "tests/test_data/air_temperature_1000_hpa_level_histogram_plot.nc"
-    )
-    plot.plot_histogram_series(cube, sequence_coordinate="time")
+    plot.plot_histogram_series(histogram_cube, sequence_coordinate="time")
     assert Path("air_temperature_1000_hpa_level_histogram_plot_473718.0.png").is_file()
 
