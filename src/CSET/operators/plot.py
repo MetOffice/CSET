@@ -593,6 +593,9 @@ def spatial_contour_plot(
     except iris.exceptions.CoordinateNotFoundError:
         pass
 
+    # if the sequence_coordinate is option is this testthen correct? It is similar to the
+    # test in spatial plotting for optional sequences. It does not crash when running CLI
+    # cset bake command with a single timestep
     try:
         cube.coord(sequence_coordinate)
     except iris.exceptions.CoordinateNotFoundError as err:
@@ -798,15 +801,13 @@ def plot_vertical_line_series(
     except iris.exceptions.CoordinateNotFoundError as err:
         raise ValueError(f"Cube must have a {series_coordinate} coordinate.") from err
 
-    # If several individual vertical lines are plotted with time as sequence_coordinate
-    # for the time slider option.
     try:
-        cube.coord(sequence_coordinate)
+        if cube.ndim > 1:
+            cube.coord(sequence_coordinate)
     except iris.exceptions.CoordinateNotFoundError as err:
-        raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
-
-    if cube.ndim > 1:
-        raise ValueError("Cube must be 1D.")
+        raise ValueError(
+            f"Cube must be 1D. If it is not 1D check if it has a {sequence_coordinate} to use for slider function."
+        ) from err
 
     # Ensure we have a name for the plot file.
     recipe_title = get_recipe_metadata().get("title", "Untitled")
@@ -937,7 +938,7 @@ def plot_histogram_series(
         # Use sequence value so multiple sequences can merge.
         sequence_value = cube_slice.coord(sequence_coordinate).points[0]
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
-        coord = cube_slice.coord(series_coordinate)
+        coord = cube_slice.coord(sequence_coordinate)
         # Format the coordinate value in a unit appropriate way.
         title = f"{recipe_title} | {coord.units.title(coord.points[0])}"
         # Do the actual plotting.
