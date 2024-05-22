@@ -19,6 +19,8 @@ from math import asin, cos, radians, sin, sqrt
 import iris
 import numpy as np
 
+from CSET.operators._utils import get_cube_xycoordname
+
 
 def _calc_dist(coord_1, coord_2):
     """Haversine distance in metres."""
@@ -47,6 +49,7 @@ def _calc_dist(coord_1, coord_2):
 def calc_crosssection(cube, startxy, endxy, coord="distance"):
     """Compute cross section."""
     # Find out xy coord name
+    x_name, y_name = get_cube_xycoordname(cube)
 
     # Get local cutout so we can get proper xmin/ymin spacing.
     cube = cube.intersection(
