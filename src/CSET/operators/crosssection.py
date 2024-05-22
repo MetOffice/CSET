@@ -14,21 +14,17 @@
 
 """Operators to extract a cross section given a tuple of xy coords to start/finish."""
 
-from math import atan2, cos, radians, sin, sqrt
+from math import asin, cos, radians, sin, sqrt
 
 import iris
 import numpy as np
 
-# Usual names for spatial coordinates.
-# TODO can we determine grid coord names in a more intelligent way?
-X_COORD_NAMES = ["longitude", "grid_longitude", "projection_x_coordinate", "x"]
-Y_COORD_NAMES = ["latitude", "grid_latitude", "projection_y_coordinate", "y"]
 
-
-def calc_dist(coord_1, coord_2):
-    """Haversine distance in meters."""
-    # Approximate radius of earth in km
-    R = 6378.0
+def _calc_dist(coord_1, coord_2):
+    """Haversine distance in metres."""
+    # Approximate radius of earth in m
+    # Source: https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
+    radius = 6378000
 
     # extract coordinates and convert to radians
     lat1 = radians(coord_1[0])
@@ -42,14 +38,16 @@ def calc_dist(coord_1, coord_2):
 
     # Compute distance
     a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
-    distance = R * c
+    c = 2 * asin(sqrt(a))
+    distance = radius * c
 
-    return distance * 1000
+    return distance
 
 
-def calc_crosssection(cube, startxy, endxy, coord="latitude"):
+def calc_crosssection(cube, startxy, endxy, coord="distance"):
     """Compute cross section."""
+    # Find out xy coord name
+
     # Get local cutout so we can get proper xmin/ymin spacing.
     cube = cube.intersection(
         latitude=(startxy[0] - 0.5, endxy[0] + 0.5),
@@ -101,7 +99,7 @@ def calc_crosssection(cube, startxy, endxy, coord="latitude"):
 
         if coord == "distance":
             # one step at end potentially at end and add to cube after merge.
-            dist = calc_dist((startxy[0], startxy[1]), (ypnts[i], xpnts[i]))
+            dist = _calc_dist((startxy[0], startxy[1]), (ypnts[i], xpnts[i]))
             dist_coord = iris.coords.AuxCoord(dist, long_name="distance", units="m")
             cube_slice.add_aux_coord(dist_coord)
             cube_slice = iris.util.new_axis(cube_slice, scalar_coord="distance")
