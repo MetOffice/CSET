@@ -5,11 +5,13 @@
     recipe_start => crosssection => recipe_finish
     """
 
+{% for var in CS_VARS %}
 [runtime]
     [[crossection]]
-    script = rose task-run -v --app-key=run_cset_recipe
+    inherit = PARALLEL
     execution time limit = PT60M
         [[[environment]]]
         CSET_RECIPE_NAME = "crosssection.yaml"
-        CSET_ADDOPTS = "--CS_STARTCOORDS={{CS_STARTCOORDS}} --CS_FINISHCOORDS={{CS_FINISHCOORDS}} --CS_VARS={{CS_VARS}}"
+        CSET_ADDOPTS = "--CS_STARTCOORDS={{CS_STARTCOORDS}} --CS_FINISHCOORDS={{CS_FINISHCOORDS}} --CS_VARS={{var}}"
+{% endfor %}
 {% endif %}
