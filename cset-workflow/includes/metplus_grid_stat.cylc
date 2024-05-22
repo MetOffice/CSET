@@ -9,8 +9,4 @@
     [[metplus_grid_stat]]
     # Runs METplus wrappers for point stat calculations.
         inherit = METPLUS
-        [[[environment]]]
-        METPLUS_FCST_DIR = {{METPLUS_FCST_DIR}}
-        METPLUS_ANA_DIR = {{METPLUS_ANA_DIR}}
-        ROSE_APP_OPT_CONF_KEYS = {{METPLUS_OPT_CONFIG_KEYS}}
 {% endif %}
