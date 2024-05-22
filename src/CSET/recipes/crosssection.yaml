@@ -1,0 +1,19 @@
+title: Cross Section
+description: |
+  Extracts over a cross section for a specified variable between two points and plots it.
+steps:
+  - operator: read.read_cubes
+
+  - operator: crosssection.compute_ageofair
+    cube:
+        operator: filters.filter_cubes
+        constraint:
+            operator: constraints.generate_stash_constraint
+            stash: $CS_VARS
+    startxy: $CS_STARTCOORDS
+    endxy: $CS_FINISHCOORDS
+
+  - operator: write.write_cube_to_nc
+    filename: intermediate/crosssection
+
+  - operator: plot.spatial_contour_plot
