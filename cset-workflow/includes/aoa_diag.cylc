@@ -8,7 +8,7 @@
 {% for plev in AOA_PLEV %}
 [runtime]
     [[aoa_diag]]
-    inherid = PARALLEL
+    inherit = PARALLEL
     execution time limit = PT60M
         [[[environment]]]
         CSET_RECIPE_NAME = "ageofair_plot.yaml"
