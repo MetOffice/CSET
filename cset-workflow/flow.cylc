@@ -73,6 +73,7 @@ URL = https://metoffice.github.io/CSET
 
         LOGLEVEL = {{LOGLEVEL}}
         WEB_DIR = {{WEB_DIR}}
+        COLORBAR_FILE = {{COLORBAR_FILE}}
 
     [[PARALLEL]]
     script = rose task-run -v --app-key=run_cset_recipe
@@ -86,8 +87,18 @@ URL = https://metoffice.github.io/CSET
 
     [[FETCH_DATA]]
 
+    # Dummy tasks needed for workflow scheduling.
     [[process_finish]]
-    # Dummy task needed for workflow scheduling.
+    script = true
+    platform = localhost
+
+    [[dummy_collate]]
+    inherit = COLLATE
+    script = true
+    platform = localhost
+
+    [[dummy_parallel]]
+    inherit = PARALLEL
     script = true
     platform = localhost
 

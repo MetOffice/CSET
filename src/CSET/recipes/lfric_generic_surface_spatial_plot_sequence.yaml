@@ -15,6 +15,12 @@ parallel:
       validity_time_constraint:
         operator: constraints.generate_time_constraint
         time_start: $VALIDITY_TIME
+      area_constraint:
+        operator: constraints.generate_area_constraint
+        lat_start: $SUBAREA_LAT_BOUND_BOTTOM
+        lat_end: $SUBAREA_LAT_BOUND_TOP
+        lon_start: $SUBAREA_LON_BOUND_LEFT
+        lon_end: $SUBAREA_LON_BOUND_RIGHT
 
   # Remove source stash attribute, as it can be encoded in different orders.
   # Remove uuid and timeStamp, as these are only relevant to output files, not

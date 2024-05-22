@@ -4,7 +4,9 @@ description: |
 
 parallel:
   - operator: read.read_cubes
-
+    constraint:
+        operator: constraints.generate_time_constraint
+        time_start: $VALIDITY_TIME
   - operator: convection.cape_ratio
     SBCAPE:
         operator: filters.filter_cubes
@@ -26,8 +28,16 @@ parallel:
   - operator: filters.filter_cubes
     constraint:
         operator: constraints.generate_time_constraint
-        time_start: $TIME
-
-  - operator: plot.postage_stamp_contour_plot
+        time_start: $VALIDITY_TIME
 
   - operator: write.write_cube_to_nc
+    filename: intermediate/cape_ratio
+
+collate:
+  - operator: read.read_cube
+    filename_pattern: intermediate/*.nc
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+  - operator: plot.spatial_contour_plot
