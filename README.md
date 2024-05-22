@@ -23,6 +23,10 @@ contributions.
 Please read [the documentation](https://metoffice.github.io/CSET) to learn more
 about CSET, and how to use it.
 
+If you want to ask or share with the CSET community, please use the relevant
+category of the [Simulation Systems Discussions
+Forum](https://github.com/MetOffice/simulation-systems/discussions/categories/cset-toolkit).
+
 ## Contributing
 
 Contributions are readily welcomed! To get started with developing CSET visit

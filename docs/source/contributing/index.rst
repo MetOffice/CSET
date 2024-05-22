@@ -70,6 +70,19 @@ branch. (Not the default ``main`` branch!)
 
 .. _update conda lock files workflow: https://github.com/MetOffice/CSET/actions/workflows/conda-lock.yml
 
+Said whether Generative AI, such as GitHub Copilot, has been used in this PR
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Generative AI tools such as GitHub Copilot are useful, but there are still
+unanswered questions around the copyright of their output. Therefore CSET
+contributions that used Generative AI must disclose it, along with the name of
+the AI tool used. This can be a simple statement in the PR description, for
+example:
+
+.. code-block:: text
+
+    This PR contains AI generated code from GitHub Copilot.
+
 Marked the PR as ready to review
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

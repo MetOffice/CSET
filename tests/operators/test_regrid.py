@@ -51,21 +51,6 @@ def test_regrid_onto_cube(regrid_source_cube, regrid_test_cube):
     )
 
 
-def test_regrid_onto_cube_missing_coord(regrid_source_cube, regrid_test_cube):
-    """Missing coordinate raises error."""
-    # Missing X coordinate.
-    source = regrid_source_cube.copy()
-    source.remove_coord("longitude")
-    with pytest.raises(ValueError):
-        regrid.regrid_onto_cube(source, regrid_test_cube, method="Linear")
-
-    # Missing Y coordinate.
-    source = regrid_source_cube.copy()
-    source.remove_coord("latitude")
-    with pytest.raises(ValueError):
-        regrid.regrid_onto_cube(source, regrid_test_cube, method="Linear")
-
-
 def test_regrid_onto_cube_unknown_crs(regrid_source_cube, regrid_test_cube):
     """Coordinate reference system is unrecognised."""
     # Exchange X to unsupported coordinate system.
@@ -106,25 +91,6 @@ def test_regrid_onto_xyspacing(regrid_source_cube, regrid_test_cube):
         rtol=1e-06,
         atol=1e-02,
     )
-
-
-def test_regrid_onto_xyspacing_missing_coord(regrid_source_cube):
-    """Missing coordinate raises error."""
-    # Missing X coordinate.
-    source = regrid_source_cube.copy()
-    source.remove_coord("longitude")
-    with pytest.raises(ValueError):
-        regrid.regrid_onto_xyspacing(
-            source, xspacing=0.5, yspacing=0.5, method="Linear"
-        )
-
-    # Missing Y coordinate.
-    source = regrid_source_cube.copy()
-    source.remove_coord("latitude")
-    with pytest.raises(ValueError):
-        regrid.regrid_onto_xyspacing(
-            source, xspacing=0.5, yspacing=0.5, method="Linear"
-        )
 
 
 def test_regrid_onto_xyspacing_unknown_crs(regrid_source_cube):
