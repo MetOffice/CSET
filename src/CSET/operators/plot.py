@@ -338,8 +338,8 @@ def _plot_and_save_vertical_line_series(
     """
     fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
     iplt.plot(cube, coord, "o-")
-    plt.gca().invert_yaxis()
     ax = plt.gca()
+    ax.invert_yaxis()
 
     # Add some labels and tweak the style.
     ax.set(
