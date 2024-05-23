@@ -44,10 +44,16 @@ def cube(cubes):
 
 
 @pytest.fixture(scope="session")
-def vertical_profile_cube():
-    """Get a vertical profile Cube."""
+def vertical_profile_cube_readonly():
+    """Get a vertical profile Cube. It is NOT safe to modify."""
     from CSET.operators import read
 
     return read.read_cube(
         "tests/test_data/air_temperature_vertical_profile_as_series.nc"
     )
+
+
+@pytest.fixture()
+def vertical_profile_cube(vertical_profile_cube_readonly):
+    """Get a vertical profile Cube.  It is safe to modify."""
+    return vertical_profile_cube_readonly.copy()
