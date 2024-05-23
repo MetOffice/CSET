@@ -1,18 +1,16 @@
 {% if LFRIC_DOMAIN_MEAN_VERTICAL_PROFILE_SERIES %}
-{% for model_field in PRESSURE_LEVEL_MODEL_FIELDS %}
-{% for plevel in PRESSURE_LEVELS %}
 [runtime]
+{% for model_field in LFRIC_PRESSURE_LEVEL_MODEL_FIELDS %}
     [[pre_process_lfric_domain_mean_vertical_profile_series_{{model_field}}]]
     inherit = PARALLEL
         [[[environment]]]
         CSET_RECIPE_NAME = "lfric_generic_domain_mean_vertical_profile_series.yaml"
-        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --PLEVEL='{{plevel}}'"
+        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --PLEVEL='{{LFRIC_PRESSURE_LEVELS}}'"
 
     [[collate_lfric_domain_mean_vertical_profile_series_{{model_field}}]]
     inherit = COLLATE
         [[[environment]]]
         CSET_RECIPE_NAME = "lfric_generic_domain_mean_vertical_profile_series.yaml"
-        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --PLEVEL='{{plevel}}'"
-{% endfor %}
+        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --PLEVEL='{{LFRIC_PRESSURE_LEVELS}}}'"
 {% endfor %}
 {% endif %}
