@@ -139,7 +139,8 @@ def test_plot_vertical_line_series_no_series_coordinate(cube, tmp_working_dir):
         plot.plot_vertical_line_series(cube)
 
 
-def test_plot_vertical_line_series_too_many_dimensions(cube, tmp_working_dir):
-    """Error when cube has more than one dimension."""
-    with pytest.raises(ValueError):
-        plot.plot_vertical_line_series(cube)
+def test_plot_vertical_line_series_no_sequence_coordinate(vertical_profile_cube):
+    """Error when cube is missing sequence coordinate (time)."""
+    vertical_profile_cube.remove_coord("time")
+    with pytest.raises(ValueError, match="Cube must have a time coordinate."):
+        plot.plot_vertical_line_series(vertical_profile_cube)
