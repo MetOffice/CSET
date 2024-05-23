@@ -622,7 +622,7 @@ def plot_vertical_line_series(
     # Ensure we've got a single cube.
     cube = _check_single_cube(cube)
 
-    # test if series coordinate i.e. pressure level exist for any cube with cube.ndim >=1.
+    # Test if series coordinate i.e. pressure level exist for any cube with cube.ndim >=1.
     try:
         coord = cube.coord(series_coordinate)
     except iris.exceptions.CoordinateNotFoundError as err:
