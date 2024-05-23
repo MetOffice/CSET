@@ -599,10 +599,8 @@ def plot_vertical_line_series(
         Name of the plot to write, used as a prefix for plot sequences. Defaults
         to the recipe name.
     series_coordinate: str, optional
-        Coordinate about which to make a series. In this case the series defaults
-        to ``"pressure"`` for the y-axis. Normally the series coordinate refers
-        to ``"time"`` on the x-axis. This
-        coordinate must exist in the cube.
+        Coordinate to plot on the y-axis. Defaults to ``pressure``.
+        This coordinate must exist in the cube.
     sequence_coordinate: str, optional
         Coordinate about which to make a plot sequence. Defaults to ``"time"``.
         This coordinate must exist in the cube.
