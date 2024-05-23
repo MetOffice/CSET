@@ -17,7 +17,6 @@ parallel:
         operator: constraints.generate_time_constraint
         time_start: $VALIDITY_TIME
 
-
   - operator: collapse.collapse
     coordinate: [grid_latitude, grid_longitude]
     method: MEAN
