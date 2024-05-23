@@ -589,7 +589,6 @@ def plot_vertical_line_series(
     A 1D line plot with y-axis as pressure coordinate can be plotted, but if the sequence_coordinate is present
     then a sequence of plots will be produced.
 
-
     The cube must be 1D.
 
     Parameters
