@@ -36,7 +36,7 @@ parallel:
 
   # Save domain meaned variable to a file per validity time.
   - operator: write.write_cube_to_nc
-    filename: intermediate/domain_mean
+    filename: intermediate/pressure_level_domain_mean
 
 # Collation steps.
 # Reads in intermediate cube and plots it.
@@ -44,11 +44,15 @@ collate:
   - operator: read.read_cube
     filename_pattern: intermediate/*.nc
 
-  # Make a single NetCDF with all the data inside it.
+# Make a single NetCDF with all the data inside it.
   - operator: write.write_cube_to_nc
     overwrite: True
 
-  # Plot the data.
+# plot the vertical line series
   - operator: plot.plot_vertical_line_series
     series_coordinate: pressure
     sequence_coordinate: time
+
+# Make a single NetCDF with all the data inside it.
+  - operator: write.write_cube_to_nc
+    overwrite: True
