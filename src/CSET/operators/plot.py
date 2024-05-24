@@ -901,9 +901,12 @@ def scatter_plot(
     cube_y: iris.cube.Cube,
     cube_x: iris.cube.Cube,
     filename: str = None,
-    sequence_coordinate: str = "time",
+    # sequence_coordinate: str = "time",
     **kwargs,
 ) -> (iris.cube.Cube, iris.cube.Cube):
+    # sequence_coordinate: str, optional
+    #    Coordinate about which to make a plot sequence. Defaults to ``"time"``.
+    #    This coordinate must exist in the cube.
     """Plot a scatter plot between two variables.
 
     Both cubes must be 1D.
@@ -916,9 +919,6 @@ def scatter_plot(
         1 dimensional Cube of the data to plot on x-axis.
     filename: str, optional
         Filename of the plot to write.
-    sequence_coordinate: str, optional
-        Coordinate about which to make a plot sequence. Defaults to ``"time"``.
-        This coordinate must exist in the cube.
 
     Returns
     -------
@@ -940,6 +940,38 @@ def scatter_plot(
     """
     # Check cubes are correct shape.
     cube_x = _check_single_cube(cube_x)
+    cube_y = _check_single_cube(cube_y)
+
+    # try:
+    #    coord_x = cube_x.coord(series_coordinate)
+    # except iris.exceptions.CoordinateNotFoundError as err:
+    #    raise ValueError(f"cube_x must have a {series_coordinate} coordinate.") from err
+    # try:
+    #    coord_y = cube_y.coord(series_coordinate)
+    # except iris.exceptions.CoordinateNotFoundError as err:
+    #    raise ValueError(f"cube_y must have a {series_coordinate} coordinate.") from err
+    if cube_x.ndim > 1:
+        raise ValueError("cube_x must be 1D.")
+    if cube_y.ndim > 1:
+        raise ValueError("cube_y must be 1D.")
+
+    # Ensure we have a name for the plot file.
+    title = get_recipe_metadata().get("title", "Untitled")
+    if filename is None:
+        filename = slugify(title)
+
+    # Add file extension.
+    plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
+
+    # Do the actual plotting.
+    _plot_and_save_scatter_plot(cube_y, cube_x, plot_filename, title)
+
+    # Add list of plots to plot metadata.
+    plot_index = _append_to_plot_index([plot_filename])
+
+    # Make a page to display the plots.
+    _make_plot_html_page(plot_index)
+
     return cube_y, cube_x
 
 
