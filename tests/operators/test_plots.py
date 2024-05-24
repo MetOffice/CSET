@@ -132,14 +132,18 @@ def test_plot_vertical_line_series(vertical_profile_cube, tmp_working_dir):
     assert Path("untitled_473721.0.png").is_file()
 
 
-def test_plot_vertical_line_series_no_series_coordinate(vertical_profile_cube):
+def test_plot_vertical_line_series_no_series_coordinate(
+    vertical_profile_cube, tmp_working_dir
+):
     """Error when cube is missing series coordinate (pressure)."""
     vertical_profile_cube.remove_coord("pressure")
     with pytest.raises(ValueError, match="Cube must have a pressure coordinate."):
         plot.plot_vertical_line_series(vertical_profile_cube)
 
 
-def test_plot_vertical_line_series_no_sequence_coordinate(vertical_profile_cube):
+def test_plot_vertical_line_series_no_sequence_coordinate(
+    vertical_profile_cube, tmp_working_dir
+):
     """Error when cube is missing sequence coordinate (time)."""
     vertical_profile_cube.remove_coord("time")
     with pytest.raises(ValueError, match="Cube must have a time coordinate."):
