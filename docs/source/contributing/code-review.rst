@@ -72,14 +72,13 @@ diagnostic. The same ethics and standards apply to the science review as the
 technical review and for peer-reviewing journal articles.
 
 As with all reviews you need to keep an open mind and not allow previous
-expectations to control your review. Just because you do not like a diagnostic
-does not mean it should not be included in CSET. You are not reviewing how good
-a diagnostic is - that is a job for journal reviewers. Instead you are
-reviewing whether the code does what it is supposed to do, how usable the
-addition is, and if there is enough information to allow the correct
-interpretation of the diagnostic by those new to the diagnostic. The
-descriptions of each part of the science review are put in the order they are
-recommended to be considered.
+expectations to impact your review. If you personally do not like a diagnostic
+that does not mean it should not be included in CSET. You are not reviewing how
+good a diagnostic is. Instead you are reviewing whether the code does what it
+is supposed to do, how usable the addition is, and if there is enough
+information to allow the correct interpretation of the diagnostic by those new
+to the diagnostic. The descriptions of each part of the science review are put
+in the order they are recommended to be considered.
 
 CSET Documentation
 ~~~~~~~~~~~~~~~~~~
