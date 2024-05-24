@@ -12,6 +12,7 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@daflack`_ added an inflow layer properties diagnostic in :pr:`353`
 * `@jfrost-mo`_ fixed LFRic cube metadata on load in :pr:`627`. This means that
   loading LFRic data no longer requires special steps in the recipe.
 * `@jfrost-mo`_ made the ``install_restricted_files.sh`` script non-interactive
