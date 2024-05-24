@@ -626,6 +626,13 @@ def plot_vertical_line_series(
     except iris.exceptions.CoordinateNotFoundError as err:
         raise ValueError(f"Cube must have a {series_coordinate} coordinate.") from err
 
+    # If several individual vertical lines are plotted with time as sequence_coordinate
+    # for the time slider option.
+    try:
+        cube.coord(sequence_coordinate)
+    except iris.exceptions.CoordinateNotFoundError as err:
+        raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
+
     # Ensure we have a name for the plot file.
     recipe_title = get_recipe_metadata().get("title", "Untitled")
     if filename is None:
@@ -633,13 +640,6 @@ def plot_vertical_line_series(
 
     # Make vertical line plot
     plotting_func = _plot_and_save_vertical_line_series
-
-    # If several individual vertical lines are plotted with time as sequence_coordinate
-    # for the time slider option.
-    try:
-        cube.coord(sequence_coordinate)
-    except iris.exceptions.CoordinateNotFoundError as err:
-        raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
 
     # Create a plot for each value of the sequence coordinate.
     plot_index = []

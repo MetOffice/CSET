@@ -134,7 +134,7 @@ def test_plot_vertical_line_series(vertical_profile_cube, tmp_working_dir):
 
 def test_plot_vertical_line_series_no_series_coordinate(vertical_profile_cube):
     """Error when cube is missing series coordinate (pressure)."""
-    vertical_profile_cube.remove_coord("time")
+    vertical_profile_cube.remove_coord("pressure")
     with pytest.raises(ValueError, match="Cube must have a pressure coordinate."):
         plot.plot_vertical_line_series(vertical_profile_cube)
 
