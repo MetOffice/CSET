@@ -61,7 +61,6 @@ def test_filter_cubes_pressure_coord_none_returned(cube):
     pressure_constraint = constraints.generate_pressure_level_constraint(
         pressure_levels=[]
     )
-    cube = cube.copy()
     cube.add_aux_coord(iris.coords.DimCoord(100, var_name="pressure"))
     with pytest.raises(ValueError):
         filters.filter_cubes(cube, pressure_constraint)

@@ -22,6 +22,8 @@ Unreleased
   in :pr:`606`. This should make it less confusing to use.
 * `@Sylviabohnenstengel`_ added information to rose-meta for colorbar selection
   and provided path to example JSON file in :pr:`632`
+* `@jfrost-mo`_ improved the cube test fixtures in :pr:`631`, making tests
+  simpler
 * `@jfrost-mo`_ added a Generative AI policy in :pr:`624`
 * `@jfrost-mo`_ linked to the `CSET discussion forum`_ in :pr:`625`
 * `@jwarner8`_ use common operator to identify x/y coord names in regrid
