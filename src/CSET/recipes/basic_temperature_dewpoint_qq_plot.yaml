@@ -1,0 +1,27 @@
+category: Quick Look
+title: q-q plot temperature and dewpoint
+description: Extracts, quantiles, and plots the surface temperature and dewpoint from a file.
+
+parallel:
+  - operator: read.read_cubes
+  - operator: plot.scatter_plot
+    cube_y:
+        operator: collapse.collapse
+        cube:
+            operator: filter.filter_cubes
+            constraint:
+                operator: constraints.generate_stash_constraint
+                stash: m01s03i236
+        coordinate: ['time','grid_latitude','grid_longitude']
+        method: 'PERCENTILE'
+        additional_percent: [0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100]
+    cube_x:
+        operator: collapse.collapse
+        cube:
+            operator: filter.filter_cubes
+            constraint:
+                operator: constraints.generate_stash_constraint
+                stash: m01s03i250
+        coordinate: ['time','grid_latitude','grid_longitude']
+        method: 'PERCENTILE'
+        additional_percent: [0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100]
