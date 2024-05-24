@@ -897,6 +897,52 @@ def plot_vertical_line_series(
     return cube
 
 
+def scatter_plot(
+    cube_y: iris.cube.Cube,
+    cube_x: iris.cube.Cube,
+    filename: str = None,
+    sequence_coordinate: str = "time",
+    **kwargs,
+) -> (iris.cube.Cube, iris.cube.Cube):
+    """Plot a scatter plot between two variables.
+
+    Both cubes must be 1D.
+
+    Parameters
+    ----------
+    cube_y: Cube
+        1 dimensional Cube of the data to plot on y-axis.
+    cube_x: Cube
+        1 dimensional Cube of the data to plot on x-axis.
+    filename: str, optional
+        Filename of the plot to write.
+    sequence_coordinate: str, optional
+        Coordinate about which to make a plot sequence. Defaults to ``"time"``.
+        This coordinate must exist in the cube.
+
+    Returns
+    -------
+    cube_y
+        The original y cube (so further operations can be applied).
+    cube_x
+        The original x cube (so further operations can be applied).
+
+    Raises
+    ------
+    ValueError
+        If the cube doesn't have the right dimensions.
+    TypeError
+        If the cube isn't a single cube.
+
+    Notes
+    -----
+    TO BE CONTINUED ...
+    """
+    # Check cubes are correct shape.
+    cube_x = _check_single_cube(cube_x)
+    return cube_y, cube_x
+
+
 def plot_histogram_series(
     cube: iris.cube.Cube,
     filename: str = None,
