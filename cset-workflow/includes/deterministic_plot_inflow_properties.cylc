@@ -1,45 +1,12 @@
-[scheduling]
-    [[graph]]
-    P1 = """
-    recipe_start => deterministic_plot_inflow_layer_properties => recipe_finish
-    """
-
+{% if DETERMINISTIC_PLOT_INFLOW_PROPERTIES %}
 [runtime]
-    [[deterministic_plot_inflow_layer_properties]]
-    script = rose task-run -v --app-key=run_cset_recipe
-    execution time limit = PT15M
+    [[parallel_inflow_layer_properties]]
+    inherit = PARALLEL
         [[[environment]]]
-        CSET_RECIPE = """
-title: Inflow properties plot
-description: |
-  Extracts data required for, and calculates the Inflow properties diagnostic, plotting on a map.
+        CSET_RECIPE_NAME = "inflow_layer_properties_plot.yaml"
 
-steps:
-  - operator: read.read_cubes
-
-  - operator: convection.inflow_layer_properties
-    EIB:
-        operator: filters.filter_cubes
-        constraint:
-            operator: constraints.generate_stash_constraint
-            stash: m01s20i119
-    BLheight:
-        operator: filters.filter_cubes
-        constraint:
-            operator: constraints.generate_stash_constraint
-            stash: m01s00i025
-    Orography:
-        operator: filters.filter_cubes
-        constraint:
-            operator: constraints.generate_stash_constraint
-            stash: m01s00i033
-
-  - operator: filters.filter_cubes
-    constraint:
-        operator: constraints.generate_time_constraint
-        time_start: 2022-10-28T06:00Z
-
-  - operator: plot.spatial_contour_plot
-
-  - operator: write.write_cube_to_nc
-"""
+    [[collate_inflow_layer_properties]]
+    inherit = COLLATE
+        [[[environment]]]
+        CSET_RECIPE_NAME = "inflow_layer_properties_plot.yaml"
+{% endif %}

@@ -4,6 +4,9 @@ description: |
 
 parallel:
   - operator: read.read_cubes
+    constraint:
+        operator: constraints.generate_time_constraint
+        time_start: $VALIDITY_TIME
 
   - operator: convection.inflow_layer_properties
     EIB:
@@ -22,11 +25,14 @@ parallel:
             operator: constraints.generate_stash_constraint
             stash: m01s00i033
 
-  - operator: filters.filter_cubes
-    constraint:
-        operator: constraints.generate_time_constraint
-        time_start: 2022-10-28T06:00Z
+  - operator: write.write_cube_to_nc
+    filename: intermediate/inflow_layer
 
-  - operator: plot.postage_stamp_contour_plot
+collate:
+  - operator: read.read_cube
+    filename: intermediate/*.nc
 
   - operator: write.write_cube_to_nc
+    overwrite: True
+
+  - operator: plot.postage_stamp_contour_plot
