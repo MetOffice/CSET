@@ -12,6 +12,8 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@jfrost-mo`_ ensured cartopy data files are included in the GitHub Actions
+  cache in :pr:`647`
 * `@daflack`_ added an inflow layer properties diagnostic in :pr:`353`
 * `@jfrost-mo`_ fixed LFRic cube metadata on load in :pr:`627`. This means that
   loading LFRic data no longer requires special steps in the recipe.
