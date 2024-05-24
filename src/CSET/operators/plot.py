@@ -429,6 +429,42 @@ def _plot_and_save_vertical_line_series(
     plt.close(fig)
 
 
+def _plot_and_save_scatter_plot(
+    cube_y: iris.cube.Cube, cube_x: iris.cube.Cube, filename: str, title: str, **kwargs
+):
+    """Plot and save a 1D scatter plot.
+
+    Parameters
+    ----------
+    cube_y: Cube
+        1 dimensional Cube of the data to plot on y-axis.
+    cube_x: Cube
+        1 dimensional Cube of the data to plot on x-axis.
+    filename: str
+        Filename of the plot to write.
+    title: str
+        Plot title.
+    """
+    fig = plt.figure(figuresize=(8, 8), facecolor="w", edgecolor="k")
+    iplt.scatter(cube_y, cube_x)
+    ax = plt.gca()
+
+    # Add some labels and tweak the style.
+    ax.set(
+        xlabel=f"{cube_x.name()} / {cube_x.units}",
+        ylabel=f"{cube_y.name()} / {cube_y.units}",
+        title=title,
+    )
+    ax.ticklabel_format(axis="y", useOffset=False)
+    ax.ticklabel_params(axis="x", labelrotation=15)
+    ax.autoscale()
+
+    # Save plot.
+    fig.savefig(filename, bbox_inches="tight", dpi=150)
+    logging.info("Saved scatter plot to %s", filename)
+    plt.close(fig)
+
+
 def _plot_and_save_histogram_series(
     cube: iris.cube.Cube,
     filename: str,
