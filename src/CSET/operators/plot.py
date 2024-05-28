@@ -321,7 +321,13 @@ def _plot_and_save_line_series(
 
 
 def _plot_and_save_vertical_line_series(
-    cube: iris.cube.Cube, coord: iris.coords.Coord, filename: str, title: str, **kwargs
+    cube: iris.cube.Cube,
+    coord: iris.coords.Coord,
+    filename: str,
+    title: str,
+    vmin: float,
+    vmax: float,
+    **kwargs,
 ):
     """Plot and save a 1D line series in vertical.
 
@@ -335,11 +341,41 @@ def _plot_and_save_vertical_line_series(
         Filename of the plot to write.
     title: str
         Plot title.
+    vmin: float
+        Minimum value for the x-axis.
+    vmax: float
+        Maximum value for the x-axis.
     """
+    # plot the vertical pressure axis using log scale
     fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
     iplt.plot(cube, coord, "o-")
     ax = plt.gca()
     ax.invert_yaxis()
+    ax.set_yscale("log")
+
+    # Define y-ticks and labels for pressure log axis
+    y_tick_labels = [
+        "1000",
+        "850",
+        "700",
+        "500",
+        "300",
+        "200",
+        "100",
+        "50",
+        "30",
+        "20",
+        "10",
+    ]
+    y_ticks = [1000, 850, 700, 500, 300, 200, 100, 50, 30, 20, 10]
+
+    # Set y-axis limits and ticks
+    ax.set_ylim(1200, 100)
+    ax.set_yticks(y_ticks)
+    ax.set_yticklabels(y_tick_labels)
+
+    # set x-axis limits
+    ax.set_xlim(vmin, vmax)
 
     # Add some labels and tweak the style.
     ax.set(
@@ -347,9 +383,6 @@ def _plot_and_save_vertical_line_series(
         xlabel=f"{cube.name()} / {cube.units}",
         title=title,
     )
-    ax.ticklabel_format(axis="x")  # , labelrotation=15)
-    ax.tick_params(axis="y")  # , useOffset=False)
-    ax.autoscale()
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=150)
@@ -641,6 +674,14 @@ def plot_vertical_line_series(
     # Make vertical line plot
     plotting_func = _plot_and_save_vertical_line_series
 
+    # set the lower and upper limit for the x-axis to ensure all plots
+    # have same range. This needs to read the whole cube over the range of
+    # the sequence and if applicable postage stamp coordinate.
+    # This only works if the plotting is done in the collate section of a
+    # recipe and not in the parallel section of a recipe.
+    vmin = np.floor((cube.data.min()))
+    vmax = np.ceil((cube.data.max()))
+
     # Create a plot for each value of the sequence coordinate.
     plot_index = []
     for cube_slice in cube.slices_over(sequence_coordinate):
@@ -656,6 +697,8 @@ def plot_vertical_line_series(
             coord,
             plot_filename,
             title=title,
+            vmin=vmin,
+            vmax=vmax,
         )
         plot_index.append(plot_filename)
 
