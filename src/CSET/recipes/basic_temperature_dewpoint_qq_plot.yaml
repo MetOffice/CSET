@@ -4,6 +4,19 @@ description: Extracts, quantiles, and plots the surface temperature and dewpoint
 
 parallel:
   - operator: read.read_cubes
+  - operator: filter.filter_cubes
+    temp_constraint:
+        operator: constraints.generate_stash_constraint
+        stash: m01s03i236
+    dewpoint_constraint:
+        operator: constraints.generate_stash_constraint
+        stash: m01s03i250
+  - operator: write.write_cube_to_nc
+    filename: intermediate/qq_data
+
+collate:
+  - operator: read.read_cubes
+    filename: intermediate/*
   - operator: plot.scatter_plot
     cube_y:
         operator: collapse.collapse
@@ -25,3 +38,5 @@ parallel:
         coordinate: ['time','grid_latitude','grid_longitude']
         method: 'PERCENTILE'
         additional_percent: [0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100]
+  - operator: write.write_cube_to_nc
+    overwrite: True
