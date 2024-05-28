@@ -4,7 +4,7 @@ description: Extracts, quantiles, and plots the surface temperature and dewpoint
 
 parallel:
   - operator: read.read_cubes
-  - operator: filter.filter_cubes
+  - operator: filter.filter_multiple_cubes
     temp_constraint:
         operator: constraints.generate_stash_constraint
         stash: m01s03i236
