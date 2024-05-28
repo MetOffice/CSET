@@ -1,6 +1,6 @@
 category: Quick Look
-title: Domain mean horizontal $VARNAME vertical profile as series
-description: Plots a time series of the domain mean surface $VARNAME.
+title: Domain mean $VARNAME vertical profile as series
+description: Plots a time series of the vertical profile of domain mean $VARNAME using a log pressure coordinate.
 
 # Pre-processing steps.
 parallel:
