@@ -34,6 +34,7 @@ import numpy as np
 from markdown_it import MarkdownIt
 
 from CSET._common import get_recipe_metadata, render_file, slugify
+from CSET.operators._utils import get_cube_xycoordname
 
 ############################
 # Private helper functions #
@@ -211,8 +212,12 @@ def _plot_and_save_contour_plot(
     # Using pyplot interface here as we need iris to generate a cartopy GeoAxes.
     axes = plt.gca()
 
-    # Add coastlines.
-    axes.coastlines(resolution="10m")
+    # Add coastlines if cube contains x and y map coordinates.
+    try:
+        get_cube_xycoordname(cube)
+        axes.coastlines(resolution="10m")
+    except ValueError:
+        pass
 
     # Add title.
     axes.set_title(title, fontsize=16)
@@ -269,7 +274,13 @@ def _plot_and_save_postage_stamp_contour_plot(
         ax = plt.gca()
         ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
         ax.set_axis_off()
-        ax.coastlines()
+
+        # Add coastlines if cube contains x and y map coordinates.
+        try:
+            get_cube_xycoordname(cube)
+            ax.coastlines(resolution="10m")
+        except ValueError:
+            pass
 
     # Put the shared colorbar in its own axes.
     colorbar_axes = fig.add_axes([0.15, 0.07, 0.7, 0.03])
