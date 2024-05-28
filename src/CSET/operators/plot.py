@@ -323,7 +323,7 @@ def _plot_and_save_line_series(
 def _plot_and_save_vertical_line_series(
     cube: iris.cube.Cube, coord: iris.coords.Coord, filename: str, title: str, **kwargs
 ):
-    """Plot and save a 1D line series.
+    """Plot and save a 1D line series in vertical.
 
     Parameters
     ----------
