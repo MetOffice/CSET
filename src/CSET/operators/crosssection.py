@@ -47,7 +47,21 @@ def _calc_dist(coord_1, coord_2):
 
 
 def calc_crosssection(cube, startxy, endxy, coord="distance"):
-    """Compute cross section."""
+    """
+    Compute cross section.
+
+    Compute a cross section for a given cube containing pressure level, latitude
+    and longitude coordinates, with an appropriate sampling interval along the
+    transect based on grid spacing.
+
+    Arguments
+    ---------
+
+    cube: Cube
+        An iris cube containing at least pressure, latitude and longitude coordinate
+        dimensions.
+
+    """
     # Find out xy coord name
     x_name, y_name = get_cube_xycoordname(cube)
 
