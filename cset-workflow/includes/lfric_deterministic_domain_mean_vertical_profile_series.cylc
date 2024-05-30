@@ -1,6 +1,6 @@
 {% if LFRIC_DOMAIN_MEAN_VERTICAL_PROFILE_SERIES %}
 [runtime]
-{% for model_field in LFRIC_MODEL_LEVEL_NUMBER_MODEL_FIELDS %}
+{% for model_field in LFRIC_MODEL_LEVEL_MODEL_FIELDS %}
     [[pre_process_lfric_domain_mean_vertical_profile_series_{{model_field}}]]
     inherit = PARALLEL
         [[[environment]]]
