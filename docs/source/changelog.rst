@@ -15,6 +15,7 @@ Unreleased
 * `@jwarner8`_ add intelligent determination of whether to plot country lines
    in :pr:`655`
 * `@daflack`_ fixed inflow properties recipe in :pr:`662`
+* `@daflack`_ added science review guidance to the documentation in :pr:`649`
 * `@jfrost-mo`_ ensured cartopy data files are included in the GitHub Actions
   cache in :pr:`647`
 * `@jfrost-mo`_ grouped the package install logs in GitHub Actions in :pr:`645`
