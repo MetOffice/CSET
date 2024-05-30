@@ -1,27 +1,21 @@
 category: Quick Look
-title: Domain mean surface $VARNAME time series
-description: Plots a time series of the domain mean surface $VARNAME.
+title: Domain mean $VARNAME vertical profile as series
+description: Plots a time series of vertical profiles for the domain mean $VARNAME using a log pressure coordinate.
 
 # Pre-processing steps.
 parallel:
-  - operator: read.read_cubes
+  - operator: read.read_cube
     constraint:
       operator: constraints.combine_constraints
-      varname_constraint:
+      variable_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
       pressure_level_constraint:
         operator: constraints.generate_pressure_level_constraint
-        pressure_levels: []
+        pressure_levels: $PLEVEL
       validity_time_constraint:
         operator: constraints.generate_time_constraint
         time_start: $VALIDITY_TIME
-      area_constraint:
-        operator: constraints.generate_area_constraint
-        lat_start: $SUBAREA_LAT_BOUND_BOTTOM
-        lat_end: $SUBAREA_LAT_BOUND_TOP
-        lon_start: $SUBAREA_LON_BOUND_LEFT
-        lon_end: $SUBAREA_LON_BOUND_RIGHT
 
   - operator: collapse.collapse
     coordinate: [grid_latitude, grid_longitude]
@@ -29,7 +23,7 @@ parallel:
 
   # Save domain meaned variable to a file per validity time.
   - operator: write.write_cube_to_nc
-    filename: intermediate/domain_mean
+    filename: intermediate/pressure_level_domain_mean
 
 # Collation steps.
 # Reads in intermediate cube and plots it.
@@ -37,9 +31,11 @@ collate:
   - operator: read.read_cube
     filename_pattern: intermediate/*.nc
 
+# plot the vertical line series
+  - operator: plot.plot_vertical_line_series
+    series_coordinate: pressure
+    sequence_coordinate: time
+
   # Make a single NetCDF with all the data inside it.
   - operator: write.write_cube_to_nc
     overwrite: True
-
-  # Plot the data.
-  - operator: plot.plot_line_series

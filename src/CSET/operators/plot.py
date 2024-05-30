@@ -34,6 +34,7 @@ import numpy as np
 from markdown_it import MarkdownIt
 
 from CSET._common import get_recipe_metadata, render_file, slugify
+from CSET.operators._utils import get_cube_xycoordname
 
 ############################
 # Private helper functions #
@@ -211,8 +212,12 @@ def _plot_and_save_contour_plot(
     # Using pyplot interface here as we need iris to generate a cartopy GeoAxes.
     axes = plt.gca()
 
-    # Add coastlines.
-    axes.coastlines(resolution="10m")
+    # Add coastlines if cube contains x and y map coordinates.
+    try:
+        get_cube_xycoordname(cube)
+        axes.coastlines(resolution="10m")
+    except ValueError:
+        pass
 
     # Add title.
     axes.set_title(title, fontsize=16)
@@ -269,7 +274,13 @@ def _plot_and_save_postage_stamp_contour_plot(
         ax = plt.gca()
         ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
         ax.set_axis_off()
-        ax.coastlines()
+
+        # Add coastlines if cube contains x and y map coordinates.
+        try:
+            get_cube_xycoordname(cube)
+            ax.coastlines(resolution="10m")
+        except ValueError:
+            pass
 
     # Put the shared colorbar in its own axes.
     colorbar_axes = fig.add_axes([0.15, 0.07, 0.7, 0.03])
@@ -313,6 +324,76 @@ def _plot_and_save_line_series(
     ax.ticklabel_format(axis="y", useOffset=False)
     ax.tick_params(axis="x", labelrotation=15)
     ax.autoscale()
+
+    # Save plot.
+    fig.savefig(filename, bbox_inches="tight", dpi=150)
+    logging.info("Saved line plot to %s", filename)
+    plt.close(fig)
+
+
+def _plot_and_save_vertical_line_series(
+    cube: iris.cube.Cube,
+    coord: iris.coords.Coord,
+    filename: str,
+    title: str,
+    vmin: float,
+    vmax: float,
+    **kwargs,
+):
+    """Plot and save a 1D line series in vertical.
+
+    Parameters
+    ----------
+    cube: Cube
+        1 dimensional Cube of the data to plot on x-axis.
+    coord: Coord
+        Coordinate to plot on y-axis.
+    filename: str
+        Filename of the plot to write.
+    title: str
+        Plot title.
+    vmin: float
+        Minimum value for the x-axis.
+    vmax: float
+        Maximum value for the x-axis.
+    """
+    # plot the vertical pressure axis using log scale
+    fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
+    iplt.plot(cube, coord, "o-")
+    ax = plt.gca()
+    ax.invert_yaxis()
+    ax.set_yscale("log")
+
+    # Define y-ticks and labels for pressure log axis
+    y_tick_labels = [
+        "1000",
+        "850",
+        "700",
+        "500",
+        "300",
+        "200",
+        "100",
+        "50",
+        "30",
+        "20",
+        "10",
+    ]
+    y_ticks = [1000, 850, 700, 500, 300, 200, 100, 50, 30, 20, 10]
+
+    # Set y-axis limits and ticks
+    ax.set_ylim(1100, 100)
+    ax.set_yticks(y_ticks)
+    ax.set_yticklabels(y_tick_labels)
+
+    # set x-axis limits
+    ax.set_xlim(vmin, vmax)
+
+    # Add some labels and tweak the style.
+    ax.set(
+        ylabel=f"{coord.name()} / {coord.units}",
+        xlabel=f"{cube.name()} / {cube.units}",
+        title=title,
+    )
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=150)
@@ -535,5 +616,107 @@ def plot_line_series(
 
     # Make a page to display the plots.
     _make_plot_html_page(plot_index)
+
+    return cube
+
+
+def plot_vertical_line_series(
+    cube: iris.cube.Cube,
+    filename: str = None,
+    series_coordinate: str = "pressure",
+    sequence_coordinate: str = "time",
+    # line_coordinate: str = "realization",
+    **kwargs,
+) -> iris.cube.Cube:
+    """Plot a line plot against a type of vertical coordinate.
+
+    A 1D line plot with y-axis as pressure coordinate can be plotted, but if the sequence_coordinate is present
+    then a sequence of plots will be produced.
+
+    The cube must be 1D.
+
+    Parameters
+    ----------
+    cube: Cube
+        Iris cube of the data to plot. It should have a single dimension.
+    filename: str, optional
+        Name of the plot to write, used as a prefix for plot sequences. Defaults
+        to the recipe name.
+    series_coordinate: str, optional
+        Coordinate to plot on the y-axis. Defaults to ``pressure``.
+        This coordinate must exist in the cube.
+    sequence_coordinate: str, optional
+        Coordinate about which to make a plot sequence. Defaults to ``"time"``.
+        This coordinate must exist in the cube.
+
+    Returns
+    -------
+    Cube
+        The original cube (so further operations can be applied).
+
+    Raises
+    ------
+    ValueError
+        If the cube doesn't have the right dimensions.
+    TypeError
+        If the cube isn't a single cube.
+    """
+    # Ensure we've got a single cube.
+    cube = _check_single_cube(cube)
+
+    # Test if series coordinate i.e. pressure level exist for any cube with cube.ndim >=1.
+    try:
+        coord = cube.coord(series_coordinate)
+    except iris.exceptions.CoordinateNotFoundError as err:
+        raise ValueError(f"Cube must have a {series_coordinate} coordinate.") from err
+
+    # If several individual vertical lines are plotted with time as sequence_coordinate
+    # for the time slider option.
+    try:
+        cube.coord(sequence_coordinate)
+    except iris.exceptions.CoordinateNotFoundError as err:
+        raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
+
+    # Ensure we have a name for the plot file.
+    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    if filename is None:
+        filename = slugify(recipe_title)
+
+    # Make vertical line plot
+    plotting_func = _plot_and_save_vertical_line_series
+
+    # set the lower and upper limit for the x-axis to ensure all plots
+    # have same range. This needs to read the whole cube over the range of
+    # the sequence and if applicable postage stamp coordinate.
+    # This only works if the plotting is done in the collate section of a
+    # recipe and not in the parallel section of a recipe.
+    vmin = np.floor((cube.data.min()))
+    vmax = np.ceil((cube.data.max()))
+
+    # Create a plot for each value of the sequence coordinate.
+    plot_index = []
+    for cube_slice in cube.slices_over(sequence_coordinate):
+        # Use sequence value so multiple sequences can merge.
+        sequence_value = cube_slice.coord(sequence_coordinate).points[0]
+        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
+        coord = cube_slice.coord(series_coordinate)
+        # Format the coordinate value in a unit appropriate way.
+        title = f"{recipe_title} | {coord.units.title(coord.points[0])}"
+        # Do the actual plotting.
+        plotting_func(
+            cube_slice,
+            coord,
+            plot_filename,
+            title=title,
+            vmin=vmin,
+            vmax=vmax,
+        )
+        plot_index.append(plot_filename)
+
+    # Add list of plots to plot metadata.
+    complete_plot_index = _append_to_plot_index(plot_index)
+
+    # Make a page to display the plots.
+    _make_plot_html_page(complete_plot_index)
 
     return cube

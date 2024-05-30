@@ -11,5 +11,5 @@ Aim to have all relevant checks ticked off before merging. See the [developer's 
 - [ ] All tests and CI checks pass.
 - [ ] Added an entry to the top of `docs/source/changelog.rst`
 - [ ] Conda lock files have been updated if dependencies have changed.
-- [ ] Said whether Generative AI, such as GitHub Copilot, has been used in this PR.
+- [ ] Attributed any Generative AI, such as GitHub Copilot, used in this PR.
 - [ ] Marked the PR as ready to review.
