@@ -430,7 +430,12 @@ def _plot_and_save_vertical_line_series(
 
 
 def _plot_and_save_scatter_plot(
-    cube_y: iris.cube.Cube, cube_x: iris.cube.Cube, filename: str, title: str, **kwargs
+    cube_y: iris.cube.Cube,
+    cube_x: iris.cube.Cube,
+    filename: str,
+    title: str,
+    one_to_one: bool,
+    **kwargs,
 ):
     """Plot and save a 1D scatter plot.
 
@@ -447,6 +452,19 @@ def _plot_and_save_scatter_plot(
     """
     fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
     iplt.scatter(cube_y, cube_x)
+    if one_to_one is True:
+        plt.plot(
+            [
+                np.nanmin([np.nanmin(cube_y.data), np.nanmin(cube_x.data)]),
+                np.nanmax([np.nanmax(cube_y.data), np.nanmax(cube_x.data)]),
+            ],
+            [
+                np.nanmin([np.nanmin(cube_y.data), np.nanmin(cube_x.data)]),
+                np.nanmax([np.nanmax(cube_y.data), np.nanmax(cube_x.data)]),
+            ],
+            "k",
+            linestyle="--",
+        )
     ax = plt.gca()
 
     # Add some labels and tweak the style.
@@ -902,6 +920,7 @@ def scatter_plot(
     cube_x: iris.cube.Cube,
     filename: str = None,
     # sequence_coordinate: str = "time",
+    one_to_one: bool = True,
     **kwargs,
 ) -> (iris.cube.Cube, iris.cube.Cube):
     # sequence_coordinate: str, optional
@@ -964,7 +983,7 @@ def scatter_plot(
     plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
 
     # Do the actual plotting.
-    _plot_and_save_scatter_plot(cube_y, cube_x, plot_filename, title)
+    _plot_and_save_scatter_plot(cube_y, cube_x, plot_filename, title, one_to_one)
 
     # Add list of plots to plot metadata.
     plot_index = _append_to_plot_index([plot_filename])
