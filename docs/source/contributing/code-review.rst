@@ -174,9 +174,14 @@ Code
 The code review can overlap with the technical review. However, the main focus
 of the science code review is to make sure the scientific logic of the code
 follows the principles of the diagnostic. For example, if someone is coding a
-diagnostic based on an equation, is the equation correct? has it been sensibly
-coded (broken down into appropriate terms in necessary)? have the correct
-conditionals been applied? are there any missing terms? are the units correct?
+diagnostic based on an equation:
+
+* Is the equation correct?
+* Has it been sensibly coded (broken down into appropriate terms in necessary)?
+* Have the correct conditionals been applied?
+* Are there any missing terms?
+* Are the units correct?
+
 Ultimately, does the code produce what you would expect it to from a science
 perspective, is it easily understood and debugged, and are there suitable 
 comments in the code?
@@ -185,12 +190,14 @@ comments in the code?
 Plotting Routines
 ~~~~~~~~~~~~~~~~~
 
-Questions that should be asked include does the plot make sense (e.g. is the
-vertical coordinate plotted on the y axis; does it improve the interpretation
-if a logarithmic scale is used)? Is the plot easy to interpret or is guidance
-required and is that guidance appropriate? Are the colour bars appropriate and
-mindful of accessibility if a specific colour bar is required? Is the labelling
-present and appropriate? Is the plot legible?
+For a plotting routine, questions that should be considered include:
+
+* Does the plot make sense (e.g. is the vertical coordinate plotted on the y axis;
+  does it improve the interpretation if a logarithmic scale is used)?
+* Is the plot easy to interpret or is guidance required and is that guidance appropriate?
+* Are the colour bars appropriate and mindful of accessibility if a specific colour bar is required?
+* Is the labelling present and appropriate?
+* Is the plot legible?
 
 
 Portability Review
