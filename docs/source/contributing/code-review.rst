@@ -185,8 +185,8 @@ Plotting Routines
 
 For a plotting routine, specific questions to consider include:
 
-* Does the plot make sense (e.g. is the vertical coordinate plotted on the y
-  axis; does it improve the interpretation if a logarithmic scale is used)?
+* Does the plot make sense (e.g. is the vertical coordinate plotted on the
+  y-axis; does it improve the interpretation if a logarithmic scale is used)?
 * Is the plot easy to interpret or is guidance required and is that guidance
   appropriate?
 * Are the colour bars appropriate and mindful of accessibility if a specific
