@@ -21,7 +21,7 @@ parallel:
 
 collate:
   - operator: read.read_cubes
-    filename: intermediate/*
+    filename_pattern: intermediate/*.nc
   - operator: plot.scatter_plot
     cube_y:
         operator: collapse.collapse
