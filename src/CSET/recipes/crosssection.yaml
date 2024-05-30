@@ -1,7 +1,7 @@
 title: Cross Section
 description: |
   Extracts over a cross section for a specified variable between two points and plots it.
-steps:
+parallel:
   - operator: read.read_cubes
 
   - operator: crosssection.compute_ageofair
@@ -15,5 +15,12 @@ steps:
 
   - operator: write.write_cube_to_nc
     filename: intermediate/crosssection
+
+collate:
+  - operator: read.read_cube
+    filename_pattern: intermediate/*.nc
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
 
   - operator: plot.spatial_contour_plot
