@@ -76,9 +76,11 @@ you personally do not like a diagnostic that does not mean it should not be
 included in CSET. You are not reviewing how good a diagnostic is. Instead you
 are reviewing whether the code does what it is supposed to do, how usable the
 addition is, and if there is enough information to allow the correct
-interpretation of the diagnostic by those new to the diagnostic  through the
+interpretation of the diagnostic by those new to the diagnostic through the
 appropriate use of documentation (docstrings, workflow metadata entry, etc.)
-along with journal references where appropriate. The descriptions of each part
+along with journal references where appropriate.
+
+The descriptions of each part
 of the science review are put in the order they are recommended to be
 considered, not necessarily the order of importance. The idea is to provide
 comments in the appropriate parts of the code and an overview as part of the
@@ -102,19 +104,24 @@ should include a full description of the diagnostic that includes the logic
 behind it (including assumptions used) and, where applicable, make use of
 appropriate references and equations. The notes description must include how
 to interpret the diagnostic including expected maximum and minimum ranges.
+
 The description can be brief, and if not included it is recommended that a
 reviewer asks for a reference pointing to further information if it is
 available (e.g. ensure the paper that first describes the diagnostic is cited).
 The expected applicability ranges should also be included and cover whether
 there are any situations in which the diagnostic will not be sensible to use,
-or if the behaviour changes with resolution. Finally, an interpretation notes
+or if the behaviour changes with resolution.
+
+Finally, an interpretation notes
 or caveats section could be beneficial if there is likely to be an
 interpretation of the diagnostic that differs from its conventional
 interpretation. For example, does the ordering of the routines within a model
 timestep impact the interpretation, e.g., CAPE is traditionally interpreted
 before precipitation occurs and so if it is output at the end of the timestep
 it will have a different interpretation to if it was output at the start of
-the timestep. Throughout the entire notes section you should be checking for
+the timestep.
+
+Throughout the entire notes section you should be checking for
 scientific inaccuracies and whether it can be easily interpreted by another
 scientist. This interpretation could be from just reading it as an expert in the area, or with sufficient referencing for those less familiar
 with the diagnostic. Ideally, the extra reading should be kept to a minimum
@@ -128,12 +135,15 @@ Recipe Documentation
 This type of documentation is particularly important for plotting. The
 descriptions provided in the recipe should be sufficient to allow
 interpretation of the diagnostic, or plot, for those that have not used/seen it
-before. These descriptions will be included in the output webpage. Therefore,
+before.
+
+These descriptions will be included in the output webpage. Therefore,
 important information to include will be the maximum/minimum ranges, the
 interpretation and applicability ranges of the diagnostic. For some plots
 (e.g., q-q plots) this should include a general "how to interpret" section
 which covers what patterns to look for to identify certain relationships or
 factors. This should mimic those parts from the CSET documentation.
+
 Further applicability considerations should include assumptions and caveats
 with the chain of operators used and how that could impact the results, e.g.
 impact of re-gridding. And if any operators could break assumptions of the
@@ -148,7 +158,9 @@ The GUI documentation should be checked for usability. Important questions to
 ask are whether there is enough information provided that a new user to CSET
 could "pick it up" and run it with limited input from the developers. If
 specific example files or default file locations are required these should be
-clearly specified in the description. It is also worth considering the parts of
+clearly specified in the description.
+
+It is also worth considering the parts of
 the documentation that would be more beneficial in the "help" or "description"
 sections, with the latter being readily visible in the GUI. For example, any
 specific input requirements should be in the description, including the
