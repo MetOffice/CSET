@@ -4,7 +4,7 @@ description: |
 parallel:
   - operator: read.read_cubes
 
-  - operator: crosssection.compute_ageofair
+  - operator: crosssection.calc_crosssection
     cube:
         operator: filters.filter_cubes
         constraint:
