@@ -456,7 +456,7 @@ def _plot_and_save_scatter_plot(
         title=title,
     )
     ax.ticklabel_format(axis="y", useOffset=False)
-    ax.ticklabel_params(axis="x", labelrotation=15)
+    ax.tick_params(axis="x", labelrotation=15)
     ax.autoscale()
 
     # Save plot.
