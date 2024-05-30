@@ -80,76 +80,71 @@ interpretation of the diagnostic by those new to the diagnostic through the
 appropriate use of documentation (docstrings, workflow metadata entry, etc.)
 along with journal references where appropriate.
 
-The descriptions of each part
-of the science review are put in the order they are recommended to be
-considered, not necessarily the order of importance. The idea is to provide
-comments in the appropriate parts of the code and an overview as part of the
-PR discussion.
-
+The descriptions of each part of the science review are put in the order they
+are recommended to be considered, not necessarily the order of importance. The
+idea is to provide comments in the appropriate parts of the code and an overview
+as part of the PR discussion.
 
 CSET Documentation
 ~~~~~~~~~~~~~~~~~~
 
 The documentation should include a short summary statement of what the operator
 does, a list of the input parameters, a list of the output, any expected errors
-or warnings that it raises and why, notes, references, and clear examples of
-the use of the diagnostic. The notes and references are particularly important
-for diagnostics and are less of a requirement for plotting operators. The
-docstrings of operators that are not prefixed with an underscore are used in
-the documentation and so should be considered carefully.
+or warnings that it raises and why, notes, references, and clear examples of the
+use of the diagnostic. The notes and references are particularly important for
+diagnostics and are less of a requirement for plotting operators. The docstrings
+of operators that are not prefixed with an underscore are used in the
+documentation and so should be considered carefully.
 
 The notes section is the most important section of the documentation for
-diagnostics, providing the detail about the diagnostic. It
-should include a full description of the diagnostic that includes the logic
-behind it (including assumptions used) and, where applicable, make use of
-appropriate references and equations. The notes description must include how
-to interpret the diagnostic including expected maximum and minimum ranges.
+diagnostics, providing the detail about the diagnostic. It should include a full
+description of the diagnostic that includes the logic behind it (including
+assumptions used) and, where applicable, make use of appropriate references and
+equations. The notes description must include how to interpret the diagnostic
+including expected maximum and minimum ranges.
 
 The description can be brief, and if not included it is recommended that a
-reviewer asks for a reference pointing to further information if it is
-available (e.g. ensure the paper that first describes the diagnostic is cited).
-The expected applicability ranges should also be included and cover whether
-there are any situations in which the diagnostic will not be sensible to use,
-or if the behaviour changes with resolution.
+reviewer asks for a reference pointing to further information if it is available
+(e.g. ensure the paper that first describes the diagnostic is cited). The
+expected applicability ranges should also be included and cover whether there
+are any situations in which the diagnostic will not be sensible to use, or if
+the behaviour changes with resolution.
 
-Finally, an interpretation notes
-or caveats section could be beneficial if there is likely to be an
-interpretation of the diagnostic that differs from its conventional
-interpretation. For example, does the ordering of the routines within a model
-timestep impact the interpretation, e.g., CAPE is traditionally interpreted
-before precipitation occurs and so if it is output at the end of the timestep
-it will have a different interpretation to if it was output at the start of
-the timestep.
+Finally, an interpretation notes or caveats section could be beneficial if there
+is likely to be an interpretation of the diagnostic that differs from its
+conventional interpretation. For example, does the ordering of the routines
+within a model timestep impact the interpretation, e.g., CAPE is traditionally
+interpreted before precipitation occurs and so if it is output at the end of the
+timestep it will have a different interpretation to if it was output at the
+start of the timestep.
 
-Throughout the entire notes section you should be checking for
-scientific inaccuracies and whether it can be easily interpreted by another
-scientist. This interpretation could be from just reading it as an expert in the area, or with sufficient referencing for those less familiar
-with the diagnostic. Ideally, the extra reading should be kept to a minimum
-and there would be enough for someone to be able to interpret the diagnostic
-but know which papers to cite in a journal article.
-
+Throughout the entire notes section you should be checking for scientific
+inaccuracies and whether it can be easily interpreted by another scientist. This
+interpretation could be from just reading it as an expert in the area, or with
+sufficient referencing for those less familiar with the diagnostic. Ideally, the
+extra reading should be kept to a minimum and there would be enough for someone
+to be able to interpret the diagnostic but know which papers to cite in a
+journal article.
 
 Recipe Documentation
 ~~~~~~~~~~~~~~~~~~~~
 
 This type of documentation is particularly important for plotting. The
-descriptions provided in the recipe should be sufficient to allow
-interpretation of the diagnostic, or plot, for those that have not used/seen it
-before.
+descriptions provided in the recipe should be sufficient to allow interpretation
+of the diagnostic, or plot, for those that have not used/seen it before.
 
-These descriptions will be included in the output webpage. Therefore,
-important information to include will be the maximum/minimum ranges, the
-interpretation and applicability ranges of the diagnostic. For some plots
-(e.g., q-q plots) this should include a general "how to interpret" section
-which covers what patterns to look for to identify certain relationships or
-factors. This should mimic those parts from the CSET documentation.
+These descriptions will be included in the output webpage. Therefore, important
+information to include will be the maximum/minimum ranges, the interpretation
+and applicability ranges of the diagnostic. For some plots (e.g., q-q plots)
+this should include a general "how to interpret" section which covers what
+patterns to look for to identify certain relationships or factors. This should
+mimic those parts from the CSET documentation.
 
-Further applicability considerations should include assumptions and caveats
-with the chain of operators used and how that could impact the results, e.g.
-impact of re-gridding. And if any operators could break assumptions of the
-diagnostics and thus have applicability ranges (e.g. resolution supported by
-the diagnostic).
-
+Further applicability considerations should include assumptions and caveats with
+the chain of operators used and how that could impact the results, e.g. impact
+of re-gridding. And if any operators could break assumptions of the diagnostics
+and thus have applicability ranges (e.g. resolution supported by the
+diagnostic).
 
 GUI Documentation
 ~~~~~~~~~~~~~~~~~
@@ -160,13 +155,12 @@ could "pick it up" and run it with limited input from the developers. If
 specific example files or default file locations are required these should be
 clearly specified in the description.
 
-It is also worth considering the parts of
-the documentation that would be more beneficial in the "help" or "description"
-sections, with the latter being readily visible in the GUI. For example, any
-specific input requirements should be in the description, including the
-required format.  Any important caveats, assumptions and applicability
-information should be mentioned in the GUI extended help text.
-
+It is also worth considering the parts of the documentation that would be more
+beneficial in the "help" or "description" sections, with the latter being
+readily visible in the GUI. For example, any specific input requirements should
+be in the description, including the required format.  Any important caveats,
+assumptions and applicability information should be mentioned in the GUI
+extended help text.
 
 Code
 ~~~~
@@ -183,19 +177,20 @@ diagnostic based on an equation:
 * Are the units correct?
 
 Ultimately, does the code produce what you would expect it to from a science
-perspective, is it easily understood and debugged, and are there suitable 
+perspective, is it easily understood and debugged, and are there suitable
 comments in the code?
-
 
 Plotting Routines
 ~~~~~~~~~~~~~~~~~
 
-For a plotting routine, questions that should be considered include:
+For a plotting routine, specific questions to consider include:
 
-* Does the plot make sense (e.g. is the vertical coordinate plotted on the y axis;
-  does it improve the interpretation if a logarithmic scale is used)?
-* Is the plot easy to interpret or is guidance required and is that guidance appropriate?
-* Are the colour bars appropriate and mindful of accessibility if a specific colour bar is required?
+* Does the plot make sense (e.g. is the vertical coordinate plotted on the y
+  axis; does it improve the interpretation if a logarithmic scale is used)?
+* Is the plot easy to interpret or is guidance required and is that guidance
+  appropriate?
+* Are the colour bars appropriate and mindful of accessibility if a specific
+  colour bar is required?
 * Is the labelling present and appropriate?
 * Is the plot legible?
 
