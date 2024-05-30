@@ -1,6 +1,6 @@
 title: Inflow layer properties plot
 description: |
-  Extracts data required for, and calculates the Inflow properties diagnostic, plotting on a map.
+  Extracts data required for, and calculates the Inflow properties diagnostic, plotting on a spatial map.
 
 parallel:
   - operator: read.read_cubes
