@@ -6,8 +6,13 @@ parallel:
   - operator: read.read_cubes
   - operator: filters.filter_multiple_cubes
     temp_constraint:
-        operator: constraints.generate_stash_constraint
-        stash: m01s03i236
+        operator: constraints.combine_constraints
+        stash_constraint:
+            operator: constraints.generate_stash_constraint
+            stash: m01s03i236
+        cell_method_constraint:
+            operator: constraints.generate_cell_methods_constraint
+            cell_methods: []
     dewpoint_constraint:
         operator: constraints.generate_stash_constraint
         stash: m01s03i250
