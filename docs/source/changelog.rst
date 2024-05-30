@@ -15,7 +15,12 @@ Unreleased
 .. Highlight any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
-* `@Sylviabohnenstengel`_ documentation: add info on quick pytesting in :pr: `696`
+* `@Sylviabohnenstengel`_ documentation: add info on quick pytesting in :pr:`696`
+* `@Sylviabohnenstengel`_ introduced lfric_model_level and lfric_model_level_field to rose meta
+* `@Sylviabohnenstengel`_ expand plot operator add plotting lfric vertical profiles on model levels
+* `@Sylviabohnenstengel`_ expand plot operator add plotting on model levels to spatial plot operator
+* `@Sylviabohnenstengel`_ added new recipe for plotting vertical profiles on model levels for lfric.
+* `@Sylviabohnenstengel`_ added new recipe for plotting spatial lfric data on model levels.
 
 24.6.0 (2024-06-17)
 -------------------
