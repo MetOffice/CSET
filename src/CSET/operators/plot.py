@@ -445,7 +445,7 @@ def _plot_and_save_scatter_plot(
     title: str
         Plot title.
     """
-    fig = plt.figure(figuresize=(8, 8), facecolor="w", edgecolor="k")
+    fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
     iplt.scatter(cube_y, cube_x)
     ax = plt.gca()
 
