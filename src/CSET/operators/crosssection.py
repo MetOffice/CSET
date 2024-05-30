@@ -62,14 +62,29 @@ def calc_crosssection(cube, startxy, endxy, coord="distance"):
         dimensions.
 
     """
+    # Parse arguments
+    startxy = startxy.split(",")
+    endxy = endxy.split(",")
+    startxy[0] = float(startxy[0])
+    startxy[1] = float(startxy[1])
+    endxy[0] = float(endxy[0])
+    endxy[1] = float(endxy[1])
+
     # Find out xy coord name
     x_name, y_name = get_cube_xycoordname(cube)
 
+    keyword_args = {
+        x_name: (startxy[0] - 0.5, endxy[0] + 0.5),
+        y_name: (startxy[1] - 0.5, endxy[1] + 0.5),
+    }
+
+    print(cube)
+
     # Get local cutout so we can get proper xmin/ymin spacing.
-    cube = cube.intersection(
-        latitude=(startxy[0] - 0.5, endxy[0] + 0.5),
-        longitude=(startxy[1] - 0.5, endxy[1] + 0.5),
-    )
+    cube = cube.intersection(**keyword_args)
+
+    # getattr(iris.analysis, method, None)
+    print(cube)
 
     # Compute minimum gap between coords - in case variable res, default to minimum.
     xmin = np.min(
