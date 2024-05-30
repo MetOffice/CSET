@@ -30,7 +30,7 @@ parallel:
 
 collate:
   - operator: read.read_cube
-    filename: intermediate/*.nc
+    filename_pattern: intermediate/*.nc
 
   - operator: write.write_cube_to_nc
     overwrite: True
