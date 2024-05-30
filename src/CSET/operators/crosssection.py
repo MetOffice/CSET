@@ -147,15 +147,3 @@ def calc_crosssection(cube, startxy, endxy, coord="distance"):
         return interpolated_cubes[0]
     else:
         raise ValueError("Can't merge into a single cube")
-
-
-cube = calc_crosssection(
-    cube=iris.load_cube(
-        "/scratch/jawarner/tmp_2304/20210422T0600Z_Regn1_resn_1_RA2T_pz024.pp",
-        "air_temperature",
-    )[4, 10, :, :],
-    startxy=(-2, 38),
-    endxy=(7, 39),
-    coord="longitude",
-)
-print(cube)
