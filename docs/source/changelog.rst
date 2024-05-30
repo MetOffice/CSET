@@ -12,6 +12,8 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@jwarner8`_ add intelligent determination of whether to plot country lines
+   in :pr:`655`
 * `@daflack`_ fixed inflow properties recipe in :pr:`662`
 * `@jfrost-mo`_ ensured cartopy data files are included in the GitHub Actions
   cache in :pr:`647`
