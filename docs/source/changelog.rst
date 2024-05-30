@@ -12,6 +12,7 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@daflack`_ fixes inflow properties recipe in :pr:`662`
 * `@jfrost-mo`_ ensured cartopy data files are included in the GitHub Actions
   cache in :pr:`647`
 * `@jfrost-mo`_ grouped the package install logs in GitHub Actions in :pr:`645`
