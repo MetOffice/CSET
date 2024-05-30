@@ -1,0 +1,12 @@
+{% if METPLUS_GRID_STAT %}
+[scheduling]
+    [[graph]]
+    {{CSET_CYCLE_PERIOD}} = """
+    metplus_grid_stat => housekeeping_full
+    """
+
+[runtime]
+    [[metplus_grid_stat]]
+    # Runs METplus wrappers for point stat calculations.
+        inherit = METPLUS
+{% endif %}

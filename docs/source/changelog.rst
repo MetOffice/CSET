@@ -14,6 +14,7 @@ Unreleased
 
 * `@jwarner8`_ add intelligent determination of whether to plot country lines
    in :pr:`655`
+* `@daflack`_ fixed inflow properties recipe in :pr:`662`
 * `@jfrost-mo`_ ensured cartopy data files are included in the GitHub Actions
   cache in :pr:`647`
 * `@jfrost-mo`_ grouped the package install logs in GitHub Actions in :pr:`645`
@@ -30,6 +31,7 @@ Unreleased
   operator :pr:`626`
 * `@jwarner8`_ added generic cube util for common functions so all operators can
   use to reduce repetition in :pr:`620`
+* `@JorgeBornemann`_ added METPlus GridStat functionality (NIWA) in :pr:`629`
 * `@jfrost-mo`_ added a code of conduct in :pr:`618`
 * `@jfrost-mo`_ fixed some rose edit metadata so the subarea selectors show up
   when enabled in :pr:`612`
@@ -41,6 +43,12 @@ Unreleased
   :pr:`603`
 * `@dasha-shchep`_ added ``generate_area_constraint`` operator and added to
   LFRic recipes in :pr:`522`. This was their first contribution 🎉
+* `@Sylviabohnenstengel`_ added a vertical line plotting operator that plots
+  vertical profiles using an optional series coordinate and an optional sequence
+  coordinate in :pr:`567`. The series coordinate is currently tested for
+  pressure and the sequence coordinate allows displaying vertical profiles over
+  time using the time slider functionality. Furthermore added a recipe to plot
+  vertical profiles and test functions for the vertical plot operator.
 * `@jfrost-mo`_ dropped python 3.9 support in :pr:`448` The minimum required
   python is now 3.10.
 * `@jfrost-mo`_ fixed some outdated documentation examples in :pr:`546`

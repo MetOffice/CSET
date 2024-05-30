@@ -136,8 +136,10 @@ def _step_parser(step: dict, step_input: any) -> str:
     first_arg = next(iter(inspect.signature(operator).parameters.keys()))
     logging.debug("first_arg: %s", first_arg)
     if first_arg not in kwargs:
+        logging.debug("first_arg not in kwargs, using step_input.")
         return operator(step_input, **kwargs)
     else:
+        logging.debug("first_arg in kwargs.")
         return operator(**kwargs)
 
 
