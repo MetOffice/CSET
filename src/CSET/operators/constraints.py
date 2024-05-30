@@ -14,6 +14,7 @@
 
 """Operators to generate constraints to filter with."""
 
+from collections.abc import Iterable
 from datetime import datetime
 from typing import Union
 
@@ -65,29 +66,39 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
 
 
 def generate_model_level_constraint(
-    model_level_number: Union[int, str], **kwargs
+    model_level: int | list[int], **kwargs
 ) -> iris.Constraint:
     """Generate constraint for a particular model level number.
 
-    Operator that takes a CF compliant model_level_number string, and uses iris to
+    Operator that takes a CF compliant model_level_number int or list of int, and uses iris to
     generate a constraint to be passed into the read operator to minimize the
     CubeList the read operator loads and speed up loading.
 
     Arguments
     ---------
-    model_level_number: str
+    model_level_number: int|list
         CF compliant model level number.
 
     Returns
     -------
     model_level_number_constraint: iris.Constraint
     """
-    # Cast to int in case a string is given.
-    model_level_number = int(model_level_number)
-    model_level_number_constraint = iris.Constraint(
-        model_level_number=model_level_number
-    )
-    return model_level_number_constraint
+    # turn into a list in case is iterable
+    if not isinstance(model_level, Iterable):
+        model_level = [model_level]
+
+    if len(model_level) == 0:
+        # If none specified reject cubes with model level coordinate.
+        def no_model_level_number(cube):
+            try:
+                cube.coord("model_level_number")
+            except iris.exceptions.CoordinateNotFoundError:
+                return True
+            return False
+
+        return iris.Constraint(cube_func=no_model_level_number)
+
+    return iris.Constraint(model_level_number=model_level)
 
 
 def generate_pressure_level_constraint(
