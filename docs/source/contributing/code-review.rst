@@ -77,7 +77,7 @@ included in CSET. You are not reviewing how good a diagnostic is. Instead you
 are reviewing whether the code does what it is supposed to do, how usable the
 addition is, and if there is enough information to allow the correct
 interpretation of the diagnostic by those new to the diagnostic  through the
-appropriate use of documentation (docstrings, metadata entry to workflow etc.)
+appropriate use of documentation (docstrings, workflow metadata entry, etc.)
 along with journal references where appropriate. The descriptions of each part
 of the science review are put in the order they are recommended to be
 considered, not necessarily the order of importance. The idea is to provide
@@ -97,7 +97,7 @@ docstrings of operators that are not prefixed with an underscore are used in
 the documentation and so should be considered carefully.
 
 The notes section is the most important section of the documentation for
-diagnostics. The notes section provides the detail about the diagnostic. It
+diagnostics, providing the detail about the diagnostic. It
 should include a full description of the diagnostic that includes the logic
 behind it (including assumptions used) and, where applicable, make use of
 appropriate references and equations. The notes description must include how
@@ -116,8 +116,7 @@ before precipitation occurs and so if it is output at the end of the timestep
 it will have a different interpretation to if it was output at the start of
 the timestep. Throughout the entire notes section you should be checking for
 scientific inaccuracies and whether it can be easily interpreted by another
-scientist. This interpretation could be from just reading it alone
-(an expert in the area) or with sufficient referencing for those less familiar
+scientist. This interpretation could be from just reading it as an expert in the area, or with sufficient referencing for those less familiar
 with the diagnostic. Ideally, the extra reading should be kept to a minimum
 and there would be enough for someone to be able to interpret the diagnostic
 but know which papers to cite in a journal article.
@@ -167,8 +166,8 @@ diagnostic based on an equation, is the equation correct? has it been sensibly
 coded (broken down into appropriate terms in necessary)? have the correct
 conditionals been applied? are there any missing terms? are the units correct?
 Ultimately, does the code produce what you would expect it to from a science
-Perspective, is it easily interpretable, can it be debugged easily, and are
-there suitable use of comments in the code?
+perspective, is it easily understood and debugged, and are there suitable 
+comments in the code?
 
 
 Plotting Routines
