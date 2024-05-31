@@ -46,7 +46,7 @@ def _calc_dist(coord_1, coord_2):
     return distance
 
 
-def calc_crosssection(cube, startxy, endxy, coord="distance"):
+def calc_crosssection(cube, startxy, endxy, coord="longitude"):
     """
     Compute cross section.
 
@@ -159,6 +159,7 @@ def calc_crosssection(cube, startxy, endxy, coord="distance"):
     interpolated_cubes = interpolated_cubes.concatenate()
 
     if len(interpolated_cubes) == 1:
+        print(interpolated_cubes[0])
         return interpolated_cubes[0]
     else:
         raise ValueError("Can't merge into a single cube")
