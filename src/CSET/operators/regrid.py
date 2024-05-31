@@ -18,7 +18,7 @@ import iris
 import iris.cube
 import numpy as np
 
-from CSET.operators._utils import get_cube_xycoordname
+from CSET.operators._utils import get_cube_yxcoordname
 
 
 def regrid_onto_cube(
@@ -55,8 +55,8 @@ def regrid_onto_cube(
     -----
     Currently rectlinear grids (uniform) are supported.
     """
-    # Get x,y coord names
-    x_coord, y_coord = get_cube_xycoordname(incube)
+    # Get y,x coord names
+    y_coord, x_coord = get_cube_yxcoordname(incube)
 
     # List of supported grids - check if it is compatible
     supported_grids = (iris.coord_systems.GeogCS,)
@@ -113,7 +113,7 @@ def regrid_onto_xyspacing(
 
     """
     # Get x,y coord names
-    x_coord, y_coord = get_cube_xycoordname(incube)
+    y_coord, x_coord = get_cube_yxcoordname(incube)
 
     # List of supported grids - check if it is compatible
     supported_grids = (iris.coord_systems.GeogCS,)
