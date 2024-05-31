@@ -20,7 +20,7 @@ from math import asin, cos, radians, sin, sqrt
 import iris
 import numpy as np
 
-from CSET.operators._utils import get_cube_xycoordname
+from CSET.operators._utils import get_cube_yxcoordname
 
 
 def _calc_dist(coord_1, coord_2):
@@ -47,7 +47,7 @@ def _calc_dist(coord_1, coord_2):
     return distance
 
 
-def calc_crosssection(cube, startxy, endxy, coord="longitude"):
+def calc_crosssection(cube, startxy, endxy, coord="distance"):
     """
     Compute cross section.
 
@@ -92,9 +92,7 @@ def calc_crosssection(cube, startxy, endxy, coord="longitude"):
     endxy[1] = float(endxy[1])
 
     # Find out xy coord name
-    x_name, y_name = get_cube_xycoordname(cube)
-    # TMP FIX IN PROGRESS
-    y_name, x_name = get_cube_xycoordname(cube)
+    y_name, x_name = get_cube_yxcoordname(cube)
 
     if startxy[0] > max(cube.coord(y_name).points) or startxy[0] < min(
         cube.coord(y_name).points
@@ -222,7 +220,7 @@ def calc_crosssection(cube, startxy, endxy, coord="longitude"):
 
     # If concatenation successful, should be cubelist with one cube left.
     if len(interpolated_cubes) == 1:
-        print(interpolated_cubes[0])
+        print(interpolated_cubes)
         return interpolated_cubes[0]
     else:
         raise ValueError("Can't merge into a single cube")
