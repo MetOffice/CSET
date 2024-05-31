@@ -93,8 +93,8 @@ def calc_crosssection(cube, startxy, endxy, coord="longitude"):
 
     # Find out xy coord name
     x_name, y_name = get_cube_xycoordname(cube)
-    print(x_name, y_name)
-    print(cube)
+    # TMP FIX IN PROGRESS
+    y_name, x_name = get_cube_xycoordname(cube)
 
     if startxy[0] > max(cube.coord(y_name).points) or startxy[0] < min(
         cube.coord(y_name).points
@@ -102,8 +102,8 @@ def calc_crosssection(cube, startxy, endxy, coord="longitude"):
         raise IndexError(
             "starty {a} not between {b} and {c}".format(
                 a=startxy[0],
-                b=min(cube.coords(y_name).points),
-                c=max(cube.coords(y_name).points),
+                b=min(cube.coord(y_name).points),
+                c=max(cube.coord(y_name).points),
             )
         )
     if startxy[1] > max(cube.coord(x_name).points) or startxy[1] < min(
@@ -112,8 +112,8 @@ def calc_crosssection(cube, startxy, endxy, coord="longitude"):
         raise IndexError(
             "startx {a} not between {b} and {c}".format(
                 a=startxy[1],
-                b=min(cube.coords(x_name).points),
-                c=max(cube.coords(x_name).points),
+                b=min(cube.coord(x_name).points),
+                c=max(cube.coord(x_name).points),
             )
         )
     if endxy[0] > max(cube.coord(y_name).points) or endxy[0] < min(
@@ -122,8 +122,8 @@ def calc_crosssection(cube, startxy, endxy, coord="longitude"):
         raise IndexError(
             "endy {a} not between {b} and {c}".format(
                 a=endxy[0],
-                b=min(cube.coords(y_name).points),
-                c=max(cube.coords(y_name).points),
+                b=min(cube.coord(y_name).points),
+                c=max(cube.coord(y_name).points),
             )
         )
     if endxy[1] > max(cube.coord(x_name).points) or endxy[1] < min(
@@ -132,26 +132,16 @@ def calc_crosssection(cube, startxy, endxy, coord="longitude"):
         raise IndexError(
             "endx {a} not between {b} and {c}".format(
                 a=endxy[1],
-                b=min(cube.coords(x_name).points),
-                c=max(cube.coords(x_name).points),
+                b=min(cube.coord(x_name).points),
+                c=max(cube.coord(x_name).points),
             )
         )
 
-    print(startxy)
-    print(endxy)
-
-    print(max(cube.coord(y_name).points))
-    print(min(cube.coord(y_name).points))
-    print(max(cube.coord(x_name).points))
-    print(min(cube.coord(x_name).points))
-
     # Create dict for parsing into intersection method
     keyword_args = {
-        x_name: (startxy[0], endxy[0]),
-        y_name: (startxy[1], endxy[1]),
+        x_name: (startxy[1], endxy[1]),
+        y_name: (startxy[0], endxy[0]),
     }
-
-    print(keyword_args)
 
     # Get local cutout so we can get proper xmin/ymin spacing relevant to the
     # cross section itself.
