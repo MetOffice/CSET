@@ -1,9 +1,4 @@
 {% if AOA_DIAG %}
-[scheduling]
-    [[graph]]
-    P1 = """
-    recipe_start => aoa_diag => recipe_finish
-    """
 
 {% for plev in AOA_PLEV %}
 [runtime]
