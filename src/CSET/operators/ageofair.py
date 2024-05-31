@@ -57,7 +57,7 @@ def _calc_dist(coord_1, coord_2):
     return distance
 
 
-def aoa_core(
+def _aoa_core(
     x_arr: np.ndarray,
     y_arr: np.ndarray,
     z_arr: np.ndarray,
@@ -335,7 +335,7 @@ def compute_ageofair(
         # TODO: there was an error where 719 was passed to x idx.
         pool = multiprocessing.Pool(multicore)
         func = partial(
-            aoa_core,
+            _aoa_core,
             np.copy(x_arr),
             np.copy(y_arr),
             np.copy(z_arr),
@@ -352,7 +352,7 @@ def compute_ageofair(
     else:
         # Single core - better for debugging.
         for i in range(0, XWIND.shape[3]):
-            aoa_core(
+            _aoa_core(
                 x_arr,
                 y_arr,
                 z_arr,
