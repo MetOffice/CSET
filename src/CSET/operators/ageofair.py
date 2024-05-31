@@ -303,7 +303,7 @@ def compute_ageofair(
     if np.all(dt == dt[0]):
         dt = dt[0]
     else:
-        raise NotImplementedError("Time not monotonically increasing, not supported")
+        raise NotImplementedError("Time intervals are not consistent")
 
     # Get coord points
     lat_name, lon_name = get_cube_xycoordname(XWIND)
