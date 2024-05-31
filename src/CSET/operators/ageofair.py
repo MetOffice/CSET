@@ -377,9 +377,8 @@ def compute_ageofair(
         "AOA DIAG DONE, took %s s", (datetime.datetime.now() - start).total_seconds()
     )
     for i in range(0, XWIND.shape[3]):
-        ageofair_cube.data[:, :, i] = np.load(
-            tmpdir + "/aoa_frag_" + str(i).zfill(4) + ".npy"
-        )
-        os.remove(tmpdir + "/aoa_frag_" + str(i).zfill(4) + ".npy")
+        file = f"{tmpdir}/aoa_frag_{i:04}.npy"
+        ageofair_cube.data[:, :, i] = np.load(file)
+        os.remove(file)
 
     return ageofair_cube
