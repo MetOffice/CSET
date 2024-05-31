@@ -152,7 +152,7 @@ def test_aoa_timeunits(xwind, ywind, wwind, geopot):
 
 @pytest.fixture()
 def test_aoa_plevreq(xwind, ywind, wwind, geopot):
-    """Pressure level requested that doesn't exist raises Value error."""
+    """Pressure level requested that doesn't exist raises Index error."""
     with pytest.raises(IndexError):
         ageofair.compute_ageofair(
             xwind, ywind, wwind, geopot, plev=123, incW=True, cyclic=True
