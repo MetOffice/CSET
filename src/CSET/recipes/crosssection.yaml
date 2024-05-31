@@ -18,7 +18,7 @@ parallel:
 
 collate:
   - operator: read.read_cube
-    filename_pattern: intermediate/crosssection*
+    filename_pattern: intermediate/crosssection
 
   - operator: write.write_cube_to_nc
     overwrite: True
