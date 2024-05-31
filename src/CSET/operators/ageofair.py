@@ -384,4 +384,7 @@ def compute_ageofair(
         ageofair_cube.data[:, :, i] = np.load(file)
         os.remove(file)
 
+    # Clean tmpdir
+    tmpdir.cleanup()
+
     return ageofair_cube
