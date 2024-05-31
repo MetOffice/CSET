@@ -260,9 +260,6 @@ def compute_ageofair(
         An iris cube of the age of air data, with 3 dimensions (time, latitude, longitude).
 
     """
-    # Number of pooled processes to use if multicore is True.
-    multicore_proc = 8
-
     # Set up temporary directory to store intermediate age of air slices.
     tmpdir = tempfile.mkdtemp()
     logging.info("Made tmpdir %s", tmpdir)
@@ -336,7 +333,7 @@ def compute_ageofair(
     start = datetime.datetime.now()
     if multicore:
         # Multiprocessing on each longitude slice
-        pool = multiprocessing.Pool(multicore_proc)
+        pool = multiprocessing.Pool(8)
         func = partial(
             _aoa_core,
             np.copy(x_arr),
