@@ -34,7 +34,7 @@ import numpy as np
 from markdown_it import MarkdownIt
 
 from CSET._common import get_recipe_metadata, render_file, slugify
-from CSET.operators._utils import get_cube_xycoordname
+from CSET.operators._utils import get_cube_yxcoordname
 
 ############################
 # Private helper functions #
@@ -214,7 +214,7 @@ def _plot_and_save_contour_plot(
 
     # Add coastlines if cube contains x and y map coordinates.
     try:
-        get_cube_xycoordname(cube)
+        get_cube_yxcoordname(cube)
         axes.coastlines(resolution="10m")
     except ValueError:
         pass
@@ -277,7 +277,7 @@ def _plot_and_save_postage_stamp_contour_plot(
 
         # Add coastlines if cube contains x and y map coordinates.
         try:
-            get_cube_xycoordname(cube)
+            get_cube_yxcoordname(cube)
             ax.coastlines(resolution="10m")
         except ValueError:
             pass
