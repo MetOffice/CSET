@@ -276,6 +276,10 @@ def compute_ageofair(
 
     # Make data non-lazy to speed up code.
     logging.info("Making data non-lazy...")
+    XWIND.realise_data()
+    YWIND.realise_data()
+    WWIND.realise_data()
+    GEOPOT.realise_data()
     x_arr = XWIND.data
     y_arr = YWIND.data
     z_arr = WWIND.data
