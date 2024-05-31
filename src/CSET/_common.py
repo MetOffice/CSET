@@ -71,8 +71,6 @@ def parse_recipe(recipe_yaml: Union[Path, str], variables: dict = None):
             recipe = yaml.load(recipe_yaml)
         except ruamel.yaml.parser.ParserError as err:
             raise ValueError("ParserError: Invalid YAML") from err
-        except ruamel.yaml.error.YAMLStreamError as err:
-            raise TypeError("Must provide a file object (with a read method)") from err
 
     logging.debug(recipe)
     check_recipe_has_steps(recipe)

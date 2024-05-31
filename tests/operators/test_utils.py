@@ -30,24 +30,24 @@ def source_cube() -> iris.cube.Cube:
     )
 
 
-def test_missing_coord_get_cube_xycoordname(source_cube):
+def test_missing_coord_get_cube_yxcoordname(source_cube):
     """Missing coordinate raises error."""
     # Missing X coordinate.
     source = source_cube.copy()
     source.remove_coord("longitude")
     with pytest.raises(ValueError):
-        common_operators.get_cube_xycoordname(source)
+        common_operators.get_cube_yxcoordname(source)
 
     # Missing Y coordinate.
     source = source_cube.copy()
     source.remove_coord("latitude")
     with pytest.raises(ValueError):
-        common_operators.get_cube_xycoordname(source)
+        common_operators.get_cube_yxcoordname(source)
 
 
-def test_get_cube_xycoordname(source_cube):
+def test_get_cube_yxcoordname(source_cube):
     """Check that function returns tuple containing horizontal dimension names."""
-    assert (common_operators.get_cube_xycoordname(source_cube)) == (
+    assert (common_operators.get_cube_yxcoordname(source_cube)) == (
         "latitude",
         "longitude",
     )

@@ -23,7 +23,7 @@ import iris
 import iris.cube
 
 
-def get_cube_xycoordname(cube: iris.cube.Cube) -> tuple[str, str]:
+def get_cube_yxcoordname(cube: iris.cube.Cube) -> tuple[str, str]:
     """
     Return horizontal coordinate name(s) from a given cube.
 
@@ -37,14 +37,14 @@ def get_cube_xycoordname(cube: iris.cube.Cube) -> tuple[str, str]:
 
     Returns
     -------
-    (x_coord, y_coord)
+    (y_coord, x_coord)
         A tuple containing the horizontal coordinate name for latitude and longitude respectively
         found within the cube.
 
     Raises
     ------
     ValueError
-        If an x/y horizontal coordinates cannot be found.
+        If a unique y/x horizontal coordinate cannot be found.
     """
     # Acceptable horizontal coordinate names.
     X_COORD_NAMES = ["longitude", "grid_longitude", "projection_x_coordinate", "x"]
