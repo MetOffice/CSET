@@ -297,7 +297,8 @@ def compute_ageofair(
         # If not using vertical velocity, set vertical velocity to zero.
         z_arr[:] = 0
 
-    # Get time spacing of cube -
+    # Get time spacing of cube to determine whether the spacing in time is the
+    # same throughout the cube. If not, then not supported.
     dt = XWIND.coord("time").points[1:] - XWIND.coord("time").points[:-1]
     if np.all(dt == dt[0]):
         dt = dt[0]
