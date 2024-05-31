@@ -269,7 +269,7 @@ def compute_ageofair(
         raise ValueError("Cubes are not the same shape")
 
     # Get time units and assign for later
-    if str(XWIND.coord("time").units) == "hours since 1970-01-01 00:00:00":
+    if str(XWIND.coord("time").units).startswith("hours since "):
         timeunit = "hour"
     else:
         raise NotImplementedError("Unsupported time base")
