@@ -338,7 +338,6 @@ def compute_ageofair(
     start = datetime.datetime.now()
     if multicore:
         # Multiprocessing on each longitude slice
-        pool = multiprocessing.Pool(8)
         func = partial(
             _aoa_core,
             np.copy(x_arr),
@@ -353,7 +352,11 @@ def compute_ageofair(
             cyclic,
             tmpdir,
         )
-        pool.map(func, range(0, XWIND.shape[3]))
+        # Unix API for getting set of usable CPUs.
+        # See https://docs.python.org/3/library/os.html#os.cpu_count
+        num_usable_cores = len(os.sched_getaffinity(0))
+        with multiprocessing.Pool(num_usable_cores) as pool:
+            pool.map(func, range(0, XWIND.shape[3]))
     else:
         # Single core - better for debugging.
         for i in range(0, XWIND.shape[3]):
