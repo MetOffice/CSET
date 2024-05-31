@@ -38,37 +38,36 @@ def test_calc_dist():
     assert np.allclose(dist, actual_distance, rtol=1e-06, atol=20000)
 
 
-def get_xwind() -> iris.cube.Cube:
+def xwind() -> iris.cube.Cube:
     """Get regridded xwind to run tests on."""
     return iris.load_cube("tests/test_data/ageofair/aoa_in_rgd.nc", "x_wind")
 
 
-def get_ywind() -> iris.cube.Cube:
+def ywind() -> iris.cube.Cube:
     """Get regridded ywind to run tests on."""
     return iris.load_cube("tests/test_data/ageofair/aoa_in_rgd.nc", "y_wind")
 
 
-def get_wwind() -> iris.cube.Cube:
+def wwind() -> iris.cube.Cube:
     """Get regridded wwind to run tests on."""
     return iris.load_cube(
         "tests/test_data/ageofair/aoa_in_rgd.nc", "upward_air_velocity"
     )
 
 
-def get_geopot() -> iris.cube.Cube:
+def geopot() -> iris.cube.Cube:
     """Get regridded geopotential height to run tests on."""
     return iris.load_cube(
         "tests/test_data/ageofair/aoa_in_rgd.nc", "geopotential_height"
     )
 
 
-def test_aoa_noincW_nocyclic(
-    xwind=get_xwind, ywind=get_ywind, wwind=get_wwind, geopot=get_geopot
-):
+@pytest.fixture()
+def test_aoa_noincW_nocyclic(xwind, ywind, wwind, geopot):
     """Test case no vertical velocity and not cyclic."""
     assert np.allclose(
         ageofair.compute_ageofair(
-            xwind(), ywind(), wwind(), geopot(), plev=500, incW=False, cyclic=False
+            xwind, ywind, wwind, geopot, plev=500, incW=False, cyclic=False
         ).data,
         iris.load_cube("tests/test_data/ageofair/aoa_out.nc").data,
         rtol=1e-06,
@@ -76,13 +75,12 @@ def test_aoa_noincW_nocyclic(
     )
 
 
-def test_aoa_incW_nocyclic(
-    xwind=get_xwind, ywind=get_ywind, wwind=get_wwind, geopot=get_geopot
-):
+@pytest.fixture()
+def test_aoa_incW_nocyclic(xwind, ywind, wwind, geopot):
     """Test case including vertical velocity and not cyclic."""
     assert np.allclose(
         ageofair.compute_ageofair(
-            xwind(), ywind(), wwind(), geopot(), plev=500, incW=True, cyclic=False
+            xwind, ywind, wwind, geopot, plev=500, incW=True, cyclic=False
         ).data,
         iris.load_cube("tests/test_data/ageofair/aoa_out_incW.nc").data,
         rtol=1e-06,
@@ -90,13 +88,12 @@ def test_aoa_incW_nocyclic(
     )
 
 
-def test_aoa_noincW_cyclic(
-    xwind=get_xwind, ywind=get_ywind, wwind=get_wwind, geopot=get_geopot
-):
+@pytest.fixture()
+def test_aoa_noincW_cyclic(xwind, ywind, wwind, geopot):
     """Test case no vertical velocity and cyclic."""
     assert np.allclose(
         ageofair.compute_ageofair(
-            xwind(), ywind(), wwind(), geopot(), plev=500, incW=False, cyclic=True
+            xwind, ywind, wwind, geopot, plev=500, incW=False, cyclic=True
         ).data,
         iris.load_cube("tests/test_data/ageofair/aoa_out_cyclic.nc").data,
         rtol=1e-06,
@@ -104,13 +101,12 @@ def test_aoa_noincW_cyclic(
     )
 
 
-def test_aoa_incW_cyclic(
-    xwind=get_xwind, ywind=get_ywind, wwind=get_wwind, geopot=get_geopot
-):
+@pytest.fixture()
+def test_aoa_incW_cyclic(xwind, ywind, wwind, geopot):
     """Test case including vertical velocity and cyclic."""
     assert np.allclose(
         ageofair.compute_ageofair(
-            xwind(), ywind(), wwind(), geopot(), plev=500, incW=True, cyclic=True
+            xwind, ywind, wwind, geopot, plev=500, incW=True, cyclic=True
         ).data,
         iris.load_cube("tests/test_data/ageofair/aoa_out_incW_cyclic.nc").data,
         rtol=1e-06,
@@ -118,20 +114,18 @@ def test_aoa_incW_cyclic(
     )
 
 
-def test_aoa_mismatched_size(
-    xwind=get_xwind, ywind=get_ywind, wwind=get_wwind, geopot=get_geopot
-):
+@pytest.fixture()
+def test_aoa_mismatched_size(xwind, ywind, wwind, geopot):
     """Mismatched array size raises error."""
     ywind = ywind()[:, :, 1:, :]
     with pytest.raises(ValueError):
         ageofair.compute_ageofair(
-            xwind(), ywind, wwind(), geopot(), plev=500, incW=True, cyclic=True
+            xwind, ywind, wwind, geopot, plev=500, incW=True, cyclic=True
         )
 
 
-def test_aoa_timefreq(
-    xwind=get_xwind, ywind=get_ywind, wwind=get_wwind, geopot=get_geopot
-):
+@pytest.fixture()
+def test_aoa_timefreq(xwind, ywind, wwind, geopot):
     """Variable time intervals raises NotImplemented error."""
     with pytest.raises(NotImplementedError):
         ageofair.compute_ageofair(
@@ -145,23 +139,21 @@ def test_aoa_timefreq(
         )
 
 
-def test_aoa_timeunits(
-    xwind=get_xwind, ywind=get_ywind, wwind=get_wwind, geopot=get_geopot
-):
+@pytest.fixture()
+def test_aoa_timeunits(xwind, ywind, wwind, geopot):
     """Time intervals that are not hourly raises NotImplemented error."""
     xwind = xwind()
     xwind.coord("time").units = "days since 1970-01-01 00:00:00"
     with pytest.raises(NotImplementedError):
         ageofair.compute_ageofair(
-            xwind, ywind(), wwind(), geopot(), plev=500, incW=True, cyclic=True
+            xwind, ywind, wwind, geopot, plev=500, incW=True, cyclic=True
         )
 
 
-def test_aoa_plevreq(
-    xwind=get_xwind, ywind=get_ywind, wwind=get_wwind, geopot=get_geopot
-):
+@pytest.fixture()
+def test_aoa_plevreq(xwind, ywind, wwind, geopot):
     """Pressure level requested that doesn't exist raises Value error."""
     with pytest.raises(IndexError):
         ageofair.compute_ageofair(
-            xwind(), ywind(), wwind(), geopot(), plev=123, incW=True, cyclic=True
+            xwind, ywind, wwind, geopot, plev=123, incW=True, cyclic=True
         )
