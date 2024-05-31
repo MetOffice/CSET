@@ -205,7 +205,8 @@ def compute_ageofair(
     GEOPOT: Cube,
     plev: int,
     incW: bool,
-    cyclic: bool,
+    cyclic: bool = False,
+    multicore=True,
 ):
     """
     Compute back trajectories for a given forecast.
@@ -244,11 +245,14 @@ def compute_ageofair(
         the trajectory to capture large areas of rising/sinking air, in phenomena such as overturning
         circulations. If incW if False, then compute back trajectories on a pressure level with no
         vertical advection (essentially a laminar, stratified flow).
-    cyclic: book
+    cyclic: bool
         If cyclic is True, then the code will assume no east/west boundary and if a back trajectory
         reaches the boundary, it will emerge out of the other side. This option is useful for large
         domains such as the K-SCALE tropical channel, where there are only north/south boundaries in
         the domain.
+    multicore: bool
+        If true, split up age of air diagnostic to use multiple cores (defaults to 8), otherwise run
+        using a single process, which is easier to debug.
 
     Returns
     -------
@@ -256,8 +260,8 @@ def compute_ageofair(
         An iris cube of the age of air data, with 3 dimensions (time, latitude, longitude).
 
     """
-    # If not None, then use multiple cores to run age of air diagnostic.
-    multicore = None
+    # Number of pooled processes to use if multicore is True.
+    multicore_proc = 8
 
     # Set up temporary directory to store intermediate age of air slices.
     tmpdir = tempfile.mkdtemp()
@@ -330,10 +334,9 @@ def compute_ageofair(
 
     logging.info("STARTING AOA DIAG...")
     start = datetime.datetime.now()
-    if multicore is not None:
+    if multicore:
         # Multiprocessing on each longitude slice
-        # TODO: there was an error where 719 was passed to x idx.
-        pool = multiprocessing.Pool(multicore)
+        pool = multiprocessing.Pool(multicore_proc)
         func = partial(
             _aoa_core,
             np.copy(x_arr),
