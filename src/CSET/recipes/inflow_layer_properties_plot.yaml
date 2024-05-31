@@ -1,37 +1,32 @@
-title: CAPE ratio plot
+title: Inflow layer properties plot
 description: |
-  Extracts data required for, and calculates the CAPE ratio diagnostic, plotting on a map.
+  Extracts data required for, and calculates the Inflow properties diagnostic, plotting on a spatial map.
 
 parallel:
   - operator: read.read_cubes
     constraint:
         operator: constraints.generate_time_constraint
         time_start: $VALIDITY_TIME
-  - operator: convection.cape_ratio
-    SBCAPE:
-        operator: filters.filter_cubes
-        constraint:
-            operator: constraints.generate_stash_constraint
-            stash: m01s20i114
-    MUCAPE:
-        operator: filters.filter_cubes
-        constraint:
-            operator: constraints.generate_stash_constraint
-            stash: m01s20i112
-    MUCIN:
-        operator: filters.filter_cubes
-        constraint:
-            operator: constraints.generate_stash_constraint
-            stash: m01s20i113
-    MUCIN_thresh: -75
 
-  - operator: filters.filter_cubes
-    constraint:
-        operator: constraints.generate_time_constraint
-        time_start: $VALIDITY_TIME
+  - operator: convection.inflow_layer_properties
+    EIB:
+        operator: filters.filter_cubes
+        constraint:
+            operator: constraints.generate_stash_constraint
+            stash: m01s20i119
+    BLheight:
+        operator: filters.filter_cubes
+        constraint:
+            operator: constraints.generate_stash_constraint
+            stash: m01s00i025
+    Orography:
+        operator: filters.filter_cubes
+        constraint:
+            operator: constraints.generate_stash_constraint
+            stash: m01s00i033
 
   - operator: write.write_cube_to_nc
-    filename: intermediate/cape_ratio
+    filename: intermediate/inflow_layer
 
 collate:
   - operator: read.read_cube
@@ -40,4 +35,4 @@ collate:
   - operator: write.write_cube_to_nc
     overwrite: True
 
-  - operator: plot.spatial_contour_plot
+  - operator: plot.postage_stamp_contour_plot

@@ -40,6 +40,23 @@ from CSET.operators import (
     write,
 )
 
+# Exported operators & functions to use elsewhere.
+__all__ = [
+    "aggregate",
+    "collapse",
+    "constraints",
+    "convection",
+    "execute_recipe_parallel",
+    "execute_recipe_collate",
+    "filters",
+    "get_operator",
+    "misc",
+    "plot",
+    "read",
+    "regrid",
+    "write",
+]
+
 # Stop iris giving a warning whenever it loads something.
 FUTURE.datum_support = True
 # Stop iris giving a warning whenever it saves something.
@@ -119,8 +136,10 @@ def _step_parser(step: dict, step_input: any) -> str:
     first_arg = next(iter(inspect.signature(operator).parameters.keys()))
     logging.debug("first_arg: %s", first_arg)
     if first_arg not in kwargs:
+        logging.debug("first_arg not in kwargs, using step_input.")
         return operator(step_input, **kwargs)
     else:
+        logging.debug("first_arg in kwargs.")
         return operator(**kwargs)
 
 
@@ -251,20 +270,3 @@ def execute_recipe_collate(
             )
         steps = recipe.get("post-steps", tuple())
     _run_steps(recipe, steps, output_directory, output_directory, style_file)
-
-
-__all__ = [
-    "aggregate",
-    "collapse",
-    "constraints",
-    "convection",
-    "execute_recipe_parallel",
-    "execute_recipe_collate",
-    "filters",
-    "get_operator",
-    "misc",
-    "plot",
-    "read",
-    "regrid",
-    "write",
-]

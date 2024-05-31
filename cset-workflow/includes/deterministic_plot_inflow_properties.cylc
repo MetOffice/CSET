@@ -1,0 +1,12 @@
+{% if DETERMINISTIC_PLOT_INFLOW_PROPERTIES %}
+[runtime]
+    [[parallel_inflow_layer_properties]]
+    inherit = PARALLEL
+        [[[environment]]]
+        CSET_RECIPE_NAME = "inflow_layer_properties_plot.yaml"
+
+    [[collate_inflow_layer_properties]]
+    inherit = COLLATE
+        [[[environment]]]
+        CSET_RECIPE_NAME = "inflow_layer_properties_plot.yaml"
+{% endif %}

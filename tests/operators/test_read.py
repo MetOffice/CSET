@@ -34,9 +34,8 @@ def test_read_cubes():
 
 def test_read_cubes_no_cubes_warning():
     """Warning emitted when constraint gives no cubes."""
-    # TODO: Warning doesn't reach pytest for some reason.
-    # with pytest.warns(Warning, match="No cubes loaded"):
-    cubes = read.read_cubes("tests/test_data/air_temp.nc", "non-existent")
+    with pytest.warns(UserWarning, match="No cubes loaded"):
+        cubes = read.read_cubes("tests/test_data/air_temp.nc", "non-existent")
     assert len(cubes) == 0
 
 
@@ -91,3 +90,99 @@ def test_read_cube_unconstrained():
     """Error for multiple cubes read."""
     with pytest.raises(ValueError):
         read.read_cube("tests/test_data/air_temp.nc")
+
+
+def test_check_input_files_direct_path(tmp_path):
+    """Get a iterable of a single file from a direct path."""
+    file_path = tmp_path / "file"
+    file_path.touch()
+    read._check_input_files(file_path, "*")
+    actual = read._check_input_files(file_path, "*")
+    expected = (file_path,)
+    assert actual == expected
+
+
+def test_check_input_files_direct_path_as_string(tmp_path):
+    """Get a iterable of a single file from a direct path as a string."""
+    file_path = tmp_path / "file"
+    file_path.touch()
+    string_path = str(file_path)
+    actual = read._check_input_files(string_path, "*")
+    expected = (file_path,)
+    assert actual == expected
+
+
+def test_check_input_files_direct_path_glob(tmp_path):
+    """Get a iterable of files from a direct path containing a glob pattern."""
+    file1_path = tmp_path / "file1"
+    file2_path = tmp_path / "file2"
+    file1_path.touch()
+    file2_path.touch()
+    glob_path = tmp_path / "file*"
+    actual = read._check_input_files(glob_path, "*")
+    expected = (file1_path, file2_path)
+    assert actual == expected
+
+
+def test_check_input_files_direct_path_match_glob_like_file(tmp_path):
+    """Get a iterable of a single file from a glob-like direct path."""
+    file1_path = tmp_path / "file1"
+    glob_like_path = tmp_path / "file*"
+    file1_path.touch()
+    glob_like_path.touch()
+    actual = read._check_input_files(glob_like_path, "*")
+    expected = (glob_like_path,)
+    assert actual == expected
+
+
+def test_check_input_files_input_directory(tmp_path):
+    """Get a iterable of files in an input directory."""
+    file1_path = tmp_path / "file1"
+    file2_path = tmp_path / "file2"
+    file1_path.touch()
+    file2_path.touch()
+    actual = read._check_input_files(tmp_path, "*")
+    expected = (file1_path, file2_path)
+    assert actual == expected
+
+
+def test_check_input_files_input_directory_glob(tmp_path):
+    """Get a iterable of files in an input directory with a glob pattern."""
+    file1_path = tmp_path / "file1"
+    file2_path = tmp_path / "file2"
+    file1_path.touch()
+    file2_path.touch()
+    actual = read._check_input_files(tmp_path, "*1")
+    expected = (file1_path,)
+    assert actual == expected
+
+
+def test_check_input_files_invalid_path(tmp_path):
+    """Error when path doesn't exist."""
+    file_path = tmp_path / "file"
+    with pytest.raises(FileNotFoundError):
+        read._check_input_files(file_path, "*")
+
+
+def test_check_input_files_no_file_in_directory(tmp_path):
+    """Error when input directory doesn't contain any files."""
+    with pytest.raises(FileNotFoundError):
+        read._check_input_files(tmp_path, "*")
+
+
+def test_lfric_normalise_callback_remove_attrs(cube):
+    """Correctly remove unneeded attributes."""
+    cube.attributes["uuid"] = "87096862-89c3-4749-9c6c-0be91c2a7954"
+    cube.attributes["timeStamp"] = "2024-May-20 12:29:21 GMT"
+    read._lfric_normalise_callback(cube, None, None)
+    assert "uuid" not in cube.attributes
+    assert "timeStamp" not in cube.attributes
+
+
+def test_lfric_normalise_callback_sort_stash(cube):
+    """Correctly sort STASH code lists."""
+    cube.attributes["um_stash_source"] = "['m01s03i025', 'm01s00i025']"
+    read._lfric_normalise_callback(cube, None, None)
+    actual = cube.attributes["um_stash_source"]
+    expected = "['m01s00i025', 'm01s03i025']"
+    assert actual == expected

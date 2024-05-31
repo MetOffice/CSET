@@ -87,8 +87,25 @@ URL = https://metoffice.github.io/CSET
 
     [[FETCH_DATA]]
 
+    [[METPLUS]]
+        [[[environment]]]
+            METPLUS_ANA_DIR = {{METPLUS_ANA_DIR}}
+            METPLUS_FCST_DIR = {{METPLUS_FCST_DIR}}
+            METPLUS_OBS_DIR = {{METPLUS_OBS_DIR}}
+            ROSE_APP_OPT_CONF_KEYS = {{METPLUS_OPT_CONFIG_KEYS}}
+
+    # Dummy tasks needed for workflow scheduling.
     [[process_finish]]
-    # Dummy task needed for workflow scheduling.
+    script = true
+    platform = localhost
+
+    [[dummy_collate]]
+    inherit = COLLATE
+    script = true
+    platform = localhost
+
+    [[dummy_parallel]]
+    inherit = PARALLEL
     script = true
     platform = localhost
 
