@@ -449,6 +449,8 @@ def _plot_and_save_scatter_plot(
         Filename of the plot to write.
     title: str
         Plot title.
+    one_to_one: bool
+        Whether a 1:1 line is plotted.
     """
     fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
     iplt.scatter(cube_y, cube_x)
@@ -938,6 +940,9 @@ def scatter_plot(
         1 dimensional Cube of the data to plot on x-axis.
     filename: str, optional
         Filename of the plot to write.
+    one_to_one: bool, optional
+        If True a 1:1 line is plotted; if False it is not.
+        Default is True.
 
     Returns
     -------
