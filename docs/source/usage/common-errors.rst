@@ -34,6 +34,17 @@ If the workflow was first installed with cylc 7, such as via ``rose suite-run``,
 the file layout will not be recognised by cylc 8. This can be resolved by
 deleting the workflow installation under ``~/cylc-run/cset-workflow``.
 
+ERROR Recipe name_of_recipe.yaml does not exist.
+------------------------------------------------
+
+If the workflow gives as error message that a recipe yaml file does not exist, ensure
+that you have enabled the correct conda environment.
+
+.. code-block:: text
+
+    conda activate cset-dev
+
+
 WARNING No cubes loaded, check your constraints!
 ------------------------------------------------
 
