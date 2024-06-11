@@ -5,12 +5,12 @@
     inherit = PARALLEL
         [[[environment]]]
         CSET_RECIPE_NAME = "lfric_generic_domain_mean_vertical_profile_series.yaml"
-        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --MLEVEL='{{LFRIC_MODEL_LEVEL}}'"
+        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --MLEVEL='{{LFRIC_MODEL_LEVELS}}'"
 
     [[collate_lfric_domain_mean_vertical_profile_series_{{model_field}}]]
     inherit = COLLATE
         [[[environment]]]
         CSET_RECIPE_NAME = "lfric_generic_domain_mean_vertical_profile_series.yaml"
-        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --MLEVEL='{{LFRIC_MODEL_LEVEL}}'"
+        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --MLEVEL='{{LFRIC_MODEL_LEVELS}}'"
 {% endfor %}
 {% endif %}
