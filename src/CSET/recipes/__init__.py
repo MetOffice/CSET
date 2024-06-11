@@ -60,6 +60,8 @@ def _recipe_files_in_tree(
 
 def _get_recipe_file(recipe_name: str, input_dir: Path = None) -> Path:
     """Return a Path to the recipe file."""
+    logging.info("recipe file: %s", recipe_name)
+    logging.info("input_dir: %s", input_dir)
     if input_dir is None:
         input_dir = _version_agnostic_importlib_resources_file()
     file = input_dir / recipe_name
