@@ -32,12 +32,12 @@ from CSET.operators import (
     collapse,
     constraints,
     convection,
-    crosssection,
     filters,
     misc,
     plot,
     read,
     regrid,
+    transect,
     write,
 )
 
@@ -47,7 +47,7 @@ __all__ = [
     "collapse",
     "constraints",
     "convection",
-    "crosssection",
+    "transect",
     "execute_recipe_parallel",
     "execute_recipe_collate",
     "filters",
