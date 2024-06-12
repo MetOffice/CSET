@@ -1,10 +1,10 @@
-title: Cross Section
+title: Transect
 description: |
-  Extracts over a cross section for a specified variable between two points and plots it.
+  Extracts a transect for a specified variable between two points and plots it.
 parallel:
   - operator: read.read_cubes
 
-  - operator: crosssection.calc_crosssection
+  - operator: transect.calc_transect
     cube:
         operator: filters.filter_cubes
         constraint:
@@ -14,7 +14,7 @@ parallel:
     endxy: $CS_FINISHCOORDS
 
   - operator: write.write_cube_to_nc
-    filename: intermediate/crosssection
+    filename: intermediate/transect
 
 collate:
   - operator: read.read_cube

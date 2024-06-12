@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Operators to extract a cross section given a tuple of xy coords to start/finish."""
+"""Operators to extract a transect given a tuple of xy coords to start/finish."""
 
 import logging
 
@@ -22,11 +22,11 @@ import numpy as np
 from CSET.operators._utils import get_cube_yxcoordname
 
 
-def calc_crosssection(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
+def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
     """
-    Compute cross section.
+    Compute transect between startxy and endxy.
 
-    Computes a cross section for a given cube containing at least latitude
+    Computes a transect for a given cube containing at least latitude
     and longitude coordinates, using an appropriate sampling interval along the
     transect based on grid spacing. Also decides a suitable x coordinate to plot along
     the transect - see notes for details on this.
@@ -122,7 +122,7 @@ def calc_crosssection(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
     }
 
     # Get local cutout so we can get proper xmin/ymin spacing relevant to the
-    # cross section itself.
+    # transect itself.
     cube = cube.intersection(**keyword_args)
 
     # Compute minimum gap between x/y spatial coords.
