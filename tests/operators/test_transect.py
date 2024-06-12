@@ -48,7 +48,7 @@ def load_cube_ml_out() -> iris.cube.Cube:
     return iris.load_cube("tests/test_data/transect_out_umml.nc")
 
 
-def test_transect_pl(regrid_source_cube, regrid_test_cube):
+def test_transect_pl(load_cube_pl, load_cube_pl_out):
     """Test case of computing transect on UM pressure level data."""
     assert np.allclose(
         transect.calc_transect(
@@ -60,7 +60,7 @@ def test_transect_pl(regrid_source_cube, regrid_test_cube):
     )
 
 
-def test_transect_ml(regrid_source_cube, regrid_test_cube):
+def test_transect_ml(load_cube_ml, load_cube_ml_out):
     """Test case of computing transect on UM model level data."""
     assert np.allclose(
         transect.calc_transect(
@@ -72,7 +72,7 @@ def test_transect_ml(regrid_source_cube, regrid_test_cube):
     )
 
 
-def test_transect_coord_outofbounds(regrid_source_cube, regrid_test_cube):
+def test_transect_coord_outofbounds(load_cube_pl):
     """Test case of computing transect on coords out of range."""
     with pytest.raises(IndexError):
         transect.calc_transect(
