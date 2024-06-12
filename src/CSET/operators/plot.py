@@ -182,6 +182,61 @@ def _colorbar_map_levels(varname: str, **kwargs):
     return cmap, levels, norm
 
 
+def _is_transect(cube: iris.cube.Cube) -> bool:
+    """
+    Determine whether a cube is a transect or not.
+
+    If cube is a transect, it will contain only one spatial (map) coordinate,
+    and one vertical coordinate (either pressure or model level).
+
+    Arguments
+    ---------
+
+    cube: iris.cube.Cube
+        An iris cube which will be checked to see if it contains coordinate
+        names that match a pre-defined list of acceptable coordinate names.
+
+    Returns
+    -------
+    bool
+        If true, then the cube is a transect that contains one spatial (map)
+        coordinate and one vertical coordinate.
+    """
+    # Acceptable spatial (map) coordinate names.
+    SPATIAL_MAP_COORD_NAMES = [
+        "longitude",
+        "grid_longitude",
+        "projection_x_coordinate",
+        "x",
+        "latitude",
+        "grid_latitude",
+        "projection_y_coordinate",
+        "y",
+        "distance",
+    ]
+
+    # Acceptable vertical coordinate names
+    VERTICAL_COORD_NAMES = ["pressure", "model_level"]
+
+    # Get a list of coordinate names for the cube
+    coord_names = [coord.name() for coord in cube.coords()]
+
+    # Check which spatial coordinates we have.
+    spatial_coords = [
+        coord for coord in coord_names if coord in SPATIAL_MAP_COORD_NAMES
+    ]
+    if len(spatial_coords) != 1:
+        return False
+
+    # Check which vertical coordinates we have.
+    vertical_coords = [coord for coord in coord_names if coord in VERTICAL_COORD_NAMES]
+    if len(vertical_coords) != 1:
+        return False
+
+    # Passed criteria so return True
+    return True
+
+
 def _plot_and_save_contour_plot(
     cube: iris.cube.Cube,
     filename: str,
