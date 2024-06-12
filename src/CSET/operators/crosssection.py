@@ -26,7 +26,7 @@ def calc_crosssection(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
     """
     Compute cross section.
 
-    Computes a cross section for a given cube containing pressure level, latitude
+    Computes a cross section for a given cube containing at least latitude
     and longitude coordinates, using an appropriate sampling interval along the
     transect based on grid spacing. Also decides a suitable x coordinate to plot along
     the transect - see notes for details on this.
@@ -35,8 +35,8 @@ def calc_crosssection(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
     ---------
 
     cube: Cube
-        An iris cube containing at least pressure, latitude and longitude coordinate
-        dimensions, to compute the transect on.
+        An iris cube containing latitude and longitude coordinate dimensions,
+        to compute the transect on.
     startxy: tuple
         A tuple containing the start coordinates for the transect using the original
         data coordinates, ordered (latitude,longitude).
