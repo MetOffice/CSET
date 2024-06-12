@@ -23,7 +23,7 @@ import numpy as np
 from CSET.operators._utils import get_cube_yxcoordname
 
 
-def _calc_dist(coord_1, coord_2):
+def _calc_dist(coord_1: tuple, coord_2: tuple):
     """Haversine distance in metres."""
     # Approximate radius of earth in m
     # Source: https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
@@ -47,7 +47,7 @@ def _calc_dist(coord_1, coord_2):
     return distance
 
 
-def calc_crosssection(cube, startxy, endxy, coord="distance"):
+def calc_crosssection(cube: iris.Cube, startxy: tuple, endxy: tuple, coord="distance"):
     """
     Compute cross section.
 
