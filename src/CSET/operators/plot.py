@@ -34,7 +34,7 @@ import numpy as np
 from markdown_it import MarkdownIt
 
 from CSET._common import get_recipe_metadata, render_file, slugify
-from CSET.operators._utils import get_cube_yxcoordname
+from CSET.operators._utils import _is_transect, get_cube_yxcoordname
 
 ############################
 # Private helper functions #
@@ -218,6 +218,16 @@ def _plot_and_save_contour_plot(
         axes.coastlines(resolution="10m")
     except ValueError:
         pass
+
+    # Check to see if transect, and if so, adjust y axis.
+    if _is_transect(cube):
+        axes.invert_yaxis()
+        if "pressure" in [coord.name() for coord in cube.coords()]:
+            axes.set_yscale("log")
+            axes.set_ylim(
+                np.max(cube.coord("pressure").points),
+                np.min(cube.coord("pressure").points),
+            )
 
     # Add title.
     axes.set_title(title, fontsize=16)

@@ -15,7 +15,6 @@
 """Operators to extract a cross section given a tuple of xy coords to start/finish."""
 
 import logging
-from math import asin, cos, radians, sin, sqrt
 
 import iris
 import numpy as np
@@ -23,39 +22,14 @@ import numpy as np
 from CSET.operators._utils import get_cube_yxcoordname
 
 
-def _calc_dist(coord_1: tuple, coord_2: tuple):
-    """Haversine distance in metres."""
-    # Approximate radius of earth in m
-    # Source: https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
-    radius = 6378000
-
-    # extract coordinates and convert to radians
-    lat1 = radians(coord_1[0])
-    lon1 = radians(coord_1[1])
-    lat2 = radians(coord_2[0])
-    lon2 = radians(coord_2[1])
-
-    # Find out delta latitude, longitude
-    dlon = lon2 - lon1
-    dlat = lat2 - lat1
-
-    # Compute distance
-    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
-    c = 2 * asin(sqrt(a))
-    distance = radius * c
-
-    return distance
-
-
-def calc_crosssection(
-    cube: iris.cube.Cube, startxy: tuple, endxy: tuple, coord="distance"
-):
+def calc_crosssection(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
     """
     Compute cross section.
 
     Computes a cross section for a given cube containing pressure level, latitude
     and longitude coordinates, using an appropriate sampling interval along the
-    transect based on grid spacing.
+    transect based on grid spacing. Also decides a suitable x coordinate to plot along
+    the transect - see notes for details on this.
 
     Arguments
     ---------
@@ -69,10 +43,6 @@ def calc_crosssection(
     endxy: tuple
         A tuple containing the end coordinates for the transect using the original
         data coordinates, ordered (latitude,longitude).
-    coord: str
-        A string specifying the coordinate to be used to plot on the x axis for the
-        transect, and thus be used for plotting the cross section. 'distance' can
-        also be used to show the transect as a function of distance from startxy.
 
     Returns
     -------
@@ -84,6 +54,14 @@ def calc_crosssection(
     -----
     This operator uses the iris.linear method to interpolate the specific point along
     the transect.
+    Identification of an appropriate coordinate to plot along the x axis is done by
+    determining the largest distance out of latitude and longitude. For example, if
+    the transect is 90 degrees (west to east), then delta latitude is zero, so it will
+    always plot as a function of longitude. Vice versa if the transect is 180 degrees
+    (south to north). If a transect is 45 degrees, and delta latitude and longitude
+    are the same, it will default to plotting as a function of longitude. Note this
+    doesn't affect the transect plot, its purely for interpretation with some appropriate
+    x axis labelling/points.
     """
     # Parse arguments
     startxy = startxy.split(",")
@@ -170,13 +148,21 @@ def calc_crosssection(
     if latslice_only:
         xpnts = np.repeat(startxy[1], int(dist_deg / ymin))
         ypnts = np.linspace(startxy[0], endxy[0], int(dist_deg / ymin))
+        xaxis_coord = "latitude"
     elif lonslice_only:
         xpnts = np.linspace(startxy[1], endxy[1], int(dist_deg / xmin))
         ypnts = np.repeat(startxy[0], int(dist_deg / xmin))
+        xaxis_coord = "longitude"
     else:
         # Else use the smallest grid space in x or y direction.
         xpnts = np.linspace(startxy[1], endxy[1], int(dist_deg / np.min([xmin, ymin])))
         ypnts = np.linspace(startxy[0], endxy[0], int(dist_deg / np.min([xmin, ymin])))
+
+        # If change in latitude larger than change in longitude:
+        if abs(startxy[0] - endxy[0]) > abs(startxy[1] - endxy[1]):
+            xaxis_coord = "latitude"
+        elif abs(startxy[0] - endxy[0]) <= abs(startxy[1] - endxy[1]):
+            xaxis_coord = "longitude"
 
     # Create cubelist to store interpolated points along transect.
     interpolated_cubes = iris.cube.CubeList()
@@ -190,15 +176,7 @@ def calc_crosssection(
             [(x_name, xpnts[i]), (y_name, ypnts[i])], iris.analysis.Linear()
         )
 
-        if coord == "distance":
-            # Need to remove existing spatial coords otherwise won't merge.
-            dist = _calc_dist((startxy[0], startxy[1]), (ypnts[i], xpnts[i]))
-            dist_coord = iris.coords.AuxCoord(dist, long_name="distance", units="m")
-            cube_slice.add_aux_coord(dist_coord)
-            cube_slice = iris.util.new_axis(cube_slice, scalar_coord="distance")
-            cube_slice.remove_coord(x_name)
-            cube_slice.remove_coord(y_name)
-        elif coord == "latitude":
+        if xaxis_coord == "latitude":
             cube_slice.remove_coord(x_name)
             cube_slice.remove_coord(y_name)
             dist_coord = iris.coords.AuxCoord(
@@ -206,7 +184,7 @@ def calc_crosssection(
             )
             cube_slice.add_aux_coord(dist_coord)
             cube_slice = iris.util.new_axis(cube_slice, scalar_coord="latitude")
-        elif coord == "longitude":
+        elif xaxis_coord == "longitude":
             cube_slice.remove_coord(x_name)
             cube_slice.remove_coord(y_name)
             dist_coord = iris.coords.AuxCoord(
