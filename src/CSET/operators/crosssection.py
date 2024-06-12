@@ -47,7 +47,9 @@ def _calc_dist(coord_1: tuple, coord_2: tuple):
     return distance
 
 
-def calc_crosssection(cube: iris.Cube, startxy: tuple, endxy: tuple, coord="distance"):
+def calc_crosssection(
+    cube: iris.cube.Cube, startxy: tuple, endxy: tuple, coord="distance"
+):
     """
     Compute cross section.
 
