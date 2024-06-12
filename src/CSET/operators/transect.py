@@ -200,7 +200,6 @@ def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
 
     # If concatenation successful, should be cubelist with one cube left.
     if len(interpolated_cubes) == 1:
-        print(interpolated_cubes)
         return interpolated_cubes[0]
     else:
         raise ValueError("Can't merge into a single cube")
