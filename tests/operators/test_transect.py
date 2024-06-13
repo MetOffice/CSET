@@ -48,18 +48,20 @@ def load_cube_ml_out() -> iris.cube.Cube:
     return iris.load_cube("tests/test_data/transect_out_umml.nc")
 
 
+@pytest.fixture(scope="session")
 def test_transect_pl(load_cube_pl, load_cube_pl_out):
     """Test case of computing transect on UM pressure level data."""
     assert np.allclose(
         transect.calc_transect(
             load_cube_pl, startxy=(-10.94, 19.06), endxy=(-10.82, 19.18)
-        ),
-        load_cube_pl_out,
+        ).data,
+        load_cube_pl_out.data,
         rtol=1e-06,
         atol=1e-02,
     )
 
 
+@pytest.fixture(scope="session")
 def test_transect_ml(load_cube_ml, load_cube_ml_out):
     """Test case of computing transect on UM model level data."""
     assert np.allclose(
