@@ -30,6 +30,12 @@ def source_cube() -> iris.cube.Cube:
     )
 
 
+@pytest.fixture(scope="session")
+def transect_source_cube() -> iris.cube.Cube:
+    """Get a 3D cube to test with."""
+    return iris.load_cube("tests/test_data/transect_test_umpl.nc")
+
+
 def test_missing_coord_get_cube_yxcoordname(source_cube):
     """Missing coordinate raises error."""
     # Missing X coordinate.
@@ -51,3 +57,16 @@ def test_get_cube_yxcoordname(source_cube):
         "latitude",
         "longitude",
     )
+
+
+def test_is_transect_multiplespatialcoords(source_cube):
+    """Check that function returns False as more than one spatial map coord."""
+    assert not common_operators._is_transect(source_cube)
+
+
+def test_is_transect_noverticalcoord(transect_source_cube):
+    """Check that function returns False as no vertical coord found."""
+    # Retain only time and latitude coordinate, so it passes the first spatial coord test.
+    transect_source_cube_slice = transect_source_cube[:, 0, :, 0]
+
+    assert not common_operators._is_transect(transect_source_cube_slice)
