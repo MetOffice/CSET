@@ -76,10 +76,10 @@ def test_transect_coord_outofbounds(load_cube_pl):
     """Test case of computing transect on coords out of range."""
     with pytest.raises(IndexError):
         transect.calc_transect(
-            load_cube_pl, startxy=(-11.94, -0.94), endxy=(-10.82, -0.78)
+            load_cube_pl, startxy=(-11.94, 19.06), endxy=(-10.82, 19.18)
         )
 
 
 def test_transect_coord_strargument(load_cube_pl):
     """Test case of computing transect using str argument and not tuple."""
-    transect.calc_transect(load_cube_pl, startxy="-10.94, -0.94", endxy="-10.82, -0.78")
+    transect.calc_transect(load_cube_pl, startxy="-10.94, 19.06", endxy="-10.82, 19.18")
