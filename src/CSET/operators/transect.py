@@ -65,9 +65,9 @@ def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
     """
     # Parse arguments
     if type(startxy) is not tuple:
-        startxy = tuple(startxy.split(","))
+        startxy = tuple([float(i) for i in startxy.split(",")])
     if type(endxy) is not tuple:
-        endxy = tuple(endxy.split(","))
+        endxy = tuple([float(i) for i in endxy.split(",")])
 
     # Find out xy coord name
     y_name, x_name = get_cube_yxcoordname(cube)
