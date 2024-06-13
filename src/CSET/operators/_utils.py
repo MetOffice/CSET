@@ -103,7 +103,7 @@ def _is_transect(cube: iris.cube.Cube) -> bool:
     VERTICAL_COORD_NAMES = ["pressure", "model_level_number"]
 
     # Get a list of coordinate names for the cube
-    coord_names = [coord.name() for coord in cube.coords()]
+    coord_names = [coord.name() for coord in cube.coords(dim_coords=True)]
 
     # Check which spatial coordinates we have.
     spatial_coords = [
