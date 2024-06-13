@@ -54,7 +54,7 @@ def test_transect_pl(load_cube_pl, load_cube_pl_out):
         transect.calc_transect(
             load_cube_pl, startxy=(-10.94, 19.06), endxy=(-10.82, 19.18)
         ).data,
-        load_cube_pl_out,
+        load_cube_pl_out().data,
         rtol=1e-06,
         atol=1e-02,
     )
@@ -66,7 +66,7 @@ def test_transect_ml(load_cube_ml, load_cube_ml_out):
         transect.calc_transect(
             load_cube_ml, startxy=(-0.94, 29.06), endxy=(-0.78, 29.3)
         ).data,
-        load_cube_ml_out,
+        load_cube_ml_out().data,
         rtol=1e-06,
         atol=1e-02,
     )
