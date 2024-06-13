@@ -113,20 +113,6 @@ def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
             )
         )
 
-    # Create dict for parsing into intersection method
-    keyword_args = {
-        x_name: (startxy[1], endxy[1]),
-        y_name: (startxy[0], endxy[0]),
-    }
-
-    # Get local cutout so we can get proper xmin/ymin spacing relevant to the
-    # transect itself.
-    cube = cube.intersection(**keyword_args)
-
-    # Compute minimum gap between x/y spatial coords.
-    xmin = np.min(cube.coord(x_name).points[1:] - cube.coord(x_name).points[:-1])
-    ymin = np.min(cube.coord(y_name).points[1:] - cube.coord(y_name).points[:-1])
-
     # Compute vector distance between start and end points in degrees.
     dist_deg = np.sqrt(((startxy[0] - endxy[0]) ** 2) + ((startxy[1] - endxy[1]) ** 2))
 
@@ -141,6 +127,10 @@ def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
         lonslice_only = True
     else:
         lonslice_only = False
+
+    # Compute minimum gap between x/y spatial coords.
+    xmin = np.min(cube.coord(x_name).points[1:] - cube.coord(x_name).points[:-1])
+    ymin = np.min(cube.coord(y_name).points[1:] - cube.coord(y_name).points[:-1])
 
     # Depending on the transect angle relative to the grid
     if latslice_only:
@@ -167,7 +157,7 @@ def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
 
     # Iterate over all points along transect.
     for i in range(0, xpnts.shape[0]):
-        logging.info("%s/%s", i, xpnts.shape[0])
+        logging.info("%s/%s", i + 1, xpnts.shape[0])
 
         # Get point along transect.
         cube_slice = cube.interpolate(
@@ -197,7 +187,4 @@ def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
     interpolated_cubes = interpolated_cubes.concatenate()
 
     # If concatenation successful, should be cubelist with one cube left.
-    if len(interpolated_cubes) == 1:
-        return interpolated_cubes[0]
-    else:
-        raise ValueError("Can't merge into a single cube")
+    return interpolated_cubes[0]

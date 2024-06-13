@@ -53,8 +53,8 @@ def test_transect_pl(load_cube_pl, load_cube_pl_out):
     assert np.allclose(
         transect.calc_transect(
             load_cube_pl, startxy=(-10.94, 19.06), endxy=(-10.82, 19.18)
-        ).data,
-        load_cube_pl_out.data,
+        ),
+        load_cube_pl_out,
         rtol=1e-06,
         atol=1e-02,
     )
@@ -72,12 +72,56 @@ def test_transect_ml(load_cube_ml, load_cube_ml_out):
     )
 
 
-def test_transect_coord_outofbounds(load_cube_pl):
-    """Test case of computing transect on coords out of range."""
+def test_transect_coord_outofboundsLLat(load_cube_pl):
+    """Test case of computing transect on coords out of range (low start lat)."""
     with pytest.raises(IndexError):
         transect.calc_transect(
             load_cube_pl, startxy=(-11.94, 19.06), endxy=(-10.82, 19.18)
         )
+
+
+def test_transect_coord_outofboundsLLon(load_cube_pl):
+    """Test case of computing transect on coords out of range (low start lon)."""
+    with pytest.raises(IndexError):
+        transect.calc_transect(
+            load_cube_pl, startxy=(-10.94, 10.06), endxy=(-10.82, 19.18)
+        )
+
+
+def test_transect_coord_outofboundsHLat(load_cube_pl):
+    """Test case of computing transect on coords out of range (high end lat)."""
+    with pytest.raises(IndexError):
+        transect.calc_transect(
+            load_cube_pl, startxy=(-10.94, 19.06), endxy=(-5.82, 19.18)
+        )
+
+
+def test_transect_coord_outofboundsHLon(load_cube_pl):
+    """Test case of computing transect on coords out of range (high end lon)."""
+    with pytest.raises(IndexError):
+        transect.calc_transect(
+            load_cube_pl, startxy=(-10.94, 19.06), endxy=(-10.82, 25.18)
+        )
+
+
+def test_transect_90degangle(load_cube_pl):
+    """Test case of computing transect on 90 degree angle (no delta lon)."""
+    transect.calc_transect(load_cube_pl, startxy=(-10.94, 19.18), endxy=(-10.82, 19.18))
+
+
+def test_transect_180degangle(load_cube_pl):
+    """Test case of computing transect on 180 degree angle (no delta lat)."""
+    transect.calc_transect(load_cube_pl, startxy=(-10.94, 19.06), endxy=(-10.94, 19.18))
+
+
+def test_transect_plotasfuncoflatitude(load_cube_pl):
+    """Test case of computing transect where it should return as function of latitude."""
+    transect.calc_transect(load_cube_pl, startxy=(-10.94, 19.06), endxy=(-10.82, 19.14))
+
+
+def test_transect_plotasfuncoflongitude(load_cube_pl):
+    """Test case of computing transect where it should return as function of longitude."""
+    transect.calc_transect(load_cube_pl, startxy=(-10.94, 19.06), endxy=(-10.86, 19.18))
 
 
 def test_transect_coord_strargument(load_cube_pl):
