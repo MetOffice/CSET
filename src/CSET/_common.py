@@ -183,7 +183,7 @@ def parse_variable_options(arguments: list[str]) -> dict:
             raise ArgumentError(f"Unknown argument: {arguments[i]}")
         try:
             recipe_variables[key.strip("-")] = ast.literal_eval(value)
-        except ValueError:
+        except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError):
             recipe_variables[key.strip("-")] = value
         i += 1
     return recipe_variables
