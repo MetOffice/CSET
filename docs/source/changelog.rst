@@ -12,6 +12,13 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+24.6.0 (2024-06-17)
+-------------------
+
+This release contains a quite a number of small improvements, increasing the
+reliability of CSET significantly, and paving the way for further improvements
+to come.
+
 * `@jfrost-mo` replaced how the encoding of subprocess output is determined in
   :pr:`604`. This adds support for python before 3.11, and more accurately
   reflects the encoding.
