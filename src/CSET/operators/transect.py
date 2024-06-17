@@ -63,7 +63,7 @@ def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
     doesn't affect the transect plot, its purely for interpretation with some appropriate
     x axis labelling/points.
     """
-    # Parse arguments
+    # Parse arguments in case running using CSET bake
     if type(startxy) is not tuple:
         startxy = tuple([float(i) for i in startxy.split(",")])
     if type(endxy) is not tuple:
