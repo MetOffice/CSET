@@ -3,7 +3,7 @@ description: |
   Extracts a transect for a specified variable between two points and plots it.
 
 parallel:
-  - operator: read.read_cubes
+  - operator: read.read_cube
     constraint:
         operator: constraints.combine_constraints
         validity_time_constraint:
