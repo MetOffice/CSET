@@ -15,9 +15,9 @@
 """Subpackage contains all of CSET's operators."""
 
 import inspect
-import json
 import logging
 import os
+import sqlite3
 from pathlib import Path
 from typing import Union
 
@@ -102,17 +102,24 @@ def get_operator(name: str):
 
 
 def _write_metadata(recipe: dict):
-    """Write a meta.json file in the CWD."""
-    # TODO: Investigate whether we might be better served by an SQLite database.
+    """Initialise a meta.db file in the CWD, and write some basic metadata."""
     metadata = recipe.copy()
     # Remove steps, as not needed, and might contain non-serialisable types.
     metadata.pop("parallel", None)
     metadata.pop("collate", None)
-    with open("meta.json", "wt", encoding="UTF-8") as fp:
-        json.dump(metadata, fp)
-    os.sync()
-    # Stat directory to force NFS to synchronise metadata.
-    os.stat(Path.cwd())
+    metadata.pop("post-steps", None)
+    # Use a SQLite databases over a JSON file for better concurrent writing.
+    # Not setting autocommit to support py <3.12. The autocommit changes don't
+    # affect our usage as we just do single statement writes.
+    with sqlite3.connect("meta.db") as db:
+        # Key-value store for textual metadata.
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT)"
+        )
+        db.executemany("INSERT INTO metadata VALUES (?, ?)", metadata.items())
+        # Table for plots.
+        db.execute("CREATE TABLE IF NOT EXISTS plots (path UNIQUE TEXT)")
+        db.commit()
 
 
 def _step_parser(step: dict, step_input: any) -> str:

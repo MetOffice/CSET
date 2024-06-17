@@ -21,7 +21,7 @@ from typing import Union
 import iris
 import iris.cube
 
-from CSET._common import get_recipe_metadata, slugify
+from CSET._common import get_recipe_title, slugify
 
 
 def write_cube_to_nc(
@@ -50,7 +50,7 @@ def write_cube_to_nc(
         The inputted cube(list) (so further operations can be applied)
     """
     if filename is None:
-        filename = slugify(get_recipe_metadata().get("title", "Untitled"))
+        filename = slugify(get_recipe_title())
 
     # Append a unique suffix if not overwriting. We use randomness rather than a
     # sequence number to avoid race conditions with multiple job runners.

@@ -14,11 +14,11 @@
 
 """Operators to produce various kinds of plots."""
 
-import fcntl
 import importlib.resources
 import json
 import logging
 import math
+import sqlite3
 import sys
 from typing import Union
 
@@ -32,7 +32,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from markdown_it import MarkdownIt
 
-from CSET._common import get_recipe_metadata, render_file, slugify
+from CSET._common import get_recipe_metadata, get_recipe_title, render_file, slugify
 from CSET.operators._utils import get_cube_yxcoordname, is_transect
 
 ############################
@@ -40,19 +40,12 @@ from CSET.operators._utils import get_cube_yxcoordname, is_transect
 ############################
 
 
-def _append_to_plot_index(plot_index: list) -> list:
-    """Add plots into the plot index, returning the complete plot index."""
-    with open("meta.json", "r+t", encoding="UTF-8") as fp:
-        fcntl.flock(fp, fcntl.LOCK_EX)
-        fp.seek(0)
-        meta = json.load(fp)
-        complete_plot_index = meta.get("plots", [])
-        complete_plot_index = complete_plot_index + plot_index
-        meta["plots"] = complete_plot_index
-        fp.seek(0)
-        fp.truncate()
-        json.dump(meta, fp)
-    return complete_plot_index
+def _append_to_plot_index(plots: list):
+    """Add plots into the plot index."""
+    with sqlite3.connect("meta.db") as db:
+        for plot in plots:
+            db.execute("INSERT INTO plots VALUES (?)", (plot,))
+        db.commit()
 
 
 def _check_single_cube(
@@ -86,10 +79,12 @@ def _check_single_cube(
     raise TypeError("Must have a single cube", cube)
 
 
-def _make_plot_html_page(plots: list):
+def _make_plot_html_page():
     """Create a HTML page to display a plot image."""
-    # Debug check that plots actually contains some strings.
-    assert isinstance(plots[0], str)
+    # Load plots from the database.
+    with sqlite3.connect("meta.db") as db:
+        rows = db.execute("SELECT path FROM plots ORDER BY path").fetchall()
+        plots = [row[0] for row in rows]
 
     # Load HTML template file.
     # Importlib behaviour changed in 3.12 to avoid circular dependencies.
@@ -102,9 +97,10 @@ def _make_plot_html_page(plots: list):
     template_file = operator_files.joinpath("_plot_page_template.html")
 
     # Get some metadata.
-    meta = get_recipe_metadata()
-    title = meta.get("title", "Untitled")
-    description = MarkdownIt().render(meta.get("description", "*No description.*"))
+
+    title = get_recipe_title()
+    description_raw = get_recipe_metadata("description", "*No description.*")
+    description = MarkdownIt().render(description_raw)
 
     # Prepare template variables.
     variables = {
@@ -139,9 +135,7 @@ def _colorbar_map_levels(varname: str, **kwargs):
     """
     # Grab the colour bar file from the recipe global metadata. A non-existent
     # placeholder path is used if not found.
-    colorbar_file = get_recipe_metadata().get(
-        "style_file_path", "/non-existent/NO_FILE_SPECIFIED"
-    )
+    colorbar_file = get_recipe_metadata("style_file_path", "")
     try:
         with open(colorbar_file, "rt", encoding="UTF-8") as fp:
             colorbar = json.load(fp)
@@ -170,7 +164,6 @@ def _colorbar_map_levels(varname: str, **kwargs):
             except KeyError:
                 levels = None
                 norm = None
-
     except FileNotFoundError:
         logging.debug("Colour bar file: %s", colorbar_file)
         logging.info("Colour bar file does not exist. Using default values.")
@@ -642,7 +635,7 @@ def spatial_contour_plot(
     TypeError
         If the cube isn't a single cube.
     """
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_title()
 
     # Ensure we have a name for the plot file.
     if filename is None:
@@ -684,10 +677,10 @@ def spatial_contour_plot(
         plot_index.append(plot_filename)
 
     # Add list of plots to plot metadata.
-    complete_plot_index = _append_to_plot_index(plot_index)
+    _append_to_plot_index(plot_index)
 
     # Make a page to display the plots.
-    _make_plot_html_page(complete_plot_index)
+    _make_plot_html_page()
 
     return cube
 
@@ -740,7 +733,7 @@ def plot_line_series(
         raise ValueError("Cube must be 1D.")
 
     # Ensure we have a name for the plot file.
-    title = get_recipe_metadata().get("title", "Untitled")
+    title = get_recipe_title()
     if filename is None:
         filename = slugify(title)
 
@@ -751,10 +744,10 @@ def plot_line_series(
     _plot_and_save_line_series(cube, coord, plot_filename, title)
 
     # Add list of plots to plot metadata.
-    plot_index = _append_to_plot_index([plot_filename])
+    _append_to_plot_index([plot_filename])
 
     # Make a page to display the plots.
-    _make_plot_html_page(plot_index)
+    _make_plot_html_page()
 
     return cube
 
@@ -819,7 +812,7 @@ def plot_vertical_line_series(
         raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
 
     # Ensure we have a name for the plot file.
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_title()
     if filename is None:
         filename = slugify(recipe_title)
 
@@ -853,10 +846,10 @@ def plot_vertical_line_series(
         plot_index.append(plot_filename)
 
     # Add list of plots to plot metadata.
-    complete_plot_index = _append_to_plot_index(plot_index)
+    _append_to_plot_index(plot_index)
 
     # Make a page to display the plots.
-    _make_plot_html_page(complete_plot_index)
+    _make_plot_html_page()
 
     return cube
 

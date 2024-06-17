@@ -16,12 +16,12 @@
 
 import ast
 import io
-import json
 import logging
 import re
+import sqlite3
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Union
+from typing import Any, Union
 
 import ruamel.yaml
 
@@ -124,16 +124,27 @@ def slugify(s: str) -> str:
     return re.sub(r"[^a-z0-9\._-]+", "_", s.casefold()).strip("_")
 
 
-def get_recipe_metadata() -> dict:
-    """Get the metadata of the running recipe."""
+def get_recipe_metadata(key: str, default: Any = None) -> str:
+    """Get the specified metadata of the running recipe.
+
+    Raises KeyError if not found, or the default value if not None.
+    """
+    with sqlite3.connect("meta.db") as db:
+        row = db.execute("SELECT value FROM metadata WHERE key = ?", (key,)).fetchone()
+        if row is None:
+            if default is not None:
+                return default
+            raise KeyError(f"Metadata key not found: {key}")
+        return row[0]
+
+
+def get_recipe_title() -> str:
+    """Get the title of the running recipe."""
     try:
-        with open("meta.json", "rt", encoding="UTF-8") as fp:
-            return json.load(fp)
-    except FileNotFoundError:
-        meta = {}
-        with open("meta.json", "wt", encoding="UTF-8") as fp:
-            json.dump(meta, fp)
-        return {}
+        title = get_recipe_metadata("title")
+    except KeyError:
+        title = "Untitled"
+    return title
 
 
 def parse_variable_options(arguments: list[str]) -> dict:
