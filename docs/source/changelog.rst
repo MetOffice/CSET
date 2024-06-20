@@ -19,11 +19,11 @@ This release contains a quite a number of small improvements, increasing the
 reliability of CSET significantly, and paving the way for further improvements
 to come.
 
-* `@jfrost-mo` replaced how the encoding of subprocess output is determined in
+* `@jfrost-mo`_ replaced how the encoding of subprocess output is determined in
   :pr:`604`. This adds support for python before 3.11, and more accurately
   reflects the encoding.
-* `@jwarner8`_ add intelligent determination of whether to plot country lines
-   in :pr:`655`
+* `@jwarner8`_ add intelligent determination of whether to plot country lines in
+  :pr:`655`
 * `@daflack`_ fixed inflow properties recipe in :pr:`662`
 * `@daflack`_ added science review guidance to the documentation in :pr:`649`
 * `@jfrost-mo`_ ensured cartopy data files are included in the GitHub Actions
