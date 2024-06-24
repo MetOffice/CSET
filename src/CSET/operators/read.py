@@ -75,6 +75,7 @@ def read_cube(
         If the constraint doesn't produce a single cube.
     """
     cubes = read_cubes(loadpath, constraint, filename_pattern)
+    # TODO: fix cubes to enable merge for full level and half level fusion.
     # Check filtered cubes is a CubeList containing one cube.
     if len(cubes) == 1:
         return cubes[0]
