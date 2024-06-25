@@ -128,7 +128,7 @@ def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
     lat_coord = cube.coord(lat_name)
 
     # Compute vector distance between start and end points in degrees.
-    dist_deg = np.sqrt(((startxy[0] - endxy[0]) ** 2) + ((startxy[1] - endxy[1]) ** 2))
+    dist_deg = np.sqrt((startxy[0] - endxy[0])**2 + (startxy[1] - endxy[1])**2)
 
     # For scenarios where coord is at 90 degree to the grid (i.e. no latitude/longitude change).
     # Only xmin or ymin will be zero, not both (otherwise startxy and endxy the same).
