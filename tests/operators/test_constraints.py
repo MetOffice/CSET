@@ -42,6 +42,20 @@ def test_generate_model_level_constraint():
     assert repr(var_constraint) == expected_model_level_constraint
 
 
+def test_generate_full_level_constraint():
+    """Generate iris cube constraint for full level number."""
+    var_constraint = constraints.generate_full_level_constraint("2")
+    expected_full_level_constraint = "Constraint(coord_values={'full_level_number': 2})"
+    assert repr(var_constraint) == expected_full_level_constraint
+
+
+def test_generate_half_level_constraint():
+    """Generate iris cube constraint for half level number."""
+    var_constraint = constraints.generate_half_level_constraint("2")
+    expected_half_level_constraint = "Constraint(coord_values={'half_level_number': 2})"
+    assert repr(var_constraint) == expected_half_level_constraint
+
+
 def test_generate_cell_methods_constraint():
     """Generate iris cube constraint for cell methods."""
     cell_methods_constraint = constraints.generate_cell_methods_constraint([])
