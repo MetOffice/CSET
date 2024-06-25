@@ -98,7 +98,9 @@ def generate_model_level_constraint(
 
         return iris.Constraint(cube_func=no_model_level_number)
 
-    return iris.Constraint(model_level_number=model_level)
+    # for now lfric data dont feature model_level_number, but full_levels coordinate
+    # return iris.Constraint(model_level_number=model_level)
+    return iris.Constraint(full_levels=model_level)
 
 
 def generate_pressure_level_constraint(

@@ -390,8 +390,11 @@ def _plot_and_save_vertical_line_series(
         # Set y-axis limits and ticks
         ax.set_ylim(1100, 100)
 
-    # test if series_coordinate is model level data
-    elif series_coordinate == "model_level_number":
+    # test if series_coordinate is model level data. The um data uses model_level_number
+    # and lfric uses full_levels as coordinate.
+    elif (
+        series_coordinate == "model_level_number" or series_coordinate == "full_levels"
+    ):
         # Define y-ticks and labels for model level axis
         y_ticks = cube.coord(series_coordinate).points
         y_tick_labels = [str(int(i)) for i in y_ticks]
@@ -658,7 +661,9 @@ def plot_vertical_line_series(
         Name of the plot to write, used as a prefix for plot sequences. Defaults
         to the recipe name.
     series_coordinate: str, optional
-        Coordinate to plot on the y-axis. Can be model_level, but defaults to ``pressure``.
+        Coordinate to plot on the y-axis. Can be model_level for um or
+        full_levels for lfric, but defaults to ``model_level_number`` as lfric data
+        do not contain a pressure coordinate.
         This coordinate must exist in the cube.
     sequence_coordinate: str, optional
         Coordinate about which to make a plot sequence. Defaults to ``"time"``.
