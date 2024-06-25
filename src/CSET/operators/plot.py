@@ -781,28 +781,25 @@ def plot_vertical_line_series(
     if filename is None:
         filename = slugify(recipe_title)
 
-    # Make vertical line plot
-    plotting_func = _plot_and_save_vertical_line_series
-
     # set the lower and upper limit for the x-axis to ensure all plots
     # have same range. This needs to read the whole cube over the range of
     # the sequence and if applicable postage stamp coordinate.
     # This only works if the plotting is done in the collate section of a
     # recipe and not in the parallel section of a recipe.
-    vmin = np.floor((cube.data.min()))
-    vmax = np.ceil((cube.data.max()))
+    vmin = np.floor(cube.data.min())
+    vmax = np.ceil(cube.data.max())
 
     # Create a plot for each value of the sequence coordinate.
     plot_index = []
     for cube_slice in cube.slices_over(sequence_coordinate):
         # Use sequence value so multiple sequences can merge.
-        sequence_value = cube_slice.coord(sequence_coordinate).points[0]
+        seq_coord = cube_slice.coord(sequence_coordinate)
+        sequence_value = seq_coord.points[0]
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
-        coord = cube_slice.coord(sequence_coordinate)
         # Format the coordinate value in a unit appropriate way.
-        title = f"{recipe_title} | {coord.units.title(coord.points[0])}"
+        title = f"{recipe_title} | {seq_coord.units.title(sequence_value)}"
         # Do the actual plotting.
-        plotting_func(
+        _plot_and_save_vertical_line_series(
             cube_slice,
             coord,
             plot_filename,
