@@ -68,14 +68,13 @@ def get_cube_yxcoordname(cube: iris.cube.Cube) -> tuple[str, str]:
 
 def _is_transect(cube: iris.cube.Cube) -> bool:
     """
-    Determine whether a cube is a transect or not.
+    Determine whether a cube is a transect.
 
     If cube is a transect, it will contain only one spatial (map) coordinate,
     and one vertical coordinate (either pressure or model level).
 
     Arguments
     ---------
-
     cube: iris.cube.Cube
         An iris cube which will be checked to see if it contains coordinate
         names that match a pre-defined list of acceptable coordinate names.

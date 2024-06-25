@@ -230,9 +230,9 @@ def _plot_and_save_contour_plot(
             )
         # If both model_level_number and level_height exists, iplt can construct
         # plot as a function of height above orography (NOT sea level).
-        elif "model_level_number" in [
-            coord.name() for coord in cube.coords()
-        ] and "level_height" in [coord.name() for coord in cube.coords()]:
+        elif {"model_level_number", "level_height"}.issubset(
+            {coord.name() for coord in cube.coords()}
+        ):
             axes.set_yscale("log")
 
     # Add title.
