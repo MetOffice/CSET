@@ -137,7 +137,7 @@ def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
     else:
         latslice_only = False
 
-    if startxy[0] - endxy[0] == 0:
+    if startxy[0] == endxy[0]:
         lonslice_only = True
     else:
         lonslice_only = False
