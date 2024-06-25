@@ -132,7 +132,7 @@ def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
 
     # For scenarios where coord is at 90 degree to the grid (i.e. no latitude/longitude change).
     # Only xmin or ymin will be zero, not both (otherwise startxy and endxy the same).
-    if startxy[1] - endxy[1] == 0:
+    if startxy[1] == endxy[1]:
         latslice_only = True
     else:
         latslice_only = False
