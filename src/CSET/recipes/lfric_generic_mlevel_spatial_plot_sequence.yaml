@@ -1,7 +1,7 @@
 category: Quick Look
 title: $VARNAME $MLEVEL Level Spatial Plot
 description: |
-  Extracts and plots the $VARNAME from a file at model level $MLEVEL.
+  Extracts and plots the $VARNAME from a file at full level $MLEVEL.
 
 parallel:
   - operator: read.read_cubes
@@ -15,8 +15,9 @@ parallel:
         time_start: $VALIDITY_TIME
       model_level_constraint:
         operator: constraints.generate_level_constraint
-        coordinate: "model_level_number"
+        coordinate: "full_levels"
         levels: $MLEVEL
+
   - operator: write.write_cube_to_nc
     filename: intermediate/model_level_field
 
