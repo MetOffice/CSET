@@ -10,9 +10,6 @@ parallel:
       variable_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
-#      cell_methods_constraint:
-#        operator: constraints.generate_cell_methods_constraint
-#        cell_methods: []
       pressure_level_constraint:
         operator: constraints.generate_level_constraint
         coordinate: "pressure"
@@ -43,11 +40,3 @@ collate:
   # Make a single NetCDF with all the data inside it.
   - operator: write.write_cube_to_nc
     overwrite: True
-<<<<<<< HEAD
-=======
-
-  # Plot the data.
-  - operator: plot.plot_vertical_line_series
-    series_coordinate: pressure
-    sequence_coordinate: time
->>>>>>> include vertical line plot operator and internal function.
