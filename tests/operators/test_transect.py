@@ -53,7 +53,7 @@ def test_transect_pl(load_cube_pl, load_cube_pl_out):
     """Test case of computing transect on UM pressure level data."""
     assert np.allclose(
         transect.calc_transect(
-            load_cube_pl, startxy=(-10.94, 19.06), endxy=(-10.82, 19.18)
+            load_cube_pl, startcoords=(-10.94, 19.06), endcoords=(-10.82, 19.18)
         ).data,
         load_cube_pl_out.data,
         rtol=1e-06,
@@ -66,7 +66,7 @@ def test_transect_ml(load_cube_ml, load_cube_ml_out):
     """Test case of computing transect on UM model level data."""
     assert np.allclose(
         transect.calc_transect(
-            load_cube_ml, startxy=(-0.94, 29.06), endxy=(-0.78, 29.3)
+            load_cube_ml, startcoords=(-0.94, 29.06), endcoords=(-0.78, 29.3)
         ).data,
         load_cube_ml_out.data,
         rtol=1e-06,
@@ -78,7 +78,7 @@ def test_transect_45deg(load_cube_pl, load_cube_pl_out):
     """Test case of 45 degree angle where map coordinate should be longitude."""
     with pytest.raises(iris.exceptions.CoordinateNotFoundError):
         transect.calc_transect(
-            load_cube_pl, startxy=(-10.94, 19.06), endxy=(-10.86, 19.14)
+            load_cube_pl, startcoords=(-10.94, 19.06), endcoords=(-10.86, 19.14)
         ).coord("latitude")
 
 
@@ -86,7 +86,7 @@ def test_transect_coord_outofboundsLLat(load_cube_pl):
     """Test case of computing transect on coords out of range (low start lat)."""
     with pytest.raises(IndexError):
         transect.calc_transect(
-            load_cube_pl, startxy=(-11.94, 19.06), endxy=(-10.82, 19.18)
+            load_cube_pl, startcoords=(-11.94, 19.06), endcoords=(-10.82, 19.18)
         )
 
 
@@ -94,7 +94,7 @@ def test_transect_coord_outofboundsLLon(load_cube_pl):
     """Test case of computing transect on coords out of range (low start lon)."""
     with pytest.raises(IndexError):
         transect.calc_transect(
-            load_cube_pl, startxy=(-10.94, 10.06), endxy=(-10.82, 19.18)
+            load_cube_pl, startcoords=(-10.94, 10.06), endcoords=(-10.82, 19.18)
         )
 
 
@@ -102,7 +102,7 @@ def test_transect_coord_outofboundsHLat(load_cube_pl):
     """Test case of computing transect on coords out of range (high end lat)."""
     with pytest.raises(IndexError):
         transect.calc_transect(
-            load_cube_pl, startxy=(-10.94, 19.06), endxy=(-5.82, 19.18)
+            load_cube_pl, startcoords=(-10.94, 19.06), endcoords=(-5.82, 19.18)
         )
 
 
@@ -110,7 +110,7 @@ def test_transect_coord_outofboundsHLon(load_cube_pl):
     """Test case of computing transect on coords out of range (high end lon)."""
     with pytest.raises(IndexError):
         transect.calc_transect(
-            load_cube_pl, startxy=(-10.94, 19.06), endxy=(-10.82, 25.18)
+            load_cube_pl, startcoords=(-10.94, 19.06), endcoords=(-10.82, 25.18)
         )
 
 
@@ -118,7 +118,7 @@ def test_transect_90degangle(load_cube_pl):
     """Test case of computing transect on 90 degree angle (no delta lon)."""
     with pytest.raises(iris.exceptions.CoordinateNotFoundError):
         transect.calc_transect(
-            load_cube_pl, startxy=(-10.94, 19.18), endxy=(-10.82, 19.18)
+            load_cube_pl, startcoords=(-10.94, 19.18), endcoords=(-10.82, 19.18)
         ).coord("longitude")
 
 
@@ -126,7 +126,7 @@ def test_transect_180degangle(load_cube_pl):
     """Test case of computing transect on 180 degree angle (no delta lat)."""
     with pytest.raises(iris.exceptions.CoordinateNotFoundError):
         transect.calc_transect(
-            load_cube_pl, startxy=(-10.94, 19.06), endxy=(-10.94, 19.18)
+            load_cube_pl, startcoords=(-10.94, 19.06), endcoords=(-10.94, 19.18)
         ).coord("latitude")
 
 
@@ -134,7 +134,7 @@ def test_transect_plotasfuncoflatitude(load_cube_pl):
     """Test case of computing transect where it should return as function of latitude."""
     with pytest.raises(iris.exceptions.CoordinateNotFoundError):
         transect.calc_transect(
-            load_cube_pl, startxy=(-10.94, 19.06), endxy=(-10.82, 19.14)
+            load_cube_pl, startcoords=(-10.94, 19.06), endcoords=(-10.82, 19.14)
         ).coord("longitude")
 
 
@@ -142,5 +142,5 @@ def test_transect_plotasfuncoflongitude(load_cube_pl):
     """Test case of computing transect where it should return as function of longitude."""
     with pytest.raises(iris.exceptions.CoordinateNotFoundError):
         transect.calc_transect(
-            load_cube_pl, startxy=(-10.94, 19.06), endxy=(-10.86, 19.18)
+            load_cube_pl, startcoords=(-10.94, 19.06), endcoords=(-10.86, 19.18)
         ).coord("latitude")

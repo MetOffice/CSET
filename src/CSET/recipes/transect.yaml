@@ -14,8 +14,8 @@ parallel:
             stash: $CS_VARS
 
   - operator: transect.calc_transect
-    startxy: $CS_STARTCOORDS
-    endxy: $CS_FINISHCOORDS
+    startcoords: $CS_STARTCOORDS
+    endcoords: $CS_FINISHCOORDS
 
   - operator: write.write_cube_to_nc
     filename: intermediate/transect

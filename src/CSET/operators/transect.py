@@ -39,9 +39,9 @@ def _check_within_bounds(point: tuple[float, float], lat_coord, lon_coord):
         )
 
 
-def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
+def calc_transect(cube: iris.cube.Cube, startcoords: tuple, endcoords: tuple):
     """
-    Compute transect between startxy and endxy.
+    Compute transect between startcoords and endcoords.
 
     Computes a transect for a given cube containing at least latitude
     and longitude coordinates, using an appropriate sampling interval along the
@@ -54,10 +54,10 @@ def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
     cube: Cube
         An iris cube containing latitude and longitude coordinate dimensions,
         to compute the transect on.
-    startxy: tuple
+    startcoords: tuple
         A tuple containing the start coordinates for the transect using the original
         data coordinates, ordered (latitude,longitude).
-    endxy: tuple
+    endcoords: tuple
         A tuple containing the end coordinates for the transect using the original
         data coordinates, ordered (latitude,longitude).
 
@@ -65,7 +65,7 @@ def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
     -------
     cube: Cube
         A cube containing at least pressure and the coordinate specified by coord, for
-        the transect specified between startxy and endxy.
+        the transect specified between startcoords and endcoords.
 
     Notes
     -----
@@ -86,20 +86,22 @@ def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
     lon_coord = cube.coord(lon_name)
     lat_coord = cube.coord(lat_name)
 
-    _check_within_bounds(startxy, lat_coord, lon_coord)
-    _check_within_bounds(endxy, lat_coord, lon_coord)
+    _check_within_bounds(startcoords, lat_coord, lon_coord)
+    _check_within_bounds(endcoords, lat_coord, lon_coord)
 
     # Compute vector distance between start and end points in degrees.
-    dist_deg = np.sqrt((startxy[0] - endxy[0]) ** 2 + (startxy[1] - endxy[1]) ** 2)
+    dist_deg = np.sqrt(
+        (startcoords[0] - endcoords[0]) ** 2 + (startcoords[1] - endcoords[1]) ** 2
+    )
 
     # For scenarios where coord is at 90 degree to the grid (i.e. no latitude/longitude change).
-    # Only xmin or ymin will be zero, not both (otherwise startxy and endxy the same).
-    if startxy[1] == endxy[1]:
+    # Only xmin or ymin will be zero, not both (otherwise startcoords and endcoords the same).
+    if startcoords[1] == endcoords[1]:
         latslice_only = True
     else:
         latslice_only = False
 
-    if startxy[0] == endxy[0]:
+    if startcoords[0] == endcoords[0]:
         lonslice_only = True
     else:
         lonslice_only = False
@@ -110,23 +112,23 @@ def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
 
     # Depending on the transect angle relative to the grid
     if latslice_only:
-        xpnts = np.repeat(startxy[1], int(dist_deg / ymin))
-        ypnts = np.linspace(startxy[0], endxy[0], int(dist_deg / ymin))
+        xpnts = np.repeat(startcoords[1], int(dist_deg / ymin))
+        ypnts = np.linspace(startcoords[0], endcoords[0], int(dist_deg / ymin))
         xaxis_coord = "latitude"
     elif lonslice_only:
-        xpnts = np.linspace(startxy[1], endxy[1], int(dist_deg / xmin))
-        ypnts = np.repeat(startxy[0], int(dist_deg / xmin))
+        xpnts = np.linspace(startcoords[1], endcoords[1], int(dist_deg / xmin))
+        ypnts = np.repeat(startcoords[0], int(dist_deg / xmin))
         xaxis_coord = "longitude"
     else:
         # Else use the smallest grid space in x or y direction.
         number_of_points = int(dist_deg / np.min([xmin, ymin]))
-        xpnts = np.linspace(startxy[1], endxy[1], number_of_points)
-        ypnts = np.linspace(startxy[0], endxy[0], number_of_points)
+        xpnts = np.linspace(startcoords[1], endcoords[1], number_of_points)
+        ypnts = np.linspace(startcoords[0], endcoords[0], number_of_points)
 
         # If change in latitude larger than change in longitude:
-        if abs(startxy[0] - endxy[0]) > abs(startxy[1] - endxy[1]):
+        if abs(startcoords[0] - endcoords[0]) > abs(startcoords[1] - endcoords[1]):
             xaxis_coord = "latitude"
-        elif abs(startxy[0] - endxy[0]) <= abs(startxy[1] - endxy[1]):
+        elif abs(startcoords[0] - endcoords[0]) <= abs(startcoords[1] - endcoords[1]):
             xaxis_coord = "longitude"
 
     # Create cubelist to store interpolated points along transect.
