@@ -63,53 +63,47 @@ def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
     doesn't affect the transect plot, its purely for interpretation with some appropriate
     x axis labelling/points.
     """
-    # Parse arguments in case running using CSET bake
-    if type(startxy) is not tuple:
-        startxy = tuple([float(i) for i in startxy.split(",")])
-    if type(endxy) is not tuple:
-        endxy = tuple([float(i) for i in endxy.split(",")])
-
     # Find out xy coord name
-    y_name, x_name = get_cube_yxcoordname(cube)
+    lat_name, lon_name = get_cube_yxcoordname(cube)
 
-    if startxy[0] > max(cube.coord(y_name).points) or startxy[0] < min(
-        cube.coord(y_name).points
+    if startxy[0] > max(cube.coord(lat_name).points) or startxy[0] < min(
+        cube.coord(lat_name).points
     ):
         raise IndexError(
             "starty {a} not between {b} and {c}".format(
                 a=startxy[0],
-                b=min(cube.coord(y_name).points),
-                c=max(cube.coord(y_name).points),
+                b=min(cube.coord(lat_name).points),
+                c=max(cube.coord(lat_name).points),
             )
         )
-    if startxy[1] > max(cube.coord(x_name).points) or startxy[1] < min(
-        cube.coord(x_name).points
+    if startxy[1] > max(cube.coord(lon_name).points) or startxy[1] < min(
+        cube.coord(lon_name).points
     ):
         raise IndexError(
             "startx {a} not between {b} and {c}".format(
                 a=startxy[1],
-                b=min(cube.coord(x_name).points),
-                c=max(cube.coord(x_name).points),
+                b=min(cube.coord(lon_name).points),
+                c=max(cube.coord(lon_name).points),
             )
         )
-    if endxy[0] > max(cube.coord(y_name).points) or endxy[0] < min(
-        cube.coord(y_name).points
+    if endxy[0] > max(cube.coord(lat_name).points) or endxy[0] < min(
+        cube.coord(lat_name).points
     ):
         raise IndexError(
             "endy {a} not between {b} and {c}".format(
                 a=endxy[0],
-                b=min(cube.coord(y_name).points),
-                c=max(cube.coord(y_name).points),
+                b=min(cube.coord(lat_name).points),
+                c=max(cube.coord(lat_name).points),
             )
         )
-    if endxy[1] > max(cube.coord(x_name).points) or endxy[1] < min(
-        cube.coord(x_name).points
+    if endxy[1] > max(cube.coord(lon_name).points) or endxy[1] < min(
+        cube.coord(lon_name).points
     ):
         raise IndexError(
             "endx {a} not between {b} and {c}".format(
                 a=endxy[1],
-                b=min(cube.coord(x_name).points),
-                c=max(cube.coord(x_name).points),
+                b=min(cube.coord(lon_name).points),
+                c=max(cube.coord(lon_name).points),
             )
         )
 
@@ -129,8 +123,8 @@ def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
         lonslice_only = False
 
     # Compute minimum gap between x/y spatial coords.
-    xmin = np.min(cube.coord(x_name).points[1:] - cube.coord(x_name).points[:-1])
-    ymin = np.min(cube.coord(y_name).points[1:] - cube.coord(y_name).points[:-1])
+    xmin = np.min(cube.coord(lon_name).points[1:] - cube.coord(lon_name).points[:-1])
+    ymin = np.min(cube.coord(lat_name).points[1:] - cube.coord(lat_name).points[:-1])
 
     # Depending on the transect angle relative to the grid
     if latslice_only:
@@ -161,20 +155,20 @@ def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
 
         # Get point along transect.
         cube_slice = cube.interpolate(
-            [(x_name, xpnts[i]), (y_name, ypnts[i])], iris.analysis.Linear()
+            [(lon_name, xpnts[i]), (lat_name, ypnts[i])], iris.analysis.Linear()
         )
 
         if xaxis_coord == "latitude":
-            cube_slice.remove_coord(x_name)
-            cube_slice.remove_coord(y_name)
+            cube_slice.remove_coord(lon_name)
+            cube_slice.remove_coord(lat_name)
             dist_coord = iris.coords.AuxCoord(
                 ypnts[i], long_name="latitude", units="degrees"
             )
             cube_slice.add_aux_coord(dist_coord)
             cube_slice = iris.util.new_axis(cube_slice, scalar_coord="latitude")
         elif xaxis_coord == "longitude":
-            cube_slice.remove_coord(x_name)
-            cube_slice.remove_coord(y_name)
+            cube_slice.remove_coord(lon_name)
+            cube_slice.remove_coord(lat_name)
             dist_coord = iris.coords.AuxCoord(
                 xpnts[i], long_name="longitude", units="degrees"
             )
