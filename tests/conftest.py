@@ -70,6 +70,6 @@ def histogram_cube_readonly():
 
 
 @pytest.fixture()
-def histogram_cube():
+def histogram_cube(histogram_cube_readonly):
     """Get a histogram Cube."""
     return histogram_cube_readonly.copy()
