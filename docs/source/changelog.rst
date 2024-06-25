@@ -9,6 +9,8 @@ Changelog
 Unreleased
 ----------
 
+* `@dasha-shchep`_ Fixes METPLUS metadata issue in :pr:`692`
+
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 

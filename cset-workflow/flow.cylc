@@ -89,10 +89,12 @@ URL = https://metoffice.github.io/CSET
 
     [[METPLUS]]
         [[[environment]]]
+            {% if METPLUS_GRID_STAT %}
             METPLUS_ANA_DIR = {{METPLUS_ANA_DIR}}
             METPLUS_FCST_DIR = {{METPLUS_FCST_DIR}}
             METPLUS_OBS_DIR = {{METPLUS_OBS_DIR}}
             ROSE_APP_OPT_CONF_KEYS = {{METPLUS_OPT_CONFIG_KEYS}}
+            {% endif %}
 
     # Dummy tasks needed for workflow scheduling.
     [[process_finish]]
