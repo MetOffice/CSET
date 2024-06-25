@@ -94,68 +94,60 @@ def calc_transect(cube: iris.cube.Cube, startcoords: tuple, endcoords: tuple):
         (startcoords[0] - endcoords[0]) ** 2 + (startcoords[1] - endcoords[1]) ** 2
     )
 
-    # For scenarios where coord is at 90 degree to the grid (i.e. no latitude/longitude change).
-    # Only xmin or ymin will be zero, not both (otherwise startcoords and endcoords the same).
-    if startcoords[1] == endcoords[1]:
-        latslice_only = True
-    else:
-        latslice_only = False
-
-    if startcoords[0] == endcoords[0]:
-        lonslice_only = True
-    else:
-        lonslice_only = False
-
     # Compute minimum gap between x/y spatial coords.
-    xmin = np.min(lon_coord.points[1:] - lon_coord.points[:-1])
-    ymin = np.min(lat_coord.points[1:] - lat_coord.points[:-1])
+    lon_min = np.min(lon_coord.points[1:] - lon_coord.points[:-1])
+    lat_min = np.min(lat_coord.points[1:] - lat_coord.points[:-1])
 
-    # Depending on the transect angle relative to the grid
-    if latslice_only:
-        xpnts = np.repeat(startcoords[1], int(dist_deg / ymin))
-        ypnts = np.linspace(startcoords[0], endcoords[0], int(dist_deg / ymin))
-        xaxis_coord = "latitude"
-    elif lonslice_only:
-        xpnts = np.linspace(startcoords[1], endcoords[1], int(dist_deg / xmin))
-        ypnts = np.repeat(startcoords[0], int(dist_deg / xmin))
-        xaxis_coord = "longitude"
+    # For scenarios where coord is at 90 degree to the grid (i.e. no
+    # latitude/longitude change). Only xmin or ymin will be zero, not both
+    # (otherwise startcoords and endcoords the same).
+    if startcoords[1] == endcoords[1]:
+        # Along latitude.
+        lon_pnts = np.repeat(startcoords[1], int(dist_deg / lat_min))
+        lat_pnts = np.linspace(startcoords[0], endcoords[0], int(dist_deg / lat_min))
+        transect_coord = "latitude"
+    elif startcoords[0] == endcoords[0]:
+        # Along longitude.
+        lon_pnts = np.linspace(startcoords[1], endcoords[1], int(dist_deg / lon_min))
+        lat_pnts = np.repeat(startcoords[0], int(dist_deg / lon_min))
+        transect_coord = "longitude"
     else:
         # Else use the smallest grid space in x or y direction.
-        number_of_points = int(dist_deg / np.min([xmin, ymin]))
-        xpnts = np.linspace(startcoords[1], endcoords[1], number_of_points)
-        ypnts = np.linspace(startcoords[0], endcoords[0], number_of_points)
+        number_of_points = int(dist_deg / np.min([lon_min, lat_min]))
+        lon_pnts = np.linspace(startcoords[1], endcoords[1], number_of_points)
+        lat_pnts = np.linspace(startcoords[0], endcoords[0], number_of_points)
 
         # If change in latitude larger than change in longitude:
         if abs(startcoords[0] - endcoords[0]) > abs(startcoords[1] - endcoords[1]):
-            xaxis_coord = "latitude"
+            transect_coord = "latitude"
         elif abs(startcoords[0] - endcoords[0]) <= abs(startcoords[1] - endcoords[1]):
-            xaxis_coord = "longitude"
+            transect_coord = "longitude"
 
     # Create cubelist to store interpolated points along transect.
     interpolated_cubes = iris.cube.CubeList()
 
     # Iterate over all points along transect.
-    for i in range(0, xpnts.shape[0]):
-        logging.info("%s/%s", i + 1, xpnts.shape[0])
+    for i in range(0, lon_pnts.shape[0]):
+        logging.info("%s/%s", i + 1, lon_pnts.shape[0])
 
         # Get point along transect.
         cube_slice = cube.interpolate(
-            [(lon_name, xpnts[i]), (lat_name, ypnts[i])], iris.analysis.Linear()
+            [(lon_name, lon_pnts[i]), (lat_name, lat_pnts[i])], iris.analysis.Linear()
         )
 
         # Remove existing coordinates ready to add one single map coordinate
         cube_slice.remove_coord(lon_name)
         cube_slice.remove_coord(lat_name)
 
-        if xaxis_coord == "latitude":
+        if transect_coord == "latitude":
             dist_coord = iris.coords.DimCoord(
-                ypnts[i], long_name="latitude", units="degrees"
+                lat_pnts[i], long_name="latitude", units="degrees"
             )
             cube_slice.add_aux_coord(dist_coord)
             cube_slice = iris.util.new_axis(cube_slice, scalar_coord="latitude")
-        elif xaxis_coord == "longitude":
+        elif transect_coord == "longitude":
             dist_coord = iris.coords.DimCoord(
-                xpnts[i], long_name="longitude", units="degrees"
+                lon_pnts[i], long_name="longitude", units="degrees"
             )
             cube_slice.add_aux_coord(dist_coord)
             cube_slice = iris.util.new_axis(cube_slice, scalar_coord="longitude")
