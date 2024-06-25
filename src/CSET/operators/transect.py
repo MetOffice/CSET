@@ -83,49 +83,11 @@ def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
     # Find out xy coord name
     lat_name, lon_name = get_cube_yxcoordname(cube)
 
-    if startxy[0] > max(cube.coord(lat_name).points) or startxy[0] < min(
-        cube.coord(lat_name).points
-    ):
-        raise IndexError(
-            "starty {a} not between {b} and {c}".format(
-                a=startxy[0],
-                b=min(cube.coord(lat_name).points),
-                c=max(cube.coord(lat_name).points),
-            )
-        )
-    if startxy[1] > max(cube.coord(lon_name).points) or startxy[1] < min(
-        cube.coord(lon_name).points
-    ):
-        raise IndexError(
-            "startx {a} not between {b} and {c}".format(
-                a=startxy[1],
-                b=min(cube.coord(lon_name).points),
-                c=max(cube.coord(lon_name).points),
-            )
-        )
-    if endxy[0] > max(cube.coord(lat_name).points) or endxy[0] < min(
-        cube.coord(lat_name).points
-    ):
-        raise IndexError(
-            "endy {a} not between {b} and {c}".format(
-                a=endxy[0],
-                b=min(cube.coord(lat_name).points),
-                c=max(cube.coord(lat_name).points),
-            )
-        )
-    if endxy[1] > max(cube.coord(lon_name).points) or endxy[1] < min(
-        cube.coord(lon_name).points
-    ):
-        raise IndexError(
-            "endx {a} not between {b} and {c}".format(
-                a=endxy[1],
-                b=min(cube.coord(lon_name).points),
-                c=max(cube.coord(lon_name).points),
-            )
-        )
-
     lon_coord = cube.coord(lon_name)
     lat_coord = cube.coord(lat_name)
+
+    _check_within_bounds(startxy, lat_coord, lon_coord)
+    _check_within_bounds(endxy, lat_coord, lon_coord)
 
     # Compute vector distance between start and end points in degrees.
     dist_deg = np.sqrt((startxy[0] - endxy[0]) ** 2 + (startxy[1] - endxy[1]) ** 2)
