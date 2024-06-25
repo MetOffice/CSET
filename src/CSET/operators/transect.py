@@ -157,8 +157,9 @@ def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
         xaxis_coord = "longitude"
     else:
         # Else use the smallest grid space in x or y direction.
-        xpnts = np.linspace(startxy[1], endxy[1], int(dist_deg / np.min([xmin, ymin])))
-        ypnts = np.linspace(startxy[0], endxy[0], int(dist_deg / np.min([xmin, ymin])))
+        number_of_points = int(dist_deg / np.min([xmin, ymin]))
+        xpnts = np.linspace(startxy[1], endxy[1], number_of_points)
+        ypnts = np.linspace(startxy[0], endxy[0], number_of_points)
 
         # If change in latitude larger than change in longitude:
         if abs(startxy[0] - endxy[0]) > abs(startxy[1] - endxy[1]):
