@@ -74,6 +74,14 @@ def test_transect_ml(load_cube_ml, load_cube_ml_out):
     )
 
 
+def test_transect_45deg(load_cube_pl, load_cube_pl_out):
+    """Test case of 45 degree angle where map coordinate should be longitude."""
+    with pytest.raises(iris.exceptions.CoordinateNotFoundError):
+        transect.calc_transect(
+            load_cube_pl, startxy=(-10.94, 19.06), endxy=(-10.86, 19.14)
+        ).coord("latitude")
+
+
 def test_transect_coord_outofboundsLLat(load_cube_pl):
     """Test case of computing transect on coords out of range (low start lat)."""
     with pytest.raises(IndexError):
