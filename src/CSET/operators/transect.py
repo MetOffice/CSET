@@ -22,6 +22,23 @@ import numpy as np
 from CSET.operators._utils import get_cube_yxcoordname
 
 
+def _check_within_bounds(point: tuple[float, float], lat_coord, lon_coord):
+    """Check if the point (lat, lon) is within the bounds of the data."""
+    lon_min = min(lon_coord.points)
+    lon_max = max(lon_coord.points)
+    lat_min = min(lat_coord.points)
+    lat_max = max(lat_coord.points)
+    if (
+        lat_min > point[0]
+        or lat_max < point[0]
+        or lon_min > point[1]
+        or lon_max < point[1]
+    ):
+        raise IndexError(
+            f"Point {point} not between {(lat_min, lon_min)} and {(lat_max, lon_max)}"
+        )
+
+
 def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
     """
     Compute transect between startxy and endxy.
@@ -107,6 +124,9 @@ def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
             )
         )
 
+    lon_coord = cube.coord(lon_name)
+    lat_coord = cube.coord(lat_name)
+
     # Compute vector distance between start and end points in degrees.
     dist_deg = np.sqrt(((startxy[0] - endxy[0]) ** 2) + ((startxy[1] - endxy[1]) ** 2))
 
@@ -123,8 +143,8 @@ def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
         lonslice_only = False
 
     # Compute minimum gap between x/y spatial coords.
-    xmin = np.min(cube.coord(lon_name).points[1:] - cube.coord(lon_name).points[:-1])
-    ymin = np.min(cube.coord(lat_name).points[1:] - cube.coord(lat_name).points[:-1])
+    xmin = np.min(lon_coord.points[1:] - lon_coord.points[:-1])
+    ymin = np.min(lat_coord.points[1:] - lat_coord.points[:-1])
 
     # Depending on the transect angle relative to the grid
     if latslice_only:
