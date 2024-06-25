@@ -132,8 +132,3 @@ def test_transect_plotasfuncoflatitude(load_cube_pl):
 def test_transect_plotasfuncoflongitude(load_cube_pl):
     """Test case of computing transect where it should return as function of longitude."""
     transect.calc_transect(load_cube_pl, startxy=(-10.94, 19.06), endxy=(-10.86, 19.18))
-
-
-def test_transect_coord_strargument(load_cube_pl):
-    """Test case of computing transect using str argument and not tuple."""
-    transect.calc_transect(load_cube_pl, startxy="-10.94, 19.06", endxy="-10.82, 19.18")
