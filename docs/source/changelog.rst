@@ -14,14 +14,13 @@ Unreleased
 .. Add changes here, probably taken from GitHub release notes.
 .. Highlight any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
-
-* `@Sylviabohnenstengel`_ documentation: add info on quick pytesting in :pr:`696`
-* `@Sylviabohnenstengel`_ add constraint operator for lfric full_levels and half_levels
-* `@Sylviabohnenstengel`_ introduced lfric_model_level and lfric_model_level_field to rose meta
-* `@Sylviabohnenstengel`_ expand plot operator add plotting lfric vertical profiles on model levels
-* `@Sylviabohnenstengel`_ expand plot operator add plotting on model levels to spatial plot operator
-* `@Sylviabohnenstengel`_ added new recipe for plotting vertical profiles on model levels for lfric.
-* `@Sylviabohnenstengel`_ added new recipe for plotting spatial lfric data on model levels.
+* `@Sylviabohnenstengel`_ add plotting of lfric spatial model field on full_levels and half_levels in pr:`695`
+* `@Sylviabohnenstengel`_ add constraint operator for lfric full_levels and half_levels in pr:`638`
+* `@Sylviabohnenstengel`_ introduced lfric_model_level and lfric_model_level_field to rose meta in pr:`638`
+* `@Sylviabohnenstengel`_ expand plot operator add plotting lfric vertical profiles on model levels in pr:`638`
+* `@Sylviabohnenstengel`_ expand plot operator add plotting on model levels to spatial plot operator in pr:`638`
+* `@Sylviabohnenstengel`_ added new recipe for plotting vertical profiles on model levels for lfric.in pr:`638`
+* `@Sylviabohnenstengel`_ added new recipe for plotting spatial lfric data on model levels. in pr:`695`
 
 24.6.0 (2024-06-17)
 -------------------
