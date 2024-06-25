@@ -128,7 +128,7 @@ def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
     lat_coord = cube.coord(lat_name)
 
     # Compute vector distance between start and end points in degrees.
-    dist_deg = np.sqrt((startxy[0] - endxy[0])**2 + (startxy[1] - endxy[1])**2)
+    dist_deg = np.sqrt((startxy[0] - endxy[0]) ** 2 + (startxy[1] - endxy[1]) ** 2)
 
     # For scenarios where coord is at 90 degree to the grid (i.e. no latitude/longitude change).
     # Only xmin or ymin will be zero, not both (otherwise startxy and endxy the same).
@@ -179,18 +179,18 @@ def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
             [(lon_name, xpnts[i]), (lat_name, ypnts[i])], iris.analysis.Linear()
         )
 
+        # Remove existing coordinates ready to add one single map coordinate
+        cube_slice.remove_coord(lon_name)
+        cube_slice.remove_coord(lat_name)
+
         if xaxis_coord == "latitude":
-            cube_slice.remove_coord(lon_name)
-            cube_slice.remove_coord(lat_name)
-            dist_coord = iris.coords.AuxCoord(
+            dist_coord = iris.coords.DimCoord(
                 ypnts[i], long_name="latitude", units="degrees"
             )
             cube_slice.add_aux_coord(dist_coord)
             cube_slice = iris.util.new_axis(cube_slice, scalar_coord="latitude")
         elif xaxis_coord == "longitude":
-            cube_slice.remove_coord(lon_name)
-            cube_slice.remove_coord(lat_name)
-            dist_coord = iris.coords.AuxCoord(
+            dist_coord = iris.coords.DimCoord(
                 xpnts[i], long_name="longitude", units="degrees"
             )
             cube_slice.add_aux_coord(dist_coord)
