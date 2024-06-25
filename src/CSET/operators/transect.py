@@ -201,5 +201,6 @@ def calc_transect(cube: iris.cube.Cube, startxy: tuple, endxy: tuple):
     # Concatenate into single cube.
     interpolated_cubes = interpolated_cubes.concatenate()
 
-    # If concatenation successful, should be cubelist with one cube left.
+    # If concatenation successful, should be CubeList with one cube left.
+    assert len(interpolated_cubes) == 1
     return interpolated_cubes[0]
