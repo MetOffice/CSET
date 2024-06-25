@@ -806,7 +806,7 @@ def plot_vertical_line_series(
             cube.coord(sequence_coordinate)
     except iris.exceptions.CoordinateNotFoundError as err:
         raise ValueError(
-            f"Cube must be 1D. If it is not 1D check if it has a {sequence_coordinate} to use for slider function."
+            f"Cube must have a {sequence_coordinate} coordinate or be 1D."
         ) from err
 
     # Ensure we have a name for the plot file.
@@ -864,10 +864,8 @@ def plot_histogram_series(
     """Plot a histogram plot for each vertical level provided.
 
     A histogram plot can be plotted, but if the sequence_coordinate (i.e. time)
-    is present
-    then a sequence of plots will be produced using the time slider
+    is present then a sequence of plots will be produced using the time slider
     functionality to scroll through histograms against time.
-
 
     The cube must be 1D.
 
@@ -880,7 +878,8 @@ def plot_histogram_series(
         to the recipe name.
     sequence_coordinate: str, optional
         Coordinate about which to make a plot sequence. Defaults to ``"time"``.
-        This coordinate must exist in the cube and will be used for the time slider.
+        This coordinate must exist in the cube and will be used for the time
+        slider.
     stamp_coordinate: str, optional
         Coordinate about which to plot postage stamp plots. Defaults to
         ``"realization"``.
