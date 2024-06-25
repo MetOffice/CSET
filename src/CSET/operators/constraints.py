@@ -76,30 +76,127 @@ def generate_model_level_constraint(
 
     Arguments
     ---------
-    model_level_number: int|list
-        CF compliant model level number.
+    model_level: int|list
+        CF compliant model levels.
 
     Returns
     -------
-    model_level_number_constraint: iris.Constraint
+    model_level_constraint: iris.Constraint
     """
     # turn into a list in case is iterable
     if not isinstance(model_level, Iterable):
         model_level = [model_level]
 
     if len(model_level) == 0:
-        # If none specified reject cubes with model level coordinate.
+        # If none specified reject cubes with any model level coordinate.
         def no_model_level_number(cube):
+            cube.coords()
+
             try:
                 cube.coord("model_level_number")
+                # return false if found respective level coordinate
+                return False
             except iris.exceptions.CoordinateNotFoundError:
+                # do nothing if not found coordinate
                 return True
-            return False
 
         return iris.Constraint(cube_func=no_model_level_number)
 
-    # for now lfric data dont feature model_level_number, but full_levels coordinate
-    # return iris.Constraint(model_level_number=model_level)
+    # LFRic data do not have a model_level_number coordinate like um data,
+    # but a full_levels or half_levels coordinate instead.
+    # Test if vertical dimension of cube contains full_levels
+    # coordinate or model_level_number coordinate to return correct
+    # vertical level constraint
+    return iris.Constraint(model_level_number=model_level)
+
+
+def generate_half_level_constraint(
+    model_level: int | list[int], **kwargs
+) -> iris.Constraint:
+    """Generate constraint for a particular model level number.
+
+    Operator that takes a CF compliant model_level_number int or list of int, and uses iris to
+    generate a constraint to be passed into the read operator to minimize the
+    CubeList the read operator loads and speed up loading.
+
+    Arguments
+    ---------
+    model_level: int|list
+        CF compliant model levels.
+
+    Returns
+    -------
+    model_level_constraint: iris.Constraint
+    """
+    # turn into a list in case is iterable
+    if not isinstance(model_level, Iterable):
+        model_level = [model_level]
+
+    if len(model_level) == 0:
+        # If none specified reject cubes with any model level coordinate.
+        def no_model_level_number(cube):
+            cube.coords()
+
+            try:
+                cube.coord("half_levels")
+                # return false if found respective level coordinate
+                return False
+            except iris.exceptions.CoordinateNotFoundError:
+                # do nothing if not found coordinate
+                return True
+
+        return iris.Constraint(cube_func=no_model_level_number)
+
+    # LFRic data do not have a model_level_number coordinate like um data,
+    # but a full_levels or half_levels coordinate instead.
+    # Test if vertical dimension of cube contains full_levels
+    # coordinate or model_level_number coordinate to return correct
+    # vertical level constraint
+    return iris.Constraint(half_levels=model_level)
+
+
+def generate_full_level_constraint(
+    model_level: int | list[int], **kwargs
+) -> iris.Constraint:
+    """Generate constraint for a particular model level number.
+
+    Operator that takes a CF compliant model_level_number int or list of int, and uses iris to
+    generate a constraint to be passed into the read operator to minimize the
+    CubeList the read operator loads and speed up loading.
+
+    Arguments
+    ---------
+    model_level: int|list
+        CF compliant model levels.
+
+    Returns
+    -------
+    model_level_constraint: iris.Constraint
+    """
+    # turn into a list in case is iterable
+    if not isinstance(model_level, Iterable):
+        model_level = [model_level]
+
+    if len(model_level) == 0:
+        # If none specified reject cubes with any model level coordinate.
+        def no_model_level_number(cube):
+            cube.coords()
+
+            try:
+                cube.coord("full_levels")
+                # return false if found respective level coordinate
+                return False
+            except iris.exceptions.CoordinateNotFoundError:
+                # do nothing if not found coordinate
+                return True
+
+        return iris.Constraint(cube_func=no_model_level_number)
+
+    # LFRic data do not have a model_level_number coordinate like um data,
+    # but a full_levels or half_levels coordinate instead.
+    # Test if vertical dimension of cube contains full_levels
+    # coordinate or model_level_number coordinate to return correct
+    # vertical level constraint
     return iris.Constraint(full_levels=model_level)
 
 

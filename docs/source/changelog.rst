@@ -16,6 +16,7 @@ Unreleased
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
 * `@Sylviabohnenstengel`_ documentation: add info on quick pytesting in :pr:`696`
+* `@Sylviabohnenstengel`_ add constraint operator for lfric full_levels and half_levels
 * `@Sylviabohnenstengel`_ introduced lfric_model_level and lfric_model_level_field to rose meta
 * `@Sylviabohnenstengel`_ expand plot operator add plotting lfric vertical profiles on model levels
 * `@Sylviabohnenstengel`_ expand plot operator add plotting on model levels to spatial plot operator
