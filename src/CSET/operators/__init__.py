@@ -47,7 +47,6 @@ __all__ = [
     "collapse",
     "constraints",
     "convection",
-    "transect",
     "execute_recipe_parallel",
     "execute_recipe_collate",
     "filters",
@@ -56,6 +55,7 @@ __all__ = [
     "plot",
     "read",
     "regrid",
+    "transect",
     "write",
 ]
 
