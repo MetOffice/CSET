@@ -17,15 +17,15 @@ parallel:
         operator: constraints.generate_model_level_constraint
         model_level: $MLEVEL
 
+  - operator: plot.spatial_contour_plot
+    sequence_coordinate: time
+
   - operator: write.write_cube_to_nc
     filename: intermediate/model_level_field
 
 collate:
   - operator: read.read_cube
     filename_pattern: intermediate/*.nc
-
-  - operator: plot.spatial_contour_plot
-    sequence_coordinate: time
 
   - operator: write.write_cube_to_nc
     overwrite: True
