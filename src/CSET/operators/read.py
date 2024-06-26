@@ -283,7 +283,7 @@ def _check_input_files(input_path: Path | str, filename_pattern: str) -> Iterabl
         files = tuple(sorted(input_path.glob(filename_pattern)))
         if len(files) == 0:
             raise FileNotFoundError(
-                f"No files found matching glob {filename_pattern} within {input_path}"
+                f"No files found matching filename_pattern {filename_pattern} within {input_path}"
             )
     elif input_path.is_file():
         files = (input_path,)
