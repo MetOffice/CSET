@@ -9,6 +9,7 @@ Changelog
 Unreleased
 ----------
 
+* `@Sylviabohnenstengel`_ add recipe for plotting um spatial fields on model levels in :pr:`699`
 * `@dasha-shchep`_ Fixes METPLUS metadata issue in :pr:`692`
 
 .. Add changes here, probably taken from GitHub release notes.
