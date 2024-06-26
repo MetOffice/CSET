@@ -16,6 +16,7 @@ Unreleased
 
 * `@Sylviabohnenstengel`_ documentation: add info on quick pytesting
  in :pr: `696`
+
 24.6.0 (2024-06-17)
 -------------------
 
