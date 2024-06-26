@@ -33,14 +33,14 @@ You can run the tests of CSET simply with the following command:
 Quick testing of individual components during development
 =========================================================
 
-Running all when developing new tests and debugging them might take some time. 
-For testing individual tests only on the command line you can run
+Running all when developing new tests and debugging them might take some time.
+For testing individual tests only on the command line you can run:
 
 .. code-block:: bash
 
     pytest -k file_name_of_test
 
-For example the following command will find your tests if you have previously 
+For example the following command will find your tests if you have previously
 set up your conda cset-dev environment:
 
 .. code-block:bash
