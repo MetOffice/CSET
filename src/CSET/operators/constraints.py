@@ -182,7 +182,11 @@ def generate_time_constraint(
 
 
 def generate_area_constraint(
-    lat_start: float, lat_end: float, lon_start: float, lon_end: float, **kwargs
+    lat_start: float | str,
+    lat_end: float | str,
+    lon_start: float | str,
+    lon_end: float | str,
+    **kwargs,
 ) -> iris.Constraint:
     """Generate an area constraint between latitude/longitude limits.
 
@@ -205,6 +209,9 @@ def generate_area_constraint(
     -------
     area_constraint: iris.Constraint
     """
+    if lat_start == "None":
+        return iris.Constraint()
+
     area_constraint = iris.Constraint(
         coord_values={
             "grid_latitude": lambda cell: lat_start < cell < lat_end,

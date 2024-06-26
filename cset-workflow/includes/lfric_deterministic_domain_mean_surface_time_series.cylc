@@ -12,6 +12,11 @@
         --SUBAREA_LAT_BOUND_TOP={{SUBAREA_LAT_BOUND_TOP}}
         --SUBAREA_LON_BOUND_RIGHT={{SUBAREA_LON_BOUND_RIGHT}}
         --SUBAREA_LON_BOUND_LEFT={{SUBAREA_LON_BOUND_LEFT}}
+        {% else %}
+        --SUBAREA_LAT_BOUND_BOTTOM="None"
+        --SUBAREA_LAT_BOUND_TOP="None"
+        --SUBAREA_LON_BOUND_RIGHT="None"
+        --SUBAREA_LON_BOUND_LEFT="None"
         {% endif %}
         """
 
@@ -26,6 +31,11 @@
         --SUBAREA_LAT_BOUND_TOP={{SUBAREA_LAT_BOUND_TOP}}
         --SUBAREA_LON_BOUND_RIGHT={{SUBAREA_LON_BOUND_RIGHT}}
         --SUBAREA_LON_BOUND_LEFT={{SUBAREA_LON_BOUND_LEFT}}
+        {% else %}
+        --SUBAREA_LAT_BOUND_BOTTOM="None"
+        --SUBAREA_LAT_BOUND_TOP="None"
+        --SUBAREA_LON_BOUND_RIGHT="None"
+        --SUBAREA_LON_BOUND_LEFT="None"
         {% endif %}
         """
 {% endfor %}

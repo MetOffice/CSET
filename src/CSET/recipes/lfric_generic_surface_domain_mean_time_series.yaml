@@ -4,7 +4,7 @@ description: Plots a time series of the domain mean surface $VARNAME.
 
 # Pre-processing steps.
 parallel:
-  - operator: read.read_cubes
+  - operator: read.read_cube
     constraint:
       operator: constraints.combine_constraints
       varname_constraint:

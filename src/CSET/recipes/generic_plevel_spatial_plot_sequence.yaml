@@ -4,7 +4,7 @@ description: |
   Extracts ands plots the $PLEVELNAME from a file at pressure level $PLEVEL.
 
 parallel:
-  - operator: read.read_cubes
+  - operator: read.read_cube
     constraint:
       operator: constraints.combine_constraints
       variable_constraint:
