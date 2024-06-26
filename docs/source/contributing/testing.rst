@@ -34,7 +34,7 @@ Quick testing of individual components during development
 =========================================================
 
 Running all when developing new tests and debugging them might take some time. 
-For testing individual tests only on the commend line you can run
+For testing individual tests only on the command line you can run
 
 .. code-block:: bash
 
