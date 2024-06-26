@@ -14,8 +14,7 @@ Unreleased
 .. Add your changes here, highlighting any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
-* `@Sylviabohnenstengel`_ documentation: add info on quick pytesting
- in :pr: `696`
+* `@Sylviabohnenstengel`_ documentation: add info on quick pytesting in :pr: `696`
 
 24.6.0 (2024-06-17)
 -------------------
