@@ -11,7 +11,8 @@ Unreleased
 
 * `@dasha-shchep`_ Fixes METPLUS metadata issue in :pr:`692`
 
-.. Add your changes here, highlighting any user facing changes. E.g:
+.. Add changes here, probably taken from GitHub release notes.
+.. Highlight any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
 * `@Sylviabohnenstengel`_ documentation: add info on quick pytesting in :pr: `696`

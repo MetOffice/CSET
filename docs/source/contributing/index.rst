@@ -47,18 +47,14 @@ you need to add the file again with git add and rerun the commit.
 .. image:: failing_pr_check.png
     :alt: Pull request checks, with a couple failing. The details link is highlighted.
 
-Added an entry to the top of ``docs/source/changelog.rst``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Ensured the pull request title is descriptive
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For any non-trivial change an entry in the :doc:`/changelog` should be created.
-Put a line describing your change in the Unreleased section at the top of the
-file. Take inspiration from the other entries, and link to your PR using the
-``:pr:`123``` directive. If this is your first time contributing also link your
-GitHub username to your profile by adding the following line in that section:
+The PR title is used for the release notes. Therefore it should be
+sufficiently descriptive, and in particular should highlight any breaking
+changes.
 
-.. code-block:: rst
-
-    .. _@username: https://github.com/username
+The PR title can be edited by clicking the "Edit" button to its right.
 
 Conda lock files have been updated if dependencies changed
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
