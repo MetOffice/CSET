@@ -602,9 +602,9 @@ def plot_vertical_line_series(
         Name of the plot to write, used as a prefix for plot sequences. Defaults
         to the recipe name.
     series_coordinate: str, optional
-        Coordinate to plot on the y-axis. Can be model_level for um or
-        full_levels for lfric, but defaults to ``model_level_number`` as lfric data
-        do not contain a pressure coordinate.
+        Coordinate to plot on the y-axis. Can be ``pressure`` or
+        ``model_level_number`` for UM, or ``full_levels`` or ``half_levels``
+        for LFRic. Defaults to ``model_level_number``.
         This coordinate must exist in the cube.
     sequence_coordinate: str, optional
         Coordinate about which to make a plot sequence. Defaults to ``"time"``.
