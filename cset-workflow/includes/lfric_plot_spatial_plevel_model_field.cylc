@@ -6,7 +6,7 @@
     inherit = PARALLEL
         [[[environment]]]
         CSET_RECIPE_NAME = "lfric_generic_plevel_spatial_plot_sequence.yaml"
-        CSET_ADDOPTS = "--VARNAME={{model_field}} --PLEVEL={{plevel}}"
+        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --PLEVEL='{{plevel}}'"
 
     [[collate_lfric_generic_plevel_spatial_plot_sequence_{{model_field}}_{{plevel}}]]
     inherit = COLLATE
