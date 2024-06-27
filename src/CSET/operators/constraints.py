@@ -68,7 +68,7 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
 def generate_model_level_constraint(
     model_level: int | list[int], **kwargs
 ) -> iris.Constraint:
-    """Generate constraint for a particular model level number.
+    """Generate constraint for particular model level numbers.
 
     Operator that takes a CF compliant model_level_number int or list of int, and uses iris to
     generate a constraint to be passed into the read operator to minimize the
