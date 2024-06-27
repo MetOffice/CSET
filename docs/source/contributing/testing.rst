@@ -43,7 +43,7 @@ For testing individual tests only on the command line you can run:
 For example the following command will find your tests if you have previously
 set up your conda cset-dev environment:
 
-.. code-block:bash
+.. code-block:: bash
 
     pytest -k test_plots
 
