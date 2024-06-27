@@ -2,10 +2,11 @@
 
 """Install development version of CSET into the conda environment if needed."""
 
-import locale
 import logging
 import os
+import shutil
 import subprocess
+import sys
 import tempfile
 
 logging.basicConfig(
@@ -13,30 +14,33 @@ logging.basicConfig(
 )
 
 if os.getenv("CSET_ENV_USE_LOCAL_CSET") == "True":
-    local_cset_path = os.getenv("CSET_LOCAL_CSET_PATH")
+    local_cset_path = os.path.expandvars(
+        os.path.expanduser(os.getenv("CSET_LOCAL_CSET_PATH"))
+    )
     logging.info("Using local CSET from %s", local_cset_path)
     if local_cset_path.endswith(".whl"):
         logging.info("Wheel file, installing directly.")
         subprocess.run(
-            f"pip install -v --progress-bar off {local_cset_path}",
+            (
+                "pip",
+                "install",
+                "-v",
+                "--progress-bar",
+                "off",
+                "--no-deps",
+                local_cset_path,
+            ),
             check=True,
-            shell=True,
         )
     else:
         with tempfile.TemporaryDirectory() as tempdir:
-            # Copy project to temporary location to avoid permissions issues. I
-            # am using subprocess with shell=True here so variables like $HOME
-            # in the path are resolved.
-            subprocess.run(
-                f"cp -r {local_cset_path} {tempdir}",
-                check=True,
-                shell=True,
-            )
+            # Copy project to temporary location to avoid permissions issues.
+            shutil.copytree(local_cset_path, tempdir, dirs_exist_ok=True)
             # Build and install into python environment.
             subprocess.run(
-                ("pip", "install", "-v", "--progress-bar", "off", f"{tempdir}/CSET"),
+                ("pip", "install", "-v", "--progress-bar", "off", "--no-deps", tempdir),
                 check=True,
             )
 
 result = subprocess.run(("cset", "--version"), check=True, capture_output=True)
-print(f"Using CSET version: {result.stdout.decode(locale.getencoding())}")
+print(f"Using CSET version: {result.stdout.decode(sys.stdout.encoding)}")
