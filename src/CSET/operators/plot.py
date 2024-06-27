@@ -352,7 +352,7 @@ def _plot_and_save_vertical_line_series(
     filename: str
         Filename of the plot to write.
     series_coordinate: str
-        Coordinate about which to use as vertical coordinate.
+        Coordinate to use as vertical axis.
     title: str
         Plot title.
     vmin: float
@@ -365,13 +365,13 @@ def _plot_and_save_vertical_line_series(
     iplt.plot(cube, coord, "o-")
     ax = plt.gca()
 
-    # test if series_coordinate is pressure level data
+    # Special handling for pressure level data.
     if series_coordinate == "pressure":
-        # Invert y-axis and set to log scale
+        # Invert y-axis and set to log scale.
         ax.invert_yaxis()
         ax.set_yscale("log")
 
-        # Define y-ticks and labels for pressure log axis
+        # Define y-ticks and labels for pressure log axis.
         y_tick_labels = [
             "1000",
             "850",
