@@ -11,8 +11,9 @@ parallel:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
       model_level_constraint:
-        operator: constraints.generate_full_level_constraint
-        model_level: $MLEVEL
+        operator: constraints.generate_level_constraint
+        coordinate: "full_levels"
+        levels: $MLEVEL
       validity_time_constraint:
         operator: constraints.generate_time_constraint
         time_start: $VALIDITY_TIME
