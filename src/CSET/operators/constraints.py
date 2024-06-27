@@ -65,6 +65,47 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
     return varname_constraint
 
 
+def generate_level_constraint(
+    coordinate: str, levels: int | list[int], **kwargs
+) -> iris.Constraint:
+    """Generate constraint for particular levels on the specified coordinate.
+
+    Operator that generates a constraint to constrain to specific model levels.
+    If no levels are specified then any cube with the specified coordinate is
+    rejected.
+
+    Typically ``coordinate`` will be ``"pressure"`` or ``"model_level_number"``
+    for UM, or ``"full_levels"`` or ``"half_levels"`` for LFRic.
+
+    Arguments
+    ---------
+    coordinate: str
+        Level coordinate name about which to constraint.
+    levels: int | list[int]
+        CF compliant levels.
+
+    Returns
+    -------
+    constraint: iris.Constraint
+    """
+    # Ensure is iterable.
+    if not isinstance(levels, Iterable):
+        levels = [levels]
+
+    # When no levels specified reject cube with level coordinate.
+    if len(levels) == 0:
+
+        def no_levels(cube):
+            # Reject cubes for which coordinate exists.
+            return not bool(cube.coords(coordinate))
+
+        return iris.Constraint(cube_func=no_levels)
+
+    # Filter the coordinate to the desired levels.
+    # Dictionary unpacking is used to provide programmatic keyword arguments.
+    return iris.Constraint(**{coordinate: levels})
+
+
 def generate_model_level_constraint(
     model_level: int | list[int], **kwargs
 ) -> iris.Constraint:
