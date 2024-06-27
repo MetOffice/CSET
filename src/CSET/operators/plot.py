@@ -394,7 +394,7 @@ def _plot_and_save_vertical_line_series(
     elif (
         series_coordinate in ("model_level_number", "full_levels", "half_levels")
     ):
-        # Define y-ticks and labels for model level axis
+        # Define y-ticks and labels for vertical axis.
         y_ticks = cube.coord(series_coordinate).points
         y_tick_labels = [str(int(i)) for i in y_ticks]
         ax.set_ylim(min(y_ticks), max(y_ticks))
