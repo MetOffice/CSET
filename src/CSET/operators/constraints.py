@@ -70,9 +70,8 @@ def generate_model_level_constraint(
 ) -> iris.Constraint:
     """Generate constraint for particular model level numbers.
 
-    Operator that takes a CF compliant model_level_number int or list of int, and uses iris to
-    generate a constraint to be passed into the read operator to minimize the
-    CubeList the read operator loads and speed up loading.
+    Operator that generates a constraint to be passed into the read operator
+    to constrain to specific model levels.
 
     Arguments
     ---------
