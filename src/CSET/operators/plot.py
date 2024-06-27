@@ -387,7 +387,7 @@ def _plot_and_save_vertical_line_series(
         ]
         y_ticks = [1000, 850, 700, 500, 300, 200, 100, 50, 30, 20, 10]
 
-        # Set y-axis limits and ticks
+        # Set y-axis limits and ticks.
         ax.set_ylim(1100, 100)
 
     # test if series_coordinate is model level data. The um data uses model_level_number
