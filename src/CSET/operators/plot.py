@@ -392,7 +392,7 @@ def _plot_and_save_vertical_line_series(
     # test if series_coordinate is model level data. The um data uses model_level_number
     # and lfric uses full_levels as coordinate.
     elif (
-        series_coordinate == "model_level_number" or series_coordinate == "full_levels"
+        series_coordinate in ("model_level_number", "full_levels", "half_levels")
     ):
         # Define y-ticks and labels for model level axis
         y_ticks = cube.coord(series_coordinate).points
