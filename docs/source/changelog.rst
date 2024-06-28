@@ -9,7 +9,10 @@ Changelog
 Unreleased
 ----------
 
-.. Add your changes here, highlighting any user facing changes. E.g:
+* `@dasha-shchep`_ Fixes METPLUS metadata issue in :pr:`692`
+
+.. Add changes here, probably taken from GitHub release notes.
+.. Highlight any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
 * `@Sylviabohnenstengel`_ added a vertical line plotting operator that plots
@@ -18,6 +21,7 @@ Unreleased
   sequence coordinate allows displaying vertical profiles over time using the
   time slider functionality. Further added a recipe to plot vertical profiles
   and test functions for the vertical plot operator.Fixes :pr: `494`
+* `@Sylviabohnenstengel`_ documentation: add info on quick pytesting in :pr: `696`
 
 24.6.0 (2024-06-17)
 -------------------
@@ -35,6 +39,7 @@ to come.
 * `@daflack`_ added science review guidance to the documentation in :pr:`649`
 * `@jfrost-mo`_ ensured cartopy data files are included in the GitHub Actions
   cache in :pr:`647`
+* `@jfrost-mo`_ improved the error message for missing data files in :pr:`663`
 * `@jfrost-mo`_ grouped the package install logs in GitHub Actions in :pr:`645`
 * `@daflack`_ added an inflow layer properties diagnostic in :pr:`353`
 * `@jfrost-mo`_ fixed LFRic cube metadata on load in :pr:`627`. This means that
