@@ -15,9 +15,59 @@
 """Tests for convection diagnostics."""
 
 import iris
+import iris.cube
 import numpy as np
+import pytest
 
 import CSET.operators.convection as convection
+
+
+@pytest.fixture
+def SBCAPE() -> iris.cube.Cube:
+    """Get a SBCAPE cube."""
+    return iris.load_cube("tests/test_data/convection/SBCAPE.nc")
+
+
+@pytest.fixture
+def MUCAPE() -> iris.cube.Cube:
+    """Get an MUCAPE cube."""
+    return iris.load_cube("tests/test_data/convection/MUCAPE.nc")
+
+
+@pytest.fixture
+def MUCIN() -> iris.cube.Cube:
+    """Get a MUCIN cube."""
+    return iris.load_cube("tests/test_data/convection/MUCIN.nc")
+
+
+@pytest.fixture
+def EIB() -> iris.cube.Cube:
+    """Get an EIB cube."""
+    return iris.load_cube("tests/test_data/convection/EIB.nc")
+
+
+@pytest.fixture
+def BLheight() -> iris.cube.Cube:
+    """Get a BLheight cube."""
+    return iris.load_cube("tests/test_data/convection/BLheight.nc")
+
+
+@pytest.fixture
+def orography_2D() -> iris.cube.Cube:
+    """Get a 2D Orography cube."""
+    return iris.load_cube("tests/test_data/convection/Orography2D.nc")
+
+
+@pytest.fixture
+def orography_3D() -> iris.cube.Cube:
+    """Get a 3D Orography cube (realization)."""
+    return iris.load_cube("tests/test_data/convection/Orography3D.nc")
+
+
+@pytest.fixture
+def orography_4D() -> iris.cube.Cube:
+    """Get a 4D Orography cube (time and realization)."""
+    return iris.load_cube("tests/test_data/convection/Orography4D.nc")
 
 
 def test_cape_ratio():
@@ -60,13 +110,43 @@ def test_cape_ratio_non_masked_arrays():
     assert np.allclose(cape_75.data, precalculated_75.data, atol=1e-5, equal_nan=True)
 
 
-def test_inflow_layer_properties():
+def test_inflow_layer_properties(EIB, BLheight, orography_2D):
     """Compare with precalculated properties."""
-    EIB = iris.load_cube("tests/test_data/convection/EIB.nc")
-    BLheight = iris.load_cube("tests/test_data/convection/BLheight.nc")
-    Orography = iris.load_cube("tests/test_data/convection/Orography.nc")
     inflow_layer_properties = convection.inflow_layer_properties(
-        EIB, BLheight, Orography
+        EIB, BLheight, orography_2D
+    )
+    precalculated = iris.load_cube("tests/test_data/convection/ECFlagD.nc")
+    assert np.allclose(inflow_layer_properties.data, precalculated.data)
+
+
+def test_inflow_layer_properties_non_masked_arrays(EIB, BLheight, orography_2D):
+    """Use non-masked data and compare with precalculated properties."""
+    # Unmask the data.
+    EIB.data = EIB.data.filled(np.nan)
+    inflow_layer_properties = convection.inflow_layer_properties(
+        EIB, BLheight, orography_2D
+    )
+    precalculated = iris.load_cube("tests/test_data/convection/ECFlagD.nc")
+    assert np.allclose(inflow_layer_properties.data, precalculated.data)
+
+
+def test_inflow_layer_properties_3D_orography(EIB, BLheight, orography_3D):
+    """Reduce a 3D orography filed down to 2D."""
+    # TODO: Get David to look into why.
+    pytest.xfail("Manufactured orography gives different results.")
+    inflow_layer_properties = convection.inflow_layer_properties(
+        EIB, BLheight, orography_3D
+    )
+    precalculated = iris.load_cube("tests/test_data/convection/ECFlagD.nc")
+    assert np.allclose(inflow_layer_properties.data, precalculated.data)
+
+
+def test_inflow_layer_properties_4D_orography(EIB, BLheight, orography_4D):
+    """Reduce a 4D orography filed down to 2D."""
+    # TODO: Get David to look into why.
+    pytest.xfail("Manufactured orography gives different results.")
+    inflow_layer_properties = convection.inflow_layer_properties(
+        EIB, BLheight, orography_4D
     )
     precalculated = iris.load_cube("tests/test_data/convection/ECFlagD.nc")
     assert np.allclose(inflow_layer_properties.data, precalculated.data)
