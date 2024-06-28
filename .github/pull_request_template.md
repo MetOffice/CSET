@@ -1,7 +1,5 @@
 <!-- Thanks for contributing! Please add a short description of your change, and link to an issue, e.g. "Fixes #123" -->
 
-Fixes #
-
 ### Contribution checklist
 
 Aim to have all relevant checks ticked off before merging. See the [developer's guide](https://metoffice.github.io/CSET/contributing/) for more detail.
