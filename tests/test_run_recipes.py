@@ -14,6 +14,7 @@
 
 """Tests for running CSET operator recipes."""
 
+import json
 from pathlib import Path
 from uuid import uuid4
 
@@ -72,8 +73,24 @@ def test_execute_recipe_parallel_invalid_output_dir(tmp_path: Path):
         CSET.operators.execute_recipe_parallel(recipe, input_file, output_dir)
 
 
-def test_execute_recipe_collate(tmp_path):
+def test_execute_recipe_collate(tmp_path: Path):
     """Execute collate from a recipe."""
     output_dir = tmp_path
     recipe_file = Path("tests/test_data/noop_recipe.yaml")
     CSET.operators.execute_recipe_collate(recipe_file, output_dir)
+
+
+def test_execute_recipe_collate_no_steps(tmp_path: Path):
+    """Execute collate for a recipe without any collate steps."""
+    recipe = '{"parallel":[{"operator": misc.noop}]}'
+    output_dir = tmp_path
+    CSET.operators.execute_recipe_collate(recipe, output_dir)
+
+
+def test_run_steps_style_file_metadata_written(tmp_path: Path):
+    """Style file path metadata written out."""
+    style_file_path = "/test/style_file_path.json"
+    CSET.operators._run_steps({}, [], None, tmp_path, Path(style_file_path))
+    with open(tmp_path / "meta.json", "rb") as fp:
+        metadata = json.load(fp)
+    assert metadata["style_file_path"] == style_file_path
