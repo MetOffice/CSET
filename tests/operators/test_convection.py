@@ -95,3 +95,14 @@ def test_inflow_layer_properties(EIB, BLheight, orography_2D):
     )
     precalculated = iris.load_cube("tests/test_data/convection/ECFlagD.nc")
     assert np.allclose(inflow_layer_properties.data, precalculated.data)
+
+
+def test_inflow_layer_properties_non_masked_arrays(EIB, BLheight, orography_2D):
+    """Use non-masked data and compare with precalculated properties."""
+    # Unmask the data.
+    EIB.data = EIB.data.filled(np.nan)
+    inflow_layer_properties = convection.inflow_layer_properties(
+        EIB, BLheight, orography_2D
+    )
+    precalculated = iris.load_cube("tests/test_data/convection/ECFlagD.nc")
+    assert np.allclose(inflow_layer_properties.data, precalculated.data)
