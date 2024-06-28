@@ -41,7 +41,7 @@ Fortunately individual tests can be run on the command line with:
     pytest -k file_name_of_test
 
 
-You can also run all of the tests in a file, by giving the same of the file. For
+You can also run all of the tests in a file, by giving the name of the file. For
 example, the following command will run all of the plotting tests.
 
 .. code-block:: bash
