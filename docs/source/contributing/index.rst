@@ -94,4 +94,4 @@ Marked the PR as ready to review
     :alt: Green status symbol indicating an open PR ready for review.
 
 If you opened the PR as a draft make sure it is marked as ready for review with
-a green status symbol when you want others to look at it.
+a green status symbol when it is ready for others to look at it.
