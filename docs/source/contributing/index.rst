@@ -50,11 +50,17 @@ you need to add the file again with git add and rerun the commit.
 Ensured the pull request title is descriptive
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The PR title is used for the release notes. Therefore it should be
-sufficiently descriptive, and in particular should highlight any breaking
-changes.
+The title of a pull request should clearly describe what the pull request
+changes, and in particular should highlight any breaking changes.
 
-The PR title can be edited by clicking the "Edit" button to its right.
+The titles of pull requests are used to compile the release notes and
+:doc:`/changelog`, therefore it is important that they are easy to understand
+for people who are not familiar with the code. Descriptive pull request titles
+also makes it easier to search for changes; useful when a bug was introduced.
+
+The pull request title can be edited by clicking the "Edit" button to its right.
+If you need more text to describe what the pull request does, please add it in
+the description.
 
 Conda lock files have been updated if dependencies changed
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
