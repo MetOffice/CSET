@@ -132,6 +132,23 @@ def test_plot_vertical_line_series(vertical_profile_cube, tmp_working_dir):
     assert Path("untitled_473721.0.png").is_file()
 
 
+def test_plot_vertical_line_series_with_filename(
+    vertical_profile_cube, tmp_working_dir
+):
+    """Save a vertical line series plot with specific filename.
+
+    The given filename does not haven extension to test that too.
+    """
+    plot.plot_vertical_line_series(
+        vertical_profile_cube,
+        filename="Test",
+        series_coordinate="pressure",
+        sequence_coordinate="time",
+    )
+    assert Path("Test_473718.0.png").is_file()
+    assert Path("Test_473721.0.png").is_file()
+
+
 def test_plot_vertical_line_series_no_series_coordinate(
     vertical_profile_cube, tmp_working_dir
 ):
