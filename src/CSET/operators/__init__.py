@@ -105,9 +105,7 @@ def _write_metadata(recipe: dict):
     metadata = recipe.copy()
     # Remove steps, as not needed, and might contain non-serialisable types.
     metadata.pop("parallel", None)
-    metadata.pop("steps", None)
     metadata.pop("collate", None)
-    metadata.pop("post-steps", None)
     with open("meta.json", "wt", encoding="UTF-8") as fp:
         json.dump(metadata, fp)
     os.sync()
