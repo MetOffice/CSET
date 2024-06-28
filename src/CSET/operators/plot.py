@@ -20,7 +20,6 @@ import json
 import logging
 import math
 import sys
-import warnings
 from typing import Union
 
 import iris
@@ -494,62 +493,6 @@ def spatial_contour_plot(
     # Make a page to display the plots.
     _make_plot_html_page(complete_plot_index)
 
-    return cube
-
-
-# Deprecated
-def postage_stamp_contour_plot(
-    cube: iris.cube.Cube,
-    filename: str = None,
-    coordinate: str = "realization",
-    **kwargs,
-) -> iris.cube.Cube:
-    """Plot postage stamp contour plots from an ensemble.
-
-    Depreciated. Use spatial_contour_plot with a stamp_coordinate argument
-    instead.
-
-    Parameters
-    ----------
-    cube: Cube
-        Iris cube of data to be plotted. It must have a realization coordinate.
-    filename: pathlike, optional
-        The path of the plot to write. Defaults to the recipe name.
-    coordinate: str
-        The coordinate that becomes different plots. Defaults to "realization".
-
-    Returns
-    -------
-    Cube
-        The original cube (so further operations can be applied)
-
-    Raises
-    ------
-    ValueError
-        If the cube doesn't have the right dimensions.
-    TypeError
-        If cube isn't a Cube.
-    """
-    warnings.warn(
-        "postage_stamp_contour_plot is depreciated. Use spatial_contour_plot with a stamp_coordinate argument instead.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    # Get suitable filename.
-    if filename is None:
-        filename = slugify(get_recipe_metadata().get("title", "Untitled"))
-    if not filename.endswith(".png"):
-        filename = filename + ".png"
-
-    # Check cube is suitable.
-    cube = _check_single_cube(cube)
-    try:
-        cube.coord(coordinate)
-    except iris.exceptions.CoordinateNotFoundError as err:
-        raise ValueError(f"Cube must have a {coordinate} coordinate.") from err
-
-    _plot_and_save_postage_stamp_contour_plot(cube, filename, coordinate, title="")
-    _make_plot_html_page([filename])
     return cube
 
 
