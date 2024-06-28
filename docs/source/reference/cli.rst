@@ -28,6 +28,19 @@ page.
     -s STYLE_FILE, --style-file STYLE_FILE
                             colour bar definition to use
 
+
+The ``cset bake`` commands need to be run out of the ``CSET/recipe`` folder.
+Here is an example to run a recipe making use of the templated variable ``VARNAME`` in the recipe.
+The '-v' is optional to give verbose output::
+
+.. code-block:: text
+
+    cset -v bake -i INPUT_DIR/* -o OUTPUT_DIR -r generic_surface_histogram_series.yaml  --VARNAME air_pressure_at_sea_level --VALIDITY_TIME 2024-01-16T06:00Z
+
+When running `cset bake` multiple times for the same recipe it can cause issues with merging data into
+a single cube if output from a previous `cset bake` run exists in the chosen `OUTPUT_DIR`. In
+this case you need to delete the output data from the previous run.
+
 .. _cset-cookbook-command:
 
 cset cookbook
