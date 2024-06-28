@@ -21,17 +21,43 @@ import CSET.operators.convection as convection
 
 
 def test_cape_ratio():
-    """Compare with precalculated ratio."""
+    """Compare with precalculated ratio KGOs."""
+    # Load the test data.
     SBCAPE = iris.load_cube("tests/test_data/convection/SBCAPE.nc")
     MUCAPE = iris.load_cube("tests/test_data/convection/MUCAPE.nc")
     MUCIN = iris.load_cube("tests/test_data/convection/MUCIN.nc")
+
+    # Calculate the diagnostic.
     cape_75 = convection.cape_ratio(SBCAPE, MUCAPE, MUCIN)
+    # Compare with KGO.
     precalculated_75 = iris.load_cube("tests/test_data/convection/ECFlagB.nc")
     assert np.allclose(cape_75.data, precalculated_75.data, atol=1e-5, equal_nan=True)
 
+    # Calculate the diagnostic.
     cape_1p5 = convection.cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-1.5)
+    # Compare with KGO.
     precalculated_1p5 = iris.load_cube("tests/test_data/convection/ECFlagB_2.nc")
     assert np.allclose(cape_1p5.data, precalculated_1p5.data, atol=1e-5, equal_nan=True)
+
+
+def test_cape_ratio_non_masked_arrays():
+    """Calculate with non-masked arrays and compare with precalculated ratio."""
+    # Load the test data.
+    SBCAPE = iris.load_cube("tests/test_data/convection/SBCAPE.nc")
+    MUCAPE = iris.load_cube("tests/test_data/convection/MUCAPE.nc")
+    MUCIN = iris.load_cube("tests/test_data/convection/MUCIN.nc")
+
+    # Replace masked values with NaNs.
+    SBCAPE.data = SBCAPE.data.filled(np.nan)
+    MUCAPE.data = MUCAPE.data.filled(np.nan)
+    MUCIN.data = MUCIN.data.filled(np.nan)
+
+    # Calculate the diagnostic.
+    cape_75 = convection.cape_ratio(SBCAPE, MUCAPE, MUCIN)
+
+    # Compare with KGO.
+    precalculated_75 = iris.load_cube("tests/test_data/convection/ECFlagB.nc")
+    assert np.allclose(cape_75.data, precalculated_75.data, atol=1e-5, equal_nan=True)
 
 
 def test_inflow_layer_properties():
