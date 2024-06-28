@@ -73,6 +73,21 @@ def test_cape_ratio(SBCAPE, MUCAPE, MUCIN):
     assert np.allclose(cape_1p5.data, precalculated_1p5.data, atol=1e-5, equal_nan=True)
 
 
+def test_cape_ratio_non_masked_arrays(SBCAPE, MUCAPE, MUCIN):
+    """Calculate with non-masked arrays and compare with precalculated ratio."""
+    # Replace masked values with NaNs.
+    SBCAPE.data = SBCAPE.data.filled(np.nan)
+    MUCAPE.data = MUCAPE.data.filled(np.nan)
+    MUCIN.data = MUCIN.data.filled(np.nan)
+
+    # Calculate the diagnostic.
+    cape_75 = convection.cape_ratio(SBCAPE, MUCAPE, MUCIN)
+
+    # Compare with KGO.
+    precalculated_75 = iris.load_cube("tests/test_data/convection/ECFlagB.nc")
+    assert np.allclose(cape_75.data, precalculated_75.data, atol=1e-5, equal_nan=True)
+
+
 def test_inflow_layer_properties(EIB, BLheight, orography_2D):
     """Compare with precalculated properties."""
     inflow_layer_properties = convection.inflow_layer_properties(
