@@ -3,7 +3,7 @@ title: Surface $VARNAME
 description: Extracts and plots the surface $VARNAME from a file.
 
 parallel:
-  - operator: read.read_cubes
+  - operator: read.read_cube
     constraint:
       operator: constraints.combine_constraints
       varname_constraint:
