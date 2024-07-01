@@ -393,10 +393,138 @@ def _plot_and_save_vertical_line_series(
         xlabel=f"{cube.name()} / {cube.units}",
         title=title,
     )
+    ax.ticklabel_format(axis="x")  # , labelrotation=15)
+    ax.tick_params(axis="y")  # , useOffset=False)
+    ax.autoscale()
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=150)
     logging.info("Saved line plot to %s", filename)
+    plt.close(fig)
+
+
+def _plot_and_save_histogram_series(
+    cube: iris.cube.Cube, filename: str, title: str, vmin: float, vmax: float, **kwargs
+):
+    """Plot and save a histogram series.
+
+    Parameters
+    ----------
+    cube: Cube
+        2 dimensional Cube of the data to plot as histogram.
+        Plotting options are fixed:
+        density=True, histtype='bar',stacked=True to ensure that
+        a probability density is plotted using matplotlib.pyplot.hist
+        to plot the probability density so that the area under
+        the histogram integrates to 1.
+        stacked is set to True so the sum of the histograms is
+        normalized to 1.
+        ax.autoscale is switched off and the ylim range
+        is preset as (0,1) to make figures comparable.
+    filename: str
+        Filename of the plot to write.
+    title: str
+        Plot title.
+    vmin: float
+        minimum for colourbar
+    vmax: float
+        maximum for colourbar
+    """
+    fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
+    # reshape cube data into a single array to allow for a single histogram.
+    # Otherwise we plot xdim histograms stacked.
+    cube_data_1d = (cube.data).flatten()
+    plt.hist(cube_data_1d, density=True, histtype="bar", stacked=True)
+    ax = plt.gca()
+    # try seaborn for a box whisker plot:
+    # https://python-graph-gallery.com/34-grouped-boxplot/
+
+    # Add some labels and tweak the style.
+    ax.set(
+        title=title,
+        xlabel=f"{cube.name()} / {cube.units}",
+        ylabel="normalised probability density",
+        ylim=(0, 1),
+        xlim=(vmin, vmax),
+    )
+    #    ax.autoscale()
+
+    # Save plot.
+    fig.savefig(filename, bbox_inches="tight", dpi=150)
+    logging.info("Saved line plot to %s", filename)
+    plt.close(fig)
+
+
+def _plot_and_save_postage_stamp_histogram_series(
+    cube: iris.cube.Cube,
+    filename: str,
+    title: str,
+    stamp_coordinate: str,
+    vmin: float,
+    vmax: float,
+    **kwargs,
+):
+    """Plot and save postage (ensemble members) stamps for a histogram series.
+
+    Parameters
+    ----------
+    cube: Cube
+        2 dimensional Cube of the data to plot as histogram.
+        Plotting options are fixed:
+        density=True, histtype='bar',stacked=True to ensure that
+        a probability density is plotted using matplotlib.pyplot.hist
+        to plot the probability density so that the area under
+        the histogram integrates to 1.
+        stacked is set to True so the sum of the histograms is
+        normalized to 1.
+        ax.autoscale is switched off and the ylim range
+        is preset as (0,1) to make figures comparable.
+    filename: str
+        Filename of the plot to write.
+    title: str
+        Plot title.
+    stamp_coordinate: str
+        Coordinate that becomes different plots.
+    vmin: float
+        minimum for colourbar
+    vmax: float
+        maximum for colourbar
+    """
+    # Use the smallest square grid that will fit the members.
+    grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
+
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+    # Make a subplot for each member.
+    for member, subplot in zip(
+        cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1), strict=False
+    ):
+        # Implicit interface is much easier here, due to needing to have the
+        # cartopy GeoAxes generated.
+        plt.subplot(grid_size, grid_size, subplot)
+        # reshape cube data into a single array to allow for a single histogram.
+        # Otherwise we plot xdim histograms stacked.
+        member_data_1d = (member.data).flatten()
+        plot = plt.hist(member_data_1d, density=True, histtype="bar", stacked=True)
+        ax = plt.gca()
+        ax.set_title(
+            f"Normalised probability density function Member #{member.coord(stamp_coordinate).points[0]}"
+        )
+        ax.set_axis_off()
+        ax.coastlines()
+        ax.set_ylim(0, 1)
+        ax.set_xlim(vmin, vmax)
+
+    # Put the shared colorbar in its own axes.
+    # Put the shared colorbar in its own axes.
+    colorbar_axes = fig.add_axes([0.15, 0.07, 0.7, 0.03])
+    colorbar = fig.colorbar(plot, colorbar_axes, orientation="horizontal")
+    colorbar.set_label(f"{cube.name()} / {cube.units}")
+
+    # Overall figure title.
+    fig.suptitle(title)
+
+    fig.savefig(filename, bbox_inches="tight", dpi=150)
+    logging.info("Saved contour postage stamp plot to %s", filename)
     plt.close(fig)
 
 
@@ -464,6 +592,9 @@ def spatial_contour_plot(
     except iris.exceptions.CoordinateNotFoundError:
         pass
 
+    # if the sequence_coordinate is option is this testthen correct? It is similar to the
+    # test in spatial plotting for optional sequences. It does not crash when running CLI
+    # cset bake command with a single timestep
     try:
         cube.coord(sequence_coordinate)
     except iris.exceptions.CoordinateNotFoundError as err:
@@ -586,7 +717,7 @@ def plot_vertical_line_series(
         Name of the plot to write, used as a prefix for plot sequences. Defaults
         to the recipe name.
     series_coordinate: str, optional
-        Coordinate to plot on the y-axis. Defaults to ``pressure``.
+        Coordinate about which to make a series. Defaults to ``"pressure"``.
         This coordinate must exist in the cube.
     sequence_coordinate: str, optional
         Coordinate about which to make a plot sequence. Defaults to ``"time"``.
@@ -613,40 +744,38 @@ def plot_vertical_line_series(
     except iris.exceptions.CoordinateNotFoundError as err:
         raise ValueError(f"Cube must have a {series_coordinate} coordinate.") from err
 
-    # If several individual vertical lines are plotted with time as sequence_coordinate
-    # for the time slider option.
     try:
-        cube.coord(sequence_coordinate)
+        if cube.ndim > 1:
+            cube.coord(sequence_coordinate)
     except iris.exceptions.CoordinateNotFoundError as err:
-        raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
+        raise ValueError(
+            f"Cube must have a {sequence_coordinate} coordinate or be 1D."
+        ) from err
 
     # Ensure we have a name for the plot file.
     recipe_title = get_recipe_metadata().get("title", "Untitled")
     if filename is None:
         filename = slugify(recipe_title)
 
-    # Make vertical line plot
-    plotting_func = _plot_and_save_vertical_line_series
-
     # set the lower and upper limit for the x-axis to ensure all plots
     # have same range. This needs to read the whole cube over the range of
     # the sequence and if applicable postage stamp coordinate.
     # This only works if the plotting is done in the collate section of a
     # recipe and not in the parallel section of a recipe.
-    vmin = np.floor((cube.data.min()))
-    vmax = np.ceil((cube.data.max()))
+    vmin = np.floor(cube.data.min())
+    vmax = np.ceil(cube.data.max())
 
     # Create a plot for each value of the sequence coordinate.
     plot_index = []
     for cube_slice in cube.slices_over(sequence_coordinate):
         # Use sequence value so multiple sequences can merge.
-        sequence_value = cube_slice.coord(sequence_coordinate).points[0]
+        seq_coord = cube_slice.coord(sequence_coordinate)
+        sequence_value = seq_coord.points[0]
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
-        coord = cube_slice.coord(series_coordinate)
         # Format the coordinate value in a unit appropriate way.
-        title = f"{recipe_title} | {coord.units.title(coord.points[0])}"
+        title = f"{recipe_title} | {seq_coord.units.title(sequence_value)}"
         # Do the actual plotting.
-        plotting_func(
+        _plot_and_save_vertical_line_series(
             cube_slice,
             coord,
             plot_filename,
@@ -661,5 +790,123 @@ def plot_vertical_line_series(
 
     # Make a page to display the plots.
     _make_plot_html_page(complete_plot_index)
+
+    return cube
+
+
+def plot_histogram_series(
+    cube: iris.cube.Cube,
+    filename: str = None,
+    sequence_coordinate: str = "time",
+    stamp_coordinate: str = "realization",
+    **kwargs,
+) -> iris.cube.Cube:
+    """Plot a histogram plot for each vertical level provided.
+
+    A histogram plot can be plotted, but if the sequence_coordinate (i.e. time)
+    is present then a sequence of plots will be produced using the time slider
+    functionality to scroll through histograms against time.
+
+    The cube must be 1D.
+
+    Parameters
+    ----------
+    cube: Cube
+        Iris cube of the data to plot. It should have a single dimension.
+    filename: str, optional
+        Name of the plot to write, used as a prefix for plot sequences. Defaults
+        to the recipe name.
+    sequence_coordinate: str, optional
+        Coordinate about which to make a plot sequence. Defaults to ``"time"``.
+        This coordinate must exist in the cube and will be used for the time
+        slider.
+    stamp_coordinate: str, optional
+        Coordinate about which to plot postage stamp plots. Defaults to
+        ``"realization"``.
+
+    Returns
+    -------
+    Cube
+        The original cube (so further operations can be applied).
+
+    Raises
+    ------
+    ValueError
+        If the cube doesn't have the right dimensions.
+    TypeError
+        If the cube isn't a single cube.
+    """
+    recipe_title = get_recipe_metadata().get("title", "Untitled")
+
+    # Ensure we have a name for the plot file.
+    if filename is None:
+        filename = slugify(recipe_title)
+
+    # Ensure we've got a single cube.
+    cube = _check_single_cube(cube)
+
+    # Call internal plotting function
+    plotting_func = _plot_and_save_histogram_series
+
+    # Make postage stamp plots if stamp_coordinate exists and has more than a
+    # single point.
+    try:
+        if cube.coord(stamp_coordinate).shape[0] > 1:
+            plotting_func = _plot_and_save_postage_stamp_histogram_series
+    except iris.exceptions.CoordinateNotFoundError:
+        pass
+
+    # If several histograms are plotted with time as sequence_coordinate
+    # for the time slider option.
+    try:
+        cube.coord(sequence_coordinate)
+    except iris.exceptions.CoordinateNotFoundError as err:
+        raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
+
+    # set the lower and upper limit for the colorbar to ensure all plots
+    # have same range. This needs to read the whole cube over the range of
+    # the sequence and if applicable postage stamp coordinate.
+    # This only works if the plotting is done in the collate section of a
+    # recipe and not in the parallel section of a recipe.
+    vmin = np.floor((cube.data.min()))
+    vmax = np.ceil((cube.data.max()))
+
+    # Create a plot for each value of the sequence coordinate.
+    plot_index = []
+    for cube_slice in cube.slices_over(sequence_coordinate):
+        # Use sequence value so multiple sequences can merge.
+        sequence_value = cube_slice.coord(sequence_coordinate).points[0]
+        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
+        coord = cube_slice.coord(sequence_coordinate)
+        # Format the coordinate value in a unit appropriate way.
+        title = f"{recipe_title} | {coord.units.title(coord.points[0])}"
+        # Do the actual plotting.
+        plotting_func(
+            cube_slice,
+            plot_filename,
+            stamp_coordinate=stamp_coordinate,
+            title=title,
+            vmin=vmin,
+            vmax=vmax,
+        )
+        plot_index.append(plot_filename)
+
+    # Add list of plots to plot metadata.
+    complete_plot_index = _append_to_plot_index(plot_index)
+
+    # Make a page to display the plots.
+    _make_plot_html_page(complete_plot_index)
+
+    ##   # Add file extension.
+    ##   plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
+
+    ##    # Do the actual plotting.
+    ##    _plot_and_save_vertical_line_series(cube, coord, plot_filename, title)
+
+    ##    # Add list of plots to plot metadata.
+    ##    plot_index = _append_to_plot_index([plot_filename])
+
+    ##    # Make a page to display the plots.
+    ##    _make_plot_html_page(plot_index)
 
     return cube
