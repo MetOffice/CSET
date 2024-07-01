@@ -14,8 +14,8 @@
 
 """Operators to generate constraints to filter with."""
 
+from collections.abc import Iterable
 from datetime import datetime
-from typing import Union
 
 import iris
 import iris.cube
@@ -64,67 +64,45 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
     return varname_constraint
 
 
-def generate_model_level_constraint(
-    model_level_number: Union[int, str], **kwargs
+def generate_level_constraint(
+    coordinate: str, levels: int | list[int], **kwargs
 ) -> iris.Constraint:
-    """Generate constraint for a particular model level number.
+    """Generate constraint for particular levels on the specified coordinate.
 
-    Operator that takes a CF compliant model_level_number string, and uses iris to
-    generate a constraint to be passed into the read operator to minimize the
-    CubeList the read operator loads and speed up loading.
+    Operator that generates a constraint to constrain to specific model or
+    pressure levels. If no levels are specified then any cube with the specified
+    coordinate is rejected.
+
+    Typically ``coordinate`` will be ``"pressure"`` or ``"model_level_number"``
+    for UM, or ``"full_levels"`` or ``"half_levels"`` for LFRic.
 
     Arguments
     ---------
-    model_level_number: str
-        CF compliant model level number.
+    coordinate: str
+        Level coordinate name about which to constraint.
+    levels: int | list[int]
+        CF compliant levels.
 
     Returns
     -------
-    model_level_number_constraint: iris.Constraint
+    constraint: iris.Constraint
     """
-    # Cast to int in case a string is given.
-    model_level_number = int(model_level_number)
-    model_level_number_constraint = iris.Constraint(
-        model_level_number=model_level_number
-    )
-    return model_level_number_constraint
+    # Ensure is iterable.
+    if not isinstance(levels, Iterable):
+        levels = [levels]
 
+    # When no levels specified reject cube with level coordinate.
+    if len(levels) == 0:
 
-def generate_pressure_level_constraint(
-    pressure_levels: Union[int, list[int]], **kwargs
-) -> iris.Constraint:
-    """Generate constraint for the specified pressure_levels.
+        def no_levels(cube):
+            # Reject cubes for which coordinate exists.
+            return not bool(cube.coords(coordinate))
 
-    If no pressure levels are specified then any cube with a pressure coordinate
-    is rejected.
+        return iris.Constraint(cube_func=no_levels)
 
-    Arguments
-    ---------
-    pressure_levels: int|list
-        List of integer pressure levels in hPa either as single integer
-        for a single level or a list of multiple integers.
-
-    Returns
-    -------
-    pressure_constraint: iris.Constraint
-    """
-    # If pressure_level is an integer it is converted into a list.
-    if isinstance(pressure_levels, int):
-        pressure_levels = [pressure_levels]
-    if len(pressure_levels) == 0:
-        # If none specified reject cubes with pressure level coordinate.
-        def no_pressure_coordinate(cube):
-            try:
-                cube.coord("pressure")
-            except iris.exceptions.CoordinateNotFoundError:
-                return True
-            return False
-
-        pressure_constraint = iris.Constraint(cube_func=no_pressure_coordinate)
-    else:
-        pressure_constraint = iris.Constraint(pressure=pressure_levels)
-
-    return pressure_constraint
+    # Filter the coordinate to the desired levels.
+    # Dictionary unpacking is used to provide programmatic keyword arguments.
+    return iris.Constraint(**{coordinate: levels})
 
 
 def generate_cell_methods_constraint(cell_methods: list, **kwargs) -> iris.Constraint:

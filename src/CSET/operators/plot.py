@@ -334,6 +334,7 @@ def _plot_and_save_vertical_line_series(
     cube: iris.cube.Cube,
     coord: iris.coords.Coord,
     filename: str,
+    series_coordinate: str,
     title: str,
     vmin: float,
     vmax: float,
@@ -349,6 +350,8 @@ def _plot_and_save_vertical_line_series(
         Coordinate to plot on y-axis.
     filename: str
         Filename of the plot to write.
+    series_coordinate: str
+        Coordinate to use as vertical axis.
     title: str
         Plot title.
     vmin: float
@@ -360,27 +363,40 @@ def _plot_and_save_vertical_line_series(
     fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
     iplt.plot(cube, coord, "o-")
     ax = plt.gca()
-    ax.invert_yaxis()
-    ax.set_yscale("log")
 
-    # Define y-ticks and labels for pressure log axis
-    y_tick_labels = [
-        "1000",
-        "850",
-        "700",
-        "500",
-        "300",
-        "200",
-        "100",
-        "50",
-        "30",
-        "20",
-        "10",
-    ]
-    y_ticks = [1000, 850, 700, 500, 300, 200, 100, 50, 30, 20, 10]
+    # Special handling for pressure level data.
+    if series_coordinate == "pressure":
+        # Invert y-axis and set to log scale.
+        ax.invert_yaxis()
+        ax.set_yscale("log")
 
-    # Set y-axis limits and ticks
-    ax.set_ylim(1100, 100)
+        # Define y-ticks and labels for pressure log axis.
+        y_tick_labels = [
+            "1000",
+            "850",
+            "700",
+            "500",
+            "300",
+            "200",
+            "100",
+            "50",
+            "30",
+            "20",
+            "10",
+        ]
+        y_ticks = [1000, 850, 700, 500, 300, 200, 100, 50, 30, 20, 10]
+
+        # Set y-axis limits and ticks.
+        ax.set_ylim(1100, 100)
+
+    # test if series_coordinate is model level data. The um data uses model_level_number
+    # and lfric uses full_levels as coordinate.
+    elif series_coordinate in ("model_level_number", "full_levels", "half_levels"):
+        # Define y-ticks and labels for vertical axis.
+        y_ticks = cube.coord(series_coordinate).points
+        y_tick_labels = [str(int(i)) for i in y_ticks]
+        ax.set_ylim(min(y_ticks), max(y_ticks))
+
     ax.set_yticks(y_ticks)
     ax.set_yticklabels(y_tick_labels)
 
@@ -566,7 +582,7 @@ def plot_line_series(
 def plot_vertical_line_series(
     cube: iris.cube.Cube,
     filename: str = None,
-    series_coordinate: str = "pressure",
+    series_coordinate: str = "model_level_number",
     sequence_coordinate: str = "time",
     # line_coordinate: str = "realization",
     **kwargs,
@@ -586,7 +602,9 @@ def plot_vertical_line_series(
         Name of the plot to write, used as a prefix for plot sequences. Defaults
         to the recipe name.
     series_coordinate: str, optional
-        Coordinate to plot on the y-axis. Defaults to ``pressure``.
+        Coordinate to plot on the y-axis. Can be ``pressure`` or
+        ``model_level_number`` for UM, or ``full_levels`` or ``half_levels``
+        for LFRic. Defaults to ``model_level_number``.
         This coordinate must exist in the cube.
     sequence_coordinate: str, optional
         Coordinate about which to make a plot sequence. Defaults to ``"time"``.
@@ -650,6 +668,7 @@ def plot_vertical_line_series(
             cube_slice,
             coord,
             plot_filename,
+            series_coordinate,
             title=title,
             vmin=vmin,
             vmax=vmax,
