@@ -69,7 +69,7 @@ def generate_level_constraint(
 ) -> iris.Constraint:
     """Generate constraint for particular levels on the specified coordinate.
 
-    Operator that generates a constraint to constrain to specific model levels.
+    Operator that generates a constraint to constrain to specific model or pressure levels.
     If no levels are specified then any cube with the specified coordinate is
     rejected.
 
