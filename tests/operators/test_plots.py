@@ -73,27 +73,6 @@ def test_postage_stamp_contour_plot_sequence_coord_check(cube, tmp_working_dir):
         plot.spatial_contour_plot(cube)
 
 
-# Deprecated functionality.
-def test_postage_stamp_plots_deprecated(monkeypatch, tmp_path):
-    """Plot postage stamp plots of ensemble data."""
-    ensemble_cube = read.read_cube("tests/test_data/exeter_em*.nc")
-    ensemble_cube_3d = ensemble_cube.slices_over("time").next()
-    monkeypatch.chdir(tmp_path)
-    plot_file = Path("plot.png")
-    with pytest.deprecated_call():
-        plot.postage_stamp_contour_plot(ensemble_cube_3d, filename=plot_file.name)
-    assert plot_file.is_file()
-
-
-def test_postage_stamp_realization_check_deprecated(cube, tmp_working_dir):
-    """Check error when cube has no realization coordinate."""
-    cube = cube.copy()
-    cube.remove_coord("realization")
-    with pytest.deprecated_call():
-        with pytest.raises(ValueError):
-            plot.postage_stamp_contour_plot(cube)
-
-
 def test_plot_line_series(cube, tmp_working_dir):
     """Save a line series plot."""
     cube = collapse.collapse(cube, ["grid_latitude", "grid_longitude"], "MEAN")
