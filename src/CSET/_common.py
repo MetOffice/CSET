@@ -18,7 +18,6 @@ import io
 import json
 import logging
 import re
-import warnings
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Union
@@ -107,15 +106,7 @@ def check_recipe_has_steps(recipe: dict):
     if not isinstance(recipe, dict):
         raise TypeError("Recipe must contain a mapping.")
     if "parallel" not in recipe:
-        if "steps" in recipe:
-            warnings.warn(
-                "'steps' recipe key is deprecated, use 'parallel' instead.",
-                DeprecationWarning,
-                stacklevel=3,
-            )
-            parallel_steps_key = "steps"
-        else:
-            raise ValueError("Recipe must contain a 'parallel' key.")
+        raise ValueError("Recipe must contain a 'parallel' key.")
     try:
         if len(recipe[parallel_steps_key]) < 1:
             raise ValueError("Recipe must have at least 1 parallel step.")
