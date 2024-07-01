@@ -70,3 +70,12 @@ CSET.operators.convection
 
 .. automodule:: CSET.operators.convection
    :members:
+
+Uncategorised Operators
+~~~~~~~~~~~~~~~~~~~~~~~
+
+CSET.operators.ageofair
+-----------------------
+
+.. automodule:: CSET.operators.ageofair
+   :members:
