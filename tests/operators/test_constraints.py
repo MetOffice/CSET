@@ -33,6 +33,13 @@ def test_generate_var_constraint():
     assert repr(var_constraint) == expected_var_constraint
 
 
+def test_generate_var_constraint_stash():
+    """Generate iris cube constraint for UM STASH code with var constraint."""
+    var_constraint = constraints.generate_var_constraint("m01s03i236")
+    expected_stash_constraint = "AttributeConstraint({'STASH': 'm01s03i236'})"
+    assert repr(var_constraint) == expected_stash_constraint
+
+
 def test_generate_cell_methods_constraint():
     """Generate iris cube constraint for cell methods."""
     cell_methods_constraint = constraints.generate_cell_methods_constraint([])
