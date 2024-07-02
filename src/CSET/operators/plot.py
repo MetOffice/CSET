@@ -224,10 +224,7 @@ def _plot_and_save_contour_plot(
         if "pressure" in [coord.name() for coord in cube.coords()]:
             axes.invert_yaxis()
             axes.set_yscale("log")
-            axes.set_ylim(
-                np.max(cube.coord("pressure").points),
-                np.min(cube.coord("pressure").points),
-            )
+            axes.set_ylim(1100, 100)
         # If both model_level_number and level_height exists, iplt can construct
         # plot as a function of height above orography (NOT sea level).
         elif {"model_level_number", "level_height"}.issubset(
