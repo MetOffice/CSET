@@ -921,13 +921,9 @@ def scatter_plot(
     cube_y: iris.cube.Cube,
     cube_x: iris.cube.Cube,
     filename: str = None,
-    # sequence_coordinate: str = "time",
     one_to_one: bool = True,
     **kwargs,
 ) -> (iris.cube.Cube, iris.cube.Cube):
-    # sequence_coordinate: str, optional
-    #    Coordinate about which to make a plot sequence. Defaults to ``"time"``.
-    #    This coordinate must exist in the cube.
     """Plot a scatter plot between two variables.
 
     Both cubes must be 1D.
@@ -966,14 +962,6 @@ def scatter_plot(
     cube_x = _check_single_cube(cube_x)
     cube_y = _check_single_cube(cube_y)
 
-    # try:
-    #    coord_x = cube_x.coord(series_coordinate)
-    # except iris.exceptions.CoordinateNotFoundError as err:
-    #    raise ValueError(f"cube_x must have a {series_coordinate} coordinate.") from err
-    # try:
-    #    coord_y = cube_y.coord(series_coordinate)
-    # except iris.exceptions.CoordinateNotFoundError as err:
-    #    raise ValueError(f"cube_y must have a {series_coordinate} coordinate.") from err
     if cube_x.ndim > 1:
         raise ValueError("cube_x must be 1D.")
     if cube_y.ndim > 1:
