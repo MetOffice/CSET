@@ -5,7 +5,7 @@
     inherit = PARALLEL
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_basic_qq_plot.yaml"
-        CSET_ADDOPTS = "--VARNAME_A='{{model_field_A}}' --VARNAME_B='{{model_field_B}}'"
+        CSET_ADDOPTS = "--VARNAME_A='{{model_field_A}}' --VARNAME_B='{{model_field_B}}' --COORD_LIST='{{COORDINATE_LIST}}' --ONE_TO_ONE='{{ONE_TO_ONE}}"
 
     [[generic_basic_qq_plot_{{model_field_A}}_{{model_field_B}}_collate]]
     inherit = COLLATE
