@@ -1,0 +1,17 @@
+{% if BASIC_QQ_PLOT %}
+[runtime]
+{% for model_field_A in MODEL_FIELDS_A %}
+{% for model_field_B in MODEL_FIELDS_B %}
+    [[generic_basic_qq_plot_{{model_field_A}}_{{model_field_B}}]]
+    inherit = PARALLEL
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_basic_qq_plot.yaml"
+        CSET_ADDOPTS = "--VARNAME_A='{{model_field_A}}' --VARNAME_B='{{model_field_B}}'"
+
+    [[generic_spatial_plot_time_series_collation_{{model_field}}]]
+    inherit = COLLATE
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_basic_qq_plot.yaml"
+        CSET_ADDOPTS = "--VARNAME_A='{{model_field_A}}' --VARNAME_B='{{model_field_B}}' --COORD_LIST='{{COORDINATE_LIST}}' --ONE_TO_ONE='{{ONE_TO_ONE}}'"
+{% endfor %}
+{% endif %}
