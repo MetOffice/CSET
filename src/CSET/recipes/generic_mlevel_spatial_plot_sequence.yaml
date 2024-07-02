@@ -1,0 +1,32 @@
+category: Quick Look
+title: $VARNAME $MLEVEL Level Spatial Plot
+description: |
+  Extracts ands plots the $VARNAME from a file at model level $MLEVEL.
+
+parallel:
+  - operator: read.read_cubes
+    constraint:
+      operator: constraints.combine_constraints
+      variable_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      validity_time_constraint:
+        operator: constraints.generate_time_constraint
+        time_start: $VALIDITY_TIME
+      model_level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: "model_level_number"
+        levels: $MLEVEL
+
+  - operator: write.write_cube_to_nc
+    filename: intermediate/model_level_field
+
+collate:
+  - operator: read.read_cube
+    filename_pattern: intermediate/*.nc
+
+  - operator: plot.spatial_contour_plot
+    sequence_coordinate: time
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
