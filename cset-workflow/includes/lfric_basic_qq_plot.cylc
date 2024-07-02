@@ -1,14 +1,13 @@
 {% if LFRIC_BASIC_QQ_PLOTS %}
 [runtime]
-{% for model_field_A in LFRIC_MODEL_FIELDS_A %}
-{% for model_field_B in LFRIC_MODEL_FIELDS_B %}
-    [[lfric_generic_basic_qq_plot_{{model_field_A}}_{{model_field_B}}]]
+{% for model_field_A, model_field_B in zip(LFRIC_MODEL_FIELDS_A, LFRIC_MODEL_FIELDS_B) %}
+    [[lfric_generic_basic_qq_plot_{{model_field_A}}_{{model_field_B}}_parallel]]
     inherit = PARALLEL
         [[[environment]]]
         CSET_RECIPE_NAME = "lfric_generic_basic_qq_plot.yaml"
         CSET_ADDOPTS = "--VARNAME_A='{{model_field_A}}' --VARNAME_B='{{model_field_B}}'"
 
-    [[generic_spatial_plot_time_series_collation_{{model_field}}]]
+    [[lfric_generic_basic_qq_plot_{{model_field_A}}_{{model_field_B}}_collate]]
     inherit = COLLATE
         [[[environment]]]
         CSET_RECIPE_NAME = "lfric_generic_basic_qq_plot.yaml"
