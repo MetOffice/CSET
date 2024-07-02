@@ -1,7 +1,7 @@
 category: Quick Look
-title: $VARNAME $PLEVEL hPa Level Histogram Plot
+title: $VARNAME $MLEVEL Level Histogram Plot
 description: |
-  Extracts and plots the probability density of $PLEVEL hPa $VARNAME from a file at pressure level $PLEVEL. It uses matplotlib.pyplot.hist to plot the probability density so that the area under the histogram integrates to 1. stacked is set to True so the sum of the histograms is normalized to 1.
+  Extracts and plots the probability density of $MLEVEL hPa $VARNAME from a file at model level $MLEVEL. It uses matplotlib.pyplot.hist to plot the probability density so that the area under the histogram integrates to 1. stacked is set to True so the sum of the histograms is normalized to 1.
 
 parallel:
   - operator: read.read_cube
@@ -14,8 +14,9 @@ parallel:
         operator: constraints.generate_time_constraint
         time_start: $VALIDITY_TIME
       pressure_level_constraint:
-        operator: constraints.generate_pressure_level_constraint
-        pressure_levels: $PLEVEL
+        operator: constraints.generate_level
+        coordinate: "full_levels"
+        levels: $MLEVEL
 
   - operator: write.write_cube_to_nc
     filename: intermediate/histogram
@@ -29,5 +30,5 @@ collate:
     overwrite: True
 
   - operator: plot.plot_histogram_series
-    series_coordinate: pressure
+    series_coordinate: full_levels
     sequence_coordinate: time
