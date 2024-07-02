@@ -694,7 +694,8 @@ def spatial_contour_plot(
     Raises
     ------
     ValueError
-        If the cube doesn't have the right dimensions.
+        If the cube doesn't have the right dimensions and cubes not the same
+        size.
     TypeError
         If the cube isn't a single cube.
     """
@@ -956,7 +957,29 @@ def scatter_plot(
 
     Notes
     -----
-    TO BE CONTINUED ...
+    Scatter plots are used for determining if there is a relationship between
+    two variables. Positive relations have a slope going from bottom left to
+    top right; Negative relations have a slope going from top left to bottom
+    right.
+
+    A variant of the scatter plot is the quantile-quantile plot. This plot does
+    not use all data points, but the selected quantiles of each variable
+    instead. Quantile-quantile plots are valuable for comparing against
+    observations and other models. Identical percentiles between the variables
+    will lie on the one-to-one line implying the values correspond well to each
+    other. Where there is a deviation from the one-to-one line a range
+    of possibilities exist depending on how and where the data is shifted
+    (e.g., Wilks 2011 [Wilks2011]_).
+
+    For distributions above the one-to-one line the distribution is left-skewed;
+    below is right-skewed. A distinct break implies a bimodal distribution, and
+    closer values/values further apart at the tails imply poor representation of
+    the extremes.
+
+    References
+    ----------
+    .. [Wilks2011] Wilks, D.S., (2011) "Statistical Methods in the Atmospheric
+       Sciences" Third Edition, vol. 100, Academic Press, Oxford, UK, 676 pp.
     """
     # Check cubes are correct shape.
     cube_x = _check_single_cube(cube_x)
