@@ -14,6 +14,7 @@
 
 """Operators to generate constraints to filter with."""
 
+import re
 from collections.abc import Iterable
 from datetime import datetime
 
@@ -45,22 +46,25 @@ def generate_stash_constraint(stash: str, **kwargs) -> iris.AttributeConstraint:
 
 
 def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
-    """Generate constraint from variable name.
+    """Generate constraint from variable name or STASH code.
 
-    Operator that takes a CF compliant variable name string, and uses iris to
-    generate a constraint to be passed into the read operator to minimize the
-    CubeList the read operator loads and speed up loading.
+    Operator that takes a CF compliant variable name string, and generates an
+    iris constraint to be passed into the read or filter operator. Can also be
+    passed a STASH code to generate a STASH constraint.
 
     Arguments
     ---------
     varname: str
-        CF compliant name of variable. Needed later for LFRic.
+        CF compliant name of variable, or a UM STASH code such as "m01s03i236".
 
     Returns
     -------
     varname_constraint: iris.Constraint
     """
-    varname_constraint = iris.Constraint(name=varname)
+    if re.match(r"m[0-9]{2}s[0-9]{2}i[0-9]{3}$", varname):
+        varname_constraint = iris.AttributeConstraint(STASH=varname)
+    else:
+        varname_constraint = iris.Constraint(name=varname)
     return varname_constraint
 
 
