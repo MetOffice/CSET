@@ -149,15 +149,23 @@ def test_plot_vertical_line_series_no_sequence_coordinate(
             vertical_profile_cube, series_coordinate="pressure"
         )
 
-# Do we need this test? I could not see it in main?
+
 def test_plot_vertical_line_series_too_many_dimensions(cube, tmp_working_dir):
     """Error when cube has more than one dimension."""
     with pytest.raises(ValueError):
         plot.plot_vertical_line_series(cube)
 
 
-def test_plot_histogram_sequence_coordinate(histogram_cube, tmp_working_dir):
-    """Plot sequence of contour plots."""
-    plot.plot_histogram_series(histogram_cube, sequence_coordinate="time")
-    assert Path("air_temperature_1000_hpa_level_histogram_plot_473718.0.png").is_file()
+def test_plot_histogram_no_sequence_coordinate(histogram_cube, tmp_working_dir):
+    """Error when cube is missing sequence coordinate (time)."""
+    histogram_cube.remove_coord("time")
+    with pytest.raises(ValueError, match="Cube must have a time coordinate."):
+        plot.plot_histogram_series(histogram_cube, series_coordinate="pressure")
 
+
+def test_plot_histogram_with_filename(histogram_cube, tmp_working_dir):
+    """Plot sequence of contour plots."""
+    plot.plot_histogram_series(
+        histogram_cube, filename="test", sequence_coordinate="time"
+    )
+    assert Path("test_473718.0.png").is_file()
