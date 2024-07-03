@@ -903,7 +903,7 @@ def plot_histogram_series(
         # Use sequence value so multiple sequences can merge.
         sequence_value = cube_slice.coord(sequence_coordinate).points[0]
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
-        coord = cube_slice.coord(series_coordinate)
+        coord = cube_slice.coord(sequence_coordinate)
         # Format the coordinate value in a unit appropriate way.
         title = f"{recipe_title} | {coord.units.title(coord.points[0])}"
         # Do the actual plotting.
