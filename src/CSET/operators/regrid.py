@@ -206,17 +206,19 @@ def regrid_to_single_point(
     domain boundary as data here is potentially unreliable.
 
     """
+    # Get x,y coord names
+    y_coord_names, x_coord_names = get_cube_yxcoordname(incube)
     # Get a list of coordinate names for the cube
     coord_names = [coord.name() for coord in incube.coords()]
 
     # Check which x-coordinate we have, if any
-    x_coords = [coord for coord in coord_names if coord in X_COORD_NAMES]
+    x_coords = [coord for coord in coord_names if coord in x_coord_names]
     if len(x_coords) != 1:
         raise ValueError("Could not identify a unique x-coordinate in cube")
     x_coord = incube.coord(x_coords[0])
 
     # Check which y-coordinate we have, if any
-    y_coords = [coord for coord in coord_names if coord in Y_COORD_NAMES]
+    y_coords = [coord for coord in coord_names if coord in y_coord_names]
     if len(y_coords) != 1:
         raise ValueError("Could not identify a unique y-coordinate in cube")
     y_coord = incube.coord(y_coords[0])
