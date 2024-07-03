@@ -430,8 +430,8 @@ def _plot_and_save_vertical_line_series(
 
 
 def _plot_and_save_scatter_plot(
-    cube_y: iris.cube.Cube,
     cube_x: iris.cube.Cube,
+    cube_y: iris.cube.Cube,
     filename: str,
     title: str,
     one_to_one: bool,
@@ -441,10 +441,10 @@ def _plot_and_save_scatter_plot(
 
     Parameters
     ----------
-    cube_y: Cube
-        1 dimensional Cube of the data to plot on y-axis.
     cube_x: Cube
         1 dimensional Cube of the data to plot on x-axis.
+    cube_y: Cube
+        1 dimensional Cube of the data to plot on y-axis.
     filename: str
         Filename of the plot to write.
     title: str
@@ -453,7 +453,7 @@ def _plot_and_save_scatter_plot(
         Whether a 1:1 line is plotted.
     """
     fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
-    iplt.scatter(cube_y, cube_x)
+    iplt.scatter(cube_x, cube_y)
     if one_to_one is True:
         plt.plot(
             [
@@ -919,8 +919,8 @@ def plot_vertical_line_series(
 
 
 def scatter_plot(
-    cube_y: iris.cube.Cube,
     cube_x: iris.cube.Cube,
+    cube_y: iris.cube.Cube,
     filename: str = None,
     one_to_one: bool = True,
     **kwargs,
@@ -931,9 +931,9 @@ def scatter_plot(
 
     Parameters
     ----------
-    cube_y: Cube
-        1 dimensional Cube of the data to plot on y-axis.
     cube_x: Cube
+        1 dimensional Cube of the data to plot on y-axis.
+    cube_y: Cube
         1 dimensional Cube of the data to plot on x-axis.
     filename: str, optional
         Filename of the plot to write.
@@ -943,10 +943,10 @@ def scatter_plot(
 
     Returns
     -------
-    cube_y
-        The original y cube (so further operations can be applied).
     cube_x
         The original x cube (so further operations can be applied).
+    cube_y
+        The original y cube (so further operations can be applied).
 
     Raises
     ------
@@ -999,7 +999,7 @@ def scatter_plot(
     plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
 
     # Do the actual plotting.
-    _plot_and_save_scatter_plot(cube_y, cube_x, plot_filename, title, one_to_one)
+    _plot_and_save_scatter_plot(cube_x, cube_y, plot_filename, title, one_to_one)
 
     # Add list of plots to plot metadata.
     plot_index = _append_to_plot_index([plot_filename])
@@ -1007,7 +1007,7 @@ def scatter_plot(
     # Make a page to display the plots.
     _make_plot_html_page(plot_index)
 
-    return cube_y, cube_x
+    return cube_x, cube_y
 
 
 def plot_histogram_series(

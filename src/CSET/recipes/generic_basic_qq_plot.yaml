@@ -41,7 +41,7 @@ collate:
             constraint:
                 operator: constraints.generate_var_constraint
                 varname: $VARNAME_A
-        coordinate: $COORD_LIST
+        coordinate: [time,grid_latitude,grid_longitude]
         method: 'PERCENTILE'
         additional_percent: [0,0.001,0.01,0.1,1,5,10,15,20,25,30,40,50,60,70,75,80,85,90,95,98,99,99.9,99.99,99.999,100]
     cube_x:
@@ -51,7 +51,7 @@ collate:
             constraint:
                 operator: constraints.generate_var_constraint
                 varname: $VARNAME_B
-        coordinate: $COORD_LIST
+        coordinate: [time,grid_latitude,grid_longitude]
         method: 'PERCENTILE'
         additional_percent: [0,0.001,0.01,0.1,1,5,10,15,20,25,30,40,50,60,70,75,80,85,90,95,98,99,99.9,99.99,99.999,100]
     one-to-one: $ONE_TO_ONE

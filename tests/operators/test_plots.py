@@ -242,7 +242,7 @@ def test_scatter_plot_too_many_x_dimensions(
     cube_y = collapse.collapse(cube, ["time", "grid_longitude"], "MEAN")[0:4]
     cube_x = vertical_profile_cube.copy()
     with pytest.raises(ValueError):
-        plot.scatter_plot(cube_y, cube_x)
+        plot.scatter_plot(cube_x, cube_y)
 
 
 def test_scatter_plot_too_many_y_dimensions(
@@ -252,4 +252,4 @@ def test_scatter_plot_too_many_y_dimensions(
     cube_y = cube.copy()
     cube_x = collapse.collapse(vertical_profile_cube, ["time"], "MEAN")[0:4]
     with pytest.raises(ValueError):
-        plot.scatter_plot(cube_y, cube_x)
+        plot.scatter_plot(cube_x, cube_y)
