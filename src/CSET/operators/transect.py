@@ -69,7 +69,7 @@ def calc_transect(cube: iris.cube.Cube, startcoords: tuple, endcoords: tuple):
 
     Notes
     -----
-    This operator uses the iris.linear method to interpolate the specific point along
+    This operator uses the iris.Nearest method to interpolate the specific point along
     the transect.
     Identification of an appropriate coordinate to plot along the x axis is done by
     determining the largest distance out of latitude and longitude. For example, if
@@ -126,13 +126,14 @@ def calc_transect(cube: iris.cube.Cube, startcoords: tuple, endcoords: tuple):
     # Create cubelist to store interpolated points along transect.
     interpolated_cubes = iris.cube.CubeList()
 
-    # Iterate over all points along transect.
+    # Iterate over all points along transect, lon_pnts will be the same shape as
+    # lat_pnts so we can use either to iterate over.
     for i in range(0, lon_pnts.shape[0]):
         logging.info("%s/%s", i + 1, lon_pnts.shape[0])
 
         # Get point along transect.
         cube_slice = cube.interpolate(
-            [(lon_name, lon_pnts[i]), (lat_name, lat_pnts[i])], iris.analysis.Linear()
+            [(lon_name, lon_pnts[i]), (lat_name, lat_pnts[i])], iris.analysis.Nearest()
         )
 
         # Remove existing coordinates ready to add one single map coordinate
