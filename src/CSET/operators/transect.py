@@ -55,11 +55,11 @@ def calc_transect(cube: iris.cube.Cube, startcoords: tuple, endcoords: tuple):
         An iris cube containing latitude and longitude coordinate dimensions,
         to compute the transect on.
     startcoords: tuple
-        A tuple containing the start coordinates for the transect using the original
-        data coordinates, ordered (latitude,longitude).
+        A tuple containing the start coordinates for the transect using model coordinates,
+        ordered (latitude,longitude).
     endcoords: tuple
-        A tuple containing the end coordinates for the transect using the original
-        data coordinates, ordered (latitude,longitude).
+        A tuple containing the end coordinates for the transect using model coordinates,
+        ordered (latitude,longitude).
 
     Returns
     -------
