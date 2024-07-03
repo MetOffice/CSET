@@ -86,6 +86,15 @@ On this page you will need to add several things.
 Once that is all written you simply need to press "Publish release". A release
 will be automatically made, and the package will be pushed to PyPI and beyond.
 
+After the release has been made you will want to add the release notes into a
+new section in the :doc:`/changelog`. If this is someone's first time
+contributing also link their GitHub username to their profile by adding the
+following line at the bottom of that section:
+
+.. code-block:: rst
+
+    .. _@username: https://github.com/username
+
 .. _CalVer: https://calver.org/
 .. _Releases: https://github.com/MetOffice/CSET/releases
 .. _Draft a new release: https://github.com/MetOffice/CSET/releases/new

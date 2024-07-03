@@ -94,12 +94,6 @@ def test_parse_recipe_exception_parallel_not_sequence():
         common.parse_recipe("parallel: 7")
 
 
-def test_parse_recipe_deprecated_steps():
-    """Deprecation warning when falling back to steps key."""
-    with pytest.warns(DeprecationWarning):
-        common.parse_recipe('steps: [{"operator": "misc.noop"}]')
-
-
 def test_parse_recipe_exception_non_dict():
     """Exception for recipe that parses to a non-dict."""
     with pytest.raises(TypeError):

@@ -1,27 +1,25 @@
 category: Quick Look
-title: Surface $VARNAME
-description: Extracts and plots the surface $VARNAME from a file.
+title: $VARNAME $PLEVEL Level Spatial Plot
+description: |
+  Extracts and plots the $VARNAME from a file at pressure level $PLEVEL.
 
 parallel:
-  - operator: read.read_cube
+  - operator: read.read_cubes
     constraint:
       operator: constraints.combine_constraints
-      varname_constraint:
+      variable_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
-      cell_methods_constraint:
-        operator: constraints.generate_cell_methods_constraint
-        cell_methods: []
       pressure_level_constraint:
         operator: constraints.generate_level_constraint
         coordinate: "pressure"
-        levels: []
+        levels: $PLEVEL
       validity_time_constraint:
         operator: constraints.generate_time_constraint
         time_start: $VALIDITY_TIME
 
   - operator: write.write_cube_to_nc
-    filename: intermediate/surface_field
+    filename: intermediate/pressure_level_field
 
 collate:
   - operator: read.read_cube

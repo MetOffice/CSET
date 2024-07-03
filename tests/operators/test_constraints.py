@@ -33,13 +33,11 @@ def test_generate_var_constraint():
     assert repr(var_constraint) == expected_var_constraint
 
 
-def test_generate_model_level_constraint():
-    """Generate iris cube constraint for model level number."""
-    var_constraint = constraints.generate_model_level_constraint("2")
-    expected_model_level_constraint = (
-        "Constraint(coord_values={'model_level_number': 2})"
-    )
-    assert repr(var_constraint) == expected_model_level_constraint
+def test_generate_var_constraint_stash():
+    """Generate iris cube constraint for UM STASH code with var constraint."""
+    var_constraint = constraints.generate_var_constraint("m01s03i236")
+    expected_stash_constraint = "AttributeConstraint({'STASH': 'm01s03i236'})"
+    assert repr(var_constraint) == expected_stash_constraint
 
 
 def test_generate_cell_methods_constraint():
@@ -68,30 +66,32 @@ def test_generate_time_constraint():
     assert expected_time_constraint in repr(time_constraint)
 
 
-def test_generate_pressure_level_constraint_single_level():
-    """Generate constraint for a single pressure level."""
-    pressure_constraint = constraints.generate_pressure_level_constraint(
-        pressure_levels=1000
+def test_generate_level_constraint_single_level():
+    """Generate constraint for a single level."""
+    pressure_constraint = constraints.generate_level_constraint(
+        coordinate="pressure", levels=1000
     )
     expected_pressure_constraint = "Constraint(coord_values={'pressure': [1000]})"
     assert expected_pressure_constraint in repr(pressure_constraint)
 
 
-def test_generate_pressure_level_constraint_multi_level():
+def test_generate_level_constraint_multi_level():
     """Generate constraint for multiple pressure levels."""
-    pressure_constraint = constraints.generate_pressure_level_constraint(
-        pressure_levels=[200, 800]
+    pressure_constraint = constraints.generate_level_constraint(
+        coordinate="pressure", levels=[200, 800]
     )
     expected_pressure_constraint = "Constraint(coord_values={'pressure': [200, 800]})"
     assert expected_pressure_constraint in repr(pressure_constraint)
 
 
-def test_generate_pressure_level_constraint_no_pressure():
+def test_generate_level_constraint_no_pressure():
     """Generate constraint for not having pressure levels."""
-    pressure_constraint = constraints.generate_pressure_level_constraint(
-        pressure_levels=[]
+    pressure_constraint = constraints.generate_level_constraint(
+        coordinate="pressure", levels=[]
     )
-    expected_pressure_constraint = "Constraint(cube_func=<function generate_pressure_level_constraint.<locals>.no_pressure_coordinate at"
+    expected_pressure_constraint = (
+        "Constraint(cube_func=<function generate_level_constraint.<locals>.no_levels at"
+    )
     assert expected_pressure_constraint in repr(pressure_constraint)
 
 

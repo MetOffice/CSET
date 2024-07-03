@@ -18,7 +18,6 @@ import inspect
 import json
 import logging
 import os
-import warnings
 from pathlib import Path
 from typing import Union
 
@@ -108,9 +107,7 @@ def _write_metadata(recipe: dict):
     metadata = recipe.copy()
     # Remove steps, as not needed, and might contain non-serialisable types.
     metadata.pop("parallel", None)
-    metadata.pop("steps", None)
     metadata.pop("collate", None)
-    metadata.pop("post-steps", None)
     with open("meta.json", "wt", encoding="UTF-8") as fp:
         json.dump(metadata, fp)
     os.sync()
@@ -215,17 +212,7 @@ def execute_recipe_parallel(
     except (FileExistsError, NotADirectoryError) as err:
         logging.error("Output directory is a file. %s", output_directory)
         raise err
-    # If parallel doesn't exist try steps.
-    try:
-        steps = recipe["parallel"]
-    except KeyError:
-        if "steps" in recipe:
-            warnings.warn(
-                "'steps' recipe key is deprecated. Use 'parallel' instead.",
-                DeprecationWarning,
-                stacklevel=1,
-            )
-        steps = recipe["steps"]
+    steps = recipe["parallel"]
     _run_steps(recipe, steps, step_input, output_directory, style_file)
 
 
@@ -260,15 +247,6 @@ def execute_recipe_collate(
     output_directory = Path(output_directory).resolve()
     assert output_directory.is_dir()
     recipe = parse_recipe(recipe_yaml, recipe_variables)
-    # If collate doesn't exist try post-steps, else treat it as having no steps.
-    try:
-        steps = recipe["collate"]
-    except KeyError:
-        if "post-steps" in recipe:
-            warnings.warn(
-                "'post-steps' recipe key is deprecated. Use 'collate' instead.",
-                DeprecationWarning,
-                stacklevel=1,
-            )
-        steps = recipe.get("post-steps", tuple())
+    # If collate doesn't exist treat it as having no steps.
+    steps = recipe.get("collate", [])
     _run_steps(recipe, steps, output_directory, output_directory, style_file)
