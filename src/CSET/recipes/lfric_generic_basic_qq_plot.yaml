@@ -6,11 +6,21 @@ parallel:
   - operator: read.read_cubes
   - operator: filters.filter_multiple_cubes
     constraint_A:
-      operator: constraints.generate_var_constraint
-      varname: $VARNAME_A
+        operator: constraints.combine_constraints
+        variable_constraint:
+            operator: constraints.generate_var_constraint
+            varname: $VARNAME_A
+        validity_time_constraint:
+            operator: constraints.generate_time_constraint
+            time_start: $VALIDITY_TIME
     constraint_B:
-      operator: constraints.generate_var_constraint
-      varname: $VARNAME_B
+        operator: constraints.combine_constraints
+        variable_constraint:
+            operator: constraints.generate_var_constraint
+            varname: $VARNAME_B
+        validity_time_constraint:
+            operator: constraints.generate_time_constraint
+            time_start: $VALIDITY_TIME
 
   - operator: write.write_cube_to_nc
     filename: intermediate/qq_data

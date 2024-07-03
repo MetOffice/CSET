@@ -13,6 +13,9 @@ parallel:
         cell_method_constraint:
             operator: constraints.generate_cell_methods_constraint
             cell_methods: []
+        validity_time_constraint:
+            operator: constraints.generate_time_constraint
+            time_start: $VALIDITY_TIME
     constraint_B:
         operator: constraints.combine_constraints
         variable_constraint:
@@ -21,6 +24,9 @@ parallel:
         cell_method_constraint:
             operator: constraints.generate_cell_methods_constraint
             cell_methods: []
+        validity_time_constraint:
+            operator: constraints.generate_time_constraint
+            time_start: $VALIDITY_TIME
   - operator: write.write_cube_to_nc
     filename: intermediate/qq_data
 
