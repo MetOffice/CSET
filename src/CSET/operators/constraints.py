@@ -191,7 +191,7 @@ def generate_area_constraint(
     -------
     area_constraint: iris.Constraint
     """
-    if lat_start == "None":
+    if lat_start is None:
         return iris.Constraint()
 
     area_constraint = iris.Constraint(
