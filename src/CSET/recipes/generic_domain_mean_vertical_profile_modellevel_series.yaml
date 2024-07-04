@@ -1,6 +1,6 @@
 category: Quick Look
 title: Domain mean $VARNAME vertical profile as series
-description: Plots a time series of vertical profiles for the domain mean $VARNAME using a modellevel coordinate.
+description: Plots a time series of vertical profiles for the domain mean $VARNAME using a `model_level_number` coordinate.
 
 # Pre-processing steps.
 parallel:
