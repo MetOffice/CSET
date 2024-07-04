@@ -129,6 +129,14 @@ def test_parse_variable_options():
         common.parse_variable_options(("--VARIABLE",))
 
 
+def test_parse_variable_options_quoted():
+    """Quoted arguments get unquoted before interpretation."""
+    args = ["--A='None'", "--B", '"None"']
+    expected = {"A": None, "B": None}
+    actual = common.parse_variable_options(args)
+    assert actual == expected
+
+
 def test_template_variables():
     """Multiple variables are correctly templated into recipe."""
     recipe = {"parallel": [{"operator": "misc.noop", "v1": "$VAR_A", "v2": "$VAR_B"}]}
