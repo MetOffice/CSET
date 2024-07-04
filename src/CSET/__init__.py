@@ -150,6 +150,9 @@ def main():
     stderr_log.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
     logger.addHandler(stderr_log)
 
+    # Down here so runs after logging is setup.
+    logging.debug("CLI Arguments: %s", cli_args)
+
     if args.subparser is None:
         print("Please choose a command.", file=sys.stderr)
         parser.print_usage()
