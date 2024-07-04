@@ -61,12 +61,11 @@ def test_get_cube_yxcoordname(source_cube):
 
 def test_is_transect_multiplespatialcoords(source_cube):
     """Check that function returns False as more than one spatial map coord."""
-    assert not common_operators._is_transect(source_cube)
+    assert not common_operators.is_transect(source_cube)
 
 
 def test_is_transect_noverticalcoord(transect_source_cube):
     """Check that function returns False as no vertical coord found."""
     # Retain only time and latitude coordinate, so it passes the first spatial coord test.
     transect_source_cube_slice = transect_source_cube[:, 0, :, 0]
-
-    assert not common_operators._is_transect(transect_source_cube_slice)
+    assert not common_operators.is_transect(transect_source_cube_slice)
