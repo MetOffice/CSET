@@ -694,8 +694,7 @@ def spatial_contour_plot(
     Raises
     ------
     ValueError
-        If the cube doesn't have the right dimensions and cubes not the same
-        size.
+        If the cube doesn't have the right dimensions.
     TypeError
         If the cube isn't a single cube.
     """
@@ -951,7 +950,8 @@ def scatter_plot(
     Raises
     ------
     ValueError
-        If the cube doesn't have the right dimensions.
+        If the cube doesn't have the right dimensions and cubes not the same
+        size.
     TypeError
         If the cube isn't a single cube.
 
