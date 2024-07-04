@@ -40,8 +40,7 @@ def _check_within_bounds(point: tuple[float, float], lat_coord, lon_coord):
 
 
 def calc_transect(cube: iris.cube.Cube, startcoords: tuple, endcoords: tuple):
-    """
-    Compute transect between startcoords and endcoords.
+    """Compute transect between startcoords and endcoords.
 
     Computes a transect for a given cube containing at least latitude
     and longitude coordinates, using an appropriate sampling interval along the
