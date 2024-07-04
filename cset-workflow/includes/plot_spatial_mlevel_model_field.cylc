@@ -6,7 +6,7 @@
     inherit = PARALLEL
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_mlevel_spatial_plot_sequence.yaml"
-        CSET_ADDOPTS = "--VARNAME={{model_field}} --MLEVEL={{mlevel}}"
+        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --MLEVEL='{{mlevel}}'"
 
     [[collate_generic_mlevel_spatial_plot_sequence_{{model_field}}_{{mlevel}}]]
     inherit = COLLATE
