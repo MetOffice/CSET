@@ -9,6 +9,7 @@ Changelog
 Unreleased
 ----------
 
+* `@jwarner8`_ added new transect capability in :pr:`531`
 * `@dasha-shchep`_ Fixes METPLUS metadata issue in :pr:`692`
 
 .. Add changes here, probably taken from GitHub release notes.
