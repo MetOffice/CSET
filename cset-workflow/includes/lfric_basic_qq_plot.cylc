@@ -1,4 +1,4 @@
-{% if LFRIC_BASIC_QQ_PLOTS %}
+{% if LFRIC_BASIC_QQ_PLOT %}
 [runtime]
 {% for model_field_A, model_field_B in zip(LFRIC_MODEL_FIELDS_A, LFRIC_MODEL_FIELDS_B) %}
     [[lfric_generic_basic_qq_plot_{{model_field_A}}_{{model_field_B}}_parallel]]
