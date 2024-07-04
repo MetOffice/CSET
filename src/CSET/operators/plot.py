@@ -33,7 +33,7 @@ import numpy as np
 from markdown_it import MarkdownIt
 
 from CSET._common import get_recipe_metadata, render_file, slugify
-from CSET.operators._utils import get_cube_yxcoordname
+from CSET.operators._utils import get_cube_yxcoordname, is_transect
 
 ############################
 # Private helper functions #
@@ -217,6 +217,19 @@ def _plot_and_save_contour_plot(
         axes.coastlines(resolution="10m")
     except ValueError:
         pass
+
+    # Check to see if transect, and if so, adjust y axis.
+    if is_transect(cube):
+        if "pressure" in [coord.name() for coord in cube.coords()]:
+            axes.invert_yaxis()
+            axes.set_yscale("log")
+            axes.set_ylim(1100, 100)
+        # If both model_level_number and level_height exists, iplt can construct
+        # plot as a function of height above orography (NOT sea level).
+        elif {"model_level_number", "level_height"}.issubset(
+            {coord.name() for coord in cube.coords()}
+        ):
+            axes.set_yscale("log")
 
     # Add title.
     axes.set_title(title, fontsize=16)

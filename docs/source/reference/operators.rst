@@ -14,6 +14,12 @@ CSET.operators.aggregate
 .. automodule:: CSET.operators.aggregate
    :members:
 
+CSET.operators.transect
+---------------------------
+
+.. automodule:: CSET.operators.transect
+   :members:
+
 CSET.operators.collapse
 -----------------------
 

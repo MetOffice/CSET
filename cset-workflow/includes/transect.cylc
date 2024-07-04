@@ -1,0 +1,18 @@
+{% if EXTRACT_TRANSECT %}
+{% for var in CS_VARS %}
+[runtime]
+    [[parallel_transect]]
+    inherit = PARALLEL
+    execution time limit = PT60M
+        [[[environment]]]
+        CSET_RECIPE_NAME = "transect.yaml"
+        CSET_ADDOPTS = "--CS_STARTCOORDS='{{CS_STARTCOORDS}}' --CS_FINISHCOORDS='{{CS_FINISHCOORDS}}' --CS_VARS='{{var}}'"
+
+    [[collate_transect]]
+    inherit = COLLATE
+    execution time limit = PT60M
+        [[[environment]]]
+        CSET_RECIPE_NAME = "transect.yaml"
+        CSET_ADDOPTS = "--CS_STARTCOORDS='{{CS_STARTCOORDS}}' --CS_FINISHCOORDS='{{CS_FINISHCOORDS}}' --CS_VARS='{{var}}'"
+{% endfor %}
+{% endif %}

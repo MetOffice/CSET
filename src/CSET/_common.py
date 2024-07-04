@@ -14,6 +14,7 @@
 
 """Common functionality used across CSET."""
 
+import ast
 import io
 import json
 import logging
@@ -172,8 +173,9 @@ def parse_variable_options(arguments: list[str]) -> dict:
         else:
             raise ArgumentError(f"Unknown argument: {arguments[i]}")
         try:
-            recipe_variables[key.strip("-")] = json.loads(value)
-        except json.JSONDecodeError:
+            recipe_variables[key.strip("-")] = ast.literal_eval(value)
+        # Capture the many possible exceptions from ast.literal_eval
+        except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError):
             recipe_variables[key.strip("-")] = value
         i += 1
     return recipe_variables

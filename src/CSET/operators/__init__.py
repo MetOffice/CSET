@@ -36,6 +36,7 @@ from CSET.operators import (
     plot,
     read,
     regrid,
+    transect,
     write,
 )
 
@@ -45,14 +46,15 @@ __all__ = [
     "collapse",
     "constraints",
     "convection",
-    "execute_recipe_parallel",
     "execute_recipe_collate",
+    "execute_recipe_parallel",
     "filters",
     "get_operator",
     "misc",
     "plot",
     "read",
     "regrid",
+    "transect",
     "write",
 ]
 
