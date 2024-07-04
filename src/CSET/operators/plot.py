@@ -33,7 +33,7 @@ import numpy as np
 from markdown_it import MarkdownIt
 
 from CSET._common import get_recipe_metadata, render_file, slugify
-from CSET.operators._utils import is_transect, get_cube_yxcoordname
+from CSET.operators._utils import get_cube_yxcoordname, is_transect
 
 ############################
 # Private helper functions #
