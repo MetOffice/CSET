@@ -94,8 +94,8 @@ def calc_transect(cube: iris.cube.Cube, startcoords: tuple, endcoords: tuple):
     )
 
     # Compute minimum gap between x/y spatial coords.
-    lon_min = np.min(lon_coord.points[1:] - lon_coord.points[:-1])
-    lat_min = np.min(lat_coord.points[1:] - lat_coord.points[:-1])
+    lon_min = np.abs(np.min(lon_coord.points[1:] - lon_coord.points[:-1]))
+    lat_min = np.abs(np.min(lat_coord.points[1:] - lat_coord.points[:-1]))
 
     # For scenarios where coord is at 90 degree to the grid (i.e. no
     # latitude/longitude change). Only xmin or ymin will be zero, not both
