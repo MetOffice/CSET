@@ -33,7 +33,7 @@ import numpy as np
 from markdown_it import MarkdownIt
 
 from CSET._common import get_recipe_metadata, render_file, slugify
-from CSET.operators._utils import _is_transect, get_cube_yxcoordname
+from CSET.operators._utils import is_transect, get_cube_yxcoordname
 
 ############################
 # Private helper functions #
@@ -219,7 +219,7 @@ def _plot_and_save_contour_plot(
         pass
 
     # Check to see if transect, and if so, adjust y axis.
-    if _is_transect(cube):
+    if is_transect(cube):
         if "pressure" in [coord.name() for coord in cube.coords()]:
             axes.invert_yaxis()
             axes.set_yscale("log")
