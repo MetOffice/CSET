@@ -36,7 +36,6 @@ from CSET.operators import (
     plot,
     read,
     regrid,
-    regrid,
     transect,
     write,
 )
