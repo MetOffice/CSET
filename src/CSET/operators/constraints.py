@@ -69,7 +69,7 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
 
 
 def generate_level_constraint(
-    coordinate: str, levels: int | list[int], **kwargs
+    coordinate: str, levels: int | list[int] | str, **kwargs
 ) -> iris.Constraint:
     """Generate constraint for particular levels on the specified coordinate.
 
@@ -84,8 +84,9 @@ def generate_level_constraint(
     ---------
     coordinate: str
         Level coordinate name about which to constraint.
-    levels: int | list[int]
-        CF compliant levels.
+    levels: int | list[int] | str
+        CF compliant levels, or if str, then astericks for retrieving all levels
+        available.
 
     Returns
     -------
@@ -106,7 +107,10 @@ def generate_level_constraint(
 
     # Filter the coordinate to the desired levels.
     # Dictionary unpacking is used to provide programmatic keyword arguments.
-    return iris.Constraint(**{coordinate: levels})
+    if levels == "*":
+        return iris.Constraint(**{coordinate: lambda cell: True})
+    else:
+        return iris.Constraint(**{coordinate: levels})
 
 
 def generate_cell_methods_constraint(cell_methods: list, **kwargs) -> iris.Constraint:

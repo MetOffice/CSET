@@ -14,8 +14,8 @@ parallel:
             varname: $CS_VARS
         level_constraint:
             operator: constraints.generate_level_constraint
-            coordinate: "pressure"
-            levels: [200,500,850]
+            coordinate: $CS_VERTLEV
+            levels: '*'
 
   - operator: transect.calc_transect
     startcoords: $CS_STARTCOORDS
