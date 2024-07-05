@@ -161,9 +161,9 @@ def parse_variable_options(arguments: list[str]) -> dict:
     recipe_variables = {}
     i = 0
     while i < len(arguments):
-        if re.match(r"^--[A-Z_]+=.*$", arguments[i]):
+        if re.fullmatch(r"--[A-Z_]+=.*", arguments[i]):
             key, value = arguments[i].split("=", 1)
-        elif re.match(r"^--[A-Z_]+$", arguments[i]):
+        elif re.fullmatch(r"--[A-Z_]+", arguments[i]):
             try:
                 key = arguments[i].strip("-")
                 value = arguments[i + 1]
@@ -173,6 +173,9 @@ def parse_variable_options(arguments: list[str]) -> dict:
         else:
             raise ArgumentError(f"Unknown argument: {arguments[i]}")
         try:
+            # Remove quotes from arguments, in case left in CSET_ADDOPTS.
+            if re.fullmatch(r"""["'].+["']""", value):
+                value = value[1:-1]
             recipe_variables[key.strip("-")] = ast.literal_eval(value)
         # Capture the many possible exceptions from ast.literal_eval
         except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError):
