@@ -154,19 +154,20 @@ def test_regrid_to_single_point_missing_coord(cube):
         regrid.regrid_to_single_point(source, 0.5, 358.5, "Nearest")
 
 
-def test_regrid_to_single_point_unknown_crs(cube):
-    """Coordinate reference system is unrecognised."""
-    # Exchange X to unsupported coordinate system.
-    source_changed_x = cube.copy()
-    source_changed_x.coord("grid_longitude").coord_system = iris.coord_systems.OSGB()
+def test_regrid_to_single_point_unknown_crs_x(cube):
+    """X coordinate reference system is unrecognised."""
+    # Exchange to unsupported coordinate system.
+    cube.coord("grid_longitude").coord_system = iris.coord_systems.OSGB()
     with pytest.raises(NotImplementedError):
-        regrid.regrid_to_single_point(source_changed_x, 0.5, 358.5, "Nearest")
+        regrid.regrid_to_single_point(cube, 0.5, 358.5, "Nearest")
 
-    # Exchange Y to unsupported coordinate system.
-    source_changed_y = cube.copy()
-    source_changed_y.coord("grid_latitude").coord_system = iris.coord_systems.OSGB()
+
+def test_regrid_to_single_point_unknown_crs_x(cube):
+    """Y coordinate reference system is unrecognised."""
+    # Exchange to unsupported coordinate system.
+    cube.coord("grid_latitude").coord_system = iris.coord_systems.OSGB()
     with pytest.raises(NotImplementedError):
-        regrid.regrid_to_single_point(source_changed_y, 0.5, 358.5, "Nearest")
+        regrid.regrid_to_single_point(cube, 0.5, 358.5, "Nearest")
 
 
 def test_regrid_to_single_point_outside_domain(cube):
