@@ -6,13 +6,13 @@
     execution time limit = PT60M
         [[[environment]]]
         CSET_RECIPE_NAME = "transect.yaml"
-        CSET_ADDOPTS = "--CS_STARTCOORDS='{{CS_STARTCOORDS}}' --CS_FINISHCOORDS='{{CS_FINISHCOORDS}}' --CS_VARS='{{var}}'"
+        CSET_ADDOPTS = "--CS_STARTCOORDS='{{CS_STARTCOORDS}}' --CS_FINISHCOORDS='{{CS_FINISHCOORDS}}' --CS_VARS='{{var}}' --CS_VERTLEV='{{var}}'"
 
     [[collate_transect]]
     inherit = COLLATE
     execution time limit = PT60M
         [[[environment]]]
         CSET_RECIPE_NAME = "transect.yaml"
-        CSET_ADDOPTS = "--CS_STARTCOORDS='{{CS_STARTCOORDS}}' --CS_FINISHCOORDS='{{CS_FINISHCOORDS}}' --CS_VARS='{{var}}'"
+        CSET_ADDOPTS = "--CS_STARTCOORDS='{{CS_STARTCOORDS}}' --CS_FINISHCOORDS='{{CS_FINISHCOORDS}}' --CS_VARS='{{var}}' -CS_VERTLEV='{{var}}'"
 {% endfor %}
 {% endif %}
