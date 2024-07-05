@@ -1,5 +1,4 @@
 [template variables]
-!!CAPE_RATIO_TIME=""
 CLEAN_WEB_DIR=True
 !!CONDA_METPLUS_VENV_LOCATION=""
 CONDA_PATH=""
