@@ -22,7 +22,10 @@ from CSET.operators._utils import get_cube_yxcoordname
 
 
 def regrid_onto_cube(
-    incube: iris.cube.Cube, target: iris.cube.Cube, method: str, **kwargs
+    incube: iris.cube.Cube | iris.cube.CubeList,
+    target: iris.cube.Cube,
+    method: str,
+    **kwargs,
 ) -> iris.cube.Cube:
     """Regrid a cube, projecting onto a target cube.
 
