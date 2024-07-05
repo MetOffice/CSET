@@ -14,6 +14,8 @@
 
 """Tests regrid operator."""
 
+import warnings
+
 import iris
 import iris.coord_systems
 import iris.cube
@@ -21,6 +23,7 @@ import numpy as np
 import pytest
 
 import CSET.operators.regrid as regrid
+from CSET.operators.regrid import BoundaryWarning
 
 
 # Session scope fixtures, so the test data only has to be loaded once.
@@ -176,3 +179,17 @@ def test_regrid_to_single_point_unknown_method(cube):
     """Method does not exist."""
     with pytest.raises(NotImplementedError):
         regrid.regrid_to_single_point(cube, 0.5, 358.5, method="nonexistent")
+
+
+def test_boundary_warning():
+    """Ensures a warning is raised when chosen point is too close to boundary."""
+    with pytest.warns(BoundaryWarning):
+        warnings.warn(
+            """Selected gridpoint is close to the domain edge.
+
+        In many cases gridpoints near the domain boundary contain non-physical
+        values, so caution is advised when interpreting them.
+        """,
+            BoundaryWarning,
+            stacklevel=2,
+        )
