@@ -71,6 +71,13 @@ def test_is_transect_noverticalcoord(transect_source_cube):
     assert not common_operators.is_transect(transect_source_cube_slice)
 
 
+def test_is_transect_correctcoord(transect_source_cube):
+    """Check that function returns True as one map and vertical coord found."""
+    # Retain only time and latitude coordinate, so it passes the first spatial coord test.
+    transect_source_cube_slice = transect_source_cube[:, :, :, 0]
+    assert common_operators.is_transect(transect_source_cube_slice)
+
+
 def test_combine_singlecube_into_cubelist(source_cube):
     """Test case of single cube into cubelist."""
     cubelist = common_operators.combine_cubes_into_cubelist(source_cube)
