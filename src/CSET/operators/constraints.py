@@ -85,31 +85,31 @@ def generate_level_constraint(
     coordinate: str
         Level coordinate name about which to constraint.
     levels: int | list[int] | str
-        CF compliant levels, or if str, then astericks for retrieving all levels
-        available.
+        CF compliant levels, or ``"*"`` for retrieving all levels available.
 
     Returns
     -------
     constraint: iris.Constraint
     """
-    # Ensure is iterable.
-    if not isinstance(levels, Iterable):
-        levels = [levels]
-
-    # When no levels specified reject cube with level coordinate.
-    if len(levels) == 0:
-
-        def no_levels(cube):
-            # Reject cubes for which coordinate exists.
-            return not bool(cube.coords(coordinate))
-
-        return iris.Constraint(cube_func=no_levels)
-
-    # Filter the coordinate to the desired levels.
-    # Dictionary unpacking is used to provide programmatic keyword arguments.
+    # If astericks, then return all levels for given coordinate.
     if levels == "*":
         return iris.Constraint(**{coordinate: lambda cell: True})
     else:
+        # Ensure is iterable.
+        if not isinstance(levels, Iterable):
+            levels = [levels]
+
+        # When no levels specified reject cube with level coordinate.
+        if len(levels) == 0:
+
+            def no_levels(cube):
+                # Reject cubes for which coordinate exists.
+                return not bool(cube.coords(coordinate))
+
+            return iris.Constraint(cube_func=no_levels)
+
+        # Filter the coordinate to the desired levels.
+        # Dictionary unpacking is used to provide programmatic keyword arguments.
         return iris.Constraint(**{coordinate: levels})
 
 
