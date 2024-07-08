@@ -22,19 +22,20 @@ from CSET.operators._utils import get_cube_yxcoordname
 
 
 def regrid_onto_cube(
-    incube: iris.cube.Cube | iris.cube.CubeList,
+    toregrid: iris.cube.Cube | iris.cube.CubeList,
     target: iris.cube.Cube,
     method: str,
     **kwargs,
-) -> iris.cube.Cube:
-    """Regrid a cube, projecting onto a target cube.
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Regrid a cube or cubelist, projecting onto a target cube.
 
-    Cube must have at least 2 dimensions.
+    All cubes must have at least 2 spatial (map) dimensions.
 
     Arguments
     ----------
-    incube: Cube
-        An iris cube of the data to regrid. As a minimum, it needs to be 2D with a latitude,
+    toregrid: Cube | Cubelist
+        An iris cube of the data to regrid, or multiple cubes to regrid in a cubelist.
+        A minimum requirement is that the cubes need to be 2D with a latitude,
         longitude coordinates.
     target: Cube
         An iris cube of the data to regrid onto. It needs to be 2D with a latitude,
@@ -44,8 +45,9 @@ def regrid_onto_cube(
 
     Returns
     -------
-    iris.cube.Cube
-        An iris cube of the data that has been regridded.
+    iris.cube.Cube | iris.cube.CubeList
+        An iris cube of the data that has been regridded, or a cubelist of the cubes
+        that have been regridded in the same order they were passed in incubelist.
 
     Raises
     ------
@@ -58,25 +60,38 @@ def regrid_onto_cube(
     -----
     Currently rectlinear grids (uniform) are supported.
     """
-    # Get y,x coord names
-    y_coord, x_coord = get_cube_yxcoordname(incube)
+    # If only one cube, put into cubelist as an iterable.
+    if type(toregrid) == iris.Cube:
+        toregrid = iris.cube.CubeList([toregrid])
 
-    # List of supported grids - check if it is compatible
-    supported_grids = (iris.coord_systems.GeogCS,)
-    if not isinstance(incube.coord(x_coord).coord_system, supported_grids):
-        raise NotImplementedError(
-            f"Does not currently support {incube.coord(x_coord).coord_system} coordinate system"
-        )
-    if not isinstance(incube.coord(y_coord).coord_system, supported_grids):
-        raise NotImplementedError(
-            f"Does not currently support {incube.coord(y_coord).coord_system} coordinate system"
-        )
+    # To store regridded cubes
+    regridded_cubes = iris.cube.CubeList()
 
-    regrid_method = getattr(iris.analysis, method, None)
-    if callable(regrid_method):
-        return incube.regrid(target, regrid_method())
-    else:
-        raise NotImplementedError(f"Does not currently support {method} regrid method")
+    # Iterate over all cubes and regrid
+    for cube in toregrid:
+        # Get y,x coord names
+        y_coord, x_coord = get_cube_yxcoordname(cube)
+
+        # List of supported grids - check if it is compatible
+        supported_grids = (iris.coord_systems.GeogCS,)
+        if not isinstance(cube.coord(x_coord).coord_system, supported_grids):
+            raise NotImplementedError(
+                f"Does not currently support {cube.coord(x_coord).coord_system} coordinate system"
+            )
+        if not isinstance(cube.coord(y_coord).coord_system, supported_grids):
+            raise NotImplementedError(
+                f"Does not currently support {cube.coord(y_coord).coord_system} coordinate system"
+            )
+
+        regrid_method = getattr(iris.analysis, method, None)
+        if callable(regrid_method):
+            regridded_cubes.append(cube.regrid(target, regrid_method()))
+        else:
+            raise NotImplementedError(
+                f"Does not currently support {method} regrid method"
+            )
+
+    return regridded_cubes
 
 
 def regrid_onto_xyspacing(
