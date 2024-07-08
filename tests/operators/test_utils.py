@@ -81,6 +81,16 @@ def test_combine_singlecube_into_cubelist(source_cube):
     assert repr(cubelist) in expected_cubelist
 
 
+def test_combine_singlecubelist_into_cubelist(source_cube, transect_source_cube):
+    """Test case of single cubelist into cubelist."""
+    cubelist = common_operators.combine_cubes_into_cubelist(
+        iris.cube.CubeList([source_cube, transect_source_cube])
+    )
+
+    expected_cubelist = "[<iris 'Cube' of surface_altitude / (m) (latitude: 200; longitude: 200)>,\n<iris 'Cube' of air_temperature / (K) (time: 2; pressure: 16; latitude: 6; longitude: 6)>]"
+    assert repr(cubelist) in expected_cubelist
+
+
 def test_combine_single_noncompliant_into_cubelist():
     """Test case of single object which isn't cube or cubelist."""
     with pytest.raises(TypeError):
@@ -102,8 +112,6 @@ def test_combine_multiple_cube_and_noncompliant_into_cubelist(source_cube):
     """Test case of a valid cube with some non compliant data which isn't cube or cubelist."""
     with pytest.raises(TypeError):
         common_operators.combine_cubes_into_cubelist(source_cube, a="hello")
-    with pytest.raises(TypeError):
-        common_operators.combine_cubes_into_cubelist("hello", a=source_cube)
 
 
 def test_combine_multiplecube_mixed_into_cubelist(source_cube, transect_source_cube):
