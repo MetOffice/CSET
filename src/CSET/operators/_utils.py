@@ -149,23 +149,21 @@ def combine_cubes_into_cubelist(
     all_cubes = iris.cube.CubeList()
 
     # For first argument...
-    if type(first) in (iris.cube.Cube, iris.cube.CubeList):
-        if type(first) == iris.cube.Cube:
-            all_cubes.append(first)
-        elif type(first) == iris.cube.CubeList:
-            for cube in first:
-                all_cubes.append(cube)
+    if type(first) == iris.cube.Cube:
+        all_cubes.append(first)
+    elif type(first) == iris.cube.CubeList:
+        for cube in first:
+            all_cubes.append(cube)
     else:
         raise TypeError("Not a cube or cubelist!")
 
     # For all subsequent arguments
     for item in kwargs.values():
-        if type(item) in (iris.cube.Cube, iris.cube.CubeList):
-            if type(item) == iris.cube.Cube:
-                all_cubes.append(item)
-            elif type(item) == iris.cube.CubeList:
-                for cube in item:
-                    all_cubes.append(cube)
+        if type(item) == iris.cube.Cube:
+            all_cubes.append(item)
+        elif type(item) == iris.cube.CubeList:
+            for cube in item:
+                all_cubes.append(cube)
         else:
             raise TypeError("Not a cube or cubelist!")
 
