@@ -120,7 +120,7 @@ def is_transect(cube: iris.cube.Cube) -> bool:
 
 
 def combine_cubes_into_cubelist(
-    first: iris.cube | iris.cube.CubeList, **kwargs
+    first: iris.cube.Cube | iris.cube.CubeList, **kwargs
 ) -> iris.cube.CubeList:
     """Operator that combines multiple cubes or cubelists into one.
 
@@ -149,24 +149,24 @@ def combine_cubes_into_cubelist(
     all_cubes = iris.cube.CubeList()
 
     # For first argument...
-    if type(first) not in (iris.cube.Cube, iris.cube.CubeList):
-        raise TypeError("Not a cube or cubelist!")
-    else:
+    if type(first) in (iris.cube.Cube, iris.cube.CubeList):
         if type(first) == iris.cube.Cube:
             all_cubes.append(first)
         elif type(first) == iris.cube.CubeList:
             for cube in first:
                 all_cubes.append(cube)
+    else:
+        raise TypeError("Not a cube or cubelist!")
 
     # For all subsequent arguments
     for item in kwargs.values():
-        if type(item) not in (iris.cube.Cube, iris.cube.CubeList):
-            raise TypeError("Not a cube or cubelist!")
-        else:
+        if type(item) in (iris.cube.Cube, iris.cube.CubeList):
             if type(item) == iris.cube.Cube:
-                all_cubes.append(first)
+                all_cubes.append(item)
             elif type(item) == iris.cube.CubeList:
-                for cube in first:
+                for cube in item:
                     all_cubes.append(cube)
+        else:
+            raise TypeError("Not a cube or cubelist!")
 
     return all_cubes
