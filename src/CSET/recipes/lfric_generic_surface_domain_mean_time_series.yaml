@@ -4,15 +4,16 @@ description: Plots a time series of the domain mean surface $VARNAME.
 
 # Pre-processing steps.
 parallel:
-  - operator: read.read_cubes
+  - operator: read.read_cube
     constraint:
       operator: constraints.combine_constraints
       varname_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
       pressure_level_constraint:
-        operator: constraints.generate_pressure_level_constraint
-        pressure_levels: []
+        operator: constraints.generate_level_constraint
+        coordinate: "pressure"
+        levels: []
       validity_time_constraint:
         operator: constraints.generate_time_constraint
         time_start: $VALIDITY_TIME

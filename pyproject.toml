@@ -47,9 +47,10 @@ build-backend = "setuptools.build_meta"
 [tool.pytest.ini_options]
 addopts = ["--import-mode=importlib"]
 filterwarnings = [
-    # https://github.com/dateutil/dateutil/issues/1314
-    "ignore::DeprecationWarning:dateutil",
     "ignore:numpy.ndarray size changed:RuntimeWarning",
+    # Cartopy downloads coastlines, etc. Caching does not catch this for the
+    # first CI run on each branch.
+    "ignore::cartopy.io.DownloadWarning",
 ]
 minversion = "7"
 pythonpath = ["src"]
@@ -127,7 +128,6 @@ skip = "build,*.css,*.ipynb,*.js,*.html,*.svg,*.xml,.git"
 [tool.ruff]
 line-length = 88
 src = ["src", "test"]
-output-format = "full"
 
 [tool.ruff.lint]
 extend-select = ["B", "D", "I"]

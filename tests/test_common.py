@@ -94,12 +94,6 @@ def test_parse_recipe_exception_parallel_not_sequence():
         common.parse_recipe("parallel: 7")
 
 
-def test_parse_recipe_deprecated_steps():
-    """Deprecation warning when falling back to steps key."""
-    with pytest.warns(DeprecationWarning):
-        common.parse_recipe('steps: [{"operator": "misc.noop"}]')
-
-
 def test_parse_recipe_exception_non_dict():
     """Exception for recipe that parses to a non-dict."""
     with pytest.raises(TypeError):
@@ -133,6 +127,14 @@ def test_parse_variable_options():
     # Missing variable value.
     with pytest.raises(ValueError):
         common.parse_variable_options(("--VARIABLE",))
+
+
+def test_parse_variable_options_quoted():
+    """Quoted arguments get unquoted before interpretation."""
+    args = ["--A='None'", "--B", '"None"']
+    expected = {"A": None, "B": None}
+    actual = common.parse_variable_options(args)
+    assert actual == expected
 
 
 def test_template_variables():

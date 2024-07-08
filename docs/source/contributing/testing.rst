@@ -30,6 +30,32 @@ You can run the tests of CSET simply with the following command:
 
         conda activate cset-dev
 
+Quick testing of individual components during development
+---------------------------------------------------------
+
+Running all test when developing new tests and debugging might take some time.
+Fortunately individual tests can be run on the command line with:
+
+.. code-block:: bash
+
+    pytest -k file_name_of_test
+
+
+You can also run all of the tests in a file, by giving the name of the file. For
+example, the following command will run all of the plotting tests.
+
+.. code-block:: bash
+
+    pytest -k test_plots
+
+
+You will need to make sure you have the conda environment activated, and that
+CSET is installed into it with:
+
+.. code-block:: bash
+
+    pip install -e .
+
 Unit Testing
 ------------
 

@@ -9,11 +9,37 @@ Changelog
 Unreleased
 ----------
 
-.. Add your changes here, highlighting any user facing changes. E.g:
+* `@dasha-shchep`_ Fixes METPLUS metadata issue in :pr:`692`
+
+.. Add changes here, probably taken from GitHub release notes.
+.. Highlight any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@Sylviabohnenstengel`_ documentation: add info on quick pytesting in :pr:`696`
+* `@Sylviabohnenstengel`_ add constraint operator for lfric full_levels and half_levels
+* `@Sylviabohnenstengel`_ introduced lfric_model_level and lfric_model_level_field to rose meta
+* `@Sylviabohnenstengel`_ expand plot operator add plotting lfric vertical profiles on model levels
+* `@Sylviabohnenstengel`_ expand plot operator add plotting on model levels to spatial plot operator
+* `@Sylviabohnenstengel`_ added new recipe for plotting vertical profiles on model levels for lfric.
+* `@Sylviabohnenstengel`_ added new recipe for plotting spatial lfric data on model levels.
+
+24.6.0 (2024-06-17)
+-------------------
+
+This release contains a quite a number of small improvements, increasing the
+reliability of CSET significantly, and paving the way for further improvements
+to come.
+
+* `@jfrost-mo`_ replaced how the encoding of subprocess output is determined in
+  :pr:`604`. This adds support for python before 3.11, and more accurately
+  reflects the encoding.
+* `@jwarner8`_ add intelligent determination of whether to plot country lines in
+  :pr:`655`
+* `@daflack`_ fixed inflow properties recipe in :pr:`662`
+* `@daflack`_ added science review guidance to the documentation in :pr:`649`
 * `@jfrost-mo`_ ensured cartopy data files are included in the GitHub Actions
   cache in :pr:`647`
+* `@jfrost-mo`_ improved the error message for missing data files in :pr:`663`
 * `@jfrost-mo`_ grouped the package install logs in GitHub Actions in :pr:`645`
 * `@daflack`_ added an inflow layer properties diagnostic in :pr:`353`
 * `@jfrost-mo`_ fixed LFRic cube metadata on load in :pr:`627`. This means that
@@ -28,6 +54,7 @@ Unreleased
   operator :pr:`626`
 * `@jwarner8`_ added generic cube util for common functions so all operators can
   use to reduce repetition in :pr:`620`
+* `@JorgeBornemann`_ added METPlus GridStat functionality (NIWA) in :pr:`629`
 * `@jfrost-mo`_ added a code of conduct in :pr:`618`
 * `@jfrost-mo`_ fixed some rose edit metadata so the subarea selectors show up
   when enabled in :pr:`612`
@@ -39,6 +66,12 @@ Unreleased
   :pr:`603`
 * `@dasha-shchep`_ added ``generate_area_constraint`` operator and added to
   LFRic recipes in :pr:`522`. This was their first contribution 🎉
+* `@Sylviabohnenstengel`_ added a vertical line plotting operator that plots
+  vertical profiles using an optional series coordinate and an optional sequence
+  coordinate in :pr:`567`. The series coordinate is currently tested for
+  pressure and the sequence coordinate allows displaying vertical profiles over
+  time using the time slider functionality. Furthermore added a recipe to plot
+  vertical profiles and test functions for the vertical plot operator.
 * `@jfrost-mo`_ dropped python 3.9 support in :pr:`448` The minimum required
   python is now 3.10.
 * `@jfrost-mo`_ fixed some outdated documentation examples in :pr:`546`

@@ -14,11 +14,11 @@
 
 """Common functionality used across CSET."""
 
+import ast
 import io
 import json
 import logging
 import re
-import warnings
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Union
@@ -71,8 +71,6 @@ def parse_recipe(recipe_yaml: Union[Path, str], variables: dict = None):
             recipe = yaml.load(recipe_yaml)
         except ruamel.yaml.parser.ParserError as err:
             raise ValueError("ParserError: Invalid YAML") from err
-        except ruamel.yaml.error.YAMLStreamError as err:
-            raise TypeError("Must provide a file object (with a read method)") from err
 
     logging.debug(recipe)
     check_recipe_has_steps(recipe)
@@ -109,15 +107,7 @@ def check_recipe_has_steps(recipe: dict):
     if not isinstance(recipe, dict):
         raise TypeError("Recipe must contain a mapping.")
     if "parallel" not in recipe:
-        if "steps" in recipe:
-            warnings.warn(
-                "'steps' recipe key is deprecated, use 'parallel' instead.",
-                DeprecationWarning,
-                stacklevel=3,
-            )
-            parallel_steps_key = "steps"
-        else:
-            raise ValueError("Recipe must contain a 'parallel' key.")
+        raise ValueError("Recipe must contain a 'parallel' key.")
     try:
         if len(recipe[parallel_steps_key]) < 1:
             raise ValueError("Recipe must have at least 1 parallel step.")
@@ -171,9 +161,9 @@ def parse_variable_options(arguments: list[str]) -> dict:
     recipe_variables = {}
     i = 0
     while i < len(arguments):
-        if re.match(r"^--[A-Z_]+=.*$", arguments[i]):
+        if re.fullmatch(r"--[A-Z_]+=.*", arguments[i]):
             key, value = arguments[i].split("=", 1)
-        elif re.match(r"^--[A-Z_]+$", arguments[i]):
+        elif re.fullmatch(r"--[A-Z_]+", arguments[i]):
             try:
                 key = arguments[i].strip("-")
                 value = arguments[i + 1]
@@ -183,8 +173,12 @@ def parse_variable_options(arguments: list[str]) -> dict:
         else:
             raise ArgumentError(f"Unknown argument: {arguments[i]}")
         try:
-            recipe_variables[key.strip("-")] = json.loads(value)
-        except json.JSONDecodeError:
+            # Remove quotes from arguments, in case left in CSET_ADDOPTS.
+            if re.fullmatch(r"""["'].+["']""", value):
+                value = value[1:-1]
+            recipe_variables[key.strip("-")] = ast.literal_eval(value)
+        # Capture the many possible exceptions from ast.literal_eval
+        except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError):
             recipe_variables[key.strip("-")] = value
         i += 1
     return recipe_variables
