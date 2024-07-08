@@ -33,9 +33,9 @@ def regrid_onto_cube(
 
     Arguments
     ----------
-    toregrid: Cube | Cubelist
+    toregrid: iris.cube | iris.cube.CubeList
         An iris cube of the data to regrid, or multiple cubes to regrid in a cubelist.
-        A minimum requirement is that the cubes need to be 2D with a latitude,
+        A minimum requirement is that the cube(s) need to be 2D with a latitude,
         longitude coordinates.
     target: Cube
         An iris cube of the data to regrid onto. It needs to be 2D with a latitude,
@@ -45,9 +45,9 @@ def regrid_onto_cube(
 
     Returns
     -------
-    iris.cube.Cube | iris.cube.CubeList
+    iris.cube | iris.cube.CubeList
         An iris cube of the data that has been regridded, or a cubelist of the cubes
-        that have been regridded in the same order they were passed in incubelist.
+        that have been regridded in the same order they were passed in toregrid.
 
     Raises
     ------
@@ -61,7 +61,7 @@ def regrid_onto_cube(
     Currently rectlinear grids (uniform) are supported.
     """
     # If only one cube, put into cubelist as an iterable.
-    if type(toregrid) == iris.Cube:
+    if type(toregrid) == iris.cube.Cube:
         toregrid = iris.cube.CubeList([toregrid])
 
     # To store regridded cubes
@@ -91,20 +91,29 @@ def regrid_onto_cube(
                 f"Does not currently support {method} regrid method"
             )
 
-    return regridded_cubes
+    # Preserve returning a cube if only a cube has been supplied to regrid.
+    if len(regridded_cubes) == 1:
+        return regridded_cubes[0]
+    else:
+        return regridded_cubes
 
 
 def regrid_onto_xyspacing(
-    incube: iris.cube.Cube, xspacing: int, yspacing: int, method: str, **kwargs
+    toregrid: iris.cube.Cube | iris.cube.CubeList,
+    xspacing: int,
+    yspacing: int,
+    method: str,
+    **kwargs,
 ) -> iris.cube.Cube:
-    """Regrid cube onto a set x,y spacing.
+    """Regrid cube or cubelist onto a set x,y spacing.
 
-    Regrid cube using specified x,y spacing, which is performed linearly.
+    Regrid cube(s) using specified x,y spacing, which is performed linearly.
 
     Parameters
     ----------
-    incube: Cube
-        An iris cube of the data to regrid. As a minimum, it needs to be 2D with a latitude,
+    toregrid: iris.cube | iris.cube.CubeList
+        An iris cube of the data to regrid, or multiple cubes to regrid in a cubelist.
+        A minimum requirement is that the cube(s) need to be 2D with a latitude,
         longitude coordinates.
     xspacing: integer
         Spacing of points in longitude direction (could be degrees, meters etc.)
@@ -115,8 +124,9 @@ def regrid_onto_xyspacing(
 
     Returns
     -------
-    cube_rgd: Cube
-        An iris cube of the data that has been regridded.
+    iris.cube | iris.cube.CubeList
+        An iris cube of the data that has been regridded, or a cubelist of the cubes
+        that have been regridded in the same order they were passed in toregrid.
 
     Raises
     ------
@@ -130,37 +140,54 @@ def regrid_onto_xyspacing(
     Currently rectlinear grids (uniform) are supported.
 
     """
-    # Get x,y coord names
-    y_coord, x_coord = get_cube_yxcoordname(incube)
+    # If only one cube, put into cubelist as an iterable.
+    if type(toregrid) == iris.cube.Cube:
+        toregrid = iris.cube.CubeList([toregrid])
 
-    # List of supported grids - check if it is compatible
-    supported_grids = (iris.coord_systems.GeogCS,)
-    if not isinstance(incube.coord(x_coord).coord_system, supported_grids):
-        raise NotImplementedError(
-            f"Does not currently support {incube.coord(x_coord).coord_system} regrid method"
-        )
-    if not isinstance(incube.coord(y_coord).coord_system, supported_grids):
-        raise NotImplementedError(
-            f"Does not currently support {incube.coord(y_coord).coord_system} regrid method"
-        )
+    # To store regridded cubes
+    regridded_cubes = iris.cube.CubeList()
 
-    # Get axis
-    lat, lon = incube.coord(y_coord), incube.coord(x_coord)
+    # Iterate over all cubes and regrid
+    for cube in toregrid:
+        # Get x,y coord names
+        y_coord, x_coord = get_cube_yxcoordname(cube)
 
-    # Get bounds
-    lat_min, lon_min = lat.points.min(), lon.points.min()
-    lat_max, lon_max = lat.points.max(), lon.points.max()
+        # List of supported grids - check if it is compatible
+        supported_grids = (iris.coord_systems.GeogCS,)
+        if not isinstance(cube.coord(x_coord).coord_system, supported_grids):
+            raise NotImplementedError(
+                f"Does not currently support {cube.coord(x_coord).coord_system} regrid method"
+            )
+        if not isinstance(cube.coord(y_coord).coord_system, supported_grids):
+            raise NotImplementedError(
+                f"Does not currently support {cube.coord(y_coord).coord_system} regrid method"
+            )
 
-    # Generate new mesh
-    latout = np.arange(lat_min, lat_max, yspacing)
-    lonout = np.arange(lon_min, lon_max, xspacing)
+        # Get axis
+        lat, lon = cube.coord(y_coord), cube.coord(x_coord)
 
-    regrid_method = getattr(iris.analysis, method, None)
-    if callable(regrid_method):
-        cube_rgd = incube.interpolate(
-            [(y_coord, latout), (x_coord, lonout)], regrid_method()
-        )
+        # Get bounds
+        lat_min, lon_min = lat.points.min(), lon.points.min()
+        lat_max, lon_max = lat.points.max(), lon.points.max()
+
+        # Generate new mesh
+        latout = np.arange(lat_min, lat_max, yspacing)
+        lonout = np.arange(lon_min, lon_max, xspacing)
+
+        regrid_method = getattr(iris.analysis, method, None)
+        if callable(regrid_method):
+            regridded_cubes.append(
+                cube.interpolate(
+                    [(y_coord, latout), (x_coord, lonout)], regrid_method()
+                )
+            )
+        else:
+            raise NotImplementedError(
+                f"Does not currently support {method} regrid method"
+            )
+
+    # Preserve returning a cube if only a cube has been supplied to regrid.
+    if len(regridded_cubes) == 1:
+        return regridded_cubes[0]
     else:
-        raise NotImplementedError(f"Does not currently support {method} regrid method")
-
-    return cube_rgd
+        return regridded_cubes

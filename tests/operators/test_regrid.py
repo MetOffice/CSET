@@ -51,6 +51,34 @@ def test_regrid_onto_cube(regrid_source_cube, regrid_test_cube):
     )
 
 
+def test_regrid_onto_cube_cubes(regrid_source_cube, regrid_test_cube):
+    """Test regrid case where target cube to project onto is specified for multiple cubes."""
+    # Create cubelist with multiple cubes
+    cubelist_to_regrid = iris.cube.CubeList([regrid_source_cube, regrid_source_cube])
+
+    regridded_cubes = regrid.regrid_onto_cube(
+        cubelist_to_regrid, regrid_test_cube, method="Linear"
+    )
+
+    expected_cubelist = "[<iris 'Cube' of surface_altitude / (m) (latitude: 16; longitude: 16)>,\n<iris 'Cube' of surface_altitude / (m) (latitude: 16; longitude: 16)>]"
+
+    assert repr(regridded_cubes) in expected_cubelist
+
+
+def test_regrid_onto_xyspacing_cubes(regrid_source_cube, regrid_test_cube):
+    """Test regrid case where xyspacing to project onto is specified for multiple cubes."""
+    # Create cubelist with multiple cubes
+    cubelist_to_regrid = iris.cube.CubeList([regrid_source_cube, regrid_source_cube])
+
+    regridded_cubes = regrid.regrid_onto_xyspacing(
+        cubelist_to_regrid, xspacing=0.5, yspacing=0.5, method="Linear"
+    )
+
+    expected_cubelist = "[<iris 'Cube' of surface_altitude / (m) (latitude: 16; longitude: 16)>,\n<iris 'Cube' of surface_altitude / (m) (latitude: 16; longitude: 16)>]"
+
+    assert repr(regridded_cubes) in expected_cubelist
+
+
 def test_regrid_onto_cube_unknown_crs(regrid_source_cube, regrid_test_cube):
     """Coordinate reference system is unrecognised."""
     # Exchange X to unsupported coordinate system.
