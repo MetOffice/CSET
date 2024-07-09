@@ -162,7 +162,7 @@ def test_regrid_to_single_point_unknown_crs_x(cube):
         regrid.regrid_to_single_point(cube, 0.5, 358.5, "Nearest")
 
 
-def test_regrid_to_single_point_unknown_crs_x(cube):
+def test_regrid_to_single_point_unknown_crs_y(cube):
     """Y coordinate reference system is unrecognised."""
     # Exchange to unsupported coordinate system.
     cube.coord("grid_latitude").coord_system = iris.coord_systems.OSGB()
