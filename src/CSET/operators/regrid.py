@@ -257,11 +257,7 @@ def regrid_to_single_point(
             )
 
     regrid_method = getattr(iris.analysis, method, None)
-    if callable(regrid_method):
-        cube_rgd = incube.interpolate(
-            ((y_coord, lat_pt), (x_coord, lon_pt)), regrid_method()
-        )
-    else:
+    if not callable(regrid_method):
         raise NotImplementedError(f"Does not currently support {method} regrid method")
-
+    cube_rgd = incube.interpolate(((lat, lat_pt), (lon, lon_pt)), regrid_method())
     return cube_rgd
