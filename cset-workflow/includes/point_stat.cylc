@@ -9,8 +9,13 @@
     [[metplus_ascii2nc]]
     # Runs METplus wrappers for ASCII to nc ingestion of obs.
         inherit = METPLUS
+        [[[environment]]]
+           TASK_INIT_TIME = $(cylc cycle-point --template=%Y%m%d%H)
+           TASK_END_TIME = $(cylc cycle-point --template=%Y%m%d%H --offset-hours={{FORECAST_LENGHT}}) 
 
     [[metplus_point_stat]]
     # Runs METplus wrappers for point stat calculations.
         inherit = METPLUS
+        [[[environment]]]
+           TASK_INIT_TIME = $(cylc cycle-point --template=%Y%m%d%H)
 {% endif %}
