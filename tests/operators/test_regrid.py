@@ -170,10 +170,10 @@ def test_regrid_to_single_point_unknown_crs_y(cube):
         regrid.regrid_to_single_point(cube, 0.5, 358.5, "Nearest")
 
 
-def test_regrid_to_single_point_outside_domain(cube):
+def test_regrid_to_single_point_outside_domain(regrid_source_cube):
     """Error if coordinates are outside the model domain."""
     with pytest.raises(ValueError):
-        regrid.regrid_to_single_point(cube, 0.5, 178.5, "Nearest")
+        regrid.regrid_to_single_point(regrid_source_cube, 0.5, 178.5, "Nearest")
 
 
 def test_regrid_to_single_point_unknown_method(cube):
