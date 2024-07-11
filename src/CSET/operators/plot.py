@@ -473,7 +473,6 @@ def _plot_and_save_histogram_series(
         ylim=(0, 1),
         xlim=(vmin, vmax),
     )
-    #    ax.autoscale()
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=150)
