@@ -526,7 +526,7 @@ def _plot_and_save_postage_stamp_histogram_series(
         # Implicit interface is much easier here, due to needing to have the
         # cartopy GeoAxes generated.
         plt.subplot(grid_size, grid_size, subplot)
-        # reshape cube data into a single array to allow for a single histogram.
+        # Reshape cube data into a single array to allow for a single histogram.
         # Otherwise we plot xdim histograms stacked.
         member_data_1d = (member.data).flatten()
         plot = plt.hist(member_data_1d, density=True, histtype="bar", stacked=True)
