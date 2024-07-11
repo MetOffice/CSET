@@ -496,7 +496,7 @@ def _plot_and_save_postage_stamp_histogram_series(
     cube: Cube
         2 dimensional Cube of the data to plot as histogram.
         Plotting options are fixed:
-        density=True, histtype='bar',stacked=True to ensure that
+        density=True, histtype='bar', stacked=True to ensure that
         a probability density is plotted using matplotlib.pyplot.hist
         to plot the probability density so that the area under
         the histogram integrates to 1.
