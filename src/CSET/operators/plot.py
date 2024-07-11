@@ -457,7 +457,7 @@ def _plot_and_save_histogram_series(
         maximum for colourbar
     """
     fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
-    # reshape cube data into a single array to allow for a single histogram.
+    # Reshape cube data into a single array to allow for a single histogram.
     # Otherwise we plot xdim histograms stacked.
     cube_data_1d = (cube.data).flatten()
     plt.hist(cube_data_1d, density=True, histtype="bar", stacked=True)
