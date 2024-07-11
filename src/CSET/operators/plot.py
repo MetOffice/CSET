@@ -462,7 +462,7 @@ def _plot_and_save_histogram_series(
     cube_data_1d = (cube.data).flatten()
     plt.hist(cube_data_1d, density=True, histtype="bar", stacked=True)
     ax = plt.gca()
-    # try seaborn for a box whisker plot:
+    # Try seaborn for a box whisker plot:
     # https://python-graph-gallery.com/34-grouped-boxplot/
 
     # Add some labels and tweak the style.
