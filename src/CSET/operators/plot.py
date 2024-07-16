@@ -435,7 +435,7 @@ def _plot_and_save_histogram_series(
     title: str,
     vmin: float,
     vmax: float,
-    histtype: str,
+    histtype: str = "step",
     **kwargs,
 ):
     """Plot and save a histogram series.
@@ -461,6 +461,8 @@ def _plot_and_save_histogram_series(
         minimum for colourbar
     vmax: float
         maximum for colourbar
+    histtype: str
+        Type of histogram plot. Defaults to ``"step"``.
     """
     fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
     # Reshape cube data into a single array to allow for a single histogram.
@@ -536,7 +538,7 @@ def _plot_and_save_postage_stamp_histogram_series(
         # Reshape cube data into a single array to allow for a single histogram.
         # Otherwise we plot xdim histograms stacked.
         member_data_1d = (member.data).flatten()
-        plot = plt.hist(member_data_1d, density=True, histtype="bar", stacked=True)
+        plot = plt.hist(member_data_1d, density=True, histtype=histtype, stacked=True)
         ax = plt.gca()
         ax.set_title(
             f"Normalised probability density function Member #{member.coord(stamp_coordinate).points[0]}"
