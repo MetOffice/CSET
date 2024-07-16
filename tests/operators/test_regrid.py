@@ -14,8 +14,6 @@
 
 """Tests regrid operator."""
 
-import warnings
-
 import iris
 import iris.coord_systems
 import iris.cube
@@ -131,6 +129,7 @@ def test_regrid_onto_xyspacing_unknown_method(regrid_source_cube):
         )
 
 
+@pytest.mark.filterwarnings("ignore:Selected point is within")
 def test_regrid_to_single_point(cube):
     """Regrid to single point."""
     # Test extracting a single point.
@@ -139,6 +138,7 @@ def test_regrid_to_single_point(cube):
     assert repr(regrid_cube) == expected_cube
 
 
+@pytest.mark.filterwarnings("ignore:Selected point is within")
 def test_regrid_to_single_point_missing_coord(cube):
     """Missing coordinate raises error."""
     # Missing X coordinate.
@@ -182,15 +182,15 @@ def test_regrid_to_single_point_unknown_method(cube):
         regrid.regrid_to_single_point(cube, 0.5, 358.5, method="nonexistent")
 
 
-def test_boundary_warning():
+@pytest.mark.filterwarnings(
+    "ignore:this date/calendar/year zero convention is not supported by CF"
+)
+def test_boundary_warning(regrid_source_cube):
     """Ensures a warning is raised when chosen point is too close to boundary."""
-    with pytest.warns(BoundaryWarning):
-        warnings.warn(
-            """Selected gridpoint is close to the domain edge.
+    with pytest.warns(
+        BoundaryWarning, match="Selected point is within 8 gridlengths"
+    ) as warning:
+        regrid.regrid_to_single_point(regrid_source_cube, -0.9, 393.0, "Nearest")
 
-        In many cases gridpoints near the domain boundary contain non-physical
-        values, so caution is advised when interpreting them.
-        """,
-            BoundaryWarning,
-            stacklevel=2,
-        )
+    assert len(warning) == 1
+    assert issubclass(warning[-1].category, BoundaryWarning)
