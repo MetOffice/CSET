@@ -32,3 +32,4 @@ collate:
   - operator: plot.plot_histogram_series
     series_coordinate: full_levels
     sequence_coordinate: time
+    histtype: $HISTTYPE

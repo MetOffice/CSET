@@ -430,7 +430,13 @@ def _plot_and_save_vertical_line_series(
 
 
 def _plot_and_save_histogram_series(
-    cube: iris.cube.Cube, filename: str, title: str, vmin: float, vmax: float, **kwargs
+    cube: iris.cube.Cube,
+    filename: str,
+    title: str,
+    vmin: float,
+    vmax: float,
+    histtype: str,
+    **kwargs,
 ):
     """Plot and save a histogram series.
 
@@ -439,7 +445,7 @@ def _plot_and_save_histogram_series(
     cube: Cube
         2 dimensional Cube of the data to plot as histogram.
         Plotting options are fixed:
-        density=True, histtype='bar',stacked=True to ensure that
+        density=True, histtype='step',stacked=True to ensure that
         a probability density is plotted using matplotlib.pyplot.hist
         to plot the probability density so that the area under
         the histogram integrates to 1.
@@ -460,7 +466,7 @@ def _plot_and_save_histogram_series(
     # Reshape cube data into a single array to allow for a single histogram.
     # Otherwise we plot xdim histograms stacked.
     cube_data_1d = (cube.data).flatten()
-    plt.hist(cube_data_1d, density=True, histtype="bar", stacked=True)
+    plt.hist(cube_data_1d, density=True, histtype=histtype, stacked=True)
     ax = plt.gca()
     # Try seaborn for a box whisker plot:
     # https://python-graph-gallery.com/34-grouped-boxplot/
@@ -487,6 +493,7 @@ def _plot_and_save_postage_stamp_histogram_series(
     stamp_coordinate: str,
     vmin: float,
     vmax: float,
+    histtype: str,
     **kwargs,
 ):
     """Plot and save postage (ensemble members) stamps for a histogram series.
@@ -514,6 +521,8 @@ def _plot_and_save_postage_stamp_histogram_series(
         minimum for colourbar
     vmax: float
         maximum for colourbar
+    histtype: str
+        Type of histogram plot. Defaults to ``"step"``.
     """
     # Use the smallest square grid that will fit the members.
     grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
@@ -823,6 +832,7 @@ def plot_histogram_series(
     filename: str = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
+    histtype: str = "step",
     **kwargs,
 ) -> iris.cube.Cube:
     """Plot a histogram plot for each vertical level provided.
@@ -848,6 +858,8 @@ def plot_histogram_series(
     stamp_coordinate: str, optional
         Coordinate about which to plot postage stamp plots. Defaults to
         ``"realization"``.
+    histtype: str, optional
+        Type of histogram plot. Defaults to ``"step"``.
 
     Returns
     -------
@@ -913,6 +925,7 @@ def plot_histogram_series(
             title=title,
             vmin=vmin,
             vmax=vmax,
+            histtype=histtype,
         )
         plot_index.append(plot_filename)
 

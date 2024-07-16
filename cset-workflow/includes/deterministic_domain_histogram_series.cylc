@@ -6,13 +6,13 @@
     inherit = PARALLEL
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_histogram_series.yaml"
-        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --MLEVEL='{{mlevel}}'"
+        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --MLEVEL='{{mlevel}}' --HISTTYPE='{{HISTOGRAM_TYPE}}'"
 
     [[collate_deterministic_domain_histogram_series_{{model_field}}_{{mlevel}}]]
     inherit = COLLATE
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_histogram_series.yaml"
-        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --MLEVEL='{{mlevel}}'"
+        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --MLEVEL='{{mlevel}}' --HISTTYPE='{{HISTOGRAM_TYPE}}'"
 {% endfor %}
 {% endfor %}
 {% endif %}
