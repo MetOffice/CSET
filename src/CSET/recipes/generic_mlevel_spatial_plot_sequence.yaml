@@ -27,6 +27,7 @@ collate:
 
   - operator: plot.spatial_contour_plot
     sequence_coordinate: time
+    stamp_coordinate: "realization"
 
   - operator: write.write_cube_to_nc
     overwrite: True

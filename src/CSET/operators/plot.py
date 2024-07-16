@@ -880,6 +880,9 @@ def plot_histogram_series(
     is present
     then a sequence of plots will be produced using the time slider
     functionality to scroll through histograms against time.
+    If a stamp_coordinate is present then postage stamp plots will be produced.
+    If sstamp_coordinate and single_plot is True,
+    all postage stamp plots will be plotted in a single plot instead of separate postage stamp plots.
 
 
     The cube must be 1D.

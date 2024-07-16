@@ -30,9 +30,8 @@ collate:
     overwrite: True
 
   - operator: plot.plot_histogram_series
-    series_coordinate: full_levels
     sequence_coordinate: time
     # stamp_coordinate and single_plot optional and only required for ensemble data
     stamp_coordinate: "realization"
-    single_plot: True
+    single_plot: False
     histtype: $HISTTYPE
