@@ -1,4 +1,4 @@
-{% if DOMAIN_HISTOGRAM_SERIES_FIELD %}
+{% if LFRIC_DOMAIN_HISTOGRAM_SERIES_FIELD %}
 [runtime]
 {% for model_field in LFRIC_MODEL_LEVEL_MODEL_FIELDS %}
 {% for mlevel in LFRIC_MODEL_LEVELS %}

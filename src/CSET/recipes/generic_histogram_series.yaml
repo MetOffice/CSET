@@ -15,7 +15,7 @@ parallel:
         time_start: $VALIDITY_TIME
       model_level_constraint:
         operator: constraints.generate_level_constraint
-        coordinate: "full_levels"
+        coordinate: "model_level_number"
         levels: $MLEVEL
 
   - operator: write.write_cube_to_nc
@@ -32,6 +32,7 @@ collate:
   - operator: plot.plot_histogram_series
     series_coordinate: full_levels
     sequence_coordinate: time
+    # stamp_coordinate and single_plot optional and only required for ensemble data
     stamp_coordinate: "realization"
     single_plot: True
     histtype: $HISTTYPE
