@@ -11,6 +11,12 @@ CSET.operators
 .. automodule:: CSET.operators
    :members:
 
+CSET.operators._utils
+---------------------
+
+.. automodule:: CSET.operators._utils
+   :members:
+
 CSET.recipes
 ------------
 
