@@ -562,6 +562,44 @@ def _plot_and_save_postage_stamp_histogram_series(
     plt.close(fig)
 
 
+def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
+    cube: iris.cube.Cube,
+    filename: str,
+    title: str,
+    stamp_coordinate: str,
+    vmin: float,
+    vmax: float,
+    histtype: str = "step",
+    **kwargs,
+):
+    fig, ax = plt.subplots(figsize=(10, 10), facecolor="w", edgecolor="k")
+    ax.set_title(title)
+    ax.set_xlim(vmin, vmax)
+    ax.set_ylim(0, 1)
+
+    # Loop over all slices along the stamp_coordinate
+    for member in cube.slices_over(stamp_coordinate):
+        # Flatten the member data to 1D
+        member_data_1d = member.data.flatten()
+
+        # Plot the histogram as a line plot
+        ax.hist(
+            member_data_1d,
+            density=True,
+            histtype=histtype,
+            label=f"Member #{member.coord(stamp_coordinate).points[0]}",
+        )
+
+    # Add a legend
+    ax.legend()
+
+    # Save the figure to a file
+    plt.savefig(filename)
+
+    # Close the figure
+    plt.close(fig)
+
+
 ####################
 # Public functions #
 ####################
@@ -832,6 +870,7 @@ def plot_histogram_series(
     filename: str = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
+    single_plot: bool = True,
     histtype: str = "step",
     **kwargs,
 ) -> iris.cube.Cube:
@@ -858,6 +897,10 @@ def plot_histogram_series(
     stamp_coordinate: str, optional
         Coordinate about which to plot postage stamp plots. Defaults to
         ``"realization"``.
+    single_plot: bool, optional
+        If True, all postage stamp plots will be plotted in a single plot.
+        If False, each postage stamp plot will be plotted separately.
+        Is only valid if stamp_coordinate exists and has more than a single point.
     histtype: str, optional
         Type of histogram plot. Defaults to ``"step"``.
 
@@ -886,10 +929,16 @@ def plot_histogram_series(
     plotting_func = _plot_and_save_histogram_series
 
     # Make postage stamp plots if stamp_coordinate exists and has more than a
-    # single point.
+    # single point. If single_plot is True, all postage stamp plots will be
+    # plotted in a single plot instead of separate postage stamp plots.
     try:
         if cube.coord(stamp_coordinate).shape[0] > 1:
-            plotting_func = _plot_and_save_postage_stamp_histogram_series
+            if single_plot:
+                plotting_func = (
+                    _plot_and_save_postage_stamps_in_single_plot_histogram_series
+                )
+            else:
+                plotting_func = _plot_and_save_postage_stamp_histogram_series
     except iris.exceptions.CoordinateNotFoundError:
         pass
 

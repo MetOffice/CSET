@@ -32,4 +32,6 @@ collate:
   - operator: plot.plot_histogram_series
     series_coordinate: full_levels
     sequence_coordinate: time
+    stamp_coordinate: "realization"
+    single_plot: True
     histtype: $HISTTYPE
