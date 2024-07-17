@@ -518,9 +518,9 @@ def _plot_and_save_postage_stamp_histogram_series(
     stamp_coordinate: str
         Coordinate that becomes different plots.
     vmin: float
-        minimum for colourbar
+        minimum for pdf x-axis
     vmax: float
-        maximum for colourbar
+        maximum for pdf x-axis
     histtype: str
         Type of histogram plot. Defaults to ``"step"``.
     """
@@ -870,7 +870,7 @@ def plot_histogram_series(
     filename: str = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
-    single_plot: bool = True,
+    single_plot: bool = False,
     histtype: str = "step",
     **kwargs,
 ) -> iris.cube.Cube:
@@ -935,13 +935,16 @@ def plot_histogram_series(
     # single point. If single_plot is True, all postage stamp plots will be
     # plotted in a single plot instead of separate postage stamp plots.
     try:
-        if cube.coord(stamp_coordinate).shape[0] > 1:
-            if single_plot:
-                plotting_func = (
-                    _plot_and_save_postage_stamps_in_single_plot_histogram_series
-                )
-            else:
-                plotting_func = _plot_and_save_postage_stamp_histogram_series
+        if not single_plot and cube.coord(stamp_coordinate).shape[0] > 1:
+            plotting_func = _plot_and_save_postage_stamp_histogram_series
+    except iris.exceptions.CoordinateNotFoundError:
+        pass
+
+    try:
+        if single_plot and cube.coord(stamp_coordinate).shape[0] > 1:
+            plotting_func = (
+                _plot_and_save_postage_stamps_in_single_plot_histogram_series
+            )
     except iris.exceptions.CoordinateNotFoundError:
         pass
 
