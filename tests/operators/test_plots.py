@@ -152,7 +152,7 @@ def test_plot_vertical_line_series_no_sequence_coordinate(
 
 def test_plot_vertical_line_series_too_many_dimensions(cube, tmp_working_dir):
     """Error when cube has more than one dimension."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Cube must have only one dimension."):
         plot.plot_vertical_line_series(cube)
 
 
