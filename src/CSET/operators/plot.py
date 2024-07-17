@@ -945,7 +945,7 @@ def plot_histogram_series(
     except iris.exceptions.CoordinateNotFoundError as err:
         raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
 
-    # set the lower and upper limit for the colorbar to ensure all plots
+    # Set the lower and upper limit for the colorbar to ensure all plots
     # have same range. This needs to read the whole cube over the range of
     # the sequence and if applicable postage stamp coordinate.
     # This only works if the plotting is done in the collate section of a
