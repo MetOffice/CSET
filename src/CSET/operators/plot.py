@@ -879,7 +879,8 @@ def plot_histogram_series(
     Parameters
     ----------
     cube: Cube
-        Iris cube of the data to plot. It should have a single dimension.
+        Iris cube of the data to plot. It should have a single dimension other
+        than the stamp coordinate.
     filename: str, optional
         Name of the plot to write, used as a prefix for plot sequences. Defaults
         to the recipe name.
