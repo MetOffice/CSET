@@ -876,9 +876,6 @@ def plot_histogram_series(
     If sstamp_coordinate and single_plot is True,
     all postage stamp plots will be plotted in a single plot instead of separate postage stamp plots.
 
-
-    The cube must be 1D.
-
     Parameters
     ----------
     cube: Cube
