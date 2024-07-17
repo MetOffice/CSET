@@ -538,27 +538,18 @@ def _plot_and_save_postage_stamp_histogram_series(
         # Reshape cube data into a single array to allow for a single histogram.
         # Otherwise we plot xdim histograms stacked.
         member_data_1d = (member.data).flatten()
-        plot = plt.hist(member_data_1d, density=True, histtype=histtype, stacked=True)
+        plt.hist(member_data_1d, density=True, histtype=histtype, stacked=True)
         ax = plt.gca()
-        ax.set_title(
-            f"Normalised probability density function Member #{member.coord(stamp_coordinate).points[0]}"
-        )
-        ax.set_axis_off()
-        ax.coastlines()
+        ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
+
         ax.set_ylim(0, 1)
         ax.set_xlim(vmin, vmax)
-
-    # Put the shared colorbar in its own axes.
-    # Put the shared colorbar in its own axes.
-    colorbar_axes = fig.add_axes([0.15, 0.07, 0.7, 0.03])
-    colorbar = fig.colorbar(plot, colorbar_axes, orientation="horizontal")
-    colorbar.set_label(f"{cube.name()} / {cube.units}")
 
     # Overall figure title.
     fig.suptitle(title)
 
     fig.savefig(filename, bbox_inches="tight", dpi=150)
-    logging.info("Saved contour postage stamp plot to %s", filename)
+    logging.info("Saved histogram postage stamp plot to %s", filename)
     plt.close(fig)
 
 
@@ -576,17 +567,19 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
     ax.set_title(title)
     ax.set_xlim(vmin, vmax)
     ax.set_ylim(0, 1)
-
+    ax.set_xlabel(f"{cube.name()} / {cube.units}")
+    ax.set_ylabel("normalised probability density")
     # Loop over all slices along the stamp_coordinate
     for member in cube.slices_over(stamp_coordinate):
         # Flatten the member data to 1D
         member_data_1d = member.data.flatten()
 
-        # Plot the histogram as a line plot
-        ax.hist(
+        # Plot the histogram using plt.hist
+        plt.hist(
             member_data_1d,
             density=True,
             histtype=histtype,
+            stacked=True,
             label=f"Member #{member.coord(stamp_coordinate).points[0]}",
         )
 
