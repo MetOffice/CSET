@@ -870,8 +870,7 @@ def plot_histogram_series(
     """Plot a histogram plot for each vertical level provided.
 
     A histogram plot can be plotted, but if the sequence_coordinate (i.e. time)
-    is present
-    then a sequence of plots will be produced using the time slider
+    is present then a sequence of plots will be produced using the time slider
     functionality to scroll through histograms against time.
     If a stamp_coordinate is present then postage stamp plots will be produced.
     If sstamp_coordinate and single_plot is True,
