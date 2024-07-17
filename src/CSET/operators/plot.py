@@ -983,16 +983,4 @@ def plot_histogram_series(
     # Make a page to display the plots.
     _make_plot_html_page(complete_plot_index)
 
-    ##   # Add file extension.
-    ##   plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
-
-    ##    # Do the actual plotting.
-    ##    _plot_and_save_vertical_line_series(cube, coord, plot_filename, title)
-
-    ##    # Add list of plots to plot metadata.
-    ##    plot_index = _append_to_plot_index([plot_filename])
-
-    ##    # Make a page to display the plots.
-    ##    _make_plot_html_page(plot_index)
-
     return cube
