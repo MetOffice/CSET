@@ -462,7 +462,9 @@ def _plot_and_save_histogram_series(
     vmax: float
         maximum for colourbar
     histtype: str
-        Type of histogram plot. Defaults to ``"step"``.
+        The type of histogram to plot. Options are "step" for a line
+        histogram or "barstacked", "stepfilled". "Step" is the default option,
+        but can be changed in the rose-suite.conf configuration.
     """
     fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
     # Reshape cube data into a single array to allow for a single histogram.
@@ -522,7 +524,10 @@ def _plot_and_save_postage_stamp_histogram_series(
     vmax: float
         maximum for pdf x-axis
     histtype: str
-        Type of histogram plot. Defaults to ``"step"``.
+        The type of histogram to plot. Options are "step" for a line
+        histogram or "barstacked", "stepfilled". "Step" is the default option,
+        but can be changed in the rose-suite.conf configuration.
+
     """
     # Use the smallest square grid that will fit the members.
     grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
@@ -895,7 +900,9 @@ def plot_histogram_series(
         If False, each postage stamp plot will be plotted separately.
         Is only valid if stamp_coordinate exists and has more than a single point.
     histtype: str, optional
-        Type of histogram plot. Defaults to ``"step"``.
+        The type of histogram to plot. Options are "step" for a line
+        histogram or "barstacked", "stepfilled". "Step" is the default option,
+        but can be changed in the rose-suite.conf configuration.
 
     Returns
     -------
