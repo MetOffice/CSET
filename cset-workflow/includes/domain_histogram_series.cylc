@@ -1,4 +1,4 @@
-{% if DOMAIN_HISTOGRAM_SERIES_FIELD %}
+{% if DOMAIN_HISTOGRAM_SERIES %}
 [runtime]
 {% for model_field in MODEL_LEVEL_MODEL_FIELDS %}
 {% for mlevel in UM_MODEL_LEVELS %}
