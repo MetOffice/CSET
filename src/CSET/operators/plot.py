@@ -546,7 +546,6 @@ def _plot_and_save_postage_stamp_histogram_series(
         plt.hist(member_data_1d, density=True, histtype=histtype, stacked=True)
         ax = plt.gca()
         ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
-
         ax.set_ylim(0, 1)
         ax.set_xlim(vmin, vmax)
 
