@@ -577,7 +577,6 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
     for member in cube.slices_over(stamp_coordinate):
         # Flatten the member data to 1D
         member_data_1d = member.data.flatten()
-
         # Plot the histogram using plt.hist
         plt.hist(
             member_data_1d,
