@@ -171,3 +171,18 @@ def test_plot_histogram_with_filename(histogram_cube, tmp_working_dir):
         histogram_cube, filename="test", sequence_coordinate="time"
     )
     assert Path("test_473718.0.png").is_file()
+    assert Path("test_473721.0.png").is_file()
+
+
+def test_plot_and_save_postage_stamp_histogram_series(histogram_cube, tmp_working_dir):
+    """Test plotting a postage stamp histogram."""
+    plot._plot_and_save_postage_stamp_histogram_series(
+        cube=histogram_cube,
+        filename="test.png",
+        title="Test",
+        stamp_coordinate="realization",
+        vmin=250,
+        vmax=350,
+        histtype="step",
+    )
+    assert Path("test.png").is_file()
