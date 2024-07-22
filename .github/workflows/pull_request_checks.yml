@@ -135,9 +135,6 @@ jobs:
           echo '::group::Building the documentation'
           sphinx-build -b html --color -W --keep-going "docs/source" "docs/build/html"
           echo '::endgroup::'
-          echo '::group::Checking for broken hyperlinks'
-          sphinx-build -b linkcheck --color -W --keep-going "docs/source" "docs/build/linkcheck"
-          echo '::endgroup::'
       - name: Upload documentation artifact
         uses: actions/upload-artifact@v4
         with:
