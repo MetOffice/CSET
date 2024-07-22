@@ -31,22 +31,34 @@ def tmp_working_dir(tmp_path, monkeypatch):
 
 # Session scope fixtures, so the test data only has to be loaded once.
 @pytest.fixture(scope="session")
-def cubes():
-    """Get an iris CubeList."""
+def cubes_readonly():
+    """Get an iris CubeList. NOT safe to modify."""
     return read.read_cubes("tests/test_data/air_temp.nc")
 
 
+@pytest.fixture()
+def cubes(cubes_readonly):
+    """Get an iris CubeList. Safe to modify."""
+    return cubes_readonly.copy()
+
+
 @pytest.fixture(scope="session")
-def cube(cubes):
-    """Get an iris Cube."""
-    return filters.filter_cubes(cubes, constraints.generate_cell_methods_constraint([]))
+def cube_readonly(cubes_readonly):
+    """Get an iris Cube. NOT safe to modify."""
+    return filters.filter_cubes(
+        cubes_readonly, constraints.generate_cell_methods_constraint([])
+    )
+
+
+@pytest.fixture()
+def cube(cube_readonly):
+    """Get an iris Cube. Safe to modify."""
+    return cube_readonly.copy()
 
 
 @pytest.fixture(scope="session")
 def vertical_profile_cube_readonly():
     """Get a vertical profile Cube. It is NOT safe to modify."""
-    from CSET.operators import read
-
     return read.read_cube(
         "tests/test_data/air_temperature_vertical_profile_as_series.nc"
     )
