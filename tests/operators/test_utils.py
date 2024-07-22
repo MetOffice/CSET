@@ -19,19 +19,18 @@ import pytest
 import CSET.operators._utils as operator_utils
 
 
-def test_missing_coord_get_cube_yxcoordname(regrid_rectilinear_cube):
-    """Missing coordinate raises error."""
-    # Missing X coordinate.
-    source = regrid_rectilinear_cube.copy()
-    source.remove_coord("longitude")
+def test_missing_coord_get_cube_yxcoordname_x(regrid_rectilinear_cube):
+    """Missing X coordinate raises error."""
+    regrid_rectilinear_cube.remove_coord("longitude")
     with pytest.raises(ValueError):
-        operator_utils.get_cube_yxcoordname(source)
+        operator_utils.get_cube_yxcoordname(regrid_rectilinear_cube)
 
-    # Missing Y coordinate.
-    source = regrid_rectilinear_cube.copy()
-    source.remove_coord("latitude")
+
+def test_missing_coord_get_cube_yxcoordname_y(regrid_rectilinear_cube):
+    """Missing Y coordinate raises error."""
+    regrid_rectilinear_cube.remove_coord("longitude")
     with pytest.raises(ValueError):
-        operator_utils.get_cube_yxcoordname(source)
+        operator_utils.get_cube_yxcoordname(regrid_rectilinear_cube)
 
 
 def test_get_cube_yxcoordname(regrid_rectilinear_cube):
