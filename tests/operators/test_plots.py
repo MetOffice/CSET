@@ -186,3 +186,19 @@ def test_plot_and_save_postage_stamp_histogram_series(histogram_cube, tmp_workin
         histtype="step",
     )
     assert Path("test.png").is_file()
+
+
+def test_plot_and_save_postage_stamps_in_single_plot_histogram_series(
+    histogram_cube, tmp_working_dir
+):
+    """Test plotting a multiline histogram for multiple ensemble members."""
+    plot._plot_and_save_postage_stamps_in_single_plot_histogram_series(
+        cube=histogram_cube,
+        filename="test.png",
+        title="Test",
+        stamp_coordinate="realization",
+        vmin=250,
+        vmax=350,
+        histtype="step",
+    )
+    assert Path("test.png").is_file()
