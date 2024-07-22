@@ -923,28 +923,25 @@ def plot_histogram_series(
     # Ensure we've got a single cube.
     cube = _check_single_cube(cube)
 
-    # Call internal plotting function
+    # Internal plotting function.
     plotting_func = _plot_and_save_histogram_series
 
     # Make postage stamp plots if stamp_coordinate exists and has more than a
     # single point. If single_plot is True, all postage stamp plots will be
     # plotted in a single plot instead of separate postage stamp plots.
     try:
-        if not single_plot and cube.coord(stamp_coordinate).shape[0] > 1:
-            plotting_func = _plot_and_save_postage_stamp_histogram_series
+        if cube.coord(stamp_coordinate).shape[0] > 1:
+            if single_plot:
+                plotting_func = (
+                    _plot_and_save_postage_stamps_in_single_plot_histogram_series
+                )
+            else:
+                plotting_func = _plot_and_save_postage_stamp_histogram_series
     except iris.exceptions.CoordinateNotFoundError:
         pass
 
-    try:
-        if single_plot and cube.coord(stamp_coordinate).shape[0] > 1:
-            plotting_func = (
-                _plot_and_save_postage_stamps_in_single_plot_histogram_series
-            )
-    except iris.exceptions.CoordinateNotFoundError:
-        pass
-
-    # If several histograms are plotted with time as sequence_coordinate
-    # for the time slider option.
+    # If several histograms are plotted with time as sequence_coordinate for the
+    # time slider option.
     try:
         cube.coord(sequence_coordinate)
     except iris.exceptions.CoordinateNotFoundError as err:
