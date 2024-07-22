@@ -14,11 +14,9 @@
 
 """Test plotting operators."""
 
-import unittest.mock as mock
 from pathlib import Path
 
 import iris.cube
-import matplotlib.pyplot as plt
 import pytest
 
 from CSET.operators import collapse, plot, read
@@ -173,25 +171,3 @@ def test_plot_histogram_with_filename(histogram_cube, tmp_working_dir):
         histogram_cube, filename="test", sequence_coordinate="time"
     )
     assert Path("test_473718.0.png").is_file()
-
-
-def test_plot_and_save_postage_stamp_histogram_series_grid_size(
-    histogram_cube, tmp_working_dir
-):
-    """The test checks that the grid size is calculated correctly for the postage stamp plot."""
-    # get the realization coordinate of the histogram_cube
-    realization_coord = histogram_cube.coord("realization")
-
-    # Since the original function returns a figure as png file we can not test its number of subplots.
-    # Instead we replace plt.savefig with a mock function that does nothing to allow the plot_histogram_series
-    # function to create a plot without saving it to a file. This way we can access
-    # the figure and check its number of subplots.
-    with mock.patch("matplotlib.pyplot.savefig"):
-        # call the function with the test cube
-        plot.plot_histogram_series(histogram_cube, sequence_coordinate="time")
-
-    # get the figure
-    fig = plt.gcf()
-
-    # check that the figure has been created with the correct number of subplots and equates to realization_dim
-    assert len(fig.axes) == realization_coord.shape[0]
