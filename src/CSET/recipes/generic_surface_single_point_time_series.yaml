@@ -1,0 +1,41 @@
+category: Quick Look
+title: Time series of $VARNAME at $LATITUDE_POINT N, $LONGITUDE_POINT E
+description: Plots a time series of the surface $VARNAME at a selected gridpoint.
+
+# Parallel steps.
+parallel:
+  - operator: read.read_cube
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        levels: []
+        coordinate: "pressure"
+      validity_time_constraint:
+        operator: constraints.generate_time_constraint
+        time_start: $VALIDITY_TIME
+
+  - operator: regrid.regrid_to_single_point
+    lat_pt: $LATITUDE_POINT
+    lon_pt: $LONGITUDE_POINT
+    method: $SINGLE_POINT_METHOD
+
+  # Save single-point variable to a file per validity time.
+  - operator: write.write_cube_to_nc
+    filename: intermediate/single_point_values
+
+# Collation steps.
+# Reads in intermediate cube and plots it.
+collate:
+  - operator: read.read_cube
+    filename_pattern: intermediate/*.nc
+
+  # Make a single NetCDF with all the data inside it.
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+  # Plot the data.
+  - operator: plot.plot_line_series
