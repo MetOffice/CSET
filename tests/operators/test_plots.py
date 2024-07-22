@@ -39,7 +39,6 @@ def test_check_single_cube():
 def test_spatial_contour_plot(cube, tmp_working_dir):
     """Plot spatial contour plot of instant air temp."""
     # Remove realization coord to increase coverage, and as its not needed.
-    cube = cube.copy()
     cube.remove_coord("realization")
     cube_2d = cube.slices_over("time").next()
     plot.spatial_contour_plot(cube_2d, filename="plot")
@@ -67,7 +66,6 @@ def test_postage_stamp_contour_plot(monkeypatch, tmp_path):
 def test_postage_stamp_contour_plot_sequence_coord_check(cube, tmp_working_dir):
     """Check error when cube has no time coordinate."""
     # What does this even physically mean? No data?
-    cube = cube.copy()
     cube.remove_coord("time")
     with pytest.raises(ValueError):
         plot.spatial_contour_plot(cube)
