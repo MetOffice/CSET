@@ -15,6 +15,7 @@ Unreleased
 .. Highlight any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@Sylviabohnenstengel`_ add pdf functionality for spatial fields in :pr:`594`.
 * `@Sylviabohnenstengel`_ documentation: add info on quick pytesting in :pr:`696`
 * `@Sylviabohnenstengel`_ add constraint operator for lfric full_levels and half_levels
 * `@Sylviabohnenstengel`_ introduced lfric_model_level and lfric_model_level_field to rose meta
@@ -22,6 +23,12 @@ Unreleased
 * `@Sylviabohnenstengel`_ expand plot operator add plotting on model levels to spatial plot operator
 * `@Sylviabohnenstengel`_ added new recipe for plotting vertical profiles on model levels for lfric.
 * `@Sylviabohnenstengel`_ added new recipe for plotting spatial lfric data on model levels.
+* `@Sylviabohnenstengel`_ added a vertical line plotting operator that plots
+  vertical profiles using an optional series coordinate and an optional sequence
+  coordinate. The series coordinate is currently tested for pressure and the
+  sequence coordinate allows displaying vertical profiles over time using the
+  time slider functionality. Further added a recipe to plot vertical profiles
+  and test functions for the vertical plot operator.Fixes :pr: `494`
 
 24.6.0 (2024-06-17)
 -------------------

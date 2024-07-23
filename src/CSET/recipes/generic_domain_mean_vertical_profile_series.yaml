@@ -1,5 +1,5 @@
 category: Quick Look
-title: Domain mean $VARNAME vertical profile as series
+title: Domain horizontal mean $VARNAME vertical profile as series
 description: Plots a time series of vertical profiles for the domain mean $VARNAME using a log pressure coordinate.
 
 # Pre-processing steps.

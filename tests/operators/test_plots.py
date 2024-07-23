@@ -148,3 +148,57 @@ def test_plot_vertical_line_series_no_sequence_coordinate(
         plot.plot_vertical_line_series(
             vertical_profile_cube, series_coordinate="pressure"
         )
+
+
+def test_plot_vertical_line_series_too_many_dimensions(cube, tmp_working_dir):
+    """Error when cube has more than one dimension."""
+    with pytest.raises(
+        ValueError, match="Cube must have a model_level_number coordinate."
+    ):
+        plot.plot_vertical_line_series(cube)
+
+
+def test_plot_histogram_no_sequence_coordinate(histogram_cube, tmp_working_dir):
+    """Error when cube is missing sequence coordinate (time)."""
+    histogram_cube.remove_coord("time")
+    with pytest.raises(ValueError, match="Cube must have a time coordinate."):
+        plot.plot_histogram_series(histogram_cube, series_coordinate="pressure")
+
+
+def test_plot_histogram_with_filename(histogram_cube, tmp_working_dir):
+    """Plot sequence of contour plots."""
+    plot.plot_histogram_series(
+        histogram_cube, filename="test", sequence_coordinate="time"
+    )
+    assert Path("test_473718.0.png").is_file()
+    assert Path("test_473721.0.png").is_file()
+
+
+def test_plot_and_save_postage_stamp_histogram_series(histogram_cube, tmp_working_dir):
+    """Test plotting a postage stamp histogram."""
+    plot._plot_and_save_postage_stamp_histogram_series(
+        cube=histogram_cube,
+        filename="test.png",
+        title="Test",
+        stamp_coordinate="realization",
+        vmin=250,
+        vmax=350,
+        histtype="step",
+    )
+    assert Path("test.png").is_file()
+
+
+def test_plot_and_save_postage_stamps_in_single_plot_histogram_series(
+    histogram_cube, tmp_working_dir
+):
+    """Test plotting a multiline histogram for multiple ensemble members."""
+    plot._plot_and_save_postage_stamps_in_single_plot_histogram_series(
+        cube=histogram_cube,
+        filename="test.png",
+        title="Test",
+        stamp_coordinate="realization",
+        vmin=250,
+        vmax=350,
+        histtype="step",
+    )
+    assert Path("test.png").is_file()
