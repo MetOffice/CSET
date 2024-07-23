@@ -2,8 +2,13 @@ Recipe Format
 =============
 
 The recipes are text files written in `YAML 1.2`_, a configuration language that
-is widely used. They are saved with the ``.yaml`` extension. Below is a
-commented example recipe:
+is widely used. They are saved with the ``.yaml`` extension.
+
+Currently we develop separate recipes for similar diagnostics for Unified Model data and
+LFRic data. Recipes are also separately developed for surface diagnostics and
+diagnostics on vertical levels.
+
+Below is a commented example recipe:
 
 .. code-block:: yaml
 
@@ -102,6 +107,12 @@ for example:
 .. code-block:: bash
 
     cset bake -i input -o output -r recipe.yaml --MY_VARIABLE='value'
+
+Alternatively a space can be used between the variable and value:
+
+.. code-block:: bash
+
+    cset bake -i input -o output -r recipe.yaml --MY_VARIABLE value
 
 The given value will be templated into the parameter so what runs is actually:
 
