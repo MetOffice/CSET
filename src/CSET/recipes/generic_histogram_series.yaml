@@ -1,7 +1,13 @@
 category: Quick Look
 title: $VARNAME $MLEVEL Level Histogram Plot
 description: |
-  Extracts and plots the probability density of $MLEVEL level $VARNAME from a file at model level $MLEVEL. It uses [`plt.hist`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.hist.html) to plot the probability density so that the area under the histogram integrates to 1. `stacked` is set to True so the sum of the histograms is normalized to 1. In case of ensemble data choose from postage stamp plot or single plot via the single_plot option in the recipe directly.
+  Extracts and plots the probability density of $MLEVEL level $VARNAME from a
+  file at model level $MLEVEL. It uses
+  [`plt.hist`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.hist.html)
+  to plot the probability density so that the area under the histogram
+  integrates to 1. `stacked` is set to True so the sum of the histograms is
+  normalized to 1. In case of ensemble data choose from postage stamp plot or
+  single plot via the single_plot option in the recipe directly.
 
 parallel:
   - operator: read.read_cube
@@ -34,4 +40,3 @@ collate:
     # stamp_coordinate and single_plot optional and only required for ensemble data
     stamp_coordinate: "realization"
     single_plot: False
-    histtype: $HISTTYPE
