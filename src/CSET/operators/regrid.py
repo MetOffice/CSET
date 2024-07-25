@@ -34,7 +34,7 @@ def regrid_onto_cube(
     Arguments
     ----------
     toregrid: iris.cube | iris.cube.CubeList
-        An iris cube of the data to regrid, or multiple cubes to regrid in a cubelist.
+        An iris Cube of data to regrid, or multiple cubes to regrid in a CubeList.
         A minimum requirement is that the cube(s) need to be 2D with a latitude,
         longitude coordinates.
     target: Cube
