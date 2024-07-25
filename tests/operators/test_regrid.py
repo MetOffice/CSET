@@ -71,7 +71,6 @@ def test_regrid_onto_xyspacing_cubes(regrid_source_cube, regrid_test_cube):
     )
 
     expected_cubelist = "[<iris 'Cube' of surface_altitude / (m) (latitude: 16; longitude: 16)>,\n<iris 'Cube' of surface_altitude / (m) (latitude: 16; longitude: 16)>]"
-
     assert repr(regridded_cubes) in expected_cubelist
 
 
