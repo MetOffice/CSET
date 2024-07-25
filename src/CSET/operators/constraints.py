@@ -105,7 +105,7 @@ def generate_level_constraint(
 
             def no_levels(cube):
                 # Reject cubes for which coordinate exists.
-                return not bool(cube.coords(coordinate))
+                return not cube.coords(coordinate)
 
             return iris.Constraint(cube_func=no_levels)
 
