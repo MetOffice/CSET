@@ -46,7 +46,7 @@ def regrid_onto_cube(
     Returns
     -------
     iris.cube | iris.cube.CubeList
-        An iris cube of the data that has been regridded, or a cubelist of the cubes
+        An iris cube of the data that has been regridded, or a CubeList of the cubes
         that have been regridded in the same order they were passed in toregrid.
 
     Raises
