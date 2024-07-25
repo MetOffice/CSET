@@ -84,6 +84,15 @@ def test_generate_level_constraint_multi_level():
     assert expected_pressure_constraint in repr(pressure_constraint)
 
 
+def test_generate_level_constraint_all_level():
+    """Generate constraint for all levels."""
+    pressure_constraint = constraints.generate_level_constraint(
+        coordinate="pressure", levels="*"
+    )
+    expected_pressure_constraint = "Constraint(coord_values={'pressure': <function generate_level_constraint.<locals>.<lambda> at"
+    assert expected_pressure_constraint in repr(pressure_constraint)
+
+
 def test_generate_level_constraint_no_pressure():
     """Generate constraint for not having pressure levels."""
     pressure_constraint = constraints.generate_level_constraint(

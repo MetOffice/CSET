@@ -9,9 +9,13 @@ parallel:
         validity_time_constraint:
             operator: constraints.generate_time_constraint
             time_start: $VALIDITY_TIME
-        stash_constraint:
-            operator: constraints.generate_stash_constraint
-            stash: $CS_VARS
+        var_constraint:
+            operator: constraints.generate_var_constraint
+            varname: $CS_VARS
+        level_constraint:
+            operator: constraints.generate_level_constraint
+            coordinate: $CS_VERTLEV
+            levels: '*'
 
   - operator: transect.calc_transect
     startcoords: $CS_STARTCOORDS
