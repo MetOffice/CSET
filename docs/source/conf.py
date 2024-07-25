@@ -8,7 +8,7 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "CSET"
-copyright = "2022-2024, Met Office and contributors."
+copyright = "Crown copyright, Met Office (2022-2024) and CSET contributors."
 author = "Met Office and Partners"
 
 # -- General configuration ---------------------------------------------------
@@ -26,6 +26,7 @@ extensions = [
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "furo"
+html_baseurl = "https://metoffice.github.io/CSET/"
 
 # -- LaTeX output configuration ----------------------------------------------
 # https://www.sphinx-doc.org/en/master/latex.html

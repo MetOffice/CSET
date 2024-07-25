@@ -1,4 +1,4 @@
-# Copyright 2022 Met Office and contributors.
+# © Crown copyright, Met Office (2022-2024) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import json
 import logging
 import math
 import sys
-import warnings
 from typing import Union
 
 import iris
@@ -34,6 +33,7 @@ import numpy as np
 from markdown_it import MarkdownIt
 
 from CSET._common import get_recipe_metadata, render_file, slugify
+from CSET.operators._utils import get_cube_yxcoordname, is_transect
 
 ############################
 # Private helper functions #
@@ -211,8 +211,25 @@ def _plot_and_save_contour_plot(
     # Using pyplot interface here as we need iris to generate a cartopy GeoAxes.
     axes = plt.gca()
 
-    # Add coastlines.
-    axes.coastlines(resolution="10m")
+    # Add coastlines if cube contains x and y map coordinates.
+    try:
+        get_cube_yxcoordname(cube)
+        axes.coastlines(resolution="10m")
+    except ValueError:
+        pass
+
+    # Check to see if transect, and if so, adjust y axis.
+    if is_transect(cube):
+        if "pressure" in [coord.name() for coord in cube.coords()]:
+            axes.invert_yaxis()
+            axes.set_yscale("log")
+            axes.set_ylim(1100, 100)
+        # If both model_level_number and level_height exists, iplt can construct
+        # plot as a function of height above orography (NOT sea level).
+        elif {"model_level_number", "level_height"}.issubset(
+            {coord.name() for coord in cube.coords()}
+        ):
+            axes.set_yscale("log")
 
     # Add title.
     axes.set_title(title, fontsize=16)
@@ -269,7 +286,13 @@ def _plot_and_save_postage_stamp_contour_plot(
         ax = plt.gca()
         ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
         ax.set_axis_off()
-        ax.coastlines()
+
+        # Add coastlines if cube contains x and y map coordinates.
+        try:
+            get_cube_yxcoordname(cube)
+            ax.coastlines(resolution="10m")
+        except ValueError:
+            pass
 
     # Put the shared colorbar in its own axes.
     colorbar_axes = fig.add_axes([0.15, 0.07, 0.7, 0.03])
@@ -317,6 +340,259 @@ def _plot_and_save_line_series(
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=150)
     logging.info("Saved line plot to %s", filename)
+    plt.close(fig)
+
+
+def _plot_and_save_vertical_line_series(
+    cube: iris.cube.Cube,
+    coord: iris.coords.Coord,
+    filename: str,
+    series_coordinate: str,
+    title: str,
+    vmin: float,
+    vmax: float,
+    **kwargs,
+):
+    """Plot and save a 1D line series in vertical.
+
+    Parameters
+    ----------
+    cube: Cube
+        1 dimensional Cube of the data to plot on x-axis.
+    coord: Coord
+        Coordinate to plot on y-axis.
+    filename: str
+        Filename of the plot to write.
+    series_coordinate: str
+        Coordinate to use as vertical axis.
+    title: str
+        Plot title.
+    vmin: float
+        Minimum value for the x-axis.
+    vmax: float
+        Maximum value for the x-axis.
+    """
+    # plot the vertical pressure axis using log scale
+    fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
+    iplt.plot(cube, coord, "o-")
+    ax = plt.gca()
+
+    # Special handling for pressure level data.
+    if series_coordinate == "pressure":
+        # Invert y-axis and set to log scale.
+        ax.invert_yaxis()
+        ax.set_yscale("log")
+
+        # Define y-ticks and labels for pressure log axis.
+        y_tick_labels = [
+            "1000",
+            "850",
+            "700",
+            "500",
+            "300",
+            "200",
+            "100",
+            "50",
+            "30",
+            "20",
+            "10",
+        ]
+        y_ticks = [1000, 850, 700, 500, 300, 200, 100, 50, 30, 20, 10]
+
+        # Set y-axis limits and ticks.
+        ax.set_ylim(1100, 100)
+
+    # test if series_coordinate is model level data. The um data uses model_level_number
+    # and lfric uses full_levels as coordinate.
+    elif series_coordinate in ("model_level_number", "full_levels", "half_levels"):
+        # Define y-ticks and labels for vertical axis.
+        y_ticks = cube.coord(series_coordinate).points
+        y_tick_labels = [str(int(i)) for i in y_ticks]
+        ax.set_ylim(min(y_ticks), max(y_ticks))
+
+    ax.set_yticks(y_ticks)
+    ax.set_yticklabels(y_tick_labels)
+
+    # set x-axis limits
+    ax.set_xlim(vmin, vmax)
+
+    # Add some labels and tweak the style.
+    ax.set(
+        ylabel=f"{coord.name()} / {coord.units}",
+        xlabel=f"{cube.name()} / {cube.units}",
+        title=title,
+    )
+
+    # Save plot.
+    fig.savefig(filename, bbox_inches="tight", dpi=150)
+    logging.info("Saved line plot to %s", filename)
+    plt.close(fig)
+
+
+def _plot_and_save_histogram_series(
+    cube: iris.cube.Cube,
+    filename: str,
+    title: str,
+    vmin: float,
+    vmax: float,
+    histtype: str = "step",
+    **kwargs,
+):
+    """Plot and save a histogram series.
+
+    Parameters
+    ----------
+    cube: Cube
+        2 dimensional Cube of the data to plot as histogram.
+        Plotting options are fixed:
+        density=True, histtype='step',stacked=True to ensure that
+        a probability density is plotted using matplotlib.pyplot.hist
+        to plot the probability density so that the area under
+        the histogram integrates to 1.
+        stacked is set to True so the sum of the histograms is
+        normalized to 1.
+        ax.autoscale is switched off and the ylim range
+        is preset as (0,1) to make figures comparable.
+    filename: str
+        Filename of the plot to write.
+    title: str
+        Plot title.
+    vmin: float
+        minimum for colourbar
+    vmax: float
+        maximum for colourbar
+    histtype: str
+        The type of histogram to plot. Options are "step" for a line
+        histogram or "barstacked", "stepfilled". "Step" is the default option,
+        but can be changed in the rose-suite.conf configuration.
+    """
+    fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
+    # Reshape cube data into a single array to allow for a single histogram.
+    # Otherwise we plot xdim histograms stacked.
+    cube_data_1d = (cube.data).flatten()
+    plt.hist(cube_data_1d, density=True, histtype=histtype, stacked=True)
+    ax = plt.gca()
+
+    # Add some labels and tweak the style.
+    ax.set(
+        title=title,
+        xlabel=f"{cube.name()} / {cube.units}",
+        ylabel="normalised probability density",
+        ylim=(0, 1),
+        xlim=(vmin, vmax),
+    )
+
+    # Save plot.
+    fig.savefig(filename, bbox_inches="tight", dpi=150)
+    logging.info("Saved line plot to %s", filename)
+    plt.close(fig)
+
+
+def _plot_and_save_postage_stamp_histogram_series(
+    cube: iris.cube.Cube,
+    filename: str,
+    title: str,
+    stamp_coordinate: str,
+    vmin: float,
+    vmax: float,
+    histtype: str,
+    **kwargs,
+):
+    """Plot and save postage (ensemble members) stamps for a histogram series.
+
+    Parameters
+    ----------
+    cube: Cube
+        2 dimensional Cube of the data to plot as histogram.
+        Plotting options are fixed:
+        density=True, histtype='bar', stacked=True to ensure that
+        a probability density is plotted using matplotlib.pyplot.hist
+        to plot the probability density so that the area under
+        the histogram integrates to 1.
+        stacked is set to True so the sum of the histograms is
+        normalized to 1.
+        ax.autoscale is switched off and the ylim range
+        is preset as (0,1) to make figures comparable.
+    filename: str
+        Filename of the plot to write.
+    title: str
+        Plot title.
+    stamp_coordinate: str
+        Coordinate that becomes different plots.
+    vmin: float
+        minimum for pdf x-axis
+    vmax: float
+        maximum for pdf x-axis
+    histtype: str
+        The type of histogram to plot. Options are "step" for a line
+        histogram or "barstacked", "stepfilled". "Step" is the default option,
+        but can be changed in the rose-suite.conf configuration.
+
+    """
+    # Use the smallest square grid that will fit the members.
+    grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
+
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+    # Make a subplot for each member.
+    for member, subplot in zip(
+        cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1), strict=False
+    ):
+        # Implicit interface is much easier here, due to needing to have the
+        # cartopy GeoAxes generated.
+        plt.subplot(grid_size, grid_size, subplot)
+        # Reshape cube data into a single array to allow for a single histogram.
+        # Otherwise we plot xdim histograms stacked.
+        member_data_1d = (member.data).flatten()
+        plt.hist(member_data_1d, density=True, histtype=histtype, stacked=True)
+        ax = plt.gca()
+        ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
+        ax.set_ylim(0, 1)
+        ax.set_xlim(vmin, vmax)
+
+    # Overall figure title.
+    fig.suptitle(title)
+
+    fig.savefig(filename, bbox_inches="tight", dpi=150)
+    logging.info("Saved histogram postage stamp plot to %s", filename)
+    plt.close(fig)
+
+
+def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
+    cube: iris.cube.Cube,
+    filename: str,
+    title: str,
+    stamp_coordinate: str,
+    vmin: float,
+    vmax: float,
+    histtype: str = "step",
+    **kwargs,
+):
+    fig, ax = plt.subplots(figsize=(10, 10), facecolor="w", edgecolor="k")
+    ax.set_title(title)
+    ax.set_xlim(vmin, vmax)
+    ax.set_ylim(0, 1)
+    ax.set_xlabel(f"{cube.name()} / {cube.units}")
+    ax.set_ylabel("normalised probability density")
+    # Loop over all slices along the stamp_coordinate
+    for member in cube.slices_over(stamp_coordinate):
+        # Flatten the member data to 1D
+        member_data_1d = member.data.flatten()
+        # Plot the histogram using plt.hist
+        plt.hist(
+            member_data_1d,
+            density=True,
+            histtype=histtype,
+            stacked=True,
+            label=f"Member #{member.coord(stamp_coordinate).points[0]}",
+        )
+
+    # Add a legend
+    ax.legend()
+
+    # Save the figure to a file
+    plt.savefig(filename)
+
+    # Close the figure
     plt.close(fig)
 
 
@@ -416,62 +692,6 @@ def spatial_contour_plot(
     return cube
 
 
-# Deprecated
-def postage_stamp_contour_plot(
-    cube: iris.cube.Cube,
-    filename: str = None,
-    coordinate: str = "realization",
-    **kwargs,
-) -> iris.cube.Cube:
-    """Plot postage stamp contour plots from an ensemble.
-
-    Depreciated. Use spatial_contour_plot with a stamp_coordinate argument
-    instead.
-
-    Parameters
-    ----------
-    cube: Cube
-        Iris cube of data to be plotted. It must have a realization coordinate.
-    filename: pathlike, optional
-        The path of the plot to write. Defaults to the recipe name.
-    coordinate: str
-        The coordinate that becomes different plots. Defaults to "realization".
-
-    Returns
-    -------
-    Cube
-        The original cube (so further operations can be applied)
-
-    Raises
-    ------
-    ValueError
-        If the cube doesn't have the right dimensions.
-    TypeError
-        If cube isn't a Cube.
-    """
-    warnings.warn(
-        "postage_stamp_contour_plot is depreciated. Use spatial_contour_plot with a stamp_coordinate argument instead.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    # Get suitable filename.
-    if filename is None:
-        filename = slugify(get_recipe_metadata().get("title", "Untitled"))
-    if not filename.endswith(".png"):
-        filename = filename + ".png"
-
-    # Check cube is suitable.
-    cube = _check_single_cube(cube)
-    try:
-        cube.coord(coordinate)
-    except iris.exceptions.CoordinateNotFoundError as err:
-        raise ValueError(f"Cube must have a {coordinate} coordinate.") from err
-
-    _plot_and_save_postage_stamp_contour_plot(cube, filename, coordinate, title="")
-    _make_plot_html_page([filename])
-    return cube
-
-
 # TODO: Expand function to handle ensemble data.
 # line_coordinate: str, optional
 #     Coordinate about which to plot multiple lines. Defaults to
@@ -535,5 +755,231 @@ def plot_line_series(
 
     # Make a page to display the plots.
     _make_plot_html_page(plot_index)
+
+    return cube
+
+
+def plot_vertical_line_series(
+    cube: iris.cube.Cube,
+    filename: str = None,
+    series_coordinate: str = "model_level_number",
+    sequence_coordinate: str = "time",
+    # line_coordinate: str = "realization",
+    **kwargs,
+) -> iris.cube.Cube:
+    """Plot a line plot against a type of vertical coordinate.
+
+    A 1D line plot with y-axis as pressure coordinate can be plotted, but if the sequence_coordinate is present
+    then a sequence of plots will be produced.
+
+    The cube must be 1D.
+
+    Parameters
+    ----------
+    cube: Cube
+        Iris cube of the data to plot. It should have a single dimension.
+    filename: str, optional
+        Name of the plot to write, used as a prefix for plot sequences. Defaults
+        to the recipe name.
+    series_coordinate: str, optional
+        Coordinate to plot on the y-axis. Can be ``pressure`` or
+        ``model_level_number`` for UM, or ``full_levels`` or ``half_levels``
+        for LFRic. Defaults to ``model_level_number``.
+        This coordinate must exist in the cube.
+    sequence_coordinate: str, optional
+        Coordinate about which to make a plot sequence. Defaults to ``"time"``.
+        This coordinate must exist in the cube.
+
+    Returns
+    -------
+    Cube
+        The original cube (so further operations can be applied).
+
+    Raises
+    ------
+    ValueError
+        If the cube doesn't have the right dimensions.
+    TypeError
+        If the cube isn't a single cube.
+    """
+    # Ensure we've got a single cube.
+    cube = _check_single_cube(cube)
+
+    # Test if series coordinate i.e. pressure level exist for any cube with cube.ndim >=1.
+    try:
+        coord = cube.coord(series_coordinate)
+    except iris.exceptions.CoordinateNotFoundError as err:
+        raise ValueError(f"Cube must have a {series_coordinate} coordinate.") from err
+
+    # If several individual vertical lines are plotted with time as sequence_coordinate
+    # for the time slider option.
+    try:
+        cube.coord(sequence_coordinate)
+    except iris.exceptions.CoordinateNotFoundError as err:
+        raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
+
+    # Ensure we have a name for the plot file.
+    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    if filename is None:
+        filename = slugify(recipe_title)
+
+    # set the lower and upper limit for the x-axis to ensure all plots
+    # have same range. This needs to read the whole cube over the range of
+    # the sequence and if applicable postage stamp coordinate.
+    # This only works if the plotting is done in the collate section of a
+    # recipe and not in the parallel section of a recipe.
+    vmin = np.floor(cube.data.min())
+    vmax = np.ceil(cube.data.max())
+
+    # Create a plot for each value of the sequence coordinate.
+    plot_index = []
+    for cube_slice in cube.slices_over(sequence_coordinate):
+        # Use sequence value so multiple sequences can merge.
+        seq_coord = cube_slice.coord(sequence_coordinate)
+        sequence_value = seq_coord.points[0]
+        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
+        # Format the coordinate value in a unit appropriate way.
+        title = f"{recipe_title} | {seq_coord.units.title(sequence_value)}"
+        # Do the actual plotting.
+        _plot_and_save_vertical_line_series(
+            cube_slice,
+            coord,
+            plot_filename,
+            series_coordinate,
+            title=title,
+            vmin=vmin,
+            vmax=vmax,
+        )
+        plot_index.append(plot_filename)
+
+    # Add list of plots to plot metadata.
+    complete_plot_index = _append_to_plot_index(plot_index)
+
+    # Make a page to display the plots.
+    _make_plot_html_page(complete_plot_index)
+
+    return cube
+
+
+def plot_histogram_series(
+    cube: iris.cube.Cube,
+    filename: str = None,
+    sequence_coordinate: str = "time",
+    stamp_coordinate: str = "realization",
+    single_plot: bool = False,
+    histtype: str = "step",
+    **kwargs,
+) -> iris.cube.Cube:
+    """Plot a histogram plot for each vertical level provided.
+
+    A histogram plot can be plotted, but if the sequence_coordinate (i.e. time)
+    is present then a sequence of plots will be produced using the time slider
+    functionality to scroll through histograms against time.
+    If a stamp_coordinate is present then postage stamp plots will be produced.
+    If stamp_coordinate and single_plot is True,
+    all postage stamp plots will be plotted in a single plot instead of separate postage stamp plots.
+
+    Parameters
+    ----------
+    cube: Cube
+        Iris cube of the data to plot. It should have a single dimension other
+        than the stamp coordinate.
+    filename: str, optional
+        Name of the plot to write, used as a prefix for plot sequences. Defaults
+        to the recipe name.
+    sequence_coordinate: str, optional
+        Coordinate about which to make a plot sequence. Defaults to ``"time"``.
+        This coordinate must exist in the cube and will be used for the time slider.
+    stamp_coordinate: str, optional
+        Coordinate about which to plot postage stamp plots. Defaults to
+        ``"realization"``.
+    single_plot: bool, optional
+        If True, all postage stamp plots will be plotted in a single plot.
+        If False, each postage stamp plot will be plotted separately.
+        Is only valid if stamp_coordinate exists and has more than a single point.
+    histtype: str, optional
+        The type of histogram to plot. Options are "step" for a line
+        histogram or "barstacked", "stepfilled". "Step" is the default option,
+        but can be changed in the rose-suite.conf configuration.
+
+    Returns
+    -------
+    Cube
+        The original cube (so further operations can be applied).
+
+    Raises
+    ------
+    ValueError
+        If the cube doesn't have the right dimensions.
+    TypeError
+        If the cube isn't a single cube.
+    """
+    recipe_title = get_recipe_metadata().get("title", "Untitled")
+
+    # Ensure we have a name for the plot file.
+    if filename is None:
+        filename = slugify(recipe_title)
+
+    # Ensure we've got a single cube.
+    cube = _check_single_cube(cube)
+
+    # Internal plotting function.
+    plotting_func = _plot_and_save_histogram_series
+
+    # Make postage stamp plots if stamp_coordinate exists and has more than a
+    # single point. If single_plot is True, all postage stamp plots will be
+    # plotted in a single plot instead of separate postage stamp plots.
+    try:
+        if cube.coord(stamp_coordinate).shape[0] > 1:
+            if single_plot:
+                plotting_func = (
+                    _plot_and_save_postage_stamps_in_single_plot_histogram_series
+                )
+            else:
+                plotting_func = _plot_and_save_postage_stamp_histogram_series
+    except iris.exceptions.CoordinateNotFoundError:
+        pass
+
+    # If several histograms are plotted with time as sequence_coordinate for the
+    # time slider option.
+    try:
+        cube.coord(sequence_coordinate)
+    except iris.exceptions.CoordinateNotFoundError as err:
+        raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
+
+    # Set the lower and upper limit for the colorbar to ensure all plots
+    # have same range. This needs to read the whole cube over the range of
+    # the sequence and if applicable postage stamp coordinate.
+    # This only works if the plotting is done in the collate section of a
+    # recipe and not in the parallel section of a recipe.
+    vmin = np.floor((cube.data.min()))
+    vmax = np.ceil((cube.data.max()))
+
+    # Create a plot for each value of the sequence coordinate.
+    plot_index = []
+    for cube_slice in cube.slices_over(sequence_coordinate):
+        # Use sequence value so multiple sequences can merge.
+        sequence_value = cube_slice.coord(sequence_coordinate).points[0]
+        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
+        coord = cube_slice.coord(sequence_coordinate)
+        # Format the coordinate value in a unit appropriate way.
+        title = f"{recipe_title} | {coord.units.title(coord.points[0])}"
+        # Do the actual plotting.
+        plotting_func(
+            cube_slice,
+            plot_filename,
+            stamp_coordinate=stamp_coordinate,
+            title=title,
+            vmin=vmin,
+            vmax=vmax,
+            histtype=histtype,
+        )
+        plot_index.append(plot_filename)
+
+    # Add list of plots to plot metadata.
+    complete_plot_index = _append_to_plot_index(plot_index)
+
+    # Make a page to display the plots.
+    _make_plot_html_page(complete_plot_index)
 
     return cube

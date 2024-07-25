@@ -1,4 +1,4 @@
-# Copyright 2022 Met Office and contributors.
+# © Crown copyright, Met Office (2022-2024) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,7 +39,6 @@ def test_check_single_cube():
 def test_spatial_contour_plot(cube, tmp_working_dir):
     """Plot spatial contour plot of instant air temp."""
     # Remove realization coord to increase coverage, and as its not needed.
-    cube = cube.copy()
     cube.remove_coord("realization")
     cube_2d = cube.slices_over("time").next()
     plot.spatial_contour_plot(cube_2d, filename="plot")
@@ -67,31 +66,9 @@ def test_postage_stamp_contour_plot(monkeypatch, tmp_path):
 def test_postage_stamp_contour_plot_sequence_coord_check(cube, tmp_working_dir):
     """Check error when cube has no time coordinate."""
     # What does this even physically mean? No data?
-    cube = cube.copy()
     cube.remove_coord("time")
     with pytest.raises(ValueError):
         plot.spatial_contour_plot(cube)
-
-
-# Deprecated functionality.
-def test_postage_stamp_plots_deprecated(monkeypatch, tmp_path):
-    """Plot postage stamp plots of ensemble data."""
-    ensemble_cube = read.read_cube("tests/test_data/exeter_em*.nc")
-    ensemble_cube_3d = ensemble_cube.slices_over("time").next()
-    monkeypatch.chdir(tmp_path)
-    plot_file = Path("plot.png")
-    with pytest.deprecated_call():
-        plot.postage_stamp_contour_plot(ensemble_cube_3d, filename=plot_file.name)
-    assert plot_file.is_file()
-
-
-def test_postage_stamp_realization_check_deprecated(cube, tmp_working_dir):
-    """Check error when cube has no realization coordinate."""
-    cube = cube.copy()
-    cube.remove_coord("realization")
-    with pytest.deprecated_call():
-        with pytest.raises(ValueError):
-            plot.postage_stamp_contour_plot(cube)
 
 
 def test_plot_line_series(cube, tmp_working_dir):
@@ -121,3 +98,105 @@ def test_plot_line_series_too_many_dimensions(cube, tmp_working_dir):
     """Error when cube has more than one dimension."""
     with pytest.raises(ValueError):
         plot.plot_line_series(cube)
+
+
+def test_plot_vertical_line_series(vertical_profile_cube, tmp_working_dir):
+    """Save a vertical line series plot."""
+    plot.plot_vertical_line_series(
+        vertical_profile_cube, series_coordinate="pressure", sequence_coordinate="time"
+    )
+    assert Path("untitled_473718.0.png").is_file()
+    assert Path("untitled_473721.0.png").is_file()
+
+
+def test_plot_vertical_line_series_with_filename(
+    vertical_profile_cube, tmp_working_dir
+):
+    """Save a vertical line series plot with specific filename.
+
+    The given filename does not haven extension to test that too.
+    """
+    plot.plot_vertical_line_series(
+        vertical_profile_cube,
+        filename="Test",
+        series_coordinate="pressure",
+        sequence_coordinate="time",
+    )
+    assert Path("Test_473718.0.png").is_file()
+    assert Path("Test_473721.0.png").is_file()
+
+
+def test_plot_vertical_line_series_no_series_coordinate(
+    vertical_profile_cube, tmp_working_dir
+):
+    """Error when cube is missing series coordinate (pressure)."""
+    vertical_profile_cube.remove_coord("pressure")
+    with pytest.raises(ValueError, match="Cube must have a pressure coordinate."):
+        plot.plot_vertical_line_series(
+            vertical_profile_cube, series_coordinate="pressure"
+        )
+
+
+def test_plot_vertical_line_series_no_sequence_coordinate(
+    vertical_profile_cube, tmp_working_dir
+):
+    """Error when cube is missing sequence coordinate (time)."""
+    vertical_profile_cube.remove_coord("time")
+    with pytest.raises(ValueError, match="Cube must have a time coordinate."):
+        plot.plot_vertical_line_series(
+            vertical_profile_cube, series_coordinate="pressure"
+        )
+
+
+def test_plot_vertical_line_series_too_many_dimensions(cube, tmp_working_dir):
+    """Error when cube has more than one dimension."""
+    with pytest.raises(
+        ValueError, match="Cube must have a model_level_number coordinate."
+    ):
+        plot.plot_vertical_line_series(cube)
+
+
+def test_plot_histogram_no_sequence_coordinate(histogram_cube, tmp_working_dir):
+    """Error when cube is missing sequence coordinate (time)."""
+    histogram_cube.remove_coord("time")
+    with pytest.raises(ValueError, match="Cube must have a time coordinate."):
+        plot.plot_histogram_series(histogram_cube, series_coordinate="pressure")
+
+
+def test_plot_histogram_with_filename(histogram_cube, tmp_working_dir):
+    """Plot sequence of contour plots."""
+    plot.plot_histogram_series(
+        histogram_cube, filename="test", sequence_coordinate="time"
+    )
+    assert Path("test_473718.0.png").is_file()
+    assert Path("test_473721.0.png").is_file()
+
+
+def test_plot_and_save_postage_stamp_histogram_series(histogram_cube, tmp_working_dir):
+    """Test plotting a postage stamp histogram."""
+    plot._plot_and_save_postage_stamp_histogram_series(
+        cube=histogram_cube,
+        filename="test.png",
+        title="Test",
+        stamp_coordinate="realization",
+        vmin=250,
+        vmax=350,
+        histtype="step",
+    )
+    assert Path("test.png").is_file()
+
+
+def test_plot_and_save_postage_stamps_in_single_plot_histogram_series(
+    histogram_cube, tmp_working_dir
+):
+    """Test plotting a multiline histogram for multiple ensemble members."""
+    plot._plot_and_save_postage_stamps_in_single_plot_histogram_series(
+        cube=histogram_cube,
+        filename="test.png",
+        title="Test",
+        stamp_coordinate="realization",
+        vmin=250,
+        vmax=350,
+        histtype="step",
+    )
+    assert Path("test.png").is_file()

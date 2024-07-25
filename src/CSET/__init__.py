@@ -1,4 +1,4 @@
-# Copyright 2022-2023 Met Office and contributors.
+# © Crown copyright, Met Office (2022-2024) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -149,6 +149,9 @@ def main():
     stderr_log.addFilter(lambda record: record.levelno >= loglevel)
     stderr_log.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
     logger.addHandler(stderr_log)
+
+    # Down here so runs after logging is setup.
+    logging.debug("CLI Arguments: %s", cli_args)
 
     if args.subparser is None:
         print("Please choose a command.", file=sys.stderr)

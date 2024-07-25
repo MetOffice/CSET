@@ -1,4 +1,4 @@
-# Copyright 2022 Met Office and contributors.
+# © Crown copyright, Met Office (2022-2024) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,7 +30,6 @@ def test_noop_operator():
 
 def test_remove_attribute_cube(cube):
     """Remove attribute from a Cube."""
-    cube = cube.copy()
     assert "STASH" in cube.attributes
     cube = misc.remove_attribute(cube, "STASH")[0]
     assert "STASH" not in cube.attributes
@@ -38,7 +37,6 @@ def test_remove_attribute_cube(cube):
 
 def test_remove_attribute_cubelist(cubes):
     """Remove attribute from a CubeList."""
-    cubes = cubes.copy()
     for cube in cubes:
         assert "STASH" in cube.attributes
     cubes = misc.remove_attribute(cubes, "STASH")
@@ -100,3 +98,44 @@ def test_multiplication_failure(cube):
     a = read.read_cube("tests/test_data/convection/ECFlagB.nc")
     with pytest.raises(ValueError):
         misc.multiplication(cube, a)
+
+
+def test_combine_singlecube_into_cubelist(cube):
+    """Test case of single cube into cubelist."""
+    cubelist = misc.combine_cubes_into_cubelist(cube)
+    expected_cubelist = "[<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>]"
+    assert repr(cubelist) in expected_cubelist
+
+
+def test_combine_singlecubelist_into_cubelist(cube):
+    """Test case of single cubelist into cubelist."""
+    cubelist = misc.combine_cubes_into_cubelist(iris.cube.CubeList([cube, cube]))
+    expected_cubelist = "[<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>,\n<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>]"
+    assert repr(cubelist) in expected_cubelist
+
+
+def test_combine_single_noncompliant_into_cubelist():
+    """Test case of single object which isn't cube or cubelist."""
+    with pytest.raises(TypeError):
+        misc.combine_cubes_into_cubelist("hello")
+
+
+def test_combine_multiplecube_into_cubelist(cube):
+    """Test case of multiple cube into cubelist."""
+    cubelist = misc.combine_cubes_into_cubelist(cube, a=cube)
+    expected_cubelist = "[<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>,\n<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>]"
+    assert repr(cubelist) in expected_cubelist
+
+
+def test_combine_multiple_cube_and_noncompliant_into_cubelist(cube):
+    """Test case of a valid cube with some non compliant data which isn't cube or cubelist."""
+    with pytest.raises(TypeError):
+        misc.combine_cubes_into_cubelist(cube, a="hello")
+
+
+def test_combine_multiplecube_mixed_into_cubelist(cube):
+    """Test case of multiple cubes and cubelist into cubelist."""
+    cubelist = misc.combine_cubes_into_cubelist(cube, a=cube)
+    out_cubelist = misc.combine_cubes_into_cubelist(cube, a=cubelist, b=cube)
+    expected_cubelist = "[<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>,\n<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>,\n<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>,\n<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>]"
+    assert repr(out_cubelist) in expected_cubelist

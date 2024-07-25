@@ -166,5 +166,10 @@
     "wind_speed_at_10m": {
         "min": 0.0,
         "max": 30.0
+    },
+    "air_potential_temperature": {
+        "min": 230,
+        "max": 340,
+        "cmap": "jet"
     }
 }

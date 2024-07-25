@@ -20,7 +20,9 @@ jobs:
         uses: actions/cache@v4
         with:
           key: conda|${{runner.os}}-${{runner.arch}}|${{ hashFiles(format('requirements/locks/{0}-lock-linux-64.txt', matrix.py-ver)) }}
-          path: ~/conda-env
+          path: |
+            ~/conda-env
+            ~/.local/share/cartopy
       - name: Create conda environment
         if: steps.conda-env-cache.outputs.cache-hit != 'true'
         run: |
@@ -33,7 +35,10 @@ jobs:
         env:
           PY_COLORS: "1"
         run: |
+          # Install package and run pytest.
+          echo '::group::Installing local package'
           python3 -m pip install -e .
+          echo '::endgroup::'
           pytest --verbose --cov --cov-append --cov-config=pyproject.toml
           mv .coverage ".coverage.${{ matrix.py-ver }}"
       - uses: actions/upload-artifact@v4
@@ -95,6 +100,8 @@ jobs:
       - name: Set up pre-commit
         run: python3 -m pip install pre-commit
       - name: Run pre-commit
+        env:
+          RUFF_OUTPUT_FORMAT: github
         run: pre-commit run --show-diff-on-failure --color=always --all-files
 
   build-docs:
@@ -107,7 +114,9 @@ jobs:
         uses: actions/cache@v4
         with:
           key: conda|${{runner.os}}-${{runner.arch}}|${{hashFiles('requirements/locks/py312-lock-linux-64.txt')}}
-          path: ~/conda-env
+          path: |
+            ~/conda-env
+            ~/.local/share/cartopy
       - name: Create conda environment
         if: steps.conda-env-cache.outputs.cache-hit != 'true'
         run: |
@@ -125,9 +134,6 @@ jobs:
           # Generate the documentation
           echo '::group::Building the documentation'
           sphinx-build -b html --color -W --keep-going "docs/source" "docs/build/html"
-          echo '::endgroup::'
-          echo '::group::Checking for broken hyperlinks'
-          sphinx-build -b linkcheck --color -W --keep-going "docs/source" "docs/build/linkcheck"
           echo '::endgroup::'
       - name: Upload documentation artifact
         uses: actions/upload-artifact@v4

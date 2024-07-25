@@ -1,4 +1,4 @@
-# Copyright 2022-2023 Met Office and contributors.
+# © Crown copyright, Met Office (2022-2024) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ import inspect
 import json
 import logging
 import os
-import warnings
 from pathlib import Path
 from typing import Union
 
@@ -38,6 +37,7 @@ from CSET.operators import (
     plot,
     read,
     regrid,
+    transect,
     write,
 )
 
@@ -48,14 +48,15 @@ __all__ = [
     "collapse",
     "constraints",
     "convection",
-    "execute_recipe_parallel",
     "execute_recipe_collate",
+    "execute_recipe_parallel",
     "filters",
     "get_operator",
     "misc",
     "plot",
     "read",
     "regrid",
+    "transect",
     "write",
 ]
 
@@ -108,9 +109,7 @@ def _write_metadata(recipe: dict):
     metadata = recipe.copy()
     # Remove steps, as not needed, and might contain non-serialisable types.
     metadata.pop("parallel", None)
-    metadata.pop("steps", None)
     metadata.pop("collate", None)
-    metadata.pop("post-steps", None)
     with open("meta.json", "wt", encoding="UTF-8") as fp:
         json.dump(metadata, fp)
     os.sync()
@@ -138,8 +137,10 @@ def _step_parser(step: dict, step_input: any) -> str:
     first_arg = next(iter(inspect.signature(operator).parameters.keys()))
     logging.debug("first_arg: %s", first_arg)
     if first_arg not in kwargs:
+        logging.debug("first_arg not in kwargs, using step_input.")
         return operator(step_input, **kwargs)
     else:
+        logging.debug("first_arg in kwargs.")
         return operator(**kwargs)
 
 
@@ -213,17 +214,7 @@ def execute_recipe_parallel(
     except (FileExistsError, NotADirectoryError) as err:
         logging.error("Output directory is a file. %s", output_directory)
         raise err
-    # If parallel doesn't exist try steps.
-    try:
-        steps = recipe["parallel"]
-    except KeyError:
-        if "steps" in recipe:
-            warnings.warn(
-                "'steps' recipe key is deprecated. Use 'parallel' instead.",
-                DeprecationWarning,
-                stacklevel=1,
-            )
-        steps = recipe["steps"]
+    steps = recipe["parallel"]
     _run_steps(recipe, steps, step_input, output_directory, style_file)
 
 
@@ -258,15 +249,6 @@ def execute_recipe_collate(
     output_directory = Path(output_directory).resolve()
     assert output_directory.is_dir()
     recipe = parse_recipe(recipe_yaml, recipe_variables)
-    # If collate doesn't exist try post-steps, else treat it as having no steps.
-    try:
-        steps = recipe["collate"]
-    except KeyError:
-        if "post-steps" in recipe:
-            warnings.warn(
-                "'post-steps' recipe key is deprecated. Use 'collate' instead.",
-                DeprecationWarning,
-                stacklevel=1,
-            )
-        steps = recipe.get("post-steps", tuple())
+    # If collate doesn't exist treat it as having no steps.
+    steps = recipe.get("collate", [])
     _run_steps(recipe, steps, output_directory, output_directory, style_file)

@@ -4,7 +4,6 @@
 
 import fcntl
 import json
-import locale
 import logging
 import os
 import subprocess
@@ -100,10 +99,12 @@ def recipe_id():
     if p.returncode != 0:
         logging.error(
             "cset recipe-id returned non-zero exit code.\n%s",
-            p.stderr.decode(locale.getencoding()),
+            # Presume that subprocesses have the same IO encoding as this one.
+            # Honestly, on all our supported platforms this will be "utf-8".
+            p.stderr.decode(sys.stderr.encoding),
         )
         sys.exit(1)
-    id = p.stdout.decode(locale.getencoding()).strip()
+    id = p.stdout.decode(sys.stdout.encoding).strip()
     return id
 
 

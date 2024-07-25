@@ -1,0 +1,18 @@
+{% if LFRIC_PLOT_SPATIAL_PRESSURE_LEVEL_MODEL_FIELD %}
+[runtime]
+{% for model_field in LFRIC_PRESSURE_LEVEL_MODEL_FIELDS %}
+{% for plevel in LFRIC_PRESSURE_LEVELS %}
+    [[process_lfric_generic_plevel_spatial_plot_sequence_{{model_field}}_{{plevel}}]]
+    inherit = PARALLEL
+        [[[environment]]]
+        CSET_RECIPE_NAME = "lfric_generic_plevel_spatial_plot_sequence.yaml"
+        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --PLEVEL='{{plevel}}'"
+
+    [[collate_lfric_generic_plevel_spatial_plot_sequence_{{model_field}}_{{plevel}}]]
+    inherit = COLLATE
+        [[[environment]]]
+        CSET_RECIPE_NAME = "lfric_generic_plevel_spatial_plot_sequence.yaml"
+        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --PLEVEL='{{plevel}}'"
+{% endfor %}
+{% endfor %}
+{% endif %}

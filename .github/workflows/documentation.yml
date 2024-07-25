@@ -22,7 +22,9 @@ jobs:
         uses: actions/cache@v4
         with:
           key: conda|${{runner.os}}-${{runner.arch}}|${{hashFiles('requirements/locks/py312-lock-linux-64.txt')}}
-          path: ~/conda-env
+          path: |
+            ~/conda-env
+            ~/.local/share/cartopy
 
       - name: Create conda environment
         if: steps.conda-env-cache.outputs.cache-hit != 'true'

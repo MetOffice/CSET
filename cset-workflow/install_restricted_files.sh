@@ -3,47 +3,84 @@
 set -euo pipefail
 IFS="$(printf '\n\t')"
 
-echo "This script downloads and install Momentum Partnership restricted files and"
-echo "code for use in CSET. To use it make sure you have git cloning via SSH"
-echo "setup for the repository at https://github.com/MetOffice/CSET-workflow"
+show_help()
+{
+  cat << EOF
+Usage: ${0} [-b branch-name] [-R repository]
 
-read -rp 'Remote branch to use? [main]: ' branch
-if [[ -z "$branch" ]]
-then
-  branch="main"
-fi
+  * Repository defaults to https://github.com/MetOffice/CSET-workflow
+  * Branch defaults to main
+  * Most people should omit both, and use the default values
 
-read -rp 'Restricted files will be overwritten. Continue? [Y/n]: ' choice
-if [[ "$choice" == [^Yy]* ]]
+This script downloads and install Momentum® Partnership restricted files and
+code for use in CSET. Make sure you have git authentication setup for the
+repository at https://github.com/MetOffice/CSET-workflow
+EOF
+  exit "$1"
+}
+
+# Set defaults. These are left unchanged if the option isn't specified.
+branch="main"
+httpurl="https://github.com/MetOffice/CSET-workflow"
+
+# Parse options.
+while getopts "hb:R:" opt
+do
+  case "$opt" in
+    b) branch="$OPTARG"
+    ;;
+    R) httpurl="$OPTARG"
+    ;;
+    h) show_help 0
+    ;;
+    ?) show_help 1
+  esac
+done
+
+# Basic check that we are in the right folder.
+if [[ ! -f flow.cylc ]]
 then
-  echo "Aborted"
+  echo "You must be in the cset-workflow directory when running this script."
   exit 1
 fi
-unset choice
 
+# Convert GitHub HTTPS url into SSH one.
+# GitLab prepends `ssh.` to its SSH URLs, so is not currently supported.
+sshurl="$(echo "$httpurl" | sed -e 's/https:\/\//git@/' -e 's/\//:/')"
+
+# Make a temporary directory into which to clone the repository.
 tempdir="$(mktemp -d)"
 
 # We don't need history, so shallow git clone for speed.
-if ! git clone --branch "${branch}" --depth 1 git@github.com:MetOffice/CSET-workflow.git "${tempdir}"
+# First try with SSH cloning.
+echo "Cloning ${branch} from ${sshurl}"
+if ! git clone --branch "${branch}" --depth 1 "${sshurl}" "${tempdir}"
 then
-  echo
-  echo "Problem cloning git repository."
-  echo "Check you have SSH cloning set up for https://github.com/MetOffice/CSET-workflow"
-  exit 1
+  echo "Cannot clone via SSH, falling back to HTTPS."
+  echo "Cloning ${branch} from ${httpurl}"
+  if ! git clone --branch "${branch}" --depth 1 "${httpurl}" "${tempdir}"
+  then
+    echo "Problem cloning git repository."
+    echo "Check you have set up access for ${httpurl}"
+    exit 1
+  fi
 fi
 
 # Copy most files from there into workflow directory, clobering existing ones.
 # Don't copy some files, like README.md or top-level hidden files.
 rm "${tempdir}/README.md"
-
-if [[ -z "${1-}" ]]
-then
-  target_directory="$PWD"
-else
-  target_directory="$1"
-fi
-
-cp -rv "${tempdir}"/* "${target_directory}"
-
-# Clean up, must force here to remove .git folder.
+# Ignores top level hidden files.
+cp -rv "${tempdir}"/* "$PWD"
+# Clean up. Must force here to remove .git folder.
 rm -rf "${tempdir}"
+
+# Report success.
+cat << EOF
+   ___________ ____________
+  / ____/ ___// ____/_  __/
+ / /    \__ \/ __/   / /
+/ /___ ___/ / /___  / /
+\____//____/_____/ /_/
+
+Restricted files installed!
+EOF
