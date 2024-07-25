@@ -66,7 +66,6 @@ def test_regrid_onto_xyspacing_cubes(regrid_source_cube, regrid_test_cube):
     """Test regrid case where xyspacing to project onto is specified for multiple cubes."""
     # Create cubelist with multiple cubes
     cubelist_to_regrid = iris.cube.CubeList([regrid_source_cube, regrid_source_cube])
-
     regridded_cubes = regrid.regrid_onto_xyspacing(
         cubelist_to_regrid, xspacing=0.5, yspacing=0.5, method="Linear"
     )
