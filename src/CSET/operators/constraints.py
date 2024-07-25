@@ -85,7 +85,8 @@ def generate_level_constraint(
     coordinate: str
         Level coordinate name about which to constraint.
     levels: int | list[int] | str
-        CF compliant levels, or ``"*"`` for retrieving all levels available.
+        CF compliant level points, ``"*"`` for retrieving all levels, or
+        ``[]`` for no levels.
 
     Returns
     -------
