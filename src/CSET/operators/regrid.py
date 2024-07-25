@@ -27,7 +27,7 @@ def regrid_onto_cube(
     method: str,
     **kwargs,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Regrid a cube or cubelist, projecting onto a target cube.
+    """Regrid a cube or CubeList, projecting onto a target cube.
 
     All cubes must have at least 2 spatial (map) dimensions.
 
