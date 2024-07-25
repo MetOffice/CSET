@@ -19,6 +19,8 @@ https://docs.pytest.org/en/latest/reference/fixtures.html#conftest-py-sharing-fi
 
 import pytest
 
+from CSET.operators import constraints, filters, read
+
 
 @pytest.fixture()
 def tmp_working_dir(tmp_path, monkeypatch):
@@ -27,27 +29,37 @@ def tmp_working_dir(tmp_path, monkeypatch):
     return tmp_path
 
 
+# Session scope fixtures, so the test data only has to be loaded from disk
+# once, then make an in-memory copy whenever it is reused.
 @pytest.fixture(scope="session")
-def cubes():
-    """Get an iris CubeList."""
-    import CSET.operators.read as read
-
+def cubes_readonly():
+    """Get an iris CubeList. NOT safe to modify."""
     return read.read_cubes("tests/test_data/air_temp.nc")
 
 
-@pytest.fixture(scope="session")
-def cube(cubes):
-    """Get an iris Cube."""
-    from CSET.operators import constraints, filters
+@pytest.fixture()
+def cubes(cubes_readonly):
+    """Get an iris CubeList. Safe to modify."""
+    return cubes_readonly.copy()
 
-    return filters.filter_cubes(cubes, constraints.generate_cell_methods_constraint([]))
+
+@pytest.fixture(scope="session")
+def cube_readonly(cubes_readonly):
+    """Get an iris Cube. NOT safe to modify."""
+    return filters.filter_cubes(
+        cubes_readonly, constraints.generate_cell_methods_constraint([])
+    )
+
+
+@pytest.fixture()
+def cube(cube_readonly):
+    """Get an iris Cube. Safe to modify."""
+    return cube_readonly.copy()
 
 
 @pytest.fixture(scope="session")
 def vertical_profile_cube_readonly():
     """Get a vertical profile Cube. It is NOT safe to modify."""
-    from CSET.operators import read
-
     return read.read_cube(
         "tests/test_data/air_temperature_vertical_profile_as_series.nc"
     )
@@ -55,7 +67,7 @@ def vertical_profile_cube_readonly():
 
 @pytest.fixture()
 def vertical_profile_cube(vertical_profile_cube_readonly):
-    """Get a vertical profile Cube.  It is safe to modify."""
+    """Get a vertical profile Cube. It is safe to modify."""
     return vertical_profile_cube_readonly.copy()
 
 
@@ -73,3 +85,29 @@ def histogram_cube_readonly():
 def histogram_cube(histogram_cube_readonly):
     """Get a histogram Cube."""
     return histogram_cube_readonly.copy()
+
+
+@pytest.fixture(scope="session")
+def regrid_rectilinear_cube_readonly():
+    """Get a cube to test with. It is NOT safe to modify."""
+    return read.read_cube(
+        "tests/test_data/regrid/regrid_rectilinearGeogCS.nc", "surface_altitude"
+    )
+
+
+@pytest.fixture()
+def regrid_rectilinear_cube(regrid_rectilinear_cube_readonly):
+    """Get a cube to test with. It is safe to modify."""
+    return regrid_rectilinear_cube_readonly.copy()
+
+
+@pytest.fixture(scope="session")
+def transect_source_cube_readonly():
+    """Get a 3D cube to test with. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/transect_test_umpl.nc")
+
+
+@pytest.fixture()
+def transect_source_cube(transect_source_cube_readonly):
+    """Get a 3D cube to test with. It is safe to modify."""
+    return transect_source_cube_readonly.copy()

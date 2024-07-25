@@ -14,6 +14,7 @@
 
 """Miscellaneous operators."""
 
+import itertools
 from collections.abc import Iterable
 from typing import Union
 
@@ -198,3 +199,41 @@ def multiplication(multiplicand, multiplier):
 
     """
     return multiplicand * multiplier
+
+
+def combine_cubes_into_cubelist(first: Cube | CubeList, **kwargs) -> CubeList:
+    """Operator that combines multiple cubes or CubeLists into one.
+
+    Arguments
+    ---------
+    first: Cube | CubeList
+        First cube or CubeList to merge into CubeList.
+    second: Cube | CubeList
+        Second cube or CubeList to merge into CubeList. This must be a named
+        argument.
+    third: Cube | CubeList
+        There can be any number of additional arguments, they just need unique
+        names.
+    ...
+
+    Returns
+    -------
+    combined_cubelist: CubeList
+        Combined CubeList containing all cubes/CubeLists.
+
+    Raises
+    ------
+    TypeError:
+        If the provided arguments are not either a Cube or CubeList.
+    """
+    # Create empty CubeList to store cubes/CubeList.
+    all_cubes = CubeList()
+    # Combine all CubeLists into a single flat iterable.
+    for item in itertools.chain(iter_maybe(first), *map(iter_maybe, kwargs.values())):
+        # Check each item is a Cube, erroring if not.
+        if isinstance(item, Cube):
+            # Add cube to CubeList.
+            all_cubes.append(item)
+        else:
+            raise TypeError("Not a Cube or CubeList!", item)
+    return all_cubes
