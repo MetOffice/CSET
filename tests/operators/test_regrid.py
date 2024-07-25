@@ -55,7 +55,6 @@ def test_regrid_onto_cube_cubes(regrid_source_cube, regrid_test_cube):
     """Test regrid case where target cube to project onto is specified for multiple cubes."""
     # Create cubelist with multiple cubes.
     cubelist_to_regrid = iris.cube.CubeList([regrid_source_cube, regrid_source_cube])
-
     regridded_cubes = regrid.regrid_onto_cube(
         cubelist_to_regrid, regrid_test_cube, method="Linear"
     )
