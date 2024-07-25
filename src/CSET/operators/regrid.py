@@ -18,6 +18,7 @@ import iris
 import iris.cube
 import numpy as np
 
+from CSET._common import iter_maybe
 from CSET.operators._utils import get_cube_yxcoordname
 
 
@@ -60,15 +61,11 @@ def regrid_onto_cube(
     -----
     Currently rectlinear grids (uniform) are supported.
     """
-    # If only one cube, put into cubelist as an iterable.
-    if type(toregrid) == iris.cube.Cube:
-        toregrid = iris.cube.CubeList([toregrid])
-
-    # To store regridded cubes
+    # To store regridded cubes.
     regridded_cubes = iris.cube.CubeList()
 
-    # Iterate over all cubes and regrid
-    for cube in toregrid:
+    # Iterate over all cubes and regrid.
+    for cube in iter_maybe(toregrid):
         # Get y,x coord names
         y_coord, x_coord = get_cube_yxcoordname(cube)
 
@@ -140,15 +137,11 @@ def regrid_onto_xyspacing(
     Currently rectlinear grids (uniform) are supported.
 
     """
-    # If only one cube, put into cubelist as an iterable.
-    if type(toregrid) == iris.cube.Cube:
-        toregrid = iris.cube.CubeList([toregrid])
-
-    # To store regridded cubes
+    # To store regridded cubes.
     regridded_cubes = iris.cube.CubeList()
 
-    # Iterate over all cubes and regrid
-    for cube in toregrid:
+    # Iterate over all cubes and regrid.
+    for cube in iter_maybe(toregrid):
         # Get x,y coord names
         y_coord, x_coord = get_cube_yxcoordname(cube)
 
