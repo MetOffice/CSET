@@ -4,44 +4,30 @@ title = CSET
 description = Workflow for running CSET.
 URL = https://metoffice.github.io/CSET
 
-[scheduler]
-    UTC mode = True
-
 [scheduling]
     runahead limit = P{{CSET_RUNAHEAD_LIMIT}}
-    initial cycle point = {{CSET_INITIAL_CYCLE_POINT}}
-    final cycle point = {{CSET_FINAL_CYCLE_POINT}}
+    initial cycle point = 1000-01-01
 
     [[graph]]
     # Only runs on the first cycle.
     R1/^ = """
-    build_conda & install_website_skeleton => FETCH_DATA
+    build_conda => install_local_cset
+    build_conda => install_website_skeleton
+    install_local_cset & install_website_skeleton => setup_complete
     """
+
+    # Runs for every forecast initiation time to process the data in parallel.
+    {% for date in CSET_CASE_DATES %}
+    R1/{{date}} = """
+    setup_complete[^] => FETCH_DATA:succeed-all => PROCESS:finish-all => process_finish => housekeeping_raw
+    """
+    {% endfor %}
 
     # Only runs on the final cycle.
     R1/$ = """
-    process_finish => COLLATE:succeed-all =>
-    finish_website => send_email => housekeeping_full
+    PROCESS:finish-all => finish_website => send_email
+    PROCESS:finish-all => housekeeping_full
     """
-
-    # Runs every cycle to process the data in parallel.
-    {{CSET_CYCLE_PERIOD}} = """
-    install_website_skeleton[^] & build_conda[^] =>
-    FETCH_DATA:succeed-all => PARALLEL:succeed-all =>
-    process_finish => housekeeping_raw
-
-    # Intercycle dependence with this task ensures the collate step waits for
-    # the required data.
-    process_finish[-{{CSET_CYCLE_PERIOD}}] => process_finish
-    """
-
-    {% if CSET_INCREMENTAL_OUTPUT %}
-    # Runs every so often to update output plots during runtime.
-    {{CSET_INCREMENTAL_OUTPUT_PERIOD}} = """
-    COLLATE[-{{CSET_INCREMENTAL_OUTPUT_PERIOD}}]:finish-all &
-    process_finish => COLLATE
-    """
-    {% endif %}
 
 [runtime]
     [[root]]
@@ -74,15 +60,8 @@ URL = https://metoffice.github.io/CSET
         COLORBAR_FILE = {{COLORBAR_FILE}}
         PLOT_RESOLUTION = {{PLOT_RESOLUTION}}
 
-    [[PARALLEL]]
+    [[PROCESS]]
     script = rose task-run -v --app-key=run_cset_recipe
-    [[[environment]]]
-        CSET_BAKE_MODE = parallel
-
-    [[COLLATE]]
-    script = rose task-run -v --app-key=run_cset_recipe
-    [[[environment]]]
-        CSET_BAKE_MODE = collate
 
     [[FETCH_DATA]]
 
@@ -95,20 +74,13 @@ URL = https://metoffice.github.io/CSET
             ROSE_APP_OPT_CONF_KEYS = {{METPLUS_OPT_CONFIG_KEYS}}
             {% endif %}
 
-    # Dummy tasks needed for workflow scheduling.
-    [[process_finish]]
+    [[DUMMY_TASK]]
     script = true
     platform = localhost
+    execution time limit = PT1M
 
-    [[dummy_collate]]
-    inherit = COLLATE
-    script = true
-    platform = localhost
-
-    [[dummy_parallel]]
-    inherit = PARALLEL
-    script = true
-    platform = localhost
+    [[setup_complete]]
+    inherit = DUMMY_TASK
 
     [[build_conda]]
     # Create the conda environment if it does not yet exist, possibly installing
