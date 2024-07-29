@@ -200,6 +200,8 @@ def test_plot_and_save_postage_stamps_in_single_plot_histogram_series(
         histtype="step",
     )
     assert Path("test.png").is_file()
+
+
 def test_scatter_plot(cube, vertical_profile_cube, tmp_working_dir):
     """Save a scatter plot."""
     cube_y = collapse.collapse(cube, ["time", "grid_longitude"], "MEAN")[0:4]
