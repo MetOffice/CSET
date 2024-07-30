@@ -13,6 +13,10 @@ parallel:
         validity_time_constraint:
             operator: constraints.generate_time_constraint
             time_start: $VALIDITY_TIME
+        level_constraint:
+            operator: constraints.generate_level_constraint
+            coordinate: $LFRIC_VERTICAL_COORDINATE_A
+            levels: $LFRIC_LEVELS_A
     constraint_B:
         operator: constraints.combine_constraints
         variable_constraint:
@@ -21,6 +25,10 @@ parallel:
         validity_time_constraint:
             operator: constraints.generate_time_constraint
             time_start: $VALIDITY_TIME
+        level_constraint:
+            operator: constraints.generate_level_constraint
+            coordinate: $LFRIC_VERTICAL_COORDINATE_B
+            levels: $LFRIC_LEVELS_B
 
   - operator: write.write_cube_to_nc
     filename: intermediate/qq_data
