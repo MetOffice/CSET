@@ -1,28 +1,28 @@
 #!/bin/bash
 
-# Copies the static files for the web interface into the correct location,
-# optionally removing previous files there.
+# Copies the static files for the web interface into the correct location, and
+# creates a symbolic link under the web server's document root.
 
 set -euo pipefail
 IFS="$(printf '\n\t')"
 
-if [[ "$CLEAN_WEB_DIR" == True ]]; then
-  echo "Removing existing files at $WEB_DIR"
-  rm -rf -- "$WEB_DIR"
-fi
+# Strip trailing slashes in case they have been added in the config. Otherwise
+# they break the symlinks.
+WEB_DIR="${WEB_DIR%/}"
+
+# Remove existing output ahead of creating new symlink.
+echo "Removing any existing output link at $WEB_DIR"
+rm -vfr -- "$WEB_DIR"
 
 echo "Installing website files to $WEB_DIR"
 # If we end up needing a build step for the website, here is where to run it.
 
+# Create directory for web content.
+mkdir -v "${CYLC_WORKFLOW_SHARE_DIR}/web"
 # Copy static HTML/CSS/JS.
-if mkdir -v "$WEB_DIR"; then
-  cp -rv html/* "$WEB_DIR"
-  # Create symbolic link to plots directory.
-  # NOTE: While its good for space, it means `cylc clean` removes plots.
-  ln -s "${CYLC_WORKFLOW_SHARE_DIR}/plots" "${WEB_DIR}/plots"
-else
-  # Fail task if directory already exists.
-  >&2 echo "Web directory already exists, refusing to overwrite."
-  >&2 echo "Web directory: $WEB_DIR"
-  false
-fi
+cp -rv html/* "${CYLC_WORKFLOW_SHARE_DIR}/web"
+# Create directory for plots.
+mkdir -p "${CYLC_WORKFLOW_SHARE_DIR}/web/plots"
+# Create symbolic link to web directory.
+# NOTE: While good for space, it means `cylc clean` removes output.
+ln -s "${CYLC_WORKFLOW_SHARE_DIR}/web" "$WEB_DIR"
