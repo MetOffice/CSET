@@ -14,7 +14,7 @@ logging.basicConfig(
 )
 
 if os.getenv("CSET_ENV_USE_LOCAL_CSET") == "True":
-    with tempfile.TemporaryDirectory as cset_install_path:
+    with tempfile.TemporaryDirectory() as cset_install_path:
         cset_source_path = os.path.expandvars(
             os.path.expanduser(os.getenv("CSET_LOCAL_CSET_PATH"))
         )
