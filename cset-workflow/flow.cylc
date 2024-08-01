@@ -128,8 +128,6 @@ URL = https://metoffice.github.io/CSET
 
     [[install_website_skeleton]]
     # Copies the static files that make up the web interface.
-        [[[environment]]]
-        CLEAN_WEB_DIR = {{CLEAN_WEB_DIR}}
 
     [[fetch_fcst]]
     # Fetch data from disk or a file based archival system.
