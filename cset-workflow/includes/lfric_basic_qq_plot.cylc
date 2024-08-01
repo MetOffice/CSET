@@ -1,16 +1,16 @@
 {% if LFRIC_BASIC_QQ_PLOT %}
 [runtime]
-{% for model_field_A, model_field_B in zip(LFRIC_MODEL_FIELDS_A, LFRIC_MODEL_FIELDS_B) %}
+{% for model_field_A, model_field_B, coord_A, coord_B in zip(LFRIC_MODEL_FIELDS_A, LFRIC_MODEL_FIELDS_B, LFRIC_VERTICAL_COORDINATE_A, LFRIC_VERTICAL_COORDINATE_B) %}
     [[lfric_generic_basic_qq_plot_{{model_field_A}}_{{model_field_B}}_parallel]]
     inherit = PARALLEL
         [[[environment]]]
         CSET_RECIPE_NAME = "lfric_generic_basic_qq_plot.yaml"
         CSET_ADDOPTS = """
         --VARNAME_A='{{model_field_A}}'
-        --LFRIC_VERTICAL_COORDINATE_A='{{LFRIC_VERTICAL_COORDINATE_A}}'
+        --LFRIC_VERTICAL_COORDINATE_A='{{coord_A}}'
         --LFRIC_LEVELS_A='{{LFRIC_LEVELS_A}}'
         --VARNAME_B='{{model_field_B}}'
-        --LFRIC_VERTICAL_COORDINATE_B='{{LFRIC_VERTICAL_COORDINATE_B}}'
+        --LFRIC_VERTICAL_COORDINATE_B='{{coord_B}}'
         --LFRIC_LEVELS_B='{{LFRIC_LEVELS_B}}'
         --COORD_LIST='{{LFRIC_COORDINATE_LIST}}'
         --ONE_TO_ONE='{{LFRIC_ONE_TO_ONE}}'
@@ -22,10 +22,10 @@
         CSET_RECIPE_NAME = "lfric_generic_basic_qq_plot.yaml"
         CSET_ADDOPTS = """
         --VARNAME_A='{{model_field_A}}'
-        --LFRIC_VERTICAL_COORDINATE_A='{{LFRIC_VERTICAL_COORDINATE_A}}'
+        --LFRIC_VERTICAL_COORDINATE_A='{{coord_A}}'
         --LFRIC_LEVELS_A='{{LFRIC_LEVELS_A}}'
         --VARNAME_B='{{model_field_B}}'
-        --LFRIC_VERTICAL_COORDINATE_B='{{LFRIC_VERTICAL_COORDINATE_B}}'
+        --LFRIC_VERTICAL_COORDINATE_B='{{coord_B}}'
         --LFRIC_LEVELS_B='{{LFRIC_LEVELS_B}}'
         --COORD_LIST='{{LFRIC_COORDINATE_LIST}}'
         --ONE_TO_ONE='{{LFRIC_ONE_TO_ONE}}'

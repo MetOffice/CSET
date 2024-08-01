@@ -42,8 +42,17 @@ collate:
         cube:
             operator: filters.filter_cubes
             constraint:
-                operator: constraints.generate_var_constraint
-                varname: $VARNAME_A
+                operator: constraints.combine_constraints
+                variable_constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: $VARNAME_A
+                cell_method_constraint:
+                    operator: constraints.generate_cell_methods_constraint
+                    cell_methods: []
+                level_constraint:
+                    operator: constraints.generate_level_constraint
+                    coordinate: $LFRIC_VERTICAL_COORDINATE_A
+                    levels: $LFRIC_LEVELS_A
         coordinate: $COORD_LIST
         method: 'PERCENTILE'
         additional_percent: [0,0.001,0.01,0.1,1,5,10,15,20,25,30,40,50,60,70,75,80,85,90,95,98,99,99.9,99.99,99.999,100]
@@ -52,8 +61,17 @@ collate:
         cube:
             operator: filters.filter_cubes
             constraint:
-                operator: constraints.generate_var_constraint
-                varname: $VARNAME_B
+                operator: constraints.combine_constraints
+                variable_constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: $VARNAME_B
+                cell_method_constraint:
+                    operator: constraints.generate_cell_methods_constraint
+                    cell_methods: []
+                level_constraint:
+                    operator: constraints.generate_level_constraint
+                    coordinate: $LFRIC_VERTICAL_COORDINATE_B
+                    levels: $LFRIC_LEVELS_B
         coordinate: $COORD_LIST
         method: 'PERCENTILE'
         additional_percent: [0,0.001,0.01,0.1,1,5,10,15,20,25,30,40,50,60,70,75,80,85,90,95,98,99,99.9,99.99,99.999,100]
