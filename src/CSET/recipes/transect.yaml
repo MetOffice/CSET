@@ -1,4 +1,4 @@
-title: Transect
+title: Transect $CS_VARS
 description: |
   Extracts a transect for a specified variable between two points and plots it.
 
@@ -26,9 +26,14 @@ parallel:
 
 collate:
   - operator: read.read_cube
+    constraint:
+        operator: constraints.generate_var_constraint
+        varname: $CS_VARS
+
     filename_pattern: intermediate/*
 
   - operator: write.write_cube_to_nc
+    filename: transect_$CS_VARS.nc
     overwrite: True
 
   - operator: plot.spatial_contour_plot
