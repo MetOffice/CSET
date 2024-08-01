@@ -10,6 +10,7 @@ dependencies:
   - pygraphviz
   - isodate
   - markdown-it-py >= 3.0
+  - nc-time-axis
 
   # Build dependencies
   - setuptools>=64
