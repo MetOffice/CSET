@@ -1,16 +1,16 @@
 {% if BASIC_QQ_PLOT %}
 [runtime]
-{% for model_field_A, model_field_B in zip(MODEL_FIELDS_A, MODEL_FIELDS_B) %}
+{% for model_field_A, model_field_B, coord_A, coord_B in zip(MODEL_FIELDS_A, MODEL_FIELDS_B,VERTICAL_COORDINATE_A, VERTICAL_COORDINATE_B) %}
     [[generic_basic_qq_plot_{{model_field_A}}_{{model_field_B}}_parallel]]
     inherit = PARALLEL
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_basic_qq_plot.yaml"
         CSET_ADDOPTS = """
         --VARNAME_A='{{model_field_A}}'
-        --VERTICAL_COORDINATE_A='{{VERTICAL_COORDINATE_A}}'
+        --VERTICAL_COORDINATE_A='{{coord_A}}'
         --LEVELS_A='{{LEVELS_A}}'
         --VARNAME_B='{{model_field_B}}'
-        --VERTICAL_COORDINATE_B='{{VERTICAL_COORDINATE_B}}'
+        --VERTICAL_COORDINATE_B='{{coord_B}}'
         --LEVELS_B='{{LEVELS_B}}'
         --COORD_LIST='{{COORDINATE_LIST}}'
         --ONE_TO_ONE='{{ONE_TO_ONE}}'
@@ -21,10 +21,10 @@
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_basic_qq_plot.yaml"
         CSET_ADDOPTS = """--VARNAME_A='{{model_field_A}}'
-        --VERTICAL_COORDINATE_A='{{VERTICAL_COORDINATE_A}}'
+        --VERTICAL_COORDINATE_A='{{coord_A}}'
         --LEVELS_A='{{LEVELS_A}}'
         --VARNAME_B='{{model_field_B}}'
-        --VERTICAL_COORDINATE_B='{{VERTICAL_COORDINATE_B}}'
+        --VERTICAL_COORDINATE_B='{{coord_B}}'
         --LEVELS_B='{{LEVELS_B}}'
         --COORD_LIST='{{COORDINATE_LIST}}'
         --ONE_TO_ONE='{{ONE_TO_ONE}}'
