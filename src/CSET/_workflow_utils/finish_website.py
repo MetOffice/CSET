@@ -11,5 +11,5 @@ import os
 
 def run():
     """Run workflow script."""
-    with open(f"{os.getenv('WEB_DIR')}/status.html", "wt") as fp:
+    with open(os.getenv("CYLC_WORKFLOW_SHARE_DIR") + "/web/status.html", "wt") as fp:
         fp.write("<p>Finished</p>\n")

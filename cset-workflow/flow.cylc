@@ -11,13 +11,14 @@ URL = https://metoffice.github.io/CSET
     [[graph]]
     # Only runs on the first cycle.
     R1/^ = """
-    build_conda => install_website_skeleton => install_website_skeleton => setup_complete
+    build_conda => install_website_skeleton => setup_complete
     """
 
     # Runs for every forecast initiation time to process the data in parallel.
     {% for date in CSET_CASE_DATES %}
     R1/{{date}} = """
-    setup_complete[^] => FETCH_DATA:succeed-all => PROCESS:finish-all => process_finish => housekeeping_raw
+    setup_complete[^] => FETCH_DATA:succeed-all => PROCESS:finish-all
+    PROCESS:finish-all => process_finish => housekeeping_raw
     """
     {% endfor %}
 
@@ -54,7 +55,6 @@ URL = https://metoffice.github.io/CSET
         {% endif %}
 
         LOGLEVEL = {{LOGLEVEL}}
-        WEB_DIR = {{WEB_DIR}}
         COLORBAR_FILE = {{COLORBAR_FILE}}
 
     [[PROCESS]]
@@ -92,6 +92,8 @@ URL = https://metoffice.github.io/CSET
 
     [[install_website_skeleton]]
     # Copies the static files that make up the web interface.
+        [[[environment]]]
+        WEB_DIR = {{WEB_DIR}}
 
     [[fetch_fcst]]
     # Fetch data from disk or a file based archival system.
@@ -127,6 +129,7 @@ URL = https://metoffice.github.io/CSET
     platform = localhost
         [[[environment]]]
         WEB_ADDR = {{WEB_ADDR}}
+        WEB_DIR = {{WEB_DIR}}
 
 
 # Include files bring their own graph and runtime sections.
