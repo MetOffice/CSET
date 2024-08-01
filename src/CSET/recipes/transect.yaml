@@ -1,4 +1,4 @@
-title: Transect $CS_VARS
+title: Transect of $CS_VAR
 description: |
   Extracts a transect for a specified variable between two points and plots it.
 
@@ -11,7 +11,7 @@ parallel:
             time_start: $VALIDITY_TIME
         var_constraint:
             operator: constraints.generate_var_constraint
-            varname: $CS_VARS
+            varname: $CS_VAR
         level_constraint:
             operator: constraints.generate_level_constraint
             coordinate: $CS_VERTLEV
@@ -22,7 +22,7 @@ parallel:
     endcoords: $CS_FINISHCOORDS
 
   - operator: write.write_cube_to_nc
-    filename: intermediate/transect
+    filename: intermediate/transectu
 
 collate:
   - operator: read.read_cube
@@ -33,7 +33,6 @@ collate:
     filename_pattern: intermediate/*
 
   - operator: write.write_cube_to_nc
-    filename: transect_$CS_VARS.nc
     overwrite: True
 
   - operator: plot.spatial_contour_plot
