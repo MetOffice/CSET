@@ -103,7 +103,7 @@ https://conda.anaconda.org/conda-forge/linux-64/gts-0.7.6-h977cf35_4.conda#4d8df
 https://conda.anaconda.org/conda-forge/linux-64/kiwisolver-1.4.5-py310hd41b1e2_1.conda#b8d67603d43b23ce7e988a5d81a7ab79
 https://conda.anaconda.org/conda-forge/linux-64/lcms2-2.16-hb7c19ff_0.conda#51bb7010fc86f70eee639b4bb7a894f5
 https://conda.anaconda.org/conda-forge/linux-64/libblas-3.9.0-23_linux64_openblas.conda#96c8450a40aa2b9733073a9460de972c
-https://conda.anaconda.org/conda-forge/linux-64/libcurl-8.9.0-hdb1bdb2_0.conda#5badfbdb2688d8aaca7bd3c98d557b97
+https://conda.anaconda.org/conda-forge/linux-64/libcurl-8.9.1-hdb1bdb2_0.conda#7da1d242ca3591e174a3c7d82230d3c0
 https://conda.anaconda.org/conda-forge/linux-64/libwebp-1.4.0-h2c329e2_0.conda#80030debaa84cfc31755d53742df3ca6
 https://conda.anaconda.org/conda-forge/noarch/locket-1.0.0-pyhd8ed1ab_0.tar.bz2#91e27ef3d05cc772ce627e51cff111c4
 https://conda.anaconda.org/conda-forge/linux-64/markupsafe-2.1.5-py310h2372a71_0.conda#f6703fa0214a00bf49d1bef6dc7672d0
@@ -138,8 +138,8 @@ https://conda.anaconda.org/conda-forge/linux-64/liblapack-3.9.0-23_linux64_openb
 https://conda.anaconda.org/conda-forge/noarch/markdown-it-py-3.0.0-pyhd8ed1ab_0.conda#93a8e71256479c62074356ef6ebf501b
 https://conda.anaconda.org/conda-forge/noarch/partd-1.4.2-pyhd8ed1ab_0.conda#0badf9c54e24cecfb0ad2f99d680c163
 https://conda.anaconda.org/conda-forge/linux-64/pillow-10.4.0-py310hebfe307_0.conda#89d70dfe2d59edcefc3881be6bff33a6
-https://conda.anaconda.org/conda-forge/noarch/pip-24.0-pyhd8ed1ab_0.conda#f586ac1e56c8638b64f9c8122a7b8a67
-https://conda.anaconda.org/conda-forge/linux-64/proj-9.4.1-hb784bbd_0.conda#c38c5246d064ef16eba065d93c46f1c6
+https://conda.anaconda.org/conda-forge/noarch/pip-24.2-pyhd8ed1ab_0.conda#6721aef6bfe5937abe70181545dd2c51
+https://conda.anaconda.org/conda-forge/linux-64/proj-9.4.1-h54d7996_1.conda#e479d1991c725e1a355f33c0e40dbc66
 https://conda.anaconda.org/conda-forge/noarch/python-dateutil-2.9.0-pyhd8ed1ab_0.conda#2cf4264fffb9e6eff6031c5b6884d61c
 https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml-0.18.6-py310h2372a71_0.conda#50b7d9b39099cdbabf65bf27df73a793
 https://conda.anaconda.org/conda-forge/noarch/typing-extensions-4.12.2-hd8ed1ab_0.conda#52d648bd608f5737b123f510bb5514b5
@@ -147,7 +147,7 @@ https://conda.anaconda.org/conda-forge/linux-64/harfbuzz-9.0.0-hfac3d4d_0.conda#
 https://conda.anaconda.org/conda-forge/noarch/importlib_metadata-8.2.0-hd8ed1ab_0.conda#0fd030dce707a6654472cf7619b0b01b
 https://conda.anaconda.org/conda-forge/linux-64/libnetcdf-4.9.2-nompi_h135f659_114.conda#a908e463c710bd6b10a9eaa89fdf003c
 https://conda.anaconda.org/conda-forge/linux-64/numpy-1.26.4-py310hb13e2d6_0.conda#6593de64c935768b6bad3e19b3e978be
-https://conda.anaconda.org/conda-forge/linux-64/pyproj-3.6.1-py310hf666db6_7.conda#577d33875077f2ae50b13dd56e4d90f8
+https://conda.anaconda.org/conda-forge/linux-64/pyproj-3.6.1-py310h8efdad9_8.conda#141894c09837c83a396fce6eb629c1ab
 https://conda.anaconda.org/conda-forge/noarch/setuptools-scm-8.1.0-pyhd8ed1ab_0.conda#ba9f7f0ec4f2a18de3e7bce67c4a431e
 https://conda.anaconda.org/conda-forge/linux-64/cftime-1.6.4-py310h261611a_0.conda#5c0e2cd80ceab2ac5201459cc016b88b
 https://conda.anaconda.org/conda-forge/linux-64/contourpy-1.2.1-py310hd41b1e2_0.conda#60ee50b1968f802f2a487ba36d4cce0d
