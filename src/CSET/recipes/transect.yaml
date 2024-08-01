@@ -28,7 +28,7 @@ collate:
   - operator: read.read_cube
     constraint:
         operator: constraints.generate_var_constraint
-        varname: $CS_VARS
+        varname: $CS_VAR
 
     filename_pattern: intermediate/*
 
