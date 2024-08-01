@@ -22,7 +22,7 @@ parallel:
     endcoords: $CS_FINISHCOORDS
 
   - operator: write.write_cube_to_nc
-    filename: intermediate/transectu
+    filename: intermediate/transect
 
 collate:
   - operator: read.read_cube
