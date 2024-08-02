@@ -16,8 +16,10 @@ then
         echo "Wheel file, installing directly."
         cset_install_path="${cset_source_path}"
     else
-        # Copy project to temporary location to avoid permissions issues.
-        cp -r "${cset_source_path}"/. "${cset_install_path}"
+        # Copy project to temporary location to avoid permissions issues. We
+        # don't want to copy all hidden files, as they can contain large conda
+        # environments, but we do want the .git directory.
+        cp -r "${cset_source_path}"/* "${cset_source_path}"/.git "${cset_install_path}"
     fi
 
     # Build and install into python environment.
