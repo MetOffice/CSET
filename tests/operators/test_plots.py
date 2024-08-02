@@ -200,3 +200,58 @@ def test_plot_and_save_postage_stamps_in_single_plot_histogram_series(
         histtype="step",
     )
     assert Path("test.png").is_file()
+
+
+def test_scatter_plot(cube, vertical_profile_cube, tmp_working_dir):
+    """Save a scatter plot."""
+    cube_y = collapse.collapse(cube, ["time", "grid_longitude"], "MEAN")[0:4]
+    cube_x = collapse.collapse(vertical_profile_cube, ["time"], "MEAN")[0:4]
+    plot.scatter_plot(
+        cube_y,
+        cube_x,
+    )
+    assert Path("untitled.png").is_file()
+
+
+def test_scatter_plot_with_filename(cube, vertical_profile_cube, tmp_working_dir):
+    """Save a scatter plot with a file name."""
+    cube_y = collapse.collapse(cube, ["time", "grid_longitude"], "MEAN")[0:4]
+    cube_x = collapse.collapse(vertical_profile_cube, ["time"], "MEAN")[0:4]
+    plot.scatter_plot(
+        cube_y,
+        cube_x,
+        filename="scatter_plot.ext",
+    )
+    assert Path("scatter_plot.png").is_file()
+
+
+def test_scatter_plot_no_one_to_one_line(cube, vertical_profile_cube, tmp_working_dir):
+    """Save a scatter plot without a one-to-one line."""
+    cube_y = collapse.collapse(cube, ["time", "grid_longitude"], "MEAN")[0:4]
+    cube_x = collapse.collapse(vertical_profile_cube, ["time"], "MEAN")[0:4]
+    plot.scatter_plot(
+        cube_y,
+        cube_x,
+        one_to_one=False,
+    )
+    assert Path("untitled.png").is_file()
+
+
+def test_scatter_plot_too_many_x_dimensions(
+    cube, vertical_profile_cube, tmp_working_dir
+):
+    """Error when cube_x has more than one dimension."""
+    cube_y = collapse.collapse(cube, ["time", "grid_longitude"], "MEAN")[0:4]
+    cube_x = vertical_profile_cube.copy()
+    with pytest.raises(ValueError):
+        plot.scatter_plot(cube_x, cube_y)
+
+
+def test_scatter_plot_too_many_y_dimensions(
+    cube, vertical_profile_cube, tmp_working_dir
+):
+    """Error when cube_y has more than one dimension."""
+    cube_y = cube.copy()
+    cube_x = collapse.collapse(vertical_profile_cube, ["time"], "MEAN")[0:4]
+    with pytest.raises(ValueError):
+        plot.scatter_plot(cube_x, cube_y)
