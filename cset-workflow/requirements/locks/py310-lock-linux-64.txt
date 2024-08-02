@@ -116,7 +116,7 @@ https://conda.anaconda.org/conda-forge/noarch/pyshp-2.3.1-pyhd8ed1ab_0.tar.bz2#9
 https://conda.anaconda.org/conda-forge/linux-64/python-xxhash-3.4.1-py310h2372a71_0.conda#b631b889b0b4bc2fca7b8b977ca484b2
 https://conda.anaconda.org/conda-forge/linux-64/pyyaml-6.0.1-py310h2372a71_1.conda#bb010e368de4940771368bc3dc4c63e7
 https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml.clib-0.2.8-py310h2372a71_0.conda#dcf6d2535586c77b31425ed835610c54
-https://conda.anaconda.org/conda-forge/noarch/setuptools-71.0.4-pyhd8ed1ab_0.conda#ee78ac9c720d0d02fcfd420866b82ab1
+https://conda.anaconda.org/conda-forge/noarch/setuptools-72.1.0-pyhd8ed1ab_0.conda#e06d4c26df4f958a8d38696f2c344d15
 https://conda.anaconda.org/conda-forge/noarch/six-1.16.0-pyh6c4a22f_0.tar.bz2#e5f25f8dbc060e9a8d912e432202afc2
 https://conda.anaconda.org/conda-forge/noarch/tomli-2.0.1-pyhd8ed1ab_0.tar.bz2#5844808ffab9ebdb694585b50ba02a96
 https://conda.anaconda.org/conda-forge/noarch/toolz-0.12.1-pyhd8ed1ab_0.conda#2fcb582444635e2c402e8569bb94e039
@@ -160,7 +160,7 @@ https://conda.anaconda.org/conda-forge/linux-64/shapely-2.0.5-py310h019a838_0.co
 https://conda.anaconda.org/conda-forge/linux-64/cf-units-3.2.0-py310h261611a_5.conda#643414a9f73226b2a6a43a4800734d3b
 https://conda.anaconda.org/conda-forge/linux-64/gtk2-2.24.33-h6470451_5.conda#1483ba046164be27df7f6eddbcec3a12
 https://conda.anaconda.org/conda-forge/linux-64/librsvg-2.58.2-h9564881_1.conda#c6a47e6f551890e82e92e4c1b84be353
-https://conda.anaconda.org/conda-forge/linux-64/matplotlib-base-3.9.1-py310h0b1de36_0.conda#5341c2c1a7f0a9d196f8070bfa4e16ba
+https://conda.anaconda.org/conda-forge/linux-64/matplotlib-base-3.9.1-py310hf02ac8c_1.conda#8ae8eaa0cafa82d1ec2fd9b5c4397da5
 https://conda.anaconda.org/conda-forge/linux-64/netcdf4-1.7.1-nompi_py310hf3005e6_101.conda#409736627835306542425033e2a41dd2
 https://conda.anaconda.org/conda-forge/linux-64/cartopy-0.23.0-py310hf9f9076_1.conda#dd5c97834c12bae782b35261e0bea7b4
 https://conda.anaconda.org/conda-forge/linux-64/graphviz-11.0.0-hc68bbd7_0.conda#52a531ef95358086a56086c45d97ab75
