@@ -119,7 +119,7 @@ URL = https://metoffice.github.io/CSET
 
     [[install_local_cset]]
     # Install CSET from source.
-    execution time limit = PT5M
+    execution time limit = PT10M
         [[[environment]]]
         CSET_ENV_USE_LOCAL_CSET = {{CSET_ENV_USE_LOCAL_CSET}}
         {% if CSET_ENV_USE_LOCAL_CSET %}
