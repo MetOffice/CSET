@@ -29,6 +29,7 @@ dependencies = [
     "mo_pack >= 0.3.0",
     "isodate",
     "markdown-it-py >= 3.0",
+    "nc-time-axis",
 ]
 
 [project.urls]
