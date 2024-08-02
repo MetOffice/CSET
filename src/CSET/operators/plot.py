@@ -429,6 +429,62 @@ def _plot_and_save_vertical_line_series(
     plt.close(fig)
 
 
+def _plot_and_save_scatter_plot(
+    cube_x: iris.cube.Cube,
+    cube_y: iris.cube.Cube,
+    filename: str,
+    title: str,
+    one_to_one: bool,
+    **kwargs,
+):
+    """Plot and save a 1D scatter plot.
+
+    Parameters
+    ----------
+    cube_x: Cube
+        1 dimensional Cube of the data to plot on x-axis.
+    cube_y: Cube
+        1 dimensional Cube of the data to plot on y-axis.
+    filename: str
+        Filename of the plot to write.
+    title: str
+        Plot title.
+    one_to_one: bool
+        Whether a 1:1 line is plotted.
+    """
+    fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
+    iplt.scatter(cube_x, cube_y)
+    if one_to_one is True:
+        plt.plot(
+            [
+                np.nanmin([np.nanmin(cube_y.data), np.nanmin(cube_x.data)]),
+                np.nanmax([np.nanmax(cube_y.data), np.nanmax(cube_x.data)]),
+            ],
+            [
+                np.nanmin([np.nanmin(cube_y.data), np.nanmin(cube_x.data)]),
+                np.nanmax([np.nanmax(cube_y.data), np.nanmax(cube_x.data)]),
+            ],
+            "k",
+            linestyle="--",
+        )
+    ax = plt.gca()
+
+    # Add some labels and tweak the style.
+    ax.set(
+        xlabel=f"{cube_x.name()} / {cube_x.units}",
+        ylabel=f"{cube_y.name()} / {cube_y.units}",
+        title=title,
+    )
+    ax.ticklabel_format(axis="y", useOffset=False)
+    ax.tick_params(axis="x", labelrotation=15)
+    ax.autoscale()
+
+    # Save plot.
+    fig.savefig(filename, bbox_inches="tight", dpi=150)
+    logging.info("Saved scatter plot to %s", filename)
+    plt.close(fig)
+
+
 def _plot_and_save_histogram_series(
     cube: iris.cube.Cube,
     filename: str,
@@ -859,6 +915,99 @@ def plot_vertical_line_series(
     _make_plot_html_page(complete_plot_index)
 
     return cube
+
+
+def scatter_plot(
+    cube_x: iris.cube.Cube,
+    cube_y: iris.cube.Cube,
+    filename: str = None,
+    one_to_one: bool = True,
+    **kwargs,
+) -> (iris.cube.Cube, iris.cube.Cube):
+    """Plot a scatter plot between two variables.
+
+    Both cubes must be 1D.
+
+    Parameters
+    ----------
+    cube_x: Cube
+        1 dimensional Cube of the data to plot on y-axis.
+    cube_y: Cube
+        1 dimensional Cube of the data to plot on x-axis.
+    filename: str, optional
+        Filename of the plot to write.
+    one_to_one: bool, optional
+        If True a 1:1 line is plotted; if False it is not.
+        Default is True.
+
+    Returns
+    -------
+    cube_x
+        The original x cube (so further operations can be applied).
+    cube_y
+        The original y cube (so further operations can be applied).
+
+    Raises
+    ------
+    ValueError
+        If the cube doesn't have the right dimensions and cubes not the same
+        size.
+    TypeError
+        If the cube isn't a single cube.
+
+    Notes
+    -----
+    Scatter plots are used for determining if there is a relationship between
+    two variables. Positive relations have a slope going from bottom left to
+    top right; Negative relations have a slope going from top left to bottom
+    right.
+
+    A variant of the scatter plot is the quantile-quantile plot. This plot does
+    not use all data points, but the selected quantiles of each variable
+    instead. Quantile-quantile plots are valuable for comparing against
+    observations and other models. Identical percentiles between the variables
+    will lie on the one-to-one line implying the values correspond well to each
+    other. Where there is a deviation from the one-to-one line a range
+    of possibilities exist depending on how and where the data is shifted
+    (e.g., Wilks 2011 [Wilks2011]_).
+
+    For distributions above the one-to-one line the distribution is left-skewed;
+    below is right-skewed. A distinct break implies a bimodal distribution, and
+    closer values/values further apart at the tails imply poor representation of
+    the extremes.
+
+    References
+    ----------
+    .. [Wilks2011] Wilks, D.S., (2011) "Statistical Methods in the Atmospheric
+       Sciences" Third Edition, vol. 100, Academic Press, Oxford, UK, 676 pp.
+    """
+    # Check cubes are correct shape.
+    cube_x = _check_single_cube(cube_x)
+    cube_y = _check_single_cube(cube_y)
+
+    if cube_x.ndim > 1:
+        raise ValueError("cube_x must be 1D.")
+    if cube_y.ndim > 1:
+        raise ValueError("cube_y must be 1D.")
+
+    # Ensure we have a name for the plot file.
+    title = get_recipe_metadata().get("title", "Untitled")
+    if filename is None:
+        filename = slugify(title)
+
+    # Add file extension.
+    plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
+
+    # Do the actual plotting.
+    _plot_and_save_scatter_plot(cube_x, cube_y, plot_filename, title, one_to_one)
+
+    # Add list of plots to plot metadata.
+    plot_index = _append_to_plot_index([plot_filename])
+
+    # Make a page to display the plots.
+    _make_plot_html_page(plot_index)
+
+    return cube_x, cube_y
 
 
 def plot_histogram_series(
