@@ -212,7 +212,7 @@ def _plot_and_save_contour_plot(
     axes = plt.gca()
 
     # Add coastlines if cube contains x and y map coordinates.
-    # If is map, fix extent to keep plot tight.
+    # If is spatial map, fix extent to keep plot tight.
     try:
         lataxis, lonaxis = get_cube_yxcoordname(cube)
         axes.coastlines(resolution="10m")
