@@ -1,4 +1,4 @@
-category: Quick Look
+category: Histogram
 title: $VARNAME Surface Level Histogram Plot
 description: |
   Extracts and plots the probability density of surface `$VARNAME`. It uses
