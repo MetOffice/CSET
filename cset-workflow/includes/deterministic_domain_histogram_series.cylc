@@ -1,4 +1,4 @@
-{% if DOMAIN_HISTOGRAM_SERIES_FIELD %}
+{% if DOMAIN_HISTOGRAM_SERIES %}
 [runtime]
 {% for model_field in MODEL_LEVEL_MODEL_FIELDS %}
     [[pre_process_deterministic_domain_histogram_series_{{model_field}}]]
