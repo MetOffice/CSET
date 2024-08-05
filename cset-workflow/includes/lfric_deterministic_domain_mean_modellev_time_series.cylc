@@ -1,0 +1,18 @@
+{% if LFRIC_DOMAIN_MEAN_MODELLEV_TIME_SERIES %}
+[runtime]
+{% for model_field in LFRIC_MODEL_LEVEL_MODEL_FIELDS %}
+{% for mlevel in LFRIC_MODEL_LEVELS %}
+    [[process_lfric_generic_mlevel_domain_mean_time_series_{{model_field}}_{{mlevel}}]]
+    inherit = PARALLEL
+        [[[environment]]]
+        CSET_RECIPE_NAME = "lfric_generic_mlevel_domain_mean_time_series.yaml"
+        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --PLEVEL='{{mlevel}}'"
+
+    [[collate_lfric_generic_mlevel_domain_mean_time_series_{{model_field}}_{{mlevel}}]]
+    inherit = COLLATE
+        [[[environment]]]
+        CSET_RECIPE_NAME = "lfric_generic_mlevel_domain_mean_time_series.yaml"
+        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --PLEVEL='{{mlevel}}'"
+{% endfor %}
+{% endfor %}
+{% endif %}
