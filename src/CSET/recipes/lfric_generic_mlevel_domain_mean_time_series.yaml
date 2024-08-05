@@ -1,5 +1,5 @@
 category: Quick Look
-title: Domain mean model level $VARNAME time series
+title: Domain mean model level $MLEVEL for $VARNAME time series
 description: Plots a time series of the domain mean model level.
 
 # Pre-processing steps.
@@ -12,7 +12,7 @@ parallel:
         varname: $VARNAME
       model_level_constraint:
         operator: constraints.generate_level_constraint
-        coordinate: "full_levels"
+        coordinate: "model_level_number"
         levels: $MLEVEL
       validity_time_constraint:
         operator: constraints.generate_time_constraint
