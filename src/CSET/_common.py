@@ -72,13 +72,14 @@ def parse_recipe(recipe_yaml: Union[Path, str], variables: dict = None):
         except ruamel.yaml.parser.ParserError as err:
             raise ValueError("ParserError: Invalid YAML") from err
 
-    logging.debug(recipe)
+    logging.debug("Recipe before templating:\n%s", recipe)
     check_recipe_has_steps(recipe)
 
     if variables is not None:
         logging.debug("Recipe variables: %s", variables)
         recipe = template_variables(recipe, variables)
 
+    logging.debug("Recipe after templating:\n%s", recipe)
     return recipe
 
 
@@ -103,16 +104,15 @@ def check_recipe_has_steps(recipe: dict):
     KeyError
         If needed recipe variables are not supplied.
     """
-    parallel_steps_key = "parallel"
     if not isinstance(recipe, dict):
         raise TypeError("Recipe must contain a mapping.")
-    if "parallel" not in recipe:
-        raise ValueError("Recipe must contain a 'parallel' key.")
+    if "steps" not in recipe:
+        raise ValueError("Recipe must contain a 'steps' key.")
     try:
-        if len(recipe[parallel_steps_key]) < 1:
-            raise ValueError("Recipe must have at least 1 parallel step.")
+        if len(recipe["steps"]) < 1:
+            raise ValueError("Recipe must have at least 1 step.")
     except TypeError as err:
-        raise ValueError("'parallel' key must contain a sequence of steps.") from err
+        raise ValueError("'steps' key must contain a sequence of steps.") from err
 
 
 def slugify(s: str) -> str:
