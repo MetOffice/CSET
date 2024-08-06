@@ -4,15 +4,13 @@ title = CSET
 description = Workflow for running CSET.
 URL = https://metoffice.github.io/CSET
 
-{% from "jinja_utils" import glob, zip, get_models %}
+{% from "jinja_utils" import get_models, glob, max, min, zip, restructure_field_list, sanitise_task_name %}
 {% set models = get_models(ROSE_SUITE_VARIABLES) %}
 
 [scheduling]
     runahead limit = P{{CSET_RUNAHEAD_LIMIT}}
-    initial cycle point = 1000-01-01
-    # BUG: This final cycle point will cause issues, as it will trigger the
-    # processing for that date.
-    final cycle point = 3000-01-01
+    initial cycle point = {{ min(CSET_CASE_DATES) }}
+    final cycle point = {{ max(CSET_CASE_DATES) }}
 
     [[graph]]
     # Only runs on the first cycle.
@@ -23,8 +21,7 @@ URL = https://metoffice.github.io/CSET
     # Runs for every forecast initiation time to process the data in parallel.
     {% for date in CSET_CASE_DATES %}
     R1/{{date}} = """
-    setup_complete[^] => FETCH_DATA:succeed-all => PROCESS:finish-all
-    PROCESS:finish-all => housekeeping_raw
+    setup_complete[^] => FETCH_DATA:succeed-all => PROCESS:finish-all => housekeeping_raw
     """
     {% endfor %}
 
