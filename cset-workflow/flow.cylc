@@ -5,11 +5,14 @@ description = Workflow for running CSET.
 URL = https://metoffice.github.io/CSET
 
 {% from "jinja_utils" import glob, zip, get_models %}
-{% set models = get_models() %}
+{% set models = get_models(ROSE_SUITE_VARIABLES) %}
 
 [scheduling]
     runahead limit = P{{CSET_RUNAHEAD_LIMIT}}
     initial cycle point = 1000-01-01
+    # BUG: This final cycle point will cause issues, as it will trigger the
+    # processing for that date.
+    final cycle point = 3000-01-01
 
     [[graph]]
     # Only runs on the first cycle.
@@ -21,7 +24,7 @@ URL = https://metoffice.github.io/CSET
     {% for date in CSET_CASE_DATES %}
     R1/{{date}} = """
     setup_complete[^] => FETCH_DATA:succeed-all => PROCESS:finish-all
-    PROCESS:finish-all => process_finish => housekeeping_raw
+    PROCESS:finish-all => housekeeping_raw
     """
     {% endfor %}
 
@@ -67,15 +70,18 @@ URL = https://metoffice.github.io/CSET
     [[FETCH_DATA]]
     script = rose task-run -v --app-key=fetch_fcst
     execution time limit = PT1H
+        [[[environment]]]
+        CSET_ANALYSIS_OFFSET = {{CSET_ANALYSIS_OFFSET}}
+        CSET_ANALYSIS_PERIOD = {{CSET_ANALYSIS_PERIOD}}
 
     [[METPLUS]]
         [[[environment]]]
-            {% if METPLUS_GRID_STAT %}
-            METPLUS_ANA_DIR = {{METPLUS_ANA_DIR}}
-            METPLUS_FCST_DIR = {{METPLUS_FCST_DIR}}
-            METPLUS_OBS_DIR = {{METPLUS_OBS_DIR}}
-            ROSE_APP_OPT_CONF_KEYS = {{METPLUS_OPT_CONFIG_KEYS}}
-            {% endif %}
+        {% if METPLUS_GRID_STAT %}
+        METPLUS_ANA_DIR = {{METPLUS_ANA_DIR}}
+        METPLUS_FCST_DIR = {{METPLUS_FCST_DIR}}
+        METPLUS_OBS_DIR = {{METPLUS_OBS_DIR}}
+        ROSE_APP_OPT_CONF_KEYS = {{METPLUS_OPT_CONFIG_KEYS}}
+        {% endif %}
 
     [[DUMMY_TASK]]
     script = true
@@ -108,12 +114,11 @@ URL = https://metoffice.github.io/CSET
         [[[environment]]]
         MODEL_NUMBER = {{model["number"]}}
         ROSE_APP_OPT_CONF_KEYS = {{model["data_source"]}}
-        CSET_ANALYSIS_OFFSET = {{model["analysis_offset"]}}
-        CSET_ANALYSIS_PERIOD = {{model["analysis_period"]}}
-        CYLC_TASK_CYCLE_POINT = {{model["cycle_point"]}}
         DATA_PATH = {{model["data_path"]}}
-        DATA_PERIOD = {{model["data_period"]}}
         DATE_TYPE = {{model["date_type"]}}
+        {% if model["date_type"] != "initiation" %}
+        DATA_PERIOD = {{model["data_period"]}}
+        {% endif %}
     {% endfor %}
 
     [[housekeeping_raw]]

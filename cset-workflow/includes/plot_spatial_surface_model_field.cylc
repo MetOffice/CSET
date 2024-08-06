@@ -9,4 +9,5 @@
         CSET_ADDOPTS = "--VARNAME={{model_field}}"
         MODEL_NUMBER = {{model["number"]}}
 {% endfor %}
+{% endfor %}
 {% endif %}

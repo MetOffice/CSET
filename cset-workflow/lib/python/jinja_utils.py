@@ -4,23 +4,19 @@
 from builtins import zip  # noqa: F401
 from glob import glob  # noqa: F401
 
-import jinja2
 
-
-@jinja2.pass_context
-def get_models(context):
+def get_models(rose_variables: dict):
     """Load per-model configuration into a single object.
 
     Returns a list of dictionaries, each one containing a per-model
     configuration.
     """
-    ctx = context.get_all()
     models = []
     for model in range(1, 11):
         model_prefix = f"m{model:02d}_"
         model_vars = {
             key.removeprefix(model_prefix): value
-            for key, value in ctx.items()
+            for key, value in rose_variables.items()
             if key.startswith(model_prefix)
         }
         if model_vars:
