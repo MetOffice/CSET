@@ -118,7 +118,7 @@ def generate_cell_methods_constraint(cell_methods: list, **kwargs) -> iris.Const
     """Generate constraint from cell methods.
 
     Operator that takes a list of cell methods and generates a constraint from
-    that.
+    that. Use [] to specify non-aggregated data.
 
     Arguments
     ---------
@@ -129,11 +129,19 @@ def generate_cell_methods_constraint(cell_methods: list, **kwargs) -> iris.Const
     -------
     cell_method_constraint: iris.Constraint
     """
+    if len(cell_methods) == 0:
 
-    def check_cell_methods(cube: iris.cube.Cube):
-        return cube.cell_methods == tuple(cell_methods)
+        def check_no_aggregation(cube: iris.cube.Cube) -> bool:
+            """Check that any cell methods are "point", meaning no aggregation."""
+            return set(cm.method for cm in cube.cell_methods) <= {"point"}
 
-    cell_methods_constraint = iris.Constraint(cube_func=check_cell_methods)
+        cell_methods_constraint = iris.Constraint(cube_func=check_no_aggregation)
+    else:
+
+        def check_cell_methods(cube: iris.cube.Cube) -> bool:
+            return cube.cell_methods == tuple(cell_methods)
+
+        cell_methods_constraint = iris.Constraint(cube_func=check_cell_methods)
     return cell_methods_constraint
 
 
