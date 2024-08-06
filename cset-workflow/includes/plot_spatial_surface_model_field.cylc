@@ -1,4 +1,5 @@
 {% if PLOT_SPATIAL_SURFACE_MODEL_FIELD %}
+{% for model in models %}
 {% for model_field in SURFACE_MODEL_FIELDS %}
 [runtime]
     [[generic_spatial_plot_time_series_{{model_field}}]]
@@ -6,5 +7,6 @@
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_surface_spatial_plot_sequence.yaml"
         CSET_ADDOPTS = "--VARNAME={{model_field}}"
+        MODEL_NUMBER = {{model["number"]}}
 {% endfor %}
 {% endif %}

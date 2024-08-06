@@ -145,8 +145,8 @@ def _step_parser(step: dict, step_input: any) -> str:
 def _run_steps(recipe, steps, step_input, output_directory: Path, style_file: Path):
     """Execute the steps in a recipe."""
     original_working_directory = Path.cwd()
-    os.chdir(output_directory)
     try:
+        os.chdir(output_directory)
         logger = logging.getLogger()
         diagnostic_log = logging.FileHandler(
             filename="CSET.log", mode="w", encoding="UTF-8"
@@ -168,14 +168,14 @@ def _run_steps(recipe, steps, step_input, output_directory: Path, style_file: Pa
         os.chdir(original_working_directory)
 
 
-def execute_recipe_parallel(
+def execute_recipe(
     recipe_yaml: Union[Path, str],
     input_directory: Path,
     output_directory: Path,
     recipe_variables: dict = None,
     style_file: Path = None,
 ) -> None:
-    """Parse and executes the parallel steps from a recipe file.
+    """Parse and executes the steps from a recipe file.
 
     Parameters
     ----------
@@ -202,51 +202,13 @@ def execute_recipe_parallel(
     TypeError
         The provided recipe is not a stream or Path.
     """
-    if recipe_variables is None:
-        recipe_variables = {}
     recipe = parse_recipe(recipe_yaml, recipe_variables)
     step_input = Path(input_directory).absolute()
-    # Create output directory, and an inter-cycle intermediate directory.
+    # Create output directory.
     try:
-        (output_directory / "intermediate").mkdir(parents=True, exist_ok=True)
+        output_directory.mkdir(parents=True, exist_ok=True)
     except (FileExistsError, NotADirectoryError) as err:
         logging.error("Output directory is a file. %s", output_directory)
         raise err
-    steps = recipe["parallel"]
+    steps = recipe["steps"]
     _run_steps(recipe, steps, step_input, output_directory, style_file)
-
-
-def execute_recipe_collate(
-    recipe_yaml: Union[Path, str],
-    output_directory: Path,
-    recipe_variables: dict = None,
-    style_file: Path = None,
-) -> None:
-    """Parse and execute the collation steps from a recipe file.
-
-    Parameters
-    ----------
-    recipe_yaml: Path or str
-        Path to a file containing, or string of, a recipe's YAML describing the
-        operators that need running. If a Path is provided it is opened and
-        read.
-    output_directory: Path
-        Pathlike indicating desired location of output. Must already exist.
-    recipe_variables: dict
-        Dictionary of variables for the recipe.
-
-    Raises
-    ------
-    ValueError
-        The recipe is not well formed.
-    TypeError
-        The provided recipe is not a stream or Path.
-    """
-    if recipe_variables is None:
-        recipe_variables = {}
-    output_directory = Path(output_directory).resolve()
-    assert output_directory.is_dir()
-    recipe = parse_recipe(recipe_yaml, recipe_variables)
-    # If collate doesn't exist treat it as having no steps.
-    steps = recipe.get("collate", [])
-    _run_steps(recipe, steps, output_directory, output_directory, style_file)

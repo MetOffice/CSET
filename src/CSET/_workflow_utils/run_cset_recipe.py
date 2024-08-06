@@ -105,7 +105,8 @@ def recipe_id():
         )
         sys.exit(1)
     id = p.stdout.decode(sys.stdout.encoding).strip()
-    return id
+    model_number = os.environ["MODEL_NUMBER"]
+    return f"m{model_number}_{id}"
 
 
 def output_directory():
@@ -118,7 +119,8 @@ def data_directory():
     """Get the input data directory for the cycle."""
     share_directory = os.environ["CYLC_WORKFLOW_SHARE_DIR"]
     cycle_point = os.environ["CYLC_TASK_CYCLE_POINT"]
-    return f"{share_directory}/cycle/{cycle_point}/data"
+    model_number = os.environ["MODEL_NUMBER"]
+    return f"{share_directory}/cycle/{cycle_point}/data/{model_number}"
 
 
 def create_diagnostic_archive(output_directory):
@@ -146,30 +148,7 @@ def add_to_diagnostic_index(output_directory, recipe_id):
     append_to_index({category: {recipe_id: title}})
 
 
-def parallel():
-    """Process raw data in parallel."""
-    logging.info("Pre-processing data into intermediate form.")
-    try:
-        subprocess.run(
-            (
-                "cset",
-                "-v",
-                "bake",
-                f"--recipe={recipe_file()}",
-                f"--input-dir={data_directory()}",
-                f"--output-dir={output_directory()}",
-                f"--style-file={os.getenv('COLORBAR_FILE', '')}",
-                "--parallel-only",
-            ),
-            check=True,
-            env=subprocess_env(),
-        )
-    except subprocess.CalledProcessError:
-        logging.error("cset bake exited non-zero while processing.")
-        sys.exit(1)
-
-
-def collate():
+def run_recipe_steps():
     """Collate processed data together and produce output plot.
 
     If the intermediate directory doesn't exist then we are running a simple
@@ -186,25 +165,20 @@ def collate():
                 "-v",
                 "bake",
                 f"--recipe={recipe_file()}",
+                f"--input-dir={data_directory()}",
                 f"--output-dir={output_directory()}",
                 f"--style-file={os.getenv('COLORBAR_FILE', '')}",
-                "--collate-only",
             ),
             check=True,
             env=subprocess_env(),
         )
     except subprocess.CalledProcessError:
         logging.error("cset bake exited non-zero while collating.")
-        sys.exit(1)
+        raise
     create_diagnostic_archive(output_directory())
     add_to_diagnostic_index(output_directory(), recipe_id())
 
 
 def run():
     """Run workflow script."""
-    # Check if we are running in parallel or collate mode.
-    bake_mode = os.getenv("CSET_BAKE_MODE")
-    if bake_mode == "parallel":
-        parallel()
-    elif bake_mode == "collate":
-        collate()
+    run_recipe_steps()
