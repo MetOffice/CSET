@@ -92,6 +92,12 @@ def test_read_cube_unconstrained():
         read.read_cube("tests/test_data/air_temp.nc")
 
 
+def test_read_cube_merge_concatenate():
+    """Cubes are combined after callbacks have been applied."""
+    cube = read.read_cube("tests/test_data/concat_after_fix_[12].nc")
+    assert isinstance(cube, iris.cube.Cube)
+
+
 def test_check_input_files_direct_path(tmp_path):
     """Get a iterable of a single file from a direct path."""
     file_path = tmp_path / "file"
