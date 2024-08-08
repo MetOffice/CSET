@@ -29,9 +29,10 @@ class FileRetriever(abc.ABC):
     method is called for each file path.
     """
 
-    def __enter__(self):
+    def __enter__(self) -> "FileRetriever":
         """Initialise the file retriever."""
         logging.debug("Initialising FileRetriever.")
+        return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         """Clean up the file retriever."""
