@@ -21,13 +21,13 @@ URL = https://metoffice.github.io/CSET
     # Runs for every forecast initiation time to process the data in parallel.
     {% for date in CSET_CASE_DATES %}
     R1/{{date}} = """
-    setup_complete[^] => FETCH_DATA:succeed-all => PROCESS:succeed-all => housekeeping_raw
+    setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete => PROCESS:succeed-all => housekeeping_raw
     """
     {% endfor %}
 
     # Only runs on the final cycle.
     R1/$ = """
-    housekeeping_raw => finish_website => send_email
+    PROCESS:finish-all => finish_website => send_email
     housekeeping_raw => housekeeping_full
     """
 
@@ -86,6 +86,9 @@ URL = https://metoffice.github.io/CSET
     execution time limit = PT1M
 
     [[setup_complete]]
+    inherit = DUMMY_TASK
+
+    [[fetch_complete]]
     inherit = DUMMY_TASK
 
     [[build_conda]]
