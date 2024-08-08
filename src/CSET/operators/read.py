@@ -185,6 +185,7 @@ def _create_callback(is_ensemble: bool) -> callable:
         else:
             _deterministic_callback(cube, field, filename)
         _lfric_normalise_callback(cube, field, filename)
+        _lfric_time_coord_fix_callback(cube, field, filename)
 
     return callback
 
@@ -250,6 +251,27 @@ def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
     if stash_list:
         # Parse the string as a list, sort, then re-encode as a string.
         cube.attributes["um_stash_source"] = str(sorted(ast.literal_eval(stash_list)))
+
+
+def _lfric_time_coord_fix_callback(cube: iris.cube.Cube, field, filename):
+    """Ensure the time coordinate is a DimCoord rather than an AuxCoord.
+
+    The coordinate is converted and replaced if not. SLAMed LFRic data has this
+    issue, though the coordinate satisfies all the properties for a DimCoord.
+    """
+    if cube.coords("time"):
+        time_coord = cube.coord("time")
+        if not isinstance(time_coord, iris.coords.DimCoord):
+            dim_time_coord = iris.coords.DimCoord.from_coord(time_coord)
+            coord_dim = cube.coord_dims(time_coord)
+            cube.remove_coord(time_coord)
+            # Add dimension coordinate back to cover correct array dimension.
+            # Scalar coordinates will not have an array dimension so we add it
+            # as an auxiliary coordinate instead.
+            if coord_dim:
+                cube.add_dim_coord(dim_time_coord, coord_dim)
+            else:
+                cube.add_aux_coord(dim_time_coord)
 
 
 def _check_input_files(input_path: Path | str, filename_pattern: str) -> Iterable[Path]:
