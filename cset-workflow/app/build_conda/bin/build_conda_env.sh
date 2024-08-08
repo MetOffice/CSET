@@ -78,6 +78,8 @@ build_conda_env() {
   fi
 
   # Remove old conda environment.
+  echo "Removing conda environment with:"
+  echo "${CONDA_PATH}conda remove -p $CONDA_VENV_LOCATION --all --yes --quiet"
   if ! "${CONDA_PATH}conda" remove -p "$CONDA_VENV_LOCATION" --all --yes --quiet
   then
     >&2 echo "Failed to conda remove old environment, trying to remove manually."
