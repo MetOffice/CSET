@@ -86,7 +86,6 @@ def _template_file_path():
     """Fill time placeholders to generate a file path to fetch."""
     raw_path = os.environ["DATA_PATH"]
     date_type = os.environ["DATE_TYPE"]
-    data_period = isodate.parse_duration(os.getenv("DATA_PERIOD"))
     data_time = datetime.fromisoformat(os.environ["CYLC_TASK_CYCLE_POINT"])
     forecast_length = isodate.parse_duration(os.environ["CSET_ANALYSIS_PERIOD"])
     forecast_offset = isodate.parse_duration(os.environ["CSET_ANALYSIS_OFFSET"])
@@ -96,6 +95,7 @@ def _template_file_path():
     match date_type:
         case "validity":
             date = data_time
+            data_period = isodate.parse_duration(os.getenv("DATA_PERIOD"))
             while date < data_time + forecast_length:
                 placeholder_times.append(date)
                 date += data_period
@@ -103,6 +103,7 @@ def _template_file_path():
             placeholder_times.append(data_time)
         case "lead":
             placeholder_times.append(data_time)
+            data_period = isodate.parse_duration(os.getenv("DATA_PERIOD"))
             lead_time = forecast_offset
             while lead_time < forecast_length:
                 lead_times.append(lead_time)
@@ -123,7 +124,6 @@ def _template_file_path():
             )
         else:
             paths.append(path)
-
     return paths
 
 
@@ -135,7 +135,7 @@ def fetch_data(file_retriever: FileRetriever = FilesystemFileRetriever):
      * CSET_ANALYSIS_PERIOD
      * CYLC_TASK_CYCLE_POINT
      * DATA_PATH
-     * DATA_PERIOD
+     * DATA_PERIOD - If DATE_TYPE is not 'initialisation'
      * DATE_TYPE
      * MODEL_NUMBER
 
