@@ -74,6 +74,7 @@ class FilesystemFileRetriever(FileRetriever):
             Path to filesystem directory into which the file should be copied.
         """
         file_paths = glob.glob(os.path.expanduser(file_path))
+        logging.debug("Copying files:\n%s", "\n".join(file_paths))
         for file in file_paths:
             try:
                 shutil.copy(file, output_dir)
@@ -147,6 +148,7 @@ def fetch_data(file_retriever: FileRetriever = FilesystemFileRetriever):
     model_number = os.getenv("MODEL_NUMBER")
     cycle_share_data_dir = f"{os.getenv('CYLC_WORKFLOW_SHARE_DIR')}/cycle/{os.getenv('CYLC_TASK_CYCLE_POINT')}/data/{model_number}"
     os.makedirs(cycle_share_data_dir, exist_ok=True)
+    logging.debug("Output directory: %s", cycle_share_data_dir)
 
     # Get file paths.
     paths = _template_file_path()
