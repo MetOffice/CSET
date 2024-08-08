@@ -141,8 +141,9 @@ def read_cubes(
         callback = _create_callback(is_ensemble=True)
         cubes = iris.load(input_files, constraint, callback=callback)
 
-    # Merge cubes now metadata has been fixed.
-    cubes.merge()
+    # Merge and concatenate cubes now metadata has been fixed.
+    cubes = cubes.merge()
+    cubes = cubes.concatenate()
 
     logging.debug("Loaded cubes: %s", cubes)
     if len(cubes) == 0:
