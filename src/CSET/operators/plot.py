@@ -341,7 +341,7 @@ def _plot_and_save_pcolormesh_plot(
     cmap, levels, norm = _colorbar_map_levels(cube.name())
 
     # Filled contour plot of the field.
-    contours = iplt.pcolormesh(cube, cmap=cmap, levels=levels, norm=norm)
+    colormesh = iplt.pcolormesh(cube, cmap=cmap, norm=norm)
 
     # Using pyplot interface here as we need iris to generate a cartopy GeoAxes.
     axes = plt.gca()
@@ -379,7 +379,7 @@ def _plot_and_save_pcolormesh_plot(
     axes.set_title(title, fontsize=16)
 
     # Add colour bar.
-    cbar = fig.colorbar(contours)
+    cbar = fig.colorbar(colormesh)
     cbar.set_label(label=f"{cube.name()} ({cube.units})", size=20)
 
     # Save plot.
@@ -426,7 +426,7 @@ def _plot_and_save_postage_stamp_pcolormesh_plot(
         # Implicit interface is much easier here, due to needing to have the
         # cartopy GeoAxes generated.
         plt.subplot(grid_size, grid_size, subplot)
-        plot = iplt.pcolormesh(member, cmap=cmap, levels=levels, norm=norm)
+        plot = iplt.pcolormesh(member, cmap=cmap, norm=norm)
         ax = plt.gca()
         ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
         ax.set_axis_off()
