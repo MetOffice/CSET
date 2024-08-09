@@ -102,8 +102,17 @@
             sequence_number.addEventListener("change", update_displayed_plot);
         }
 
+        // Ensure image is already in browser cache.
+        function preload_image(image_url) {
+            let img = new Image();
+            img.src = image_url;
+        }
+
         const plot_urls = {{plots}}
         display_sequence_controls(plot_urls);
+
+        // Preload plots so they appear as you slide.
+        plot_urls.forEach(preload_image);
     </script>
 </head>
 
