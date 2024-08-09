@@ -6,7 +6,10 @@
     inherit = PROCESS
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_surface_spatial_plot_sequence.yaml"
-        CSET_ADDOPTS = "--VARNAME={{field}}"
+        CSET_ADDOPTS = """
+            --VARNAME='{{field}}'
+            --MODEL_NAME='{{models[model_number-1]["name"]}}'
+        """
         MODEL_NUMBER = {{model_number}}
 {% endfor %}
 {% endfor %}
