@@ -9,8 +9,18 @@ URL = https://metoffice.github.io/CSET
 
 [scheduling]
     runahead limit = P{{CSET_RUNAHEAD_LIMIT}}
+
+    # Initial and final cycle points cover the entire period of interest.
+    {% if CSET_CYCLING_MODE == "case_study" %}
     initial cycle point = {{ min(CSET_CASE_DATES) }}
     final cycle point = {{ max(CSET_CASE_DATES) }}
+    {% elif CSET_CYCLING_MODE == "trial" %}
+    initial cycle point = {{CSET_TRIAL_START_DATE}}
+    # End date can be blank.
+    {% if CSET_TRIAL_END_DATE %}
+    final cycle point = {{CSET_TRIAL_END_DATE}}
+    {% endif %}
+    {% endif %}
 
     [[graph]]
     # Only runs on the first cycle.
@@ -20,18 +30,31 @@ URL = https://metoffice.github.io/CSET
     install_local_cset & install_website_skeleton => setup_complete
     """
 
+    {% if CSET_CYCLING_MODE == "case_study" %}
     # Runs for every forecast initiation time to process the data in parallel.
     {% for date in CSET_CASE_DATES %}
     R1/{{date}} = """
-    setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete => PROCESS:finish-all => housekeeping_raw
+    setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
+    fetch_complete => PROCESS:finish-all => housekeeping_raw
     """
     {% endfor %}
+    {% elif CSET_CYCLING_MODE == "trial" %}
+    # Analyse from each forecast.
+    {{CSET_TRIAL_CYCLE_PERIOD}} = """
+    setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
+    fetch_complete => PROCESS:finish-all => housekeeping_raw
+    """
+    {% endif %}
 
+    # Can only run tasks on final cycle point if it exists, so skip for
+    # continuous trials.
+    {% if CSET_CYCLING_MODE != "trial" or CSET_TRIAL_END_DATE %}
     # Only runs on the final cycle.
     R1/$ = """
     housekeeping_raw => finish_website => send_email
     housekeeping_raw => housekeeping_full
     """
+    {% endif %}
 
 [runtime]
     [[root]]
