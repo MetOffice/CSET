@@ -1,6 +1,6 @@
 category: Surface Spatial Plot
-title: Surface $VARNAME
-description: Extracts and plots the surface $VARNAME from a file.
+title: $MODEL_NAME Surface $VARNAME
+description: Extracts and plots the surface $VARNAME for all times in $MODEL_NAME.
 
 steps:
   - operator: read.read_cube

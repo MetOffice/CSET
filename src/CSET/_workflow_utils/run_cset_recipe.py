@@ -17,11 +17,6 @@ logging.basicConfig(
 def subprocess_env():
     """Create a dictionary of amended environment variables for subprocess."""
     env_mapping = dict(os.environ)
-    cycle_point = env_mapping["CYLC_TASK_CYCLE_POINT"]
-    # Add validity time based on cycle point.
-    env_mapping["CSET_ADDOPTS"] = (
-        f"{os.getenv('CSET_ADDOPTS', '')} --VALIDITY_TIME={cycle_point}"
-    )
     return env_mapping
 
 
