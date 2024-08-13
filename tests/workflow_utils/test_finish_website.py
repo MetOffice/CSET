@@ -14,12 +14,91 @@
 
 """Tests for finish_website workflow utility."""
 
+import json
+import logging
+
 from CSET._workflow_utils import finish_website
 
 
 def test_write_workflow_status(monkeypatch, tmp_path):
     """Workflow  finish status gets written to status file."""
-    monkeypatch.setenv("WEB_DIR", str(tmp_path))
-    finish_website.run()
-    with open(tmp_path / "status.html") as fp:
+    web_dir = tmp_path / "web"
+    web_dir.mkdir()
+    monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", str(tmp_path))
+    finish_website.update_workflow_status()
+    with open(web_dir / "status.html", "rt", encoding="UTF-8") as fp:
         assert fp.read() == "<p>Finished</p>\n"
+
+
+def test_construct_index(monkeypatch, tmp_path):
+    """Test putting the index together."""
+    monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", str(tmp_path))
+    plots_dir = tmp_path / "web/plots"
+    plots_dir.mkdir(parents=True)
+
+    # Plot directories.
+    plot1 = plots_dir / "p1/meta.json"
+    plot1.parent.mkdir()
+    plot1.write_text('{"category": "Category", "title": "P1"}')
+    plot2 = plots_dir / "p2/meta.json"
+    plot2.parent.mkdir()
+    plot2.write_text('{"category": "Category", "title": "P2"}')
+
+    # Non-plot directory also present.
+    static_resource = plots_dir / "static/style.css"
+    static_resource.parent.mkdir()
+    static_resource.touch()
+
+    # Construct index.
+    finish_website.construct_index()
+
+    # Check index.
+    index_file = plots_dir / "index.json"
+    assert index_file.is_file()
+    with open(index_file, "rt", encoding="UTF-8") as fp:
+        index = json.load(fp)
+    expected = {"Category": {"p1": "P1", "p2": "P2"}}
+    assert index == expected
+
+
+def test_construct_index_invalid(monkeypatch, tmp_path, caplog):
+    """Test constructing index when metadata is invalid."""
+    monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", str(tmp_path))
+    plots_dir = tmp_path / "web/plots"
+    plots_dir.mkdir(parents=True)
+
+    # Plot directories.
+    plot = plots_dir / "p1/meta.json"
+    plot.parent.mkdir()
+    plot.write_text('"Not JSON!"')
+
+    # Construct index.
+    finish_website.construct_index()
+
+    # Check log message.
+    _, level, message = caplog.record_tuples[0]
+    assert level == logging.ERROR
+    assert "p1/meta.json is invalid, skipping." in message
+
+    index_file = plots_dir / "index.json"
+    assert index_file.is_file()
+    with open(index_file, "rt", encoding="UTF-8") as fp:
+        index = json.load(fp)
+    expected = {}
+    assert index == expected
+
+
+def test_entrypoint(monkeypatch):
+    """Test running the finish_website module."""
+    counter = 0
+
+    def increment_counter():
+        nonlocal counter
+        counter += 1
+
+    monkeypatch.setattr(finish_website, "construct_index", increment_counter)
+    monkeypatch.setattr(finish_website, "update_workflow_status", increment_counter)
+
+    # Just check that it runs all the needed subfunctions.
+    finish_website.run()
+    assert counter == 2

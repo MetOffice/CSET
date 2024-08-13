@@ -14,7 +14,6 @@
 
 """Tests for run_cset_recipe workflow utility."""
 
-import json
 import os
 import subprocess
 import zipfile
@@ -23,61 +22,6 @@ from pathlib import Path
 import pytest
 
 from CSET._workflow_utils import run_cset_recipe
-
-
-def test_combine_dicts():
-    """Test combine_dicts function."""
-    d1 = {"a": 1, "b": 2, "c": {"d": 3, "e": 4}}
-    d2 = {"b": 3, "c": {"d": 5, "f": 6}}
-    expected = {"a": 1, "b": 3, "c": {"d": 5, "e": 4, "f": 6}}
-    assert run_cset_recipe.combine_dicts(d1, d2) == expected
-
-
-def test_append_to_index(monkeypatch, tmp_path):
-    """Test appending to index."""
-    index_path = tmp_path / "web/plots/index.json"
-    index_path.parent.mkdir(parents=True)
-    monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", str(tmp_path))
-    with open(index_path, "wt", encoding="UTF-8") as fp:
-        json.dump(
-            {
-                "Category Name": {"recipe_id_a": "Title A"},
-                "Other Category": {"recipe_id_b": "Title B"},
-            },
-            fp,
-        )
-    record = {"Category Name": {"recipe_id": "Plot Name"}}
-    run_cset_recipe.append_to_index(record)
-    expected = {
-        "Category Name": {"recipe_id": "Plot Name", "recipe_id_a": "Title A"},
-        "Other Category": {"recipe_id_b": "Title B"},
-    }
-    with open(index_path, "rt", encoding="UTF-8") as fp:
-        assert json.load(fp) == expected
-
-
-def test_append_to_index_missing(monkeypatch, tmp_path):
-    """Test appending to index when index does not yet exist."""
-    index_path = tmp_path / "web/plots/index.json"
-    index_path.parent.mkdir(parents=True)
-    monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", str(tmp_path))
-    record = {"Category Name": {"recipe_id": "Plot Name"}}
-    run_cset_recipe.append_to_index(record)
-    with open(index_path, "rt", encoding="UTF-8") as fp:
-        assert json.load(fp) == record
-
-
-def test_append_to_index_invalid(monkeypatch, tmp_path):
-    """Test appending to index when existing content is invalid."""
-    index_path = tmp_path / "web/plots/index.json"
-    index_path.parent.mkdir(parents=True)
-    monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", str(tmp_path))
-    with open(index_path, "wt", encoding="UTF-8") as fp:
-        fp.write("Not JSON!")
-    record = {"Category Name": {"recipe_id": "Plot Name"}}
-    run_cset_recipe.append_to_index(record)
-    with open(index_path, "rt", encoding="UTF-8") as fp:
-        assert json.load(fp) == record
 
 
 def test_subprocess_env(monkeypatch):

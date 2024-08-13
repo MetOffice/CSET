@@ -328,3 +328,20 @@ def iter_maybe(thing) -> Iterable:
     if isinstance(thing, Iterable) and not isinstance(thing, str):
         return thing
     return (thing,)
+
+
+def combine_dicts(d1: dict, d2: dict) -> dict:
+    """Recursively combines two dictionaries.
+
+    Duplicate atoms favour the second dictionary.
+    """
+    # Update existing keys.
+    for key in d1.keys() & d2.keys():
+        if isinstance(d1[key], dict):
+            d1[key] = combine_dicts(d1[key], d2[key])
+        else:
+            d1[key] = d2[key]
+    # Add any new keys.
+    for key in d2.keys() - d1.keys():
+        d1[key] = d2[key]
+    return d1

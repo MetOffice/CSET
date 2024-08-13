@@ -268,3 +268,11 @@ def test_iter_maybe_string():
     for value in created_iterable:
         # The same object is inside the iterable.
         assert value is atom
+
+
+def test_combine_dicts():
+    """Test combine_dicts function."""
+    d1 = {"a": 1, "b": 2, "c": {"d": 3, "e": 4}}
+    d2 = {"b": 3, "c": {"d": 5, "f": 6}}
+    expected = {"a": 1, "b": 3, "c": {"d": 5, "e": 4, "f": 6}}
+    assert common.combine_dicts(d1, d2) == expected
