@@ -1,7 +1,10 @@
-category: Spatial Plot
-title: $VARNAME $MLEVEL Level Spatial Plot
+category: Spatial Plot (ModelLev)
+title: $VARNAME Model Level $MLEVEL Spatial Plot
 description: |
   Extracts and plots the $VARNAME from a file at full level $MLEVEL.
+  At the moment these are fixed - levels 20,38,53 correspond to
+  (1461,5061,10067 meters), to roughly sample around 850/500/250mb.
+  [Using 40km L70 levelset]
 
 parallel:
   - operator: read.read_cubes

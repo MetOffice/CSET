@@ -165,7 +165,7 @@ def _colorbar_map_levels(varname: str, **kwargs):
             try:
                 vmin, vmax = colorbar[varname]["min"], colorbar[varname]["max"]
                 logging.debug("From color_bar dictionary: Using min and max")
-                levels = np.linspace(vmin, vmax, 10)
+                levels = np.linspace(vmin, vmax, 20)
                 norm = None
             except KeyError:
                 levels = None
@@ -200,7 +200,7 @@ def _plot_and_save_contour_plot(
 
     """
     # Setup plot details, size, resolution, etc.
-    fig = plt.figure(figsize=(15, 15), facecolor="w", edgecolor="k")
+    fig = plt.figure(figsize=(18, 15), facecolor="w", edgecolor="k")
 
     # Specify the color bar
     cmap, levels, norm = _colorbar_map_levels(cube.name())
@@ -242,6 +242,11 @@ def _plot_and_save_contour_plot(
 
     # Add title.
     axes.set_title(title, fontsize=16)
+
+    axes.annotate('Min:'+str(round(np.min(cube.data),1))+' Max:'+str(round(np.max(cube.data),1))+' Mean:'+str(round(np.mean(cube.data),1)),
+                  xy=(1,0),xycoords='axes fraction',xytext=(-5, 5), textcoords='offset points',
+                  ha='right', va='bottom', size=11,bbox=dict(boxstyle="round",
+                  fc="0.8", ec="0.5", alpha=0.9))
 
     # Add colour bar.
     cbar = fig.colorbar(contours)
@@ -538,7 +543,6 @@ def _plot_and_save_histogram_series(
     # Reshape cube data into a single array to allow for a single histogram.
     # Otherwise we plot xdim histograms stacked.
     cube_data_1d = (cube.data).flatten()
-    plt.hist(cube_data_1d, density=True, histtype=histtype, stacked=True)
     ax = plt.gca()
 
     # Add some labels and tweak the style.
@@ -546,9 +550,30 @@ def _plot_and_save_histogram_series(
         title=title,
         xlabel=f"{cube.name()} / {cube.units}",
         ylabel="normalised probability density",
-        ylim=(0, 1),
-        xlim=(vmin, vmax),
     )
+
+    if cube.name() == 'surface_microphysical_precipitation_rate':
+        BIN_EDGES = 10.0**(np.arange(-10, 27, 1) / 10.0)/(3.98107171e+02/128)
+        BIN_EDGES = np.insert(BIN_EDGES, 0, 0)
+        hist,b = np.histogram(cube_data_1d,density=True,bins=BIN_EDGES)
+        ax.plot(b[1:],hist,color='red',linewidth=2,marker='o',markersize=3,label='S4p4_RAL2')
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_xticks([0.1,0.5,1,2,4,8,16,32,64,128])
+        ax.set_ylabel('Frequency')
+
+        v_lines = [0.1,0.5,1,2,4,8,16,32,64,128]
+        for v_line in v_lines:
+            ax.axvline(x=v_line, linestyle="--",linewidth=0.5, color="0.5")
+            ax.annotate("{0:.1f}".format(v_line),
+                                  xy=(v_line, 0.97),
+                                  xycoords=("data", "axes fraction"),
+                                  ha="center", annotation_clip=True,
+                                  fontsize=7)
+
+    else:
+        plt.hist(cube_data_1d, density=True, histtype='barstacked',bins=20, stacked=True)
+        ax.set_xlim(vmin, vmax)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=150)
