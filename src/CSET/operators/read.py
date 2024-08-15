@@ -23,6 +23,7 @@ from pathlib import Path
 import iris
 import iris.coords
 import iris.cube
+import iris.util
 import numpy as np
 
 
@@ -258,20 +259,14 @@ def _lfric_time_coord_fix_callback(cube: iris.cube.Cube, field, filename):
 
     The coordinate is converted and replaced if not. SLAMed LFRic data has this
     issue, though the coordinate satisfies all the properties for a DimCoord.
+    Scalar time values are left as AuxCoords.
     """
     if cube.coords("time"):
         time_coord = cube.coord("time")
-        if not isinstance(time_coord, iris.coords.DimCoord):
-            dim_time_coord = iris.coords.DimCoord.from_coord(time_coord)
-            coord_dim = cube.coord_dims(time_coord)
-            cube.remove_coord(time_coord)
-            # Add dimension coordinate back to cover correct array dimension.
-            # Scalar coordinates will not have an array dimension so we add it
-            # as an auxiliary coordinate instead.
-            if coord_dim:
-                cube.add_dim_coord(dim_time_coord, coord_dim)
-            else:
-                cube.add_aux_coord(dim_time_coord)
+        if not isinstance(time_coord, iris.coords.DimCoord) and cube.coord_dims(
+            time_coord
+        ):
+            iris.util.promote_aux_coord_to_dim_coord(cube, time_coord)
 
 
 def _check_input_files(input_path: Path | str, filename_pattern: str) -> Iterable[Path]:

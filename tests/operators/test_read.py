@@ -212,7 +212,7 @@ def test_lfric_time_coord_fix_callback_scalar_time():
     cube = iris.cube.Cube([0, 0, 0], aux_coords_and_dims=[(length_coord, 0)])
     cube.add_aux_coord(time_coord)
     read._lfric_time_coord_fix_callback(cube, None, None)
-    assert isinstance(cube.coord("time"), iris.coords.DimCoord)
+    assert isinstance(cube.coord("time"), iris.coords.AuxCoord)
     assert cube.coord_dims("time") == ()
 
 
