@@ -94,8 +94,7 @@ def read_cubes(
     """Read cubes from files.
 
     Read operator that takes a path string (can include wildcards), and uses
-    iris to load_cube all the cubes matching the constraint and return a
-    CubeList object.
+    iris to load the minimal set of cubes matching the constraint.
 
     If the loaded data is split across multiple files, a filename_pattern can be
     specified to select the read files using Unix shell-style wildcards. In this
@@ -124,7 +123,7 @@ def read_cubes(
     Returns
     -------
     cubes: iris.cube.CubeList
-        Cubes loaded
+        Cubes loaded after being merged and concatenated.
 
     Raises
     ------
@@ -141,8 +140,9 @@ def read_cubes(
         callback = _create_callback(is_ensemble=True)
         cubes = iris.load(input_files, constraint, callback=callback)
 
-    # Merge cubes now metadata has been fixed.
-    cubes.merge()
+    # Merge and concatenate cubes now metadata has been fixed.
+    cubes = cubes.merge()
+    cubes = cubes.concatenate()
 
     logging.debug("Loaded cubes: %s", cubes)
     if len(cubes) == 0:
