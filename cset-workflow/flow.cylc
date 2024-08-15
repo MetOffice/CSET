@@ -26,7 +26,7 @@ URL = https://metoffice.github.io/CSET
 
     # Runs every cycle to process the data in parallel.
     {{CSET_CYCLE_PERIOD}} = """
-    install_website_skeleton[^] & install_local_cset[^] =>
+    install_website_skeleton[^] & build_conda[^] =>
     FETCH_DATA:succeed-all => PARALLEL:succeed-all =>
     process_finish => housekeeping_raw
 
