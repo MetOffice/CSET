@@ -15,9 +15,7 @@ URL = https://metoffice.github.io/CSET
     [[graph]]
     # Only runs on the first cycle.
     R1/^ = """
-    build_conda => install_website_skeleton
-    build_conda => install_local_cset
-    install_website_skeleton & install_local_cset => FETCH_DATA
+    build_conda & install_website_skeleton => FETCH_DATA
     """
 
     # Only runs on the final cycle.
@@ -28,7 +26,7 @@ URL = https://metoffice.github.io/CSET
 
     # Runs every cycle to process the data in parallel.
     {{CSET_CYCLE_PERIOD}} = """
-    install_website_skeleton[^] & install_local_cset[^] =>
+    install_website_skeleton[^] & build_conda[^] =>
     FETCH_DATA:succeed-all => PARALLEL:succeed-all =>
     process_finish => housekeeping_raw
 
@@ -112,15 +110,11 @@ URL = https://metoffice.github.io/CSET
     platform = localhost
 
     [[build_conda]]
-    # Create the conda environment if it does not yet exist.
+    # Create the conda environment if it does not yet exist, possibly installing
+    # CSET from source.
     execution time limit = PT30M
         [[[environment]]]
         CONDA_VENV_CREATE = {{CONDA_VENV_CREATE}}
-
-    [[install_local_cset]]
-    # Install CSET from source.
-    execution time limit = PT10M
-        [[[environment]]]
         CSET_ENV_USE_LOCAL_CSET = {{CSET_ENV_USE_LOCAL_CSET}}
         {% if CSET_ENV_USE_LOCAL_CSET %}
         CSET_LOCAL_CSET_PATH = {{CSET_LOCAL_CSET_PATH}}
