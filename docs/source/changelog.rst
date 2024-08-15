@@ -15,6 +15,9 @@ Unreleased
 .. Highlight any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+* `@JKPShonk`_ and `@cehalliwell`_ added functionality to CSET to allow it to
+   generate time series plots from model data mapped on to a selected
+   longitude/latitude location in :pr:`577`
 * `@Sylviabohnenstengel`_ add pdf functionality for spatial fields in :pr:`594`.
 * `@Sylviabohnenstengel`_ documentation: add info on quick pytesting in :pr:`696`
 * `@Sylviabohnenstengel`_ add constraint operator for lfric full_levels and half_levels
@@ -104,6 +107,9 @@ to come.
   that workflow configuration makes more sense in :pr:`504`
 * `@jfrost-mo`_ updated the example rose-suite.conf to reflect what a modern
   version should look like in :pr:`508`
+
+.. _@JKPShonk: https://github.com/JKPShonk
+.. _@cehalliwell: https://github.com/cehalliwell
 
 .. _CSET discussion forum: https://github.com/MetOffice/simulation-systems/discussions/categories/cset-toolkit
 .. _@dasha-shchep: https://github.com/dasha-shchep

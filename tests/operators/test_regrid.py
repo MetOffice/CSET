@@ -21,6 +21,7 @@ import numpy as np
 import pytest
 
 import CSET.operators.regrid as regrid
+from CSET.operators.regrid import BoundaryWarning
 
 
 # Session scope fixtures, so the test data only has to be loaded once.
@@ -148,3 +149,70 @@ def test_regrid_onto_xyspacing_unknown_method(regrid_source_cube):
         regrid.regrid_onto_xyspacing(
             regrid_source_cube, xspacing=0.5, yspacing=0.5, method="nonexistent"
         )
+
+
+@pytest.mark.filterwarnings("ignore:Selected point is within")
+def test_regrid_to_single_point(cube):
+    """Regrid to single point."""
+    # Test extracting a single point.
+    regrid_cube = regrid.regrid_to_single_point(cube, 0.5, 358.5, "Nearest")
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3)>"
+    assert repr(regrid_cube) == expected_cube
+
+
+@pytest.mark.filterwarnings("ignore:Selected point is within")
+def test_regrid_to_single_point_missing_coord(cube):
+    """Missing coordinate raises error."""
+    # Missing X coordinate.
+    source = cube.copy()
+    source.remove_coord("grid_longitude")
+    with pytest.raises(ValueError):
+        regrid.regrid_to_single_point(source, 0.5, 358.5, "Nearest")
+
+    # Missing Y coordinate.
+    source = cube.copy()
+    source.remove_coord("grid_latitude")
+    with pytest.raises(ValueError):
+        regrid.regrid_to_single_point(source, 0.5, 358.5, "Nearest")
+
+
+def test_regrid_to_single_point_unknown_crs_x(cube):
+    """X coordinate reference system is unrecognised."""
+    # Exchange to unsupported coordinate system.
+    cube.coord("grid_longitude").coord_system = iris.coord_systems.OSGB()
+    with pytest.raises(NotImplementedError):
+        regrid.regrid_to_single_point(cube, 0.5, 358.5, "Nearest")
+
+
+def test_regrid_to_single_point_unknown_crs_y(cube):
+    """Y coordinate reference system is unrecognised."""
+    # Exchange to unsupported coordinate system.
+    cube.coord("grid_latitude").coord_system = iris.coord_systems.OSGB()
+    with pytest.raises(NotImplementedError):
+        regrid.regrid_to_single_point(cube, 0.5, 358.5, "Nearest")
+
+
+def test_regrid_to_single_point_outside_domain(regrid_source_cube):
+    """Error if coordinates are outside the model domain."""
+    with pytest.raises(ValueError):
+        regrid.regrid_to_single_point(regrid_source_cube, 0.5, 178.5, "Nearest")
+
+
+def test_regrid_to_single_point_unknown_method(cube):
+    """Method does not exist."""
+    with pytest.raises(NotImplementedError):
+        regrid.regrid_to_single_point(cube, 0.5, 358.5, method="nonexistent")
+
+
+@pytest.mark.filterwarnings(
+    "ignore:this date/calendar/year zero convention is not supported by CF"
+)
+def test_boundary_warning(regrid_source_cube):
+    """Ensures a warning is raised when chosen point is too close to boundary."""
+    with pytest.warns(
+        BoundaryWarning, match="Selected point is within 8 gridlengths"
+    ) as warning:
+        regrid.regrid_to_single_point(regrid_source_cube, -0.9, 393.0, "Nearest")
+
+    assert len(warning) == 1
+    assert issubclass(warning[-1].category, BoundaryWarning)
