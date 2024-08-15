@@ -1,4 +1,4 @@
-# Copyright 2022 Met Office and contributors.
+# © Crown copyright, Met Office (2022-2024) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,7 +39,6 @@ def test_check_single_cube():
 def test_spatial_contour_plot(cube, tmp_working_dir):
     """Plot spatial contour plot of instant air temp."""
     # Remove realization coord to increase coverage, and as its not needed.
-    cube = cube.copy()
     cube.remove_coord("realization")
     cube_2d = cube.slices_over("time").next()
     plot.spatial_contour_plot(cube_2d, filename="plot")
@@ -67,7 +66,6 @@ def test_postage_stamp_contour_plot(monkeypatch, tmp_path):
 def test_postage_stamp_contour_plot_sequence_coord_check(cube, tmp_working_dir):
     """Check error when cube has no time coordinate."""
     # What does this even physically mean? No data?
-    cube = cube.copy()
     cube.remove_coord("time")
     with pytest.raises(ValueError):
         plot.spatial_contour_plot(cube)
@@ -148,3 +146,112 @@ def test_plot_vertical_line_series_no_sequence_coordinate(
         plot.plot_vertical_line_series(
             vertical_profile_cube, series_coordinate="pressure"
         )
+
+
+def test_plot_vertical_line_series_too_many_dimensions(cube, tmp_working_dir):
+    """Error when cube has more than one dimension."""
+    with pytest.raises(
+        ValueError, match="Cube must have a model_level_number coordinate."
+    ):
+        plot.plot_vertical_line_series(cube)
+
+
+def test_plot_histogram_no_sequence_coordinate(histogram_cube, tmp_working_dir):
+    """Error when cube is missing sequence coordinate (time)."""
+    histogram_cube.remove_coord("time")
+    with pytest.raises(ValueError, match="Cube must have a time coordinate."):
+        plot.plot_histogram_series(histogram_cube, series_coordinate="pressure")
+
+
+def test_plot_histogram_with_filename(histogram_cube, tmp_working_dir):
+    """Plot sequence of contour plots."""
+    plot.plot_histogram_series(
+        histogram_cube, filename="test", sequence_coordinate="time"
+    )
+    assert Path("test_473718.0.png").is_file()
+    assert Path("test_473721.0.png").is_file()
+
+
+def test_plot_and_save_postage_stamp_histogram_series(histogram_cube, tmp_working_dir):
+    """Test plotting a postage stamp histogram."""
+    plot._plot_and_save_postage_stamp_histogram_series(
+        cube=histogram_cube,
+        filename="test.png",
+        title="Test",
+        stamp_coordinate="realization",
+        vmin=250,
+        vmax=350,
+        histtype="step",
+    )
+    assert Path("test.png").is_file()
+
+
+def test_plot_and_save_postage_stamps_in_single_plot_histogram_series(
+    histogram_cube, tmp_working_dir
+):
+    """Test plotting a multiline histogram for multiple ensemble members."""
+    plot._plot_and_save_postage_stamps_in_single_plot_histogram_series(
+        cube=histogram_cube,
+        filename="test.png",
+        title="Test",
+        stamp_coordinate="realization",
+        vmin=250,
+        vmax=350,
+        histtype="step",
+    )
+    assert Path("test.png").is_file()
+
+
+def test_scatter_plot(cube, vertical_profile_cube, tmp_working_dir):
+    """Save a scatter plot."""
+    cube_y = collapse.collapse(cube, ["time", "grid_longitude"], "MEAN")[0:4]
+    cube_x = collapse.collapse(vertical_profile_cube, ["time"], "MEAN")[0:4]
+    plot.scatter_plot(
+        cube_y,
+        cube_x,
+    )
+    assert Path("untitled.png").is_file()
+
+
+def test_scatter_plot_with_filename(cube, vertical_profile_cube, tmp_working_dir):
+    """Save a scatter plot with a file name."""
+    cube_y = collapse.collapse(cube, ["time", "grid_longitude"], "MEAN")[0:4]
+    cube_x = collapse.collapse(vertical_profile_cube, ["time"], "MEAN")[0:4]
+    plot.scatter_plot(
+        cube_y,
+        cube_x,
+        filename="scatter_plot.ext",
+    )
+    assert Path("scatter_plot.png").is_file()
+
+
+def test_scatter_plot_no_one_to_one_line(cube, vertical_profile_cube, tmp_working_dir):
+    """Save a scatter plot without a one-to-one line."""
+    cube_y = collapse.collapse(cube, ["time", "grid_longitude"], "MEAN")[0:4]
+    cube_x = collapse.collapse(vertical_profile_cube, ["time"], "MEAN")[0:4]
+    plot.scatter_plot(
+        cube_y,
+        cube_x,
+        one_to_one=False,
+    )
+    assert Path("untitled.png").is_file()
+
+
+def test_scatter_plot_too_many_x_dimensions(
+    cube, vertical_profile_cube, tmp_working_dir
+):
+    """Error when cube_x has more than one dimension."""
+    cube_y = collapse.collapse(cube, ["time", "grid_longitude"], "MEAN")[0:4]
+    cube_x = vertical_profile_cube.copy()
+    with pytest.raises(ValueError):
+        plot.scatter_plot(cube_x, cube_y)
+
+
+def test_scatter_plot_too_many_y_dimensions(
+    cube, vertical_profile_cube, tmp_working_dir
+):
+    """Error when cube_y has more than one dimension."""
+    cube_y = cube.copy()
+    cube_x = collapse.collapse(vertical_profile_cube, ["time"], "MEAN")[0:4]
+    with pytest.raises(ValueError):
+        plot.scatter_plot(cube_x, cube_y)

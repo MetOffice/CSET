@@ -1,4 +1,4 @@
-# Copyright 2022 Met Office and contributors.
+# © Crown copyright, Met Office (2022-2024) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -69,7 +69,7 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
 
 
 def generate_level_constraint(
-    coordinate: str, levels: int | list[int], **kwargs
+    coordinate: str, levels: int | list[int] | str, **kwargs
 ) -> iris.Constraint:
     """Generate constraint for particular levels on the specified coordinate.
 
@@ -84,29 +84,34 @@ def generate_level_constraint(
     ---------
     coordinate: str
         Level coordinate name about which to constraint.
-    levels: int | list[int]
-        CF compliant levels.
+    levels: int | list[int] | str
+        CF compliant level points, ``"*"`` for retrieving all levels, or
+        ``[]`` for no levels.
 
     Returns
     -------
     constraint: iris.Constraint
     """
-    # Ensure is iterable.
-    if not isinstance(levels, Iterable):
-        levels = [levels]
+    # If astericks, then return all levels for given coordinate.
+    if levels == "*":
+        return iris.Constraint(**{coordinate: lambda cell: True})
+    else:
+        # Ensure is iterable.
+        if not isinstance(levels, Iterable):
+            levels = [levels]
 
-    # When no levels specified reject cube with level coordinate.
-    if len(levels) == 0:
+        # When no levels specified reject cube with level coordinate.
+        if len(levels) == 0:
 
-        def no_levels(cube):
-            # Reject cubes for which coordinate exists.
-            return not bool(cube.coords(coordinate))
+            def no_levels(cube):
+                # Reject cubes for which coordinate exists.
+                return not cube.coords(coordinate)
 
-        return iris.Constraint(cube_func=no_levels)
+            return iris.Constraint(cube_func=no_levels)
 
-    # Filter the coordinate to the desired levels.
-    # Dictionary unpacking is used to provide programmatic keyword arguments.
-    return iris.Constraint(**{coordinate: levels})
+        # Filter the coordinate to the desired levels.
+        # Dictionary unpacking is used to provide programmatic keyword arguments.
+        return iris.Constraint(**{coordinate: levels})
 
 
 def generate_cell_methods_constraint(cell_methods: list, **kwargs) -> iris.Constraint:

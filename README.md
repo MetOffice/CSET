@@ -40,10 +40,11 @@ addition in the design phase, and then others can provide guidance early.
 
 ## Licence
 
-Copyright © 2022-2024 Met Office and contributors.
+© Crown copyright, Met Office (2022-2024) and CSET contributors.
 
-Licensed under the [Apache License, Version 2.0](LICENCE) (the "License"); You
-may obtain a copy of the License at
+Licensed under the [Apache License, Version 2.0](LICENCE) (the "License"); you
+may not use this file except in compliance with the License. You may obtain a
+copy of the License at
 
 <http://www.apache.org/licenses/LICENSE-2.0>
 

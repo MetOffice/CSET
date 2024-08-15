@@ -39,8 +39,8 @@ def append_to_index(record: dict):
 
     Record should have the form {"Category Name": {"recipe_id": "Plot Name"}}
     """
-    # Plot index is at {run}/share/plots/index.json
-    index_path = Path(os.getenv("CYLC_WORKFLOW_SHARE_DIR"), "plots/index.json")
+    # Plot index is at {run}/share/web/plots/index.json
+    index_path = Path(os.getenv("CYLC_WORKFLOW_SHARE_DIR"), "web/plots/index.json")
     with open(index_path, "a+t", encoding="UTF-8") as fp:
         # Lock file until closed.
         fcntl.flock(fp, fcntl.LOCK_EX)
@@ -111,7 +111,7 @@ def recipe_id():
 def output_directory():
     """Get the plot output directory for the recipe."""
     share_directory = os.environ["CYLC_WORKFLOW_SHARE_DIR"]
-    return f"{share_directory}/plots/{recipe_id()}"
+    return f"{share_directory}/web/plots/{recipe_id()}"
 
 
 def data_directory():

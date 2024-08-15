@@ -1,4 +1,4 @@
-# Copyright 2022 Met Office and contributors.
+# © Crown copyright, Met Office (2022-2024) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -81,6 +81,15 @@ def test_generate_level_constraint_multi_level():
         coordinate="pressure", levels=[200, 800]
     )
     expected_pressure_constraint = "Constraint(coord_values={'pressure': [200, 800]})"
+    assert expected_pressure_constraint in repr(pressure_constraint)
+
+
+def test_generate_level_constraint_all_level():
+    """Generate constraint for all levels."""
+    pressure_constraint = constraints.generate_level_constraint(
+        coordinate="pressure", levels="*"
+    )
+    expected_pressure_constraint = "Constraint(coord_values={'pressure': <function generate_level_constraint.<locals>.<lambda> at"
     assert expected_pressure_constraint in repr(pressure_constraint)
 
 

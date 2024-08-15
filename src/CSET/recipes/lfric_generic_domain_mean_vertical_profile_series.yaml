@@ -1,6 +1,6 @@
 category: Quick Look
 title: Domain mean $VARNAME vertical profile as series
-description: Plots a time series of the vertical profile of domain mean $VARNAME using the model_level_number coordinate.
+description: Plots a time series of the vertical profile of domain mean $VARNAME using the full_levels coordinate.
 
 # Pre-processing steps.
 parallel:
@@ -27,8 +27,8 @@ parallel:
     filename: intermediate/model_level_domain_mean
 
 # Collation steps.
-# Reads in intermediate cube and plots it.
 collate:
+  # Reads in intermediate cube and plots it.
   - operator: read.read_cube
     filename_pattern: intermediate/*.nc
 
@@ -37,6 +37,6 @@ collate:
     series_coordinate: full_levels
     sequence_coordinate: time
 
-# Make a single NetCDF with all the data inside it.
+  # Make a single NetCDF with all the data inside it.
   - operator: write.write_cube_to_nc
     overwrite: True

@@ -1,4 +1,4 @@
-# Copyright 2024 Met Office and contributors.
+# © Crown copyright, Met Office (2022-2024) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -50,6 +50,28 @@ def test_regrid_onto_cube(regrid_source_cube, regrid_test_cube):
         rtol=1e-06,
         atol=1e-02,
     )
+
+
+def test_regrid_onto_cube_cubes(regrid_source_cube, regrid_test_cube):
+    """Test regrid case where target cube to project onto is specified for multiple cubes."""
+    # Create cubelist with multiple cubes.
+    cubelist_to_regrid = iris.cube.CubeList([regrid_source_cube, regrid_source_cube])
+    regridded_cubes = regrid.regrid_onto_cube(
+        cubelist_to_regrid, regrid_test_cube, method="Linear"
+    )
+    expected_cubelist = "[<iris 'Cube' of surface_altitude / (m) (latitude: 16; longitude: 16)>,\n<iris 'Cube' of surface_altitude / (m) (latitude: 16; longitude: 16)>]"
+    assert repr(regridded_cubes) in expected_cubelist
+
+
+def test_regrid_onto_xyspacing_cubes(regrid_source_cube, regrid_test_cube):
+    """Test regrid case where xyspacing to project onto is specified for multiple cubes."""
+    # Create cubelist with multiple cubes
+    cubelist_to_regrid = iris.cube.CubeList([regrid_source_cube, regrid_source_cube])
+    regridded_cubes = regrid.regrid_onto_xyspacing(
+        cubelist_to_regrid, xspacing=0.5, yspacing=0.5, method="Linear"
+    )
+    expected_cubelist = "[<iris 'Cube' of surface_altitude / (m) (latitude: 16; longitude: 16)>,\n<iris 'Cube' of surface_altitude / (m) (latitude: 16; longitude: 16)>]"
+    assert repr(regridded_cubes) in expected_cubelist
 
 
 def test_regrid_onto_cube_unknown_crs(regrid_source_cube, regrid_test_cube):
