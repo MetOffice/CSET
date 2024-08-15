@@ -145,6 +145,13 @@ def read_cubes(
     cubes = cubes.merge()
     cubes = cubes.concatenate()
 
+    # Ensure dimension coordinates are bounded.
+    for cube in cubes:
+        for dim_coord in cube.coords(dim_coords=True):
+            # Iris can't guess the bounds of a scalar coordinate.
+            if not dim_coord.has_bounds() and dim_coord.shape[0] > 1:
+                dim_coord.guess_bounds()
+
     logging.debug("Loaded cubes: %s", cubes)
     if len(cubes) == 0:
         warnings.warn(
