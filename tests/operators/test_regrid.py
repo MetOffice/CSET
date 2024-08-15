@@ -198,6 +198,7 @@ def test_regrid_to_single_point_outside_domain(regrid_source_cube):
         regrid.regrid_to_single_point(regrid_source_cube, 0.5, 178.5, "Nearest")
 
 
+@pytest.mark.filterwarnings("ignore:Selected point is within")
 def test_regrid_to_single_point_unknown_method(cube):
     """Method does not exist."""
     with pytest.raises(NotImplementedError):
