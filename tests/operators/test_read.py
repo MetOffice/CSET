@@ -14,6 +14,8 @@
 
 """Reading operator tests."""
 
+import iris
+import iris.coords
 import iris.cube
 import pytest
 
@@ -192,3 +194,31 @@ def test_lfric_normalise_callback_sort_stash(cube):
     actual = cube.attributes["um_stash_source"]
     expected = "['m01s00i025', 'm01s03i025']"
     assert actual == expected
+
+
+def test_lfric_time_coord_fix_callback():
+    """Correctly convert time from AuxCoord to DimCoord."""
+    time_coord = iris.coords.AuxCoord([0, 1, 2], standard_name="time")
+    cube = iris.cube.Cube([0, 0, 0], aux_coords_and_dims=[(time_coord, 0)])
+    read._lfric_time_coord_fix_callback(cube, None, None)
+    assert isinstance(cube.coord("time"), iris.coords.DimCoord)
+    assert cube.coord_dims("time") == (0,)
+
+
+def test_lfric_time_coord_fix_callback_scalar_time():
+    """Correctly convert time from AuxCoord to DimCoord for scalar time."""
+    length_coord = iris.coords.DimCoord([0, 1, 2], var_name="length")
+    time_coord = iris.coords.AuxCoord([0], standard_name="time")
+    cube = iris.cube.Cube([0, 0, 0], aux_coords_and_dims=[(length_coord, 0)])
+    cube.add_aux_coord(time_coord)
+    read._lfric_time_coord_fix_callback(cube, None, None)
+    assert isinstance(cube.coord("time"), iris.coords.AuxCoord)
+    assert cube.coord_dims("time") == ()
+
+
+def test_lfric_time_coord_fix_callback_no_time():
+    """Don't do anything if no time coordinate present."""
+    length_coord = iris.coords.DimCoord([0, 1, 2], var_name="length")
+    cube = iris.cube.Cube([0, 0, 0], aux_coords_and_dims=[(length_coord, 0)])
+    read._lfric_time_coord_fix_callback(cube, None, None)
+    assert len(cube.coords("time")) == 0

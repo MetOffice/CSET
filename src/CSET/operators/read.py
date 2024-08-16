@@ -23,6 +23,7 @@ from pathlib import Path
 import iris
 import iris.coords
 import iris.cube
+import iris.util
 import numpy as np
 
 
@@ -144,6 +145,13 @@ def read_cubes(
     cubes = cubes.merge()
     cubes = cubes.concatenate()
 
+    # Ensure dimension coordinates are bounded.
+    for cube in cubes:
+        for dim_coord in cube.coords(dim_coords=True):
+            # Iris can't guess the bounds of a scalar coordinate.
+            if not dim_coord.has_bounds() and dim_coord.shape[0] > 1:
+                dim_coord.guess_bounds()
+
     logging.debug("Loaded cubes: %s", cubes)
     if len(cubes) == 0:
         warnings.warn(
@@ -185,6 +193,7 @@ def _create_callback(is_ensemble: bool) -> callable:
         else:
             _deterministic_callback(cube, field, filename)
         _lfric_normalise_callback(cube, field, filename)
+        _lfric_time_coord_fix_callback(cube, field, filename)
 
     return callback
 
@@ -250,6 +259,21 @@ def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
     if stash_list:
         # Parse the string as a list, sort, then re-encode as a string.
         cube.attributes["um_stash_source"] = str(sorted(ast.literal_eval(stash_list)))
+
+
+def _lfric_time_coord_fix_callback(cube: iris.cube.Cube, field, filename):
+    """Ensure the time coordinate is a DimCoord rather than an AuxCoord.
+
+    The coordinate is converted and replaced if not. SLAMed LFRic data has this
+    issue, though the coordinate satisfies all the properties for a DimCoord.
+    Scalar time values are left as AuxCoords.
+    """
+    if cube.coords("time"):
+        time_coord = cube.coord("time")
+        if not isinstance(time_coord, iris.coords.DimCoord) and cube.coord_dims(
+            time_coord
+        ):
+            iris.util.promote_aux_coord_to_dim_coord(cube, time_coord)
 
 
 def _check_input_files(input_path: Path | str, filename_pattern: str) -> Iterable[Path]:
