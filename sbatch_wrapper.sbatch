@@ -9,4 +9,3 @@ module load scitools
 
 # Run CSET
 python $HOME/CSET/lfric_parser.py $1
-
