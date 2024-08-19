@@ -1,11 +1,11 @@
 {
     "air_pressure_at_mean_sea_level": {
-        "min": 99200,
-        "max": 102400
+        "min": 96000,
+        "max": 104000
     },
     "atmosphere_mass_content_of_cloud_ice": {
         "min": 0.0,
-        "max": 0.8
+        "max": 0.5
     },
     "atmosphere_mass_content_of_water_vapor": {
         "min": 0,
@@ -22,6 +22,10 @@
     "boundary_layer_depth": {
         "min": 0.0,
         "max": 2000.0
+    },
+    "grid_surface_snow_amount": {
+        "min": 0.0,
+        "max": 0.5
     },
     "ceilometrer_filtered_combined_cloud_amount_maximum_random_overlap": {
         "min": 0,
@@ -42,25 +46,39 @@
         "max": 50.0
     },
     "dew_point_temperature_at_screen_level": {
-        "min": 260,
-        "max": 340,
+        "min": 250,
+        "max": 300,
         "cmap": "jet"
     },
     "eastward_wind_at_10m": {
         "min": -30.0,
         "max": 30.0
     },
+    "eastward_wind": {
+        "min": -50.0,
+        "max": 50.0,
+        "cmap": "RdBu"
+    },
+    "northward_wind": {
+        "min": -50.0,
+        "max": 50.0,
+        "cmap": "RdBu"
+    },
     "fog_fraction_at_screen_level": {
         "min": 0,
         "max": 1,
-        "cmap": "cubehelix"
+        "cmap": "viridis"
     },
     "graupel_water_path": {
         "min": 0,
-        "max": 0.4
+        "max": 0.5
+    },
+    "atmospheric_boundary_layer_thickness": {
+        "min": 0,
+        "max": 3000
     },
     "grid_surface_temperature": {
-        "min": 250,
+        "min": 260,
         "max": 320,
         "cmap": "jet"
     },
@@ -84,7 +102,13 @@
     },
     "northward_wind_at_10m": {
         "min": -30.0,
-        "max": 30.0
+        "max": 30.0,
+        "cmap": "RdBu"
+    },
+    "northward_wind_10m": {
+        "min": -30.0,
+        "max": 30.0,
+        "cmap": "RdBu"
     },
     "radar_reflectivity_at_1km_above_the_surface": {
         "min": -50.0,
@@ -92,12 +116,16 @@
     },
     "relative_humidity_at_screen_level": {
         "min": 30.0,
-        "max": 110.0,
+        "max": 105.0,
         "cmap": "YlGnBu"
     },
     "surface_downward_longwave_flux": {
         "min": 100,
         "max": 450
+    },
+    "surface_downward_shortwave_flux": {
+        "min": 0,
+        "max": 1400
     },
     "surface_downward_longwave_flux_radiative_timestep": {
         "min": 100,
@@ -105,7 +133,7 @@
     },
     "surface_microphysical_graupelfall_rate": {
         "min": 0,
-        "max": 0.0002
+        "max": 0.001
     },
     "surface_microphysical_precipitation_rate": {
         "levels": [
@@ -147,7 +175,7 @@
     },
     "temperature_at_screen_level": {
         "min": 260,
-        "max": 340,
+        "max": 320,
         "cmap": "jet"
     },
     "top_upward_longwave_flux": {
@@ -167,9 +195,47 @@
         "min": 0.0,
         "max": 30.0
     },
+    "tropopause_level": {
+        "min": 30.0,
+        "max": 70.0
+    },
+    "total_lightning_flash_rate": {
+        "min": 0,
+        "max": 0.001
+    },
     "air_potential_temperature": {
         "min": 230,
         "max": 340,
         "cmap": "jet"
+    },
+    "surface_net_shortwave_flux": {
+        "min": -100,
+        "max": 9000
+    },
+    "surface_net_longwave_flux": {
+        "min": -200,
+        "max": 200,
+        "cmap": "jet"
+    },
+    "toa_upward_longwave_flux": {
+        "min": 0,
+        "max": 400
+    },
+    "toa_upward_shortwave_flux": {
+        "min": 0,
+        "max": 1400
+    },
+    "total_ice_water_path": {
+        "min": 0,
+        "max": 10
+    },
+    "upward_air_velocity": {
+        "min": -6,
+        "max": 6,
+        "cmap":"RdBu"
     }
+
+
+
+
 }
