@@ -132,7 +132,6 @@ src = ["src", "test"]
 
 [tool.ruff.lint]
 extend-select = ["B", "D", "I"]
-ignore-init-module-imports = true
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
