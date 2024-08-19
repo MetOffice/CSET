@@ -632,7 +632,6 @@ def _plot_and_save_postage_stamp_histogram_series(
         plt.hist(member_data_1d, density=True, histtype=histtype, stacked=True)
         ax = plt.gca()
         ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
-        ax.set_ylim(0, 1)
         ax.set_xlim(vmin, vmax)
 
     # Overall figure title.
@@ -656,7 +655,6 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
     fig, ax = plt.subplots(figsize=(10, 10), facecolor="w", edgecolor="k")
     ax.set_title(title)
     ax.set_xlim(vmin, vmax)
-    ax.set_ylim(0, 1)
     ax.set_xlabel(f"{cube.name()} / {cube.units}")
     ax.set_ylabel("normalised probability density")
     # Loop over all slices along the stamp_coordinate
