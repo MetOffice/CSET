@@ -165,7 +165,7 @@ def _colorbar_map_levels(varname: str, **kwargs):
             try:
                 vmin, vmax = colorbar[varname]["min"], colorbar[varname]["max"]
                 logging.debug("From color_bar dictionary: Using min and max")
-                levels = np.linspace(vmin, vmax, 10)
+                levels = np.linspace(vmin, vmax, 20)
                 norm = None
             except KeyError:
                 levels = None
