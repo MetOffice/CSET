@@ -243,6 +243,24 @@ def _plot_and_save_contour_plot(
     # Add title.
     axes.set_title(title, fontsize=16)
 
+    # Add watermark with min/max/mean. Currently not user toggable.
+    axes.annotate(
+        "Min:"
+        + str(round(np.min(cube.data), 1))
+        + " Max:"
+        + str(round(np.max(cube.data), 1))
+        + " Mean:"
+        + str(round(np.mean(cube.data), 1)),
+        xy=(1, 0),
+        xycoords="axes fraction",
+        xytext=(-5, 5),
+        textcoords="offset points",
+        ha="right",
+        va="bottom",
+        size=11,
+        bbox=dict(boxstyle="round", fc="0.8", ec="0.5", alpha=0.9),
+    )
+
     # Add colour bar.
     cbar = fig.colorbar(contours)
     cbar.set_label(label=f"{cube.name()} ({cube.units})", size=20)
