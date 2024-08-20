@@ -56,7 +56,8 @@ def recipe_id():
 def output_directory():
     """Get the plot output directory for the recipe."""
     share_directory = os.environ["CYLC_WORKFLOW_SHARE_DIR"]
-    return f"{share_directory}/web/plots/{recipe_id()}"
+    cycle_point = os.environ["CYLC_TASK_CYCLE_POINT"]
+    return f"{share_directory}/web/plots/{recipe_id()}_{cycle_point}"
 
 
 def data_directory():
