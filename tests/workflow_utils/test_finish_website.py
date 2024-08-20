@@ -90,6 +90,8 @@ def test_construct_index_invalid(monkeypatch, tmp_path, caplog):
 
 def test_entrypoint(monkeypatch):
     """Test running the finish_website module."""
+    # Count the number of times the other functions are run, to ensure they
+    # are both run.
     counter = 0
 
     def increment_counter():
