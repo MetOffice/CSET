@@ -245,12 +245,7 @@ def _plot_and_save_contour_plot(
 
     # Add watermark with min/max/mean. Currently not user toggable.
     axes.annotate(
-        "Min:"
-        + str(round(np.min(cube.data), 1))
-        + " Max:"
-        + str(round(np.max(cube.data), 1))
-        + " Mean:"
-        + str(round(np.mean(cube.data), 1)),
+        f"Min: {np.min(cube.data):g} Max: {np.max(cube.data):g} Mean: {np.mean(cube.data):g}"
         xy=(1, 0),
         xycoords="axes fraction",
         xytext=(-5, 5),
