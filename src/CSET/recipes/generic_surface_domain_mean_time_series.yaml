@@ -1,5 +1,5 @@
 category: Time Series
-title: Domain mean surface $VARNAME time series
+title: $MODEL_NAME Domain mean surface $VARNAME time series
 description: Plots a time series of the domain mean surface $VARNAME.
 
 steps:
