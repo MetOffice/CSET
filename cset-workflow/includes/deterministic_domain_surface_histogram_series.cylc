@@ -1,16 +1,16 @@
 {% if DOMAIN_SURFACE_HISTOGRAM_SERIES_FIELD %}
+{% for equivalent_field in restructure_field_list(SURFACE_MODEL_FIELDS) %}
+{% for model_number, field in equivalent_field.items() %}
 [runtime]
-{% for model_field in SURFACE_MODEL_FIELDS %}
-    [[pre_process_deterministic_domain_surface_histogram_series_{{model_field}}]]
-    inherit = PARALLEL
+    [[generic_surface_histogram_series_m{{model_number}}_{{sanitise_task_name(field)}}]]
+    inherit = PROCESS
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_surface_histogram_series.yaml"
-        CSET_ADDOPTS = "--VARNAME='{{model_field}}'"
-
-    [[collate_deterministic_domain_surface_histogram_series_{{model_field}}]]
-    inherit = COLLATE
-        [[[environment]]]
-        CSET_RECIPE_NAME = "generic_surface_histogram_series.yaml"
-        CSET_ADDOPTS = "--VARNAME='{{model_field}}'"
+        CSET_ADDOPTS = """
+            --VARNAME='{{field}}'
+            --MODEL_NAME='{{models[model_number-1]["name"]}}'
+        """
+        MODEL_NUMBER = {{model_number}}
+{% endfor %}
 {% endfor %}
 {% endif %}
