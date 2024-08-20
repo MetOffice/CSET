@@ -103,6 +103,8 @@ def sanitise_task_name(s: str):
     # Ensure the first character is alphanumeric.
     if not s[0].isalnum():
         s = f"sanitised_{s}"
+    # Specifically replace `.` with `p`, as in 3p5.
+    s = s.replace(".", "p")
     # Replace invalid characters with underscores.
     s = "".join(c if c.isalnum() or c in "-+%@" else "_" for c in s)
     # Ensure the name is not a reserved name.
