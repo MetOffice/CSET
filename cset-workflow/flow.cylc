@@ -25,9 +25,7 @@ URL = https://metoffice.github.io/CSET
     [[graph]]
     # Only runs on the first cycle.
     R1/^ = """
-    build_conda => install_local_cset
-    build_conda => install_website_skeleton
-    install_local_cset & install_website_skeleton => setup_complete
+    build_conda => install_website_skeleton => setup_complete
     """
 
     {% if CSET_CYCLING_MODE == "case_study" %}
