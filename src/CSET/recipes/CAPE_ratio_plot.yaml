@@ -1,3 +1,4 @@
+category: Diagnostics
 title: CAPE ratio plot
 description: |
   Extracts data required for, and calculates the CAPE ratio diagnostic, plotting on a map.

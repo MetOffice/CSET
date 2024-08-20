@@ -1,4 +1,4 @@
-category: Quick Look
+category: Model Level Spatial
 title: $VARNAME $MLEVEL Level Spatial Plot
 description: |
   Extracts ands plots the $VARNAME from a file at model level $MLEVEL.

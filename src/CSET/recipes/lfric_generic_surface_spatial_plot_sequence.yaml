@@ -1,4 +1,4 @@
-category: Quick Look
+category: Surface Spatial Plot
 title: Surface $VARNAME
 description: Extracts and plots the surface $VARNAME from a file.
 

@@ -1,4 +1,4 @@
-category: Quick Look
+category: Histogram
 title: $VARNAME $MLEVEL Level Histogram Plot
 description: |
   Extracts and plots the probability density of $MLEVEL level $VARNAME from a

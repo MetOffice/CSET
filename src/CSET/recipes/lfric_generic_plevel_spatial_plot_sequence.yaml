@@ -1,4 +1,4 @@
-category: Quick Look
+category: Pressure Level Spatial
 title: $VARNAME $PLEVEL Level Spatial Plot
 description: |
   Extracts and plots the $VARNAME from a file at pressure level $PLEVEL.

@@ -165,7 +165,7 @@ def _colorbar_map_levels(varname: str, **kwargs):
             try:
                 vmin, vmax = colorbar[varname]["min"], colorbar[varname]["max"]
                 logging.debug("From color_bar dictionary: Using min and max")
-                levels = np.linspace(vmin, vmax, 10)
+                levels = np.linspace(vmin, vmax, 20)
                 norm = None
             except KeyError:
                 levels = None
@@ -242,6 +242,20 @@ def _plot_and_save_contour_plot(
 
     # Add title.
     axes.set_title(title, fontsize=16)
+
+    # Add watermark with min/max/mean. Currently not user toggable.
+    # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
+    axes.annotate(
+        f"Min: {np.min(cube.data):g} Max: {np.max(cube.data):g} Mean: {np.mean(cube.data):g}",
+        xy=(1, 0),
+        xycoords="axes fraction",
+        xytext=(-5, 5),
+        textcoords="offset points",
+        ha="right",
+        va="bottom",
+        size=11,
+        bbox=dict(boxstyle="round", fc="#cccccc", ec="#808080", alpha=0.9),
+    )
 
     # Add colour bar.
     cbar = fig.colorbar(contours)
@@ -614,7 +628,6 @@ def _plot_and_save_postage_stamp_histogram_series(
         plt.hist(member_data_1d, density=True, histtype=histtype, stacked=True)
         ax = plt.gca()
         ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
-        ax.set_ylim(0, 1)
         ax.set_xlim(vmin, vmax)
 
     # Overall figure title.
@@ -638,7 +651,6 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
     fig, ax = plt.subplots(figsize=(10, 10), facecolor="w", edgecolor="k")
     ax.set_title(title)
     ax.set_xlim(vmin, vmax)
-    ax.set_ylim(0, 1)
     ax.set_xlabel(f"{cube.name()} / {cube.units}")
     ax.set_ylabel("normalised probability density")
     # Loop over all slices along the stamp_coordinate
