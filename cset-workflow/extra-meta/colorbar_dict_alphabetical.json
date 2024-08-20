@@ -1,4 +1,9 @@
 {
+    "air_potential_temperature": {
+        "min": 230,
+        "max": 340,
+        "cmap": "jet"
+    },
     "air_pressure_at_mean_sea_level": {
         "min": 96000,
         "max": 104000
@@ -19,13 +24,13 @@
         "min": 8800,
         "max": 10800
     },
+    "atmospheric_boundary_layer_thickness": {
+        "min": 0,
+        "max": 3000
+    },
     "boundary_layer_depth": {
         "min": 0.0,
         "max": 2000.0
-    },
-    "grid_surface_snow_amount": {
-        "min": 0.0,
-        "max": 0.5
     },
     "ceilometrer_filtered_combined_cloud_amount_maximum_random_overlap": {
         "min": 0,
@@ -50,19 +55,14 @@
         "max": 300,
         "cmap": "jet"
     },
-    "eastward_wind_at_10m": {
-        "min": -30.0,
-        "max": 30.0,
-        "cmap": "RdBu"
-    },
     "eastward_wind": {
         "min": -50.0,
         "max": 50.0,
         "cmap": "RdBu"
     },
-    "northward_wind": {
-        "min": -50.0,
-        "max": 50.0,
+    "eastward_wind_at_10m": {
+        "min": -30.0,
+        "max": 30.0,
         "cmap": "RdBu"
     },
     "fog_fraction_at_screen_level": {
@@ -74,9 +74,9 @@
         "min": 0,
         "max": 0.5
     },
-    "atmospheric_boundary_layer_thickness": {
-        "min": 0,
-        "max": 3000
+    "grid_surface_snow_amount": {
+        "min": 0.0,
+        "max": 0.5
     },
     "grid_surface_temperature": {
         "min": 260,
@@ -101,12 +101,17 @@
         "max": 1,
         "cmap": "cubehelix"
     },
-    "northward_wind_at_10m": {
+    "northward_wind": {
+        "min": -50.0,
+        "max": 50.0,
+        "cmap": "RdBu"
+    },
+    "northward_wind_10m": {
         "min": -30.0,
         "max": 30.0,
         "cmap": "RdBu"
     },
-    "northward_wind_10m": {
+    "northward_wind_at_10m": {
         "min": -30.0,
         "max": 30.0,
         "cmap": "RdBu"
@@ -124,13 +129,13 @@
         "min": 100,
         "max": 450
     },
-    "surface_downward_shortwave_flux": {
-        "min": 0,
-        "max": 1400
-    },
     "surface_downward_longwave_flux_radiative_timestep": {
         "min": 100,
         "max": 450
+    },
+    "surface_downward_shortwave_flux": {
+        "min": 0,
+        "max": 1400
     },
     "surface_microphysical_graupelfall_rate": {
         "min": 0,
@@ -174,48 +179,18 @@
         "min": 0,
         "max": 0.0002
     },
-    "temperature_at_screen_level": {
-        "min": 260,
-        "max": 320,
-        "cmap": "jet"
-    },
-    "top_upward_longwave_flux": {
-        "min": 150,
-        "max": 350
-    },
-    "turbulent_mixing_height": {
-        "min": 0.0,
-        "max": 5000.0,
-        "cmap": "jet"
-    },
-    "visibility_including_precipitation_at_screen_level": {
-        "min": 0,
-        "max": 32000
-    },
-    "wind_speed_at_10m": {
-        "min": 0.0,
-        "max": 30.0
-    },
-    "tropopause_level": {
-        "min": 30.0,
-        "max": 70.0
-    },
-    "total_lightning_flash_rate": {
-        "min": 0,
-        "max": 0.001
-    },
-    "air_potential_temperature": {
-        "min": 230,
-        "max": 340,
+    "surface_net_longwave_flux": {
+        "min": -200,
+        "max": 200,
         "cmap": "jet"
     },
     "surface_net_shortwave_flux": {
         "min": -100,
         "max": 9000
     },
-    "surface_net_longwave_flux": {
-        "min": -200,
-        "max": 200,
+    "temperature_at_screen_level": {
+        "min": 260,
+        "max": 320,
         "cmap": "jet"
     },
     "toa_upward_longwave_flux": {
@@ -226,17 +201,38 @@
         "min": 0,
         "max": 1400
     },
+    "top_upward_longwave_flux": {
+        "min": 150,
+        "max": 350
+    },
     "total_ice_water_path": {
         "min": 0,
         "max": 10
     },
+    "total_lightning_flash_rate": {
+        "min": 0,
+        "max": 0.001
+    },
+    "tropopause_level": {
+        "min": 30.0,
+        "max": 70.0
+    },
+    "turbulent_mixing_height": {
+        "min": 0.0,
+        "max": 5000.0,
+        "cmap": "jet"
+    },
     "upward_air_velocity": {
         "min": -6,
         "max": 6,
-        "cmap":"RdBu"
+        "cmap": "RdBu"
+    },
+    "visibility_including_precipitation_at_screen_level": {
+        "min": 0,
+        "max": 32000
+    },
+    "wind_speed_at_10m": {
+        "min": 0.0,
+        "max": 30.0
     }
-
-
-
-
 }
