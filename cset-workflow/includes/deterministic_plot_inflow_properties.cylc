@@ -1,12 +1,13 @@
 {% if DETERMINISTIC_PLOT_INFLOW_PROPERTIES %}
+{% for model in models %}
 [runtime]
-    [[parallel_inflow_layer_properties]]
-    inherit = PARALLEL
+    [[inflow_layer_properties_plot_m{{model["number"]}}]]
+    inherit = PROCESS
         [[[environment]]]
         CSET_RECIPE_NAME = "inflow_layer_properties_plot.yaml"
-
-    [[collate_inflow_layer_properties]]
-    inherit = COLLATE
-        [[[environment]]]
-        CSET_RECIPE_NAME = "inflow_layer_properties_plot.yaml"
+        CSET_ADDOPTS = """
+            --MODEL_NAME='{{model["name"]}}'
+        """
+        MODEL_NUMBER = {{model["number"]}}
+{% endfor %}
 {% endif %}
