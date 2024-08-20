@@ -83,7 +83,6 @@ URL = https://metoffice.github.io/CSET
         {% endif %}
 
         LOGLEVEL = {{LOGLEVEL}}
-        WEB_DIR = {{WEB_DIR}}
         COLORBAR_FILE = {{COLORBAR_FILE}}
         PLOT_RESOLUTION = {{PLOT_RESOLUTION}}
 
@@ -131,6 +130,8 @@ URL = https://metoffice.github.io/CSET
 
     [[install_website_skeleton]]
     # Copies the static files that make up the web interface.
+        [[[environment]]]
+        WEB_DIR = {{WEB_DIR}}
 
     {% for model in models %}
     [[fetch_fcst_m{{model["number"]}}]]
@@ -167,6 +168,7 @@ URL = https://metoffice.github.io/CSET
     platform = localhost
         [[[environment]]]
         WEB_ADDR = {{WEB_ADDR}}
+        WEB_DIR = {{WEB_DIR}}
 
 
 # Include files bring their own graph and runtime sections.
