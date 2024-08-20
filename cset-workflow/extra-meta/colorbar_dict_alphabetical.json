@@ -52,7 +52,8 @@
     },
     "eastward_wind_at_10m": {
         "min": -30.0,
-        "max": 30.0
+        "max": 30.0,
+        "cmap": "RdBu"
     },
     "eastward_wind": {
         "min": -50.0,
