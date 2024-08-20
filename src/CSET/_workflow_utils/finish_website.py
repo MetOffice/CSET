@@ -27,6 +27,7 @@ def construct_index():
     index = {}
     plots_dir = Path(os.environ["CYLC_WORKFLOW_SHARE_DIR"] + "/web/plots")
     # Loop over all directories, and append to index.
+    # Only visits the directories directly under the plots directory.
     for directory in (d for d in plots_dir.iterdir() if d.is_dir()):
         try:
             with open(directory / "meta.json", "rt", encoding="UTF-8") as fp:
