@@ -76,6 +76,9 @@ def main():
     parser_bake.add_argument(
         "-s", "--style-file", type=Path, help="colour bar definition to use"
     )
+    parser_bake.add_argument(
+        "--plot-resolution", type=int, help="plotting resolution in dpi"
+    )
     parser_bake.set_defaults(func=_bake_command)
 
     parser_graph = subparsers.add_parser("graph", help="visualise a recipe file")
@@ -207,10 +210,15 @@ def _bake_command(args, unparsed_args):
             args.output_dir,
             recipe_variables,
             args.style_file,
+            args.plot_resolution,
         )
     if not args.parallel_only:
         execute_recipe_collate(
-            args.recipe, args.output_dir, recipe_variables, args.style_file
+            args.recipe,
+            args.output_dir,
+            recipe_variables,
+            args.style_file,
+            args.plot_resolution,
         )
 
 

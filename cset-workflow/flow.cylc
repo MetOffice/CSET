@@ -72,6 +72,7 @@ URL = https://metoffice.github.io/CSET
         LOGLEVEL = {{LOGLEVEL}}
         WEB_DIR = {{WEB_DIR}}
         COLORBAR_FILE = {{COLORBAR_FILE}}
+        PLOT_RESOLUTION = {{PLOT_RESOLUTION}}
 
     [[PARALLEL]]
     script = rose task-run -v --app-key=run_cset_recipe

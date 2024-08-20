@@ -181,6 +181,11 @@ def _colorbar_map_levels(varname: str, **kwargs):
     return cmap, levels, norm
 
 
+def _get_plot_resolution() -> int:
+    """Get resolution of rasterised plots in pixels per inch."""
+    return get_recipe_metadata().get("plot_resolution", 100)
+
+
 def _plot_and_save_contour_plot(
     cube: iris.cube.Cube,
     filename: str,
@@ -248,7 +253,7 @@ def _plot_and_save_contour_plot(
     cbar.set_label(label=f"{cube.name()} ({cube.units})", size=20)
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=100)
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
     logging.info("Saved contour plot to %s", filename)
     plt.close(fig)
 
@@ -311,7 +316,7 @@ def _plot_and_save_postage_stamp_contour_plot(
     # Overall figure title.
     fig.suptitle(title)
 
-    fig.savefig(filename, bbox_inches="tight", dpi=100)
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
     logging.info("Saved contour postage stamp plot to %s", filename)
     plt.close(fig)
 
@@ -347,7 +352,7 @@ def _plot_and_save_line_series(
     ax.autoscale()
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=100)
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
     logging.info("Saved line plot to %s", filename)
     plt.close(fig)
 
@@ -436,7 +441,7 @@ def _plot_and_save_vertical_line_series(
     ax.autoscale()
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=100)
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
     logging.info("Saved line plot to %s", filename)
     plt.close(fig)
 
@@ -492,7 +497,7 @@ def _plot_and_save_scatter_plot(
     ax.autoscale()
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=100)
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
     logging.info("Saved scatter plot to %s", filename)
     plt.close(fig)
 
@@ -551,7 +556,7 @@ def _plot_and_save_histogram_series(
     )
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=100)
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
     logging.info("Saved line plot to %s", filename)
     plt.close(fig)
 
@@ -620,7 +625,7 @@ def _plot_and_save_postage_stamp_histogram_series(
     # Overall figure title.
     fig.suptitle(title)
 
-    fig.savefig(filename, bbox_inches="tight", dpi=100)
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
     logging.info("Saved histogram postage stamp plot to %s", filename)
     plt.close(fig)
 
@@ -658,7 +663,7 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
     ax.legend()
 
     # Save the figure to a file
-    plt.savefig(filename, bbox_inches="tight", dpi=100)
+    plt.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
 
     # Close the figure
     plt.close(fig)

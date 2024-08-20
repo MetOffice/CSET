@@ -94,3 +94,11 @@ def test_run_steps_style_file_metadata_written(tmp_path: Path):
     with open(tmp_path / "meta.json", "rb") as fp:
         metadata = json.load(fp)
     assert metadata["style_file_path"] == style_file_path
+
+
+def test_run_steps_plot_resolution_metadata_written(tmp_path: Path):
+    """Style file path metadata written out."""
+    CSET.operators._run_steps({}, [], None, tmp_path, plot_resolution=72)
+    with open(tmp_path / "meta.json", "rb") as fp:
+        metadata = json.load(fp)
+    assert metadata["plot_resolution"] == 72
