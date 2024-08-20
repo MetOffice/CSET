@@ -21,7 +21,8 @@ logging.basicConfig(
 def construct_index():
     """Construct the plot index.
 
-    Index should has the form {"Category Name": {"recipe_id": "Plot Name"}}
+    Index should has the form ``{"Category Name": {"recipe_id": "Plot Name"}}``
+    where ``recipe_id`` is the name of the plot's directory.
     """
     index = {}
     plots_dir = Path(os.environ["CYLC_WORKFLOW_SHARE_DIR"] + "/web/plots")
