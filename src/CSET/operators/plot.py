@@ -244,7 +244,7 @@ def _plot_and_save_contour_plot(
     axes.set_title(title, fontsize=16)
 
     # Add watermark with min/max/mean. Currently not user toggable.
-    # In the bbox dictionary, fc and ec need to be parsed as string hex for grey shade
+    # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
     axes.annotate(
         f"Min: {np.min(cube.data):g} Max: {np.max(cube.data):g} Mean: {np.mean(cube.data):g}",
         xy=(1, 0),
