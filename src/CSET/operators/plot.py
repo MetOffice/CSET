@@ -181,6 +181,11 @@ def _colorbar_map_levels(varname: str, **kwargs):
     return cmap, levels, norm
 
 
+def _get_plot_resolution() -> int:
+    """Get resolution of rasterised plots in pixels per inch."""
+    return get_recipe_metadata().get("plot_resolution", 100)
+
+
 def _plot_and_save_contour_plot(
     cube: iris.cube.Cube,
     filename: str,
@@ -200,7 +205,7 @@ def _plot_and_save_contour_plot(
 
     """
     # Setup plot details, size, resolution, etc.
-    fig = plt.figure(figsize=(15, 15), facecolor="w", edgecolor="k")
+    fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
 
     # Specify the color bar
     cmap, levels, norm = _colorbar_map_levels(cube.name())
@@ -262,7 +267,7 @@ def _plot_and_save_contour_plot(
     cbar.set_label(label=f"{cube.name()} ({cube.units})", size=20)
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=150)
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
     logging.info("Saved contour plot to %s", filename)
     plt.close(fig)
 
@@ -293,7 +298,7 @@ def _plot_and_save_postage_stamp_contour_plot(
     # Use the smallest square grid that will fit the members.
     grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
 
-    fig = plt.figure(figsize=(10, 10))
+    fig = plt.figure(figsize=(8, 8))
 
     # Specify the color bar
     cmap, levels, norm = _colorbar_map_levels(cube.name())
@@ -325,7 +330,7 @@ def _plot_and_save_postage_stamp_contour_plot(
     # Overall figure title.
     fig.suptitle(title)
 
-    fig.savefig(filename, bbox_inches="tight", dpi=150)
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
     logging.info("Saved contour postage stamp plot to %s", filename)
     plt.close(fig)
 
@@ -361,7 +366,7 @@ def _plot_and_save_line_series(
     ax.autoscale()
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=150)
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
     logging.info("Saved line plot to %s", filename)
     plt.close(fig)
 
@@ -450,7 +455,7 @@ def _plot_and_save_vertical_line_series(
     ax.autoscale()
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=150)
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
     logging.info("Saved line plot to %s", filename)
     plt.close(fig)
 
@@ -506,7 +511,7 @@ def _plot_and_save_scatter_plot(
     ax.autoscale()
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=150)
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
     logging.info("Saved scatter plot to %s", filename)
     plt.close(fig)
 
@@ -565,7 +570,7 @@ def _plot_and_save_histogram_series(
     )
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=150)
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
     logging.info("Saved line plot to %s", filename)
     plt.close(fig)
 
@@ -614,7 +619,7 @@ def _plot_and_save_postage_stamp_histogram_series(
     # Use the smallest square grid that will fit the members.
     grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
 
-    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+    fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
     # Make a subplot for each member.
     for member, subplot in zip(
         cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1), strict=False
@@ -633,7 +638,7 @@ def _plot_and_save_postage_stamp_histogram_series(
     # Overall figure title.
     fig.suptitle(title)
 
-    fig.savefig(filename, bbox_inches="tight", dpi=150)
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
     logging.info("Saved histogram postage stamp plot to %s", filename)
     plt.close(fig)
 
@@ -648,7 +653,7 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
     histtype: str = "step",
     **kwargs,
 ):
-    fig, ax = plt.subplots(figsize=(10, 10), facecolor="w", edgecolor="k")
+    fig, ax = plt.subplots(figsize=(8, 8), facecolor="w", edgecolor="k")
     ax.set_title(title)
     ax.set_xlim(vmin, vmax)
     ax.set_xlabel(f"{cube.name()} / {cube.units}")
@@ -670,7 +675,7 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
     ax.legend()
 
     # Save the figure to a file
-    plt.savefig(filename)
+    plt.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
 
     # Close the figure
     plt.close(fig)

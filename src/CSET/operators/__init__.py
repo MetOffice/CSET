@@ -142,7 +142,14 @@ def _step_parser(step: dict, step_input: any) -> str:
         return operator(**kwargs)
 
 
-def _run_steps(recipe, steps, step_input, output_directory: Path, style_file: Path):
+def _run_steps(
+    recipe,
+    steps,
+    step_input,
+    output_directory: Path,
+    style_file: Path = None,
+    plot_resolution: int = None,
+) -> None:
     """Execute the steps in a recipe."""
     original_working_directory = Path.cwd()
     os.chdir(output_directory)
@@ -159,6 +166,8 @@ def _run_steps(recipe, steps, step_input, output_directory: Path, style_file: Pa
         # Create metadata file used by some steps.
         if style_file:
             recipe["style_file_path"] = str(style_file)
+        if plot_resolution:
+            recipe["plot_resolution"] = plot_resolution
         _write_metadata(recipe)
         # Execute the recipe.
         for step in steps:
@@ -174,6 +183,7 @@ def execute_recipe_parallel(
     output_directory: Path,
     recipe_variables: dict = None,
     style_file: Path = None,
+    plot_resolution: int = None,
 ) -> None:
     """Parse and executes the parallel steps from a recipe file.
 
@@ -188,8 +198,12 @@ def execute_recipe_parallel(
         input.
     output_directory: Path
         Pathlike indicating desired location of output.
-    recipe_variables: dict
+    recipe_variables: dict, optional
         Dictionary of variables for the recipe.
+    style_file: Path, optional
+        Path to a style file.
+    plot_resolution: int, optional
+        Resolution of plots in dpi.
 
     Raises
     ------
@@ -213,7 +227,7 @@ def execute_recipe_parallel(
         logging.error("Output directory is a file. %s", output_directory)
         raise err
     steps = recipe["parallel"]
-    _run_steps(recipe, steps, step_input, output_directory, style_file)
+    _run_steps(recipe, steps, step_input, output_directory, style_file, plot_resolution)
 
 
 def execute_recipe_collate(
@@ -221,6 +235,7 @@ def execute_recipe_collate(
     output_directory: Path,
     recipe_variables: dict = None,
     style_file: Path = None,
+    plot_resolution: int = None,
 ) -> None:
     """Parse and execute the collation steps from a recipe file.
 
@@ -234,6 +249,10 @@ def execute_recipe_collate(
         Pathlike indicating desired location of output. Must already exist.
     recipe_variables: dict
         Dictionary of variables for the recipe.
+    style_file: Path, optional
+        Path to a style file.
+    plot_resolution: int, optional
+        Resolution of plots in dpi.
 
     Raises
     ------
@@ -249,4 +268,6 @@ def execute_recipe_collate(
     recipe = parse_recipe(recipe_yaml, recipe_variables)
     # If collate doesn't exist treat it as having no steps.
     steps = recipe.get("collate", [])
-    _run_steps(recipe, steps, output_directory, output_directory, style_file)
+    _run_steps(
+        recipe, steps, output_directory, output_directory, style_file, plot_resolution
+    )

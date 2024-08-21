@@ -255,3 +255,17 @@ def test_scatter_plot_too_many_y_dimensions(
     cube_x = collapse.collapse(vertical_profile_cube, ["time"], "MEAN")[0:4]
     with pytest.raises(ValueError):
         plot.scatter_plot(cube_x, cube_y)
+
+
+def test_get_plot_resolution(tmp_working_dir):
+    """Test getting the plot resolution."""
+    with open("meta.json", "wt", encoding="UTF-8") as fp:
+        fp.write('{"plot_resolution": 72}')
+    resolution = plot._get_plot_resolution()
+    assert resolution == 72
+
+
+def test_get_plot_resolution_unset(tmp_working_dir):
+    """Test getting the default plot resolution when unset."""
+    resolution = plot._get_plot_resolution()
+    assert resolution == 100
