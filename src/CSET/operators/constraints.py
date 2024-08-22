@@ -92,7 +92,7 @@ def generate_level_constraint(
     -------
     constraint: iris.Constraint
     """
-    # If astericks, then return all levels for given coordinate.
+    # If asterisks, then return all levels for given coordinate.
     if levels == "*":
         return iris.Constraint(**{coordinate: lambda cell: True})
     else:
