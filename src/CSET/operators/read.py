@@ -304,6 +304,7 @@ def _check_input_files(input_path: Path | str, filename_pattern: str) -> Iterabl
     FileNotFoundError:
         If the provided arguments don't resolve to at least one existing file.
     """
+    logging.debug("Checking '%s' for pattern '%s'", input_path, filename_pattern)
     # Convert string paths into Path objects.
     if isinstance(input_path, str):
         input_path = Path(input_path)
