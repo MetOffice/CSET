@@ -188,7 +188,7 @@ def _plot_and_save_spatial_plot(
     cube: iris.cube.Cube,
     filename: str,
     title: str,
-    method: Literal["contour", "pcolormesh"],
+    method: Literal["contourf", "pcolormesh"],
     **kwargs,
 ):
     """Plot and save a spatial plot.
@@ -201,7 +201,7 @@ def _plot_and_save_spatial_plot(
         Filename of the plot to write.
     title: str
         Plot title.
-    method: "contour" | "pcolormesh"
+    method: "contourf" | "pcolormesh"
         The plotting method to use.
     """
     # Setup plot details, size, resolution, etc.
@@ -210,7 +210,7 @@ def _plot_and_save_spatial_plot(
     # Specify the color bar
     cmap, levels, norm = _colorbar_map_levels(cube.name())
 
-    if method == "contour":
+    if method == "contourf":
         # Filled contour plot of the field.
         plot = iplt.contourf(cube, cmap=cmap, levels=levels, norm=norm)
     elif method == "pcolormesh":
@@ -284,7 +284,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
     filename: str,
     stamp_coordinate: str,
     title: str,
-    method: Literal["contour", "pcolormesh"],
+    method: Literal["contourf", "pcolormesh"],
     **kwargs,
 ):
     """Plot postage stamp spatial plots from an ensemble.
@@ -297,7 +297,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
         Filename of the plot to write.
     stamp_coordinate: str
         Coordinate that becomes different plots.
-    method: "contour" | "pcolormesh"
+    method: "contourf" | "pcolormesh"
         The plotting method to use.
 
     Raises
@@ -320,7 +320,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
         # Implicit interface is much easier here, due to needing to have the
         # cartopy GeoAxes generated.
         plt.subplot(grid_size, grid_size, subplot)
-        if method == "contour":
+        if method == "contourf":
             # Filled contour plot of the field.
             plot = iplt.contourf(member, cmap=cmap, levels=levels, norm=norm)
         elif method == "pcolormesh":
@@ -709,7 +709,7 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
 
 
 def _spatial_plot(
-    method: Literal["contour", "pcolormesh"],
+    method: Literal["contourf", "pcolormesh"],
     cube: iris.cube.Cube,
     filename: str | None,
     sequence_coordinate: str,
@@ -723,7 +723,7 @@ def _spatial_plot(
 
     Parameters
     ----------
-    method: "contour" | "pcolormesh"
+    method: "contourf" | "pcolormesh"
         The plotting method to use.
     cube: Cube
         Iris cube of the data to plot. It should have two spatial dimensions,
@@ -842,7 +842,7 @@ def spatial_contour_plot(
     TypeError
         If the cube isn't a single cube.
     """
-    _spatial_plot("contour", cube, filename, sequence_coordinate, stamp_coordinate)
+    _spatial_plot("contourf", cube, filename, sequence_coordinate, stamp_coordinate)
     return cube
 
 
