@@ -316,5 +316,5 @@ def test_invalid_plotting_method_postage_stamp_spatial_plot(cube, tmp_working_di
     """Test plotting a postage stamp spatial plot with an invalid method."""
     with pytest.raises(ValueError, match="Unknown plotting method"):
         plot._plot_and_save_postage_stamp_spatial_plot(
-            cube, "filename", "title", "invalid"
+            cube, "filename", "realization", "title", "invalid"
         )
