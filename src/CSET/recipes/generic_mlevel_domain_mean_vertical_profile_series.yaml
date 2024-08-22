@@ -1,9 +1,8 @@
 category: Profiles
-title: Domain mean $VARNAME vertical profile as series
+title: $MODEL_NAME Domain horizontal mean $VARNAME vertical profile as series
 description: Plots a time series of vertical profiles for the domain mean $VARNAME using a `model_level_number` coordinate.
 
-# Pre-processing steps.
-parallel:
+steps:
   - operator: read.read_cube
     constraint:
       operator: constraints.combine_constraints
@@ -12,27 +11,14 @@ parallel:
         varname: $VARNAME
       pressure_level_constraint:
         operator: constraints.generate_level_constraint
-        coordinate: "model_level_number"
-        levels: $MLEVEL
-      validity_time_constraint:
-        operator: constraints.generate_time_constraint
-        time_start: $VALIDITY_TIME
+        coordinate: model_level_number
+        levels: "*"
 
   - operator: collapse.collapse
     coordinate: [grid_latitude, grid_longitude]
     method: MEAN
 
-  # Save domain meaned variable to a file per validity time.
-  - operator: write.write_cube_to_nc
-    filename: intermediate/model_level_level_domain_mean
-
-# Collation steps.
-# Reads in intermediate cube and plots it.
-collate:
-  - operator: read.read_cube
-    filename_pattern: intermediate/*.nc
-
-# plot the vertical line series
+  # Plot the vertical line series.
   - operator: plot.plot_vertical_line_series
     series_coordinate: model_level_number
     sequence_coordinate: time
