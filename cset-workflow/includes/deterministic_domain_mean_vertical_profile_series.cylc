@@ -1,16 +1,16 @@
 {% if DOMAIN_MEAN_VERTICAL_PROFILE_SERIES %}
+{% for equivalent_field in restructure_field_list(PRESSURE_LEVEL_MODEL_FIELDS) %}
+{% for model_number, field in equivalent_field.items() %}
 [runtime]
-{% for model_field in PRESSURE_LEVEL_MODEL_FIELDS %}
-    [[pre_process_domain_mean_vertical_profile_series_{{model_field}}]]
-    inherit = PARALLEL
+    [[generic_domain_mean_vertical_profile_series_m{{model_number}}_{{sanitise_task_name(field)}}]]
+    inherit = PROCESS
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_domain_mean_vertical_profile_series.yaml"
-        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --PLEVEL='{{PRESSURE_LEVELS}}'"
-
-    [[collate_domain_mean_vertical_profile_series_{{model_field}}]]
-    inherit = COLLATE
-        [[[environment]]]
-        CSET_RECIPE_NAME = "generic_domain_mean_vertical_profile_series.yaml"
-        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --PLEVEL='{{PRESSURE_LEVELS}}'"
+        CSET_ADDOPTS = """
+            --VARNAME='{{field}}'
+            --MODEL_NAME='{{models[model_number-1]["name"]}}'
+        """
+        MODEL_NUMBER = {{model_number}}
+{% endfor %}
 {% endfor %}
 {% endif %}
