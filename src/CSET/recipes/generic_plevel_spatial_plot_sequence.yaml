@@ -1,7 +1,7 @@
 category: Pressure Level Spatial
-title: $VARNAME $PLEVEL Level Spatial Plot
+title: $MODEL_NAME $VARNAME $PLEVEL Level Spatial Plot
 description: |
-  Extracts ands plots the $PLEVELNAME from a file at pressure level $PLEVEL.
+  Extracts ands plots the $PLEVELNAME from $MODEL_NAME at pressure level $PLEVEL.
 
 parallel:
   - operator: read.read_cube
@@ -10,25 +10,13 @@ parallel:
       variable_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
-      validity_time_constraint:
-        operator: constraints.generate_time_constraint
-        time_start: $VALIDITY_TIME
       pressure_level_constraint:
         operator: constraints.generate_level_constraint
-        coordinate: "pressure"
+        coordinate: pressure
         levels: $PLEVEL
-
-  - operator: write.write_cube_to_nc
 
   - operator: plot.spatial_contour_plot
     sequence_coordinate: time
-
-  - operator: write.write_cube_to_nc
-    filename: intermediate/pressure_level_field
-
-collate:
-  - operator: read.read_cube
-    filename_pattern: intermediate/*.nc
 
   - operator: write.write_cube_to_nc
     overwrite: True
