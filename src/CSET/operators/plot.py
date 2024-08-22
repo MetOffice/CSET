@@ -20,7 +20,7 @@ import json
 import logging
 import math
 import sys
-from typing import Union
+from typing import Literal
 
 import iris
 import iris.coords
@@ -55,9 +55,7 @@ def _append_to_plot_index(plot_index: list) -> list:
     return complete_plot_index
 
 
-def _check_single_cube(
-    cube: Union[iris.cube.Cube, iris.cube.CubeList],
-) -> iris.cube.Cube:
+def _check_single_cube(cube: iris.cube.Cube | iris.cube.CubeList) -> iris.cube.Cube:
     """Ensure a single cube is given.
 
     If a CubeList of length one is given that the contained cube is returned,
@@ -186,13 +184,14 @@ def _get_plot_resolution() -> int:
     return get_recipe_metadata().get("plot_resolution", 100)
 
 
-def _plot_and_save_contour_plot(
+def _plot_and_save_spatial_plot(
     cube: iris.cube.Cube,
     filename: str,
     title: str,
+    method: Literal["contour", "pcolormesh"],
     **kwargs,
 ):
-    """Plot and save a contour plot.
+    """Plot and save a spatial plot.
 
     Parameters
     ----------
@@ -202,7 +201,8 @@ def _plot_and_save_contour_plot(
         Filename of the plot to write.
     title: str
         Plot title.
-
+    method: "contour" | "pcolormesh"
+        The plotting method to use.
     """
     # Setup plot details, size, resolution, etc.
     fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
@@ -210,8 +210,14 @@ def _plot_and_save_contour_plot(
     # Specify the color bar
     cmap, levels, norm = _colorbar_map_levels(cube.name())
 
-    # Filled contour plot of the field.
-    contours = iplt.contourf(cube, cmap=cmap, levels=levels, norm=norm)
+    if method == "contour":
+        # Filled contour plot of the field.
+        plot = iplt.contourf(cube, cmap=cmap, levels=levels, norm=norm)
+    elif method == "pcolormesh":
+        # pcolormesh plot of the field.
+        plot = iplt.pcolormesh(cube, cmap=cmap, norm=norm)
+    else:
+        raise ValueError(f"Unknown plotting method: {method}")
 
     # Using pyplot interface here as we need iris to generate a cartopy GeoAxes.
     axes = plt.gca()
@@ -230,6 +236,7 @@ def _plot_and_save_contour_plot(
             ]
         )
     except ValueError:
+        # Skip if no x and y map coordinates.
         pass
 
     # Check to see if transect, and if so, adjust y axis.
@@ -263,7 +270,7 @@ def _plot_and_save_contour_plot(
     )
 
     # Add colour bar.
-    cbar = fig.colorbar(contours)
+    cbar = fig.colorbar(plot)
     cbar.set_label(label=f"{cube.name()} ({cube.units})", size=20)
 
     # Save plot.
@@ -272,14 +279,15 @@ def _plot_and_save_contour_plot(
     plt.close(fig)
 
 
-def _plot_and_save_postage_stamp_contour_plot(
+def _plot_and_save_postage_stamp_spatial_plot(
     cube: iris.cube.Cube,
     filename: str,
     stamp_coordinate: str,
     title: str,
+    method: Literal["contour", "pcolormesh"],
     **kwargs,
 ):
-    """Plot postage stamp contour plots from an ensemble.
+    """Plot postage stamp spatial plots from an ensemble.
 
     Parameters
     ----------
@@ -289,6 +297,8 @@ def _plot_and_save_postage_stamp_contour_plot(
         Filename of the plot to write.
     stamp_coordinate: str
         Coordinate that becomes different plots.
+    method: "contour" | "pcolormesh"
+        The plotting method to use.
 
     Raises
     ------
@@ -310,16 +320,33 @@ def _plot_and_save_postage_stamp_contour_plot(
         # Implicit interface is much easier here, due to needing to have the
         # cartopy GeoAxes generated.
         plt.subplot(grid_size, grid_size, subplot)
-        plot = iplt.contourf(member, cmap=cmap, levels=levels, norm=norm)
+        if method == "contour":
+            # Filled contour plot of the field.
+            plot = iplt.contourf(member, cmap=cmap, levels=levels, norm=norm)
+        elif method == "pcolormesh":
+            # pcolormesh plot of the field.
+            plot = iplt.pcolormesh(member, cmap=cmap, norm=norm)
+        else:
+            raise ValueError(f"Unknown plotting method: {method}")
         ax = plt.gca()
         ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
         ax.set_axis_off()
 
         # Add coastlines if cube contains x and y map coordinates.
+        # If is spatial map, fix extent to keep plot tight.
         try:
-            get_cube_yxcoordname(cube)
+            lataxis, lonaxis = get_cube_yxcoordname(cube)
             ax.coastlines(resolution="10m")
+            ax.set_extent(
+                [
+                    np.min(cube.coord(lonaxis).points),
+                    np.max(cube.coord(lonaxis).points),
+                    np.min(cube.coord(lataxis).points),
+                    np.max(cube.coord(lataxis).points),
+                ]
+            )
         except ValueError:
+            # Skip if no x and y map coordinates.
             pass
 
     # Put the shared colorbar in its own axes.
@@ -331,141 +358,6 @@ def _plot_and_save_postage_stamp_contour_plot(
     fig.suptitle(title)
 
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved contour postage stamp plot to %s", filename)
-    plt.close(fig)
-
-
-def _plot_and_save_pcolormesh_plot(
-    cube: iris.cube.Cube,
-    filename: str,
-    title: str,
-    **kwargs,
-):
-    """Plot and save a pcolormesh plot.
-
-    Parameters
-    ----------
-    cube: Cube
-        2 dimensional (lat and lon) Cube of the data to plot.
-    filename: str
-        Filename of the plot to write.
-    title: str
-        Plot title.
-
-    """
-    # Setup plot details, size, resolution, etc.
-    fig = plt.figure(figsize=(15, 15), facecolor="w", edgecolor="k")
-
-    # Specify the color bar
-    cmap, levels, norm = _colorbar_map_levels(cube.name())
-
-    # Filled contour plot of the field.
-    colormesh = iplt.pcolormesh(cube, cmap=cmap, norm=norm)
-
-    # Using pyplot interface here as we need iris to generate a cartopy GeoAxes.
-    axes = plt.gca()
-
-    # Add coastlines if cube contains x and y map coordinates.
-    # If is spatial map, fix extent to keep plot tight.
-    try:
-        lataxis, lonaxis = get_cube_yxcoordname(cube)
-        axes.coastlines(resolution="10m")
-        axes.set_extent(
-            [
-                np.min(cube.coord(lonaxis).points),
-                np.max(cube.coord(lonaxis).points),
-                np.min(cube.coord(lataxis).points),
-                np.max(cube.coord(lataxis).points),
-            ]
-        )
-    except ValueError:
-        pass
-
-    # Check to see if transect, and if so, adjust y axis.
-    if is_transect(cube):
-        if "pressure" in [coord.name() for coord in cube.coords()]:
-            axes.invert_yaxis()
-            axes.set_yscale("log")
-            axes.set_ylim(1100, 100)
-        # If both model_level_number and level_height exists, iplt can construct
-        # plot as a function of height above orography (NOT sea level).
-        elif {"model_level_number", "level_height"}.issubset(
-            {coord.name() for coord in cube.coords()}
-        ):
-            axes.set_yscale("log")
-
-    # Add title.
-    axes.set_title(title, fontsize=16)
-
-    # Add colour bar.
-    cbar = fig.colorbar(colormesh)
-    cbar.set_label(label=f"{cube.name()} ({cube.units})", size=20)
-
-    # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=150)
-    logging.info("Saved contour plot to %s", filename)
-    plt.close(fig)
-
-
-def _plot_and_save_postage_stamp_pcolormesh_plot(
-    cube: iris.cube.Cube,
-    filename: str,
-    stamp_coordinate: str,
-    title: str,
-    **kwargs,
-):
-    """Plot postage stamp pcolormesh plots from an ensemble.
-
-    Parameters
-    ----------
-    cube: Cube
-        Iris cube of data to be plotted. It must have the stamp coordinate.
-    filename: str
-        Filename of the plot to write.
-    stamp_coordinate: str
-        Coordinate that becomes different plots.
-
-    Raises
-    ------
-    ValueError
-        If the cube doesn't have the right dimensions.
-    """
-    # Use the smallest square grid that will fit the members.
-    grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
-
-    fig = plt.figure(figsize=(10, 10))
-
-    # Specify the color bar
-    cmap, levels, norm = _colorbar_map_levels(cube.name())
-
-    # Make a subplot for each member.
-    for member, subplot in zip(
-        cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1), strict=False
-    ):
-        # Implicit interface is much easier here, due to needing to have the
-        # cartopy GeoAxes generated.
-        plt.subplot(grid_size, grid_size, subplot)
-        plot = iplt.pcolormesh(member, cmap=cmap, norm=norm)
-        ax = plt.gca()
-        ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
-        ax.set_axis_off()
-
-        # Add coastlines if cube contains x and y map coordinates.
-        try:
-            get_cube_yxcoordname(cube)
-            ax.coastlines(resolution="10m")
-        except ValueError:
-            pass
-
-    # Put the shared colorbar in its own axes.
-    colorbar_axes = fig.add_axes([0.15, 0.07, 0.7, 0.03])
-    colorbar = fig.colorbar(plot, colorbar_axes, orientation="horizontal")
-    colorbar.set_label(f"{cube.name()} / {cube.units}")
-
-    # Overall figure title.
-    fig.suptitle(title)
-
-    fig.savefig(filename, bbox_inches="tight", dpi=150)
     logging.info("Saved contour postage stamp plot to %s", filename)
     plt.close(fig)
 
@@ -816,6 +708,94 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
     plt.close(fig)
 
 
+def _spatial_plot(
+    method: Literal["contour", "pcolormesh"],
+    cube: iris.cube.Cube,
+    filename: str,
+    sequence_coordinate: str,
+    stamp_coordinate: str,
+):
+    """Plot a spatial variable onto a map from a 2D, 3D, or 4D cube.
+
+    A 2D spatial field can be plotted, but if the sequence_coordinate is present
+    then a sequence of plots will be produced. Similarly if the stamp_coordinate
+    is present then postage stamp plots will be produced.
+
+    Parameters
+    ----------
+    method: "contour" | "pcolormesh"
+        The plotting method to use.
+    cube: Cube
+        Iris cube of the data to plot. It should have two spatial dimensions,
+        such as lat and lon, and may also have a another two dimension to be
+        plotted sequentially and/or as postage stamp plots.
+    filename: str | None
+        Name of the plot to write, used as a prefix for plot sequences. If None
+        uses the recipe name.
+    sequence_coordinate: str
+        Coordinate about which to make a plot sequence. Defaults to ``"time"``.
+        This coordinate must exist in the cube.
+    stamp_coordinate: str
+        Coordinate about which to plot postage stamp plots. Defaults to
+        ``"realization"``.
+
+    Raises
+    ------
+    ValueError
+        If the cube doesn't have the right dimensions.
+    TypeError
+        If the cube isn't a single cube.
+    """
+    recipe_title = get_recipe_metadata().get("title", "Untitled")
+
+    # Ensure we have a name for the plot file.
+    if filename is None:
+        filename = slugify(recipe_title)
+
+    # Ensure we've got a single cube.
+    cube = _check_single_cube(cube)
+
+    # Make postage stamp plots if stamp_coordinate exists and has more than a
+    # single point.
+    plotting_func = _plot_and_save_spatial_plot
+    try:
+        if cube.coord(stamp_coordinate).shape[0] > 1:
+            plotting_func = _plot_and_save_postage_stamp_spatial_plot
+    except iris.exceptions.CoordinateNotFoundError:
+        pass
+
+    # Must have a sequence coordinate.
+    try:
+        cube.coord(sequence_coordinate)
+    except iris.exceptions.CoordinateNotFoundError as err:
+        raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
+
+    # Create a plot for each value of the sequence coordinate.
+    plot_index = []
+    for cube_slice in cube.slices_over(sequence_coordinate):
+        # Use sequence value so multiple sequences can merge.
+        sequence_value = cube_slice.coord(sequence_coordinate).points[0]
+        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
+        coord = cube_slice.coord(sequence_coordinate)
+        # Format the coordinate value in a unit appropriate way.
+        title = f"{recipe_title} | {coord.units.title(coord.points[0])}"
+        # Do the actual plotting.
+        plotting_func(
+            cube_slice,
+            filename=plot_filename,
+            stamp_coordinate=stamp_coordinate,
+            title=title,
+            method=method,
+        )
+        plot_index.append(plot_filename)
+
+    # Add list of plots to plot metadata.
+    complete_plot_index = _append_to_plot_index(plot_index)
+
+    # Make a page to display the plots.
+    _make_plot_html_page(complete_plot_index)
+
+
 ####################
 # Public functions #
 ####################
@@ -862,54 +842,7 @@ def spatial_contour_plot(
     TypeError
         If the cube isn't a single cube.
     """
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
-
-    # Ensure we have a name for the plot file.
-    if filename is None:
-        filename = slugify(recipe_title)
-
-    # Ensure we've got a single cube.
-    cube = _check_single_cube(cube)
-
-    # Make postage stamp plots if stamp_coordinate exists and has more than a
-    # single point.
-    plotting_func = _plot_and_save_contour_plot
-    try:
-        if cube.coord(stamp_coordinate).shape[0] > 1:
-            plotting_func = _plot_and_save_postage_stamp_contour_plot
-    except iris.exceptions.CoordinateNotFoundError:
-        pass
-
-    # Must have a sequence coordinate.
-    try:
-        cube.coord(sequence_coordinate)
-    except iris.exceptions.CoordinateNotFoundError as err:
-        raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
-
-    # Create a plot for each value of the sequence coordinate.
-    plot_index = []
-    for cube_slice in cube.slices_over(sequence_coordinate):
-        # Use sequence value so multiple sequences can merge.
-        sequence_value = cube_slice.coord(sequence_coordinate).points[0]
-        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
-        coord = cube_slice.coord(sequence_coordinate)
-        # Format the coordinate value in a unit appropriate way.
-        title = f"{recipe_title} | {coord.units.title(coord.points[0])}"
-        # Do the actual plotting.
-        plotting_func(
-            cube_slice,
-            plot_filename,
-            stamp_coordinate=stamp_coordinate,
-            title=title,
-        )
-        plot_index.append(plot_filename)
-
-    # Add list of plots to plot metadata.
-    complete_plot_index = _append_to_plot_index(plot_index)
-
-    # Make a page to display the plots.
-    _make_plot_html_page(complete_plot_index)
-
+    _spatial_plot("contour", cube, filename, sequence_coordinate, stamp_coordinate)
     return cube
 
 
@@ -958,54 +891,7 @@ def spatial_pcolormesh_plot(
     TypeError
         If the cube isn't a single cube.
     """
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
-
-    # Ensure we have a name for the plot file.
-    if filename is None:
-        filename = slugify(recipe_title)
-
-    # Ensure we've got a single cube.
-    cube = _check_single_cube(cube)
-
-    # Make postage stamp plots if stamp_coordinate exists and has more than a
-    # single point.
-    plotting_func = _plot_and_save_pcolormesh_plot
-    try:
-        if cube.coord(stamp_coordinate).shape[0] > 1:
-            plotting_func = _plot_and_save_postage_stamp_pcolormesh_plot
-    except iris.exceptions.CoordinateNotFoundError:
-        pass
-
-    # Must have a sequence coordinate.
-    try:
-        cube.coord(sequence_coordinate)
-    except iris.exceptions.CoordinateNotFoundError as err:
-        raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
-
-    # Create a plot for each value of the sequence coordinate.
-    plot_index = []
-    for cube_slice in cube.slices_over(sequence_coordinate):
-        # Use sequence value so multiple sequences can merge.
-        sequence_value = cube_slice.coord(sequence_coordinate).points[0]
-        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
-        coord = cube_slice.coord(sequence_coordinate)
-        # Format the coordinate value in a unit appropriate way.
-        title = f"{recipe_title} | {coord.units.title(coord.points[0])}"
-        # Do the actual plotting.
-        plotting_func(
-            cube_slice,
-            plot_filename,
-            stamp_coordinate=stamp_coordinate,
-            title=title,
-        )
-        plot_index.append(plot_filename)
-
-    # Add list of plots to plot metadata.
-    complete_plot_index = _append_to_plot_index(plot_index)
-
-    # Make a page to display the plots.
-    _make_plot_html_page(complete_plot_index)
-
+    _spatial_plot("pcolormesh", cube, filename, sequence_coordinate, stamp_coordinate)
     return cube
 
 
@@ -1185,7 +1071,7 @@ def scatter_plot(
     filename: str = None,
     one_to_one: bool = True,
     **kwargs,
-) -> (iris.cube.Cube, iris.cube.Cube):
+) -> tuple[iris.cube.Cube, iris.cube.Cube]:
     """Plot a scatter plot between two variables.
 
     Both cubes must be 1D.
