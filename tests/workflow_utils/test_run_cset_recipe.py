@@ -169,6 +169,7 @@ def test_create_diagnostic_archive(tmp_path):
     archive_path = tmp_path / "diagnostic.zip"
     assert archive_path.is_file()
     with zipfile.ZipFile(archive_path, "r") as archive:
+        # Check all files are now in archive.
         assert set(archive.namelist()) == files
 
 
