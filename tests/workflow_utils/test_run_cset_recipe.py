@@ -174,7 +174,7 @@ def test_create_diagnostic_archive(tmp_path):
 
 
 def test_entrypoint_parallel(monkeypatch):
-    """Check entrypoint for parallel job."""
+    """Check that parallel run_cset_recipe only runs parallel function."""
 
     def assert_true():
         assert True
@@ -190,7 +190,7 @@ def test_entrypoint_parallel(monkeypatch):
 
 
 def test_entrypoint_collate(monkeypatch):
-    """Check entrypoint for collate job."""
+    """Check that collate run_cset_recipe only runs collate function."""
 
     def assert_true():
         assert True
@@ -206,7 +206,7 @@ def test_entrypoint_collate(monkeypatch):
 
 
 def test_entrypoint_neither(monkeypatch):
-    """Entrypoint does nothing for a noop job."""
+    """Check that other CSET_BAKE_MODE runs no functions."""
 
     def assert_false():
         assert False, "unwanted processing."  # noqa: B011
