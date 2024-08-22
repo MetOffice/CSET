@@ -8,8 +8,11 @@ from datetime import datetime, timedelta
 
 import isodate
 
+# This file is excluded from coverage testing as it will be removed when the
+# data time cycling is merged.
 
-def word_month_to_num(month: str) -> int:
+
+def word_month_to_num(month: str) -> int:  # pragma: no cover
     """Convert a string month into the corresponding number.
 
     E.g. "January" -> 1, "feb" -> 2.
@@ -38,7 +41,7 @@ def word_month_to_num(month: str) -> int:
     return month_number
 
 
-def validity_time_direct(times: dict) -> datetime:
+def validity_time_direct(times: dict) -> datetime:  # pragma: no cover
     """Extract the validity time directly."""
     try:
         month = times["valid_month"]
@@ -54,7 +57,7 @@ def validity_time_direct(times: dict) -> datetime:
     return validity_time
 
 
-def validity_time_from_init_time(times: dict) -> datetime:
+def validity_time_from_init_time(times: dict) -> datetime:  # pragma: no cover
     """Derive the validity time from the initiation time and lead time."""
     try:
         month = times["init_month"]
@@ -72,7 +75,7 @@ def validity_time_from_init_time(times: dict) -> datetime:
     return validity_time
 
 
-def all_validity_info(pattern: str) -> bool:
+def all_validity_info(pattern: str) -> bool:  # pragma: no cover
     """Check the validity time is present."""
     return (
         "{valid_year}" in pattern
@@ -81,7 +84,7 @@ def all_validity_info(pattern: str) -> bool:
     )
 
 
-def all_init_info(pattern: str) -> bool:
+def all_init_info(pattern: str) -> bool:  # pragma: no cover
     """Check the initiation time and lead time are present."""
     return (
         "{init_year}" in pattern
@@ -97,7 +100,7 @@ def create_validity_time_tester(
     period_length: str,
     times_per_file: int,
     time_offset: int,
-) -> callable:
+) -> callable:  # pragma: no cover
     """Get a function to test if a filename contains a certain validity time.
 
     Parameters
