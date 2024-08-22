@@ -1,19 +1,16 @@
-{% if PLOT_SPATIAL_PRESSURE_LEVEL_MODEL_FIELD %}
+{% if DOMAIN_MEAN_VERTICAL_PROFILE_SERIES %}
 {% for equivalent_field in restructure_field_list(PRESSURE_LEVEL_MODEL_FIELDS) %}
 {% for model_number, field in equivalent_field.items() %}
-{% for plevel in PRESSURE_LEVELS %}
 [runtime]
-    [[generic_plevel_spatial_plot_sequence_m{{model_number}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
+    [[generic_plevel_domain_mean_vertical_profile_series_m{{model_number}}_{{sanitise_task_name(field)}}]]
     inherit = PROCESS
         [[[environment]]]
-        CSET_RECIPE_NAME = "generic_plevel_spatial_plot_sequence.yaml"
+        CSET_RECIPE_NAME = "generic_plevel_domain_mean_vertical_profile_series.yaml"
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
-            --PLEVEL='{{plevel}}'
             --MODEL_NAME='{{models[model_number-1]["name"]}}'
         """
         MODEL_NUMBER = {{model_number}}
-{% endfor %}
 {% endfor %}
 {% endfor %}
 {% endif %}
