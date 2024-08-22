@@ -3,7 +3,7 @@ title: $MODEL_NAME Inflow layer properties plot
 description: |
   Extracts data required for, and calculates the Inflow properties diagnostic, plotting on a spatial map.
 
-parallel:
+steps:
   - operator: read.read_cubes
 
   - operator: convection.inflow_layer_properties

@@ -3,7 +3,7 @@ title: $MODEL_NAME $VARNAME $PLEVEL Level Spatial Plot
 description: |
   Extracts ands plots the $PLEVELNAME from $MODEL_NAME at pressure level $PLEVEL.
 
-parallel:
+steps:
   - operator: read.read_cube
     constraint:
       operator: constraints.combine_constraints

@@ -7,7 +7,7 @@ description: |
   integrates to 1. stacked is set to True so the sum of the histograms is
   normalized to 1.
 
-parallel:
+steps:
   - operator: read.read_cube
     constraint:
       operator: constraints.combine_constraints
