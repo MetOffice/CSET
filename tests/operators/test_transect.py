@@ -14,13 +14,15 @@
 
 """Tests transect operator."""
 
+from pathlib import Path
+
 import iris
 import iris.coord_systems
 import iris.cube
 import numpy as np
 import pytest
 
-import CSET.operators.transect as transect
+from CSET.operators import plot, transect
 
 
 # Session scope fixtures, so the test data only has to be loaded once.
@@ -144,3 +146,33 @@ def test_transect_plotasfuncoflongitude(load_cube_pl):
         transect.calc_transect(
             load_cube_pl, startcoords=(-10.94, 19.06), endcoords=(-10.86, 19.18)
         ).coord("latitude")
+
+
+def test_transect_model_level_spatial_contour_plot(load_cube_ml_out, tmp_working_dir):
+    """Plot a contour plot of the transect model level data."""
+    plot.spatial_contour_plot(load_cube_ml_out, filename="plot")
+    assert Path("plot_449743.0.png").is_file()
+    assert Path("plot_449744.0.png").is_file()
+
+
+def test_transect_model_level_spatial_pcolormesh_plot(
+    load_cube_ml_out, tmp_working_dir
+):
+    """Plot a pcolormesh plot of the transect model level data."""
+    plot.spatial_pcolormesh_plot(load_cube_ml_out, filename="plot")
+    assert Path("plot_449743.0.png").is_file()
+    assert Path("plot_449744.0.png").is_file()
+
+
+def test_transect_pressure_spatial_contour_plot(load_cube_pl_out, tmp_working_dir):
+    """Plot a contour plot of the transect pressure data."""
+    plot.spatial_contour_plot(load_cube_pl_out, filename="plot")
+    assert Path("plot_449469.0.png").is_file()
+    assert Path("plot_449472.0.png").is_file()
+
+
+def test_transect_pressure_spatial_pcolormesh_plot(load_cube_pl_out, tmp_working_dir):
+    """Plot a pcolormesh plot of the transect pressure data."""
+    plot.spatial_pcolormesh_plot(load_cube_pl_out, filename="plot")
+    assert Path("plot_449469.0.png").is_file()
+    assert Path("plot_449472.0.png").is_file()

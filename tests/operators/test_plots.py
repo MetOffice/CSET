@@ -71,6 +71,41 @@ def test_postage_stamp_contour_plot_sequence_coord_check(cube, tmp_working_dir):
         plot.spatial_contour_plot(cube)
 
 
+def test_spatial_pcolormesh_plot(cube, tmp_working_dir):
+    """Plot spatial pcolormesh plot of instant air temp."""
+    # Remove realization coord to increase coverage, and as its not needed.
+    cube.remove_coord("realization")
+    cube_2d = cube.slices_over("time").next()
+    plot.spatial_pcolormesh_plot(cube_2d, filename="plot")
+    assert Path("plot_462147.0.png").is_file()
+
+
+def test_pcolormesh_plot_sequence(cube, tmp_working_dir):
+    """Plot sequence of pcolormesh plots."""
+    plot.spatial_pcolormesh_plot(cube, sequence_coordinate="time")
+    assert Path("untitled_462147.0.png").is_file()
+    assert Path("untitled_462148.0.png").is_file()
+    assert Path("untitled_462149.0.png").is_file()
+
+
+def test_postage_stamp_pcolormesh_plot(monkeypatch, tmp_path):
+    """Plot postage stamp plots of ensemble data."""
+    ensemble_cube = read.read_cube("tests/test_data/exeter_em*.nc")
+    # Get a single time step.
+    ensemble_cube_3d = next(ensemble_cube.slices_over("time"))
+    monkeypatch.chdir(tmp_path)
+    plot.spatial_pcolormesh_plot(ensemble_cube_3d)
+    assert Path("untitled_463858.0.png").is_file()
+
+
+def test_postage_stamp_pcolormesh_plot_sequence_coord_check(cube, tmp_working_dir):
+    """Check error when cube has no time coordinate."""
+    # What does this even physically mean? No data?
+    cube.remove_coord("time")
+    with pytest.raises(ValueError):
+        plot.spatial_pcolormesh_plot(cube)
+
+
 def test_plot_line_series(cube, tmp_working_dir):
     """Save a line series plot."""
     cube = collapse.collapse(cube, ["grid_latitude", "grid_longitude"], "MEAN")
@@ -269,3 +304,17 @@ def test_get_plot_resolution_unset(tmp_working_dir):
     """Test getting the default plot resolution when unset."""
     resolution = plot._get_plot_resolution()
     assert resolution == 100
+
+
+def test_invalid_plotting_method_spatial_plot(cube, tmp_working_dir):
+    """Test plotting a spatial plot with an invalid method."""
+    with pytest.raises(ValueError, match="Unknown plotting method"):
+        plot._plot_and_save_spatial_plot(cube, "filename", "title", "invalid")
+
+
+def test_invalid_plotting_method_postage_stamp_spatial_plot(cube, tmp_working_dir):
+    """Test plotting a postage stamp spatial plot with an invalid method."""
+    with pytest.raises(ValueError, match="Unknown plotting method"):
+        plot._plot_and_save_postage_stamp_spatial_plot(
+            cube, "filename", "realization", "title", "invalid"
+        )
