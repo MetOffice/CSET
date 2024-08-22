@@ -711,7 +711,7 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
 def _spatial_plot(
     method: Literal["contour", "pcolormesh"],
     cube: iris.cube.Cube,
-    filename: str,
+    filename: str | None,
     sequence_coordinate: str,
     stamp_coordinate: str,
 ):

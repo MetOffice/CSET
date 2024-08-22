@@ -304,3 +304,17 @@ def test_get_plot_resolution_unset(tmp_working_dir):
     """Test getting the default plot resolution when unset."""
     resolution = plot._get_plot_resolution()
     assert resolution == 100
+
+
+def test_invalid_plotting_method_spatial_plot(cube, tmp_working_dir):
+    """Test plotting a spatial plot with an invalid method."""
+    with pytest.raises(ValueError, match="Unknown plotting method"):
+        plot._plot_and_save_spatial_plot(cube, "filename", "title", "invalid")
+
+
+def test_invalid_plotting_method_postage_stamp_spatial_plot(cube, tmp_working_dir):
+    """Test plotting a postage stamp spatial plot with an invalid method."""
+    with pytest.raises(ValueError, match="Unknown plotting method"):
+        plot._plot_and_save_postage_stamp_spatial_plot(
+            cube, "filename", "title", "invalid"
+        )
