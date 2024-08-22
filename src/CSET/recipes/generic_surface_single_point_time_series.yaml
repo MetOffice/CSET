@@ -2,8 +2,7 @@ category: Time Series
 title: $MODEL_NAME Time series of $VARNAME at $LATITUDE_POINT N, $LONGITUDE_POINT E
 description: Plots a time series of the surface $VARNAME at a selected gridpoint.
 
-# Parallel steps.
-parallel:
+steps:
   - operator: read.read_cube
     constraint:
       operator: constraints.combine_constraints
