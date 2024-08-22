@@ -100,6 +100,9 @@ def sanitise_task_name(s: str):
     Note that actually there are a few more characters supported, see:
     https://github.com/cylc/cylc-flow/issues/6288
     """
+    # Ensure we have a string.
+    if not isinstance(s, str):
+        s = str(s)
     # Ensure the first character is alphanumeric.
     if not s[0].isalnum():
         s = f"sanitised_{s}"
