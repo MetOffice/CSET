@@ -14,7 +14,7 @@
 
 """Tests for fetch_data workflow utility."""
 
-from datetime import UTC, datetime, timedelta
+import datetime
 
 import pytest
 
@@ -24,9 +24,9 @@ from CSET._workflow_utils import fetch_data
 def test_get_needed_environment_variables(monkeypatch):
     """Needed environment variables are loaded."""
     duration_raw = "PT1H"
-    duration = timedelta(hours=1)
+    duration = datetime.timedelta(hours=1)
     date_raw = "20000101T0000Z"
-    date = datetime(2000, 1, 1, 0, 0, tzinfo=UTC)
+    date = datetime.datetime(2000, 1, 1, 0, 0, tzinfo=datetime.timezone.utc)
     path = "/path/to/data"
     number_raw = "1"
 
@@ -100,10 +100,10 @@ def test_template_file_path_validity_time():
     actual = fetch_data._template_file_path(
         "/path/%Y-%m-%d.nc",
         "validity",
-        datetime(2000, 1, 1, tzinfo=UTC),
-        timedelta(days=5),
-        timedelta(),
-        timedelta(days=1),
+        datetime.datetime(2000, 1, 1, tzinfo=datetime.timezone.utc),
+        datetime.timedelta(days=5),
+        datetime.timedelta(),
+        datetime.timedelta(days=1),
     )
     expected = [
         "/path/2000-01-01.nc",
@@ -120,9 +120,9 @@ def test_template_file_path_initiation_time():
     actual = fetch_data._template_file_path(
         "/path/%Y-%m-%d.nc",
         "initiation",
-        datetime(2000, 1, 1, tzinfo=UTC),
-        timedelta(days=5),
-        timedelta(),
+        datetime.datetime(2000, 1, 1, tzinfo=datetime.timezone.utc),
+        datetime.timedelta(days=5),
+        datetime.timedelta(),
         None,
     )
     expected = ["/path/2000-01-01.nc"]
@@ -134,10 +134,10 @@ def test_template_file_path_lead_time():
     actual = fetch_data._template_file_path(
         "/path/%N.nc",
         "lead",
-        datetime(2000, 1, 1, tzinfo=UTC),
-        timedelta(hours=5, seconds=1),
-        timedelta(hours=1),
-        timedelta(hours=1),
+        datetime.datetime(2000, 1, 1, tzinfo=datetime.timezone.utc),
+        datetime.timedelta(hours=5, seconds=1),
+        datetime.timedelta(hours=1),
+        datetime.timedelta(hours=1),
     )
     expected = [
         "/path/001.nc",
