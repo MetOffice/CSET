@@ -15,6 +15,7 @@
 """Tests for fetch_data workflow utility."""
 
 import datetime
+from pathlib import Path
 
 import pytest
 
@@ -161,3 +162,24 @@ def test_FilesystemFileRetriever(tmp_path):
         ffr.get_file("tests/test_data/exeter_em*.nc", str(tmp_path))
     assert (tmp_path / "exeter_em01.nc").is_file()
     assert (tmp_path / "exeter_em02.nc").is_file()
+
+
+def test_FilesystemFileRetriever_no_files(tmp_path, caplog):
+    """Test warning when no files match the requested path."""
+    with fetch_data.FilesystemFileRetriever() as ffr:
+        # Should warn, but not error.
+        ffr.get_file("/non-existent/file.nc", str(tmp_path))
+    log_record = caplog.records[0]
+    assert log_record.levelname == "WARNING"
+    assert log_record.message.startswith("file_path does not match any files:")
+
+
+def test_FilesystemFileRetriever_copy_error(caplog):
+    """Test warning when file copy errors."""
+    with fetch_data.FilesystemFileRetriever() as ffr:
+        # Please don't run as root.
+        ffr.get_file("tests/test_data/air_temp.nc", "/usr/bin")
+    assert not Path("/usr/bin/air_temp.nc").is_file()
+    log_record = caplog.records[0]
+    assert log_record.levelname == "WARNING"
+    assert log_record.message.startswith("Failed to copy")
