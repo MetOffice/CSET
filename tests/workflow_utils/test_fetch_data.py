@@ -14,11 +14,10 @@
 
 """Tests for fetch_data workflow utility."""
 
-from CSET._workflow_utils import fetch_data_filesystem, validity_time_tester
+from CSET._workflow_utils import fetch_data
 
 
 def test_function_exists():
     """Placeholder tests before rewriting fetch data utility."""
     # TODO: Write tests after switching to new fetch_data utility.
-    assert callable(fetch_data_filesystem.run)
-    assert callable(validity_time_tester.create_validity_time_tester)
+    assert callable(fetch_data.fetch_data)
