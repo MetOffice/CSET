@@ -2,8 +2,6 @@
 
 """Run a recipe with the CSET CLI."""
 
-import fcntl
-import json
 import logging
 import os
 import subprocess
@@ -14,46 +12,6 @@ from pathlib import Path
 logging.basicConfig(
     level=os.getenv("LOGLEVEL", "INFO"), format="%(asctime)s %(levelname)s %(message)s"
 )
-
-
-def combine_dicts(d1: dict, d2: dict) -> dict:
-    """Recursively combines two dictionaries.
-
-    Duplicate atoms favour the second dictionary.
-    """
-    # Update existing keys.
-    for key in d1.keys() & d2.keys():
-        if isinstance(d1[key], dict):
-            d1[key] = combine_dicts(d1[key], d2[key])
-        else:
-            d1[key] = d2[key]
-    # Add any new keys.
-    for key in d2.keys() - d1.keys():
-        d1[key] = d2[key]
-    return d1
-
-
-def append_to_index(record: dict):
-    """Append the plot record to the index file.
-
-    Record should have the form {"Category Name": {"recipe_id": "Plot Name"}}
-    """
-    # Plot index is at {run}/share/web/plots/index.json
-    index_path = Path(os.getenv("CYLC_WORKFLOW_SHARE_DIR"), "web/plots/index.json")
-    with open(index_path, "a+t", encoding="UTF-8") as fp:
-        # Lock file until closed.
-        fcntl.flock(fp, fcntl.LOCK_EX)
-        # Open in append mode then seek back to avoid errors if the file does
-        # not exist.
-        fp.seek(0)
-        try:
-            index = json.load(fp)
-        except json.JSONDecodeError:
-            index = {}
-        index = combine_dicts(index, record)
-        fp.seek(0)
-        fp.truncate()
-        json.dump(index, fp)
 
 
 def subprocess_env():
@@ -125,19 +83,6 @@ def create_diagnostic_archive(output_directory):
                 archive.write(file, arcname=file.relative_to(output_directory))
 
 
-# Not covered by tests as will soon be removed in #794.
-def add_to_diagnostic_index(output_directory, recipe_id):  # pragma: no cover
-    """Add the diagnostic to the plot index if it isn't already there."""
-    output_directory = Path(output_directory)
-    with open(output_directory / "meta.json", "rt", encoding="UTF-8") as fp:
-        recipe_meta = json.load(fp)
-    title = recipe_meta.get("title", "Unknown")
-    category = recipe_meta.get("category", "Unknown")
-
-    # Add plot to plot index.
-    append_to_index({category: {recipe_id: title}})
-
-
 # Not covered by tests as will soon be removed in #765.
 def parallel():  # pragma: no cover
     """Process raw data in parallel."""
@@ -193,7 +138,6 @@ def collate():  # pragma: no cover
         logging.error("cset bake exited non-zero while collating.")
         raise
     create_diagnostic_archive(output_directory())
-    add_to_diagnostic_index(output_directory(), recipe_id())
 
 
 def run():
