@@ -81,16 +81,16 @@ def test_parse_recipe_exception_blank():
         common.parse_recipe("")
 
 
-def test_parse_recipe_exception_no_parallel():
-    """Exception for recipe without any parallel steps."""
+def test_parse_recipe_exception_no_steps():
+    """Exception for recipe without any steps steps."""
     with pytest.raises(ValueError):
-        common.parse_recipe("parallel: []")
+        common.parse_recipe("steps: []")
 
 
-def test_parse_recipe_exception_parallel_not_sequence():
-    """Exception for recipe with parallel containing an atom."""
+def test_parse_recipe_exception_steps_not_sequence():
+    """Exception for recipe with steps containing an atom."""
     with pytest.raises(ValueError):
-        common.parse_recipe("parallel: 7")
+        common.parse_recipe("steps: 7")
 
 
 def test_parse_recipe_exception_non_dict():
@@ -138,12 +138,20 @@ def test_parse_variable_options_quoted():
 
 def test_template_variables():
     """Multiple variables are correctly templated into recipe."""
-    recipe = {"parallel": [{"operator": "misc.noop", "v1": "$VAR_A", "v2": "$VAR_B"}]}
+    recipe = {
+        "steps": [{"operator": "misc.noop", "v1": "$VAR_A", "v2": "$VAR_B", "v3": 0}]
+    }
     variables = {"VAR_A": 42, "VAR_B": 3.14}
-    expected = {"parallel": [{"operator": "misc.noop", "v1": 42, "v2": 3.14}]}
+    expected = {"steps": [{"operator": "misc.noop", "v1": 42, "v2": 3.14, "v3": 0}]}
     actual = common.template_variables(recipe, variables)
     assert actual == expected
     assert recipe == expected
+
+
+def test_template_variables_wrong_recipe_type():
+    """Give wrong type for recipe."""
+    with pytest.raises(TypeError):
+        common.template_variables(1, {})
 
 
 def test_replace_template_variable():
@@ -162,12 +170,6 @@ def test_replace_template_variable():
     # Error when variable not provided.
     with pytest.raises(KeyError):
         common.replace_template_variable("$VAR", {})
-
-
-def test_template_variables_wrong_recipe_type():
-    """Give wrong type for recipe."""
-    with pytest.raises(TypeError):
-        common.template_variables(1, {})
 
 
 def test_get_recipe_meta(tmp_working_dir):

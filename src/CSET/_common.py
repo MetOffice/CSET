@@ -57,7 +57,7 @@ def parse_recipe(recipe_yaml: Union[Path, str], variables: dict = None):
     Examples
     --------
     >>> CSET._common.parse_recipe(Path("myrecipe.yaml"))
-    {'parallel': [{'operator': 'misc.noop'}]}
+    {'steps': [{'operator': 'misc.noop'}]}
     """
     # Ensure recipe_yaml is something the YAML parser can read.
     if isinstance(recipe_yaml, str):
@@ -87,7 +87,7 @@ def check_recipe_has_steps(recipe: dict):
     """Check a recipe has the minimum required steps.
 
     Checking that the recipe actually has some steps, and providing helpful
-    error messages otherwise. We must have at least a parallel step, as that
+    error messages otherwise. We must have at least a steps step, as that
     reads the raw data.
 
     Parameters
