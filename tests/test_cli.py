@@ -69,7 +69,7 @@ def test_bake_invalid_args():
 
 
 def test_bake_invalid_args_input_dir():
-    """Missing required input-dir argument for parallel."""
+    """Missing required input-dir argument for bake."""
     with pytest.raises(subprocess.CalledProcessError):
         subprocess.run(
             ["cset", "bake", "--recipe=foo", "--output-dir=/tmp"], check=True
