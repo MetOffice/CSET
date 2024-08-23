@@ -1,38 +1,31 @@
-title: Transect of $CS_VAR
+title: $MODEL_NAME Transect of $VARNAME
 description: |
-  Extracts a transect for a specified variable between two points and plots it.
+  Extracts a $VERTICAL_COORDINATE transect for $VARNAME between two points and
+  plots it.
 
-parallel:
+  Start coordinate: `$START_COORDS`
+  End coordinate: `$FINISH_COORDS`
+
+steps:
   - operator: read.read_cube
     constraint:
         operator: constraints.combine_constraints
-        validity_time_constraint:
-            operator: constraints.generate_time_constraint
-            time_start: $VALIDITY_TIME
+        cell_method_constraint:
+            operator: constraints.generate_cell_methods_constraint
+            cell_methods: []
         var_constraint:
             operator: constraints.generate_var_constraint
-            varname: $CS_VAR
+            varname: $VARNAME
         level_constraint:
             operator: constraints.generate_level_constraint
-            coordinate: $CS_VERTLEV
+            coordinate: $VERTICAL_COORDINATE
             levels: '*'
 
   - operator: transect.calc_transect
-    startcoords: $CS_STARTCOORDS
-    endcoords: $CS_FINISHCOORDS
+    startcoords: $START_COORDS
+    endcoords: $FINISH_COORDS
 
-  - operator: write.write_cube_to_nc
-    filename: intermediate/transect
-
-collate:
-  - operator: read.read_cube
-    constraint:
-        operator: constraints.generate_var_constraint
-        varname: $CS_VAR
-
-    filename_pattern: intermediate/*
+  - operator: plot.spatial_contour_plot
 
   - operator: write.write_cube_to_nc
     overwrite: True
-
-  - operator: plot.spatial_contour_plot
