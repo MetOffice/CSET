@@ -59,43 +59,45 @@ def test_parse_recipe_exception_missing():
 
 def test_parse_recipe_exception_type():
     """Exception for incorrect type."""
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match="recipe_yaml must be a str or Path."):
         common.parse_recipe(True)
 
 
 def test_parse_recipe_exception_invalid_yaml():
     """Exception for invalid YAML."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="ParserError: Invalid YAML"):
         common.parse_recipe('"Inside quotes" outside of quotes')
 
 
 def test_parse_recipe_exception_invalid_recipe():
     """Exception for valid YAML but invalid recipe."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Recipe must contain a 'steps' key."):
         common.parse_recipe("a: 1")
 
 
 def test_parse_recipe_exception_blank():
     """Exception for blank recipe."""
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match="Recipe must contain a mapping."):
         common.parse_recipe("")
 
 
 def test_parse_recipe_exception_no_steps():
     """Exception for recipe without any steps steps."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Recipe must have at least 1 step"):
         common.parse_recipe("steps: []")
 
 
 def test_parse_recipe_exception_steps_not_sequence():
     """Exception for recipe with steps containing an atom."""
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="'steps' key must contain a sequence of steps."
+    ):
         common.parse_recipe("steps: 7")
 
 
 def test_parse_recipe_exception_non_dict():
     """Exception for recipe that parses to a non-dict."""
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match="Recipe must contain a mapping."):
         common.parse_recipe("[]")
 
 
