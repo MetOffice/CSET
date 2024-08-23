@@ -25,12 +25,12 @@ import CSET._common as common
 def test_parse_recipe_string():
     """Loading and parsing of a YAML recipe from a string."""
     valid_recipe = """\
-    parallel:
+    steps:
         operator: misc.noop
         arg1: Hello
     """
     parsed = common.parse_recipe(valid_recipe)
-    assert parsed == {"parallel": {"operator": "misc.noop", "arg1": "Hello"}}
+    assert parsed == {"steps": {"operator": "misc.noop", "arg1": "Hello"}}
 
 
 def test_parse_recipe_path():
@@ -39,7 +39,7 @@ def test_parse_recipe_path():
     expected = {
         "title": "Noop",
         "description": "A recipe that does nothing. Only used for testing.",
-        "parallel": [
+        "steps": [
             {
                 "operator": "misc.noop",
                 "test_argument": "Banana",
@@ -47,7 +47,6 @@ def test_parse_recipe_path():
                 "substep": {"operator": "constraints.combine_constraints"},
             }
         ],
-        "collate": [{"operator": "misc.noop"}],
     }
     assert parsed == expected
 
