@@ -118,3 +118,35 @@ def test_entrypoint(monkeypatch):
     monkeypatch.setattr(run_cset_recipe, "run_recipe_steps", assert_true)
     run_cset_recipe.run()
     assert function_ran, "Function did not run!"
+
+
+def test_run_recipe_steps(monkeypatch, tmp_working_dir):
+    """Test run recipe steps correctly runs CSET and creates an archive."""
+
+    def mock_func(*args, **kwargs):
+        pass
+
+    monkeypatch.setattr(subprocess, "run", mock_func)
+    monkeypatch.setattr(run_cset_recipe, "create_diagnostic_archive", mock_func)
+    monkeypatch.setattr(run_cset_recipe, "recipe_file", mock_func)
+    monkeypatch.setattr(run_cset_recipe, "output_directory", mock_func)
+    monkeypatch.setattr(run_cset_recipe, "data_directory", mock_func)
+    run_cset_recipe.run_recipe_steps()
+
+
+def test_run_recipe_steps_exception(monkeypatch, tmp_working_dir):
+    """Test run recipe steps correctly raises exception on cset bake error."""
+
+    def mock_subprocess_run(*args, **kwargs):
+        raise subprocess.CalledProcessError(1, args, b"", b"")
+
+    def mock_func(*args, **kwargs):
+        pass
+
+    monkeypatch.setattr(subprocess, "run", mock_subprocess_run)
+    monkeypatch.setattr(run_cset_recipe, "create_diagnostic_archive", mock_func)
+    monkeypatch.setattr(run_cset_recipe, "recipe_file", mock_func)
+    monkeypatch.setattr(run_cset_recipe, "output_directory", mock_func)
+    monkeypatch.setattr(run_cset_recipe, "data_directory", mock_func)
+    with pytest.raises(subprocess.CalledProcessError):
+        run_cset_recipe.run_recipe_steps()
