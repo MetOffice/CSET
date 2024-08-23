@@ -118,6 +118,13 @@ def test_generate_area_constraint():
     assert expected_area_constraint in repr(area_constraint)
 
 
+def test_generate_area_constraint_no_limits():
+    """Generate area constraint with no limits."""
+    area_constraint = constraints.generate_area_constraint(None, None, None, None)
+    expected_area_constraint = "Constraint()"
+    assert expected_area_constraint in repr(area_constraint)
+
+
 def test_combine_constraints():
     """Combine constraint."""
     stash_constraint = constraints.generate_stash_constraint("m01s03i236")
