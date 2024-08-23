@@ -52,35 +52,6 @@ def test_bake_recipe_execution(tmp_path):
     )
 
 
-def test_bake_parallel_only(tmp_path):
-    """Run recipe parallel steps from the command line."""
-    subprocess.run(
-        [
-            "cset",
-            "bake",
-            f"--input-dir={os.devnull}",
-            f"--output-dir={tmp_path}",
-            "--recipe=tests/test_data/noop_recipe.yaml",
-            "--parallel-only",
-        ],
-        check=True,
-    )
-
-
-def test_bake_post_only(tmp_path):
-    """Run recipe collate steps from the command line."""
-    subprocess.run(
-        [
-            "cset",
-            "bake",
-            f"--output-dir={tmp_path}",
-            "--recipe=tests/test_data/noop_recipe.yaml",
-            "--collate-only",
-        ],
-        check=True,
-    )
-
-
 def test_bake_invalid_args():
     """Invalid arguments give non-zero exit code."""
     with pytest.raises(subprocess.CalledProcessError):

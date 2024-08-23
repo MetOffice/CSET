@@ -1,12 +1,9 @@
 title: Noop
 description: A recipe that does nothing. Only used for testing.
 
-parallel:
+steps:
   - operator: misc.noop
     test_argument: Banana
     dict_argument: {"key": "value"}
     substep:
       operator: constraints.combine_constraints
-
-collate:
-  - operator: misc.noop

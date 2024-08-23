@@ -1,4 +1,4 @@
-parallel:
+steps:
   - operator: read.read_cubes
     filename_pattern: "exeter_em*.nc"
     constraint:
