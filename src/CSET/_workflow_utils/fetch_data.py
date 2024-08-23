@@ -77,6 +77,8 @@ class FilesystemFileRetriever(FileRetriever):
         """
         file_paths = glob.glob(os.path.expanduser(file_path))
         logging.debug("Copying files:\n%s", "\n".join(file_paths))
+        if not file_paths:
+            logging.warning("file_path does not match any files: %s", file_path)
         for file in file_paths:
             try:
                 shutil.copy(file, output_dir)
