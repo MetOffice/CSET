@@ -105,8 +105,7 @@ def _write_metadata(recipe: dict):
     # TODO: Investigate whether we might be better served by an SQLite database.
     metadata = recipe.copy()
     # Remove steps, as not needed, and might contain non-serialisable types.
-    metadata.pop("parallel", None)
-    metadata.pop("collate", None)
+    metadata.pop("steps", None)
     with open("meta.json", "wt", encoding="UTF-8") as fp:
         json.dump(metadata, fp)
     os.sync()
