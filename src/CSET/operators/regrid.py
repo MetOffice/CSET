@@ -279,9 +279,7 @@ def regrid_to_single_point(
     lat_min, lon_min = lat.points.min(), lon.points.min()
     lat_max, lon_max = lat.points.max(), lon.points.max()
 
-    # Get bounds
-    # Boundaries of frame to avoid selecting gridpoint close to domain edge
-    # Currently hardwired to 8 but could be a user input
+    # Get boundaries of frame to avoid selecting gridpoint close to domain edge
     lat_min_bound, lon_min_bound = (
         lat.points[boundary_margin - 1],
         lon.points[boundary_margin - 1],
