@@ -2,46 +2,9 @@ category: Quick Look
 title: basic q-q plot
 description: Extracts, quantiles, and plots two different variables ($VARNAME_A and $VARNAME_B) on a scatter plot.
 
-parallel:
+steps:
   - operator: read.read_cubes
-  - operator: filters.filter_multiple_cubes
-    constraint_A:
-        operator: constraints.combine_constraints
-        variable_constraint:
-            operator: constraints.generate_var_constraint
-            varname: $VARNAME_A
-        cell_method_constraint:
-            operator: constraints.generate_cell_methods_constraint
-            cell_methods: []
-        validity_time_constraint:
-            operator: constraints.generate_time_constraint
-            time_start: $VALIDITY_TIME
-        level_constraint:
-            operator: constraints.generate_level_constraint
-            coordinate: $VERTICAL_COORDINATE_A
-            levels: $LEVELS_A
-    constraint_B:
-        operator: constraints.combine_constraints
-        variable_constraint:
-            operator: constraints.generate_var_constraint
-            varname: $VARNAME_B
-        cell_method_constraint:
-            operator: constraints.generate_cell_methods_constraint
-            cell_methods: []
-        validity_time_constraint:
-            operator: constraints.generate_time_constraint
-            time_start: $VALIDITY_TIME
-        level_constraint:
-            operator: constraints.generate_level_constraint
-            coordinate: $VERTICAL_COORDINATE_B
-            levels: $LEVELS_B
 
-  - operator: write.write_cube_to_nc
-    filename: intermediate/qq_data
-
-collate:
-  - operator: read.read_cubes
-    filename_pattern: intermediate/*.nc
   - operator: plot.scatter_plot
     cube_y:
         operator: collapse.collapse
@@ -82,5 +45,6 @@ collate:
         method: 'PERCENTILE'
         additional_percent: [0,0.001,0.01,0.1,1,5,10,15,20,25,30,40,50,60,70,75,80,85,90,95,98,99,99.9,99.99,99.999,100]
     one-to-one: $ONE_TO_ONE
+
   - operator: write.write_cube_to_nc
     overwrite: True
