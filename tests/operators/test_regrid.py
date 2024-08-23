@@ -160,14 +160,13 @@ def test_regrid_to_single_point(cube):
     assert repr(regrid_cube) == expected_cube
 
 
-@pytest.mark.filterwarnings("ignore:Selected point is within")
 def test_regrid_to_single_point_missing_coord(cube):
     """Missing coordinate raises error."""
     # Missing X coordinate.
     source = cube.copy()
     source.remove_coord("grid_longitude")
     with pytest.raises(ValueError):
-        regrid.regrid_to_single_point(source, 0.5, 358.5, "Nearest")
+        regrid.regrid_to_single_point(source, 0.5, 358.5, "Nearest", boundary_margin=0)
 
     # Missing Y coordinate.
     source = cube.copy()
