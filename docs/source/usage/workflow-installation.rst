@@ -47,19 +47,22 @@ the config.
 .. image:: rose-edit.png
     :alt: rose edit GUI, showing the environment setup options.
 
-* The Data and Cycling section contains settings for the input data, and the
-  workflow cycling controls.
-
-* The Diagnostic section contains settings for enabling the various diagnostics
-  included with CSET. Some general diagnostics will take from a list of variable
-  names or STASH codes, and operate on all of them.
-
 * The Environment section contains settings for controlling how CSET integrates
   with your compute environment. This includes things like activating modules,
   and choosing a site profile.
 
 * The General section contains whole-workflow configuration for things like
   logging and housekeeping.
+
+* The Models and Cases section contains settings for the input data. Here you
+  need to setup how you want to cycle (over case studies or a trial period),
+  how many models you want, and where to find the data for them.
+
+* The Diagnostic section contains settings for enabling the various diagnostics
+  included with CSET. The diagnostics are split into vague science area. Some
+  general diagnostics will have a table in their section for setting which model
+  fields to process. Diagnostics may also take additional options after being
+  enabled.
 
 Help for each variable can be viewed by clicking on the variable's name. Once
 you have configured CSET you can save and close rose edit.

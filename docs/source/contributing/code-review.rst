@@ -194,13 +194,11 @@ For a plotting routine, specific questions to consider include:
 * Is the labelling present and appropriate?
 * Is the plot legible?
 
-
 Portability Review
 ------------------
 
 .. attention::
 
     🚧 Section under construction. 🚧
-
 
 Something about the portability review…
