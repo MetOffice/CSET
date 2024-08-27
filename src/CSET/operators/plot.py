@@ -1029,9 +1029,7 @@ def plot_vertical_line_series(
 
     # Set the lower and upper limit for the x-axis to ensure all plots have same
     # range. This needs to read the whole cube over the range of the sequence
-    # and if applicable postage stamp coordinate. This only works if the
-    # plotting is done in the collate section of a recipe and not in the
-    # parallel section of a recipe.
+    # and if applicable postage stamp coordinate.
     vmin = np.floor(cube.data.min())
     vmax = np.ceil(cube.data.max())
 
@@ -1243,9 +1241,7 @@ def plot_histogram_series(
 
     # Set the lower and upper limit for the colorbar to ensure all plots have
     # same range. This needs to read the whole cube over the range of the
-    # sequence and if applicable postage stamp coordinate. This only works if
-    # the plotting is done in the collate section of a recipe and not in the
-    # parallel section of a recipe.
+    # sequence and if applicable postage stamp coordinate.
     vmin = np.floor((cube.data.min()))
     vmax = np.ceil((cube.data.max()))
 
