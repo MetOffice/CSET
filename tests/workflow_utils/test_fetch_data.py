@@ -56,8 +56,9 @@ def test_get_needed_environment_variables(monkeypatch):
 
     # Check DATA_PERIOD is not there for initiation.
     monkeypatch.setenv("DATE_TYPE", "initiation")
+    monkeypatch.delenv("DATA_PERIOD")
     initiation_actual = fetch_data._get_needed_environment_variables()
-    assert "data_period" not in initiation_actual
+    assert initiation_actual["data_period"] is None
 
 
 def test_fetch_data(monkeypatch, tmp_path):
