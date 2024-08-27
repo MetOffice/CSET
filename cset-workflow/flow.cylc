@@ -159,7 +159,6 @@ URL = https://metoffice.github.io/CSET
 
     [[finish_website]]
     # Updates the workflow info in the web interface.
-    platform = localhost
 
     [[send_email]]
     # Send email to notify that the workflow is complete.
