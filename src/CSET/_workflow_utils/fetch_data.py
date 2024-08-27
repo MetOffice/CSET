@@ -104,9 +104,13 @@ def _get_needed_environment_variables() -> dict:
         "cycle_point": os.environ["CYLC_TASK_CYCLE_POINT"],
         "model_number": os.environ["MODEL_NUMBER"],
     }
-    # Data period is not needed for initiation time.
-    if variables["date_type"] != "initiation":
+    try:
         variables["data_period"] = isodate.parse_duration(os.environ["DATA_PERIOD"])
+    except KeyError:
+        # Data period is not needed for initiation time.
+        if variables["date_type"] != "initiation":
+            raise
+        variables["data_period"] = None
     return variables
 
 
