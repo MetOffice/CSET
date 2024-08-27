@@ -30,9 +30,7 @@ output should be a directory, but it will be created if it does not exist.
     cset bake -i air_temp.nc -o output/ -r air_temperature_spatial_plot.yaml
 
 This will run the recipe and leave its output in the specified output directory.
-
-The most interesting output will be the plot, which you can look at with
-``xdg-open output/plot.png``.
+You can look at the visualised output with ``xdg-open output/index.html``.
 
 You've now successfully run CSET with a pre-existing recipe. In the next
 tutorial we will see what is going on inside.
