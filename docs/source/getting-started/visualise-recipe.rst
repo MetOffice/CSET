@@ -6,15 +6,14 @@ Visualising a recipe graphically
 In this tutorial we will investigate what is going on inside of a recipe, and
 visualise the *operators* inside.
 
-As in the previous tutorial use the ``cset cookbook`` command to find the "Mean
-Air Temperature Spatial Plot" recipe.
+As in the previous tutorial `download this example recipe file`_.
 
 We will now visualise the steps inside the recipe using the ``cset graph``
 command.
 
 .. code-block:: bash
 
-    cset graph -r recipes/mean-air-temp-spatial-plot.yaml
+    cset graph -r air_temperature_spatial_plot.yaml
 
 This should open an image of a visualisation of the recipe. Each node is a step,
 or an *operator*, which does a single processing task. You can see that later
@@ -38,20 +37,20 @@ Now we can see the structure of the recipe graphically, we can delve into what
 each operator is doing. The ellipses represent the operators, and the arrows
 between them show where they pass their output to the next operators.
 
-The first operator in the recipe is ``read.read_cubes``, however it takes a
-constraint on a STASH code, which is itself created by another operator,
-``constraints.generate_stash_constraint``.
+The first operator in the recipe is ``read.read_cubes``, which loads the data
+cubes from a file into a CubeList, which it passes onto the next step.
 
 This operators-running-operators behaviour is further used in the next step,
 where the read CubeList is filtered down to a single air temperature cube. There
-are two constraints used here, the STASH code, and the cell methods. These are
-combined into a single constraint by the ``constraints.combine_constraints``
-operator before being used by the ``filters.filter_cubes`` operator.
+are two constraints used here, the variable's STASH code, and the cell methods.
+These are combined into a single constraint by the
+``constraints.combine_constraints`` operator before being used by the
+``filters.filter_cubes`` operator.
 
-Afterwards the cube has its time dimension removed by the mean method applied by
-the ``collapse.collapse`` operator, so it becomes two-dimensional. Then it
-passes to the ``plot.spatial_contour_plot`` and ``write.write_cube_to_nc``
-operators to be plotted and saved.
+Afterwards the cube passes to the ``plot.spatial_contour_plot`` and
+``write.write_cube_to_nc`` operators to be plotted and saved.
 
 You now know how to visualise a recipe, and a little about the operators it is
-made up of. In the next tutorial you will learn to make your own.
+made up of. In the next tutorial you will learn to make your own recipe.
+
+.. _download this example recipe file: https://gist.githubusercontent.com/jfrost-mo/6e539d5be20bfa28342bf4ff82f24dea/raw/air_temperature_spatial_plot.yaml

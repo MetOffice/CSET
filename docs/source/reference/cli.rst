@@ -57,7 +57,7 @@ or use ``--details`` for descriptions of available recipes.
 
     options:
     -h, --help            show this help message and exit
-    -d, --details         list available recipes. Supplied recipes are detailed.
+    -d, --details         list available recipes. Supplied recipes are detailed
     -o OUTPUT_DIR, --output-dir OUTPUT_DIR
                             directory to save recipes. If omitted uses $PWD
 
