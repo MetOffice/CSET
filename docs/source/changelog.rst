@@ -9,23 +9,130 @@ Changelog
 Unreleased
 ----------
 
-* `@dasha-shchep`_ Fixes METPLUS metadata issue in :pr:`692`
-
 .. Add changes here, probably taken from GitHub release notes.
 .. Highlight any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+24.8.0 (2024-08-29)
+-------------------
+
+This release contains a large number of bug fixes and small improvements, and
+sets the stage for the major cycling improvement (:issue:`750`) coming in the
+next release in a few days.
+
+* Parse recipe variables as python literals by `@jfrost-mo`_ in :pr:`683`
+* Fixed metplus config issue  by `@dasha-shchep`_ in :pr:`693`
+* Clarify error message on missing files by `@jfrost-mo`_ in :pr:`663`
+* Update testing.rst by `@Sylviabohnenstengel`_ in :pr:`696`
+* Correct rst syntax added in #696 by `@jfrost-mo`_ in :pr:`700`
+* Suggest descriptive PR titles instead of changelog entry by `@jfrost-mo`_ in
+  :pr:`701`
+* Improve PR title documentation in developer's guide by `@jfrost-mo`_ in
+  :pr:`707`
+* Remove Fixes placeholder in PR template by `@jfrost-mo`_ in :pr:`705`
+* Update section header to match PR checklist item by `@jfrost-mo`_ in :pr:`704`
+* Minor wording tweak in marking PR as ready to review docs by `@jfrost-mo`_ in
+  :pr:`702`
+* Add canonical URL links to documentation by `@jfrost-mo`_ in :pr:`650`
+* Clarify running specific tests by `@jfrost-mo`_ in :pr:`703`
+* Fix SET_SUBAREA being required to run some LFRIC recipes by `@dasha-shchep`_
+  in :pr:`717`
+* Remove deprecated postage stamp contour plot operator by `@jfrost-mo`_ in
+  :pr:`710`
+* Remove unneeded fallback code for old recipe step keys by `@jfrost-mo`_ in
+  :pr:`711`
+* Test vertical plotting with a filename specified by `@jfrost-mo`_ in :pr:`712`
+* Test running recipes with no collate steps and running with a specified style
+  file by `@jfrost-mo`_ in :pr:`713`
+* Test handling of masked arrays in convection operators, and load convection
+  test files with fixtures by `@jfrost-mo`_ in :pr:`714`
+* Ignore cartopy DownloadWarning in pytest by `@jfrost-mo`_ in :pr:`716`
+* LFRic extension to vertical profile by `@Sylviabohnenstengel`_ in :pr:`638`
+* Remove unneeded rose edit setting by `@jfrost-mo`_ in :pr:`722`
+* Test higher dimensional orography handling in convection operators by
+  `@jfrost-mo`_ in :pr:`715`
+* Support STASH codes in generate_var_constraint by `@jfrost-mo`_ in :pr:`723`
+* Add cross-section transect functionality by `@jwarner8`_ in :pr:`531`
+* Extend UM vertical plotting to model level by `@Sylviabohnenstengel`_ in
+  :pr:`697`
+* UM spatial plot on model levels by `@Sylviabohnenstengel`_ in :pr:`699`
+* Enable spatial fields on full and half levels by `@Sylviabohnenstengel`_ in
+  :pr:`695`
+* Fix bug in transect operator by `@jwarner8`_ in :pr:`731`
+* Unquote double quoted shell values by `@jfrost-mo`_ in :pr:`729`
+* Remove invalid rose meta trigger for removed variable by `@jfrost-mo`_ in
+  :pr:`733`
+* Add _utils operators to internal function documentation by `@jfrost-mo`_ in
+  :pr:`735`
+* Don't check documentation hyperlinks in commit CI by `@jfrost-mo`_ in
+  :pr:`749`
+* Generate Histograms for 2D field by `@Sylviabohnenstengel`_ in :pr:`594`
+* Tidy up documentation around recipes and cset bake command, introducing
+  examples by `@Sylviabohnenstengel`_ in :pr:`641`
+* Create operator to combine Cubes/CubeList into single CubeList by `@jwarner8`_
+  in :pr:`738`
+* Update copyright attribution per legal advice by `@jfrost-mo`_ in :pr:`753`
+* Regrid to take CubeList and Cubes by `@jwarner8`_ in :pr:`734`
+* Enhance level filter operator to return all vertical levels by `@jwarner8`_ in
+  :pr:`728`
+* Mass retrieval fix by `@jwarner8`_ in :pr:`759`
+* Copy source files from any named folder when installing locally by
+  `@jfrost-mo`_ in :pr:`472`
+* Add missing brackets to TemporaryDirectory call when installing local CSET by
+  `@jfrost-mo`_ in :pr:`760`
+* Move all website files under the workflow shared directory by `@jfrost-mo`_ in
+  :pr:`764`
+* Fix overwriting when using transect on multiple variables by `@jwarner8`_ in
+  :pr:`766`
+* Add Q-Q plot functionality by `@daflack`_ in :pr:`642`
+* Add nc-time-axis to dependencies by `@jwarner8`_ in :pr:`767`
+* Fix plot frames jumping around by `@jwarner8`_ in :pr:`772`
+* Surface field histogram by `@Sylviabohnenstengel`_ in :pr:`640`
+* Preload plot images on web page by `@jfrost-mo`_ in :pr:`781`
+* Extract single point data by `@JKPShonk`_ in :pr:`577`
+* Filter irrelevant warning raised by regrid test by `@jfrost-mo`_ in :pr:`796`
+* Merge and concatenate cubes on load by `@jfrost-mo`_ in :pr:`790`
+* Allow Point cell methods for empty constraint, making it possible to unify UM
+  and LFRic recipes by `@jfrost-mo`_ in :pr:`778`
+* Merge install_local_cset into build_conda so environment is setup in a single
+  cylc task by `@jfrost-mo`_ in :pr:`791`
+* Convert time AuxCoord to DimCoord for LFRic data by `@jfrost-mo`_ in :pr:`789`
+* Cancel running PR checks if new commit is pushed by `@jfrost-mo`_ in :pr:`793`
+* Stop ruff warning about ignore-init-module-imports by `@jfrost-mo`_ in
+  :pr:`800`
+* Parsing of float in workflow by `@jwarner8`_ in :pr:`802`
+* Configurable plotting resolution by `@jfrost-mo`_ in :pr:`803`
+* General small plot improvements and website organisation by `@jwarner8`_ in
+  :pr:`801`
+* Set figsize to consistent 8 by 8 inches, and reduce resolution to 100 dpi by
+  `@jfrost-mo`_ in :pr:`786`
+* Remove LFRic specific recipes now recipes can handle both UM and LFRic data by
+  `@jfrost-mo`_ in :pr:`805`
+* Move workflow utility code into unstable module within CSET package by
+  `@jfrost-mo`_ in :pr:`792`
+* Add pcolormesh plotting operator by `@jfrost-mo`_ in :pr:`787`
+* Use pcolormesh for Quicklook surface spatial plots by `@jfrost-mo`_ in :pr:`788`
+* Create the plot index in finish_website to avoid a data race between
+  concurrent index writers by `@jfrost-mo`_ in :pr:`794`
+* `@dasha-shchep`_ Fixes METPLUS metadata issue in :pr:`692`
 * `@JKPShonk`_ and `@cehalliwell`_ added functionality to CSET to allow it to
    generate time series plots from model data mapped on to a selected
    longitude/latitude location in :pr:`577`
 * `@Sylviabohnenstengel`_ add pdf functionality for spatial fields in :pr:`594`.
-* `@Sylviabohnenstengel`_ documentation: add info on quick pytesting in :pr:`696`
-* `@Sylviabohnenstengel`_ add constraint operator for lfric full_levels and half_levels
-* `@Sylviabohnenstengel`_ introduced lfric_model_level and lfric_model_level_field to rose meta
-* `@Sylviabohnenstengel`_ expand plot operator add plotting lfric vertical profiles on model levels
-* `@Sylviabohnenstengel`_ expand plot operator add plotting on model levels to spatial plot operator
-* `@Sylviabohnenstengel`_ added new recipe for plotting vertical profiles on model levels for lfric.
-* `@Sylviabohnenstengel`_ added new recipe for plotting spatial lfric data on model levels.
+* `@Sylviabohnenstengel`_ documentation: add info on quick pytesting in
+  :pr:`696`
+* `@Sylviabohnenstengel`_ add constraint operator for lfric full_levels and
+  half_levels
+* `@Sylviabohnenstengel`_ introduced lfric_model_level and
+  lfric_model_level_field to rose meta
+* `@Sylviabohnenstengel`_ expand plot operator add plotting lfric vertical
+  profiles on model levels
+* `@Sylviabohnenstengel`_ expand plot operator add plotting on model levels to
+  spatial plot operator
+* `@Sylviabohnenstengel`_ added new recipe for plotting vertical profiles on
+  model levels for lfric.
+* `@Sylviabohnenstengel`_ added new recipe for plotting spatial lfric data on
+  model levels.
 * `@Sylviabohnenstengel`_ added a vertical line plotting operator that plots
   vertical profiles using an optional series coordinate and an optional sequence
   coordinate. The series coordinate is currently tested for pressure and the
