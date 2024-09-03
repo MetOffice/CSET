@@ -8,7 +8,7 @@
         CSET_RECIPE_NAME = "generic_surface_single_point_time_series.yaml"
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
-            --MODEL_NAME='{{models[model_number-1]["name"]}}'
+            --MODEL_NAME='{{models[model_number]["name"]}}'
             --LONGITUDE_POINT='{{LONGITUDE_POINT}}'
             --LATITUDE_POINT='{{LATITUDE_POINT}}'
             --SINGLE_POINT_METHOD='{{SINGLE_POINT_METHOD}}'

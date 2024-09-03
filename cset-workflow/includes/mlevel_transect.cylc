@@ -11,7 +11,7 @@
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
             --VERTICAL_COORDINATE='model_level_number'
-            --MODEL_NAME='{{models[model_number-1]["name"]}}'
+            --MODEL_NAME='{{models[model_number]["name"]}}'
             --START_COORDS='{{MLEVEL_TRANSECT_STARTCOORDS}}'
             --FINISH_COORDS='{{MLEVEL_TRANSECT_FINISHCOORDS}}'
         """
