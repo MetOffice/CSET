@@ -42,7 +42,7 @@
         CSET_RECIPE_NAME = "generic_basic_qq_plot.yaml"
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
-            --MODEL_NAME='{{models[model_number-1]["name"]}}'
+            --MODEL_NAME='{{models[model_number]["name"]}}'
         """
         MODEL_NUMBER = {{model_number}}
 {% endfor %}
