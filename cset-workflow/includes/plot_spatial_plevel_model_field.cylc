@@ -10,7 +10,7 @@
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
             --PLEVEL='{{plevel}}'
-            --MODEL_NAME='{{models[model_number-1]["name"]}}'
+            --MODEL_NAME='{{models[model_number]["name"]}}'
         """
         MODEL_NUMBER = {{model_number}}
 {% endfor %}

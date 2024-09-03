@@ -8,7 +8,7 @@
         CSET_RECIPE_NAME = "generic_surface_domain_mean_time_series.yaml"
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
-            --MODEL_NAME='{{models[model_number-1]["name"]}}'
+            --MODEL_NAME='{{models[model_number]["name"]}}'
         """
         MODEL_NUMBER = {{model_number}}
 {% endfor %}
