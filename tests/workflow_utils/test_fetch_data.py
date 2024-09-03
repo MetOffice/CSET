@@ -84,7 +84,7 @@ def test_fetch_data(monkeypatch, tmp_path):
 
     files_gotten = False
 
-    class MockFileRetriever(fetch_data.FileRetriever):
+    class MockFileRetriever(fetch_data.FileRetrieverABC):
         def get_file(self, file_path: str, output_dir: str) -> None:
             nonlocal files_gotten
             files_gotten = True

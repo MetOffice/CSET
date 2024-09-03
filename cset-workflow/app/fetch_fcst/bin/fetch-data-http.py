@@ -6,10 +6,10 @@ import ssl
 import urllib.parse
 import urllib.request
 
-from CSET._workflow_utils.fetch_data import FileRetriever, fetch_data
+from CSET._workflow_utils.fetch_data import FileRetrieverABC, fetch_data
 
 
-class HTTPFileRetriever(FileRetriever):
+class HTTPFileRetriever(FileRetrieverABC):
     """Retrieve files via HTTP."""
 
     def get_file(self, file_path: str, output_dir: str) -> None:

@@ -19,7 +19,7 @@ logging.basicConfig(
 )
 
 
-class FileRetriever(abc.ABC):
+class FileRetrieverABC(abc.ABC):
     """Abstract class for retrieving files from a data source.
 
     The `get_file` method must be defined. Optionally the __enter__ and __exit__
@@ -31,7 +31,7 @@ class FileRetriever(abc.ABC):
     method is called for each file path.
     """
 
-    def __enter__(self) -> "FileRetriever":
+    def __enter__(self) -> "FileRetrieverABC":
         """Initialise the file retriever."""
         logging.debug("Initialising FileRetriever.")
         return self
@@ -61,7 +61,7 @@ class FileRetriever(abc.ABC):
         raise NotImplementedError
 
 
-class FilesystemFileRetriever(FileRetriever):
+class FilesystemFileRetriever(FileRetrieverABC):
     """Retrieve files from the filesystem."""
 
     def get_file(self, file_path: str, output_dir: str) -> None:
@@ -158,7 +158,7 @@ def _template_file_path(
     return paths
 
 
-def fetch_data(file_retriever: FileRetriever = FilesystemFileRetriever):
+def fetch_data(file_retriever: FileRetrieverABC = FilesystemFileRetriever):
     """Fetch the data for a model.
 
     The following environment variables need to be set:
