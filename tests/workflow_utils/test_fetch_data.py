@@ -52,13 +52,15 @@ def test_get_needed_environment_variables(monkeypatch):
         "share_dir": path,
     }
     actual = fetch_data._get_needed_environment_variables()
-    assert actual == expected
+    assert actual == expected, "Unexpected values from reading environment variables"
 
     # Check DATA_PERIOD is not there for initiation.
     monkeypatch.setenv("DATE_TYPE", "initiation")
     monkeypatch.delenv("DATA_PERIOD")
     initiation_actual = fetch_data._get_needed_environment_variables()
-    assert initiation_actual["data_period"] is None
+    assert (
+        initiation_actual["data_period"] is None
+    ), "data_period should not be set for initiation time"
 
 
 def test_fetch_data(monkeypatch, tmp_path):
