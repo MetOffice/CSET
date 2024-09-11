@@ -111,6 +111,7 @@ def _get_needed_environment_variables() -> dict:
         if variables["date_type"] != "initiation":
             raise
         variables["data_period"] = None
+    logging.debug("Environment variables loaded: %s", variables)
     return variables
 
 
