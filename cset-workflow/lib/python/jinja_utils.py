@@ -38,7 +38,7 @@ def get_models(rose_variables: dict):
     configuration.
     """
     models = []
-    for model in range(0, 9):
+    for model in range(0, 10):
         model_prefix = f"m{model:02d}_"
         model_vars = {
             key.removeprefix(model_prefix): value
