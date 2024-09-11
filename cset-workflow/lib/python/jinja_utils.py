@@ -76,11 +76,7 @@ def restructure_field_list(fields: list):
     batched = getattr(itertools, "batched", _batched)
     all_fields = batched(fields, max_number_of_models)
     rearranged = [
-        {
-            field[0] + 1: field[1]
-            for field in enumerate(equivalent_model_fields)
-            if field[1]
-        }
+        {field[0]: field[1] for field in enumerate(equivalent_model_fields) if field[1]}
         for equivalent_model_fields in all_fields
     ]
     return rearranged
