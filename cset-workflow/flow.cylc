@@ -4,8 +4,11 @@ title = CSET
 description = Workflow for running CSET.
 URL = https://metoffice.github.io/CSET
 
+# Import all of our Jinja utilities for use in the workflow.
 {% from "jinja_utils" import get_models, glob, max, min, zip, restructure_field_list, sanitise_task_name %}
+# Load a list a model detail dictionaries.
 {% set models = get_models(ROSE_SUITE_VARIABLES) %}
+
 
 [scheduling]
     # There is rarely a reason to manually set the runahead limit, as we will
@@ -57,6 +60,7 @@ URL = https://metoffice.github.io/CSET
         housekeeping_raw => housekeeping_full
         """
     {% endif %}
+
 
 [runtime]
     [[root]]
