@@ -189,6 +189,7 @@ def test_FilesystemFileRetriever_copy_error(caplog):
     assert log_record.message.startswith("Failed to copy")
 
 
+@pytest.mark.network
 def test_HTTPFileRetriever(tmp_path):
     """Test retrieving a file via HTTP."""
     url = "https://github.com/MetOffice/CSET/raw/48dc1d29846604aacb8d370b82bca31405931c87/tests/test_data/exeter_em01.nc"
@@ -200,3 +201,16 @@ def test_HTTPFileRetriever(tmp_path):
     expected_hash = "67899970eeca75b9378f0275ce86db3d1d613f2bc7a178540912848dc8a69ca7"
     actual_hash = hashlib.sha256(file.read_bytes()).hexdigest()
     assert actual_hash == expected_hash
+
+
+@pytest.mark.network
+def test_HTTPFileRetriever_no_files(tmp_path, caplog):
+    """Test warning rather than error when requested URL does not exist."""
+    with fetch_data.HTTPFileRetriever() as ffr:
+        # Should warn, but not error.
+        ffr.get_file("https://www.metoffice.gov.uk/CSET-404-testing", str(tmp_path))
+    log_record = caplog.records[0]
+    assert log_record.levelname == "WARNING"
+    assert log_record.message.startswith(
+        "Failed to retrieve https://www.metoffice.gov.uk/CSET-404-testing, error:"
+    )
