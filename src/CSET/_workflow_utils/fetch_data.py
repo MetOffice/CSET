@@ -7,7 +7,10 @@ import glob
 import logging
 import os
 import shutil
+import ssl
 import sys
+import urllib.parse
+import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from typing import Literal
@@ -20,7 +23,7 @@ logging.basicConfig(
 
 
 class FileRetrieverABC(abc.ABC):
-    """Abstract class for retrieving files from a data source.
+    """Abstract base class for retrieving files from a data source.
 
     The `get_file` method must be defined. Optionally the __enter__ and __exit__
     methods maybe be overridden to add setup or cleanup code.
@@ -84,6 +87,29 @@ class FilesystemFileRetriever(FileRetrieverABC):
                 shutil.copy(file, output_dir)
             except OSError as err:
                 logging.warning("Failed to copy %s, error: %s", file, err)
+
+
+class HTTPFileRetriever(FileRetrieverABC):
+    """Retrieve files via HTTP."""
+
+    def get_file(self, file_path: str, output_dir: str) -> None:
+        """Save a file from a HTTP address to the output directory.
+
+        Parameters
+        ----------
+        file_path: str
+            Path of the file to copy on MASS. It may contain patterns like
+            globs, which will be expanded in a system specific manner.
+        output_dir: str
+            Path to filesystem directory into which the file should be copied.
+        """
+        ctx = ssl.create_default_context()
+        save_path = urllib.parse.urlparse(file_path).path.split("/")[-1]
+        with urllib.request.urlopen(file_path, output_dir, context=ctx) as response:
+            with open(save_path, "wb") as fp:
+                # Read in 1 MiB chunks so data doesn't all have to be in memory.
+                while data := response.read(1024 * 1024):
+                    fp.write(data)
 
 
 def _get_needed_environment_variables() -> dict:
