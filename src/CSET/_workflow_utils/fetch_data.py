@@ -104,8 +104,11 @@ class HTTPFileRetriever(FileRetrieverABC):
             Path to filesystem directory into which the file should be copied.
         """
         ctx = ssl.create_default_context()
-        save_path = urllib.parse.urlparse(file_path).path.split("/")[-1]
-        with urllib.request.urlopen(file_path, output_dir, context=ctx) as response:
+        save_path = (
+            f"{output_dir.removesuffix('/')}/"
+            + urllib.parse.urlparse(file_path).path.split("/")[-1]
+        )
+        with urllib.request.urlopen(file_path, context=ctx) as response:
             with open(save_path, "wb") as fp:
                 # Read in 1 MiB chunks so data doesn't all have to be in memory.
                 while data := response.read(1024 * 1024):
