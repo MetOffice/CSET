@@ -1,4 +1,4 @@
-{% if DETERMINISTIC_PLOT_CAPE_RATIO %}
+{% if DETERMINISTIC_PLOT_CAPE_RATIO|default(False) %}
 {% for model in models %}
 [runtime]
     [[plot_cape_ratio_m{{model["number"]}}]]

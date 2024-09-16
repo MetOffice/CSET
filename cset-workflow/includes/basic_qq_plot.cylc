@@ -1,4 +1,4 @@
-{% if BASIC_QQ_PLOT %}
+{% if BASIC_QQ_PLOT|default(False) %}
 [runtime]
 {% for model_field_A, model_field_B, coord_A, coord_B in zip(MODEL_FIELDS_A, MODEL_FIELDS_B,VERTICAL_COORDINATE_A, VERTICAL_COORDINATE_B) %}
     [[generic_basic_qq_plot_{{model_field_A}}_{{model_field_B}}_parallel]]

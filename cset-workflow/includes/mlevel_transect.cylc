@@ -1,4 +1,4 @@
-{% if EXTRACT_MLEVEL_TRANSECT %}
+{% if EXTRACT_MLEVEL_TRANSECT|default(False) %}
 {% for equivalent_field in restructure_field_list(MODEL_LEVEL_MODEL_FIELDS) %}
 {% for model_number, field in equivalent_field.items() %}
 [runtime]

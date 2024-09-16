@@ -1,4 +1,4 @@
-{% if DOMAIN_MEAN_VERTICAL_PROFILE_MODELLEVEL_SERIES %}
+{% if DOMAIN_MEAN_VERTICAL_PROFILE_MODELLEVEL_SERIES|default(False) %}
 {% for equivalent_field in restructure_field_list(MODEL_LEVEL_MODEL_FIELDS) %}
 {% for model_number, field in equivalent_field.items() %}
 [runtime]

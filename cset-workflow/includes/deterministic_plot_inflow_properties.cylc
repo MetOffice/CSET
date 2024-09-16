@@ -1,4 +1,4 @@
-{% if DETERMINISTIC_PLOT_INFLOW_PROPERTIES %}
+{% if DETERMINISTIC_PLOT_INFLOW_PROPERTIES|default(False) %}
 {% for model in models %}
 [runtime]
     [[inflow_layer_properties_plot_m{{model["number"]}}]]

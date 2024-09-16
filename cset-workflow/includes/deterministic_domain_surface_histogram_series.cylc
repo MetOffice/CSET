@@ -1,4 +1,4 @@
-{% if DOMAIN_SURFACE_HISTOGRAM_SERIES_FIELD %}
+{% if DOMAIN_SURFACE_HISTOGRAM_SERIES_FIELD|default(False) %}
 {% for equivalent_field in restructure_field_list(SURFACE_MODEL_FIELDS) %}
 {% for model_number, field in equivalent_field.items() %}
 [runtime]

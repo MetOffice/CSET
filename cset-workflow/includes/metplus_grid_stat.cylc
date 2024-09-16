@@ -1,4 +1,4 @@
-{% if METPLUS_GRID_STAT %}
+{% if METPLUS_GRID_STAT|default(False) %}
 [scheduling]
     [[graph]]
     {{CSET_CYCLE_PERIOD}} = """
