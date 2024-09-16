@@ -51,6 +51,7 @@ jobs:
           name: coverage-data-${{ matrix.py-ver }}
           path: .coverage.*
           retention-days: 1
+          include-hidden-files: true
 
   coverage-report:
     if: github.event_name == 'pull_request'
