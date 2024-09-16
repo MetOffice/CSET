@@ -14,19 +14,19 @@ URL = https://metoffice.github.io/CSET
     # There is rarely a reason to manually set the runahead limit, as we will
     # usually be limited by number of concurrent jobs.
     {% if CSET_RUNAHEAD_LIMIT|default(False) %}
-    runahead limit = P{{CSET_RUNAHEAD_LIMIT}}
+        runahead limit = P{{CSET_RUNAHEAD_LIMIT}}
     {% endif %}
 
     # Initial and final cycle points cover the entire period of interest.
     {% if CSET_CYCLING_MODE == "case_study" %}
-    initial cycle point = {{ min(CSET_CASE_DATES) }}
-    final cycle point = {{ max(CSET_CASE_DATES) }}
+        initial cycle point = {{ min(CSET_CASE_DATES) }}
+        final cycle point = {{ max(CSET_CASE_DATES) }}
     {% elif CSET_CYCLING_MODE == "trial" %}
-    initial cycle point = {{CSET_TRIAL_START_DATE}}
-    # End date can be blank.
-    {% if CSET_TRIAL_END_DATE|default(False) %}
-    final cycle point = {{CSET_TRIAL_END_DATE}}
-    {% endif %}
+        initial cycle point = {{CSET_TRIAL_START_DATE}}
+        # End date can be blank.
+        {% if CSET_TRIAL_END_DATE|default(False) %}
+            final cycle point = {{CSET_TRIAL_END_DATE}}
+        {% endif %}
     {% endif %}
 
     [[graph]]
@@ -36,19 +36,19 @@ URL = https://metoffice.github.io/CSET
     """
 
     {% if CSET_CYCLING_MODE == "case_study" %}
-    # Runs for every forecast initiation time to process the data in parallel.
-    {% for date in CSET_CASE_DATES %}
-    R1/{{date}} = """
-    setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
-    fetch_complete => PROCESS:finish-all => housekeeping_raw
-    """
-    {% endfor %}
+        # Runs for every forecast initiation time to process the data in parallel.
+        {% for date in CSET_CASE_DATES %}
+            R1/{{date}} = """
+            setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
+            fetch_complete => PROCESS:finish-all => housekeeping_raw
+            """
+        {% endfor %}
     {% elif CSET_CYCLING_MODE == "trial" %}
-    # Analyse from each forecast.
-    {{CSET_TRIAL_CYCLE_PERIOD}} = """
-    setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
-    fetch_complete => PROCESS:finish-all => housekeeping_raw
-    """
+        # Analyse from each forecast.
+        {{CSET_TRIAL_CYCLE_PERIOD}} = """
+        setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
+        fetch_complete => PROCESS:finish-all => housekeeping_raw
+        """
     {% endif %}
 
     # Can only run tasks on final cycle point if it exists, so skip for
@@ -71,23 +71,23 @@ URL = https://metoffice.github.io/CSET
         # defined.
         CSET_ENV_USE_MODULES = {{CSET_ENV_USE_MODULES|default(False)}}
         {% if CSET_ENV_USE_MODULES|default(False) %}
-        MODULES_LIST = {{MODULES_LIST}}
-        MODULES_PURGE = {{MODULES_PURGE}}
+            MODULES_LIST = {{MODULES_LIST}}
+            MODULES_PURGE = {{MODULES_PURGE}}
         {% endif %}
 
         CSET_ENV_USE_CONDA = {{CSET_ENV_USE_CONDA|default(False)}}
         {% if CSET_ENV_USE_CONDA|default(False) %}
-        CONDA_PATH = {{CONDA_PATH}}
-        CONDA_VENV_LOCATION = {{CONDA_VENV_LOCATION}}
+            CONDA_PATH = {{CONDA_PATH}}
+            CONDA_VENV_LOCATION = {{CONDA_VENV_LOCATION}}
         {% endif %}
 
         CSET_ENV_SEPARATE_MET = {{CSET_ENV_SEPARATE_MET|default(False)}}
         {% if CSET_ENV_SEPARATE_MET|default(False) %}
-        CONDA_METPLUS_VENV_LOCATION = {{CONDA_METPLUS_VENV_LOCATION}}
-        MET_INSTALL_DIR = {{MET_INSTALL_DIR}}
-        MET_BUILD_BASE = {{MET_BUILD_BASE}}
-        METPLUS_BASE = {{METPLUS_BASE}}
-        MET_LIBRARIES = {{MET_LIBRARIES}}
+            CONDA_METPLUS_VENV_LOCATION = {{CONDA_METPLUS_VENV_LOCATION}}
+            MET_INSTALL_DIR = {{MET_INSTALL_DIR}}
+            MET_BUILD_BASE = {{MET_BUILD_BASE}}
+            METPLUS_BASE = {{METPLUS_BASE}}
+            MET_LIBRARIES = {{MET_LIBRARIES}}
         {% endif %}
 
         LOGLEVEL = {{LOGLEVEL}}
@@ -108,10 +108,10 @@ URL = https://metoffice.github.io/CSET
     [[METPLUS]]
         [[[environment]]]
         {% if METPLUS_GRID_STAT|default(False) %}
-        METPLUS_ANA_DIR = {{METPLUS_ANA_DIR}}
-        METPLUS_FCST_DIR = {{METPLUS_FCST_DIR}}
-        METPLUS_OBS_DIR = {{METPLUS_OBS_DIR}}
-        ROSE_APP_OPT_CONF_KEYS = {{METPLUS_OPT_CONFIG_KEYS}}
+            METPLUS_ANA_DIR = {{METPLUS_ANA_DIR}}
+            METPLUS_FCST_DIR = {{METPLUS_FCST_DIR}}
+            METPLUS_OBS_DIR = {{METPLUS_OBS_DIR}}
+            ROSE_APP_OPT_CONF_KEYS = {{METPLUS_OPT_CONFIG_KEYS}}
         {% endif %}
 
     [[DUMMY_TASK]]
@@ -133,7 +133,7 @@ URL = https://metoffice.github.io/CSET
         CONDA_VENV_CREATE = {{CONDA_VENV_CREATE}}
         CSET_ENV_USE_LOCAL_CSET = {{CSET_ENV_USE_LOCAL_CSET|default(False) }}
         {% if CSET_ENV_USE_LOCAL_CSET|default(False) %}
-        CSET_LOCAL_CSET_PATH = {{CSET_LOCAL_CSET_PATH}}
+            CSET_LOCAL_CSET_PATH = {{CSET_LOCAL_CSET_PATH}}
         {% endif %}
 
     [[install_website_skeleton]]
@@ -151,7 +151,7 @@ URL = https://metoffice.github.io/CSET
         DATA_PATH = {{model["data_path"]}}
         DATE_TYPE = {{model["date_type"]}}
         {% if model["date_type"] != "initiation" %}
-        DATA_PERIOD = {{model["data_period"]}}
+            DATA_PERIOD = {{model["data_period"]}}
         {% endif %}
     {% endfor %}
 
