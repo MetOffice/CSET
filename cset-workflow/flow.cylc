@@ -8,7 +8,11 @@ URL = https://metoffice.github.io/CSET
 {% set models = get_models(ROSE_SUITE_VARIABLES) %}
 
 [scheduling]
+    # There is rarely a reason to manually set the runahead limit, as we will
+    # usually be limited by number of concurrent jobs.
+    {% if CSET_RUNAHEAD_LIMIT|default(False) %}
     runahead limit = P{{CSET_RUNAHEAD_LIMIT}}
+    {% endif %}
 
     # Initial and final cycle points cover the entire period of interest.
     {% if CSET_CYCLING_MODE == "case_study" %}
