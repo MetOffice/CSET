@@ -1,4 +1,4 @@
-{% if EXTRACT_PLEVEL_TRANSECT %}
+{% if EXTRACT_PLEVEL_TRANSECT|default(False) %}
 {% for equivalent_field in restructure_field_list(PRESSURE_LEVEL_MODEL_FIELDS) %}
 {% for model_number, field in equivalent_field.items() %}
 [runtime]

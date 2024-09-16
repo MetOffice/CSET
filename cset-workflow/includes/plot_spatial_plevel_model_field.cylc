@@ -1,4 +1,4 @@
-{% if PLOT_SPATIAL_PRESSURE_LEVEL_MODEL_FIELD %}
+{% if PLOT_SPATIAL_PRESSURE_LEVEL_MODEL_FIELD|default(False) %}
 {% for equivalent_field in restructure_field_list(PRESSURE_LEVEL_MODEL_FIELDS) %}
 {% for model_number, field in equivalent_field.items() %}
 {% for plevel in PRESSURE_LEVELS %}

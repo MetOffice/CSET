@@ -1,4 +1,4 @@
-{% if METPLUS_POINT_STAT %}
+{% if METPLUS_POINT_STAT|default(False) %}
 [scheduling]
     [[graph]]
     {{CSET_CYCLE_PERIOD}} = """

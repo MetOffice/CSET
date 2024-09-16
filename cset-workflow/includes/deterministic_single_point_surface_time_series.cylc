@@ -1,4 +1,4 @@
-{% if SURFACE_SINGLE_POINT_TIME_SERIES %}
+{% if SURFACE_SINGLE_POINT_TIME_SERIES|default(False) %}
 {% for equivalent_field in restructure_field_list(SURFACE_MODEL_FIELDS) %}
 {% for model_number, field in equivalent_field.items() %}
 [runtime]
