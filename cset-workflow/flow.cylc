@@ -147,7 +147,7 @@ URL = https://metoffice.github.io/CSET
     inherit = FETCH_DATA
         [[[environment]]]
         MODEL_NUMBER = {{model["number"]}}
-        ROSE_APP_OPT_CONF_KEYS = {{model["data_source"]}}
+        ROSE_APP_COMMAND_KEY = {{model["data_source"]}}
         DATA_PATH = {{model["data_path"]}}
         DATE_TYPE = {{model["date_type"]}}
         {% if model["date_type"] != "initiation" %}
