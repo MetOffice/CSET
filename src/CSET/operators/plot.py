@@ -1069,7 +1069,7 @@ def scatter_plot(
     filename: str = None,
     one_to_one: bool = True,
     **kwargs,
-) -> iris.cube.CubeList[iris.cube.Cube, iris.cube.Cube]:
+) -> iris.cube.CubeList:
     """Plot a scatter plot between two variables.
 
     Both cubes must be 1D.
