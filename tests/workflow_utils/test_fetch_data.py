@@ -15,6 +15,7 @@
 """Tests for fetch_data workflow utility."""
 
 import datetime
+import hashlib
 from pathlib import Path
 
 import pytest
@@ -186,3 +187,16 @@ def test_FilesystemFileRetriever_copy_error(caplog):
     log_record = caplog.records[0]
     assert log_record.levelname == "WARNING"
     assert log_record.message.startswith("Failed to copy")
+
+
+def test_HTTPFileRetriever(tmp_path):
+    """Test retrieving a file via HTTP."""
+    url = "https://github.com/MetOffice/CSET/raw/48dc1d29846604aacb8d370b82bca31405931c87/tests/test_data/exeter_em01.nc"
+    with fetch_data.HTTPFileRetriever() as hfr:
+        hfr.get_file(url, str(tmp_path))
+    file = tmp_path / "exeter_em01.nc"
+    assert file.is_file()
+    # Check file hash is correct, indicating a non-corrupt download.
+    expected_hash = "67899970eeca75b9378f0275ce86db3d1d613f2bc7a178540912848dc8a69ca7"
+    actual_hash = hashlib.sha256(file.read_bytes()).hexdigest()
+    assert actual_hash == expected_hash
