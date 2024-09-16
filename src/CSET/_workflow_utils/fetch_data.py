@@ -108,11 +108,16 @@ class HTTPFileRetriever(FileRetrieverABC):
             f"{output_dir.removesuffix('/')}/"
             + urllib.parse.urlparse(file_path).path.split("/")[-1]
         )
-        with urllib.request.urlopen(file_path, context=ctx) as response:
-            with open(save_path, "wb") as fp:
-                # Read in 1 MiB chunks so data doesn't all have to be in memory.
-                while data := response.read(1024 * 1024):
-                    fp.write(data)
+        try:
+            with urllib.request.urlopen(file_path, timeout=30, context=ctx) as response:
+                if response.status != 200:
+                    raise OSError(f"Cannot retrieve URL: {response.status}")
+                with open(save_path, "wb") as fp:
+                    # Read in 1 MiB chunks so data needn't fit in memory.
+                    while data := response.read(1024 * 1024):
+                        fp.write(data)
+        except OSError as err:
+            logging.warning("Failed to retrieve %s, error: %s", file_path, err)
 
 
 def _get_needed_environment_variables() -> dict:
