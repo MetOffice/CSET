@@ -35,14 +35,13 @@ def test_get_needed_environment_variables(monkeypatch):
     monkeypatch.setenv("CSET_ANALYSIS_OFFSET", duration_raw)
     monkeypatch.setenv("CSET_ANALYSIS_PERIOD", duration_raw)
     monkeypatch.setenv("CYLC_TASK_CYCLE_POINT", date_raw)
-    monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", path)
     monkeypatch.setenv("DATA_PATH", path)
     monkeypatch.setenv("DATA_PERIOD", duration_raw)
     monkeypatch.setenv("MODEL_NUMBER", number_raw)
+    monkeypatch.setenv("ROSE_DATAC", path)
     monkeypatch.setenv("DATE_TYPE", "validity")
 
     expected = {
-        "cycle_point": date_raw,
         "data_period": duration,
         "data_time": date,
         "date_type": "validity",
@@ -50,7 +49,7 @@ def test_get_needed_environment_variables(monkeypatch):
         "forecast_offset": duration,
         "model_number": number_raw,
         "raw_path": path,
-        "share_dir": path,
+        "rose_datac": path,
     }
     actual = fetch_data._get_needed_environment_variables()
     assert actual == expected, "Unexpected values from reading environment variables"
@@ -66,9 +65,9 @@ def test_get_needed_environment_variables_data_period_handling(monkeypatch):
     monkeypatch.setenv("CSET_ANALYSIS_OFFSET", duration_raw)
     monkeypatch.setenv("CSET_ANALYSIS_PERIOD", duration_raw)
     monkeypatch.setenv("CYLC_TASK_CYCLE_POINT", date_raw)
-    monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", path)
     monkeypatch.setenv("DATA_PATH", path)
     monkeypatch.setenv("MODEL_NUMBER", number_raw)
+    monkeypatch.setenv("ROSE_DATAC", path)
 
     # Check DATA_PERIOD is not there for initiation.
     monkeypatch.setenv("DATE_TYPE", "initiation")
@@ -88,15 +87,14 @@ def test_fetch_data(monkeypatch, tmp_path):
 
     def mock_get_needed_environment_variables():
         return {
-            "share_dir": str(tmp_path),
-            "cycle_point": "20000101T0000Z",
-            "model_number": "1",
-            "raw_path": None,
-            "date_type": None,
+            "data_period": None,
             "data_time": None,
+            "date_type": None,
             "forecast_length": None,
             "forecast_offset": None,
-            "data_period": None,
+            "model_number": "1",
+            "raw_path": None,
+            "rose_datac": f"{tmp_path}/cycle/20000101T0000Z",
         }
 
     def mock_template_file_path(*args, **kwargs):
