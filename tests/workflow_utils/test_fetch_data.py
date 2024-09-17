@@ -55,13 +55,32 @@ def test_get_needed_environment_variables(monkeypatch):
     actual = fetch_data._get_needed_environment_variables()
     assert actual == expected, "Unexpected values from reading environment variables"
 
+
+def test_get_needed_environment_variables_data_period_handling(monkeypatch):
+    """Handle data_period dependent on date type."""
+    duration_raw = "PT1H"
+    date_raw = "20000101T0000Z"
+    path = "/path/to/data"
+    number_raw = "1"
+
+    monkeypatch.setenv("CSET_ANALYSIS_OFFSET", duration_raw)
+    monkeypatch.setenv("CSET_ANALYSIS_PERIOD", duration_raw)
+    monkeypatch.setenv("CYLC_TASK_CYCLE_POINT", date_raw)
+    monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", path)
+    monkeypatch.setenv("DATA_PATH", path)
+    monkeypatch.setenv("MODEL_NUMBER", number_raw)
+
     # Check DATA_PERIOD is not there for initiation.
     monkeypatch.setenv("DATE_TYPE", "initiation")
-    monkeypatch.delenv("DATA_PERIOD")
     initiation_actual = fetch_data._get_needed_environment_variables()
     assert (
         initiation_actual["data_period"] is None
     ), "data_period should not be set for initiation time"
+
+    # Check exception when data period is not specified for validity time.
+    monkeypatch.setenv("DATE_TYPE", "validity")
+    with pytest.raises(KeyError):
+        fetch_data._get_needed_environment_variables()
 
 
 def test_fetch_data(monkeypatch, tmp_path):
