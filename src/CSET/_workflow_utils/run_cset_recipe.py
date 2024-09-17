@@ -65,10 +65,9 @@ def output_directory():
 
 def data_directory():
     """Get the input data directory for the cycle."""
-    share_directory = os.environ["CYLC_WORKFLOW_SHARE_DIR"]
-    cycle_point = os.environ["CYLC_TASK_CYCLE_POINT"]
+    rose_datac = os.environ["ROSE_DATAC"]
     model_number = os.environ["MODEL_NUMBER"]
-    return f"{share_directory}/cycle/{cycle_point}/data/{model_number}"
+    return f"{rose_datac}/data/{model_number}"
 
 
 def create_diagnostic_archive(output_directory):

@@ -134,9 +134,8 @@ def _get_needed_environment_variables() -> dict:
         "data_time": _fromisoformat(os.environ["CYLC_TASK_CYCLE_POINT"]),
         "forecast_length": isodate.parse_duration(os.environ["CSET_ANALYSIS_PERIOD"]),
         "forecast_offset": isodate.parse_duration(os.environ["CSET_ANALYSIS_OFFSET"]),
-        "share_dir": os.environ["CYLC_WORKFLOW_SHARE_DIR"],
-        "cycle_point": os.environ["CYLC_TASK_CYCLE_POINT"],
         "model_number": os.environ["MODEL_NUMBER"],
+        "rose_datac": os.environ["ROSE_DATAC"],
     }
     try:
         variables["data_period"] = isodate.parse_duration(os.environ["DATA_PERIOD"])
@@ -200,11 +199,11 @@ def fetch_data(file_retriever: FileRetrieverABC = FilesystemFileRetriever):
     * CSET_ANALYSIS_OFFSET
     * CSET_ANALYSIS_PERIOD
     * CYLC_TASK_CYCLE_POINT
-    * CYLC_WORKFLOW_SHARE_DIR
     * DATA_PATH
     * DATA_PERIOD
     * DATE_TYPE
     * MODEL_NUMBER
+    * ROSE_DATAC
 
     Parameters
     ----------
@@ -214,11 +213,9 @@ def fetch_data(file_retriever: FileRetrieverABC = FilesystemFileRetriever):
     v = _get_needed_environment_variables()
 
     # Prepare output directory.
-    cycle_share_data_dir = (
-        f"{v['share_dir']}/cycle/{v['cycle_point']}/data/{v['model_number']}"
-    )
-    os.makedirs(cycle_share_data_dir, exist_ok=True)
-    logging.debug("Output directory: %s", cycle_share_data_dir)
+    cycle_data_dir = f"{v['rose_datac']}/data/{v['model_number']}"
+    os.makedirs(cycle_data_dir, exist_ok=True)
+    logging.debug("Output directory: %s", cycle_data_dir)
 
     # Get file paths.
     paths = _template_file_path(
@@ -234,4 +231,4 @@ def fetch_data(file_retriever: FileRetrieverABC = FilesystemFileRetriever):
     # Use file retriever to transfer data with multiple threads.
     with file_retriever() as retriever, ThreadPoolExecutor() as executor:
         for path in paths:
-            executor.submit(retriever.get_file, path, cycle_share_data_dir)
+            executor.submit(retriever.get_file, path, cycle_data_dir)
