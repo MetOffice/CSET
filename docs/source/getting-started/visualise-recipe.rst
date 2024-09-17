@@ -6,7 +6,8 @@ Visualising a recipe graphically
 In this tutorial we will investigate what is going on inside of a recipe, and
 visualise the *operators* inside.
 
-As in the previous tutorial `download this example recipe file`_.
+As in the previous tutorial we can download this example recipe file:
+:download:`air_temperature_spatial_plot.yaml`
 
 We will now visualise the steps inside the recipe using the ``cset graph``
 command.
@@ -52,5 +53,3 @@ Afterwards the cube passes to the ``plot.spatial_contour_plot`` and
 
 You now know how to visualise a recipe, and a little about the operators it is
 made up of. In the next tutorial you will learn to make your own recipe.
-
-.. _download this example recipe file: https://gist.githubusercontent.com/jfrost-mo/6e539d5be20bfa28342bf4ff82f24dea/raw/air_temperature_spatial_plot.yaml
