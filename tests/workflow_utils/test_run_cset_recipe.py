@@ -84,8 +84,7 @@ def test_output_directory(monkeypatch):
 
 def test_data_directory(monkeypatch):
     """Data directory correctly interpreted."""
-    monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", "/share")
-    monkeypatch.setenv("CYLC_TASK_CYCLE_POINT", "20000101T0000Z")
+    monkeypatch.setenv("ROSE_DATAC", "/share/cycle/20000101T0000Z")
     monkeypatch.setenv("MODEL_NUMBER", "1")
     expected = "/share/cycle/20000101T0000Z/data/1"
     actual = run_cset_recipe.data_directory()
