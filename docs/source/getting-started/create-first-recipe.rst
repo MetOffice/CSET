@@ -32,7 +32,7 @@ We will now create a recipe from scratch. This recipe will plot a specific
 timestamp of the example air temperature data.
 
 Start by opening a new file in your favourite text editor, and save it somewhere
-accessible as ``single_timestep_surface_air_temperature_spatial_plot.yaml``.
+accessible as ``surface_air_temperature_spatial_plot.yaml``.
 
 Recipe Metadata
 ---------------
@@ -179,16 +179,14 @@ After following this far your recipe should look like this:
 Running the Recipe
 ------------------
 
-We can run this recipe using `the same data`_ as was used for the
-:doc:`run-recipe` tutorial.
-
-.. _the same data: https://github.com/MetOffice/CSET/raw/main/tests/test_data/air_temp.nc
+We can run this recipe using the same data as was used for the
+:doc:`run-recipe` tutorial: :download:`air_temp.nc`
 
 Use ``cset bake`` to run your newly created recipe.
 
 .. code-block:: bash
 
-    cset bake -i air_temp.nc -o output/ -r single_timestep_surface_air_temperature_spatial_plot.yaml
+    cset bake -i air_temp.nc -o output/ -r surface_air_temperature_spatial_plot.yaml
 
 You can investigate the created plot and data file in the specified ``output``
 directory.

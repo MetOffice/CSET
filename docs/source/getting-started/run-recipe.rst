@@ -9,17 +9,11 @@ this tutorial you will use CSET to plot the mean surface air temperature of a
 forecast.
 
 We will create a basic spatial plot of the mean surface air temperature, using a
-pre-existing recipe. You can `download the recipe file here`_.
+pre-existing recipe. Download the following recipe:
+:download:`air_temperature_spatial_plot.yaml`
 
-Now you need to find some data to process. You can `download an example file
-here`_, or with the following command.
-
-.. code-block:: bash
-
-    # Download recipe file.
-    curl -LO https://gist.githubusercontent.com/jfrost-mo/6e539d5be20bfa28342bf4ff82f24dea/raw/air_temperature_spatial_plot.yaml
-    # Download example data.
-    curl -LO https://github.com/MetOffice/CSET/raw/main/tests/test_data/air_temp.nc
+Now you need to find some data to process. Download the following example file:
+:download:`air_temp.nc`
 
 Now we are ready to run our recipe. This is where we use the ``cset bake``
 command. This takes the input data file, an output path and the recipe file. The
@@ -34,6 +28,3 @@ You can look at the visualised output with ``xdg-open output/index.html``.
 
 You've now successfully run CSET with a pre-existing recipe. In the next
 tutorial we will see what is going on inside.
-
-.. _download the recipe file here: https://gist.githubusercontent.com/jfrost-mo/6e539d5be20bfa28342bf4ff82f24dea/raw/air_temperature_spatial_plot.yaml
-.. _download an example file here: https://github.com/MetOffice/CSET/raw/main/tests/test_data/air_temp.nc
