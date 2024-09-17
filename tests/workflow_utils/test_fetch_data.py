@@ -227,9 +227,9 @@ def test_HTTPFileRetriever_no_files(tmp_path, caplog):
     """Test warning rather than error when requested URL does not exist."""
     with fetch_data.HTTPFileRetriever() as ffr:
         # Should warn, but not error.
-        ffr.get_file("https://www.metoffice.gov.uk/CSET-404-testing", str(tmp_path))
+        ffr.get_file("http://httpbin.org/status/404", str(tmp_path))
     log_record = caplog.records[0]
     assert log_record.levelname == "WARNING"
     assert log_record.message.startswith(
-        "Failed to retrieve https://www.metoffice.gov.uk/CSET-404-testing, error:"
+        "Failed to retrieve http://httpbin.org/status/404, error:"
     )
