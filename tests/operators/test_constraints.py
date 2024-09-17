@@ -16,6 +16,8 @@
 
 from datetime import datetime
 
+import pytest
+
 from CSET.operators import constraints
 
 
@@ -131,6 +133,17 @@ def test_generate_area_constraint_no_limits():
     area_constraint = constraints.generate_area_constraint(None, None, None, None)
     expected_area_constraint = "Constraint()"
     assert expected_area_constraint in repr(area_constraint)
+
+
+def test_generate_area_constraint_invalid_arguments():
+    """Generate area constraint raises exception with invalid arguments."""
+    # Non-numbers are rejected.
+    with pytest.raises(TypeError):
+        constraints.generate_area_constraint(1, 2, 3, "four")
+
+    # Mixed numbers and Nones are rejected.
+    with pytest.raises(TypeError):
+        constraints.generate_area_constraint(None, None, None, 0)
 
 
 def test_combine_constraints():
