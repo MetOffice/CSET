@@ -227,14 +227,15 @@ def _plot_and_save_spatial_plot(
     try:
         lataxis, lonaxis = get_cube_yxcoordname(cube)
         axes.coastlines(resolution="10m")
-        axes.set_extent(
-            [
-                np.min(cube.coord(lonaxis).points),
-                np.max(cube.coord(lonaxis).points),
-                np.min(cube.coord(lataxis).points),
-                np.max(cube.coord(lataxis).points),
-            ]
-        )
+        if cube.coord(lonaxis).points[-1] <= 180.0:
+            axes.set_extent(
+                [
+                    np.min(cube.coord(lataxis).points),
+                    np.max(cube.coord(lataxis).points),
+                    np.min(cube.coord(lataxis).points),
+                    np.max(cube.coord(lataxis).points),
+                ]
+            )
     except ValueError:
         # Skip if no x and y map coordinates.
         pass
