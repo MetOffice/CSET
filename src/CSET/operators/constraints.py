@@ -14,6 +14,7 @@
 
 """Operators to generate constraints to filter with."""
 
+import numbers
 import re
 from collections.abc import Iterable
 from datetime import datetime
@@ -177,10 +178,10 @@ def generate_time_constraint(
 
 
 def generate_area_constraint(
-    lat_start: float | str,
-    lat_end: float | str,
-    lon_start: float | str,
-    lon_end: float | str,
+    lat_start: float | None,
+    lat_end: float | None,
+    lon_start: float | None,
+    lon_end: float | None,
     **kwargs,
 ) -> iris.Constraint:
     """Generate an area constraint between latitude/longitude limits.
@@ -189,29 +190,59 @@ def generate_area_constraint(
     constraint that selects grid values only inside that area. Works with the
     data's native grid so is defined within the rotated pole CRS.
 
+    Alternatively, all arguments may be None to indicate the area should not be
+    constrained. This is useful to allow making subsetting an optional step in a
+    processing pipeline.
+
     Arguments
     ---------
-    lat_start: float
+    lat_start: float | None
         Latitude value for lower bound
-    lat_end: float
+    lat_end: float | None
         Latitude value for top bound
-    lon_start: float
+    lon_start: float | None
         Longitude value for left bound
-    lon_end: float
+    lon_end: float | None
         Longitude value for right bound
 
     Returns
     -------
     area_constraint: iris.Constraint
     """
-    if lat_start is None:
+    # Check all arguments are defined, or all are None.
+    if not (
+        all(
+            (
+                isinstance(lat_start, numbers.Real),
+                isinstance(lat_end, numbers.Real),
+                isinstance(lon_start, numbers.Real),
+                isinstance(lon_end, numbers.Real),
+            )
+        )
+        or all((lat_start is None, lat_end is None, lon_start is None, lon_end is None))
+    ):
+        raise TypeError("Bounds must real numbers, or all None.")
+
+    # Don't constrain area if all arguments are None.
+    if lat_start is None:  # Only need to check once, as they will be the same.
+        # An empty constraint allows everything.
         return iris.Constraint()
 
+    # Handle bounds crossing the date line.
+    if lon_end < lon_start:
+        lon_end = lon_end + 360
+
+    def bound_lat(cell: iris.coords.Cell) -> bool:
+        return lat_start < cell < lat_end
+
+    def bound_lon(cell: iris.coords.Cell) -> bool:
+        # Adjust cell values to handle crossing the date line.
+        if cell < lon_start:
+            cell = cell + 360
+        return lon_start < cell < lon_end
+
     area_constraint = iris.Constraint(
-        coord_values={
-            "grid_latitude": lambda cell: lat_start < cell < lat_end,
-            "grid_longitude": lambda cell: lon_start < cell < lon_end,
-        }
+        coord_values={"grid_latitude": bound_lat, "grid_longitude": bound_lon}
     )
     return area_constraint
 
