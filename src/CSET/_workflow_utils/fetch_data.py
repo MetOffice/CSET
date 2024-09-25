@@ -4,6 +4,7 @@
 
 import abc
 import glob
+import itertools
 import logging
 import os
 import shutil
@@ -41,7 +42,7 @@ class FileRetrieverABC(abc.ABC):
         logging.debug("Tearing down FileRetriever.")
 
     @abc.abstractmethod
-    def get_file(self, file_path: str, output_dir: str) -> None:  # pragma: no cover
+    def get_file(self, file_path: str, output_dir: str) -> bool:  # pragma: no cover
         """Save a file from the data source to the output directory.
 
         Not all of the given paths will exist, so FileNotFoundErrors should be
@@ -57,6 +58,11 @@ class FileRetrieverABC(abc.ABC):
             like globs, which will be expanded in a system specific manner.
         output_dir: str
             Path to filesystem directory into which the file should be copied.
+
+        Returns
+        -------
+        bool:
+            True if files were transferred, otherwise False.
         """
         raise NotImplementedError
 
@@ -64,7 +70,7 @@ class FileRetrieverABC(abc.ABC):
 class FilesystemFileRetriever(FileRetrieverABC):
     """Retrieve files from the filesystem."""
 
-    def get_file(self, file_path: str, output_dir: str) -> None:
+    def get_file(self, file_path: str, output_dir: str) -> bool:
         """Save a file from the filesystem to the output directory.
 
         Parameters
@@ -74,16 +80,24 @@ class FilesystemFileRetriever(FileRetrieverABC):
             like globs, which will be expanded in a system specific manner.
         output_dir: str
             Path to filesystem directory into which the file should be copied.
+
+        Returns
+        -------
+        bool:
+            True if files were transferred, otherwise False.
         """
         file_paths = glob.glob(os.path.expanduser(file_path))
         logging.debug("Copying files:\n%s", "\n".join(file_paths))
         if not file_paths:
             logging.warning("file_path does not match any files: %s", file_path)
+        any_files_copied = False
         for file in file_paths:
             try:
                 shutil.copy(file, output_dir)
+                any_files_copied = True
             except OSError as err:
                 logging.warning("Failed to copy %s, error: %s", file, err)
+        return any_files_copied
 
 
 def _get_needed_environment_variables() -> dict:
@@ -176,6 +190,11 @@ def fetch_data(file_retriever: FileRetrieverABC = FilesystemFileRetriever):
     ----------
     file_retriever: FileRetriever
         FileRetriever implementation to use. Defaults to FilesystemFileRetriever.
+
+    Raises
+    ------
+    FileNotFound:
+        If no files are found for the model, across all tried paths.
     """
     v = _get_needed_environment_variables()
 
@@ -199,5 +218,13 @@ def fetch_data(file_retriever: FileRetrieverABC = FilesystemFileRetriever):
 
     # Use file retriever to transfer data with multiple threads.
     with file_retriever() as retriever, ThreadPoolExecutor() as executor:
-        for path in paths:
-            executor.submit(retriever.get_file, path, cycle_share_data_dir)
+        files_found = any(
+            executor.map(
+                retriever.get_file, paths, itertools.repeat(cycle_share_data_dir)
+            )
+        )
+    # We don't need to exhause the iterator, as all futures are submitted
+    # before map yields anything. Therefore they will all be resolved upon
+    # exiting the with block.
+    if not files_found:
+        raise FileNotFoundError("No files found for model!")

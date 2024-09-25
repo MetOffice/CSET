@@ -88,6 +88,7 @@ def test_fetch_data(monkeypatch, tmp_path):
         def get_file(self, file_path: str, output_dir: str) -> None:
             nonlocal files_gotten
             files_gotten = True
+            return True
 
     monkeypatch.setattr(
         fetch_data,
