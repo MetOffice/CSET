@@ -100,12 +100,13 @@ def test_fetch_data(monkeypatch, tmp_path):
     def mock_template_file_path(*args, **kwargs):
         return [f"path_{n}" for n in range(5)]
 
-    files_gotten = False
+    # Check get_file is called appropriately when fetching data.
+    actually_called = False
 
     class MockFileRetriever(fetch_data.FileRetrieverABC):
         def get_file(self, file_path: str, output_dir: str) -> None:
-            nonlocal files_gotten
-            files_gotten = True
+            nonlocal actually_called
+            actually_called = True
             return True
 
     monkeypatch.setattr(
@@ -115,7 +116,15 @@ def test_fetch_data(monkeypatch, tmp_path):
     )
     monkeypatch.setattr(fetch_data, "_template_file_path", mock_template_file_path)
     fetch_data.fetch_data(MockFileRetriever)
-    assert files_gotten
+    assert actually_called
+
+    # Check exception is raised when no files found.
+    class MockFileRetrieverNoFiles(fetch_data.FileRetrieverABC):
+        def get_file(self, file_path: str, output_dir: str) -> None:
+            return False
+
+    with pytest.raises(FileNotFoundError):
+        fetch_data.fetch_data(MockFileRetrieverNoFiles)
 
 
 def test_template_file_path_validity_time():
