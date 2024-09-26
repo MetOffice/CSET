@@ -23,6 +23,25 @@ import pytest
 from CSET._workflow_utils import fetch_data
 
 
+def mock_get_needed_environment_variables():
+    """Minimal set of environment variables for running a mock fetch_data."""
+    return {
+        "data_period": None,
+        "data_time": None,
+        "date_type": None,
+        "forecast_length": None,
+        "forecast_offset": None,
+        "model_number": "1",
+        "raw_path": None,
+        "rose_datac": "/tmp/cycle/20000101T0000Z",
+    }
+
+
+def mock_template_file_path(*args, **kwargs):
+    """List of paths for testing with."""
+    return [f"path_{n}" for n in range(5)]
+
+
 def test_get_needed_environment_variables(monkeypatch):
     """Needed environment variables are loaded."""
     duration_raw = "PT1H"
@@ -82,25 +101,8 @@ def test_get_needed_environment_variables_data_period_handling(monkeypatch):
         fetch_data._get_needed_environment_variables()
 
 
-def test_fetch_data(monkeypatch, tmp_path):
-    """Test top-level fetch_data function with other calls mocked out."""
-
-    def mock_get_needed_environment_variables():
-        return {
-            "data_period": None,
-            "data_time": None,
-            "date_type": None,
-            "forecast_length": None,
-            "forecast_offset": None,
-            "model_number": "1",
-            "raw_path": None,
-            "rose_datac": f"{tmp_path}/cycle/20000101T0000Z",
-        }
-
-    def mock_template_file_path(*args, **kwargs):
-        return [f"path_{n}" for n in range(5)]
-
-    # Check get_file is called appropriately when fetching data.
+def test_fetch_data(monkeypatch):
+    """Check get_file is called appropriately when fetching data."""
     actually_called = False
 
     class MockFileRetriever(fetch_data.FileRetrieverABC):
@@ -118,13 +120,27 @@ def test_fetch_data(monkeypatch, tmp_path):
     fetch_data.fetch_data(MockFileRetriever)
     assert actually_called
 
-    # Check exception is raised when no files found.
+
+def test_fetch_data_no_files_found(monkeypatch):
+    """Check exception is raised when no files found."""
+    actually_called = False
+
     class MockFileRetrieverNoFiles(fetch_data.FileRetrieverABC):
         def get_file(self, file_path: str, output_dir: str) -> None:
+            nonlocal actually_called
+            actually_called = True
             return False
 
-    with pytest.raises(FileNotFoundError):
+    monkeypatch.setattr(
+        fetch_data,
+        "_get_needed_environment_variables",
+        mock_get_needed_environment_variables,
+    )
+    monkeypatch.setattr(fetch_data, "_template_file_path", mock_template_file_path)
+    with pytest.raises(FileNotFoundError, match="No files found for model!"):
         fetch_data.fetch_data(MockFileRetrieverNoFiles)
+
+    assert actually_called
 
 
 def test_template_file_path_validity_time():
@@ -190,30 +206,33 @@ def test_template_file_path_invalid_date_type():
 def test_FilesystemFileRetriever(tmp_path):
     """Test retrieving a file from the filesystem."""
     with fetch_data.FilesystemFileRetriever() as ffr:
-        ffr.get_file("tests/test_data/exeter_em*.nc", str(tmp_path))
+        files_found = ffr.get_file("tests/test_data/exeter_em*.nc", str(tmp_path))
     assert (tmp_path / "exeter_em01.nc").is_file()
     assert (tmp_path / "exeter_em02.nc").is_file()
+    assert files_found
 
 
 def test_FilesystemFileRetriever_no_files(tmp_path, caplog):
     """Test warning when no files match the requested path."""
     with fetch_data.FilesystemFileRetriever() as ffr:
         # Should warn, but not error.
-        ffr.get_file("/non-existent/file.nc", str(tmp_path))
+        files_found = ffr.get_file("/non-existent/file.nc", str(tmp_path))
     log_record = caplog.records[0]
     assert log_record.levelname == "WARNING"
     assert log_record.message.startswith("file_path does not match any files:")
+    assert not files_found
 
 
 def test_FilesystemFileRetriever_copy_error(caplog):
     """Test warning when file copy errors."""
     with fetch_data.FilesystemFileRetriever() as ffr:
         # Please don't run as root.
-        ffr.get_file("tests/test_data/air_temp.nc", "/usr/bin")
+        files_found = ffr.get_file("tests/test_data/air_temp.nc", "/usr/bin")
     assert not Path("/usr/bin/air_temp.nc").is_file()
     log_record = caplog.records[0]
     assert log_record.levelname == "WARNING"
     assert log_record.message.startswith("Failed to copy")
+    assert not files_found
 
 
 @pytest.mark.network
@@ -221,23 +240,25 @@ def test_HTTPFileRetriever(tmp_path):
     """Test retrieving a file via HTTP."""
     url = "https://github.com/MetOffice/CSET/raw/48dc1d29846604aacb8d370b82bca31405931c87/tests/test_data/exeter_em01.nc"
     with fetch_data.HTTPFileRetriever() as hfr:
-        hfr.get_file(url, str(tmp_path))
+        files_found = hfr.get_file(url, str(tmp_path))
     file = tmp_path / "exeter_em01.nc"
     assert file.is_file()
     # Check file hash is correct, indicating a non-corrupt download.
     expected_hash = "67899970eeca75b9378f0275ce86db3d1d613f2bc7a178540912848dc8a69ca7"
     actual_hash = hashlib.sha256(file.read_bytes()).hexdigest()
     assert actual_hash == expected_hash
+    assert files_found
 
 
 @pytest.mark.network
 def test_HTTPFileRetriever_no_files(tmp_path, caplog):
     """Test warning rather than error when requested URL does not exist."""
-    with fetch_data.HTTPFileRetriever() as ffr:
+    with fetch_data.HTTPFileRetriever() as hfr:
         # Should warn, but not error.
-        ffr.get_file("http://httpbin.org/status/404", str(tmp_path))
+        files_found = hfr.get_file("http://httpbin.org/status/404", str(tmp_path))
     log_record = caplog.records[0]
     assert log_record.levelname == "WARNING"
     assert log_record.message.startswith(
         "Failed to retrieve http://httpbin.org/status/404, error:"
     )
+    assert not files_found
