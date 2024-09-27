@@ -19,10 +19,12 @@ jobs:
       matrix:
         py-ver: ["py310", "py311", "py312"]
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+
       - name: Cache conda environment
         id: conda-env-cache
-        uses: actions/cache@v4
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9
         with:
           key: conda|${{runner.os}}-${{runner.arch}}|${{ hashFiles(format('requirements/locks/{0}-lock-linux-64.txt', matrix.py-ver)) }}
           path: |
@@ -46,7 +48,7 @@ jobs:
           echo '::endgroup::'
           pytest --verbose --cov --cov-append --cov-config=pyproject.toml
           mv .coverage ".coverage.${{ matrix.py-ver }}"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874
         with:
           name: coverage-data-${{ matrix.py-ver }}
           path: .coverage.*
@@ -61,13 +63,15 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+      - name: Setup python
+        uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3
         with:
           python-version: "3.x"
       - name: Install coverage
         run: python3 -m pip install coverage
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
         with:
           pattern: coverage-data-*
           merge-multiple: true
@@ -94,12 +98,13 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3
         with:
           python-version: "3.x"
-      - uses: actions/cache@v4
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9
         with:
           key: pre-commit|${{runner.os}}-${{runner.arch}}|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
           path: ~/.cache/pre-commit
@@ -114,10 +119,11 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
       - name: Cache conda environment
         id: conda-env-cache
-        uses: actions/cache@v4
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9
         with:
           key: conda|${{runner.os}}-${{runner.arch}}|${{hashFiles('requirements/locks/py312-lock-linux-64.txt')}}
           path: |
@@ -142,7 +148,7 @@ jobs:
           sphinx-build -b html --color -W --keep-going "docs/source" "docs/build/html"
           echo '::endgroup::'
       - name: Upload documentation artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874
         with:
           name: html-docs
           path: docs/build/html/
