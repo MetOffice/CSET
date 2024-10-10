@@ -10,3 +10,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+        actions-dependencies:
+          # Only group minor and patch updates. We want to carefully review
+          # major updates.
+          update-types: [minor, patch]

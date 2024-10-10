@@ -9,11 +9,12 @@ jobs:
   check-documentation-hyperlinks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
 
       - name: Cache conda environment
         id: conda-env-cache
-        uses: actions/cache@v4
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9
         with:
           key: conda|${{runner.os}}-${{runner.arch}}|${{hashFiles('requirements/locks/py312-lock-linux-64.txt')}}
           path: |
@@ -43,7 +44,7 @@ jobs:
           echo '::group::Checking for broken hyperlinks'
           sphinx-build -b linkcheck --color -W --keep-going "docs/source" "docs/build/linkcheck"
           echo '::endgroup::'
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874
         with:
           name: html-docs
           path: docs/build/html/

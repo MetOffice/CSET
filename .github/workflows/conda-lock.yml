@@ -13,9 +13,11 @@ jobs:
   update-conda-lock-files:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
 
-      - uses: actions/setup-python@v5
+      - name: Setup python
+        uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3
         with:
           python-version: "3.11"
 
@@ -52,7 +54,7 @@ jobs:
           wait
 
       - name: Generate GitHub App Token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@5d869da34e18e7287c1daad50e0b8ea0f506ce69
         id: app-token
         with:
           app-id: ${{ secrets.AUTH_APP_ID }}

@@ -13,16 +13,18 @@ jobs:
   build-package:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
 
-      - uses: actions/setup-python@v5
+      - name: Setup python
+        uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3
         with:
             python-version: "3.x"
 
       - name: Install dependencies
         run: python3 -m pip install tox tox-conda
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9
         with:
             key: tox|build-package|${{ runner.os }}-${{ runner.arch}}|${{ hashFiles('requirements/locks/*') }}
             path: .tox
@@ -30,7 +32,7 @@ jobs:
       - name: Build package
         run: tox -e build-package
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874
         with:
           name: packages
           path: dist/
@@ -46,7 +48,7 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
         with:
           name: packages
           path: dist/
@@ -57,7 +59,8 @@ jobs:
       # - name: Publish package distributions to PyPI
       #   uses: pypa/gh-action-pypi-publish@release/v1
 
-      - uses: actions/setup-python@v5
+      - name: Setup python
+        uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3
         with:
             python-version: "3.x"
 
