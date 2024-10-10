@@ -10,11 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+        uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871
 
       - name: Cache conda environment
         id: conda-env-cache
-        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9
+        uses: actions/cache@3624ceb22c1c5a301c8db4169662070a689d9ea8
         with:
           key: conda|${{runner.os}}-${{runner.arch}}|${{hashFiles('requirements/locks/py312-lock-linux-64.txt')}}
           path: |
@@ -44,7 +44,7 @@ jobs:
           echo '::group::Checking for broken hyperlinks'
           sphinx-build -b linkcheck --color -W --keep-going "docs/source" "docs/build/linkcheck"
           echo '::endgroup::'
-      - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874
+      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
         with:
           name: html-docs
           path: docs/build/html/
