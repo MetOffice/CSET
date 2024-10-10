@@ -1029,9 +1029,7 @@ def plot_vertical_line_series(
 
     # Set the lower and upper limit for the x-axis to ensure all plots have same
     # range. This needs to read the whole cube over the range of the sequence
-    # and if applicable postage stamp coordinate. This only works if the
-    # plotting is done in the collate section of a recipe and not in the
-    # parallel section of a recipe.
+    # and if applicable postage stamp coordinate.
     vmin = np.floor(cube.data.min())
     vmax = np.ceil(cube.data.max())
 
@@ -1071,7 +1069,7 @@ def scatter_plot(
     filename: str = None,
     one_to_one: bool = True,
     **kwargs,
-) -> tuple[iris.cube.Cube, iris.cube.Cube]:
+) -> iris.cube.CubeList:
     """Plot a scatter plot between two variables.
 
     Both cubes must be 1D.
@@ -1085,15 +1083,12 @@ def scatter_plot(
     filename: str, optional
         Filename of the plot to write.
     one_to_one: bool, optional
-        If True a 1:1 line is plotted; if False it is not.
-        Default is True.
+        If True a 1:1 line is plotted; if False it is not. Default is True.
 
     Returns
     -------
-    cube_x
-        The original x cube (so further operations can be applied).
-    cube_y
-        The original y cube (so further operations can be applied).
+    cubes: CubeList
+        CubeList of the original x and y cubes for further processing.
 
     Raises
     ------
@@ -1106,18 +1101,17 @@ def scatter_plot(
     Notes
     -----
     Scatter plots are used for determining if there is a relationship between
-    two variables. Positive relations have a slope going from bottom left to
-    top right; Negative relations have a slope going from top left to bottom
-    right.
+    two variables. Positive relations have a slope going from bottom left to top
+    right; Negative relations have a slope going from top left to bottom right.
 
     A variant of the scatter plot is the quantile-quantile plot. This plot does
     not use all data points, but the selected quantiles of each variable
     instead. Quantile-quantile plots are valuable for comparing against
     observations and other models. Identical percentiles between the variables
     will lie on the one-to-one line implying the values correspond well to each
-    other. Where there is a deviation from the one-to-one line a range
-    of possibilities exist depending on how and where the data is shifted
-    (e.g., Wilks 2011 [Wilks2011]_).
+    other. Where there is a deviation from the one-to-one line a range of
+    possibilities exist depending on how and where the data is shifted (e.g.,
+    Wilks 2011 [Wilks2011]_).
 
     For distributions above the one-to-one line the distribution is left-skewed;
     below is right-skewed. A distinct break implies a bimodal distribution, and
@@ -1155,7 +1149,7 @@ def scatter_plot(
     # Make a page to display the plots.
     _make_plot_html_page(plot_index)
 
-    return cube_x, cube_y
+    return iris.cube.CubeList([cube_x, cube_y])
 
 
 def plot_histogram_series(
@@ -1247,9 +1241,7 @@ def plot_histogram_series(
 
     # Set the lower and upper limit for the colorbar to ensure all plots have
     # same range. This needs to read the whole cube over the range of the
-    # sequence and if applicable postage stamp coordinate. This only works if
-    # the plotting is done in the collate section of a recipe and not in the
-    # parallel section of a recipe.
+    # sequence and if applicable postage stamp coordinate.
     vmin = np.floor((cube.data.min()))
     vmax = np.ceil((cube.data.max()))
 

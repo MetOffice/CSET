@@ -13,20 +13,20 @@ page.
 
 .. code-block:: text
 
-    usage: cset bake [-h] [-i INPUT_DIR] -o OUTPUT_DIR -r RECIPE [--pre-only | --post-only] [-s STYLE_FILE]
+    usage: cset bake [-h] -i INPUT_DIR -o OUTPUT_DIR -r RECIPE [-s STYLE_FILE] [--plot-resolution PLOT_RESOLUTION]
 
     options:
-    -h, --help              show this help message and exit
+    -h, --help            show this help message and exit
     -i INPUT_DIR, --input-dir INPUT_DIR
                             directory containing input data
     -o OUTPUT_DIR, --output-dir OUTPUT_DIR
                             directory to write output into
     -r RECIPE, --recipe RECIPE
                             recipe file to read
-    --parallel-only         only run parallel steps
-    --collate-only          only run collation steps
     -s STYLE_FILE, --style-file STYLE_FILE
                             colour bar definition to use
+    --plot-resolution PLOT_RESOLUTION
+                            plotting resolution in dpi
 
 Here is an example to run a recipe making use of the templated variable ``VARNAME`` in the recipe.
 The '-v' is optional to give verbose output::
@@ -57,7 +57,7 @@ or use ``--details`` for descriptions of available recipes.
 
     options:
     -h, --help            show this help message and exit
-    -d, --details         list available recipes. Supplied recipes are detailed.
+    -d, --details         list available recipes. Supplied recipes are detailed
     -o OUTPUT_DIR, --output-dir OUTPUT_DIR
                             directory to save recipes. If omitted uses $PWD
 

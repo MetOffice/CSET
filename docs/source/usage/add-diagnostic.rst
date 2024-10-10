@@ -175,7 +175,6 @@ Push code into remote repository branch with:
     # Just "git push" will suggest the correct command.
     git push --set-upstream origin <insert branch name>
 
-
 If the remote branch is behind changes on trunk then you update the remote
 branch on the GitHub repository by merging in changes from main. While on your
 branch:
@@ -184,7 +183,6 @@ branch:
 
     # Merge in the changes from the copy of main on GitHub.
     git merge origin/main
-
 
 Don't forget to push your changes back up to GitHub.
 
@@ -198,7 +196,7 @@ Start the review process
 Make a :ref:`pull-request` on GitHub to propose your changes for inclusion in
 the trunk.
 
-Once you have satisfied the steps in the :doc:`Developer's guide
-</contributing/index>` go ahead and request a review on GitHub.
+Once you have satisfied the steps in the :doc:`/contributing/index` go ahead and
+request a review on GitHub.
 
 .. _recipe file: https://metoffice.github.io/CSET/usage/operator-recipes

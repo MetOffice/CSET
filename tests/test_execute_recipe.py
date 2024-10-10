@@ -16,7 +16,6 @@
 
 import json
 from pathlib import Path
-from uuid import uuid4
 
 import pytest
 
@@ -47,44 +46,28 @@ def test_get_operator_exception_not_callable():
         CSET.operators.get_operator("misc.__doc__")
 
 
-def test_execute_recipe_parallel(tmp_path: Path):
+def test_execute_recipe(tmp_path: Path):
     """Execute recipe to test happy case (this is really an integration test)."""
     input_file = Path("tests/test_data/air_temp.nc")
-    output_dir = tmp_path / f"{uuid4()}"
-    recipe_file = Path("tests/test_data/plot_instant_air_temp.yaml")
-    CSET.operators.execute_recipe_parallel(recipe_file, input_file, output_dir)
+    recipe = Path("tests/test_data/plot_instant_air_temp.yaml")
+    CSET.operators.execute_recipe(recipe, input_file, tmp_path)
 
 
-def test_execute_recipe_parallel_edge_cases(tmp_path: Path):
+def test_execute_recipe_edge_cases(tmp_path: Path):
     """Test weird edge cases. Also tests data paths not being pathlib Paths."""
     input_file = "tests/test_data/air_temp.nc"
-    output_dir = tmp_path / f"{uuid4()}"
     recipe = Path("tests/test_data/noop_recipe.yaml")
-    CSET.operators.execute_recipe_parallel(recipe, input_file, output_dir)
+    CSET.operators.execute_recipe(recipe, input_file, tmp_path)
 
 
-def test_execute_recipe_parallel_invalid_output_dir(tmp_path: Path):
+def test_execute_recipe_invalid_output_dir(tmp_path: Path):
     """Exception raised if output directory can't be created."""
-    recipe = '{"parallel":[{"operator": misc.noop}]}'
+    recipe = '{"steps":[{"operator": misc.noop}]}'
     input_file = Path("tests/test_data/air_temp.nc")
     output_dir = tmp_path / "actually_a_file"
     output_dir.touch()
     with pytest.raises((FileExistsError, NotADirectoryError)):
-        CSET.operators.execute_recipe_parallel(recipe, input_file, output_dir)
-
-
-def test_execute_recipe_collate(tmp_path: Path):
-    """Execute collate from a recipe."""
-    output_dir = tmp_path
-    recipe_file = Path("tests/test_data/noop_recipe.yaml")
-    CSET.operators.execute_recipe_collate(recipe_file, output_dir)
-
-
-def test_execute_recipe_collate_no_steps(tmp_path: Path):
-    """Execute collate for a recipe without any collate steps."""
-    recipe = '{"parallel":[{"operator": misc.noop}]}'
-    output_dir = tmp_path
-    CSET.operators.execute_recipe_collate(recipe, output_dir)
+        CSET.operators.execute_recipe(recipe, input_file, output_dir)
 
 
 def test_run_steps_style_file_metadata_written(tmp_path: Path):

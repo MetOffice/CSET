@@ -1,4 +1,4 @@
-{% if BASIC_QQ_PLOT %}
+{% if BASIC_QQ_PLOT|default(False) %}
 [runtime]
 {% for model_field_A, model_field_B, coord_A, coord_B in zip(MODEL_FIELDS_A, MODEL_FIELDS_B,VERTICAL_COORDINATE_A, VERTICAL_COORDINATE_B) %}
     [[generic_basic_qq_plot_{{model_field_A}}_{{model_field_B}}_parallel]]
@@ -31,3 +31,20 @@
         """
 {% endfor %}
 {% endif %}
+
+{# Example code to use as basis for multi-model cycling:
+{% for equivalent_field in restructure_field_list(PRESSURE_LEVEL_MODEL_FIELDS) %}
+{% for model_number, field in equivalent_field.items() %}
+[runtime]
+    [[generic_basic_qq_plot_m{{model_number}}_{{sanitise_task_name(field)}}]]
+    inherit = PROCESS
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_basic_qq_plot.yaml"
+        CSET_ADDOPTS = """
+            --VARNAME='{{field}}'
+            --MODEL_NAME='{{models[model_number]["name"]}}'
+        """
+        MODEL_NUMBER = {{model_number}}
+{% endfor %}
+{% endfor %}
+#}

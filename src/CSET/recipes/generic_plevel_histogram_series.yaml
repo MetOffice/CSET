@@ -1,42 +1,31 @@
 category: Histogram
-title: $VARNAME $MLEVEL Level Histogram Plot
+title: $MODEL_NAME $VARNAME $PLEVEL Level Histogram Plot
 description: |
-  Extracts and plots the probability density of $MLEVEL level $VARNAME from a
-  file at model level $MLEVEL. It uses
+  Extracts and plots the probability density of $PLEVEL level $VARNAME from a
+  file at model level $PLEVEL of $MODEL_NAME. It uses
   [`plt.hist`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.hist.html)
   to plot the probability density so that the area under the histogram
   integrates to 1. `stacked` is set to True so the sum of the histograms is
   normalized to 1. In case of ensemble data choose from postage stamp plot or
   single plot via the single_plot option in the recipe directly.
 
-parallel:
+steps:
   - operator: read.read_cube
     constraint:
       operator: constraints.combine_constraints
       variable_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
-      validity_time_constraint:
-        operator: constraints.generate_time_constraint
-        time_start: $VALIDITY_TIME
       model_level_constraint:
         operator: constraints.generate_level_constraint
-        coordinate: "model_level_number"
-        levels: $MLEVEL
-
-  - operator: write.write_cube_to_nc
-    filename: intermediate/histogram
-
-
-collate:
-  - operator: read.read_cube
-    filename_pattern: intermediate/*.nc
-
-  - operator: write.write_cube_to_nc
-    overwrite: True
+        coordinate: pressure
+        levels: $PLEVEL
 
   - operator: plot.plot_histogram_series
     sequence_coordinate: time
     # stamp_coordinate and single_plot optional and only required for ensemble data
     stamp_coordinate: "realization"
     single_plot: False
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

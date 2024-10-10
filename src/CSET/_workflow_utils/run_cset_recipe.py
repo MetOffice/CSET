@@ -17,11 +17,6 @@ logging.basicConfig(
 def subprocess_env():
     """Create a dictionary of amended environment variables for subprocess."""
     env_mapping = dict(os.environ)
-    cycle_point = env_mapping["CYLC_TASK_CYCLE_POINT"]
-    # Add validity time based on cycle point.
-    env_mapping["CSET_ADDOPTS"] = (
-        f"{os.getenv('CSET_ADDOPTS', '')} --VALIDITY_TIME={cycle_point}"
-    )
     return env_mapping
 
 
@@ -39,35 +34,40 @@ def recipe_id():
     """Get the ID for the recipe."""
     file = recipe_file()
     env = subprocess_env()
-    p = subprocess.run(
-        ("cset", "recipe-id", "--recipe", file),
-        capture_output=True,
-        env=env,
-    )
-    # Explicitly check return code as otherwise we can't get the error message.
-    if p.returncode != 0:
-        logging.error(
-            "cset recipe-id returned non-zero exit code.\n%s",
+    try:
+        p = subprocess.run(
+            ("cset", "recipe-id", "--recipe", file),
+            capture_output=True,
+            check=True,
+            env=env,
+        )
+    except subprocess.CalledProcessError as err:
+        logging.exception(
+            "cset recipe-id exited with non-zero code %s.\nstdout: %s\nstderr: %s",
+            err.returncode,
             # Presume that subprocesses have the same IO encoding as this one.
             # Honestly, on all our supported platforms this will be "utf-8".
-            p.stderr.decode(sys.stderr.encoding),
+            err.stdout.decode(sys.stdout.encoding),
+            err.stderr.decode(sys.stderr.encoding),
         )
-        p.check_returncode()
+        raise
     id = p.stdout.decode(sys.stdout.encoding).strip()
-    return id
+    model_number = os.environ["MODEL_NUMBER"]
+    return f"m{model_number}_{id}"
 
 
 def output_directory():
     """Get the plot output directory for the recipe."""
     share_directory = os.environ["CYLC_WORKFLOW_SHARE_DIR"]
-    return f"{share_directory}/web/plots/{recipe_id()}"
+    cycle_point = os.environ["CYLC_TASK_CYCLE_POINT"]
+    return f"{share_directory}/web/plots/{recipe_id()}_{cycle_point}"
 
 
 def data_directory():
     """Get the input data directory for the cycle."""
-    share_directory = os.environ["CYLC_WORKFLOW_SHARE_DIR"]
-    cycle_point = os.environ["CYLC_TASK_CYCLE_POINT"]
-    return f"{share_directory}/cycle/{cycle_point}/data"
+    rose_datac = os.environ["ROSE_DATAC"]
+    model_number = os.environ["MODEL_NUMBER"]
+    return f"{rose_datac}/data/{model_number}"
 
 
 def create_diagnostic_archive(output_directory):
@@ -83,68 +83,32 @@ def create_diagnostic_archive(output_directory):
                 archive.write(file, arcname=file.relative_to(output_directory))
 
 
-# Not covered by tests as will soon be removed in #765.
-def parallel():  # pragma: no cover
-    """Process raw data in parallel."""
-    logging.info("Pre-processing data into intermediate form.")
+def run_recipe_steps():
+    """Process data and produce output plots."""
     try:
-        subprocess.run(
-            (
-                "cset",
-                "-v",
-                "bake",
-                f"--recipe={recipe_file()}",
-                f"--input-dir={data_directory()}",
-                f"--output-dir={output_directory()}",
-                f"--style-file={os.getenv('COLORBAR_FILE', '')}",
-                f"--plot-resolution={os.getenv('PLOT_RESOLUTION', '')}",
-                "--parallel-only",
-            ),
-            check=True,
-            env=subprocess_env(),
+        command = (
+            "cset",
+            "-v",
+            "bake",
+            f"--recipe={recipe_file()}",
+            f"--input-dir={data_directory()}",
+            f"--output-dir={output_directory()}",
+            f"--style-file={os.getenv('COLORBAR_FILE', '')}",
+            f"--plot-resolution={os.getenv('PLOT_RESOLUTION', '')}",
         )
-    except subprocess.CalledProcessError:
-        logging.error("cset bake exited non-zero while processing.")
-        raise
-
-
-# Not covered by tests as will soon be removed in #765.
-def collate():  # pragma: no cover
-    """Collate processed data together and produce output plot.
-
-    If the intermediate directory doesn't exist then we are running a simple
-    non-parallelised recipe, and we need to run cset bake to process the data
-    and produce any plots. So we actually get some usage out of it, we are using
-    the non-restricted form of bake, so it runs both the processing and
-    collation steps.
-    """
-    try:
-        logging.info("Collating intermediate data and saving output.")
-        subprocess.run(
-            (
-                "cset",
-                "-v",
-                "bake",
-                f"--recipe={recipe_file()}",
-                f"--output-dir={output_directory()}",
-                f"--style-file={os.getenv('COLORBAR_FILE', '')}",
-                f"--plot-resolution={os.getenv('PLOT_RESOLUTION', '')}",
-                "--collate-only",
-            ),
-            check=True,
-            env=subprocess_env(),
+        logging.info("Running %s", " ".join(command))
+        subprocess.run(command, check=True, env=subprocess_env(), capture_output=True)
+    except subprocess.CalledProcessError as err:
+        logging.exception(
+            "cset bake exited with non-zero code %s.\nstdout: %s\nstderr: %s",
+            err.returncode,
+            err.stdout.decode(sys.stdout.encoding),
+            err.stderr.decode(sys.stderr.encoding),
         )
-    except subprocess.CalledProcessError:
-        logging.error("cset bake exited non-zero while collating.")
         raise
     create_diagnostic_archive(output_directory())
 
 
 def run():
     """Run workflow script."""
-    # Check if we are running in parallel or collate mode.
-    bake_mode = os.getenv("CSET_BAKE_MODE")
-    if bake_mode == "parallel":
-        parallel()
-    elif bake_mode == "collate":
-        collate()
+    run_recipe_steps()

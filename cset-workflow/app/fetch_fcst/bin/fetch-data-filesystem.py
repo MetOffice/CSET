@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
-"""Retrieve the files from the filesystem for the current cycle point."""
+"""Retrieve files from the filesystem."""
 
-import CSET._workflow_utils.fetch_data_filesystem
+from CSET._workflow_utils.fetch_data import FilesystemFileRetriever, fetch_data
 
-CSET._workflow_utils.fetch_data_filesystem.run()
+fetch_data(FilesystemFileRetriever)

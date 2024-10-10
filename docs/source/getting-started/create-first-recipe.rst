@@ -32,7 +32,7 @@ We will now create a recipe from scratch. This recipe will plot a specific
 timestamp of the example air temperature data.
 
 Start by opening a new file in your favourite text editor, and save it somewhere
-accessible as ``single_timestep_surface_air_temperature_spatial_plot.yaml``.
+accessible as ``surface_air_temperature_spatial_plot.yaml``.
 
 Recipe Metadata
 ---------------
@@ -75,11 +75,9 @@ Recipe Steps
 ------------
 
 When baking you follow a recipe step-by-step, CSET does the same with its
-recipes. The steps of the recipe are contained within one of two keys. The
-``parallel`` key for independent tasks that process the raw data, and the
-``collate`` key for sequential tasks that bring together the processed data into
-the final output. Each block prefixed with a ``-`` (which makes a list in YAML)
-is an individual step, and they are run in order from top to bottom.
+recipes. The steps of the recipe are contained within the ``steps`` key. Each
+block prefixed with a ``-`` (which makes a list in YAML) is an individual step,
+and they are run in order from top to bottom.
 
 Each step has an ``operator`` key, which specifies which operator to use. A
 `complete list of operators is in the documentation`_, but for this tutorial we
@@ -93,7 +91,7 @@ to the input data as its implicit input.
 
 .. code-block:: yaml
 
-    parallel:
+    steps:
       - operator: read.read_cubes
 
 Once we have read the data, we need to filter them down to the data we require
@@ -157,7 +155,7 @@ After following this far your recipe should look like this:
       Extracts and plots the 1.5m air temperature from a file. The temperature
       is averaged across the time coordinate.
 
-    parallel:
+    steps:
       - operator: read.read_cubes
 
       - operator: filters.filter_cubes
@@ -181,16 +179,14 @@ After following this far your recipe should look like this:
 Running the Recipe
 ------------------
 
-We can run this recipe using `the same data`_ as was used for the
-:doc:`run-recipe` tutorial.
-
-.. _the same data: https://github.com/MetOffice/CSET/raw/main/tests/test_data/air_temp.nc
+We can run this recipe using the same data as was used for the
+:doc:`run-recipe` tutorial: :download:`air_temp.nc`
 
 Use ``cset bake`` to run your newly created recipe.
 
 .. code-block:: bash
 
-    cset bake -i air_temp.nc -o output/ -r single_timestep_surface_air_temperature_spatial_plot.yaml
+    cset bake -i air_temp.nc -o output/ -r surface_air_temperature_spatial_plot.yaml
 
 You can investigate the created plot and data file in the specified ``output``
 directory.
