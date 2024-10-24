@@ -24,17 +24,11 @@ import pytest
 from CSET._workflow_utils import run_cset_recipe
 
 
-def test_subprocess_env(monkeypatch):
+def test_subprocess_env():
     """Test subprocess_env function."""
-    monkeypatch.setenv("CYLC_TASK_CYCLE_POINT", "2000-01-01T00:00:00Z")
-    monkeypatch.setenv("CSET_ADDOPTS", "--other-opts")
-    expected = {
-        "CYLC_TASK_CYCLE_POINT": "2000-01-01T00:00:00Z",
-        "CSET_ADDOPTS": "--other-opts --VALIDITY_TIME=2000-01-01T00:00:00Z",
-    }
+    expected = dict(os.environ)
     actual = run_cset_recipe.subprocess_env()
-    for expected_item in expected.items():
-        assert expected_item in actual.items()
+    assert actual == expected
 
 
 def test_recipe_file(monkeypatch, tmp_working_dir):
@@ -50,15 +44,12 @@ def test_recipe_id(monkeypatch, tmp_working_dir):
 
     def mock_recipe_file():
         with open("recipe.yaml", "wt", encoding="UTF-8") as fp:
-            fp.write("title: Recipe Title\nparallel: [{operator: misc.noop}]")
+            fp.write("title: Recipe Title\nsteps: [{operator: misc.noop}]")
         return "recipe.yaml"
 
-    def mock_subprocess_env():
-        return os.environ
-
+    monkeypatch.setenv("MODEL_NUMBER", "1")
     monkeypatch.setattr(run_cset_recipe, "recipe_file", mock_recipe_file)
-    monkeypatch.setattr(run_cset_recipe, "subprocess_env", mock_subprocess_env)
-    expected = "recipe_title"
+    expected = "m1_recipe_title"
     actual = run_cset_recipe.recipe_id()
     assert actual == expected
 
@@ -71,11 +62,8 @@ def test_recipe_id_invalid_recipe(monkeypatch, tmp_working_dir):
             fp.write("Not a recipe!")
         return "recipe.yaml"
 
-    def mock_subprocess_env():
-        return os.environ
-
+    monkeypatch.setenv("MODEL_NUMBER", "1")
     monkeypatch.setattr(run_cset_recipe, "recipe_file", mock_recipe_file)
-    monkeypatch.setattr(run_cset_recipe, "subprocess_env", mock_subprocess_env)
     with pytest.raises(subprocess.CalledProcessError):
         run_cset_recipe.recipe_id()
 
@@ -88,16 +76,17 @@ def test_output_directory(monkeypatch):
 
     monkeypatch.setattr(run_cset_recipe, "recipe_id", mock_recipe_id)
     monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", "/share")
+    monkeypatch.setenv("CYLC_TASK_CYCLE_POINT", "20000101T0000Z")
     actual = run_cset_recipe.output_directory()
-    expected = "/share/web/plots/recipe_id"
+    expected = "/share/web/plots/recipe_id_20000101T0000Z"
     assert actual == expected
 
 
 def test_data_directory(monkeypatch):
     """Data directory correctly interpreted."""
-    monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", "/share")
-    monkeypatch.setenv("CYLC_TASK_CYCLE_POINT", "20000101T0000Z")
-    expected = "/share/cycle/20000101T0000Z/data"
+    monkeypatch.setenv("ROSE_DATAC", "/share/cycle/20000101T0000Z")
+    monkeypatch.setenv("MODEL_NUMBER", "1")
+    expected = "/share/cycle/20000101T0000Z/data/1"
     actual = run_cset_recipe.data_directory()
     assert actual == expected
 
@@ -117,46 +106,46 @@ def test_create_diagnostic_archive(tmp_path):
         assert set(archive.namelist()) == files
 
 
-def test_entrypoint_parallel(monkeypatch):
-    """Check that parallel run_cset_recipe only runs parallel function."""
+def test_entrypoint(monkeypatch):
+    """Check that run_cset_recipe.run() calls the correct function."""
+    function_ran = False
 
     def assert_true():
-        assert True
+        nonlocal function_ran
+        function_ran = True
 
-    def assert_false():
-        assert False, "collate() during parallel job."  # noqa: B011
-
-    monkeypatch.setenv("CSET_BAKE_MODE", "parallel")
-    monkeypatch.setattr(run_cset_recipe, "parallel", assert_true)
-    monkeypatch.setattr(run_cset_recipe, "collate", assert_false)
-
+    monkeypatch.setattr(run_cset_recipe, "run_recipe_steps", assert_true)
     run_cset_recipe.run()
+    assert function_ran, "Function did not run!"
 
 
-def test_entrypoint_collate(monkeypatch):
-    """Check that collate run_cset_recipe only runs collate function."""
+def test_run_recipe_steps(monkeypatch, tmp_working_dir):
+    """Test run recipe steps correctly runs CSET and creates an archive."""
 
-    def assert_true():
-        assert True
+    def mock_func(*args, **kwargs):
+        pass
 
-    def assert_false():
-        assert False, "parallel() during collate job."  # noqa: B011
-
-    monkeypatch.setenv("CSET_BAKE_MODE", "collate")
-    monkeypatch.setattr(run_cset_recipe, "parallel", assert_false)
-    monkeypatch.setattr(run_cset_recipe, "collate", assert_true)
-
-    run_cset_recipe.run()
+    monkeypatch.setattr(subprocess, "run", mock_func)
+    monkeypatch.setattr(run_cset_recipe, "create_diagnostic_archive", mock_func)
+    monkeypatch.setattr(run_cset_recipe, "recipe_file", mock_func)
+    monkeypatch.setattr(run_cset_recipe, "output_directory", mock_func)
+    monkeypatch.setattr(run_cset_recipe, "data_directory", mock_func)
+    run_cset_recipe.run_recipe_steps()
 
 
-def test_entrypoint_neither(monkeypatch):
-    """Check that other CSET_BAKE_MODE runs no functions."""
+def test_run_recipe_steps_exception(monkeypatch, tmp_working_dir):
+    """Test run recipe steps correctly raises exception on cset bake error."""
 
-    def assert_false():
-        assert False, "unwanted processing."  # noqa: B011
+    def mock_subprocess_run(*args, **kwargs):
+        raise subprocess.CalledProcessError(1, args, b"", b"")
 
-    monkeypatch.setenv("CSET_BAKE_MODE", "")
-    monkeypatch.setattr(run_cset_recipe, "parallel", assert_false)
-    monkeypatch.setattr(run_cset_recipe, "collate", assert_false)
+    def mock_func(*args, **kwargs):
+        pass
 
-    run_cset_recipe.run()
+    monkeypatch.setattr(subprocess, "run", mock_subprocess_run)
+    monkeypatch.setattr(run_cset_recipe, "create_diagnostic_archive", mock_func)
+    monkeypatch.setattr(run_cset_recipe, "recipe_file", mock_func)
+    monkeypatch.setattr(run_cset_recipe, "output_directory", mock_func)
+    monkeypatch.setattr(run_cset_recipe, "data_directory", mock_func)
+    with pytest.raises(subprocess.CalledProcessError):
+        run_cset_recipe.run_recipe_steps()

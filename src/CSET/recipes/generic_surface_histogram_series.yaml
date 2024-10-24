@@ -7,28 +7,17 @@ description: |
   integrates to 1. stacked is set to True so the sum of the histograms is
   normalized to 1.
 
-parallel:
+steps:
   - operator: read.read_cube
     constraint:
       operator: constraints.combine_constraints
       variable_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
-      validity_time_constraint:
-        operator: constraints.generate_time_constraint
-        time_start: $VALIDITY_TIME
       pressure_level_constraint:
         operator: constraints.generate_level_constraint
         coordinate: pressure
         levels: []
-
-  - operator: write.write_cube_to_nc
-    filename: intermediate/histogram
-
-
-collate:
-  - operator: read.read_cube
-    filename_pattern: intermediate/*.nc
 
   - operator: write.write_cube_to_nc
     overwrite: True

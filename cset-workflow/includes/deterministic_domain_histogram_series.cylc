@@ -1,16 +1,19 @@
-{% if DOMAIN_HISTOGRAM_SERIES_FIELD %}
+{% if DOMAIN_HISTOGRAM_SERIES|default(False) %}
+{% for equivalent_field in restructure_field_list(PRESSURE_LEVEL_MODEL_FIELDS) %}
+{% for model_number, field in equivalent_field.items() %}
+{% for plevel in PRESSURE_LEVELS %}
 [runtime]
-{% for model_field in MODEL_LEVEL_MODEL_FIELDS %}
-    [[pre_process_deterministic_domain_histogram_series_{{model_field}}]]
-    inherit = PARALLEL
+    [[generic_plevel_histogram_series_m{{model_number}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
+    inherit = PROCESS
         [[[environment]]]
-        CSET_RECIPE_NAME = "generic_histogram_series.yaml"
-        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --MLEVEL='{{UM_MODEL_LEVELS}}'"
-
-    [[collate_deterministic_domain_histogram_series_{{model_field}}]]
-    inherit = COLLATE
-        [[[environment]]]
-        CSET_RECIPE_NAME = "generic_histogram_series.yaml"
-        CSET_ADDOPTS = "--VARNAME='{{model_field}}' --MLEVEL='{{UM_MODEL_LEVELS}}'"
+        CSET_RECIPE_NAME = "generic_plevel_histogram_series.yaml"
+        CSET_ADDOPTS = """
+            --VARNAME='{{field}}'
+            --PLEVEL='{{plevel}}'
+            --MODEL_NAME='{{models[model_number]["name"]}}'
+        """
+        MODEL_NUMBER = {{model_number}}
+{% endfor %}
+{% endfor %}
 {% endfor %}
 {% endif %}

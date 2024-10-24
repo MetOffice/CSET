@@ -25,12 +25,12 @@ import CSET._common as common
 def test_parse_recipe_string():
     """Loading and parsing of a YAML recipe from a string."""
     valid_recipe = """\
-    parallel:
+    steps:
         operator: misc.noop
         arg1: Hello
     """
     parsed = common.parse_recipe(valid_recipe)
-    assert parsed == {"parallel": {"operator": "misc.noop", "arg1": "Hello"}}
+    assert parsed == {"steps": {"operator": "misc.noop", "arg1": "Hello"}}
 
 
 def test_parse_recipe_path():
@@ -39,7 +39,7 @@ def test_parse_recipe_path():
     expected = {
         "title": "Noop",
         "description": "A recipe that does nothing. Only used for testing.",
-        "parallel": [
+        "steps": [
             {
                 "operator": "misc.noop",
                 "test_argument": "Banana",
@@ -47,7 +47,6 @@ def test_parse_recipe_path():
                 "substep": {"operator": "constraints.combine_constraints"},
             }
         ],
-        "collate": [{"operator": "misc.noop"}],
     }
     assert parsed == expected
 
@@ -60,43 +59,45 @@ def test_parse_recipe_exception_missing():
 
 def test_parse_recipe_exception_type():
     """Exception for incorrect type."""
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match="recipe_yaml must be a str or Path."):
         common.parse_recipe(True)
 
 
 def test_parse_recipe_exception_invalid_yaml():
     """Exception for invalid YAML."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="ParserError: Invalid YAML"):
         common.parse_recipe('"Inside quotes" outside of quotes')
 
 
 def test_parse_recipe_exception_invalid_recipe():
     """Exception for valid YAML but invalid recipe."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Recipe must contain a 'steps' key."):
         common.parse_recipe("a: 1")
 
 
 def test_parse_recipe_exception_blank():
     """Exception for blank recipe."""
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match="Recipe must contain a mapping."):
         common.parse_recipe("")
 
 
-def test_parse_recipe_exception_no_parallel():
-    """Exception for recipe without any parallel steps."""
-    with pytest.raises(ValueError):
-        common.parse_recipe("parallel: []")
+def test_parse_recipe_exception_no_steps():
+    """Exception for recipe without any steps steps."""
+    with pytest.raises(ValueError, match="Recipe must have at least 1 step"):
+        common.parse_recipe("steps: []")
 
 
-def test_parse_recipe_exception_parallel_not_sequence():
-    """Exception for recipe with parallel containing an atom."""
-    with pytest.raises(ValueError):
-        common.parse_recipe("parallel: 7")
+def test_parse_recipe_exception_steps_not_sequence():
+    """Exception for recipe with steps containing an atom."""
+    with pytest.raises(
+        ValueError, match="'steps' key must contain a sequence of steps."
+    ):
+        common.parse_recipe("steps: 7")
 
 
 def test_parse_recipe_exception_non_dict():
     """Exception for recipe that parses to a non-dict."""
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match="Recipe must contain a mapping."):
         common.parse_recipe("[]")
 
 
@@ -139,12 +140,20 @@ def test_parse_variable_options_quoted():
 
 def test_template_variables():
     """Multiple variables are correctly templated into recipe."""
-    recipe = {"parallel": [{"operator": "misc.noop", "v1": "$VAR_A", "v2": "$VAR_B"}]}
+    recipe = {
+        "steps": [{"operator": "misc.noop", "v1": "$VAR_A", "v2": "$VAR_B", "v3": 0}]
+    }
     variables = {"VAR_A": 42, "VAR_B": 3.14}
-    expected = {"parallel": [{"operator": "misc.noop", "v1": 42, "v2": 3.14}]}
+    expected = {"steps": [{"operator": "misc.noop", "v1": 42, "v2": 3.14, "v3": 0}]}
     actual = common.template_variables(recipe, variables)
     assert actual == expected
     assert recipe == expected
+
+
+def test_template_variables_wrong_recipe_type():
+    """Give wrong type for recipe."""
+    with pytest.raises(TypeError):
+        common.template_variables(1, {})
 
 
 def test_replace_template_variable():
@@ -163,12 +172,6 @@ def test_replace_template_variable():
     # Error when variable not provided.
     with pytest.raises(KeyError):
         common.replace_template_variable("$VAR", {})
-
-
-def test_template_variables_wrong_recipe_type():
-    """Give wrong type for recipe."""
-    with pytest.raises(TypeError):
-        common.template_variables(1, {})
 
 
 def test_get_recipe_meta(tmp_working_dir):

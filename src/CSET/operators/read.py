@@ -253,6 +253,7 @@ def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
     # Remove unwanted attributes.
     cube.attributes.pop("timeStamp", None)
     cube.attributes.pop("uuid", None)
+    # There might also be a "name" attribute to ditch, which is the filename.
 
     # Sort STASH code list.
     stash_list = cube.attributes.get("um_stash_source")
@@ -268,12 +269,17 @@ def _lfric_time_coord_fix_callback(cube: iris.cube.Cube, field, filename):
     issue, though the coordinate satisfies all the properties for a DimCoord.
     Scalar time values are left as AuxCoords.
     """
+    # This issue seems to come from iris's handling of NetCDF files where time
+    # always ends up as an AuxCoord.
     if cube.coords("time"):
         time_coord = cube.coord("time")
         if not isinstance(time_coord, iris.coords.DimCoord) and cube.coord_dims(
             time_coord
         ):
             iris.util.promote_aux_coord_to_dim_coord(cube, time_coord)
+
+    # Force single-valued coordinates to be scalar coordinates.
+    return iris.util.squeeze(cube)
 
 
 def _check_input_files(input_path: Path | str, filename_pattern: str) -> Iterable[Path]:
@@ -298,6 +304,7 @@ def _check_input_files(input_path: Path | str, filename_pattern: str) -> Iterabl
     FileNotFoundError:
         If the provided arguments don't resolve to at least one existing file.
     """
+    logging.debug("Checking '%s' for pattern '%s'", input_path, filename_pattern)
     # Convert string paths into Path objects.
     if isinstance(input_path, str):
         input_path = Path(input_path)

@@ -50,6 +50,7 @@ def main():
         "-i",
         "--input-dir",
         type=Path,
+        required=True,
         help="directory containing input data",
     )
     parser_bake.add_argument(
@@ -65,13 +66,6 @@ def main():
         type=Path,
         required=True,
         help="recipe file to read",
-    )
-    bake_step_control = parser_bake.add_mutually_exclusive_group()
-    bake_step_control.add_argument(
-        "--parallel-only", action="store_true", help="only run parallel steps"
-    )
-    bake_step_control.add_argument(
-        "--collate-only", action="store_true", help="only run collation steps"
     )
     parser_bake.add_argument(
         "-s", "--style-file", type=Path, help="colour bar definition to use"
@@ -197,29 +191,17 @@ def calculate_loglevel(args) -> int:
 
 def _bake_command(args, unparsed_args):
     from CSET._common import parse_variable_options
-    from CSET.operators import execute_recipe_collate, execute_recipe_parallel
+    from CSET.operators import execute_recipe
 
     recipe_variables = parse_variable_options(unparsed_args)
-    if not args.collate_only:
-        # Input dir is needed for parallel steps, but not collate steps.
-        if not args.input_dir:
-            raise ArgumentError("the following arguments are required: -i/--input-dir")
-        execute_recipe_parallel(
-            args.recipe,
-            args.input_dir,
-            args.output_dir,
-            recipe_variables,
-            args.style_file,
-            args.plot_resolution,
-        )
-    if not args.parallel_only:
-        execute_recipe_collate(
-            args.recipe,
-            args.output_dir,
-            recipe_variables,
-            args.style_file,
-            args.plot_resolution,
-        )
+    execute_recipe(
+        args.recipe,
+        args.input_dir,
+        args.output_dir,
+        recipe_variables,
+        args.style_file,
+        args.plot_resolution,
+    )
 
 
 def _graph_command(args, unparsed_args):

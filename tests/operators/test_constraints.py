@@ -16,6 +16,8 @@
 
 from datetime import datetime
 
+import pytest
+
 from CSET.operators import constraints
 
 
@@ -114,8 +116,34 @@ def test_generate_level_constraint_no_pressure():
 def test_generate_area_constraint():
     """Generate area constraint with lat-lon limits."""
     area_constraint = constraints.generate_area_constraint(0.0, 0.0, 0.1, 0.1)
-    expected_area_constraint = "Constraint(coord_values={'grid_latitude': <function generate_area_constraint.<locals>.<lambda> at"
+    actual = repr(area_constraint)
+    assert "Constraint(coord_values={" in actual
+    assert (
+        "'grid_latitude': <function generate_area_constraint.<locals>.bound_lat at 0x"
+        in actual
+    )
+    assert (
+        "'grid_longitude': <function generate_area_constraint.<locals>.bound_lon at 0x"
+        in actual
+    )
+
+
+def test_generate_area_constraint_no_limits():
+    """Generate area constraint with no limits."""
+    area_constraint = constraints.generate_area_constraint(None, None, None, None)
+    expected_area_constraint = "Constraint()"
     assert expected_area_constraint in repr(area_constraint)
+
+
+def test_generate_area_constraint_invalid_arguments():
+    """Generate area constraint raises exception with invalid arguments."""
+    # Non-numbers are rejected.
+    with pytest.raises(TypeError):
+        constraints.generate_area_constraint(1, 2, 3, "four")
+
+    # Mixed numbers and Nones are rejected.
+    with pytest.raises(TypeError):
+        constraints.generate_area_constraint(None, None, None, 0)
 
 
 def test_combine_constraints():
