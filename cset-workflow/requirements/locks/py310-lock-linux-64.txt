@@ -161,7 +161,7 @@ https://conda.anaconda.org/conda-forge/linux-64/cf-units-3.2.0-py310hf462985_6.c
 https://conda.anaconda.org/conda-forge/linux-64/graphviz-12.0.0-hba01fac_0.conda#953e31ea00d46beb7e64a79fc291ec44
 https://conda.anaconda.org/conda-forge/linux-64/matplotlib-base-3.9.2-py310h68603db_1.conda#989ef368e7b81b6c28e608e651a2a7d8
 https://conda.anaconda.org/conda-forge/linux-64/netcdf4-1.7.2-nompi_py310h5146f0f_100.conda#82a474392c02d35a969aaad569cbbca8
-https://conda.anaconda.org/conda-forge/linux-64/cartopy-0.24.0-py310h5eaa309_0.conda#ca4d935c1715f95b6e86846ad1675a2b
+https://conda.anaconda.org/conda-forge/linux-64/cartopy-0.23.0-py310h5eaa309_2.conda#7eecc124f1b4ebd547b0e5f2ad6c9e2f
 https://conda.anaconda.org/conda-forge/noarch/nc-time-axis-1.4.1-pyhd8ed1ab_0.tar.bz2#281b58948bf60a2582de9e548bcc5369
 https://conda.anaconda.org/conda-forge/linux-64/pygraphviz-1.14-py310h9a1d609_0.conda#9310fea0488c0baa6e8572bd6d08771a
 https://conda.anaconda.org/conda-forge/noarch/iris-3.9.0-pyha770c72_0.conda#efaf150eb009f04efa58f1401c767192
