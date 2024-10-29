@@ -15,6 +15,7 @@
 """Operators to produce various kinds of plots."""
 
 import fcntl
+import functools
 import importlib.resources
 import json
 import logging
@@ -84,19 +85,28 @@ def _check_single_cube(cube: iris.cube.Cube | iris.cube.CubeList) -> iris.cube.C
     raise TypeError("Must have a single cube", cube)
 
 
+def _py312_importlib_resources_files_shim():
+    """Importlib behaviour changed in 3.12 to avoid circular dependencies.
+
+    This shim is needed until python 3.12 is our oldest supported version, after
+    which it can just be replaced by directly using importlib.resources.files.
+    """
+    if sys.version_info.minor >= 12:
+        files = importlib.resources.files()
+    else:
+        import CSET.operators
+
+        files = importlib.resources.files(CSET.operators)
+    return files
+
+
 def _make_plot_html_page(plots: list):
     """Create a HTML page to display a plot image."""
     # Debug check that plots actually contains some strings.
     assert isinstance(plots[0], str)
 
     # Load HTML template file.
-    # Importlib behaviour changed in 3.12 to avoid circular dependencies.
-    if sys.version_info.minor >= 12:
-        operator_files = importlib.resources.files()
-    else:
-        import CSET.operators
-
-        operator_files = importlib.resources.files(CSET.operators)
+    operator_files = _py312_importlib_resources_files_shim()
     template_file = operator_files.joinpath("_plot_page_template.html")
 
     # Get some metadata.
@@ -121,9 +131,29 @@ def _make_plot_html_page(plots: list):
         fp.write(html)
 
 
-def _colorbar_map_levels(varname: str, **kwargs):
+@functools.cache
+def _load_colorbar_map() -> dict:
+    """Load the colorbar definitions from a file.
+
+    This is a separate function to make it cacheable.
     """
-    Specify the color map and levels.
+    # Grab the colorbar file from the recipe global metadata.
+    try:
+        colorbar_file = get_recipe_metadata()["style_file_path"]
+        logging.debug("Colour bar file: %s", colorbar_file)
+        with open(colorbar_file, "rt", encoding="UTF-8") as fp:
+            colorbar = json.load(fp)
+    except (FileNotFoundError, KeyError):
+        logging.info("Colorbar file does not exist. Using default values.")
+        operator_files = _py312_importlib_resources_files_shim()
+        colorbar_def_file = operator_files.joinpath("_colorbar_definition.json")
+        with open(colorbar_def_file, "rt", encoding="UTF-8") as fp:
+            colorbar = json.load(fp)
+    return colorbar
+
+
+def _colorbar_map_levels(varname: str, **kwargs):
+    """Specify the color map and levels.
 
     For the given variable name, from a colorbar dictionary file.
 
@@ -134,47 +164,42 @@ def _colorbar_map_levels(varname: str, **kwargs):
     varname: str
         Variable name to extract from the dictionary
 
+    Returns
+    -------
+    cmap:
+        Matplotlib colormap.
+    levels:
+        List of levels to use for plotting. For continuous plots the min and max
+        should be taken as the range.
+    norm:
+        BoundryNorm information.
     """
-    # Grab the colour bar file from the recipe global metadata. A non-existent
-    # placeholder path is used if not found.
-    colorbar_file = get_recipe_metadata().get(
-        "style_file_path", "/non-existent/NO_FILE_SPECIFIED"
-    )
+    colorbar = _load_colorbar_map()
+
+    # Get the colormap for this variable.
     try:
-        with open(colorbar_file, "rt", encoding="UTF-8") as fp:
-            colorbar = json.load(fp)
-
-        # Specify the colormap for this variable
-        try:
-            cmap = colorbar[varname]["cmap"]
-            logging.debug("From color_bar dictionary: Using cmap")
-        except KeyError:
-            cmap = mpl.colormaps["viridis"]
-
-        # Specify the colorbar levels for this variable
-        try:
-            levels = colorbar[varname]["levels"]
-
-            actual_cmap = mpl.cm.get_cmap(cmap)
-
-            norm = mpl.colors.BoundaryNorm(levels, ncolors=actual_cmap.N)
-            logging.debug("From color_bar dictionary: Using levels")
-        except KeyError:
-            try:
-                vmin, vmax = colorbar[varname]["min"], colorbar[varname]["max"]
-                logging.debug("From color_bar dictionary: Using min and max")
-                levels = np.linspace(vmin, vmax, 20)
-                norm = None
-            except KeyError:
-                levels = None
-                norm = None
-
-    except FileNotFoundError:
-        logging.debug("Colour bar file: %s", colorbar_file)
-        logging.info("Colour bar file does not exist. Using default values.")
-        levels = None
-        norm = None
+        cmap = colorbar[varname]["cmap"]
+        logging.debug("From colorbar dictionary: Using cmap")
+    except KeyError:
         cmap = mpl.colormaps["viridis"]
+
+    # Get the colorbar levels for this variable.
+    try:
+        levels = colorbar[varname]["levels"]
+        actual_cmap = mpl.cm.get_cmap(cmap)
+        norm = mpl.colors.BoundaryNorm(levels, ncolors=actual_cmap.N)
+        logging.debug("From colorbar dictionary: Using levels")
+    except KeyError:
+        try:
+            # Get the range for this variable.
+            vmin, vmax = colorbar[varname]["min"], colorbar[varname]["max"]
+            logging.debug("From colorbar dictionary: Using min and max")
+            # Calculate levels from range.
+            levels = np.linspace(vmin, vmax, 20)
+            norm = None
+        except KeyError:
+            levels = None
+            norm = None
 
     return cmap, levels, norm
 
