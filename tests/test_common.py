@@ -51,6 +51,15 @@ def test_parse_recipe_path():
     assert parsed == expected
 
 
+def test_parse_recipe_insert_variables():
+    """Test insertion of variables into a recipe."""
+    recipe_yaml = '{"steps": [{"operator": "misc.noop", "argument": "$VALUE"}]}'
+    variables = {"VALUE": 42}
+    parsed = common.parse_recipe(recipe_yaml, variables)
+    expected = {"steps": [{"operator": "misc.noop", "argument": 42}]}
+    assert parsed == expected
+
+
 def test_parse_recipe_exception_missing():
     """Exception for non-existent file."""
     with pytest.raises(FileNotFoundError):
