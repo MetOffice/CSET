@@ -22,15 +22,10 @@ jobs:
             python-version: "3.x"
 
       - name: Install dependencies
-        run: python3 -m pip install tox tox-conda
-
-      - uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a
-        with:
-            key: tox|build-package|${{ runner.os }}-${{ runner.arch}}|${{ hashFiles('requirements/locks/*') }}
-            path: .tox
+        run: python3 -m pip install build
 
       - name: Build package
-        run: tox -e build-package
+        run: python3 -m build
 
       - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
         with:
