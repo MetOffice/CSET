@@ -139,7 +139,7 @@
     "max": 120,
     "min": 20
   },
-  "straiform_rainfall_rate": {
+  "stratiform_rainfall_rate": {
     "cmap": "jet",
     "levels": [
       0,
