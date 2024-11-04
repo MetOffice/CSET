@@ -85,18 +85,25 @@ def create_diagnostic_archive(output_directory):
 
 def run_recipe_steps():
     """Process data and produce output plots."""
+    command = [
+        "cset",
+        "-v",
+        "bake",
+        f"--recipe={recipe_file()}",
+        f"--input-dir={data_directory()}",
+        f"--output-dir={output_directory()}",
+    ]
+
+    colorbar_file = os.getenv("COLORBAR_FILE")
+    if colorbar_file:
+        command.append(f"--style-file={colorbar_file}")
+
+    plot_resolution = os.getenv("PLOT_RESOLUTION")
+    if plot_resolution:
+        command.append(f"--plot-resolution={plot_resolution}")
+
+    logging.info("Running %s", " ".join(command))
     try:
-        command = (
-            "cset",
-            "-v",
-            "bake",
-            f"--recipe={recipe_file()}",
-            f"--input-dir={data_directory()}",
-            f"--output-dir={output_directory()}",
-            f"--style-file={os.getenv('COLORBAR_FILE', '')}",
-            f"--plot-resolution={os.getenv('PLOT_RESOLUTION', '')}",
-        )
-        logging.info("Running %s", " ".join(command))
         subprocess.run(command, check=True, env=subprocess_env(), capture_output=True)
     except subprocess.CalledProcessError as err:
         logging.exception(
