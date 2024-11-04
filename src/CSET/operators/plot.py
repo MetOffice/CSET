@@ -282,11 +282,18 @@ def _plot_and_save_spatial_plot(
         ):
             axes.set_yscale("log")
 
-        axes.set_title(title+"\n"+\
-                       'Start Lat: '+cube.attributes['transect_coords'].split('_')[0]+\
-                       ' Start Lon: '+cube.attributes['transect_coords'].split('_')[1]+\
-                       ' End Lat: '+cube.attributes['transect_coords'].split('_')[2]+\
-                       ' End Lon: '+cube.attributes['transect_coords'].split('_')[3])
+       axes.set_title(
+            title
+            + "\n"
+            + "Start Lat: "
+            + cube.attributes["transect_coords"].split("_")[0]
+            + " Start Lon: "
+            + cube.attributes["transect_coords"].split("_")[1]
+            + " End Lat: "
+            + cube.attributes["transect_coords"].split("_")[2]
+            + " End Lon: "
+            + cube.attributes["transect_coords"].split("_")[3]
+        )
 
     else:
         # Add title.
