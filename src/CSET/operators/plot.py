@@ -282,7 +282,7 @@ def _plot_and_save_spatial_plot(
         ):
             axes.set_yscale("log")
 
-       axes.set_title(
+        axes.set_title(
             title
             + "\n"
             + "Start Lat: "
