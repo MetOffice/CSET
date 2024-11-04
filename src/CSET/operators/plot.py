@@ -288,7 +288,7 @@ def _plot_and_save_spatial_plot(
             f' Start Lon: {cube.attributes["transect_coords"].split("_")[1]}'
             f' End Lat: {cube.attributes["transect_coords"].split("_")[2]}'
             f' End Lon: {cube.attributes["transect_coords"].split("_")[3]}',
-            fontsize=16
+            fontsize=16,
         )
 
     else:
