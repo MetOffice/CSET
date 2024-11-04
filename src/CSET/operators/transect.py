@@ -157,7 +157,7 @@ def calc_transect(cube: iris.cube.Cube, startcoords: tuple, endcoords: tuple):
     # Concatenate into single cube.
     interpolated_cubes = interpolated_cubes.concatenate()
 
-    # Add metadata to interpolated cubes showing coordinates
+    # Add metadata to interpolated cubes showing coordinates.
     interpolated_cubes[0].attributes["transect_coords"] = (
         f"{startcoords[0]}_{startcoords[1]}_{endcoords[1]}_{endcoords[1]}"
     )
