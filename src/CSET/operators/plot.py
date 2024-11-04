@@ -214,8 +214,13 @@ def _plot_and_save_spatial_plot(
         # Filled contour plot of the field.
         plot = iplt.contourf(cube, cmap=cmap, levels=levels, norm=norm)
     elif method == "pcolormesh":
+        try:
+            vmin = min(levels)
+            vmax = max(levels)
+        except TypeError:
+            vmin, vmax = None, None
         # pcolormesh plot of the field.
-        plot = iplt.pcolormesh(cube, cmap=cmap, norm=norm)
+        plot = iplt.pcolormesh(cube, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax)
     else:
         raise ValueError(f"Unknown plotting method: {method}")
 
@@ -324,8 +329,13 @@ def _plot_and_save_postage_stamp_spatial_plot(
             # Filled contour plot of the field.
             plot = iplt.contourf(member, cmap=cmap, levels=levels, norm=norm)
         elif method == "pcolormesh":
+            try:
+                vmin = min(levels)
+                vmax = max(levels)
+            except TypeError:
+                vmin, vmax = None, None
             # pcolormesh plot of the field.
-            plot = iplt.pcolormesh(member, cmap=cmap, norm=norm)
+            plot = iplt.pcolormesh(member, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax)
         else:
             raise ValueError(f"Unknown plotting method: {method}")
         ax = plt.gca()
