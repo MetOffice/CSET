@@ -282,8 +282,18 @@ def _plot_and_save_spatial_plot(
         ):
             axes.set_yscale("log")
 
-    # Add title.
-    axes.set_title(title, fontsize=16)
+        axes.set_title(
+            f'{title}\n'
+            f'Start Lat: {cube.attributes["transect_coords"].split("_")[0]}'
+            f' Start Lon: {cube.attributes["transect_coords"].split("_")[1]}'
+            f' End Lat: {cube.attributes["transect_coords"].split("_")[2]}'
+            f' End Lon: {cube.attributes["transect_coords"].split("_")[3]}',
+            fontsize=16,
+        )
+
+    else:
+        # Add title.
+        axes.set_title(title, fontsize=16)
 
     # Add watermark with min/max/mean. Currently not user toggable.
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
