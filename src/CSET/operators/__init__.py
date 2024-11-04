@@ -191,9 +191,8 @@ def execute_recipe(
         Path to a file containing, or string of, a recipe's YAML describing the
         operators that need running. If a Path is provided it is opened and
         read.
-    input_file: Path
-        Pathlike to netCDF (or something else that iris read) file to be used as
-        input.
+    input_directory: Path
+        Pathlike to directory containing input files.
     output_directory: Path
         Pathlike indicating desired location of output.
     recipe_variables: dict, optional
