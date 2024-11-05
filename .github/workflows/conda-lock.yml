@@ -25,7 +25,7 @@ jobs:
         run: python3 -m pip install conda-lock
 
       - name: Update conda
-        run: conda update -q conda
+        run: conda update --channel conda-forge --quiet conda
 
       - name: Hash existing lock files
         run: |
