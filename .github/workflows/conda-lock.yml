@@ -56,6 +56,15 @@ jobs:
           done
           wait
 
+      - name: Sort lock files to make diffs easier to review
+        run: |
+          shopt -s globstar
+          for file in **/locks/*.txt
+          do
+            cat "$file" | (sed -u 4q; sort) > sorted.txt
+            mv sorted.txt "$file"
+          done
+
       - name: Generate GitHub App Token
         uses: actions/create-github-app-token@5d869da34e18e7287c1daad50e0b8ea0f506ce69
         id: app-token
