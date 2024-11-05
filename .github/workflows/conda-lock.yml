@@ -26,6 +26,8 @@ jobs:
 
       - name: Update conda
         run: |
+          conda config --show-sources
+          conda info
           echo "Pre-installed channels:"
           conda config --show channels
           # All existing channels.
