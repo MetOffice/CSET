@@ -25,7 +25,17 @@ jobs:
         run: python3 -m pip install conda-lock
 
       - name: Update conda
-        run: conda update -q conda
+        run: |
+          echo "Pre-installed channels:"
+          conda config --show channels
+          # All existing channels.
+          conda config --remove channels defaults
+          # Re-add conda-forge.
+          conda config --add channels conda-forge
+          echo "Pre-installed channels:"
+          conda config --show channels
+          # Ensure we have the latest version of conda.
+          conda update -q conda
 
       - name: Hash existing lock files
         run: |
