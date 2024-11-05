@@ -1,6 +1,7 @@
 name: cset-dev
 channels:
   - conda-forge
+  - nodefaults
 dependencies:
   # Runtime dependencies
   - numpy
