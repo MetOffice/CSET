@@ -12,6 +12,8 @@ dependencies:
   - isodate
   - markdown-it-py >= 3.0
   - nc-time-axis
+  # Needed before iris 3.11 is released.
+  - cartopy = 0.23.0
 
   # Build dependencies
   - setuptools>=64

@@ -8,3 +8,5 @@ dependencies:
   - pip
   - setuptools>=64
   - setuptools_scm>=8
+  # Needed before iris 3.11 is released.
+  - cartopy = 0.23.0
