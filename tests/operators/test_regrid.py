@@ -155,7 +155,19 @@ def test_regrid_onto_xyspacing_unknown_method(regrid_source_cube):
 def test_regrid_to_single_point(cube):
     """Regrid to single point."""
     # Test extracting a single point.
-    regrid_cube = regrid.regrid_to_single_point(cube, 0.5, 358.5, "Nearest")
+    regrid_cube = regrid.regrid_to_single_point(
+        cube, 0.5, 358.5, "Nearest", boundary_margin=1
+    )
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3)>"
+    assert repr(regrid_cube) == expected_cube
+
+
+def test_regrid_to_single_point_longitude_transform(cube):
+    """Regrid to single point."""
+    # Test extracting a single point.
+    regrid_cube = regrid.regrid_to_single_point(
+        cube, 0.5, -1.5, "Nearest", boundary_margin=1
+    )
     expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3)>"
     assert repr(regrid_cube) == expected_cube
 
@@ -166,7 +178,7 @@ def test_regrid_to_single_point_missing_coord(cube):
     source = cube.copy()
     source.remove_coord("grid_longitude")
     with pytest.raises(ValueError):
-        regrid.regrid_to_single_point(source, 0.5, 358.5, "Nearest", boundary_margin=0)
+        regrid.regrid_to_single_point(source, 0.5, 358.5, "Nearest", boundary_margin=1)
 
     # Missing Y coordinate.
     source = cube.copy()
