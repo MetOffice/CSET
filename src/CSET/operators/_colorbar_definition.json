@@ -46,53 +46,18 @@
   },
   "atmosphere_boundary_layer_thickness": {
     "cmap": "terrain",
-    "levels": [
-      0,
-      25,
-      50,
-      100,
-      150,
-      200,
-      250,
-      500,
-      750,
-      1000,
-      1500,
-      2000,
-      2500,
-      5000
-    ]
+    "max": 5000,
+    "min": 0
   },
   "boundary_layer_depth": {
     "cmap": "terrain",
-    "levels": [
-      0,
-      25,
-      50,
-      100,
-      150,
-      200,
-      250,
-      500,
-      750,
-      1000,
-      1500,
-      2000,
-      2500,
-      5000
-    ]
+    "max": 5000,
+    "min": 0
   },
   "boundary_layer_type_indicator": {
      "cmap": "Set1",
-     "levels": [
-       1,
-       2,
-       3,
-       4,
-       5,
-       6,
-       7
-      ]
+    "max": 7,
+    "min":1
   },
   "surface_based_convective_available_potential_energy": {
     "cmap": "Oranges",
@@ -126,7 +91,7 @@
   },
   "cloud_base_altitude_asl_combined_cloud_amount_greater_than_2p5_okta": {
     "cmap": "terrain",
-    "max": 10000,
+    "max": 150,
     "min": 0
   },
   "cloud_droplet_number_concentration": {
@@ -201,20 +166,8 @@
   },
   "grid_surface_snow_amount": {
     "cmap": "cool",
-    "levels": [
-      0,
-      0.1,
-      0.25,
-      0.5,
-      1,
-      2,
-      4,
-      8,
-      16,
-      32,
-      64,
-      200
-    ]
+    "max": 0.01,
+    "min": 0
   },
   "grid_surface_temperature": {
     "cmap": "RdYlBu_r",
@@ -281,11 +234,6 @@
     "max": 35.0,
     "min": -35.0
   },
-  "northward_wind_at_10m": {
-    "cmap": "bwr",
-    "max": 35.0,
-    "min": -35.0
-  },
   "number_of_lightning_flashes_in_column": {
     "cmap": "YlOrRd",
     "max": 5,
@@ -323,20 +271,8 @@
   },
   "stratiform_rainfall_rate": {
     "cmap": "cividis",
-    "levels": [
-      0,
-      0.1,
-      0.25,
-      0.5,
-      1,
-      2,
-      4,
-      8,
-      16,
-      32,
-      64,
-      200
-    ]
+    "max": 0.01,
+    "min": 0
   },
   "surface_downward_longwave_flux": {
     "cmap": "Greys_r",
@@ -355,122 +291,33 @@
   },
   "surface_microphysical_graupelfall_rate": {
     "cmap": "cividis",
-    "levels": [
-      0,
-      0.1,
-      0.25,
-      0.5,
-      1,
-      2,
-      4,
-      8,
-      16,
-      32,
-      64,
-      200
-    ]
+    "max": 0.01,
+    "min": 0
   },
   "surface_microphysical_precipitation_amount": {
     "cmap": "cividis",
-    "levels": [
-      0,
-      0.1,
-      0.25,
-      0.5,
-      1,
-      2,
-      4,
-      8,
-      16,
-      32,
-      64,
-      200
-    ]
+    "max": 0.01,
+    "min": 0
   },
   "surface_microphysical_precipitation_rate": {
     "cmap": "cividis",
-    "levels": [
-      0,
-      0.1,
-      0.25,
-      0.5,
-      1,
-      2,
-      4,
-      8,
-      16,
-      32,
-      64,
-      200
-    ]
+    "max": 0.01,
+    "min": 0
   },
   "surface_microphysical_rainfall_rate": {
     "cmap": "cividis",
-    "levels": [
-      0,
-      0.1,
-      0.25,
-      0.5,
-      1,
-      2,
-      4,
-      8,
-      16,
-      32,
-      64,
-      200
-    ]
-  },
-  "surface_microphysical_rainfall_amount": {
-    "cmap": "cividis",
-    "levels": [
-      0,
-      0.1,
-      0.25,
-      0.5,
-      1,
-      2,
-      4,
-      8,
-      16,
-      32,
-      64,
-      200
-    ]
+    "max": 0.01,
+    "min": 0
   },
   "surface_microphysical_snowfall_rate": {
     "cmap": "cool",
-    "levels": [
-      0,
-      0.1,
-      0.25,
-      0.5,
-      1,
-      2,
-      4,
-      8,
-      16,
-      32,
-      64,
-      200
-    ]
+    "max": 0.01,
+    "min": 0
   },
   "surface_microphysical_snowfall_amount": {
     "cmap": "cool",
-    "levels": [
-      0,
-      0.1,
-      0.25,
-      0.5,
-      1,
-      2,
-      4,
-      8,
-      16,
-      32,
-      64,
-      200
-    ]
+    "max": 0.01,
+    "min": 0
   },
   "surface_net_longwave_flux": {
     "cmap": "bwr",
@@ -544,22 +391,8 @@
   },
   "turbulent_mixing_height": {
     "cmap": "terrain",
-    "levels": [
-      0,
-      25,
-      50,
-      100,
-      150,
-      200,
-      250,
-      500,
-      750,
-      1000,
-      1500,
-      2000,
-      2500,
-      5000
-    ]
+    "max": 5000,
+    "min": 0
   },
   "upward_air_velocity": {
     "cmap": "bwr",
