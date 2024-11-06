@@ -1,5 +1,5 @@
 {
-  "3D_cloud_fraction": {
+  "combined_cloud_amount": {
     "cmap": "Greys_r",
     "max": 1,
     "min": 0
@@ -18,11 +18,6 @@
     "cmap": "coolwarm",
     "max": 104000,
     "min": 94000
-  },
-  "air_temperature": {
-    "cmap": "jet",
-    "max": 320,
-    "min": 260
   },
   "atmosphere_mass_content_of_cloud_ice": {
     "cmap": "Blues",
@@ -109,11 +104,6 @@
      "max": 1,
      "min": 0.0001
   },
-  "cloud_top": {
-     "cmap": "terrain",
-     "max": 10000,
-     "min": 2.5
-  },
   "combined_cloud_amount_maximum_random_overlap": {
     "cmap": "Greys_r",
     "max": 1,
@@ -154,11 +144,6 @@
     "max": 1,
     "min": 0
   },
-  "geopotential_height": {
-    "cmap": "coolwarm",
-    "max": 5600,
-    "min": 4500
-  },
   "graupel_water_path": {
     "cmap":"GnBu",
     "max": 10,
@@ -179,16 +164,6 @@
     "max": 1000,
     "min": -1000
   },
-  "high_cloud_cover": {
-    "cmap": "Greys_r",
-    "max": 1,
-    "min": 0
-  },
-  "low_cloud_cover": {
-    "cmap": "Greys_r",
-    "max": 1,
-    "min": 0
-  },
   "mass_content_of_water_in_soil": {
     "cmap": "ocean_r",
     "max": 500,
@@ -199,11 +174,6 @@
     "max": 500,
     "min": -10
   },
-  "maximum_column_reflectivity": {
-    "cmap": "cubehelix_r",
-    "max": 70,
-    "min": 0
-  },
   "maximum_combined_cloud_amount_below_111m_asl": {
     "cmap": "Greys_r",
     "max": 1.0,
@@ -212,16 +182,6 @@
   "maximum_combined_cloud_amount_between_5574_and_13608m_asl": {
     "cmap": "Greys_r",
     "max": 1,
-    "min": 0
-  },
-  "medium_cloud_cover": {
-    "cmap": "Greys_r",
-    "max": 1,
-    "min": 0
-  },
-  "mixing_ratio": {
-    "cmap": "cividis_r",
-    "max": 0.002,
     "min": 0
   },
   "northward_wind": {
@@ -239,11 +199,6 @@
     "max": 5,
     "min": 1
   },
-  "pressure": {
-    "cmap": "coolwarm",
-    "max": 105600,
-    "min": 92000
-  },
   "potential_vorticity": {
      "cmap": "RdBu_r",
      "max": 0.000012,
@@ -258,11 +213,6 @@
     "cmap": "cividis",
     "max": 0.002,
     "min": 0
-  },
-  "relative_humidity": {
-    "cmap": "YlGnBu",
-    "max": 120,
-    "min": 20
   },
   "relative_humidity_at_screen_level": {
     "cmap": "Blues",
@@ -379,11 +329,6 @@
     "max": 10,
     "min": 0
   },
-  "total_cloud_cover": {
-    "cmap": "Greys_r",
-    "max": 1,
-    "min": 0
-  },
   "tropopause_level": {
     "cmap": "terrain",
     "max": 70,
@@ -419,7 +364,7 @@
     "max": 30.0,
     "min": 0.0
   },
-  "wind_speed_of_gust": {
+  "wind_speed_of_gust_at_10m": {
     "cmap": "Oranges",
     "max": 60,
     "min": 0
