@@ -1,6 +1,6 @@
 {
-  "3D cloud fraction": {
-    "cmap": "binary_r",
+  "3D_cloud_fraction": {
+    "cmap": "Greys_r",
     "max": 1,
     "min": 0
   },
@@ -16,8 +16,8 @@
   },
   "air_pressure_at_mean_sea_level": {
     "cmap": "coolwarm",
-    "max": 105600,
-    "min": 92000
+    "max": 104000,
+    "min": 94000
   },
   "air_temperature": {
     "cmap": "jet",
@@ -31,7 +31,7 @@
   },
   "atmosphere_mass_content_of_water_vapor": {
     "cmap": "Blues",
-    "max": 0.0002,
+    "max": 100,
     "min": 0
   },
   "atmosphere_mass_of_air_per_unit_area": {
@@ -44,7 +44,7 @@
     "max": 10560,
     "min": 9200
   },
-  "atmospheric_boundary_layer_thickness": {
+  "atmosphere_boundary_layer_thickness": {
     "cmap": "terrain",
     "levels": [
       0,
@@ -115,12 +115,12 @@
     "min": -2000
   },
   "cloud_area_fraction": {
-    "cmap": "binary_r",
+    "cmap": "Greys_r",
     "max": 1,
     "min": 0
   },
   "ceilometrer_filtered_combined_cloud_amount_maximum_random_overlap": {
-    "cmap": "binary_r",
+    "cmap": "Greys_r",
     "max": 1,
     "min": 0
   },
@@ -150,14 +150,14 @@
      "min": 2.5
   },
   "combined_cloud_amount_maximum_random_overlap": {
-    "cmap": "binary_r",
+    "cmap": "Greys_r",
     "max": 1,
     "min": 0
   },
   "composite_radar_reflectivity": {
     "cmap": "cubehelix_r",
     "max": 70.0,
-    "min": -50.0
+    "min": -35.0
   },
   "divergence_of_wind": {
     "cmap": "PiYG",
@@ -185,7 +185,7 @@
     "min": 0.5
   },
   "fog_fraction_at_screen_level": {
-    "cmap": "binary_r",
+    "cmap": "Greys_r",
     "max": 1,
     "min": 0
   },
@@ -196,8 +196,8 @@
   },
   "graupel_water_path": {
     "cmap":"GnBu",
-    "max": 1.0,
-    "min": 0.0001
+    "max": 10,
+    "min": 0.0
   },
   "grid_surface_snow_amount": {
     "cmap": "cool",
@@ -227,24 +227,24 @@
     "min": -1000
   },
   "high_cloud_cover": {
-    "cmap": "binary_r",
+    "cmap": "Greys_r",
     "max": 1,
     "min": 0
   },
   "low_cloud_cover": {
-    "cmap": "binary_r",
+    "cmap": "Greys_r",
     "max": 1,
     "min": 0
   },
   "mass_content_of_water_in_soil": {
-    "cmap": "ocean",
-    "max": 50,
-    "min": 0
+    "cmap": "ocean_r",
+    "max": 500,
+    "min": -10
   },
   "mass_content_of_water_in_soil_layer": {
-    "cmap": "ocean",
-    "max": 50,
-    "min": 0
+    "cmap": "ocean_r",
+    "max": 500,
+    "min": -10
   },
   "maximum_column_reflectivity": {
     "cmap": "cubehelix_r",
@@ -252,17 +252,17 @@
     "min": 0
   },
   "maximum_combined_cloud_amount_below_111m_asl": {
-    "cmap": "binary_r",
+    "cmap": "Greys_r",
     "max": 1.0,
     "min": 0.0
   },
   "maximum_combined_cloud_amount_between_5574_and_13608m_asl": {
-    "cmap": "binary_r",
+    "cmap": "Greys_r",
     "max": 1,
     "min": 0
   },
   "medium_cloud_cover": {
-    "cmap": "binary_r",
+    "cmap": "Greys_r",
     "max": 1,
     "min": 0
   },
@@ -288,7 +288,7 @@
   },
   "number_of_lightning_flashes_in_column": {
     "cmap": "YlOrRd",
-    "max": 10,
+    "max": 5,
     "min": 1
   },
   "pressure": {
@@ -339,17 +339,17 @@
     ]
   },
   "surface_downward_longwave_flux": {
-    "cmap": "binary_r",
+    "cmap": "Greys_r",
     "max": 500,
     "min": 0
   },
   "surface_downward_longwave_flux_radiative_timestep": {
-    "cmap": "binary_r",
+    "cmap": "Greys_r",
     "max": 500,
     "min": 0
   },
   "surface_downward_shortwave_flux": {
-    "cmap": "binary_r",
+    "cmap": "Greys",
     "max": 1400,
     "min": 0
   },
@@ -479,8 +479,8 @@
   },
   "surface_net_shortwave_flux": {
     "cmap": "bwr",
-    "max": 100,
-    "min": -100
+    "max": 1400,
+    "min": -1400
   },
   "upward_heat_flux_in_air": {
     "cmap": "bwr",
@@ -508,23 +508,23 @@
     "min": 223
   },
   "toa_upward_longwave_flux": {
-    "cmap": "binary",
+    "cmap": "Greys",
     "max": 500,
     "min": 0
   },
   "toa_upward_shortwave_flux": {
-    "cmap": "binary",
+    "cmap": "Greys_r",
     "max": 1400,
     "min": 0
   },
   "top_upward_longwave_flux": {
-    "cmap": "binary",
+    "cmap": "Greys",
     "max": 500,
     "min": 0
   },
   "total_ice_water_path": {
     "cmap": "Blues",
-    "max": 0.002,
+    "max": 50,
     "min": 0
   },
   "total_lightning_flash_rate": {
@@ -533,14 +533,14 @@
     "min": 0
   },
   "total_cloud_cover": {
-    "cmap": "binary_r",
+    "cmap": "Greys_r",
     "max": 1,
     "min": 0
   },
   "tropopause_level": {
     "cmap": "terrain",
-    "max": 15000,
-    "min": 8000
+    "max": 70,
+    "min": 30
   },
   "turbulent_mixing_height": {
     "cmap": "terrain",
@@ -572,7 +572,7 @@
     "min": 0
   },
   "visibility_including_precipitation_at_screen_level": {
-    "cmap": "YlOrRd",
+    "cmap": "YlOrRd_r",
     "max": 25000,
     "min": 0
   },
