@@ -194,6 +194,7 @@ def _create_callback(is_ensemble: bool) -> callable:
             _deterministic_callback(cube, field, filename)
         _lfric_normalise_callback(cube, field, filename)
         _lfric_time_coord_fix_callback(cube, field, filename)
+        _longitude_fix_callback(cube, field, filename)
 
     return callback
 
@@ -280,6 +281,33 @@ def _lfric_time_coord_fix_callback(cube: iris.cube.Cube, field, filename):
 
     # Force single-valued coordinates to be scalar coordinates.
     return iris.util.squeeze(cube)
+
+
+def _longitude_fix_callback(cube: iris.cube.Cube, field, filename):
+    """Check longitude coordinates are in the range -180 deg to 180 deg.
+
+    This is necessary if comparing two models with different conventions --
+    for example, models where the prime meridian is defined as 0 deg or
+    360 deg. If not in the range -180 deg to 180 deg, we wrap the longitude
+    so that it falls in this range.
+    """
+    import CSET.operators._utils as utils
+
+    try:
+        y, x = utils.get_cube_yxcoordname(cube)
+    except ValueError:
+        return cube
+    long_coord = cube.coord(x)
+    long_points = long_coord.points.copy()
+    long_centre = np.mean(long_points)
+    while long_centre < -180.0:
+        long_centre += 360.0
+        long_points += 360.0
+    while long_centre >= 180.0:
+        long_centre -= 360.0
+        long_points -= 360.0
+    long_coord.points = long_points
+    return cube
 
 
 def _check_input_files(input_path: Path | str, filename_pattern: str) -> Iterable[Path]:
