@@ -26,7 +26,7 @@
   },
   "atmosphere_mass_content_of_cloud_ice": {
     "cmap": "Blues",
-    "max": 0.0025,
+    "max": 5,
     "min": 0.0
   },
   "atmosphere_mass_content_of_water_vapor": {
@@ -252,7 +252,7 @@
   "radar_reflectivity_at_1km_above_the_surface": {
     "cmap": "cubehelix_r",
     "max": 70.0,
-    "min": -50.0
+    "min": -35.0
   },
   "rain_mixing_ratio": {
     "cmap": "cividis",
