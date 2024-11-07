@@ -171,7 +171,9 @@ def test_regrid_to_single_point_west(cube):
     # Test extracting a single point.
     # Test that the grid latitude rotation works when the
     # centre of the grid is too far west.
-    cube.coord("grid_longitude").points -= 720.0
+    long_coord = cube.coord("grid_longitude").points.copy()
+    long_coord -= 720.0
+    cube.coord("grid_longitude").points = long_coord
     regrid_cube = regrid.regrid_to_single_point(
         cube, 0.5, -1.5, "Nearest", boundary_margin=1
     )
