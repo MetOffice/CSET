@@ -20,6 +20,7 @@ import iris.cube
 import numpy as np
 import pytest
 
+import CSET.operators.read as read
 import CSET.operators.regrid as regrid
 from CSET.operators.regrid import BoundaryWarning
 
@@ -174,8 +175,9 @@ def test_regrid_to_single_point_west(cube):
     long_coord = cube.coord("grid_longitude").points.copy()
     long_coord -= 720.0
     cube.coord("grid_longitude").points = long_coord
+    cube_fix = read._longitude_fix_callback(cube, None, None)
     regrid_cube = regrid.regrid_to_single_point(
-        cube, 0.5, -1.5, "Nearest", boundary_margin=1
+        cube_fix, 0.5, -1.5, "Nearest", boundary_margin=1
     )
     expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3)>"
     assert repr(regrid_cube) == expected_cube
