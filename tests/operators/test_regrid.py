@@ -152,7 +152,34 @@ def test_regrid_onto_xyspacing_unknown_method(regrid_source_cube):
 
 
 @pytest.mark.filterwarnings("ignore:Selected point is within")
-def test_regrid_to_single_point(cube):
+def test_regrid_to_single_point_east(cube):
+    """Regrid to single point."""
+    # Test extracting a single point.
+    # Test that the grid latitude rotation works when the
+    # centre of the grid is too far east (note that the
+    # test cube, by default, is too far east, centred east
+    # of 180 deg).
+    regrid_cube = regrid.regrid_to_single_point(
+        cube, 0.5, -1.5, "Nearest", boundary_margin=1
+    )
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3)>"
+    assert repr(regrid_cube) == expected_cube
+
+
+def test_regrid_to_single_point_west(cube):
+    """Regrid to single point."""
+    # Test extracting a single point.
+    # Test that the grid latitude rotation works when the
+    # centre of the grid is too far west.
+    cube.coord("grid_longitude").points -= 720.0
+    regrid_cube = regrid.regrid_to_single_point(
+        cube, 0.5, -1.5, "Nearest", boundary_margin=1
+    )
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3)>"
+    assert repr(regrid_cube) == expected_cube
+
+
+def test_regrid_to_single_point_longitude_transform_1(cube):
     """Regrid to single point."""
     # Test extracting a single point.
     regrid_cube = regrid.regrid_to_single_point(
@@ -162,11 +189,11 @@ def test_regrid_to_single_point(cube):
     assert repr(regrid_cube) == expected_cube
 
 
-def test_regrid_to_single_point_longitude_transform(cube):
+def test_regrid_to_single_point_longitude_transform_2(cube):
     """Regrid to single point."""
     # Test extracting a single point.
     regrid_cube = regrid.regrid_to_single_point(
-        cube, 0.5, -1.5, "Nearest", boundary_margin=1
+        cube, 0.5, -361.5, "Nearest", boundary_margin=1
     )
     expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3)>"
     assert repr(regrid_cube) == expected_cube
@@ -203,10 +230,16 @@ def test_regrid_to_single_point_unknown_crs_y(cube):
         regrid.regrid_to_single_point(cube, 0.5, 358.5, "Nearest")
 
 
-def test_regrid_to_single_point_outside_domain(regrid_source_cube):
+def test_regrid_to_single_point_outside_domain_longitude(regrid_source_cube):
     """Error if coordinates are outside the model domain."""
     with pytest.raises(ValueError):
         regrid.regrid_to_single_point(regrid_source_cube, 0.5, 178.5, "Nearest")
+
+
+def test_regrid_to_single_point_outside_domain_latitude(regrid_source_cube):
+    """Error if coordinates are outside the model domain."""
+    with pytest.raises(ValueError):
+        regrid.regrid_to_single_point(regrid_source_cube, 80.5, 358.5, "Nearest")
 
 
 @pytest.mark.filterwarnings("ignore:Selected point is within")
