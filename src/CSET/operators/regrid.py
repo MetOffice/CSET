@@ -218,9 +218,11 @@ def regrid_to_single_point(
         An iris cube of the data to regrid. As a minimum, it needs to be 2D with
         latitude, longitude coordinates.
     lon_pt: float
-        Selected value of longitude.
+        Selected value of longitude: this should be in the range -180 degrees to
+        180 degrees.
     lat_pt: float
-        Selected value of latitude.
+        Selected value of latitude: this should be in the range -90 degrees to
+        90 degrees.
     method: str
         Method used to determine the values at the selected longitude and
         latitude. The recommended approach is to use iris.analysis.Nearest(),
