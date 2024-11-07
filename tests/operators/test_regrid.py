@@ -160,8 +160,9 @@ def test_regrid_to_single_point_east(cube):
     # centre of the grid is too far east (note that the
     # test cube, by default, is too far east, centred east
     # of 180 deg).
+    cube_fix = read._longitude_fix_callback(cube, None, None)
     regrid_cube = regrid.regrid_to_single_point(
-        cube, 0.5, -1.5, "Nearest", boundary_margin=1
+        cube_fix, 0.5, -1.5, "Nearest", boundary_margin=1
     )
     expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3)>"
     assert repr(regrid_cube) == expected_cube
