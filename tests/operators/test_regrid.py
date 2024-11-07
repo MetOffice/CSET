@@ -224,14 +224,14 @@ def test_longitude_fix_callback_missing_coord(cube):
     # Missing X coordinate.
     source = cube.copy()
     source.remove_coord("grid_longitude")
-    with pytest.raises(ValueError):
-        read._longitude_fix_callback(source, None, None)
+    cube_fix = read._longitude_fix_callback(source, None, None)
+    assert cube_fix == source
 
     # Missing Y coordinate.
     source = cube.copy()
     source.remove_coord("grid_latitude")
-    with pytest.raises(ValueError):
-        read._longitude_fix_callback(source, None, None)
+    cube_fix = read._longitude_fix_callback(source, None, None)
+    assert cube_fix == source
 
 
 def test_regrid_to_single_point_unknown_crs_x(cube):
