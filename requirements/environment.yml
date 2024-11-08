@@ -5,6 +5,8 @@ dependencies:
   # Runtime dependencies
   - numpy
   - iris >= 3.5
+  - certifi < 2024.5
+  - iris >= 3.5
   - ruamel.yaml >= 0.17
   - mo_pack # For handling pp files.
   - pygraphviz
