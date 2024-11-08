@@ -130,8 +130,6 @@ class HTTPFileRetriever(FileRetrieverABC):
         any_files_copied = False
         try:
             with urllib.request.urlopen(file_path, timeout=30, context=ctx) as response:
-                if response.status != 200:
-                    raise OSError(f"Cannot retrieve URL: {response.status}")
                 with open(save_path, "wb") as fp:
                     # Read in 1 MiB chunks so data needn't fit in memory.
                     while data := response.read(1024 * 1024):
