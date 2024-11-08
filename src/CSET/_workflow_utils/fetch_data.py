@@ -123,6 +123,8 @@ class HTTPFileRetriever(FileRetrieverABC):
             True if files were transferred, otherwise False.
         """
         ctx = ssl.create_default_context()
+        # Needed to enable compatibility with malformed iBoss TLS certificates.
+        ctx.verify_flags &= ~ssl.VERIFY_X509_STRICT
         save_path = (
             f"{output_dir.removesuffix('/')}/"
             + urllib.parse.urlparse(file_path).path.split("/")[-1]
