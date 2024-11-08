@@ -13,24 +13,27 @@ CSET Documentation
    changelog
    GitHub <https://github.com/MetOffice/CSET>
 
-CSET (Convective- and turbulence-scale Evaluation and verification Toolkit) is an open-source
-toolkit for evaluation, verification and investigation of convective- and
-turbulence-scale numerical models for weather and climate applications, cutting
-across time and space scales with a focus on regional domains.
+CSET (Convective- and turbulence-scale Evaluation and verification Toolkit) is
+an open-source toolkit for evaluation, verification and investigation of
+convective- and turbulence-scale numerical models for weather and climate
+applications, cutting across time and space scales with a focus on regional
+domains.
 
-CSET provides a centralised and peer-reviewed source of tools
-to aid process-oriented evaluation for UM and LFRic models, supporting both
-deterministic and ensemble configurations. It will support evaluation of machine learning models and
-utilise observations from a range of sources to aid in the evaluation process.
+CSET provides a centralised and peer-reviewed source of tools to aid
+process-oriented evaluation for UM and LFRic models, supporting both
+deterministic and ensemble configurations. It will support evaluation of machine
+learning models and utilise observations from a range of sources to aid in the
+evaluation process.
 
-It will utilise the Model Evaluation Tools (MET) software to provide a range of verification metrics
-aligned with operational verification best practices.
+It will utilise the Model Evaluation Tools (MET) software to provide a range of
+verification metrics aligned with operational verification best practices.
 
-For model and diagnostics developers CSET offers well documented and peer reviewed evaluation
-tools with a well defined release cycle and flexible evaluation code that can adapt to users needs. CSET is built with portability in mind
-and can be run on a range of platforms from local desktops to HPC systems and AWS servers. It
-ensures traceable and reproduceable results during the model assessment cycle and offers a legacy for
-diagnostics and access to observations.
+For model and diagnostics developers CSET offers well documented and peer
+reviewed evaluation tools with a well defined release cycle and flexible
+evaluation code that can adapt to users needs. CSET is built with portability in
+mind and can be run on a range of platforms from local desktops to HPC systems
+and AWS servers. It ensures traceable and reproduceable results during the model
+assessment cycle and offers a legacy for diagnostics and access to observations.
 
 It aligns parametrisation development, diagnostic development and evaluation
 research, feeding back into Regional Atmosphere and Land (RAL) model development
