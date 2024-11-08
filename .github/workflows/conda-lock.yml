@@ -61,7 +61,7 @@ jobs:
           shopt -s globstar
           for file in **/locks/*.txt
           do
-            cat "$file" | (sed -u 1q; sort) > sorted.txt
+            cat "$file" | (sed -u 4q; sort) > sorted.txt
             mv sorted.txt "$file"
           done
 
