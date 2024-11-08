@@ -260,7 +260,7 @@ def fetch_data(file_retriever: FileRetrieverABC = FilesystemFileRetriever):
         files_found = any(
             executor.map(retriever.get_file, paths, itertools.repeat(cycle_data_dir))
         )
-    # We don't need to exhause the iterator, as all futures are submitted
+    # We don't need to exhaust the iterator, as all futures are submitted
     # before map yields anything. Therefore they will all be resolved upon
     # exiting the with block.
     if not files_found:
