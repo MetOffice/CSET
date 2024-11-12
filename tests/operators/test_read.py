@@ -180,7 +180,7 @@ def test_check_input_files_no_file_in_directory(tmp_path):
 
 def test_um_normalise_callback_rename_stash(cube):
     """Correctly translate from STASH to LFRic variable name."""
-    read._um_normalise_callback(cube, "m01s03i236", None)
+    read._um_normalise_callback(cube, None, None)
     actual = cube.long_name
     expected = "temperature_at_screen_level"
     assert actual == expected
