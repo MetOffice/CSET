@@ -152,14 +152,13 @@ def test_regrid_onto_xyspacing_unknown_method(regrid_source_cube):
         )
 
 
-@pytest.mark.filterwarnings("ignore:Selected point is within")
 def test_regrid_to_single_point_east(cube):
-    """Regrid to single point."""
-    # Test extracting a single point.
-    # Test that the grid latitude rotation works when the
-    # centre of the grid is too far east (note that the
-    # test cube, by default, is too far east, centred east
-    # of 180 deg).
+    """Test extracting a single point.
+
+    Test that the grid latitude rotation works when the
+    centre of the grid is too far east (that is, the centre
+    of the longitude range is further east than 180 deg).
+    """
     cube_fix = read._longitude_fix_callback(cube, None, None)
     regrid_cube = regrid.regrid_to_single_point(
         cube_fix, 0.5, -1.5, "Nearest", boundary_margin=1
@@ -169,10 +168,12 @@ def test_regrid_to_single_point_east(cube):
 
 
 def test_regrid_to_single_point_west(cube):
-    """Regrid to single point."""
-    # Test extracting a single point.
-    # Test that the grid latitude rotation works when the
-    # centre of the grid is too far west.
+    """Test extracting a single point.
+
+    Test that the grid latitude rotation works when the
+    centre of the grid is too far west (that is, the centre
+    of the longitude range is further west than -180 deg).
+    """
     long_coord = cube.coord("grid_longitude").points.copy()
     long_coord -= 720.0
     cube.coord("grid_longitude").points = long_coord
@@ -185,8 +186,12 @@ def test_regrid_to_single_point_west(cube):
 
 
 def test_regrid_to_single_point_longitude_transform_1(cube):
-    """Regrid to single point."""
-    # Test extracting a single point.
+    """Test extracting a single point.
+
+    Test that, if a longitude selection is made that is too
+    far east (further east than 180 deg), the code corrects it
+    back into the standard range (-180 deg to 180 deg).
+    """
     regrid_cube = regrid.regrid_to_single_point(
         cube, 0.5, 358.5, "Nearest", boundary_margin=1
     )
@@ -195,8 +200,12 @@ def test_regrid_to_single_point_longitude_transform_1(cube):
 
 
 def test_regrid_to_single_point_longitude_transform_2(cube):
-    """Regrid to single point."""
-    # Test extracting a single point.
+    """Test extracting a single point.
+
+    Test that, if a longitude selection is made that is too
+    far west (further west than -180 deg), the code corrects it
+    back into the standard range (-180 deg to 180 deg).
+    """
     regrid_cube = regrid.regrid_to_single_point(
         cube, 0.5, -361.5, "Nearest", boundary_margin=1
     )
@@ -224,13 +233,13 @@ def test_longitude_fix_callback_missing_coord(cube):
     # Missing X coordinate.
     source = cube.copy()
     source.remove_coord("grid_longitude")
-    cube_fix = read._longitude_fix_callback(source, None, None)
+    cube_fix = read._longitude_fix_callback(source.copy(), None, None)
     assert cube_fix == source
 
     # Missing Y coordinate.
     source = cube.copy()
     source.remove_coord("grid_latitude")
-    cube_fix = read._longitude_fix_callback(source, None, None)
+    cube_fix = read._longitude_fix_callback(source.copy(), None, None)
     assert cube_fix == source
 
 

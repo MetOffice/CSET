@@ -296,10 +296,11 @@ def _longitude_fix_callback(cube: iris.cube.Cube, field, filename):
     try:
         y, x = utils.get_cube_yxcoordname(cube)
     except ValueError:
+        # Don't modify non-spatial cubes.
         return cube
     long_coord = cube.coord(x)
     long_points = long_coord.points.copy()
-    long_centre = np.mean(long_points)
+    long_centre = np.median(long_points)
     while long_centre < -180.0:
         long_centre += 360.0
         long_points += 360.0
