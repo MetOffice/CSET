@@ -112,7 +112,7 @@ def regrid_onto_xyspacing(
     yspacing: int,
     method: str,
     **kwargs,
-) -> iris.cube.Cube:
+) -> iris.cube.Cube | iris.cube.CubeList:
     """Regrid cube or cubelist onto a set x,y spacing.
 
     Regrid cube(s) using specified x,y spacing, which is performed linearly.
