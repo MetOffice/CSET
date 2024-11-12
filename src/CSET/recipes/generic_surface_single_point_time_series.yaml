@@ -17,6 +17,7 @@ steps:
   - operator: regrid.regrid_to_single_point
     lat_pt: $LATITUDE_POINT
     lon_pt: $LONGITUDE_POINT
+    latlon_in_type: $LATLON_IN_TYPE
     method: $SINGLE_POINT_METHOD
 
   # Make a single NetCDF with all the data inside it.
