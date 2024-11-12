@@ -30,7 +30,7 @@ import numpy as np
 from iris.cube import Cube
 from scipy.ndimage import gaussian_filter
 
-from CSET.operators._utils import get_cube_xycoordname
+from CSET.operators._utils import get_cube_yxcoordname
 
 
 def _calc_dist(coord_1, coord_2):
@@ -306,7 +306,7 @@ def compute_ageofair(
         raise NotImplementedError("Time intervals are not consistent")
 
     # Get coord points
-    lat_name, lon_name = get_cube_xycoordname(XWIND)
+    lon_name, lat_name = get_cube_yxcoordname(XWIND)
     lats = XWIND.coord(lat_name).points
     lons = XWIND.coord(lon_name).points
     time = XWIND.coord("time").points
