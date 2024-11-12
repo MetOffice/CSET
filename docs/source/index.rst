@@ -32,7 +32,7 @@ For model and diagnostics developers CSET offers well documented and peer
 reviewed evaluation tools with a well defined release cycle and flexible
 evaluation code that can adapt to users needs. CSET is built with portability in
 mind and can be run on a range of platforms from local desktops to HPC systems
-and AWS servers. It ensures traceable and reproduceable results during the model
+and cloud servers. It ensures traceable and reproducible results during the model
 assessment cycle and offers a legacy for diagnostics and access to observations.
 
 It aligns parametrisation development, diagnostic development and evaluation
