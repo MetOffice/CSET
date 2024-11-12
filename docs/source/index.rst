@@ -37,7 +37,7 @@ assessment cycle and offers a legacy for diagnostics and access to observations.
 
 It aligns parametrisation development, diagnostic development and evaluation
 research, feeding back into Regional Atmosphere and Land (RAL) model development
-across the Met Office and Momentum partnership.
+across the Met Office and Momentum® Partnership.
 
 It is build on a modern software stack using python 3 and METplus. Clear
 documentation, working practices, automatic testing, and open access promote
