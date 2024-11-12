@@ -1,5 +1,5 @@
 category: Diagnostics
-title: Age of Air Diagnostic
+title: $MODEL_NAME Age of Air Diagnostic at $AOA_PLEV
 description: |
   Extracts data required for, and calculates the age of air diagnostic on a given pressure levels. This is then plotted on a map projection for each lead-time. A timeseries plot is also produced.
 
