@@ -1,10 +1,12 @@
-"""Module to contain field mappings for UM STASH codes to LFRic long names."""
+"""Module to contain field mappings for UM STASH codes to LFRic long names.
 
-""" ORIGINAL CODE AT source=svn://fcm1/cma.xm_svn/contrib/trunk/irislib. """
-""" Please update the original code source as well as this file if changes required. """
+ORIGINAL CODE AT source=svn://fcm1/cma.xm_svn/contrib/trunk/irislib.
+Please update the original code source as well as this file if changes required.
+"""
+
 
 # Set up UM STASH code to cube name mapping
-#  Form of entry is <stashcode>: (<long_name>, <grid>)
+# Form of entry is <stashcode>: (<long_name>, <grid>)
 STASH_TO_LFRIC = {
     "m01s00i002": ("eastward_wind_at_cell_centres", "face"),
     "m01s00i003": ("northward_wind_at_cell_centres", "face"),
