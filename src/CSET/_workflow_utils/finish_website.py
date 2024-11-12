@@ -33,7 +33,11 @@ def construct_index():
             with open(directory / "meta.json", "rt", encoding="UTF-8") as fp:
                 plot_metadata = json.load(fp)
             record = {
-                plot_metadata["category"]: {directory.name: plot_metadata["title"]}
+                plot_metadata["category"]: {
+                    directory.name: plot_metadata["title"]
+                    + " "
+                    + os.getenv("CYLC_TASK_CYCLE_POINT", "")
+                }
             }
         except FileNotFoundError:
             # Skip directories without metadata, as are likely not plots.
