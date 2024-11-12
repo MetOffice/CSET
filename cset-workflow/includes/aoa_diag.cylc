@@ -6,7 +6,7 @@
     inherit = PROCESS
     execution time limit = PT60M
         [[[environment]]]
-        CSET_RECIPE_NAME = "ageofair_plot.yaml"
+        CSET_RECIPE_NAME = "ageofair.yaml"
         CSET_ADDOPTS = "--AOA_PLEV={{plev}} --AOA_INCW={{AOA_INCW}} --AOA_CYCLIC={{AOA_CYCLIC}}"
 {% endfor %}
 {% endif %}
