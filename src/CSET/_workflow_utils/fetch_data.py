@@ -123,6 +123,8 @@ class HTTPFileRetriever(FileRetrieverABC):
             True if files were transferred, otherwise False.
         """
         ctx = ssl.create_default_context()
+        # Needed to enable compatibility with malformed iBoss TLS certificates.
+        ctx.verify_flags &= ~ssl.VERIFY_X509_STRICT
         save_path = (
             f"{output_dir.removesuffix('/')}/"
             + urllib.parse.urlparse(file_path).path.split("/")[-1]
@@ -130,8 +132,6 @@ class HTTPFileRetriever(FileRetrieverABC):
         any_files_copied = False
         try:
             with urllib.request.urlopen(file_path, timeout=30, context=ctx) as response:
-                if response.status != 200:
-                    raise OSError(f"Cannot retrieve URL: {response.status}")
                 with open(save_path, "wb") as fp:
                     # Read in 1 MiB chunks so data needn't fit in memory.
                     while data := response.read(1024 * 1024):
@@ -260,7 +260,7 @@ def fetch_data(file_retriever: FileRetrieverABC = FilesystemFileRetriever):
         files_found = any(
             executor.map(retriever.get_file, paths, itertools.repeat(cycle_data_dir))
         )
-    # We don't need to exhause the iterator, as all futures are submitted
+    # We don't need to exhaust the iterator, as all futures are submitted
     # before map yields anything. Therefore they will all be resolved upon
     # exiting the with block.
     if not files_found:

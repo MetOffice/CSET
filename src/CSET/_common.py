@@ -30,7 +30,7 @@ class ArgumentError(ValueError):
     """Provided arguments are not understood."""
 
 
-def parse_recipe(recipe_yaml: Union[Path, str], variables: dict = None):
+def parse_recipe(recipe_yaml: Union[Path, str], variables: dict = None) -> dict:
     """Parse a recipe into a python dictionary.
 
     Parameters

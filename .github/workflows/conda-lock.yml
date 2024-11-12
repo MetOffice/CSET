@@ -25,7 +25,7 @@ jobs:
         run: python3 -m pip install conda-lock
 
       - name: Update conda
-        run: conda update -q conda
+        run: conda update --channel conda-forge --quiet conda
 
       - name: Hash existing lock files
         run: |
@@ -55,6 +55,15 @@ jobs:
             conda-lock --channel conda-forge --kind explicit --file "${{ runner.temp }}/${py_ver}_workflow_environment.yml" --platform linux-64 --filename-template "cset-workflow/requirements/locks/py$(echo $py_ver | sed 's/\.//')-lock-linux-64.txt" &
           done
           wait
+
+      - name: Sort lock files to make diffs easier to review
+        run: |
+          shopt -s globstar
+          for file in **/locks/*.txt
+          do
+            cat "$file" | (sed -u 4q; sort) > sorted.txt
+            mv sorted.txt "$file"
+          done
 
       - name: Generate GitHub App Token
         uses: actions/create-github-app-token@5d869da34e18e7287c1daad50e0b8ea0f506ce69
