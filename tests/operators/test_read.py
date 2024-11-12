@@ -178,6 +178,14 @@ def test_check_input_files_no_file_in_directory(tmp_path):
         read._check_input_files(tmp_path, "*")
 
 
+def test_um_normalise_callback_rename_stash(cube):
+    """Correctly translate from STASH to LFRic variable name."""
+    read._um_normalise_callback(cube, "m01s03i236", None)
+    actual = cube.long_name
+    expected = "temperature_at_screen_level"
+    assert actual == expected
+
+
 def test_lfric_normalise_callback_remove_attrs(cube):
     """Correctly remove unneeded attributes."""
     cube.attributes["uuid"] = "87096862-89c3-4749-9c6c-0be91c2a7954"
