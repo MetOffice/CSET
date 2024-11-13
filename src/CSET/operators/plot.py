@@ -230,7 +230,7 @@ def _plot_and_save_spatial_plot(
         The plotting method to use.
     """
     # Setup plot details, size, resolution, etc.
-    fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
     # Specify the color bar
     cmap, levels, norm = _colorbar_map_levels(cube.name())
@@ -823,7 +823,7 @@ def _spatial_plot(
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
         coord = cube_slice.coord(sequence_coordinate)
         # Format the coordinate value in a unit appropriate way.
-        title = f"{recipe_title} | {coord.units.title(coord.points[0])}"
+        title = f"{recipe_title}\n{coord.units.title(coord.points[0])}"
         # Do the actual plotting.
         plotting_func(
             cube_slice,
@@ -1086,7 +1086,7 @@ def plot_vertical_line_series(
         sequence_value = seq_coord.points[0]
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
         # Format the coordinate value in a unit appropriate way.
-        title = f"{recipe_title} | {seq_coord.units.title(sequence_value)}"
+        title = f"{recipe_title}\n{seq_coord.units.title(sequence_value)}"
         # Do the actual plotting.
         _plot_and_save_vertical_line_series(
             cube_slice,
@@ -1298,7 +1298,7 @@ def plot_histogram_series(
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
         coord = cube_slice.coord(sequence_coordinate)
         # Format the coordinate value in a unit appropriate way.
-        title = f"{recipe_title} | {coord.units.title(coord.points[0])}"
+        title = f"{recipe_title}\n{coord.units.title(coord.points[0])}"
         # Do the actual plotting.
         plotting_func(
             cube_slice,
