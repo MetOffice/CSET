@@ -1,6 +1,7 @@
 name: cset-workflow
 channels:
   - conda-forge
+  - nodefaults
 dependencies:
   # Runtime dependencies
   - cset

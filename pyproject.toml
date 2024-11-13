@@ -63,6 +63,7 @@ testpaths = ["tests"]
 branch = true
 relative_files = true
 source = ["src"]
+omit = ["__main__.py"]
 
 [tool.tox]
 legacy_tox_ini = '''
