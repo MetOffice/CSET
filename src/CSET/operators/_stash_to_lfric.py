@@ -4,7 +4,6 @@ ORIGINAL CODE AT source=svn://fcm1/cma.xm_svn/contrib/trunk/irislib.
 Please update the original code source as well as this file if changes required.
 """
 
-
 # Set up UM STASH code to cube name mapping
 # Form of entry is <stashcode>: (<long_name>, <grid>)
 STASH_TO_LFRIC = {
