@@ -252,8 +252,14 @@ def _um_normalise_callback(cube: iris.cube.Cube, field, filename):
     # Convert STASH to LFRic variable name
     if "STASH" in cube.attributes:
         stash = cube.attributes["STASH"]
-        (name, grid) = STASH_TO_LFRIC.get(str(stash), (None, "a"))
-        cube.long_name = name
+        try:
+            (name, grid) = STASH_TO_LFRIC.get(str(stash), (None, "a"))
+            cube.long_name = name
+        except KeyError:
+            logging.warning("Unknown STASH code: %s", stash)
+            logging.warning("Please check file stash_to_lfric.py to update.")
+            # Don't change cubes with unknown stash codes.
+            pass
 
 
 def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
