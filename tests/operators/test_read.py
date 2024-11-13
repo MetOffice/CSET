@@ -14,6 +14,8 @@
 
 """Reading operator tests."""
 
+import logging
+
 import iris
 import iris.coords
 import iris.cube
@@ -184,6 +186,14 @@ def test_um_normalise_callback_rename_stash(cube):
     actual = cube.long_name
     expected = "temperature_at_screen_level"
     assert actual == expected
+
+
+def test_um_normalise_callback_missing_entry(cube, caplog):
+    """Warning when STASH dictionary doesn't contain stash."""
+    cube.attributes["STASH"] = "m00s00i000"
+    read._um_normalise_callback(cube, None, None)
+    _, level, message = caplog.record_tuples[0]
+    assert level == logging.WARNING
 
 
 def test_lfric_normalise_callback_remove_attrs(cube):

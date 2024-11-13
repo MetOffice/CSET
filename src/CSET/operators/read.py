@@ -253,7 +253,7 @@ def _um_normalise_callback(cube: iris.cube.Cube, field, filename):
     if "STASH" in cube.attributes:
         stash = cube.attributes["STASH"]
         try:
-            (name, grid) = STASH_TO_LFRIC.get(str(stash), (None, "a"))
+            (name, grid) = STASH_TO_LFRIC[str(stash)]
             cube.long_name = name
         except KeyError:
             logging.warning("Unknown STASH code: %s", stash)
