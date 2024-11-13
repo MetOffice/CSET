@@ -37,7 +37,7 @@ def construct_index():
                     directory.name: plot_metadata["title"]
                     + " "
                     + os.getenv("CYLC_TASK_CYCLE_POINT", "")
-                }
+                }.strip()
             }
         except FileNotFoundError:
             # Skip directories without metadata, as are likely not plots.
