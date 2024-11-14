@@ -26,6 +26,8 @@ import iris.cube
 import iris.util
 import numpy as np
 
+from CSET.operators._stash_to_lfric import STASH_TO_LFRIC
+
 
 class NoDataWarning(UserWarning):
     """Warning that no data has been loaded."""
@@ -192,6 +194,7 @@ def _create_callback(is_ensemble: bool) -> callable:
             _ensemble_callback(cube, field, filename)
         else:
             _deterministic_callback(cube, field, filename)
+        _um_normalise_callback(cube, field, filename)
         _lfric_normalise_callback(cube, field, filename)
         _lfric_time_coord_fix_callback(cube, field, filename)
         _longitude_fix_callback(cube, field, filename)
@@ -238,6 +241,25 @@ def _deterministic_callback(cube, field, filename):
         cube.add_aux_coord(
             iris.coords.AuxCoord(np.int32(0), standard_name="realization", units="1")
         )
+
+
+def _um_normalise_callback(cube: iris.cube.Cube, field, filename):
+    """Normalise UM STASH variable long names to LFRic variable names.
+
+    Note standard names will remain associated with cubes where different.
+    Long name will be used consistently in output filename and titles.
+    """
+    # Convert STASH to LFRic variable name
+    if "STASH" in cube.attributes:
+        stash = cube.attributes["STASH"]
+        try:
+            (name, grid) = STASH_TO_LFRIC[str(stash)]
+            cube.long_name = name
+        except KeyError:
+            logging.warning("Unknown STASH code: %s", stash)
+            logging.warning("Please check file stash_to_lfric.py to update.")
+            # Don't change cubes with unknown stash codes.
+            pass
 
 
 def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
