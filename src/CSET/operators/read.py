@@ -247,7 +247,7 @@ def _um_normalise_callback(cube: iris.cube.Cube, field, filename):
     """Normalise UM STASH variable long names to LFRic variable names.
 
     Note standard names will remain associated with cubes where different.
-    Long_name will be used consistently in output filename and titles.
+    Long name will be used consistently in output filename and titles.
     """
     # Convert STASH to LFRic variable name
     if "STASH" in cube.attributes:
