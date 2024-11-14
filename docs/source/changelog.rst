@@ -20,6 +20,7 @@ This release contains a large number of bug fixes and small improvements, and
 sets the stage for the major cycling improvement (:issue:`750`) coming in the
 next release in a few days.
 
+* Added line wrapping for title. by `@Sylviabohnenstengel`_ in :pr:`935`
 * Parse recipe variables as python literals by `@jfrost-mo`_ in :pr:`683`
 * Fixed metplus config issue  by `@dasha-shchep`_ in :pr:`693`
 * Clarify error message on missing files by `@jfrost-mo`_ in :pr:`663`

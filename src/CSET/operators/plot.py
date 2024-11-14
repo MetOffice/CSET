@@ -230,7 +230,7 @@ def _plot_and_save_spatial_plot(
         The plotting method to use.
     """
     # Setup plot details, size, resolution, etc.
-    fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
     # Specify the color bar
     cmap, levels, norm = _colorbar_map_levels(cube.name())
@@ -348,7 +348,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
     # Use the smallest square grid that will fit the members.
     grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
 
-    fig = plt.figure(figsize=(8, 8))
+    fig = plt.figure(figsize=(10, 10))
 
     # Specify the color bar
     cmap, levels, norm = _colorbar_map_levels(cube.name())
@@ -423,7 +423,7 @@ def _plot_and_save_line_series(
     title: str
         Plot title.
     """
-    fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     iplt.plot(coord, cube, "o-")
     ax = plt.gca()
 
@@ -473,7 +473,7 @@ def _plot_and_save_vertical_line_series(
         Maximum value for the x-axis.
     """
     # plot the vertical pressure axis using log scale
-    fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     iplt.plot(cube, coord, "o-")
     ax = plt.gca()
 
@@ -555,7 +555,7 @@ def _plot_and_save_scatter_plot(
     one_to_one: bool
         Whether a 1:1 line is plotted.
     """
-    fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     iplt.scatter(cube_x, cube_y)
     if one_to_one is True:
         plt.plot(
@@ -625,7 +625,7 @@ def _plot_and_save_histogram_series(
         histogram or "barstacked", "stepfilled". "Step" is the default option,
         but can be changed in the rose-suite.conf configuration.
     """
-    fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     # Reshape cube data into a single array to allow for a single histogram.
     # Otherwise we plot xdim histograms stacked.
     cube_data_1d = (cube.data).flatten()
@@ -691,7 +691,7 @@ def _plot_and_save_postage_stamp_histogram_series(
     # Use the smallest square grid that will fit the members.
     grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
 
-    fig = plt.figure(figsize=(8, 8), facecolor="w", edgecolor="k")
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     # Make a subplot for each member.
     for member, subplot in zip(
         cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1), strict=False
@@ -725,7 +725,7 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
     histtype: str = "step",
     **kwargs,
 ):
-    fig, ax = plt.subplots(figsize=(8, 8), facecolor="w", edgecolor="k")
+    fig, ax = plt.subplots(figsize=(10, 10), facecolor="w", edgecolor="k")
     ax.set_title(title)
     ax.set_xlim(vmin, vmax)
     ax.set_xlabel(f"{cube.name()} / {cube.units}")
@@ -823,7 +823,7 @@ def _spatial_plot(
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
         coord = cube_slice.coord(sequence_coordinate)
         # Format the coordinate value in a unit appropriate way.
-        title = f"{recipe_title} | {coord.units.title(coord.points[0])}"
+        title = f"{recipe_title}\n{coord.units.title(coord.points[0])}"
         # Do the actual plotting.
         plotting_func(
             cube_slice,
@@ -1086,7 +1086,7 @@ def plot_vertical_line_series(
         sequence_value = seq_coord.points[0]
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
         # Format the coordinate value in a unit appropriate way.
-        title = f"{recipe_title} | {seq_coord.units.title(sequence_value)}"
+        title = f"{recipe_title}\n{seq_coord.units.title(sequence_value)}"
         # Do the actual plotting.
         _plot_and_save_vertical_line_series(
             cube_slice,
@@ -1298,7 +1298,7 @@ def plot_histogram_series(
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
         coord = cube_slice.coord(sequence_coordinate)
         # Format the coordinate value in a unit appropriate way.
-        title = f"{recipe_title} | {coord.units.title(coord.points[0])}"
+        title = f"{recipe_title}\n{coord.units.title(coord.points[0])}"
         # Do the actual plotting.
         plotting_func(
             cube_slice,
