@@ -213,6 +213,20 @@ def test_regrid_to_single_point_longitude_transform_2(cube):
     assert repr(regrid_cube) == expected_cube
 
 
+def test_regrid_to_single_point_realworld(cube):
+    """Test extracting a single point.
+
+    Test that, if a real world coordinate is specified, the code is
+    mapping this point correctly onto the rotated grid.
+    """
+    cube_fix = read._longitude_fix_callback(cube, None, None)
+    regrid_cube = regrid.regrid_to_single_point(
+        cube_fix, 52.98, -5.0, "realworld", "Nearest", boundary_margin=1
+    )
+    expected_array = "array(288.59375, dtype=float32)"
+    assert repr(regrid_cube[0].data) == expected_array
+
+
 def test_regrid_to_single_point_missing_coord(cube):
     """Missing coordinate raises error."""
     # Missing X coordinate.
