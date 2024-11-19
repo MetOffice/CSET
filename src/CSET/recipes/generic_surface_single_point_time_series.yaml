@@ -1,5 +1,5 @@
 category: Time Series
-title: $MODEL_NAME Time series of $VARNAME at $LATITUDE_POINT N, $LONGITUDE_POINT E
+title: $MODEL_NAME Time series of $VARNAME at $LATITUDE_POINT N, $LONGITUDE_POINT E "("$SINGLE_POINT_METHOD")"
 description: Plots a time series of the surface $VARNAME at a selected gridpoint.
 
 steps:
