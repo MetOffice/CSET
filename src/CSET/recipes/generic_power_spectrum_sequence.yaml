@@ -1,0 +1,26 @@
+category: Power spectrum plot
+title: $MODEL_NAME Surface $VARNAME
+description: Extracts and plots the power spectrum of surface $VARNAME for all times in $MODEL_NAME.
+
+steps:
+  - operator: read.read_cube
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: "pressure"
+        levels: []
+
+  - operator: power_spectrum.power_spectrum
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+  - operator: plot.power_spectrum_sequence
+    sequence_coordinate: time

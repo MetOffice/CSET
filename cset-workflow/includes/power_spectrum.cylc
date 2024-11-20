@@ -1,0 +1,16 @@
+{% if POWER_SPECTRUM|default(False) %}
+{% for equivalent_field in restructure_field_list(SURFACE_MODEL_FIELDS) %}
+{% for model_number, field in equivalent_field.items() %}
+[runtime]
+    [[generic_power_spectrum_series_m{{model_number}}_{{sanitise_task_name(field)}}]]
+    inherit = PROCESS
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_power_spectrum_sequence.yaml"
+        CSET_ADDOPTS = """
+            --VARNAME='{{field}}'
+            --MODEL_NAME='{{models[model_number]["name"]}}'
+        """
+        MODEL_NUMBER = {{model_number}}
+{% endfor %}
+{% endfor %}
+{% endif %}

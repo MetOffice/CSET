@@ -841,6 +841,38 @@ def _spatial_plot(
     _make_plot_html_page(complete_plot_index)
 
 
+def _plot_and_save_power_spectrum_series(
+    cube: iris.cube.Cube,
+    filename: str = None,
+    series_coordinate: str = "time",
+    **kwargs,
+):
+    """
+    Plot the radial average power spectrum from the given 1D cube.
+
+    Parameters
+    ----------
+    radial_average_cube : iris.cube.Cube
+        The 1D cube containing the radial average power spectrum.
+    filename : str, optional
+        The filename to save the plot. If None, the plot will be displayed.
+    """
+    # Extract data from the cube
+    radius = cube.coord("radius").points
+    power_spectrum = cube.data
+
+    # Plot the radial average power spectrum
+    plt.figure()
+    plt.plot(radius, power_spectrum)
+    plt.xlabel("Radius")
+    plt.ylabel("Average Power")
+    plt.title("Radial Average Power Spectrum")
+
+    # Save the plot if a filename is provided
+    if filename:
+        plt.savefig(filename)
+
+
 ####################
 # Public functions #
 ####################
@@ -1309,6 +1341,83 @@ def plot_histogram_series(
             vmax=vmax,
             histtype=histtype,
         )
+        plot_index.append(plot_filename)
+
+    # Add list of plots to plot metadata.
+    complete_plot_index = _append_to_plot_index(plot_index)
+
+    # Make a page to display the plots.
+    _make_plot_html_page(complete_plot_index)
+
+    return cube
+
+
+def plot_power_spectrum(
+    cube: iris.cube.Cube,
+    filename: str = None,
+    sequence_coordinate: str = "time",
+    single_plot: bool = False,
+    **kwargs,
+) -> iris.cube.Cube:
+    """Plot a power spectrum.
+
+    The cube must contain a power spectrum.
+
+    Parameters
+    ----------
+    cube: Cube
+        Iris cube of the data to plot. It should be a 2D cube and can have an additional
+        dimension to be plotted as series.
+    filename: str, optional
+        Name of the plot to write, used as a prefix for plot sequences. Defaults
+        to the recipe name.
+    sequence_coordinate: str, optional
+        Coordinate about which to make a plot sequence. Defaults to ``"time"``.
+        This coordinate must exist in the cube and will be used for the time
+        slider.
+
+    Returns
+    -------
+    Cube
+        The original cube (so further operations can be applied).
+
+    Raises
+    ------
+    ValueError
+        If the cube doesn't have the right dimensions.
+    TypeError
+        If the cube isn't a single cube.
+    """
+    recipe_title = get_recipe_metadata().get("title", "Untitled")
+
+    # Ensure we have a name for the plot file.
+    if filename is None:
+        filename = slugify(recipe_title)
+
+    # Ensure we've got a single cube.
+    cube = _check_single_cube(cube)
+
+    # Internal plotting function.
+    plotting_func = _plot_and_save_power_spectrum_series
+
+    # If several histograms are plotted with time as sequence_coordinate for the
+    # time slider option.
+    try:
+        cube.coord(sequence_coordinate)
+    except iris.exceptions.CoordinateNotFoundError as err:
+        raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
+
+    # Create a plot for each value of the sequence coordinate.
+    plot_index = []
+    for cube_slice in cube.slices_over(sequence_coordinate):
+        # Use sequence value so multiple sequences can merge.
+        sequence_value = cube_slice.coord(sequence_coordinate).points[0]
+        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
+        coord = cube_slice.coord(sequence_coordinate)
+        # Format the coordinate value in a unit appropriate way.
+        title = f"{recipe_title}\n{coord.units.title(coord.points[0])}"
+        # Do the actual plotting.
+        plotting_func(cube_slice, plot_filename, title=title)
         plot_index.append(plot_filename)
 
     # Add list of plots to plot metadata.
