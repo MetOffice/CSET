@@ -17,7 +17,7 @@ steps:
         coordinate: "pressure"
         levels: []
 
-  - operator: power_spectrum.power_spectrum
+  - operator: power_spectrum.calculate_power_spectrum
 
   - operator: write.write_cube_to_nc
     overwrite: True

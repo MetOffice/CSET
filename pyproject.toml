@@ -31,7 +31,7 @@ dependencies = [
     "isodate",
     "markdown-it-py >= 3.0",
     "nc-time-axis",
-    "scipy.fft",
+    "scipy",
 ]
 
 [project.urls]
