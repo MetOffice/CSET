@@ -34,6 +34,7 @@ from CSET.operators import (
     filters,
     misc,
     plot,
+    power_spectrum,
     read,
     regrid,
     transect,
@@ -55,6 +56,7 @@ __all__ = [
     "regrid",
     "transect",
     "write",
+    "power_spectrum",
 ]
 
 # Stop iris giving a warning whenever it loads something.
