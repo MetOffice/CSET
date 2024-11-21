@@ -14,6 +14,8 @@
 
 """Operator to calculate power spectrum from a 2D cube or CubeList."""
 
+import logging
+
 import iris
 import numpy as np
 from scipy.fft import fft2, fftshift
@@ -38,41 +40,66 @@ def calculate_power_spectrum(
     ValueError
         If the constraint doesn't produce a single cube.
     """
-    # Perform 2D Fourier transform
-    cube_fft = fftshift(fft2(cube.data))
+    # Check if the cube has at least 2 dimensions
+    if cube.ndim < 2:
+        logging.debug("Cube must have at least 2 dimensions", cube.ndim, cube.shape)
+        raise ValueError("Cube must have at least 2 dimensions")
 
-    # Calculate power spectrum
-    power_spectrum = np.abs(cube_fft) ** 2
+    # Handle 3D cube (time,x,y)
+    if cube.ndim == 3:
+        logging.info("Calculating power spectrum for 3D cube")
+        power_spectra = []
+        for t in range(cube.shape[0]):
+            # Access the last two dimensions (x, y) for each time slice
+            data_slice = cube[t].data
+            cube_fft = fftshift(fft2(data_slice))
+            power_spectrum = np.abs(cube_fft) ** 2
+            power_spectra.append(power_spectrum)
 
-    """Calculate the radial average of the power spectrum to achieve a 1D lineplot
-    and not a heatmap. We chose radial average to avoid a directional 1D power spectrum.
-    """
-    y, x = np.indices(power_spectrum.shape)
-    center = np.array([x.max() / 2, y.max() / 2])
-    r = np.hypot(x - center[0], y - center[1])
+        # Stack the power spectra along the time dimension
+        power_spectra = np.stack(power_spectra)
+        logging.info("Power spectrum calculated for 3D cube", power_spectra.shape)
+    else:
+        # Handle 2D cube (x, y)
+        logging.info("Calculating power spectrum for 2D cube")
+        cube_fft = fftshift(fft2(cube.data))
+        power_spectrum = np.abs(cube_fft) ** 2
+        power_spectra = power_spectrum[np.newaxis, ...]
 
-    # Sort the radii and power spectrum
-    ind = np.argsort(r.flat)
-    r_sorted = r.flat[ind]
-    power_spectrum_sorted = power_spectrum.flat[ind]
+    # Calculate the radial average of the power spectrum for each time slice
+    radial_means = []
+    for t in range(power_spectra.shape[0]):
+        power_spectrum = power_spectra[t]
+        y, x = np.indices(power_spectrum.shape)
+        center = np.array([x.max() / 2, y.max() / 2])
+        r = np.hypot(x - center[0], y - center[1])
 
-    # Calculate the radial average
-    r_bin_edges = np.arange(0, r.max() + 1, 1)
-    r_bin_centers = (r_bin_edges[:-1] + r_bin_edges[1:]) / 2
-    radial_mean = np.zeros(len(r_bin_centers))
+        # Create bins for the radial distances
+        r_bin_edges = np.arange(0, r.max() + 1, 1)
+        r_bin_centers = (r_bin_edges[:-1] + r_bin_edges[1:]) / 2
 
-    for i in range(len(r_bin_centers)):
-        mask = (r_sorted >= r_bin_edges[i]) & (r_sorted < r_bin_edges[i + 1])
-        radial_mean[i] = power_spectrum_sorted[mask].mean()
+        # Digitize the radial distances to find the bin index for each point
+        r_bin_indices = np.digitize(r.flat, r_bin_edges) - 1
 
-    # Create a new 1D cube for the radial average power spectrum
+        # Calculate the radial average using np.bincount
+        radial_sum = np.bincount(r_bin_indices, weights=power_spectrum.flat)
+        radial_count = np.bincount(r_bin_indices)
+        radial_mean = radial_sum / radial_count
+
+        radial_means.append(radial_mean)
+
+    # Stack the radial averages along the time dimension
+    radial_means = np.stack(radial_means)
+
+    # Create a new 2D cube for the radial average power spectrum
     radial_average_cube = iris.cube.Cube(
-        radial_mean,
+        radial_means,
         long_name="radial_average_power_spectrum",
         units="unknown",
         dim_coords_and_dims=[
-            (iris.coords.DimCoord(r_bin_centers, long_name="radius", units="1"), 0)
+            (cube.coord("time"), 0),
+            (iris.coords.DimCoord(r_bin_centers, long_name="radius", units="1"), 1),
         ],
     )
-
+    logging.info("Radial average power spectrum calculated", radial_average_cube.shape)
     return radial_average_cube
