@@ -5,9 +5,14 @@
     [[aoa_diag_m{{model["number"]}}_plev{{plev}}]]
     inherit = PROCESS
     execution time limit = PT60M
+
+        [[[directives]]]
+        --mem=20000
+
         [[[environment]]]
         CSET_RECIPE_NAME = "ageofair.yaml"
-        CSET_ADDOPTS = "--AOA_PLEV={{plev}} --AOA_INCW={{AOA_INCW}} --AOA_CYCLIC={{AOA_CYCLIC}} --MODEL_NAME='{{model["name"]}}"
+        CSET_ADDOPTS = "--AOA_PLEV={{plev}} --AOA_INCW={{AOA_INCW}} --AOA_CYCLIC={{AOA_CYCLIC}} --MODEL_NAME='{{model["name"]}}'"
         MODEL_NUMBER = {{model["number"]}}
+{% endfor %}
 {% endfor %}
 {% endif %}
