@@ -39,6 +39,19 @@ def calculate_power_spectrum(
     ------
     ValueError
         If the constraint doesn't produce a single cube.
+
+    Notes
+    -----
+    Fourier Transform: COnverting the spatial domain signal (timesclice) into the frequency domain.
+    The calculated spectrums holds information about the different frequency components present in each spatial domain.
+
+    To turn a 2D heatmap into a 1D power spectrum we require some averaging around the zero frequency component
+    at the center of the frequency space: This represents the average intensity of the original spatial domain signal.
+
+    Power Spectrum: calculated as the squared magnitude of the Fourier coefficients.
+    The zero frequency component in the power spectrum represents the total power or
+    energy of the mean value of the original signal.
+
     """
     # Check if the cube has at least 2 dimensions
     if cube.ndim < 2:

@@ -22,5 +22,5 @@ steps:
   - operator: write.write_cube_to_nc
     overwrite: True
 
-  - operator: plot.power_spectrum
+  - operator: plot.plot_power_spectrum
     sequence_coordinate: time
