@@ -5,24 +5,8 @@ description: |
 
 steps:
   - operator: read.read_cubes
-  - operator: filters.filter_multiple_cubes
 
-    constraint_xwind:
-        operator: constraints.generate_stash_constraint
-        stash: m01s15i201
-    constraint_ywind:
-        operator: constraints.generate_stash_constraint
-        stash: m01s15i202
-    constraint_wwind:
-        operator: constraints.generate_stash_constraint
-        stash: m01s15i242
-    constraint_geopot:
-        operator: constraints.generate_stash_constraint
-        stash: m01s16i202
-
-  - operator: write.write_cube_to_nc
-    filename: intermediate/filtered
-
+  - operator: ageofair.compute_ageofair
     XWIND:
         operator: regrid.regrid_onto_xyspacing
         xspacing: 0.5
@@ -63,15 +47,6 @@ steps:
             constraint:
                 operator: constraints.generate_stash_constraint
                 stash: m01s16i202
-
-  - operator: write.write_cube_to_nc
-    filename: intermediate/regridded
-
-
-  - operator: read.read_cubes
-    filename_pattern: intermediate/*.nc
-
-  - operator: ageofair.compute_ageofair
 
     plev: $AOA_PLEV
     incW: $AOA_INCW
