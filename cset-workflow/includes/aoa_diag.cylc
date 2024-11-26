@@ -7,7 +7,7 @@
     execution time limit = PT60M
 
         [[[directives]]]
-        --mem=20000
+        --mem=80000
 
         [[[environment]]]
         CSET_RECIPE_NAME = "ageofair.yaml"

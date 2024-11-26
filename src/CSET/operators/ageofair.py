@@ -260,6 +260,10 @@ def compute_ageofair(
         An iris cube of the age of air data, with 3 dimensions (time, latitude, longitude).
 
     """
+    logging.info("Testing")
+    logging.info(XWIND)
+    logging.info(type(XWIND))
+
     # Set up temporary directory to store intermediate age of air slices.
     tmpdir = tempfile.mkdtemp()
     logging.info("Made tmpdir %s", tmpdir)
