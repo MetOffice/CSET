@@ -89,7 +89,7 @@ def _aoa_core(
     lats: np.ndarray
         A numpy array containing latitude points.
     lons: np.ndarray
-        A numpy array containing latitude points.
+        A numpy array containing longitude points.
     dt: int
         Gap between time intervals
     plev_idx: int
@@ -116,7 +116,7 @@ def _aoa_core(
             outside_lam = False
 
             # If final column, look at dist from prev column, otherwise look at next column.
-            if lon_pnt == len(lons) - 1:
+            if int(lon_pnt) == int(len(lons) - 1):
                 ew_spacing = _calc_dist(
                     (lats[lat_pnt], lons[lon_pnt]), (lats[lat_pnt], lons[lon_pnt - 1])
                 )
@@ -126,7 +126,7 @@ def _aoa_core(
                 )
 
             # If final row, look at dist from row column, otherwise look at next row.
-            if lat_pnt == len(lats) - 1:
+            if int(lat_pnt) == int(len(lats) - 1):
                 ns_spacing = _calc_dist(
                     (lats[lat_pnt], lons[lon_pnt]), (lats[lat_pnt - 1], lons[lon_pnt])
                 )
@@ -206,7 +206,7 @@ def compute_ageofair(
     plev: int,
     incW: bool,
     cyclic: bool = False,
-    multicore=True,
+    multicore=False,
 ):
     """
     Compute back trajectories for a given forecast.
@@ -260,13 +260,9 @@ def compute_ageofair(
         An iris cube of the age of air data, with 3 dimensions (time, latitude, longitude).
 
     """
-    logging.info("Testing")
-    logging.info(XWIND)
-    logging.info(type(XWIND))
-
     # Set up temporary directory to store intermediate age of air slices.
-    tmpdir = tempfile.mkdtemp()
-    logging.info("Made tmpdir %s", tmpdir)
+    tmpdir = tempfile.TemporaryDirectory()
+    logging.info("Made tmpdir %s", tmpdir.name)
 
     # Check that all cubes are of same size (will catch different dimension orders too).
     if not XWIND.shape == YWIND.shape == WWIND.shape == GEOPOT.shape:
@@ -280,10 +276,6 @@ def compute_ageofair(
 
     # Make data non-lazy to speed up code.
     logging.info("Making data non-lazy...")
-    XWIND.realise_data()
-    YWIND.realise_data()
-    WWIND.realise_data()
-    GEOPOT.realise_data()
     x_arr = XWIND.data
     y_arr = YWIND.data
     z_arr = WWIND.data
@@ -310,7 +302,7 @@ def compute_ageofair(
         raise NotImplementedError("Time intervals are not consistent")
 
     # Get coord points
-    lon_name, lat_name = get_cube_yxcoordname(XWIND)
+    lat_name, lon_name = get_cube_yxcoordname(XWIND)
     lats = XWIND.coord(lat_name).points
     lons = XWIND.coord(lon_name).points
     time = XWIND.coord("time").points
@@ -354,13 +346,13 @@ def compute_ageofair(
             plev_idx,
             timeunit,
             cyclic,
-            tmpdir,
+            tmpdir.name,
         )
         # Unix API for getting set of usable CPUs.
         # See https://docs.python.org/3/library/os.html#os.cpu_count
         num_usable_cores = len(os.sched_getaffinity(0))
         with multiprocessing.Pool(num_usable_cores) as pool:
-            pool.map(func, range(0, XWIND.shape[3]))
+            pool.map(func, range(0, XWIND.shape[3] - 1))
     else:
         # Single core - better for debugging.
         for i in range(0, XWIND.shape[3]):
@@ -375,7 +367,7 @@ def compute_ageofair(
                 plev_idx,
                 timeunit,
                 cyclic,
-                tmpdir,
+                tmpdir.name,
                 i,
             )
 
@@ -384,7 +376,7 @@ def compute_ageofair(
         "AOA DIAG DONE, took %s s", (datetime.datetime.now() - start).total_seconds()
     )
     for i in range(0, XWIND.shape[3]):
-        file = f"{tmpdir}/aoa_frag_{i:04}.npy"
+        file = f"{tmpdir.name}/aoa_frag_{i:04}.npy"
         ageofair_cube.data[:, :, i] = np.load(file)
         os.remove(file)
 
