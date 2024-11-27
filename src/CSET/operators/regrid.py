@@ -218,9 +218,11 @@ def regrid_to_single_point(
         An iris cube of the data to regrid. As a minimum, it needs to be 2D with
         latitude, longitude coordinates.
     lon_pt: float
-        Selected value of longitude.
+        Selected value of longitude: this should be in the range -180 degrees to
+        180 degrees.
     lat_pt: float
-        Selected value of latitude.
+        Selected value of latitude: this should be in the range -90 degrees to
+        90 degrees.
     method: str
         Method used to determine the values at the selected longitude and
         latitude. The recommended approach is to use iris.analysis.Nearest(),
@@ -290,14 +292,19 @@ def regrid_to_single_point(
     )
 
     # Check to see if selected point is outside the domain
-    if (
-        (lat_pt < lat_min)
-        or (lat_pt > lat_max)
-        or (lon_pt < lon_min)
-        or (lon_pt > lon_max)
-    ):
+    if (lat_pt < lat_min) or (lat_pt > lat_max):
         raise ValueError("Selected point is outside the domain.")
-    elif (
+    else:
+        if (lon_pt < lon_min) or (lon_pt > lon_max):
+            if (lon_pt + 360.0 >= lon_min) and (lon_pt + 360.0 <= lon_max):
+                lon_pt += 360.0
+            elif (lon_pt - 360.0 >= lon_min) and (lon_pt - 360.0 <= lon_max):
+                lon_pt -= 360.0
+            else:
+                raise ValueError("Selected point is outside the domain.")
+
+    # Check to see if selected point is near the domain boundaries
+    if (
         (lat_pt < lat_min_bound)
         or (lat_pt > lat_max_bound)
         or (lon_pt < lon_min_bound)

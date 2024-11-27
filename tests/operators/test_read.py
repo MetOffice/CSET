@@ -14,6 +14,8 @@
 
 """Reading operator tests."""
 
+import logging
+
 import iris
 import iris.coords
 import iris.cube
@@ -176,6 +178,22 @@ def test_check_input_files_no_file_in_directory(tmp_path):
     """Error when input directory doesn't contain any files."""
     with pytest.raises(FileNotFoundError):
         read._check_input_files(tmp_path, "*")
+
+
+def test_um_normalise_callback_rename_stash(cube):
+    """Correctly translate from STASH to LFRic variable name."""
+    read._um_normalise_callback(cube, None, None)
+    actual = cube.long_name
+    expected = "temperature_at_screen_level"
+    assert actual == expected
+
+
+def test_um_normalise_callback_missing_entry(cube, caplog):
+    """Warning when STASH dictionary doesn't contain stash."""
+    cube.attributes["STASH"] = "m00s00i000"
+    read._um_normalise_callback(cube, None, None)
+    _, level, message = caplog.record_tuples[0]
+    assert level == logging.WARNING
 
 
 def test_lfric_normalise_callback_remove_attrs(cube):
