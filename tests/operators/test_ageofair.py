@@ -115,6 +115,46 @@ def test_aoa_incW_cyclic(xwind, ywind, wwind, geopot):
 
 
 @pytest.fixture()
+def test_aoa_incW_cyclic_parallelthreads(xwind, ywind, wwind, geopot):
+    """Test case including vertical velocity and cyclic with parallel."""
+    assert np.allclose(
+        ageofair.compute_ageofair(
+            xwind,
+            ywind,
+            wwind,
+            geopot,
+            plev=500,
+            incW=True,
+            cyclic=True,
+            multicore=True,
+        ).data,
+        iris.load_cube("tests/test_data/ageofair/aoa_out_incW_cyclic.nc").data,
+        rtol=1e-06,
+        atol=1e-02,
+    )
+
+
+@pytest.fixture()
+def test_aoa_incW_cyclic_singlethread(xwind, ywind, wwind, geopot):
+    """Test case including vertical velocity and cyclic with no parallelisation."""
+    assert np.allclose(
+        ageofair.compute_ageofair(
+            xwind,
+            ywind,
+            wwind,
+            geopot,
+            plev=500,
+            incW=True,
+            cyclic=True,
+            multicore=False,
+        ).data,
+        iris.load_cube("tests/test_data/ageofair/aoa_out_incW_cyclic.nc").data,
+        rtol=1e-06,
+        atol=1e-02,
+    )
+
+
+@pytest.fixture()
 def test_aoa_mismatched_size(xwind, ywind, wwind, geopot):
     """Mismatched array size raises error."""
     ywind = ywind()[:, :, 1:, :]
