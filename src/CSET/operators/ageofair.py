@@ -206,7 +206,7 @@ def compute_ageofair(
     plev: int,
     incW: bool,
     cyclic: bool = False,
-    multicore=False,
+    multicore=True,
 ):
     """
     Compute back trajectories for a given forecast.
