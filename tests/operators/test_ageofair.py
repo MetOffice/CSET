@@ -62,6 +62,16 @@ def geopot() -> iris.cube.Cube:
     )
 
 
+def ens_regridded() -> iris.cube.CubeList:
+    """Get regridded ensemble cubelist to run tests on."""
+    return iris.load("tests/test_data/ageofair/aoa_in_ens.nc")
+
+
+def ens_regridded_out() -> iris.cube.Cube:
+    """Get age of air ensemble output to check results are consistent."""
+    return iris.load("tests/test_data/ageofair/aoa_out_incW_ens.nc")
+
+
 @pytest.fixture()
 def test_aoa_noincW_nocyclic(xwind, ywind, wwind, geopot):
     """Test case no vertical velocity and not cyclic."""
@@ -197,3 +207,51 @@ def test_aoa_plevreq(xwind, ywind, wwind, geopot):
         ageofair.compute_ageofair(
             xwind, ywind, wwind, geopot, plev=123, incW=True, cyclic=True
         )
+
+
+@pytest.fixture()
+def test_aoa_ens(ens_regridded):
+    """Test case including vertical velocity and not cyclic for ensemble data."""
+    assert np.allclose(
+        ageofair.compute_ageofair(
+            ens_regridded.extract("x_wind")[0],
+            ens_regridded.extract("y_wind")[0],
+            ens_regridded.extract("upward_air_velocity")[0],
+            ens_regridded.extract("geopotential_height")[0],
+            plev=200,
+            incW=True,
+            cyclic=False,
+        ).data,
+        iris.load_cube("tests/test_data/ageofair/aoa_out_incW_ens.nc").data,
+        rtol=1e-06,
+        atol=1e-02,
+    )
+
+
+@pytest.fixture()
+def test_aoa_ens_multicore(ens_regridded):
+    """Test case with ensembles ensuring that single core and multicore produce identical values."""
+    assert np.allclose(
+        ageofair.compute_ageofair(
+            ens_regridded.extract("x_wind")[0],
+            ens_regridded.extract("y_wind")[0],
+            ens_regridded.extract("upward_air_velocity")[0],
+            ens_regridded.extract("geopotential_height")[0],
+            plev=200,
+            incW=True,
+            cyclic=False,
+            multicore=True,
+        ).data,
+        ageofair.compute_ageofair(
+            ens_regridded.extract("x_wind")[0],
+            ens_regridded.extract("y_wind")[0],
+            ens_regridded.extract("upward_air_velocity")[0],
+            ens_regridded.extract("geopotential_height")[0],
+            plev=200,
+            incW=True,
+            cyclic=False,
+            multicore=False,
+        ).data,
+        rtol=1e-06,
+        atol=1e-02,
+    )
