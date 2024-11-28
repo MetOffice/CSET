@@ -6,7 +6,7 @@
     [[generic_plevel_spatial_plot_sequence_m{{model_number}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
     inherit = PROCESS
         [[[directives]]]
-        --mem=4000
+        --mem=12000
 
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_plevel_spatial_plot_sequence.yaml"
