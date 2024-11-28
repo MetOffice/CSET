@@ -214,6 +214,8 @@ def compute_ageofair(
     This allows us to determine when air entered through the boundaries. This will run on all available
     lead-times, and thus return an age of air cube of shape ntime, nlat, nlon. It supports multiprocesing,
     by iterating over longitude, or if set as None, will run on a single core, which is easier for debugging.
+    This function supports ensembles, where it will check if realization dimension exists and if so, loop
+    over this axis.
 
     Arguments
     ----------
@@ -281,17 +283,11 @@ def compute_ageofair(
     z_arr = WWIND.data
     g_arr = GEOPOT.data
 
-    # Smooth vertical velocity if using, to 2sigma (standard for 0.5 degree).
-    if incW:
-        logging.info("Smoothing vertical velocity...")
-        for t in range(0, z_arr.shape[0]):
-            for p in range(0, z_arr.shape[1]):
-                z_arr[t, p, :, :] = gaussian_filter(
-                    z_arr[t, p, :, :], [2, 2], mode="nearest"
-                )
-    else:
-        # If not using vertical velocity, set vertical velocity to zero.
-        z_arr[:] = 0
+    # Get coord points
+    lat_name, lon_name = get_cube_yxcoordname(XWIND)
+    lats = XWIND.coord(lat_name).points
+    lons = XWIND.coord(lon_name).points
+    time = XWIND.coord("time").points
 
     # Get time spacing of cube to determine whether the spacing in time is the
     # same throughout the cube. If not, then not supported.
@@ -301,11 +297,46 @@ def compute_ageofair(
     else:
         raise NotImplementedError("Time intervals are not consistent")
 
-    # Get coord points
-    lat_name, lon_name = get_cube_yxcoordname(XWIND)
-    lats = XWIND.coord(lat_name).points
-    lons = XWIND.coord(lon_name).points
-    time = XWIND.coord("time").points
+    # Some logic to determine which index each axis is, and check for ensembles.
+    dimension_mapping = {}
+    for coord in XWIND.dim_coords:
+        dim_index = XWIND.coord_dims(coord.name())[0]
+        dimension_mapping[coord.name()] = dim_index
+
+    if "realization" in dimension_mapping:
+        ensemble_mode = True
+        if dimension_mapping != {
+            "realization": 0,
+            "time": 1,
+            "pressure": 2,
+            lat_name: 3,
+            lon_name: 4,
+        }:
+            raise f"Dimension mapping not correct, ordered {dimension_mapping}"
+    else:
+        ensemble_mode = False
+        if dimension_mapping != {"time": 0, "pressure": 1, lat_name: 2, lon_name: 3}:
+            raise f"Dimension mapping not correct, ordered {dimension_mapping}"
+
+    # Smooth vertical velocity if using, to 2sigma (standard for 0.5 degree).
+    if incW and ensemble_mode:
+        logging.info("Smoothing vertical velocity...")
+        for e in range(0, z_arr.shape[0]):
+            for t in range(0, z_arr.shape[1]):
+                for p in range(0, z_arr.shape[2]):
+                    z_arr[e, t, p, :, :] = gaussian_filter(
+                        z_arr[e, t, p, :, :], [2, 2], mode="nearest"
+                    )
+    elif incW and not ensemble_mode:
+        logging.info("Smoothing vertical velocity...")
+        for t in range(0, z_arr.shape[0]):
+            for p in range(0, z_arr.shape[1]):
+                z_arr[t, p, :, :] = gaussian_filter(
+                    z_arr[t, p, :, :], [2, 2], mode="nearest"
+                )
+    else:
+        # If not using vertical velocity, set vertical velocity to zero.
+        z_arr[:] = 0
 
     # Get array index for user specified pressure level.
     if plev not in XWIND.coord("pressure").points:
@@ -320,47 +351,97 @@ def compute_ageofair(
     plev_idx = np.where(XWIND.coord("pressure").points == plev)[0][0]
 
     # Initialise cube containing age of air.
-    ageofair_cube = Cube(
-        np.zeros((len(time), len(lats), len(lons))),
-        long_name="age_of_air",
-        dim_coords_and_dims=[
-            (XWIND.coord("time"), 0),
-            (XWIND.coord(lat_name), 1),
-            (XWIND.coord(lon_name), 2),
-        ],
-    )
+    if ensemble_mode:
+        ageofair_cube = Cube(
+            np.zeros(
+                (
+                    len(XWIND.coord("realization").points),
+                    len(time),
+                    len(lats),
+                    len(lons),
+                )
+            ),
+            long_name="age_of_air",
+            dim_coords_and_dims=[
+                (XWIND.coord("realization"), 0),
+                (XWIND.coord("time"), 1),
+                (XWIND.coord(lat_name), 2),
+                (XWIND.coord(lon_name), 3),
+            ],
+        )
+    else:
+        ageofair_cube = Cube(
+            np.zeros((len(time), len(lats), len(lons))),
+            long_name="age_of_air",
+            dim_coords_and_dims=[
+                (XWIND.coord("time"), 0),
+                (XWIND.coord(lat_name), 1),
+                (XWIND.coord(lon_name), 2),
+            ],
+        )
 
     logging.info("STARTING AOA DIAG...")
     start = datetime.datetime.now()
-    if multicore:
-        # Multiprocessing on each longitude slice
-        func = partial(
-            _aoa_core,
-            np.copy(x_arr),
-            np.copy(y_arr),
-            np.copy(z_arr),
-            np.copy(g_arr),
-            lats,
-            lons,
-            dt,
-            plev_idx,
-            timeunit,
-            cyclic,
-            tmpdir.name,
-        )
-        # Unix API for getting set of usable CPUs.
-        # See https://docs.python.org/3/library/os.html#os.cpu_count
-        num_usable_cores = len(os.sched_getaffinity(0))
-        with multiprocessing.Pool(num_usable_cores) as pool:
-            pool.map(func, range(0, XWIND.shape[3] - 1))
+    if ensemble_mode:
+        for e in range(0, len(XWIND.coord("realization").points)):
+            logging.info(f"Working on member {e}")
+            if multicore:
+                # Multiprocessing on each longitude slice
+                func = partial(
+                    _aoa_core,
+                    np.copy(x_arr[e, :, :, :, :]),
+                    np.copy(y_arr[e, :, :, :, :]),
+                    np.copy(z_arr[e, :, :, :, :]),
+                    np.copy(g_arr[e, :, :, :, :]),
+                    lats,
+                    lons,
+                    dt,
+                    plev_idx,
+                    timeunit,
+                    cyclic,
+                    tmpdir.name,
+                )
+                # Unix API for getting set of usable CPUs.
+                # See https://docs.python.org/3/library/os.html#os.cpu_count
+                num_usable_cores = len(os.sched_getaffinity(0))
+                with multiprocessing.Pool(num_usable_cores) as pool:
+                    pool.map(func, range(0, XWIND.shape[4]))
+            else:
+                # Single core - better for debugging.
+                for i in range(0, XWIND.shape[4]):
+                    _aoa_core(
+                        x_arr[e, :, :, :, :],
+                        y_arr[e, :, :, :, :],
+                        z_arr[e, :, :, :, :],
+                        g_arr[e, :, :, :, :],
+                        lats,
+                        lons,
+                        dt,
+                        plev_idx,
+                        timeunit,
+                        cyclic,
+                        tmpdir.name,
+                        i,
+                    )
+
+            # Verbose for time taken to run, and collate tmp ndarrays into final cube, and return
+            logging.info(
+                "AOA DIAG DONE, took %s s",
+                (datetime.datetime.now() - start).total_seconds(),
+            )
+            for i in range(0, XWIND.shape[4]):
+                file = f"{tmpdir.name}/aoa_frag_{i:04}.npy"
+                ageofair_cube.data[e, :, :, i] = np.load(file)
+                os.remove(file)
     else:
-        # Single core - better for debugging.
-        for i in range(0, XWIND.shape[3]):
-            _aoa_core(
-                x_arr,
-                y_arr,
-                z_arr,
-                g_arr,
+        if multicore:
+            # Multiprocessing on each longitude slice
+            func = partial(
+                _aoa_core,
+                np.copy(x_arr),
+                np.copy(y_arr),
+                np.copy(z_arr),
+                np.copy(g_arr),
                 lats,
                 lons,
                 dt,
@@ -368,17 +449,39 @@ def compute_ageofair(
                 timeunit,
                 cyclic,
                 tmpdir.name,
-                i,
             )
+            # Unix API for getting set of usable CPUs.
+            # See https://docs.python.org/3/library/os.html#os.cpu_count
+            num_usable_cores = len(os.sched_getaffinity(0))
+            with multiprocessing.Pool(num_usable_cores) as pool:
+                pool.map(func, range(0, XWIND.shape[3]))
+        else:
+            # Single core - better for debugging.
+            for i in range(0, XWIND.shape[3]):
+                _aoa_core(
+                    x_arr,
+                    y_arr,
+                    z_arr,
+                    g_arr,
+                    lats,
+                    lons,
+                    dt,
+                    plev_idx,
+                    timeunit,
+                    cyclic,
+                    tmpdir.name,
+                    i,
+                )
 
-    # Verbose for time taken to run, and collate tmp ndarrays into final cube, and return
-    logging.info(
-        "AOA DIAG DONE, took %s s", (datetime.datetime.now() - start).total_seconds()
-    )
-    for i in range(0, XWIND.shape[3]):
-        file = f"{tmpdir.name}/aoa_frag_{i:04}.npy"
-        ageofair_cube.data[:, :, i] = np.load(file)
-        os.remove(file)
+        # Verbose for time taken to run, and collate tmp ndarrays into final cube, and return
+        logging.info(
+            "AOA DIAG DONE, took %s s",
+            (datetime.datetime.now() - start).total_seconds(),
+        )
+        for i in range(0, XWIND.shape[3]):
+            file = f"{tmpdir.name}/aoa_frag_{i:04}.npy"
+            ageofair_cube.data[:, :, i] = np.load(file)
+            os.remove(file)
 
     # Clean tmpdir
     tmpdir.cleanup()
