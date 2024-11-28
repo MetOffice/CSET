@@ -8,6 +8,7 @@
 
         [[[directives]]]
         --mem=80000
+        --ntasks=12
 
         [[[environment]]]
         CSET_RECIPE_NAME = "ageofair.yaml"
