@@ -36,6 +36,9 @@ from markdown_it import MarkdownIt
 from CSET._common import get_recipe_metadata, render_file, slugify
 from CSET.operators._utils import get_cube_yxcoordname, is_transect
 
+# Use a non-interactive plotting backend.
+mpl.use("agg")
+
 ############################
 # Private helper functions #
 ############################
