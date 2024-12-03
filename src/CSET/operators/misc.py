@@ -18,9 +18,11 @@ import itertools
 from collections.abc import Iterable
 from typing import Union
 
+import cf_units
 from iris.cube import Cube, CubeList
 
 from CSET._common import iter_maybe
+from CSET.operators._utils import fully_equalise_attributes, get_initiation_time
 
 
 def noop(x, **kwargs):
@@ -237,3 +239,55 @@ def combine_cubes_into_cubelist(first: Cube | CubeList, **kwargs) -> CubeList:
         else:
             raise TypeError("Not a Cube or CubeList!", item)
     return all_cubes
+
+
+def convert_to_lead_time(cube: Cube | CubeList) -> Cube | CubeList:
+    """Convert time coordinate to time since the forecast initiation."""
+    for c in iter_maybe(cube):
+        init_time = get_initiation_time(c)
+        time_coord = c.coord("time")
+        # init_time_numeric = time_coord.units.date2num(init_time)
+        # time_coord.points = time_coord.points - init_time_numeric
+        time_coord.rename("forecast_lead_time")
+        time_coord.units = cf_units.Unit("seconds")
+        # Add the reference time back.
+        c.attributes["forecast_reference_time"] = init_time.isoformat()
+    return cube
+
+
+def difference(base, other):
+    """Difference of two fields.
+
+    Parameters
+    ----------
+    base: Cube
+        Any field to have another field subtracted from it.
+    other: Cube
+        Any field to be subtracted from to another field.
+
+    Returns
+    -------
+    Cube
+
+    Raises
+    ------
+    ValueError
+        When the cubes are not compatible.
+
+    Notes
+    -----
+    This is a simple operator designed for combination of diagnostics or
+    creating new diagnostics by using recipes. It can be used for model
+    differences to allow for comparisons between the same field in different
+    models or model configurations.
+
+    Examples
+    --------
+    >>> model_diff = misc.difference(temperature_model_A, temperature_model_B)
+
+    """
+    fully_equalise_attributes([base, other])
+    new_cube = base - other
+
+    # TODO: Normalise attributes, etc.
+    return new_cube
