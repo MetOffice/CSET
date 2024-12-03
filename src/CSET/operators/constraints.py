@@ -23,6 +23,8 @@ import iris
 import iris.cube
 import iris.exceptions
 
+from CSET.operators._utils import get_initiation_time
+
 
 def generate_stash_constraint(stash: str, **kwargs) -> iris.AttributeConstraint:
     """Generate constraint from STASH code.
@@ -174,6 +176,33 @@ def generate_time_constraint(
     elif isinstance(time_end, str):
         time_end = datetime.fromisoformat(time_end)
     time_constraint = iris.Constraint(time=lambda t: time_start <= t.point <= time_end)
+    return time_constraint
+
+
+def generate_forecast_reference_time_constraint(
+    ref_time: str, **kwargs
+) -> iris.AttributeConstraint:
+    """Generate constraint on specific forecast reference time.
+
+    Operator that takes a ISO 8601 datetime string, and returns a constraint
+    that selects forecasts that began on that date and time.
+
+    Arguments
+    ---------
+    ref_time: str | datetime.datetime
+        ISO date for lower bound
+
+    Returns
+    -------
+    time_constraint: iris.Constraint
+    """
+    ref_time = datetime.fromisoformat(ref_time)
+
+    def cube_func(cube):
+        init_time = get_initiation_time(cube)
+        return init_time == ref_time
+
+    time_constraint = iris.Constraint(cube_func=cube_func)
     return time_constraint
 
 
