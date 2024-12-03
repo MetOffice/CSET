@@ -19,8 +19,11 @@ Functions below should only be added if it is not suitable as a standalone
 operator, and will be used across multiple operators.
 """
 
+import logging
+
 import iris
 import iris.cube
+import iris.util
 
 
 def get_cube_yxcoordname(cube: iris.cube.Cube) -> tuple[str, str]:
@@ -117,3 +120,22 @@ def is_transect(cube: iris.cube.Cube) -> bool:
 
     # Passed criteria so return True
     return True
+
+
+def fully_equalise_attributes(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Remove any unique attributes between cubes or coordinates."""
+    # Don't bother with single cubes.
+    if isinstance(cubes, iris.cube.Cube):
+        return cubes
+    # Equalise cube attributes.
+    removed = iris.util.equalise_attributes(cubes)
+    logging.debug("Removed attributes from cube: %s", removed)
+
+    # Equalise coordinate attributes.
+    for coord in (coordinate.name() for coordinate in cubes[0].coords()):
+        removed = iris.util.equalise_attributes([cube.coord(coord) for cube in cubes])
+        logging.debug("Removed attributes from coordinate %s: %s", coord, removed)
+
+    return cubes
