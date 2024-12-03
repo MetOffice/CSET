@@ -318,7 +318,7 @@ def _plot_and_save_spatial_plot(
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved contour plot to %s", filename)
+    logging.info("Saved spatial plot to %s", filename)
     plt.close(fig)
 
 
