@@ -19,8 +19,12 @@ Functions below should only be added if it is not suitable as a standalone
 operator, and will be used across multiple operators.
 """
 
+import logging
+
 import iris
 import iris.cube
+import iris.exceptions
+import iris.util
 
 
 def get_cube_yxcoordname(cube: iris.cube.Cube) -> tuple[str, str]:
@@ -153,3 +157,35 @@ def is_transect(cube: iris.cube.Cube) -> bool:
 
     # Passed criteria so return True
     return True
+
+
+def fully_equalise_attributes(cubes: iris.cube.CubeList):
+    """Remove any unique attributes between cubes or coordinates in place."""
+    # Equalise cube attributes.
+    removed = iris.util.equalise_attributes(cubes)
+    logging.debug("Removed attributes from cube: %s", removed)
+
+    # Equalise coordinate attributes.
+    coord_sets = [{coord.name() for coord in cube.coords()} for cube in cubes]
+
+    all_coords = set.union(*coord_sets)
+    coords_to_equalise = set.intersection(*coord_sets)
+    coords_to_remove = set.difference(all_coords, coords_to_equalise)
+
+    logging.debug("All coordinates: %s", all_coords)
+    logging.debug("Coordinates to remove: %s", coords_to_remove)
+    logging.debug("Coordinates to equalise: %s", coords_to_equalise)
+
+    for coord in coords_to_remove:
+        for cube in cubes:
+            try:
+                cube.remove_coord(coord)
+                logging.debug("Removed coordinate %s from %s cube.", coord, cube.name())
+            except iris.exceptions.CoordinateNotFoundError:
+                pass
+
+    for coord in coords_to_equalise:
+        removed = iris.util.equalise_attributes([cube.coord(coord) for cube in cubes])
+        logging.debug("Removed attributes from coordinate %s: %s", coord, removed)
+
+    return cubes

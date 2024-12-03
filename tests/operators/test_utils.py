@@ -15,6 +15,8 @@
 """Tests for common operator functionality across CSET."""
 
 import iris
+import iris.coords
+import iris.cube
 import pytest
 
 import CSET.operators._utils as operator_utils
@@ -72,3 +74,66 @@ def test_is_spatialdim_true():
     """Check that is spatial test returns true if cube contains spatial coordinates."""
     cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
     assert operator_utils.is_spatialdim(cube)
+
+
+def test_fully_equalise_attributes_remove_unique_attributes():
+    """Check unique attributes are removed."""
+    original = iris.cube.Cube(
+        [], var_name="variable", attributes={"shared_attribute": 1}
+    )
+    c1 = original.copy()
+    c2 = original.copy()
+    c2.attributes["unique_attribute"] = 1
+
+    fixed_cubes = operator_utils.fully_equalise_attributes([c1, c2])
+    for cube in fixed_cubes:
+        assert cube == original
+
+
+def test_fully_equalise_attributes_remove_differing_attributes():
+    """Check attributes with different values are removed."""
+    original = iris.cube.Cube(
+        [], var_name="variable", attributes={"shared_attribute": 1}
+    )
+    c1 = original.copy()
+    c2 = original.copy()
+    c2.attributes["shared_attribute"] = 2
+
+    fixed_cubes = operator_utils.fully_equalise_attributes([c1, c2])
+    for cube in fixed_cubes:
+        assert "shared_attribute" not in cube.attributes
+
+
+def test_fully_equalise_attributes_remove_unique_coords():
+    """Check unique coordinates are removed."""
+    foo_coord = iris.coords.DimCoord([0], var_name="foo")
+    bar_coord = iris.coords.AuxCoord([0], var_name="bar")
+
+    original = iris.cube.Cube(
+        [0], var_name="variable", dim_coords_and_dims=[(foo_coord, 0)]
+    )
+    c1 = original.copy()
+    c2 = original.copy()
+    c2.add_aux_coord(bar_coord)
+
+    fixed_cubes = operator_utils.fully_equalise_attributes([c1, c2])
+    for cube in fixed_cubes:
+        assert cube.coord("foo")
+        assert not cube.coords("bar")
+
+
+def test_fully_equalise_attributes_equalise_coords():
+    """Check differing coordinates are equalised."""
+    foo_coord = iris.coords.DimCoord(
+        [0], var_name="foo", attributes={"shared_attribute": 1}
+    )
+    original = iris.cube.Cube(
+        [0], var_name="variable", dim_coords_and_dims=[(foo_coord, 0)]
+    )
+    c1 = original.copy()
+    c2 = original.copy()
+    c2.coord("foo").attributes["shared_attribute"] = 2
+
+    fixed_cubes = operator_utils.fully_equalise_attributes([c1, c2])
+    for cube in fixed_cubes:
+        assert "shared_attribute" not in cube.coord("foo").attributes
