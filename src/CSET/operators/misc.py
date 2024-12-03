@@ -15,11 +15,16 @@
 """Miscellaneous operators."""
 
 import itertools
+import logging
 from collections.abc import Iterable
 
+import iris
+import iris.coords
+import numpy as np
 from iris.cube import Cube, CubeList
 
 from CSET._common import iter_maybe
+from CSET.operators._utils import fully_equalise_attributes
 
 
 def noop(x, **kwargs):
@@ -236,3 +241,76 @@ def combine_cubes_into_cubelist(first: Cube | CubeList, **kwargs) -> CubeList:
         else:
             raise TypeError("Not a Cube or CubeList!", item)
     return all_cubes
+
+
+def difference(cubes: CubeList):
+    """Difference of two fields.
+
+    Parameters
+    ----------
+    cubes: CubeList
+        A list of exactly two cubes. One must have the cset_comparison_base
+        attribute set to 1, and will be used as the base of the comparison.
+
+    Returns
+    -------
+    Cube
+
+    Raises
+    ------
+    ValueError
+        When the cubes are not compatible.
+
+    Notes
+    -----
+    This is a simple operator designed for combination of diagnostics or
+    creating new diagnostics by using recipes. It can be used for model
+    differences to allow for comparisons between the same field in different
+    models or model configurations.
+
+    Examples
+    --------
+    >>> model_diff = misc.difference(temperature_model_A, temperature_model_B)
+
+    """
+    if len(cubes) != 2:
+        raise ValueError("cubes should contain exactly 2 cubes.")
+    base = cubes.extract_cube(iris.AttributeConstraint(cset_comparison_base=1))
+    other = cubes.extract_cube(
+        iris.Constraint(
+            cube_func=lambda cube: "cset_comparison_base" not in cube.attributes
+        )
+    )
+
+    # Figure out if we are comparing between UM and LFRic; flip array if so.
+    def calc_model_type(cube) -> str:
+        if "um_version" in cube.attributes:
+            return "UM"
+        elif cube.attributes.get("title", None) == "Created by xios":
+            return "LFRic"
+        else:
+            logging.warning("Unknown model type.")
+            return "unknown"
+
+    flip_array = calc_model_type(base) != calc_model_type(other)
+
+    # Extract just common time points.
+    logging.debug("Base: %s\nOther: %s", base.coord("time"), other.coord("time"))
+    base_times = set(base.coord("time").units.num2date(base.coord("time").points))
+    other_times = set(other.coord("time").units.num2date(other.coord("time").points))
+    shared_times = set.intersection(base_times, other_times)
+    time_constraint = iris.Constraint(time=lambda cell: cell.point in shared_times)
+    base = base.extract(time_constraint)
+    other = other.extract(time_constraint)
+
+    # Equalise attributes so we can merge.
+    fully_equalise_attributes([base, other])
+    logging.debug("Base: %s\nOther: %s", base, other)
+
+    # This currently relies on the cubes having the same underlying data layout.
+    difference = base.copy()
+    difference.rename(base.name() + "_difference")
+    if flip_array:
+        other.data = np.flip(other.data, other.coord("grid_latitude").cube_dims(other))
+    difference.data = base.data - other.data
+    return difference
