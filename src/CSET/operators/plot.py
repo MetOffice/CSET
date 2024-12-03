@@ -33,7 +33,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from markdown_it import MarkdownIt
 
-from CSET._common import get_recipe_metadata, render_file, slugify
+from CSET._common import get_recipe_metadata, iter_maybe, render_file, slugify
 from CSET.operators._utils import get_cube_yxcoordname, is_transect
 
 # Use a non-interactive plotting backend.
@@ -948,20 +948,21 @@ def spatial_pcolormesh_plot(
 #     Coordinate about which to plot multiple lines. Defaults to
 #     ``"realization"``.
 def plot_line_series(
-    cube: iris.cube.Cube,
+    toplot: iris.cube.Cube | iris.cube.CubeList,
     filename: str = None,
     series_coordinate: str = "time",
     # line_coordinate: str = "realization",
     **kwargs,
-) -> iris.cube.Cube:
+) -> iris.cube.Cube | iris.cube.CubeList:
     """Plot a line plot for the specified coordinate.
 
-    The cube must be 1D.
+    The cube or CubeList must be 1D.
 
     Parameters
     ----------
-    cube: Cube
-        Iris cube of the data to plot. It should have a single dimension.
+    toplot: iris.cube | iris.cube.CubeList
+        Iris cube or CubeList of the data to plot. The single cube or the individual cubes in the
+        cubeList should have a single dimension.
     filename: str, optional
         Name of the plot to write, used as a prefix for plot sequences. Defaults
         to the recipe name.
@@ -971,43 +972,56 @@ def plot_line_series(
 
     Returns
     -------
-    Cube
-        The original cube (so further operations can be applied).
+    iris.cube | iris.cube.CubeList
+        An iris cube of the plotted data, or a cubelist of the
+        plotted data.
 
     Raises
     ------
     ValueError
-        If the cube doesn't have the right dimensions.
+        If the cube or the cube in the CubeList doesn't have the right dimensions.
     TypeError
         If the cube isn't a single cube.
     """
-    # Check cube is right shape.
-    cube = _check_single_cube(cube)
-    try:
-        coord = cube.coord(series_coordinate)
-    except iris.exceptions.CoordinateNotFoundError as err:
-        raise ValueError(f"Cube must have a {series_coordinate} coordinate.") from err
-    if cube.ndim > 1:
-        raise ValueError("Cube must be 1D.")
+    # To store plotted CubeList.
+    plotted_cubes = iris.cube.CubeList()
 
-    # Ensure we have a name for the plot file.
-    title = get_recipe_metadata().get("title", "Untitled")
-    if filename is None:
-        filename = slugify(title)
+    # Iterate over all cubes in CubeList and plot.
+    for cube in iter_maybe(toplot):
+        # Check cube is right shape.
+        cube = _check_single_cube(cube)
+        try:
+            coord = cube.coord(series_coordinate)
+        except iris.exceptions.CoordinateNotFoundError as err:
+            raise ValueError(
+                f"Cube must have a {series_coordinate} coordinate."
+            ) from err
+        if cube.ndim > 1:
+            raise ValueError("Cube must be 1D.")
 
-    # Add file extension.
-    plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
+        # Ensure we have a name for the plot file.
+        title = get_recipe_metadata().get("title", "Untitled")
+        if filename is None:
+            filename = slugify(title)
 
-    # Do the actual plotting.
-    _plot_and_save_line_series(cube, coord, plot_filename, title)
+        # Add file extension.
+        plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
 
-    # Add list of plots to plot metadata.
-    plot_index = _append_to_plot_index([plot_filename])
+        # Do the actual plotting.
+        _plot_and_save_line_series(cube, coord, plot_filename, title)
 
-    # Make a page to display the plots.
-    _make_plot_html_page(plot_index)
+        # Add list of plots to plot metadata.
+        plot_index = _append_to_plot_index([plot_filename])
 
-    return cube
+        # Make a page to display the plots.
+        _make_plot_html_page(plot_index)
+        plotted_cubes.append(cube)
+
+    # Preserve returning a cube if only a cube has been supplied to regrid.
+    if len(plotted_cubes) == 1:
+        return plotted_cubes[0]
+    else:
+        return plotted_cubes
 
 
 def plot_vertical_line_series(
