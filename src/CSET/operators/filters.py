@@ -19,6 +19,56 @@ from typing import Union
 import iris
 import iris.cube
 import iris.exceptions
+import numpy as np
+
+from CSET._common import iter_maybe
+
+
+def apply_mask(
+    original_field: Union[iris.cube.Cube, iris.cube.CubeList],
+    masks: Union[iris.cube.Cube, iris.cube.CubeList],
+) -> Union[iris.cube.Cube, iris.cube.CubeList]:
+    """Apply a mask to given data as a masked array.
+
+    Parameters
+    ----------
+    original_field: iris.cube.Cube | iris.cube.CubeList
+        The field to be masked.
+    masks: iris.cube.Cube | iris.cube.CubeList
+        The mask being applied to the original field.
+
+    Returns
+    -------
+    A masked field.
+
+    Return type
+    -----------
+    iris.cube.Cube | iris.cube.CubeList
+
+    Notes
+    -----
+    The mask is first converted to boolean and then inverted to ensure
+    compatibility with np.ma.masked_array such that the values you want
+    are kept, rather than removed based on the generate mask format.
+
+    As discussed in generate_mask, you can combine multiple masks in a
+    recipe using other functions before applying the mask to the data.
+
+    Examples
+    --------
+    >>> land_points_only = apply_mask(temperature, land_mask)
+    """
+    masked_data_list = iris.cube.CubeList()
+    for data, msk in iter_maybe(zip(original_field, masks, strict=False)):
+        masked_data = data.copy()
+        msk2 = ~msk.data.astype(bool)
+        masked_data.data = np.ma.masked_array(data.data, mask=msk2)
+        masked_data.varname = "masked_" + data.standard_name
+        masked_data_list.append(masked_data)
+    if len(masked_data_list) == 1:
+        return masked_data_list[0]
+    else:
+        return masked_data_list
 
 
 def filter_cubes(
@@ -93,3 +143,79 @@ def filter_multiple_cubes(
             "The constraints don't produce a single cube per constraint."
         ) from err
     return filtered_cubes
+
+
+def generate_mask(
+    mask_field: Union[iris.cube.Cube, iris.cube.CubeList], condition: str, value: float
+) -> Union[iris.cube.Cube, iris.cube.CubeList]:
+    """Generate a mask to remove data not meeting conditions.
+
+    Parameters
+    ----------
+    mask_field: iris.cube.Cube | iris.cube.CubeList
+        The field to be used for creating the mask.
+    condition: str
+        The type of condition applied, six available options:
+        '==','!=','<','<=','>', and '>='.
+    value: float
+        The value on the other side of the condition.
+
+    Returns
+    -------
+    Masks meeting the conditions applied.
+
+    Return type
+    -----------
+    iris.cube.Cube | iris.cube.CubeList
+
+    Raises
+    ------
+    ValueError: Unexpected value for condition. Expected ==, !=, >, >=, <, <=
+        Raised when condition is not supported.
+
+    Notes
+    -----
+    The mask is created in the opposite sense to numpy.ma.masked_arrays. This
+    method was chosen to allow easy combination of masks together outside of
+    this function using misc.addition or misc.multiplication depending on
+    applicability. The combinations can be of any fields such as orography >
+    500 m, and humidity == 100 %.
+
+    The conversion to a masked array occurs in the apply_mask routine, which
+    should happen after all relevant masks have been combined.
+
+    Examples
+    --------
+    >>> land_mask = generate_mask(land_sea_mask,'==',1)
+    """
+    mask_list = iris.cube.CubeList()
+    for cube in iter_maybe(mask_field):
+        masks = cube.copy()
+        masks.data = np.zeros(masks.data.shape)
+        if condition == "==":
+            masks.data[cube.data == value] = 1
+        elif condition == "!=":
+            masks.data[cube.data != value] = 1
+        elif condition == ">":
+            masks.data[cube.data > value] = 1
+        elif condition == ">=":
+            masks.data[cube.data >= value] = 1
+        elif condition == "<":
+            masks.data[cube.data < value] = 1
+        elif condition == "<=":
+            masks.data[cube.data >= value] = 1
+        else:
+            raise ValueError("""Unexpected value for condition. Expected ==, !=,
+                              >, >=, <, <=""")
+        cube.var_name = cube.standard_name
+        if cube.var_name is not None:
+            masks.var_name = "mask_of_" + cube.var_name + condition + str(value)
+        else:
+            masks.var_name = "mask_of_" + cube.var_name + condition + str(value)
+        masks.attributes.pop("STASH", None)
+
+        mask_list.append(masks)
+    if len(mask_list) == 1:
+        return mask_list[0]
+    else:
+        return mask_list
