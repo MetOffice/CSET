@@ -47,12 +47,12 @@ jobs:
             # Developer lock files.
             cp "requirements/environment.yml" "${{ runner.temp }}/${py_ver}_dev_environment.yml"
             echo -e "\n  - python = $py_ver" >> "${{ runner.temp }}/${py_ver}_dev_environment.yml"
-            conda-lock --channel conda-forge --kind explicit --file "${{ runner.temp }}/${py_ver}_dev_environment.yml" --platform linux-64 --filename-template "requirements/locks/py$(echo $py_ver | sed 's/\.//')-lock-linux-64.txt" &
+            conda-lock --channel conda-forge --kind explicit --file "${{ runner.temp }}/${py_ver}_dev_environment.yml" --platform linux-64 --filename-template "requirements/locks/py$(echo $py_ver | sed 's/\.//')-lock-linux-64.txt"
 
             # Workflow lock files.
             cp "cset-workflow/requirements/environment.yml" "${{ runner.temp }}/${py_ver}_workflow_environment.yml"
             echo -e "\n  - python = $py_ver" >> "${{ runner.temp }}/${py_ver}_workflow_environment.yml"
-            conda-lock --channel conda-forge --kind explicit --file "${{ runner.temp }}/${py_ver}_workflow_environment.yml" --platform linux-64 --filename-template "cset-workflow/requirements/locks/py$(echo $py_ver | sed 's/\.//')-lock-linux-64.txt" &
+            conda-lock --channel conda-forge --kind explicit --file "${{ runner.temp }}/${py_ver}_workflow_environment.yml" --platform linux-64 --filename-template "cset-workflow/requirements/locks/py$(echo $py_ver | sed 's/\.//')-lock-linux-64.txt"
           done
           wait
 
