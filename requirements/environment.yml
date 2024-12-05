@@ -7,7 +7,6 @@ dependencies:
   - numpy
   - iris >= 3.5
   - iris-grib
-  - iris_grib
   - ruamel.yaml >= 0.17
   - mo_pack # For handling pp files.
   - pygraphviz
