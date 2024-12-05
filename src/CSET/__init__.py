@@ -25,14 +25,14 @@ from pathlib import Path
 from CSET._common import ArgumentError
 
 
-def main():
+def main(raw_cli_args: list[str] = sys.argv):
     """CLI entrypoint.
 
     Handles argument parsing, setting up logging, top level error capturing,
     and execution of the desired subcommand.
     """
     parser = setup_argument_parser()
-    cli_args = sys.argv[1:] + shlex.split(os.getenv("CSET_ADDOPTS", ""))
+    cli_args = raw_cli_args[1:] + shlex.split(os.getenv("CSET_ADDOPTS", ""))
     args, unparsed_args = parser.parse_known_args(cli_args)
     setup_logging(args.verbose)
 
