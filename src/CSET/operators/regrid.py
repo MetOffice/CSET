@@ -108,8 +108,8 @@ def regrid_onto_cube(
 
 def regrid_onto_xyspacing(
     toregrid: iris.cube.Cube | iris.cube.CubeList,
-    xspacing: int,
-    yspacing: int,
+    xspacing: float,
+    yspacing: float,
     method: str,
     **kwargs,
 ) -> iris.cube.Cube | iris.cube.CubeList:
@@ -123,9 +123,9 @@ def regrid_onto_xyspacing(
         An iris cube of the data to regrid, or multiple cubes to regrid in a
         cubelist. A minimum requirement is that the cube(s) need to be 2D with a
         latitude, longitude coordinates.
-    xspacing: integer
+    xspacing: float
         Spacing of points in longitude direction (could be degrees, meters etc.)
-    yspacing: integer
+    yspacing: float
         Spacing of points in latitude direction (could be degrees, meters etc.)
     method: str
         Method used to regrid onto, etc. Linear will use iris.analysis.Linear()
