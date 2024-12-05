@@ -109,7 +109,7 @@ jobs:
           git push --set-upstream origin "conda-lock-files:${remote_branch_name}"
 
           # Create PR on GitHub using GitHub REST API.
-          request_body='{"title":"[CI] Update conda lock files","body":"Created automatically by GitHub Actions.","base":'"${base_branch_name}'","head":"'"${remote_branch_name}"'"}'
+          request_body='{"title":"[CI] Update conda lock files","body":"Created automatically by GitHub Actions.","base":"'"${base_branch_name}"'","head":"'"${remote_branch_name}"'"}'
           curl -LsS --fail-with-body \
             -X POST \
             -H "Accept: application/vnd.github+json" \
