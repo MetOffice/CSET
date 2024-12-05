@@ -80,9 +80,3 @@ steps:
     overwrite: True
 
   - operator: plot.spatial_contour_plot
-
-  - operator: collapse.collapse
-    coordinate: [grid_latitude, grid_longitude]
-    method: MEAN
-
-  - operator: plot.plot_line_series
