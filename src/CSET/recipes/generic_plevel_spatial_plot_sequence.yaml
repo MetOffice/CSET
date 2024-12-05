@@ -15,8 +15,8 @@ steps:
         coordinate: pressure
         levels: $PLEVEL
 
-  - operator: plot.spatial_contour_plot
-    sequence_coordinate: time
-
   - operator: write.write_cube_to_nc
     overwrite: True
+
+  - operator: plot.spatial_contour_plot
+    sequence_coordinate: time
