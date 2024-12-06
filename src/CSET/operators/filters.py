@@ -149,7 +149,9 @@ def filter_multiple_cubes(
 
 
 def generate_mask(
-    mask_field: Union[iris.cube.Cube, iris.cube.CubeList], condition: str, value: float
+    mask_field: Union[iris.cube.Cube, iris.cube.CubeList],
+    condition: str,
+    value: float,
 ) -> Union[iris.cube.Cube, iris.cube.CubeList]:
     """Generate a mask to remove data not meeting conditions.
 
@@ -211,7 +213,6 @@ def generate_mask(
             raise ValueError("""Unexpected value for condition. Expected ==, !=,
                               >, >=, <, <=""")
         cube.var_name = cube.standard_name
-        # masks.var_name = "mask_of_" + cube.var_name + condition + str(value)
         masks.var_name = cube.var_name
         masks.attributes.pop("STASH", None)
 
