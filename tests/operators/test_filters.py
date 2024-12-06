@@ -263,6 +263,24 @@ def test_generate_mask_less_equal_to(cube):
     )
 
 
+def test_generate_mask_equal_to_cubelist(cubes):
+    """Generates a mask with values equal to a specified value as a cubelist."""
+    masks = iris.cube.CubeList()
+    for cube in cubes:
+        mask = cube.copy()
+        mask.data = np.zeros(mask.data.shape)
+        mask.data[cube.data == 276] = 1
+        masks.append(mask)
+    calculated_masks = filters.generate_mask(cubes, "==", 276)
+    for calc, mask in zip(calculated_masks, masks, strict=True):
+        assert np.allclose(
+            calc.data,
+            mask.data,
+            rtol=1e-06,
+            atol=1e-02,
+        )
+
+
 # def test_generates_mask_cube_list():
 
 # def test_apply_mask_single_cube():
