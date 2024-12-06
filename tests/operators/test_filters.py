@@ -15,6 +15,7 @@
 """Test filter operators."""
 
 import iris.cube
+import numpy as np
 import pytest
 
 from CSET.operators import constraints, filters
@@ -176,3 +177,141 @@ def test_generate_level_constraint_returnallmodlev(load_verticalcoord_cubelist):
     assert expected_coordstr in repr(
         load_verticalcoord_cubelist.extract(constraint_1)[0].coords
     )
+
+
+def test_generate_mask_fail_wrong_condition(cube):
+    """Fails for a wrong condition."""
+    with pytest.raises(ValueError):
+        filters.generate_mask(cube, "!<", 10)
+
+
+def test_generate_mask_equal_to(cube):
+    """Generates a mask with values equal to a specified value."""
+    mask = cube.copy()
+    mask.data = np.zeros(mask.data.shape)
+    mask.data[cube.data == 276] = 1
+    assert np.allclose(
+        filters.generate_mask(cube, "==", 276).data,
+        mask.data,
+        rtol=1e-06,
+        atol=1e-02,
+    )
+
+
+def test_generate_mask_not_equal_to(cube):
+    """Generates a mask with values not equal to a specified value."""
+    mask = cube.copy()
+    mask.data = np.zeros(mask.data.shape)
+    mask.data[cube.data != 276] = 1
+    assert np.allclose(
+        filters.generate_mask(cube, "!=", 276).data,
+        mask.data,
+        rtol=1e-06,
+        atol=1e-02,
+    )
+
+
+def test_generate_mask_greater_than(cube):
+    """Generates a mask with values greater than a specified value."""
+    mask = cube.copy()
+    mask.data = np.zeros(mask.data.shape)
+    mask.data[cube.data > 276] = 1
+    assert np.allclose(
+        filters.generate_mask(cube, ">", 276).data,
+        mask.data,
+        rtol=1e-06,
+        atol=1e-02,
+    )
+
+
+def test_generate_mask_greater_equal_to(cube):
+    """Generates a mask with values greater than or equal to a specified value."""
+    mask = cube.copy()
+    mask.data = np.zeros(mask.data.shape)
+    mask.data[cube.data >= 276] = 1
+    assert np.allclose(
+        filters.generate_mask(cube, ">=", 276).data,
+        mask.data,
+        rtol=1e-06,
+        atol=1e-02,
+    )
+
+
+def test_generate_mask_less_than(cube):
+    """Generates a mask with values less than a specified value."""
+    mask = cube.copy()
+    mask.data = np.zeros(mask.data.shape)
+    mask.data[cube.data < 276] = 1
+    assert np.allclose(
+        filters.generate_mask(cube, "<", 276).data,
+        mask.data,
+        rtol=1e-06,
+        atol=1e-02,
+    )
+
+
+def test_generate_mask_less_equal_to(cube):
+    """Generates a mask with values less than or equal to a specified value."""
+    mask = cube.copy()
+    mask.data = np.zeros(mask.data.shape)
+    mask.data[cube.data <= 276] = 1
+    assert np.allclose(
+        filters.generate_mask(cube, "<=", 276).data,
+        mask.data,
+        rtol=1e-06,
+        atol=1e-02,
+    )
+
+
+def test_generate_mask_equal_to_cubelist(cubes):
+    """Generates a mask with values equal to a specified value as a cubelist."""
+    masks = iris.cube.CubeList()
+    for cube in cubes:
+        mask = cube.copy()
+        mask.data = np.zeros(mask.data.shape)
+        mask.data[cube.data == 276] = 1
+        masks.append(mask)
+    calculated_masks = filters.generate_mask(cubes, "==", 276)
+    for calc, mask in zip(calculated_masks, masks, strict=True):
+        assert np.allclose(
+            calc.data,
+            mask.data,
+            rtol=1e-06,
+            atol=1e-02,
+        )
+
+
+def test_apply_mask_single_cube(cube):
+    """Apply a mask to a single cube."""
+    mask = filters.generate_mask(cube, "==", 276)
+    mask.data[mask.data == 0] = np.nan
+    test_data = cube.copy()
+    test_data.data *= mask.data
+    assert np.allclose(
+        filters.apply_mask(cube, mask).data,
+        test_data.data,
+        rtol=1e-06,
+        atol=1e-02,
+        equal_nan=True,
+    )
+
+
+def test_apply_mask_cubelist(cubes):
+    """Apply masks to a cubelist."""
+    masks = filters.generate_mask(cubes, "==", 276)
+    for cube in masks:
+        cube.data[cube.data == 0] = np.nan
+    test_calc = iris.cube.CubeList()
+    for cube, mask in zip(cubes, masks, strict=True):
+        data = cube.copy()
+        data.data *= mask.data
+        test_calc.append(data)
+    calculated_masked_data = filters.apply_mask(cubes, masks)
+    for calc, mask in zip(test_calc, calculated_masked_data, strict=True):
+        assert np.allclose(
+            calc.data,
+            mask.data,
+            rtol=1e-06,
+            atol=1e-02,
+            equal_nan=True,
+        )
