@@ -47,9 +47,8 @@ def apply_mask(
 
     Notes
     -----
-    The mask is first converted to boolean and then inverted to ensure
-    compatibility with np.ma.masked_array such that the values you want
-    are kept, rather than removed based on the generate mask format.
+    The mask is first converted to 1s and NaNs before multiplication with
+    the original data.
 
     As discussed in generate_mask, you can combine multiple masks in a
     recipe using other functions before applying the mask to the data.
@@ -59,11 +58,10 @@ def apply_mask(
     >>> land_points_only = apply_mask(temperature, land_mask)
     """
     masked_data_list = iris.cube.CubeList()
-    for data, msk in iter_maybe(zip(original_field, masks, strict=False)):
+    for data, msk in iter_maybe(zip(original_field, masks, strict=True)):
         masked_data = data.copy()
-        msk2 = ~msk.data.astype(bool)
-        masked_data.data = np.ma.masked_array(data.data, mask=msk2)
-        masked_data.varname = "masked_" + data.standard_name
+        msk.data[msk.data == 0] = np.nan
+        masked_data.data *= msk.data
         masked_data_list.append(masked_data)
     if len(masked_data_list) == 1:
         return masked_data_list[0]
