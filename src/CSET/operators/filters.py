@@ -203,12 +203,13 @@ def generate_mask(
         elif condition == "<":
             masks.data[cube.data < value] = 1
         elif condition == "<=":
-            masks.data[cube.data >= value] = 1
+            masks.data[cube.data <= value] = 1
         else:
             raise ValueError("""Unexpected value for condition. Expected ==, !=,
                               >, >=, <, <=""")
         cube.var_name = cube.standard_name
-        masks.var_name = "mask_of_" + cube.var_name + condition + str(value)
+        # masks.var_name = "mask_of_" + cube.var_name + condition + str(value)
+        masks.var_name = cube.var_name
         masks.attributes.pop("STASH", None)
 
         mask_list.append(masks)
