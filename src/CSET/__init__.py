@@ -26,7 +26,11 @@ from CSET._common import ArgumentError
 
 
 def main():
-    """CLI entrypoint."""
+    """CLI entrypoint.
+
+    Handles argument parsing, setting up logging, top level error capturing,
+    and execution of the desired subcommand.
+    """
     parser = argparse.ArgumentParser(
         prog="cset", description="Convective Scale Evaluation Tool"
     )
@@ -159,9 +163,18 @@ def main():
         # Execute the specified subcommand.
         args.func(args, unparsed_args)
     except ArgumentError as err:
-        logging.error(err)
+        # Error message for when needed template variables are missing.
+        print(err, file=sys.stderr)
         parser.print_usage()
-        sys.exit(3)
+        sys.exit(127)
+    except Exception as err:
+        # Provide slightly nicer error messages for unhandled exceptions.
+        print(err, file=sys.stderr)
+        # Display the time and full traceback when debug logging.
+        logging.debug("An unhandled exception occurred.")
+        if logging.root.isEnabledFor(logging.DEBUG):
+            raise
+        sys.exit(1)
 
 
 def calculate_loglevel(args) -> int:
