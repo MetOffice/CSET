@@ -208,10 +208,7 @@ def generate_mask(
             raise ValueError("""Unexpected value for condition. Expected ==, !=,
                               >, >=, <, <=""")
         cube.var_name = cube.standard_name
-        if cube.var_name is not None:
-            masks.var_name = "mask_of_" + cube.var_name + condition + str(value)
-        else:
-            masks.var_name = "mask_of_" + cube.var_name + condition + str(value)
+        masks.var_name = "mask_of_" + cube.var_name + condition + str(value)
         masks.attributes.pop("STASH", None)
 
         mask_list.append(masks)
