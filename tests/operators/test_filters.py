@@ -176,3 +176,28 @@ def test_generate_level_constraint_returnallmodlev(load_verticalcoord_cubelist):
     assert expected_coordstr in repr(
         load_verticalcoord_cubelist.extract(constraint_1)[0].coords
     )
+
+
+def test_generate_mask_fail_wrong_condition(cube):
+    """Fails for a wrong condition."""
+    with pytest.raises(ValueError):
+        filters.generate_mask(cube, "!<", 10)
+
+
+# def test_generate_mask_equal_to():
+
+# def test_generate_mask_not_equal_to():
+
+# def test_generate_mask_greater_than():
+
+# def test_generate_mask_greater_equal_to():
+
+# def test_generate_mask_less_than():
+
+# def test_generate_mask_less_equal_to():
+
+# def test_generates_mask_cube_list():
+
+# def test_apply_mask_single_cube():
+
+# def test_apply_mask_cubelist():
