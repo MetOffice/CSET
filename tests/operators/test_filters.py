@@ -281,8 +281,37 @@ def test_generate_mask_equal_to_cubelist(cubes):
         )
 
 
-# def test_generates_mask_cube_list():
+def test_apply_mask_single_cube(cube):
+    """Apply a mask to a single cube."""
+    mask = filters.generate_mask(cube, "==", 276)
+    mask.data[mask.data == 0] = np.nan
+    test_data = cube.copy()
+    test_data.data *= mask.data
+    assert np.allclose(
+        filters.apply_mask(cube, mask).data,
+        test_data.data,
+        rtol=1e-06,
+        atol=1e-02,
+        equal_nan=True,
+    )
 
-# def test_apply_mask_single_cube():
 
-# def test_apply_mask_cubelist():
+def test_apply_mask_cubelist(cubes):
+    """Apply masks to a cubelist."""
+    masks = filters.generate_mask(cubes, "==", 276)
+    for cube in masks:
+        cube.data[cube.data == 0] = np.nan
+    test_calc = iris.cube.CubeList()
+    for cube, mask in zip(cubes, masks, strict=True):
+        data = cube.copy()
+        data.data *= mask.data
+        test_calc.append(data)
+    calculated_masked_data = filters.apply_mask(cubes, masks)
+    for calc, mask in zip(test_calc, calculated_masked_data, strict=True):
+        assert np.allclose(
+            calc.data,
+            mask.data,
+            rtol=1e-06,
+            atol=1e-02,
+            equal_nan=True,
+        )

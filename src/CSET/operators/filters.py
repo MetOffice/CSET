@@ -57,16 +57,21 @@ def apply_mask(
     --------
     >>> land_points_only = apply_mask(temperature, land_mask)
     """
-    masked_data_list = iris.cube.CubeList()
-    for data, msk in iter_maybe(zip(original_field, masks, strict=True)):
-        masked_data = data.copy()
-        msk.data[msk.data == 0] = np.nan
-        masked_data.data *= msk.data
-        masked_data_list.append(masked_data)
-    if len(masked_data_list) == 1:
-        return masked_data_list[0]
+    mask_list = iris.cube.CubeList()
+    for mask in iter_maybe(masks):
+        mask.data[mask.data == 0] = np.nan
+        mask_list.append(mask)
+    if len(mask_list) == 1:
+        masked_field = original_field.copy()
+        masked_field.data *= mask_list[0].data
+        return masked_field
     else:
-        return masked_data_list
+        mask_field_list = iris.cube.CubeList()
+        for data, mask in zip(original_field, mask_list, strict=False):
+            mask_field_data = data.copy()
+            mask_field_data.data *= mask.data
+            mask_field_list.append(mask_field_data)
+        return mask_field_list
 
 
 def filter_cubes(
