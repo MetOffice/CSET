@@ -1,9 +1,19 @@
 {% if METPLUS_POINT_STAT|default(False) %}
 [scheduling]
     [[graph]]
-    {{CSET_CYCLE_PERIOD}} = """
-    metplus_ascii2nc => metplus_point_stat => housekeeping_full
-    """
+    {% if CSET_CYCLING_MODE == "case_study" %}
+        # Runs for every forecast initiation time to process the data in parallel.
+        {% for date in CSET_CASE_DATES %}
+            R1/{{date}} = """
+            metplus_ascii2nc => metplus_point_stat => housekeeping_full
+            """
+        {% endfor %}
+    {% elif CSET_CYCLING_MODE == "trial" %}
+        # Analyse from each forecast.
+        {{CSET_TRIAL_CYCLE_PERIOD}} = """
+        metplus_ascii2nc => metplus_point_stat => housekeeping_full
+        """
+    {% endif %}
 
 [runtime]
     [[metplus_ascii2nc]]
