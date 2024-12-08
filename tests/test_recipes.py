@@ -1,4 +1,4 @@
-# Copyright 2023 Met Office and contributors.
+# © Crown copyright, Met Office (2022-2024) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,8 +23,14 @@ import CSET.recipes
 
 def test_recipe_files_in_tree():
     """Get recipes in directory containing sub-directories."""
-    files = list(CSET.recipes._recipe_files_in_tree(input_dir=Path("tests")))
+    files = CSET.recipes._recipe_files_in_tree(input_dir=Path("tests"))
     assert Path("tests/test_data/noop_recipe.yaml") in files
+
+
+def test_recipe_files_in_tree_from_package():
+    """Get a recipe from inside the CSET package."""
+    files = CSET.recipes._recipe_files_in_tree()
+    assert any("CAPE_ratio_plot.yaml" == path.name for path in files)
 
 
 def test_unpack(tmp_path: Path):
@@ -71,3 +77,22 @@ def test_get_recipe_file_in_package():
     """Get a recipe file from a the default location inside the package."""
     file = CSET.recipes._get_recipe_file("CAPE_ratio_plot.yaml")
     assert file.is_file()
+
+
+def test_list_available_recipes(capsys):
+    """Display available recipes."""
+    CSET.recipes.list_available_recipes()
+    # Read stdout and stderr.
+    captured_output = capsys.readouterr()
+    # Check start.
+    assert captured_output.out.startswith("Available recipes:\n")
+    # Check has some recipes.
+    assert len(captured_output.out.splitlines()) > 3
+
+
+def test_detail_recipe(capsys):
+    """Show detail of a recipe."""
+    CSET.recipes.detail_recipe("CAPE_ratio_plot.yaml")
+    # Read stdout and stderr.
+    captured_output = capsys.readouterr()
+    assert captured_output.out.startswith("\n\tCAPE_ratio_plot.yaml\n")

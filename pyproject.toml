@@ -15,6 +15,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Programming Language :: Python",
     "Topic :: Scientific/Engineering :: Atmospheric Science",
     "Topic :: Scientific/Engineering :: GIS",
@@ -29,6 +30,8 @@ dependencies = [
     "mo_pack >= 0.3.0",
     "isodate",
     "markdown-it-py >= 3.0",
+    "nc-time-axis",
+    "iris-grib",
 ]
 
 [project.urls]
@@ -52,6 +55,7 @@ filterwarnings = [
     # first CI run on each branch.
     "ignore::cartopy.io.DownloadWarning",
 ]
+markers = ["network: marks tests that use external network resources"]
 minversion = "7"
 pythonpath = ["src"]
 testpaths = ["tests"]
@@ -60,6 +64,7 @@ testpaths = ["tests"]
 branch = true
 relative_files = true
 source = ["src"]
+omit = ["__main__.py"]
 
 [tool.tox]
 legacy_tox_ini = '''
@@ -70,25 +75,6 @@ envlist =
     coverage-clean
     py312-linux-tests
     py312-linux-docs
-
-[testenv:py{310,311,312}-lock]
-allowlist_externals = cp
-conda_channels = conda-forge
-conda_create_args = --override-channels
-conda_deps =
-    pip
-    conda-lock
-description = Create explicit environment specification conda lock files for CSET dependencies.
-skip_install = true
-setenv =
-    LOCKDIR = {toxinidir}{/}requirements{/}locks{/}
-    TMPFILE = {envtmpdir}{/}environment.yml
-    YMLFILE = {toxinidir}{/}requirements{/}environment.yml
-commands =
-    cp "{env:YMLFILE}" "{env:TMPFILE}"
-    # Hacky script to avoid having to have per-python-version yaml files.
-    python3 -c 'from sys import version_info as v; fh = open("{env:TMPFILE}", "a"); fh.write(f"\n  - python =\{v.major\}.\{v.minor\}\n")'
-    conda-lock --channel conda-forge --kind explicit --file {env:TMPFILE} --platform linux-64 --filename-template "{env:LOCKDIR}{envname}-\{platform\}.txt" {posargs}
 
 [testenv:py{310,311,312}-{linux,osx,win}-tests]
 description = Run unit and integration tests with PyTest.
@@ -109,12 +95,6 @@ conda_spec =
 usedevelop = true
 commands = sphinx-build -d "docs/build/doctree" docs/source "docs/build/html" --color -W -bhtml {posargs}
 
-[testenv:build-package]
-description = Build sdist and wheel packages.
-deps = build
-skip_install = true
-commands = python3 -m build
-
 [testenv:coverage-clean]
 deps = coverage
 skip_install = true
@@ -131,7 +111,6 @@ src = ["src", "test"]
 
 [tool.ruff.lint]
 extend-select = ["B", "D", "I"]
-ignore-init-module-imports = true
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"

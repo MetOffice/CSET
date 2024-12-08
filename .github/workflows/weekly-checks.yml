@@ -1,0 +1,52 @@
+name: Weekly Checks
+
+on:
+  schedule:
+    - cron: "8 4 * * 1"
+  workflow_dispatch:
+
+jobs:
+  check-documentation-hyperlinks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Cache conda environment
+        id: conda-env-cache
+        uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a
+        with:
+          key: conda|${{runner.os}}-${{runner.arch}}|${{hashFiles('requirements/locks/py312-lock-linux-64.txt')}}
+          path: |
+            ~/conda-env
+            ~/.local/share/cartopy
+
+      - name: Create conda environment
+        if: steps.conda-env-cache.outputs.cache-hit != 'true'
+        run: |
+          # Check cache hasn't pulled a partial key match.
+          test ! -e "${HOME}/conda-env"
+          conda create --prefix="${HOME}/conda-env" --file=requirements/locks/py312-lock-linux-64.txt
+
+      - name: Add conda environment to PATH
+        run: echo "${HOME}/conda-env/bin" >> $GITHUB_PATH
+
+      - name: Build documentation
+        run: |
+          # Install module so it can be imported during docs generation.
+          echo '::group::Installing local package'
+          python3 -m pip install .
+          echo '::endgroup::'
+          # Generate the documentation
+          echo '::group::Building the documentation'
+          sphinx-build -b html --color "docs/source" "docs/build/html"
+          echo '::endgroup::'
+          echo '::group::Checking for broken hyperlinks'
+          sphinx-build -b linkcheck --color -W --keep-going "docs/source" "docs/build/linkcheck"
+          echo '::endgroup::'
+      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
+        with:
+          name: html-docs
+          path: docs/build/html/
+          retention-days: 1
+          if-no-files-found: error

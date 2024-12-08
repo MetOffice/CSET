@@ -1,18 +1,19 @@
-{% if PLOT_SPATIAL_PRESSURE_LEVEL_MODEL_FIELD %}
-[runtime]
-{% for model_field in PRESSURE_LEVEL_MODEL_FIELDS %}
+{% if PLOT_SPATIAL_PRESSURE_LEVEL_MODEL_FIELD|default(False) %}
+{% for equivalent_field in restructure_field_list(PRESSURE_LEVEL_MODEL_FIELDS) %}
+{% for model_number, field in equivalent_field.items() %}
 {% for plevel in PRESSURE_LEVELS %}
-    [[process_generic_plevel_spatial_plot_sequence_{{model_field}}_{{plevel}}]]
-    inherit = PARALLEL
+[runtime]
+    [[generic_plevel_spatial_plot_sequence_m{{model_number}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
+    inherit = PROCESS
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_plevel_spatial_plot_sequence.yaml"
-        CSET_ADDOPTS = "--VARNAME={{model_field}} --PLEVEL={{plevel}}"
-
-    [[collate_generic_plevel_spatial_plot_sequence_{{model_field}}_{{plevel}}]]
-    inherit = COLLATE
-        [[[environment]]]
-        CSET_RECIPE_NAME = "generic_plevel_spatial_plot_sequence.yaml"
-        CSET_ADDOPTS = "--VARNAME={{model_field}} --PLEVEL={{plevel}}"
+        CSET_ADDOPTS = """
+            --VARNAME='{{field}}'
+            --PLEVEL='{{plevel}}'
+            --MODEL_NAME='{{models[model_number]["name"]}}'
+        """
+        MODEL_NUMBER = {{model_number}}
+{% endfor %}
 {% endfor %}
 {% endfor %}
 {% endif %}

@@ -1,0 +1,27 @@
+category: Time Series
+title: $MODEL_NAME Time series of $VARNAME at $LATITUDE_POINT N, $LONGITUDE_POINT E
+description: Plots a time series of the surface $VARNAME at a selected gridpoint.
+
+steps:
+  - operator: read.read_cube
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        levels: []
+        coordinate: "pressure"
+
+  - operator: regrid.regrid_to_single_point
+    lat_pt: $LATITUDE_POINT
+    lon_pt: $LONGITUDE_POINT
+    method: $SINGLE_POINT_METHOD
+
+  # Make a single NetCDF with all the data inside it.
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+  # Plot the data.
+  - operator: plot.plot_line_series

@@ -13,17 +13,19 @@ jobs:
   update-conda-lock-files:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
-      - uses: actions/setup-python@v5
+      - name: Setup python
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
         with:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: python3 -m pip install tox tox-conda conda-lock
+        run: python3 -m pip install conda-lock
 
       - name: Update conda
-        run: conda update -q conda
+        run: conda update --channel conda-forge --quiet conda
 
       - name: Hash existing lock files
         run: |
@@ -37,22 +39,34 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git switch -c conda-lock-files
 
-      - name: Update CSET lock files
-        run: tox -e py310-lock,py311-lock,py312-lock
-
-      - name: Update workflow lock files
+      - name: Update CSET developer and workflow lock files
         run: |
-          py_vers="3.10 3.11 3.12"
+          py_vers="3.10 3.11 3.12 3.13"
           for py_ver in $py_vers
           do
-            cp "cset-workflow/requirements/environment.yml" "${{ runner.temp }}/${py_ver}_environment.yml"
-            echo -e "\n  - python = $py_ver" >> "${{ runner.temp }}/${py_ver}_environment.yml"
-            conda-lock --channel conda-forge --kind explicit --file "${{ runner.temp }}/${py_ver}_environment.yml" --platform linux-64 --filename-template "cset-workflow/requirements/locks/py$(echo $py_ver | sed 's/\.//')-lock-linux-64.txt" &
+            # Developer lock files.
+            cp "requirements/environment.yml" "${{ runner.temp }}/${py_ver}_dev_environment.yml"
+            echo -e "\n  - python = $py_ver" >> "${{ runner.temp }}/${py_ver}_dev_environment.yml"
+            conda-lock --channel conda-forge --kind explicit --file "${{ runner.temp }}/${py_ver}_dev_environment.yml" --platform linux-64 --filename-template "requirements/locks/py$(echo $py_ver | sed 's/\.//')-lock-linux-64.txt"
+
+            # Workflow lock files.
+            cp "cset-workflow/requirements/environment.yml" "${{ runner.temp }}/${py_ver}_workflow_environment.yml"
+            echo -e "\n  - python = $py_ver" >> "${{ runner.temp }}/${py_ver}_workflow_environment.yml"
+            conda-lock --channel conda-forge --kind explicit --file "${{ runner.temp }}/${py_ver}_workflow_environment.yml" --platform linux-64 --filename-template "cset-workflow/requirements/locks/py$(echo $py_ver | sed 's/\.//')-lock-linux-64.txt"
           done
           wait
 
+      - name: Sort lock files to make diffs easier to review
+        run: |
+          shopt -s globstar
+          for file in **/locks/*.txt
+          do
+            cat "$file" | (sed -u 4q; sort) > sorted.txt
+            mv sorted.txt "$file"
+          done
+
       - name: Generate GitHub App Token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@5d869da34e18e7287c1daad50e0b8ea0f506ce69
         id: app-token
         with:
           app-id: ${{ secrets.AUTH_APP_ID }}

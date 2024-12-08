@@ -1,4 +1,4 @@
-# Copyright 2022-2024 Met Office and contributors.
+# © Crown copyright, Met Office (2022-2024) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ class ArgumentError(ValueError):
     """Provided arguments are not understood."""
 
 
-def parse_recipe(recipe_yaml: Union[Path, str], variables: dict = None):
+def parse_recipe(recipe_yaml: Union[Path, str], variables: dict = None) -> dict:
     """Parse a recipe into a python dictionary.
 
     Parameters
@@ -57,7 +57,7 @@ def parse_recipe(recipe_yaml: Union[Path, str], variables: dict = None):
     Examples
     --------
     >>> CSET._common.parse_recipe(Path("myrecipe.yaml"))
-    {'parallel': [{'operator': 'misc.noop'}]}
+    {'steps': [{'operator': 'misc.noop'}]}
     """
     # Ensure recipe_yaml is something the YAML parser can read.
     if isinstance(recipe_yaml, str):
@@ -72,13 +72,14 @@ def parse_recipe(recipe_yaml: Union[Path, str], variables: dict = None):
         except ruamel.yaml.parser.ParserError as err:
             raise ValueError("ParserError: Invalid YAML") from err
 
-    logging.debug(recipe)
+    logging.debug("Recipe before templating:\n%s", recipe)
     check_recipe_has_steps(recipe)
 
     if variables is not None:
         logging.debug("Recipe variables: %s", variables)
         recipe = template_variables(recipe, variables)
 
+    logging.debug("Recipe after templating:\n%s", recipe)
     return recipe
 
 
@@ -86,7 +87,7 @@ def check_recipe_has_steps(recipe: dict):
     """Check a recipe has the minimum required steps.
 
     Checking that the recipe actually has some steps, and providing helpful
-    error messages otherwise. We must have at least a parallel step, as that
+    error messages otherwise. We must have at least a steps step, as that
     reads the raw data.
 
     Parameters
@@ -103,16 +104,15 @@ def check_recipe_has_steps(recipe: dict):
     KeyError
         If needed recipe variables are not supplied.
     """
-    parallel_steps_key = "parallel"
     if not isinstance(recipe, dict):
         raise TypeError("Recipe must contain a mapping.")
-    if "parallel" not in recipe:
-        raise ValueError("Recipe must contain a 'parallel' key.")
+    if "steps" not in recipe:
+        raise ValueError("Recipe must contain a 'steps' key.")
     try:
-        if len(recipe[parallel_steps_key]) < 1:
-            raise ValueError("Recipe must have at least 1 parallel step.")
+        if len(recipe["steps"]) < 1:
+            raise ValueError("Recipe must have at least 1 step.")
     except TypeError as err:
-        raise ValueError("'parallel' key must contain a sequence of steps.") from err
+        raise ValueError("'steps' key must contain a sequence of steps.") from err
 
 
 def slugify(s: str) -> str:
@@ -328,3 +328,20 @@ def iter_maybe(thing) -> Iterable:
     if isinstance(thing, Iterable) and not isinstance(thing, str):
         return thing
     return (thing,)
+
+
+def combine_dicts(d1: dict, d2: dict) -> dict:
+    """Recursively combines two dictionaries.
+
+    Duplicate atoms favour the second dictionary.
+    """
+    # Update existing keys.
+    for key in d1.keys() & d2.keys():
+        if isinstance(d1[key], dict):
+            d1[key] = combine_dicts(d1[key], d2[key])
+        else:
+            d1[key] = d2[key]
+    # Add any new keys.
+    for key in d2.keys() - d1.keys():
+        d1[key] = d2[key]
+    return d1

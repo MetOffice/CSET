@@ -8,6 +8,12 @@ packaged on `conda-forge`_ in the ``cset`` package. The following command will
 install CSET into its own conda environment, which is recommended to avoid
 possible package conflicts.
 
+.. caution::
+
+    The example shell snippets in this documentation use ``bash``, and may not
+    work with other shells. In particular there are known issues activating
+    conda environments with ``ksh``.
+
 .. code-block:: bash
 
     conda create --name=cset --channel=conda-forge cset

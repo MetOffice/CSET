@@ -1,4 +1,4 @@
-# Copyright 2022-2023 Met Office and contributors.
+# © Crown copyright, Met Office (2022-2024) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,7 +23,10 @@ from pathlib import Path
 import iris
 import iris.coords
 import iris.cube
+import iris.util
 import numpy as np
+
+from CSET.operators._stash_to_lfric import STASH_TO_LFRIC
 
 
 class NoDataWarning(UserWarning):
@@ -94,8 +97,7 @@ def read_cubes(
     """Read cubes from files.
 
     Read operator that takes a path string (can include wildcards), and uses
-    iris to load_cube all the cubes matching the constraint and return a
-    CubeList object.
+    iris to load the minimal set of cubes matching the constraint.
 
     If the loaded data is split across multiple files, a filename_pattern can be
     specified to select the read files using Unix shell-style wildcards. In this
@@ -124,7 +126,7 @@ def read_cubes(
     Returns
     -------
     cubes: iris.cube.CubeList
-        Cubes loaded
+        Cubes loaded after being merged and concatenated.
 
     Raises
     ------
@@ -141,8 +143,16 @@ def read_cubes(
         callback = _create_callback(is_ensemble=True)
         cubes = iris.load(input_files, constraint, callback=callback)
 
-    # Merge cubes now metadata has been fixed.
-    cubes.merge()
+    # Merge and concatenate cubes now metadata has been fixed.
+    cubes = cubes.merge()
+    cubes = cubes.concatenate()
+
+    # Ensure dimension coordinates are bounded.
+    for cube in cubes:
+        for dim_coord in cube.coords(dim_coords=True):
+            # Iris can't guess the bounds of a scalar coordinate.
+            if not dim_coord.has_bounds() and dim_coord.shape[0] > 1:
+                dim_coord.guess_bounds()
 
     logging.debug("Loaded cubes: %s", cubes)
     if len(cubes) == 0:
@@ -184,7 +194,10 @@ def _create_callback(is_ensemble: bool) -> callable:
             _ensemble_callback(cube, field, filename)
         else:
             _deterministic_callback(cube, field, filename)
+        _um_normalise_callback(cube, field, filename)
         _lfric_normalise_callback(cube, field, filename)
+        _lfric_time_coord_fix_callback(cube, field, filename)
+        _longitude_fix_callback(cube, field, filename)
 
     return callback
 
@@ -230,6 +243,25 @@ def _deterministic_callback(cube, field, filename):
         )
 
 
+def _um_normalise_callback(cube: iris.cube.Cube, field, filename):
+    """Normalise UM STASH variable long names to LFRic variable names.
+
+    Note standard names will remain associated with cubes where different.
+    Long name will be used consistently in output filename and titles.
+    """
+    # Convert STASH to LFRic variable name
+    if "STASH" in cube.attributes:
+        stash = cube.attributes["STASH"]
+        try:
+            (name, grid) = STASH_TO_LFRIC[str(stash)]
+            cube.long_name = name
+        except KeyError:
+            logging.warning("Unknown STASH code: %s", stash)
+            logging.warning("Please check file stash_to_lfric.py to update.")
+            # Don't change cubes with unknown stash codes.
+            pass
+
+
 def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
     """Normalise attributes that prevents LFRic cube from merging.
 
@@ -244,12 +276,61 @@ def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
     # Remove unwanted attributes.
     cube.attributes.pop("timeStamp", None)
     cube.attributes.pop("uuid", None)
+    # There might also be a "name" attribute to ditch, which is the filename.
 
     # Sort STASH code list.
     stash_list = cube.attributes.get("um_stash_source")
     if stash_list:
         # Parse the string as a list, sort, then re-encode as a string.
         cube.attributes["um_stash_source"] = str(sorted(ast.literal_eval(stash_list)))
+
+
+def _lfric_time_coord_fix_callback(cube: iris.cube.Cube, field, filename):
+    """Ensure the time coordinate is a DimCoord rather than an AuxCoord.
+
+    The coordinate is converted and replaced if not. SLAMed LFRic data has this
+    issue, though the coordinate satisfies all the properties for a DimCoord.
+    Scalar time values are left as AuxCoords.
+    """
+    # This issue seems to come from iris's handling of NetCDF files where time
+    # always ends up as an AuxCoord.
+    if cube.coords("time"):
+        time_coord = cube.coord("time")
+        if not isinstance(time_coord, iris.coords.DimCoord) and cube.coord_dims(
+            time_coord
+        ):
+            iris.util.promote_aux_coord_to_dim_coord(cube, time_coord)
+
+    # Force single-valued coordinates to be scalar coordinates.
+    return iris.util.squeeze(cube)
+
+
+def _longitude_fix_callback(cube: iris.cube.Cube, field, filename):
+    """Check longitude coordinates are in the range -180 deg to 180 deg.
+
+    This is necessary if comparing two models with different conventions --
+    for example, models where the prime meridian is defined as 0 deg or
+    360 deg. If not in the range -180 deg to 180 deg, we wrap the longitude
+    so that it falls in this range.
+    """
+    import CSET.operators._utils as utils
+
+    try:
+        y, x = utils.get_cube_yxcoordname(cube)
+    except ValueError:
+        # Don't modify non-spatial cubes.
+        return cube
+    long_coord = cube.coord(x)
+    long_points = long_coord.points.copy()
+    long_centre = np.median(long_points)
+    while long_centre < -180.0:
+        long_centre += 360.0
+        long_points += 360.0
+    while long_centre >= 180.0:
+        long_centre -= 360.0
+        long_points -= 360.0
+    long_coord.points = long_points
+    return cube
 
 
 def _check_input_files(input_path: Path | str, filename_pattern: str) -> Iterable[Path]:
@@ -274,6 +355,7 @@ def _check_input_files(input_path: Path | str, filename_pattern: str) -> Iterabl
     FileNotFoundError:
         If the provided arguments don't resolve to at least one existing file.
     """
+    logging.debug("Checking '%s' for pattern '%s'", input_path, filename_pattern)
     # Convert string paths into Path objects.
     if isinstance(input_path, str):
         input_path = Path(input_path)

@@ -1,4 +1,4 @@
-# Copyright 2022 Met Office and contributors.
+# © Crown copyright, Met Office (2022-2024) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,35 +52,6 @@ def test_bake_recipe_execution(tmp_path):
     )
 
 
-def test_bake_parallel_only(tmp_path):
-    """Run recipe parallel steps from the command line."""
-    subprocess.run(
-        [
-            "cset",
-            "bake",
-            f"--input-dir={os.devnull}",
-            f"--output-dir={tmp_path}",
-            "--recipe=tests/test_data/noop_recipe.yaml",
-            "--parallel-only",
-        ],
-        check=True,
-    )
-
-
-def test_bake_post_only(tmp_path):
-    """Run recipe collate steps from the command line."""
-    subprocess.run(
-        [
-            "cset",
-            "bake",
-            f"--output-dir={tmp_path}",
-            "--recipe=tests/test_data/noop_recipe.yaml",
-            "--collate-only",
-        ],
-        check=True,
-    )
-
-
 def test_bake_invalid_args():
     """Invalid arguments give non-zero exit code."""
     with pytest.raises(subprocess.CalledProcessError):
@@ -98,7 +69,7 @@ def test_bake_invalid_args():
 
 
 def test_bake_invalid_args_input_dir():
-    """Missing required input-dir argument for parallel."""
+    """Missing required input-dir argument for bake."""
     with pytest.raises(subprocess.CalledProcessError):
         subprocess.run(
             ["cset", "bake", "--recipe=foo", "--output-dir=/tmp"], check=True

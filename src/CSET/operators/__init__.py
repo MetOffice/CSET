@@ -1,4 +1,4 @@
-# Copyright 2022-2023 Met Office and contributors.
+# © Crown copyright, Met Office (2022-2024) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -46,8 +46,7 @@ __all__ = [
     "collapse",
     "constraints",
     "convection",
-    "execute_recipe_collate",
-    "execute_recipe_parallel",
+    "execute_recipe",
     "filters",
     "get_operator",
     "misc",
@@ -106,8 +105,7 @@ def _write_metadata(recipe: dict):
     # TODO: Investigate whether we might be better served by an SQLite database.
     metadata = recipe.copy()
     # Remove steps, as not needed, and might contain non-serialisable types.
-    metadata.pop("parallel", None)
-    metadata.pop("collate", None)
+    metadata.pop("steps", None)
     with open("meta.json", "wt", encoding="UTF-8") as fp:
         json.dump(metadata, fp)
     os.sync()
@@ -142,11 +140,18 @@ def _step_parser(step: dict, step_input: any) -> str:
         return operator(**kwargs)
 
 
-def _run_steps(recipe, steps, step_input, output_directory: Path, style_file: Path):
+def _run_steps(
+    recipe,
+    steps,
+    step_input,
+    output_directory: Path,
+    style_file: Path = None,
+    plot_resolution: int = None,
+) -> None:
     """Execute the steps in a recipe."""
     original_working_directory = Path.cwd()
-    os.chdir(output_directory)
     try:
+        os.chdir(output_directory)
         logger = logging.getLogger()
         diagnostic_log = logging.FileHandler(
             filename="CSET.log", mode="w", encoding="UTF-8"
@@ -159,6 +164,8 @@ def _run_steps(recipe, steps, step_input, output_directory: Path, style_file: Pa
         # Create metadata file used by some steps.
         if style_file:
             recipe["style_file_path"] = str(style_file)
+        if plot_resolution:
+            recipe["plot_resolution"] = plot_resolution
         _write_metadata(recipe)
         # Execute the recipe.
         for step in steps:
@@ -168,14 +175,15 @@ def _run_steps(recipe, steps, step_input, output_directory: Path, style_file: Pa
         os.chdir(original_working_directory)
 
 
-def execute_recipe_parallel(
+def execute_recipe(
     recipe_yaml: Union[Path, str],
     input_directory: Path,
     output_directory: Path,
     recipe_variables: dict = None,
     style_file: Path = None,
+    plot_resolution: int = None,
 ) -> None:
-    """Parse and executes the parallel steps from a recipe file.
+    """Parse and executes the steps from a recipe file.
 
     Parameters
     ----------
@@ -183,13 +191,16 @@ def execute_recipe_parallel(
         Path to a file containing, or string of, a recipe's YAML describing the
         operators that need running. If a Path is provided it is opened and
         read.
-    input_file: Path
-        Pathlike to netCDF (or something else that iris read) file to be used as
-        input.
+    input_directory: Path
+        Pathlike to directory containing input files.
     output_directory: Path
         Pathlike indicating desired location of output.
-    recipe_variables: dict
+    recipe_variables: dict, optional
         Dictionary of variables for the recipe.
+    style_file: Path, optional
+        Path to a style file.
+    plot_resolution: int, optional
+        Resolution of plots in dpi.
 
     Raises
     ------
@@ -202,51 +213,13 @@ def execute_recipe_parallel(
     TypeError
         The provided recipe is not a stream or Path.
     """
-    if recipe_variables is None:
-        recipe_variables = {}
     recipe = parse_recipe(recipe_yaml, recipe_variables)
     step_input = Path(input_directory).absolute()
-    # Create output directory, and an inter-cycle intermediate directory.
+    # Create output directory.
     try:
-        (output_directory / "intermediate").mkdir(parents=True, exist_ok=True)
+        output_directory.mkdir(parents=True, exist_ok=True)
     except (FileExistsError, NotADirectoryError) as err:
         logging.error("Output directory is a file. %s", output_directory)
         raise err
-    steps = recipe["parallel"]
-    _run_steps(recipe, steps, step_input, output_directory, style_file)
-
-
-def execute_recipe_collate(
-    recipe_yaml: Union[Path, str],
-    output_directory: Path,
-    recipe_variables: dict = None,
-    style_file: Path = None,
-) -> None:
-    """Parse and execute the collation steps from a recipe file.
-
-    Parameters
-    ----------
-    recipe_yaml: Path or str
-        Path to a file containing, or string of, a recipe's YAML describing the
-        operators that need running. If a Path is provided it is opened and
-        read.
-    output_directory: Path
-        Pathlike indicating desired location of output. Must already exist.
-    recipe_variables: dict
-        Dictionary of variables for the recipe.
-
-    Raises
-    ------
-    ValueError
-        The recipe is not well formed.
-    TypeError
-        The provided recipe is not a stream or Path.
-    """
-    if recipe_variables is None:
-        recipe_variables = {}
-    output_directory = Path(output_directory).resolve()
-    assert output_directory.is_dir()
-    recipe = parse_recipe(recipe_yaml, recipe_variables)
-    # If collate doesn't exist treat it as having no steps.
-    steps = recipe.get("collate", [])
-    _run_steps(recipe, steps, output_directory, output_directory, style_file)
+    steps = recipe["steps"]
+    _run_steps(recipe, steps, step_input, output_directory, style_file, plot_resolution)

@@ -13,23 +13,32 @@ CSET Documentation
    changelog
    GitHub <https://github.com/MetOffice/CSET>
 
-CSET (Convective- and turbulence-scale Evaluation and verification Toolkit) is a
-toolkit for evaluation, verification and investigation of convective- and
-turbulence-scale numerical models for weather and climate applications, cutting
-across time and space scales.
+CSET (Convective- and turbulence-scale Evaluation and verification Toolkit) is
+an open-source toolkit for evaluation, verification and investigation of
+convective- and turbulence-scale numerical models for weather and climate
+applications, cutting across time and space scales with a focus on regional
+domains.
+
+CSET provides a centralised and peer-reviewed source of tools to aid
+process-oriented evaluation for UM and LFRic models, supporting both
+deterministic and ensemble configurations. It will support evaluation of machine
+learning models and utilise observations from a range of sources to aid in the
+evaluation process.
+
+It will utilise the Model Evaluation Tools (MET) software to provide a range of
+verification metrics aligned with operational verification best practices.
+
+For model and diagnostics developers CSET offers well documented and peer
+reviewed evaluation tools with a well defined release cycle and flexible
+evaluation code that can adapt to users needs. CSET is built with portability in
+mind and can be run on a range of platforms from local desktops to HPC systems
+and cloud servers. It ensures traceable and reproducible results during the model
+assessment cycle and offers a legacy for diagnostics and access to observations.
 
 It aligns parametrisation development, diagnostic development and evaluation
 research, feeding back into Regional Atmosphere and Land (RAL) model development
-across the Met Office and UM partnership.
+across the Met Office and Momentum® Partnership.
 
-Apart from verification capabilities it provides a centralised source of tools
-to aid process-oriented evaluation for UM and LFRic models, supporting both
-deterministic and ensembles.
-
-For model developers CSET offers well documented and peer reviewed evaluation
-tools and flexible evaluation code that can adapt to users needs.
-
-For diagnostic developers it provides a legacy for diagnostics and observations.
 It is build on a modern software stack using python 3 and METplus. Clear
 documentation, working practices, automatic testing, and open access promote
 contributions.
@@ -62,7 +71,15 @@ Conduct`_.
 Licence
 -------
 
-Copyright © 2022-2024 Met Office and contributors. CSET is distributed under the
-`Apache 2.0 License`_, in the hope that it will be useful.
+© Crown copyright, Met Office (2022-2024) and CSET contributors.
 
-.. _Apache 2.0 License: https://www.apache.org/licenses/LICENSE-2.0
+Licensed under the Apache License, Version 2.0 (the "License"); you
+may not use this file except in compliance with the License. You may obtain a
+copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.

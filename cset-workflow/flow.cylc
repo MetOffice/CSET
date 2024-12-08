@@ -4,145 +4,157 @@ title = CSET
 description = Workflow for running CSET.
 URL = https://metoffice.github.io/CSET
 
-[scheduler]
-    UTC mode = True
+# Import all of our Jinja utilities for use in the workflow.
+{% from "jinja_utils" import get_models, glob, max, min, zip, restructure_field_list, sanitise_task_name %}
+# Load a list a model detail dictionaries.
+{% set models = get_models(ROSE_SUITE_VARIABLES) %}
+
 
 [scheduling]
-    runahead limit = P{{CSET_RUNAHEAD_LIMIT}}
-    initial cycle point = {{CSET_INITIAL_CYCLE_POINT}}
-    final cycle point = {{CSET_FINAL_CYCLE_POINT}}
+    # There is rarely a reason to manually set the runahead limit, as we will
+    # usually be limited by number of concurrent jobs.
+    {% if CSET_RUNAHEAD_LIMIT|default(False) %}
+        runahead limit = P{{CSET_RUNAHEAD_LIMIT}}
+    {% endif %}
+
+    # Initial and final cycle points cover the entire period of interest.
+    {% if CSET_CYCLING_MODE == "case_study" %}
+        initial cycle point = {{ min(CSET_CASE_DATES) }}
+        final cycle point = {{ max(CSET_CASE_DATES) }}
+    {% elif CSET_CYCLING_MODE == "trial" %}
+        initial cycle point = {{CSET_TRIAL_START_DATE}}
+        # End date can be blank.
+        {% if CSET_TRIAL_END_DATE|default(False) %}
+            final cycle point = {{CSET_TRIAL_END_DATE}}
+        {% endif %}
+    {% endif %}
 
     [[graph]]
     # Only runs on the first cycle.
     R1/^ = """
-    build_conda => install_website_skeleton
-    build_conda => install_local_cset
-    install_website_skeleton & install_local_cset => FETCH_DATA
+    build_conda => install_website_skeleton => setup_complete
     """
 
-    # Only runs on the final cycle.
-    R1/$ = """
-    process_finish => COLLATE:succeed-all =>
-    finish_website => send_email => housekeeping_full
-    """
-
-    # Runs every cycle to process the data in parallel.
-    {{CSET_CYCLE_PERIOD}} = """
-    install_website_skeleton[^] & install_local_cset[^] =>
-    FETCH_DATA:succeed-all => PARALLEL:succeed-all =>
-    process_finish => housekeeping_raw
-
-    # Intercycle dependence with this task ensures the collate step waits for
-    # the required data.
-    process_finish[-{{CSET_CYCLE_PERIOD}}] => process_finish
-    """
-
-    {% if CSET_INCREMENTAL_OUTPUT %}
-    # Runs every so often to update output plots during runtime.
-    {{CSET_INCREMENTAL_OUTPUT_PERIOD}} = """
-    COLLATE[-{{CSET_INCREMENTAL_OUTPUT_PERIOD}}]:finish-all &
-    process_finish => COLLATE
-    """
+    {% if CSET_CYCLING_MODE == "case_study" %}
+        # Runs for every forecast initiation time to process the data in parallel.
+        {% for date in CSET_CASE_DATES %}
+            R1/{{date}} = """
+            setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
+            fetch_complete => PROCESS:finish-all => housekeeping_raw
+            """
+        {% endfor %}
+    {% elif CSET_CYCLING_MODE == "trial" %}
+        # Analyse from each forecast.
+        {{CSET_TRIAL_CYCLE_PERIOD}} = """
+        setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
+        fetch_complete => PROCESS:finish-all => housekeeping_raw
+        """
     {% endif %}
+
+    # Can only run tasks on final cycle point if it exists, so skip for
+    # continuous trials.
+    {% if CSET_CYCLING_MODE != "trial" or CSET_TRIAL_END_DATE|default(False) %}
+        # Only runs on the final cycle.
+        R1/$ = """
+        housekeeping_raw => finish_website => send_email
+        housekeeping_raw => housekeeping_full
+        """
+    {% endif %}
+
 
 [runtime]
     [[root]]
     script = rose task-run -v
     execution time limit = PT15M
         [[[environment]]]
-        CSET_ENV_USE_MODULES = {{CSET_ENV_USE_MODULES}}
-        {% if CSET_ENV_USE_MODULES %}
-        MODULES_LIST = {{MODULES_LIST}}
-        MODULES_PURGE = {{MODULES_PURGE}}
+        # As these variables are used in the environment script, they must be
+        # defined.
+        CSET_ENV_USE_MODULES = {{CSET_ENV_USE_MODULES|default(False)}}
+        {% if CSET_ENV_USE_MODULES|default(False) %}
+            MODULES_LIST = {{MODULES_LIST}}
+            MODULES_PURGE = {{MODULES_PURGE}}
         {% endif %}
 
-        CSET_ENV_USE_CONDA = {{CSET_ENV_USE_CONDA}}
-        {% if CSET_ENV_USE_CONDA %}
-        CONDA_PATH = {{CONDA_PATH}}
-        CONDA_VENV_LOCATION = {{CONDA_VENV_LOCATION}}
+        CSET_ENV_USE_CONDA = {{CSET_ENV_USE_CONDA|default(False)}}
+        {% if CSET_ENV_USE_CONDA|default(False) %}
+            CONDA_PATH = {{CONDA_PATH}}
+            CONDA_VENV_LOCATION = {{CONDA_VENV_LOCATION}}
         {% endif %}
 
-        CSET_ENV_SEPARATE_MET = {{CSET_ENV_SEPARATE_MET}}
-        {% if CSET_ENV_SEPARATE_MET %}
-        CONDA_METPLUS_VENV_LOCATION = {{CONDA_METPLUS_VENV_LOCATION}}
-        MET_INSTALL_DIR = {{MET_INSTALL_DIR}}
-        MET_BUILD_BASE = {{MET_BUILD_BASE}}
-        METPLUS_BASE = {{METPLUS_BASE}}
-        MET_LIBRARIES = {{MET_LIBRARIES}}
+        CSET_ENV_SEPARATE_MET = {{CSET_ENV_SEPARATE_MET|default(False)}}
+        {% if CSET_ENV_SEPARATE_MET|default(False) %}
+            CONDA_METPLUS_VENV_LOCATION = {{CONDA_METPLUS_VENV_LOCATION}}
+            MET_INSTALL_DIR = {{MET_INSTALL_DIR}}
+            MET_BUILD_BASE = {{MET_BUILD_BASE}}
+            METPLUS_BASE = {{METPLUS_BASE}}
+            MET_LIBRARIES = {{MET_LIBRARIES}}
         {% endif %}
 
         LOGLEVEL = {{LOGLEVEL}}
-        WEB_DIR = {{WEB_DIR}}
         COLORBAR_FILE = {{COLORBAR_FILE}}
+        PLOT_RESOLUTION = {{PLOT_RESOLUTION|default(100)}}
 
-    [[PARALLEL]]
+    [[PROCESS]]
     script = rose task-run -v --app-key=run_cset_recipe
-    [[[environment]]]
-        CSET_BAKE_MODE = parallel
-
-    [[COLLATE]]
-    script = rose task-run -v --app-key=run_cset_recipe
-    [[[environment]]]
-        CSET_BAKE_MODE = collate
+    execution time limit = PT1H
 
     [[FETCH_DATA]]
+    script = rose task-run -v --app-key=fetch_fcst
+    execution time limit = PT1H
+        [[[environment]]]
+        CSET_ANALYSIS_OFFSET = {{CSET_ANALYSIS_OFFSET}}
+        CSET_ANALYSIS_PERIOD = {{CSET_ANALYSIS_PERIOD}}
 
     [[METPLUS]]
         [[[environment]]]
-            {% if METPLUS_GRID_STAT %}
+        {% if METPLUS_GRID_STAT|default(False) %}
             METPLUS_ANA_DIR = {{METPLUS_ANA_DIR}}
             {% endif %}
             METPLUS_FCST_DIR = {{METPLUS_FCST_DIR}}
             METPLUS_OBS_DIR = {{METPLUS_OBS_DIR}}
             ROSE_APP_OPT_CONF_KEYS = {{METPLUS_OPT_CONFIG_KEYS}}
+        {% endif %}
 
-    # Dummy tasks needed for workflow scheduling.
-    [[process_finish]]
+    [[DUMMY_TASK]]
     script = true
     platform = localhost
+    execution time limit = PT1M
 
-    [[dummy_collate]]
-    inherit = COLLATE
-    script = true
-    platform = localhost
+    [[setup_complete]]
+    inherit = DUMMY_TASK
 
-    [[dummy_parallel]]
-    inherit = PARALLEL
-    script = true
-    platform = localhost
+    [[fetch_complete]]
+    inherit = DUMMY_TASK
 
     [[build_conda]]
-    # Create the conda environment if it does not yet exist.
+    # Create the conda environment if it does not yet exist, possibly installing
+    # CSET from source.
     execution time limit = PT30M
         [[[environment]]]
         CONDA_VENV_CREATE = {{CONDA_VENV_CREATE}}
-
-    [[install_local_cset]]
-    # Install CSET from source.
-    execution time limit = PT5M
-        [[[environment]]]
-        CSET_ENV_USE_LOCAL_CSET = {{CSET_ENV_USE_LOCAL_CSET}}
-        {% if CSET_ENV_USE_LOCAL_CSET %}
-        CSET_LOCAL_CSET_PATH = {{CSET_LOCAL_CSET_PATH}}
+        CSET_ENV_USE_LOCAL_CSET = {{CSET_ENV_USE_LOCAL_CSET|default(False) }}
+        {% if CSET_ENV_USE_LOCAL_CSET|default(False) %}
+            CSET_LOCAL_CSET_PATH = {{CSET_LOCAL_CSET_PATH}}
         {% endif %}
 
     [[install_website_skeleton]]
     # Copies the static files that make up the web interface.
         [[[environment]]]
-        CLEAN_WEB_DIR = {{CLEAN_WEB_DIR}}
+        WEB_DIR = {{WEB_DIR}}
 
-    [[fetch_fcst]]
+    {% for model in models %}
+    [[fetch_fcst_m{{model["number"]}}]]
     # Fetch data from disk or a file based archival system.
     inherit = FETCH_DATA
         [[[environment]]]
-        ROSE_APP_OPT_CONF_KEYS = {{FETCH_FCST_OPT_CONF}}
-        CSET_INPUT_FILE_PATH = {{CSET_INPUT_FILE_PATH}}
-        {% if CSET_INCREMENTAL_DATA_FETCH %}
-        CSET_FILE_NAME_METADATA_PATTERN = {{CSET_FILE_NAME_METADATA_PATTERN}}
-        CSET_CYCLE_PERIOD = {{CSET_CYCLE_PERIOD}}
-        CSET_TIMES_PER_FILE = {{CSET_TIMES_PER_FILE}}
-        CSET_FILE_TIME_OFFSET = {{CSET_FILE_TIME_OFFSET}}
+        MODEL_NUMBER = {{model["number"]}}
+        ROSE_APP_COMMAND_KEY = {{model["data_source"]}}
+        DATA_PATH = {{model["data_path"]}}
+        DATE_TYPE = {{model["date_type"]}}
+        {% if model["date_type"] != "initiation" %}
+            DATA_PERIOD = {{model["data_period"]}}
         {% endif %}
+    {% endfor %}
 
     [[housekeeping_raw]]
     # Housekeep unprocessed data files.
@@ -158,13 +170,13 @@ URL = https://metoffice.github.io/CSET
 
     [[finish_website]]
     # Updates the workflow info in the web interface.
-    platform = localhost
 
     [[send_email]]
     # Send email to notify that the workflow is complete.
     platform = localhost
         [[[environment]]]
         WEB_ADDR = {{WEB_ADDR}}
+        WEB_DIR = {{WEB_DIR}}
 
 
 # Include files bring their own graph and runtime sections.

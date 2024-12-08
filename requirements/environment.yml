@@ -1,6 +1,7 @@
 name: cset-dev
 channels:
   - conda-forge
+  - nodefaults
 dependencies:
   # Runtime dependencies
   - numpy
@@ -10,6 +11,8 @@ dependencies:
   - pygraphviz
   - isodate
   - markdown-it-py >= 3.0
+  - nc-time-axis
+  - iris-grib
 
   # Build dependencies
   - setuptools>=64
@@ -28,4 +31,4 @@ dependencies:
 
   # Documentation dependencies
   - sphinx >= 6.0
-  - furo
+  - furo >= 2024.8.6
