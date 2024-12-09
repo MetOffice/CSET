@@ -132,7 +132,7 @@ def get_recipe_metadata() -> dict:
     except FileNotFoundError:
         meta = {}
         with open("meta.json", "wt", encoding="UTF-8") as fp:
-            json.dump(meta, fp)
+            json.dump(meta, fp, indent=2)
         return {}
 
 
