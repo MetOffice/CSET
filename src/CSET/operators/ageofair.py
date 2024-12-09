@@ -341,10 +341,7 @@ def compute_ageofair(
     # Get array index for user specified pressure level.
     if plev not in XWIND.coord("pressure").points:
         raise IndexError(
-            "Can't find plev ",
-            str(plev),
-            " in ",
-            XWIND.coord("pressure").points,
+            f"Can't find plev {plev} in {XWIND.coord("pressure").points}"
         )
 
     # Find corresponding pressure level index
