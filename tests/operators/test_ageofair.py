@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests age of air operators."""
+"""Tests for age of air operator."""
 
 import iris
 import iris.cube
