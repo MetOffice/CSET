@@ -277,8 +277,7 @@ def compute_ageofair(
 
     """
     # Set up temporary directory to store intermediate age of air slices.
-    # tmpdir = tempfile.TemporaryDirectory(dir=os.environ["CYLC_TASK_WORK_DIR"])
-    tmpdir = tempfile.TemporaryDirectory()
+    tmpdir = tempfile.TemporaryDirectory(dir=os.getenv["CYLC_TASK_WORK_DIR"])
     logging.info("Made tmpdir %s", tmpdir.name)
 
     # Check that all cubes are of same size (will catch different dimension orders too).
@@ -293,10 +292,10 @@ def compute_ageofair(
 
     # Make data non-lazy to speed up code.
     logging.info("Making data non-lazy...")
-    XWIND.realise_data()
-    YWIND.realise_data()
-    WWIND.realise_data()
-    GEOPOT.realise_data()
+    # XWIND.realise_data()
+    # YWIND.realise_data()
+    # WWIND.realise_data()
+    # GEOPOT.realise_data()
     x_arr = XWIND.data
     y_arr = YWIND.data
     z_arr = WWIND.data
