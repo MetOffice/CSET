@@ -143,7 +143,7 @@ def _aoa_core(
             outside_lam = False
 
             # If final column, look at dist from prev column, otherwise look at next column.
-            if int(lon_pnt) == int(len(lons) - 1):
+            if lon_pnt == len(lons) - 1:
                 ew_spacing = _calc_dist(
                     (lats[lat_pnt], lons[lon_pnt]), (lats[lat_pnt], lons[lon_pnt - 1])
                 )
@@ -153,7 +153,7 @@ def _aoa_core(
                 )
 
             # If final row, look at dist from row column, otherwise look at next row.
-            if int(lat_pnt) == int(len(lats) - 1):
+            if lat_pnt == len(lats) - 1:
                 ns_spacing = _calc_dist(
                     (lats[lat_pnt], lons[lon_pnt]), (lats[lat_pnt - 1], lons[lon_pnt])
                 )
@@ -207,7 +207,7 @@ def _aoa_core(
                     # Support cyclic domains like K-SCALE, where x coord out of domain gets moved through dateline.
                     if cyclic:
                         if (
-                            x <= -1
+                            x < 0
                         ):  # as for example -0.3 would still be in domain, but x_arr.shape-0.3 would result in index error
                             x = x_arr.shape[3] + x  # wrap back around dateline
                         elif x >= x_arr.shape[3]:
