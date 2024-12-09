@@ -972,7 +972,7 @@ def plot_line_series(
     Returns
     -------
     iris.cube | iris.cube.CubeList
-        An iris cube of the plotted data, or a cubelist of the
+        The original cube or CubeList (so further operations can be applied).
         plotted data.
 
     Raises
