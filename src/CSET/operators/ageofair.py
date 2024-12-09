@@ -204,7 +204,6 @@ def compute_ageofair(
     WWIND: Cube,
     GEOPOT: Cube,
     plev: int,
-    incW: bool,
     cyclic: bool = False,
     multicore=True,
 ):
@@ -237,15 +236,6 @@ def compute_ageofair(
     plev: int
         The pressure level of which to compute the back trajectory on. The function will search to
         see if this exists and if not, will raise an exception.
-    incW: bool
-        If incW is True, then the back trajectories will take into account vertical velocity fields
-        and thus a back trajectory takes a 3D path back. In this case, vertical wind fields are
-        smoothed in addition to the prior coarsening, to prevent instantaneous sampling of strong
-        updrafts/downdrafts that would advect a parcel to the bottom/top of atmosphere if the
-        temporal sampling of the data is coarse enough (e.g. hourly or 3 hourly). This option enables
-        the trajectory to capture large areas of rising/sinking air, in phenomena such as overturning
-        circulations. If incW if False, then compute back trajectories on a pressure level with no
-        vertical advection (essentially a laminar, stratified flow).
     cyclic: bool
         If cyclic is True, then the code will assume no east/west boundary and if a back trajectory
         reaches the boundary, it will emerge out of the other side. This option is useful for large
@@ -317,31 +307,16 @@ def compute_ageofair(
         if dimension_mapping != {"time": 0, "pressure": 1, lat_name: 2, lon_name: 3}:
             raise f"Dimension mapping not correct, ordered {dimension_mapping}"
 
-    # Smooth vertical velocity if using, to 2sigma (standard for 0.5 degree).
-    if incW and ensemble_mode:
-        logging.info("Smoothing vertical velocity...")
-        for e in range(0, z_arr.shape[0]):
-            for t in range(0, z_arr.shape[1]):
-                for p in range(0, z_arr.shape[2]):
-                    z_arr[e, t, p, :, :] = gaussian_filter(
-                        z_arr[e, t, p, :, :], [2, 2], mode="nearest"
-                    )
-    elif incW and not ensemble_mode:
-        logging.info("Smoothing vertical velocity...")
-        for t in range(0, z_arr.shape[0]):
-            for p in range(0, z_arr.shape[1]):
-                z_arr[t, p, :, :] = gaussian_filter(
-                    z_arr[t, p, :, :], [2, 2], mode="nearest"
-                )
+    # Smooth vertical velocity to 2sigma (standard for 0.5 degree).
+    logging.info("Smoothing vertical velocity...")
+    if ensemble_mode:
+        z_arr = gaussian_filter(z_arr, 2, mode="nearest", axes=(3, 4))
     else:
-        # If not using vertical velocity, set vertical velocity to zero.
-        z_arr[:] = 0
+        z_arr = gaussian_filter(z_arr, 2, mode="nearest", axes=(2, 3))
 
     # Get array index for user specified pressure level.
     if plev not in XWIND.coord("pressure").points:
-        raise IndexError(
-            f"Can't find plev {plev} in {XWIND.coord("pressure").points}"
-        )
+        raise IndexError(f"Can't find plev {plev} in {XWIND.coord("pressure").points}")
 
     # Find corresponding pressure level index
     plev_idx = np.where(XWIND.coord("pressure").points == plev)[0][0]
