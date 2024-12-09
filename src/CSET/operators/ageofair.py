@@ -112,7 +112,7 @@ def _aoa_core(
         # Initialise leadtime slice with current leadtime.
         ageofair_local[leadtime, :] = leadtime * dt
         for lat_pnt in range(0, x_arr.shape[2]):
-            # Gridpoint initialised as within lam by construction
+            # Gridpoint initialised as within LAM by construction.
             outside_lam = False
 
             # If final column, look at dist from prev column, otherwise look at next column.
