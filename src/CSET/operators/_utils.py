@@ -24,6 +24,7 @@ import logging
 
 import iris
 import iris.cube
+import iris.exceptions
 import iris.util
 
 
@@ -123,10 +124,8 @@ def is_transect(cube: iris.cube.Cube) -> bool:
     return True
 
 
-def fully_equalise_attributes(
-    cubes: iris.cube.Cube | iris.cube.CubeList,
-) -> iris.cube.Cube | iris.cube.CubeList:
-    """Remove any unique attributes between cubes or coordinates."""
+def fully_equalise_attributes(cubes: iris.cube.Cube | iris.cube.CubeList):
+    """Remove any unique attributes between cubes or coordinates in place."""
     # Don't bother with single cubes.
     if isinstance(cubes, iris.cube.Cube):
         return cubes
@@ -135,11 +134,27 @@ def fully_equalise_attributes(
     logging.debug("Removed attributes from cube: %s", removed)
 
     # Equalise coordinate attributes.
-    for coord in (coordinate.name() for coordinate in cubes[0].coords()):
+    coord_sets = [{coord.name() for coord in cube.coords()} for cube in cubes]
+
+    all_coords = set.union(*coord_sets)
+    coords_to_equalise = set.intersection(*coord_sets)
+    coords_to_remove = set.difference(all_coords, coords_to_equalise)
+
+    logging.debug("All coordinates: %s", all_coords)
+    logging.debug("Coordinates to remove: %s", coords_to_remove)
+    logging.debug("Coordinates to equalise: %s", coords_to_equalise)
+
+    for coord in coords_to_remove:
+        for cube in cubes:
+            try:
+                cube.remove_coord(coord)
+                logging.debug("Removed coordinate %s from %s cube.", coord, cube.name())
+            except iris.exceptions.CoordinateNotFoundError:
+                pass
+
+    for coord in coords_to_equalise:
         removed = iris.util.equalise_attributes([cube.coord(coord) for cube in cubes])
         logging.debug("Removed attributes from coordinate %s: %s", coord, removed)
-
-    return cubes
 
 
 def get_initiation_time(cube: iris.cube.Cube) -> datetime.datetime:
