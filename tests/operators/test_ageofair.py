@@ -94,7 +94,7 @@ def test_aoa_cyclic(xwind, ywind, wwind, geopot):
     """Test case when cyclic."""
     assert np.allclose(
         ageofair.compute_ageofair(
-            xwind, ywind, wwind, geopot, plev=500, cyclic=True
+            xwind, ywind, wwind, geopot, plev=500, cyclic=True, multicore=False
         ).data,
         iris.load_cube("tests/test_data/ageofair/aoa_out_cyclic.nc").data,
         rtol=1e-06,

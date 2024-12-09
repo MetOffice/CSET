@@ -64,6 +64,8 @@ def _calc_dist(coord_1, coord_2):
     The function uses the Haversine approximation to calculate distance in metres.
 
     """
+    # Approximate radius of earth in m
+    # Source: https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
     radius = 6378000
 
     # Extract coordinates and convert to radians
