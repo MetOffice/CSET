@@ -49,6 +49,7 @@ def _calc_dist(coord_1, coord_2):
     # Approximate radius of earth in m
     # Source: https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
     radius = 6378000
+    radius = 6371229.0
 
     # Extract coordinates and convert to radians
     lat1 = radians(coord_1[0])
@@ -329,7 +330,7 @@ def compute_ageofair(
 
     # Get array index for user specified pressure level.
     if plev not in XWIND.coord("pressure").points:
-        raise IndexError(f"Can't find plev {plev} in {XWIND.coord("pressure").points}")
+        raise IndexError(f"Can't find plev {plev} in {XWIND.coord('pressure').points}")
 
     # Find corresponding pressure level index
     plev_idx = np.where(XWIND.coord("pressure").points == plev)[0][0]
