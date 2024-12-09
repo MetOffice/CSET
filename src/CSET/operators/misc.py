@@ -21,6 +21,7 @@ from collections.abc import Iterable
 from typing import Union
 
 import cf_units
+import numpy as np
 from iris.cube import Cube, CubeList
 
 from CSET._common import iter_maybe
@@ -265,7 +266,7 @@ def convert_to_lead_time(cube: Cube | CubeList) -> Cube | CubeList:
     return cube
 
 
-def difference(base, other):
+def difference(base: Cube, other: Cube):
     """Difference of two fields.
 
     Parameters
@@ -296,6 +297,9 @@ def difference(base, other):
     >>> model_diff = misc.difference(temperature_model_A, temperature_model_B)
 
     """
+    flip_array = base.attributes.get("model", None) != other.attributes.get(
+        "model", None
+    )
     fully_equalise_attributes([base, other])
     logging.debug("Base: %s\nOther: %s", base, other)
     logging.debug(
@@ -306,7 +310,8 @@ def difference(base, other):
 
     # This currently relies on the cubes having the same underlying data layout.
     difference = base.copy()
-    difference.rename(f"{base.name()} difference")
+    difference.rename("difference")
+    if flip_array:
+        other.data = np.flip(other.data, other.coord("grid_latitude").cube_dims(other))
     difference.data = base.data - other.data
-
     return difference
