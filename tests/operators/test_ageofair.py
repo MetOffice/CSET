@@ -218,10 +218,10 @@ def test_aoa_misordered_dims(xwind, ywind, wwind, geopot):
     """Dimensions in input cubes do not match expected ordering."""
     with pytest.raises(ValueError):
         ageofair.compute_ageofair(
-            xwind.transpose(["time", "pressure", "longitude", "latitude"]),
-            ywind.transpose(["time", "pressure", "longitude", "latitude"]),
-            wwind.transpose(["time", "pressure", "longitude", "latitude"]),
-            geopot.transpose(["time", "pressure", "longitude", "latitude"]),
+            xwind.transpose([0, 1, 3, 2]),
+            ywind.transpose([0, 1, 3, 2]),
+            wwind.transpose([0, 1, 3, 2]),
+            geopot.transpose([0, 1, 3, 2]),
             plev=500,
             cyclic=True,
         )
