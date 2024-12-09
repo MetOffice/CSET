@@ -59,7 +59,7 @@ def ens_regridded() -> iris.cube.CubeList:
 @pytest.fixture()
 def ens_regridded_out() -> iris.cube.Cube:
     """Get age of air ensemble output to check results are consistent."""
-    return iris.load("tests/test_data/ageofair/aoa_out_incW_ens.nc")
+    return iris.load("tests/test_data/ageofair/aoa_out_ens.nc")
 
 
 def test_calc_dist():
@@ -78,35 +78,23 @@ def test_calc_dist():
     assert np.allclose(dist, actual_distance, rtol=1e-06, atol=20000)
 
 
-def test_aoa_noincW_nocyclic(xwind, ywind, wwind, geopot):
-    """Test case no vertical velocity and not cyclic."""
+def test_aoa_nocyclic(xwind, ywind, wwind, geopot):
+    """Test case when not cyclic."""
     assert np.allclose(
         ageofair.compute_ageofair(
-            xwind, ywind, wwind, geopot, plev=500, incW=False, cyclic=False
+            xwind, ywind, wwind, geopot, plev=500, cyclic=False
         ).data,
-        iris.load_cube("tests/test_data/ageofair/aoa_out.nc").data,
+        iris.load_cube("tests/test_data/ageofair/aoa_out_nocyclic.nc").data,
         rtol=1e-06,
         atol=1e-02,
     )
 
 
-def test_aoa_incW_nocyclic(xwind, ywind, wwind, geopot):
-    """Test case including vertical velocity and not cyclic."""
+def test_aoa_cyclic(xwind, ywind, wwind, geopot):
+    """Test case when cyclic."""
     assert np.allclose(
         ageofair.compute_ageofair(
-            xwind, ywind, wwind, geopot, plev=500, incW=True, cyclic=False
-        ).data,
-        iris.load_cube("tests/test_data/ageofair/aoa_out_incW.nc").data,
-        rtol=1e-06,
-        atol=1e-02,
-    )
-
-
-def test_aoa_noincW_cyclic(xwind, ywind, wwind, geopot):
-    """Test case no vertical velocity and cyclic."""
-    assert np.allclose(
-        ageofair.compute_ageofair(
-            xwind, ywind, wwind, geopot, plev=500, incW=False, cyclic=True
+            xwind, ywind, wwind, geopot, plev=500, cyclic=True
         ).data,
         iris.load_cube("tests/test_data/ageofair/aoa_out_cyclic.nc").data,
         rtol=1e-06,
@@ -114,20 +102,8 @@ def test_aoa_noincW_cyclic(xwind, ywind, wwind, geopot):
     )
 
 
-def test_aoa_incW_cyclic(xwind, ywind, wwind, geopot):
-    """Test case including vertical velocity and cyclic."""
-    assert np.allclose(
-        ageofair.compute_ageofair(
-            xwind, ywind, wwind, geopot, plev=500, incW=True, cyclic=True
-        ).data,
-        iris.load_cube("tests/test_data/ageofair/aoa_out_incW_cyclic.nc").data,
-        rtol=1e-06,
-        atol=1e-02,
-    )
-
-
-def test_aoa_incW_cyclic_parallelthreads(xwind, ywind, wwind, geopot):
-    """Test case including vertical velocity and cyclic with parallel."""
+def test_aoa_cyclic_parallelthreads(xwind, ywind, wwind, geopot):
+    """Test case when cyclic with parallel threads."""
     assert np.allclose(
         ageofair.compute_ageofair(
             xwind,
@@ -135,7 +111,6 @@ def test_aoa_incW_cyclic_parallelthreads(xwind, ywind, wwind, geopot):
             wwind,
             geopot,
             plev=500,
-            incW=True,
             cyclic=True,
             multicore=True,
         ).data,
@@ -145,8 +120,8 @@ def test_aoa_incW_cyclic_parallelthreads(xwind, ywind, wwind, geopot):
     )
 
 
-def test_aoa_incW_cyclic_singlethread(xwind, ywind, wwind, geopot):
-    """Test case including vertical velocity and cyclic with no parallelisation."""
+def test_aoa_cyclic_singlethread(xwind, ywind, wwind, geopot):
+    """Test case when cyclic with no parallelisation."""
     assert np.allclose(
         ageofair.compute_ageofair(
             xwind,
@@ -154,7 +129,6 @@ def test_aoa_incW_cyclic_singlethread(xwind, ywind, wwind, geopot):
             wwind,
             geopot,
             plev=500,
-            incW=True,
             cyclic=True,
             multicore=False,
         ).data,
@@ -168,9 +142,7 @@ def test_aoa_mismatched_size(xwind, ywind, wwind, geopot):
     """Mismatched array size raises error."""
     ywind = ywind[:, :, 1:, :]
     with pytest.raises(ValueError):
-        ageofair.compute_ageofair(
-            xwind, ywind, wwind, geopot, plev=500, incW=True, cyclic=True
-        )
+        ageofair.compute_ageofair(xwind, ywind, wwind, geopot, plev=500, cyclic=True)
 
 
 def test_aoa_timefreq(xwind, ywind, wwind, geopot):
@@ -182,7 +154,6 @@ def test_aoa_timefreq(xwind, ywind, wwind, geopot):
             wwind[[1, 2, 4, 5], :, :, :],
             geopot[[1, 2, 4, 5], :, :, :],
             plev=500,
-            incW=True,
             cyclic=True,
         )
 
@@ -191,17 +162,13 @@ def test_aoa_timeunits(xwind, ywind, wwind, geopot):
     """Time intervals that are not hourly raises NotImplemented error."""
     xwind.coord("time").units = "days since 1970-01-01 00:00:00"
     with pytest.raises(NotImplementedError):
-        ageofair.compute_ageofair(
-            xwind, ywind, wwind, geopot, plev=500, incW=True, cyclic=True
-        )
+        ageofair.compute_ageofair(xwind, ywind, wwind, geopot, plev=500, cyclic=True)
 
 
 def test_aoa_plevreq(xwind, ywind, wwind, geopot):
     """Pressure level requested that doesn't exist raises Index error."""
     with pytest.raises(IndexError):
-        ageofair.compute_ageofair(
-            xwind, ywind, wwind, geopot, plev=123, incW=True, cyclic=True
-        )
+        ageofair.compute_ageofair(xwind, ywind, wwind, geopot, plev=123, cyclic=True)
 
 
 def test_aoa_ens(ens_regridded):
@@ -213,7 +180,6 @@ def test_aoa_ens(ens_regridded):
             ens_regridded.extract("upward_air_velocity")[0],
             ens_regridded.extract("geopotential_height")[0],
             plev=200,
-            incW=True,
             cyclic=False,
         ).data,
         iris.load_cube("tests/test_data/ageofair/aoa_out_incW_ens.nc").data,
@@ -231,7 +197,6 @@ def test_aoa_ens_multicore(ens_regridded):
             ens_regridded.extract("upward_air_velocity")[0],
             ens_regridded.extract("geopotential_height")[0],
             plev=200,
-            incW=True,
             cyclic=False,
             multicore=True,
         ).data,
@@ -241,7 +206,6 @@ def test_aoa_ens_multicore(ens_regridded):
             ens_regridded.extract("upward_air_velocity")[0],
             ens_regridded.extract("geopotential_height")[0],
             plev=200,
-            incW=True,
             cyclic=False,
             multicore=False,
         ).data,
