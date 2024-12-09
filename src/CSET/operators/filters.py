@@ -189,6 +189,9 @@ def generate_mask(
     The conversion to a masked array occurs in the apply_mask routine, which
     should happen after all relevant masks have been combined.
 
+    Currently, it is only possible to use the same condition and value when
+    masking.
+
     Examples
     --------
     >>> land_mask = generate_mask(land_sea_mask,'==',1)
