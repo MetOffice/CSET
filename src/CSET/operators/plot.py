@@ -55,7 +55,7 @@ def _append_to_plot_index(plot_index: list) -> list:
         meta["plots"] = complete_plot_index
         fp.seek(0)
         fp.truncate()
-        json.dump(meta, fp)
+        json.dump(meta, fp, indent=2)
     return complete_plot_index
 
 

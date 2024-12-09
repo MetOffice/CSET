@@ -113,7 +113,7 @@ def _write_metadata(recipe: dict):
     # Remove steps, as not needed, and might contain non-serialisable types.
     metadata.pop("steps", None)
     with open("meta.json", "wt", encoding="UTF-8") as fp:
-        json.dump(metadata, fp)
+        json.dump(metadata, fp, indent=2)
     os.sync()
     # Stat directory to force NFS to synchronise metadata.
     os.stat(Path.cwd())
