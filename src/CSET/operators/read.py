@@ -191,6 +191,7 @@ def _create_callback(is_ensemble: bool) -> callable:
     """Compose together the needed callbacks into a single function."""
 
     def callback(cube: iris.cube.Cube, field, filename: str):
+        _model_name_callback(cube, field, filename)
         if is_ensemble:
             _ensemble_callback(cube, field, filename)
         else:
@@ -201,6 +202,27 @@ def _create_callback(is_ensemble: bool) -> callable:
         _longitude_fix_callback(cube, field, filename)
 
     return callback
+
+
+def _model_name_callback(cube, field, filename):
+    """Add the model name to the cube attributes.
+
+    Arguments
+    ---------
+    cube: Cube
+        Model data cube
+    field
+        Raw data variable, unused.
+    filename: str
+        filename of ensemble member data
+    """
+    if "um_version" in cube.attributes:
+        model = "UM"
+    elif cube.attributes.get("title", None) == "Created by xios":
+        model = "LFRic"
+    else:
+        logging.warning("Unknown model type")
+    cube.attributes["model"] = model
 
 
 def _ensemble_callback(cube, field, filename):
