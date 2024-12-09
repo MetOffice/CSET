@@ -277,7 +277,7 @@ def compute_ageofair(
 
     """
     # Set up temporary directory to store intermediate age of air slices.
-    tmpdir = tempfile.TemporaryDirectory(dir=os.environ["CYLC_TASK_WORK_DIR"])
+    # tmpdir = tempfile.TemporaryDirectory(dir=os.environ["CYLC_TASK_WORK_DIR"])
     tmpdir = tempfile.TemporaryDirectory()
     logging.info("Made tmpdir %s", tmpdir.name)
 
