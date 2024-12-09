@@ -22,22 +22,6 @@ import pytest
 import CSET.operators.ageofair as ageofair
 
 
-def test_calc_dist():
-    """
-    Test distance calculated from calc_dist in age of air calculation.
-
-    Allow a tolerance of 20km (TBD, expect some error).
-    """
-    # London and Johannesburg coordinates to 2 decimal places.
-    london_coords = (51.51, -0.13)
-    johanbg_coords = (-26.21, 28.03)
-
-    dist = ageofair._calc_dist(london_coords, johanbg_coords)
-    actual_distance = 9068670  # Air line according to Google?!
-
-    assert np.allclose(dist, actual_distance, rtol=1e-06, atol=20000)
-
-
 @pytest.fixture()
 def xwind() -> iris.cube.Cube:
     """Get regridded xwind to run tests on."""
@@ -76,6 +60,22 @@ def ens_regridded() -> iris.cube.CubeList:
 def ens_regridded_out() -> iris.cube.Cube:
     """Get age of air ensemble output to check results are consistent."""
     return iris.load("tests/test_data/ageofair/aoa_out_incW_ens.nc")
+
+
+def test_calc_dist():
+    """
+    Test distance calculated from calc_dist in age of air calculation.
+
+    Allow a tolerance of 20km (as we expect some error).
+    """
+    # London and Johannesburg coordinates to 2 decimal places.
+    london_coords = (51.51, -0.13)
+    johanbg_coords = (-26.21, 28.03)
+
+    dist = ageofair._calc_dist(london_coords, johanbg_coords)
+    actual_distance = 9068670  # Air line according to Google?!
+
+    assert np.allclose(dist, actual_distance, rtol=1e-06, atol=20000)
 
 
 def test_aoa_noincW_nocyclic(xwind, ywind, wwind, geopot):
