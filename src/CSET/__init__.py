@@ -51,7 +51,7 @@ def main():
         "--input-dir",
         type=Path,
         required=True,
-        help="directory containing input data",
+        help="directory containing input data. May contain wildcards",
     )
     parser_bake.add_argument(
         "-o",
