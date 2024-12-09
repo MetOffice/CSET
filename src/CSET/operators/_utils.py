@@ -144,18 +144,24 @@ def fully_equalise_attributes(
 
 def get_initiation_time(cube: iris.cube.Cube) -> datetime.datetime:
     """Get the forecast initiation time from a cube."""
-    if "forecast_reference_time" in cube.attributes:
+    logging.debug("Getting forecast initiation time from cube: %s", cube)
+    try:
+        ref_time_coord = cube.coord("forecast_reference_time")
         init_time = datetime.datetime.fromisoformat(
-            cube.attributes["forecast_reference_time"]
+            ref_time_coord.units.num2date(ref_time_coord.points[0]).isoformat()
         ).replace(tzinfo=datetime.timezone.utc)
-    elif "forecast_reference_time" in cube.coords():
-        # TODO: Actually get datetime out.
-        # init_time = cube.coord("forecast_reference_time")
-        return datetime.datetime.now(tz=datetime.timezone.utc)
-    else:
-        init_time = datetime.datetime.fromisoformat(
-            cube.coord("time").attributes["time_origin"]
-        )
-        # Add time zone, presuming UTC.
-        init_time = init_time.replace(tzinfo=datetime.timezone.utc)
+    except iris.exceptions.CoordinateNotFoundError:
+        try:
+            init_time = datetime.datetime.fromisoformat(
+                cube.attributes["forecast_reference_time"]
+            ).replace(tzinfo=datetime.timezone.utc)
+        except KeyError:
+            try:
+                init_time = datetime.datetime.fromisoformat(
+                    cube.coord("time").attributes["time_origin"]
+                )
+                # Add time zone, presuming UTC.
+                init_time = init_time.replace(tzinfo=datetime.timezone.utc)
+            except KeyError as err:
+                raise ValueError from err("No forecast initiation time found in cube.")
     return init_time
