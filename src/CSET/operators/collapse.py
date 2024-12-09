@@ -22,26 +22,27 @@ import iris.coord_categorisation
 import iris.cube
 import iris.util
 
+from CSET._common import iter_maybe
 from CSET.operators._utils import ensure_aggregatable_across_cases, is_time_aggregatable
 
 
 def collapse(
-    cube: iris.cube.Cube,
+    cubes: iris.cube.Cube | iris.cube.CubeList,
     coordinate: str | list[str],
     method: str,
     additional_percent: float = None,
     **kwargs,
-) -> iris.cube.Cube:
-    """Collapse coordinate(s) of a cube.
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Collapse coordinate(s) of a single cube or of every cube in a cube list.
 
-    Collapses similar (stash) fields in a cube into a cube collapsing around the
+    Collapses similar fields in each cube into a cube collapsing around the
     specified coordinate(s) and method. This could be a (weighted) mean or
     percentile.
 
     Arguments
     ---------
-    cube: iris.cube.Cube
-         Cube to collapse and iterate over one dimension
+    cubes: iris.cube.Cube | iris.cube.CubeList
+         Cube or CubeList to collapse and iterate over one dimension
     coordinate: str | list[str]
          Coordinate(s) to collapse over e.g. 'time', 'longitude', 'latitude',
          'model_level_number', 'realization'. A list of multiple coordinates can
@@ -53,8 +54,8 @@ def collapse(
 
     Returns
     -------
-    cube: iris.cube.Cube
-         Single variable but several methods of aggregation
+    collapsed_cubes: iris.cube.Cube | iris.cube.CubeList
+        Single variable but several methods of aggregation
 
     Raises
     ------
@@ -63,6 +64,7 @@ def collapse(
     """
     if method == "PERCENTILE" and additional_percent is None:
         raise ValueError("Must specify additional_percent")
+    collapsed_cubes = iris.cube.CubeList([])
     with warnings.catch_warnings():
         warnings.filterwarnings(
             "ignore", "Cannot check if coordinate is contiguous", UserWarning
@@ -70,13 +72,23 @@ def collapse(
         warnings.filterwarnings(
             "ignore", "Collapsing spatial coordinate.+without weighting", UserWarning
         )
-        if method == "PERCENTILE":
-            collapsed_cube = cube.collapsed(
-                coordinate, getattr(iris.analysis, method), percent=additional_percent
-            )
-        else:
-            collapsed_cube = cube.collapsed(coordinate, getattr(iris.analysis, method))
-    return collapsed_cube
+        for cube in iter_maybe(cubes):
+            if method == "PERCENTILE":
+                collapsed_cubes.append(
+                    cube.collapsed(
+                        coordinate,
+                        getattr(iris.analysis, method),
+                        percent=additional_percent,
+                    )
+                )
+            else:
+                collapsed_cubes.append(
+                    cube.collapsed(coordinate, getattr(iris.analysis, method))
+                )
+    if len(collapsed_cubes) == 1:
+        return collapsed_cubes[0]
+    else:
+        return collapsed_cubes
 
 
 def collapse_by_lead_time(
