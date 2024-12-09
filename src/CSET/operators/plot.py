@@ -961,8 +961,7 @@ def plot_line_series(
     Parameters
     ----------
     toplot: iris.cube | iris.cube.CubeList
-        Iris cube or CubeList of the data to plot. The single cube or the individual cubes in the
-        cubeList should have a single dimension.
+        Cube or CubeList of the data to plot. The individual cubes should have a single dimension.
     filename: str, optional
         Name of the plot to write, used as a prefix for plot sequences. Defaults
         to the recipe name.
