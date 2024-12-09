@@ -105,7 +105,7 @@ def _aoa_core(
     """
     # Initialise empty array to store age of air for this latitude strip.
     ageofair_local = np.zeros((x_arr.shape[0], x_arr.shape[2]))
-    logging.info("Working on %s", lon_pnt)
+    logging.debug("Working on %s", lon_pnt)
 
     # Ignore leadtime 0 as this is trivial.
     for leadtime in range(1, x_arr.shape[0]):
