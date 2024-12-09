@@ -264,16 +264,20 @@ def compute_ageofair(
         the domain.
     multicore: bool
         If true, split up age of air diagnostic to use multiple cores (defaults to number of cores available to the process), otherwise run
-        using a single process, which is easier to debug.
+        using a single process, which is easier to debug if developing the code.
 
     Returns
     -------
-    Cube
+    ageofair_cube: Cube
         An iris cube of the age of air data, with 3 dimensions (time, latitude, longitude).
+
+    Notes
+    -----
+    Fill me in with details of papers (accepted and submitted).
 
     """
     # Set up temporary directory to store intermediate age of air slices.
-    tmpdir = tempfile.TemporaryDirectory()
+    tmpdir = tempfile.TemporaryDirectory(dir=os.environ["CYLC_TASK_WORK_DIR"])
     logging.info("Made tmpdir %s", tmpdir.name)
 
     # Check that all cubes are of same size (will catch different dimension orders too).
@@ -288,6 +292,10 @@ def compute_ageofair(
 
     # Make data non-lazy to speed up code.
     logging.info("Making data non-lazy...")
+    XWIND.realise_data()
+    YWIND.realise_data()
+    WWIND.realise_data()
+    GEOPOT.realise_data()
     x_arr = XWIND.data
     y_arr = YWIND.data
     z_arr = WWIND.data
@@ -322,7 +330,9 @@ def compute_ageofair(
             lat_name: 3,
             lon_name: 4,
         }:
-            raise f"Dimension mapping not correct, ordered {dimension_mapping}"
+            raise ValueError(
+                f"Dimension mapping not correct, ordered {dimension_mapping}"
+            )
     else:
         ensemble_mode = False
         if dimension_mapping != {"time": 0, "pressure": 1, lat_name: 2, lon_name: 3}:
