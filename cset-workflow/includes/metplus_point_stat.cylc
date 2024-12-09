@@ -1,0 +1,56 @@
+{% if METPLUS_POINT_STAT|default(False) %}
+[scheduling]
+    [[graph]]
+    {% if CSET_CYCLING_MODE == "case_study" %}
+        # Runs for every forecast initiation time to process the data in parallel.
+        {% for date in CSET_CASE_DATES %}
+            R1/{{date}} = """
+            {% for metplus_obs_type in METPLUS_OBS_TYPES %}
+            metplus_ascii2nc_{{metplus_obs_type}}
+            {% endfor %}
+            {% for metplus_stat in METPLUS_POINTSTAT_STATS %}
+            [METPLUS_ASCII2NC]:suceed-all => metplus_point_stat_{{metplus_stat}} => housekeeping_full
+            {% endfor %}
+            """
+        {% endfor %}
+    {% elif CSET_CYCLING_MODE == "trial" %}
+            # Analyse from each forecast.
+            {{CSET_TRIAL_CYCLE_PERIOD}} = """
+            {% for metplus_obs_type in METPLUS_OBS_TYPES %}
+            metplus_ascii2nc_{{metplus_obs_type}}
+            {% endfor %}
+            {% for metplus_stat in METPLUS_POINTSTAT_STATS %}
+            [METPLUS_ASCII2NC]:suceed-all => metplus_point_stat_{{metplus_stat}} => housekeeping_full
+            {% endfor %}
+            """
+    {% endif %}
+
+[runtime]
+    [[METPLUS_ASCII2NC]]
+    # Family to group the ascii2nc tasks for all the obs types
+        inherit = METPLUS_ASCII2NC
+
+    {% for metplus_obs_type in METPLUS_OBS_TYPES %}
+    [[metplus_ascii2nc_{{metplus_obs_type}}]]
+    # Runs METplus wrappers for ASCII to nc ingestion of obs.
+    # Note that the setting of FORECAST_LENGTH maight be done better in the gui using metadata
+        inherit = METPLUS_ASCII2NC
+        [[[environment]]]
+           TASK_INIT_TIME = $(cylc cycle-point --template=%Y%m%d%H)
+           TASK_END_TIME = $(cylc cycle-point --template=%Y%m%d%H --offset-hours={{FORECAST_LENGHT}})
+           FORECAST_LENGTH = {{FORECAST_LENGHT}}
+           ROSE_TASK_APP = metplus_ascii2nc
+           metplus_obs_type = {{metplus_obs_type}}
+    {% endfor %}
+
+    {% for metplus_stat in METPLUS_POINTSTAT_STATS %}
+    [[metplus_point_stat_{{metplus_stat}}]]
+    # Runs METplus wrappers for point stat calculations.
+        inherit = METPLUS
+        [[[environment]]]
+           TASK_INIT_TIME = $(cylc cycle-point --template=%Y%m%d%H)
+           FORECAST_LENGTH = {{FORECAST_LENGHT}}
+           ROSE_TASK_APP = metplus_point_stat
+           metplus_stat = {{metplus_stat}}
+    {% endfor %}
+{% endif %}
