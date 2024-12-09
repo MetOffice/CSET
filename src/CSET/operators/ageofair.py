@@ -362,6 +362,7 @@ def compute_ageofair(
                 )
             ),
             long_name="age_of_air",
+            units="hours",
             dim_coords_and_dims=[
                 (XWIND.coord("realization"), 0),
                 (XWIND.coord("time"), 1),
@@ -373,6 +374,7 @@ def compute_ageofair(
         ageofair_cube = Cube(
             np.zeros((len(time), len(lats), len(lons))),
             long_name="age_of_air",
+            units="hours",
             dim_coords_and_dims=[
                 (XWIND.coord("time"), 0),
                 (XWIND.coord(lat_name), 1),
