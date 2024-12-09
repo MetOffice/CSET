@@ -277,7 +277,7 @@ def compute_ageofair(
 
     """
     # Set up temporary directory to store intermediate age of air slices.
-    tmpdir = tempfile.TemporaryDirectory(dir=os.getenv["CYLC_TASK_WORK_DIR"])
+    tmpdir = tempfile.TemporaryDirectory(dir=os.getenv("CYLC_TASK_WORK_DIR"))
     logging.info("Made tmpdir %s", tmpdir.name)
 
     # Check that all cubes are of same size (will catch different dimension orders too).
