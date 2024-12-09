@@ -190,7 +190,7 @@ def generate_mask(
     should happen after all relevant masks have been combined.
 
     Currently, it is only possible to use the same condition and value when
-    masking.
+    masking multiple cubes.
 
     Examples
     --------
