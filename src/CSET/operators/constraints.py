@@ -22,6 +22,7 @@ from datetime import datetime
 import iris
 import iris.cube
 import iris.exceptions
+import isodate
 
 from CSET.operators._utils import get_initiation_time
 
@@ -203,6 +204,36 @@ def generate_forecast_reference_time_constraint(
         return init_time == ref_time
 
     time_constraint = iris.Constraint(cube_func=cube_func)
+    return time_constraint
+
+
+def generate_forecast_lead_time_constraint(
+    lead_time_start: str, lead_time_end: str, **kwargs
+) -> iris.AttributeConstraint:
+    """Generate constraint between forecast reference times.
+
+    Operator that takes one or two ISO 8601 date strings, and returns a
+    constraint that selects values between those dates (inclusive).
+
+    Arguments
+    ---------
+    time_start: str | datetime.datetime
+        ISO date for lower bound
+
+    time_end: str | datetime.datetime
+        ISO date for upper bound. If omitted it defaults to the same as
+        time_start
+
+    Returns
+    -------
+    time_constraint: iris.Constraint
+    """
+    start = isodate.parse_duration(lead_time_start).total_seconds()
+    if lead_time_end is None:
+        end = start
+    else:
+        end = isodate.parse_duration(lead_time_end).total_seconds()
+    time_constraint = iris.Constraint(forecast_lead_time=lambda t: start <= t <= end)
     return time_constraint
 
 
