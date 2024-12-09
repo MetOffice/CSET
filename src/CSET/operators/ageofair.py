@@ -305,7 +305,9 @@ def compute_ageofair(
     else:
         ensemble_mode = False
         if dimension_mapping != {"time": 0, "pressure": 1, lat_name: 2, lon_name: 3}:
-            raise f"Dimension mapping not correct, ordered {dimension_mapping}"
+            raise ValueError(
+                f"Dimension mapping not correct, ordered {dimension_mapping}"
+            )
 
     # Smooth vertical velocity to 2sigma (standard for 0.5 degree).
     logging.info("Smoothing vertical velocity...")
