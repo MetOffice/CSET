@@ -73,7 +73,6 @@ steps:
                     levels: "*"
 
     plev: $AOA_PLEV
-    incW: $AOA_INCW
     cyclic: $AOA_CYCLIC
 
   - operator: write.write_cube_to_nc
