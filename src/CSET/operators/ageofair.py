@@ -176,7 +176,7 @@ def _aoa_core(
                     x = x + du
                     y = y + dv
 
-                    # If it is now outside domain, then save age and dont process further with outside lam flag
+                    # If it is now outside domain, then save age and don't process further with outside LAM flag.
                     # Support cyclic domains like K-SCALE, where x coord out of domain gets moved through dateline.
                     if cyclic:
                         if (
