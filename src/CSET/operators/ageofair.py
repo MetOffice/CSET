@@ -249,17 +249,11 @@ def compute_ageofair(
         Requires 4 dimensions, ordered time, pressure, latitude and longitude. Must contain at
         least 2 time points to compute back trajectory.
     YWIND: Cube
-        An iris cube containing the y component of wind on pressure levels, on a 0p5 degree grid.
-        Requires 4 dimensions, ordered time, pressure, latitude and longitude. Must contain at
-        least 2 time points to compute back trajectory.
+        An iris cube in the same format as XWIND.
     WWIND: Cube
-        An iris cube containing the w component of wind on pressure levels, on a 0p5 degree grid.
-        Requires 4 dimensions, ordered time, pressure, latitude and longitude. Must contain at
-        least 2 time points to compute back trajectory.
+        An iris cube in the same format as XWIND.
     GEOPOT: Cube
-        An iris cube containing geopotential height on pressure levels, on a 0p5 degree grid.
-        Requires 4 dimensions, ordered time, pressure, latitude and longitude. Must contain at
-        least 2 time points to compute back trajectory.
+        An iris cube in the same format as XWIND.
     plev: int
         The pressure level of which to compute the back trajectory on. The function will search to
         see if this exists and if not, will raise an exception.
@@ -269,7 +263,7 @@ def compute_ageofair(
         domains such as the K-SCALE tropical channel, where there are only north/south boundaries in
         the domain.
     multicore: bool
-        If true, split up age of air diagnostic to use multiple cores (defaults to 8), otherwise run
+        If true, split up age of air diagnostic to use multiple cores (defaults to number of cores available to the process), otherwise run
         using a single process, which is easier to debug.
 
     Returns
