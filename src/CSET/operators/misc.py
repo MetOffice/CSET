@@ -14,6 +14,7 @@
 
 """Miscellaneous operators."""
 
+import datetime
 import itertools
 from collections.abc import Iterable
 from typing import Union
@@ -246,10 +247,18 @@ def convert_to_lead_time(cube: Cube | CubeList) -> Cube | CubeList:
     for c in iter_maybe(cube):
         init_time = get_initiation_time(c)
         time_coord = c.coord("time")
-        # init_time_numeric = time_coord.units.date2num(init_time)
-        # time_coord.points = time_coord.points - init_time_numeric
         time_coord.rename("forecast_lead_time")
+        time_coord.points = [
+            (
+                datetime.datetime.fromisoformat(
+                    time_coord.units.num2date(point).isoformat()
+                ).replace(tzinfo=datetime.timezone.utc)
+                - init_time
+            ).total_seconds()
+            for point in time_coord.points
+        ]
         time_coord.units = cf_units.Unit("seconds")
+        time_coord.bounds = None
         # Add the reference time back.
         c.attributes["forecast_reference_time"] = init_time.isoformat()
     return cube
