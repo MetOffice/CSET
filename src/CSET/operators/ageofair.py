@@ -39,7 +39,7 @@ def _calc_dist(coord_1, coord_2):
     # Source: https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
     radius = 6378000
 
-    # extract coordinates and convert to radians
+    # Extract coordinates and convert to radians
     lat1 = radians(coord_1[0])
     lon1 = radians(coord_1[1])
     lat2 = radians(coord_2[0])
