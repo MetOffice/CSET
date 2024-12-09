@@ -31,7 +31,6 @@ dependencies = [
     "isodate",
     "markdown-it-py >= 3.0",
     "nc-time-axis",
-    "iris-grib",
 ]
 
 [project.urls]
