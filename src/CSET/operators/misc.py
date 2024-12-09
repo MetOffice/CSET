@@ -16,6 +16,7 @@
 
 import datetime
 import itertools
+import logging
 from collections.abc import Iterable
 from typing import Union
 
@@ -296,7 +297,16 @@ def difference(base, other):
 
     """
     fully_equalise_attributes([base, other])
-    new_cube = base - other
+    logging.debug("Base: %s\nOther: %s", base, other)
+    logging.debug(
+        "Base: %s\nOther: %s",
+        base.coord("forecast_lead_time"),
+        other.coord("forecast_lead_time"),
+    )
 
-    # TODO: Normalise attributes, etc.
-    return new_cube
+    # This currently relies on the cubes having the same underlying data layout.
+    difference = base.copy()
+    difference.rename(f"{base.name()} difference")
+    difference.data = base.data - other.data
+
+    return difference
