@@ -355,68 +355,28 @@ def compute_ageofair(
             ],
         )
 
+    # Unix API for getting set of usable CPUs.
+    # See https://docs.python.org/3/library/os.html#os.cpu_count
+    if multicore:
+        num_usable_cores = len(os.sched_getaffinity(0))
+    else:
+        num_usable_cores = 1
+
     logging.info("STARTING AOA DIAG...")
     start = datetime.datetime.now()
+
+    # Main call for calculating age of air diagnostic
     if ensemble_mode:
         for e in range(0, len(XWIND.coord("realization").points)):
             logging.info(f"Working on member {e}")
-            if multicore:
-                # Multiprocessing on each longitude slice
-                func = partial(
-                    _aoa_core,
-                    np.copy(x_arr[e, :, :, :, :]),
-                    np.copy(y_arr[e, :, :, :, :]),
-                    np.copy(z_arr[e, :, :, :, :]),
-                    np.copy(g_arr[e, :, :, :, :]),
-                    lats,
-                    lons,
-                    dt,
-                    plev_idx,
-                    timeunit,
-                    cyclic,
-                    tmpdir.name,
-                )
-                # Unix API for getting set of usable CPUs.
-                # See https://docs.python.org/3/library/os.html#os.cpu_count
-                num_usable_cores = len(os.sched_getaffinity(0))
-                with multiprocessing.Pool(num_usable_cores) as pool:
-                    pool.map(func, range(0, XWIND.shape[4]))
-            else:
-                # Single core - better for debugging.
-                for i in range(0, XWIND.shape[4]):
-                    _aoa_core(
-                        x_arr[e, :, :, :, :],
-                        y_arr[e, :, :, :, :],
-                        z_arr[e, :, :, :, :],
-                        g_arr[e, :, :, :, :],
-                        lats,
-                        lons,
-                        dt,
-                        plev_idx,
-                        timeunit,
-                        cyclic,
-                        tmpdir.name,
-                        i,
-                    )
 
-            # Verbose for time taken to run, and collate tmp ndarrays into final cube, and return
-            logging.info(
-                "AOA DIAG DONE, took %s s",
-                (datetime.datetime.now() - start).total_seconds(),
-            )
-            for i in range(0, XWIND.shape[4]):
-                file = f"{tmpdir.name}/aoa_frag_{i:04}.npy"
-                ageofair_cube.data[e, :, :, i] = np.load(file)
-                os.remove(file)
-    else:
-        if multicore:
             # Multiprocessing on each longitude slice
             func = partial(
                 _aoa_core,
-                np.copy(x_arr),
-                np.copy(y_arr),
-                np.copy(z_arr),
-                np.copy(g_arr),
+                np.copy(x_arr[e, :, :, :, :]),
+                np.copy(y_arr[e, :, :, :, :]),
+                np.copy(z_arr[e, :, :, :, :]),
+                np.copy(g_arr[e, :, :, :, :]),
                 lats,
                 lons,
                 dt,
@@ -425,38 +385,46 @@ def compute_ageofair(
                 cyclic,
                 tmpdir.name,
             )
-            # Unix API for getting set of usable CPUs.
-            # See https://docs.python.org/3/library/os.html#os.cpu_count
-            num_usable_cores = len(os.sched_getaffinity(0))
-            with multiprocessing.Pool(num_usable_cores) as pool:
-                pool.map(func, range(0, XWIND.shape[3]))
-        else:
-            # Single core - better for debugging.
-            for i in range(0, XWIND.shape[3]):
-                _aoa_core(
-                    x_arr,
-                    y_arr,
-                    z_arr,
-                    g_arr,
-                    lats,
-                    lons,
-                    dt,
-                    plev_idx,
-                    timeunit,
-                    cyclic,
-                    tmpdir.name,
-                    i,
-                )
 
-        # Verbose for time taken to run, and collate tmp ndarrays into final cube, and return
-        logging.info(
-            "AOA DIAG DONE, took %s s",
-            (datetime.datetime.now() - start).total_seconds(),
+            with multiprocessing.Pool(num_usable_cores) as pool:
+                pool.map(func, range(0, XWIND.shape[4]))
+
+            for i in range(0, XWIND.shape[4]):
+                file = f"{tmpdir.name}/aoa_frag_{i:04}.npy"
+                ageofair_cube.data[e, :, :, i] = np.load(file)
+
+    else:
+        # Multiprocessing on each longitude slice
+        func = partial(
+            _aoa_core,
+            np.copy(x_arr),
+            np.copy(y_arr),
+            np.copy(z_arr),
+            np.copy(g_arr),
+            lats,
+            lons,
+            dt,
+            plev_idx,
+            timeunit,
+            cyclic,
+            tmpdir.name,
         )
+        # Unix API for getting set of usable CPUs.
+        # See https://docs.python.org/3/library/os.html#os.cpu_count
+        num_usable_cores = len(os.sched_getaffinity(0))
+        with multiprocessing.Pool(num_usable_cores) as pool:
+            pool.map(func, range(0, XWIND.shape[3]))
+
         for i in range(0, XWIND.shape[3]):
             file = f"{tmpdir.name}/aoa_frag_{i:04}.npy"
             ageofair_cube.data[:, :, i] = np.load(file)
             os.remove(file)
+
+    # Verbose for time taken to run, and collate tmp ndarrays into final cube, and return
+    logging.info(
+        "AOA DIAG DONE, took %s s",
+        (datetime.datetime.now() - start).total_seconds(),
+    )
 
     # Clean tmpdir
     tmpdir.cleanup()
