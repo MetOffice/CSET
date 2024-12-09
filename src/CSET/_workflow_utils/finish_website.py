@@ -47,7 +47,7 @@ def construct_index():
         index = combine_dicts(index, record)
 
     with open(plots_dir / "index.json", "wt", encoding="UTF-8") as fp:
-        json.dump(index, fp)
+        json.dump(index, fp, indent=2)
 
 
 def update_workflow_status():
