@@ -114,7 +114,7 @@ def test_aoa_cyclic_parallelthreads(xwind, ywind, wwind, geopot):
             cyclic=True,
             multicore=True,
         ).data,
-        iris.load_cube("tests/test_data/ageofair/aoa_out_incW_cyclic.nc").data,
+        iris.load_cube("tests/test_data/ageofair/aoa_out_cyclic.nc").data,
         rtol=1e-06,
         atol=1e-02,
     )
@@ -132,7 +132,7 @@ def test_aoa_cyclic_singlethread(xwind, ywind, wwind, geopot):
             cyclic=True,
             multicore=False,
         ).data,
-        iris.load_cube("tests/test_data/ageofair/aoa_out_incW_cyclic.nc").data,
+        iris.load_cube("tests/test_data/ageofair/aoa_out_cyclic.nc").data,
         rtol=1e-06,
         atol=1e-02,
     )
@@ -182,7 +182,7 @@ def test_aoa_ens(ens_regridded):
             plev=200,
             cyclic=False,
         ).data,
-        iris.load_cube("tests/test_data/ageofair/aoa_out_incW_ens.nc").data,
+        iris.load_cube("tests/test_data/ageofair/aoa_out_ens.nc").data,
         rtol=1e-06,
         atol=1e-02,
     )
@@ -212,3 +212,16 @@ def test_aoa_ens_multicore(ens_regridded):
         rtol=1e-06,
         atol=1e-02,
     )
+
+
+def test_aoa_misordered_dims(xwind, ywind, wwind, geopot):
+    """Dimensions in input cubes do not match expected ordering."""
+    with pytest.raises(ValueError):
+        ageofair.compute_ageofair(
+            xwind.transpose(["time", "pressure", "longitude", "latitude"]),
+            ywind.transpose(["time", "pressure", "longitude", "latitude"]),
+            wwind.transpose(["time", "pressure", "longitude", "latitude"]),
+            geopot.transpose(["time", "pressure", "longitude", "latitude"]),
+            plev=500,
+            cyclic=True,
+        )
