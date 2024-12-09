@@ -45,11 +45,26 @@ from CSET.operators._utils import get_cube_yxcoordname
 
 
 def _calc_dist(coord_1, coord_2):
-    """Haversine distance in metres."""
-    # Approximate radius of earth in m
-    # Source: https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
+    """Calculate distance between two coordinate tuples.
+
+    Arguments
+    ----------
+    coord_1: tuple
+        A tuple containing (latitude, longitude) coordinate floats
+    coord_2: tuple
+        A tuple containing (latitude, longitude) coordinate floats
+
+    Returns
+    -------
+    distance: float
+        Distance between the two coordinate points in meters
+
+    Notes
+    -----
+    The function uses the Haversine approximation to calculate distance in metres.
+
+    """
     radius = 6378000
-    radius = 6371229.0
 
     # Extract coordinates and convert to radians
     lat1 = radians(coord_1[0])
@@ -89,12 +104,12 @@ def _aoa_core(
     parallelisation.
 
     Arguments
-    ----------
+    ---------
     x_arr: np.ndarray
         A numpy array containing x wind data.
     y_arr: np.ndarray
         A numpy array containing y wind data.
-    Z_arr: np.ndarray
+    z_arr: np.ndarray
         A numpy array containing w wind data, or a placeholder full of zeros if incW is False
     g_arr: np.ndarray
         A numpy array containing geopotential height data.
