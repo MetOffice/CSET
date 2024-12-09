@@ -15,7 +15,18 @@
 """
 Age of air operator.
 
-This determines how old air is since it entered through the lateral boundary at some given leadtime.
+The age of air diagnostic provides a qualtitative view of how old air is within
+the domain, by calculating a back trajectory at each grid point at each lead time
+to determine when air entered through the lateral boundary. This is useful for
+diagnosing how quickly air ventilates the domain, depending on its size and the
+prevailing meteorology.
+
+The diagnostic uses the u, v and w components of wind, along with geopotential height to
+perform the back trajectory. Data is first regridded to 0.5 degrees.
+
+Note: the code here does not consider sub-grid transport, and only uses the postprocessed
+velocity fields and geopotential height. Its applicability is for large-scale flow O(1000 km),
+and not small scale flow where mixing is likely to play a larger role.
 """
 
 import datetime
