@@ -195,7 +195,7 @@ def _aoa_core(
                         outside_lam = True
 
     # Save 3d array containing age of air
-    np.save(tmpdir + "/aoa_frag_" + str(lon_pnt).zfill(4) + ".npy", ageofair_local)
+    np.save(tmpdir + f"/aoa_frag_{lon_pnt:04d}.npy", ageofair_local)
 
 
 def compute_ageofair(
