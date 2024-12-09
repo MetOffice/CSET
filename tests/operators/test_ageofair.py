@@ -90,18 +90,6 @@ def test_aoa_nocyclic(xwind, ywind, wwind, geopot):
     )
 
 
-def test_aoa_cyclic(xwind, ywind, wwind, geopot):
-    """Test case when cyclic."""
-    assert np.allclose(
-        ageofair.compute_ageofair(
-            xwind, ywind, wwind, geopot, plev=500, cyclic=True, multicore=False
-        ).data,
-        iris.load_cube("tests/test_data/ageofair/aoa_out_cyclic.nc").data,
-        rtol=1e-06,
-        atol=1e-02,
-    )
-
-
 def test_aoa_cyclic_parallelthreads(xwind, ywind, wwind, geopot):
     """Test case when cyclic with parallel threads."""
     assert np.allclose(
@@ -216,12 +204,16 @@ def test_aoa_ens_multicore(ens_regridded):
 
 def test_aoa_misordered_dims(xwind, ywind, wwind, geopot):
     """Dimensions in input cubes do not match expected ordering."""
+    xwind.transpose([0, 1, 3, 2])
+    ywind.transpose([0, 1, 3, 2])
+    wwind.transpose([0, 1, 3, 2])
+    geopot.transpose([0, 1, 3, 2])
     with pytest.raises(ValueError):
         ageofair.compute_ageofair(
-            xwind.transpose([0, 1, 3, 2]),
-            ywind.transpose([0, 1, 3, 2]),
-            wwind.transpose([0, 1, 3, 2]),
-            geopot.transpose([0, 1, 3, 2]),
+            xwind,
+            ywind,
+            wwind,
+            geopot,
             plev=500,
             cyclic=True,
         )
