@@ -46,7 +46,7 @@ def main():
     if isinstance(data, dict):
         data = sort_dict(data)
 
-    output_file = f".tmp-{args.input_file}-sorted.json"
+    output_file = f".tmp-{args.input_file}-sorted.json".replace("/", "")
     with open(output_file, "wt", encoding="UTF-8") as fp:
         json.dump(data, fp, indent=2)
         # End file with a newline.
