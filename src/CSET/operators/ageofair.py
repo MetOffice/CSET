@@ -208,8 +208,7 @@ def compute_ageofair(
     cyclic: bool = False,
     multicore=True,
 ):
-    """
-    Compute back trajectories for a given forecast.
+    """Compute back trajectories for a given forecast.
 
     This allows us to determine when air entered through the boundaries. This will run on all available
     lead-times, and thus return an age of air cube of shape ntime, nlat, nlon. It supports multiprocesing,
