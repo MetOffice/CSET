@@ -202,6 +202,7 @@ def regrid_to_single_point(
     cube: iris.cube.Cube,
     lat_pt: float,
     lon_pt: float,
+    latlon_in_type: str,
     method: str,
     boundary_margin: int = 8,
     **kwargs,
@@ -274,6 +275,12 @@ def regrid_to_single_point(
             f"Does not currently support {cube.coord(y_coord).coord_system} regrid method"
         )
 
+    # Transform input coordinates onto rotated grid if requested
+    if latlon_in_type == "realworld":
+        lon_tr, lat_tr = transform_lat_long_points(lon_pt, lat_pt, cube)
+    elif latlon_in_type == "rotated":
+        lon_tr, lat_tr = lon_pt, lat_pt
+
     # Get axis
     lat, lon = cube.coord(y_coord), cube.coord(x_coord)
 
@@ -292,23 +299,23 @@ def regrid_to_single_point(
     )
 
     # Check to see if selected point is outside the domain
-    if (lat_pt < lat_min) or (lat_pt > lat_max):
+    if (lat_tr < lat_min) or (lat_tr > lat_max):
         raise ValueError("Selected point is outside the domain.")
     else:
-        if (lon_pt < lon_min) or (lon_pt > lon_max):
-            if (lon_pt + 360.0 >= lon_min) and (lon_pt + 360.0 <= lon_max):
-                lon_pt += 360.0
-            elif (lon_pt - 360.0 >= lon_min) and (lon_pt - 360.0 <= lon_max):
-                lon_pt -= 360.0
+        if (lon_tr < lon_min) or (lon_tr > lon_max):
+            if (lon_tr + 360.0 >= lon_min) and (lon_tr + 360.0 <= lon_max):
+                lon_tr += 360.0
+            elif (lon_tr - 360.0 >= lon_min) and (lon_tr - 360.0 <= lon_max):
+                lon_tr -= 360.0
             else:
                 raise ValueError("Selected point is outside the domain.")
 
     # Check to see if selected point is near the domain boundaries
     if (
-        (lat_pt < lat_min_bound)
-        or (lat_pt > lat_max_bound)
-        or (lon_pt < lon_min_bound)
-        or (lon_pt > lon_max_bound)
+        (lat_tr < lat_min_bound)
+        or (lat_tr > lat_max_bound)
+        or (lon_tr < lon_min_bound)
+        or (lon_tr > lon_max_bound)
     ):
         warnings.warn(
             f"Selected point is within {boundary_margin} gridlengths of the domain edge, data may be unreliable.",
@@ -319,5 +326,41 @@ def regrid_to_single_point(
     regrid_method = getattr(iris.analysis, method, None)
     if not callable(regrid_method):
         raise NotImplementedError(f"Does not currently support {method} regrid method")
-    cube_rgd = cube.interpolate(((lat, lat_pt), (lon, lon_pt)), regrid_method())
+    cube_rgd = cube.interpolate(((lat, lat_tr), (lon, lon_tr)), regrid_method())
     return cube_rgd
+
+
+def transform_lat_long_points(lon, lat, cube):
+    """Transform a selected point in longitude and latitude in ...
+
+    the real world to the corresponding point on the rotated grid
+    of a cube.
+
+    Parameters
+    ----------
+    cube: Cube
+        An iris cube of the data to regrid. As a minimum, it needs to be 2D with
+        latitude, longitude coordinates.
+    lon: float
+        Selected value of longitude: this should be in the range -180 degrees to
+        180 degrees.
+    lat: float
+        Selected value of latitude: this should be in the range -90 degrees to
+        90 degrees.
+
+    Returns
+    -------
+    lon_rot, lat_rot: float
+        Coordinates of the selected point on the rotated grid specified within
+        the selected cube.
+
+    """
+    import cartopy.crs as ccrs
+
+    rot_pole = cube.coord_system().as_cartopy_crs()
+    true_grid = ccrs.Geodetic()
+    rot_coords = rot_pole.transform_point(lon, lat, true_grid)
+    lon_rot = rot_coords[0]
+    lat_rot = rot_coords[1]
+
+    return lon_rot, lat_rot
