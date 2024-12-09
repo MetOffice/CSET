@@ -48,7 +48,7 @@ def test_get_operator_exception_not_callable():
 
 def test_execute_recipe(tmp_path: Path):
     """Execute recipe to test happy case (this is really an integration test)."""
-    input_file = Path("tests/test_data/air_temp.nc")
+    input_file = "tests/test_data/air_temp.nc"
     recipe = Path("tests/test_data/plot_instant_air_temp.yaml")
     CSET.operators.execute_recipe(recipe, input_file, tmp_path)
 
@@ -73,7 +73,7 @@ def test_execute_recipe_invalid_output_dir(tmp_path: Path):
 def test_run_steps_style_file_metadata_written(tmp_path: Path):
     """Style file path metadata written out."""
     style_file_path = "/test/style_file_path.json"
-    CSET.operators._run_steps({}, [], None, tmp_path, Path(style_file_path))
+    CSET.operators._run_steps({}, [], "", tmp_path, Path(style_file_path))
     with open(tmp_path / "meta.json", "rb") as fp:
         metadata = json.load(fp)
     assert metadata["style_file_path"] == style_file_path
@@ -81,7 +81,7 @@ def test_run_steps_style_file_metadata_written(tmp_path: Path):
 
 def test_run_steps_plot_resolution_metadata_written(tmp_path: Path):
     """Style file path metadata written out."""
-    CSET.operators._run_steps({}, [], None, tmp_path, plot_resolution=72)
+    CSET.operators._run_steps({}, [], "", tmp_path, plot_resolution=72)
     with open(tmp_path / "meta.json", "rb") as fp:
         metadata = json.load(fp)
     assert metadata["plot_resolution"] == 72

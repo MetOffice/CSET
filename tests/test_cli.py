@@ -123,7 +123,7 @@ def test_bake_recipe_execution(monkeypatch):
     def _bake_test(args, unparsed_args):
         nonlocal bake_ran
         bake_ran = True
-        assert args.input_dir == Path("/dev/null")
+        assert args.input_dir == ["/dev/null"]
         assert args.output_dir == Path("/dev/null")
         assert args.recipe == Path("tests/test_data/noop_recipe.yaml")
 

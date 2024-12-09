@@ -89,9 +89,11 @@ def setup_argument_parser() -> argparse.ArgumentParser:
     parser_bake.add_argument(
         "-i",
         "--input-dir",
-        type=Path,
+        type=str,
+        action="extend",
         required=True,
-        help="directory containing input data",
+        nargs="+",
+        help="directories containing input data. May contain wildcards",
     )
     parser_bake.add_argument(
         "-o",

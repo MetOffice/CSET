@@ -24,7 +24,7 @@ from iris import FUTURE
 
 # Import operators here so they are exported for use by recipes.
 import CSET.operators
-from CSET._common import parse_recipe
+from CSET._common import iter_maybe, parse_recipe
 from CSET.operators import (
     ageofair,
     aggregate,
@@ -155,6 +155,11 @@ def _run_steps(
 ) -> None:
     """Execute the steps in a recipe."""
     original_working_directory = Path.cwd()
+    # Make paths absolute.
+    step_input = [
+        path if path.startswith("/") else f"{original_working_directory}/{path}"
+        for path in iter_maybe(step_input)
+    ]
     try:
         os.chdir(output_directory)
         logger = logging.getLogger()
@@ -182,7 +187,7 @@ def _run_steps(
 
 def execute_recipe(
     recipe_yaml: Path | str,
-    input_directory: Path,
+    input_directories: list[str],
     output_directory: Path,
     recipe_variables: dict = None,
     style_file: Path = None,
@@ -196,8 +201,9 @@ def execute_recipe(
         Path to a file containing, or a string of, a recipe's YAML describing
         the operators that need running. If a Path is provided it is opened and
         read.
-    input_directory: Path
-        Pathlike to directory containing input files.
+    input_directories: list[str]
+        List of pathlike to directories containing input files. Each path is
+        assumed to be to a different model.
     output_directory: Path
         Pathlike indicating desired location of output.
     recipe_variables: dict, optional
@@ -219,7 +225,6 @@ def execute_recipe(
         The provided recipe is not a stream or Path.
     """
     recipe = parse_recipe(recipe_yaml, recipe_variables)
-    step_input = Path(input_directory).absolute()
     # Create output directory.
     try:
         output_directory.mkdir(parents=True, exist_ok=True)
@@ -227,4 +232,6 @@ def execute_recipe(
         logging.error("Output directory is a file. %s", output_directory)
         raise err
     steps = recipe["steps"]
-    _run_steps(recipe, steps, step_input, output_directory, style_file, plot_resolution)
+    _run_steps(
+        recipe, steps, input_directories, output_directory, style_file, plot_resolution
+    )
