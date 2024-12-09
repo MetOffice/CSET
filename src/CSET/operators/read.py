@@ -15,6 +15,7 @@
 """Operators for reading various types of files from disk."""
 
 import ast
+import glob
 import logging
 import warnings
 from collections.abc import Iterable
@@ -117,7 +118,7 @@ def read_cubes(
     Arguments
     ---------
     loadpath: pathlike
-        Path to where .pp/.nc files are located
+        Path to where .pp/.nc files are located. Can include globs.
     constraint: iris.Constraint | iris.ConstraintCombination, optional
         Constraints to filter data by. Defaults to unconstrained.
     filename_pattern: str, optional
@@ -333,7 +334,9 @@ def _longitude_fix_callback(cube: iris.cube.Cube, field, filename):
     return cube
 
 
-def _check_input_files(input_path: Path | str, filename_pattern: str) -> Iterable[Path]:
+def _check_input_files(
+    input_paths: Path | str, filename_pattern: str
+) -> Iterable[Path]:
     """Get an iterable of files to load, and check that they all exist.
 
     Arguments
@@ -355,25 +358,22 @@ def _check_input_files(input_path: Path | str, filename_pattern: str) -> Iterabl
     FileNotFoundError:
         If the provided arguments don't resolve to at least one existing file.
     """
-    logging.debug("Checking '%s' for pattern '%s'", input_path, filename_pattern)
-    # Convert string paths into Path objects.
-    if isinstance(input_path, str):
-        input_path = Path(input_path)
+    files = []
+    for input_path in [Path(p) for p in glob.glob(str(input_paths))]:
+        logging.debug("Checking '%s' for pattern '%s'", input_path, filename_pattern)
 
-    # Get the list of files in the directory, or use it directly. Error if no
-    # files found.
-    if input_path.is_dir():
-        files = tuple(sorted(input_path.glob(filename_pattern)))
-        if len(files) == 0:
-            raise FileNotFoundError(
-                f"No files found matching filename_pattern {filename_pattern} within {input_path}"
-            )
-    elif input_path.is_file():
-        files = (input_path,)
-    else:
-        # Handle input_path containing a glob pattern.
-        files = tuple(sorted(input_path.parent.glob(input_path.name)))
-        if len(files) == 0:
-            raise FileNotFoundError(f"{input_path} does not exist!")
+        # Convert string paths into Path objects.
+        if isinstance(input_path, str):
+            input_path = Path(input_path)
+
+        # Get the list of files in the directory, or use it directly.
+        if input_path.is_dir():
+            files = files + list(input_path.glob(filename_pattern))
+        else:
+            files.append(input_path)
+
+    files.sort()
     logging.info("Loading files:\n%s", "\n".join(str(path) for path in files))
+    if len(files) == 0:
+        raise FileNotFoundError(f"No files found for {input_paths}")
     return files
