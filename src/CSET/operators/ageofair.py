@@ -144,7 +144,7 @@ def _aoa_core(
                     y = lat_pnt
                     z = plev_idx
 
-                # Only seek preceding wind if its inside domain..
+                # Only seek preceding wind if its inside domain.
                 if not outside_lam:
                     # Get vector profile at current time - nearest whole gridpoint.
                     u = x_arr[leadtime - n, int(z), int(y), int(x)]
