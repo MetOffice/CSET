@@ -64,12 +64,14 @@ def apply_mask(
     if len(mask_list) == 1:
         masked_field = original_field.copy()
         masked_field.data *= mask_list[0].data
+        masked_field.rename(f"mask_of_{original_field.name()}")
         return masked_field
     else:
         mask_field_list = iris.cube.CubeList()
-        for data, mask in zip(original_field, mask_list, strict=False):
+        for data, mask in zip(original_field, mask_list, strict=True):
             mask_field_data = data.copy()
             mask_field_data.data *= mask.data
+            mask_field_data.rename(f"mask_of_{data.name()}")
             mask_field_list.append(mask_field_data)
         return mask_field_list
 
@@ -189,8 +191,7 @@ def generate_mask(
     The conversion to a masked array occurs in the apply_mask routine, which
     should happen after all relevant masks have been combined.
 
-    Currently, it is only possible to use the same condition and value when
-    masking multiple cubes.
+    The same condition and value will be used when masking multiple cubes.
 
     Examples
     --------
@@ -215,8 +216,7 @@ def generate_mask(
         else:
             raise ValueError("""Unexpected value for condition. Expected ==, !=,
                               >, >=, <, <=""")
-        cube.var_name = cube.standard_name
-        masks.var_name = cube.var_name
+        masks.rename(f"mask_for_{cube.name()}_{condition}_{value}")
         masks.attributes.pop("STASH", None)
 
         mask_list.append(masks)
