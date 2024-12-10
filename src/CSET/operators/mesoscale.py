@@ -119,7 +119,7 @@ def spatial_perturbation_field(
             pert_field.data -= uniform_filter(cube.data, filter_scale, axes=axes)
         # rename cube to indicate spatial perturbation field
         pert_field.attributes["perturbation_field"] = (
-            f"{filter_type}_with_" f"{str(filter_scale)}_grid_point_filter_scale"
+            f"{filter_type}_with_{str(filter_scale)}_grid_point_filter_scale"
         )
         pert_fields.append(pert_field)
     if len(pert_fields) == 1:
