@@ -217,3 +217,24 @@ def test_aoa_misordered_dims(xwind, ywind, wwind, geopot):
             plev=500,
             cyclic=True,
         )
+
+
+def test_aoa_misordered_dims_ens(ens_regridded):
+    """Dimensions in input cubes do not match expected ordering."""
+    xwind = ens_regridded.extract("x_wind")[0]
+    ywind = ens_regridded.extract("y_wind")[0]
+    wwind = ens_regridded.extract("upward_air_velocity")[0]
+    geopot = ens_regridded.extract("geopotential_height")[0]
+    xwind.transpose([0, 1, 2, 4, 3])
+    ywind.transpose([0, 1, 2, 4, 3])
+    wwind.transpose([0, 1, 2, 4, 3])
+    geopot.transpose([0, 1, 2, 4, 3])
+    with pytest.raises(ValueError):
+        ageofair.compute_ageofair(
+            xwind,
+            ywind,
+            wwind,
+            geopot,
+            plev=500,
+            cyclic=True,
+        )
