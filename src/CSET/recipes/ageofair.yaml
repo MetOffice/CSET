@@ -1,7 +1,14 @@
 category: Diagnostics
 title: $MODEL_NAME Age of Air Diagnostic at $AOA_PLEV
 description: |
-  Extracts data required for, and calculates the age of air diagnostic on a given pressure levels. This is then plotted on a map projection for each lead-time. A timeseries plot is also produced.
+  Extracts data required for, and calculates the age of air diagnostic on a given pressure levels. This is then plotted on a map projection for each lead-time.
+  The age of air diagnostic provides a qualtitative view of how old air is within
+  the domain, by calculating a back trajectory at each grid point at each lead time
+  to determine when air entered through the lateral boundary. This is useful for
+  diagnosing how quickly air ventilates the domain, depending on its size and the
+  prevailing meteorology.
+  The diagnostic uses the u, v and w components of wind, along with geopotential height to
+  perform the back trajectory. Data is first regridded to 0.5 degrees.
 
 steps:
   - operator: read.read_cubes
