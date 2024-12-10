@@ -1,0 +1,88 @@
+category: Diagnostics
+title: $MODEL_NAME Age of Air Diagnostic at $AOA_PLEV
+description: |
+  Extracts data required for, and calculates the age of air diagnostic on a given pressure levels. This is then plotted on a map projection for each lead-time.
+  The age of air diagnostic provides a qualtitative view of how old air is within
+  the domain, by calculating a back trajectory at each grid point at each lead time
+  to determine when air entered through the lateral boundary. This is useful for
+  diagnosing how quickly air ventilates the domain, depending on its size and the
+  prevailing meteorology.
+  The diagnostic uses the u, v and w components of wind, along with geopotential height to
+  perform the back trajectory. Data is first regridded to 0.5 degrees.
+
+steps:
+  - operator: read.read_cubes
+
+  - operator: ageofair.compute_ageofair
+    XWIND:
+        operator: regrid.regrid_onto_xyspacing
+        xspacing: 0.5
+        yspacing: 0.5
+        method: Linear
+        toregrid:
+            operator: filters.filter_cubes
+            constraint:
+                operator: constraints.combine_constraints
+                variable_constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: x_wind
+                pressure_level_constraint:
+                    operator: constraints.generate_level_constraint
+                    coordinate: pressure
+                    levels: "*"
+    YWIND:
+        operator: regrid.regrid_onto_xyspacing
+        xspacing: 0.5
+        yspacing: 0.5
+        method: Linear
+        toregrid:
+            operator: filters.filter_cubes
+            constraint:
+                operator: constraints.combine_constraints
+                variable_constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: y_wind
+                pressure_level_constraint:
+                    operator: constraints.generate_level_constraint
+                    coordinate: pressure
+                    levels: "*"
+    WWIND:
+        operator: regrid.regrid_onto_xyspacing
+        xspacing: 0.5
+        yspacing: 0.5
+        method: Linear
+        toregrid:
+            operator: filters.filter_cubes
+            constraint:
+                operator: constraints.combine_constraints
+                variable_constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: upward_air_velocity
+                pressure_level_constraint:
+                    operator: constraints.generate_level_constraint
+                    coordinate: pressure
+                    levels: "*"
+    GEOPOT:
+        operator: regrid.regrid_onto_xyspacing
+        xspacing: 0.5
+        yspacing: 0.5
+        method: Linear
+        toregrid:
+            operator: filters.filter_cubes
+            constraint:
+                operator: constraints.combine_constraints
+                variable_constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: geopotential_height
+                pressure_level_constraint:
+                    operator: constraints.generate_level_constraint
+                    coordinate: pressure
+                    levels: "*"
+
+    plev: $AOA_PLEV
+    cyclic: $AOA_CYCLIC
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+  - operator: plot.spatial_contour_plot

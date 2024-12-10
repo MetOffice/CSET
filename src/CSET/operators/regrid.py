@@ -158,7 +158,7 @@ def regrid_onto_xyspacing(
         y_coord, x_coord = get_cube_yxcoordname(cube)
 
         # List of supported grids - check if it is compatible
-        supported_grids = (iris.coord_systems.GeogCS,)
+        supported_grids = (iris.coord_systems.GeogCS, iris.coord_systems.RotatedGeogCS)
         if not isinstance(cube.coord(x_coord).coord_system, supported_grids):
             raise NotImplementedError(
                 f"Does not currently support {cube.coord(x_coord).coord_system} regrid method"
