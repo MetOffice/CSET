@@ -82,7 +82,7 @@ def spatial_perturbation_field(
 
     References
     ----------
-    .. [Flacketal.2016] Flack, D.L.A., Plant, R.S., Gray, S.L., Lean, H.W.,
+    .. [Flacketal2016] Flack, D.L.A., Plant, R.S., Gray, S.L., Lean, H.W.,
        Keil, C. and Craig, G.C. (2016) "Characterisation of Convective
        Regimes over the British Isles." Quarterly Journal of the Royal
        Meteorological Society, vol. 142, 1541-1553. doi:10.1002/qj.2758
