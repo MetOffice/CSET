@@ -275,7 +275,19 @@ def compute_ageofair(
 
     Notes
     -----
-    Fill me in with details of papers (accepted and submitted).
+    The age of air diagnostic was used in Warner et al. (2023) [Warneretal2023]_ to identify the relative
+    role of spin-up from initial conditions and lateral boundary conditions over tropical Africa to explore
+    the impact of new data assimilation techniques. A further paper is currently in review ([Warneretal2024]_)
+    which applies the diagnostic more widely to the Australian ACCESS convection-permitting models.
+
+    References
+    ----------
+    .. [Warneretal2023] Warner, J.L., Petch, J., Short, C., Bain, C., 2023. Assessing the impact of an NWP warm-start
+        system on model spin-up over tropical Africa. QJ, 149( 751), pp.621-636. doi:10.1002/qj.4429
+    .. [Warneretal2024] Diagnosing lateral boundary spin-up in regional models using an age of air diagnostic
+        James L. Warner, Charmaine N. Franklin, Belinda Roux, Shaun Cooper, Susan Rennie, Vinod
+        Kumar
+        Submitted for Quarterly Journal of the Royal Meteorological Society.
 
     """
     # Set up temporary directory to store intermediate age of air slices.
@@ -451,7 +463,6 @@ def compute_ageofair(
         for i in range(0, XWIND.shape[3]):
             file = f"{tmpdir.name}/aoa_frag_{i:04}.npy"
             ageofair_cube.data[:, :, i] = np.load(file)
-            os.remove(file)
 
     # Verbose for time taken to run, and collate tmp ndarrays into final cube, and return
     logging.info(
