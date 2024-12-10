@@ -99,6 +99,9 @@
     "max": 315,
     "min": 263
   },
+  "difference": {
+    "cmap": "bwr"
+  },
   "divergence_of_wind": {
     "cmap": "PiYG",
     "max": 1e-05,
