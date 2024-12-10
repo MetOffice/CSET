@@ -286,7 +286,7 @@ def compute_ageofair(
         system on model spin-up over tropical Africa. QJ, 149( 751), pp.621-636. doi:10.1002/qj.4429
     .. [Warneretal2024] Diagnosing lateral boundary spin-up in regional models using an age of air diagnostic
         James L. Warner, Charmaine N. Franklin, Belinda Roux, Shaun Cooper, Susan Rennie, Vinod
-        Kumar
+        Kumar.
         Submitted for Quarterly Journal of the Royal Meteorological Society.
 
     """
@@ -306,10 +306,6 @@ def compute_ageofair(
 
     # Make data non-lazy to speed up code.
     logging.info("Making data non-lazy...")
-    # XWIND.realise_data()
-    # YWIND.realise_data()
-    # WWIND.realise_data()
-    # GEOPOT.realise_data()
     x_arr = XWIND.data
     y_arr = YWIND.data
     z_arr = WWIND.data
