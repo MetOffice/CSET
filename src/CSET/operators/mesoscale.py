@@ -42,15 +42,15 @@ def spatial_perturbation_field(
     Parameters
     ----------
     original_field: iris.cube.Cube | iris.cube.CubeList
-        raw original field from the model
+        Raw field from the model.
     Gaussian_filter: boolean
         Switch to determine if a Gaussian filter is applied.
         If set to True a Gaussian filter is applied; if set to False
         a Uniform filter is applied.
         Default is True.
     filter_scale: int
-        Scale at which to apply the filter over in grid boxes. If the
-        filter is a Gaussian convultion this value represents the
+        Scale at which to define the filter in grid boxes. If the
+        filter is a Gaussian convolution this value represents the
         halfwidth of the Gaussian kernel.
         Default is 40 grid points.
 
@@ -69,7 +69,7 @@ def spatial_perturbation_field(
     In mesoscale meteorology the perturbation field is more important than the
     balanced flows for process understanding. This function is designed
     to create spatial perturbation fields based on smoothing with a Gaussian
-    kernel or a Uniform kernel.
+    kernel or a uniform kernel.
 
     The kernels are defined by the filter_scale, which for mesoscale
     perturbations should be between an approximate cloud separation distance,
@@ -77,7 +77,7 @@ def spatial_perturbation_field(
     value between these ranges should provided broadly consistent results (e.g.
     [Flacketal2016]_). The Gaussian kernel will give greater importance to
     areas closer to the event and will produce a smooth perturbation field.
-    The Uniform kernel will produce a smooth perturbation field but will not
+    The uniform kernel will produce a smooth perturbation field but will not
     give local features as much prominence.
 
     References
