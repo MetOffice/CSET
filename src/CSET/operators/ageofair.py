@@ -400,8 +400,6 @@ def compute_ageofair(
     # See https://docs.python.org/3/library/os.html#os.cpu_count
     if multicore:
         num_usable_cores = len(os.sched_getaffinity(0))
-    else:
-        num_usable_cores = 1
 
     logging.info("STARTING AOA DIAG...")
     start = datetime.datetime.now()
@@ -426,9 +424,12 @@ def compute_ageofair(
                 cyclic,
                 tmpdir.name,
             )
-
-            with multiprocessing.Pool(num_usable_cores) as pool:
-                pool.map(func, range(0, XWIND.shape[4]))
+            if multicore:
+                with multiprocessing.Pool(num_usable_cores) as pool:
+                    pool.map(func, range(0, XWIND.shape[4]))
+            else:
+                # Convert to list to ensure everything is processed.
+                list(map(func, range(0, XWIND.shape[4])))
 
             for i in range(0, XWIND.shape[4]):
                 file = f"{tmpdir.name}/aoa_frag_{i:04}.npy"
@@ -450,11 +451,12 @@ def compute_ageofair(
             cyclic,
             tmpdir.name,
         )
-        # Unix API for getting set of usable CPUs.
-        # See https://docs.python.org/3/library/os.html#os.cpu_count
-        num_usable_cores = len(os.sched_getaffinity(0))
-        with multiprocessing.Pool(num_usable_cores) as pool:
-            pool.map(func, range(0, XWIND.shape[3]))
+        if multicore:
+            with multiprocessing.Pool(num_usable_cores) as pool:
+                pool.map(func, range(0, XWIND.shape[3]))
+        else:
+            # Convert to list to ensure everything is processed.
+            list(map(func, range(0, XWIND.shape[3])))
 
         for i in range(0, XWIND.shape[3]):
             file = f"{tmpdir.name}/aoa_frag_{i:04}.npy"
