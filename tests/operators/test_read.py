@@ -255,13 +255,12 @@ def test_pressurecoordfix_callback():
 
 def test_spatialcoordrename_callback():
     """Check that spatial coord gets renamed if it is not grid_latitude."""
+    # This cube contains 'latitude' and 'longitude'
     cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
-    cube.coord("grid_latitude").rename("latitude")
-    cube.coord("grid_longitude").rename("longitude")
     read._fix_spatialcoord_name_callback(cube)
     assert (
         str(cube.coords)
-        == "<bound method Cube.coords of <iris 'Cube' of air_temperature / (K) (time: 2; pressure: 16; latitude: 6; longitude: 6)>>"
+        == "<bound method Cube.coords of <iris 'Cube' of air_temperature / (K) (time: 2; pressure: 16; grid_latitude: 6; grid_longitude: 6)>>"
     )
 
 
