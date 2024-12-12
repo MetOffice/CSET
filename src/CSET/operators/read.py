@@ -198,6 +198,8 @@ def _create_callback(is_ensemble: bool) -> callable:
         _lfric_normalise_callback(cube, field, filename)
         _lfric_time_coord_fix_callback(cube, field, filename)
         _longitude_fix_callback(cube, field, filename)
+        _fix_spatialcoord_name_callback(cube)
+        _fix_pressurecoord_name_callback(cube)
 
     return callback
 
@@ -330,6 +332,44 @@ def _longitude_fix_callback(cube: iris.cube.Cube, field, filename):
         long_centre -= 360.0
         long_points -= 360.0
     long_coord.points = long_points
+    return cube
+
+
+def _fix_spatialcoord_name_callback(cube: iris.cube.Cube):
+    """Check latitude and longitude coordinates name.
+
+    This is necessary as some models define their grid as 'grid_latitude' and 'grid_longitude'
+    and this means that recipes will fail - particularly if the user is comparing multiple models
+    where the spatial coordinate names differ.
+    """
+    import CSET.operators._utils as utils
+
+    try:
+        y_name, x_name = utils.get_cube_yxcoordname(cube)
+    except ValueError:
+        # Don't modify non-spatial cubes.
+        return cube
+
+    # We only want to modify instances where the coordinate system is actually
+    # latitude/longitude, and not touch the cube if the coordinate system is say
+    # meters.
+    if y_name in ["latitude"]:
+        cube.coord(y_name).rename("grid_latitude")
+    if x_name in ["longitude"]:
+        cube.coord(x_name).rename("grid_longitude")
+
+    return cube
+
+
+def _fix_pressurecoord_name_callback(cube: iris.cube.Cube):
+    """Rename pressure_level coordinate to pressure if it exists."""
+    # We only want to modify instances where the coordinate system is actually
+    # latitude/longitude, and not touch the cube if the coordinate system is say
+    # meters.
+    for coord in cube.dim_coords:
+        if coord.name() == "pressure_level":
+            coord.rename("pressure")
+
     return cube
 
 
