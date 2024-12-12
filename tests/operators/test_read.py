@@ -244,17 +244,33 @@ def test_lfric_time_coord_fix_callback_no_time():
 
 def test_pressurecoordfix_callback():
     """Check that pressure_level is renamed to pressure if it exists."""
-    cube = read.read_cube("tests/test_data/test_renameplev.nc")
+    cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
+    cube.coord("pressure").rename("pressure_level")
+    read._fix_pressurecoord_name_callback(cube)
     assert (
         str(cube.coords)
-        == "<bound method Cube.coords of <iris 'Cube' of air_temperature / (K) (time: 2; pressure: 2; grid_latitude: 2; grid_longitude: 2)>>"
+        == "<bound method Cube.coords of <iris 'Cube' of air_temperature / (K) (time: 2; pressure: 16; latitude: 6; longitude: 6)>>"
     )
 
 
 def test_spatialcoordrename_callback():
-    """Check that spatial coord rename returns unchanged cube if no spatial coords."""
-    cube = read.read_cube("tests/test_data/test_nospatialcoords.nc")
+    """Check that spatial coord gets renamed if it is not grid_latitude."""
+    cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
+    cube.coord("grid_latitude").rename("latitude")
+    cube.coord("grid_longitude").rename("longitude")
+    read._fix_spatialcoord_name_callback(cube)
     assert (
         str(cube.coords)
-        == "<bound method Cube.coords of <iris 'Cube' of air_temperature / (K) (time: 2; pressure: 2)>>"
+        == "<bound method Cube.coords of <iris 'Cube' of air_temperature / (K) (time: 2; pressure: 16; latitude: 6; longitude: 6)>>"
+    )
+
+
+def test_spatialcoordnotexist_callback():
+    """Check that spatial coord returns cube if cube does not contain spatial coordinates."""
+    cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
+    cube = cube[:, :, 0, 0]  # Remove spatial dimcoords
+    read._fix_spatialcoord_name_callback(cube)
+    assert (
+        str(cube.coords)
+        == "<bound method Cube.coords of <iris 'Cube' of air_temperature / (K) (time: 2; pressure: 16)>>"
     )
