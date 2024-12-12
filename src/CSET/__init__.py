@@ -31,9 +31,12 @@ def main(raw_cli_args: list[str] = sys.argv):
     Handles argument parsing, setting up logging, top level error capturing,
     and execution of the desired subcommand.
     """
+    # Read arguments from the command line and CSET_ADDOPTS environment variable
+    # into an args object.
     parser = setup_argument_parser()
     cli_args = raw_cli_args[1:] + shlex.split(os.getenv("CSET_ADDOPTS", ""))
     args, unparsed_args = parser.parse_known_args(cli_args)
+
     setup_logging(args.verbose)
 
     # Down here so runs after logging is setup.
