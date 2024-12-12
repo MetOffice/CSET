@@ -353,9 +353,9 @@ def _fix_spatialcoord_name_callback(cube: iris.cube.Cube):
     # We only want to modify instances where the coordinate system is actually
     # latitude/longitude, and not touch the cube if the coordinate system is say
     # meters.
-    if y_name in ["latitude"]:
+    if y_name in ["latitude"] and cube.coord(y_name).units == "degrees":
         cube.coord(y_name).rename("grid_latitude")
-    if x_name in ["longitude"]:
+    if x_name in ["longitude"] and cube.coord(x_name).units == "degrees":
         cube.coord(x_name).rename("grid_longitude")
 
     return cube
