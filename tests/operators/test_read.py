@@ -247,13 +247,13 @@ def test_pressurecoordfix_callback():
     cube = read.read_cube("tests/test_data/test_renameplev.nc")
     assert (
         str(cube.coords)
-        == "<bound method Cube.coord of <iris 'Cube' of air_temperature / (K) (time: 2; pressure_level: 2; latitude: 2; longitude: 2)>>"
+        == "<bound method Cube.coord of <iris 'Cube' of air_temperature / (K) (time: 2; pressure_level: 2; grid_latitude: 2; grid_longitude: 2)>>"
     )
 
 
 def test_spatialcoordrename_callback():
     """Check that spatial coord rename returns unchanged cube if no spatial coords."""
-    cube = read.read_cube("tests/test_data/test_renameplev.nc")
+    cube = read.read_cube("tests/test_data/test_nospatialcoords.nc")
     assert (
         str(cube.coords)
         == "<bound method Cube.coord of <iris 'Cube' of air_temperature / (K) (time: 2; pressure: 2)>>"
