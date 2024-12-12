@@ -112,7 +112,7 @@ def _aoa_core(
     y_arr: np.ndarray
         A numpy array containing y wind data.
     z_arr: np.ndarray
-        A numpy array containing w wind data, or a placeholder full of zeros if incW is False
+        A numpy array containing w wind data.
     g_arr: np.ndarray
         A numpy array containing geopotential height data.
     lats: np.ndarray
