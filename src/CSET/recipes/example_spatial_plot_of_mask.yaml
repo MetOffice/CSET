@@ -1,0 +1,21 @@
+category: Surface Spatial Plot
+title: Example plot of a mask
+description: |
+  Generates a mask and then provides a spatial map of the mask.
+
+steps:
+  - operator: read.read_cubes
+
+  - operator: filters.generate_mask
+    mask_field:
+        operator: filters.filter_cubes
+        constraint:
+            operator: constraints.generate_var_constraint
+            varname: surface_altitude
+    condition: '>='
+    value: 500
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

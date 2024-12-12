@@ -33,9 +33,11 @@ def apply_mask(
     Parameters
     ----------
     original_field: iris.cube.Cube | iris.cube.CubeList
-        The field to be masked.
+        The field(s) to be masked.
     masks: iris.cube.Cube | iris.cube.CubeList
-        The mask being applied to the original field.
+        The mask being applied to the original field. Masks should
+        be the same length type as the original_field. The masks are applied
+        to each individual Cube in a CubeList in the order they are provided.
 
     Returns
     -------
@@ -64,14 +66,14 @@ def apply_mask(
     if len(mask_list) == 1:
         masked_field = original_field.copy()
         masked_field.data *= mask_list[0].data
-        masked_field.rename(f"mask_of_{original_field.name()}")
+        masked_field.attributes["mask"] = f"mask_of_{original_field.name()}"
         return masked_field
     else:
         mask_field_list = iris.cube.CubeList()
         for data, mask in zip(original_field, mask_list, strict=True):
             mask_field_data = data.copy()
             mask_field_data.data *= mask.data
-            mask_field_data.rename(f"mask_of_{data.name()}")
+            mask_field_data.attributes["mask"] = f"mask_of_{original_field.name()}"
             mask_field_list.append(mask_field_data)
         return mask_field_list
 
@@ -216,8 +218,7 @@ def generate_mask(
         else:
             raise ValueError("""Unexpected value for condition. Expected ==, !=,
                               >, >=, <, <=""")
-        masks.rename(f"mask_for_{cube.name()}_{condition}_{value}")
-        masks.attributes.pop("STASH", None)
+        masks.attributes["mask"] = f"mask_for_{cube.name()}_{condition}_{value}"
 
         mask_list.append(masks)
     if len(mask_list) == 1:
