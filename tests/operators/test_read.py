@@ -240,3 +240,21 @@ def test_lfric_time_coord_fix_callback_no_time():
     cube = iris.cube.Cube([0, 0, 0], aux_coords_and_dims=[(length_coord, 0)])
     read._lfric_time_coord_fix_callback(cube, None, None)
     assert len(cube.coords("time")) == 0
+
+
+def test_pressurecoordfix_callback():
+    """Check that pressure_level is renamed to pressure if it exists."""
+    cube = read.read_cube("tests/test_data/test_renameplev.nc")
+    assert (
+        str(cube.coords)
+        == "<bound method Cube.coord of <iris 'Cube' of air_temperature / (K) (time: 2; pressure_level: 2; latitude: 2; longitude: 2)>>"
+    )
+
+
+def test_spatialcoordrename_callback():
+    """Check that spatial coord rename returns unchanged cube if no spatial coords."""
+    cube = read.read_cube("tests/test_data/test_renameplev.nc")
+    assert (
+        str(cube.coords)
+        == "<bound method Cube.coord of <iris 'Cube' of air_temperature / (K) (time: 2; pressure: 2)>>"
+    )
