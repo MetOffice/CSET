@@ -22,26 +22,24 @@ CSET.
 """
 
 import logging
-from typing import Union
 
 import iris
 import numpy as np
 from scipy.ndimage import gaussian_filter, uniform_filter
 
-from CSET._common import iter_maybe
 from CSET.operators._utils import get_cube_yxcoordname
 
 
 def spatial_perturbation_field(
-    original_field: Union[iris.cube.Cube, iris.cube.CubeList],
+    original_field: iris.cube.Cube,
     Gaussian_filter: bool = True,
     filter_scale: int = 40,
-) -> Union[iris.cube.Cube, iris.cube.CubeList]:
+) -> iris.cube.Cube:
     """Calculate a spatial perturbation field.
 
     Parameters
     ----------
-    original_field: iris.cube.Cube | iris.cube.CubeList
+    original_field: iris.cube.Cube
         Raw field from the model.
     Gaussian_filter: boolean
         Switch to determine if a Gaussian filter is applied.
@@ -56,13 +54,11 @@ def spatial_perturbation_field(
 
     Returns
     -------
-    An iris cube of the spatial perturbation field, or a CubeList of the
-    spatial perturbation fields in the same order they were passed into
-    original_field.
+    An iris cube of the spatial perturbation field.
 
     Return type
     -----------
-    iris.cube.Cube | iris.cube.CubeList
+    iris.cube.Cube
 
     Notes
     -----
@@ -98,31 +94,25 @@ def spatial_perturbation_field(
     >>> plt.show()
 
     """
-    pert_fields = iris.cube.CubeList()
-    for cube in iter_maybe(original_field):
-        pert_field = cube.copy()
-        # find axes of spatial coordinates in field
-        coords = [coord.name() for coord in cube.coords()]
-        axes = (
-            coords.index(get_cube_yxcoordname(cube)[0]),
-            coords.index(get_cube_yxcoordname(cube)[1]),
-        )
-        # apply convolution depending on type used
-        if Gaussian_filter:
-            filter_type = "Gaussian"
-            logging.info("Gaussian filter applied.")
-            half_width = np.sqrt(2 * np.log(2) * filter_scale)
-            pert_field.data -= gaussian_filter(cube.data, half_width, axes=axes)
-        else:
-            logging.info("Uniform filter applied.")
-            filter_type = "Uniform"
-            pert_field.data -= uniform_filter(cube.data, filter_scale, axes=axes)
-        # rename cube to indicate spatial perturbation field
-        pert_field.attributes["perturbation_field"] = (
-            f"{filter_type}_with_{str(filter_scale)}_grid_point_filter_scale"
-        )
-        pert_fields.append(pert_field)
-    if len(pert_fields) == 1:
-        return pert_fields[0]
+    pert_field = original_field.copy()
+    # find axes of spatial coordinates in field
+    coords = [coord.name() for coord in original_field.coords()]
+    axes = (
+        coords.index(get_cube_yxcoordname(original_field)[0]),
+        coords.index(get_cube_yxcoordname(original_field)[1]),
+    )
+    # apply convolution depending on type used
+    if Gaussian_filter:
+        filter_type = "Gaussian"
+        logging.info("Gaussian filter applied.")
+        half_width = np.sqrt(2 * np.log(2) * filter_scale)
+        pert_field.data -= gaussian_filter(original_field.data, half_width, axes=axes)
     else:
-        return pert_fields
+        logging.info("Uniform filter applied.")
+        filter_type = "Uniform"
+        pert_field.data -= uniform_filter(original_field.data, filter_scale, axes=axes)
+    # rename cube to indicate spatial perturbation field
+    pert_field.attributes["perturbation_field"] = (
+        f"{filter_type}_with_{str(filter_scale)}_grid_point_filter_scale"
+    )
+    return pert_field

@@ -14,7 +14,6 @@
 
 """Test mesoscale operators."""
 
-import iris.cube
 import numpy as np
 from scipy.ndimage import gaussian_filter, uniform_filter
 
@@ -76,26 +75,3 @@ def test_spatial_perturbation_field_uniform(cube):
         rtol=1e-06,
         atol=1e-02,
     )
-
-
-def test_spatial_perturbation_field_Gaussian_cubelist(cubes):
-    """Test smoothing a cubelist with a Gaussian filter."""
-    calculated_cubes = iris.cube.CubeList()
-    half_width = np.sqrt(2 * np.log(2) * 40)
-    for cube in cubes:
-        calculated = cube.copy()
-        coords = [coord.name() for coord in cube.coords()]
-        axes = (
-            coords.index(get_cube_yxcoordname(cube)[0]),
-            coords.index(get_cube_yxcoordname(cube)[1]),
-        )
-        calculated.data -= gaussian_filter(cube.data, half_width, axes=axes)
-        calculated_cubes.append(calculated)
-    function_cubes = mesoscale.spatial_perturbation_field(cubes)
-    for calc, func in zip(calculated_cubes, function_cubes, strict=False):
-        assert np.allclose(
-            calc.data,
-            func.data,
-            rtol=1e-06,
-            atol=1e-02,
-        )
