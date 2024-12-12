@@ -73,7 +73,7 @@ def apply_mask(
         for data, mask in zip(original_field, mask_list, strict=True):
             mask_field_data = data.copy()
             mask_field_data.data *= mask.data
-            mask_field_data.attributes["mask"] = f"mask_of_{original_field.name()}"
+            mask_field_data.attributes["mask"] = f"mask_of_{data.name()}"
             mask_field_list.append(mask_field_data)
         return mask_field_list
 
