@@ -14,6 +14,7 @@
 
 """Operators to perform various kind of filtering."""
 
+import logging
 from typing import Union
 
 import iris
@@ -21,23 +22,19 @@ import iris.cube
 import iris.exceptions
 import numpy as np
 
-from CSET._common import iter_maybe
-
 
 def apply_mask(
-    original_field: Union[iris.cube.Cube, iris.cube.CubeList],
-    masks: Union[iris.cube.Cube, iris.cube.CubeList],
-) -> Union[iris.cube.Cube, iris.cube.CubeList]:
+    original_field: iris.cube.Cube,
+    masks: iris.cube.Cube,
+) -> iris.cube.Cube:
     """Apply a mask to given data as a masked array.
 
     Parameters
     ----------
-    original_field: iris.cube.Cube | iris.cube.CubeList
-        The field(s) to be masked.
-    masks: iris.cube.Cube | iris.cube.CubeList
-        The mask being applied to the original field. Masks should
-        be the same length type as the original_field. The masks are applied
-        to each individual Cube in a CubeList in the order they are provided.
+    original_field: iris.cube.Cube
+        The field to be masked.
+    masks: iris.cube.Cube
+        The mask being applied to the original field.
 
     Returns
     -------
@@ -45,7 +42,7 @@ def apply_mask(
 
     Return type
     -----------
-    iris.cube.Cube | iris.cube.CubeList
+    iris.cube.Cube
 
     Notes
     -----
@@ -59,23 +56,17 @@ def apply_mask(
     --------
     >>> land_points_only = apply_mask(temperature, land_mask)
     """
-    mask_list = iris.cube.CubeList()
-    for mask in iter_maybe(masks):
-        mask.data[mask.data == 0] = np.nan
-        mask_list.append(mask)
-    if len(mask_list) == 1:
-        masked_field = original_field.copy()
-        masked_field.data *= mask_list[0].data
-        masked_field.attributes["mask"] = f"mask_of_{original_field.name()}"
-        return masked_field
-    else:
-        mask_field_list = iris.cube.CubeList()
-        for data, mask in zip(original_field, mask_list, strict=True):
-            mask_field_data = data.copy()
-            mask_field_data.data *= mask.data
-            mask_field_data.attributes["mask"] = f"mask_of_{data.name()}"
-            mask_field_list.append(mask_field_data)
-        return mask_field_list
+    masks.data[masks.data == 0] = np.nan
+    # ensure mask is only 1s or nans
+    masks.data[~np.isnan(masks.data)] = 1
+    logging.info(
+        "Mask set to 1 or 0s, if addition of multiple masks results"
+        "in values > 1 these are set to 1."
+    )
+    masked_field = original_field.copy()
+    masked_field.data *= masks.data
+    masked_field.attributes["mask"] = f"mask_of_{original_field.name()}"
+    return masked_field
 
 
 def filter_cubes(
@@ -153,33 +144,34 @@ def filter_multiple_cubes(
 
 
 def generate_mask(
-    mask_field: Union[iris.cube.Cube, iris.cube.CubeList],
+    mask_field: iris.cube.Cube,
     condition: str,
     value: float,
-) -> Union[iris.cube.Cube, iris.cube.CubeList]:
+) -> iris.cube.Cube:
     """Generate a mask to remove data not meeting conditions.
 
     Parameters
     ----------
-    mask_field: iris.cube.Cube | iris.cube.CubeList
+    mask_field: iris.cube.Cube
         The field to be used for creating the mask.
     condition: str
         The type of condition applied, six available options:
         '==','!=','<','<=','>', and '>='.
     value: float
-        The value on the other side of the condition.
+        The value on the right hand side of the condition.
 
     Returns
     -------
-    Masks meeting the conditions applied.
+    Masks meeting the condition applied.
 
     Return type
     -----------
-    iris.cube.Cube | iris.cube.CubeList
+    iris.cube.Cube
 
     Raises
     ------
-    ValueError: Unexpected value for condition. Expected ==, !=, >, >=, <, <=
+    ValueError: Unexpected value for condition. Expected ==, !=, >, >=, <, <=.
+                Got {condition}.
         Raised when condition is not supported.
 
     Notes
@@ -193,35 +185,27 @@ def generate_mask(
     The conversion to a masked array occurs in the apply_mask routine, which
     should happen after all relevant masks have been combined.
 
-    The same condition and value will be used when masking multiple cubes.
-
     Examples
     --------
     >>> land_mask = generate_mask(land_sea_mask,'==',1)
     """
-    mask_list = iris.cube.CubeList()
-    for cube in iter_maybe(mask_field):
-        masks = cube.copy()
-        masks.data = np.zeros(masks.data.shape)
-        if condition == "==":
-            masks.data[cube.data == value] = 1
-        elif condition == "!=":
-            masks.data[cube.data != value] = 1
-        elif condition == ">":
-            masks.data[cube.data > value] = 1
-        elif condition == ">=":
-            masks.data[cube.data >= value] = 1
-        elif condition == "<":
-            masks.data[cube.data < value] = 1
-        elif condition == "<=":
-            masks.data[cube.data <= value] = 1
-        else:
+    masks = mask_field.copy()
+    masks.data = np.zeros(masks.data.shape)
+    match condition:
+        case "==":
+            masks.data[mask_field.data == value] = 1
+        case "!=":
+            masks.data[mask_field.data != value] = 1
+        case ">":
+            masks.data[mask_field.data > value] = 1
+        case ">=":
+            masks.data[mask_field.data >= value] = 1
+        case "<":
+            masks.data[mask_field.data < value] = 1
+        case "<=":
+            masks.data[mask_field.data <= value] = 1
+        case _:
             raise ValueError("""Unexpected value for condition. Expected ==, !=,
-                              >, >=, <, <=""")
-        masks.attributes["mask"] = f"mask_for_{cube.name()}_{condition}_{value}"
-
-        mask_list.append(masks)
-    if len(mask_list) == 1:
-        return mask_list[0]
-    else:
-        return mask_list
+                              >, >=, <, <=. Got {condition}.""")
+    masks.attributes["mask"] = f"mask_for_{mask_field.name()}_{condition}_{value}"
+    return masks
