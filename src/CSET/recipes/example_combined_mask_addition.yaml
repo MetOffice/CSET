@@ -2,6 +2,8 @@ category: Quick Look
 title: Example adding masks for 'OR' type filters
 description: |
   Generates and applies two masks, and adds them together for more complex stratified analysis.
+  Examples would include masking for variables outside a range, e.g. temperature < 273 K or temperature
+  > 313 K. Addition of masks would be akin to finding a probability of two events happening at the same time in different places.
 
 steps:
   - operator: read.read_cubes

@@ -56,8 +56,8 @@ def apply_mask(
     --------
     >>> land_points_only = apply_mask(temperature, land_mask)
     """
+    # Ensure mask is only 1s or NaNs.
     masks.data[masks.data == 0] = np.nan
-    # ensure mask is only 1s or nans
     masks.data[~np.isnan(masks.data)] = 1
     logging.info(
         "Mask set to 1 or 0s, if addition of multiple masks results"

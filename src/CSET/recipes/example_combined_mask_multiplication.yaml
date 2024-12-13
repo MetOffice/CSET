@@ -2,6 +2,8 @@ category: Quick Look
 title: Example adding masks for 'AND' type filters
 description: |
   Generates and applies two masks, and multiplies them together for more complex stratified analysis.
+  Examples would include masking for temperature > 273 K and orography > 500 m. Multiplication of masks
+   would be akin to finding a probability of of two events happening at the same time in the same place.
 
 steps:
   - operator: read.read_cubes
