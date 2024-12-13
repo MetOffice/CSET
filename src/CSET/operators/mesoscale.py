@@ -40,7 +40,8 @@ def spatial_perturbation_field(
     Parameters
     ----------
     original_field: iris.cube.Cube
-        Iris cube containing data to smooth, supporting multiple dimensions (at least two spatial dimensions must be supplied, i.e. 2D).
+        Iris cube containing data to smooth, supporting multiple dimensions 
+        (at least two spatial dimensions must be supplied, i.e. 2D).
     Gaussian_filter: boolean
         Switch to determine if a Gaussian filter is applied.
         If set to True a Gaussian filter is applied; if set to False
@@ -78,6 +79,7 @@ def spatial_perturbation_field(
 
     Caution should be applied to boundaries, particularly if the domain is of variable resolution, as some
     numerical artifacts could be introduced.
+    
     References
     ----------
     .. [Flacketal2016] Flack, D.L.A., Plant, R.S., Gray, S.L., Lean, H.W.,
