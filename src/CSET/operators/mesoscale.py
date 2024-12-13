@@ -40,7 +40,7 @@ def spatial_perturbation_field(
     Parameters
     ----------
     original_field: iris.cube.Cube
-        Raw field from the model.
+        Iris cube containing data to smooth, supporting multiple dimensions (at least two spatial dimensions must be supplied, i.e. 2D).
     Gaussian_filter: boolean
         Switch to determine if a Gaussian filter is applied.
         If set to True a Gaussian filter is applied; if set to False
@@ -76,6 +76,8 @@ def spatial_perturbation_field(
     The uniform kernel will produce a smooth perturbation field but will not
     give local features as much prominence.
 
+    Caution should be applied to boundaries, particularly if the domain is of variable resolution, as some
+    numerical artifacts could be introduced.
     References
     ----------
     .. [Flacketal2016] Flack, D.L.A., Plant, R.S., Gray, S.L., Lean, H.W.,
@@ -97,6 +99,7 @@ def spatial_perturbation_field(
     pert_field = original_field.copy()
     # find axes of spatial coordinates in field
     coords = [coord.name() for coord in original_field.coords()]
+   # axes tuple containing latitude, longitude coordinate name.
     axes = (
         coords.index(get_cube_yxcoordname(original_field)[0]),
         coords.index(get_cube_yxcoordname(original_field)[1]),
