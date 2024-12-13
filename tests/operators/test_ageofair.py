@@ -63,8 +63,7 @@ def ens_regridded_out() -> iris.cube.Cube:
 
 
 def test_calc_dist():
-    """
-    Test distance calculated from calc_dist in age of air calculation.
+    """Test distance calculated from calc_dist in age of air calculation.
 
     Allow a tolerance of 20km (as we expect some error).
     """
