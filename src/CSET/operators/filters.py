@@ -25,7 +25,7 @@ import numpy as np
 
 def apply_mask(
     original_field: iris.cube.Cube,
-    masks: iris.cube.Cube,
+    mask: iris.cube.Cube,
 ) -> iris.cube.Cube:
     """Apply a mask to given data as a masked array.
 
@@ -33,7 +33,7 @@ def apply_mask(
     ----------
     original_field: iris.cube.Cube
         The field to be masked.
-    masks: iris.cube.Cube
+    mask: iris.cube.Cube
         The mask being applied to the original field.
 
     Returns
@@ -57,14 +57,14 @@ def apply_mask(
     >>> land_points_only = apply_mask(temperature, land_mask)
     """
     # Ensure mask is only 1s or NaNs.
-    masks.data[masks.data == 0] = np.nan
-    masks.data[~np.isnan(masks.data)] = 1
+    mask.data[mask.data == 0] = np.nan
+    mask.data[~np.isnan(mask.data)] = 1
     logging.info(
         "Mask set to 1 or 0s, if addition of multiple masks results"
         "in values > 1 these are set to 1."
     )
     masked_field = original_field.copy()
-    masked_field.data *= masks.data
+    masked_field.data *= mask.data
     masked_field.attributes["mask"] = f"mask_of_{original_field.name()}"
     return masked_field
 
@@ -162,11 +162,8 @@ def generate_mask(
 
     Returns
     -------
-    Masks meeting the condition applied.
-
-    Return type
-    -----------
-    iris.cube.Cube
+    mask: iris.cube.Cube
+        Masks meeting the condition applied.
 
     Raises
     ------
@@ -189,23 +186,23 @@ def generate_mask(
     --------
     >>> land_mask = generate_mask(land_sea_mask,'==',1)
     """
-    masks = mask_field.copy()
+    mask = mask_field.copy()
     masks.data = np.zeros(masks.data.shape)
     match condition:
         case "==":
-            masks.data[mask_field.data == value] = 1
+            mask.data[mask_field.data == value] = 1
         case "!=":
-            masks.data[mask_field.data != value] = 1
+            mask.data[mask_field.data != value] = 1
         case ">":
-            masks.data[mask_field.data > value] = 1
+            mask.data[mask_field.data > value] = 1
         case ">=":
-            masks.data[mask_field.data >= value] = 1
+            mask.data[mask_field.data >= value] = 1
         case "<":
-            masks.data[mask_field.data < value] = 1
+            mask.data[mask_field.data < value] = 1
         case "<=":
-            masks.data[mask_field.data <= value] = 1
+            mask.data[mask_field.data <= value] = 1
         case _:
             raise ValueError("""Unexpected value for condition. Expected ==, !=,
                               >, >=, <, <=. Got {condition}.""")
-    masks.attributes["mask"] = f"mask_for_{mask_field.name()}_{condition}_{value}"
+    mask.attributes["mask"] = f"mask_for_{mask_field.name()}_{condition}_{value}"
     return masks
