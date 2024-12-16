@@ -360,19 +360,20 @@ def _fix_spatialcoord_name_callback(cube: iris.cube.Cube):
     if x_name in ["longitude"] and cube.coord(x_name).units == "degrees":
         cube.coord(x_name).rename("grid_longitude")
 
-    return cube
-
 
 def _fix_pressurecoord_name_callback(cube: iris.cube.Cube):
-    """Rename pressure_level coordinate to pressure if it exists."""
+    """Rename pressure_level coordinate to pressure if it exists.
+
+    This problem was raised because the AIFS model data from ECMWF
+    defines the pressure coordinate with the name 'pressure_level' rather
+    than compliant CF coordinate names
+    """
     # We only want to modify instances where the coordinate system is actually
     # latitude/longitude, and not touch the cube if the coordinate system is say
     # meters.
     for coord in cube.dim_coords:
         if coord.name() == "pressure_level":
             coord.rename("pressure")
-
-    return cube
 
 
 def _check_input_files(input_path: Path | str, filename_pattern: str) -> Iterable[Path]:
