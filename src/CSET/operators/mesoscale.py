@@ -32,7 +32,7 @@ from CSET.operators._utils import get_cube_yxcoordname
 
 def spatial_perturbation_field(
     original_field: iris.cube.Cube,
-    Gaussian_filter: bool = True,
+    gaussian_filter: bool = True,
     filter_scale: int = 40,
 ) -> iris.cube.Cube:
     """Calculate a spatial perturbation field.
@@ -42,8 +42,7 @@ def spatial_perturbation_field(
     original_field: iris.cube.Cube
         Iris cube containing data to smooth, supporting multiple dimensions
         (at least two spatial dimensions must be supplied, i.e. 2D).
-    Gaussian_filter: boolean
-        Switch to determine if a Gaussian filter is applied.
+    gaussian_filter: boolean
         If set to True a Gaussian filter is applied; if set to False
         a Uniform filter is applied.
         Default is True.
@@ -90,7 +89,7 @@ def spatial_perturbation_field(
     Examples
     --------
     >>> Temperature_perturbation = meso.spatial_perturbation_fields(Temp,
-                                   Gaussian_filter=True,filter_scale=40)
+                                   gaussian_filter=True,filter_scale=40)
     >>> iplt.pcolormesh(Temperature_perturabtion[0,:,:],cmap=mpl.cm.bwr)
     >>> plt.gca().coastlines('10m')
     >>> plt.clim(-5,5)

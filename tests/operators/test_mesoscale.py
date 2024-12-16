@@ -60,7 +60,7 @@ def test_spatial_perturbation_field_uniform(cube):
     calculated.data -= uniform_filter(cube.data, 40, axes=axes)
     assert np.allclose(
         calculated.data,
-        mesoscale.spatial_perturbation_field(cube, Gaussian_filter=False).data,
+        mesoscale.spatial_perturbation_field(cube, gaussian_filter=False).data,
         rtol=1e-06,
         atol=1e-02,
     )
@@ -70,7 +70,7 @@ def test_spatial_perturbation_field_uniform(cube):
     assert np.allclose(
         calculated_2.data,
         mesoscale.spatial_perturbation_field(
-            cube, Gaussian_filter=False, filter_scale=100
+            cube, gaussian_filter=False, filter_scale=100
         ).data,
         rtol=1e-06,
         atol=1e-02,
