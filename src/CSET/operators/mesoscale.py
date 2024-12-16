@@ -53,11 +53,8 @@ def spatial_perturbation_field(
 
     Returns
     -------
-    An iris cube of the spatial perturbation field.
-
-    Return type
-    -----------
-    iris.cube.Cube
+    pert_field: iris.cube.Cube
+        An iris cube of the spatial perturbation field.
 
     Notes
     -----
