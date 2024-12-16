@@ -24,7 +24,6 @@ CSET.
 import logging
 
 import iris
-import numpy as np
 from scipy.ndimage import gaussian_filter, uniform_filter
 
 from CSET.operators._utils import get_cube_yxcoordname
@@ -32,7 +31,7 @@ from CSET.operators._utils import get_cube_yxcoordname
 
 def spatial_perturbation_field(
     original_field: iris.cube.Cube,
-    gaussian_filter: bool = True,
+    apply_gaussian_filter: bool = True,
     filter_scale: int = 40,
 ) -> iris.cube.Cube:
     """Calculate a spatial perturbation field.
@@ -42,15 +41,15 @@ def spatial_perturbation_field(
     original_field: iris.cube.Cube
         Iris cube containing data to smooth, supporting multiple dimensions
         (at least two spatial dimensions must be supplied, i.e. 2D).
-    gaussian_filter: boolean
+    apply_gaussian_filter: boolean, optional
         If set to True a Gaussian filter is applied; if set to False
         a Uniform filter is applied.
         Default is True.
-    filter_scale: int
+    filter_scale: int, optional
         Scale at which to define the filter in grid boxes. If the
         filter is a Gaussian convolution this value represents the
-        halfwidth of the Gaussian kernel.
-        Default is 40 grid points.
+        standard deviation of the Gaussian kernel.
+        Default is 40 grid boxes.
 
     Returns
     -------
@@ -106,16 +105,15 @@ def spatial_perturbation_field(
         coords.index(get_cube_yxcoordname(original_field)[1]),
     )
     # apply convolution depending on type used
-    if Gaussian_filter:
+    if apply_gaussian_filter:
         filter_type = "Gaussian"
         logging.info("Gaussian filter applied.")
-        half_width = np.sqrt(2 * np.log(2) * filter_scale)
-        pert_field.data -= gaussian_filter(original_field.data, half_width, axes=axes)
+        pert_field.data -= gaussian_filter(original_field.data, filter_scale, axes=axes)
     else:
         logging.info("Uniform filter applied.")
         filter_type = "Uniform"
         pert_field.data -= uniform_filter(original_field.data, filter_scale, axes=axes)
-    # rename cube to indicate spatial perturbation field
+    # provide attributes to cube to indicate spatial perturbation field
     pert_field.attributes["perturbation_field"] = (
         f"{filter_type}_with_{str(filter_scale)}_grid_point_filter_scale"
     )

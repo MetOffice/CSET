@@ -21,7 +21,7 @@ import CSET.operators.mesoscale as mesoscale
 from CSET.operators._utils import get_cube_yxcoordname
 
 
-def test_spatial_perturbation_field_Gaussian(cube):
+def test_spatial_perturbation_field_gaussian(cube):
     """Test smoothing a cube with a Gaussian filter."""
     calculated = cube.copy()
     coords = [coord.name() for coord in cube.coords()]
@@ -29,8 +29,7 @@ def test_spatial_perturbation_field_Gaussian(cube):
         coords.index(get_cube_yxcoordname(cube)[0]),
         coords.index(get_cube_yxcoordname(cube)[1]),
     )
-    half_width = np.sqrt(2 * np.log(2) * 40)
-    calculated.data -= gaussian_filter(cube.data, half_width, axes=axes)
+    calculated.data -= gaussian_filter(cube.data, 40, axes=axes)
     assert np.allclose(
         calculated.data,
         mesoscale.spatial_perturbation_field(cube).data,
@@ -39,8 +38,7 @@ def test_spatial_perturbation_field_Gaussian(cube):
     )
 
     calculated_2 = cube.copy()
-    half_width = np.sqrt(2 * np.log(2) * 100)
-    calculated_2.data -= gaussian_filter(cube.data, half_width, axes=axes)
+    calculated_2.data -= gaussian_filter(cube.data, 100, axes=axes)
     assert np.allclose(
         calculated_2.data,
         mesoscale.spatial_perturbation_field(cube, filter_scale=100).data,
@@ -60,7 +58,7 @@ def test_spatial_perturbation_field_uniform(cube):
     calculated.data -= uniform_filter(cube.data, 40, axes=axes)
     assert np.allclose(
         calculated.data,
-        mesoscale.spatial_perturbation_field(cube, gaussian_filter=False).data,
+        mesoscale.spatial_perturbation_field(cube, apply_gaussian_filter=False).data,
         rtol=1e-06,
         atol=1e-02,
     )
@@ -70,7 +68,7 @@ def test_spatial_perturbation_field_uniform(cube):
     assert np.allclose(
         calculated_2.data,
         mesoscale.spatial_perturbation_field(
-            cube, gaussian_filter=False, filter_scale=100
+            cube, apply_gaussian_filter=False, filter_scale=100
         ).data,
         rtol=1e-06,
         atol=1e-02,
