@@ -205,4 +205,4 @@ def generate_mask(
             raise ValueError("""Unexpected value for condition. Expected ==, !=,
                               >, >=, <, <=. Got {condition}.""")
     mask.attributes["mask"] = f"mask_for_{mask_field.name()}_{condition}_{value}"
-    return masks
+    return mask
