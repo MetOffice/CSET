@@ -21,24 +21,26 @@ import iris
 import iris.analysis
 import iris.cube
 
+from CSET._common import iter_maybe
+
 
 def collapse(
-    cube: iris.cube.Cube,
+    cubes: iris.cube.Cube | iris.cube.CubeList,
     coordinate: Union[str, list[str]],
     method: str,
     additional_percent: float = None,
     **kwargs,
-) -> iris.cube.Cube:
-    """Collapse coordinate(s) of a cube.
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Collapse coordinate(s) of a single cube or of every cube in a cube list.
 
-    Collapses similar (stash) fields in a cube into a cube collapsing around the
+    Collapses similar (stash) fields in each cube into a cube collapsing around the
     specified coordinate(s) and method. This could be a (weighted) mean or
     percentile.
 
     Arguments
     ---------
-    cube: iris.cube.Cube
-         Cube to collapse and iterate over one dimension
+    cubes: iris.cube.Cube | iris.cube.CubeList
+         Cube or cube list to collapse and iterate over one dimension
     coordinate: str | list[str]
          Coordinate(s) to collapse over e.g. 'time', 'longitude', 'latitude',
          'model_level_number', 'realization'. A list of multiple coordinates can
@@ -50,8 +52,8 @@ def collapse(
 
     Returns
     -------
-    cube: iris.cube.Cube
-         Single variable but several methods of aggregation
+    collapsed_cubes: iris.cube.Cube | iris.cube.CubeList
+        Single variable but several methods of aggregation
 
     Raises
     ------
@@ -67,13 +69,18 @@ def collapse(
         warnings.filterwarnings(
             "ignore", "Collapsing spatial coordinate.+without weighting", UserWarning
         )
-        if method == "PERCENTILE":
-            collapsed_cube = cube.collapsed(
-                coordinate, getattr(iris.analysis, method), percent=additional_percent
-            )
-        else:
-            collapsed_cube = cube.collapsed(coordinate, getattr(iris.analysis, method))
-    return collapsed_cube
+        for cube in iter_maybe(cubes):
+            if method == "PERCENTILE":
+                collapsed_cubes = cube.collapsed(
+                    coordinate,
+                    getattr(iris.analysis, method),
+                    percent=additional_percent,
+                )
+            else:
+                collapsed_cubes = cube.collapsed(
+                    coordinate, getattr(iris.analysis, method)
+                )
+    return collapsed_cubes
 
 
 # TODO
