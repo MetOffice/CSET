@@ -66,6 +66,42 @@ def get_cube_yxcoordname(cube: iris.cube.Cube) -> tuple[str, str]:
     return (y_coords[0], x_coords[0])
 
 
+def is_spatialdim(cube: iris.cube.Cube) -> bool:
+    """Determine whether a cube is has two spatial dimension coordinates.
+
+    If cube has both spatial dims, it will contain two unique coordinates
+    that explain space (latitude and longitude). The coordinates have to
+    be iterable/contain usable dimension data, as cubes may contain these
+    coordinates as scaler dimensions after being collapsed.
+
+    Arguments
+    ---------
+    cube: iris.cube.Cube
+        An iris cube which will be checked to see if it contains coordinate
+        names that match a pre-defined list of acceptable coordinate names.
+
+    Returns
+    -------
+    bool
+        If true, then the cube has a spatial projection and thus can be plotted
+        as a map.
+    """
+    # Acceptable horizontal coordinate names.
+    X_COORD_NAMES = ["longitude", "grid_longitude", "projection_x_coordinate", "x"]
+    Y_COORD_NAMES = ["latitude", "grid_latitude", "projection_y_coordinate", "y"]
+
+    # Get a list of coordinate names for the cube
+    coord_names = [coord.name() for coord in cube.dim_coords]
+    x_coords = [coord for coord in coord_names if coord in X_COORD_NAMES]
+    y_coords = [coord for coord in coord_names if coord in Y_COORD_NAMES]
+
+    # If there is one coordinate for both x and y direction return True.
+    if len(x_coords) == 1 and len(y_coords) == 1:
+        return True
+    else:
+        return False
+
+
 def is_transect(cube: iris.cube.Cube) -> bool:
     """Determine whether a cube is a transect.
 

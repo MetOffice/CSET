@@ -344,11 +344,13 @@ def _fix_spatialcoord_name_callback(cube: iris.cube.Cube):
     """
     import CSET.operators._utils as utils
 
-    try:
-        y_name, x_name = utils.get_cube_yxcoordname(cube)
-    except ValueError:
+    # Check if cube is spatial.
+    if not utils.is_spatialdim(cube):
         # Don't modify non-spatial cubes.
         return cube
+
+    # Get spatial coords.
+    y_name, x_name = utils.get_cube_yxcoordname(cube)
 
     # We only want to modify instances where the coordinate system is actually
     # latitude/longitude, and not touch the cube if the coordinate system is say
