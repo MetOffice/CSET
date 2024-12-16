@@ -81,4 +81,9 @@ def DKE(
     --------
     >>> DKE = ensembles.DKE()
     """
+    DKE = u_mem.copy()
+    DKE.data = (
+        0.5 * (u_ctrl.data - u_mem.data) ** 2 + 0.5 * (v_ctrl.data - v_mem.data) ** 2
+    )
+    DKE.rename("Difference Kinetic Energy")
     return DKE
