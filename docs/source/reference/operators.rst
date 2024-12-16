@@ -87,8 +87,8 @@ CSET.operators.mesoscale
    :members:
 
 
-Generic Operators
-~~~~~~~~~~~~~~~~~
+Other
+~~~~~
 
 CSET.operators.ageofair
 -----------------------
