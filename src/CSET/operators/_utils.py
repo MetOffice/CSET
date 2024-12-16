@@ -72,7 +72,7 @@ def is_spatialdim(cube: iris.cube.Cube) -> bool:
     If cube has both spatial dims, it will contain two unique coordinates
     that explain space (latitude and longitude). The coordinates have to
     be iterable/contain usable dimension data, as cubes may contain these
-    coordinates as scaler dimensions after being collapsed.
+    coordinates as scalar dimensions after being collapsed.
 
     Arguments
     ---------
