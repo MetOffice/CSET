@@ -163,7 +163,7 @@ def generate_mask(
     Returns
     -------
     mask: iris.cube.Cube
-        Masks meeting the condition applied.
+        Mask meeting the condition applied.
 
     Raises
     ------
