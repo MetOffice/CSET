@@ -161,7 +161,7 @@ def test_regrid_to_single_point_east(cube):
     """
     cube_fix = read._longitude_fix_callback(cube, None, None)
     regrid_cube = regrid.regrid_to_single_point(
-        cube_fix, 0.5, -1.5, "Nearest", boundary_margin=1
+        cube_fix, 0.5, -1.5, "rotated", "Nearest", boundary_margin=1
     )
     expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3)>"
     assert repr(regrid_cube) == expected_cube
@@ -179,7 +179,7 @@ def test_regrid_to_single_point_west(cube):
     cube.coord("grid_longitude").points = long_coord
     cube_fix = read._longitude_fix_callback(cube, None, None)
     regrid_cube = regrid.regrid_to_single_point(
-        cube_fix, 0.5, -1.5, "Nearest", boundary_margin=1
+        cube_fix, 0.5, -1.5, "rotated", "Nearest", boundary_margin=1
     )
     expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3)>"
     assert repr(regrid_cube) == expected_cube
@@ -193,7 +193,7 @@ def test_regrid_to_single_point_longitude_transform_1(cube):
     back into the standard range (-180 deg to 180 deg).
     """
     regrid_cube = regrid.regrid_to_single_point(
-        cube, 0.5, 358.5, "Nearest", boundary_margin=1
+        cube, 0.5, 358.5, "rotated", "Nearest", boundary_margin=1
     )
     expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3)>"
     assert repr(regrid_cube) == expected_cube
@@ -207,10 +207,38 @@ def test_regrid_to_single_point_longitude_transform_2(cube):
     back into the standard range (-180 deg to 180 deg).
     """
     regrid_cube = regrid.regrid_to_single_point(
-        cube, 0.5, -361.5, "Nearest", boundary_margin=1
+        cube, 0.5, -361.5, "rotated", "Nearest", boundary_margin=1
     )
     expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3)>"
     assert repr(regrid_cube) == expected_cube
+
+
+def test_regrid_to_single_point_realworld(cube):
+    """Test extracting a single point.
+
+    Test that, if a real world coordinate is specified, the code is
+    mapping this point correctly onto the rotated grid.
+    """
+    cube_fix = read._longitude_fix_callback(cube, None, None)
+    regrid_cube = regrid.regrid_to_single_point(
+        cube_fix, 52.98, -5.0, "realworld", "Nearest", boundary_margin=1
+    )
+    expected_array = "array(288.59375, dtype=float32)"
+    assert repr(regrid_cube[0].data) == expected_array
+
+
+def test_regrid_to_single_point_rotated(cube):
+    """Test extracting a single point.
+
+    Test that, if a rotated coordinate is specified, the answer
+    matches the corresponding coordinate on the real world grid.
+    """
+    cube_fix = read._longitude_fix_callback(cube, None, None)
+    regrid_cube = regrid.regrid_to_single_point(
+        cube_fix, 0.5, -1.5, "rotated", "Nearest", boundary_margin=1
+    )
+    expected_array = "array(288.59375, dtype=float32)"
+    assert repr(regrid_cube[0].data) == expected_array
 
 
 def test_regrid_to_single_point_missing_coord(cube):
@@ -219,13 +247,15 @@ def test_regrid_to_single_point_missing_coord(cube):
     source = cube.copy()
     source.remove_coord("grid_longitude")
     with pytest.raises(ValueError):
-        regrid.regrid_to_single_point(source, 0.5, 358.5, "Nearest", boundary_margin=1)
+        regrid.regrid_to_single_point(
+            source, 0.5, 358.5, "rotated", "Nearest", boundary_margin=1
+        )
 
     # Missing Y coordinate.
     source = cube.copy()
     source.remove_coord("grid_latitude")
     with pytest.raises(ValueError):
-        regrid.regrid_to_single_point(source, 0.5, 358.5, "Nearest")
+        regrid.regrid_to_single_point(source, 0.5, 358.5, "rotated", "Nearest")
 
 
 def test_longitude_fix_callback_missing_coord(cube):
@@ -248,7 +278,7 @@ def test_regrid_to_single_point_unknown_crs_x(cube):
     # Exchange to unsupported coordinate system.
     cube.coord("grid_longitude").coord_system = iris.coord_systems.OSGB()
     with pytest.raises(NotImplementedError):
-        regrid.regrid_to_single_point(cube, 0.5, 358.5, "Nearest")
+        regrid.regrid_to_single_point(cube, 0.5, 358.5, "rotated", "Nearest")
 
 
 def test_regrid_to_single_point_unknown_crs_y(cube):
@@ -256,26 +286,30 @@ def test_regrid_to_single_point_unknown_crs_y(cube):
     # Exchange to unsupported coordinate system.
     cube.coord("grid_latitude").coord_system = iris.coord_systems.OSGB()
     with pytest.raises(NotImplementedError):
-        regrid.regrid_to_single_point(cube, 0.5, 358.5, "Nearest")
+        regrid.regrid_to_single_point(cube, 0.5, 358.5, "rotated", "Nearest")
 
 
 def test_regrid_to_single_point_outside_domain_longitude(regrid_source_cube):
     """Error if coordinates are outside the model domain."""
     with pytest.raises(ValueError):
-        regrid.regrid_to_single_point(regrid_source_cube, 0.5, 178.5, "Nearest")
+        regrid.regrid_to_single_point(
+            regrid_source_cube, 0.5, 178.5, "rotated", "Nearest"
+        )
 
 
 def test_regrid_to_single_point_outside_domain_latitude(regrid_source_cube):
     """Error if coordinates are outside the model domain."""
     with pytest.raises(ValueError):
-        regrid.regrid_to_single_point(regrid_source_cube, 80.5, 358.5, "Nearest")
+        regrid.regrid_to_single_point(
+            regrid_source_cube, 80.5, 358.5, "rotated", "Nearest"
+        )
 
 
 @pytest.mark.filterwarnings("ignore:Selected point is within")
 def test_regrid_to_single_point_unknown_method(cube):
     """Method does not exist."""
     with pytest.raises(NotImplementedError):
-        regrid.regrid_to_single_point(cube, 0.5, 358.5, method="nonexistent")
+        regrid.regrid_to_single_point(cube, 0.5, 358.5, "rotated", method="nonexistent")
 
 
 @pytest.mark.filterwarnings(
@@ -286,7 +320,9 @@ def test_boundary_warning(regrid_source_cube):
     with pytest.warns(
         BoundaryWarning, match="Selected point is within 8 gridlengths"
     ) as warning:
-        regrid.regrid_to_single_point(regrid_source_cube, -0.9, 393.0, "Nearest")
+        regrid.regrid_to_single_point(
+            regrid_source_cube, -0.9, 393.0, "rotated", "Nearest"
+        )
 
     assert len(warning) == 1
     assert issubclass(warning[-1].category, BoundaryWarning)
