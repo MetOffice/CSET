@@ -187,7 +187,7 @@ def generate_mask(
     >>> land_mask = generate_mask(land_sea_mask,'==',1)
     """
     mask = mask_field.copy()
-    masks.data = np.zeros(masks.data.shape)
+    mask.data = np.zeros(mask.data.shape)
     match condition:
         case "==":
             mask.data[mask_field.data == value] = 1
