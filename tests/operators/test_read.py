@@ -248,8 +248,8 @@ def test_pressurecoordfix_callback():
     cube.coord("pressure").rename("pressure_level")
     read._fix_pressurecoord_name_callback(cube)
     assert (
-        str(cube.coords)
-        == "<bound method Cube.coords of <iris 'Cube' of air_temperature / (K) (time: 2; pressure: 16; latitude: 6; longitude: 6)>>"
+        repr(cube.coords())
+        == "[<DimCoord: time / (hours since 1970-01-01 00:00:00)  [...]  shape(2,)>, <DimCoord: pressure / (hPa)  [ 100., 150., ..., 950., 1000.]  shape(16,)>, <DimCoord: latitude / (degrees)  [-10.98, -10.94, ..., -10.82, -10.78]  shape(6,)>, <DimCoord: longitude / (degrees)  [19.02, 19.06, ..., 19.18, 19.22]  shape(6,)>, <DimCoord: forecast_reference_time / (hours since 1970-01-01 00:00:00)  [...]>, <AuxCoord: forecast_period / (hours)  [15., 18.]  shape(2,)>]"
     )
 
 
@@ -259,8 +259,8 @@ def test_spatialcoordrename_callback():
     cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
     read._fix_spatialcoord_name_callback(cube)
     assert (
-        str(cube.coords)
-        == "<bound method Cube.coords of <iris 'Cube' of air_temperature / (K) (time: 2; pressure: 16; grid_latitude: 6; grid_longitude: 6)>>"
+        repr(cube.coords())
+        == "[<DimCoord: time / (hours since 1970-01-01 00:00:00)  [...]  shape(2,)>, <DimCoord: pressure / (hPa)  [ 100., 150., ..., 950., 1000.]  shape(16,)>, <DimCoord: grid_latitude / (degrees)  [-10.98, -10.94, ..., -10.82, -10.78]  shape(6,)>, <DimCoord: grid_longitude / (degrees)  [19.02, 19.06, ..., 19.18, 19.22]  shape(6,)>, <DimCoord: forecast_reference_time / (hours since 1970-01-01 00:00:00)  [...]>, <AuxCoord: forecast_period / (hours)  [15., 18.]  shape(2,)>]"
     )
 
 
@@ -270,6 +270,6 @@ def test_spatialcoordnotexist_callback():
     cube = cube[:, :, 0, 0]  # Remove spatial dimcoords
     read._fix_spatialcoord_name_callback(cube)
     assert (
-        str(cube.coords)
-        == "<bound method Cube.coords of <iris 'Cube' of air_temperature / (K) (time: 2; pressure: 16)>>"
+        repr(cube.coords())
+        == "[<DimCoord: time / (hours since 1970-01-01 00:00:00)  [...]  shape(2,)>, <DimCoord: pressure / (hPa)  [ 100., 150., ..., 950., 1000.]  shape(16,)>, <DimCoord: forecast_reference_time / (hours since 1970-01-01 00:00:00)  [...]>, <DimCoord: latitude / (degrees)  [-10.98]>, <DimCoord: longitude / (degrees)  [19.02]>, <AuxCoord: forecast_period / (hours)  [15., 18.]  shape(2,)>]"
     )
