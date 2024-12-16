@@ -38,11 +38,8 @@ def apply_mask(
 
     Returns
     -------
-    A masked field.
-
-    Return type
-    -----------
-    iris.cube.Cube
+    masked_field: iris.cube.Cube
+        A cube of the masked field.
 
     Notes
     -----
