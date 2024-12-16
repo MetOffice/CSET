@@ -86,7 +86,6 @@ CSET.operators.mesoscale
 .. automodule:: CSET.operators.mesoscale
    :members:
 
-
 Other
 ~~~~~
 
