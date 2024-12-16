@@ -51,7 +51,7 @@ def get_cube_yxcoordname(cube: iris.cube.Cube) -> tuple[str, str]:
     Y_COORD_NAMES = ["latitude", "grid_latitude", "projection_y_coordinate", "y"]
 
     # Get a list of coordinate names for the cube
-    coord_names = [coord.name() for coord in cube.dim_coords]
+    coord_names = [coord.name() for coord in cube.coords()]
 
     # Check which x-coordinate we have, if any
     x_coords = [coord for coord in coord_names if coord in X_COORD_NAMES]
