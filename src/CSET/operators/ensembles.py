@@ -84,9 +84,17 @@ def DKE(
         dim_index = u.coord_dims(coord.name())[0]
         dim_map[coord.name()] = dim_index
     if "realization" not in dim_map:
-        raise ValueError("Cubes do not have a realization coordinate")
+        raise ValueError("u cube does not have a realization coordinate")
     if not dim_map["realization"] == 0:
-        raise ValueError("Realization is not the first coordinate in the cube")
+        raise ValueError("Realization is not the first coordinate in u cube")
+    dim_map = {}
+    for coord in v.dim_coords:
+        dim_index = v.coord_dims(coord.name())[0]
+        dim_map[coord.name()] = dim_index
+    if "realization" not in dim_map:
+        raise ValueError("v cube does not have a realization coordinate")
+    if not dim_map["realization"] == 0:
+        raise ValueError("Realization is not the first coordinate in v cube")
     if not u.shape == v.shape:
         raise ValueError("Cubes are not the same shape")
     for coord_u, coord_v in zip(u.dim_coords, v.dim_coords, strict=True):

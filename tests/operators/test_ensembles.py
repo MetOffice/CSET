@@ -29,9 +29,21 @@ def xwind() -> iris.cube.Cube:
 
 
 @pytest.fixture()
+def xwind_deterministic() -> iris.cube.Cube:
+    """Get xwind to run tests on."""
+    return iris.load_cube("tests/test_data/ageofair/aoa_in_rgd.nc", "x_wind")
+
+
+@pytest.fixture()
 def ywind() -> iris.cube.Cube:
     """Get ywind to run tests on."""
     return iris.load_cube("tests/test_data/ageofair/aoa_in_ens.nc", "y_wind")
+
+
+@pytest.fixture()
+def ywind_deterministic() -> iris.cube.Cube:
+    """Get xwind to run tests on."""
+    return iris.load_cube("tests/test_data/ageofair/aoa_in_rgd.nc", "y_wind")
 
 
 def test_DKE(xwind, ywind):
@@ -48,3 +60,52 @@ def test_DKE(xwind, ywind):
         rtol=1e-06,
         atol=1e-02,
     )
+
+
+def test_DKE_no_realization_u(xwind_deterministic, ywind):
+    """Test DKE fails with no realization coordinate for u."""
+    with pytest.raises(ValueError):
+        ensembles.DKE(xwind_deterministic, ywind)
+
+
+def test_DKE_no_realization_v(xwind, ywind_deterministic):
+    """Test DKE fails with no realization coordinate for v."""
+    with pytest.raises(ValueError):
+        ensembles.DKE(xwind, ywind_deterministic)
+
+
+def test_DKE_wrong_order_u(xwind, ywind):
+    """Test DKE fails when realization is not the first coordinate in u."""
+    xwind.transpose([1, 0, 2, 3, 4])
+    with pytest.raises(ValueError):
+        ensembles.DKE(xwind, ywind)
+
+
+def test_DKE_wrong_order_v(xwind, ywind):
+    """Test DKE fails when realization is not the first coordinate in v."""
+    ywind.transpose([1, 0, 2, 3, 4])
+    with pytest.raises(ValueError):
+        ensembles.DKE(xwind, ywind)
+
+
+def test_DKE_shape_mismatch(xwind, ywind):
+    """Test DKE fails when there is a shape mismatch between u and v."""
+    xwind = xwind[:, 1:, :]
+    with pytest.raises(ValueError):
+        ensembles.DKE(xwind, ywind)
+
+
+def test_DKE_coordinate_mismatch(xwind, ywind):
+    """Test DKE fails when there is a coordinate mismatch between u and v."""
+    xwind_new = iris.cube.Cube(
+        xwind.data,
+        dim_coords_and_dims=[
+            (xwind.coord("realization"), 0),
+            (xwind.coord("time"), 1),
+            (xwind.coord("pressure")[::-1], 2),
+            (xwind.coord("grid_latitude"), 3),
+            (xwind.coord("grid_longitude"), 4),
+        ],
+    )
+    with pytest.raises(ValueError):
+        ensembles.DKE(xwind_new, ywind)
