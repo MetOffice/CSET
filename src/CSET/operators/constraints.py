@@ -92,6 +92,14 @@ def generate_level_constraint(
     Returns
     -------
     constraint: iris.Constraint
+
+    Notes
+    -----
+    Due to the specification of ``coordinate`` as an argument any iterable
+    coordinate can be stratified with this function. Therefore,
+    ``"realization"`` is a valid option. Subsequently, ``levels`` specifies the
+    ensemble members, or group of ensemble members you wish to constrain your
+    results over.
     """
     # If asterisks, then return all levels for given coordinate.
     if levels == "*":
