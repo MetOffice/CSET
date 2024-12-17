@@ -20,7 +20,6 @@ ensembles. They are not just limited to considering ensemble spread.
 """
 
 import iris
-import numpy as np
 
 
 def DKE(
@@ -76,18 +75,22 @@ def DKE(
     --------
     >>> DKE = ensembles.DKE(u, v)
     """
-    # check dimensionality and coordinates of the cubes are identical
+    # Check dimensionality and coordinates of the cubes are identical.
+    if not u._ndim >= 3:
+        raise ValueError(f"Cube expected to be 3D. Got {u.ndim}.")
     if not u.shape == v.shape:
         raise ValueError("Cubes are not the same shape")
-
     if not u.coord == v.coord:
         raise ValueError("u and v are on different coordinates")
 
-    DKE = np.zeros(u.shape)
+    # Define control member and perturbed members.
     u_ctrl = u[0, :, :, :]
     u_mem = u[1:, :, :, :]
     v_ctrl = v[0, :, :, :]
     v_mem = v[1:, :, :, :]
+
+    # Calculate the DKE
+    DKE = u_mem.copy()
     DKE.data = (
         0.5 * (u_ctrl.data - u_mem.data) ** 2 + 0.5 * (v_ctrl.data - v_mem.data) ** 2
     )
