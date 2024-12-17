@@ -20,27 +20,22 @@ ensembles. They are not just limited to considering ensemble spread.
 """
 
 import iris
+import numpy as np
 
 
 def DKE(
-    u_ctrl: iris.cube.Cube,
-    u_mem: iris.cube.Cube,
-    v_ctrl: iris.cube.Cube,
-    v_mem: iris.cube.Cube,
+    u: iris.cube.Cube,
+    v: iris.cube.Cube,
 ) -> iris.cube.Cube:
     r"""Calculate the Difference Kinetic Energy (DKE).
 
     Parameters
     ----------
-    u_ctrl: iris.cube.Cube
-        Iris cube of the u component of the wind field for the control member.
-    u_mem: iris.cube.Cube
-        Iris cube of the u component of the wind field for the perturbed
-        members.
-    v_ctrl: iris.cube.Cube
-        Iris cube in the same format as u_ctrl.
-    v_mem: iris.cube.Cube
-        Iris cube in the same format as v_mem.
+    u: iris.cube.Cube
+        Iris cube of the u component of the wind field for all members. Must be
+        a minimum of three dimensions: realization, latitude, longitude.
+    v: iris.cube.Cube
+        Iris cube of the v component of the wind field same format as u.
 
     Returns
     -------
@@ -79,9 +74,20 @@ def DKE(
 
     Examples
     --------
-    >>> DKE = ensembles.DKE()
+    >>> DKE = ensembles.DKE(u, v)
     """
-    DKE = u_mem.copy()
+    # check dimensionality and coordinates of the cubes are identical
+    if not u.shape == v.shape:
+        raise ValueError("Cubes are not the same shape")
+
+    if not u.coord == v.coord:
+        raise ValueError("u and v are on different coordinates")
+
+    DKE = np.zeros(u.shape)
+    u_ctrl = u[0, :, :, :]
+    u_mem = u[1:, :, :, :]
+    v_ctrl = v[0, :, :, :]
+    v_mem = v[1:, :, :, :]
     DKE.data = (
         0.5 * (u_ctrl.data - u_mem.data) ** 2 + 0.5 * (v_ctrl.data - v_mem.data) ** 2
     )
