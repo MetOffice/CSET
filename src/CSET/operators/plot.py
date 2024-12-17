@@ -644,6 +644,8 @@ def _plot_and_save_histogram_series(
         xlim=(vmin, vmax),
     )
 
+    ax.grid(linestyle="--", color="black", linewidth=0.5)
+
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
     logging.info("Saved line plot to %s", filename)
