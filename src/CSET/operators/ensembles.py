@@ -20,6 +20,7 @@ ensembles. They are not just limited to considering ensemble spread.
 """
 
 import iris
+import numpy as np
 
 
 def DKE(
@@ -31,8 +32,9 @@ def DKE(
     Parameters
     ----------
     u: iris.cube.Cube
-        Iris cube of the u component of the wind field for all members. Must be
-        a minimum of three dimensions: realization, latitude, longitude.
+        Iris cube of the u component of the wind field for all members. Must
+        include a realization coordinate; realization must be the first
+        coordinate.
     v: iris.cube.Cube
         Iris cube of the v component of the wind field same format as u.
 
@@ -62,7 +64,8 @@ def DKE(
     integrations. However, initially the DKE per unit mass is implemented here.
 
     The DKE is often considered in the form  of power spectra to identify the
-    presence of upscale error growth or the dominant scales of error growth.
+    presence of upscale error growth or the dominant scales of error growth. It
+    is often plotted on on a logarithmic scale.
 
     References
     ----------
@@ -76,21 +79,28 @@ def DKE(
     >>> DKE = ensembles.DKE(u, v)
     """
     # Check dimensionality and coordinates of the cubes are identical.
-    if not u._ndim >= 3:
-        raise ValueError(f"Cube expected to be 3D. Got {u.ndim}.")
+    dim_map = {}
+    for coord in u.dim_coords:
+        dim_index = u.coord_dims(coord.name())[0]
+        dim_map[coord.name()] = dim_index
+    if "realization" not in dim_map:
+        raise ValueError("Cubes do not have a realization coordinate")
+    if not dim_map["realization"] == 0:
+        raise ValueError("Realization is not first coordinate of cube")
     if not u.shape == v.shape:
         raise ValueError("Cubes are not the same shape")
     if not u.coord == v.coord:
         raise ValueError("u and v are on different coordinates")
 
     # Define control member and perturbed members.
-    u_ctrl = u[0, :, :, :]
-    u_mem = u[1:, :, :, :]
-    v_ctrl = v[0, :, :, :]
-    v_mem = v[1:, :, :, :]
+    u_ctrl = u[np.where(u.coord("realization").points[:] == 0)[0][0], :]
+    u_mem = u[np.where(u.coord("realization").points[:] != 0)[0][:], :]
+    v_ctrl = v[np.where(v.coord("realization").points[:] == 0)[0][0], :]
+    v_mem = v[np.where(v.coord("realization").points[:] != 0)[0][:], :]
 
     # Calculate the DKE
     DKE = u_mem.copy()
+    DKE.data[:] = 0.0
     DKE.data = (
         0.5 * (u_ctrl.data - u_mem.data) ** 2 + 0.5 * (v_ctrl.data - v_mem.data) ** 2
     )
