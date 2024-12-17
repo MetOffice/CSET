@@ -1,0 +1,45 @@
+category: Ensembles
+title: Ensemble mean 500 hPa spatial plot of Difference Kinetic Energy
+description: |
+  A spatial plot of the ensemble mean Difference Kinetic Energy (DKE) at 500
+  hPa. Larger DKE implies greater spread between the ensemble members, small
+  DKE shows reduced spread between ensemble members. Maps of the DKE can be
+  useful for identifying dynamical differences between the members and for
+  deciding which processes to identify further.
+
+steps:
+  - operator: read.read_cubes
+
+  - operator: ensembles.DKE
+    u:
+        operator: filter.filter_cubes
+        constraint:
+            operator: constraints.combine_constraints
+            variable_constraint:
+                operator: constraints.generate_var_constraint
+                varname: eastward_wind
+            level_constraint:
+                operator: constraints.generate_levels_constraint
+                coordinate: pressure
+                levels: [500]
+    v:
+        operator: filter.filter_cubes
+        constraint:
+            operator: constraints.combine_constraints
+            variable_constraint:
+                operator: constraints.generate_var_constraint
+                varname: westward_wind
+            level_constraint:
+                operator: constraints.generate_levels_constraint
+                coordinate: 'pressure'
+                levels: [500]
+
+  - operator: collapse.collapse
+    coordinate: [realization]
+    method: MEAN
+
+  - operator: plot.spatial_pcolormesh_plot
+    sequence_coordinate: time
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
