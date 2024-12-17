@@ -86,11 +86,12 @@ def DKE(
     if "realization" not in dim_map:
         raise ValueError("Cubes do not have a realization coordinate")
     if not dim_map["realization"] == 0:
-        raise ValueError("Realization is not first coordinate of cube")
+        raise ValueError("Realization is not the first coordinate in the cube")
     if not u.shape == v.shape:
         raise ValueError("Cubes are not the same shape")
-    if not u.coord == v.coord:
-        raise ValueError("u and v are on different coordinates")
+    for coord_u, coord_v in zip(u.dim_coords, v.dim_coords, strict=True):
+        if not u.coord(coord_u.name()) == v.coord(coord_v.name()):
+            raise ValueError(f"u and v have different coordinates for {coord_u.name()}")
 
     # Define control member and perturbed members.
     u_ctrl = u[np.where(u.coord("realization").points[:] == 0)[0][0], :]
