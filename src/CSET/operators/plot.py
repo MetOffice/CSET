@@ -207,6 +207,48 @@ def _colorbar_map_levels(varname: str, **kwargs):
     return cmap, levels, norm
 
 
+# def _get_hist_properties(varname: str, **kwargs):
+#     """Specify the histogram min/max and also axis.
+
+#     For the given variable name, from a colorbar dictionary file.
+
+#     Parameters
+#     ----------
+#     colorbar_file: str
+#         Filename of the colorbar dictionary to read.
+#     varname: str
+#         Variable name to extract from the dictionary
+
+#     Returns
+#     -------
+#     vmin:
+#         Minimum value to create bins from.
+#     vmax:
+#         Maximum value to create bins from.
+#     xscale:
+#         Type of xscale projection, default None
+#     yscale:
+#         Type of yscale projection, default None
+#     """
+#     colorbar = _load_colorbar_map()
+
+#     # Get something from this json.
+#     try:
+#         vmin, vmax = colorbar[varname]["min"], colorbar[varname]["max"]
+#         logging.debug("Histogram: From colorbar dictionary: Using min and max")
+#     except KeyError:
+#         vmin, vmax = None, None
+
+#     # Get the colorbar levels for this variable.
+#     try:
+#         xscale, yscale = colorbar[varname]["hist_xscale"], colorbar[varname]["hist_yscale"]
+#         logging.debug("Histogram: From colorbar dictionary: Using hist_xscale and hist_yscale")
+#     except KeyError:
+#         xscale, yscale = None, None
+
+#     return vmin, vmax, xscale, yscale
+
+
 def _get_plot_resolution() -> int:
     """Get resolution of rasterised plots in pixels per inch."""
     return get_recipe_metadata().get("plot_resolution", 100)
@@ -629,22 +671,38 @@ def _plot_and_save_histogram_series(
         but can be changed in the rose-suite.conf configuration.
     """
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+    ax = plt.gca()
+
+    # Exception case, where distribution better fits log scales/bins.
+    if cube.long_name in ["surface_microphysical_rainfall_rate"]:
+        cube.convert_units("kg m-2 h-1")  # Usually in seconds but mm/hr more intuitive.
+        bins = 10.0 ** (np.arange(-10, 27, 1) / 10.0)  # Suggestion from RMED toolbox.
+        bins = np.insert(bins, 0, 0)
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        vmin = 0
+        vmax = 400  # Manually set vmin/vmax to override json derived value.
+    else:
+        bins = np.linspace(vmin, vmax, 50)
+
     # Reshape cube data into a single array to allow for a single histogram.
     # Otherwise we plot xdim histograms stacked.
     cube_data_1d = (cube.data).flatten()
-    plt.hist(cube_data_1d, density=True, histtype=histtype, stacked=True)
-    ax = plt.gca()
+    x, y = np.histogram(cube_data_1d, bins=bins, density=True)
+
+    # Y is the bin edges, so plot values on lower edge of the bin.
+    ax.plot(y[:-1], x, color="black", linewidth=2, marker="o", markersize=6)
 
     # Add some labels and tweak the style.
     ax.set(
         title=title,
         xlabel=f"{cube.name()} / {cube.units}",
         ylabel="normalised probability density",
-        ylim=(0, 1),
         xlim=(vmin, vmax),
     )
 
-    ax.grid(linestyle="--", color="black", linewidth=0.5)
+    # Overlay grid-lines onto histogram plot.
+    ax.grid(linestyle="--", color="grey", linewidth=1)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
