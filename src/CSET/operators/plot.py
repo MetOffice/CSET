@@ -23,6 +23,7 @@ import math
 import sys
 from typing import Literal
 
+import cartopy.crs as ccrs
 import iris
 import iris.coords
 import iris.cube
@@ -266,8 +267,20 @@ def _plot_and_save_spatial_plot(
                 np.max(cube.coord(lonaxis).points),
                 np.min(cube.coord(lataxis).points),
                 np.max(cube.coord(lataxis).points),
-            ]
+            ],
+            crs=ccrs.PlateCarree(),
         )
+
+        gl = axes.gridlines(
+            crs=ccrs.PlateCarree(),
+            draw_labels=True,
+            linewidth=0.5,
+            color="gray",
+            alpha=0.5,
+            linestyle="--",
+        )
+        gl.top_labels = False
+        gl.right_labels = False
     except ValueError:
         # Skip if no x and y map coordinates.
         pass
