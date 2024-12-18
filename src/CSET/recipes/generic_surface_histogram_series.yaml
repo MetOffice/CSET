@@ -18,6 +18,9 @@ steps:
         operator: constraints.generate_level_constraint
         coordinate: pressure
         levels: []
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
 
   - operator: write.write_cube_to_nc
     overwrite: True
