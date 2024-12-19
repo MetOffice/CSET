@@ -2011,6 +2011,60 @@ def _validate_cubes_coords(
         )
 
 
+def _calculate_CFAD(
+    cube: iris.cube.Cube, vertical_coordinate: str, bin_edges: list[float]
+) -> iris.cube.Cube:
+    """Calculate a Contour Frequency by Altitude Diagram (CFAD).
+
+    Parameters
+    ----------
+    cube: iris.cube.Cube
+        A cube of the data to be turned into a CFAD. It should be a minimum
+        of two dimensions with one being a user specified vertical coordinate.
+    vertical_coordinate: str
+        The vertical coordinate of the cube for the CFAD to be calculated over.
+    bin_edges: list[float]
+        The bin edges for the histogram. The bins need to be specified to
+        ensure consistency across the CFAD, otherwise it cannot be interpreted.
+    """
+    # Setup empty array for containing the CFAD data.
+    CFAD_values = np.zeros(
+        (len(cube.coord(vertical_coordinate).points), len(bin_edges) - 1)
+    )
+
+    # Set iterator for CFAD values.
+    i = 0
+
+    # Calculate the CFAD as a histogram summing to one for each level.
+    for level_cube in cube.slices_over(vertical_coordinate):
+        # Note setting density to True does not produce the correct
+        # normalization for a CFAD, where each row must sum to one.
+        CFAD_values[i, :] = (
+            np.histogram(level_cube.data.reshape(level_cube.data.size), bins=bin_edges)[
+                0
+            ]
+            / level_cube.data.size
+        )
+        i += 1
+    # calculate central points for bins
+    bins = (np.array(bin_edges[:-1]) + np.array(bin_edges[1:])) / 2.0
+    bin_bounds = np.array((bin_edges[:-1], bin_edges[1:])).T
+    # Now construct the coordinates for the cube.
+    vert_coord = cube.coord(vertical_coordinate)
+    bin_coord = iris.coords.DimCoord(
+        bins, bounds=bin_bounds, standard_name=cube.standard_name, units=cube.units
+    )
+    # Now construct the cube that is to be output.
+    CFAD = iris.cube.Cube(
+        CFAD_values,
+        dim_coords_and_dims=[(vert_coord, 0), (bin_coord, 1)],
+        standard_name=cube.standard_name,
+        units="1",
+    )
+    CFAD.attributes["type"] = "Contour Frequency by Altitude Diagram (CFAD)"
+    return CFAD
+
+
 ####################
 # Public functions #
 ####################
