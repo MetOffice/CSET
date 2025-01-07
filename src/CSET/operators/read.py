@@ -83,6 +83,8 @@ def read_cube(
     if len(cubes) == 1:
         return cubes[0]
     else:
+        # Log cube details so you can see why they are not merging.
+        logging.debug("Non-merging cubes:\n%s", "\n".join(str(cube) for cube in cubes))
         raise ValueError(
             f"Constraint doesn't produce single cube. {constraint}\n{cubes}"
         )
