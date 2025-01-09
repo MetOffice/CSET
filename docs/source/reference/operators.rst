@@ -76,3 +76,21 @@ CSET.operators.convection
 
 .. automodule:: CSET.operators.convection
    :members:
+
+Mesoscale Operators
+~~~~~~~~~~~~~~~~~~~
+
+CSET.operators.mesoscale
+------------------------
+
+.. automodule:: CSET.operators.mesoscale
+   :members:
+
+Other
+~~~~~
+
+CSET.operators.ageofair
+-----------------------
+
+.. automodule:: CSET.operators.ageofair
+   :members:

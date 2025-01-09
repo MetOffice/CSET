@@ -27,11 +27,13 @@ from iris import FUTURE
 import CSET.operators
 from CSET._common import parse_recipe
 from CSET.operators import (
+    ageofair,
     aggregate,
     collapse,
     constraints,
     convection,
     filters,
+    mesoscale,
     misc,
     plot,
     read,
@@ -42,6 +44,7 @@ from CSET.operators import (
 
 # Exported operators & functions to use elsewhere.
 __all__ = [
+    "ageofair",
     "aggregate",
     "collapse",
     "constraints",
@@ -49,6 +52,7 @@ __all__ = [
     "execute_recipe",
     "filters",
     "get_operator",
+    "mesoscale",
     "misc",
     "plot",
     "read",

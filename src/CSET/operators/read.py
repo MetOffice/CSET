@@ -83,6 +83,8 @@ def read_cube(
     if len(cubes) == 1:
         return cubes[0]
     else:
+        # Log cube details so you can see why they are not merging.
+        logging.debug("Non-merging cubes:\n%s", "\n".join(str(cube) for cube in cubes))
         raise ValueError(
             f"Constraint doesn't produce single cube. {constraint}\n{cubes}"
         )
@@ -198,6 +200,8 @@ def _create_callback(is_ensemble: bool) -> callable:
         _lfric_normalise_callback(cube, field, filename)
         _lfric_time_coord_fix_callback(cube, field, filename)
         _longitude_fix_callback(cube, field, filename)
+        _fix_spatialcoord_name_callback(cube)
+        _fix_pressurecoord_name_callback(cube)
 
     return callback
 
@@ -276,7 +280,7 @@ def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
     # Remove unwanted attributes.
     cube.attributes.pop("timeStamp", None)
     cube.attributes.pop("uuid", None)
-    # There might also be a "name" attribute to ditch, which is the filename.
+    cube.attributes.pop("name", None)
 
     # Sort STASH code list.
     stash_list = cube.attributes.get("um_stash_source")
@@ -331,6 +335,52 @@ def _longitude_fix_callback(cube: iris.cube.Cube, field, filename):
         long_points -= 360.0
     long_coord.points = long_points
     return cube
+
+
+def _fix_spatialcoord_name_callback(cube: iris.cube.Cube):
+    """Check latitude and longitude coordinates name.
+
+    This is necessary as some models define their grid as 'grid_latitude' and 'grid_longitude'
+    and this means that recipes will fail - particularly if the user is comparing multiple models
+    where the spatial coordinate names differ.
+    """
+    import CSET.operators._utils as utils
+
+    # Check if cube is spatial.
+    if not utils.is_spatialdim(cube):
+        # Don't modify non-spatial cubes.
+        return cube
+
+    # Get spatial coords.
+    y_name, x_name = utils.get_cube_yxcoordname(cube)
+
+    if y_name in ["latitude"] and cube.coord(y_name).units in [
+        "degrees",
+        "degrees_north",
+        "degrees_south",
+    ]:
+        cube.coord(y_name).rename("grid_latitude")
+    if x_name in ["longitude"] and cube.coord(x_name).units in [
+        "degrees",
+        "degrees_west",
+        "degrees_east",
+    ]:
+        cube.coord(x_name).rename("grid_longitude")
+
+
+def _fix_pressurecoord_name_callback(cube: iris.cube.Cube):
+    """Rename pressure_level coordinate to pressure if it exists.
+
+    This problem was raised because the AIFS model data from ECMWF
+    defines the pressure coordinate with the name 'pressure_level' rather
+    than compliant CF coordinate names
+    """
+    # We only want to modify instances where the coordinate system is actually
+    # latitude/longitude, and not touch the cube if the coordinate system is say
+    # meters.
+    for coord in cube.dim_coords:
+        if coord.name() == "pressure_level":
+            coord.rename("pressure")
 
 
 def _check_input_files(input_path: Path | str, filename_pattern: str) -> Iterable[Path]:

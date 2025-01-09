@@ -18,28 +18,28 @@ from pathlib import Path
 
 import pytest
 
-import CSET.recipes
+from CSET import recipes
 
 
 def test_recipe_files_in_tree():
     """Get recipes in directory containing sub-directories."""
-    files = CSET.recipes._recipe_files_in_tree(input_dir=Path("tests"))
+    files = recipes._recipe_files_in_tree(input_dir=Path("tests"))
     assert Path("tests/test_data/noop_recipe.yaml") in files
 
 
 def test_recipe_files_in_tree_from_package():
     """Get a recipe from inside the CSET package."""
-    files = CSET.recipes._recipe_files_in_tree()
+    files = recipes._recipe_files_in_tree()
     assert any("CAPE_ratio_plot.yaml" == path.name for path in files)
 
 
 def test_unpack(tmp_path: Path):
     """Unpack recipes."""
-    CSET.recipes.unpack_recipe(tmp_path, "CAPE_ratio_plot.yaml")
+    recipes.unpack_recipe(tmp_path, "CAPE_ratio_plot.yaml")
     assert (tmp_path / "CAPE_ratio_plot.yaml").is_file()
     # Unpack everything and check a warning is produced when files collide.
     with pytest.warns():
-        CSET.recipes.unpack_recipe(tmp_path, "CAPE_ratio_plot.yaml")
+        recipes.unpack_recipe(tmp_path, "CAPE_ratio_plot.yaml")
 
 
 def test_unpack_recipes_exception_collision(tmp_path: Path):
@@ -47,7 +47,7 @@ def test_unpack_recipes_exception_collision(tmp_path: Path):
     file_path = tmp_path / "regular_file"
     file_path.touch()
     with pytest.raises(FileExistsError):
-        CSET.recipes.unpack_recipe(file_path, "CAPE_ratio_plot.yaml")
+        recipes.unpack_recipe(file_path, "CAPE_ratio_plot.yaml")
 
 
 def test_unpack_recipes_exception_permission():
@@ -56,32 +56,30 @@ def test_unpack_recipes_exception_permission():
     Will fail if tests are run as root, but no one should do that, right?
     """
     with pytest.raises(OSError):
-        CSET.recipes.unpack_recipe(
-            Path("/usr/bin/cset"), "extract_instant_air_temp.yaml"
-        )
+        recipes.unpack_recipe(Path("/usr/bin/cset"), "extract_instant_air_temp.yaml")
 
 
 def test_get_recipe_file():
     """Get a recipe file from a specific location."""
-    file = CSET.recipes._get_recipe_file("noop_recipe.yaml", Path("tests/test_data"))
+    file = recipes._get_recipe_file("noop_recipe.yaml", Path("tests/test_data"))
     assert file.is_file()
 
 
 def test_get_recipe_file_missing():
     """Exception raised when recipe file not in location."""
     with pytest.raises(FileNotFoundError):
-        CSET.recipes._get_recipe_file("non-existent", Path("tests/test_data"))
+        recipes._get_recipe_file("non-existent", Path("tests/test_data"))
 
 
 def test_get_recipe_file_in_package():
     """Get a recipe file from a the default location inside the package."""
-    file = CSET.recipes._get_recipe_file("CAPE_ratio_plot.yaml")
+    file = recipes._get_recipe_file("CAPE_ratio_plot.yaml")
     assert file.is_file()
 
 
 def test_list_available_recipes(capsys):
     """Display available recipes."""
-    CSET.recipes.list_available_recipes()
+    recipes.list_available_recipes()
     # Read stdout and stderr.
     captured_output = capsys.readouterr()
     # Check start.
@@ -92,7 +90,7 @@ def test_list_available_recipes(capsys):
 
 def test_detail_recipe(capsys):
     """Show detail of a recipe."""
-    CSET.recipes.detail_recipe("CAPE_ratio_plot.yaml")
+    recipes.detail_recipe("CAPE_ratio_plot.yaml")
     # Read stdout and stderr.
     captured_output = capsys.readouterr()
     assert captured_output.out.startswith("\n\tCAPE_ratio_plot.yaml\n")

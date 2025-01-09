@@ -1,0 +1,50 @@
+category: Quick Look
+title: Example adding masks for 'AND' type filters
+description: |
+  Generates and applies two masks, and multiplies them together for more complex stratified analysis.
+  Examples would include masking for temperature > 273 K and orography > 500 m. Multiplication of masks
+   would be akin to finding a probability of two events happening at the same time in the same place.
+
+steps:
+  - operator: read.read_cubes
+
+  - operator: filters.apply_mask
+    original_field:
+        operator: filters.filter_cubes
+        constraint:
+            operator: constraints.combine_constraints
+            variable_constraint:
+                operator: constraints.generate_var_constraint
+                varname: surface_air_temperature
+            cell_method_constraint:
+                operator: constraints.generate_cell_methods_constraint
+                cell_methods: []
+    masks:
+        operator: misc.multiplication
+        multiplicand:
+            operator: filters.generate_mask
+            mask_field:
+                operator: filters.filter_cubes
+                constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: surface_altitude
+            condition: '>'
+            value: 500
+        multiplier:
+            operator: filters.generate_mask
+            mask_field:
+                operator: filters.filter_cubes
+                constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: surface_air_temperature
+            condition: '<='
+            value: 273
+
+  - operator: collapse.collapse
+    coordinate: [grid_latitude, grid_longitude]
+    method: MEAN
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+  - operator: plot.plot_line_series

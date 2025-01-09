@@ -47,12 +47,12 @@ jobs:
             # Developer lock files.
             cp "requirements/environment.yml" "${{ runner.temp }}/${py_ver}_dev_environment.yml"
             echo -e "\n  - python = $py_ver" >> "${{ runner.temp }}/${py_ver}_dev_environment.yml"
-            conda-lock --channel conda-forge --kind explicit --file "${{ runner.temp }}/${py_ver}_dev_environment.yml" --platform linux-64 --filename-template "requirements/locks/py$(echo $py_ver | sed 's/\.//')-lock-linux-64.txt" &
+            conda-lock --channel conda-forge --kind explicit --file "${{ runner.temp }}/${py_ver}_dev_environment.yml" --platform linux-64 --filename-template "requirements/locks/py$(echo $py_ver | sed 's/\.//')-lock-linux-64.txt"
 
             # Workflow lock files.
             cp "cset-workflow/requirements/environment.yml" "${{ runner.temp }}/${py_ver}_workflow_environment.yml"
             echo -e "\n  - python = $py_ver" >> "${{ runner.temp }}/${py_ver}_workflow_environment.yml"
-            conda-lock --channel conda-forge --kind explicit --file "${{ runner.temp }}/${py_ver}_workflow_environment.yml" --platform linux-64 --filename-template "cset-workflow/requirements/locks/py$(echo $py_ver | sed 's/\.//')-lock-linux-64.txt" &
+            conda-lock --channel conda-forge --kind explicit --file "${{ runner.temp }}/${py_ver}_workflow_environment.yml" --platform linux-64 --filename-template "cset-workflow/requirements/locks/py$(echo $py_ver | sed 's/\.//')-lock-linux-64.txt"
           done
           wait
 
@@ -66,28 +66,50 @@ jobs:
           done
 
       - name: Generate GitHub App Token
-        uses: actions/create-github-app-token@5d869da34e18e7287c1daad50e0b8ea0f506ce69
+        uses: actions/create-github-app-token@c1a285145b9d317df6ced56c09f525b5c2b6f755
         id: app-token
         with:
           app-id: ${{ secrets.AUTH_APP_ID }}
           private-key: ${{ secrets.AUTH_APP_PRIVATE_KEY }}
 
       - name: Create pull requests
+        env:
+          source_ref: ${{ github.ref }}
+          source_ref_type: ${{ github.ref_type }}
         run: |
           shopt -s globstar
+
+          # Display any changes in the log.
           git diff --name-status
-          if $(sha256sum --status -c ${{ runner.temp }}/lock_file_hashes); then
+
+          # Exit early if there are no changes.
+          if $(sha256sum --status -c ${{ runner.temp }}/lock_file_hashes)
+          then
             echo "Lock files unchanged. Skipping pull request..."
             exit 0
           fi
-          # Update lock_file_hashes so pushed branch name is unique.
-          sha256sum **/locks/*.txt > ${{ runner.temp }}/lock_file_hashes
+
+          # Commit changed lockfiles.
           git add **/locks/*.txt
           git commit -m "[CI] Update conda lock files"
+
+          # Update lock_file_hashes so pushed branch name is unique.
+          sha256sum **/locks/*.txt > ${{ runner.temp }}/lock_file_hashes
           remote_branch_name="conda-lock-$(sha256sum ${{ runner.temp }}/lock_file_hashes | head -c 8)"
+
+          # If running from a branch target the created PR at that branch.
+          if [[ $source_ref_type = branch ]]
+          then
+            base_branch_name="$source_ref"
+          else
+            base_branch_name="main"
+          fi
+
+          # Push branch to GitHub.
           git push --set-upstream origin "conda-lock-files:${remote_branch_name}"
+
           # Create PR on GitHub using GitHub REST API.
-          request_body='{"title":"[CI] Update conda lock files","body":"Created automatically by GitHub Actions.","base":"main","head":"'"${remote_branch_name}"'"}'
+          request_body='{"title":"[CI] Update conda lock files","body":"Created automatically by GitHub Actions.","base":"'"${base_branch_name}"'","head":"'"${remote_branch_name}"'"}'
           curl -LsS --fail-with-body \
             -X POST \
             -H "Accept: application/vnd.github+json" \

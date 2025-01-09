@@ -1,0 +1,28 @@
+category: Surface Spatial Plot
+title: Mesoscale Uniform Filter Spatial Perturbation Plot
+description: |
+  Creates a spatial map of a perturbation field based on a uniform filter
+  over a specified filter scale in number of grid points.
+
+steps:
+  - operator: read.read_cubes
+
+  - operator: mesoscale.spatial_perturbation_field
+    original_field:
+        operator: filters.filter_cubes
+        constraint:
+            operator: constraints.combine_constraints
+            variable_constraint:
+                operator: constraints.generate_var_constraint
+                varname: surface_air_temperature
+            cell_method_constraint:
+                operator: constraints.generate_cell_methods_constraint
+                cell_methods: []
+    Gaussian_filter: False
+    filter_scale: 40
+
+  - operator: plot.spatial_pcolormesh_plot
+    sequence_coordinate: time
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
