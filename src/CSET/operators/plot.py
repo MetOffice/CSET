@@ -978,7 +978,7 @@ def plot_line_series(
     Raises
     ------
     ValueError
-        If the cube or the cube in the CubeList doesn't have the right dimensions.
+        If the cubes don't have the right dimensions.
     TypeError
         If the cube isn't a single cube.
     """
