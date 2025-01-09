@@ -15,6 +15,7 @@
 """Operators for reading various types of files from disk."""
 
 import ast
+import functools
 import logging
 import warnings
 from collections.abc import Iterable
@@ -247,6 +248,12 @@ def _deterministic_callback(cube, field, filename):
         )
 
 
+@functools.lru_cache(10)
+def _warn_once(msg):
+    """Print a warning message, skipping recent duplicates."""
+    logging.warning(msg)
+
+
 def _um_normalise_callback(cube: iris.cube.Cube, field, filename):
     """Normalise UM STASH variable long names to LFRic variable names.
 
@@ -260,10 +267,10 @@ def _um_normalise_callback(cube: iris.cube.Cube, field, filename):
             (name, grid) = STASH_TO_LFRIC[str(stash)]
             cube.long_name = name
         except KeyError:
-            logging.warning("Unknown STASH code: %s", stash)
-            logging.warning("Please check file stash_to_lfric.py to update.")
             # Don't change cubes with unknown stash codes.
-            pass
+            _warn_once(
+                f"Unknown STASH code: {stash}. Please check file stash_to_lfric.py to update."
+            )
 
 
 def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
