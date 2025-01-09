@@ -110,8 +110,8 @@ def _write_metadata(recipe: dict):
     """Write a meta.json file in the CWD."""
     # TODO: Investigate whether we might be better served by an SQLite database.
     metadata = recipe.copy()
-    # Remove steps, as not needed, and might contain non-serialisable types.
-    metadata.pop("steps", None)
+    # Stringify steps.
+    metadata["steps"] = str(metadata.get("steps"))
     with open("meta.json", "wt", encoding="UTF-8") as fp:
         json.dump(metadata, fp)
     os.sync()

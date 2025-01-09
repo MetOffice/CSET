@@ -116,6 +116,7 @@ def _make_plot_html_page(plots: list):
     meta = get_recipe_metadata()
     title = meta.get("title", "Untitled")
     description = MarkdownIt().render(meta.get("description", "*No description.*"))
+    steps = meta.get("steps", "Steps not found...")
 
     # Prepare template variables.
     variables = {
@@ -124,6 +125,7 @@ def _make_plot_html_page(plots: list):
         "initial_plot": plots[0],
         "plots": plots,
         "title_slug": slugify(title),
+        "steps": steps,
     }
 
     # Render template.

@@ -38,6 +38,11 @@
             object-fit: contain;
         }
 
+        pre {
+            max-width: 100%;
+            overflow-x: auto;
+        }
+
         #sequence_controls {
             display: flex;
             align-items: center;
@@ -66,6 +71,11 @@
             box-shadow: 4px 4px 4px grey;
             outline: darkgrey solid 1px;
             overflow: auto;
+        }
+
+        .full_width_iframe {
+            width: 100%;
+            background-color: white;
         }
     </style>
     <script type="module">
@@ -129,6 +139,18 @@
     <aside id="description-container">
         <h1>{{title}}</h1>
         {{description}}
+        <hr>
+        <h2>Recipe Steps</h2>
+        <details>
+            <summary>Click to expand</summary>
+            <pre><code>{{steps}}</code></pre>
+        </details>
+        <hr>
+        <h2>Logs</h2>
+        <p><code>CSET.log</code> contains:</p>
+        <iframe class="full_width_iframe" src="CSET.log">
+            <p>No <code>CSET.log</code> found.</p>
+        </iframe>
         <hr>
         <p><a href="diagnostic.zip" download="{{title_slug}}.zip">💾 Save Diagnostic</a></p>
     </aside>
