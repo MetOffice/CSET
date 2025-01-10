@@ -142,11 +142,11 @@ URL = https://metoffice.github.io/CSET
         WEB_DIR = {{WEB_DIR}}
 
     {% for model in models %}
-    [[fetch_fcst_m{{model["number"]}}]]
+    [[fetch_fcst_m{{model["id"]}}]]
     # Fetch data from disk or a file based archival system.
     inherit = FETCH_DATA
         [[[environment]]]
-        MODEL_NUMBER = {{model["number"]}}
+        MODEL_IDENTIFIER = {{model["id"]}}
         ROSE_APP_COMMAND_KEY = {{model["data_source"]}}
         DATA_PATH = {{model["data_path"]}}
         DATE_TYPE = {{model["date_type"]}}

@@ -34,17 +34,17 @@
 
 {# Example code to use as basis for multi-model cycling:
 {% for equivalent_field in restructure_field_list(PRESSURE_LEVEL_MODEL_FIELDS) %}
-{% for model_number, field in equivalent_field.items() %}
+{% for model_identifier, field in equivalent_field.items() %}
 [runtime]
-    [[generic_basic_qq_plot_m{{model_number}}_{{sanitise_task_name(field)}}]]
+    [[generic_basic_qq_plot_m{{model_identifier}}_{{sanitise_task_name(field)}}]]
     inherit = PROCESS
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_basic_qq_plot.yaml"
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
-            --MODEL_NAME='{{models[model_number]["name"]}}'
+            --MODEL_NAME='{{models[model_identifier]["name"]}}'
         """
-        MODEL_NUMBER = {{model_number}}
+        MODEL_IDENTIFIERS = {{model_identifier}}
 {% endfor %}
 {% endfor %}
 #}
