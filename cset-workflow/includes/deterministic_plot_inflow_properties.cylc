@@ -1,13 +1,13 @@
 {% if DETERMINISTIC_PLOT_INFLOW_PROPERTIES|default(False) %}
 {% for model in models %}
 [runtime]
-    [[inflow_layer_properties_plot_m{{model["number"]}}]]
+    [[inflow_layer_properties_plot_m{{model["id"]}}]]
     inherit = PROCESS
         [[[environment]]]
         CSET_RECIPE_NAME = "inflow_layer_properties_plot.yaml"
         CSET_ADDOPTS = """
             --MODEL_NAME='{{model["name"]}}'
         """
-        MODEL_NUMBER = {{model["number"]}}
+        MODEL_IDENTIFIERS = {{model["id"]}}
 {% endfor %}
 {% endif %}

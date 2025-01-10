@@ -47,7 +47,7 @@ def test_recipe_id(monkeypatch, tmp_working_dir):
             fp.write("title: Recipe Title\nsteps: [{operator: misc.noop}]")
         return "recipe.yaml"
 
-    monkeypatch.setenv("MODEL_NUMBER", "1")
+    monkeypatch.setenv("MODEL_IDENTIFIERS", "1")
     monkeypatch.setattr(run_cset_recipe, "recipe_file", mock_recipe_file)
     expected = "m1_recipe_title"
     actual = run_cset_recipe.recipe_id()
@@ -62,7 +62,7 @@ def test_recipe_id_invalid_recipe(monkeypatch, tmp_working_dir):
             fp.write("Not a recipe!")
         return "recipe.yaml"
 
-    monkeypatch.setenv("MODEL_NUMBER", "1")
+    monkeypatch.setenv("MODEL_IDENTIFIERS", "1")
     monkeypatch.setattr(run_cset_recipe, "recipe_file", mock_recipe_file)
     with pytest.raises(subprocess.CalledProcessError):
         run_cset_recipe.recipe_id()
@@ -85,7 +85,7 @@ def test_output_directory(monkeypatch):
 def test_data_directories(monkeypatch):
     """Data directory correctly interpreted."""
     monkeypatch.setenv("ROSE_DATAC", "/share/cycle/20000101T0000Z")
-    monkeypatch.setenv("MODEL_NUMBER", "1")
+    monkeypatch.setenv("MODEL_IDENTIFIERS", "1")
     expected = ["/share/cycle/20000101T0000Z/data/1"]
     actual = run_cset_recipe.data_directories()
     assert actual == expected

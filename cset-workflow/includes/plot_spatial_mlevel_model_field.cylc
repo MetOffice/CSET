@@ -1,18 +1,18 @@
 {% if PLOT_SPATIAL_MODEL_LEVEL_MODEL_FIELD|default(False) %}
 {% for equivalent_field in restructure_field_list(MODEL_LEVEL_MODEL_FIELDS) %}
-{% for model_number, field in equivalent_field.items() %}
+{% for model_identifier, field in equivalent_field.items() %}
 {% for mlevel in UM_MODEL_LEVELS %}
 [runtime]
-    [[generic_mlevel_spatial_plot_sequence_m{{model_number}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(mlevel)}}]]
+    [[generic_mlevel_spatial_plot_sequence_m{{model_identifier}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(mlevel)}}]]
     inherit = PROCESS
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_mlevel_spatial_plot_sequence.yaml"
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
             --MLEVEL='{{mlevel}}'
-            --MODEL_NAME='{{models[model_number]["name"]}}'
+            --MODEL_NAME='{{models[model_identifier]["name"]}}'
         """
-        MODEL_NUMBER = {{model_number}}
+        MODEL_IDENTIFIERS = {{model_identifier}}
 {% endfor %}
 {% endfor %}
 {% endfor %}

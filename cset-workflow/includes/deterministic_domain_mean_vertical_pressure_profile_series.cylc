@@ -1,16 +1,16 @@
 {% if DOMAIN_MEAN_VERTICAL_PROFILE_SERIES|default(False) %}
 {% for equivalent_field in restructure_field_list(PRESSURE_LEVEL_MODEL_FIELDS) %}
-{% for model_number, field in equivalent_field.items() %}
+{% for model_identifier, field in equivalent_field.items() %}
 [runtime]
-    [[generic_plevel_domain_mean_vertical_profile_series_m{{model_number}}_{{sanitise_task_name(field)}}]]
+    [[generic_plevel_domain_mean_vertical_profile_series_m{{model_identifier}}_{{sanitise_task_name(field)}}]]
     inherit = PROCESS
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_plevel_domain_mean_vertical_profile_series.yaml"
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
-            --MODEL_NAME='{{models[model_number]["name"]}}'
+            --MODEL_NAME='{{models[model_identifier]["name"]}}'
         """
-        MODEL_NUMBER = {{model_number}}
+        MODEL_IDENTIFIERS = {{model_identifier}}
 {% endfor %}
 {% endfor %}
 {% endif %}

@@ -46,7 +46,7 @@ def get_models(rose_variables: dict):
             if key.startswith(model_prefix)
         }
         if model_vars:
-            model_vars["number"] = model
+            model_vars["id"] = model
             models.append(model_vars)
     return models
 

@@ -52,7 +52,7 @@ def recipe_id():
         )
         raise
     recipe_id = p.stdout.decode(sys.stdout.encoding).strip()
-    model_identifiers = sorted(os.environ["MODEL_NUMBER"].split())
+    model_identifiers = sorted(os.environ["MODEL_IDENTIFIERS"].split())
     return f"m{'_m'.join(model_identifiers)}_{recipe_id}"
 
 
@@ -66,7 +66,7 @@ def output_directory():
 def data_directories() -> list[str]:
     """Get the input data directories for the cycle."""
     rose_datac = os.environ["ROSE_DATAC"]
-    model_identifiers = sorted(os.environ["MODEL_NUMBER"].split())
+    model_identifiers = sorted(os.environ["MODEL_IDENTIFIERS"].split())
     return [f"{rose_datac}/data/{model_id}" for model_id in model_identifiers]
 
 

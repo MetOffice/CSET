@@ -1,19 +1,19 @@
 {% if SURFACE_SINGLE_POINT_TIME_SERIES|default(False) %}
 {% for equivalent_field in restructure_field_list(SURFACE_MODEL_FIELDS) %}
-{% for model_number, field in equivalent_field.items() %}
+{% for model_identifier, field in equivalent_field.items() %}
 [runtime]
-    [[generic_surface_single_point_time_series_m{{model_number}}_{{sanitise_task_name(field)}}]]
+    [[generic_surface_single_point_time_series_m{{model_identifier}}_{{sanitise_task_name(field)}}]]
     inherit = PROCESS
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_surface_single_point_time_series.yaml"
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
-            --MODEL_NAME='{{models[model_number]["name"]}}'
+            --MODEL_NAME='{{models[model_identifier]["name"]}}'
             --LONGITUDE_POINT='{{LONGITUDE_POINT}}'
             --LATITUDE_POINT='{{LATITUDE_POINT}}'
             --SINGLE_POINT_METHOD='{{SINGLE_POINT_METHOD}}'
         """
-        MODEL_NUMBER = {{model_number}}
+        MODEL_IDENTIFIERS = {{model_identifier}}
 {% endfor %}
 {% endfor %}
 {% endif %}
