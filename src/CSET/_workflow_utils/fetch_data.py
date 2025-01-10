@@ -156,7 +156,7 @@ def _get_needed_environment_variables() -> dict:
         "data_time": _fromisoformat(os.environ["CYLC_TASK_CYCLE_POINT"]),
         "forecast_length": isodate.parse_duration(os.environ["CSET_ANALYSIS_PERIOD"]),
         "forecast_offset": isodate.parse_duration(os.environ["CSET_ANALYSIS_OFFSET"]),
-        "model_number": os.environ["MODEL_NUMBER"],
+        "model_identifier": os.environ["MODEL_IDENTIFIER"],
         "rose_datac": os.environ["ROSE_DATAC"],
     }
     try:
@@ -222,7 +222,7 @@ def fetch_data(file_retriever: FileRetrieverABC = FilesystemFileRetriever):
     * DATA_PATH
     * DATA_PERIOD
     * DATE_TYPE
-    * MODEL_NUMBER
+    * MODEL_IDENTIFIER
     * ROSE_DATAC
 
     Parameters
@@ -238,7 +238,7 @@ def fetch_data(file_retriever: FileRetrieverABC = FilesystemFileRetriever):
     v = _get_needed_environment_variables()
 
     # Prepare output directory.
-    cycle_data_dir = f"{v['rose_datac']}/data/{v['model_number']}"
+    cycle_data_dir = f"{v['rose_datac']}/data/{v['model_identifier']}"
     os.makedirs(cycle_data_dir, exist_ok=True)
     logging.debug("Output directory: %s", cycle_data_dir)
 
