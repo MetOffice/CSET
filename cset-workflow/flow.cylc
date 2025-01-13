@@ -5,18 +5,12 @@ description = Workflow for running CSET.
 URL = https://metoffice.github.io/CSET
 
 # Import all of our Jinja utilities for use in the workflow.
-{% from "jinja_utils" import get_models, glob, max, min, zip, restructure_field_list, sanitise_task_name %}
+{% from "jinja_utils" import get_models, glob, max, min, zip, sanitise_task_name %}
 # Load a list a model detail dictionaries.
 {% set models = get_models(ROSE_SUITE_VARIABLES) %}
 
 
 [scheduling]
-    # There is rarely a reason to manually set the runahead limit, as we will
-    # usually be limited by number of concurrent jobs.
-    {% if CSET_RUNAHEAD_LIMIT|default(False) %}
-        runahead limit = P{{CSET_RUNAHEAD_LIMIT}}
-    {% endif %}
-
     # Initial and final cycle points cover the entire period of interest.
     {% if CSET_CYCLING_MODE == "case_study" %}
         initial cycle point = {{ min(CSET_CASE_DATES) }}
@@ -101,9 +95,6 @@ URL = https://metoffice.github.io/CSET
     [[FETCH_DATA]]
     script = rose task-run -v --app-key=fetch_fcst
     execution time limit = PT1H
-        [[[environment]]]
-        CSET_ANALYSIS_OFFSET = {{CSET_ANALYSIS_OFFSET}}
-        CSET_ANALYSIS_PERIOD = {{CSET_ANALYSIS_PERIOD}}
 
     [[METPLUS]]
         [[[environment]]]
@@ -150,9 +141,9 @@ URL = https://metoffice.github.io/CSET
         ROSE_APP_COMMAND_KEY = {{model["data_source"]}}
         DATA_PATH = {{model["data_path"]}}
         DATE_TYPE = {{model["date_type"]}}
-        {% if model["date_type"] != "initiation" %}
-            DATA_PERIOD = {{model["data_period"]}}
-        {% endif %}
+        DATA_PERIOD = {{model["data_period"]}}
+        ANALYSIS_OFFSET = {{model["analysis_offset"]}}
+        ANALYSIS_PERIOD = {{model["analysis_period"]}}
     {% endfor %}
 
     [[housekeeping_raw]]

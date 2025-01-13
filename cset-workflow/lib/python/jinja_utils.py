@@ -14,14 +14,12 @@
 
 """Useful functions for the workflow."""
 
-import itertools
 from builtins import max, min, zip
 from glob import glob
 
 # Reexport functions for use within workflow.
 __all__ = [
     "get_models",
-    "restructure_field_list",
     "sanitise_task_name",
     # Reexported functions.
     "max",
@@ -38,8 +36,8 @@ def get_models(rose_variables: dict):
     configuration.
     """
     models = []
-    for model in range(0, 10):
-        model_prefix = f"m{model + 1:02d}_"
+    for model in range(1, 20):
+        model_prefix = f"m{model}_"
         model_vars = {
             key.removeprefix(model_prefix): value
             for key, value in rose_variables.items()
@@ -49,37 +47,6 @@ def get_models(rose_variables: dict):
             model_vars["id"] = model
             models.append(model_vars)
     return models
-
-
-def _batched(iterable, n):
-    """Implement itertools.batched for Python < 3.12.
-
-    batched('ABCDEFG', 3) → ABC DEF G
-    https://docs.python.org/3/library/itertools.html#itertools.batched
-    """
-    if n < 1:
-        raise ValueError("n must be at least one")
-    iterator = iter(iterable)
-    while batch := tuple(itertools.islice(iterator, n)):
-        yield batch
-
-
-def restructure_field_list(fields: list):
-    """Restructure a 1D list of fields into a 2D list."""
-    # ('m01s03i236', 'temp_at_screen_level', '', '', '', '', '', '', '', '',
-    #  'm01s03i230', 'wind_speed_at_10m', '', '', '', '', '', '', '', '')
-    # -> [{1: "m01s03i236", 2: "temp_at_screen_level"},
-    #     {1: "m01s03i230", 2: "wind_speed_at_10m"}]
-    max_number_of_models = 10
-    assert len(fields) % max_number_of_models == 0
-    # itertools.batched is from python 3.12
-    batched = getattr(itertools, "batched", _batched)
-    all_fields = batched(fields, max_number_of_models)
-    rearranged = [
-        {field[0]: field[1] for field in enumerate(equivalent_model_fields) if field[1]}
-        for equivalent_model_fields in all_fields
-    ]
-    return rearranged
 
 
 def sanitise_task_name(s: str):
