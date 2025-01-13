@@ -21,7 +21,6 @@ import logging
 import re
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Union
 
 import ruamel.yaml
 
@@ -30,7 +29,7 @@ class ArgumentError(ValueError):
     """Provided arguments are not understood."""
 
 
-def parse_recipe(recipe_yaml: Union[Path, str], variables: dict = None) -> dict:
+def parse_recipe(recipe_yaml: Path | str, variables: dict = None) -> dict:
     """Parse a recipe into a python dictionary.
 
     Parameters
@@ -184,7 +183,7 @@ def parse_variable_options(arguments: list[str]) -> dict:
     return recipe_variables
 
 
-def template_variables(recipe: Union[dict, list], variables: dict) -> dict:
+def template_variables(recipe: dict | list, variables: dict) -> dict:
     """Insert variables into recipe.
 
     Parameters

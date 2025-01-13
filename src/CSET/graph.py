@@ -19,7 +19,6 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Union
 from uuid import uuid4
 
 import pygraphviz
@@ -28,7 +27,7 @@ from CSET._common import parse_recipe
 
 
 def save_graph(
-    recipe_file: Union[Path, str],
+    recipe_file: Path | str,
     save_path: Path = None,
     auto_open: bool = False,
     detailed: bool = False,
