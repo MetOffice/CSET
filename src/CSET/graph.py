@@ -75,7 +75,7 @@ def save_graph(
         graph.add_edge(prev_node, node)
 
         if detailed:
-            graph.get_node(node).attr["label"] = f'{step["operator"]}\n' + "".join(
+            graph.get_node(node).attr["label"] = f"{step['operator']}\n" + "".join(
                 f"<{key}: {kwargs[key]}>\n" for key in kwargs
             )
         return node
