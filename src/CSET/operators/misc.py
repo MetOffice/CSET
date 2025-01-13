@@ -16,7 +16,6 @@
 
 import itertools
 from collections.abc import Iterable
-from typing import Union
 
 from iris.cube import Cube, CubeList
 
@@ -42,7 +41,7 @@ def noop(x, **kwargs):
 
 
 def remove_attribute(
-    cubes: Union[Cube, CubeList], attribute: Union[str, Iterable], **kwargs
+    cubes: Cube | CubeList, attribute: str | Iterable, **kwargs
 ) -> CubeList:
     """Remove a cube attribute.
 

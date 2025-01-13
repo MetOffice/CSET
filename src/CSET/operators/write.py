@@ -16,7 +16,6 @@
 
 import secrets
 from pathlib import Path
-from typing import Union
 
 import iris
 import iris.cube
@@ -25,7 +24,7 @@ from CSET._common import get_recipe_metadata, slugify
 
 
 def write_cube_to_nc(
-    cube: Union[iris.cube.Cube, iris.cube.CubeList],
+    cube: iris.cube.Cube | iris.cube.CubeList,
     filename: str = None,
     overwrite: bool = False,
     **kwargs,
