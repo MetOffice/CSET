@@ -85,6 +85,7 @@ def DKE(
     """
     # Check dimensionality and coordinates of the cubes are identical.
     for cube in [u, v]:
+        # Use dim_map to store the dimensions and check the realization coordinate is the first coordinate. 
         dim_map = {}
         for coord in cube.dim_coords:
             dim_index = cube.coord_dims(coord.name())[0]
@@ -94,9 +95,11 @@ def DKE(
         if not dim_map["realization"] == 0:
             raise ValueError("Realization should be the first coordinate in cube.")
 
+    # Check cubes are the same shape.
     if u.shape != v.shape:
         raise ValueError("Cubes should be the same shape.")
 
+    # Check coordinates are identical.
     for coord_u, coord_v in zip(u.dim_coords, v.dim_coords, strict=True):
         if not u.coord(coord_u.name()) == v.coord(coord_v.name()):
             raise ValueError(
