@@ -200,8 +200,8 @@ def _create_callback(is_ensemble: bool) -> callable:
         _lfric_normalise_callback(cube, field, filename)
         _lfric_time_coord_fix_callback(cube, field, filename)
         _longitude_fix_callback(cube, field, filename)
-        _fix_spatialcoord_name_callback(cube)
-        _fix_pressurecoord_name_callback(cube)
+        _fix_spatial_coord_name_callback(cube)
+        _fix_pressure_coord_name_callback(cube)
 
     return callback
 
@@ -337,7 +337,7 @@ def _longitude_fix_callback(cube: iris.cube.Cube, field, filename):
     return cube
 
 
-def _fix_spatialcoord_name_callback(cube: iris.cube.Cube):
+def _fix_spatial_coord_name_callback(cube: iris.cube.Cube):
     """Check latitude and longitude coordinates name.
 
     This is necessary as some models define their grid as 'grid_latitude' and 'grid_longitude'
@@ -368,7 +368,7 @@ def _fix_spatialcoord_name_callback(cube: iris.cube.Cube):
         cube.coord(x_name).rename("grid_longitude")
 
 
-def _fix_pressurecoord_name_callback(cube: iris.cube.Cube):
+def _fix_pressure_coord_name_callback(cube: iris.cube.Cube):
     """Rename pressure_level coordinate to pressure if it exists.
 
     This problem was raised because the AIFS model data from ECMWF
