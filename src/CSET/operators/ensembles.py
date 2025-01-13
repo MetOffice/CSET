@@ -83,9 +83,9 @@ def DKE(
     --------
     >>> DKE = ensembles.DKE(u, v)
     """
-    # Check dimensionality and coordinates of the cubes are identical.
     for cube in [u, v]:
-        # Use dim_map to store the dimensions and check the realization coordinate is the first coordinate. 
+        # Use dim_map to store the dimensions and check the realization
+        # coordinate is the first coordinate.
         dim_map = {}
         for coord in cube.dim_coords:
             dim_index = cube.coord_dims(coord.name())[0]
