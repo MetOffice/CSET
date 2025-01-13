@@ -1,8 +1,8 @@
 {% if EXTRACT_MLEVEL_TRANSECT|default(False) %}
-{% for equivalent_field in restructure_field_list(MODEL_LEVEL_MODEL_FIELDS) %}
-{% for model_identifier, field in equivalent_field.items() %}
+{% for field in MODEL_LEVEL_MODEL_FIELDS %}
+{% for model in models %}
 [runtime]
-    [[mlevel_transect_m{{model_identifier}}_{{sanitise_task_name(field)}}]]
+    [[mlevel_transect_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
     inherit = PROCESS
     # Transect calculation can take a while, so increase the time limit.
     execution time limit = PT60M
@@ -11,11 +11,11 @@
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
             --VERTICAL_COORDINATE='model_level_number'
-            --MODEL_NAME='{{models[model_identifier]["name"]}}'
+            --MODEL_NAME='{{model["name"]}}'
             --START_COORDS='{{MLEVEL_TRANSECT_STARTCOORDS}}'
             --FINISH_COORDS='{{MLEVEL_TRANSECT_FINISHCOORDS}}'
         """
-        MODEL_IDENTIFIERS = {{model_identifier}}
+        MODEL_IDENTIFIERS = {{model["id"]}}
 {% endfor %}
 {% endfor %}
 {% endif %}
