@@ -20,6 +20,7 @@ ensembles. They are not just limited to considering ensemble spread.
 """
 
 import iris
+import iris.cube
 import numpy as np
 
 
@@ -47,25 +48,29 @@ def DKE(
     -----
     The Difference Kinetic Energy, or DKE was first used in an ensemble sense
     by [Zhangetal2002]_. It is calculated as
+
     .. math:: \frac{1}{2}u'u' + \frac{1}{2}v'v'
+
     where
+
     .. math:: x' = x_{control} - x_{perturbed}
+
     for each member of the ensemble.
 
-    The DKE is used to show links between the peturbation growth (growth of
-    enesemble spread) or errors with dynamical features. It can be particularly
+    The DKE is used to show links between the perturbation growth (growth of
+    ensemble spread) or errors with dynamical features. It can be particularly
     useful in understanding differences in physical mechanisms between ensemble
     members. The larger the DKE the greater the difference between the two
     members being considered.
 
     The DKE can be viewed as a domain average, horizontal integration (to
-    produce profiles), or vertical integration (to provide spatial maps).
-    Furthermore, weigthings based on volume or mass can be applied to these
+    produce profiles), or vertical integration/subsampling (to provide spatial maps).
+    Furthermore, weightings based on volume or mass can be applied to these
     integrations. However, initially the DKE per unit mass is implemented here.
 
-    The DKE is often considered in the form  of power spectra to identify the
+    The DKE is often considered in the form of power spectra to identify the
     presence of upscale error growth or the dominant scales of error growth. It
-    is often plotted on on a logarithmic scale.
+    is often plotted on a logarithmic scale.
 
     References
     ----------
@@ -79,28 +84,24 @@ def DKE(
     >>> DKE = ensembles.DKE(u, v)
     """
     # Check dimensionality and coordinates of the cubes are identical.
-    dim_map = {}
-    for coord in u.dim_coords:
-        dim_index = u.coord_dims(coord.name())[0]
-        dim_map[coord.name()] = dim_index
-    if "realization" not in dim_map:
-        raise ValueError("u cube does not have a realization coordinate")
-    if not dim_map["realization"] == 0:
-        raise ValueError("Realization is not the first coordinate in u cube")
-    dim_map = {}
-    for coord in v.dim_coords:
-        dim_index = v.coord_dims(coord.name())[0]
-        dim_map[coord.name()] = dim_index
-    if "realization" not in dim_map:
-        raise ValueError("v cube does not have a realization coordinate")
-    if not dim_map["realization"] == 0:
-        raise ValueError("Realization is not the first coordinate in v cube")
-    if not u.shape == v.shape:
-        raise ValueError("Cubes are not the same shape")
+    for cube in [u, v]:
+        dim_map = {}
+        for coord in cube.dim_coords:
+            dim_index = cube.coord_dims(coord.name())[0]
+            dim_map[coord.name()] = dim_index
+        if "realization" not in dim_map:
+            raise ValueError("Cube should have a realization coordinate.")
+        if not dim_map["realization"] == 0:
+            raise ValueError("Realization should be the first coordinate in cube.")
+
+    if u.shape != v.shape:
+        raise ValueError("Cubes should be the same shape.")
+
     for coord_u, coord_v in zip(u.dim_coords, v.dim_coords, strict=True):
         if not u.coord(coord_u.name()) == v.coord(coord_v.name()):
-            raise ValueError(f"u and v have different coordinates for {coord_u.name()}")
-
+            raise ValueError(
+                f"u and v should have matching coordinates for {coord_u.name()}."
+            )
     # Define control member and perturbed members.
     u_ctrl = u[np.where(u.coord("realization").points[:] == 0)[0][0], :]
     u_mem = u[np.where(u.coord("realization").points[:] != 0)[0][:], :]
