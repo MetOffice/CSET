@@ -91,9 +91,9 @@ def test_get_needed_environment_variables_data_period_handling(monkeypatch):
     # Check DATA_PERIOD is not there for initiation.
     monkeypatch.setenv("DATE_TYPE", "initiation")
     initiation_actual = fetch_data._get_needed_environment_variables()
-    assert (
-        initiation_actual["data_period"] is None
-    ), "data_period should not be set for initiation time"
+    assert initiation_actual["data_period"] is None, (
+        "data_period should not be set for initiation time"
+    )
 
     # Check exception when data period is not specified for validity time.
     monkeypatch.setenv("DATE_TYPE", "validity")

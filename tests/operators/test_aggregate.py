@@ -31,6 +31,6 @@ def test_aggregate(cube):
     )
 
     # Check if number of coords on aggregated cube is same as original cube.
-    assert len(aggregated_cube.coords()) == len(
-        cube.coords()
-    ), "aggregated cube does not have additional aux coordinate"
+    assert len(aggregated_cube.coords()) == len(cube.coords()), (
+        "aggregated cube does not have additional aux coordinate"
+    )
