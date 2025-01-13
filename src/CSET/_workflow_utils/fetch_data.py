@@ -172,7 +172,7 @@ def _get_needed_environment_variables() -> dict:
 
 def _template_file_path(
     raw_path: str,
-    date_type: Literal["validity", "initiation", "lead"],
+    date_type: Literal["validity", "initiation"],
     data_time: datetime,
     forecast_length: timedelta,
     forecast_offset: timedelta,
@@ -189,8 +189,6 @@ def _template_file_path(
                 date += data_period
         case "initiation":
             placeholder_times.append(data_time)
-        case "lead":
-            placeholder_times.append(data_time)
             lead_time = forecast_offset
             while lead_time < forecast_length:
                 lead_times.append(lead_time)
@@ -198,7 +196,7 @@ def _template_file_path(
         case _:
             raise ValueError(f"Invalid date type: {date_type}")
 
-    paths: list[str] = []
+    paths: set[str] = set()
     for placeholder_time in placeholder_times:
         # Expand out all other format strings.
         path = placeholder_time.strftime(os.path.expandvars(raw_path))
@@ -206,12 +204,12 @@ def _template_file_path(
             # Expand out lead time format strings, %N.
             for lead_time in lead_times:
                 # BUG: Will not respect escaped % signs, e.g: %%N.
-                paths.append(
+                paths.add(
                     path.replace("%N", f"{int(lead_time.total_seconds()) // 3600:03d}")
                 )
         else:
-            paths.append(path)
-    return paths
+            paths.add(path)
+    return sorted(paths)
 
 
 def fetch_data(file_retriever: FileRetrieverABC = FilesystemFileRetriever):

@@ -171,7 +171,7 @@ def test_template_file_path_initiation_time():
         datetime.datetime(2000, 1, 1, tzinfo=datetime.timezone.utc),
         datetime.timedelta(days=5),
         datetime.timedelta(),
-        None,
+        datetime.timedelta(days=1),
     )
     expected = ["/path/2000-01-01.nc"]
     assert actual == expected
@@ -181,7 +181,7 @@ def test_template_file_path_lead_time():
     """Test filling path placeholders for lead time."""
     actual = fetch_data._template_file_path(
         "/path/%N.nc",
-        "lead",
+        "initiation",
         datetime.datetime(2000, 1, 1, tzinfo=datetime.timezone.utc),
         datetime.timedelta(hours=5, seconds=1),
         datetime.timedelta(hours=1),
