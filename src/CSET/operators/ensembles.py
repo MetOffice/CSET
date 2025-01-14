@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2025) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,10 +24,7 @@ import iris.cube
 import numpy as np
 
 
-def DKE(
-    u: iris.cube.Cube,
-    v: iris.cube.Cube,
-) -> iris.cube.Cube:
+def DKE(u: iris.cube.Cube, v: iris.cube.Cube) -> iris.cube.Cube:
     r"""Calculate the Difference Kinetic Energy (DKE).
 
     Parameters
