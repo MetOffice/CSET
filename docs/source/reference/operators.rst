@@ -77,6 +77,15 @@ CSET.operators.convection
 .. automodule:: CSET.operators.convection
    :members:
 
+Ensemble Operators
+~~~~~~~~~~~~~~~~~~
+
+CSET.operators.ensembles
+------------------------
+
+.. automodule:: CSET.operators.ensembles
+   :members:
+
 Mesoscale Operators
 ~~~~~~~~~~~~~~~~~~~
 
