@@ -411,29 +411,37 @@ def _plot_and_save_postage_stamp_spatial_plot(
 
 
 def _plot_and_save_line_series(
-    cube: iris.cube.Cube, coord: iris.coords.Coord, filename: str, title: str, **kwargs
+    cube: iris.cube.Cube | iris.cube.CubeList,
+    coord: iris.coords.Coord,
+    filename: str,
+    title: str,
+    **kwargs,
 ):
     """Plot and save a 1D line series.
 
     Parameters
     ----------
-    cube: Cube
-        1 dimensional Cube of the data to plot on y-axis.
+    cube: Cube or CubeList
+        Cube or CubeList containing the cubes to plot on the y-axis.
     coord: Coord
-        Coordinate to plot on x-axis.
+        Coordinate to plot on the x-axis.
     filename: str
         Filename of the plot to write.
     title: str
         Plot title.
     """
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
-    iplt.plot(coord, cube, "o-")
+
+    # Get the current axes
     ax = plt.gca()
+    for cube_iter in cube:
+        iplt.plot(coord, cube_iter, "o-", ax=ax)
 
     # Add some labels and tweak the style.
+    # check if cube[0] works for single cube if not cubeList
     ax.set(
         xlabel=f"{coord.name()} / {coord.units}",
-        ylabel=f"{cube.name()} / {cube.units}",
+        ylabel=f"{cube[0].name()} / {cube[0].units}",
         title=title,
     )
     ax.ticklabel_format(axis="y", useOffset=False)
@@ -948,7 +956,7 @@ def spatial_pcolormesh_plot(
 #     Coordinate about which to plot multiple lines. Defaults to
 #     ``"realization"``.
 def plot_line_series(
-    toplot: iris.cube.Cube | iris.cube.CubeList,
+    cube: iris.cube.Cube | iris.cube.CubeList,
     filename: str = None,
     series_coordinate: str = "time",
     # line_coordinate: str = "realization",
@@ -960,7 +968,7 @@ def plot_line_series(
 
     Parameters
     ----------
-    toplot: iris.cube | iris.cube.CubeList
+    iris.cube | iris.cube.CubeList
         Cube or CubeList of the data to plot. The individual cubes should have a single dimension.
     filename: str, optional
         Name of the plot to write, used as a prefix for plot sequences. Defaults
@@ -982,45 +990,43 @@ def plot_line_series(
     TypeError
         If the cube isn't a single cube.
     """
-    # To store plotted CubeList.
-    plotted_cubes = iris.cube.CubeList()
+    # Ensure we have a name for the plot file.
+    title = get_recipe_metadata().get("title", "Untitled")
+    if filename is None:
+        filename = slugify(title)
+
+    # Add file extension.
+    plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
+
+    # Initialise list to store cubes to plot.
+    cubes_to_plot = []
 
     # Iterate over all cubes in CubeList and plot.
-    for cube in iter_maybe(toplot):
+    for cube_iter in iter_maybe(cube):
         # Check cube is right shape.
-        cube = _check_single_cube(cube)
+        cube_iter = _check_single_cube(cube_iter)
         try:
-            coord = cube.coord(series_coordinate)
+            coord = cube_iter.coord(series_coordinate)
         except iris.exceptions.CoordinateNotFoundError as err:
             raise ValueError(
                 f"Cube must have a {series_coordinate} coordinate."
             ) from err
-        if cube.ndim > 1:
+        if cube_iter.ndim > 1:
             raise ValueError("Cube must be 1D.")
 
-        # Ensure we have a name for the plot file.
-        title = get_recipe_metadata().get("title", "Untitled")
-        if filename is None:
-            filename = slugify(title)
+        # Add cube to list for plotting.
+        cubes_to_plot.append(cube)
 
-        # Add file extension.
-        plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
+    # Do the actual plotting.
+    _plot_and_save_line_series(cubes_to_plot, coord, plot_filename, title)
 
-        # Do the actual plotting.
-        _plot_and_save_line_series(cube, coord, plot_filename, title)
+    # Add list of plots to plot metadata.
+    plot_index = _append_to_plot_index([plot_filename])
 
-        # Add list of plots to plot metadata.
-        plot_index = _append_to_plot_index([plot_filename])
+    # Make a page to display the plots.
+    _make_plot_html_page(plot_index)
 
-        # Make a page to display the plots.
-        _make_plot_html_page(plot_index)
-        plotted_cubes.append(cube)
-
-    # Preserve returning a cube if only a cube has been supplied to regrid.
-    if len(plotted_cubes) == 1:
-        return plotted_cubes[0]
-    else:
-        return plotted_cubes
+    return cube
 
 
 def plot_vertical_line_series(
