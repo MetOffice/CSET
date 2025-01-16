@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2025) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ import warnings
 
 import iris
 import iris.analysis
+import iris.coord_categorisation
 import iris.cube
 
 
@@ -72,6 +73,53 @@ def collapse(
             )
         else:
             collapsed_cube = cube.collapsed(coordinate, getattr(iris.analysis, method))
+    return collapsed_cube
+
+
+def collapse_by_hour_of_day(
+    cube: iris.cube.Cube,
+    method: str,
+    **kwargs,
+) -> iris.cube.Cube:
+    """Collapse a cube by hour of the day.
+
+    Arguments
+    ---------
+    cube: iris.cube.Cube
+        Cube to collapse and iterate over one dimension.
+    method: str
+        Type of collapsed i.e. method: 'MEAN', 'MAX', 'MIN', 'MEDIAN', getattr
+        creates iris.analysis.MEAN.
+
+    Returns
+    -------
+    cube: iris.cube.Cube
+        Single variable but several methods of aggregation.
+
+    Raises
+    ------
+    iris.exceptions.CoordinateMultiDimError
+        If the coordinate being aggregated over exists for multiple dimensions.
+
+    Notes
+    -----
+    Collapsing of the cube is around the 'time' coordinate. The coordinates are
+    first grouped by the hour of day, and then aggregated by the hour of day
+    to create a diurnal cycle. This operator is applicable for both single
+    forecasts and for multiple forecasts.
+
+    To apply this operator successfully there must only be one time coordinate.
+    Should an exception be raised the user first needs to apply the collapse
+    operator to reduce the time dimensions before applying this operator.
+    """
+    # Categorise the time coordinate by hour of the day.
+    iris.coord_categorisation.add_hour(cube, "time", name="hour")
+    # Aggregated by the new category coordinate.
+    collapsed_cube = cube.aggregated_by("hour", getattr(iris.analysis, method))
+    # Remove unnecessary coordinates.
+    collapsed_cube.remove_coord("time")
+    collapsed_cube.remove_coord("forecast_reference_time")
+    collapsed_cube.remove_coord("forecast_period")
     return collapsed_cube
 
 
