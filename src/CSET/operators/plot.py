@@ -432,10 +432,11 @@ def _plot_and_save_line_series(
     """
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
+    for cube_iter in cube:
+        iplt.plot(coord, cube_iter, "o-")
+
     # Get the current axes
     ax = plt.gca()
-    for cube_iter in cube:
-        iplt.plot(coord, cube_iter, "o-", ax=ax)
 
     # Add some labels and tweak the style.
     # check if cube[0] works for single cube if not cubeList
@@ -1015,7 +1016,7 @@ def plot_line_series(
             raise ValueError("Cube must be 1D.")
 
         # Add cube to list for plotting.
-        cubes_to_plot.append(cube)
+        cubes_to_plot.append(cube_iter)
 
     # Do the actual plotting.
     _plot_and_save_line_series(cubes_to_plot, coord, plot_filename, title)
