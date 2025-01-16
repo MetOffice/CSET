@@ -204,6 +204,11 @@
     "max": 0.002,
     "min": 0
   },
+  "relative_humidity": {
+    "cmap": "Blues",
+    "max": 110,
+    "min": 0
+  },
   "relative_humidity_at_screen_level": {
     "cmap": "Blues",
     "max": 110,
