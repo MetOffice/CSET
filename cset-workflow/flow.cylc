@@ -40,14 +40,14 @@ URL = https://metoffice.github.io/CSET
         {% for date in CSET_CASE_DATES %}
             R1/{{date}} = """
             setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
-            fetch_complete => PROCESS:finish-all => housekeeping_raw
+            fetch_complete => PROCESS:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} => housekeeping_raw
             """
         {% endfor %}
     {% elif CSET_CYCLING_MODE == "trial" %}
         # Analyse from each forecast.
         {{CSET_TRIAL_CYCLE_PERIOD}} = """
         setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
-        fetch_complete => PROCESS:finish-all => housekeeping_raw
+        fetch_complete => PROCESS:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} => housekeeping_raw
         """
     {% endif %}
 
