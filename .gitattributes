@@ -1,0 +1,7 @@
+# .gitattributes
+
+# Sets attributes on paths that are used by git-adjacent tooling.
+# File pattern                    Attributes
+
+# https://docs.github.com/en/repositories/working-with-files/managing-files/customizing-how-changed-files-appear-on-github
+cset-workflow/meta/rose-meta.conf linguist-generated=true
