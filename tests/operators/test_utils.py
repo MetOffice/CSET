@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2025) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,9 +17,34 @@
 import iris
 import iris.coords
 import iris.cube
+import numpy as np
 import pytest
 
 import CSET.operators._utils as operator_utils
+
+
+@pytest.fixture()
+def long_forecast() -> iris.cube.Cube:
+    """Get long_forecast to run tests on."""
+    return iris.load_cube(
+        "tests/test_data/long_forecast_air_temp_fcst_1.nc", "air_temperature"
+    )
+
+
+@pytest.fixture()
+def long_forecast_multi_day() -> iris.cube.Cube:
+    """Get long_forecast_multi_day to run tests on."""
+    return iris.load_cube(
+        "tests/test_data/long_forecast_air_temp_multi_day.nc", "air_temperature"
+    )
+
+
+@pytest.fixture()
+def long_forecast_many_cubes() -> iris.cube.Cube:
+    """Get long_forecast_may_cubes to run tests on."""
+    return iris.load(
+        "tests/test_data/long_forecast_air_temp_fcst_*.nc", "air_temperature"
+    )
 
 
 def test_missing_coord_get_cube_yxcoordname_x(regrid_rectilinear_cube):
@@ -137,3 +162,44 @@ def test_fully_equalise_attributes_equalise_coords():
     fixed_cubes = operator_utils.fully_equalise_attributes([c1, c2])
     for cube in fixed_cubes:
         assert "shared_attribute" not in cube.coord("foo").attributes
+
+
+def test_ensure_aggregatable_across_cases_true_aggregateable_cube(
+    long_forecast_multi_day,
+):
+    """Check that an aggregatable cube is returned with no changes."""
+    assert np.allclose(
+        operator_utils.ensure_aggregatable_across_cases(long_forecast_multi_day).data,
+        long_forecast_multi_day.data,
+        rtol=1e-06,
+        atol=1e-02,
+    )
+
+
+def test_ensure_aggregatable_across_cases_false_aggregateable_cube(long_forecast):
+    """Check that a non-aggregatable cube raises an error."""
+    with pytest.raises(ValueError):
+        operator_utils.ensure_aggregatable_across_cases(long_forecast)
+
+
+def test_ensure_aggregatable_across_cases_cubelist(
+    long_forecast_many_cubes, long_forecast_multi_day
+):
+    """Check that a CubeList turns into an aggregatable Cube."""
+    # Check output is a Cube.
+    output_data = operator_utils.ensure_aggregatable_across_cases(
+        long_forecast_many_cubes
+    )
+    assert isinstance(output_data, iris.cube.Cube)
+    # Check output can be aggregated in time.
+    assert isinstance(
+        operator_utils.ensure_aggregatable_across_cases(output_data), iris.cube.Cube
+    )
+    # Check output is identical to a pre-calculated cube.
+    pre_calculated_data = long_forecast_multi_day
+    assert np.allclose(
+        pre_calculated_data.data,
+        output_data.data,
+        rtol=1e-06,
+        atol=1e-02,
+    )
