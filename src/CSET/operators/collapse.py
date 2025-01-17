@@ -21,6 +21,8 @@ import iris.analysis
 import iris.coord_categorisation
 import iris.cube
 
+from CSET.operators._utils import ensure_aggregatable_across_cases
+
 
 def collapse(
     cube: iris.cube.Cube,
@@ -73,6 +75,54 @@ def collapse(
             )
         else:
             collapsed_cube = cube.collapsed(coordinate, getattr(iris.analysis, method))
+    return collapsed_cube
+
+
+def collapse_by_lead_time(
+    cube: iris.cube.Cube | iris.cube.CubeList,
+    method: str,
+    additional_percent: float = None,
+    **kwargs,
+) -> iris.cube.Cube:
+    """Collapse a cube around lead time for multiple cases.
+
+    First checks if the data can be aggregated by lead time easily. Then
+    collapses by lead time for a specified method using the collapse function.
+
+    Arguments
+    ---------
+    cube: iris.cube.Cube | iris.cube.CubeList
+        Cube to collapse by lead time or CubeList that will be converted
+        to a cube before collapsing by lead time.
+    method: str
+         Type of collapse i.e. method: 'MEAN', 'MAX', 'MIN', 'MEDIAN',
+         'PERCENTILE' getattr creates iris.analysis.MEAN, etc For PERCENTILE
+         YAML file requires i.e. method: 'PERCENTILE' additional_percent: 90
+
+    Returns
+    -------
+    cube: iris.cube.Cube
+        Single variable collapsed by lead time based on chosen method.
+
+    Raises
+    ------
+    ValueError
+        If additional_percent wasn't supplied while using PERCENTILE method.
+    """
+    if method == "PERCENTILE" and additional_percent is None:
+        raise ValueError("Must specify additional_percent")
+    # Ensure the cube can be aggregated over mutlipe cases.
+    cube_to_collapse = ensure_aggregatable_across_cases(cube)
+    # Collapse by lead time.
+    if method == "PERCENTILE":
+        collapsed_cube = collapse(
+            cube_to_collapse,
+            "forecast_period",
+            method,
+            additional_percent=additional_percent,
+        )
+    else:
+        collapsed_cube = collapse(cube_to_collapse, "forecast_period", method)
     return collapsed_cube
 
 
