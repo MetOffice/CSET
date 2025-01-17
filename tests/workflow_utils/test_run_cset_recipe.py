@@ -82,12 +82,12 @@ def test_output_directory(monkeypatch):
     assert actual == expected
 
 
-def test_data_directory(monkeypatch):
+def test_data_directories(monkeypatch):
     """Data directory correctly interpreted."""
     monkeypatch.setenv("ROSE_DATAC", "/share/cycle/20000101T0000Z")
     monkeypatch.setenv("MODEL_NUMBER", "1")
-    expected = "/share/cycle/20000101T0000Z/data/1"
-    actual = run_cset_recipe.data_directory()
+    expected = ["/share/cycle/20000101T0000Z/data/1"]
+    actual = run_cset_recipe.data_directories()
     assert actual == expected
 
 
@@ -123,13 +123,16 @@ def test_run_recipe_steps(monkeypatch, tmp_working_dir):
     """Test run recipe steps correctly runs CSET and creates an archive."""
 
     def mock_func(*args, **kwargs):
-        pass
+        return ""
+
+    def mock_data_dirs(*args, **kwargs):
+        return [""]
 
     monkeypatch.setattr(subprocess, "run", mock_func)
     monkeypatch.setattr(run_cset_recipe, "create_diagnostic_archive", mock_func)
     monkeypatch.setattr(run_cset_recipe, "recipe_file", mock_func)
     monkeypatch.setattr(run_cset_recipe, "output_directory", mock_func)
-    monkeypatch.setattr(run_cset_recipe, "data_directory", mock_func)
+    monkeypatch.setattr(run_cset_recipe, "data_directories", mock_data_dirs)
     run_cset_recipe.run_recipe_steps()
 
 
@@ -140,12 +143,15 @@ def test_run_recipe_steps_exception(monkeypatch, tmp_working_dir):
         raise subprocess.CalledProcessError(1, args, b"", b"")
 
     def mock_func(*args, **kwargs):
-        pass
+        return ""
+
+    def mock_data_dirs(*args, **kwargs):
+        return [""]
 
     monkeypatch.setattr(subprocess, "run", mock_subprocess_run)
     monkeypatch.setattr(run_cset_recipe, "create_diagnostic_archive", mock_func)
     monkeypatch.setattr(run_cset_recipe, "recipe_file", mock_func)
     monkeypatch.setattr(run_cset_recipe, "output_directory", mock_func)
-    monkeypatch.setattr(run_cset_recipe, "data_directory", mock_func)
+    monkeypatch.setattr(run_cset_recipe, "data_directories", mock_data_dirs)
     with pytest.raises(subprocess.CalledProcessError):
         run_cset_recipe.run_recipe_steps()
