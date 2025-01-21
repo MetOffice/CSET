@@ -206,9 +206,20 @@ def setup_logging(verbosity: int):
     logger = logging.getLogger()
     # Record everything at least INFO for the log file.
     logger.setLevel(min(loglevel, logging.INFO))
+    # Hide matplotlib's many font messages.
+    logger.addFilter(
+        lambda record: not (
+            isinstance(record, str) and record.msg.startswith("findfont:")
+        )
+    )
     stderr_log = logging.StreamHandler()
     # Filter stderr log to just what is requested.
     stderr_log.addFilter(lambda record: record.levelno >= loglevel)
+    stderr_log.addFilter(
+        lambda record: not (
+            isinstance(record, str) and record.msg.startswith("findfont:")
+        )
+    )
     stderr_log.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
     logger.addHandler(stderr_log)
 

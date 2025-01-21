@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2025) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ import warnings
 
 import iris
 import iris.analysis
+import iris.coord_categorisation
 import iris.cube
 
 
@@ -72,6 +73,64 @@ def collapse(
             )
         else:
             collapsed_cube = cube.collapsed(coordinate, getattr(iris.analysis, method))
+    return collapsed_cube
+
+
+def collapse_by_hour_of_day(
+    cube: iris.cube.Cube,
+    method: str,
+    additional_percent: float = None,
+    **kwargs,
+) -> iris.cube.Cube:
+    """Collapse a cube by hour of the day.
+
+    Arguments
+    ---------
+    cube: iris.cube.Cube
+        Cube to collapse and iterate over one dimension. It should contain only
+        one time dimension.
+    method: str
+        Type of collapse i.e. method: 'MEAN', 'MAX', 'MIN', 'MEDIAN',
+        'PERCENTILE'. For 'PERCENTILE' the additional_percent must be specified.
+
+    Returns
+    -------
+    cube: iris.cube.Cube
+        Single variable but several methods of aggregation.
+
+    Raises
+    ------
+    ValueError
+        If additional_percent wasn't supplied while using PERCENTILE method.
+
+    Notes
+    -----
+    Collapsing of the cube is around the 'time' coordinate. The coordinates are
+    first grouped by the hour of day, and then aggregated by the hour of day
+    to create a diurnal cycle. This operator is applicable for both single
+    forecasts and for multiple forecasts. The hour used is based on the units of
+    the time coordinate. If the time coordinate is in UTC, hour will be in UTC.
+
+    To apply this operator successfully there must only be one time dimension.
+    Should a MultiDim exception be raised the user first needs to apply the
+    collapse operator to reduce the time dimensions before applying this
+    operator.
+    """
+    if method == "PERCENTILE" and additional_percent is None:
+        raise ValueError("Must specify additional_percent")
+    # Categorise the time coordinate by hour of the day.
+    iris.coord_categorisation.add_hour(cube, "time", name="hour")
+    # Aggregate by the new category coordinate.
+    if method == "PERCENTILE":
+        collapsed_cube = cube.aggregated_by(
+            "hour", getattr(iris.analysis, method), percent=additional_percent
+        )
+    else:
+        collapsed_cube = cube.aggregated_by("hour", getattr(iris.analysis, method))
+    # Remove unnecessary time coordinates.
+    collapsed_cube.remove_coord("time")
+    collapsed_cube.remove_coord("forecast_reference_time")
+    collapsed_cube.remove_coord("forecast_period")
     return collapsed_cube
 
 
