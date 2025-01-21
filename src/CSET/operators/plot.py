@@ -55,7 +55,7 @@ def _append_to_plot_index(plot_index: list) -> list:
         meta["plots"] = complete_plot_index
         fp.seek(0)
         fp.truncate()
-        json.dump(meta, fp)
+        json.dump(meta, fp, indent=2)
     return complete_plot_index
 
 
@@ -301,8 +301,8 @@ def _plot_and_save_spatial_plot(
     # Add watermark with min/max/mean. Currently not user toggable.
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
     axes.annotate(
-        f"Min: {np.min(cube.data):g} Max: {np.max(cube.data):g} Mean: {np.mean(cube.data):g}",
-        xy=(1, 0),
+        f"Min: {np.min(cube.data):.3g} Max: {np.max(cube.data):.3g} Mean: {np.mean(cube.data):.3g}",
+        xy=(1, -0.05),
         xycoords="axes fraction",
         xytext=(-5, 5),
         textcoords="offset points",
@@ -318,7 +318,7 @@ def _plot_and_save_spatial_plot(
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved contour plot to %s", filename)
+    logging.info("Saved spatial plot to %s", filename)
     plt.close(fig)
 
 

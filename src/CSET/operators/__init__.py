@@ -19,7 +19,6 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Union
 
 from iris import FUTURE
 
@@ -113,7 +112,7 @@ def _write_metadata(recipe: dict):
     # Remove steps, as not needed, and might contain non-serialisable types.
     metadata.pop("steps", None)
     with open("meta.json", "wt", encoding="UTF-8") as fp:
-        json.dump(metadata, fp)
+        json.dump(metadata, fp, indent=2)
     os.sync()
     # Stat directory to force NFS to synchronise metadata.
     os.stat(Path.cwd())
@@ -182,7 +181,7 @@ def _run_steps(
 
 
 def execute_recipe(
-    recipe_yaml: Union[Path, str],
+    recipe_yaml: Path | str,
     input_directory: Path,
     output_directory: Path,
     recipe_variables: dict = None,
@@ -193,9 +192,9 @@ def execute_recipe(
 
     Parameters
     ----------
-    recipe_yaml: Path or str
-        Path to a file containing, or string of, a recipe's YAML describing the
-        operators that need running. If a Path is provided it is opened and
+    recipe_yaml: Path | str
+        Path to a file containing, or a string of, a recipe's YAML describing
+        the operators that need running. If a Path is provided it is opened and
         read.
     input_directory: Path
         Pathlike to directory containing input files.
