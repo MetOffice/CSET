@@ -64,6 +64,11 @@
     "max": 150,
     "min": 0
   },
+  "cloud_base_altitude": {
+    "cmap": "terrain",
+    "max": 150,
+    "min": 0
+  },
   "cloud_droplet_number_concentration": {
     "cmap": "GnBu",
     "max": 5000,
