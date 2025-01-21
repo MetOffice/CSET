@@ -108,7 +108,8 @@ def collapse_by_hour_of_day(
     Collapsing of the cube is around the 'time' coordinate. The coordinates are
     first grouped by the hour of day, and then aggregated by the hour of day
     to create a diurnal cycle. This operator is applicable for both single
-    forecasts and for multiple forecasts.
+    forecasts and for multiple forecasts. The hour used is based on the units of
+    the time coordinate. If the time coordinate is in UTC, hour will be in UTC.
 
     To apply this operator successfully there must only be one time dimension.
     Should a MultiDim exception be raised the user first needs to apply the

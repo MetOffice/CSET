@@ -25,7 +25,7 @@ from CSET.operators import collapse
 def long_forecast() -> iris.cube.Cube:
     """Get long_forecast to run tests on."""
     return iris.load_cube(
-        "tests/test_data/long_forecast_air_temperature.nc", "air_temperature"
+        "tests/test_data/long_forecast_air_temp_fcst_1.nc", "air_temperature"
     )
 
 
