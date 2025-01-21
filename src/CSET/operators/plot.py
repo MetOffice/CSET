@@ -980,8 +980,8 @@ def plot_line_series(
 
     Returns
     -------
-    iris.cube | iris.cube.CubeList
-        The original cube or CubeList (so further operations can be applied).
+    iris.cube.Cube | iris.cube.CubeList
+        The original Cube or CubeList (so further operations can be applied).
         plotted data.
 
     Raises
