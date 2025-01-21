@@ -989,7 +989,7 @@ def plot_line_series(
     ValueError
         If the cubes don't have the right dimensions.
     TypeError
-        If the cube isn't a single cube.
+        If the cube isn't a Cube or CubeList.
     """
     # Ensure we have a name for the plot file.
     title = get_recipe_metadata().get("title", "Untitled")
