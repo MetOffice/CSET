@@ -411,7 +411,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
 
 
 def _plot_and_save_line_series(
-    cube: iris.cube.Cube | iris.cube.CubeList,
+    cubes: iris.cube.Cube | iris.cube.CubeList,
     coord: iris.coords.Coord,
     filename: str,
     title: str,
@@ -421,8 +421,8 @@ def _plot_and_save_line_series(
 
     Parameters
     ----------
-    cube: Cube or CubeList
-        Cube or CubeList containing the cubes to plot on the y-axis.
+    cubes: Cubes or CubeList
+        Cubes or CubeList containing the cubes to plot on the y-axis.
     coord: Coord
         Coordinate to plot on the x-axis.
     filename: str
@@ -432,17 +432,17 @@ def _plot_and_save_line_series(
     """
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
-    for cube_iter in iter_maybe(cube):
+    for cube_iter in iter_maybe(cubes):
         iplt.plot(coord, cube_iter, "o-")
 
     # Get the current axes
     ax = plt.gca()
 
     # Add some labels and tweak the style.
-    # check if cube[0] works for single cube if not cubeList
+    # check if cubes[0] works for single cube if not CubeList
     ax.set(
         xlabel=f"{coord.name()} / {coord.units}",
-        ylabel=f"{cube[0].name()} / {cube[0].units}",
+        ylabel=f"{cubes[0].name()} / {cubes[0].units}",
         title=title,
     )
     ax.ticklabel_format(axis="y", useOffset=False)
@@ -970,7 +970,9 @@ def plot_line_series(
     Parameters
     ----------
     iris.cube | iris.cube.CubeList
-        Cube or CubeList of the data to plot. The individual cubes should have a single dimension.
+        Cubes or CubeList of the data to plot. The individual cubes should have a single dimension.
+        The Cubes or Cubelist should cover the same phenomenon i.e. all Cubes contain temperature data.
+        We do not support different data such as temperature and humidity in the same Cubelist for plotting.
     filename: str, optional
         Name of the plot to write, used as a prefix for plot sequences. Defaults
         to the recipe name.
