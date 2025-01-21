@@ -91,8 +91,7 @@ def collapse_by_hour_of_day(
         one time dimension.
     method: str
         Type of collapse i.e. method: 'MEAN', 'MAX', 'MIN', 'MEDIAN',
-        'PERCENTILE' getattr creates iris.analysis.MEAN, etc For PERCENTILE
-        YAML file requires i.e. method: 'PERCENTILE' additional_percent: 90
+        'PERCENTILE'. For 'PERCENTILE' the additional_percent must be specified.
 
     Returns
     -------
