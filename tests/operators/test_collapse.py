@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2025) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,9 +14,19 @@
 
 """Test collapse operators."""
 
+import iris
+import iris.cube
 import pytest
 
 from CSET.operators import collapse
+
+
+@pytest.fixture()
+def long_forecast() -> iris.cube.Cube:
+    """Get long_forecast to run tests on."""
+    return iris.load_cube(
+        "tests/test_data/long_forecast_air_temp_fcst_1.nc", "air_temperature"
+    )
 
 
 def test_collapse(cube):
@@ -48,4 +58,24 @@ def test_collapse_percentile(cube):
     expected_cube = (
         "<iris 'Cube' of air_temperature / (K) (grid_latitude: 17; grid_longitude: 13)>"
     )
+    assert repr(collapsed_cube) == expected_cube
+
+
+def test_collapse_by_hour_of_day(long_forecast):
+    """Convert and aggregates time dimension by hour of day."""
+    # Test collapsing a long forecast.
+    collapsed_cube = collapse.collapse_by_hour_of_day(long_forecast, "MEAN")
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (-- : 24; grid_latitude: 3; grid_longitude: 3)>"
+    assert repr(collapsed_cube) == expected_cube
+
+
+def test_collapse_by_hour_of_day_percentile(long_forecast):
+    """Convert and aggregate time dimension by hour of day with percentiles."""
+    with pytest.raises(ValueError):
+        collapse.collapse_by_hour_of_day(long_forecast, "PERCENTILE")
+    # Test collapsing long forecast.
+    collapsed_cube = collapse.collapse_by_hour_of_day(
+        long_forecast, "PERCENTILE", additional_percent=[25, 75]
+    )
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (percentile_over_hour: 2; -- : 24; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
