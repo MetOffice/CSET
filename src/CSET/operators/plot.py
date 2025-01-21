@@ -965,7 +965,7 @@ def plot_line_series(
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Plot a line plot for the specified coordinate.
 
-    The cube or CubeList must be 1D.
+    The Cube or CubeList must be 1D.
 
     Parameters
     ----------
