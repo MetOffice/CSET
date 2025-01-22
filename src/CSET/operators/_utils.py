@@ -202,7 +202,7 @@ def ensure_aggregatable_across_cases(
         If a Cube is provided a sub-operator is called to determine if the
         cube has the necessary dimensional coordinates to be aggregateable. If
         a CubeList is provided a Cube is created by slicing over all time
-        coordinates and resulting list is merged to create an aggregatable cube.
+        coordinates and the resulting list is merged to create an aggregatable cube.
 
     Returns
     -------
