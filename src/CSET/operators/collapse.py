@@ -223,7 +223,7 @@ def collapse_by_validity_time(
     # Convert to a cube that is split by validity time.
     new_cubelist = iris.cube.CubeList()
     # Slice over cube by both time dimensions to create a cube list.
-    for sub_cube in cube_to_collapse.slives_over(
+    for sub_cube in cube_to_collapse.slices_over(
         ["forecast_period", "forecast_reference_time"]
     ):
         new_cubelist.append(sub_cube)
@@ -236,15 +236,15 @@ def collapse_by_validity_time(
     merged_list_1 = new_cubelist.merge(unique=False)
     # Create a new "fake" coordinate and apply to each remaining cube to allow
     # final merging to take place into a single cube.
-    y = 0
-    for x in merged_list_1:
-        fake_time_coord = iris.coords.AuxCoord(y)
+    fake_time = 0
+    for sub_cube in merged_list_1:
+        fake_time_coord = iris.coords.AuxCoord(fake_time)
         fake_time_coord.units = "1"
         fake_time_coord.rename("fake_time_coord")
-        x.add_aux_coord(fake_time_coord)
-        y += 1
+        sub_cube.add_aux_coord(fake_time_coord)
+        fake_time += 1
     # Merge CubeList to create final cube.
-    final_cube = merged_list_1.merge()
+    final_cube = merged_list_1.merge_cube()
     # Collapse over fake_time_coord to represent collapsing over validity time.
     if method == "PERCENTILE":
         collapsed_cube = collapse(
