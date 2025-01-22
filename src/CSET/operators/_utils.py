@@ -200,9 +200,11 @@ def ensure_aggregatable_across_cases(
     ---------
     cube: iris.cube.Cube | iris.cube.CubeList
         If a Cube is provided a sub-operator is called to determine if the
-        cube has the necessary dimensional coordinates to be aggregateable. If
-        a CubeList is provided a Cube is created by slicing over all time
-        coordinates and the resulting list is merged to create an aggregatable cube.
+        cube has the necessary dimensional coordinates to be aggregateable.
+        These necessary coordinates are 'forecast_period' and
+        'forecast_reference_time'.If a CubeList is provided a Cube is created
+        by slicing over all time coordinates and the resulting list is merged
+        to create an aggregatable cube.
 
     Returns
     -------
@@ -228,7 +230,8 @@ def ensure_aggregatable_across_cases(
         ---------
         cube: iris.cube.Cube
             An iris cube which will be checked to see if it is aggregatable based
-            on a set of pre-defined dimensional time coordinates.
+            on a set of pre-defined dimensional time coordinates:
+            'forecast_period' and 'forecast_reference_time'.
 
         Returns
         -------
@@ -247,11 +250,8 @@ def ensure_aggregatable_across_cases(
         temporal_coords = [
             coord for coord in coord_names if coord in TEMPORAL_COORD_NAMES
         ]
-        if len(temporal_coords) != 2:
-            return False
-
-        # Passed criterion so return True.
-        return True
+        # Return whether both coordinates are in the temporal coordinates.
+        return len(temporal_coords) == 2
 
     # Check to see if a cube is input and if that cube is iterable.
     if isinstance(cube, iris.cube.Cube):
@@ -267,7 +267,9 @@ def ensure_aggregatable_across_cases(
     else:
         new_cube_list = iris.cube.CubeList()
         for sub_cube in cube:
-            for cube_slice in sub_cube.slices_over(["forecast_period", "forecast_reference_time"]):
+            for cube_slice in sub_cube.slices_over(
+                ["forecast_period", "forecast_reference_time"]
+            ):
                 new_cube_list.append(cube_slice)
         new_merged_cube = new_cube_list.merge_cube()
         return new_merged_cube
