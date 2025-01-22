@@ -110,7 +110,7 @@ def collapse_by_lead_time(
     """
     if method == "PERCENTILE" and additional_percent is None:
         raise ValueError("Must specify additional_percent")
-    # Ensure the cube can be aggregated over mutiple cases.
+    # Ensure the cube can be aggregated over multiple cases.
     cube_to_collapse = ensure_aggregatable_across_cases(cube)
     # Collapse by lead time.
     if method == "PERCENTILE":
