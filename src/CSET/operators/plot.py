@@ -970,7 +970,7 @@ def plot_line_series(
     Parameters
     ----------
     iris.cube | iris.cube.CubeList
-        Cubes or CubeList of the data to plot. The individual cubes should have a single dimension.
+        Cube or CubeList of the data to plot. The individual cubes should have a single dimension.
         The Cubes or Cubelist should cover the same phenomenon i.e. all Cubes contain temperature data.
         We do not support different data such as temperature and humidity in the same Cubelist for plotting.
     filename: str, optional
