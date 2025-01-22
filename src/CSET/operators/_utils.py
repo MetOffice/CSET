@@ -266,8 +266,8 @@ def ensure_aggregatable_across_cases(
     # Create an aggregatable cube from the provided CubeList.
     else:
         new_cube_list = iris.cube.CubeList()
-        for x in cube:
-            for y in x.slices_over(["forecast_period", "forecast_reference_time"]):
-                new_cube_list.append(y)
-        new_list_merged = new_cube_list.merge()[0]
-        return new_list_merged
+        for sub_cube in cube:
+            for cube_slice in sub_cube.slices_over(["forecast_period", "forecast_reference_time"]):
+                new_cube_list.append(cube_slice)
+        new_merged_cube = new_cube_list.merge_cube()
+        return new_merged_cube
