@@ -421,8 +421,8 @@ def _plot_and_save_line_series(
 
     Parameters
     ----------
-    cubes: Cubes or CubeList
-        Cubes or CubeList containing the cubes to plot on the y-axis.
+    cubes: Cube or CubeList
+        Cube or CubeList containing the cubes to plot on the y-axis.
     coord: Coord
         Coordinate to plot on the x-axis.
     filename: str
