@@ -1001,10 +1001,7 @@ def plot_line_series(
     # Add file extension.
     plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
 
-    # Initialise list to store cubes to plot.
-    cubes_to_plot = []
-
-    # Iterate over all cubes in CubeList and plot.
+    # Iterate over all cubes in cube or CubeList and plot.
     for cube_iter in iter_maybe(cube):
         # Check cube is right shape.
         cube_iter = _check_single_cube(cube_iter)
@@ -1017,11 +1014,8 @@ def plot_line_series(
         if cube_iter.ndim > 1:
             raise ValueError("Cube must be 1D.")
 
-        # Add cube to list for plotting.
-        cubes_to_plot.append(cube_iter)
-
     # Do the actual plotting.
-    _plot_and_save_line_series(cubes_to_plot, coord, plot_filename, title)
+    _plot_and_save_line_series(cube, coord, plot_filename, title)
 
     # Add list of plots to plot metadata.
     plot_index = _append_to_plot_index([plot_filename])
