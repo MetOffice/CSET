@@ -126,21 +126,27 @@ def collapse_by_lead_time(
 
 
 def collapse_by_hour_of_day(
-    cube: iris.cube.Cube,
+    cube: iris.cube.Cube | iris.cube.CubeList,
     method: str,
     additional_percent: float = None,
+    multi_case: bool = True,
     **kwargs,
 ) -> iris.cube.Cube:
     """Collapse a cube by hour of the day.
 
     Arguments
     ---------
-    cube: iris.cube.Cube
-        Cube to collapse and iterate over one dimension. It should contain only
-        one time dimension.
+    cube: iris.cube.Cube | iris.cube.CubeList
+        Cube to collapse and iterate over one dimension or CubeList to
+        convert to a cube and then collapse prior to aggregating by hour.
+        If a single cube is presented it should contain only one time
+        dimension. If a CubeList is provided multi_case must be True.
     method: str
         Type of collapse i.e. method: 'MEAN', 'MAX', 'MIN', 'MEDIAN',
         'PERCENTILE'. For 'PERCENTILE' the additional_percent must be specified.
+    multi_case: boolean
+        Default is True. If True multiple cases will be aggregated by hour of
+        day; if False a single forecast will be aggregated by hour of day.
 
     Returns
     -------
@@ -151,6 +157,8 @@ def collapse_by_hour_of_day(
     ------
     ValueError
         If additional_percent wasn't supplied while using PERCENTILE method.
+    TypeError
+        If a CubeList is given and multi_case is not True.
 
     Notes
     -----
@@ -163,10 +171,19 @@ def collapse_by_hour_of_day(
     To apply this operator successfully there must only be one time dimension.
     Should a MultiDim exception be raised the user first needs to apply the
     collapse operator to reduce the time dimensions before applying this
-    operator.
+    operator. If multi_case is true the collapse_by_lead_time operator is
+    applied and performs this step.
     """
     if method == "PERCENTILE" and additional_percent is None:
         raise ValueError("Must specify additional_percent")
+    if isinstance(cube, iris.cube.CubeList) and not multi_case:
+        raise TypeError("multi_case must be true for a CubeList")
+    if multi_case:
+        print(multi_case)
+        # Collapse by lead time to get a single time dimension.
+        # cube = collapse_by_lead_time(
+        #    cube, method, additional_percent=additional_percent
+        # )
     # Categorise the time coordinate by hour of the day.
     iris.coord_categorisation.add_hour(cube, "time", name="hour")
     # Aggregate by the new category coordinate.
@@ -178,8 +195,11 @@ def collapse_by_hour_of_day(
         collapsed_cube = cube.aggregated_by("hour", getattr(iris.analysis, method))
     # Remove unnecessary time coordinates.
     collapsed_cube.remove_coord("time")
-    collapsed_cube.remove_coord("forecast_reference_time")
     collapsed_cube.remove_coord("forecast_period")
+    # Remove forecast_reference_time if a single case, as collapse_by_lead_time
+    # will have effectively done this if multi_case is True.
+    if not multi_case:
+        collapsed_cube.remove_coord("forecast_reference_time")
     return collapsed_cube
 
 
