@@ -89,6 +89,7 @@ def collapse_by_lead_time(
 
     First checks if the data can be aggregated by lead time easily. Then
     collapses by lead time for a specified method using the collapse function.
+    This operator provides the average of all T+1, T+2, etc.
 
     Arguments
     ---------
@@ -117,12 +118,12 @@ def collapse_by_lead_time(
     if method == "PERCENTILE":
         collapsed_cube = collapse(
             cube_to_collapse,
-            "forecast_period",
+            "forecast_reference_time",
             method,
             additional_percent=additional_percent,
         )
     else:
-        collapsed_cube = collapse(cube_to_collapse, "forecast_period", method)
+        collapsed_cube = collapse(cube_to_collapse, "forecast_reference_time", method)
     return collapsed_cube
 
 
@@ -134,6 +135,10 @@ def collapse_by_hour_of_day(
     **kwargs,
 ) -> iris.cube.Cube:
     """Collapse a cube by hour of the day.
+
+    Collapses a cube by hour of the day in the time coordinates provided by the
+    model. It is useful for creating diurnal cycle plots. It aggregates all
+    00 UTC together regardless of lead time.
 
     Arguments
     ---------
