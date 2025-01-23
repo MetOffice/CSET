@@ -160,3 +160,44 @@ def test_collapse_by_lead_time_cube_list_percentile(
         rtol=1e-06,
         atol=1e-02,
     )
+
+
+def test_collapse_by_validity_time(long_forecast_multi_day):
+    """Reduce a dimension of a cube by validity time."""
+    collapsed_cube = collapse.collapse_by_validity_time(long_forecast_multi_day, "MEAN")
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 145; grid_latitude: 3; grid_longitude: 3)>"
+    assert repr(collapsed_cube) == expected_cube
+
+
+def test_collapse_by_validity_time_cubelist(long_forecast_many_cubes):
+    """Convert to cube and reduce a dimension by validity time."""
+    collapsed_cube = collapse.collapse_by_validity_time(
+        long_forecast_many_cubes, "MEAN"
+    )
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 145; grid_latitude: 3; grid_longitude: 3)>"
+    assert repr(collapsed_cube) == expected_cube
+
+
+def test_collapse_by_validity_time_percentile(long_forecast_multi_day):
+    """Reduce by validity time with percentiles."""
+    # Test successful collapsing by validity time.
+    collapsed_cube = collapse.collapse_by_validity_time(
+        long_forecast_multi_day, "PERCENTILE", additional_percent=[25, 75]
+    )
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (percentile_over_equalised_validity_time: 2; time: 145; grid_latitude: 3; grid_longitude: 3)>"
+    assert repr(collapsed_cube) == expected_cube
+
+
+def test_collapse_by_validity_time_percentile_fail(long_forecast_multi_day):
+    """Test not specifying additional percent fails."""
+    with pytest.raises(ValueError):
+        collapse.collapse_by_validity_time(long_forecast_multi_day, "PERCENTILE")
+
+
+def test_collapse_by_validity_time_cubelist_percentile(long_forecast_many_cubes):
+    """Convert to cube and reduce by validity time with percentiles."""
+    collapsed_cube = collapse.collapse_by_validity_time(
+        long_forecast_many_cubes, "PERCENTILE", additional_percent=[25, 75]
+    )
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (percentile_over_equalised_validity_time: 2; time: 145; grid_latitude: 3; grid_longitude: 3)>"
+    assert repr(collapsed_cube) == expected_cube
