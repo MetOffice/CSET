@@ -242,8 +242,6 @@ sort-key=met2
 # Models and Cases: Case and model settings.
 ################################################################################
 
-[template variables]
-
 [template variables=CSET_CYCLING_MODE]
 ns=Models and Cases
 title=Cycling mode
@@ -300,6 +298,23 @@ type=quoted
 compulsory=true
 sort-key=c3
 
+# Cross-model settings.
+[template variables=ANALYSIS_LENGTH]
+ns=Models and Cases
+title=Analysis length
+description=Length of forecast to analyse, e.g. PT48H
+help=The period over which to produce diagnostics for the forecasts, in ISO 8601
+    duration format. For example: PT48H or P7D
+
+    This should be the length of your longest forecast. Overestimating is fine
+    as times that don't exist will be ignored.
+
+    This controls how much data is fetched and fed into CSET for analysis but
+    only at the granularity of files, so it may not be exact.
+type=quoted
+compulsory=true
+sort-key=d1
+
 
 ################################################################################
 # Model definitions. Section repeated for each desired model.
@@ -322,7 +337,6 @@ trigger={% for model_id in range(1, 21) %}
         template variables=m{{model_id}}_data_path: this >= {{model_id}};
         template variables=m{{model_id}}_date_type: this >= {{model_id}};
         template variables=m{{model_id}}_data_period: this >= {{model_id}};
-        template variables=m{{model_id}}_analysis_period: this >= {{model_id}};
         template variables=m{{model_id}}_analysis_offset: this >= {{model_id}};
         {% endfor %}
 
@@ -407,28 +421,15 @@ type=quoted
 compulsory=true
 sort-key=b2
 
-[template variables=m{{model_id}}_analysis_period]
-ns=Models and Cases/Model {{ "%02d" % model_id }}
-title=Analysis period
-description=The length of forecast to analyse, AKA forecast length.
-help=The period over which to produce diagnostics for the forecast, in ISO 8601 duration format.
-    For example: PT48H
-
-    This controls how much data is fetched and fed into CSET for analysis but
-    only at the granularity of files, so it may not be exact.
-type=quoted
-compulsory=true
-sort-key=d1
-
 [template variables=m{{model_id}}_analysis_offset]
 ns=Models and Cases/Model {{ "%02d" % model_id }}
 title=Analysis offset
 description=Offset from forecast initiation to verification start, e.g. PT1H
 help=The offset in time between the forecast initiation and the start of the
-    analysis period, AKA the first validity time. This is useful when required
-    fields are not output on the first time step; if they are it should probably
-    be set to PT0H, meaning no offset.
+    analysis period, AKA the first validity time, as an ISO 8601 duration. This
+    is useful when required fields are not output on the first time step; if
+    they are it should probably be set to PT0H, meaning no offset.
 type=quoted
 compulsory=true
-sort-key=d2
+sort-key=b3
 {% endfor %}

@@ -52,7 +52,7 @@ def test_get_needed_environment_variables(monkeypatch):
     number_raw = "1"
 
     monkeypatch.setenv("ANALYSIS_OFFSET", duration_raw)
-    monkeypatch.setenv("ANALYSIS_PERIOD", duration_raw)
+    monkeypatch.setenv("ANALYSIS_LENGTH", duration_raw)
     monkeypatch.setenv("CYLC_TASK_CYCLE_POINT", date_raw)
     monkeypatch.setenv("DATA_PATH", path)
     monkeypatch.setenv("DATA_PERIOD", duration_raw)
@@ -82,7 +82,7 @@ def test_get_needed_environment_variables_data_period_handling(monkeypatch):
     number_raw = "1"
 
     monkeypatch.setenv("ANALYSIS_OFFSET", duration_raw)
-    monkeypatch.setenv("ANALYSIS_PERIOD", duration_raw)
+    monkeypatch.setenv("ANALYSIS_LENGTH", duration_raw)
     monkeypatch.setenv("CYLC_TASK_CYCLE_POINT", date_raw)
     monkeypatch.setenv("DATA_PATH", path)
     monkeypatch.setenv("MODEL_IDENTIFIER", number_raw)

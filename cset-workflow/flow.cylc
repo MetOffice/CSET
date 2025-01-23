@@ -95,6 +95,8 @@ URL = https://metoffice.github.io/CSET
     [[FETCH_DATA]]
     script = rose task-run -v --app-key=fetch_fcst
     execution time limit = PT1H
+        [[[environment]]]
+        ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
 
     [[METPLUS]]
         [[[environment]]]
@@ -143,7 +145,6 @@ URL = https://metoffice.github.io/CSET
         DATE_TYPE = {{model["date_type"]}}
         DATA_PERIOD = {{model["data_period"]}}
         ANALYSIS_OFFSET = {{model["analysis_offset"]}}
-        ANALYSIS_PERIOD = {{model["analysis_period"]}}
     {% endfor %}
 
     [[housekeeping_raw]]
