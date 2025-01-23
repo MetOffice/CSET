@@ -154,7 +154,7 @@ def _get_needed_environment_variables() -> dict:
         "raw_path": os.environ["DATA_PATH"],
         "date_type": os.environ["DATE_TYPE"],
         "data_time": _fromisoformat(os.environ["CYLC_TASK_CYCLE_POINT"]),
-        "forecast_length": isodate.parse_duration(os.environ["ANALYSIS_PERIOD"]),
+        "forecast_length": isodate.parse_duration(os.environ["ANALYSIS_LENGTH"]),
         "forecast_offset": isodate.parse_duration(os.environ["ANALYSIS_OFFSET"]),
         "model_identifier": os.environ["MODEL_IDENTIFIER"],
         "rose_datac": os.environ["ROSE_DATAC"],
@@ -217,7 +217,7 @@ def fetch_data(file_retriever: FileRetrieverABC = FilesystemFileRetriever):
 
     The following environment variables need to be set:
     * ANALYSIS_OFFSET
-    * ANALYSIS_PERIOD
+    * ANALYSIS_LENGTH
     * CYLC_TASK_CYCLE_POINT
     * DATA_PATH
     * DATA_PERIOD
