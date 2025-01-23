@@ -191,6 +191,38 @@ def fully_equalise_attributes(cubes: iris.cube.CubeList):
     return cubes
 
 
+def is_time_aggregatable(cube: iris.cube.Cube) -> bool:
+    """Determine whether a cube can be aggregated in time.
+
+    If a cube is aggregatable it will contain both a 'forecast_reference_time'
+    and 'forecast_period' coordinate as dimensional coordinates.
+
+    Arguments
+    ---------
+    cube: iris.cube.Cube
+        An iris cube which will be checked to see if it is aggregatable based
+        on a set of pre-defined dimensional time coordinates:
+        'forecast_period' and 'forecast_reference_time'.
+
+    Returns
+    -------
+    bool
+        If true, then the cube is aggregatable and contains dimensional
+        coordinates including both 'forecast_reference_time' and
+        'forecast_period'.
+    """
+    # Acceptable time coordinate names for aggregatable cube.
+    TEMPORAL_COORD_NAMES = ["forecast_period", "forecast_reference_time"]
+
+    # Coordinate names for the cube.
+    coord_names = [coord.name() for coord in cube.coords(dim_coords=True)]
+
+    # Check which temporal coordinates we have.
+    temporal_coords = [coord for coord in coord_names if coord in TEMPORAL_COORD_NAMES]
+    # Return whether both coordinates are in the temporal coordinates.
+    return len(temporal_coords) == 2
+
+
 def ensure_aggregatable_across_cases(
     cube: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube:
@@ -199,8 +231,8 @@ def ensure_aggregatable_across_cases(
     Arguments
     ---------
     cube: iris.cube.Cube | iris.cube.CubeList
-        If a Cube is provided a sub-operator is called to determine if the
-        cube has the necessary dimensional coordinates to be aggregateable.
+        If a Cube is provided it is checked to determine if it has the
+        the necessary dimensional coordinates to be aggregateable.
         These necessary coordinates are 'forecast_period' and
         'forecast_reference_time'.If a CubeList is provided a Cube is created
         by slicing over all time coordinates and the resulting list is merged
@@ -219,40 +251,6 @@ def ensure_aggregatable_across_cases(
         raised. The user should then provide a CubeList to be turned into an
         aggregatable cube to allow aggregation across multiple cases to occur.
     """
-
-    def is_time_aggregatable(cube: iris.cube.Cube) -> bool:
-        """Determine whether a cube can be aggregated in time.
-
-        If a cube is aggregatable it will contain both a 'forecast_reference_time'
-        and 'forecast_period' coordinate as dimensional coordinates.
-
-        Arguments
-        ---------
-        cube: iris.cube.Cube
-            An iris cube which will be checked to see if it is aggregatable based
-            on a set of pre-defined dimensional time coordinates:
-            'forecast_period' and 'forecast_reference_time'.
-
-        Returns
-        -------
-        bool
-            If true, then the cube is aggregatable and contains dimensional
-            coordinates including both 'forecast_reference_time' and
-            'forecast_period'.
-        """
-        # Acceptable time coordinate names for aggregatable cube.
-        TEMPORAL_COORD_NAMES = ["forecast_period", "forecast_reference_time"]
-
-        # Coordinate names for the cube.
-        coord_names = [coord.name() for coord in cube.coords(dim_coords=True)]
-
-        # Check which temporal coordinates we have.
-        temporal_coords = [
-            coord for coord in coord_names if coord in TEMPORAL_COORD_NAMES
-        ]
-        # Return whether both coordinates are in the temporal coordinates.
-        return len(temporal_coords) == 2
-
     # Check to see if a cube is input and if that cube is iterable.
     if isinstance(cube, iris.cube.Cube):
         if is_time_aggregatable(cube):
