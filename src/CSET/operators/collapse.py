@@ -221,12 +221,10 @@ def collapse_by_validity_time(
     # Ensure the cube can be aggregated over multiple times.
     cube_to_collapse = ensure_aggregatable_across_cases(cube)
     # Convert to a cube that is split by validity time.
-    new_cubelist = iris.cube.CubeList()
-    # Slice over cube by both time dimensions to create a cube list.
-    for sub_cube in cube_to_collapse.slices_over(
-        ["forecast_period", "forecast_reference_time"]
-    ):
-        new_cubelist.append(sub_cube)
+    # Slice over cube by both time dimensions to create a CubeList.
+    new_cubelist = iris.cube.CubeList(
+        cube_to_collapse.slices_over(["forecast_period", "forecast_reference_time"])
+    )
     # Remove forecast_period and forecast_reference_time coordinates.
     for sub_cube in new_cubelist:
         sub_cube.remove_coord("forecast_period")
