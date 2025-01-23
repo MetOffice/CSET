@@ -426,7 +426,8 @@ title=Analysis offset
 description=Offset from forecast initiation to verification start, e.g. PT1H
 help=The offset in time between the forecast initiation and the start of the
     analysis period, AKA the first validity time. This is useful when required
-    fields are not output on the first time step.
+    fields are not output on the first time step; if they are it should probably
+    be set to PT0H, meaning no offset.
 type=quoted
 compulsory=true
 sort-key=d2
