@@ -234,25 +234,26 @@ def collapse_by_validity_time(
     merged_list_1 = new_cubelist.merge(unique=False)
     # Create a new "fake" coordinate and apply to each remaining cube to allow
     # final merging to take place into a single cube.
-    fake_time = 0
-    for sub_cube in merged_list_1:
-        fake_time_coord = iris.coords.AuxCoord(fake_time)
-        fake_time_coord.units = "1"
-        fake_time_coord.rename("fake_time_coord")
-        sub_cube.add_aux_coord(fake_time_coord)
-        fake_time += 1
+    equalised_validity_time = iris.coords.AuxCoord(
+        points=0, long_name="equalised_validity_time", units="1"
+    )
+    for sub_cube, eq_valid_time in zip(
+        merged_list_1, range(len(merged_list_1)), strict=True
+    ):
+        sub_cube.add_aux_coord(equalised_validity_time.copy(points=eq_valid_time))
+
     # Merge CubeList to create final cube.
     final_cube = merged_list_1.merge_cube()
     # Collapse over fake_time_coord to represent collapsing over validity time.
     if method == "PERCENTILE":
         collapsed_cube = collapse(
             final_cube,
-            "fake_time_coord",
+            "equalised_validity_time",
             method,
             additional_percent=additional_percent,
         )
     else:
-        collapsed_cube = collapse(final_cube, "fake_time_coord", method)
+        collapsed_cube = collapse(final_cube, "equalised_validity_time", method)
     return collapsed_cube
 
 

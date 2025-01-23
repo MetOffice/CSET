@@ -180,23 +180,24 @@ def test_collapse_by_validity_time_cubelist(long_forecast_many_cubes):
 
 def test_collapse_by_validity_time_percentile(long_forecast_multi_day):
     """Reduce by validity time with percentiles."""
-    with pytest.raises(ValueError):
-        collapse.collapse_by_validity_time(long_forecast_multi_day, "PERCENTILE")
     # Test successful collapsing by validity time.
     collapsed_cube = collapse.collapse_by_validity_time(
         long_forecast_multi_day, "PERCENTILE", additional_percent=[25, 75]
     )
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (percentile_over_fake_time_coord: 2; time: 145; grid_latitude: 3; grid_longitude: 3)>"
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (percentile_over_equalised_validity_time: 2; time: 145; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
+
+
+def test_collapse_by_validity_time_percentile_fail(long_forecast_multi_day):
+    """Test not specifying additional percent fails."""
+    with pytest.raises(ValueError):
+        collapse.collapse_by_validity_time(long_forecast_multi_day, "PERCENTILE")
 
 
 def test_collapse_by_validity_time_cubelist_percentile(long_forecast_many_cubes):
     """Convert to cube and reduce by validity time with percentiles."""
-    with pytest.raises(ValueError):
-        collapse.collapse_by_validity_time(long_forecast_many_cubes, "PERCENTILE")
-    # Test successful collapsing by validity time.
     collapsed_cube = collapse.collapse_by_validity_time(
         long_forecast_many_cubes, "PERCENTILE", additional_percent=[25, 75]
     )
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (percentile_over_fake_time_coord: 2; time: 145; grid_latitude: 3; grid_longitude: 3)>"
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (percentile_over_equalised_validity_time: 2; time: 145; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
