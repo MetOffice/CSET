@@ -404,6 +404,10 @@ def compute_ageofair(
     logging.info("STARTING AOA DIAG...")
     start = datetime.datetime.now()
 
+    # Use "spawn" method to avoid warnings before the default is changed in
+    # python 3.14. See the (not very good) warning here:
+    # https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods
+    mp_context = multiprocessing.get_context("spawn")
     # Main call for calculating age of air diagnostic
     if ensemble_mode:
         for e in range(0, len(XWIND.coord("realization").points)):
@@ -425,7 +429,7 @@ def compute_ageofair(
                 tmpdir.name,
             )
             if multicore:
-                with multiprocessing.Pool(num_usable_cores) as pool:
+                with mp_context.Pool(num_usable_cores) as pool:
                     pool.map(func, range(0, XWIND.shape[4]))
             else:
                 # Convert to list to ensure everything is processed.
@@ -452,7 +456,7 @@ def compute_ageofair(
             tmpdir.name,
         )
         if multicore:
-            with multiprocessing.Pool(num_usable_cores) as pool:
+            with mp_context.Pool(num_usable_cores) as pool:
                 pool.map(func, range(0, XWIND.shape[3]))
         else:
             # Convert to list to ensure everything is processed.
