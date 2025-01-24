@@ -173,3 +173,22 @@ def test_difference_incorrect_number_of_cubes(cube):
     three_cubes = iris.cube.CubeList([cube, cube, cube])
     with pytest.raises(ValueError, match="cubes should contain exactly 2 cubes."):
         misc.difference(three_cubes)
+
+
+def test_difference_different_model_types(cube):
+    """Other cube is flipped when model types differ."""
+    fake_lfric_cube = cube.copy()
+    fake_lfric_cube.attributes["title"] = "Created by xios"
+    del fake_lfric_cube.attributes["um_version"]
+    del fake_lfric_cube.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([cube, fake_lfric_cube])
+
+    # Take difference.
+    difference_cube = misc.difference(cubes)
+
+    assert isinstance(difference_cube, iris.cube.Cube)
+    # Even though both cubes use the same data, one will be flipped, so check
+    # the difference is not zero.
+    assert not np.allclose(
+        difference_cube.data, np.zeros_like(difference_cube.data), atol=1e-9
+    )
