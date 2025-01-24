@@ -164,6 +164,16 @@ def test_fully_equalise_attributes_equalise_coords():
         assert "shared_attribute" not in cube.coord("foo").attributes
 
 
+def test_is_time_aggregatable_False(long_forecast):
+    """Check that a cube that is not time aggregatable returns False."""
+    assert not operator_utils.is_time_aggregatable(long_forecast)
+
+
+def test_is_time_aggregatable(long_forecast_multi_day):
+    """Check that a time aggregatable cube returns True."""
+    assert operator_utils.is_time_aggregatable(long_forecast_multi_day)
+
+
 def test_ensure_aggregatable_across_cases_true_aggregateable_cube(
     long_forecast_multi_day,
 ):

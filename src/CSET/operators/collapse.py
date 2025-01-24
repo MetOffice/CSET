@@ -20,8 +20,9 @@ import iris
 import iris.analysis
 import iris.coord_categorisation
 import iris.cube
+import iris.util
 
-from CSET.operators._utils import ensure_aggregatable_across_cases
+from CSET.operators._utils import ensure_aggregatable_across_cases, is_time_aggregatable
 
 
 def collapse(
@@ -88,6 +89,7 @@ def collapse_by_lead_time(
 
     First checks if the data can be aggregated by lead time easily. Then
     collapses by lead time for a specified method using the collapse function.
+    This operator provides the average of all T+1, T+2, etc.
 
     Arguments
     ---------
@@ -116,31 +118,50 @@ def collapse_by_lead_time(
     if method == "PERCENTILE":
         collapsed_cube = collapse(
             cube_to_collapse,
-            "forecast_period",
+            "forecast_reference_time",
             method,
             additional_percent=additional_percent,
         )
     else:
-        collapsed_cube = collapse(cube_to_collapse, "forecast_period", method)
+        collapsed_cube = collapse(cube_to_collapse, "forecast_reference_time", method)
     return collapsed_cube
 
 
 def collapse_by_hour_of_day(
-    cube: iris.cube.Cube,
+    cube: iris.cube.Cube | iris.cube.CubeList,
     method: str,
     additional_percent: float = None,
+    multi_case: bool = True,
     **kwargs,
 ) -> iris.cube.Cube:
     """Collapse a cube by hour of the day.
 
+    Collapses a cube by hour of the day in the time coordinates provided by the
+    model. It is useful for creating diurnal cycle plots. It aggregates all
+    00 UTC together regardless of lead time.
+
     Arguments
     ---------
-    cube: iris.cube.Cube
-        Cube to collapse and iterate over one dimension. It should contain only
-        one time dimension.
+    cube: iris.cube.Cube | iris.cube.CubeList
+        Cube to collapse and iterate over one dimension or CubeList to
+        convert to a cube and then collapse prior to aggregating by hour.
+        If a CubeList is provided multi_case must be set to True as the Cube List
+        should only contain cubes of multiple dates and not different variables
+        or models. A cube that only contains one time dimension must have
+        multi_case set to False as it contains only one forecast. A cube
+        containing two time dimensions, e.g., 'forecast_reference_time' and
+        'forecast_period' must have multi_case set to True as it will contain
+        multiple forecasts.
     method: str
         Type of collapse i.e. method: 'MEAN', 'MAX', 'MIN', 'MEDIAN',
         'PERCENTILE'. For 'PERCENTILE' the additional_percent must be specified.
+    multi_case: boolean, optional
+        Default is True. If True multiple cases will be aggregated by hour of
+        day; if False a single forecast will be aggregated by hour of day.
+        Information around the usage of multi_case is provided above under the
+        description for the cube argument. It is kept as an argument rather
+        than being automatically generated to maintain traceability for the
+        users actions.
 
     Returns
     -------
@@ -151,6 +172,10 @@ def collapse_by_hour_of_day(
     ------
     ValueError
         If additional_percent wasn't supplied while using PERCENTILE method.
+    TypeError
+        If a CubeList is given and multi_case is not True;
+        if a Cube is given and contains two time dimensions and multi_case is not True;
+        if a Cube is given and contains one time dimensions and multi_case is not False.
 
     Notes
     -----
@@ -163,10 +188,36 @@ def collapse_by_hour_of_day(
     To apply this operator successfully there must only be one time dimension.
     Should a MultiDim exception be raised the user first needs to apply the
     collapse operator to reduce the time dimensions before applying this
-    operator.
+    operator. If multi_case is true the collapse_by_lead_time operator is
+    applied and performs this step.
     """
     if method == "PERCENTILE" and additional_percent is None:
         raise ValueError("Must specify additional_percent")
+    elif (
+        isinstance(cube, iris.cube.Cube)
+        and is_time_aggregatable(cube)
+        and not multi_case
+    ):
+        raise TypeError(
+            "multi_case must be true for a cube containing two time dimensions"
+        )
+    elif (
+        isinstance(cube, iris.cube.Cube)
+        and not is_time_aggregatable(cube)
+        and multi_case
+    ):
+        raise TypeError(
+            "multi_case must be false for a cube containing one time dimension"
+        )
+    elif isinstance(cube, iris.cube.CubeList) and not multi_case:
+        raise TypeError("multi_case must be true for a CubeList")
+
+    if multi_case:
+        # Collapse by lead time to get a single time dimension.
+        cube = collapse_by_lead_time(
+            cube, method, additional_percent=additional_percent
+        )
+
     # Categorise the time coordinate by hour of the day.
     iris.coord_categorisation.add_hour(cube, "time", name="hour")
     # Aggregate by the new category coordinate.
@@ -176,10 +227,18 @@ def collapse_by_hour_of_day(
         )
     else:
         collapsed_cube = cube.aggregated_by("hour", getattr(iris.analysis, method))
+
     # Remove unnecessary time coordinates.
     collapsed_cube.remove_coord("time")
-    collapsed_cube.remove_coord("forecast_reference_time")
     collapsed_cube.remove_coord("forecast_period")
+    # Remove forecast_reference_time if a single case, as collapse_by_lead_time
+    # will have effectively done this if multi_case is True.
+    if not multi_case:
+        collapsed_cube.remove_coord("forecast_reference_time")
+
+    # Promote "hour" to dim_coord if monotonic.
+    if collapsed_cube.coord("hour").is_monotonic():
+        iris.util.promote_aux_coord_to_dim_coord(collapsed_cube, "hour")
     return collapsed_cube
 
 
