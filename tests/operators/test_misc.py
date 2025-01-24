@@ -14,6 +14,8 @@
 
 """Test miscellaneous operators."""
 
+import iris
+import iris.cube
 import iris.exceptions
 import numpy as np
 import pytest
@@ -100,14 +102,14 @@ def test_multiplication_failure(cube):
         misc.multiplication(cube, a)
 
 
-def test_combine_singlecube_into_cubelist(cube):
+def test_combine_single_cube_into_cubelist(cube):
     """Test case of single cube into cubelist."""
     cubelist = misc.combine_cubes_into_cubelist(cube)
     expected_cubelist = "[<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>]"
     assert repr(cubelist) in expected_cubelist
 
 
-def test_combine_singlecubelist_into_cubelist(cube):
+def test_combine_single_cubelist_into_cubelist(cube):
     """Test case of single cubelist into cubelist."""
     cubelist = misc.combine_cubes_into_cubelist(iris.cube.CubeList([cube, cube]))
     expected_cubelist = "[<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>,\n<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>]"
@@ -120,7 +122,7 @@ def test_combine_single_noncompliant_into_cubelist():
         misc.combine_cubes_into_cubelist("hello")
 
 
-def test_combine_multiplecube_into_cubelist(cube):
+def test_combine_multiple_cube_into_cubelist(cube):
     """Test case of multiple cube into cubelist."""
     cubelist = misc.combine_cubes_into_cubelist(cube, a=cube)
     expected_cubelist = "[<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>,\n<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>]"
@@ -133,9 +135,41 @@ def test_combine_multiple_cube_and_noncompliant_into_cubelist(cube):
         misc.combine_cubes_into_cubelist(cube, a="hello")
 
 
-def test_combine_multiplecube_mixed_into_cubelist(cube):
+def test_combine_multiple_cube_mixed_into_cubelist(cube):
     """Test case of multiple cubes and cubelist into cubelist."""
     cubelist = misc.combine_cubes_into_cubelist(cube, a=cube)
     out_cubelist = misc.combine_cubes_into_cubelist(cube, a=cubelist, b=cube)
     expected_cubelist = "[<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>,\n<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>,\n<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>,\n<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>]"
     assert repr(out_cubelist) in expected_cubelist
+
+
+def test_difference(cube: iris.cube.Cube):
+    """Test taking the difference between two cubes."""
+    # Data preparation.
+    other_cube = cube.copy()
+    del other_cube.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([cube, other_cube])
+
+    # Take difference.
+    difference_cube = misc.difference(cubes)
+
+    # As both cubes use the same data, check the difference is zero.
+    assert isinstance(difference_cube, iris.cube.Cube)
+    assert np.allclose(
+        difference_cube.data, np.zeros_like(difference_cube.data), atol=1e-9
+    )
+
+
+def test_difference_incorrect_number_of_cubes(cube):
+    """Test exception when incorrect number of cubes provided."""
+    no_cubes = iris.cube.CubeList([])
+    with pytest.raises(ValueError, match="cubes should contain exactly 2 cubes."):
+        misc.difference(no_cubes)
+
+    one_cube = iris.cube.CubeList([cube])
+    with pytest.raises(ValueError, match="cubes should contain exactly 2 cubes."):
+        misc.difference(one_cube)
+
+    three_cubes = iris.cube.CubeList([cube, cube, cube])
+    with pytest.raises(ValueError, match="cubes should contain exactly 2 cubes."):
+        misc.difference(three_cubes)
