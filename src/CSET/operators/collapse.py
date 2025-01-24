@@ -145,16 +145,23 @@ def collapse_by_hour_of_day(
     cube: iris.cube.Cube | iris.cube.CubeList
         Cube to collapse and iterate over one dimension or CubeList to
         convert to a cube and then collapse prior to aggregating by hour.
-        If a CubeList is provided multi_case must be True. A cube that only
-        contains one time dimension must have multi_case set to False; a cube
+        If a CubeList is provided multi_case must be set to True as the Cube List
+        should only contain cubes of multiple dates and not different variables
+        or models. A cube that only contains one time dimension must have
+        multi_case set to False as it contains only one forecast. A cube
         containing two time dimensions, e.g., 'forecast_reference_time' and
-        'forecast_period' must have multi_case set to True.
+        'forecast_period' must have multi_case set to True as it will contain
+        multiple forecasts.
     method: str
         Type of collapse i.e. method: 'MEAN', 'MAX', 'MIN', 'MEDIAN',
         'PERCENTILE'. For 'PERCENTILE' the additional_percent must be specified.
     multi_case: boolean, optional
         Default is True. If True multiple cases will be aggregated by hour of
         day; if False a single forecast will be aggregated by hour of day.
+        Information around the usage of multi_case is provided above under the
+        description for the cube argument. It is kept as an argument rather
+        than being automatically generated to maintain traceability for the
+        users actions.
 
     Returns
     -------
