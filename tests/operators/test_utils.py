@@ -213,3 +213,22 @@ def test_ensure_aggregatable_across_cases_cubelist(
         rtol=1e-06,
         atol=1e-02,
     )
+
+
+def test_model_type_um(cube):
+    """Test detecting the model type of some UM data."""
+    model_type = operator_utils.model_type(cube)
+    assert model_type == "UM"
+
+
+def test_model_type_slammed_lfric(slammed_lfric_cube):
+    """Test detecting the model type of some slammed LFRic data."""
+    model_type = operator_utils.model_type(slammed_lfric_cube)
+    assert model_type == "LFRic"
+
+
+def test_model_type_unknown():
+    """Test detecting the model type of some UM data."""
+    cube = iris.cube.Cube([0], var_name="test")
+    model_type = operator_utils.model_type(cube)
+    assert model_type == "unknown"
