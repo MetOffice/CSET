@@ -66,6 +66,8 @@ __all__ = [
 FUTURE.datum_support = True
 # Stop iris giving a warning whenever it saves something.
 FUTURE.save_split_attrs = True
+# Accept microsecond precision in iris times.
+FUTURE.date_microseconds = True
 
 
 def get_operator(name: str):
