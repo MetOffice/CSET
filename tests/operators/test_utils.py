@@ -88,17 +88,15 @@ def test_is_transect_correct_coord(transect_source_cube):
     assert operator_utils.is_transect(transect_source_cube_slice)
 
 
-def test_is_spatialdim_false():
+def test_is_spatialdim_false(transect_source_cube):
     """Check that is spatial test returns false if cube does not contain spatial coordinates."""
-    cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
-    cube = cube[:, :, 0, 0]  # Remove spatial dimcoords
+    cube = transect_source_cube[:, :, 0, 0]  # Remove spatial dimcoords.
     assert not operator_utils.is_spatialdim(cube)
 
 
-def test_is_spatialdim_true():
+def test_is_spatialdim_true(transect_source_cube):
     """Check that is spatial test returns true if cube contains spatial coordinates."""
-    cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
-    assert operator_utils.is_spatialdim(cube)
+    assert operator_utils.is_spatialdim(transect_source_cube)
 
 
 def test_fully_equalise_attributes_remove_unique_attributes():
