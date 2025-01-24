@@ -18,7 +18,7 @@ import iris.cube
 import numpy as np
 import pytest
 
-from CSET.operators import constraints, filters
+from CSET.operators import constraints, filters, read
 
 constraint_single = constraints.combine_constraints(
     constraints.generate_stash_constraint("m01s03i236"),
@@ -124,7 +124,7 @@ def test_filter_multiple_cubes_none_returned(cubes):
 @pytest.fixture(scope="session")
 def load_vertical_coord_cubelist() -> iris.cube.CubeList:
     """Get a cubelist with multiple vertical level cubes."""
-    return iris.load("tests/test_data/vertlevtestdata.nc", "y_wind")
+    return read.read_cubes("tests/test_data/vertlevtestdata.nc", "y_wind")
 
 
 def test_generate_level_constraint_return_single_level(load_vertical_coord_cubelist):
@@ -139,12 +139,10 @@ def test_generate_level_constraint_return_single_level(load_vertical_coord_cubel
         coordinate="model_level_number", levels=[]
     )
     combined = constraints.combine_constraints(constraint_1, a=constraint_2)
-
-    extracted = load_vertical_coord_cubelist.extract(combined)[0]
-
-    expected_coordstr = "<bound method Cube.coords of <iris 'Cube' of y_wind / (m s-1) (latitude: 2; longitude: 2)>>"
-
-    assert expected_coordstr in repr(extracted.coords)
+    cube = load_vertical_coord_cubelist.extract_cube(combined)
+    coords = [coord.name() for coord in cube.coords()]
+    assert "pressure" not in coords
+    assert "model_level_number" not in coords
 
 
 def test_generate_level_constraint_return_all_pressure(load_vertical_coord_cubelist):
@@ -152,15 +150,11 @@ def test_generate_level_constraint_return_all_pressure(load_vertical_coord_cubel
 
     Return one with a pressure on all levels.
     """
-    constraint_1 = constraints.generate_level_constraint(
+    constraint = constraints.generate_level_constraint(
         coordinate="pressure", levels="*"
     )
-
-    expected_coordstr = "<bound method Cube.coords of <iris 'Cube' of y_wind / (m s-1) (pressure: 34; latitude: 2; longitude: 2)>>"
-
-    assert expected_coordstr in repr(
-        load_vertical_coord_cubelist.extract(constraint_1)[0].coords
-    )
+    coord = load_vertical_coord_cubelist.extract_cube(constraint).coord("pressure")
+    assert coord.shape == (34,)
 
 
 def test_generate_level_constraint_return_all_model_levels(
@@ -170,15 +164,13 @@ def test_generate_level_constraint_return_all_model_levels(
 
     Return one with a model level on all levels.
     """
-    constraint_1 = constraints.generate_level_constraint(
+    constraint = constraints.generate_level_constraint(
         coordinate="model_level_number", levels="*"
     )
-
-    expected_coordstr = "<bound method Cube.coords of <iris 'Cube' of y_wind / (m s-1) (model_level_number: 70; latitude: 2; longitude: 2)>>"
-
-    assert expected_coordstr in repr(
-        load_vertical_coord_cubelist.extract(constraint_1)[0].coords
+    coord = load_vertical_coord_cubelist.extract_cube(constraint).coord(
+        "model_level_number"
     )
+    assert coord.shape == (70,)
 
 
 def test_generate_mask_fail_wrong_condition(cube):
