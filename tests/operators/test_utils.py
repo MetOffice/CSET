@@ -69,19 +69,19 @@ def test_get_cube_yxcoordname(regrid_rectilinear_cube):
     )
 
 
-def test_is_transect_multiplespatialcoords(regrid_rectilinear_cube):
+def test_is_transect_multiple_spatial_coords(regrid_rectilinear_cube):
     """Check that function returns False as more than one spatial map coord."""
     assert not operator_utils.is_transect(regrid_rectilinear_cube)
 
 
-def test_is_transect_noverticalcoord(transect_source_cube):
+def test_is_transect_no_vertical_coord(transect_source_cube):
     """Check that function returns False as no vertical coord found."""
     # Retain only time and latitude coordinate, so it passes the first spatial coord test.
     transect_source_cube_slice = transect_source_cube[:, 0, :, 0]
     assert not operator_utils.is_transect(transect_source_cube_slice)
 
 
-def test_is_transect_correctcoord(transect_source_cube):
+def test_is_transect_correct_coord(transect_source_cube):
     """Check that function returns True as one map and vertical coord found."""
     # Retain only time and latitude coordinate, so it passes the first spatial coord test.
     transect_source_cube_slice = transect_source_cube[:, :, :, 0]
