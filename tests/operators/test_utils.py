@@ -21,12 +21,13 @@ import numpy as np
 import pytest
 
 import CSET.operators._utils as operator_utils
+from CSET.operators import read
 
 
 @pytest.fixture()
 def long_forecast() -> iris.cube.Cube:
     """Get long_forecast to run tests on."""
-    return iris.load_cube(
+    return read.read_cube(
         "tests/test_data/long_forecast_air_temp_fcst_1.nc", "air_temperature"
     )
 
@@ -34,7 +35,7 @@ def long_forecast() -> iris.cube.Cube:
 @pytest.fixture()
 def long_forecast_multi_day() -> iris.cube.Cube:
     """Get long_forecast_multi_day to run tests on."""
-    return iris.load_cube(
+    return read.read_cube(
         "tests/test_data/long_forecast_air_temp_multi_day.nc", "air_temperature"
     )
 
@@ -42,7 +43,7 @@ def long_forecast_multi_day() -> iris.cube.Cube:
 @pytest.fixture()
 def long_forecast_many_cubes() -> iris.cube.Cube:
     """Get long_forecast_may_cubes to run tests on."""
-    return iris.load(
+    return read.read_cubes(
         "tests/test_data/long_forecast_air_temp_fcst_*.nc", "air_temperature"
     )
 
