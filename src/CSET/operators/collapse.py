@@ -152,7 +152,7 @@ def collapse_by_hour_of_day(
     method: str
         Type of collapse i.e. method: 'MEAN', 'MAX', 'MIN', 'MEDIAN',
         'PERCENTILE'. For 'PERCENTILE' the additional_percent must be specified.
-    multi_case: boolean
+    multi_case: boolean, optional
         Default is True. If True multiple cases will be aggregated by hour of
         day; if False a single forecast will be aggregated by hour of day.
 
@@ -186,7 +186,7 @@ def collapse_by_hour_of_day(
     """
     if method == "PERCENTILE" and additional_percent is None:
         raise ValueError("Must specify additional_percent")
-    if (
+    elif (
         isinstance(cube, iris.cube.Cube)
         and is_time_aggregatable(cube)
         and not multi_case
@@ -194,7 +194,7 @@ def collapse_by_hour_of_day(
         raise TypeError(
             "multi_case must be true for a cube containing two time dimensions"
         )
-    if (
+    elif (
         isinstance(cube, iris.cube.Cube)
         and not is_time_aggregatable(cube)
         and multi_case
@@ -202,7 +202,7 @@ def collapse_by_hour_of_day(
         raise TypeError(
             "multi_case must be false for a cube containing one time dimension"
         )
-    if isinstance(cube, iris.cube.CubeList) and not multi_case:
+    elif isinstance(cube, iris.cube.CubeList) and not multi_case:
         raise TypeError("multi_case must be true for a CubeList")
 
     if multi_case:
