@@ -19,25 +19,25 @@ import iris.cube
 import numpy as np
 import pytest
 
-import CSET.operators.ageofair as ageofair
+from CSET.operators import ageofair, read
 
 
 @pytest.fixture()
 def xwind() -> iris.cube.Cube:
     """Get regridded xwind to run tests on."""
-    return iris.load_cube("tests/test_data/ageofair/aoa_in_rgd.nc", "x_wind")
+    return read.read_cube("tests/test_data/ageofair/aoa_in_rgd.nc", "x_wind")
 
 
 @pytest.fixture()
 def ywind() -> iris.cube.Cube:
     """Get regridded ywind to run tests on."""
-    return iris.load_cube("tests/test_data/ageofair/aoa_in_rgd.nc", "y_wind")
+    return read.read_cube("tests/test_data/ageofair/aoa_in_rgd.nc", "y_wind")
 
 
 @pytest.fixture()
 def wwind() -> iris.cube.Cube:
     """Get regridded wwind to run tests on."""
-    return iris.load_cube(
+    return read.read_cube(
         "tests/test_data/ageofair/aoa_in_rgd.nc", "upward_air_velocity"
     )
 
@@ -45,7 +45,7 @@ def wwind() -> iris.cube.Cube:
 @pytest.fixture()
 def geopot() -> iris.cube.Cube:
     """Get regridded geopotential height to run tests on."""
-    return iris.load_cube(
+    return read.read_cube(
         "tests/test_data/ageofair/aoa_in_rgd.nc", "geopotential_height"
     )
 
@@ -53,13 +53,13 @@ def geopot() -> iris.cube.Cube:
 @pytest.fixture()
 def ens_regridded() -> iris.cube.CubeList:
     """Get regridded ensemble cubelist to run tests on."""
-    return iris.load("tests/test_data/ageofair/aoa_in_ens.nc")
+    return read.read_cubes("tests/test_data/ageofair/aoa_in_ens.nc")
 
 
 @pytest.fixture()
 def ens_regridded_out() -> iris.cube.Cube:
     """Get age of air ensemble output to check results are consistent."""
-    return iris.load_cube("tests/test_data/ageofair/aoa_out_ens.nc")
+    return read.read_cube("tests/test_data/ageofair/aoa_out_ens.nc")
 
 
 def test_calc_dist():
@@ -83,7 +83,7 @@ def test_aoa_nocyclic(xwind, ywind, wwind, geopot):
         ageofair.compute_ageofair(
             xwind, ywind, wwind, geopot, plev=500, cyclic=False
         ).data,
-        iris.load_cube("tests/test_data/ageofair/aoa_out_nocyclic.nc").data,
+        read.read_cube("tests/test_data/ageofair/aoa_out_nocyclic.nc").data,
         rtol=1e-06,
         atol=1e-02,
     )
@@ -101,7 +101,7 @@ def test_aoa_cyclic_parallel_processing(xwind, ywind, wwind, geopot):
             cyclic=True,
             multicore=True,
         ).data,
-        iris.load_cube("tests/test_data/ageofair/aoa_out_cyclic.nc").data,
+        read.read_cube("tests/test_data/ageofair/aoa_out_cyclic.nc").data,
         rtol=1e-06,
         atol=1e-02,
     )
@@ -119,7 +119,7 @@ def test_aoa_cyclic_single_process(xwind, ywind, wwind, geopot):
             cyclic=True,
             multicore=False,
         ).data,
-        iris.load_cube("tests/test_data/ageofair/aoa_out_cyclic.nc").data,
+        read.read_cube("tests/test_data/ageofair/aoa_out_cyclic.nc").data,
         rtol=1e-06,
         atol=1e-02,
     )
