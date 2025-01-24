@@ -127,7 +127,7 @@ def load_verticalcoord_cubelist() -> iris.cube.CubeList:
     return iris.load("tests/test_data/vertlevtestdata.nc", "y_wind")
 
 
-def test_generate_level_constraint_returnsinglelevel(load_verticalcoord_cubelist):
+def test_generate_level_constraint_return_single_level(load_verticalcoord_cubelist):
     """For a cubelist that contains 3 cubes on different vertical levels.
 
     Return one without a vertical coordinate.
@@ -147,7 +147,7 @@ def test_generate_level_constraint_returnsinglelevel(load_verticalcoord_cubelist
     assert expected_coordstr in repr(extracted.coords)
 
 
-def test_generate_level_constraint_returnallpressure(load_verticalcoord_cubelist):
+def test_generate_level_constraint_return_all_pressure(load_verticalcoord_cubelist):
     """For a cubelist that contains 3 cubes on different vertical levels.
 
     Return one with a pressure on all levels.
@@ -163,7 +163,7 @@ def test_generate_level_constraint_returnallpressure(load_verticalcoord_cubelist
     )
 
 
-def test_generate_level_constraint_returnallmodlev(load_verticalcoord_cubelist):
+def test_generate_level_constraint_return_all_model_levels(load_verticalcoord_cubelist):
     """For a cubelist that contains 3 cubes on different vertical levels.
 
     Return one with a model level on all levels.

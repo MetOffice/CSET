@@ -174,7 +174,7 @@ def test_is_time_aggregatable(long_forecast_multi_day):
     assert operator_utils.is_time_aggregatable(long_forecast_multi_day)
 
 
-def test_ensure_aggregatable_across_cases_true_aggregateable_cube(
+def test_ensure_aggregatable_across_cases_true_aggregatable_cube(
     long_forecast_multi_day,
 ):
     """Check that an aggregatable cube is returned with no changes."""
@@ -186,7 +186,7 @@ def test_ensure_aggregatable_across_cases_true_aggregateable_cube(
     )
 
 
-def test_ensure_aggregatable_across_cases_false_aggregateable_cube(long_forecast):
+def test_ensure_aggregatable_across_cases_false_aggregatable_cube(long_forecast):
     """Check that a non-aggregatable cube raises an error."""
     with pytest.raises(ValueError):
         operator_utils.ensure_aggregatable_across_cases(long_forecast)
