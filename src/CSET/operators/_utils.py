@@ -232,7 +232,7 @@ def ensure_aggregatable_across_cases(
     ---------
     cube: iris.cube.Cube | iris.cube.CubeList
         If a Cube is provided it is checked to determine if it has the
-        the necessary dimensional coordinates to be aggregateable.
+        the necessary dimensional coordinates to be aggregatable.
         These necessary coordinates are 'forecast_period' and
         'forecast_reference_time'.If a CubeList is provided a Cube is created
         by slicing over all time coordinates and the resulting list is merged
