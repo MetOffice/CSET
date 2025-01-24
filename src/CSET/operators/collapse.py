@@ -204,6 +204,7 @@ def collapse_by_hour_of_day(
         )
     if isinstance(cube, iris.cube.CubeList) and not multi_case:
         raise TypeError("multi_case must be true for a CubeList")
+    
     if multi_case:
         # Collapse by lead time to get a single time dimension.
         cube = collapse_by_lead_time(
