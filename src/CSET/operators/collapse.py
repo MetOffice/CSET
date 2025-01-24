@@ -210,6 +210,7 @@ def collapse_by_hour_of_day(
         cube = collapse_by_lead_time(
             cube, method, additional_percent=additional_percent
         )
+
     # Categorise the time coordinate by hour of the day.
     iris.coord_categorisation.add_hour(cube, "time", name="hour")
     # Aggregate by the new category coordinate.
@@ -219,6 +220,7 @@ def collapse_by_hour_of_day(
         )
     else:
         collapsed_cube = cube.aggregated_by("hour", getattr(iris.analysis, method))
+
     # Remove unnecessary time coordinates.
     collapsed_cube.remove_coord("time")
     collapsed_cube.remove_coord("forecast_period")
@@ -226,6 +228,7 @@ def collapse_by_hour_of_day(
     # will have effectively done this if multi_case is True.
     if not multi_case:
         collapsed_cube.remove_coord("forecast_reference_time")
+
     # Promote "hour" to dim_coord if monotonic.
     if collapsed_cube.coord("hour").is_monotonic():
         iris.util.promote_aux_coord_to_dim_coord(collapsed_cube, "hour")
