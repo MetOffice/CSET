@@ -27,6 +27,7 @@ dependencies:
   - tox-conda
   - pytest >= 7.0
   - pytest-cov
+  - pytest-xdist
 
   # Documentation dependencies
   - sphinx >= 6.0
