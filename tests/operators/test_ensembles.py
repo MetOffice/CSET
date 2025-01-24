@@ -19,31 +19,31 @@ import iris.cube
 import numpy as np
 import pytest
 
-import CSET.operators.ensembles as ensembles
+from CSET.operators import ensembles, read
 
 
 @pytest.fixture()
 def xwind() -> iris.cube.Cube:
     """Get xwind to run tests on."""
-    return iris.load_cube("tests/test_data/ageofair/aoa_in_ens.nc", "x_wind")
+    return read.read_cube("tests/test_data/ageofair/aoa_in_ens.nc", "x_wind")
 
 
 @pytest.fixture()
 def xwind_deterministic() -> iris.cube.Cube:
     """Get xwind to run tests on."""
-    return iris.load_cube("tests/test_data/ageofair/aoa_in_rgd.nc", "x_wind")
+    return read.read_cube("tests/test_data/ageofair/aoa_in_rgd.nc", "x_wind")
 
 
 @pytest.fixture()
 def ywind() -> iris.cube.Cube:
     """Get ywind to run tests on."""
-    return iris.load_cube("tests/test_data/ageofair/aoa_in_ens.nc", "y_wind")
+    return read.read_cube("tests/test_data/ageofair/aoa_in_ens.nc", "y_wind")
 
 
 @pytest.fixture()
 def ywind_deterministic() -> iris.cube.Cube:
     """Get xwind to run tests on."""
-    return iris.load_cube("tests/test_data/ageofair/aoa_in_rgd.nc", "y_wind")
+    return read.read_cube("tests/test_data/ageofair/aoa_in_rgd.nc", "y_wind")
 
 
 def test_DKE(xwind, ywind):

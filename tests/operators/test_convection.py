@@ -19,61 +19,61 @@ import iris.cube
 import numpy as np
 import pytest
 
-import CSET.operators.convection as convection
+from CSET.operators import convection, read
 
 
 @pytest.fixture
 def SBCAPE() -> iris.cube.Cube:
     """Get a SBCAPE cube."""
-    return iris.load_cube("tests/test_data/convection/SBCAPE.nc")
+    return read.read_cube("tests/test_data/convection/SBCAPE.nc")
 
 
 @pytest.fixture
 def MUCAPE() -> iris.cube.Cube:
     """Get an MUCAPE cube."""
-    return iris.load_cube("tests/test_data/convection/MUCAPE.nc")
+    return read.read_cube("tests/test_data/convection/MUCAPE.nc")
 
 
 @pytest.fixture
 def MUCIN() -> iris.cube.Cube:
     """Get a MUCIN cube."""
-    return iris.load_cube("tests/test_data/convection/MUCIN.nc")
+    return read.read_cube("tests/test_data/convection/MUCIN.nc")
 
 
 @pytest.fixture
 def EIB() -> iris.cube.Cube:
     """Get an EIB cube."""
-    return iris.load_cube("tests/test_data/convection/EIB.nc")
+    return read.read_cube("tests/test_data/convection/EIB.nc")
 
 
 @pytest.fixture
 def BLheight() -> iris.cube.Cube:
     """Get a BLheight cube."""
-    return iris.load_cube("tests/test_data/convection/BLheight.nc")
+    return read.read_cube("tests/test_data/convection/BLheight.nc")
 
 
 @pytest.fixture
 def orography_2D() -> iris.cube.Cube:
     """Get a 2D Orography cube."""
-    return iris.load_cube("tests/test_data/convection/Orography2D.nc")
+    return read.read_cube("tests/test_data/convection/Orography2D.nc")
 
 
 @pytest.fixture
 def orography_3D() -> iris.cube.Cube:
     """Get a 3D Orography cube (time)."""
-    return iris.load_cube("tests/test_data/convection/Orography3D.nc")
+    return read.read_cube("tests/test_data/convection/Orography3D.nc")
 
 
 @pytest.fixture
 def orography_3D_ens() -> iris.cube.Cube:
     """Get a 3D Orography cube (realization)."""
-    return iris.load_cube("tests/test_data/convection/Orography3D_ens.nc")
+    return read.read_cube("tests/test_data/convection/Orography3D_ens.nc")
 
 
 @pytest.fixture
 def orography_4D() -> iris.cube.Cube:
     """Get a 4D Orography cube (time and realization)."""
-    return iris.load_cube("tests/test_data/convection/Orography4D.nc")
+    return read.read_cube("tests/test_data/convection/Orography4D.nc")
 
 
 def test_cape_ratio(SBCAPE, MUCAPE, MUCIN):
@@ -81,13 +81,13 @@ def test_cape_ratio(SBCAPE, MUCAPE, MUCIN):
     # Calculate the diagnostic.
     cape_75 = convection.cape_ratio(SBCAPE, MUCAPE, MUCIN)
     # Compare with KGO.
-    precalculated_75 = iris.load_cube("tests/test_data/convection/ECFlagB.nc")
+    precalculated_75 = read.read_cube("tests/test_data/convection/ECFlagB.nc")
     assert np.allclose(cape_75.data, precalculated_75.data, atol=1e-5, equal_nan=True)
 
     # Calculate the diagnostic.
     cape_1p5 = convection.cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-1.5)
     # Compare with KGO.
-    precalculated_1p5 = iris.load_cube("tests/test_data/convection/ECFlagB_2.nc")
+    precalculated_1p5 = read.read_cube("tests/test_data/convection/ECFlagB_2.nc")
     assert np.allclose(cape_1p5.data, precalculated_1p5.data, atol=1e-5, equal_nan=True)
 
 
@@ -102,7 +102,7 @@ def test_cape_ratio_non_masked_arrays(SBCAPE, MUCAPE, MUCIN):
     cape_75 = convection.cape_ratio(SBCAPE, MUCAPE, MUCIN)
 
     # Compare with KGO.
-    precalculated_75 = iris.load_cube("tests/test_data/convection/ECFlagB.nc")
+    precalculated_75 = read.read_cube("tests/test_data/convection/ECFlagB.nc")
     assert np.allclose(cape_75.data, precalculated_75.data, atol=1e-5, equal_nan=True)
 
 
@@ -111,7 +111,7 @@ def test_inflow_layer_properties(EIB, BLheight, orography_2D):
     inflow_layer_properties = convection.inflow_layer_properties(
         EIB, BLheight, orography_2D
     )
-    precalculated = iris.load_cube("tests/test_data/convection/ECFlagD.nc")
+    precalculated = read.read_cube("tests/test_data/convection/ECFlagD.nc")
     assert np.allclose(inflow_layer_properties.data, precalculated.data)
 
 
@@ -122,7 +122,7 @@ def test_inflow_layer_properties_non_masked_arrays(EIB, BLheight, orography_2D):
     inflow_layer_properties = convection.inflow_layer_properties(
         EIB, BLheight, orography_2D
     )
-    precalculated = iris.load_cube("tests/test_data/convection/ECFlagD.nc")
+    precalculated = read.read_cube("tests/test_data/convection/ECFlagD.nc")
     assert np.allclose(inflow_layer_properties.data, precalculated.data)
 
 
@@ -131,7 +131,7 @@ def test_inflow_layer_properties_3D_orography_time(EIB, BLheight, orography_3D):
     inflow_layer_properties = convection.inflow_layer_properties(
         EIB, BLheight, orography_3D
     )
-    precalculated = iris.load_cube("tests/test_data/convection/ECFlagD.nc")
+    precalculated = read.read_cube("tests/test_data/convection/ECFlagD.nc")
     assert np.allclose(inflow_layer_properties.data, precalculated.data)
 
 
@@ -140,7 +140,7 @@ def test_inflow_layer_properties_3D_orography_ensemble(EIB, BLheight, orography_
     inflow_layer_properties = convection.inflow_layer_properties(
         EIB, BLheight, orography_3D_ens
     )
-    precalculated = iris.load_cube("tests/test_data/convection/ECFlagD.nc")
+    precalculated = read.read_cube("tests/test_data/convection/ECFlagD.nc")
     assert np.allclose(inflow_layer_properties.data, precalculated.data)
 
 
@@ -149,5 +149,5 @@ def test_inflow_layer_properties_4D_orography(EIB, BLheight, orography_4D):
     inflow_layer_properties = convection.inflow_layer_properties(
         EIB, BLheight, orography_4D
     )
-    precalculated = iris.load_cube("tests/test_data/convection/ECFlagD.nc")
+    precalculated = read.read_cube("tests/test_data/convection/ECFlagD.nc")
     assert np.allclose(inflow_layer_properties.data, precalculated.data)
