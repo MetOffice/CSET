@@ -271,3 +271,30 @@ def ensure_aggregatable_across_cases(
                 new_cube_list.append(cube_slice)
         new_merged_cube = new_cube_list.merge_cube()
         return new_merged_cube
+
+
+def model_type(cube: iris.cube.Cube) -> str:
+    """Use heuristics to infer the type of model.
+
+    Usage of this function should be avoided unless absolutely necessary to
+    ensure we are able to support novel models. In particular something
+    sensible should be done for "unknown" models.
+
+    Arguments
+    ---------
+    cube: iris.cube.Cube
+        An iris cube to check.
+
+    Returns
+    -------
+    str
+        The model name. One of "UM", "LFRic", or "unknown" if the model
+        couldn't be determined.
+    """
+    if "um_version" in cube.attributes:
+        return "UM"
+    elif cube.attributes.get("title", None) == "Created by xios":
+        return "LFRic"
+    else:
+        logging.warning("Unknown model type.")
+        return "unknown"

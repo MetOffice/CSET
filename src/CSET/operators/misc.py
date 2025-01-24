@@ -24,7 +24,11 @@ import numpy as np
 from iris.cube import Cube, CubeList
 
 from CSET._common import iter_maybe
-from CSET.operators._utils import fully_equalise_attributes
+from CSET.operators._utils import (
+    fully_equalise_attributes,
+    get_cube_yxcoordname,
+    model_type,
+)
 
 
 def noop(x, **kwargs):
@@ -283,16 +287,9 @@ def difference(cubes: CubeList):
     )
 
     # Figure out if we are comparing between UM and LFRic; flip array if so.
-    def calc_model_type(cube) -> str:
-        if "um_version" in cube.attributes:
-            return "UM"
-        elif cube.attributes.get("title", None) == "Created by xios":
-            return "LFRic"
-        else:
-            logging.warning("Unknown model type.")
-            return "unknown"
-
-    flip_array = calc_model_type(base) != calc_model_type(other)
+    if model_type(base) != model_type(other):
+        lat_coord, _ = get_cube_yxcoordname(other)
+        other.data = np.flip(other.data, other.coord(lat_coord).cube_dims(other))
 
     # Extract just common time points.
     logging.debug("Base: %s\nOther: %s", base.coord("time"), other.coord("time"))
@@ -310,7 +307,5 @@ def difference(cubes: CubeList):
     # This currently relies on the cubes having the same underlying data layout.
     difference = base.copy()
     difference.rename(base.name() + "_difference")
-    if flip_array:
-        other.data = np.flip(other.data, other.coord("grid_latitude").cube_dims(other))
     difference.data = base.data - other.data
     return difference

@@ -58,6 +58,18 @@ def cube(cube_readonly):
 
 
 @pytest.fixture(scope="session")
+def slammed_lfric_cube_readonly():
+    """Get an iris Cube of slammed LFRic data. NOT safe to modify."""
+    return read.read_cube("tests/test_data/slammed_lfric_air_temp.nc")
+
+
+@pytest.fixture()
+def slammed_lfric_cube(slammed_lfric_cube_readonly):
+    """Get an iris Cube of slammed LFRic data. Safe to modify."""
+    return slammed_lfric_cube_readonly.copy()
+
+
+@pytest.fixture(scope="session")
 def vertical_profile_cube_readonly():
     """Get a vertical profile Cube. It is NOT safe to modify."""
     return read.read_cube(
