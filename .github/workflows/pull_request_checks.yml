@@ -46,7 +46,7 @@ jobs:
           echo '::group::Installing local package'
           python3 -m pip install .
           echo '::endgroup::'
-          pytest --verbose --cov --cov-append --cov-config=pyproject.toml
+          pytest -n logical --verbose --cov --cov-append --cov-config=pyproject.toml
           mv .coverage ".coverage.${{ matrix.py-ver }}"
       - uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
         with:
