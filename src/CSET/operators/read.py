@@ -339,8 +339,9 @@ def _lfric_time_coord_fix_callback(cube: iris.cube.Cube, field, filename):
     # always ends up as an AuxCoord.
     if cube.coords("time"):
         time_coord = cube.coord("time")
-        if not isinstance(time_coord, iris.coords.DimCoord) and cube.coord_dims(
-            time_coord
+        if (
+            not isinstance(time_coord, iris.coords.DimCoord)
+            and len(cube.coord_dims(time_coord)) == 1
         ):
             iris.util.promote_aux_coord_to_dim_coord(cube, time_coord)
 
