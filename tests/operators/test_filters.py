@@ -122,12 +122,12 @@ def test_filter_multiple_cubes_none_returned(cubes):
 
 # Session scope fixtures, so the test data only has to be loaded once.
 @pytest.fixture(scope="session")
-def load_verticalcoord_cubelist() -> iris.cube.CubeList:
+def load_vertical_coord_cubelist() -> iris.cube.CubeList:
     """Get a cubelist with multiple vertical level cubes."""
     return iris.load("tests/test_data/vertlevtestdata.nc", "y_wind")
 
 
-def test_generate_level_constraint_return_single_level(load_verticalcoord_cubelist):
+def test_generate_level_constraint_return_single_level(load_vertical_coord_cubelist):
     """For a cubelist that contains 3 cubes on different vertical levels.
 
     Return one without a vertical coordinate.
@@ -140,14 +140,14 @@ def test_generate_level_constraint_return_single_level(load_verticalcoord_cubeli
     )
     combined = constraints.combine_constraints(constraint_1, a=constraint_2)
 
-    extracted = load_verticalcoord_cubelist.extract(combined)[0]
+    extracted = load_vertical_coord_cubelist.extract(combined)[0]
 
     expected_coordstr = "<bound method Cube.coords of <iris 'Cube' of y_wind / (m s-1) (latitude: 2; longitude: 2)>>"
 
     assert expected_coordstr in repr(extracted.coords)
 
 
-def test_generate_level_constraint_return_all_pressure(load_verticalcoord_cubelist):
+def test_generate_level_constraint_return_all_pressure(load_vertical_coord_cubelist):
     """For a cubelist that contains 3 cubes on different vertical levels.
 
     Return one with a pressure on all levels.
@@ -159,11 +159,13 @@ def test_generate_level_constraint_return_all_pressure(load_verticalcoord_cubeli
     expected_coordstr = "<bound method Cube.coords of <iris 'Cube' of y_wind / (m s-1) (pressure: 34; latitude: 2; longitude: 2)>>"
 
     assert expected_coordstr in repr(
-        load_verticalcoord_cubelist.extract(constraint_1)[0].coords
+        load_vertical_coord_cubelist.extract(constraint_1)[0].coords
     )
 
 
-def test_generate_level_constraint_return_all_model_levels(load_verticalcoord_cubelist):
+def test_generate_level_constraint_return_all_model_levels(
+    load_vertical_coord_cubelist,
+):
     """For a cubelist that contains 3 cubes on different vertical levels.
 
     Return one with a model level on all levels.
@@ -175,7 +177,7 @@ def test_generate_level_constraint_return_all_model_levels(load_verticalcoord_cu
     expected_coordstr = "<bound method Cube.coords of <iris 'Cube' of y_wind / (m s-1) (model_level_number: 70; latitude: 2; longitude: 2)>>"
 
     assert expected_coordstr in repr(
-        load_verticalcoord_cubelist.extract(constraint_1)[0].coords
+        load_vertical_coord_cubelist.extract(constraint_1)[0].coords
     )
 
 
