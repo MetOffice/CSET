@@ -175,6 +175,16 @@ def test_difference_incorrect_number_of_cubes(cube):
         misc.difference(three_cubes)
 
 
+def test_difference_incorrect_data_shape(cube):
+    """Test exception when data shape differs."""
+    rearranged_cube = cube.copy()
+    rearranged_cube.transpose()
+    del rearranged_cube.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([cube, rearranged_cube])
+    with pytest.raises(ValueError, match="Cubes should have the same data shape"):
+        misc.difference(cubes)
+
+
 def test_difference_different_model_types(cube):
     """Other cube is flipped when model types differ."""
     flipped = cube.copy()
