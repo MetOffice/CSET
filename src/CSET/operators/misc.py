@@ -285,6 +285,11 @@ def difference(cubes: CubeList):
         )
     )
 
+    if base.shape != other.shape:
+        raise ValueError(
+            f"Cubes should have the same data shape, got {base.shape}, {other.shape}"
+        )
+
     def is_increasing(sequence: list) -> bool:
         """Determine the direction of an ordered sequence.
 
