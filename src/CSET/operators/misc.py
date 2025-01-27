@@ -27,7 +27,6 @@ from CSET._common import iter_maybe
 from CSET.operators._utils import (
     fully_equalise_attributes,
     get_cube_yxcoordname,
-    model_type,
 )
 
 
@@ -286,10 +285,22 @@ def difference(cubes: CubeList):
         )
     )
 
+    def is_increasing(sequence: list) -> bool:
+        """Determine the direction of an ordered sequence.
+
+        Returns "increasing" or "decreasing" depending on whether the sequence
+        is going up or down. The sequence should already be monotonic, with no
+        duplicate values. An iris DimCoord's points fulfills this criteria.
+        """
+        return sequence[0] < sequence[1]
+
     # Figure out if we are comparing between UM and LFRic; flip array if so.
-    if model_type(base) != model_type(other):
-        lat_coord, _ = get_cube_yxcoordname(other)
-        other.data = np.flip(other.data, other.coord(lat_coord).cube_dims(other))
+    base_lat_name, _ = get_cube_yxcoordname(base)
+    base_lat_direction = is_increasing(base.coord(base_lat_name).points)
+    other_lat_name, _ = get_cube_yxcoordname(other)
+    other_lat_direction = is_increasing(other.coord(other_lat_name).points)
+    if base_lat_direction != other_lat_direction:
+        other.data = np.flip(other.data, other.coord(other_lat_name).cube_dims(other))
 
     # Extract just common time points.
     logging.debug("Base: %s\nOther: %s", base.coord("time"), other.coord("time"))
