@@ -59,7 +59,7 @@ def ens_regridded() -> iris.cube.CubeList:
 @pytest.fixture()
 def ens_regridded_out() -> iris.cube.Cube:
     """Get age of air ensemble output to check results are consistent."""
-    return iris.load("tests/test_data/ageofair/aoa_out_ens.nc")
+    return iris.load_cube("tests/test_data/ageofair/aoa_out_ens.nc")
 
 
 def test_calc_dist():
@@ -89,8 +89,8 @@ def test_aoa_nocyclic(xwind, ywind, wwind, geopot):
     )
 
 
-def test_aoa_cyclic_parallelthreads(xwind, ywind, wwind, geopot):
-    """Test case when cyclic with parallel threads."""
+def test_aoa_cyclic_parallel_processing(xwind, ywind, wwind, geopot):
+    """Test case when cyclic with parallel processing."""
     assert np.allclose(
         ageofair.compute_ageofair(
             xwind,
@@ -107,7 +107,7 @@ def test_aoa_cyclic_parallelthreads(xwind, ywind, wwind, geopot):
     )
 
 
-def test_aoa_cyclic_singlethread(xwind, ywind, wwind, geopot):
+def test_aoa_cyclic_single_process(xwind, ywind, wwind, geopot):
     """Test case when cyclic with no parallelisation."""
     assert np.allclose(
         ageofair.compute_ageofair(
@@ -158,7 +158,7 @@ def test_aoa_plevreq(xwind, ywind, wwind, geopot):
         ageofair.compute_ageofair(xwind, ywind, wwind, geopot, plev=123, cyclic=True)
 
 
-def test_aoa_ens(ens_regridded):
+def test_aoa_ens(ens_regridded, ens_regridded_out):
     """Test case including vertical velocity and not cyclic for ensemble data."""
     assert np.allclose(
         ageofair.compute_ageofair(
@@ -168,14 +168,15 @@ def test_aoa_ens(ens_regridded):
             ens_regridded.extract("geopotential_height")[0],
             plev=200,
             cyclic=False,
+            multicore=False,
         ).data,
-        iris.load_cube("tests/test_data/ageofair/aoa_out_ens.nc").data,
+        ens_regridded_out.data,
         rtol=1e-06,
         atol=1e-02,
     )
 
 
-def test_aoa_ens_multicore(ens_regridded):
+def test_aoa_ens_multicore(ens_regridded, ens_regridded_out):
     """Test case with ensembles ensuring that single core and multicore produce identical values."""
     assert np.allclose(
         ageofair.compute_ageofair(
@@ -187,15 +188,7 @@ def test_aoa_ens_multicore(ens_regridded):
             cyclic=False,
             multicore=True,
         ).data,
-        ageofair.compute_ageofair(
-            ens_regridded.extract("x_wind")[0],
-            ens_regridded.extract("y_wind")[0],
-            ens_regridded.extract("upward_air_velocity")[0],
-            ens_regridded.extract("geopotential_height")[0],
-            plev=200,
-            cyclic=False,
-            multicore=False,
-        ).data,
+        ens_regridded_out.data,
         rtol=1e-06,
         atol=1e-02,
     )
