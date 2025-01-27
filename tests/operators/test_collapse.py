@@ -148,7 +148,7 @@ def test_collapse_by_hour_of_day_multi_forecast_cubelist_fail(long_forecast_many
 
 
 def test_collapse_by_hour_of_day_monotonic_coords(medium_forecast):
-    """Convert and aggregates time dimension by hour of day with montonic coordinates."""
+    """Convert and aggregates time dimension by hour of day with monotonic coordinates."""
     collapsed_cube = collapse.collapse_by_hour_of_day(
         medium_forecast, "MEAN", multi_case=False
     )
