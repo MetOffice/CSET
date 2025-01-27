@@ -400,14 +400,15 @@ def compute_ageofair(
     # See https://docs.python.org/3/library/os.html#os.cpu_count
     if multicore:
         num_usable_cores = len(os.sched_getaffinity(0))
+        # Use "spawn" method to avoid warnings before the default is changed in
+        # python 3.14. See the (not very good) warning here:
+        # https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods
+        mp_context = multiprocessing.get_context("spawn")
+        pool = mp_context.Pool(num_usable_cores)
 
     logging.info("STARTING AOA DIAG...")
     start = datetime.datetime.now()
 
-    # Use "spawn" method to avoid warnings before the default is changed in
-    # python 3.14. See the (not very good) warning here:
-    # https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods
-    mp_context = multiprocessing.get_context("spawn")
     # Main call for calculating age of air diagnostic
     if ensemble_mode:
         for e in range(0, len(XWIND.coord("realization").points)):
@@ -429,8 +430,7 @@ def compute_ageofair(
                 tmpdir.name,
             )
             if multicore:
-                with mp_context.Pool(num_usable_cores) as pool:
-                    pool.map(func, range(0, XWIND.shape[4]))
+                pool.map(func, range(0, XWIND.shape[4]))
             else:
                 # Convert to list to ensure everything is processed.
                 list(map(func, range(0, XWIND.shape[4])))
@@ -456,8 +456,7 @@ def compute_ageofair(
             tmpdir.name,
         )
         if multicore:
-            with mp_context.Pool(num_usable_cores) as pool:
-                pool.map(func, range(0, XWIND.shape[3]))
+            pool.map(func, range(0, XWIND.shape[3]))
         else:
             # Convert to list to ensure everything is processed.
             list(map(func, range(0, XWIND.shape[3])))
@@ -465,6 +464,11 @@ def compute_ageofair(
         for i in range(0, XWIND.shape[3]):
             file = f"{tmpdir.name}/aoa_frag_{i:04}.npy"
             ageofair_cube.data[:, :, i] = np.load(file)
+
+    if multicore:
+        # Wait for tasks to finish then clean up worker processes.
+        pool.terminate()
+        pool.join()
 
     # Verbose for time taken to run, and collate tmp ndarrays into final cube, and return
     logging.info(
