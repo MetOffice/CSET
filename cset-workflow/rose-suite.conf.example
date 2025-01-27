@@ -1,5 +1,5 @@
 [template variables]
-ANALYSIS_LENGTH
+ANALYSIS_LENGTH=""
 !!AOA_CYCLIC=False
 AOA_DIAG=False
 !!AOA_PLEV=[]
