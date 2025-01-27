@@ -177,18 +177,18 @@ def test_difference_incorrect_number_of_cubes(cube):
 
 def test_difference_different_model_types(cube):
     """Other cube is flipped when model types differ."""
-    fake_lfric_cube = cube.copy()
-    fake_lfric_cube.attributes["title"] = "Created by xios"
-    del fake_lfric_cube.attributes["um_version"]
-    del fake_lfric_cube.attributes["cset_comparison_base"]
-    cubes = iris.cube.CubeList([cube, fake_lfric_cube])
+    flipped = cube.copy()
+    flipped_coord = flipped.coord("grid_latitude")
+    flipped_coord.points = np.flip(flipped_coord.points)
+    flipped.data = np.flip(flipped.data, flipped_coord.cube_dims(flipped))
+    del flipped.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([cube, flipped])
 
     # Take difference.
     difference_cube = misc.difference(cubes)
 
     assert isinstance(difference_cube, iris.cube.Cube)
-    # Even though both cubes use the same data, one will be flipped, so check
-    # the difference is not zero.
-    assert not np.allclose(
+    # As both cubes use the same data, check the difference is zero.
+    assert np.allclose(
         difference_cube.data, np.zeros_like(difference_cube.data), atol=1e-9
     )
