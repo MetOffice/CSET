@@ -59,6 +59,11 @@
     "max": 1,
     "min": 0
   },
+  "cloud_base_altitude": {
+    "cmap": "terrain",
+    "max": 150,
+    "min": 0
+  },
   "cloud_base_altitude_asl_combined_cloud_amount_greater_than_2p5_okta": {
     "cmap": "terrain",
     "max": 150,
@@ -202,6 +207,11 @@
   "rain_mixing_ratio": {
     "cmap": "cividis",
     "max": 0.002,
+    "min": 0
+  },
+  "relative_humidity": {
+    "cmap": "Blues",
+    "max": 110,
     "min": 0
   },
   "relative_humidity_at_screen_level": {

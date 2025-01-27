@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2025) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,8 +19,12 @@ Functions below should only be added if it is not suitable as a standalone
 operator, and will be used across multiple operators.
 """
 
+import logging
+
 import iris
 import iris.cube
+import iris.exceptions
+import iris.util
 
 
 def get_cube_yxcoordname(cube: iris.cube.Cube) -> tuple[str, str]:
@@ -64,6 +68,42 @@ def get_cube_yxcoordname(cube: iris.cube.Cube) -> tuple[str, str]:
         raise ValueError("Could not identify a unique y-coordinate in cube")
 
     return (y_coords[0], x_coords[0])
+
+
+def is_spatialdim(cube: iris.cube.Cube) -> bool:
+    """Determine whether a cube is has two spatial dimension coordinates.
+
+    If cube has both spatial dims, it will contain two unique coordinates
+    that explain space (latitude and longitude). The coordinates have to
+    be iterable/contain usable dimension data, as cubes may contain these
+    coordinates as scalar dimensions after being collapsed.
+
+    Arguments
+    ---------
+    cube: iris.cube.Cube
+        An iris cube which will be checked to see if it contains coordinate
+        names that match a pre-defined list of acceptable coordinate names.
+
+    Returns
+    -------
+    bool
+        If true, then the cube has a spatial projection and thus can be plotted
+        as a map.
+    """
+    # Acceptable horizontal coordinate names.
+    X_COORD_NAMES = ["longitude", "grid_longitude", "projection_x_coordinate", "x"]
+    Y_COORD_NAMES = ["latitude", "grid_latitude", "projection_y_coordinate", "y"]
+
+    # Get a list of coordinate names for the cube
+    coord_names = [coord.name() for coord in cube.dim_coords]
+    x_coords = [coord for coord in coord_names if coord in X_COORD_NAMES]
+    y_coords = [coord for coord in coord_names if coord in Y_COORD_NAMES]
+
+    # If there is one coordinate for both x and y direction return True.
+    if len(x_coords) == 1 and len(y_coords) == 1:
+        return True
+    else:
+        return False
 
 
 def is_transect(cube: iris.cube.Cube) -> bool:
@@ -117,3 +157,117 @@ def is_transect(cube: iris.cube.Cube) -> bool:
 
     # Passed criteria so return True
     return True
+
+
+def fully_equalise_attributes(cubes: iris.cube.CubeList):
+    """Remove any unique attributes between cubes or coordinates in place."""
+    # Equalise cube attributes.
+    removed = iris.util.equalise_attributes(cubes)
+    logging.debug("Removed attributes from cube: %s", removed)
+
+    # Equalise coordinate attributes.
+    coord_sets = [{coord.name() for coord in cube.coords()} for cube in cubes]
+
+    all_coords = set.union(*coord_sets)
+    coords_to_equalise = set.intersection(*coord_sets)
+    coords_to_remove = set.difference(all_coords, coords_to_equalise)
+
+    logging.debug("All coordinates: %s", all_coords)
+    logging.debug("Coordinates to remove: %s", coords_to_remove)
+    logging.debug("Coordinates to equalise: %s", coords_to_equalise)
+
+    for coord in coords_to_remove:
+        for cube in cubes:
+            try:
+                cube.remove_coord(coord)
+                logging.debug("Removed coordinate %s from %s cube.", coord, cube.name())
+            except iris.exceptions.CoordinateNotFoundError:
+                pass
+
+    for coord in coords_to_equalise:
+        removed = iris.util.equalise_attributes([cube.coord(coord) for cube in cubes])
+        logging.debug("Removed attributes from coordinate %s: %s", coord, removed)
+
+    return cubes
+
+
+def is_time_aggregatable(cube: iris.cube.Cube) -> bool:
+    """Determine whether a cube can be aggregated in time.
+
+    If a cube is aggregatable it will contain both a 'forecast_reference_time'
+    and 'forecast_period' coordinate as dimensional coordinates.
+
+    Arguments
+    ---------
+    cube: iris.cube.Cube
+        An iris cube which will be checked to see if it is aggregatable based
+        on a set of pre-defined dimensional time coordinates:
+        'forecast_period' and 'forecast_reference_time'.
+
+    Returns
+    -------
+    bool
+        If true, then the cube is aggregatable and contains dimensional
+        coordinates including both 'forecast_reference_time' and
+        'forecast_period'.
+    """
+    # Acceptable time coordinate names for aggregatable cube.
+    TEMPORAL_COORD_NAMES = ["forecast_period", "forecast_reference_time"]
+
+    # Coordinate names for the cube.
+    coord_names = [coord.name() for coord in cube.coords(dim_coords=True)]
+
+    # Check which temporal coordinates we have.
+    temporal_coords = [coord for coord in coord_names if coord in TEMPORAL_COORD_NAMES]
+    # Return whether both coordinates are in the temporal coordinates.
+    return len(temporal_coords) == 2
+
+
+def ensure_aggregatable_across_cases(
+    cube: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube:
+    """Ensure a Cube or CubeList can be aggregated across multiple cases.
+
+    Arguments
+    ---------
+    cube: iris.cube.Cube | iris.cube.CubeList
+        If a Cube is provided it is checked to determine if it has the
+        the necessary dimensional coordinates to be aggregateable.
+        These necessary coordinates are 'forecast_period' and
+        'forecast_reference_time'.If a CubeList is provided a Cube is created
+        by slicing over all time coordinates and the resulting list is merged
+        to create an aggregatable cube.
+
+    Returns
+    -------
+    cube: iris.cube.Cube
+        A time aggregatable cube with dimension coordinates including
+        'forecast_period' and 'forecast_reference_time'.
+
+    Raises
+    ------
+    ValueError
+        If a Cube is provided and it is not aggregatable a ValueError is
+        raised. The user should then provide a CubeList to be turned into an
+        aggregatable cube to allow aggregation across multiple cases to occur.
+    """
+    # Check to see if a cube is input and if that cube is iterable.
+    if isinstance(cube, iris.cube.Cube):
+        if is_time_aggregatable(cube):
+            return cube
+        else:
+            raise ValueError(
+                "Single Cube should have 'forecast_period' and"
+                "'forecast_reference_time' dimensional coordinates. "
+                "To make a time aggregatable Cube input a CubeList."
+            )
+    # Create an aggregatable cube from the provided CubeList.
+    else:
+        new_cube_list = iris.cube.CubeList()
+        for sub_cube in cube:
+            for cube_slice in sub_cube.slices_over(
+                ["forecast_period", "forecast_reference_time"]
+            ):
+                new_cube_list.append(cube_slice)
+        new_merged_cube = new_cube_list.merge_cube()
+        return new_merged_cube

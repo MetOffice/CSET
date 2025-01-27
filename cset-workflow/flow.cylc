@@ -5,18 +5,12 @@ description = Workflow for running CSET.
 URL = https://metoffice.github.io/CSET
 
 # Import all of our Jinja utilities for use in the workflow.
-{% from "jinja_utils" import get_models, glob, max, min, zip, restructure_field_list, sanitise_task_name %}
+{% from "jinja_utils" import get_models, glob, max, min, zip, sanitise_task_name %}
 # Load a list a model detail dictionaries.
 {% set models = get_models(ROSE_SUITE_VARIABLES) %}
 
 
 [scheduling]
-    # There is rarely a reason to manually set the runahead limit, as we will
-    # usually be limited by number of concurrent jobs.
-    {% if CSET_RUNAHEAD_LIMIT|default(False) %}
-        runahead limit = P{{CSET_RUNAHEAD_LIMIT}}
-    {% endif %}
-
     # Initial and final cycle points cover the entire period of interest.
     {% if CSET_CYCLING_MODE == "case_study" %}
         initial cycle point = {{ min(CSET_CASE_DATES) }}
@@ -40,14 +34,14 @@ URL = https://metoffice.github.io/CSET
         {% for date in CSET_CASE_DATES %}
             R1/{{date}} = """
             setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
-            fetch_complete => PROCESS:finish-all => housekeeping_raw
+            fetch_complete => PROCESS:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} => housekeeping_raw
             """
         {% endfor %}
     {% elif CSET_CYCLING_MODE == "trial" %}
         # Analyse from each forecast.
         {{CSET_TRIAL_CYCLE_PERIOD}} = """
         setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
-        fetch_complete => PROCESS:finish-all => housekeeping_raw
+        fetch_complete => PROCESS:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} => housekeeping_raw
         """
     {% endif %}
 
@@ -102,8 +96,7 @@ URL = https://metoffice.github.io/CSET
     script = rose task-run -v --app-key=fetch_fcst
     execution time limit = PT1H
         [[[environment]]]
-        CSET_ANALYSIS_OFFSET = {{CSET_ANALYSIS_OFFSET}}
-        CSET_ANALYSIS_PERIOD = {{CSET_ANALYSIS_PERIOD}}
+        ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
 
     [[METPLUS]]
         [[[environment]]]
@@ -143,17 +136,16 @@ URL = https://metoffice.github.io/CSET
         WEB_DIR = {{WEB_DIR}}
 
     {% for model in models %}
-    [[fetch_fcst_m{{model["number"]}}]]
+    [[fetch_fcst_m{{model["id"]}}]]
     # Fetch data from disk or a file based archival system.
     inherit = FETCH_DATA
         [[[environment]]]
-        MODEL_NUMBER = {{model["number"]}}
+        MODEL_IDENTIFIER = {{model["id"]}}
         ROSE_APP_COMMAND_KEY = {{model["data_source"]}}
         DATA_PATH = {{model["data_path"]}}
         DATE_TYPE = {{model["date_type"]}}
-        {% if model["date_type"] != "initiation" %}
-            DATA_PERIOD = {{model["data_period"]}}
-        {% endif %}
+        DATA_PERIOD = {{model["data_period"]}}
+        ANALYSIS_OFFSET = {{model["analysis_offset"]}}
     {% endfor %}
 
     [[housekeeping_raw]]

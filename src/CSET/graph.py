@@ -19,7 +19,6 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Union
 from uuid import uuid4
 
 import pygraphviz
@@ -28,7 +27,7 @@ from CSET._common import parse_recipe
 
 
 def save_graph(
-    recipe_file: Union[Path, str],
+    recipe_file: Path | str,
     save_path: Path = None,
     auto_open: bool = False,
     detailed: bool = False,
@@ -75,7 +74,7 @@ def save_graph(
         graph.add_edge(prev_node, node)
 
         if detailed:
-            graph.get_node(node).attr["label"] = f'{step["operator"]}\n' + "".join(
+            graph.get_node(node).attr["label"] = f"{step['operator']}\n" + "".join(
                 f"<{key}: {kwargs[key]}>\n" for key in kwargs
             )
         return node
