@@ -66,7 +66,7 @@ def output_directory():
 def data_directories() -> list[str]:
     """Get the input data directories for the cycle."""
     model_identifiers = sorted(os.environ["MODEL_IDENTIFIERS"].split())
-    if os.getenv["DO_CASE_AGGREGATION"]:
+    if os.getenv("DO_CASE_AGGREGATION"):
         cylc_workflow_share_dir = os.environ["CYLC_WORKFLOW_SHARE_DIR"]
         return [
             f"{cylc_workflow_share_dir}/data/{model_id}"
