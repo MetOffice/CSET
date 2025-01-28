@@ -175,13 +175,23 @@ def test_difference_incorrect_number_of_cubes(cube):
         misc.difference(three_cubes)
 
 
-def test_difference_incorrect_data_shape(cube):
-    """Test exception when data shape differs."""
+def test_difference_incorrect_data_latitude_shape(cube):
+    """Test exception when data latitude shape differs."""
     rearranged_cube = cube.copy()
-    rearranged_cube.transpose()
+    rearranged_cube = rearranged_cube[:, 1:, :]
     del rearranged_cube.attributes["cset_comparison_base"]
     cubes = iris.cube.CubeList([cube, rearranged_cube])
-    with pytest.raises(ValueError, match="Cubes should have the same data shape"):
+    with pytest.raises(ValueError, match="Cubes should have the same latitude shape"):
+        misc.difference(cubes)
+
+
+def test_difference_incorrect_data_longitude_shape(cube):
+    """Test exception when data longitude shape differs."""
+    rearranged_cube = cube.copy()
+    rearranged_cube = rearranged_cube[:, :, 1:]
+    del rearranged_cube.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([cube, rearranged_cube])
+    with pytest.raises(ValueError, match="Cubes should have the same longitude shape"):
         misc.difference(cubes)
 
 
