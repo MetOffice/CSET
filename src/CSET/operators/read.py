@@ -280,7 +280,7 @@ def _deterministic_callback(cube, field, filename):
         )
 
 
-@functools.lru_cache(10)
+@functools.lru_cache(None)
 def _warn_once(msg):
     """Print a warning message, skipping recent duplicates."""
     logging.warning(msg)
