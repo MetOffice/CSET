@@ -4,9 +4,6 @@
 [runtime]
     [[generic_spatial_plot_time_series_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
     inherit = PROCESS
-        [[[directives]]]
-        --mem=4G
-
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_surface_spatial_plot_sequence.yaml"
         CSET_ADDOPTS = """
