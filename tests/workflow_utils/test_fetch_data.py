@@ -217,9 +217,17 @@ def test_FilesystemFileRetriever_no_files(tmp_path, caplog):
     with fetch_data.FilesystemFileRetriever() as ffr:
         # Should warn, but not error.
         files_found = ffr.get_file("/non-existent/file.nc", str(tmp_path))
-    log_record = caplog.records[0]
+    log_record = next(
+        filter(
+            lambda record: record.message.startswith(
+                "file_path does not match any files:"
+            ),
+            caplog.records,
+        ),
+        None,
+    )
+    assert log_record
     assert log_record.levelname == "WARNING"
-    assert log_record.message.startswith("file_path does not match any files:")
     assert not files_found
 
 
@@ -229,9 +237,14 @@ def test_FilesystemFileRetriever_copy_error(caplog):
         # Please don't run as root.
         files_found = ffr.get_file("tests/test_data/air_temp.nc", "/usr/bin")
     assert not Path("/usr/bin/air_temp.nc").is_file()
-    log_record = caplog.records[0]
+    log_record = next(
+        filter(
+            lambda record: record.message.startswith("Failed to copy"), caplog.records
+        ),
+        None,
+    )
+    assert log_record
     assert log_record.levelname == "WARNING"
-    assert log_record.message.startswith("Failed to copy")
     assert not files_found
 
 
@@ -256,9 +269,15 @@ def test_HTTPFileRetriever_no_files(tmp_path, caplog):
     with fetch_data.HTTPFileRetriever() as hfr:
         # Should warn, but not error.
         files_found = hfr.get_file("http://httpbin.org/status/404", str(tmp_path))
-    log_record = caplog.records[0]
-    assert log_record.levelname == "WARNING"
-    assert log_record.message.startswith(
-        "Failed to retrieve http://httpbin.org/status/404, error:"
+    log_record = next(
+        filter(
+            lambda record: record.message.startswith(
+                "Failed to retrieve http://httpbin.org/status/404, error:"
+            ),
+            caplog.records,
+        ),
+        None,
     )
+    assert log_record
+    assert log_record.levelname == "WARNING"
     assert not files_found
