@@ -91,6 +91,8 @@ URL = https://metoffice.github.io/CSET
     [[PROCESS]]
     script = rose task-run -v --app-key=run_cset_recipe
     execution time limit = PT1H
+    [[[directives]]]
+        --mem=4000
 
     [[FETCH_DATA]]
     script = rose task-run -v --app-key=fetch_fcst
