@@ -69,7 +69,7 @@ def data_directories() -> list[str]:
     if os.getenv("DO_CASE_AGGREGATION"):
         cylc_workflow_share_dir = os.environ["CYLC_WORKFLOW_SHARE_DIR"]
         return [
-            f"{cylc_workflow_share_dir}/data/{model_id}"
+            f"{cylc_workflow_share_dir}/cycle/*/data/{model_id}"
             for model_id in model_identifiers
         ]
     else:
