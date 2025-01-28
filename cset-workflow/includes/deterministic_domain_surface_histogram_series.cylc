@@ -1,16 +1,16 @@
 {% if DOMAIN_SURFACE_HISTOGRAM_SERIES_FIELD|default(False) %}
-{% for equivalent_field in restructure_field_list(SURFACE_MODEL_FIELDS) %}
-{% for model_number, field in equivalent_field.items() %}
+{% for field in SURFACE_MODEL_FIELDS %}
+{% for model in models %}
 [runtime]
-    [[generic_surface_histogram_series_m{{model_number}}_{{sanitise_task_name(field)}}]]
+    [[generic_surface_histogram_series_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
     inherit = PROCESS
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_surface_histogram_series.yaml"
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
-            --MODEL_NAME='{{models[model_number]["name"]}}'
+            --MODEL_NAME='{{model["name"]}}'
         """
-        MODEL_NUMBER = {{model_number}}
+        MODEL_IDENTIFIERS = {{model["id"]}}
 {% endfor %}
 {% endfor %}
 {% endif %}

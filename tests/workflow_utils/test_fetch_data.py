@@ -31,7 +31,7 @@ def mock_get_needed_environment_variables():
         "date_type": None,
         "forecast_length": None,
         "forecast_offset": None,
-        "model_number": "1",
+        "model_identifier": "1",
         "raw_path": None,
         "rose_datac": "/tmp/cycle/20000101T0000Z",
     }
@@ -51,12 +51,12 @@ def test_get_needed_environment_variables(monkeypatch):
     path = "/path/to/data"
     number_raw = "1"
 
-    monkeypatch.setenv("CSET_ANALYSIS_OFFSET", duration_raw)
-    monkeypatch.setenv("CSET_ANALYSIS_PERIOD", duration_raw)
+    monkeypatch.setenv("ANALYSIS_OFFSET", duration_raw)
+    monkeypatch.setenv("ANALYSIS_LENGTH", duration_raw)
     monkeypatch.setenv("CYLC_TASK_CYCLE_POINT", date_raw)
     monkeypatch.setenv("DATA_PATH", path)
     monkeypatch.setenv("DATA_PERIOD", duration_raw)
-    monkeypatch.setenv("MODEL_NUMBER", number_raw)
+    monkeypatch.setenv("MODEL_IDENTIFIER", number_raw)
     monkeypatch.setenv("ROSE_DATAC", path)
     monkeypatch.setenv("DATE_TYPE", "validity")
 
@@ -66,7 +66,7 @@ def test_get_needed_environment_variables(monkeypatch):
         "date_type": "validity",
         "forecast_length": duration,
         "forecast_offset": duration,
-        "model_number": number_raw,
+        "model_identifier": number_raw,
         "raw_path": path,
         "rose_datac": path,
     }
@@ -81,19 +81,19 @@ def test_get_needed_environment_variables_data_period_handling(monkeypatch):
     path = "/path/to/data"
     number_raw = "1"
 
-    monkeypatch.setenv("CSET_ANALYSIS_OFFSET", duration_raw)
-    monkeypatch.setenv("CSET_ANALYSIS_PERIOD", duration_raw)
+    monkeypatch.setenv("ANALYSIS_OFFSET", duration_raw)
+    monkeypatch.setenv("ANALYSIS_LENGTH", duration_raw)
     monkeypatch.setenv("CYLC_TASK_CYCLE_POINT", date_raw)
     monkeypatch.setenv("DATA_PATH", path)
-    monkeypatch.setenv("MODEL_NUMBER", number_raw)
+    monkeypatch.setenv("MODEL_IDENTIFIER", number_raw)
     monkeypatch.setenv("ROSE_DATAC", path)
 
     # Check DATA_PERIOD is not there for initiation.
     monkeypatch.setenv("DATE_TYPE", "initiation")
     initiation_actual = fetch_data._get_needed_environment_variables()
-    assert (
-        initiation_actual["data_period"] is None
-    ), "data_period should not be set for initiation time"
+    assert initiation_actual["data_period"] is None, (
+        "data_period should not be set for initiation time"
+    )
 
     # Check exception when data period is not specified for validity time.
     monkeypatch.setenv("DATE_TYPE", "validity")
@@ -171,7 +171,7 @@ def test_template_file_path_initiation_time():
         datetime.datetime(2000, 1, 1, tzinfo=datetime.timezone.utc),
         datetime.timedelta(days=5),
         datetime.timedelta(),
-        None,
+        datetime.timedelta(days=1),
     )
     expected = ["/path/2000-01-01.nc"]
     assert actual == expected
@@ -181,7 +181,7 @@ def test_template_file_path_lead_time():
     """Test filling path placeholders for lead time."""
     actual = fetch_data._template_file_path(
         "/path/%N.nc",
-        "lead",
+        "initiation",
         datetime.datetime(2000, 1, 1, tzinfo=datetime.timezone.utc),
         datetime.timedelta(hours=5, seconds=1),
         datetime.timedelta(hours=1),

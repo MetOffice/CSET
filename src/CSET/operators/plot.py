@@ -33,7 +33,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from markdown_it import MarkdownIt
 
-from CSET._common import get_recipe_metadata, render_file, slugify
+from CSET._common import get_recipe_metadata, iter_maybe, render_file, slugify
 from CSET.operators._utils import get_cube_yxcoordname, is_transect
 
 # Use a non-interactive plotting backend.
@@ -55,7 +55,7 @@ def _append_to_plot_index(plot_index: list) -> list:
         meta["plots"] = complete_plot_index
         fp.seek(0)
         fp.truncate()
-        json.dump(meta, fp)
+        json.dump(meta, fp, indent=2)
     return complete_plot_index
 
 
@@ -328,11 +328,11 @@ def _plot_and_save_spatial_plot(
             axes.set_yscale("log")
 
         axes.set_title(
-            f'{title}\n'
-            f'Start Lat: {cube.attributes["transect_coords"].split("_")[0]}'
-            f' Start Lon: {cube.attributes["transect_coords"].split("_")[1]}'
-            f' End Lat: {cube.attributes["transect_coords"].split("_")[2]}'
-            f' End Lon: {cube.attributes["transect_coords"].split("_")[3]}',
+            f"{title}\n"
+            f"Start Lat: {cube.attributes['transect_coords'].split('_')[0]}"
+            f" Start Lon: {cube.attributes['transect_coords'].split('_')[1]}"
+            f" End Lat: {cube.attributes['transect_coords'].split('_')[2]}"
+            f" End Lon: {cube.attributes['transect_coords'].split('_')[3]}",
             fontsize=16,
         )
 
@@ -343,8 +343,8 @@ def _plot_and_save_spatial_plot(
     # Add watermark with min/max/mean. Currently not user toggable.
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
     axes.annotate(
-        f"Min: {np.min(cube.data):g} Max: {np.max(cube.data):g} Mean: {np.mean(cube.data):g}",
-        xy=(1, 0),
+        f"Min: {np.min(cube.data):.3g} Max: {np.max(cube.data):.3g} Mean: {np.mean(cube.data):.3g}",
+        xy=(1, -0.05),
         xycoords="axes fraction",
         xytext=(-5, 5),
         textcoords="offset points",
@@ -360,7 +360,7 @@ def _plot_and_save_spatial_plot(
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved contour plot to %s", filename)
+    logging.info("Saved spatial plot to %s", filename)
     plt.close(fig)
 
 
@@ -453,29 +453,38 @@ def _plot_and_save_postage_stamp_spatial_plot(
 
 
 def _plot_and_save_line_series(
-    cube: iris.cube.Cube, coord: iris.coords.Coord, filename: str, title: str, **kwargs
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+    coord: iris.coords.Coord,
+    filename: str,
+    title: str,
+    **kwargs,
 ):
     """Plot and save a 1D line series.
 
     Parameters
     ----------
-    cube: Cube
-        1 dimensional Cube of the data to plot on y-axis.
+    cubes: Cube or CubeList
+        Cube or CubeList containing the cubes to plot on the y-axis.
     coord: Coord
-        Coordinate to plot on x-axis.
+        Coordinate to plot on the x-axis.
     filename: str
         Filename of the plot to write.
     title: str
         Plot title.
     """
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
-    iplt.plot(coord, cube, "o-")
+
+    for cube_iter in iter_maybe(cubes):
+        iplt.plot(coord, cube_iter, "o-")
+
+    # Get the current axes
     ax = plt.gca()
 
     # Add some labels and tweak the style.
+    # check if cubes[0] works for single cube if not CubeList
     ax.set(
         xlabel=f"{coord.name()} / {coord.units}",
-        ylabel=f"{cube.name()} / {cube.units}",
+        ylabel=f"{cubes[0].name()} / {cubes[0].units}",
         title=title,
     )
     ax.ticklabel_format(axis="y", useOffset=False)
@@ -1008,20 +1017,22 @@ def spatial_pcolormesh_plot(
 #     Coordinate about which to plot multiple lines. Defaults to
 #     ``"realization"``.
 def plot_line_series(
-    cube: iris.cube.Cube,
+    cube: iris.cube.Cube | iris.cube.CubeList,
     filename: str = None,
     series_coordinate: str = "time",
     # line_coordinate: str = "realization",
     **kwargs,
-) -> iris.cube.Cube:
+) -> iris.cube.Cube | iris.cube.CubeList:
     """Plot a line plot for the specified coordinate.
 
-    The cube must be 1D.
+    The Cube or CubeList must be 1D.
 
     Parameters
     ----------
-    cube: Cube
-        Iris cube of the data to plot. It should have a single dimension.
+    iris.cube | iris.cube.CubeList
+        Cube or CubeList of the data to plot. The individual cubes should have a single dimension.
+        The cubes should cover the same phenomenon i.e. all cubes contain temperature data.
+        We do not support different data such as temperature and humidity in the same CubeList for plotting.
     filename: str, optional
         Name of the plot to write, used as a prefix for plot sequences. Defaults
         to the recipe name.
@@ -1031,25 +1042,17 @@ def plot_line_series(
 
     Returns
     -------
-    Cube
-        The original cube (so further operations can be applied).
+    iris.cube.Cube | iris.cube.CubeList
+        The original Cube or CubeList (so further operations can be applied).
+        plotted data.
 
     Raises
     ------
     ValueError
-        If the cube doesn't have the right dimensions.
+        If the cubes don't have the right dimensions.
     TypeError
-        If the cube isn't a single cube.
+        If the cube isn't a Cube or CubeList.
     """
-    # Check cube is right shape.
-    cube = _check_single_cube(cube)
-    try:
-        coord = cube.coord(series_coordinate)
-    except iris.exceptions.CoordinateNotFoundError as err:
-        raise ValueError(f"Cube must have a {series_coordinate} coordinate.") from err
-    if cube.ndim > 1:
-        raise ValueError("Cube must be 1D.")
-
     # Ensure we have a name for the plot file.
     title = get_recipe_metadata().get("title", "Untitled")
     if filename is None:
@@ -1057,6 +1060,19 @@ def plot_line_series(
 
     # Add file extension.
     plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
+
+    # Iterate over all cubes in cube or CubeList and plot.
+    for cube_iter in iter_maybe(cube):
+        # Check cube is right shape.
+        cube_iter = _check_single_cube(cube_iter)
+        try:
+            coord = cube_iter.coord(series_coordinate)
+        except iris.exceptions.CoordinateNotFoundError as err:
+            raise ValueError(
+                f"Cube must have a {series_coordinate} coordinate."
+            ) from err
+        if cube_iter.ndim > 1:
+            raise ValueError("Cube must be 1D.")
 
     # Do the actual plotting.
     _plot_and_save_line_series(cube, coord, plot_filename, title)

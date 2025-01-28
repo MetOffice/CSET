@@ -71,6 +71,19 @@ def test_read_cubes_ensemble_separate_files():
         assert isinstance(int(point), int)
 
 
+def test_read_cubes_verify_comparison_base():
+    """Read two paths for cubes, and check only the first is marked as base."""
+    paths = [
+        "tests/test_data/air_temp.nc",  # UM 11.9
+        "tests/test_data/exeter_em01.nc",  # UM 13.0
+    ]
+    cubes = read.read_cubes(paths)
+    for cube in cubes.extract(iris.AttributeConstraint(um_version="11.9")):
+        assert cube.attributes["cset_comparison_base"] == 1
+    for cube in cubes.extract(iris.AttributeConstraint(um_version="13.0")):
+        assert "cset_comparison_base" not in cube.attributes
+
+
 def test_fieldsfile_ensemble_naming():
     """Extracting the realization from the fields file naming convention."""
     cube = iris.cube.Cube([0])
@@ -103,22 +116,12 @@ def test_read_cube_merge_concatenate():
 
 
 def test_check_input_files_direct_path(tmp_path):
-    """Get a iterable of a single file from a direct path."""
-    file_path = tmp_path / "file"
-    file_path.touch()
-    read._check_input_files(file_path, "*")
-    actual = read._check_input_files(file_path, "*")
-    expected = (file_path,)
-    assert actual == expected
-
-
-def test_check_input_files_direct_path_as_string(tmp_path):
     """Get a iterable of a single file from a direct path as a string."""
     file_path = tmp_path / "file"
     file_path.touch()
     string_path = str(file_path)
     actual = read._check_input_files(string_path, "*")
-    expected = (file_path,)
+    expected = [file_path]
     assert actual == expected
 
 
@@ -128,9 +131,9 @@ def test_check_input_files_direct_path_glob(tmp_path):
     file2_path = tmp_path / "file2"
     file1_path.touch()
     file2_path.touch()
-    glob_path = tmp_path / "file*"
+    glob_path = f"{tmp_path}/file*"
     actual = read._check_input_files(glob_path, "*")
-    expected = (file1_path, file2_path)
+    expected = [file1_path, file2_path]
     assert actual == expected
 
 
@@ -140,8 +143,8 @@ def test_check_input_files_direct_path_match_glob_like_file(tmp_path):
     glob_like_path = tmp_path / "file*"
     file1_path.touch()
     glob_like_path.touch()
-    actual = read._check_input_files(glob_like_path, "*")
-    expected = (glob_like_path,)
+    actual = read._check_input_files(str(glob_like_path), "*")
+    expected = [glob_like_path]
     assert actual == expected
 
 
@@ -151,8 +154,8 @@ def test_check_input_files_input_directory(tmp_path):
     file2_path = tmp_path / "file2"
     file1_path.touch()
     file2_path.touch()
-    actual = read._check_input_files(tmp_path, "*")
-    expected = (file1_path, file2_path)
+    actual = read._check_input_files(str(tmp_path), "*")
+    expected = [file1_path, file2_path]
     assert actual == expected
 
 
@@ -162,14 +165,14 @@ def test_check_input_files_input_directory_glob(tmp_path):
     file2_path = tmp_path / "file2"
     file1_path.touch()
     file2_path.touch()
-    actual = read._check_input_files(tmp_path, "*1")
-    expected = (file1_path,)
+    actual = read._check_input_files(str(tmp_path), "*1")
+    expected = [file1_path]
     assert actual == expected
 
 
 def test_check_input_files_invalid_path(tmp_path):
     """Error when path doesn't exist."""
-    file_path = tmp_path / "file"
+    file_path = str(tmp_path / "file")
     with pytest.raises(FileNotFoundError):
         read._check_input_files(file_path, "*")
 
@@ -177,7 +180,7 @@ def test_check_input_files_invalid_path(tmp_path):
 def test_check_input_files_no_file_in_directory(tmp_path):
     """Error when input directory doesn't contain any files."""
     with pytest.raises(FileNotFoundError):
-        read._check_input_files(tmp_path, "*")
+        read._check_input_files(str(tmp_path), "*")
 
 
 def test_um_normalise_callback_rename_stash(cube):
@@ -242,33 +245,33 @@ def test_lfric_time_coord_fix_callback_no_time():
     assert len(cube.coords("time")) == 0
 
 
-def test_pressurecoordfix_callback():
+def test_pressure_coord_fix_callback():
     """Check that pressure_level is renamed to pressure if it exists."""
     cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
     cube.coord("pressure").rename("pressure_level")
-    read._fix_pressurecoord_name_callback(cube)
+    read._fix_pressure_coord_name_callback(cube)
     assert (
         repr(cube.coords())
         == "[<DimCoord: time / (hours since 1970-01-01 00:00:00)  [...]  shape(2,)>, <DimCoord: pressure / (hPa)  [ 100., 150., ..., 950., 1000.]  shape(16,)>, <DimCoord: latitude / (degrees)  [-10.98, -10.94, ..., -10.82, -10.78]  shape(6,)>, <DimCoord: longitude / (degrees)  [19.02, 19.06, ..., 19.18, 19.22]  shape(6,)>, <DimCoord: forecast_reference_time / (hours since 1970-01-01 00:00:00)  [...]>, <AuxCoord: forecast_period / (hours)  [15., 18.]  shape(2,)>]"
     )
 
 
-def test_spatialcoordrename_callback():
+def test_spatial_coord_rename_callback():
     """Check that spatial coord gets renamed if it is not grid_latitude."""
     # This cube contains 'latitude' and 'longitude'
     cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
-    read._fix_spatialcoord_name_callback(cube)
+    read._fix_spatial_coord_name_callback(cube)
     assert (
         repr(cube.coords())
         == "[<DimCoord: time / (hours since 1970-01-01 00:00:00)  [...]  shape(2,)>, <DimCoord: pressure / (hPa)  [ 100., 150., ..., 950., 1000.]  shape(16,)>, <DimCoord: grid_latitude / (degrees)  [-10.98, -10.94, ..., -10.82, -10.78]  shape(6,)>, <DimCoord: grid_longitude / (degrees)  [19.02, 19.06, ..., 19.18, 19.22]  shape(6,)>, <DimCoord: forecast_reference_time / (hours since 1970-01-01 00:00:00)  [...]>, <AuxCoord: forecast_period / (hours)  [15., 18.]  shape(2,)>]"
     )
 
 
-def test_spatialcoordnotexist_callback():
+def test_spatial_coord_not_exist_callback():
     """Check that spatial coord returns cube if cube does not contain spatial coordinates."""
     cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
     cube = cube[:, :, 0, 0]  # Remove spatial dimcoords
-    read._fix_spatialcoord_name_callback(cube)
+    read._fix_spatial_coord_name_callback(cube)
     assert (
         repr(cube.coords())
         == "[<DimCoord: time / (hours since 1970-01-01 00:00:00)  [...]  shape(2,)>, <DimCoord: pressure / (hPa)  [ 100., 150., ..., 950., 1000.]  shape(16,)>, <DimCoord: forecast_reference_time / (hours since 1970-01-01 00:00:00)  [...]>, <DimCoord: latitude / (degrees)  [-10.98]>, <DimCoord: longitude / (degrees)  [19.02]>, <AuxCoord: forecast_period / (hours)  [15., 18.]  shape(2,)>]"

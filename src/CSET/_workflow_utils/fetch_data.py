@@ -154,9 +154,9 @@ def _get_needed_environment_variables() -> dict:
         "raw_path": os.environ["DATA_PATH"],
         "date_type": os.environ["DATE_TYPE"],
         "data_time": _fromisoformat(os.environ["CYLC_TASK_CYCLE_POINT"]),
-        "forecast_length": isodate.parse_duration(os.environ["CSET_ANALYSIS_PERIOD"]),
-        "forecast_offset": isodate.parse_duration(os.environ["CSET_ANALYSIS_OFFSET"]),
-        "model_number": os.environ["MODEL_NUMBER"],
+        "forecast_length": isodate.parse_duration(os.environ["ANALYSIS_LENGTH"]),
+        "forecast_offset": isodate.parse_duration(os.environ["ANALYSIS_OFFSET"]),
+        "model_identifier": os.environ["MODEL_IDENTIFIER"],
         "rose_datac": os.environ["ROSE_DATAC"],
     }
     try:
@@ -172,7 +172,7 @@ def _get_needed_environment_variables() -> dict:
 
 def _template_file_path(
     raw_path: str,
-    date_type: Literal["validity", "initiation", "lead"],
+    date_type: Literal["validity", "initiation"],
     data_time: datetime,
     forecast_length: timedelta,
     forecast_offset: timedelta,
@@ -189,8 +189,6 @@ def _template_file_path(
                 date += data_period
         case "initiation":
             placeholder_times.append(data_time)
-        case "lead":
-            placeholder_times.append(data_time)
             lead_time = forecast_offset
             while lead_time < forecast_length:
                 lead_times.append(lead_time)
@@ -198,7 +196,7 @@ def _template_file_path(
         case _:
             raise ValueError(f"Invalid date type: {date_type}")
 
-    paths: list[str] = []
+    paths: set[str] = set()
     for placeholder_time in placeholder_times:
         # Expand out all other format strings.
         path = placeholder_time.strftime(os.path.expandvars(raw_path))
@@ -206,25 +204,25 @@ def _template_file_path(
             # Expand out lead time format strings, %N.
             for lead_time in lead_times:
                 # BUG: Will not respect escaped % signs, e.g: %%N.
-                paths.append(
+                paths.add(
                     path.replace("%N", f"{int(lead_time.total_seconds()) // 3600:03d}")
                 )
         else:
-            paths.append(path)
-    return paths
+            paths.add(path)
+    return sorted(paths)
 
 
 def fetch_data(file_retriever: FileRetrieverABC = FilesystemFileRetriever):
     """Fetch the data for a model.
 
     The following environment variables need to be set:
-    * CSET_ANALYSIS_OFFSET
-    * CSET_ANALYSIS_PERIOD
+    * ANALYSIS_OFFSET
+    * ANALYSIS_LENGTH
     * CYLC_TASK_CYCLE_POINT
     * DATA_PATH
     * DATA_PERIOD
     * DATE_TYPE
-    * MODEL_NUMBER
+    * MODEL_IDENTIFIER
     * ROSE_DATAC
 
     Parameters
@@ -240,7 +238,7 @@ def fetch_data(file_retriever: FileRetrieverABC = FilesystemFileRetriever):
     v = _get_needed_environment_variables()
 
     # Prepare output directory.
-    cycle_data_dir = f"{v['rose_datac']}/data/{v['model_number']}"
+    cycle_data_dir = f"{v['rose_datac']}/data/{v['model_identifier']}"
     os.makedirs(cycle_data_dir, exist_ok=True)
     logging.debug("Output directory: %s", cycle_data_dir)
 

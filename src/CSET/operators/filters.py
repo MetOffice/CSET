@@ -15,7 +15,6 @@
 """Operators to perform various kind of filtering."""
 
 import logging
-from typing import Union
 
 import iris
 import iris.cube
@@ -67,7 +66,7 @@ def apply_mask(
 
 
 def filter_cubes(
-    cube: Union[iris.cube.Cube, iris.cube.CubeList],
+    cube: iris.cube.Cube | iris.cube.CubeList,
     constraint: iris.Constraint,
     **kwargs,
 ) -> iris.cube.Cube:
@@ -104,7 +103,7 @@ def filter_cubes(
 
 
 def filter_multiple_cubes(
-    cubes: Union[iris.cube.Cube, iris.cube.CubeList],
+    cubes: iris.cube.Cube | iris.cube.CubeList,
     **kwargs,
 ) -> iris.cube.CubeList:
     """Filter a CubeList on multiple constraints, returning another CubeList.

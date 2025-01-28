@@ -1,8 +1,8 @@
 {% if EXTRACT_PLEVEL_TRANSECT|default(False) %}
-{% for equivalent_field in restructure_field_list(PRESSURE_LEVEL_MODEL_FIELDS) %}
-{% for model_number, field in equivalent_field.items() %}
+{% for field in PRESSURE_LEVEL_MODEL_FIELDS %}
+{% for model in models %}
 [runtime]
-    [[plevel_transect_m{{model_number}}_{{sanitise_task_name(field)}}]]
+    [[plevel_transect_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
     inherit = PROCESS
     # Transect calculation can take a while, so increase the time limit.
     execution time limit = PT60M
@@ -11,11 +11,11 @@
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
             --VERTICAL_COORDINATE='pressure'
-            --MODEL_NAME='{{models[model_number]["name"]}}'
+            --MODEL_NAME='{{model["name"]}}'
             --START_COORDS='{{PLEVEL_TRANSECT_STARTCOORDS}}'
             --FINISH_COORDS='{{PLEVEL_TRANSECT_FINISHCOORDS}}'
         """
-        MODEL_NUMBER = {{model_number}}
+        MODEL_IDENTIFIERS = {{model["id"]}}
 {% endfor %}
 {% endfor %}
 {% endif %}

@@ -46,9 +46,9 @@ jobs:
           echo '::group::Installing local package'
           python3 -m pip install .
           echo '::endgroup::'
-          pytest --verbose --cov --cov-append --cov-config=pyproject.toml
+          pytest -n logical --verbose --cov --cov-append --cov-config=pyproject.toml
           mv .coverage ".coverage.${{ matrix.py-ver }}"
-      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
+      - uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
         with:
           name: coverage-data-${{ matrix.py-ver }}
           path: .coverage.*
@@ -148,7 +148,7 @@ jobs:
           sphinx-build -b html --color -W --keep-going "docs/source" "docs/build/html"
           echo '::endgroup::'
       - name: Upload documentation artifact
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
         with:
           name: html-docs
           path: docs/build/html/
