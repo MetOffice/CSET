@@ -1,8 +1,8 @@
-category: Time Series
-title: $MODEL_NAME Domain mean surface $VARNAME time series case aggregation by lead time
+category: Surface Spatial Plot
+title: $MODEL_NAME Surface $VARNAME case aggregation by lead time
 description: |
-  Plots a time series of the domain mean surface $VARNAME by averaging over
-  all cases by using a consistent lead time.
+  Extracts and plots the surface $VARNAME for all times in $MODEL_NAME. Case
+  aggregation occurs over lead time.
 
 steps:
   - operator: read.read_cubes
@@ -19,17 +19,11 @@ steps:
         coordinate: "pressure"
         levels: []
 
-  - operator: collapse.collapse
-    coordinate: [grid_latitude, grid_longitude]
-    method: MEAN
-
   - operator: collapse.collapse_by_lead_time
     method: MEAN
 
-  # Make a single NetCDF with all the data inside it.
+  - operator: plot.spatial_pcolormesh_plot
+    sequence_coordinate: forecast_period
+
   - operator: write.write_cube_to_nc
     overwrite: True
-
-  # Plot the data.
-  - operator: plot.plot_line_series
-    series_coordinate: forecast_period
