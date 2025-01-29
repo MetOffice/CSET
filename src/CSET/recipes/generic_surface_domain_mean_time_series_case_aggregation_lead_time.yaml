@@ -1,5 +1,5 @@
 category: Time Series
-title: $MODEL_NAME Domain mean surface $VARNAME time series
+title: $MODEL_NAME Domain mean surface $VARNAME time series case aggregation by lead time
 description: Plots a time series of the domain mean surface $VARNAME.
 
 steps:
@@ -30,3 +30,4 @@ steps:
 
   # Plot the data.
   - operator: plot.plot_line_series
+    series_coordinate: forecast_period
