@@ -12,7 +12,7 @@ description: |
   providing a single cube to the histogram operator.
 
 steps:
-  - operator: read.read_cube
+  - operator: read.read_cubes
     constraint:
       operator: constraints.combine_constraints
       variable_constraint:
