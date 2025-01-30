@@ -245,15 +245,23 @@ def test_lfric_time_coord_fix_callback_no_time():
     assert len(cube.coords("time")) == 0
 
 
-def test_pressure_coord_fix_callback():
+def test_pressure_coord_name_fix_callback():
     """Check that pressure_level is renamed to pressure if it exists."""
     cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
     cube.coord("pressure").rename("pressure_level")
-    read._fix_pressure_coord_name_callback(cube)
+    read._fix_pressure_coord_callback(cube)
     assert (
         repr(cube.coords())
         == "[<DimCoord: time / (hours since 1970-01-01 00:00:00)  [...]  shape(2,)>, <DimCoord: pressure / (hPa)  [ 100., 150., ..., 950., 1000.]  shape(16,)>, <DimCoord: latitude / (degrees)  [-10.98, -10.94, ..., -10.82, -10.78]  shape(6,)>, <DimCoord: longitude / (degrees)  [19.02, 19.06, ..., 19.18, 19.22]  shape(6,)>, <DimCoord: forecast_reference_time / (hours since 1970-01-01 00:00:00)  [...]>, <AuxCoord: forecast_period / (hours)  [15., 18.]  shape(2,)>]"
     )
+
+
+def test_pressure_coord_unit_fix_callback():
+    """Check that pressure level units are hPa."""
+    cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
+    cube.coord("pressure").convert_units("Pa")
+    read._fix_pressure_coord_callback(cube)
+    assert repr(str(cube.coord("pressure").units)) == "'hPa'"
 
 
 def test_spatial_coord_rename_callback():
