@@ -71,6 +71,18 @@ def test_collapse(cube):
     assert repr(collapsed_cube) == expected_cube
 
 
+def test_collapse_cubelist(cube):
+    """Reduce dimensions of multiple cubes in a CubeList."""
+    cubes = iris.cube.CubeList([cube, cube])
+    collapsed_cubes = collapse.collapse(cubes, "time", "MEAN")
+    assert len(collapsed_cubes) == 2
+    expected_cube = (
+        "<iris 'Cube' of air_temperature / (K) (grid_latitude: 17; grid_longitude: 13)>"
+    )
+    for collapsed_cube in collapsed_cubes:
+        assert repr(collapsed_cube) == expected_cube
+
+
 def test_collapse_percentile(cube):
     """Reduce dimension of a cube with a PERCENTILE aggregation."""
     with pytest.raises(ValueError):
