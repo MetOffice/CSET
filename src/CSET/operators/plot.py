@@ -1169,7 +1169,7 @@ def scatter_plot(
     ----------
     cube_x: Cube | CubeList
         1 dimensional Cube of the data to plot on y-axis.
-    cube_y: Cube | CUbeList
+    cube_y: Cube | CubeList
         1 dimensional Cube of the data to plot on x-axis.
     filename: str, optional
         Filename of the plot to write.
