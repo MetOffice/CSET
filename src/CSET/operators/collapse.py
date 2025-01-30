@@ -244,14 +244,20 @@ def collapse_by_hour_of_day(
     # Remove unnecessary time coordinates.
     collapsed_cube.remove_coord("time")
     collapsed_cube.remove_coord("forecast_period")
+    collapsed_cube.coord("hour").units = "hours"
+
+    # Sort hour coordinate.
+    axis = collapsed_cube.coord("hour").cube_dims(collapsed_cube)[0]
+    collapsed_cube.data.sort(axis=axis)
+    collapsed_cube.coord("hour").points.sort()
+
     # Remove forecast_reference_time if a single case, as collapse_by_lead_time
     # will have effectively done this if multi_case is True.
     if not multi_case:
         collapsed_cube.remove_coord("forecast_reference_time")
 
-    # Promote "hour" to dim_coord if monotonic.
-    if collapsed_cube.coord("hour").is_monotonic():
-        iris.util.promote_aux_coord_to_dim_coord(collapsed_cube, "hour")
+    # Promote "hour" to dim_coord.
+    iris.util.promote_aux_coord_to_dim_coord(collapsed_cube, "hour")
     return collapsed_cube
 
 
