@@ -574,7 +574,12 @@ def _plot_and_save_scatter_plot(
     # plot the cube_x and cube_y 1D fields as a scatter plot. If they are CubeLists this ensures
     # to pair each cube from cube_x with the corresponding cube from cube_y, allowing to iterate
     # over the pairs simultaneously.
-    for cube_x_iter, cube_y_iter in zip(cube_x, cube_y, strict=False):
+
+    # Ensure cube_x and cube_y are iterable turning them into CubeLists
+    cube_x_iterable = iter_maybe(cube_x)
+    cube_y_iterable = iter_maybe(cube_y)
+
+    for cube_x_iter, cube_y_iter in zip(cube_x_iterable, cube_y_iterable, strict=False):
         iplt.scatter(cube_x_iter, cube_y_iter)
     if one_to_one is True:
         plt.plot(
