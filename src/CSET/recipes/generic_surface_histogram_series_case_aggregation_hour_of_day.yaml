@@ -1,0 +1,29 @@
+category: Histogram
+title: $MODEL_NAME $VARNAME Surface Level Histogram Plot case aggregation by hour of day
+description: |
+  Extracts and plots the probability density of surface `$VARNAME`. It uses
+  [`plt.hist`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.hist.html)
+  to plot the probability density so that the area under the histogram
+  integrates to 1. stacked is set to True so the sum of the histograms is
+  normalized to 1. Case aggregation occurs by putting all of the data into
+  one histogram whilst still providing a single cube to the histogram operator.
+
+steps:
+  - operator: read.read_cubes
+    constraint:
+      operator: constraints.combine_constraints
+      variable_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: pressure
+        levels: []
+
+  - operator: misc.ensure_aggregatable_across_cases
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+  - operator: plot.plot_histogram_series
+    sequence_coordinate: hour
