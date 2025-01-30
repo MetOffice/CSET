@@ -548,8 +548,8 @@ def _plot_and_save_vertical_line_series(
 
 
 def _plot_and_save_scatter_plot(
-    cube_x: iris.cube.Cube,
-    cube_y: iris.cube.Cube,
+    cube_x: iris.cube.Cube | iris.cube.CubeList,
+    cube_y: iris.cube.Cube | iris.cube.CubeList,
     filename: str,
     title: str,
     one_to_one: bool,
@@ -559,10 +559,10 @@ def _plot_and_save_scatter_plot(
 
     Parameters
     ----------
-    cube_x: Cube
-        1 dimensional Cube of the data to plot on x-axis.
-    cube_y: Cube
-        1 dimensional Cube of the data to plot on y-axis.
+    cube_x: Cube | CubeList
+        1 dimensional Cube or CubeList of the data to plot on x-axis.
+    cube_y: Cube | CubeList
+        1 dimensional Cube or CubeList of the data to plot on y-axis.
     filename: str
         Filename of the plot to write.
     title: str
@@ -571,7 +571,11 @@ def _plot_and_save_scatter_plot(
         Whether a 1:1 line is plotted.
     """
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
-    iplt.scatter(cube_x, cube_y)
+    # plot the cube_x and cube_y 1D fields as a scatter plot. If they are CubeLists this ensures
+    # to pair each cube from cube_x with the corresponding cube from cube_y, allowing to iterate
+    # over the pairs simultaneously.
+    for cube_x_iter, cube_y_iter in zip(cube_x, cube_y, strict=False):
+        iplt.scatter(cube_x_iter, cube_y_iter)
     if one_to_one is True:
         plt.plot(
             [
@@ -1151,8 +1155,8 @@ def plot_vertical_line_series(
 
 
 def scatter_plot(
-    cube_x: iris.cube.Cube,
-    cube_y: iris.cube.Cube,
+    cube_x: iris.cube.Cube | iris.cube.CubeList,
+    cube_y: iris.cube.Cube | iris.cube.CubeList,
     filename: str = None,
     one_to_one: bool = True,
     **kwargs,
@@ -1163,9 +1167,9 @@ def scatter_plot(
 
     Parameters
     ----------
-    cube_x: Cube
+    cube_x: Cube | CubeList
         1 dimensional Cube of the data to plot on y-axis.
-    cube_y: Cube
+    cube_y: Cube | CUbeList
         1 dimensional Cube of the data to plot on x-axis.
     filename: str, optional
         Filename of the plot to write.
@@ -1210,14 +1214,19 @@ def scatter_plot(
     .. [Wilks2011] Wilks, D.S., (2011) "Statistical Methods in the Atmospheric
        Sciences" Third Edition, vol. 100, Academic Press, Oxford, UK, 676 pp.
     """
-    # Check cubes are correct shape.
-    cube_x = _check_single_cube(cube_x)
-    cube_y = _check_single_cube(cube_y)
+    # Iterate over all cubes in cube or CubeList and plot.
+    for cube_iter in iter_maybe(cube_x):
+        # Check cubes are correct shape.
+        cube_iter = _check_single_cube(cube_iter)
+        if cube_iter.ndim > 1:
+            raise ValueError("cube_x must be 1D.")
 
-    if cube_x.ndim > 1:
-        raise ValueError("cube_x must be 1D.")
-    if cube_y.ndim > 1:
-        raise ValueError("cube_y must be 1D.")
+    # Iterate over all cubes in cube or CubeList and plot.
+    for cube_iter in iter_maybe(cube_y):
+        # Check cubes are correct shape.
+        cube_iter = _check_single_cube(cube_iter)
+        if cube_iter.ndim > 1:
+            raise ValueError("cube_y must be 1D.")
 
     # Ensure we have a name for the plot file.
     title = get_recipe_metadata().get("title", "Untitled")
