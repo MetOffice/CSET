@@ -24,7 +24,10 @@ import iris.util
 
 from CSET._common import iter_maybe
 from CSET.operators._utils import is_time_aggregatable
-from CSET.operators.aggregate import ensure_aggregatable_across_cases
+from CSET.operators.aggregate import (
+    add_hour_coordinate,
+    ensure_aggregatable_across_cases,
+)
 
 
 def collapse(
@@ -232,7 +235,7 @@ def collapse_by_hour_of_day(
         )
 
     # Categorise the time coordinate by hour of the day.
-    iris.coord_categorisation.add_hour(cube, "time", name="hour")
+    cube = add_hour_coordinate(cube)
     # Aggregate by the new category coordinate.
     if method == "PERCENTILE":
         collapsed_cube = cube.aggregated_by(
@@ -244,7 +247,6 @@ def collapse_by_hour_of_day(
     # Remove unnecessary time coordinates.
     collapsed_cube.remove_coord("time")
     collapsed_cube.remove_coord("forecast_period")
-    collapsed_cube.coord("hour").units = "hours"
 
     # Sort hour coordinate.
     axis = collapsed_cube.coord("hour").cube_dims(collapsed_cube)[0]
