@@ -23,7 +23,7 @@ steps:
         coordinate: pressure
         levels: $PLEVEL
 
-  - operator: misc.ensure_aggregatable_across_cases
+  - operator: aggregate.ensure_aggregatable_across_cases
 
   - operator: plot.plot_histogram_series
     sequence_coordinate: forecast_period

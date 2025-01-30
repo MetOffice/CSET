@@ -27,7 +27,6 @@ from CSET._common import iter_maybe
 from CSET.operators._utils import (
     fully_equalise_attributes,
     get_cube_yxcoordname,
-    is_time_aggregatable,
 )
 
 
@@ -333,62 +332,3 @@ def difference(cubes: CubeList):
     difference.rename(base.name() + "_difference")
     difference.data = base.data - other.data
     return difference
-
-
-def ensure_aggregatable_across_cases(
-    cube: iris.cube.Cube | iris.cube.CubeList,
-) -> iris.cube.Cube:
-    """Ensure a Cube or CubeList can be aggregated across multiple cases.
-
-    Arguments
-    ---------
-    cube: iris.cube.Cube | iris.cube.CubeList
-        If a Cube is provided it is checked to determine if it has the
-        the necessary dimensional coordinates to be aggregatable.
-        These necessary coordinates are 'forecast_period' and
-        'forecast_reference_time'.If a CubeList is provided a Cube is created
-        by slicing over all time coordinates and the resulting list is merged
-        to create an aggregatable cube.
-
-    Returns
-    -------
-    cube: iris.cube.Cube
-        A time aggregatable cube with dimension coordinates including
-        'forecast_period' and 'forecast_reference_time'.
-
-    Raises
-    ------
-    ValueError
-        If a Cube is provided and it is not aggregatable a ValueError is
-        raised. The user should then provide a CubeList to be turned into an
-        aggregatable cube to allow aggregation across multiple cases to occur.
-
-    Notes
-    -----
-    This is a simple operator designed to ensure that a Cube is aggregatable
-    across cases. If a CubeList is presented it will create an aggregatable Cube
-    from that list. Its functionality is for case study (or trial) aggregation
-    to ensure that the full dataset can be loaded as a single cube. This
-    functionality is particularly useful for percentiles, Q-Q plots, and
-    histograms.
-    """
-    # Check to see if a cube is input and if that cube is iterable.
-    if isinstance(cube, iris.cube.Cube):
-        if is_time_aggregatable(cube):
-            return cube
-        else:
-            raise ValueError(
-                "Single Cube should have 'forecast_period' and"
-                "'forecast_reference_time' dimensional coordinates. "
-                "To make a time aggregatable Cube input a CubeList."
-            )
-    # Create an aggregatable cube from the provided CubeList.
-    else:
-        new_cube_list = iris.cube.CubeList()
-        for sub_cube in cube:
-            for cube_slice in sub_cube.slices_over(
-                ["forecast_period", "forecast_reference_time"]
-            ):
-                new_cube_list.append(cube_slice)
-        new_merged_cube = new_cube_list.merge_cube()
-        return new_merged_cube
