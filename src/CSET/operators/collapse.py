@@ -249,8 +249,6 @@ def collapse_by_hour_of_day(
     collapsed_cube.remove_coord("forecast_period")
 
     # Sort hour coordinate.
-    axis = collapsed_cube.coord("hour").cube_dims(collapsed_cube)[0]
-    collapsed_cube.data.sort(axis=axis)
     collapsed_cube.coord("hour").points.sort()
 
     # Remove forecast_reference_time if a single case, as collapse_by_lead_time
