@@ -20,7 +20,7 @@ steps:
         coordinate: pressure
         levels: []
 
-  - operator: _utils.ensure_aggregatable_across_cases
+  - operator: misc.ensure_aggregatable_across_cases
 
   - operator: write.write_cube_to_nc
     overwrite: True
