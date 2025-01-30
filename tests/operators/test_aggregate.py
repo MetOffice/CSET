@@ -78,3 +78,23 @@ def test_ensure_aggregatable_across_cases_cubelist(
         rtol=1e-06,
         atol=1e-02,
     )
+
+
+def test_add_hour_coordinate(long_forecast):
+    """Check that a Cube has an hour coordinate added to it."""
+    cube_with_hour_coordinate = aggregate.add_hour_coordinate(long_forecast)
+    hour_coord = cube_with_hour_coordinate.coord("hour")
+    assert hour_coord
+    assert hour_coord.units == "hours"
+    assert len(set(hour_coord.points)) == 24
+
+
+def test_add_hour_coordinate_cubelist(long_forecast_many_cubes):
+    """Check that a CubeList has hour coordinates added to it."""
+    cubes_with_hour_coordinate = aggregate.add_hour_coordinate(long_forecast_many_cubes)
+    assert isinstance(cubes_with_hour_coordinate, iris.cube.CubeList)
+    for cube in cubes_with_hour_coordinate:
+        hour_coord = cube.coord("hour")
+        assert hour_coord
+        assert hour_coord.units == "hours"
+        assert len(set(hour_coord.points)) == 24

@@ -20,6 +20,7 @@ import iris.coord_categorisation
 import iris.cube
 import isodate
 
+from CSET._common import iter_maybe
 from CSET.operators._utils import is_time_aggregatable
 
 
@@ -143,3 +144,36 @@ def ensure_aggregatable_across_cases(
                 new_cube_list.append(cube_slice)
         new_merged_cube = new_cube_list.merge_cube()
         return new_merged_cube
+
+
+def add_hour_coordinate(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Add a category coordinate of hour of day to a Cube or CubeList.
+
+    Arguments
+    ---------
+    cubes: iris.cube.Cube | iris.cube.CubeList
+        Cube of any variable that has a time coordinate.
+
+    Returns
+    -------
+    cube: iris.cube.Cube
+        A Cube with an additional auxiliary coordinate of hour.
+
+    Notes
+    -----
+    This is a simple operator designed to be used prior to case aggregation for
+    histograms, Q-Q plots, and percentiles when aggregated by hour of day.
+    """
+    new_cubelist = iris.cube.CubeList()
+    for cube in iter_maybe(cubes):
+        # Add a category coordinate of hour into each cube.
+        iris.coord_categorisation.add_hour(cube, "time", name="hour")
+        cube.coord("hour").units = "hours"
+        new_cubelist.append(cube)
+
+    if len(new_cubelist) == 1:
+        return new_cubelist[0]
+    else:
+        return new_cubelist
