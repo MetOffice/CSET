@@ -593,8 +593,8 @@ def _plot_and_save_scatter_plot(
 
     # Add some labels and tweak the style.
     ax.set(
-        xlabel=f"{cube_x.name()} / {cube_x.units}",
-        ylabel=f"{cube_y.name()} / {cube_y.units}",
+        xlabel=f"{cube_x[0].name()} / {cube_x[0].units}",
+        ylabel=f"{cube_y[0].name()} / {cube_y[0].units}",
         title=title,
     )
     ax.ticklabel_format(axis="y", useOffset=False)
