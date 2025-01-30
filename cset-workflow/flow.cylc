@@ -23,6 +23,11 @@ URL = https://metoffice.github.io/CSET
         {% endif %}
     {% endif %}
 
+    [[special tasks]]
+        # cycle_complete depends on its previous instance. We then don't need to
+        # know the offset between the cycles.
+        sequential = cycle_complete
+
     [[graph]]
     # Only runs on the first cycle.
     R1/^ = """
@@ -33,15 +38,22 @@ URL = https://metoffice.github.io/CSET
         # Runs for every forecast initiation time to process the data in parallel.
         {% for date in CSET_CASE_DATES %}
             R1/{{date}} = """
-            setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
-            fetch_complete => PROCESS:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} => housekeeping_raw
+            setup_complete[^] =>
+            FETCH_DATA:succeed-all =>
+            fetch_complete
+            fetch_complete =>
+            PROCESS:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} =>
+            cycle_complete
             """
         {% endfor %}
     {% elif CSET_CYCLING_MODE == "trial" %}
         # Analyse from each forecast.
         {{CSET_TRIAL_CYCLE_PERIOD}} = """
-        setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
-        fetch_complete => PROCESS:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} => housekeeping_raw
+        setup_complete[^] =>
+        FETCH_DATA:succeed-all =>
+        fetch_complete =>
+        PROCESS:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} =>
+        cycle_complete
         """
     {% endif %}
 
@@ -50,8 +62,8 @@ URL = https://metoffice.github.io/CSET
     {% if CSET_CYCLING_MODE != "trial" or CSET_TRIAL_END_DATE|default(False) %}
         # Only runs on the final cycle.
         R1/$ = """
-        housekeeping_raw => finish_website => send_email
-        housekeeping_raw => housekeeping_full
+        cycle_complete => finish_website => send_email
+        finish_website => housekeeping
         """
     {% endif %}
 
@@ -120,6 +132,9 @@ URL = https://metoffice.github.io/CSET
     [[fetch_complete]]
     inherit = DUMMY_TASK
 
+    [[cycle_complete]]
+    inherit = DUMMY_TASK
+
     [[build_conda]]
     # Create the conda environment if it does not yet exist, possibly installing
     # CSET from source.
@@ -149,17 +164,10 @@ URL = https://metoffice.github.io/CSET
         ANALYSIS_OFFSET = {{model["analysis_offset"]}}
     {% endfor %}
 
-    [[housekeeping_raw]]
-    # Housekeep unprocessed data files.
-    script = rose task-run -v --app-key=housekeeping
+    [[housekeeping]]
+    # Housekeep unprocessed data files and processed intermediate files.
         [[[environment]]]
-        HOUSEKEEPING_MODE = {{[HOUSEKEEPING_MODE, 1]|min}}
-
-    [[housekeeping_full]]
-    # Housekeep processed intermediate files too.
-    script = rose task-run -v --app-key=housekeeping
-        [[[environment]]]
-        HOUSEKEEPING_MODE = {{[HOUSEKEEPING_MODE, 2]|min}}
+        HOUSEKEEPING_MODE = {{HOUSEKEEPING_MODE}}
 
     [[finish_website]]
     # Updates the workflow info in the web interface.
