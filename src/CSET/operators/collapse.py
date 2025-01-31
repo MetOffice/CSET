@@ -23,7 +23,8 @@ import iris.cube
 import iris.util
 
 from CSET._common import iter_maybe
-from CSET.operators._utils import ensure_aggregatable_across_cases, is_time_aggregatable
+from CSET.operators._utils import is_time_aggregatable
+from CSET.operators.aggregate import ensure_aggregatable_across_cases
 
 
 def collapse(
