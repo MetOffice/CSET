@@ -23,7 +23,11 @@ import iris.cube
 import iris.util
 
 from CSET._common import iter_maybe
-from CSET.operators._utils import ensure_aggregatable_across_cases, is_time_aggregatable
+from CSET.operators._utils import is_time_aggregatable
+from CSET.operators.aggregate import (
+    add_hour_coordinate,
+    ensure_aggregatable_across_cases,
+)
 
 
 def collapse(
@@ -231,7 +235,7 @@ def collapse_by_hour_of_day(
         )
 
     # Categorise the time coordinate by hour of the day.
-    iris.coord_categorisation.add_hour(cube, "time", name="hour")
+    cube = add_hour_coordinate(cube)
     # Aggregate by the new category coordinate.
     if method == "PERCENTILE":
         collapsed_cube = cube.aggregated_by(
@@ -243,14 +247,17 @@ def collapse_by_hour_of_day(
     # Remove unnecessary time coordinates.
     collapsed_cube.remove_coord("time")
     collapsed_cube.remove_coord("forecast_period")
+
+    # Sort hour coordinate.
+    collapsed_cube.coord("hour").points.sort()
+
     # Remove forecast_reference_time if a single case, as collapse_by_lead_time
     # will have effectively done this if multi_case is True.
     if not multi_case:
         collapsed_cube.remove_coord("forecast_reference_time")
 
-    # Promote "hour" to dim_coord if monotonic.
-    if collapsed_cube.coord("hour").is_monotonic():
-        iris.util.promote_aux_coord_to_dim_coord(collapsed_cube, "hour")
+    # Promote "hour" to dim_coord.
+    iris.util.promote_aux_coord_to_dim_coord(collapsed_cube, "hour")
     return collapsed_cube
 
 

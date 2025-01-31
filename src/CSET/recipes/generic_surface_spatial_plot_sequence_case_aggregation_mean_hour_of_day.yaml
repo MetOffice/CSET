@@ -1,0 +1,29 @@
+category: Surface Spatial Plot
+title: $MODEL_NAME Surface $VARNAME case aggregation by hour of day
+description: |
+  Extracts and plots the surface $VARNAME for all times in $MODEL_NAME. Case
+  aggregation occurs over hour of day.
+
+steps:
+  - operator: read.read_cubes
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: "pressure"
+        levels: []
+
+  - operator: collapse.collapse_by_hour_of_day
+    method: MEAN
+
+  - operator: plot.spatial_pcolormesh_plot
+    sequence_coordinate: hour
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

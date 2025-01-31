@@ -1,0 +1,21 @@
+{% if DOMAIN_HISTOGRAM_SERIES_CASE_AGGREGATION|default(False) %}
+{% for field in PRESSURE_LEVEL_MODEL_FIELDS %}
+{% for model in models %}
+{% for plevel in PRESSURE_LEVELS %}
+[runtime]
+    [[generic_plevel_histogram_series_case_aggregation_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
+    inherit = PROCESS_CASE_AGGREGATION
+        [[[directives]]]
+        --mem=5000
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_plevel_histogram_series_case_aggregation.yaml"
+        CSET_ADDOPTS = """
+            --VARNAME='{{field}}'
+            --PLEVEL='{{plevel}}'
+            --MODEL_NAME='{{model["name"]}}'
+        """
+        MODEL_IDENTIFIERS = {{model["id"]}}
+{% endfor %}
+{% endfor %}
+{% endfor %}
+{% endif %}

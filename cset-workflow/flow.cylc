@@ -62,7 +62,9 @@ URL = https://metoffice.github.io/CSET
     {% if CSET_CYCLING_MODE != "trial" or CSET_TRIAL_END_DATE|default(False) %}
         # Only runs on the final cycle.
         R1/$ = """
-        cycle_complete => finish_website => send_email
+        cycle_complete =>
+        PROCESS_CASE_AGGREGATION:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} =>
+        finish_website => send_email
         finish_website => housekeeping
         """
     {% endif %}
@@ -105,6 +107,13 @@ URL = https://metoffice.github.io/CSET
     execution time limit = PT1H
     [[[directives]]]
         --mem=4000
+
+    [[PROCESS_CASE_AGGREGATION]]
+    script = rose task-run -v --app-key=run_cset_recipe
+    execution time limit = PT1H
+        [[[environment]]]
+        # As this process is used for case aggregation we hard code to True.
+        DO_CASE_AGGREGATION = True
 
     [[FETCH_DATA]]
     script = rose task-run -v --app-key=fetch_fcst
