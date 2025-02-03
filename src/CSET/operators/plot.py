@@ -521,7 +521,7 @@ def _plot_and_save_vertical_line_series(
     # model_level_number and lfric uses full_levels as coordinate.
     elif series_coordinate in ("model_level_number", "full_levels", "half_levels"):
         # Define y-ticks and labels for vertical axis.
-        y_ticks = next(iter_maybe(cubes)).coord(series_coordinate).points
+        y_ticks = iter_maybe(cubes)[0].coord(series_coordinate).points
         y_tick_labels = [str(int(i)) for i in y_ticks]
         ax.set_ylim(min(y_ticks), max(y_ticks))
 
@@ -534,7 +534,7 @@ def _plot_and_save_vertical_line_series(
     # Add some labels and tweak the style.
     ax.set(
         ylabel=f"{coord.name()} / {coord.units}",
-        xlabel=f"{next(iter_maybe(cubes)).name()} / {next(iter_maybe(cubes)).units}",
+        xlabel=f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}",
         title=title,
     )
     ax.ticklabel_format(axis="x")
