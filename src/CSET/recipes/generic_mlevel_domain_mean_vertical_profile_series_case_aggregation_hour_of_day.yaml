@@ -1,0 +1,34 @@
+category: Profiles
+title: $MODEL_NAME Domain horizontal mean $VARNAME vertical profile as series case aggregation by hour of day
+description: |
+  Plots a time series of vertical profiles for the domain mean $VARNAME using a
+  `model_level_number` coordinate. This recipe aggregates over all cases using a
+  consistent hour of day.
+
+steps:
+  - operator: read.read_cubes
+    constraint:
+      operator: constraints.combine_constraints
+      variable_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: model_level_number
+        levels: "*"
+
+  - operator: collapse.collapse
+    coordinate: [grid_latitude, grid_longitude]
+    method: MEAN
+
+  - operator: collapse.collapse_by_hour_of_day
+    method: MEAN
+
+  # Plot the vertical line series.
+  - operator: plot.plot_vertical_line_series
+    series_coordinate: model_level_number
+    sequence_coordinate: hour
+
+  # Make a single NetCDF with all the data inside it.
+  - operator: write.write_cube_to_nc
+    overwrite: True
