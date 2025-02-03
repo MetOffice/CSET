@@ -555,7 +555,7 @@ def _plot_and_save_scatter_plot(
     one_to_one: bool,
     **kwargs,
 ):
-    """Plot and save a 1D scatter plot.
+    """Plot and save a 2D scatter plot.
 
     Parameters
     ----------
@@ -579,7 +579,7 @@ def _plot_and_save_scatter_plot(
     cube_x_iterable = iter_maybe(cube_x)
     cube_y_iterable = iter_maybe(cube_y)
 
-    for cube_x_iter, cube_y_iter in zip(cube_x_iterable, cube_y_iterable, strict=False):
+    for cube_x_iter, cube_y_iter in zip(cube_x_iterable, cube_y_iterable, strict=True):
         iplt.scatter(cube_x_iter, cube_y_iter)
     if one_to_one is True:
         plt.plot(
