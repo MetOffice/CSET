@@ -5,7 +5,7 @@ ci:
 
 repos:
   - repo: https://github.com/codespell-project/codespell
-    rev: db0100e9569b92719311a5bf6727ca1bb4664409  # frozen: v2.4.0
+    rev: 63c8f8312b7559622c0d82815639671ae42132ac  # frozen: v2.4.1
     hooks:
       - id: codespell
         # Additional dependency needed until Python 3.11 is our minimum version.
@@ -13,7 +13,7 @@ repos:
           - tomli
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 36b36942c52d8ce8ae6314461f2d86b1fda158e3  # frozen: v0.9.3
+    rev: 871f3bcae4fe473cd7109c3a068db975dc035e3b  # frozen: v0.9.4
     hooks:
       - id: ruff
         args: [--fix, --show-fixes, --exit-non-zero-on-fix]
