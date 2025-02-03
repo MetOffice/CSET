@@ -486,8 +486,8 @@ def _plot_and_save_vertical_line_series(
     """
     # plot the vertical pressure axis using log scale
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
-    for cube_iter in iter_maybe(cubes):
-        iplt.plot(cube_iter, coord, "o-")
+    for cube in iter_maybe(cubes):
+        iplt.plot(cube, coord, "o-")
 
     # Get the current axis
     ax = plt.gca()
