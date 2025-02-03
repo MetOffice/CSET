@@ -77,24 +77,28 @@ def remove_attribute(
     return cubes
 
 
-def addition(addend_1, addend_2):
+def addition(
+    addend_1: Cube | CubeList, addend_2: Cube | CubeList, **kwargs
+) -> Cube | CubeList:
     """Addition of two fields.
 
     Parameters
     ----------
-    addend_1: Cube
-        Any field to have another field added to it.
+    addend_1: Cube | CubeList
+        Any Cube or Cube in a CubeList to have another field added to it.
     addend_2: Cube
-        Any field to be added to another field.
+        Any Cube or Cube in a CubeList to be added to another field.
 
     Returns
     -------
-    Cube
+    Cube | CubeList
 
     Raises
     ------
     ValueError, iris.exceptions.NotYetImplementedError
         When the cubes are not compatible.
+    ValueError,
+        If the lengths of the CubeLists do not match.
 
     Notes
     -----
@@ -106,7 +110,23 @@ def addition(addend_1, addend_2):
     >>> field_addition = misc.addition(kinetic_energy_u, kinetic_energy_v)
 
     """
-    return addend_1 + addend_2
+    # Ensure CubeLists are used if a Cube is passed.
+    addend_1 = CubeList(iter_maybe(addend_1))
+    addend_2 = CubeList(iter_maybe(addend_2))
+
+    if len(addend_1) != len(addend_2):
+        raise ValueError("The lengths of the CubeLists do not match.")
+
+    # add the matching pairs of cubes in the Cubelists together
+    result_cubes = CubeList()
+    for cube1, cube2 in zip(addend_1, addend_2, strict=False):
+        result_cubes.append(cube1 + cube2)
+
+    # Return a Cube if only single Cubes were passed and
+    # return CubeList if two Cubelists were passed.
+    if isinstance(addend_1, Cube) and isinstance(addend_2, Cube):
+        return result_cubes[0]
+    return result_cubes
 
 
 def subtraction(minuend, subtrahend):

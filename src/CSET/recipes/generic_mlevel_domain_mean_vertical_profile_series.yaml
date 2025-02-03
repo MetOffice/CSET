@@ -11,7 +11,7 @@ steps:
         varname: $VARNAME
       pressure_level_constraint:
         operator: constraints.generate_level_constraint
-        coordinate: model_level_number
+        coordinate: full_levels
         levels: "*"
 
   - operator: collapse.collapse
@@ -20,7 +20,7 @@ steps:
 
   # Plot the vertical line series.
   - operator: plot.plot_vertical_line_series
-    series_coordinate: model_level_number
+    series_coordinate: full_levels
     sequence_coordinate: time
 
   # Make a single NetCDF with all the data inside it.

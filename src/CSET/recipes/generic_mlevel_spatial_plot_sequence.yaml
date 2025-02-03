@@ -12,7 +12,7 @@ steps:
         varname: $VARNAME
       model_level_constraint:
         operator: constraints.generate_level_constraint
-        coordinate: "model_level_number"
+        coordinate: full_levels
         levels: $MLEVEL
 
   - operator: plot.spatial_contour_plot
