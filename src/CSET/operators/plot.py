@@ -456,7 +456,7 @@ def _plot_and_save_line_series(
 
 
 def _plot_and_save_vertical_line_series(
-    cube: iris.cube.Cube,
+    cubes: iris.cube.Cube | iris.cube.CubeList,
     coord: iris.coords.Coord,
     filename: str,
     series_coordinate: str,
@@ -469,8 +469,8 @@ def _plot_and_save_vertical_line_series(
 
     Parameters
     ----------
-    cube: Cube
-        1 dimensional Cube of the data to plot on x-axis.
+    cubes: Cube or CubeList
+        1 dimensional Cube or CubeList of the data to plot on x-axis.
     coord: Coord
         Coordinate to plot on y-axis.
     filename: str
@@ -486,7 +486,10 @@ def _plot_and_save_vertical_line_series(
     """
     # plot the vertical pressure axis using log scale
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
-    iplt.plot(cube, coord, "o-")
+    for cube in iter_maybe(cubes):
+        iplt.plot(cube, coord, "o-")
+
+    # Get the current axis
     ax = plt.gca()
 
     # Special handling for pressure level data.
@@ -518,7 +521,7 @@ def _plot_and_save_vertical_line_series(
     # model_level_number and lfric uses full_levels as coordinate.
     elif series_coordinate in ("model_level_number", "full_levels", "half_levels"):
         # Define y-ticks and labels for vertical axis.
-        y_ticks = cube.coord(series_coordinate).points
+        y_ticks = iter_maybe(cubes)[0].coord(series_coordinate).points
         y_tick_labels = [str(int(i)) for i in y_ticks]
         ax.set_ylim(min(y_ticks), max(y_ticks))
 
@@ -531,7 +534,7 @@ def _plot_and_save_vertical_line_series(
     # Add some labels and tweak the style.
     ax.set(
         ylabel=f"{coord.name()} / {coord.units}",
-        xlabel=f"{cube.name()} / {cube.units}",
+        xlabel=f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}",
         title=title,
     )
     ax.ticklabel_format(axis="x")
@@ -545,21 +548,21 @@ def _plot_and_save_vertical_line_series(
 
 
 def _plot_and_save_scatter_plot(
-    cube_x: iris.cube.Cube,
-    cube_y: iris.cube.Cube,
+    cube_x: iris.cube.Cube | iris.cube.CubeList,
+    cube_y: iris.cube.Cube | iris.cube.CubeList,
     filename: str,
     title: str,
     one_to_one: bool,
     **kwargs,
 ):
-    """Plot and save a 1D scatter plot.
+    """Plot and save a 2D scatter plot.
 
     Parameters
     ----------
-    cube_x: Cube
-        1 dimensional Cube of the data to plot on x-axis.
-    cube_y: Cube
-        1 dimensional Cube of the data to plot on y-axis.
+    cube_x: Cube | CubeList
+        1 dimensional Cube or CubeList of the data to plot on x-axis.
+    cube_y: Cube | CubeList
+        1 dimensional Cube or CubeList of the data to plot on y-axis.
     filename: str
         Filename of the plot to write.
     title: str
@@ -568,7 +571,16 @@ def _plot_and_save_scatter_plot(
         Whether a 1:1 line is plotted.
     """
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
-    iplt.scatter(cube_x, cube_y)
+    # plot the cube_x and cube_y 1D fields as a scatter plot. If they are CubeLists this ensures
+    # to pair each cube from cube_x with the corresponding cube from cube_y, allowing to iterate
+    # over the pairs simultaneously.
+
+    # Ensure cube_x and cube_y are iterable
+    cube_x_iterable = iter_maybe(cube_x)
+    cube_y_iterable = iter_maybe(cube_y)
+
+    for cube_x_iter, cube_y_iter in zip(cube_x_iterable, cube_y_iterable, strict=True):
+        iplt.scatter(cube_x_iter, cube_y_iter)
     if one_to_one is True:
         plt.plot(
             [
@@ -586,8 +598,8 @@ def _plot_and_save_scatter_plot(
 
     # Add some labels and tweak the style.
     ax.set(
-        xlabel=f"{cube_x.name()} / {cube_x.units}",
-        ylabel=f"{cube_y.name()} / {cube_y.units}",
+        xlabel=f"{cube_x[0].name()} / {cube_x[0].units}",
+        ylabel=f"{cube_y[0].name()} / {cube_y[0].units}",
         title=title,
     )
     ax.ticklabel_format(axis="y", useOffset=False)
@@ -1027,24 +1039,26 @@ def plot_line_series(
 
 
 def plot_vertical_line_series(
-    cube: iris.cube.Cube,
+    cubes: iris.cube.Cube | iris.cube.CubeList,
     filename: str = None,
     series_coordinate: str = "model_level_number",
     sequence_coordinate: str = "time",
     # line_coordinate: str = "realization",
     **kwargs,
-) -> iris.cube.Cube:
+) -> iris.cube.Cube | iris.cube.CubeList:
     """Plot a line plot against a type of vertical coordinate.
+
+    The Cube or CubeList must be 1D.
 
     A 1D line plot with y-axis as pressure coordinate can be plotted, but if the sequence_coordinate is present
     then a sequence of plots will be produced.
 
-    The cube must be 1D.
-
     Parameters
     ----------
-    cube: Cube
-        Iris cube of the data to plot. It should have a single dimension.
+    iris.cube | iris.cube.CubeList
+        Cube or CubeList of the data to plot. The individual cubes should have a single dimension.
+        The cubes should cover the same phenomenon i.e. all cubes contain temperature data.
+        We do not support different data such as temperature and humidity in the same CubeList for plotting.
     filename: str, optional
         Name of the plot to write, used as a prefix for plot sequences. Defaults
         to the recipe name.
@@ -1059,56 +1073,74 @@ def plot_vertical_line_series(
 
     Returns
     -------
-    Cube
-        The original cube (so further operations can be applied).
+    iris.cube.Cube | iris.cube.CubeList
+        The original Cube or CubeList (so further operations can be applied).
+        Plotted data.
 
     Raises
     ------
     ValueError
-        If the cube doesn't have the right dimensions.
+        If the cubes doesn't have the right dimensions.
     TypeError
-        If the cube isn't a single cube.
+        If the cube isn't a Cube or CubeList.
     """
-    # Ensure we've got a single cube.
-    cube = _check_single_cube(cube)
-
-    # Test if series coordinate i.e. pressure level exist for any cube with cube.ndim >=1.
-    try:
-        coord = cube.coord(series_coordinate)
-    except iris.exceptions.CoordinateNotFoundError as err:
-        raise ValueError(f"Cube must have a {series_coordinate} coordinate.") from err
-
-    try:
-        if cube.ndim > 1:
-            cube.coord(sequence_coordinate)
-    except iris.exceptions.CoordinateNotFoundError as err:
-        raise ValueError(
-            f"Cube must have a {sequence_coordinate} coordinate or be 1D."
-        ) from err
-
     # Ensure we have a name for the plot file.
     recipe_title = get_recipe_metadata().get("title", "Untitled")
     if filename is None:
         filename = slugify(recipe_title)
 
+    # Initialise empty list to hold all data from all cubes in a CubeList
+    all_data = []
+
+    # Iterate over all cubes in cube or CubeList and plot.
+    for cube_iter in iter_maybe(cubes):
+        # Ensure we've got a single cube.
+        cube_iter = _check_single_cube(cube_iter)
+
+        # Test if series coordinate i.e. pressure level exist for any cube with cube.ndim >=1.
+        try:
+            coord = cube_iter.coord(series_coordinate)
+        except iris.exceptions.CoordinateNotFoundError as err:
+            raise ValueError(
+                f"Cube must have a {series_coordinate} coordinate."
+            ) from err
+
+        try:
+            if cube_iter.ndim > 1:
+                cube_iter.coord(sequence_coordinate)
+        except iris.exceptions.CoordinateNotFoundError as err:
+            raise ValueError(
+                f"Cube must have a {sequence_coordinate} coordinate or be 1D."
+            ) from err
+
+        # Append cube data to the list to alculate vmin and vmax across entire cubelist
+        all_data.append(cube_iter.data)
+
+    # Combine all data into a single NumPy array
+    combined_data = np.concatenate(all_data)
+
     # Set the lower and upper limit for the x-axis to ensure all plots have same
     # range. This needs to read the whole cube over the range of the sequence
     # and if applicable postage stamp coordinate.
-    vmin = np.floor(cube.data.min())
-    vmax = np.ceil(cube.data.max())
+    vmin = np.floor(combined_data.min())
+    vmax = np.ceil(combined_data.max())
 
     # Create a plot for each value of the sequence coordinate.
+    # Allowing for multiple cubes in a CubeList to be plotted in the same plot for
+    # similar sequence values. Passing a CubeList into the internal plotting function
+    # for similar values of the sequence coordinate. cube_slice can be an iris.cube.Cube
+    # or an iris.cube.CubeList.
     plot_index = []
-    for cube_slice in cube.slices_over(sequence_coordinate):
+    for cubes_slice in cubes.slices_over(sequence_coordinate):
         # Use sequence value so multiple sequences can merge.
-        seq_coord = cube_slice.coord(sequence_coordinate)
+        seq_coord = cubes_slice.coord(sequence_coordinate)
         sequence_value = seq_coord.points[0]
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
         # Format the coordinate value in a unit appropriate way.
         title = f"{recipe_title}\n{seq_coord.units.title(sequence_value)}"
         # Do the actual plotting.
         _plot_and_save_vertical_line_series(
-            cube_slice,
+            cubes_slice,
             coord,
             plot_filename,
             series_coordinate,
@@ -1124,12 +1156,12 @@ def plot_vertical_line_series(
     # Make a page to display the plots.
     _make_plot_html_page(complete_plot_index)
 
-    return cube
+    return cubes
 
 
 def scatter_plot(
-    cube_x: iris.cube.Cube,
-    cube_y: iris.cube.Cube,
+    cube_x: iris.cube.Cube | iris.cube.CubeList,
+    cube_y: iris.cube.Cube | iris.cube.CubeList,
     filename: str = None,
     one_to_one: bool = True,
     **kwargs,
@@ -1140,9 +1172,9 @@ def scatter_plot(
 
     Parameters
     ----------
-    cube_x: Cube
+    cube_x: Cube | CubeList
         1 dimensional Cube of the data to plot on y-axis.
-    cube_y: Cube
+    cube_y: Cube | CubeList
         1 dimensional Cube of the data to plot on x-axis.
     filename: str, optional
         Filename of the plot to write.
@@ -1187,14 +1219,19 @@ def scatter_plot(
     .. [Wilks2011] Wilks, D.S., (2011) "Statistical Methods in the Atmospheric
        Sciences" Third Edition, vol. 100, Academic Press, Oxford, UK, 676 pp.
     """
-    # Check cubes are correct shape.
-    cube_x = _check_single_cube(cube_x)
-    cube_y = _check_single_cube(cube_y)
+    # Iterate over all cubes in cube or CubeList and plot.
+    for cube_iter in iter_maybe(cube_x):
+        # Check cubes are correct shape.
+        cube_iter = _check_single_cube(cube_iter)
+        if cube_iter.ndim > 1:
+            raise ValueError("cube_x must be 1D.")
 
-    if cube_x.ndim > 1:
-        raise ValueError("cube_x must be 1D.")
-    if cube_y.ndim > 1:
-        raise ValueError("cube_y must be 1D.")
+    # Iterate over all cubes in cube or CubeList and plot.
+    for cube_iter in iter_maybe(cube_y):
+        # Check cubes are correct shape.
+        cube_iter = _check_single_cube(cube_iter)
+        if cube_iter.ndim > 1:
+            raise ValueError("cube_y must be 1D.")
 
     # Ensure we have a name for the plot file.
     title = get_recipe_metadata().get("title", "Untitled")
