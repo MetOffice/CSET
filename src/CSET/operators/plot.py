@@ -613,7 +613,7 @@ def _plot_and_save_scatter_plot(
 
 
 def _plot_and_save_histogram_series(
-    cube: iris.cube.Cube,
+    cubes: iris.cube.Cube | iris.cube.CubeList,
     filename: str,
     title: str,
     vmin: float,
@@ -625,8 +625,8 @@ def _plot_and_save_histogram_series(
 
     Parameters
     ----------
-    cube: Cube
-        2 dimensional Cube of the data to plot as histogram.
+    cubes: Cube or CubeList
+        2 dimensional Cube or CubeList of the data to plot as histogram.
         Plotting options are fixed:
         density=True, histtype='step',stacked=True to ensure that
         a probability density is plotted using matplotlib.pyplot.hist
@@ -650,16 +650,20 @@ def _plot_and_save_histogram_series(
         but can be changed in the rose-suite.conf configuration.
     """
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
-    # Reshape cube data into a single array to allow for a single histogram.
-    # Otherwise we plot xdim histograms stacked.
-    cube_data_1d = (cube.data).flatten()
-    plt.hist(cube_data_1d, density=True, histtype=histtype, stacked=True)
+
+    for cube in iter_maybe(cubes):
+        # Reshape cube data into a single array to allow for a single histogram.
+        # Otherwise we plot xdim histograms stacked.
+        cube_data_1d = (cube.data).flatten()
+        plt.hist(cube_data_1d, density=True, histtype=histtype, stacked=True)
+
+    # Get the current axes
     ax = plt.gca()
 
     # Add some labels and tweak the style.
     ax.set(
         title=title,
-        xlabel=f"{cube.name()} / {cube.units}",
+        xlabel=f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}",
         ylabel="normalised probability density",
         ylim=(0, 1),
         xlim=(vmin, vmax),
@@ -1254,14 +1258,14 @@ def scatter_plot(
 
 
 def plot_histogram_series(
-    cube: iris.cube.Cube,
+    cubes: iris.cube.Cube | iris.cube.CubeList,
     filename: str = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
     single_plot: bool = False,
     histtype: str = "step",
     **kwargs,
-) -> iris.cube.Cube:
+) -> iris.cube.Cube | iris.cube.CubeList:
     """Plot a histogram plot for each vertical level provided.
 
     A histogram plot can be plotted, but if the sequence_coordinate (i.e. time)
@@ -1273,9 +1277,11 @@ def plot_histogram_series(
 
     Parameters
     ----------
-    cube: Cube
-        Iris cube of the data to plot. It should have a single dimension other
+    cubes: Cube | iris.cube.CubeList
+        Iris cube or CubeList of the data to plot. It should have a single dimension other
         than the stamp coordinate.
+        The cubes should cover the same phenomenon i.e. all cubes contain temperature data.
+        We do not support different data such as temperature and humidity in the same CubeList for plotting.
     filename: str, optional
         Name of the plot to write, used as a prefix for plot sequences. Defaults
         to the recipe name.
@@ -1297,15 +1303,16 @@ def plot_histogram_series(
 
     Returns
     -------
-    Cube
-        The original cube (so further operations can be applied).
+    iris.cube.Cube | iris.cube.CubeList
+        The original Cube or CubeList (so further operations can be applied).
+        Plotted data.
 
     Raises
     ------
     ValueError
         If the cube doesn't have the right dimensions.
     TypeError
-        If the cube isn't a single cube.
+        If the cube isn't a Cube or CubeList.
     """
     recipe_title = get_recipe_metadata().get("title", "Untitled")
 
@@ -1313,42 +1320,59 @@ def plot_histogram_series(
     if filename is None:
         filename = slugify(recipe_title)
 
-    # Ensure we've got a single cube.
-    cube = _check_single_cube(cube)
-
     # Internal plotting function.
     plotting_func = _plot_and_save_histogram_series
 
-    # Make postage stamp plots if stamp_coordinate exists and has more than a
-    # single point. If single_plot is True, all postage stamp plots will be
-    # plotted in a single plot instead of separate postage stamp plots.
-    try:
-        if cube.coord(stamp_coordinate).shape[0] > 1:
-            if single_plot:
-                plotting_func = (
-                    _plot_and_save_postage_stamps_in_single_plot_histogram_series
-                )
-            else:
-                plotting_func = _plot_and_save_postage_stamp_histogram_series
-    except iris.exceptions.CoordinateNotFoundError:
-        pass
+    # Initialise empty list to hold all data from all cubes in a CubeList
+    all_data = []
 
-    # If several histograms are plotted with time as sequence_coordinate for the
-    # time slider option.
-    try:
-        cube.coord(sequence_coordinate)
-    except iris.exceptions.CoordinateNotFoundError as err:
-        raise ValueError(f"Cube must have a {sequence_coordinate} coordinate.") from err
+    # Iterate over all cubes in cube or CubeList and plot.
+    for cube_iter in iter_maybe(cubes):
+        # Ensure we've got a single cube.
+        cube_iter = _check_single_cube(cube_iter)
+
+        # Make postage stamp plots if stamp_coordinate exists and has more than a
+        # single point. If single_plot is True, all postage stamp plots will be
+        # plotted in a single plot instead of separate postage stamp plots.
+        try:
+            if cube_iter.coord(stamp_coordinate).shape[0] > 1:
+                if single_plot:
+                    plotting_func = (
+                        _plot_and_save_postage_stamps_in_single_plot_histogram_series
+                    )
+                else:
+                    plotting_func = _plot_and_save_postage_stamp_histogram_series
+        except iris.exceptions.CoordinateNotFoundError:
+            pass
+
+        # If several histograms are plotted with time as sequence_coordinate for the
+        # time slider option.
+        try:
+            cube_iter.coord(sequence_coordinate)
+        except iris.exceptions.CoordinateNotFoundError as err:
+            raise ValueError(
+                f"Cube must have a {sequence_coordinate} coordinate."
+            ) from err
+
+        # append cube data to the list to calculate vmin and vmax across entire cubelist
+        all_data.append(cube_iter.data)
+
+    # Combine all data into a single NumPy array
+    combined_data = np.concatenate(all_data)
 
     # Set the lower and upper limit for the colorbar to ensure all plots have
     # same range. This needs to read the whole cube over the range of the
     # sequence and if applicable postage stamp coordinate.
-    vmin = np.floor((cube.data.min()))
-    vmax = np.ceil((cube.data.max()))
+    vmin = np.floor((combined_data.min()))
+    vmax = np.ceil((combined_data.max()))
 
     # Create a plot for each value of the sequence coordinate.
+    # Allowing for multiple cubes in a CubeList to be plotted in the same plot for
+    # similar sequence values. Passing a CubeList into the internal plotting function
+    # for similar values of the sequence coordinate. cube_slice can be an iris.cube.Cube
+    # or an iris.cube.CubeList.
     plot_index = []
-    for cube_slice in cube.slices_over(sequence_coordinate):
+    for cube_slice in cubes.slices_over(sequence_coordinate):
         # Use sequence value so multiple sequences can merge.
         sequence_value = cube_slice.coord(sequence_coordinate).points[0]
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
@@ -1373,4 +1397,4 @@ def plot_histogram_series(
     # Make a page to display the plots.
     _make_plot_html_page(complete_plot_index)
 
-    return cube
+    return cubes
