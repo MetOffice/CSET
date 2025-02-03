@@ -112,6 +112,10 @@ def addition(
     >>> field_addition = misc.addition(kinetic_energy_u, kinetic_energy_v)
 
     """
+    # Store the original types
+    original_type_1 = type(addend_1)
+    original_type_2 = type(addend_2)
+
     # Ensure CubeLists are used if a Cube is passed.
     addend_1 = CubeList(iter_maybe(addend_1))
     addend_2 = CubeList(iter_maybe(addend_2))
@@ -126,9 +130,10 @@ def addition(
 
     # Return a Cube if only single Cubes were passed and
     # return CubeList if two Cubelists were passed.
-    if isinstance(addend_1, Cube) and isinstance(addend_2, Cube):
+    if isinstance(original_type_1, Cube) and isinstance(original_type_2, Cube):
         return result_cubes[0]
-    return result_cubes
+    else:
+        return result_cubes
 
 
 def subtraction(minuend, subtrahend):
