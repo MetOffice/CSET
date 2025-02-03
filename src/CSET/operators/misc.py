@@ -103,7 +103,9 @@ def addition(
     Notes
     -----
     This is a simple operator designed for combination of diagnostics or
-    creating new diagnostics by using recipes.
+    creating new diagnostics by using recipes. If only cubes are passed
+    into the operator then a cube is returned. If CubeLists are passed into
+    the operator then a CubeList is returned.
 
     Examples
     --------
