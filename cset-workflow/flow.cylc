@@ -130,6 +130,7 @@ URL = https://metoffice.github.io/CSET
     script = true
     platform = localhost
     execution time limit = PT1M
+    run mode = skip
 
     [[setup_complete]]
     inherit = DUMMY_TASK
