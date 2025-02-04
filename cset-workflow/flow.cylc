@@ -130,6 +130,7 @@ URL = https://metoffice.github.io/CSET
             ROSE_APP_OPT_CONF_KEYS = {{METPLUS_OPT_CONFIG_KEYS}}
         {% endif %}
 
+    # Noop tasks to ensure a complete/efficient workflow graph
     [[DUMMY_TASK]]
     script = true
     platform = localhost
@@ -143,6 +144,12 @@ URL = https://metoffice.github.io/CSET
 
     [[cycle_complete]]
     inherit = DUMMY_TASK
+
+    [[dummy_process]]
+    inherit = DUMMY_TASK, PROCESS
+
+    [[dummy_process_case_aggregation]]
+    inherit = DUMMY_TASK, PROCESS_CASE_AGGREGATION
 
     [[build_conda]]
     # Create the conda environment if it does not yet exist, possibly installing
