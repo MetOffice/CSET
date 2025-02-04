@@ -45,8 +45,11 @@ def test_ensure_aggregatable_across_cases_true_aggregatable_cube(
     long_forecast_multi_day,
 ):
     """Check that an aggregatable cube is returned with no changes."""
+    cubes = aggregate.ensure_aggregatable_across_cases(long_forecast_multi_day)
+    assert len(cubes) == 1
+    cube = cubes[0]
     assert np.allclose(
-        aggregate.ensure_aggregatable_across_cases(long_forecast_multi_day).data,
+        cube.data,
         long_forecast_multi_day.data,
         rtol=1e-06,
         atol=1e-02,
@@ -63,18 +66,21 @@ def test_ensure_aggregatable_across_cases_cubelist(
     long_forecast_many_cubes, long_forecast_multi_day
 ):
     """Check that a CubeList turns into an aggregatable Cube."""
+    output_data = aggregate.ensure_aggregatable_across_cases(long_forecast_multi_day)
+    assert isinstance(output_data, iris.cube.CubeList)
+    assert len(output_data) == 1
+
     # Check output is a Cube.
     output_data = aggregate.ensure_aggregatable_across_cases(long_forecast_many_cubes)
-    assert isinstance(output_data, iris.cube.Cube)
-    # Check output can be aggregated in time.
-    assert isinstance(
-        aggregate.ensure_aggregatable_across_cases(output_data), iris.cube.Cube
-    )
+    assert isinstance(output_data, iris.cube.CubeList)
+    assert len(output_data) == 1
+    cube = output_data[0]
+    assert isinstance(cube, iris.cube.Cube)
     # Check output is identical to a pre-calculated cube.
     pre_calculated_data = long_forecast_multi_day
     assert np.allclose(
         pre_calculated_data.data,
-        output_data.data,
+        cube.data,
         rtol=1e-06,
         atol=1e-02,
     )
