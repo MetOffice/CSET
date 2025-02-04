@@ -409,24 +409,24 @@ def _fix_spatial_coord_name_callback(cube: iris.cube.Cube):
 
 
 def _fix_pressure_coord_callback(cube: iris.cube.Cube):
-    """Rename pressure coordinate to 'pressure' if it exists and ensure hPa units.
+    """Rename pressure coordinate to "pressure" if it exists and ensure hPa units.
 
     This problem was raised because the AIFS model data from ECMWF
-    defines the pressure coordinate with the name 'pressure_level' rather
+    defines the pressure coordinate with the name "pressure_level" rather
     than compliant CF coordinate names.
 
-    Additionally, set the units of pressure to be hPa.
+    Additionally, set the units of pressure to be hPa to be consistent with the UM,
+    and approach the coordinates in a unified way.
     """
-    # We only want to modify instances where the coordinate system is actually
-    # latitude/longitude, and not touch the cube if the coordinate system is say
-    # meters.
     for coord in cube.dim_coords:
-        if coord.name() in ["pressure_level", "pressure_levels"]:
+        coord_name = coord.name()
+
+        if coord_name in ["pressure_level", "pressure_levels"]:
             coord.rename("pressure")
 
-    for coord in cube.dim_coords:
-        if coord.name() == "pressure":
-            cube.coord("pressure").convert_units("hPa")
+        if coord_name == "pressure":
+            if cube.coord("pressure").units != "hPa":
+                cube.coord("pressure").convert_units("hPa")
 
 
 def _check_input_files(input_paths: list[str], filename_pattern: str) -> list[Path]:
