@@ -65,9 +65,16 @@ def output_directory():
 
 def data_directories() -> list[str]:
     """Get the input data directories for the cycle."""
-    rose_datac = os.environ["ROSE_DATAC"]
     model_identifiers = sorted(os.environ["MODEL_IDENTIFIERS"].split())
-    return [f"{rose_datac}/data/{model_id}" for model_id in model_identifiers]
+    if os.getenv("DO_CASE_AGGREGATION"):
+        cylc_workflow_share_dir = os.environ["CYLC_WORKFLOW_SHARE_DIR"]
+        return [
+            f"{cylc_workflow_share_dir}/cycle/*/data/{model_id}"
+            for model_id in model_identifiers
+        ]
+    else:
+        rose_datac = os.environ["ROSE_DATAC"]
+        return [f"{rose_datac}/data/{model_id}" for model_id in model_identifiers]
 
 
 def create_diagnostic_archive(output_directory):

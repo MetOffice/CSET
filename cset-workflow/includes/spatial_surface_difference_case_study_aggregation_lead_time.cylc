@@ -1,0 +1,22 @@
+{% if SPATIAL_SURFACE_DIFFERENCE_CASE_AGGREGATION_LEAD_TIME|default(False) %}
+# Models are listed in order, so model 1 is the first element.
+{% set base_model = models[0] %}
+# As we use model 1 as the base model we skip it here.
+{% for model in models[1:] %}
+{% for field in SURFACE_MODEL_FIELDS %}
+[runtime]
+    [[spatial_surface_difference_case_aggregation_by_lead_time_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
+    inherit = PROCESS_CASE_AGGREGATION
+        [[[directives]]]
+        --mem=5000
+        [[[environment]]]
+        CSET_RECIPE_NAME = "surface_spatial_difference_case_aggregation_mean_lead_time.yaml"
+        CSET_ADDOPTS = """
+            --VARNAME='{{field}}'
+            --BASE_MODEL='{{base_model["name"]}}'
+            --OTHER_MODEL='{{model["name"]}}'
+        """
+        MODEL_IDENTIFIERS = '1 {{model["id"]}}'
+{% endfor %}
+{% endfor %}
+{% endif %}

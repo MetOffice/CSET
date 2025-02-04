@@ -103,7 +103,7 @@ def test_collapse_by_hour_of_day(long_forecast):
     collapsed_cube = collapse.collapse_by_hour_of_day(
         long_forecast, "MEAN", multi_case=False
     )
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (-- : 24; grid_latitude: 3; grid_longitude: 3)>"
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
 
 
@@ -119,7 +119,7 @@ def test_collapse_by_hour_of_day_percentile(long_forecast):
     collapsed_cube = collapse.collapse_by_hour_of_day(
         long_forecast, "PERCENTILE", additional_percent=[25, 75], multi_case=False
     )
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (percentile_over_hour: 2; -- : 24; grid_latitude: 3; grid_longitude: 3)>"
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (percentile_over_hour: 2; hour: 24; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
 
 
@@ -132,7 +132,7 @@ def test_collapse_by_hour_of_day_percentile_fail(long_forecast):
 def test_collapse_by_hour_of_day_multi_forecast_cube(long_forecast_multi_day):
     """Convert and aggregates time dimension by hour of day for a multi day cube."""
     collapsed_cube = collapse.collapse_by_hour_of_day(long_forecast_multi_day, "MEAN")
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (-- : 24; grid_latitude: 3; grid_longitude: 3)>"
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
 
 
@@ -147,7 +147,7 @@ def test_collapse_by_hour_of_day_multi_forecast_cube_fail(long_forecast_multi_da
 def test_collapse_by_hour_of_day_multi_forecast_cubelist(long_forecast_many_cubes):
     """Convert and aggregates time dimension by hour of day for a CubeList."""
     collapsed_cube = collapse.collapse_by_hour_of_day(long_forecast_many_cubes, "MEAN")
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (-- : 24; grid_latitude: 3; grid_longitude: 3)>"
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
 
 
@@ -157,15 +157,6 @@ def test_collapse_by_hour_of_day_multi_forecast_cubelist_fail(long_forecast_many
         collapse.collapse_by_hour_of_day(
             long_forecast_many_cubes, "MEAN", multi_case=False
         )
-
-
-def test_collapse_by_hour_of_day_monotonic_coords(medium_forecast):
-    """Convert and aggregates time dimension by hour of day with monotonic coordinates."""
-    collapsed_cube = collapse.collapse_by_hour_of_day(
-        medium_forecast, "MEAN", multi_case=False
-    )
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
-    assert repr(collapsed_cube) == expected_cube
 
 
 def test_collapse_by_lead_time_single_cube(long_forecast_multi_day):

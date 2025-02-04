@@ -91,6 +91,16 @@ def test_data_directories(monkeypatch):
     assert actual == expected
 
 
+def test_data_directories_multiple_cases(monkeypatch):
+    """Data directory correctly interpreted for multiple cases."""
+    monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", "/share")
+    monkeypatch.setenv("DO_CASE_AGGREGATION", "True")
+    monkeypatch.setenv("MODEL_IDENTIFIERS", "1")
+    expected = ["/share/cycle/*/data/1"]
+    actual = run_cset_recipe.data_directories()
+    assert actual == expected
+
+
 def test_create_diagnostic_archive(tmp_path):
     """Create ZIP archive of output."""
     # Create dummy output files.
