@@ -247,6 +247,18 @@ def test_collapse_by_validity_time_cubelist(long_forecast_many_cubes):
     assert repr(collapsed_cube) == expected_cube
 
 
+def test_collapse_by_validity_time_incompatible_cubelist(long_forecast_many_cubes):
+    """Error raised when incompatible cubes are given."""
+    foo_cubes = long_forecast_many_cubes.copy()
+    for cube in foo_cubes:
+        cube.rename("foo")
+    test_cubes = long_forecast_many_cubes + foo_cubes
+    with pytest.raises(
+        ValueError, match="Cubes should be compatible when collapsing by validity time."
+    ):
+        collapse.collapse_by_validity_time(test_cubes, "MEAN")
+
+
 def test_collapse_by_validity_time_percentile(long_forecast_multi_day):
     """Reduce by validity time with percentiles."""
     # Test successful collapsing by validity time.
