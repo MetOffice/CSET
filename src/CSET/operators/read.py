@@ -15,12 +15,14 @@
 """Operators for reading various types of files from disk."""
 
 import ast
+import datetime
 import functools
 import glob
 import logging
 import warnings
 from pathlib import Path
 
+import cf_units
 import iris
 import iris.coords
 import iris.cube
@@ -229,6 +231,7 @@ def _create_callback(is_ensemble: bool, is_base: bool) -> callable:
         _longitude_fix_callback(cube, field, filename)
         _fix_spatial_coord_name_callback(cube)
         _fix_pressure_coord_name_callback(cube)
+        _lfric_time_callback(cube)
 
     return callback
 
@@ -421,6 +424,66 @@ def _fix_pressure_coord_name_callback(cube: iris.cube.Cube):
     for coord in cube.dim_coords:
         if coord.name() == "pressure_level":
             coord.rename("pressure")
+
+
+def _lfric_time_callback(cube: iris.cube.Cube):
+    """
+    Fix time coordinate metadata if missing dimensions.
+
+    Some model data does not contain forecast_reference_time or forecast_period as
+    expected coordinates, and so we cannot aggregate over case studies without this
+    metadata. This callback fixes these issues.
+
+    Notes
+    -----
+    Some parts of the code have been adapted from Paul Earnshaw's scripts.
+    """
+    # Construct forecast_reference time and forecast_period if they dont exist.
+    if not cube.coords("forecast_reference_time"):
+        try:
+            tcoord = cube.coord("time")
+            init_time = datetime.datetime.fromisoformat(
+                cube.coord("time").attributes["time_origin"]
+            )
+            time_unit = cube.coord("time").units
+            frt_point = cf_units.date2num(
+                init_time, str(time_unit), calendar=time_unit.calendar
+            )
+
+            frt_coord = iris.coords.AuxCoord(
+                frt_point, units=tcoord.units, standard_name="forecast_reference_time"
+            )
+            cube.add_aux_coord(frt_coord)
+        except KeyError:
+            logging.info(
+                "Cannot find forecast_reference_time, but no time_origin to construct it"
+            )
+
+    # Construct forecast_period axis (leadtime) if doesn't exist.
+    if not cube.coords("forecast_period"):
+        try:
+            tcoord = cube.coord("time")
+            init = cube.coord("forecast_reference_time")
+
+            lead_times = tcoord.points - init.points
+            if "seconds" in str(tcoord.units):
+                units = "seconds"
+            elif "hours" in str(tcoord.units):
+                units = "hours"
+            else:
+                raise ValueError(f"Not a recognised base time unit {str(tcoord.units)}")
+
+            lead_time_coord = iris.coords.AuxCoord(
+                lead_times, long_name="forecast_period", units=units
+            )
+
+            # Associate lead time dimension with coordinate time.
+            time_dim = cube.coord_dims("time")
+            cube.add_aux_coord(lead_time_coord, time_dim)
+        except KeyError:
+            logging.info("Cannot create forecast_period")
+
+    return cube
 
 
 def _check_input_files(input_paths: list[str], filename_pattern: str) -> list[Path]:
