@@ -19,31 +19,7 @@ import iris.cube
 import numpy as np
 import pytest
 
-from CSET.operators import collapse, read
-
-
-@pytest.fixture()
-def long_forecast() -> iris.cube.Cube:
-    """Get long_forecast to run tests on."""
-    return read.read_cube(
-        "tests/test_data/long_forecast_air_temp_fcst_1.nc", "air_temperature"
-    )
-
-
-@pytest.fixture()
-def long_forecast_multi_day() -> iris.cube.Cube:
-    """Get long_forecast_multi_day to run tests on."""
-    return read.read_cube(
-        "tests/test_data/long_forecast_air_temp_multi_day.nc", "air_temperature"
-    )
-
-
-@pytest.fixture()
-def long_forecast_many_cubes() -> iris.cube.Cube:
-    """Get long_forecast_may_cubes to run tests on."""
-    return read.read_cubes(
-        "tests/test_data/long_forecast_air_temp_fcst_*.nc", "air_temperature"
-    )
+from CSET.operators import collapse
 
 
 @pytest.fixture()
@@ -247,6 +223,18 @@ def test_collapse_by_validity_time_cubelist(long_forecast_many_cubes):
     assert repr(collapsed_cube) == expected_cube
 
 
+def test_collapse_by_validity_time_incompatible_cubelist(long_forecast_many_cubes):
+    """Error raised when incompatible cubes are given."""
+    foo_cubes = long_forecast_many_cubes.copy()
+    for cube in foo_cubes:
+        cube.rename("foo")
+    test_cubes = long_forecast_many_cubes + foo_cubes
+    with pytest.raises(
+        ValueError, match="Cubes should be compatible when collapsing by validity time."
+    ):
+        collapse.collapse_by_validity_time(test_cubes, "MEAN")
+
+
 def test_collapse_by_validity_time_percentile(long_forecast_multi_day):
     """Reduce by validity time with percentiles."""
     # Test successful collapsing by validity time.
@@ -259,7 +247,7 @@ def test_collapse_by_validity_time_percentile(long_forecast_multi_day):
 
 def test_collapse_by_validity_time_percentile_fail(long_forecast_multi_day):
     """Test not specifying additional percent fails."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Must specify additional_percent"):
         collapse.collapse_by_validity_time(long_forecast_multi_day, "PERCENTILE")
 
 

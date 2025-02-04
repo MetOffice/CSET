@@ -286,7 +286,7 @@ def collapse_by_validity_time(
 
     Returns
     -------
-    cube: iris.cube.Cube
+    cube: iris.cube.Cube | iris.cube.CubeList
         Single variable collapsed by lead time based on chosen method.
 
     Raises
@@ -297,8 +297,11 @@ def collapse_by_validity_time(
     if method == "PERCENTILE" and additional_percent is None:
         raise ValueError("Must specify additional_percent")
     # Ensure the cube can be aggregated over multiple times.
-    cube_to_collapse = ensure_aggregatable_across_cases(cube)
+    cubes_to_collapse = ensure_aggregatable_across_cases(cube)
+    if len(cubes_to_collapse) != 1:
+        raise ValueError("Cubes should be compatible when collapsing by validity time.")
     # Convert to a cube that is split by validity time.
+    cube_to_collapse = cubes_to_collapse[0]
     # Slice over cube by both time dimensions to create a CubeList.
     new_cubelist = iris.cube.CubeList(
         cube_to_collapse.slices_over(["forecast_period", "forecast_reference_time"])
@@ -324,15 +327,14 @@ def collapse_by_validity_time(
     final_cube = merged_list_1.merge_cube()
     # Collapse over fake_time_coord to represent collapsing over validity time.
     if method == "PERCENTILE":
-        collapsed_cube = collapse(
+        return collapse(
             final_cube,
             "equalised_validity_time",
             method,
             additional_percent=additional_percent,
         )
     else:
-        collapsed_cube = collapse(final_cube, "equalised_validity_time", method)
-    return collapsed_cube
+        return collapse(final_cube, "equalised_validity_time", method)
 
 
 # TODO

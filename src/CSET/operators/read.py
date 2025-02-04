@@ -170,6 +170,12 @@ def read_cubes(
         cubes.extend(load_from_paths(base_path, is_ensemble=True, is_base=True))
         cubes.extend(load_from_paths(other_paths, is_ensemble=True, is_base=False))
 
+    # Unify time units so different case studies can merge.
+    iris.util.unify_time_units(cubes)
+
+    # Should we call ensure_aggregatable_across_cases here?
+    # aggregate.ensure_aggregatable_across_cases(cubes)
+
     # Merge and concatenate cubes now metadata has been fixed.
     cubes = cubes.merge()
     cubes = cubes.concatenate()
@@ -204,12 +210,10 @@ def _is_ensemble(cubelist: iris.cube.CubeList) -> bool:
         cube_content = cube.xml()
         if cube_content in unique_cubes:
             logging.info("Ensemble data loaded.")
-            logging.debug("Cube Contents: %s", unique_cubes)
             return True
         else:
             unique_cubes.add(cube_content)
     logging.info("Deterministic data loaded.")
-    logging.debug("Cube Contents: %s", unique_cubes)
     return False
 
 
@@ -229,12 +233,12 @@ def _create_callback(is_ensemble: bool, is_base: bool) -> callable:
         _lfric_time_coord_fix_callback(cube, field, filename)
         _longitude_fix_callback(cube, field, filename)
         _fix_spatial_coord_name_callback(cube)
-        _lfric_time_callback(cube)
         _fix_pressure_coord_callback(cube)
         _fix_um_radtime_prehour(cube)
         _fix_um_radtime_posthour(cube)
         _fix_lfric_longnames(cube)
         _fix_um_lightning(cube)
+        _lfric_time_callback(cube)
 
     return callback
 
@@ -545,10 +549,13 @@ def _lfric_time_callback(cube: iris.cube.Cube):
     coord_names = [coord.name() for coord in cube.coords()]
 
     # Construct forecast_reference time and forecast_period if they dont exist.
-    if "forecast_reference_time" not in coord_names:
-        if "time" in coord_names:
-            tcoord = cube.coord("time")
-            if "time_origin" in tcoord.attributes:
+    if "time" in coord_names:
+        tcoord = cube.coord("time")
+        if (
+            "forecast_reference_time" not in coord_names
+            and "time_origin" in tcoord.attributes
+        ):
+            try:
                 init_time = datetime.datetime.fromisoformat(
                     cube.coord("time").attributes["time_origin"]
                 )
@@ -561,15 +568,12 @@ def _lfric_time_callback(cube: iris.cube.Cube):
                     standard_name="forecast_reference_time",
                 )
                 cube.add_aux_coord(frt_coord)
-            else:
+            except KeyError:
                 logging.info(
-                    "Cannot find forecast_reference_time, but no time_origin to construct it"
+                    "Cannot find forecast_reference_time, but not enough information to construct it."
                 )
-
-        else:
-            logging.info(
-                "Cannot find forecast_reference_time, but no time axis to construct it"
-            )
+        # Remove time_origin to allow multiple case studies to merge.
+        tcoord.attributes.pop("time_origin", None)
 
     # Regenerate coordinates list from cube
     coord_names = [coord.name() for coord in cube.coords()]
