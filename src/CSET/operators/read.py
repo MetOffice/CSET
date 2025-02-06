@@ -446,9 +446,7 @@ def _lfric_time_callback(cube: iris.cube.Cube):
                 cube.coord("time").attributes["time_origin"]
             )
             time_unit = cube.coord("time").units
-            frt_point = cf_units.date2num(
-                init_time, str(time_unit), calendar=time_unit.calendar
-            )
+            frt_point = time_unit.date2num(init_time)
 
             frt_coord = iris.coords.AuxCoord(
                 frt_point, units=tcoord.units, standard_name="forecast_reference_time"
