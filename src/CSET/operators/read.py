@@ -22,7 +22,6 @@ import logging
 import warnings
 from pathlib import Path
 
-import cf_units
 import iris
 import iris.coords
 import iris.cube
@@ -230,7 +229,6 @@ def _create_callback(is_ensemble: bool, is_base: bool) -> callable:
         _lfric_time_coord_fix_callback(cube, field, filename)
         _longitude_fix_callback(cube, field, filename)
         _fix_spatial_coord_name_callback(cube)
-        _fix_pressure_coord_name_callback(cube)
         _lfric_time_callback(cube)
         _fix_pressure_coord_callback(cube)
 
