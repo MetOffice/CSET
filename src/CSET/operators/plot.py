@@ -1334,16 +1334,13 @@ def plot_histogram_series(
         # Make postage stamp plots if stamp_coordinate exists and has more than a
         # single point. If single_plot is True, all postage stamp plots will be
         # plotted in a single plot instead of separate postage stamp plots.
-        try:
-            if cube_iter.coord(stamp_coordinate).shape[0] > 1:
+        if stamp_coordinate in [c.name() for c in cube_iter.coords()] and cube_iter.coord(stamp_coordinate).shape[0] > 1:
                 if single_plot:
                     plotting_func = (
                         _plot_and_save_postage_stamps_in_single_plot_histogram_series
                     )
                 else:
                     plotting_func = _plot_and_save_postage_stamp_histogram_series
-        except iris.exceptions.CoordinateNotFoundError:
-            pass
 
         # If several histograms are plotted with time as sequence_coordinate for the
         # time slider option.
