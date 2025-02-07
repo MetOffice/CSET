@@ -425,7 +425,7 @@ def _fix_pressure_coord_callback(cube: iris.cube.Cube):
             coord.rename("pressure")
 
         if coord_name == "pressure":
-            if str(cube.coord("pressure").units) != "hPa":
+            if str(cube.coord("pressure").units) != "Pa":
                 cube.coord("pressure").convert_units("hPa")
 
 
