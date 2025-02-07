@@ -3,16 +3,53 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Plot Placeholder</title>
+    <title>CSET diagnostic placeholder</title>
     <style>
-        h1 {
+        main {
             font-family: sans-serif;
-            margin: 5em auto 0;
-            width: fit-content;
+            margin: 5em auto 1em;
+            width: 50em;
+            max-width: 97%;
         }
     </style>
 </head>
 
 <body>
-    <h1>Select a plot to begin</h1>
+    <main>
+        <h1>Select a plot from the sidebar</h1>
+        <p>
+            Welcome to CSET, the Convective- and turbulence-Scale Evaluation and
+            verification Toolkit. Your processed diagnostics can be accessed via
+            the buttons on the sidebar.
+        </p>
+        <h3>Workflow status</h3>
+        <div id="workflow-status">
+            <p>Unknown</p>
+        </div>
+        <h3>Send feedback</h3>
+        <p>
+            CSET is a new system, and we would love to hear about your
+            experiences. Please tell us your highlights, issues, or
+            suggestions:
+            <a href="https://github.com/MetOffice/CSET/issues/new/choose">Feedback via GitHub</a>
+            |
+            <a href="mailto:james.frost@metoffice.gov.uk?subject=CSET%20Feedback&body=%3E%20Thanks%20for%20sharing%20your%20feedback!%20Please%20share%20your%20issue%2C%20suggestion%2C%20or%20highlight%20in%20this%20message.%20If%20you%20are%20having%20issues%2C%20please%20also%20include%20your%20CSET%20version.%0A%0A">Feedback via email</a>
+        </p>
+    </main>
+    <script>
+        // Display workflow status on placeholder page.
+        const workflow_status = document.getElementById("workflow-status");
+        fetch("status.html")
+            .then((response) => {
+                if (!response.ok) {
+                    console.warn("Could not fetch the workflow status.", response.status);
+                    return;
+                }
+                response.text().then((html) => { workflow_status.innerHTML = html; });
+            })
+            // Catch non-HTTP fetch errors.
+            .catch((err) => {
+                console.error("Workflow status could not be retrieved: ", err);
+            });
+    </script>
 </body>
