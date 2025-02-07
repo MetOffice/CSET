@@ -470,6 +470,9 @@ RAL3_LFRic_mods = {
     "m01s09i205": ("high_type_cloud_area_fraction", "face"),
     "m01s09i210": ("cloud_base_altitude", "face"),
     "m01s04i112": ("radar_reflectivity_at_1km_above_the_surface", "face"),
+    "m01s00i391": ("humidity_mixing_ratio", "face"),
+    "m01s00i255": ("exner_pressure_at_cell_interfaces", "face"),
+    "m01s09i231": ("combined_cloud_amount", "face"),
 }
 
 # Combine into single STASH dict
