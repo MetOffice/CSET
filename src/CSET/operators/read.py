@@ -432,8 +432,7 @@ def _fix_pressure_coord_callback(cube: iris.cube.Cube):
 
 
 def _lfric_time_callback(cube: iris.cube.Cube):
-    """
-    Fix time coordinate metadata if missing dimensions.
+    """Fix time coordinate metadata if missing dimensions.
 
     Some model data does not contain forecast_reference_time or forecast_period as
     expected coordinates, and so we cannot aggregate over case studies without this
