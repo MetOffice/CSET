@@ -6,7 +6,7 @@ Please update the original code source as well as this file if changes required.
 
 # Set up UM STASH code to cube name mapping
 # Form of entry is <stashcode>: (<long_name>, <grid>)
-STASH_TO_LFRIC = {
+STASH_TO_LFRIC_FCM = {
     "m01s00i002": ("eastward_wind_at_cell_centres", "face"),
     "m01s00i003": ("northward_wind_at_cell_centres", "face"),
     "m01s00i004": ("air_potential_temperature", "face"),
@@ -456,3 +456,21 @@ STASH_TO_LFRIC = {
     "m01s35i024": ("potential_temperature_increment_from_spt", "face"),
     "m01s35i025": ("vapour_increment_from_spt", "face"),
 }
+
+# Local additions to make CSET work with RNS for RAL3-LFRic.
+# TODO port to Pauls FCM branch
+RAL3_LFRic_mods = {
+    "m01s03i281": ("visibility_in_air", "face"),
+    "m01s01i235": ("surface_downward_shortwave_flux", "face"),
+    "m01s02i207": ("surface_downward_longwave_flux", "face"),
+    "m01s03i250": ("dew_point_temperature_at_screen_level", "face"),
+    "m01s03i025": ("atmosphere_boundary_layer_thickness", "face"),
+    "m01s09i203": ("low_type_cloud_area_fraction", "face"),
+    "m01s09i204": ("medium_type_cloud_area_fraction", "face"),
+    "m01s09i205": ("high_type_cloud_area_fraction", "face"),
+    "m01s09i210": ("cloud_base_altitude", "face"),
+    "m01s04i112": ("radar_reflectivity_at_1km_above_the_surface", "face"),
+}
+
+# Combine into single STASH dict
+STASH_TO_LFRic = {**STASH_TO_LFRIC_FCM, **RAL3_LFRic_mods}
