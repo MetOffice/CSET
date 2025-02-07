@@ -476,4 +476,4 @@ RAL3_LFRic_mods = {
 }
 
 # Combine into single STASH dict
-STASH_TO_LFRic = {**STASH_TO_LFRIC_FCM, **RAL3_LFRic_mods}
+STASH_TO_LFRIC = {**STASH_TO_LFRIC_FCM, **RAL3_LFRic_mods}
