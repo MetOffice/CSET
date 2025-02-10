@@ -202,8 +202,8 @@ def regrid_to_single_point(
     cube: iris.cube.Cube,
     lat_pt: float,
     lon_pt: float,
-    method: str,
     latlon_in_type: str = "rotated",
+    method: str = "Nearest",
     boundary_margin: int = 8,
     **kwargs,
 ) -> iris.cube.Cube:
