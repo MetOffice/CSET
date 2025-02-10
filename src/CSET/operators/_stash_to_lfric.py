@@ -460,7 +460,7 @@ STASH_TO_LFRIC_FCM = {
 # Local additions to make CSET work with RNS for RAL3-LFRic.
 # TODO port to Pauls FCM branch
 RAL3_LFRic_mods = {
-    "m01s03i281": ("visibility_in_air", "face"),
+    "m01s03i281": ("visibility_in_air", "face"),  # inc precipitation.
     "m01s01i235": ("surface_downward_shortwave_flux", "face"),
     "m01s02i207": ("surface_downward_longwave_flux", "face"),
     "m01s03i250": ("dew_point_temperature_at_screen_level", "face"),
@@ -473,6 +473,8 @@ RAL3_LFRic_mods = {
     "m01s00i391": ("humidity_mixing_ratio", "face"),
     "m01s00i255": ("exner_pressure_at_cell_interfaces", "face"),
     "m01s09i231": ("combined_cloud_amount", "face"),
+    "m01s09i217": ("cloud_area_fraction", "face"),
+    "m01s21i104": ("number_of_lightning_flashes_in_column", "face"),
 }
 
 # Combine into single STASH dict
