@@ -202,8 +202,8 @@ def regrid_to_single_point(
     cube: iris.cube.Cube,
     lat_pt: float,
     lon_pt: float,
-    latlon_in_type: str,
     method: str,
+    latlon_in_type: str = "rotated",
     boundary_margin: int = 8,
     **kwargs,
 ) -> iris.cube.Cube:
@@ -331,16 +331,16 @@ def regrid_to_single_point(
 
 
 def transform_lat_long_points(lon, lat, cube):
-    """Transform a selected point in longitude and latitude in ...
+    """Transform a selected point in longitude and latitude.
 
-    the real world to the corresponding point on the rotated grid
-    of a cube.
+    Transform the coordinates of a point from the real world
+    grid to the corresponding point on the rotated grid of a cube.
 
     Parameters
     ----------
     cube: Cube
-        An iris cube of the data to regrid. As a minimum, it needs to be 2D with
-        latitude, longitude coordinates.
+        An iris cube of data defining the rotated grid to be used in
+    the longitude-latitude transformation.
     lon: float
         Selected value of longitude: this should be in the range -180 degrees to
         180 degrees.
