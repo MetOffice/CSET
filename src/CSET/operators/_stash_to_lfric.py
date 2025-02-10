@@ -473,7 +473,6 @@ RAL3_LFRic_mods = {
     "m01s00i391": ("humidity_mixing_ratio", "face"),
     "m01s00i255": ("exner_pressure_at_cell_interfaces", "face"),
     "m01s09i231": ("combined_cloud_amount", "face"),
-    "m01s09i217": ("cloud_area_fraction", "face"),
     "m01s21i104": ("number_of_lightning_flashes_in_column", "face"),
 }
 
