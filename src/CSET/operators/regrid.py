@@ -340,7 +340,7 @@ def transform_lat_long_points(lon, lat, cube):
     ----------
     cube: Cube
         An iris cube of data defining the rotated grid to be used in
-    the longitude-latitude transformation.
+        the longitude-latitude transformation.
     lon: float
         Selected value of longitude: this should be in the range -180 degrees to
         180 degrees.
