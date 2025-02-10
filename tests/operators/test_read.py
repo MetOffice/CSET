@@ -281,3 +281,41 @@ def test_spatial_coord_not_exist_callback():
         repr(cube.coords())
         == "[<DimCoord: time / (hours since 1970-01-01 00:00:00)  [...]  shape(2,)>, <DimCoord: pressure / (hPa)  [ 100., 150., ..., 950., 1000.]  shape(16,)>, <DimCoord: forecast_reference_time / (hours since 1970-01-01 00:00:00)  [...]>, <DimCoord: latitude / (degrees)  [-10.98]>, <DimCoord: longitude / (degrees)  [19.02]>, <AuxCoord: forecast_period / (hours)  [15., 18.]  shape(2,)>]"
     )
+
+
+def test_lfric_timecoord_fix_forecastperiod(slammed_lfric_cube_readonly):
+    """Check that read callback creates an appropriate forecast_period dimension."""
+    cube = slammed_lfric_cube_readonly.copy()
+    cube = read._lfric_time_callback(cube)
+    assert (
+        repr(cube.coord("forecast_period"))
+        == "<AuxCoord: forecast_period / (seconds)  [3600., ...]  shape(6,)>"
+    )
+
+
+def test_lfric_timecoord_fix_forecastreftime(slammed_lfric_cube_readonly):
+    """Check that read callback creates an appropriate forecast_reference_time coord."""
+    cube = slammed_lfric_cube_readonly.copy()
+    cube = read._lfric_time_callback(cube)
+    assert (
+        repr(cube.coord("forecast_reference_time"))
+        == "<DimCoord: forecast_reference_time / (seconds since 2022-01-01 00:00:00)  [...]>"
+    )
+
+
+def test_lfric_timecoord_fix_notimeorigin(slammed_lfric_cube_readonly):
+    """Check that read raises KeyError if no time_origin attribute."""
+    cube = slammed_lfric_cube_readonly.copy()
+    cube.coord("time").attributes.pop("time_origin", None)
+    with pytest.raises(KeyError):
+        read._lfric_time_callback(cube)
+
+
+def test_lfric_timecoord_fix_baseunits(slammed_lfric_cube_readonly):
+    """Check that read raises ValueError if base units unsupported."""
+    cube = slammed_lfric_cube_readonly.copy()
+    cube.coord("time").units = iris.cube.Unit(
+        "days since 2022-01-01 00:00:00", calendar="standard"
+    )
+    with pytest.raises(ValueError):
+        read._lfric_time_callback(cube)

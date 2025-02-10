@@ -460,30 +460,31 @@ def _lfric_time_callback(cube: iris.cube.Cube):
             logging.info(
                 "Cannot find forecast_reference_time, but no time_origin to construct it"
             )
+            raise
 
     # Construct forecast_period axis (leadtime) if doesn't exist.
     if not cube.coords("forecast_period"):
-        try:
-            tcoord = cube.coord("time")
-            init = cube.coord("forecast_reference_time")
+        # Get time coordinate and forecast_reference_time
+        tcoord = cube.coord("time")
+        init = cube.coord("forecast_reference_time")
 
-            lead_times = tcoord.points - init.points
-            if "seconds" in str(tcoord.units):
-                units = "seconds"
-            elif "hours" in str(tcoord.units):
-                units = "hours"
-            else:
-                raise ValueError(f"Not a recognised base time unit {str(tcoord.units)}")
+        # Create array of forecast leadtimes.
+        lead_times = tcoord.points - init.points
+        if "seconds" in str(tcoord.units):
+            units = "seconds"
+        elif "hours" in str(tcoord.units):
+            units = "hours"
+        else:
+            raise ValueError(f"Not a recognised base time unit {str(tcoord.units)}")
 
-            lead_time_coord = iris.coords.AuxCoord(
-                lead_times, long_name="forecast_period", units=units
-            )
+        # Create new axis object.
+        lead_time_coord = iris.coords.AuxCoord(
+            lead_times, long_name="forecast_period", units=units
+        )
 
-            # Associate lead time dimension with coordinate time.
-            time_dim = cube.coord_dims("time")
-            cube.add_aux_coord(lead_time_coord, time_dim)
-        except KeyError:
-            logging.info("Cannot create forecast_period")
+        # Associate lead time dimension with coordinate time.
+        time_dim = cube.coord_dims("time")
+        cube.add_aux_coord(lead_time_coord, time_dim)
 
     return cube
 
