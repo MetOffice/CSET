@@ -230,6 +230,10 @@ def _create_callback(is_ensemble: bool, is_base: bool) -> callable:
         _longitude_fix_callback(cube, field, filename)
         _fix_spatial_coord_name_callback(cube)
         _fix_pressure_coord_callback(cube)
+        _fix_um_radtime(cube)
+        _fix_um_latitude(cube)
+        _fix_lfric_longnames(cube)
+        _fix_um_lightning(cube)
 
     return callback
 
@@ -430,19 +434,31 @@ def _fix_pressure_coord_callback(cube: iris.cube.Cube):
                 cube.coord("pressure").convert_units("hPa")
 
 
-def _fix_um_gridcellpoint_timepoint(cube: iris.cube.Cube):
+def _fix_um_latitude(cube: iris.cube.Cube):
     """TO BE DECIDED, A HACK CURRENTLY."""
     # Fix extra latitude point.
     try:
         if cube.attributes["STASH"] in ["m01s03i225", "m01s03i226"]:
-            lat_dim = cube.coord_dims("grid_latitude")[0]  # Get dimension index
-            slices = [slice(None)] * cube.ndim  # Create full slices
-            slices[lat_dim] = slice(1, None)  # Modify only the latitude dimension
-            cube = cube[tuple(slices)]
+            #        logging.info(f'currently {cube}')
+            #        lat_dim = cube.coord_dims("grid_latitude")[0]  # Get dimension index
+            #        slices = [slice(None)] * cube.ndim  # Create full slices
+            #        slices[lat_dim] = slice(1, None)  # Modify only the latitude dimension
+            #        cube = cube[tuple(slices)]
+            #        logging.info('DONE RGD')
+            #       logging.info(cube)
+            return cube.copy()[:, 1:, :]
 
+    except KeyError:
+        pass
+
+
+def _fix_um_radtime(cube: iris.cube.Cube):
+    """Fix radiation which is output 1 minute past every hour."""
+    try:
         if cube.attributes["STASH"] in [
             "m01s01i208",
             "m01s02i205",
+            "m01s02i201",
             "m01s01i207",
             "m01s02i207",
             "m01s01i235",
@@ -465,6 +481,55 @@ def _fix_um_gridcellpoint_timepoint(cube: iris.cube.Cube):
             time_coord.points = new_time_values
     except KeyError:
         pass
+
+    return cube
+
+
+def _fix_lfric_longnames(cube: iris.cube.Cube):
+    """To fix names where the long name is appropriate."""
+    try:
+        if str(cube.long_name) == "combined_cloud_amount_maximum_random_overlap":
+            cube.rename("combined_cloud_amount_maximum_random_overlap")
+
+    except:
+        pass
+    return cube
+
+
+def _fix_um_lightning(cube: iris.cube.Cube):
+    """Callback to fix lightning in UM based on discussion with Anne.
+
+    Lightning (m01s21i104) is being output as a time accumulation in UM,
+    over each hour, not from the start of the forecast, to be compatible
+    with LFRic. So this is a short term solution to remove cell methods (
+    as variables are ignored with cell methods for surface plots currently),
+    and also adjust the time so that the value is at the end of each hour.
+    """
+    try:
+        if cube.attributes["STASH"] == "m01s21i104":
+            cube.cell_methods = []
+
+            time_coord = cube.coord("time")
+
+            # Convert time points to datetime objects
+            time_unit = time_coord.units
+            time_points = time_unit.num2date(time_coord.points)
+
+            # Subtract 1 minute from each time point
+            new_time_points = np.array(
+                [t + datetime.timedelta(minutes=30) for t in time_points]
+            )
+
+            # Convert back to numeric values using the original time unit
+            new_time_values = time_unit.date2num(new_time_points)
+
+            # Replace the time coordinate with corrected values
+            time_coord.points = new_time_values
+
+    except:
+        pass
+
+    return cube
 
 
 def _check_input_files(input_paths: list[str], filename_pattern: str) -> list[Path]:
