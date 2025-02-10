@@ -20,16 +20,14 @@ import iris.cube
 import numpy as np
 import pytest
 
-import CSET.operators.read as read
-import CSET.operators.regrid as regrid
-from CSET.operators.regrid import BoundaryWarning
+from CSET.operators import _utils, read, regrid
 
 
 # Session scope fixtures, so the test data only has to be loaded once.
 @pytest.fixture(scope="session")
 def regrid_source_cube() -> iris.cube.Cube:
     """Get a cube to regrid."""
-    return iris.load_cube(
+    return read.read_cube(
         "tests/test_data/regrid/regrid_rectilinearGeogCS.nc", "surface_altitude"
     )
 
@@ -37,7 +35,7 @@ def regrid_source_cube() -> iris.cube.Cube:
 @pytest.fixture(scope="session")
 def regrid_test_cube() -> iris.cube.Cube:
     """Get a regridded cube to compare."""
-    return iris.load_cube("tests/test_data/regrid/out_rectilinearGeogCS_0p5deg.nc")
+    return read.read_cube("tests/test_data/regrid/out_rectilinearGeogCS_0p5deg.nc")
 
 
 def test_regrid_onto_cube(regrid_source_cube, regrid_test_cube):
@@ -57,35 +55,53 @@ def test_regrid_onto_cube_cubes(regrid_source_cube, regrid_test_cube):
     """Test regrid case where target cube to project onto is specified for multiple cubes."""
     # Create cubelist with multiple cubes.
     cubelist_to_regrid = iris.cube.CubeList([regrid_source_cube, regrid_source_cube])
+    # Regrid all those cubes.
     regridded_cubes = regrid.regrid_onto_cube(
         cubelist_to_regrid, regrid_test_cube, method="Linear"
     )
-    expected_cubelist = "[<iris 'Cube' of surface_altitude / (m) (latitude: 16; longitude: 16)>,\n<iris 'Cube' of surface_altitude / (m) (latitude: 16; longitude: 16)>]"
-    assert repr(regridded_cubes) in expected_cubelist
+    # Check it regridded correctly.
+    assert len(regridded_cubes) == 2
+    for cube in regridded_cubes:
+        lat_name, lon_name = _utils.get_cube_yxcoordname(cube)
+        assert (
+            cube.coord(lat_name).points == regrid_test_cube.coord(lat_name).points
+        ).all()
+        assert (
+            cube.coord(lon_name).points == regrid_test_cube.coord(lon_name).points
+        ).all()
 
 
-def test_regrid_onto_xyspacing_cubes(regrid_source_cube, regrid_test_cube):
+def test_regrid_onto_xyspacing_cubes(regrid_source_cube):
     """Test regrid case where xyspacing to project onto is specified for multiple cubes."""
     # Create cubelist with multiple cubes
     cubelist_to_regrid = iris.cube.CubeList([regrid_source_cube, regrid_source_cube])
     regridded_cubes = regrid.regrid_onto_xyspacing(
         cubelist_to_regrid, xspacing=0.5, yspacing=0.5, method="Linear"
     )
-    expected_cubelist = "[<iris 'Cube' of surface_altitude / (m) (latitude: 16; longitude: 16)>,\n<iris 'Cube' of surface_altitude / (m) (latitude: 16; longitude: 16)>]"
-    assert repr(regridded_cubes) in expected_cubelist
+    # Check it regridded correctly.
+    assert len(regridded_cubes) == 2
+    for cube in regridded_cubes:
+        lat_name, lon_name = _utils.get_cube_yxcoordname(cube)
+        lat_coord = cube.coord(lat_name)
+        lon_coord = cube.coord(lon_name)
+        # Inclusive interval from -1.0 to 6.5 in steps of 0.5.
+        assert (lat_coord.points == [x / 10.0 for x in range(-10, 70, 5)]).all()
+        # Inclusive interval from 32.0 to 39.5 in steps of 0.5.
+        assert (lon_coord.points == [x / 10.0 for x in range(320, 400, 5)]).all()
 
 
 def test_regrid_onto_cube_unknown_crs(regrid_source_cube, regrid_test_cube):
     """Coordinate reference system is unrecognised."""
+    lat_name, lon_name = _utils.get_cube_yxcoordname(regrid_source_cube)
     # Exchange X to unsupported coordinate system.
     source_changed_x = regrid_source_cube.copy()
-    source_changed_x.coord("longitude").coord_system = iris.coord_systems.OSGB()
+    source_changed_x.coord(lon_name).coord_system = iris.coord_systems.OSGB()
     with pytest.raises(NotImplementedError):
         regrid.regrid_onto_cube(source_changed_x, regrid_test_cube, method="Linear")
 
     # Exchange Y to unsupported coordinate system.
     source_changed_y = regrid_source_cube.copy()
-    source_changed_y.coord("latitude").coord_system = iris.coord_systems.OSGB()
+    source_changed_y.coord(lat_name).coord_system = iris.coord_systems.OSGB()
     with pytest.raises(NotImplementedError):
         regrid.regrid_onto_cube(source_changed_y, regrid_test_cube, method="Linear")
 
@@ -119,9 +135,10 @@ def test_regrid_onto_xyspacing(regrid_source_cube, regrid_test_cube):
 
 def test_regrid_onto_xyspacing_unknown_crs(regrid_source_cube):
     """Coordinate reference system is unrecognised."""
+    lat_name, lon_name = _utils.get_cube_yxcoordname(regrid_source_cube)
     # Exchange X to unsupported coordinate system.
     source_changed_x = regrid_source_cube.copy()
-    source_changed_x.coord("longitude").coord_system = iris.coord_systems.OSGB()
+    source_changed_x.coord(lon_name).coord_system = iris.coord_systems.OSGB()
     with pytest.raises(NotImplementedError):
         regrid.regrid_onto_xyspacing(
             source_changed_x, xspacing=0.5, yspacing=0.5, method="Linear"
@@ -129,7 +146,7 @@ def test_regrid_onto_xyspacing_unknown_crs(regrid_source_cube):
 
     # Exchange Y to unsupported coordinate system.
     source_changed_y = regrid_source_cube.copy()
-    source_changed_y.coord("latitude").coord_system = iris.coord_systems.OSGB()
+    source_changed_y.coord(lat_name).coord_system = iris.coord_systems.OSGB()
     with pytest.raises(NotImplementedError):
         regrid.regrid_onto_xyspacing(
             source_changed_y, xspacing=0.5, yspacing=0.5, method="Linear"
@@ -163,8 +180,13 @@ def test_regrid_to_single_point_east(cube):
     regrid_cube = regrid.regrid_to_single_point(
         cube_fix, 0.5, -1.5, "rotated", "Nearest", boundary_margin=1
     )
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3)>"
-    assert repr(regrid_cube) == expected_cube
+    lat_name, lon_name = _utils.get_cube_yxcoordname(regrid_cube)
+    lat_coord = regrid_cube.coord(lat_name)
+    lon_coord = regrid_cube.coord(lon_name)
+    assert lat_coord.shape == (1,)
+    assert lon_coord.shape == (1,)
+    assert lat_coord.points[0] == 0.5
+    assert lon_coord.points[0] == -1.5
 
 
 def test_regrid_to_single_point_west(cube):
@@ -181,8 +203,13 @@ def test_regrid_to_single_point_west(cube):
     regrid_cube = regrid.regrid_to_single_point(
         cube_fix, 0.5, -1.5, "rotated", "Nearest", boundary_margin=1
     )
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3)>"
-    assert repr(regrid_cube) == expected_cube
+    lat_name, lon_name = _utils.get_cube_yxcoordname(regrid_cube)
+    lat_coord = regrid_cube.coord(lat_name)
+    lon_coord = regrid_cube.coord(lon_name)
+    assert lat_coord.shape == (1,)
+    assert lon_coord.shape == (1,)
+    assert lat_coord.points[0] == 0.5
+    assert lon_coord.points[0] == -1.5
 
 
 def test_regrid_to_single_point_longitude_transform_1(cube):
@@ -195,8 +222,13 @@ def test_regrid_to_single_point_longitude_transform_1(cube):
     regrid_cube = regrid.regrid_to_single_point(
         cube, 0.5, 358.5, "rotated", "Nearest", boundary_margin=1
     )
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3)>"
-    assert repr(regrid_cube) == expected_cube
+    lat_name, lon_name = _utils.get_cube_yxcoordname(regrid_cube)
+    lat_coord = regrid_cube.coord(lat_name)
+    lon_coord = regrid_cube.coord(lon_name)
+    assert lat_coord.shape == (1,)
+    assert lon_coord.shape == (1,)
+    assert lat_coord.points[0] == 0.5
+    assert lon_coord.points[0] == -1.5
 
 
 def test_regrid_to_single_point_longitude_transform_2(cube):
@@ -209,8 +241,13 @@ def test_regrid_to_single_point_longitude_transform_2(cube):
     regrid_cube = regrid.regrid_to_single_point(
         cube, 0.5, -361.5, "rotated", "Nearest", boundary_margin=1
     )
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3)>"
-    assert repr(regrid_cube) == expected_cube
+    lat_name, lon_name = _utils.get_cube_yxcoordname(regrid_cube)
+    lat_coord = regrid_cube.coord(lat_name)
+    lon_coord = regrid_cube.coord(lon_name)
+    assert lat_coord.shape == (1,)
+    assert lon_coord.shape == (1,)
+    assert lat_coord.points[0] == 0.5
+    assert lon_coord.points[0] == -1.5
 
 
 def test_regrid_to_single_point_realworld(cube):
@@ -318,11 +355,11 @@ def test_regrid_to_single_point_unknown_method(cube):
 def test_boundary_warning(regrid_source_cube):
     """Ensures a warning is raised when chosen point is too close to boundary."""
     with pytest.warns(
-        BoundaryWarning, match="Selected point is within 8 gridlengths"
+        regrid.BoundaryWarning, match="Selected point is within 8 gridlengths"
     ) as warning:
         regrid.regrid_to_single_point(
             regrid_source_cube, -0.9, 393.0, "rotated", "Nearest"
         )
 
     assert len(warning) == 1
-    assert issubclass(warning[-1].category, BoundaryWarning)
+    assert issubclass(warning[-1].category, regrid.BoundaryWarning)

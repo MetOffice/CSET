@@ -15,9 +15,10 @@
 """Operators for reading various types of files from disk."""
 
 import ast
+import functools
+import glob
 import logging
 import warnings
-from collections.abc import Iterable
 from pathlib import Path
 
 import iris
@@ -26,13 +27,16 @@ import iris.cube
 import iris.util
 import numpy as np
 
+from CSET._common import iter_maybe
+from CSET.operators._stash_to_lfric import STASH_TO_LFRIC
+
 
 class NoDataWarning(UserWarning):
     """Warning that no data has been loaded."""
 
 
 def read_cube(
-    loadpath: Path,
+    loadpath: list[str] | str,
     constraint: iris.Constraint = None,
     filename_pattern: str = "*",
     **kwargs,
@@ -56,7 +60,7 @@ def read_cube(
 
     Arguments
     ---------
-    loadpath: pathlike
+    loadpath: str | list[str]
         Path to where .pp/.nc files are located
     constraint: iris.Constraint | iris.ConstraintCombination, optional
         Constraints to filter data by. Defaults to unconstrained.
@@ -76,18 +80,19 @@ def read_cube(
         If the constraint doesn't produce a single cube.
     """
     cubes = read_cubes(loadpath, constraint, filename_pattern)
-    # TODO: Fix coordinate name to enable full level and half level merging.
     # Check filtered cubes is a CubeList containing one cube.
     if len(cubes) == 1:
         return cubes[0]
     else:
+        # Log cube details so you can see why they are not merging.
+        logging.debug("Non-merging cubes:\n%s", "\n".join(str(cube) for cube in cubes))
         raise ValueError(
             f"Constraint doesn't produce single cube. {constraint}\n{cubes}"
         )
 
 
 def read_cubes(
-    loadpath: Path,
+    loadpath: list[str] | str,
     constraint: iris.Constraint = None,
     filename_pattern: str = "*",
     **kwargs,
@@ -114,8 +119,8 @@ def read_cubes(
 
     Arguments
     ---------
-    loadpath: pathlike
-        Path to where .pp/.nc files are located
+    loadpath: str | list[str]
+        Path to where .pp/.nc files are located. Can include globs.
     constraint: iris.Constraint | iris.ConstraintCombination, optional
         Constraints to filter data by. Defaults to unconstrained.
     filename_pattern: str, optional
@@ -131,15 +136,38 @@ def read_cubes(
     FileNotFoundError
         If the provided path does not exist
     """
-    input_files = _check_input_files(loadpath, filename_pattern)
-    # A constraint of None lets everything be loaded.
     logging.debug("Constraint: %s", constraint)
+
+    def load_from_paths(
+        paths: list[str], is_ensemble: bool, is_base: bool
+    ) -> iris.cube.CubeList:
+        # Skip if no paths given, mainly for when we only have a base path.
+        if not paths:
+            return iris.cube.CubeList([])
+        input_files = _check_input_files(paths, filename_pattern)
+        callback = _create_callback(is_ensemble=is_ensemble, is_base=is_base)
+        # If unset, a constraint of None lets everything be loaded.
+        return iris.load(input_files, constraint, callback=callback)
+
+    # Get lists of paths.
+    paths = iter_maybe(loadpath)
+    base_path = paths[:1]
+    # If len(paths) < 2, this just returns an empty list, rather than an error.
+    other_paths = paths[1:]
+    del paths
+
     # Load the data, then reload with correct handling if it is ensemble data.
-    callback = _create_callback(is_ensemble=False)
-    cubes = iris.load(input_files, constraint, callback=callback)
+    cubes = iris.cube.CubeList([])
+
+    # Split out first input file definition here and mark as base model.
+    cubes.extend(load_from_paths(base_path, is_ensemble=False, is_base=True))
+    cubes.extend(load_from_paths(other_paths, is_ensemble=False, is_base=False))
+
+    # Reload all data with ensemble handling if needed.
     if _is_ensemble(cubes):
-        callback = _create_callback(is_ensemble=True)
-        cubes = iris.load(input_files, constraint, callback=callback)
+        cubes = iris.cube.CubeList()
+        cubes.extend(load_from_paths(base_path, is_ensemble=True, is_base=True))
+        cubes.extend(load_from_paths(other_paths, is_ensemble=True, is_base=False))
 
     # Merge and concatenate cubes now metadata has been fixed.
     cubes = cubes.merge()
@@ -184,19 +212,31 @@ def _is_ensemble(cubelist: iris.cube.CubeList) -> bool:
     return False
 
 
-def _create_callback(is_ensemble: bool) -> callable:
+def _create_callback(is_ensemble: bool, is_base: bool) -> callable:
     """Compose together the needed callbacks into a single function."""
 
+    # TODO: Fix coordinate name to enable full level and half level merging.
     def callback(cube: iris.cube.Cube, field, filename: str):
+        if is_base:
+            _mark_as_comparison_base_callback(cube, field, filename)
         if is_ensemble:
             _ensemble_callback(cube, field, filename)
         else:
             _deterministic_callback(cube, field, filename)
+        _um_normalise_callback(cube, field, filename)
         _lfric_normalise_callback(cube, field, filename)
         _lfric_time_coord_fix_callback(cube, field, filename)
         _longitude_fix_callback(cube, field, filename)
+        _fix_spatial_coord_name_callback(cube)
+        _fix_pressure_coord_callback(cube)
 
     return callback
+
+
+def _mark_as_comparison_base_callback(cube, field, filename):
+    """Add an attribute to the cube to mark it as the base for comparisons."""
+    # Use 1 to indicate True, as booleans can't be saved in NetCDF attributes.
+    cube.attributes["cset_comparison_base"] = 1
 
 
 def _ensemble_callback(cube, field, filename):
@@ -240,6 +280,31 @@ def _deterministic_callback(cube, field, filename):
         )
 
 
+@functools.lru_cache(None)
+def _warn_once(msg):
+    """Print a warning message, skipping recent duplicates."""
+    logging.warning(msg)
+
+
+def _um_normalise_callback(cube: iris.cube.Cube, field, filename):
+    """Normalise UM STASH variable long names to LFRic variable names.
+
+    Note standard names will remain associated with cubes where different.
+    Long name will be used consistently in output filename and titles.
+    """
+    # Convert STASH to LFRic variable name
+    if "STASH" in cube.attributes:
+        stash = cube.attributes["STASH"]
+        try:
+            (name, grid) = STASH_TO_LFRIC[str(stash)]
+            cube.long_name = name
+        except KeyError:
+            # Don't change cubes with unknown stash codes.
+            _warn_once(
+                f"Unknown STASH code: {stash}. Please check file stash_to_lfric.py to update."
+            )
+
+
 def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
     """Normalise attributes that prevents LFRic cube from merging.
 
@@ -254,7 +319,7 @@ def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
     # Remove unwanted attributes.
     cube.attributes.pop("timeStamp", None)
     cube.attributes.pop("uuid", None)
-    # There might also be a "name" attribute to ditch, which is the filename.
+    cube.attributes.pop("name", None)
 
     # Sort STASH code list.
     stash_list = cube.attributes.get("um_stash_source")
@@ -274,8 +339,9 @@ def _lfric_time_coord_fix_callback(cube: iris.cube.Cube, field, filename):
     # always ends up as an AuxCoord.
     if cube.coords("time"):
         time_coord = cube.coord("time")
-        if not isinstance(time_coord, iris.coords.DimCoord) and cube.coord_dims(
-            time_coord
+        if (
+            not isinstance(time_coord, iris.coords.DimCoord)
+            and len(cube.coord_dims(time_coord)) == 1
         ):
             iris.util.promote_aux_coord_to_dim_coord(cube, time_coord)
 
@@ -311,21 +377,73 @@ def _longitude_fix_callback(cube: iris.cube.Cube, field, filename):
     return cube
 
 
-def _check_input_files(input_path: Path | str, filename_pattern: str) -> Iterable[Path]:
+def _fix_spatial_coord_name_callback(cube: iris.cube.Cube):
+    """Check latitude and longitude coordinates name.
+
+    This is necessary as some models define their grid as 'grid_latitude' and 'grid_longitude'
+    and this means that recipes will fail - particularly if the user is comparing multiple models
+    where the spatial coordinate names differ.
+    """
+    import CSET.operators._utils as utils
+
+    # Check if cube is spatial.
+    if not utils.is_spatialdim(cube):
+        # Don't modify non-spatial cubes.
+        return cube
+
+    # Get spatial coords.
+    y_name, x_name = utils.get_cube_yxcoordname(cube)
+
+    if y_name in ["latitude"] and cube.coord(y_name).units in [
+        "degrees",
+        "degrees_north",
+        "degrees_south",
+    ]:
+        cube.coord(y_name).rename("grid_latitude")
+    if x_name in ["longitude"] and cube.coord(x_name).units in [
+        "degrees",
+        "degrees_west",
+        "degrees_east",
+    ]:
+        cube.coord(x_name).rename("grid_longitude")
+
+
+def _fix_pressure_coord_callback(cube: iris.cube.Cube):
+    """Rename pressure coordinate to "pressure" if it exists and ensure hPa units.
+
+    This problem was raised because the AIFS model data from ECMWF
+    defines the pressure coordinate with the name "pressure_level" rather
+    than compliant CF coordinate names.
+
+    Additionally, set the units of pressure to be hPa to be consistent with the UM,
+    and approach the coordinates in a unified way.
+    """
+    for coord in cube.dim_coords:
+        coord_name = coord.name()
+
+        if coord_name in ["pressure_level", "pressure_levels"]:
+            coord.rename("pressure")
+
+        if coord_name == "pressure":
+            if str(cube.coord("pressure").units) != "hPa":
+                cube.coord("pressure").convert_units("hPa")
+
+
+def _check_input_files(input_paths: list[str], filename_pattern: str) -> list[Path]:
     """Get an iterable of files to load, and check that they all exist.
 
     Arguments
     ---------
-    input_path: Path | str
-        Path to an input file or directory. The path may itself contain glob
-        patterns, but unlike in shells it will match directly first.
+    input_paths: list[str]
+        List of paths to input files or directories. The path may itself contain
+        glob patterns, but unlike in shells it will match directly first.
 
     filename_pattern: str
-        Shell-style glob pattern to match inside the input directory.
+        Shell-style glob pattern to match inside an input directory.
 
     Returns
     -------
-    Iterable[Path]
+    list[Path]
         A list of files to load.
 
     Raises
@@ -333,25 +451,29 @@ def _check_input_files(input_path: Path | str, filename_pattern: str) -> Iterabl
     FileNotFoundError:
         If the provided arguments don't resolve to at least one existing file.
     """
-    logging.debug("Checking '%s' for pattern '%s'", input_path, filename_pattern)
-    # Convert string paths into Path objects.
-    if isinstance(input_path, str):
-        input_path = Path(input_path)
+    files = []
+    for raw_filename in iter_maybe(input_paths):
+        # Match glob-like files first, if they exist.
+        raw_path = Path(raw_filename)
+        if raw_path.is_file():
+            files.append(raw_path)
+        else:
+            for input_path in glob.glob(str(raw_filename)):
+                # Convert string paths into Path objects.
+                input_path = Path(input_path)
+                # Get the list of files in the directory, or use it directly.
+                if input_path.is_dir():
+                    logging.debug(
+                        "Checking directory '%s' for files matching '%s'",
+                        input_path,
+                        filename_pattern,
+                    )
+                    files.extend(input_path.glob(filename_pattern))
+                else:
+                    files.append(input_path)
 
-    # Get the list of files in the directory, or use it directly. Error if no
-    # files found.
-    if input_path.is_dir():
-        files = tuple(sorted(input_path.glob(filename_pattern)))
-        if len(files) == 0:
-            raise FileNotFoundError(
-                f"No files found matching filename_pattern {filename_pattern} within {input_path}"
-            )
-    elif input_path.is_file():
-        files = (input_path,)
-    else:
-        # Handle input_path containing a glob pattern.
-        files = tuple(sorted(input_path.parent.glob(input_path.name)))
-        if len(files) == 0:
-            raise FileNotFoundError(f"{input_path} does not exist!")
+    files.sort()
     logging.info("Loading files:\n%s", "\n".join(str(path) for path in files))
+    if len(files) == 0:
+        raise FileNotFoundError(f"No files found for {input_paths}")
     return files

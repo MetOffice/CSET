@@ -5,26 +5,35 @@ ci:
 
 repos:
   - repo: https://github.com/codespell-project/codespell
-    rev: 193cd7d27cd571f79358af09a8fb8997e54f8fff  # frozen: v2.3.0
+    rev: 63c8f8312b7559622c0d82815639671ae42132ac  # frozen: v2.4.1
     hooks:
-    - id: codespell
-      # Additional dependency needed until Python 3.11 is our minimum version.
-      additional_dependencies:
-        - tomli
+      - id: codespell
+        # Additional dependency needed until Python 3.11 is our minimum version.
+        additional_dependencies:
+          - tomli
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    # Ruff version.
-    rev: 6a19e69c83fd6e3a3ffdd5e32a40e35c37b02218  # frozen: v0.7.3
+    rev: d7f0995508bdaeb0a1f4a838500d6a0a1fc6ec7b  # frozen: v0.9.5
     hooks:
       - id: ruff
-        args: [ --fix, --show-fixes, --exit-non-zero-on-fix ]
+        args: [--fix, --show-fixes, --exit-non-zero-on-fix]
       - id: ruff-format
 
+  - repo: local
+    hooks:
+      - id: sort-json
+        name: Sort JSON
+        description: Recursively sort JSON files by key.
+        entry: ./scripts/sort_json.py
+        language: script
+        types: [json]
+        files: src/CSET/operators/_colorbar_definition.json
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: cef0300fd0fc4d2a87a85fa2093c6b283ea36f4b  # frozen: v5.0.0
+    rev: cef0300fd0fc4d2a87a85fa2093c6b283ea36f4b # frozen: v5.0.0
     hooks:
       - id: check-added-large-files
-        args: ['--maxkb=10240']
+        args: ["--maxkb=10240"]
       - id: check-case-conflict
       - id: check-merge-conflict
       - id: check-toml

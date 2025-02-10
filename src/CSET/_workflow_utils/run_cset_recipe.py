@@ -51,9 +51,9 @@ def recipe_id():
             err.stderr.decode(sys.stderr.encoding),
         )
         raise
-    id = p.stdout.decode(sys.stdout.encoding).strip()
-    model_number = os.environ["MODEL_NUMBER"]
-    return f"m{model_number}_{id}"
+    recipe_id = p.stdout.decode(sys.stdout.encoding).strip()
+    model_identifiers = sorted(os.environ["MODEL_IDENTIFIERS"].split())
+    return f"m{'_m'.join(model_identifiers)}_{recipe_id}"
 
 
 def output_directory():
@@ -63,11 +63,18 @@ def output_directory():
     return f"{share_directory}/web/plots/{recipe_id()}_{cycle_point}"
 
 
-def data_directory():
-    """Get the input data directory for the cycle."""
-    rose_datac = os.environ["ROSE_DATAC"]
-    model_number = os.environ["MODEL_NUMBER"]
-    return f"{rose_datac}/data/{model_number}"
+def data_directories() -> list[str]:
+    """Get the input data directories for the cycle."""
+    model_identifiers = sorted(os.environ["MODEL_IDENTIFIERS"].split())
+    if os.getenv("DO_CASE_AGGREGATION"):
+        cylc_workflow_share_dir = os.environ["CYLC_WORKFLOW_SHARE_DIR"]
+        return [
+            f"{cylc_workflow_share_dir}/cycle/*/data/{model_id}"
+            for model_id in model_identifiers
+        ]
+    else:
+        rose_datac = os.environ["ROSE_DATAC"]
+        return [f"{rose_datac}/data/{model_id}" for model_id in model_identifiers]
 
 
 def create_diagnostic_archive(output_directory):
@@ -85,14 +92,11 @@ def create_diagnostic_archive(output_directory):
 
 def run_recipe_steps():
     """Process data and produce output plots."""
-    command = [
-        "cset",
-        "-v",
-        "bake",
-        f"--recipe={recipe_file()}",
-        f"--input-dir={data_directory()}",
-        f"--output-dir={output_directory()}",
-    ]
+    command = (
+        ["cset", "bake", "--recipe", recipe_file(), "--input-dir"]
+        + data_directories()
+        + ["--output-dir", output_directory()]
+    )
 
     colorbar_file = os.getenv("COLORBAR_FILE")
     if colorbar_file:

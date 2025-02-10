@@ -23,8 +23,6 @@ import copy
 import logging
 import warnings
 
-import iris
-import iris.cube
 import numpy as np
 
 
@@ -199,10 +197,10 @@ def inflow_layer_properties(EIB, BLheight, Orography):
     interpretation of CAPE related diagnostics.
 
     You might encounter warnings with the following text ``Orography assumed not
-    to vary with time or ensemble member.`` or ``Orography assumed not to vary
-    with time and ensemble member.`` these warnings are expected when the
-    orography files are not 2-dimensional, and do not cause any problems unless
-    ordering is not as expected.
+    to vary with ensemble member.`` or ``Orography assumed not to vary with time
+    and ensemble member.`` these warnings are expected when the orography files
+    are not 2-dimensional, and do not cause any problems unless ordering is not
+    as expected.
 
     References
     ----------
@@ -229,11 +227,8 @@ def inflow_layer_properties(EIB, BLheight, Orography):
     EC_Flagd = np.zeros(EIB.shape)
     # Check dimensions for Orography cube and replace with 2D array if not 2D.
     if Orography.ndim == 3:
-        try:
-            Orography = Orography.slices_over("realization").next()
-        except iris.exceptions.CoordinateNotFoundError:
-            Orography = Orography.slices_over("time").next()
-        logging.warning("Orography assumed not to vary with time or ensemble member")
+        Orography = Orography.slices_over("realization").next()
+        logging.warning("Orography assumed not to vary with ensemble member")
     elif Orography.ndim == 4:
         Orography = Orography.slices_over(("time", "realization")).next()
         logging.warning("Orography assumed not to vary with time or ensemble member. ")

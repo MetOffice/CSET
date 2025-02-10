@@ -58,6 +58,18 @@ def cube(cube_readonly):
 
 
 @pytest.fixture(scope="session")
+def slammed_lfric_cube_readonly():
+    """Get an iris Cube of slammed LFRic data. NOT safe to modify."""
+    return read.read_cube("tests/test_data/slammed_lfric_air_temp.nc")
+
+
+@pytest.fixture()
+def slammed_lfric_cube(slammed_lfric_cube_readonly):
+    """Get an iris Cube of slammed LFRic data. Safe to modify."""
+    return slammed_lfric_cube_readonly.copy()
+
+
+@pytest.fixture(scope="session")
 def vertical_profile_cube_readonly():
     """Get a vertical profile Cube. It is NOT safe to modify."""
     return read.read_cube(
@@ -111,3 +123,27 @@ def transect_source_cube_readonly():
 def transect_source_cube(transect_source_cube_readonly):
     """Get a 3D cube to test with. It is safe to modify."""
     return transect_source_cube_readonly.copy()
+
+
+@pytest.fixture()
+def long_forecast():
+    """Get long_forecast to run tests on."""
+    return read.read_cube(
+        "tests/test_data/long_forecast_air_temp_fcst_1.nc", "air_temperature"
+    )
+
+
+@pytest.fixture()
+def long_forecast_multi_day():
+    """Get long_forecast_multi_day to run tests on."""
+    return read.read_cube(
+        "tests/test_data/long_forecast_air_temp_multi_day.nc", "air_temperature"
+    )
+
+
+@pytest.fixture()
+def long_forecast_many_cubes():
+    """Get long_forecast_may_cubes to run tests on."""
+    return read.read_cubes(
+        "tests/test_data/long_forecast_air_temp_fcst_*.nc", "air_temperature"
+    )

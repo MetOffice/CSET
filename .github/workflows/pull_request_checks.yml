@@ -24,7 +24,7 @@ jobs:
 
       - name: Cache conda environment
         id: conda-env-cache
-        uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57
         with:
           key: conda|${{runner.os}}-${{runner.arch}}|${{ hashFiles(format('requirements/locks/{0}-lock-linux-64.txt', matrix.py-ver)) }}
           path: |
@@ -44,11 +44,11 @@ jobs:
         run: |
           # Install package and run pytest.
           echo '::group::Installing local package'
-          python3 -m pip install -e .
+          python3 -m pip install .
           echo '::endgroup::'
-          pytest --verbose --cov --cov-append --cov-config=pyproject.toml
+          pytest -n logical --verbose --cov --cov-append --cov-config=pyproject.toml
           mv .coverage ".coverage.${{ matrix.py-ver }}"
-      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
+      - uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
         with:
           name: coverage-data-${{ matrix.py-ver }}
           path: .coverage.*
@@ -66,7 +66,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Setup python
-        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
         with:
           python-version: "3.x"
       - name: Install coverage
@@ -101,10 +101,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Set up Python
-        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
         with:
           python-version: "3.x"
-      - uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a
+      - uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57
         with:
           key: pre-commit|${{runner.os}}-${{runner.arch}}|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
           path: ~/.cache/pre-commit
@@ -123,7 +123,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Cache conda environment
         id: conda-env-cache
-        uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57
         with:
           key: conda|${{runner.os}}-${{runner.arch}}|${{hashFiles('requirements/locks/py312-lock-linux-64.txt')}}
           path: |
@@ -148,7 +148,7 @@ jobs:
           sphinx-build -b html --color -W --keep-going "docs/source" "docs/build/html"
           echo '::endgroup::'
       - name: Upload documentation artifact
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
         with:
           name: html-docs
           path: docs/build/html/

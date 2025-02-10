@@ -16,6 +16,7 @@
 """Sort a JSON file."""
 
 import argparse
+import hashlib
 import json
 import os
 import sys
@@ -46,15 +47,27 @@ def main():
     if isinstance(data, dict):
         data = sort_dict(data)
 
-    output_file = f".tmp-{args.input_file}-sorted.json"
+    output_file = f".tmp-{args.input_file}-sorted.json".replace("/", "")
     with open(output_file, "wt", encoding="UTF-8") as fp:
         json.dump(data, fp, indent=2)
         # End file with a newline.
         fp.write("\n")
 
-    # Atomically replace original file.
-    os.rename(output_file, args.input_file)
-    return 0
+    # Check if sorting changed the file.
+    with open(args.input_file, "rb") as fp:
+        original_digest = hashlib.file_digest(fp, "sha256").digest()
+    with open(output_file, "rb") as fp:
+        new_digest = hashlib.file_digest(fp, "sha256").digest()
+
+    if original_digest == new_digest:
+        # File unchanged, don't overwrite and return zero.
+        os.remove(output_file)
+        return 0
+    else:
+        # File changed, overwrite and return non-zero.
+        # Atomically replace original file via rename.
+        os.rename(output_file, args.input_file)
+        return 1
 
 
 if __name__ == "__main__":

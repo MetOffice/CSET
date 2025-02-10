@@ -15,12 +15,19 @@
 """Miscellaneous operators."""
 
 import itertools
+import logging
 from collections.abc import Iterable
-from typing import Union
 
+import iris
+import iris.coords
+import numpy as np
 from iris.cube import Cube, CubeList
 
 from CSET._common import iter_maybe
+from CSET.operators._utils import (
+    fully_equalise_attributes,
+    get_cube_yxcoordname,
+)
 
 
 def noop(x, **kwargs):
@@ -42,7 +49,7 @@ def noop(x, **kwargs):
 
 
 def remove_attribute(
-    cubes: Union[Cube, CubeList], attribute: Union[str, Iterable], **kwargs
+    cubes: Cube | CubeList, attribute: str | Iterable, **kwargs
 ) -> CubeList:
     """Remove a cube attribute.
 
@@ -237,3 +244,91 @@ def combine_cubes_into_cubelist(first: Cube | CubeList, **kwargs) -> CubeList:
         else:
             raise TypeError("Not a Cube or CubeList!", item)
     return all_cubes
+
+
+def difference(cubes: CubeList):
+    """Difference of two fields.
+
+    Parameters
+    ----------
+    cubes: CubeList
+        A list of exactly two cubes. One must have the cset_comparison_base
+        attribute set to 1, and will be used as the base of the comparison.
+
+    Returns
+    -------
+    Cube
+
+    Raises
+    ------
+    ValueError
+        When the cubes are not compatible.
+
+    Notes
+    -----
+    This is a simple operator designed for combination of diagnostics or
+    creating new diagnostics by using recipes. It can be used for model
+    differences to allow for comparisons between the same field in different
+    models or model configurations.
+
+    Examples
+    --------
+    >>> model_diff = misc.difference(temperature_model_A, temperature_model_B)
+
+    """
+    if len(cubes) != 2:
+        raise ValueError("cubes should contain exactly 2 cubes.")
+    base = cubes.extract_cube(iris.AttributeConstraint(cset_comparison_base=1))
+    other = cubes.extract_cube(
+        iris.Constraint(
+            cube_func=lambda cube: "cset_comparison_base" not in cube.attributes
+        )
+    )
+
+    def is_increasing(sequence: list) -> bool:
+        """Determine the direction of an ordered sequence.
+
+        Returns "increasing" or "decreasing" depending on whether the sequence
+        is going up or down. The sequence should already be monotonic, with no
+        duplicate values. An iris DimCoord's points fulfills this criteria.
+        """
+        return sequence[0] < sequence[1]
+
+    # Figure out if we are comparing between UM and LFRic; flip array if so.
+    base_lat_name, base_lon_name = get_cube_yxcoordname(base)
+    base_lat_direction = is_increasing(base.coord(base_lat_name).points)
+    other_lat_name, other_lon_name = get_cube_yxcoordname(other)
+    other_lat_direction = is_increasing(other.coord(other_lat_name).points)
+    if base_lat_direction != other_lat_direction:
+        other.data = np.flip(other.data, other.coord(other_lat_name).cube_dims(other))
+
+    # Check latitude, longitude shape the same. Not comparing points, as these
+    # might slightly differ due to rounding errors (especially in future if we
+    # are regidded cubes to common resolutions).
+    if base.coord(base_lat_name).shape != other.coord(other_lat_name).shape:
+        raise ValueError(
+            f"Cubes should have the same latitude shape, got {base.coord(base_lat_name)} {other.coord(other_lat_name)}"
+        )
+    if base.coord(base_lon_name).shape != other.coord(other_lon_name).shape:
+        raise ValueError(
+            f"Cubes should have the same longitude shape, got {base.coord(base_lon_name)} {other.coord(other_lon_name)}"
+        )
+
+    # Extract just common time points.
+    logging.debug("Base: %s\nOther: %s", base.coord("time"), other.coord("time"))
+    base_times = set(base.coord("time").units.num2date(base.coord("time").points))
+    other_times = set(other.coord("time").units.num2date(other.coord("time").points))
+    shared_times = set.intersection(base_times, other_times)
+    time_constraint = iris.Constraint(time=lambda cell: cell.point in shared_times)
+    base = base.extract(time_constraint)
+    other = other.extract(time_constraint)
+
+    # Equalise attributes so we can merge.
+    fully_equalise_attributes([base, other])
+    logging.debug("Base: %s\nOther: %s", base, other)
+
+    # This currently relies on the cubes having the same underlying data layout.
+    difference = base.copy()
+    difference.rename(base.name() + "_difference")
+    difference.data = base.data - other.data
+    return difference

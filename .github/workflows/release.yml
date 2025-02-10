@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
       - name: Setup python
-        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
         with:
             python-version: "3.x"
 
@@ -27,7 +27,7 @@ jobs:
       - name: Build package
         run: python3 -m build
 
-      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
+      - uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
         with:
           name: packages
           path: dist/
@@ -55,7 +55,7 @@ jobs:
       #   uses: pypa/gh-action-pypi-publish@release/v1
 
       - name: Setup python
-        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
         with:
             python-version: "3.x"
 

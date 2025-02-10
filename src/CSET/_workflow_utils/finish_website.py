@@ -33,7 +33,9 @@ def construct_index():
             with open(directory / "meta.json", "rt", encoding="UTF-8") as fp:
                 plot_metadata = json.load(fp)
             record = {
-                plot_metadata["category"]: {directory.name: plot_metadata["title"]}
+                plot_metadata["category"]: {
+                    directory.name: f"{plot_metadata['title']} {os.getenv('CYLC_TASK_CYCLE_POINT', '')}".strip()
+                }
             }
         except FileNotFoundError:
             # Skip directories without metadata, as are likely not plots.
@@ -45,7 +47,7 @@ def construct_index():
         index = combine_dicts(index, record)
 
     with open(plots_dir / "index.json", "wt", encoding="UTF-8") as fp:
-        json.dump(index, fp)
+        json.dump(index, fp, indent=2)
 
 
 def update_workflow_status():

@@ -1,0 +1,435 @@
+# Diagnostics settings are split into a separate file.
+import=meta/diagnostics
+
+[template variables]
+
+################################################################################
+# Setup: Software environment and general non-scientific setup.
+################################################################################
+
+[template variables=LOGLEVEL]
+ns=Setup
+title=Logging level
+description=How detailed the logs should be.
+help=INFO only shows a general overview of what is happening, while DEBUG
+    enables in-operator logging, but produces a lot of output.
+
+    DEBUG log level also causes failed tasks to hold the workflow.
+values="INFO", "DEBUG"
+value-titles=Info, Debug
+compulsory=true
+
+[template variables=HOUSEKEEPING_MODE]
+ns=Setup
+title=Housekeeping mode
+description=How much housekeeping deletes.
+help=None will delete nothing.
+
+    Debug will only delete the downloads of initial data, and will keep
+    intermediate files.
+
+    Standard deletes most intermediate files, save for the final data that is
+    plotted.
+values=0, 1, 2
+value-titles=None, Debug, Standard
+compulsory=true
+
+[template variables=COLORBAR_FILE]
+ns=Setup
+title=Colorbar override file
+description=File path to a style file. Leave blank to use the built-in one.
+help=This will be a JSON file with a colorbar definition inside. See
+    src/CSET/operators/_colorbar_definition.json for an example.
+type=quoted
+compulsory=true
+
+[template variables=PLOT_RESOLUTION]
+ns=Setup
+title=Plot resolution
+description=Resolution of output plot in dpi.
+help=This is passed through to the plotting operators and sets the resolution
+    of the output plots to the given number of pixels per inch. If unset
+    defaults to 100 dpi. The plots are all 8 by 8 inches, so this corresponds
+    to 800 by 800 pixels.
+type=integer
+compulsory=true
+
+[template variables=WEB_ADDR]
+ns=Setup
+title=Website address
+description=The address at which the website is served. It should be specified
+           to the directory level above WEB_DIR (e.g.
+           https://example.com/~username if WEB_DIR is $HOME/public_html/CSET).
+help=This should be the address where your public_html or equivalent is served.
+    It might include a partial path, such as your username.
+
+    E.g: https://example.com/~username/
+type=quoted
+compulsory=true
+sort-key=web1
+
+[template variables=WEB_DIR]
+ns=Setup
+title=Web directory
+description=Path to directory that is served by the webserver
+           (e.g: $HOME/public_html/CSET).
+help=This will probably be under $HOME/public_html or similar. You will want to
+    ensure a subfolder is used as it will be replaced with a symbolic link.
+
+    This is where the output of the workflow will be accessible from, through a
+    symlink to the workflow shared directory. Anything existing at the path will
+    be removed.
+
+    E.g: $HOME/public_html/CSET
+type=quoted
+compulsory=true
+sort-key=web2
+
+[template variables=SITE]
+ns=Setup
+title=Site
+description=Which institution to load the site-specific configuration for.
+help=The site-specific configuration should live in a file under site/
+    For example the Met Office configuration lives under "site/metoffice.cylc".
+
+    Localhost does not use any site-specific settings, and should work on any
+    cylc installation. It will however run on the scheduler server.
+values="localhost", "metoffice", "niwa"
+value-titles=Localhost, Met Office, NIWA
+compulsory=true
+sort-key=aaa
+
+[template variables=CSET_ENV_USE_MODULES]
+ns=Setup
+title=Use modules for environment
+description=Use Linux modules to load the environment.
+type=python_boolean
+compulsory=true
+trigger=template variables=MODULES_PURGE: True;
+        template variables=MODULES_LIST: True;
+sort-key=modules1
+
+[template variables=MODULES_PURGE]
+ns=Setup
+title=Purge modules
+description=Purge modules that are not explicitly specified.
+help=Remove any modules that are loaded by default before loading the specified
+    ones. This is recommended as it makes your workflows more explicit and less
+    dependent on site-specific details, increasing portability.
+type=python_boolean
+compulsory=true
+sort-key=modules2
+
+[template variables=MODULES_LIST]
+ns=Setup
+description=Modules to load.
+type=spaced_list
+length=:
+compulsory=true
+sort-key=modules2
+
+[template variables=CSET_ENV_USE_CONDA]
+ns=Setup
+title=Use conda for environment
+description=Use a conda environment.
+help=The conda environment is loaded after any modules.
+type=python_boolean
+compulsory=true
+trigger=template variables=CONDA_VENV_LOCATION: True;
+        template variables=CONDA_VENV_CREATE: True;
+        template variables=CONDA_PATH: True;
+sort-key=conda1
+
+[template variables=CONDA_PATH]
+ns=Setup
+title=Conda executable path
+description=Where to get conda from. Leave blank if conda already on path.
+help=Path where the conda executable is. This should be to a directory, rather
+    to a binary itself. Leave this field blank if conda comes from another
+    source, such as modules or being already on path.
+type=quoted
+compulsory=true
+sort-key=conda2
+
+[template variables=CONDA_VENV_CREATE]
+ns=Setup
+title=Create conda environment
+description=Whether to (re)create the conda environment.
+help=When enabled it will check that the conda environment exists and is
+    up-to-date, recreating it otherwise.
+type=python_boolean
+compulsory=true
+sort-key=conda2
+
+[template variables=CONDA_VENV_LOCATION]
+ns=Setup
+title=Conda environment location
+description=Location of the conda virtual environment.
+help=Existing environments can be found by running `conda info --envs` and
+    copying the path displayed there. If unspecified it defaults to the workflow
+    share directory.
+
+    If creating the conda environment as part of the workflow, it will only be
+    created if it does not exist or is out of date.
+type=quoted
+compulsory=true
+sort-key=conda2
+
+[template variables=CSET_ENV_USE_LOCAL_CSET]
+ns=Setup
+title=Use local CSET
+description=Whether to use a local version of CSET, rather than the bundled one.
+help=Use a local version of CSET, rather than the version provided from conda.
+    This is especially useful for running development versions.
+type=python_boolean
+compulsory=true
+trigger=template variables=CSET_LOCAL_CSET_PATH: True;
+sort-key=localcset1
+
+[template variables=CSET_LOCAL_CSET_PATH]
+ns=Setup
+title=Local CSET path
+description=Path to local copy of CSET.
+help=Path to either a wheel file, or a checked out copy of the CSET git repo.
+    For the repository, it should be the path to the directory containing the
+    pyproject.toml file.
+type=quoted
+compulsory=true
+sort-key=localcset2
+
+[template variables=CSET_ENV_SEPARATE_MET]
+ns=Setup
+title=Use external MET install
+description=Separately source MET, rather than using modules or conda.
+type=python_boolean
+trigger=template variables=MET_INSTALL_DIR: True;
+        template variables=CONDA_METPLUS_VENV_LOCATION: True;
+        template variables=METPLUS_BASE: True;
+        template variables=MET_LIBRARIES: True;
+compulsory=true
+sort-key=met1
+
+[template variables=CONDA_METPLUS_VENV_LOCATION]
+ns=Setup
+description=Location of the conda virtual environment needed by METplus.
+type=quoted
+compulsory=true
+sort-key=met2
+
+[template variables=MET_INSTALL_DIR]
+ns=Setup
+description=Path where MET is installed to.
+type=quoted
+compulsory=true
+sort-key=met2
+
+[template variables=METPLUS_BASE]
+ns=Setup
+description=Path where METplus is installed to.
+type=quoted
+compulsory=true
+sort-key=met2
+
+[template variables=MET_LIBRARIES]
+ns=Setup
+description=Path to libraries needed by MET.
+type=quoted
+compulsory=true
+sort-key=met2
+
+
+################################################################################
+# Models and Cases: Case and model settings.
+################################################################################
+
+[template variables=CSET_CYCLING_MODE]
+ns=Models and Cases
+title=Cycling mode
+description=Process case studies, or a continuous trial.
+values="case_study", "trial"
+value-titles=Case Study, Trial
+trigger=template variables=CSET_CASE_DATES: "case_study";
+        template variables=CSET_TRIAL_START_DATE: "trial";
+        template variables=CSET_TRIAL_END_DATE: "trial";
+        template variables=CSET_TRIAL_CYCLE_PERIOD: "trial";
+compulsory=true
+sort-key=a1
+
+# Case study settings.
+[template variables=CSET_CASE_DATES]
+ns=Models and Cases
+title=Case study dates
+description=List of quoted date-times of cases, e.g. "20000101T0000Z"
+help=This should be a python list of ISO 8601 datetime strings indicating the
+    forecast initiation time or first validity time (AKA data time) of the data.
+type=python_list
+compulsory=true
+sort-key=b1
+
+# Trials settings.
+[template variables=CSET_TRIAL_START_DATE]
+ns=Models and Cases
+title=Trial start date
+description=Start date of the trial.
+help=The start date of the trial, in ISO 8601 format. This is the first date
+    that the workflow will run from. For example: 20000101T0000Z
+type=quoted
+compulsory=true
+sort-key=c1
+
+[template variables=CSET_TRIAL_END_DATE]
+ns=Models and Cases
+title=Trial end date
+description=End date of the trial. If blank, the workflow will run indefinitely.
+help=The end date of the trial, in ISO 8601 format. This is the last date that
+    the workflow will run to. If blank, the workflow will run indefinitely.
+    For example: 20000101T0000Z
+type=quoted
+compulsory=true
+sort-key=c2
+
+[template variables=CSET_TRIAL_CYCLE_PERIOD]
+ns=Models and Cases
+title=Trial cycle period
+description=The period between model runs of the trial.
+help=The cycle period of the trial, as an ISO 8601 duration. This is the time
+    between each forecast initiation of the model. For example: PT48H
+type=quoted
+compulsory=true
+sort-key=c3
+
+# Cross-model settings.
+[template variables=ANALYSIS_LENGTH]
+ns=Models and Cases
+title=Analysis length
+description=Length of forecast to analyse, e.g. PT48H
+help=The period over which to produce diagnostics for the forecasts, in ISO 8601
+    duration format. For example: PT48H or P7D
+
+    This should be the length of your longest forecast. Overestimating is fine
+    as times that don't exist will be ignored.
+
+    This controls how much data is fetched and fed into CSET for analysis but
+    only at the granularity of files, so it may not be exact.
+type=quoted
+compulsory=true
+sort-key=d1
+
+
+################################################################################
+# Model definitions. Section repeated for each desired model.
+################################################################################
+
+[template variables=CSET_MODEL_COUNT]
+ns=Models and Cases
+title=Number of models
+description=Number of models to evaluate.
+help=The number of models to evaluate, between 1 and 20. If more models
+    are needed, it is straightforward to change upon request.
+type=integer
+range=1:20
+compulsory=true
+sort-key=e1
+# Need to link to all of the model settings here.
+trigger={% for model_id in range(1, 21) %}
+        template variables=m{{model_id}}_name: this >= {{model_id}};
+        template variables=m{{model_id}}_data_source: this >= {{model_id}};
+        template variables=m{{model_id}}_data_path: this >= {{model_id}};
+        template variables=m{{model_id}}_date_type: this >= {{model_id}};
+        template variables=m{{model_id}}_data_period: this >= {{model_id}};
+        template variables=m{{model_id}}_analysis_offset: this >= {{model_id}};
+        {% endfor %}
+
+{% for model_id in range(1, 21) %}
+
+# Model {{model_id}}
+[template variables=m{{model_id}}_name]
+ns=Models and Cases/Model {{ "%02d" % model_id }}
+title=Model name
+description=A concise, friendly name for the model.
+help=A recognisable name for this particular model. This is carried through to
+     the output webpage, and identifies the model. As it is only used for
+     display purposes it can be any short string.
+type=quoted
+compulsory=true
+sort-key=a0
+
+[template variables=m{{model_id}}_data_source]
+ns=Models and Cases/Model {{ "%02d" % model_id }}
+title=Data source
+description=From whence to retrieve the forecast.
+help=System from which to retrieve the forecast data. Filesystem is generic,
+    while the others are site-specific.
+values="filesystem", "mass"
+value-titles=Filesystem, MASS
+compulsory=true
+sort-key=a1
+
+[template variables=m{{model_id}}_data_path]
+ns=Models and Cases/Model {{ "%02d" % model_id }}
+title=Data path
+description=The path to the forecast.
+help=Full path (including file name) to the forecast data on your chosen storage
+    system. Can contain wildcards. No quotation marks required in rose edit, as
+    it is automatically quoted there.
+
+    strftime format strings are supported, and will be replaced with the
+    desired case study date or trial time. E.g: `/data/%Y%m%d/model1/*.nc`
+
+    For forecast lead time, %N can be used which is replaced by the 3 digit
+    lead time in hours. The regular placeholders are still usable, and refer
+    to the initiation time E.g: `/data/case_%Y%m%d/model1_%N.nc`
+
+    Commonly useful placeholders:
+    %Y: Year, e.g: 2024
+    %m: Month, e.g: 12
+    %d: Day, e.g: 31
+    %H: Hour, e.g: 23
+    %M: Minute, e.g: 59
+    %N: Forecast lead time in hours, e.g: 012
+
+    For more on strftime format strings, see: https://strftime.org
+type=quoted
+compulsory=true
+sort-key=a2
+
+[template variables=m{{model_id}}_date_type]
+ns=Models and Cases/Model {{ "%02d" % model_id }}
+title=Date placeholder type
+description=Type of date templated into the data path.
+help=The type of date templated into the data path. Affects interpretation of
+    strftime placeholders in the data path.
+
+    Forecast initiation time, AKA data time, is the validity time of the first
+    data point. For realtime forecasts this is approximately when the forecast
+    was started. Selecting this also allows templating the forecast lead time.
+
+    Validity time is when the simulated or predicted data is valid for.
+values="initiation", "validity"
+value-titles=Forecast Initiation Time, Validity Time
+compulsory=true
+sort-key=b1
+
+[template variables=m{{model_id}}_data_period]
+ns=Models and Cases/Model {{ "%02d" % model_id }}
+title=Data period
+description=Output frequency of the underlying data, e.g. PT1H
+help=The period of the input data in each file as an ISO 8601 duration. This
+    is used to fetch files at regular validity or lead times.
+
+type=quoted
+compulsory=true
+sort-key=b2
+
+[template variables=m{{model_id}}_analysis_offset]
+ns=Models and Cases/Model {{ "%02d" % model_id }}
+title=Analysis offset
+description=Offset from forecast initiation to verification start, e.g. PT1H
+help=The offset in time between the forecast initiation and the start of the
+    analysis period, AKA the first validity time, as an ISO 8601 duration. This
+    is useful when required fields are not output on the first time step; if
+    they are it should probably be set to PT0H, meaning no offset.
+type=quoted
+compulsory=true
+sort-key=b3
+{% endfor %}

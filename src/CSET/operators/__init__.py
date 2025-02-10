@@ -19,19 +19,21 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Union
 
 from iris import FUTURE
 
 # Import operators here so they are exported for use by recipes.
 import CSET.operators
-from CSET._common import parse_recipe
+from CSET._common import iter_maybe, parse_recipe
 from CSET.operators import (
+    ageofair,
     aggregate,
     collapse,
     constraints,
     convection,
+    ensembles,
     filters,
+    mesoscale,
     misc,
     plot,
     read,
@@ -42,13 +44,16 @@ from CSET.operators import (
 
 # Exported operators & functions to use elsewhere.
 __all__ = [
+    "ageofair",
     "aggregate",
     "collapse",
     "constraints",
     "convection",
+    "ensembles",
     "execute_recipe",
     "filters",
     "get_operator",
+    "mesoscale",
     "misc",
     "plot",
     "read",
@@ -61,6 +66,8 @@ __all__ = [
 FUTURE.datum_support = True
 # Stop iris giving a warning whenever it saves something.
 FUTURE.save_split_attrs = True
+# Accept microsecond precision in iris times.
+FUTURE.date_microseconds = True
 
 
 def get_operator(name: str):
@@ -107,7 +114,7 @@ def _write_metadata(recipe: dict):
     # Remove steps, as not needed, and might contain non-serialisable types.
     metadata.pop("steps", None)
     with open("meta.json", "wt", encoding="UTF-8") as fp:
-        json.dump(metadata, fp)
+        json.dump(metadata, fp, indent=2)
     os.sync()
     # Stat directory to force NFS to synchronise metadata.
     os.stat(Path.cwd())
@@ -150,6 +157,11 @@ def _run_steps(
 ) -> None:
     """Execute the steps in a recipe."""
     original_working_directory = Path.cwd()
+    # Make paths absolute.
+    step_input = [
+        path if path.startswith("/") else f"{original_working_directory}/{path}"
+        for path in iter_maybe(step_input)
+    ]
     try:
         os.chdir(output_directory)
         logger = logging.getLogger()
@@ -176,8 +188,8 @@ def _run_steps(
 
 
 def execute_recipe(
-    recipe_yaml: Union[Path, str],
-    input_directory: Path,
+    recipe_yaml: Path | str,
+    input_directories: list[str],
     output_directory: Path,
     recipe_variables: dict = None,
     style_file: Path = None,
@@ -187,12 +199,13 @@ def execute_recipe(
 
     Parameters
     ----------
-    recipe_yaml: Path or str
-        Path to a file containing, or string of, a recipe's YAML describing the
-        operators that need running. If a Path is provided it is opened and
+    recipe_yaml: Path | str
+        Path to a file containing, or a string of, a recipe's YAML describing
+        the operators that need running. If a Path is provided it is opened and
         read.
-    input_directory: Path
-        Pathlike to directory containing input files.
+    input_directories: list[str]
+        List of pathlike to directories containing input files. Each path is
+        assumed to be to a different model.
     output_directory: Path
         Pathlike indicating desired location of output.
     recipe_variables: dict, optional
@@ -214,7 +227,6 @@ def execute_recipe(
         The provided recipe is not a stream or Path.
     """
     recipe = parse_recipe(recipe_yaml, recipe_variables)
-    step_input = Path(input_directory).absolute()
     # Create output directory.
     try:
         output_directory.mkdir(parents=True, exist_ok=True)
@@ -222,4 +234,6 @@ def execute_recipe(
         logging.error("Output directory is a file. %s", output_directory)
         raise err
     steps = recipe["steps"]
-    _run_steps(recipe, steps, step_input, output_directory, style_file, plot_resolution)
+    _run_steps(
+        recipe, steps, input_directories, output_directory, style_file, plot_resolution
+    )

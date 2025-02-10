@@ -5,18 +5,12 @@ description = Workflow for running CSET.
 URL = https://metoffice.github.io/CSET
 
 # Import all of our Jinja utilities for use in the workflow.
-{% from "jinja_utils" import get_models, glob, max, min, zip, restructure_field_list, sanitise_task_name %}
+{% from "jinja_utils" import get_models, glob, max, min, zip, sanitise_task_name %}
 # Load a list a model detail dictionaries.
 {% set models = get_models(ROSE_SUITE_VARIABLES) %}
 
 
 [scheduling]
-    # There is rarely a reason to manually set the runahead limit, as we will
-    # usually be limited by number of concurrent jobs.
-    {% if CSET_RUNAHEAD_LIMIT|default(False) %}
-        runahead limit = P{{CSET_RUNAHEAD_LIMIT}}
-    {% endif %}
-
     # Initial and final cycle points cover the entire period of interest.
     {% if CSET_CYCLING_MODE == "case_study" %}
         initial cycle point = {{ min(CSET_CASE_DATES) }}
@@ -29,6 +23,11 @@ URL = https://metoffice.github.io/CSET
         {% endif %}
     {% endif %}
 
+    [[special tasks]]
+        # cycle_complete depends on its previous instance. We then don't need to
+        # know the offset between the cycles.
+        sequential = cycle_complete
+
     [[graph]]
     # Only runs on the first cycle.
     R1/^ = """
@@ -39,15 +38,22 @@ URL = https://metoffice.github.io/CSET
         # Runs for every forecast initiation time to process the data in parallel.
         {% for date in CSET_CASE_DATES %}
             R1/{{date}} = """
-            setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
-            fetch_complete => PROCESS:finish-all => housekeeping_raw
+            setup_complete[^] =>
+            FETCH_DATA:succeed-all =>
+            fetch_complete
+            fetch_complete =>
+            PROCESS:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} =>
+            cycle_complete
             """
         {% endfor %}
     {% elif CSET_CYCLING_MODE == "trial" %}
         # Analyse from each forecast.
         {{CSET_TRIAL_CYCLE_PERIOD}} = """
-        setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
-        fetch_complete => PROCESS:finish-all => housekeeping_raw
+        setup_complete[^] =>
+        FETCH_DATA:succeed-all =>
+        fetch_complete =>
+        PROCESS:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} =>
+        cycle_complete
         """
     {% endif %}
 
@@ -56,8 +62,10 @@ URL = https://metoffice.github.io/CSET
     {% if CSET_CYCLING_MODE != "trial" or CSET_TRIAL_END_DATE|default(False) %}
         # Only runs on the final cycle.
         R1/$ = """
-        housekeeping_raw => finish_website => send_email
-        housekeeping_raw => housekeeping_full
+        cycle_complete =>
+        PROCESS_CASE_AGGREGATION:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} =>
+        finish_website => send_email
+        finish_website => housekeeping
         """
     {% endif %}
 
@@ -97,13 +105,21 @@ URL = https://metoffice.github.io/CSET
     [[PROCESS]]
     script = rose task-run -v --app-key=run_cset_recipe
     execution time limit = PT1H
+    [[[directives]]]
+        --mem=4000
+
+    [[PROCESS_CASE_AGGREGATION]]
+    script = rose task-run -v --app-key=run_cset_recipe
+    execution time limit = PT1H
+        [[[environment]]]
+        # As this process is used for case aggregation we hard code to True.
+        DO_CASE_AGGREGATION = True
 
     [[FETCH_DATA]]
     script = rose task-run -v --app-key=fetch_fcst
     execution time limit = PT1H
         [[[environment]]]
-        CSET_ANALYSIS_OFFSET = {{CSET_ANALYSIS_OFFSET}}
-        CSET_ANALYSIS_PERIOD = {{CSET_ANALYSIS_PERIOD}}
+        ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
 
     [[METPLUS]]
         [[[environment]]]
@@ -114,6 +130,7 @@ URL = https://metoffice.github.io/CSET
             ROSE_APP_OPT_CONF_KEYS = {{METPLUS_OPT_CONFIG_KEYS}}
         {% endif %}
 
+    # Noop tasks to ensure a complete/efficient workflow graph
     [[DUMMY_TASK]]
     script = true
     platform = localhost
@@ -124,6 +141,15 @@ URL = https://metoffice.github.io/CSET
 
     [[fetch_complete]]
     inherit = DUMMY_TASK
+
+    [[cycle_complete]]
+    inherit = DUMMY_TASK
+
+    [[dummy_process]]
+    inherit = DUMMY_TASK, PROCESS
+
+    [[dummy_process_case_aggregation]]
+    inherit = DUMMY_TASK, PROCESS_CASE_AGGREGATION
 
     [[build_conda]]
     # Create the conda environment if it does not yet exist, possibly installing
@@ -142,30 +168,22 @@ URL = https://metoffice.github.io/CSET
         WEB_DIR = {{WEB_DIR}}
 
     {% for model in models %}
-    [[fetch_fcst_m{{model["number"]}}]]
+    [[fetch_fcst_m{{model["id"]}}]]
     # Fetch data from disk or a file based archival system.
     inherit = FETCH_DATA
         [[[environment]]]
-        MODEL_NUMBER = {{model["number"]}}
+        MODEL_IDENTIFIER = {{model["id"]}}
         ROSE_APP_COMMAND_KEY = {{model["data_source"]}}
         DATA_PATH = {{model["data_path"]}}
         DATE_TYPE = {{model["date_type"]}}
-        {% if model["date_type"] != "initiation" %}
-            DATA_PERIOD = {{model["data_period"]}}
-        {% endif %}
+        DATA_PERIOD = {{model["data_period"]}}
+        ANALYSIS_OFFSET = {{model["analysis_offset"]}}
     {% endfor %}
 
-    [[housekeeping_raw]]
-    # Housekeep unprocessed data files.
-    script = rose task-run -v --app-key=housekeeping
+    [[housekeeping]]
+    # Housekeep unprocessed data files and processed intermediate files.
         [[[environment]]]
-        HOUSEKEEPING_MODE = {{[HOUSEKEEPING_MODE, 1]|min}}
-
-    [[housekeeping_full]]
-    # Housekeep processed intermediate files too.
-    script = rose task-run -v --app-key=housekeeping
-        [[[environment]]]
-        HOUSEKEEPING_MODE = {{[HOUSEKEEPING_MODE, 2]|min}}
+        HOUSEKEEPING_MODE = {{HOUSEKEEPING_MODE}}
 
     [[finish_website]]
     # Updates the workflow info in the web interface.
