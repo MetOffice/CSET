@@ -419,12 +419,10 @@ def _fix_pressure_coord_callback(cube: iris.cube.Cube):
     and approach the coordinates in a unified way.
     """
     for coord in cube.dim_coords:
-        coord_name = coord.name()
-
-        if coord_name in ["pressure_level", "pressure_levels"]:
+        if coord.name() in ["pressure_level", "pressure_levels"]:
             coord.rename("pressure")
 
-        if coord_name == "pressure":
+        if coord.name() == "pressure":
             if str(cube.coord("pressure").units) != "hPa":
                 cube.coord("pressure").convert_units("hPa")
 
