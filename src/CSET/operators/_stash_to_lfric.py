@@ -6,7 +6,7 @@ Please update the original code source as well as this file if changes required.
 
 # Set up UM STASH code to cube name mapping
 # Form of entry is <stashcode>: (<long_name>, <grid>)
-STASH_TO_LFRIC_FCM = {
+STASH_TO_LFRIC = {
     "m01s00i002": ("eastward_wind_at_cell_centres", "face"),
     "m01s00i003": ("northward_wind_at_cell_centres", "face"),
     "m01s00i004": ("air_potential_temperature", "face"),
@@ -474,7 +474,10 @@ RAL3_LFRic_mods = {
     "m01s00i255": ("exner_pressure_at_cell_interfaces", "face"),
     "m01s09i231": ("combined_cloud_amount", "face"),
     "m01s21i104": ("number_of_lightning_flashes_in_column", "face"),
+    "m01s15i229": ("potential_vorticity_at_pressure_levels", "face"),
+    "m01s16i205": ("wet_bulb_potential_temperature_at_pressure_levels", "face"),
 }
 
+
 # Combine into single STASH dict
-STASH_TO_LFRIC = {**STASH_TO_LFRIC_FCM, **RAL3_LFRic_mods}
+STASH_TO_LFRIC.update(RAL3_LFRic_mods)
