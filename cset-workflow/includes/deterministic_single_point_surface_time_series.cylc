@@ -11,6 +11,7 @@
             --MODEL_NAME='{{model["name"]}}'
             --LONGITUDE_POINT='{{LONGITUDE_POINT}}'
             --LATITUDE_POINT='{{LATITUDE_POINT}}'
+            --LATLON_IN_TYPE='{{LATLON_IN_TYPE}}'
             --SINGLE_POINT_METHOD='{{SINGLE_POINT_METHOD}}'
         """
         MODEL_IDENTIFIERS = {{model["id"]}}
