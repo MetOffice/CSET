@@ -259,6 +259,7 @@ def test_pressure_coord_unit_fix_callback(transect_source_cube):
     cube.coord("pressure").convert_units("Pa")
     read._fix_pressure_coord_callback(cube)
     assert str(cube.coord("pressure").units) == "hPa"
+    assert cube.coord("pressure").points[0] == 100
 
 
 def test_spatial_coord_rename_callback():
