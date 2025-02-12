@@ -1,6 +1,6 @@
-category: Surface Time Series
-title: $MODEL_NAME Domain mean surface $VARNAME time series
-description: Plots a time series of the domain mean surface $VARNAME.
+category: Pressure Level Time Series
+title: $MODEL_NAME $VARNAME $PLEVEL Domain mean time series
+description: Plots a time series of the domain mean $VARNAME $PLEVEL pressure level.
 
 steps:
   - operator: read.read_cube
@@ -9,13 +9,10 @@ steps:
       varname_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
-      cell_methods_constraint:
-        operator: constraints.generate_cell_methods_constraint
-        cell_methods: []
       pressure_level_constraint:
         operator: constraints.generate_level_constraint
         coordinate: "pressure"
-        levels: []
+        levels: $PLEVEL
 
   - operator: collapse.collapse
     coordinate: [grid_latitude, grid_longitude]
