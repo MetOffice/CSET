@@ -190,28 +190,58 @@ def _colorbar_map_levels(cube: iris.cube.Cube):
     user_colorbar_file = get_recipe_metadata().get("style_file_path", None)
     colorbar = _load_colorbar_map(user_colorbar_file)
 
-    # First try standard name, then long name, then varname.
-    varnames = list(filter(None, [cube.standard_name, cube.long_name, cube.var_name]))
+    try:
+        # Ensure pressure_level is a string of an integer, as used in the
+        # _colorbar_definition.json. We assume that pressure is a scalar
+        # coordinate here.
+        pressure_level = str(int(cube.coord("pressure").points[0]))
+    except iris.exceptions.CoordinateNotFoundError:
+        pressure_level = None
+
+    # First try standard name, then long name, then var name.
+    varnames = filter(None, [cube.standard_name, cube.long_name, cube.var_name])
     for varname in varnames:
         # Get the colormap for this variable.
         try:
             cmap = mpl.colormaps[colorbar[varname]["cmap"]]
+            if pressure_level is None:
+                var_colorbar = colorbar[varname]
+            else:
+                # If pressure level is specified for cube use a pressure-level
+                # specific colourbar, if one exists.
+                try:
+                    var_colorbar = colorbar[varname]["pressure_levels"][pressure_level]
+                except KeyError:
+                    logging.warning(
+                        "%s has no colorbar definition for pressure level %s.",
+                        varname,
+                        pressure_level,
+                    )
+                    # Fallback to variable default.
+                    var_colorbar = colorbar[varname]
+
             # Get the colorbar levels for this variable.
             try:
-                levels = colorbar[varname]["levels"]
+                levels = var_colorbar["levels"]
+                # Use discrete bins when levels are specified, rather than a
+                # smooth range.
                 norm = mpl.colors.BoundaryNorm(levels, ncolors=cmap.N)
+                logging.debug("Using levels for %s colorbar.", varname)
             except KeyError:
                 # Get the range for this variable.
-                vmin, vmax = colorbar[varname]["min"], colorbar[varname]["max"]
-                logging.debug("From colorbar dictionary: Using min and max")
+                vmin, vmax = var_colorbar["min"], var_colorbar["max"]
+                logging.debug("Using min and max for %s colorbar.", varname)
                 # Calculate levels from range.
                 levels = np.linspace(vmin, vmax, 20)
                 norm = None
-                return cmap, levels, norm
+            return cmap, levels, norm
         except KeyError:
+            logging.debug("Cube name %s has no colorbar definition.", varname)
+            # Retry with next name.
             continue
 
     # Default if no varnames match.
+    logging.warning("No colorbar definition exists for %s.", cube.name())
     cmap, levels, norm = mpl.colormaps["viridis"], None, None
     return cmap, levels, norm
 
