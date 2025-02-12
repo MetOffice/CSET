@@ -497,15 +497,15 @@ def _fix_lfric_longnames(cube: iris.cube.Cube):
         if str(cube.long_name) == "combined_cloud_amount_maximum_random_overlap":
             cube.rename("combined_cloud_amount_maximum_random_overlap")
 
-    except:
+    except KeyError:
         pass
 
 
 def _fix_um_lightning(cube: iris.cube.Cube):
-    """Callback to fix lightning in UM based on discussion with Anne.
+    """To fix the date points in lightning accumulation STASH.
 
     Lightning (m01s21i104) is being output as a time accumulation in UM,
-    over each hour, not from the start of the forecast, to be compatible
+    over each hour (TAcc1hr), not from the start of the forecast, to be compatible
     with LFRic. So this is a short term solution to remove cell methods (
     as variables are ignored with cell methods for surface plots currently),
     and also adjust the time so that the value is at the end of each hour.
@@ -531,7 +531,7 @@ def _fix_um_lightning(cube: iris.cube.Cube):
             # Replace the time coordinate with corrected values
             time_coord.points = new_time_values
 
-    except:
+    except KeyError:
         pass
 
 
