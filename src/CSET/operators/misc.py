@@ -303,7 +303,12 @@ def difference(cubes: CubeList):
         base.coord(base_lat_name).shape != other.coord(other_lat_name).shape
         or base.coord(base_lon_name).shape != other.coord(other_lon_name).shape
     ):
-        if base.attributes.get("STASH", None) in ["m01s03i225", "m01s03i226"]:
+        if base.attributes.get("STASH", None) in [
+            "m01s03i225",
+            "m01s03i226",
+            "m01s15i201",
+            "m01s15i202",
+        ]:
             base = regrid_onto_cube(base, other, method="Linear")
         else:
             raise ValueError(
