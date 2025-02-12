@@ -534,6 +534,11 @@
     "max": 1400,
     "min": -1400
   },
+  "surface_net_shortwave_flux_difference": {
+    "cmap": "bwr",
+    "max": 1400,
+    "min": -1400
+  },
   "surface_northward_sea_water_velocity": {
     "max": 5.0,
     "min": 0.0
