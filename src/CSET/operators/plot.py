@@ -207,48 +207,6 @@ def _colorbar_map_levels(varname: str, **kwargs):
     return cmap, levels, norm
 
 
-# def _get_hist_properties(varname: str, **kwargs):
-#     """Specify the histogram min/max and also axis.
-
-#     For the given variable name, from a colorbar dictionary file.
-
-#     Parameters
-#     ----------
-#     colorbar_file: str
-#         Filename of the colorbar dictionary to read.
-#     varname: str
-#         Variable name to extract from the dictionary
-
-#     Returns
-#     -------
-#     vmin:
-#         Minimum value to create bins from.
-#     vmax:
-#         Maximum value to create bins from.
-#     xscale:
-#         Type of xscale projection, default None
-#     yscale:
-#         Type of yscale projection, default None
-#     """
-#     colorbar = _load_colorbar_map()
-
-#     # Get something from this json.
-#     try:
-#         vmin, vmax = colorbar[varname]["min"], colorbar[varname]["max"]
-#         logging.debug("Histogram: From colorbar dictionary: Using min and max")
-#     except KeyError:
-#         vmin, vmax = None, None
-
-#     # Get the colorbar levels for this variable.
-#     try:
-#         xscale, yscale = colorbar[varname]["hist_xscale"], colorbar[varname]["hist_yscale"]
-#         logging.debug("Histogram: From colorbar dictionary: Using hist_xscale and hist_yscale")
-#     except KeyError:
-#         xscale, yscale = None, None
-
-#     return vmin, vmax, xscale, yscale
-
-
 def _get_plot_resolution() -> int:
     """Get resolution of rasterised plots in pixels per inch."""
     return get_recipe_metadata().get("plot_resolution", 100)
