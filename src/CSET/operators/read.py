@@ -230,8 +230,8 @@ def _create_callback(is_ensemble: bool, is_base: bool) -> callable:
         _longitude_fix_callback(cube, field, filename)
         _fix_spatial_coord_name_callback(cube)
         _fix_pressure_coord_callback(cube)
-        _fix_um_radtime(cube)
-        _fix_um_radtime2(cube)
+        _fix_um_radtime_prehour(cube)
+        _fix_um_radtime_posthour(cube)
         _fix_lfric_longnames(cube)
         _fix_um_lightning(cube)
 
@@ -434,7 +434,7 @@ def _fix_pressure_coord_callback(cube: iris.cube.Cube):
                 cube.coord("pressure").convert_units("hPa")
 
 
-def _fix_um_radtime(cube: iris.cube.Cube):
+def _fix_um_radtime_posthour(cube: iris.cube.Cube):
     """Fix radiation which is output 1 minute past every hour."""
     try:
         if cube.attributes["STASH"] in [
@@ -465,8 +465,8 @@ def _fix_um_radtime(cube: iris.cube.Cube):
         pass
 
 
-def _fix_um_radtime2(cube: iris.cube.Cube):
-    """Fix radiation which is output 1 minute past every hour."""
+def _fix_um_radtime_prehour(cube: iris.cube.Cube):
+    """Fix radiation which is output 1 minute before every hour."""
     try:
         if cube.attributes["STASH"] in [
             "m01s01i207",
