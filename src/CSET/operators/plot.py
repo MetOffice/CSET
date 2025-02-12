@@ -653,15 +653,11 @@ def _plot_and_save_histogram_series(
     ax = plt.gca()
 
     for cube in iter_maybe(cubes):
-        # Reshape cube data into a single array to allow for a single histogram.
-        # Otherwise we plot xdim histograms stacked.
-        cube_data_1d = (cube.data).flatten()
-
-        # Exception case, where distribution better fits log scales/bins.
-        if cube_data_1d.long_name in ["surface_microphysical_rainfall_rate"]:
-            cube_data_1d.convert_units(
-                "kg m-2 h-1"
-            )  # Usually in seconds but mm/hr more intuitive.
+        # Easier to check title (where var name originates)
+        # than seeing if longnames exist etc.
+        if "surface_microphysical_rainfall_rate" in title:
+            # Usually in seconds but mm/hr more intuitive.
+            cube.convert_units("kg m-2 h-1")
             bins = 10.0 ** (
                 np.arange(-10, 27, 1) / 10.0
             )  # Suggestion from RMED toolbox.
@@ -672,6 +668,12 @@ def _plot_and_save_histogram_series(
             vmax = 400  # Manually set vmin/vmax to override json derived value.
         else:
             bins = np.linspace(vmin, vmax, 50)
+
+        # Reshape cube data into a single array to allow for a single histogram.
+        # Otherwise we plot xdim histograms stacked.
+        cube_data_1d = (cube.data).flatten()
+
+        # Exception case, where distribution better fits log scales/bins.
 
     x, y = np.histogram(cube_data_1d, bins=bins, density=True)
     ax.plot(y[:-1], x, color="black", linewidth=2, marker="o", markersize=6)
