@@ -312,7 +312,7 @@ def difference(cubes: CubeList):
             base = regrid_onto_cube(base, other, method="Linear")
         else:
             raise ValueError(
-                f"Cubes should have the same latitude shape, got {base.coord(base_lat_name)} {other.coord(other_lat_name)}"
+                f"Cubes should have the same shape, got {base.coord(base_lat_name)} {other.coord(other_lat_name)}"
             )
 
     def is_increasing(sequence: list) -> bool:
