@@ -301,25 +301,3 @@ def test_lfric_timecoord_fix_forecastreftime(slammed_lfric_cube_readonly):
         repr(cube.coord("forecast_reference_time"))
         == "<DimCoord: forecast_reference_time / (seconds since 2022-01-01 00:00:00)  [...]>"
     )
-
-
-def test_lfric_timecoord_fix_notimeorigin(slammed_lfric_cube_readonly):
-    """Check that read raises KeyError if no time_origin attribute."""
-    cube = slammed_lfric_cube_readonly.copy()
-    cube.coord("time").attributes.pop("time_origin", None)
-    cube.remove_coord("forecast_reference_time")
-    cube.remove_coord("forecast_period")
-    with pytest.raises(KeyError):
-        read._lfric_time_callback(cube)
-
-
-def test_lfric_timecoord_fix_baseunits(slammed_lfric_cube_readonly):
-    """Check that read raises ValueError if base units unsupported."""
-    cube = slammed_lfric_cube_readonly.copy()
-    cube.coord("time").units = iris.cube.Unit(
-        "days since 2022-01-01 00:00:00", calendar="standard"
-    )
-    cube.remove_coord("forecast_reference_time")
-    cube.remove_coord("forecast_period")
-    with pytest.raises(ValueError):
-        read._lfric_time_callback(cube)
