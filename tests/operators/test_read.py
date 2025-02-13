@@ -291,11 +291,10 @@ def test_lfric_timecoord_fix_forecastperiod(slammed_lfric_cube):
         == "<AuxCoord: forecast_period / (seconds)  [3600., ...]  shape(6,)>"
     )
 
-def test_lfric_timecoord_fix_forecastreftime(slammed_lfric_cube_readonly):
+def test_lfric_timecoord_fix_forecastreftime(slammed_lfric_cube):
     """Check that read callback creates an appropriate forecast_reference_time coord."""
-    cube = slammed_lfric_cube_readonly.copy()
-    cube = read._lfric_time_callback(cube)
+    read._lfric_time_callback(slammed_lfric_cube)
     assert (
-        repr(cube.coord("forecast_reference_time"))
+        repr(slammed_lfric_cube.coord("forecast_reference_time"))
         == "<DimCoord: forecast_reference_time / (seconds since 2022-01-01 00:00:00)  [...]>"
     )
