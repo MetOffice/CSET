@@ -468,9 +468,7 @@ def _fix_um_radtime_posthour(cube: iris.cube.Cube):
 def _fix_um_radtime_prehour(cube: iris.cube.Cube):
     """Fix radiation which is output 1 minute before every hour."""
     try:
-        if cube.attributes["STASH"] in [
-            "m01s01i207",
-        ]:
+        if cube.attributes["STASH"] == "m01s01i207":
             time_coord = cube.coord("time")
 
             # Convert time points to datetime objects
