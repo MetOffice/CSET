@@ -92,6 +92,17 @@ def test_colorbar_map_levels(cube, tmp_working_dir):
     assert norm is None
 
 
+# Test will fail (but not cause an overall fail) as we can't test using levels
+# until there is at least one variable that uses them.
+@pytest.mark.xfail(reason="No colorbar currently uses levels")
+def test_colorbar_map_levels_def_on_levels(cube, tmp_working_dir):
+    """Colorbar definition that uses levels is found for cube."""
+    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    assert cmap == mpl.colormaps[...]
+    assert levels == [1, 2, 3]
+    assert norm == ...
+
+
 def test_colorbar_map_levels_name_fallback(cube, tmp_working_dir):
     """Colorbar definition is found for cube after checking its other names."""
     cube.standard_name = None
