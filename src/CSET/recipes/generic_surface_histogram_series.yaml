@@ -22,7 +22,6 @@ steps:
         coordinate: pressure
         levels: []
 
-
   - operator: write.write_cube_to_nc
     overwrite: True
 
