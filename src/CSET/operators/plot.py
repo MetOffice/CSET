@@ -655,6 +655,7 @@ def _plot_and_save_histogram_series(
     for cube in iter_maybe(cubes):
         # Easier to check title (where var name originates)
         # than seeing if longnames exist etc.
+        # Exception case, where distribution better fits log scales/bins.
         if "surface_microphysical_rainfall_rate" in title:
             # Usually in seconds but mm/hr more intuitive.
             cube.convert_units("kg m-2 h-1")
@@ -672,8 +673,6 @@ def _plot_and_save_histogram_series(
         # Reshape cube data into a single array to allow for a single histogram.
         # Otherwise we plot xdim histograms stacked.
         cube_data_1d = (cube.data).flatten()
-
-        # Exception case, where distribution better fits log scales/bins.
 
     x, y = np.histogram(cube_data_1d, bins=bins, density=True)
     ax.plot(y[:-1], x, color="black", linewidth=2, marker="o", markersize=6)
