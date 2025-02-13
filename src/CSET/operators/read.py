@@ -505,8 +505,6 @@ def _lfric_time_callback(cube: iris.cube.Cube):
                 "No time coordinate or forecast_reference_time, so cannot construct forecast_period"
             )
 
-    return cube
-
 
 def _check_input_files(input_paths: list[str], filename_pattern: str) -> list[Path]:
     """Get an iterable of files to load, and check that they all exist.
