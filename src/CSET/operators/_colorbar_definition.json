@@ -686,6 +686,11 @@
     "max": 5000,
     "min": 0
   },
+  "turbulent_mixing_height_difference": {
+    "cmap": "terrain",
+    "max": 5000,
+    "min": -5000
+  },
   "upward_air_velocity": {
     "cmap": "bwr",
     "max": 5,
