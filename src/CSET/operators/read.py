@@ -527,7 +527,6 @@ def _fix_um_lightning(cube: iris.cube.Cube):
 
             # Replace the time coordinate with corrected values
             time_coord.points = new_time_values
-
     except KeyError:
         pass
 
