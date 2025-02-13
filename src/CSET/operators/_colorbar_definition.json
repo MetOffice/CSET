@@ -392,6 +392,16 @@
     "max": 0.05,
     "min": -0.05
   },
+  "stratiform_rainfall_flux": {
+    "cmap": "cividis",
+    "max": 0.01,
+    "min": 0
+  },
+  "stratiform_rainfall_flux_difference": {
+    "cmap": "cividis",
+    "max": 0.01,
+    "min": -0.01
+  },
   "stratiform_rainfall_rate": {
     "cmap": "cividis",
     "max": 0.01,
