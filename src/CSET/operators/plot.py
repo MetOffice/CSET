@@ -539,7 +539,7 @@ def _plot_and_save_vertical_line_series(
     )
     ax.ticklabel_format(axis="x")
     ax.tick_params(axis="y")
-    ax.autoscale()
+    # ax.autoscale()
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -650,24 +650,43 @@ def _plot_and_save_histogram_series(
         but can be changed in the rose-suite.conf configuration.
     """
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+    ax = plt.gca()
 
     for cube in iter_maybe(cubes):
+        # Easier to check title (where var name originates)
+        # than seeing if longnames exist etc.
+        # Exception case, where distribution better fits log scales/bins.
+        if "surface_microphysical_rainfall_rate" in title:
+            # Usually in seconds but mm/hr more intuitive.
+            cube.convert_units("kg m-2 h-1")
+            bins = 10.0 ** (
+                np.arange(-10, 27, 1) / 10.0
+            )  # Suggestion from RMED toolbox.
+            bins = np.insert(bins, 0, 0)
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+            vmin = 0
+            vmax = 400  # Manually set vmin/vmax to override json derived value.
+        else:
+            bins = np.linspace(vmin, vmax, 50)
+
         # Reshape cube data into a single array to allow for a single histogram.
         # Otherwise we plot xdim histograms stacked.
         cube_data_1d = (cube.data).flatten()
-        plt.hist(cube_data_1d, density=True, histtype=histtype, stacked=True)
 
-    # Get the current axes
-    ax = plt.gca()
+    x, y = np.histogram(cube_data_1d, bins=bins, density=True)
+    ax.plot(y[:-1], x, color="black", linewidth=2, marker="o", markersize=6)
 
     # Add some labels and tweak the style.
     ax.set(
         title=title,
         xlabel=f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}",
         ylabel="normalised probability density",
-        ylim=(0, 1),
         xlim=(vmin, vmax),
     )
+
+    # Overlay grid-lines onto histogram plot.
+    ax.grid(linestyle="--", color="grey", linewidth=1)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())

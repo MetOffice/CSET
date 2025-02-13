@@ -4,44 +4,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSET Home</title>
+    <title>CSET</title>
     <link rel="stylesheet" href="static/style.css">
     <link rel="icon" href="static/favicon.ico" type="image/x-icon">
     <script src="static/script.js" defer></script>
 </head>
 
 <body>
-    <nav class="topbar">
-        <h1>CSET</h1>
-        <menu>
-            <li><a href="index.html"><button>Home</button></a></li>
-            <li><a href="single.html"><button>Single plot</button></a></li>
-            <li><a href="double.html"><button>Side by side</button></a></li>
-        </menu>
+    <nav id="plot-selector">
+        <header>
+            <h1>CSET</h1>
+            <button id="clear-plots">⎚ Clear view</button>
+            <button id="description-toggle">⇲ Hide description</button>
+        </header>
+        <hr>
+        <!-- Links to diagnostics get inserted here. -->
     </nav>
-    <main class="body-text">
-        <div>
-            <h2>Top level page</h2>
-            <p>
-                Information about the overall workflow run will be displayed on this
-                page. For now just use the links along the top to get to specific
-                pages.
-            </p>
-            <h3>Current Status</h3>
-            <div id="workflow_status">
-                <p>Unknown</p>
-            </div>
-            <h3>Send Feedback</h3>
-            <p>
-                CSET is a new system, and we would love to hear about your
-                experiences. Please tell us your highlights, issues, or
-                suggestions:
-                <a href="https://github.com/MetOffice/CSET/issues/new/choose">Feedback via GitHub</a>
-                |
-                <a href="mailto:james.frost@metoffice.gov.uk?subject=CSET%20Feedback&body=%3E%20Thanks%20for%20sharing%20your%20feedback!%20Please%20share%20your%20issue%2C%20suggestion%2C%20or%20highlight%20in%20this%20message.%20If%20you%20are%20having%20issues%2C%20please%20also%20include%20your%20CSET%20version.%0A%0A">Feedback via email</a>
-            </p>
+    <main>
+        <article id="single-frame">
+            <iframe class="frame" id=plot-frame-full src="placeholder.html"></iframe>
+        </article>
+        <div id="dual-frame" class="vsplit hidden">
+            <article class="websplit-container">
+                <iframe class="frame" id=plot-frame-left src="placeholder.html"></iframe>
+            </article>
+            <article class="websplit-container">
+                <iframe class="frame" id=plot-frame-right src="placeholder.html"></iframe>
+            </article>
         </div>
     </main>
+    <!-- Script prevents deferred JS forcing rendering before CSS is loaded. -->
+    <script>true</script>
 </body>
 
 </html>
