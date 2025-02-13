@@ -230,7 +230,12 @@
   "grid_surface_snow_amount": {
     "cmap": "cool",
     "max": 0.01,
-    "min": 0
+    "min": 0.0
+  },
+  "grid_surface_snow_amount_difference": {
+    "cmap": "cool",
+    "max": 0.01,
+    "min": -0.01
   },
   "grid_surface_temperature": {
     "cmap": "RdYlBu_r",
@@ -556,6 +561,16 @@
     "cmap": "bwr",
     "max": 5e-06,
     "min": -5e-06
+  },
+  "surface_snow_amount": {
+    "cmap": "cool",
+    "max": 0.01,
+    "min": 0.0
+  },
+  "surface_snow_amount_difference": {
+    "cmap": "cool",
+    "max": 0.01,
+    "min": -0.01
   },
   "surface_temperature": {
     "max": 30.0,
