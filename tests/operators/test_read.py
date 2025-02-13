@@ -291,7 +291,6 @@ def test_lfric_timecoord_fix_forecastperiod(slammed_lfric_cube):
         == "<AuxCoord: forecast_period / (seconds)  [3600., ...]  shape(6,)>"
     )
 
-
 def test_lfric_timecoord_fix_forecastreftime(slammed_lfric_cube_readonly):
     """Check that read callback creates an appropriate forecast_reference_time coord."""
     cube = slammed_lfric_cube_readonly.copy()
