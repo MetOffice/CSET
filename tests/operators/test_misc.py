@@ -195,6 +195,20 @@ def test_difference_incorrect_data_longitude_shape(cube):
         misc.difference(cubes)
 
 
+def test_difference_incorrect_data_shape_regrid(cube):
+    """Test when data shape differs, but gets regridded.
+
+    For a cube if it meets the requirements of the variable exceptions.
+    """
+    rearranged_cube = cube.copy()
+    rearranged_cube = rearranged_cube[:, :, 1:]
+    rearranged_cube.attributes["STASH"] = "m01s03i225"
+    other_cube = cube.copy()
+    del other_cube.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([rearranged_cube, other_cube])
+    assert type(misc.difference(cubes)) is iris.cube.Cube
+
+
 def test_difference_different_model_types(cube):
     """Other cube is flipped when model types differ."""
     flipped = cube.copy()
