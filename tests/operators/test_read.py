@@ -258,7 +258,8 @@ def test_pressure_coord_unit_fix_callback(transect_source_cube):
     cube = transect_source_cube.copy()
     cube.coord("pressure").convert_units("Pa")
     read._fix_pressure_coord_callback(cube)
-    assert cube.coord("pressure").units == "hPa"
+    assert str(cube.coord("pressure").units) == "hPa"
+    assert cube.coord("pressure").points[0] == 100
 
 
 def test_spatial_coord_rename_callback():
@@ -280,4 +281,22 @@ def test_spatial_coord_not_exist_callback():
     assert (
         repr(cube.coords())
         == "[<DimCoord: time / (hours since 1970-01-01 00:00:00)  [...]  shape(2,)>, <DimCoord: pressure / (hPa)  [ 100., 150., ..., 950., 1000.]  shape(16,)>, <DimCoord: forecast_reference_time / (hours since 1970-01-01 00:00:00)  [...]>, <DimCoord: latitude / (degrees)  [-10.98]>, <DimCoord: longitude / (degrees)  [19.02]>, <AuxCoord: forecast_period / (hours)  [15., 18.]  shape(2,)>]"
+    )
+
+
+def test_lfric_timecoord_fix_forecastperiod(slammed_lfric_cube):
+    """Check that read callback creates an appropriate forecast_period dimension."""
+    read._lfric_time_callback(slammed_lfric_cube)
+    assert (
+        repr(slammed_lfric_cube.coord("forecast_period"))
+        == "<AuxCoord: forecast_period / (seconds)  [3600., ...]  shape(6,)>"
+    )
+
+
+def test_lfric_timecoord_fix_forecastreftime(slammed_lfric_cube):
+    """Check that read callback creates an appropriate forecast_reference_time coord."""
+    read._lfric_time_callback(slammed_lfric_cube)
+    assert (
+        repr(slammed_lfric_cube.coord("forecast_reference_time"))
+        == "<DimCoord: forecast_reference_time / (seconds since 2022-01-01 00:00:00)  [...]>"
     )
