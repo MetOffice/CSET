@@ -206,7 +206,10 @@ def test_difference_incorrect_data_shape_regrid(cube):
     other_cube = cube.copy()
     del other_cube.attributes["cset_comparison_base"]
     cubes = iris.cube.CubeList([rearranged_cube, other_cube])
-    assert type(misc.difference(cubes)) is iris.cube.Cube
+    difference = misc.difference(cubes)
+    assert isinstance(difference, iris.cube.Cube)
+    assert difference.shape == cube.shape
+    assert difference.shape != rearrange_cube.shape
 
 
 def test_difference_different_model_types(cube):
