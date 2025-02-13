@@ -283,12 +283,11 @@ def test_spatial_coord_not_exist_callback():
     )
 
 
-def test_lfric_timecoord_fix_forecastperiod(slammed_lfric_cube_readonly):
+def test_lfric_timecoord_fix_forecastperiod(slammed_lfric_cube):
     """Check that read callback creates an appropriate forecast_period dimension."""
-    cube = slammed_lfric_cube_readonly.copy()
-    cube = read._lfric_time_callback(cube)
+    read._lfric_time_callback(slammed_lfric_cube)
     assert (
-        repr(cube.coord("forecast_period"))
+        repr(slammed_lfric_cube.coord("forecast_period"))
         == "<AuxCoord: forecast_period / (seconds)  [3600., ...]  shape(6,)>"
     )
 
