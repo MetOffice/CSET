@@ -181,7 +181,7 @@ def test_difference_incorrect_data_latitude_shape(cube):
     rearranged_cube = rearranged_cube[:, 1:, :]
     del rearranged_cube.attributes["cset_comparison_base"]
     cubes = iris.cube.CubeList([cube, rearranged_cube])
-    with pytest.raises(ValueError, match="Cubes should have the same latitude shape"):
+    with pytest.raises(ValueError, match="Cubes should have the same shape"):
         misc.difference(cubes)
 
 
@@ -191,8 +191,24 @@ def test_difference_incorrect_data_longitude_shape(cube):
     rearranged_cube = rearranged_cube[:, :, 1:]
     del rearranged_cube.attributes["cset_comparison_base"]
     cubes = iris.cube.CubeList([cube, rearranged_cube])
-    with pytest.raises(ValueError, match="Cubes should have the same longitude shape"):
+    with pytest.raises(ValueError, match="Cubes should have the same shape"):
         misc.difference(cubes)
+
+
+def test_difference_incorrect_data_shape_regrid(cube):
+    """Test when data shape differs, but gets regridded.
+
+    For a cube if it meets the requirements of the variable exceptions.
+    """
+    rearranged_cube = cube.copy()
+    rearranged_cube = rearranged_cube[:, :, 1:]
+    rearranged_cube.attributes["STASH"] = "m01s03i225"
+    del cube.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([rearranged_cube, cube])
+    difference = misc.difference(cubes)
+    assert isinstance(difference, iris.cube.Cube)
+    assert difference.shape == cube.shape
+    assert difference.shape != rearranged_cube.shape
 
 
 def test_difference_different_model_types(cube):

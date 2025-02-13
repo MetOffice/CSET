@@ -456,3 +456,28 @@ STASH_TO_LFRIC = {
     "m01s35i024": ("potential_temperature_increment_from_spt", "face"),
     "m01s35i025": ("vapour_increment_from_spt", "face"),
 }
+
+# Local additions to make CSET work with RNS for RAL3-LFRic.
+# TODO: Port to Paul's FCM branch.
+RAL3_LFRic_mods = {
+    "m01s03i281": ("visibility_in_air", "face"),  # inc precipitation.
+    "m01s01i235": ("surface_downward_shortwave_flux", "face"),
+    "m01s02i207": ("surface_downward_longwave_flux", "face"),
+    "m01s03i250": ("dew_point_temperature_at_screen_level", "face"),
+    "m01s03i025": ("atmosphere_boundary_layer_thickness", "face"),
+    "m01s09i203": ("low_type_cloud_area_fraction", "face"),
+    "m01s09i204": ("medium_type_cloud_area_fraction", "face"),
+    "m01s09i205": ("high_type_cloud_area_fraction", "face"),
+    "m01s09i210": ("cloud_base_altitude", "face"),
+    "m01s04i112": ("radar_reflectivity_at_1km_above_the_surface", "face"),
+    "m01s00i391": ("humidity_mixing_ratio", "face"),
+    "m01s00i255": ("exner_pressure_at_cell_interfaces", "face"),
+    "m01s09i231": ("combined_cloud_amount", "face"),
+    "m01s21i104": ("number_of_lightning_flashes_in_column", "face"),
+    "m01s15i229": ("potential_vorticity_at_pressure_levels", "face"),
+    "m01s16i205": ("wet_bulb_potential_temperature_at_pressure_levels", "face"),
+}
+
+
+# Combine into single STASH dict
+STASH_TO_LFRIC.update(RAL3_LFRic_mods)

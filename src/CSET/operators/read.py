@@ -231,6 +231,10 @@ def _create_callback(is_ensemble: bool, is_base: bool) -> callable:
         _fix_spatial_coord_name_callback(cube)
         _lfric_time_callback(cube)
         _fix_pressure_coord_callback(cube)
+        _fix_um_radtime_prehour(cube)
+        _fix_um_radtime_posthour(cube)
+        _fix_lfric_longnames(cube)
+        _fix_um_lightning(cube)
 
     return callback
 
@@ -427,6 +431,103 @@ def _fix_pressure_coord_callback(cube: iris.cube.Cube):
         if coord.name() == "pressure":
             if str(cube.coord("pressure").units) != "hPa":
                 cube.coord("pressure").convert_units("hPa")
+
+
+def _fix_um_radtime_posthour(cube: iris.cube.Cube):
+    """Fix radiation which is output 1 minute past every hour."""
+    try:
+        if cube.attributes["STASH"] in [
+            "m01s01i208",
+            "m01s02i205",
+            "m01s02i201",
+            "m01s01i207",
+            "m01s02i207",
+            "m01s01i235",
+        ]:
+            time_coord = cube.coord("time")
+
+            # Convert time points to datetime objects
+            time_unit = time_coord.units
+            time_points = time_unit.num2date(time_coord.points)
+
+            # Subtract 1 minute from each time point
+            new_time_points = np.array(
+                [t - datetime.timedelta(minutes=1) for t in time_points]
+            )
+
+            # Convert back to numeric values using the original time unit
+            new_time_values = time_unit.date2num(new_time_points)
+
+            # Replace the time coordinate with corrected values
+            time_coord.points = new_time_values
+    except KeyError:
+        pass
+
+
+def _fix_um_radtime_prehour(cube: iris.cube.Cube):
+    """Fix radiation which is output 1 minute before every hour."""
+    try:
+        if cube.attributes["STASH"] == "m01s01i207":
+            time_coord = cube.coord("time")
+
+            # Convert time points to datetime objects
+            time_unit = time_coord.units
+            time_points = time_unit.num2date(time_coord.points)
+
+            # Add 1 minute from each time point
+            new_time_points = np.array(
+                [t + datetime.timedelta(minutes=1) for t in time_points]
+            )
+
+            # Convert back to numeric values using the original time unit
+            new_time_values = time_unit.date2num(new_time_points)
+
+            # Replace the time coordinate with corrected values
+            time_coord.points = new_time_values
+    except KeyError:
+        pass
+
+
+def _fix_lfric_longnames(cube: iris.cube.Cube):
+    """To fix names where the long name is appropriate."""
+    try:
+        if str(cube.long_name) == "combined_cloud_amount_maximum_random_overlap":
+            cube.rename("combined_cloud_amount_maximum_random_overlap")
+    except KeyError:
+        pass
+
+
+def _fix_um_lightning(cube: iris.cube.Cube):
+    """To fix the date points in lightning accumulation STASH.
+
+    Lightning (m01s21i104) is being output as a time accumulation in UM,
+    over each hour (TAcc1hr), not from the start of the forecast, to be compatible
+    with LFRic. So this is a short term solution to remove cell methods (
+    as variables are ignored with cell methods for surface plots currently),
+    and also adjust the time so that the value is at the end of each hour.
+    """
+    try:
+        if cube.attributes["STASH"] == "m01s21i104":
+            cube.cell_methods = []
+
+            time_coord = cube.coord("time")
+
+            # Convert time points to datetime objects
+            time_unit = time_coord.units
+            time_points = time_unit.num2date(time_coord.points)
+
+            # Subtract 1 minute from each time point
+            new_time_points = np.array(
+                [t + datetime.timedelta(minutes=30) for t in time_points]
+            )
+
+            # Convert back to numeric values using the original time unit
+            new_time_values = time_unit.date2num(new_time_points)
+
+            # Replace the time coordinate with corrected values
+            time_coord.points = new_time_values
+    except KeyError:
+        pass
 
 
 def _lfric_time_callback(cube: iris.cube.Cube):
