@@ -539,7 +539,7 @@ def _plot_and_save_vertical_line_series(
     )
     ax.ticklabel_format(axis="x")
     ax.tick_params(axis="y")
-    ax.autoscale()
+    # ax.autoscale()
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
