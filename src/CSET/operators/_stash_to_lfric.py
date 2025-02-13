@@ -458,7 +458,7 @@ STASH_TO_LFRIC = {
 }
 
 # Local additions to make CSET work with RNS for RAL3-LFRic.
-# TODO port to Pauls FCM branch
+# TODO: Port to Paul's FCM branch.
 RAL3_LFRic_mods = {
     "m01s03i281": ("visibility_in_air", "face"),  # inc precipitation.
     "m01s01i235": ("surface_downward_shortwave_flux", "face"),
