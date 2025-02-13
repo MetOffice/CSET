@@ -33,7 +33,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 from markdown_it import MarkdownIt
 
-from CSET._common import get_recipe_metadata, iter_maybe, render_file, slugify
+from CSET._common import (
+    combine_dicts,
+    get_recipe_metadata,
+    iter_maybe,
+    render_file,
+    slugify,
+)
 from CSET.operators._utils import get_cube_yxcoordname, is_transect
 
 # Use a non-interactive plotting backend.
@@ -135,29 +141,28 @@ def _make_plot_html_page(plots: list):
 
 
 @functools.cache
-def _load_colorbar_map() -> dict:
+def _load_colorbar_map(user_colorbar_file: str = None) -> dict:
     """Load the colorbar definitions from a file.
 
     This is a separate function to make it cacheable.
     """
-    operator_files = _py312_importlib_resources_files_shim()
-    colorbar_def_file = operator_files.joinpath("_colorbar_definition.json")
-    with open(colorbar_def_file, "rt", encoding="UTF-8") as fp:
+    colorbar_file = _py312_importlib_resources_files_shim().joinpath(
+        "_colorbar_definition.json"
+    )
+    with open(colorbar_file, "rt", encoding="UTF-8") as fp:
         colorbar = json.load(fp)
 
-    # Grab the colorbar file from the recipe global metadata.
-    colorbar_file = get_recipe_metadata().get("style_file_path", None)
-    logging.debug("Colour bar file: %s", colorbar_file)
+    logging.debug("User colour bar file: %s", user_colorbar_file)
     override_colorbar = {}
-    if colorbar_file:
+    if user_colorbar_file:
         try:
-            with open(colorbar_file, "rt", encoding="UTF-8") as fp:
+            with open(user_colorbar_file, "rt", encoding="UTF-8") as fp:
                 override_colorbar = json.load(fp)
         except FileNotFoundError:
-            logging.info("Colorbar file does not exist. Using default values.")
+            logging.warning("Colorbar file does not exist. Using default values.")
 
     # Overwrite values with the user supplied colourbar definition.
-    colorbar.update(override_colorbar)
+    colorbar = combine_dicts(colorbar, override_colorbar)
     return colorbar
 
 
@@ -181,7 +186,9 @@ def _colorbar_map_levels(cube: iris.cube.Cube):
     norm:
         BoundryNorm information.
     """
-    colorbar = _load_colorbar_map()
+    # Grab the colorbar file from the recipe global metadata.
+    user_colorbar_file = get_recipe_metadata().get("style_file_path", None)
+    colorbar = _load_colorbar_map(user_colorbar_file)
 
     # First try standard name, then long name, then varname.
     varnames = list(filter(None, [cube.standard_name, cube.long_name, cube.var_name]))
