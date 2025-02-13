@@ -352,6 +352,11 @@
     "max": 70.0,
     "min": -35.0
   },
+  "radar_reflectivity_at_1km_above_the_surface_difference": {
+    "cmap": "cubehelix_r",
+    "max": 100.0,
+    "min": -100.0
+  },
   "rain_mixing_ratio": {
     "cmap": "cividis",
     "max": 0.002,
