@@ -45,7 +45,6 @@ nav {
 }
 
 nav summary {
-  font-size: large;
   font-weight: bold;
 }
 
@@ -64,11 +63,13 @@ nav menu > li {
   margin: 8px 0;
   padding: 0 4px;
   border: 1px solid black;
+  font-size: small;
 }
 
 .plot-position-chooser {
   display: flex;
   margin-bottom: 0.25em;
+  font-size: medium;
 }
 
 .plot-position-chooser button {
