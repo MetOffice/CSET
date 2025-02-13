@@ -195,12 +195,11 @@ def _colorbar_map_levels(cube: iris.cube.Cube):
     for varname in varnames:
         # Get the colormap for this variable.
         try:
-            cmap = colorbar[varname]["cmap"]
+            cmap = mpl.colormaps[colorbar[varname]["cmap"]]
             # Get the colorbar levels for this variable.
             try:
                 levels = colorbar[varname]["levels"]
-                actual_cmap = mpl.cm.get_cmap(cmap)
-                norm = mpl.colors.BoundaryNorm(levels, ncolors=actual_cmap.N)
+                norm = mpl.colors.BoundaryNorm(levels, ncolors=cmap.N)
             except KeyError:
                 # Get the range for this variable.
                 vmin, vmax = colorbar[varname]["min"], colorbar[varname]["max"]
@@ -208,7 +207,6 @@ def _colorbar_map_levels(cube: iris.cube.Cube):
                 # Calculate levels from range.
                 levels = np.linspace(vmin, vmax, 20)
                 norm = None
-
                 return cmap, levels, norm
         except KeyError:
             continue

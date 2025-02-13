@@ -18,6 +18,8 @@ import json
 from pathlib import Path
 
 import iris.cube
+import matplotlib as mpl
+import numpy as np
 import pytest
 
 from CSET.operators import collapse, plot, read
@@ -80,6 +82,34 @@ def test_load_colorbar_map_override_file_not_found(tmp_path):
     colorbar = plot._load_colorbar_map(user_colourbar_file)
     # Check it still returns the built-in one.
     assert isinstance(colorbar, dict)
+
+
+def test_colorbar_map_levels(cube, tmp_working_dir):
+    """Colorbar definition is found for cube."""
+    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    assert cmap == mpl.colormaps["RdYlBu_r"]
+    assert (levels == np.linspace(223, 323, 20)).all()
+    assert norm is None
+
+
+def test_colorbar_map_levels_name_fallback(cube, tmp_working_dir):
+    """Colorbar definition is found for cube after checking its other names."""
+    cube.standard_name = None
+    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    assert cmap == mpl.colormaps["RdYlBu_r"]
+    assert (levels == np.linspace(223, 323, 20)).all()
+    assert norm is None
+
+
+def test_colorbar_map_levels_unknown_variable_fallback(cube, tmp_working_dir):
+    """Colorbar definition doesn't exist for cube."""
+    cube.standard_name = None
+    cube.long_name = None
+    cube.var_name = "unknown"
+    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    assert cmap == mpl.colormaps["viridis"]
+    assert levels is None
+    assert norm is None
 
 
 def test_spatial_contour_plot(cube, tmp_working_dir):
