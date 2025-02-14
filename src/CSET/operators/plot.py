@@ -175,7 +175,7 @@ def _colorbar_map_levels(varname: str, **kwargs):
         List of levels to use for plotting. For continuous plots the min and max
         should be taken as the range.
     norm:
-        BoundryNorm information.
+        BoundaryNorm information.
     """
     colorbar = _load_colorbar_map()
 
@@ -258,14 +258,14 @@ def _plot_and_save_spatial_plot(
     # Add coastlines if cube contains x and y map coordinates.
     # If is spatial map, fix extent to keep plot tight.
     try:
-        lataxis, lonaxis = get_cube_yxcoordname(cube)
+        lat_axis, lon_axis = get_cube_yxcoordname(cube)
         axes.coastlines(resolution="10m")
         axes.set_extent(
             [
-                np.min(cube.coord(lonaxis).points),
-                np.max(cube.coord(lonaxis).points),
-                np.min(cube.coord(lataxis).points),
-                np.max(cube.coord(lataxis).points),
+                np.min(cube.coord(lon_axis).points),
+                np.max(cube.coord(lon_axis).points),
+                np.min(cube.coord(lat_axis).points),
+                np.max(cube.coord(lat_axis).points),
             ]
         )
     except ValueError:
@@ -298,7 +298,7 @@ def _plot_and_save_spatial_plot(
         # Add title.
         axes.set_title(title, fontsize=16)
 
-    # Add watermark with min/max/mean. Currently not user toggable.
+    # Add watermark with min/max/mean. Currently not user togglable.
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
     axes.annotate(
         f"Min: {np.min(cube.data):.3g} Max: {np.max(cube.data):.3g} Mean: {np.mean(cube.data):.3g}",
@@ -383,14 +383,14 @@ def _plot_and_save_postage_stamp_spatial_plot(
         # Add coastlines if cube contains x and y map coordinates.
         # If is spatial map, fix extent to keep plot tight.
         try:
-            lataxis, lonaxis = get_cube_yxcoordname(cube)
+            lat_axis, lon_axis = get_cube_yxcoordname(cube)
             ax.coastlines(resolution="10m")
             ax.set_extent(
                 [
-                    np.min(cube.coord(lonaxis).points),
-                    np.max(cube.coord(lonaxis).points),
-                    np.min(cube.coord(lataxis).points),
-                    np.max(cube.coord(lataxis).points),
+                    np.min(cube.coord(lon_axis).points),
+                    np.max(cube.coord(lon_axis).points),
+                    np.min(cube.coord(lat_axis).points),
+                    np.max(cube.coord(lat_axis).points),
                 ]
             )
         except ValueError:
@@ -539,7 +539,6 @@ def _plot_and_save_vertical_line_series(
     )
     ax.ticklabel_format(axis="x")
     ax.tick_params(axis="y")
-    # ax.autoscale()
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -654,7 +653,7 @@ def _plot_and_save_histogram_series(
 
     for cube in iter_maybe(cubes):
         # Easier to check title (where var name originates)
-        # than seeing if longnames exist etc.
+        # than seeing if long names exist etc.
         # Exception case, where distribution better fits log scales/bins.
         if "surface_microphysical_rainfall_rate" in title:
             # Usually in seconds but mm/hr more intuitive.
@@ -1136,7 +1135,8 @@ def plot_vertical_line_series(
                 f"Cube must have a {sequence_coordinate} coordinate or be 1D."
             ) from err
 
-        # Append cube data to the list to alculate vmin and vmax across entire cubelist
+        # Append cube data to the list to calculate vmin and vmax across entire
+        # cubelist.
         all_data.append(cube_iter.data)
 
     # Combine all data into a single NumPy array
