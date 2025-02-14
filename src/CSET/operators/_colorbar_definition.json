@@ -709,6 +709,26 @@
     "max": 2,
     "min": -2
   },
+  "toa_direct_shortwave_flux": {
+    "cmap": "viridis",
+    "max": 1400.0,
+    "min": 0.0
+  },
+  "toa_direct_shortwave_flux_difference": {
+    "cmap": "viridis",
+    "max": 1400.0,
+    "min": -1400.0
+  },
+  "toa_incoming_shortwave_flux": {
+    "cmap": "viridis",
+    "max": 1400.0,
+    "min": 0.0
+  },
+  "toa_incoming_shortwave_flux_difference": {
+    "cmap": "viridis",
+    "max": 1400.0,
+    "min": -1400.0
+  },
   "toa_outgoing_longwave_flux": {
     "max": 350.0,
     "min": 0.0
