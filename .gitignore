@@ -1,3 +1,7 @@
+################################
+# General python project stuff #
+################################
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -133,7 +137,11 @@ dmypy.json
 .ruff_cache/
 
 
-# Exclude site-specific files that are held in a seperate private repo.
+#######################
+# CSET specific stuff #
+#######################
+
+# Exclude site-specific files that are held in a separate private repo.
 /site/
 /opt/
 restricted*

@@ -1,46 +1,35 @@
 #! /bin/bash
 # This script builds the conda environment used by most subsequent tasks.
-set -euo pipefail
+set -euxo pipefail
 
-# Use default location if CONDA_VENV_LOCATION is not specified.
-if [[ -z "$CONDA_VENV_LOCATION" ]]; then
-  CONDA_VENV_LOCATION="${CYLC_WORKFLOW_SHARE_DIR}/cset_conda_env"
+# Find environment definition file, abort if not found.
+env_lock_file="${CYLC_WORKFLOW_RUN_DIR}/requirements/development-locks/py313-lock-linux-64.txt"
+if [[ -f "$env_lock_file" ]]
+then
+  echo "Using environment file $env_lock_file"
+else
+  >&2 echo "Environment file $env_lock_file not found"
+  exit 1
 fi
+
+# Conda environment name is based on hash of lock file.
+conda_env_name="cset-workflow-$(sha256sum "$env_lock_file" | head -c 12)"
 
 
 should_build_conda_env() {
   # Decide if the environment needs building.
-  if [[ "$CONDA_VENV_CREATE" == True ]]
-  then
-    true
-  elif [[ "$CONDA_VENV_CREATE" == False ]]
+  if [[ "$CONDA_VENV_CREATE" == False ]]
   then
     echo "Conda environment building disabled"
     return 1
-  else
-    >&2 echo "Invalid value for CONDA_VENV_CREATE: $CONDA_VENV_CREATE"
-    exit 1
   fi
 
-  # Find environment definition file, abort if not found.
-  env_lock_file="${CYLC_WORKFLOW_RUN_DIR}/requirements/locks/py312-lock-linux-64.txt"
-  if [[ -f "$env_lock_file" ]]
+  # Skip building if environment already exists. As we use a hash of the lock
+  # files we can just check for the name.
+  if conda info --envs | grep "$conda_env_name"
   then
-    echo "Using environment file $env_lock_file"
-  else
-    >&2 echo "Environment file $env_lock_file not found"
-    exit 1
-  fi
-
-  if [[ -f "${CONDA_VENV_LOCATION}/cset_env_hash" ]]
-  then
-    if [[ "$(cat "${CONDA_VENV_LOCATION}/cset_env_hash")" == "$(sha256sum "$env_lock_file" | head -c 64)" ]]
-    then
-      echo "Conda environment already exist, no build required"
-      return 1
-    else
-      echo "Conda environment is out of date, building afresh"
-    fi
+    echo "Conda environment already exist, no build required"
+    return 1
   else
     echo "Conda environment does not exist, building afresh"
   fi
@@ -77,22 +66,13 @@ build_conda_env() {
     CONDA_PATH=""
   fi
 
-  # Remove old conda environment.
-  echo "Removing conda environment with:"
-  echo "${CONDA_PATH}conda remove -p $CONDA_VENV_LOCATION --all --yes --quiet"
-  if ! "${CONDA_PATH}conda" remove -p "$CONDA_VENV_LOCATION" --all --yes --quiet
-  then
-    >&2 echo "Failed to conda remove old environment, trying to remove manually."
-    rm -rf -- "$CONDA_VENV_LOCATION"
-  fi
-
   # Build conda environment.
   echo "Building conda with:"
-  echo "${CONDA_PATH}conda create -p $CONDA_VENV_LOCATION --file $env_lock_file --yes --force --quiet"
-  "${CONDA_PATH}conda" create -p "$CONDA_VENV_LOCATION" --file "$env_lock_file" --yes --force --quiet
-
-  # Create hash file for next run.
-  sha256sum "$env_lock_file"  | head -c 64 > "${CONDA_VENV_LOCATION}/cset_env_hash"
+  echo "${CONDA_PATH}conda create -n $conda_env_name --file $env_lock_file --yes --force --quiet"
+  conda_create_start=$(date +%s)
+  "${CONDA_PATH}conda" create -n "$conda_env_name" --file "$env_lock_file" --yes --force --quiet
+  conda_create_duration=$(($(date +%s) - conda_create_start))
+  echo "Creating conda environment took ${conda_create_duration} seconds"
 }
 
 
@@ -101,6 +81,11 @@ then
   build_conda_env
 fi
 
-# Install development version of CSET into the conda environment if needed, and
-# validate CSET is installed. This needs to run inside the conda environment.
+# Provide a known path to activate the conda environment.
+# BUG: Won't handle conda prefixes containing spaces.
+env_prefix="$(conda info --envs | grep -Eo '/[^ ]+'"${conda_env_name}"'$')"
+ln -vfs "${env_prefix}" "${CYLC_WORKFLOW_SHARE_DIR}/cset-conda-environment"
+
+# Install CSET into the conda environment and validate CSET is installed.
+# This needs to run inside the conda environment.
 app_env_wrapper install-local-cset.sh

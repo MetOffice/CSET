@@ -26,7 +26,7 @@ jobs:
         id: conda-env-cache
         uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57
         with:
-          key: conda|${{runner.os}}-${{runner.arch}}|${{ hashFiles(format('requirements/locks/{0}-lock-linux-64.txt', matrix.py-ver)) }}
+          key: conda|${{runner.os}}-${{runner.arch}}|${{ hashFiles(format('requirements/development-locks/{0}-lock-linux-64.txt', matrix.py-ver)) }}
           path: |
             ~/conda-env
             ~/.local/share/cartopy
@@ -35,7 +35,7 @@ jobs:
         run: |
           # Check cache hasn't pulled a partial key match.
           test ! -e "${HOME}/conda-env"
-          conda create --prefix="${HOME}/conda-env" --file=requirements/locks/${{ matrix.py-ver }}-lock-linux-64.txt
+          conda create --prefix="${HOME}/conda-env" --file=requirements/development-locks/${{ matrix.py-ver }}-lock-linux-64.txt
       - name: Add conda environment to PATH
         run: echo "${HOME}/conda-env/bin" >> $GITHUB_PATH
       - name: Run tests
@@ -125,7 +125,7 @@ jobs:
         id: conda-env-cache
         uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57
         with:
-          key: conda|${{runner.os}}-${{runner.arch}}|${{hashFiles('requirements/locks/py312-lock-linux-64.txt')}}
+          key: conda|${{runner.os}}-${{runner.arch}}|${{hashFiles('requirements/development-locks/py313-lock-linux-64.txt')}}
           path: |
             ~/conda-env
             ~/.local/share/cartopy
@@ -134,7 +134,7 @@ jobs:
         run: |
           # Check cache hasn't pulled a partial key match.
           test ! -e "${HOME}/conda-env"
-          conda create --prefix="${HOME}/conda-env" --file=requirements/locks/py312-lock-linux-64.txt
+          conda create --prefix="${HOME}/conda-env" --file=requirements/development-locks/py313-lock-linux-64.txt
       - name: Add conda environment to PATH
         run: echo "${HOME}/conda-env/bin" >> $GITHUB_PATH
       - name: Build documentation with Sphinx

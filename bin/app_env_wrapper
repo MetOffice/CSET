@@ -5,16 +5,9 @@
 #
 # Usage: app_env_wrapper CMD [cmd_opts]
 
-set -euo pipefail
+set -euxo pipefail
 
-# Check that environment is sourced in at least one way
-if [[ "$CSET_ENV_USE_MODULES" == False ]] && [[ "$CSET_ENV_USE_CONDA" == False ]]
-then
-  echo '[ERROR] At least one way of specifying environment needed'
-  exit 1
-fi
-
-# Load modules
+# Load modules.
 if [[ $CSET_ENV_USE_MODULES == True ]]
 then
   IFS_SAVE=$IFS
@@ -29,28 +22,21 @@ then
   module list
 fi
 
-# Activate conda environment
-if [[ "$CSET_ENV_USE_CONDA" == True ]]
-then
-  # Ensure CONDA_PATH is defined.
-  if [[ -d "$CONDA_PATH" ]]; then
-    echo "Sourcing conda on path: ${CONDA_PATH}"
-  else
-    CONDA_PATH=""
-  fi
-  # Use default location if CONDA_VENV_LOCATION is not specified.
-  if [[ -z "$CONDA_VENV_LOCATION" ]]; then
-    CONDA_VENV_LOCATION="${CYLC_WORKFLOW_SHARE_DIR}/cset_conda_env"
-  fi
-  echo "Using conda environment $CONDA_VENV_LOCATION"
-  source "$("${CONDA_PATH}conda" info --base)/etc/profile.d/conda.sh"
-  set +u
-  "${CONDA_PATH}conda" activate "$CONDA_VENV_LOCATION"
-  set -u
-  export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+# Ensure CONDA_PATH is defined.
+if [[ -d "$CONDA_PATH" ]]; then
+  echo "Sourcing conda from ${CONDA_PATH}"
+else
+  CONDA_PATH=""
 fi
 
-# Add separately maintained METplus to PATH.
+# Activate conda environment.
+source "$("${CONDA_PATH}conda" info --base)/etc/profile.d/conda.sh"
+set +u
+"${CONDA_PATH}conda" activate "${CYLC_WORKFLOW_SHARE_DIR}/cset-conda-environment"
+set -u
+export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+
+# Add separately maintained METplus environment to PATH.
 if [[ "$CSET_ENV_SEPARATE_MET" == True ]]
 then
   echo "Using separate installation of METplus."
