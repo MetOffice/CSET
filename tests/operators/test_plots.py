@@ -55,11 +55,11 @@ def test_load_colorbar_map_override(tmp_path):
     """Colorbar is loaded correctly and overridden by the user definition."""
     # Setup a user provided colorbar override.
     user_definition = {"temperature_at_screen_level": {"max": 1000, "min": 0}}
-    user_colourbar_file = tmp_path / "colorbar.json"
-    with open(user_colourbar_file, "wt") as fp:
+    user_colorbar_file = tmp_path / "colorbar.json"
+    with open(user_colorbar_file, "wt") as fp:
         json.dump(user_definition, fp)
 
-    colorbar = plot._load_colorbar_map(user_colourbar_file)
+    colorbar = plot._load_colorbar_map(user_colorbar_file)
 
     assert isinstance(colorbar, dict)
     # Check definition is updated.
@@ -78,8 +78,8 @@ def test_load_colorbar_map_override(tmp_path):
 
 def test_load_colorbar_map_override_file_not_found(tmp_path):
     """Colorbar overridden by the user definition in non-existent file."""
-    user_colourbar_file = tmp_path / "colorbar.json"
-    colorbar = plot._load_colorbar_map(user_colourbar_file)
+    user_colorbar_file = tmp_path / "colorbar.json"
+    colorbar = plot._load_colorbar_map(user_colorbar_file)
     # Check it still returns the built-in one.
     assert isinstance(colorbar, dict)
 

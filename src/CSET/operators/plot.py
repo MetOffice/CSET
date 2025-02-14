@@ -161,7 +161,7 @@ def _load_colorbar_map(user_colorbar_file: str = None) -> dict:
         except FileNotFoundError:
             logging.warning("Colorbar file does not exist. Using default values.")
 
-    # Overwrite values with the user supplied colourbar definition.
+    # Overwrite values with the user supplied colorbar definition.
     colorbar = combine_dicts(colorbar, override_colorbar)
     return colorbar
 
@@ -174,7 +174,7 @@ def _colorbar_map_levels(cube: iris.cube.Cube):
     Parameters
     ----------
     cube: Cube
-        Cube of variable for which the colourbar information is desired.
+        Cube of variable for which the colorbar information is desired.
 
     Returns
     -------
@@ -650,9 +650,9 @@ def _plot_and_save_histogram_series(
     title: str
         Plot title.
     vmin: float
-        minimum for colourbar
+        minimum for colorbar
     vmax: float
-        maximum for colourbar
+        maximum for colorbar
     histtype: str
         The type of histogram to plot. Options are "step" for a line
         histogram or "barstacked", "stepfilled". "Step" is the default option,
