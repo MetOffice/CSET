@@ -613,6 +613,7 @@
     "min": -0.01
   },
   "surface_net_downward_longwave_flux": {
+   "cmap": "bwr",
     "max": 250.0,
     "min": -250.0
   },
@@ -634,6 +635,16 @@
     "cmap": "bwr",
     "max": 100,
     "min": -100
+  },
+  "surface_net_longwave_flux_radiative_timestep": {
+    "cmap": "bwr",
+    "max": 250,
+    "min": -250
+  },
+  "surface_net_longwave_flux_radiative_timestep_difference": {
+    "cmap": "bwr",
+    "max": 80,
+    "min": -80
   },
   "surface_net_shortwave_flux": {
     "cmap": "bwr",
