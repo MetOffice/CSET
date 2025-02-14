@@ -33,7 +33,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 from markdown_it import MarkdownIt
 
-from CSET._common import get_recipe_metadata, iter_maybe, render_file, slugify
+from CSET._common import (
+    combine_dicts,
+    get_recipe_metadata,
+    iter_maybe,
+    render_file,
+    slugify,
+)
 from CSET.operators._utils import get_cube_yxcoordname, is_transect
 
 # Use a non-interactive plotting backend.
@@ -135,37 +141,40 @@ def _make_plot_html_page(plots: list):
 
 
 @functools.cache
-def _load_colorbar_map() -> dict:
+def _load_colorbar_map(user_colorbar_file: str = None) -> dict:
     """Load the colorbar definitions from a file.
 
     This is a separate function to make it cacheable.
     """
-    # Grab the colorbar file from the recipe global metadata.
-    try:
-        colorbar_file = get_recipe_metadata()["style_file_path"]
-        logging.debug("Colour bar file: %s", colorbar_file)
-        with open(colorbar_file, "rt", encoding="UTF-8") as fp:
-            colorbar = json.load(fp)
-    except (FileNotFoundError, KeyError):
-        logging.info("Colorbar file does not exist. Using default values.")
-        operator_files = _py312_importlib_resources_files_shim()
-        colorbar_def_file = operator_files.joinpath("_colorbar_definition.json")
-        with open(colorbar_def_file, "rt", encoding="UTF-8") as fp:
-            colorbar = json.load(fp)
+    colorbar_file = _py312_importlib_resources_files_shim().joinpath(
+        "_colorbar_definition.json"
+    )
+    with open(colorbar_file, "rt", encoding="UTF-8") as fp:
+        colorbar = json.load(fp)
+
+    logging.debug("User colour bar file: %s", user_colorbar_file)
+    override_colorbar = {}
+    if user_colorbar_file:
+        try:
+            with open(user_colorbar_file, "rt", encoding="UTF-8") as fp:
+                override_colorbar = json.load(fp)
+        except FileNotFoundError:
+            logging.warning("Colorbar file does not exist. Using default values.")
+
+    # Overwrite values with the user supplied colorbar definition.
+    colorbar = combine_dicts(colorbar, override_colorbar)
     return colorbar
 
 
-def _colorbar_map_levels(varname: str, **kwargs):
+def _colorbar_map_levels(cube: iris.cube.Cube):
     """Specify the color map and levels.
 
     For the given variable name, from a colorbar dictionary file.
 
     Parameters
     ----------
-    colorbar_file: str
-        Filename of the colorbar dictionary to read.
-    varname: str
-        Variable name to extract from the dictionary
+    cube: Cube
+        Cube of variable for which the colorbar information is desired.
 
     Returns
     -------
@@ -177,33 +186,33 @@ def _colorbar_map_levels(varname: str, **kwargs):
     norm:
         BoundaryNorm information.
     """
-    colorbar = _load_colorbar_map()
+    # Grab the colorbar file from the recipe global metadata.
+    user_colorbar_file = get_recipe_metadata().get("style_file_path", None)
+    colorbar = _load_colorbar_map(user_colorbar_file)
 
-    # Get the colormap for this variable.
-    try:
-        cmap = colorbar[varname]["cmap"]
-        logging.debug("From colorbar dictionary: Using cmap")
-    except KeyError:
-        cmap = mpl.colormaps["viridis"]
-
-    # Get the colorbar levels for this variable.
-    try:
-        levels = colorbar[varname]["levels"]
-        actual_cmap = mpl.cm.get_cmap(cmap)
-        norm = mpl.colors.BoundaryNorm(levels, ncolors=actual_cmap.N)
-        logging.debug("From colorbar dictionary: Using levels")
-    except KeyError:
+    # First try standard name, then long name, then varname.
+    varnames = list(filter(None, [cube.standard_name, cube.long_name, cube.var_name]))
+    for varname in varnames:
+        # Get the colormap for this variable.
         try:
-            # Get the range for this variable.
-            vmin, vmax = colorbar[varname]["min"], colorbar[varname]["max"]
-            logging.debug("From colorbar dictionary: Using min and max")
-            # Calculate levels from range.
-            levels = np.linspace(vmin, vmax, 20)
-            norm = None
+            cmap = mpl.colormaps[colorbar[varname]["cmap"]]
+            # Get the colorbar levels for this variable.
+            try:
+                levels = colorbar[varname]["levels"]
+                norm = mpl.colors.BoundaryNorm(levels, ncolors=cmap.N)
+            except KeyError:
+                # Get the range for this variable.
+                vmin, vmax = colorbar[varname]["min"], colorbar[varname]["max"]
+                logging.debug("From colorbar dictionary: Using min and max")
+                # Calculate levels from range.
+                levels = np.linspace(vmin, vmax, 20)
+                norm = None
+                return cmap, levels, norm
         except KeyError:
-            levels = None
-            norm = None
+            continue
 
+    # Default if no varnames match.
+    cmap, levels, norm = mpl.colormaps["viridis"], None, None
     return cmap, levels, norm
 
 
@@ -236,7 +245,7 @@ def _plot_and_save_spatial_plot(
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
     # Specify the color bar
-    cmap, levels, norm = _colorbar_map_levels(cube.name())
+    cmap, levels, norm = _colorbar_map_levels(cube)
 
     if method == "contourf":
         # Filled contour plot of the field.
@@ -354,7 +363,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
     fig = plt.figure(figsize=(10, 10))
 
     # Specify the color bar
-    cmap, levels, norm = _colorbar_map_levels(cube.name())
+    cmap, levels, norm = _colorbar_map_levels(cube)
 
     # Make a subplot for each member.
     for member, subplot in zip(
@@ -640,9 +649,9 @@ def _plot_and_save_histogram_series(
     title: str
         Plot title.
     vmin: float
-        minimum for colourbar
+        minimum for colorbar
     vmax: float
-        maximum for colourbar
+        maximum for colorbar
     histtype: str
         The type of histogram to plot. Options are "step" for a line
         histogram or "barstacked", "stepfilled". "Step" is the default option,
