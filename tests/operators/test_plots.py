@@ -123,6 +123,15 @@ def test_colorbar_map_levels_unknown_variable_fallback(cube, tmp_working_dir):
     assert norm is None
 
 
+def test_colorbar_map_levels_pressure_level(transect_source_cube, tmp_working_dir):
+    """Pressure level specific colorbar definition is picked up."""
+    cube_250hPa = transect_source_cube.extract(iris.Constraint(pressure=250))
+    cmap, levels, norm = plot._colorbar_map_levels(cube_250hPa)
+    assert cmap == mpl.colormaps["RdYlBu_r"]
+    assert (levels == np.linspace(200, 240, 20)).all()
+    assert norm is None
+
+
 def test_spatial_contour_plot(cube, tmp_working_dir):
     """Plot spatial contour plot of instant air temp."""
     # Remove realization coord to increase coverage, and as its not needed.
