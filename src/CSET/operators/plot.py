@@ -214,7 +214,7 @@ def _colorbar_map_levels(cube: iris.cube.Cube):
                 var_colorbar = colorbar[varname]
             else:
                 # If pressure level is specified for cube use a pressure-level
-                # specific colourbar, if one exists.
+                # specific colorbar, if one exists.
                 try:
                     var_colorbar = colorbar[varname]["pressure_levels"][pressure_level]
                 except KeyError:
