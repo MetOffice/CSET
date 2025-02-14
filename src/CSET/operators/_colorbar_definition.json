@@ -48,12 +48,32 @@
     "max": 5,
     "min": -5
   },
+  "atmosphere_cloud_liquid_water_content": {
+    "cmap": "Blues",
+    "max": 5,
+    "min": 0.0
+  },
+  "atmosphere_cloud_liquid_water_content_difference": {
+    "cmap": "Blues",
+    "max": 5,
+    "min": -5
+  },
   "atmosphere_mass_content_of_cloud_ice": {
     "cmap": "Blues",
     "max": 5,
     "min": 0.0
   },
   "atmosphere_mass_content_of_cloud_ice_difference": {
+    "cmap": "Blues",
+    "max": 5,
+    "min": -5
+  },
+  "atmosphere_mass_content_of_cloud_liquid_water": {
+    "cmap": "Blues",
+    "max": 5,
+    "min": 0.0
+  },
+  "atmosphere_mass_content_of_cloud_liquid_water_difference": {
     "cmap": "Blues",
     "max": 5,
     "min": -5
