@@ -633,6 +633,49 @@
     "max": 1e-06,
     "min": -1e-06
   },
+  "temperature_at_pressure_levels": {
+    "cmap": "RdYlBu_r",
+    "max": 330,
+    "min": 200,
+    "pressure_levels": {
+      "100": {
+        "max": 240,
+        "min": 200
+      },
+      "1000": {
+        "max": 320,
+        "min": 240
+      },
+      "200": {
+        "max": 240,
+        "min": 200
+      },
+      "250": {
+        "max": 240,
+        "min": 200
+      },
+      "300": {
+        "max": 250,
+        "min": 210
+      },
+      "500": {
+        "max": 280,
+        "min": 240
+      },
+      "700": {
+        "max": 300,
+        "min": 240
+      },
+      "850": {
+        "max": 310,
+        "min": 250
+      },
+      "950": {
+        "max": 310,
+        "min": 250
+      }
+    }
+  },
   "temperature_at_screen_level": {
     "cmap": "RdYlBu_r",
     "max": 323,
