@@ -21,7 +21,7 @@ else
 fi
 
 # Build and install into conda environment.
-pip install --verbose --progress-bar off --no-deps -- "${cset_install_path}"
+pip install --progress-bar off --no-deps -- "${cset_install_path}"
 
 # Basic test that it installed successfully.
 echo "Using CSET version: $(cset --version)"
