@@ -482,6 +482,11 @@
     "max": 1400,
     "min": 0
   },
+  "surface_downward_shortwave_flux_difference": {
+    "cmap": "Greys",
+    "max": 1400,
+    "min": -1400
+  },
   "surface_downwelling_longwave_flux_in_air": {
     "cmap": "Greys_r",
     "max": 500,
@@ -491,6 +496,16 @@
     "cmap": "Greys_r",
     "max": 500,
     "min": -500
+  },
+  "surface_downwelling_shortwave_flux_in_air": {
+    "cmap": "Greys",
+    "max": 1400,
+    "min": 0
+  },
+  "surface_downwelling_shortwave_flux_in_air_difference": {
+    "cmap": "Greys",
+    "max": 1400,
+    "min": -1400
   },
   "surface_eastward_sea_water_velocity": {
     "max": 5.0,
