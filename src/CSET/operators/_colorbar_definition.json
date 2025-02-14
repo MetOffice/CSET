@@ -38,10 +38,25 @@
     "max": 200.0,
     "min": -200.0
   },
+  "atmosphere_cloud_ice_content": {
+    "cmap": "Blues",
+    "max": 5,
+    "min": 0.0
+  },
+  "atmosphere_cloud_ice_content_difference": {
+    "cmap": "Blues",
+    "max": 5,
+    "min": -5
+  },
   "atmosphere_mass_content_of_cloud_ice": {
     "cmap": "Blues",
     "max": 5,
     "min": 0.0
+  },
+  "atmosphere_mass_content_of_cloud_ice_difference": {
+    "cmap": "Blues",
+    "max": 5,
+    "min": -5
   },
   "atmosphere_mass_content_of_water_vapor": {
     "cmap": "Blues",
