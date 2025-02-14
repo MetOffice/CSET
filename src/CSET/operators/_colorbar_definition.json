@@ -93,6 +93,11 @@
     "max": 10560,
     "min": 9200
   },
+  "atmosphere_mass_of_air_per_unit_area_difference": {
+    "cmap": "Greys",
+    "max": 500,
+    "min": -500
+  },
   "atmosphere_wetplusdry_mass_per_unit_area": {
     "cmap": "Greys",
     "max": 10560,
@@ -280,7 +285,12 @@
   "grid_surface_snow_amount": {
     "cmap": "cool",
     "max": 0.01,
-    "min": 0
+    "min": 0.0
+  },
+  "grid_surface_snow_amount_difference": {
+    "cmap": "cool",
+    "max": 0.01,
+    "min": -0.01
   },
   "grid_surface_temperature": {
     "cmap": "RdYlBu_r",
@@ -456,6 +466,16 @@
     "cmap": "bwr",
     "max": 0.05,
     "min": -0.05
+  },
+  "stratiform_rainfall_flux": {
+    "cmap": "cividis",
+    "max": 0.01,
+    "min": 0
+  },
+  "stratiform_rainfall_flux_difference": {
+    "cmap": "cividis",
+    "max": 0.01,
+    "min": -0.01
   },
   "stratiform_rainfall_rate": {
     "cmap": "cividis",
@@ -661,6 +681,11 @@
     "max": 1400,
     "min": -1400
   },
+  "surface_net_shortwave_flux_difference": {
+    "cmap": "bwr",
+    "max": 1400,
+    "min": -1400
+  },
   "surface_northward_sea_water_velocity": {
     "max": 5.0,
     "min": 0.0
@@ -678,6 +703,16 @@
     "cmap": "bwr",
     "max": 5e-06,
     "min": -5e-06
+  },
+  "surface_snow_amount": {
+    "cmap": "cool",
+    "max": 0.01,
+    "min": 0.0
+  },
+  "surface_snow_amount_difference": {
+    "cmap": "cool",
+    "max": 0.01,
+    "min": -0.01
   },
   "surface_temperature": {
     "max": 30.0,
@@ -814,6 +849,11 @@
     "cmap": "terrain",
     "max": 5000,
     "min": 0
+  },
+  "turbulent_mixing_height_difference": {
+    "cmap": "terrain",
+    "max": 5000,
+    "min": -5000
   },
   "upward_air_velocity": {
     "cmap": "bwr",
