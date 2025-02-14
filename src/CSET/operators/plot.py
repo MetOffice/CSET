@@ -191,15 +191,17 @@ def _colorbar_map_levels(cube: iris.cube.Cube):
     colorbar = _load_colorbar_map(user_colorbar_file)
 
     try:
-        # Ensure pressure_level is a string of an integer, as used in the
-        # _colorbar_definition.json. We assume that pressure is a scalar
-        # coordinate here.
-        pressure_level = str(int(cube.coord("pressure").points[0]))
+        # We assume that pressure is a scalar coordinate here.
+        pressure_level_raw = cube.coord("pressure").points[0]
+        # Ensure pressure_level is a string, as it is used as a JSON key.
+        pressure_level = str(int(pressure_level_raw))
     except iris.exceptions.CoordinateNotFoundError:
         pressure_level = None
 
-    # First try standard name, then long name, then var name.
-    varnames = filter(None, [cube.standard_name, cube.long_name, cube.var_name])
+    # First try long name, then standard name, then var name. This order is used
+    # as long name is the one we correct between models, so it most likely to be
+    # consistent.
+    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     for varname in varnames:
         # Get the colormap for this variable.
         try:
