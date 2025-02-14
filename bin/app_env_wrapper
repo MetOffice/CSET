@@ -5,7 +5,7 @@
 #
 # Usage: app_env_wrapper CMD [cmd_opts]
 
-set -euxo pipefail
+set -euo pipefail
 
 # Load modules.
 if [[ $CSET_ENV_USE_MODULES == True ]]
