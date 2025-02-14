@@ -167,9 +167,13 @@ def _load_colorbar_map(user_colorbar_file: str = None) -> dict:
 
 
 def _colorbar_map_levels(cube: iris.cube.Cube):
-    """Specify the color map and levels.
+    """Get an appropriate colorbar for the given cube.
 
-    For the given variable name, from a colorbar dictionary file.
+    For the given variable the appropriate colorbar is looked up from a
+    combination of the built-in CSET colorbar definitions, and any user supplied
+    definitions. As well as varying on variables, these definitions may also
+    exist for specific pressure levels to account for variables with
+    significantly different ranges at different heights.
 
     Parameters
     ----------
