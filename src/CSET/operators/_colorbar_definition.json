@@ -457,9 +457,20 @@
     "max": 0.001,
     "min": -0.001
   },
+  "stratiform_snowfall_flux": {
+    "cmap": "cool",
+    "max": 0.01,
+    "min": 0
+  },
+  "stratiform_snowfall_flux_difference": {
+    "cmap": "cool",
+    "max": 0.001,
+    "min": -0.001
+  },
   "stratiform_snowfall_rate": {
-    "max": 0.006,
-    "min": -0.006
+    "cmap": "cool",
+    "max": 0.01,
+    "min": 0
   },
   "stratiform_snowfall_rate_difference": {
     "cmap": "bwr",
@@ -595,6 +606,11 @@
     "cmap": "cool",
     "max": 0.01,
     "min": 0
+  },
+  "surface_microphysical_snowfall_rate_difference": {
+    "cmap": "cool",
+    "max": 0.01,
+    "min": -0.01
   },
   "surface_net_downward_longwave_flux": {
     "max": 250.0,
