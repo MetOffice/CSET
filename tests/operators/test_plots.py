@@ -88,7 +88,7 @@ def test_colorbar_map_levels(cube, tmp_working_dir):
     """Colorbar definition is found for cube."""
     cmap, levels, norm = plot._colorbar_map_levels(cube)
     assert cmap == mpl.colormaps["RdYlBu_r"]
-    assert (levels == np.linspace(223, 323, 21)).all()
+    assert (levels == np.linspace(223, 323, 51)).all()
     assert norm is None
 
 
@@ -108,7 +108,7 @@ def test_colorbar_map_levels_name_fallback(cube, tmp_working_dir):
     cube.standard_name = None
     cmap, levels, norm = plot._colorbar_map_levels(cube)
     assert cmap == mpl.colormaps["RdYlBu_r"]
-    assert (levels == np.linspace(223, 323, 21)).all()
+    assert (levels == np.linspace(223, 323, 51)).all()
     assert norm is None
 
 
@@ -128,7 +128,7 @@ def test_colorbar_map_levels_pressure_level(transect_source_cube, tmp_working_di
     cube_250hPa = transect_source_cube.extract(iris.Constraint(pressure=250))
     cmap, levels, norm = plot._colorbar_map_levels(cube_250hPa)
     assert cmap == mpl.colormaps["RdYlBu_r"]
-    assert (levels == np.linspace(200, 240, 21)).all()
+    assert (levels == np.linspace(200, 240, 51)).all()
     assert norm is None
 
 

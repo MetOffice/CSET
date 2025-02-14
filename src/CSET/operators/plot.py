@@ -238,7 +238,7 @@ def _colorbar_map_levels(cube: iris.cube.Cube):
                 vmin, vmax = var_colorbar["min"], var_colorbar["max"]
                 logging.debug("Using min and max for %s colorbar.", varname)
                 # Calculate levels from range.
-                levels = np.linspace(vmin, vmax, 21)
+                levels = np.linspace(vmin, vmax, 51)
                 norm = None
             return cmap, levels, norm
         except KeyError:
