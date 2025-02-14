@@ -234,7 +234,7 @@ def _colorbar_map_levels(cube: iris.cube.Cube):
                 vmin, vmax = var_colorbar["min"], var_colorbar["max"]
                 logging.debug("Using min and max for %s colorbar.", varname)
                 # Calculate levels from range.
-                levels = np.linspace(vmin, vmax, 20)
+                levels = np.linspace(vmin, vmax, 21)
                 norm = None
             return cmap, levels, norm
         except KeyError:
@@ -709,7 +709,7 @@ def _plot_and_save_histogram_series(
             vmin = 0
             vmax = 400  # Manually set vmin/vmax to override json derived value.
         else:
-            bins = np.linspace(vmin, vmax, 50)
+            bins = np.linspace(vmin, vmax, 51)
 
         # Reshape cube data into a single array to allow for a single histogram.
         # Otherwise we plot xdim histograms stacked.
