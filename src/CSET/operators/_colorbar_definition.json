@@ -262,6 +262,16 @@
     "max": 0.1,
     "min": -0.1
   },
+  "grid_surface_upward_sensible_heat_flux": {
+    "cmap": "bwr",
+    "max": 250.0,
+    "min": -250.0
+  },
+  "grid_surface_upward_sensible_heat_flux_difference": {
+    "cmap": "bwr",
+    "max": 80.0,
+    "min": -80.0
+  },
   "graupel_water_path": {
     "cmap": "GnBu",
     "max": 10,
@@ -693,6 +703,7 @@
     "min": -80.0
   },
   "surface_upward_sensible_heat_flux": {
+    "cmap": "bwr",
     "max": 250.0,
     "min": -250.0
   },
