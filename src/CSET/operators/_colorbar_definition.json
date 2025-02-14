@@ -358,6 +358,16 @@
     "max": 35.0,
     "min": -35.0
   },
+  "northward_wind_at_10m": {
+    "cmap": "bwr",
+    "max": 35.0,
+    "min": -35.0
+  },
+  "northward_wind_at_10m_difference": {
+    "cmap": "bwr",
+    "max": 35.0,
+    "min": -35.0
+  },
   "number_of_lightning_flashes_in_column": {
     "cmap": "YlOrRd",
     "max": 5,
@@ -817,8 +827,9 @@
     "min": -2.5
   },
   "y_wind": {
-    "max": 30.0,
-    "min": 0.0
+    "cmap": "bwr",
+    "max": 35.0,
+    "min": -35.0
   },
   "y_wind_difference": {
     "cmap": "bwr",
