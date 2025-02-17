@@ -22,8 +22,8 @@ then
         cp -r "${cset_source_path}"/* "${cset_source_path}"/.git "${cset_install_path}"
     fi
 
-    # Build and install into python environment.
-    pip install --verbose --progress-bar off --no-deps -- "${cset_install_path}"
+    # Build and install into conda environment.
+    pip install --progress-bar off --no-deps -- "${cset_install_path}"
 fi
 
 echo "Using CSET version: $(cset --version)"
