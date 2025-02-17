@@ -128,18 +128,6 @@ length=:
 compulsory=true
 sort-key=modules2
 
-[template variables=CSET_ENV_USE_CONDA]
-ns=Setup
-title=Use conda for environment
-description=Use a conda environment.
-help=The conda environment is loaded after any modules.
-type=python_boolean
-compulsory=true
-trigger=template variables=CONDA_VENV_LOCATION: True;
-        template variables=CONDA_VENV_CREATE: True;
-        template variables=CONDA_PATH: True;
-sort-key=conda1
-
 [template variables=CONDA_PATH]
 ns=Setup
 title=Conda executable path
