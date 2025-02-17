@@ -38,15 +38,55 @@
     "max": 200.0,
     "min": -200.0
   },
+  "atmosphere_cloud_ice_content": {
+    "cmap": "Blues",
+    "max": 5,
+    "min": 0.0
+  },
+  "atmosphere_cloud_ice_content_difference": {
+    "cmap": "bwr",
+    "max": 5,
+    "min": -5
+  },
+  "atmosphere_cloud_liquid_water_content": {
+    "cmap": "Blues",
+    "max": 5,
+    "min": 0.0
+  },
+  "atmosphere_cloud_liquid_water_content_difference": {
+    "cmap": "bwr",
+    "max": 5,
+    "min": -5
+  },
   "atmosphere_mass_content_of_cloud_ice": {
     "cmap": "Blues",
     "max": 5,
     "min": 0.0
   },
+  "atmosphere_mass_content_of_cloud_ice_difference": {
+    "cmap": "bwr",
+    "max": 5,
+    "min": -5
+  },
+  "atmosphere_mass_content_of_cloud_liquid_water": {
+    "cmap": "Blues",
+    "max": 5,
+    "min": 0.0
+  },
+  "atmosphere_mass_content_of_cloud_liquid_water_difference": {
+    "cmap": "bwr",
+    "max": 5,
+    "min": -5
+  },
   "atmosphere_mass_content_of_water_vapor": {
     "cmap": "Blues",
     "max": 100,
     "min": 0
+  },
+  "atmosphere_mass_content_of_water_vapor_difference": {
+    "cmap": "bwr",
+    "max": 100,
+    "min": -100
   },
   "atmosphere_mass_of_air_per_unit_area": {
     "cmap": "Greys",
@@ -252,6 +292,16 @@
     "max": 1000,
     "min": -1000
   },
+  "grid_surface_upward_sensible_heat_flux": {
+    "cmap": "bwr",
+    "max": 250.0,
+    "min": -250.0
+  },
+  "grid_surface_upward_sensible_heat_flux_difference": {
+    "cmap": "bwr",
+    "max": 80.0,
+    "min": -80.0
+  },
   "gridbox inflow": {
     "max": 10.0,
     "min": 0.1
@@ -328,10 +378,25 @@
     "max": 35.0,
     "min": -35.0
   },
+  "northward_wind_at_10m": {
+    "cmap": "bwr",
+    "max": 35.0,
+    "min": -35.0
+  },
+  "northward_wind_at_10m_difference": {
+    "cmap": "bwr",
+    "max": 35.0,
+    "min": -35.0
+  },
   "number_of_lightning_flashes_in_column": {
     "cmap": "YlOrRd",
     "max": 5,
     "min": 1
+  },
+  "number_of_lightning_flashes_in_column_difference": {
+    "cmap": "bwr",
+    "max": 5,
+    "min": -5
   },
   "potential_vorticity": {
     "cmap": "RdBu_r",
@@ -353,7 +418,7 @@
     "min": -35.0
   },
   "radar_reflectivity_at_1km_above_the_surface_difference": {
-    "cmap": "cubehelix_r",
+    "cmap": "bwr",
     "max": 100.0,
     "min": -100.0
   },
@@ -422,9 +487,20 @@
     "max": 0.001,
     "min": -0.001
   },
+  "stratiform_snowfall_flux": {
+    "cmap": "cool",
+    "max": 0.01,
+    "min": 0
+  },
+  "stratiform_snowfall_flux_difference": {
+    "cmap": "bwr",
+    "max": 0.001,
+    "min": -0.001
+  },
   "stratiform_snowfall_rate": {
-    "max": 0.006,
-    "min": -0.006
+    "cmap": "cool",
+    "max": 0.01,
+    "min": 0
   },
   "stratiform_snowfall_rate_difference": {
     "cmap": "bwr",
@@ -473,6 +549,11 @@
     "max": 500,
     "min": 0
   },
+  "surface_downward_longwave_flux_difference": {
+    "cmap": "bwr",
+    "max": 500,
+    "min": -500
+  },
   "surface_downward_longwave_flux_radiative_timestep": {
     "cmap": "Greys_r",
     "max": 500,
@@ -491,6 +572,31 @@
     "cmap": "Greys",
     "max": 1400,
     "min": 0
+  },
+  "surface_downward_shortwave_flux_difference": {
+    "cmap": "bwr",
+    "max": 1400,
+    "min": -1400
+  },
+  "surface_downwelling_longwave_flux_in_air": {
+    "cmap": "Greys_r",
+    "max": 500,
+    "min": 0
+  },
+  "surface_downwelling_longwave_flux_in_air_difference": {
+    "cmap": "bwr",
+    "max": 500,
+    "min": -500
+  },
+  "surface_downwelling_shortwave_flux_in_air": {
+    "cmap": "Greys",
+    "max": 1400,
+    "min": 0
+  },
+  "surface_downwelling_shortwave_flux_in_air_difference": {
+    "cmap": "bwr",
+    "max": 1400,
+    "min": -1400
   },
   "surface_eastward_sea_water_velocity": {
     "max": 5.0,
@@ -531,7 +637,13 @@
     "max": 0.01,
     "min": 0
   },
+  "surface_microphysical_snowfall_rate_difference": {
+    "cmap": "bwr",
+    "max": 0.01,
+    "min": -0.01
+  },
   "surface_net_downward_longwave_flux": {
+    "cmap": "bwr",
     "max": 250.0,
     "min": -250.0
   },
@@ -553,6 +665,16 @@
     "cmap": "bwr",
     "max": 100,
     "min": -100
+  },
+  "surface_net_longwave_flux_radiative_timestep": {
+    "cmap": "bwr",
+    "max": 250,
+    "min": -250
+  },
+  "surface_net_longwave_flux_radiative_timestep_difference": {
+    "cmap": "bwr",
+    "max": 80,
+    "min": -80
   },
   "surface_net_shortwave_flux": {
     "cmap": "bwr",
@@ -616,6 +738,7 @@
     "min": -80.0
   },
   "surface_upward_sensible_heat_flux": {
+    "cmap": "bwr",
     "max": 250.0,
     "min": -250.0
   },
@@ -686,7 +809,28 @@
     "max": 2,
     "min": -2
   },
+  "toa_direct_shortwave_flux": {
+    "cmap": "viridis",
+    "max": 1400.0,
+    "min": 0.0
+  },
+  "toa_direct_shortwave_flux_difference": {
+    "cmap": "bwr",
+    "max": 1400.0,
+    "min": -1400.0
+  },
+  "toa_incoming_shortwave_flux": {
+    "cmap": "viridis",
+    "max": 1400.0,
+    "min": 0.0
+  },
+  "toa_incoming_shortwave_flux_difference": {
+    "cmap": "bwr",
+    "max": 1400.0,
+    "min": -1400.0
+  },
   "toa_outgoing_longwave_flux": {
+    "cmap": "viridis",
     "max": 350.0,
     "min": 0.0
   },
@@ -709,10 +853,20 @@
     "max": 500,
     "min": 0
   },
-  "toa_upward_shortwave_flux": {
-    "cmap": "Greys_r",
-    "max": 1400,
-    "min": 0
+  "toa_upward_longwave_flux_difference": {
+    "cmap": "bwr",
+    "max": 10,
+    "min": -10
+  },
+  "toa_upward_longwave_flux_radiative_timestep": {
+    "cmap": "viridis",
+    "max": 350.0,
+    "min": 0.0
+  },
+  "toa_upward_longwave_flux_radiative_timestep_difference": {
+    "cmap": "bwr",
+    "max": 10.0,
+    "min": -10.0
   },
   "top_upward_longwave_flux": {
     "cmap": "Greys",
@@ -825,8 +979,9 @@
     "min": -2.5
   },
   "y_wind": {
-    "max": 30.0,
-    "min": 0.0
+    "cmap": "bwr",
+    "max": 35.0,
+    "min": -35.0
   },
   "y_wind_difference": {
     "cmap": "bwr",
