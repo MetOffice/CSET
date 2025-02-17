@@ -14,9 +14,12 @@
 
 """Test plotting operators."""
 
+import json
 from pathlib import Path
 
 import iris.cube
+import matplotlib as mpl
+import numpy as np
 import pytest
 
 from CSET.operators import collapse, plot, read
@@ -34,6 +37,99 @@ def test_check_single_cube():
         plot._check_single_cube(long_cubelist)
     with pytest.raises(TypeError):
         plot._check_single_cube(non_cube)
+
+
+def test_load_colorbar_map():
+    """Colorbar is loaded correctly."""
+    colorbar = plot._load_colorbar_map()
+    assert isinstance(colorbar, dict)
+    # Check we can find an example definition.
+    assert colorbar["temperature_at_screen_level"] == {
+        "cmap": "RdYlBu_r",
+        "max": 323,
+        "min": 223,
+    }
+
+
+def test_load_colorbar_map_override(tmp_path):
+    """Colorbar is loaded correctly and overridden by the user definition."""
+    # Setup a user provided colorbar override.
+    user_definition = {"temperature_at_screen_level": {"max": 1000, "min": 0}}
+    user_colorbar_file = tmp_path / "colorbar.json"
+    with open(user_colorbar_file, "wt") as fp:
+        json.dump(user_definition, fp)
+
+    colorbar = plot._load_colorbar_map(user_colorbar_file)
+
+    assert isinstance(colorbar, dict)
+    # Check definition is updated.
+    assert colorbar["temperature_at_screen_level"] == {
+        "cmap": "RdYlBu_r",
+        "max": 1000,
+        "min": 0,
+    }
+    # Check we can still see unchanged definitions.
+    assert colorbar["temperature_at_screen_level_difference"] == {
+        "cmap": "bwr",
+        "max": 2,
+        "min": -2,
+    }
+
+
+def test_load_colorbar_map_override_file_not_found(tmp_path):
+    """Colorbar overridden by the user definition in non-existent file."""
+    user_colorbar_file = tmp_path / "colorbar.json"
+    colorbar = plot._load_colorbar_map(user_colorbar_file)
+    # Check it still returns the built-in one.
+    assert isinstance(colorbar, dict)
+
+
+def test_colorbar_map_levels(cube, tmp_working_dir):
+    """Colorbar definition is found for cube."""
+    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    assert cmap == mpl.colormaps["RdYlBu_r"]
+    assert (levels == np.linspace(223, 323, 51)).all()
+    assert norm is None
+
+
+# Test will fail (but not cause an overall fail) as we can't test using levels
+# until there is at least one variable that uses them.
+@pytest.mark.xfail(reason="No colorbar currently uses levels")
+def test_colorbar_map_levels_def_on_levels(cube, tmp_working_dir):
+    """Colorbar definition that uses levels is found for cube."""
+    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    assert cmap == mpl.colormaps[...]
+    assert levels == [1, 2, 3]
+    assert norm == ...
+
+
+def test_colorbar_map_levels_name_fallback(cube, tmp_working_dir):
+    """Colorbar definition is found for cube after checking its other names."""
+    cube.standard_name = None
+    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    assert cmap == mpl.colormaps["RdYlBu_r"]
+    assert (levels == np.linspace(223, 323, 51)).all()
+    assert norm is None
+
+
+def test_colorbar_map_levels_unknown_variable_fallback(cube, tmp_working_dir):
+    """Colorbar definition doesn't exist for cube."""
+    cube.standard_name = None
+    cube.long_name = None
+    cube.var_name = "unknown"
+    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    assert cmap == mpl.colormaps["viridis"]
+    assert levels is None
+    assert norm is None
+
+
+def test_colorbar_map_levels_pressure_level(transect_source_cube, tmp_working_dir):
+    """Pressure level specific colorbar definition is picked up."""
+    cube_250hPa = transect_source_cube.extract(iris.Constraint(pressure=250))
+    cmap, levels, norm = plot._colorbar_map_levels(cube_250hPa)
+    assert cmap == mpl.colormaps["RdYlBu_r"]
+    assert (levels == np.linspace(200, 240, 51)).all()
+    assert norm is None
 
 
 def test_spatial_contour_plot(cube, tmp_working_dir):

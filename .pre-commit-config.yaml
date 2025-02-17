@@ -13,7 +13,7 @@ repos:
           - tomli
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: d7f0995508bdaeb0a1f4a838500d6a0a1fc6ec7b  # frozen: v0.9.5
+    rev: 895ebb389825c29bd4e0addcf7579d6c69d199cc  # frozen: v0.9.6
     hooks:
       - id: ruff
         args: [--fix, --show-fixes, --exit-non-zero-on-fix]
