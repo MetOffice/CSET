@@ -29,14 +29,9 @@ else
 fi
 
 # Activate conda environment.
-# Use default location if CONDA_VENV_LOCATION is not specified.
-  if [[ -z "$CONDA_VENV_LOCATION" ]]; then
-    CONDA_VENV_LOCATION="${CYLC_WORKFLOW_SHARE_DIR}/cset-conda-environment"
-  fi
-  echo "Using conda environment $CONDA_VENV_LOCATION"
 source "$("${CONDA_PATH}conda" info --base)/etc/profile.d/conda.sh"
 set +u
-"${CONDA_PATH}conda" activate "$CONDA_VENV_LOCATION"
+"${CONDA_PATH}conda" activate "${CYLC_WORKFLOW_SHARE_DIR}/cset-conda-environment"
 set -u
 export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 

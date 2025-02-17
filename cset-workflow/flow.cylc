@@ -93,7 +93,6 @@ URL = https://metoffice.github.io/CSET
         {% endif %}
 
         CONDA_PATH = {{CONDA_PATH}}
-        CONDA_VENV_LOCATION = {{CONDA_VENV_LOCATION}}
         LOGLEVEL = {{LOGLEVEL}}
         COLORBAR_FILE = {{COLORBAR_FILE}}
         PLOT_RESOLUTION = {{PLOT_RESOLUTION|default(100)}}
@@ -152,7 +151,6 @@ URL = https://metoffice.github.io/CSET
     # CSET from source.
     execution time limit = PT30M
         [[[environment]]]
-        CONDA_VENV_CREATE = {{CONDA_VENV_CREATE}}
         CSET_ENV_USE_LOCAL_CSET = {{CSET_ENV_USE_LOCAL_CSET|default(False) }}
         {% if CSET_ENV_USE_LOCAL_CSET|default(False) %}
             CSET_LOCAL_CSET_PATH = {{CSET_LOCAL_CSET_PATH}}

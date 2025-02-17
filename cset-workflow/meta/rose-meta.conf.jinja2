@@ -137,31 +137,7 @@ help=Path where the conda executable is. This should be to a directory, rather
     source, such as modules or being already on path.
 type=quoted
 compulsory=true
-sort-key=conda2
-
-[template variables=CONDA_VENV_CREATE]
-ns=Setup
-title=Create conda environment
-description=Whether to (re)create the conda environment.
-help=When enabled it will check that the conda environment exists and is
-    up-to-date, recreating it otherwise.
-type=python_boolean
-compulsory=true
-sort-key=conda2
-
-[template variables=CONDA_VENV_LOCATION]
-ns=Setup
-title=Conda environment location
-description=Location of the conda virtual environment.
-help=Existing environments can be found by running `conda info --envs` and
-    copying the path displayed there. If unspecified it defaults to the workflow
-    share directory.
-
-    If creating the conda environment as part of the workflow, it will only be
-    created if it does not exist or is out of date.
-type=quoted
-compulsory=true
-sort-key=conda2
+sort-key=conda1
 
 [template variables=CSET_ENV_USE_LOCAL_CSET]
 ns=Setup
@@ -172,7 +148,7 @@ help=Use a local version of CSET, rather than the version provided from conda.
 type=python_boolean
 compulsory=true
 trigger=template variables=CSET_LOCAL_CSET_PATH: True;
-sort-key=localcset1
+sort-key=conda2
 
 [template variables=CSET_LOCAL_CSET_PATH]
 ns=Setup
@@ -183,7 +159,7 @@ help=Path to either a wheel file, or a checked out copy of the CSET git repo.
     pyproject.toml file.
 type=quoted
 compulsory=true
-sort-key=localcset2
+sort-key=conda3
 
 [template variables=CSET_ENV_SEPARATE_MET]
 ns=Setup
