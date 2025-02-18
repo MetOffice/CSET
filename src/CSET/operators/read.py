@@ -493,11 +493,11 @@ def _fix_lfric_radtime_prehour(cube: iris.cube.Cube):
     """Fix radiation which is output 1 minute before every hour."""
     try:
         # Check LFRic.
-        if "time_origin" in cube.coord("time").attributes:
-            if cube.name() in [
+        if ("time_origin" in cube.coord("time").attributes and
+            cube.name() in [
                 "toa_upward_longwave_flux_radiative_timestep",
                 "surface_net_longwave_flux_radiative_timestep",
-            ]:
+            ]):
                 time_coord = cube.coord("time")
 
                 # Convert time points to datetime objects
