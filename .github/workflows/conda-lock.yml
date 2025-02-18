@@ -25,13 +25,13 @@ jobs:
         run: python3 -m pip install conda-lock
 
       - name: Update conda
-        run: conda update --channel conda-forge --quiet --all
+        run: conda update --name base --channel conda-forge --quiet --all --yes
 
-      - name: Switch branch
+      - name: Setup git user and branch
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git switch -c conda-lock-files
+          git switch -c "conda-lock-$(date +%s)"
 
       - name: Update CSET developer and workflow lock files
         run: |
@@ -71,22 +71,15 @@ jobs:
           source_ref: ${{ github.ref }}
           source_ref_type: ${{ github.ref_type }}
         run: |
-          shopt -s globstar
-
           # Display any changes in the log and exit early if there are none.
-          if ! git diff --name-status --exit-code
+          if git diff --name-status --exit-code
           then
             echo "Lock files unchanged. Skipping pull request..."
             exit 0
           fi
 
           # Commit changed lockfiles.
-          git add .
-          git commit -m "[CI] Update conda lock files"
-
-          # Update lock_file_hashes so pushed branch name is unique.
-          sha256sum **/*locks/*.txt > ${{ runner.temp }}/lock_file_hashes
-          remote_branch_name="conda-lock-$(sha256sum ${{ runner.temp }}/lock_file_hashes | head -c 8)"
+          git commit -am "[CI] Update conda lock files"
 
           # If running from a branch target the created PR at that branch.
           if [[ $source_ref_type = branch ]]
@@ -97,10 +90,10 @@ jobs:
           fi
 
           # Push branch to GitHub.
-          git push --set-upstream origin "conda-lock-files:${remote_branch_name}"
+          git push --set-upstream origin HEAD
 
           # Create PR on GitHub using GitHub REST API.
-          request_body='{"title":"[CI] Update conda lock files","body":"Created automatically by GitHub Actions.","base":"'"${base_branch_name}"'","head":"'"${remote_branch_name}"'"}'
+          request_body='{"title":"[CI] Update conda lock files","body":"Created automatically by GitHub Actions.","base":"'"${base_branch_name}"'","head":"'"$(git branch --show-current)"'"}'
           curl -LsS --fail-with-body \
             -X POST \
             -H "Accept: application/vnd.github+json" \
