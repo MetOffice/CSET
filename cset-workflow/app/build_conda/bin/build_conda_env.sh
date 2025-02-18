@@ -23,7 +23,7 @@ should_build_conda_env() {
   fi
 
   # Find environment definition file, abort if not found.
-  env_lock_file="${CYLC_WORKFLOW_RUN_DIR}/requirements/locks/py313-lock-linux-64.txt"
+  env_lock_file="${CYLC_WORKFLOW_RUN_DIR}/requirements/workflow-locks/py313-lock-linux-64.txt"
   if [[ -f "$env_lock_file" ]]
   then
     echo "Using environment file $env_lock_file"
