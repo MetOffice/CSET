@@ -2,7 +2,7 @@ name: Publish packages
 
 on:
   release:
-    types: [released]
+    types: [published]
 
 # Allow only one concurrent deployment
 concurrency:
