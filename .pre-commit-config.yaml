@@ -29,6 +29,17 @@ repos:
         types: [json]
         files: src/CSET/operators/_colorbar_definition.json
 
+  - repo: local
+    hooks:
+      - id: regenerate-rose-meta
+        name: Regenerate rose metadata
+        description: Ensure the rose metadata has been generated from its template.
+        entry: ./scripts/generate_rose_meta.py
+        language: python
+        files: cset-workflow/meta/
+        additional_dependencies:
+          - jinja2
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: cef0300fd0fc4d2a87a85fa2093c6b283ea36f4b # frozen: v5.0.0
     hooks:
