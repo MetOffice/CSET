@@ -146,7 +146,7 @@ https://conda.anaconda.org/conda-forge/noarch/adwaita-icon-theme-47.0-unix_0.con
 https://conda.anaconda.org/conda-forge/noarch/certifi-2025.1.31-pyhd8ed1ab_0.conda#c207fa5ac7ea99b149344385a9c0880d
 https://conda.anaconda.org/conda-forge/noarch/click-8.1.8-pyh707e725_0.conda#f22f4d4970e09d68a10b922cbb0408d3
 https://conda.anaconda.org/conda-forge/noarch/cloudpickle-3.1.1-pyhd8ed1ab_0.conda#364ba6c9fb03886ac979b482f39ebb92
-https://conda.anaconda.org/conda-forge/noarch/cset-25.2.0rc2-pyhd8ed1ab_0.conda#9cb7780c293d6f51fc0c19171392488b
+https://conda.anaconda.org/conda-forge/noarch/cset-25.2.0rc3-pyhd8ed1ab_0.conda#a56c8a9412e29b018a2174993673f804
 https://conda.anaconda.org/conda-forge/noarch/cycler-0.12.1-pyhd8ed1ab_1.conda#44600c4667a319d67dbe0681fc0bc833
 https://conda.anaconda.org/conda-forge/noarch/dask-core-2024.8.2-pyhd8ed1ab_0.conda#8e7524a2fb561506260db789806c7ee9
 https://conda.anaconda.org/conda-forge/noarch/font-ttf-dejavu-sans-mono-2.37-hab24e00_0.tar.bz2#0c96522c6bdaed4b1566d11387caaf45
