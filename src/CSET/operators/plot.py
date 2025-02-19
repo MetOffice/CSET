@@ -477,8 +477,17 @@ def _plot_and_save_line_series(
     """
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
+    # store min/max ranges
+    y_levels = []
+
     for cube_iter in iter_maybe(cubes):
         iplt.plot(coord, cube_iter, "o-")
+
+        # So we can calculate the min/max if multiple cubes
+        _, levels, _ = _colorbar_map_levels(cube_iter)
+        if levels is not None:
+            y_levels.append(np.min(levels))
+            y_levels.append(np.max(levels))
 
     # Get the current axes
     ax = plt.gca()
@@ -492,7 +501,15 @@ def _plot_and_save_line_series(
     )
     ax.ticklabel_format(axis="y", useOffset=False)
     ax.tick_params(axis="x", labelrotation=15)
-    ax.autoscale()
+
+    # If no vmin, vmax from colorbar
+    if y_levels == []:
+        ax.autoscale()
+    else:
+        ax.set_ylim(np.min(y_levels), np.max(y_levels))
+
+    # Add gridlines
+    ax.grid(linestyle="--", color="grey", linewidth=1)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
