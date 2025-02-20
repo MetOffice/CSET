@@ -1159,6 +1159,9 @@ def plot_vertical_line_series(
     # Initialise empty list to hold all data from all cubes in a CubeList
     all_data = []
 
+    # Store min/max ranges for x range
+    x_levels = []
+
     # Iterate over all cubes in cube or CubeList and plot.
     for cube_iter in iter_maybe(cubes):
         # Ensure we've got a single cube.
@@ -1180,18 +1183,26 @@ def plot_vertical_line_series(
                 f"Cube must have a {sequence_coordinate} coordinate or be 1D."
             ) from err
 
-        # Append cube data to the list to calculate vmin and vmax across entire
-        # cubelist.
-        all_data.append(cube_iter.data)
+        # Get minimum and maximum from levels information.
+        _, levels, _ = _colorbar_map_levels(cube_iter)
+        if levels is not None:
+            x_levels.append(min(levels))
+            x_levels.append(max(levels))
+        else:
+            all_data.append(cube_iter.data)
 
-    # Combine all data into a single NumPy array
-    combined_data = np.concatenate(all_data)
+    if len(x_levels) == 0:
+        # Combine all data into a single NumPy array
+        combined_data = np.concatenate(all_data)
 
-    # Set the lower and upper limit for the x-axis to ensure all plots have same
-    # range. This needs to read the whole cube over the range of the sequence
-    # and if applicable postage stamp coordinate.
-    vmin = np.floor(combined_data.min())
-    vmax = np.ceil(combined_data.max())
+        # Set the lower and upper limit for the x-axis to ensure all plots have same
+        # range. This needs to read the whole cube over the range of the sequence
+        # and if applicable postage stamp coordinate.
+        vmin = np.floor(combined_data.min())
+        vmax = np.ceil(combined_data.max())
+    else:
+        vmin = min(x_levels)
+        vmax = max(x_levels)
 
     # Create a plot for each value of the sequence coordinate.
     # Allowing for multiple cubes in a CubeList to be plotted in the same plot for
