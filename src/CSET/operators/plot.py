@@ -20,6 +20,7 @@ import importlib.resources
 import json
 import logging
 import math
+import os
 import sys
 from typing import Literal
 
@@ -59,6 +60,17 @@ def _append_to_plot_index(plot_index: list) -> list:
         complete_plot_index = meta.get("plots", [])
         complete_plot_index = complete_plot_index + plot_index
         meta["plots"] = complete_plot_index
+        logging.debug(
+            "Cylc task namespace hierarchy: %s",
+            os.getenv(
+                "CYLC_TASK_NAMESPACE_HIERARCHY",
+                "$CYLC_TASK_NAMESPACE_HIERARCHY not set.",
+            ),
+        )
+        if "PROCESS_CASE_AGGREGATION" not in os.getenv(
+            "CYLC_TASK_NAMESPACE_HIERARCHY", ""
+        ):
+            meta["case_date"] = os.getenv("CYLC_TASK_CYCLE_POINT", "")
         fp.seek(0)
         fp.truncate()
         json.dump(meta, fp, indent=2)
@@ -477,10 +489,19 @@ def _plot_and_save_line_series(
     """
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
+    # Store min/max ranges.
+    y_levels = []
+
     for cube_iter in iter_maybe(cubes):
         iplt.plot(coord, cube_iter, "o-")
 
-    # Get the current axes
+        # Calculate the global min/max if multiple cubes are given.
+        _, levels, _ = _colorbar_map_levels(cube_iter)
+        if levels is not None:
+            y_levels.append(min(levels))
+            y_levels.append(max(levels))
+
+    # Get the current axes.
     ax = plt.gca()
 
     # Add some labels and tweak the style.
@@ -492,7 +513,15 @@ def _plot_and_save_line_series(
     )
     ax.ticklabel_format(axis="y", useOffset=False)
     ax.tick_params(axis="x", labelrotation=15)
-    ax.autoscale()
+
+    # Set y limits to global min and max, autoscale if colorbar doesn't exist.
+    if y_levels:
+        ax.set_ylim(min(y_levels), max(y_levels))
+    else:
+        ax.autoscale()
+
+    # Add gridlines
+    ax.grid(linestyle="--", color="grey", linewidth=1)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
