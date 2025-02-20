@@ -139,6 +139,16 @@
     "max": 1,
     "min": -1
   },
+  "geopotential_height_at_pressure_levels": {
+    "cmap": "viridis",
+    "max": 10000,
+    "min": 0
+  },
+  "geopotential_height_at_pressure_levels_differences": {
+    "cmap": "bwr",
+    "max": 300,
+    "min": -300
+  },
   "grid_surface_snow_amount": {
     "cmap": "cool",
     "max": 1,
@@ -219,6 +229,16 @@
     "max": 1,
     "min": -1
   },
+  "meridional_wind_at_pressure_levels": {
+    "cmap": "bwr",
+    "max": 35,
+    "min": -35
+  },
+  "meridional_wind_at_pressure_levels_difference": {
+    "cmap": "bwr",
+    "max": 20,
+    "min": -20
+  },
   "northward_wind_at_10m": {
     "cmap": "bwr",
     "max": 35.0,
@@ -244,6 +264,16 @@
     "max": 5,
     "min": -5
   },
+  "potential_vorticity_at_pressure_levels": {
+    "cmap": "bwr",
+    "max": 1.8e-05,
+    "min": -1.8e-05
+  },
+  "potential_vorticity_at_pressure_levels_difference": {
+    "cmap": "bwr",
+    "max": 2e-06,
+    "min": -2e-06
+  },
   "radar_reflectivity_at_1km_above_the_surface": {
     "cmap": "cubehelix_r",
     "max": 70.0,
@@ -263,6 +293,16 @@
     "cmap": "bwr",
     "max": 30,
     "min": -30
+  },
+  "relative_humidity_wrt_ice_at_pressure_levels": {
+    "cmap": "viridis",
+    "max": 110,
+    "min": 0
+  },
+  "relative_humidity_wrt_ice_at_pressure_levels_difference": {
+    "cmap": "bwr",
+    "max": 50,
+    "min": -50
   },
   "soil_temperature": {
     "cmap": "RdYlBu_r",
@@ -377,6 +417,11 @@
       }
     }
   },
+  "temperature_at_pressure_levels_difference": {
+    "cmap": "bwr",
+    "max": 10,
+    "min": -10
+  },
   "temperature_at_screen_level": {
     "cmap": "RdYlBu_r",
     "max": 323,
@@ -432,6 +477,26 @@
     "max": 5000,
     "min": -5000
   },
+  "vapour_specific_humidity_at_pressure_levels_for_climate_averaging": {
+    "cmap": "viridis",
+    "max": 0.01,
+    "min": 0
+  },
+  "vapour_specific_humidity_at_pressure_levels_for_climate_averaging_differences": {
+    "cmap": "bwr",
+    "max": 0.0001,
+    "min": -0.0001
+  },
+  "vertical_wind_at_pressure_levels": {
+    "cmap": "bwr",
+    "max": -1,
+    "min": -1
+  },
+  "vertical_wind_at_pressure_levels_difference": {
+    "cmap": "bwr",
+    "max": 1,
+    "min": -1
+  },
   "visibility_in_air": {
     "cmap": "viridis",
     "max": 30000.0,
@@ -446,5 +511,20 @@
     "cmap": "RdYlBu_r",
     "max": 340,
     "min": 260
+  },
+  "wet_bulb_potential_temperature_at_pressure_levels_differences": {
+    "cmap": "bwr",
+    "max": 5,
+    "min": -5
+  },
+  "zonal_wind_at_pressure_levels": {
+    "cmap": "bwr",
+    "max": 35,
+    "min": -35
+  },
+  "zonal_wind_at_pressure_levels_difference": {
+    "cmap": "bwr",
+    "max": 20,
+    "min": -20
   }
 }
