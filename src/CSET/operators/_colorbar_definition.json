@@ -462,10 +462,6 @@
     "max": 100,
     "min": -100
   },
-  "total_lightning_flash_rate": {
-    "cmap": "YlOrRd",
-    "max": 10,
-    "min": 0
   },
   "turbulent_mixing_height": {
     "cmap": "terrain",
