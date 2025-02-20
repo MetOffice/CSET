@@ -477,7 +477,7 @@ def _plot_and_save_line_series(
     """
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
-    # store min/max ranges
+    # Store min/max ranges.
     y_levels = []
 
     for cube_iter in iter_maybe(cubes):
