@@ -486,8 +486,8 @@ def _plot_and_save_line_series(
         # Calculate the global min/max if multiple cubes are given.
         _, levels, _ = _colorbar_map_levels(cube_iter)
         if levels is not None:
-            y_levels.append(np.min(levels))
-            y_levels.append(np.max(levels))
+            y_levels.append(min(levels))
+            y_levels.append(max(levels))
 
     # Get the current axes
     ax = plt.gca()
