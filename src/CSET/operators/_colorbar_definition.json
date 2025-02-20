@@ -10,21 +10,9 @@
     "min": 94000
   },
   "air_pressure_at_mean_sea_level_difference": {
-<<<<<<< HEAD
-=======
     "cmap": "bwr",
     "max": 1000,
     "min": -1000
-  },
-  "air_pressure_at_sea_level": {
-    "max": 1025.0,
-    "min": 980.0
-  },
-  "air_pressure_at_sea_level_difference": {
->>>>>>> 9f4100a5 (more json updates)
-    "cmap": "bwr",
-    "max": 0.8,
-    "min": -0.8
   },
   "atmosphere_boundary_layer_thickness": {
     "cmap": "terrain",
@@ -106,8 +94,6 @@
     "max": 1,
     "min": 0
   },
-<<<<<<< HEAD
-=======
   "combined_cloud_amount_maximum_random_overlap_difference": {
     "cmap": "bwr",
     "max": 1,
@@ -118,12 +104,6 @@
     "max": 70.0,
     "min": -35.0
   },
-  "dew_point_temperature": {
-    "cmap": "RdYlBu_r",
-    "max": 315,
-    "min": 263
-  },
->>>>>>> 9f4100a5 (more json updates)
   "dew_point_temperature_at_screen_level": {
     "cmap": "RdYlBu_r",
     "max": 315,
@@ -144,15 +124,6 @@
     "max": 5,
     "min": -5
   },
-  "evaporation_flux_from_open_sea": {
-    "max": 0.006,
-    "min": -0.006
-  },
-  "evaporation_flux_from_open_sea_difference": {
-    "cmap": "bwr",
-    "max": 35.0,
-    "min": -35.0
-  },
   "exner_pressure_at_cell_interfaces": {
     "cmap": "coolwarm",
     "max": 1.1,
@@ -164,21 +135,9 @@
     "min": 0
   },
   "fog_fraction_at_screen_level_difference": {
-<<<<<<< HEAD
-=======
     "cmap": "bwr",
     "max": 1,
     "min": -1
-  },
-  "friction_velocity": {
-    "max": 10.0,
-    "min": 0.0
-  },
-  "friction_velocity_difference": {
->>>>>>> 9f4100a5 (more json updates)
-    "cmap": "bwr",
-    "max": 1.0,
-    "min": -1.0
   },
   "grid_surface_snow_amount": {
     "cmap": "cool",
@@ -220,26 +179,6 @@
     "max": 80.0,
     "min": -80.0
   },
-<<<<<<< HEAD
-=======
-  "gridbox inflow": {
-    "max": 10.0,
-    "min": 0.1
-  },
-  "gridbox inflow_difference": {
-    "cmap": "bwr",
-    "max": 5e-06,
-    "min": -5e-06
-  },
-  "gridbox outflow": {
-    "max": 10.0,
-    "min": 0.1
-  },
-  "gridbox outflow_difference": {
-    "cmap": "bwr",
-    "max": 5e-06,
-    "min": -5e-06
-  },
   "high_type_cloud_area_fraction": {
     "cmap": "viridis",
     "max": 1,
@@ -260,12 +199,6 @@
     "max": 1,
     "min": -1
   },
-  "mass_content_of_water_in_soil": {
-    "cmap": "ocean_r",
-    "max": 500,
-    "min": -10
-  },
->>>>>>> 9f4100a5 (more json updates)
   "mass_content_of_water_in_soil_layer": {
     "cmap": "ocean_r",
     "max": 500,
@@ -275,18 +208,6 @@
     "cmap": "viridis",
     "max": 1.0,
     "min": 0.0
-  },
-<<<<<<< HEAD
-=======
-  "maximum_combined_cloud_amount_below_111m_asl_difference": {
-    "cmap": "bwr",
-    "max": 1,
-    "min": -1
-  },
-  "maximum_combined_cloud_amount_between_5574_and_13608m_asl": {
-    "cmap": "Greys_r",
-    "max": 1,
-    "min": 0
   },
   "medium_type_cloud_area_fraction": {
     "cmap": "viridis",
@@ -298,45 +219,6 @@
     "max": 1,
     "min": -1
   },
-  "mld_4": {
-    "max": 250.0,
-    "min": -250.0
-  },
-  "mld_4_difference": {
-    "cmap": "bwr",
-    "max": 80.0,
-    "min": -80.0
-  },
-  "moisture_content_of_soil_layer": {
-    "max": 50.0,
-    "min": 0.0
-  },
-  "moisture_content_of_soil_layer_difference": {
-    "cmap": "bwr",
-    "max": 0.5,
-    "min": -0.5
-  },
-  "most_unstable_convective_available_potential_energy": {
-    "cmap": "Oranges",
-    "max": 5000,
-    "min": 0
-  },
-  "most_unstable_convective_inhibition": {
-    "cmap": "Purples_r",
-    "max": 0,
-    "min": -2000
-  },
-  "northward_wind": {
-    "cmap": "bwr",
-    "max": 35.0,
-    "min": -35.0
-  },
-  "northward_wind_10m": {
-    "cmap": "bwr",
-    "max": 35.0,
-    "min": -35.0
-  },
->>>>>>> 9f4100a5 (more json updates)
   "northward_wind_at_10m": {
     "cmap": "bwr",
     "max": 35.0,
@@ -417,19 +299,11 @@
     "max": 0.001,
     "min": 0
   },
-<<<<<<< HEAD
-=======
   "surface_microphysical_rainfall_rate_difference": {
     "cmap": "bwr",
     "max": 0.001,
     "min": -0.001
   },
-  "surface_microphysical_snowfall_amount": {
-    "cmap": "cool",
-    "max": 0.01,
-    "min": 0
-  },
->>>>>>> 9f4100a5 (more json updates)
   "surface_microphysical_snowfall_rate": {
     "cmap": "cool",
     "max": 0.001,
@@ -543,25 +417,10 @@
     "max": 100,
     "min": -100
   },
-  "top_upward_longwave_flux": {
-    "cmap": "Greys",
-    "max": 500,
-    "min": 0
-  },
-  "total_ice_water_path": {
-    "cmap": "Blues",
-    "max": 50,
-    "min": 0
-  },
   "total_lightning_flash_rate": {
     "cmap": "YlOrRd",
     "max": 10,
     "min": 0
-  },
-  "tropopause_level": {
-    "cmap": "terrain",
-    "max": 70,
-    "min": 30
   },
   "turbulent_mixing_height": {
     "cmap": "terrain",
