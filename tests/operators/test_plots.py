@@ -71,8 +71,8 @@ def test_load_colorbar_map_override(tmp_path):
     # Check we can still see unchanged definitions.
     assert colorbar["temperature_at_screen_level_difference"] == {
         "cmap": "bwr",
-        "max": 2,
-        "min": -2,
+        "max": 10,
+        "min": -10,
     }
 
 
