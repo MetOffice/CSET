@@ -24,26 +24,6 @@
     "max": 200.0,
     "min": -200.0
   },
-  "atmosphere_cloud_ice_content": {
-    "cmap": "Blues",
-    "max": 5,
-    "min": 0.0
-  },
-  "atmosphere_cloud_ice_content_difference": {
-    "cmap": "bwr",
-    "max": 5,
-    "min": -5
-  },
-  "atmosphere_cloud_liquid_water_content": {
-    "cmap": "Blues",
-    "max": 5,
-    "min": 0.0
-  },
-  "atmosphere_cloud_liquid_water_content_difference": {
-    "cmap": "bwr",
-    "max": 5,
-    "min": -5
-  },
   "atmosphere_mass_content_of_cloud_ice": {
     "cmap": "Blues",
     "max": 5,
@@ -84,30 +64,6 @@
     "max": 500,
     "min": -500
   },
-  "atmosphere_wetplusdry_mass_per_unit_area": {
-    "cmap": "Greys",
-    "max": 10560,
-    "min": 9200
-  },
-  "baseflow": {
-    "max": 1e-06,
-    "min": 0.0
-  },
-  "baseflow_difference": {
-    "cmap": "bwr",
-    "max": 5e-06,
-    "min": -5e-06
-  },
-  "boundary_layer_type_indicator": {
-    "cmap": "Set1",
-    "max": 7,
-    "min": 1
-  },
-  "ceilometrer_filtered_combined_cloud_amount_maximum_random_overlap": {
-    "cmap": "Greys_r",
-    "max": 1,
-    "min": 0
-  },
   "cloud_base_altitude": {
     "cmap": "terrain",
     "max": 1000,
@@ -118,17 +74,12 @@
     "max": 500.0,
     "min": -500.0
   },
-  "cloud_droplet_number_concentration": {
-    "cmap": "GnBu",
-    "max": 5000,
-    "min": 10
-  },
   "cloud_ice_mixing_ratio": {
     "cmap": "GnBu",
     "max": 1,
     "min": 0.0001
   },
-  "cloud_liquid_mixing_ratio": {
+  "cloud_liquid_water_mixing_ratio": {
     "camp": "GnBu",
     "max": 1,
     "min": 0.0001
@@ -143,16 +94,6 @@
     "max": 1,
     "min": 0
   },
-  "composite_radar_reflectivity": {
-    "cmap": "cubehelix_r",
-    "max": 70.0,
-    "min": -35.0
-  },
-  "dew_point_temperature": {
-    "cmap": "RdYlBu_r",
-    "max": 315,
-    "min": 263
-  },
   "dew_point_temperature_at_screen_level": {
     "cmap": "RdYlBu_r",
     "max": 315,
@@ -163,48 +104,20 @@
     "max": 1.5,
     "min": -1.5
   },
-  "dew_point_temperature_difference": {
-    "cmap": "bwr",
-    "max": 1.5,
-    "min": -1.5
-  },
-  "divergence_of_wind": {
-    "cmap": "PiYG",
-    "max": 1e-05,
-    "min": -1e-05
-  },
-  "eastward_wind": {
-    "cmap": "bwr",
-    "max": 35.0,
-    "min": -35.0
-  },
   "eastward_wind_at_10m": {
     "cmap": "bwr",
     "max": 35.0,
     "min": -35.0
   },
-  "evaporation_flux_from_open_sea": {
-    "max": 0.006,
-    "min": -0.006
-  },
-  "evaporation_flux_from_open_sea_difference": {
+  "eastward_wind_at_cell_centres": {
     "cmap": "bwr",
-    "max": 0.001,
-    "min": -0.001
+    "max": 35.0,
+    "min": -35.0
   },
   "exner_pressure_at_cell_interfaces": {
     "cmap": "coolwarm",
     "max": 1.1,
     "min": 0.5
-  },
-  "field1900": {
-    "max": 0.25,
-    "min": 0.0
-  },
-  "field1900_difference": {
-    "cmap": "bwr",
-    "max": 0.015,
-    "min": -0.015
   },
   "fog_fraction_at_screen_level": {
     "cmap": "Greys_r",
@@ -215,20 +128,6 @@
     "cmap": "bwr",
     "max": 1.0,
     "min": -1.0
-  },
-  "friction_velocity": {
-    "max": 10.0,
-    "min": 0.0
-  },
-  "friction_velocity_difference": {
-    "cmap": "bwr",
-    "max": 0.1,
-    "min": -0.1
-  },
-  "graupel_water_path": {
-    "cmap": "GnBu",
-    "max": 10,
-    "min": 0.0
   },
   "grid_surface_snow_amount": {
     "cmap": "cool",
@@ -260,29 +159,6 @@
     "max": 80.0,
     "min": -80.0
   },
-  "gridbox inflow": {
-    "max": 10.0,
-    "min": 0.1
-  },
-  "gridbox inflow_difference": {
-    "cmap": "bwr",
-    "max": 5e-06,
-    "min": -5e-06
-  },
-  "gridbox outflow": {
-    "max": 10.0,
-    "min": 0.1
-  },
-  "gridbox outflow_difference": {
-    "cmap": "bwr",
-    "max": 5e-06,
-    "min": -5e-06
-  },
-  "mass_content_of_water_in_soil": {
-    "cmap": "ocean_r",
-    "max": 500,
-    "min": -10
-  },
   "mass_content_of_water_in_soil_layer": {
     "cmap": "ocean_r",
     "max": 500,
@@ -293,45 +169,17 @@
     "max": 1.0,
     "min": 0.0
   },
-  "mld_4": {
-    "max": 250.0,
-    "min": -250.0
-  },
-  "mld_4_difference": {
-    "cmap": "bwr",
-    "max": 80.0,
-    "min": -80.0
-  },
-  "moisture_content_of_soil_layer": {
-    "max": 50.0,
-    "min": 0.0
-  },
-  "moisture_content_of_soil_layer_difference": {
-    "cmap": "bwr",
-    "max": 0.5,
-    "min": -0.5
-  },
-  "most_unstable_convective_available_potential_energy": {
-    "cmap": "Oranges",
-    "max": 5000,
-    "min": 0
-  },
-  "most_unstable_convective_inhibition": {
-    "cmap": "Purples_r",
-    "max": 0,
-    "min": -2000
-  },
-  "northward_wind": {
-    "cmap": "bwr",
-    "max": 35.0,
-    "min": -35.0
-  },
   "northward_wind_at_10m": {
     "cmap": "bwr",
     "max": 35.0,
     "min": -35.0
   },
   "northward_wind_at_10m_difference": {
+    "cmap": "bwr",
+    "max": 35.0,
+    "min": -35.0
+  },
+  "northward_wind_at_cell_centres": {
     "cmap": "bwr",
     "max": 35.0,
     "min": -35.0
@@ -346,15 +194,6 @@
     "max": 5,
     "min": -5
   },
-  "qsr": {
-    "max": 250.0,
-    "min": -250.0
-  },
-  "qsr_difference": {
-    "cmap": "bwr",
-    "max": 80.0,
-    "min": -80.0
-  },
   "radar_reflectivity_at_1km_above_the_surface": {
     "cmap": "cubehelix_r",
     "max": 70.0,
@@ -364,11 +203,6 @@
     "cmap": "bwr",
     "max": 100.0,
     "min": -100.0
-  },
-  "rain_mixing_ratio": {
-    "cmap": "cividis",
-    "max": 0.002,
-    "min": 0
   },
   "relative_humidity_at_screen_level": {
     "cmap": "Blues",
@@ -390,43 +224,6 @@
     "max": 0.5,
     "min": -0.5
   },
-  "subsurface_runoff_flux": {
-    "max": 2.0,
-    "min": 0.0
-  },
-  "subsurface_runoff_flux_difference": {
-    "cmap": "bwr",
-    "max": 5e-06,
-    "min": -5e-06
-  },
-  "surface roughness": {
-    "max": 1.0,
-    "min": 0.0
-  },
-  "surface roughness_difference": {
-    "cmap": "bwr",
-    "max": 0.1,
-    "min": -0.1
-  },
-  "surface_based_convective_available_potential_energy": {
-    "cmap": "Oranges",
-    "max": 5000,
-    "min": 0
-  },
-  "surface_based_convective_inhibition": {
-    "cmap": "Purples_r",
-    "max": 0,
-    "min": -2000
-  },
-  "surface_downward_eastward_stress": {
-    "max": 0.25,
-    "min": 0.0
-  },
-  "surface_downward_eastward_stress_difference": {
-    "cmap": "bwr",
-    "max": 0.05,
-    "min": -0.05
-  },
   "surface_downward_longwave_flux": {
     "cmap": "Greys_r",
     "max": 500,
@@ -436,20 +233,6 @@
     "cmap": "bwr",
     "max": 500,
     "min": -500
-  },
-  "surface_downward_longwave_flux_radiative_timestep": {
-    "cmap": "Greys_r",
-    "max": 500,
-    "min": 0
-  },
-  "surface_downward_northward_stress": {
-    "max": 0.25,
-    "min": 0.0
-  },
-  "surface_downward_northward_stress_difference": {
-    "cmap": "bwr",
-    "max": 0.05,
-    "min": -0.05
   },
   "surface_downward_shortwave_flux": {
     "cmap": "Greys",
@@ -461,57 +244,8 @@
     "max": 1400,
     "min": -1400
   },
-  "surface_downwelling_longwave_flux_in_air": {
-    "cmap": "Greys_r",
-    "max": 500,
-    "min": 0
-  },
-  "surface_downwelling_longwave_flux_in_air_difference": {
-    "cmap": "bwr",
-    "max": 500,
-    "min": -500
-  },
-  "surface_downwelling_shortwave_flux_in_air": {
-    "cmap": "Greys",
-    "max": 1400,
-    "min": 0
-  },
-  "surface_downwelling_shortwave_flux_in_air_difference": {
-    "cmap": "bwr",
-    "max": 1400,
-    "min": -1400
-  },
-  "surface_eastward_sea_water_velocity": {
-    "max": 5.0,
-    "min": 0.0
-  },
-  "surface_eastward_sea_water_velocity_difference": {
-    "cmap": "bwr",
-    "max": 0.5,
-    "min": -0.5
-  },
-  "surface_microphysical_graupelfall_rate": {
-    "cmap": "cividis",
-    "max": 0.01,
-    "min": 0
-  },
-  "surface_microphysical_precipitation_amount": {
-    "cmap": "cividis",
-    "max": 0.01,
-    "min": 0
-  },
-  "surface_microphysical_precipitation_rate": {
-    "cmap": "cividis",
-    "max": 0.01,
-    "min": 0
-  },
   "surface_microphysical_rainfall_rate": {
     "cmap": "cividis",
-    "max": 0.01,
-    "min": 0
-  },
-  "surface_microphysical_snowfall_amount": {
-    "cmap": "cool",
     "max": 0.01,
     "min": 0
   },
@@ -524,30 +258,6 @@
     "cmap": "bwr",
     "max": 0.01,
     "min": -0.01
-  },
-  "surface_net_downward_longwave_flux": {
-    "cmap": "bwr",
-    "max": 250.0,
-    "min": -250.0
-  },
-  "surface_net_downward_longwave_flux_difference": {
-    "cmap": "bwr",
-    "max": 80.0,
-    "min": -80.0
-  },
-  "surface_net_downward_shortwave_flux": {
-    "max": 250.0,
-    "min": -250.0
-  },
-  "surface_net_downward_shortwave_flux_difference": {
-    "cmap": "bwr",
-    "max": 80.0,
-    "min": -80.0
-  },
-  "surface_net_longwave_flux": {
-    "cmap": "bwr",
-    "max": 100,
-    "min": -100
   },
   "surface_net_longwave_flux_radiative_timestep": {
     "cmap": "bwr",
@@ -568,38 +278,6 @@
     "cmap": "bwr",
     "max": 1400,
     "min": -1400
-  },
-  "surface_northward_sea_water_velocity": {
-    "max": 5.0,
-    "min": 0.0
-  },
-  "surface_northward_sea_water_velocity_difference": {
-    "cmap": "bwr",
-    "max": 0.5,
-    "min": -0.5
-  },
-  "surface_runoff_flux": {
-    "max": 2.0,
-    "min": 0.0
-  },
-  "surface_runoff_flux_difference": {
-    "cmap": "bwr",
-    "max": 5e-06,
-    "min": -5e-06
-  },
-  "surface_tile_fraction": {
-    "cmap": "Set1",
-    "max": 9,
-    "min": 0
-  },
-  "surface_upward_water_flux": {
-    "max": 0.0001,
-    "min": -0.0001
-  },
-  "surface_upward_water_flux_difference": {
-    "cmap": "bwr",
-    "max": 1e-06,
-    "min": -1e-06
   },
   "temperature_at_pressure_levels": {
     "cmap": "RdYlBu_r",
@@ -664,45 +342,6 @@
     "max": 1400.0,
     "min": -1400.0
   },
-  "toa_incoming_shortwave_flux": {
-    "cmap": "viridis",
-    "max": 1400.0,
-    "min": 0.0
-  },
-  "toa_incoming_shortwave_flux_difference": {
-    "cmap": "bwr",
-    "max": 1400.0,
-    "min": -1400.0
-  },
-  "toa_outgoing_longwave_flux": {
-    "cmap": "viridis",
-    "max": 350.0,
-    "min": 0.0
-  },
-  "toa_outgoing_longwave_flux_difference": {
-    "cmap": "bwr",
-    "max": 10.0,
-    "min": -10.0
-  },
-  "toa_outgoing_shortwave_flux": {
-    "max": 350.0,
-    "min": 0.0
-  },
-  "toa_outgoing_shortwave_flux_difference": {
-    "cmap": "bwr",
-    "max": 10.0,
-    "min": -10.0
-  },
-  "toa_upward_longwave_flux": {
-    "cmap": "Greys",
-    "max": 500,
-    "min": 0
-  },
-  "toa_upward_longwave_flux_difference": {
-    "cmap": "bwr",
-    "max": 10,
-    "min": -10
-  },
   "toa_upward_longwave_flux_radiative_timestep": {
     "cmap": "viridis",
     "max": 350.0,
@@ -712,16 +351,6 @@
     "cmap": "bwr",
     "max": 10.0,
     "min": -10.0
-  },
-  "total_ice_water_path": {
-    "cmap": "Blues",
-    "max": 50,
-    "min": 0
-  },
-  "tropopause_level": {
-    "cmap": "terrain",
-    "max": 70,
-    "min": 30
   },
   "turbulent_mixing_height": {
     "cmap": "terrain",
@@ -733,21 +362,6 @@
     "max": 5000,
     "min": -5000
   },
-  "upward_air_velocity": {
-    "cmap": "bwr",
-    "max": 5,
-    "min": -5
-  },
-  "upward_heat_flux_in_air": {
-    "cmap": "bwr",
-    "max": 1000,
-    "min": -1000
-  },
-  "vapour_mixing_ratio": {
-    "cmap": "cividis",
-    "max": 0.002,
-    "min": 0
-  },
   "visibility_in_air": {
     "max": 70000.0,
     "min": 0.0
@@ -757,46 +371,9 @@
     "max": 3000.0,
     "min": -3000.0
   },
-  "water_flux_into_sea_water_from_rivers": {
-    "max": 1000.0,
-    "min": 1e-15
-  },
-  "water_flux_into_sea_water_from_rivers_difference": {
-    "cmap": "bwr",
-    "max": 10.0,
-    "min": -10.0
-  },
-  "water_potential_evaporation_flux": {
-    "max": 1.0,
-    "min": -1.0
-  },
-  "water_potential_evaporation_flux_difference": {
-    "cmap": "bwr",
-    "max": 1.0,
-    "min": -1.0
-  },
   "wet_bulb_potential_temperature_at_pressure_levels": {
     "cmap": "RdYlBu_r",
     "max": 340,
     "min": 260
-  },
-  "wind_mixing_energy_flux_into_sea_water": {
-    "max": 100.0,
-    "min": -100.0
-  },
-  "wind_mixing_energy_flux_into_sea_water_difference": {
-    "cmap": "bwr",
-    "max": 1.5,
-    "min": -1.5
-  },
-  "wind_speed_at_10m": {
-    "cmap": "Oranges",
-    "max": 30.0,
-    "min": 0.0
-  },
-  "wind_speed_of_gust_at_10m": {
-    "cmap": "Oranges",
-    "max": 60,
-    "min": 0
   }
 }
