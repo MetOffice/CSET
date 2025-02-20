@@ -414,3 +414,37 @@ def test_invalid_plotting_method_postage_stamp_spatial_plot(cube, tmp_working_di
         plot._plot_and_save_postage_stamp_spatial_plot(
             cube, "filename", "realization", "title", "invalid"
         )
+
+
+def test_append_to_plot_index(monkeypatch, tmp_working_dir):
+    """Ensure the datetime is written along with the plot index."""
+    # Setup environment and required file.
+    monkeypatch.setenv("CYLC_TASK_CYCLE_POINT", "20000101T0000Z")
+    with open("meta.json", "wt") as fp:
+        fp.write('{"plots":["plot_1"]}\n')
+
+    plot._append_to_plot_index(["plot_2"])
+
+    with open("meta.json", "rt") as fp:
+        meta = json.load(fp)
+    assert meta == {"plots": ["plot_1", "plot_2"], "case_date": "20000101T0000Z"}
+    assert "datetime" not in meta
+
+
+def test_append_to_plot_index_case_aggregation_no_datetime(
+    monkeypatch, tmp_working_dir
+):
+    """Ensure the datetime is not written for aggregation plots."""
+    # Setup environment and required file.
+    monkeypatch.setenv("CYLC_TASK_CYCLE_POINT", "20000101T0000Z")
+    monkeypatch.setenv(
+        "CYLC_TASK_NAMESPACE_HIERARCHY", "root PROCESS_CASE_AGGREGATION task_name"
+    )
+    with open("meta.json", "wt") as fp:
+        fp.write("{}\n")
+
+    plot._append_to_plot_index(["plot_1"])
+
+    with open("meta.json", "rt") as fp:
+        meta = json.load(fp)
+    assert "case_date" not in meta
