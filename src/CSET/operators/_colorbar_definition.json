@@ -573,8 +573,8 @@
   },
   "vertical_wind_at_pressure_levels": {
     "cmap": "bwr",
-    "max": 5,
-    "min": -5
+    "max": 2,
+    "min": -2
   },
   "vertical_wind_at_pressure_levels_difference": {
     "cmap": "bwr",
