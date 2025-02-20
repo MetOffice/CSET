@@ -347,6 +347,12 @@ def difference(cubes: CubeList):
 
     # This currently relies on the cubes having the same underlying data layout.
     difference = base.copy()
-    difference.rename(base.name() + "_difference")
+
+    # Differences don't have a standard name; long name gets a suffix. We are
+    # assuming we can rely on cubes having a long name, so we don't check for
+    # its presents.
+    difference.standard_name = None
+    difference.long_name = base.long_name + "_difference"
+
     difference.data = base.data - other.data
     return difference
