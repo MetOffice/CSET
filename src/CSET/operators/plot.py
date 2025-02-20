@@ -502,11 +502,11 @@ def _plot_and_save_line_series(
     ax.ticklabel_format(axis="y", useOffset=False)
     ax.tick_params(axis="x", labelrotation=15)
 
-    # If no vmin, vmax from colorbar
-    if y_levels == []:
-        ax.autoscale()
+    # Set y limits to global min and max, autoscale if colorbar doesn't exist.
+    if y_levels:
+        ax.set_ylim(min(y_levels), max(y_levels))
     else:
-        ax.set_ylim(np.min(y_levels), np.max(y_levels))
+        ax.autoscale()
 
     # Add gridlines
     ax.grid(linestyle="--", color="grey", linewidth=1)
