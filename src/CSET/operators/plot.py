@@ -489,7 +489,7 @@ def _plot_and_save_line_series(
             y_levels.append(min(levels))
             y_levels.append(max(levels))
 
-    # Get the current axes
+    # Get the current axes.
     ax = plt.gca()
 
     # Add some labels and tweak the style.
