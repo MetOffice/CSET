@@ -109,7 +109,16 @@
     "max": 35.0,
     "min": -35.0
   },
-  "eastward_wind_at_cell_centres": {
+  "eastward_wind_at_10m_difference": {
+    "cmap": "bwr",
+    "max": 5,
+    "min": -5
+  },
+  "evaporation_flux_from_open_sea": {
+    "max": 0.006,
+    "min": -0.006
+  },
+  "evaporation_flux_from_open_sea_difference": {
     "cmap": "bwr",
     "max": 35.0,
     "min": -35.0
