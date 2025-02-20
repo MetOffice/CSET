@@ -187,12 +187,6 @@ def setup_logging(verbosity: int):
     logging.captureWarnings(True)
 
     # Calculate logging level.
-    try:
-        name_to_level = logging.getLevelNamesMapping()
-    except AttributeError:
-        # logging.getLevelNamesMapping() is python 3.11 or newer. Using
-        # implementation detail for older versions.
-        name_to_level = logging._nameToLevel
     # Level from CLI flags.
     if verbosity >= 2:
         cli_loglevel = logging.DEBUG
@@ -200,29 +194,35 @@ def setup_logging(verbosity: int):
         cli_loglevel = logging.INFO
     else:
         cli_loglevel = logging.WARNING
-    # Level from environment variable.
+
+    # Level from $LOGLEVEL environment variable.
+    try:
+        name_to_level = logging.getLevelNamesMapping()
+    except AttributeError:
+        # logging.getLevelNamesMapping() is python 3.11 or newer. Using
+        # implementation detail for older versions.
+        name_to_level = logging._nameToLevel
     env_loglevel = name_to_level.get(os.getenv("LOGLEVEL"), logging.ERROR)
+
+    # Logging verbosity is the most verbose of CLI and environment setting.
     loglevel = min(cli_loglevel, env_loglevel)
 
     # Configure the root logger.
     logger = logging.getLogger()
-    # Record everything at least INFO for the log file.
-    logger.setLevel(min(loglevel, logging.INFO))
+    # Set logging level.
+    logger.setLevel(loglevel)
+
     # Hide matplotlib's many font messages.
-    logger.addFilter(
-        lambda record: not (
-            isinstance(record, str) and record.msg.startswith("findfont:")
-        )
-    )
+    class NoFontMessageFilter(logging.Filter):
+        def filter(self, record):
+            return not record.getMessage().startswith("findfont:")
+
+    logging.getLogger("matplotlib.font_manager").addFilter(NoFontMessageFilter())
+
     stderr_log = logging.StreamHandler()
-    # Filter stderr log to just what is requested.
-    stderr_log.addFilter(lambda record: record.levelno >= loglevel)
-    stderr_log.addFilter(
-        lambda record: not (
-            isinstance(record, str) and record.msg.startswith("findfont:")
-        )
+    stderr_log.setFormatter(
+        logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s")
     )
-    stderr_log.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
     logger.addHandler(stderr_log)
 
 

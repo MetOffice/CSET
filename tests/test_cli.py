@@ -56,9 +56,9 @@ def test_argument_parser():
 def test_setup_logging():
     """Tests the logging setup at various verbosity levels."""
     root_logger = logging.getLogger()
-    # Log level gets pinned at a minimum of INFO for file output.
+    # Log has a minimum of WARNING.
     CSET.setup_logging(0)
-    assert root_logger.level == logging.INFO
+    assert root_logger.level == logging.WARNING
     # -v
     CSET.setup_logging(1)
     assert root_logger.level == logging.INFO
