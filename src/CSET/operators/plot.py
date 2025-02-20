@@ -483,7 +483,7 @@ def _plot_and_save_line_series(
     for cube_iter in iter_maybe(cubes):
         iplt.plot(coord, cube_iter, "o-")
 
-        # So we can calculate the min/max if multiple cubes
+        # Calculate the global min/max if multiple cubes are given.
         _, levels, _ = _colorbar_map_levels(cube_iter)
         if levels is not None:
             y_levels.append(np.min(levels))
