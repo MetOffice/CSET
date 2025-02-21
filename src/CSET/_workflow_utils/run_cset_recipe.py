@@ -108,14 +108,9 @@ def run_recipe_steps():
 
     logging.info("Running %s", " ".join(command))
     try:
-        subprocess.run(command, check=True, env=subprocess_env(), capture_output=True)
+        subprocess.run(command, check=True, env=subprocess_env())
     except subprocess.CalledProcessError as err:
-        logging.exception(
-            "cset bake exited with non-zero code %s.\nstdout: %s\nstderr: %s",
-            err.returncode,
-            err.stdout.decode(sys.stdout.encoding),
-            err.stderr.decode(sys.stderr.encoding),
-        )
+        logging.exception("cset bake exited with non-zero code %s.", err.returncode)
         raise
     create_diagnostic_archive(output_directory())
 
