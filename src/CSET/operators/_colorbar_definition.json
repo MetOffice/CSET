@@ -159,8 +159,8 @@
   },
   "geopotential_height_at_pressure_levels_difference": {
     "cmap": "bwr",
-    "max": 300,
-    "min": -300
+    "max": 60,
+    "min": -60
   },
   "grid_surface_snow_amount": {
     "cmap": "cool",
