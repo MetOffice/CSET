@@ -235,7 +235,7 @@
   "maximum_combined_cloud_amount_below_111m_asl_difference": {
     "cmap": "bwr",
     "max": 1.0,
-    "min": -10.0
+    "min": -1.0
   },
   "medium_type_cloud_area_fraction": {
     "cmap": "viridis",
