@@ -614,6 +614,9 @@ def _plot_and_save_vertical_line_series(
     ax.ticklabel_format(axis="x")
     ax.tick_params(axis="y")
 
+    # Add gridlines
+    ax.grid(linestyle="--", color="grey", linewidth=1)
+
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
     logging.info("Saved line plot to %s", filename)
@@ -691,7 +694,6 @@ def _plot_and_save_histogram_series(
     title: str,
     vmin: float,
     vmax: float,
-    histtype: str = "step",
     **kwargs,
 ):
     """Plot and save a histogram series.
@@ -700,15 +702,6 @@ def _plot_and_save_histogram_series(
     ----------
     cubes: Cube or CubeList
         2 dimensional Cube or CubeList of the data to plot as histogram.
-        Plotting options are fixed:
-        density=True, histtype='step',stacked=True to ensure that
-        a probability density is plotted using matplotlib.pyplot.hist
-        to plot the probability density so that the area under
-        the histogram integrates to 1.
-        stacked is set to True so the sum of the histograms is
-        normalized to 1.
-        ax.autoscale is switched off and the ylim range
-        is preset as (0,1) to make figures comparable.
     filename: str
         Filename of the plot to write.
     title: str
@@ -717,10 +710,6 @@ def _plot_and_save_histogram_series(
         minimum for colorbar
     vmax: float
         maximum for colorbar
-    histtype: str
-        The type of histogram to plot. Options are "step" for a line
-        histogram or "barstacked", "stepfilled". "Step" is the default option,
-        but can be changed in the rose-suite.conf configuration.
     """
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     ax = plt.gca()
@@ -774,7 +763,6 @@ def _plot_and_save_postage_stamp_histogram_series(
     stamp_coordinate: str,
     vmin: float,
     vmax: float,
-    histtype: str,
     **kwargs,
 ):
     """Plot and save postage (ensemble members) stamps for a histogram series.
@@ -783,15 +771,6 @@ def _plot_and_save_postage_stamp_histogram_series(
     ----------
     cube: Cube
         2 dimensional Cube of the data to plot as histogram.
-        Plotting options are fixed:
-        density=True, histtype='bar', stacked=True to ensure that
-        a probability density is plotted using matplotlib.pyplot.hist
-        to plot the probability density so that the area under
-        the histogram integrates to 1.
-        stacked is set to True so the sum of the histograms is
-        normalized to 1.
-        ax.autoscale is switched off and the ylim range
-        is preset as (0,1) to make figures comparable.
     filename: str
         Filename of the plot to write.
     title: str
@@ -802,11 +781,6 @@ def _plot_and_save_postage_stamp_histogram_series(
         minimum for pdf x-axis
     vmax: float
         maximum for pdf x-axis
-    histtype: str
-        The type of histogram to plot. Options are "step" for a line
-        histogram or "barstacked", "stepfilled". "Step" is the default option,
-        but can be changed in the rose-suite.conf configuration.
-
     """
     # Use the smallest square grid that will fit the members.
     grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
@@ -822,7 +796,7 @@ def _plot_and_save_postage_stamp_histogram_series(
         # Reshape cube data into a single array to allow for a single histogram.
         # Otherwise we plot xdim histograms stacked.
         member_data_1d = (member.data).flatten()
-        plt.hist(member_data_1d, density=True, histtype=histtype, stacked=True)
+        plt.hist(member_data_1d, density=True, stacked=True)
         ax = plt.gca()
         ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
         ax.set_xlim(vmin, vmax)
@@ -842,7 +816,6 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
     stamp_coordinate: str,
     vmin: float,
     vmax: float,
-    histtype: str = "step",
     **kwargs,
 ):
     fig, ax = plt.subplots(figsize=(10, 10), facecolor="w", edgecolor="k")
@@ -858,7 +831,6 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
         plt.hist(
             member_data_1d,
             density=True,
-            histtype=histtype,
             stacked=True,
             label=f"Member #{member.coord(stamp_coordinate).points[0]}",
         )
@@ -1188,6 +1160,9 @@ def plot_vertical_line_series(
     # Initialise empty list to hold all data from all cubes in a CubeList
     all_data = []
 
+    # Store min/max ranges for x range.
+    x_levels = []
+
     # Iterate over all cubes in cube or CubeList and plot.
     for cube_iter in iter_maybe(cubes):
         # Ensure we've got a single cube.
@@ -1209,18 +1184,26 @@ def plot_vertical_line_series(
                 f"Cube must have a {sequence_coordinate} coordinate or be 1D."
             ) from err
 
-        # Append cube data to the list to calculate vmin and vmax across entire
-        # cubelist.
-        all_data.append(cube_iter.data)
+        # Get minimum and maximum from levels information.
+        _, levels, _ = _colorbar_map_levels(cube_iter)
+        if levels is not None:
+            x_levels.append(min(levels))
+            x_levels.append(max(levels))
+        else:
+            all_data.append(cube_iter.data)
 
-    # Combine all data into a single NumPy array
-    combined_data = np.concatenate(all_data)
+    if len(x_levels) == 0:
+        # Combine all data into a single NumPy array
+        combined_data = np.concatenate(all_data)
 
-    # Set the lower and upper limit for the x-axis to ensure all plots have same
-    # range. This needs to read the whole cube over the range of the sequence
-    # and if applicable postage stamp coordinate.
-    vmin = np.floor(combined_data.min())
-    vmax = np.ceil(combined_data.max())
+        # Set the lower and upper limit for the x-axis to ensure all plots have same
+        # range. This needs to read the whole cube over the range of the sequence
+        # and if applicable postage stamp coordinate.
+        vmin = np.floor(combined_data.min())
+        vmax = np.ceil(combined_data.max())
+    else:
+        vmin = min(x_levels)
+        vmax = max(x_levels)
 
     # Create a plot for each value of the sequence coordinate.
     # Allowing for multiple cubes in a CubeList to be plotted in the same plot for
@@ -1356,7 +1339,6 @@ def plot_histogram_series(
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
     single_plot: bool = False,
-    histtype: str = "step",
     **kwargs,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Plot a histogram plot for each vertical level provided.
@@ -1389,10 +1371,6 @@ def plot_histogram_series(
         If True, all postage stamp plots will be plotted in a single plot. If
         False, each postage stamp plot will be plotted separately. Is only valid
         if stamp_coordinate exists and has more than a single point.
-    histtype: str, optional
-        The type of histogram to plot. Options are "step" for a line histogram
-        or "barstacked", "stepfilled". "Step" is the default option, but can be
-        changed in the rose-suite.conf configuration.
 
     Returns
     -------
@@ -1418,6 +1396,9 @@ def plot_histogram_series(
 
     # Initialise empty list to hold all data from all cubes in a CubeList
     all_data = []
+
+    # Store min/max ranges for xlim.
+    x_levels = []
 
     # Iterate over all cubes in cube or CubeList and plot.
     for cube_iter in iter_maybe(cubes):
@@ -1447,17 +1428,26 @@ def plot_histogram_series(
                 f"Cube must have a {sequence_coordinate} coordinate."
             ) from err
 
-        # append cube data to the list to calculate vmin and vmax across entire cubelist
-        all_data.append(cube_iter.data)
+        # Get minimum and maximum from levels information.
+        _, levels, _ = _colorbar_map_levels(cube_iter)
+        if levels is not None:
+            x_levels.append(min(levels))
+            x_levels.append(max(levels))
+        else:
+            all_data.append(cube_iter.data)
 
-    # Combine all data into a single NumPy array
-    combined_data = np.concatenate(all_data)
+    if len(x_levels) == 0:
+        # Combine all data into a single NumPy array
+        combined_data = np.concatenate(all_data)
 
-    # Set the lower and upper limit for the colorbar to ensure all plots have
-    # same range. This needs to read the whole cube over the range of the
-    # sequence and if applicable postage stamp coordinate.
-    vmin = np.floor((combined_data.min()))
-    vmax = np.ceil((combined_data.max()))
+        # Set the lower and upper limit for the x-axis to ensure all plots have same
+        # range. This needs to read the whole cube over the range of the sequence
+        # and if applicable postage stamp coordinate.
+        vmin = np.floor(combined_data.min())
+        vmax = np.ceil(combined_data.max())
+    else:
+        vmin = min(x_levels)
+        vmax = max(x_levels)
 
     # Create a plot for each value of the sequence coordinate.
     # Allowing for multiple cubes in a CubeList to be plotted in the same plot for
@@ -1480,7 +1470,6 @@ def plot_histogram_series(
             title=title,
             vmin=vmin,
             vmax=vmax,
-            histtype=histtype,
         )
         plot_index.append(plot_filename)
 
