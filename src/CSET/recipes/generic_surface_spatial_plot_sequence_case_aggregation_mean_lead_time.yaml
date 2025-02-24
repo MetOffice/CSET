@@ -19,7 +19,10 @@ steps:
         coordinate: "pressure"
         levels: []
 
-  - operator: collapse.collapse_by_lead_time
+  - operator: aggregate.ensure_aggregatable_across_cases
+
+  - operator: collapse.collapse
+    coordinate: "forecast_reference_time"
     method: MEAN
 
   - operator: plot.spatial_pcolormesh_plot

@@ -16,6 +16,8 @@ steps:
         coordinate: "model_level_number"
         levels: $MLEVEL
 
+  - operator: aggregate.ensure_aggregatable_across_cases
+
   - operator: collapse.collapse_by_hour_of_day
     method: MEAN
 
