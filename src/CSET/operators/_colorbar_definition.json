@@ -157,10 +157,10 @@
       }
     }
   },
-  "geopotential_height_at_pressure_levels_differences": {
+  "geopotential_height_at_pressure_levels_difference": {
     "cmap": "bwr",
-    "max": 300,
-    "min": -300
+    "max": 60,
+    "min": -60
   },
   "grid_surface_snow_amount": {
     "cmap": "cool",
@@ -231,6 +231,11 @@
     "cmap": "viridis",
     "max": 1.0,
     "min": 0.0
+  },
+  "maximum_combined_cloud_amount_below_111m_asl_difference": {
+    "cmap": "bwr",
+    "max": 1.0,
+    "min": -1.0
   },
   "medium_type_cloud_area_fraction": {
     "cmap": "viridis",
@@ -566,7 +571,7 @@
       }
     }
   },
-  "vapour_specific_humidity_at_pressure_levels_for_climate_averaging_differences": {
+  "vapour_specific_humidity_at_pressure_levels_for_climate_averaging_difference": {
     "cmap": "bwr",
     "max": 0.0001,
     "min": -0.0001
@@ -596,7 +601,7 @@
     "max": 340,
     "min": 260
   },
-  "wet_bulb_potential_temperature_at_pressure_levels_differences": {
+  "wet_bulb_potential_temperature_at_pressure_levels_difference": {
     "cmap": "bwr",
     "max": 5,
     "min": -5

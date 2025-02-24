@@ -158,6 +158,8 @@ def test_difference(cube: iris.cube.Cube):
     assert np.allclose(
         difference_cube.data, np.zeros_like(difference_cube.data), atol=1e-9
     )
+    assert difference_cube.standard_name is None
+    assert difference_cube.long_name == cube.long_name + "_difference"
 
 
 def test_difference_incorrect_number_of_cubes(cube):
