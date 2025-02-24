@@ -19,10 +19,10 @@ steps:
         coordinate: "pressure"
         levels: []
 
-  - operator: misc.difference
-
   - operator: collapse.collapse_by_hour_of_day
     method: MEAN
+
+  - operator: misc.difference
 
   - operator: plot.spatial_pcolormesh_plot
     sequence_coordinate: hour
