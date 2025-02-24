@@ -247,7 +247,7 @@ def test_collapse_by_validity_time_percentile(long_forecast_multi_day):
 
 def test_collapse_by_validity_time_percentile_fail(long_forecast_multi_day):
     """Test not specifying additional percent fails."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Must specify additional_percent"):
         collapse.collapse_by_validity_time(long_forecast_multi_day, "PERCENTILE")
 
 
