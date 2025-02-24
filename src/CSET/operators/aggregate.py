@@ -96,28 +96,25 @@ def ensure_aggregatable_across_cases(
 ) -> iris.cube.CubeList:
     """Ensure a Cube or CubeList can be aggregated across multiple cases.
 
+    The cubes are grouped into buckets of compatible cubes, then each bucket is
+    converted into a single aggregatable cube with ``forecast_period`` and
+    ``forecast_reference_time`` dimension coordinates.
+
     Arguments
     ---------
     cubes: iris.cube.Cube | iris.cube.CubeList
-        If a single Cube is provided it is checked to determine if it has the
-        the necessary dimensional coordinates to be aggregatable. These
-        necessary coordinates are 'forecast_period' and
-        'forecast_reference_time'. If a CubeList is provided a Cube is created
-        by slicing over all time coordinates and the resulting list is merged to
-        create an aggregatable cube.
+        Each cube is checked to determine if it has the the necessary
+        dimensional coordinates to be aggregatable, being processed if needed.
 
     Returns
     -------
     cubes: iris.cube.CubeList
-        A CubeList of time aggregatable cube with dimension coordinates
-        including 'forecast_period' and 'forecast_reference_time'.
+        A CubeList of time aggregatable cubes.
 
     Raises
     ------
     ValueError
-        If a Cube is provided and it is not aggregatable a ValueError is raised.
-        The user should then provide a CubeList to be turned into an
-        aggregatable cube to allow aggregation across multiple cases to occur.
+        If any of the provided cubes cannot be made aggregatable.
 
     Notes
     -----
@@ -127,6 +124,9 @@ def ensure_aggregatable_across_cases(
     to ensure that the full dataset can be loaded as a single cube. This
     functionality is particularly useful for percentiles, Q-Q plots, and
     histograms.
+
+    The necessary dimension coordinates for a cube to be aggregatable are
+    ``forecast_period`` and ``forecast_reference_time``.
     """
 
     # Group compatible cubes.
