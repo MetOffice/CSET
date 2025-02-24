@@ -1160,7 +1160,7 @@ def plot_vertical_line_series(
     # Initialise empty list to hold all data from all cubes in a CubeList
     all_data = []
 
-    # Store min/max ranges for x range
+    # Store min/max ranges for x range.
     x_levels = []
 
     # Iterate over all cubes in cube or CubeList and plot.
