@@ -125,25 +125,43 @@ def transect_source_cube(transect_source_cube_readonly):
     return transect_source_cube_readonly.copy()
 
 
-@pytest.fixture()
-def long_forecast():
-    """Get long_forecast to run tests on."""
+@pytest.fixture(scope="session")
+def long_forecast_read_only():
+    """Get long_forecast to run tests on. It is NOT safe to modify."""
     return read.read_cube(
         "tests/test_data/long_forecast_air_temp_fcst_1.nc", "air_temperature"
     )
 
 
 @pytest.fixture()
-def long_forecast_multi_day():
-    """Get long_forecast_multi_day to run tests on."""
+def long_forecast(long_forecast_read_only):
+    """Get long_forecast to run tests on. It is safe to modify."""
+    return long_forecast_read_only.copy()
+
+
+@pytest.fixture(scope="session")
+def long_forecast_multi_day_read_only():
+    """Get long_forecast_multi_day to run tests on. It is NOT safe to modify."""
     return read.read_cube(
         "tests/test_data/long_forecast_air_temp_multi_day.nc", "air_temperature"
     )
 
 
 @pytest.fixture()
-def long_forecast_many_cubes():
-    """Get long_forecast_may_cubes to run tests on."""
+def long_forecast_multi_day(long_forecast_multi_day_read_only):
+    """Get long_forecast_multi_day to run tests on. It is safe to modify."""
+    return long_forecast_multi_day_read_only.copy()
+
+
+@pytest.fixture(scope="session")
+def long_forecast_many_cubes_read_only():
+    """Get long_forecast_may_cubes to run tests on. It is NOT safe to modify."""
     return read.read_cubes(
         "tests/test_data/long_forecast_air_temp_fcst_*.nc", "air_temperature"
     )
+
+
+@pytest.fixture()
+def long_forecast_many_cubes(long_forecast_many_cubes_read_only):
+    """Get long_forecast_may_cubes to run tests on. It is safe to modify."""
+    return long_forecast_many_cubes_read_only.copy()
