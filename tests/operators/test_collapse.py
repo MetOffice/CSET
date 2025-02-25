@@ -19,31 +19,7 @@ import iris.cube
 import numpy as np
 import pytest
 
-from CSET.operators import collapse, read
-
-
-@pytest.fixture()
-def long_forecast() -> iris.cube.Cube:
-    """Get long_forecast to run tests on."""
-    return read.read_cube(
-        "tests/test_data/long_forecast_air_temp_fcst_1.nc", "air_temperature"
-    )
-
-
-@pytest.fixture()
-def long_forecast_multi_day() -> iris.cube.Cube:
-    """Get long_forecast_multi_day to run tests on."""
-    return read.read_cube(
-        "tests/test_data/long_forecast_air_temp_multi_day.nc", "air_temperature"
-    )
-
-
-@pytest.fixture()
-def long_forecast_many_cubes() -> iris.cube.Cube:
-    """Get long_forecast_may_cubes to run tests on."""
-    return read.read_cubes(
-        "tests/test_data/long_forecast_air_temp_fcst_*.nc", "air_temperature"
-    )
+from CSET.operators import collapse
 
 
 @pytest.fixture()
@@ -166,7 +142,9 @@ def test_collapse_by_lead_time_single_cube(long_forecast_multi_day):
     )
     assert np.allclose(
         calculated_cube.data,
-        collapse.collapse_by_lead_time(long_forecast_multi_day, "MEAN").data,
+        collapse.collapse(
+            long_forecast_multi_day, "forecast_reference_time", "MEAN"
+        ).data,
         rtol=1e-06,
         atol=1e-02,
     )
@@ -181,7 +159,9 @@ def test_collapse_by_lead_time_cube_list(
     )
     assert np.allclose(
         calculated_cube.data,
-        collapse.collapse_by_lead_time(long_forecast_many_cubes, "MEAN").data,
+        collapse.collapse(
+            long_forecast_many_cubes, "forecast_reference_time", "MEAN"
+        ).data,
         rtol=1e-06,
         atol=1e-02,
     )
@@ -197,8 +177,11 @@ def test_collapse_by_lead_time_single_cube_percentile(long_forecast_multi_day):
     )
     assert np.allclose(
         calculated_cube.data,
-        collapse.collapse_by_lead_time(
-            long_forecast_multi_day, "PERCENTILE", additional_percent=75
+        collapse.collapse(
+            long_forecast_multi_day,
+            "forecast_reference_time",
+            "PERCENTILE",
+            additional_percent=75,
         ).data,
         rtol=1e-06,
         atol=1e-02,
@@ -208,7 +191,9 @@ def test_collapse_by_lead_time_single_cube_percentile(long_forecast_multi_day):
 def test_collapse_by_lead_time_single_cube_percentile_fail(long_forecast_multi_day):
     """Test fail by not setting additional percent."""
     with pytest.raises(ValueError):
-        collapse.collapse_by_lead_time(long_forecast_multi_day, "PERCENTILE")
+        collapse.collapse(
+            long_forecast_multi_day, "forecast_reference_time", "PERCENTILE"
+        )
 
 
 def test_collapse_by_lead_time_cube_list_percentile(
@@ -223,8 +208,11 @@ def test_collapse_by_lead_time_cube_list_percentile(
     )
     assert np.allclose(
         calculated_cube.data,
-        collapse.collapse_by_lead_time(
-            long_forecast_many_cubes, "PERCENTILE", additional_percent=75
+        collapse.collapse(
+            long_forecast_many_cubes,
+            "forecast_reference_time",
+            "PERCENTILE",
+            additional_percent=75,
         ).data,
         rtol=1e-06,
         atol=1e-02,
@@ -247,6 +235,18 @@ def test_collapse_by_validity_time_cubelist(long_forecast_many_cubes):
     assert repr(collapsed_cube) == expected_cube
 
 
+def test_collapse_by_validity_time_incompatible_cubelist(long_forecast_many_cubes):
+    """Error raised when incompatible cubes are given."""
+    foo_cubes = long_forecast_many_cubes.copy()
+    for cube in foo_cubes:
+        cube.rename("foo")
+    test_cubes = long_forecast_many_cubes + foo_cubes
+    with pytest.raises(
+        ValueError, match="Cubes should be compatible when collapsing by validity time."
+    ):
+        collapse.collapse_by_validity_time(test_cubes, "MEAN")
+
+
 def test_collapse_by_validity_time_percentile(long_forecast_multi_day):
     """Reduce by validity time with percentiles."""
     # Test successful collapsing by validity time.
@@ -259,7 +259,7 @@ def test_collapse_by_validity_time_percentile(long_forecast_multi_day):
 
 def test_collapse_by_validity_time_percentile_fail(long_forecast_multi_day):
     """Test not specifying additional percent fails."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Must specify additional_percent"):
         collapse.collapse_by_validity_time(long_forecast_multi_day, "PERCENTILE")
 
 
