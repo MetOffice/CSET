@@ -5,8 +5,13 @@
 set -euo pipefail
 
 if [[ $CSET_ENV_USE_LOCAL_CSET = "True" ]]; then
-  cset_source_path="${CSET_LOCAL_CSET_PATH}"
-  echo "Using local CSET from ${cset_source_path}"
+  if [[ -e $CSET_LOCAL_CSET_PATH ]]; then
+    cset_source_path="${CSET_LOCAL_CSET_PATH}"
+    echo "Using local CSET from ${cset_source_path}"
+  else
+    echo "${CSET_LOCAL_CSET_PATH:-''}" does not exist. Make sure CSET_LOCAL_CSET_PATH is set correctly.
+    exit 1
+  fi
 
   # Directly install wheel files or copy, build, and install source folder.
   if [[ $cset_source_path == *.whl ]]; then
