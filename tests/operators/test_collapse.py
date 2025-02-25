@@ -142,7 +142,9 @@ def test_collapse_by_lead_time_single_cube(long_forecast_multi_day):
     )
     assert np.allclose(
         calculated_cube.data,
-        collapse.collapse_by_lead_time(long_forecast_multi_day, "MEAN").data,
+        collapse.collapse(
+            long_forecast_multi_day, "forecast_reference_time", "MEAN"
+        ).data,
         rtol=1e-06,
         atol=1e-02,
     )
@@ -157,7 +159,9 @@ def test_collapse_by_lead_time_cube_list(
     )
     assert np.allclose(
         calculated_cube.data,
-        collapse.collapse_by_lead_time(long_forecast_many_cubes, "MEAN").data,
+        collapse.collapse(
+            long_forecast_many_cubes, "forecast_reference_time", "MEAN"
+        ).data,
         rtol=1e-06,
         atol=1e-02,
     )
@@ -173,8 +177,11 @@ def test_collapse_by_lead_time_single_cube_percentile(long_forecast_multi_day):
     )
     assert np.allclose(
         calculated_cube.data,
-        collapse.collapse_by_lead_time(
-            long_forecast_multi_day, "PERCENTILE", additional_percent=75
+        collapse.collapse(
+            long_forecast_multi_day,
+            "forecast_reference_time",
+            "PERCENTILE",
+            additional_percent=75,
         ).data,
         rtol=1e-06,
         atol=1e-02,
@@ -184,7 +191,9 @@ def test_collapse_by_lead_time_single_cube_percentile(long_forecast_multi_day):
 def test_collapse_by_lead_time_single_cube_percentile_fail(long_forecast_multi_day):
     """Test fail by not setting additional percent."""
     with pytest.raises(ValueError):
-        collapse.collapse_by_lead_time(long_forecast_multi_day, "PERCENTILE")
+        collapse.collapse(
+            long_forecast_multi_day, "forecast_reference_time", "PERCENTILE"
+        )
 
 
 def test_collapse_by_lead_time_cube_list_percentile(
@@ -199,8 +208,11 @@ def test_collapse_by_lead_time_cube_list_percentile(
     )
     assert np.allclose(
         calculated_cube.data,
-        collapse.collapse_by_lead_time(
-            long_forecast_many_cubes, "PERCENTILE", additional_percent=75
+        collapse.collapse(
+            long_forecast_many_cubes,
+            "forecast_reference_time",
+            "PERCENTILE",
+            additional_percent=75,
         ).data,
         rtol=1e-06,
         atol=1e-02,
