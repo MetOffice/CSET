@@ -578,10 +578,13 @@ def _lfric_time_callback(cube: iris.cube.Cube):
     coord_names = [coord.name() for coord in cube.coords()]
 
     # Construct forecast_reference time and forecast_period if they dont exist.
-    if "forecast_reference_time" not in coord_names:
-        if "time" in coord_names:
-            tcoord = cube.coord("time")
-            if "time_origin" in tcoord.attributes:
+    if "time" in coord_names:
+        tcoord = cube.coord("time")
+        if (
+            "forecast_reference_time" not in coord_names
+            and "time_origin" in tcoord.attributes
+        ):
+            try:
                 init_time = datetime.datetime.fromisoformat(
                     cube.coord("time").attributes["time_origin"]
                 )
@@ -594,16 +597,12 @@ def _lfric_time_callback(cube: iris.cube.Cube):
                     standard_name="forecast_reference_time",
                 )
                 cube.add_aux_coord(frt_coord)
-                # Remove time_origin to allow multiple case studies to merge.
-                del tcoord.attributes["time_origin"]
-            else:
+            except KeyError:
                 logging.info(
-                    "Cannot find forecast_reference_time, but no time_origin to construct it"
+                    "Cannot find forecast_reference_time, but not enough information to construct it."
                 )
-        else:
-            logging.info(
-                "Cannot find forecast_reference_time, but no time axis to construct it"
-            )
+        # Remove time_origin to allow multiple case studies to merge.
+        tcoord.attributes.pop("time_origin", None)
 
     # Regenerate coordinates list from cube
     coord_names = [coord.name() for coord in cube.coords()]
