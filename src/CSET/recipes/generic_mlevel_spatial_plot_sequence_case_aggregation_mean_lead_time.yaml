@@ -16,7 +16,10 @@ steps:
         coordinate: "model_level_number"
         levels: $MLEVEL
 
-  - operator: collapse.collapse_by_lead_time
+  - operator: aggregate.ensure_aggregatable_across_cases
+
+  - operator: collapse.collapse
+    coordinate: "forecast_reference_time"
     method: MEAN
 
   - operator: plot.spatial_contour_plot
