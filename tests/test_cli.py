@@ -67,6 +67,16 @@ def test_setup_logging():
     assert root_logger.level == logging.DEBUG
 
 
+def test_setup_logging_mpl_font_logs_filtered(caplog):
+    """Test matplotlib log messages about fonts are filtered out."""
+    CSET.setup_logging(2)
+    logger = logging.getLogger("matplotlib.font_manager")
+    logger.debug("findfont: message")
+    logger.debug("other message")
+    assert len(caplog.records) == 1
+    assert caplog.records[0].getMessage() == "other message"
+
+
 def test_main_no_subparser(capsys):
     """Appropriate error when no subparser is given."""
     with pytest.raises(SystemExit) as sysexit:
