@@ -235,7 +235,6 @@ def _create_callback(is_ensemble: bool, is_base: bool) -> callable:
         _fix_um_radtime_posthour(cube)
         _fix_lfric_longnames(cube)
         _fix_um_lightning(cube)
-        _fix_lfric_radtime_prehour(cube)
 
     return callback
 
@@ -469,34 +468,6 @@ def _fix_um_radtime_prehour(cube: iris.cube.Cube):
     """Fix radiation which is output 1 minute before every hour."""
     try:
         if cube.attributes["STASH"] == "m01s01i207":
-            time_coord = cube.coord("time")
-
-            # Convert time points to datetime objects
-            time_unit = time_coord.units
-            time_points = time_unit.num2date(time_coord.points)
-
-            # Add 1 minute from each time point
-            new_time_points = np.array(
-                [t + datetime.timedelta(minutes=1) for t in time_points]
-            )
-
-            # Convert back to numeric values using the original time unit
-            new_time_values = time_unit.date2num(new_time_points)
-
-            # Replace the time coordinate with corrected values
-            time_coord.points = new_time_values
-    except KeyError:
-        pass
-
-
-def _fix_lfric_radtime_prehour(cube: iris.cube.Cube):
-    """Fix radiation which is output 1 minute before every hour."""
-    try:
-        # Check LFRic.
-        if "time_origin" in cube.coord("time").attributes and cube.name() in [
-            "toa_upward_longwave_flux_radiative_timestep",
-            "surface_net_longwave_flux_radiative_timestep",
-        ]:
             time_coord = cube.coord("time")
 
             # Convert time points to datetime objects
