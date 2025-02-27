@@ -1,35 +1,7 @@
-Install and run the CSET workflow
-=================================
+Run the workflow
+================
 
-CSET is typically run through a `cylc workflow`_. The first thing you will need
-to do is download the CSET workflow. The easiest way to do that is via the
-`Releases page on GitHub`_, or you can clone the repository. Once downloaded the
-tarball or zip can be unpacked to a location of your choosing.
-
-CSET uses **cylc 8**, so you must ensure that is the version of cylc configured
-for usage. For the Met Office installation this involves setting an environment
-variable before running cylc with the following commands:
-
-.. code-block:: bash
-
-   export CYLC_VERSION=8
-   cylc --version  # Check version starts in 8
-
-The workflow lives within the ``cset-workflow`` directory, and all the following
-commands assume you are within it.
-
-.. code-block:: bash
-
-  # From within your CSET repository, change into the workflow directory.
-  cd cset-workflow
-
-First up, if you are at a specific site, you need to install the site specific
-configuration. This is done by running the ``install_restricted_files.sh``
-script. In most cases you will want to omit the options, and use the defaults.
-
-.. code-block:: bash
-
-  ./install_restricted_files.sh [-b branch] [-R repository]
+To run the workflow we need to configure it.
 
 You will then need to edit the configuration to set up your job. Start by making
 a copy of the ``rose-suite.conf.example`` file called ``rose-suite.conf``. This
@@ -83,6 +55,4 @@ the command ``cylc gui``.
 Once CSET has finished running you will receive an email containing a link to
 the output page.
 
-.. _cylc workflow: https://cylc.github.io/
-.. _Releases page on GitHub: https://github.com/MetOffice/CSET/releases
 .. _rose edit: https://metomi.github.io/rose/doc/html/api/command-reference.html#rose-config-edit
