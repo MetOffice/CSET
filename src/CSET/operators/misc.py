@@ -279,8 +279,8 @@ def difference(cubes: CubeList):
     """
     if len(cubes) != 2:
         raise ValueError("cubes should contain exactly 2 cubes.")
-    base = cubes.extract_cube(iris.AttributeConstraint(cset_comparison_base=1))
-    other = cubes.extract_cube(
+    base: Cube = cubes.extract_cube(iris.AttributeConstraint(cset_comparison_base=1))
+    other: Cube = cubes.extract_cube(
         iris.Constraint(
             cube_func=lambda cube: "cset_comparison_base" not in cube.attributes
         )
@@ -340,6 +340,8 @@ def difference(cubes: CubeList):
     time_constraint = iris.Constraint(time=lambda cell: cell.point in shared_times)
     base = base.extract(time_constraint)
     other = other.extract(time_constraint)
+    if base is None or other is None:
+        raise ValueError("No common time points found!")
 
     # Equalise attributes so we can merge.
     fully_equalise_attributes([base, other])
