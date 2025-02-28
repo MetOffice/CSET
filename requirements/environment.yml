@@ -23,8 +23,6 @@ dependencies:
   - ruff
 
   # Testing dependencies
-  - tox < 4.0
-  - tox-conda
   - pytest >= 7.0
   - pytest-cov
   - pytest-xdist
