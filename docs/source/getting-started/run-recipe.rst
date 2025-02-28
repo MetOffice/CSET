@@ -26,5 +26,5 @@ output should be a directory, but it will be created if it does not exist.
 This will run the recipe and leave its output in the specified output directory.
 You can look at the visualised output with ``xdg-open output/index.html``.
 
-You've now successfully run CSET with a pre-existing recipe. In the next
-tutorial we will see what is going on inside.
+You've now successfully run CSET with a pre-existing recipe. In :doc:`the next
+tutorial <visualise-recipe>` we will see what is going on inside.
