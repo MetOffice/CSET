@@ -283,20 +283,18 @@ def collapse_by_validity_time(
 
         # Merge CubeList to create final cube.
         final_cube = merged_list_1.merge_cube()
-        # Collapse over fake_time_coord to represent collapsing over validity time.
-        if method == "PERCENTILE":
-            collapsed_cubes.append(
-                collapse(
-                    final_cube,
-                    "equalised_validity_time",
-                    method,
-                    additional_percent=additional_percent,
-                )
-            )
-        else:
-            collapsed_cubes.append(
-                collapse(final_cube, "equalised_validity_time", method)
-            )
+
+        # Collapse over equalised_validity_time as a proxy for equal validity
+        # time.
+        collapsed_cube = collapse(
+            final_cube,
+            "equalised_validity_time",
+            method,
+            additional_percent=additional_percent,
+        )
+        collapsed_cube.remove_coord("equalised_validity_time")
+        collapsed_cubes.append(collapsed_cube)
+
     if len(collapsed_cubes) == 1:
         return collapsed_cubes[0]
     else:
