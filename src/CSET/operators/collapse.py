@@ -14,11 +14,13 @@
 
 """Operators to perform various kind of collapse on either 1 or 2 dimensions."""
 
+import datetime
 import warnings
 
 import iris
 import iris.analysis
 import iris.coord_categorisation
+import iris.coords
 import iris.cube
 import iris.util
 
@@ -264,8 +266,24 @@ def collapse_by_validity_time(
         new_cubelist = iris.cube.CubeList(
             cube.slices_over(["forecast_period", "forecast_reference_time"])
         )
-        # Remove forecast_period and forecast_reference_time coordinates.
         for sub_cube in new_cubelist:
+            # Reconstruct the time coordinate if it is missing.
+            if "time" not in [coord.name() for coord in sub_cube.coords()]:
+                ref_time_coord = sub_cube.coord("forecast_reference_time")
+                ref_units = ref_time_coord.units
+                ref_time = ref_units.num2date(ref_time_coord.points)
+                period_coord = sub_cube.coord("forecast_period")
+                period_units = period_coord.units
+                # Given how we are slicing there will only be one point.
+                period_seconds = period_units.convert(period_coord.points[0], "seconds")
+                period_duration = datetime.timedelta(seconds=period_seconds)
+                time = ref_time + period_duration
+                time_points = ref_units.date2num(time)
+                time_coord = iris.coords.AuxCoord(
+                    points=time_points, standard_name="time", units=ref_units
+                )
+                sub_cube.add_aux_coord(time_coord)
+            # Remove forecast_period and forecast_reference_time coordinates.
             sub_cube.remove_coord("forecast_period")
             sub_cube.remove_coord("forecast_reference_time")
         # Create new CubeList by merging with unique = False to produce a validity

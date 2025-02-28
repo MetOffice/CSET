@@ -150,6 +150,14 @@ def test_collapse_by_validity_time(long_forecast_multi_day):
     assert repr(collapsed_cube) == expected_cube
 
 
+def test_collapse_by_validity_time_no_time_coordinate(long_forecast_multi_day):
+    """Collapse a cube without a time coordinate by validity time."""
+    long_forecast_multi_day.remove_coord("time")
+    collapsed_cube = collapse.collapse_by_validity_time(long_forecast_multi_day, "MEAN")
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 145; grid_latitude: 3; grid_longitude: 3)>"
+    assert repr(collapsed_cube) == expected_cube
+
+
 def test_collapse_by_validity_time_percentile(long_forecast_multi_day):
     """Reduce by validity time with percentiles."""
     # Test successful collapsing by validity time.
