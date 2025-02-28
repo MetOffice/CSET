@@ -19,10 +19,12 @@ steps:
         coordinate: "pressure"
         levels: []
 
-  - operator: misc.difference
+  - operator: aggregate.ensure_aggregatable_across_cases
 
   - operator: collapse.collapse_by_validity_time
     method: MEAN
+
+  - operator: misc.difference
 
   - operator: plot.spatial_pcolormesh_plot
     sequence_coordinate: time
