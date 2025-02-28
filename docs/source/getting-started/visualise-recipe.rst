@@ -52,4 +52,5 @@ Afterwards the cube passes to the ``plot.spatial_contour_plot`` and
 ``write.write_cube_to_nc`` operators to be plotted and saved.
 
 You now know how to visualise a recipe, and a little about the operators it is
-made up of. In the next tutorial you will learn to make your own recipe.
+made up of. In :doc:`the next tutorial <create-first-recipe>` you will learn to
+make your own recipe.

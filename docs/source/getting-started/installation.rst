@@ -40,7 +40,8 @@ a simple command.
 This command should output the installed version of CSET. This will look
 something like ``CSET vX.Y.Z``.
 
-You now have CSET installed, so try to :doc:`/getting-started/run-recipe`.
+You now have CSET installed. Go to :doc:`the next tutorial to run it
+<run-recipe>`.
 
 
 .. _conda: https://docs.conda.io/en/latest/
