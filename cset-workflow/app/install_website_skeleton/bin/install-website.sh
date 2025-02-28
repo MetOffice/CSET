@@ -23,6 +23,10 @@ mkdir -v "${CYLC_WORKFLOW_SHARE_DIR}/web"
 cp -rv html/* "${CYLC_WORKFLOW_SHARE_DIR}/web"
 # Create directory for plots.
 mkdir -p "${CYLC_WORKFLOW_SHARE_DIR}/web/plots"
+
+# Ensure parent directories of WEB_DIR exist.
+mkdir -p "$(dirname "$WEB_DIR")"
+
 # Create symbolic link to web directory.
 # NOTE: While good for space, it means `cylc clean` removes output.
 ln -s "${CYLC_WORKFLOW_SHARE_DIR}/web" "$WEB_DIR"
