@@ -32,9 +32,13 @@ def construct_index():
         try:
             with open(directory / "meta.json", "rt", encoding="UTF-8") as fp:
                 plot_metadata = json.load(fp)
+            category = plot_metadata["category"]
+            case_date = plot_metadata.get("case_date", "")
             record = {
-                plot_metadata["category"]: {
-                    directory.name: f"{plot_metadata['title']} {plot_metadata.get('case_date', '')}".strip()
+                category: {
+                    case_date: {
+                        directory.name: f"{plot_metadata['title']}{case_date}".strip()
+                    }
                 }
             }
         except FileNotFoundError:
