@@ -333,15 +333,20 @@ def difference(cubes: CubeList):
         other.data = np.flip(other.data, other.coord(other_lat_name).cube_dims(other))
 
     # Extract just common time points.
-    logging.debug("Base: %s\nOther: %s", base.coord("time"), other.coord("time"))
-    base_times = set(base.coord("time").units.num2date(base.coord("time").points))
-    other_times = set(other.coord("time").units.num2date(other.coord("time").points))
-    shared_times = set.intersection(base_times, other_times)
-    time_constraint = iris.Constraint(time=lambda cell: cell.point in shared_times)
-    base = base.extract(time_constraint)
-    other = other.extract(time_constraint)
-    if base is None or other is None:
-        raise ValueError("No common time points found!")
+    if "time" in [coord.name() for coord in base.coords()]:
+        logging.debug("Base: %s\nOther: %s", base.coord("time"), other.coord("time"))
+        base_times = set(base.coord("time").units.num2date(base.coord("time").points))
+        other_times = set(
+            other.coord("time").units.num2date(other.coord("time").points)
+        )
+        shared_times = set.intersection(base_times, other_times)
+        time_constraint = iris.Constraint(time=lambda cell: cell.point in shared_times)
+        base = base.extract(time_constraint)
+        other = other.extract(time_constraint)
+        if base is None or other is None:
+            raise ValueError("No common time points found!")
+    else:
+        logging.debug("No time coord, skipping equalisation.")
 
     # Equalise attributes so we can merge.
     fully_equalise_attributes([base, other])
