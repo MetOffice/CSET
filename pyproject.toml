@@ -65,41 +65,6 @@ relative_files = true
 source = ["src"]
 omit = ["__main__.py"]
 
-[tool.tox]
-legacy_tox_ini = '''
-[tox]
-requires = tox-conda
-isolated_build = True
-envlist =
-    coverage-clean
-    py312-linux-tests
-    py312-linux-docs
-
-[testenv:py{310,311,312}-{linux,osx,win}-tests]
-description = Run unit and integration tests with PyTest.
-conda_spec =
-    py310-linux: {toxinidir}{/}requirements{/}locks{/}py310-lock-linux-64.txt
-    py311-linux: {toxinidir}{/}requirements{/}locks{/}py311-lock-linux-64.txt
-    py312-linux: {toxinidir}{/}requirements{/}locks{/}py312-lock-linux-64.txt
-usedevelop = true
-depends = coverage-clean
-commands = pytest {posargs}
-
-[testenv:py{310,311,312}-{linux,osx,win}-docs]
-description = Invoke sphinx-build to build the HTML docs.
-conda_spec =
-    py310-linux: {toxinidir}{/}requirements{/}locks{/}py310-lock-linux-64.txt
-    py311-linux: {toxinidir}{/}requirements{/}locks{/}py311-lock-linux-64.txt
-    py312-linux: {toxinidir}{/}requirements{/}locks{/}py312-lock-linux-64.txt
-usedevelop = true
-commands = sphinx-build -d "docs/build/doctree" docs/source "docs/build/html" --color -W -bhtml {posargs}
-
-[testenv:coverage-clean]
-deps = coverage
-skip_install = true
-commands = coverage erase
-'''
-
 [tool.codespell]
 ignore-words-list = "lazyness,meaned"
 skip = "build,*.css,*.ipynb,*.js,*.html,*.svg,*.xml,.git"
