@@ -50,6 +50,8 @@ def construct_index():
             continue
         index = combine_dicts(index, record)
 
+    # sort index of plots
+    index = dict(sorted(index.items(), key=lambda x: x[1]))
     with open(plots_dir / "index.json", "wt", encoding="UTF-8") as fp:
         json.dump(index, fp, indent=2)
 

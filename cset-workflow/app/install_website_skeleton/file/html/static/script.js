@@ -133,7 +133,7 @@ function construct_sidebar_from_data(data) {
       details.append(subcategory);
     }
     // Add details to the document (e.g., a specific container element).
-    document.getElementById("plots-container").append(details);
+    sidebar.append(details);
 
   }
 }
