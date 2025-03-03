@@ -15,6 +15,7 @@
 """Operators to perform various kind of collapse on either 1 or 2 dimensions."""
 
 import datetime
+import logging
 import warnings
 
 import iris
@@ -22,6 +23,7 @@ import iris.analysis
 import iris.coord_categorisation
 import iris.coords
 import iris.cube
+import iris.exceptions
 import iris.util
 
 from CSET._common import iter_maybe
@@ -301,15 +303,21 @@ def collapse_by_validity_time(
 
         # Merge CubeList to create final cube.
         final_cube = merged_list_1.merge_cube()
+        logging.debug("Pre-collapse validity time cube:\n%s", final_cube)
 
         # Collapse over equalised_validity_time as a proxy for equal validity
         # time.
-        collapsed_cube = collapse(
-            final_cube,
-            "equalised_validity_time",
-            method,
-            additional_percent=additional_percent,
-        )
+        try:
+            collapsed_cube = collapse(
+                final_cube,
+                "equalised_validity_time",
+                method,
+                additional_percent=additional_percent,
+            )
+        except iris.exceptions.CoordinateCollapseError as err:
+            raise ValueError(
+                "Cubes do not overlap therefore cannot collapse across validity time."
+            ) from err
         collapsed_cube.remove_coord("equalised_validity_time")
         collapsed_cubes.append(collapsed_cube)
 
