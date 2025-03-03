@@ -14,6 +14,8 @@
 
 """Test collapse operators."""
 
+import datetime
+
 import iris
 import iris.cube
 import numpy as np
@@ -156,6 +158,18 @@ def test_collapse_by_validity_time_no_time_coordinate(long_forecast_multi_day):
     collapsed_cube = collapse.collapse_by_validity_time(long_forecast_multi_day, "MEAN")
     expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 145; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
+
+
+def test_collapse_by_validity_time_no_common_points(cube):
+    """Test exception when there are no common time points between cubes."""
+    c1 = cube.extract(iris.Constraint(time=datetime.datetime(2022, 9, 21, 2, 30)))
+    c2 = cube.extract(iris.Constraint(time=datetime.datetime(2022, 9, 21, 4, 30)))
+    cubes = iris.cube.CubeList([c1, c2])
+    with pytest.raises(
+        ValueError,
+        match="Cubes do not overlap therefore cannot collapse across validity time.",
+    ):
+        collapse.collapse_by_validity_time(cubes, "MEAN")
 
 
 def test_collapse_by_validity_time_percentile(long_forecast_multi_day):
