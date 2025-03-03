@@ -581,12 +581,8 @@ def _plot_and_save_vertical_line_series(
             "300",
             "200",
             "100",
-            "50",
-            "30",
-            "20",
-            "10",
         ]
-        y_ticks = [1000, 850, 700, 500, 300, 200, 100, 50, 30, 20, 10]
+        y_ticks = [1000, 850, 700, 500, 300, 200, 100]
 
         # Set y-axis limits and ticks.
         ax.set_ylim(1100, 100)
