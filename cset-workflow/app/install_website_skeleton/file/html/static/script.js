@@ -74,7 +74,6 @@ function construct_sidebar_from_data(data) {
   for (const category in data) {
     // Details element for category.
     const details = document.createElement("details");
-    details.open = true;
 
     // Title for category and case_date (summary element).
     const summary = document.createElement("summary");
@@ -83,13 +82,14 @@ function construct_sidebar_from_data(data) {
 
     for (const case_date in data[category]) {
       // Submenu for case_date.
-      const subcategory = document.createElement("div");
-      subcategory.classList.add("subcategory");
+      const subcategory = document.createElement("details");
+
 
       // Title for case_date.
-      const subcategory_header = document.createElement("h3");
+      const subcategory_header = document.createElement("summary");
       subcategory_header.textContent = `${case_date}`;
       subcategory.append(subcategory_header);
+
 
       // Menu of plots for this category and case_date.
       const category_menu = document.createElement("menu");
@@ -129,12 +129,8 @@ function construct_sidebar_from_data(data) {
         // Add entry to the menu.
         category_menu.append(list_item);
       }
-
-      // Join category and case_date to the DOM.
       subcategory.append(category_menu);
-
-      // Add subcategory to details.
-      subcategory.append(subcategory);
+      details.append(subcategory);
     }
     // Add details to the document (e.g., a specific container element).
     document.getElementById("plots-container").append(details);
