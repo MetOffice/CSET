@@ -130,12 +130,12 @@ once in the ``src/CSET/recipes`` directory. This way we can run recipes with the
 Test your code
 --------------
 
-Tests can be run by invoking the ``tox`` command and are also run on ``git
-commit``. To run the tests:
+Tests can be run by invoking the ``pytest`` command. Some additional checks are
+also run on ``git commit`` via ``pre-commit``. To run the tests:
 
 .. code-block:: bash
 
-    tox
+    pytest
 
 Committing code
 ---------------
