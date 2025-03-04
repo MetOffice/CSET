@@ -536,7 +536,7 @@ def _fix_um_lightning(cube: iris.cube.Cube):
 
 
 def _fix_model_level_name(cube: iris.cube.Cube):
-    """To fix model level varname for consistency to allow merging."""
+    """Fix LFRic model level varname for consistency to allow merging."""
     for coord in cube.dim_coords:
         if coord.name() == "model_level_number":
             coord.var_name = "model_level_number"
