@@ -73,26 +73,25 @@ function construct_sidebar_from_data(data) {
 
   for (const category in data) {
     // Details element for category.
-    const details = document.createElement("details");
+    const category_details = document.createElement("details");
 
-    // Title for category and case_date (summary element).
-    const summary = document.createElement("summary");
-    summary.textContent = `${category}`;
-    details.append(summary);
+    // Title for category (summary element).
+    const category_summary = document.createElement("summary");
+    category_summary.textContent = category;
+    category_details.append(category_summary);
 
+    // Add each case date into category.
     for (const case_date in data[category]) {
-      // Submenu for case_date.
-      const subcategory = document.createElement("details");
-
+      // Details element for case_date.
+      const case_details = document.createElement("details");
 
       // Title for case_date.
-      const subcategory_header = document.createElement("summary");
-      subcategory_header.textContent = `${case_date}`;
-      subcategory.append(subcategory_header);
-
+      const case_summary = document.createElement("summary");
+      case_summary.textContent = case_date;
+      case_details.append(case_summary);
 
       // Menu of plots for this category and case_date.
-      const category_menu = document.createElement("menu");
+      const case_menu = document.createElement("menu");
 
       // Add each plot.
       for (const plot in data[category][case_date]) {
@@ -127,14 +126,16 @@ function construct_sidebar_from_data(data) {
         list_item.append(position_chooser);
 
         // Add entry to the menu.
-        category_menu.append(list_item);
+        case_menu.append(list_item);
       }
-      subcategory.append(category_menu);
-      details.append(subcategory);
-    }
-    // Add details to the document (e.g., a specific container element).
-    sidebar.append(details);
 
+      // Finish constructing this case and add to its category.
+      case_details.append(case_menu);
+      category_details.append(case_details);
+    }
+
+    // Join category to the DOM.
+    sidebar.append(category_details);
   }
 }
 
