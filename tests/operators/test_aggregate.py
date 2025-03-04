@@ -86,6 +86,18 @@ def test_ensure_aggregatable_across_cases_cubelist(
     )
 
 
+def test_ensure_aggregatable_across_cases_different_buckets(
+    long_forecast_multi_day: iris.cube.Cube,
+):
+    """Check that incompatible cubes are made separately aggregatable."""
+    other = long_forecast_multi_day.copy()
+    other.rename("other_variable")
+    cubes = iris.cube.CubeList([long_forecast_multi_day, other])
+    output = aggregate.ensure_aggregatable_across_cases(cubes)
+    assert isinstance(output, iris.cube.CubeList)
+    assert len(output) == 2
+
+
 def test_add_hour_coordinate(long_forecast):
     """Check that a Cube has an hour coordinate added to it."""
     cube_with_hour_coordinate = aggregate.add_hour_coordinate(long_forecast)
