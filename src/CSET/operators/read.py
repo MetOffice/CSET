@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2025) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -234,6 +234,7 @@ def _create_callback(is_ensemble: bool, is_base: bool) -> callable:
         _longitude_fix_callback(cube, field, filename)
         _fix_spatial_coord_name_callback(cube)
         _fix_pressure_coord_callback(cube)
+        _fix_model_level_name(cube)
         _fix_um_radtime_prehour(cube)
         _fix_um_radtime_posthour(cube)
         _fix_lfric_longnames(cube)
@@ -532,6 +533,13 @@ def _fix_um_lightning(cube: iris.cube.Cube):
             time_coord.points = new_time_values
     except KeyError:
         pass
+
+
+def _fix_model_level_name(cube: iris.cube.Cube):
+    """To fix model level varname for consistency to allow merging."""
+    for coord in cube.dim_coords:
+        if coord.name() == "model_level_number":
+            coord.var_name = "model_level_number"
 
 
 def _lfric_time_callback(cube: iris.cube.Cube):
