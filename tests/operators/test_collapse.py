@@ -63,7 +63,7 @@ def test_collapse_cubelist(cube):
 
 def test_collapse_percentile(cube):
     """Reduce dimension of a cube with a PERCENTILE aggregation."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Must specify additional_percent"):
         collapse.collapse(cube, "time", "PERCENTILE")
 
     # Test collapsing a single coordinate.
@@ -78,9 +78,7 @@ def test_collapse_percentile(cube):
 
 def test_collapse_by_hour_of_day(long_forecast):
     """Convert and aggregates time dimension by hour of day."""
-    collapsed_cube = collapse.collapse_by_hour_of_day(
-        long_forecast, "MEAN", multi_case=False
-    )
+    collapsed_cube = collapse.collapse_by_hour_of_day(long_forecast, "MEAN")
     expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
 
@@ -88,7 +86,7 @@ def test_collapse_by_hour_of_day(long_forecast):
 def test_collapse_by_hour_of_day_cubelist(long_forecast):
     """Collapsing a CubeList by hour of day collapses each cube separately."""
     cubes = iris.cube.CubeList([long_forecast, long_forecast.copy()])
-    collapsed_cubes = collapse.collapse_by_hour_of_day(cubes, "MEAN", multi_case=False)
+    collapsed_cubes = collapse.collapse_by_hour_of_day(cubes, "MEAN")
     assert isinstance(collapsed_cubes, iris.cube.CubeList)
     assert len(collapsed_cubes) == 2
     expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
@@ -96,17 +94,11 @@ def test_collapse_by_hour_of_day_cubelist(long_forecast):
         assert repr(collapsed_cube) == expected_cube
 
 
-def test_collapse_by_hour_of_day_fail(long_forecast):
-    """Test failing due to multi_case set to True."""
-    with pytest.raises(TypeError):
-        collapse.collapse_by_hour_of_day(long_forecast, "MEAN")
-
-
 def test_collapse_by_hour_of_day_percentile(long_forecast):
     """Convert and aggregate time dimension by hour of day with percentiles."""
     # Test collapsing long forecast.
     collapsed_cube = collapse.collapse_by_hour_of_day(
-        long_forecast, "PERCENTILE", additional_percent=[25, 75], multi_case=False
+        long_forecast, "PERCENTILE", additional_percent=[25, 75]
     )
     expected_cube = "<iris 'Cube' of air_temperature / (K) (percentile_over_hour: 2; hour: 24; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
@@ -114,8 +106,8 @@ def test_collapse_by_hour_of_day_percentile(long_forecast):
 
 def test_collapse_by_hour_of_day_percentile_fail(long_forecast):
     """Test failing due to non-specified additional_percent."""
-    with pytest.raises(ValueError):
-        collapse.collapse_by_hour_of_day(long_forecast, "PERCENTILE", multi_case=False)
+    with pytest.raises(ValueError, match="Must specify additional_percent"):
+        collapse.collapse_by_hour_of_day(long_forecast, "PERCENTILE")
 
 
 def test_collapse_by_hour_of_day_multi_forecast_cube(long_forecast_multi_day):
@@ -123,21 +115,6 @@ def test_collapse_by_hour_of_day_multi_forecast_cube(long_forecast_multi_day):
     collapsed_cube = collapse.collapse_by_hour_of_day(long_forecast_multi_day, "MEAN")
     expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
-
-
-def test_collapse_by_hour_of_day_multi_forecast_cube_fail(long_forecast_multi_day):
-    """Test failing due to multi_case set to False."""
-    with pytest.raises(TypeError):
-        collapse.collapse_by_hour_of_day(
-            long_forecast_multi_day, "MEAN", multi_case=False
-        )
-
-
-def test_collapse_by_hour_of_day_multi_forecast_cubelist_fail(long_forecast_multi_day):
-    """Test failing due to multi_case set to False when given a CubeList."""
-    cubes = iris.cube.CubeList([long_forecast_multi_day, long_forecast_multi_day])
-    with pytest.raises(TypeError):
-        collapse.collapse_by_hour_of_day(cubes, "MEAN", multi_case=False)
 
 
 def test_collapse_by_lead_time_single_cube(long_forecast_multi_day):
@@ -157,7 +134,7 @@ def test_collapse_by_lead_time_single_cube(long_forecast_multi_day):
 
 def test_collapse_by_lead_time_single_cube_percentile_fail(long_forecast_multi_day):
     """Test fail by not setting additional percent."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Must specify additional_percent"):
         collapse.collapse(
             long_forecast_multi_day, "forecast_reference_time", "PERCENTILE"
         )
