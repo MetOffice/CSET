@@ -1396,17 +1396,21 @@ def plot_histogram_series(
     # Store min/max ranges for xlim.
     x_levels = []
 
+    if isinstance(cubes, iris.cube.CubeList) and len(cubes) != 1:
+        raise ValueError("Histogram plot can only plot a single cube.")
+
+    plot_index = []
     # Iterate over all cubes in cube or CubeList and plot.
-    for cube_iter in iter_maybe(cubes):
+    for cube in iter_maybe(cubes):
         # Ensure we've got a single cube.
-        cube_iter = _check_single_cube(cube_iter)
+        cube = _check_single_cube(cube)
 
         # Make postage stamp plots if stamp_coordinate exists and has more than a
         # single point. If single_plot is True, all postage stamp plots will be
         # plotted in a single plot instead of separate postage stamp plots.
         if (
-            stamp_coordinate in [c.name() for c in cube_iter.coords()]
-            and cube_iter.coord(stamp_coordinate).shape[0] > 1
+            stamp_coordinate in [c.name() for c in cube.coords()]
+            and cube.coord(stamp_coordinate).shape[0] > 1
         ):
             if single_plot:
                 plotting_func = (
@@ -1418,56 +1422,55 @@ def plot_histogram_series(
         # If several histograms are plotted with time as sequence_coordinate for the
         # time slider option.
         try:
-            cube_iter.coord(sequence_coordinate)
+            cube.coord(sequence_coordinate)
         except iris.exceptions.CoordinateNotFoundError as err:
             raise ValueError(
                 f"Cube must have a {sequence_coordinate} coordinate."
             ) from err
 
         # Get minimum and maximum from levels information.
-        _, levels, _ = _colorbar_map_levels(cube_iter)
+        _, levels, _ = _colorbar_map_levels(cube)
         if levels is not None:
             x_levels.append(min(levels))
             x_levels.append(max(levels))
         else:
-            all_data.append(cube_iter.data)
+            all_data.append(cube.data)
 
-    if len(x_levels) == 0:
-        # Combine all data into a single NumPy array
-        combined_data = np.concatenate(all_data)
+        if len(x_levels) == 0:
+            # Combine all data into a single NumPy array
+            combined_data = np.concatenate(all_data)
 
-        # Set the lower and upper limit for the x-axis to ensure all plots have same
-        # range. This needs to read the whole cube over the range of the sequence
-        # and if applicable postage stamp coordinate.
-        vmin = np.floor(combined_data.min())
-        vmax = np.ceil(combined_data.max())
-    else:
-        vmin = min(x_levels)
-        vmax = max(x_levels)
+            # Set the lower and upper limit for the x-axis to ensure all plots have same
+            # range. This needs to read the whole cube over the range of the sequence
+            # and if applicable postage stamp coordinate.
+            vmin = np.floor(combined_data.min())
+            vmax = np.ceil(combined_data.max())
+        else:
+            vmin = min(x_levels)
+            vmax = max(x_levels)
 
-    # Create a plot for each value of the sequence coordinate.
-    # Allowing for multiple cubes in a CubeList to be plotted in the same plot for
-    # similar sequence values. Passing a CubeList into the internal plotting function
-    # for similar values of the sequence coordinate. cube_slice can be an iris.cube.Cube
-    # or an iris.cube.CubeList.
-    plot_index = []
-    for cube_slice in cubes.slices_over(sequence_coordinate):
-        # Use sequence value so multiple sequences can merge.
-        sequence_value = cube_slice.coord(sequence_coordinate).points[0]
-        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
-        coord = cube_slice.coord(sequence_coordinate)
-        # Format the coordinate value in a unit appropriate way.
-        title = f"{recipe_title}\n{coord.units.title(coord.points[0])}"
-        # Do the actual plotting.
-        plotting_func(
-            cube_slice,
-            plot_filename,
-            stamp_coordinate=stamp_coordinate,
-            title=title,
-            vmin=vmin,
-            vmax=vmax,
-        )
-        plot_index.append(plot_filename)
+        # Create a plot for each value of the sequence coordinate.
+        # Allowing for multiple cubes in a CubeList to be plotted in the same plot for
+        # similar sequence values. Passing a CubeList into the internal plotting function
+        # for similar values of the sequence coordinate. cube_slice can be an iris.cube.Cube
+        # or an iris.cube.CubeList.
+        for cube_slice in cube.slices_over(sequence_coordinate):
+            # Use sequence value so multiple sequences can merge.
+            sequence_value = cube_slice.coord(sequence_coordinate).points[0]
+            plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
+            coord = cube_slice.coord(sequence_coordinate)
+            # Format the coordinate value in a unit appropriate way.
+            title = f"{recipe_title}\n{coord.units.title(coord.points[0])}"
+            # Do the actual plotting.
+            plotting_func(
+                cube_slice,
+                plot_filename,
+                stamp_coordinate=stamp_coordinate,
+                title=title,
+                vmin=vmin,
+                vmax=vmax,
+            )
+            plot_index.append(plot_filename)
 
     # Add list of plots to plot metadata.
     complete_plot_index = _append_to_plot_index(plot_index)

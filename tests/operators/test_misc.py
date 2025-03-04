@@ -14,6 +14,8 @@
 
 """Test miscellaneous operators."""
 
+import datetime
+
 import iris
 import iris.cube
 import iris.exceptions
@@ -160,6 +162,30 @@ def test_difference(cube: iris.cube.Cube):
     )
     assert difference_cube.standard_name is None
     assert difference_cube.long_name == cube.long_name + "_difference"
+
+
+def test_difference_no_time_coord(cube):
+    """Difference of cubes with no time coordinate."""
+    c1 = cube.extract(iris.Constraint(time=datetime.datetime(2022, 9, 21, 3, 30)))
+    c1.remove_coord("time")
+    c2 = c1.copy()
+    del c2.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([c1, c2])
+    difference_cube = misc.difference(cubes)
+    assert isinstance(difference_cube, iris.cube.Cube)
+    assert np.allclose(
+        difference_cube.data, np.zeros_like(difference_cube.data), atol=1e-9
+    )
+
+
+def test_difference_no_common_points(cube):
+    """Test exception when there are no common time points between cubes."""
+    c1 = cube.extract(iris.Constraint(time=datetime.datetime(2022, 9, 21, 2, 30)))
+    c2 = cube.extract(iris.Constraint(time=datetime.datetime(2022, 9, 21, 4, 30)))
+    del c2.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([c1, c2])
+    with pytest.raises(ValueError, match="No common time points found!"):
+        misc.difference(cubes)
 
 
 def test_difference_incorrect_number_of_cubes(cube):
