@@ -37,7 +37,7 @@ def construct_index():
             record = {
                 category: {
                     case_date if case_date else "Aggregation": {
-                        directory.name: f"{plot_metadata['title']} {case_date}".strip()
+                        directory.name: f"{plot_metadata['title']}".strip()
                     }
                 }
             }
