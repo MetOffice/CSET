@@ -36,7 +36,7 @@ def construct_index():
             case_date = plot_metadata.get("case_date", "")
             record = {
                 category: {
-                    case_date: {
+                    case_date if case_date else "Aggregation": {
                         directory.name: f"{plot_metadata['title']}{case_date}".strip()
                     }
                 }
