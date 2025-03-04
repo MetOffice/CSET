@@ -50,10 +50,16 @@ def construct_index():
             continue
         index = combine_dicts(index, record)
 
-    # sort index of plots
+    # Sort index of diagnostics.
     index = dict(sorted(index.items()))
-    # index = dict(sorted(index.items(), key=lambda x: str(x[1])))
-    logging.debug("output index %s", index)
+    for category in index:
+        for case_date in index[category]:
+            diagnostics = index[category][case_date]
+            index[category][case_date] = dict(
+                # Sort by display name.
+                sorted(diagnostics.items(), key=lambda x: x[1])
+            )
+
     with open(plots_dir / "index.json", "wt", encoding="UTF-8") as fp:
         json.dump(index, fp, indent=2)
 
