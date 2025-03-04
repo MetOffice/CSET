@@ -23,7 +23,10 @@ steps:
     coordinate: [grid_latitude, grid_longitude]
     method: MEAN
 
-  - operator: collapse.collapse_by_lead_time
+  - operator: aggregate.ensure_aggregatable_across_cases
+
+  - operator: collapse.collapse
+    coordinate: "forecast_reference_time"
     method: MEAN
 
   # Make a single NetCDF with all the data inside it.

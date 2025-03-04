@@ -15,20 +15,21 @@ of the project.
 Having tooling to aid in comparing output to KGO is useful, especially if we
 want to get into automated functional testing.
 
-You can run the tests of CSET simply with the following command:
+You can run the tests of CSET with the following command:
 
 .. code-block:: bash
 
-    tox
+    pytest
 
 .. note::
 
-    You might need to load the conda environment beforehand with the
-    following command:
+    You will need to make sure you have the conda environment activated, and that
+    CSET is installed into it with:
 
     .. code-block:: bash
 
         conda activate cset-dev
+        pip install -e .
 
 Quick testing of individual components during development
 ---------------------------------------------------------
@@ -38,7 +39,7 @@ Fortunately individual tests can be run on the command line with:
 
 .. code-block:: bash
 
-    pytest -k file_name_of_test
+    pytest -k name_of_test
 
 
 You can also run all of the tests in a file, by giving the name of the file. For
@@ -47,14 +48,6 @@ example, the following command will run all of the plotting tests.
 .. code-block:: bash
 
     pytest -k test_plots
-
-
-You will need to make sure you have the conda environment activated, and that
-CSET is installed into it with:
-
-.. code-block:: bash
-
-    pip install -e .
 
 Unit Testing
 ------------
@@ -120,14 +113,15 @@ some good points on writing docstrings for unit tests.
 Pre-commit Checks
 -----------------
 
-Some very quick checks to catch any very obvious mistakes. They are usually
-setup to run automatically when you make a commit. The checks are installed from
-.pre-commit-config.yaml, and currently involve formatting python code, linting,
-and checking all files are well formed (no trailing whitespace, etc.).
+Pre-commit checks are very quick checks to catch any obvious mistakes. They are
+usually setup to run automatically when you make a commit. The checks are
+installed from .pre-commit-config.yaml, and currently involve formatting python
+code, linting, and checking all files are well formed (no trailing whitespace,
+etc.).
 
 .. code-block:: bash
 
-    # Install the pre-commit helper.
-    pip install pre-commit
+    # Ensure your conda environment is activated.
+    conda activate cset-dev
     # Install the checks into git
     pre-commit install

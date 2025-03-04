@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2025) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -300,3 +300,11 @@ def test_lfric_timecoord_fix_forecastreftime(slammed_lfric_cube):
         repr(slammed_lfric_cube.coord("forecast_reference_time"))
         == "<DimCoord: forecast_reference_time / (seconds since 2022-01-01 00:00:00)  [...]>"
     )
+
+
+def test_fix_model_level_name():
+    """Check that read callback renames the model level var name."""
+    cube = iris.load_cube("tests/test_data/model_level_test.nc")
+    cube.coord("model_level_number").var_name = "model_level_number_0"
+    read._fix_model_level_name(cube)
+    assert cube.coord("model_level_number").var_name == "model_level_number"
