@@ -133,6 +133,13 @@ def test_collapse_by_hour_of_day_multi_forecast_cube_fail(long_forecast_multi_da
         )
 
 
+def test_collapse_by_hour_of_day_multi_forecast_cubelist_fail(long_forecast_multi_day):
+    """Test failing due to multi_case set to False when given a CubeList."""
+    cubes = iris.cube.CubeList([long_forecast_multi_day, long_forecast_multi_day])
+    with pytest.raises(TypeError):
+        collapse.collapse_by_hour_of_day(cubes, "MEAN", multi_case=False)
+
+
 def test_collapse_by_lead_time_single_cube(long_forecast_multi_day):
     """Check cube collapse by lead time."""
     calculated_cube = collapse.collapse(
