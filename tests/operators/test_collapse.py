@@ -85,6 +85,17 @@ def test_collapse_by_hour_of_day(long_forecast):
     assert repr(collapsed_cube) == expected_cube
 
 
+def test_collapse_by_hour_of_day_cubelist(long_forecast):
+    """Collapsing a CubeList by hour of day collapses each cube separately."""
+    cubes = iris.cube.CubeList([long_forecast, long_forecast.copy()])
+    collapsed_cubes = collapse.collapse_by_hour_of_day(cubes, "MEAN", multi_case=False)
+    assert isinstance(collapsed_cubes, iris.cube.CubeList)
+    assert len(collapsed_cubes) == 2
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
+    for collapsed_cube in collapsed_cubes:
+        assert repr(collapsed_cube) == expected_cube
+
+
 def test_collapse_by_hour_of_day_fail(long_forecast):
     """Test failing due to multi_case set to True."""
     with pytest.raises(TypeError):
@@ -150,6 +161,19 @@ def test_collapse_by_validity_time(long_forecast_multi_day):
     collapsed_cube = collapse.collapse_by_validity_time(long_forecast_multi_day, "MEAN")
     expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 145; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
+
+
+def test_collapse_by_validity_time_cubelist(long_forecast_multi_day):
+    """Collapsing a CubeList by validity time collapses each cube separately."""
+    cubes = iris.cube.CubeList(
+        [long_forecast_multi_day, long_forecast_multi_day.copy()]
+    )
+    collapsed_cubes = collapse.collapse_by_validity_time(cubes, "MEAN")
+    assert isinstance(collapsed_cubes, iris.cube.CubeList)
+    assert len(collapsed_cubes) == 2
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 145; grid_latitude: 3; grid_longitude: 3)>"
+    for collapsed_cube in collapsed_cubes:
+        assert repr(collapsed_cube) == expected_cube
 
 
 def test_collapse_by_validity_time_no_time_coordinate(long_forecast_multi_day):
