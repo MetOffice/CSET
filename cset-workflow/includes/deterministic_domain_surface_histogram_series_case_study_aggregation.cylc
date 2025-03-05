@@ -5,7 +5,7 @@
     [[generic_surface_histogram_series_case_aggregation_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
     inherit = PROCESS_CASE_AGGREGATION
         [[[directives]]]
-        --mem=5000
+        --mem=150000
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_surface_histogram_series_case_aggregation.yaml"
         CSET_ADDOPTS = """

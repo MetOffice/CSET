@@ -5,7 +5,7 @@
     [[generic_mlevel_domain_mean_vertical_profile_series_case_aggregation_by_hour_of_day_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
     inherit = PROCESS_CASE_AGGREGATION
         [[[directives]]]
-        --mem=5000
+        --mem=150000
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_mlevel_domain_mean_vertical_profile_series_case_aggregation_hour_of_day.yaml"
         CSET_ADDOPTS = """

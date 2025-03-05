@@ -5,7 +5,7 @@
     [[generic_surface_domain_mean_time_series_case_aggregation_by_validity_time_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
     inherit = PROCESS_CASE_AGGREGATION
         [[[directives]]]
-        --mem=5000
+        --mem=150000
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_surface_domain_mean_time_series_case_aggregation_validity_time.yaml"
         CSET_ADDOPTS = """

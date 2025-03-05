@@ -8,7 +8,7 @@
     [[spatial_surface_difference_case_aggregation_by_lead_time_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
     inherit = PROCESS_CASE_AGGREGATION
         [[[directives]]]
-        --mem=5000
+        --mem=150000
         [[[environment]]]
         CSET_RECIPE_NAME = "surface_spatial_difference_case_aggregation_mean_lead_time.yaml"
         CSET_ADDOPTS = """
