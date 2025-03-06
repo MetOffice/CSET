@@ -16,7 +16,7 @@ Changelog
 25.3.0 (2025-03-06)
 -------------------
 
-This release is the baseline for evaluating **RAL3-LFRic#708.1** with RMED
+This release is the baseline for evaluating **RAL3_LFRic#708.1** with RMED
 Ticket #708 detailing the science configuration. It introduces a fixed
 evaluation functionality for RAL3-LFRic and RAL3-UM, new functionality, bug
 fixes, and improvements. Key features for RAL3-LFRic evaluation include:
