@@ -19,10 +19,11 @@ the config.
 .. image:: rose-edit.png
     :alt: rose edit GUI, showing the environment setup options.
 
-* The Diagnostic section contains settings for enabling the various diagnostics
-  included with CSET. The diagnostics are split into science areas. Some general
-  diagnostics will have a list in their section for setting which model fields
-  to process. Diagnostics may also take additional options after being enabled.
+* The Diagnostic section contains settings for enabling the various
+  :term:`diagnostics <diagnostic>` included with CSET. The diagnostics are split
+  into science areas. Some general diagnostics will have a list in their section
+  for setting which model fields to process. Diagnostics may also take
+  additional options after being enabled.
 
 * The Models and Cases section contains settings for the input data. Here you
   need to setup how you want to cycle (over case studies or a trial period),
