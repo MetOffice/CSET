@@ -6,12 +6,194 @@ Changelog
     Short prose summary of most important changes.
     List of changes with who made them and a link to the PR.
 
-Unreleased
-----------
+.. Unreleased
+.. ----------
 
 .. Add changes here, probably taken from GitHub release notes.
 .. Highlight any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
+
+25.3.0 (2025-03-06)
+-------------------
+
+This release is the baseline for evaluating RAL3-LFRic with RMED Ticket #708
+detailing the science configuration. It introduces a fixed evaluation
+functionality for RAL3-LFRic and RAL3-UM, new functionality, bug fixes, and
+improvements. Key features for RAL3-LFRic evaluation include:
+
+* Surface fields: spatial plots, timeseries, histograms, model comparison plots,
+  time aggregation by hour of day, validity time, forecast range, area averages.
+* Pressure levels fields: spatial plots, timeseries, histograms, model
+  comparison plots, time aggregation by hour of day, validity time, forecast
+  range, area averages, vertical profiles, PDFs.
+
+Additional capabilities: transects, point selection, QQ plots, age of air
+diagnostics, cape diagnostics that can be selected by the user.
+
+The next release will add analysis on model levels, multi-line plotting, and
+more derived variables.
+
+* Upload hidden coverage files to fix GitHub Actions breakage by `@jfrost-mo`_ in :pr:`832`
+* Pin GitHub Actions to specific commits to prevent random breakage by `@jfrost-mo`_ in :pr:`846`
+* Switch to data time cycling to support multiple models and multiple case studies or trials by `@jfrost-mo`_ in :pr:`765`
+* Note that all documentation shell examples use bash by `@jfrost-mo`_ in :pr:`861`
+* Add colorbar entries for more standard names by `@jfrost-mo`_ in :pr:`839`
+* Support python 3.13 and remove usage of tox in CI by `@jfrost-mo`_ in :pr:`872`
+* Correct execute_recipe docstring; it takes an input directory by `@jfrost-mo`_ in :pr:`869`
+* Fix colorbar min and max not being set on pcolormesh plots by `@jfrost-mo`_ in :pr:`870`
+* Error fetch_fcst task when no data found for a model, as it usually indicates a typo in the data path by `@jfrost-mo`_ in :pr:`842`
+* Rewrite colorbar loading to use default colorbar definition from inside CSET package by `@jfrost-mo`_ in :pr:`871`
+* Fix spelling of stratiform_rainfall_rate in colorbar definition by `@jfrost-mo`_ in :pr:`878`
+* Improve transect title by `@jwarner8`_ in :pr:`829`
+* Update colorbar definitions by `@daflack`_ in :pr:`892`
+* Fix typo in comment by `@jfrost-mo`_ in :pr:`906`
+* Sort conda lock files to aid reviewing by `@jfrost-mo`_ in :pr:`890`
+* Explicitly use conda-forge conda channel for updating conda and resolving lock files by `@jfrost-mo`_ in :pr:`886`
+* Exclude `__main__.py` from test coverage measurement by `@jfrost-mo`_ in :pr:`880`
+* Remove HTTP status check as urlopen already does it by `@jfrost-mo`_ in :pr:`882`
+* Test templating variables into recipe parser by `@jfrost-mo`_ in :pr:`881`
+* Test recipe listing and detailing functions by `@jfrost-mo`_ in :pr:`883`
+* Fix type signature by `@jwarner8`_ in :pr:`931`
+* Changes to fix longitude convention to be in the range -180 degrees to 180 degrees where possible by `@JKPShonk`_ in :pr:`896`
+* Disable strict checking that TLS certificates are well formed by `@jfrost-mo`_ in :pr:`904`
+* Change CSET introduction on documentation welcome page by `@Sylviabohnenstengel`_ in :pr:`899`
+* Harmonise variable names from UM Stash to LFRic variable and long_name by `@ukmo-huw-lewis`_ in :pr:`898`
+* Add date to cset plot menu items by `@mo-sanamahmood`_ in :pr:`934`
+* Wrap plot title and increase figure size by `@Sylviabohnenstengel`_ in :pr:`935`
+* Fix supported arg type in regrid operator by `@jwarner8`_ in :pr:`948`
+* Use non-interactive backend for plotting by `@jfrost-mo`_ in :pr:`951`
+* Update to WEB_ADDR documentation by `@daflack`_ in :pr:`955`
+* Add iris-grib library support by `@jwarner8`_ in :pr:`960`
+* Revert "Add iris-grib to dev dependencies" by `@jfrost-mo`_ in :pr:`974`
+* Import CSET.recipes as recipes during testing for readability by `@jfrost-mo`_ in :pr:`968`
+* Add nicer error messages for unhandled exceptions by `@jfrost-mo`_ in :pr:`884`
+* Target lockfile update PR to source branch by `@jfrost-mo`_ in :pr:`963`
+* Convert CLI interface tests to not use `subprocess.run` by `@jfrost-mo`_ in :pr:`970`
+* Use regular install for CI tests by `@jfrost-mo`_ in :pr:`463`
+* Add age of air diagnostic functionality by `@jwarner8`_ in :pr:`480`
+* Add mask operators by `@daflack`_ in :pr:`967`
+* Documentation update for mask operator by `@daflack`_ in :pr:`990`
+* Adds spatial perturbation operator by `@daflack`_ in :pr:`979`
+* New callbacks to standardise some dim names by `@jwarner8`_ in :pr:`983`
+* Fix location of AOA docs by `@jwarner8`_ in :pr:`1001`
+* Fix no title in surface histogram plots by `@jwarner8`_ in :pr:`1006`
+* Updates generate_levels_constraint documentation for ensemble functionality by `@daflack`_ in :pr:`1003`
+* Log cubes that don't merge in `load_cube` operator by `@jfrost-mo`_ in :pr:`1022`
+* Remove unneeded `name` global attribute by `@jfrost-mo`_ in :pr:`1024`
+* Adds DKE functionality by `@daflack`_ in :pr:`1002`
+* Format JSON when writing by `@jfrost-mo`_ in :pr:`1041`
+* Limit domain statistics to 3 s.f. and move below plot by `@jfrost-mo`_ in :pr:`1040`
+* Require tasks to succeed in DEBUG mode by `@jfrost-mo`_ in :pr:`1039`
+* Generalise spatial plot log message by `@jfrost-mo`_ in :pr:`1042`
+* Separate words in callback function name with _ so it is easier to read by `@jfrost-mo`_ in :pr:`1043`
+* Handle sorting files outside the current directory in `sort_json.py` script by `@jfrost-mo`_ in :pr:`1046`
+* Replace all remaining usage of typing.Union with `|` by `@jfrost-mo`_ in :pr:`1047`
+* Fix typo in rose-edit help by `@jfrost-mo`_ in :pr:`1051`
+* Add configuration file for GitHub Issue templates by `@jfrost-mo`_ in :pr:`1035`
+* Merge lead time into initiation time cycling by `@jfrost-mo`_ in :pr:`1053`
+* Add utility function for equalising attributes by `@jfrost-mo`_ in :pr:`1052`
+* unify colourbar for relative_humidity between UM and LFRic by `@Sylviabohnenstengel`_ in :pr:`1038`
+* unify colourbar for cloud_base_altitude between um and lfric by `@Sylviabohnenstengel`_ in :pr:`1059`
+* Reduce useless log messages by `@jfrost-mo`_ in :pr:`1045`
+* Adds collapse_by_hour_of_day operator by `@daflack`_ in :pr:`1034`
+* Sort colorbar JSON files via pre-commit hook by `@jfrost-mo`_ in :pr:`1060`
+* Handle CubeList in line plotting operator by `@Sylviabohnenstengel`_ in :pr:`954`
+* Ensure multiple cases are put into a single cube by `@daflack`_ in :pr:`1050`
+* Data loading improvements, including loading multiple models by `@jfrost-mo`_ in :pr:`1054`
+* Improve rose edit and simplify include files by `@jfrost-mo`_ in :pr:`1055`
+* Collapse by validity time by `@daflack`_ in :pr:`1067`
+* Update collapse_by_hour for multiple cases by `@daflack`_ in :pr:`1068`
+* Accept microsecond precision in iris times by `@jfrost-mo`_ in :pr:`1074`
+* Parallelise CI tests by `@jfrost-mo`_ in :pr:`1071`
+* Use "spawn" start method for multiprocessing by `@jfrost-mo`_ in :pr:`1075`
+* Fix issue with rose-suite.conf variable by `@jwarner8`_ in :pr:`1082`
+* Remove unnecessary computation from age-of-air test by `@jfrost-mo`_ in :pr:`1081`
+* Share multiprocessing pool across ensemble members by `@jfrost-mo`_ in :pr:`1080`
+* Add data fetching script from MASS by `@jfrost-mo`_ in :pr:`1084`
+* Spatial difference plots by `@jfrost-mo`_ in :pr:`1061`
+* Make MASS fetch data script executable by `@jfrost-mo`_ in :pr:`1085`
+* Add additional colour bar definitions from UKEP Plot by `@jfrost-mo`_ in :pr:`1064`
+* Increase default memory to 4G for processes by `@jwarner8`_ in :pr:`1090`
+* Relax shape check in difference plots by `@jwarner8`_ in :pr:`1088`
+* Deduplicate an unlimited amount of STASH warnings by `@jfrost-mo`_ in :pr:`1091`
+* Search for correct log_record in fetch_data tests by `@jfrost-mo`_ in :pr:`1089`
+* Implement required return value for MASSFileRetriever by `@jfrost-mo`_ in :pr:`1095`
+* Use CSET read operator to load test data, and improve various fragile tests by `@jfrost-mo`_ in :pr:`1076`
+* Remove housekeep_raw task from workflow by `@jfrost-mo`_ in :pr:`1104`
+* Allow `collapse.collapse` to handle a CubeList by `@jfrost-mo`_ in :pr:`985`
+* Update workflow for single recipe case aggregation by lead time by `@daflack`_ in :pr:`1086`
+* Update workflow to allow case aggregation by hour of day by `@daflack`_ in :pr:`1101`
+* Updates workflow for aggregation by validity time by `@daflack`_ in :pr:`1102`
+* Handle CubeLists in `plot_vertical_line_series` and `plot_scatter_plot` by `@Sylviabohnenstengel`_ in :pr:`1100`
+* Add dummy tasks to prevent workflow graph failures by `@jfrost-mo`_ in :pr:`1119`
+* Update rose-suite.conf.example by `@jfrost-mo`_ in :pr:`1121`
+* Fix for pressure coordinate name variants plus enforce units to be hPa by `@jwarner8`_ in :pr:`1106`
+* Fix issue where pressure coordinate returns Unit object, not str by `@jwarner8`_ in :pr:`1123`
+* Allow real-world coordinates to be specified in single-point timeseries by `@cehalliwell`_ in :pr:`943`
+* Extend histogram plot with CubeList handling capability by `@Sylviabohnenstengel`_ in :pr:`1116`
+* switch off auto-scale for x axis to avoid jumping of ticks on x axis … by `@Sylviabohnenstengel`_ in :pr:`1134`
+* Various fixes and new recipes for pressure level functionality by `@jwarner8`_ in :pr:`1127`
+* Switch web viewer to sidebar layout by `@jfrost-mo`_ in :pr:`1132`
+* Tidy Conf by making aggregatable collapsible, and fill missing example values by `@jwarner8`_ in :pr:`1135`
+* Histogram enhancements by `@jwarner8`_ in :pr:`1137`
+* Fix LFRic time coordinate metadata by `@jwarner8`_ in :pr:`1117`
+* Shrink sidebar font size by `@jfrost-mo`_ in :pr:`1142`
+* Various QuickLook fixes and enhancements of surface plot functionality by `@jwarner8`_ in :pr:`1122`
+* put in colorbar for surface_net_shortwave_flux_difference by `@BernardClaxton`_ in :pr:`1138`
+* Fix spelling in plot.py by `@jfrost-mo`_ in :pr:`1147`
+* Search for all varnames and allow user colorbar override by `@jfrost-mo`_ in :pr:`1141`
+* Support flexible pressure_level dependent colorbars by `@Sylviabohnenstengel`_ in :pr:`1140`
+* Fill out colorbar definitions for missing variables by `@BernardClaxton`_ in :pr:`1145`
+* Unify .gitignore to cover both workflow and library by `@jfrost-mo`_ in :pr:`1151`
+* Update environments used throughout CSET to python 3.13 by `@jfrost-mo`_ in :pr:`1153`
+* Run generate_rose_meta script as pre-commit hook by `@jfrost-mo`_ in :pr:`1154`
+* Rename workflow conda lock files by `@jfrost-mo`_ in :pr:`1157`
+* Always build conda environment within workflow share directory by `@jfrost-mo`_ in :pr:`1156`
+* Break long names in sidebar by `@jfrost-mo`_ in :pr:`1160`
+* Allow release workflow to run on pre-releases by `@jfrost-mo`_ in :pr:`1161`
+* Unify documentation building Action into pull requests check workflow by `@jfrost-mo`_ in :pr:`1159`
+* Small additions to regrid and callback by `@jwarner8`_ in :pr:`1158`
+* Fix conda failure by `@jfrost-mo`_ in :pr:`1162`
+* Revert to python 3.12 for workflow environment by `@jfrost-mo`_ in :pr:`1168`
+* Add missing settings to example suite config by `@jfrost-mo`_ in :pr:`1169`
+* Remove any repeated or UM colorbars by `@daflack`_ in :pr:`1177`
+* Fix JSON colorbar entries and ensure we use LFRic names by `@jwarner8`_ in :pr:`1178`
+* Add colorbar ranges for different pressure levels by `@daflack`_ in :pr:`1181`
+* Add shellcheck to pre-commit hooks by `@jfrost-mo`_ in :pr:`1184`
+* Set website display date at plot creation by `@jfrost-mo`_ in :pr:`1186`
+* Fix timeseries ylim based on JSON entries, and add gridlines by `@jwarner8`_ in :pr:`1175`
+* Append suffix to difference cube long name by `@jfrost-mo`_ in :pr:`1189`
+* Simplify logging by `@jfrost-mo`_ in :pr:`1185`
+* Fix color bars by `@daflack`_ in :pr:`1193`
+* Fix colorbar for geopotential height differences by `@daflack`_ in :pr:`1195`
+* Add fixes for vertical line xlim and PDF xlim by `@jwarner8`_ in :pr:`1182`
+* Test matplotlib font logs are filtered out by `@jfrost-mo`_ in :pr:`1200`
+* Remove unneeded callback by `@jwarner8`_ in :pr:`1205`
+* Error build_conda when local CSET path not set by `@jfrost-mo`_ in :pr:`1203`
+* Draw attention to the hyperlink to download the example by `@jfrost-mo`_ in :pr:`1211`
+* Create needed parent directories when writing the website by `@jfrost-mo`_ in :pr:`1219`
+* Remove tox by `@jfrost-mo`_ in :pr:`1220`
+* Updated vertical line series pressure maximum y limit to 100hPa by `@mo-LewisBlunn`_ in :pr:`1223`
+* Modify `ensure_aggregatable_across_cases` to ensure NetCDF cubes are correctly merged by `@jfrost-mo`_ in :pr:`1199`
+* Model level callback to allow LFRic cubes to merge by `@daflack`_ in :pr:`1227`
+* Sort diagnostics by display name by `@jfrost-mo`_ in :pr:`1229`
+* Add iris-grib to dev dependencies by `@jfrost-mo`_ in :pr:`980`
+* Add case date as subcategory for output website by `@Sylviabohnenstengel`_ in :pr:`1208`
+* Increase memory and wall clock limits for case aggregation tasks by `@daflack`_ in :pr:`1236`
+
+New Contributors
+
+* `@ukmo-huw-lewis`_ made their first contribution in :pr:`898`
+* `@mo-sanamahmood`_ made their first contribution in :pr:`934`
+* `@cehalliwell`_ made their first contribution in :pr:`943`
+* `@BernardClaxton`_ made their first contribution in :pr:`1138`
+* `@mo-LewisBlunn`_ made their first contribution in :pr:`1223`
+
+.. _@ukmo-huw-lewis: https://github.com/ukmo-huw-lewis
+.. _@mo-sanamahmood: https://github.com/mo-sanamahmood
+.. _@BernardClaxton: https://github.com/BernardClaxton
+.. _@mo-LewisBlunn: https://github.com/mo-LewisBlunn
+
 
 24.8.0 (2024-08-29)
 -------------------
@@ -20,7 +202,7 @@ This release contains a large number of bug fixes and small improvements, and
 sets the stage for the major cycling improvement (:issue:`750`) coming in the
 next release in a few days.
 
-* Added line wrapping for title. by `@Sylviabohnenstengel`_ in :pr:`935`
+* Added line wrapping for title by `@Sylviabohnenstengel`_ in :pr:`935`
 * Parse recipe variables as python literals by `@jfrost-mo`_ in :pr:`683`
 * Fixed metplus config issue  by `@dasha-shchep`_ in :pr:`693`
 * Clarify error message on missing files by `@jfrost-mo`_ in :pr:`663`
@@ -338,7 +520,7 @@ now generated as handily viewable HTML pages.
 * Update index.rst by `@Sylviabohnenstengel`_ in :pr:`230`
 * Use static branch name while updating lock files by `@jfrost-mo`_ in :pr:`245`
 * Swap out flake8 for Ruff by `@jfrost-mo`_ in :pr:`218`
-* Including aggregate operator. by `@Sylviabohnenstengel`_ in :pr:`241`
+* Including aggregate operator by `@Sylviabohnenstengel`_ in :pr:`241`
 * Fix filter operator for filtering cube by `@daflack`_ in :pr:`258`
 * Fix pre-commit mangling test data by `@jfrost-mo`_ in :pr:`273`
 * Improve tutorials by `@jfrost-mo`_ in :pr:`209`
