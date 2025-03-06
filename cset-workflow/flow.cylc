@@ -113,6 +113,8 @@ URL = https://metoffice.github.io/CSET
     [[FETCH_DATA]]
     script = rose task-run -v --app-key=fetch_fcst
     execution time limit = PT1H
+    [[[directives]]]
+        --mem=100000
         [[[environment]]]
         ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
 

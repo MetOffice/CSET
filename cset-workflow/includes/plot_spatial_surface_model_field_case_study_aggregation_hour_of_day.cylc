@@ -4,8 +4,6 @@
 [runtime]
     [[generic_spatial_plot_time_series_case_aggregation_by_hour_of_day_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
     inherit = PROCESS_CASE_AGGREGATION
-        [[[directives]]]
-        --mem=100000
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_surface_spatial_plot_sequence_case_aggregation_mean_hour_of_day.yaml"
         CSET_ADDOPTS = """
