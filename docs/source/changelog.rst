@@ -16,10 +16,10 @@ Changelog
 25.3.0 (2025-03-06)
 -------------------
 
-This release is the baseline for evaluating RAL3-LFRic with RMED Ticket #708
-detailing the science configuration. It introduces a fixed evaluation
-functionality for RAL3-LFRic and RAL3-UM, new functionality, bug fixes, and
-improvements. Key features for RAL3-LFRic evaluation include:
+This release is the baseline for evaluating **RAL3-LFRic#708.1** with RMED
+Ticket #708 detailing the science configuration. It introduces a fixed
+evaluation functionality for RAL3-LFRic and RAL3-UM, new functionality, bug
+fixes, and improvements. Key features for RAL3-LFRic evaluation include:
 
 * Surface fields: spatial plots, timeseries, histograms, model comparison plots,
   time aggregation by hour of day, validity time, forecast range, area averages.
