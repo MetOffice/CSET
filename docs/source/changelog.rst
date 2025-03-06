@@ -23,7 +23,7 @@ improvements. Key features for RAL3-LFRic evaluation include:
 
 * Surface fields: spatial plots, timeseries, histograms, model comparison plots,
   time aggregation by hour of day, validity time, forecast range, area averages.
-* Pressure levels fields: spatial plots, timeseries, histograms, model
+* Pressure level fields: spatial plots, timeseries, histograms, model
   comparison plots, time aggregation by hour of day, validity time, forecast
   range, area averages, vertical profiles, PDFs.
 
