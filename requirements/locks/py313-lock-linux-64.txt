@@ -31,7 +31,7 @@ https://conda.anaconda.org/conda-forge/linux-64/freeglut-3.2.2-ha6d2627_3.conda#
 https://conda.anaconda.org/conda-forge/linux-64/freetype-2.12.1-h267a509_2.conda#9ae35c3d96db2c94ce0cef86efdfa2cb
 https://conda.anaconda.org/conda-forge/linux-64/fribidi-1.0.10-h36c2ea0_0.tar.bz2#ac7bc6a654f8f41b352b38f4051135f8
 https://conda.anaconda.org/conda-forge/linux-64/gdk-pixbuf-2.42.12-hb9ae30d_0.conda#201db6c2d9a3c5e46573ac4cb2e92f4f
-https://conda.anaconda.org/conda-forge/linux-64/geos-3.13.0-h5888daf_0.conda#40b4ab956c90390e407bb177f8a58bab
+https://conda.anaconda.org/conda-forge/linux-64/geos-3.13.1-h97f6797_0.conda#5bc18c66111bc94532b0d2df00731c66
 https://conda.anaconda.org/conda-forge/linux-64/glib-tools-2.82.2-h4833e2c_1.conda#e2e44caeaef6e4b107577aa46c95eb12
 https://conda.anaconda.org/conda-forge/linux-64/graphite2-1.3.13-h59595ed_1003.conda#f87c7b7c2cb45f323ffbce941c78ab7c
 https://conda.anaconda.org/conda-forge/linux-64/graphviz-12.2.1-h5ae0cbf_1.conda#df7835d2c73cd1889d377cfd6694ada4
@@ -128,7 +128,7 @@ https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml-0.18.10-py313h536fd9
 https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml.clib-0.2.8-py313h536fd9c_1.conda#d3400df9c9d0b58368bc0c0fc2591c39
 https://conda.anaconda.org/conda-forge/linux-64/ruff-0.9.9-py313hfe82de2_0.conda#bfbdfb2693302758efd961e1015b6161
 https://conda.anaconda.org/conda-forge/linux-64/scipy-1.15.2-py313h86fcf2b_0.conda#ca68acd9febc86448eeed68d0c6c8643
-https://conda.anaconda.org/conda-forge/linux-64/shapely-2.0.7-py313h3f71f02_0.conda#23fcbc2e378354ce32a78872d3d3c934
+https://conda.anaconda.org/conda-forge/linux-64/shapely-2.0.7-py313h576e190_1.conda#b6c6d37ab7c2313fe456e5ed2f348038
 https://conda.anaconda.org/conda-forge/linux-64/snappy-1.2.1-h8bd8927_1.conda#3b3e64af585eadfb52bb90b553db5edf
 https://conda.anaconda.org/conda-forge/linux-64/sqlite-3.49.1-h9eae976_1.conda#069213b4f57ec55bbcfaebe415c758f7
 https://conda.anaconda.org/conda-forge/linux-64/tk-8.6.13-noxft_h4845f30_101.conda#d453b98d9c83e71da0741bb0ff4d76bc
@@ -196,7 +196,7 @@ https://conda.anaconda.org/conda-forge/noarch/iniconfig-2.0.0-pyhd8ed1ab_1.conda
 https://conda.anaconda.org/conda-forge/noarch/iris-3.11.1-pyha770c72_1.conda#f501583062225a070455d011d81b07bf
 https://conda.anaconda.org/conda-forge/noarch/iris-grib-0.21.0-pyhd8ed1ab_0.conda#d5a110459acc9669c58e5d516fc2e165
 https://conda.anaconda.org/conda-forge/noarch/isodate-0.7.2-pyhd8ed1ab_1.conda#14c42a6334f38c412449f5a5e4043a5a
-https://conda.anaconda.org/conda-forge/noarch/jinja2-3.1.5-pyhd8ed1ab_0.conda#2752a6ed44105bfb18c9bef1177d9dcd
+https://conda.anaconda.org/conda-forge/noarch/jinja2-3.1.6-pyhd8ed1ab_0.conda#446bd6c8cb26050d528881df495ce646
 https://conda.anaconda.org/conda-forge/noarch/locket-1.0.0-pyhd8ed1ab_0.tar.bz2#91e27ef3d05cc772ce627e51cff111c4
 https://conda.anaconda.org/conda-forge/noarch/markdown-it-py-3.0.0-pyhd8ed1ab_1.conda#fee3164ac23dfca50cfcc8b85ddefb81
 https://conda.anaconda.org/conda-forge/noarch/mdurl-0.1.2-pyhd8ed1ab_1.conda#592132998493b3ff25fd7479396e8351
