@@ -32,9 +32,13 @@ def construct_index():
         try:
             with open(directory / "meta.json", "rt", encoding="UTF-8") as fp:
                 plot_metadata = json.load(fp)
+            category = plot_metadata["category"]
+            case_date = plot_metadata.get("case_date", "")
             record = {
-                plot_metadata["category"]: {
-                    directory.name: f"{plot_metadata['title']} {plot_metadata.get('case_date', '')}".strip()
+                category: {
+                    case_date if case_date else "Aggregation": {
+                        directory.name: f"{plot_metadata['title']}".strip()
+                    }
                 }
             }
         except FileNotFoundError:
@@ -45,6 +49,16 @@ def construct_index():
             logging.error("%s is invalid, skipping.\n%s", directory / "meta.json", err)
             continue
         index = combine_dicts(index, record)
+
+    # Sort index of diagnostics.
+    index = dict(sorted(index.items()))
+    for category in index:
+        for case_date in index[category]:
+            diagnostics = index[category][case_date]
+            index[category][case_date] = dict(
+                # Sort by display name.
+                sorted(diagnostics.items(), key=lambda x: x[1])
+            )
 
     with open(plots_dir / "index.json", "wt", encoding="UTF-8") as fp:
         json.dump(index, fp, indent=2)

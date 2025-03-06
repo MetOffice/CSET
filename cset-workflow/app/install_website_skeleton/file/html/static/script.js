@@ -71,58 +71,71 @@ function construct_sidebar_from_data(data) {
   // Button icons.
   const icons = { left: "◧", full: "▣", right: "◨" };
 
-  for (category in data) {
+  for (const category in data) {
     // Details element for category.
-    const details = document.createElement("details");
-    details.open = true;
+    const category_details = document.createElement("details");
 
     // Title for category (summary element).
-    const summary = document.createElement("summary");
-    summary.textContent = category;
-    details.append(summary);
+    const category_summary = document.createElement("summary");
+    category_summary.textContent = category;
+    category_details.append(category_summary);
 
-    // Menu of plots for this category.
-    const category_menu = document.createElement("menu");
+    // Add each case date into category.
+    for (const case_date in data[category]) {
+      // Details element for case_date.
+      const case_details = document.createElement("details");
 
-    // Add each plot.
-    for (const plot in data[category]) {
-      // Menu entry for plot.
-      const list_item = document.createElement("li");
-      list_item.textContent = data[category][plot];
+      // Title for case_date.
+      const case_summary = document.createElement("summary");
+      case_summary.textContent = case_date;
+      case_details.append(case_summary);
 
-      // Container element for plot position chooser buttons.
-      const position_chooser = document.createElement("div");
-      position_chooser.classList.add("plot-position-chooser");
+      // Menu of plots for this category and case_date.
+      const case_menu = document.createElement("menu");
 
-      // Add buttons for each position.
-      for (const position of ["left", "full", "right"]) {
-        // Create button.
-        const button = document.createElement("button");
-        button.classList.add(position);
-        button.textContent = icons[position];
+      // Add each plot.
+      for (const plot in data[category][case_date]) {
+        // Menu entry for plot.
+        const list_item = document.createElement("li");
+        list_item.textContent = data[category][case_date][plot];
 
-        // Add a callback updating the iframe when the link is clicked.
-        button.addEventListener("click", (event) => {
-          event.preventDefault();
-          // Set the appropriate frame layout.
-          position == "full" ? ensure_single_frame() : ensure_dual_frame();
-          document.getElementById(`plot-frame-${position}`).src = `plots/${plot}`;
-        });
+        // Container element for plot position chooser buttons.
+        const position_chooser = document.createElement("div");
+        position_chooser.classList.add("plot-position-chooser");
 
-        // Add button to chooser.
-        position_chooser.append(button);
+        // Add buttons for each position.
+        for (const position of ["left", "full", "right"]) {
+          // Create button.
+          const button = document.createElement("button");
+          button.classList.add(position);
+          button.textContent = icons[position];
+
+          // Add a callback updating the iframe when the link is clicked.
+          button.addEventListener("click", (event) => {
+            event.preventDefault();
+            // Set the appropriate frame layout.
+            position == "full" ? ensure_single_frame() : ensure_dual_frame();
+            document.getElementById(`plot-frame-${position}`).src = `plots/${plot}`;
+          });
+
+          // Add button to chooser.
+          position_chooser.append(button);
+        }
+
+        // Add position chooser to entry.
+        list_item.append(position_chooser);
+
+        // Add entry to the menu.
+        case_menu.append(list_item);
       }
 
-      // Add position chooser to entry.
-      list_item.append(position_chooser);
-
-      // Add entry to the menu.
-      category_menu.append(list_item);
+      // Finish constructing this case and add to its category.
+      case_details.append(case_menu);
+      category_details.append(case_details);
     }
 
     // Join category to the DOM.
-    details.append(category_menu);
-    sidebar.append(details);
+    sidebar.append(category_details);
   }
 }
 

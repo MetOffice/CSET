@@ -39,10 +39,10 @@ def test_construct_index(monkeypatch, tmp_path):
     # Plot directories.
     plot1 = plots_dir / "p1/meta.json"
     plot1.parent.mkdir()
-    plot1.write_text('{"category": "Category", "title": "P1"}')
+    plot1.write_text('{"category": "Category", "title": "P1", "case_date": "20250101"}')
     plot2 = plots_dir / "p2/meta.json"
     plot2.parent.mkdir()
-    plot2.write_text('{"category": "Category", "title": "P2"}')
+    plot2.write_text('{"category": "Category", "title": "P2", "case_date": "20250101"}')
 
     # Non-plot directory also present.
     static_resource = plots_dir / "static/style.css"
@@ -57,7 +57,30 @@ def test_construct_index(monkeypatch, tmp_path):
     assert index_file.is_file()
     with open(index_file, "rt", encoding="UTF-8") as fp:
         index = json.load(fp)
-    expected = {"Category": {"p1": "P1", "p2": "P2"}}
+    expected = {"Category": {"20250101": {"p1": "P1", "p2": "P2"}}}
+    assert index == expected
+
+
+def test_construct_index_aggregation_case(monkeypatch, tmp_path):
+    """Construct the index from a diagnostics without a case date."""
+    monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", str(tmp_path))
+    plots_dir = tmp_path / "web/plots"
+    plots_dir.mkdir(parents=True)
+
+    # Plot directories.
+    plot1 = plots_dir / "p1/meta.json"
+    plot1.parent.mkdir()
+    plot1.write_text('{"category": "Category", "title": "P1"}')
+
+    # Construct index.
+    finish_website.construct_index()
+
+    # Check index.
+    index_file = plots_dir / "index.json"
+    assert index_file.is_file()
+    with open(index_file, "rt", encoding="UTF-8") as fp:
+        index = json.load(fp)
+    expected = {"Category": {"Aggregation": {"p1": "P1"}}}
     assert index == expected
 
 
