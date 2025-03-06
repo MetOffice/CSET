@@ -33,8 +33,8 @@ reviewed evaluation tools with a well defined release cycle and flexible
 evaluation code that can adapt to user needs. CSET is built with portability in
 mind and can be run on a range of platforms from local desktops to HPC systems
 and cloud servers. It ensures traceable and reproducible results during the
-regional model assessment cycle, and offers a legacy for diagnostics and access
-to observations.
+regional model assessment cycle and offers diagnostics access to observations
+and a legacy through continued maintenance and improved discoverability.
 
 It aligns parametrisation development, diagnostic development and evaluation
 research, feeding back into Regional Atmosphere and Land (RAL) model development
