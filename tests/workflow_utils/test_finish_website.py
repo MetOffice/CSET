@@ -57,7 +57,7 @@ def test_construct_index(monkeypatch, tmp_path):
     assert index_file.is_file()
     with open(index_file, "rt", encoding="UTF-8") as fp:
         index = json.load(fp)
-    expected = {"Category": {"20250101": {"p1": "P1 20250101", "p2": "P2 20250101"}}}
+    expected = {"Category": {"20250101": {"p1": "P1", "p2": "P2"}}}
     assert index == expected
 
 
