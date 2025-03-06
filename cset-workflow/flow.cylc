@@ -106,6 +106,8 @@ URL = https://metoffice.github.io/CSET
     [[PROCESS_CASE_AGGREGATION]]
     script = rose task-run -v --app-key=run_cset_recipe
     execution time limit = PT2H
+    [[[directives]]]
+        --mem=100000
         [[[environment]]]
         # As this process is used for case aggregation we hard code to True.
         DO_CASE_AGGREGATION = True
@@ -113,8 +115,6 @@ URL = https://metoffice.github.io/CSET
     [[FETCH_DATA]]
     script = rose task-run -v --app-key=fetch_fcst
     execution time limit = PT1H
-    [[[directives]]]
-        --mem=100000
         [[[environment]]]
         ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
 
