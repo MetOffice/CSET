@@ -9,7 +9,7 @@ Getting Started
 
 This section contains tutorials suitable for getting started with CSET. By
 following them you should learn the basics of using CSET. There are two ways to
-run CSET: Via a cylc workflow, or as a command line program.
+run CSET: via a cylc workflow, or as a command line program.
 
 The cylc workflow allows large scale processing of multiple models,
 case-studies, and variables. It is more complex to set up, requiring a cylc
