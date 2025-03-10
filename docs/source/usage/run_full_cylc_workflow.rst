@@ -1,5 +1,5 @@
-Running a full CYLC workflow with CSET
-======================================
+Running a full CYLC workflow with CSET v25.3.0
+==============================================
 
 .. Tutorial on running CSET within a CYLC environment.
 
@@ -14,7 +14,7 @@ website with the plots to navigate. This guide assumes that you have
 Which should produce a version 8.X.
 
 The next step is to download the latest release of CSET, which can be
-found at `CSET Releases`_. This example will utilise version **v25.2.0-pre3**.
+found at `CSET Releases`_. This example will utilise version **v25.3.0**.
 Once you have downloaded the tar.gz, untar the file.
 
 If you are running in the Met Office, you can then cd into the ``cset-workflow``
@@ -69,7 +69,11 @@ monitor the progress by using either ``cylc tui`` on the command line, or ``cylc
 will open up a browser showing progress through the workflow.
 
 Once completed, you will get an email and be able to look through plots at the web address
-you specified in the GUI.
+you specified in the GUI. The GUI on the website will look like the below image. You can navigate
+through the drop down menu items on the left hand side.
+
+.. image:: cset_ui.PNG
+    :alt: Screenshot of the CSET web interface.
 
 
 .. _CYLC8: https://cylc.github.io/cylc-doc/stable/html/index.html
