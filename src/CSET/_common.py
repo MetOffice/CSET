@@ -329,6 +329,24 @@ def iter_maybe(thing) -> Iterable:
     return (thing,)
 
 
+def human_sorted(iterable: Iterable, reverse: bool = False) -> list:
+    """Sort such numbers within strings are sorted correctly."""
+    # Adapted from https://nedbatchelder.com/blog/200712/human_sorting.html
+
+    def alphanum_key(s):
+        """Turn a string into a list of string and number chunks.
+
+        >>> alphanum_key("z23a")
+        ["z", 23, "a"]
+        """
+        try:
+            return [int(c) if c.isdecimal() else c for c in re.split(r"(\d+)", s)]
+        except TypeError:
+            return s
+
+    return sorted(iterable, key=alphanum_key, reverse=reverse)
+
+
 def combine_dicts(d1: dict, d2: dict) -> dict:
     """Recursively combines two dictionaries.
 
@@ -344,3 +362,12 @@ def combine_dicts(d1: dict, d2: dict) -> dict:
     for key in d2.keys() - d1.keys():
         d1[key] = d2[key]
     return d1
+
+
+def sort_dict(d: dict) -> dict:
+    """Recursively sort a dictionary."""
+    # Thank you to https://stackoverflow.com/a/47882384
+    return {
+        k: sort_dict(v) if isinstance(v, dict) else v
+        for k, v in human_sorted(d.items())
+    }
