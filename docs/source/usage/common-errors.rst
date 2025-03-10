@@ -68,3 +68,15 @@ reading in the CubeList can not perform operations yet on CubeLists.
 In this case try switching to ``read.read_cube``, which forces a single Cube as
 output and not a CubeList. This requires that all metadata, etc. match up to
 allow forming a single Cube, often requiring refinement of the constraints.
+
+CondaHTTPError: HTTP 000 CONNECTION FAILED
+------------------------------------------
+
+This indicates conda has not been able to retrieve the packages that CSET
+requires. Often, especially in the Met Office, this is simply that the default 1
+minutes download timeout has expired. This timeout can be increased with the
+following command, and conda can then be re-run.
+
+.. code-block:: bash
+
+    echo 'remote_read_timeout_secs: 100.0' >> ~/.condarc

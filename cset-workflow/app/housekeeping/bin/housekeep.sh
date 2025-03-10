@@ -20,7 +20,5 @@ then
 elif [[ $HOUSEKEEPING_MODE -ge 2 ]]
 then
     # Housekeeping: Standard
-    echo 'Removing intermediate data.'
-    rm -rfv -- "$CYLC_WORKFLOW_SHARE_DIR"/cycle/*/data \
-              "$CYLC_WORKFLOW_SHARE_DIR"/web/plots/*/intermediate
+    rm -rfv -- "$CYLC_WORKFLOW_SHARE_DIR"/cycle/*/data
 fi

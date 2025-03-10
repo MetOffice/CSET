@@ -5,8 +5,6 @@
 [runtime]
     [[generic_mlevel_spatial_plot_sequence_case_aggregation_by_validity_time_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(mlevel)}}]]
     inherit = PROCESS_CASE_AGGREGATION
-        [[[directives]]]
-        --mem=5000
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_mlevel_spatial_plot_sequence_case_aggregation_mean_validity_time.yaml"
         CSET_ADDOPTS = """
