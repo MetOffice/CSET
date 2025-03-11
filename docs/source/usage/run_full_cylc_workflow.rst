@@ -41,13 +41,14 @@ directory.
 Expand the options in Diagnostics; we will ignore the sections Convection, Other
 and Verification blank for now, but this is where various diagnostics can be toggled
 on/off. For now, we will go to Quicklook, and add ``temperature_at_screen_level`` to the
-Surface model fields list. We will then toggle all the options below to True, until we
-get to ``SURFACE_SINGLE_PONT_TIME_SERIES`` which we will leave blank. We will next add
+Surface model fields list. We will then toggle all the options below to True, apart from
+any case aggregation tasks over validity time or hour of day, until we get to
+``SURFACE_SINGLE_PONT_TIME_SERIES`` which we will leave blank. We will next add
 ``zonal_wind_at_pressure_levels`` to the Pressure level model fields list, and choose
 some pressure levels to plot. Lets plot ``200``, ``500`` and ``850``. Again, toggle all
-the options below this to True until we get to ``EXTRACT_PLEVEL_TRANSECT`` which we will
-keep to False. Ignore any options below this, they are for transects and plotting on model
-levels.
+the options below this to True apart from case aggregation tasks over validity time or hour of day
+until we get to ``EXTRACT_PLEVEL_TRANSECT`` which we will keep to False. Ignore any options
+below this, they are for transects and plotting on model levels.
 
 We will next click on Models and Cases in the left hand column, and add the case study dates
 for our forecasts. These are ``20230117T0000Z`` and ``20230118T0000Z``. Set the Analysis length
@@ -70,9 +71,16 @@ will open up a browser showing progress through the workflow.
 
 Once completed, you will get an email and be able to look through plots at the web address
 you specified in the GUI. The GUI on the website will look like the below image. You can navigate
-through the drop down menu items on the left hand side.
+through the drop down menu items on the left hand side. Note that the plots are stored in the
+``web`` folder, located in ``~/cylc-run/cset-workflow/run(N)/share/web`` for the latest CSET run.
+If you clean the suite, it will delete the plots. To keep the plots safe, move the web folder
+to a sensible location, and symlink the web folder back to the page where you have been displaying
+the plots (the path in Web Directory in the rose edit GUI).
 
-.. image:: cset_ui.PNG
+.. image:: cset_ui1.PNG
+    :alt: Screenshot of the CSET web interface.
+
+.. image:: cset_ui2.PNG
     :alt: Screenshot of the CSET web interface.
 
 
