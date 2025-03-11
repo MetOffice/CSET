@@ -11,7 +11,7 @@ import logging
 import os
 from pathlib import Path
 
-from CSET._common import combine_dicts
+from CSET._common import combine_dicts, sort_dict
 
 logging.basicConfig(
     level=os.getenv("LOGLEVEL", "INFO"), format="%(asctime)s %(levelname)s %(message)s"
@@ -51,15 +51,9 @@ def construct_index():
         index = combine_dicts(index, record)
 
     # Sort index of diagnostics.
-    index = dict(sorted(index.items()))
-    for category in index:
-        for case_date in index[category]:
-            diagnostics = index[category][case_date]
-            index[category][case_date] = dict(
-                # Sort by display name.
-                sorted(diagnostics.items(), key=lambda x: x[1])
-            )
+    index = sort_dict(index)
 
+    # Write out website index.
     with open(plots_dir / "index.json", "wt", encoding="UTF-8") as fp:
         json.dump(index, fp, indent=2)
 

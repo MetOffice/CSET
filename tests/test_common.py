@@ -282,9 +282,24 @@ def test_iter_maybe_string():
         assert value is atom
 
 
+def test_human_sort():
+    """Strings are sorted by value of contained numbers."""
+    strings = ["a9", "a100", "a20", "a"]
+    assert common.human_sorted(strings) == ["a", "a9", "a20", "a100"]
+    # Check it is also fine with non-string data types.
+    other_types = [[4, 5, 6], [1, 2, 3]]
+    assert common.human_sorted(other_types) == [[1, 2, 3], [4, 5, 6]]
+
+
 def test_combine_dicts():
     """Test combine_dicts function."""
     d1 = {"a": 1, "b": 2, "c": {"d": 3, "e": 4}}
     d2 = {"b": 3, "c": {"d": 5, "f": 6}}
     expected = {"a": 1, "b": 3, "c": {"d": 5, "e": 4, "f": 6}}
     assert common.combine_dicts(d1, d2) == expected
+
+
+def test_sort_dicts():
+    """Test recursively sorting a dictionary."""
+    d = {"b": {"ba": 1, "bb": 2}, "a": {"ab": 2, "aa": 1}}
+    assert common.sort_dict(d) == {"a": {"aa": 1, "ab": 2}, "b": {"ba": 1, "bb": 2}}
