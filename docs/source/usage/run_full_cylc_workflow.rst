@@ -9,6 +9,7 @@ website with the plots to navigate. This guide assumes that you have
 `CYLC8`_ installed in your workspace. You can confirm this by typing
 
 .. code-block:: bash
+
    cylc --version
 
 Which should produce a version 8.X.
