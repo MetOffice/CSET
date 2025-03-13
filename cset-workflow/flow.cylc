@@ -127,11 +127,12 @@ URL = https://metoffice.github.io/CSET
             ROSE_APP_OPT_CONF_KEYS = {{METPLUS_OPT_CONFIG_KEYS}}
         {% endif %}
 
-    # Noop tasks to ensure a complete/efficient workflow graph
+    # Noop tasks to ensure a complete/efficient workflow graph.
     [[DUMMY_TASK]]
     script = true
     platform = localhost
     execution time limit = PT1M
+    run mode = skip
 
     [[setup_complete]]
     inherit = DUMMY_TASK
