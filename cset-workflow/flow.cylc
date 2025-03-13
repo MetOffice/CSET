@@ -40,7 +40,7 @@ URL = https://metoffice.github.io/CSET
             R1/{{date}} = """
             setup_complete[^] =>
             FETCH_DATA:succeed-all =>
-            fetch_complete
+            PREPROCESS_DATA:succeed-all =>
             fetch_complete =>
             PROCESS:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} =>
             cycle_complete
@@ -51,6 +51,7 @@ URL = https://metoffice.github.io/CSET
         {{CSET_TRIAL_CYCLE_PERIOD}} = """
         setup_complete[^] =>
         FETCH_DATA:succeed-all =>
+        PREPROCESS_DATA:succeed-all =>
         fetch_complete =>
         PROCESS:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} =>
         cycle_complete
@@ -122,6 +123,13 @@ URL = https://metoffice.github.io/CSET
         [[[environment]]]
         ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
 
+    [[PREPROCESS_DATA]]
+    script = rose task-run -v --app-key=preprocess_data
+    execution time limit = PT15M
+    execution retry delays = PT1M, PT15M, PT1H
+        [[[directives]]]
+        --mem = 30000
+
     [[METPLUS]]
         [[[environment]]]
         {% if METPLUS_GRID_STAT|default(False) %}
@@ -179,6 +187,12 @@ URL = https://metoffice.github.io/CSET
         DATE_TYPE = {{model["date_type"]}}
         DATA_PERIOD = {{model["data_period"]}}
         ANALYSIS_OFFSET = {{model["analysis_offset"]}}
+
+    [[preprocess_m{{model["id"]}}]]
+    # Preprocess data to fix up metadata and speed up future loads.
+    inherit = PREPROCESS_DATA
+        [[[environment]]]
+        MODEL_IDENTIFIER = {{model["id"]}}
     {% endfor %}
 
     [[housekeeping]]
