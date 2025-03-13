@@ -77,6 +77,21 @@ def _append_to_plot_index(plot_index: list) -> list:
     return complete_plot_index
 
 
+def _mark_diagnostic_as_extreme():
+    """Mark a diagnostic as containing extreme values."""
+    logging.warning("Diagnostic contains extreme values!")
+    with open("meta.json", "r+t", encoding="UTF-8") as fp:
+        fcntl.flock(fp, fcntl.LOCK_EX)
+        fp.seek(0)
+        meta = json.load(fp)
+        # Only add if not already there.
+        if "extreme_values" not in meta:
+            meta["extreme_values"] = True
+            fp.seek(0)
+            fp.truncate()
+            json.dump(meta, fp, indent=2)
+
+
 def _check_single_cube(cube: iris.cube.Cube | iris.cube.CubeList) -> iris.cube.Cube:
     """Ensure a single cube is given.
 
@@ -294,16 +309,16 @@ def _plot_and_save_spatial_plot(
 
     # Specify the color bar
     cmap, levels, norm = _colorbar_map_levels(cube)
+    try:
+        vmin = min(levels)
+        vmax = max(levels)
+    except TypeError:
+        vmin, vmax = None, None
 
     if method == "contourf":
         # Filled contour plot of the field.
         plot = iplt.contourf(cube, cmap=cmap, levels=levels, norm=norm)
     elif method == "pcolormesh":
-        try:
-            vmin = min(levels)
-            vmax = max(levels)
-        except TypeError:
-            vmin, vmax = None, None
         # pcolormesh plot of the field.
         plot = iplt.pcolormesh(cube, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax)
     else:
@@ -350,15 +365,17 @@ def _plot_and_save_spatial_plot(
             f" End Lon: {cube.attributes['transect_coords'].split('_')[3]}",
             fontsize=16,
         )
-
     else:
         # Add title.
         axes.set_title(title, fontsize=16)
 
     # Add watermark with min/max/mean. Currently not user togglable.
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
+    data_min = np.min(cube.data)
+    data_max = np.max(cube.data)
+    data_mean = np.mean(cube.data)
     axes.annotate(
-        f"Min: {np.min(cube.data):.3g} Max: {np.max(cube.data):.3g} Mean: {np.mean(cube.data):.3g}",
+        f"Min: {data_min:.3g} Max: {data_max:.3g} Mean: {data_mean:.3g}",
         xy=(1, -0.05),
         xycoords="axes fraction",
         xytext=(-5, 5),
@@ -368,6 +385,10 @@ def _plot_and_save_spatial_plot(
         size=11,
         bbox=dict(boxstyle="round", fc="#cccccc", ec="#808080", alpha=0.9),
     )
+
+    if vmin is not None and vmax is not None and (data_min < vmin or vmax < data_max):
+        # Extreme values in cube.
+        _mark_diagnostic_as_extreme()
 
     # Add colour bar.
     cbar = fig.colorbar(plot)
@@ -412,6 +433,11 @@ def _plot_and_save_postage_stamp_spatial_plot(
 
     # Specify the color bar
     cmap, levels, norm = _colorbar_map_levels(cube)
+    try:
+        vmin = min(levels)
+        vmax = max(levels)
+    except TypeError:
+        vmin, vmax = None, None
 
     # Make a subplot for each member.
     for member, subplot in zip(
@@ -424,11 +450,6 @@ def _plot_and_save_postage_stamp_spatial_plot(
             # Filled contour plot of the field.
             plot = iplt.contourf(member, cmap=cmap, levels=levels, norm=norm)
         elif method == "pcolormesh":
-            try:
-                vmin = min(levels)
-                vmax = max(levels)
-            except TypeError:
-                vmin, vmax = None, None
             # pcolormesh plot of the field.
             plot = iplt.pcolormesh(member, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax)
         else:
@@ -465,6 +486,12 @@ def _plot_and_save_postage_stamp_spatial_plot(
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
     logging.info("Saved contour postage stamp plot to %s", filename)
     plt.close(fig)
+
+    data_min = np.min(cube.data)
+    data_max = np.max(cube.data)
+    if vmin is not None and vmax is not None and (data_min < vmin or vmax < data_max):
+        # Extreme values in cube.
+        _mark_diagnostic_as_extreme()
 
 
 def _plot_and_save_line_series(
