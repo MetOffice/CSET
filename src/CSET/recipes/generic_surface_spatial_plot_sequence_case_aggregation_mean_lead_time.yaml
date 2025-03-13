@@ -28,5 +28,6 @@ steps:
   - operator: plot.spatial_pcolormesh_plot
     sequence_coordinate: forecast_period
 
-  - operator: write.write_cube_to_nc
-    overwrite: True
+  # Disabled for performance reasons. See issue #1253.
+  # - operator: write.write_cube_to_nc
+  #   overwrite: True

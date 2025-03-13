@@ -26,5 +26,6 @@ steps:
     sequence_coordinate: forecast_period
     stamp_coordinate: realization
 
-  - operator: write.write_cube_to_nc
-    overwrite: True
+  # Disabled for performance reasons. See issue #1253.
+  # - operator: write.write_cube_to_nc
+  #   overwrite: True

@@ -32,5 +32,6 @@ steps:
     sequence_coordinate: hour
 
   # Make a single NetCDF with all the data inside it.
-  - operator: write.write_cube_to_nc
-    overwrite: True
+  # Disabled for performance reasons. See issue #1253.
+  # - operator: write.write_cube_to_nc
+  #   overwrite: True

@@ -22,8 +22,9 @@ steps:
 
   - operator: aggregate.ensure_aggregatable_across_cases
 
-  - operator: write.write_cube_to_nc
-    overwrite: True
+  # Disabled for performance reasons. See issue #1253.
+  # - operator: write.write_cube_to_nc
+  #   overwrite: True
 
   - operator: plot.plot_histogram_series
     sequence_coordinate: forecast_period
