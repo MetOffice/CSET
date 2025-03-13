@@ -34,10 +34,15 @@ def construct_index():
                 plot_metadata = json.load(fp)
             category = plot_metadata["category"]
             case_date = plot_metadata.get("case_date", "")
+            extreme_values = plot_metadata.get("extreme_values", False)
+            title = plot_metadata["title"]
+            if extreme_values:
+                with open(plots_dir / "../status.html", "at") as fp:
+                    fp.write(f"<p>{case_date} / {title} contains extreme values.</p>\n")
             record = {
                 category: {
                     case_date if case_date else "Aggregation": {
-                        directory.name: f"{plot_metadata['title']}".strip()
+                        directory.name: f"{'❗' if extreme_values else ''} {title}".strip()
                     }
                 }
             }
@@ -61,7 +66,7 @@ def construct_index():
 def update_workflow_status():
     """Update the workflow status on the front page of the web interface."""
     web_dir = Path(os.environ["CYLC_WORKFLOW_SHARE_DIR"] + "/web")
-    with open(web_dir / "status.html", "wt") as fp:
+    with open(web_dir / "status.html", "at") as fp:
         fp.write("<p>Finished</p>\n")
 
 
