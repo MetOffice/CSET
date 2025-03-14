@@ -457,6 +457,10 @@ def _fix_um_radtime_posthour(cube: iris.cube.Cube):
             time_unit = time_coord.units
             time_points = time_unit.num2date(time_coord.points)
 
+            # Skip if times don't need fixing.
+            if time_points[0].minute != 1:
+                return
+
             # Subtract 1 minute from each time point
             new_time_points = np.array(
                 [t - datetime.timedelta(minutes=1) for t in time_points]
@@ -480,6 +484,10 @@ def _fix_um_radtime_prehour(cube: iris.cube.Cube):
             # Convert time points to datetime objects
             time_unit = time_coord.units
             time_points = time_unit.num2date(time_coord.points)
+
+            # Skip if times don't need fixing.
+            if time_points[0].minute != 59:
+                return
 
             # Add 1 minute from each time point
             new_time_points = np.array(
@@ -515,6 +523,7 @@ def _fix_um_lightning(cube: iris.cube.Cube):
     """
     try:
         if cube.attributes["STASH"] == "m01s21i104":
+            # Remove aggregation cell method.
             cube.cell_methods = []
 
             time_coord = cube.coord("time")
@@ -522,6 +531,10 @@ def _fix_um_lightning(cube: iris.cube.Cube):
             # Convert time points to datetime objects
             time_unit = time_coord.units
             time_points = time_unit.num2date(time_coord.points)
+
+            # Skip if times don't need fixing.
+            if time_points[0].minute == 0:
+                return
 
             # Subtract 1 minute from each time point
             new_time_points = np.array(
