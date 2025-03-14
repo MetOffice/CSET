@@ -4,6 +4,7 @@
 
 import logging
 import os
+import shlex
 import subprocess
 import sys
 import zipfile
@@ -42,7 +43,7 @@ def recipe_id():
             env=env,
         )
     except subprocess.CalledProcessError as err:
-        logging.exception(
+        logging.critical(
             "cset recipe-id exited with non-zero code %s.\nstdout: %s\nstderr: %s",
             err.returncode,
             # Presume that subprocesses have the same IO encoding as this one.
@@ -50,7 +51,7 @@ def recipe_id():
             err.stdout.decode(sys.stdout.encoding),
             err.stderr.decode(sys.stderr.encoding),
         )
-        raise
+        sys.exit(1)
     recipe_id = p.stdout.decode(sys.stdout.encoding).strip()
     model_identifiers = sorted(os.environ["MODEL_IDENTIFIERS"].split())
     return f"m{'_m'.join(model_identifiers)}_{recipe_id}"
@@ -106,12 +107,14 @@ def run_recipe_steps():
     if plot_resolution:
         command.append(f"--plot-resolution={plot_resolution}")
 
-    logging.info("Running %s", " ".join(command))
+    logging.info("Running %s", shlex.join(command))
     try:
         subprocess.run(command, check=True, env=subprocess_env())
     except subprocess.CalledProcessError as err:
-        logging.exception("cset bake exited with non-zero code %s.", err.returncode)
-        raise
+        logging.critical("cset bake exited with non-zero code %s.", err.returncode)
+        sys.exit(1)
+
+    logging.info("Creating diagnostic archive.")
     create_diagnostic_archive(output_directory())
 
 
