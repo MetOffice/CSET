@@ -22,6 +22,7 @@ operator, and will be used across multiple operators.
 import logging
 
 import iris
+import iris.coords
 import iris.cube
 import iris.exceptions
 import iris.util
@@ -221,3 +222,30 @@ def is_time_aggregatable(cube: iris.cube.Cube) -> bool:
     temporal_coords = [coord for coord in coord_names if coord in TEMPORAL_COORD_NAMES]
     # Return whether both coordinates are in the temporal coordinates.
     return len(temporal_coords) == 2
+
+
+def get_difference_time_coord_name(cube: iris.cube.Cube) -> iris.coords.Coord:
+    """Get the name of the time coordinate on a cube.
+
+    Gets the first non-scalar dimension coordinate.
+
+    Arguments
+    ---------
+    cube: iris.cube.Cube
+        An iris cube in which to find the coordinate.
+
+    Returns
+    -------
+    coord: iris.coords.Coord | None
+        The first time coordinate on the cube, or None if there are None.
+    """
+    return next(
+        map(
+            lambda coord: coord.name(),
+            filter(
+                lambda coord: coord.units.is_time_reference(),
+                filter(lambda coord: coord.shape > (1,), cube.dim_coords),
+            ),
+        ),
+        None,
+    )
