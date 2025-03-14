@@ -180,10 +180,13 @@ def test_difference_no_time_coord(cube):
 
 def test_difference_no_common_points(cube):
     """Test exception when there are no common time points between cubes."""
-    c1 = cube.extract(iris.Constraint(time=datetime.datetime(2022, 9, 21, 2, 30)))
-    c2 = cube.extract(iris.Constraint(time=datetime.datetime(2022, 9, 21, 4, 30)))
-    del c2.attributes["cset_comparison_base"]
-    cubes = iris.cube.CubeList([c1, c2])
+    other_cube = cube.copy()
+    # Offset times by 6 hours.
+    new_times = other_cube.coord("time").points.copy()
+    new_times += 6
+    other_cube.coord("time").points = new_times
+    del other_cube.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([cube, other_cube])
     with pytest.raises(ValueError, match="No common time points found!"):
         misc.difference(cubes)
 
