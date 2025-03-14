@@ -4,6 +4,7 @@
 
 import logging
 import os
+import shlex
 import subprocess
 import sys
 import zipfile
@@ -42,7 +43,7 @@ def recipe_id():
             env=env,
         )
     except subprocess.CalledProcessError as err:
-        logging.exception(
+        logging.critical(
             "cset recipe-id exited with non-zero code %s.\nstdout: %s\nstderr: %s",
             err.returncode,
             # Presume that subprocesses have the same IO encoding as this one.
@@ -92,10 +93,12 @@ def create_diagnostic_archive(output_directory):
 
 def run_recipe_steps():
     """Process data and produce output plots."""
+    output_dir = output_directory()
+
     command = (
         ["cset", "bake", "--recipe", recipe_file(), "--input-dir"]
         + data_directories()
-        + ["--output-dir", output_directory()]
+        + ["--output-dir", output_dir]
     )
 
     colorbar_file = os.getenv("COLORBAR_FILE")
@@ -106,15 +109,20 @@ def run_recipe_steps():
     if plot_resolution:
         command.append(f"--plot-resolution={plot_resolution}")
 
-    logging.info("Running %s", " ".join(command))
+    logging.info("Running %s", shlex.join(command))
     try:
         subprocess.run(command, check=True, env=subprocess_env())
     except subprocess.CalledProcessError as err:
-        logging.exception("cset bake exited with non-zero code %s.", err.returncode)
+        logging.critical("cset bake exited with non-zero code %s.", err.returncode)
         raise
-    create_diagnostic_archive(output_directory())
+
+    logging.info("Creating diagnostic archive.")
+    create_diagnostic_archive(output_dir)
 
 
 def run():
     """Run workflow script."""
-    run_recipe_steps()
+    try:
+        run_recipe_steps()
+    except subprocess.CalledProcessError:
+        sys.exit(1)
