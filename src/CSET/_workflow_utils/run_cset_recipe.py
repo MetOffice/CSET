@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 import zipfile
+from functools import cache
 from pathlib import Path
 
 logging.basicConfig(
@@ -14,12 +15,14 @@ logging.basicConfig(
 )
 
 
+@cache
 def subprocess_env():
     """Create a dictionary of amended environment variables for subprocess."""
     env_mapping = dict(os.environ)
     return env_mapping
 
 
+@cache
 def recipe_file() -> str:
     """Write the recipe file to disk and return its path as a string."""
     # Ready recipe file to disk.
@@ -30,6 +33,7 @@ def recipe_file() -> str:
     return cset_recipe
 
 
+@cache
 def recipe_id():
     """Get the ID for the recipe."""
     file = recipe_file()
@@ -56,6 +60,7 @@ def recipe_id():
     return f"m{'_m'.join(model_identifiers)}_{recipe_id}"
 
 
+@cache
 def output_directory():
     """Get the plot output directory for the recipe."""
     share_directory = os.environ["CYLC_WORKFLOW_SHARE_DIR"]
@@ -63,6 +68,7 @@ def output_directory():
     return f"{share_directory}/web/plots/{recipe_id()}_{cycle_point}"
 
 
+@cache
 def data_directories() -> list[str]:
     """Get the input data directories for the cycle."""
     model_identifiers = sorted(os.environ["MODEL_IDENTIFIERS"].split())
