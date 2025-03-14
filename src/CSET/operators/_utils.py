@@ -240,11 +240,11 @@ def get_difference_time_coord_name(cube: iris.cube.Cube) -> iris.coords.Coord:
         The first time coordinate on the cube, or None if there are None.
     """
     return next(
-        map(
-            lambda coord: coord.name(),
-            filter(
-                lambda coord: coord.units.is_time_reference(),
-                filter(lambda coord: coord.shape > (1,), cube.dim_coords),
+        filter(
+            lambda name: name in ["time", "hour"],
+            map(
+                lambda coord: coord.name(),
+                filter(lambda coord: coord.shape > (1,), cube.coords()),
             ),
         ),
         None,
