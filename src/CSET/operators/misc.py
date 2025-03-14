@@ -27,6 +27,7 @@ from CSET._common import iter_maybe
 from CSET.operators._utils import (
     fully_equalise_attributes,
     get_cube_yxcoordname,
+    get_difference_time_coord_name,
 )
 from CSET.operators.regrid import regrid_onto_cube
 
@@ -333,12 +334,13 @@ def difference(cubes: CubeList):
         other.data = np.flip(other.data, other.coord(other_lat_name).cube_dims(other))
 
     # Extract just common time points.
-    if "time" in [coord.name() for coord in base.coords()]:
-        logging.debug("Base: %s\nOther: %s", base.coord("time"), other.coord("time"))
-        base_times = set(base.coord("time").units.num2date(base.coord("time").points))
-        other_times = set(
-            other.coord("time").units.num2date(other.coord("time").points)
-        )
+    time_coord = get_difference_time_coord_name(base)
+    if time_coord and time_coord in [coord.name() for coord in base.coords()]:
+        base_time_coord = base.coord(time_coord)
+        other_time_coord = other.coord(time_coord)
+        logging.debug("Base: %s\nOther: %s", base_time_coord, other_time_coord)
+        base_times = set(base_time_coord.units.num2date(base_time_coord.points))
+        other_times = set(other_time_coord.units.num2date(other_time_coord.points))
         shared_times = set.intersection(base_times, other_times)
         time_constraint = iris.Constraint(time=lambda cell: cell.point in shared_times)
         base = base.extract(time_constraint)
