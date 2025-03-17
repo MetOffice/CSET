@@ -9,6 +9,9 @@
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
             --MODEL_NAME='{{model["name"]}}'
+            --SELECT_SUBAREA='{{SELECT_SUBAREA}}'
+            --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
+            --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
         """
         MODEL_IDENTIFIERS = {{model["id"]}}
 {% endfor %}
