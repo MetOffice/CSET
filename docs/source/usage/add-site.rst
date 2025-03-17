@@ -61,7 +61,7 @@ configuration. This requires editing the metadata at
 definition for the SITE variable, and add your site to it. This requires adding
 a value that matches the filename (without the ``.cylc`` extension) of your site
 file, as well as a value title that is the display name of your site. For ACME
-we will adjust it like so:
+we will adjust it as follows:
 
 .. code-block:: diff
 
