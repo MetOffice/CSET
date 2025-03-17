@@ -16,6 +16,9 @@ steps:
         operator: constraints.generate_level_constraint
         coordinate: "pressure"
         levels: []
+    SELECT_SUBAREA: $SELECT_SUBAREA
+    SUBAREA_TYPE: $SUBAREA_TYPE
+    SUBAREA_EXTENT: $SUBAREA_EXTENT
 
   - operator: plot.spatial_pcolormesh_plot
     sequence_coordinate: time
