@@ -49,7 +49,7 @@ remain as a fairly modest allocation with a couple gigabytes of memory.
 
 If required you can also define additional workflow changes in this file, that
 will overwrite CSET's flow.cylc file. If you need to make additional changes
-please `open an issue on the CSET GitHub repository`_, so we can ensure your use
+please `open an issue on the CSET GitHub repository`, so we can ensure your use
 case is supported directly in CSET.
 
 Add rose edit metadata entry for site
