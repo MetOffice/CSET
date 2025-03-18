@@ -41,8 +41,8 @@ def read_cube(
     loadpath: list[str] | str,
     constraint: iris.Constraint = None,
     select_subarea: bool = False,
-    subarea_type:  str = 'RealWorld',
-    subarea_extent: list = [0,0,0,0],
+    subarea_type: str = "RealWorld",
+    subarea_extent: list = [0, 0, 0, 0],
     filename_pattern: str = "*",
     **kwargs,
 ) -> iris.cube.Cube:
@@ -84,7 +84,14 @@ def read_cube(
     ValueError
         If the constraint doesn't produce a single cube.
     """
-    cubes = read_cubes(loadpath, constraint, select_subarea,subarea_type,subarea_extent, filename_pattern)
+    cubes = read_cubes(
+        loadpath,
+        constraint,
+        select_subarea,
+        subarea_type,
+        subarea_extent,
+        filename_pattern,
+    )
     # Check filtered cubes is a CubeList containing one cube.
     if len(cubes) == 1:
         return cubes[0]
@@ -100,8 +107,8 @@ def read_cubes(
     loadpath: list[str] | str,
     constraint: iris.Constraint = None,
     select_subarea: bool = False,
-    subarea_type:  str = 'RealWorld',
-    subarea_extent: list = [0,0,0,0],
+    subarea_type: str = "RealWorld",
+    subarea_extent: list = [0, 0, 0, 0],
     filename_pattern: str = "*",
     **kwargs,
 ) -> iris.cube.CubeList:
@@ -183,6 +190,17 @@ def read_cubes(
     # Should we call ensure_aggregatable_across_cases here?
     # aggregate.ensure_aggregatable_across_cases(cubes)
 
+    # To write up and tidy.
+    if select_subarea:
+        # Some logic here about using appropriate coordinates
+        cubes = iris.cube.CubeList(
+            cube.intersection(
+                grid_latitude=(subarea_extent[0], subarea_extent[1]),
+                grid_longitude=(subarea_extent[2], subarea_extent[3]),
+            )
+            for cube in cubes
+        )
+
     # Merge and concatenate cubes now metadata has been fixed.
     cubes = cubes.merge()
     cubes = cubes.concatenate()
@@ -193,13 +211,6 @@ def read_cubes(
             # Iris can't guess the bounds of a scalar coordinate.
             if not dim_coord.has_bounds() and dim_coord.shape[0] > 1:
                 dim_coord.guess_bounds()
-
-    # To write up and tidy.
-    if select_subarea:
-        #Some logic here about using appropriate coordinates
-        for cube in cubes:
-            cube = cube.intersection(grid_latitude=(subarea_extent[0],subarea_extent[1]),
-                                     grid_longitude=(subarea_extent[2],subarea_extent[3]))
 
     logging.debug("Loaded cubes: %s", cubes)
     if len(cubes) == 0:
