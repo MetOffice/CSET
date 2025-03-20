@@ -187,7 +187,6 @@ def read_cubes(
     # Should we call ensure_aggregatable_across_cases here?
     # aggregate.ensure_aggregatable_across_cases(cubes)
 
-
     # To write up and tidy. TO FINISH
     if SUBAREA_TYPE == 'realworld':
         cutout_cubes = iris.cube.CubeList()
