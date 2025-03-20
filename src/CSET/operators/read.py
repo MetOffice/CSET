@@ -240,7 +240,6 @@ def _create_callback(is_ensemble: bool, is_base: bool) -> callable:
         _fix_lfric_longnames(cube)
         _fix_um_lightning(cube)
         _lfric_time_callback(cube)
-        _convert_precipitation_units(cube)
 
     return callback
 
@@ -666,33 +665,3 @@ def _check_input_files(input_paths: list[str], filename_pattern: str) -> list[Pa
     if len(files) == 0:
         raise FileNotFoundError(f"No files found for {input_paths}")
     return files
-
-
-def _convert_precipitation_units(cube: iris.cube.Cube):
-    """To convert the unit of precipitation from kg m-2 s-1 to mm hr-1.
-
-    Some precipitation diagnostics are output with unit kg m-2 s-1 and are converted to mm hr-1.
-    """
-    try:
-        # if cube.attributes["STASH"] == "m01s04i203" or cube.long_name == "surface_microphysical_rainfall_rate":
-        if cube.long_name == "surface_microphysical_rainfall_rate":
-            if cube.units == "kg m-2 s-1":
-                logging.info(
-                    "Converting precipitation units from kg m-2 s-1 to mm hr-1"
-                )
-                # manually convert from kg m-2 s-1 to mm hr-1 assuming 1kg water = 1l water = 1dm^3 water
-                cube.data = cube.data * 3600.0
-
-                # update the units
-                cube.units = "mm hr-1"
-            else:
-                logging.warning(
-                    "Precipitation units are not in 'kg m-2 s-1', skipping conversion"
-                )
-    except iris.exceptions.CoordinateNotFoundError:
-        logging.warning(
-            "Precipitation cube does not contain the required coordinate, skipping conversion"
-        )
-    except KeyError:
-        logging.warning("STASH attribute not found in cube, cannot convert units")
-    return cube
