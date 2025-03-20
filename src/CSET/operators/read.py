@@ -234,7 +234,7 @@ def _create_callback(is_ensemble: bool, is_base: bool) -> callable:
         _longitude_fix_callback(cube, field, filename)
         _fix_spatial_coord_name_callback(cube)
         _fix_pressure_coord_callback(cube)
-        _fix_model_level_name(cube)
+        _lfric_normalise_varname(cube)
         _fix_um_radtime_prehour(cube)
         _fix_um_radtime_posthour(cube)
         _fix_lfric_longnames(cube)
@@ -535,11 +535,16 @@ def _fix_um_lightning(cube: iris.cube.Cube):
         pass
 
 
-def _fix_model_level_name(cube: iris.cube.Cube):
-    """Fix LFRic model level varname for consistency to allow merging."""
-    for coord in cube.dim_coords:
-        if coord.name() == "model_level_number":
-            coord.var_name = "model_level_number"
+def _lfric_normalise_varname(cube: iris.cube.Cube):
+    """Fix LFRic varnames for consistency to allow merging.
+
+    LFRic data seems to sometime have a coordinate name end in "_0", which
+    causes the cubes to fail to merge. This has been noticed in
+    model_level_number as well as forecast_period.
+    """
+    for coord in cube.coords():
+        if coord.var_name and coord.var_name.endswith("_0"):
+            coord.var_name = coord.var_name.removesuffix("_0")
 
 
 def _lfric_time_callback(cube: iris.cube.Cube):

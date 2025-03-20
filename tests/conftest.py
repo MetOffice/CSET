@@ -165,3 +165,15 @@ def long_forecast_many_cubes_read_only():
 def long_forecast_many_cubes(long_forecast_many_cubes_read_only):
     """Get long_forecast_may_cubes to run tests on. It is safe to modify."""
     return long_forecast_many_cubes_read_only.copy()
+
+
+@pytest.fixture(scope="session")
+def model_level_cube_read_only():
+    """Get model level cube to run tests on. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/model_level_test.nc")
+
+
+@pytest.fixture()
+def model_level_cube(model_level_cube_read_only):
+    """Get model level cube to run tests on. It is safe to modify."""
+    return model_level_cube_read_only.copy()
