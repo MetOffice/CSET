@@ -245,6 +245,7 @@ def _colorbar_map_levels(cube: iris.cube.Cube):
                 # smooth range.
                 norm = mpl.colors.BoundaryNorm(levels, ncolors=cmap.N)
                 logging.debug("Using levels for %s colorbar.", varname)
+                logging.info("Using levels: %s", levels)
             except KeyError:
                 # Get the range for this variable.
                 vmin, vmax = var_colorbar["min"], var_colorbar["max"]
@@ -299,13 +300,13 @@ def _plot_and_save_spatial_plot(
         # Filled contour plot of the field.
         plot = iplt.contourf(cube, cmap=cmap, levels=levels, norm=norm)
     elif method == "pcolormesh":
-        try:
-            vmin = min(levels)
-            vmax = max(levels)
-        except TypeError:
-            vmin, vmax = None, None
+        # try:
+        #    vmin = min(levels)
+        #    vmax = max(levels)
+        # except TypeError:
+        # vmin, vmax = None, None
         # pcolormesh plot of the field.
-        plot = iplt.pcolormesh(cube, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax)
+        plot = iplt.pcolormesh(cube, cmap=cmap, norm=norm)
     else:
         raise ValueError(f"Unknown plotting method: {method}")
 
