@@ -25,6 +25,7 @@ from pathlib import Path
 import iris
 import iris.coords
 import iris.cube
+import iris.exceptions
 import iris.util
 import numpy as np
 
@@ -240,6 +241,7 @@ def _create_callback(is_ensemble: bool, is_base: bool) -> callable:
         _fix_lfric_longnames(cube)
         _fix_um_lightning(cube)
         _lfric_time_callback(cube)
+        _lfric_forecast_period_standard_name_callback(cube)
 
     return callback
 
@@ -609,7 +611,10 @@ def _lfric_time_callback(cube: iris.cube.Cube):
 
             # Create new axis object.
             lead_time_coord = iris.coords.AuxCoord(
-                lead_times, long_name="forecast_period", units=units
+                lead_times,
+                standard_name="forecast_period",
+                long_name="forecast_period",
+                units=units,
             )
 
             # Associate lead time dimension with coordinate time.
@@ -620,6 +625,16 @@ def _lfric_time_callback(cube: iris.cube.Cube):
             logging.info(
                 "No time coordinate or forecast_reference_time, so cannot construct forecast_period"
             )
+
+
+def _lfric_forecast_period_standard_name_callback(cube: iris.cube.Cube):
+    """Add forecast_period standard name if missing."""
+    try:
+        coord = cube.coord("forecast_period")
+        if not coord.standard_name:
+            coord.standard_name = "forecast_period"
+    except iris.exceptions.CoordinateNotFoundError:
+        pass
 
 
 def _check_input_files(input_paths: list[str], filename_pattern: str) -> list[Path]:

@@ -307,3 +307,10 @@ def test_lfric_normalise_varname(model_level_cube):
     model_level_cube.coord("model_level_number").var_name = "model_level_number_0"
     read._lfric_normalise_varname(model_level_cube)
     assert model_level_cube.coord("model_level_number").var_name == "model_level_number"
+
+
+def test_lfric_forecast_period_standard_name_callback(cube):
+    """Ensure forecast period coordinates have a standard name."""
+    cube.coord("forecast_period").standard_name = None
+    read._lfric_forecast_period_standard_name_callback(cube)
+    assert cube.coord("forecast_period").standard_name == "forecast_period"
