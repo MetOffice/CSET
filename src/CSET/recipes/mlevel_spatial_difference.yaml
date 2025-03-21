@@ -1,5 +1,5 @@
 category: Model Level Spatial Plot Difference
-title: Pressure $VARNAME $MLEVEL difference ($BASE_MODEL - $OTHER_MODEL)
+title: Model Level $VARNAME lv$MLEVEL difference ($BASE_MODEL - $OTHER_MODEL)
 description: Extracts and plot the difference in surface $VARNAME $MLEVEL for all times.
 
 steps:

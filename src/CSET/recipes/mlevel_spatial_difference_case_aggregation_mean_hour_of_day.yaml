@@ -1,5 +1,5 @@
 category: Model Level Spatial Plot Difference
-title: Model Level $VARNAME $MLEVEL difference ($BASE_MODEL - $OTHER_MODEL) case aggregation by hour of day
+title: Model Level $VARNAME lv$MLEVEL difference ($BASE_MODEL - $OTHER_MODEL) case aggregation by hour of day
 description: |
   Extracts and plot the difference in model level $VARNAME on $MLEVEL for all times. The cases
   are aggregated over hour of day.
