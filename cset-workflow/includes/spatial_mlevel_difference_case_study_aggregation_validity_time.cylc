@@ -1,4 +1,4 @@
-{% if SPATIAL_MLEVEL_DIFFERENCE_CASE_AGGREGATION_MEAN_VALIDITY_TIME|default(False) %}
+{% if SPATIAL_MLEVEL_DIFFERENCE_CASE_AGGREGATION_VALIDITY_TIME|default(False) %}
 # Models are listed in order, so model 1 is the first element.
 {% set base_model = models[0] %}
 # As we use model 1 as the base model we skip it here.
