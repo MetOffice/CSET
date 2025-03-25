@@ -889,6 +889,9 @@ def _spatial_plot(
     # Ensure we've got a single cube.
     cube = _check_single_cube(cube)
 
+    # Convert precipitation units if necessary
+    _convert_precipitation_units_callback(cube)
+
     # Make postage stamp plots if stamp_coordinate exists and has more than a
     # single point.
     plotting_func = _plot_and_save_spatial_plot
@@ -976,9 +979,6 @@ def spatial_contour_plot(
     TypeError
         If the cube isn't a single cube.
     """
-    # Convert precipitation units if necessary
-    _convert_precipitation_units_callback(cube)
-
     _spatial_plot("contourf", cube, filename, sequence_coordinate, stamp_coordinate)
     return cube
 
