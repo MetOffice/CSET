@@ -1493,19 +1493,17 @@ def _convert_precipitation_units_callback(cube: iris.cube.Cube):
 
     Some precipitation diagnostics are output with unit kg m-2 s-1 and are converted to mm hr-1.
     """
-        # if cube.attributes["STASH"] == "m01s04i203" or cube.long_name == "surface_microphysical_rainfall_rate":
-        if cube.long_name == "surface_microphysical_rainfall_rate":
-            if cube.units == "kg m-2 s-1":
-                logging.info(
-                    "Converting precipitation units from kg m-2 s-1 to mm hr-1"
-                )
-                # manually convert from kg m-2 s-1 to mm hr-1 assuming 1kg water = 1l water = 1dm^3 water
-                cube.data = cube.data * 3600.0
+    # if cube.attributes["STASH"] == "m01s04i203" or cube.long_name == "surface_microphysical_rainfall_rate":
+    if cube.long_name == "surface_microphysical_rainfall_rate":
+        if cube.units == "kg m-2 s-1":
+            logging.info("Converting precipitation units from kg m-2 s-1 to mm hr-1")
+            # manually convert from kg m-2 s-1 to mm hr-1 assuming 1kg water = 1l water = 1dm^3 water
+            cube.data = cube.data * 3600.0
 
-                # update the units
-                cube.units = "mm hr-1"
-            else:
-                logging.warning(
-                    "Precipitation units are not in 'kg m-2 s-1', skipping conversion"
-                )
+            # update the units
+            cube.units = "mm hr-1"
+        else:
+            logging.warning(
+                "Precipitation units are not in 'kg m-2 s-1', skipping conversion"
+            )
     return cube
