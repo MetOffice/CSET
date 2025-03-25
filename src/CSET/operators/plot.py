@@ -1495,7 +1495,6 @@ def _convert_precipitation_units_callback(cube: iris.cube.Cube):
 
     Some precipitation diagnostics are output with unit kg m-2 s-1 and are converted to mm hr-1.
     """
-    try:
         # if cube.attributes["STASH"] == "m01s04i203" or cube.long_name == "surface_microphysical_rainfall_rate":
         if cube.long_name == "surface_microphysical_rainfall_rate":
             if cube.units == "kg m-2 s-1":
