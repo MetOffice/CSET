@@ -1511,10 +1511,4 @@ def _convert_precipitation_units_callback(cube: iris.cube.Cube):
                 logging.warning(
                     "Precipitation units are not in 'kg m-2 s-1', skipping conversion"
                 )
-    except iris.exceptions.CoordinateNotFoundError:
-        logging.warning(
-            "Precipitation cube does not contain the required coordinate, skipping conversion"
-        )
-    except KeyError:
-        logging.warning("STASH attribute not found in cube, cannot convert units")
     return cube
