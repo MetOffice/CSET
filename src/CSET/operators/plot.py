@@ -246,6 +246,11 @@ def _colorbar_map_levels(cube: iris.cube.Cube):
                 norm = mpl.colors.BoundaryNorm(levels, ncolors=cmap.N)
                 logging.debug("Using levels for %s colorbar.", varname)
                 logging.info("Using levels: %s", levels)
+                # Overwrite cmap, levels and norm for specific variables that require custom colorbar_map as these
+                # can not be defined in the json file.
+                cmap, levels, norm = _custom_colourmap_precipitation(
+                    cube, cmap, levels, norm
+                )
             except KeyError:
                 # Get the range for this variable.
                 vmin, vmax = var_colorbar["min"], var_colorbar["max"]
@@ -956,6 +961,46 @@ def _convert_precipitation_units_callback(cube: iris.cube.Cube):
     return cube
 
 
+def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
+    """Return a custom colourmap for the current recipe."""
+    import matplotlib.colors as mcolors
+
+    if (
+        cube.long_name == "surface_microphysical_rainfall_rate"
+        or cube.standard_name == "surface_microphysical_rainfall_rate"
+        or cube.var_name == "surface_microphysical_rainfall_rate"
+    ):
+        # Define the levels and colors
+        levels = [0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128]
+        colors = [
+            (0, 0, 0.6),
+            "b",
+            "c",
+            "g",
+            "y",
+            (1, 0.5, 0),
+            "r",
+            "m",
+            (0.6, 0.6, 0.6),
+            "k",
+        ]
+
+        # Create a custom colormap
+        cmap = mcolors.ListedColormap(colors)
+
+        # Normalize the levels
+        norm = mcolors.BoundaryNorm(levels, cmap.N)
+        logging.info(
+            "change colormap for surface_microphysical_rainfall_rate colorbar."
+        )
+    else:
+        # do nothing and keep existing colorbar attributes
+        cmap = cmap
+        levels = levels
+        norm = norm
+    return cmap, levels, norm
+
+
 ####################
 # Public functions #
 ####################
@@ -1051,9 +1096,6 @@ def spatial_pcolormesh_plot(
     TypeError
         If the cube isn't a single cube.
     """
-    # Convert precipitation units if necessary
-    _convert_precipitation_units_callback(cube)
-
     _spatial_plot("pcolormesh", cube, filename, sequence_coordinate, stamp_coordinate)
     return cube
 
