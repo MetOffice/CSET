@@ -27,7 +27,7 @@ class MASSFileRetriever(FileRetrieverABC):
         bool:
             True if files were transferred, otherwise False.
         """
-        moo_command = ["moo", "get", file_path, output_dir]
+        moo_command = ["moo", "get", "--force", file_path, output_dir]
         logging.debug(f"Fetching from MASS with:\n{' '.join(moo_command)}")
         p = subprocess.run(moo_command)
         if p.returncode > 0:
