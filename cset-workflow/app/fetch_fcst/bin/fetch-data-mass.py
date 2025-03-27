@@ -4,7 +4,6 @@
 
 import logging
 import subprocess
-import sys
 
 from CSET._workflow_utils.fetch_data import FileRetrieverABC, fetch_data
 
@@ -32,12 +31,7 @@ class MASSFileRetriever(FileRetrieverABC):
         logging.debug(f"Fetching from MASS with:\n{' '.join(moo_command)}")
         p = subprocess.run(moo_command)
         if p.returncode > 0:
-            logging.info(
-                "moo get exited with non-zero code %s.\nstdout: %s\nstderr: %s",
-                p.returncode,
-                p.stdout.decode(sys.stdout.encoding),
-                p.stderr.decode(sys.stderr.encoding),
-            )
+            logging.info("moo get exited with non-zero code %s.", p.returncode)
             return False
         return True
 
