@@ -21,27 +21,28 @@ domains.
 
 CSET provides a centralised and peer-reviewed source of tools to aid
 process-oriented evaluation for UM and LFRic models, supporting both
-deterministic and ensemble configurations. It will support evaluation of machine
-learning models and utilise observations from a range of sources to aid in the
-evaluation process.
+deterministic and ensemble configurations.
 
-It will utilise the Model Evaluation Tools (MET) software to provide a range of
+In the future, it will support evaluation of machine learning models and utilise
+observations from a range of sources to aid in the evaluation process. It will
+utilise the Model Evaluation Tools (MET) software to provide a range of
 verification metrics aligned with operational verification best practices.
 
-For model and diagnostics developers CSET offers well documented and peer
+For CSET model and diagnostics developers, CSET offers well documented and peer
 reviewed evaluation tools with a well defined release cycle and flexible
-evaluation code that can adapt to users needs. CSET is built with portability in
+evaluation code that can adapt to user needs. CSET is built with portability in
 mind and can be run on a range of platforms from local desktops to HPC systems
-and cloud servers. It ensures traceable and reproducible results during the model
-assessment cycle and offers a legacy for diagnostics and access to observations.
+and cloud servers. It ensures traceable and reproducible results during the
+regional model assessment cycle and offers diagnostics access to observations
+and a legacy through continued maintenance and improved discoverability.
 
 It aligns parametrisation development, diagnostic development and evaluation
 research, feeding back into Regional Atmosphere and Land (RAL) model development
 across the Met Office and Momentum® Partnership.
 
-It is build on a modern software stack using python 3 and METplus. Clear
-documentation, working practices, automatic testing, and open access promote
-contributions.
+It is built using a modern software stack underpinned by python 3 and METplus.
+Contributions to CSET are promoted by clear documentation and working practices,
+automatic testing, and an open access GitHub code base.
 
 For information on how to use CSET, see :doc:`getting-started/index`.
 
@@ -71,7 +72,7 @@ Conduct`_.
 Licence
 -------
 
-© Crown copyright, Met Office (2022-2024) and CSET contributors.
+© Crown copyright, Met Office (2022-2025) and CSET contributors.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you
 may not use this file except in compliance with the License. You may obtain a

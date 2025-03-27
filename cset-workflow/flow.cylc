@@ -99,13 +99,13 @@ URL = https://metoffice.github.io/CSET
 
     [[PROCESS]]
     script = rose task-run -v --app-key=run_cset_recipe
-    execution time limit = PT1H
+    execution time limit = PT15M
     [[[directives]]]
         --mem=5000
 
     [[PROCESS_CASE_AGGREGATION]]
     script = rose task-run -v --app-key=run_cset_recipe
-    execution time limit = PT2H
+    execution time limit = PT3H
         [[[directives]]]
         --mem=100000
         [[[environment]]]
@@ -127,11 +127,12 @@ URL = https://metoffice.github.io/CSET
             ROSE_APP_OPT_CONF_KEYS = {{METPLUS_OPT_CONFIG_KEYS}}
         {% endif %}
 
-    # Noop tasks to ensure a complete/efficient workflow graph
+    # Noop tasks to ensure a complete/efficient workflow graph.
     [[DUMMY_TASK]]
     script = true
     platform = localhost
     execution time limit = PT1M
+    run mode = skip
 
     [[setup_complete]]
     inherit = DUMMY_TASK

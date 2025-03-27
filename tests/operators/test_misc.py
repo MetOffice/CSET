@@ -230,7 +230,7 @@ def test_difference_incorrect_data_shape_regrid(cube):
     """
     rearranged_cube = cube.copy()
     rearranged_cube = rearranged_cube[:, :, 1:]
-    rearranged_cube.attributes["STASH"] = "m01s03i225"
+    rearranged_cube.rename("eastward_wind_at_10m")
     del cube.attributes["cset_comparison_base"]
     cubes = iris.cube.CubeList([rearranged_cube, cube])
     difference = misc.difference(cubes)

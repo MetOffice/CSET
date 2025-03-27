@@ -303,13 +303,13 @@ def difference(cubes: CubeList):
         base.coord(base_lat_name).shape != other.coord(other_lat_name).shape
         or base.coord(base_lon_name).shape != other.coord(other_lon_name).shape
     ):
-        if base.attributes.get("STASH", None) in [
-            "m01s03i225",
-            "m01s03i226",
-            "m01s15i201",
-            "m01s15i202",
-            "m01s15i229",
-            "m01s30i205",
+        if base.long_name in [
+            "eastward_wind_at_10m",
+            "northward_wind_at_10m",
+            "zonal_wind_at_pressure_levels",
+            "meridional_wind_at_pressure_levels",
+            "potential_vorticity_at_pressure_levels",
+            "vapour_specific_humidity_at_pressure_levels_for_climate_averaging",
         ]:
             base = regrid_onto_cube(base, other, method="Linear")
         else:

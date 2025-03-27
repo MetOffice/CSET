@@ -8,5 +8,5 @@ This section contains guides on how to do specific things with CSET.
 
     common-errors
     operator-recipes
-    workflow-installation
     add-diagnostic
+    add-site
