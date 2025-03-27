@@ -977,8 +977,9 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
         or cube.var_name == "surface_microphysical_rainfall_rate"
     ):
         # Define the levels and colors
-        levels = [0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128]
+        levels = [0, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
         colors = [
+            "w",
             (0, 0, 0.6),
             "b",
             "c",
@@ -986,9 +987,11 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
             "y",
             (1, 0.5, 0),
             "r",
+            "pink",
             "m",
-            (0.6, 0.6, 0.6),
-            "k",
+            "purple",
+            "maroon",
+            "gray",
         ]
         # Create a custom colormap
         cmap = mcolors.ListedColormap(colors)
