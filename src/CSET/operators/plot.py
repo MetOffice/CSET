@@ -370,7 +370,7 @@ def _plot_and_save_spatial_plot(
     )
 
     # Add colour bar.
-    cbar = fig.colorbar(plot)
+    cbar = fig.colorbar(plot, orientation="horizontal")
     cbar.set_label(label=f"{cube.name()} ({cube.units})", size=20)
 
     # Save plot.
