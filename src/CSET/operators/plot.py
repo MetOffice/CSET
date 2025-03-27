@@ -321,7 +321,7 @@ def _plot_and_save_spatial_plot(
         x2 = np.max(cube.coord(lon_axis).points)
         y1 = np.min(cube.coord(lat_axis).points)
         y2 = np.max(cube.coord(lat_axis).points)
-        # Adjust bounds within +/- 180.0 if x dimension extends beyond half-globe
+        # Adjust bounds within +/- 180.0 if x dimension extends beyond half-globe.
         if (x2 - x1) > 180.0:
             x1 = x1 - 180.0
             x2 = x2 - 180.0
