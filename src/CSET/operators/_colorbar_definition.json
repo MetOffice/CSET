@@ -392,18 +392,8 @@
   },
   "surface_microphysical_rainfall_rate": {
     "cmap": "cividis",
-    "levels": [
-      0.125,
-      0.25,
-      0.5,
-      1,
-      2,
-      4,
-      8,
-      16,
-      32,
-      64
-    ]
+    "max": 256.0,
+    "min": 0.0
   },
   "surface_microphysical_rainfall_rate_difference": {
     "cmap": "bwr",
