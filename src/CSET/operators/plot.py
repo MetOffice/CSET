@@ -313,7 +313,7 @@ def _plot_and_save_spatial_plot(
             vmax = max(levels)
         except TypeError:
             vmin, vmax = None, None
-        # pcolormesh plot of the field and ensure not to use norm and not vmin/vmax if levels are defined.
+        # pcolormesh plot of the field and ensure to use norm and not vmin/vmax if levels are defined.
         if norm is not None:
             vmin = None
             vmax = None
@@ -385,6 +385,10 @@ def _plot_and_save_spatial_plot(
     # Add colour bar.
     cbar = fig.colorbar(plot, orientation="horizontal")
     cbar.set_label(label=f"{cube.name()} ({cube.units})", size=20)
+    # add ticks and tick_labels for every levels if less than 20 levels exist
+    if levels is not None and len(levels) < 20:
+        cbar.set_ticks(levels)
+        cbar.set_ticklabels([f"{level:.1f}" for level in levels])
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
