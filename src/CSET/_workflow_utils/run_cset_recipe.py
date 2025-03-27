@@ -4,6 +4,7 @@
 
 import logging
 import os
+import shlex
 import subprocess
 import sys
 import zipfile
@@ -106,7 +107,11 @@ def run_recipe_steps():
     if plot_resolution:
         command.append(f"--plot-resolution={plot_resolution}")
 
-    logging.info("Running %s", " ".join(command))
+    skip_write = bool(os.getenv("SKIP_WRITE"))
+    if skip_write:
+        command.append("--skip-write")
+
+    logging.info("Running %s", shlex.join(command))
     try:
         subprocess.run(command, check=True, env=subprocess_env())
     except subprocess.CalledProcessError as err:
