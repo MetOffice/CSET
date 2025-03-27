@@ -258,6 +258,9 @@ def _colorbar_map_levels(cube: iris.cube.Cube):
                 # Calculate levels from range.
                 levels = np.linspace(vmin, vmax, 51)
                 norm = None
+                cmap, levels, norm = _custom_colourmap_precipitation(
+                    cube, cmap, levels, norm
+                )
             return cmap, levels, norm
         except KeyError:
             logging.debug("Cube name %s has no colorbar definition.", varname)
@@ -305,13 +308,16 @@ def _plot_and_save_spatial_plot(
         # Filled contour plot of the field.
         plot = iplt.contourf(cube, cmap=cmap, levels=levels, norm=norm)
     elif method == "pcolormesh":
-        # try:
-        #    vmin = min(levels)
-        #    vmax = max(levels)
-        # except TypeError:
-        # vmin, vmax = None, None
-        # pcolormesh plot of the field.
-        plot = iplt.pcolormesh(cube, cmap=cmap, norm=norm)
+        try:
+            vmin = min(levels)
+            vmax = max(levels)
+        except TypeError:
+            vmin, vmax = None, None
+        # pcolormesh plot of the field and ensure not to use norm and not vmin/vmax if levels are defined.
+        if norm is not None:
+            vmin = None
+            vmax = None
+        plot = iplt.pcolormesh(cube, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax)
     else:
         raise ValueError(f"Unknown plotting method: {method}")
 
@@ -984,10 +990,8 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
             (0.6, 0.6, 0.6),
             "k",
         ]
-
         # Create a custom colormap
         cmap = mcolors.ListedColormap(colors)
-
         # Normalize the levels
         norm = mcolors.BoundaryNorm(levels, cmap.N)
         logging.info(
