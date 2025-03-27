@@ -13,6 +13,30 @@ Changelog
 .. Highlight any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+25.3.1 (2025-03-27)
+-------------------
+
+A smaller release contains a number of bug fixes and other minor improvements
+ahead of a new feature release next month. The most noticeable change maybe be
+the plot colorbar now being horizontal to leave more space for titles and
+side-by-side comparisons.
+
+## What's Changed
+* Remove unneeded deletion from housekeeping by `@jfrost-mo`_ in :pr:`1241`
+* Add conda HTTP error to common errors by `@jfrost-mo`_ in :pr:`1242`
+* Reduce PROCESS time limit to 15 minutes by `@jfrost-mo`_ in :pr:`1243`
+* Getting started documentation improvements by `@jfrost-mo`_ in :pr:`1218`
+* Check for staggered grid with name rather than STASH in difference operator by `@jfrost-mo`_ in :pr:`1248`
+* Fully sort website index by `@jfrost-mo`_ in :pr:`1249`
+* Increase aggregation wallclock to 3 hours by `@jfrost-mo`_ in :pr:`1250`
+* Skip running dummy tasks by `@jfrost-mo`_ in :pr:`1120`
+* Document adding a site-specific configuration by `@jfrost-mo`_ in :pr:`1251`
+* Avoid calling ``os.sync()`` by `@jfrost-mo`_ in :pr:`1276`
+* Avoid accessing non-captured output in MASS fetch script by `@jfrost-mo`_ in :pr:`1278`
+* Correct for instances where longitude plot bounds caused set_extent to by `@ukmo-huw-lewis`_ in :pr:`1283`
+* 1-line change to move default position of map colorbars to horizontal by `@ukmo-huw-lewis`_ in :pr:`1284`
+
+
 25.3.0 (2025-03-06)
 -------------------
 
