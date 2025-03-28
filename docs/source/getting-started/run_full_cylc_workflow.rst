@@ -51,7 +51,9 @@ and Verification blank for now, but this is where various diagnostics can be tog
 on/off. For now, we will go to Quicklook, and add ``temperature_at_screen_level`` to the
 Surface model fields list. We will then toggle all the options below to True, apart from
 any case aggregation tasks over validity time or hour of day, until we get to
-``SURFACE_SINGLE_PONT_TIME_SERIES`` which we will leave blank. We will next add
+``SURFACE_SINGLE_PONT_TIME_SERIES`` which we will leave blank.
+
+We will next add
 ``zonal_wind_at_pressure_levels`` to the Pressure level model fields list, and choose
 some pressure levels to plot. Lets plot ``200``, ``500`` and ``850``. Again, toggle all
 the options below this to True apart from case aggregation tasks over validity time or hour of day
