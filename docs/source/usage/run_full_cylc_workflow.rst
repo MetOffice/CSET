@@ -6,7 +6,7 @@ Running a full CYLC workflow with CSET v25.3.0
 This tutorial provides a step by step guide of how to run CSET within
 a CYLC environment across multiple forecast data that will populate a
 website with the plots to navigate. This guide assumes that you have
-`CYLC8`_ installed in your workspace. You can confirm this by typing
+`Cylc 8`_ installed in your workspace. You can confirm this by typing
 
 .. code-block:: bash
 
