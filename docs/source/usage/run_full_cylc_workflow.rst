@@ -67,7 +67,7 @@ Filesystem retrieval, and enter the path to the data. This should follow the for
 ``/some/path/to/data/MODELA_%Y%m%dT%H%MZ.nc``, where you replace ModelA with the relevant
 model. The ``%`` will evaluate the path base on the case study date.
 
-Finally, we will go to Setup, and select your organisation from the Site list. Add website
+Finally, we will go to Setup, and select your organisation from the Site list, or localhost if it is not listed. Add website
 details for where to display the plots at, this will differ depending on what organistation
 you are running CSET from. You can use the GUI help by clicking on the cog icon next to
 each variable, which will provide more information on how to fill this in.
