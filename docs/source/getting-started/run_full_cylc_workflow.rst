@@ -42,7 +42,7 @@ You can directly copy these links and use ``wget`` to retrieve, or download in y
 browser.
 
 Now we have the CSET release and the files we want to visualise, we can start to
-setup the configuration using ``rose edit`` command inside the ``cset-worflow``
+setup the configuration using ``rose edit`` command inside the ``cset-workflow``
 directory.
 
 Expand the options in Diagnostics; we will ignore the sections Convection, Other
