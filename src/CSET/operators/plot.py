@@ -317,14 +317,15 @@ def _plot_and_save_spatial_plot(
     try:
         lat_axis, lon_axis = get_cube_yxcoordname(cube)
         axes.coastlines(resolution="10m")
-        axes.set_extent(
-            [
-                np.min(cube.coord(lon_axis).points),
-                np.max(cube.coord(lon_axis).points),
-                np.min(cube.coord(lat_axis).points),
-                np.max(cube.coord(lat_axis).points),
-            ]
-        )
+        x1 = np.min(cube.coord(lon_axis).points)
+        x2 = np.max(cube.coord(lon_axis).points)
+        y1 = np.min(cube.coord(lat_axis).points)
+        y2 = np.max(cube.coord(lat_axis).points)
+        # Adjust bounds within +/- 180.0 if x dimension extends beyond half-globe.
+        if (x2 - x1) > 180.0:
+            x1 = x1 - 180.0
+            x2 = x2 - 180.0
+        axes.set_extent([x1, x2, y1, y2])
     except ValueError:
         # Skip if no x and y map coordinates.
         pass
@@ -370,7 +371,7 @@ def _plot_and_save_spatial_plot(
     )
 
     # Add colour bar.
-    cbar = fig.colorbar(plot)
+    cbar = fig.colorbar(plot, orientation="horizontal")
     cbar.set_label(label=f"{cube.name()} ({cube.units})", size=20)
 
     # Save plot.
@@ -442,14 +443,15 @@ def _plot_and_save_postage_stamp_spatial_plot(
         try:
             lat_axis, lon_axis = get_cube_yxcoordname(cube)
             ax.coastlines(resolution="10m")
-            ax.set_extent(
-                [
-                    np.min(cube.coord(lon_axis).points),
-                    np.max(cube.coord(lon_axis).points),
-                    np.min(cube.coord(lat_axis).points),
-                    np.max(cube.coord(lat_axis).points),
-                ]
-            )
+            x1 = np.min(cube.coord(lon_axis).points)
+            x2 = np.max(cube.coord(lon_axis).points)
+            y1 = np.min(cube.coord(lat_axis).points)
+            y2 = np.max(cube.coord(lat_axis).points)
+            # Adjust bounds within +/- 180.0 if x dimension extends beyond half-globe.
+            if (x2 - x1) > 180.0:
+                x1 = x1 - 180.0
+                x2 = x2 - 180.0
+            ax.set_extent([x1, x2, y1, y2])
         except ValueError:
             # Skip if no x and y map coordinates.
             pass
