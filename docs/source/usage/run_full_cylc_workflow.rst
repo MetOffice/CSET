@@ -73,7 +73,7 @@ you are running CSET from. You can use the GUI help by clicking on the cog icon 
 each variable, which will provide more information on how to fill this in.
 
 We are now ready to run CSET! Within the cset-workflow folder, run ``cylc vip .``. You can
-monitor the progress by using either ``cylc tui`` on the command line, or ``cylchub``, which
+monitor the progress by using either ``cylc tui`` on the command line, or ``cylc gui``, which
 will open up a browser showing progress through the workflow.
 
 Once completed, you will get an email and be able to look through plots at the web address
