@@ -79,7 +79,7 @@ will open up a browser showing progress through the workflow.
 Once completed, you will get an email and be able to look through plots at the web address
 you specified in the GUI. The GUI on the website will look like the below image. You can navigate
 through the drop down menu items on the left hand side. Note that the plots are stored in the
-``web`` folder, located in ``~/cylc-run/cset-workflow/run(N)/share/web`` for the latest CSET run.
+``web`` folder, located in ``~/cylc-run/cset-workflow/runN/share/web`` for the latest CSET run.
 If you clean the suite, it will delete the plots. To keep the plots safe, move the web folder
 to a sensible location, and symlink the web folder back to the page where you have been displaying
 the plots (the path in Web Directory in the rose edit GUI).
