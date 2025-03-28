@@ -85,7 +85,7 @@ the plots (the path in Web Directory in the rose edit GUI).
     :alt: Screenshot of the CSET web interface.
 
 
-.. _CYLC8: https://cylc.github.io/cylc-doc/stable/html/index.html
+.. _Cylc 8: https://cylc.github.io/cylc-doc/stable/html/index.html
 .. _CSET Releases: https://cylc.github.io/cylc-doc/stable/html/index.html
 .. _MODELA_20230117T0000Z.nc: https://github.com/jwarner8/MO_Github_External/raw/refs/heads/master/CSET_exampledata/MODELA_20230117T0000Z.nc
 .. _MODELA_20230118T0000Z.nc: https://github.com/jwarner8/MO_Github_External/raw/refs/heads/master/CSET_exampledata/MODELA_20230118T0000Z.nc
