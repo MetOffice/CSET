@@ -43,7 +43,7 @@ browser.
 
 Now we have the CSET release and the files we want to visualise, we first copy the
 `rose-suite.conf.example` to `rose-suite.conf`. We can then begin to start setting up
-the configuration using ``rose edit`` command inside the ``cset-workflow``
+the configuration using ``rose edit`` command inside the ``cset-workflow-v25.3.1``
 directory.
 
 Expand the options in Diagnostics; we will ignore the sections Convection, Other
