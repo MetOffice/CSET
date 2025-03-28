@@ -18,9 +18,11 @@ The next step is to download the latest release of CSET, which can be
 found at `CSET Releases`_. This example will utilise version **v25.3.0**.
 Once you have downloaded the tar.gz, untar the file.
 
-If you are running in the Met Office, you can then cd into the ``cset-workflow``
-folder, and run ./install_restricted_files.sh. This adds some site specific
-configuration files that specify where CYLC will run the tasks.
+If you are running in the Met Office or the Momentum Partnership, you can then
+cd into the ``cset-workflow`` folder, and run ./install_restricted_files.sh.
+This adds some site specific configuration files that specify where CYLC will
+run the tasks. For other users, you can skip this step and use the localhost site
+instead.
 
 We will now download some sample data, which will contain screen air temperature
 and air temperature on pressure levels for a couple of forecasts, for two different
