@@ -10,4 +10,3 @@ This section contains guides on how to do specific things with CSET.
     operator-recipes
     add-diagnostic
     add-site
-    run_full_cylc_workflow
