@@ -48,7 +48,7 @@ directory.
 
 Expand the options in Diagnostics; we will ignore the sections Convection, Other
 and Verification blank for now, but this is where various diagnostics can be toggled
-on/off. For now, we will go to Quicklook, and add ``temperature_at_screen_level`` to the
+on/off. For now, we will go to Quicklook, and add ``"temperature_at_screen_level"`` to the
 Surface model fields list. We will then toggle all the options below to True, apart from
 any case aggregation tasks over validity time or hour of day, until we get to
 ``SURFACE_SINGLE_PONT_TIME_SERIES`` which we will leave blank.
