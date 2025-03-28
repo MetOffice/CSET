@@ -14,6 +14,9 @@ website with the plots to navigate. This guide assumes that you have
 
 Which should produce a version 8.X.
 
+1. Download CSET workflow
+-------------------------
+
 The next step is to download the latest release of CSET, which can be
 found at `CSET Releases`_. This example will utilise version **v25.3.1**.
 Once you have downloaded the tar.gz, untar the file.
@@ -23,6 +26,9 @@ cd into the ``cset-workflow-v25.3.1`` folder, and run ./install_restricted_files
 This adds some site specific configuration files that specify where CYLC will
 run the tasks. For other users, you can skip this step and use the localhost site
 instead.
+
+2. Download CSET sample data
+----------------------------
 
 We will now download some sample data, which will contain screen air temperature
 and air temperature on pressure levels for a couple of forecasts, for two different
@@ -41,10 +47,16 @@ File                        Size    SHA256 checksum
 You can directly copy these links and use ``wget`` to retrieve, or download in your
 browser.
 
+3. Configuration
+----------------
+
 Now we have the CSET release and the files we want to visualise, we first copy the
 `rose-suite.conf.example` to `rose-suite.conf`. We can then begin to start setting up
 the configuration using ``rose edit`` command inside the ``cset-workflow-v25.3.1``
 directory.
+
+i. Diagnostics
+~~~~~~~~~~~~~~
 
 Expand the options in Diagnostics; we will ignore the sections Convection, Other
 and Verification blank for now, but this is where various diagnostics can be toggled
@@ -60,6 +72,9 @@ the options below this to True apart from case aggregation tasks over validity t
 until we get to ``EXTRACT_PLEVEL_TRANSECT`` which we will keep to False. Ignore any options
 below this, they are for transects and plotting on model levels.
 
+ii. Data
+~~~~~~~~
+
 We will next click on Models and Cases in the left hand column, and add the case study dates
 for our forecasts. These are ``20230117T0000Z`` and ``20230118T0000Z``. Set the Analysis length
 PT48H, and select number models to be 2. Once this is done, you should be able to expand the
@@ -73,15 +88,24 @@ Filesystem retrieval, and enter the path to the data. This should follow the for
 ``/some/path/to/data/MODELA_%Y%m%dT%H%MZ.nc``, where you replace ModelA with the relevant
 model. The ``%`` will evaluate the path base on the case study date.
 
+iii. Site setup
+~~~~~~~~~~~~~~~
+
 Finally, we will go to Setup, and select your organisation from the Site list, or localhost if it is not listed. Add website
 details for where to display the plots at, this will differ depending on what organistation
 you are running CSET from. You can use the GUI help by clicking on the cog icon next to
 each variable, which will provide more information on how to fill this in. Make sure you save
 the configuration before closing ``rose edit``.
 
+4. Run workflow
+---------------
+
 We are now ready to run CSET! Within the cset-workflow folder, run ``cylc vip .``. You can
 monitor the progress by using either ``cylc tui`` on the command line, or ``cylc gui``, which
 will open up a browser showing progress through the workflow.
+
+5. View webpage
+---------------
 
 Once completed, you will get an email and be able to look through plots at the web address
 you specified in the GUI. The GUI on the website will look like the below image. You can navigate
