@@ -1,4 +1,4 @@
-Running a full CYLC workflow with CSET v25.3.0
+Running a full CYLC workflow with CSET v25.3.1
 ==============================================
 
 .. Tutorial on running CSET within a CYLC environment.
