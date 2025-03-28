@@ -15,7 +15,7 @@ website with the plots to navigate. This guide assumes that you have
 Which should produce a version 8.X.
 
 The next step is to download the latest release of CSET, which can be
-found at `CSET Releases`_. This example will utilise version **v25.3.0**.
+found at `CSET Releases`_. This example will utilise version **v25.3.1**.
 Once you have downloaded the tar.gz, untar the file.
 
 If you are running in the Met Office or the Momentum Partnership, you can then
