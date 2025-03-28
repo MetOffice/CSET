@@ -19,7 +19,7 @@ found at `CSET Releases`_. This example will utilise version **v25.3.1**.
 Once you have downloaded the tar.gz, untar the file.
 
 If you are running in the Met Office or the Momentum Partnership, you can then
-cd into the ``cset-workflow`` folder, and run ./install_restricted_files.sh.
+cd into the ``cset-workflow-v25.3.1`` folder, and run ./install_restricted_files.sh.
 This adds some site specific configuration files that specify where CYLC will
 run the tasks. For other users, you can skip this step and use the localhost site
 instead.
