@@ -25,6 +25,7 @@ import iris
 import iris.cube
 import iris.exceptions
 import iris.util
+import numpy as np
 
 
 def get_cube_yxcoordname(cube: iris.cube.Cube) -> tuple[str, str]:
@@ -264,3 +265,31 @@ def is_time_aggregatable(cube: iris.cube.Cube) -> bool:
     temporal_coords = [coord for coord in coord_names if coord in TEMPORAL_COORD_NAMES]
     # Return whether both coordinates are in the temporal coordinates.
     return len(temporal_coords) == 2
+
+
+def get_common_time_cubes(cubelist):
+    """
+    Filter cubes in the cubelist to retain common time points.
+
+    Parameters
+    ----------
+        cubelist (iris.cube.CubeList): A list of iris cubes.
+
+    Returns
+    -------
+        iris.cube.CubeList: A new CubeList with each cube containing only the common time points.
+    """
+    # Extract time coordinates from all cubes
+    time_sets = [set(cube.coord("time").points) for cube in cubelist]
+
+    # Find common time points across all cubes
+    common_times = sorted(set.intersection(*time_sets))
+
+    # Subset each cube to retain only the common time points
+    new_cubelist = iris.cube.CubeList()
+    for cube in cubelist:
+        time_coord = cube.coord("time")
+        time_indices = np.where(np.isin(time_coord.points, common_times))[0]
+        new_cubelist.append(cube[time_indices])
+
+    return new_cubelist
