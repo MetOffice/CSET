@@ -76,7 +76,7 @@ ii. Data
 ~~~~~~~~
 
 We will next click on Models and Cases in the left hand column, and add the case study dates
-for our forecasts. These are ``20230117T0000Z`` and ``20230118T0000Z``. Set the Analysis length
+for our forecasts. These are ``"20230117T0000Z"`` and ``"20230118T0000Z"``. Set the Analysis length
 PT48H, and select number models to be 2. Once this is done, you should be able to expand the
 Models and Cases menu on the left hand side to reveal Model 01 and Model 02.
 
