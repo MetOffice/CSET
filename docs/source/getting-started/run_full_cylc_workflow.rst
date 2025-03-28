@@ -76,7 +76,8 @@ model. The ``%`` will evaluate the path base on the case study date.
 Finally, we will go to Setup, and select your organisation from the Site list, or localhost if it is not listed. Add website
 details for where to display the plots at, this will differ depending on what organistation
 you are running CSET from. You can use the GUI help by clicking on the cog icon next to
-each variable, which will provide more information on how to fill this in.
+each variable, which will provide more information on how to fill this in. Make sure you save
+the configuration before closing ``rose edit``.
 
 We are now ready to run CSET! Within the cset-workflow folder, run ``cylc vip .``. You can
 monitor the progress by using either ``cylc tui`` on the command line, or ``cylc gui``, which
