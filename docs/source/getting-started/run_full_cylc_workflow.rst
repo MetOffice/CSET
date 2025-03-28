@@ -62,7 +62,7 @@ for our forecasts. These are ``20230117T0000Z`` and ``20230118T0000Z``. Set the 
 PT48H, and select number models to be 2. Once this is done, you should be able to expand the
 Models and Cases menu on the left hand side to reveal Model01 and Model02.
 
-.. image:: cset_ui3.PNG
+.. image:: cset_ui3.png
     :alt: Screenshot of the CSET GUI.
 
 For each model respectively, fill in either ModelA and ModelB in the model name, select
