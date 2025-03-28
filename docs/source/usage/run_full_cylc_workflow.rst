@@ -29,10 +29,14 @@ and air temperature on pressure levels for a couple of forecasts, for two differ
 models to help us explore some of the functionality of CSET. The data consists of
 4 files to download;
 
-`MODELA_20230117T0000Z.nc`_ (~20mb)
-`MODELA_20230118T0000Z.nc`_ (~20mb)
-`MODELB_20230117T0000Z.nc`_ (~90mb)
-`MODELB_20230118T0000Z.nc`_ (~90mb)
+=========================== ======= ======================================
+File                        Size    SHA256 checksum
+=========================== ======= ======================================
+`MODELA_20230117T0000Z.nc`_ ~20 MiB ``669a6e31c10ad0a9ebd62fd19770f99775afc89f167b16ecb27e0e4b48160c19``
+`MODELA_20230118T0000Z.nc`_ ~20 MiB ``9a9829ac8a130f9698f02b4cb09f6c1ceda8ce8192ba1cda3b7cbac731e8a7c0``
+`MODELB_20230117T0000Z.nc`_ ~90 MiB ``64a91273afa6ffa496d9cbd478eb486d84a51e05be98f4864398ea5af8df2e9d``
+`MODELB_20230118T0000Z.nc`_ ~90 MiB ``d2a476f61e58da6120a4658324b259ecb827847250cc8841104dfd1135a6f300``
+=========================== ======= ======================================
 
 You can directly copy these links and use ``wget`` to retrieve, or download in your
 browser.
