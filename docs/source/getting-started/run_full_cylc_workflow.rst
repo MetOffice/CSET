@@ -66,7 +66,7 @@ any case aggregation tasks over validity time or hour of day, until we get to
 ``SURFACE_SINGLE_PONT_TIME_SERIES`` which we will leave blank.
 
 We will next add
-``zonal_wind_at_pressure_levels`` to the Pressure level model fields list, and choose
+``"zonal_wind_at_pressure_levels"`` to the Pressure level model fields list, and choose
 some pressure levels to plot. Lets plot ``200``, ``500`` and ``850``. Again, toggle all
 the options below this to True apart from case aggregation tasks over validity time or hour of day
 until we get to ``EXTRACT_PLEVEL_TRANSECT`` which we will keep to False. Ignore any options
