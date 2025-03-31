@@ -461,7 +461,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
     colorbar = fig.colorbar(
         plot, colorbar_axes, orientation="horizontal", pad=0.042, shrink=0.7
     )
-    colorbar.set_label(f"{cube.name()} / {cube.units}", size=16)
+    colorbar.set_label(f"{cube.name()} ({cube.units})", size=16)
 
     # Overall figure title.
     fig.suptitle(title)
