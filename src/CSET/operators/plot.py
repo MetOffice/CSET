@@ -388,7 +388,7 @@ def _plot_and_save_spatial_plot(
     # add ticks and tick_labels for every levels if less than 20 levels exist
     if levels is not None and len(levels) < 20:
         cbar.set_ticks(levels)
-        cbar.set_ticklabels([f"{level:.1f}" for level in levels])   
+        cbar.set_ticklabels([f"{level:.1f}" for level in levels])
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
