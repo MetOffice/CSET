@@ -371,7 +371,7 @@ def _plot_and_save_spatial_plot(
     )
 
     # Add colour bar.
-    cbar = fig.colorbar(plot, orientation="horizontal", pad=0.08, shrink=0.75)
+    cbar = fig.colorbar(plot, orientation="horizontal", pad=0.042, shrink=0.7)
     cbar.set_label(label=f"{cube.name()} ({cube.units})", size=16)
 
     # Save plot.
@@ -459,7 +459,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
     # Put the shared colorbar in its own axes.
     colorbar_axes = fig.add_axes([0.15, 0.07, 0.7, 0.03])
     colorbar = fig.colorbar(
-        plot, colorbar_axes, orientation="horizontal", pad=0.042, shrink=0.75
+        plot, colorbar_axes, orientation="horizontal", pad=0.042, shrink=0.7
     )
     colorbar.set_label(f"{cube.name()} / {cube.units}", size=16)
 
