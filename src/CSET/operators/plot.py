@@ -245,6 +245,12 @@ def _colorbar_map_levels(cube: iris.cube.Cube):
                 # smooth range.
                 norm = mpl.colors.BoundaryNorm(levels, ncolors=cmap.N)
                 logging.debug("Using levels for %s colorbar.", varname)
+                logging.info("Using levels: %s", levels)
+                # Overwrite cmap, levels and norm for specific variables that require custom colorbar_map as these
+                # can not be defined in the json file.
+                cmap, levels, norm = _custom_colourmap_precipitation(
+                    cube, cmap, levels, norm
+                )
             except KeyError:
                 # Get the range for this variable.
                 vmin, vmax = var_colorbar["min"], var_colorbar["max"]
@@ -252,6 +258,9 @@ def _colorbar_map_levels(cube: iris.cube.Cube):
                 # Calculate levels from range.
                 levels = np.linspace(vmin, vmax, 51)
                 norm = None
+                cmap, levels, norm = _custom_colourmap_precipitation(
+                    cube, cmap, levels, norm
+                )
             return cmap, levels, norm
         except KeyError:
             logging.debug("Cube name %s has no colorbar definition.", varname)
@@ -304,7 +313,10 @@ def _plot_and_save_spatial_plot(
             vmax = max(levels)
         except TypeError:
             vmin, vmax = None, None
-        # pcolormesh plot of the field.
+        # pcolormesh plot of the field and ensure to use norm and not vmin/vmax if levels are defined.
+        if norm is not None:
+            vmin = None
+            vmax = None
         plot = iplt.pcolormesh(cube, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax)
     else:
         raise ValueError(f"Unknown plotting method: {method}")
@@ -373,6 +385,10 @@ def _plot_and_save_spatial_plot(
     # Add colour bar.
     cbar = fig.colorbar(plot, orientation="horizontal")
     cbar.set_label(label=f"{cube.name()} ({cube.units})", size=20)
+    # add ticks and tick_labels for every levels if less than 20 levels exist
+    if levels is not None and len(levels) < 20:
+        cbar.set_ticks(levels)
+        cbar.set_ticklabels([f"{level:.1f}" for level in levels])
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -890,6 +906,9 @@ def _spatial_plot(
     # Ensure we've got a single cube.
     cube = _check_single_cube(cube)
 
+    # Convert precipitation units if necessary
+    _convert_precipitation_units_callback(cube)
+
     # Make postage stamp plots if stamp_coordinate exists and has more than a
     # single point.
     plotting_func = _plot_and_save_spatial_plot
@@ -929,6 +948,68 @@ def _spatial_plot(
 
     # Make a page to display the plots.
     _make_plot_html_page(complete_plot_index)
+
+
+def _convert_precipitation_units_callback(cube: iris.cube.Cube):
+    """To convert the unit of precipitation from kg m-2 s-1 to mm hr-1.
+
+    Some precipitation diagnostics are output with unit kg m-2 s-1 and are converted to mm hr-1.
+    """
+    # if cube.attributes["STASH"] == "m01s04i203" or cube.long_name == "surface_microphysical_rainfall_rate":
+    if cube.long_name == "surface_microphysical_rainfall_rate":
+        if cube.units == "kg m-2 s-1":
+            logging.info("Converting precipitation units from kg m-2 s-1 to mm hr-1")
+            # Convert from kg m-2 s-1 to mm s-1 assuming 1kg water = 1l water = 1dm^3 water.
+            # This is a 1:1 conversion, so we just change the units.
+            cube.units = "mm s-1"
+            # Convert the units to per hour.
+            cube.convert_units("mm hr-1")
+        else:
+            logging.warning(
+                "Precipitation units are not in 'kg m-2 s-1', skipping conversion"
+            )
+    return cube
+
+
+def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
+    """Return a custom colourmap for the current recipe."""
+    import matplotlib.colors as mcolors
+
+    if (
+        cube.long_name == "surface_microphysical_rainfall_rate"
+        or cube.standard_name == "surface_microphysical_rainfall_rate"
+        or cube.var_name == "surface_microphysical_rainfall_rate"
+    ):
+        # Define the levels and colors
+        levels = [0, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
+        colors = [
+            "w",
+            (0, 0, 0.6),
+            "b",
+            "c",
+            "g",
+            "y",
+            (1, 0.5, 0),
+            "r",
+            "pink",
+            "m",
+            "purple",
+            "maroon",
+            "gray",
+        ]
+        # Create a custom colormap
+        cmap = mcolors.ListedColormap(colors)
+        # Normalize the levels
+        norm = mcolors.BoundaryNorm(levels, cmap.N)
+        logging.info(
+            "change colormap for surface_microphysical_rainfall_rate colorbar."
+        )
+    else:
+        # do nothing and keep existing colorbar attributes
+        cmap = cmap
+        levels = levels
+        norm = norm
+    return cmap, levels, norm
 
 
 ####################
