@@ -14,6 +14,7 @@
 
 """Reading operator tests."""
 
+import datetime
 import logging
 
 import iris
@@ -260,6 +261,88 @@ def test_pressure_coord_unit_fix_callback(transect_source_cube):
     read._fix_pressure_coord_callback(cube)
     assert str(cube.coord("pressure").units) == "hPa"
     assert cube.coord("pressure").points[0] == 100
+
+
+def test_fix_um_radtime_posthour(cube):
+    """Check times that are 1 minute passed are rounded to the whole hour."""
+    # Offset times by one minute.
+    time_coord = cube.coord("time")
+    times = time_coord.units.num2pydate(time_coord.points) + datetime.timedelta(
+        minutes=1
+    )
+    time_coord.points = time_coord.units.date2num(times)
+    # Check all times are offset.
+    for time in times:
+        assert time.minute == 1
+
+    # Give cube a radiation STASH code.
+    cube.attributes["STASH"] = "m01s01i208"
+
+    # Apply fix.
+    read._fix_um_radtime_posthour(cube)
+
+    # Ensure radiation times are fixed.
+    rad_time_coord = cube.coord("time")
+    rad_times = rad_time_coord.units.num2pydate(rad_time_coord.points)
+    # Check all times are fixed.
+    assert rad_times[0] == datetime.datetime(2022, 9, 21, 3, 0)
+    for time in rad_times:
+        assert time.minute == 0
+
+
+def test_fix_um_radtime_posthour_skip_non_radiation(cube):
+    """Check non-radiation times are NOT fixed."""
+    # Offset times by one minute.
+    time_coord = cube.coord("time")
+    times = time_coord.units.num2pydate(time_coord.points) + datetime.timedelta(
+        minutes=1
+    )
+    time_coord.points = time_coord.units.date2num(times)
+    # Check all times are offset.
+    for time in times:
+        assert time.minute == 1
+
+    # Apply fix.
+    read._fix_um_radtime_posthour(cube)
+
+    # Ensure that non-radiation cubes are unchanged.
+    non_rad_time_coord = cube.coord("time")
+    non_rad_times = non_rad_time_coord.units.num2pydate(non_rad_time_coord.points)
+    for nrt, t in zip(non_rad_times, times, strict=True):
+        assert nrt == t
+
+
+def test_fix_um_radtime_posthour_skip_non_offset(cube):
+    """Check radiation times NOT offset by 1 minute are not fixed."""
+    time_coord = cube.coord("time")
+    times = time_coord.units.num2pydate(time_coord.points)
+    # Check all times are not offset.
+    for time in times:
+        assert time.minute == 0
+
+    # Give cube a radiation STASH code.
+    cube.attributes["STASH"] = "m01s01i208"
+
+    # Apply fix.
+    read._fix_um_radtime_posthour(cube)
+
+    # Ensure that non-offset cubes are unchanged.
+    non_offset_time_coord = cube.coord("time")
+    non_offset_times = non_offset_time_coord.units.num2pydate(
+        non_offset_time_coord.points
+    )
+    for nt, t in zip(non_offset_times, times, strict=True):
+        assert nt == t
+
+
+def test_fix_um_radtime_posthour_no_time_coordinate():
+    """Check cubes without time coordinates are skipped without error."""
+    # Create a cube with no time coordinate.
+    cube = iris.cube.Cube([0], var_name="data")
+    # Apply fix.
+    read._fix_um_radtime_posthour(cube)
+    # Check unchanged.
+    assert cube == iris.cube.Cube([0], var_name="data")
 
 
 def test_spatial_coord_rename_callback():

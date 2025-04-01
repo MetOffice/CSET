@@ -462,9 +462,7 @@ def _fix_um_radtime_posthour(cube: iris.cube.Cube):
                 return
 
             # Subtract 1 minute from each time point
-            new_time_points = np.array(
-                [t - datetime.timedelta(minutes=1) for t in time_points]
-            )
+            new_time_points = time_points - datetime.timedelta(minutes=1)
 
             # Convert back to numeric values using the original time unit
             new_time_values = time_unit.date2num(new_time_points)
