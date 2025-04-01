@@ -25,6 +25,7 @@ from pathlib import Path
 import iris
 import iris.coords
 import iris.cube
+import iris.exceptions
 import iris.util
 import numpy as np
 
@@ -234,12 +235,13 @@ def _create_callback(is_ensemble: bool, is_base: bool) -> callable:
         _longitude_fix_callback(cube, field, filename)
         _fix_spatial_coord_name_callback(cube)
         _fix_pressure_coord_callback(cube)
-        _fix_model_level_name(cube)
+        _lfric_normalise_varname(cube)
         _fix_um_radtime_prehour(cube)
         _fix_um_radtime_posthour(cube)
         _fix_lfric_longnames(cube)
         _fix_um_lightning(cube)
         _lfric_time_callback(cube)
+        _lfric_forecast_period_standard_name_callback(cube)
 
     return callback
 
@@ -535,11 +537,16 @@ def _fix_um_lightning(cube: iris.cube.Cube):
         pass
 
 
-def _fix_model_level_name(cube: iris.cube.Cube):
-    """Fix LFRic model level varname for consistency to allow merging."""
-    for coord in cube.dim_coords:
-        if coord.name() == "model_level_number":
-            coord.var_name = "model_level_number"
+def _lfric_normalise_varname(cube: iris.cube.Cube):
+    """Fix LFRic varnames for consistency to allow merging.
+
+    LFRic data seems to sometime have a coordinate name end in "_0", which
+    causes the cubes to fail to merge. This has been noticed in
+    model_level_number as well as forecast_period.
+    """
+    for coord in cube.coords():
+        if coord.var_name and coord.var_name.endswith("_0"):
+            coord.var_name = coord.var_name.removesuffix("_0")
 
 
 def _lfric_time_callback(cube: iris.cube.Cube):
@@ -604,7 +611,10 @@ def _lfric_time_callback(cube: iris.cube.Cube):
 
             # Create new axis object.
             lead_time_coord = iris.coords.AuxCoord(
-                lead_times, long_name="forecast_period", units=units
+                lead_times,
+                standard_name="forecast_period",
+                long_name="forecast_period",
+                units=units,
             )
 
             # Associate lead time dimension with coordinate time.
@@ -615,6 +625,16 @@ def _lfric_time_callback(cube: iris.cube.Cube):
             logging.info(
                 "No time coordinate or forecast_reference_time, so cannot construct forecast_period"
             )
+
+
+def _lfric_forecast_period_standard_name_callback(cube: iris.cube.Cube):
+    """Add forecast_period standard name if missing."""
+    try:
+        coord = cube.coord("forecast_period")
+        if not coord.standard_name:
+            coord.standard_name = "forecast_period"
+    except iris.exceptions.CoordinateNotFoundError:
+        pass
 
 
 def _check_input_files(input_paths: list[str], filename_pattern: str) -> list[Path]:
