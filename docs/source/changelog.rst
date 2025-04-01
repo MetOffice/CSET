@@ -35,7 +35,8 @@ side-by-side comparisons.
 * Avoid accessing non-captured output in MASS fetch script by `@jfrost-mo`_ in :pr:`1278`
 * Correct for instances where longitude plot bounds caused set_extent to by `@ukmo-huw-lewis`_ in :pr:`1283`
 * 1-line change to move default position of map colorbars to horizontal by `@ukmo-huw-lewis`_ in :pr:`1284`
-
+* Overwrite partially downloaded files from MASS by `@jfrost-mo`_ in :pr:`1281`
+* Add release notes for v25.3.1 by `@jfrost-mo`_ in :pr:`1286`
 
 25.3.0 (2025-03-06)
 -------------------
