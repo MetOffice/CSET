@@ -427,6 +427,53 @@ def test_fix_um_radtime_prehour_no_time_coordinate():
     assert cube == iris.cube.Cube([0], var_name="data")
 
 
+def test_fix_um_lightning(cube):
+    """Check time and cell_methods are adjusted."""
+    # Add UM lightning STASH code.
+    cube.attributes["STASH"] = "m01s21i104"
+    # Add expected cell method.
+    cube.cell_methods = (iris.coords.CellMethod("accumulation"),)
+    # Offset times by 30 minutes.
+    time_coord = cube.coord("time")
+    times = time_coord.units.num2date(time_coord.points) - datetime.timedelta(
+        minutes=30
+    )
+    time_coord.points = time_coord.units.date2num(times)
+    for time in times:
+        assert time.minute == 30
+
+    # Apply fix.
+    read._fix_um_lightning(cube)
+
+    # Check fix was applied properly.
+    assert cube.cell_methods == ()
+    fixed_time_coord = cube.coord("time")
+    fixed_times = fixed_time_coord.units.num2date(fixed_time_coord.points)
+    for ft, t in zip(fixed_times, times, strict=True):
+        assert ft.minute == 0
+        assert ft.hour == t.hour + 1
+
+
+def test_fix_um_lightning_skip_no_offset(cube):
+    """Check non offset times are not fixed."""
+    # Add UM lightning STASH code.
+    cube.attributes["STASH"] = "m01s21i104"
+    time_coord = cube.coord("time")
+    times = time_coord.units.num2date(time_coord.points)
+    # Times are not offset from the hour.
+    for time in times:
+        assert time.minute == 0
+
+    # Apply fix.
+    read._fix_um_lightning(cube)
+
+    # Check that times are unchanged.
+    fixed_time_coord = cube.coord("time")
+    fixed_times = fixed_time_coord.units.num2date(fixed_time_coord.points)
+    for ft, t in zip(fixed_times, times, strict=True):
+        assert ft == t
+
+
 def test_spatial_coord_rename_callback():
     """Check that spatial coord gets renamed if it is not grid_latitude."""
     # This cube contains 'latitude' and 'longitude'

@@ -519,33 +519,28 @@ def _fix_um_lightning(cube: iris.cube.Cube):
     as variables are ignored with cell methods for surface plots currently),
     and also adjust the time so that the value is at the end of each hour.
     """
-    try:
-        if cube.attributes["STASH"] == "m01s21i104":
-            # Remove aggregation cell method.
-            cube.cell_methods = []
+    if cube.attributes.get("STASH") == "m01s21i104":
+        # Remove aggregation cell method.
+        cube.cell_methods = ()
 
-            time_coord = cube.coord("time")
+        time_coord = cube.coord("time")
 
-            # Convert time points to datetime objects
-            time_unit = time_coord.units
-            time_points = time_unit.num2date(time_coord.points)
+        # Convert time points to datetime objects.
+        time_unit = time_coord.units
+        time_points = time_unit.num2date(time_coord.points)
 
-            # Skip if times don't need fixing.
-            if time_points[0].minute == 0:
-                return
+        # Skip if times don't need fixing.
+        if time_points[0].minute == 0:
+            return
 
-            # Subtract 1 minute from each time point
-            new_time_points = np.array(
-                [t + datetime.timedelta(minutes=30) for t in time_points]
-            )
+        # Add 30 minutes to each time point.
+        new_time_points = time_points + datetime.timedelta(minutes=30)
 
-            # Convert back to numeric values using the original time unit
-            new_time_values = time_unit.date2num(new_time_points)
+        # Convert back to numeric values using the original time unit.
+        new_time_values = time_unit.date2num(new_time_points)
 
-            # Replace the time coordinate with corrected values
-            time_coord.points = new_time_values
-    except KeyError:
-        pass
+        # Replace the time coordinate with corrected values.
+        time_coord.points = new_time_values
 
 
 def _lfric_normalise_varname(cube: iris.cube.Cube):
