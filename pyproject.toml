@@ -67,7 +67,7 @@ source = ["src"]
 omit = ["__main__.py"]
 
 [tool.codespell]
-ignore-words-list = "lazyness,meaned"
+ignore-words-list = "lazyness,meaned,runn"
 skip = "build,*.css,*.ipynb,*.js,*.html,*.svg,*.xml,.git"
 
 [tool.ruff]

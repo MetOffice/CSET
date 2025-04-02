@@ -302,9 +302,15 @@ def test_lfric_timecoord_fix_forecastreftime(slammed_lfric_cube):
     )
 
 
-def test_fix_model_level_name():
+def test_lfric_normalise_varname(model_level_cube):
     """Check that read callback renames the model level var name."""
-    cube = iris.load_cube("tests/test_data/model_level_test.nc")
-    cube.coord("model_level_number").var_name = "model_level_number_0"
-    read._fix_model_level_name(cube)
-    assert cube.coord("model_level_number").var_name == "model_level_number"
+    model_level_cube.coord("model_level_number").var_name = "model_level_number_0"
+    read._lfric_normalise_varname(model_level_cube)
+    assert model_level_cube.coord("model_level_number").var_name == "model_level_number"
+
+
+def test_lfric_forecast_period_standard_name_callback(cube):
+    """Ensure forecast period coordinates have a standard name."""
+    cube.coord("forecast_period").standard_name = None
+    read._lfric_forecast_period_standard_name_callback(cube)
+    assert cube.coord("forecast_period").standard_name == "forecast_period"

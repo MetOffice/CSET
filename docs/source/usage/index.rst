@@ -9,3 +9,4 @@ This section contains guides on how to do specific things with CSET.
     common-errors
     operator-recipes
     add-diagnostic
+    add-site

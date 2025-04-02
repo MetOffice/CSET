@@ -129,6 +129,18 @@ def test_entrypoint(monkeypatch):
     assert function_ran, "Function did not run!"
 
 
+def test_entrypoint_exit_on_subprocess_exception(monkeypatch):
+    """Check that run_cset_recipe.run() exits non-zero."""
+
+    def subprocess_error():
+        raise subprocess.CalledProcessError(1, "foo")
+
+    monkeypatch.setattr(run_cset_recipe, "run_recipe_steps", subprocess_error)
+    with pytest.raises(SystemExit) as exc_info:
+        run_cset_recipe.run()
+        assert exc_info.value.code == 1
+
+
 def test_run_recipe_steps(monkeypatch, tmp_working_dir):
     """Test run recipe steps correctly runs CSET and creates an archive."""
 
