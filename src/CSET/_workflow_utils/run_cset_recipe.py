@@ -106,6 +106,10 @@ def run_recipe_steps():
     if plot_resolution:
         command.append(f"--plot-resolution={plot_resolution}")
 
+    histogram_method_surface = os.getenv("HISTOGRAM_METHOD_SURFACE")
+    if histogram_method_surface:
+        command.append(f"--histogram-method-surface={histogram_method_surface}")
+
     logging.info("Running %s", " ".join(command))
     try:
         subprocess.run(command, check=True, env=subprocess_env())

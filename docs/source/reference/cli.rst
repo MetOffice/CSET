@@ -27,6 +27,8 @@ page.
                             colour bar definition to use
     --plot-resolution PLOT_RESOLUTION
                             plotting resolution in dpi
+    --histogram-method-surface HISTOGRAM_METHOD_SURFACE
+                            histogram method to use for surface fields
 
 Here is an example to run a recipe making use of the templated variable ``VARNAME`` in the recipe.
 The '-v' is optional to give verbose output::

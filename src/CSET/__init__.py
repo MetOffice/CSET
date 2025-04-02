@@ -115,6 +115,11 @@ def setup_argument_parser() -> argparse.ArgumentParser:
     parser_bake.add_argument(
         "--plot-resolution", type=int, help="plotting resolution in dpi"
     )
+    parser_bake.add_argument(
+        "--histogram-method-surface",
+        type=str,
+        help="histogram method to use i.e. frequency, normalised_frequency or density",
+    )
     parser_bake.set_defaults(func=_bake_command)
 
     parser_graph = subparsers.add_parser("graph", help="visualise a recipe file")
@@ -238,6 +243,7 @@ def _bake_command(args, unparsed_args):
         recipe_variables,
         args.style_file,
         args.plot_resolution,
+        args.histogram_method_surface,
     )
 
 
