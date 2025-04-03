@@ -383,8 +383,9 @@ def _plot_and_save_spatial_plot(
     )
 
     # Add colour bar.
-    cbar = fig.colorbar(plot, orientation="horizontal")
-    cbar.set_label(label=f"{cube.name()} ({cube.units})", size=20)
+    cbar = fig.colorbar(plot, orientation="horizontal", pad=0.042, shrink=0.7)
+    cbar.set_label(label=f"{cube.name()} ({cube.units})", size=16)
+
     # add ticks and tick_labels for every levels if less than 20 levels exist
     if levels is not None and len(levels) < 20:
         cbar.set_ticks(levels)
@@ -474,8 +475,10 @@ def _plot_and_save_postage_stamp_spatial_plot(
 
     # Put the shared colorbar in its own axes.
     colorbar_axes = fig.add_axes([0.15, 0.07, 0.7, 0.03])
-    colorbar = fig.colorbar(plot, colorbar_axes, orientation="horizontal")
-    colorbar.set_label(f"{cube.name()} / {cube.units}")
+    colorbar = fig.colorbar(
+        plot, colorbar_axes, orientation="horizontal", pad=0.042, shrink=0.7
+    )
+    colorbar.set_label(f"{cube.name()} ({cube.units})", size=16)
 
     # Overall figure title.
     fig.suptitle(title)

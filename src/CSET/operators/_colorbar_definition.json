@@ -502,7 +502,7 @@
     "min": -10
   },
   "toa_direct_shortwave_flux": {
-    "cmap": "viridis",
+    "cmap": "Greys",
     "max": 1400.0,
     "min": 0.0
   },
@@ -512,7 +512,7 @@
     "min": -2.0
   },
   "toa_upward_longwave_flux_radiative_timestep": {
-    "cmap": "viridis",
+    "cmap": "Greys",
     "max": 350.0,
     "min": 0.0
   },
@@ -523,7 +523,7 @@
   },
   "toa_upward_shortwave_flux": {
     "cmap": "Greys",
-    "max": 500,
+    "max": 500.0,
     "min": 0
   },
   "toa_upward_shortwave_flux_difference": {
