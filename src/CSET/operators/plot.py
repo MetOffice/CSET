@@ -385,6 +385,7 @@ def _plot_and_save_spatial_plot(
     # Add colour bar.
     cbar = fig.colorbar(plot, orientation="horizontal", pad=0.042, shrink=0.7)
     cbar.set_label(label=f"{cube.name()} ({cube.units})", size=16)
+
     # add ticks and tick_labels for every levels if less than 20 levels exist
     if levels is not None and len(levels) < 20:
         cbar.set_ticks(levels)
