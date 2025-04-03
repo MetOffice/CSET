@@ -109,6 +109,10 @@ def run_recipe_steps():
     if plot_resolution:
         command.append(f"--plot-resolution={plot_resolution}")
 
+    skip_write = bool(os.getenv("SKIP_WRITE"))
+    if skip_write:
+        command.append("--skip-write")
+
     logging.info("Running %s", shlex.join(command))
     try:
         subprocess.run(command, check=True, env=subprocess_env())

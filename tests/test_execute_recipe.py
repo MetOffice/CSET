@@ -85,3 +85,11 @@ def test_run_steps_plot_resolution_metadata_written(tmp_path: Path):
     with open(tmp_path / "meta.json", "rb") as fp:
         metadata = json.load(fp)
     assert metadata["plot_resolution"] == 72
+
+
+def test_run_steps_skip_write_metadata_written(tmp_path: Path):
+    """Skip write metadata written out."""
+    CSET.operators._run_steps({}, [], "", tmp_path, skip_write=True)
+    with open(tmp_path / "meta.json", "rb") as fp:
+        metadata = json.load(fp)
+    assert metadata["skip_write"]
