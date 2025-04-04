@@ -304,8 +304,13 @@ sort-key=models-d1
 
 [template variables=SELECT_SUBAREA]
 ns=Models and Cases
-description=Only analyse a subset of the region in the input data.
-help=Select this option to run a recipe over a defined latitude-longitude range.
+description=Analyse a subset of the region in the input data.
+
+            NB: This only works for spatial plots, timeseries and profiles.
+                It does not yet work for PDFs, and other diagnostics. This
+                is due to extra code needed to regrid onto the lowest model
+                resolution for a fair comparison to be made.
+help=Select this option to run over a defined latitude-longitude range.
 trigger=template variables=SUBAREA_TYPE: True;
        =template variables=SUBAREA_EXTENT: True;
 type=python_boolean
