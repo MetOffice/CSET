@@ -197,7 +197,7 @@ def read_cubes(
             # First, we need to check if coordinate system is rotated or not.
             # If rotated, we will need to convert coordinates into rotated
             # coords to extract the appropriate cutout.
-            coord_system = cube.coord("latitude").coord_system
+            coord_system = cube.coord("grid_latitude").coord_system
             if isinstance(coord_system, iris.coord_systems.RotatedGeogCS):
                 logging.info("Cube is in rotated pole coordinates")
 
