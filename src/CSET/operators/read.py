@@ -203,10 +203,10 @@ def read_cubes(
 
                 # Convert user specified coordinates into rotated pole coordinates.
                 rotated_lons, rotated_lats = rotate_pole(
-                    SUBAREA_EXTENT[2, 3],
-                    SUBAREA_EXTENT[0, 1],
-                    pole_lon=cube.coord_system.grid_north_pole_longitude,
-                    pole_lat=cube.coord_system.grid_north_pole_latitude,
+                    (SUBAREA_EXTENT[2], SUBAREA_EXTENT[3]),
+                    (SUBAREA_EXTENT[0], SUBAREA_EXTENT[1]),
+                    pole_lon=coord_system.grid_north_pole_longitude,
+                    pole_lat=coord_system.grid_north_pole_latitude,
                 )
 
                 logging.info(
