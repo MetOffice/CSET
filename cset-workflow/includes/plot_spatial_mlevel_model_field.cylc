@@ -13,6 +13,8 @@
             --VARNAME='{{field}}'
             --MLEVEL='{{mlevel}}'
             --MODEL_NAME='{{model["name"]}}'
+            --SUBAREA_TYPE='{{SUBAREA_TYPE|default("None")}}'
+            --SUBAREA_EXTENT='{{SUBAREA_EXTENT|default("[0,0,0,0]")}}'
         """
         MODEL_IDENTIFIERS = {{model["id"]}}
 {% endfor %}
