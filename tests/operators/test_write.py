@@ -19,9 +19,9 @@ from pathlib import Path
 from CSET.operators import write
 
 
-def test_write_cube(tmp_path: Path, cube):
+def test_write_cube(cube, tmp_working_dir: Path):
     """Write cube and verify it was written."""
-    file_path = tmp_path / "cube.nc"
+    file_path = tmp_working_dir / "cube.nc"
     write.write_cube_to_nc(cube, file_path, overwrite=True)
     assert file_path.is_file()
 
