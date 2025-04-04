@@ -13,6 +13,8 @@ steps:
         operator: constraints.generate_level_constraint
         coordinate: pressure
         levels: "*"
+    SUBAREA_TYPE: $SUBAREA_TYPE
+    SUBAREA_EXTENT: $SUBAREA_EXTENT
 
   - operator: collapse.collapse
     coordinate: [grid_latitude, grid_longitude]
