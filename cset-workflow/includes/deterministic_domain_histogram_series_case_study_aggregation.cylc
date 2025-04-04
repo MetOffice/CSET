@@ -1,4 +1,4 @@
-{% if DOMAIN_HISTOGRAM_SERIES_CASE_AGGREGATION|default(False) %}
+{% if DOMAIN_HISTOGRAM_SERIES_CASE_AGGREGATION_ALL|default(False) %}
 {% for field in PRESSURE_LEVEL_MODEL_FIELDS %}
 {% for model in models %}
 {% for plevel in PRESSURE_LEVELS %}
