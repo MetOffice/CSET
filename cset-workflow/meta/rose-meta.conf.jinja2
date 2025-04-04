@@ -43,6 +43,15 @@ help=This will be a JSON file with a colorbar definition inside. See
 type=quoted
 compulsory=true
 
+[template variables=SKIP_WRITE]
+ns=Setup
+title=Skip writing processed data
+description=Skip saving the processed data used for the plots to save disk space.
+help=This skips writing the processed data that is plotted to minimise disk usage
+    and IO throughput. It is recommended for large CSET runs.
+type=python_boolean
+compulsory=true
+
 [template variables=PLOT_RESOLUTION]
 ns=Setup
 title=Plot resolution

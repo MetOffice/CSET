@@ -31,3 +31,4 @@ ad-hoc or small scale usage, as well as development.
     run-recipe
     visualise-recipe
     create-first-recipe
+    run_full_cylc_workflow

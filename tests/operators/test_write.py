@@ -31,3 +31,11 @@ def test_write_cube_default_filename(cube, tmp_working_dir):
     Path("meta.json").write_text("{}", encoding="UTF-8")
     write.write_cube_to_nc(cube, overwrite=True)
     assert Path.cwd().joinpath("untitled.nc").is_file()
+
+
+def test_write_cube_skip_write(cube, tmp_working_dir):
+    """Cube is not written when skip_write is configured."""
+    Path("meta.json").write_text('{"skip_write": true}', encoding="UTF-8")
+    returned = write.write_cube_to_nc(cube, "output.nc", overwrite=True)
+    assert returned == cube
+    assert not Path.cwd().joinpath("output.nc").is_file()

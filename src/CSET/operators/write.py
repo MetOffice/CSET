@@ -48,6 +48,11 @@ def write_cube_to_nc(
     Cube | CubeList
         The inputted cube(list) (so further operations can be applied)
     """
+    # Allow writing to be disabled without changing the recipe. This improves
+    # runtime and avoids using excessive disk space for large runs.
+    if get_recipe_metadata().get("skip_write"):
+        return cube
+
     if filename is None:
         filename = slugify(get_recipe_metadata().get("title", "Untitled"))
 

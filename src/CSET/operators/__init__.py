@@ -109,15 +109,11 @@ def get_operator(name: str):
 
 def _write_metadata(recipe: dict):
     """Write a meta.json file in the CWD."""
-    # TODO: Investigate whether we might be better served by an SQLite database.
     metadata = recipe.copy()
     # Remove steps, as not needed, and might contain non-serialisable types.
     metadata.pop("steps", None)
     with open("meta.json", "wt", encoding="UTF-8") as fp:
         json.dump(metadata, fp, indent=2)
-    os.sync()
-    # Stat directory to force NFS to synchronise metadata.
-    os.stat(Path.cwd())
 
 
 def _step_parser(step: dict, step_input: any) -> str:
@@ -154,6 +150,7 @@ def _run_steps(
     output_directory: Path,
     style_file: Path = None,
     plot_resolution: int = None,
+    skip_write: bool = None,
 ) -> None:
     """Execute the steps in a recipe."""
     original_working_directory = Path.cwd()
@@ -177,6 +174,8 @@ def _run_steps(
             recipe["style_file_path"] = str(style_file)
         if plot_resolution:
             recipe["plot_resolution"] = plot_resolution
+        if skip_write:
+            recipe["skip_write"] = skip_write
         _write_metadata(recipe)
         # Execute the recipe.
         for step in steps:
@@ -193,6 +192,7 @@ def execute_recipe(
     recipe_variables: dict = None,
     style_file: Path = None,
     plot_resolution: int = None,
+    skip_write: bool = None,
 ) -> None:
     """Parse and executes the steps from a recipe file.
 
@@ -213,6 +213,8 @@ def execute_recipe(
         Path to a style file.
     plot_resolution: int, optional
         Resolution of plots in dpi.
+    skip_write: bool, optional
+        Skip saving processed output alongside plots.
 
     Raises
     ------
@@ -234,5 +236,11 @@ def execute_recipe(
         raise err
     steps = recipe["steps"]
     _run_steps(
-        recipe, steps, input_directories, output_directory, style_file, plot_resolution
+        recipe,
+        steps,
+        input_directories,
+        output_directory,
+        style_file,
+        plot_resolution,
+        skip_write,
     )
