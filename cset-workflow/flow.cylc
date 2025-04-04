@@ -74,6 +74,8 @@ URL = https://metoffice.github.io/CSET
     [[root]]
     script = rose task-run -v
     execution time limit = PT15M
+    # Retry submit-failed tasks after a minute.
+    submission retry delays = PT1M
         [[[environment]]]
         # As these variables are used in the environment script, they must be
         # defined.
@@ -100,7 +102,8 @@ URL = https://metoffice.github.io/CSET
 
     [[PROCESS]]
     script = rose task-run -v --app-key=run_cset_recipe
-    execution time limit = PT15M
+    execution time limit = PT5M
+    execution retry delays = PT1M, PT15M, PT1H
     [[[directives]]]
         --mem=5000
 
