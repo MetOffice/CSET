@@ -210,10 +210,10 @@ def read_cubes(
                 )
 
                 logging.info(
-                    f"User requested LLat{SUBAREA_EXTENT[0]} ULat{SUBAREA_EXTENT[1]} LLon{SUBAREA_EXTENT[2]} ULon{SUBAREA_EXTENT[3]}"
+                    f"User requested LLat:{SUBAREA_EXTENT[0]} ULat:{SUBAREA_EXTENT[1]} LLon:{SUBAREA_EXTENT[2]} ULon:{SUBAREA_EXTENT[3]}"
                 )
                 logging.info(
-                    f"Rotated coord LLat{rotated_lats[0]} ULat{rotated_lats[1]} LLon{rotated_lons[0]} ULon{rotated_lons[1]}"
+                    f"Rotated coord LLat:{rotated_lats[0]} ULat:{rotated_lats[1]} LLon:{rotated_lons[0]} ULon:{rotated_lons[1]}"
                 )
 
                 # Do cutout and add to cutout_cubes.
@@ -226,14 +226,14 @@ def read_cubes(
             else:
                 logging.info("Cube is in real-world coordinates")
                 logging.info(
-                    f"User requested LLat{SUBAREA_EXTENT[0]} ULat{SUBAREA_EXTENT[1]} LLon{SUBAREA_EXTENT[2]} ULon{SUBAREA_EXTENT[3]}"
+                    f"User requested LLat:{SUBAREA_EXTENT[0]} ULat:{SUBAREA_EXTENT[1]} LLon:{SUBAREA_EXTENT[2]} ULon:{SUBAREA_EXTENT[3]}"
                 )
 
                 # Do cutout and add to cutout_cubes.
                 cutout_cubes.append(
                     cube.intersection(
-                        grid_latitude=(rotated_lats[0], rotated_lats[1]),
-                        grid_longitude=(rotated_lons[0], rotated_lons[1]),
+                        grid_latitude=(SUBAREA_EXTENT[0], SUBAREA_EXTENT[1]),
+                        grid_longitude=(SUBAREA_EXTENT[2], SUBAREA_EXTENT[3]),
                     )
                 )
 
@@ -251,8 +251,8 @@ def read_cubes(
             # Do cutout and add to cutout_cubes.
             cutout_cubes.append(
                 cube.intersection(
-                    grid_latitude=(rotated_lats[0], rotated_lats[1]),
-                    grid_longitude=(rotated_lons[0], rotated_lons[1]),
+                    grid_latitude=(SUBAREA_EXTENT[0], SUBAREA_EXTENT[1]),
+                    grid_longitude=(SUBAREA_EXTENT[2], SUBAREA_EXTENT[3]),
                 )
             )
 
