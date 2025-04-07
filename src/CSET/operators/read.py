@@ -69,6 +69,12 @@ def read_cube(
         Path to where .pp/.nc files are located
     constraint: iris.Constraint | iris.ConstraintCombination, optional
         Constraints to filter data by. Defaults to unconstrained.
+    SUBAREA_TYPE: str, optional
+        Whether to constrain data by model relative coordinates or real world
+        coordinates.
+    SUBAREA_EXTEND: list, optional
+        List of coordinates to constraint data by, in order lower latitude,
+        upper latitude, lower longitude, upper longitude.
     filename_pattern: str, optional
         Unix shell-style glob pattern to match filenames to. Defaults to "*"
 
@@ -136,6 +142,12 @@ def read_cubes(
         Path to where .pp/.nc files are located. Can include globs.
     constraint: iris.Constraint | iris.ConstraintCombination, optional
         Constraints to filter data by. Defaults to unconstrained.
+    SUBAREA_TYPE: str, optional
+        Whether to constrain data by model relative coordinates or real world
+        coordinates.
+    SUBAREA_EXTEND: list, optional
+        List of coordinates to constraint data by, in order lower latitude,
+        upper latitude, lower longitude, upper longitude.
     filename_pattern: str, optional
         Unix shell-style glob pattern to match filenames to. Defaults to "*"
 
