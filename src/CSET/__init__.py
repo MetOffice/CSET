@@ -116,6 +116,9 @@ def setup_argument_parser() -> argparse.ArgumentParser:
         "--plot-resolution", type=int, help="plotting resolution in dpi"
     )
     parser_bake.add_argument(
+        "--skip-write", action="store_true", help="Skip saving processed output"
+    )
+    parser_bake.add_argument(
         "--histogram-method-surface",
         type=str,
         help="histogram method to use i.e. frequency, normalised_frequency or density",
@@ -243,6 +246,7 @@ def _bake_command(args, unparsed_args):
         recipe_variables,
         args.style_file,
         args.plot_resolution,
+        args.skip_write,
         args.histogram_method_surface,
     )
 

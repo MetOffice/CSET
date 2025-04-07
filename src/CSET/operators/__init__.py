@@ -150,6 +150,7 @@ def _run_steps(
     output_directory: Path,
     style_file: Path = None,
     plot_resolution: int = None,
+    skip_write: bool = None,
     histogram_method_surface: str = None,
 ) -> None:
     """Execute the steps in a recipe."""
@@ -174,6 +175,8 @@ def _run_steps(
             recipe["style_file_path"] = str(style_file)
         if plot_resolution:
             recipe["plot_resolution"] = plot_resolution
+        if skip_write:
+            recipe["skip_write"] = skip_write
         if histogram_method_surface:
             recipe["histogram_method_surface"] = histogram_method_surface
         _write_metadata(recipe)
@@ -192,6 +195,7 @@ def execute_recipe(
     recipe_variables: dict = None,
     style_file: Path = None,
     plot_resolution: int = None,
+    skip_write: bool = None,
     histogram_method_surface: str = None,
 ) -> None:
     """Parse and executes the steps from a recipe file.
@@ -213,6 +217,8 @@ def execute_recipe(
         Path to a style file.
     plot_resolution: int, optional
         Resolution of plots in dpi.
+    skip_write: bool, optional
+        Skip saving processed output alongside plots.
     histogram_method_surface: str, optional
         Method to use to compute surface field histograms.
 
@@ -242,5 +248,6 @@ def execute_recipe(
         output_directory,
         style_file,
         plot_resolution,
+        skip_write,
         histogram_method_surface,
     )

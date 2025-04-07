@@ -109,11 +109,15 @@ def run_recipe_steps():
     if plot_resolution:
         command.append(f"--plot-resolution={plot_resolution}")
 
+    skip_write = bool(os.getenv("SKIP_WRITE"))
+    if skip_write:
+        command.append("--skip-write")
+
     histogram_method_surface = os.getenv("HISTOGRAM_METHOD_SURFACE")
     if histogram_method_surface:
         command.append(f"--histogram-method-surface={histogram_method_surface}")
-    logging.info("Running %s", shlex.join(command))
 
+    logging.info("Running %s", shlex.join(command))
     try:
         subprocess.run(command, check=True, env=subprocess_env())
     except subprocess.CalledProcessError as err:
