@@ -35,7 +35,7 @@ jobs:
 
       - name: Update CSET developer and workflow lock files
         run: |
-          py_vers="3.10 3.11 3.12 3.13"
+          py_vers="3.11 3.12 3.13"
           for py_ver in $py_vers
           do
             # Developer lock files.
