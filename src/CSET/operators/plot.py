@@ -670,7 +670,7 @@ def _plot_and_save_scatter_plot(
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     # plot the cube_x and cube_y 1D fields as a scatter plot. If they are CubeLists this ensures
     # to pair each cube from cube_x with the corresponding cube from cube_y, allowing to iterate
-    # over the pairs simultaneously.src/CSET/operators/plot.py:271
+    # over the pairs simultaneously.
 
     # Ensure cube_x and cube_y are iterable
     cube_x_iterable = iter_maybe(cube_x)
@@ -714,15 +714,15 @@ def _plot_histogram(data, method: str = "density", **kwargs) -> dict:
 
     Histograms can be computed using any of three different methods:
 
-    frequency           - This is constructed from the raw counts within each bin.
+    frequency            - This is constructed from the raw counts within each bin.
 
-    normalised_freqency - The frequency counts are normailsed so that the total
-                          counts is 1.
+    normalised_frequency - The frequency counts are normalised so that the total
+                           counts is 1.
 
-    density             - The counts per bin are normalised to by both the total
-                          counts and the bin widths. The sum of the areas of the
-                          bins is 1. This is the discrete sampling analogue of
-                          the continuous probability density function.
+    density              - The counts per bin are normalised by both the total
+                           counts and the bin widths. The sum of the areas of the
+                           bins is 1. This is the discrete sampling analogue of
+                           the continuous probability density function.
 
     This function returns a dictionary of plotting labels to use on the histogram plot.
     Keys available:
@@ -734,13 +734,13 @@ def _plot_histogram(data, method: str = "density", **kwargs) -> dict:
     histogram and the number of bins to use. Using these options will set the bin
     width to ( value_maximum - value_minimum ) / number of bins. See the documentation
     for matplotlib.pyplot.hist for more details at:
-    https://matplotlib.org/3.1.1/api/_as_gen/matplotlib.pyplot.hist.html
+    https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.hist.html
 
     Parameters
     ----------
     data: array
         Input values of the data to use for computing the histogram.
-    method: "frequency" | "normalised_freqency" | "density", optional
+    method: "frequency" | "normalised_frequency" | "density", optional
         The histogram method to use. Default is "density".
     **kwargs: optional keyword arguments used by matplotlib.pyplot.hist
         The keywords "density" and "weights" are set by the input "method", so
