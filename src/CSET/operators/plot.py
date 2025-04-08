@@ -839,7 +839,7 @@ def _plot_and_save_histogram_series(
         color="black",
         linewidth=2,
         histtype="step",
-        label=str(bins) + " bins",
+        label=f"{bins} bins",
     )
 
     # Add some labels and tweak the style.
