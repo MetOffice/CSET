@@ -767,7 +767,7 @@ def _plot_histogram(data, method: str = "density", **kwargs) -> dict:
 
     # Grab the parameter settings required for the histogram method
     try:
-        args_method = hist_method[method.lower()]["method_args"]
+        args_method = hist_method[method]["method_args"]
     except KeyError:
         logging.debug(
             "Problem in %s with unrecognised histogram method '%s'",
