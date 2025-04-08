@@ -280,7 +280,7 @@ def _get_plot_resolution() -> int:
 
 def _get_histogram_method_surface() -> str:
     """Get method to use when computing histograms."""
-    return get_recipe_metadata().get("histogram_method_surface", "Density")
+    return get_recipe_metadata().get("histogram_method_surface", "density").lower()
 
 
 def _plot_and_save_spatial_plot(
