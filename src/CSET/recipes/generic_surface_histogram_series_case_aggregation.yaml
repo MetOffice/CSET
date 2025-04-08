@@ -1,5 +1,5 @@
 category: Histogram
-title: $MODEL_NAME $VARNAME Surface Level Histogram Plot case aggregation
+title: $TITLE_PREFIX $VARNAME Surface Level Histogram Plot case aggregation
 description: |
   Extracts and plots the probability density of surface `$VARNAME`. It uses
   [`plt.hist`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.hist.html)
@@ -10,6 +10,7 @@ description: |
 
 steps:
   - operator: read.read_cubes
+    model_names: $MODEL_NAME
     constraint:
       operator: constraints.combine_constraints
       variable_constraint:
