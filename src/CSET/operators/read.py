@@ -97,6 +97,7 @@ def read_cubes(
     loadpath: list[str] | str,
     constraint: iris.Constraint = None,
     filename_pattern: str = "*",
+    model_names: str | None = None,
     **kwargs,
 ) -> iris.cube.CubeList:
     """Read cubes from files.
@@ -141,13 +142,13 @@ def read_cubes(
     logging.debug("Constraint: %s", constraint)
 
     def load_from_paths(
-        paths: list[str], is_ensemble: bool, is_base: bool
+        paths: list[str], is_ensemble: bool, is_base: bool, model_name: str | None = None
     ) -> iris.cube.CubeList:
         # Skip if no paths given, mainly for when we only have a base path.
         if not paths:
             return iris.cube.CubeList([])
         input_files = _check_input_files(paths, filename_pattern)
-        callback = _create_callback(is_ensemble=is_ensemble, is_base=is_base)
+        callback = _create_callback(is_ensemble=is_ensemble, is_base=is_base, model_name=model_name)
         # If unset, a constraint of None lets everything be loaded.
         return iris.load(input_files, constraint, callback=callback)
 
@@ -161,15 +162,33 @@ def read_cubes(
     # Load the data, then reload with correct handling if it is ensemble data.
     cubes = iris.cube.CubeList([])
 
+    # the idea is to add model_name attribute to each cube (to make it available at any further step without necessity
+    # to pass it as function parameter), so it has to be defined (but we create default values in case user
+    # provides none)
+    if model_names is not None:
+        model_names = model_names.split('__')
+    else:
+        # just to make sure cubes will get model_name attribute
+        model_names = [f'm{i+1:d}' for i in range(len(other_paths) + 1)]
+    logging.debug(f"received model labels: {model_names}")
+    if len(model_names) != len(other_paths) + 1:
+        raise ValueError(f"Invalid number of labels: {len(model_names)} while the are {len(other_paths)+1} paths given")
+
+    base_model_name = model_names[0]
+    other_model_names = model_names[1:]
+    del model_names
+
     # Split out first input file definition here and mark as base model.
-    cubes.extend(load_from_paths(base_path, is_ensemble=False, is_base=True))
-    cubes.extend(load_from_paths(other_paths, is_ensemble=False, is_base=False))
+    cubes.extend(load_from_paths(base_path, is_ensemble=False, is_base=True, model_name=base_model_name))
+    for i, other_path in enumerate(other_paths):
+        cubes.extend(load_from_paths(other_path, is_ensemble=False, is_base=False, model_name=other_model_names[i]))
 
     # Reload all data with ensemble handling if needed.
     if _is_ensemble(cubes):
         cubes = iris.cube.CubeList()
-        cubes.extend(load_from_paths(base_path, is_ensemble=True, is_base=True))
-        cubes.extend(load_from_paths(other_paths, is_ensemble=True, is_base=False))
+        cubes.extend(load_from_paths(base_path, is_ensemble=True, is_base=True, model_name=base_model_name))
+        for i, other_path in enumerate(other_paths):
+            cubes.extend(load_from_paths(other_path, is_ensemble=True, is_base=False, model_name=other_model_names[i]))
 
     # Unify time units so different case studies can merge.
     iris.util.unify_time_units(cubes)
@@ -218,7 +237,7 @@ def _is_ensemble(cubelist: iris.cube.CubeList) -> bool:
     return False
 
 
-def _create_callback(is_ensemble: bool, is_base: bool) -> callable:
+def _create_callback(is_ensemble: bool, is_base: bool, model_name: str | None = None) -> callable:
     """Compose together the needed callbacks into a single function."""
 
     # TODO: Fix coordinate name to enable full level and half level merging.
@@ -229,6 +248,9 @@ def _create_callback(is_ensemble: bool, is_base: bool) -> callable:
             _ensemble_callback(cube, field, filename)
         else:
             _deterministic_callback(cube, field, filename)
+        if model_name is not None:
+            _add_model_name_attribute(cube, model_name)
+
         _um_normalise_callback(cube, field, filename)
         _lfric_normalise_callback(cube, field, filename)
         _lfric_time_coord_fix_callback(cube, field, filename)
@@ -244,6 +266,10 @@ def _create_callback(is_ensemble: bool, is_base: bool) -> callable:
         _lfric_forecast_period_standard_name_callback(cube)
 
     return callback
+
+
+def _add_model_name_attribute(cube, model_name):
+    cube.attributes["model_name"] = model_name
 
 
 def _mark_as_comparison_base_callback(cube, field, filename):
