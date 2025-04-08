@@ -1,6 +1,6 @@
 category: Model Level Spatial Plot Difference
 title: Model Level $VARNAME lv$MLEVEL difference ($BASE_MODEL - $OTHER_MODEL)
-description: Extracts and plot the difference in surface $VARNAME $MLEVEL for all times.
+description: Extracts and plot the difference in surface $VARNAME at level $MLEVEL for all times.
 
 steps:
   - operator: read.read_cubes
