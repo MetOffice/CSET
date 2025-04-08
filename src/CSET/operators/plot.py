@@ -767,12 +767,11 @@ def _plot_histogram(data, method: str = "density", **kwargs) -> dict:
     # Grab the parameter settings required for the histogram method
     try:
         args_method = hist_method[method]["method_args"]
-    except KeyError:
-        logging.debug(
-            "Problem in %s with unrecognised histogram method '%s'",
-            method,
-        )
-        return hist_method["duff"]["labels"]
+    except KeyError as err:
+        raise ValueError(
+            f"Unrecognised histogram method: {method}\n"
+            f"Method should be one of {', '.join(hist_method.keys())}"
+        ) from err
 
     # Use the function matplotlib.pyplot.hist to plot the histogram.
     plt.hist(data, **args_method, **kwargs)
