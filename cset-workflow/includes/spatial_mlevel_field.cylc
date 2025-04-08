@@ -1,5 +1,5 @@
-{% if PLOT_SPATIAL_MODEL_LEVEL_MODEL_FIELD|default(False) %}
-{% for field in MODEL_LEVEL_MODEL_FIELDS %}
+{% if SPATIAL_MLEVEL_FIELD|default(False) %}
+{% for field in MODEL_LEVEL_FIELDS %}
 {% for model in models %}
 {% for mlevel in MODEL_LEVELS %}
 [runtime]

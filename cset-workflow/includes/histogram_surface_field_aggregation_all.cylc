@@ -1,5 +1,5 @@
-{% if DOMAIN_SURFACE_HISTOGRAM_SERIES_FIELD_CASE_AGGREGATION_ALL|default(False) %}
-{% for field in SURFACE_MODEL_FIELDS %}
+{% if HISTOGRAM_SURFACE_FIELD_AGGREGATION[3]|default(False) %}
+{% for field in SURFACE_FIELDS %}
 {% for model in models %}
 [runtime]
     [[generic_surface_histogram_series_case_aggregation_m{{model["id"]}}_{{sanitise_task_name(field)}}]]

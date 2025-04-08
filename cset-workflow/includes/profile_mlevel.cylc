@@ -1,11 +1,11 @@
-{% if DOMAIN_MEAN_SURFACE_TIME_SERIES|default(False) %}
-{% for field in SURFACE_MODEL_FIELDS %}
+{% if PROFILE_MLEVEL|default(False) %}
+{% for field in MODEL_LEVEL_FIELDS %}
 {% for model in models %}
 [runtime]
-    [[generic_surface_domain_mean_time_series_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
+    [[generic_mlevel_domain_mean_vertical_profile_series_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
     inherit = PROCESS
         [[[environment]]]
-        CSET_RECIPE_NAME = "generic_surface_domain_mean_time_series.yaml"
+        CSET_RECIPE_NAME = "generic_mlevel_domain_mean_vertical_profile_series.yaml"
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
             --MODEL_NAME='{{model["name"]}}'
