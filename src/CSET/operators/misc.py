@@ -306,6 +306,8 @@ def difference(cubes: CubeList):
         if base.long_name in [
             "eastward_wind_at_10m",
             "northward_wind_at_10m",
+            "northward_wind_at_cell_centres",
+            "eastward_wind_at_cell_centres",
             "zonal_wind_at_pressure_levels",
             "meridional_wind_at_pressure_levels",
             "potential_vorticity_at_pressure_levels",
