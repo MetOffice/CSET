@@ -1,0 +1,27 @@
+category: Surface Spatial Plot
+title: $MODEL_NAME Surface $VARNAME $STAT
+description: Extracts and plots the $STAT of surface $VARNAME across all times in $MODEL_NAME.
+
+steps:
+  - operator: read.read_cube
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: "pressure"
+        levels: []
+
+  - operator: collapse.collapse
+    coordinate: "time"
+    method: $STAT
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

@@ -1,0 +1,25 @@
+category: Model Level Spatial
+title: $MODEL_NAME $VARNAME $MLEVEL Level $STAT
+description: |
+  Extracts ands plots the $STAT of $VARNAME from a file at model level $MLEVEL.
+
+steps:
+  - operator: read.read_cubes
+    constraint:
+      operator: constraints.combine_constraints
+      variable_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      model_level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: "model_level_number"
+        levels: $MLEVEL
+
+  - operator: collapse.collapse
+    coordinate: "time"
+    method: $STAT
+
+  - operator: plot.spatial_contour_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

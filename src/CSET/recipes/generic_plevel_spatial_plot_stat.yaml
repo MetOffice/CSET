@@ -1,0 +1,25 @@
+category: Pressure Level Spatial
+title: $MODEL_NAME $VARNAME $PLEVEL Level $STAT
+description: |
+  Extracts ands plots the $STAT of $PLEVELNAME from $MODEL_NAME at pressure level $PLEVEL.
+
+steps:
+  - operator: read.read_cube
+    constraint:
+      operator: constraints.combine_constraints
+      variable_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: pressure
+        levels: $PLEVEL
+
+  - operator: collapse.collapse
+    coordinate: "time"
+    method: $STAT
+
+  - operator: plot.spatial_contour_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
