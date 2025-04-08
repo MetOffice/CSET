@@ -1,7 +1,7 @@
 category: Model Level Spatial Plot Difference
 title: Model Level $VARNAME lv$MLEVEL difference ($BASE_MODEL - $OTHER_MODEL) case aggregation by lead time
 description: |
-  Extracts and plot the difference in model level $VARNAME on $MLEVEL for all times. The cases
+  Extracts and plot the difference in $VARNAME on model level $MLEVEL for all times. The cases
   are aggregated over lead time.
 
 steps:
