@@ -762,7 +762,6 @@ def _plot_histogram(data, method: str = "density", **kwargs) -> dict:
             "method_args": {"density": False},
             "labels": {"ylabel": "Frequency"},
         },
-        "duff": {"labels": {"ylabel": None}},
     }
 
     # Grab the parameter settings required for the histogram method
