@@ -780,7 +780,7 @@ def _plot_histogram(data, method: str = "density", **kwargs) -> dict:
 
     # Return from this function _plot_histogram, passing back the
     # label to print on the y-axis of the histogram.
-    return hist_method[method.lower()]["labels"]
+    return hist_method[method]["labels"]
 
 
 def _plot_and_save_histogram_series(
