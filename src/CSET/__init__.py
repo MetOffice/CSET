@@ -115,6 +115,9 @@ def setup_argument_parser() -> argparse.ArgumentParser:
     parser_bake.add_argument(
         "--plot-resolution", type=int, help="plotting resolution in dpi"
     )
+    parser_bake.add_argument(
+        "--skip-write", action="store_true", help="Skip saving processed output"
+    )
     parser_bake.set_defaults(func=_bake_command)
 
     parser_graph = subparsers.add_parser("graph", help="visualise a recipe file")
@@ -196,13 +199,9 @@ def setup_logging(verbosity: int):
         cli_loglevel = logging.WARNING
 
     # Level from $LOGLEVEL environment variable.
-    try:
-        name_to_level = logging.getLevelNamesMapping()
-    except AttributeError:
-        # logging.getLevelNamesMapping() is python 3.11 or newer. Using
-        # implementation detail for older versions.
-        name_to_level = logging._nameToLevel
-    env_loglevel = name_to_level.get(os.getenv("LOGLEVEL"), logging.ERROR)
+    env_loglevel = logging.getLevelNamesMapping().get(
+        os.getenv("LOGLEVEL"), logging.ERROR
+    )
 
     # Logging verbosity is the most verbose of CLI and environment setting.
     loglevel = min(cli_loglevel, env_loglevel)
@@ -238,6 +237,7 @@ def _bake_command(args, unparsed_args):
         recipe_variables,
         args.style_file,
         args.plot_resolution,
+        args.skip_write,
     )
 
 

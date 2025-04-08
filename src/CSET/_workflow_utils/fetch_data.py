@@ -9,7 +9,6 @@ import logging
 import os
 import shutil
 import ssl
-import sys
 import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
@@ -144,16 +143,10 @@ class HTTPFileRetriever(FileRetrieverABC):
 
 def _get_needed_environment_variables() -> dict:
     """Load the needed variables from the environment."""
-    # Python 3.10 and older don't fully support ISO 8601 datetime formats.
-    # TODO: Remove once we drop python 3.10.
-    if sys.version_info.minor < 11:
-        _fromisoformat = isodate.parse_datetime
-    else:
-        _fromisoformat = datetime.fromisoformat
     variables = {
         "raw_path": os.environ["DATA_PATH"],
         "date_type": os.environ["DATE_TYPE"],
-        "data_time": _fromisoformat(os.environ["CYLC_TASK_CYCLE_POINT"]),
+        "data_time": datetime.fromisoformat(os.environ["CYLC_TASK_CYCLE_POINT"]),
         "forecast_length": isodate.parse_duration(os.environ["ANALYSIS_LENGTH"]),
         "forecast_offset": isodate.parse_duration(os.environ["ANALYSIS_OFFSET"]),
         "model_identifier": os.environ["MODEL_IDENTIFIER"],
