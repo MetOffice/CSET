@@ -47,6 +47,8 @@ from CSET.operators._utils import get_cube_yxcoordname, is_transect
 # Use a non-interactive plotting backend.
 mpl.use("agg")
 
+DEFAULT_DISCRETE_COLORS = mpl.colormaps['tab10'].colors + mpl.colormaps['Accent'].colors
+
 ############################
 # Private helper functions #
 ############################
@@ -177,6 +179,32 @@ def _load_colorbar_map(user_colorbar_file: str = None) -> dict:
     # Overwrite values with the user supplied colorbar definition.
     colorbar = combine_dicts(colorbar, override_colorbar)
     return colorbar
+
+
+def _get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
+    """Get an appropriate colors for model lines in line plots.
+
+    For each model in the list of cubes colors either from user provided
+    color definition file (so-called style file) or from default colors are mapped
+    to model_name attribute.
+
+    Parameters
+    ----------
+    cube: CubeList or Cube
+        Cubes with model_name attribute
+
+    Returns
+    -------
+    model_colors_map:
+        Dictionary mapping model_name attribute to colors
+    """
+    user_colorbar_file = get_recipe_metadata().get("style_file_path", None)
+    colorbar = _load_colorbar_map(user_colorbar_file)
+    model_names = [cube.attributes['model_name'] for cube in iter_maybe(cubes)]
+    use_user_colors = all([mname in colorbar.keys() for mname in model_names])
+    if use_user_colors:
+        return {mname: colorbar[mname] for mname in model_names}
+    return {mname: color for mname, color in zip(model_names, DEFAULT_DISCRETE_COLORS, strict=False)}
 
 
 def _colorbar_map_levels(cube: iris.cube.Cube):
@@ -731,10 +759,7 @@ def _plot_and_save_histogram_series(
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     ax = plt.gca()
 
-    # todo: expose color list for the user
-    colors = ['purple', 'teal', 'gold', 'red', 'forestgreen']
-    model_names = [cube.attributes['model_name'] for cube in iter_maybe(cubes)]
-    model_colors_map = {mname: color for mname, color in zip(model_names, colors, strict=False)}
+    model_colors_map = _get_model_colors_map(cubes)
 
     for i, cube in enumerate(iter_maybe(cubes)):
         # Easier to check title (where var name originates)
@@ -760,9 +785,9 @@ def _plot_and_save_histogram_series(
 
         label = None
         color = 'black'
-        if len(model_names) > 1:
-            label = model_names[i]
-            color = model_colors_map[cube.attributes['model_name']]
+        if len(model_colors_map) > 1:
+            label = cube.attributes['model_name']
+            color = model_colors_map[label]
         x, y = np.histogram(cube_data_1d, bins=bins, density=True)
         ax.plot(y[:-1], x, color=color, linewidth=2, marker="o", markersize=6, label=label)
 
@@ -776,7 +801,7 @@ def _plot_and_save_histogram_series(
 
     # Overlay grid-lines onto histogram plot.
     ax.grid(linestyle="--", color="grey", linewidth=1)
-    if len(model_names) > 1:
+    if len(model_colors_map) > 1:
         ax.legend(loc="best", ncol=1, frameon=False)
 
     # Save plot.
