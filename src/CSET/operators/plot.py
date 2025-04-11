@@ -278,6 +278,11 @@ def _get_plot_resolution() -> int:
     return get_recipe_metadata().get("plot_resolution", 100)
 
 
+def _get_histogram_method() -> str:
+    """Get method to use when computing histograms."""
+    return get_recipe_metadata().get("histogram_method", "density").lower()
+
+
 def _plot_and_save_spatial_plot(
     cube: iris.cube.Cube,
     filename: str,
@@ -704,6 +709,78 @@ def _plot_and_save_scatter_plot(
     plt.close(fig)
 
 
+def _plot_histogram(data, method: str = "density", **kwargs) -> dict:
+    """Plot a histogram using a specified method to compute the histogram.
+
+    Histograms can be computed using any of three different methods:
+
+    frequency            - This is constructed from the raw counts within each bin.
+
+    normalised_frequency - The frequency counts are normalised so that the total
+                           counts is 1.
+
+    density              - The counts per bin are normalised by both the total
+                           counts and the bin widths. The sum of the areas of the
+                           bins is 1. This is the discrete sampling analogue of
+                           the continuous probability density function.
+
+    This function returns a dictionary of plotting labels to use on the histogram plot.
+    Keys available:
+
+       "ylabel" - label for the y-axis indicating the method used to compute the histogram.
+
+
+    It is possible to specify both the range of data values to consider for the
+    histogram and the number of bins to use. Using these options will set the bin
+    width to ( value_maximum - value_minimum ) / number of bins. See the documentation
+    for matplotlib.pyplot.hist for more details at:
+    https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.hist.html
+
+    Parameters
+    ----------
+    data: array
+        Input values of the data to use for computing the histogram.
+    method: "frequency" | "normalised_frequency" | "density", optional
+        The histogram method to use. Default is "density".
+    **kwargs: optional keyword arguments used by matplotlib.pyplot.hist
+        The keywords "density" and "weights" are set by the input "method", so
+        values should not be assigned to these keywords in the call to this function.
+    """
+    # Define the parameter settings in matplotlib.pyplot.hist
+    # required to implement the histogram methods "density",
+    # "normalised frequency" and "frequency".
+    hist_method = {
+        "density": {"method_args": {"density": True}, "labels": {"ylabel": "Density"}},
+        "normalised_frequency": {
+            "method_args": {
+                "density": False,
+                "weights": 1.0 / len(data) * np.ones(len(data)),
+            },
+            "labels": {"ylabel": "Normalised frequency"},
+        },
+        "frequency": {
+            "method_args": {"density": False},
+            "labels": {"ylabel": "Frequency"},
+        },
+    }
+
+    # Grab the parameter settings required for the histogram method
+    try:
+        args_method = hist_method[method]["method_args"]
+    except KeyError as err:
+        raise ValueError(
+            f"Unrecognised histogram method: {method}\n"
+            f"Method should be one of {', '.join(hist_method.keys())}"
+        ) from err
+
+    # Use the function matplotlib.pyplot.hist to plot the histogram.
+    plt.hist(data, **args_method, **kwargs)
+
+    # Return from this function _plot_histogram, passing back the
+    # label to print on the y-axis of the histogram.
+    return hist_method[method]["labels"]
+
+
 def _plot_and_save_histogram_series(
     cubes: iris.cube.Cube | iris.cube.CubeList,
     filename: str,
@@ -752,14 +829,22 @@ def _plot_and_save_histogram_series(
         # Otherwise we plot xdim histograms stacked.
         cube_data_1d = (cube.data).flatten()
 
-    x, y = np.histogram(cube_data_1d, bins=bins, density=True)
-    ax.plot(y[:-1], x, color="black", linewidth=2, marker="o", markersize=6)
+    # Plot the histogram.
+    y = _plot_histogram(
+        cube_data_1d,
+        method=_get_histogram_method(),
+        bins=bins,
+        color="black",
+        linewidth=2,
+        histtype="step",
+        label=f"{bins} bins",
+    )
 
     # Add some labels and tweak the style.
     ax.set(
         title=title,
         xlabel=f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}",
-        ylabel="normalised probability density",
+        ylabel=y["ylabel"],
         xlim=(vmin, vmax),
     )
 

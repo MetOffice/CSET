@@ -113,6 +113,10 @@ def run_recipe_steps():
     if skip_write:
         command.append("--skip-write")
 
+    histogram_method = os.getenv("HISTOGRAM_METHOD")
+    if histogram_method:
+        command.append(f"--histogram-method={histogram_method}")
+
     logging.info("Running %s", shlex.join(command))
     try:
         subprocess.run(command, check=True, env=subprocess_env())
