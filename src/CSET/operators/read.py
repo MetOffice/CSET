@@ -238,7 +238,6 @@ def _create_callback(is_ensemble: bool, is_base: bool) -> callable:
         _lfric_normalise_varname(cube)
         _fix_um_radtime_prehour(cube)
         _fix_um_radtime_posthour(cube)
-        _fix_lfric_longnames(cube)
         _fix_um_lightning(cube)
         _lfric_time_callback(cube)
         _lfric_forecast_period_standard_name_callback(cube)
@@ -497,15 +496,6 @@ def _fix_um_radtime_prehour(cube: iris.cube.Cube):
 
             # Replace the time coordinate with corrected values
             time_coord.points = new_time_values
-    except KeyError:
-        pass
-
-
-def _fix_lfric_longnames(cube: iris.cube.Cube):
-    """To fix names where the long name is appropriate."""
-    try:
-        if str(cube.long_name) == "combined_cloud_amount_maximum_random_overlap":
-            cube.rename("combined_cloud_amount_maximum_random_overlap")
     except KeyError:
         pass
 
