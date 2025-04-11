@@ -278,9 +278,9 @@ def _get_plot_resolution() -> int:
     return get_recipe_metadata().get("plot_resolution", 100)
 
 
-def _get_histogram_method_surface() -> str:
+def _get_histogram_method() -> str:
     """Get method to use when computing histograms."""
-    return get_recipe_metadata().get("histogram_method_surface", "density").lower()
+    return get_recipe_metadata().get("histogram_method", "density").lower()
 
 
 def _plot_and_save_spatial_plot(
@@ -832,7 +832,7 @@ def _plot_and_save_histogram_series(
     # Plot the histogram.
     y = _plot_histogram(
         cube_data_1d,
-        method=_get_histogram_method_surface(),
+        method=_get_histogram_method(),
         bins=bins,
         color="black",
         linewidth=2,

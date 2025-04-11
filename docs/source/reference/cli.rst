@@ -27,7 +27,7 @@ page.
                             colour bar definition to use
     --plot-resolution PLOT_RESOLUTION
                             plotting resolution in dpi
-    --histogram-method-surface HISTOGRAM_METHOD_SURFACE
+    --histogram-method HISTOGRAM_METHOD
                             histogram method to use i.e. frequency, normalised_frequency or density
 
 Here is an example to run a recipe making use of the templated variable ``VARNAME`` in the recipe.

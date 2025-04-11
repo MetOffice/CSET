@@ -113,9 +113,9 @@ def run_recipe_steps():
     if skip_write:
         command.append("--skip-write")
 
-    histogram_method_surface = os.getenv("HISTOGRAM_METHOD_SURFACE")
-    if histogram_method_surface:
-        command.append(f"--histogram-method-surface={histogram_method_surface}")
+    histogram_method = os.getenv("HISTOGRAM_METHOD")
+    if histogram_method:
+        command.append(f"--histogram-method={histogram_method}")
 
     logging.info("Running %s", shlex.join(command))
     try:
