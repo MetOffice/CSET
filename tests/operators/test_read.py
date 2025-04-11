@@ -496,22 +496,58 @@ def test_spatial_coord_not_exist_callback():
     )
 
 
-def test_lfric_timecoord_fix_forecastperiod(slammed_lfric_cube):
-    """Check that read callback creates an appropriate forecast_period dimension."""
-    read._lfric_time_callback(slammed_lfric_cube)
-    assert (
-        repr(slammed_lfric_cube.coord("forecast_period"))
-        == "<AuxCoord: forecast_period / (seconds)  [3600., ...]  shape(6,)>"
-    )
-
-
-def test_lfric_timecoord_fix_forecastreftime(slammed_lfric_cube):
+def test_lfric_time_callback_forecast_reference_time(slammed_lfric_cube):
     """Check that read callback creates an appropriate forecast_reference_time coord."""
+    slammed_lfric_cube.remove_coord("forecast_reference_time")
+    assert not slammed_lfric_cube.coords("forecast_reference_time")
+    slammed_lfric_cube.coord("time").attributes["time_origin"] = "2022-01-01 00:00:00"
+
     read._lfric_time_callback(slammed_lfric_cube)
-    assert (
-        repr(slammed_lfric_cube.coord("forecast_reference_time"))
-        == "<DimCoord: forecast_reference_time / (seconds since 2022-01-01 00:00:00)  [...]>"
-    )
+
+    ref_time_coord = slammed_lfric_cube.coord("forecast_reference_time")
+    assert ref_time_coord.standard_name == "forecast_reference_time"
+    assert ref_time_coord.long_name == "forecast_reference_time"
+    assert ref_time_coord.var_name is None
+    assert str(ref_time_coord.units) == "seconds since 2022-01-01 00:00:00"
+    assert all(ref_time_coord.points == [0])
+
+
+def test_lfric_time_callback_forecast_period(slammed_lfric_cube):
+    """Check that read callback creates an appropriate forecast_period dimension."""
+    slammed_lfric_cube.remove_coord("forecast_period")
+    assert not slammed_lfric_cube.coords("forecast_period")
+
+    read._lfric_time_callback(slammed_lfric_cube)
+
+    fc_period_coord = slammed_lfric_cube.coord("forecast_period")
+    assert fc_period_coord.standard_name == "forecast_period"
+    assert fc_period_coord.long_name == "forecast_period"
+    assert fc_period_coord.var_name is None
+    assert str(fc_period_coord.units) == "seconds"
+    assert all(fc_period_coord.points == [3600, 7200, 10800, 14400, 18000, 21600])
+
+
+def test_lfric_time_callback_hours(slammed_lfric_cube):
+    """Check hours are set as forecast_period units."""
+    slammed_lfric_cube.remove_coord("forecast_period")
+    assert not slammed_lfric_cube.coords("forecast_period")
+    slammed_lfric_cube.coord("time").convert_units("hours since 1970-01-01 00:00:00")
+
+    read._lfric_time_callback(slammed_lfric_cube)
+
+    fc_period_coord = slammed_lfric_cube.coord("forecast_period")
+    assert str(fc_period_coord.units) == "hours"
+    assert all(fc_period_coord.points == [1, 2, 3, 4, 5, 6])
+
+
+def test_lfric_time_callback_unknown_units(slammed_lfric_cube):
+    """Error when forecast_period units cannot be determined."""
+    slammed_lfric_cube.remove_coord("forecast_period")
+    assert not slammed_lfric_cube.coords("forecast_period")
+    slammed_lfric_cube.coord("time").convert_units("days since 1970-01-01 00:00:00")
+
+    with pytest.raises(ValueError, match="Unrecognised base time unit:"):
+        read._lfric_time_callback(slammed_lfric_cube)
 
 
 def test_lfric_normalise_varname(model_level_cube):
