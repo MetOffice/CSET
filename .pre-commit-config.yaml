@@ -8,12 +8,9 @@ repos:
     rev: 63c8f8312b7559622c0d82815639671ae42132ac  # frozen: v2.4.1
     hooks:
       - id: codespell
-        # Additional dependency needed until Python 3.11 is our minimum version.
-        additional_dependencies:
-          - tomli
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 25a8c8da6c24a3b9a1a536e2674683dd0eead5d6  # frozen: v0.11.2
+    rev: 8304991d8f6fe14b2c347b1fa35f3eef713446ae  # frozen: v0.11.5
     hooks:
       - id: ruff
         args: [--fix, --show-fixes, --exit-non-zero-on-fix]

@@ -1,4 +1,4 @@
-{% if DOMAIN_SURFACE_HISTOGRAM_SERIES_FIELD_CASE_AGGREGATION|default(False) %}
+{% if DOMAIN_SURFACE_HISTOGRAM_SERIES_FIELD_CASE_AGGREGATION_ALL|default(False) %}
 {% if MULTIMODEL|default(False) %}
 {% for field in SURFACE_MODEL_FIELDS %}
 [runtime]

@@ -2,7 +2,7 @@
 {% for field in MODEL_LEVEL_MODEL_FIELDS %}
 {% for model in models %}
 [runtime]
-    [[generic_mlevel_domain_mean_vertical_profile_series_case_aggregation_by_lead_time_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
+    [[generic_mlevel_domain_mean_vertical_profile_series_case_aggregation_lead_time_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
     inherit = PROCESS_CASE_AGGREGATION
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_mlevel_domain_mean_vertical_profile_series_case_aggregation_lead_time.yaml"

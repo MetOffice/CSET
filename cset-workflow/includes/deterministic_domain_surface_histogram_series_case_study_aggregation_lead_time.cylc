@@ -19,7 +19,7 @@
 {% for field in SURFACE_MODEL_FIELDS %}
 {% for model in models %}
 [runtime]
-    [[generic_surface_histogram_series_case_aggregation_by_lead_time_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
+    [[generic_surface_histogram_series_case_aggregation_lead_time_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
     inherit = PROCESS_CASE_AGGREGATION
         [[[directives]]]
         --mem=5000

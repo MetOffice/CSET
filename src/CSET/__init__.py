@@ -199,13 +199,9 @@ def setup_logging(verbosity: int):
         cli_loglevel = logging.WARNING
 
     # Level from $LOGLEVEL environment variable.
-    try:
-        name_to_level = logging.getLevelNamesMapping()
-    except AttributeError:
-        # logging.getLevelNamesMapping() is python 3.11 or newer. Using
-        # implementation detail for older versions.
-        name_to_level = logging._nameToLevel
-    env_loglevel = name_to_level.get(os.getenv("LOGLEVEL"), logging.ERROR)
+    env_loglevel = logging.getLevelNamesMapping().get(
+        os.getenv("LOGLEVEL"), logging.ERROR
+    )
 
     # Logging verbosity is the most verbose of CLI and environment setting.
     loglevel = min(cli_loglevel, env_loglevel)
