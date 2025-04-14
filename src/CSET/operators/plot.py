@@ -204,7 +204,7 @@ def _get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
     use_user_colors = all([mname in colorbar.keys() for mname in model_names])
     if use_user_colors:
         return {mname: colorbar[mname] for mname in model_names}
-    return {mname: color for mname, color in zip(model_names, DEFAULT_DISCRETE_COLORS, strict=False)}
+    return {mname: color for mname, color in zip(sorted(model_names), DEFAULT_DISCRETE_COLORS, strict=False)}
 
 
 def _colorbar_map_levels(cube: iris.cube.Cube):
