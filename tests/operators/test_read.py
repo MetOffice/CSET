@@ -562,3 +562,46 @@ def test_lfric_forecast_period_standard_name_callback(cube):
     cube.coord("forecast_period").standard_name = None
     read._lfric_forecast_period_standard_name_callback(cube)
     assert cube.coord("forecast_period").standard_name == "forecast_period"
+
+
+def test_read_cubes_extract_subarea():
+    """Read cube and ensure appropriate subarea is extracted."""
+    # All cubes are on same grid, and vary by cell method.
+    cube = read.read_cubes("tests/test_data/air_temp.nc")[0]
+    assert (
+        repr(cube.coord("grid_latitude").coord_system)
+        == "RotatedGeogCS(37.5, 177.5, ellipsoid=GeogCS(6371229.0))"
+    )
+    assert round(cube.coord("grid_latitude").points[0], 2) == -3.76
+    assert round(cube.coord("grid_latitude").points[-1], 2) == 7.04
+    assert round(cube.coord("grid_longitude").points[0], 2) == -5.06
+    assert round(cube.coord("grid_longitude").points[-1], 2) == 3.04
+
+    # Now load the cube and extract model relative latitude bound -2 to 0, and longitude bound -2 to 0
+    # The data is coarse, so the intersection will bring the nearest grid point to the cutout, hence
+    # edge coordinates do not match bounds.
+    cube_mr = read.read_cubes(
+        "tests/test_data/air_temp.nc",
+        SUBAREA_TYPE="modelrelative",
+        SUBAREA_EXTENT=[-2, 0, -2, 0],
+    )[0]
+
+    # Repeat for real world coordinates, using latitude bound 50.5 to 52.5 and longitude bound -4.5 to -2.5
+    # We know from above the rotated pole is 37.5N, so we need to add 52.5 to the model relative latitudes
+    # to extract the same latitude band.
+    cube_rw = read.read_cubes(
+        "tests/test_data/air_temp.nc",
+        SUBAREA_TYPE="realworld",
+        SUBAREA_EXTENT=[50.5, 52.5, -4.5, -2.5],
+    )[0]
+
+    # Compare the latitude coordinates to check its extracted same region. We use latitude as there is little
+    # difference in spacing from the equator to pole, but longitude varies (converges to zero at pole)
+    assert (
+        cube_mr.coord("grid_latitude").points[0].all()
+        == cube_rw.coord("grid_latitude").points[0].all()
+    )
+    assert (
+        cube_mr.coord("grid_latitude").points[-1].all()
+        == cube_rw.coord("grid_latitude").points[-1].all()
+    )
