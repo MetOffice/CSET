@@ -291,7 +291,6 @@ def _create_callback(
         _lfric_normalise_varname(cube)
         _fix_um_radtime_prehour(cube)
         _fix_um_radtime_posthour(cube)
-        _fix_lfric_longnames(cube)
         _fix_um_lightning(cube)
         _lfric_time_callback(cube)
         _lfric_forecast_period_standard_name_callback(cube)
@@ -514,10 +513,12 @@ def _fix_um_radtime_posthour(cube: iris.cube.Cube):
             time_unit = time_coord.units
             time_points = time_unit.num2date(time_coord.points)
 
+            # Skip if times don't need fixing.
+            if time_points[0].minute != 1:
+                return
+
             # Subtract 1 minute from each time point
-            new_time_points = np.array(
-                [t - datetime.timedelta(minutes=1) for t in time_points]
-            )
+            new_time_points = time_points - datetime.timedelta(minutes=1)
 
             # Convert back to numeric values using the original time unit
             new_time_values = time_unit.date2num(new_time_points)
@@ -538,6 +539,10 @@ def _fix_um_radtime_prehour(cube: iris.cube.Cube):
             time_unit = time_coord.units
             time_points = time_unit.num2date(time_coord.points)
 
+            # Skip if times don't need fixing.
+            if time_points[0].minute != 59:
+                return
+
             # Add 1 minute from each time point
             new_time_points = np.array(
                 [t + datetime.timedelta(minutes=1) for t in time_points]
@@ -552,15 +557,6 @@ def _fix_um_radtime_prehour(cube: iris.cube.Cube):
         pass
 
 
-def _fix_lfric_longnames(cube: iris.cube.Cube):
-    """To fix names where the long name is appropriate."""
-    try:
-        if str(cube.long_name) == "combined_cloud_amount_maximum_random_overlap":
-            cube.rename("combined_cloud_amount_maximum_random_overlap")
-    except KeyError:
-        pass
-
-
 def _fix_um_lightning(cube: iris.cube.Cube):
     """To fix the date points in lightning accumulation STASH.
 
@@ -570,28 +566,28 @@ def _fix_um_lightning(cube: iris.cube.Cube):
     as variables are ignored with cell methods for surface plots currently),
     and also adjust the time so that the value is at the end of each hour.
     """
-    try:
-        if cube.attributes["STASH"] == "m01s21i104":
-            cube.cell_methods = []
+    if cube.attributes.get("STASH") == "m01s21i104":
+        # Remove aggregation cell method.
+        cube.cell_methods = ()
 
-            time_coord = cube.coord("time")
+        time_coord = cube.coord("time")
 
-            # Convert time points to datetime objects
-            time_unit = time_coord.units
-            time_points = time_unit.num2date(time_coord.points)
+        # Convert time points to datetime objects.
+        time_unit = time_coord.units
+        time_points = time_unit.num2date(time_coord.points)
 
-            # Subtract 1 minute from each time point
-            new_time_points = np.array(
-                [t + datetime.timedelta(minutes=30) for t in time_points]
-            )
+        # Skip if times don't need fixing.
+        if time_points[0].minute == 0:
+            return
 
-            # Convert back to numeric values using the original time unit
-            new_time_values = time_unit.date2num(new_time_points)
+        # Add 30 minutes to each time point.
+        new_time_points = time_points + datetime.timedelta(minutes=30)
 
-            # Replace the time coordinate with corrected values
-            time_coord.points = new_time_values
-    except KeyError:
-        pass
+        # Convert back to numeric values using the original time unit.
+        new_time_values = time_unit.date2num(new_time_points)
+
+        # Replace the time coordinate with corrected values.
+        time_coord.points = new_time_values
 
 
 def _lfric_normalise_varname(cube: iris.cube.Cube):
@@ -617,71 +613,64 @@ def _lfric_time_callback(cube: iris.cube.Cube):
     -----
     Some parts of the code have been adapted from Paul Earnshaw's scripts.
     """
-    # See what coordinates exist in cube
-    coord_names = [coord.name() for coord in cube.coords()]
-
-    # Construct forecast_reference time and forecast_period if they dont exist.
-    if "time" in coord_names:
+    # Construct forecast_reference time if it doesn't exist.
+    try:
         tcoord = cube.coord("time")
-        if (
-            "forecast_reference_time" not in coord_names
-            and "time_origin" in tcoord.attributes
-        ):
+        if not cube.coords("forecast_reference_time"):
             try:
                 init_time = datetime.datetime.fromisoformat(
-                    cube.coord("time").attributes["time_origin"]
+                    tcoord.attributes["time_origin"]
                 )
-                time_unit = cube.coord("time").units
-                frt_point = time_unit.date2num(init_time)
-
+                frt_point = tcoord.units.date2num(init_time)
                 frt_coord = iris.coords.AuxCoord(
                     frt_point,
                     units=tcoord.units,
                     standard_name="forecast_reference_time",
+                    long_name="forecast_reference_time",
                 )
                 cube.add_aux_coord(frt_coord)
             except KeyError:
-                logging.info(
-                    "Cannot find forecast_reference_time, but not enough information to construct it."
+                logging.warning(
+                    "Cannot find forecast_reference_time, but no `time_origin` attribute to construct it from."
                 )
+
         # Remove time_origin to allow multiple case studies to merge.
         tcoord.attributes.pop("time_origin", None)
 
-    # Regenerate coordinates list from cube
-    coord_names = [coord.name() for coord in cube.coords()]
+        # Construct forecast_period axis (forecast lead time) if it doesn't exist.
+        if not cube.coords("forecast_period"):
+            try:
+                # Create array of forecast lead times.
+                init_coord = cube.coord("forecast_reference_time")
+                init_time_points_in_tcoord_units = tcoord.units.date2num(
+                    init_coord.units.num2date(init_coord.points)
+                )
+                lead_times = tcoord.points - init_time_points_in_tcoord_units
 
-    # Construct forecast_period axis (leadtime) if doesn't exist.
-    if "forecast_period" not in coord_names:
-        if "time" in coord_names and "forecast_reference_time" in coord_names:
-            # Get time coordinate and forecast_reference_time
-            tcoord = cube.coord("time")
-            init = cube.coord("forecast_reference_time")
+                # Get unit for lead time from time coordinate's unit.
+                if "seconds" in str(tcoord.units):
+                    units = "seconds"
+                elif "hours" in str(tcoord.units):
+                    units = "hours"
+                else:
+                    raise ValueError(f"Unrecognised base time unit: {tcoord.units}")
 
-            # Create array of forecast leadtimes.
-            lead_times = tcoord.points - init.points
-            if "seconds" in str(tcoord.units):
-                units = "seconds"
-            elif "hours" in str(tcoord.units):
-                units = "hours"
-            else:
-                raise ValueError(f"Not a recognised base time unit {str(tcoord.units)}")
+                # Create lead time coordinate.
+                lead_time_coord = iris.coords.AuxCoord(
+                    lead_times,
+                    standard_name="forecast_period",
+                    long_name="forecast_period",
+                    units=units,
+                )
 
-            # Create new axis object.
-            lead_time_coord = iris.coords.AuxCoord(
-                lead_times,
-                standard_name="forecast_period",
-                long_name="forecast_period",
-                units=units,
-            )
-
-            # Associate lead time dimension with coordinate time.
-            time_dim = cube.coord_dims("time")
-            cube.add_aux_coord(lead_time_coord, time_dim)
-
-        else:
-            logging.info(
-                "No time coordinate or forecast_reference_time, so cannot construct forecast_period"
-            )
+                # Associate lead time coordinate with time dimension.
+                cube.add_aux_coord(lead_time_coord, cube.coord_dims("time"))
+            except iris.exceptions.CoordinateNotFoundError:
+                logging.warning(
+                    "Cube does not have both time and forecast_reference_time coordinate, so cannot construct forecast_period"
+                )
+    except iris.exceptions.CoordinateNotFoundError:
+        logging.warning("No time coordinate on cube.")
 
 
 def _lfric_forecast_period_standard_name_callback(cube: iris.cube.Cube):
