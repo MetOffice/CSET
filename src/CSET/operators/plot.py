@@ -47,7 +47,7 @@ from CSET.operators._utils import get_cube_yxcoordname, is_transect
 # Use a non-interactive plotting backend.
 mpl.use("agg")
 
-DEFAULT_DISCRETE_COLORS = mpl.colormaps['tab10'].colors + mpl.colormaps['Accent'].colors
+DEFAULT_DISCRETE_COLORS = mpl.colormaps["tab10"].colors + mpl.colormaps["Accent"].colors
 
 ############################
 # Private helper functions #
@@ -200,11 +200,16 @@ def _get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
     """
     user_colorbar_file = get_recipe_metadata().get("style_file_path", None)
     colorbar = _load_colorbar_map(user_colorbar_file)
-    model_names = [cube.attributes['model_name'] for cube in iter_maybe(cubes)]
+    model_names = [cube.attributes["model_name"] for cube in iter_maybe(cubes)]
     use_user_colors = all([mname in colorbar.keys() for mname in model_names])
     if use_user_colors:
         return {mname: colorbar[mname] for mname in model_names}
-    return {mname: color for mname, color in zip(sorted(model_names), DEFAULT_DISCRETE_COLORS, strict=False)}
+    return {
+        mname: color
+        for mname, color in zip(
+            sorted(model_names), DEFAULT_DISCRETE_COLORS, strict=False
+        )
+    }
 
 
 def _colorbar_map_levels(cube: iris.cube.Cube):
@@ -761,7 +766,7 @@ def _plot_and_save_histogram_series(
 
     model_colors_map = _get_model_colors_map(cubes)
 
-    for i, cube in enumerate(iter_maybe(cubes)):
+    for cube in iter_maybe(cubes):
         # Easier to check title (where var name originates)
         # than seeing if long names exist etc.
         # Exception case, where distribution better fits log scales/bins.
@@ -784,12 +789,14 @@ def _plot_and_save_histogram_series(
         cube_data_1d = (cube.data).flatten()
 
         label = None
-        color = 'black'
+        color = "black"
         if len(model_colors_map) > 1:
-            label = cube.attributes['model_name']
+            label = cube.attributes["model_name"]
             color = model_colors_map[label]
         x, y = np.histogram(cube_data_1d, bins=bins, density=True)
-        ax.plot(y[:-1], x, color=color, linewidth=2, marker="o", markersize=6, label=label)
+        ax.plot(
+            y[:-1], x, color=color, linewidth=2, marker="o", markersize=6, label=label
+        )
 
     # Add some labels and tweak the style.
     ax.set(
@@ -1515,16 +1522,22 @@ def plot_histogram_series(
     # Internal plotting function.
     plotting_func = _plot_and_save_histogram_series
 
-    model_names = list(filter(lambda x: x is not None,
-                         set([cube.attributes.get("model_name", None) for cube in cubes])))
+    model_names = list(
+        filter(
+            lambda x: x is not None,
+            set([cube.attributes.get("model_name", None) for cube in cubes]),
+        )
+    )
     if not model_names:
         raise ValueError("Missing model names. Please provide them.")
 
     num_models = len(model_names)
 
     if isinstance(cubes, iris.cube.CubeList) and len(cubes) != num_models:
-        raise ValueError(f"There are {num_models:d} models provided, so histogram plot can only plot"
-                         f" {num_models:d} cubes.")
+        raise ValueError(
+            f"There are {num_models:d} models provided, so histogram plot can only plot"
+            f" {num_models:d} cubes."
+        )
 
     # If several histograms are plotted with time as sequence_coordinate for the
     # time slider option.
@@ -1540,7 +1553,7 @@ def plot_histogram_series(
     levels = None
     for cube in cubes:
         _, levels, _ = _colorbar_map_levels(cube)
-        logging.debug(f'levels: {levels}')
+        logging.debug(f"levels: {levels}")
         if levels is not None:
             vmin = min(levels)
             vmax = max(levels)
@@ -1556,8 +1569,8 @@ def plot_histogram_series(
     # -- model_names are ignored, that is stamp plots are produced per single model only
     if num_models == 1:
         if (
-                stamp_coordinate in [c.name() for c in cubes[0].coords()]
-                and cubes[0].coord(stamp_coordinate).shape[0] > 1
+            stamp_coordinate in [c.name() for c in cubes[0].coords()]
+            and cubes[0].coord(stamp_coordinate).shape[0] > 1
         ):
             if single_plot:
                 plotting_func = (
@@ -1567,12 +1580,20 @@ def plot_histogram_series(
                 plotting_func = _plot_and_save_postage_stamp_histogram_series
         cube_iterables = cubes[0].slices_over(sequence_coordinate)
     else:
-        all_points = sorted(set(chain(*[cb.coord(sequence_coordinate).points for cb in cubes])))
+        all_points = sorted(
+            set(chain(*[cb.coord(sequence_coordinate).points for cb in cubes]))
+        )
         all_slices = list(chain(*[cb.slices_over(sequence_coordinate) for cb in cubes]))
         # matched slices (matched by seq coord point; it may happen that evaluated models do not cover
         # the same seq coord range)
         cube_iterables = [
-            iris.cube.CubeList([s for s in all_slices if s.coord(sequence_coordinate).points[0] == point])
+            iris.cube.CubeList(
+                [
+                    s
+                    for s in all_slices
+                    if s.coord(sequence_coordinate).points[0] == point
+                ]
+            )
             for point in all_points
         ]
 
