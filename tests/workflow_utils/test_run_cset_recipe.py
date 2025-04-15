@@ -16,7 +16,6 @@
 
 import os
 import subprocess
-import zipfile
 from pathlib import Path
 
 import pytest
@@ -101,21 +100,6 @@ def test_data_directories_multiple_cases(monkeypatch):
     assert actual == expected
 
 
-def test_create_diagnostic_archive(tmp_path):
-    """Create ZIP archive of output."""
-    # Create dummy output files.
-    files = {"one", "two", "three"}
-    for filename in files:
-        (tmp_path / filename).touch()
-
-    run_cset_recipe.create_diagnostic_archive(tmp_path)
-    archive_path = tmp_path / "diagnostic.zip"
-    assert archive_path.is_file()
-    with zipfile.ZipFile(archive_path, "r") as archive:
-        # Check all files are now in archive.
-        assert set(archive.namelist()) == files
-
-
 def test_entrypoint(monkeypatch):
     """Check that run_cset_recipe.run() calls the correct function."""
     function_ran = False
@@ -151,7 +135,6 @@ def test_run_recipe_steps(monkeypatch, tmp_working_dir):
         return [""]
 
     monkeypatch.setattr(subprocess, "run", mock_func)
-    monkeypatch.setattr(run_cset_recipe, "create_diagnostic_archive", mock_func)
     monkeypatch.setattr(run_cset_recipe, "recipe_file", mock_func)
     monkeypatch.setattr(run_cset_recipe, "output_directory", mock_func)
     monkeypatch.setattr(run_cset_recipe, "data_directories", mock_data_dirs)
@@ -171,7 +154,6 @@ def test_run_recipe_steps_exception(monkeypatch, tmp_working_dir):
         return [""]
 
     monkeypatch.setattr(subprocess, "run", mock_subprocess_run)
-    monkeypatch.setattr(run_cset_recipe, "create_diagnostic_archive", mock_func)
     monkeypatch.setattr(run_cset_recipe, "recipe_file", mock_func)
     monkeypatch.setattr(run_cset_recipe, "output_directory", mock_func)
     monkeypatch.setattr(run_cset_recipe, "data_directories", mock_data_dirs)

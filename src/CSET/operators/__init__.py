@@ -18,6 +18,7 @@ import inspect
 import json
 import logging
 import os
+import zipfile
 from pathlib import Path
 
 from iris import FUTURE
@@ -143,6 +144,18 @@ def _step_parser(step: dict, step_input: any) -> str:
         return operator(**kwargs)
 
 
+def create_diagnostic_archive(output_directory: Path):
+    """Create archive for easy download of plots and data."""
+    archive_path = output_directory / "diagnostic.zip"
+    with zipfile.ZipFile(
+        archive_path, "w", compression=zipfile.ZIP_DEFLATED
+    ) as archive:
+        for file in output_directory.rglob("*"):
+            # Check the archive doesn't add itself.
+            if not file.samefile(archive_path):
+                archive.write(file, arcname=file.relative_to(output_directory))
+
+
 def execute_recipe(
     recipe_yaml: Path | str,
     input_directories: list[str],
@@ -223,7 +236,9 @@ def execute_recipe(
         # Execute the recipe.
         for step in steps:
             step_input = _step_parser(step, step_input)
+        logger.info("Recipe output:\n%s", step_input)
 
-        logging.info("Recipe output:\n%s", step_input)
+        logger.info("Creating diagnostic archive.")
+        create_diagnostic_archive(output_directory)
     finally:
         os.chdir(original_working_directory)
