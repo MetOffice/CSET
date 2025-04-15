@@ -1,5 +1,5 @@
 {% if EXTRACT_MLEVEL_TRANSECT|default(False) %}
-{% for field in MODEL_LEVEL_MODEL_FIELDS %}
+{% for field in MODEL_LEVEL_FIELDS %}
 {% for model in models %}
 [runtime]
     [[mlevel_transect_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
