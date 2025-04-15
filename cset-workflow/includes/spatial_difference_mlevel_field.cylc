@@ -1,15 +1,15 @@
-{% if SPATIAL_MLEVEL_DIFFERENCE_CASE_AGGREGATION_HOUR_OF_DAY|default(False) %}
+{% if SPATIAL_MLEVEL_DIFFERENCE|default(False) %}
 # Models are listed in order, so model 1 is the first element.
 {% set base_model = models[0] %}
 # As we use model 1 as the base model we skip it here.
 {% for model in models[1:] %}
-{% for field in MODEL_LEVEL_MODEL_FIELDS %}
+{% for field in MODEL_LEVEL_FIELDS %}
 {% for mlevel in MODEL_LEVELS %}
 [runtime]
-    [[spatial_mlevel_difference_case_aggregation_mean_hour_of_day_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(mlevel)}}]]
-    inherit = PROCESS_CASE_AGGREGATION
+    [[spatial_mlevel_difference_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(mlevel)}}]]
+    inherit = PROCESS
         [[[environment]]]
-        CSET_RECIPE_NAME = "mlevel_spatial_difference_case_aggregation_mean_hour_of_day.yaml"
+        CSET_RECIPE_NAME = "mlevel_spatial_difference.yaml"
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
             --MLEVEL='{{mlevel}}'

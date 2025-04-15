@@ -1,8 +1,8 @@
-category: Model Level Spatial Plot Difference
-title: Model Level $VARNAME lv$MLEVEL difference ($BASE_MODEL - $OTHER_MODEL) case aggregation by validity time
+category: Pressure Level Spatial Plot Difference
+title: Pressure $VARNAME $PLEVEL difference ($BASE_MODEL - $OTHER_MODEL) case aggregation by hour of day
 description: |
-  Extracts and plot the difference in $VARNAME on model level $MLEVEL for all times. The cases
-  are aggregated over validity time.
+  Extracts and plot the difference in $VARNAME on pressure level $PLEVEL for all times. The cases
+  are aggregated over hour of day.
 
 steps:
   - operator: read.read_cubes
@@ -16,18 +16,18 @@ steps:
         cell_methods: []
       model_level_constraint:
         operator: constraints.generate_level_constraint
-        coordinate: "model_level_number"
-        levels: $MLEVEL
+        coordinate: "pressure"
+        levels: $PLEVEL
 
   - operator: aggregate.ensure_aggregatable_across_cases
 
-  - operator: collapse.collapse_by_validity_time
+  - operator: collapse.collapse_by_hour_of_day
     method: MEAN
 
   - operator: misc.difference
 
   - operator: plot.spatial_pcolormesh_plot
-    sequence_coordinate: time
+    sequence_coordinate: hour
 
   - operator: write.write_cube_to_nc
     overwrite: True
