@@ -8,10 +8,6 @@ URL = https://metoffice.github.io/CSET
 {% from "jinja_utils" import get_models, glob, max, min, zip, sanitise_task_name %}
 # Load a list a model detail dictionaries.
 {% set models = get_models(ROSE_SUITE_VARIABLES) %}
-# Create a list of plot types.
-{% set PTYPES = ["SPATIAL", "SPATIAL_DIFFERENCE", "TIMESERIES", "HISTOGRAM"] %}
-# Create a list of diagnostic types.
-{% set DTYPES = ["SURFACE", "PLEVEL", "MLEVEL"] %}
 # Create a list of case aggregation types.
 {% set AGGREGATION_TYPES = ["LEAD_TIME", "HOUR_OF_DAY", "VALIDITY_TIME"] %}
 
