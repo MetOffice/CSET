@@ -91,9 +91,8 @@ def setup_argument_parser() -> argparse.ArgumentParser:
         "--input-dir",
         type=str,
         action="extend",
-        required=True,
         nargs="+",
-        help="directories containing input data. May contain wildcards",
+        help="Alternate way to set the INPUT_PATHS recipe variable",
     )
     parser_bake.add_argument(
         "-o",
@@ -226,13 +225,21 @@ def setup_logging(verbosity: int):
 
 
 def _bake_command(args, unparsed_args):
-    from CSET._common import parse_variable_options
+    from CSET._common import iter_maybe, parse_variable_options
     from CSET.operators import execute_recipe
+
+    # Convert --input_dir=... to INPUT_PATHS recipe variable.
+    if args.input_dir:
+        # Make paths absolute.
+        abs_paths = [
+            p if p.startswith("/") else f"{os.getcwd()}/{p}"
+            for p in iter_maybe(args.input_dir)
+        ]
+        unparsed_args.append(f"--INPUT_PATHS={abs_paths}")
 
     recipe_variables = parse_variable_options(unparsed_args)
     execute_recipe(
         args.recipe,
-        args.input_dir,
         args.output_dir,
         recipe_variables,
         args.style_file,
