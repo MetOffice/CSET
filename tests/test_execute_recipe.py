@@ -70,26 +70,35 @@ def test_execute_recipe_invalid_output_dir(tmp_path: Path):
         CSET.operators.execute_recipe(recipe, input_file, output_dir)
 
 
-def test_run_steps_style_file_metadata_written(tmp_path: Path):
+def test_execute_recipe_style_file_metadata_written(tmp_path: Path):
     """Style file path metadata written out."""
     style_file_path = "/test/style_file_path.json"
-    CSET.operators._run_steps({}, [], "", tmp_path, Path(style_file_path))
+    CSET.operators.execute_recipe(
+        '{"steps":[{"operator": misc.noop}]}',
+        [],
+        tmp_path,
+        style_file=Path(style_file_path),
+    )
     with open(tmp_path / "meta.json", "rb") as fp:
         metadata = json.load(fp)
     assert metadata["style_file_path"] == style_file_path
 
 
-def test_run_steps_plot_resolution_metadata_written(tmp_path: Path):
+def test_execute_recipe_plot_resolution_metadata_written(tmp_path: Path):
     """Style file path metadata written out."""
-    CSET.operators._run_steps({}, [], "", tmp_path, plot_resolution=72)
+    CSET.operators.execute_recipe(
+        '{"steps":[{"operator": misc.noop}]}', [], tmp_path, plot_resolution=72
+    )
     with open(tmp_path / "meta.json", "rb") as fp:
         metadata = json.load(fp)
     assert metadata["plot_resolution"] == 72
 
 
-def test_run_steps_skip_write_metadata_written(tmp_path: Path):
+def test_execute_recipe_skip_write_metadata_written(tmp_path: Path):
     """Skip write metadata written out."""
-    CSET.operators._run_steps({}, [], "", tmp_path, skip_write=True)
+    CSET.operators.execute_recipe(
+        '{"steps":[{"operator": misc.noop}]}', [], tmp_path, skip_write=True
+    )
     with open(tmp_path / "meta.json", "rb") as fp:
         metadata = json.load(fp)
     assert metadata["skip_write"]
