@@ -25,7 +25,6 @@ from uuid import uuid4
 import pytest
 
 import CSET
-import CSET.operators
 
 
 def test_command_line_invocation():

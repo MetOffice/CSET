@@ -38,19 +38,15 @@ class NoDataWarning(UserWarning):
 
 
 def read_cube(
-    loadpath: list[str] | str,
+    file_paths: list[str] | str,
     constraint: iris.Constraint = None,
-    filename_pattern: str = "*",
     **kwargs,
 ) -> iris.cube.Cube:
     """Read a single cube from files.
 
-    Read operator that takes a path string (can include wildcards), and uses
-    iris to load the cube matching the constraint.
-
-    If the loaded data is split across multiple files, a filename_pattern can be
-    specified to select the read files using Unix shell-style wildcards. In this
-    case the loadpath should point to the directory containing the data.
+    Read operator that takes a path string (can include shell-style glob
+    patterns), and loads the cube matching the constraint. If any paths point to
+    directory, all the files contained within are loaded.
 
     Ensemble data can also be loaded. If it has a realization coordinate
     already, it will be directly used. If not, it will have its member number
@@ -62,12 +58,10 @@ def read_cube(
 
     Arguments
     ---------
-    loadpath: str | list[str]
-        Path to where .pp/.nc files are located
+    file_paths: str | list[str]
+        Path or paths to where .pp/.nc files are located
     constraint: iris.Constraint | iris.ConstraintCombination, optional
         Constraints to filter data by. Defaults to unconstrained.
-    filename_pattern: str, optional
-        Unix shell-style glob pattern to match filenames to. Defaults to "*"
 
     Returns
     -------
@@ -81,7 +75,7 @@ def read_cube(
     ValueError
         If the constraint doesn't produce a single cube.
     """
-    cubes = read_cubes(loadpath, constraint, filename_pattern)
+    cubes = read_cubes(file_paths, constraint)
     # Check filtered cubes is a CubeList containing one cube.
     if len(cubes) == 1:
         return cubes[0]
@@ -94,19 +88,15 @@ def read_cube(
 
 
 def read_cubes(
-    loadpath: list[str] | str,
+    file_paths: list[str] | str,
     constraint: iris.Constraint = None,
-    filename_pattern: str = "*",
     **kwargs,
 ) -> iris.cube.CubeList:
     """Read cubes from files.
 
-    Read operator that takes a path string (can include wildcards), and uses
-    iris to load the minimal set of cubes matching the constraint.
-
-    If the loaded data is split across multiple files, a filename_pattern can be
-    specified to select the read files using Unix shell-style wildcards. In this
-    case the loadpath should point to the directory containing the data.
+    Read operator that takes a path string (can include shell-style glob
+    patterns), and loads the cubes matching the constraint. If any paths point
+    to directory, all the files contained within are loaded.
 
     Ensemble data can also be loaded. If it has a realization coordinate
     already, it will be directly used. If not, it will have its member number
@@ -121,12 +111,10 @@ def read_cubes(
 
     Arguments
     ---------
-    loadpath: str | list[str]
-        Path to where .pp/.nc files are located. Can include globs.
+    file_paths: str | list[str]
+        Path or paths to where .pp/.nc files are located. Can include globs.
     constraint: iris.Constraint | iris.ConstraintCombination, optional
         Constraints to filter data by. Defaults to unconstrained.
-    filename_pattern: str, optional
-        Unix shell-style glob pattern to match filenames to. Defaults to "*"
 
     Returns
     -------
@@ -146,13 +134,13 @@ def read_cubes(
         # Skip if no paths given, mainly for when we only have a base path.
         if not paths:
             return iris.cube.CubeList([])
-        input_files = _check_input_files(paths, filename_pattern)
+        input_files = _check_input_files(paths)
         callback = _create_callback(is_ensemble=is_ensemble, is_base=is_base)
         # If unset, a constraint of None lets everything be loaded.
         return iris.load(input_files, constraint, callback=callback)
 
     # Get lists of paths.
-    paths = iter_maybe(loadpath)
+    paths = iter_maybe(file_paths)
     base_path = paths[:1]
     # If len(paths) < 2, this just returns an empty list, rather than an error.
     other_paths = paths[1:]
@@ -626,7 +614,7 @@ def _lfric_forecast_period_standard_name_callback(cube: iris.cube.Cube):
         pass
 
 
-def _check_input_files(input_paths: list[str], filename_pattern: str) -> list[Path]:
+def _check_input_files(input_paths: list[str]) -> list[Path]:
     """Get an iterable of files to load, and check that they all exist.
 
     Arguments
@@ -634,9 +622,6 @@ def _check_input_files(input_paths: list[str], filename_pattern: str) -> list[Pa
     input_paths: list[str]
         List of paths to input files or directories. The path may itself contain
         glob patterns, but unlike in shells it will match directly first.
-
-    filename_pattern: str
-        Shell-style glob pattern to match inside an input directory.
 
     Returns
     -------
@@ -655,17 +640,13 @@ def _check_input_files(input_paths: list[str], filename_pattern: str) -> list[Pa
         if raw_path.is_file():
             files.append(raw_path)
         else:
-            for input_path in glob.glob(str(raw_filename)):
+            for input_path in glob.glob(raw_filename):
                 # Convert string paths into Path objects.
                 input_path = Path(input_path)
                 # Get the list of files in the directory, or use it directly.
                 if input_path.is_dir():
-                    logging.debug(
-                        "Checking directory '%s' for files matching '%s'",
-                        input_path,
-                        filename_pattern,
-                    )
-                    files.extend(input_path.glob(filename_pattern))
+                    logging.debug("Checking directory '%s' for files")
+                    files.extend(p for p in input_path.iterdir() if p.is_file())
                 else:
                     files.append(input_path)
 
