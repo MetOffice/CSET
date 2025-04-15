@@ -1,0 +1,43 @@
+# Loop over all models
+{% for model in models %}
+
+# Loop over aggregation types (hour_of_day, lead_time, validity_time)
+{% for atype in range(AGGREGATION_TYPES|count) %}
+
+# Pressure level fields
+{% if PROFILE_PLEVEL_AGGREGATION[atype]|default(False) %}
+{% for field in PRESSURE_LEVEL_FIELDS %}
+[runtime]
+    [[plevel_domain_mean_vertical_profile_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
+    inherit = PROCESS_CASE_AGGREGATION
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_level_domain_mean_vertical_profile_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
+        CSET_ADDOPTS = """
+            --VARNAME='{{field}}'
+            --LEVELTYPE='pressure'
+            --MODEL_NAME='{{model["name"]}}'
+        """
+        MODEL_IDENTIFIERS = {{model["id"]}}
+{% endfor %}
+{% endif %}
+
+# Model level fields
+{% if PROFILE_MLEVEL_AGGREGATION[atype]|default(False) %}
+{% for field in MODEL_LEVEL_FIELDS %}
+[runtime]
+    [[mlevel_domain_mean_vertical_profile_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
+    inherit = PROCESS_CASE_AGGREGATION
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_level_domain_mean_vertical_profile_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
+        CSET_ADDOPTS = """
+            --VARNAME='{{field}}'
+            --LEVELTYPE='model_level_number'
+            --MODEL_NAME='{{model["name"]}}'
+        """
+        MODEL_IDENTIFIERS = {{model["id"]}}
+{% endfor %}
+{% endif %}
+
+{% endfor %}
+
+{% endfor %}
