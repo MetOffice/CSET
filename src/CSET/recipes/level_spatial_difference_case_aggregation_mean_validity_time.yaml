@@ -1,8 +1,8 @@
-category: Pressure Spatial Plot Difference
-title: Pressure $VARNAME $PLEVEL difference ($BASE_MODEL - $OTHER_MODEL) case aggregation by lead time
+category: Level Spatial Plot Difference
+title: $LEVELTYPE $VARNAME $LEVEL difference ($BASE_MODEL - $OTHER_MODEL) case aggregation by validity time
 description: |
-  Extracts and plot the difference in $VARNAME on pressure level $PLEVEL for all times. The cases
-  are aggregated over lead time.
+  Extracts and plot the difference $VARNAME on $LEVELTYPE level $LEVEL for all times. The cases
+  are aggregated over validity time.
 
 steps:
   - operator: read.read_cubes
@@ -14,21 +14,20 @@ steps:
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
-      model_level_constraint:
+      level_constraint:
         operator: constraints.generate_level_constraint
-        coordinate: "pressure"
-        levels: $PLEVEL
+        coordinate: $LEVELTYPE
+        levels: $LEVEL
 
   - operator: aggregate.ensure_aggregatable_across_cases
 
-  - operator: collapse.collapse
-    coordinate: "forecast_reference_time"
+  - operator: collapse.collapse_by_validity_time
     method: MEAN
 
   - operator: misc.difference
 
   - operator: plot.spatial_pcolormesh_plot
-    sequence_coordinate: forecast_period
+    sequence_coordinate: time
 
   - operator: write.write_cube_to_nc
     overwrite: True

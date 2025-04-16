@@ -1,6 +1,6 @@
-category: Pressure Spatial Plot Difference
-title: Pressure $VARNAME $PLEVEL difference ($BASE_MODEL - $OTHER_MODEL)
-description: Extracts and plot the difference in surface $VARNAME $PLEVEL for all times.
+category: Level Spatial Plot Difference
+title: $LEVELTYPE $VARNAME $LEVEL difference ($BASE_MODEL - $OTHER_MODEL)
+description: Extracts and plot the difference in surface $VARNAME on $LEVELTYPE $LEVEL for all times.
 
 steps:
   - operator: read.read_cubes
@@ -9,10 +9,10 @@ steps:
       varname_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
-      pressure_level_constraint:
+      level_constraint:
         operator: constraints.generate_level_constraint
-        coordinate: "pressure"
-        levels: $PLEVEL
+        coordinate: $LEVELTYPE
+        levels: $LEVEL
 
   - operator: misc.difference
 

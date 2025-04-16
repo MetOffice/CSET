@@ -1,6 +1,6 @@
-category: Pressure Level Time Series
-title: $MODEL_NAME $VARNAME $PLEVEL Domain mean time series
-description: Plots a time series of the domain mean $VARNAME $PLEVEL pressure level.
+category: Level Time Series
+title: $MODEL_NAME $VARNAME $LEVEL Domain mean time series case aggregation by validity time
+description: Plots a time series of the domain mean $VARNAME at $LEVELTYPE $LEVEL by averaging over all cases by using a consistent validity time.
 
 steps:
   - operator: read.read_cube
@@ -9,13 +9,18 @@ steps:
       varname_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
-      pressure_level_constraint:
+      level_constraint:
         operator: constraints.generate_level_constraint
-        coordinate: "pressure"
-        levels: $PLEVEL
+        coordinate: $LEVELTYPE
+        levels: $LEVEL
 
   - operator: collapse.collapse
     coordinate: [grid_latitude, grid_longitude]
+    method: MEAN
+
+  - operator: aggregate.ensure_aggregatable_across_cases
+
+  - operator: collapse.collapse_by_validity_time
     method: MEAN
 
   # Make a single NetCDF with all the data inside it.
@@ -24,3 +29,4 @@ steps:
 
   # Plot the data.
   - operator: plot.plot_line_series
+    series_coordinate: time

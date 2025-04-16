@@ -1,7 +1,7 @@
-category: Pressure Level Spatial
-title: $MODEL_NAME $VARNAME $PLEVEL Level Spatial Plot case aggregation by lead time
+category: Level Spatial
+title: $MODEL_NAME $VARNAME $LEVELTYPE $LEVEL Level Spatial Plot case aggregation by lead time
 description: |
-  Extracts ands plots the $PLEVELNAME from $MODEL_NAME at pressure level $PLEVEL.
+  Extracts ands plots the $VARNAME from $MODEL_NAME at $LEVELTYPE level $LEVEL.
   Multiple cases are aggregated together keeping the lead time consistent.
 
 steps:
@@ -11,10 +11,10 @@ steps:
       variable_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
-      pressure_level_constraint:
+      level_constraint:
         operator: constraints.generate_level_constraint
-        coordinate: pressure
-        levels: $PLEVEL
+        coordinate: $LEVELTYPE
+        levels: $LEVEL
 
   - operator: aggregate.ensure_aggregatable_across_cases
 

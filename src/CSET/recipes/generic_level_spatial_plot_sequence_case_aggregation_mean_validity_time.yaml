@@ -1,8 +1,8 @@
-category: Model Level Spatial
-title: $MODEL_NAME $VARNAME $MLEVEL Level Spatial Plot case aggregation by validity time
+category: Level Spatial
+title: $MODEL_NAME $VARNAME $LEVELTYPE $LEVEL Level Spatial Plot case aggregation by validity time
 description: |
-  Extracts ands plots the $VARNAME from a file at model level $MLEVEL. The cases
-  are aggregated together by keeping the validity time consistent.
+  Extracts ands plots the $VARNAME from $MODEL_NAME at $LEVELTYPE level $LEVEL.
+  Multiple cases are aggregated together keeping the validity time consistent.
 
 steps:
   - operator: read.read_cubes
@@ -11,10 +11,10 @@ steps:
       variable_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
-      model_level_constraint:
+      level_constraint:
         operator: constraints.generate_level_constraint
-        coordinate: "model_level_number"
-        levels: $MLEVEL
+        coordinate: $LEVELTYPE
+        levels: $LEVEL
 
   - operator: aggregate.ensure_aggregatable_across_cases
 
@@ -23,7 +23,6 @@ steps:
 
   - operator: plot.spatial_contour_plot
     sequence_coordinate: time
-    stamp_coordinate: realization
 
   - operator: write.write_cube_to_nc
     overwrite: True

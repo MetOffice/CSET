@@ -1,7 +1,7 @@
-category: Pressure Level Spatial
-title: $MODEL_NAME $VARNAME $PLEVEL Level Spatial Plot
+category: Level Spatial
+title: $MODEL_NAME $VARNAME $LEVELTYPE $LEVEL Level Spatial Plot
 description: |
-  Extracts ands plots the $PLEVELNAME from $MODEL_NAME at pressure level $PLEVEL.
+  Extracts ands plots the $VARNAME from $MODEL_NAME at $LEVELTYPE level $LEVEL.
 
 steps:
   - operator: read.read_cube
@@ -10,10 +10,10 @@ steps:
       variable_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
-      pressure_level_constraint:
+      level_constraint:
         operator: constraints.generate_level_constraint
-        coordinate: pressure
-        levels: $PLEVEL
+        coordinate: $LEVELTYPE
+        levels: $LEVEL
 
   - operator: plot.spatial_contour_plot
     sequence_coordinate: time

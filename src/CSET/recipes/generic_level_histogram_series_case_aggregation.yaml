@@ -1,0 +1,32 @@
+category: Histogram
+title: $MODEL_NAME $VARNAME $LEVELTYPE $LEVEL Level Histogram Plot case aggregation
+description: |
+  Extracts and plots the probability density of $LEVEL level $VARNAME from a
+  file at $LEVELTYPE level $LEVEL of $MODEL_NAME. It uses
+  [`plt.hist`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.hist.html)
+  to plot the probability density so that the area under the histogram
+  integrates to 1. `stacked` is set to True so the sum of the histograms is
+  normalized to 1. In case of ensemble data choose from postage stamp plot or
+  single plot via the single_plot option in the recipe directly. Case
+  aggregation occurs by putting all of the data into one histogram whilst still
+  providing a single cube to the histogram operator.
+
+steps:
+  - operator: read.read_cubes
+    constraint:
+      operator: constraints.combine_constraints
+      variable_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: $LEVELTYPE
+        levels: $LEVEL
+
+  - operator: aggregate.ensure_aggregatable_across_cases
+
+  - operator: plot.plot_histogram_series
+    sequence_coordinate: realization
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

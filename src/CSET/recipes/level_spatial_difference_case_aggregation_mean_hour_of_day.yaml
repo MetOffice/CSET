@@ -1,7 +1,7 @@
-category: Pressure Level Spatial Plot Difference
-title: Pressure $VARNAME $PLEVEL difference ($BASE_MODEL - $OTHER_MODEL) case aggregation by hour of day
+category: Level Spatial Plot Difference
+title: $VARNAME $LEVELTYPE $LEVEL difference ($BASE_MODEL - $OTHER_MODEL) case aggregation by hour of day
 description: |
-  Extracts and plot the difference in $VARNAME on pressure level $PLEVEL for all times. The cases
+  Extracts and plot the difference in $VARNAME on $LEVELTYPE level $LEVEL for all times. The cases
   are aggregated over hour of day.
 
 steps:
@@ -14,10 +14,10 @@ steps:
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
-      model_level_constraint:
+      level_constraint:
         operator: constraints.generate_level_constraint
-        coordinate: "pressure"
-        levels: $PLEVEL
+        coordinate: $LEVELTYPE
+        levels: $LEVEL
 
   - operator: aggregate.ensure_aggregatable_across_cases
 

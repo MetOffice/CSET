@@ -1,31 +1,32 @@
 category: Histogram
-title: $MODEL_NAME $VARNAME $PLEVEL Level Histogram Plot
+title: $MODEL_NAME $VARNAME $LEVELTYPE $LEVEL Level Histogram Plot case aggregation lead time
 description: |
-  Extracts and plots the probability density of $PLEVEL level $VARNAME from a
-  file at model level $PLEVEL of $MODEL_NAME. It uses
+  Extracts and plots the probability density of $VARNAME from a
+  file at $LEVELTYPE level $LEVEL of $MODEL_NAME. It uses
   [`plt.hist`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.hist.html)
   to plot the probability density so that the area under the histogram
   integrates to 1. `stacked` is set to True so the sum of the histograms is
   normalized to 1. In case of ensemble data choose from postage stamp plot or
-  single plot via the single_plot option in the recipe directly.
+  single plot via the single_plot option in the recipe directly. Case
+  aggregation occurs by putting all of the data into one histogram whilst still
+  providing a single cube to the histogram operator.
 
 steps:
-  - operator: read.read_cube
+  - operator: read.read_cubes
     constraint:
       operator: constraints.combine_constraints
       variable_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
-      cell_methods_constraint:
-        operator: constraints.generate_cell_methods_constraint
-        cell_methods: []
-      model_level_constraint:
+      level_constraint:
         operator: constraints.generate_level_constraint
-        coordinate: pressure
-        levels: $PLEVEL
+        coordinate: $LEVELTYPE
+        levels: $LEVEL
+
+  - operator: aggregate.ensure_aggregatable_across_cases
 
   - operator: plot.plot_histogram_series
-    sequence_coordinate: time
+    sequence_coordinate: forecast_period
     # stamp_coordinate and single_plot optional and only required for ensemble data
     stamp_coordinate: "realization"
     single_plot: False
