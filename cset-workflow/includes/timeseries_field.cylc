@@ -25,7 +25,7 @@
     [[plevel_domain_mean_time_series_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
     inherit = PROCESS
         [[[environment]]]
-        CSET_RECIPE_NAME = "generic_plevel_domain_mean_time_series.yaml"
+        CSET_RECIPE_NAME = "generic_level_domain_mean_time_series.yaml"
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
             --LEVELTYPE='pressure'
@@ -45,7 +45,7 @@
     [[mlevel_domain_mean_time_series_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
     inherit = PROCESS
         [[[environment]]]
-        CSET_RECIPE_NAME = "generic_plevel_domain_mean_time_series.yaml"
+        CSET_RECIPE_NAME = "generic_level_domain_mean_time_series.yaml"
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
             --LEVELTYPE='model_level_number'

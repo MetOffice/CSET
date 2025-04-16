@@ -1,5 +1,5 @@
-category: Level Spatial Plot Difference
-title: $VARNAME $LEVELTYPE $LEVEL difference ($BASE_MODEL - $OTHER_MODEL) case aggregation by hour of day
+category: $LEVELTYPE Level Spatial Difference
+title: $VARNAME ${LEVELTYPE:0:1}$LEVEL difference ($BASE_MODEL - $OTHER_MODEL) aggregation by hour of day
 description: |
   Extracts and plot the difference in $VARNAME on $LEVELTYPE level $LEVEL for all times. The cases
   are aggregated over hour of day.

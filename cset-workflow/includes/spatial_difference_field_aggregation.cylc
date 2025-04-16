@@ -28,8 +28,8 @@
 {% for field in PRESSURE_LEVEL_FIELDS %}
 {% for plevel in PRESSURE_LEVELS %}
 [runtime]
-    [[spatial_pressure_difference_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
-    inherit = PROCESS
+    [[spatial_pressure_difference_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
+    inherit = PROCESS_CASE_AGGREGATION
         [[[environment]]]
         CSET_RECIPE_NAME = "level_spatial_difference_case_aggregation_mean_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
         CSET_ADDOPTS = """

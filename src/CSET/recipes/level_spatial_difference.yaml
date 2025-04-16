@@ -1,6 +1,6 @@
-category: Level Spatial Plot Difference
-title: $LEVELTYPE $VARNAME $LEVEL difference ($BASE_MODEL - $OTHER_MODEL)
-description: Extracts and plot the difference in surface $VARNAME on $LEVELTYPE $LEVEL for all times.
+category: $LEVELTYPE Level Spatial Difference
+title: $VARNAME ${LEVELTYPE:0:1}$LEVEL difference ($BASE_MODEL - $OTHER_MODEL)
+description: Extracts and plot the difference in surface $VARNAME on $LEVELTYPE level $LEVEL for all times.
 
 steps:
   - operator: read.read_cubes

@@ -1,5 +1,5 @@
 category: Histogram
-title: $MODEL_NAME $VARNAME $LEVELTYPE $LEVEL Level Histogram Plot case aggregation by hour of day
+title: $MODEL_NAME $VARNAME ${LEVELTYPE:0:1}$LEVEL histogram aggregation by hour of day
 description: |
   Extracts and plots the probability density of $VARNAME from a
   file at $LEVELTYPE level $LEVEL of $MODEL_NAME. It uses
@@ -24,6 +24,9 @@ steps:
         levels: $LEVEL
 
   - operator: aggregate.ensure_aggregatable_across_cases
+
+  - operator: collapse.collapse_by_hour_of_day
+    method: MEAN
 
   - operator: plot.plot_histogram_series
     sequence_coordinate: hour

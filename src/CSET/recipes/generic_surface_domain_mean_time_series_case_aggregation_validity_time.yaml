@@ -1,4 +1,4 @@
-category: Time Series
+category: Surface Time Series
 title: $MODEL_NAME Domain mean surface $VARNAME time series case aggregation by validity time
 description: |
   Plots a time series of the domain mean surface $VARNAME by averaging over
