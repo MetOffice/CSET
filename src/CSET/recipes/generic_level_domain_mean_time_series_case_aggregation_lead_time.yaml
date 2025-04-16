@@ -3,7 +3,7 @@ title: $MODEL_NAME $VARNAME $LEVEL domain mean time series aggregation by lead t
 description: Plots a time series of the domain mean $VARNAME at $LEVELTYPE $LEVEL by averaging over all cases by using a consistent lead time.
 
 steps:
-  - operator: read.read_cube
+  - operator: read.read_cubes
     constraint:
       operator: constraints.combine_constraints
       varname_constraint:

@@ -9,7 +9,7 @@
 {% for field in PRESSURE_LEVEL_FIELDS %}
 [runtime]
     [[plevel_domain_mean_vertical_profile_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
-    inherit = PROCESS_CASE_AGGREGATION
+    inherit = PROFILE_AGGREGATION, PROCESS_CASE_AGGREGATION
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_level_domain_mean_vertical_profile_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
         CSET_ADDOPTS = """
@@ -26,7 +26,7 @@
 {% for field in MODEL_LEVEL_FIELDS %}
 [runtime]
     [[mlevel_domain_mean_vertical_profile_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
-    inherit = PROCESS_CASE_AGGREGATION
+    inherit = PROFILE_AGGREGATION, PROCESS_CASE_AGGREGATION
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_level_domain_mean_vertical_profile_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
         CSET_ADDOPTS = """

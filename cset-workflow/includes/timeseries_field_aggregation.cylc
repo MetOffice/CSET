@@ -9,7 +9,7 @@
 {% for field in SURFACE_FIELDS %}
 [runtime]
     [[surface_domain_mean_time_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
-    inherit = PROCESS_CASE_AGGREGATION
+    inherit = TIMESERIES_AGGREGATION, PROCESS_CASE_AGGREGATION
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_surface_domain_mean_time_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
         CSET_ADDOPTS = """
@@ -26,7 +26,7 @@
 {% for plevel in PRESSURE_LEVELS %}
 [runtime]
     [[plevel_domain_mean_time_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
-    inherit = PROCESS_CASE_AGGREGATION
+    inherit = TIMESERIES_AGGREGATION, PROCESS_CASE_AGGREGATION
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_level_domain_mean_time_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
         CSET_ADDOPTS = """
@@ -46,7 +46,7 @@
 {% for plevel in MODEL_LEVELS %}
 [runtime]
     [[mlevel_domain_mean_time_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
-    inherit = PROCESS_CASE_AGGREGATION
+    inherit = TIMESERIES_AGGREGATION, PROCESS_CASE_AGGREGATION
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_level_domain_mean_time_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
         CSET_ADDOPTS = """

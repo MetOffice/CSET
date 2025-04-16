@@ -8,7 +8,7 @@
 {% for field in SURFACE_FIELDS %}
 [runtime]
     [[spatial_surface_difference_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
-    inherit = PROCESS
+    inherit = SPATIAL_DIFFERENCE, PROCESS
         [[[environment]]]
         CSET_RECIPE_NAME = "surface_spatial_difference.yaml"
         CSET_ADDOPTS = """
@@ -26,7 +26,7 @@
 {% for plevel in PRESSURE_LEVELS %}
 [runtime]
     [[spatial_pressure_difference_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
-    inherit = PROCESS
+    inherit = SPATIAL_DIFFERENCE, PROCESS
         [[[environment]]]
         CSET_RECIPE_NAME = "level_spatial_difference.yaml"
         CSET_ADDOPTS = """
@@ -47,7 +47,7 @@
 {% for mlevel in MODEL_LEVELS %}
 [runtime]
     [[spatial_mlevel_difference_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(mlevel)}}]]
-    inherit = PROCESS
+    inherit = SPATIAL_DIFFERENCE, PROCESS
         [[[environment]]]
         CSET_RECIPE_NAME = "level_spatial_difference.yaml"
         CSET_ADDOPTS = """

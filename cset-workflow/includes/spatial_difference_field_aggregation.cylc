@@ -11,7 +11,7 @@
 {% for field in SURFACE_FIELDS %}
 [runtime]
     [[spatial_surface_difference_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
-    inherit = PROCESS_CASE_AGGREGATION
+    inherit = SPATIAL_DIFFERENCE_AGGREGATION, PROCESS_CASE_AGGREGATION
         [[[environment]]]
         CSET_RECIPE_NAME = "surface_spatial_difference_case_aggregation_mean_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
         CSET_ADDOPTS = """
@@ -29,7 +29,7 @@
 {% for plevel in PRESSURE_LEVELS %}
 [runtime]
     [[spatial_pressure_difference_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
-    inherit = PROCESS_CASE_AGGREGATION
+    inherit = SPATIAL_DIFFERENCE_AGGREGATION, PROCESS_CASE_AGGREGATION
         [[[environment]]]
         CSET_RECIPE_NAME = "level_spatial_difference_case_aggregation_mean_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
         CSET_ADDOPTS = """
@@ -50,7 +50,7 @@
 {% for mlevel in MODEL_LEVELS %}
 [runtime]
     [[spatial_mlevel_difference_case_aggregation_mean_hour_of_day_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(mlevel)}}]]
-    inherit = PROCESS_CASE_AGGREGATION
+    inherit = SPATIAL_DIFFERENCE_AGGREGATION, PROCESS_CASE_AGGREGATION
         [[[environment]]]
         CSET_RECIPE_NAME = "mlevel_spatial_difference_case_aggregation_mean_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
         CSET_ADDOPTS = """

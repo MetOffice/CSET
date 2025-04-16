@@ -1,5 +1,5 @@
 category: Histogram
-title: $MODEL_NAME $VARNAME ${LEVELTYPE:0:1}$LEVEL histogram
+title: $MODEL_NAME $VARNAME $LEVELTYPE$LEVEL histogram
 description: |
   Extracts and plots the probability density of $VARNAME from a
   file at $LEVELTYPE level $LEVEL of $MODEL_NAME. It uses

@@ -6,7 +6,7 @@
 {% for field in PRESSURE_LEVEL_FIELDS %}
 [runtime]
     [[plevel_domain_mean_vertical_profile_series_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
-    inherit = PROCESS
+    inherit = PROFILE, PROCESS
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_level_domain_mean_vertical_profile_series.yaml"
         CSET_ADDOPTS = """
@@ -23,7 +23,7 @@
 {% for field in MODEL_LEVEL_FIELDS %}
 [runtime]
     [[mlevel_domain_mean_vertical_profile_series_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
-    inherit = PROCESS
+    inherit = PROFILE, PROCESS
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_level_domain_mean_vertical_profile_series.yaml"
         CSET_ADDOPTS = """
