@@ -1566,7 +1566,7 @@ def plot_histogram_series(
     # Make postage stamp plots if stamp_coordinate exists and has more than a
     # single point. If single_plot is True:
     # -- all postage stamp plots will be plotted in a single plot instead of separate postage stamp plots.
-    # -- model_names are ignored, that is stamp plots are produced per single model only
+    # -- model names (hidden in cube attrs) are ignored, that is stamp plots are produced per single model only
     if num_models == 1:
         if (
             stamp_coordinate in [c.name() for c in cubes[0].coords()]
@@ -1585,7 +1585,7 @@ def plot_histogram_series(
         )
         all_slices = list(chain(*[cb.slices_over(sequence_coordinate) for cb in cubes]))
         # matched slices (matched by seq coord point; it may happen that evaluated models do not cover
-        # the same seq coord range)
+        # the same seq coord range, hence matching necessary)
         cube_iterables = [
             iris.cube.CubeList(
                 [

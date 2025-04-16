@@ -97,7 +97,7 @@ def read_cubes(
     loadpath: list[str] | str,
     constraint: iris.Constraint = None,
     filename_pattern: str = "*",
-    model_names: str | None = None,
+    model_names: str | list[str] | None = None,
     **kwargs,
 ) -> iris.cube.CubeList:
     """Read cubes from files.
@@ -128,6 +128,9 @@ def read_cubes(
         Constraints to filter data by. Defaults to unconstrained.
     filename_pattern: str, optional
         Unix shell-style glob pattern to match filenames to. Defaults to "*"
+    model_names: str or list, optional
+        Names of the models that correspond to respective path in loadpaths; Should be provided as single string
+        concatenated with ",", e.g. model1,model2 or as list of strings, e.g. [model1,model2]
 
     Returns
     -------
@@ -171,10 +174,12 @@ def read_cubes(
     # to pass it as function parameter), so it has to be defined (but we create default values in case user
     # provides none)
     if model_names is not None:
-        model_names = model_names.split("__")
+        if isinstance(model_names, str):
+            model_names = model_names.split(",")
     else:
         # just to make sure cubes will get model_name attribute
         model_names = [f"m{i + 1:d}" for i in range(len(other_paths) + 1)]
+
     logging.debug(f"received model labels: {model_names}")
     if len(model_names) != len(other_paths) + 1:
         raise ValueError(
