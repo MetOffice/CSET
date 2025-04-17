@@ -4,6 +4,7 @@ description: Extracts, quantiles, and plots two different variables ($VARNAME_A 
 
 steps:
   - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
 
   - operator: plot.scatter_plot
     cube_y:

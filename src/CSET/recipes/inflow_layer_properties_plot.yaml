@@ -5,6 +5,7 @@ description: |
 
 steps:
   - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
 
   - operator: convection.inflow_layer_properties
     EIB:

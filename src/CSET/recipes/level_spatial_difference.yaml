@@ -4,6 +4,7 @@ description: Extracts and plot the difference in surface $VARNAME on $LEVELTYPE 
 
 steps:
   - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
     constraint:
       operator: constraints.combine_constraints
       varname_constraint:

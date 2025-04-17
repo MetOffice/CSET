@@ -13,7 +13,7 @@ steps:
   # Specify the operator to run in each step.
   - operator: read.read_cubes
     # Specify the name of the argument, and its value.
-    filename_pattern: "*.nc"
+    file_paths: "/data/*.nc"
 
   - operator: filters.filter_cubes
     # Can specify extra keyword arguments as sub-maps.

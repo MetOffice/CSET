@@ -8,6 +8,7 @@ description: |
 
 steps:
   - operator: read.read_cube
+    file_paths: $INPUT_PATHS
     constraint:
         operator: constraints.combine_constraints
         cell_method_constraint:
