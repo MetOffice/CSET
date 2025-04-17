@@ -7,7 +7,6 @@ import os
 import shlex
 import subprocess
 import sys
-import zipfile
 from pathlib import Path
 
 logging.basicConfig(
@@ -78,19 +77,6 @@ def data_directories() -> list[str]:
         return [f"{rose_datac}/data/{model_id}" for model_id in model_identifiers]
 
 
-def create_diagnostic_archive(output_directory):
-    """Create archive for easy download of plots and data."""
-    output_directory = Path(output_directory)
-    archive_path = output_directory / "diagnostic.zip"
-    with zipfile.ZipFile(
-        archive_path, "w", compression=zipfile.ZIP_DEFLATED
-    ) as archive:
-        for file in output_directory.rglob("*"):
-            # Check the archive doesn't add itself.
-            if not file.samefile(archive_path):
-                archive.write(file, arcname=file.relative_to(output_directory))
-
-
 def run_recipe_steps():
     """Process data and produce output plots."""
     output_dir = output_directory()
@@ -119,9 +105,6 @@ def run_recipe_steps():
     except subprocess.CalledProcessError as err:
         logging.critical("cset bake exited with non-zero code %s.", err.returncode)
         raise
-
-    logging.info("Creating diagnostic archive.")
-    create_diagnostic_archive(output_dir)
 
 
 def run():

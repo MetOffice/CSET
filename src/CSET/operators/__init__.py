@@ -18,6 +18,7 @@ import inspect
 import json
 import logging
 import os
+import zipfile
 from pathlib import Path
 
 from iris import FUTURE
@@ -143,46 +144,16 @@ def _step_parser(step: dict, step_input: any) -> str:
         return operator(**kwargs)
 
 
-def _run_steps(
-    recipe,
-    steps,
-    step_input,
-    output_directory: Path,
-    style_file: Path = None,
-    plot_resolution: int = None,
-    skip_write: bool = None,
-) -> None:
-    """Execute the steps in a recipe."""
-    original_working_directory = Path.cwd()
-    # Make paths absolute.
-    step_input = [
-        path if path.startswith("/") else f"{original_working_directory}/{path}"
-        for path in iter_maybe(step_input)
-    ]
-    try:
-        os.chdir(output_directory)
-        logger = logging.getLogger()
-        diagnostic_log = logging.FileHandler(
-            filename="CSET.log", mode="w", encoding="UTF-8"
-        )
-        diagnostic_log.setFormatter(
-            logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s")
-        )
-        logger.addHandler(diagnostic_log)
-        # Create metadata file used by some steps.
-        if style_file:
-            recipe["style_file_path"] = str(style_file)
-        if plot_resolution:
-            recipe["plot_resolution"] = plot_resolution
-        if skip_write:
-            recipe["skip_write"] = skip_write
-        _write_metadata(recipe)
-        # Execute the recipe.
-        for step in steps:
-            step_input = _step_parser(step, step_input)
-        logging.info("Recipe output:\n%s", step_input)
-    finally:
-        os.chdir(original_working_directory)
+def create_diagnostic_archive(output_directory: Path):
+    """Create archive for easy download of plots and data."""
+    archive_path = output_directory / "diagnostic.zip"
+    with zipfile.ZipFile(
+        archive_path, "w", compression=zipfile.ZIP_DEFLATED
+    ) as archive:
+        for file in output_directory.rglob("*"):
+            # Check the archive doesn't add itself.
+            if not file.samefile(archive_path):
+                archive.write(file, arcname=file.relative_to(output_directory))
 
 
 def execute_recipe(
@@ -235,12 +206,39 @@ def execute_recipe(
         logging.error("Output directory is a file. %s", output_directory)
         raise err
     steps = recipe["steps"]
-    _run_steps(
-        recipe,
-        steps,
-        input_directories,
-        output_directory,
-        style_file,
-        plot_resolution,
-        skip_write,
-    )
+
+    # Execute the steps in a recipe.
+    original_working_directory = Path.cwd()
+    # Make paths absolute.
+    step_input = [
+        path if path.startswith("/") else f"{original_working_directory}/{path}"
+        for path in iter_maybe(input_directories)
+    ]
+    try:
+        os.chdir(output_directory)
+        logger = logging.getLogger(__name__)
+        diagnostic_log = logging.FileHandler(
+            filename="CSET.log", mode="w", encoding="UTF-8"
+        )
+        diagnostic_log.setFormatter(
+            logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s")
+        )
+        logger.addHandler(diagnostic_log)
+        # Create metadata file used by some steps.
+        if style_file:
+            recipe["style_file_path"] = str(style_file)
+        if plot_resolution:
+            recipe["plot_resolution"] = plot_resolution
+        if skip_write:
+            recipe["skip_write"] = skip_write
+        _write_metadata(recipe)
+
+        # Execute the recipe.
+        for step in steps:
+            step_input = _step_parser(step, step_input)
+        logger.info("Recipe output:\n%s", step_input)
+
+        logger.info("Creating diagnostic archive.")
+        create_diagnostic_archive(output_directory)
+    finally:
+        os.chdir(original_working_directory)
