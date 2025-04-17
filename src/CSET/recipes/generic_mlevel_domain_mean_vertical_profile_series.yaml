@@ -13,7 +13,7 @@ steps:
         operator: constraints.generate_level_constraint
         coordinate: model_level_number
         levels: "*"
-    SUBAREA_TYPE: $SUBAREA_TYPE
+    subarea_type: $SUBAREA_TYPE
     SUBAREA_EXTENT: $SUBAREA_EXTENT
 
   - operator: collapse.collapse

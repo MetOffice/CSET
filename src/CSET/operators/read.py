@@ -41,8 +41,8 @@ class NoDataWarning(UserWarning):
 def read_cube(
     loadpath: list[str] | str,
     constraint: iris.Constraint = None,
-    SUBAREA_TYPE: str = "RealWorld",
-    SUBAREA_EXTENT: list = None,
+    subarea_type: str = "RealWorld",
+    subarea_extent: list = None,
     filename_pattern: str = "*",
     **kwargs,
 ) -> iris.cube.Cube:
@@ -69,10 +69,10 @@ def read_cube(
         Path to where .pp/.nc files are located
     constraint: iris.Constraint | iris.ConstraintCombination, optional
         Constraints to filter data by. Defaults to unconstrained.
-    SUBAREA_TYPE: str, optional
+    subarea_type: str, optional
         Whether to constrain data by model relative coordinates or real world
         coordinates.
-    SUBAREA_EXTEND: list, optional
+    subarea_extent: list, optional
         List of coordinates to constraint data by, in order lower latitude,
         upper latitude, lower longitude, upper longitude.
     filename_pattern: str, optional
@@ -93,8 +93,8 @@ def read_cube(
     cubes = read_cubes(
         loadpath,
         constraint,
-        SUBAREA_TYPE,
-        SUBAREA_EXTENT,
+        subarea_type,
+        subarea_extent,
         filename_pattern,
     )
     # Check filtered cubes is a CubeList containing one cube.
@@ -111,8 +111,8 @@ def read_cube(
 def read_cubes(
     loadpath: list[str] | str,
     constraint: iris.Constraint = None,
-    SUBAREA_TYPE: str = "None",
-    SUBAREA_EXTENT: list = None,
+    subarea_type: str = "None",
+    subarea_extent: list = None,
     filename_pattern: str = "*",
     **kwargs,
 ) -> iris.cube.CubeList:
@@ -142,10 +142,10 @@ def read_cubes(
         Path to where .pp/.nc files are located. Can include globs.
     constraint: iris.Constraint | iris.ConstraintCombination, optional
         Constraints to filter data by. Defaults to unconstrained.
-    SUBAREA_TYPE: str, optional
+    subarea_type: str, optional
         Whether to constrain data by model relative coordinates or real world
         coordinates.
-    SUBAREA_EXTEND: list, optional
+    subarea_extent: list, optional
         List of coordinates to constraint data by, in order lower latitude,
         upper latitude, lower longitude, upper longitude.
     filename_pattern: str, optional
@@ -201,7 +201,7 @@ def read_cubes(
     # aggregate.ensure_aggregatable_across_cases(cubes)
 
     # Select sub region if sub_area type is realworld
-    if SUBAREA_TYPE == "realworld":
+    if subarea_type == "realworld":
         # To store cutouts.
         cutout_cubes = iris.cube.CubeList()
 
@@ -215,14 +215,14 @@ def read_cubes(
 
                 # Convert user specified coordinates into rotated pole coordinates.
                 rotated_lons, rotated_lats = rotate_pole(
-                    np.array([SUBAREA_EXTENT[2], SUBAREA_EXTENT[3]]),
-                    np.array([SUBAREA_EXTENT[0], SUBAREA_EXTENT[1]]),
+                    np.array([subarea_extent[2], subarea_extent[3]]),
+                    np.array([subarea_extent[0], subarea_extent[1]]),
                     pole_lon=coord_system.grid_north_pole_longitude,
                     pole_lat=coord_system.grid_north_pole_latitude,
                 )
 
                 logging.info(
-                    f"User requested LLat:{SUBAREA_EXTENT[0]} ULat:{SUBAREA_EXTENT[1]} LLon:{SUBAREA_EXTENT[2]} ULon:{SUBAREA_EXTENT[3]}"
+                    f"User requested LLat:{subarea_extent[0]} ULat:{subarea_extent[1]} LLon:{subarea_extent[2]} ULon:{subarea_extent[3]}"
                 )
                 logging.info(
                     f"Rotated coord LLat:{rotated_lats[0]} ULat:{rotated_lats[1]} LLon:{rotated_lons[0]} ULon:{rotated_lons[1]}"
@@ -238,33 +238,33 @@ def read_cubes(
             else:
                 logging.info("Cube is in real-world coordinates")
                 logging.info(
-                    f"User requested LLat:{SUBAREA_EXTENT[0]} ULat:{SUBAREA_EXTENT[1]} LLon:{SUBAREA_EXTENT[2]} ULon:{SUBAREA_EXTENT[3]}"
+                    f"User requested LLat:{subarea_extent[0]} ULat:{subarea_extent[1]} LLon:{subarea_extent[2]} ULon:{subarea_extent[3]}"
                 )
 
                 # Do cutout and add to cutout_cubes.
                 cutout_cubes.append(
                     cube.intersection(
-                        grid_latitude=(SUBAREA_EXTENT[0], SUBAREA_EXTENT[1]),
-                        grid_longitude=(SUBAREA_EXTENT[2], SUBAREA_EXTENT[3]),
+                        grid_latitude=(subarea_extent[0], subarea_extent[1]),
+                        grid_longitude=(subarea_extent[2], subarea_extent[3]),
                     )
                 )
 
         # Restore variable name
         cubes = cutout_cubes
 
-    elif SUBAREA_TYPE == "modelrelative":
+    elif subarea_type == "modelrelative":
         # To store cutouts.
         cutout_cubes = iris.cube.CubeList()
         logging.info(
-            f"User requested model relative LLat{SUBAREA_EXTENT[0]} ULat{SUBAREA_EXTENT[1]} LLon{SUBAREA_EXTENT[2]} ULon{SUBAREA_EXTENT[3]}"
+            f"User requested model relative LLat{subarea_extent[0]} ULat{subarea_extent[1]} LLon{subarea_extent[2]} ULon{subarea_extent[3]}"
         )
 
         for cube in cubes:
             # Do cutout and add to cutout_cubes.
             cutout_cubes.append(
                 cube.intersection(
-                    grid_latitude=(SUBAREA_EXTENT[0], SUBAREA_EXTENT[1]),
-                    grid_longitude=(SUBAREA_EXTENT[2], SUBAREA_EXTENT[3]),
+                    grid_latitude=(subarea_extent[0], subarea_extent[1]),
+                    grid_longitude=(subarea_extent[2], subarea_extent[3]),
                 )
             )
 

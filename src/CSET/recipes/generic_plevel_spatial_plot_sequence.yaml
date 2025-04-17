@@ -14,7 +14,7 @@ steps:
         operator: constraints.generate_level_constraint
         coordinate: pressure
         levels: $PLEVEL
-    SUBAREA_TYPE: $SUBAREA_TYPE
+    subarea_type: $SUBAREA_TYPE
     SUBAREA_EXTENT: $SUBAREA_EXTENT
 
   - operator: plot.spatial_contour_plot
