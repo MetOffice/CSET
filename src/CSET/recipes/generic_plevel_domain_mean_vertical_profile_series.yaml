@@ -14,7 +14,7 @@ steps:
         coordinate: pressure
         levels: "*"
     subarea_type: $SUBAREA_TYPE
-    SUBAREA_EXTENT: $SUBAREA_EXTENT
+    subarea_extent: $SUBAREA_EXTENT
 
   - operator: collapse.collapse
     coordinate: [grid_latitude, grid_longitude]
