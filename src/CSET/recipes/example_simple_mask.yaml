@@ -4,6 +4,7 @@ description: Generates and applies a simple mask to a field for stratified analy
 
 steps:
   - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
 
   - operator: filters.apply_mask
     original_field:

@@ -25,28 +25,26 @@ def construct_index():
     where ``recipe_id`` is the name of the plot's directory.
     """
     index = {}
-    plots_dir = Path(os.environ["CYLC_WORKFLOW_SHARE_DIR"] + "/web/plots")
-    # Loop over all directories, and append to index.
-    # Only visits the directories directly under the plots directory.
-    for directory in (d for d in plots_dir.iterdir() if d.is_dir()):
+    plots_dir = Path(os.environ["CYLC_WORKFLOW_SHARE_DIR"]) / "web/plots"
+    # Loop over all diagnostics and append to index.
+    for metadata_file in plots_dir.glob("**/*/meta.json"):
         try:
-            with open(directory / "meta.json", "rt", encoding="UTF-8") as fp:
+            with open(metadata_file, "rt", encoding="UTF-8") as fp:
                 plot_metadata = json.load(fp)
+
             category = plot_metadata["category"]
             case_date = plot_metadata.get("case_date", "")
+            relative_url = str(metadata_file.parent.relative_to(plots_dir))
+
             record = {
                 category: {
                     case_date if case_date else "Aggregation": {
-                        directory.name: f"{plot_metadata['title']}".strip()
+                        relative_url: plot_metadata["title"].strip()
                     }
                 }
             }
-        except FileNotFoundError:
-            # Skip directories without metadata, as are likely not plots.
-            logging.debug("No meta.json in %s, skipping.", directory)
-            continue
         except (json.JSONDecodeError, KeyError, TypeError) as err:
-            logging.error("%s is invalid, skipping.\n%s", directory / "meta.json", err)
+            logging.error("%s is invalid, skipping.\n%s", metadata_file, err)
             continue
         index = combine_dicts(index, record)
 

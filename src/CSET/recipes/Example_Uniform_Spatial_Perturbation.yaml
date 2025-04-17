@@ -6,6 +6,7 @@ description: |
 
 steps:
   - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
 
   - operator: mesoscale.spatial_perturbation_field
     original_field:

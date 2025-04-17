@@ -8,7 +8,8 @@ description: |
   normalized to 1.
 
 steps:
-  - operator: read.read_cubes
+  - operator: read.read_cube
+    file_paths: $INPUT_PATHS
     model_names: $MODEL_NAME
     constraint:
       operator: constraints.combine_constraints

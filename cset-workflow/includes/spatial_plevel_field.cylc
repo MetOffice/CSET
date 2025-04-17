@@ -1,5 +1,5 @@
-{% if PLOT_SPATIAL_PRESSURE_LEVEL_MODEL_FIELD|default(False) %}
-{% for field in PRESSURE_LEVEL_MODEL_FIELDS %}
+{% if SPATIAL_PLEVEL_FIELD|default(False) %}
+{% for field in PRESSURE_LEVEL_FIELDS %}
 {% for model in models %}
 {% for plevel in PRESSURE_LEVELS %}
 [runtime]

@@ -13,7 +13,7 @@
 <title>61b2e64b&#45;9e35&#45;49ee&#45;9200&#45;2f69705e8485</title>
 <ellipse fill="none" stroke="black" cx="164.91" cy="-432.96" rx="109.96" ry="28.99"/>
 <text text-anchor="middle" x="164.91" y="-436.16" font-family="Times,serif" font-size="14.00">read.read_cubes</text>
-<text text-anchor="middle" x="164.91" y="-419.66" font-family="Times,serif" font-size="14.00">&lt;filename_pattern: *.nc&gt;</text>
+<text text-anchor="middle" x="164.91" y="-419.66" font-family="Times,serif" font-size="14.00">&lt;file_paths: /data/*.nc&gt;</text>
 </g>
 <!-- 409506e4&#45;ebd1&#45;4ba1&#45;bcc1&#45;7aa92d2720c7 -->
 <g id="node3" class="node">

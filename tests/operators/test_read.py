@@ -60,9 +60,8 @@ def test_read_cubes_ensemble_separate_files():
     from CSET.operators import constraints
 
     cubes = read.read_cubes(
-        "tests/test_data/",
+        "tests/test_data/exeter_em*.nc",
         constraint=constraints.generate_stash_constraint("m01s03i236"),
-        filename_pattern="exeter_em*.nc",
     )
     # Check ensemble members have been merged into a single cube.
     assert len(cubes) == 1
@@ -121,7 +120,7 @@ def test_check_input_files_direct_path(tmp_path):
     file_path = tmp_path / "file"
     file_path.touch()
     string_path = str(file_path)
-    actual = read._check_input_files(string_path, "*")
+    actual = read._check_input_files(string_path)
     expected = [file_path]
     assert actual == expected
 
@@ -133,7 +132,7 @@ def test_check_input_files_direct_path_glob(tmp_path):
     file1_path.touch()
     file2_path.touch()
     glob_path = f"{tmp_path}/file*"
-    actual = read._check_input_files(glob_path, "*")
+    actual = read._check_input_files(glob_path)
     expected = [file1_path, file2_path]
     assert actual == expected
 
@@ -144,7 +143,7 @@ def test_check_input_files_direct_path_match_glob_like_file(tmp_path):
     glob_like_path = tmp_path / "file*"
     file1_path.touch()
     glob_like_path.touch()
-    actual = read._check_input_files(str(glob_like_path), "*")
+    actual = read._check_input_files(str(glob_like_path))
     expected = [glob_like_path]
     assert actual == expected
 
@@ -155,19 +154,8 @@ def test_check_input_files_input_directory(tmp_path):
     file2_path = tmp_path / "file2"
     file1_path.touch()
     file2_path.touch()
-    actual = read._check_input_files(str(tmp_path), "*")
+    actual = read._check_input_files(str(tmp_path))
     expected = [file1_path, file2_path]
-    assert actual == expected
-
-
-def test_check_input_files_input_directory_glob(tmp_path):
-    """Get a iterable of files in an input directory with a glob pattern."""
-    file1_path = tmp_path / "file1"
-    file2_path = tmp_path / "file2"
-    file1_path.touch()
-    file2_path.touch()
-    actual = read._check_input_files(str(tmp_path), "*1")
-    expected = [file1_path]
     assert actual == expected
 
 
@@ -175,13 +163,13 @@ def test_check_input_files_invalid_path(tmp_path):
     """Error when path doesn't exist."""
     file_path = str(tmp_path / "file")
     with pytest.raises(FileNotFoundError):
-        read._check_input_files(file_path, "*")
+        read._check_input_files(file_path)
 
 
 def test_check_input_files_no_file_in_directory(tmp_path):
     """Error when input directory doesn't contain any files."""
     with pytest.raises(FileNotFoundError):
-        read._check_input_files(str(tmp_path), "*")
+        read._check_input_files(str(tmp_path))
 
 
 def test_um_normalise_callback_rename_stash(cube):

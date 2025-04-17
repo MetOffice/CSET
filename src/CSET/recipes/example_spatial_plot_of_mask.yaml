@@ -5,6 +5,7 @@ description: |
 
 steps:
   - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
 
   - operator: filters.generate_mask
     mask_field:

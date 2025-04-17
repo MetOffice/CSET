@@ -1,12 +1,12 @@
-{% if DOMAIN_HISTOGRAM_SERIES_CASE_AGGREGATION_LEAD_TIME|default(False) %}
-{% for field in PRESSURE_LEVEL_MODEL_FIELDS %}
+{% if HISTOGRAM_PLEVEL_FIELD_AGGREGATION[3]|default(False) %}
+{% for field in PRESSURE_LEVEL_FIELDS %}
 {% for model in models %}
 {% for plevel in PRESSURE_LEVELS %}
 [runtime]
-    [[generic_plevel_histogram_series_case_aggregation_lead_time_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
+    [[generic_plevel_histogram_series_case_aggregation_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
     inherit = PROCESS_CASE_AGGREGATION
         [[[environment]]]
-        CSET_RECIPE_NAME = "generic_plevel_histogram_series_case_aggregation_lead_time.yaml"
+        CSET_RECIPE_NAME = "generic_plevel_histogram_series_case_aggregation.yaml"
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
             --PLEVEL='{{plevel}}'
