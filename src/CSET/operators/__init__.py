@@ -25,7 +25,7 @@ from iris import FUTURE
 
 # Import operators here so they are exported for use by recipes.
 import CSET.operators
-from CSET._common import iter_maybe, parse_recipe
+from CSET._common import parse_recipe
 from CSET.operators import (
     ageofair,
     aggregate,
@@ -158,7 +158,6 @@ def create_diagnostic_archive(output_directory: Path):
 
 def execute_recipe(
     recipe_yaml: Path | str,
-    input_directories: list[str],
     output_directory: Path,
     recipe_variables: dict = None,
     style_file: Path = None,
@@ -173,9 +172,6 @@ def execute_recipe(
         Path to a file containing, or a string of, a recipe's YAML describing
         the operators that need running. If a Path is provided it is opened and
         read.
-    input_directories: list[str]
-        List of pathlike to directories containing input files. Each path is
-        assumed to be to a different model.
     output_directory: Path
         Pathlike indicating desired location of output.
     recipe_variables: dict, optional
@@ -209,11 +205,6 @@ def execute_recipe(
 
     # Execute the steps in a recipe.
     original_working_directory = Path.cwd()
-    # Make paths absolute.
-    step_input = [
-        path if path.startswith("/") else f"{original_working_directory}/{path}"
-        for path in iter_maybe(input_directories)
-    ]
     try:
         os.chdir(output_directory)
         logger = logging.getLogger(__name__)
@@ -234,6 +225,7 @@ def execute_recipe(
         _write_metadata(recipe)
 
         # Execute the recipe.
+        step_input = None
         for step in steps:
             step_input = _step_parser(step, step_input)
         logger.info("Recipe output:\n%s", step_input)

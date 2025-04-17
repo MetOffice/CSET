@@ -91,9 +91,8 @@ def setup_argument_parser() -> argparse.ArgumentParser:
         "--input-dir",
         type=str,
         action="extend",
-        required=True,
         nargs="+",
-        help="directories containing input data. May contain wildcards",
+        help="Alternate way to set the INPUT_PATHS recipe variable",
     )
     parser_bake.add_argument(
         "-o",
@@ -169,16 +168,6 @@ def setup_argument_parser() -> argparse.ArgumentParser:
     )
     parser_cookbook.set_defaults(func=_cookbook_command)
 
-    parser_recipe_id = subparsers.add_parser("recipe-id", help="get the ID of a recipe")
-    parser_recipe_id.add_argument(
-        "-r",
-        "--recipe",
-        type=Path,
-        required=True,
-        help="recipe file to read",
-    )
-    parser_recipe_id.set_defaults(func=_recipe_id_command)
-
     return parser
 
 
@@ -226,13 +215,21 @@ def setup_logging(verbosity: int):
 
 
 def _bake_command(args, unparsed_args):
-    from CSET._common import parse_variable_options
+    from CSET._common import iter_maybe, parse_variable_options
     from CSET.operators import execute_recipe
+
+    # Convert --input_dir=... to INPUT_PATHS recipe variable.
+    if args.input_dir:
+        # Make paths absolute.
+        abs_paths = [
+            p if p.startswith("/") else f"{os.getcwd()}/{p}"
+            for p in iter_maybe(args.input_dir)
+        ]
+        unparsed_args.append(f"--INPUT_PATHS={abs_paths}")
 
     recipe_variables = parse_variable_options(unparsed_args)
     execute_recipe(
         args.recipe,
-        args.input_dir,
         args.output_dir,
         recipe_variables,
         args.style_file,
@@ -266,18 +263,3 @@ def _cookbook_command(args, unparsed_args):
                 sys.exit(1)
     else:
         list_available_recipes()
-
-
-def _recipe_id_command(args, unparsed_args):
-    from uuid import uuid4
-
-    from CSET._common import parse_recipe, parse_variable_options, slugify
-
-    recipe_variables = parse_variable_options(unparsed_args)
-    recipe = parse_recipe(args.recipe, recipe_variables)
-    try:
-        recipe_id = slugify(recipe["title"])
-    except KeyError:
-        logging.warning("Recipe has no title; Falling back to random recipe_id.")
-        recipe_id = str(uuid4())
-    print(recipe_id)
