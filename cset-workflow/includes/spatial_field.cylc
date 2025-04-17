@@ -1,3 +1,8 @@
+{% if SPATIAL_SURFACE_FIELD or SPATIAL_PLEVEL_FIELD or SPATIAL_MLEVEL_FIELD %}
+[[SPATIAL]]
+    inherit=PROCESS
+{% endif %}
+
 # Loop over all models
 {% for model in models %}
 

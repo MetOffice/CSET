@@ -1,3 +1,8 @@
+{% if True in SPATIAL_SURFACE_FIELD_AGGREGATION or True in SPATIAL_PLEVEL_FIELD_AGGREGATION or True in SPATIAL_MLEVEL_FIELD_AGGREGATION %}
+[[SPATIAL_AGGREGATION]]
+   inherit=PROCESS_CASE_AGGREGATION
+{% endif %}
+
 # Loop over all models
 {% for model in models %}
 

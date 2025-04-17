@@ -1,3 +1,8 @@
+{% if PROFILE_PLEVEL or PROFILE_MLEVEL %}
+[[PROFILE]]
+   inherit = PROCESS
+{% endif %}
+
 # Loop over all models
 {% for model in models %}
 

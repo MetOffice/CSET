@@ -211,28 +211,6 @@ URL = https://metoffice.github.io/CSET
         WEB_ADDR = {{WEB_ADDR}}
         WEB_DIR = {{WEB_DIR}}
 
-    # Define families to partition running workflow
-    [[SPATIAL]]
-        inherit = PROCESS
-    [[SPATIAL_DIFFERENCE]]
-        inherit = PROCESS
-    [[HISTOGRAM]]
-        inherit = PROCESS
-    [[TIMESERIES]]
-        inherit = PROCESS
-    [[PROFILE]]
-        inherit = PROCESS
-    [[SPATIAL_AGGREGATION]]
-        inherit = PROCESS_CASE_AGGREGATION
-    [[SPATIAL_DIFFERENCE_AGGREGATION]]
-        inherit = PROCESS_CASE_AGGREGATION
-    [[HISTOGRAM_AGGREGATION]]
-        inherit = PROCESS_CASE_AGGREGATION
-    [[TIMESERIES_AGGREGATION]]
-        inherit = PROCESS_CASE_AGGREGATION
-    [[PROFILE_AGGREGATION]]
-        inherit = PROCESS_CASE_AGGREGATION
-
 # Include files bring their own graph and runtime sections.
 {% for include_file in glob("includes/*.cylc") %}
 {% include include_file %}

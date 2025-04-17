@@ -1,3 +1,8 @@
+{% if SPATIAL_DIFFERENCE_SURFACE_FIELD or SPATIAL_DIFFERENCE_PLEVEL_FIELD or SPATIAL_DIFFERENCE_MLEVEL_FIELD %}
+[[SPATIAL_DIFFERENCE]]
+    inherit = PROCESS
+{% endif %}
+
 # Models are listed in order, so model 1 is the first element.
 {% set base_model = models[0] %}
 # As we use model 1 as the base model we skip it here.

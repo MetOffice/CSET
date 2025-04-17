@@ -1,3 +1,8 @@
+{% if HISTOGRAM_SURFACE_FIELD or HISTOGRAM_PLEVEL_FIELD or HISTOGRAM_MLEVEL_FIELD %}
+[[HISTOGRAM]]
+    inherit = PROCESS
+{% endif %}
+
 # Loop over all models
 {% for model in models %}
 

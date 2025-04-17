@@ -1,3 +1,8 @@
+{% if True in PROFILE_PLEVEL_AGGREGATION or True in PROFILE_MLEVEL_AGGREGATION %}
+[[PROFILE_AGGREGATION]]
+   inherit = PROCESS_CASE_AGGREGATION
+{% endif %}
+
 # Loop over all models
 {% for model in models %}
 

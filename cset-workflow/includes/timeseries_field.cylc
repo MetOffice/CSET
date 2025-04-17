@@ -1,3 +1,8 @@
+{% if TIMESERIES_SURFACE_FIELD or TIMESERIES_PLEVEL_FIELD or TIMESERIES_MLEVEL_FIELD %}
+[[TIMESERIES]]
+   inherit = PROCESS
+{% endif %}
+
 # Loop over models
 {% for model in models %}
 

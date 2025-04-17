@@ -1,3 +1,8 @@
+{% if True in HISTOGRAM_SURFACE_FIELD_AGGREGATION or True in HISTOGRAM_PLEVEL_FIELD_AGGREGATION or True in HISTOGRAM_MLEVEL_FIELD_AGGREGATION %}
+[[HISTOGRAM_AGGREGATION]]
+   inherit = PROCESS_CASE_AGGREGATION
+{% endif %}
+
 # Loop over all models
 {% for model in models %}
 
