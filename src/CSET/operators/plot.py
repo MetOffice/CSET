@@ -190,7 +190,7 @@ def _get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
 
     Parameters
     ----------
-    cube: CubeList or Cube
+    cubes: CubeList or Cube
         Cubes with model_name attribute
 
     Returns
@@ -200,14 +200,21 @@ def _get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
     """
     user_colorbar_file = get_recipe_metadata().get("style_file_path", None)
     colorbar = _load_colorbar_map(user_colorbar_file)
-    model_names = [cube.attributes["model_name"] for cube in iter_maybe(cubes)]
+    model_names = [cube.attributes.get("model_name", None) for cube in iter_maybe(cubes)]
+    model_names = [mn for mn in model_names if mn is not None]
+    if not model_names:
+        return {}
     use_user_colors = all([mname in colorbar.keys() for mname in model_names])
     if use_user_colors:
         return {mname: colorbar[mname] for mname in model_names}
+
+    color_list = DEFAULT_DISCRETE_COLORS
+    while len(model_names) > len(color_list):
+        color_list += color_list
     return {
         mname: color
         for mname, color in zip(
-            sorted(model_names), DEFAULT_DISCRETE_COLORS, strict=False
+            sorted(model_names), color_list, strict=False
         )
     }
 
@@ -791,7 +798,7 @@ def _plot_and_save_histogram_series(
         label = None
         color = "black"
         if len(model_colors_map) > 1:
-            label = cube.attributes["model_name"]
+            label = cube.attributes.get("model_name")
             color = model_colors_map[label]
         x, y = np.histogram(cube_data_1d, bins=bins, density=True)
         ax.plot(
@@ -1525,7 +1532,7 @@ def plot_histogram_series(
     model_names = list(
         filter(
             lambda x: x is not None,
-            set([cube.attributes.get("model_name", None) for cube in cubes]),
+            {cube.attributes.get("model_name", None) for cube in cubes},
         )
     )
     if not model_names:
@@ -1535,8 +1542,8 @@ def plot_histogram_series(
 
     if isinstance(cubes, iris.cube.CubeList) and len(cubes) != num_models:
         raise ValueError(
-            f"There are {num_models:d} models provided, so histogram plot can only plot"
-            f" {num_models:d} cubes."
+            f"There are {num_models} models provided, so histogram plot can only plot"
+            f" {num_models} cubes."
         )
 
     # If several histograms are plotted with time as sequence_coordinate for the
@@ -1560,8 +1567,8 @@ def plot_histogram_series(
             break
 
     if levels is None:
-        vmin = min([cb.data.min() for cb in cubes])
-        vmax = max([cb.data.max() for cb in cubes])
+        vmin = min(cb.data.min() for cb in cubes)
+        vmax = max(cb.data.max() for cb in cubes)
 
     # Make postage stamp plots if stamp_coordinate exists and has more than a
     # single point. If single_plot is True:

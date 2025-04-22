@@ -164,9 +164,6 @@ def read_cubes(
     if model_names is not None:
         if isinstance(model_names, str):
             model_names = model_names.split(",")
-    else:
-        # just to make sure cubes will get model_name attribute
-        model_names = [f"m{i + 1:d}" for i in range(len(other_paths) + 1)]
 
     logging.debug(f"received model labels: {model_names}")
     if len(model_names) != len(other_paths) + 1:
@@ -185,12 +182,16 @@ def read_cubes(
         )
     )
     for i, other_path in enumerate(other_paths):
+        try:
+            model_name = other_model_names[i]
+        except IndexError:
+            model_name = None
         cubes.extend(
             load_from_paths(
                 other_path,
                 is_ensemble=False,
                 is_base=False,
-                model_name=other_model_names[i],
+                model_name=model_name,
             )
         )
 
@@ -203,12 +204,16 @@ def read_cubes(
             )
         )
         for i, other_path in enumerate(other_paths):
+            try:
+                model_name = other_model_names[i]
+            except IndexError:
+                model_name = None
             cubes.extend(
                 load_from_paths(
                     other_path,
                     is_ensemble=True,
                     is_base=False,
-                    model_name=other_model_names[i],
+                    model_name=model_name,
                 )
             )
 

@@ -1,9 +1,10 @@
 category: Surface Time Series
-title: $MODEL_NAME Domain mean surface $VARNAME time series
+title: $TITLE_PREFIX Domain mean surface $VARNAME time series
 description: Plots a time series of the domain mean surface $VARNAME.
 
 steps:
-  - operator: read.read_cube
+  - operator: read.read_cubes
+    model_names: $MODEL_NAME
     file_paths: $INPUT_PATHS
     constraint:
       operator: constraints.combine_constraints

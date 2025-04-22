@@ -5,8 +5,6 @@
 [runtime]
     [[generic_surface_histogram_series_case_aggregation_by_lead_time_{{sanitise_task_name(field)}}]]
     inherit = PROCESS_CASE_AGGREGATION
-        [[[directives]]]
-        --mem=5000
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_surface_histogram_series_case_aggregation_lead_time.yaml"
         CSET_ADDOPTS = """
@@ -22,8 +20,6 @@
 [runtime]
     [[generic_surface_histogram_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
     inherit = PROCESS_CASE_AGGREGATION
-        [[[directives]]]
-        --mem=5000
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_surface_histogram_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
         CSET_ADDOPTS = """

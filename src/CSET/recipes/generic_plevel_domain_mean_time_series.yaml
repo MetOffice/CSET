@@ -1,9 +1,10 @@
 category: Pressure Level Time Series
-title: $MODEL_NAME $VARNAME $PLEVEL Domain mean time series
+title: $TITLE_PREFIX $VARNAME $PLEVEL Domain mean time series
 description: Plots a time series of the domain mean $VARNAME $PLEVEL pressure level.
 
 steps:
-  - operator: read.read_cube
+  - operator: read.read_cubes
+    model_names: $MODEL_NAME
     file_paths: $INPUT_PATHS
     constraint:
       operator: constraints.combine_constraints
