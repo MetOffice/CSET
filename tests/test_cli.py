@@ -25,7 +25,6 @@ from uuid import uuid4
 import pytest
 
 import CSET
-import CSET.operators
 
 
 def test_command_line_invocation():
@@ -41,15 +40,15 @@ def test_command_line_invocation():
 
 # Every other test should not use the command line interface, but rather stay
 # within python to ensure coverage measurement.
-def test_argument_parser():
+def test_argument_parser(tmp_path):
     """Tests the argument parser behaves appropriately."""
     parser = CSET.setup_argument_parser()
     # Test verbose flag.
-    args = parser.parse_args(["recipe-id", "-r", "recipe.yaml"])
+    args = parser.parse_args(["graph", "-r", "recipe.yaml", "-o", str(tmp_path)])
     assert args.verbose == 0
-    args = parser.parse_args(["-v", "recipe-id", "-r", "recipe.yaml"])
+    args = parser.parse_args(["-v", "graph", "-r", "recipe.yaml", "-o", str(tmp_path)])
     assert args.verbose == 1
-    args = parser.parse_args(["-vv", "recipe-id", "-r", "recipe.yaml"])
+    args = parser.parse_args(["-vv", "graph", "-r", "recipe.yaml", "-o", str(tmp_path)])
     assert args.verbose == 2
 
 
@@ -166,16 +165,6 @@ def test_bake_invalid_args(capsys):
     assert capsys.readouterr().err == "Unknown argument: --not-a-real-option\n"
 
 
-def test_bake_invalid_args_input_dir(capsys):
-    """Missing required input-dir argument for bake."""
-    with pytest.raises(SystemExit) as sysexit:
-        CSET.main(["cset", "bake", "--recipe=foo", "--output-dir=/tmp"])
-    assert sysexit.value.code == 2
-    assert capsys.readouterr().err.endswith(
-        "cset bake: error: the following arguments are required: -i/--input-dir\n"
-    )
-
-
 def test_graph_creation(tmp_path: Path):
     """Generates a graph with the command line interface."""
     # We can't easily test running without the output specified from the CLI, as
@@ -250,23 +239,3 @@ def test_cookbook_non_existent_recipe(tmp_path):
             ["cset", "cookbook", "--output-dir", str(tmp_path), "non-existent.yaml"]
         )
     assert sysexit.value.code == 1
-
-
-def test_recipe_id(capsys):
-    """Get recipe ID for a recipe."""
-    CSET.main(["cset", "recipe-id", "-r", "tests/test_data/noop_recipe.yaml"])
-    assert capsys.readouterr().out == "noop\n"
-
-
-def test_recipe_id_no_title(capsys):
-    """Get recipe id for recipe without a title."""
-    CSET.main(["cset", "recipe-id", "-r", "tests/test_data/ensemble_air_temp.yaml"])
-    # UUID output + newline.
-    assert len(capsys.readouterr().out) == 37
-
-
-def test_cset_addopts(capsys, monkeypatch):
-    """Lists in CSET_ADDOPTS environment variable don't crash the parser."""
-    monkeypatch.setenv("CSET_ADDOPTS", "--LIST='[1, 2, 3]'")
-    CSET.main(["cset", "recipe-id", "-r", "tests/test_data/addopts_test_recipe.yaml"])
-    assert capsys.readouterr().out == "list_1_2_3\n"

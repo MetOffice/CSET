@@ -1,5 +1,5 @@
-{% if DOMAIN_MEAN_SURFACE_TIME_SERIES|default(False) %}
-{% for field in SURFACE_MODEL_FIELDS %}
+{% if TIMESERIES_SURFACE_FIELD|default(False) %}
+{% for field in SURFACE_FIELDS %}
 {% for model in models %}
 [runtime]
     [[generic_surface_domain_mean_time_series_m{{model["id"]}}_{{sanitise_task_name(field)}}]]

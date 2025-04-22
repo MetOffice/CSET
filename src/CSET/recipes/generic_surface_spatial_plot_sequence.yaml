@@ -4,6 +4,7 @@ description: Extracts and plots the surface $VARNAME for all times in $MODEL_NAM
 
 steps:
   - operator: read.read_cube
+    file_paths: $INPUT_PATHS
     constraint:
       operator: constraints.combine_constraints
       varname_constraint:
