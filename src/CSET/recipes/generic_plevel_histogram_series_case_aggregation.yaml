@@ -1,5 +1,5 @@
 category: Histogram
-title: $MODEL_NAME $VARNAME $PLEVEL Level Histogram Plot case aggregation
+title: $TITLE_PREFIX $VARNAME $PLEVEL Level Histogram Plot case aggregation
 description: |
   Extracts and plots the probability density of $PLEVEL level $VARNAME from a
   file at model level $PLEVEL of $MODEL_NAME. It uses
@@ -13,6 +13,7 @@ description: |
 
 steps:
   - operator: read.read_cubes
+    model_names: $MODEL_NAME
     constraint:
       operator: constraints.combine_constraints
       variable_constraint:

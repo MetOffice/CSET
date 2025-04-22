@@ -1,7 +1,25 @@
 {% if DOMAIN_HISTOGRAM_SERIES_CASE_AGGREGATION_ALL|default(False) %}
-{% for field in PRESSURE_LEVEL_MODEL_FIELDS %}
-{% for model in models %}
 {% for plevel in PRESSURE_LEVELS %}
+{% for field in PRESSURE_MODEL_FIELDS %}
+
+{% if MULTIMODEL|default(False) %}
+[runtime]
+    [[generic_plevel_multimodel_histogram_series_case_aggregation_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
+    inherit = PROCESS
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_plevel_histogram_series_case_aggregation.yaml"
+        CSET_ADDOPTS = """
+            --VARNAME='{{field}}'
+            --PLEVEL='{{plevel}}'
+            --MODEL_NAME='{{ models | map(attribute="name") | list | join("__")}}'
+            --TITLE_PREFIX='Multimodel'
+        """
+        MODEL_IDENTIFIERS = '{{ models | map(attribute="id") | list | join(" ")}}'
+{% endfor %}
+
+{% else %}
+
+{% for model in models %}
 [runtime]
     [[generic_plevel_histogram_series_case_aggregation_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
     inherit = PROCESS_CASE_AGGREGATION
@@ -14,6 +32,9 @@
         """
         MODEL_IDENTIFIERS = {{model["id"]}}
 {% endfor %}
+
+{% endif %}
+
 {% endfor %}
 {% endfor %}
 {% endif %}
