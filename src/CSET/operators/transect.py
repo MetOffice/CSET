@@ -136,8 +136,12 @@ def calc_transect(cube: iris.cube.Cube, startcoords: tuple, endcoords: tuple):
         )
 
         # Remove existing coordinates ready to add one single map coordinate
-        cube_slice.remove_coord(lon_name)
-        cube_slice.remove_coord(lat_name)
+        # Note latitude/longitude cubes may have additional AuxCoord to remove
+        for coord_name in ["latitude", "longitude", "grid_latitude", "grid_longitude"]:
+            try:
+                cube_slice.remove_coord(coord_name)
+            except iris.exceptions.CoordinateNotFoundError:
+                pass
 
         if transect_coord == "latitude":
             dist_coord = iris.coords.DimCoord(
