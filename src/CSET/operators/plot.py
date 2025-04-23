@@ -200,7 +200,9 @@ def _get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
     """
     user_colorbar_file = get_recipe_metadata().get("style_file_path", None)
     colorbar = _load_colorbar_map(user_colorbar_file)
-    model_names = [cube.attributes.get("model_name", None) for cube in iter_maybe(cubes)]
+    model_names = [
+        cube.attributes.get("model_name", None) for cube in iter_maybe(cubes)
+    ]
     model_names = [mn for mn in model_names if mn is not None]
     if not model_names:
         return {}
@@ -213,9 +215,7 @@ def _get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
         color_list += color_list
     return {
         mname: color
-        for mname, color in zip(
-            sorted(model_names), color_list, strict=False
-        )
+        for mname, color in zip(sorted(model_names), color_list, strict=False)
     }
 
 

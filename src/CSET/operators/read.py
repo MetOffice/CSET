@@ -161,19 +161,21 @@ def read_cubes(
     # the idea is to add model_name attribute to each cube (to make it available at any further step without necessity
     # to pass it as function parameter), so it has to be defined (but we create default values in case user
     # provides none)
+    base_model_name = None
+    other_model_names = []
     if model_names is not None:
         if isinstance(model_names, str):
             model_names = model_names.split(",")
 
-    logging.debug(f"received model labels: {model_names}")
-    if len(model_names) != len(other_paths) + 1:
-        raise ValueError(
-            f"Invalid number of labels: {len(model_names)} while the are {len(other_paths) + 1} paths given"
-        )
+        logging.debug(f"received model labels: {model_names}")
+        if len(model_names) != len(other_paths) + 1:
+            raise ValueError(
+                f"Invalid number of labels: {len(model_names)} while the are {len(other_paths) + 1} paths given"
+            )
 
-    base_model_name = model_names[0]
-    other_model_names = model_names[1:]
-    del model_names
+        base_model_name = model_names[0]
+        other_model_names = model_names[1:]
+        del model_names
 
     # Split out first input file definition here and mark as base model.
     cubes.extend(
