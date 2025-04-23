@@ -55,17 +55,22 @@ def get_cube_yxcoordname(cube: iris.cube.Cube) -> tuple[str, str]:
     Y_COORD_NAMES = ["latitude", "grid_latitude", "projection_y_coordinate", "y"]
 
     # Get a list of dimension coordinate names for the cube
-    coord_names = [coord.name() for coord in cube.coords(dim_coords=True)]
+    dim_coord_names = [coord.name() for coord in cube.coords(dim_coords=True)]
+    coord_names = [coord.name() for coord in cube.coords()]
 
     # Check which x-coordinate we have, if any
     x_coords = [coord for coord in coord_names if coord in X_COORD_NAMES]
     if len(x_coords) != 1:
-        raise ValueError("Could not identify a unique x-coordinate in cube")
+        x_coords = [coord for coord in dim_coord_names if coord in X_COORD_NAMES]
+        if len(x_coords) != 1:
+            raise ValueError("Could not identify a unique x-coordinate in cube")
 
     # Check which y-coordinate we have, if any
     y_coords = [coord for coord in coord_names if coord in Y_COORD_NAMES]
     if len(y_coords) != 1:
-        raise ValueError("Could not identify a unique y-coordinate in cube")
+        y_coords = [coord for coord in dim_coord_names if coord in Y_COORD_NAMES]
+        if len(y_coords) != 1:
+            raise ValueError("Could not identify a unique y-coordinate in cube")
 
     return (y_coords[0], x_coords[0])
 
