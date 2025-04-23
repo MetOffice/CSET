@@ -1,0 +1,19 @@
+{% if MULTIMODEL|default(False) %}
+
+[runtime]
+    [[create_model_color_map]]
+        inherit = PREPROCESS
+        [[[environment]]]
+            {% if COLORBAR_FILE == "" %}
+            COLORBAR_FILE = "${CYLC_WORKFLOW_SHARE_DIR}/style_file.json"
+            APPEND =
+            {% else %}
+            APPEND = --append
+            {% endif %}
+            SCRIPT_OPTS = """
+                --models {{ models | map(attribute="name") | list | join(" ")}}
+                --filepath $COLORBAR_FILE
+                $APPEND
+            """
+
+{% endif %}

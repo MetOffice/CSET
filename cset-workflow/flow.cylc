@@ -43,6 +43,7 @@ URL = https://metoffice.github.io/CSET
             FETCH_DATA:succeed-all =>
             PREPROCESS_DATA:succeed-all =>
             fetch_complete =>
+            PREPROCESS:succeed-all =>
             PROCESS:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} =>
             cycle_complete
             """
@@ -54,6 +55,7 @@ URL = https://metoffice.github.io/CSET
         FETCH_DATA:succeed-all =>
         PREPROCESS_DATA:succeed-all =>
         fetch_complete =>
+        PREPROCESS:succeed-all =>
         PROCESS:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} =>
         cycle_complete
         """
@@ -101,6 +103,9 @@ URL = https://metoffice.github.io/CSET
         COLORBAR_FILE = {{COLORBAR_FILE}}
         PLOT_RESOLUTION = {{PLOT_RESOLUTION|default(100)}}
         SKIP_WRITE = {{SKIP_WRITE}}
+
+    [[PREPROCESS]]
+    execution time limit = PT5M
 
     [[PROCESS]]
     script = rose task-run -v --app-key=run_cset_recipe
@@ -158,6 +163,9 @@ URL = https://metoffice.github.io/CSET
 
     [[dummy_process]]
     inherit = DUMMY_TASK, PROCESS
+
+    [[dummy_preprocess]]
+    inherit = DUMMY_TASK, PREPROCESS
 
     [[dummy_process_case_aggregation]]
     inherit = DUMMY_TASK, PROCESS_CASE_AGGREGATION
