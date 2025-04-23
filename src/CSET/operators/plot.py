@@ -1536,9 +1536,10 @@ def plot_histogram_series(
         )
     )
     if not model_names:
-        raise ValueError("Missing model names. Please provide them.")
-
-    num_models = len(model_names)
+        logging.debug("Missing model names. Will assume single model.")
+        num_models = 1
+    else:
+        num_models = len(model_names)
 
     if isinstance(cubes, iris.cube.CubeList) and len(cubes) != num_models:
         raise ValueError(
