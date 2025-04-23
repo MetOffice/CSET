@@ -44,6 +44,22 @@ def test_get_cube_yxcoordname(regrid_rectilinear_cube):
     )
 
 
+def test_missing_coord_get_cube_coordindex(regrid_rectilinear_cube):
+    """Missing coordinate name raises error."""
+    with pytest.raises(ValueError):
+        operator_utils.get_cube_coordindex(regrid_rectilinear_cube, "gridded_latitude")
+
+
+def test_get_cube_coordindex(regrid_rectilinear_cube):
+    """Check that function returns correct dimension index for grid_latitude."""
+    assert (
+        operator_utils.get_cube_coordindex(regrid_rectilinear_cube, "latitude")
+    ) == 0
+    assert (
+        operator_utils.get_cube_coordindex(regrid_rectilinear_cube, "longitude")
+    ) == 1
+
+
 def test_is_transect_multiple_spatial_coords(regrid_rectilinear_cube):
     """Check that function returns False as more than one spatial map coord."""
     assert not operator_utils.is_transect(regrid_rectilinear_cube)
