@@ -24,14 +24,14 @@ import CSET.operators._utils as operator_utils
 
 def test_missing_coord_get_cube_yxcoordname_x(regrid_rectilinear_cube):
     """Missing X coordinate raises error."""
-    regrid_rectilinear_cube.remove_coord("grid_longitude")
+    regrid_rectilinear_cube.remove_coord("longitude")
     with pytest.raises(ValueError):
         operator_utils.get_cube_yxcoordname(regrid_rectilinear_cube)
 
 
 def test_missing_coord_get_cube_yxcoordname_y(regrid_rectilinear_cube):
     """Missing Y coordinate raises error."""
-    regrid_rectilinear_cube.remove_coord("grid_longitude")
+    regrid_rectilinear_cube.remove_coord("longitude")
     with pytest.raises(ValueError):
         operator_utils.get_cube_yxcoordname(regrid_rectilinear_cube)
 
@@ -39,8 +39,8 @@ def test_missing_coord_get_cube_yxcoordname_y(regrid_rectilinear_cube):
 def test_get_cube_yxcoordname(regrid_rectilinear_cube):
     """Check that function returns tuple containing horizontal dimension names."""
     assert (operator_utils.get_cube_yxcoordname(regrid_rectilinear_cube)) == (
-        "grid_latitude",
-        "grid_longitude",
+        "latitude",
+        "longitude",
     )
 
 
@@ -51,7 +51,7 @@ def test_missing_coord_get_cube_coordindex(regrid_rectilinear_cube):
 
 
 def test_get_cube_coordindex(regrid_rectilinear_cube):
-    """Check that function returns correct dimension index for grid_latitude."""
+    """Check that function returns correct dimension index for latitude and longitude."""
     assert (
         operator_utils.get_cube_coordindex(regrid_rectilinear_cube, "latitude")
     ) == 0
