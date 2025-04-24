@@ -29,7 +29,7 @@ import iris.util
 
 def get_cube_yxcoordname(cube: iris.cube.Cube) -> tuple[str, str]:
     """
-    Return horizontal coordinate name(s) from a given cube.
+    Return horizontal dimension coordinate name(s) from a given cube.
 
     Arguments
     ---------
@@ -37,7 +37,7 @@ def get_cube_yxcoordname(cube: iris.cube.Cube) -> tuple[str, str]:
     cube: iris.cube.Cube
         An iris cube which will be checked to see if it contains coordinate
         names that match a pre-defined list of acceptable horizontal
-        coordinate names.
+        dimension coordinate names.
 
     Returns
     -------
@@ -54,20 +54,62 @@ def get_cube_yxcoordname(cube: iris.cube.Cube) -> tuple[str, str]:
     X_COORD_NAMES = ["longitude", "grid_longitude", "projection_x_coordinate", "x"]
     Y_COORD_NAMES = ["latitude", "grid_latitude", "projection_y_coordinate", "y"]
 
-    # Get a list of coordinate names for the cube
+    # Get a list of dimension coordinate names for the cube
+    dim_coord_names = [coord.name() for coord in cube.coords(dim_coords=True)]
     coord_names = [coord.name() for coord in cube.coords()]
 
     # Check which x-coordinate we have, if any
     x_coords = [coord for coord in coord_names if coord in X_COORD_NAMES]
     if len(x_coords) != 1:
-        raise ValueError("Could not identify a unique x-coordinate in cube")
+        x_coords = [coord for coord in dim_coord_names if coord in X_COORD_NAMES]
+        if len(x_coords) != 1:
+            raise ValueError("Could not identify a unique x-coordinate in cube")
 
     # Check which y-coordinate we have, if any
     y_coords = [coord for coord in coord_names if coord in Y_COORD_NAMES]
     if len(y_coords) != 1:
-        raise ValueError("Could not identify a unique y-coordinate in cube")
+        y_coords = [coord for coord in dim_coord_names if coord in Y_COORD_NAMES]
+        if len(y_coords) != 1:
+            raise ValueError("Could not identify a unique y-coordinate in cube")
 
     return (y_coords[0], x_coords[0])
+
+
+def get_cube_coordindex(cube: iris.cube.Cube, coord_name) -> int:
+    """
+    Return coordinate dimension for a named coordinate from a given cube.
+
+    Arguments
+    ---------
+
+    cube: iris.cube.Cube
+        An iris cube which will be checked to see if it contains coordinate
+        names that match a pre-defined list of acceptable horizontal
+        coordinate names.
+
+    coord_name: str
+        A cube dimension name
+
+    Returns
+    -------
+    coord_index
+        An integer specifying where in the cube dimension list a specified coordinate name is found.
+
+    Raises
+    ------
+    ValueError
+        If a specified dimension coordinate cannot be found.
+    """
+    # Get a list of dimension coordinate names for the cube
+    coord_names = [coord.name() for coord in cube.coords(dim_coords=True)]
+
+    # Check which index the requested dimension is found in, if any
+    try:
+        coord_index = coord_names.index(coord_name)
+    except iris.exceptions.CoordinateNotFoundError:
+        pass
+
+    return coord_index
 
 
 def is_spatialdim(cube: iris.cube.Cube) -> bool:
