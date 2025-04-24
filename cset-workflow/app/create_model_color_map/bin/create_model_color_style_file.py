@@ -1,3 +1,5 @@
+#! /usr/bin/env python3
+
 """Functions to create style file with model:color mapping."""
 
 import argparse

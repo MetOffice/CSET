@@ -11,7 +11,7 @@
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
             --PLEVEL='{{plevel}}'
-            --MODEL_NAME='{{ models | map(attribute="name") | list | join(",")}}'
+            --MODEL_NAME='{{ shell_quote(repr(models | map(attribute="name") | list)) }}'
             --TITLE_PREFIX='Multimodel'
         """
         MODEL_IDENTIFIERS = '{{ models | map(attribute="id") | list | join(" ")}}'

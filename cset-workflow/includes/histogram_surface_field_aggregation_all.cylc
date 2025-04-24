@@ -8,7 +8,7 @@
         CSET_RECIPE_NAME = "generic_surface_histogram_series_case_aggregation.yaml"
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
-            --MODEL_NAME='{{ models | map(attribute="name") | list | join(",")}}'
+            --MODEL_NAME='{{ models | map(attribute="name") | list | string | shell_quote }}'
             --TITLE_PREFIX='Multimodel'
         """
         MODEL_IDENTIFIERS = '{{ models | map(attribute="id") | list | join(" ")}}'

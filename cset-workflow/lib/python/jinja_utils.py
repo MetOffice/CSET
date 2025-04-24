@@ -16,6 +16,7 @@
 
 from builtins import max, min, zip
 from glob import glob
+from shlex import quote as shell_quote
 
 # Reexport functions for use within workflow.
 __all__ = [
@@ -26,6 +27,7 @@ __all__ = [
     "min",
     "zip",
     "glob",
+    "shell_quote",
 ]
 
 
