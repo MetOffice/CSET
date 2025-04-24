@@ -4,15 +4,15 @@
     [[create_model_color_map]]
         inherit = PREPROCESS
         [[[environment]]]
+            STYLE_FILE = "${CYLC_WORKFLOW_SHARE_DIR}/style_file.json"
             {% if COLORBAR_FILE == "" %}
-            COLORBAR_FILE = "${CYLC_WORKFLOW_SHARE_DIR}/style_file.json"
             APPEND =
             {% else %}
             APPEND = --append
             {% endif %}
             SCRIPT_OPTS = """
                 --models {{ models | map(attribute="name") | list | join(" ")}}
-                --filepath $COLORBAR_FILE
+                --filepath $STYLE_FILE
                 $APPEND
             """
 

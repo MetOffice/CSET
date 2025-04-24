@@ -107,7 +107,10 @@ def create_json_file(input: dict, filepath: str, append: bool) -> None:
                 base = json.load(fp)
         except FileNotFoundError as err:
             raise FileNotFoundError(f"File {filepath} not found.") from err
-    base.update(input)
+
+    for k, v in input.items():
+        if k not in base:
+            base[k] = v
 
     with open(filepath, "w+") as fp:
         json.dump(base, fp, indent=4)
