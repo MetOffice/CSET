@@ -55,11 +55,11 @@ def run_recipe_steps():
         if skip_write == "True":
             command.append("--skip-write")
 
-    print("Running %s", shlex.join(command))
+    print("Running", shlex.join(command))
     try:
         subprocess.run(command, check=True)
     except subprocess.CalledProcessError as err:
-        print("cset bake exited with non-zero code %s.", err.returncode, sys.stderr)
+        print(f"cset bake exited with non-zero code {err.returncode}.", sys.stderr)
         raise
 
 
