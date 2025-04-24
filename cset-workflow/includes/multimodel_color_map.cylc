@@ -3,6 +3,7 @@
 [runtime]
     [[create_model_color_map]]
         inherit = PREPROCESS
+        post-script = cylc broadcast $CYLC_WORKFLOW_ID -n root -s "[environment]COLORBAR_FILE=${STYLE_FILE}"
         [[[environment]]]
             STYLE_FILE = "${CYLC_WORKFLOW_SHARE_DIR}/style_file.json"
             {% if COLORBAR_FILE == "" %}

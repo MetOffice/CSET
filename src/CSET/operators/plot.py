@@ -797,7 +797,7 @@ def _plot_and_save_histogram_series(
 
         label = None
         color = "black"
-        if len(model_colors_map) > 1:
+        if model_colors_map:
             label = cube.attributes.get("model_name")
             color = model_colors_map[label]
         x, y = np.histogram(cube_data_1d, bins=bins, density=True)
@@ -815,7 +815,7 @@ def _plot_and_save_histogram_series(
 
     # Overlay grid-lines onto histogram plot.
     ax.grid(linestyle="--", color="grey", linewidth=1)
-    if len(model_colors_map) > 1:
+    if model_colors_map:
         ax.legend(loc="best", ncol=1, frameon=False)
 
     # Save plot.
