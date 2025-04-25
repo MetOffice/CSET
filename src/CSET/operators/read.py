@@ -493,9 +493,7 @@ def _fix_um_radtime_prehour(cube: iris.cube.Cube):
                 return
 
             # Add 1 minute from each time point
-            new_time_points = np.array(
-                [t + datetime.timedelta(minutes=1) for t in time_points]
-            )
+            new_time_points = time_points + datetime.timedelta(minutes=1)
 
             # Convert back to numeric values using the original time unit
             new_time_values = time_unit.date2num(new_time_points)
