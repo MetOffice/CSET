@@ -104,9 +104,6 @@ URL = https://metoffice.github.io/CSET
         PLOT_RESOLUTION = {{PLOT_RESOLUTION|default(100)}}
         SKIP_WRITE = {{SKIP_WRITE}}
 
-    [[PREPROCESS]]
-    execution time limit = PT5M
-
     [[PROCESS]]
     script = rose task-run -v --app-key=run_cset_recipe
     execution time limit = PT5M
@@ -185,6 +182,7 @@ URL = https://metoffice.github.io/CSET
     [[assign_model_colours]]
     # Copies the style file, inserting per-model definitions to ensure
     # consistency between the many runs.
+    execution time limit = PT5M
         [[[environment]]]
         COLORBAR_FILE = {{COLORBAR_FILE}}
         MODEL_NAMES = """{{model_names}}"""
