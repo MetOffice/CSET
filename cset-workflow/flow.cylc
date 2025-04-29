@@ -33,6 +33,7 @@ URL = https://metoffice.github.io/CSET
     # Only runs on the first cycle.
     R1/^ = """
     build_conda => install_website_skeleton => setup_complete
+    build_conda => assign_model_colours => setup_complete
     """
 
     {% if CSET_CYCLING_MODE == "case_study" %}
@@ -164,9 +165,6 @@ URL = https://metoffice.github.io/CSET
     [[dummy_process]]
     inherit = DUMMY_TASK, PROCESS
 
-    [[dummy_preprocess]]
-    inherit = DUMMY_TASK, PREPROCESS
-
     [[dummy_process_case_aggregation]]
     inherit = DUMMY_TASK, PROCESS_CASE_AGGREGATION
 
@@ -184,6 +182,13 @@ URL = https://metoffice.github.io/CSET
     # Copies the static files that make up the web interface.
         [[[environment]]]
         WEB_DIR = {{WEB_DIR}}
+
+    [[assign_model_colours]]
+    # Copies the style file, inserting per-model definitions to ensure
+    # consistency between the many runs.
+        post-script = cylc broadcast $CYLC_WORKFLOW_ID -n root -s "[environment]COLORBAR_FILE=${STYLE_FILE}"
+        [[[environment]]]
+            MODELS = {{ models | map(attribute="name") | join("\n")}}
 
     {% for model in models %}
     [[fetch_fcst_m{{model["id"]}}]]
