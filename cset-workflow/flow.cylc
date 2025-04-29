@@ -101,7 +101,6 @@ URL = https://metoffice.github.io/CSET
 
         CONDA_PATH = {{CONDA_PATH}}
         LOGLEVEL = {{LOGLEVEL}}
-        COLORBAR_FILE = {{COLORBAR_FILE}}
         PLOT_RESOLUTION = {{PLOT_RESOLUTION|default(100)}}
         SKIP_WRITE = {{SKIP_WRITE}}
 
@@ -188,7 +187,8 @@ URL = https://metoffice.github.io/CSET
     # consistency between the many runs.
         post-script = cylc broadcast $CYLC_WORKFLOW_ID -n root -s "[environment]COLORBAR_FILE=${STYLE_FILE}"
         [[[environment]]]
-            MODELS = {{ models | map(attribute="name") | join("\n")}}
+            COLORBAR_FILE = {{COLORBAR_FILE}}
+            MODELS = """{{ models | map(attribute='name') | join('\n')}}"""
 
     {% for model in models %}
     [[fetch_fcst_m{{model["id"]}}]]
