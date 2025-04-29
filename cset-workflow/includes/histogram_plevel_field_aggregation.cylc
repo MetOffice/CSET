@@ -12,9 +12,9 @@
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
             --PLEVEL='{{plevel}}'
-            --MODEL_NAME='{{ models | map(attribute="name") | list | string | shell_quote }}'
+            --MODEL_NAME='{{model_names}}'
         """
-        MODEL_IDENTIFIERS = '{{ models | map(attribute="id") | list | join(" ")}}'
+        MODEL_IDENTIFIERS = '{{model_ids}}'
 {% endfor %}
 {% endfor %}
 {% endfor %}

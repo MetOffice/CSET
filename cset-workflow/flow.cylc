@@ -5,9 +5,11 @@ description = Workflow for running CSET.
 URL = https://metoffice.github.io/CSET
 
 # Import all of our Jinja utilities for use in the workflow.
-{% from "jinja_utils" import get_models, glob, max, min, zip, sanitise_task_name, shell_quote %}
+{% from "jinja_utils" import get_model_names, get_model_ids, get_models, glob, max, min, zip, sanitise_task_name %}
 # Load a list a model detail dictionaries.
 {% set models = get_models(ROSE_SUITE_VARIABLES) %}
+{% set model_ids = get_model_ids(models) %}
+{% set model_names = get_model_names(models) %}
 # Create a list of case aggregation types.
 {% set AGGREGATION_TYPES = ["LEAD_TIME", "HOUR_OF_DAY", "VALIDITY_TIME"] %}
 
@@ -44,7 +46,6 @@ URL = https://metoffice.github.io/CSET
             FETCH_DATA:succeed-all =>
             PREPROCESS_DATA:succeed-all =>
             fetch_complete =>
-            PREPROCESS:succeed-all =>
             PROCESS:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} =>
             cycle_complete
             """
@@ -56,7 +57,6 @@ URL = https://metoffice.github.io/CSET
         FETCH_DATA:succeed-all =>
         PREPROCESS_DATA:succeed-all =>
         fetch_complete =>
-        PREPROCESS:succeed-all =>
         PROCESS:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} =>
         cycle_complete
         """
@@ -185,10 +185,9 @@ URL = https://metoffice.github.io/CSET
     [[assign_model_colours]]
     # Copies the style file, inserting per-model definitions to ensure
     # consistency between the many runs.
-        post-script = cylc broadcast $CYLC_WORKFLOW_ID -n root -s "[environment]COLORBAR_FILE=${STYLE_FILE}"
         [[[environment]]]
-            COLORBAR_FILE = {{COLORBAR_FILE}}
-            MODELS = """{{ models | map(attribute='name') | join('\n')}}"""
+        COLORBAR_FILE = {{COLORBAR_FILE}}
+        MODEL_NAMES = '{{model_names}}'
 
     {% for model in models %}
     [[fetch_fcst_m{{model["id"]}}]]

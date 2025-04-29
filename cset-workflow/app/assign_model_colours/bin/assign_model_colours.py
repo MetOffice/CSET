@@ -58,7 +58,7 @@ def create_model_colour_mapping(model_names: list[str]) -> dict:
 
 def main():
     """Create model name <-> colour mappings add to a copy of the style file."""
-    model_names = os.environ["MODELS"].splitlines()
+    model_names = json.loads(os.environ["MODEL_NAMES"])
     style_file = os.getenv("COLORBAR_FILE")
 
     if style_file:
