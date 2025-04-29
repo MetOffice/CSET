@@ -55,7 +55,7 @@ def get_models(rose_variables: dict) -> list[dict]:
 def get_model_names(models: list) -> str:
     """Get a quoted JSON list literal of model names."""
     json_text = json.dumps([model["name"] for model in models])
-    return f"'{json_text}'"
+    return json_text.replace('"', r"\"")
 
 
 def get_model_ids(models: list) -> str:
