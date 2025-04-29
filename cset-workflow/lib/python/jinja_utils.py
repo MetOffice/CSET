@@ -14,6 +14,7 @@
 
 """Useful functions for the workflow."""
 
+import base64
 import json
 from builtins import max, min, zip
 from glob import glob
@@ -53,8 +54,10 @@ def get_models(rose_variables: dict) -> list[dict]:
 
 
 def get_model_names(models: list) -> str:
-    """Get an JSON list literal of model names."""
-    return json.dumps([model["name"] for model in models])
+    """Get a base64 encoded JSON list literal of model names."""
+    json_text = json.dumps([model["name"] for model in models])
+    b64_bin = base64.b64encode(json_text.encode())
+    return b64_bin.decode()
 
 
 def get_model_ids(models: list) -> str:

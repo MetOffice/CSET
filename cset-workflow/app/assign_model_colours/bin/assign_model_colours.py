@@ -2,6 +2,7 @@
 
 """Functions to create style file with model:color mapping."""
 
+import base64
 import itertools
 import json
 import os
@@ -58,7 +59,12 @@ def create_model_colour_mapping(model_names: list[str]) -> dict:
 
 def main():
     """Create model name <-> colour mappings add to a copy of the style file."""
-    model_names = json.loads(os.environ["MODEL_NAMES"])
+    raw_model_names = os.environ["MODEL_NAMES"]
+    print(raw_model_names)
+    decoded_model_names = base64.b64decode(raw_model_names).decode()
+    print(decoded_model_names)
+    model_names = json.loads(raw_model_names)
+    print(model_names)
     style_file = os.getenv("COLORBAR_FILE")
 
     if style_file:

@@ -187,7 +187,7 @@ URL = https://metoffice.github.io/CSET
     # consistency between the many runs.
         [[[environment]]]
         COLORBAR_FILE = {{COLORBAR_FILE}}
-        MODEL_NAMES = '{{model_names}}'
+        MODEL_NAMES = {{model_names}}
 
     {% for model in models %}
     [[fetch_fcst_m{{model["id"]}}]]
