@@ -32,8 +32,7 @@ DISCRETE_COLORS = (
 
 
 def create_model_colour_mapping(model_names: list[str]) -> dict:
-    """
-    Create dict with model name <-> colour mapping.
+    """Create dict with model name <-> colour mapping.
 
     The model names are mapped to colours in alphabetical order.
 
@@ -58,9 +57,7 @@ def create_model_colour_mapping(model_names: list[str]) -> dict:
 
 def main():
     """Create model name <-> colour mappings add to a copy of the style file."""
-    raw_model_names = os.environ["MODEL_NAMES"]
-    print(f"Raw MODEL_NAMES: {raw_model_names!r}")
-    model_names = json.loads(raw_model_names)
+    model_names = json.loads(os.environ["MODEL_NAMES"])
     print(f"Processing models: {', '.join(model_names)}")
 
     style_file = os.getenv("COLORBAR_FILE")
