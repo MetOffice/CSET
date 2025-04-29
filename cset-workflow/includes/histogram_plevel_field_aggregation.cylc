@@ -2,10 +2,9 @@
 {% if HISTOGRAM_PLEVEL_FIELD_AGGREGATION[atype]|default(False) %}
 {% for field in PRESSURE_LEVEL_FIELDS %}
 {% for plevel in PRESSURE_LEVELS %}
-{% for field in PRESSURE_LEVEL_FIELDS %}
 [runtime]
     [[generic_plevel_histogram_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_multimodel_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
-    inherit = PROCESS
+    inherit = PROCESS_CASE_AGGREGATION
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_plevel_histogram_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
         CSET_ADDOPTS = """
@@ -16,7 +15,5 @@
         MODEL_IDENTIFIERS = '{{model_ids}}'
 {% endfor %}
 {% endfor %}
-{% endfor %}
-
 {% endif %}
 {% endfor %}

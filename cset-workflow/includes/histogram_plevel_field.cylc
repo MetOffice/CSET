@@ -12,7 +12,6 @@
             --MODEL_NAME='{{model_names}}'
         """
         MODEL_IDENTIFIERS = '{{model_ids}}'
-
 {% endfor %}
 {% endfor %}
 {% endif %}
