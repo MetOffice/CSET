@@ -7,7 +7,7 @@
         CSET_RECIPE_NAME = "generic_surface_histogram_series.yaml"
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
-            --MODEL_NAME='{{model_names}}'
+            --MODEL_NAME={{model_names}}
         """
         MODEL_IDENTIFIERS = '{{model_ids}}'
 {% endfor %}
