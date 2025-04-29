@@ -180,7 +180,7 @@ URL = https://metoffice.github.io/CSET
         WEB_DIR = {{WEB_DIR}}
 
     [[assign_model_colours]]
-    # Copies the style file, inserting per-model definitions to ensure
+    # Copies the style file, inserting per-model colour definitions to ensure
     # consistency between the many runs.
     execution time limit = PT5M
         [[[environment]]]
