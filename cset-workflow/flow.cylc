@@ -185,7 +185,7 @@ URL = https://metoffice.github.io/CSET
     execution time limit = PT5M
         [[[environment]]]
         COLORBAR_FILE = {{COLORBAR_FILE}}
-        MODEL_NAMES = """{{model_names}}"""
+        MODEL_NAMES = '{{model_names}}'
 
     {% for model in models %}
     [[fetch_fcst_m{{model["id"]}}]]
