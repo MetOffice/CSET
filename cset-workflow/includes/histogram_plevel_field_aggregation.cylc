@@ -1,6 +1,5 @@
 {% for atype in range(AGGREGATION_TYPES|count) %}
 {% if HISTOGRAM_PLEVEL_FIELD_AGGREGATION[atype]|default(False) %}
-
 {% for field in PRESSURE_LEVEL_FIELDS %}
 {% for plevel in PRESSURE_LEVELS %}
 {% for field in PRESSURE_LEVEL_FIELDS %}

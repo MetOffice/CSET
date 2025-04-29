@@ -1,7 +1,6 @@
 {% if HISTOGRAM_PLEVEL_FIELD|default(False) %}
 {% for field in PRESSURE_LEVEL_FIELDS %}
 {% for plevel in PRESSURE_LEVELS %}
-
 [runtime]
     [[generic_plevel_multimodel_histogram_series_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
     inherit = PROCESS
