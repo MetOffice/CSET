@@ -1,5 +1,5 @@
 category: Histogram
-title: $TITLE_PREFIX $VARNAME Surface Level Histogram Plot
+title: $VARNAME Surface Level Histogram Plot
 description: |
   Extracts and plots the probability density of surface `$VARNAME`. It uses
   [`plt.hist`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.hist.html)

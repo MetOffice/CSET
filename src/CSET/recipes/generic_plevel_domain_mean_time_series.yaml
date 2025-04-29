@@ -1,5 +1,5 @@
 category: Pressure Level Time Series
-title: $TITLE_PREFIX $VARNAME $PLEVEL Domain mean time series
+title: $VARNAME $PLEVEL Domain mean time series
 description: Plots a time series of the domain mean $VARNAME $PLEVEL pressure level.
 
 steps:

@@ -3,8 +3,6 @@
 
 {% for field in PRESSURE_LEVEL_FIELDS %}
 {% for plevel in PRESSURE_LEVELS %}
-
-{% if MULTIMODEL|default(False) %}
 {% for field in PRESSURE_LEVEL_FIELDS %}
 [runtime]
     [[generic_plevel_histogram_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_multimodel_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
@@ -15,28 +13,9 @@
             --VARNAME='{{field}}'
             --PLEVEL='{{plevel}}'
             --MODEL_NAME='{{ models | map(attribute="name") | list | string | shell_quote }}'
-            --TITLE_PREFIX='Multimodel'
         """
         MODEL_IDENTIFIERS = '{{ models | map(attribute="id") | list | join(" ")}}'
 {% endfor %}
-
-{% else %}
-
-{% for model in models %}
-[runtime]
-    [[generic_plevel_histogram_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
-    inherit = PROCESS_CASE_AGGREGATION
-        [[[environment]]]
-        CSET_RECIPE_NAME = "generic_plevel_histogram_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
-        CSET_ADDOPTS = """
-            --VARNAME='{{field}}'
-            --PLEVEL='{{plevel}}'
-            --MODEL_NAME='{{model["name"]}}'
-        """
-        MODEL_IDENTIFIERS = {{model["id"]}}
-{% endfor %}
-
-{% endif %}
 {% endfor %}
 {% endfor %}
 

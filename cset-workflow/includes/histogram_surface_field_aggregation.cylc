@@ -1,6 +1,5 @@
 {% for atype in range(AGGREGATION_TYPES|count) %}
 {% if HISTOGRAM_SURFACE_FIELD_AGGREGATION[atype]|default(False) %}
-{% if MULTIMODEL|default(False) %}
 {% for field in SURFACE_FIELDS %}
 [runtime]
     [[generic_surface_histogram_series_case_aggregation_by_lead_time_{{sanitise_task_name(field)}}]]
@@ -10,26 +9,8 @@
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
             --MODEL_NAME='{{ models | map(attribute="name") | list | string | shell_quote }}'
-            --TITLE_PREFIX='Multimodel'
         """
         MODEL_IDENTIFIERS = '{{ models | map(attribute="id") | list | join(" ")}}'
 {% endfor %}
-{% else %}
-{% for field in SURFACE_FIELDS %}
-{% for model in models %}
-[runtime]
-    [[generic_surface_histogram_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
-    inherit = PROCESS_CASE_AGGREGATION
-        [[[environment]]]
-        CSET_RECIPE_NAME = "generic_surface_histogram_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
-        CSET_ADDOPTS = """
-            --VARNAME='{{field}}'
-            --MODEL_NAME='{{model["name"]}}'
-            --TITLE_PREFIX='{{model["name"]}}'
-        """
-        MODEL_IDENTIFIERS = {{model["id"]}}
-{% endfor %}
-{% endfor %}
-{% endif %}
 {% endif %}
 {% endfor %}
