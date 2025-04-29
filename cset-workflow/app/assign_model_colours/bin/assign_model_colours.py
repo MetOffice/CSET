@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-"""Functions to create style file with model:color mapping."""
+"""Write the style file with model name <-> colour mappings."""
 
 import itertools
 import json
