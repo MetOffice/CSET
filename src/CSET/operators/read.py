@@ -460,21 +460,39 @@ def _fix_spatial_coord_name_callback(cube: iris.cube.Cube):
         # Don't modify non-spatial cubes.
         return cube
 
-    # Get spatial coords.
+    # Get spatial coords and dimension index.
     y_name, x_name = utils.get_cube_yxcoordname(cube)
+    ny = utils.get_cube_coordindex(cube, y_name)
+    nx = utils.get_cube_coordindex(cube, x_name)
 
     if y_name in ["latitude"] and cube.coord(y_name).units in [
         "degrees",
         "degrees_north",
         "degrees_south",
     ]:
-        cube.coord(y_name).rename("grid_latitude")
+        if "grid_latitude" not in [
+            coord.name() for coord in cube.coords(dim_coords=False)
+        ]:
+            cube.add_aux_coord(
+                iris.coords.AuxCoord(
+                    cube.coord(y_name).points, long_name="grid_latitude"
+                ),
+                ny,
+            )
     if x_name in ["longitude"] and cube.coord(x_name).units in [
         "degrees",
         "degrees_west",
         "degrees_east",
     ]:
-        cube.coord(x_name).rename("grid_longitude")
+        if "grid_longitude" not in [
+            coord.name() for coord in cube.coords(dim_coords=False)
+        ]:
+            cube.add_aux_coord(
+                iris.coords.AuxCoord(
+                    cube.coord(x_name).points, long_name="grid_longitude"
+                ),
+                nx,
+            )
 
 
 def _fix_pressure_coord_callback(cube: iris.cube.Cube):
@@ -544,9 +562,7 @@ def _fix_um_radtime_prehour(cube: iris.cube.Cube):
                 return
 
             # Add 1 minute from each time point
-            new_time_points = np.array(
-                [t + datetime.timedelta(minutes=1) for t in time_points]
-            )
+            new_time_points = time_points + datetime.timedelta(minutes=1)
 
             # Convert back to numeric values using the original time unit
             new_time_values = time_unit.date2num(new_time_points)
