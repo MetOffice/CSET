@@ -115,6 +115,13 @@ def test_read_cube_merge_concatenate():
     assert isinstance(cube, iris.cube.Cube)
 
 
+def test_load_model_add_model_name():
+    """Model name correctly added when given."""
+    cubes = read._load_model("tests/test_data/air_temp.nc", "Test", None)
+    for cube in cubes:
+        assert cube.attributes["model_name"] == "Test"
+
+
 def test_check_input_files_direct_path(tmp_path):
     """Get a iterable of a single file from a direct path as a string."""
     file_path = tmp_path / "file"
