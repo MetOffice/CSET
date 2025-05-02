@@ -84,6 +84,17 @@ def test_read_cubes_verify_comparison_base():
         assert "cset_comparison_base" not in cube.attributes
 
 
+def test_read_cubes_incorrect_number_of_model_names():
+    """Error raised when number of models names doesn't match number of paths."""
+    with pytest.raises(
+        ValueError,
+        match=r"The number of model names \(2\) should equal the number of paths given \(1\)\.",
+    ):
+        read.read_cubes(
+            "tests/test_data/air_temp.nc", model_names=["Model 1", "Model 2"]
+        )
+
+
 def test_fieldsfile_ensemble_naming():
     """Extracting the realization from the fields file naming convention."""
     cube = iris.cube.Cube([0])
