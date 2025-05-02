@@ -460,22 +460,37 @@ STASH_TO_LFRIC = {
 # Local additions to make CSET work with RNS for RAL3-LFRic.
 # TODO: Port to Paul's FCM branch.
 RAL3_LFRic_mods = {
-    "m01s03i281": ("visibility_in_air", "face"),  # inc precipitation.
+    "m01s00i012": ("specific_snow", "face"),
+    "m01s00i255": ("exner_pressure_at_cell_interfaces", "face"),
+    "m01s00i271": ("specific_cloud_ice", "face"),
+    "m01s00i391": ("humidity_mixing_ratio", "face"),
+    "m01s00i393": ("snow_mixing_ratio", "face"),
+    "m01s00i396": ("cloud_ice_mixing_ratio", "face"),
     "m01s01i235": ("surface_downward_shortwave_flux", "face"),
     "m01s02i207": ("surface_downward_longwave_flux", "face"),
-    "m01s03i250": ("dew_point_temperature_at_screen_level", "face"),
     "m01s03i025": ("atmosphere_boundary_layer_thickness", "face"),
+    "m01s03i250": ("dew_point_temperature_at_screen_level", "face"),
+    "m01s03i253": ("probability_visibility_below_5km_at_screen_level", "face"),
+    "m01s03i281": ("visibility_in_air", "face"),  # inc precipitation.
+    "m01s03i332": ("toa_upward_longwave_flux", "face"),
+    "m01s03i463": ("gust_wind_speed_at_10m", "face"),
+    "m01s04i112": ("radar_reflectivity_at_1km_above_the_surface", "face"),
     "m01s09i203": ("low_type_cloud_area_fraction", "face"),
     "m01s09i204": ("medium_type_cloud_area_fraction", "face"),
     "m01s09i205": ("high_type_cloud_area_fraction", "face"),
     "m01s09i210": ("cloud_base_altitude", "face"),
-    "m01s04i112": ("radar_reflectivity_at_1km_above_the_surface", "face"),
-    "m01s00i391": ("humidity_mixing_ratio", "face"),
-    "m01s00i255": ("exner_pressure_at_cell_interfaces", "face"),
+    "m01s09i218": ("cloud_fraction_below_1000feet_asl", "face"),
     "m01s09i231": ("combined_cloud_amount", "face"),
-    "m01s21i104": ("number_of_lightning_flashes_in_column", "face"),
     "m01s15i229": ("potential_vorticity_at_pressure_levels", "face"),
     "m01s16i205": ("wet_bulb_potential_temperature_at_pressure_levels", "face"),
+    "m01s21i100": ("total_lightning_flash_rate", "face"),
+    "m01s21i101": ("storm_field_indicator", "face"),
+    "m01s21i102": ("graupel_water_path", "face"),
+    "m01s21i103": ("total_ice_water_path", "face"),
+    "m01s21i104": ("number_of_lightning_flashes_in_column", "face"),
+    "m01s21i105": ("lightning_flash_rate_due_to_upward_graupel_flux", "face"),
+    "m01s21i106": ("lightning_flash_rate_due_to_total_ice_in_column", "face"),
+    "m01s30i406": ("atmosphere_mass_content_of_snow", "face"),
 }
 
 
