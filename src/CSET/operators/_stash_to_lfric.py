@@ -11,7 +11,7 @@ STASH_TO_LFRIC = {
     "m01s00i003": ("northward_wind_at_cell_centres", "face"),
     "m01s00i004": ("air_potential_temperature", "face"),
     "m01s00i010": ("specific_humidity", "face"),
-    "m01s00i012": ("specific_cloud_ice", "face"),
+    "m01s00i012": ("specific_cloud_ice", "face"),  # Overwritten below.
     "m01s00i023": ("grid_surface_snow_amount", "face"),
     "m01s00i024": ("grid_surface_temperature", "face"),
     "m01s00i025": ("boundary_layer_depth", "face"),
@@ -28,10 +28,10 @@ STASH_TO_LFRIC = {
     "m01s00i389": ("dry_air_density", "face"),
     "m01s00i391": ("vapour_mixing_ratio", "face"),
     "m01s00i392": ("cloud_liquid_mixing_ratio", "face"),
-    "m01s00i393": ("cloud_ice_mixing_ratio", "face"),
+    "m01s00i393": ("cloud_ice_mixing_ratio", "face"),  # Overwritten below.
     "m01s00i394": ("rain_mixing_ratio", "face"),
     "m01s00i395": ("graupel_mixing_ratio", "face"),
-    "m01s00i396": ("snow_mixing_ratio", "face"),
+    "m01s00i396": ("snow_mixing_ratio", "face"),  # Overwritten below.
     "m01s00i407": ("pressure_at_cell_centres", "face"),
     "m01s00i408": ("pressure_at_cell_interfaces", "face"),
     "m01s00i409": ("surface_air_pressure", "face"),
@@ -54,7 +54,10 @@ STASH_TO_LFRIC = {
     "m01s01i218": ("downward_shortwave_flux_radiative_timestep", "face"),
     "m01s01i219": ("upward_clear_shortwave_flux_radiative_timestep", "face"),
     "m01s01i220": ("downward_clear_shortwave_flux_radiative_timestep", "face"),
-    "m01s01i235": ("surface_downward_shortwave_flux_radiative_timestep", "face"),
+    "m01s01i235": (
+        "surface_downward_shortwave_flux_radiative_timestep",
+        "face",
+    ),  # Overwritten below.
     "m01s01i254": (
         "weighted_warm_cloud_top_effective_radius_radiative_timestep",
         "face",
@@ -65,7 +68,10 @@ STASH_TO_LFRIC = {
     "m01s02i204": ("total_column_cloud_fraction_radiative_timestep", "face"),
     "m01s02i205": ("toa_upward_longwave_flux_radiative_timestep", "face"),
     "m01s02i206": ("toa_upward_clear_longwave_flux_radiative_timestep", "face"),
-    "m01s02i207": ("surface_downward_longwave_flux_radiative_timestep", "face"),
+    "m01s02i207": (
+        "surface_downward_longwave_flux_radiative_timestep",
+        "face",
+    ),  # Overwritten below.
     "m01s02i208": ("surface_downward_clear_longwave_flux_radiative_timestep", "face"),
     "m01s02i217": ("upward_longwave_flux_radiative_timestep", "face"),
     "m01s02i218": ("downward_longwave_flux_radiative_timestep", "face"),
@@ -90,7 +96,7 @@ STASH_TO_LFRIC = {
     "m01s02i473": ("calipso_cf_40_lvls_liq", "face"),
     "m01s02i474": ("calipso_cf_40_lvls_ice", "face"),
     "m01s02i475": ("calipso_cf_40_lvls_undet", "face"),
-    "m01s03i025": ("boundary_layer_depth", "face"),
+    "m01s03i025": ("boundary_layer_depth", "face"),  # Overwritten below.
     "m01s03i181": ("temperature_increment_from_bl_scheme", "face"),
     "m01s03i182": ("vapour_increment_from_bl_scheme", "face"),
     "m01s03i183": ("liquid_water_increment_from_bl_scheme", "face"),
@@ -117,7 +123,10 @@ STASH_TO_LFRIC = {
     "m01s03i248": ("fog_fraction_at_screen_level", "face"),
     "m01s03i258": ("surface_snow_melt_heat_flux", "face"),
     "m01s03i261": ("gross_primary_productivity", "face"),
-    "m01s03i281": ("visibility_including_precipitation_at_screen_level", "face"),
+    "m01s03i281": (
+        "visibility_including_precipitation_at_screen_level",
+        "face",
+    ),  # Overwritten below.
     "m01s03i296": ("water_evaporation_flux_from_soil", "face"),
     "m01s03i297": ("grid_water_evaporation_flux_from_canopy", "face"),
     "m01s03i298": ("grid_surface_snow_sublimation_rate", "face"),
@@ -267,13 +276,22 @@ STASH_TO_LFRIC = {
     "m01s08i234": ("surface_runoff_flux", "face"),
     "m01s08i235": ("subsurface_runoff_flux", "face"),
     "m01s09i202": ("maximum_combined_cloud_amount_below_111m_asl", "face"),
-    "m01s09i203": ("maximum_combined_cloud_amount_between_111_and_1949m_asl", "face"),
-    "m01s09i204": ("maximum_combined_cloud_amount_between_1949_and_5574m_asl", "face"),
-    "m01s09i205": ("maximum_combined_cloud_amount_between_5574_and_13608m_asl", "face"),
+    "m01s09i203": (
+        "maximum_combined_cloud_amount_between_111_and_1949m_asl",
+        "face",
+    ),  # Overwritten below.
+    "m01s09i204": (
+        "maximum_combined_cloud_amount_between_1949_and_5574m_asl",
+        "face",
+    ),  # Overwritten below.
+    "m01s09i205": (
+        "maximum_combined_cloud_amount_between_5574_and_13608m_asl",
+        "face",
+    ),  # Overwritten below.
     "m01s09i210": (
         "cloud_base_altitude_asl_combined_cloud_amount_greater_than_2p5_okta",
         "face",
-    ),
+    ),  # Overwritten below.
     "m01s09i216": ("combined_cloud_amount_random_overlap", "face"),
     "m01s09i217": ("combined_cloud_amount_maximum_random_overlap", "face"),
     "m01s09i233": (
@@ -419,7 +437,10 @@ STASH_TO_LFRIC = {
     "m01s30i403": ("atmosphere_mass_of_air_per_unit_area", "face"),
     "m01s30i404": ("atmosphere_wetplusdry_mass_per_unit_area", "face"),
     "m01s30i405": ("atmosphere_mass_content_of_cloud_liquid_water", "face"),
-    "m01s30i406": ("atmosphere_mass_content_of_cloud_ice", "face"),
+    "m01s30i406": (
+        "atmosphere_mass_content_of_cloud_ice",
+        "face",
+    ),  # Overwritten below.
     "m01s30i419": ("energy_correction_rate", "face"),
     "m01s30i420": ("atmosphere_energy_content", "face"),
     "m01s30i421": ("atmosphere_potential_energy_content", "face"),
