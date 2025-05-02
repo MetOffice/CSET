@@ -13,7 +13,7 @@ Changelog
 .. Highlight any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
-v25.5.0 (2025-05-02)
+25.5.0 (2025-05-02)
 --------------------
 
 Amongst the many changes in this release we now have the capability to plot
@@ -56,6 +56,8 @@ workflow configuration GUI, and various bug fixes.
 * Plot all models on a single histogram plot by `@refszkentla`_ in :pr:`1324`. This was their first contribution 🎉
 * Order LFRic before UM in RAL3-LFRic rose config by `@jfrost-mo`_ in :pr:`1349`
 * Add v25.5.0 release notes and document more of the release process by `@jfrost-mo`_  in :pr:`1357`
+* Fix formatting of v25.3.1 release notes by `@jfrost-mo` in :pr:`1358`
+* Add last v25.5.0 release notes by `@jfrost-mo` in :pr:`1359`
 
 New Contributors
 
