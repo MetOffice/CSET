@@ -84,6 +84,17 @@ def test_read_cubes_verify_comparison_base():
         assert "cset_comparison_base" not in cube.attributes
 
 
+def test_read_cubes_incorrect_number_of_model_names():
+    """Error raised when number of models names doesn't match number of paths."""
+    with pytest.raises(
+        ValueError,
+        match=r"The number of model names \(2\) should equal the number of paths given \(1\)\.",
+    ):
+        read.read_cubes(
+            "tests/test_data/air_temp.nc", model_names=["Model 1", "Model 2"]
+        )
+
+
 def test_fieldsfile_ensemble_naming():
     """Extracting the realization from the fields file naming convention."""
     cube = iris.cube.Cube([0])
@@ -113,6 +124,13 @@ def test_read_cube_merge_concatenate():
     """Cubes are combined after callbacks have been applied."""
     cube = read.read_cube("tests/test_data/concat_after_fix_[12].nc")
     assert isinstance(cube, iris.cube.Cube)
+
+
+def test_load_model_add_model_name():
+    """Model name correctly added when given."""
+    cubes = read._load_model("tests/test_data/air_temp.nc", "Test", None)
+    for cube in cubes:
+        assert cube.attributes["model_name"] == "Test"
 
 
 def test_check_input_files_direct_path(tmp_path):
