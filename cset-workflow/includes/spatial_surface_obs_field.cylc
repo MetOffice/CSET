@@ -1,0 +1,12 @@
+{% if SURFACE_OBS_PLOT %}
+{% for obs_field in SURFACE_OBS_FIELDS %}
+[runtime]
+    [[obs_model_level_air_temperature_scatterplot_{{obs_field}}]]
+    inherit = PROCESS
+        [[[environment]]]
+        CSET_RECIPE_NAME = "obs_model_level_air_temperature_scatterplot.yaml"
+        CSET_ADDOPTS = "--VARNAME={{obs_field}}"
+        MODEL_IDENTIFIERS = "OBS"
+
+{% endfor %}
+{% endif %}

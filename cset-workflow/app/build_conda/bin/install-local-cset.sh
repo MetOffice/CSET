@@ -1,4 +1,5 @@
 #! /bin/bash
+set -xv
 
 # Install development version of CSET into the conda environment if needed.
 
