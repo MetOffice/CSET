@@ -71,7 +71,6 @@ ahead of a new feature release next month. The most noticeable change maybe be
 the plot colorbar now being horizontal to leave more space for titles and
 side-by-side comparisons.
 
-## What's Changed
 * Remove unneeded deletion from housekeeping by `@jfrost-mo`_ in :pr:`1241`
 * Add conda HTTP error to common errors by `@jfrost-mo`_ in :pr:`1242`
 * Reduce PROCESS time limit to 15 minutes by `@jfrost-mo`_ in :pr:`1243`
