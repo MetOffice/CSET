@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2025) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 import fcntl
 import functools
 import importlib.resources
+import itertools
 import json
 import logging
 import math
@@ -45,6 +46,8 @@ from CSET.operators._utils import get_cube_yxcoordname, is_transect
 
 # Use a non-interactive plotting backend.
 mpl.use("agg")
+
+DEFAULT_DISCRETE_COLORS = mpl.colormaps["tab10"].colors + mpl.colormaps["Accent"].colors
 
 ############################
 # Private helper functions #
@@ -178,6 +181,41 @@ def _load_colorbar_map(user_colorbar_file: str = None) -> dict:
     return colorbar
 
 
+def _get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
+    """Get an appropriate colors for model lines in line plots.
+
+    For each model in the list of cubes colors either from user provided
+    color definition file (so-called style file) or from default colors are mapped
+    to model_name attribute.
+
+    Parameters
+    ----------
+    cubes: CubeList or Cube
+        Cubes with model_name attribute
+
+    Returns
+    -------
+    model_colors_map:
+        Dictionary mapping model_name attribute to colors
+    """
+    user_colorbar_file = get_recipe_metadata().get("style_file_path", None)
+    colorbar = _load_colorbar_map(user_colorbar_file)
+    model_names = sorted(
+        filter(
+            lambda x: x is not None,
+            (cube.attributes.get("model_name", None) for cube in iter_maybe(cubes)),
+        )
+    )
+    if not model_names:
+        return {}
+    use_user_colors = all(mname in colorbar.keys() for mname in model_names)
+    if use_user_colors:
+        return {mname: colorbar[mname] for mname in model_names}
+
+    color_list = itertools.cycle(DEFAULT_DISCRETE_COLORS)
+    return {mname: color for mname, color in zip(model_names, color_list, strict=False)}
+
+
 def _colorbar_map_levels(cube: iris.cube.Cube):
     """Get an appropriate colorbar for the given cube.
 
@@ -246,8 +284,9 @@ def _colorbar_map_levels(cube: iris.cube.Cube):
                 norm = mpl.colors.BoundaryNorm(levels, ncolors=cmap.N)
                 logging.debug("Using levels for %s colorbar.", varname)
                 logging.info("Using levels: %s", levels)
-                # Overwrite cmap, levels and norm for specific variables that require custom colorbar_map as these
-                # can not be defined in the json file.
+                # Overwrite cmap, levels and norm for specific variables that
+                # require custom colorbar_map as these can not be defined in the
+                # JSON file.
                 cmap, levels, norm = _custom_colourmap_precipitation(
                     cube, cmap, levels, norm
                 )
@@ -313,7 +352,8 @@ def _plot_and_save_spatial_plot(
             vmax = max(levels)
         except TypeError:
             vmin, vmax = None, None
-        # pcolormesh plot of the field and ensure to use norm and not vmin/vmax if levels are defined.
+        # pcolormesh plot of the field and ensure to use norm and not vmin/vmax
+        # if levels are defined.
         if norm is not None:
             vmin = None
             vmax = None
@@ -730,6 +770,8 @@ def _plot_and_save_histogram_series(
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     ax = plt.gca()
 
+    model_colors_map = _get_model_colors_map(cubes)
+
     for cube in iter_maybe(cubes):
         # Easier to check title (where var name originates)
         # than seeing if long names exist etc.
@@ -752,8 +794,15 @@ def _plot_and_save_histogram_series(
         # Otherwise we plot xdim histograms stacked.
         cube_data_1d = (cube.data).flatten()
 
-    x, y = np.histogram(cube_data_1d, bins=bins, density=True)
-    ax.plot(y[:-1], x, color="black", linewidth=2, marker="o", markersize=6)
+        label = None
+        color = "black"
+        if model_colors_map:
+            label = cube.attributes.get("model_name")
+            color = model_colors_map[label]
+        x, y = np.histogram(cube_data_1d, bins=bins, density=True)
+        ax.plot(
+            y[:-1], x, color=color, linewidth=2, marker="o", markersize=6, label=label
+        )
 
     # Add some labels and tweak the style.
     ax.set(
@@ -765,6 +814,8 @@ def _plot_and_save_histogram_series(
 
     # Overlay grid-lines onto histogram plot.
     ax.grid(linestyle="--", color="grey", linewidth=1)
+    if model_colors_map:
+        ax.legend(loc="best", ncol=1, frameon=False)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -1468,6 +1519,8 @@ def plot_histogram_series(
     """
     recipe_title = get_recipe_metadata().get("title", "Untitled")
 
+    cubes = iter_maybe(cubes)
+
     # Ensure we have a name for the plot file.
     if filename is None:
         filename = slugify(recipe_title)
@@ -1475,37 +1528,27 @@ def plot_histogram_series(
     # Internal plotting function.
     plotting_func = _plot_and_save_histogram_series
 
-    # Initialise empty list to hold all data from all cubes in a CubeList
-    all_data = []
+    model_names = list(
+        filter(
+            lambda x: x is not None,
+            {cube.attributes.get("model_name", None) for cube in cubes},
+        )
+    )
+    if not model_names:
+        logging.debug("Missing model names. Will assume single model.")
+        num_models = 1
+    else:
+        num_models = len(model_names)
 
-    # Store min/max ranges for xlim.
-    x_levels = []
+    if isinstance(cubes, iris.cube.CubeList) and len(cubes) != num_models:
+        raise ValueError(
+            f"There are {num_models} models provided, so histogram plot can only plot"
+            f" {num_models} cubes."
+        )
 
-    if isinstance(cubes, iris.cube.CubeList) and len(cubes) != 1:
-        raise ValueError("Histogram plot can only plot a single cube.")
-
-    plot_index = []
-    # Iterate over all cubes in cube or CubeList and plot.
-    for cube in iter_maybe(cubes):
-        # Ensure we've got a single cube.
-        cube = _check_single_cube(cube)
-
-        # Make postage stamp plots if stamp_coordinate exists and has more than a
-        # single point. If single_plot is True, all postage stamp plots will be
-        # plotted in a single plot instead of separate postage stamp plots.
-        if (
-            stamp_coordinate in [c.name() for c in cube.coords()]
-            and cube.coord(stamp_coordinate).shape[0] > 1
-        ):
-            if single_plot:
-                plotting_func = (
-                    _plot_and_save_postage_stamps_in_single_plot_histogram_series
-                )
-            else:
-                plotting_func = _plot_and_save_postage_stamp_histogram_series
-
-        # If several histograms are plotted with time as sequence_coordinate for the
-        # time slider option.
+    # If several histograms are plotted with time as sequence_coordinate for the
+    # time slider option.
+    for cube in cubes:
         try:
             cube.coord(sequence_coordinate)
         except iris.exceptions.CoordinateNotFoundError as err:
@@ -1513,49 +1556,88 @@ def plot_histogram_series(
                 f"Cube must have a {sequence_coordinate} coordinate."
             ) from err
 
-        # Get minimum and maximum from levels information.
+    # Get minimum and maximum from levels information.
+    levels = None
+    for cube in cubes:
         _, levels, _ = _colorbar_map_levels(cube)
+        logging.debug("levels: %s", levels)
         if levels is not None:
-            x_levels.append(min(levels))
-            x_levels.append(max(levels))
-        else:
-            all_data.append(cube.data)
+            vmin = min(levels)
+            vmax = max(levels)
+            break
 
-        if len(x_levels) == 0:
-            # Combine all data into a single NumPy array
-            combined_data = np.concatenate(all_data)
+    if levels is None:
+        vmin = min(cb.data.min() for cb in cubes)
+        vmax = max(cb.data.max() for cb in cubes)
 
-            # Set the lower and upper limit for the x-axis to ensure all plots have same
-            # range. This needs to read the whole cube over the range of the sequence
-            # and if applicable postage stamp coordinate.
-            vmin = np.floor(combined_data.min())
-            vmax = np.ceil(combined_data.max())
-        else:
-            vmin = min(x_levels)
-            vmax = max(x_levels)
-
-        # Create a plot for each value of the sequence coordinate.
-        # Allowing for multiple cubes in a CubeList to be plotted in the same plot for
-        # similar sequence values. Passing a CubeList into the internal plotting function
-        # for similar values of the sequence coordinate. cube_slice can be an iris.cube.Cube
-        # or an iris.cube.CubeList.
-        for cube_slice in cube.slices_over(sequence_coordinate):
-            # Use sequence value so multiple sequences can merge.
-            sequence_value = cube_slice.coord(sequence_coordinate).points[0]
-            plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
-            coord = cube_slice.coord(sequence_coordinate)
-            # Format the coordinate value in a unit appropriate way.
-            title = f"{recipe_title}\n{coord.units.title(coord.points[0])}"
-            # Do the actual plotting.
-            plotting_func(
-                cube_slice,
-                plot_filename,
-                stamp_coordinate=stamp_coordinate,
-                title=title,
-                vmin=vmin,
-                vmax=vmax,
+    # Make postage stamp plots if stamp_coordinate exists and has more than a
+    # single point. If single_plot is True:
+    # -- all postage stamp plots will be plotted in a single plot instead of
+    # separate postage stamp plots.
+    # -- model names (hidden in cube attrs) are ignored, that is stamp plots are
+    # produced per single model only
+    if num_models == 1:
+        if (
+            stamp_coordinate in [c.name() for c in cubes[0].coords()]
+            and cubes[0].coord(stamp_coordinate).shape[0] > 1
+        ):
+            if single_plot:
+                plotting_func = (
+                    _plot_and_save_postage_stamps_in_single_plot_histogram_series
+                )
+            else:
+                plotting_func = _plot_and_save_postage_stamp_histogram_series
+        cube_iterables = cubes[0].slices_over(sequence_coordinate)
+    else:
+        all_points = sorted(
+            set(
+                itertools.chain.from_iterable(
+                    cb.coord(sequence_coordinate).points for cb in cubes
+                )
             )
-            plot_index.append(plot_filename)
+        )
+        all_slices = list(
+            itertools.chain.from_iterable(
+                cb.slices_over(sequence_coordinate) for cb in cubes
+            )
+        )
+        # Matched slices (matched by seq coord point; it may happen that
+        # evaluated models do not cover the same seq coord range, hence matching
+        # necessary)
+        cube_iterables = [
+            iris.cube.CubeList(
+                s for s in all_slices if s.coord(sequence_coordinate).points[0] == point
+            )
+            for point in all_points
+        ]
+
+    plot_index = []
+    # Create a plot for each value of the sequence coordinate. Allowing for
+    # multiple cubes in a CubeList to be plotted in the same plot for similar
+    # sequence values. Passing a CubeList into the internal plotting function
+    # for similar values of the sequence coordinate. cube_slice can be an
+    # iris.cube.Cube or an iris.cube.CubeList.
+    for cube_slice in cube_iterables:
+        single_cube = cube_slice
+        if isinstance(cube_slice, iris.cube.CubeList):
+            single_cube = cube_slice[0]
+
+        # Use sequence value so multiple sequences can merge.
+        sequence_value = single_cube.coord(sequence_coordinate).points[0]
+        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
+        coord = single_cube.coord(sequence_coordinate)
+        # Format the coordinate value in a unit appropriate way.
+        title = f"{recipe_title}\n{coord.units.title(coord.points[0])}"
+        # Do the actual plotting.
+        plotting_func(
+            cube_slice,
+            filename=plot_filename,
+            stamp_coordinate=stamp_coordinate,
+            title=title,
+            vmin=vmin,
+            vmax=vmax,
+        )
+        plot_index.append(plot_filename)
 
     # Add list of plots to plot metadata.
     complete_plot_index = _append_to_plot_index(plot_index)

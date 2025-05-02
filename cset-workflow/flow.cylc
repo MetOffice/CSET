@@ -5,9 +5,11 @@ description = Workflow for running CSET.
 URL = https://metoffice.github.io/CSET
 
 # Import all of our Jinja utilities for use in the workflow.
-{% from "jinja_utils" import get_models, glob, max, min, zip, sanitise_task_name %}
+{% from "jinja_utils" import get_model_names, get_model_ids, get_models, glob, max, min, zip, sanitise_task_name %}
 # Load a list a model detail dictionaries.
 {% set models = get_models(ROSE_SUITE_VARIABLES) %}
+{% set model_ids = get_model_ids(models) %}
+{% set model_names = get_model_names(models) %}
 # Create a list of case aggregation types.
 {% set AGGREGATION_TYPES = ["LEAD_TIME", "HOUR_OF_DAY", "VALIDITY_TIME"] %}
 
@@ -33,6 +35,7 @@ URL = https://metoffice.github.io/CSET
     # Only runs on the first cycle.
     R1/^ = """
     build_conda => install_website_skeleton => setup_complete
+    build_conda => assign_model_colours => setup_complete
     """
 
     {% if CSET_CYCLING_MODE == "case_study" %}
@@ -98,7 +101,6 @@ URL = https://metoffice.github.io/CSET
 
         CONDA_PATH = {{CONDA_PATH}}
         LOGLEVEL = {{LOGLEVEL}}
-        COLORBAR_FILE = {{COLORBAR_FILE}}
         PLOT_RESOLUTION = {{PLOT_RESOLUTION|default(100)}}
         SKIP_WRITE = {{SKIP_WRITE}}
 
@@ -176,6 +178,14 @@ URL = https://metoffice.github.io/CSET
     # Copies the static files that make up the web interface.
         [[[environment]]]
         WEB_DIR = {{WEB_DIR}}
+
+    [[assign_model_colours]]
+    # Copies the style file, inserting per-model colour definitions to ensure
+    # consistency between the many runs.
+    execution time limit = PT5M
+        [[[environment]]]
+        COLORBAR_FILE = {{COLORBAR_FILE}}
+        MODEL_NAMES = '{{model_names}}'
 
     {% for model in models %}
     [[fetch_fcst_m{{model["id"]}}]]
