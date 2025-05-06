@@ -303,6 +303,35 @@ def test_plot_histogram_with_filename(histogram_cube, tmp_working_dir):
     assert Path("test_473721.0.png").is_file()
 
 
+def test_plot_and_save_histogram_series(histogram_cube, tmp_working_dir):
+    """Plot a histogram using either of three methods.
+
+    frequency            - This is constructed from the raw counts within each bin.
+
+    normalised_frequency - The frequency counts are normalised so that the total
+                           counts is 1.
+
+    density              - The counts per bin are normalised by both the total
+                           counts and the bin widths. The sum of the areas of the
+                           bins is 1. This is the discrete sampling analogue of
+                           the continuous probability density function.
+    """
+    plot._plot_and_save_histogram_series(
+        histogram_cube,
+        vmin=250,
+        vmax=350,
+        title="test_histogram",
+        filename="test_plot_and_save_histogram_series.png",
+        method="density",
+        bins=50,
+        color="black",
+        linewidth=2,
+        histtype="step",
+        label="density",
+    )
+    assert Path("test_plot_and_save_histogram_series.png").is_file()
+
+
 def test_plot_and_save_postage_stamp_histogram_series(histogram_cube, tmp_working_dir):
     """Test plotting a postage stamp histogram."""
     plot._plot_and_save_postage_stamp_histogram_series(

@@ -884,7 +884,6 @@ def _plot_and_save_histogram_series(
             color=color,
             linewidth=2,
             histtype="step",
-            markersize=6,
             label=label,
         )
 
