@@ -35,7 +35,9 @@ def parse_recipe(recipe_yaml: Path | str, variables: dict = None) -> dict:
     Parameters
     ----------
     recipe_yaml: Path | str
-        Path to recipe file, or the recipe YAML directly.
+        Path to a file containing, or a string of, a recipe's YAML describing
+        the operators that need running. If a Path is provided it is opened and
+        read.
     variables: dict
         Dictionary of recipe variables. If None templating is not attempted.
 
