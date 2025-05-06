@@ -29,10 +29,10 @@ def recipe_file() -> str:
     return cset_recipe
 
 
-def data_directories() -> list[str]:
+def data_directories(case_aggregation: bool) -> list[str]:
     """Get the input data directories for the cycle."""
     model_identifiers = sorted(os.environ["MODEL_IDENTIFIERS"].split())
-    if os.getenv("DO_CASE_AGGREGATION"):
+    if case_aggregation:
         share_dir = os.environ["CYLC_WORKFLOW_SHARE_DIR"]
         return [
             f"{share_dir}/cycle/*/data/{model_id}" for model_id in model_identifiers
@@ -42,40 +42,41 @@ def data_directories() -> list[str]:
         return [f"{rose_datac}/data/{model_id}" for model_id in model_identifiers]
 
 
-def run_recipe_steps():
-    """Process data and produce output plots."""
+def run_parbake():
+    """Pre-process recipe to bake in all variables."""
+    print("Retrieving recipe from cookbook.")
     recipe = recipe_file()
-    data_dirs = data_directories()
-    # Construct the plot output directory for the recipe.
-    output_dir = f"{os.environ['CYLC_WORKFLOW_SHARE_DIR']}/web/plots/{os.environ['CYLC_TASK_ID']}"
-    style_file = f"{os.environ['CYLC_WORKFLOW_SHARE_DIR']}/style.json"
 
-    command = (
-        ["cset", "bake", "--recipe", recipe, "--input-dir"]
-        + data_dirs
-        + ["--output-dir", output_dir, "--style-file", style_file]
-    )
+    # Collect configuration from environment.
+    case_aggregation = bool(os.getenv("DO_CASE_AGGREGATION"))
+    data_dirs = data_directories(case_aggregation)
+    # Construct the location for the recipe.
+    if case_aggregation:
+        recipe_dir = f"{os.environ['ROSE_DATAC']}/aggregation_recipes/"
+    else:
+        recipe_dir = f"{os.environ['ROSE_DATAC']}/recipes/"
+    os.makedirs(recipe_dir, exist_ok=True)
+    output = f"{recipe_dir}{os.environ['CYLC_TASK_NAME']}.yaml"
 
-    plot_resolution = os.getenv("PLOT_RESOLUTION")
-    if plot_resolution:
-        command.append(f"--plot-resolution={plot_resolution}")
-
-    skip_write = os.getenv("SKIP_WRITE")
-    if skip_write:
-        command.append("--skip-write")
+    # Construct command to run.
+    command = ["cset", "parbake", "--recipe", recipe, "--output", output]
+    # Append input data paths.
+    command += ["--INPUT_PATHS", str(data_dirs)]
+    # Append additional command line arguments.
+    command += shlex.split(os.getenv("CSET_ADDOPTS", ""))
 
     print("Running", shlex.join(command))
     try:
         subprocess.run(command, check=True)
     except subprocess.CalledProcessError as err:
-        print(f"cset bake exited with non-zero code {err.returncode}.")
+        print(f"cset parbake exited with non-zero code {err.returncode}.")
         raise
 
 
 def run():
     """Run workflow script."""
     try:
-        run_recipe_steps()
+        run_parbake()
     except subprocess.CalledProcessError:
         sys.exit(1)
 
