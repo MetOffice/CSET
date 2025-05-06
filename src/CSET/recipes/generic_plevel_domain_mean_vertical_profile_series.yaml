@@ -4,6 +4,7 @@ description: Plots a time series of vertical profiles for the domain mean $VARNA
 
 steps:
   - operator: read.read_cube
+    file_paths: $INPUT_PATHS
     constraint:
       operator: constraints.combine_constraints
       variable_constraint:

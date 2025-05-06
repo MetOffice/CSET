@@ -4,6 +4,7 @@ description: Plots a time series of the surface $VARNAME at a selected gridpoint
 
 steps:
   - operator: read.read_cube
+    file_paths: $INPUT_PATHS
     constraint:
       operator: constraints.combine_constraints
       varname_constraint:

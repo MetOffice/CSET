@@ -1,3 +1,4 @@
+category: Transect
 title: $MODEL_NAME Transect of $VARNAME
 description: |
   Extracts a $VERTICAL_COORDINATE transect for $VARNAME between two points and
@@ -8,6 +9,7 @@ description: |
 
 steps:
   - operator: read.read_cube
+    file_paths: $INPUT_PATHS
     constraint:
         operator: constraints.combine_constraints
         cell_method_constraint:

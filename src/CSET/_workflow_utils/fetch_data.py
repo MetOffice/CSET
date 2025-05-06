@@ -7,12 +7,12 @@ import glob
 import itertools
 import logging
 import os
-import shutil
 import ssl
 import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Literal
 
 import isodate
@@ -93,9 +93,11 @@ class FilesystemFileRetriever(FileRetrieverABC):
         if not file_paths:
             logging.warning("file_path does not match any files: %s", file_path)
         any_files_copied = False
-        for file in file_paths:
+        for f in file_paths:
+            file = Path(f)
             try:
-                shutil.copy(file, output_dir)
+                # We know file exists from glob.
+                os.symlink(file.absolute(), f"{output_dir}/{file.name}")
                 any_files_copied = True
             except OSError as err:
                 logging.warning("Failed to copy %s, error: %s", file, err)

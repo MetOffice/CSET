@@ -1,0 +1,34 @@
+category: Model Level Spatial Plot Difference
+title: Model Level $VARNAME lv$MLEVEL difference ($BASE_MODEL - $OTHER_MODEL) case aggregation by validity time
+description: |
+  Extracts and plot the difference $VARNAME on in model level $MLEVEL for all times. The cases
+  are aggregated over validity time.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+      model_level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: "model_level_number"
+        levels: $MLEVEL
+
+  - operator: aggregate.ensure_aggregatable_across_cases
+
+  - operator: collapse.collapse_by_validity_time
+    method: MEAN
+
+  - operator: misc.difference
+
+  - operator: plot.spatial_pcolormesh_plot
+    sequence_coordinate: time
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

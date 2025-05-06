@@ -46,7 +46,7 @@ def test_preprocess_data(tmp_path):
         shutil.copy(file, tmp_path)
 
     # Preprocess data.
-    preprocess.preprocess_data(tmp_path)
+    preprocess.preprocess_data(str(tmp_path))
 
     # Check file has been created.
     output = tmp_path / "forecast.nc"

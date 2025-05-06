@@ -60,9 +60,8 @@ def test_read_cubes_ensemble_separate_files():
     from CSET.operators import constraints
 
     cubes = read.read_cubes(
-        "tests/test_data/",
+        "tests/test_data/exeter_em*.nc",
         constraint=constraints.generate_stash_constraint("m01s03i236"),
-        filename_pattern="exeter_em*.nc",
     )
     # Check ensemble members have been merged into a single cube.
     assert len(cubes) == 1
@@ -83,6 +82,17 @@ def test_read_cubes_verify_comparison_base():
         assert cube.attributes["cset_comparison_base"] == 1
     for cube in cubes.extract(iris.AttributeConstraint(um_version="13.0")):
         assert "cset_comparison_base" not in cube.attributes
+
+
+def test_read_cubes_incorrect_number_of_model_names():
+    """Error raised when number of models names doesn't match number of paths."""
+    with pytest.raises(
+        ValueError,
+        match=r"The number of model names \(2\) should equal the number of paths given \(1\)\.",
+    ):
+        read.read_cubes(
+            "tests/test_data/air_temp.nc", model_names=["Model 1", "Model 2"]
+        )
 
 
 def test_fieldsfile_ensemble_naming():
@@ -116,12 +126,19 @@ def test_read_cube_merge_concatenate():
     assert isinstance(cube, iris.cube.Cube)
 
 
+def test_load_model_add_model_name():
+    """Model name correctly added when given."""
+    cubes = read._load_model("tests/test_data/air_temp.nc", "Test", None)
+    for cube in cubes:
+        assert cube.attributes["model_name"] == "Test"
+
+
 def test_check_input_files_direct_path(tmp_path):
     """Get a iterable of a single file from a direct path as a string."""
     file_path = tmp_path / "file"
     file_path.touch()
     string_path = str(file_path)
-    actual = read._check_input_files(string_path, "*")
+    actual = read._check_input_files(string_path)
     expected = [file_path]
     assert actual == expected
 
@@ -133,7 +150,7 @@ def test_check_input_files_direct_path_glob(tmp_path):
     file1_path.touch()
     file2_path.touch()
     glob_path = f"{tmp_path}/file*"
-    actual = read._check_input_files(glob_path, "*")
+    actual = read._check_input_files(glob_path)
     expected = [file1_path, file2_path]
     assert actual == expected
 
@@ -144,7 +161,7 @@ def test_check_input_files_direct_path_match_glob_like_file(tmp_path):
     glob_like_path = tmp_path / "file*"
     file1_path.touch()
     glob_like_path.touch()
-    actual = read._check_input_files(str(glob_like_path), "*")
+    actual = read._check_input_files(str(glob_like_path))
     expected = [glob_like_path]
     assert actual == expected
 
@@ -155,19 +172,8 @@ def test_check_input_files_input_directory(tmp_path):
     file2_path = tmp_path / "file2"
     file1_path.touch()
     file2_path.touch()
-    actual = read._check_input_files(str(tmp_path), "*")
+    actual = read._check_input_files(str(tmp_path))
     expected = [file1_path, file2_path]
-    assert actual == expected
-
-
-def test_check_input_files_input_directory_glob(tmp_path):
-    """Get a iterable of files in an input directory with a glob pattern."""
-    file1_path = tmp_path / "file1"
-    file2_path = tmp_path / "file2"
-    file1_path.touch()
-    file2_path.touch()
-    actual = read._check_input_files(str(tmp_path), "*1")
-    expected = [file1_path]
     assert actual == expected
 
 
@@ -175,13 +181,13 @@ def test_check_input_files_invalid_path(tmp_path):
     """Error when path doesn't exist."""
     file_path = str(tmp_path / "file")
     with pytest.raises(FileNotFoundError):
-        read._check_input_files(file_path, "*")
+        read._check_input_files(file_path)
 
 
 def test_check_input_files_no_file_in_directory(tmp_path):
     """Error when input directory doesn't contain any files."""
     with pytest.raises(FileNotFoundError):
-        read._check_input_files(str(tmp_path), "*")
+        read._check_input_files(str(tmp_path))
 
 
 def test_um_normalise_callback_rename_stash(cube):
@@ -474,14 +480,14 @@ def test_fix_um_lightning_skip_no_offset(cube):
         assert ft == t
 
 
-def test_spatial_coord_rename_callback():
-    """Check that spatial coord gets renamed if it is not grid_latitude."""
+def test_spatial_coord_auxcoord_callback():
+    """Check that additional spatial aux coord grid_latitude gets added."""
     # This cube contains 'latitude' and 'longitude'
     cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
     read._fix_spatial_coord_name_callback(cube)
     assert (
         repr(cube.coords())
-        == "[<DimCoord: time / (hours since 1970-01-01 00:00:00)  [...]  shape(2,)>, <DimCoord: pressure / (hPa)  [ 100., 150., ..., 950., 1000.]  shape(16,)>, <DimCoord: grid_latitude / (degrees)  [-10.98, -10.94, ..., -10.82, -10.78]  shape(6,)>, <DimCoord: grid_longitude / (degrees)  [19.02, 19.06, ..., 19.18, 19.22]  shape(6,)>, <DimCoord: forecast_reference_time / (hours since 1970-01-01 00:00:00)  [...]>, <AuxCoord: forecast_period / (hours)  [15., 18.]  shape(2,)>]"
+        == "[<DimCoord: time / (hours since 1970-01-01 00:00:00)  [...]  shape(2,)>, <DimCoord: pressure / (hPa)  [ 100., 150., ..., 950., 1000.]  shape(16,)>, <DimCoord: latitude / (degrees)  [-10.98, -10.94, ..., -10.82, -10.78]  shape(6,)>, <DimCoord: longitude / (degrees)  [19.02, 19.06, ..., 19.18, 19.22]  shape(6,)>, <DimCoord: forecast_reference_time / (hours since 1970-01-01 00:00:00)  [...]>, <AuxCoord: forecast_period / (hours)  [15., 18.]  shape(2,)>, <AuxCoord: grid_latitude / (unknown)  [-10.98, -10.94, ..., -10.82, -10.78]  shape(6,)>, <AuxCoord: grid_longitude / (unknown)  [19.02, 19.06, ..., 19.18, 19.22]  shape(6,)>]"
     )
 
 
@@ -496,22 +502,58 @@ def test_spatial_coord_not_exist_callback():
     )
 
 
-def test_lfric_timecoord_fix_forecastperiod(slammed_lfric_cube):
-    """Check that read callback creates an appropriate forecast_period dimension."""
-    read._lfric_time_callback(slammed_lfric_cube)
-    assert (
-        repr(slammed_lfric_cube.coord("forecast_period"))
-        == "<AuxCoord: forecast_period / (seconds)  [3600., ...]  shape(6,)>"
-    )
-
-
-def test_lfric_timecoord_fix_forecastreftime(slammed_lfric_cube):
+def test_lfric_time_callback_forecast_reference_time(slammed_lfric_cube):
     """Check that read callback creates an appropriate forecast_reference_time coord."""
+    slammed_lfric_cube.remove_coord("forecast_reference_time")
+    assert not slammed_lfric_cube.coords("forecast_reference_time")
+    slammed_lfric_cube.coord("time").attributes["time_origin"] = "2022-01-01 00:00:00"
+
     read._lfric_time_callback(slammed_lfric_cube)
-    assert (
-        repr(slammed_lfric_cube.coord("forecast_reference_time"))
-        == "<DimCoord: forecast_reference_time / (seconds since 2022-01-01 00:00:00)  [...]>"
-    )
+
+    ref_time_coord = slammed_lfric_cube.coord("forecast_reference_time")
+    assert ref_time_coord.standard_name == "forecast_reference_time"
+    assert ref_time_coord.long_name == "forecast_reference_time"
+    assert ref_time_coord.var_name is None
+    assert str(ref_time_coord.units) == "seconds since 2022-01-01 00:00:00"
+    assert all(ref_time_coord.points == [0])
+
+
+def test_lfric_time_callback_forecast_period(slammed_lfric_cube):
+    """Check that read callback creates an appropriate forecast_period dimension."""
+    slammed_lfric_cube.remove_coord("forecast_period")
+    assert not slammed_lfric_cube.coords("forecast_period")
+
+    read._lfric_time_callback(slammed_lfric_cube)
+
+    fc_period_coord = slammed_lfric_cube.coord("forecast_period")
+    assert fc_period_coord.standard_name == "forecast_period"
+    assert fc_period_coord.long_name == "forecast_period"
+    assert fc_period_coord.var_name is None
+    assert str(fc_period_coord.units) == "seconds"
+    assert all(fc_period_coord.points == [3600, 7200, 10800, 14400, 18000, 21600])
+
+
+def test_lfric_time_callback_hours(slammed_lfric_cube):
+    """Check hours are set as forecast_period units."""
+    slammed_lfric_cube.remove_coord("forecast_period")
+    assert not slammed_lfric_cube.coords("forecast_period")
+    slammed_lfric_cube.coord("time").convert_units("hours since 1970-01-01 00:00:00")
+
+    read._lfric_time_callback(slammed_lfric_cube)
+
+    fc_period_coord = slammed_lfric_cube.coord("forecast_period")
+    assert str(fc_period_coord.units) == "hours"
+    assert all(fc_period_coord.points == [1, 2, 3, 4, 5, 6])
+
+
+def test_lfric_time_callback_unknown_units(slammed_lfric_cube):
+    """Error when forecast_period units cannot be determined."""
+    slammed_lfric_cube.remove_coord("forecast_period")
+    assert not slammed_lfric_cube.coords("forecast_period")
+    slammed_lfric_cube.coord("time").convert_units("days since 1970-01-01 00:00:00")
+
+    with pytest.raises(ValueError, match="Unrecognised base time unit:"):
+        read._lfric_time_callback(slammed_lfric_cube)
 
 
 def test_lfric_normalise_varname(model_level_cube):

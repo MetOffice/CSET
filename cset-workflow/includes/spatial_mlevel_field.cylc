@@ -1,0 +1,20 @@
+{% if SPATIAL_MLEVEL_FIELD|default(False) %}
+{% for field in MODEL_LEVEL_FIELDS %}
+{% for model in models %}
+{% for mlevel in MODEL_LEVELS %}
+[runtime]
+    [[generic_mlevel_spatial_plot_sequence_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(mlevel)}}]]
+    inherit = PROCESS
+        [[[directives]]]
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_mlevel_spatial_plot_sequence.yaml"
+        CSET_ADDOPTS = """
+            --VARNAME='{{field}}'
+            --MLEVEL='{{mlevel}}'
+            --MODEL_NAME='{{model["name"]}}'
+        """
+        MODEL_IDENTIFIERS = {{model["id"]}}
+{% endfor %}
+{% endfor %}
+{% endfor %}
+{% endif %}

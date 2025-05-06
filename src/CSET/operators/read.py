@@ -18,6 +18,7 @@ import ast
 import datetime
 import functools
 import glob
+import itertools
 import logging
 import warnings
 from pathlib import Path
@@ -38,19 +39,15 @@ class NoDataWarning(UserWarning):
 
 
 def read_cube(
-    loadpath: list[str] | str,
+    file_paths: list[str] | str,
     constraint: iris.Constraint = None,
-    filename_pattern: str = "*",
     **kwargs,
 ) -> iris.cube.Cube:
     """Read a single cube from files.
 
-    Read operator that takes a path string (can include wildcards), and uses
-    iris to load the cube matching the constraint.
-
-    If the loaded data is split across multiple files, a filename_pattern can be
-    specified to select the read files using Unix shell-style wildcards. In this
-    case the loadpath should point to the directory containing the data.
+    Read operator that takes a path string (can include shell-style glob
+    patterns), and loads the cube matching the constraint. If any paths point to
+    directory, all the files contained within are loaded.
 
     Ensemble data can also be loaded. If it has a realization coordinate
     already, it will be directly used. If not, it will have its member number
@@ -62,12 +59,10 @@ def read_cube(
 
     Arguments
     ---------
-    loadpath: str | list[str]
-        Path to where .pp/.nc files are located
+    file_paths: str | list[str]
+        Path or paths to where .pp/.nc files are located
     constraint: iris.Constraint | iris.ConstraintCombination, optional
         Constraints to filter data by. Defaults to unconstrained.
-    filename_pattern: str, optional
-        Unix shell-style glob pattern to match filenames to. Defaults to "*"
 
     Returns
     -------
@@ -81,32 +76,27 @@ def read_cube(
     ValueError
         If the constraint doesn't produce a single cube.
     """
-    cubes = read_cubes(loadpath, constraint, filename_pattern)
+    cubes = read_cubes(file_paths, constraint)
     # Check filtered cubes is a CubeList containing one cube.
     if len(cubes) == 1:
         return cubes[0]
     else:
-        # Log cube details so you can see why they are not merging.
-        logging.debug("Non-merging cubes:\n%s", "\n".join(str(cube) for cube in cubes))
         raise ValueError(
-            f"Constraint doesn't produce single cube. {constraint}\n{cubes}"
+            f"Constraint doesn't produce single cube: {constraint}\n{cubes}"
         )
 
 
 def read_cubes(
-    loadpath: list[str] | str,
-    constraint: iris.Constraint = None,
-    filename_pattern: str = "*",
+    file_paths: list[str] | str,
+    constraint: iris.Constraint | None = None,
+    model_names: str | list[str] | None = None,
     **kwargs,
 ) -> iris.cube.CubeList:
     """Read cubes from files.
 
-    Read operator that takes a path string (can include wildcards), and uses
-    iris to load the minimal set of cubes matching the constraint.
-
-    If the loaded data is split across multiple files, a filename_pattern can be
-    specified to select the read files using Unix shell-style wildcards. In this
-    case the loadpath should point to the directory containing the data.
+    Read operator that takes a path string (can include shell-style glob
+    patterns), and loads the cubes matching the constraint. If any paths point
+    to directory, all the files contained within are loaded.
 
     Ensemble data can also be loaded. If it has a realization coordinate
     already, it will be directly used. If not, it will have its member number
@@ -121,12 +111,12 @@ def read_cubes(
 
     Arguments
     ---------
-    loadpath: str | list[str]
-        Path to where .pp/.nc files are located. Can include globs.
+    file_paths: str | list[str]
+        Path or paths to where .pp/.nc files are located. Can include globs.
     constraint: iris.Constraint | iris.ConstraintCombination, optional
         Constraints to filter data by. Defaults to unconstrained.
-    filename_pattern: str, optional
-        Unix shell-style glob pattern to match filenames to. Defaults to "*"
+    model_names: str | list[str], optional
+        Names of the models that correspond to respective paths in file_paths.
 
     Returns
     -------
@@ -138,44 +128,34 @@ def read_cubes(
     FileNotFoundError
         If the provided path does not exist
     """
-    logging.debug("Constraint: %s", constraint)
+    # Get iterable of paths. Each path corresponds to 1 model.
+    paths = iter_maybe(file_paths)
+    model_names = iter_maybe(model_names)
 
-    def load_from_paths(
-        paths: list[str], is_ensemble: bool, is_base: bool
-    ) -> iris.cube.CubeList:
-        # Skip if no paths given, mainly for when we only have a base path.
-        if not paths:
-            return iris.cube.CubeList([])
-        input_files = _check_input_files(paths, filename_pattern)
-        callback = _create_callback(is_ensemble=is_ensemble, is_base=is_base)
-        # If unset, a constraint of None lets everything be loaded.
-        return iris.load(input_files, constraint, callback=callback)
+    # Check we have appropriate number of model names.
+    if model_names != (None,) and len(model_names) != len(paths):
+        raise ValueError(
+            f"The number of model names ({len(model_names)}) should equal "
+            f"the number of paths given ({len(paths)})."
+        )
 
-    # Get lists of paths.
-    paths = iter_maybe(loadpath)
-    base_path = paths[:1]
-    # If len(paths) < 2, this just returns an empty list, rather than an error.
-    other_paths = paths[1:]
-    del paths
+    # Load the data for each model into a CubeList per model.
+    model_cubes = (
+        _load_model(path, name, constraint)
+        for path, name in itertools.zip_longest(paths, model_names, fillvalue=None)
+    )
 
-    # Load the data, then reload with correct handling if it is ensemble data.
-    cubes = iris.cube.CubeList([])
+    # Split out first model's cubes and mark it as the base for comparisons.
+    cubes = next(model_cubes)
+    for cube in cubes:
+        # Use 1 to indicate True, as booleans can't be saved in NetCDF attributes.
+        cube.attributes["cset_comparison_base"] = 1
 
-    # Split out first input file definition here and mark as base model.
-    cubes.extend(load_from_paths(base_path, is_ensemble=False, is_base=True))
-    cubes.extend(load_from_paths(other_paths, is_ensemble=False, is_base=False))
-
-    # Reload all data with ensemble handling if needed.
-    if _is_ensemble(cubes):
-        cubes = iris.cube.CubeList()
-        cubes.extend(load_from_paths(base_path, is_ensemble=True, is_base=True))
-        cubes.extend(load_from_paths(other_paths, is_ensemble=True, is_base=False))
+    # Load the rest of the models.
+    cubes.extend(itertools.chain.from_iterable(model_cubes))
 
     # Unify time units so different case studies can merge.
     iris.util.unify_time_units(cubes)
-
-    # Should we call ensure_aggregatable_across_cases here?
-    # aggregate.ensure_aggregatable_across_cases(cubes)
 
     # Merge and concatenate cubes now metadata has been fixed.
     cubes = cubes.merge()
@@ -188,12 +168,81 @@ def read_cubes(
             if not dim_coord.has_bounds() and dim_coord.shape[0] > 1:
                 dim_coord.guess_bounds()
 
-    logging.debug("Loaded cubes: %s", cubes)
+    logging.info("Loaded cubes: %s", cubes)
     if len(cubes) == 0:
         warnings.warn(
             "No cubes loaded, check your constraints!", NoDataWarning, stacklevel=2
         )
     return cubes
+
+
+def _load_model(
+    paths: str | list[str],
+    model_name: str | None,
+    constraint: iris.Constraint | None,
+) -> iris.cube.CubeList:
+    """Load a single model's data into a CubeList."""
+    input_files = _check_input_files(paths)
+    # If unset, a constraint of None lets everything be loaded.
+    logging.debug("Constraint: %s", constraint)
+    cubes = iris.load(
+        input_files, constraint, callback=_create_callback(is_ensemble=False)
+    )
+    # Reload with ensemble handling if needed.
+    if _is_ensemble(cubes):
+        cubes = iris.load(
+            input_files, constraint, callback=_create_callback(is_ensemble=True)
+        )
+
+    # Add model_name attribute to each cube to make it available at any further
+    # step without needing to pass it as function parameter.
+    if model_name is not None:
+        for cube in cubes:
+            cube.attributes["model_name"] = model_name
+    return cubes
+
+
+def _check_input_files(input_paths: str | list[str]) -> list[Path]:
+    """Get an iterable of files to load, and check that they all exist.
+
+    Arguments
+    ---------
+    input_paths: list[str]
+        List of paths to input files or directories. The path may itself contain
+        glob patterns, but unlike in shells it will match directly first.
+
+    Returns
+    -------
+    list[Path]
+        A list of files to load.
+
+    Raises
+    ------
+    FileNotFoundError:
+        If the provided arguments don't resolve to at least one existing file.
+    """
+    files = []
+    for raw_filename in iter_maybe(input_paths):
+        # Match glob-like files first, if they exist.
+        raw_path = Path(raw_filename)
+        if raw_path.is_file():
+            files.append(raw_path)
+        else:
+            for input_path in glob.glob(raw_filename):
+                # Convert string paths into Path objects.
+                input_path = Path(input_path)
+                # Get the list of files in the directory, or use it directly.
+                if input_path.is_dir():
+                    logging.debug("Checking directory '%s' for files")
+                    files.extend(p for p in input_path.iterdir() if p.is_file())
+                else:
+                    files.append(input_path)
+
+    files.sort()
+    logging.info("Loading files:\n%s", "\n".join(str(path) for path in files))
+    if len(files) == 0:
+        raise FileNotFoundError(f"No files found for {input_paths}")
+    return files
 
 
 def _is_ensemble(cubelist: iris.cube.CubeList) -> bool:
@@ -218,17 +267,15 @@ def _is_ensemble(cubelist: iris.cube.CubeList) -> bool:
     return False
 
 
-def _create_callback(is_ensemble: bool, is_base: bool) -> callable:
+def _create_callback(is_ensemble: bool) -> callable:
     """Compose together the needed callbacks into a single function."""
 
-    # TODO: Fix coordinate name to enable full level and half level merging.
     def callback(cube: iris.cube.Cube, field, filename: str):
-        if is_base:
-            _mark_as_comparison_base_callback(cube, field, filename)
         if is_ensemble:
             _ensemble_callback(cube, field, filename)
         else:
             _deterministic_callback(cube, field, filename)
+
         _um_normalise_callback(cube, field, filename)
         _lfric_normalise_callback(cube, field, filename)
         _lfric_time_coord_fix_callback(cube, field, filename)
@@ -238,18 +285,11 @@ def _create_callback(is_ensemble: bool, is_base: bool) -> callable:
         _lfric_normalise_varname(cube)
         _fix_um_radtime_prehour(cube)
         _fix_um_radtime_posthour(cube)
-        _fix_lfric_longnames(cube)
         _fix_um_lightning(cube)
         _lfric_time_callback(cube)
         _lfric_forecast_period_standard_name_callback(cube)
 
     return callback
-
-
-def _mark_as_comparison_base_callback(cube, field, filename):
-    """Add an attribute to the cube to mark it as the base for comparisons."""
-    # Use 1 to indicate True, as booleans can't be saved in NetCDF attributes.
-    cube.attributes["cset_comparison_base"] = 1
 
 
 def _ensemble_callback(cube, field, filename):
@@ -404,21 +444,39 @@ def _fix_spatial_coord_name_callback(cube: iris.cube.Cube):
         # Don't modify non-spatial cubes.
         return cube
 
-    # Get spatial coords.
+    # Get spatial coords and dimension index.
     y_name, x_name = utils.get_cube_yxcoordname(cube)
+    ny = utils.get_cube_coordindex(cube, y_name)
+    nx = utils.get_cube_coordindex(cube, x_name)
 
     if y_name in ["latitude"] and cube.coord(y_name).units in [
         "degrees",
         "degrees_north",
         "degrees_south",
     ]:
-        cube.coord(y_name).rename("grid_latitude")
+        if "grid_latitude" not in [
+            coord.name() for coord in cube.coords(dim_coords=False)
+        ]:
+            cube.add_aux_coord(
+                iris.coords.AuxCoord(
+                    cube.coord(y_name).points, long_name="grid_latitude"
+                ),
+                ny,
+            )
     if x_name in ["longitude"] and cube.coord(x_name).units in [
         "degrees",
         "degrees_west",
         "degrees_east",
     ]:
-        cube.coord(x_name).rename("grid_longitude")
+        if "grid_longitude" not in [
+            coord.name() for coord in cube.coords(dim_coords=False)
+        ]:
+            cube.add_aux_coord(
+                iris.coords.AuxCoord(
+                    cube.coord(x_name).points, long_name="grid_longitude"
+                ),
+                nx,
+            )
 
 
 def _fix_pressure_coord_callback(cube: iris.cube.Cube):
@@ -488,24 +546,13 @@ def _fix_um_radtime_prehour(cube: iris.cube.Cube):
                 return
 
             # Add 1 minute from each time point
-            new_time_points = np.array(
-                [t + datetime.timedelta(minutes=1) for t in time_points]
-            )
+            new_time_points = time_points + datetime.timedelta(minutes=1)
 
             # Convert back to numeric values using the original time unit
             new_time_values = time_unit.date2num(new_time_points)
 
             # Replace the time coordinate with corrected values
             time_coord.points = new_time_values
-    except KeyError:
-        pass
-
-
-def _fix_lfric_longnames(cube: iris.cube.Cube):
-    """To fix names where the long name is appropriate."""
-    try:
-        if str(cube.long_name) == "combined_cloud_amount_maximum_random_overlap":
-            cube.rename("combined_cloud_amount_maximum_random_overlap")
     except KeyError:
         pass
 
@@ -566,71 +613,64 @@ def _lfric_time_callback(cube: iris.cube.Cube):
     -----
     Some parts of the code have been adapted from Paul Earnshaw's scripts.
     """
-    # See what coordinates exist in cube
-    coord_names = [coord.name() for coord in cube.coords()]
-
-    # Construct forecast_reference time and forecast_period if they dont exist.
-    if "time" in coord_names:
+    # Construct forecast_reference time if it doesn't exist.
+    try:
         tcoord = cube.coord("time")
-        if (
-            "forecast_reference_time" not in coord_names
-            and "time_origin" in tcoord.attributes
-        ):
+        if not cube.coords("forecast_reference_time"):
             try:
                 init_time = datetime.datetime.fromisoformat(
-                    cube.coord("time").attributes["time_origin"]
+                    tcoord.attributes["time_origin"]
                 )
-                time_unit = cube.coord("time").units
-                frt_point = time_unit.date2num(init_time)
-
+                frt_point = tcoord.units.date2num(init_time)
                 frt_coord = iris.coords.AuxCoord(
                     frt_point,
                     units=tcoord.units,
                     standard_name="forecast_reference_time",
+                    long_name="forecast_reference_time",
                 )
                 cube.add_aux_coord(frt_coord)
             except KeyError:
-                logging.info(
-                    "Cannot find forecast_reference_time, but not enough information to construct it."
+                logging.warning(
+                    "Cannot find forecast_reference_time, but no `time_origin` attribute to construct it from."
                 )
+
         # Remove time_origin to allow multiple case studies to merge.
         tcoord.attributes.pop("time_origin", None)
 
-    # Regenerate coordinates list from cube
-    coord_names = [coord.name() for coord in cube.coords()]
+        # Construct forecast_period axis (forecast lead time) if it doesn't exist.
+        if not cube.coords("forecast_period"):
+            try:
+                # Create array of forecast lead times.
+                init_coord = cube.coord("forecast_reference_time")
+                init_time_points_in_tcoord_units = tcoord.units.date2num(
+                    init_coord.units.num2date(init_coord.points)
+                )
+                lead_times = tcoord.points - init_time_points_in_tcoord_units
 
-    # Construct forecast_period axis (leadtime) if doesn't exist.
-    if "forecast_period" not in coord_names:
-        if "time" in coord_names and "forecast_reference_time" in coord_names:
-            # Get time coordinate and forecast_reference_time
-            tcoord = cube.coord("time")
-            init = cube.coord("forecast_reference_time")
+                # Get unit for lead time from time coordinate's unit.
+                if "seconds" in str(tcoord.units):
+                    units = "seconds"
+                elif "hours" in str(tcoord.units):
+                    units = "hours"
+                else:
+                    raise ValueError(f"Unrecognised base time unit: {tcoord.units}")
 
-            # Create array of forecast leadtimes.
-            lead_times = tcoord.points - init.points
-            if "seconds" in str(tcoord.units):
-                units = "seconds"
-            elif "hours" in str(tcoord.units):
-                units = "hours"
-            else:
-                raise ValueError(f"Not a recognised base time unit {str(tcoord.units)}")
+                # Create lead time coordinate.
+                lead_time_coord = iris.coords.AuxCoord(
+                    lead_times,
+                    standard_name="forecast_period",
+                    long_name="forecast_period",
+                    units=units,
+                )
 
-            # Create new axis object.
-            lead_time_coord = iris.coords.AuxCoord(
-                lead_times,
-                standard_name="forecast_period",
-                long_name="forecast_period",
-                units=units,
-            )
-
-            # Associate lead time dimension with coordinate time.
-            time_dim = cube.coord_dims("time")
-            cube.add_aux_coord(lead_time_coord, time_dim)
-
-        else:
-            logging.info(
-                "No time coordinate or forecast_reference_time, so cannot construct forecast_period"
-            )
+                # Associate lead time coordinate with time dimension.
+                cube.add_aux_coord(lead_time_coord, cube.coord_dims("time"))
+            except iris.exceptions.CoordinateNotFoundError:
+                logging.warning(
+                    "Cube does not have both time and forecast_reference_time coordinate, so cannot construct forecast_period"
+                )
+    except iris.exceptions.CoordinateNotFoundError:
+        logging.warning("No time coordinate on cube.")
 
 
 def _lfric_forecast_period_standard_name_callback(cube: iris.cube.Cube):
@@ -641,53 +681,3 @@ def _lfric_forecast_period_standard_name_callback(cube: iris.cube.Cube):
             coord.standard_name = "forecast_period"
     except iris.exceptions.CoordinateNotFoundError:
         pass
-
-
-def _check_input_files(input_paths: list[str], filename_pattern: str) -> list[Path]:
-    """Get an iterable of files to load, and check that they all exist.
-
-    Arguments
-    ---------
-    input_paths: list[str]
-        List of paths to input files or directories. The path may itself contain
-        glob patterns, but unlike in shells it will match directly first.
-
-    filename_pattern: str
-        Shell-style glob pattern to match inside an input directory.
-
-    Returns
-    -------
-    list[Path]
-        A list of files to load.
-
-    Raises
-    ------
-    FileNotFoundError:
-        If the provided arguments don't resolve to at least one existing file.
-    """
-    files = []
-    for raw_filename in iter_maybe(input_paths):
-        # Match glob-like files first, if they exist.
-        raw_path = Path(raw_filename)
-        if raw_path.is_file():
-            files.append(raw_path)
-        else:
-            for input_path in glob.glob(str(raw_filename)):
-                # Convert string paths into Path objects.
-                input_path = Path(input_path)
-                # Get the list of files in the directory, or use it directly.
-                if input_path.is_dir():
-                    logging.debug(
-                        "Checking directory '%s' for files matching '%s'",
-                        input_path,
-                        filename_pattern,
-                    )
-                    files.extend(input_path.glob(filename_pattern))
-                else:
-                    files.append(input_path)
-
-    files.sort()
-    logging.info("Loading files:\n%s", "\n".join(str(path) for path in files))
-    if len(files) == 0:
-        raise FileNotFoundError(f"No files found for {input_paths}")
-    return files

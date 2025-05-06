@@ -82,6 +82,7 @@ On this page you will need to add several things.
   notes" button will include the titles of all merged pull requests, which is a
   good starting point, though automated PRs should be removed. It is especially
   important to highlight any changes that might break backwards compatibility.
+  The description should also contain links to download CSET from other places.
 
 Once that is all written you simply need to press "Publish release". A release
 will be automatically made, and the package will be pushed to PyPI and beyond.
@@ -95,7 +96,38 @@ following line at the bottom of that section:
 
     .. _@username: https://github.com/username
 
+
+After the release GitHub Action has run (which requires a repository admin to
+approve) there are still a few steps left to do:
+
+First update the `conda-forge cset feedstock`_ to publish an updated conda
+package. The main change that will need to be made is updating the version and
+SHA256 hash in the ``recipe/recipe.yaml`` file. The hash can be obtained from
+the `PyPI release page`_ > "Download files" > "View details" on the source
+distribution. Once the change is committed it can take up to an hour for the
+updated package to become visible via the conda-forge CDN, so you will have to
+wait before continuing to the next step.
+
+Once the conda-forge package has updated you will need to update the workflow
+lockfiles so the workflow uses new CSET version. This simply requires running
+the `update conda lock files GitHub Action`_ and merging the resulting pull
+request.
+
+Once that is done you will need to create the workflow tarball to add to the
+release. Make a clean checkout of the CSET repository, rename the
+``cset-workflow`` directory to ``cset-workflow-v25.X.Y``, and tar it up:
+
+.. code-block:: bash
+
+  tar -czf cset-workflow-v25.X.Y.tar.gz ./cset-workflow-v25.X.Y
+
+Finally edit the release on GitHub and upload the tarball, making sure it is
+linked prominently from the release notes.
+
 .. _CalVer: https://calver.org/
 .. _Releases: https://github.com/MetOffice/CSET/releases
 .. _Draft a new release: https://github.com/MetOffice/CSET/releases/new
 .. _setuptools_scm: https://setuptools-scm.readthedocs.io/en/latest/
+.. _conda-forge cset feedstock: https://github.com/conda-forge/cset-feedstock
+.. _PyPI release page: https://pypi.org/project/CSET/
+.. _update conda lock files GitHub Action: https://github.com/MetOffice/CSET/actions/workflows/conda-lock.yml
