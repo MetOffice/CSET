@@ -1,0 +1,70 @@
+{% if True in HISTOGRAM_SURFACE_FIELD_AGGREGATION or True in HISTOGRAM_PLEVEL_FIELD_AGGREGATION or True in HISTOGRAM_MLEVEL_FIELD_AGGREGATION %}
+[[HISTOGRAM_AGGREGATION]]
+   inherit = PROCESS_CASE_AGGREGATION
+{% endif %}
+
+# Loop over all models
+{% for model in models %}
+
+# Loop over aggregation types (hour_of_day, lead_time, validity_time)
+{% for atype in range(AGGREGATION_TYPES|count) %}
+
+# Surface (2D) fields
+{% if HISTOGRAM_SURFACE_FIELD_AGGREGATION[atype]|default(False) %}
+{% for field in SURFACE_FIELDS %}
+[runtime]
+    [[surface_histogram_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_{{sanitise_task_name(field)}}]]
+    inherit = HISTOGRAM_AGGREGATION, PROCESS_CASE_AGGREGATION
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_surface_histogram_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
+        CSET_ADDOPTS = """
+            --VARNAME='{{field}}'
+            --MODEL_NAME='{{model_names}}'
+        """
+        MODEL_IDENTIFIERS = {{model_ids}}
+{% endfor %}
+{% endif %}
+
+# Pressure level fields
+{% if HISTOGRAM_PLEVEL_FIELD_AGGREGATION[atype]|default(False) %}
+{% for field in PRESSURE_LEVEL_FIELDS %}
+{% for plevel in PRESSURE_LEVELS %}
+[runtime]
+    [[plevel_histogram_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
+    inherit = HISTOGRAM_AGGREGATION, PROCESS_CASE_AGGREGATION
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_level_histogram_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
+        CSET_ADDOPTS = """
+            --VARNAME='{{field}}'
+            --LEVELTYPE='pressure'
+            --LEVEL='{{plevel}}'
+            --MODEL_NAME='{{model_names}}'
+        """
+        MODEL_IDENTIFIERS = {{model_ids}}
+{% endfor %}
+{% endfor %}
+{% endif %}
+
+# Model level fields
+{% if HISTOGRAM_MLEVEL_FIELD_AGGREGATION[atype]|default(False) %}
+{% for field in MODEL_LEVEL_FIELDS %}
+{% for mlevel in MODEL_LEVELS %}
+[runtime]
+    [[mlevel_histogram_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(mlevel)}}]]
+    inherit = HISTOGRAM_AGGREGATION, PROCESS_CASE_AGGREGATION
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_level_histogram_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
+        CSET_ADDOPTS = """
+            --VARNAME='{{field}}'
+            --LEVELTYPE='model_level_number'
+            --LEVEL='{{mlevel}}'
+            --MODEL_NAME='{{model_names}}'
+        """
+        MODEL_IDENTIFIERS = {{model_ids}}
+{% endfor %}
+{% endfor %}
+{% endif %}
+
+{% endfor %}
+
+{% endfor %}

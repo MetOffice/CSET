@@ -1,0 +1,43 @@
+{% if PROFILE_PLEVEL or PROFILE_MLEVEL %}
+[[PROFILE]]
+   inherit = PROCESS
+{% endif %}
+
+# Loop over all models
+{% for model in models %}
+
+# Pressure level fields
+{% if PROFILE_PLEVEL|default(False) %}
+{% for field in PRESSURE_LEVEL_FIELDS %}
+[runtime]
+    [[plevel_domain_mean_vertical_profile_series_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
+    inherit = PROFILE, PROCESS
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_level_domain_mean_vertical_profile_series.yaml"
+        CSET_ADDOPTS = """
+            --VARNAME='{{field}}'
+            --LEVELTYPE='pressure'
+            --MODEL_NAME='{{model["name"]}}'
+        """
+        MODEL_IDENTIFIERS = {{model["id"]}}
+{% endfor %}
+{% endif %}
+
+# Model level fields
+{% if PROFILE_MLEVEL|default(False) %}
+{% for field in MODEL_LEVEL_FIELDS %}
+[runtime]
+    [[mlevel_domain_mean_vertical_profile_series_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
+    inherit = PROFILE, PROCESS
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_level_domain_mean_vertical_profile_series.yaml"
+        CSET_ADDOPTS = """
+            --VARNAME='{{field}}'
+            --LEVELTYPE='model_level_number'
+            --MODEL_NAME='{{model["name"]}}'
+        """
+        MODEL_IDENTIFIERS = {{model["id"]}}
+{% endfor %}
+{% endif %}
+
+{% endfor %}

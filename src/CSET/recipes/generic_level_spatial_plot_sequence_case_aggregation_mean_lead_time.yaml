@@ -1,24 +1,21 @@
-category: Surface Spatial Plot
-title: "$MODEL_NAME Surface $VARNAME \n Aggregation by lead time"
+category: $LEVELTYPE Level Spatial
+title: "$MODEL_NAME $VARNAME $LEVELTYPE$LEVEL \n Aggregation by lead time"
 description: |
-  Extracts and plots the surface $VARNAME for all times in $MODEL_NAME. Case
-  aggregation occurs over lead time.
+  Extracts ands plots the $VARNAME from $MODEL_NAME at $LEVELTYPE level $LEVEL.
+  Multiple cases are aggregated together keeping the lead time consistent.
 
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
     constraint:
       operator: constraints.combine_constraints
-      varname_constraint:
+      variable_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
-      cell_methods_constraint:
-        operator: constraints.generate_cell_methods_constraint
-        cell_methods: []
-      pressure_level_constraint:
+      level_constraint:
         operator: constraints.generate_level_constraint
-        coordinate: "pressure"
-        levels: []
+        coordinate: $LEVELTYPE
+        levels: $LEVEL
 
   - operator: aggregate.ensure_aggregatable_across_cases
 
@@ -26,7 +23,7 @@ steps:
     coordinate: "forecast_reference_time"
     method: MEAN
 
-  - operator: plot.spatial_pcolormesh_plot
+  - operator: plot.spatial_contour_plot
     sequence_coordinate: forecast_period
 
   - operator: write.write_cube_to_nc

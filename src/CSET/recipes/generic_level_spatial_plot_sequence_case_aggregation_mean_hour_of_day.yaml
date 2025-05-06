@@ -1,31 +1,28 @@
-category: Surface Spatial Plot
-title: "$MODEL_NAME Surface $VARNAME \n Aggregation by hour of day"
+category: $LEVELTYPE Level Spatial
+title: "$MODEL_NAME $VARNAME $LEVELTYPE$LEVEL \n Aggregation by hour of day"
 description: |
-  Extracts and plots the surface $VARNAME for all times in $MODEL_NAME. Case
-  aggregation occurs over hour of day.
+  Extracts ands plots the $VARNAME from $MODEL_NAME at $LEVELTYPE level $LEVEL.
+  Multiple cases are aggregated together keeping the hour of day consistent.
 
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
     constraint:
       operator: constraints.combine_constraints
-      varname_constraint:
+      variable_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
-      cell_methods_constraint:
-        operator: constraints.generate_cell_methods_constraint
-        cell_methods: []
-      pressure_level_constraint:
+      level_constraint:
         operator: constraints.generate_level_constraint
-        coordinate: "pressure"
-        levels: []
+        coordinate: $LEVELTYPE
+        levels: $LEVEL
 
   - operator: aggregate.ensure_aggregatable_across_cases
 
   - operator: collapse.collapse_by_hour_of_day
     method: MEAN
 
-  - operator: plot.spatial_pcolormesh_plot
+  - operator: plot.spatial_contour_plot
     sequence_coordinate: hour
 
   - operator: write.write_cube_to_nc
