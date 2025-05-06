@@ -17,7 +17,6 @@
 import argparse
 import logging
 import os
-import shlex
 import sys
 from importlib.metadata import version
 from pathlib import Path
@@ -36,13 +35,9 @@ def main(raw_cli_args: list[str] = sys.argv):
     # Read arguments from the command line and CSET_ADDOPTS environment variable
     # into an args object.
     parser = setup_argument_parser()
-    cli_args = raw_cli_args[1:] + shlex.split(os.getenv("CSET_ADDOPTS", ""))
-    args, unparsed_args = parser.parse_known_args(cli_args)
+    args, unparsed_args = parser.parse_known_args(raw_cli_args[1:])
 
     setup_logging(args.verbose)
-
-    # Down here so runs after logging is setup.
-    logger.debug("CLI Arguments: %s", cli_args)
 
     if args.subparser is None:
         print("Please choose a command.", file=sys.stderr)
@@ -120,6 +115,25 @@ def setup_argument_parser() -> argparse.ArgumentParser:
         "--skip-write", action="store_true", help="Skip saving processed output"
     )
     parser_bake.set_defaults(func=_bake_command)
+
+    parser_parbake = subparsers.add_parser(
+        "parbake", help="bake variables into a recipe file"
+    )
+    parser_parbake.add_argument(
+        "-r",
+        "--recipe",
+        type=Path,
+        required=True,
+        help="recipe file to read",
+    )
+    parser_parbake.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        required=True,
+        help="parbaked recipe file to write",
+    )
+    parser_parbake.set_defaults(func=_parbake_command)
 
     parser_graph = subparsers.add_parser("graph", help="visualise a recipe file")
     parser_graph.add_argument(
@@ -225,7 +239,7 @@ def setup_logging(verbosity: int):
 
 
 def _bake_command(args, unparsed_args):
-    from CSET._common import iter_maybe, parse_variable_options
+    from CSET._common import iter_maybe, parse_recipe, parse_variable_options
     from CSET.operators import execute_recipe
 
     # Convert --input_dir=... to INPUT_PATHS recipe variable.
@@ -234,14 +248,26 @@ def _bake_command(args, unparsed_args):
         unparsed_args.append(f"--INPUT_PATHS={abs_paths}")
 
     recipe_variables = parse_variable_options(unparsed_args)
+    recipe = parse_recipe(args.recipe, recipe_variables)
     execute_recipe(
-        args.recipe,
+        recipe,
         args.output_dir,
-        recipe_variables,
         args.style_file,
         args.plot_resolution,
         args.skip_write,
     )
+
+
+def _parbake_command(args, unparsed_args):
+    from ruamel.yaml import YAML
+
+    from CSET._common import parse_recipe, parse_variable_options
+
+    recipe_variables = parse_variable_options(unparsed_args)
+    recipe = parse_recipe(args.recipe, recipe_variables)
+    with open(args.output, "wt") as fp:
+        with YAML(pure=True, output=fp) as yaml:
+            yaml.dump(recipe)
 
 
 def _graph_command(args, unparsed_args):
