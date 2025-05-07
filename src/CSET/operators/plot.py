@@ -556,7 +556,7 @@ def _plot_and_save_line_series(
 
     for cube_iter in iter_maybe(cubes):
         label = None
-        color = 'black'
+        color = "black"
         if model_colors_map:
             label = cube_iter.attributes.get("model_name")
             color = model_colors_map.get(label)
@@ -1075,7 +1075,7 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
 
 
 def _get_num_models(cube: iris.cube.Cube | iris.cube.CubeList) -> int:
-    """Return number of models based on cube attributes. """
+    """Return number of models based on cube attributes."""
     model_names = list(
         filter(
             lambda x: x is not None,
@@ -1089,7 +1089,9 @@ def _get_num_models(cube: iris.cube.Cube | iris.cube.CubeList) -> int:
         return len(model_names)
 
 
-def _validate_cube_shape(cube: iris.cube.Cube | iris.cube.CubeList, num_models: int) -> None:
+def _validate_cube_shape(
+    cube: iris.cube.Cube | iris.cube.CubeList, num_models: int
+) -> None:
     """Check cube is right shape."""
     if isinstance(cube, iris.cube.CubeList) and len(cube) != num_models:
         raise ValueError(
