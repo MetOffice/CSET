@@ -1,0 +1,23 @@
+category: $LEVELTYPE Level Spatial Difference
+title: "$VARNAME $LEVELTYPE$LEVEL \n Difference ($BASE_MODEL - $OTHER_MODEL)"
+description: Extracts and plot the difference in surface $VARNAME on $LEVELTYPE level $LEVEL for all times.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: $LEVELTYPE
+        levels: $LEVEL
+
+  - operator: misc.difference
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

@@ -1,0 +1,36 @@
+category: Histogram
+title: $VARNAME $LEVELTYPE $LEVEL histogram
+description: |
+  Extracts and plots the probability density of $VARNAME from a
+  file at $LEVELTYPE level $LEVEL of $MODEL_NAME. It uses
+  [`plt.hist`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.hist.html)
+  to plot the probability density so that the area under the histogram
+  integrates to 1. `stacked` is set to True so the sum of the histograms is
+  normalized to 1. In case of ensemble data choose from postage stamp plot or
+  single plot via the single_plot option in the recipe directly.
+
+steps:
+  - operator: read.read_cubes
+    model_names: $MODEL_NAME
+    file_paths: $INPUT_PATHS
+    constraint:
+      operator: constraints.combine_constraints
+      variable_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+      level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: $LEVELTYPE
+        levels: $LEVEL
+
+  - operator: plot.plot_histogram_series
+    sequence_coordinate: time
+    # stamp_coordinate and single_plot optional and only required for ensemble data
+    stamp_coordinate: "realization"
+    single_plot: False
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

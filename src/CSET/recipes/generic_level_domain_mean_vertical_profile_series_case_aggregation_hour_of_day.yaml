@@ -1,25 +1,22 @@
-category: Surface Time Series
-title: Domain mean surface $VARNAME time series aggregation by hour of day
+category: Profiles
+title: $MODEL_NAME domain horizontal mean $VARNAME vertical profile aggregation by hour of day
 description: |
-  Plots a time series of the domain mean surface $VARNAME by averaging over
-  all cases by using a consistent hour of day.
+  Plots a time series of vertical profiles for the domain mean $VARNAME using a
+  $LEVELTYPE coordinate. Multiple cases are aggregated together keeping the
+  hour of day consistent.
 
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
-    model_names: $MODEL_NAME
     constraint:
       operator: constraints.combine_constraints
-      varname_constraint:
+      variable_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
-      cell_methods_constraint:
-        operator: constraints.generate_cell_methods_constraint
-        cell_methods: []
-      pressure_level_constraint:
+      level_constraint:
         operator: constraints.generate_level_constraint
-        coordinate: "pressure"
-        levels: []
+        coordinate: $LEVELTYPE
+        levels: "*"
 
   - operator: collapse.collapse
     coordinate: [grid_latitude, grid_longitude]
@@ -30,10 +27,11 @@ steps:
   - operator: collapse.collapse_by_hour_of_day
     method: MEAN
 
+  # Plot the vertical line series.
+  - operator: plot.plot_vertical_line_series
+    series_coordinate: $LEVELTYPE
+    sequence_coordinate: hour
+
   # Make a single NetCDF with all the data inside it.
   - operator: write.write_cube_to_nc
     overwrite: True
-
-  # Plot the data.
-  - operator: plot.plot_line_series
-    series_coordinate: hour
