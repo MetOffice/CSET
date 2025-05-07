@@ -303,19 +303,16 @@ def test_plot_histogram_with_filename(histogram_cube, tmp_working_dir):
     assert Path("test_473721.0.png").is_file()
 
 
+def test_get_histogram_method(tmp_working_dir):
+    """Test getting the histogram method."""
+    with open("meta.json", "wt", encoding="UTF-8") as fp:
+        fp.write('{"histogram_method": "density"}')
+    method = plot._get_histogram_method()
+    assert method == "density"
+
+
 def test_plot_and_save_histogram_series(histogram_cube, tmp_working_dir):
-    """Plot a histogram using either of three methods.
-
-    frequency            - This is constructed from the raw counts within each bin.
-
-    normalised_frequency - The frequency counts are normalised so that the total
-                           counts is 1.
-
-    density              - The counts per bin are normalised by both the total
-                           counts and the bin widths. The sum of the areas of the
-                           bins is 1. This is the discrete sampling analogue of
-                           the continuous probability density function.
-    """
+    """Plot a histogram using the density method via plot._plot_histogram."""
     plot._plot_and_save_histogram_series(
         histogram_cube,
         vmin=250,
