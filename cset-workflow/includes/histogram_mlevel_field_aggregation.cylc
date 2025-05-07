@@ -1,20 +1,18 @@
 {% for atype in range(AGGREGATION_TYPES|count) %}
 {% if HISTOGRAM_MLEVEL_FIELD_AGGREGATION[atype]|default(False) %}
 {% for field in MODEL_LEVEL_FIELDS %}
-{% for model in models %}
 {% for mlevel in UM_MODEL_LEVELS %}
 [runtime]
-    [[generic_mlevel_histogram_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(mlevel)}}]]
+    [[generic_mlevel_histogram_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(mlevel)}}]]
     inherit = PROCESS_CASE_AGGREGATION
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_mlevel_histogram_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
             --MLEVEL='{{mlevel}}'
-            --MODEL_NAME='{{model["name"]}}'
+            --MODEL_NAME='{{model_names}}'
         """
-        MODEL_IDENTIFIERS = {{model["id"]}}
-{% endfor %}
+        MODEL_IDENTIFIERS = '{{model_ids}}'
 {% endfor %}
 {% endfor %}
 {% endif %}
