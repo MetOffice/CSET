@@ -3,9 +3,6 @@
    inherit = PROCESS_CASE_AGGREGATION
 {% endif %}
 
-# Loop over all models
-{% for model in models %}
-
 # Surface (2D) fields
 {% if HISTOGRAM_SURFACE_FIELD_AGGREGATION[3]|default(False) %}
 {% for field in SURFACE_FIELDS %}
@@ -62,5 +59,3 @@
 {% endfor %}
 {% endfor %}
 {% endif %}
-
-{% endfor %}

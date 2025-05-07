@@ -3,9 +3,6 @@
     inherit = PROCESS
 {% endif %}
 
-# Loop over all models
-{% for model in models %}
-
 # Surface (2D) fields
 {% if HISTOGRAM_SURFACE_FIELD|default(False) %}
 {% for field in SURFACE_FIELDS %}
@@ -61,5 +58,3 @@
 {% endfor %}
 {% endfor %}
 {% endif %}
-
-{% endfor %}
