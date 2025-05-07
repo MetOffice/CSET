@@ -312,14 +312,15 @@ def test_get_histogram_method(tmp_working_dir):
 
 
 def test_plot_and_save_histogram_series(histogram_cube, tmp_working_dir):
-    """Plot a histogram using the density method via plot._plot_histogram."""
+    """Plot a histogram using the frequency method via plot._plot_histogram."""
+    with open("meta.json", "wt", encoding="UTF-8") as fp:
+        fp.write('{"histogram_method": "frequency"}')
     plot._plot_and_save_histogram_series(
         histogram_cube,
         vmin=250,
         vmax=350,
         title="test_histogram",
         filename="test_plot_and_save_histogram_series.png",
-        method="density",
         bins=50,
         color="black",
         linewidth=2,
