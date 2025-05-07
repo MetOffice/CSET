@@ -325,7 +325,7 @@ def test_plot_and_save_histogram_series(histogram_cube, tmp_working_dir):
         color="black",
         linewidth=2,
         histtype="step",
-        label="density",
+        label="frequency",
     )
     assert Path("test_plot_and_save_histogram_series.png").is_file()
 
