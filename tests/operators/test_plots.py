@@ -311,6 +311,24 @@ def test_get_histogram_method(tmp_working_dir):
     assert method == "density"
 
 
+def test_plot_histogram(histogram_cube, tmp_working_dir):
+    """Plot a histogram using the normalised_frequency method using plot._plot_histogram."""
+    cube_data_1d = (histogram_cube.data).flatten()
+
+    fig = mpl.pyplot.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+    plot._plot_histogram(
+        cube_data_1d,
+        method="normalised_frequency",
+        bins=50,
+        color="black",
+        linewidth=2,
+        histtype="step",
+        label="histogram",
+    )
+    fig.savefig("test_plot_histogram.png", bbox_inches="tight", dpi=100)
+    assert Path("test_plot_histogram.png").is_file()
+
+
 def test_plot_and_save_histogram_series(histogram_cube, tmp_working_dir):
     """Plot a histogram using the frequency method via plot._plot_histogram."""
     with open("meta.json", "wt", encoding="UTF-8") as fp:
