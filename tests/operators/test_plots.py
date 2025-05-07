@@ -316,7 +316,7 @@ def test_plot_histogram(histogram_cube, tmp_working_dir):
     cube_data_1d = (histogram_cube.data).flatten()
 
     fig = mpl.pyplot.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
-    plot._plot_histogram(
+    y = plot._plot_histogram(
         cube_data_1d,
         method="normalised_frequency",
         bins=50,
@@ -326,6 +326,7 @@ def test_plot_histogram(histogram_cube, tmp_working_dir):
         label="histogram",
     )
     fig.savefig("test_plot_histogram.png", bbox_inches="tight", dpi=100)
+    assert y["ylabel"] == "Normalised frequency"
     assert Path("test_plot_histogram.png").is_file()
 
 
