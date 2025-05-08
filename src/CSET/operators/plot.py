@@ -629,8 +629,16 @@ def _plot_and_save_vertical_line_series(
     """
     # plot the vertical pressure axis using log scale
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+
+    model_colors_map = _get_model_colors_map(cubes)
+
     for cube in iter_maybe(cubes):
-        iplt.plot(cube, coord, "o-")
+        label = None
+        color = "black"
+        if model_colors_map:
+            label = cube.attributes.get("model_name")
+            color = model_colors_map[label]
+        iplt.plot(cube, coord, color=color, marker="o", ls="-", label=label)
 
     # Get the current axis
     ax = plt.gca()
@@ -681,6 +689,8 @@ def _plot_and_save_vertical_line_series(
 
     # Add gridlines
     ax.grid(linestyle="--", color="grey", linewidth=1)
+    if model_colors_map:
+        ax.legend(loc="best", ncol=1, frameon=False)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -1334,10 +1344,14 @@ def plot_vertical_line_series(
     # Store min/max ranges for x range.
     x_levels = []
 
+    num_models = _get_num_models(cubes)
+
+    _validate_cube_shape(cubes, num_models)
+
     # Iterate over all cubes in cube or CubeList and plot.
     for cube_iter in iter_maybe(cubes):
         # Ensure we've got a single cube.
-        cube_iter = _check_single_cube(cube_iter)
+        # cube_iter = _check_single_cube(cube_iter)
 
         # Test if series coordinate i.e. pressure level exist for any cube with cube.ndim >=1.
         try:
@@ -1376,15 +1390,42 @@ def plot_vertical_line_series(
         vmin = min(x_levels)
         vmax = max(x_levels)
 
+    # Matching the slices (matching by seq coord point; it may happen that
+    # evaluated models do not cover the same seq coord range, hence matching
+    # necessary)
+    all_points = sorted(
+        set(
+            itertools.chain.from_iterable(
+                cb.coord(sequence_coordinate).points for cb in cubes
+            )
+        )
+    )
+    all_slices = list(
+        itertools.chain.from_iterable(
+            cb.slices_over(sequence_coordinate) for cb in cubes
+        )
+    )
+    cube_iterables = [
+        iris.cube.CubeList(
+            s for s in all_slices if s.coord(sequence_coordinate).points[0] == point
+        )
+        for point in all_points
+    ]
+
     # Create a plot for each value of the sequence coordinate.
     # Allowing for multiple cubes in a CubeList to be plotted in the same plot for
     # similar sequence values. Passing a CubeList into the internal plotting function
     # for similar values of the sequence coordinate. cube_slice can be an iris.cube.Cube
     # or an iris.cube.CubeList.
     plot_index = []
-    for cubes_slice in cubes.slices_over(sequence_coordinate):
+    # for cubes_slice in cubes.slices_over(sequence_coordinate):
+    for cubes_slice in cube_iterables:
+        single_cube = cubes_slice
+        if isinstance(single_cube, iris.cube.CubeList):
+            single_cube = single_cube[0]
+
         # Use sequence value so multiple sequences can merge.
-        seq_coord = cubes_slice.coord(sequence_coordinate)
+        seq_coord = single_cube.coord(sequence_coordinate)
         sequence_value = seq_coord.points[0]
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
         # Format the coordinate value in a unit appropriate way.

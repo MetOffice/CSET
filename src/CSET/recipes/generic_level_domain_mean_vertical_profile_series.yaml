@@ -1,10 +1,11 @@
 category: Profiles
-title: $MODEL_NAME domain horizontal mean $VARNAME vertical profile as series
+title: Domain horizontal mean $VARNAME vertical profile as series
 description: Plots a time series of vertical profiles for the domain mean $VARNAME using a $LEVELTYPE coordinate.
 
 steps:
-  - operator: read.read_cube
+  - operator: read.read_cubes
     file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
     constraint:
       operator: constraints.combine_constraints
       variable_constraint:
