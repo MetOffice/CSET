@@ -1079,7 +1079,7 @@ def _get_num_models(cube: iris.cube.Cube | iris.cube.CubeList) -> int:
     model_names = list(
         filter(
             lambda x: x is not None,
-            set([cb.attributes.get("model_name", None) for cb in iter_maybe(cube)]),
+            {cb.attributes.get("model_name", None) for cb in iter_maybe(cube)},
         )
     )
     if not model_names:
@@ -1092,11 +1092,11 @@ def _get_num_models(cube: iris.cube.Cube | iris.cube.CubeList) -> int:
 def _validate_cube_shape(
     cube: iris.cube.Cube | iris.cube.CubeList, num_models: int
 ) -> None:
-    """Check cube is right shape."""
+    """Check all cubes have a model name."""
     if isinstance(cube, iris.cube.CubeList) and len(cube) != num_models:
         raise ValueError(
-            f"There are {num_models:d} model names provided, and {len(cube)} cubes; "
-            f"These numbers should match."
+            f"The number of model names ({num_models}) should equal the number "
+            f"of cubes ({len(cube)})."
         )
 
 
