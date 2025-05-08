@@ -3,9 +3,6 @@
    inherit = PROCESS_CASE_AGGREGATION
 {% endif %}
 
-# Loop over models
-{% for model in models %}
-
 # Loop over aggregation types (hour_of_day, lead_time, validity_time)
 {% for atype in range(AGGREGATION_TYPES|count) %}
 
@@ -13,15 +10,15 @@
 {% if TIMESERIES_SURFACE_FIELD_AGGREGATION[atype]|default(False) %}
 {% for field in SURFACE_FIELDS %}
 [runtime]
-    [[surface_domain_mean_time_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
+    [[surface_domain_mean_time_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_{{sanitise_task_name(field)}}]]
     inherit = TIMESERIES_AGGREGATION, PROCESS_CASE_AGGREGATION
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_surface_domain_mean_time_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
-            --MODEL_NAME='{{model["name"]}}'
+            --MODEL_NAME='{{model_names}}'
         """
-        MODEL_IDENTIFIERS = {{model["id"]}}
+        MODEL_IDENTIFIERS = '{{model_ids}}'
 {% endfor %}
 {% endif %}
 
@@ -30,7 +27,7 @@
 {% for field in PRESSURE_LEVEL_FIELDS %}
 {% for plevel in PRESSURE_LEVELS %}
 [runtime]
-    [[plevel_domain_mean_time_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
+    [[plevel_domain_mean_time_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
     inherit = TIMESERIES_AGGREGATION, PROCESS_CASE_AGGREGATION
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_level_domain_mean_time_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
@@ -38,9 +35,9 @@
             --VARNAME='{{field}}'
             --LEVELTYPE='pressure'
             --LEVEL='{{plevel}}'
-            --MODEL_NAME='{{model["name"]}}'
+            --MODEL_NAME='{{model_names}}'
         """
-        MODEL_IDENTIFIERS = {{model["id"]}}
+        MODEL_IDENTIFIERS = '{{model_ids}}'
 {% endfor %}
 {% endfor %}
 {% endif %}
@@ -50,7 +47,7 @@
 {% for field in MODEL_LEVEL_FIELDS %}
 {% for plevel in MODEL_LEVELS %}
 [runtime]
-    [[mlevel_domain_mean_time_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
+    [[mlevel_domain_mean_time_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
     inherit = TIMESERIES_AGGREGATION, PROCESS_CASE_AGGREGATION
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_level_domain_mean_time_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
@@ -58,13 +55,11 @@
             --VARNAME='{{field}}'
             --LEVELTYPE='model_level_number'
             --LEVEL='{{mlevel}}'
-            --MODEL_NAME='{{model["name"]}}'
+            --MODEL_NAME='{{model_names}}'
         """
-        MODEL_IDENTIFIERS = {{model["id"]}}
+        MODEL_IDENTIFIERS = '{{model_ids}}'
 {% endfor %}
 {% endfor %}
 {% endif %}
-
-{% endfor %}
 
 {% endfor %}

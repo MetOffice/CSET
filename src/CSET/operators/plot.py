@@ -549,11 +549,18 @@ def _plot_and_save_line_series(
     """
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
+    model_colors_map = _get_model_colors_map(cubes)
+
     # Store min/max ranges.
     y_levels = []
 
     for cube_iter in iter_maybe(cubes):
-        iplt.plot(coord, cube_iter, "o-")
+        label = None
+        color = "black"
+        if model_colors_map:
+            label = cube_iter.attributes.get("model_name")
+            color = model_colors_map.get(label)
+        iplt.plot(coord, cube_iter, color=color, marker="o", ls="-", label=label)
 
         # Calculate the global min/max if multiple cubes are given.
         _, levels, _ = _colorbar_map_levels(cube_iter)
@@ -582,6 +589,8 @@ def _plot_and_save_line_series(
 
     # Add gridlines
     ax.grid(linestyle="--", color="grey", linewidth=1)
+    if model_colors_map:
+        ax.legend(loc="best", ncol=1, frameon=False)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -1065,6 +1074,32 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
     return cmap, levels, norm
 
 
+def _get_num_models(cube: iris.cube.Cube | iris.cube.CubeList) -> int:
+    """Return number of models based on cube attributes."""
+    model_names = list(
+        filter(
+            lambda x: x is not None,
+            {cb.attributes.get("model_name", None) for cb in iter_maybe(cube)},
+        )
+    )
+    if not model_names:
+        logging.debug("Missing model names. Will assume single model.")
+        return 1
+    else:
+        return len(model_names)
+
+
+def _validate_cube_shape(
+    cube: iris.cube.Cube | iris.cube.CubeList, num_models: int
+) -> None:
+    """Check all cubes have a model name."""
+    if isinstance(cube, iris.cube.CubeList) and len(cube) != num_models:
+        raise ValueError(
+            f"The number of model names ({num_models}) should equal the number "
+            f"of cubes ({len(cube)})."
+        )
+
+
 ####################
 # Public functions #
 ####################
@@ -1213,10 +1248,12 @@ def plot_line_series(
     # Add file extension.
     plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
 
+    num_models = _get_num_models(cube)
+
+    _validate_cube_shape(cube, num_models)
+
     # Iterate over all cubes in cube or CubeList and plot.
     for cube_iter in iter_maybe(cube):
-        # Check cube is right shape.
-        cube_iter = _check_single_cube(cube_iter)
         try:
             coord = cube_iter.coord(series_coordinate)
         except iris.exceptions.CoordinateNotFoundError as err:
@@ -1528,23 +1565,9 @@ def plot_histogram_series(
     # Internal plotting function.
     plotting_func = _plot_and_save_histogram_series
 
-    model_names = list(
-        filter(
-            lambda x: x is not None,
-            {cube.attributes.get("model_name", None) for cube in cubes},
-        )
-    )
-    if not model_names:
-        logging.debug("Missing model names. Will assume single model.")
-        num_models = 1
-    else:
-        num_models = len(model_names)
+    num_models = _get_num_models(cubes)
 
-    if isinstance(cubes, iris.cube.CubeList) and len(cubes) != num_models:
-        raise ValueError(
-            f"There are {num_models} models provided, so histogram plot can only plot"
-            f" {num_models} cubes."
-        )
+    _validate_cube_shape(cubes, num_models)
 
     # If several histograms are plotted with time as sequence_coordinate for the
     # time slider option.

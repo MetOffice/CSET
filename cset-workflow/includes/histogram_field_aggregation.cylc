@@ -3,9 +3,6 @@
    inherit = PROCESS_CASE_AGGREGATION
 {% endif %}
 
-# Loop over all models
-{% for model in models %}
-
 # Loop over aggregation types (hour_of_day, lead_time, validity_time)
 {% for atype in range(AGGREGATION_TYPES|count) %}
 
@@ -64,7 +61,5 @@
 {% endfor %}
 {% endfor %}
 {% endif %}
-
-{% endfor %}
 
 {% endfor %}
