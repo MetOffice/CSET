@@ -528,8 +528,8 @@ def _plot_and_save_postage_stamp_spatial_plot(
 
 
 def _plot_and_save_line_series(
-    cubes: iris.cube.Cube | iris.cube.CubeList,
-    coord: iris.coords.Coord,
+    cubes: iris.cube.CubeList,
+    coords: list[iris.coords.Coord],
     filename: str,
     title: str,
     **kwargs,
@@ -540,8 +540,8 @@ def _plot_and_save_line_series(
     ----------
     cubes: Cube or CubeList
         Cube or CubeList containing the cubes to plot on the y-axis.
-    coord: Coord
-        Coordinate to plot on the x-axis.
+    coords: list[Coord]
+        Coordinates to plot on the x-axis, one per cube.
     filename: str
         Filename of the plot to write.
     title: str
@@ -554,16 +554,16 @@ def _plot_and_save_line_series(
     # Store min/max ranges.
     y_levels = []
 
-    for cube_iter in iter_maybe(cubes):
+    for cube, coord in zip(cubes, coords, strict=True):
         label = None
         color = "black"
         if model_colors_map:
-            label = cube_iter.attributes.get("model_name")
+            label = cube.attributes.get("model_name")
             color = model_colors_map.get(label)
-        iplt.plot(coord, cube_iter, color=color, marker="o", ls="-", label=label)
+        iplt.plot(coord, cube, color=color, marker="o", ls="-", label=label)
 
         # Calculate the global min/max if multiple cubes are given.
-        _, levels, _ = _colorbar_map_levels(cube_iter)
+        _, levels, _ = _colorbar_map_levels(cube)
         if levels is not None:
             y_levels.append(min(levels))
             y_levels.append(max(levels))
@@ -574,7 +574,7 @@ def _plot_and_save_line_series(
     # Add some labels and tweak the style.
     # check if cubes[0] works for single cube if not CubeList
     ax.set(
-        xlabel=f"{coord.name()} / {coord.units}",
+        xlabel=f"{coords[0].name()} / {coords[0].units}",
         ylabel=f"{cubes[0].name()} / {cubes[0].units}",
         title=title,
     )
@@ -1252,19 +1252,21 @@ def plot_line_series(
 
     _validate_cube_shape(cube, num_models)
 
-    # Iterate over all cubes in cube or CubeList and plot.
-    for cube_iter in iter_maybe(cube):
+    # Iterate over all cubes and extract coordinate to plot.
+    cubes = iter_maybe(cube)
+    coords = []
+    for cube in cubes:
         try:
-            coord = cube_iter.coord(series_coordinate)
+            coords.append(cube.coord(series_coordinate))
         except iris.exceptions.CoordinateNotFoundError as err:
             raise ValueError(
                 f"Cube must have a {series_coordinate} coordinate."
             ) from err
-        if cube_iter.ndim > 1:
+        if cube.ndim > 1:
             raise ValueError("Cube must be 1D.")
 
     # Do the actual plotting.
-    _plot_and_save_line_series(cube, coord, plot_filename, title)
+    _plot_and_save_line_series(cubes, coords, plot_filename, title)
 
     # Add list of plots to plot metadata.
     plot_index = _append_to_plot_index([plot_filename])
