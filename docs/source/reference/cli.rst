@@ -26,6 +26,8 @@ page.
                             colour bar definition to use
     --plot-resolution PLOT_RESOLUTION
                             plotting resolution in dpi
+    --histogram-method HISTOGRAM_METHOD
+                            histogram method to use i.e. frequency, normalised_frequency or density
     --skip-write          Skip saving processed output
 
 Here is an example to run a recipe making use of the templated variable

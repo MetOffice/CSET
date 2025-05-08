@@ -103,6 +103,7 @@ URL = https://metoffice.github.io/CSET
         LOGLEVEL = {{LOGLEVEL}}
         PLOT_RESOLUTION = {{PLOT_RESOLUTION|default(100)}}
         SKIP_WRITE = {{SKIP_WRITE}}
+        HISTOGRAM_METHOD = {{HISTOGRAM_METHOD|default("Frequency")}}
 
     [[PROCESS]]
     script = rose task-run -v --app-key=run_cset_recipe
