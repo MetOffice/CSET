@@ -6,7 +6,7 @@
 # Loop over models
 {% for model in models %}
 
-# Loop over aggregation types (hour_of_day, lead_time, validity_time)
+# Loop over aggregation types (hour_of_day, lead_time, validity_time, all)
 {% for atype in range(AGGREGATION_TYPES|count) %}
 
 # Surface (2D) fields

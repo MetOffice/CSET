@@ -9,7 +9,7 @@ URL = https://metoffice.github.io/CSET
 # Load a list a model detail dictionaries.
 {% set models = get_models(ROSE_SUITE_VARIABLES) %}
 # Create a list of case aggregation types.
-{% set AGGREGATION_TYPES = ["LEAD_TIME", "HOUR_OF_DAY", "VALIDITY_TIME"] %}
+{% set AGGREGATION_TYPES = ["LEAD_TIME", "HOUR_OF_DAY", "VALIDITY_TIME", "ALL"] %}
 
 [scheduling]
     # Initial and final cycle points cover the entire period of interest.
@@ -104,7 +104,7 @@ URL = https://metoffice.github.io/CSET
 
     [[PROCESS]]
     script = rose task-run -v --app-key=run_cset_recipe
-    execution time limit = PT5M
+    execution time limit = PT30M
     execution retry delays = PT1M, PT15M, PT1H
     [[[directives]]]
         --mem=5000

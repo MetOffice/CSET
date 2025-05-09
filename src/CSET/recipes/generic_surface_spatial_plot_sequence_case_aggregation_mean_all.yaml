@@ -1,8 +1,8 @@
 category: Surface Spatial Plot
-title: "$MODEL_NAME Surface $VARNAME \n Aggregation by lead time"
+title: "$MODEL_NAME Surface $VARNAME \n Aggregation across all times"
 description: |
-  Extracts and plots the mean of surface $VARNAME for all times in $MODEL_NAME. Case
-  aggregation occurs over lead time.
+  Extracts and plots the mean surface $VARNAME for all times in $MODEL_NAME. Case
+  aggregation occurs over all available times.
 
 steps:
   - operator: read.read_cubes
@@ -23,11 +23,11 @@ steps:
   - operator: aggregate.ensure_aggregatable_across_cases
 
   - operator: collapse.collapse
-    coordinate: "forecast_reference_time"
+    coordinate: time
     method: MEAN
 
   - operator: plot.spatial_pcolormesh_plot
-    sequence_coordinate: forecast_period
+    sequence_coordinate: time
 
   - operator: write.write_cube_to_nc
     overwrite: True

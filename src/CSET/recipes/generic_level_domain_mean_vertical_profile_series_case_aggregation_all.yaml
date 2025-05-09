@@ -1,0 +1,37 @@
+category: Profiles
+title: $MODEL_NAME domain horizontal mean $VARNAME vertical profile aggregation all times
+description: |
+  Plots a vertical profile for the domain mean $VARNAME using a
+  $LEVELTYPE coordinate. Multiple cases are aggregated together for all available times.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    constraint:
+      operator: constraints.combine_constraints
+      variable_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: $LEVELTYPE
+        levels: "*"
+
+  - operator: collapse.collapse
+    coordinate: [grid_latitude, grid_longitude]
+    method: MEAN
+
+  - operator: aggregate.ensure_aggregatable_across_cases
+
+  - operator: collapse.collapse
+    coordinate: [time]
+    method: MEAN
+
+  # Plot the vertical line series.
+  - operator: plot.plot_vertical_line_series
+    series_coordinate: $LEVELTYPE
+    sequence_coordinate: time
+
+  # Make a single NetCDF with all the data inside it.
+  - operator: write.write_cube_to_nc
+    overwrite: True
