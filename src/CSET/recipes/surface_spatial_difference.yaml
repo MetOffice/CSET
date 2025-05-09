@@ -1,6 +1,6 @@
 category: Surface Spatial Plot Difference
-title: Surface $VARNAME difference ($BASE_MODEL - $OTHER_MODEL)
-description: Extracts and plot the difference in surface $VARNAME for all times.
+title: Surface $METHOD $VARNAME difference ($BASE_MODEL - $OTHER_MODEL)
+description: Extracts and plot the difference in $METHOD of surface $VARNAME for all times.
 
 steps:
   - operator: read.read_cubes
@@ -17,6 +17,10 @@ steps:
         operator: constraints.generate_level_constraint
         coordinate: "pressure"
         levels: []
+
+  - operator: collapse.collapse
+    coordinate: [time]
+    method: $METHOD
 
   - operator: misc.difference
 

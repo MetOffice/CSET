@@ -11,8 +11,9 @@
 # Surface (2D) fields
 {% if SPATIAL_DIFFERENCE_SURFACE_FIELD|default(False) %}
 {% for field in SURFACE_FIELDS %}
+{% for method in SPATIAL_SURFACE_FIELD_METHOD %}
 [runtime]
-    [[spatial_surface_difference_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
+    [[spatial_surface_difference_{{method}}_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
     inherit = SPATIAL_DIFFERENCE, PROCESS
         [[[environment]]]
         CSET_RECIPE_NAME = "surface_spatial_difference.yaml"
@@ -20,8 +21,10 @@
             --VARNAME='{{field}}'
             --BASE_MODEL='{{base_model["name"]}}'
             --OTHER_MODEL='{{model["name"]}}'
+	    --METHOD='{{method}}'
         """
         MODEL_IDENTIFIERS = '1 {{model["id"]}}'
+{% endfor %}
 {% endfor %}
 {% endif %}
 
@@ -29,8 +32,9 @@
 {% if SPATIAL_DIFFERENCE_PLEVEL_FIELD|default(False) %}
 {% for field in PRESSURE_LEVEL_FIELDS %}
 {% for plevel in PRESSURE_LEVELS %}
+{% for method in SPATIAL_PLEVEL_FIELD_METHOD %}
 [runtime]
-    [[spatial_pressure_difference_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
+    [[spatial_pressure_difference_{{method}}_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
     inherit = SPATIAL_DIFFERENCE, PROCESS
         [[[environment]]]
         CSET_RECIPE_NAME = "level_spatial_difference.yaml"
@@ -40,8 +44,10 @@
             --LEVEL='{{plevel}}'
             --BASE_MODEL='{{base_model["name"]}}'
             --OTHER_MODEL='{{model["name"]}}'
+	    --METHOD='{{method}}'
         """
         MODEL_IDENTIFIERS = '1 {{model["id"]}}'
+{% endfor %}
 {% endfor %}
 {% endfor %}
 {% endif %}
@@ -50,8 +56,9 @@
 {% if SPATIAL_MLEVEL_DIFFERENCE|default(False) %}
 {% for field in MODEL_LEVEL_FIELDS %}
 {% for mlevel in MODEL_LEVELS %}
+{% for method in SPATIAL_MLEVEL_FIELD_METHOD %}
 [runtime]
-    [[spatial_mlevel_difference_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(mlevel)}}]]
+    [[spatial_mlevel_difference_{{method}}_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(mlevel)}}]]
     inherit = SPATIAL_DIFFERENCE, PROCESS
         [[[environment]]]
         CSET_RECIPE_NAME = "level_spatial_difference.yaml"
@@ -61,8 +68,10 @@
             --LEVEL='{{mlevel}}'
             --BASE_MODEL='{{base_model["name"]}}'
             --OTHER_MODEL='{{model["name"]}}'
+	    --METHOD='{{method}}'
         """
         MODEL_IDENTIFIERS = '1 {{model["id"]}}'
+{% endfor %}
 {% endfor %}
 {% endfor %}
 {% endif %}

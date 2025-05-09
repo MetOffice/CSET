@@ -1,7 +1,7 @@
 category: $LEVELTYPE Level Spatial
-title: $MODEL_NAME $VARNAME $LEVELTYPE$LEVEL
+title: $MODEL_NAME $VARNAME $LEVELTYPE$LEVEL $METHOD
 description: |
-  Extracts ands plots the $VARNAME from $MODEL_NAME at $LEVELTYPE level $LEVEL.
+  Extracts ands plots the $METHOD of $VARNAME from $MODEL_NAME at $LEVELTYPE level $LEVEL.
 
 steps:
   - operator: read.read_cube
@@ -15,6 +15,10 @@ steps:
         operator: constraints.generate_level_constraint
         coordinate: $LEVELTYPE
         levels: $LEVEL
+
+  - operator: collapse.collapse
+    coordinate: [time]
+    method: $METHOD
 
   - operator: plot.spatial_contour_plot
     sequence_coordinate: time
