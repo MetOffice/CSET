@@ -4,11 +4,11 @@ title: Spatial scatter plot of station temperature from the MetDB.
 steps:
   - operator: read_mo.read_metdb2cube
     contact_email: "john.m.edwards@metoffice.gov.uk"
-    obs_source: 'LNDSYN'
-    obs_field: 'SRFC_AIR_TMPR'
+    obs_source: 'LNDSYB'
+    obs_field: $VARNAME
     obs_time: 20220719T0000Z
     met_keywords: 'PLATFORM 03'
-    valid_range: [150,350]
+    valid_range: [-150,350]
 
   - operator: plot.spatial_contour_plot
     sequence_coordinate: time
