@@ -1338,6 +1338,7 @@ def plot_vertical_line_series(
     if filename is None:
         filename = slugify(recipe_title)
 
+    cubes = iter_maybe(cubes)
     # Initialise empty list to hold all data from all cubes in a CubeList
     all_data = []
 
