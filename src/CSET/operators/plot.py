@@ -600,7 +600,7 @@ def _plot_and_save_line_series(
 
 def _plot_and_save_vertical_line_series(
     cubes: iris.cube.CubeList,
-    coords:list[iris.coords.Coord],
+    coords: list[iris.coords.Coord],
     filename: str,
     series_coordinate: str,
     title: str,
@@ -1352,7 +1352,6 @@ def plot_vertical_line_series(
     # Iterate over all cubes in cube or CubeList and plot.
     coords = []
     for cube in cubes:
-
         # Test if series coordinate i.e. pressure level exist for any cube with cube.ndim >=1.
         try:
             coords.append(cube.coord(series_coordinate))
@@ -1375,7 +1374,7 @@ def plot_vertical_line_series(
             x_levels.append(min(levels))
             x_levels.append(max(levels))
         else:
-            all_data.append(cube_iter.data)
+            all_data.append(cube.data)
 
     if len(x_levels) == 0:
         # Combine all data into a single NumPy array
