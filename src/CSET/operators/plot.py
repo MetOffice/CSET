@@ -599,8 +599,8 @@ def _plot_and_save_line_series(
 
 
 def _plot_and_save_vertical_line_series(
-    cubes: iris.cube.Cube | iris.cube.CubeList,
-    coord: iris.coords.Coord,
+    cubes: iris.cube.CubeList,
+    coords:list[iris.coords.Coord],
     filename: str,
     series_coordinate: str,
     title: str,
@@ -612,10 +612,10 @@ def _plot_and_save_vertical_line_series(
 
     Parameters
     ----------
-    cubes: Cube or CubeList
+    cubes: CubeList
         1 dimensional Cube or CubeList of the data to plot on x-axis.
-    coord: Coord
-        Coordinate to plot on y-axis.
+    coord: list[Coord]
+        Coordinates to plot on the y-axis, one per cube.
     filename: str
         Filename of the plot to write.
     series_coordinate: str
@@ -632,12 +632,12 @@ def _plot_and_save_vertical_line_series(
 
     model_colors_map = _get_model_colors_map(cubes)
 
-    for cube in iter_maybe(cubes):
+    for cube, coord in zip(cubes, coords, strict=True):
         label = None
         color = "black"
         if model_colors_map:
             label = cube.attributes.get("model_name")
-            color = model_colors_map[label]
+            color = model_colors_map.get(label)
         iplt.plot(cube, coord, color=color, marker="o", ls="-", label=label)
 
     # Get the current axis
@@ -1350,28 +1350,27 @@ def plot_vertical_line_series(
     _validate_cube_shape(cubes, num_models)
 
     # Iterate over all cubes in cube or CubeList and plot.
-    for cube_iter in iter_maybe(cubes):
-        # Ensure we've got a single cube.
-        # cube_iter = _check_single_cube(cube_iter)
+    coords = []
+    for cube in cubes:
 
         # Test if series coordinate i.e. pressure level exist for any cube with cube.ndim >=1.
         try:
-            coord = cube_iter.coord(series_coordinate)
+            coords.append(cube.coord(series_coordinate))
         except iris.exceptions.CoordinateNotFoundError as err:
             raise ValueError(
                 f"Cube must have a {series_coordinate} coordinate."
             ) from err
 
         try:
-            if cube_iter.ndim > 1:
-                cube_iter.coord(sequence_coordinate)
+            if cube.ndim > 1:
+                cube.coord(sequence_coordinate)
         except iris.exceptions.CoordinateNotFoundError as err:
             raise ValueError(
                 f"Cube must have a {sequence_coordinate} coordinate or be 1D."
             ) from err
 
         # Get minimum and maximum from levels information.
-        _, levels, _ = _colorbar_map_levels(cube_iter)
+        _, levels, _ = _colorbar_map_levels(cube)
         if levels is not None:
             x_levels.append(min(levels))
             x_levels.append(max(levels))
@@ -1434,7 +1433,7 @@ def plot_vertical_line_series(
         # Do the actual plotting.
         _plot_and_save_vertical_line_series(
             cubes_slice,
-            coord,
+            coords,
             plot_filename,
             series_coordinate,
             title=title,
