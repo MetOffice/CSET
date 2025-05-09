@@ -17,6 +17,7 @@
 import json
 from pathlib import Path
 
+import iris.coords
 import iris.cube
 import matplotlib as mpl
 import numpy as np
@@ -229,6 +230,32 @@ def test_plot_line_series_too_many_dimensions(cube, tmp_working_dir):
     """Error when cube has more than one dimension."""
     with pytest.raises(ValueError):
         plot.plot_line_series(cube)
+
+
+def test_plot_line_series_different_coord_lengths(tmp_working_dir):
+    """Save a line series plot with specific filename and series coordinate."""
+    coord1 = iris.coords.DimCoord(
+        [0, 1, 2, 3], standard_name="time", units="hours since 1970-01-01"
+    )
+    cube1 = iris.cube.Cube(
+        [0, 1, 2, 3],
+        long_name="my_var",
+        dim_coords_and_dims=[(coord1, 0)],
+        attributes={"model_name": "m1"},
+    )
+    coord2 = iris.coords.DimCoord(
+        [1, 2, 3], standard_name="time", units="hours since 1970-01-01"
+    )
+    cube2 = iris.cube.Cube(
+        [3, 2, 1],
+        long_name="my_var",
+        dim_coords_and_dims=[(coord2, 0)],
+        attributes={"model_name": "m2"},
+    )
+    cubes = iris.cube.CubeList([cube1, cube2])
+
+    plot.plot_line_series(cubes, filename="plot.png")
+    assert Path("plot.png").is_file()
 
 
 def test_plot_vertical_line_series(vertical_profile_cube, tmp_working_dir):

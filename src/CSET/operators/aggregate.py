@@ -20,8 +20,6 @@ import iris
 import iris.analysis
 import iris.coord_categorisation
 import iris.cube
-import iris.exceptions
-import iris.util
 import isodate
 
 from CSET._common import iter_maybe

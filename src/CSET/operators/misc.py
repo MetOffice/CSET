@@ -19,15 +19,11 @@ import logging
 from collections.abc import Iterable
 
 import iris
-import iris.coords
 import numpy as np
 from iris.cube import Cube, CubeList
 
 from CSET._common import iter_maybe
-from CSET.operators._utils import (
-    fully_equalise_attributes,
-    get_cube_yxcoordname,
-)
+from CSET.operators._utils import fully_equalise_attributes, get_cube_yxcoordname
 from CSET.operators.regrid import regrid_onto_cube
 
 
@@ -335,20 +331,7 @@ def difference(cubes: CubeList):
         other.data = np.flip(other.data, other.coord(other_lat_name).cube_dims(other))
 
     # Extract just common time points.
-    if "time" in [coord.name() for coord in base.coords()]:
-        logging.debug("Base: %s\nOther: %s", base.coord("time"), other.coord("time"))
-        base_times = set(base.coord("time").units.num2date(base.coord("time").points))
-        other_times = set(
-            other.coord("time").units.num2date(other.coord("time").points)
-        )
-        shared_times = set.intersection(base_times, other_times)
-        time_constraint = iris.Constraint(time=lambda cell: cell.point in shared_times)
-        base = base.extract(time_constraint)
-        other = other.extract(time_constraint)
-        if base is None or other is None:
-            raise ValueError("No common time points found!")
-    else:
-        logging.debug("No time coord, skipping equalisation.")
+    base, other = _extract_common_time_points(base, other)
 
     # Equalise attributes so we can merge.
     fully_equalise_attributes([base, other])
@@ -365,3 +348,47 @@ def difference(cubes: CubeList):
 
     difference.data = base.data - other.data
     return difference
+
+
+def _extract_common_time_points(base: Cube, other: Cube) -> tuple[Cube, Cube]:
+    """Extract common time points from cubes to allow comparison."""
+    # Get the name of the first non-scalar time coordinate.
+    time_coord = next(
+        map(
+            lambda coord: coord.name(),
+            filter(
+                lambda coord: coord.shape > (1,) and coord.name() in ["time", "hour"],
+                base.coords(),
+            ),
+        ),
+        None,
+    )
+    if not time_coord:
+        logging.debug("No time coord, skipping equalisation.")
+        return (base, other)
+    base_time_coord = base.coord(time_coord)
+    other_time_coord = other.coord(time_coord)
+    logging.debug("Base: %s\nOther: %s", base_time_coord, other_time_coord)
+    if time_coord == "hour":
+        # We directly compare points when comparing coordinates with
+        # non-absolute units, such as hour. We can't just check the units are
+        # equal as iris automatically converts to datetime objects in the
+        # comparison for certain coordinate names.
+        base_times = base_time_coord.points
+        other_times = other_time_coord.points
+        shared_times = set.intersection(set(base_times), set(other_times))
+    else:
+        # Units don't match, so converting to datetimes for comparison.
+        base_times = base_time_coord.units.num2date(base_time_coord.points)
+        other_times = other_time_coord.units.num2date(other_time_coord.points)
+        shared_times = set.intersection(set(base_times), set(other_times))
+    logging.debug("Shared times: %s", shared_times)
+    time_constraint = iris.Constraint(
+        coord_values={time_coord: lambda cell: cell.point in shared_times}
+    )
+    # Extract points matching the shared times.
+    base = base.extract(time_constraint)
+    other = other.extract(time_constraint)
+    if base is None or other is None:
+        raise ValueError("No common time points found!")
+    return (base, other)

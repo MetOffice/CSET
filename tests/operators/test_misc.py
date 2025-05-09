@@ -17,6 +17,7 @@
 import datetime
 
 import iris
+import iris.coords
 import iris.cube
 import iris.exceptions
 import numpy as np
@@ -180,10 +181,13 @@ def test_difference_no_time_coord(cube):
 
 def test_difference_no_common_points(cube):
     """Test exception when there are no common time points between cubes."""
-    c1 = cube.extract(iris.Constraint(time=datetime.datetime(2022, 9, 21, 2, 30)))
-    c2 = cube.extract(iris.Constraint(time=datetime.datetime(2022, 9, 21, 4, 30)))
-    del c2.attributes["cset_comparison_base"]
-    cubes = iris.cube.CubeList([c1, c2])
+    other_cube = cube.copy()
+    # Offset times by 6 hours.
+    new_times = other_cube.coord("time").points.copy()
+    new_times += 6
+    other_cube.coord("time").points = new_times
+    del other_cube.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([cube, other_cube])
     with pytest.raises(ValueError, match="No common time points found!"):
         misc.difference(cubes)
 
@@ -256,3 +260,65 @@ def test_difference_different_model_types(cube):
     assert np.allclose(
         difference_cube.data, np.zeros_like(difference_cube.data), atol=1e-9
     )
+
+
+def test_extract_common_time_points():
+    """Common times are selected."""
+    coord1 = iris.coords.DimCoord(
+        [0, 24, 48], standard_name="time", units="hours since 1970-01-01"
+    )
+    coord2 = iris.coords.DimCoord(
+        [0, 24, 48], standard_name="time", units="hours since 1970-01-02"
+    )
+    c1 = iris.cube.Cube(
+        [1, 2, 3], long_name="my_var", dim_coords_and_dims=[(coord1, 0)]
+    )
+    c2 = iris.cube.Cube(
+        [2, 3, 4], long_name="my_var", dim_coords_and_dims=[(coord2, 0)]
+    )
+    c1_common, c2_common = misc._extract_common_time_points(c1, c2)
+    assert all(c1_common.coord("time").points == [24, 48])
+    assert all(c2_common.coord("time").points == [0, 24])
+
+
+def test_extract_common_time_points_hour():
+    """Common hours are selected."""
+    coord1 = iris.coords.DimCoord([0, 6, 12], long_name="hour", units="hours")
+    coord2 = iris.coords.DimCoord([6, 12, 18], long_name="hour", units="hours")
+    c1 = iris.cube.Cube(
+        [1, 2, 3], long_name="my_var", dim_coords_and_dims=[(coord1, 0)]
+    )
+    c2 = iris.cube.Cube(
+        [2, 3, 4], long_name="my_var", dim_coords_and_dims=[(coord2, 0)]
+    )
+    c1_common, c2_common = misc._extract_common_time_points(c1, c2)
+    assert all(c1_common.coord("hour").points == [6, 12])
+    assert c1_common == c2_common
+
+
+def test_extract_common_time_points_no_time_coord():
+    """Cubes without time coordinates are passed through unchanged."""
+    coord = iris.coords.DimCoord([1, 2, 3], long_name="number", units="1")
+    c1 = iris.cube.Cube([1, 2, 3], long_name="my_var", dim_coords_and_dims=[(coord, 0)])
+    c2 = c1.copy()
+    c1_common, c2_common = misc._extract_common_time_points(c1, c2)
+    assert c1_common == c1
+    assert c2_common == c2
+
+
+def test_extract_common_time_points_no_overlap():
+    """ValueError when there are no common times."""
+    coord1 = iris.coords.DimCoord(
+        [0, 6, 12], standard_name="time", units="hours since 1970-01-01"
+    )
+    coord2 = iris.coords.DimCoord(
+        [18, 24, 30], standard_name="time", units="hours since 1970-01-01"
+    )
+    c1 = iris.cube.Cube(
+        [1, 2, 3], long_name="my_var", dim_coords_and_dims=[(coord1, 0)]
+    )
+    c2 = iris.cube.Cube(
+        [4, 5, 6], long_name="my_var", dim_coords_and_dims=[(coord2, 0)]
+    )
+    with pytest.raises(ValueError, match="No common time points found!"):
+        misc._extract_common_time_points(c1, c2)
