@@ -35,7 +35,7 @@ def test_get_configuration(monkeypatch, tmp_path):
     cset_args, plot_dir, recipe_files, nproc = bake_recipes.get_configuration()
     assert cset_args == []
     assert plot_dir == f"{tmp_path}/web/plots/20000101T0000Z"
-    assert recipe_files == [str(recipe_dir / f"r{n}.yaml") for n in range(3)]
+    assert sorted(recipe_files) == [str(recipe_dir / f"r{n}.yaml") for n in range(3)]
     assert nproc == len(os.sched_getaffinity(0))
 
 
@@ -53,7 +53,7 @@ def test_get_configuration_case_aggregation(monkeypatch, tmp_path):
     cset_args, plot_dir, recipe_files, nproc = bake_recipes.get_configuration()
     assert cset_args == []
     assert plot_dir == f"{tmp_path}/web/plots/20000101T0000Z"
-    assert recipe_files == [str(recipe_dir / f"r{n}.yaml") for n in range(3)]
+    assert sorted(recipe_files) == [str(recipe_dir / f"r{n}.yaml") for n in range(3)]
     assert nproc == 1
 
 
