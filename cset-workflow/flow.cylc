@@ -29,7 +29,7 @@ URL = https://metoffice.github.io/CSET
     [[special tasks]]
         # cycle_complete depends on its previous instance. We then don't need to
         # know the offset between the cycles.
-        sequential = cycle_complete
+        sequential = fetch_complete, cycle_complete
 
     [[graph]]
     # Only runs on the first cycle.
@@ -46,18 +46,20 @@ URL = https://metoffice.github.io/CSET
             FETCH_DATA:succeed-all =>
             PREPROCESS_DATA:succeed-all =>
             fetch_complete =>
-            PROCESS:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} =>
+            PROCESS:succeed-all =>
+            bake_recipes =>
             cycle_complete
             """
         {% endfor %}
     {% elif CSET_CYCLING_MODE == "trial" %}
-        # Analyse from each forecast.
+        # Analysis from each forecast.
         {{CSET_TRIAL_CYCLE_PERIOD}} = """
         setup_complete[^] =>
         FETCH_DATA:succeed-all =>
         PREPROCESS_DATA:succeed-all =>
         fetch_complete =>
-        PROCESS:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} =>
+        PROCESS:succeed-all =>
+        bake_recipes =>
         cycle_complete
         """
     {% endif %}
@@ -67,10 +69,13 @@ URL = https://metoffice.github.io/CSET
     {% if CSET_CYCLING_MODE != "trial" or CSET_TRIAL_END_DATE|default(False) %}
         # Only runs on the final cycle.
         R1/$ = """
-        cycle_complete =>
-        PROCESS_CASE_AGGREGATION:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} =>
+        fetch_complete =>
+        PROCESS_CASE_AGGREGATION:succeed-all =>
+        bake_recipes =>
+        bake_aggregation_recipes =>
+        cycle_complete => housekeeping
+        cycle_complete => finish_website
         finish_website => send_email
-        finish_website => housekeeping
         """
     {% endif %}
 
@@ -102,20 +107,23 @@ URL = https://metoffice.github.io/CSET
         CONDA_PATH = {{CONDA_PATH}}
         LOGLEVEL = {{LOGLEVEL}}
         PLOT_RESOLUTION = {{PLOT_RESOLUTION|default(100)}}
-        SKIP_WRITE = {{SKIP_WRITE}}
+        {% if SKIP_WRITE|default(False) %}
+        SKIP_WRITE = True
+        {% endif %}
 
     [[PROCESS]]
-    script = rose task-run -v --app-key=run_cset_recipe
-    execution time limit = PT5M
-    execution retry delays = PT1M, PT15M, PT1H
+    script = rose task-run -v --app-key=parbake_recipe
+    execution time limit = PT2M
     [[[directives]]]
-        --mem=5000
+        --ntasks=1
+        --mem=100
 
     [[PROCESS_CASE_AGGREGATION]]
-    script = rose task-run -v --app-key=run_cset_recipe
-    execution time limit = PT3H
+    script = rose task-run -v --app-key=parbake_recipe
+    execution time limit = PT2M
         [[[directives]]]
-        --mem=100000
+        --ntasks=1
+        --mem=100
         [[[environment]]]
         # As this process is used for case aggregation we hard code to True.
         DO_CASE_AGGREGATION = True
@@ -158,10 +166,10 @@ URL = https://metoffice.github.io/CSET
     [[cycle_complete]]
     inherit = DUMMY_TASK
 
-    [[dummy_process]]
+    [[dummy_parbake]]
     inherit = DUMMY_TASK, PROCESS
 
-    [[dummy_process_case_aggregation]]
+    [[dummy_parbake_case_aggregation]]
     inherit = DUMMY_TASK, PROCESS_CASE_AGGREGATION
 
     [[build_conda]]
@@ -205,6 +213,24 @@ URL = https://metoffice.github.io/CSET
         [[[environment]]]
         MODEL_IDENTIFIER = {{model["id"]}}
     {% endfor %}
+
+    [[bake_recipes]]
+    execution time limit = PT3H
+    execution retry delays = 5*PT1M
+    [[[directives]]]
+        --ntasks=32
+        --mem=64000
+
+    [[bake_aggregation_recipes]]
+    script = rose task-run -v --app-key=bake_recipes
+    execution time limit = PT3H
+    execution retry delays = 5*PT1M
+    [[[directives]]]
+        --ntasks=8
+        --mem=64000
+    [[[environment]]]
+        # As this process is used for case aggregation we hard code to True.
+        DO_CASE_AGGREGATION = True
 
     [[housekeeping]]
     # Housekeep unprocessed data files and processed intermediate files.
