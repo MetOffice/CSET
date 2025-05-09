@@ -14,11 +14,14 @@
 
 """Useful functions for the workflow."""
 
+import json
 from builtins import max, min, zip
 from glob import glob
 
 # Reexport functions for use within workflow.
 __all__ = [
+    "get_model_ids",
+    "get_model_names",
     "get_models",
     "sanitise_task_name",
     # Reexported functions.
@@ -29,7 +32,7 @@ __all__ = [
 ]
 
 
-def get_models(rose_variables: dict):
+def get_models(rose_variables: dict) -> list[dict]:
     """Load per-model configuration into a single object.
 
     Returns a list of dictionaries, each one containing a per-model
@@ -49,7 +52,18 @@ def get_models(rose_variables: dict):
     return models
 
 
-def sanitise_task_name(s: str):
+def get_model_names(models: list) -> str:
+    """Get a quoted JSON list literal of model names."""
+    json_text = json.dumps([model["name"] for model in models])
+    return json_text.replace('"', r"\"")
+
+
+def get_model_ids(models: list) -> str:
+    """Get space separated list of model identifiers."""
+    return " ".join(str(model["id"]) for model in models)
+
+
+def sanitise_task_name(s: str) -> str:
     """Sanitise a string to be used as a Cylc task name.
 
     Rules per

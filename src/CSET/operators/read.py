@@ -18,6 +18,7 @@ import ast
 import datetime
 import functools
 import glob
+import itertools
 import logging
 import warnings
 from pathlib import Path
@@ -80,16 +81,15 @@ def read_cube(
     if len(cubes) == 1:
         return cubes[0]
     else:
-        # Log cube details so you can see why they are not merging.
-        logging.debug("Non-merging cubes:\n%s", "\n".join(str(cube) for cube in cubes))
         raise ValueError(
-            f"Constraint doesn't produce single cube. {constraint}\n{cubes}"
+            f"Constraint doesn't produce single cube: {constraint}\n{cubes}"
         )
 
 
 def read_cubes(
     file_paths: list[str] | str,
-    constraint: iris.Constraint = None,
+    constraint: iris.Constraint | None = None,
+    model_names: str | list[str] | None = None,
     **kwargs,
 ) -> iris.cube.CubeList:
     """Read cubes from files.
@@ -115,6 +115,8 @@ def read_cubes(
         Path or paths to where .pp/.nc files are located. Can include globs.
     constraint: iris.Constraint | iris.ConstraintCombination, optional
         Constraints to filter data by. Defaults to unconstrained.
+    model_names: str | list[str], optional
+        Names of the models that correspond to respective paths in file_paths.
 
     Returns
     -------
@@ -126,44 +128,34 @@ def read_cubes(
     FileNotFoundError
         If the provided path does not exist
     """
-    logging.debug("Constraint: %s", constraint)
-
-    def load_from_paths(
-        paths: list[str], is_ensemble: bool, is_base: bool
-    ) -> iris.cube.CubeList:
-        # Skip if no paths given, mainly for when we only have a base path.
-        if not paths:
-            return iris.cube.CubeList([])
-        input_files = _check_input_files(paths)
-        callback = _create_callback(is_ensemble=is_ensemble, is_base=is_base)
-        # If unset, a constraint of None lets everything be loaded.
-        return iris.load(input_files, constraint, callback=callback)
-
-    # Get lists of paths.
+    # Get iterable of paths. Each path corresponds to 1 model.
     paths = iter_maybe(file_paths)
-    base_path = paths[:1]
-    # If len(paths) < 2, this just returns an empty list, rather than an error.
-    other_paths = paths[1:]
-    del paths
+    model_names = iter_maybe(model_names)
 
-    # Load the data, then reload with correct handling if it is ensemble data.
-    cubes = iris.cube.CubeList([])
+    # Check we have appropriate number of model names.
+    if model_names != (None,) and len(model_names) != len(paths):
+        raise ValueError(
+            f"The number of model names ({len(model_names)}) should equal "
+            f"the number of paths given ({len(paths)})."
+        )
 
-    # Split out first input file definition here and mark as base model.
-    cubes.extend(load_from_paths(base_path, is_ensemble=False, is_base=True))
-    cubes.extend(load_from_paths(other_paths, is_ensemble=False, is_base=False))
+    # Load the data for each model into a CubeList per model.
+    model_cubes = (
+        _load_model(path, name, constraint)
+        for path, name in itertools.zip_longest(paths, model_names, fillvalue=None)
+    )
 
-    # Reload all data with ensemble handling if needed.
-    if _is_ensemble(cubes):
-        cubes = iris.cube.CubeList()
-        cubes.extend(load_from_paths(base_path, is_ensemble=True, is_base=True))
-        cubes.extend(load_from_paths(other_paths, is_ensemble=True, is_base=False))
+    # Split out first model's cubes and mark it as the base for comparisons.
+    cubes = next(model_cubes)
+    for cube in cubes:
+        # Use 1 to indicate True, as booleans can't be saved in NetCDF attributes.
+        cube.attributes["cset_comparison_base"] = 1
+
+    # Load the rest of the models.
+    cubes.extend(itertools.chain.from_iterable(model_cubes))
 
     # Unify time units so different case studies can merge.
     iris.util.unify_time_units(cubes)
-
-    # Should we call ensure_aggregatable_across_cases here?
-    # aggregate.ensure_aggregatable_across_cases(cubes)
 
     # Merge and concatenate cubes now metadata has been fixed.
     cubes = cubes.merge()
@@ -176,12 +168,81 @@ def read_cubes(
             if not dim_coord.has_bounds() and dim_coord.shape[0] > 1:
                 dim_coord.guess_bounds()
 
-    logging.debug("Loaded cubes: %s", cubes)
+    logging.info("Loaded cubes: %s", cubes)
     if len(cubes) == 0:
         warnings.warn(
             "No cubes loaded, check your constraints!", NoDataWarning, stacklevel=2
         )
     return cubes
+
+
+def _load_model(
+    paths: str | list[str],
+    model_name: str | None,
+    constraint: iris.Constraint | None,
+) -> iris.cube.CubeList:
+    """Load a single model's data into a CubeList."""
+    input_files = _check_input_files(paths)
+    # If unset, a constraint of None lets everything be loaded.
+    logging.debug("Constraint: %s", constraint)
+    cubes = iris.load(
+        input_files, constraint, callback=_create_callback(is_ensemble=False)
+    )
+    # Reload with ensemble handling if needed.
+    if _is_ensemble(cubes):
+        cubes = iris.load(
+            input_files, constraint, callback=_create_callback(is_ensemble=True)
+        )
+
+    # Add model_name attribute to each cube to make it available at any further
+    # step without needing to pass it as function parameter.
+    if model_name is not None:
+        for cube in cubes:
+            cube.attributes["model_name"] = model_name
+    return cubes
+
+
+def _check_input_files(input_paths: str | list[str]) -> list[Path]:
+    """Get an iterable of files to load, and check that they all exist.
+
+    Arguments
+    ---------
+    input_paths: list[str]
+        List of paths to input files or directories. The path may itself contain
+        glob patterns, but unlike in shells it will match directly first.
+
+    Returns
+    -------
+    list[Path]
+        A list of files to load.
+
+    Raises
+    ------
+    FileNotFoundError:
+        If the provided arguments don't resolve to at least one existing file.
+    """
+    files = []
+    for raw_filename in iter_maybe(input_paths):
+        # Match glob-like files first, if they exist.
+        raw_path = Path(raw_filename)
+        if raw_path.is_file():
+            files.append(raw_path)
+        else:
+            for input_path in glob.glob(raw_filename):
+                # Convert string paths into Path objects.
+                input_path = Path(input_path)
+                # Get the list of files in the directory, or use it directly.
+                if input_path.is_dir():
+                    logging.debug("Checking directory '%s' for files")
+                    files.extend(p for p in input_path.iterdir() if p.is_file())
+                else:
+                    files.append(input_path)
+
+    files.sort()
+    logging.info("Loading files:\n%s", "\n".join(str(path) for path in files))
+    if len(files) == 0:
+        raise FileNotFoundError(f"No files found for {input_paths}")
+    return files
 
 
 def _is_ensemble(cubelist: iris.cube.CubeList) -> bool:
@@ -206,17 +267,15 @@ def _is_ensemble(cubelist: iris.cube.CubeList) -> bool:
     return False
 
 
-def _create_callback(is_ensemble: bool, is_base: bool) -> callable:
+def _create_callback(is_ensemble: bool) -> callable:
     """Compose together the needed callbacks into a single function."""
 
-    # TODO: Fix coordinate name to enable full level and half level merging.
     def callback(cube: iris.cube.Cube, field, filename: str):
-        if is_base:
-            _mark_as_comparison_base_callback(cube, field, filename)
         if is_ensemble:
             _ensemble_callback(cube, field, filename)
         else:
             _deterministic_callback(cube, field, filename)
+
         _um_normalise_callback(cube, field, filename)
         _lfric_normalise_callback(cube, field, filename)
         _lfric_time_coord_fix_callback(cube, field, filename)
@@ -231,12 +290,6 @@ def _create_callback(is_ensemble: bool, is_base: bool) -> callable:
         _lfric_forecast_period_standard_name_callback(cube)
 
     return callback
-
-
-def _mark_as_comparison_base_callback(cube, field, filename):
-    """Add an attribute to the cube to mark it as the base for comparisons."""
-    # Use 1 to indicate True, as booleans can't be saved in NetCDF attributes.
-    cube.attributes["cset_comparison_base"] = 1
 
 
 def _ensemble_callback(cube, field, filename):
@@ -493,9 +546,7 @@ def _fix_um_radtime_prehour(cube: iris.cube.Cube):
                 return
 
             # Add 1 minute from each time point
-            new_time_points = np.array(
-                [t + datetime.timedelta(minutes=1) for t in time_points]
-            )
+            new_time_points = time_points + datetime.timedelta(minutes=1)
 
             # Convert back to numeric values using the original time unit
             new_time_values = time_unit.date2num(new_time_points)
@@ -630,46 +681,3 @@ def _lfric_forecast_period_standard_name_callback(cube: iris.cube.Cube):
             coord.standard_name = "forecast_period"
     except iris.exceptions.CoordinateNotFoundError:
         pass
-
-
-def _check_input_files(input_paths: list[str]) -> list[Path]:
-    """Get an iterable of files to load, and check that they all exist.
-
-    Arguments
-    ---------
-    input_paths: list[str]
-        List of paths to input files or directories. The path may itself contain
-        glob patterns, but unlike in shells it will match directly first.
-
-    Returns
-    -------
-    list[Path]
-        A list of files to load.
-
-    Raises
-    ------
-    FileNotFoundError:
-        If the provided arguments don't resolve to at least one existing file.
-    """
-    files = []
-    for raw_filename in iter_maybe(input_paths):
-        # Match glob-like files first, if they exist.
-        raw_path = Path(raw_filename)
-        if raw_path.is_file():
-            files.append(raw_path)
-        else:
-            for input_path in glob.glob(raw_filename):
-                # Convert string paths into Path objects.
-                input_path = Path(input_path)
-                # Get the list of files in the directory, or use it directly.
-                if input_path.is_dir():
-                    logging.debug("Checking directory '%s' for files")
-                    files.extend(p for p in input_path.iterdir() if p.is_file())
-                else:
-                    files.append(input_path)
-
-    files.sort()
-    logging.info("Loading files:\n%s", "\n".join(str(path) for path in files))
-    if len(files) == 0:
-        raise FileNotFoundError(f"No files found for {input_paths}")
-    return files

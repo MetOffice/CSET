@@ -1,3 +1,4 @@
+category: Transect
 title: $MODEL_NAME Transect of $VARNAME
 description: |
   Extracts a $VERTICAL_COORDINATE transect for $VARNAME between two points and

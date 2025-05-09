@@ -1,10 +1,11 @@
 category: Time Series
-title: $MODEL_NAME Time series of $VARNAME at $LATITUDE_POINT N, $LONGITUDE_POINT E ($LATLON_IN_TYPE)
+title: Time series of $VARNAME at $LATITUDE_POINT N, $LONGITUDE_POINT E ($LATLON_IN_TYPE)
 description: Plots a time series of the surface $VARNAME at a selected gridpoint.
 
 steps:
-  - operator: read.read_cube
+  - operator: read.read_cubes
     file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
     constraint:
       operator: constraints.combine_constraints
       varname_constraint:

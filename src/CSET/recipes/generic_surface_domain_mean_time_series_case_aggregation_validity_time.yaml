@@ -1,5 +1,5 @@
 category: Surface Time Series
-title: $MODEL_NAME Domain mean surface $VARNAME time series aggregation by validity time
+title: Domain mean surface $VARNAME time series aggregation by validity time
 description: |
   Plots a time series of the domain mean surface $VARNAME by averaging over
   all cases by using a consistent validity time.
@@ -7,6 +7,7 @@ description: |
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
     constraint:
       operator: constraints.combine_constraints
       varname_constraint:

@@ -1,5 +1,5 @@
 category: Histogram
-title: $MODEL_NAME $VARNAME $LEVELTYPE$LEVEL histogram aggregation by lead time
+title: $VARNAME $LEVELTYPE $LEVEL histogram aggregation by lead time
 description: |
   Extracts and plots the probability density of $VARNAME from a
   file at $LEVELTYPE level $LEVEL of $MODEL_NAME. It uses
@@ -13,6 +13,7 @@ description: |
 
 steps:
   - operator: read.read_cubes
+    model_names: $MODEL_NAME
     file_paths: $INPUT_PATHS
     constraint:
       operator: constraints.combine_constraints

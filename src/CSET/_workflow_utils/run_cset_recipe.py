@@ -35,16 +35,13 @@ def run_recipe_steps():
     data_dirs = data_directories()
     # Construct the plot output directory for the recipe.
     output_dir = f"{os.environ['CYLC_WORKFLOW_SHARE_DIR']}/web/plots/{os.environ['CYLC_TASK_ID']}"
+    style_file = f"{os.environ['CYLC_WORKFLOW_SHARE_DIR']}/style.json"
 
     command = (
         ["cset", "bake", "--recipe", recipe, "--input-dir"]
         + data_dirs
-        + ["--output-dir", output_dir]
+        + ["--output-dir", output_dir, "--style-file", style_file]
     )
-
-    colorbar_file = os.getenv("COLORBAR_FILE")
-    if colorbar_file:
-        command.append(f"--style-file={colorbar_file}")
 
     plot_resolution = os.getenv("PLOT_RESOLUTION")
     if plot_resolution:

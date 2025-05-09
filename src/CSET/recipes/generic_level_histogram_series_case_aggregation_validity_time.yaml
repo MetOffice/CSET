@@ -1,5 +1,5 @@
 category: Histogram
-title: $MODEL_NAME $VARNAME $LEVELTYPE$LEVEL histogram aggregation by validity time
+title: $VARNAME $LEVELTYPE $LEVEL Level Histogram Plot case aggregation validity time
 description: |
   Extracts and plots the probability density of $VARNAME from a
   file at $LEVELTYPE level $LEVEL of $MODEL_NAME. It uses
@@ -13,6 +13,8 @@ description: |
 
 steps:
   - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
     constraint:
       operator: constraints.combine_constraints
       variable_constraint:

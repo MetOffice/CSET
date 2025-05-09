@@ -10,7 +10,7 @@ repos:
       - id: codespell
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: d119aaff6891558b6eaf52518386871d1d267131  # frozen: v0.11.6
+    rev: f0fe93c067104b76ffb58852abe79673a8429bd1  # frozen: v0.11.8
     hooks:
       - id: ruff
         args: [--fix, --show-fixes, --exit-non-zero-on-fix]

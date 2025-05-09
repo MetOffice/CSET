@@ -13,6 +13,58 @@ Changelog
 .. Highlight any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+25.5.0 (2025-05-02)
+--------------------
+
+Amongst the many changes in this release we now have the capability to plot
+multiple models on the same plot, at least for histogram plots. This should be a
+significant aid to those comparing multiple models with CSET. We also have
+significantly improved documentation (though it has been online for a while),
+improved colour bars, various performance improvements, simplification of
+workflow configuration GUI, and various bug fixes.
+
+* Update workflow CSET package by `@jfrost-mo`_ in :pr:`1291`
+* Ignore codespell error for "runN" by `@jfrost-mo`_ in :pr:`1292`
+* Update output image in full cylc example tutorial by `@jfrost-mo`_ in :pr:`1293`
+* Add fully worked example with CYLC to documentation by `@jwarner8`_ in :pr:`1213`
+* include precipitation specific colorbar and unit conversion by `@Sylviabohnenstengel`_ in :pr:`1268`
+* Improve colorbar formatting to reduce whitespace by `@ukmo-huw-lewis`_ in :pr:`1296`
+* Nicer output on crash from run_cset_recipe by `@jfrost-mo`_ in :pr:`1262`
+* Normalise all LFRic coord names by `@jfrost-mo`_ in :pr:`1299`
+* Add option to skip writing output by `@jfrost-mo`_ in :pr:`1277`
+* Updated default colorbar definition for radiation by `@ukmo-huw-lewis`_ in :pr:`1305`
+* Conditionally fix times in callbacks to avoid corrupting dates by double fixing by `@jfrost-mo`_ in :pr:`1297`
+* Avoid writing meta.json outside tempdir during test by `@jfrost-mo`_ in :pr:`1311`
+* Retry failed processing tasks by `@jfrost-mo`_ in :pr:`1313`
+* Add SKIP_WRITE to example configuration by `@jfrost-mo`_ in :pr:`1320`
+* Update cset-workflow GUI organisation with clearer labelling for "General setup", "Cycling and Models", diagnostic-type and evaluation-type specific option panels by `@ukmo-huw-lewis`_ in :pr:`1310`
+* Drop support for python 3.10 by `@jfrost-mo`_ in :pr:`1316`
+* Add last few changes into v25.3.1 changelog by `@jfrost-mo`_ in :pr:`1288`
+* Add preprocessing task to speed up workflow by `@jfrost-mo`_ in :pr:`1301`
+* Add model level support to CSET by `@jwarner8`_ in :pr:`1270`
+* Refactor lfric_time_callback by `@jfrost-mo`_ in :pr:`1321`
+* Simplify cset-workflow plot options and env variable names by `@ukmo-huw-lewis`_ in :pr:`1319`
+* Move diagnostic archive creation into bake by `@jfrost-mo`_ in :pr:`1326`
+* Provide input paths via recipe variables and remove unneeded ``cset recipe-id`` command by `@jfrost-mo`_ in :pr:`1329`
+* Update logic for reading SKIP_WRITE environment variable when running cset-workflow by `@ukmo-huw-lewis`_ in :pr:`1339`
+* Correctly format print-based logging in run_cset_recipe.py by `@jfrost-mo`_ in :pr:`1341`
+* Fix implementation of grid latitude grid longitude callback for non rotated pole inputs by `@ukmo-huw-lewis`_ in :pr:`1340`
+* Remove unnecessary array construction in radtime_prehour callback by `@jfrost-mo`_ in :pr:`1342`
+* Add category to transect recipe by `@jfrost-mo`_ in :pr:`1348`
+* Symbolic link to raw filesystem data to avoid slow copy by `@jfrost-mo`_ in :pr:`1352`
+* Add additional STASH to LFRic mappings by `@jfrost-mo`_ in :pr:`1354`
+* Plot all models on a single histogram plot by `@refszkentla`_ in :pr:`1324`. This was their first contribution 🎉
+* Order LFRic before UM in RAL3-LFRic rose config by `@jfrost-mo`_ in :pr:`1349`
+* Add v25.5.0 release notes and document more of the release process by `@jfrost-mo`_  in :pr:`1357`
+* Fix formatting of v25.3.1 release notes by `@jfrost-mo` in :pr:`1358`
+* Add last v25.5.0 release notes by `@jfrost-mo` in :pr:`1359`
+
+New Contributors
+
+* `@refszkentla`_ made their first contribution in :pr:`1324`
+
+.. _@refszkentla: https://github.com/refszkentla
+
 25.3.1 (2025-03-27)
 -------------------
 
@@ -21,7 +73,6 @@ ahead of a new feature release next month. The most noticeable change maybe be
 the plot colorbar now being horizontal to leave more space for titles and
 side-by-side comparisons.
 
-## What's Changed
 * Remove unneeded deletion from housekeeping by `@jfrost-mo`_ in :pr:`1241`
 * Add conda HTTP error to common errors by `@jfrost-mo`_ in :pr:`1242`
 * Reduce PROCESS time limit to 15 minutes by `@jfrost-mo`_ in :pr:`1243`
@@ -41,7 +92,7 @@ side-by-side comparisons.
 25.3.0 (2025-03-06)
 -------------------
 
-This release is the baseline for evaluating **RAL3_LFRic#708.1** with RMED
+This release is the baseline for evaluating **RAL3-LFRic#708.1** with RMED
 Ticket #708 detailing the science configuration. It introduces a fixed
 evaluation functionality for RAL3-LFRic and RAL3-UM, new functionality, bug
 fixes, and improvements. Key features for RAL3-LFRic evaluation include:
