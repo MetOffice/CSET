@@ -13,6 +13,59 @@ dependencies:
   - markdown-it-py >= 3.0
   - nc-time-axis
   - iris-grib
+  - ncdata
+  - python==3.12.*
+  - aiohttp
+  - cartopy
+  - cdsapi
+  - cfgrib
+  - cfunits
+  - cmocean
+  - dask
+  - dask-jobqueue
+  - distributed
+  - easygems
+  - fastparquet
+  - flox
+  - h5netcdf
+  - hdf5plugin
+  - healpix
+  - hvplot
+  - intake==0.7.0
+  - intake-esm
+  - intake-stac
+  - intake-xarray==0.7.0
+  - ipykernel
+  - iris
+  - jupyter
+  - jupyterlab
+  - jupytext
+  - libnetcdf>=4.9.2
+  - matplotlib
+  - netcdf4
+  - numba
+  - numpy
+  - odc-stac
+  - opencv
+  - pandas
+  - pystac
+  - pytest
+  - requests
+  - rioxarray
+  - ruff
+  - s3fs
+  - scipy
+  - seaborn
+  - sh
+  - spectrum
+  - tokenizers
+  - tqdm
+  - types-pyyaml
+  - uxarray
+  - xarray>=2025.1.2
+  - xgcm
+  - zarr<3.0.0
+  - pip
 
   # Build dependencies
   - setuptools>=64

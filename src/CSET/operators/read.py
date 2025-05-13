@@ -23,12 +23,15 @@ import logging
 import warnings
 from pathlib import Path
 
+import easygems.healpix as egh
+import intake
 import iris
 import iris.coords
 import iris.cube
 import iris.exceptions
 import iris.util
 import numpy as np
+from ncdata.iris_xarray import cubes_from_xarray
 
 from CSET._common import iter_maybe
 from CSET.operators._stash_to_lfric import STASH_TO_LFRIC
@@ -140,10 +143,30 @@ def read_cubes(
         )
 
     # Load the data for each model into a CubeList per model.
-    model_cubes = (
-        _load_model(path, name, constraint)
-        for path, name in itertools.zip_longest(paths, model_names, fillvalue=None)
+    # model_cubes = (
+    #     _load_model(path, name, constraint)
+    #     for path, name in itertools.zip_longest(paths, model_names, fillvalue=None)
+    # )
+    cat = intake.open_catalog(
+        "https://digital-earths-global-hackathon.github.io/catalog/catalog.yaml"
+    )["online"]
+    sim = cat["um_glm_n2560_RAL3p3"]
+    ds = sim(zoom=3, time="PT1H").to_dask()
+    del ds.attrs["regional"]
+    ds = ds.pipe(egh.attach_coords)
+    lat_coord = iris.coords.AuxCoord(
+        ds.coords["lat"].data, standard_name="latitude", units="degree_north"
     )
+    lon_coord = iris.coords.AuxCoord(
+        ds.coords["lon"].data, standard_name="longitude", units="degree_east"
+    )
+    cubes = cubes_from_xarray(ds)
+    for cube in cubes:
+        cell_dim = cube.coord_dims("cell")
+        cube.add_aux_coord(lat_coord, cell_dim)
+        cube.add_aux_coord(lon_coord, cell_dim)
+    cubes = cubes.extract(constraint)
+    model_cubes = iter([cubes])
 
     # Split out first model's cubes and mark it as the base for comparisons.
     cubes = next(model_cubes)
