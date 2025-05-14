@@ -10,6 +10,11 @@ description: |
   to the probability density function of the data with the bins being normalised by both
   the total counts and the bin widths. The area under a density histogram integrates to 1.
 
+  Some fields may exhibit numerical beats as a consequence of the low precision used to archive
+  the data. These beats will manifest as seemingly spurious, regular peaks in the plotted histogram.
+  For example the cloud area fractions from the UM are stored using 6-bit precision
+  which allows just 64 values over the range [0, 1] and plotting histograms using 50 bins generates
+  numerical beats.
 
 steps:
   - operator: read.read_cubes
