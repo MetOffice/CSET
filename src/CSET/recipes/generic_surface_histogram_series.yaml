@@ -1,11 +1,20 @@
 category: Histogram
 title: $VARNAME Surface Level Histogram Plot
 description: |
-  Extracts and plots the probability density of surface `$VARNAME`. It uses
-  [`plt.hist`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.hist.html)
-  to plot the probability density so that the area under the histogram
-  integrates to 1. stacked is set to True so the sum of the histograms is
-  normalized to 1.
+  Extracts and plots a histogram for `$VARNAME`.
+  It uses [`plt.hist`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.hist.html).
+  Three methods are possible for constructing the histogram (a) `frequency` histogram plots
+  the raw frequency counts in each bin (b) for a `normalised frequency` plot, the
+  bins are normalised by the total counts so the plotted frequencies sum to 1 and
+  (c) a `density` histogram is the closest analogue
+  to the probability density function of the data with the bins being normalised by both
+  the total counts and the bin widths. The area under a density histogram integrates to 1.
+
+  Some fields may exhibit numerical beats as a consequence of the low precision used to archive
+  the data. These beats will manifest as seemingly spurious, regular peaks in the plotted histogram.
+  For example the cloud area fractions from the UM are stored using 6-bit precision
+  which allows just 64 values over the range [0, 1] and plotting histograms using 50 bins generates
+  numerical beats.
 
 steps:
   - operator: read.read_cubes
