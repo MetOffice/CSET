@@ -145,6 +145,7 @@ dmypy.json
 cset-workflow/site/
 cset-workflow/opt/
 restricted*
+*metdb*
 cset-workflow/app/demo_pointstat/
 
 # User workflow configuration.

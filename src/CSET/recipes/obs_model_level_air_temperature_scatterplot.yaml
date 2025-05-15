@@ -1,14 +1,16 @@
 category: Quick Look
 title: Spatial scatter plot of station temperature from the MetDB.
+description: |
+    Plot some observations.
 
 steps:
-  - operator: read_mo.read_metdb2cube
-    contact_email: "john.m.edwards@metoffice.gov.uk"
-    obs_source: 'LNDSYB'
-    obs_field: $VARNAME
-    obs_time: 20220719T0000Z
-    met_keywords: 'PLATFORM 03'
-    valid_range: [-150,350]
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    constraint:
+      operator: constraints.combine_constraints
+      variable_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
 
   - operator: plot.spatial_contour_plot
     sequence_coordinate: time

@@ -988,7 +988,7 @@ def _spatial_plot(
     # dimension called observation or model_obs_error
     try:
         for crd in cube.coords():
-            if ( (crd.var_name == "observation") or
+            if ( (crd.var_name == "station") or
                  (crd.var_name == "model_obs_error") ):
                 plotting_func = _plot_and_save_scattermap_plot
     except:

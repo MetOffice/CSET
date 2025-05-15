@@ -9,6 +9,7 @@ import logging
 import os
 import shutil
 import ssl
+import json
 import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
@@ -163,6 +164,22 @@ def _get_needed_environment_variables() -> dict:
     return variables
 
 
+def _get_needed_environment_variables_obs() -> dict:
+    """Load the needed variables from the environment."""
+    variables = {
+        "subtype": os.environ["OBS_SUBTYPE"],
+        "data_time": datetime.fromisoformat(os.environ["CYLC_TASK_CYCLE_POINT"]),
+        "forecast_length": isodate.parse_duration(os.environ["ANALYSIS_LENGTH"]),
+        "obs_fields": json.loads(os.environ["SURFACE_SYNOP_FIELDS"].replace("'",'"')),
+        "model_identifier": "OBS",
+        "wmo_nmbrs": json.loads(os.environ["WMO_BLOCK_STTN_NMBRS"].replace("'",'"')),
+        "obs_interval": isodate.parse_duration(os.environ["SURFACE_SYNOP_INTERVAL"]),
+        "rose_datac": os.environ["ROSE_DATAC"],
+    }
+    logging.debug("Environment variables loaded: %s", variables)
+    return variables
+
+
 def _template_file_path(
     raw_path: str,
     date_type: Literal["validity", "initiation"],
@@ -256,3 +273,62 @@ def fetch_data(file_retriever: FileRetrieverABC = FilesystemFileRetriever):
     # exiting the with block.
     if not files_found:
         raise FileNotFoundError("No files found for model!")
+
+
+def fetch_obs(obs_retriever: FileRetrieverABC = FilesystemFileRetriever):
+    """Fetch the observations correspomding to a model run.
+
+    The following environment variables need to be set:
+    * ANALYSIS_OFFSET
+    * ANALYSIS_LENGTH
+    * CYLC_TASK_CYCLE_POINT
+    * DATA_PATH
+    * DATA_PERIOD
+    * DATE_TYPE
+    * MODEL_IDENTIFIER
+    * ROSE_DATAC
+
+    Parameters
+    ----------
+    obs_retriever: ObsRetriever
+        ObsRetriever implementation to use. Defaults to FilesystemFileRetriever.
+
+    Raises
+    ------
+    FileNotFound:
+        If no observations are available.
+    """
+    v = _get_needed_environment_variables_obs()
+
+    # Prepare output directory.
+    cycle_obs_dir = f"{v['rose_datac']}/data/OBS"
+    os.makedirs(cycle_obs_dir, exist_ok=True)
+    logging.debug("Output directory: %s", cycle_obs_dir)
+
+    # We will get just one file for now, but follow the templating
+    # syntax for the model for consistency.
+    obs_base_path = v["subtype"] + "_" + "%Y%m%dT%H%MZ_dt_" + \
+        str(int(v["forecast_length"].total_seconds() // 3600)).zfill(3) + ".nc"
+    paths = _template_file_path(
+        obs_base_path,
+        "initiation",
+        v["data_time"],
+        v["forecast_length"],
+        timedelta(seconds=0),
+        v["obs_interval"],
+    )
+    print('@@OBSP0: ', paths)
+    logging.info("Retrieving paths:\n%s", "\n".join(paths))
+
+    # Use obs retriever to transfer data with multiple threads.
+    # We shouldn't need to iterate as we do for the forecast data
+    # because these files will be smaller. Passing None is a temporary
+    # measure until we can work out why python doesn't think this is a 
+    # class method.
+    try:
+        obs_retriever.get_file (None, paths[0], 
+            v["subtype"], v["wmo_nmbrs"],
+            v["obs_fields"], v["data_time"], v["forecast_length"],
+            v["obs_interval"], cycle_obs_dir)
+    except:
+        raise FileNotFoundError("No observations available.")
