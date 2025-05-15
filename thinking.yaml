@@ -1,0 +1,35 @@
+# Format 1
+data_sources:
+  - name: "um_ral3"
+    source: "filesystem"
+    # Do we want to include time placeholders?
+    path: "$DATADIR/.../um.pp"
+  - name: "lfric_ral3"
+    source: "mass"
+    path: "moose:/.../lfric.nc"
+
+# Format 2
+sources:
+    um_ral3:  # ID as key name.
+        source: "filesystem"  # Required key to tell how the rest are used.
+        path: "$DATADIR/.../um.pp"  # Source-specific keys.
+    lfric_ral3:
+        source: "mass"
+        suite-id: "u-de155"
+    global_data:
+        source: "intake-catalogue"
+        url: "https://.../catalogue.yaml"
+
+# Format 3
+filesystem:
+    um_ral3:
+        path: "$DATADIR/.../um.pp"
+mass:
+    lfric_ral3:
+        suite-id: "u-de155"
+intake-catalogue:
+    global-data:
+        url: "https://.../catalogue.yaml"
+
+# Am I just reinventing an intake catalogue here? Should I just use them? They
+# would need to support local data as well as custom fetching methods.
