@@ -104,10 +104,7 @@ def get_cube_coordindex(cube: iris.cube.Cube, coord_name) -> int:
     coord_names = [coord.name() for coord in cube.coords(dim_coords=True)]
 
     # Check which index the requested dimension is found in, if any
-    try:
-        coord_index = coord_names.index(coord_name)
-    except iris.exceptions.CoordinateNotFoundError:
-        pass
+    coord_index = coord_names.index(coord_name)
 
     return coord_index
 
