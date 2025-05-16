@@ -81,7 +81,9 @@ print(DataGetter)
 # Questions:
 # 1. How easy is writing a new reader? This doesn't look too bad, and wouldn't
 #    be anymore work than writing our own loading code.
-# 2. How easy is writing a catalogue?
+# 2. How easy is writing a catalogue? Hmm. Its a bit weird, as there is a
+#    generator program within intake take takes a python function call and turns
+#    that into YAML.
 # 3. How willing am I to accept it as a dependency? While there are a few people
 #    in the organisation, there is only one consistent maintainer over the past
 #    two years. On the other hand it isn't a huge package outside of the various
