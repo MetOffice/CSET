@@ -1,0 +1,21 @@
+{% if SURFACE_SYNOP_OBS and SURFACE_SYNOP_DIFFS %}
+{% for model in models %}
+{% for obs_field in SURFACE_SYNOP_FIELDS %}
+    {% set model_field = SURFACE_SYNOP_MODEL_FIELDS[SURFACE_SYNOP_FIELDS.index(obs_fields)] %}
+[runtime]
+    [[obs_model_difference_scatterplot_m{{model["id"]}}_{{obs_field}}]]
+    inherit = PROCESS
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_model_obs_difference_scatterplot.yaml"
+        CSET_ADDOPTS = """
+            --OBSVARNAME={{obs_field}}
+            --VARNAME={{model_field}}
+            --BASE_MODEL='{{model["id"]}}'
+            --OBSERVATIONS='OBS'
+            --DIFFERENCE=True
+        """
+        MODEL_IDENTIFIERS = 'OBS {{model["id"]}}'
+
+{% endfor %}
+{% endfor %}
+{% endif %}

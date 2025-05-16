@@ -1,0 +1,30 @@
+category: Quick Look
+title: Spatial scatter plot of station temperature from the MetDB.
+description: |
+    Plot some observations.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+
+  -operator: regrid.interpolate_to_point_cube
+   FLD:
+    constraint:
+      operator: constraints.combine_constraints
+      variable_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+   POINT_CUBE:
+    constraint:
+      operator: constraints.combine_constraints
+      variable_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $OBSVARNAME
+
+  - operator: plot.spatial_contour_plot
+    sequence_coordinate: time
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+

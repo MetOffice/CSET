@@ -23,6 +23,8 @@ import numpy as np
 from CSET._common import iter_maybe
 from CSET.operators._utils import get_cube_yxcoordname
 
+from copy import deepcopy
+
 
 class BoundaryWarning(UserWarning):
     """Selected gridpoint is close to the domain edge.
@@ -364,3 +366,58 @@ def transform_lat_long_points(lon, lat, cube):
     lat_rot = rot_coords[1]
 
     return lon_rot, lat_rot
+
+def interpolate_to_point_cube(fld: cube, 
+                              point_cube: cube,
+                              **kwargs) -> cube:
+    #
+    # As a basis, create a copy of the point cube.
+    fld_point_cube = point_cube.copy()
+    # Get indices of positional coordinates. We assume that the
+    # point cube is unrotated.
+    klon = None
+    klat = None
+    for kc in range(len(fld_point_cube.aux_coords)):
+        if (fld_point_cube.aux_coords[kc].standard_name == 'latitude'):
+            klat = kc
+        elif (fld_point_cube.aux_coords[kc].standard_name == 'longitude'):
+            klon = kc
+    #
+    # The input may have a rotated coordinate system.
+    if ( len(fld.coords('grid_latitude')) > 0 ):
+        # Interpolate in rotated coordinates.
+        rot_csyst = fld.coords('grid_latitude')[0].coord_system
+        rotpt = iris.analysis.cartography.rotate_pole(
+                    fld_point_cube.aux_coords[klon].points,
+                    fld_point_cube.aux_coords[klat].points,
+                    rot_csyst.grid_north_pole_longitude,
+                    rot_csyst.grid_north_pole_latitude)
+        # Add other interpolation options later.
+        fld_interpolator = iris.analysis.Linear(
+                               extrapolation_mode = 'mask').interpolator(
+                               fld,
+                               ['time', 'grid_latitude', 'grid_longitude'])
+        for jt in range(len(fld_point_cube.coords('time')[0].points)):
+            fld_point_cube.data[jt, :] = [ fld_interpolator(
+                [fld_point_cube.coords('time')[0].points[jt],
+                rotpt[0][k], rotpt[1][k]]).data 
+                for k in range(len(rotpt[0])) ]
+    else:
+        # Add other interpolation options later.
+        fld_interpolator = iris.analysis.Linear(
+                               extrapolation_mode = 'mask').interpolator(
+                               fld,
+                               ['time', 'latitude', 'longitude'])
+        for jt in range(len(fld_point_cube.coords('time')[0].points)):
+            fld_point_cube.data[jt, :] = [ fld_interpolator(
+                [fld_point_cube.coords('time')[0].points[jt],
+                fld_point_cube.aux_coords[klon].points[k],
+                fld_point_cube.aux_coords[klon].points[k]]).data 
+                for k in range(fld_point_cube.aux_coords[klon].points) ]
+    #
+    return fld_point_cube
+
+
+    
+
+
