@@ -166,7 +166,9 @@ def read_cubes(
     # aggregate.ensure_aggregatable_across_cases(cubes)
 
     # Merge and concatenate cubes now metadata has been fixed.
-    cubes = cubes.merge()
+    # Temporarily disabled the requirement of uniqueness to stop
+    # failures on merging the orography.
+    cubes = cubes.merge(unique=False)
     cubes = cubes.concatenate()
 
     # Ensure dimension coordinates are bounded.
