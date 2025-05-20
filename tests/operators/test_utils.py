@@ -60,6 +60,9 @@ def test_get_cube_coordindex(regrid_rectilinear_cube):
     assert (
         operator_utils.get_cube_coordindex(regrid_rectilinear_cube, "longitude")
     ) == 1
+    # Error when coord name isn't in cube.
+    with pytest.raises(ValueError):
+        operator_utils.get_cube_coordindex(regrid_rectilinear_cube, "no-existent")
 
 
 def test_is_transect_multiple_spatial_coords(regrid_rectilinear_cube):
