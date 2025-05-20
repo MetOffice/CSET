@@ -330,21 +330,28 @@ def iter_maybe(thing) -> Iterable:
 
 
 def human_sorted(iterable: Iterable, reverse: bool = False) -> list:
-    """Sort such numbers within strings are sorted correctly."""
-    # Adapted from https://nedbatchelder.com/blog/200712/human_sorting.html
+    """Sort a list of strings how humans expect."""
+    # Adapted from https://nedbatchelder.com/blog/202503/human_sorting_improved.html
 
-    def alphanum_key(s):
-        """Turn a string into a list of string and number chunks.
+    def human_key(s: str) -> tuple[list[str | int], str]:
+        """Turn a string into a sortable value that works how humans expect.
 
-        >>> alphanum_key("z23a")
-        ["z", 23, "a"]
+        "z23A" -> (["z", 23, "a"], "z23A")
+
+        The original string is appended as a last value to ensure the
+        key is unique enough so that "x1y" and "x001y" can be distinguished.
         """
-        try:
-            return [int(c) if c.isdecimal() else c for c in re.split(r"(\d+)", s)]
-        except TypeError:
-            return s
 
-    return sorted(iterable, key=alphanum_key, reverse=reverse)
+        def try_int(s: str) -> str | int:
+            """If `s` is a number, return an int, else `s` unchanged."""
+            try:
+                return int(s)
+            except ValueError:
+                return s
+
+        return ([try_int(c) for c in re.split(r"(\d+)", s.casefold())], s)
+
+    return sorted(iterable, key=human_key, reverse=reverse)
 
 
 def combine_dicts(d1: dict, d2: dict) -> dict:
