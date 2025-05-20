@@ -57,6 +57,38 @@ arguably more secure) than cloning via HTTPS. `GitHub's documentation on SSH`_
 covers setting it up. To access repositories within an enterprise environment
 (such as this one) you will also have to `setup single sign-on`_.
 
+Git will default to the protocol used to clone the repository i.e. https or ssh. If you have cloned
+the Git repository with https you might encounter difficulties with pushing changes back into the 
+repository when it asks for a username and password authentication when invoking a push command. 
+You can verify the access method with:
+
+.. code-block:: bash
+
+    git remote -v
+
+If ssh is configured the command should give you:
+
+.. code-block:: bash
+
+    origin	git@github.com:MetOffice/CSET.git (fetch)
+    origin	git@github.com:MetOffice/CSET.git (push)
+
+If https is configured it will give you:
+
+.. code-block:: bash
+
+    origin  https://github.com/MetOffice/CSET.git (fetch)
+    origin  https://github.com/MetOffice/CSET.git (push)
+
+If it indicates https access then you can switch to ssh to avoid having to use a username and password:
+
+.. code-block:: bash
+
+    git remote set-url origin git@github.com:MetOffice/CSET.git
+
+This updates the Git configuration for your repository, and this change is written to 
+the .git/config file located in the root of your local repository.
+
 .. _Git Credential Manager: https://github.com/GitCredentialManager/git-credential-manager/blob/main/README.md
 .. _GitHub CLI to authenticate: https://cli.github.com/manual/gh_auth_login
 .. _configure git to use it: https://cli.github.com/manual/gh_auth_setup-git
