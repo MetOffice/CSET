@@ -18,11 +18,11 @@ steps:
         coordinate: "pressure"
         levels: []
 
+  - operator: misc.difference
+
   - operator: collapse.collapse
     coordinate: [time]
     method: $METHOD
-
-  - operator: misc.difference
 
   - operator: plot.spatial_pcolormesh_plot
 
