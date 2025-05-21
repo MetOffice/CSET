@@ -29,16 +29,19 @@ page.
     --skip-write          Skip saving processed output
 
 Here is an example to run a recipe making use of the templated variable
-``VARNAME`` in the recipe. The '-v' is optional to give verbose output::
+``VARNAME`` in the recipe. The '-v' is optional to give verbose output:
 
-.. code-block:: text
+.. code-block:: shell
 
-    cset -v bake -o OUTPUT_DIR -r generic_surface_histogram_series.yaml --INPUT_PATHS 'INPUT_DIR' --VARNAME 'air_pressure_at_sea_level' --VALIDITY_TIME '2024-01-16T06:00Z'
+    cset -v bake -o 'OUTPUT_DIR' -r 'generic_surface_histogram_series.yaml' \
+        --INPUT_PATHS='INPUT_DIR' \
+        --VARNAME='air_pressure_at_sea_level' \
+        --VALIDITY_TIME='2024-01-16T06:00Z'
 
-When running `cset bake` multiple times for the same recipe it can cause issues
-with merging data into a single cube if output from a previous `cset bake` run
-exists in the chosen `OUTPUT_DIR`. In this case you need to delete the output
-data from the previous run.
+When running ``cset bake`` multiple times for the same recipe it can cause
+issues with merging data into a single cube if output from a previous ``cset
+bake`` run exists in the chosen ``OUTPUT_DIR``. In this case you need to delete
+the output data from the previous run.
 
 .. _cset-cookbook-command:
 
