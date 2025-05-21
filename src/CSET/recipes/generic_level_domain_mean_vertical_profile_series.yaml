@@ -1,6 +1,6 @@
 category: Profiles
-title: $MODEL_NAME domain horizontal mean $VARNAME vertical profile as series
-description: Plots a time series of vertical profiles for the domain mean $VARNAME using a $LEVELTYPE coordinate.
+title: $MODEL_NAME domain horizontal mean $VARNAME vertical profile $METHOD
+description: Plots the $METHOD of vertical profiles for the domain mean $VARNAME using a $LEVELTYPE coordinate from all times in $MODEL_NAME.
 
 steps:
   - operator: read.read_cube
@@ -18,6 +18,11 @@ steps:
   - operator: collapse.collapse
     coordinate: [grid_latitude, grid_longitude]
     method: MEAN
+
+  # If required, collapse data using specified time analysis method (or sequence)
+  - operator: collapse.collapse
+    coordinate: [time]
+    method: $METHOD
 
   # Plot the vertical line series.
   - operator: plot.plot_vertical_line_series

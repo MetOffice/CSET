@@ -27,7 +27,7 @@ steps:
         levels: $LEVEL
 
   - operator: plot.plot_histogram_series
-    sequence_coordinate: time
+    sequence_coordinate: $SEQUENCE
     # stamp_coordinate and single_plot optional and only required for ensemble data
     stamp_coordinate: "realization"
     single_plot: False
