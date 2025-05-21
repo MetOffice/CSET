@@ -877,22 +877,13 @@ def _plot_and_save_scattermap_plot(
         Plot title.
     """
     # Setup plot details, size, resolution, etc.
-    print('@@33: ', cube)
     fig = plt.figure(figsize=(15, 15), facecolor="w", edgecolor="k")
     axes = plt.gca()
 
     # Filled contour plot of the field.
     cmap = mpl.colormaps["jet"]
 
-    #for axc in cube.aux_coords:
-    #    if (axc.standard_name == 'latitude'):
-    #       ilat = cube.aux_coords.index(axc)
-    #    elif (axc.standard_name == 'longitude'):
-    #       ilon = cube.aux_coords.index(axc)
     mrk_size = int(np.sqrt(500000.0 / len(cube.data)))
-    # Pythonic but obscure?
-    # klon = next((kc for kc, acrd in enumerate(cube.aux_coords) 
-    #   if acrd.standard_name == 'longitude'), None)
     klon = None
     klat = None
     for kc in range(len(cube.aux_coords)):
@@ -904,7 +895,6 @@ def _plot_and_save_scattermap_plot(
                  cube.aux_coords[klat],
                  c=cube.data[:], s=mrk_size, cmap='jet',
                  edgecolors='k')
-    #This may be possible with iplt.points.
 
     # Using pyplot interface here as we need iris to generate a cartopy GeoAxes.
     axes = plt.gca()

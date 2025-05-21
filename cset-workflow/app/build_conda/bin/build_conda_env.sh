@@ -1,6 +1,4 @@
 #! /bin/bash
-set -xv
-export LMOD_SH_DBG_ON=1
 
 # Build the conda environment used by most subsequent tasks.
 
@@ -32,15 +30,9 @@ if [[ $CSET_ENV_USE_MODULES == True ]]; then
 fi
 
 # Build conda environment.
-echo '@@CB0'
-module list
-echo '@@CB1'
 echo "Building conda with:"
 echo "${CONDA_PATH:=}conda create -p ${CYLC_WORKFLOW_SHARE_DIR}/cset-conda-environment --file $env_lock_file --yes --force --quiet"
 "${CONDA_PATH}conda" create -p "${CYLC_WORKFLOW_SHARE_DIR}/cset-conda-environment" --file "$env_lock_file" --yes --force --quiet
-echo '@@CB2'
-module list
-echo '@@CB3'
 
 # Install local version of CSET into the conda environment if needed, and
 # validate CSET is installed. This needs to run inside the conda environment.

@@ -317,7 +317,6 @@ def fetch_obs(obs_retriever: FileRetrieverABC = FilesystemFileRetriever):
         timedelta(seconds=0),
         v["obs_interval"],
     )
-    print('@@OBSP0: ', paths)
     logging.info("Retrieving paths:\n%s", "\n".join(paths))
 
     # Use obs retriever to transfer data with multiple threads.
