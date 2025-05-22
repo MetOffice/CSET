@@ -25,6 +25,7 @@ from uuid import uuid4
 import pytest
 
 import CSET
+import CSET.operators
 
 
 def test_command_line_invocation():
@@ -163,6 +164,55 @@ def test_bake_invalid_args(capsys):
         )
     assert sysexit.value.code == 127
     assert capsys.readouterr().err == "Unknown argument: --not-a-real-option\n"
+
+
+def test_bake_no_input_dir_option(monkeypatch):
+    """Test running CSET recipe without specifying --input-dir."""
+    function_ran = False
+
+    def mock_execute_recipe(*args, **kwargs):
+        nonlocal function_ran
+        function_ran = True
+
+    monkeypatch.setattr(CSET.operators, "execute_recipe", mock_execute_recipe)
+
+    CSET.main(
+        [
+            "cset",
+            "bake",
+            "--recipe=tests/test_data/noop_recipe.yaml",
+            "--output-dir=/dev/null",
+        ]
+    )
+    assert function_ran
+
+
+def test_parbake_recipe(tmp_path):
+    """A recipe has its variables filled."""
+    # Setup source recipe.
+    source_recipe = tmp_path / "source.yaml"
+    source_recipe.write_text(
+        """title: Noop
+steps:
+- operator: misc.noop
+  test_argument: $VARIABLE
+"""
+    )
+    # Parbake the source recipe.
+    parbaked_recipe = tmp_path / "parbaked.yaml"
+
+    class args:
+        recipe = source_recipe
+        output = parbaked_recipe
+
+    CSET._parbake_command(args, unparsed_args=["--VARIABLE='air_temperature'"])
+    # Check it looks as expected.
+    expected = """title: Noop
+steps:
+- operator: misc.noop
+  test_argument: air_temperature
+"""
+    assert parbaked_recipe.read_text() == expected
 
 
 def test_graph_creation(tmp_path: Path):
