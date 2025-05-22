@@ -22,7 +22,7 @@ jobs:
           python-version: "3.x"
 
       - name: Install dependencies
-        run: python3 -m pip install pre-commit
+        run: pip install pre-commit
 
       - name: Hash existing config file
         run: sha256sum .pre-commit-config.yaml > ${{ runner.temp }}/config_file_hashes

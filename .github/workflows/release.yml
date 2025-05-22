@@ -25,7 +25,7 @@ jobs:
             python-version: "3.x"
 
       - name: Install dependencies
-        run: python3 -m pip install build
+        run: pip install build
 
       - name: Build package
         run: python3 -m build
@@ -63,13 +63,13 @@ jobs:
             python-version: "3.x"
 
       - name: Install dependencies
-        run: python3 -m pip install twine
+        run: pip install twine
 
       - name: Check package metadata
-        run: python3 -m twine check --strict dist/*
+        run: twine check --strict dist/*
 
       - name: Upload to PyPI
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-        run: python3 -m twine upload --disable-progress-bar --verbose --non-interactive dist/*
+        run: twine upload --disable-progress-bar --verbose --non-interactive dist/*
