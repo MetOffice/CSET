@@ -192,7 +192,7 @@ https://conda.anaconda.org/conda-forge/noarch/hyperframe-6.1.0-pyhd8ed1ab_0.cond
 https://conda.anaconda.org/conda-forge/noarch/identify-2.6.10-pyhd8ed1ab_0.conda#8d5b9b702810fb3054d52ba146023bc3
 https://conda.anaconda.org/conda-forge/noarch/idna-3.10-pyhd8ed1ab_1.conda#39a4f67be3286c86d696df570b1201b7
 https://conda.anaconda.org/conda-forge/noarch/imagesize-1.4.1-pyhd8ed1ab_0.tar.bz2#7de5386c8fea29e76b303f37dde4c352
-https://conda.anaconda.org/conda-forge/noarch/importlib-metadata-8.7.0-pyhe01879c_0.conda#d15f9e9c8463415e41e9355dbe7709f1
+https://conda.anaconda.org/conda-forge/noarch/importlib-metadata-8.6.1-pyha770c72_0.conda#f4b39bf00c69f56ac01e020ebfac066c
 https://conda.anaconda.org/conda-forge/noarch/iniconfig-2.0.0-pyhd8ed1ab_1.conda#6837f3eff7dcea42ecd714ce1ac2b108
 https://conda.anaconda.org/conda-forge/noarch/iris-3.12.2-pyha770c72_0.conda#281bb211efe112ed90f2d703bbcf5512
 https://conda.anaconda.org/conda-forge/noarch/iris-grib-0.21.0-pyhd8ed1ab_0.conda#d5a110459acc9669c58e5d516fc2e165
