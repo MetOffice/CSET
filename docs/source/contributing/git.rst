@@ -43,57 +43,55 @@ Authenticating git with GitHub
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When you clone a private repository GitHub needs to verify you have permission
-to access it. There are two ways of authentication in git: via HTTPS, or via
-SSH, with SSH being recommended.
-
-Cloning via HTTPS is good for when you are behind restrictive proxies that block
-all internet traffic except websites. You will either have to setup the `Git
-Credential Manager`_, which may not be installed by default, or use the `GitHub
-CLI to authenticate`_, and `configure git to use it`_. In environments where you
-can't install additional software, use the SSH method instead.
+to access it. There are two ways of authentication in git: via SSH, or via
+HTTPS, with SSH being recommended.
 
 Cloning via SSH is good when you already have an SSH key, and it is simpler (and
 arguably more secure) than cloning via HTTPS. `GitHub's documentation on SSH`_
 covers setting it up. To access repositories within an enterprise environment
 (such as this one) you will also have to `setup single sign-on`_.
 
-Git will default to the protocol used to clone the repository i.e. https or ssh. If you have cloned
-the Git repository with https you might encounter difficulties with pushing changes back into the 
-repository when it asks for a username and password authentication when invoking a push command. 
-You can verify the access method with:
+Cloning via HTTPS is good for when you are behind restrictive firewalls that
+block all internet traffic except websites. You will either have to setup a
+`personal access token`_ and `Git Credential Manager`_, or use the `GitHub CLI
+to authenticate`_, and `configure git to use it`_. In environments where you
+can't install additional software, use the SSH method instead.
+
+Git will default to the protocol used to clone the repository i.e. SSH or HTTPS.
+If you have cloned the Git repository with HTTPS you might encounter
+difficulties with pushing changes back into the repository, with it asking for a
+username and password. You can verify the access method with:
 
 .. code-block:: bash
 
     git remote -v
 
-If ssh is configured the command should give you:
+If SSH is configured the command will give you:
 
-.. code-block:: bash
+.. code-block:: text
 
     origin	git@github.com:MetOffice/CSET.git (fetch)
     origin	git@github.com:MetOffice/CSET.git (push)
 
-If https is configured it will give you:
+If HTTPS is configured it will give you:
 
-.. code-block:: bash
+.. code-block:: text
 
     origin  https://github.com/MetOffice/CSET.git (fetch)
     origin  https://github.com/MetOffice/CSET.git (push)
 
-If it indicates https access then you can switch to ssh to avoid having to use a username and password:
+To avoid having to use a username and password you can switch to SSH:
 
 .. code-block:: bash
 
     git remote set-url origin git@github.com:MetOffice/CSET.git
-
-This updates the Git configuration for your repository, and this change is written to 
-the .git/config file located in the root of your local repository.
 
 .. _Git Credential Manager: https://github.com/GitCredentialManager/git-credential-manager/blob/main/README.md
 .. _GitHub CLI to authenticate: https://cli.github.com/manual/gh_auth_login
 .. _configure git to use it: https://cli.github.com/manual/gh_auth_setup-git
 .. _GitHub's documentation on SSH: https://docs.github.com/en/authentication/connecting-to-github-with-ssh
 .. _setup single sign-on: https://docs.github.com/en/enterprise-cloud@latest/authentication/authenticating-with-saml-single-sign-on/authorizing-an-ssh-key-for-use-with-saml-single-sign-on
+.. _personal access token: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens
 
 Useful git commands
 -------------------
