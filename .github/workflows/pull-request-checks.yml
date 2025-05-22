@@ -44,9 +44,11 @@ jobs:
         run: |
           # Install package and run pytest.
           echo '::group::Installing local package'
-          python3 -m pip install .
+          pip install --no-deps .
           echo '::endgroup::'
+          echo '::group::Running unit tests'
           pytest -n logical --verbose --cov --cov-append --cov-config=pyproject.toml
+          echo '::endgroup::'
           mv .coverage ".coverage.${{ matrix.py-ver }}"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
@@ -70,7 +72,7 @@ jobs:
         with:
           python-version: "3.x"
       - name: Install coverage
-        run: python3 -m pip install coverage
+        run: pip install coverage
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           pattern: coverage-data-*
@@ -109,7 +111,7 @@ jobs:
           key: pre-commit|${{runner.os}}-${{runner.arch}}|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
           path: ~/.cache/pre-commit
       - name: Set up pre-commit
-        run: python3 -m pip install pre-commit
+        run: pip install pre-commit
       - name: Run pre-commit
         env:
           RUFF_OUTPUT_FORMAT: github
@@ -140,7 +142,7 @@ jobs:
         run: |
           # Install module so it can be imported during docs generation.
           echo '::group::Installing local package'
-          python3 -m pip install .
+          pip install --no-deps .
           echo '::endgroup::'
           # Generate the documentation
           echo '::group::Building the documentation'

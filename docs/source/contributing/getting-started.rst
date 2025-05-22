@@ -75,7 +75,7 @@ environment for you to use.
     # Adds extra checks when you commit something with git.
     pre-commit install
     # Make CSET runnable for manual testing
-    pip install -e .
+    pip install --no-deps -e .
 
 When subsequently returning to the code after closing your terminal, you will
 need to rerun the ``conda activate cset-dev`` command.
