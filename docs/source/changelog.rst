@@ -13,6 +13,30 @@ Changelog
 .. Highlight any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+25.5.1 (2025-05-22)
+-------------------
+
+A smaller release with some big features. We now have the capability to select a
+sub-area of a domain for analysis. This is useful both for looking at small
+parts of a large (perhaps global) domain, as well as for trimming off boundaries
+that may contain numerical artifacts.
+
+We also follow up on the last release by bringing multiple model support to time
+series and vertical profile plots.
+
+* Correct model level sort key in rose edit by `@jfrost-mo`_ in :pr:`1364`
+* Rationalise number of include and recipe files by introducing LEVELTYPE generic option to simplify dev and user experience by `@ukmo-huw-lewis`_ in :pr:`1328`
+* Support multiple models on single plot for timeseries by `@refszkentla`_ in :pr:`1365`
+* Support equalising hour coordinate in difference operator by `@jfrost-mo`_ in :pr:`1260`
+* Pair cube with corresponding coordinate when plotting line series by `@jfrost-mo`_ in :pr:`1366`
+* Bump minimum iris version to avoid dask issues by `@jfrost-mo`_ in :pr:`1369`
+* Fix formatting of cset bake example documentation by `@jfrost-mo`_ in :pr:`1379`
+* Improve testing of get_cube_coordindex by `@jfrost-mo`_ in :pr:`1374`
+* Reimplement sub-area functionality universally  by `@jwarner8`_ in :pr:`1259`
+* Multiple model lines on vertical profiles by `@refszkentla`_ in :pr:`1368`
+* Document how to switch git repository from HTTPS to SSH by `@Sylviabohnenstengel`_ in :pr:`1380`
+* Add CSET v25.5.1 release notes to changelog by `@jfrost-mo`_ in :pr:`1382`
+
 25.5.0 (2025-05-02)
 --------------------
 
