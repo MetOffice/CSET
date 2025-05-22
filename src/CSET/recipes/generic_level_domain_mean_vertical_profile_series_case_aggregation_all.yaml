@@ -1,5 +1,5 @@
 category: Profiles
-title: $MODEL_NAME domain horizontal mean $VARNAME vertical profile aggregation all times
+title: Domain horizontal mean $VARNAME vertical profile aggregation all times
 description: |
   Plots a vertical profile for the domain mean $VARNAME using a
   $LEVELTYPE coordinate. Multiple cases are aggregated together for all available times.
@@ -7,6 +7,7 @@ description: |
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
     constraint:
       operator: constraints.combine_constraints
       variable_constraint:

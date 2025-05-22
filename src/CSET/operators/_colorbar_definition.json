@@ -370,6 +370,11 @@
     "max": 0.5,
     "min": -0.5
   },
+  "specific_humidity_at_screen_level": {
+    "cmap": "Blues",
+    "max": 0,
+    "min": 0.05
+  },
   "surface_downward_longwave_flux": {
     "cmap": "Greys_r",
     "max": 500,

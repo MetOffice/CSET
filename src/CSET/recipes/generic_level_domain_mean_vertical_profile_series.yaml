@@ -1,10 +1,11 @@
 category: Profiles
-title: $MODEL_NAME domain horizontal mean $VARNAME vertical profile $METHOD
+title: Domain horizontal mean $VARNAME vertical profile $METHOD
 description: Plots the $METHOD of vertical profiles for the domain mean $VARNAME using a $LEVELTYPE coordinate from all times in $MODEL_NAME.
 
 steps:
-  - operator: read.read_cube
+  - operator: read.read_cubes
     file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
     constraint:
       operator: constraints.combine_constraints
       variable_constraint:
