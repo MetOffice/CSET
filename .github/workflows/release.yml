@@ -60,10 +60,10 @@ jobs:
             python-version: "3.x"
 
       - name: Install dependencies
-        run: python -m pip install twine
+        run: python3 -m pip install twine
 
       - name: Check package metadata
-        run: python -m twine check --strict dist/*
+        run: python3 -m twine check --strict dist/*
 
       - name: Upload to PyPI
         env:
