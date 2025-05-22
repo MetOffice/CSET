@@ -1380,9 +1380,9 @@ def plot_vertical_line_series(
         # Combine all data into a single NumPy array
         combined_data = np.concatenate(all_data)
 
-        # Set the lower and upper limit for the x-axis to ensure all plots have same
-        # range. This needs to read the whole cube over the range of the sequence
-        # and if applicable postage stamp coordinate.
+        # Set the lower and upper limit for the x-axis to ensure all plots have
+        # same range. This needs to read the whole cube over the range of the
+        # sequence and if applicable postage stamp coordinate.
         vmin = np.floor(combined_data.min())
         vmax = np.ceil(combined_data.max())
     else:
@@ -1392,24 +1392,28 @@ def plot_vertical_line_series(
     # Matching the slices (matching by seq coord point; it may happen that
     # evaluated models do not cover the same seq coord range, hence matching
     # necessary)
-    all_points = sorted(
-        set(
-            itertools.chain.from_iterable(
-                cb.coord(sequence_coordinate).points for cb in cubes
+    def filter_cube_iterables(cube_iterables) -> bool:
+        return len(cube_iterables) == len(coords)
+
+    cube_iterables = filter(
+        filter_cube_iterables,
+        (
+            iris.cube.CubeList(
+                s
+                for s in itertools.chain.from_iterable(
+                    cb.slices_over(sequence_coordinate) for cb in cubes
+                )
+                if s.coord(sequence_coordinate).points[0] == point
             )
-        )
+            for point in sorted(
+                set(
+                    itertools.chain.from_iterable(
+                        cb.coord(sequence_coordinate).points for cb in cubes
+                    )
+                )
+            )
+        ),
     )
-    all_slices = list(
-        itertools.chain.from_iterable(
-            cb.slices_over(sequence_coordinate) for cb in cubes
-        )
-    )
-    cube_iterables = [
-        iris.cube.CubeList(
-            s for s in all_slices if s.coord(sequence_coordinate).points[0] == point
-        )
-        for point in all_points
-    ]
 
     # Create a plot for each value of the sequence coordinate.
     # Allowing for multiple cubes in a CubeList to be plotted in the same plot for
@@ -1417,14 +1421,9 @@ def plot_vertical_line_series(
     # for similar values of the sequence coordinate. cube_slice can be an iris.cube.Cube
     # or an iris.cube.CubeList.
     plot_index = []
-    # for cubes_slice in cubes.slices_over(sequence_coordinate):
     for cubes_slice in cube_iterables:
-        single_cube = cubes_slice
-        if isinstance(single_cube, iris.cube.CubeList):
-            single_cube = single_cube[0]
-
         # Use sequence value so multiple sequences can merge.
-        seq_coord = single_cube.coord(sequence_coordinate)
+        seq_coord = cubes_slice[0].coord(sequence_coordinate)
         sequence_value = seq_coord.points[0]
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
         # Format the coordinate value in a unit appropriate way.
