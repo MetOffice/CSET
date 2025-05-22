@@ -104,15 +104,15 @@ def test_execute_recipe_skip_write_metadata_written(tmp_path: Path):
     assert metadata["skip_write"]
 
 
-def test_create_diagnostic_archive(tmp_path):
+def test_create_diagnostic_archive(tmp_working_dir):
     """Create ZIP archive of output."""
     # Create dummy output files.
     files = {"one", "two", "three"}
     for filename in files:
-        (tmp_path / filename).touch()
+        (tmp_working_dir / filename).touch()
 
-    CSET.operators.create_diagnostic_archive(tmp_path)
-    archive_path = tmp_path / "diagnostic.zip"
+    CSET.operators.create_diagnostic_archive()
+    archive_path = tmp_working_dir / "diagnostic.zip"
     assert archive_path.is_file()
     with zipfile.ZipFile(archive_path, "r") as archive:
         # Check all files are now in archive.
