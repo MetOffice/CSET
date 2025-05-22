@@ -29,7 +29,7 @@ You can run the tests of CSET with the following command:
     .. code-block:: bash
 
         conda activate cset-dev
-        pip install -e .
+        pip install --no-deps -e .
 
 Quick testing of individual components during development
 ---------------------------------------------------------

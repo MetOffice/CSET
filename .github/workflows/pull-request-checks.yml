@@ -44,7 +44,7 @@ jobs:
         run: |
           # Install package and run pytest.
           echo '::group::Installing local package'
-          python3 -m pip install .
+          python3 -m pip install --no-deps .
           echo '::endgroup::'
           echo '::group::Running unit tests'
           pytest -n logical --verbose --cov --cov-append --cov-config=pyproject.toml
@@ -142,7 +142,7 @@ jobs:
         run: |
           # Install module so it can be imported during docs generation.
           echo '::group::Installing local package'
-          python3 -m pip install .
+          python3 -m pip install --no-deps .
           echo '::endgroup::'
           # Generate the documentation
           echo '::group::Building the documentation'
