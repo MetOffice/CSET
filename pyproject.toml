@@ -4,12 +4,11 @@ dynamic = ["version"]
 description = "Toolkit for evaluation and investigation of numerical models for weather and climate applications."
 authors = [{ name = "Met Office" }, { name = "NIWA" }]
 readme = "README.md"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
 requires-python = ">=3.11"
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: Apache Software License",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.11",
@@ -23,7 +22,7 @@ classifiers = [
 ]
 dependencies = [
     "numpy",
-    "scitools-iris >= 3.6",
+    "scitools-iris >= 3.12.2",
     "ruamel.yaml >= 0.17",
     "pygraphviz >= 1.11",
     "mo_pack >= 0.3.0",
@@ -41,7 +40,7 @@ Source = "https://github.com/MetOffice/CSET"
 cset = "CSET:main"
 
 [build-system]
-requires = ["setuptools>=64", "setuptools_scm>=8"]
+requires = ["setuptools>=80", "setuptools_scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]

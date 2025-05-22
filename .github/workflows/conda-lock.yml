@@ -22,7 +22,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: python3 -m pip install conda-lock
+        run: pip install conda-lock
 
       - name: Update conda
         run: conda update --name base --channel conda-forge --quiet --all --yes

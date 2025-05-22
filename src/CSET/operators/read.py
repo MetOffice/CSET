@@ -29,9 +29,11 @@ import iris.cube
 import iris.exceptions
 import iris.util
 import numpy as np
+from iris.analysis.cartography import rotate_pole
 
 from CSET._common import iter_maybe
 from CSET.operators._stash_to_lfric import STASH_TO_LFRIC
+from CSET.operators._utils import get_cube_yxcoordname
 
 
 class NoDataWarning(UserWarning):
@@ -41,6 +43,9 @@ class NoDataWarning(UserWarning):
 def read_cube(
     file_paths: list[str] | str,
     constraint: iris.Constraint = None,
+    model_names: list[str] | str | None = None,
+    subarea_type: str = None,
+    subarea_extent: list[float] = None,
     **kwargs,
 ) -> iris.cube.Cube:
     """Read a single cube from files.
@@ -63,6 +68,14 @@ def read_cube(
         Path or paths to where .pp/.nc files are located
     constraint: iris.Constraint | iris.ConstraintCombination, optional
         Constraints to filter data by. Defaults to unconstrained.
+    model_names: str | list[str], optional
+        Names of the models that correspond to respective paths in file_paths.
+    subarea_type: "realworld" | "modelrelative", optional
+        Whether to constrain data by model relative coordinates or real world
+        coordinates.
+    subarea_extent: list, optional
+        List of coordinates to constraint data by, in order lower latitude,
+        upper latitude, lower longitude, upper longitude.
 
     Returns
     -------
@@ -76,7 +89,13 @@ def read_cube(
     ValueError
         If the constraint doesn't produce a single cube.
     """
-    cubes = read_cubes(file_paths, constraint)
+    cubes = read_cubes(
+        file_paths=file_paths,
+        constraint=constraint,
+        model_names=model_names,
+        subarea_type=subarea_type,
+        subarea_extent=subarea_extent,
+    )
     # Check filtered cubes is a CubeList containing one cube.
     if len(cubes) == 1:
         return cubes[0]
@@ -90,6 +109,8 @@ def read_cubes(
     file_paths: list[str] | str,
     constraint: iris.Constraint | None = None,
     model_names: str | list[str] | None = None,
+    subarea_type: str = None,
+    subarea_extent: list = None,
     **kwargs,
 ) -> iris.cube.CubeList:
     """Read cubes from files.
@@ -117,6 +138,12 @@ def read_cubes(
         Constraints to filter data by. Defaults to unconstrained.
     model_names: str | list[str], optional
         Names of the models that correspond to respective paths in file_paths.
+    subarea_type: str, optional
+        Whether to constrain data by model relative coordinates or real world
+        coordinates.
+    subarea_extent: list[float], optional
+        List of coordinates to constraint data by, in order lower latitude,
+        upper latitude, lower longitude, upper longitude.
 
     Returns
     -------
@@ -156,6 +183,9 @@ def read_cubes(
 
     # Unify time units so different case studies can merge.
     iris.util.unify_time_units(cubes)
+
+    # Select sub region.
+    cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
 
     # Merge and concatenate cubes now metadata has been fixed.
     cubes = cubes.merge()
@@ -243,6 +273,59 @@ def _check_input_files(input_paths: str | list[str]) -> list[Path]:
     if len(files) == 0:
         raise FileNotFoundError(f"No files found for {input_paths}")
     return files
+
+
+def _cutout_cubes(
+    cubes: iris.cube.CubeList,
+    subarea_type: str | None,
+    subarea_extent: list[float, float, float, float],
+):
+    """Cut out a subarea from a CubeList."""
+    if subarea_type is None:
+        logging.debug("Subarea selection is disabled.")
+        return cubes
+
+    if subarea_type not in ["realworld", "modelrelative"]:
+        raise ValueError("Unknown subarea_type:", subarea_type)
+
+    logging.debug(
+        "User requested LLat: %s ULat: %s LLon: %s ULon: %s",
+        subarea_extent[0],
+        subarea_extent[1],
+        subarea_extent[2],
+        subarea_extent[3],
+    )
+    cutout_cubes = iris.cube.CubeList()
+
+    for cube in cubes:
+        # Define cutout region using user provided coordinates.
+        cutout_coords = {
+            "lat": np.array(subarea_extent[0:2]),
+            "lon": np.array(subarea_extent[2:4]),
+        }
+        lat_name, _ = get_cube_yxcoordname(cube)
+        coord_system = cube.coord(lat_name).coord_system
+        # If the coordinate system is rotated we convert coordinates into
+        # model-relative coordinates to extract the appropriate cutout.
+        if subarea_type == "realworld" and isinstance(
+            coord_system, iris.coord_systems.RotatedGeogCS
+        ):
+            rotated_lons, rotated_lats = rotate_pole(
+                cutout_coords["lon"],
+                cutout_coords["lat"],
+                pole_lon=coord_system.grid_north_pole_longitude,
+                pole_lat=coord_system.grid_north_pole_latitude,
+            )
+            cutout_coords = {"lat": rotated_lats, "lon": rotated_lons}
+        # Do cutout and add to cutout_cubes.
+        logging.debug("Cutting out coords %s", cutout_coords)
+        cutout_cubes.append(
+            cube.intersection(
+                grid_latitude=cutout_coords["lat"], grid_longitude=cutout_coords["lon"]
+            )
+        )
+
+    return cutout_cubes
 
 
 def _is_ensemble(cubelist: iris.cube.CubeList) -> bool:

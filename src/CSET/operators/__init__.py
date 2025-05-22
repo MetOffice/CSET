@@ -144,8 +144,9 @@ def _step_parser(step: dict, step_input: any) -> str:
         return operator(**kwargs)
 
 
-def create_diagnostic_archive(output_directory: Path):
+def create_diagnostic_archive():
     """Create archive for easy download of plots and data."""
+    output_directory: Path = Path.cwd()
     archive_path = output_directory / "diagnostic.zip"
     with zipfile.ZipFile(
         archive_path, "w", compression=zipfile.ZIP_DEFLATED
@@ -231,6 +232,6 @@ def execute_recipe(
         logger.info("Recipe output:\n%s", step_input)
 
         logger.info("Creating diagnostic archive.")
-        create_diagnostic_archive(output_directory)
+        create_diagnostic_archive()
     finally:
         os.chdir(original_working_directory)
