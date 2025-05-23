@@ -14,6 +14,13 @@
             --MODEL_NAME='{{model["name"]}}'
             --START_COORDS='{{MLEVEL_TRANSECT_STARTCOORDS}}'
             --FINISH_COORDS='{{MLEVEL_TRANSECT_FINISHCOORDS}}'
+            {% if SELECT_SUBAREA %}
+            --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
+            --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
+            {% else %}
+            --SUBAREA_TYPE='None'
+            --SUBAREA_EXTENT='None'
+            {% endif %}
         """
         MODEL_IDENTIFIERS = {{model["id"]}}
 {% endfor %}

@@ -18,6 +18,13 @@
         --LEVELS_B='{{LEVELS_B}}'
         --COORD_LIST='{{COORDINATE_LIST}}'
         --ONE_TO_ONE='{{ONE_TO_ONE}}'
+        {% if SELECT_SUBAREA %}
+        --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
+        --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
+        {% else %}
+        --SUBAREA_TYPE='None'
+        --SUBAREA_EXTENT='None'
+        {% endif %}
         """
         MODEL_IDENTIFIERS = '1 {{model["id"]}}'
 {% endfor %}

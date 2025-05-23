@@ -12,7 +12,18 @@
 
         [[[environment]]]
         CSET_RECIPE_NAME = "ageofair.yaml"
-        CSET_ADDOPTS = "--AOA_PLEV={{plev}} --AOA_CYCLIC={{AOA_CYCLIC}} --MODEL_NAME='{{model["name"]}}'"
+        CSET_ADDOPTS = """
+            --AOA_PLEV='{{plev}}'
+            --AOA_CYCLIC='{{AOA_CYCLIC}}'
+            --MODEL_NAME='{{model["name"]}}'
+            {% if SELECT_SUBAREA %}
+            --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
+            --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
+            {% else %}
+            --SUBAREA_TYPE='None'
+            --SUBAREA_EXTENT='None'
+            {% endif %}
+            """
         MODEL_IDENTIFIERS = {{model["id"]}}
 {% endfor %}
 {% endfor %}

@@ -14,6 +14,13 @@
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
             --MODEL_NAME='{{model_names}}'
+            {% if SELECT_SUBAREA %}
+            --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
+            --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
+            {% else %}
+            --SUBAREA_TYPE='None'
+            --SUBAREA_EXTENT='None'
+            {% endif %}
         """
         MODEL_IDENTIFIERS = {{model_ids}}
 
@@ -34,6 +41,13 @@
             --LEVELTYPE='pressure'
             --LEVEL='{{plevel}}'
             --MODEL_NAME='{{model_names}}'
+            {% if SELECT_SUBAREA %}
+            --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
+            --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
+            {% else %}
+            --SUBAREA_TYPE='None'
+            --SUBAREA_EXTENT='None'
+            {% endif %}
         """
         MODEL_IDENTIFIERS = {{model_ids}}
 {% endfor %}
@@ -54,6 +68,13 @@
             --LEVELTYPE='model_level_number'
             --LEVEL='{{mlevel}}'
             --MODEL_NAME='{{model_names}}'
+            {% if SELECT_SUBAREA %}
+            --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
+            --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
+            {% else %}
+            --SUBAREA_TYPE='None'
+            --SUBAREA_EXTENT='None'
+            {% endif %}
         """
         MODEL_IDENTIFIERS = {{model_ids}}
 {% endfor %}
