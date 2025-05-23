@@ -303,7 +303,7 @@ compulsory=true
 sort-key=models-d1
 
 [template variables=SELECT_SUBAREA]
-ns=Models and Cases
+ns=Models
 title=Cutout subarea
 description=Analyse a subset of the region in the input data.
 
@@ -316,7 +316,7 @@ trigger=template variables=SUBAREA_TYPE: True;
        =template variables=SUBAREA_EXTENT: True;
 type=python_boolean
 compulsory=true
-sort-key=e1
+sort-key=models-e1
 
 [template variables=SUBAREA_TYPE]
 ns=Models
@@ -325,7 +325,7 @@ description=Use real world or model relative coordinates.
 values="realworld", "modelrelative"
 value-titles=Real World, Model Relative
 compulsory=true
-sort-key=e2
+sort-key=models-e2
 
 [template variables=SUBAREA_EXTENT]
 ns=Models
@@ -339,7 +339,7 @@ help=Allows a user to cutout a sub-region of model data Defaults
      to 0,0,0,0.
 type=real,real,real,real
 compulsory=true
-sort-key=e3
+sort-key=models-e3
 
 ################################################################################
 # Model definitions. Section repeated for each desired model.
