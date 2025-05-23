@@ -13,6 +13,17 @@ Changelog
 .. Highlight any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+2025.5.2 (2025-05-23)
+---------------------
+
+A bugfix release to fix all recipes failing when run by the workflow due to
+undefined ``SUBAREA_TYPE`` and ``SUBAREA_EXTENT`` recipe variables.
+
+* Update pyproject.toml metadata by `@jfrost-mo`_ in :pr:`1383`
+* Various minor GitHub Actions improvements by `@jfrost-mo`_ in :pr:`1387`
+* Add subarea variables to include files by `@jfrost-mo`_ in :pr:`1389`
+* Add CSET v25.5.2 release notes to changelog by `@jfrost-mo`_ in :pr:`1390`
+
 25.5.1 (2025-05-22)
 -------------------
 

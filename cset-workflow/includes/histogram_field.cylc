@@ -19,6 +19,13 @@
             {% else %}
             --SEQUENCE='realization'
             {% endif %}
+            {% if SELECT_SUBAREA %}
+            --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
+            --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
+            {% else %}
+            --SUBAREA_TYPE='None'
+            --SUBAREA_EXTENT='None'
+            {% endif %}
         """
         MODEL_IDENTIFIERS = {{model_ids}}
 {% endfor %}
@@ -42,6 +49,13 @@
             --SEQUENCE='time'
             {% else %}
             --SEQUENCE='realization'
+            {% endif %}
+            {% if SELECT_SUBAREA %}
+            --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
+            --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
+            {% else %}
+            --SUBAREA_TYPE='None'
+            --SUBAREA_EXTENT='None'
             {% endif %}
         """
         MODEL_IDENTIFIERS = {{model_ids}}
@@ -67,6 +81,13 @@
             --SEQUENCE='time'
             {% else %}
             --SEQUENCE='realization'
+            {% endif %}
+            {% if SELECT_SUBAREA %}
+            --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
+            --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
+            {% else %}
+            --SUBAREA_TYPE='None'
+            --SUBAREA_EXTENT='None'
             {% endif %}
         """
         MODEL_IDENTIFIERS = {{model_ids}}

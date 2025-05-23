@@ -19,6 +19,13 @@
             --VARNAME='{{field}}'
             --MODEL_NAME='{{model["name"]}}'
 	    --METHOD='{{method}}'
+            {% if SELECT_SUBAREA %}
+            --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
+            --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
+            {% else %}
+            --SUBAREA_TYPE='None'
+            --SUBAREA_EXTENT='None'
+            {% endif %}
         """
         MODEL_IDENTIFIERS = {{model["id"]}}
 {% endfor %}
@@ -43,6 +50,13 @@
             --LEVEL='{{plevel}}'
             --MODEL_NAME='{{model["name"]}}'
 	    --METHOD='{{method}}'
+            {% if SELECT_SUBAREA %}
+            --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
+            --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
+            {% else %}
+            --SUBAREA_TYPE='None'
+            --SUBAREA_EXTENT='None'
+            {% endif %}
         """
         MODEL_IDENTIFIERS = {{model["id"]}}
 {% endfor %}
@@ -67,6 +81,13 @@
             --LEVEL='{{mlevel}}'
             --MODEL_NAME='{{model["name"]}}'
 	    --METHOD='{{method}}'
+            {% if SELECT_SUBAREA %}
+            --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
+            --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
+            {% else %}
+            --SUBAREA_TYPE='None'
+            --SUBAREA_EXTENT='None'
+            {% endif %}
         """
         MODEL_IDENTIFIERS = {{model["id"]}}
 {% endfor %}
