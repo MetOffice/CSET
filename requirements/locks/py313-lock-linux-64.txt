@@ -125,7 +125,7 @@ https://conda.anaconda.org/conda-forge/linux-64/qhull-2020.2-h434a139_5.conda#35
 https://conda.anaconda.org/conda-forge/linux-64/readline-8.2-h8c095d6_2.conda#283b96675859b20a825f8fa30f311446
 https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml-0.18.10-py313h536fd9c_0.conda#04313f7cbb5fde9462f46d1d91450a3f
 https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml.clib-0.2.8-py313h536fd9c_1.conda#d3400df9c9d0b58368bc0c0fc2591c39
-https://conda.anaconda.org/conda-forge/linux-64/ruff-0.11.10-py313h67f39b2_1.conda#ecd71aac2682ed0e83cdf6eabad9273f
+https://conda.anaconda.org/conda-forge/linux-64/ruff-0.11.11-py313h67f39b2_0.conda#6cdf32b099ede65e824dff3f62c66cd8
 https://conda.anaconda.org/conda-forge/linux-64/scipy-1.15.2-py313h86fcf2b_0.conda#ca68acd9febc86448eeed68d0c6c8643
 https://conda.anaconda.org/conda-forge/linux-64/shapely-2.1.1-py313h576e190_0.conda#186fd0068dea82af028d34f8271a0d2f
 https://conda.anaconda.org/conda-forge/linux-64/snappy-1.2.1-h8bd8927_1.conda#3b3e64af585eadfb52bb90b553db5edf
@@ -190,7 +190,7 @@ https://conda.anaconda.org/conda-forge/noarch/hyperframe-6.1.0-pyhd8ed1ab_0.cond
 https://conda.anaconda.org/conda-forge/noarch/identify-2.6.10-pyhd8ed1ab_0.conda#8d5b9b702810fb3054d52ba146023bc3
 https://conda.anaconda.org/conda-forge/noarch/idna-3.10-pyhd8ed1ab_1.conda#39a4f67be3286c86d696df570b1201b7
 https://conda.anaconda.org/conda-forge/noarch/imagesize-1.4.1-pyhd8ed1ab_0.tar.bz2#7de5386c8fea29e76b303f37dde4c352
-https://conda.anaconda.org/conda-forge/noarch/importlib-metadata-8.6.1-pyha770c72_0.conda#f4b39bf00c69f56ac01e020ebfac066c
+https://conda.anaconda.org/conda-forge/noarch/importlib-metadata-8.7.0-pyhe01879c_1.conda#63ccfdc3a3ce25b027b8767eb722fca8
 https://conda.anaconda.org/conda-forge/noarch/iniconfig-2.0.0-pyhd8ed1ab_1.conda#6837f3eff7dcea42ecd714ce1ac2b108
 https://conda.anaconda.org/conda-forge/noarch/iris-3.12.2-pyha770c72_0.conda#281bb211efe112ed90f2d703bbcf5512
 https://conda.anaconda.org/conda-forge/noarch/iris-grib-0.21.0-pyhd8ed1ab_0.conda#d5a110459acc9669c58e5d516fc2e165
