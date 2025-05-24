@@ -31,6 +31,9 @@ def preprocess_data(data_location: str):
     for cube in cubes:
         del cube.attributes["cset_comparison_base"]
 
+    # Remove time0 diagnostics; LFRic does not output T0 so can cause issues.
+    cubes = read._remove_time0(cubes)
+
     # Use iris directly to save uncompressed for faster reading.
     iris.save(cubes, "forecast.nc")
 
