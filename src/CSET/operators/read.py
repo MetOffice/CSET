@@ -791,6 +791,8 @@ def _remove_time0_callback(cubes: iris.cube.CubeList):
                 )
                 if valid_cube:
                     valid_cubes.append(valid_cube)
+            else:
+                valid_cubes.append(cube)
         except iris.exceptions.CoordinateNotFoundError:
             pass
 
