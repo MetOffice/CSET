@@ -297,6 +297,7 @@ def _colorbar_map_levels(cube: iris.cube.Cube):
                 # Calculate levels from range.
                 levels = np.linspace(vmin, vmax, 51)
                 norm = None
+                # norm = mpl.colors.BoundaryNorm(levels, ncolors=2*cmap.N)
                 cmap, levels, norm = _custom_colourmap_precipitation(
                     cube, cmap, levels, norm
                 )
@@ -1006,10 +1007,11 @@ def _spatial_plot(
         coord = cube_slice.coord(sequence_coordinate)
         # Format the coordinate value in a unit appropriate way.
         # Print sequence (e.g. time) bounds if plotting single non-sequence outputs
-        if nplot == 1:
-            title = f"{recipe_title}\n [{coord.units.title(coord.bounds[0][0])} to {coord.units.title(coord.bounds[0][1])}]"
-        else:
-            title = f"{recipe_title}\n [{coord.units.title(coord.points[0])}]"
+        title = f"{recipe_title}\n [{coord.units.title(coord.points[0])}]"
+        print(coord)
+        if nplot == 1 and coord.has_bounds:
+            if np.size(coord.bounds) > 1:
+                title = f"{recipe_title}\n [{coord.units.title(coord.bounds[0][0])} to {coord.units.title(coord.bounds[0][1])}]"
         # Do the actual plotting.
         plotting_func(
             cube_slice,

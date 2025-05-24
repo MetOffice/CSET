@@ -184,9 +184,6 @@ def read_cubes(
     # Unify time units so different case studies can merge.
     iris.util.unify_time_units(cubes)
 
-    # Remove time outputs within first hour.
-    cubes = _remove_time0_callback(cubes)
-
     # Select sub region.
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
 
@@ -769,7 +766,7 @@ def _lfric_forecast_period_standard_name_callback(cube: iris.cube.Cube):
         pass
 
 
-def _remove_time0_callback(cubes: iris.cube.CubeList):
+def _remove_time0(cubes: iris.cube.CubeList):
     """Remove T0 from UM inputs to allow time-averaged comparison with LFRic.
 
     A number of UM outputs contain T=0 initial time diagnostic fields, while
@@ -784,16 +781,13 @@ def _remove_time0_callback(cubes: iris.cube.CubeList):
     """
     valid_cubes = iris.cube.CubeList()
     for cube in cubes:
-        try:
-            if cube.coord("forecast_period"):
-                valid_cube = cube.extract(
-                    iris.Constraint(forecast_period=lambda cell: cell >= 0.5)
-                )
-                if valid_cube:
-                    valid_cubes.append(valid_cube)
-            else:
-                valid_cubes.append(cube)
-        except iris.exceptions.CoordinateNotFoundError:
-            pass
+        if cube.coords("forecast_period"):
+            valid_cube = cube.extract(
+                iris.Constraint(forecast_period=lambda cell: cell >= 0.5)
+            )
+            if valid_cube:
+                valid_cubes.append(valid_cube)
+        else:
+            valid_cubes.append(cube)
 
     return valid_cubes
