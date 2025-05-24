@@ -184,6 +184,9 @@ def read_cubes(
     # Unify time units so different case studies can merge.
     iris.util.unify_time_units(cubes)
 
+    # Remove time outputs within first hour.
+    cubes = _remove_time0_callback(cubes)
+
     # Select sub region.
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
 
@@ -764,3 +767,31 @@ def _lfric_forecast_period_standard_name_callback(cube: iris.cube.Cube):
             coord.standard_name = "forecast_period"
     except iris.exceptions.CoordinateNotFoundError:
         pass
+
+
+def _remove_time0_callback(cubes: iris.cube.CubeList):
+    """Remove T0 from UM inputs to allow time-averaged comparison with LFRic.
+
+    A number of UM outputs contain T=0 initial time diagnostic fields, while
+    LFRic diagnostics begin from T=1 output step. This does not cause issues
+    for comparing UM with LFRic for hour-by-hour comparisons, for which times
+    are matched up in code. However, for any recipes requiring collapse by
+    time ahead of comparison, computing averages over e.g. 24h vs 25h window
+    results in different timestamps in each collapsed cube, breaking subsequent
+    CSET time-checking steps to compare like-with-like.
+
+    This function removes any outputs at T=0 to support time-processed comparisons.
+    """
+    valid_cubes = iris.cube.CubeList()
+    for cube in cubes:
+        try:
+            if cube.coord("forecast_period"):
+                valid_cube = cube.extract(
+                    iris.Constraint(forecast_period=lambda cell: cell >= 0.5)
+                )
+                if valid_cube:
+                    valid_cubes.append(valid_cube)
+        except iris.exceptions.CoordinateNotFoundError:
+            pass
+
+    return valid_cubes

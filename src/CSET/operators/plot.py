@@ -560,7 +560,7 @@ def _plot_and_save_line_series(
         if model_colors_map:
             label = cube.attributes.get("model_name")
             color = model_colors_map.get(label)
-        iplt.plot(coord, cube, color=color, marker="o", ls="-", label=label)
+        iplt.plot(coord, cube, color=color, marker="o", ls="-", lw=3, label=label)
 
         # Calculate the global min/max if multiple cubes are given.
         _, levels, _ = _colorbar_map_levels(cube)
@@ -638,7 +638,7 @@ def _plot_and_save_vertical_line_series(
         if model_colors_map:
             label = cube.attributes.get("model_name")
             color = model_colors_map.get(label)
-        iplt.plot(cube, coord, color=color, marker="o", ls="-", label=label)
+        iplt.plot(cube, coord, color=color, marker="o", ls="-", lw=3, label=label)
 
     # Get the current axis
     ax = plt.gca()
@@ -998,13 +998,18 @@ def _spatial_plot(
 
     # Create a plot for each value of the sequence coordinate.
     plot_index = []
+    nplot = np.size(cube.slices_over(sequence_coordinate))
     for cube_slice in cube.slices_over(sequence_coordinate):
         # Use sequence value so multiple sequences can merge.
         sequence_value = cube_slice.coord(sequence_coordinate).points[0]
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
         coord = cube_slice.coord(sequence_coordinate)
         # Format the coordinate value in a unit appropriate way.
-        title = f"{recipe_title}\n{coord.units.title(coord.points[0])}"
+        # Print sequence (e.g. time) bounds if plotting single non-sequence outputs
+        if nplot == 1:
+            title = f"{recipe_title}\n [{coord.units.title(coord.bounds[0][0])} to {coord.units.title(coord.bounds[0][1])}]"
+        else:
+            title = f"{recipe_title}\n [{coord.units.title(coord.points[0])}]"
         # Do the actual plotting.
         plotting_func(
             cube_slice,
@@ -1421,13 +1426,18 @@ def plot_vertical_line_series(
     # for similar values of the sequence coordinate. cube_slice can be an iris.cube.Cube
     # or an iris.cube.CubeList.
     plot_index = []
+    nplot = np.size(cube_iterables)
     for cubes_slice in cube_iterables:
         # Use sequence value so multiple sequences can merge.
         seq_coord = cubes_slice[0].coord(sequence_coordinate)
         sequence_value = seq_coord.points[0]
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
         # Format the coordinate value in a unit appropriate way.
-        title = f"{recipe_title}\n{seq_coord.units.title(sequence_value)}"
+        # Print sequence (e.g. time) bounds if plotting single non-sequence outputs
+        if nplot == 1:
+            title = f"{recipe_title}\n [{seq_coord.units.title(seq_coord.bounds[0][0])} to {seq_coord.units.title(seq_coord.bounds[0][1])}]"
+        else:
+            title = f"{recipe_title}\n [{seq_coord.units.title(sequence_value)}]"
         # Do the actual plotting.
         _plot_and_save_vertical_line_series(
             cubes_slice,
