@@ -22,16 +22,28 @@ import iris
 from CSET.operators import read
 
 
-def preprocess_data(data_location: str):
+def preprocess_data(
+    data_location: str | str,
+    fields: iris.Constraint | None = None,
+    constraints: list | None = None,
+):
     """Rewrite data into a single file. This also fixes all the metadata."""
+    # Specify variable lists, if required, else read all data
+    if fields:
+        var_constraint = fields
+    else:
+        var_constraint = None
+
     # Load up all the data.
-    cubes = read.read_cubes(data_location)
+    cubes = read.read_cubes(data_location, constraint=var_constraint)
 
     # Remove added comparison base; we don't know if this is the base model yet.
     for cube in cubes:
         del cube.attributes["cset_comparison_base"]
 
     # Remove time0 diagnostics; LFRic does not output T0 so can cause issues.
+    ## Option to add this as a time constraint based on value of user-defined
+    ## m*_analysis_offset. For initial implementation assume to remove time0.
     cubes = read._remove_time0(cubes)
 
     # Use iris directly to save uncompressed for faster reading.
@@ -53,4 +65,24 @@ def run():
         f"{os.environ['MODEL_IDENTIFIER']}"
     )
     print(f"Preprocessing {data_location}")
-    preprocess_data(data_location)
+
+    # Preprocess for only selected variables, else read all
+    str_fields = f"{os.environ['FIELDS']}"
+
+    # Parse FIELDS env variable string to list of iris-ready constraint names
+    fields = list(
+        str_fields.replace("[", "")
+        .replace("]", "")
+        .replace("'", "")
+        .replace(" ", "")
+        .split(",")
+    )
+    if len(fields) > 0:
+        print(f"Preprocessing variable list {fields}")
+    else:
+        fields = None
+        print("Preprocessing all variables in files")
+
+    constraints = None
+
+    preprocess_data(data_location, fields=fields, constraints=constraints)

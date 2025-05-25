@@ -555,6 +555,9 @@ def _plot_and_save_line_series(
     # Store min/max ranges.
     y_levels = []
 
+    # Check match-up across sequence coords gives consistent sizes
+    _validate_cubes_coords(cubes, coords)
+
     for cube, coord in zip(cubes, coords, strict=True):
         label = None
         color = "black"
@@ -632,6 +635,9 @@ def _plot_and_save_vertical_line_series(
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
     model_colors_map = _get_model_colors_map(cubes)
+
+    # Check match-up across sequence coords gives consistent sizes
+    _validate_cubes_coords(cubes, coords)
 
     for cube, coord in zip(cubes, coords, strict=True):
         label = None
@@ -1006,9 +1012,8 @@ def _spatial_plot(
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
         coord = cube_slice.coord(sequence_coordinate)
         # Format the coordinate value in a unit appropriate way.
-        # Print sequence (e.g. time) bounds if plotting single non-sequence outputs
         title = f"{recipe_title}\n [{coord.units.title(coord.points[0])}]"
-        print(coord)
+        # Use sequence (e.g. time) bounds if plotting single non-sequence outputs
         if nplot == 1 and coord.has_bounds:
             if np.size(coord.bounds) > 1:
                 title = f"{recipe_title}\n [{coord.units.title(coord.bounds[0][0])} to {coord.units.title(coord.bounds[0][1])}]"
@@ -1114,6 +1119,19 @@ def _validate_cube_shape(
         raise ValueError(
             f"The number of model names ({num_models}) should equal the number "
             f"of cubes ({len(cube)})."
+        )
+
+
+def _validate_cubes_coords(
+    cubes: iris.cube.CubeList, coords: list[iris.coords.Coord]
+) -> None:
+    """Check same number of cubes as sequence coordinate for zip functions."""
+    if len(cubes) != len(coords):
+        raise ValueError(
+            f"The number of CubeList entries ({len(cubes)}) should equal the number "
+            f"of sequence coordinates ({len(coords)})."
+            f"Check that number of time entries in input data are consistent if "
+            f"performing time-averaging steps prior to plotting outputs."
         )
 
 
@@ -1435,11 +1453,11 @@ def plot_vertical_line_series(
         sequence_value = seq_coord.points[0]
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
         # Format the coordinate value in a unit appropriate way.
-        # Print sequence (e.g. time) bounds if plotting single non-sequence outputs
-        if nplot == 1:
-            title = f"{recipe_title}\n [{seq_coord.units.title(seq_coord.bounds[0][0])} to {seq_coord.units.title(seq_coord.bounds[0][1])}]"
-        else:
-            title = f"{recipe_title}\n [{seq_coord.units.title(sequence_value)}]"
+        title = f"{recipe_title}\n [{seq_coord.units.title(sequence_value)}]"
+        # Use sequence (e.g. time) bounds if plotting single non-sequence outputs
+        if nplot == 1 and seq_coord.has_bounds:
+            if np.size(seq_coord.bounds) > 1:
+                title = f"{recipe_title}\n [{seq_coord.units.title(seq_coord.bounds[0][0])} to {seq_coord.units.title(seq_coord.bounds[0][1])}]"
         # Do the actual plotting.
         _plot_and_save_vertical_line_series(
             cubes_slice,

@@ -22,9 +22,6 @@ steps:
 
   - operator: aggregate.ensure_aggregatable_across_cases
 
-  - operator: collapse.collapse_by_validity_time
-    method: MEAN
-
   # Make a single NetCDF with all the data inside it.
   - operator: write.write_cube_to_nc
     overwrite: True
