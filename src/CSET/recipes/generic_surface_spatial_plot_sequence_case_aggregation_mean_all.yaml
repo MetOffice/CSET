@@ -1,5 +1,5 @@
 category: Surface Spatial Plot
-title: "$MODEL_NAME Surface $VARNAME \n Aggregation across all times"
+title: "$MODEL_NAME Surface $VARNAME \n Aggregation over all cases"
 description: |
   Extracts and plots the mean surface $VARNAME for all times in $MODEL_NAME. Case
   aggregation occurs over all available times.
@@ -19,6 +19,8 @@ steps:
         operator: constraints.generate_level_constraint
         coordinate: "pressure"
         levels: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
 
   - operator: aggregate.ensure_aggregatable_across_cases
 

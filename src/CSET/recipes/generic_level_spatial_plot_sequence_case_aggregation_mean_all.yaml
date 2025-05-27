@@ -1,5 +1,5 @@
 category: $LEVELTYPE Level Spatial
-title: "$MODEL_NAME $VARNAME $LEVELTYPE$LEVEL \n Aggregation for all times"
+title: "$MODEL_NAME $VARNAME $LEVELTYPE$LEVEL \n Aggregation over all cases"
 description: |
   Extracts ands plots the $VARNAME from $MODEL_NAME at $LEVELTYPE level $LEVEL.
   Multiple cases are aggregated together for all available times.

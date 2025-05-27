@@ -1,5 +1,5 @@
 category: Histogram
-title: $VARNAME $LEVELTYPE $LEVEL histogram case aggregation
+title: "Histogram $VARNAME $LEVELTYPE $LEVEL \n Aggregation over all cases"
 description: |
   Extracts and plots the probability density of $LEVEL level $VARNAME from a
   file at $LEVELTYPE level $LEVEL of $MODEL_NAME. It uses
