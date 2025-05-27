@@ -216,7 +216,7 @@ def _get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
     return {mname: color for mname, color in zip(model_names, color_list, strict=False)}
 
 
-def _colorbar_map_levels(cube: iris.cube.Cube):
+def _colorbar_map_levels(cube: iris.cube.Cube, axis=None):
     """Get an appropriate colorbar for the given cube.
 
     For the given variable the appropriate colorbar is looked up from a
@@ -229,6 +229,8 @@ def _colorbar_map_levels(cube: iris.cube.Cube):
     ----------
     cube: Cube
         Cube of variable for which the colorbar information is desired.
+    axis: str
+        If specified, x or y-axis for setting vmin and vmax bounds
 
     Returns
     -------
@@ -276,31 +278,48 @@ def _colorbar_map_levels(cube: iris.cube.Cube):
                     # Fallback to variable default.
                     var_colorbar = colorbar[varname]
 
-            # Get the colorbar levels for this variable.
-            try:
-                levels = var_colorbar["levels"]
-                # Use discrete bins when levels are specified, rather than a
-                # smooth range.
-                norm = mpl.colors.BoundaryNorm(levels, ncolors=cmap.N)
-                logging.debug("Using levels for %s colorbar.", varname)
-                logging.info("Using levels: %s", levels)
-                # Overwrite cmap, levels and norm for specific variables that
-                # require custom colorbar_map as these can not be defined in the
-                # JSON file.
-                cmap, levels, norm = _custom_colourmap_precipitation(
-                    cube, cmap, levels, norm
-                )
-            except KeyError:
-                # Get the range for this variable.
-                vmin, vmax = var_colorbar["min"], var_colorbar["max"]
-                logging.debug("Using min and max for %s colorbar.", varname)
-                # Calculate levels from range.
+            # Get the range for this variable.
+            vmin, vmax = var_colorbar["min"], var_colorbar["max"]
+            # Testing for x-specific or y-specific overrides.
+            if axis:
+                if axis == "x":
+                    try:
+                        vmin, vmax = var_colorbar["xmin"], var_colorbar["xmax"]
+                    except KeyError:
+                        vmin, vmax = var_colorbar["min"], var_colorbar["max"]
+                if axis == "y":
+                    try:
+                        vmin, vmax = var_colorbar["ymin"], var_colorbar["ymax"]
+                    except KeyError:
+                        vmin, vmax = var_colorbar["min"], var_colorbar["max"]
                 levels = np.linspace(vmin, vmax, 51)
-                norm = None
-                # norm = mpl.colors.BoundaryNorm(levels, ncolors=2*cmap.N)
-                cmap, levels, norm = _custom_colourmap_precipitation(
-                    cube, cmap, levels, norm
-                )
+            # Get the colorbar levels for this variable.
+            else:
+                try:
+                    levels = var_colorbar["levels"]
+                    # Use discrete bins when levels are specified, rather than a
+                    # smooth range.
+                    norm = mpl.colors.BoundaryNorm(levels, ncolors=cmap.N)
+                    logging.debug("Using levels for %s colorbar.", varname)
+                    logging.info("Using levels: %s", levels)
+                    # Overwrite cmap, levels and norm for specific variables that
+                    # require custom colorbar_map as these can not be defined in the
+                    # JSON file.
+                    cmap, levels, norm = _custom_colourmap_precipitation(
+                        cube, cmap, levels, norm
+                    )
+                except KeyError:
+                    # Get the range for this variable.
+                    vmin, vmax = var_colorbar["min"], var_colorbar["max"]
+                    logging.debug("Using min and max for %s colorbar.", varname)
+                    # Calculate levels from range.
+                    levels = np.linspace(vmin, vmax, 51)
+
+            # norm = None
+            norm = mpl.colors.BoundaryNorm(levels, ncolors=cmap.N)
+            cmap, levels, norm = _custom_colourmap_precipitation(
+                cube, cmap, levels, norm
+            )
             return cmap, levels, norm
         except KeyError:
             logging.debug("Cube name %s has no colorbar definition.", varname)
@@ -375,9 +394,11 @@ def _plot_and_save_spatial_plot(
         y1 = np.min(cube.coord(lat_axis).points)
         y2 = np.max(cube.coord(lat_axis).points)
         # Adjust bounds within +/- 180.0 if x dimension extends beyond half-globe.
-        if (x2 - x1) > 180.0:
+        print(x1, x2)
+        if (x2 - x1) > 180.0 or x2 > 180.0:
             x1 = x1 - 180.0
             x2 = x2 - 180.0
+        print(x1, x2)
         axes.set_extent([x1, x2, y1, y2])
     except ValueError:
         # Skip if no x and y map coordinates.
@@ -521,7 +542,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
     colorbar.set_label(f"{cube.name()} ({cube.units})", size=16)
 
     # Overall figure title.
-    fig.suptitle(title)
+    fig.suptitle(title, fontsize=16)
 
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
     logging.info("Saved contour postage stamp plot to %s", filename)
@@ -567,7 +588,7 @@ def _plot_and_save_line_series(
         iplt.plot(coord, cube, color=color, marker="o", ls="-", lw=3, label=label)
 
         # Calculate the global min/max if multiple cubes are given.
-        _, levels, _ = _colorbar_map_levels(cube)
+        _, levels, _ = _colorbar_map_levels(cube, axis="y")
         if levels is not None:
             y_levels.append(min(levels))
             y_levels.append(max(levels))
@@ -577,13 +598,13 @@ def _plot_and_save_line_series(
 
     # Add some labels and tweak the style.
     # check if cubes[0] works for single cube if not CubeList
-    ax.set(
-        xlabel=f"{coords[0].name()} / {coords[0].units}",
-        ylabel=f"{cubes[0].name()} / {cubes[0].units}",
-        title=title,
-    )
+    ax.set_xlabel(f"{coords[0].name()} / {coords[0].units}", fontsize=14)
+    ax.set_ylabel(f"{cubes[0].name()} / {cubes[0].units}", fontsize=14)
+    ax.set_title(title, fontsize=16)
+
     ax.ticklabel_format(axis="y", useOffset=False)
     ax.tick_params(axis="x", labelrotation=15)
+    ax.tick_params(axis="both", labelsize=12)
 
     # Set y limits to global min and max, autoscale if colorbar doesn't exist.
     if y_levels:
@@ -594,7 +615,7 @@ def _plot_and_save_line_series(
     # Add gridlines
     ax.grid(linestyle="--", color="grey", linewidth=1)
     if model_colors_map:
-        ax.legend(loc="best", ncol=1, frameon=False)
+        ax.legend(loc="best", ncol=1, frameon=False, fontsize=16)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -686,18 +707,19 @@ def _plot_and_save_vertical_line_series(
     ax.set_xlim(vmin, vmax)
 
     # Add some labels and tweak the style.
-    ax.set(
-        ylabel=f"{coord.name()} / {coord.units}",
-        xlabel=f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}",
-        title=title,
+    ax.set_ylabel(f"{coord.name()} / {coord.units}", fontsize=14)
+    ax.set_xlabel(
+        f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}", fontsize=14
     )
+    ax.set_title(title, fontsize=16)
     ax.ticklabel_format(axis="x")
     ax.tick_params(axis="y")
+    ax.tick_params(axis="both", labelsize=12)
 
     # Add gridlines
     ax.grid(linestyle="--", color="grey", linewidth=1)
     if model_colors_map:
-        ax.legend(loc="best", ncol=1, frameon=False)
+        ax.legend(loc="best", ncol=1, frameon=False, fontsize=16)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -755,13 +777,12 @@ def _plot_and_save_scatter_plot(
     ax = plt.gca()
 
     # Add some labels and tweak the style.
-    ax.set(
-        xlabel=f"{cube_x[0].name()} / {cube_x[0].units}",
-        ylabel=f"{cube_y[0].name()} / {cube_y[0].units}",
-        title=title,
-    )
+    ax.set_xlabel(f"{cube_x[0].name()} / {cube_x[0].units}", fontsize=14)
+    ax.set_ylabel(f"{cube_y[0].name()} / {cube_y[0].units}", fontsize=14)
+    ax.set_title(title, fontsize=16)
     ax.ticklabel_format(axis="y", useOffset=False)
     ax.tick_params(axis="x", labelrotation=15)
+    ax.tick_params(axis="both", labelsize=12)
     ax.autoscale()
 
     # Save plot.
@@ -827,21 +848,22 @@ def _plot_and_save_histogram_series(
             color = model_colors_map[label]
         x, y = np.histogram(cube_data_1d, bins=bins, density=True)
         ax.plot(
-            y[:-1], x, color=color, linewidth=2, marker="o", markersize=6, label=label
+            y[:-1], x, color=color, linewidth=3, marker="o", markersize=6, label=label
         )
 
     # Add some labels and tweak the style.
-    ax.set(
-        title=title,
-        xlabel=f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}",
-        ylabel="normalised probability density",
-        xlim=(vmin, vmax),
+    ax.set_title(title, fontsize=16)
+    ax.set_xlabel(
+        f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}", fontsize=14
     )
+    ax.set_ylabel("Normalised probability density", fontsize=14)
+    ax.set_xlim(vmin, vmax)
+    ax.tick_params(axis="both", labelsize=12)
 
     # Overlay grid-lines onto histogram plot.
     ax.grid(linestyle="--", color="grey", linewidth=1)
     if model_colors_map:
-        ax.legend(loc="best", ncol=1, frameon=False)
+        ax.legend(loc="best", ncol=1, frameon=False, fontsize=16)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -895,7 +917,7 @@ def _plot_and_save_postage_stamp_histogram_series(
         ax.set_xlim(vmin, vmax)
 
     # Overall figure title.
-    fig.suptitle(title)
+    fig.suptitle(title, fontsize=16)
 
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
     logging.info("Saved histogram postage stamp plot to %s", filename)
@@ -912,10 +934,10 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
     **kwargs,
 ):
     fig, ax = plt.subplots(figsize=(10, 10), facecolor="w", edgecolor="k")
-    ax.set_title(title)
+    ax.set_title(title, fontsize=16)
     ax.set_xlim(vmin, vmax)
-    ax.set_xlabel(f"{cube.name()} / {cube.units}")
-    ax.set_ylabel("normalised probability density")
+    ax.set_xlabel(f"{cube.name()} / {cube.units}", fontsize=14)
+    ax.set_ylabel("normalised probability density", fontsize=14)
     # Loop over all slices along the stamp_coordinate
     for member in cube.slices_over(stamp_coordinate):
         # Flatten the member data to 1D
@@ -929,7 +951,7 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
         )
 
     # Add a legend
-    ax.legend()
+    ax.legend(fontsize=16)
 
     # Save the figure to a file
     plt.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -977,6 +999,7 @@ def _spatial_plot(
         If the cube isn't a single cube.
     """
     recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = recipe_title.replace("_for_climate_averaging", "")
 
     # Ensure we have a name for the plot file.
     if filename is None:
@@ -1277,6 +1300,7 @@ def plot_line_series(
     """
     # Ensure we have a name for the plot file.
     title = get_recipe_metadata().get("title", "Untitled")
+    title = title.replace("_for_climate_averaging", "")
     if filename is None:
         filename = slugify(title)
 
@@ -1360,6 +1384,7 @@ def plot_vertical_line_series(
     """
     # Ensure we have a name for the plot file.
     recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = recipe_title.replace("_for_climate_averaging", "")
     if filename is None:
         filename = slugify(recipe_title)
 
@@ -1394,7 +1419,7 @@ def plot_vertical_line_series(
             ) from err
 
         # Get minimum and maximum from levels information.
-        _, levels, _ = _colorbar_map_levels(cube)
+        _, levels, _ = _colorbar_map_levels(cube, axis="x")
         if levels is not None:
             x_levels.append(min(levels))
             x_levels.append(max(levels))
@@ -1555,6 +1580,7 @@ def scatter_plot(
 
     # Ensure we have a name for the plot file.
     title = get_recipe_metadata().get("title", "Untitled")
+    title = title.replace("_for_climate_averaging", "")
     if filename is None:
         filename = slugify(title)
 
@@ -1626,6 +1652,7 @@ def plot_histogram_series(
         If the cube isn't a Cube or CubeList.
     """
     recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = recipe_title.replace("_for_climate_averaging", "")
 
     cubes = iter_maybe(cubes)
 
@@ -1720,8 +1747,13 @@ def plot_histogram_series(
         sequence_value = single_cube.coord(sequence_coordinate).points[0]
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
         coord = single_cube.coord(sequence_coordinate)
+        nplot = np.size(cube_iterables)
         # Format the coordinate value in a unit appropriate way.
-        title = f"{recipe_title}\n{coord.units.title(coord.points[0])}"
+        title = f"{recipe_title}\n [{coord.units.title(coord.points[0])}]"
+        # Use sequence (e.g. time) bounds if plotting single non-sequence outputs
+        if nplot == 1 and coord.has_bounds:
+            if np.size(coord.bounds) > 1:
+                title = f"{recipe_title}\n [{coord.units.title(coord.bounds[0][0])} to {coord.units.title(coord.bounds[0][1])}]"
         # Do the actual plotting.
         plotting_func(
             cube_slice,
