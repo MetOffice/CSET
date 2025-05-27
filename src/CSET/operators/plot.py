@@ -216,7 +216,7 @@ def _get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
     return {mname: color for mname, color in zip(model_names, color_list, strict=False)}
 
 
-def _colorbar_map_levels(cube: iris.cube.Cube):
+def _colorbar_map_levels(cube: iris.cube.Cube, axis=None):
     """Get an appropriate colorbar for the given cube.
 
     For the given variable the appropriate colorbar is looked up from a
@@ -229,6 +229,8 @@ def _colorbar_map_levels(cube: iris.cube.Cube):
     ----------
     cube: Cube
         Cube of variable for which the colorbar information is desired.
+    axis: str
+        If specified, x or y-axis for setting vmin and vmax bounds
 
     Returns
     -------
@@ -293,10 +295,24 @@ def _colorbar_map_levels(cube: iris.cube.Cube):
             except KeyError:
                 # Get the range for this variable.
                 vmin, vmax = var_colorbar["min"], var_colorbar["max"]
+                print(vmin, vmax)
+                if axis:
+                    print(axis)
+                    if axis == "x":
+                        try:
+                            vmin, vmax = var_colorbar["xmin"], var_colorbar["xmax"]
+                        except:
+                            pass
+                    if axis == "y":
+                        try:
+                            vmin, vmax = var_colorbar["ymin"], var_colorbar["ymax"]
+                        except:
+                            pass
                 logging.debug("Using min and max for %s colorbar.", varname)
                 # Calculate levels from range.
                 levels = np.linspace(vmin, vmax, 51)
-                norm = None
+                # norm = None
+                norm = mpl.colors.BoundaryNorm(levels, ncolors=cmap.N)
                 cmap, levels, norm = _custom_colourmap_precipitation(
                     cube, cmap, levels, norm
                 )
