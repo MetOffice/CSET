@@ -113,6 +113,9 @@ def _write_metadata(recipe: dict):
     metadata = recipe.copy()
     # Remove steps, as not needed, and might contain non-serialisable types.
     metadata.pop("steps", None)
+    # To remove long variable names with suffix
+    if "title" in metadata:
+        metadata["title"] = metadata["title"].replace("_for_climate_averaging", "")
     with open("meta.json", "wt", encoding="UTF-8") as fp:
         json.dump(metadata, fp, indent=2)
 
