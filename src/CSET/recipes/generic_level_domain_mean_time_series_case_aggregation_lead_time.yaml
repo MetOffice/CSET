@@ -1,5 +1,5 @@
 category: $LEVELTYPE Level Time Series
-title: $VARNAME $LEVEL domain mean time series aggregation by lead time
+title: "$VARNAME $LEVEL domain mean time series \n Aggregation by lead time"
 description: Plots a time series of the domain mean $VARNAME at $LEVELTYPE $LEVEL by averaging over all cases by using a consistent lead time.
 
 steps:

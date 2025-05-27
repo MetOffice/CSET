@@ -1,5 +1,5 @@
 category: Histogram
-title: $VARNAME $LEVELTYPE $LEVEL Level Histogram Plot case aggregation validity time
+title: "Histogram $VARNAME $LEVELTYPE $LEVEL \n Aggregation by validity time"
 description: |
   Extracts and plots the probability density of $VARNAME from a
   file at $LEVELTYPE level $LEVEL of $MODEL_NAME. It uses
