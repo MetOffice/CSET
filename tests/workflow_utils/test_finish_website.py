@@ -137,7 +137,8 @@ def test_entrypoint(monkeypatch):
 
     monkeypatch.setattr(finish_website, "construct_index", increment_counter)
     monkeypatch.setattr(finish_website, "update_workflow_status", increment_counter)
+    monkeypatch.setattr(finish_website, "copy_rose_config", increment_counter)
 
     # Just check that it runs all the needed subfunctions.
     finish_website.run()
-    assert counter == 2
+    assert counter == 3
