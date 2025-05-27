@@ -999,7 +999,6 @@ def _spatial_plot(
         If the cube isn't a single cube.
     """
     recipe_title = get_recipe_metadata().get("title", "Untitled")
-    recipe_title = recipe_title.replace("_for_climate_averaging", "")
 
     # Ensure we have a name for the plot file.
     if filename is None:
@@ -1300,7 +1299,7 @@ def plot_line_series(
     """
     # Ensure we have a name for the plot file.
     title = get_recipe_metadata().get("title", "Untitled")
-    title = title.replace("_for_climate_averaging", "")
+
     if filename is None:
         filename = slugify(title)
 
@@ -1384,7 +1383,7 @@ def plot_vertical_line_series(
     """
     # Ensure we have a name for the plot file.
     recipe_title = get_recipe_metadata().get("title", "Untitled")
-    recipe_title = recipe_title.replace("_for_climate_averaging", "")
+
     if filename is None:
         filename = slugify(recipe_title)
 
@@ -1580,7 +1579,7 @@ def scatter_plot(
 
     # Ensure we have a name for the plot file.
     title = get_recipe_metadata().get("title", "Untitled")
-    title = title.replace("_for_climate_averaging", "")
+
     if filename is None:
         filename = slugify(title)
 
@@ -1652,7 +1651,6 @@ def plot_histogram_series(
         If the cube isn't a Cube or CubeList.
     """
     recipe_title = get_recipe_metadata().get("title", "Untitled")
-    recipe_title = recipe_title.replace("_for_climate_averaging", "")
 
     cubes = iter_maybe(cubes)
 

@@ -29,7 +29,7 @@ import iris.cube
 import iris.exceptions
 import iris.util
 import numpy as np
-from iris.analysis.cartography import rotate_pole
+from iris.analysis.cartography import rotate_pole, unrotate_pole, wrap_lons
 
 from CSET._common import iter_maybe
 from CSET.operators._stash_to_lfric import STASH_TO_LFRIC
@@ -317,11 +317,13 @@ def _cutout_cubes(
                 pole_lat=coord_system.grid_north_pole_latitude,
             )
             cutout_coords = {"lat": rotated_lats, "lon": rotated_lons}
+        # cube.coord("grid_latitude").units="degrees"
+        # cube.coord("grid_longitude").units="degrees"
         # Do cutout and add to cutout_cubes.
         logging.debug("Cutting out coords %s", cutout_coords)
         cutout_cubes.append(
             cube.intersection(
-                grid_latitude=cutout_coords["lat"], grid_longitude=cutout_coords["lon"]
+                latitude=cutout_coords["lat"], longitude=cutout_coords["lon"]
             )
         )
 
@@ -532,6 +534,38 @@ def _fix_spatial_coord_name_callback(cube: iris.cube.Cube):
     ny = utils.get_cube_coordindex(cube, y_name)
     nx = utils.get_cube_coordindex(cube, x_name)
 
+    if "grid_latitude" in [coord.name() for coord in cube.coords(dim_coords=True)]:
+        coord_system = cube.coord("grid_latitude").coord_system
+        lons, lats = unrotate_pole(
+            cube.coord("grid_longitude").points,
+            cube.coord("grid_latitude").points,
+            pole_lon=coord_system.grid_north_pole_longitude,
+            pole_lat=coord_system.grid_north_pole_latitude,
+        )
+
+        cube.remove_coord("grid_latitude")
+        cube.add_dim_coord(
+            iris.coords.DimCoord(
+                lats,
+                long_name="latitude",
+                standard_name="latitude",
+                units="degrees_north",
+                coord_system=iris.coord_systems.GeogCS(6371229.0),
+            ),
+            ny,
+        )
+        cube.remove_coord("grid_longitude")
+        cube.add_dim_coord(
+            iris.coords.DimCoord(
+                wrap_lons(lons, 0.0, 360.0),
+                long_name="longitude",
+                standard_name="longitude",
+                units="degrees_east",
+                coord_system=iris.coord_systems.GeogCS(6371229.0),
+            ),
+            nx,
+        )
+
     if y_name in ["latitude"] and cube.coord(y_name).units in [
         "degrees",
         "degrees_north",
@@ -542,7 +576,9 @@ def _fix_spatial_coord_name_callback(cube: iris.cube.Cube):
         ]:
             cube.add_aux_coord(
                 iris.coords.AuxCoord(
-                    cube.coord(y_name).points, long_name="grid_latitude"
+                    cube.coord(y_name).points,
+                    long_name="grid_latitude",
+                    units="degrees",
                 ),
                 ny,
             )
@@ -556,7 +592,9 @@ def _fix_spatial_coord_name_callback(cube: iris.cube.Cube):
         ]:
             cube.add_aux_coord(
                 iris.coords.AuxCoord(
-                    cube.coord(x_name).points, long_name="grid_longitude"
+                    cube.coord(x_name).points,
+                    long_name="grid_longitude",
+                    units="degrees",
                 ),
                 nx,
             )
@@ -731,8 +769,10 @@ def _lfric_time_callback(cube: iris.cube.Cube):
                 lead_times = tcoord.points - init_time_points_in_tcoord_units
 
                 # Get unit for lead time from time coordinate's unit.
+                # Standardise lead_times in hours
                 if "seconds" in str(tcoord.units):
-                    units = "seconds"
+                    lead_times = lead_times / 3600.0
+                    units = "hours"
                 elif "hours" in str(tcoord.units):
                     units = "hours"
                 else:

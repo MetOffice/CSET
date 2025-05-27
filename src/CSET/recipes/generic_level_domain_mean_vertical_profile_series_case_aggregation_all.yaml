@@ -1,5 +1,5 @@
 category: Profiles
-title: "Domain horizontal mean $VARNAME vertical profile \n Aggregation over all cases"
+title: "Domain horizontal mean $VARNAME vertical profile\n Aggregation over all cases"
 description: |
   Plots a vertical profile for the domain mean $VARNAME using a
   $LEVELTYPE coordinate. Multiple cases are aggregated together for all available times.

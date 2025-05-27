@@ -299,21 +299,23 @@ def difference(cubes: CubeList):
         base.coord(base_lat_name).shape != other.coord(other_lat_name).shape
         or base.coord(base_lon_name).shape != other.coord(other_lon_name).shape
     ):
-        if base.long_name in [
-            "eastward_wind_at_10m",
-            "northward_wind_at_10m",
-            "northward_wind_at_cell_centres",
-            "eastward_wind_at_cell_centres",
-            "zonal_wind_at_pressure_levels",
-            "meridional_wind_at_pressure_levels",
-            "potential_vorticity_at_pressure_levels",
-            "vapour_specific_humidity_at_pressure_levels_for_climate_averaging",
-        ]:
-            base = regrid_onto_cube(base, other, method="Linear")
-        else:
-            raise ValueError(
-                f"Cubes should have the same shape, got {base.coord(base_lat_name)} {other.coord(other_lat_name)}"
-            )
+        #### !! HL !! Always assume to regrid (avoids issues with different number rows/cols)
+        base = regrid_onto_cube(base, other, method="Linear")
+    ##        if base.long_name in [
+    ##            "eastward_wind_at_10m",
+    ##            "northward_wind_at_10m",
+    ##            "northward_wind_at_cell_centres",
+    ##            "eastward_wind_at_cell_centres",
+    ##            "zonal_wind_at_pressure_levels",
+    ##            "meridional_wind_at_pressure_levels",
+    ##            "potential_vorticity_at_pressure_levels",
+    ##            "vapour_specific_humidity_at_pressure_levels_for_climate_averaging",
+    ##        ]:
+    ##            base = regrid_onto_cube(base, other, method="Linear")
+    ##        else:
+    ##            raise ValueError(
+    ##                f"Cubes should have the same shape, got {base.coord(base_lat_name)} {other.coord(other_lat_name)}"
+    ##            )
 
     def is_increasing(sequence: list) -> bool:
         """Determine the direction of an ordered sequence.

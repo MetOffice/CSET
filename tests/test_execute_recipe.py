@@ -104,6 +104,14 @@ def test_execute_recipe_skip_write_metadata_written(tmp_path: Path):
     assert metadata["skip_write"]
 
 
+def test_write_metadata_climate_varname_shortened(tmp_working_dir):
+    """Recipe title written to metadata has certain variable names shortened."""
+    CSET.operators._write_metadata({"title": "foo_for_climate_averaging"})
+    with open("meta.json", "rt") as fp:
+        meta = json.load(fp)
+    assert meta["title"] == "foo"
+
+
 def test_create_diagnostic_archive(tmp_working_dir):
     """Create ZIP archive of output."""
     # Create dummy output files.

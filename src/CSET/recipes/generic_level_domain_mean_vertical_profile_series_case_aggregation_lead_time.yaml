@@ -1,5 +1,5 @@
 category: Profiles
-title: "Domain horizontal mean $VARNAME vertical profile \n Aggregation by lead time"
+title: "Domain horizontal mean $VARNAME vertical profile\n Aggregation by lead time"
 description: |
   Plots a time series of vertical profiles for the domain mean $VARNAME using a
   $LEVELTYPE coordinate. Multiple cases are aggregated together keeping the
