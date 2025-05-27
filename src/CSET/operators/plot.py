@@ -520,7 +520,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
     colorbar.set_label(f"{cube.name()} ({cube.units})", size=16)
 
     # Overall figure title.
-    fig.suptitle(title)
+    fig.suptitle(title, fontsize=16)
 
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
     logging.info("Saved contour postage stamp plot to %s", filename)
@@ -560,7 +560,7 @@ def _plot_and_save_line_series(
         if model_colors_map:
             label = cube.attributes.get("model_name")
             color = model_colors_map.get(label)
-        iplt.plot(coord, cube, color=color, marker="o", ls="-", label=label)
+        iplt.plot(coord, cube, color=color, marker="o", ls="-", lw=3, label=label)
 
         # Calculate the global min/max if multiple cubes are given.
         _, levels, _ = _colorbar_map_levels(cube)
@@ -573,13 +573,13 @@ def _plot_and_save_line_series(
 
     # Add some labels and tweak the style.
     # check if cubes[0] works for single cube if not CubeList
-    ax.set(
-        xlabel=f"{coords[0].name()} / {coords[0].units}",
-        ylabel=f"{cubes[0].name()} / {cubes[0].units}",
-        title=title,
-    )
+    ax.set_xlabel(f"{coords[0].name()} / {coords[0].units}", fontsize=14)
+    ax.set_ylabel(f"{cubes[0].name()} / {cubes[0].units}", fontsize=14)
+    ax.set_title(title, fontsize=16)
+
     ax.ticklabel_format(axis="y", useOffset=False)
     ax.tick_params(axis="x", labelrotation=15)
+    ax.tick_params(axis="both", labelsize=12)
 
     # Set y limits to global min and max, autoscale if colorbar doesn't exist.
     if y_levels:
@@ -590,7 +590,7 @@ def _plot_and_save_line_series(
     # Add gridlines
     ax.grid(linestyle="--", color="grey", linewidth=1)
     if model_colors_map:
-        ax.legend(loc="best", ncol=1, frameon=False)
+        ax.legend(loc="best", ncol=1, frameon=False, fontsize=16)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -638,7 +638,7 @@ def _plot_and_save_vertical_line_series(
         if model_colors_map:
             label = cube.attributes.get("model_name")
             color = model_colors_map.get(label)
-        iplt.plot(cube, coord, color=color, marker="o", ls="-", label=label)
+        iplt.plot(cube, coord, color=color, marker="o", ls="-", lw=3, label=label)
 
     # Get the current axis
     ax = plt.gca()
@@ -679,18 +679,19 @@ def _plot_and_save_vertical_line_series(
     ax.set_xlim(vmin, vmax)
 
     # Add some labels and tweak the style.
-    ax.set(
-        ylabel=f"{coord.name()} / {coord.units}",
-        xlabel=f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}",
-        title=title,
+    ax.set_ylabel(f"{coord.name()} / {coord.units}", fontsize=14)
+    ax.set_xlabel(
+        f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}", fontsize=14
     )
+    ax.set_title(title, fontsize=16)
     ax.ticklabel_format(axis="x")
     ax.tick_params(axis="y")
+    ax.tick_params(axis="both", labelsize=12)
 
     # Add gridlines
     ax.grid(linestyle="--", color="grey", linewidth=1)
     if model_colors_map:
-        ax.legend(loc="best", ncol=1, frameon=False)
+        ax.legend(loc="best", ncol=1, frameon=False, fontsize=16)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -748,13 +749,12 @@ def _plot_and_save_scatter_plot(
     ax = plt.gca()
 
     # Add some labels and tweak the style.
-    ax.set(
-        xlabel=f"{cube_x[0].name()} / {cube_x[0].units}",
-        ylabel=f"{cube_y[0].name()} / {cube_y[0].units}",
-        title=title,
-    )
+    ax.set_xlabel(f"{cube_x[0].name()} / {cube_x[0].units}", fontsize=14)
+    ax.set_ylabel(f"{cube_y[0].name()} / {cube_y[0].units}", fontsize=14)
+    ax.set_title(title, fontsize=16)
     ax.ticklabel_format(axis="y", useOffset=False)
     ax.tick_params(axis="x", labelrotation=15)
+    ax.tick_params(axis="both", labelsize=12)
     ax.autoscale()
 
     # Save plot.
@@ -820,21 +820,22 @@ def _plot_and_save_histogram_series(
             color = model_colors_map[label]
         x, y = np.histogram(cube_data_1d, bins=bins, density=True)
         ax.plot(
-            y[:-1], x, color=color, linewidth=2, marker="o", markersize=6, label=label
+            y[:-1], x, color=color, linewidth=3, marker="o", markersize=6, label=label
         )
 
     # Add some labels and tweak the style.
-    ax.set(
-        title=title,
-        xlabel=f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}",
-        ylabel="normalised probability density",
-        xlim=(vmin, vmax),
+    ax.set_title(title, fontsize=16)
+    ax.set_xlabel(
+        f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}", fontsize=14
     )
+    ax.set_ylabel("Normalised probability density", fontsize=14)
+    ax.set_xlim(vmin, vmax)
+    ax.tick_params(axis="both", labelsize=12)
 
     # Overlay grid-lines onto histogram plot.
     ax.grid(linestyle="--", color="grey", linewidth=1)
     if model_colors_map:
-        ax.legend(loc="best", ncol=1, frameon=False)
+        ax.legend(loc="best", ncol=1, frameon=False, fontsize=16)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -888,7 +889,7 @@ def _plot_and_save_postage_stamp_histogram_series(
         ax.set_xlim(vmin, vmax)
 
     # Overall figure title.
-    fig.suptitle(title)
+    fig.suptitle(title, fontsize=16)
 
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
     logging.info("Saved histogram postage stamp plot to %s", filename)
@@ -905,10 +906,10 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
     **kwargs,
 ):
     fig, ax = plt.subplots(figsize=(10, 10), facecolor="w", edgecolor="k")
-    ax.set_title(title)
+    ax.set_title(title, fontsize=16)
     ax.set_xlim(vmin, vmax)
-    ax.set_xlabel(f"{cube.name()} / {cube.units}")
-    ax.set_ylabel("normalised probability density")
+    ax.set_xlabel(f"{cube.name()} / {cube.units}", fontsize=14)
+    ax.set_ylabel("normalised probability density", fontsize=14)
     # Loop over all slices along the stamp_coordinate
     for member in cube.slices_over(stamp_coordinate):
         # Flatten the member data to 1D
@@ -922,7 +923,7 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
         )
 
     # Add a legend
-    ax.legend()
+    ax.legend(fontsize=16)
 
     # Save the figure to a file
     plt.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -1252,6 +1253,7 @@ def plot_line_series(
     """
     # Ensure we have a name for the plot file.
     title = get_recipe_metadata().get("title", "Untitled")
+
     if filename is None:
         filename = slugify(title)
 
@@ -1335,6 +1337,7 @@ def plot_vertical_line_series(
     """
     # Ensure we have a name for the plot file.
     recipe_title = get_recipe_metadata().get("title", "Untitled")
+
     if filename is None:
         filename = slugify(recipe_title)
 
@@ -1525,6 +1528,7 @@ def scatter_plot(
 
     # Ensure we have a name for the plot file.
     title = get_recipe_metadata().get("title", "Untitled")
+
     if filename is None:
         filename = slugify(title)
 

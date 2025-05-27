@@ -1,7 +1,7 @@
 category: Surface Spatial Plot
-title: "$MODEL_NAME Surface $VARNAME \n Aggregation by lead time"
+title: "$MODEL_NAME Surface $VARNAME\n Aggregation by lead time"
 description: |
-  Extracts and plots the surface $VARNAME for all times in $MODEL_NAME. Case
+  Extracts and plots the mean of surface $VARNAME for all times in $MODEL_NAME. Case
   aggregation occurs over lead time.
 
 steps:

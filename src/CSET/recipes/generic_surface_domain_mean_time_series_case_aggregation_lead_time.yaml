@@ -1,5 +1,5 @@
 category: Surface Time Series
-title: Domain mean surface $VARNAME time series aggregation by lead time
+title: "Domain mean surface $VARNAME time series\n Aggregation by lead time"
 description: |
   Plots a time series of the domain mean surface $VARNAME by averaging over
   all cases by using a consistent lead time.

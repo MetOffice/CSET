@@ -1,5 +1,5 @@
 category: Histogram
-title: $VARNAME $LEVELTYPE$LEVEL histogram aggregation by hour of day
+title: "Histogram $VARNAME $LEVELTYPE $LEVEL\n Aggregation by hour of day"
 description: |
   Extracts and plots the probability density of $VARNAME from a
   file at $LEVELTYPE level $LEVEL of $MODEL_NAME. It uses
