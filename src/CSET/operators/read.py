@@ -303,9 +303,7 @@ def _cutout_cubes(
             "lat": np.array(subarea_extent[0:2]),
             "lon": np.array(subarea_extent[2:4]),
         }
-        lat_name, _ = get_cube_yxcoordname(
-            cube,
-        )
+        lat_name, _ = get_cube_yxcoordname(cube)
         coord_system = cube.coord(lat_name).coord_system
         # If the coordinate system is rotated we convert coordinates into
         # model-relative coordinates to extract the appropriate cutout.
