@@ -384,22 +384,25 @@ def _plot_and_save_spatial_plot(
     # Using pyplot interface here as we need iris to generate a cartopy GeoAxes.
     axes = plt.gca()
 
+    #### HL: CHECK IF THIS STILL NEEDED.....
+    #### HL: K-SCALE PLOTS OK WITHOUT THE set_extent, including CUOUTS
+    #### HL: Keep testing....
     # Add coastlines if cube contains x and y map coordinates.
     # If is spatial map, fix extent to keep plot tight.
     try:
-        lat_axis, lon_axis = get_cube_yxcoordname(cube)
+        # lat_axis, lon_axis = get_cube_yxcoordname(cube)
         axes.coastlines(resolution="10m")
-        x1 = np.min(cube.coord(lon_axis).points)
-        x2 = np.max(cube.coord(lon_axis).points)
-        y1 = np.min(cube.coord(lat_axis).points)
-        y2 = np.max(cube.coord(lat_axis).points)
+        # x1 = np.min(cube.coord(lon_axis).points)
+        # x2 = np.max(cube.coord(lon_axis).points)
+        # y1 = np.min(cube.coord(lat_axis).points)
+        # y2 = np.max(cube.coord(lat_axis).points)
         # Adjust bounds within +/- 180.0 if x dimension extends beyond half-globe.
-        print(x1, x2)
-        if (x2 - x1) > 180.0 or x2 > 180.0:
-            x1 = x1 - 180.0
-            x2 = x2 - 180.0
-        print(x1, x2)
-        axes.set_extent([x1, x2, y1, y2])
+        ##print(x1, x2)
+        ##if (x2 - x1) > 180.0 or x2 > 180.0:
+        ##    x1 = x1 - 180.0
+        ##    x2 = x2 - 180.0
+        ##print(x1, x2)
+        # axes.set_extent([x1, x2, y1, y2])
     except ValueError:
         # Skip if no x and y map coordinates.
         pass
@@ -1030,6 +1033,7 @@ def _spatial_plot(
     nplot = np.size(cube.coord(sequence_coordinate).points)
     for cube_slice in cube.slices_over(sequence_coordinate):
         # Use sequence value so multiple sequences can merge.
+        print(cube_slice.coord(sequence_coordinate).points[0])
         sequence_value = cube_slice.coord(sequence_coordinate).points[0]
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
         coord = cube_slice.coord(sequence_coordinate)
@@ -1039,6 +1043,7 @@ def _spatial_plot(
         if nplot == 1 and coord.has_bounds:
             if np.size(coord.bounds) > 1:
                 title = f"{recipe_title}\n [{coord.units.title(coord.bounds[0][0])} to {coord.units.title(coord.bounds[0][1])}]"
+        print(title)
         # Do the actual plotting.
         plotting_func(
             cube_slice,
