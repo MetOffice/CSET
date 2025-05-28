@@ -1027,7 +1027,7 @@ def _spatial_plot(
 
     # Create a plot for each value of the sequence coordinate.
     plot_index = []
-    nplot = np.size(cube.slices_over(sequence_coordinate))
+    nplot = np.size(cube.coord(sequence_coordinate).points)
     for cube_slice in cube.slices_over(sequence_coordinate):
         # Use sequence value so multiple sequences can merge.
         sequence_value = cube_slice.coord(sequence_coordinate).points[0]
@@ -1470,7 +1470,7 @@ def plot_vertical_line_series(
     # for similar values of the sequence coordinate. cube_slice can be an iris.cube.Cube
     # or an iris.cube.CubeList.
     plot_index = []
-    nplot = np.size(cube_iterables)
+    nplot = np.size(cube_iterables.coord(sequence_coordinate).points)
     for cubes_slice in cube_iterables:
         # Use sequence value so multiple sequences can merge.
         seq_coord = cubes_slice[0].coord(sequence_coordinate)
@@ -1731,6 +1731,7 @@ def plot_histogram_series(
         ]
 
     plot_index = []
+    nplot = np.size(cube.coord(sequence_coordinate).points)
     # Create a plot for each value of the sequence coordinate. Allowing for
     # multiple cubes in a CubeList to be plotted in the same plot for similar
     # sequence values. Passing a CubeList into the internal plotting function
@@ -1745,7 +1746,6 @@ def plot_histogram_series(
         sequence_value = single_cube.coord(sequence_coordinate).points[0]
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
         coord = single_cube.coord(sequence_coordinate)
-        nplot = np.size(cube_iterables)
         # Format the coordinate value in a unit appropriate way.
         title = f"{recipe_title}\n [{coord.units.title(coord.points[0])}]"
         # Use sequence (e.g. time) bounds if plotting single non-sequence outputs
