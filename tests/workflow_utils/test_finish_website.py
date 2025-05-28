@@ -20,6 +20,20 @@ import logging
 from CSET._workflow_utils import finish_website
 
 
+def test_copy_rose_config(monkeypatch, tmp_path):
+    """Copy rose-suite.conf to web dir."""
+    rose_suite_conf = tmp_path / "rose-suite.conf"
+    with open(rose_suite_conf, "wt") as fp:
+        fp.write("<p>Test rose-suite.conf file</p>\n")
+    web_dir = tmp_path / "web"
+    web_dir.mkdir()
+    monkeypatch.setenv("CYLC_WORKFLOW_RUN_DIR", str(tmp_path))
+    monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", str(tmp_path))
+    finish_website.copy_rose_config()
+    with open(web_dir / "rose-suite.conf", "rt", encoding="UTF-8") as fp:
+        assert fp.read() == "<p>Test rose-suite.conf file</p>\n"
+
+
 def test_write_workflow_status(monkeypatch, tmp_path):
     """Workflow  finish status gets written to status file."""
     web_dir = tmp_path / "web"
@@ -123,7 +137,8 @@ def test_entrypoint(monkeypatch):
 
     monkeypatch.setattr(finish_website, "construct_index", increment_counter)
     monkeypatch.setattr(finish_website, "update_workflow_status", increment_counter)
+    monkeypatch.setattr(finish_website, "copy_rose_config", increment_counter)
 
     # Just check that it runs all the needed subfunctions.
     finish_website.run()
-    assert counter == 2
+    assert counter == 3
