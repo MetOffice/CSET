@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/usr/bin/env bash
 
 # This is simple wrapper script for apps in this suite,
 # designed to set up the appropriate Python environment.
@@ -21,21 +21,6 @@ if [[ $CSET_ENV_USE_MODULES == True ]]; then
   module list
 fi
 
-# Ensure CONDA_PATH is defined.
-if [[ -d "$CONDA_PATH" ]]; then
-  echo "Sourcing conda from ${CONDA_PATH}"
-else
-  CONDA_PATH=""
-fi
-
-# Activate conda environment.
-# shellcheck disable=1091
-source "$("${CONDA_PATH}conda" info --base)/etc/profile.d/conda.sh"
-set +u
-"${CONDA_PATH}conda" activate "${CYLC_WORKFLOW_SHARE_DIR}/cset-conda-environment"
-set -u
-export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-
 # Add separately maintained METplus to PATH.
 if [[ "$CSET_ENV_SEPARATE_MET" == True ]]; then
   echo "Using separate installation of METplus."
@@ -43,4 +28,18 @@ if [[ "$CSET_ENV_SEPARATE_MET" == True ]]; then
   export PATH="${METPLUS_BASE}/ush:${MET_BUILD_BASE}/bin:${PATH}"
 fi
 
-exec "$@"
+# Ensure CONDA_PATH is defined.
+if [[ -d "$CONDA_PATH" ]]; then
+  echo "Sourcing conda from ${CONDA_PATH}"
+else
+  CONDA_PATH=""
+fi
+
+# Run under conda environment if one is linked.
+if [[ -d "${CYLC_WORKFLOW_RUN_DIR}/conda-environment" ]]; then
+  echo "Using conda environment from ${CYLC_WORKFLOW_RUN_DIR}/conda-environment"
+  exec "${CONDA_PATH}conda" run --prefix "${CYLC_WORKFLOW_RUN_DIR}/conda-environment" "$@"
+else
+  echo "No conda environment to use. Running directly..."
+  exec "$@"
+fi
