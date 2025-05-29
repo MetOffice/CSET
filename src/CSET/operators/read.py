@@ -562,10 +562,10 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
             cube.add_dim_coord(
                 iris.coords.DimCoord(
                     lats,
-                    long_name="latitude",
-                    standard_name="latitude",
-                    units="degrees_north",
+                    var_name="latitude",
+                    units="degrees",
                     coord_system=iris.coord_systems.GeogCS(6371229.0),
+                    circular=True,
                 ),
                 ny,
             )
@@ -574,10 +574,10 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
             cube.add_dim_coord(
                 iris.coords.DimCoord(
                     lons,
-                    long_name="longitude",
-                    standard_name="longitude",
-                    units="degrees_east",
+                    var_name="longitude",
+                    units="degrees",
                     coord_system=iris.coord_systems.GeogCS(6371229.0),
+                    circular=True,
                 ),
                 nx,
             )
@@ -598,7 +598,7 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
                     cube.coord(y_name).points,
                     long_name="grid_latitude",
                     units="degrees",
-                    coord_system=iris.coord_systems.RotatedGeogCS(90.0, 180.0),
+                    coord_system=iris.coord_systems.RotatedGeogCS(90.0, -180.0),
                 ),
                 ny,
             )
@@ -615,7 +615,7 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
                     cube.coord(x_name).points,
                     long_name="grid_longitude",
                     units="degrees",
-                    coord_system=iris.coord_systems.RotatedGeogCS(90.0, 180.0),
+                    coord_system=iris.coord_systems.RotatedGeogCS(90.0, -180.0),
                 ),
                 nx,
             )
