@@ -513,8 +513,6 @@ def _longitude_fix_callback(cube: iris.cube.Cube):
     long_coord = cube.coord(x)
     long_points = long_coord.points.copy()
     long_centre = np.median(long_points)
-    # long_min = np.min(long_points)
-    # long_max = np.max(long_points)
     while long_centre < -180.0:
         long_centre += 360.0
         long_points += 360.0
@@ -600,9 +598,8 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
             cube.add_aux_coord(
                 iris.coords.AuxCoord(
                     cube.coord(y_name).points,
-                    long_name="grid_latitude",
+                    var_name="grid_latitude",
                     units="degrees",
-                    coord_system=iris.coord_systems.RotatedGeogCS(90.0, -180.0),
                 ),
                 ny,
             )
@@ -617,9 +614,8 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
             cube.add_aux_coord(
                 iris.coords.AuxCoord(
                     cube.coord(x_name).points,
-                    long_name="grid_longitude",
+                    var_name="grid_longitude",
                     units="degrees",
-                    coord_system=iris.coord_systems.RotatedGeogCS(90.0, -180.0),
                 ),
                 nx,
             )
