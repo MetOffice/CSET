@@ -531,8 +531,8 @@ def test_lfric_time_callback_forecast_period(slammed_lfric_cube):
     assert fc_period_coord.standard_name == "forecast_period"
     assert fc_period_coord.long_name == "forecast_period"
     assert fc_period_coord.var_name is None
-    assert str(fc_period_coord.units) == "seconds"
-    assert all(fc_period_coord.points == [3600, 7200, 10800, 14400, 18000, 21600])
+    assert str(fc_period_coord.units) == "hours"
+    assert all(fc_period_coord.points == [1, 2, 3, 4, 5, 6])
 
 
 def test_lfric_time_callback_hours(slammed_lfric_cube):
