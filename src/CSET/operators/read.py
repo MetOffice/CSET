@@ -576,7 +576,7 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
                 ),
                 ny,
             )
-            # y_name = "latitude"
+            y_name = "latitude"
             cube.remove_coord("grid_longitude")
             cube.add_dim_coord(
                 iris.coords.DimCoord(
@@ -587,7 +587,7 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
                 ),
                 nx,
             )
-            # x_name = "longitude"
+            x_name = "longitude"
 
     # Create additional AuxCoord [grid_latitude, grid_longitude] with
     # rotated pole attributes for cases with [lat, lon] inputs
@@ -599,7 +599,6 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
         if "grid_latitude" not in [
             coord.name() for coord in cube.coords(dim_coords=False)
         ]:
-            print("add aux")
             cube.add_aux_coord(
                 iris.coords.AuxCoord(
                     cube.coord(y_name).points,
@@ -617,7 +616,6 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
         if "grid_longitude" not in [
             coord.name() for coord in cube.coords(dim_coords=False)
         ]:
-            print("add aux2")
             cube.add_aux_coord(
                 iris.coords.AuxCoord(
                     cube.coord(x_name).points,
