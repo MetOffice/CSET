@@ -185,7 +185,9 @@ def read_cubes(
     iris.util.unify_time_units(cubes)
 
     # Select sub region.
+    print(cubes)
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
+    print(cubes)
 
     # Merge and concatenate cubes now metadata has been fixed.
     cubes = cubes.merge()
@@ -321,8 +323,9 @@ def _cutout_cubes(
         # cube.coord("grid_longitude").units="degrees"
         # Do cutout and add to cutout_cubes.
         logging.debug("Cutting out coords %s", cutout_coords)
-
+        print("cutting")
         if isinstance(coord_system, iris.coord_systems.RotatedGeogCS):
+            print("TYPE1")
             cutout_cubes.append(
                 cube.intersection(
                     grid_latitude=cutout_coords["lat"],
@@ -330,6 +333,9 @@ def _cutout_cubes(
                 )
             )
         else:
+            print("TYPE2")
+            print(cube.coord("latitude").points)
+            print(cube.coord("longitude").points)
             cutout_cubes.append(
                 cube.intersection(
                     latitude=cutout_coords["lat"], longitude=cutout_coords["lon"]
@@ -506,12 +512,12 @@ def _longitude_fix_callback(cube: iris.cube.Cube, field, filename):
     """
     import CSET.operators._utils as utils
 
-    print(cube)
     try:
         y, x = utils.get_cube_yxcoordname(cube)
     except ValueError:
         # Don't modify non-spatial cubes.
         return cube
+
     long_coord = cube.coord(x)
     long_points = long_coord.points.copy()
     long_centre = np.median(long_points)
@@ -549,9 +555,11 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
     ny = utils.get_cube_coordindex(cube, y_name)
     nx = utils.get_cube_coordindex(cube, x_name)
 
+    print(y_name)
     # Translate [grid_latitude, grid_longitude] to an unrotated 1-d DimCoord
     # [latitude, longitude] for instances where rotated_pole=90.0
     if "grid_latitude" in [coord.name() for coord in cube.coords(dim_coords=True)]:
+        print("yup")
         coord_system = cube.coord("grid_latitude").coord_system
         pole_lat = coord_system.grid_north_pole_latitude
         if pole_lat == 90.0:
@@ -562,28 +570,24 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
             cube.add_dim_coord(
                 iris.coords.DimCoord(
                     lats,
-                    long_name="latitude",
-                    standard_name="latitude",
+                    var_name="latitude",
                     units="degrees",
                     coord_system=iris.coord_systems.GeogCS(6371229.0),
-                    circular=True,
                 ),
                 ny,
             )
-            y_name = "latitude"
+            # y_name = "latitude"
             cube.remove_coord("grid_longitude")
             cube.add_dim_coord(
                 iris.coords.DimCoord(
                     lons,
-                    long_name="longitude",
-                    standard_name="longitude",
+                    var_name="longitude",
                     units="degrees",
                     coord_system=iris.coord_systems.GeogCS(6371229.0),
-                    circular=True,
                 ),
                 nx,
             )
-            x_name = "longitude"
+            # x_name = "longitude"
 
     # Create additional AuxCoord [grid_latitude, grid_longitude] with
     # rotated pole attributes for cases with [lat, lon] inputs
@@ -595,12 +599,13 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
         if "grid_latitude" not in [
             coord.name() for coord in cube.coords(dim_coords=False)
         ]:
+            print("add aux")
             cube.add_aux_coord(
                 iris.coords.AuxCoord(
                     cube.coord(y_name).points,
-                    long_name="grid_latitude",
+                    var_name="grid_latitude",
                     units="degrees",
-                    coord_system=iris.coord_systems.RotatedGeogCS(90.0, -180.0),
+                    #                    coord_system=iris.coord_systems.RotatedGeogCS(90.0, -180.0),
                 ),
                 ny,
             )
@@ -612,12 +617,13 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
         if "grid_longitude" not in [
             coord.name() for coord in cube.coords(dim_coords=False)
         ]:
+            print("add aux2")
             cube.add_aux_coord(
                 iris.coords.AuxCoord(
                     cube.coord(x_name).points,
-                    long_name="grid_longitude",
+                    var_name="grid_longitude",
                     units="degrees",
-                    coord_system=iris.coord_systems.RotatedGeogCS(90.0, -180.0),
+                    #                    coord_system=iris.coord_systems.RotatedGeogCS(90.0, -180.0),
                 ),
                 nx,
             )
