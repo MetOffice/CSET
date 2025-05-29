@@ -562,7 +562,8 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
             cube.add_dim_coord(
                 iris.coords.DimCoord(
                     lats,
-                    var_name="latitude",
+                    long_name="latitude",
+                    standard_name="latitude",
                     units="degrees",
                     coord_system=iris.coord_systems.GeogCS(6371229.0),
                     circular=True,
@@ -574,7 +575,8 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
             cube.add_dim_coord(
                 iris.coords.DimCoord(
                     lons,
-                    var_name="longitude",
+                    long_name="longitude",
+                    standard_name="longitude",
                     units="degrees",
                     coord_system=iris.coord_systems.GeogCS(6371229.0),
                     circular=True,
