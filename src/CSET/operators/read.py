@@ -29,7 +29,7 @@ import iris.cube
 import iris.exceptions
 import iris.util
 import numpy as np
-from iris.analysis.cartography import rotate_pole, unrotate_pole, wrap_lons
+from iris.analysis.cartography import rotate_pole
 
 from CSET._common import iter_maybe
 from CSET.operators._stash_to_lfric import STASH_TO_LFRIC
@@ -321,11 +321,20 @@ def _cutout_cubes(
         # cube.coord("grid_longitude").units="degrees"
         # Do cutout and add to cutout_cubes.
         logging.debug("Cutting out coords %s", cutout_coords)
-        cutout_cubes.append(
-            cube.intersection(
-                latitude=cutout_coords["lat"], longitude=cutout_coords["lon"]
+
+        if isinstance(coord_system, iris.coord_systems.RotatedGeogCS):
+            cutout_cubes.append(
+                cube.intersection(
+                    grid_latitude=cutout_coords["lat"],
+                    grid_longitude=cutout_coords["lon"],
+                )
             )
-        )
+        else:
+            cutout_cubes.append(
+                cube.intersection(
+                    latitude=cutout_coords["lat"], longitude=cutout_coords["lon"]
+                )
+            )
 
     return cutout_cubes
 
@@ -365,7 +374,7 @@ def _create_callback(is_ensemble: bool) -> callable:
         _lfric_normalise_callback(cube, field, filename)
         _lfric_time_coord_fix_callback(cube, field, filename)
         _longitude_fix_callback(cube, field, filename)
-        _fix_spatial_coord_name_callback(cube)
+        _fix_spatial_coords_callback(cube)
         _fix_pressure_coord_callback(cube)
         _lfric_normalise_varname(cube)
         _fix_um_radtime_prehour(cube)
@@ -506,30 +515,22 @@ def _longitude_fix_callback(cube: iris.cube.Cube, field, filename):
     long_coord = cube.coord(x)
     long_points = long_coord.points.copy()
     long_centre = np.median(long_points)
-    print(long_centre)
-    print("FIX LON POINTS CALLBACKA ", np.min(long_points), np.max(long_points))
     while long_centre <= -180.0:
         long_centre += 360.0
         long_points += 360.0
-        print(long_centre)
-        print("FIX LON POINTS CALLBACKB ", np.min(long_points), np.max(long_points))
     while long_centre > 180.0:
         long_centre -= 360.0
         long_points -= 360.0
     long_coord.points = long_points
 
-    long_coord.bounds = None
-    long_coord.guess_bounds()
+    if long_coord.has_bounds() and np.size(long_coord) > 1:
+        long_coord.bounds = None
+        long_coord.guess_bounds()
 
-    print(
-        "FIX LON POINTS CALLBACKC ",
-        np.min(long_coord.points),
-        np.max(long_coord.points),
-    )
     return cube
 
 
-def _fix_spatial_coord_name_callback(cube: iris.cube.Cube):
+def _fix_spatial_coords_callback(cube: iris.cube.Cube):
     """Check latitude and longitude coordinates name.
 
     This is necessary as some models define their grid as 'grid_latitude' and 'grid_longitude'
@@ -548,19 +549,14 @@ def _fix_spatial_coord_name_callback(cube: iris.cube.Cube):
     ny = utils.get_cube_coordindex(cube, y_name)
     nx = utils.get_cube_coordindex(cube, x_name)
 
-    # Correct for instances where grid_latitude has pole 90
+    # Translate [grid_latitude, grid_longitude] to an unrotated 1-d DimCoord
+    # [latitude, longitude] for instances where rotated_pole=90.0
     if "grid_latitude" in [coord.name() for coord in cube.coords(dim_coords=True)]:
         coord_system = cube.coord("grid_latitude").coord_system
         pole_lat = coord_system.grid_north_pole_latitude
         if pole_lat == 90.0:
-            print("Not really rotated")
-
-            lons, lats = unrotate_pole(
-                cube.coord("grid_longitude").points,
-                cube.coord("grid_latitude").points,
-                pole_lon=coord_system.grid_north_pole_longitude,
-                pole_lat=coord_system.grid_north_pole_latitude,
-            )
+            lats = cube.coord("grid_latitude").points
+            lons = cube.coord("grid_longitude").points
 
             cube.remove_coord("grid_latitude")
             cube.add_dim_coord(
@@ -573,10 +569,11 @@ def _fix_spatial_coord_name_callback(cube: iris.cube.Cube):
                 ),
                 ny,
             )
+            y_name = "latitude"
             cube.remove_coord("grid_longitude")
             cube.add_dim_coord(
                 iris.coords.DimCoord(
-                    wrap_lons(lons, 0.0, 360.0),
+                    lons,
                     long_name="longitude",
                     standard_name="longitude",
                     units="degrees_east",
@@ -584,7 +581,10 @@ def _fix_spatial_coord_name_callback(cube: iris.cube.Cube):
                 ),
                 nx,
             )
+            x_name = "longitude"
 
+    # Create additional AuxCoord [grid_latitude, grid_longitude] with
+    # rotated pole attributes for cases with [lat, lon] inputs
     if y_name in ["latitude"] and cube.coord(y_name).units in [
         "degrees",
         "degrees_north",
@@ -619,12 +619,6 @@ def _fix_spatial_coord_name_callback(cube: iris.cube.Cube):
                 ),
                 nx,
             )
-    print("FIX NAMES: ", cube)
-    print(
-        "FIX NAMES LON POINTS ",
-        np.min(cube.coord("longitude").points),
-        np.max(cube.coord("longitude").points),
-    )
 
 
 def _fix_pressure_coord_callback(cube: iris.cube.Cube):

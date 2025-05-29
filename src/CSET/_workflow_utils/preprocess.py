@@ -54,7 +54,7 @@ def preprocess_data(
     os.mkdir(data_location)
 
     # Move forecast data back into place.
-    shutil.move("forecast.nc", data_location + "/forecastB.nc")
+    shutil.move("forecast.nc", data_location + "/forecast.nc")
 
 
 def run():

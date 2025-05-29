@@ -384,25 +384,20 @@ def _plot_and_save_spatial_plot(
     # Using pyplot interface here as we need iris to generate a cartopy GeoAxes.
     axes = plt.gca()
 
-    #### HL: CHECK IF THIS STILL NEEDED.....
-    #### HL: K-SCALE PLOTS OK WITHOUT THE set_extent, including CUOUTS
-    #### HL: Keep testing....
     # Add coastlines if cube contains x and y map coordinates.
     # If is spatial map, fix extent to keep plot tight.
     try:
-        # lat_axis, lon_axis = get_cube_yxcoordname(cube)
+        lat_axis, lon_axis = get_cube_yxcoordname(cube)
         axes.coastlines(resolution="10m")
-        # x1 = np.min(cube.coord(lon_axis).points)
-        # x2 = np.max(cube.coord(lon_axis).points)
-        # y1 = np.min(cube.coord(lat_axis).points)
-        # y2 = np.max(cube.coord(lat_axis).points)
+        x1 = np.min(cube.coord(lon_axis).points)
+        x2 = np.max(cube.coord(lon_axis).points)
+        y1 = np.min(cube.coord(lat_axis).points)
+        y2 = np.max(cube.coord(lat_axis).points)
         # Adjust bounds within +/- 180.0 if x dimension extends beyond half-globe.
-        ##print(x1, x2)
-        ##if (x2 - x1) > 180.0 or x2 > 180.0:
-        ##    x1 = x1 - 180.0
-        ##    x2 = x2 - 180.0
-        ##print(x1, x2)
-        # axes.set_extent([x1, x2, y1, y2])
+        if (np.abs(x2 - x1)) > 180.0:
+            x1 = x1 - 180.0
+            x2 = x2 - 180.0
+        axes.set_extent([x1, x2, y1, y2])
     except ValueError:
         # Skip if no x and y map coordinates.
         pass
@@ -511,6 +506,11 @@ def _plot_and_save_postage_stamp_spatial_plot(
                 vmax = max(levels)
             except TypeError:
                 vmin, vmax = None, None
+            # pcolormesh plot of the field and ensure to use norm and not vmin/vmax
+            # if levels are defined.
+            if norm is not None:
+                vmin = None
+                vmax = None
             # pcolormesh plot of the field.
             plot = iplt.pcolormesh(member, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax)
         else:
@@ -1475,7 +1475,7 @@ def plot_vertical_line_series(
     # for similar values of the sequence coordinate. cube_slice can be an iris.cube.Cube
     # or an iris.cube.CubeList.
     plot_index = []
-    nplot = np.size(cube_iterables.coord(sequence_coordinate).points)
+    nplot = np.size(cubes[0].coord(sequence_coordinate).points)
     for cubes_slice in cube_iterables:
         # Use sequence value so multiple sequences can merge.
         seq_coord = cubes_slice[0].coord(sequence_coordinate)
