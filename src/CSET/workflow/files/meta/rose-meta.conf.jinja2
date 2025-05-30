@@ -35,29 +35,6 @@ type=quoted
 compulsory=true
 sort-key=setup-b-conda
 
-[template variables=CSET_ENV_USE_LOCAL_CSET]
-ns=Setup
-title=Use local CSET
-description=Whether to use a local version of CSET, rather than the bundled one.
-help=Use a local version of CSET, rather than the version provided from conda.
-    This is especially useful for running development versions.
-type=python_boolean
-compulsory=true
-trigger=template variables=CSET_LOCAL_CSET_PATH: True;
-sort-key=setup-c-cset1
-
-[template variables=CSET_LOCAL_CSET_PATH]
-ns=Setup
-title=Local CSET path
-description=Path to local copy of CSET.
-help=Path to either a wheel file, or a checked out copy of the CSET git repo.
-    For the repository, it should be the path to the directory containing the
-    pyproject.toml file.
-type=quoted
-compulsory=true
-sort-key=setup-c-cset2
-
-
 [template variables=CSET_ENV_SEPARATE_MET]
 ns=Setup
 title=Use external MET install
