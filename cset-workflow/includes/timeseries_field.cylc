@@ -1,6 +1,10 @@
 {% if TIMESERIES_SURFACE_FIELD or TIMESERIES_PLEVEL_FIELD or TIMESERIES_MLEVEL_FIELD %}
 [[TIMESERIES]]
-   inherit = PROCESS
+    inherit = PROCESS
+
+[runtime]
+    [[dummy_timeseries]]
+    inherit = DUMMY_TASK, TIMESERIES
 {% endif %}
 
 # Surface (2D) fields
@@ -8,7 +12,7 @@
 {% for field in SURFACE_FIELDS %}
 [runtime]
     [[surface_domain_mean_time_series_{{sanitise_task_name(field)}}]]
-    inherit = TIMESERIES, PROCESS
+    inherit = TIMESERIES
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_surface_domain_mean_time_series.yaml"
         CSET_ADDOPTS = """
@@ -32,7 +36,7 @@
 {% for plevel in PRESSURE_LEVELS %}
 [runtime]
     [[plevel_domain_mean_time_series_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
-    inherit = TIMESERIES, PROCESS
+    inherit = TIMESERIES
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_level_domain_mean_time_series.yaml"
         CSET_ADDOPTS = """
@@ -59,7 +63,7 @@
 {% for plevel in MODEL_LEVELS %}
 [runtime]
     [[mlevel_domain_mean_time_series_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
-    inherit = TIMESERIES, PROCESS
+    inherit = TIMESERIES
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_level_domain_mean_time_series.yaml"
         CSET_ADDOPTS = """

@@ -1,6 +1,10 @@
 {% if True in TIMESERIES_SURFACE_FIELD_AGGREGATION or True in TIMESERIES_PLEVEL_FIELD_AGGREGATION or True in TIMESERIES_MLEVEL_FIELD_AGGREGATION %}
 [[TIMESERIES_AGGREGATION]]
-   inherit = PROCESS_CASE_AGGREGATION
+    inherit = PROCESS_CASE_AGGREGATION
+
+[runtime]
+    [[dummy_timeseries_aggregation]]
+    inherit = DUMMY_TASK, TIMESERIES_AGGREGATION
 {% endif %}
 
 # Loop over aggregation types (hour_of_day, lead_time, validity_time)
@@ -11,7 +15,7 @@
 {% for field in SURFACE_FIELDS %}
 [runtime]
     [[surface_domain_mean_time_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_{{sanitise_task_name(field)}}]]
-    inherit = TIMESERIES_AGGREGATION, PROCESS_CASE_AGGREGATION
+    inherit = TIMESERIES_AGGREGATION
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_surface_domain_mean_time_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
         CSET_ADDOPTS = """
@@ -35,7 +39,7 @@
 {% for plevel in PRESSURE_LEVELS %}
 [runtime]
     [[plevel_domain_mean_time_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
-    inherit = TIMESERIES_AGGREGATION, PROCESS_CASE_AGGREGATION
+    inherit = TIMESERIES_AGGREGATION
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_level_domain_mean_time_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
         CSET_ADDOPTS = """
@@ -62,7 +66,7 @@
 {% for plevel in MODEL_LEVELS %}
 [runtime]
     [[mlevel_domain_mean_time_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
-    inherit = TIMESERIES_AGGREGATION, PROCESS_CASE_AGGREGATION
+    inherit = TIMESERIES_AGGREGATION
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_level_domain_mean_time_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
         CSET_ADDOPTS = """
