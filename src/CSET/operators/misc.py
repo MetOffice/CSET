@@ -314,7 +314,9 @@ def difference(cubes: CubeList):
             "vapour_specific_humidity_at_pressure_levels_for_climate_averaging",
         ]
     ):
-        logging.debug("Linear regridding cube to base grid to compute differences")
+        logging.debug(
+            "Linear regridding base cube to other grid to compute differences"
+        )
         base = regrid_onto_cube(base, other, method="Linear")
 
     def is_increasing(sequence: list) -> bool:

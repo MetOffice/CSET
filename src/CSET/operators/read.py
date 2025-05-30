@@ -373,9 +373,9 @@ def _create_callback(is_ensemble: bool) -> callable:
         _lfric_normalise_callback(cube, field, filename)
         _lfric_time_coord_fix_callback(cube, field, filename)
         _longitude_fix_callback(cube)
+        _normalise_var0_varname(cube)
         _fix_spatial_coords_callback(cube)
         _fix_pressure_coord_callback(cube)
-        _lfric_normalise_varname(cube)
         _fix_um_radtime_prehour(cube)
         _fix_um_radtime_posthour(cube)
         _fix_um_lightning(cube)
@@ -592,6 +592,7 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
         "degrees_north",
         "degrees_south",
     ]:
+        # Add grid_latitude AuxCoord
         if "grid_latitude" not in [
             coord.name() for coord in cube.coords(dim_coords=False)
         ]:
@@ -603,11 +604,17 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
                 ),
                 ny,
             )
+        # Ensure input latitude DimCoord has CoordSystem
+        # This attribute is sometimes lost on iris.save
+        if cube.coord(y_name).coord_system:
+            cube.coord(y_name).coord_system = iris.coord_systems.GeogCS(6371229.0)
+
     if x_name in ["longitude"] and cube.coord(x_name).units in [
         "degrees",
         "degrees_west",
         "degrees_east",
     ]:
+        # Add grid_longitude AuxCoord
         if "grid_longitude" not in [
             coord.name() for coord in cube.coords(dim_coords=False)
         ]:
@@ -619,6 +626,11 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
                 ),
                 nx,
             )
+
+        # Ensure input longitude DimCoord has CoordSystem
+        # This attribute is sometimes lost on iris.save
+        if cube.coord(x_name).coord_system:
+            cube.coord(x_name).coord_system = iris.coord_systems.GeogCS(6371229.0)
 
 
 def _fix_pressure_coord_callback(cube: iris.cube.Cube):
@@ -732,12 +744,13 @@ def _fix_um_lightning(cube: iris.cube.Cube):
         time_coord.points = new_time_values
 
 
-def _lfric_normalise_varname(cube: iris.cube.Cube):
-    """Fix LFRic varnames for consistency to allow merging.
+def _normalise_var0_varname(cube: iris.cube.Cube):
+    """Fix varnames for consistency to allow merging.
 
-    LFRic data seems to sometime have a coordinate name end in "_0", which
-    causes the cubes to fail to merge. This has been noticed in
-    model_level_number as well as forecast_period.
+    Some model data netCDF sometimes have a coordinate name end in
+    "_0", where duplicate coordinates of same name are defined but
+    with different attributes. This can be inconsistently managed in
+    different model inputs and can cause cubes to fail to merge.
     """
     for coord in cube.coords():
         if coord.var_name and coord.var_name.endswith("_0"):

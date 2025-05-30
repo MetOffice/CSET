@@ -558,10 +558,10 @@ def test_lfric_time_callback_unknown_units(slammed_lfric_cube):
         read._lfric_time_callback(slammed_lfric_cube)
 
 
-def test_lfric_normalise_varname(model_level_cube):
+def test_normalise_var0_varname(model_level_cube):
     """Check that read callback renames the model level var name."""
     model_level_cube.coord("model_level_number").var_name = "model_level_number_0"
-    read._lfric_normalise_varname(model_level_cube)
+    read._normalise_var0_varname(model_level_cube)
     assert model_level_cube.coord("model_level_number").var_name == "model_level_number"
 
 
