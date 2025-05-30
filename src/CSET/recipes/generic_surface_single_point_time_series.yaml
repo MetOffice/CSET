@@ -11,6 +11,9 @@ steps:
       varname_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
       pressure_level_constraint:
         operator: constraints.generate_level_constraint
         levels: []
