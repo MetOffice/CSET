@@ -34,8 +34,8 @@ URL = https://metoffice.github.io/CSET
     [[graph]]
     # Only runs on the first cycle.
     R1/^ = """
-    build_conda => install_website_skeleton => setup_complete
-    build_conda => assign_model_colours => setup_complete
+    validate_environment => install_website_skeleton => setup_complete
+    validate_environment => assign_model_colours => setup_complete
     """
 
     {% if CSET_CYCLING_MODE == "case_study" %}
@@ -167,15 +167,8 @@ URL = https://metoffice.github.io/CSET
     [[dummy_process_case_aggregation]]
     inherit = DUMMY_TASK, PROCESS_CASE_AGGREGATION
 
-    [[build_conda]]
-    # Create the conda environment if it does not yet exist, possibly installing
-    # CSET from source.
-    execution time limit = PT30M
-        [[[environment]]]
-        CSET_ENV_USE_LOCAL_CSET = {{CSET_ENV_USE_LOCAL_CSET|default(False) }}
-        {% if CSET_ENV_USE_LOCAL_CSET|default(False) %}
-            CSET_LOCAL_CSET_PATH = {{CSET_LOCAL_CSET_PATH}}
-        {% endif %}
+    [[validate_environment]]
+    # Checks the environment works and the cset command is available.
 
     [[install_website_skeleton]]
     # Copies the static files that make up the web interface.
