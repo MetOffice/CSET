@@ -22,10 +22,16 @@ import iris
 from CSET.operators import read
 
 
-def preprocess_data(data_location: str):
+def preprocess_data(data_location: str, fields: iris.Constraint | None = None):
     """Rewrite data into a single file. This also fixes all the metadata."""
+    # Specify variable lists, if required, else default to read all data
+    if fields:
+        var_constraint = fields
+    else:
+        var_constraint = None
+
     # Load up all the data.
-    cubes = read.read_cubes(data_location)
+    cubes = read.read_cubes(data_location, constraint=var_constraint)
 
     # Remove added comparison base; we don't know if this is the base model yet.
     for cube in cubes:
@@ -50,4 +56,23 @@ def run():
         f"{os.environ['MODEL_IDENTIFIER']}"
     )
     print(f"Preprocessing {data_location}")
-    preprocess_data(data_location)
+
+    # Preprocess only selected variables, else read all
+    str_fields = f"{os.environ['FIELDS']}"
+
+    # Parse FIELDS workflow environment variable string to list of
+    # iris-ready constraint names
+    fields = list(
+        str_fields.replace("[", "")
+        .replace("]", "")
+        .replace("'", "")
+        .replace(" ", "")
+        .split(",")
+    )
+    if len(fields) > 0:
+        print(f"Preprocessing variable list {fields}")
+    else:
+        fields = None
+        print("Preprocessing all variables in files")
+
+    preprocess_data(data_location, fields=fields)
