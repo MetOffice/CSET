@@ -18,7 +18,7 @@ import subprocess
 
 import pytest
 
-from CSET._workflow_utils import send_email
+from CSET.workflow import send_email
 
 
 def test_get_home_page_address_public_html(monkeypatch):
