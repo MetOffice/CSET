@@ -1,4 +1,3 @@
-#!jinja2
 [meta]
 title = CSET
 description = Workflow for running CSET.
