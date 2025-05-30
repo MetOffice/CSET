@@ -1,6 +1,8 @@
-category: Surface Spatial Plot Difference
-title: Surface $METHOD $VARNAME difference ($BASE_MODEL - $OTHER_MODEL)
-description: Extracts and plot the difference in $METHOD of surface $VARNAME for all times.
+category: Surface Time Series
+title: "$MODEL_NAME Domain mean surface $VARNAME time series\n Aggregation over all cases"
+description: |
+  Plots a time series of the domain mean surface $VARNAME by averaging over
+  all cases for non-overlapping times.
 
 steps:
   - operator: read.read_cubes
@@ -17,16 +19,17 @@ steps:
         operator: constraints.generate_level_constraint
         coordinate: "pressure"
         levels: []
-    subarea_type: $SUBAREA_TYPE
-    subarea_extent: $SUBAREA_EXTENT
-
-  - operator: misc.difference
 
   - operator: collapse.collapse
-    coordinate: [time]
-    method: $METHOD
+    coordinate: [grid_latitude, grid_longitude]
+    method: MEAN
 
-  - operator: plot.spatial_pcolormesh_plot
+  - operator: aggregate.ensure_aggregatable_across_cases
 
+  # Make a single NetCDF with all the data inside it.
   - operator: write.write_cube_to_nc
     overwrite: True
+
+  # Plot the data.
+  - operator: plot.plot_line_series
+    series_coordinate: time

@@ -186,7 +186,6 @@ def read_cubes(
 
     # Select sub region.
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
-
     # Merge and concatenate cubes now metadata has been fixed.
     cubes = cubes.merge()
     cubes = cubes.concatenate()
@@ -317,13 +316,23 @@ def _cutout_cubes(
                 pole_lat=coord_system.grid_north_pole_latitude,
             )
             cutout_coords = {"lat": rotated_lats, "lon": rotated_lons}
+        # cube.coord("grid_latitude").units="degrees"
+        # cube.coord("grid_longitude").units="degrees"
         # Do cutout and add to cutout_cubes.
         logging.debug("Cutting out coords %s", cutout_coords)
-        cutout_cubes.append(
-            cube.intersection(
-                grid_latitude=cutout_coords["lat"], grid_longitude=cutout_coords["lon"]
+        if isinstance(coord_system, iris.coord_systems.RotatedGeogCS):
+            cutout_cubes.append(
+                cube.intersection(
+                    grid_latitude=cutout_coords["lat"],
+                    grid_longitude=cutout_coords["lon"],
+                )
             )
-        )
+        else:
+            cutout_cubes.append(
+                cube.intersection(
+                    latitude=cutout_coords["lat"], longitude=cutout_coords["lon"]
+                )
+            )
 
     return cutout_cubes
 
@@ -362,10 +371,11 @@ def _create_callback(is_ensemble: bool) -> callable:
         _um_normalise_callback(cube, field, filename)
         _lfric_normalise_callback(cube, field, filename)
         _lfric_time_coord_fix_callback(cube, field, filename)
-        _longitude_fix_callback(cube, field, filename)
-        _fix_spatial_coord_name_callback(cube)
-        _fix_pressure_coord_callback(cube)
         _lfric_normalise_varname(cube)
+        _longitude_fix_callback(cube, field, filename)
+        _fix_spatial_coords_callback(cube)
+        _fix_pressure_coord_callback(cube)
+        # _lfric_normalise_varname(cube)
         _fix_um_radtime_prehour(cube)
         _fix_um_radtime_posthour(cube)
         _fix_um_lightning(cube)
@@ -500,20 +510,26 @@ def _longitude_fix_callback(cube: iris.cube.Cube, field, filename):
     except ValueError:
         # Don't modify non-spatial cubes.
         return cube
+
     long_coord = cube.coord(x)
     long_points = long_coord.points.copy()
     long_centre = np.median(long_points)
-    while long_centre < -180.0:
+    while long_centre <= -180.0:
         long_centre += 360.0
         long_points += 360.0
-    while long_centre >= 180.0:
+    while long_centre > 180.0:
         long_centre -= 360.0
         long_points -= 360.0
     long_coord.points = long_points
+
+    if long_coord.has_bounds() and np.size(long_coord) > 1:
+        long_coord.bounds = None
+        long_coord.guess_bounds()
+
     return cube
 
 
-def _fix_spatial_coord_name_callback(cube: iris.cube.Cube):
+def _fix_spatial_coords_callback(cube: iris.cube.Cube):
     """Check latitude and longitude coordinates name.
 
     This is necessary as some models define their grid as 'grid_latitude' and 'grid_longitude'
@@ -532,6 +548,40 @@ def _fix_spatial_coord_name_callback(cube: iris.cube.Cube):
     ny = utils.get_cube_coordindex(cube, y_name)
     nx = utils.get_cube_coordindex(cube, x_name)
 
+    # Translate [grid_latitude, grid_longitude] to an unrotated 1-d DimCoord
+    # [latitude, longitude] for instances where rotated_pole=90.0
+    if "grid_latitude" in [coord.name() for coord in cube.coords(dim_coords=True)]:
+        coord_system = cube.coord("grid_latitude").coord_system
+        pole_lat = coord_system.grid_north_pole_latitude
+        if pole_lat == 90.0:
+            lats = cube.coord("grid_latitude").points
+            lons = cube.coord("grid_longitude").points
+
+            cube.remove_coord("grid_latitude")
+            cube.add_dim_coord(
+                iris.coords.DimCoord(
+                    lats,
+                    var_name="latitude",
+                    units="degrees",
+                    coord_system=iris.coord_systems.GeogCS(6371229.0),
+                ),
+                ny,
+            )
+            y_name = "latitude"
+            cube.remove_coord("grid_longitude")
+            cube.add_dim_coord(
+                iris.coords.DimCoord(
+                    lons,
+                    var_name="longitude",
+                    units="degrees",
+                    coord_system=iris.coord_systems.GeogCS(6371229.0),
+                ),
+                nx,
+            )
+            x_name = "longitude"
+
+    # Create additional AuxCoord [grid_latitude, grid_longitude] with
+    # rotated pole attributes for cases with [lat, lon] inputs
     if y_name in ["latitude"] and cube.coord(y_name).units in [
         "degrees",
         "degrees_north",
@@ -542,10 +592,18 @@ def _fix_spatial_coord_name_callback(cube: iris.cube.Cube):
         ]:
             cube.add_aux_coord(
                 iris.coords.AuxCoord(
-                    cube.coord(y_name).points, long_name="grid_latitude"
+                    cube.coord(y_name).points,
+                    var_name="grid_latitude",
+                    units="degrees",
+                    #                    coord_system=iris.coord_systems.RotatedGeogCS(90.0, -180.0),
                 ),
                 ny,
             )
+
+        # Ensure valid CoordSystem for DimCoord
+        if cube.coord(y_name).coord_system:
+            cube.coord(y_name).coord_system = iris.coord_systems.GeogCS(6371229.0)
+
     if x_name in ["longitude"] and cube.coord(x_name).units in [
         "degrees",
         "degrees_west",
@@ -556,10 +614,17 @@ def _fix_spatial_coord_name_callback(cube: iris.cube.Cube):
         ]:
             cube.add_aux_coord(
                 iris.coords.AuxCoord(
-                    cube.coord(x_name).points, long_name="grid_longitude"
+                    cube.coord(x_name).points,
+                    var_name="grid_longitude",
+                    units="degrees",
+                    #                    coord_system=iris.coord_systems.RotatedGeogCS(90.0, -180.0),
                 ),
                 nx,
             )
+
+        # Ensure valid CoordSystem for DimCoord
+        if cube.coord(x_name).coord_system:
+            cube.coord(x_name).coord_system = iris.coord_systems.GeogCS(6371229.0)
 
 
 def _fix_pressure_coord_callback(cube: iris.cube.Cube):
@@ -731,8 +796,10 @@ def _lfric_time_callback(cube: iris.cube.Cube):
                 lead_times = tcoord.points - init_time_points_in_tcoord_units
 
                 # Get unit for lead time from time coordinate's unit.
+                # Standardise lead_times in hours
                 if "seconds" in str(tcoord.units):
-                    units = "seconds"
+                    lead_times = lead_times / 3600.0
+                    units = "hours"
                 elif "hours" in str(tcoord.units):
                     units = "hours"
                 else:
@@ -764,3 +831,30 @@ def _lfric_forecast_period_standard_name_callback(cube: iris.cube.Cube):
             coord.standard_name = "forecast_period"
     except iris.exceptions.CoordinateNotFoundError:
         pass
+
+
+def _remove_time0(cubes: iris.cube.CubeList):
+    """Remove T0 from UM inputs to allow time-averaged comparison with LFRic.
+
+    A number of UM outputs contain T=0 initial time diagnostic fields, while
+    LFRic diagnostics begin from T=1 output step. This does not cause issues
+    for comparing UM with LFRic for hour-by-hour comparisons, for which times
+    are matched up in code. However, for any recipes requiring collapse by
+    time ahead of comparison, computing averages over e.g. 24h vs 25h window
+    results in different timestamps in each collapsed cube, breaking subsequent
+    CSET time-checking steps to compare like-with-like.
+
+    This function removes any outputs at T=0 to support time-processed comparisons.
+    """
+    valid_cubes = iris.cube.CubeList()
+    for cube in cubes:
+        if cube.coords("forecast_period"):
+            valid_cube = cube.extract(
+                iris.Constraint(forecast_period=lambda cell: cell >= 0.5)
+            )
+            if valid_cube:
+                valid_cubes.append(valid_cube)
+        else:
+            valid_cubes.append(cube)
+
+    return valid_cubes

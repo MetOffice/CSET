@@ -69,7 +69,7 @@ def collapse(
     ValueError
         If additional_percent wasn't supplied while using PERCENTILE method.
     """
-    if method == "SEQ" or method == "" or method is None:
+    if method == "SEQ":
         return cubes
     if method == "PERCENTILE" and additional_percent is None:
         raise ValueError("Must specify additional_percent")
@@ -94,6 +94,7 @@ def collapse(
                 collapsed_cubes.append(
                     cube.collapsed(coordinate, getattr(iris.analysis, method))
                 )
+    print(collapsed_cubes[0])
     if len(collapsed_cubes) == 1:
         return collapsed_cubes[0]
     else:

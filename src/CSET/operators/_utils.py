@@ -106,6 +106,10 @@ def get_cube_coordindex(cube: iris.cube.Cube, coord_name) -> int:
     # Check which index the requested dimension is found in, if any
     coord_index = coord_names.index(coord_name)
 
+    # Correction if missing dimension names in inputs
+    if len(coord_names) < len(cube.shape):
+        coord_index = coord_index + 1
+
     return coord_index
 
 

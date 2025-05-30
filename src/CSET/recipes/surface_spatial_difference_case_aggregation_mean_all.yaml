@@ -1,6 +1,8 @@
 category: Surface Spatial Plot Difference
-title: Surface $METHOD $VARNAME difference ($BASE_MODEL - $OTHER_MODEL)
-description: Extracts and plot the difference in $METHOD of surface $VARNAME for all times.
+title: "Surface $VARNAME difference ($BASE_MODEL - $OTHER_MODEL)\n Mean all cases"
+description: |
+  Extracts and plot the difference of mean surface $VARNAME for all times. The cases
+  are aggregated over all times available.
 
 steps:
   - operator: read.read_cubes
@@ -20,13 +22,16 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
-  - operator: misc.difference
+  - operator: aggregate.ensure_aggregatable_across_cases
 
   - operator: collapse.collapse
     coordinate: [time]
-    method: $METHOD
+    method: MEAN
+
+  - operator: misc.difference
 
   - operator: plot.spatial_pcolormesh_plot
+    sequence_coordinate: time
 
   - operator: write.write_cube_to_nc
     overwrite: True
