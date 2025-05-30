@@ -185,10 +185,7 @@ def read_cubes(
     iris.util.unify_time_units(cubes)
 
     # Select sub region.
-    print(cubes)
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
-    print(cubes)
-
     # Merge and concatenate cubes now metadata has been fixed.
     cubes = cubes.merge()
     cubes = cubes.concatenate()
@@ -323,9 +320,7 @@ def _cutout_cubes(
         # cube.coord("grid_longitude").units="degrees"
         # Do cutout and add to cutout_cubes.
         logging.debug("Cutting out coords %s", cutout_coords)
-        print("cutting")
         if isinstance(coord_system, iris.coord_systems.RotatedGeogCS):
-            print("TYPE1")
             cutout_cubes.append(
                 cube.intersection(
                     grid_latitude=cutout_coords["lat"],
@@ -333,9 +328,6 @@ def _cutout_cubes(
                 )
             )
         else:
-            print("TYPE2")
-            print(cube.coord("latitude").points)
-            print(cube.coord("longitude").points)
             cutout_cubes.append(
                 cube.intersection(
                     latitude=cutout_coords["lat"], longitude=cutout_coords["lon"]
@@ -379,10 +371,11 @@ def _create_callback(is_ensemble: bool) -> callable:
         _um_normalise_callback(cube, field, filename)
         _lfric_normalise_callback(cube, field, filename)
         _lfric_time_coord_fix_callback(cube, field, filename)
+        _lfric_normalise_varname(cube)
         _longitude_fix_callback(cube, field, filename)
         _fix_spatial_coords_callback(cube)
         _fix_pressure_coord_callback(cube)
-        _lfric_normalise_varname(cube)
+        # _lfric_normalise_varname(cube)
         _fix_um_radtime_prehour(cube)
         _fix_um_radtime_posthour(cube)
         _fix_um_lightning(cube)
@@ -555,11 +548,9 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
     ny = utils.get_cube_coordindex(cube, y_name)
     nx = utils.get_cube_coordindex(cube, x_name)
 
-    print(y_name)
     # Translate [grid_latitude, grid_longitude] to an unrotated 1-d DimCoord
     # [latitude, longitude] for instances where rotated_pole=90.0
     if "grid_latitude" in [coord.name() for coord in cube.coords(dim_coords=True)]:
-        print("yup")
         coord_system = cube.coord("grid_latitude").coord_system
         pole_lat = coord_system.grid_north_pole_latitude
         if pole_lat == 90.0:
@@ -608,6 +599,11 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
                 ),
                 ny,
             )
+
+        # Ensure valid CoordSystem for DimCoord
+        if cube.coord(y_name).coord_system:
+            cube.coord(y_name).coord_system = iris.coord_systems.GeogCS(6371229.0)
+
     if x_name in ["longitude"] and cube.coord(x_name).units in [
         "degrees",
         "degrees_west",
@@ -625,6 +621,10 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
                 ),
                 nx,
             )
+
+        # Ensure valid CoordSystem for DimCoord
+        if cube.coord(x_name).coord_system:
+            cube.coord(x_name).coord_system = iris.coord_systems.GeogCS(6371229.0)
 
 
 def _fix_pressure_coord_callback(cube: iris.cube.Cube):

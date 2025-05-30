@@ -1010,6 +1010,8 @@ def _spatial_plot(
     # Ensure we've got a single cube.
     cube = _check_single_cube(cube)
 
+    print("Spatial")
+    print(cube)
     # Convert precipitation units if necessary
     _convert_precipitation_units_callback(cube)
 
