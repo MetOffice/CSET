@@ -5,7 +5,7 @@
 import logging
 import subprocess
 
-from CSET._workflow_utils.fetch_data import FileRetrieverABC, fetch_data
+from CSET.workflow.fetch_data import FileRetrieverABC, fetch_data
 
 
 class MASSFileRetriever(FileRetrieverABC):
