@@ -2,6 +2,6 @@
 
 """Send a notification email linking to the output page."""
 
-import CSET._workflow_utils.send_email
+import CSET.workflow.send_email
 
-CSET._workflow_utils.send_email.run()
+CSET.workflow.send_email.run()
