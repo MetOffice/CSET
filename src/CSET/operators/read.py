@@ -317,13 +317,23 @@ def _cutout_cubes(
                 pole_lat=coord_system.grid_north_pole_latitude,
             )
             cutout_coords = {"lat": rotated_lats, "lon": rotated_lons}
+
         # Do cutout and add to cutout_cubes.
         logging.debug("Cutting out coords %s", cutout_coords)
-        cutout_cubes.append(
-            cube.intersection(
-                grid_latitude=cutout_coords["lat"], grid_longitude=cutout_coords["lon"]
+
+        if isinstance(coord_system, iris.coord_systems.RotatedGeogCS):
+            cutout_cubes.append(
+                cube.intersection(
+                    grid_latitude=cutout_coords["lat"],
+                    grid_longitude=cutout_coords["lon"],
+                )
             )
-        )
+        else:
+            cutout_cubes.append(
+                cube.intersection(
+                    latitude=cutout_coords["lat"], longitude=cutout_coords["lon"]
+                )
+            )
 
     return cutout_cubes
 
@@ -362,10 +372,10 @@ def _create_callback(is_ensemble: bool) -> callable:
         _um_normalise_callback(cube, field, filename)
         _lfric_normalise_callback(cube, field, filename)
         _lfric_time_coord_fix_callback(cube, field, filename)
-        _longitude_fix_callback(cube, field, filename)
-        _fix_spatial_coord_name_callback(cube)
+        _longitude_fix_callback(cube)
+        _normalise_var0_varname(cube)
+        _fix_spatial_coords_callback(cube)
         _fix_pressure_coord_callback(cube)
-        _lfric_normalise_varname(cube)
         _fix_um_radtime_prehour(cube)
         _fix_um_radtime_posthour(cube)
         _fix_um_lightning(cube)
@@ -485,7 +495,7 @@ def _lfric_time_coord_fix_callback(cube: iris.cube.Cube, field, filename):
     return iris.util.squeeze(cube)
 
 
-def _longitude_fix_callback(cube: iris.cube.Cube, field, filename):
+def _longitude_fix_callback(cube: iris.cube.Cube):
     """Check longitude coordinates are in the range -180 deg to 180 deg.
 
     This is necessary if comparing two models with different conventions --
@@ -510,15 +520,24 @@ def _longitude_fix_callback(cube: iris.cube.Cube, field, filename):
         long_centre -= 360.0
         long_points -= 360.0
     long_coord.points = long_points
+
+    # Update coord bounds to be consistent with wrapping
+    if long_coord.has_bounds() and np.size(long_coord) > 1:
+        long_coord.bounds = None
+        long_coord.guess_bounds()
+
     return cube
 
 
-def _fix_spatial_coord_name_callback(cube: iris.cube.Cube):
+def _fix_spatial_coords_callback(cube: iris.cube.Cube):
     """Check latitude and longitude coordinates name.
 
-    This is necessary as some models define their grid as 'grid_latitude' and 'grid_longitude'
-    and this means that recipes will fail - particularly if the user is comparing multiple models
-    where the spatial coordinate names differ.
+    This is necessary as some models define their grid as on rotated
+    'grid_latitude' and 'grid_longitude' coordinates while others define
+    the grid on non-rotated 'latitude' and 'longitude'.
+    Cube dimensions need to be made consistent to avoid recipe failures,
+    particularly where comparing multiple input models with differing spatial
+    coordinates.
     """
     import CSET.operators._utils as utils
 
@@ -532,34 +551,86 @@ def _fix_spatial_coord_name_callback(cube: iris.cube.Cube):
     ny = utils.get_cube_coordindex(cube, y_name)
     nx = utils.get_cube_coordindex(cube, x_name)
 
+    # Translate [grid_latitude, grid_longitude] to an unrotated 1-d DimCoord
+    # [latitude, longitude] for instances where rotated_pole=90.0
+    if "grid_latitude" in [coord.name() for coord in cube.coords(dim_coords=True)]:
+        coord_system = cube.coord("grid_latitude").coord_system
+        pole_lat = coord_system.grid_north_pole_latitude
+        if pole_lat == 90.0:
+            lats = cube.coord("grid_latitude").points
+            lons = cube.coord("grid_longitude").points
+
+            cube.remove_coord("grid_latitude")
+            cube.add_dim_coord(
+                iris.coords.DimCoord(
+                    lats,
+                    var_name="latitude",
+                    units="degrees",
+                    coord_system=iris.coord_systems.GeogCS(6371229.0),
+                    circular=True,
+                ),
+                ny,
+            )
+            y_name = "latitude"
+            cube.remove_coord("grid_longitude")
+            cube.add_dim_coord(
+                iris.coords.DimCoord(
+                    lons,
+                    var_name="longitude",
+                    units="degrees",
+                    coord_system=iris.coord_systems.GeogCS(6371229.0),
+                    circular=True,
+                ),
+                nx,
+            )
+            x_name = "longitude"
+
+    # Create additional AuxCoord [grid_latitude, grid_longitude] with
+    # rotated pole attributes for cases with [lat, lon] inputs
     if y_name in ["latitude"] and cube.coord(y_name).units in [
         "degrees",
         "degrees_north",
         "degrees_south",
     ]:
+        # Add grid_latitude AuxCoord
         if "grid_latitude" not in [
             coord.name() for coord in cube.coords(dim_coords=False)
         ]:
             cube.add_aux_coord(
                 iris.coords.AuxCoord(
-                    cube.coord(y_name).points, long_name="grid_latitude"
+                    cube.coord(y_name).points,
+                    var_name="grid_latitude",
+                    units="degrees",
                 ),
                 ny,
             )
+        # Ensure input latitude DimCoord has CoordSystem
+        # This attribute is sometimes lost on iris.save
+        if cube.coord(y_name).coord_system:
+            cube.coord(y_name).coord_system = iris.coord_systems.GeogCS(6371229.0)
+
     if x_name in ["longitude"] and cube.coord(x_name).units in [
         "degrees",
         "degrees_west",
         "degrees_east",
     ]:
+        # Add grid_longitude AuxCoord
         if "grid_longitude" not in [
             coord.name() for coord in cube.coords(dim_coords=False)
         ]:
             cube.add_aux_coord(
                 iris.coords.AuxCoord(
-                    cube.coord(x_name).points, long_name="grid_longitude"
+                    cube.coord(x_name).points,
+                    var_name="grid_longitude",
+                    units="degrees",
                 ),
                 nx,
             )
+
+        # Ensure input longitude DimCoord has CoordSystem
+        # This attribute is sometimes lost on iris.save
+        if cube.coord(x_name).coord_system:
+            cube.coord(x_name).coord_system = iris.coord_systems.GeogCS(6371229.0)
 
 
 def _fix_pressure_coord_callback(cube: iris.cube.Cube):
@@ -673,12 +744,13 @@ def _fix_um_lightning(cube: iris.cube.Cube):
         time_coord.points = new_time_values
 
 
-def _lfric_normalise_varname(cube: iris.cube.Cube):
-    """Fix LFRic varnames for consistency to allow merging.
+def _normalise_var0_varname(cube: iris.cube.Cube):
+    """Fix varnames for consistency to allow merging.
 
-    LFRic data seems to sometime have a coordinate name end in "_0", which
-    causes the cubes to fail to merge. This has been noticed in
-    model_level_number as well as forecast_period.
+    Some model data netCDF sometimes have a coordinate name end in
+    "_0", where duplicate coordinates of same name are defined but
+    with different attributes. This can be inconsistently managed in
+    different model inputs and can cause cubes to fail to merge.
     """
     for coord in cube.coords():
         if coord.var_name and coord.var_name.endswith("_0"):
