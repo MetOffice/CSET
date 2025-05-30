@@ -1,7 +1,7 @@
 category: Surface Time Series
-title: "Domain mean surface $VARNAME time series\n Aggregation by validity time"
+title: "Domain mean $VARNAME time series\n Aggregation by validity time"
 description: |
-  Plots a time series of the domain mean surface $VARNAME by averaging over
+  Plots a time series of the domain mean $VARNAME by averaging over
   all cases by using a consistent validity time.
 
 steps:
