@@ -1,7 +1,7 @@
 category: Surface Spatial Plot Difference
-title: "Surface $VARNAME difference ($BASE_MODEL - $OTHER_MODEL)\n Mean all cases"
+title: "$VARNAME difference ($BASE_MODEL - $OTHER_MODEL)\n Mean all cases"
 description: |
-  Extracts and plot the difference of mean surface $VARNAME for all times. The cases
+  Extracts and plot the difference of mean $VARNAME for all times. The cases
   are aggregated over all times available.
 
 steps:

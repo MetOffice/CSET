@@ -1,6 +1,6 @@
 category: Surface Time Series
-title: Domain mean surface $VARNAME time series
-description: Plots a time series of the domain mean surface $VARNAME.
+title: Domain mean $VARNAME time series
+description: Plots a time series of the domain horizontal mean $VARNAME.
 
 steps:
   - operator: read.read_cubes

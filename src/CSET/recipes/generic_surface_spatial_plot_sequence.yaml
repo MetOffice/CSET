@@ -1,6 +1,6 @@
 category: Surface Spatial Plot
-title: $MODEL_NAME Surface $VARNAME $METHOD
-description: Extracts and plots the $METHOD of surface $VARNAME from all times in $MODEL_NAME.
+title: $MODEL_NAME $VARNAME $METHOD
+description: Extracts and plots the $METHOD of $VARNAME from all times in $MODEL_NAME.
 
 steps:
   - operator: read.read_cube

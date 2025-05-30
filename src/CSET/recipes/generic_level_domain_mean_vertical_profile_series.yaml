@@ -1,6 +1,7 @@
 category: Profiles
-title: Domain horizontal mean $VARNAME vertical profile $METHOD
-description: Plots the $METHOD of vertical profiles for the domain mean $VARNAME using a $LEVELTYPE coordinate.
+title: Domain mean $VARNAME vertical profile $METHOD
+description: Plots the $METHOD of vertical profiles for the domain horizontal mean
+  $VARNAME using a $LEVELTYPE coordinate.
 
 steps:
   - operator: read.read_cubes

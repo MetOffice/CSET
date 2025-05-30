@@ -1,7 +1,7 @@
 category: $LEVELTYPE Level Spatial
 title: $MODEL_NAME $VARNAME $LEVELTYPE$LEVEL $METHOD
 description: |
-  Extracts ands plots the $METHOD of $VARNAME from $MODEL_NAME at $LEVELTYPE level $LEVEL.
+  Extracts and plots the $METHOD of $VARNAME from $MODEL_NAME at $LEVELTYPE level $LEVEL.
 
 steps:
   - operator: read.read_cube

@@ -1,7 +1,7 @@
 category: Surface Time Series
-title: "$MODEL_NAME Domain mean surface $VARNAME time series\n Aggregation over all cases"
+title: "$MODEL_NAME Domain mean $VARNAME time series\n Aggregation over all cases"
 description: |
-  Plots a time series of the domain mean surface $VARNAME by averaging over
+  Plots a time series of the domain horizontal mean surface $VARNAME by averaging over
   all cases for non-overlapping times.
 
 steps:
