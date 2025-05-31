@@ -28,7 +28,7 @@ def test_preprocess(monkeypatch):
     monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", "/data")
     monkeypatch.setenv("CYLC_TASK_CYCLE_POINT", "20250101T0000Z")
     monkeypatch.setenv("MODEL_IDENTIFIER", "1")
-    monkeypatch.setenv("FIELDS", "['air_temperature']")
+    monkeypatch.setenv("FIELDS", "['air_temperature','air_temperature','dummy_var']")
 
     def mock_preprocess_data(data_location: str, fields: None):
         nonlocal preprocess_run
