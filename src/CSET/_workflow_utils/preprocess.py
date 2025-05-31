@@ -70,12 +70,14 @@ def run():
     str_fields = f"{os.environ['FIELDS']}"
 
     # Parse FIELDS env variable string to list of iris-ready constraint names
-    fields = list(
-        str_fields.replace("[", "")
-        .replace("]", "")
-        .replace("'", "")
-        .replace(" ", "")
-        .split(",")
+    fields = set(
+        list(
+            str_fields.replace("[", "")
+            .replace("]", "")
+            .replace("'", "")
+            .replace(" ", "")
+            .split(",")
+        )
     )
     if len(fields) > 0:
         print(f"Preprocessing variable list {fields}")
