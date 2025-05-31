@@ -60,14 +60,16 @@ def run():
     # Preprocess only selected variables, else read all
     str_fields = f"{os.environ['FIELDS']}"
 
-    # Parse FIELDS workflow environment variable string to list of
-    # iris-ready constraint names
-    fields = list(
-        str_fields.replace("[", "")
-        .replace("]", "")
-        .replace("'", "")
-        .replace(" ", "")
-        .split(",")
+    # Parse FIELDS workflow environment variable string to
+    # unique list of iris-ready constraint names
+    fields = set(
+        list(
+            str_fields.replace("[", "")
+            .replace("]", "")
+            .replace("'", "")
+            .replace(" ", "")
+            .split(",")
+        )
     )
     if len(fields) > 0:
         print(f"Preprocessing variable list {fields}")
