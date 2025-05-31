@@ -230,7 +230,9 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis=None):
     cube: Cube
         Cube of variable for which the colorbar information is desired.
     axis: str
-        If specified, x or y-axis for setting vmin and vmax bounds
+        If specified, x or y-axis for setting vmin and vmax bounds. These
+        can be set in colorbar definitions using xmin,xmax or ymin,ymax
+        settings, or default to min,max if not provided.
 
     Returns
     -------
@@ -320,6 +322,13 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis=None):
             cmap, levels, norm = _custom_colourmap_precipitation(
                 cube, cmap, levels, norm
             )
+
+            # Override levels for temperature or geopotential height variable
+            # time series
+            if axis == "y":
+                if "temperature" in varname or "geopotential" in varname:
+                    levels = None
+
             return cmap, levels, norm
         except KeyError:
             logging.debug("Cube name %s has no colorbar definition.", varname)
@@ -612,6 +621,9 @@ def _plot_and_save_line_series(
     # Set y limits to global min and max, autoscale if colorbar doesn't exist.
     if y_levels:
         ax.set_ylim(min(y_levels), max(y_levels))
+        # Mark x=0 if present in plot
+        if min(y_levels) < 0.0 and max(y_levels) > 0.0:
+            ax.hline(x=0, linestyle="-", color="grey", linewidth=2)
     else:
         ax.autoscale()
 
@@ -708,6 +720,9 @@ def _plot_and_save_vertical_line_series(
 
     # set x-axis limits
     ax.set_xlim(vmin, vmax)
+    # mark y=0 if present in plot
+    if vmin < 0.0 and vmax > 0.0:
+        ax.hline(y=0, linestyle="-", color="grey", linewidth=2)
 
     # Add some labels and tweak the style.
     ax.set_ylabel(f"{coord.name()} / {coord.units}", fontsize=14)
@@ -1613,7 +1628,7 @@ def plot_histogram_series(
     single_plot: bool = False,
     **kwargs,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Plot a histogram plot for each vertical level provided.
+    """Plot a histogram plot for each vertical/ level provided.
 
     A histogram plot can be plotted, but if the sequence_coordinate (i.e. time)
     is present then a sequence of plots will be produced using the time slider

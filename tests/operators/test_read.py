@@ -614,3 +614,17 @@ def test_read_cubes_extract_subarea():
     assert not np.array_equal(
         cube_rw.coord("grid_latitude").points, cube.coord("grid_latitude").points
     )
+
+
+def test_read_cubes_outofbounds_subarea():
+    """Ensure correct failure if subarea outside cube extent."""
+    with pytest.raises(
+        ValueError,
+        match=r"Cutout region requested not within data area. "
+        "Check and update SUBAREA_EXTENT.",
+    ):
+        read.read_cubes(
+            "tests/test_data/air_temp.nc",
+            subarea_type="realworld",
+            subarea_extent=[-5.5, 5.5, -125.5, 125.5],
+        )[0]
