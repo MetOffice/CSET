@@ -109,8 +109,30 @@ def test_read_cube():
     """Returns a Cube rather than CubeList."""
     from CSET.operators import constraints
 
+    # Rotated [grid_latitude, grid_longitude] example file
     cube = read.read_cube(
         "tests/test_data/air_temp.nc",
+        constraint=constraints.generate_cell_methods_constraint([]),
+    )
+    assert isinstance(cube, iris.cube.Cube)
+
+    # Global [latitude, longitude] example file
+    cube = read.read_cube(
+        "tests/test_data/air_temperature_global.nc",
+        constraint=constraints.generate_cell_methods_constraint([]),
+    )
+    assert isinstance(cube, iris.cube.Cube)
+
+    # Regional [latitude, longitude] example file
+    cube = read.read_cube(
+        "tests/test_data/air_temperature_lat_lon.nc",
+        constraint=constraints.generate_cell_methods_constraint([]),
+    )
+    assert isinstance(cube, iris.cube.Cube)
+
+    # Regional [lat, lon] example across dateline
+    cube = read.read_cube(
+        "tests/test_data/air_temperature_dateline.nc",
         constraint=constraints.generate_cell_methods_constraint([]),
     )
     assert isinstance(cube, iris.cube.Cube)
@@ -616,6 +638,63 @@ def test_read_cubes_extract_subarea():
     )
 
 
+def test_read_cubes_extract_subarea_latlon():
+    """Read cube with latlon coord and ensure appropriate subarea is extracted."""
+    # Read in global test data
+    cube = read.read_cubes("tests/test_data/air_temperature_global.nc")[0]
+    assert cube.coord("latitude").coord_system == iris.coord_systems.GeogCS(6371229.0)
+
+    # Cutout real world coordinates, using latitude bound -30.0 to 30.0 and
+    # longitude bound -4.5 to -2.5
+    cube_rw = read.read_cubes(
+        "tests/test_data/air_temperature_global.nc",
+        subarea_type="realworld",
+        subarea_extent=[-30.0, 30.0, -4.5, -2.5],
+    )[0]
+    assert isinstance(cube_rw, iris.cube.Cube)
+
+    # Compare the latitude coordinates to check its extracted same region. We
+    # use latitude as there is little difference in spacing from the equator to
+    # pole, but longitude varies (converges to zero at pole).
+    assert not np.array_equal(
+        cube_rw.coord("latitude").points, cube.coord("latitude").points
+    )
+
+
+def test_read_cubes_extract_subarea_dateline():
+    """Read cube with latlon coord across dateline and ensure appropriate subarea is extracted."""
+    cube = read.read_cubes("tests/test_data/air_temperature_dateline.nc")[0]
+    assert cube.coord("latitude").coord_system == iris.coord_systems.GeogCS(6371229.0)
+
+    # Cutout real world coordinates, using latitude bound -40.0 to -35.0 and
+    # longitude bound 175.0 to 181.0
+    cube_rw = read.read_cubes(
+        "tests/test_data/air_temperature_dateline.nc",
+        subarea_type="realworld",
+        subarea_extent=[-40.0, -35.0, 175.0, 181.0],
+    )[0]
+    assert isinstance(cube_rw, iris.cube.Cube)
+
+    # Compare the longitude coordinates to check its extracted a region.
+    assert not np.array_equal(
+        cube_rw.coord("latitude").points, cube.coord("latitude").points
+    )
+
+    # Cutout real world coordinates, using latitude bound -40.0 to -35.0 and
+    # longitude bound -5.0 to 1.0
+    cube_rw_2 = read.read_cubes(
+        "tests/test_data/air_temperature_dateline.nc",
+        subarea_type="realworld",
+        subarea_extent=[-40.0, -35.0, -5.0, 1.0],
+    )[0]
+    assert isinstance(cube_rw_2, iris.cube.Cube)
+
+    # Compare the longitude coordinates to check its extracted a region.
+    assert not np.array_equal(
+        cube_rw_2.coord("latitude").points, cube.coord("latitude").points
+    )
+
+
 def test_read_cubes_outofbounds_subarea():
     """Ensure correct failure if subarea outside cube extent."""
     with pytest.raises(
@@ -625,6 +704,17 @@ def test_read_cubes_outofbounds_subarea():
     ):
         read.read_cubes(
             "tests/test_data/air_temp.nc",
+            subarea_type="realworld",
+            subarea_extent=[-5.5, 5.5, -125.5, 125.5],
+        )[0]
+
+    with pytest.raises(
+        ValueError,
+        match=r"Cutout region requested not within data area. "
+        "Check and update SUBAREA_EXTENT.",
+    ):
+        read.read_cubes(
+            "tests/test_data/air_temperature_dateline.nc",
             subarea_type="realworld",
             subarea_extent=[-5.5, 5.5, -125.5, 125.5],
         )[0]

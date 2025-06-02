@@ -297,6 +297,15 @@ def _cutout_cubes(
     )
     cutout_cubes = iris.cube.CubeList()
 
+    # Ensure realworld cutout region is within +/- 180.0 bounds
+    if subarea_type == "realworld":
+        if subarea_extent[2] < -180.0:
+            subarea_extent[2] += 180.0
+            subarea_extent[3] += 180.0
+        if subarea_extent[3] > 180.0:
+            subarea_extent[2] -= 180.0
+            subarea_extent[3] -= 180.0
+
     for cube in cubes:
         # Define cutout region using user provided coordinates.
         cutout_coords = {
@@ -533,7 +542,8 @@ def _longitude_fix_callback(cube: iris.cube.Cube):
     This is necessary if comparing two models with different conventions --
     for example, models where the prime meridian is defined as 0 deg or
     360 deg. If not in the range -180 deg to 180 deg, we wrap the longitude
-    so that it falls in this range.
+    so that it falls in this range. Checks are for near-180 bounds given
+    model data bounds may not extend exactly to 0. or 360.
     """
     import CSET.operators._utils as utils
 
@@ -545,12 +555,12 @@ def _longitude_fix_callback(cube: iris.cube.Cube):
     long_coord = cube.coord(x)
     long_points = long_coord.points.copy()
     long_centre = np.median(long_points)
-    while long_centre < -180.0:
-        long_centre += 360.0
-        long_points += 360.0
-    while long_centre >= 180.0:
-        long_centre -= 360.0
-        long_points -= 360.0
+    while long_centre < -175.0:
+        long_centre += 180.0
+        long_points += 180.0
+    while long_centre >= 175.0:
+        long_centre -= 180.0
+        long_points -= 180.0
     long_coord.points = long_points
 
     # Update coord bounds to be consistent with wrapping
