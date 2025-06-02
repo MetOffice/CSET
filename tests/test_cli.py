@@ -165,6 +165,33 @@ def test_bake_invalid_args(capsys):
     assert capsys.readouterr().err == "Unknown argument: --not-a-real-option\n"
 
 
+def test_bake_INPUT_PATHS_conversion(monkeypatch):
+    """--input-dir argument is converted to --INPUT_PATHS recipe variable."""
+
+    def check_vars(*args, **kwargs):
+        assert "INPUT_PATHS" in args[2]
+        p = str(Path("foo").absolute())
+        assert args[2]["INPUT_PATHS"] in (p, [p])
+
+    monkeypatch.setattr(CSET.operators, "execute_recipe", check_vars)
+
+    class args:
+        recipe = "recipe.yaml"
+        input_dir = "foo"
+        output_dir = Path("/dev/null")
+        style_file = None
+        plot_resolution = None
+        skip_write = None
+
+    # Check --input-dir is converted.
+    unparsed_args = []
+    CSET._bake_command(args, unparsed_args)
+    # Check --INPUT_PATHS is directly used.
+    args.input_dir = None
+    unparsed_args = ["--INPUT_PATHS", str(Path("foo").absolute())]
+    CSET._bake_command(args, unparsed_args)
+
+
 def test_graph_creation(tmp_path: Path):
     """Generates a graph with the command line interface."""
     # We can't easily test running without the output specified from the CLI, as
