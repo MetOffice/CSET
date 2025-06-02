@@ -25,6 +25,7 @@ from uuid import uuid4
 import pytest
 
 import CSET
+import CSET.workflow
 
 
 def test_command_line_invocation():
@@ -239,3 +240,17 @@ def test_cookbook_non_existent_recipe(tmp_path):
             ["cset", "cookbook", "--output-dir", str(tmp_path), "non-existent.yaml"]
         )
     assert sysexit.value.code == 1
+
+
+def test_extract_workflow_command(monkeypatch, tmp_path):
+    """Extract workflow command correctly calls install_workflow function."""
+    ran = False
+
+    def dummy_install_workflow(location: Path):
+        nonlocal ran
+        ran = True
+        assert location == tmp_path
+
+    monkeypatch.setattr(CSET.workflow, "install_workflow", dummy_install_workflow)
+    CSET.main(["cset", "extract-workflow", str(tmp_path)])
+    assert ran
