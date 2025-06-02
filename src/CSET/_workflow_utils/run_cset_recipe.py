@@ -49,8 +49,7 @@ def run_recipe_steps():
 
     skip_write = os.getenv("SKIP_WRITE")
     if skip_write:
-        if skip_write == "True":
-            command.append("--skip-write")
+        command.append("--skip-write")
 
     print("Running", shlex.join(command))
     try:
