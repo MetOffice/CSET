@@ -12,6 +12,7 @@ permissions:
 jobs:
   update-pre-commit-config:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
