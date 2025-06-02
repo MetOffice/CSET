@@ -230,11 +230,7 @@ def _bake_command(args, unparsed_args):
 
     # Convert --input_dir=... to INPUT_PATHS recipe variable.
     if args.input_dir:
-        # Make paths absolute.
-        abs_paths = [
-            p if p.startswith("/") else f"{os.getcwd()}/{p}"
-            for p in iter_maybe(args.input_dir)
-        ]
+        abs_paths = [str(Path(p).absolute()) for p in iter_maybe(args.input_dir)]
         unparsed_args.append(f"--INPUT_PATHS={abs_paths}")
 
     recipe_variables = parse_variable_options(unparsed_args)
