@@ -1,7 +1,7 @@
 category: Surface Spatial Plot Difference
-title: "Surface $VARNAME difference ($BASE_MODEL - $OTHER_MODEL)\n Aggregation by hour of day"
+title: "$VARNAME difference ($BASE_MODEL - $OTHER_MODEL)\n Aggregation by hour of day"
 description: |
-  Extracts and plot the difference in surface $VARNAME for all times. The cases
+  Extracts and plot the difference in $VARNAME for all times. The cases
   are aggregated over hour of day.
 
 steps:

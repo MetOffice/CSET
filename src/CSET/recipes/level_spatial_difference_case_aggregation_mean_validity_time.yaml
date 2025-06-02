@@ -1,7 +1,7 @@
 category: $LEVELTYPE Level Spatial Difference
 title: "$VARNAME $LEVELTYPE$LEVEL\n Difference ($BASE_MODEL - $OTHER_MODEL)\n Aggregation by validity time"
 description: |
-  Extracts and plot the difference $VARNAME on $LEVELTYPE level $LEVEL for all times. The cases
+  Extracts and plot the difference in $VARNAME on $LEVELTYPE level $LEVEL for all times. The cases
   are aggregated over validity time.
 
 steps:

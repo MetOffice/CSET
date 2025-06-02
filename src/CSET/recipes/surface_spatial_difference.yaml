@@ -1,6 +1,6 @@
 category: Surface Spatial Plot Difference
-title: Surface $VARNAME difference ($BASE_MODEL - $OTHER_MODEL)
-description: Extracts and plot the difference in surface $VARNAME for all times.
+title: $VARNAME difference ($BASE_MODEL - $OTHER_MODEL)
+description: Extracts and plot the difference in $VARNAME for all times.
 
 steps:
   - operator: read.read_cubes
