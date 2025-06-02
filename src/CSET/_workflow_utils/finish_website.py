@@ -67,7 +67,7 @@ def update_workflow_status():
 def copy_rose_config():
     """Copy the rose-suite.conf file to add to output web directory."""
     rose_suite_conf = Path(os.environ["CYLC_WORKFLOW_RUN_DIR"]) / "rose-suite.conf"
-    web_dir = Path(os.environ["CYLC_WORKFLOW_SHARE_DIR"]) / "web"
+    web_dir = Path(os.environ["CYLC_WORKFLOW_SHARE_DIR"]) / "web/rose-suite.conf.txt"
     shutil.copy(rose_suite_conf, web_dir)
 
 

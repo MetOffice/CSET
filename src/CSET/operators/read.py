@@ -402,8 +402,8 @@ def _create_callback(is_ensemble: bool) -> callable:
         _um_normalise_callback(cube, field, filename)
         _lfric_normalise_callback(cube, field, filename)
         _lfric_time_coord_fix_callback(cube, field, filename)
-        _lfric_normalise_varname(cube)
         _longitude_fix_callback(cube, field, filename)
+        _lfric_normalise_varname(cube)
         _fix_spatial_coords_callback(cube)
         _fix_pressure_coord_callback(cube)
         # _lfric_normalise_varname(cube)
@@ -595,6 +595,7 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
                     var_name="latitude",
                     units="degrees",
                     coord_system=iris.coord_systems.GeogCS(6371229.0),
+                    circular=True,
                 ),
                 ny,
             )
@@ -606,6 +607,7 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
                     var_name="longitude",
                     units="degrees",
                     coord_system=iris.coord_systems.GeogCS(6371229.0),
+                    circular=True,
                 ),
                 nx,
             )
@@ -632,7 +634,7 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
             )
 
         # Ensure valid CoordSystem for DimCoord
-        if cube.coord(y_name).coord_system:
+        if not cube.coord(y_name).coord_system:
             cube.coord(y_name).coord_system = iris.coord_systems.GeogCS(6371229.0)
 
     if x_name in ["longitude"] and cube.coord(x_name).units in [
@@ -654,7 +656,7 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
             )
 
         # Ensure valid CoordSystem for DimCoord
-        if cube.coord(x_name).coord_system:
+        if not cube.coord(x_name).coord_system:
             cube.coord(x_name).coord_system = iris.coord_systems.GeogCS(6371229.0)
 
 
@@ -678,9 +680,10 @@ def _fix_pressure_coord_callback(cube: iris.cube.Cube):
 
 
 def _fix_um_radtime_posthour(cube: iris.cube.Cube):
-    """Fix radiation which is output 1 minute past every hour."""
+    """Fix radiation which is output N minute or N second past every hour."""
     try:
         if cube.attributes["STASH"] in [
+            "m01s01i207",
             "m01s01i208",
             "m01s02i205",
             "m01s02i201",
@@ -695,11 +698,23 @@ def _fix_um_radtime_posthour(cube: iris.cube.Cube):
             time_points = time_unit.num2date(time_coord.points)
 
             # Skip if times don't need fixing.
-            if time_points[0].minute != 1:
+            if time_points[0].minute == 0 and time_points[0].second == 0:
+                return
+            if time_points[0].minute == 30 and time_points[0].second == 0:
                 return
 
-            # Subtract 1 minute from each time point
-            new_time_points = time_points - datetime.timedelta(minutes=1)
+            # Subtract N minute from each time point
+            n_minute = time_points[0].minute
+            n_second = time_points[0].second
+            if n_minute > 30:
+                n_minute = n_minute - 60
+            if n_second > 30:
+                n_second = n_second - 60
+            new_time_points = (
+                time_points
+                - datetime.timedelta(minutes=n_minute)
+                - datetime.timedelta(seconds=n_second)
+            )
 
             # Convert back to numeric values using the original time unit
             new_time_values = time_unit.date2num(new_time_points)
@@ -779,6 +794,15 @@ def _lfric_normalise_varname(cube: iris.cube.Cube):
     for coord in cube.coords():
         if coord.var_name and coord.var_name.endswith("_0"):
             coord.var_name = coord.var_name.removesuffix("_0")
+        if coord.var_name and coord.var_name.endswith("_1"):
+            coord.var_name = coord.var_name.removesuffix("_1")
+        if coord.var_name and coord.var_name.endswith("_2"):
+            coord.var_name = coord.var_name.removesuffix("_2")
+        if coord.var_name and coord.var_name.endswith("_3"):
+            coord.var_name = coord.var_name.removesuffix("_3")
+
+    if cube.var_name and cube.var_name.endswith("_0"):
+        cube.var_name = cube.var_name.removesuffix("_0")
 
 
 def _lfric_time_callback(cube: iris.cube.Cube):

@@ -623,7 +623,7 @@ def _plot_and_save_line_series(
         ax.set_ylim(min(y_levels), max(y_levels))
         # Mark x=0 if present in plot
         if min(y_levels) < 0.0 and max(y_levels) > 0.0:
-            ax.vlines(x=0, linestyle="-", color="grey", linewidth=2)
+            ax.axhline(y=0, xmin=0, xmax=1, ls="-", color="grey", lw=2)
     else:
         ax.autoscale()
 
@@ -722,7 +722,7 @@ def _plot_and_save_vertical_line_series(
     ax.set_xlim(vmin, vmax)
     # mark y=0 if present in plot
     if vmin < 0.0 and vmax > 0.0:
-        ax.hlines(y=0, linestyle="-", color="grey", linewidth=2)
+        ax.axvline(x=0, ymin=0, ymax=1, ls="-", color="grey", lw=2)
 
     # Add some labels and tweak the style.
     ax.set_ylabel(f"{coord.name()} / {coord.units}", fontsize=14)
