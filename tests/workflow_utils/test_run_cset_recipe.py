@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2025) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -75,7 +75,7 @@ def test_entrypoint_exit_on_subprocess_exception(monkeypatch):
 
 
 def test_run_recipe_steps(monkeypatch, tmp_working_dir):
-    """Test run recipe steps correctly runs CSET and creates an archive."""
+    """Test run recipe steps correctly runs CSET."""
 
     def mock_func(*args, **kwargs):
         return ""
@@ -88,6 +88,26 @@ def test_run_recipe_steps(monkeypatch, tmp_working_dir):
     monkeypatch.setattr(run_cset_recipe, "data_directories", mock_data_dirs)
     monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", "/share")
     monkeypatch.setenv("CYLC_TASK_ID", "20000101T0000Z/foo")
+
+    run_cset_recipe.run_recipe_steps()
+
+
+def test_run_recipe_steps_optional_args(monkeypatch, tmp_working_dir):
+    """Test run recipe steps correctly runs CSET with optional arguments."""
+
+    def mock_func(*args, **kwargs):
+        return ""
+
+    def mock_data_dirs(*args, **kwargs):
+        return [""]
+
+    monkeypatch.setattr(subprocess, "run", mock_func)
+    monkeypatch.setattr(run_cset_recipe, "recipe_file", mock_func)
+    monkeypatch.setattr(run_cset_recipe, "data_directories", mock_data_dirs)
+    monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", "/share")
+    monkeypatch.setenv("CYLC_TASK_ID", "20000101T0000Z/foo")
+    monkeypatch.setenv("PLOT_RESOLUTION", "72")
+    monkeypatch.setenv("SKIP_WRITE", "True")
 
     run_cset_recipe.run_recipe_steps()
 

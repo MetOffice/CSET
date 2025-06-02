@@ -1,6 +1,6 @@
 category: Time Series
 title: Time series of $VARNAME at $LATITUDE_POINT N, $LONGITUDE_POINT E ($LATLON_IN_TYPE)
-description: Plots a time series of the surface $VARNAME at a selected gridpoint.
+description: Plots a time series of the $VARNAME at a selected gridpoint.
 
 steps:
   - operator: read.read_cubes
@@ -11,6 +11,9 @@ steps:
       varname_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
       pressure_level_constraint:
         operator: constraints.generate_level_constraint
         levels: []
