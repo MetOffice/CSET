@@ -14,6 +14,7 @@
 
 """Tests for install workflow utility."""
 
+import os
 import stat
 
 import pytest
@@ -106,7 +107,7 @@ def test_install_workflow_no_conda_prefix(monkeypatch, tmp_path):
     monkeypatch.delenv("CONDA_PREFIX", raising=False)
     CSET.workflow.install_workflow(tmp_path)
     wd = next(tmp_path.glob("cset-workflow-v*/"))
-    assert not (wd / "conda-environment").exists(follow_symlinks=False)
+    assert not os.path.lexists(wd / "conda-environment")
 
 
 def test_install_workflow_not_dir(tmp_path):
