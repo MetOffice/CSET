@@ -19,16 +19,22 @@ notice.
 """
 
 import importlib.metadata
-import importlib.resources
 import logging
 import os
 import shutil
 import stat
+import sys
 from pathlib import Path
 
 import CSET.workflow.files
 
 logger = logging.getLogger(__name__)
+
+# The as_file interface only supports directories from python 3.12.
+if sys.version_info.minor < 12:
+    import importlib_resources
+else:
+    import importlib.resources as importlib_resources
 
 
 def make_script_executable(p: Path):
@@ -65,8 +71,8 @@ def install_workflow(location: Path):
     workflow_dir = location / f"cset-workflow-v{importlib.metadata.version('CSET')}"
 
     # Write workflow content into workflow_dir.
-    workflow_files = importlib.resources.files(CSET.workflow.files)
-    with importlib.resources.as_file(workflow_files) as w:
+    workflow_files = importlib_resources.files(CSET.workflow.files)
+    with importlib_resources.as_file(workflow_files) as w:
         logger.info("Copying workflow files into place.")
         try:
             shutil.copytree(w, workflow_dir)
@@ -75,9 +81,9 @@ def install_workflow(location: Path):
 
     # Make scripts executable.
     logger.info("Changing mode of scripts to be executable.")
-    for dirpath, _, filenames in workflow_dir.walk():
+    for dirpath, _, filenames in os.walk(workflow_dir):
         for filename in filenames:
-            make_script_executable(dirpath / filename)
+            make_script_executable(Path(dirpath) / filename)
 
     # Create link to conda environment.
     conda_prefix = os.getenv("CONDA_PREFIX")
