@@ -56,7 +56,7 @@ def run_recipe_steps():
     try:
         subprocess.run(command, check=True)
     except subprocess.CalledProcessError as err:
-        print(f"cset bake exited with non-zero code {err.returncode}.", sys.stderr)
+        print(f"cset bake exited with non-zero code {err.returncode}.")
         raise
 
 
