@@ -81,9 +81,9 @@ def install_workflow(location: Path):
 
     # Make scripts executable.
     logger.info("Changing mode of scripts to be executable.")
-    for dirpath, _, filenames in workflow_dir.walk():
+    for dirpath, _, filenames in os.walk(workflow_dir):
         for filename in filenames:
-            make_script_executable(dirpath / filename)
+            make_script_executable(Path(dirpath) / filename)
 
     # Create link to conda environment.
     conda_prefix = os.getenv("CONDA_PREFIX")
