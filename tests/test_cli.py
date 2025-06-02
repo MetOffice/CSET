@@ -41,16 +41,72 @@ def test_command_line_invocation():
 
 # Every other test should not use the command line interface, but rather stay
 # within python to ensure coverage measurement.
-def test_argument_parser(tmp_path):
-    """Tests the argument parser behaves appropriately."""
+def test_argument_parser_graph(tmp_path):
+    """Tests the cset graph argument parser behaves appropriately."""
     parser = CSET.setup_argument_parser()
-    # Test verbose flag.
     args = parser.parse_args(["graph", "-r", "recipe.yaml", "-o", str(tmp_path)])
+    assert args.recipe == Path("recipe.yaml")
+    assert args.output_path == tmp_path
     assert args.verbose == 0
+    # Test verbose flag.
     args = parser.parse_args(["-v", "graph", "-r", "recipe.yaml", "-o", str(tmp_path)])
     assert args.verbose == 1
     args = parser.parse_args(["-vv", "graph", "-r", "recipe.yaml", "-o", str(tmp_path)])
     assert args.verbose == 2
+
+
+def test_argument_parser_bake(tmp_path):
+    """Tests the cset bake argument parser behaves appropriately."""
+    parser = CSET.setup_argument_parser()
+    # Check required arguments.
+    args = parser.parse_args(
+        ["bake", "--recipe", "recipe.yaml", "--output-dir", str(tmp_path)]
+    )
+    assert args.recipe == Path("recipe.yaml")
+    assert args.output_dir == tmp_path
+    # Check optional arguments.
+    args = parser.parse_args(
+        [
+            "bake",
+            "-r",
+            "recipe.yaml",
+            "-o",
+            str(tmp_path),
+            "-i",
+            str(tmp_path),
+            "-s",
+            str(tmp_path / "style.json"),
+            "--plot-resolution",
+            "72",
+            "--skip-write",
+        ]
+    )
+    assert args.input_dir == [str(tmp_path)]
+    assert args.style_file == tmp_path / "style.json"
+    assert args.plot_resolution == 72
+    assert args.skip_write is True
+
+
+def test_argument_parser_cookbook(tmp_path):
+    """Tests the cset cookbook argument parser behaves appropriately."""
+    parser = CSET.setup_argument_parser()
+    # Check default values.
+    args = parser.parse_args(["cookbook"])
+    assert args.recipe == ""
+    assert args.output_dir == Path.cwd()
+    # Check optional arguments.
+    args = parser.parse_args(["cookbook", "-d", "-o", str(tmp_path), "recipe.yaml"])
+    assert args.details is True
+    assert args.output_dir == tmp_path
+    assert args.recipe == "recipe.yaml"
+
+
+def test_argument_parser_extract_workflow(tmp_path):
+    """Tests the cset extract-workflow argument parser behaves appropriately."""
+    parser = CSET.setup_argument_parser()
+    # Check required argument.
+    args = parser.parse_args(["extract-workflow", str(tmp_path)])
+    assert args.location == tmp_path
 
 
 def test_setup_logging():
