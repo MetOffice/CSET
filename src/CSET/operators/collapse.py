@@ -27,7 +27,7 @@ import iris.exceptions
 import iris.util
 
 from CSET._common import iter_maybe
-from CSET.operators._utils import get_common_time_cubes, is_time_aggregatable
+from CSET.operators._utils import is_time_aggregatable
 from CSET.operators.aggregate import add_hour_coordinate
 
 
