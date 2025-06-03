@@ -17,7 +17,7 @@
 import iris
 import iris.coords
 import iris.cube
-import pytest
+import numpy as np
 
 import CSET.operators._utils as operator_utils
 
@@ -170,7 +170,7 @@ def test_is_time_aggregatable(long_forecast_multi_day):
 
 def test_get_common_time_cubes(transect_source_cube):
     """Check that only common time points are returned."""
-    cubelist = operator_utils.get_common_time_cubes(
-        iris.cube.CubeList([transect_source_cube[1:], transect_source_cube[:]])
-    )
-    assert cubelist[0].coord("time").points == cubelist[0].coord("time").points
+    cubelist = iris.cube.CubeList(
+        [transect_source_cube[1:], transect_source_cube[:]]
+    ).extract_overlapping("time")
+    assert cubelist[0].coord("time").points == np.array([449472.0])
