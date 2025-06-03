@@ -86,6 +86,9 @@ URL = https://metoffice.github.io/CSET
         {% for date in CSET_CASE_DATES %}
             R1/{{date}} = """
             setup_complete[^] =>
+            {% if SURFACE_SYNOP_OBS %}
+                 FETCH_OBS:succeed-all =>
+            {% endif %}
             FETCH_DATA:succeed-all =>
             PREPROCESS_DATA:succeed-all =>
             fetch_complete =>
@@ -97,6 +100,9 @@ URL = https://metoffice.github.io/CSET
         # Analyse from each forecast.
         {{CSET_TRIAL_CYCLE_PERIOD}} = """
         setup_complete[^] =>
+        {% if SURFACE_SYNOP_OBS %}
+             FETCH_OBS:succeed-all =>
+        {% endif %}
         FETCH_DATA:succeed-all =>
         PREPROCESS_DATA:succeed-all =>
         fetch_complete =>
@@ -156,6 +162,9 @@ URL = https://metoffice.github.io/CSET
     execution retry delays = PT1M, PT15M, PT1H
     [[[directives]]]
         --mem=5000
+    [[[environment]]]
+        PLOTTING_PROJECTION = {{PLOTTING_PROJECTION | default(None)}}
+
 
     [[PROCESS_CASE_AGGREGATION]]
     script = rose task-run -v --app-key=run_cset_recipe
@@ -168,6 +177,12 @@ URL = https://metoffice.github.io/CSET
 
     [[FETCH_DATA]]
     script = rose task-run -v --app-key=fetch_fcst
+    execution time limit = PT1H
+        [[[environment]]]
+        ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
+
+    [[FETCH_OBS]]
+    script = rose task-run -v --app-key=fetch_obs
     execution time limit = PT1H
         [[[environment]]]
         ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
@@ -245,6 +260,20 @@ URL = https://metoffice.github.io/CSET
         MODEL_IDENTIFIER = {{model["id"]}}
 	FIELDS = {{preprocess_fields}}
     {% endfor %}
+
+    {% if SURFACE_SYNOP_OBS %}
+    [[fetch_obs]]
+    # Fetch observations from the MetDB.
+    inherit = FETCH_OBS
+        [[[environment]]]
+        MODEL_IDENTIFIER = "OBS"
+        ROSE_APP_COMMAND_KEY = "metdb"
+        SURFACE_SYNOP_FIELDS = {{SURFACE_SYNOP_FIELDS}}
+        SURFACE_SYNOP_INTERVAL = {{SURFACE_SYNOP_INTERVAL}}
+        SURFACE_SYNOP_OFFSET = {{SURFACE_SYNOP_OFFSET}}
+        WMO_BLOCK_STTN_NMBRS = {{WMO_BLOCK_STTN_NMBRS | list}}
+        OBS_SUBTYPE = "LNDSYB"
+    {% endif %}
 
     [[housekeeping]]
     # Housekeep unprocessed data files and processed intermediate files.

@@ -1,0 +1,39 @@
+category: Quick Look
+title: Difference between modelled field of $VARNAME in model $MODEL_NAME and observation.
+description: |
+    Plot some observations.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+
+  - operator: regrid.interpolate_to_point_cube
+    fld:
+      operator: filters.filter_cubes
+      constraint:
+        operator: constraints.combine_constraints
+        var_constraint:
+          operator: constraints.generate_var_constraint
+          varname: $VARNAME
+        cell_method_constraint:
+          operator: constraints.generate_cell_methods_constraint
+          cell_methods: []
+        # This will require more work. Several fields are stored with muliple
+        # cell methods, so generally we want the instantaneous one, but in
+        # other cases, the field may be available only with another cell method.
+        # In effect, we shall need to match cell methods to diagnostics.
+    point_cube:
+      operator: filters.filter_cubes
+      constraint:
+        operator: constraints.generate_var_constraint
+        varname: $OBSVARNAME
+    output_difference: True
+
+  - operator: plot.spatial_contour_plot
+    sequence_coordinate: time
+    projection: $PLOTTING_PROJECTION
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+
