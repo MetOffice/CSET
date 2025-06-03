@@ -5,7 +5,7 @@
 [runtime]
     [[obs_model_difference_scatterplot_m{{model["id"]}}_{{obs_field}}]]
     inherit = PROCESS
-    execution time limit = PT1H
+    execution time limit = PT6H
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_model_obs_difference_scatterplot.yaml"
         CSET_ADDOPTS = """
@@ -15,6 +15,9 @@
             --OBSERVATIONS='OBS'
             --MODEL_NAME='{{model["name"]}}'
             --DIFFERENCE=True
+            --SUBAREA_TYPE={{SUBAREA_TYPE | default(None)}}
+            --SUBAREA_EXTENT={{SUBAREA_TYPE | default(None)}}
+            --PLOTTING_PROJECTION={{PLOTTING_PROJECTION | default(None)}}
         """
         MODEL_IDENTIFIERS = 'OBS {{model["id"]}}'
 

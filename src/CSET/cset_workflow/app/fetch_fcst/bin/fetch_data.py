@@ -188,7 +188,7 @@ def _get_needed_environment_variables_obs() -> dict:
         "model_identifier": "OBS",
         "wmo_nmbrs": json.loads(os.environ["WMO_BLOCK_STTN_NMBRS"].replace("'",'"')),
         "obs_interval": isodate.parse_duration(os.environ["SURFACE_SYNOP_INTERVAL"]),
- i      "obs_offset": isodate.parse_duration(os.environ["SURFACE_SYNOP_OFFSET"]),
+        "obs_offset": isodate.parse_duration(os.environ["SURFACE_SYNOP_OFFSET"]),
         "rose_datac": os.environ["ROSE_DATAC"],
     }
     logging.debug("Environment variables loaded: %s", variables)
