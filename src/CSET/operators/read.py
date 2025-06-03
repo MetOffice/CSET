@@ -545,10 +545,10 @@ def _longitude_fix_callback(cube: iris.cube.Cube, field, filename):
     long_coord = cube.coord(x)
     long_points = long_coord.points.copy()
     long_centre = np.median(long_points)
-    while long_centre <= -180.0:
+    while long_centre <= -175.0:
         long_centre += 180.0
         long_points += 180.0
-    while long_centre > 180.0:
+    while long_centre > 175.0:
         long_centre -= 180.0
         long_points -= 180.0
     long_coord.points = long_points
