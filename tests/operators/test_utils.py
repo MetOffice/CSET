@@ -18,6 +18,7 @@ import iris
 import iris.coords
 import iris.cube
 import numpy as np
+import pytest
 
 import CSET.operators._utils as operator_utils
 
