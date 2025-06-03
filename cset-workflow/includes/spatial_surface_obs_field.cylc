@@ -6,7 +6,12 @@
     execution time limit = PT1H
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_obs_scatterplot.yaml"
-        CSET_ADDOPTS = "--VARNAME={{obs_field}}"
+        CSET_ADDOPTS = """
+            --VARNAME={{obs_field}}
+            --SUBAREA_TYPE={{SUBAREA_TYPE | default(None)}}
+            --SUBAREA_EXTENT={{SUBAREA_TYPE | default(None)}}
+            --PLOTTING_PROJECTION={{PLOTTING_PROJECTION | default(None)}}
+        """
         MODEL_IDENTIFIERS = "OBS"
 
 {% endfor %}
