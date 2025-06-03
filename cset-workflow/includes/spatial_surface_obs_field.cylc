@@ -1,0 +1,13 @@
+{% if SURFACE_SYNOP_OBS %}
+{% for obs_field in SURFACE_SYNOP_FIELDS %}
+[runtime]
+    [[generic_obs_scatterplot_{{obs_field}}]]
+    inherit = PROCESS
+    execution time limit = PT1H
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_obs_scatterplot.yaml"
+        CSET_ADDOPTS = "--VARNAME={{obs_field}}"
+        MODEL_IDENTIFIERS = "OBS"
+
+{% endfor %}
+{% endif %}

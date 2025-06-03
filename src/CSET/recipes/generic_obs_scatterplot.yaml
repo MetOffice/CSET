@@ -1,0 +1,22 @@
+category: Quick Look
+title: Observed values of $VARNAME.
+description: |
+    Plot some observations.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    constraint:
+      operator: constraints.combine_constraints
+      variable_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+
+  - operator: plot.spatial_contour_plot
+    sequence_coordinate: time
+    projection: $PLOTTING_PROJECTION
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+
