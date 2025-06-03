@@ -166,7 +166,7 @@ def collapse_by_hour_of_day(
         collapsed_cubes.append(cube)
 
     # Retain only common time points between the different models.
-    collapsed_cubes = get_common_time_cubes(collapsed_cubes)
+    collapsed_cubes = collapsed_cubes.extract_overlapping("time")
 
     final_list = iris.cube.CubeList([])
     for cube in iter_maybe(collapsed_cubes):
