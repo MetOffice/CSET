@@ -1,6 +1,10 @@
 {% if SPATIAL_SURFACE_FIELD or SPATIAL_PLEVEL_FIELD or SPATIAL_MLEVEL_FIELD %}
 [[SPATIAL]]
     inherit=PROCESS
+
+[runtime]
+    [[dummy_spatial]]
+    inherit = DUMMY_TASK, SPATIAL
 {% endif %}
 
 # Loop over all models
@@ -11,7 +15,7 @@
 {% for field in SURFACE_FIELDS %}
 [runtime]
     [[spatial_plot_time_series_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
-    inherit = SPATIAL, PROCESS
+    inherit = SPATIAL
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_surface_spatial_plot_sequence.yaml"
         CSET_ADDOPTS = """
@@ -35,7 +39,7 @@
 {% for plevel in PRESSURE_LEVELS %}
 [runtime]
     [[plevel_spatial_plot_sequence_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
-    inherit = SPATIAL, PROCESS
+    inherit = SPATIAL
         [[[directives]]]
         --mem=4000
         [[[environment]]]
@@ -64,7 +68,7 @@
 {% for mlevel in MODEL_LEVELS %}
 [runtime]
     [[mlevel_spatial_plot_sequence_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(mlevel)}}]]
-    inherit = SPATIAL, PROCESS
+    inherit = SPATIAL
         [[[directives]]]
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_level_spatial_plot_sequence.yaml"

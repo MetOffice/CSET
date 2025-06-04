@@ -1,6 +1,10 @@
 {% if True in PROFILE_PLEVEL_AGGREGATION or True in PROFILE_MLEVEL_AGGREGATION %}
 [[PROFILE_AGGREGATION]]
-   inherit = PROCESS_CASE_AGGREGATION
+    inherit = PROCESS_CASE_AGGREGATION
+
+[runtime]
+    [[dummy_profile_aggregation]]
+    inherit = DUMMY_TASK, PROFILE_AGGREGATION
 {% endif %}
 
 # Loop over aggregation types (hour_of_day, lead_time, validity_time)
@@ -11,7 +15,7 @@
 {% for field in PRESSURE_LEVEL_FIELDS %}
 [runtime]
     [[plevel_domain_mean_vertical_profile_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_{{sanitise_task_name(field)}}]]
-    inherit = PROFILE_AGGREGATION, PROCESS_CASE_AGGREGATION
+    inherit = PROFILE_AGGREGATION
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_level_domain_mean_vertical_profile_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
         CSET_ADDOPTS = """
@@ -35,7 +39,7 @@
 {% for field in MODEL_LEVEL_FIELDS %}
 [runtime]
     [[mlevel_domain_mean_vertical_profile_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}_{{sanitise_task_name(field)}}]]
-    inherit = PROFILE_AGGREGATION, PROCESS_CASE_AGGREGATION
+    inherit = PROFILE_AGGREGATION
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_level_domain_mean_vertical_profile_series_case_aggregation_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
         CSET_ADDOPTS = """

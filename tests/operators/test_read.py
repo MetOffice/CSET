@@ -653,7 +653,7 @@ def test_read_cubes_extract_subarea_latlon():
     )[0]
     assert isinstance(cube_rw, iris.cube.Cube)
 
-    # Compare the latitude coordinates to check its extracted same region. We
+    # Compare the latitude coordinates to check it has extracted same region. We
     # use latitude as there is little difference in spacing from the equator to
     # pole, but longitude varies (converges to zero at pole).
     assert not np.array_equal(

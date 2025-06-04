@@ -1,5 +1,5 @@
 category: Histogram
-title: Surface $VARNAME histogram case aggregation
+title: "Histogram $VARNAME\n Aggregation over all cases"
 description: |
   Extracts and plots the probability density of surface `$VARNAME`. It uses
   [`plt.hist`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.hist.html)
@@ -17,6 +17,9 @@ steps:
       variable_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
       pressure_level_constraint:
         operator: constraints.generate_level_constraint
         coordinate: pressure
