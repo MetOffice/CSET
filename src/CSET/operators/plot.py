@@ -224,6 +224,8 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis=None):
     definitions. As well as varying on variables, these definitions may also
     exist for specific pressure levels to account for variables with
     significantly different ranges at different heights.
+    Specific variable ranges can be separately set in user-supplied definition
+    for x- or y-axis limits, or indicate where automated range preferred.
 
     Parameters
     ----------
@@ -231,8 +233,10 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis=None):
         Cube of variable for which the colorbar information is desired.
     axis: str
         If specified, x or y-axis for setting vmin and vmax bounds. These
-        can be set in colorbar definitions using xmin,xmax or ymin,ymax
-        settings, or default to min,max if not provided.
+        can be set in colorbar definitions using values of xmin,xmax or
+        ymin,ymax settings, or default to min,max values if not provided.
+        For variables where setting universal xmin,xmax or ymin,ymax might
+        not be desirable (e.g. temperature), users can set levels to "auto".
 
     Returns
     -------
@@ -247,6 +251,7 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis=None):
     # Grab the colorbar file from the recipe global metadata.
     user_colorbar_file = get_recipe_metadata().get("style_file_path", None)
     colorbar = _load_colorbar_map(user_colorbar_file)
+    cmap = None
 
     try:
         # We assume that pressure is a scalar coordinate here.
@@ -263,82 +268,74 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis=None):
     for varname in varnames:
         # Get the colormap for this variable.
         try:
-            cmap = mpl.colormaps[colorbar[varname]["cmap"]]
-            if pressure_level is None:
-                var_colorbar = colorbar[varname]
-            else:
-                # If pressure level is specified for cube use a pressure-level
-                # specific colorbar, if one exists.
-                try:
-                    var_colorbar = colorbar[varname]["pressure_levels"][pressure_level]
-                except KeyError:
-                    logging.warning(
-                        "%s has no colorbar definition for pressure level %s.",
-                        varname,
-                        pressure_level,
-                    )
-                    # Fallback to variable default.
-                    var_colorbar = colorbar[varname]
-
-            # Get the range for this variable.
-            vmin, vmax = var_colorbar["min"], var_colorbar["max"]
-            # Testing for x-specific or y-specific overrides.
-            if axis:
-                if axis == "x":
-                    try:
-                        vmin, vmax = var_colorbar["xmin"], var_colorbar["xmax"]
-                    except KeyError:
-                        vmin, vmax = var_colorbar["min"], var_colorbar["max"]
-                if axis == "y":
-                    try:
-                        vmin, vmax = var_colorbar["ymin"], var_colorbar["ymax"]
-                    except KeyError:
-                        vmin, vmax = var_colorbar["min"], var_colorbar["max"]
-                levels = np.linspace(vmin, vmax, 51)
-            # Get the colorbar levels for this variable.
-            else:
-                try:
-                    levels = var_colorbar["levels"]
-                    # Use discrete bins when levels are specified, rather than a
-                    # smooth range.
-                    norm = mpl.colors.BoundaryNorm(levels, ncolors=cmap.N)
-                    logging.debug("Using levels for %s colorbar.", varname)
-                    logging.info("Using levels: %s", levels)
-                    # Overwrite cmap, levels and norm for specific variables that
-                    # require custom colorbar_map as these can not be defined in the
-                    # JSON file.
-                    cmap, levels, norm = _custom_colourmap_precipitation(
-                        cube, cmap, levels, norm
-                    )
-                except KeyError:
-                    # Get the range for this variable.
-                    vmin, vmax = var_colorbar["min"], var_colorbar["max"]
-                    logging.debug("Using min and max for %s colorbar.", varname)
-                    # Calculate levels from range.
-                    levels = np.linspace(vmin, vmax, 51)
-
-            # norm = None
-            norm = mpl.colors.BoundaryNorm(levels, ncolors=cmap.N)
-            cmap, levels, norm = _custom_colourmap_precipitation(
-                cube, cmap, levels, norm
-            )
-
-            # Override levels for temperature or geopotential height variable
-            # time series
-            if axis == "y":
-                if "temperature" in varname or "geopotential" in varname:
-                    levels = None
-
-            return cmap, levels, norm
+            var_colorbar = colorbar[varname]
+            cmap = plt.get_cmap(colorbar[varname]["cmap"], 51)
+            varname_key = varname
         except KeyError:
             logging.debug("Cube name %s has no colorbar definition.", varname)
-            # Retry with next name.
-            continue
 
-    # Default if no varnames match.
-    logging.warning("No colorbar definition exists for %s.", cube.name())
-    cmap, levels, norm = mpl.colormaps["viridis"], None, None
-    return cmap, levels, norm
+    # If no valid colormap has been defined, use defaults and return
+    if not cmap:
+        logging.warning("No colorbar definition exists for %s.", cube.name())
+        cmap, levels, norm = mpl.colormaps["viridis"], None, None
+        return cmap, levels, norm
+
+    # Test if pressure-level specific settings are provided for cube
+    if pressure_level:
+        try:
+            var_colorbar = colorbar[varname_key]["pressure_levels"][pressure_level]
+        except KeyError:
+            logging.debug(
+                "%s has no colorbar definition for pressure level %s.",
+                varname,
+                pressure_level,
+            )
+
+    # Check for availability of x-axis or y-axis user-specific overrides
+    # for line plottypes and return levels.
+    if axis:
+        if axis == "x":
+            try:
+                vmin, vmax = var_colorbar["xmin"], var_colorbar["xmax"]
+            except KeyError:
+                vmin, vmax = var_colorbar["min"], var_colorbar["max"]
+        if axis == "y":
+            try:
+                vmin, vmax = var_colorbar["ymin"], var_colorbar["ymax"]
+            except KeyError:
+                vmin, vmax = var_colorbar["min"], var_colorbar["max"]
+        # Check if user-specified auto-scaling for this variable
+        if vmin == "auto" or vmax == "auto":
+            levels = None
+        else:
+            levels = np.linspace(vmin, vmax, 2)
+
+        # Complete settings based on levels
+        return None, levels, None
+
+    # Get and use the colorbar levels for this variable if spatial or histogram.
+    else:
+        try:
+            levels = var_colorbar["levels"]
+            # Use discrete bins when levels are specified, rather
+            # than a smooth range.
+            norm = mpl.colors.BoundaryNorm(levels, ncolors=cmap.N)
+            logging.debug("Using levels for %s colorbar.", varname)
+            logging.info("Using levels: %s", levels)
+
+        except KeyError:
+            # Get the range for this variable.
+            vmin, vmax = var_colorbar["min"], var_colorbar["max"]
+            logging.debug("Using min and max for %s colorbar.", varname)
+            # Calculate levels from range.
+            levels = np.linspace(vmin, vmax, 101)
+            norm = None
+
+        # Overwrite cmap, levels and norm for specific variables that
+        # require custom colorbar_map as these can not be defined in the
+        # JSON file.
+        cmap, levels, norm = _custom_colourmap_precipitation(cube, cmap, levels, norm)
+        return cmap, levels, norm
 
 
 def _get_plot_resolution() -> int:
