@@ -49,6 +49,8 @@ def test_load_colorbar_map():
         "cmap": "RdYlBu_r",
         "max": 323,
         "min": 223,
+        "ymax": "auto",
+        "ymin": "auto",
     }
 
 
@@ -68,6 +70,8 @@ def test_load_colorbar_map_override(tmp_path):
         "cmap": "RdYlBu_r",
         "max": 1000,
         "min": 0,
+        "ymax": "auto",
+        "ymin": "auto",
     }
     # Check we can still see unchanged definitions.
     assert colorbar["temperature_at_screen_level_difference"] == {
@@ -88,28 +92,53 @@ def test_load_colorbar_map_override_file_not_found(tmp_path):
 def test_colorbar_map_levels(cube, tmp_working_dir):
     """Colorbar definition is found for cube."""
     cmap, levels, norm = plot._colorbar_map_levels(cube)
-    assert cmap == mpl.colormaps["RdYlBu_r"]
-    assert (levels == np.linspace(223, 323, 51)).all()
+    assert cmap == mpl.pyplot.get_cmap("RdYlBu_r", 51)
+    assert (levels == np.linspace(223, 323, 101)).all()
     assert norm is None
 
 
-# Test will fail (but not cause an overall fail) as we can't test using levels
-# until there is at least one variable that uses them.
-@pytest.mark.xfail(reason="No colorbar currently uses levels")
+def test_colorbar_map_levels_xaxis(cube, tmp_working_dir):
+    """Set levels for based on xmin, xmax."""
+    cube = iris.cube.Cube([np.arange(10)])
+    cube.rename("zonal_wind_at_pressure_levels")
+    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="x")
+    assert cmap is None
+    assert (levels == np.linspace(-25, 25, 2)).all()
+    assert norm is None
+
+
+def test_colorbar_map_levels_yaxis(cube, tmp_working_dir):
+    """Set levels for based on ymin, ymax."""
+    cube = iris.cube.Cube([np.arange(10)])
+    cube.rename("toa_upward_shortwave_flux")
+    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="y")
+    assert cmap is None
+    assert (levels == np.linspace(0, 350, 2)).all()
+    assert norm is None
+
+
+def test_colorbar_map_levels_yaxis_auto(cube, tmp_working_dir):
+    """Set levels for based on ymin, ymax set to auto."""
+    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="y")
+    assert cmap is None
+    assert levels is None
+    assert norm is None
+
+
 def test_colorbar_map_levels_def_on_levels(cube, tmp_working_dir):
     """Colorbar definition that uses levels is found for cube."""
+    cube = iris.cube.Cube([np.arange(10)])
+    cube.rename("surface_microphysical_rainfall_rate")
     cmap, levels, norm = plot._colorbar_map_levels(cube)
-    assert cmap == mpl.colormaps[...]
-    assert levels == [1, 2, 3]
-    assert norm == ...
+    assert levels == [0, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
 
 
 def test_colorbar_map_levels_name_fallback(cube, tmp_working_dir):
     """Colorbar definition is found for cube after checking its other names."""
     cube.standard_name = None
     cmap, levels, norm = plot._colorbar_map_levels(cube)
-    assert cmap == mpl.colormaps["RdYlBu_r"]
-    assert (levels == np.linspace(223, 323, 51)).all()
+    assert cmap == mpl.pyplot.get_cmap("RdYlBu_r", 51)
+    assert (levels == np.linspace(223, 323, 101)).all()
     assert norm is None
 
 
@@ -119,7 +148,7 @@ def test_colorbar_map_levels_unknown_variable_fallback(cube, tmp_working_dir):
     cube.long_name = None
     cube.var_name = "unknown"
     cmap, levels, norm = plot._colorbar_map_levels(cube)
-    assert cmap == mpl.colormaps["viridis"]
+    assert cmap == mpl.pyplot.get_cmap("viridis")
     assert levels is None
     assert norm is None
 
@@ -128,8 +157,20 @@ def test_colorbar_map_levels_pressure_level(transect_source_cube, tmp_working_di
     """Pressure level specific colorbar definition is picked up."""
     cube_250hPa = transect_source_cube.extract(iris.Constraint(pressure=250))
     cmap, levels, norm = plot._colorbar_map_levels(cube_250hPa)
-    assert cmap == mpl.colormaps["RdYlBu_r"]
-    assert (levels == np.linspace(200, 240, 51)).all()
+    assert cmap == mpl.pyplot.get_cmap("RdYlBu_r", 51)
+    assert (levels == np.linspace(200, 240, 101)).all()
+    assert norm is None
+
+
+def test_colorbar_map_levels_pressure_level_yaxis(
+    transect_source_cube, tmp_working_dir
+):
+    """Pressure level specific colorbar definition is picked up."""
+    cube_250hPa = transect_source_cube.extract(iris.Constraint(pressure=250))
+    cube_250hPa.rename("zonal_wind_at_pressure_levels")
+    cmap, levels, norm = plot._colorbar_map_levels(cube_250hPa, axis="y")
+    assert cmap is None
+    assert (levels == np.linspace(-20, 20, 2)).all()
     assert norm is None
 
 
