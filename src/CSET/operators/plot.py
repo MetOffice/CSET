@@ -1658,6 +1658,13 @@ def plot_histogram_series(
     # Get minimum and maximum from levels information.
     levels = None
     for cube in cubes:
+        # First check if user-specified "auto" range variable.
+        # This maintains the value of levels as None, so proceed.
+        _, levels, _ = _colorbar_map_levels(cube, axis="y")
+        if levels is None:
+            break
+        # If levels is changed, recheck to use the vmin,vmax or
+        # levels-based ranges for histogram plots.
         _, levels, _ = _colorbar_map_levels(cube)
         logging.debug("levels: %s", levels)
         if levels is not None:
