@@ -56,10 +56,10 @@ def run():
     str_fields = os.environ["FIELDS"]
 
     # Parse FIELDS workflow environment variable string to
-    # unique list of iris-ready constraint names
+    # list of unique iris-ready constraint names.
     fields = set(ast.literal_eval(str_fields))
 
-    if len(fields) > 0:
+    if fields:
         print(f"Preprocessing variable list {fields}.")
     else:
         fields = None
