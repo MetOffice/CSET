@@ -10,8 +10,8 @@
     "cmap": "coolwarm",
     "max": 104000,
     "min": 94000,
-    "ymax": 100000,
-    "ymin": 102000
+    "ymax": "auto",
+    "ymin": "auto"
   },
   "air_pressure_at_mean_sea_level_difference": {
     "cmap": "bwr",
@@ -157,21 +157,31 @@
     "pressure_levels": {
       "1000": {
         "max": 250,
-        "min": -250
+        "min": -250,
+        "ymax": "auto",
+        "ymin": "auto"
       },
       "250": {
         "max": 10800,
-        "min": 10200
+        "min": 10200,
+        "ymax": "auto",
+        "ymin": "auto"
       },
       "500": {
         "max": 6000,
-        "min": 5000
+        "min": 5000,
+        "ymax": "auto",
+        "ymin": "auto"
       },
       "850": {
         "max": 1700,
-        "min": 1200
+        "min": 1200,
+        "ymax": "auto",
+        "ymin": "auto"
       }
-    }
+    },
+    "ymax": "auto",
+    "ymin": "auto"
   },
   "geopotential_height_at_pressure_levels_difference": {
     "cmap": "bwr",
@@ -273,8 +283,8 @@
   },
   "meridional_wind_at_pressure_levels": {
     "cmap": "bwr",
-    "max": 50,
-    "min": -50,
+    "max": 40,
+    "min": -40,
     "pressure_levels": {
       "100": {
         "max": 100,
@@ -295,8 +305,8 @@
         "ymin": -10
       },
       "250": {
-        "max": 55,
-        "min": -55,
+        "max": 50,
+        "min": -50,
         "ymax": 10,
         "ymin": -10
       },
@@ -307,8 +317,8 @@
         "ymin": -10
       },
       "500": {
-        "max": 45,
-        "min": -45,
+        "max": 40,
+        "min": -40,
         "ymax": 10,
         "ymin": -10
       },
