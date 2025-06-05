@@ -459,7 +459,9 @@
       64,
       128,
       256
-    ]
+    ],
+    "ymax": 1.0,
+    "ymin": 0.0
   },
   "surface_microphysical_rainfall_rate_difference": {
     "cmap": "bwr",
