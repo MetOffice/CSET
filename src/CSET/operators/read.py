@@ -361,20 +361,11 @@ def _cutout_cubes(
 
         # Do cutout and add to cutout_cubes.
         logging.debug("Cutting out coords %s", cutout_coords)
-
-        if isinstance(coord_system, iris.coord_systems.RotatedGeogCS):
-            cutout_cubes.append(
-                cube.intersection(
-                    grid_latitude=cutout_coords["lat"],
-                    grid_longitude=cutout_coords["lon"],
-                )
-            )
-        else:
-            cutout_cubes.append(
-                cube.intersection(
-                    latitude=cutout_coords["lat"], longitude=cutout_coords["lon"]
-                )
-            )
+        intersection_args = {
+            lat_name: cutout_coords["lat"],
+            lon_name: cutout_coords["lon"],
+        }
+        cutout_cubes.append(cube.intersection(**intersection_args))
 
     return cutout_cubes
 
