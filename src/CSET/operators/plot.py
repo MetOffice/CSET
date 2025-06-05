@@ -666,7 +666,6 @@ def _plot_and_save_vertical_line_series(
         if model_colors_map:
             label = cube.attributes.get("model_name")
             color = model_colors_map.get(label)
-        print(cube)
         iplt.plot(cube, coord, color=color, marker="o", ls="-", lw=3, label=label)
 
     # Get the current axis
@@ -1404,7 +1403,6 @@ def plot_vertical_line_series(
             ) from err
 
         # Get minimum and maximum from levels information.
-        print("HERE")
         _, levels, _ = _colorbar_map_levels(cube, axis="x")
         if levels is not None:
             x_levels.append(min(levels))
