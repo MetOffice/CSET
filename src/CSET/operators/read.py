@@ -399,7 +399,7 @@ def _create_callback(is_ensemble: bool) -> callable:
         _fix_spatial_coords_callback(cube)
         _fix_pressure_coord_callback(cube)
         # _lfric_normalise_varname(cube)
-        _fix_um_radtime_prehour(cube)
+        # _fix_um_radtime_prehour(cube)
         _fix_um_radtime_posthour(cube)
         _fix_um_lightning(cube)
         _lfric_time_callback(cube)
@@ -700,8 +700,6 @@ def _fix_um_radtime_posthour(cube: iris.cube.Cube):
             n_second = time_points[0].second
             if n_minute > 30:
                 n_minute = n_minute - 60
-            if n_second > 30:
-                n_second = n_second - 60
             new_time_points = (
                 time_points
                 - datetime.timedelta(minutes=n_minute)
