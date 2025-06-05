@@ -16,25 +16,25 @@ URL = https://metoffice.github.io/CSET
 # Set list of all required variable names for PREPROCESS.
 {% set preprocess_fields = [] %}
 {% if SPATIAL_SURFACE_FIELD|default(False) or SPATIAL_DIFFERENCE_SURFACE_FIELD|default(False) or TIMESERIES_SURFACE_FIELD|default(False) or HISTOGRAM_SURFACE_FIELD|default(False) %}
-    {% do preprocess_fields.append(SURFACE_FIELDS) %}
+    {% do preprocess_fields.extend(SURFACE_FIELDS) %}
 {% endif %}
 {% if SPATIAL_PLEVEL_FIELD|default(False) or SPATIAL_DIFFERENCE_PLEVEL_FIELD|default(False) or TIMESERIES_PLEVEL_FIELD|default(False) or HISTOGRAM_PLEVEL_FIELD|default(False) or PROFILE_PLEVEL|default(False) %}
-    {% do preprocess_fields.append(PRESSURE_LEVEL_FIELDS) %}
+    {% do preprocess_fields.extend(PRESSURE_LEVEL_FIELDS) %}
 {% endif %}
 {% if SPATIAL_MLEVEL_FIELD|default(False) or SPATIAL_DIFFERENCE_MLEVEL_FIELD|default(False) or TIMESERIES_MLEVEL_FIELD|default(False) or HISTOGRAM_MLEVEL_FIELD|default(False) or PROFILE_MLEVEL|default(False) %}
-    {% do preprocess_fields.append(MODEL_LEVEL_FIELDS) %}
+    {% do preprocess_fields.extend(MODEL_LEVEL_FIELDS) %}
 {% endif %}
 # Specify required variables for process-based methods for PREPROCESS
 {% if AOA_DIAG|default(False) %}
-    {% do preprocess_fields.append(['zonal_wind_at_pressure_levels','meridional_wind_at_pressure_levels','vertical_wind_at_pressure_levels','geopotential_height_at_pressure_levels']) %}
+    {% do preprocess_fields.extend(['zonal_wind_at_pressure_levels','meridional_wind_at_pressure_levels','vertical_wind_at_pressure_levels','geopotential_height_at_pressure_levels']) %}
 {% endif %}
 {% if BASIC_QQ_PLOT|default(False) %}
-    {% do preprocess_fields.append(MODEL_FIELDS_A) %}
-    {% do preprocess_fields.append(MODEL_FIELDS_B) %}
+    {% do preprocess_fields.extend(MODEL_FIELDS_A) %}
+    {% do preprocess_fields.extend(MODEL_FIELDS_B) %}
 {% endif %}
 {% if DETERMINISTIC_PLOT_CAPE_RATIO|default(False) or DETERMINISTIC_PLOT_INFLOW_PROPERTIES|default(False) %}
-    {% do preprocess_fields.append(['m01s20i114','m01s20i112','m01s20i113']) %}
-    {% do preproecss_fields.append(['m01s20i119','m01s00i025','m01s00i033']) %}
+    {% do preprocess_fields.extend(['m01s20i114','m01s20i112','m01s20i113']) %}
+    {% do preproecss_fields.extend(['m01s20i119','m01s00i025','m01s00i033']) %}
 {% endif %}
 
 
