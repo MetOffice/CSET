@@ -1,6 +1,10 @@
 {% if PROFILE_PLEVEL or PROFILE_MLEVEL %}
 [[PROFILE]]
-   inherit = PROCESS
+    inherit = PROCESS
+
+[runtime]
+    [[dummy_profile]]
+    inherit = DUMMY_TASK, PROFILE
 {% endif %}
 
 # Pressure level fields
@@ -9,7 +13,7 @@
 {% for method in SPATIAL_PLEVEL_FIELD_METHOD %}
 [runtime]
     [[plevel_domain_mean_vertical_profile_{{method}}_{{sanitise_task_name(field)}}]]
-    inherit = PROFILE, PROCESS
+    inherit = PROFILE
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_level_domain_mean_vertical_profile_series.yaml"
         CSET_ADDOPTS = """
@@ -36,7 +40,7 @@
 {% for method in SPATIAL_MLEVEL_FIELD_METHOD %}
 [runtime]
     [[mlevel_domain_mean_vertical_profile_{{method}}_{{sanitise_task_name(field)}}]]
-    inherit = PROFILE, PROCESS
+    inherit = PROFILE
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_level_domain_mean_vertical_profile_series.yaml"
         CSET_ADDOPTS = """

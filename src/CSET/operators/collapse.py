@@ -153,7 +153,7 @@ def collapse_by_hour_of_day(
     collapsed_cubes = iris.cube.CubeList([])
     for cube in iter_maybe(cubes):
         if is_time_aggregatable(cube):
-            # Collapse by lead time to get a single time dimension.
+            # Collapse by forecast reference time to get a single time dimension.
             cube = collapse(
                 cube,
                 "forecast_reference_time",

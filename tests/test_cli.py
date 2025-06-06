@@ -30,7 +30,9 @@ import CSET
 def test_command_line_invocation():
     """Check invocation via different entrypoints.
 
-    Uses subprocess to validate the external interface.
+    Uses subprocess to validate the external interface. Every other test should
+    not use the command line interface, but rather stay within python to ensure
+    coverage measurement.
     """
     # Invoke via cset command
     subprocess.run(["cset", "--version"], check=True)
@@ -38,18 +40,64 @@ def test_command_line_invocation():
     subprocess.run(["python3", "-m", "CSET", "--version"], check=True)
 
 
-# Every other test should not use the command line interface, but rather stay
-# within python to ensure coverage measurement.
-def test_argument_parser(tmp_path):
-    """Tests the argument parser behaves appropriately."""
+def test_argument_parser_graph(tmp_path):
+    """Tests the cset graph argument parser behaves appropriately."""
     parser = CSET.setup_argument_parser()
-    # Test verbose flag.
     args = parser.parse_args(["graph", "-r", "recipe.yaml", "-o", str(tmp_path)])
+    assert args.recipe == Path("recipe.yaml")
+    assert args.output_path == tmp_path
     assert args.verbose == 0
+    # Test verbose flag.
     args = parser.parse_args(["-v", "graph", "-r", "recipe.yaml", "-o", str(tmp_path)])
     assert args.verbose == 1
     args = parser.parse_args(["-vv", "graph", "-r", "recipe.yaml", "-o", str(tmp_path)])
     assert args.verbose == 2
+
+
+def test_argument_parser_bake(tmp_path):
+    """Tests the cset bake argument parser behaves appropriately."""
+    parser = CSET.setup_argument_parser()
+    # Check required arguments.
+    args = parser.parse_args(
+        ["bake", "--recipe", "recipe.yaml", "--output-dir", str(tmp_path)]
+    )
+    assert args.recipe == Path("recipe.yaml")
+    assert args.output_dir == tmp_path
+    # Check optional arguments.
+    args = parser.parse_args(
+        [
+            "bake",
+            "-r",
+            "recipe.yaml",
+            "-o",
+            str(tmp_path),
+            "-i",
+            str(tmp_path),
+            "-s",
+            str(tmp_path / "style.json"),
+            "--plot-resolution",
+            "72",
+            "--skip-write",
+        ]
+    )
+    assert args.input_dir == [str(tmp_path)]
+    assert args.style_file == tmp_path / "style.json"
+    assert args.plot_resolution == 72
+    assert args.skip_write is True
+
+
+def test_argument_parser_cookbook(tmp_path):
+    """Tests the cset cookbook argument parser behaves appropriately."""
+    parser = CSET.setup_argument_parser()
+    # Check default values.
+    args = parser.parse_args(["cookbook"])
+    assert args.recipe == ""
+    assert args.output_dir == Path.cwd()
+    # Check optional arguments.
+    args = parser.parse_args(["cookbook", "-d", "-o", str(tmp_path), "recipe.yaml"])
+    assert args.details is True
+    assert args.output_dir == tmp_path
+    assert args.recipe == "recipe.yaml"
 
 
 def test_setup_logging():
@@ -163,6 +211,33 @@ def test_bake_invalid_args(capsys):
         )
     assert sysexit.value.code == 127
     assert capsys.readouterr().err == "Unknown argument: --not-a-real-option\n"
+
+
+def test_bake_INPUT_PATHS_conversion(monkeypatch):
+    """--input-dir argument is converted to --INPUT_PATHS recipe variable."""
+
+    def check_vars(*args, **kwargs):
+        assert "INPUT_PATHS" in args[2]
+        p = str(Path("foo").absolute())
+        assert args[2]["INPUT_PATHS"] in (p, [p])
+
+    monkeypatch.setattr(CSET.operators, "execute_recipe", check_vars)
+
+    class args:
+        recipe = "recipe.yaml"
+        input_dir = "foo"
+        output_dir = Path("/dev/null")
+        style_file = None
+        plot_resolution = None
+        skip_write = None
+
+    # Check --input-dir is converted.
+    unparsed_args = []
+    CSET._bake_command(args, unparsed_args)
+    # Check --INPUT_PATHS is directly used.
+    args.input_dir = None
+    unparsed_args = ["--INPUT_PATHS", str(Path("foo").absolute())]
+    CSET._bake_command(args, unparsed_args)
 
 
 def test_graph_creation(tmp_path: Path):

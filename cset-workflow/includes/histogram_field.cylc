@@ -1,6 +1,10 @@
 {% if HISTOGRAM_SURFACE_FIELD or HISTOGRAM_PLEVEL_FIELD or HISTOGRAM_MLEVEL_FIELD %}
 [[HISTOGRAM]]
     inherit = PROCESS
+
+[runtime]
+    [[dummy_histogram]]
+    inherit = DUMMY_TASK, HISTOGRAM
 {% endif %}
 
 # Surface (2D) fields
@@ -8,7 +12,7 @@
 {% for field in SURFACE_FIELDS %}
 [runtime]
     [[surface_histogram_series_{{sanitise_task_name(field)}}]]
-    inherit = HISTOGRAM, PROCESS
+    inherit = HISTOGRAM
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_surface_histogram_series.yaml"
         CSET_ADDOPTS = """
@@ -37,7 +41,7 @@
 {% for plevel in PRESSURE_LEVELS %}
 [runtime]
     [[plevel_histogram_series_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
-    inherit = HISTOGRAM, PROCESS
+    inherit = HISTOGRAM
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_level_histogram_series.yaml"
         CSET_ADDOPTS = """
@@ -69,7 +73,7 @@
 {% for mlevel in MODEL_LEVELS %}
 [runtime]
     [[mlevel_histogram_series_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(mlevel)}}]]
-    inherit = HISTOGRAM, PROCESS
+    inherit = HISTOGRAM
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_level_histogram_series.yaml"
         CSET_ADDOPTS = """

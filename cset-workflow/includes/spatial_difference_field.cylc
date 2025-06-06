@@ -1,6 +1,10 @@
 {% if SPATIAL_DIFFERENCE_SURFACE_FIELD or SPATIAL_DIFFERENCE_PLEVEL_FIELD or SPATIAL_DIFFERENCE_MLEVEL_FIELD %}
 [[SPATIAL_DIFFERENCE]]
     inherit = PROCESS
+
+[runtime]
+    [[dummy_spatial_difference]]
+    inherit = DUMMY_TASK, SPATIAL_DIFFERENCE
 {% endif %}
 
 # Models are listed in order, so model 1 is the first element.
@@ -14,7 +18,7 @@
 {% for method in SPATIAL_SURFACE_FIELD_METHOD %}
 [runtime]
     [[spatial_surface_difference_{{method}}_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
-    inherit = SPATIAL_DIFFERENCE, PROCESS
+    inherit = SPATIAL_DIFFERENCE
         [[[environment]]]
         CSET_RECIPE_NAME = "surface_spatial_difference.yaml"
         CSET_ADDOPTS = """
@@ -42,7 +46,7 @@
 {% for method in SPATIAL_PLEVEL_FIELD_METHOD %}
 [runtime]
     [[spatial_pressure_difference_{{method}}_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
-    inherit = SPATIAL_DIFFERENCE, PROCESS
+    inherit = SPATIAL_DIFFERENCE
         [[[environment]]]
         CSET_RECIPE_NAME = "level_spatial_difference.yaml"
         CSET_ADDOPTS = """
@@ -73,7 +77,7 @@
 {% for method in SPATIAL_MLEVEL_FIELD_METHOD %}
 [runtime]
     [[spatial_mlevel_difference_{{method}}_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(mlevel)}}]]
-    inherit = SPATIAL_DIFFERENCE, PROCESS
+    inherit = SPATIAL_DIFFERENCE
         [[[environment]]]
         CSET_RECIPE_NAME = "level_spatial_difference.yaml"
         CSET_ADDOPTS = """

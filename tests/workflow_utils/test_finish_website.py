@@ -24,14 +24,14 @@ def test_copy_rose_config(monkeypatch, tmp_path):
     """Copy rose-suite.conf to web dir."""
     rose_suite_conf = tmp_path / "rose-suite.conf"
     with open(rose_suite_conf, "wt") as fp:
-        fp.write("<p>Test rose-suite.conf file</p>\n")
+        fp.write("Test rose-suite.conf file\n")
     web_dir = tmp_path / "web"
     web_dir.mkdir()
     monkeypatch.setenv("CYLC_WORKFLOW_RUN_DIR", str(tmp_path))
     monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", str(tmp_path))
     finish_website.copy_rose_config()
-    with open(web_dir / "rose-suite.conf", "rt", encoding="UTF-8") as fp:
-        assert fp.read() == "<p>Test rose-suite.conf file</p>\n"
+    with open(web_dir / "rose-suite.conf.txt", "rt", encoding="UTF-8") as fp:
+        assert fp.read() == "Test rose-suite.conf file\n"
 
 
 def test_write_workflow_status(monkeypatch, tmp_path):

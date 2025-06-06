@@ -120,7 +120,10 @@ URL = https://metoffice.github.io/CSET
         CONDA_PATH = {{CONDA_PATH}}
         LOGLEVEL = {{LOGLEVEL}}
         PLOT_RESOLUTION = {{PLOT_RESOLUTION|default(100)}}
-        SKIP_WRITE = {{SKIP_WRITE}}
+        {% if SKIP_WRITE|default(False) %}
+        SKIP_WRITE = True
+        {% endif %}
+
 
     [[PROCESS]]
     script = rose task-run -v --app-key=run_cset_recipe
