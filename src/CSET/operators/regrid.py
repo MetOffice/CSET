@@ -399,10 +399,11 @@ def interpolate_to_point_cube(fld: iris.cube.Cube | iris.cube.CubeList,
                                fld,
                                ['time', 'grid_latitude', 'grid_longitude'])
         for jt in range(len(fld_point_cube.coords('time')[0].points)):
-            fld_point_cube.data[jt, :] = [ fld_interpolator(
-                [fld_point_cube.coords('time')[0].points[jt],
-                rotpt[0][k], rotpt[1][k]]).data 
-                for k in range(len(rotpt[0])) ]
+            fld_point_cube.data[jt, :] = np.ma.masked_invalid(
+                [ fld_interpolator( [fld_point_cube.coord('time').points[jt],
+                        rotpt[1][k], rotpt[0][k]]).data
+                    if ~point_cube.data.mask[jt][k] else np.nan
+                for k in range(len(rotpt[0])) ])
     else:
         # Add other interpolation options later.
         fld_interpolator = iris.analysis.Linear(
@@ -410,11 +411,12 @@ def interpolate_to_point_cube(fld: iris.cube.Cube | iris.cube.CubeList,
                                fld,
                                ['time', 'latitude', 'longitude'])
         for jt in range(len(fld_point_cube.coords('time')[0].points)):
-            fld_point_cube.data[jt, :] = [ fld_interpolator(
-                [fld_point_cube.coords('time')[0].points[jt],
-                fld_point_cube.aux_coords[klon].points[k],
-                fld_point_cube.aux_coords[klon].points[k]]).data 
-                for k in range(fld_point_cube.aux_coords[klon].points) ]
+            fld_point_cube.data[jt, :] = np.ma.masked_invalid(
+                [ fld_interpolator( [fld_point_cube.coords('time')[0].points[jt],
+                    fld_point_cube.coord('latitude').points[k],
+                    fld_point_cube.coord('longitude').points[k]]).data 
+                if ~point_cube.data.mask[jt][k] else np.nan
+                for k in range(fld_point_cube.coord('latitude').points) ] )
     #
     if (output_difference):
         fld_point_cube.data -= point_cube.data

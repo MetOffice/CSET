@@ -1349,7 +1349,7 @@ def spatial_contour_plot(
     TypeError
         If the cube isn't a single cube.
     """
-    _spatial_plot("contourf", cube, filename, sequence_coordinate, stamp_coordinate)
+    _spatial_plot("contourf", cube, filename, sequence_coordinate, stamp_coordinate, **kwargs)
     return cube
 
 
@@ -1398,7 +1398,7 @@ def spatial_pcolormesh_plot(
     TypeError
         If the cube isn't a single cube.
     """
-    _spatial_plot("pcolormesh", cube, filename, sequence_coordinate, stamp_coordinate)
+    _spatial_plot("pcolormesh", cube, filename, sequence_coordinate, stamp_coordinate, **kwargs)
     return cube
 
 
