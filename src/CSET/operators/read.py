@@ -33,7 +33,7 @@ from iris.analysis.cartography import rotate_pole
 
 from CSET._common import iter_maybe
 from CSET.operators._stash_to_lfric import STASH_TO_LFRIC
-from CSET.operators._utils import get_cube_yxcoordname
+from CSET.operators._utils import get_cube_coordindex, get_cube_yxcoordname
 
 
 class NoDataWarning(UserWarning):
@@ -289,8 +289,6 @@ def _cutout_cubes(
         raise ValueError("Unknown subarea_type:", subarea_type)
 
     # If selected, cutout according to number of grid cells to trim from each edgei
-    import CSET.operators._utils as utils
-
     if subarea_type == "gridcells":
         logging.debug(
             "User requested LowerTrim: %s LeftTrim: %s UpperTrim: %s RightTrim: %s",
@@ -302,9 +300,9 @@ def _cutout_cubes(
         cutout_cubes = iris.cube.CubeList()
         # Find spatial coordinates
         for cube in cubes:
-            y_name, x_name = utils.get_cube_yxcoordname(cube)
-            ny = utils.get_cube_coordindex(cube, y_name)
-            nx = utils.get_cube_coordindex(cube, x_name)
+            y_name, x_name = get_cube_yxcoordname(cube)
+            ny = get_cube_coordindex(cube, y_name)
+            nx = get_cube_coordindex(cube, x_name)
             nlat = cube.shape[ny]
             nlon = cube.shape[nx]
             n_lower = subarea_extent[0]
