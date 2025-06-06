@@ -216,7 +216,7 @@ def _get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
     return {mname: color for mname, color in zip(model_names, color_list, strict=False)}
 
 
-def _colorbar_map_levels(cube: iris.cube.Cube, axis=None):
+def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = None):
     """Get an appropriate colorbar for the given cube.
 
     For the given variable the appropriate colorbar is looked up from a
@@ -231,12 +231,13 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis=None):
     ----------
     cube: Cube
         Cube of variable for which the colorbar information is desired.
-    axis: str
-        If specified, x or y-axis for setting vmin and vmax bounds. These
-        can be set in colorbar definitions using values of xmin,xmax or
-        ymin,ymax settings, or default to min,max values if not provided.
-        For variables where setting universal xmin,xmax or ymin,ymax might
-        not be desirable (e.g. temperature), users can set levels to "auto".
+    axis: "x", "y", optional
+        Select the levels for just this axis of a line plot. The min and max
+        can be set by xmin/xmax or ymin/ymax respectively. For variables where
+        setting a universal range is not desirable (e.g. temperature), users
+        can set ymin/ymax values to "auto" in the colorbar definitions file.
+        Where no additional xmin/xmax or ymin/ymax values are provided, the
+        axis bounds default to use the vmin/vmax values provided.
 
     Returns
     -------
@@ -271,16 +272,17 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis=None):
             var_colorbar = colorbar[varname]
             cmap = plt.get_cmap(colorbar[varname]["cmap"], 51)
             varname_key = varname
+            break
         except KeyError:
             logging.debug("Cube name %s has no colorbar definition.", varname)
 
-    # If no valid colormap has been defined, use defaults and return
+    # If no valid colormap has been defined, use defaults and return.
     if not cmap:
         logging.warning("No colorbar definition exists for %s.", cube.name())
         cmap, levels, norm = mpl.colormaps["viridis"], None, None
         return cmap, levels, norm
 
-    # Test if pressure-level specific settings are provided for cube
+    # Test if pressure-level specific settings are provided for cube.
     if pressure_level:
         try:
             var_colorbar = colorbar[varname_key]["pressure_levels"][pressure_level]
@@ -292,7 +294,8 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis=None):
             )
 
     # Check for availability of x-axis or y-axis user-specific overrides
-    # for line plottypes and return levels.
+    # for setting level bounds for line plot types and return just levels.
+    # Line plots do not need a colormap, and just use the data range.
     if axis:
         if axis == "x":
             try:
@@ -308,9 +311,9 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis=None):
         if vmin == "auto" or vmax == "auto":
             levels = None
         else:
-            levels = np.linspace(vmin, vmax, 2)
+            levels = [vmin, vmax]
 
-        # Complete settings based on levels
+        # Complete settings based on levels.
         return None, levels, None
 
     # Get and use the colorbar levels for this variable if spatial or histogram.
@@ -610,6 +613,7 @@ def _plot_and_save_line_series(
     # Set y limits to global min and max, autoscale if colorbar doesn't exist.
     if y_levels:
         ax.set_ylim(min(y_levels), max(y_levels))
+        # Add zero line.
         if min(y_levels) < 0.0 and max(y_levels) > 0.0:
             ax.axhline(y=0, xmin=0, xmax=1, ls="-", color="grey", lw=2)
     else:
@@ -703,9 +707,9 @@ def _plot_and_save_vertical_line_series(
     ax.set_yticks(y_ticks)
     ax.set_yticklabels(y_tick_labels)
 
-    # set x-axis limits
+    # Set x-axis limits.
     ax.set_xlim(vmin, vmax)
-    # mark y=0 if present in plot
+    # Mark y=0 if present in plot.
     if vmin < 0.0 and vmax > 0.0:
         ax.axvline(x=0, ymin=0, ymax=1, ls="-", color="grey", lw=2)
 

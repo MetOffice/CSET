@@ -103,7 +103,17 @@ def test_colorbar_map_levels_xaxis(cube, tmp_working_dir):
     cube.rename("zonal_wind_at_pressure_levels")
     cmap, levels, norm = plot._colorbar_map_levels(cube, axis="x")
     assert cmap is None
-    assert (levels == np.linspace(-25, 25, 2)).all()
+    assert levels == [-25, 25]
+    assert norm is None
+
+
+def test_colorbar_map_levels_xaxis_default(cube, tmp_working_dir):
+    """Test for variable without xmin, xmax."""
+    cube = iris.cube.Cube([np.arange(10)])
+    cube.rename("zonal_wind_at_pressure_levels_difference")
+    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="x")
+    assert cmap is None
+    assert levels == [-20, 20]
     assert norm is None
 
 
@@ -113,7 +123,17 @@ def test_colorbar_map_levels_yaxis(cube, tmp_working_dir):
     cube.rename("toa_upward_shortwave_flux")
     cmap, levels, norm = plot._colorbar_map_levels(cube, axis="y")
     assert cmap is None
-    assert (levels == np.linspace(0, 350, 2)).all()
+    assert levels == [0, 350]
+    assert norm is None
+
+
+def test_colorbar_map_levels_yaxis_default(cube, tmp_working_dir):
+    """Test for variable without ymin, ymax."""
+    cube = iris.cube.Cube([np.arange(10)])
+    cube.rename("toa_upward_shortwave_flux_difference")
+    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="y")
+    assert cmap is None
+    assert levels == [-100, 100]
     assert norm is None
 
 
@@ -170,7 +190,7 @@ def test_colorbar_map_levels_pressure_level_yaxis(
     cube_250hPa.rename("zonal_wind_at_pressure_levels")
     cmap, levels, norm = plot._colorbar_map_levels(cube_250hPa, axis="y")
     assert cmap is None
-    assert (levels == np.linspace(-20, 20, 2)).all()
+    assert levels == [-20, 20]
     assert norm is None
 
 
