@@ -214,7 +214,7 @@ def test_difference_different_data_shape_regrid(cube):
     """
     rearranged_cube = cube.copy()
     rearranged_cube = rearranged_cube[:, :, 1:]
-    del rearranged_cube.attributes["cset_comparison_base"]
+    del cube.attributes["cset_comparison_base"]
     cubes = iris.cube.CubeList([rearranged_cube, cube])
     difference = misc.difference(cubes)
     assert isinstance(difference, iris.cube.Cube)
