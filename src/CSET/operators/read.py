@@ -329,6 +329,15 @@ def _cutout_cubes(
     )
     cutout_cubes = iris.cube.CubeList()
 
+    # Ensure realworld cutout region is within +/- 180.0 bounds
+    if subarea_type == "realworld":
+        if subarea_extent[2] < -180.0:
+            subarea_extent[2] += 180.0
+            subarea_extent[3] += 180.0
+        if subarea_extent[3] > 180.0:
+            subarea_extent[2] -= 180.0
+            subarea_extent[3] -= 180.0
+
     for cube in cubes:
         # Define cutout region using user provided coordinates.
         cutout_coords = {
@@ -428,7 +437,7 @@ def _create_callback(is_ensemble: bool) -> callable:
         _lfric_normalise_callback(cube, field, filename)
         _lfric_time_coord_fix_callback(cube, field, filename)
         _longitude_fix_callback(cube, field, filename)
-        _lfric_normalise_varname(cube)
+        _normalise_var0_varname(cube)
         _fix_spatial_coords_callback(cube)
         _fix_pressure_coord_callback(cube)
         # _lfric_normalise_varname(cube)
@@ -807,7 +816,7 @@ def _fix_um_lightning(cube: iris.cube.Cube):
         time_coord.points = new_time_values
 
 
-def _lfric_normalise_varname(cube: iris.cube.Cube):
+def _normalise_var0_varname(cube: iris.cube.Cube):
     """Fix LFRic varnames for consistency to allow merging.
 
     LFRic data seems to sometime have a coordinate name end in "_0", which

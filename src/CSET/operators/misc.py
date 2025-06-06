@@ -286,15 +286,18 @@ def difference(cubes: CubeList):
     base_lat_name, base_lon_name = get_cube_yxcoordname(base)
     other_lat_name, other_lon_name = get_cube_yxcoordname(other)
 
-    # Check latitude, longitude shape the same. Not comparing points, as these
-    # might slightly differ due to rounding errors (especially in future if we
-    # are regridding cubes to common resolutions).
-    # An exception has been included here to deal with some variables on different
-    # grid staggering (cell center vs edge of cell) when comparing UM to LFRic,
-    # depending on whether they are on a B grid or Arakawa staggering. Note we do not
-    # generally apply regridding to any variable where dimension sizes do not
-    # match, to make sure we are using appropriate regridding technique. In this
-    # case for winds, a Linear regridding is appropriate (smooth variable).
+    # Ensure cubes to compare are on common differencing grid.
+    # This is triggered if either
+    #      i) latitude and longitude shapes are not the same. Note grid points
+    #         are not compared directly as these can differ through rounding
+    #         errors.
+    #     ii) or variables are known to often sit on different grid staggering
+    #         in different models (e.g. cell center vs cell edge), as is the case
+    #         for UM and LFRic comparisons.
+    # In future greater choice of regridding method might be applied depending
+    # on variable type. Linear regridding can in general be appropriate for smooth
+    # variables. Care should be taken with interpretation of differences
+    # given this dependency on regridding.
     if (
         base.coord(base_lat_name).shape != other.coord(other_lat_name).shape
         or base.coord(base_lon_name).shape != other.coord(other_lon_name).shape
