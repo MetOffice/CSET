@@ -16,17 +16,17 @@ page.
     usage: cset bake [-h] [-i INPUT_DIR [INPUT_DIR ...]] -o OUTPUT_DIR -r RECIPE [-s STYLE_FILE] [--plot-resolution PLOT_RESOLUTION] [--skip-write]
 
     options:
-    -h, --help            show this help message and exit
-    -i, --input-dir INPUT_DIR [INPUT_DIR ...]
-                            Alternate way to set the INPUT_PATHS recipe variable
-    -o, --output-dir OUTPUT_DIR
-                            directory to write output into
-    -r, --recipe RECIPE   recipe file to read
-    -s, --style-file STYLE_FILE
-                            colour bar definition to use
-    --plot-resolution PLOT_RESOLUTION
-                            plotting resolution in dpi
-    --skip-write          Skip saving processed output
+      -h, --help            show this help message and exit
+      -i, --input-dir INPUT_DIR [INPUT_DIR ...]
+                              Alternate way to set the INPUT_PATHS recipe variable
+      -o, --output-dir OUTPUT_DIR
+                              directory to write output into
+      -r, --recipe RECIPE   recipe file to read
+      -s, --style-file STYLE_FILE
+                              colour bar definition to use
+      --plot-resolution PLOT_RESOLUTION
+                              plotting resolution in dpi
+      --skip-write          Skip saving processed output
 
 Here is an example to run a recipe making use of the templated variable
 ``VARNAME`` in the recipe. The '-v' is optional to give verbose output:
@@ -57,13 +57,13 @@ or use ``--details`` for descriptions of available recipes.
     usage: cset cookbook [-h] [-d] [-o OUTPUT_DIR] [recipe]
 
     positional arguments:
-    recipe                recipe to output or detail
+      recipe                recipe to output or detail
 
     options:
-    -h, --help            show this help message and exit
-    -d, --details         list available recipes. Supplied recipes are detailed
-    -o, --output-dir OUTPUT_DIR
-                            directory to save recipes. If omitted uses $PWD
+      -h, --help            show this help message and exit
+      -d, --details         list available recipes. Supplied recipes are detailed
+      -o, --output-dir OUTPUT_DIR
+                              directory to save recipes. If omitted uses $PWD
 
 .. _cset-graph-command:
 
@@ -80,11 +80,28 @@ exactly what ran.
     usage: cset graph [-h] [-d] [-o [OUTPUT_PATH]] -r RECIPE
 
     options:
-    -h, --help            show this help message and exit
-    -d, --details         include operator arguments in output
-    -o, --output-path [OUTPUT_PATH]
-                            persistent file to save the graph. Otherwise the file is opened
-    -r, --recipe RECIPE   recipe file to read
+      -h, --help            show this help message and exit
+      -d, --details         include operator arguments in output
+      -o, --output-path [OUTPUT_PATH]
+                              persistent file to save the graph. Otherwise the file is opened
+      -r, --recipe RECIPE   recipe file to read
 
 .. image:: recipe-graph.svg
     :alt: A graph visualising a recipe. The nodes are linked with directed edges showing the flow of data.
+
+cset extract-workflow
+~~~~~~~~~~~~~~~~~~~~~
+
+Unpack the CSET cylc workflow into a new directory under location. The current
+CSET conda environment is linked so it can be used by the workflow. For guided
+usage see :doc:`/getting-started/workflow-installation`.
+
+.. code-block:: text
+
+    usage: cset extract-workflow [-h] location
+
+    positional arguments:
+      location    directory to save workflow into
+
+    options:
+      -h, --help  show this help message and exit

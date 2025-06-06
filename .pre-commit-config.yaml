@@ -38,7 +38,7 @@ repos:
         description: Ensure the rose metadata has been generated from its template.
         entry: ./scripts/generate_rose_meta.py
         language: python
-        files: cset-workflow/meta/
+        files: src/CSET/workflow/files/meta/
         additional_dependencies:
           - jinja2
 

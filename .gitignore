@@ -142,10 +142,10 @@ dmypy.json
 #######################
 
 # Exclude site-specific files that are held in a separate private repo.
-cset-workflow/site/
-cset-workflow/opt/
+src/CSET/workflow/files/site/
+src/CSET/workflow/files/opt/
+src/CSET/workflow/files/app/demo_pointstat/
 restricted*
-cset-workflow/app/demo_pointstat/
 
 # User workflow configuration.
-cset-workflow/rose-suite.conf
+src/CSET/workflow/files/rose-suite.conf
