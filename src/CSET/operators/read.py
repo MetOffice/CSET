@@ -284,9 +284,42 @@ def _cutout_cubes(
         logging.debug("Subarea selection is disabled.")
         return cubes
 
-    if subarea_type not in ["realworld", "modelrelative"]:
+    if subarea_type not in ["realworld", "modelrelative", "gridcells"]:
         raise ValueError("Unknown subarea_type:", subarea_type)
 
+    # If selected, cutout according to number of grid cells to trim from each edgei
+    import CSET.operators._utils as utils
+
+    if subarea_type == "gridcells":
+        logging.debug(
+            "User requested LowerTrim: %s LeftTrim: %s UpperTrim: %s RightTrim: %s",
+            subarea_extent[0],
+            subarea_extent[1],
+            subarea_extent[2],
+            subarea_extent[3],
+        )
+        cutout_cubes = iris.cube.CubeList()
+        # Find spatial coordinates
+        for cube in cubes:
+            y_name, x_name = utils.get_cube_yxcoordname(cube)
+            ny = utils.get_cube_coordindex(cube, y_name)
+            nx = utils.get_cube_coordindex(cube, x_name)
+            nlat = cube.shape[ny]
+            nlon = cube.shape[nx]
+            n_lower = subarea_extent[0]
+            n_left = subarea_extent[1]
+            n_upper = nlat - subarea_extent[2]
+            n_right = nlon - subarea_extent[3]
+            if len(cube.shape) == 2:
+                cutout_cubes.append(cube[n_lower:n_upper, n_left:n_right])
+            if len(cube.shape) == 3:
+                cutout_cubes.append(cube[:, n_lower:n_upper, n_left:n_right])
+            if len(cube.shape) == 4:
+                cutout_cubes.append(cube[:, :, n_lower:n_upper, n_left:n_right])
+
+        return cutout_cubes
+
+    # If not gridcells, cutout by requested geographic area.
     logging.debug(
         "User requested LLat: %s ULat: %s LLon: %s ULon: %s",
         subarea_extent[0],
