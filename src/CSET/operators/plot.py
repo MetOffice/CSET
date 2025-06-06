@@ -216,7 +216,7 @@ def _get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
     return {mname: color for mname, color in zip(model_names, color_list, strict=False)}
 
 
-def _colorbar_map_levels(cube: iris.cube.Cube, axis=None):
+def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = None):
     """Get an appropriate colorbar for the given cube.
 
     For the given variable the appropriate colorbar is looked up from a
@@ -230,13 +230,14 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis=None):
     Parameters
     ----------
     cube: Cube
-        Cube of variable for which the colorbar information is desired.
-    axis: str
-        If specified, x or y-axis for setting vmin and vmax bounds. These
-        can be set in colorbar definitions using values of xmin,xmax or
-        ymin,ymax settings, or default to min,max values if not provided.
-        For variables where setting universal xmin,xmax or ymin,ymax might
-        not be desirable (e.g. temperature), users can set levels to "auto".
+        Cube of variable for which the colorbar information is desired.i
+    axis: "x", "y", optional
+        Select the levels for just this axis of a line plot. The min and max
+        can be set by xmin/xmax or ymin/ymax respectively. For variables where
+        setting a universal range is not desirable (e.g. temperature), users
+        can set ymin/ymax values to "auto" in the colorbar definitions file.
+        Where no additional xmin/xmax or ymin/ymax values are provided, the
+        axis bounds default to use the vmin/vmax values provided.
 
     Returns
     -------
@@ -271,6 +272,7 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis=None):
             var_colorbar = colorbar[varname]
             cmap = plt.get_cmap(colorbar[varname]["cmap"], 51)
             varname_key = varname
+            break
         except KeyError:
             logging.debug("Cube name %s has no colorbar definition.", varname)
 
@@ -308,7 +310,7 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis=None):
         if vmin == "auto" or vmax == "auto":
             levels = None
         else:
-            levels = np.linspace(vmin, vmax, 2)
+            levels = [vmin, vmax]
 
         # Complete settings based on levels
         return None, levels, None
