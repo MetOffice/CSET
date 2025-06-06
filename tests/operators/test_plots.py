@@ -15,6 +15,7 @@
 """Test plotting operators."""
 
 import json
+import logging
 from pathlib import Path
 
 import iris.coords
@@ -192,6 +193,29 @@ def test_colorbar_map_levels_pressure_level_yaxis(
     assert cmap is None
     assert levels == [-20, 20]
     assert norm is None
+
+
+def test_colorbar_map_levels_missing_pressure_level(
+    transect_source_cube, tmp_working_dir, caplog
+):
+    """Pressure level specific colorbar definition is not defined."""
+    cube_288hPa = transect_source_cube.extract(iris.Constraint(pressure=250))
+    cube_288hPa.coord("pressure").points = 288.0
+    cmap, levels, norm = plot._colorbar_map_levels(cube_288hPa)
+    with caplog.at_level(logging.DEBUG):
+        cmap, levels, norm = plot._colorbar_map_levels(cube_288hPa)
+        assert caplog.record_tuples == [
+            (
+                "root",
+                logging.DEBUG,
+                "temperature_at_pressure_levels has no colorbar definition for pressure level 288.",
+            ),
+            (
+                "root",
+                logging.DEBUG,
+                "Using min and max for temperature_at_pressure_levels colorbar.",
+            ),
+        ]
 
 
 def test_spatial_contour_plot(cube, tmp_working_dir):
