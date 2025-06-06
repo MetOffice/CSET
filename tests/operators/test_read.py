@@ -572,6 +572,54 @@ def test_lfric_forecast_period_standard_name_callback(cube):
     assert cube.coord("forecast_period").standard_name == "forecast_period"
 
 
+def test_read_cubes_extract_cells():
+    """Read cube and ensure appropriate number of cells are trimmed from domain edges."""
+    cube = read.read_cubes(
+        "tests/test_data/air_temperature_1000_hpa_level_histogram_plot.nc"
+    )[0]
+    assert cube.shape == (420, 380)
+
+    # Test trimming same number of grid points in all directions
+    cube_all = read.read_cubes(
+        "tests/test_data/air_temperature_1000_hpa_level_histogram_plot.nc",
+        subarea_type="gridcells",
+        subarea_extent=[10, 10, 10, 10],
+    )[0]
+    assert cube_all.shape == (400, 360)
+    assert round(cube_all.data[0, 0], 2) == round(cube.data[10, 10], 2)
+    assert round(cube_all.data[-1, -1], 2) == round(cube.data[409, 369], 2)
+    print("here")
+    # Test trimming lower and upper edges only
+    cube_tb = read.read_cubes(
+        "tests/test_data/air_temperature_1000_hpa_level_histogram_plot.nc",
+        subarea_type="gridcells",
+        subarea_extent=[15, 0, 15, 0],
+    )[0]
+    assert cube_tb.shape == (390, 380)
+    assert round(cube_tb.data[0, 0], 2) == round(cube.data[15, 0], 2)
+    assert round(cube_tb.data[-1, -1], 2) == round(cube.data[389, 379], 2)
+
+    # Test trimming left and right edges only
+    cube_lr = read.read_cubes(
+        "tests/test_data/air_temperature_1000_hpa_level_histogram_plot.nc",
+        subarea_type="gridcells",
+        subarea_extent=[0, 15, 0, 15],
+    )[0]
+    assert cube_lr.shape == (420, 350)
+    assert round(cube_lr.data[0, 0], 2) == round(cube.data[0, 15], 2)
+    assert round(cube_lr.data[-1, -1], 2) == round(cube.data[419, 364], 2)
+
+    # Test trimming lower-side only
+    cube_lo = read.read_cubes(
+        "tests/test_data/air_temperature_1000_hpa_level_histogram_plot.nc",
+        subarea_type="gridcells",
+        subarea_extent=[100, 0, 0, 0],
+    )[0]
+    assert cube_lo.shape == (320, 380)
+    assert round(cube_lo.data[0, 0], 2) == round(cube.data[100, 0], 2)
+    assert round(cube_lo.data[-1, -1], 2) == round(cube.data[419, 379], 2)
+
+
 def test_read_cubes_extract_subarea():
     """Read cube and ensure appropriate subarea is extracted."""
     # All cubes are on same grid, and vary by cell method.
