@@ -486,10 +486,10 @@ def test_spatial_coord_auxcoord_callback():
     """Check that additional spatial aux coord grid_latitude gets added."""
     # This cube contains 'latitude' and 'longitude'
     cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
-    read._fix_spatial_coord_name_callback(cube)
+    read._fix_spatial_coords_callback(cube)
     assert (
         repr(cube.coords())
-        == "[<DimCoord: time / (hours since 1970-01-01 00:00:00)  [...]  shape(2,)>, <DimCoord: pressure / (hPa)  [ 100., 150., ..., 950., 1000.]  shape(16,)>, <DimCoord: latitude / (degrees)  [-10.98, -10.94, ..., -10.82, -10.78]  shape(6,)>, <DimCoord: longitude / (degrees)  [19.02, 19.06, ..., 19.18, 19.22]  shape(6,)>, <DimCoord: forecast_reference_time / (hours since 1970-01-01 00:00:00)  [...]>, <AuxCoord: forecast_period / (hours)  [15., 18.]  shape(2,)>, <AuxCoord: grid_latitude / (unknown)  [-10.98, -10.94, ..., -10.82, -10.78]  shape(6,)>, <AuxCoord: grid_longitude / (unknown)  [19.02, 19.06, ..., 19.18, 19.22]  shape(6,)>]"
+        == "[<DimCoord: time / (hours since 1970-01-01 00:00:00)  [...]  shape(2,)>, <DimCoord: pressure / (hPa)  [ 100., 150., ..., 950., 1000.]  shape(16,)>, <DimCoord: latitude / (degrees)  [-10.98, -10.94, ..., -10.82, -10.78]  shape(6,)>, <DimCoord: longitude / (degrees)  [19.02, 19.06, ..., 19.18, 19.22]  shape(6,)>, <DimCoord: forecast_reference_time / (hours since 1970-01-01 00:00:00)  [...]>, <AuxCoord: forecast_period / (hours)  [15., 18.]  shape(2,)>, <AuxCoord: grid_latitude / (degrees)  [-10.98, -10.94, ..., -10.82, -10.78]  shape(6,)>, <AuxCoord: grid_longitude / (degrees)  [19.02, 19.06, ..., 19.18, 19.22]  shape(6,)>]"
     )
 
 
@@ -497,7 +497,7 @@ def test_spatial_coord_not_exist_callback():
     """Check that spatial coord returns cube if cube does not contain spatial coordinates."""
     cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
     cube = cube[:, :, 0, 0]  # Remove spatial dimcoords
-    read._fix_spatial_coord_name_callback(cube)
+    read._fix_spatial_coords_callback(cube)
     assert (
         repr(cube.coords())
         == "[<DimCoord: time / (hours since 1970-01-01 00:00:00)  [...]  shape(2,)>, <DimCoord: pressure / (hPa)  [ 100., 150., ..., 950., 1000.]  shape(16,)>, <DimCoord: forecast_reference_time / (hours since 1970-01-01 00:00:00)  [...]>, <DimCoord: latitude / (degrees)  [-10.98]>, <DimCoord: longitude / (degrees)  [19.02]>, <AuxCoord: forecast_period / (hours)  [15., 18.]  shape(2,)>]"
@@ -558,10 +558,10 @@ def test_lfric_time_callback_unknown_units(slammed_lfric_cube):
         read._lfric_time_callback(slammed_lfric_cube)
 
 
-def test_lfric_normalise_varname(model_level_cube):
+def test_normalise_var0_varname(model_level_cube):
     """Check that read callback renames the model level var name."""
     model_level_cube.coord("model_level_number").var_name = "model_level_number_0"
-    read._lfric_normalise_varname(model_level_cube)
+    read._normalise_var0_varname(model_level_cube)
     assert model_level_cube.coord("model_level_number").var_name == "model_level_number"
 
 
@@ -614,3 +614,17 @@ def test_read_cubes_extract_subarea():
     assert not np.array_equal(
         cube_rw.coord("grid_latitude").points, cube.coord("grid_latitude").points
     )
+
+
+def test_read_cubes_outofbounds_subarea():
+    """Ensure correct failure if subarea outside cube extent."""
+    with pytest.raises(
+        ValueError,
+        match=r"Cutout region requested not within data area. "
+        "Check and update SUBAREA_EXTENT.",
+    ):
+        read.read_cubes(
+            "tests/test_data/air_temp.nc",
+            subarea_type="realworld",
+            subarea_extent=[-5.5, 5.5, -125.5, 125.5],
+        )[0]
