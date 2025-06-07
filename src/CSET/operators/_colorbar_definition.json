@@ -288,6 +288,8 @@
       "100": {
         "max": 100,
         "min": -100,
+        "xmax": 10,
+        "xmin": -10,
         "ymax": 10,
         "ymin": -10
       },
@@ -618,7 +620,7 @@
     "cmap": "Greys",
     "max": 500.0,
     "min": 0,
-    "ymax": 350.0,
+    "ymax": 450.0,
     "ymin": 0.0
   },
   "toa_upward_shortwave_flux_difference": {
@@ -730,6 +732,8 @@
       "100": {
         "max": 100,
         "min": -100,
+        "xmax": 25,
+        "xmin": -25,
         "ymax": 20,
         "ymin": -20
       },

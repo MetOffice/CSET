@@ -315,11 +315,11 @@ def _cutout_cubes(
             n_right = nlon - subarea_extent[3] - 1
 
             # Define cutout region using user provided cell points.
-            lat_points = cube.coord(lat_name).points
-            lon_points = cube.coord(lon_name).points
+            lat_points = np.sort(cube.coord(lat_name).points)
+            lon_points = np.sort(cube.coord(lon_name).points)
             cutout_coords = {
-                "lat": [lat_points[n_lower], lat_points[n_upper]],
-                "lon": [lon_points[n_left], lon_points[n_right]],
+                "lat": np.array([lat_points[n_lower], lat_points[n_upper]]),
+                "lon": np.array([lon_points[n_left], lon_points[n_right]]),
             }
 
         # Compute cutout based on specified coordinate values
@@ -361,45 +361,45 @@ def _cutout_cubes(
                 )
                 cutout_coords = {"lat": rotated_lats, "lon": rotated_lons}
 
-    # Test if SUBAREA_EXTENT sits entirely within available data region
-    # If no area of overlap cube.intersection will return
-    # non-descriptive index 0 is out of bounds error.
-    lon_min = cube.coord(lon_name).points.min()
-    lon_max = cube.coord(lon_name).points.max()
-    lat_min = cube.coord(lat_name).points.min()
-    lat_max = cube.coord(lat_name).points.max()
-    if (
-        (cutout_coords["lon"].min() < lon_min)
-        or (cutout_coords["lon"].max() > lon_max)
-        or (cutout_coords["lat"].min() < lat_min)
-        or (cutout_coords["lat"].max() > lat_max)
-    ):
-        logging.warning(
-            "User requested LLat: %s ULat: %s LLon: %s ULon: %s",
-            cutout_coords["lat"].min(),
-            cutout_coords["lat"].max(),
-            cutout_coords["lon"].min(),
-            cutout_coords["lon"].max(),
-        )
-        logging.warning(
-            "Data region LLat: %s ULat: %s LLon: %s ULon: %s",
-            lat_min,
-            lat_max,
-            lon_min,
-            lon_max,
-        )
-        raise ValueError(
-            "Cutout region requested not within data area. "
-            "Check and update SUBAREA_EXTENT."
-        )
+        # Test if SUBAREA_EXTENT sits entirely within available data region
+        # If no area of overlap cube.intersection will return
+        # non-descriptive index 0 is out of bounds error.
+        lon_min = cube.coord(lon_name).points.min()
+        lon_max = cube.coord(lon_name).points.max()
+        lat_min = cube.coord(lat_name).points.min()
+        lat_max = cube.coord(lat_name).points.max()
+        if (
+            (cutout_coords["lon"].min() < lon_min)
+            or (cutout_coords["lon"].max() > lon_max)
+            or (cutout_coords["lat"].min() < lat_min)
+            or (cutout_coords["lat"].max() > lat_max)
+        ):
+            logging.warning(
+                "User requested LLat: %s ULat: %s LLon: %s ULon: %s",
+                cutout_coords["lat"].min(),
+                cutout_coords["lat"].max(),
+                cutout_coords["lon"].min(),
+                cutout_coords["lon"].max(),
+            )
+            logging.warning(
+                "Data region LLat: %s ULat: %s LLon: %s ULon: %s",
+                lat_min,
+                lat_max,
+                lon_min,
+                lon_max,
+            )
+            raise ValueError(
+                "Cutout region requested not within data area. "
+                "Check and update SUBAREA_EXTENT."
+            )
 
-    # Do cutout and add to cutout_cubes.
-    logging.debug("Cutting out coords %s", cutout_coords)
-    intersection_args = {
-        lat_name: cutout_coords["lat"],
-        lon_name: cutout_coords["lon"],
-    }
-    cutout_cubes.append(cube.intersection(**intersection_args))
+        # Do cutout and add to cutout_cubes.
+        logging.debug("Cutting out coords %s", cutout_coords)
+        intersection_args = {
+            lat_name: cutout_coords["lat"],
+            lon_name: cutout_coords["lon"],
+        }
+        cutout_cubes.append(cube.intersection(**intersection_args))
 
     return cutout_cubes
 
@@ -691,7 +691,7 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
                 nx,
             )
 
-        # Ensure valid CoordSystem for DimCoord
+        # Ensure valid CoordSystem for DimCoord.
         if not cube.coord(x_name).coord_system:
             cube.coord(x_name).coord_system = iris.coord_systems.GeogCS(6371229.0)
 

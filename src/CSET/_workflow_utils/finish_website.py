@@ -6,6 +6,7 @@ Constructs the plot index, and does the final update to the workflow status on
 the front page of the web interface.
 """
 
+import datetime
 import json
 import logging
 import os
@@ -62,6 +63,9 @@ def update_workflow_status():
     web_dir = Path(os.environ["CYLC_WORKFLOW_SHARE_DIR"] + "/web")
     with open(web_dir / "status.html", "wt") as fp:
         fp.write("<p>Finished</p>\n")
+        fp.write("<p>CSET v{version('CSET')}</p>\n")
+        now_stamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        fp.write("<p>Date created: " + now_stamp + "</p>\n")
 
 
 def copy_rose_config():
