@@ -672,15 +672,13 @@ def test_read_cubes_extract_subarea():
     )
 
 
-def test_read_cubes_outofbounds_subarea():
+def test_read_cubes_outofbounds_subarea(caplog):
     """Ensure correct failure if subarea outside cube extent."""
-    with pytest.raises(
-        ValueError,
-        match=r"Cutout region requested not within data area. "
-        "Check and update SUBAREA_EXTENT.",
-    ):
+    with pytest.raises(IndexError):
         read.read_cubes(
             "tests/test_data/air_temp.nc",
             subarea_type="realworld",
             subarea_extent=[-5.5, 5.5, -125.5, 125.5],
         )[0]
+        _, level, message = caplog.record_tuples[0]
+        assert level == logging.ERROR
