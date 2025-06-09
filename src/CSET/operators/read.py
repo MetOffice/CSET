@@ -297,15 +297,6 @@ def _cutout_cubes(
     )
     cutout_cubes = iris.cube.CubeList()
 
-    # Ensure realworld cutout region is within +/- 180.0 bounds
-    # if subarea_type == "realworld":
-    #    if subarea_extent[2] < -180.0:
-    #        subarea_extent[2] += 180.0
-    #        subarea_extent[3] += 180.0
-    #    if subarea_extent[3] > 180.0:
-    #        subarea_extent[2] -= 180.0
-    #        subarea_extent[3] -= 180.0
-
     for cube in cubes:
         # Define cutout region using user provided coordinates.
         lats = np.array(subarea_extent[0:2])
