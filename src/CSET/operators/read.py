@@ -349,12 +349,11 @@ def _cutout_cubes(
         logging.debug("Cutting out coords: %s", intersection_args)
         try:
             cutout_cubes.append(cube.intersection(**intersection_args))
-        except IndexError:
-            logging.error(
-                "Cutout intersection failed. "
-                "Cutout region requested not within data area. "
+        except IndexError as err:
+            raise ValueError(
+                "Cutout region requested should be within data area. "
                 "Check and update SUBAREA_EXTENT."
-            )
+            ) from err
 
     return cutout_cubes
 
