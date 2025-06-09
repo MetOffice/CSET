@@ -579,6 +579,14 @@ def test_read_cubes_extract_cells():
     )[0]
     assert cube.shape == (420, 380)
 
+    # Test not trimming any cells.
+    cube_full = read.read_cubes(
+        "tests/test_data/air_temperature_1000_hpa_level_histogram_plot.nc",
+        subarea_type="gridcells",
+        subarea_extent=[0, 0, 0, 0],
+    )[0]
+    assert cube_full.shape == (420, 380)
+
     # Test trimming same number of grid points in all directions
     cube_all = read.read_cubes(
         "tests/test_data/air_temperature_1000_hpa_level_histogram_plot.nc",
@@ -588,7 +596,7 @@ def test_read_cubes_extract_cells():
     assert cube_all.shape == (400, 360)
     assert round(cube_all.data[0, 0], 2) == round(cube.data[10, 10], 2)
     assert round(cube_all.data[-1, -1], 2) == round(cube.data[409, 369], 2)
-    print("here")
+
     # Test trimming lower and upper edges only
     cube_tb = read.read_cubes(
         "tests/test_data/air_temperature_1000_hpa_level_histogram_plot.nc",
