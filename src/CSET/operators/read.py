@@ -298,20 +298,22 @@ def _cutout_cubes(
     cutout_cubes = iris.cube.CubeList()
 
     # Ensure realworld cutout region is within +/- 180.0 bounds
-    if subarea_type == "realworld":
-        if subarea_extent[2] < -180.0:
-            subarea_extent[2] += 180.0
-            subarea_extent[3] += 180.0
-        if subarea_extent[3] > 180.0:
-            subarea_extent[2] -= 180.0
-            subarea_extent[3] -= 180.0
+    # if subarea_type == "realworld":
+    #    if subarea_extent[2] < -180.0:
+    #        subarea_extent[2] += 180.0
+    #        subarea_extent[3] += 180.0
+    #    if subarea_extent[3] > 180.0:
+    #        subarea_extent[2] -= 180.0
+    #        subarea_extent[3] -= 180.0
 
     for cube in cubes:
         # Define cutout region using user provided coordinates.
-        cutout_coords = {
-            "lat": np.array(subarea_extent[0:2]),
-            "lon": np.array(subarea_extent[2:4]),
-        }
+        lats = np.array(subarea_extent[0:2])
+        lons = np.array(subarea_extent[2:4])
+        while lons[0] < -180.0:
+            lons += 180.0
+        while lons[1] > 180.0:
+            lons -= 180.0
         lat_name, lon_name = get_cube_yxcoordname(cube)
         coord_system = cube.coord(lat_name).coord_system
         # If the coordinate system is rotated we convert coordinates into
@@ -319,53 +321,23 @@ def _cutout_cubes(
         if subarea_type == "realworld" and isinstance(
             coord_system, iris.coord_systems.RotatedGeogCS
         ):
-            rotated_lons, rotated_lats = rotate_pole(
-                cutout_coords["lon"],
-                cutout_coords["lat"],
+            lons, lats = rotate_pole(
+                lons,
+                lats,
                 pole_lon=coord_system.grid_north_pole_longitude,
                 pole_lat=coord_system.grid_north_pole_latitude,
             )
-            cutout_coords = {"lat": rotated_lats, "lon": rotated_lons}
-
-        # Test if SUBAREA_EXTENT sits entirely within available data region
-        # If no area of overlap cube.intersection will return
-        # non-descriptive index 0 is out of bounds error.
-        lon_min = cube.coord(lon_name).points.min()
-        lon_max = cube.coord(lon_name).points.max()
-        lat_min = cube.coord(lat_name).points.min()
-        lat_max = cube.coord(lat_name).points.max()
-        if (
-            (cutout_coords["lon"].min() < lon_min)
-            or (cutout_coords["lon"].max() > lon_max)
-            or (cutout_coords["lat"].min() < lat_min)
-            or (cutout_coords["lat"].max() > lat_max)
-        ):
-            logging.warning(
-                "User requested LLat: %s ULat: %s LLon: %s ULon: %s",
-                cutout_coords["lat"].min(),
-                cutout_coords["lat"].max(),
-                cutout_coords["lon"].min(),
-                cutout_coords["lon"].max(),
-            )
-            logging.warning(
-                "Data region LLat: %s ULat: %s LLon: %s ULon: %s",
-                lat_min,
-                lat_max,
-                lon_min,
-                lon_max,
-            )
-            raise ValueError(
-                "Cutout region requested not within data area. "
-                "Check and update SUBAREA_EXTENT."
-            )
 
         # Do cutout and add to cutout_cubes.
-        logging.debug("Cutting out coords %s", cutout_coords)
-        intersection_args = {
-            lat_name: cutout_coords["lat"],
-            lon_name: cutout_coords["lon"],
-        }
-        cutout_cubes.append(cube.intersection(**intersection_args))
+        intersection_args = {lat_name: lats, lon_name: lons}
+        logging.debug("Cutting out coords %s", intersection_args)
+        try:
+            cutout_cubes.append(cube.intersection(**intersection_args))
+        except IndexError as err:
+            raise ValueError(
+                "Cutout region requested should be within data area. "
+                "Check and update SUBAREA_EXTENT."
+            ) from err
 
     return cutout_cubes
 

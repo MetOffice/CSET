@@ -717,7 +717,7 @@ def test_read_cubes_outofbounds_subarea():
     """Ensure correct failure if subarea outside cube extent."""
     with pytest.raises(
         ValueError,
-        match=r"Cutout region requested not within data area. "
+        match=r"Cutout region requested should be within data area. "
         "Check and update SUBAREA_EXTENT.",
     ):
         read.read_cubes(
@@ -728,7 +728,7 @@ def test_read_cubes_outofbounds_subarea():
 
     with pytest.raises(
         ValueError,
-        match=r"Cutout region requested not within data area. "
+        match=r"Cutout region requested should be within data area. "
         "Check and update SUBAREA_EXTENT.",
     ):
         read.read_cubes(
