@@ -214,8 +214,8 @@
   },
   "grid_surface_upward_latent_heat_flux": {
     "cmap": "bwr_r",
-    "max": 1000,
-    "min": -1000,
+    "max": 500,
+    "min": -500,
     "ymax": 250,
     "ymin": -50
   },
@@ -289,54 +289,72 @@
       "100": {
         "max": 100,
         "min": -100,
+        "xmax": 10,
+        "xmin": -10,
         "ymax": 10,
         "ymin": -10
       },
       "1000": {
         "max": 35,
         "min": -35,
+        "xmax": 10,
+        "xmin": -10,
         "ymax": 10,
         "ymin": -10
       },
       "200": {
         "max": 80,
         "min": -80,
+        "xmax": 10,
+        "xmin": -10,
         "ymax": 10,
         "ymin": -10
       },
       "250": {
         "max": 50,
         "min": -50,
+        "xmax": 10,
+        "xmin": -10,
         "ymax": 10,
         "ymin": -10
       },
       "300": {
         "max": 55,
         "min": -55,
+        "xmax": 10,
+        "xmin": -10,
         "ymax": 10,
         "ymin": -10
       },
       "500": {
         "max": 40,
         "min": -40,
+        "xmax": 10,
+        "xmin": -10,
         "ymax": 10,
         "ymin": -10
       },
       "700": {
         "max": 35,
         "min": -35,
+        "xmax": 10,
+        "xmin": -10,
         "ymax": 10,
         "ymin": -10
       },
       "850": {
         "max": 35,
         "min": -35,
+        "xmax": 10,
+        "xmin": -10,
         "ymax": 10,
         "ymin": -10
       },
       "950": {
         "max": 35,
         "min": -35,
+        "xmax": 10,
+        "xmin": -10,
         "ymax": 10,
         "ymin": -10
       }
@@ -370,7 +388,7 @@
     "cmap": "YlOrRd",
     "max": 5,
     "min": 1,
-    "ymax": 20,
+    "ymax": 0.5,
     "ymin": 0
   },
   "number_of_lightning_flashes_in_column_difference": {
@@ -471,7 +489,7 @@
       128,
       256
     ],
-    "ymax": 1.0,
+    "ymax": 0.01,
     "ymin": 0.0
   },
   "surface_microphysical_rainfall_rate_difference": {
@@ -618,9 +636,7 @@
   "toa_upward_shortwave_flux": {
     "cmap": "Greys",
     "max": 500.0,
-    "min": 0,
-    "ymax": 350.0,
-    "ymin": 0.0
+    "min": 0
   },
   "toa_upward_shortwave_flux_difference": {
     "cmap": "bwr",
@@ -646,41 +662,63 @@
     "pressure_levels": {
       "100": {
         "max": 5e-05,
-        "min": 0
+        "min": 0,
+        "xmax": 0.015,
+        "xmin": 0.0
       },
       "1000": {
         "max": 0.01,
-        "min": 0
+        "min": 0,
+        "xmax": 0.015,
+        "xmin": 0.0
       },
       "200": {
         "max": 5e-05,
-        "min": 0
+        "min": 0,
+        "xmax": 0.015,
+        "xmin": 0.0
       },
       "250": {
         "max": 5e-05,
-        "min": 0
+        "min": 0,
+        "xmax": 0.015,
+        "xmin": 0.0
       },
       "300": {
         "max": 0.0001,
-        "min": 0
+        "min": 0,
+        "xmax": 0.015,
+        "xmin": 0.0
       },
       "500": {
         "max": 0.003,
-        "min": 0
+        "min": 0,
+        "xmax": 0.015,
+        "xmin": 0.0
       },
       "700": {
         "max": 0.003,
-        "min": 0
+        "min": 0,
+        "xmax": 0.015,
+        "xmin": 0.0
       },
       "850": {
         "max": 0.005,
-        "min": 0
+        "min": 0,
+        "xmax": 0.015,
+        "xmin": 0.0
       },
       "950": {
         "max": 0.01,
-        "min": 0
+        "min": 0,
+        "xmax": 0.015,
+        "xmin": 0.0
       }
-    }
+    },
+    "xmax": 0.015,
+    "xmin": 0.0,
+    "ymax": "auto",
+    "ymin": "auto"
   },
   "vapour_specific_humidity_at_pressure_levels_for_climate_averaging_difference": {
     "cmap": "bwr",
@@ -731,54 +769,72 @@
       "100": {
         "max": 100,
         "min": -100,
+        "xmax": 25,
+        "xmin": -25,
         "ymax": 20,
         "ymin": -20
       },
       "1000": {
         "max": 35,
         "min": -35,
+        "xmax": 25,
+        "xmin": -25,
         "ymax": 20,
         "ymin": -20
       },
       "200": {
         "max": 80,
         "min": -80,
+        "xmax": 25,
+        "xmin": -25,
         "ymax": 20,
         "ymin": -20
       },
       "250": {
         "max": 70,
         "min": -70,
+        "xmax": 25,
+        "xmin": -25,
         "ymax": 20,
         "ymin": -20
       },
       "300": {
         "max": 55,
         "min": -55,
+        "xmax": 25,
+        "xmin": -25,
         "ymax": 20,
         "ymin": -20
       },
       "500": {
         "max": 45,
         "min": -45,
+        "xmax": 25,
+        "xmin": -25,
         "ymax": 10,
         "ymin": -10
       },
       "700": {
         "max": 35,
         "min": -35,
+        "xmax": 25,
+        "xmin": -25,
         "ymax": 10,
         "ymin": -10
       },
       "850": {
         "max": 35,
         "min": -35,
+        "xmax": 25,
+        "xmin": -25,
         "ymax": 10,
         "ymin": -10
       },
       "950": {
         "max": 35,
         "min": -35,
+        "xmax": 25,
+        "xmin": -25,
         "ymax": 10,
         "ymin": -10
       }
