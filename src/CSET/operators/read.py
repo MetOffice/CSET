@@ -318,6 +318,14 @@ def _cutout_cubes(
                 subarea_extent[2],
                 subarea_extent[3],
             )
+            # Ensure realworld cutout region is within +/- 180.0 bounds
+            if subarea_type == "realworld":
+                if subarea_extent[2] < -180.0:
+                    subarea_extent[2] += 180.0
+                    subarea_extent[3] += 180.0
+                if subarea_extent[3] > 180.0:
+                    subarea_extent[2] -= 180.0
+                    subarea_extent[3] -= 180.0
             # Define cutout region using user provided coordinates.
             lats = subarea_extent[0:2]
             lons = subarea_extent[2:4]
@@ -335,6 +343,38 @@ def _cutout_cubes(
                 )
         else:
             raise ValueError("Unknown subarea_type:", subarea_type)
+
+        # Test if SUBAREA_EXTENT sits entirely within available data region
+        # If no area of overlap cube.intersection will return
+        # non-descriptive index 0 is out of bounds error.
+        lon_min = cube.coord(lon_name).points.min()
+        lon_max = cube.coord(lon_name).points.max()
+        lat_min = cube.coord(lat_name).points.min()
+        lat_max = cube.coord(lat_name).points.max()
+        if (
+            (min(lons) < lon_min)
+            or (max(lons) > lon_max)
+            or (min(lats) < lat_min)
+            or (max(lats) > lat_max)
+        ):
+            logging.warning(
+                "User requested LLat: %s ULat: %s LLon: %s ULon: %s",
+                min(lats),
+                min(lats),
+                min(lons),
+                max(lons),
+            )
+            logging.warning(
+                "Data region LLat: %s ULat: %s LLon: %s ULon: %s",
+                lat_min,
+                lat_max,
+                lon_min,
+                lon_max,
+            )
+            raise ValueError(
+                "Cutout region requested not within data area. "
+                "Check and update SUBAREA_EXTENT."
+            )
 
         # Do cutout and add to cutout_cubes.
         intersection_args = {lat_name: lats, lon_name: lons}
