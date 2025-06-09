@@ -324,7 +324,6 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
             norm = mpl.colors.BoundaryNorm(levels, ncolors=cmap.N)
             logging.debug("Using levels for %s colorbar.", varname)
             logging.info("Using levels: %s", levels)
-
         except KeyError:
             # Get the range for this variable.
             vmin, vmax = var_colorbar["min"], var_colorbar["max"]
@@ -840,9 +839,10 @@ def _plot_and_save_histogram_series(
         # Easier to check title (where var name originates)
         # than seeing if long names exist etc.
         # Exception case, where distribution better fits log scales/bins.
-        if "surface_microphysical_rainfall_rate" in title:
-            # Usually in seconds but mm/hr more intuitive.
-            cube.convert_units("kg m-2 h-1")
+        if "surface_microphysical" in title:
+            if "rate" in title:
+                # Usually in seconds but mm/hr more intuitive.
+                cube.convert_units("kg m-2 h-1")
             bins = 10.0 ** (
                 np.arange(-10, 27, 1) / 10.0
             )  # Suggestion from RMED toolbox.
@@ -851,6 +851,8 @@ def _plot_and_save_histogram_series(
             ax.set_yscale("log")
             vmin = 0
             vmax = 400  # Manually set vmin/vmax to override json derived value.
+        elif "lightning" in title:
+            bins = [0, 1, 2, 3, 4, 5]
         else:
             bins = np.linspace(vmin, vmax, 51)
 
@@ -1024,8 +1026,6 @@ def _spatial_plot(
     # Ensure we've got a single cube.
     cube = _check_single_cube(cube)
 
-    print("Spatial")
-    print(cube)
     # Convert precipitation units if necessary
     _convert_precipitation_units_callback(cube)
 
@@ -1049,7 +1049,6 @@ def _spatial_plot(
     nplot = np.size(cube.coord(sequence_coordinate).points)
     for cube_slice in cube.slices_over(sequence_coordinate):
         # Use sequence value so multiple sequences can merge.
-        print(cube_slice.coord(sequence_coordinate).points[0])
         sequence_value = cube_slice.coord(sequence_coordinate).points[0]
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
         coord = cube_slice.coord(sequence_coordinate)
@@ -1059,7 +1058,6 @@ def _spatial_plot(
         if nplot == 1 and coord.has_bounds:
             if np.size(coord.bounds) > 1:
                 title = f"{recipe_title}\n [{coord.units.title(coord.bounds[0][0])} to {coord.units.title(coord.bounds[0][1])}]"
-        print(title)
         # Do the actual plotting.
         plotting_func(
             cube_slice,
@@ -1083,7 +1081,10 @@ def _convert_precipitation_units_callback(cube: iris.cube.Cube):
     Some precipitation diagnostics are output with unit kg m-2 s-1 and are converted to mm hr-1.
     """
     # if cube.attributes["STASH"] == "m01s04i203" or cube.long_name == "surface_microphysical_rainfall_rate":
-    if cube.long_name == "surface_microphysical_rainfall_rate":
+    if (
+        cube.long_name == "surface_microphysical_rainfall_rate"
+        or cube.long_name == "surface_microphysical_snowfall_rate"
+    ):
         if cube.units == "kg m-2 s-1":
             logging.info("Converting precipitation units from kg m-2 s-1 to mm hr-1")
             # Convert from kg m-2 s-1 to mm s-1 assuming 1kg water = 1l water = 1dm^3 water.
@@ -1103,10 +1104,19 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
     import matplotlib.colors as mcolors
 
     if (
-        cube.long_name == "surface_microphysical_rainfall_rate"
-        or cube.standard_name == "surface_microphysical_rainfall_rate"
-        or cube.var_name == "surface_microphysical_rainfall_rate"
+        "surface_microphysical_rainfall_rate"
+        in [cube.long_name, cube.standard_name, cube.var_name]
+        or "surface_microphysical_snowfall_rate"
+        in [cube.long_name, cube.standard_name, cube.var_name]
+        or "surface_microphysical_rainfall_amount"
+        in [cube.long_name, cube.standard_name, cube.var_name]
+        or "surface_microphysical_snowfall_amount"
+        in [cube.long_name, cube.standard_name, cube.var_name]
     ):
+        #        or cube.standard_name == "surface_microphysical_rainfall_rate"
+        #        or cube.var_name == "surface_microphysical_rainfall_rate"
+        #        or cube.long_name == "surface_microphysical_rainfall_amount"
+        #    ):
         # Define the levels and colors
         levels = [0, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
         colors = [

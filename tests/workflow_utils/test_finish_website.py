@@ -17,6 +17,7 @@
 import datetime
 import json
 import logging
+from importlib.metadata import version
 
 from CSET._workflow_utils import finish_website
 
@@ -46,10 +47,11 @@ def test_write_workflow_status(monkeypatch, tmp_path):
         # Check finish status.
         assert content[0] == "<p>Finished</p>"
         # Check dynamic CSET version added.
-        assert content[1] == "<p>CSET v{version('CSET')}</p>"
+        cset_version = version("CSET")
+        assert content[1] == "<p>CSET v" + cset_version + "</p>"
         # Check dynamic date created added and valid datetime.
-        assert "<p>Date created: " in content[2]
-        datestr = datetime.datetime.strptime(content[2][17:36], "%Y-%m-%d %H:%M:%S")
+        assert "<p>Date completed: " in content[2]
+        datestr = datetime.datetime.strptime(content[2][19:38], "%Y-%m-%d %H:%M:%S")
         assert isinstance(datestr, datetime.datetime)
 
 

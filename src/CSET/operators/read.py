@@ -22,6 +22,7 @@ import itertools
 import logging
 import warnings
 from pathlib import Path
+from typing import Literal
 
 import iris
 import iris.coords
@@ -33,7 +34,7 @@ from iris.analysis.cartography import rotate_pole
 
 from CSET._common import iter_maybe
 from CSET.operators._stash_to_lfric import STASH_TO_LFRIC
-from CSET.operators._utils import get_cube_coordindex, get_cube_yxcoordname
+from CSET.operators._utils import get_cube_yxcoordname
 
 
 class NoDataWarning(UserWarning):
@@ -70,7 +71,7 @@ def read_cube(
         Constraints to filter data by. Defaults to unconstrained.
     model_names: str | list[str], optional
         Names of the models that correspond to respective paths in file_paths.
-    subarea_type: "realworld" | "modelrelative", optional
+    subarea_type: "gridcells" | "modelrelative" | "realworld", optional
         Whether to constrain data by model relative coordinates or real world
         coordinates.
     subarea_extent: list, optional
@@ -276,7 +277,7 @@ def _check_input_files(input_paths: str | list[str]) -> list[Path]:
 
 def _cutout_cubes(
     cubes: iris.cube.CubeList,
-    subarea_type: str | None,
+    subarea_type: Literal["gridcells", "modelrelative", "realworld"] | None,
     subarea_extent: list[float, float, float, float],
 ):
     """Cut out a subarea from a CubeList."""
@@ -293,8 +294,6 @@ def _cutout_cubes(
     for cube in cubes:
         # Find dimension coordinates.
         lat_name, lon_name = get_cube_yxcoordname(cube)
-        ny = get_cube_coordindex(cube, lat_name)
-        nx = get_cube_coordindex(cube, lon_name)
 
         # Compute cutout based on number of cells to trim from edges.
         if subarea_type == "gridcells":
@@ -306,23 +305,13 @@ def _cutout_cubes(
                 subarea_extent[3],
             )
 
-            # Set grid cutout index in each direction.
-            nlat = cube.shape[ny]
-            nlon = cube.shape[nx]
-            n_lower = subarea_extent[0]
-            n_left = subarea_extent[1]
-            n_upper = nlat - subarea_extent[2] - 1
-            n_right = nlon - subarea_extent[3] - 1
-
-            # Define cutout region using user provided cell points.
             lat_points = np.sort(cube.coord(lat_name).points)
             lon_points = np.sort(cube.coord(lon_name).points)
-            cutout_coords = {
-                "lat": np.array([lat_points[n_lower], lat_points[n_upper]]),
-                "lon": np.array([lon_points[n_left], lon_points[n_right]]),
-            }
+            # Define cutout region using user provided cell points.
+            lats = [lat_points[subarea_extent[0] - 1], lat_points[-subarea_extent[2]]]
+            lons = [lon_points[subarea_extent[1] - 1], lon_points[-subarea_extent[3]]]
 
-        # Compute cutout based on specified coordinate values
+        # Compute cutout based on specified coordinate values.
         elif subarea_type == "realworld" or subarea_type == "modelrelative":
             # If not gridcells, cutout by requested geographic area,
             logging.debug(
@@ -343,23 +332,23 @@ def _cutout_cubes(
                     subarea_extent[3] -= 180.0
 
             # Define cutout region using user provided coordinates.
-            cutout_coords = {
-                "lat": np.array(subarea_extent[0:2]),
-                "lon": np.array(subarea_extent[2:4]),
-            }
+            lats = subarea_extent[0:2]
+            lons = subarea_extent[2:4]
             coord_system = cube.coord(lat_name).coord_system
             # If the coordinate system is rotated we convert coordinates into
             # model-relative coordinates to extract the appropriate cutout.
             if subarea_type == "realworld" and isinstance(
                 coord_system, iris.coord_systems.RotatedGeogCS
             ):
-                rotated_lons, rotated_lats = rotate_pole(
-                    cutout_coords["lon"],
-                    cutout_coords["lat"],
+                lons, lats = rotate_pole(
+                    lons,
+                    lats,
                     pole_lon=coord_system.grid_north_pole_longitude,
                     pole_lat=coord_system.grid_north_pole_latitude,
                 )
-                cutout_coords = {"lat": rotated_lats, "lon": rotated_lons}
+                cutout_coords = {"lat": lats, "lon": lons}
+        else:
+            raise ValueError("Unknown subarea_type:", subarea_type)
 
         # Test if SUBAREA_EXTENT sits entirely within available data region
         # If no area of overlap cube.intersection will return
@@ -369,10 +358,10 @@ def _cutout_cubes(
         lat_min = cube.coord(lat_name).points.min()
         lat_max = cube.coord(lat_name).points.max()
         if (
-            (cutout_coords["lon"].min() < lon_min)
-            or (cutout_coords["lon"].max() > lon_max)
-            or (cutout_coords["lat"].min() < lat_min)
-            or (cutout_coords["lat"].max() > lat_max)
+            (lons.min() < lon_min)
+            or (lons.max() > lon_max)
+            or (lats.min() < lat_min)
+            or (lats.max() > lat_max)
         ):
             logging.warning(
                 "User requested LLat: %s ULat: %s LLon: %s ULon: %s",
@@ -788,34 +777,53 @@ def _fix_um_radtime_prehour(cube: iris.cube.Cube):
 def _fix_um_lightning(cube: iris.cube.Cube):
     """To fix the date points in lightning accumulation STASH.
 
-    Lightning (m01s21i104) is being output as a time accumulation in UM,
-    over each hour (TAcc1hr), not from the start of the forecast, to be compatible
-    with LFRic. So this is a short term solution to remove cell methods (
-    as variables are ignored with cell methods for surface plots currently),
-    and also adjust the time so that the value is at the end of each hour.
+    UPDATED ROUTINE - holding code to be refactored.
+    Enables sum and mean coord_method variables to pass the blank cell_methods constraint
     """
+    ### FOR LIGHTNING DIAGNOSTICS NEED TO ENSURE IF LATEST INPUT DATA ARE MEAN or SUM (and if MEAN in hr, total up)
+    ### Note not clear if 300m Delhi will be totalling up to hour ok
+    ### Delhi 300m seem to have mean time proc for lightning, but WestAfr had sum??
+
+    ## Lightning - UM
     if cube.attributes.get("STASH") == "m01s21i104":
         # Remove aggregation cell method.
-        cube.cell_methods = ()
+        cell_method = iris.coords.CellMethod("sum", coords="time", intervals="60 s")
+        if cell_method != ():  ##in cube.cell_methods:    SOME MODELS SUM, SOME MEAN??
+            cube.cell_methods = ()
 
-        time_coord = cube.coord("time")
+    ## Rainfall and snowfall amount - UM
+    if (
+        cube.attributes.get("STASH") == "m01s04i201"
+        or cube.attributes.get("STASH") == "m01s04i202"
+    ):
+        cell_method = ()
+        if cell_method in cube.cell_methods:
+            cube.cell_methods = (iris.coords.CellMethod("dummy", coords="time"),)
+        cell_method = iris.coords.CellMethod("mean", coords="time", intervals="1 hour")
+        if cell_method in cube.cell_methods:
+            cube.cell_methods = ()
 
-        # Convert time points to datetime objects.
-        time_unit = time_coord.units
-        time_points = time_unit.num2date(time_coord.points)
+    ## Lightning - LFRic
+    ## Note can be timestep dependent......
+    if "lightning" in cube.name():
+        cell_method = iris.coords.CellMethod("point", coords="time")
+        if cell_method in cube.cell_methods:
+            cube.cell_methods = (iris.coords.CellMethod("dummy", coords="time"),)
+        cell_method = iris.coords.CellMethod("sum", coords="time", intervals="60 s")
+        if cell_method in cube.cell_methods:
+            cube.cell_methods = ()
+        cell_method2 = iris.coords.CellMethod("sum", coords="time", intervals="12 s")
+        if cell_method2 in cube.cell_methods:
+            cube.cell_methods = ()
 
-        # Skip if times don't need fixing.
-        if time_points[0].minute == 0:
-            return
-
-        # Add 30 minutes to each time point.
-        new_time_points = time_points + datetime.timedelta(minutes=30)
-
-        # Convert back to numeric values using the original time unit.
-        new_time_values = time_unit.date2num(new_time_points)
-
-        # Replace the time coordinate with corrected values.
-        time_coord.points = new_time_values
+    ## Rainfall and snowfall amount - LFRic
+    if "rainfall_amount" in cube.name() or "snowfall_amount" in cube.name():
+        cell_method = iris.coords.CellMethod("sum", coords="time", intervals="60 s")
+        if cell_method in cube.cell_methods:
+            cube.cell_methods = ()
+        cell_method2 = iris.coords.CellMethod("sum", coords="time", intervals="12 s")
+        if cell_method2 in cube.cell_methods:
+            cube.cell_methods = ()
 
 
 def _normalise_var0_varname(cube: iris.cube.Cube):

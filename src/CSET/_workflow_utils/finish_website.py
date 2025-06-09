@@ -11,6 +11,7 @@ import json
 import logging
 import os
 import shutil
+from importlib.metadata import version
 from pathlib import Path
 
 from CSET._common import combine_dicts, sort_dict
@@ -63,9 +64,10 @@ def update_workflow_status():
     web_dir = Path(os.environ["CYLC_WORKFLOW_SHARE_DIR"] + "/web")
     with open(web_dir / "status.html", "wt") as fp:
         fp.write("<p>Finished</p>\n")
-        fp.write("<p>CSET v{version('CSET')}</p>\n")
+        cset_version = version("CSET")
+        fp.write("<p>CSET v" + cset_version + "</p>\n")
         now_stamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        fp.write("<p>Date created: " + now_stamp + "</p>\n")
+        fp.write("<p>Date completed: " + now_stamp + "</p>\n")
 
 
 def copy_rose_config():
