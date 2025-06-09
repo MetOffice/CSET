@@ -302,8 +302,8 @@ def _cutout_cubes(
                 subarea_extent[2],
                 subarea_extent[3],
             )
-            lat_points = cube.coord(lat_name).points
-            lon_points = cube.coord(lon_name).points
+            lat_points = np.sort(cube.coord(lat_name).points)
+            lon_points = np.sort(cube.coord(lon_name).points)
             # Define cutout region using user provided cell points.
             lats = [lat_points[subarea_extent[0]], lat_points[-subarea_extent[2] - 1]]
             lons = [lon_points[subarea_extent[1]], lon_points[-subarea_extent[3] - 1]]
