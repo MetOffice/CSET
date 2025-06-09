@@ -22,6 +22,7 @@ import itertools
 import logging
 import warnings
 from pathlib import Path
+from typing import Literal
 
 import iris
 import iris.coords
@@ -277,7 +278,7 @@ def _check_input_files(input_paths: str | list[str]) -> list[Path]:
 
 def _cutout_cubes(
     cubes: iris.cube.CubeList,
-    subarea_type: str | None,
+    subarea_type: Literal["gridcells", "realworld", "modelrelative"] | None,
     subarea_extent: list[float, float, float, float],
 ):
     """Cut out a subarea from a CubeList."""
