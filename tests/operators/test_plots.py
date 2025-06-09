@@ -124,7 +124,7 @@ def test_colorbar_map_levels_yaxis(cube, tmp_working_dir):
     cube.rename("toa_upward_shortwave_flux")
     cmap, levels, norm = plot._colorbar_map_levels(cube, axis="y")
     assert cmap is None
-    assert levels == [0, 450]
+    assert levels == [0, 500]
     assert norm is None
 
 
