@@ -20,6 +20,7 @@ import functools
 import glob
 import itertools
 import logging
+import math
 import warnings
 from pathlib import Path
 from typing import Literal
@@ -318,17 +319,10 @@ def _cutout_cubes(
                 subarea_extent[2],
                 subarea_extent[3],
             )
-            # Ensure realworld cutout region is within +/- 180.0 bounds
-            if subarea_type == "realworld":
-                if subarea_extent[2] < -180.0:
-                    subarea_extent[2] += 180.0
-                    subarea_extent[3] += 180.0
-                if subarea_extent[3] > 180.0:
-                    subarea_extent[2] -= 180.0
-                    subarea_extent[3] -= 180.0
             # Define cutout region using user provided coordinates.
             lats = subarea_extent[0:2]
-            lons = subarea_extent[2:4]
+            # Ensure longitudes are within +/- 180.0 bounds.
+            lons = [math.remainder(lon, 360) for lon in subarea_extent[2:4]]
             coord_system = cube.coord(lat_name).coord_system
             # If the coordinate system is rotated we convert coordinates into
             # model-relative coordinates to extract the appropriate cutout.
