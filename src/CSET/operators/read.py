@@ -34,7 +34,7 @@ from iris.analysis.cartography import rotate_pole
 
 from CSET._common import iter_maybe
 from CSET.operators._stash_to_lfric import STASH_TO_LFRIC
-from CSET.operators._utils import get_cube_coordindex, get_cube_yxcoordname
+from CSET.operators._utils import get_cube_yxcoordname
 
 
 class NoDataWarning(UserWarning):
@@ -292,8 +292,6 @@ def _cutout_cubes(
     for cube in cubes:
         # Find dimension coordinates.
         lat_name, lon_name = get_cube_yxcoordname(cube)
-        ny = get_cube_coordindex(cube, lat_name)
-        nx = get_cube_coordindex(cube, lon_name)
 
         # Compute cutout based on number of cells to trim from edges.
         if subarea_type == "gridcells":
@@ -304,22 +302,13 @@ def _cutout_cubes(
                 subarea_extent[2],
                 subarea_extent[3],
             )
-
-            # Set grid cutout index in each direction.
-            nlat = cube.shape[ny]
-            nlon = cube.shape[nx]
-            n_lower = subarea_extent[0]
-            n_left = subarea_extent[1]
-            n_upper = nlat - subarea_extent[2] - 1
-            n_right = nlon - subarea_extent[3] - 1
-
-            # Define cutout region using user provided cell points.
             lat_points = cube.coord(lat_name).points
             lon_points = cube.coord(lon_name).points
-            lats = [lat_points[n_lower], lat_points[n_upper]]
-            lons = [lon_points[n_left], lon_points[n_right]]
+            # Define cutout region using user provided cell points.
+            lats = [lat_points[subarea_extent[0]], lat_points[-subarea_extent[2] - 1]]
+            lons = [lon_points[subarea_extent[1]], lon_points[-subarea_extent[3] - 1]]
 
-        # Compute cutout based on specified coordinate values
+        # Compute cutout based on specified coordinate values.
         elif subarea_type == "realworld" or subarea_type == "modelrelative":
             # If not gridcells, cutout by requested geographic area,
             logging.debug(
