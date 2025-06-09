@@ -5,6 +5,7 @@ description: Extracts and plot the difference in $VARNAME on $LEVELTYPE level $L
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
+    model_names: [$BASE_MODEL, $OTHER_MODEL]
     constraint:
       operator: constraints.combine_constraints
       varname_constraint:
