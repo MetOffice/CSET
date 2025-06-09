@@ -286,9 +286,6 @@ def _cutout_cubes(
         logging.debug("Subarea selection is disabled.")
         return cubes
 
-    if subarea_type not in ["realworld", "modelrelative", "gridcells"]:
-        raise ValueError("Unknown subarea_type:", subarea_type)
-
     # If selected, cutout according to number of grid cells to trim from each edge.
     cutout_cubes = iris.cube.CubeList()
     # Find spatial coordinates
@@ -347,6 +344,8 @@ def _cutout_cubes(
                     pole_lon=coord_system.grid_north_pole_longitude,
                     pole_lat=coord_system.grid_north_pole_latitude,
                 )
+        else:
+            raise ValueError("Unknown subarea_type:", subarea_type)
 
         # Do cutout and add to cutout_cubes.
         intersection_args = {lat_name: lats, lon_name: lons}
