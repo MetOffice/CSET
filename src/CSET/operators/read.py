@@ -318,10 +318,8 @@ def _cutout_cubes(
             # Define cutout region using user provided cell points.
             lat_points = cube.coord(lat_name).points
             lon_points = cube.coord(lon_name).points
-            cutout_coords = {
-                "lat": [lat_points[n_lower], lat_points[n_upper]],
-                "lon": [lon_points[n_left], lon_points[n_right]],
-            }
+            lats = [lat_points[n_lower], lat_points[n_upper]]
+            lons = [lon_points[n_left], lon_points[n_right]]
 
         # Compute cutout based on specified coordinate values
         elif subarea_type == "realworld" or subarea_type == "modelrelative":
@@ -333,32 +331,25 @@ def _cutout_cubes(
                 subarea_extent[2],
                 subarea_extent[3],
             )
-
             # Define cutout region using user provided coordinates.
-            cutout_coords = {
-                "lat": np.array(subarea_extent[0:2]),
-                "lon": np.array(subarea_extent[2:4]),
-            }
+            lats = subarea_extent[0:2]
+            lons = subarea_extent[2:4]
             coord_system = cube.coord(lat_name).coord_system
             # If the coordinate system is rotated we convert coordinates into
             # model-relative coordinates to extract the appropriate cutout.
             if subarea_type == "realworld" and isinstance(
                 coord_system, iris.coord_systems.RotatedGeogCS
             ):
-                rotated_lons, rotated_lats = rotate_pole(
-                    cutout_coords["lon"],
-                    cutout_coords["lat"],
+                lons, lats = rotate_pole(
+                    np.array(lons),
+                    np.array(lats),
                     pole_lon=coord_system.grid_north_pole_longitude,
                     pole_lat=coord_system.grid_north_pole_latitude,
                 )
-                cutout_coords = {"lat": rotated_lats, "lon": rotated_lons}
 
         # Do cutout and add to cutout_cubes.
-        logging.debug("Cutting out coords %s", cutout_coords)
-        intersection_args = {
-            lat_name: cutout_coords["lat"],
-            lon_name: cutout_coords["lon"],
-        }
+        intersection_args = {lat_name: lats, lon_name: lons}
+        logging.debug("Cutting out coords: %s", intersection_args)
         cutout_cubes.append(cube.intersection(**intersection_args))
 
     return cutout_cubes
