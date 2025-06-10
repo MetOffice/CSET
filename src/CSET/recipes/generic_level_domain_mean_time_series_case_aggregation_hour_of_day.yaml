@@ -20,8 +20,6 @@ steps:
     coordinate: [grid_latitude, grid_longitude]
     method: MEAN
 
-  - operator: aggregate.ensure_aggregatable_across_cases
-
   - operator: collapse.collapse_by_hour_of_day
     method: MEAN
 
