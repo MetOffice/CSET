@@ -103,8 +103,11 @@ def get_cube_coordindex(cube: iris.cube.Cube, coord_name) -> int:
     # Get a list of dimension coordinate names for the cube
     coord_names = [coord.name() for coord in cube.coords(dim_coords=True)]
 
-    # Check which index the requested dimension is found in, if any
-    coord_index = coord_names.index(coord_name)
+    # Check if requested dimension is found in cube and get index
+    if coord_name in coord_names:
+        coord_index = cube.coord_dims(coord_name)[0]
+    else:
+        raise ValueError("Could not find requested dimension %s", coord_name)
 
     return coord_index
 
@@ -254,9 +257,10 @@ def is_time_aggregatable(cube: iris.cube.Cube) -> bool:
     TEMPORAL_COORD_NAMES = ["forecast_period", "forecast_reference_time"]
 
     # Coordinate names for the cube.
-    coord_names = [coord.name() for coord in cube.coords(dim_coords=True)]
+    coord_names = [coord.name() for coord in cube.coords(dim_coords=False)]
 
     # Check which temporal coordinates we have.
     temporal_coords = [coord for coord in coord_names if coord in TEMPORAL_COORD_NAMES]
+    print(temporal_coords)
     # Return whether both coordinates are in the temporal coordinates.
     return len(temporal_coords) == 2

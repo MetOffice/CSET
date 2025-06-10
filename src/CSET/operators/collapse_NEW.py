@@ -69,7 +69,7 @@ def collapse(
     ValueError
         If additional_percent wasn't supplied while using PERCENTILE method.
     """
-    if method == "SEQ" or method == "" or method is None:
+    if method == "SEQ":
         return cubes
     if method == "PERCENTILE" and additional_percent is None:
         raise ValueError("Must specify additional_percent")
@@ -94,6 +94,7 @@ def collapse(
                 collapsed_cubes.append(
                     cube.collapsed(coordinate, getattr(iris.analysis, method))
                 )
+    print(collapsed_cubes[0])
     if len(collapsed_cubes) == 1:
         return collapsed_cubes[0]
     else:
@@ -152,9 +153,8 @@ def collapse_by_hour_of_day(
 
     collapsed_cubes = iris.cube.CubeList([])
     for cube in iter_maybe(cubes):
-        print(cube)
         if is_time_aggregatable(cube):
-            # Collapse by forecast reference time to get a single time dimension.
+            # Collapse by lead time to get a single time dimension.
             cube = collapse(
                 cube,
                 "forecast_reference_time",
@@ -166,15 +166,6 @@ def collapse_by_hour_of_day(
             # have effectively done this.
             cube.remove_coord("forecast_reference_time")
 
-        collapsed_cubes.append(cube)
-
-    # Retain only common time points between the different models.
-    collapsed_cubes = collapsed_cubes.extract_overlapping("time")
-    print(collapsed_cubes)
-    # stop
-
-    final_list = iris.cube.CubeList([])
-    for cube in iter_maybe(collapsed_cubes):
         # Categorise the time coordinate by hour of the day.
         cube = add_hour_coordinate(cube)
         # Aggregate by the new category coordinate.
@@ -189,21 +180,16 @@ def collapse_by_hour_of_day(
         collapsed_cube.remove_coord("time")
         collapsed_cube.remove_coord("forecast_period")
 
-        ###### HL - BUG!! # Sort hour coordinate.; ensure aggregated_by returns sorted list
-        # print(collapsed_cube.coord("hour").points)
-        # print(collapsed_cube.data)
-        # collapsed_cube.coord("hour").points.sort()
-        # print(collapsed_cube.coord("hour").points)
-        # print(collapsed_cube.data)
+        # Sort hour coordinate.
+        collapsed_cube.coord("hour").points.sort()
 
         # Promote "hour" to dim_coord.
         iris.util.promote_aux_coord_to_dim_coord(collapsed_cube, "hour")
-        final_list.append(collapsed_cube)
-
-    if len(final_list) == 1:
-        return final_list[0]
+        collapsed_cubes.append(collapsed_cube)
+    if len(collapsed_cubes) == 1:
+        return collapsed_cubes[0]
     else:
-        return final_list
+        return collapsed_cubes
 
 
 def collapse_by_validity_time(

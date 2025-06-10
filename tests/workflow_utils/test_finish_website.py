@@ -14,8 +14,10 @@
 
 """Tests for finish_website workflow utility."""
 
+import datetime
 import json
 import logging
+from importlib.metadata import version
 
 from CSET._workflow_utils import finish_website
 
@@ -41,7 +43,16 @@ def test_write_workflow_status(monkeypatch, tmp_path):
     monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", str(tmp_path))
     finish_website.update_workflow_status()
     with open(web_dir / "status.html", "rt", encoding="UTF-8") as fp:
-        assert fp.read() == "<p>Finished</p>\n"
+        content = fp.read().splitlines()
+        # Check finish status.
+        assert content[0] == "<p>Finished</p>"
+        # Check dynamic CSET version added.
+        cset_version = version("CSET")
+        assert content[1] == "<p>CSET v" + cset_version + "</p>"
+        # Check dynamic date created added and valid datetime.
+        assert "<p>Date completed: " in content[2]
+        datestr = datetime.datetime.strptime(content[2][19:38], "%Y-%m-%d %H:%M:%S")
+        assert isinstance(datestr, datetime.datetime)
 
 
 def test_construct_index(monkeypatch, tmp_path):

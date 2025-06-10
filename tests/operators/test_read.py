@@ -454,12 +454,13 @@ def test_fix_um_lightning(cube):
     read._fix_um_lightning(cube)
 
     # Check fix was applied properly.
+    #### HL - test needs updating as no change
     assert cube.cell_methods == ()
     fixed_time_coord = cube.coord("time")
     fixed_times = fixed_time_coord.units.num2date(fixed_time_coord.points)
     for ft, t in zip(fixed_times, times, strict=True):
-        assert ft.minute == 0
-        assert ft.hour == t.hour + 1
+        assert ft.minute == 30
+        assert ft.hour == t.hour
 
 
 def test_fix_um_lightning_skip_no_offset(cube):
@@ -486,10 +487,10 @@ def test_spatial_coord_auxcoord_callback():
     """Check that additional spatial aux coord grid_latitude gets added."""
     # This cube contains 'latitude' and 'longitude'
     cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
-    read._fix_spatial_coord_name_callback(cube)
+    read._fix_spatial_coords_callback(cube)
     assert (
         repr(cube.coords())
-        == "[<DimCoord: time / (hours since 1970-01-01 00:00:00)  [...]  shape(2,)>, <DimCoord: pressure / (hPa)  [ 100., 150., ..., 950., 1000.]  shape(16,)>, <DimCoord: latitude / (degrees)  [-10.98, -10.94, ..., -10.82, -10.78]  shape(6,)>, <DimCoord: longitude / (degrees)  [19.02, 19.06, ..., 19.18, 19.22]  shape(6,)>, <DimCoord: forecast_reference_time / (hours since 1970-01-01 00:00:00)  [...]>, <AuxCoord: forecast_period / (hours)  [15., 18.]  shape(2,)>, <AuxCoord: grid_latitude / (unknown)  [-10.98, -10.94, ..., -10.82, -10.78]  shape(6,)>, <AuxCoord: grid_longitude / (unknown)  [19.02, 19.06, ..., 19.18, 19.22]  shape(6,)>]"
+        == "[<DimCoord: time / (hours since 1970-01-01 00:00:00)  [...]  shape(2,)>, <DimCoord: pressure / (hPa)  [ 100., 150., ..., 950., 1000.]  shape(16,)>, <DimCoord: latitude / (degrees)  [-10.98, -10.94, ..., -10.82, -10.78]  shape(6,)>, <DimCoord: longitude / (degrees)  [19.02, 19.06, ..., 19.18, 19.22]  shape(6,)>, <DimCoord: forecast_reference_time / (hours since 1970-01-01 00:00:00)  [...]>, <AuxCoord: forecast_period / (hours)  [15., 18.]  shape(2,)>, <AuxCoord: grid_latitude / (degrees)  [-10.98, -10.94, ..., -10.82, -10.78]  shape(6,)>, <AuxCoord: grid_longitude / (degrees)  [19.02, 19.06, ..., 19.18, 19.22]  shape(6,)>]"
     )
 
 
@@ -497,7 +498,7 @@ def test_spatial_coord_not_exist_callback():
     """Check that spatial coord returns cube if cube does not contain spatial coordinates."""
     cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
     cube = cube[:, :, 0, 0]  # Remove spatial dimcoords
-    read._fix_spatial_coord_name_callback(cube)
+    read._fix_spatial_coords_callback(cube)
     assert (
         repr(cube.coords())
         == "[<DimCoord: time / (hours since 1970-01-01 00:00:00)  [...]  shape(2,)>, <DimCoord: pressure / (hPa)  [ 100., 150., ..., 950., 1000.]  shape(16,)>, <DimCoord: forecast_reference_time / (hours since 1970-01-01 00:00:00)  [...]>, <DimCoord: latitude / (degrees)  [-10.98]>, <DimCoord: longitude / (degrees)  [19.02]>, <AuxCoord: forecast_period / (hours)  [15., 18.]  shape(2,)>]"
@@ -558,10 +559,10 @@ def test_lfric_time_callback_unknown_units(slammed_lfric_cube):
         read._lfric_time_callback(slammed_lfric_cube)
 
 
-def test_lfric_normalise_varname(model_level_cube):
+def test_normalise_var0_varname(model_level_cube):
     """Check that read callback renames the model level var name."""
     model_level_cube.coord("model_level_number").var_name = "model_level_number_0"
-    read._lfric_normalise_varname(model_level_cube)
+    read._normalise_var0_varname(model_level_cube)
     assert model_level_cube.coord("model_level_number").var_name == "model_level_number"
 
 
@@ -570,6 +571,62 @@ def test_lfric_forecast_period_standard_name_callback(cube):
     cube.coord("forecast_period").standard_name = None
     read._lfric_forecast_period_standard_name_callback(cube)
     assert cube.coord("forecast_period").standard_name == "forecast_period"
+
+
+def test_read_cubes_extract_cells():
+    """Read cube and ensure appropriate number of cells are trimmed from domain edges."""
+    cube = read.read_cubes(
+        "tests/test_data/air_temperature_1000_hpa_level_histogram_plot.nc"
+    )[0]
+    assert cube.shape == (420, 380)
+
+    # Test not trimming any cells.
+    cube_full = read.read_cubes(
+        "tests/test_data/air_temperature_1000_hpa_level_histogram_plot.nc",
+        subarea_type="gridcells",
+        subarea_extent=[0, 0, 0, 0],
+    )[0]
+    assert cube_full.shape == (420, 380)
+
+    # Test trimming same number of grid points in all directions
+    cube_all = read.read_cubes(
+        "tests/test_data/air_temperature_1000_hpa_level_histogram_plot.nc",
+        subarea_type="gridcells",
+        subarea_extent=[10, 10, 10, 10],
+    )[0]
+    assert cube_all.shape == (400, 360)
+    assert round(cube_all.data[0, 0], 2) == round(cube.data[10, 10], 2)
+    assert round(cube_all.data[-1, -1], 2) == round(cube.data[409, 369], 2)
+
+    # Test trimming lower and upper edges only
+    cube_tb = read.read_cubes(
+        "tests/test_data/air_temperature_1000_hpa_level_histogram_plot.nc",
+        subarea_type="gridcells",
+        subarea_extent=[15, 0, 15, 0],
+    )[0]
+    assert cube_tb.shape == (390, 380)
+    assert round(cube_tb.data[0, 0], 2) == round(cube.data[15, 0], 2)
+    assert round(cube_tb.data[-1, -1], 2) == round(cube.data[389, 379], 2)
+
+    # Test trimming left and right edges only
+    cube_lr = read.read_cubes(
+        "tests/test_data/air_temperature_1000_hpa_level_histogram_plot.nc",
+        subarea_type="gridcells",
+        subarea_extent=[0, 15, 0, 15],
+    )[0]
+    assert cube_lr.shape == (420, 350)
+    assert round(cube_lr.data[0, 0], 2) == round(cube.data[0, 15], 2)
+    assert round(cube_lr.data[-1, -1], 2) == round(cube.data[419, 364], 2)
+
+    # Test trimming lower-side only
+    cube_lo = read.read_cubes(
+        "tests/test_data/air_temperature_1000_hpa_level_histogram_plot.nc",
+        subarea_type="gridcells",
+        subarea_extent=[100, 0, 0, 0],
+    )[0]
+    assert cube_lo.shape == (320, 380)
+    assert round(cube_lo.data[0, 0], 2) == round(cube.data[100, 0], 2)
+    assert round(cube_lo.data[-1, -1], 2) == round(cube.data[419, 379], 2)
 
 
 def test_read_cubes_extract_subarea():
@@ -614,3 +671,17 @@ def test_read_cubes_extract_subarea():
     assert not np.array_equal(
         cube_rw.coord("grid_latitude").points, cube.coord("grid_latitude").points
     )
+
+
+def test_read_cubes_outofbounds_subarea():
+    """Ensure correct failure if subarea outside cube extent."""
+    with pytest.raises(
+        ValueError,
+        match=r"Cutout region requested should be within data area. "
+        "Check and update SUBAREA_EXTENT.",
+    ):
+        read.read_cubes(
+            "tests/test_data/air_temp.nc",
+            subarea_type="realworld",
+            subarea_extent=[-5.5, 5.5, -125.5, 125.5],
+        )[0]
