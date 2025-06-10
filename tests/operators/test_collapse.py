@@ -78,9 +78,25 @@ def test_collapse_percentile(cube):
 
 def test_collapse_by_hour_of_day(long_forecast):
     """Convert and aggregates time dimension by hour of day."""
+    print(long_forecast)
     collapsed_cube = collapse.collapse_by_hour_of_day(long_forecast, "MEAN")
     expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
+
+
+def test_collapse_by_hour_of_day_single_day(long_forecast):
+    """Convert and aggregates time dimension by hour of day."""
+    print(long_forecast)
+    collapsed_cube = collapse.collapse_by_hour_of_day(long_forecast[0:24], "MEAN")
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
+    assert repr(collapsed_cube) == expected_cube
+    print(collapsed_cube)
+    print(expected_cube)
+
+    # Ensure cube data has changed when averaging 1-day only - input data spans T=15 through to T=14
+    print(collapsed_cube.data[0, 0, 0])
+    print(long_forecast[0, 0, 0])
+    assert collapsed_cube.data[0, 0, 0] != long_forecast.data[0, 0, 0]
 
 
 def test_collapse_by_hour_of_day_cubelist(long_forecast):

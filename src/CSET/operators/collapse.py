@@ -25,6 +25,7 @@ import iris.coords
 import iris.cube
 import iris.exceptions
 import iris.util
+import numpy as np
 
 from CSET._common import iter_maybe
 from CSET.operators._utils import is_time_aggregatable
@@ -180,12 +181,22 @@ def collapse_by_hour_of_day(
         else:
             collapsed_cube = cube.aggregated_by("hour", getattr(iris.analysis, method))
 
+        print("COLLAPSE: ", collapsed_cube)
+        print("COLLAPSE points: ", collapsed_cube.coord("hour").points)
+        print(collapsed_cube.data[0, 0, 0])
+        if collapsed_cube.coord("hour").points[0] > 0:
+            n1 = collapsed_cube.coord("hour").points[0]
+            collapsed_cube.coord("hour").points.sort()
+            n2 = collapsed_cube.coord("hour").points[0]
+            print(n1, n2)
+            collapsed_cube.data = np.roll(collapsed_cube.data, n2 - n1, axis=0)
+
+        print("COLLAPSE_HR: ", collapsed_cube.coord("hour"))
+        print(collapsed_cube.data[0, 0, 0])
+
         # Remove unnecessary time coordinates.
         collapsed_cube.remove_coord("time")
         collapsed_cube.remove_coord("forecast_period")
-
-        # Sort hour coordinate.
-        collapsed_cube.coord("hour").points.sort()
 
         # Promote "hour" to dim_coord.
         iris.util.promote_aux_coord_to_dim_coord(collapsed_cube, "hour")
