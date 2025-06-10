@@ -28,8 +28,9 @@ def test_preprocess(monkeypatch):
     monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", "/data")
     monkeypatch.setenv("CYLC_TASK_CYCLE_POINT", "20250101T0000Z")
     monkeypatch.setenv("MODEL_IDENTIFIER", "1")
+    monkeypatch.setenv("FIELDS", "['air_temperature','air_temperature','dummy_var']")
 
-    def mock_preprocess_data(data_location: str):
+    def mock_preprocess_data(data_location: str, fields: None):
         nonlocal preprocess_run
         preprocess_run = True
         assert data_location == "/data/cycle/20250101T0000Z/data/1"
@@ -56,5 +57,32 @@ def test_preprocess_data(tmp_path):
     # re-processing the data.
     cubes = iris.load(output)
     assert len(cubes) == 4
+    for cube in cubes:
+        assert "cset_comparison_base" not in cube.attributes
+
+
+def test_preprocess_data_varname(tmp_path):
+    """Combine model files into one for selected variable."""
+    # Prepare some model data in the data_location.
+    for file in glob.glob("tests/test_data/long_forecast_air_temp_fcst_*.nc"):
+        shutil.copy(file, tmp_path)
+
+    # Preprocess data.
+    preprocess.preprocess_data(str(tmp_path), fields=["air_temperature"])
+
+    # Check file has been created.
+    output = tmp_path / "forecast.nc"
+    assert output.is_file()
+
+    # Check cubes have been transferred correctly. We use iris here to avoid
+    # re-processing the data.
+    cubes = iris.load(output)
+    assert len(cubes) == 4
+    # Check if either air_temperature (or sometimes "forecast_period") is in file
+    for cube in cubes:
+        assert (
+            cube.standard_name == "air_temperature"
+            or cube.standard_name == "forecast_period"
+        )
     for cube in cubes:
         assert "cset_comparison_base" not in cube.attributes
