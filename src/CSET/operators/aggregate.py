@@ -172,6 +172,7 @@ def ensure_aggregatable_across_cases(
         logging.debug("Cubes to merge:\n%s", to_merge)
         aggregatable_cube = to_merge.merge_cube()
 
+        print(aggregatable_cube)
         # Verify cube is now aggregatable.
         if not is_time_aggregatable(aggregatable_cube):
             raise ValueError(
@@ -208,6 +209,9 @@ def add_hour_coordinate(
         # Add a category coordinate of hour into each cube.
         iris.coord_categorisation.add_hour(cube, "time", name="hour")
         cube.coord("hour").units = "hours"
+        time_points = cube.coord("hour").points
+        if time_points[0] > 0:
+            time_points[time_points == 0] = 24
         new_cubelist.append(cube)
 
     if len(new_cubelist) == 1:

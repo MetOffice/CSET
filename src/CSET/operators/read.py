@@ -215,6 +215,11 @@ def _load_model(
     """Load a single model's data into a CubeList."""
     input_files = _check_input_files(paths)
     # If unset, a constraint of None lets everything be loaded.
+    print("Constraint %s", constraint)
+
+    ## CHECK VARNAME
+    ##varname_constraint = constraint
+
     logging.debug("Constraint: %s", constraint)
     cubes = iris.load(
         input_files, constraint, callback=_create_callback(is_ensemble=False)

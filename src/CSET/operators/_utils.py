@@ -257,9 +257,10 @@ def is_time_aggregatable(cube: iris.cube.Cube) -> bool:
     TEMPORAL_COORD_NAMES = ["forecast_period", "forecast_reference_time"]
 
     # Coordinate names for the cube.
-    coord_names = [coord.name() for coord in cube.coords(dim_coords=True)]
+    coord_names = [coord.name() for coord in cube.coords(dim_coords=False)]
 
     # Check which temporal coordinates we have.
     temporal_coords = [coord for coord in coord_names if coord in TEMPORAL_COORD_NAMES]
+    print(temporal_coords)
     # Return whether both coordinates are in the temporal coordinates.
     return len(temporal_coords) == 2

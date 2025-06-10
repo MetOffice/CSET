@@ -152,6 +152,7 @@ def collapse_by_hour_of_day(
 
     collapsed_cubes = iris.cube.CubeList([])
     for cube in iter_maybe(cubes):
+        print(cube)
         if is_time_aggregatable(cube):
             # Collapse by forecast reference time to get a single time dimension.
             cube = collapse(
@@ -168,7 +169,9 @@ def collapse_by_hour_of_day(
         collapsed_cubes.append(cube)
 
     # Retain only common time points between the different models.
-    collapsed_cubes = collapsed_cubes.extract_overlapping("forecast_reference_time")
+    collapsed_cubes = collapsed_cubes.extract_overlapping("time")
+    print(collapsed_cubes)
+    # stop
 
     final_list = iris.cube.CubeList([])
     for cube in iter_maybe(collapsed_cubes):
@@ -186,8 +189,12 @@ def collapse_by_hour_of_day(
         collapsed_cube.remove_coord("time")
         collapsed_cube.remove_coord("forecast_period")
 
-        # Sort hour coordinate.
-        collapsed_cube.coord("hour").points.sort()
+        ###### HL - BUG!! # Sort hour coordinate.; ensure aggregated_by returns sorted list
+        # print(collapsed_cube.coord("hour").points)
+        # print(collapsed_cube.data)
+        # collapsed_cube.coord("hour").points.sort()
+        # print(collapsed_cube.coord("hour").points)
+        # print(collapsed_cube.data)
 
         # Promote "hour" to dim_coord.
         iris.util.promote_aux_coord_to_dim_coord(collapsed_cube, "hour")
