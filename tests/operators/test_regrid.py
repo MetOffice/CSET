@@ -176,7 +176,7 @@ def test_regrid_to_single_point_east(cube):
     centre of the grid is too far east (that is, the centre
     of the longitude range is further east than 180 deg).
     """
-    cube_fix = read._longitude_fix_callback(cube, None, None)
+    cube_fix = read._longitude_fix_callback(cube)
     regrid_cube = regrid.regrid_to_single_point(
         cube_fix, 0.5, -1.5, "rotated", "Nearest", boundary_margin=1
     )
@@ -199,7 +199,7 @@ def test_regrid_to_single_point_west(cube):
     long_coord = cube.coord("grid_longitude").points.copy()
     long_coord -= 720.0
     cube.coord("grid_longitude").points = long_coord
-    cube_fix = read._longitude_fix_callback(cube, None, None)
+    cube_fix = read._longitude_fix_callback(cube)
     regrid_cube = regrid.regrid_to_single_point(
         cube_fix, 0.5, -1.5, "rotated", "Nearest", boundary_margin=1
     )
@@ -256,7 +256,7 @@ def test_regrid_to_single_point_realworld(cube):
     Test that, if a real world coordinate is specified, the code is
     mapping this point correctly onto the rotated grid.
     """
-    cube_fix = read._longitude_fix_callback(cube, None, None)
+    cube_fix = read._longitude_fix_callback(cube)
     regrid_cube = regrid.regrid_to_single_point(
         cube_fix, 52.98, -5.0, "realworld", "Nearest", boundary_margin=1
     )
@@ -270,7 +270,7 @@ def test_regrid_to_single_point_rotated(cube):
     Test that, if a rotated coordinate is specified, the answer
     matches the corresponding coordinate on the real world grid.
     """
-    cube_fix = read._longitude_fix_callback(cube, None, None)
+    cube_fix = read._longitude_fix_callback(cube)
     regrid_cube = regrid.regrid_to_single_point(
         cube_fix, 0.5, -1.5, "rotated", "Nearest", boundary_margin=1
     )
@@ -300,13 +300,13 @@ def test_longitude_fix_callback_missing_coord(cube):
     # Missing X coordinate.
     source = cube.copy()
     source.remove_coord("grid_longitude")
-    cube_fix = read._longitude_fix_callback(source.copy(), None, None)
+    cube_fix = read._longitude_fix_callback(source.copy())
     assert cube_fix == source
 
     # Missing Y coordinate.
     source = cube.copy()
     source.remove_coord("grid_latitude")
-    cube_fix = read._longitude_fix_callback(source.copy(), None, None)
+    cube_fix = read._longitude_fix_callback(source.copy())
     assert cube_fix == source
 
 
