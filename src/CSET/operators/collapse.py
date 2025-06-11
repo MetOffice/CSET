@@ -164,6 +164,9 @@ def collapse_by_hour_of_day(
             # have effectively done this.
             cube.remove_coord("forecast_reference_time")
 
+        # Remove time coordinate bounds to enable collapse over time dimension.
+        if cube.coord("time").has_bounds():
+            cube.coord("time").bounds = None
         collapsed_cubes.append(cube)
 
     # Retain only common time points between different models.
