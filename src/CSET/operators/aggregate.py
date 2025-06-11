@@ -208,12 +208,6 @@ def add_hour_coordinate(
         # Add a category coordinate of hour into each cube.
         iris.coord_categorisation.add_hour(cube, "time", name="hour")
         cube.coord("hour").units = "hours"
-        # Ensure cube retains hour=24 in sorted hour coordinate
-        time_points = cube.coord("hour").points
-        print(time_points)
-        if time_points[0] > 0:
-            time_points[time_points == 0] = 24
-        print(time_points)
         new_cubelist.append(cube)
 
     if len(new_cubelist) == 1:

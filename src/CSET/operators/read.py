@@ -692,6 +692,9 @@ def _lfric_time_callback(cube: iris.cube.Cube):
     expected coordinates, and so we cannot aggregate over case studies without this
     metadata. This callback fixes these issues.
 
+    This callback also ensures all time coordinates are referenced as seconds since
+    1970-01-01 00:00:00 for consistency across different model inputs.
+
     Notes
     -----
     Some parts of the code have been adapted from Paul Earnshaw's scripts.
@@ -699,12 +702,19 @@ def _lfric_time_callback(cube: iris.cube.Cube):
     # Construct forecast_reference time if it doesn't exist.
     try:
         tcoord = cube.coord("time")
+        try:
+            tcoord.convert_units("hours since 1970-01-01 00:00:00")
+        except ValueError:
+            logging.error("Unrecognised base time unit: {tcoord.units}")
+
         if not cube.coords("forecast_reference_time"):
             try:
                 init_time = datetime.datetime.fromisoformat(
                     tcoord.attributes["time_origin"]
                 )
+                print(init_time)
                 frt_point = tcoord.units.date2num(init_time)
+                print(frt_point)
                 frt_coord = iris.coords.AuxCoord(
                     frt_point,
                     units=tcoord.units,
@@ -732,6 +742,7 @@ def _lfric_time_callback(cube: iris.cube.Cube):
 
                 # Get unit for lead time from time coordinate's unit.
                 # Convert all lead time to hours for consistency between models.
+                print(tcoord.units)
                 if "seconds" in str(tcoord.units):
                     lead_times = lead_times / 3600.0
                     units = "hours"

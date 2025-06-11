@@ -166,8 +166,9 @@ def collapse_by_hour_of_day(
 
         collapsed_cubes.append(cube)
 
-    # Retain only common time points between the different models.
-    collapsed_cubes = collapsed_cubes.extract_overlapping("time")
+    # Retain only common time points between different models.
+    if len(collapsed_cubes) > 1:
+        collapsed_cubes = collapsed_cubes.extract_overlapping("time")
 
     final_list = iris.cube.CubeList([])
     for cube in iter_maybe(collapsed_cubes):
@@ -181,18 +182,14 @@ def collapse_by_hour_of_day(
         else:
             collapsed_cube = cube.aggregated_by("hour", getattr(iris.analysis, method))
 
-        print("COLLAPSE: ", collapsed_cube)
-        print("COLLAPSE points: ", collapsed_cube.coord("hour").points)
-        print(collapsed_cube.data[0, 0, 0])
-        if collapsed_cube.coord("hour").points[0] > 0:
-            n1 = collapsed_cube.coord("hour").points[0]
-            collapsed_cube.coord("hour").points.sort()
-            n2 = collapsed_cube.coord("hour").points[0]
-            print(n1, n2)
-            collapsed_cube.data = np.roll(collapsed_cube.data, n2 - n1, axis=0)
-
-        print("COLLAPSE_HR: ", collapsed_cube.coord("hour"))
-        print(collapsed_cube.data[0, 0, 0])
+        # Ensure hour_of_day time coordinate is increasing within range
+        # 0h to 23h. Roll collapsed cube data as required.
+        # Compute nroll as the difference from 0 of time0/time_step_of_outputs.
+        # Assume time dimension is on axis 0 of collapsed cubes.
+        time_points = collapsed_cube.coord("hour").points
+        nroll = time_points[0] / (time_points[1] - time_points[0])
+        collapsed_cube.coord("hour").points = np.roll(time_points, nroll, 0)
+        collapsed_cube.data = np.roll(collapsed_cube.data, nroll, axis=0)
 
         # Remove unnecessary time coordinates.
         collapsed_cube.remove_coord("time")
