@@ -112,7 +112,6 @@ def test_collapse_by_hour_of_day_cubelist(long_forecast):
     assert isinstance(collapsed_cubes, iris.cube.CubeList)
     assert len(collapsed_cubes) == 2
     expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
-
     for collapsed_cube in collapsed_cubes:
         assert repr(collapsed_cube) == expected_cube
 
