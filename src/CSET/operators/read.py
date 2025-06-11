@@ -712,9 +712,7 @@ def _lfric_time_callback(cube: iris.cube.Cube):
                 init_time = datetime.datetime.fromisoformat(
                     tcoord.attributes["time_origin"]
                 )
-                print(init_time)
                 frt_point = tcoord.units.date2num(init_time)
-                print(frt_point)
                 frt_coord = iris.coords.AuxCoord(
                     frt_point,
                     units=tcoord.units,
@@ -742,7 +740,6 @@ def _lfric_time_callback(cube: iris.cube.Cube):
 
                 # Get unit for lead time from time coordinate's unit.
                 # Convert all lead time to hours for consistency between models.
-                print(tcoord.units)
                 if "seconds" in str(tcoord.units):
                     lead_times = lead_times / 3600.0
                     units = "hours"
