@@ -517,8 +517,8 @@ def test_lfric_time_callback_forecast_reference_time(slammed_lfric_cube):
     assert ref_time_coord.standard_name == "forecast_reference_time"
     assert ref_time_coord.long_name == "forecast_reference_time"
     assert ref_time_coord.var_name is None
-    assert str(ref_time_coord.units) == "seconds since 2022-01-01 00:00:00"
-    assert all(ref_time_coord.points == [0])
+    assert str(ref_time_coord.units) == "hours since 1970-01-01 00:00:00"
+    assert all(ref_time_coord.points == [455832])
 
 
 def test_lfric_time_callback_forecast_period(slammed_lfric_cube):
@@ -549,14 +549,17 @@ def test_lfric_time_callback_hours(slammed_lfric_cube):
     assert all(fc_period_coord.points == [1, 2, 3, 4, 5, 6])
 
 
-def test_lfric_time_callback_unknown_units(slammed_lfric_cube):
+def test_lfric_time_callback_unknown_units(slammed_lfric_cube, caplog):
     """Error when forecast_period units cannot be determined."""
     slammed_lfric_cube.remove_coord("forecast_period")
     assert not slammed_lfric_cube.coords("forecast_period")
-    slammed_lfric_cube.coord("time").convert_units("days since 1970-01-01 00:00:00")
+    slammed_lfric_cube.coord("time").units = None
 
-    with pytest.raises(ValueError, match="Unrecognised base time unit:"):
+    with pytest.raises(iris.exceptions.UnitConversionError):
         read._lfric_time_callback(slammed_lfric_cube)
+        _, level, message = caplog.record_tuples[0]
+        assert level == logging.ERROR
+        assert message == "Unrecognised base time unit: unknown"
 
 
 def test_normalise_var0_varname(model_level_cube):

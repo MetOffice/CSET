@@ -83,6 +83,28 @@ def test_collapse_by_hour_of_day(long_forecast):
     assert repr(collapsed_cube) == expected_cube
 
 
+def test_collapse_by_hour_of_day_single_day(long_forecast):
+    """Convert and aggregates time dimension by hour of day."""
+    # Read in only first 24h of input data.
+    collapsed_cube = collapse.collapse_by_hour_of_day(long_forecast[0:24], "MEAN")
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
+    assert repr(collapsed_cube) == expected_cube
+
+    # Ensure cube data has changed when averaging 1-day only. Input data spans T=3 through to T=2.
+    assert collapsed_cube.data[0, 0, 0] == long_forecast.data[21, 0, 0]
+    assert collapsed_cube.data[0, -1, -1] == long_forecast.data[21, -1, -1]
+
+    # Select different initialisation time from input data.
+    long_forecast_2 = long_forecast[56:80]
+    collapsed_cube = collapse.collapse_by_hour_of_day(long_forecast_2, "MEAN")
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
+    assert repr(collapsed_cube) == expected_cube
+
+    # Ensure cube data has changed when averaging 1-day only. Input data spans T=11 through to T=10
+    assert collapsed_cube.data[0, 0, 0] == long_forecast_2.data[13, 0, 0]
+    assert collapsed_cube.data[0, -1, -1] == long_forecast_2.data[13, -1, -1]
+
+
 def test_collapse_by_hour_of_day_cubelist(long_forecast):
     """Collapsing a CubeList by hour of day collapses each cube separately."""
     cubes = iris.cube.CubeList([long_forecast, long_forecast.copy()])

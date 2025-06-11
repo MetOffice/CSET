@@ -25,6 +25,7 @@ import iris.coords
 import iris.cube
 import iris.exceptions
 import iris.util
+import numpy as np
 
 from CSET._common import iter_maybe
 from CSET.operators._utils import is_time_aggregatable
@@ -169,9 +170,8 @@ def collapse_by_hour_of_day(
         collapsed_cubes.append(cube)
 
     # Retain only common time points between the different models.
-    collapsed_cubes = collapsed_cubes.extract_overlapping("time")
-    print(collapsed_cubes)
-    # stop
+    if len(collapsed_cubes) > 1:
+        collapsed_cubes = collapsed_cubes.extract_overlapping("time")
 
     final_list = iris.cube.CubeList([])
     for cube in iter_maybe(collapsed_cubes):
@@ -185,16 +185,18 @@ def collapse_by_hour_of_day(
         else:
             collapsed_cube = cube.aggregated_by("hour", getattr(iris.analysis, method))
 
+        # Ensure hour_of_day time coordinate is increasing within range
+        # 0h to 23h. Roll collapsed cube data as required.
+        # Compute nroll as the difference from 0 of time0/time_step_of_outputs.
+        # Assume time dimension is on axis 0 of collapsed cubes.
+        time_points = collapsed_cube.coord("hour").points
+        nroll = time_points[0] / (time_points[1] - time_points[0])
+        collapsed_cube.coord("hour").points = np.roll(time_points, nroll, 0)
+        collapsed_cube.data = np.roll(collapsed_cube.data, nroll, axis=0)
+
         # Remove unnecessary time coordinates.
         collapsed_cube.remove_coord("time")
         collapsed_cube.remove_coord("forecast_period")
-
-        ###### HL - BUG!! # Sort hour coordinate.; ensure aggregated_by returns sorted list
-        # print(collapsed_cube.coord("hour").points)
-        # print(collapsed_cube.data)
-        # collapsed_cube.coord("hour").points.sort()
-        # print(collapsed_cube.coord("hour").points)
-        # print(collapsed_cube.data)
 
         # Promote "hour" to dim_coord.
         iris.util.promote_aux_coord_to_dim_coord(collapsed_cube, "hour")

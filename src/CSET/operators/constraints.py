@@ -63,9 +63,9 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
     varname_constraint: iris.Constraint
     """
     if re.match(r"m[0-9]{2}s[0-9]{2}i[0-9]{3}$", varname):
-        varname_constraint = iris.NameConstraint(STASH=varname)
+        varname_constraint = iris.AttributeConstraint(STASH=varname)
     else:
-        varname_constraint = iris.NameConstraint(standard_name=varname)
+        varname_constraint = iris.Constraint(name=varname)
     # print(varname)
     return varname_constraint
 

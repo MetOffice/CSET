@@ -20,7 +20,6 @@ import functools
 import glob
 import itertools
 import logging
-import math
 import warnings
 from pathlib import Path
 from typing import Literal
@@ -327,16 +326,16 @@ def _cutout_cubes(
                 subarea_extent[3],
             )
             # Ensure realworld cutout region is within +/- 180.0 bounds
-            # if subarea_type == "realworld":
-            #    if subarea_extent[2] < -180.0:
-            #        subarea_extent[2] += 180.0
-            #        subarea_extent[3] += 180.0
-            #    if subarea_extent[3] > 180.0:
-            #        subarea_extent[2] -= 180.0
-            #        subarea_extent[3] -= 180.0
+            if subarea_type == "realworld":
+                if subarea_extent[2] < -180.0:
+                    subarea_extent[2] += 180.0
+                    subarea_extent[3] += 180.0
+                if subarea_extent[3] > 180.0:
+                    subarea_extent[2] -= 180.0
+                    subarea_extent[3] -= 180.0
             # Define cutout region using user provided coordinates.
             lats = subarea_extent[0:2]
-            lons = [math.remainder(lon, 360) for lon in subarea_extent[2:4]]
+            lons = subarea_extent[2:4]
             coord_system = cube.coord(lat_name).coord_system
             # If the coordinate system is rotated we convert coordinates into
             # model-relative coordinates to extract the appropriate cutout.
@@ -861,6 +860,9 @@ def _lfric_time_callback(cube: iris.cube.Cube):
     expected coordinates, and so we cannot aggregate over case studies without this
     metadata. This callback fixes these issues.
 
+    This callback also ensures all time coordinates are referenced as seconds since
+    1970-01-01 00:00:00 for consistency across different model inputs.
+
     Notes
     -----
     Some parts of the code have been adapted from Paul Earnshaw's scripts.
@@ -868,6 +870,12 @@ def _lfric_time_callback(cube: iris.cube.Cube):
     # Construct forecast_reference time if it doesn't exist.
     try:
         tcoord = cube.coord("time")
+        # Set time coordinate to common basis "hours since 1970"
+        try:
+            tcoord.convert_units("hours since 1970-01-01 00:00:00")
+        except ValueError:
+            logging.error("Unrecognised base time unit: {tcoord.units}")
+
         if not cube.coords("forecast_reference_time"):
             try:
                 init_time = datetime.datetime.fromisoformat(
