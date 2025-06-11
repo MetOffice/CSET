@@ -90,17 +90,19 @@ def test_collapse_by_hour_of_day_single_day(long_forecast):
     expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
 
-    # Ensure cube data has changed when averaging 1-day only. Input data spans T=3 through to T=2.
+    # Ensure data has changed position in cube (averaging 1-day only).
+    # Input data spans T=3 through to T=2.
     assert collapsed_cube.data[0, 0, 0] == long_forecast.data[21, 0, 0]
     assert collapsed_cube.data[0, -1, -1] == long_forecast.data[21, -1, -1]
 
-    # Select different initialisation time from input data.
+    # Select different segment from long_forecast input data.
     long_forecast_2 = long_forecast[56:80]
     collapsed_cube = collapse.collapse_by_hour_of_day(long_forecast_2, "MEAN")
     expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
 
-    # Ensure cube data has changed when averaging 1-day only. Input data spans T=11 through to T=10
+    # Ensure cube data has changed position in cube (averaging 1-day only).
+    # Input data spans T=11 through to T=10
     assert collapsed_cube.data[0, 0, 0] == long_forecast_2.data[13, 0, 0]
     assert collapsed_cube.data[0, -1, -1] == long_forecast_2.data[13, -1, -1]
 
@@ -137,6 +139,49 @@ def test_collapse_by_hour_of_day_multi_forecast_cube(long_forecast_multi_day):
     collapsed_cube = collapse.collapse_by_hour_of_day(long_forecast_multi_day, "MEAN")
     expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
+
+
+def test_collapse_by_hour_of_day_multi_forecast_single_day(long_forecast_multi_day):
+    """Test time averaging and data rolling correct for collapse_hour_of_day."""
+    # Ensure data components are as expected, working with first 24h inputs.
+    long_forecast_pick_day = long_forecast_multi_day[0:24]
+    collapsed_cube = collapse.collapse_by_hour_of_day(long_forecast_pick_day, "MEAN")
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
+    assert repr(collapsed_cube) == expected_cube
+
+    # Ensure cube data has changed position in cube (averaging 1-day only).
+    # First initialisation segment in input spans T=3 through to T=2.
+    # Second initialisation segment in input spans T=15 through to T=14.
+    # Third initialisation segment in input spans T=3 through to T=2.
+    calc_mean = (
+        long_forecast_pick_day.data[21, 0, 0, 0]
+        + long_forecast_pick_day.data[9, 1, 0, 0]
+        + long_forecast_pick_day.data[21, 2, 0, 0]
+    ) / 3.0
+    assert collapsed_cube.data[0, 0, 0] == calc_mean
+    calc_mean2 = (
+        long_forecast_pick_day.data[21, 0, -1, -1]
+        + long_forecast_pick_day.data[9, 1, -1, -1]
+        + long_forecast_pick_day.data[21, 2, -1, -1]
+    ) / 3.0
+    assert collapsed_cube.data[0, -1, -1] == calc_mean2
+
+    # Select different segment from long_forecast input data.
+    # First segment T=1 to T=0. Second T=13 to T=12. Third T=1 to T=0.
+    long_forecast_pick_day2 = long_forecast_multi_day[22:46]
+    collapsed_cube = collapse.collapse_by_hour_of_day(long_forecast_pick_day2, "MEAN")
+    calc_mean = (
+        long_forecast_pick_day2.data[23, 0, 0, 0]
+        + long_forecast_pick_day2.data[11, 1, 0, 0]
+        + long_forecast_pick_day2.data[23, 2, 0, 0]
+    ) / 3.0
+    assert collapsed_cube.data[0, 0, 0] == calc_mean
+    calc_mean2 = (
+        long_forecast_pick_day2.data[23, 0, -1, -1]
+        + long_forecast_pick_day2.data[11, 1, -1, -1]
+        + long_forecast_pick_day2.data[23, 2, -1, -1]
+    ) / 3.0
+    assert collapsed_cube.data[0, -1, -1] == calc_mean2
 
 
 def test_collapse_by_lead_time_single_cube(long_forecast_multi_day):
