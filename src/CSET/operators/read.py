@@ -719,7 +719,6 @@ def _lfric_time_callback(cube: iris.cube.Cube):
                     units=tcoord.units,
                     standard_name="forecast_reference_time",
                     long_name="forecast_reference_time",
-                    calendar="gregorian",
                 )
                 cube.add_aux_coord(frt_coord)
             except KeyError:
