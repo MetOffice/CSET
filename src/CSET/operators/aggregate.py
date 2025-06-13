@@ -27,7 +27,7 @@ from CSET.operators._utils import is_time_aggregatable
 
 
 def time_aggregate(
-    cube: iris.cube.Cube,
+    cubes: iris.cube.Cube | iris.cube.CubeList,
     method: str,
     interval_iso: str,
     **kwargs,
@@ -77,17 +77,89 @@ def time_aggregate(
     # Convert interval format to whole hours.
     interval = int(timedelta.total_seconds() / 3600)
 
-    # Add time categorisation overwriting hourly increment via lambda coord.
-    # https://scitools-iris.readthedocs.io/en/latest/_modules/iris/coord_categorisation.html
-    iris.coord_categorisation.add_categorised_coord(
-        cube, "interval", "time", lambda coord, cell: cell // interval * interval
-    )
+    new_cubelist = iris.cube.CubeList()
+    for cube in iter_maybe(cubes):
+        # Add time categorisation overwriting hourly increment via lambda coord.
+        # https://scitools-iris.readthedocs.io/en/latest/_modules/iris/coord_categorisation.html
+        iris.coord_categorisation.add_categorised_coord(
+            cube, "interval", "time", lambda coord, cell: cell // interval * interval
+        )
 
-    # Aggregate cube using supplied method.
-    aggregated_cube = cube.aggregated_by("interval", getattr(iris.analysis, method))
-    aggregated_cube.remove_coord("interval")
-    return aggregated_cube
+        # Aggregate cube using supplied method.
+        aggregated_cube = cube.aggregated_by("interval", getattr(iris.analysis, method))
+        aggregated_cube.remove_coord("interval")
 
+        new_cubelist.append(aggregated_cube)
+    
+    if len(new_cubelist) == 1:
+        return new_cubelist[0]
+    else:
+        return new_cubelist
+        
+def season_aggregate(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+    agg_coord : str,
+    method: str,
+    additional_percent: float = None,
+    **kwargs,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Aggregate cube by its season coordinate.
+
+    Aggregates similar (stash) fields in a cube for the specified coordinate and
+    using the method supplied. The aggregated cube will keep the coordinate and
+    add a further coordinate with the aggregated end time points.
+
+    Examples are: 1. Generating hourly or 6-hourly precipitation accumulations
+    given an interval for the new time coordinate.
+
+    We use the isodate class to convert ISO 8601 durations into time intervals
+    for creating a new time coordinate for aggregation.
+
+    We use the lambda function to pass coord and interval into the callable
+    category function in add_categorised to allow users to define their own
+    sub-daily intervals for the new time coordinate.
+
+    Arguments
+    ---------
+    cube: iris.cube.Cube
+        Cube to aggregate and iterate over one dimension
+    method: str
+        Type of aggregate i.e. method: 'SUM', getattr creates
+        iris.analysis.SUM, etc.
+    
+    Returns
+    -------
+    cube: iris.cube.Cube
+        Single variable but several methods of aggregation
+
+    Raises
+    ------
+    ValueError
+        If the constraint doesn't produce a single cube containing a field.
+    """
+    new_cubelist = iris.cube.CubeList()
+    for cube in iter_maybe(cubes):
+        coord_names = [coord.name() for coord in cube.coords()]
+        if agg_coord not in coord_names:
+            raise ValueError("Cube must have a {} coordinate.".format(agg_coord))
+
+        # Aggregate cube using supplied method.
+        if method == "PERCENTILE":
+            aggregated_cube = cube.aggregated_by(agg_coord,
+                                                 getattr(iris.analysis, method),
+                                                 percent=additional_percent)
+        else:
+            aggregated_cube = cube.aggregated_by(agg_coord, getattr(iris.analysis, method))
+
+        # Need to remove time coordinate to allow misc.difference to work
+        aggregated_cube.remove_coord("time")
+        
+        new_cubelist.append(aggregated_cube)
+      
+    if len(new_cubelist) == 1:
+        return new_cubelist[0]
+    else:
+        return new_cubelist
 
 def ensure_aggregatable_across_cases(
     cubes: iris.cube.Cube | iris.cube.CubeList,
@@ -210,6 +282,88 @@ def add_hour_coordinate(
         cube.coord("hour").units = "hours"
         new_cubelist.append(cube)
 
+    if len(new_cubelist) == 1:
+        return new_cubelist[0]
+    else:
+        return new_cubelist
+
+def add_month_coordinate(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Add a category coordinate of month to a Cube or CubeList.
+
+    Arguments
+    ---------
+    cubes: iris.cube.Cube | iris.cube.CubeList
+        Cube of any variable that has a time coordinate.
+
+    Returns
+    -------
+    cube: iris.cube.Cube
+        A Cube with an additional auxiliary coordinate of month.
+
+    """
+    new_cubelist = iris.cube.CubeList()
+    for cube in iter_maybe(cubes):
+        # Add a category coordinate of month into each cube.        
+        iris.coord_categorisation.add_month(cube, "time", name="month")
+        new_cubelist.append(cube)
+
+    if len(new_cubelist) == 1:
+        return new_cubelist[0]
+    else:
+        return new_cubelist
+
+def add_month_number_coordinate(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Add a category coordinate of month_number to a Cube or CubeList.
+
+    Arguments
+    ---------
+    cubes: iris.cube.Cube | iris.cube.CubeList
+        Cube of any variable that has a time coordinate.
+
+    Returns
+    -------
+    cube: iris.cube.Cube
+        A Cube with an additional auxiliary coordinate of month number.
+
+    """
+    new_cubelist = iris.cube.CubeList()
+    for cube in iter_maybe(cubes):
+        # Add a category coordinate of month number into each cube.        
+        iris.coord_categorisation.add_month_number(cube, "time", name="month_number")
+        new_cubelist.append(cube)
+
+    if len(new_cubelist) == 1:
+        return new_cubelist[0]
+    else:
+        return new_cubelist
+
+def add_season_coordinate(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+        seasons: list[str] = ["djf", "mam", "jja", "son"],
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Add a category coordinate of season to a Cube or CubeList.
+
+    Arguments
+    ---------
+    cubes: iris.cube.Cube | iris.cube.CubeList
+        Cube of any variable that has a time coordinate.
+
+    Returns
+    -------
+    cube: iris.cube.Cube
+        A Cube with an additional auxiliary coordinate of season.
+
+    """
+    new_cubelist = iris.cube.CubeList()
+    for cube in iter_maybe(cubes):
+        # Add a category coordinate of month number into each cube.        
+        iris.coord_categorisation.add_season(cube, "time", name="season", seasons=seasons)
+        new_cubelist.append(cube)
+      
     if len(new_cubelist) == 1:
         return new_cubelist[0]
     else:

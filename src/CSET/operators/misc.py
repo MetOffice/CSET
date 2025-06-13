@@ -272,7 +272,7 @@ def difference(cubes: CubeList):
     --------
     >>> model_diff = misc.difference(temperature_model_A, temperature_model_B)
 
-    """
+    """    
     if len(cubes) != 2:
         raise ValueError("cubes should contain exactly 2 cubes.")
     base: Cube = cubes.extract_cube(iris.AttributeConstraint(cset_comparison_base=1))
@@ -286,49 +286,55 @@ def difference(cubes: CubeList):
     base_lat_name, base_lon_name = get_cube_yxcoordname(base)
     other_lat_name, other_lon_name = get_cube_yxcoordname(other)
 
-    # Check latitude, longitude shape the same. Not comparing points, as these
-    # might slightly differ due to rounding errors (especially in future if we
-    # are regridding cubes to common resolutions).
-    # An exception has been included here to deal with some variables on different
-    # grid staggering (cell center vs edge of cell) when comparing UM to LFRic,
-    # depending on whether they are on a B grid or Arakawa staggering. Note we do not
-    # generally apply regridding to any variable where dimension sizes do not
-    # match, to make sure we are using appropriate regridding technique. In this
-    # case for winds, a Linear regridding is appropriate (smooth variable).
     if (
-        base.coord(base_lat_name).shape != other.coord(other_lat_name).shape
-        or base.coord(base_lon_name).shape != other.coord(other_lon_name).shape
+        base.coord(base_lat_name).points.size == 1 and other.coord(other_lat_name).points.size == 1
+        and base.coord(base_lon_name).points.size == 1 and other.coord(other_lon_name).points.size == 1
     ):
-        if base.long_name in [
-            "eastward_wind_at_10m",
-            "northward_wind_at_10m",
-            "northward_wind_at_cell_centres",
-            "eastward_wind_at_cell_centres",
-            "zonal_wind_at_pressure_levels",
-            "meridional_wind_at_pressure_levels",
-            "potential_vorticity_at_pressure_levels",
-            "vapour_specific_humidity_at_pressure_levels_for_climate_averaging",
-        ]:
-            base = regrid_onto_cube(base, other, method="Linear")
-        else:
-            raise ValueError(
-                f"Cubes should have the same shape, got {base.coord(base_lat_name)} {other.coord(other_lat_name)}"
-            )
+        print("Dealing with timeseries data")
+    else:
+        # Check latitude, longitude shape the same. Not comparing points, as these
+        # might slightly differ due to rounding errors (especially in future if we
+        # are regridding cubes to common resolutions).
+        # An exception has been included here to deal with some variables on different
+        # grid staggering (cell center vs edge of cell) when comparing UM to LFRic,
+        # depending on whether they are on a B grid or Arakawa staggering. Note we do not
+        # generally apply regridding to any variable where dimension sizes do not
+        # match, to make sure we are using appropriate regridding technique. In this
+        # case for winds, a Linear regridding is appropriate (smooth variable).
+        if (
+                base.coord(base_lat_name).shape != other.coord(other_lat_name).shape
+                or base.coord(base_lon_name).shape != other.coord(other_lon_name).shape
+        ):
+            if base.long_name in [
+                    "eastward_wind_at_10m",
+                    "northward_wind_at_10m",
+                    "northward_wind_at_cell_centres",
+                    "eastward_wind_at_cell_centres",
+                    "zonal_wind_at_pressure_levels",
+                    "meridional_wind_at_pressure_levels",
+                    "potential_vorticity_at_pressure_levels",
+                    "vapour_specific_humidity_at_pressure_levels_for_climate_averaging",
+            ]:
+                base = regrid_onto_cube(base, other, method="Linear")
+            else:
+                raise ValueError(
+                    f"Cubes should have the same shape, got {base.coord(base_lat_name)} {other.coord(other_lat_name)}"
+                )
 
-    def is_increasing(sequence: list) -> bool:
-        """Determine the direction of an ordered sequence.
+        def is_increasing(sequence: list) -> bool:
+            """Determine the direction of an ordered sequence.
 
-        Returns "increasing" or "decreasing" depending on whether the sequence
-        is going up or down. The sequence should already be monotonic, with no
-        duplicate values. An iris DimCoord's points fulfills this criteria.
-        """
-        return sequence[0] < sequence[1]
+            Returns "increasing" or "decreasing" depending on whether the sequence
+            is going up or down. The sequence should already be monotonic, with no
+            duplicate values. An iris DimCoord's points fulfills this criteria.
+            """
+            return sequence[0] < sequence[1]
 
-    # Figure out if we are comparing between UM and LFRic; flip array if so.
-    base_lat_direction = is_increasing(base.coord(base_lat_name).points)
-    other_lat_direction = is_increasing(other.coord(other_lat_name).points)
-    if base_lat_direction != other_lat_direction:
-        other.data = np.flip(other.data, other.coord(other_lat_name).cube_dims(other))
+        # Figure out if we are comparing between UM and LFRic; flip array if so.
+        base_lat_direction = is_increasing(base.coord(base_lat_name).points)
+        other_lat_direction = is_increasing(other.coord(other_lat_name).points)
+        if base_lat_direction != other_lat_direction:
+            other.data = np.flip(other.data, other.coord(other_lat_name).cube_dims(other))
 
     # Extract just common time points.
     base, other = _extract_common_time_points(base, other)

@@ -1260,6 +1260,11 @@ def plot_line_series(
     # Add file extension.
     plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
 
+    # Make sure difference plots are labelled differently
+    # to prevent over-writing
+    if not isinstance(cube, iris.cube.CubeList) and "_difference" in cube.long_name:
+        plot_filename = f"{plot_filename[0:-4]}_difference.png"
+
     num_models = _get_num_models(cube)
 
     _validate_cube_shape(cube, num_models)
@@ -1286,7 +1291,7 @@ def plot_line_series(
     # Make a page to display the plots.
     _make_plot_html_page(plot_index)
 
-    return cube
+    return cubes
 
 
 def plot_vertical_line_series(
@@ -1709,6 +1714,107 @@ def plot_histogram_series(
 
     # Add list of plots to plot metadata.
     complete_plot_index = _append_to_plot_index(plot_index)
+
+    # Make a page to display the plots.
+    _make_plot_html_page(complete_plot_index)
+
+    return cubes
+
+
+def plot_histogram(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+    filename: str = None,
+    stamp_coordinate: str = "realization",
+    single_plot: bool = False,
+    **kwargs,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Plot a histogram plot for each vertical level provided.
+
+    A histogram plot can be plotted, but if the sequence_coordinate (i.e. time)
+    is present then a sequence of plots will be produced using the time slider
+    functionality to scroll through histograms against time. If a
+    stamp_coordinate is present then postage stamp plots will be produced. If
+    stamp_coordinate and single_plot is True, all postage stamp plots will be
+    plotted in a single plot instead of separate postage stamp plots.
+
+    Parameters
+    ----------
+    cubes: Cube | iris.cube.CubeList
+        Iris cube or CubeList of the data to plot. It should have a single dimension other
+        than the stamp coordinate.
+        The cubes should cover the same phenomenon i.e. all cubes contain temperature data.
+        We do not support different data such as temperature and humidity in the same CubeList for plotting.
+    filename: str, optional
+        Name of the plot to write, used as a prefix for plot sequences. Defaults
+        to the recipe name.
+    sequence_coordinate: str, optional
+        Coordinate about which to make a plot sequence. Defaults to ``"time"``.
+        This coordinate must exist in the cube and will be used for the time
+        slider.
+    stamp_coordinate: str, optional
+        Coordinate about which to plot postage stamp plots. Defaults to
+        ``"realization"``.
+    single_plot: bool, optional
+        If True, all postage stamp plots will be plotted in a single plot. If
+        False, each postage stamp plot will be plotted separately. Is only valid
+        if stamp_coordinate exists and has more than a single point.
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        The original Cube or CubeList (so further operations can be applied).
+        Plotted data.
+
+    Raises
+    ------
+    ValueError
+        If the cube doesn't have the right dimensions.
+    TypeError
+        If the cube isn't a Cube or CubeList.
+    """
+    recipe_title = get_recipe_metadata().get("title", "Untitled")
+
+    cubes = iter_maybe(cubes)
+
+    # Ensure we have a name for the plot file.
+    if filename is None:
+        filename = slugify(recipe_title)
+
+    # Internal plotting function.
+    plotting_func = _plot_and_save_histogram_series
+
+    num_models = _get_num_models(cubes)
+
+    _validate_cube_shape(cubes, num_models)
+
+    # Get minimum and maximum from levels information.
+    levels = None
+    for cube in cubes:
+        _, levels, _ = _colorbar_map_levels(cube)
+        logging.debug("levels: %s", levels)
+        if levels is not None:
+            vmin = min(levels)
+            vmax = max(levels)
+            break
+
+    if levels is None:
+        vmin = min(cb.data.min() for cb in cubes)
+        vmax = max(cb.data.max() for cb in cubes)
+
+    plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
+    
+    # Do the actual plotting.
+    plotting_func(
+        cubes,
+        filename=plot_filename,
+        stamp_coordinate=stamp_coordinate,
+        title=recipe_title,
+        vmin=vmin,
+        vmax=vmax,
+    )
+
+    # Add list of plots to plot metadata.
+    complete_plot_index = _append_to_plot_index([plot_filename])
 
     # Make a page to display the plots.
     _make_plot_html_page(complete_plot_index)
