@@ -214,11 +214,10 @@ def _load_model(
     """Load a single model's data into a CubeList."""
     input_files = _check_input_files(paths)
     # If unset, a constraint of None lets everything be loaded.
-    print("Constraint %s", constraint)
 
     ## CHECK VARNAME
     ##varname_constraint = constraint
-
+    print(input_files)
     logging.debug("Constraint: %s", constraint)
     cubes = iris.load(
         input_files, constraint, callback=_create_callback(is_ensemble=False)
@@ -712,7 +711,10 @@ def _fix_pressure_coord_callback(cube: iris.cube.Cube):
 
 def _fix_um_radtime_posthour(cube: iris.cube.Cube):
     """Fix radiation which is output N minute or N second past every hour."""
-    try:
+    #    try:
+    ## TRY WAS FAILING WITH SWITCH TO HRS SINCE....
+
+    if "STASH" in cube.attributes:
         if cube.attributes["STASH"] in [
             "m01s01i207",
             "m01s01i208",
@@ -724,10 +726,15 @@ def _fix_um_radtime_posthour(cube: iris.cube.Cube):
         ]:
             time_coord = cube.coord("time")
 
+            print(cube)
+            print("hello")
+            print(cube.coord("time"))
+            print(cube.coord("forecast_period"))
+            print(cube.coord("forecast_period").points)
             # Convert time points to datetime objects
             time_unit = time_coord.units
             time_points = time_unit.num2date(time_coord.points)
-
+            print(time_points[0].minute, time_points[0].second)
             # Skip if times don't need fixing.
             if time_points[0].minute == 0 and time_points[0].second == 0:
                 return
@@ -750,8 +757,18 @@ def _fix_um_radtime_posthour(cube: iris.cube.Cube):
 
             # Replace the time coordinate with corrected values
             time_coord.points = new_time_values
-    except KeyError:
-        pass
+            print(new_time_values)
+
+            # Ensure forecast_period is consistent
+            cube.remove_coord("forecast_period")
+            # print("SET_FCST")
+            # new_forecast_period = cube.coord("forecast_period").points - (n_minute/60.) - (n_second/3600.)
+            # cube.coord("forecast_period").points = new_forecast_period
+            # stop
+
+
+#    except KeyError:
+#        pass
 
 
 def _fix_um_radtime_prehour(cube: iris.cube.Cube):
@@ -962,7 +979,7 @@ def _remove_time0(cubes: iris.cube.CubeList):
     for cube in cubes:
         if cube.coords("forecast_period"):
             valid_cube = cube.extract(
-                iris.Constraint(forecast_period=lambda cell: cell >= 0.5)
+                iris.Constraint(forecast_period=lambda cell: cell >= 0.25)
             )
             if valid_cube:
                 valid_cubes.append(valid_cube)

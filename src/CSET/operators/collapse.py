@@ -28,7 +28,6 @@ import iris.util
 import numpy as np
 
 from CSET._common import iter_maybe
-from CSET.operators._utils import is_time_aggregatable
 from CSET.operators.aggregate import add_hour_coordinate
 
 
@@ -151,11 +150,68 @@ def collapse_by_hour_of_day(
     if method == "PERCENTILE" and additional_percent is None:
         raise ValueError("Must specify additional_percent")
 
+    # Retain only common time points between different models if multiple model inputs.
+    if isinstance(cubes, iris.cube.CubeList):
+        print("A: ", cubes)
+        print(cubes[0])
+        print(cubes[1])
+        #        print("STOP")
+        #        stop
+        if len(cubes) > 1:
+            print("EX_OVER")
+            for cube in cubes:
+                cube.coord("forecast_reference_time").bounds = None
+                cube.coord("forecast_period").bounds = None
+                print(cube.coord("forecast_reference_time").points)
+                print(cube.coord("forecast_period").points)
+                print(np.min(cube.data))
+            try:
+                cubes = cubes.extract_overlapping(
+                    ["forecast_reference_time", "forecast_period"]
+                )
+            except ValueError:
+                print("No overlapping points")
+        print(cubes)
+        # stop
+
     collapsed_cubes = iris.cube.CubeList([])
     for cube in iter_maybe(cubes):
-        print(cube)
-        if is_time_aggregatable(cube):
-            # Collapse by forecast reference time to get a single time dimension.
+        # Categorise the time coordinate by hour of the day.
+        cube = add_hour_coordinate(cube)
+        # Ensure hour coordinate in each input is sorted, and data adjusted if needed.
+        sorted_cube = iris.cube.CubeList()
+        for fcst_slice in cube.slices_over(["forecast_reference_time"]):
+            if method == "PERCENTILE":
+                by_hour = fcst_slice.aggregated_by(
+                    "hour", getattr(iris.analysis, method), percent=additional_percent
+                )
+            else:
+                by_hour = fcst_slice.aggregated_by(
+                    "hour", getattr(iris.analysis, method)
+                )
+            # Compute if data needs sorting to lie in increasing order [0..23].
+            # Note multiple forecasts can sit in same cube spanning different
+            # initialisation times and data ranges.
+            time_points = by_hour.coord("hour").points
+            time_points_sorted = np.sort(by_hour.coord("hour").points)
+            if time_points[0] != time_points_sorted[0]:
+                nroll = time_points[0] / (time_points[1] - time_points[0])
+                print("NROLL: ", nroll)
+                # Shift hour coordinate and data cube to be in time of day order.
+                by_hour.coord("hour").points = np.roll(time_points, nroll, 0)
+                by_hour.data = np.roll(by_hour.data, nroll, axis=0)
+
+            # Remove unnecessary time coordinate.
+            by_hour.remove_coord("time")
+
+            sorted_cube.append(by_hour)
+
+        # Recombine cube slices.
+        cube = sorted_cube.merge_cube()
+
+        coord_names = [coord.name() for coord in cube.coords(dim_coords=True)]
+        if "forecast_reference_time" in coord_names:
+            # Collapse by forecast reference time to get a single cube.
             cube = collapse(
                 cube,
                 "forecast_reference_time",
@@ -163,49 +219,21 @@ def collapse_by_hour_of_day(
                 additional_percent=additional_percent,
             )
         else:
-            # Remove forecast_reference_time if a single case, as collapse will
-            # have effectively done this.
+            # Or remove forecast reference time if a single case, as collapse
+            # will have effectively done this.
             cube.remove_coord("forecast_reference_time")
 
+        # Promote "hour" to dim_coord.
+        print(cube.coord("hour"))
+        iris.util.promote_aux_coord_to_dim_coord(cube, "hour")
         collapsed_cubes.append(cube)
 
-    # Retain only common time points between the different models.
-    if len(collapsed_cubes) > 1:
-        collapsed_cubes = collapsed_cubes.extract_overlapping("time")
-
-    final_list = iris.cube.CubeList([])
-    for cube in iter_maybe(collapsed_cubes):
-        # Categorise the time coordinate by hour of the day.
-        cube = add_hour_coordinate(cube)
-        # Aggregate by the new category coordinate.
-        if method == "PERCENTILE":
-            collapsed_cube = cube.aggregated_by(
-                "hour", getattr(iris.analysis, method), percent=additional_percent
-            )
-        else:
-            collapsed_cube = cube.aggregated_by("hour", getattr(iris.analysis, method))
-
-        # Ensure hour_of_day time coordinate is increasing within range
-        # 0h to 23h. Roll collapsed cube data as required.
-        # Compute nroll as the difference from 0 of time0/time_step_of_outputs.
-        # Assume time dimension is on axis 0 of collapsed cubes.
-        time_points = collapsed_cube.coord("hour").points
-        nroll = time_points[0] / (time_points[1] - time_points[0])
-        collapsed_cube.coord("hour").points = np.roll(time_points, nroll, 0)
-        collapsed_cube.data = np.roll(collapsed_cube.data, nroll, axis=0)
-
-        # Remove unnecessary time coordinates.
-        collapsed_cube.remove_coord("time")
-        collapsed_cube.remove_coord("forecast_period")
-
-        # Promote "hour" to dim_coord.
-        iris.util.promote_aux_coord_to_dim_coord(collapsed_cube, "hour")
-        final_list.append(collapsed_cube)
-
-    if len(final_list) == 1:
-        return final_list[0]
+    print(collapsed_cubes[0])
+    print(collapsed_cubes[1])
+    if len(collapsed_cubes) == 1:
+        return collapsed_cubes[0]
     else:
-        return final_list
+        return collapsed_cubes
 
 
 def collapse_by_validity_time(
