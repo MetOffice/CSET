@@ -92,7 +92,6 @@ def collapse(
                 collapsed_cubes.append(
                     cube.collapsed(coordinate, getattr(iris.analysis, method))
                 )
-
     if len(collapsed_cubes) == 1:
         return collapsed_cubes[0]
     else:
