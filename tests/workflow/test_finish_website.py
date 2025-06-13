@@ -16,6 +16,7 @@
 
 import json
 import logging
+import re
 
 from CSET.workflow import finish_website
 
@@ -41,7 +42,10 @@ def test_write_workflow_status(monkeypatch, tmp_path):
     monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", str(tmp_path))
     finish_website.update_workflow_status()
     with open(web_dir / "status.html", "rt", encoding="UTF-8") as fp:
-        assert fp.read() == "<p>Finished</p>\n"
+        content = fp.read()
+    # Check status is written correctly.
+    pattern = r"<p>Completed at \d{4}-\d\d-\d\d \d\d:\d\d using CSET v.+</p>\n"
+    assert re.fullmatch(pattern, content)
 
 
 def test_construct_index(monkeypatch, tmp_path):
