@@ -702,11 +702,11 @@ def _lfric_time_callback(cube: iris.cube.Cube):
     # Construct forecast_reference time if it doesn't exist.
     try:
         tcoord = cube.coord("time")
-        try:
-            tcoord.calendar = "gregorian"
-            tcoord.convert_units("hours since 1970-01-01 00:00:00")
-        except ValueError:
-            logging.error("Unrecognised base time unit: {tcoord.units}")
+        #        try:
+        #            tcoord.calendar = "gregorian"
+        #            tcoord.convert_units("hours since 1970-01-01 00:00:00")
+        #        except ValueError:
+        #            logging.error("Unrecognised base time unit: {tcoord.units}")
 
         if not cube.coords("forecast_reference_time"):
             try:
