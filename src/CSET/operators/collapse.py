@@ -152,7 +152,15 @@ def collapse_by_hour_of_day(
     # Retain only common time points between different models if multiple model inputs.
     if isinstance(cubes, iris.cube.CubeList):
         if len(cubes) > 1:
-            cubes = cubes.extract_overlapping("time")
+            for cube in cubes:
+                cube.coord("forecast_reference_time").bounds = None
+                cube.coord("forecast_period").bounds = None
+            try:
+                cubes = cubes.extract_overlapping(
+                    ["forecast_reference_time", "forecast_period"]
+                )
+            except ValueError:
+                logging.error("No overlapping times detected in cubes: \n%s", cubes)
 
     collapsed_cubes = iris.cube.CubeList([])
     for cube in iter_maybe(cubes):
@@ -173,10 +181,12 @@ def collapse_by_hour_of_day(
             # Note multiple forecasts can sit in same cube spanning different
             # initialisation times and data ranges.
             time_points = by_hour.coord("hour").points
-            nroll = time_points[0] / (time_points[1] - time_points[0])
-            # Shift hour coordinate and data cube to be in time of day order.
-            by_hour.coord("hour").points = np.roll(time_points, nroll, 0)
-            by_hour.data = np.roll(by_hour.data, nroll, axis=0)
+            time_points_sorted = np.sort(by_hour.coord("hour").points)
+            if time_points[0] != time_points_sorted[0]:
+                nroll = time_points[0] / (time_points[1] - time_points[0])
+                # Shift hour coordinate and data cube to be in time of day order.
+                by_hour.coord("hour").points = np.roll(time_points, nroll, 0)
+                by_hour.data = np.roll(by_hour.data, nroll, axis=0)
 
             # Remove unnecessary time coordinate.
             by_hour.remove_coord("time")
