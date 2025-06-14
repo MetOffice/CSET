@@ -156,27 +156,16 @@ def collapse_by_hour_of_day(
 
     # Retain only common time points between different models if multiple model inputs.
     if isinstance(cubes, iris.cube.CubeList):
-        print("A: ", cubes)
-        print(cubes[0])
-        print(cubes[1])
-        #        print("STOP")
-        #        stop
         if len(cubes) > 1:
-            print("EX_OVER")
             for cube in cubes:
                 cube.coord("forecast_reference_time").bounds = None
                 cube.coord("forecast_period").bounds = None
-                print(cube.coord("forecast_reference_time").points)
-                print(cube.coord("forecast_period").points)
-                print(np.min(cube.data))
             try:
                 cubes = cubes.extract_overlapping(
                     ["forecast_reference_time", "forecast_period"]
                 )
             except ValueError:
-                print("No overlapping points")
-        print(cubes)
-        # stop
+                logging.error("No overlapping points detected in cubes: \n%s", cubes)
 
     collapsed_cubes = iris.cube.CubeList([])
     for cube in iter_maybe(cubes):
@@ -200,7 +189,6 @@ def collapse_by_hour_of_day(
             time_points_sorted = np.sort(by_hour.coord("hour").points)
             if time_points[0] != time_points_sorted[0]:
                 nroll = time_points[0] / (time_points[1] - time_points[0])
-                print("NROLL: ", nroll)
                 # Shift hour coordinate and data cube to be in time of day order.
                 by_hour.coord("hour").points = np.roll(time_points, nroll, 0)
                 by_hour.data = np.roll(by_hour.data, nroll, axis=0)
@@ -228,12 +216,9 @@ def collapse_by_hour_of_day(
             cube.remove_coord("forecast_reference_time")
 
         # Promote "hour" to dim_coord.
-        print(cube.coord("hour"))
         iris.util.promote_aux_coord_to_dim_coord(cube, "hour")
         collapsed_cubes.append(cube)
 
-    print(collapsed_cubes[0])
-    print(collapsed_cubes[1])
     if len(collapsed_cubes) == 1:
         return collapsed_cubes[0]
     else:
