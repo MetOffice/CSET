@@ -602,14 +602,25 @@ def _fix_um_radtime_posthour(cube: iris.cube.Cube):
             if time_points[0].minute != 1:
                 return
 
-            # Subtract 1 minute from each time point
+            # Subtract 1 minute from each time point.
             new_time_points = time_points - datetime.timedelta(minutes=1)
 
-            # Convert back to numeric values using the original time unit
+            # Convert back to numeric values using the original time unit.
             new_time_values = time_unit.date2num(new_time_points)
 
-            # Replace the time coordinate with corrected values
+            # Replace the time coordinate with corrected values.
             time_coord.points = new_time_values
+
+            # Recompute forecast_period with corrected values.
+            if cube.coord("forecast_period"):
+                fcst_prd_points = cube.coord("forecast_period").points
+                new_fcst_points = time_unit.num2date(
+                    fcst_prd_points
+                ) - datetime.timedelta(minutes=1)
+                cube.coord("forecast_period").points = time_unit.date2num(
+                    new_fcst_points
+                )
+
     except KeyError:
         pass
 
@@ -636,6 +647,17 @@ def _fix_um_radtime_prehour(cube: iris.cube.Cube):
 
             # Replace the time coordinate with corrected values
             time_coord.points = new_time_values
+
+            # Recompute forecast_period with corrected values.
+            if cube.coord("forecast_period"):
+                fcst_prd_points = cube.coord("forecast_period").points
+                new_fcst_points = time_unit.num2date(
+                    fcst_prd_points
+                ) + datetime.timedelta(minutes=1)
+                cube.coord("forecast_period").points = time_unit.date2num(
+                    new_fcst_points
+                )
+
     except KeyError:
         pass
 

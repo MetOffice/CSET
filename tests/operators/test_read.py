@@ -282,6 +282,8 @@ def test_fix_um_radtime_posthour(cube):
     # Check all times are offset.
     for time in times:
         assert time.minute == 1
+    # Also offset forecast_period by one minute.
+    cube.coord("forecast_period").points += 1.0 / 60.0
 
     # Give cube a radiation STASH code.
     cube.attributes["STASH"] = "m01s01i208"
@@ -296,6 +298,13 @@ def test_fix_um_radtime_posthour(cube):
     assert rad_times[0] == datetime.datetime(2022, 9, 21, 3, 0)
     for time in rad_times:
         assert time.minute == 0
+
+    # Ensure radiation forecast_period values are fixed.
+    rad_time_coord = cube.coord("forecast_period")
+    # Check all times are fixed.
+    assert rad_time_coord.points[0] == 0
+    for time in rad_time_coord.points:
+        assert time.dtype == int
 
 
 def test_fix_um_radtime_posthour_skip_non_radiation(cube):
@@ -354,7 +363,7 @@ def test_fix_um_radtime_posthour_no_time_coordinate():
 
 
 def test_fix_um_radtime_prehour(cube):
-    """Check times that are 1 minute passed are rounded to the whole hour."""
+    """Check times that are 1 minute past are rounded to the whole hour."""
     # Offset times by one minute.
     time_coord = cube.coord("time")
     times = time_coord.units.num2pydate(time_coord.points) - datetime.timedelta(
@@ -364,6 +373,8 @@ def test_fix_um_radtime_prehour(cube):
     # Check all times are offset.
     for time in times:
         assert time.minute == 59
+    # Offset forecast_period by one minute.
+    cube.coord("forecast_period").points -= 1.0 / 60.0
 
     # Give cube a radiation STASH code.
     cube.attributes["STASH"] = "m01s01i207"
@@ -378,6 +389,13 @@ def test_fix_um_radtime_prehour(cube):
     assert rad_times[0] == datetime.datetime(2022, 9, 21, 3, 0)
     for time in rad_times:
         assert time.minute == 0
+
+    # Ensure radiation forecast_periods are fixed.
+    rad_time_coord = cube.coord("forecast_period")
+    # Check all times are fixed.
+    assert rad_time_coord.points[0] == 0
+    for time in rad_time_coord.points:
+        assert time.dtype == int
 
 
 def test_fix_um_radtime_prehour_skip_non_radiation(cube):
