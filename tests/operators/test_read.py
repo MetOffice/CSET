@@ -516,10 +516,8 @@ def test_lfric_time_callback_forecast_reference_time(slammed_lfric_cube):
     assert ref_time_coord.standard_name == "forecast_reference_time"
     assert ref_time_coord.long_name == "forecast_reference_time"
     assert ref_time_coord.var_name is None
-    assert (
-        str(ref_time_coord.units) == "seconds since 2022-01-01 00:00:00"
-    )  # hours since 1970-01-01 00:00:00"
-    assert all(ref_time_coord.points == [0])  # [455832])
+    assert str(ref_time_coord.units) == "hours since 1970-01-01 00:00:00"
+    assert all(ref_time_coord.points == [455832])
 
 
 def test_lfric_time_callback_forecast_period(slammed_lfric_cube):
