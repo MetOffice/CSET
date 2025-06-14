@@ -90,6 +90,10 @@ def collapse(
                         percent=additional_percent,
                     )
                 )
+            elif method == "RANGE":
+                cube_max = cube.collapsed(coordinate, iris.analysis.MAX)
+                cube_min = cube.collapsed(coordinate, iris.analysis.MIN)
+                collapsed_cubes.append(cube_max - cube_min)
             else:
                 collapsed_cubes.append(
                     cube.collapsed(coordinate, getattr(iris.analysis, method))
