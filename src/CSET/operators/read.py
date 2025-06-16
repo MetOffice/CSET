@@ -267,7 +267,7 @@ def _check_input_files(input_paths: str | list[str]) -> list[Path]:
                 input_path = Path(input_path)
                 # Get the list of files in the directory, or use it directly.
                 if input_path.is_dir():
-                    logging.debug("Checking directory '%s' for files")
+                    logging.debug("Checking directory '%s' for files", input_path)
                     files.extend(p for p in input_path.iterdir() if p.is_file())
                 else:
                     files.append(input_path)
