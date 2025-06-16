@@ -163,11 +163,11 @@ def collapse_by_hour_of_day(
 
     collapsed_cubes = iris.cube.CubeList([])
     for cube in iter_maybe(cubes):
-        # Categorise the time coordinate by hour of the day.
-        cube = add_hour_coordinate(cube)
         # Ensure hour coordinate in each input is sorted, and data adjusted if needed.
         sorted_cube = iris.cube.CubeList()
         for fcst_slice in cube.slices_over(["forecast_reference_time"]):
+            # Categorise the time coordinate by hour of the day.
+            fcst_slide = add_hour_coordinate(fcst_slice)
             if method == "PERCENTILE":
                 by_hour = fcst_slice.aggregated_by(
                     "hour", getattr(iris.analysis, method), percent=additional_percent
