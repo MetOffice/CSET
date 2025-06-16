@@ -6,6 +6,7 @@ steps:
   - operator: read.read_cubes
     model_names: [$BASE_MODEL, $OTHER_MODEL]
     file_paths: $INPUT_PATHS
+    model_names: [$BASE_MODEL, $OTHER_MODEL]
     constraint:
       operator: constraints.combine_constraints
       varname_constraint:
