@@ -437,7 +437,7 @@ def _create_callback(is_ensemble: bool) -> callable:
         _fix_spatial_coords_callback(cube)
         _fix_pressure_coord_callback(cube)
         # _lfric_normalise_varname(cube)
-        # _fix_um_radtime_prehour(cube)
+        ## _fix_um_radtime_prehour(cube)
         _fix_um_radtime_posthour(cube)
         _fix_um_lightning(cube)
         _lfric_time_callback(cube)
@@ -769,36 +769,6 @@ def _fix_um_radtime_posthour(cube: iris.cube.Cube):
                 cube.coord("forecast_period").points = time_unit.date2num(
                     new_fcst_points
                 )
-
-
-#    except KeyError:
-#        pass
-
-
-def _fix_um_radtime_prehour(cube: iris.cube.Cube):
-    """Fix radiation which is output 1 minute before every hour."""
-    try:
-        if cube.attributes["STASH"] == "m01s01i207":
-            time_coord = cube.coord("time")
-
-            # Convert time points to datetime objects
-            time_unit = time_coord.units
-            time_points = time_unit.num2pydate(time_coord.points)
-
-            # Skip if times don't need fixing.
-            if time_points[0].minute != 59:
-                return
-
-            # Add 1 minute from each time point
-            new_time_points = time_points + datetime.timedelta(minutes=1)
-
-            # Convert back to numeric values using the original time unit
-            new_time_values = time_unit.date2num(new_time_points)
-
-            # Replace the time coordinate with corrected values
-            time_coord.points = new_time_values
-    except KeyError:
-        pass
 
 
 def _fix_um_lightning(cube: iris.cube.Cube):
