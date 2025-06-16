@@ -119,6 +119,15 @@ def test_collapse_by_hour_of_day_cubelist(long_forecast):
         assert repr(collapsed_cube) == expected_cube
 
 
+def test_collapse_by_hour_of_day_single_cubelist(long_forecast):
+    """Check single CubeList input collapsed by hour of day."""
+    # Test single cubelist entry.
+    cubes = iris.cube.CubeList([long_forecast])
+    collapsed_cube = collapse.collapse_by_hour_of_day(cubes, "MEAN")
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
+    assert repr(collapsed_cube) == expected_cube
+
+
 def test_collapse_by_hour_of_day_percentile(long_forecast):
     """Convert and aggregate time dimension by hour of day with percentiles."""
     # Test collapsing long forecast.
