@@ -169,8 +169,6 @@ def collapse_by_hour_of_day(
 
     collapsed_cubes = iris.cube.CubeList([])
     for cube in iter_maybe(cubes):
-        # Categorise the time coordinate by hour of the day.
-        cube = add_hour_coordinate(cube)
         # Ensure hour coordinate in each input is sorted, and data adjusted if needed.
         sorted_cube = iris.cube.CubeList()
         for fcst_slice in cube.slices_over(["forecast_reference_time"]):
