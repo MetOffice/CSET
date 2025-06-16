@@ -200,6 +200,20 @@ def test_collapse_by_lead_time_single_cube(long_forecast_multi_day):
     )
 
 
+def test_collapse_by_hour_of_day_multi_non_overlapping(long_forecast_multi_day):
+    """Identify when inputs have non-overlapping cubes."""
+    print(long_forecast_multi_day)
+    cube_day1 = long_forecast_multi_day[0:24, 0, :, :]
+    cube_day2 = long_forecast_multi_day[24:48, 2, :, :]
+    print(cube_day1.coord("time"))
+    print(cube_day2.coord("time"))
+    non_overlap_cubelist = iris.cube.CubeList([cube_day1, cube_day2])
+    with pytest.raises(
+        ValueError, match="No overlapping times detected in input cubes."
+    ):
+        collapse.collapse_by_hour_of_day(non_overlap_cubelist, "MEAN")
+
+
 def test_collapse_by_lead_time_single_cube_percentile_fail(long_forecast_multi_day):
     """Test fail by not setting additional percent."""
     with pytest.raises(ValueError, match="Must specify additional_percent"):

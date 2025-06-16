@@ -307,6 +307,35 @@ def test_fix_um_radtime_posthour(cube):
         assert time.dtype == int
 
 
+def test_fix_um_radtime_posthour_no_fp(cube):
+    """Check times that are 1 minute past are rounded, if no forecast_period."""
+    # Offset times by one minute.
+    time_coord = cube.coord("time")
+    times = time_coord.units.num2pydate(time_coord.points) + datetime.timedelta(
+        minutes=1
+    )
+    time_coord.points = time_coord.units.date2num(times)
+    # Check all times are offset.
+    for time in times:
+        assert time.minute == 1
+    # Remove forecast_period from input cube.
+    cube.remove_coord("forecast_period")
+
+    # Give cube a radiation STASH code.
+    cube.attributes["STASH"] = "m01s01i208"
+
+    # Apply fix.
+    read._fix_um_radtime_posthour(cube)
+
+    # Ensure radiation times are fixed.
+    rad_time_coord = cube.coord("time")
+    rad_times = rad_time_coord.units.num2pydate(rad_time_coord.points)
+    # Check all times are fixed.
+    assert rad_times[0] == datetime.datetime(2022, 9, 21, 3, 0)
+    for time in rad_times:
+        assert time.minute == 0
+
+
 def test_fix_um_radtime_posthour_skip_non_radiation(cube):
     """Check non-radiation times are NOT fixed."""
     # Offset times by one minute.
@@ -396,6 +425,35 @@ def test_fix_um_radtime_prehour(cube):
     assert rad_time_coord.points[0] == 0
     for time in rad_time_coord.points:
         assert time.dtype == int
+
+
+def test_fix_um_radtime_prehour_no_fp(cube):
+    """Check times that are 1 minute past are rounded, without forecast_period."""
+    # Offset times by one minute.
+    time_coord = cube.coord("time")
+    times = time_coord.units.num2pydate(time_coord.points) - datetime.timedelta(
+        minutes=1
+    )
+    time_coord.points = time_coord.units.date2num(times)
+    # Check all times are offset.
+    for time in times:
+        assert time.minute == 59
+    # Remove forecast_period from input.
+    cube.remove_coord("forecast_period")
+
+    # Give cube a radiation STASH code.
+    cube.attributes["STASH"] = "m01s01i207"
+
+    # Apply fix.
+    read._fix_um_radtime_prehour(cube)
+
+    # Ensure radiation times are fixed.
+    rad_time_coord = cube.coord("time")
+    rad_times = rad_time_coord.units.num2pydate(rad_time_coord.points)
+    # Check all times are fixed.
+    assert rad_times[0] == datetime.datetime(2022, 9, 21, 3, 0)
+    for time in rad_times:
+        assert time.minute == 0
 
 
 def test_fix_um_radtime_prehour_skip_non_radiation(cube):

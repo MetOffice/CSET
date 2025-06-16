@@ -154,12 +154,15 @@ def collapse_by_hour_of_day(
             for cube in cubes:
                 cube.coord("forecast_reference_time").bounds = None
                 cube.coord("forecast_period").bounds = None
-            try:
-                cubes = cubes.extract_overlapping(
-                    ["forecast_reference_time", "forecast_period"]
-                )
-            except ValueError:
-                logging.error("No overlapping times detected in cubes: \n%s", cubes)
+            cubes = cubes.extract_overlapping(
+                ["forecast_reference_time", "forecast_period"]
+            )
+            if len(cubes) == 0:
+                raise ValueError("No overlapping times detected in input cubes.")
+        else:
+            logging.debug(
+                "Not extracting common time points as multiple model inputs not detected."
+            )
 
     collapsed_cubes = iris.cube.CubeList([])
     for cube in iter_maybe(cubes):
