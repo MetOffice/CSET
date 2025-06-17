@@ -288,6 +288,30 @@ def test_postage_stamp_pcolormesh_plot_sequence_coord_check(cube, tmp_working_di
         plot.spatial_pcolormesh_plot(cube)
 
 
+def test_pcolormesh_coastline(cube, caplog):
+    """Check coastlines plotted in black for air_temperature colormap."""
+    with caplog.at_level(logging.DEBUG):
+        plot.spatial_pcolormesh_plot(cube)
+        message_match = False
+        for _, _, message in caplog.record_tuples:
+            if message == "Plotting coastlines k.":
+                message_match = True
+        assert message_match
+
+
+def test_pcolormesh_coastline_m(cube, caplog):
+    """Check coastlines plotted in magenta for viridis colormap."""
+    with caplog.at_level(logging.DEBUG):
+        # Set cube name to unknown to trigger viridis default cmap
+        cube.rename("unknown_var_name")
+        plot.spatial_pcolormesh_plot(cube)
+        message_match = False
+        for _, _, message in caplog.record_tuples:
+            if message == "Plotting coastlines m.":
+                message_match = True
+        assert message_match
+
+
 def test_plot_line_series(cube, tmp_working_dir):
     """Save a line series plot."""
     cube = collapse.collapse(cube, ["grid_latitude", "grid_longitude"], "MEAN")
