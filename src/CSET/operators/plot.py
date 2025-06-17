@@ -397,7 +397,12 @@ def _plot_and_save_spatial_plot(
     # If is spatial map, fix extent to keep plot tight.
     try:
         lat_axis, lon_axis = get_cube_yxcoordname(cube)
-        axes.coastlines(resolution="10m")
+        if cmap.name in ["viridis", "Greys"]:
+            coastcol = "m"
+        else:
+            coastcol = "k"
+        logging.debug("Plotting coastlines %s.", coastcol)
+        axes.coastlines(resolution="10m", color=coastcol)
         x1 = np.min(cube.coord(lon_axis).points)
         x2 = np.max(cube.coord(lon_axis).points)
         y1 = np.min(cube.coord(lat_axis).points)
