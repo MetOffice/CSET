@@ -149,20 +149,18 @@ def collapse_by_hour_of_day(
         raise ValueError("Must specify additional_percent")
 
     # Retain only common time points between different models if multiple model inputs.
-    if isinstance(cubes, iris.cube.CubeList):
-        if len(cubes) > 1:
-            for cube in cubes:
-                cube.coord("forecast_reference_time").bounds = None
-                cube.coord("forecast_period").bounds = None
-            cubes = cubes.extract_overlapping(
-                ["forecast_reference_time", "forecast_period"]
-            )
-            if len(cubes) == 0:
-                raise ValueError("No overlapping times detected in input cubes.")
-        else:
-            logging.debug(
-                "Not extracting common time points as multiple model inputs not detected."
-            )
+    if isinstance(cubes, iris.cube.CubeList) and len(cubes) > 1:
+        logging.debug(
+            "Extracting common time points as multiple model inputs detected."
+        )
+        for cube in cubes:
+            cube.coord("forecast_reference_time").bounds = None
+            cube.coord("forecast_period").bounds = None
+        cubes = cubes.extract_overlapping(
+            ["forecast_reference_time", "forecast_period"]
+        )
+        if len(cubes) == 0:
+            raise ValueError("No overlapping times detected in input cubes.")
 
     collapsed_cubes = iris.cube.CubeList([])
     for cube in iter_maybe(cubes):
@@ -191,6 +189,7 @@ def collapse_by_hour_of_day(
                 by_hour.data = np.roll(by_hour.data, nroll, axis=0)
 
             # Remove unnecessary time coordinate.
+            # "hour" and "forecast_period" remain as AuxCoord.
             by_hour.remove_coord("time")
 
             sorted_cube.append(by_hour)
@@ -198,8 +197,7 @@ def collapse_by_hour_of_day(
         # Recombine cube slices.
         cube = sorted_cube.merge_cube()
 
-        coord_names = [coord.name() for coord in cube.coords(dim_coords=True)]
-        if "forecast_reference_time" in coord_names:
+        if cube.coords("forecast_reference_time", dim_coords=True):
             # Collapse by forecast reference time to get a single cube.
             cube = collapse(
                 cube,

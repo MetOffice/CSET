@@ -596,7 +596,7 @@ def _fix_um_radtime_posthour(cube: iris.cube.Cube):
 
             # Convert time points to datetime objects
             time_unit = time_coord.units
-            time_points = time_unit.num2pydate(time_coord.points)
+            time_points = time_unit.num2date(time_coord.points)
 
             # Skip if times don't need fixing.
             if time_points[0].minute != 1:
@@ -614,13 +614,12 @@ def _fix_um_radtime_posthour(cube: iris.cube.Cube):
             # Recompute forecast_period with corrected values.
             if cube.coord("forecast_period"):
                 fcst_prd_points = cube.coord("forecast_period").points
-                new_fcst_points = time_unit.num2pydate(
+                new_fcst_points = time_unit.num2date(
                     fcst_prd_points
                 ) - datetime.timedelta(minutes=1)
                 cube.coord("forecast_period").points = time_unit.date2num(
                     new_fcst_points
                 )
-
     except KeyError:
         pass
 
@@ -633,7 +632,7 @@ def _fix_um_radtime_prehour(cube: iris.cube.Cube):
 
             # Convert time points to datetime objects
             time_unit = time_coord.units
-            time_points = time_unit.num2pydate(time_coord.points)
+            time_points = time_unit.num2date(time_coord.points)
 
             # Skip if times don't need fixing.
             if time_points[0].minute != 59:
@@ -651,7 +650,7 @@ def _fix_um_radtime_prehour(cube: iris.cube.Cube):
             # Recompute forecast_period with corrected values.
             if cube.coord("forecast_period"):
                 fcst_prd_points = cube.coord("forecast_period").points
-                new_fcst_points = time_unit.num2pydate(
+                new_fcst_points = time_unit.num2date(
                     fcst_prd_points
                 ) + datetime.timedelta(minutes=1)
                 cube.coord("forecast_period").points = time_unit.date2num(
@@ -679,7 +678,7 @@ def _fix_um_lightning(cube: iris.cube.Cube):
 
         # Convert time points to datetime objects.
         time_unit = time_coord.units
-        time_points = time_unit.num2pydate(time_coord.points)
+        time_points = time_unit.num2date(time_coord.points)
 
         # Skip if times don't need fixing.
         if time_points[0].minute == 0:
@@ -714,7 +713,7 @@ def _lfric_time_callback(cube: iris.cube.Cube):
     expected coordinates, and so we cannot aggregate over case studies without this
     metadata. This callback fixes these issues.
 
-    This callback also ensures all time coordinates are referenced as seconds since
+    This callback also ensures all time coordinates are referenced as hours since
     1970-01-01 00:00:00 for consistency across different model inputs.
 
     Notes
@@ -756,7 +755,7 @@ def _lfric_time_callback(cube: iris.cube.Cube):
                 # Create array of forecast lead times.
                 init_coord = cube.coord("forecast_reference_time")
                 init_time_points_in_tcoord_units = tcoord.units.date2num(
-                    init_coord.units.num2pydate(init_coord.points)
+                    init_coord.units.num2date(init_coord.points)
                 )
                 lead_times = tcoord.points - init_time_points_in_tcoord_units
 
