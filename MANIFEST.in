@@ -1,3 +1,6 @@
 prune .github
-prune cset-workflow
-exclude .gitignore .pre-commit-config.yaml .git-blame-ignore-revs
+exclude cset-workflow
+exclude .git-blame-ignore-revs
+exclude .gitattributes
+exclude .gitignore
+exclude .pre-commit-config.yaml

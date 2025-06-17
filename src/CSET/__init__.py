@@ -24,6 +24,8 @@ from pathlib import Path
 
 from CSET._common import ArgumentError
 
+logger = logging.getLogger(__name__)
+
 
 def main(raw_cli_args: list[str] = sys.argv):
     """CLI entrypoint.
@@ -40,7 +42,7 @@ def main(raw_cli_args: list[str] = sys.argv):
     setup_logging(args.verbose)
 
     # Down here so runs after logging is setup.
-    logging.debug("CLI Arguments: %s", cli_args)
+    logger.debug("CLI Arguments: %s", cli_args)
 
     if args.subparser is None:
         print("Please choose a command.", file=sys.stderr)
@@ -59,8 +61,8 @@ def main(raw_cli_args: list[str] = sys.argv):
         # Provide slightly nicer error messages for unhandled exceptions.
         print(err, file=sys.stderr)
         # Display the time and full traceback when debug logging.
-        logging.debug("An unhandled exception occurred.")
-        if logging.root.isEnabledFor(logging.DEBUG):
+        logger.debug("An unhandled exception occurred.")
+        if logger.isEnabledFor(logging.DEBUG):
             raise
         sys.exit(1)
 
@@ -168,6 +170,14 @@ def setup_argument_parser() -> argparse.ArgumentParser:
     )
     parser_cookbook.set_defaults(func=_cookbook_command)
 
+    parser_extract_workflow = subparsers.add_parser(
+        "extract-workflow", help="extract the CSET cylc workflow"
+    )
+    parser_extract_workflow.add_argument(
+        "location", type=Path, help="directory to save workflow into"
+    )
+    parser_extract_workflow.set_defaults(func=_extract_workflow_command)
+
     return parser
 
 
@@ -255,7 +265,13 @@ def _cookbook_command(args, unparsed_args):
             try:
                 unpack_recipe(args.output_dir, args.recipe)
             except FileNotFoundError:
-                logging.error("Recipe %s does not exist.", args.recipe)
+                logger.error("Recipe %s does not exist.", args.recipe)
                 sys.exit(1)
     else:
         list_available_recipes()
+
+
+def _extract_workflow_command(args, unparsed_args):
+    from CSET.workflow import install_workflow
+
+    install_workflow(args.location)

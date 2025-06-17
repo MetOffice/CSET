@@ -10,7 +10,7 @@ repos:
       - id: codespell
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: d19233b89771be2d89273f163f5edc5a39bbc34a  # frozen: v0.11.12
+    rev: 9aeda5d1f4bbd212c557da1ea78eca9e8c829e19  # frozen: v0.11.13
     hooks:
       - id: ruff
         args: [--fix, --show-fixes, --exit-non-zero-on-fix]
@@ -38,7 +38,7 @@ repos:
         description: Ensure the rose metadata has been generated from its template.
         entry: ./scripts/generate_rose_meta.py
         language: python
-        files: cset-workflow/meta/
+        files: src/CSET/workflow/files/meta/
         additional_dependencies:
           - jinja2
 
