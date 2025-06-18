@@ -66,6 +66,7 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
         varname_constraint = iris.AttributeConstraint(STASH=varname)
     else:
         varname_constraint = iris.Constraint(name=varname)
+    # print(varname)
     return varname_constraint
 
 

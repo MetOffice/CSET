@@ -1,13 +1,12 @@
 category: Surface Time Series
-title: "Domain mean $VARNAME time series\n Aggregation by hour of day"
+title: "$MODEL_NAME Domain mean $VARNAME time series\n Aggregation over all cases"
 description: |
-  Plots a time series of the domain horizontal mean $VARNAME by averaging over
-  all cases by using a consistent hour of day.
+  Plots a time series of the domain horizontal mean surface $VARNAME by averaging over
+  all cases for non-overlapping times.
 
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
-    model_names: $MODEL_NAME
     constraint:
       operator: constraints.combine_constraints
       varname_constraint:
@@ -20,8 +19,6 @@ steps:
         operator: constraints.generate_level_constraint
         coordinate: "pressure"
         levels: []
-    subarea_type: $SUBAREA_TYPE
-    subarea_extent: $SUBAREA_EXTENT
 
   - operator: collapse.collapse
     coordinate: [grid_latitude, grid_longitude]
@@ -29,13 +26,10 @@ steps:
 
   - operator: aggregate.ensure_aggregatable_across_cases
 
-  - operator: collapse.collapse_by_hour_of_day
-    method: MEAN
-
   # Make a single NetCDF with all the data inside it.
   - operator: write.write_cube_to_nc
     overwrite: True
 
   # Plot the data.
   - operator: plot.plot_line_series
-    series_coordinate: hour
+    series_coordinate: time

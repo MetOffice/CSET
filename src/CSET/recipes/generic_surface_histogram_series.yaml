@@ -23,9 +23,11 @@ steps:
         operator: constraints.generate_level_constraint
         coordinate: pressure
         levels: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
 
   - operator: write.write_cube_to_nc
     overwrite: True
 
   - operator: plot.plot_histogram_series
-    sequence_coordinate: time
+    sequence_coordinate: $SEQUENCE

@@ -1,5 +1,5 @@
 category: Histogram
-title: $VARNAME $LEVELTYPE $LEVEL histogram case aggregation
+title: "Histogram $VARNAME $LEVELTYPE $LEVEL\n Aggregation over all cases"
 description: |
   Extracts and plots the probability density of $LEVEL level $VARNAME from a
   file at $LEVELTYPE level $LEVEL of $MODEL_NAME. It uses
@@ -27,6 +27,8 @@ steps:
         operator: constraints.generate_level_constraint
         coordinate: $LEVELTYPE
         levels: $LEVEL
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
 
   - operator: aggregate.ensure_aggregatable_across_cases
 
