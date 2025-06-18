@@ -6,7 +6,7 @@ Contributing
 
 Contributions are readily welcome! In addition to reading the `working
 practices`_, the key recommendation is early communication. Open an issue on
-Github with your proposed change or addition in the design phase, and then
+GitHub with your proposed change or addition in the design phase, and then
 others can provide guidance early. To create an issue:
 
 - Go to the `issue tracker on GitHub`_,
@@ -74,13 +74,23 @@ environment for you to use.
     conda activate cset-dev
     # Adds extra checks when you commit something with git.
     pre-commit install
+    # Create conda environment link for running in-development workflows.
+    ln -s "$CONDA_PREFIX" src/CSET/workflow/files/conda-environment
     # Make CSET runnable for manual testing
     pip install --no-deps -e .
+
+Alternatively, if you have make_ installed you can use a single command
+to setup the development environment (equivalent to the above commands).
+
+.. code-block:: bash
+
+    make setup
 
 When subsequently returning to the code after closing your terminal, you will
 need to rerun the ``conda activate cset-dev`` command.
 
 .. _conda: https://docs.conda.io/en/latest/
+.. _make: https://www.gnu.org/software/make
 
 Updating tooling
 ------------------
