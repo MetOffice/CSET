@@ -272,7 +272,7 @@ def test_pressure_coord_unit_fix_callback(transect_source_cube):
 
 
 def test_fix_um_radtime(cube):
-    """Check times that are N minute passed are rounded to the whole hour."""
+    """Check times that are N minute past are rounded to the whole hour."""
     # Offset times by one minute.
     time_coord = cube.coord("time")
     times = time_coord.units.num2pydate(time_coord.points) + datetime.timedelta(
@@ -282,6 +282,44 @@ def test_fix_um_radtime(cube):
     # Check all times are offset.
     for time in times:
         assert time.minute == 1
+    # Also offset forecast_period by one minute.
+    cube.coord("forecast_period").points += 1.0 / 60.0
+
+    # Give cube a radiation STASH code.
+    cube.attributes["STASH"] = "m01s01i208"
+
+    # Apply fix.
+    read._fix_um_radtime(cube)
+
+    # Ensure radiation times are fixed.
+    rad_time_coord = cube.coord("time")
+    rad_times = rad_time_coord.units.num2pydate(rad_time_coord.points)
+    # Check all times are fixed.
+    assert rad_times[0] == datetime.datetime(2022, 9, 21, 3, 0)
+    for time in rad_times:
+        assert time.minute == 0
+
+    # Ensure radiation forecast_period values are fixed.
+    rad_time_coord = cube.coord("forecast_period")
+    # Check all times are fixed.
+    assert rad_time_coord.points[0] == 0
+    for time in rad_time_coord.points:
+        assert time.dtype == int
+
+
+def test_fix_um_radtime_posthour_no_fp(cube):
+    """Check times that are 1 minute past are rounded, if no forecast_period."""
+    # Offset times by one minute.
+    time_coord = cube.coord("time")
+    times = time_coord.units.num2pydate(time_coord.points) + datetime.timedelta(
+        minutes=1
+    )
+    time_coord.points = time_coord.units.date2num(times)
+    # Check all times are offset.
+    for time in times:
+        assert time.minute == 1
+    # Remove forecast_period from input cube.
+    cube.remove_coord("forecast_period")
 
     # Give cube a radiation STASH code.
     cube.attributes["STASH"] = "m01s01i208"
@@ -300,7 +338,7 @@ def test_fix_um_radtime(cube):
 
 
 def test_fix_um_radtime_seconds(cube):
-    """Check times that are N minute passed are rounded to the whole hour."""
+    """Check times that are N minute past are rounded to the whole hour."""
     # Offset times by 30 seconds.
     time_coord = cube.coord("time")
     times = time_coord.units.num2pydate(time_coord.points) + datetime.timedelta(
@@ -383,7 +421,7 @@ def test_fix_um_radtime_no_time_coordinate():
 
 
 def test_fix_um_radtime_prehour(cube):
-    """Check times that are 1 minute past are rounded to the whole hour."""
+    """Check times that are 1 minute ahead are rounded to the whole hour."""
     # Offset times by one minute.
     time_coord = cube.coord("time")
     times = time_coord.units.num2pydate(time_coord.points) - datetime.timedelta(
@@ -393,6 +431,44 @@ def test_fix_um_radtime_prehour(cube):
     # Check all times are offset.
     for time in times:
         assert time.minute == 59
+    # Offset forecast_period by one minute.
+    cube.coord("forecast_period").points -= 1.0 / 60.0
+
+    # Give cube a radiation STASH code.
+    cube.attributes["STASH"] = "m01s01i207"
+
+    # Apply fix.
+    read._fix_um_radtime(cube)
+
+    # Ensure radiation times are fixed.
+    rad_time_coord = cube.coord("time")
+    rad_times = rad_time_coord.units.num2pydate(rad_time_coord.points)
+    # Check all times are fixed.
+    assert rad_times[0] == datetime.datetime(2022, 9, 21, 3, 0)
+    for time in rad_times:
+        assert time.minute == 0
+
+    # Ensure radiation forecast_periods are fixed.
+    rad_time_coord = cube.coord("forecast_period")
+    # Check all times are fixed.
+    assert rad_time_coord.points[0] == 0
+    for time in rad_time_coord.points:
+        assert time.dtype == int
+
+
+def test_fix_um_radtime_prehour_no_fp(cube):
+    """Check times that are 1 minute ahead are rounded, without forecast_period."""
+    # Offset times by one minute.
+    time_coord = cube.coord("time")
+    times = time_coord.units.num2pydate(time_coord.points) - datetime.timedelta(
+        minutes=1
+    )
+    time_coord.points = time_coord.units.date2num(times)
+    # Check all times are offset.
+    for time in times:
+        assert time.minute == 59
+    # Remove forecast_period from input.
+    cube.remove_coord("forecast_period")
 
     # Give cube a radiation STASH code.
     cube.attributes["STASH"] = "m01s01i207"
@@ -543,8 +619,8 @@ def test_lfric_time_callback_forecast_reference_time(slammed_lfric_cube):
     assert ref_time_coord.standard_name == "forecast_reference_time"
     assert ref_time_coord.long_name == "forecast_reference_time"
     assert ref_time_coord.var_name is None
-    assert str(ref_time_coord.units) == "seconds since 2022-01-01 00:00:00"
-    assert all(ref_time_coord.points == [0])
+    assert str(ref_time_coord.units) == "hours since 1970-01-01 00:00:00"
+    assert all(ref_time_coord.points == [455832])
 
 
 def test_lfric_time_callback_forecast_period(slammed_lfric_cube):
@@ -575,14 +651,17 @@ def test_lfric_time_callback_hours(slammed_lfric_cube):
     assert all(fc_period_coord.points == [1, 2, 3, 4, 5, 6])
 
 
-def test_lfric_time_callback_unknown_units(slammed_lfric_cube):
+def test_lfric_time_callback_unknown_units(slammed_lfric_cube, caplog):
     """Error when forecast_period units cannot be determined."""
     slammed_lfric_cube.remove_coord("forecast_period")
     assert not slammed_lfric_cube.coords("forecast_period")
-    slammed_lfric_cube.coord("time").convert_units("days since 1970-01-01 00:00:00")
+    slammed_lfric_cube.coord("time").units = None
 
-    with pytest.raises(ValueError, match="Unrecognised base time unit:"):
+    with pytest.raises(iris.exceptions.UnitConversionError):
         read._lfric_time_callback(slammed_lfric_cube)
+        _, level, message = caplog.record_tuples[0]
+        assert level == logging.ERROR
+        assert message == "Unrecognised base time unit: unknown"
 
 
 def test_lfric_normalise_varname(model_level_cube):

@@ -624,11 +624,23 @@ def _fix_um_radtime(cube: iris.cube.Cube):
                 - datetime.timedelta(seconds=n_second)
             )
 
-            # Convert back to numeric values using the original time unit
+            # Convert back to numeric values using the original time unit.
             new_time_values = time_unit.date2num(new_time_points)
 
-            # Replace the time coordinate with updated values
+            # Replace the time coordinate with updated values.
             time_coord.points = new_time_values
+
+            # Recompute forecast_period with corrected values.
+            if cube.coord("forecast_period"):
+                fcst_prd_points = cube.coord("forecast_period").points
+                new_fcst_points = (
+                    time_unit.num2date(fcst_prd_points)
+                    - datetime.timedelta(minutes=n_minute)
+                    - datetime.timedelta(seconds=n_second)
+                )
+                cube.coord("forecast_period").points = time_unit.date2num(
+                    new_fcst_points
+                )
     except KeyError:
         pass
 
@@ -685,6 +697,9 @@ def _lfric_time_callback(cube: iris.cube.Cube):
     expected coordinates, and so we cannot aggregate over case studies without this
     metadata. This callback fixes these issues.
 
+    This callback also ensures all time coordinates are referenced as hours since
+    1970-01-01 00:00:00 for consistency across different model inputs.
+
     Notes
     -----
     Some parts of the code have been adapted from Paul Earnshaw's scripts.
@@ -692,6 +707,11 @@ def _lfric_time_callback(cube: iris.cube.Cube):
     # Construct forecast_reference time if it doesn't exist.
     try:
         tcoord = cube.coord("time")
+        try:
+            tcoord.convert_units("hours since 1970-01-01 00:00:00")
+        except ValueError:
+            logging.error("Unrecognised base time unit: {tcoord.units}")
+
         if not cube.coords("forecast_reference_time"):
             try:
                 init_time = datetime.datetime.fromisoformat(
