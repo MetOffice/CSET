@@ -86,23 +86,26 @@ def test_collapse_by_hour_of_day(long_forecast):
 def test_collapse_by_hour_of_day_single_day(long_forecast):
     """Convert and aggregates time dimension by hour of day."""
     # Read in only first 24h of input data.
-    collapsed_cube = collapse.collapse_by_hour_of_day(long_forecast[0:24], "MEAN")
+    day_long_forecast = long_forecast[0:24]
+    collapsed_cube = collapse.collapse_by_hour_of_day(day_long_forecast, "MEAN")
     expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
 
-    # Ensure cube data has changed when averaging 1-day only. Input data spans T=3 through to T=2.
-    assert collapsed_cube.data[0, 0, 0] == long_forecast.data[21, 0, 0]
-    assert collapsed_cube.data[0, -1, -1] == long_forecast.data[21, -1, -1]
+    # Ensure data has changed position in cube (averaging 1-day only).
+    # Input data spans T=3 through to T=2.
+    assert collapsed_cube.data[0, 0, 0] == day_long_forecast.data[21, 0, 0]
+    assert collapsed_cube.data[0, -1, -1] == day_long_forecast.data[21, -1, -1]
 
-    # Select different initialisation time from input data.
-    long_forecast_2 = long_forecast[56:80]
-    collapsed_cube = collapse.collapse_by_hour_of_day(long_forecast_2, "MEAN")
+    # Select different segment from long_forecast input data.
+    day_long_forecast_2 = long_forecast[56:80]
+    collapsed_cube = collapse.collapse_by_hour_of_day(day_long_forecast_2, "MEAN")
     expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
 
-    # Ensure cube data has changed when averaging 1-day only. Input data spans T=11 through to T=10
-    assert collapsed_cube.data[0, 0, 0] == long_forecast_2.data[13, 0, 0]
-    assert collapsed_cube.data[0, -1, -1] == long_forecast_2.data[13, -1, -1]
+    # Ensure cube data has changed position in cube (averaging 1-day only).
+    # Input data spans T=11 through to T=10
+    assert collapsed_cube.data[0, 0, 0] == day_long_forecast_2.data[13, 0, 0]
+    assert collapsed_cube.data[0, -1, -1] == day_long_forecast_2.data[13, -1, -1]
 
 
 def test_collapse_by_hour_of_day_cubelist(long_forecast):
@@ -114,6 +117,15 @@ def test_collapse_by_hour_of_day_cubelist(long_forecast):
     expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
     for collapsed_cube in collapsed_cubes:
         assert repr(collapsed_cube) == expected_cube
+
+
+def test_collapse_by_hour_of_day_single_cubelist(long_forecast):
+    """Check single CubeList input collapsed by hour of day."""
+    # Test single cubelist entry.
+    cubes = iris.cube.CubeList([long_forecast])
+    collapsed_cube = collapse.collapse_by_hour_of_day(cubes, "MEAN")
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
+    assert repr(collapsed_cube) == expected_cube
 
 
 def test_collapse_by_hour_of_day_percentile(long_forecast):
@@ -195,6 +207,20 @@ def test_collapse_by_lead_time_single_cube(long_forecast_multi_day):
         rtol=1e-06,
         atol=1e-02,
     )
+
+
+def test_collapse_by_hour_of_day_multi_non_overlapping(long_forecast_multi_day):
+    """Identify when inputs have non-overlapping cubes."""
+    print(long_forecast_multi_day)
+    cube_day1 = long_forecast_multi_day[0:24, 0, :, :]
+    cube_day2 = long_forecast_multi_day[24:48, 2, :, :]
+    print(cube_day1.coord("time"))
+    print(cube_day2.coord("time"))
+    non_overlap_cubelist = iris.cube.CubeList([cube_day1, cube_day2])
+    with pytest.raises(
+        ValueError, match="No overlapping times detected in input cubes."
+    ):
+        collapse.collapse_by_hour_of_day(non_overlap_cubelist, "MEAN")
 
 
 def test_collapse_by_lead_time_single_cube_percentile_fail(long_forecast_multi_day):

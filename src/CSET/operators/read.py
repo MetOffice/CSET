@@ -726,15 +726,9 @@ def _fix_um_radtime_posthour(cube: iris.cube.Cube):
         ]:
             time_coord = cube.coord("time")
 
-            print(cube)
-            print("hello")
-            print(cube.coord("time"))
-            print(cube.coord("forecast_period"))
-            print(cube.coord("forecast_period").points)
             # Convert time points to datetime objects
             time_unit = time_coord.units
             time_points = time_unit.num2pydate(time_coord.points)
-            print(time_points[0].minute, time_points[0].second)
             # Skip if times don't need fixing.
             if time_points[0].minute == 0 and time_points[0].second == 0:
                 return
@@ -752,23 +746,63 @@ def _fix_um_radtime_posthour(cube: iris.cube.Cube):
                 - datetime.timedelta(seconds=n_second)
             )
 
-            # Convert back to numeric values using the original time unit
+            # Convert back to numeric values using the original time unit.
             new_time_values = time_unit.date2num(new_time_points)
 
             # Replace the time coordinate with corrected values.
             time_coord.points = new_time_values
 
             # Recompute forecast_period with corrected values.
+            try:
+                if cube.coord("forecast_period"):
+                    fcst_prd_points = cube.coord("forecast_period").points
+                    new_fcst_points = (
+                        time_unit.num2pydate(fcst_prd_points)
+                        - datetime.timedelta(minutes=n_minute)
+                        - datetime.timedelta(seconds=n_second)
+                    )
+                    cube.coord("forecast_period").points = time_unit.date2num(
+                        new_fcst_points
+                    )
+            except KeyError:
+                pass
+
+
+def _fix_um_radtime_prehour(cube: iris.cube.Cube):
+    """Fix radiation which is output 1 minute before every hour."""
+    try:
+        if cube.attributes["STASH"] == "m01s01i207":
+            time_coord = cube.coord("time")
+
+            # Convert time points to datetime objects
+            time_unit = time_coord.units
+            time_points = time_unit.num2date(time_coord.points)
+
+            # Skip if times don't need fixing.
+            if time_points[0].minute != 59:
+                return
+
+            # Add 1 minute from each time point
+            new_time_points = time_points + datetime.timedelta(minutes=1)
+
+            # Convert back to numeric values using the original time unit
+            new_time_values = time_unit.date2num(new_time_points)
+
+            # Replace the time coordinate with corrected values
+            time_coord.points = new_time_values
+
+            # Recompute forecast_period with corrected values.
             if cube.coord("forecast_period"):
                 fcst_prd_points = cube.coord("forecast_period").points
-                new_fcst_points = (
-                    time_unit.num2pydate(fcst_prd_points)
-                    - datetime.timedelta(minutes=n_minute)
-                    - datetime.timedelta(seconds=n_second)
-                )
+                new_fcst_points = time_unit.num2date(
+                    fcst_prd_points
+                ) + datetime.timedelta(minutes=1)
                 cube.coord("forecast_period").points = time_unit.date2num(
                     new_fcst_points
                 )
+
+    except KeyError:
+        pass
 
 
 def _fix_um_lightning(cube: iris.cube.Cube):
@@ -851,7 +885,7 @@ def _lfric_time_callback(cube: iris.cube.Cube):
     expected coordinates, and so we cannot aggregate over case studies without this
     metadata. This callback fixes these issues.
 
-    This callback also ensures all time coordinates are referenced as seconds since
+    This callback also ensures all time coordinates are referenced as hours since
     1970-01-01 00:00:00 for consistency across different model inputs.
 
     Notes
