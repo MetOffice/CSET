@@ -366,8 +366,7 @@ def _create_callback(is_ensemble: bool) -> callable:
         _fix_spatial_coord_name_callback(cube)
         _fix_pressure_coord_callback(cube)
         _lfric_normalise_varname(cube)
-        _fix_um_radtime_prehour(cube)
-        _fix_um_radtime_posthour(cube)
+        _fix_um_radtime(cube)
         _fix_um_lightning(cube)
         _lfric_time_callback(cube)
         _lfric_forecast_period_standard_name_callback(cube)
@@ -581,8 +580,16 @@ def _fix_pressure_coord_callback(cube: iris.cube.Cube):
                 cube.coord("pressure").convert_units("hPa")
 
 
-def _fix_um_radtime_posthour(cube: iris.cube.Cube):
-    """Fix radiation which is output 1 minute past every hour."""
+def _fix_um_radtime(cube: iris.cube.Cube):
+    """Move radiation diagnostics from timestamps which are output N minutes or seconds past every hour.
+
+    This callback does not have any effect for output diagnostics with
+    timestamps exactly 00 or 30 minutes past the hour. Only radiation
+    diagnostics are checked.
+    Note this callback does not interpolate the data in time, only adjust
+    timestamps to sit on the hour to enable time-to-time difference plotting
+    with models which may output radiation data on the hour.
+    """
     try:
         if cube.attributes["STASH"] in [
             "m01s01i208",
@@ -599,64 +606,41 @@ def _fix_um_radtime_posthour(cube: iris.cube.Cube):
             time_points = time_unit.num2date(time_coord.points)
 
             # Skip if times don't need fixing.
-            if time_points[0].minute != 1:
+            if time_points[0].minute == 0 and time_points[0].second == 0:
+                return
+            if time_points[0].minute == 30 and time_points[0].second == 0:
                 return
 
-            # Subtract 1 minute from each time point.
-            new_time_points = time_points - datetime.timedelta(minutes=1)
+            # Subtract time difference from the hour from each time point
+            n_minute = time_points[0].minute
+            n_second = time_points[0].second
+            # If times closer to next hour, compute difference to add on to following hour
+            if n_minute > 30:
+                n_minute = n_minute - 60
+            # Compute new diagnostic time stamp
+            new_time_points = (
+                time_points
+                - datetime.timedelta(minutes=n_minute)
+                - datetime.timedelta(seconds=n_second)
+            )
 
             # Convert back to numeric values using the original time unit.
             new_time_values = time_unit.date2num(new_time_points)
 
-            # Replace the time coordinate with corrected values.
+            # Replace the time coordinate with updated values.
             time_coord.points = new_time_values
 
             # Recompute forecast_period with corrected values.
             if cube.coord("forecast_period"):
                 fcst_prd_points = cube.coord("forecast_period").points
-                new_fcst_points = time_unit.num2date(
-                    fcst_prd_points
-                ) - datetime.timedelta(minutes=1)
+                new_fcst_points = (
+                    time_unit.num2date(fcst_prd_points)
+                    - datetime.timedelta(minutes=n_minute)
+                    - datetime.timedelta(seconds=n_second)
+                )
                 cube.coord("forecast_period").points = time_unit.date2num(
                     new_fcst_points
                 )
-    except KeyError:
-        pass
-
-
-def _fix_um_radtime_prehour(cube: iris.cube.Cube):
-    """Fix radiation which is output 1 minute before every hour."""
-    try:
-        if cube.attributes["STASH"] == "m01s01i207":
-            time_coord = cube.coord("time")
-
-            # Convert time points to datetime objects
-            time_unit = time_coord.units
-            time_points = time_unit.num2date(time_coord.points)
-
-            # Skip if times don't need fixing.
-            if time_points[0].minute != 59:
-                return
-
-            # Add 1 minute from each time point
-            new_time_points = time_points + datetime.timedelta(minutes=1)
-
-            # Convert back to numeric values using the original time unit
-            new_time_values = time_unit.date2num(new_time_points)
-
-            # Replace the time coordinate with corrected values
-            time_coord.points = new_time_values
-
-            # Recompute forecast_period with corrected values.
-            if cube.coord("forecast_period"):
-                fcst_prd_points = cube.coord("forecast_period").points
-                new_fcst_points = time_unit.num2date(
-                    fcst_prd_points
-                ) + datetime.timedelta(minutes=1)
-                cube.coord("forecast_period").points = time_unit.date2num(
-                    new_fcst_points
-                )
-
     except KeyError:
         pass
 
