@@ -339,7 +339,7 @@ def test_fix_um_radtime_posthour_no_fp(cube):
 
 def test_fix_um_radtime_seconds(cube):
     """Check times that are N minute past are rounded to the whole hour."""
-    # Offset times by 30 seconds.
+    # Offset times by 50 seconds.
     time_coord = cube.coord("time")
     times = time_coord.units.num2pydate(time_coord.points) + datetime.timedelta(
         seconds=50
