@@ -147,5 +147,8 @@ src/CSET/workflow/files/opt/
 src/CSET/workflow/files/app/demo_pointstat/
 restricted*
 
+# Link to development conda-environment.
+src/CSET/workflow/files/conda-environment
+
 # User workflow configuration.
 src/CSET/workflow/files/rose-suite.conf

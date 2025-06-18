@@ -192,6 +192,7 @@ def add_hour_coordinate(
     ---------
     cubes: iris.cube.Cube | iris.cube.CubeList
         Cube of any variable that has a time coordinate.
+        Note input Cube or CubeList items should only have 1 time dimension.
 
     Returns
     -------
@@ -206,6 +207,7 @@ def add_hour_coordinate(
     new_cubelist = iris.cube.CubeList()
     for cube in iter_maybe(cubes):
         # Add a category coordinate of hour into each cube.
+        iris.util.promote_aux_coord_to_dim_coord(cube, "time")
         iris.coord_categorisation.add_hour(cube, "time", name="hour")
         cube.coord("hour").units = "hours"
         new_cubelist.append(cube)

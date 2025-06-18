@@ -17,7 +17,10 @@ conda:
 .git/hooks/pre-commit: conda
 	conda run -n cset-dev pre-commit install
 
-setup: conda .git/hooks/pre-commit ## Setup development environment.
+src/CSET/workflow/files/conda-environment:
+	conda run -n cset-dev bash -euc 'ln -s "$CONDA_PREFIX" src/CSET/workflow/files/conda-environment'
+
+setup: conda .git/hooks/pre-commit src/CSET/workflow/files/conda-environment ## Setup development environment.
 	conda run -n cset-dev pip install --no-deps -e .
 
 docs: ## Build documentation.
