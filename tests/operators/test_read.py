@@ -829,6 +829,30 @@ def test_read_cubes_extract_subarea_latlon():
     assert round(cube_rw.coord("longitude").points[0], 2) == -2.74
 
 
+def test_read_cubes_extract_subarea_outside_bounds():
+    """Read cube requesting subarea outside +/-180 and wrap request within bounds."""
+    cube = read.read_cubes("tests/test_data/air_temperature_global.nc")[0]
+    cube_rw = read.read_cubes(
+        "tests/test_data/air_temperature_global.nc",
+        subarea_type="realworld",
+        subarea_extent=[-30.0, 30.0, -544.5, -542.5],
+    )[0]
+    assert isinstance(cube_rw, iris.cube.Cube)
+
+    # Compare the latitude coordinates to check it has extracted same region. We
+    # use latitude as there is little difference in spacing from the equator to
+    # pole, but longitude varies (converges to zero at pole).
+    assert not np.array_equal(
+        cube_rw.coord("latitude").points, cube.coord("latitude").points
+    )
+
+    # Ensure extracted region has required coordinates
+    assert round(cube_rw.coord("latitude").points[0], 2) == -28.08
+    assert round(cube_rw.coord("latitude").points[-1], 2) == 28.17
+    assert np.size(cube_rw.coord("longitude")) == 1
+    assert round(cube_rw.coord("longitude").points[0], 2) == -2.74
+
+
 def test_read_cubes_extract_subarea_dateline():
     """Read cube with latlon coord across dateline and ensure appropriate subarea is extracted."""
     cube = read.read_cubes("tests/test_data/air_temperature_dateline.nc")[0]
@@ -896,5 +920,18 @@ def test_read_cubes_outofbounds_subarea():
         read.read_cubes(
             "tests/test_data/air_temperature_dateline.nc",
             subarea_type="realworld",
+            subarea_extent=[-5.5, 5.5, -125.5, 125.5],
+        )[0]
+
+
+def test_read_cubes_unknown_subarea_method():
+    """Ensure correct failure if invalid subarea method requested."""
+    with pytest.raises(
+        ValueError,
+        match=r"('Unknown subarea_type:', 'any_old_method')",
+    ):
+        read.read_cubes(
+            "tests/test_data/air_temp.nc",
+            subarea_type="any_old_method",
             subarea_extent=[-5.5, 5.5, -125.5, 125.5],
         )[0]
