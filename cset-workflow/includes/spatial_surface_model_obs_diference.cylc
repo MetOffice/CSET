@@ -15,9 +15,9 @@
             --OBSERVATIONS='OBS'
             --MODEL_NAME='{{model["name"]}}'
             --DIFFERENCE=True
-            --SUBAREA_TYPE={{SUBAREA_TYPE | default(None)}}
-            --SUBAREA_EXTENT={{SUBAREA_TYPE | default(None)}}
-            --PLOTTING_PROJECTION={{PLOTTING_PROJECTION | default(None)}}
+            --SUBAREA_TYPE={{SUBAREA_TYPE | default("")}}
+            --SUBAREA_EXTENT={{SUBAREA_TYPE | default("")}}
+            --PLOTTING_PROJECTION={{PLOTTING_PROJECTION | default("")}}
         """
         MODEL_IDENTIFIERS = 'OBS {{model["id"]}}'
 

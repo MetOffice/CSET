@@ -117,7 +117,7 @@ URL = https://metoffice.github.io/CSET
     [[[directives]]]
         --mem=5000
     [[[environment]]]
-        PLOTTING_PROJECTION = {{PLOTTING_PROJECTION | default(None)}}
+        PLOTTING_PROJECTION = {{PLOTTING_PROJECTION | default("")}}
 
 
     [[PROCESS_CASE_AGGREGATION]]
@@ -143,7 +143,7 @@ URL = https://metoffice.github.io/CSET
 
     [[PREPROCESS_DATA]]
     script = rose task-run -v --app-key=preprocess_data
-    execution time limit = PT15M
+    execution time limit = PT30M
     execution retry delays = PT1M, PT15M, PT1H
         [[[directives]]]
         --mem = 30000
@@ -231,7 +231,8 @@ URL = https://metoffice.github.io/CSET
         SURFACE_SYNOP_FIELDS = {{SURFACE_SYNOP_FIELDS}}
         SURFACE_SYNOP_INTERVAL = {{SURFACE_SYNOP_INTERVAL}}
         SURFACE_SYNOP_OFFSET = {{SURFACE_SYNOP_OFFSET}}
-        WMO_BLOCK_STTN_NMBRS = {{WMO_BLOCK_STTN_NMBRS | list}}
+        WMO_BLOCK_STTN_NMBRS = {{WMO_BLOCK_STTN_NMBRS | default("")}}
+        SUBAREA_EXTENT = {{SUBAREA_EXTENT | default("")}}
         OBS_SUBTYPE = "LNDSYB"
     {% endif %}
 
