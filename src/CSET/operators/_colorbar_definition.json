@@ -636,7 +636,7 @@
   "toa_upward_shortwave_flux": {
     "cmap": "Greys",
     "max": 500.0,
-    "min": 0
+    "min": 0.0
   },
   "toa_upward_shortwave_flux_difference": {
     "cmap": "bwr",
