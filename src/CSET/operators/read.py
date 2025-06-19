@@ -322,12 +322,10 @@ def _cutout_cubes(
             lats = np.array(subarea_extent[0:2])
             lons = np.array(subarea_extent[2:4])
             # Ensure cutout longitudes are within +/- 180.0 bounds.
-            print(lons)
             while lons[0] < -180.0:
                 lons += 180.0
             while lons[1] > 180.0:
                 lons -= 180.0
-            print("NEW_LONS: ", lons)
             # If the coordinate system is rotated we convert coordinates into
             # model-relative coordinates to extract the appropriate cutout.
             coord_system = cube.coord(lat_name).coord_system
