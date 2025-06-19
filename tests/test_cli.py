@@ -25,6 +25,7 @@ from uuid import uuid4
 import pytest
 
 import CSET
+import CSET.workflow
 
 
 def test_command_line_invocation():
@@ -98,6 +99,14 @@ def test_argument_parser_cookbook(tmp_path):
     assert args.details is True
     assert args.output_dir == tmp_path
     assert args.recipe == "recipe.yaml"
+
+
+def test_argument_parser_extract_workflow(tmp_path):
+    """Tests the cset extract-workflow argument parser behaves appropriately."""
+    parser = CSET.setup_argument_parser()
+    # Check required argument.
+    args = parser.parse_args(["extract-workflow", str(tmp_path)])
+    assert args.location == tmp_path
 
 
 def test_setup_logging():
@@ -314,3 +323,17 @@ def test_cookbook_non_existent_recipe(tmp_path):
             ["cset", "cookbook", "--output-dir", str(tmp_path), "non-existent.yaml"]
         )
     assert sysexit.value.code == 1
+
+
+def test_extract_workflow_command(monkeypatch, tmp_path):
+    """Extract workflow command correctly calls install_workflow function."""
+    ran = False
+
+    def dummy_install_workflow(location: Path):
+        nonlocal ran
+        ran = True
+        assert location == tmp_path
+
+    monkeypatch.setattr(CSET.workflow, "install_workflow", dummy_install_workflow)
+    CSET.main(["cset", "extract-workflow", str(tmp_path)])
+    assert ran

@@ -109,8 +109,30 @@ def test_read_cube():
     """Returns a Cube rather than CubeList."""
     from CSET.operators import constraints
 
+    # Rotated [grid_latitude, grid_longitude] example file
     cube = read.read_cube(
         "tests/test_data/air_temp.nc",
+        constraint=constraints.generate_cell_methods_constraint([]),
+    )
+    assert isinstance(cube, iris.cube.Cube)
+
+    # Global [latitude, longitude] example file
+    cube = read.read_cube(
+        "tests/test_data/air_temperature_global.nc",
+        constraint=constraints.generate_cell_methods_constraint([]),
+    )
+    assert isinstance(cube, iris.cube.Cube)
+
+    # Regional [latitude, longitude] example file
+    cube = read.read_cube(
+        "tests/test_data/air_temperature_lat_lon.nc",
+        constraint=constraints.generate_cell_methods_constraint([]),
+    )
+    assert isinstance(cube, iris.cube.Cube)
+
+    # Regional [lat, lon] example across dateline
+    cube = read.read_cube(
+        "tests/test_data/air_temperature_dateline.nc",
         constraint=constraints.generate_cell_methods_constraint([]),
     )
     assert isinstance(cube, iris.cube.Cube)
@@ -271,8 +293,8 @@ def test_pressure_coord_unit_fix_callback(transect_source_cube):
     assert cube.coord("pressure").points[0] == 100
 
 
-def test_fix_um_radtime_posthour(cube):
-    """Check times that are 1 minute passed are rounded to the whole hour."""
+def test_fix_um_radtime(cube):
+    """Check times that are N minute past are rounded to the whole hour."""
     # Offset times by one minute.
     time_coord = cube.coord("time")
     times = time_coord.units.num2pydate(time_coord.points) + datetime.timedelta(
@@ -282,12 +304,14 @@ def test_fix_um_radtime_posthour(cube):
     # Check all times are offset.
     for time in times:
         assert time.minute == 1
+    # Also offset forecast_period by one minute.
+    cube.coord("forecast_period").points += 1.0 / 60.0
 
     # Give cube a radiation STASH code.
     cube.attributes["STASH"] = "m01s01i208"
 
     # Apply fix.
-    read._fix_um_radtime_posthour(cube)
+    read._fix_um_radtime(cube)
 
     # Ensure radiation times are fixed.
     rad_time_coord = cube.coord("time")
@@ -297,8 +321,73 @@ def test_fix_um_radtime_posthour(cube):
     for time in rad_times:
         assert time.minute == 0
 
+    # Ensure radiation forecast_period values are fixed.
+    rad_time_coord = cube.coord("forecast_period")
+    # Check all times are fixed.
+    assert rad_time_coord.points[0] == 0
+    for time in rad_time_coord.points:
+        assert time.dtype == int
 
-def test_fix_um_radtime_posthour_skip_non_radiation(cube):
+
+def test_fix_um_radtime_posthour_no_fp(cube):
+    """Check times that are 1 minute past are rounded, if no forecast_period."""
+    # Offset times by one minute.
+    time_coord = cube.coord("time")
+    times = time_coord.units.num2pydate(time_coord.points) + datetime.timedelta(
+        minutes=1
+    )
+    time_coord.points = time_coord.units.date2num(times)
+    # Check all times are offset.
+    for time in times:
+        assert time.minute == 1
+    # Remove forecast_period from input cube.
+    cube.remove_coord("forecast_period")
+
+    # Give cube a radiation STASH code.
+    cube.attributes["STASH"] = "m01s01i208"
+
+    # Apply fix.
+    read._fix_um_radtime(cube)
+
+    # Ensure radiation times are fixed.
+    rad_time_coord = cube.coord("time")
+    rad_times = rad_time_coord.units.num2pydate(rad_time_coord.points)
+    # Check all times are fixed.
+    assert rad_times[0] == datetime.datetime(2022, 9, 21, 3, 0)
+    for time in rad_times:
+        assert time.minute == 0
+        assert time.second == 0
+
+
+def test_fix_um_radtime_seconds(cube):
+    """Check times that are N minute past are rounded to the whole hour."""
+    # Offset times by 50 seconds.
+    time_coord = cube.coord("time")
+    times = time_coord.units.num2pydate(time_coord.points) + datetime.timedelta(
+        seconds=50
+    )
+    time_coord.points = time_coord.units.date2num(times)
+    # Check all times are offset.
+    for time in times:
+        assert time.second == 50
+
+    # Give cube a radiation STASH code.
+    cube.attributes["STASH"] = "m01s01i208"
+
+    # Apply fix.
+    read._fix_um_radtime(cube)
+
+    # Ensure radiation times are fixed.
+    rad_time_coord = cube.coord("time")
+    rad_times = rad_time_coord.units.num2pydate(rad_time_coord.points)
+    # Check all times are fixed.
+    assert rad_times[0] == datetime.datetime(2022, 9, 21, 3, 0)
+    for time in rad_times:
+        assert time.minute == 0
+        assert time.second == 0
+
+
+def test_fix_um_radtime_skip_non_radiation(cube):
     """Check non-radiation times are NOT fixed."""
     # Offset times by one minute.
     time_coord = cube.coord("time")
@@ -311,7 +400,7 @@ def test_fix_um_radtime_posthour_skip_non_radiation(cube):
         assert time.minute == 1
 
     # Apply fix.
-    read._fix_um_radtime_posthour(cube)
+    read._fix_um_radtime(cube)
 
     # Ensure that non-radiation cubes are unchanged.
     non_rad_time_coord = cube.coord("time")
@@ -320,7 +409,7 @@ def test_fix_um_radtime_posthour_skip_non_radiation(cube):
         assert nrt == t
 
 
-def test_fix_um_radtime_posthour_skip_non_offset(cube):
+def test_fix_um_radtime_skip_non_offset(cube):
     """Check radiation times NOT offset by 1 minute are not fixed."""
     time_coord = cube.coord("time")
     times = time_coord.units.num2pydate(time_coord.points)
@@ -332,7 +421,7 @@ def test_fix_um_radtime_posthour_skip_non_offset(cube):
     cube.attributes["STASH"] = "m01s01i208"
 
     # Apply fix.
-    read._fix_um_radtime_posthour(cube)
+    read._fix_um_radtime(cube)
 
     # Ensure that non-offset cubes are unchanged.
     non_offset_time_coord = cube.coord("time")
@@ -343,18 +432,18 @@ def test_fix_um_radtime_posthour_skip_non_offset(cube):
         assert nt == t
 
 
-def test_fix_um_radtime_posthour_no_time_coordinate():
+def test_fix_um_radtime_no_time_coordinate():
     """Check cubes without time coordinates are skipped without error."""
     # Create a cube with no time coordinate.
     cube = iris.cube.Cube([0], var_name="data")
     # Apply fix.
-    read._fix_um_radtime_posthour(cube)
+    read._fix_um_radtime(cube)
     # Check unchanged.
     assert cube == iris.cube.Cube([0], var_name="data")
 
 
 def test_fix_um_radtime_prehour(cube):
-    """Check times that are 1 minute passed are rounded to the whole hour."""
+    """Check times that are 1 minute ahead are rounded to the whole hour."""
     # Offset times by one minute.
     time_coord = cube.coord("time")
     times = time_coord.units.num2pydate(time_coord.points) - datetime.timedelta(
@@ -364,12 +453,14 @@ def test_fix_um_radtime_prehour(cube):
     # Check all times are offset.
     for time in times:
         assert time.minute == 59
+    # Offset forecast_period by one minute.
+    cube.coord("forecast_period").points -= 1.0 / 60.0
 
     # Give cube a radiation STASH code.
     cube.attributes["STASH"] = "m01s01i207"
 
     # Apply fix.
-    read._fix_um_radtime_prehour(cube)
+    read._fix_um_radtime(cube)
 
     # Ensure radiation times are fixed.
     rad_time_coord = cube.coord("time")
@@ -378,6 +469,73 @@ def test_fix_um_radtime_prehour(cube):
     assert rad_times[0] == datetime.datetime(2022, 9, 21, 3, 0)
     for time in rad_times:
         assert time.minute == 0
+
+    # Ensure radiation forecast_periods are fixed.
+    rad_time_coord = cube.coord("forecast_period")
+    # Check all times are fixed.
+    assert rad_time_coord.points[0] == 0
+    for time in rad_time_coord.points:
+        assert time.dtype == int
+
+
+def test_fix_um_radtime_prehour_no_fp(cube):
+    """Check times that are 1 minute ahead are rounded, without forecast_period."""
+    # Offset times by one minute.
+    time_coord = cube.coord("time")
+    times = time_coord.units.num2pydate(time_coord.points) - datetime.timedelta(
+        minutes=1
+    )
+    time_coord.points = time_coord.units.date2num(times)
+    # Check all times are offset.
+    for time in times:
+        assert time.minute == 59
+    # Remove forecast_period from input.
+    cube.remove_coord("forecast_period")
+
+    # Give cube a radiation STASH code.
+    cube.attributes["STASH"] = "m01s01i207"
+
+    # Apply fix.
+    read._fix_um_radtime(cube)
+
+    # Ensure radiation times are fixed.
+    rad_time_coord = cube.coord("time")
+    rad_times = rad_time_coord.units.num2pydate(rad_time_coord.points)
+    # Check all times are fixed.
+    assert rad_times[0] == datetime.datetime(2022, 9, 21, 3, 0)
+    for time in rad_times:
+        assert time.minute == 0
+
+
+def test_fix_um_radtime_prehour_seconds(cube):
+    """Check times that are 58.50 minutes past are rounded to the whole hour."""
+    # Offset times by one minute.
+    time_coord = cube.coord("time")
+    times = (
+        time_coord.units.num2pydate(time_coord.points)
+        - datetime.timedelta(minutes=1)
+        - datetime.timedelta(seconds=10)
+    )
+    time_coord.points = time_coord.units.date2num(times)
+    # Check all times are offset.
+    for time in times:
+        assert time.minute == 58
+        assert time.second == 50
+
+    # Give cube a radiation STASH code.
+    cube.attributes["STASH"] = "m01s01i207"
+
+    # Apply fix.
+    read._fix_um_radtime(cube)
+
+    # Ensure radiation times are fixed.
+    rad_time_coord = cube.coord("time")
+    rad_times = rad_time_coord.units.num2pydate(rad_time_coord.points)
+    # Check all times are fixed.
+    assert rad_times[0] == datetime.datetime(2022, 9, 21, 3, 0)
+    for time in rad_times:
+        assert time.minute == 0
+        assert time.second == 0
 
 
 def test_fix_um_radtime_prehour_skip_non_radiation(cube):
@@ -393,46 +551,13 @@ def test_fix_um_radtime_prehour_skip_non_radiation(cube):
         assert time.minute == 59
 
     # Apply fix.
-    read._fix_um_radtime_prehour(cube)
+    read._fix_um_radtime(cube)
 
     # Ensure that non-radiation cubes are unchanged.
     non_rad_time_coord = cube.coord("time")
     non_rad_times = non_rad_time_coord.units.num2pydate(non_rad_time_coord.points)
     for nrt, t in zip(non_rad_times, times, strict=True):
         assert nrt == t
-
-
-def test_fix_um_radtime_prehour_skip_non_offset(cube):
-    """Check radiation times NOT offset by 1 minute are not fixed."""
-    time_coord = cube.coord("time")
-    times = time_coord.units.num2pydate(time_coord.points)
-    # Check all times are not offset.
-    for time in times:
-        assert time.minute == 0
-
-    # Give cube a radiation STASH code.
-    cube.attributes["STASH"] = "m01s01i207"
-
-    # Apply fix.
-    read._fix_um_radtime_prehour(cube)
-
-    # Ensure that non-offset cubes are unchanged.
-    non_offset_time_coord = cube.coord("time")
-    non_offset_times = non_offset_time_coord.units.num2pydate(
-        non_offset_time_coord.points
-    )
-    for nt, t in zip(non_offset_times, times, strict=True):
-        assert nt == t
-
-
-def test_fix_um_radtime_prehour_no_time_coordinate():
-    """Check cubes without time coordinates are skipped without error."""
-    # Create a cube with no time coordinate.
-    cube = iris.cube.Cube([0], var_name="data")
-    # Apply fix.
-    read._fix_um_radtime_prehour(cube)
-    # Check unchanged.
-    assert cube == iris.cube.Cube([0], var_name="data")
 
 
 def test_fix_um_lightning(cube):
@@ -486,10 +611,10 @@ def test_spatial_coord_auxcoord_callback():
     """Check that additional spatial aux coord grid_latitude gets added."""
     # This cube contains 'latitude' and 'longitude'
     cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
-    read._fix_spatial_coord_name_callback(cube)
+    read._fix_spatial_coords_callback(cube)
     assert (
         repr(cube.coords())
-        == "[<DimCoord: time / (hours since 1970-01-01 00:00:00)  [...]  shape(2,)>, <DimCoord: pressure / (hPa)  [ 100., 150., ..., 950., 1000.]  shape(16,)>, <DimCoord: latitude / (degrees)  [-10.98, -10.94, ..., -10.82, -10.78]  shape(6,)>, <DimCoord: longitude / (degrees)  [19.02, 19.06, ..., 19.18, 19.22]  shape(6,)>, <DimCoord: forecast_reference_time / (hours since 1970-01-01 00:00:00)  [...]>, <AuxCoord: forecast_period / (hours)  [15., 18.]  shape(2,)>, <AuxCoord: grid_latitude / (unknown)  [-10.98, -10.94, ..., -10.82, -10.78]  shape(6,)>, <AuxCoord: grid_longitude / (unknown)  [19.02, 19.06, ..., 19.18, 19.22]  shape(6,)>]"
+        == "[<DimCoord: time / (hours since 1970-01-01 00:00:00)  [...]  shape(2,)>, <DimCoord: pressure / (hPa)  [ 100., 150., ..., 950., 1000.]  shape(16,)>, <DimCoord: latitude / (degrees)  [-10.98, -10.94, ..., -10.82, -10.78]  shape(6,)>, <DimCoord: longitude / (degrees)  [19.02, 19.06, ..., 19.18, 19.22]  shape(6,)>, <DimCoord: forecast_reference_time / (hours since 1970-01-01 00:00:00)  [...]>, <AuxCoord: forecast_period / (hours)  [15., 18.]  shape(2,)>, <AuxCoord: grid_latitude / (degrees)  [-10.98, -10.94, ..., -10.82, -10.78]  shape(6,)>, <AuxCoord: grid_longitude / (degrees)  [19.02, 19.06, ..., 19.18, 19.22]  shape(6,)>]"
     )
 
 
@@ -497,7 +622,7 @@ def test_spatial_coord_not_exist_callback():
     """Check that spatial coord returns cube if cube does not contain spatial coordinates."""
     cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
     cube = cube[:, :, 0, 0]  # Remove spatial dimcoords
-    read._fix_spatial_coord_name_callback(cube)
+    read._fix_spatial_coords_callback(cube)
     assert (
         repr(cube.coords())
         == "[<DimCoord: time / (hours since 1970-01-01 00:00:00)  [...]  shape(2,)>, <DimCoord: pressure / (hPa)  [ 100., 150., ..., 950., 1000.]  shape(16,)>, <DimCoord: forecast_reference_time / (hours since 1970-01-01 00:00:00)  [...]>, <DimCoord: latitude / (degrees)  [-10.98]>, <DimCoord: longitude / (degrees)  [19.02]>, <AuxCoord: forecast_period / (hours)  [15., 18.]  shape(2,)>]"
@@ -516,8 +641,8 @@ def test_lfric_time_callback_forecast_reference_time(slammed_lfric_cube):
     assert ref_time_coord.standard_name == "forecast_reference_time"
     assert ref_time_coord.long_name == "forecast_reference_time"
     assert ref_time_coord.var_name is None
-    assert str(ref_time_coord.units) == "seconds since 2022-01-01 00:00:00"
-    assert all(ref_time_coord.points == [0])
+    assert str(ref_time_coord.units) == "hours since 1970-01-01 00:00:00"
+    assert all(ref_time_coord.points == [455832])
 
 
 def test_lfric_time_callback_forecast_period(slammed_lfric_cube):
@@ -548,20 +673,23 @@ def test_lfric_time_callback_hours(slammed_lfric_cube):
     assert all(fc_period_coord.points == [1, 2, 3, 4, 5, 6])
 
 
-def test_lfric_time_callback_unknown_units(slammed_lfric_cube):
+def test_lfric_time_callback_unknown_units(slammed_lfric_cube, caplog):
     """Error when forecast_period units cannot be determined."""
     slammed_lfric_cube.remove_coord("forecast_period")
     assert not slammed_lfric_cube.coords("forecast_period")
-    slammed_lfric_cube.coord("time").convert_units("days since 1970-01-01 00:00:00")
+    slammed_lfric_cube.coord("time").units = None
 
-    with pytest.raises(ValueError, match="Unrecognised base time unit:"):
+    with pytest.raises(iris.exceptions.UnitConversionError):
         read._lfric_time_callback(slammed_lfric_cube)
+        _, level, message = caplog.record_tuples[0]
+        assert level == logging.ERROR
+        assert message == "Unrecognised base time unit: unknown"
 
 
-def test_lfric_normalise_varname(model_level_cube):
+def test_normalise_var0_varname(model_level_cube):
     """Check that read callback renames the model level var name."""
     model_level_cube.coord("model_level_number").var_name = "model_level_number_0"
-    read._lfric_normalise_varname(model_level_cube)
+    read._normalise_var0_varname(model_level_cube)
     assert model_level_cube.coord("model_level_number").var_name == "model_level_number"
 
 
@@ -672,13 +800,101 @@ def test_read_cubes_extract_subarea():
     )
 
 
+def test_read_cubes_extract_subarea_latlon():
+    """Read cube with latlon coord and ensure appropriate subarea is extracted."""
+    # Read in global test data
+    cube = read.read_cubes("tests/test_data/air_temperature_global.nc")[0]
+    assert cube.coord("latitude").coord_system == iris.coord_systems.GeogCS(6371229.0)
+
+    # Cutout real world coordinates, using latitude bound -30.0 to 30.0 and
+    # longitude bound -4.5 to -2.5
+    cube_rw = read.read_cubes(
+        "tests/test_data/air_temperature_global.nc",
+        subarea_type="realworld",
+        subarea_extent=[-30.0, 30.0, -4.5, -2.5],
+    )[0]
+    assert isinstance(cube_rw, iris.cube.Cube)
+
+    # Compare the latitude coordinates to check it has extracted same region. We
+    # use latitude as there is little difference in spacing from the equator to
+    # pole, but longitude varies (converges to zero at pole).
+    assert not np.array_equal(
+        cube_rw.coord("latitude").points, cube.coord("latitude").points
+    )
+
+    # Ensure extracted region has required coordinates
+    assert round(cube_rw.coord("latitude").points[0], 2) == -28.08
+    assert round(cube_rw.coord("latitude").points[-1], 2) == 28.17
+    assert np.size(cube_rw.coord("longitude")) == 1
+    assert round(cube_rw.coord("longitude").points[0], 2) == -2.74
+
+
+def test_read_cubes_extract_subarea_dateline():
+    """Read cube with latlon coord across dateline and ensure appropriate subarea is extracted."""
+    cube = read.read_cubes("tests/test_data/air_temperature_dateline.nc")[0]
+    assert cube.coord("latitude").coord_system == iris.coord_systems.GeogCS(6371229.0)
+
+    # Cutout real world coordinates, using latitude bound -40.0 to -35.0 and
+    # longitude bound 175.0 to 181.0
+    cube_rw = read.read_cubes(
+        "tests/test_data/air_temperature_dateline.nc",
+        subarea_type="realworld",
+        subarea_extent=[-40.0, -35.0, 175.0, 181.0],
+    )[0]
+    assert isinstance(cube_rw, iris.cube.Cube)
+
+    # Compare the longitude coordinates to check it has extracted a region.
+    assert not np.array_equal(
+        cube_rw.coord("latitude").points, cube.coord("latitude").points
+    )
+
+    # Ensure extracted region has required coordinates
+    assert round(cube_rw.coord("latitude").points[0], 2) == -39.83
+    assert round(cube_rw.coord("latitude").points[-1], 2) == -35.24
+    assert round(cube_rw.coord("longitude").points[0], 2) == -4.83
+    assert round(cube_rw.coord("longitude").points[-1], 2) == 0.84
+
+    # Cutout real world coordinates, using latitude bound -40.0 to -35.0 and
+    # longitude bound -5.0 to 1.0
+    cube_rw_2 = read.read_cubes(
+        "tests/test_data/air_temperature_dateline.nc",
+        subarea_type="realworld",
+        subarea_extent=[-40.0, -35.0, -5.0, 1.0],
+    )[0]
+    assert isinstance(cube_rw_2, iris.cube.Cube)
+
+    # Compare the longitude coordinates to check it has extracted a region.
+    assert not np.array_equal(
+        cube_rw_2.coord("latitude").points, cube.coord("latitude").points
+    )
+
+    # Ensure extracted region has required coordinates
+    assert round(cube_rw_2.coord("latitude").points[0], 2) == -39.83
+    assert round(cube_rw_2.coord("latitude").points[-1], 2) == -35.24
+    assert round(cube_rw_2.coord("longitude").points[0], 2) == -4.83
+    assert round(cube_rw_2.coord("longitude").points[-1], 2) == 0.84
+
+
 def test_read_cubes_outofbounds_subarea():
     """Ensure correct failure if subarea outside cube extent."""
     with pytest.raises(
-        ValueError, match="Cutout region requested should be within data area."
+        ValueError,
+        match=r"Cutout region requested should be within data area. "
+        "Check and update SUBAREA_EXTENT.",
     ):
         read.read_cubes(
             "tests/test_data/air_temp.nc",
             subarea_type="realworld",
             subarea_extent=[-5.5, 5.5, -125.5, 125.5],
-        )
+        )[0]
+
+    with pytest.raises(
+        ValueError,
+        match=r"Cutout region requested should be within data area. "
+        "Check and update SUBAREA_EXTENT.",
+    ):
+        read.read_cubes(
+            "tests/test_data/air_temperature_dateline.nc",
+            subarea_type="realworld",
+            subarea_extent=[-5.5, 5.5, -125.5, 125.5],
+        )[0]
