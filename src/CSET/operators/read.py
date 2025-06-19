@@ -22,6 +22,7 @@ import itertools
 import logging
 import warnings
 from pathlib import Path
+from typing import Literal
 
 import iris
 import iris.coords
@@ -277,7 +278,7 @@ def _check_input_files(input_paths: str | list[str]) -> list[Path]:
 
 def _cutout_cubes(
     cubes: iris.cube.CubeList,
-    subarea_type: str | None,
+    subarea_type: Literal["gridcells", "realworld", "modelrelative"] | None,
     subarea_extent: list[float, float, float, float],
 ):
     """Cut out a subarea from a CubeList."""
@@ -285,43 +286,64 @@ def _cutout_cubes(
         logging.debug("Subarea selection is disabled.")
         return cubes
 
-    if subarea_type not in ["realworld", "modelrelative"]:
-        raise ValueError("Unknown subarea_type:", subarea_type)
-
-    logging.debug(
-        "User requested LLat: %s ULat: %s LLon: %s ULon: %s",
-        subarea_extent[0],
-        subarea_extent[1],
-        subarea_extent[2],
-        subarea_extent[3],
-    )
+    # If selected, cutout according to number of grid cells to trim from each edge.
     cutout_cubes = iris.cube.CubeList()
-
+    # Find spatial coordinates
     for cube in cubes:
-        # Define cutout region using user provided coordinates.
-        lats = np.array(subarea_extent[0:2])
-        lons = np.array(subarea_extent[2:4])
-        while lons[0] < -180.0:
-            lons += 180.0
-        while lons[1] > 180.0:
-            lons -= 180.0
+        # Find dimension coordinates.
         lat_name, lon_name = get_cube_yxcoordname(cube)
-        coord_system = cube.coord(lat_name).coord_system
-        # If the coordinate system is rotated we convert coordinates into
-        # model-relative coordinates to extract the appropriate cutout.
-        if subarea_type == "realworld" and isinstance(
-            coord_system, iris.coord_systems.RotatedGeogCS
-        ):
-            lons, lats = rotate_pole(
-                lons,
-                lats,
-                pole_lon=coord_system.grid_north_pole_longitude,
-                pole_lat=coord_system.grid_north_pole_latitude,
+
+        # Compute cutout based on number of cells to trim from edges.
+        if subarea_type == "gridcells":
+            logging.debug(
+                "User requested LowerTrim: %s LeftTrim: %s UpperTrim: %s RightTrim: %s",
+                subarea_extent[0],
+                subarea_extent[1],
+                subarea_extent[2],
+                subarea_extent[3],
             )
+            lat_points = np.sort(cube.coord(lat_name).points)
+            lon_points = np.sort(cube.coord(lon_name).points)
+            # Define cutout region using user provided cell points.
+            lats = [lat_points[subarea_extent[0]], lat_points[-subarea_extent[2] - 1]]
+            lons = [lon_points[subarea_extent[1]], lon_points[-subarea_extent[3] - 1]]
+
+        # Compute cutout based on specified coordinate values.
+        elif subarea_type == "realworld" or subarea_type == "modelrelative":
+            # If not gridcells, cutout by requested geographic area,
+            logging.debug(
+                "User requested LLat: %s ULat: %s LLon: %s ULon: %s",
+                subarea_extent[0],
+                subarea_extent[1],
+                subarea_extent[2],
+                subarea_extent[3],
+            )
+            # Define cutout region using user provided coordinates.
+            lats = np.array(subarea_extent[0:2])
+            lons = np.array(subarea_extent[2:4])
+            # Ensure cutout longitudes are within +/- 180.0 bounds.
+            while lons[0] < -180.0:
+                lons += 180.0
+            while lons[1] > 180.0:
+                lons -= 180.0
+            # If the coordinate system is rotated we convert coordinates into
+            # model-relative coordinates to extract the appropriate cutout.
+            coord_system = cube.coord(lat_name).coord_system
+            if subarea_type == "realworld" and isinstance(
+                coord_system, iris.coord_systems.RotatedGeogCS
+            ):
+                lons, lats = rotate_pole(
+                    lons,
+                    lats,
+                    pole_lon=coord_system.grid_north_pole_longitude,
+                    pole_lat=coord_system.grid_north_pole_latitude,
+                )
+        else:
+            raise ValueError("Unknown subarea_type:", subarea_type)
 
         # Do cutout and add to cutout_cubes.
         intersection_args = {lat_name: lats, lon_name: lons}
-        logging.debug("Cutting out coords %s", intersection_args)
+        logging.debug("Cutting out coords: %s", intersection_args)
         try:
             cutout_cubes.append(cube.intersection(**intersection_args))
         except IndexError as err:

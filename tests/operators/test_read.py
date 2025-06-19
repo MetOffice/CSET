@@ -700,6 +700,62 @@ def test_lfric_forecast_period_standard_name_callback(cube):
     assert cube.coord("forecast_period").standard_name == "forecast_period"
 
 
+def test_read_cubes_extract_cells():
+    """Read cube and ensure appropriate number of cells are trimmed from domain edges."""
+    cube = read.read_cubes(
+        "tests/test_data/air_temperature_1000_hpa_level_histogram_plot.nc"
+    )[0]
+    assert cube.shape == (420, 380)
+
+    # Test not trimming any cells.
+    cube_full = read.read_cubes(
+        "tests/test_data/air_temperature_1000_hpa_level_histogram_plot.nc",
+        subarea_type="gridcells",
+        subarea_extent=[0, 0, 0, 0],
+    )[0]
+    assert cube_full.shape == (420, 380)
+
+    # Test trimming same number of grid points in all directions
+    cube_all = read.read_cubes(
+        "tests/test_data/air_temperature_1000_hpa_level_histogram_plot.nc",
+        subarea_type="gridcells",
+        subarea_extent=[10, 10, 10, 10],
+    )[0]
+    assert cube_all.shape == (400, 360)
+    assert round(cube_all.data[0, 0], 2) == round(cube.data[10, 10], 2)
+    assert round(cube_all.data[-1, -1], 2) == round(cube.data[409, 369], 2)
+
+    # Test trimming lower and upper edges only
+    cube_tb = read.read_cubes(
+        "tests/test_data/air_temperature_1000_hpa_level_histogram_plot.nc",
+        subarea_type="gridcells",
+        subarea_extent=[15, 0, 15, 0],
+    )[0]
+    assert cube_tb.shape == (390, 380)
+    assert round(cube_tb.data[0, 0], 2) == round(cube.data[15, 0], 2)
+    assert round(cube_tb.data[-1, -1], 2) == round(cube.data[389, 379], 2)
+
+    # Test trimming left and right edges only
+    cube_lr = read.read_cubes(
+        "tests/test_data/air_temperature_1000_hpa_level_histogram_plot.nc",
+        subarea_type="gridcells",
+        subarea_extent=[0, 15, 0, 15],
+    )[0]
+    assert cube_lr.shape == (420, 350)
+    assert round(cube_lr.data[0, 0], 2) == round(cube.data[0, 15], 2)
+    assert round(cube_lr.data[-1, -1], 2) == round(cube.data[419, 364], 2)
+
+    # Test trimming lower-side only
+    cube_lo = read.read_cubes(
+        "tests/test_data/air_temperature_1000_hpa_level_histogram_plot.nc",
+        subarea_type="gridcells",
+        subarea_extent=[100, 0, 0, 0],
+    )[0]
+    assert cube_lo.shape == (320, 380)
+    assert round(cube_lo.data[0, 0], 2) == round(cube.data[100, 0], 2)
+    assert round(cube_lo.data[-1, -1], 2) == round(cube.data[419, 379], 2)
+
+
 def test_read_cubes_extract_subarea():
     """Read cube and ensure appropriate subarea is extracted."""
     # All cubes are on same grid, and vary by cell method.
@@ -756,6 +812,30 @@ def test_read_cubes_extract_subarea_latlon():
         "tests/test_data/air_temperature_global.nc",
         subarea_type="realworld",
         subarea_extent=[-30.0, 30.0, -4.5, -2.5],
+    )[0]
+    assert isinstance(cube_rw, iris.cube.Cube)
+
+    # Compare the latitude coordinates to check it has extracted same region. We
+    # use latitude as there is little difference in spacing from the equator to
+    # pole, but longitude varies (converges to zero at pole).
+    assert not np.array_equal(
+        cube_rw.coord("latitude").points, cube.coord("latitude").points
+    )
+
+    # Ensure extracted region has required coordinates
+    assert round(cube_rw.coord("latitude").points[0], 2) == -28.08
+    assert round(cube_rw.coord("latitude").points[-1], 2) == 28.17
+    assert np.size(cube_rw.coord("longitude")) == 1
+    assert round(cube_rw.coord("longitude").points[0], 2) == -2.74
+
+
+def test_read_cubes_extract_subarea_outside_bounds():
+    """Read cube requesting subarea outside +/-180 and wrap request within bounds."""
+    cube = read.read_cubes("tests/test_data/air_temperature_global.nc")[0]
+    cube_rw = read.read_cubes(
+        "tests/test_data/air_temperature_global.nc",
+        subarea_type="realworld",
+        subarea_extent=[-30.0, 30.0, -544.5, -542.5],
     )[0]
     assert isinstance(cube_rw, iris.cube.Cube)
 
@@ -840,5 +920,18 @@ def test_read_cubes_outofbounds_subarea():
         read.read_cubes(
             "tests/test_data/air_temperature_dateline.nc",
             subarea_type="realworld",
+            subarea_extent=[-5.5, 5.5, -125.5, 125.5],
+        )[0]
+
+
+def test_read_cubes_unknown_subarea_method():
+    """Ensure correct failure if invalid subarea method requested."""
+    with pytest.raises(
+        ValueError,
+        match=r"('Unknown subarea_type:', 'any_old_method')",
+    ):
+        read.read_cubes(
+            "tests/test_data/air_temp.nc",
+            subarea_type="any_old_method",
             subarea_extent=[-5.5, 5.5, -125.5, 125.5],
         )[0]
