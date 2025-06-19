@@ -186,7 +186,10 @@ def _get_needed_environment_variables_obs() -> dict:
         "forecast_length": isodate.parse_duration(os.environ["ANALYSIS_LENGTH"]),
         "obs_fields": json.loads(os.environ["SURFACE_SYNOP_FIELDS"].replace("'",'"')),
         "model_identifier": "OBS",
-        "wmo_nmbrs": json.loads(os.environ["WMO_BLOCK_STTN_NMBRS"].replace("'",'"')),
+        "wmo_nmbrs": json.loads(os.environ.get("WMO_BLOCK_STTN_NMBRS").replace("'",'"')) \
+            if len(os.environ.get("WMO_BLOCK_STTN_NMBRS")) > 0 else None,
+        "subarea_extent": json.loads(os.environ.get("SUBAREA_EXTENT")) \
+            if len(os.environ.get("SUBAREA_EXTENT")) > 0 else None,
         "obs_interval": isodate.parse_duration(os.environ["SURFACE_SYNOP_INTERVAL"]),
         "obs_offset": isodate.parse_duration(os.environ["SURFACE_SYNOP_OFFSET"]),
         "rose_datac": os.environ["ROSE_DATAC"],
@@ -341,9 +344,10 @@ def fetch_obs(obs_retriever: FileRetrieverABC = FilesystemFileRetriever):
     # class method.
     try:
         obs_retriever.get_file (paths[0], 
-            v["subtype"], v["wmo_nmbrs"],
+            v["subtype"], 
             v["obs_fields"], v["data_time"],
             v["obs_offset"], v["forecast_length"],
-            v["obs_interval"], cycle_obs_dir)
+            v["obs_interval"], cycle_obs_dir,
+            wmo_nmbrs=v["wmo_nmbrs"], subarea_extent=v["subarea_extent"])
     except:
         raise FileNotFoundError("No observations available.")

@@ -2,6 +2,7 @@
 site/
 opt/
 demo_pointstat/
+*metdb*
 restricted*
 
 # User workflow configuration.
