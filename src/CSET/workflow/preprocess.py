@@ -14,6 +14,7 @@
 
 """Preprocess forecast data into a single file per model."""
 
+import ast
 import os
 import shutil
 
@@ -22,10 +23,10 @@ import iris
 from CSET.operators import read
 
 
-def preprocess_data(data_location: str):
+def preprocess_data(data_location: str, fields: iris.Constraint | None = None):
     """Rewrite data into a single file. This also fixes all the metadata."""
     # Load up all the data.
-    cubes = read.read_cubes(data_location)
+    cubes = read.read_cubes(data_location, constraint=fields)
 
     # Remove added comparison base; we don't know if this is the base model yet.
     for cube in cubes:
@@ -50,4 +51,18 @@ def run():
         f"{os.environ['MODEL_IDENTIFIER']}"
     )
     print(f"Preprocessing {data_location}")
-    preprocess_data(data_location)
+
+    # Preprocess only selected variables, else read all
+    str_fields = os.environ["FIELDS"]
+
+    # Parse FIELDS workflow environment variable string to
+    # unique list of iris-ready constraint names
+    fields = set(ast.literal_eval(str_fields))
+
+    if len(fields) > 0:
+        print(f"Preprocessing variable list {fields}.")
+    else:
+        fields = None
+        print("Preprocessing all variables in files.")
+
+    preprocess_data(data_location, fields=fields)
