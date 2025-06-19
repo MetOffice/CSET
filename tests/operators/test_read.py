@@ -109,8 +109,30 @@ def test_read_cube():
     """Returns a Cube rather than CubeList."""
     from CSET.operators import constraints
 
+    # Rotated [grid_latitude, grid_longitude] example file
     cube = read.read_cube(
         "tests/test_data/air_temp.nc",
+        constraint=constraints.generate_cell_methods_constraint([]),
+    )
+    assert isinstance(cube, iris.cube.Cube)
+
+    # Global [latitude, longitude] example file
+    cube = read.read_cube(
+        "tests/test_data/air_temperature_global.nc",
+        constraint=constraints.generate_cell_methods_constraint([]),
+    )
+    assert isinstance(cube, iris.cube.Cube)
+
+    # Regional [latitude, longitude] example file
+    cube = read.read_cube(
+        "tests/test_data/air_temperature_lat_lon.nc",
+        constraint=constraints.generate_cell_methods_constraint([]),
+    )
+    assert isinstance(cube, iris.cube.Cube)
+
+    # Regional [lat, lon] example across dateline
+    cube = read.read_cube(
+        "tests/test_data/air_temperature_dateline.nc",
         constraint=constraints.generate_cell_methods_constraint([]),
     )
     assert isinstance(cube, iris.cube.Cube)
@@ -589,10 +611,10 @@ def test_spatial_coord_auxcoord_callback():
     """Check that additional spatial aux coord grid_latitude gets added."""
     # This cube contains 'latitude' and 'longitude'
     cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
-    read._fix_spatial_coord_name_callback(cube)
+    read._fix_spatial_coords_callback(cube)
     assert (
         repr(cube.coords())
-        == "[<DimCoord: time / (hours since 1970-01-01 00:00:00)  [...]  shape(2,)>, <DimCoord: pressure / (hPa)  [ 100., 150., ..., 950., 1000.]  shape(16,)>, <DimCoord: latitude / (degrees)  [-10.98, -10.94, ..., -10.82, -10.78]  shape(6,)>, <DimCoord: longitude / (degrees)  [19.02, 19.06, ..., 19.18, 19.22]  shape(6,)>, <DimCoord: forecast_reference_time / (hours since 1970-01-01 00:00:00)  [...]>, <AuxCoord: forecast_period / (hours)  [15., 18.]  shape(2,)>, <AuxCoord: grid_latitude / (unknown)  [-10.98, -10.94, ..., -10.82, -10.78]  shape(6,)>, <AuxCoord: grid_longitude / (unknown)  [19.02, 19.06, ..., 19.18, 19.22]  shape(6,)>]"
+        == "[<DimCoord: time / (hours since 1970-01-01 00:00:00)  [...]  shape(2,)>, <DimCoord: pressure / (hPa)  [ 100., 150., ..., 950., 1000.]  shape(16,)>, <DimCoord: latitude / (degrees)  [-10.98, -10.94, ..., -10.82, -10.78]  shape(6,)>, <DimCoord: longitude / (degrees)  [19.02, 19.06, ..., 19.18, 19.22]  shape(6,)>, <DimCoord: forecast_reference_time / (hours since 1970-01-01 00:00:00)  [...]>, <AuxCoord: forecast_period / (hours)  [15., 18.]  shape(2,)>, <AuxCoord: grid_latitude / (degrees)  [-10.98, -10.94, ..., -10.82, -10.78]  shape(6,)>, <AuxCoord: grid_longitude / (degrees)  [19.02, 19.06, ..., 19.18, 19.22]  shape(6,)>]"
     )
 
 
@@ -600,7 +622,7 @@ def test_spatial_coord_not_exist_callback():
     """Check that spatial coord returns cube if cube does not contain spatial coordinates."""
     cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
     cube = cube[:, :, 0, 0]  # Remove spatial dimcoords
-    read._fix_spatial_coord_name_callback(cube)
+    read._fix_spatial_coords_callback(cube)
     assert (
         repr(cube.coords())
         == "[<DimCoord: time / (hours since 1970-01-01 00:00:00)  [...]  shape(2,)>, <DimCoord: pressure / (hPa)  [ 100., 150., ..., 950., 1000.]  shape(16,)>, <DimCoord: forecast_reference_time / (hours since 1970-01-01 00:00:00)  [...]>, <DimCoord: latitude / (degrees)  [-10.98]>, <DimCoord: longitude / (degrees)  [19.02]>, <AuxCoord: forecast_period / (hours)  [15., 18.]  shape(2,)>]"
@@ -664,10 +686,10 @@ def test_lfric_time_callback_unknown_units(slammed_lfric_cube, caplog):
         assert message == "Unrecognised base time unit: unknown"
 
 
-def test_lfric_normalise_varname(model_level_cube):
+def test_normalise_var0_varname(model_level_cube):
     """Check that read callback renames the model level var name."""
     model_level_cube.coord("model_level_number").var_name = "model_level_number_0"
-    read._lfric_normalise_varname(model_level_cube)
+    read._normalise_var0_varname(model_level_cube)
     assert model_level_cube.coord("model_level_number").var_name == "model_level_number"
 
 
@@ -720,3 +742,103 @@ def test_read_cubes_extract_subarea():
     assert not np.array_equal(
         cube_rw.coord("grid_latitude").points, cube.coord("grid_latitude").points
     )
+
+
+def test_read_cubes_extract_subarea_latlon():
+    """Read cube with latlon coord and ensure appropriate subarea is extracted."""
+    # Read in global test data
+    cube = read.read_cubes("tests/test_data/air_temperature_global.nc")[0]
+    assert cube.coord("latitude").coord_system == iris.coord_systems.GeogCS(6371229.0)
+
+    # Cutout real world coordinates, using latitude bound -30.0 to 30.0 and
+    # longitude bound -4.5 to -2.5
+    cube_rw = read.read_cubes(
+        "tests/test_data/air_temperature_global.nc",
+        subarea_type="realworld",
+        subarea_extent=[-30.0, 30.0, -4.5, -2.5],
+    )[0]
+    assert isinstance(cube_rw, iris.cube.Cube)
+
+    # Compare the latitude coordinates to check it has extracted same region. We
+    # use latitude as there is little difference in spacing from the equator to
+    # pole, but longitude varies (converges to zero at pole).
+    assert not np.array_equal(
+        cube_rw.coord("latitude").points, cube.coord("latitude").points
+    )
+
+    # Ensure extracted region has required coordinates
+    assert round(cube_rw.coord("latitude").points[0], 2) == -28.08
+    assert round(cube_rw.coord("latitude").points[-1], 2) == 28.17
+    assert np.size(cube_rw.coord("longitude")) == 1
+    assert round(cube_rw.coord("longitude").points[0], 2) == -2.74
+
+
+def test_read_cubes_extract_subarea_dateline():
+    """Read cube with latlon coord across dateline and ensure appropriate subarea is extracted."""
+    cube = read.read_cubes("tests/test_data/air_temperature_dateline.nc")[0]
+    assert cube.coord("latitude").coord_system == iris.coord_systems.GeogCS(6371229.0)
+
+    # Cutout real world coordinates, using latitude bound -40.0 to -35.0 and
+    # longitude bound 175.0 to 181.0
+    cube_rw = read.read_cubes(
+        "tests/test_data/air_temperature_dateline.nc",
+        subarea_type="realworld",
+        subarea_extent=[-40.0, -35.0, 175.0, 181.0],
+    )[0]
+    assert isinstance(cube_rw, iris.cube.Cube)
+
+    # Compare the longitude coordinates to check it has extracted a region.
+    assert not np.array_equal(
+        cube_rw.coord("latitude").points, cube.coord("latitude").points
+    )
+
+    # Ensure extracted region has required coordinates
+    assert round(cube_rw.coord("latitude").points[0], 2) == -39.83
+    assert round(cube_rw.coord("latitude").points[-1], 2) == -35.24
+    assert round(cube_rw.coord("longitude").points[0], 2) == -4.83
+    assert round(cube_rw.coord("longitude").points[-1], 2) == 0.84
+
+    # Cutout real world coordinates, using latitude bound -40.0 to -35.0 and
+    # longitude bound -5.0 to 1.0
+    cube_rw_2 = read.read_cubes(
+        "tests/test_data/air_temperature_dateline.nc",
+        subarea_type="realworld",
+        subarea_extent=[-40.0, -35.0, -5.0, 1.0],
+    )[0]
+    assert isinstance(cube_rw_2, iris.cube.Cube)
+
+    # Compare the longitude coordinates to check it has extracted a region.
+    assert not np.array_equal(
+        cube_rw_2.coord("latitude").points, cube.coord("latitude").points
+    )
+
+    # Ensure extracted region has required coordinates
+    assert round(cube_rw_2.coord("latitude").points[0], 2) == -39.83
+    assert round(cube_rw_2.coord("latitude").points[-1], 2) == -35.24
+    assert round(cube_rw_2.coord("longitude").points[0], 2) == -4.83
+    assert round(cube_rw_2.coord("longitude").points[-1], 2) == 0.84
+
+
+def test_read_cubes_outofbounds_subarea():
+    """Ensure correct failure if subarea outside cube extent."""
+    with pytest.raises(
+        ValueError,
+        match=r"Cutout region requested should be within data area. "
+        "Check and update SUBAREA_EXTENT.",
+    ):
+        read.read_cubes(
+            "tests/test_data/air_temp.nc",
+            subarea_type="realworld",
+            subarea_extent=[-5.5, 5.5, -125.5, 125.5],
+        )[0]
+
+    with pytest.raises(
+        ValueError,
+        match=r"Cutout region requested should be within data area. "
+        "Check and update SUBAREA_EXTENT.",
+    ):
+        read.read_cubes(
+            "tests/test_data/air_temperature_dateline.nc",
+            subarea_type="realworld",
+            subarea_extent=[-5.5, 5.5, -125.5, 125.5],
+        )[0]
