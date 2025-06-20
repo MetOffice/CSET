@@ -61,10 +61,20 @@ before we can develop.
 Setting up tooling
 ------------------
 
-To be able to run the tests or build the documentation you need some
-prerequisite software. The easiest way to get this is with `conda`_. The
-following commands, when run from within the CSET directory, will setup a conda
-environment for you to use.
+To develop CSET you need some prerequisite software. If you have `GNU make`_ and
+`conda`_ installed you can use a single command to setup the development
+environment.
+
+.. code-block:: bash
+
+    make setup
+
+To use the software environment run ``conda activate cset-dev``. You will have
+to rerun this command for every new terminal.
+
+If you don't have make, you can use the following equivalent commands which,
+when run from within the CSET directory, will setup a conda environment for you
+to use.
 
 .. code-block:: bash
 
@@ -79,18 +89,8 @@ environment for you to use.
     # Make CSET runnable for manual testing
     pip install --no-deps -e .
 
-Alternatively, if you have make_ installed you can use a single command
-to setup the development environment (equivalent to the above commands).
-
-.. code-block:: bash
-
-    make setup
-
-When subsequently returning to the code after closing your terminal, you will
-need to rerun the ``conda activate cset-dev`` command.
-
 .. _conda: https://docs.conda.io/en/latest/
-.. _make: https://www.gnu.org/software/make
+.. _GNU make: https://www.gnu.org/software/make
 
 Updating tooling
 ------------------
