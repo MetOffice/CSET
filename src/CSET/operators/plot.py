@@ -386,6 +386,7 @@ def _plot_and_save_spatial_plot(
         if norm is not None:
             vmin = None
             vmax = None
+            logging.debug("Plotting using defined levels.")
         plot = iplt.pcolormesh(cube, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax)
     else:
         raise ValueError(f"Unknown plotting method: {method}")
@@ -411,6 +412,7 @@ def _plot_and_save_spatial_plot(
         if np.abs(x2 - x1) > 180.0:
             x1 = x1 - 180.0
             x2 = x2 - 180.0
+            logging.debug("Adjusting plot bounds to fit global extent.")
         axes.set_extent([x1, x2, y1, y2])
     except ValueError:
         # Skip if no x and y map coordinates.
@@ -463,6 +465,7 @@ def _plot_and_save_spatial_plot(
     if levels is not None and len(levels) < 20:
         cbar.set_ticks(levels)
         cbar.set_ticklabels([f"{level:.1f}" for level in levels])
+        logging.debug("Set colorbar ticks and labels.")
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -515,10 +518,11 @@ def _plot_and_save_postage_stamp_spatial_plot(
             # Filled contour plot of the field.
             plot = iplt.contourf(member, cmap=cmap, levels=levels, norm=norm)
         elif method == "pcolormesh":
-            try:
+            if levels is not None:
                 vmin = min(levels)
                 vmax = max(levels)
-            except TypeError:
+            else:
+                raise TypeError("Unknown vmin and vmax range.")
                 vmin, vmax = None, None
             # pcolormesh plot of the field.
             plot = iplt.pcolormesh(member, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax)
@@ -538,7 +542,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
             y1 = np.min(cube.coord(lat_axis).points)
             y2 = np.max(cube.coord(lat_axis).points)
             # Adjust bounds within +/- 180.0 if x dimension extends beyond half-globe.
-            if (x2 - x1) > 180.0:
+            if np.abs(x2 - x1) > 180.0:
                 x1 = x1 - 180.0
                 x2 = x2 - 180.0
             ax.set_extent([x1, x2, y1, y2])
@@ -621,6 +625,9 @@ def _plot_and_save_line_series(
         # Add zero line.
         if min(y_levels) < 0.0 and max(y_levels) > 0.0:
             ax.axhline(y=0, xmin=0, xmax=1, ls="-", color="grey", lw=2)
+        logging.debug(
+            "Line plot with y-axis limits %s-%s", min(y_levels), max(y_levels)
+        )
     else:
         ax.autoscale()
 
@@ -850,6 +857,12 @@ def _plot_and_save_histogram_series(
             bins = [0, 1, 2, 3, 4, 5]
         else:
             bins = np.linspace(vmin, vmax, 51)
+        logging.debug(
+            "Plotting histogram with %s bins %s - %s.",
+            np.size(bins),
+            np.min(bins),
+            np.max(bins),
+        )
 
         # Reshape cube data into a single array to allow for a single histogram.
         # Otherwise we plot xdim histograms stacked.
@@ -1681,6 +1694,7 @@ def plot_histogram_series(
         if levels is not None:
             vmin = min(levels)
             vmax = max(levels)
+            logging.debug("Updated vmin, vmax: %s, %s", vmin, vmax)
             break
 
     if levels is None:
