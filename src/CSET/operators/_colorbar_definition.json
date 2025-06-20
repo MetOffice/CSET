@@ -747,8 +747,8 @@
   },
   "vapour_specific_humidity_at_pressure_levels_for_climate_averaging_difference": {
     "cmap": "BrBG",
-    "max": 0.0001,
-    "min": -0.0001
+    "max": 0.001,
+    "min": -0.001
   },
   "vertical_wind_at_pressure_levels": {
     "cmap": "RdBu_r",
