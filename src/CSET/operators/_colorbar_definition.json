@@ -213,7 +213,7 @@
   "grid_surface_temperature": {
     "cmap": "RdYlBu_r",
     "max": 323,
-    "min": 223,
+    "min": 263,
     "ymax": "auto",
     "ymin": "auto"
   },
@@ -451,7 +451,7 @@
   "soil_temperature": {
     "cmap": "RdYlBu_r",
     "max": 323,
-    "min": 223,
+    "min": 263,
     "ymax": "auto",
     "ymin": "auto"
   },
@@ -627,7 +627,7 @@
   "temperature_at_screen_level": {
     "cmap": "RdYlBu_r",
     "max": 323,
-    "min": 273,
+    "min": 263,
     "ymax": "auto",
     "ymin": "auto"
   },

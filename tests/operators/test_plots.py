@@ -49,7 +49,7 @@ def test_load_colorbar_map():
     assert colorbar["temperature_at_screen_level"] == {
         "cmap": "RdYlBu_r",
         "max": 323,
-        "min": 273,
+        "min": 263,
         "ymax": "auto",
         "ymin": "auto",
     }
@@ -94,7 +94,7 @@ def test_colorbar_map_levels(cube, tmp_working_dir):
     """Colorbar definition is found for cube."""
     cmap, levels, norm = plot._colorbar_map_levels(cube)
     assert cmap == mpl.pyplot.get_cmap("RdYlBu_r", 51)
-    assert (levels == np.linspace(273, 323, 101)).all()
+    assert (levels == np.linspace(263, 323, 101)).all()
     assert norm is None
 
 
@@ -110,8 +110,9 @@ def test_colorbar_map_levels_xaxis(cube, tmp_working_dir):
 
 def test_colorbar_map_levels_xaxis_default(cube, tmp_working_dir):
     """Test for variable without xmin, xmax."""
-    cube = iris.cube.Cube([np.arange(10)])
-    cube.rename("zonal_wind_at_pressure_levels_difference")
+    cube = iris.cube.Cube(
+        np.arange(10), long_name="zonal_wind_at_pressure_levels_difference"
+    )
     cmap, levels, norm = plot._colorbar_map_levels(cube, axis="x")
     assert cmap is None
     assert levels == [-20, 20]
@@ -159,7 +160,7 @@ def test_colorbar_map_levels_name_fallback(cube, tmp_working_dir):
     cube.standard_name = None
     cmap, levels, norm = plot._colorbar_map_levels(cube)
     assert cmap == mpl.pyplot.get_cmap("RdYlBu_r", 51)
-    assert (levels == np.linspace(273, 323, 101)).all()
+    assert (levels == np.linspace(263, 323, 101)).all()
     assert norm is None
 
 
