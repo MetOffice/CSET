@@ -835,7 +835,7 @@ def _plot_and_save_histogram_series(
         # Easier to check title (where var name originates)
         # than seeing if long names exist etc.
         # Exception case, where distribution better fits log scales/bins.
-        if "surface_microphysical_rainfall_rate" in title:
+        if "surface_microphysical" in title:
             # Usually in seconds but mm/hr more intuitive.
             cube.convert_units("kg m-2 h-1")
             bins = 10.0 ** (
@@ -846,6 +846,8 @@ def _plot_and_save_histogram_series(
             ax.set_yscale("log")
             vmin = 0
             vmax = 400  # Manually set vmin/vmax to override json derived value.
+        elif "lightning" in title:
+            bins = [0, 1, 2, 3, 4, 5]
         else:
             bins = np.linspace(vmin, vmax, 51)
 
@@ -1068,8 +1070,11 @@ def _convert_precipitation_units_callback(cube: iris.cube.Cube):
 
     Some precipitation diagnostics are output with unit kg m-2 s-1 and are converted to mm hr-1.
     """
-    # if cube.attributes["STASH"] == "m01s04i203" or cube.long_name == "surface_microphysical_rainfall_rate":
-    if cube.long_name == "surface_microphysical_rainfall_rate":
+    # if cube.attributes["STASH"] == "m01s04i203" or cube.long_name == "surface_microphysical_rainfall_/rate":
+    print(cube.long_name, cube.standard_name, cube.var_name)
+    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    if "surface_microphysical" in varnames:
+        # or "surface_microphysical" in cube.standard_name or "surface_microphysical" in cube.var_name:
         if cube.units == "kg m-2 s-1":
             logging.info("Converting precipitation units from kg m-2 s-1 to mm hr-1")
             # Convert from kg m-2 s-1 to mm s-1 assuming 1kg water = 1l water = 1dm^3 water.
@@ -1081,6 +1086,7 @@ def _convert_precipitation_units_callback(cube: iris.cube.Cube):
             logging.warning(
                 "Precipitation units are not in 'kg m-2 s-1', skipping conversion"
             )
+    print(cube)
     return cube
 
 
@@ -1088,11 +1094,7 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
     """Return a custom colourmap for the current recipe."""
     import matplotlib.colors as mcolors
 
-    if (
-        cube.long_name == "surface_microphysical_rainfall_rate"
-        or cube.standard_name == "surface_microphysical_rainfall_rate"
-        or cube.var_name == "surface_microphysical_rainfall_rate"
-    ):
+    if "surface_microphysical" in [cube.long_name, cube.standard_name, cube.var_name]:
         # Define the levels and colors
         levels = [0, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
         colors = [
@@ -1114,9 +1116,7 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
         cmap = mcolors.ListedColormap(colors)
         # Normalize the levels
         norm = mcolors.BoundaryNorm(levels, cmap.N)
-        logging.info(
-            "change colormap for surface_microphysical_rainfall_rate colorbar."
-        )
+        logging.info("change colormap for surface_microphysical variable colorbar.")
     else:
         # do nothing and keep existing colorbar attributes
         cmap = cmap

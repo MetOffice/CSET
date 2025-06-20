@@ -348,7 +348,10 @@ def difference(cubes: CubeList):
     # assuming we can rely on cubes having a long name, so we don't check for
     # its presents.
     difference.standard_name = None
-    difference.long_name = base.long_name + "_difference"
+    if base.standard_name:
+        difference.long_name = base.standard_name + "_difference"
+    else:
+        difference.long_name = base.long_name + "_difference"
     if base.var_name:
         difference.var_name = base.var_name + "_difference"
 
