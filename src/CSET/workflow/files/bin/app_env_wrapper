@@ -40,6 +40,9 @@ if [[ -d "${CYLC_WORKFLOW_RUN_DIR}/conda-environment" ]]; then
   echo "Using conda environment from ${CYLC_WORKFLOW_RUN_DIR}/conda-environment"
   exec "${CONDA_PATH}conda" run --prefix "${CYLC_WORKFLOW_RUN_DIR}/conda-environment" "$@"
 else
-  echo "No conda environment to use. Running directly..."
+  echo "No linked conda environment. Attempting to use 'cset-dev' environment."
+  if ! "${CONDA_PATH}conda" run -n cset-dev "$@" ; then
+  echo "No conda environment to use. Attempting last-ditch attempt to run directly."
   exec "$@"
+  fi
 fi
