@@ -1070,11 +1070,8 @@ def _convert_precipitation_units_callback(cube: iris.cube.Cube):
 
     Some precipitation diagnostics are output with unit kg m-2 s-1 and are converted to mm hr-1.
     """
-    # if cube.attributes["STASH"] == "m01s04i203" or cube.long_name == "surface_microphysical_rainfall_/rate":
-    print(cube.long_name, cube.standard_name, cube.var_name)
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
-    if "surface_microphysical" in varnames:
-        # or "surface_microphysical" in cube.standard_name or "surface_microphysical" in cube.var_name:
+    if any(["surface_microphysical" in name for name in varnames]):
         if cube.units == "kg m-2 s-1":
             logging.info("Converting precipitation units from kg m-2 s-1 to mm hr-1")
             # Convert from kg m-2 s-1 to mm s-1 assuming 1kg water = 1l water = 1dm^3 water.
@@ -1086,7 +1083,6 @@ def _convert_precipitation_units_callback(cube: iris.cube.Cube):
             logging.warning(
                 "Precipitation units are not in 'kg m-2 s-1', skipping conversion"
             )
-    print(cube)
     return cube
 
 
@@ -1094,29 +1090,35 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
     """Return a custom colourmap for the current recipe."""
     import matplotlib.colors as mcolors
 
-    if "surface_microphysical" in [cube.long_name, cube.standard_name, cube.var_name]:
-        # Define the levels and colors
-        levels = [0, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
-        colors = [
-            "w",
-            (0, 0, 0.6),
-            "b",
-            "c",
-            "g",
-            "y",
-            (1, 0.5, 0),
-            "r",
-            "pink",
-            "m",
-            "purple",
-            "maroon",
-            "gray",
-        ]
-        # Create a custom colormap
-        cmap = mcolors.ListedColormap(colors)
-        # Normalize the levels
-        norm = mcolors.BoundaryNorm(levels, cmap.N)
-        logging.info("change colormap for surface_microphysical variable colorbar.")
+    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    if any(["surface_microphysical" in name for name in varnames]):
+        if "difference" in cube.long_name:
+            logging.info(
+                "No change of colormap for surface_microphysical difference variable colorbar."
+            )
+        else:
+            # Define the levels and colors
+            levels = [0, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
+            colors = [
+                "w",
+                (0, 0, 0.6),
+                "b",
+                "c",
+                "g",
+                "y",
+                (1, 0.5, 0),
+                "r",
+                "pink",
+                "m",
+                "purple",
+                "maroon",
+                "gray",
+            ]
+            # Create a custom colormap
+            cmap = mcolors.ListedColormap(colors)
+            # Normalize the levels
+            norm = mcolors.BoundaryNorm(levels, cmap.N)
+            logging.info("change colormap for surface_microphysical variable colorbar.")
     else:
         # do nothing and keep existing colorbar attributes
         cmap = cmap
