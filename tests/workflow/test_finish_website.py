@@ -31,7 +31,7 @@ def test_copy_rose_config(monkeypatch, tmp_path):
     monkeypatch.setenv("CYLC_WORKFLOW_RUN_DIR", str(tmp_path))
     monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", str(tmp_path))
     finish_website.copy_rose_config()
-    with open(web_dir / "rose-suite.conf.txt", "rt", encoding="UTF-8") as fp:
+    with open(web_dir / "rose-suite.conf", "rt", encoding="UTF-8") as fp:
         assert fp.read() == "Test rose-suite.conf file\n"
 
 
