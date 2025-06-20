@@ -49,7 +49,7 @@ def test_load_colorbar_map():
     assert colorbar["temperature_at_screen_level"] == {
         "cmap": "RdYlBu_r",
         "max": 323,
-        "min": 223,
+        "min": 273,
         "ymax": "auto",
         "ymin": "auto",
     }
@@ -94,7 +94,7 @@ def test_colorbar_map_levels(cube, tmp_working_dir):
     """Colorbar definition is found for cube."""
     cmap, levels, norm = plot._colorbar_map_levels(cube)
     assert cmap == mpl.pyplot.get_cmap("RdYlBu_r", 51)
-    assert (levels == np.linspace(223, 323, 101)).all()
+    assert (levels == np.linspace(273, 323, 101)).all()
     assert norm is None
 
 
@@ -159,7 +159,7 @@ def test_colorbar_map_levels_name_fallback(cube, tmp_working_dir):
     cube.standard_name = None
     cmap, levels, norm = plot._colorbar_map_levels(cube)
     assert cmap == mpl.pyplot.get_cmap("RdYlBu_r", 51)
-    assert (levels == np.linspace(223, 323, 101)).all()
+    assert (levels == np.linspace(273, 323, 101)).all()
     assert norm is None
 
 
