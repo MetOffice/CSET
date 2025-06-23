@@ -1,5 +1,5 @@
 {% if EXTRACT_PLEVEL_TRANSECT|default(False) %}
-{% for field in PRESSURE_LEVEL_MODEL_FIELDS %}
+{% for field in PRESSURE_LEVEL_FIELDS %}
 {% for model in models %}
 [runtime]
     [[plevel_transect_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
