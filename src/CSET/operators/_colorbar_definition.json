@@ -10,8 +10,8 @@
     "cmap": "coolwarm",
     "max": 104000,
     "min": 94000,
-    "ymax": 100000,
-    "ymin": 102000
+    "ymax": "auto",
+    "ymin": "auto"
   },
   "air_pressure_at_mean_sea_level_difference": {
     "cmap": "bwr",
@@ -26,7 +26,7 @@
     "ymin": 0
   },
   "atmosphere_boundary_layer_thickness_difference": {
-    "cmap": "bwr",
+    "cmap": "PRGn",
     "max": 1000.0,
     "min": -1000.0
   },
@@ -74,13 +74,23 @@
     "max": 500,
     "min": -500
   },
+  "cloud_area_fraction": {
+    "cmap": "viridis",
+    "max": 1,
+    "min": 0
+  },
+  "cloud_area_fraction_difference": {
+    "cmap": "PRGn",
+    "max": 1,
+    "min": -1
+  },
   "cloud_base_altitude": {
     "cmap": "terrain",
     "max": 25,
     "min": 0
   },
   "cloud_base_altitude_difference": {
-    "cmap": "bwr",
+    "cmap": "PRGn",
     "max": 20.0,
     "min": -20.0
   },
@@ -105,7 +115,7 @@
     "min": 0
   },
   "combined_cloud_amount_maximum_random_overlap_difference": {
-    "cmap": "bwr",
+    "cmap": "PRGn",
     "max": 1,
     "min": -1
   },
@@ -122,9 +132,9 @@
     "min": -10
   },
   "eastward_wind_at_10m": {
-    "cmap": "bwr",
-    "max": 35.0,
-    "min": -35.0,
+    "cmap": "RdBu_r",
+    "max": 25.0,
+    "min": -25.0,
     "ymax": 8.0,
     "ymin": -8.0
   },
@@ -142,10 +152,11 @@
     "cmap": "viridis",
     "max": 1,
     "min": 0,
-    "ymax": 0.0
+    "ymax": 0.5,
+    "ymin": 0.0
   },
   "fog_fraction_at_screen_level_difference": {
-    "cmap": "bwr",
+    "cmap": "PRGn",
     "max": 1,
     "min": -1
   },
@@ -195,14 +206,14 @@
     "ymin": 0.0
   },
   "grid_surface_snow_amount_difference": {
-    "cmap": "bwr",
+    "cmap": "BrBG",
     "max": 1,
     "min": -1
   },
   "grid_surface_temperature": {
     "cmap": "RdYlBu_r",
     "max": 323,
-    "min": 223,
+    "min": 263,
     "ymax": "auto",
     "ymin": "auto"
   },
@@ -212,14 +223,14 @@
     "min": 10
   },
   "grid_surface_upward_latent_heat_flux": {
-    "cmap": "bwr_r",
+    "cmap": "RdBu_r",
     "max": 500,
     "min": -500,
     "ymax": 250,
     "ymin": -50
   },
   "grid_surface_upward_latent_heat_flux_difference": {
-    "cmap": "bwr_r",
+    "cmap": "PuOr_r",
     "max": 80,
     "min": -80
   },
@@ -231,7 +242,7 @@
     "ymin": -50.0
   },
   "grid_surface_upward_sensible_heat_flux_difference": {
-    "cmap": "bwr",
+    "cmap": "PuOr",
     "max": 80.0,
     "min": -80.0
   },
@@ -241,7 +252,7 @@
     "min": 0
   },
   "high_type_cloud_area_fraction_difference": {
-    "cmap": "bwr",
+    "cmap": "PRGn",
     "max": 1,
     "min": -1
   },
@@ -251,7 +262,7 @@
     "min": 0
   },
   "low_type_cloud_area_fraction_difference": {
-    "cmap": "bwr",
+    "cmap": "PRGn",
     "max": 1,
     "min": -1
   },
@@ -266,7 +277,7 @@
     "min": 0.0
   },
   "maximum_combined_cloud_amount_below_111m_asl_difference": {
-    "cmap": "bwr",
+    "cmap": "PRGn",
     "max": 1.0,
     "min": -1.0
   },
@@ -276,14 +287,14 @@
     "min": 0
   },
   "medium_type_cloud_area_fraction_difference": {
-    "cmap": "bwr",
+    "cmap": "PRGn",
     "max": 1,
     "min": -1
   },
   "meridional_wind_at_pressure_levels": {
-    "cmap": "bwr",
-    "max": 50,
-    "min": -50,
+    "cmap": "RdBu_r",
+    "max": 40,
+    "min": -40,
     "pressure_levels": {
       "100": {
         "max": 100,
@@ -310,8 +321,8 @@
         "ymin": -10
       },
       "250": {
-        "max": 55,
-        "min": -55,
+        "max": 50,
+        "min": -50,
         "xmax": 10,
         "xmin": -10,
         "ymax": 10,
@@ -326,8 +337,8 @@
         "ymin": -10
       },
       "500": {
-        "max": 45,
-        "min": -45,
+        "max": 40,
+        "min": -40,
         "xmax": 10,
         "xmin": -10,
         "ymax": 10,
@@ -367,9 +378,9 @@
     "min": -20
   },
   "northward_wind_at_10m": {
-    "cmap": "bwr",
-    "max": 35.0,
-    "min": -35.0,
+    "cmap": "RdBu_r",
+    "max": 25.0,
+    "min": -25.0,
     "ymax": 8.0,
     "ymin": -8.0
   },
@@ -379,7 +390,7 @@
     "min": -5.0
   },
   "northward_wind_at_cell_centres": {
-    "cmap": "bwr",
+    "cmap": "RdBu_r",
     "max": 35.0,
     "min": -35.0
   },
@@ -391,12 +402,12 @@
     "ymin": 0
   },
   "number_of_lightning_flashes_in_column_difference": {
-    "cmap": "bwr",
+    "cmap": "RdGy_r",
     "max": 5,
     "min": -5
   },
   "potential_vorticity_at_pressure_levels": {
-    "cmap": "bwr",
+    "cmap": "RdBu_r",
     "max": 1.8e-05,
     "min": -1.8e-05,
     "ymax": 5e-06,
@@ -413,7 +424,7 @@
     "min": -35.0
   },
   "radar_reflectivity_at_1km_above_the_surface_difference": {
-    "cmap": "bwr",
+    "cmap": "BrBG",
     "max": 100.0,
     "min": -100.0
   },
@@ -423,7 +434,7 @@
     "min": 0
   },
   "relative_humidity_at_screen_level_difference": {
-    "cmap": "bwr",
+    "cmap": "BrBG",
     "max": 30,
     "min": -30
   },
@@ -433,14 +444,14 @@
     "min": 0
   },
   "relative_humidity_wrt_ice_at_pressure_levels_difference": {
-    "cmap": "bwr",
+    "cmap": "BrBG",
     "max": 50,
     "min": -50
   },
   "soil_temperature": {
     "cmap": "RdYlBu_r",
     "max": 323,
-    "min": 223,
+    "min": 263,
     "ymax": "auto",
     "ymin": "auto"
   },
@@ -455,7 +466,7 @@
     "min": 0
   },
   "surface_downward_longwave_flux_difference": {
-    "cmap": "bwr",
+    "cmap": "PuOr",
     "max": 500,
     "min": -500
   },
@@ -467,7 +478,7 @@
     "ymin": 0
   },
   "surface_downward_shortwave_flux_difference": {
-    "cmap": "bwr",
+    "cmap": "PuOr",
     "max": 1400,
     "min": -1400
   },
@@ -506,9 +517,9 @@
     "ymin": 0.0
   },
   "surface_microphysical_rainfall_rate_difference": {
-    "cmap": "bwr",
-    "max": 0.001,
-    "min": -0.001
+    "cmap": "BrBG",
+    "max": 32.0,
+    "min": -32.0
   },
   "surface_microphysical_snowfall_amount": {
     "cmap": "cividis",
@@ -521,13 +532,28 @@
   },
   "surface_microphysical_snowfall_rate": {
     "cmap": "cool",
-    "max": 0.001,
-    "min": 0
+    "levels": [
+      0,
+      0.125,
+      0.25,
+      0.5,
+      1,
+      2,
+      4,
+      8,
+      16,
+      32,
+      64,
+      128,
+      256
+    ],
+    "ymax": 0.01,
+    "ymin": 0.0
   },
   "surface_microphysical_snowfall_rate_difference": {
-    "cmap": "bwr",
-    "max": 0.001,
-    "min": -0.001
+    "cmap": "BrBG",
+    "max": 8.0,
+    "min": -8.0
   },
   "surface_net_longwave_flux_radiative_timestep": {
     "cmap": "bwr",
@@ -537,7 +563,7 @@
     "ymin": -150
   },
   "surface_net_longwave_flux_radiative_timestep_difference": {
-    "cmap": "bwr",
+    "cmap": "PuOr",
     "max": 80,
     "min": -80
   },
@@ -549,7 +575,7 @@
     "ymin": 0
   },
   "surface_net_shortwave_flux_difference": {
-    "cmap": "bwr",
+    "cmap": "PuOr",
     "max": 1400,
     "min": -1400
   },
@@ -624,7 +650,7 @@
   "temperature_at_screen_level": {
     "cmap": "RdYlBu_r",
     "max": 323,
-    "min": 223,
+    "min": 263,
     "ymax": "auto",
     "ymin": "auto"
   },
@@ -639,7 +665,7 @@
     "min": 0.0
   },
   "toa_direct_shortwave_flux_difference": {
-    "cmap": "bwr",
+    "cmap": "PuOr",
     "max": 2.0,
     "min": -2.0
   },
@@ -651,7 +677,7 @@
     "ymin": 150.0
   },
   "toa_upward_longwave_flux_radiative_timestep_difference": {
-    "cmap": "bwr",
+    "cmap": "PuOr",
     "max": 100.0,
     "min": -100.0
   },
@@ -661,7 +687,7 @@
     "min": 0.0
   },
   "toa_upward_shortwave_flux_difference": {
-    "cmap": "bwr",
+    "cmap": "PuOr",
     "max": 100,
     "min": -100
   },
@@ -673,7 +699,7 @@
     "ymin": 0
   },
   "turbulent_mixing_height_difference": {
-    "cmap": "bwr",
+    "cmap": "PRGn",
     "max": 5000,
     "min": -5000
   },
@@ -684,7 +710,9 @@
     "pressure_levels": {
       "100": {
         "max": 5e-05,
-        "min": 0
+        "min": 0,
+        "xmax": 0.015,
+        "xmin": 0.0
       },
       "1000": {
         "max": 0.01,
@@ -694,31 +722,45 @@
       },
       "200": {
         "max": 5e-05,
-        "min": 0
+        "min": 0,
+        "xmax": 0.015,
+        "xmin": 0.0
       },
       "250": {
         "max": 5e-05,
-        "min": 0
+        "min": 0,
+        "xmax": 0.015,
+        "xmin": 0.0
       },
       "300": {
         "max": 0.0001,
-        "min": 0
+        "min": 0,
+        "xmax": 0.015,
+        "xmin": 0.0
       },
       "500": {
         "max": 0.003,
-        "min": 0
+        "min": 0,
+        "xmax": 0.015,
+        "xmin": 0.0
       },
       "700": {
         "max": 0.003,
-        "min": 0
+        "min": 0,
+        "xmax": 0.015,
+        "xmin": 0.0
       },
       "850": {
         "max": 0.005,
-        "min": 0
+        "min": 0,
+        "xmax": 0.015,
+        "xmin": 0.0
       },
       "950": {
         "max": 0.01,
-        "min": 0
+        "min": 0,
+        "xmax": 0.015,
+        "xmin": 0.0
       }
     },
     "xmax": 0.015,
@@ -727,12 +769,12 @@
     "ymin": "auto"
   },
   "vapour_specific_humidity_at_pressure_levels_for_climate_averaging_difference": {
-    "cmap": "bwr",
-    "max": 0.0001,
-    "min": -0.0001
+    "cmap": "BrBG",
+    "max": 0.001,
+    "min": -0.001
   },
   "vertical_wind_at_pressure_levels": {
-    "cmap": "bwr",
+    "cmap": "RdBu_r",
     "max": 1,
     "min": -1,
     "xmax": 0.08,
@@ -751,7 +793,7 @@
     "min": 0.0
   },
   "visibility_in_air_difference": {
-    "cmap": "bwr",
+    "cmap": "PRGn",
     "max": 5000.0,
     "min": -5000.0
   },
@@ -768,7 +810,7 @@
     "min": -5
   },
   "zonal_wind_at_pressure_levels": {
-    "cmap": "bwr",
+    "cmap": "RdBu_r",
     "max": 50,
     "min": -50,
     "pressure_levels": {

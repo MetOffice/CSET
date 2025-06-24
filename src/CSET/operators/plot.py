@@ -230,7 +230,7 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
     Parameters
     ----------
     cube: Cube
-        Cube of variable for which the colorbar information is desired.i
+        Cube of variable for which the colorbar information is desired.
     axis: "x", "y", optional
         Select the levels for just this axis of a line plot. The min and max
         can be set by xmin/xmax or ymin/ymax respectively. For variables where
@@ -276,13 +276,13 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
         except KeyError:
             logging.debug("Cube name %s has no colorbar definition.", varname)
 
-    # If no valid colormap has been defined, use defaults and return
+    # If no valid colormap has been defined, use defaults and return.
     if not cmap:
         logging.warning("No colorbar definition exists for %s.", cube.name())
         cmap, levels, norm = mpl.colormaps["viridis"], None, None
         return cmap, levels, norm
 
-    # Test if pressure-level specific settings are provided for cube
+    # Test if pressure-level specific settings are provided for cube.
     if pressure_level:
         try:
             var_colorbar = colorbar[varname_key]["pressure_levels"][pressure_level]
@@ -294,7 +294,8 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
             )
 
     # Check for availability of x-axis or y-axis user-specific overrides
-    # for line plottypes and return levels.
+    # for setting level bounds for line plot types and return just levels.
+    # Line plots do not need a colormap, and just use the data range.
     if axis:
         if axis == "x":
             try:
@@ -312,7 +313,7 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
         else:
             levels = [vmin, vmax]
 
-        # Complete settings based on levels
+        # Complete settings based on levels.
         return None, levels, None
 
     # Get and use the colorbar levels for this variable if spatial or histogram.
@@ -384,6 +385,7 @@ def _plot_and_save_spatial_plot(
         if norm is not None:
             vmin = None
             vmax = None
+            logging.debug("Plotting using defined levels.")
         plot = iplt.pcolormesh(cube, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax)
     else:
         raise ValueError(f"Unknown plotting method: {method}")
@@ -395,15 +397,21 @@ def _plot_and_save_spatial_plot(
     # If is spatial map, fix extent to keep plot tight.
     try:
         lat_axis, lon_axis = get_cube_yxcoordname(cube)
-        axes.coastlines(resolution="10m")
+        if cmap.name in ["viridis", "Greys"]:
+            coastcol = "m"
+        else:
+            coastcol = "k"
+        logging.debug("Plotting coastlines %s.", coastcol)
+        axes.coastlines(resolution="10m", color=coastcol)
         x1 = np.min(cube.coord(lon_axis).points)
         x2 = np.max(cube.coord(lon_axis).points)
         y1 = np.min(cube.coord(lat_axis).points)
         y2 = np.max(cube.coord(lat_axis).points)
         # Adjust bounds within +/- 180.0 if x dimension extends beyond half-globe.
-        if (np.abs(x2 - x1)) > 180.0:
+        if np.abs(x2 - x1) > 180.0:
             x1 = x1 - 180.0
             x2 = x2 - 180.0
+            logging.debug("Adjusting plot bounds to fit global extent.")
         axes.set_extent([x1, x2, y1, y2])
     except ValueError:
         # Skip if no x and y map coordinates.
@@ -456,6 +464,7 @@ def _plot_and_save_spatial_plot(
     if levels is not None and len(levels) < 20:
         cbar.set_ticks(levels)
         cbar.set_ticklabels([f"{level:.1f}" for level in levels])
+        logging.debug("Set colorbar ticks and labels.")
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -508,10 +517,11 @@ def _plot_and_save_postage_stamp_spatial_plot(
             # Filled contour plot of the field.
             plot = iplt.contourf(member, cmap=cmap, levels=levels, norm=norm)
         elif method == "pcolormesh":
-            try:
+            if levels is not None:
                 vmin = min(levels)
                 vmax = max(levels)
-            except TypeError:
+            else:
+                raise TypeError("Unknown vmin and vmax range.")
                 vmin, vmax = None, None
             # pcolormesh plot of the field and ensure to use norm and not vmin/vmax
             # if levels are defined.
@@ -536,7 +546,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
             y1 = np.min(cube.coord(lat_axis).points)
             y2 = np.max(cube.coord(lat_axis).points)
             # Adjust bounds within +/- 180.0 if x dimension extends beyond half-globe.
-            if (x2 - x1) > 180.0:
+            if np.abs(x2 - x1) > 180.0:
                 x1 = x1 - 180.0
                 x2 = x2 - 180.0
             ax.set_extent([x1, x2, y1, y2])
@@ -619,9 +629,12 @@ def _plot_and_save_line_series(
     # Set y limits to global min and max, autoscale if colorbar doesn't exist.
     if y_levels:
         ax.set_ylim(min(y_levels), max(y_levels))
-        # Mark x=0 if present in plot
+        # Add zero line.
         if min(y_levels) < 0.0 and max(y_levels) > 0.0:
             ax.axhline(y=0, xmin=0, xmax=1, ls="-", color="grey", lw=2)
+        logging.debug(
+            "Line plot with y-axis limits %s-%s", min(y_levels), max(y_levels)
+        )
     else:
         ax.autoscale()
 
@@ -716,9 +729,9 @@ def _plot_and_save_vertical_line_series(
     ax.set_yticks(y_ticks)
     ax.set_yticklabels(y_tick_labels)
 
-    # set x-axis limits
+    # Set x-axis limits.
     ax.set_xlim(vmin, vmax)
-    # mark y=0 if present in plot
+    # Mark y=0 if present in plot.
     if vmin < 0.0 and vmax > 0.0:
         ax.axvline(x=0, ymin=0, ymax=1, ls="-", color="grey", lw=2)
 
@@ -840,9 +853,8 @@ def _plot_and_save_histogram_series(
         # than seeing if long names exist etc.
         # Exception case, where distribution better fits log scales/bins.
         if "surface_microphysical" in title:
-            if "rate" in title:
-                # Usually in seconds but mm/hr more intuitive.
-                cube.convert_units("kg m-2 h-1")
+            # Usually in seconds but mm/hr more intuitive.
+            cube.convert_units("kg m-2 h-1")
             bins = 10.0 ** (
                 np.arange(-10, 27, 1) / 10.0
             )  # Suggestion from RMED toolbox.
@@ -855,6 +867,12 @@ def _plot_and_save_histogram_series(
             bins = [0, 1, 2, 3, 4, 5]
         else:
             bins = np.linspace(vmin, vmax, 51)
+        logging.debug(
+            "Plotting histogram with %s bins %s - %s.",
+            np.size(bins),
+            np.min(bins),
+            np.max(bins),
+        )
 
         # Reshape cube data into a single array to allow for a single histogram.
         # Otherwise we plot xdim histograms stacked.
@@ -1080,11 +1098,8 @@ def _convert_precipitation_units_callback(cube: iris.cube.Cube):
 
     Some precipitation diagnostics are output with unit kg m-2 s-1 and are converted to mm hr-1.
     """
-    # if cube.attributes["STASH"] == "m01s04i203" or cube.long_name == "surface_microphysical_rainfall_rate":
-    if (
-        cube.long_name == "surface_microphysical_rainfall_rate"
-        or cube.long_name == "surface_microphysical_snowfall_rate"
-    ):
+    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    if any("surface_microphysical" in name for name in varnames):
         if cube.units == "kg m-2 s-1":
             logging.info("Converting precipitation units from kg m-2 s-1 to mm hr-1")
             # Convert from kg m-2 s-1 to mm s-1 assuming 1kg water = 1l water = 1dm^3 water.
@@ -1103,15 +1118,10 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
     """Return a custom colourmap for the current recipe."""
     import matplotlib.colors as mcolors
 
+    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if (
-        "surface_microphysical_rainfall_rate"
-        in [cube.long_name, cube.standard_name, cube.var_name]
-        or "surface_microphysical_snowfall_rate"
-        in [cube.long_name, cube.standard_name, cube.var_name]
-        or "surface_microphysical_rainfall_amount"
-        in [cube.long_name, cube.standard_name, cube.var_name]
-        or "surface_microphysical_snowfall_amount"
-        in [cube.long_name, cube.standard_name, cube.var_name]
+        any("surface_microphysical" in name for name in varnames)
+        and "difference" not in cube.long_name
     ):
         #        or cube.standard_name == "surface_microphysical_rainfall_rate"
         #        or cube.var_name == "surface_microphysical_rainfall_rate"
@@ -1138,9 +1148,7 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
         cmap = mcolors.ListedColormap(colors)
         # Normalize the levels
         norm = mcolors.BoundaryNorm(levels, cmap.N)
-        logging.info(
-            "change colormap for surface_microphysical_rainfall_rate colorbar."
-        )
+        logging.info("change colormap for surface_microphysical variable colorbar.")
     else:
         # do nothing and keep existing colorbar attributes
         cmap = cmap
@@ -1721,6 +1729,7 @@ def plot_histogram_series(
         if levels is not None:
             vmin = min(levels)
             vmax = max(levels)
+            logging.debug("Updated vmin, vmax: %s, %s", vmin, vmax)
             break
 
     if levels is None:

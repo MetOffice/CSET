@@ -289,9 +289,6 @@ def _cutout_cubes(
         logging.debug("Subarea selection is disabled.")
         return cubes
 
-    if subarea_type not in ["realworld", "modelrelative", "gridcells"]:
-        raise ValueError("Unknown subarea_type:", subarea_type)
-
     # If selected, cutout according to number of grid cells to trim from each edge.
     cutout_cubes = iris.cube.CubeList()
     # Find spatial coordinates
@@ -324,69 +321,32 @@ def _cutout_cubes(
                 subarea_extent[2],
                 subarea_extent[3],
             )
-            # Ensure realworld cutout region is within +/- 180.0 bounds
-            if subarea_type == "realworld":
-                if subarea_extent[2] < -180.0:
-                    subarea_extent[2] += 180.0
-                    subarea_extent[3] += 180.0
-                if subarea_extent[3] > 180.0:
-                    subarea_extent[2] -= 180.0
-                    subarea_extent[3] -= 180.0
             # Define cutout region using user provided coordinates.
-            lats = subarea_extent[0:2]
-            lons = subarea_extent[2:4]
-            coord_system = cube.coord(lat_name).coord_system
+            lats = np.array(subarea_extent[0:2])
+            lons = np.array(subarea_extent[2:4])
+            # Ensure cutout longitudes are within +/- 180.0 bounds.
+            while lons[0] < -180.0:
+                lons += 180.0
+            while lons[1] > 180.0:
+                lons -= 180.0
             # If the coordinate system is rotated we convert coordinates into
             # model-relative coordinates to extract the appropriate cutout.
+            coord_system = cube.coord(lat_name).coord_system
             if subarea_type == "realworld" and isinstance(
                 coord_system, iris.coord_systems.RotatedGeogCS
             ):
                 lons, lats = rotate_pole(
-                    np.array(lons),
-                    np.array(lats),
+                    lons,
+                    lats,
                     pole_lon=coord_system.grid_north_pole_longitude,
                     pole_lat=coord_system.grid_north_pole_latitude,
                 )
         else:
             raise ValueError("Unknown subarea_type:", subarea_type)
 
-        # Test if SUBAREA_EXTENT sits entirely within available data region
-        # If no area of overlap cube.intersection will return
-        # non-descriptive index 0 is out of bounds error.
-        # lon_min = cube.coord(lon_name).points.min()
-        # lon_max = cube.coord(lon_name).points.max()
-        # lat_min = cube.coord(lat_name).points.min()
-        # lat_max = cube.coord(lat_name).points.max()
-        # if (
-        #    (lons.min() < lon_min)
-        #    or (lons.max() > lon_max)
-        #    or (lats.min() < lat_min)
-        #    or (lats.max() > lat_max)
-        # ):
-        #    logging.warning(
-        #        "User requested LLat: %s ULat: %s LLon: %s ULon: %s",
-        #        cutout_coords["lat"].min(),
-        #        cutout_coords["lat"].max(),
-        #        cutout_coords["lon"].min(),
-        #        cutout_coords["lon"].max(),
-        #    )
-        #    logging.warning(
-        #        "Data region LLat: %s ULat: %s LLon: %s ULon: %s",
-        #        lat_min,
-        #        lat_max,
-        #        lon_min,
-        #        lon_max,
-        #    )
-        #    raise ValueError(
-        #        "Cutout region requested not within data area. "
-        #        "Check and update SUBAREA_EXTENT."
-        #    )
         # Do cutout and add to cutout_cubes.
-        intersection_args = {
-            lat_name: lats,
-            lon_name: lons,
-        }
-        logging.debug("Cutting out coords %s", intersection_args)
+        intersection_args = {lat_name: lats, lon_name: lons}
+        logging.debug("Cutting out coords: %s", intersection_args)
         try:
             cutout_cubes.append(cube.intersection(**intersection_args))
         except IndexError as err:
@@ -432,13 +392,11 @@ def _create_callback(is_ensemble: bool) -> callable:
         _um_normalise_callback(cube, field, filename)
         _lfric_normalise_callback(cube, field, filename)
         _lfric_time_coord_fix_callback(cube, field, filename)
-        _longitude_fix_callback(cube, field, filename)
+        _longitude_fix_callback(cube)
         _normalise_var0_varname(cube)
         _fix_spatial_coords_callback(cube)
         _fix_pressure_coord_callback(cube)
-        # _lfric_normalise_varname(cube)
-        ## _fix_um_radtime_prehour(cube)
-        _fix_um_radtime_posthour(cube)
+        _fix_um_radtime(cube)
         _fix_um_lightning(cube)
         _lfric_time_callback(cube)
         _lfric_forecast_period_standard_name_callback(cube)
@@ -556,13 +514,14 @@ def _lfric_time_coord_fix_callback(cube: iris.cube.Cube, field, filename):
     return iris.util.squeeze(cube)
 
 
-def _longitude_fix_callback(cube: iris.cube.Cube, field, filename):
+def _longitude_fix_callback(cube: iris.cube.Cube):
     """Check longitude coordinates are in the range -180 deg to 180 deg.
 
     This is necessary if comparing two models with different conventions --
     for example, models where the prime meridian is defined as 0 deg or
     360 deg. If not in the range -180 deg to 180 deg, we wrap the longitude
-    so that it falls in this range.
+    so that it falls in this range. Checks are for near-180 bounds given
+    model data bounds may not extend exactly to 0. or 360.
     """
     import CSET.operators._utils as utils
 
@@ -575,14 +534,15 @@ def _longitude_fix_callback(cube: iris.cube.Cube, field, filename):
     long_coord = cube.coord(x)
     long_points = long_coord.points.copy()
     long_centre = np.median(long_points)
-    while long_centre <= -175.0:
+    while long_centre < -175.0:
         long_centre += 180.0
         long_points += 180.0
-    while long_centre > 175.0:
+    while long_centre >= 175.0:
         long_centre -= 180.0
         long_points -= 180.0
     long_coord.points = long_points
 
+    # Update coord bounds to be consistent with wrapping.
     if long_coord.has_bounds() and np.size(long_coord) > 1:
         long_coord.bounds = None
         long_coord.guess_bounds()
@@ -593,9 +553,12 @@ def _longitude_fix_callback(cube: iris.cube.Cube, field, filename):
 def _fix_spatial_coords_callback(cube: iris.cube.Cube):
     """Check latitude and longitude coordinates name.
 
-    This is necessary as some models define their grid as 'grid_latitude' and 'grid_longitude'
-    and this means that recipes will fail - particularly if the user is comparing multiple models
-    where the spatial coordinate names differ.
+    This is necessary as some models define their grid as on rotated
+    'grid_latitude' and 'grid_longitude' coordinates while others define
+    the grid on non-rotated 'latitude' and 'longitude'.
+    Cube dimensions need to be made consistent to avoid recipe failures,
+    particularly where comparing multiple input models with differing spatial
+    coordinates.
     """
     import CSET.operators._utils as utils
 
@@ -650,6 +613,7 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
         "degrees_north",
         "degrees_south",
     ]:
+        # Add grid_latitude AuxCoord
         if "grid_latitude" not in [
             coord.name() for coord in cube.coords(dim_coords=False)
         ]:
@@ -658,12 +622,11 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
                     cube.coord(y_name).points,
                     var_name="grid_latitude",
                     units="degrees",
-                    #                    coord_system=iris.coord_systems.RotatedGeogCS(90.0, -180.0),
                 ),
                 ny,
             )
-
-        # Ensure valid CoordSystem for DimCoord
+        # Ensure input latitude DimCoord has CoordSystem
+        # This attribute is sometimes lost on iris.save
         if not cube.coord(y_name).coord_system:
             cube.coord(y_name).coord_system = iris.coord_systems.GeogCS(6371229.0)
 
@@ -672,6 +635,7 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
         "degrees_west",
         "degrees_east",
     ]:
+        # Add grid_longitude AuxCoord
         if "grid_longitude" not in [
             coord.name() for coord in cube.coords(dim_coords=False)
         ]:
@@ -680,12 +644,12 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
                     cube.coord(x_name).points,
                     var_name="grid_longitude",
                     units="degrees",
-                    #                    coord_system=iris.coord_systems.RotatedGeogCS(90.0, -180.0),
                 ),
                 nx,
             )
 
-        # Ensure valid CoordSystem for DimCoord.
+        # Ensure input longitude DimCoord has CoordSystem
+        # This attribute is sometimes lost on iris.save
         if not cube.coord(x_name).coord_system:
             cube.coord(x_name).coord_system = iris.coord_systems.GeogCS(6371229.0)
 
@@ -709,12 +673,17 @@ def _fix_pressure_coord_callback(cube: iris.cube.Cube):
                 cube.coord("pressure").convert_units("hPa")
 
 
-def _fix_um_radtime_posthour(cube: iris.cube.Cube):
-    """Fix radiation which is output N minute or N second past every hour."""
-    #    try:
-    ## TRY WAS FAILING WITH SWITCH TO HRS SINCE....
+def _fix_um_radtime(cube: iris.cube.Cube):
+    """Move radiation diagnostics from timestamps which are output N minutes or seconds past every hour.
 
-    if "STASH" in cube.attributes:
+    This callback does not have any effect for output diagnostics with
+    timestamps exactly 00 or 30 minutes past the hour. Only radiation
+    diagnostics are checked.
+    Note this callback does not interpolate the data in time, only adjust
+    timestamps to sit on the hour to enable time-to-time difference plotting
+    with models which may output radiation data on the hour.
+    """
+    try:
         if cube.attributes["STASH"] in [
             "m01s01i207",
             "m01s01i208",
@@ -735,11 +704,13 @@ def _fix_um_radtime_posthour(cube: iris.cube.Cube):
             if time_points[0].minute == 30 and time_points[0].second == 0:
                 return
 
-            # Subtract N minute from each time point
+            # Subtract time difference from the hour from each time point
             n_minute = time_points[0].minute
             n_second = time_points[0].second
+            # If times closer to next hour, compute difference to add on to following hour
             if n_minute > 30:
                 n_minute = n_minute - 60
+            # Compute new diagnostic time stamp
             new_time_points = (
                 time_points
                 - datetime.timedelta(minutes=n_minute)
@@ -749,58 +720,20 @@ def _fix_um_radtime_posthour(cube: iris.cube.Cube):
             # Convert back to numeric values using the original time unit.
             new_time_values = time_unit.date2num(new_time_points)
 
-            # Replace the time coordinate with corrected values.
-            time_coord.points = new_time_values
-
-            # Recompute forecast_period with corrected values.
-            try:
-                if cube.coord("forecast_period"):
-                    fcst_prd_points = cube.coord("forecast_period").points
-                    new_fcst_points = (
-                        time_unit.num2pydate(fcst_prd_points)
-                        - datetime.timedelta(minutes=n_minute)
-                        - datetime.timedelta(seconds=n_second)
-                    )
-                    cube.coord("forecast_period").points = time_unit.date2num(
-                        new_fcst_points
-                    )
-            except KeyError:
-                pass
-
-
-def _fix_um_radtime_prehour(cube: iris.cube.Cube):
-    """Fix radiation which is output 1 minute before every hour."""
-    try:
-        if cube.attributes["STASH"] == "m01s01i207":
-            time_coord = cube.coord("time")
-
-            # Convert time points to datetime objects
-            time_unit = time_coord.units
-            time_points = time_unit.num2date(time_coord.points)
-
-            # Skip if times don't need fixing.
-            if time_points[0].minute != 59:
-                return
-
-            # Add 1 minute from each time point
-            new_time_points = time_points + datetime.timedelta(minutes=1)
-
-            # Convert back to numeric values using the original time unit
-            new_time_values = time_unit.date2num(new_time_points)
-
-            # Replace the time coordinate with corrected values
+            # Replace the time coordinate with updated values.
             time_coord.points = new_time_values
 
             # Recompute forecast_period with corrected values.
             if cube.coord("forecast_period"):
                 fcst_prd_points = cube.coord("forecast_period").points
-                new_fcst_points = time_unit.num2date(
-                    fcst_prd_points
-                ) + datetime.timedelta(minutes=1)
+                new_fcst_points = (
+                    time_unit.num2date(fcst_prd_points)
+                    - datetime.timedelta(minutes=n_minute)
+                    - datetime.timedelta(seconds=n_second)
+                )
                 cube.coord("forecast_period").points = time_unit.date2num(
                     new_fcst_points
                 )
-
     except KeyError:
         pass
 
@@ -823,49 +756,14 @@ def _fix_um_lightning(cube: iris.cube.Cube):
             cube.cell_methods = ()
             cube.add_cell_method(iris.coords.CellMethod(method="sum", coords="time"))
 
-    ## Rainfall and snowfall amount - UM
-
-
-##    if (
-##        cube.attributes.get("STASH") == "m01s04i201"
-##        or cube.attributes.get("STASH") == "m01s04i202"
-##    ):
-##        cell_method = ()
-##        if cell_method in cube.cell_methods:
-##            cube.cell_methods = (iris.coords.CellMethod("dummy", coords="time"),)
-##        cell_method = iris.coords.CellMethod("mean", coords="time", intervals="1 hour")
-##        if cell_method in cube.cell_methods:
-##            cube.cell_methods = ()
-
-## Lightning - LFRic
-## Note can be timestep dependent......
-##    if "lightning" in cube.name():
-##        cell_method = iris.coords.CellMethod("point", coords="time")
-##        if cell_method in cube.cell_methods:
-##            cube.cell_methods = (iris.coords.CellMethod("dummy", coords="time"),)
-##        cell_method = iris.coords.CellMethod("sum", coords="time", intervals="60 s")
-##        if cell_method in cube.cell_methods:
-##            cube.cell_methods = ()
-##        cell_method2 = iris.coords.CellMethod("sum", coords="time", intervals="12 s")
-##        if cell_method2 in cube.cell_methods:
-##            cube.cell_methods = ()
-
-## Rainfall and snowfall amount - LFRic
-##    if "rainfall_amount" in cube.name() or "snowfall_amount" in cube.name():
-##        cell_method = iris.coords.CellMethod("sum", coords="time", intervals="60 s")
-##        if cell_method in cube.cell_methods:
-##            cube.cell_methods = ()
-##        cell_method2 = iris.coords.CellMethod("sum", coords="time", intervals="12 s")
-##        if cell_method2 in cube.cell_methods:
-##            cube.cell_methods = ()
-
 
 def _normalise_var0_varname(cube: iris.cube.Cube):
-    """Fix LFRic varnames for consistency to allow merging.
+    """Fix varnames for consistency to allow merging.
 
-    LFRic data seems to sometime have a coordinate name end in "_0", which
-    causes the cubes to fail to merge. This has been noticed in
-    model_level_number as well as forecast_period.
+    Some model data netCDF sometimes have a coordinate name end in
+    "_0" etc, where duplicate coordinates of same name are defined but
+    with different attributes. This can be inconsistently managed in
+    different model inputs and can cause cubes to fail to merge.
     """
     for coord in cube.coords():
         if coord.var_name and coord.var_name.endswith("_0"):

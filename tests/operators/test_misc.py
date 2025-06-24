@@ -162,7 +162,8 @@ def test_difference(cube: iris.cube.Cube):
         difference_cube.data, np.zeros_like(difference_cube.data), atol=1e-9
     )
     assert difference_cube.standard_name is None
-    assert difference_cube.long_name == cube.long_name + "_difference"
+    assert difference_cube.long_name == cube.standard_name + "_difference"
+    assert difference_cube.var_name == cube.var_name + "_difference"
 
 
 def test_difference_no_time_coord(cube):
@@ -210,7 +211,7 @@ def test_difference_incorrect_number_of_cubes(cube):
 def test_difference_different_data_shape_regrid(cube):
     """Test when data shape differs, but gets regridded.
 
-    For and cube shapes differ.
+    For any cube shapes differ.
     """
     rearranged_cube = cube.copy()
     rearranged_cube = rearranged_cube[:, :, 1:]

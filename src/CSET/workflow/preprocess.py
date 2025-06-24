@@ -14,6 +14,7 @@
 
 """Preprocess forecast data into a single file per model."""
 
+import ast
 import os
 import shutil
 
@@ -22,20 +23,10 @@ import iris
 from CSET.operators import read
 
 
-def preprocess_data(
-    data_location: str | str,
-    fields: iris.Constraint | None = None,
-    constraints: list | None = None,
-):
+def preprocess_data(data_location: str, fields: iris.Constraint | None = None):
     """Rewrite data into a single file. This also fixes all the metadata."""
-    # Specify variable lists, if required, else read all data
-    if fields:
-        var_constraint = fields
-    else:
-        var_constraint = None
-
     # Load up all the data.
-    cubes = read.read_cubes(data_location, constraint=var_constraint)
+    cubes = read.read_cubes(data_location, constraint=fields)
 
     # Remove added comparison base; we don't know if this is the base model yet.
     for cube in cubes:
@@ -66,25 +57,17 @@ def run():
     )
     print(f"Preprocessing {data_location}")
 
-    # Preprocess for only selected variables, else read all
-    str_fields = f"{os.environ['FIELDS']}"
+    # Preprocess only selected variables, else read all
+    str_fields = os.environ["FIELDS"]
 
-    # Parse FIELDS env variable string to list of iris-ready constraint names
-    fields = set(
-        list(
-            str_fields.replace("[", "")
-            .replace("]", "")
-            .replace("'", "")
-            .replace(" ", "")
-            .split(",")
-        )
-    )
+    # Parse FIELDS workflow environment variable string to
+    # unique list of iris-ready constraint names
+    fields = set(ast.literal_eval(str_fields))
+
     if len(fields) > 0:
-        print(f"Preprocessing variable list {fields}")
+        print(f"Preprocessing variable list {fields}.")
     else:
         fields = None
-        print("Preprocessing all variables in files")
+        print("Preprocessing all variables in files.")
 
-    constraints = None
-
-    preprocess_data(data_location, fields=fields, constraints=constraints)
+    preprocess_data(data_location, fields=fields)

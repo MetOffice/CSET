@@ -49,7 +49,7 @@ def test_load_colorbar_map():
     assert colorbar["temperature_at_screen_level"] == {
         "cmap": "RdYlBu_r",
         "max": 323,
-        "min": 223,
+        "min": 263,
         "ymax": "auto",
         "ymin": "auto",
     }
@@ -94,14 +94,13 @@ def test_colorbar_map_levels(cube, tmp_working_dir):
     """Colorbar definition is found for cube."""
     cmap, levels, norm = plot._colorbar_map_levels(cube)
     assert cmap == mpl.pyplot.get_cmap("RdYlBu_r", 51)
-    assert (levels == np.linspace(223, 323, 101)).all()
+    assert (levels == np.linspace(263, 323, 101)).all()
     assert norm is None
 
 
 def test_colorbar_map_levels_xaxis(cube, tmp_working_dir):
     """Set levels for based on xmin, xmax."""
-    cube = iris.cube.Cube([np.arange(10)])
-    cube.rename("zonal_wind_at_pressure_levels")
+    cube = iris.cube.Cube(np.arange(10), long_name="zonal_wind_at_pressure_levels")
     cmap, levels, norm = plot._colorbar_map_levels(cube, axis="x")
     assert cmap is None
     assert levels == [-25, 25]
@@ -110,8 +109,9 @@ def test_colorbar_map_levels_xaxis(cube, tmp_working_dir):
 
 def test_colorbar_map_levels_xaxis_default(cube, tmp_working_dir):
     """Test for variable without xmin, xmax."""
-    cube = iris.cube.Cube([np.arange(10)])
-    cube.rename("zonal_wind_at_pressure_levels_difference")
+    cube = iris.cube.Cube(
+        np.arange(10), long_name="zonal_wind_at_pressure_levels_difference"
+    )
     cmap, levels, norm = plot._colorbar_map_levels(cube, axis="x")
     assert cmap is None
     assert levels == [-20, 20]
@@ -120,8 +120,7 @@ def test_colorbar_map_levels_xaxis_default(cube, tmp_working_dir):
 
 def test_colorbar_map_levels_yaxis(cube, tmp_working_dir):
     """Set levels for based on ymin, ymax."""
-    cube = iris.cube.Cube([np.arange(10)])
-    cube.rename("toa_upward_shortwave_flux")
+    cube = iris.cube.Cube(np.arange(10), long_name="toa_upward_shortwave_flux")
     cmap, levels, norm = plot._colorbar_map_levels(cube, axis="y")
     assert cmap is None
     assert levels == [0, 500]
@@ -130,8 +129,9 @@ def test_colorbar_map_levels_yaxis(cube, tmp_working_dir):
 
 def test_colorbar_map_levels_yaxis_default(cube, tmp_working_dir):
     """Test for variable without ymin, ymax."""
-    cube = iris.cube.Cube([np.arange(10)])
-    cube.rename("toa_upward_shortwave_flux_difference")
+    cube = iris.cube.Cube(
+        np.arange(10), long_name="toa_upward_shortwave_flux_difference"
+    )
     cmap, levels, norm = plot._colorbar_map_levels(cube, axis="y")
     assert cmap is None
     assert levels == [-100, 100]
@@ -148,8 +148,9 @@ def test_colorbar_map_levels_yaxis_auto(cube, tmp_working_dir):
 
 def test_colorbar_map_levels_def_on_levels(cube, tmp_working_dir):
     """Colorbar definition that uses levels is found for cube."""
-    cube = iris.cube.Cube([np.arange(10)])
-    cube.rename("surface_microphysical_rainfall_rate")
+    cube = iris.cube.Cube(
+        np.arange(10), long_name="surface_microphysical_rainfall_rate"
+    )
     cmap, levels, norm = plot._colorbar_map_levels(cube)
     assert levels == [0, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
 
@@ -159,7 +160,7 @@ def test_colorbar_map_levels_name_fallback(cube, tmp_working_dir):
     cube.standard_name = None
     cmap, levels, norm = plot._colorbar_map_levels(cube)
     assert cmap == mpl.pyplot.get_cmap("RdYlBu_r", 51)
-    assert (levels == np.linspace(223, 323, 101)).all()
+    assert (levels == np.linspace(263, 323, 101)).all()
     assert norm is None
 
 
@@ -262,12 +263,44 @@ def test_spatial_pcolormesh_plot(cube, tmp_working_dir):
     assert Path("plot_462147.0.png").is_file()
 
 
+def test_spatial_pcolormesh_levels(cube, tmp_working_dir, caplog):
+    """Plot spatial pcolormesh based on defined levels."""
+    # Pick a variable with defined levels
+    cube.rename("surface_microphysical_rainfall_rate")
+    with caplog.at_level(logging.DEBUG):
+        plot.spatial_pcolormesh_plot(cube, sequence_coordinate="time")
+        message_matchA = False
+        message_matchB = False
+        for _, _, message in caplog.record_tuples:
+            if message == "Plotting using defined levels.":
+                message_matchA = True
+            if message == "Set colorbar ticks and labels.":
+                message_matchB = True
+        assert message_matchA
+        assert message_matchB
+    assert Path("untitled_462147.0.png").is_file()
+    assert Path("untitled_462148.0.png").is_file()
+    assert Path("untitled_462149.0.png").is_file()
+
+
 def test_pcolormesh_plot_sequence(cube, tmp_working_dir):
     """Plot sequence of pcolormesh plots."""
     plot.spatial_pcolormesh_plot(cube, sequence_coordinate="time")
     assert Path("untitled_462147.0.png").is_file()
     assert Path("untitled_462148.0.png").is_file()
     assert Path("untitled_462149.0.png").is_file()
+
+
+def test_pcolormesh_plot_global(caplog):
+    """Plot global lat-lon cube."""
+    global_cube = read.read_cube("tests/test_data/air_temperature_global.nc")
+    with caplog.at_level(logging.DEBUG):
+        plot.spatial_pcolormesh_plot(global_cube)
+        message_match = False
+        for _, _, message in caplog.record_tuples:
+            if message == "Adjusting plot bounds to fit global extent.":
+                message_match = True
+    assert message_match
 
 
 def test_postage_stamp_pcolormesh_plot(monkeypatch, tmp_path):
@@ -286,6 +319,30 @@ def test_postage_stamp_pcolormesh_plot_sequence_coord_check(cube, tmp_working_di
     cube.remove_coord("time")
     with pytest.raises(ValueError):
         plot.spatial_pcolormesh_plot(cube)
+
+
+def test_pcolormesh_coastline(cube, caplog):
+    """Check coastlines plotted in black for air_temperature colormap."""
+    with caplog.at_level(logging.DEBUG):
+        plot.spatial_pcolormesh_plot(cube)
+        message_match = False
+        for _, _, message in caplog.record_tuples:
+            if message == "Plotting coastlines k.":
+                message_match = True
+        assert message_match
+
+
+def test_pcolormesh_coastline_m(cube, caplog):
+    """Check coastlines plotted in magenta for viridis colormap."""
+    with caplog.at_level(logging.DEBUG):
+        # Set cube name to unknown to trigger viridis default cmap
+        cube.rename("unknown_var_name")
+        plot.spatial_pcolormesh_plot(cube)
+        message_match = False
+        for _, _, message in caplog.record_tuples:
+            if message == "Plotting coastlines m.":
+                message_match = True
+        assert message_match
 
 
 def test_plot_line_series(cube, tmp_working_dir):
@@ -415,6 +472,93 @@ def test_plot_histogram_with_filename(histogram_cube, tmp_working_dir):
     assert Path("test_473721.0.png").is_file()
 
 
+def test_plot_histogram_update_vmin_vmax(histogram_cube, tmp_working_dir, caplog):
+    """Plot sequence of contour plots and check levels."""
+    histogram_cube.rename("surface_microphysical_rainfall_rate")
+    plot.plot_histogram_series(
+        histogram_cube, filename="test", sequence_coordinate="time"
+    )
+    with caplog.at_level(logging.DEBUG):
+        plot.plot_histogram_series(
+            histogram_cube, filename="test", sequence_coordinate="time"
+        )
+        message_matchA = False
+        message_matchB = False
+        for _, _, message in caplog.record_tuples:
+            if (
+                message
+                == "levels: [0, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]"
+            ):
+                message_matchA = True
+            if message == "Updated vmin, vmax: 0, 256":
+                message_matchB = True
+        assert message_matchA
+        assert message_matchB
+
+
+def test_plot_and_save_histogram_series_bins(histogram_cube, tmp_working_dir, caplog):
+    """Test plotting a postage stamp histogram."""
+    with caplog.at_level(logging.DEBUG):
+        plot._plot_and_save_histogram_series(
+            cubes=histogram_cube,
+            filename="test.png",
+            title="Test",
+            vmin=0,
+            vmax=0,
+            histtype="step",
+        )
+        message_match = False
+        for _, _, message in caplog.record_tuples:
+            if message == "Plotting histogram with 51 bins 0.0 - 0.0.":
+                message_match = True
+        assert message_match
+    assert Path("test.png").is_file()
+
+
+def test_plot_and_save_histogram_series_bins_precip(
+    histogram_cube, tmp_working_dir, caplog
+):
+    """Test plotting a rainfall rate histogram."""
+    histogram_cube.rename("surface_microphysical_rainfall_flux")
+    histogram_cube.units = "kg m-2 s-1"
+    with caplog.at_level(logging.DEBUG):
+        plot._plot_and_save_histogram_series(
+            cubes=histogram_cube,
+            filename="test.png",
+            title="Test surface_microphysical",
+            vmin=0,
+            vmax=0,
+            histtype="step",
+        )
+        message_match = False
+        for _, _, message in caplog.record_tuples:
+            if message == "Plotting histogram with 38 bins 0.0 - 398.1071705534973.":
+                message_match = True
+        assert message_match
+    assert Path("test.png").is_file()
+
+
+def test_plot_and_save_histogram_series_bins_lightning(
+    histogram_cube, tmp_working_dir, caplog
+):
+    """Test plotting a lightning histogram."""
+    with caplog.at_level(logging.DEBUG):
+        plot._plot_and_save_histogram_series(
+            cubes=histogram_cube,
+            filename="test.png",
+            title="Test lightning",
+            vmin=0,
+            vmax=0,
+            histtype="step",
+        )
+        message_match = False
+        for _, _, message in caplog.record_tuples:
+            if message == "Plotting histogram with 6 bins 0 - 5.":
+                message_match = True
+        assert message_match
+    assert Path("test.png").is_file()
+
+
 def test_plot_and_save_postage_stamp_histogram_series(histogram_cube, tmp_working_dir):
     """Test plotting a postage stamp histogram."""
     plot._plot_and_save_postage_stamp_histogram_series(
@@ -526,6 +670,41 @@ def test_invalid_plotting_method_postage_stamp_spatial_plot(cube, tmp_working_di
         plot._plot_and_save_postage_stamp_spatial_plot(
             cube, "filename", "realization", "title", "invalid"
         )
+
+
+def test_levels_postage_stamp_spatial_plot(cube):
+    """Test no levels raises TypeError for pcolormesh with no levels."""
+    ensemble_cube = read.read_cube("tests/test_data/exeter_em*.nc")
+    with pytest.raises(TypeError, match="Unknown vmin and vmax range."):
+        ensemble_cube.rename("unknown")
+        plot._plot_and_save_postage_stamp_spatial_plot(
+            ensemble_cube[0], "filename", "realization", "title", "pcolormesh"
+        )
+
+
+def test_convert_precipitation_units(cube, caplog):
+    """Test precipitation conversions prior to plotting."""
+    cube.rename("surface_microphysical_rainfall_rate")
+    # Check unit conversion
+    cube.units = "kg m-2 s-1"
+    with caplog.at_level(logging.INFO):
+        cube = plot._convert_precipitation_units_callback(cube)
+    _, level, message = caplog.record_tuples[0]
+    assert level == logging.INFO
+    assert message == "Converting precipitation units from kg m-2 s-1 to mm hr-1"
+    assert cube.units == "mm hr-1"
+
+
+def test_convert_precipitation_no_units(cube, caplog):
+    """Test precipitation conversions prior to plotting."""
+    # Check no processing for non-expected units
+    cube.rename("surface_microphysical_rainfall_rate")
+    cube.units = "unknown"
+    cube = plot._convert_precipitation_units_callback(cube)
+    _, level, message = caplog.record_tuples[0]
+    assert level == logging.WARNING
+    assert message == "Precipitation units are not in 'kg m-2 s-1', skipping conversion"
+    assert cube.units == "unknown"
 
 
 def test_append_to_plot_index(monkeypatch, tmp_working_dir):
