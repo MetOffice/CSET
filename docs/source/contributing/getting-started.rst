@@ -84,8 +84,6 @@ to use.
     conda activate cset-dev
     # Adds extra checks when you commit something with git.
     pre-commit install
-    # Create conda environment link for running in-development workflows.
-    ln -s "$CONDA_PREFIX" src/CSET/workflow/files/conda-environment
     # Make CSET runnable for manual testing
     pip install --no-deps -e .
 
