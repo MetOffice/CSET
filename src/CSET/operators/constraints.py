@@ -124,7 +124,7 @@ def generate_level_constraint(
 
 
 def generate_cell_methods_constraint(
-    cell_methods: list, varname: str, **kwargs
+    cell_methods: list, varname: str = None, **kwargs
 ) -> iris.Constraint:
     """Generate constraint from cell methods.
 
@@ -135,6 +135,8 @@ def generate_cell_methods_constraint(
     ---------
     cell_methods: list
         cube.cell_methods for filtering
+    varname: str, optional
+        CF compliant name of variable, or a UM STASH code such as "m01s03i236".
 
     Returns
     -------
@@ -150,14 +152,17 @@ def generate_cell_methods_constraint(
             """Check that any cell methods are "sum"."""
             return set(cm.method for cm in cube.cell_methods) <= {"sum"}
 
-        if "surface_microphysical" in varname and "amount" in varname:
-            cell_methods_constraint = iris.Constraint(cube_func=check_cell_mean)
+        if varname:
+            if "surface_microphysical" in varname and "amount" in varname:
+                cell_methods_constraint = iris.Constraint(cube_func=check_cell_mean)
+                return cell_methods_constraint
 
-        elif "lightning" in varname:
-            cell_methods_constraint = iris.Constraint(
-                cube_func=check_cell_sum
-            )  # or iris.Constraint(cube_func=check_cell_mean)
-        #            cell_methods_constraint = iris.Constraint(cube_func=check_cell_mean) or iris.Constraint(cube_func=check_cell_sum)
+            elif "lightning" in varname:
+                cell_methods_constraint = iris.Constraint(
+                    cube_func=check_cell_sum
+                )  # or iris.Constraint(cube_func=check_cell_mean)
+                #            cell_methods_constraint = iris.Constraint(cube_func=check_cell_mean) or iris.Constraint(cube_func=check_cell_sum)
+                return cell_methods_constraint
 
         else:
 
