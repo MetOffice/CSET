@@ -30,7 +30,7 @@ import iris.cube
 import iris.exceptions
 import iris.util
 import numpy as np
-from iris.analysis.cartography import rotate_pole
+from iris.analysis.cartography import rotate_pole, rotate_winds
 
 from CSET._common import iter_maybe
 from CSET.operators._stash_to_lfric import STASH_TO_LFRIC
@@ -218,6 +218,25 @@ def _load_model(
     cubes = iris.load(
         input_files, constraint, callback=_create_callback(is_ensemble=False)
     )
+    # Add windspeed to UM cube. This calcullation is only an approximation because
+    # it uses time-averaged components.
+    try:
+        # Check whether we have components identified by STASH, but not the
+        # wind speed. Calculate the windspeed if it is missing, but note that
+        # this will be biased low in general because the components will mostly
+        # be time averages. For simplicity, we do this only if there is just one
+        # cube of a component. A more complicated approach would be to consider 
+        # the cell methods, but it may not be warranted.
+        if any([ cb.attributes['STASH'] == "m01s03i225" for cb in cubes]) and \
+           any([ cb.attributes['STASH'] == "m01s03i226" for cb in cubes])):
+            if len(cubes.extract(iris.AttributeConstraint(STASH="m01s03i225")) == 1 and \
+                not any([ cb.attributes['STASH'] == "m01s03i227" for cb in cubes]):
+                _add_wind_speed_um(cubes)
+            # Convert winds in the UM to be relative to true east and true north.
+            _convert_wind_true_dirn_um(cubes)
+    except:
+        pass
+s
     # Reload with ensemble handling if needed.
     if _is_ensemble(cubes):
         cubes = iris.load(
@@ -827,6 +846,25 @@ def _fix_lfric_cloud_base_altitude(cube: iris.cube.Cube):
         # Mask cube where set > 144kft to catch default 144.35695538058164
         cube.data = np.ma.masked_array(cube.data)
         cube.data[cube.data > 144.0] = np.ma.masked
+
+
+def _add_wind_speed_um(cubes: iris.cube.CubeList):
+    """Add the windspeed to a cube from the UM."""
+    wspd10 = (cubes.extract(iris.AttributeConstraint(STASH="m01s03i225"))[0] ** 2 +
+              cubes.extract(iris.AttributeConstraint(STASH="m01s03i226"))[0] ** 2 ) ** 0.5
+    wspd10.attributes['STASH'] = "m01s03i227"
+    cubes.append(wspd10)
+
+def _convert_wind_true_dirn_um(cubes: iris.cube.CubeList):
+    """Convert from the components relative to the grid to true dirrections.
+       As this funtcionality should not have a long lifetime, we treat only
+       the simplest case."""
+    u_grid = cubes.extract(iris.AttributeConstraint(STASH="m01s03i225"))
+    v_grid = cubes.extract(iris.AttributeConstraint(STASH="m01s03i226"))
+    if (len(u_grid) == 1 and len(v_grid) == 1):
+        true_u, true_v = rotate_winds(u_grid[0], v_grid[0], iris.coord_systems.GeogCS(6371229.0))
+        u_grid[0].data = true_u.data
+        v_grid[0].data = true_v.data
 
 
 def _normalise_var0_varname(cube: iris.cube.Cube):
