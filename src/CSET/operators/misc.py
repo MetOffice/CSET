@@ -273,6 +273,9 @@ def difference(cubes: CubeList):
     >>> model_diff = misc.difference(temperature_model_A, temperature_model_B)
 
     """
+    print(cubes)
+    for cube in cubes:
+        print(cube)
     if len(cubes) != 2:
         raise ValueError("cubes should contain exactly 2 cubes.")
     base: Cube = cubes.extract_cube(iris.AttributeConstraint(cset_comparison_base=1))

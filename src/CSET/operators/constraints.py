@@ -66,7 +66,6 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
         varname_constraint = iris.AttributeConstraint(STASH=varname)
     else:
         varname_constraint = iris.Constraint(name=varname)
-    # print(varname)
     return varname_constraint
 
 
@@ -124,7 +123,9 @@ def generate_level_constraint(
         return iris.Constraint(**{coordinate: levels})
 
 
-def generate_cell_methods_constraint(cell_methods: list, **kwargs) -> iris.Constraint:
+def generate_cell_methods_constraint(
+    cell_methods: list, varname: str, **kwargs
+) -> iris.Constraint:
     """Generate constraint from cell methods.
 
     Operator that takes a list of cell methods and generates a constraint from
@@ -141,11 +142,30 @@ def generate_cell_methods_constraint(cell_methods: list, **kwargs) -> iris.Const
     """
     if len(cell_methods) == 0:
 
-        def check_no_aggregation(cube: iris.cube.Cube) -> bool:
-            """Check that any cell methods are "point", meaning no aggregation."""
-            return set(cm.method for cm in cube.cell_methods) <= {"point"}
+        def check_cell_mean(cube: iris.cube.Cube) -> bool:
+            """Check that any cell methods are "mean"."""
+            return set(cm.method for cm in cube.cell_methods) <= {"mean"}
 
-        cell_methods_constraint = iris.Constraint(cube_func=check_no_aggregation)
+        def check_cell_sum(cube: iris.cube.Cube) -> bool:
+            """Check that any cell methods are "sum"."""
+            return set(cm.method for cm in cube.cell_methods) <= {"sum"}
+
+        if "surface_microphysical" in varname and "amount" in varname:
+            cell_methods_constraint = iris.Constraint(cube_func=check_cell_mean)
+
+        elif "lightning" in varname:
+            cell_methods_constraint = iris.Constraint(
+                cube_func=check_cell_sum
+            )  # or iris.Constraint(cube_func=check_cell_mean)
+        #            cell_methods_constraint = iris.Constraint(cube_func=check_cell_mean) or iris.Constraint(cube_func=check_cell_sum)
+
+        else:
+
+            def check_no_aggregation(cube: iris.cube.Cube) -> bool:
+                """Check that any cell methods are "point", meaning no aggregation."""
+                return set(cm.method for cm in cube.cell_methods) <= {"point"}
+
+            cell_methods_constraint = iris.Constraint(cube_func=check_no_aggregation)
     else:
 
         def check_cell_methods(cube: iris.cube.Cube) -> bool:

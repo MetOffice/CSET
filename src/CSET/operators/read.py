@@ -818,43 +818,46 @@ def _fix_um_lightning(cube: iris.cube.Cube):
     ## Lightning - UM
     if cube.attributes.get("STASH") == "m01s21i104":
         # Remove aggregation cell method.
-        cell_method = iris.coords.CellMethod("sum", coords="time", intervals="60 s")
-        if cell_method != ():  ##in cube.cell_methods:    SOME MODELS SUM, SOME MEAN??
+
+        if set(cm.method for cm in cube.cell_methods) <= {"mean"}:
             cube.cell_methods = ()
+            cube.add_cell_method(iris.coords.CellMethod(method="sum", coords="time"))
 
     ## Rainfall and snowfall amount - UM
-    if (
-        cube.attributes.get("STASH") == "m01s04i201"
-        or cube.attributes.get("STASH") == "m01s04i202"
-    ):
-        cell_method = ()
-        if cell_method in cube.cell_methods:
-            cube.cell_methods = (iris.coords.CellMethod("dummy", coords="time"),)
-        cell_method = iris.coords.CellMethod("mean", coords="time", intervals="1 hour")
-        if cell_method in cube.cell_methods:
-            cube.cell_methods = ()
 
-    ## Lightning - LFRic
-    ## Note can be timestep dependent......
-    if "lightning" in cube.name():
-        cell_method = iris.coords.CellMethod("point", coords="time")
-        if cell_method in cube.cell_methods:
-            cube.cell_methods = (iris.coords.CellMethod("dummy", coords="time"),)
-        cell_method = iris.coords.CellMethod("sum", coords="time", intervals="60 s")
-        if cell_method in cube.cell_methods:
-            cube.cell_methods = ()
-        cell_method2 = iris.coords.CellMethod("sum", coords="time", intervals="12 s")
-        if cell_method2 in cube.cell_methods:
-            cube.cell_methods = ()
 
-    ## Rainfall and snowfall amount - LFRic
-    if "rainfall_amount" in cube.name() or "snowfall_amount" in cube.name():
-        cell_method = iris.coords.CellMethod("sum", coords="time", intervals="60 s")
-        if cell_method in cube.cell_methods:
-            cube.cell_methods = ()
-        cell_method2 = iris.coords.CellMethod("sum", coords="time", intervals="12 s")
-        if cell_method2 in cube.cell_methods:
-            cube.cell_methods = ()
+##    if (
+##        cube.attributes.get("STASH") == "m01s04i201"
+##        or cube.attributes.get("STASH") == "m01s04i202"
+##    ):
+##        cell_method = ()
+##        if cell_method in cube.cell_methods:
+##            cube.cell_methods = (iris.coords.CellMethod("dummy", coords="time"),)
+##        cell_method = iris.coords.CellMethod("mean", coords="time", intervals="1 hour")
+##        if cell_method in cube.cell_methods:
+##            cube.cell_methods = ()
+
+## Lightning - LFRic
+## Note can be timestep dependent......
+##    if "lightning" in cube.name():
+##        cell_method = iris.coords.CellMethod("point", coords="time")
+##        if cell_method in cube.cell_methods:
+##            cube.cell_methods = (iris.coords.CellMethod("dummy", coords="time"),)
+##        cell_method = iris.coords.CellMethod("sum", coords="time", intervals="60 s")
+##        if cell_method in cube.cell_methods:
+##            cube.cell_methods = ()
+##        cell_method2 = iris.coords.CellMethod("sum", coords="time", intervals="12 s")
+##        if cell_method2 in cube.cell_methods:
+##            cube.cell_methods = ()
+
+## Rainfall and snowfall amount - LFRic
+##    if "rainfall_amount" in cube.name() or "snowfall_amount" in cube.name():
+##        cell_method = iris.coords.CellMethod("sum", coords="time", intervals="60 s")
+##        if cell_method in cube.cell_methods:
+##            cube.cell_methods = ()
+##        cell_method2 = iris.coords.CellMethod("sum", coords="time", intervals="12 s")
+##        if cell_method2 in cube.cell_methods:
+##            cube.cell_methods = ()
 
 
 def _normalise_var0_varname(cube: iris.cube.Cube):
