@@ -162,7 +162,8 @@ def test_difference(cube: iris.cube.Cube):
         difference_cube.data, np.zeros_like(difference_cube.data), atol=1e-9
     )
     assert difference_cube.standard_name is None
-    assert difference_cube.long_name == cube.long_name + "_difference"
+    assert difference_cube.long_name == cube.standard_name + "_difference"
+    assert difference_cube.var_name == cube.var_name + "_difference"
 
 
 def test_difference_no_time_coord(cube):
