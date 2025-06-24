@@ -94,8 +94,8 @@ jobs:
           badge_options="$(coverage json --fail-under=0 -qo - | jq -r .totals.percent_covered_display)%25-blue?style=for-the-badge"
           echo "[![Coverage](https://img.shields.io/badge/coverage-${badge_options})](${report_url})" >> ${{ runner.temp }}/cov-report.md
           # Edit last comment if it exists, else create new one.
-          if ! gh pr comment --edit-last ${{ github.head_ref }} --body-file ${{ runner.temp }}/cov-report.md ; then
-            gh pr comment ${{ github.head_ref }} --body-file ${{ runner.temp }}/cov-report.md
+          if ! gh pr comment --repo "${{ github.repository }}" --edit-last --create-if-none "${{ github.head_ref }}" --body-file "${{ runner.temp }}/cov-report.md" ; then
+            echo "Failed to post comment. This is likely due to this being a PR from a fork."
           fi
       - name: Check 95% minimum coverage
         run: coverage report --fail-under=95
