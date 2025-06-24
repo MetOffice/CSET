@@ -100,8 +100,7 @@ def test_colorbar_map_levels(cube, tmp_working_dir):
 
 def test_colorbar_map_levels_xaxis(cube, tmp_working_dir):
     """Set levels for based on xmin, xmax."""
-    cube = iris.cube.Cube([np.arange(10)])
-    cube.rename("zonal_wind_at_pressure_levels")
+    cube = iris.cube.Cube(np.arange(10), long_name="zonal_wind_at_pressure_levels")
     cmap, levels, norm = plot._colorbar_map_levels(cube, axis="x")
     assert cmap is None
     assert levels == [-25, 25]
@@ -121,8 +120,7 @@ def test_colorbar_map_levels_xaxis_default(cube, tmp_working_dir):
 
 def test_colorbar_map_levels_yaxis(cube, tmp_working_dir):
     """Set levels for based on ymin, ymax."""
-    cube = iris.cube.Cube([np.arange(10)])
-    cube.rename("toa_upward_shortwave_flux")
+    cube = iris.cube.Cube(np.arange(10), long_name="toa_upward_shortwave_flux")
     cmap, levels, norm = plot._colorbar_map_levels(cube, axis="y")
     assert cmap is None
     assert levels == [0, 500]
@@ -131,8 +129,9 @@ def test_colorbar_map_levels_yaxis(cube, tmp_working_dir):
 
 def test_colorbar_map_levels_yaxis_default(cube, tmp_working_dir):
     """Test for variable without ymin, ymax."""
-    cube = iris.cube.Cube([np.arange(10)])
-    cube.rename("toa_upward_shortwave_flux_difference")
+    cube = iris.cube.Cube(
+        np.arange(10), long_name="toa_upward_shortwave_flux_difference"
+    )
     cmap, levels, norm = plot._colorbar_map_levels(cube, axis="y")
     assert cmap is None
     assert levels == [-100, 100]
@@ -149,8 +148,9 @@ def test_colorbar_map_levels_yaxis_auto(cube, tmp_working_dir):
 
 def test_colorbar_map_levels_def_on_levels(cube, tmp_working_dir):
     """Colorbar definition that uses levels is found for cube."""
-    cube = iris.cube.Cube([np.arange(10)])
-    cube.rename("surface_microphysical_rainfall_rate")
+    cube = iris.cube.Cube(
+        np.arange(10), long_name="surface_microphysical_rainfall_rate"
+    )
     cmap, levels, norm = plot._colorbar_map_levels(cube)
     assert levels == [0, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
 
