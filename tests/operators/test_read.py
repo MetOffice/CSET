@@ -564,19 +564,12 @@ def test_fix_cell_methods_lightning(cube):
     """Check cell_methods are adjusted."""
     # Add UM lightning STASH code.
     cube.attributes["STASH"] = "m01s21i104"
-    # Apply fix.
-    read._fix_cell_methods(cube)
-    # Check instantaneous cell method assumed if no input cell method.
-    assert cube.cell_methods[0] == iris.coords.CellMethod(
-        method="point", coords=("time",), intervals=(), comments=()
-    )
-
-    # Now test with assumed time-averaged lightning diagnostic input.
+    # Set assumed time-averaged lightning diagnostic cell_method.
     cube.cell_methods = ()
     cube.add_cell_method(iris.coords.CellMethod("mean", coords="time"))
     # Apply fix.
     read._fix_cell_methods(cube)
-    # Check sum cell method now applied.
+    # Check sum cell method now applied to accumulated diagnostic.
     assert cube.cell_methods[0] == iris.coords.CellMethod(
         method="sum", coords=("time",), intervals=(), comments=()
     )
@@ -589,9 +582,7 @@ def test_fix_cell_methods_instantaneous(cube):
     # Apply fix.
     read._fix_cell_methods(cube)
     # Check that output cell method is non-aggregated.
-    assert cube.cell_methods[0] == iris.coords.CellMethod(
-        method="point", coords=("time",), intervals=(), comments=()
-    )
+    assert cube.cell_methods == ()
 
 
 def test_spatial_coord_auxcoord_callback():

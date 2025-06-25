@@ -97,6 +97,7 @@ def read_cube(
         subarea_type=subarea_type,
         subarea_extent=subarea_extent,
     )
+    print(cubes[0])
     # Check filtered cubes is a CubeList containing one cube.
     if len(cubes) == 1:
         return cubes[0]
@@ -739,19 +740,13 @@ def _fix_um_radtime(cube: iris.cube.Cube):
 def _fix_cell_methods(cube: iris.cube.Cube):
     """To fix the assumed cell_methods in accumulation STASH from UM.
 
-    This callback ensures all input cubes have an assigned CellMethod.
-
     Lightning (m01s21i104), rainfall amount (m01s04i205) and snowfall amount in UM is being output as a time accumulation,
     over each hour (TAcc1hr), but input cubes show cell_methods as "mean".
     For UM and LFRic inputs to be compatible, we assume accumulated cell_methods are
     "sum". This callback changes "mean" cube attribute cell_method to "sum",
     enabling the cell_method constraint on reading to select correct input.
     """
-    # Add instantaneous CellMethod to all cubes with no cell_method listed in input.
-    if cube.cell_methods == ():
-        cube.add_cell_method(iris.coords.CellMethod(method="point", coords="time"))
-
-    # Shift "mean" to "sum" for selected UM inputs.
+    # Shift "mean" cell_method to "sum" for selected UM inputs.
     if cube.attributes.get("STASH") in [
         "m01s21i104",
         "m01s04i201",
@@ -760,12 +755,24 @@ def _fix_cell_methods(cube: iris.cube.Cube):
         "m01s05i202",
     ]:
         # Check if input cell_method contains "mean" time-processing.
-        if set(cm.method for cm in cube.cell_methods) <= {"mean"}:
-            # Remove input aggregation cell_method.
+        if set(cm.method for cm in cube.cell_methods) == {"mean"}:
+            # Retrieve interval and any comment information.
+            for cell_method in cube.cell_methods:
+                interval_str = cell_method.intervals
+                comment_str = cell_method.comments
+
+            # Remove input aggregation method.
             cube.cell_methods = ()
 
-            # Replace with "sum" cell_method to indicate aggregation.
-            cube.add_cell_method(iris.coords.CellMethod(method="sum", coords="time"))
+            # Replace "mean" with "sum" cell_method to indicate aggregation.
+            cube.add_cell_method(
+                iris.coords.CellMethod(
+                    method="sum",
+                    coords="time",
+                    intervals=interval_str,
+                    comments=comment_str,
+                )
+            )
 
 
 def _normalise_var0_varname(cube: iris.cube.Cube):
