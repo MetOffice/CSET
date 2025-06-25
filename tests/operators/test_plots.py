@@ -155,6 +155,15 @@ def test_colorbar_map_levels_def_on_levels(cube, tmp_working_dir):
     assert levels == [0, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
 
 
+def test_colorbar_map_levels_def_on_levels_test_visibility_in_air(
+    cube, tmp_working_dir
+):
+    """Colorbar definition that uses levels is found for cube."""
+    cube = iris.cube.Cube(np.arange(10), long_name="visibility_in_air")
+    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    assert levels == [0, 50, 100, 200, 1000, 2000, 5000, 10000, 20000]
+
+
 def test_colorbar_map_levels_name_fallback(cube, tmp_working_dir):
     """Colorbar definition is found for cube after checking its other names."""
     cube.standard_name = None
