@@ -49,6 +49,13 @@ def test_generate_cell_methods_constraint():
     assert expected_cell_methods_constraint in repr(cell_methods_constraint)
 
 
+def test_generate_cell_methods_constraint_sum():
+    """Generate aggregate iris cube constraint for cell methods."""
+    cell_methods_constraint = constraints.generate_cell_methods_constraint(["sum"])
+    expected_cell_methods_constraint = "Constraint(cube_func=<function generate_cell_methods_constraint.<locals>.check_cell_methods at"
+    assert expected_cell_methods_constraint in repr(cell_methods_constraint)
+
+
 def test_generate_cell_methods_constraint_no_aggregation():
     """Generate iris cube constraint for no aggregation cell methods."""
     cell_methods_constraint = constraints.generate_cell_methods_constraint([])
