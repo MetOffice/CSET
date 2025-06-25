@@ -338,6 +338,9 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
         # require custom colorbar_map as these can not be defined in the
         # JSON file.
         cmap, levels, norm = _custom_colourmap_precipitation(cube, cmap, levels, norm)
+        cmap, levels, norm = _custom_colourmap_visibility_in_air(
+            cube, cmap, levels, norm
+        )
         return cmap, levels, norm
 
 
@@ -1130,6 +1133,36 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
         # Normalize the levels
         norm = mcolors.BoundaryNorm(levels, cmap.N)
         logging.info("change colormap for surface_microphysical variable colorbar.")
+    else:
+        # do nothing and keep existing colorbar attributes
+        cmap = cmap
+        levels = levels
+        norm = norm
+    return cmap, levels, norm
+
+
+def _custom_colourmap_visibility_in_air(cube: iris.cube.Cube, cmap, levels, norm):
+    """Return a custom colourmap for the current recipe."""
+    import matplotlib.colors as mcolors
+
+    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    if any("visibility_in_air" in name for name in varnames):
+        # Define the levels and colors
+        levels = [0, 50, 100, 200, 1000, 2000, 5000, 10000, 20000]
+        reds = np.array([143, 209, 255, 255, 44, 139, 184, 255]) / 255.0
+        grns = np.array([0, 0, 151, 255, 151, 191, 255, 255]) / 255.0
+        blus = np.array([214, 0, 0, 0, 44, 110, 197, 255]) / 255.0
+        colours = np.array([reds, grns, blus]).T
+        norm = mcolors.BoundaryNorm(levels, cmap.N)
+        # cs = ax.pcolormesh(self.lon, self.lat, outdata, vmin=0., vmax=20000.,
+        #                   cmap=cmap, norm=norm, transform=crs, rasterized=True)
+        # tick_labels = ['0', '50', '100', '200', '1km', '2km', '5km', '10km', '20km']
+
+        # Create a custom colormap
+        cmap = mcolors.ListedColormap(colours)
+        # Normalize the levels
+        norm = mcolors.BoundaryNorm(levels, cmap.N)
+        logging.info("change colormap for visibility_in_air variable colorbar.")
     else:
         # do nothing and keep existing colorbar attributes
         cmap = cmap
