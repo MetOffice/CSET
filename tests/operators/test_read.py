@@ -560,51 +560,38 @@ def test_fix_um_radtime_prehour_skip_non_radiation(cube):
         assert nrt == t
 
 
-def test_fix_um_lightning(cube):
-    """Check time and cell_methods are adjusted."""
+def test_fix_cell_methods_lightning(cube):
+    """Check cell_methods are adjusted."""
     # Add UM lightning STASH code.
     cube.attributes["STASH"] = "m01s21i104"
-    # Add expected cell method.
-    cube.cell_methods = (iris.coords.CellMethod("accumulation"),)
-    # Offset times by 30 minutes.
-    time_coord = cube.coord("time")
-    times = time_coord.units.num2date(time_coord.points) - datetime.timedelta(
-        minutes=30
+    # Apply fix.
+    read._fix_cell_methods(cube)
+    # Check instantaneous cell method assumed if no input cell method.
+    assert cube.cell_methods[0] == iris.coords.CellMethod(
+        method="point", coords=("time",), intervals=(), comments=()
     )
-    time_coord.points = time_coord.units.date2num(times)
-    for time in times:
-        assert time.minute == 30
 
+    # Now test with assumed time-averaged lightning diagnostic input.
+    cube.cell_methods = ()
+    cube.add_cell_method(iris.coords.CellMethod("mean", coords="time"))
     # Apply fix.
-    read._fix_um_lightning(cube)
-
-    # Check fix was applied properly.
-    assert cube.cell_methods == ()
-    fixed_time_coord = cube.coord("time")
-    fixed_times = fixed_time_coord.units.num2date(fixed_time_coord.points)
-    for ft, t in zip(fixed_times, times, strict=True):
-        assert ft.minute == 0
-        assert ft.hour == t.hour + 1
+    read._fix_cell_methods(cube)
+    # Check sum cell method now applied.
+    assert cube.cell_methods[0] == iris.coords.CellMethod(
+        method="sum", coords=("time",), intervals=(), comments=()
+    )
 
 
-def test_fix_um_lightning_skip_no_offset(cube):
-    """Check non offset times are not fixed."""
-    # Add UM lightning STASH code.
-    cube.attributes["STASH"] = "m01s21i104"
-    time_coord = cube.coord("time")
-    times = time_coord.units.num2date(time_coord.points)
-    # Times are not offset from the hour.
-    for time in times:
-        assert time.minute == 0
-
+def test_fix_cell_methods_instantaneous(cube):
+    """Check non aggregated inputs have CellMethod added."""
+    # Remove any cell methods from input.
+    cube.cell_methods = ()
     # Apply fix.
-    read._fix_um_lightning(cube)
-
-    # Check that times are unchanged.
-    fixed_time_coord = cube.coord("time")
-    fixed_times = fixed_time_coord.units.num2date(fixed_time_coord.points)
-    for ft, t in zip(fixed_times, times, strict=True):
-        assert ft == t
+    read._fix_cell_methods(cube)
+    # Check that output cell method is non-aggregated.
+    assert cube.cell_methods[0] == iris.coords.CellMethod(
+        method="point", coords=("time",), intervals=(), comments=()
+    )
 
 
 def test_spatial_coord_auxcoord_callback():

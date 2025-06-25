@@ -56,6 +56,15 @@ def test_generate_cell_methods_constraint_no_aggregation():
     assert expected_cell_methods_constraint in repr(cell_methods_constraint)
 
 
+def test_generate_cell_methods_constraint_varname():
+    """Generate variable-dependent iris cube constraint for cell methods."""
+    cell_methods_constraint = constraints.generate_cell_methods_constraint(
+        [], "number_of_lightning_flashes"
+    )
+    expected_cell_methods_constraint = "Constraint(cube_func=<function generate_cell_methods_constraint.<locals>.check_cell_sum at"
+    assert expected_cell_methods_constraint in repr(cell_methods_constraint)
+
+
 def test_generate_time_constraint():
     """Generate iris cube constraint for dates."""
     # Try with str dates

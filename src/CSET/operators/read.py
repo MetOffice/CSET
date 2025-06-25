@@ -394,7 +394,7 @@ def _create_callback(is_ensemble: bool) -> callable:
         _fix_spatial_coords_callback(cube)
         _fix_pressure_coord_callback(cube)
         _fix_um_radtime(cube)
-        _fix_um_lightning(cube)
+        _fix_cell_methods(cube)
         _lfric_time_callback(cube)
         _lfric_forecast_period_standard_name_callback(cube)
 
@@ -736,37 +736,36 @@ def _fix_um_radtime(cube: iris.cube.Cube):
         pass
 
 
-def _fix_um_lightning(cube: iris.cube.Cube):
-    """To fix the date points in lightning accumulation STASH.
+def _fix_cell_methods(cube: iris.cube.Cube):
+    """To fix the assumed cell_methods in accumulation STASH from UM.
 
-    Lightning (m01s21i104) is being output as a time accumulation in UM,
-    over each hour (TAcc1hr), not from the start of the forecast, to be compatible
-    with LFRic. So this is a short term solution to remove cell methods (
-    as variables are ignored with cell methods for surface plots currently),
-    and also adjust the time so that the value is at the end of each hour.
+    This callback ensures all input cubes have an assigned CellMethod.
+
+    Lightning (m01s21i104), rainfall amount (m01s04i205) and snowfall amount in UM is being output as a time accumulation,
+    over each hour (TAcc1hr), but input cubes show cell_methods as "mean".
+    For UM and LFRic inputs to be compatible, we assume accumulated cell_methods are
+    "sum". This callback changes "mean" cube attribute cell_method to "sum",
+    enabling the cell_method constraint on reading to select correct input.
     """
-    if cube.attributes.get("STASH") == "m01s21i104":
-        # Remove aggregation cell method.
-        cube.cell_methods = ()
+    # Add instantaneous CellMethod to all cubes with no cell_method listed in input.
+    if cube.cell_methods == ():
+        cube.add_cell_method(iris.coords.CellMethod(method="point", coords="time"))
 
-        time_coord = cube.coord("time")
+    # Shift "mean" to "sum" for selected UM inputs.
+    if cube.attributes.get("STASH") in [
+        "m01s21i104",
+        "m01s04i201",
+        "m01s04i202",
+        "m01s05i201",
+        "m01s05i202",
+    ]:
+        # Check if input cell_method contains "mean" time-processing.
+        if set(cm.method for cm in cube.cell_methods) <= {"mean"}:
+            # Remove input aggregation cell_method.
+            cube.cell_methods = ()
 
-        # Convert time points to datetime objects.
-        time_unit = time_coord.units
-        time_points = time_unit.num2date(time_coord.points)
-
-        # Skip if times don't need fixing.
-        if time_points[0].minute == 0:
-            return
-
-        # Add 30 minutes to each time point.
-        new_time_points = time_points + datetime.timedelta(minutes=30)
-
-        # Convert back to numeric values using the original time unit.
-        new_time_values = time_unit.date2num(new_time_points)
-
-        # Replace the time coordinate with corrected values.
-        time_coord.points = new_time_values
+            # Replace with "sum" cell_method to indicate aggregation.
+            cube.add_cell_method(iris.coords.CellMethod(method="sum", coords="time"))
 
 
 def _normalise_var0_varname(cube: iris.cube.Cube):
