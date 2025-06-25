@@ -97,7 +97,6 @@ def read_cube(
         subarea_type=subarea_type,
         subarea_extent=subarea_extent,
     )
-    print(cubes[0])
     # Check filtered cubes is a CubeList containing one cube.
     if len(cubes) == 1:
         return cubes[0]
