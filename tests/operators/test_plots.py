@@ -161,7 +161,21 @@ def test_colorbar_map_levels_def_on_levels_test_visibility_in_air(
     """Colorbar definition that uses levels is found for cube."""
     cube = iris.cube.Cube(np.arange(10), long_name="visibility_in_air")
     cmap, levels, norm = plot._colorbar_map_levels(cube)
-    assert levels == [0, 50, 100, 200, 1000, 2000, 5000, 10000, 20000]
+    assert levels == [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        1.0,
+        2.0,
+        5.0,
+        10.0,
+        20.0,
+        30.0,
+        50.0,
+        70.0,
+        100.0,
+    ]
 
 
 def test_colorbar_map_levels_name_fallback(cube, tmp_working_dir):
@@ -713,6 +727,31 @@ def test_convert_precipitation_no_units(cube, caplog):
     _, level, message = caplog.record_tuples[0]
     assert level == logging.WARNING
     assert message == "Precipitation units are not in 'kg m-2 s-1', skipping conversion"
+    assert cube.units == "unknown"
+
+
+def test_convert_visibility_units(cube, caplog):
+    """Test visibility conversions prior to plotting."""
+    cube.rename("visibility_in_air")
+    # Check unit conversion
+    cube.units = "m"
+    with caplog.at_level(logging.INFO):
+        cube = plot._convert_visibility_units_callback(cube)
+    _, level, message = caplog.record_tuples[0]
+    assert level == logging.INFO
+    assert message == "Converting visibility units m to km."
+    assert cube.units == "km"
+
+
+def test_convert_visibility_no_units(cube, caplog):
+    """Test visibility conversions prior to plotting."""
+    # Check no processing for non-expected units
+    cube.rename("visibility_in_air")
+    cube.units = "unknown"
+    cube = plot._convert_visibility_units_callback(cube)
+    _, level, message = caplog.record_tuples[0]
+    assert level == logging.WARNING
+    assert message == "Visibility units are not in 'm', skipping conversion"
     assert cube.units == "unknown"
 
 
