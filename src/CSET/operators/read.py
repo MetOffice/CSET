@@ -739,7 +739,8 @@ def _fix_um_radtime(cube: iris.cube.Cube):
 def _fix_cell_methods(cube: iris.cube.Cube):
     """To fix the assumed cell_methods in accumulation STASH from UM.
 
-    Lightning (m01s21i104), rainfall amount (m01s04i205) and snowfall amount in UM is being output as a time accumulation,
+    Lightning (m01s21i104), rainfall amount (m01s04i201, m01s05i201) and snowfall amount
+    (m01s04i202, m01s05i202) in UM is being output as a time accumulation,
     over each hour (TAcc1hr), but input cubes show cell_methods as "mean".
     For UM and LFRic inputs to be compatible, we assume accumulated cell_methods are
     "sum". This callback changes "mean" cube attribute cell_method to "sum",
