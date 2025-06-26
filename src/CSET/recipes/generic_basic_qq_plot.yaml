@@ -16,9 +16,10 @@ steps:
                 variable_constraint:
                     operator: constraints.generate_var_constraint
                     varname: $VARNAME_A
-                cell_method_constraint:
+                cell_methods_constraint:
                     operator: constraints.generate_cell_methods_constraint
                     cell_methods: []
+                    varname: $VARNAME_A
                 level_constraint:
                     operator: constraints.generate_level_constraint
                     coordinate: $VERTICAL_COORDINATE_A
@@ -35,9 +36,10 @@ steps:
                 variable_constraint:
                     operator: constraints.generate_var_constraint
                     varname: $VARNAME_B
-                cell_method_constraint:
+                cell_methods_constraint:
                     operator: constraints.generate_cell_methods_constraint
                     cell_methods: []
+                    varname: $VARNAME_B
                 level_constraint:
                     operator: constraints.generate_level_constraint
                     coordinate: $VERTICAL_COORDINATE_B

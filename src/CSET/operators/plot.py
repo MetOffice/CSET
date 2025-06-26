@@ -337,6 +337,9 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
         # require custom colorbar_map as these can not be defined in the
         # JSON file.
         cmap, levels, norm = _custom_colourmap_precipitation(cube, cmap, levels, norm)
+        cmap, levels, norm = _custom_colourmap_visibility_in_air(
+            cube, cmap, levels, norm
+        )
         return cmap, levels, norm
 
 
@@ -464,6 +467,8 @@ def _plot_and_save_spatial_plot(
     if levels is not None and len(levels) < 20:
         cbar.set_ticks(levels)
         cbar.set_ticklabels([f"{level:.1f}" for level in levels])
+        if "visibility" in cube.name():
+            cbar.set_ticklabels([f"{level:.3g}" for level in levels])
         logging.debug("Set colorbar ticks and labels.")
 
     # Save plot.
@@ -1046,6 +1051,8 @@ def _spatial_plot(
 
     # Convert precipitation units if necessary
     _convert_precipitation_units_callback(cube)
+    # Convert visibility units if necessary
+    _convert_visibility_units_callback(cube)
 
     # Make postage stamp plots if stamp_coordinate exists and has more than a
     # single point.
@@ -1114,6 +1121,19 @@ def _convert_precipitation_units_callback(cube: iris.cube.Cube):
     return cube
 
 
+def _convert_visibility_units_callback(cube: iris.cube.Cube):
+    """To convert the unit of visibility from m to km."""
+    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    if any("visibility" in name for name in varnames):
+        if cube.units == "m":
+            logging.info("Converting visibility units m to km.")
+            # Convert the units to km.
+            cube.convert_units("km")
+        else:
+            logging.warning("Visibility units are not in 'm', skipping conversion")
+    return cube
+
+
 def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
     """Return a custom colourmap for the current recipe."""
     import matplotlib.colors as mcolors
@@ -1149,6 +1169,42 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
         # Normalize the levels
         norm = mcolors.BoundaryNorm(levels, cmap.N)
         logging.info("change colormap for surface_microphysical variable colorbar.")
+    else:
+        # do nothing and keep existing colorbar attributes
+        cmap = cmap
+        levels = levels
+        norm = norm
+    return cmap, levels, norm
+
+
+def _custom_colourmap_visibility_in_air(cube: iris.cube.Cube, cmap, levels, norm):
+    """Return a custom colourmap for the current recipe."""
+    import matplotlib.colors as mcolors
+
+    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    if any("visibility_in_air" in name for name in varnames):
+        # Define the levels and colors (in km)
+        levels = [0, 0.05, 0.1, 0.2, 1.0, 2.0, 5.0, 10.0, 20.0, 30.0, 50.0, 70.0, 100.0]
+        norm = mcolors.BoundaryNorm(levels, cmap.N)
+        colours = [
+            "#8f00d6",
+            "#d10000",
+            "#ff9700",
+            "#ffff00",
+            "#00007f",
+            "#6c9ccd",
+            "#aae8ff",
+            "#37a648",
+            "#8edc64",
+            "#c5ffc5",
+            "#dcdcdc",
+            "#ffffff",
+        ]
+        # Create a custom colormap
+        cmap = mcolors.ListedColormap(colours)
+        # Normalize the levels
+        norm = mcolors.BoundaryNorm(levels, cmap.N)
+        logging.info("change colormap for visibility_in_air variable colorbar.")
     else:
         # do nothing and keep existing colorbar attributes
         cmap = cmap

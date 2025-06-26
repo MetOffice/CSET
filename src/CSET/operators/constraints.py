@@ -136,7 +136,7 @@ def generate_cell_methods_constraint(
     cell_methods: list
         cube.cell_methods for filtering
     varname: str, optional
-        CF compliant name of variable, or a UM STASH code such as "m01s03i236".
+        CF compliant name of variable.
 
     Returns
     -------
@@ -144,39 +144,37 @@ def generate_cell_methods_constraint(
     """
     if len(cell_methods) == 0:
 
+        def check_no_aggregation(cube: iris.cube.Cube) -> bool:
+            """Check that any cell methods are "point", meaning no aggregation."""
+            return set(cm.method for cm in cube.cell_methods) <= {"point"}
+
         def check_cell_mean(cube: iris.cube.Cube) -> bool:
             """Check that any cell methods are "mean"."""
-            return set(cm.method for cm in cube.cell_methods) <= {"mean"}
+            return set(cm.method for cm in cube.cell_methods) == {"mean"}
 
         def check_cell_sum(cube: iris.cube.Cube) -> bool:
             """Check that any cell methods are "sum"."""
-            return set(cm.method for cm in cube.cell_methods) <= {"sum"}
+            return set(cm.method for cm in cube.cell_methods) == {"sum"}
 
         if varname:
-            if "surface_microphysical" in varname and "amount" in varname:
-                cell_methods_constraint = iris.Constraint(cube_func=check_cell_mean)
+            # Require number_of_lightning_flashes to be "sum" cell_method input.
+            # Require surface_microphyisical_rainfall_amount and surface_microphysical_snowfall_amount to be "sum" cell_method inputs.
+            if ("lightning" in varname) or (
+                "surface_microphysical" in varname and "amount" in varname
+            ):
+                cell_methods_constraint = iris.Constraint(cube_func=check_cell_sum)
                 return cell_methods_constraint
 
-            elif "lightning" in varname:
-                cell_methods_constraint = iris.Constraint(
-                    cube_func=check_cell_sum
-                )  # or iris.Constraint(cube_func=check_cell_mean)
-                #            cell_methods_constraint = iris.Constraint(cube_func=check_cell_mean) or iris.Constraint(cube_func=check_cell_sum)
-                return cell_methods_constraint
+        # If no variable name set, assume require instantaneous cube.
+        cell_methods_constraint = iris.Constraint(cube_func=check_no_aggregation)
 
-        else:
-
-            def check_no_aggregation(cube: iris.cube.Cube) -> bool:
-                """Check that any cell methods are "point", meaning no aggregation."""
-                return set(cm.method for cm in cube.cell_methods) <= {"point"}
-
-            cell_methods_constraint = iris.Constraint(cube_func=check_no_aggregation)
     else:
-
+        # If cell_method constraint set in recipe, check for required input.
         def check_cell_methods(cube: iris.cube.Cube) -> bool:
             return cube.cell_methods == tuple(cell_methods)
 
         cell_methods_constraint = iris.Constraint(cube_func=check_cell_methods)
+
     return cell_methods_constraint
 
 

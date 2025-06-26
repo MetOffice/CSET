@@ -177,3 +177,27 @@ def model_level_cube_read_only():
 def model_level_cube(model_level_cube_read_only):
     """Get model level cube to run tests on. It is safe to modify."""
     return model_level_cube_read_only.copy()
+
+
+@pytest.fixture(scope="session")
+def global_cube_read_only():
+    """Get global cube to run tests on. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/air_temperature_global.nc")
+
+
+@pytest.fixture()
+def global_cube(global_cube_read_only):
+    """Get global cube to run tests on. It is safe to modify."""
+    return global_cube_read_only.copy()
+
+
+@pytest.fixture(scope="session")
+def ensemble_cube_read_only():
+    """Get ensemble cube to run tests on. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/exeter_em*.nc")
+
+
+@pytest.fixture()
+def ensemble_cube(ensemble_cube_read_only):
+    """Get ensemble cube to run tests on. It is safe to modify."""
+    return ensemble_cube_read_only.copy()
