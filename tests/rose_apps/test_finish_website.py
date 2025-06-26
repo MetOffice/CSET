@@ -18,7 +18,7 @@ import json
 import logging
 import re
 
-from CSET.workflow import finish_website
+from CSET.rose_apps import finish_website
 
 
 def test_copy_rose_config(monkeypatch, tmp_path):

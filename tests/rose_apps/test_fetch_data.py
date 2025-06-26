@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from CSET.workflow import fetch_data
+from CSET.rose_apps import fetch_data
 
 
 def mock_get_needed_environment_variables():

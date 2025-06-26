@@ -12,11 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Subpackage containing code used in the CSET workflow.
-
-This package is totally unstable, and its contents are subject to change without
-notice.
-"""
+"""Extract the CSET cylc workflow for use."""
 
 import importlib.metadata
 import logging
@@ -26,7 +22,7 @@ import stat
 import sys
 from pathlib import Path
 
-import CSET.workflow.files
+import CSET.workflow
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +67,7 @@ def install_workflow(location: Path):
     workflow_dir = location / f"cset-workflow-v{importlib.metadata.version('CSET')}"
 
     # Write workflow content into workflow_dir.
-    workflow_files = importlib_resources.files(CSET.workflow.files)
+    workflow_files = importlib_resources.files(CSET.workflow)
     with importlib_resources.as_file(workflow_files) as w:
         logger.info("Copying workflow files into place.")
         try:
