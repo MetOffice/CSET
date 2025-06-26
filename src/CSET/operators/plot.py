@@ -1166,14 +1166,21 @@ def _custom_colourmap_visibility_in_air(cube: iris.cube.Cube, cmap, levels, norm
     if any("visibility_in_air" in name for name in varnames):
         # Define the levels and colors (in km)
         levels = [0, 0.05, 0.1, 0.2, 1.0, 2.0, 5.0, 10.0, 20.0, 30.0, 50.0, 70.0, 100.0]
-        reds = (
-            np.array([143, 209, 255, 255, 0, 108, 170, 55, 142, 197, 220, 255]) / 255.0
-        )
-        grns = np.array([0, 0, 151, 255, 0, 156, 232, 166, 220, 255, 220, 255]) / 255.0
-        blus = np.array([214, 0, 0, 0, 127, 205, 255, 72, 100, 197, 220, 255]) / 255.0
-        colours = np.array([reds, grns, blus]).T
         norm = mcolors.BoundaryNorm(levels, cmap.N)
-
+        colours = [
+            "#8f00d6",
+            "#d10000",
+            "#ff9700",
+            "#ffff00",
+            "#00007f",
+            "#6c9ccd",
+            "#aae8ff",
+            "#37a648",
+            "#8edc64",
+            "#c5ffc5",
+            "#dcdcdc",
+            "#ffffff",
+        ]
         # Create a custom colormap
         cmap = mcolors.ListedColormap(colours)
         # Normalize the levels
