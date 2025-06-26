@@ -272,6 +272,6 @@ def _cookbook_command(args, unparsed_args):
 
 
 def _extract_workflow_command(args, unparsed_args):
-    from CSET.workflow import install_workflow
+    from CSET.extract_workflow import install_workflow
 
     install_workflow(args.location)
