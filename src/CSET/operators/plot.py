@@ -469,7 +469,7 @@ def _plot_and_save_spatial_plot(
         cbar.set_ticks(levels)
         cbar.set_ticklabels([f"{level:.1f}" for level in levels])
         if "visibility" in cube.name():
-            cbar.set_ticklabels([f"{level:.2g}" for level in levels])
+            cbar.set_ticklabels([f"{level:.3g}" for level in levels])
         logging.debug("Set colorbar ticks and labels.")
 
     # Save plot.
