@@ -19,7 +19,7 @@ import stat
 
 import pytest
 
-import CSET.workflow
+import CSET.extract_workflow as extract_workflow
 
 
 def test_make_script_executable_script(tmp_path):
@@ -28,21 +28,21 @@ def test_make_script_executable_script(tmp_path):
     # Mode is u=rw,g=r,o=r
     f.touch(mode=stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
     f.write_text("#!/usr/bin/env bash\necho 'Hello world!'")
-    CSET.workflow.make_script_executable(f)
+    extract_workflow.make_script_executable(f)
     # Check that everyone who had read permission now can execute.
     mode = f.stat().st_mode
     assert (mode & stat.S_IXUSR) and (mode & stat.S_IXGRP) and (mode & stat.S_IXOTH)
 
     # Mode is u=rw,g=r
     f.chmod(mode=stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP)
-    CSET.workflow.make_script_executable(f)
+    extract_workflow.make_script_executable(f)
     # Check that other cannot now execute.
     mode = f.stat().st_mode
     assert (mode & stat.S_IXUSR) and (mode & stat.S_IXGRP) and not (mode & stat.S_IXOTH)
 
     # Mode is u=rw
     f.chmod(mode=stat.S_IRUSR | stat.S_IWUSR)
-    CSET.workflow.make_script_executable(f)
+    extract_workflow.make_script_executable(f)
     # Check that group and other cannot now execute.
     mode = f.stat().st_mode
     assert (
@@ -58,7 +58,7 @@ def test_make_script_executable_not_script(tmp_path):
     # Mode is u=rw,g=r,o=r
     f.touch(mode=stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
     f.write_text("Not a script file.")
-    CSET.workflow.make_script_executable(f)
+    extract_workflow.make_script_executable(f)
     mode = f.stat().st_mode
     assert (
         not (mode & stat.S_IXUSR)
@@ -72,7 +72,7 @@ def test_make_script_executable_short_file(tmp_path):
     f = tmp_path / "file"
     # Mode is u=rw,g=r,o=r
     f.touch(mode=stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
-    CSET.workflow.make_script_executable(f)
+    extract_workflow.make_script_executable(f)
     mode = f.stat().st_mode
     assert (
         not (mode & stat.S_IXUSR)
@@ -86,7 +86,7 @@ def test_install_workflow(monkeypatch, tmp_path):
     conda_env = tmp_path / "conda-env"
     conda_env.mkdir()
     monkeypatch.setenv("CONDA_PREFIX", str(conda_env))
-    CSET.workflow.install_workflow(tmp_path)
+    extract_workflow.install_workflow(tmp_path)
     # Check workflow directory has been created.
     subdirs = list(tmp_path.glob("cset-workflow-v*/"))
     assert len(subdirs) == 1
@@ -105,7 +105,7 @@ def test_install_workflow(monkeypatch, tmp_path):
 def test_install_workflow_no_conda_prefix(monkeypatch, tmp_path):
     """Workflow is installed without conda environment symlink."""
     monkeypatch.delenv("CONDA_PREFIX", raising=False)
-    CSET.workflow.install_workflow(tmp_path)
+    extract_workflow.install_workflow(tmp_path)
     wd = next(tmp_path.glob("cset-workflow-v*/"))
     assert not os.path.lexists(wd / "conda-environment")
 
@@ -115,15 +115,15 @@ def test_install_workflow_not_dir(tmp_path):
     file = tmp_path / "file"
     file.touch()
     with pytest.raises(OSError, match=f"{file} should exist and be a directory."):
-        CSET.workflow.install_workflow(file)
+        extract_workflow.install_workflow(file)
 
 
 def test_install_workflow_dir_already_exists(tmp_path):
     """Exception raised when there is already a workflow dir at location."""
     # Run once to create initial version.
-    CSET.workflow.install_workflow(tmp_path)
+    extract_workflow.install_workflow(tmp_path)
     # Run again to cause error.
     with pytest.raises(
         FileExistsError, match=f"Refusing to overwrite {tmp_path}/cset-workflow-v"
     ):
-        CSET.workflow.install_workflow(tmp_path)
+        extract_workflow.install_workflow(tmp_path)
