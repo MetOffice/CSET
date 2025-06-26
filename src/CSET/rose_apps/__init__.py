@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Subpackage containing code used in the CSET workflow.
+"""
+Subpackage containing code for rose apps used in the CSET workflow.
 
 This package is totally unstable, and its contents are subject to change without
 notice.

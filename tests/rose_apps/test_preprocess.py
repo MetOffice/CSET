@@ -19,7 +19,7 @@ import shutil
 
 import iris
 
-from CSET.workflow import preprocess
+from CSET.rose_apps import preprocess
 
 
 def test_preprocess(monkeypatch):
