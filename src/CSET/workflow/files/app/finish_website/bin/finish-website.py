@@ -2,6 +2,6 @@
 
 """Write finished status to website front page."""
 
-import CSET.workflow.finish_website
+import CSET._workflow_utils.finish_website
 
-CSET.workflow.finish_website.run()
+CSET._workflow_utils.finish_website.run()

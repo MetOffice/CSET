@@ -15,7 +15,7 @@ CSET.operators.aggregate
    :members:
 
 CSET.operators.transect
----------------------------
+-----------------------
 
 .. automodule:: CSET.operators.transect
    :members:
@@ -45,7 +45,7 @@ CSET.operators.misc
    :members:
 
 CSET.operators.plot
---------------------------
+-------------------
 
 .. automodule:: CSET.operators.plot
    :members:

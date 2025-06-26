@@ -26,7 +26,7 @@ import pytest
 
 import CSET
 import CSET.extract_workflow
-import CSET.workflow
+import CSET.operators
 
 
 def test_command_line_invocation():

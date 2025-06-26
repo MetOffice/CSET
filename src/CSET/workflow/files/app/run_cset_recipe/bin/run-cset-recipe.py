@@ -2,6 +2,6 @@
 
 """Run a recipe with the CSET CLI."""
 
-import CSET.workflow.run_cset_recipe
+import CSET._workflow_utils.run_cset_recipe
 
-CSET.workflow.run_cset_recipe.run()
+CSET._workflow_utils.run_cset_recipe.run()

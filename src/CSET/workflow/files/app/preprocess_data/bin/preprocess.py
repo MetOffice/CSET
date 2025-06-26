@@ -2,6 +2,6 @@
 
 """Preprocess forecast data into a single file per model."""
 
-import CSET.workflow.preprocess
+import CSET._workflow_utils.preprocess
 
-CSET.workflow.preprocess.run()
+CSET._workflow_utils.preprocess.run()

@@ -5,13 +5,13 @@
 import logging
 import subprocess
 
-from CSET.workflow.fetch_data import FileRetrieverABC, fetch_data
+from CSET._workflow_utils.fetch_data import FileRetrieverABC, fetch_data
 
 
 class MASSFileRetriever(FileRetrieverABC):
     """Retrieve files from MASS."""
 
-    def get_file(self, file_path: str, output_dir: str) -> None:
+    def get_file(self, file_path: str, output_dir: str) -> bool:
         """Save a file from MASS to the output directory.
 
         Parameters

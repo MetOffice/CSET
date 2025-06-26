@@ -41,8 +41,8 @@ CSET._common
 .. automodule:: CSET._common
    :members:
 
-CSET.workflow
--------------
+CSET._workflow_utils
+--------------------
 
-.. automodule:: CSET.workflow
+.. automodule:: CSET._workflow_utils
    :members:

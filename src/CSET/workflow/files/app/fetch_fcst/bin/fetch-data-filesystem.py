@@ -2,6 +2,6 @@
 
 """Retrieve files from the filesystem."""
 
-from CSET.workflow.fetch_data import FilesystemFileRetriever, fetch_data
+from CSET._workflow_utils.fetch_data import FilesystemFileRetriever, fetch_data
 
 fetch_data(FilesystemFileRetriever)
