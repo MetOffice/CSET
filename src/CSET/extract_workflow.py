@@ -22,7 +22,7 @@ import stat
 import sys
 from pathlib import Path
 
-import CSET.workflow.files
+import CSET.cset_workflow
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ def install_workflow(location: Path):
     workflow_dir = location / f"cset-workflow-v{importlib.metadata.version('CSET')}"
 
     # Write workflow content into workflow_dir.
-    workflow_files = importlib_resources.files(CSET.workflow.files)
+    workflow_files = importlib_resources.files(CSET.cset_workflow)
     with importlib_resources.as_file(workflow_files) as w:
         logger.info("Copying workflow files into place.")
         try:
