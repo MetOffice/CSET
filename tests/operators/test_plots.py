@@ -24,7 +24,7 @@ import matplotlib as mpl
 import numpy as np
 import pytest
 
-from CSET.operators import collapse, plot, read
+from CSET.operators import collapse, plot
 
 
 def test_check_single_cube():
@@ -155,6 +155,29 @@ def test_colorbar_map_levels_def_on_levels(cube, tmp_working_dir):
     assert levels == [0, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
 
 
+def test_colorbar_map_levels_def_on_levels_test_visibility_in_air(
+    cube, tmp_working_dir
+):
+    """Colorbar definition that uses levels is found for cube."""
+    cube = iris.cube.Cube(np.arange(10), long_name="visibility_in_air")
+    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    assert levels == [
+        0,
+        0.05,
+        0.1,
+        0.2,
+        1.0,
+        2.0,
+        5.0,
+        10.0,
+        20.0,
+        30.0,
+        50.0,
+        70.0,
+        100.0,
+    ]
+
+
 def test_colorbar_map_levels_name_fallback(cube, tmp_working_dir):
     """Colorbar definition is found for cube after checking its other names."""
     cube.standard_name = None
@@ -236,9 +259,8 @@ def test_contour_plot_sequence(cube, tmp_working_dir):
     assert Path("untitled_462149.0.png").is_file()
 
 
-def test_postage_stamp_contour_plot(monkeypatch, tmp_path):
+def test_postage_stamp_contour_plot(ensemble_cube, monkeypatch, tmp_path):
     """Plot postage stamp plots of ensemble data."""
-    ensemble_cube = read.read_cube("tests/test_data/exeter_em*.nc")
     # Get a single time step.
     ensemble_cube_3d = next(ensemble_cube.slices_over("time"))
     monkeypatch.chdir(tmp_path)
@@ -291,9 +313,8 @@ def test_pcolormesh_plot_sequence(cube, tmp_working_dir):
     assert Path("untitled_462149.0.png").is_file()
 
 
-def test_pcolormesh_plot_global(caplog):
+def test_pcolormesh_plot_global(global_cube, caplog, tmp_working_dir):
     """Plot global lat-lon cube."""
-    global_cube = read.read_cube("tests/test_data/air_temperature_global.nc")
     with caplog.at_level(logging.DEBUG):
         plot.spatial_pcolormesh_plot(global_cube)
         message_match = False
@@ -303,9 +324,8 @@ def test_pcolormesh_plot_global(caplog):
     assert message_match
 
 
-def test_postage_stamp_pcolormesh_plot(monkeypatch, tmp_path):
+def test_postage_stamp_pcolormesh_plot(ensemble_cube, monkeypatch, tmp_path):
     """Plot postage stamp plots of ensemble data."""
-    ensemble_cube = read.read_cube("tests/test_data/exeter_em*.nc")
     # Get a single time step.
     ensemble_cube_3d = next(ensemble_cube.slices_over("time"))
     monkeypatch.chdir(tmp_path)
@@ -321,7 +341,7 @@ def test_postage_stamp_pcolormesh_plot_sequence_coord_check(cube, tmp_working_di
         plot.spatial_pcolormesh_plot(cube)
 
 
-def test_pcolormesh_coastline(cube, caplog):
+def test_pcolormesh_coastline(cube, caplog, tmp_working_dir):
     """Check coastlines plotted in black for air_temperature colormap."""
     with caplog.at_level(logging.DEBUG):
         plot.spatial_pcolormesh_plot(cube)
@@ -332,7 +352,7 @@ def test_pcolormesh_coastline(cube, caplog):
         assert message_match
 
 
-def test_pcolormesh_coastline_m(cube, caplog):
+def test_pcolormesh_coastline_m(cube, caplog, tmp_working_dir):
     """Check coastlines plotted in magenta for viridis colormap."""
     with caplog.at_level(logging.DEBUG):
         # Set cube name to unknown to trigger viridis default cmap
@@ -672,9 +692,8 @@ def test_invalid_plotting_method_postage_stamp_spatial_plot(cube, tmp_working_di
         )
 
 
-def test_levels_postage_stamp_spatial_plot(cube):
+def test_levels_postage_stamp_spatial_plot(ensemble_cube, tmp_working_dir):
     """Test no levels raises TypeError for pcolormesh with no levels."""
-    ensemble_cube = read.read_cube("tests/test_data/exeter_em*.nc")
     with pytest.raises(TypeError, match="Unknown vmin and vmax range."):
         ensemble_cube.rename("unknown")
         plot._plot_and_save_postage_stamp_spatial_plot(
@@ -704,6 +723,28 @@ def test_convert_precipitation_no_units(cube, caplog):
     _, level, message = caplog.record_tuples[0]
     assert level == logging.WARNING
     assert message == "Precipitation units are not in 'kg m-2 s-1', skipping conversion"
+    assert cube.units == "unknown"
+
+
+def test_convert_visibility_units():
+    """Test visibility units conversions prior to plotting."""
+    cube = iris.cube.Cube(
+        np.array([1000, 2000, 3000]), standard_name="visibility_in_air", units="m"
+    )
+    cube = plot._convert_visibility_units_callback(cube)
+    assert cube.units == "km"
+    assert np.allclose(cube.data, np.array([1, 2, 3]))
+
+
+def test_convert_visibility_no_units(cube, caplog):
+    """Check no processing for unexpected units in visibility conversions."""
+    cube = iris.cube.Cube(
+        np.array([1000, 2000, 3000]), standard_name="visibility_in_air", units="unknown"
+    )
+    cube = plot._convert_visibility_units_callback(cube)
+    _, level, message = caplog.record_tuples[0]
+    assert level == logging.WARNING
+    assert message == "Visibility units are not in 'm', skipping conversion"
     assert cube.units == "unknown"
 
 
