@@ -482,6 +482,20 @@
     "max": 1400,
     "min": -1400
   },
+  "surface_microphysical_rainfall_amount": {
+    "cmap": "cividis",
+    "levels": [
+      0,
+      2
+    ],
+    "ymax": 1.0,
+    "ymin": 0.0
+  },
+  "surface_microphysical_rainfall_amount_difference": {
+    "cmap": "bwr",
+    "max": 0.001,
+    "min": -0.001
+  },
   "surface_microphysical_rainfall_rate": {
     "cmap": "cividis",
     "levels": [
@@ -506,6 +520,15 @@
     "cmap": "BrBG",
     "max": 32.0,
     "min": -32.0
+  },
+  "surface_microphysical_snowfall_amount": {
+    "cmap": "cividis",
+    "levels": [
+      0,
+      2
+    ],
+    "ymax": 1.0,
+    "ymin": 0.0
   },
   "surface_microphysical_snowfall_rate": {
     "cmap": "cool",

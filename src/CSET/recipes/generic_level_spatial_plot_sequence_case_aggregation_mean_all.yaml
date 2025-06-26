@@ -1,10 +1,11 @@
 category: $LEVELTYPE Level Spatial
-title: $MODEL_NAME $VARNAME $LEVELTYPE$LEVEL $METHOD
+title: "$MODEL_NAME $VARNAME $LEVELTYPE$LEVEL\n Aggregation over all cases"
 description: |
-  Extracts and plots the $METHOD of $VARNAME from $MODEL_NAME at $LEVELTYPE level $LEVEL.
+  Extracts ands plots the $VARNAME from $MODEL_NAME at $LEVELTYPE level $LEVEL.
+  Multiple cases are aggregated together for all available times.
 
 steps:
-  - operator: read.read_cube
+  - operator: read.read_cubes
     file_paths: $INPUT_PATHS
     constraint:
       operator: constraints.combine_constraints
@@ -15,12 +16,12 @@ steps:
         operator: constraints.generate_level_constraint
         coordinate: $LEVELTYPE
         levels: $LEVEL
-    subarea_type: $SUBAREA_TYPE
-    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: aggregate.ensure_aggregatable_across_cases
 
   - operator: collapse.collapse
-    coordinate: [time]
-    method: $METHOD
+    coordinate: time
+    method: MEAN
 
   - operator: plot.spatial_contour_plot
     sequence_coordinate: time
