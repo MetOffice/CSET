@@ -31,7 +31,6 @@ def test_generate_stash_constraint():
 def test_generate_var_constraint():
     """Generate iris cube constraint for str variable name."""
     var_constraint = constraints.generate_var_constraint("test")
-    print(var_constraint)
     expected_var_constraint = "Constraint(name='test')"
     assert repr(var_constraint) == expected_var_constraint
 

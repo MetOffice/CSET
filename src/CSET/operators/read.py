@@ -214,10 +214,6 @@ def _load_model(
     """Load a single model's data into a CubeList."""
     input_files = _check_input_files(paths)
     # If unset, a constraint of None lets everything be loaded.
-
-    ## CHECK VARNAME
-    ##varname_constraint = constraint
-    print(input_files)
     logging.debug("Constraint: %s", constraint)
     cubes = iris.load(
         input_files, constraint, callback=_create_callback(is_ensemble=False)
@@ -530,7 +526,6 @@ def _longitude_fix_callback(cube: iris.cube.Cube):
     except ValueError:
         # Don't modify non-spatial cubes.
         return cube
-
     long_coord = cube.coord(x)
     long_points = long_coord.points.copy()
     long_centre = np.median(long_points)
@@ -697,7 +692,7 @@ def _fix_um_radtime(cube: iris.cube.Cube):
 
             # Convert time points to datetime objects
             time_unit = time_coord.units
-            time_points = time_unit.num2pydate(time_coord.points)
+            time_points = time_unit.num2date(time_coord.points)
             # Skip if times don't need fixing.
             if time_points[0].minute == 0 and time_points[0].second == 0:
                 return
@@ -849,7 +844,7 @@ def _lfric_time_callback(cube: iris.cube.Cube):
                 # Create array of forecast lead times.
                 init_coord = cube.coord("forecast_reference_time")
                 init_time_points_in_tcoord_units = tcoord.units.date2num(
-                    init_coord.units.num2pydate(init_coord.points)
+                    init_coord.units.num2date(init_coord.points)
                 )
                 lead_times = tcoord.points - init_time_points_in_tcoord_units
 

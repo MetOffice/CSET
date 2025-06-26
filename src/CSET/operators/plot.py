@@ -1143,10 +1143,6 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
         any("surface_microphysical" in name for name in varnames)
         and "difference" not in cube.long_name
     ):
-        #        or cube.standard_name == "surface_microphysical_rainfall_rate"
-        #        or cube.var_name == "surface_microphysical_rainfall_rate"
-        #        or cube.long_name == "surface_microphysical_rainfall_amount"
-        #    ):
         # Define the levels and colors
         levels = [0, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
         colors = [

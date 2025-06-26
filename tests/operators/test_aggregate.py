@@ -100,9 +100,7 @@ def test_ensure_aggregatable_across_cases_different_buckets(
 
 def test_add_hour_coordinate(long_forecast):
     """Check that a Cube has an hour coordinate added to it."""
-    print(long_forecast)
     cube_with_hour_coordinate = aggregate.add_hour_coordinate(long_forecast)
-    print(cube_with_hour_coordinate)
     hour_coord = cube_with_hour_coordinate.coord("hour")
     assert hour_coord
     assert hour_coord.units == "hours"

@@ -261,6 +261,5 @@ def is_time_aggregatable(cube: iris.cube.Cube) -> bool:
 
     # Check which temporal coordinates we have.
     temporal_coords = [coord for coord in coord_names if coord in TEMPORAL_COORD_NAMES]
-    print(temporal_coords)
     # Return whether both coordinates are in the temporal coordinates.
     return len(temporal_coords) == 2

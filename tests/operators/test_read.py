@@ -341,7 +341,6 @@ def test_fix_um_radtime_posthour_no_fp(cube):
     for time in times:
         assert time.minute == 1
     # Remove forecast_period from input cube.
-    print(cube)
     cube.remove_coord("forecast_period")
 
     # Give cube a radiation STASH code.

@@ -78,5 +78,8 @@ def test_preprocess_data_varname(tmp_path):
     # re-processing the data.
     cubes = iris.load(output)
     assert len(cubes) == 4
+    # Check only air_temperature in outputs (note cube[3] is "forecast_period")
+    for cube in cubes[0:3]:
+        assert cube.standard_name == "air_temperature"
     for cube in cubes:
         assert "cset_comparison_base" not in cube.attributes
