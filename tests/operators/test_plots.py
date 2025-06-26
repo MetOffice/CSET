@@ -24,7 +24,7 @@ import matplotlib as mpl
 import numpy as np
 import pytest
 
-from CSET.operators import collapse, plot, read
+from CSET.operators import collapse, plot
 
 
 def test_check_single_cube():
@@ -259,9 +259,8 @@ def test_contour_plot_sequence(cube, tmp_working_dir):
     assert Path("untitled_462149.0.png").is_file()
 
 
-def test_postage_stamp_contour_plot(monkeypatch, tmp_path):
+def test_postage_stamp_contour_plot(ensemble_cube, monkeypatch, tmp_path):
     """Plot postage stamp plots of ensemble data."""
-    ensemble_cube = read.read_cube("tests/test_data/exeter_em*.nc")
     # Get a single time step.
     ensemble_cube_3d = next(ensemble_cube.slices_over("time"))
     monkeypatch.chdir(tmp_path)
@@ -314,9 +313,8 @@ def test_pcolormesh_plot_sequence(cube, tmp_working_dir):
     assert Path("untitled_462149.0.png").is_file()
 
 
-def test_pcolormesh_plot_global(caplog):
+def test_pcolormesh_plot_global(global_cube, caplog, tmp_working_dir):
     """Plot global lat-lon cube."""
-    global_cube = read.read_cube("tests/test_data/air_temperature_global.nc")
     with caplog.at_level(logging.DEBUG):
         plot.spatial_pcolormesh_plot(global_cube)
         message_match = False
@@ -326,9 +324,8 @@ def test_pcolormesh_plot_global(caplog):
     assert message_match
 
 
-def test_postage_stamp_pcolormesh_plot(monkeypatch, tmp_path):
+def test_postage_stamp_pcolormesh_plot(ensemble_cube, monkeypatch, tmp_path):
     """Plot postage stamp plots of ensemble data."""
-    ensemble_cube = read.read_cube("tests/test_data/exeter_em*.nc")
     # Get a single time step.
     ensemble_cube_3d = next(ensemble_cube.slices_over("time"))
     monkeypatch.chdir(tmp_path)
@@ -344,7 +341,7 @@ def test_postage_stamp_pcolormesh_plot_sequence_coord_check(cube, tmp_working_di
         plot.spatial_pcolormesh_plot(cube)
 
 
-def test_pcolormesh_coastline(cube, caplog):
+def test_pcolormesh_coastline(cube, caplog, tmp_working_dir):
     """Check coastlines plotted in black for air_temperature colormap."""
     with caplog.at_level(logging.DEBUG):
         plot.spatial_pcolormesh_plot(cube)
@@ -355,7 +352,7 @@ def test_pcolormesh_coastline(cube, caplog):
         assert message_match
 
 
-def test_pcolormesh_coastline_m(cube, caplog):
+def test_pcolormesh_coastline_m(cube, caplog, tmp_working_dir):
     """Check coastlines plotted in magenta for viridis colormap."""
     with caplog.at_level(logging.DEBUG):
         # Set cube name to unknown to trigger viridis default cmap
@@ -695,9 +692,8 @@ def test_invalid_plotting_method_postage_stamp_spatial_plot(cube, tmp_working_di
         )
 
 
-def test_levels_postage_stamp_spatial_plot(cube):
+def test_levels_postage_stamp_spatial_plot(ensemble_cube, tmp_working_dir):
     """Test no levels raises TypeError for pcolormesh with no levels."""
-    ensemble_cube = read.read_cube("tests/test_data/exeter_em*.nc")
     with pytest.raises(TypeError, match="Unknown vmin and vmax range."):
         ensemble_cube.rename("unknown")
         plot._plot_and_save_postage_stamp_spatial_plot(
