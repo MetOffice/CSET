@@ -730,24 +730,21 @@ def test_convert_precipitation_no_units(cube, caplog):
     assert cube.units == "unknown"
 
 
-def test_convert_visibility_units(cube, caplog):
-    """Test visibility conversions prior to plotting."""
-    cube.rename("visibility_in_air")
-    # Check unit conversion
-    cube.units = "m"
-    with caplog.at_level(logging.INFO):
-        cube = plot._convert_visibility_units_callback(cube)
-    _, level, message = caplog.record_tuples[0]
-    assert level == logging.INFO
-    assert message == "Converting visibility units m to km."
+def test_convert_visibility_units():
+    """Test visibility units conversions prior to plotting."""
+    cube = iris.cube.Cube(
+        np.array([1000, 2000, 3000]), standard_name="visibility_in_air", units="m"
+    )
+    cube = plot._convert_visibility_units_callback(cube)
     assert cube.units == "km"
+    assert np.allclose(cube.data, np.array([1, 2, 3]))
 
 
 def test_convert_visibility_no_units(cube, caplog):
-    """Test visibility conversions prior to plotting."""
-    # Check no processing for non-expected units
-    cube.rename("visibility_in_air")
-    cube.units = "unknown"
+    """Check no processing for unexpected units in visibility conversions."""
+    cube = iris.cube.Cube(
+        np.array([1000, 2000, 3000]), standard_name="visibility_in_air", units="unknown"
+    )
     cube = plot._convert_visibility_units_callback(cube)
     _, level, message = caplog.record_tuples[0]
     assert level == logging.WARNING
