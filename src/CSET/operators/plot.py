@@ -852,7 +852,12 @@ def _plot_and_save_histogram_series(
         # than seeing if long names exist etc.
         # Exception case, where distribution better fits log scales/bins.
         if "surface_microphysical" in title:
-            if "rate" in title:
+            if "amount" in title:
+                # Compute histogram following Klingaman et al. (2017): ASoP
+                bin2 = np.exp(np.log(0.02) + 0.1 * np.linspace(0, 99, 100))
+                bins = np.pad(bin2, (1, 0), "constant", constant_values=0)
+                density = False
+            else:
                 # Usually in seconds but mm/hr more intuitive.
                 cube.convert_units("kg m-2 h-1")
                 bins = 10.0 ** (
@@ -860,11 +865,6 @@ def _plot_and_save_histogram_series(
                 )  # Suggestion from RMED toolbox.
                 bins = np.insert(bins, 0, 0)
                 ax.set_yscale("log")
-            elif "amount" in title:
-                # Compute histogram following Klingaman et al. (2017): ASoP
-                bin2 = np.exp(np.log(0.02) + 0.1 * np.linspace(0, 99, 100))
-                bins = np.pad(bin2, (1, 0), "constant", constant_values=0)
-                density = False
             vmin = bins[1]
             vmax = bins[-1]  # Manually set vmin/vmax to override json derived value.
             ax.set_xscale("log")
@@ -1061,11 +1061,6 @@ def _spatial_plot(
     # Ensure we've got a single cube.
     cube = _check_single_cube(cube)
 
-    # Convert precipitation units if necessary
-    _convert_precipitation_units_callback(cube)
-    # Convert visibility units if necessary
-    _convert_visibility_units_callback(cube)
-
     # Make postage stamp plots if stamp_coordinate exists and has more than a
     # single point.
     plotting_func = _plot_and_save_spatial_plot
@@ -1105,40 +1100,6 @@ def _spatial_plot(
 
     # Make a page to display the plots.
     _make_plot_html_page(complete_plot_index)
-
-
-def _convert_precipitation_units_callback(cube: iris.cube.Cube):
-    """To convert the unit of precipitation from kg m-2 s-1 to mm hr-1.
-
-    Some precipitation diagnostics are output with unit kg m-2 s-1 and are converted to mm hr-1.
-    """
-    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
-    if any("surface_microphysical" in name for name in varnames):
-        if cube.units == "kg m-2 s-1":
-            logging.info("Converting precipitation units from kg m-2 s-1 to mm hr-1")
-            # Convert from kg m-2 s-1 to mm s-1 assuming 1kg water = 1l water = 1dm^3 water.
-            # This is a 1:1 conversion, so we just change the units.
-            cube.units = "mm s-1"
-            # Convert the units to per hour.
-            cube.convert_units("mm hr-1")
-        else:
-            logging.warning(
-                "Precipitation units are not in 'kg m-2 s-1', skipping conversion"
-            )
-    return cube
-
-
-def _convert_visibility_units_callback(cube: iris.cube.Cube):
-    """To convert the unit of visibility from m to km."""
-    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
-    if any("visibility" in name for name in varnames):
-        if cube.units == "m":
-            logging.info("Converting visibility units m to km.")
-            # Convert the units to km.
-            cube.convert_units("km")
-        else:
-            logging.warning("Visibility units are not in 'm', skipping conversion")
-    return cube
 
 
 def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
