@@ -117,6 +117,7 @@ def _write_metadata(recipe: dict):
     if "title" in metadata:
         metadata["title"] = metadata["title"].replace("_for_climate_averaging", "")
         metadata["title"] = metadata["title"].replace("_radiative_timestep", "")
+        metadata["title"] = metadata["title"].replace("_maximum_random_overlap", "")
     with open("meta.json", "wt", encoding="UTF-8") as fp:
         json.dump(metadata, fp, indent=2)
 

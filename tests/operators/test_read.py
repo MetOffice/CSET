@@ -664,6 +664,24 @@ def test_lfric_time_callback_unknown_units(slammed_lfric_cube, caplog):
         assert message == "Unrecognised base time unit: unknown"
 
 
+def test_fix_lfric_cloud_base_altitude():
+    """Check that lfric cloud_base_altitude callback applies mask."""
+    cube = iris.cube.Cube(np.arange(151), long_name="cloud_base_altitude")
+    assert np.max(cube.data) == 150.0
+    # Apply fix callback to mask > 144kft.
+    read._fix_lfric_cloud_base_altitude(cube)
+    assert np.max(cube.data) == 144.0
+
+
+def test_fix_lfric_cloud_base_altitude_non_cloud_var():
+    """Check that lfric cloud_base_altitude callback has no impact on other variables."""
+    cube = iris.cube.Cube(np.arange(151), long_name="air_temperature")
+    assert np.max(cube.data) == 150.0
+    # Apply fix callback.
+    read._fix_lfric_cloud_base_altitude(cube)
+    assert np.max(cube.data) == 150.0
+
+
 def test_normalise_var0_varname(model_level_cube):
     """Check that read callback renames the model level var name."""
     model_level_cube.coord("model_level_number").var_name = "model_level_number_0"
