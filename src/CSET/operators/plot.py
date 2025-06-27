@@ -858,8 +858,6 @@ def _plot_and_save_histogram_series(
                 bins = np.pad(bin2, (1, 0), "constant", constant_values=0)
                 density = False
             else:
-                # Usually in seconds but mm/hr more intuitive.
-                cube.convert_units("kg m-2 h-1")
                 bins = 10.0 ** (
                     np.arange(-10, 27, 1) / 10.0
                 )  # Suggestion from RMED toolbox.
