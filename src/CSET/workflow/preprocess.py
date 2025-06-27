@@ -17,6 +17,7 @@
 import ast
 import os
 import shutil
+import tempfile
 
 import iris
 
@@ -32,15 +33,19 @@ def preprocess_data(data_location: str, fields: iris.Constraint | None = None):
     for cube in cubes:
         del cube.attributes["cset_comparison_base"]
 
+    # Work around for the current working directory being used during testing.
+    temp_output = tempfile.mktemp(
+        suffix=".nc", dir=os.getenv("CYLC_TASK_WORK_DIR", tempfile.gettempdir())
+    )
     # Use iris directly to save uncompressed for faster reading.
-    iris.save(cubes, "forecast.nc")
+    iris.save(cubes, temp_output)
 
     # Remove raw forecast data.
     shutil.rmtree(data_location)
     os.mkdir(data_location)
 
     # Move forecast data back into place.
-    shutil.move("forecast.nc", data_location + "/forecast.nc")
+    shutil.move(temp_output, os.path.join(data_location, "forecast.nc"))
 
 
 def run():
