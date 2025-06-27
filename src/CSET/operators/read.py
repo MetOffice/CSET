@@ -395,6 +395,7 @@ def _create_callback(is_ensemble: bool) -> callable:
         _fix_pressure_coord_callback(cube)
         _fix_um_radtime(cube)
         _fix_cell_methods(cube)
+        _convert_cube_units_callback(cube)
         _lfric_time_callback(cube)
         _lfric_forecast_period_standard_name_callback(cube)
 
@@ -773,6 +774,44 @@ def _fix_cell_methods(cube: iris.cube.Cube):
                     comments=comment_str,
                 )
             )
+
+
+def _convert_cube_units_callback(cube: iris.cube.Cube):
+    """Adjust diagnostic units for specific variables.
+
+    Some precipitation diagnostics are output with unit kg m-2 s-1 and are
+    converted here to mm hr-1.
+
+    Visibility diagnostics are converted here from m to km to improve output
+    formatting.
+    """
+    # Convert precipitation diagnostic units if required.
+    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    if any("surface_microphysical" in name for name in varnames):
+        if cube.units == "kg m-2 s-1":
+            logging.info("Converting precipitation units from kg m-2 s-1 to mm hr-1")
+            # Convert from kg m-2 s-1 to mm s-1 assuming 1kg water = 1l water = 1dm^3 water.
+            # This is a 1:1 conversion, so we just change the units.
+            cube.units = "mm s-1"
+            # Convert the units to per hour.
+            cube.convert_units("mm hr-1")
+        else:
+            logging.warning(
+                "Precipitation units are not in 'kg m-2 s-1', skipping conversion"
+            )
+
+    # Convert visibility diagnostic units if required.
+    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    if any("visibility" in name for name in varnames):
+        print(cube.units)
+        if cube.units == "m":
+            logging.info("Converting visibility units m to km.")
+            # Convert the units to km.
+            cube.convert_units("km")
+        else:
+            logging.warning("Visibility units are not in 'm', skipping conversion")
+
+    return cube
 
 
 def _normalise_var0_varname(cube: iris.cube.Cube):
