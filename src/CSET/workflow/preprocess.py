@@ -17,6 +17,7 @@
 import ast
 import os
 import shutil
+import tempfile
 
 import iris
 
@@ -34,18 +35,23 @@ def preprocess_data(data_location: str, fields: iris.Constraint | None = None):
 
     # Remove time0 diagnostics; LFRic does not output T0 so can cause issues.
     ## Option to add this as a time constraint based on value of user-defined
-    ## m*_analysis_offset. For initial implementation assume to remove time0.
+    ## m*_analysis_offset. For initial implementation assume to remove all time0.
     cubes = read._remove_time0(cubes)
 
+    # Work around for the current working directory being used during testing.
+    temp_output = tempfile.mktemp(
+        suffix=".nc", dir=os.getenv("CYLC_TASK_WORK_DIR", tempfile.gettempdir())
+    )
+
     # Use iris directly to save uncompressed for faster reading.
-    iris.save(cubes, "forecast.nc")
+    iris.save(cubes, temp_output)
 
     # Remove raw forecast data.
     shutil.rmtree(data_location)
     os.mkdir(data_location)
 
     # Move forecast data back into place.
-    shutil.move("forecast.nc", data_location + "/forecast.nc")
+    shutil.move(temp_output, os.path.join(data_location, "forecast.nc"))
 
 
 def run():
