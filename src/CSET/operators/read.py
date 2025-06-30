@@ -225,15 +225,20 @@ def _load_model(
     # be time averages. For simplicity, we do this only if there is just one
     # cube of a component. A more complicated approach would be to consider
     # the cell methods, but it may not be warranted.
-    if any([cb.attributes["STASH"] == "m01s03i225" for cb in cubes]) and any(
-        [cb.attributes["STASH"] == "m01s03i226" for cb in cubes]
-    ):
-        if len(
-            cubes.extract(iris.AttributeConstraint(STASH="m01s03i225"))
-        ) == 1 and not any([cb.attributes["STASH"] == "m01s03i227" for cb in cubes]):
-            _add_wind_speed_um(cubes)
-        # Convert winds in the UM to be relative to true east and true north.
-        _convert_wind_true_dirn_um(cubes)
+    try:
+        if any([cb.attributes["STASH"] == "m01s03i225" for cb in cubes]) and any(
+            [cb.attributes["STASH"] == "m01s03i226" for cb in cubes]
+        ):
+            if len(
+                cubes.extract(iris.AttributeConstraint(STASH="m01s03i225"))
+            ) == 1 and not any(
+                [cb.attributes["STASH"] == "m01s03i227" for cb in cubes]
+            ):
+                _add_wind_speed_um(cubes)
+            # Convert winds in the UM to be relative to true east and true north.
+            _convert_wind_true_dirn_um(cubes)
+    except (KeyError, AttributeError):
+        pass
 
     # Reload with ensemble handling if needed.
     if _is_ensemble(cubes):
