@@ -184,6 +184,7 @@ def read_cubes(
 
     # Unify time units so different case studies can merge.
     iris.util.unify_time_units(cubes)
+    iris.util.equalise_attributes(cubes)
 
     # Select sub region.
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
