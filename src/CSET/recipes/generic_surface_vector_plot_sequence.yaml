@@ -1,0 +1,32 @@
+category: Surface Vector Plot
+title: $MODEL_NAME Surface Vector Plot of $VARNAME_U and $VARNAME_V
+description: Extracts and plots the surface vector plot of $VARNAME_U and $VARNAME_V for all times in $MODEL_NAME.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+
+  - operator: plot.vector_plot
+    cube_u:
+      operator: filters.filter_cubes
+      constraint:
+        operator: constraints.combine_constraints
+        variable_constraint:
+          operator: constraints.generate_var_constraint
+          varname: $VARNAME_U
+        level_constraint:
+          operator: constraints.generate_level_constraint
+          coordinate: $LEVELTYPE
+          levels: $LEVEL
+    cube_v:
+      operator: filters.filter_cubes
+      constraint:
+        operator: constraints.combine_constraints
+        variable_constraint:
+          operator: constraints.generate_var_constraint
+          varname: $VARNAME_V
+        level_constraint:
+          operator: constraints.generate_level_constraint
+          coordinate: $LEVELTYPE
+          levels: $LEVEL
+    sequence_coordinate: time
