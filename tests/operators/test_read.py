@@ -668,9 +668,11 @@ def test_fix_lfric_cloud_base_altitude():
     """Check that lfric cloud_base_altitude callback applies mask."""
     cube = iris.cube.Cube(np.arange(151), long_name="cloud_base_altitude")
     assert np.max(cube.data) == 150.0
+    assert not np.ma.is_masked(cube.data)
     # Apply fix callback to mask > 144kft.
     read._fix_lfric_cloud_base_altitude(cube)
     assert np.max(cube.data) == 144.0
+    assert np.ma.is_masked(cube.data)
 
 
 def test_fix_lfric_cloud_base_altitude_non_cloud_var():
