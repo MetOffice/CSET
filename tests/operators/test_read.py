@@ -680,9 +680,11 @@ def test_fix_lfric_cloud_base_altitude_non_cloud_var():
     """Check that lfric cloud_base_altitude callback has no impact on other variables."""
     cube = iris.cube.Cube(np.arange(151), long_name="air_temperature")
     assert np.max(cube.data) == 150.0
-    # Apply fix callback.
+    assert not np.ma.is_masked(cube.data)
+    # Apply fix callback, but requiring no changes to cube.
     read._fix_lfric_cloud_base_altitude(cube)
     assert np.max(cube.data) == 150.0
+    assert not np.ma.is_masked(cube.data)
 
 
 def test_normalise_var0_varname(model_level_cube):
