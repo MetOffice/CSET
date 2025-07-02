@@ -673,7 +673,7 @@ def test_convert_precipitation_units(cube, caplog):
         cube = read._convert_cube_units_callback(cube)
     _, level, message = caplog.record_tuples[0]
     assert level == logging.INFO
-    assert message == "Converting precipitation units from kg m-2 s-1 to mm hr-1"
+    assert message == "Converting precipitation rate units from kg m-2 s-1 to mm hr-1"
     assert cube.units == "mm hr-1"
 
 
@@ -682,11 +682,28 @@ def test_convert_precipitation_no_units(cube, caplog):
     # Check no processing for non-expected units
     cube.rename("surface_microphysical_rainfall_rate")
     cube.units = "unknown"
-    cube = read._convert_cube_units_callback(cube)
+    with caplog.at_level(logging.INFO):
+        cube = read._convert_cube_units_callback(cube)
     _, level, message = caplog.record_tuples[0]
-    assert level == logging.WARNING
-    assert message == "Precipitation units are not in 'kg m-2 s-1', skipping conversion"
+    assert level == logging.INFO
+    assert (
+        message
+        == "Precipitation units are not in 'kg m-2 s-1' or 'kg m-2', skipping conversion"
+    )
     assert cube.units == "unknown"
+
+
+def test_convert_precipitation_amount_units(cube, caplog):
+    """Test precipitation conversions prior to plotting."""
+    cube.rename("surface_microphysical_rainfall_amount")
+    # Check unit conversion
+    cube.units = "kg m-2"
+    with caplog.at_level(logging.INFO):
+        cube = read._convert_cube_units_callback(cube)
+    _, level, message = caplog.record_tuples[0]
+    assert level == logging.INFO
+    assert message == "Converting precipitation amount units from kg m-2 to mm"
+    assert cube.units == "mm"
 
 
 def test_convert_visibility_units():
@@ -704,11 +721,34 @@ def test_convert_visibility_no_units(cube, caplog):
     cube = iris.cube.Cube(
         np.array([1000, 2000, 3000]), standard_name="visibility_in_air", units="unknown"
     )
-    cube = read._convert_cube_units_callback(cube)
+    with caplog.at_level(logging.INFO):
+        cube = read._convert_cube_units_callback(cube)
     _, level, message = caplog.record_tuples[0]
-    assert level == logging.WARNING
+    assert level == logging.INFO
     assert message == "Visibility units are not in 'm', skipping conversion"
     assert cube.units == "unknown"
+
+
+def test_fix_lfric_cloud_base_altitude():
+    """Check that lfric cloud_base_altitude callback applies mask."""
+    cube = iris.cube.Cube(np.arange(151) + 10.0, long_name="cloud_base_altitude")
+    assert np.max(cube.data) == 160.0
+    assert not np.ma.is_masked(cube.data)
+    # Apply fix callback to mask > 144kft.
+    read._fix_lfric_cloud_base_altitude(cube)
+    assert np.nanmax(cube.data) == 144.0
+    assert np.ma.is_masked(cube.data)
+
+
+def test_fix_lfric_cloud_base_altitude_non_cloud_var():
+    """Check that lfric cloud_base_altitude callback has no impact on other variables."""
+    cube = iris.cube.Cube(np.arange(151), long_name="air_temperature")
+    assert np.max(cube.data) == 150.0
+    assert not np.ma.is_masked(cube.data)
+    # Apply fix callback, but requiring no changes to cube.
+    read._fix_lfric_cloud_base_altitude(cube)
+    assert np.max(cube.data) == 150.0
+    assert not np.ma.is_masked(cube.data)
 
 
 def test_normalise_var0_varname(model_level_cube):

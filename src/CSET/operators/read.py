@@ -396,6 +396,7 @@ def _create_callback(is_ensemble: bool) -> callable:
         _fix_um_radtime(cube)
         _fix_cell_methods(cube)
         _convert_cube_units_callback(cube)
+        _fix_lfric_cloud_base_altitude(cube)
         _lfric_time_callback(cube)
         _lfric_forecast_period_standard_name_callback(cube)
 
@@ -789,29 +790,44 @@ def _convert_cube_units_callback(cube: iris.cube.Cube):
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if any("surface_microphysical" in name for name in varnames):
         if cube.units == "kg m-2 s-1":
-            logging.info("Converting precipitation units from kg m-2 s-1 to mm hr-1")
+            logging.info(
+                "Converting precipitation rate units from kg m-2 s-1 to mm hr-1"
+            )
             # Convert from kg m-2 s-1 to mm s-1 assuming 1kg water = 1l water = 1dm^3 water.
             # This is a 1:1 conversion, so we just change the units.
             cube.units = "mm s-1"
             # Convert the units to per hour.
             cube.convert_units("mm hr-1")
+        elif cube.units == "kg m-2":
+            logging.info("Converting precipitation amount units from kg m-2 to mm")
+            # Convert from kg m-2 to mm assuming 1kg water = 1l water = 1dm^3 water.
+            # This is a 1:1 conversion, so we just change the units.
+            cube.units = "mm"
         else:
-            logging.warning(
-                "Precipitation units are not in 'kg m-2 s-1', skipping conversion"
+            logging.info(
+                "Precipitation units are not in 'kg m-2 s-1' or 'kg m-2', skipping conversion"
             )
 
     # Convert visibility diagnostic units if required.
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if any("visibility" in name for name in varnames):
-        print(cube.units)
         if cube.units == "m":
             logging.info("Converting visibility units m to km.")
             # Convert the units to km.
             cube.convert_units("km")
         else:
-            logging.warning("Visibility units are not in 'm', skipping conversion")
+            logging.info("Visibility units are not in 'm', skipping conversion")
 
     return cube
+
+
+def _fix_lfric_cloud_base_altitude(cube: iris.cube.Cube):
+    """Mask cloud_base_altitude diagnostic in regions with no cloud."""
+    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    if any("cloud_base_altitude" in name for name in varnames):
+        # Mask cube where set > 144kft to catch default 144.35695538058164
+        cube.data = np.ma.masked_array(cube.data)
+        cube.data[cube.data > 144.0] = np.ma.masked
 
 
 def _normalise_var0_varname(cube: iris.cube.Cube):

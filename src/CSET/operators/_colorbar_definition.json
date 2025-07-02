@@ -74,6 +74,16 @@
     "max": 500,
     "min": -500
   },
+  "ceilometer_filtered_combined_cloud_amount_maximum_random_overlap": {
+    "cmap": "viridis",
+    "max": 1,
+    "min": 0
+  },
+  "ceilometer_filtered_combined_cloud_amount_maximum_random_overlap_difference": {
+    "cmap": "PRGn",
+    "max": 1,
+    "min": -1
+  },
   "cloud_area_fraction": {
     "cmap": "viridis",
     "max": 1,
@@ -486,7 +496,7 @@
     "cmap": "cividis",
     "max": 256,
     "min": 0,
-    "ymax": 0.01,
+    "ymax": 1.0,
     "ymin": 0.0
   },
   "surface_microphysical_rainfall_amount_difference": {
@@ -511,7 +521,7 @@
       128,
       256
     ],
-    "ymax": 0.01,
+    "ymax": 1.0,
     "ymin": 0.0
   },
   "surface_microphysical_rainfall_rate_difference": {
@@ -523,7 +533,7 @@
     "cmap": "cividis",
     "max": 256,
     "min": 0,
-    "ymax": 0.01,
+    "ymax": 1.0,
     "ymin": 0.0
   },
   "surface_microphysical_snowfall_amount_difference": {
@@ -548,7 +558,7 @@
       128,
       256
     ],
-    "ymax": 0.01,
+    "ymax": 1.0,
     "ymin": 0.0
   },
   "surface_microphysical_snowfall_rate_difference": {

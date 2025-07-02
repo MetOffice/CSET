@@ -88,7 +88,7 @@ to use.
     pip install --no-deps -e .
 
 .. _conda: https://docs.conda.io/en/latest/
-.. _GNU make: https://www.gnu.org/software/make
+.. _GNU make: https://www.gnu.org/software/make/
 
 Updating tooling
 ------------------
