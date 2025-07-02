@@ -666,12 +666,13 @@ def test_lfric_time_callback_unknown_units(slammed_lfric_cube, caplog):
 
 def test_fix_lfric_cloud_base_altitude():
     """Check that lfric cloud_base_altitude callback applies mask."""
-    cube = iris.cube.Cube(np.arange(151), long_name="cloud_base_altitude")
-    assert np.max(cube.data) == 150.0
+    cube = iris.cube.Cube(np.arange(151) + 10.0, long_name="cloud_base_altitude")
+    assert np.max(cube.data) == 160.0
     assert not np.ma.is_masked(cube.data)
     # Apply fix callback to mask > 144kft.
     read._fix_lfric_cloud_base_altitude(cube)
-    assert np.max(cube.data) == 144.0
+    print(np.nanmin(cube.data), np.nanmax(cube.data))
+    assert np.nanmax(cube.data) == 144.0
     assert np.ma.is_masked(cube.data)
 
 

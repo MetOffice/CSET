@@ -781,7 +781,8 @@ def _fix_lfric_cloud_base_altitude(cube: iris.cube.Cube):
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if any("cloud_base_altitude" in name for name in varnames):
         # Mask cube where set > 144kft to catch default 144.35695538058164
-        cube.data[cube.data > 144] = np.ma.masked
+        cube.data = np.ma.masked_array(cube.data)
+        cube.data[cube.data > 144.0] = np.ma.masked
 
 
 def _normalise_var0_varname(cube: iris.cube.Cube):
