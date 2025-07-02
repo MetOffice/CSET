@@ -74,6 +74,16 @@
     "max": 500,
     "min": -500
   },
+  "ceilometer_filtered_combined_cloud_amount_maximum_random_overlap": {
+    "cmap": "viridis",
+    "max": 1,
+    "min": 0
+  },
+  "ceilometer_filtered_combined_cloud_amount_maximum_random_overlap_difference": {
+    "cmap": "PRGn",
+    "max": 1,
+    "min": -1
+  },
   "cloud_area_fraction": {
     "cmap": "viridis",
     "max": 1,

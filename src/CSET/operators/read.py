@@ -395,6 +395,7 @@ def _create_callback(is_ensemble: bool) -> callable:
         _fix_pressure_coord_callback(cube)
         _fix_um_radtime(cube)
         _fix_cell_methods(cube)
+        _fix_lfric_cloud_base_altitude(cube)
         _lfric_time_callback(cube)
         _lfric_forecast_period_standard_name_callback(cube)
 
@@ -773,6 +774,15 @@ def _fix_cell_methods(cube: iris.cube.Cube):
                     comments=comment_str,
                 )
             )
+
+
+def _fix_lfric_cloud_base_altitude(cube: iris.cube.Cube):
+    """Mask cloud_base_altitude diagnostic in regions with no cloud."""
+    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    if any("cloud_base_altitude" in name for name in varnames):
+        # Mask cube where set > 144kft to catch default 144.35695538058164
+        cube.data = np.ma.masked_array(cube.data)
+        cube.data[cube.data > 144.0] = np.ma.masked
 
 
 def _normalise_var0_varname(cube: iris.cube.Cube):
