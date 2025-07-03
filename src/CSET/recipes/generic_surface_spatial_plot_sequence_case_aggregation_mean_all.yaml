@@ -15,6 +15,7 @@ steps:
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
+        varname: $VARNAME
       pressure_level_constraint:
         operator: constraints.generate_level_constraint
         coordinate: "pressure"

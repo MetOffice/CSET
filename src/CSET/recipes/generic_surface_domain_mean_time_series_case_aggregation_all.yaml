@@ -7,6 +7,7 @@ description: |
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
     constraint:
       operator: constraints.combine_constraints
       varname_constraint:
@@ -15,6 +16,7 @@ steps:
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
+        varname: $VARNAME
       pressure_level_constraint:
         operator: constraints.generate_level_constraint
         coordinate: "pressure"
