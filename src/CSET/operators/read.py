@@ -188,8 +188,6 @@ def read_cubes(
     # Select sub region.
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
     # Merge and concatenate cubes now metadata has been fixed.
-    if cubes:
-        iris.util.equalise_attributes(cubes)
     cubes = cubes.merge()
     cubes = cubes.concatenate()
 
