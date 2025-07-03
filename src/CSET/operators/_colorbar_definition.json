@@ -498,13 +498,15 @@
       0,
       2
     ],
+    "max": 256,
+    "min": 0,
     "ymax": 1.0,
     "ymin": 0.0
   },
   "surface_microphysical_rainfall_amount_difference": {
-    "cmap": "bwr",
-    "max": 0.001,
-    "min": -0.001
+    "cmap": "BrBG",
+    "max": 16.0,
+    "min": -16.0
   },
   "surface_microphysical_rainfall_rate": {
     "cmap": "cividis",
@@ -523,7 +525,7 @@
       128,
       256
     ],
-    "ymax": 0.01,
+    "ymax": 1.0,
     "ymin": 0.0
   },
   "surface_microphysical_rainfall_rate_difference": {
@@ -539,6 +541,11 @@
     ],
     "ymax": 1.0,
     "ymin": 0.0
+  },
+  "surface_microphysical_snowfall_amount_difference": {
+    "cmap": "BrBG",
+    "max": 4.0,
+    "min": -4.0
   },
   "surface_microphysical_snowfall_rate": {
     "cmap": "cool",
@@ -557,7 +564,7 @@
       128,
       256
     ],
-    "ymax": 0.01,
+    "ymax": 1.0,
     "ymin": 0.0
   },
   "surface_microphysical_snowfall_rate_difference": {

@@ -2,11 +2,15 @@ category: Histogram
 title: "Histogram $VARNAME\n Aggregation over all cases"
 description: |
   Extracts and plots the probability density of surface `$VARNAME`. It uses
-  [`plt.hist`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.hist.html)
-  to plot the probability density so that the area under the histogram
-  integrates to 1. stacked is set to True so the sum of the histograms is
-  normalized to 1. Case aggregation occurs by putting all of the data into
-  one histogram whilst still providing a single cube to the histogram operator.
+  [`plt.hist`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.hist.html).
+
+  The default method generates a probability density so that the area under the histogram
+  normalized to 1.
+  Histograms of rainfall or snowfall rate are plotted using a logarithmic scale.
+  Histograms of rainfall or snowfall amount are based on the
+  [Klingaman et al. 2017](https://gmd.copernicus.org/articles/10/57/2017/gmd-10-57-2017.html)
+  ASoP method, where histograms show the fractional contributions from each precipitation bin
+  to the total precipitation. The area under the histogram shows the total precipitation.
 
 steps:
   - operator: read.read_cubes
