@@ -4,4 +4,4 @@
 # File pattern                    Attributes
 
 # https://docs.github.com/en/repositories/working-with-files/managing-files/customizing-how-changed-files-appear-on-github
-cset-workflow/meta/rose-meta.conf linguist-generated=true
+src/CSET/cset-workflow/meta/rose-meta.conf linguist-generated=true

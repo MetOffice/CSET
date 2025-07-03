@@ -114,13 +114,14 @@ Add recipe into CSET workflow
 -----------------------------
 
 This procedure will be simplified in the future. At the moment recipes are
-included in two locations. Once in the ``cset-workflow/includes`` directory and
-once in the ``src/CSET/recipes`` directory. This way we can run recipes with the
-`cset bake` command as well as running them through the CSET workflow.
+included in two locations. Once in the ``src/CSET/cset-workflow/includes``
+directory and once in the ``src/CSET/recipes`` directory. This way we can run
+recipes with the `cset bake` command as well as running them through the CSET
+workflow.
 
 * Create a Cylc include file at
-  ``cset-workflow/includes/<new_operator_include_file>.cylc``, copying an
-  existing include file for inspiration.
+  ``src/CSET/cset-workflow/includes/<new_operator_include_file>.cylc``, copying
+  an existing include file for inspiration.
 * ``meta/rose-meta.conf``: to add section for toggle button to allow selection
   of new recipe file.
 * ``rose-suite.conf.example``: add option for new recipe.

@@ -1,5 +1,4 @@
 prune .github
-exclude cset-workflow
 exclude .git-blame-ignore-revs
 exclude .gitattributes
 exclude .gitignore
