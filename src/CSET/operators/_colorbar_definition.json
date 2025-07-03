@@ -494,10 +494,6 @@
   },
   "surface_microphysical_rainfall_amount": {
     "cmap": "cividis",
-    "levels": [
-      0,
-      2
-    ],
     "max": 256,
     "min": 0,
     "ymax": 1.0,
@@ -535,10 +531,8 @@
   },
   "surface_microphysical_snowfall_amount": {
     "cmap": "cividis",
-    "levels": [
-      0,
-      2
-    ],
+    "max": 256,
+    "min": 0,
     "ymax": 1.0,
     "ymin": 0.0
   },
