@@ -4,7 +4,9 @@ Install the workflow
 CSET is often run through a `cylc workflow`_.
 
 The CSET workflow uses **cylc 8**, so you must ensure that is the version of
-cylc configured for usage. For the Met Office installation this involves setting
+cylc configured for usage.
+
+For the Met Office installation this involves setting
 an environment variable before running cylc with the following commands:
 
 .. code-block:: bash
