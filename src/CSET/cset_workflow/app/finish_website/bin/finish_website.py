@@ -93,3 +93,7 @@ def run():
     construct_index()
     update_workflow_status()
     copy_rose_config()
+
+
+if __name__ == "__main__":
+    run()
