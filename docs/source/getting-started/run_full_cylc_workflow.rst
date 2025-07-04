@@ -75,13 +75,14 @@ GUI help can be accessed by clicking the cog icon next to each rose GUI option, 
 potential settings.
 
 
-i. General setup options
+a) General setup options
 ~~~~~~~~~~~~~~~~~~~~~~~~
-Expand the options tab under ``suite conf`` and go to the ``General setup options`` panel.
-* Select the ``Site`` or set ``localhost`` if not listed.
+Expand the options tab under the top level ``suite conf`` index heading and go to the ``General setup options`` panel.
+
+* Select the ``Site`` or set ``Localhost`` if not listed.
 * Add website details for where CSET outputs will be displayed. This will differ depending
   on the location from which CSET is run, and details of available web servers.
-* Add a path to edited ``_colorbar.json`` file if wishing to override the default.
+* Add a path to a ``Colorbar override file`` (i.e. an edited ``_colorbar.json`` file) if wishing to override the default plot colorscale or axis settings.
 * Adjust ``Logging level``, ``Plot resolution``, ``Skip writing processed data`` and
   ``Housekeeping mode`` to update requirements to workflow options.
 
@@ -89,22 +90,24 @@ Expand the options tab under ``suite conf`` and go to the ``General setup option
     :alt: Screenshot of the CSET GUI.
 
 
-ii. Cycling and Model options
+b) Cycling and Model options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Next select the ``Cycling and Model options`` panel in the left hand index.
-* Leave the ``Cycling mode`` selected as ``Case Study``.
-* Add the 2 required case study dates to evaluate. These are forecasts initialised on
+
+* Leave the ``Cycling mode`` selected as ``Case Study`` for this 2 forecast example.
+* Add the 2 required ``Case study dates`` to evaluate. These are forecasts initialised on
   ``"20230117T0000Z"`` and ``"20230118T0000Z"`` for this tutorial.
 * Set the ``Analysis length`` as ``PT48H`` to indicate a 48-hour forecast length.
-* Select the ``Number of models`` to evaluate. In this tutorial, we want to assess 2 models.
+* Select the ``Number of models`` to evaluate. In this tutorial, we want to assess 2 different models.
 
 .. image:: cset_uiA.png
     :alt: Screenshot of the CSET GUI for Cycling and Model options.
 
-Setting the number of models activates new ``Model 01`` and ``Model 02`` panels in the index
+Setting the number of models activates new ``Model 01`` and ``Model 02`` (up to ``ModelN``) panels in the index
 in which to specify model-relevant options.
 
-Navigate to each Model panel in turn to set:
+Navigate to each Model panel in turn to provide model-specific settings:
+
 * Add a readable ``Model name`` which will be associated with the data in CSET outputs.
 * Select ``Filesystem`` as the ``Data source`` to indicate that the test data are on local disk.
 * Enter the path to data, including wildcards and formatting to specify filename structure. This
@@ -116,28 +119,27 @@ Navigate to each Model panel in turn to set:
     :alt: Screenshot of the CSET GUI for Model 01 options.
 
 
-iii. Diagnostic options
+c) Diagnostic options
 ~~~~~~~~~~~~~~~~~~~~~~~
-Next expand the ``Diagnostic options`` panel. To illustrate the plotting options we will focus
+Next expand the ``Diagnostic options`` panel. To illustrate the plotting options we first focus
 on an example of evaluating ``Surface (2D) fields``. This provides support for variables
 that are only defined on a single diagnostic level. Standard options for variables defined on
 multiple levels (e.g. pressure levels or vertical model levels) are similar, and editable on the
 relevant sub-panel selected from the left hand index.
 
-Select the ``Surface (2D) fields`` panel.
+* Select the ``Surface (2D) fields`` panel.
 * Click the ``+`` option to add a variable name to ``Surface (2D) fields`` and add
-  ``"temperature_at_screen_level"`` as a variable of interest. Note the list of fields can be
+  ``"temperature_at_screen_level"`` as a new variable to evaluate. Note the list of fields can be
   extended to capture all variables of interest from input data within the same CSET workflow run.
 * Set ``SPATIAL_SURFACE_FIELD`` to ``True`` to enable plotting of spatial maps.
-* Add any ``SPATIAL_SURFACE_FIELD_METHOD`` required to set the mode for spatial map plotting.
-  For example, setting a ``SEQ`` method will produce a series of output maps for every diagnostic
+* Add any ``SPATIAL_SURFACE_FIELD_METHOD`` options required to set the mode for spatial map plotting.
+  For example, adding ``SEQ`` method will produce a series of output maps for every diagnostic
   time through the forecast (e.g. hourly). Adding a ``MEAN`` method will activate production of
-  forecast-mean diagnostic map plots. A number of methods can be added to generate all within the
-  same CSET workflow run.
-* Set any required ``SPATIAL_SURFACE_FIELD_AGGREGATION`` options, to select any methods for
+  forecast-mean diagnostic map plots. A number of methods can be specified in this list to generate all within the same CSET workflow run.
+* Set any required ``SPATIAL_SURFACE_FIELD_AGGREGATION`` options. This selects any methods for
   generating aggregated summary maps computed as a function of lead time, hour of day, validity
   time, or to generate a single map summarising all input data across all forecast periods.
-* Set ``SPATIAL_DIFFERENC_SURFACE_FIELD`` to activate difference map plots comparing ModelA to
+* Set ``SPATIAL_DIFFERENCE_SURFACE_FIELD`` to activate difference map plots comparing ModelA to
   Model B, and then set required ``SPATIAL_DIFFERENCE_SURFACE_FIELD_AGGREGATION`` options for
   aggregating differences across multiple cases.
 * Scroll further down in the Surface (2D) fields panel to show other plot type methods and options.
@@ -156,6 +158,7 @@ Select the ``Surface (2D) fields`` panel.
     :alt: Screenshot of the CSET GUI for Surface 2D fields options - lower.
 
 Next to add a 3D variable of interest, use the ``Pressure level fields`` panel.
+
 * Add ``"zonal_wind_at_pressure_levels"`` to the list of ``Pressure level fields``.
 * Add some pressure levels on which to generate outputs - for example by adding ``200``,
   ``500`` and ``850`` to the list of ``PRESSURE_LEVELS``.
@@ -190,6 +193,7 @@ Ensure to save the configuration before closing ``rose edit``.
 4. Run workflow
 ---------------
 We are now ready to run CSET!
+
 * Within the cset-workflow folder, run ``cylc vip .``.
 * Monitor the progress by using either ``cylc tui`` on the command line, or ``cylc gui``,
   which will open up a browser showing progress through the workflow.
@@ -207,17 +211,17 @@ outputs at the web address specified in the GUI.
 
 Outputs are stored in the ``web`` folder, located in ``~/cylc-run/cset-workflow/runN/share/web``
 (or an equivalent ``cylc-run`` path if running the CSET workflow with a specified run name).
-CAUTION: If you ``cylc clean`` the workflow, this will delete the plot directory. To keep the plots independently of the workflow directory, move the web folder to a required alternative location
-and update the symlink to the ``web`` folder back to the ``Web directory`` location from which
-CSET outputs are displayed.
 
-.. image:: cset_web1.PNG
+.. note::
+   If you ``cylc clean`` the workflow, this will delete the plot directory. To keep the plots independently of the workflow directory, move the web folder to a required alternative location and update the symlink to the ``web`` folder back to the ``Web directory`` location from which CSET outputs are displayed.
+
+.. image:: cset_web1.png
     :alt: Screenshot of the CSET web interface.
 
 CSET web outputs can be navigated using the index organised by type of plot, and by forecast date
 and aggregations. Plots can be displayed in either left-hand, central, or right-hand web views.
 
-.. image:: cset_web2.PNG
+.. image:: cset_web2.png
     :alt: Screenshot of the CSET web interface.
 
 
