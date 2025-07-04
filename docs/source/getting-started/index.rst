@@ -10,8 +10,8 @@ Getting Started
 This section contains tutorials suitable for getting started with CSET. By
 following them you should learn the basics of using CSET. There are two ways to
 run CSET:
-  1) as a :doc:`command line program <installation>`
-  2) using a :doc:`cylc workflow <workflow-installation>`.
+1) as a :doc:`command line program <installation>`
+2) using a :doc:`cylc workflow <workflow-installation>`.
 
 The command line program uses the CSET python package directly to analyse data
 by using pre-existing or custom recipes. The command line program is useful for
