@@ -1,8 +1,8 @@
 category: Surface Time Series
-title: "Domain mean $VARNAME time series\n Aggregation by validity time"
+title: "$MODEL_NAME Domain mean $VARNAME time series\n Aggregation over all cases"
 description: |
-  Plots a time series of the domain horizontal mean $VARNAME by averaging over
-  all cases by using a consistent validity time.
+  Plots a time series of the domain horizontal mean surface $VARNAME by averaging over
+  all cases for non-overlapping times.
 
 steps:
   - operator: read.read_cubes
@@ -21,8 +21,6 @@ steps:
         operator: constraints.generate_level_constraint
         coordinate: "pressure"
         levels: []
-    subarea_type: $SUBAREA_TYPE
-    subarea_extent: $SUBAREA_EXTENT
 
   - operator: collapse.collapse
     coordinate: [grid_latitude, grid_longitude]
@@ -31,7 +29,7 @@ steps:
   - operator: aggregate.ensure_aggregatable_across_cases
 
   - operator: collapse.collapse_by_validity_time
-    method: MEAN
+    method: SEQ
 
   # Make a single NetCDF with all the data inside it.
   - operator: write.write_cube_to_nc

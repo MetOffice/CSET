@@ -36,4 +36,4 @@ steps:
     overwrite: True
 
   - operator: plot.plot_histogram_series
-    sequence_coordinate: time
+    sequence_coordinate: $SEQUENCE

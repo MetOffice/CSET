@@ -33,10 +33,16 @@ def preprocess_data(data_location: str, fields: iris.Constraint | None = None):
     for cube in cubes:
         del cube.attributes["cset_comparison_base"]
 
+    # Remove time0 diagnostics; LFRic does not output T0 so can cause issues.
+    ## Option to add this as a time constraint based on value of user-defined
+    ## m*_analysis_offset. For initial implementation assume to remove all time0.
+    cubes = read._remove_time0(cubes)
+
     # Work around for the current working directory being used during testing.
     temp_output = tempfile.mktemp(
         suffix=".nc", dir=os.getenv("CYLC_TASK_WORK_DIR", tempfile.gettempdir())
     )
+
     # Use iris directly to save uncompressed for faster reading.
     iris.save(cubes, temp_output)
 

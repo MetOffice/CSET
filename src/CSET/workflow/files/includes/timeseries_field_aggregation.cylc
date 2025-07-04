@@ -7,7 +7,7 @@
     inherit = DUMMY_TASK, TIMESERIES_AGGREGATION
 {% endif %}
 
-# Loop over aggregation types (hour_of_day, lead_time, validity_time)
+# Loop over aggregation types (hour_of_day, lead_time, validity_time, all)
 {% for atype in range(AGGREGATION_TYPES|count) %}
 
 # Surface (2D) fields

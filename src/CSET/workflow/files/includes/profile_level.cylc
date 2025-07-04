@@ -10,8 +10,9 @@
 # Pressure level fields
 {% if PROFILE_PLEVEL|default(False) %}
 {% for field in PRESSURE_LEVEL_FIELDS %}
+{% for method in SPATIAL_PLEVEL_FIELD_METHOD %}
 [runtime]
-    [[plevel_domain_mean_vertical_profile_series_{{sanitise_task_name(field)}}]]
+    [[plevel_domain_mean_vertical_profile_{{method}}_{{sanitise_task_name(field)}}]]
     inherit = PROFILE
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_level_domain_mean_vertical_profile_series.yaml"
@@ -19,6 +20,7 @@
             --VARNAME='{{field}}'
             --LEVELTYPE='pressure'
             --MODEL_NAME='{{model_names}}'
+            --METHOD='{{method}}'
             {% if SELECT_SUBAREA %}
             --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
             --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
@@ -29,13 +31,15 @@
         """
         MODEL_IDENTIFIERS = {{model_ids}}
 {% endfor %}
+{% endfor %}
 {% endif %}
 
 # Model level fields
 {% if PROFILE_MLEVEL|default(False) %}
 {% for field in MODEL_LEVEL_FIELDS %}
+{% for method in SPATIAL_MLEVEL_FIELD_METHOD %}
 [runtime]
-    [[mlevel_domain_mean_vertical_profile_series_{{sanitise_task_name(field)}}]]
+    [[mlevel_domain_mean_vertical_profile_{{method}}_{{sanitise_task_name(field)}}]]
     inherit = PROFILE
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_level_domain_mean_vertical_profile_series.yaml"
@@ -43,6 +47,7 @@
             --VARNAME='{{field}}'
             --LEVELTYPE='model_level_number'
             --MODEL_NAME='{{model_names}}'
+            --METHOD='{{method}}'
             {% if SELECT_SUBAREA %}
             --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
             --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
@@ -52,5 +57,6 @@
             {% endif %}
         """
         MODEL_IDENTIFIERS = {{model_ids}}
+{% endfor %}
 {% endfor %}
 {% endif %}

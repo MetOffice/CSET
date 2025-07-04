@@ -1,7 +1,8 @@
 category: Profiles
-title: Domain mean $VARNAME vertical profile $METHOD
-description: Plots the $METHOD of vertical profiles for the domain horizontal mean
-  $VARNAME using a $LEVELTYPE coordinate.
+title: "Domain mean $VARNAME vertical profile\n Aggregation over all cases"
+description: |
+  Plots a vertical profile for the domain horizontal mean $VARNAME using a
+  $LEVELTYPE coordinate. Multiple cases are aggregated together for all available times.
 
 steps:
   - operator: read.read_cubes
@@ -16,17 +17,16 @@ steps:
         operator: constraints.generate_level_constraint
         coordinate: $LEVELTYPE
         levels: "*"
-    subarea_type: $SUBAREA_TYPE
-    subarea_extent: $SUBAREA_EXTENT
 
   - operator: collapse.collapse
     coordinate: [grid_latitude, grid_longitude]
     method: MEAN
 
-  # If required, collapse data using specified time analysis method (or sequence)
+  - operator: aggregate.ensure_aggregatable_across_cases
+
   - operator: collapse.collapse
     coordinate: [time]
-    method: $METHOD
+    method: MEAN
 
   # Plot the vertical line series.
   - operator: plot.plot_vertical_line_series

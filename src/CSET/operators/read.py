@@ -71,7 +71,7 @@ def read_cube(
         Constraints to filter data by. Defaults to unconstrained.
     model_names: str | list[str], optional
         Names of the models that correspond to respective paths in file_paths.
-    subarea_type: "realworld" | "modelrelative", optional
+    subarea_type: "gridcells" | "modelrelative" | "realworld", optional
         Whether to constrain data by model relative coordinates or real world
         coordinates.
     subarea_extent: list, optional
@@ -187,7 +187,6 @@ def read_cubes(
 
     # Select sub region.
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
-
     # Merge and concatenate cubes now metadata has been fixed.
     cubes = cubes.merge()
     cubes = cubes.concatenate()
@@ -540,7 +539,7 @@ def _longitude_fix_callback(cube: iris.cube.Cube):
         long_points -= 180.0
     long_coord.points = long_points
 
-    # Update coord bounds to be consistent with wrapping
+    # Update coord bounds to be consistent with wrapping.
     if long_coord.has_bounds() and np.size(long_coord) > 1:
         long_coord.bounds = None
         long_coord.guess_bounds()
@@ -685,6 +684,7 @@ def _fix_um_radtime(cube: iris.cube.Cube):
     """
     try:
         if cube.attributes["STASH"] in [
+            "m01s01i207",
             "m01s01i208",
             "m01s02i205",
             "m01s02i201",
@@ -697,7 +697,6 @@ def _fix_um_radtime(cube: iris.cube.Cube):
             # Convert time points to datetime objects
             time_unit = time_coord.units
             time_points = time_unit.num2date(time_coord.points)
-
             # Skip if times don't need fixing.
             if time_points[0].minute == 0 and time_points[0].second == 0:
                 return
@@ -869,6 +868,7 @@ def _lfric_time_callback(cube: iris.cube.Cube):
     # Construct forecast_reference time if it doesn't exist.
     try:
         tcoord = cube.coord("time")
+        # Set time coordinate to common basis "hours since 1970"
         try:
             tcoord.convert_units("hours since 1970-01-01 00:00:00")
         except ValueError:
@@ -941,3 +941,30 @@ def _lfric_forecast_period_standard_name_callback(cube: iris.cube.Cube):
             coord.standard_name = "forecast_period"
     except iris.exceptions.CoordinateNotFoundError:
         pass
+
+
+def _remove_time0(cubes: iris.cube.CubeList):
+    """Remove T0 from UM inputs to allow time-averaged comparison with LFRic.
+
+    A number of UM outputs contain T=0 initial time diagnostic fields, while
+    LFRic diagnostics begin from T=1 output step. This does not cause issues
+    for comparing UM with LFRic for hour-by-hour comparisons, for which times
+    are matched up in code. However, for any recipes requiring collapse by
+    time ahead of comparison, computing averages over e.g. 24h vs 25h window
+    results in different timestamps in each collapsed cube, breaking subsequent
+    CSET time-checking steps to compare like-with-like.
+
+    This function removes any outputs at T=0 to support time-processed comparisons.
+    """
+    valid_cubes = iris.cube.CubeList()
+    for cube in cubes:
+        if cube.coords("forecast_period"):
+            valid_cube = cube.extract(
+                iris.Constraint(forecast_period=lambda cell: cell >= 0.25)
+            )
+            if valid_cube:
+                valid_cubes.append(valid_cube)
+        else:
+            valid_cubes.append(cube)
+
+    return valid_cubes

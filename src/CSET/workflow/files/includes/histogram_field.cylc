@@ -18,6 +18,11 @@
         CSET_ADDOPTS = """
             --VARNAME='{{field}}'
             --MODEL_NAME='{{model_names}}'
+            {% if HISTOGRAM_SURFACE_FIELD_SEQUENCE|default(False) %}
+            --SEQUENCE='time'
+            {% else %}
+            --SEQUENCE='realization'
+            {% endif %}
             {% if SELECT_SUBAREA %}
             --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
             --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
@@ -44,6 +49,11 @@
             --LEVELTYPE='pressure'
             --LEVEL='{{plevel}}'
             --MODEL_NAME='{{model_names}}'
+            {% if HISTOGRAM_PLEVEL_FIELD_SEQUENCE|default(False) %}
+            --SEQUENCE='time'
+            {% else %}
+            --SEQUENCE='realization'
+            {% endif %}
             {% if SELECT_SUBAREA %}
             --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
             --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
@@ -71,6 +81,11 @@
             --LEVELTYPE='model_level_number'
             --LEVEL='{{mlevel}}'
             --MODEL_NAME='{{model_names}}'
+            {% if HISTOGRAM_MLEVEL_FIELD_SEQUENCE|default(False) %}
+            --SEQUENCE='time'
+            {% else %}
+            --SEQUENCE='realization'
+            {% endif %}
             {% if SELECT_SUBAREA %}
             --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
             --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
