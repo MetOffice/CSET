@@ -19,7 +19,7 @@ import shutil
 
 import iris
 
-from CSET._workflow_utils import preprocess
+from CSET.cset_workflow.app.preprocess_data.bin import preprocess
 
 
 def test_preprocess(monkeypatch):

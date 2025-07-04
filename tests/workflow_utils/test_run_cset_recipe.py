@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from CSET._workflow_utils import run_cset_recipe
+from CSET.cset_workflow.app.run_cset_recipe.bin import run_cset_recipe
 
 
 def test_recipe_file(monkeypatch, tmp_working_dir):

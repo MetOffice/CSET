@@ -40,9 +40,3 @@ CSET._common
 
 .. automodule:: CSET._common
    :members:
-
-CSET._workflow_utils
---------------------
-
-.. automodule:: CSET._workflow_utils
-   :members:
