@@ -12,7 +12,7 @@ repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: 7445ed19e95ffaa6aad0d9bd4123025f7039511a  # frozen: v0.12.1
     hooks:
-      - id: ruff
+      - id: ruff-check
         args: [--fix, --show-fixes, --exit-non-zero-on-fix]
       - id: ruff-format
 
