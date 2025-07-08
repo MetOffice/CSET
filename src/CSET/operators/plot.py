@@ -1052,8 +1052,6 @@ def _plot_and_save_scattermap_plot(
         axes = plt.axes(projection=ccrs.PlateCarree())
 
     # Filled contour plot of the field.
-    cmap = mpl.colormaps["jet"]
-
     mrk_size = int(np.sqrt(5000000.0 / len(cube.data)))
     klon = None
     klat = None
@@ -1074,7 +1072,7 @@ def _plot_and_save_scattermap_plot(
     # Add coastlines.
     try:
         axes.coastlines()
-    except:
+    except AttributeError:
         pass
 
     # Add title.
@@ -1149,12 +1147,11 @@ def _spatial_plot(
 
     # Produce a geographical scatter plot if the data have a
     # dimension called observation or model_obs_error
-    try:
-        for crd in cube.coords():
-            if (crd.var_name == "station") or (crd.var_name == "model_obs_error"):
-                plotting_func = _plot_and_save_scattermap_plot
-    except:
-        pass
+    if any(
+        crd.var_name == "station" or crd.var_name == "model_obs_error"
+        for crd in cube.coords()
+    ):
+        plotting_func = _plot_and_save_scattermap_plot
 
     # Must have a sequence coordinate.
     try:
