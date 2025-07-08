@@ -825,6 +825,11 @@
     "max": 25,
     "min": 0
   },
+  "wind_speed_at_10m_difference": {
+    "cmap": "bwr",
+    "max": 5,
+    "min": -5
+  },
   "zonal_wind_at_pressure_levels": {
     "cmap": "RdBu_r",
     "max": 50,
