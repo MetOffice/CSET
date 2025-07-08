@@ -18,7 +18,7 @@ steps:
         cell_method_constraint:
           operator: constraints.generate_cell_methods_constraint
           cell_methods: []
-        # This will require more work. Several fields are stored with muliple
+        # This will require more work. Several fields are stored with multiple
         # cell methods, so generally we want the instantaneous one, but in
         # other cases, the field may be available only with another cell method.
         # In effect, we shall need to match cell methods to diagnostics.
@@ -35,5 +35,3 @@ steps:
 
   - operator: write.write_cube_to_nc
     overwrite: True
-
-

@@ -25,12 +25,12 @@ import os
 import sys
 from typing import Literal
 
+import cartopy.crs as ccrs
 import iris
 import iris.coords
 import iris.cube
 import iris.exceptions
 import iris.plot as iplt
-import cartopy.crs as ccrs
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -1022,6 +1022,7 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
     # Close the figure
     plt.close(fig)
 
+
 def _plot_and_save_scattermap_plot(
     cube: iris.cube.Cube, filename: str, title: str, **kwargs
 ):
@@ -1039,11 +1040,11 @@ def _plot_and_save_scattermap_plot(
     """
     # Setup plot details, size, resolution, etc.
     fig = plt.figure(figsize=(15, 15), facecolor="w", edgecolor="k")
-    proj = kwargs.get('projection')
-    if (proj is not None):
+    proj = kwargs.get("projection")
+    if proj is not None:
         # Apart from the default, the only projection we currently support is
         # a stereographic projection over the North Pole.
-        if (proj == 'NP_Stereo'):
+        if proj == "NP_Stereo":
             axes = plt.axes(projection=ccrs.NorthPolarStereo(central_longitude=0.0))
         else:
             axes = plt.axes(projection=ccrs.PlateCarree())
@@ -1057,14 +1058,18 @@ def _plot_and_save_scattermap_plot(
     klon = None
     klat = None
     for kc in range(len(cube.aux_coords)):
-        if (cube.aux_coords[kc].standard_name == 'latitude'):
+        if cube.aux_coords[kc].standard_name == "latitude":
             klat = kc
-        elif (cube.aux_coords[kc].standard_name == 'longitude'):
+        elif cube.aux_coords[kc].standard_name == "longitude":
             klon = kc
-    scatter_map = iplt.scatter(cube.aux_coords[klon],
-                 cube.aux_coords[klat],
-                 c=cube.data[:], s=mrk_size, cmap='jet',
-                 edgecolors='k')
+    scatter_map = iplt.scatter(
+        cube.aux_coords[klon],
+        cube.aux_coords[klat],
+        c=cube.data[:],
+        s=mrk_size,
+        cmap="jet",
+        edgecolors="k",
+    )
 
     # Add coastlines.
     try:
@@ -1084,13 +1089,14 @@ def _plot_and_save_scattermap_plot(
     logging.info("Saved geographical scatter plot to %s", filename)
     plt.close(fig)
 
+
 def _spatial_plot(
     method: Literal["contourf", "pcolormesh"],
     cube: iris.cube.Cube,
     filename: str | None,
     sequence_coordinate: str,
     stamp_coordinate: str,
-    **kwargs
+    **kwargs,
 ):
     """Plot a spatial variable onto a map from a 2D, 3D, or 4D cube.
 
@@ -1141,12 +1147,11 @@ def _spatial_plot(
     except iris.exceptions.CoordinateNotFoundError:
         pass
 
-    # Produce a geographical scatter plot if the data have a 
+    # Produce a geographical scatter plot if the data have a
     # dimension called observation or model_obs_error
     try:
         for crd in cube.coords():
-            if ( (crd.var_name == "station") or
-                 (crd.var_name == "model_obs_error") ):
+            if (crd.var_name == "station") or (crd.var_name == "model_obs_error"):
                 plotting_func = _plot_and_save_scattermap_plot
     except:
         pass
@@ -1178,7 +1183,7 @@ def _spatial_plot(
             stamp_coordinate=stamp_coordinate,
             title=title,
             method=method,
-            **kwargs
+            **kwargs,
         )
         plot_index.append(plot_filename)
 
@@ -1349,7 +1354,9 @@ def spatial_contour_plot(
     TypeError
         If the cube isn't a single cube.
     """
-    _spatial_plot("contourf", cube, filename, sequence_coordinate, stamp_coordinate, **kwargs)
+    _spatial_plot(
+        "contourf", cube, filename, sequence_coordinate, stamp_coordinate, **kwargs
+    )
     return cube
 
 
@@ -1398,7 +1405,9 @@ def spatial_pcolormesh_plot(
     TypeError
         If the cube isn't a single cube.
     """
-    _spatial_plot("pcolormesh", cube, filename, sequence_coordinate, stamp_coordinate, **kwargs)
+    _spatial_plot(
+        "pcolormesh", cube, filename, sequence_coordinate, stamp_coordinate, **kwargs
+    )
     return cube
 
 
