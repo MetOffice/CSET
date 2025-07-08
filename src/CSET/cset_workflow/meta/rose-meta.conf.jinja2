@@ -170,6 +170,17 @@ type=integer
 compulsory=true
 sort-key=setup-h-out3
 
+[template variables=PLOTTING_PROJECTION]
+ns=Setup
+title=Projection for the plots
+description=Geographical projection of plots
+help=This is is the projection used for the final plots, specified as a string.
+    If no value is given, native latitudes and longitudes are used.
+compulsory=true
+values="Unspecified", "NP_Stereo"
+value-titles=Unspecified, North polar stereographic
+sort-key=setup-h-out3a
+
 [template variables=SKIP_WRITE]
 ns=Setup
 title=Skip writing processed data
