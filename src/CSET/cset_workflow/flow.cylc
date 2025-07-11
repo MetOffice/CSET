@@ -173,7 +173,7 @@ URL = https://metoffice.github.io/CSET
         ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
 
     [[PREPROCESS_DATA]]
-    script = rose task-run -v --app-key=preprocess_data
+    script = true
     execution time limit = PT30M
     execution retry delays = PT1M, PT15M, PT1H
         [[[directives]]]
