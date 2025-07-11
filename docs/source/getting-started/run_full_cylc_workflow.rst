@@ -61,9 +61,9 @@ browser.
 -------------------------
 
 After downloading the CSET release and the data to evaluate, we next set up the
-required configuration. This uses the `rose-suite.conf.example` file as a starting point to copy to create
-a `rose-suite.conf` configuration file before editing it using the ``rose edit`` command inside the ``cset-workflow-v25.3.1``
-directory.
+required configuration. The `rose-suite.conf.example` file is a starting point
+to copy to create a `rose-suite.conf` configuration file, which can be edited
+using the ``rose edit`` command inside the ``cset-workflow-v25.3.1`` directory.
 
 .. code-block:: bash
 
