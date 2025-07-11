@@ -14,7 +14,7 @@ cylc GUI, accessible with the command ``cylc gui``.
     cylc gui
 
 
-Other commands to control cylc options are described in the cylc_ documentation.
+Other commands to control the workflow are described in the cylc_ documentation.
 
 
 Once CSET has finished running you will receive an email containing a link to
