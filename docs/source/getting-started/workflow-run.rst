@@ -10,7 +10,7 @@ cylc GUI, accessible with the command ``cylc gui``.
 
     # Run workflow from the current working directory.
     cylc vip .
-    # Monitor workflow progress.
+    # Monitor the workflow's progress.
     cylc gui
 
 
