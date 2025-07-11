@@ -62,6 +62,6 @@ Help text for each variable can be viewed by clicking on the variable's name.
 Once you have finished updating CSET settings you can save the GUI (down arrow symbol) or (File -> Save) and close rose edit.
 
 Experienced CSET users, once familiar with settings, can also choose to update the ``rose-suite.conf`` file using a
-command-line editor, but for general use the rose GUI is recommended.
+command-line editor, but for general use the rose edit GUI is recommended.
 
 .. _rose edit: https://metomi.github.io/rose/doc/html/api/command-reference.html#rose-config-edit
