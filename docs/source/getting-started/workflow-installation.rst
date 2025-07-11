@@ -45,8 +45,7 @@ you can skip this step and later choose ``localhost`` as your site.
 
     ./install_restricted_files.sh
 
-You have now installed the CSET workflow. Go to :doc:`the next tutorial to run
-it <workflow-run>`.
+You have now installed the CSET workflow. Go to :doc:`the next tutorial to set it up to run <workflow-configure>`.
 
 .. _cylc workflow: https://cylc.github.io/
 .. _Releases page on GitHub: https://github.com/MetOffice/CSET/releases
