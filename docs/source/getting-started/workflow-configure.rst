@@ -4,7 +4,8 @@ Configure the workflow
 Before running the CSET workflow, the workflow configuration needs to be edited
 to add relevant task details.
 
-Start by making a copy of the ``rose-suite.conf.example`` file to create a file ``rose-suite.conf``.
+Start by making a copy of the ``rose-suite.conf.example`` file called
+``rose-suite.conf``.
 
 This needs further job-specific changes, which are done using `rose edit`_, a GUI configuration
 tool. Within rose edit work through each section under the "suite conf" tab in turn and
