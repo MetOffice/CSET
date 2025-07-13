@@ -259,6 +259,12 @@ def test_contour_plot_sequence(cube, tmp_working_dir):
     assert Path("untitled_462149.0.png").is_file()
 
 
+def test_vector_plot_with_filename(vector_cubes, tmp_working_dir):
+    """Plot a vector plot of u10 and v10 components."""
+    plot.vector_plot(vector_cubes[0], vector_cubes[1], filename="testvector", sequence_coordinate="time")
+    assert Path("testvector_6.0.png").is_file()
+
+
 def test_postage_stamp_contour_plot(ensemble_cube, monkeypatch, tmp_path):
     """Plot postage stamp plots of ensemble data."""
     # Get a single time step.
