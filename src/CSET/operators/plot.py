@@ -827,9 +827,9 @@ def _plot_and_save_vector_plot(
     Parameters
     ----------
     cube_u: Cube
-        1 dimensional Cube of the data to plot on x-axis.
+        2 dimensional Cube of u component of the data.
     cube_v: Cube
-        1 dimensional Cube of the data to plot on y-axis.
+        2 dimensional Cube of v component of the data.
     filename: str
         Filename of the plot to write.
     title: str
@@ -839,7 +839,7 @@ def _plot_and_save_vector_plot(
 
     # Create a cube containing the magnitude of the vector field.
     cube_vec_mag = (cube_u**2 + cube_v**2) ** 0.5
-    cube_vec_mag.rename("magnitude")
+    cube_vec_mag.rename(f"{cube_u.name()}_{cube_v.name()}_magnitude")
 
     # Specify the color bar
     cmap, levels, norm = _colorbar_map_levels(cube_vec_mag)
@@ -931,8 +931,8 @@ def _plot_and_save_vector_plot(
         cbar.set_ticks(levels)
         cbar.set_ticklabels([f"{level:.1f}" for level in levels])
 
-    # Add quiver plot of the vector field.
-    step = 50
+    # 30 barbs along the longest axis of the plot.
+    step = max(cube_u.shape) // 30
     iplt.quiver(cube_u[::step,::step], cube_v[::step,::step], pivot="middle")
 
     # Save plot.
@@ -1788,15 +1788,12 @@ def vector_plot(
     sequence_coordinate: str = "time",
     **kwargs,
 ) -> iris.cube.CubeList:
-    """Plot a vector plot based on the input u and v components.
-    """
+    """Plot a vector plot based on the input u and v components."""
     recipe_title = get_recipe_metadata().get("title", "Untitled")
 
     # Ensure we have a name for the plot file.
     if filename is None:
         filename = slugify(recipe_title)
-
-    plotting_func = _plot_and_save_vector_plot
 
     # Must have a sequence coordinate.
     try:
@@ -1809,6 +1806,10 @@ def vector_plot(
     except iris.exceptions.CoordinateNotFoundError as err:
         raise ValueError(f"Cube(v) must have a {sequence_coordinate} coordinate.") from err
 
+    # check that the u and v cubes have the same sequence coordinate.
+    if cube_u.coord(sequence_coordinate) != cube_v.coord(sequence_coordinate):
+        raise ValueError(f"Cube(u) and Cube (v) must have the same {sequence_coordinate} coordinate.")
+
     # Create a plot for each value of the sequence coordinate.
     plot_index = []
     for cube_u_slice, cube_v_slice in zip(cube_u.slices_over(sequence_coordinate), cube_v.slices_over(sequence_coordinate)):
@@ -1819,7 +1820,7 @@ def vector_plot(
         # Format the coordinate value in a unit appropriate way.
         title = f"{recipe_title}\n{coord.units.title(coord.points[0])}"
         # Do the actual plotting.
-        plotting_func(
+        _plot_and_save_vector_plot(
             cube_u_slice,
             cube_v_slice,
             filename=plot_filename,

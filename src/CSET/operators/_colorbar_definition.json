@@ -143,6 +143,11 @@
     "max": 5,
     "min": -5
   },
+  "eastward_wind_northward_wind_magnitude": {
+    "cmap": "YlOrRd",
+    "max": 25.0,
+    "min": 0.0
+  },
   "exner_pressure_at_cell_interfaces": {
     "cmap": "coolwarm",
     "max": 1.1,
