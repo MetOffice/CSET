@@ -932,8 +932,9 @@ def _plot_and_save_vector_plot(
         cbar.set_ticks(levels)
         cbar.set_ticklabels([f"{level:.1f}" for level in levels])
 
-    # 30 barbs along the longest axis of the plot.
-    step = max(cube_u.shape) // 30
+    # 30 barbs along the longest axis of the plot, or a barb per point for data
+    # with less than 30 points.
+    step = max(max(cube_u.shape) // 30, 1)
     iplt.quiver(cube_u[::step, ::step], cube_v[::step, ::step], pivot="middle")
 
     # Save plot.
