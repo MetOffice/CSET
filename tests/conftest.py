@@ -87,6 +87,7 @@ def vertical_profile_cube(vertical_profile_cube_readonly):
 def vector_cubes_readonly():
     """Get vector plot cubes. It is NOT safe to modify."""
     from CSET.operators import read
+
     # Read the input cubes.
     in_cubes = read.read_cubes("tests/test_data/u10_v10.nc")
     # Generate constraints for the u and v components of the wind.
@@ -94,12 +95,10 @@ def vector_cubes_readonly():
     var_constraint_v = constraints.generate_var_constraint("northward_wind")
     lev_contraint = constraints.generate_level_constraint("height", 10)
     combined_constraint_u = constraints.combine_constraints(
-        a=var_constraint_u,
-        b=lev_contraint
+        a=var_constraint_u, b=lev_contraint
     )
     combined_constraint_v = constraints.combine_constraints(
-        a=var_constraint_v,
-        b=lev_contraint
+        a=var_constraint_v, b=lev_contraint
     )
     # filter the cubes using the constraints.
     cube_u = filters.filter_cubes(in_cubes, combined_constraint_u)

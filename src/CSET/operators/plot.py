@@ -814,6 +814,7 @@ def _plot_and_save_scatter_plot(
     logging.info("Saved scatter plot to %s", filename)
     plt.close(fig)
 
+
 def _plot_and_save_vector_plot(
     cube_u: iris.cube.Cube,
     cube_v: iris.cube.Cube,
@@ -933,7 +934,7 @@ def _plot_and_save_vector_plot(
 
     # 30 barbs along the longest axis of the plot.
     step = max(cube_u.shape) // 30
-    iplt.quiver(cube_u[::step,::step], cube_v[::step,::step], pivot="middle")
+    iplt.quiver(cube_u[::step, ::step], cube_v[::step, ::step], pivot="middle")
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -1781,6 +1782,7 @@ def scatter_plot(
 
     return iris.cube.CubeList([cube_x, cube_y])
 
+
 def vector_plot(
     cube_u: iris.cube.Cube | iris.cube.CubeList,
     cube_v: iris.cube.Cube | iris.cube.CubeList,
@@ -1799,20 +1801,30 @@ def vector_plot(
     try:
         cube_u.coord(sequence_coordinate)
     except iris.exceptions.CoordinateNotFoundError as err:
-        raise ValueError(f"Cube(u) must have a {sequence_coordinate} coordinate.") from err
+        raise ValueError(
+            f"Cube(u) must have a {sequence_coordinate} coordinate."
+        ) from err
 
     try:
         cube_v.coord(sequence_coordinate)
     except iris.exceptions.CoordinateNotFoundError as err:
-        raise ValueError(f"Cube(v) must have a {sequence_coordinate} coordinate.") from err
+        raise ValueError(
+            f"Cube(v) must have a {sequence_coordinate} coordinate."
+        ) from err
 
     # check that the u and v cubes have the same sequence coordinate.
     if cube_u.coord(sequence_coordinate) != cube_v.coord(sequence_coordinate):
-        raise ValueError(f"Cube(u) and Cube (v) must have the same {sequence_coordinate} coordinate.")
+        raise ValueError(
+            f"Cube(u) and Cube (v) must have the same {sequence_coordinate} coordinate."
+        )
 
     # Create a plot for each value of the sequence coordinate.
     plot_index = []
-    for cube_u_slice, cube_v_slice in zip(cube_u.slices_over(sequence_coordinate), cube_v.slices_over(sequence_coordinate)):
+    for cube_u_slice, cube_v_slice in zip(
+        cube_u.slices_over(sequence_coordinate),
+        cube_v.slices_over(sequence_coordinate),
+        strict=True,
+    ):
         # Use sequence value so multiple sequences can merge.
         sequence_value = cube_u_slice.coord(sequence_coordinate).points[0]
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
