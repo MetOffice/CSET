@@ -17,6 +17,7 @@
 https://docs.pytest.org/en/latest/reference/fixtures.html#conftest-py-sharing-fixtures-across-multiple-files
 """
 
+import iris.cube
 import pytest
 
 from CSET.operators import constraints, filters, read
@@ -103,7 +104,7 @@ def vector_cubes_readonly():
     # filter the cubes using the constraints.
     cube_u = filters.filter_cubes(in_cubes, combined_constraint_u)
     cube_v = filters.filter_cubes(in_cubes, combined_constraint_v)
-    return [cube_u, cube_v]
+    return iris.cube.CubeList([cube_u, cube_v])
 
 
 @pytest.fixture()
