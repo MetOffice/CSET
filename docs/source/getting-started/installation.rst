@@ -43,6 +43,5 @@ something like ``CSET vX.Y.Z``.
 You now have CSET installed. Go to :doc:`the next tutorial to run it
 <run-recipe>`.
 
-
 .. _conda: https://docs.conda.io/en/latest/
 .. _conda-forge: https://anaconda.org/conda-forge/cset
