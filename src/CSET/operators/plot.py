@@ -1785,8 +1785,8 @@ def scatter_plot(
 
 
 def vector_plot(
-    cube_u: iris.cube.Cube | iris.cube.CubeList,
-    cube_v: iris.cube.Cube | iris.cube.CubeList,
+    cube_u: iris.cube.Cube,
+    cube_v: iris.cube.Cube,
     filename: str = None,
     sequence_coordinate: str = "time",
     **kwargs,
@@ -1798,26 +1798,15 @@ def vector_plot(
     if filename is None:
         filename = slugify(recipe_title)
 
-    # Must have a sequence coordinate.
+    # Cubes must have a matching sequence coordinate.
     try:
-        cube_u.coord(sequence_coordinate)
-    except iris.exceptions.CoordinateNotFoundError as err:
+        # Check that the u and v cubes have the same sequence coordinate.
+        if cube_u.coord(sequence_coordinate) != cube_v.coord(sequence_coordinate):
+            raise ValueError("Coordinates do not match.")
+    except (iris.exceptions.CoordinateNotFoundError, ValueError) as err:
         raise ValueError(
-            f"Cube(u) must have a {sequence_coordinate} coordinate."
+            f"Cubes should have matching {sequence_coordinate} coordinate:\n{cube_u}\n{cube_v}"
         ) from err
-
-    try:
-        cube_v.coord(sequence_coordinate)
-    except iris.exceptions.CoordinateNotFoundError as err:
-        raise ValueError(
-            f"Cube(v) must have a {sequence_coordinate} coordinate."
-        ) from err
-
-    # check that the u and v cubes have the same sequence coordinate.
-    if cube_u.coord(sequence_coordinate) != cube_v.coord(sequence_coordinate):
-        raise ValueError(
-            f"Cube(u) and Cube (v) must have the same {sequence_coordinate} coordinate."
-        )
 
     # Create a plot for each value of the sequence coordinate.
     plot_index = []
