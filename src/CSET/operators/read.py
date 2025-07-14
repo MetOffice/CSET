@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Literal
 
 import iris
+import iris.coord_systems
 import iris.coords
 import iris.cube
 import iris.exceptions
@@ -860,13 +861,10 @@ def _fix_um_winds(cubes: iris.cube.CubeList):
 
 
 def _add_wind_speed_um(cubes: iris.cube.CubeList):
-    """To add windspeeds to cubes from the UM.
-
-    Add the windspeed to a cube from the UM.
-    """
+    """Add windspeeds to cubes from the UM."""
     wspd10 = (
-        cubes.extract(iris.AttributeConstraint(STASH="m01s03i225"))[0] ** 2
-        + cubes.extract(iris.AttributeConstraint(STASH="m01s03i226"))[0] ** 2
+        cubes.extract_cube(iris.AttributeConstraint(STASH="m01s03i225"))[0] ** 2
+        + cubes.extract_cube(iris.AttributeConstraint(STASH="m01s03i226"))[0] ** 2
     ) ** 0.5
     wspd10.attributes["STASH"] = "m01s03i227"
     wspd10.standard_name = "wind_speed"
@@ -878,8 +876,7 @@ def _convert_wind_true_dirn_um(cubes: iris.cube.CubeList):
     """To convert winds to true directions.
 
     Convert from the components relative to the grid to true directions.
-    As this functionality should not have a long lifetime, we treat only
-    the simplest case.
+    This functionality only handles the simplest case.
     """
     u_grid = cubes.extract_cube(iris.AttributeConstraint(STASH="m01s03i225"))
     v_grid = cubes.extract_cube(iris.AttributeConstraint(STASH="m01s03i226"))
