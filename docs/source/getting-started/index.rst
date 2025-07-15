@@ -20,7 +20,7 @@ as well as development. :doc:`Follow this tutorial
 for how to use the command line program <installation>`.
 
 The cylc workflow allows large scale processing of multiple models,
-case-studies, and variables. It is however more complex to set up, requiring a
+case-studies, and variables. It is, however, more complex to set up and requires a
 cylc installation. Using the cylc workflow will be what is most widely used by
 weather and climate users familiar with rose and cylc_, and requires the least
 familiarity with CSET to analyse UM or LFRic output, since the recipes to
