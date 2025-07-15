@@ -15,7 +15,8 @@ or using a :doc:`cylc workflow <run_full_cylc_workflow>`.
 
 The command line program uses the CSET python package directly to analyse data
 by using pre-existing or custom recipes. The command line program is useful for
-ad-hoc or small scale usage, as well as development. :doc:`Follow this tutorial
+running single recipes to get a single diagnostics, ad-hoc or small scale usage, 
+as well as development. :doc:`Follow this tutorial
 for how to use the command line program <installation>`.
 
 The cylc workflow allows large scale processing of multiple models,
