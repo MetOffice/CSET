@@ -5,7 +5,7 @@ Install and run the CSET cylc workflow
 .. TODO: Images need updating to match the tutorial data.
 
 This tutorial provides a step by step guide of how to run CSET via its included
-cylc workflow across data from multiple forecasts, resulting in a website of
+cylc workflow comparing data from multiple forecasts, resulting in a website of
 plots to navigate.
 
 Prerequisites
@@ -51,10 +51,10 @@ activate`` command.
 
 .. note::
 
-    You will have to rerun the ``conda activate cset`` command whenever you use
+    You will need to rerun the ``conda activate cset`` command whenever you use
     a new terminal.
 
-Once that is done, CSET should be ready to use. This can be verified by running
+Once that is completed, CSET should be ready to use. This can be verified by running
 a simple command.
 
 .. code-block:: bash
