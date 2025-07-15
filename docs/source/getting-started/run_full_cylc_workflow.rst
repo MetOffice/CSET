@@ -104,7 +104,7 @@ You have now installed the CSET workflow and are ready to use it.
 Download sample data
 --------------------
 
-We will now download some sample data, which contains screen level air
+We will now download some sample data, which contain screen level air
 temperature and air temperature on pressure levels for two sample forecasts, for
 two different models to help us explore some of the functionality of CSET. The
 tutorial data consists of 4 files to download:
@@ -126,8 +126,8 @@ Workflow configuration
 ----------------------
 
 After downloading the CSET release and the data to evaluate, we next set up the
-required configuration. The ``rose-suite.conf.example`` file is a starting point
-to copy to create a ``rose-suite.conf`` configuration file, which can be edited
+required CSET configuration. Take a copy of the ``rose-suite.conf.example`` configuration 
+file to create a copy ``rose-suite.conf`` in the same directory. This can be edited
 from inside the ``cset-workflow-vX.Y.Z`` directory using the ``rose edit``
 command.
 
@@ -152,10 +152,14 @@ following settings:
 * Select the ``Site`` or set ``Localhost`` if not listed.
 
 * Adjust the ``Web directory`` to point to a directory that is served by your
-  webserver.
+  webserver. This can be a directory on your linux system that is displayed by
+  your webserver.
 
 * (Optionally) set the ``Website Address`` to the URL where your web directory
-  is served.
+  is served. This is the address your will use to display your results in a webbrowser.
+
+* On some servers it is useful to click the ``save`` button in the rose gui to avoid
+  loosing entered information when navigating to a new page.
 
 .. image:: rose-edit.png
     :alt: Screenshot of the CSET GUI with the General setup options panel open.
@@ -177,6 +181,8 @@ tree, and set the following:
 
 * Set the ``Number of models`` to 2, as we want to assess two different models.
 
+* Keep the Cutout Subarea set to False.
+
 .. image:: cset_uiA.png
     :alt: Screenshot of the CSET GUI for Cycling and Model options.
 
@@ -184,7 +190,8 @@ Setting the number of models activates new ``Model 01``, ``Model 02``, ...
 panels in the navigation tree in which to specify model-relevant settings. You
 may need to further expand the navigation tree to see them.
 
-Navigate to each Model panel in turn to set model-specific settings:
+Navigate to each Model panel by expanding the Cylcing and Model options menu in 
+turn to set model-specific settings:
 
 * Add a readable ``Model name`` which will be associated with the data in CSET
   outputs.
@@ -207,7 +214,9 @@ Diagnostic options
 .. temperature_at_screen_levels
 .. zonal_wind_at_pressure_levels
 
-Next expand the ``Diagnostic options`` panel and open ``Surface (2D) fields``.
+Next expand the ``Diagnostic options`` panel and keep 
+SHOW_CASE_STUDY_AGGREGATION_OPTIONS switched to ``True``.
+Open ``Surface (2D) fields``.
 This panel provides option for processing and visualising variables that are
 only defined on a single diagnostic level such as, but not exclusively, surface
 fields. Set the following settings:
@@ -301,7 +310,7 @@ Run the workflow
 
 After configuration via the rose GUI, the CSET workflow is ready to run.
 
-To run the workflow, use ``cylc vip`` within the workflow directory. You can
+To run the workflow, use ``cylc vip`` within the cset_workflow directory. You can
 view the job's progress in the browser with the cylc GUI, accessible with the
 command ``cylc gui``, or in the terminal with ``cylc tui``.
 
