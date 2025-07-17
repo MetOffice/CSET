@@ -186,6 +186,10 @@ def read_cubes(
     # Unify time units so different case studies can merge.
     iris.util.unify_time_units(cubes)
 
+    # Remove T0 from UM inputs to allow time-averaged comparison with LFRic.
+    # TODO: Remove this hack. (See docstring for issue.)
+    _remove_time0(cubes)
+
     # Select sub region.
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
     # Merge and concatenate cubes now metadata has been fixed.
