@@ -27,7 +27,7 @@ of the output you are looking at, and easily copy to settings into your own
 workflow.
 
 There is new functionality for trimming the domain boundaries (useful for
-removing unphysical regions), and new recipes for calculating summary statistics
+removing regions where unphysical data exists), and new recipes for calculating summary statistics
 within a case, such as mean, min/max, or standard deviation.
 
 There have been a number of fixes to how common time points are selected; this
