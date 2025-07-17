@@ -1,248 +1,361 @@
-Running a full CYLC workflow with CSET v25.3.1
-==============================================
+Install and run the CSET cylc workflow
+======================================
 
-.. Tutorial on running CSET within a CYLC environment.
+.. Tutorial on running CSET via its cylc workflow.
+.. TODO: Images need updating to match the tutorial data.
 
-This tutorial provides a step by step guide of how to run CSET within
-a CYLC environment across multiple forecast data that will populate a
-website with the plots to navigate. This guide assumes that you have
-`Cylc 8`_ installed in your workspace. You can confirm this by typing
+This tutorial provides a step by step guide of how to run CSET via its included
+cylc workflow comparing data from multiple forecasts, resulting in a website of
+plots to navigate.
 
-.. code-block:: bash
+Prerequisites
+-------------
 
-   cylc --version
+The CSET workflow uses **cylc 8**, so you must ensure that is the version of
+cylc configured for use on your system. You can check whether cylc is available
+with the following command:
 
-Which should produce a version 8.X.
+.. caution::
 
-1. Download CSET workflow
--------------------------
-
-Next download the latest release of CSET, which can be
-found at `CSET Releases`_. This example will utilise version **v25.3.1**.
-Once you have downloaded the tar.gz file, untar the file.
-
-.. code-block:: bash
-
-   tar -xvf cset-workflow-v25.3.1.tar.gz
-
-If you are running in the Met Office or the Momentum Partnership, you can then
-navigate into the ``cset-workflow-v25.3.1`` folder, and run the
-``install_restricted_files.sh`` script.
+    The example shell snippets in this documentation use ``bash``, and may not
+    work with other shells. In particular there are known issues activating
+    conda environments with ``ksh``.
 
 .. code-block:: bash
 
-   cd cset-workflow-v25.3.1
-   ./install_restricted_files.sh
+    # Check version starts in 8.
+    cylc --version
 
-This adds some site specific configuration files that specify where cylc will
-run the tasks. For other users, you can skip this step and use the localhost
-site instead.
+Install the command line
+------------------------
 
-2. Download CSET sample data
-----------------------------
+The CSET cylc workflow is included with the CSET command line program.
+Therefore, the first thing you will need to do is to install the CSET command
+line.
 
-We will now download some sample data, which will contain screen air temperature
+The recommended way to install CSET is via conda_. It is packaged on
+`conda-forge`_ in the ``cset`` package. The following command will install CSET
+into its own conda environment, which is recommended to avoid possible package
+conflicts.
+
+.. code-block:: bash
+
+    conda create --name=cset --channel=conda-forge cset
+
+To use CSET, you need to activate the conda environment with the ``conda
+activate`` command.
+
+.. code-block:: bash
+
+    conda activate cset
+
+.. note::
+
+    You will need to rerun the ``conda activate cset`` command whenever you use
+    a new terminal.
+
+Once that is completed, CSET should be ready to use. This can be verified by running
+a simple command.
+
+.. code-block:: bash
+
+    cset --version
+
+This command should output the installed version of CSET. This will look
+something like ``CSET vX.Y.Z``.
+
+Install the workflow
+--------------------
+
+With the newly created conda environment activated, run the ``cset
+extract-workflow`` command to unpack the workflow from inside the CSET package
+into a directory of your choosing. A sensible choice is ``~/cylc-src``, which is
+the default location where cylc will search for workflows.
+
+.. code-block:: bash
+
+    # Create the cylc-src directory if it doesn't exist.
+    mkdir -p ~/cylc-src
+    # Extract the workflow from CSET into the chosen directory.
+    cset extract-workflow ~/cylc-src
+    # Change into the freshly unpacked workflow directory.
+    cd ~/cylc-src/cset-workflow-vX.Y.Z
+
+Your directory should look like this:
+
+.. code-block:: bash
+
+    $ ls
+    app  conda-environment  includes                     lib   opt        rose-suite.conf.example
+    bin  flow.cylc          install_restricted_files.sh  meta  README.md  site
+
+If you are at a site with specific CSET integration, such as the Met Office or
+Momentum Partnership, you will want to install the site specific configuration
+files that specify where cylc will run the tasks. This is done by running the
+``install_restricted_files.sh`` script. For other users, you can skip this step
+and use the ``localhost`` site instead.
+
+.. code-block:: bash
+
+    ./install_restricted_files.sh
+
+You have now installed the CSET workflow and are ready to use it.
+
+Download sample data
+--------------------
+
+We will now download some sample data containing screen level air temperature
 and air temperature on pressure levels for two sample forecasts, for two
 different models to help us explore some of the functionality of CSET. The
-tutorial data consists of 4 files to download;
+tutorial data consists of 4 files to download:
 
-=========================== ======= ======================================
-File                        Size    SHA256 checksum
-=========================== ======= ======================================
-`MODELA_20230117T0000Z.nc`_ ~20 MiB ``669a6e31c10ad0a9ebd62fd19770f99775afc89f167b16ecb27e0e4b48160c19``
-`MODELA_20230118T0000Z.nc`_ ~20 MiB ``9a9829ac8a130f9698f02b4cb09f6c1ceda8ce8192ba1cda3b7cbac731e8a7c0``
-`MODELB_20230117T0000Z.nc`_ ~90 MiB ``64a91273afa6ffa496d9cbd478eb486d84a51e05be98f4864398ea5af8df2e9d``
-`MODELB_20230118T0000Z.nc`_ ~90 MiB ``d2a476f61e58da6120a4658324b259ecb827847250cc8841104dfd1135a6f300``
-=========================== ======= ======================================
+=========================== =======
+File                        Size
+=========================== =======
+`MODELA_20230117T0000Z.nc`_ ~20 MiB
+`MODELA_20230118T0000Z.nc`_ ~20 MiB
+`MODELB_20230117T0000Z.nc`_ ~90 MiB
+`MODELB_20230118T0000Z.nc`_ ~90 MiB
+=========================== =======
 
-You can directly copy these links and use ``wget`` to retrieve, or download in your
-browser.
+Download these files and save them somewhere persistent, such as your home
+directory or a SCRATCH disk. You can download via your browser or directly copy
+these links and use ``wget`` to retrieve on the command line.
 
-3. Workflow configuration
--------------------------
+Workflow configuration
+----------------------
 
 After downloading the CSET release and the data to evaluate, we next set up the
-required configuration. The `rose-suite.conf.example` file is a starting point
-to copy to create a `rose-suite.conf` configuration file, which can be edited
-using the ``rose edit`` command inside the ``cset-workflow-v25.3.1`` directory.
+required CSET configuration. Take a copy of the ``rose-suite.conf.example`` configuration
+file to create a copy ``rose-suite.conf`` in the same directory. This can be edited
+from inside the ``cset-workflow-vX.Y.Z`` directory using the ``rose edit``
+command.
 
 .. code-block:: bash
 
-   cd cset-workflow-v25.3.1
-   cp rose-suite.conf.example rose-suite.conf
-   rose edit
+    # Copy the example file to create a fresh rose-suite.conf.
+    cp rose-suite.conf.example rose-suite.conf
+    # Edit the configuration with the rose edit GUI.
+    rose edit
 
-GUI help can be accessed by clicking the cog icon next to each rose GUI option, which provides more information on
-potential settings.
+You should now have a graphical program with which you can navigate the various
+configuration settings that CSET provides. Detailed help for each setting can be
+accessed by clicking the setting's name.
 
+General setup options
+~~~~~~~~~~~~~~~~~~~~~
 
-a) General setup options
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Expand the options tab under the top level ``suite conf`` index heading and go to the ``General setup options`` panel.
+Expand the top level ``suite conf`` heading of the navigation tree to the left
+hand side of the GUI, go to the ``General setup options`` panel, and set the
+following settings:
 
 * Select the ``Site`` or set ``Localhost`` if not listed.
-* Add website details for where CSET outputs will be displayed. This will differ
-  depending on the location from which CSET is run, and details of available web
-  servers.
+
+* Adjust the ``Web directory`` to point to a directory that is served by your
+  webserver. Often this is a directory like ``~/public_html``.
+
+* (Optionally) set the ``Website Address`` to the URL where your web directory
+  is served. This is the address your will use to display your results in a webbrowser.
+
+.. hint::
+
+    ``rose edit`` is somewhat unreliable. Frequently click the ``save`` button
+    to avoid losing entered information when navigating to a new page.
 
 .. image:: rose-edit.png
-    :alt: Screenshot of the CSET GUI.
+    :alt: Screenshot of the CSET GUI with the General setup options panel open.
 
+Cycling and Model options
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-b) Cycling and Model options
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Next select the ``Cycling and Model options`` panel in the left hand navigation
+tree, and set the following:
 
-Next select the ``Cycling and Model options`` panel in the left hand index.
+* Leave the ``Cycling mode`` selected as ``Case Study``.
 
-* Leave the ``Cycling mode`` selected as ``Case Study`` for this 2 forecast example.
-* Add the 2 required ``Case study dates`` to evaluate. These are forecasts initialised on
-  ``"20230117T0000Z"`` and ``"20230118T0000Z"`` for this tutorial.
-* Set the ``Analysis length`` as ``PT48H`` to indicate a 48-hour forecast length.
-* Select the ``Number of models`` to evaluate. In this tutorial, we want to assess 2 different models.
+* Add the two required ``Case study dates`` to evaluate. The example data for
+  this tutorial has two forecasts initialised on ``"20230117T0000Z"`` and
+  ``"20230118T0000Z"``.
+
+* Set the ``Analysis length`` as ``PT48H`` to indicate a 48-hour forecast
+  length.
+
+* Set the ``Number of models`` to 2, as we want to assess two different models.
+
+* Keep ``Cutout Subarea`` set to ``False``.
 
 .. image:: cset_uiA.png
     :alt: Screenshot of the CSET GUI for Cycling and Model options.
 
 Setting the number of models activates new ``Model 01``, ``Model 02``, ...
-panels in the index in which to specify model-relevant options.
+panels in the navigation tree in which to specify model-relevant settings. You
+may need to further expand the navigation tree to see them.
 
-Navigate to each Model panel in turn to provide model-specific settings:
+Navigate to each Model panel by expanding the Cycling and Model options menu in
+turn to set model-specific settings:
 
-* Add a readable ``Model name`` which will be associated with the data in CSET outputs.
-* Select ``Filesystem`` as the ``Data source`` to indicate that the test data are on local disk.
-* Enter the path to data, including wildcards and formatting to specify filename structure. This
-  should follow the format ``/some/path/to/data/MODELA_%Y%m%dT%H%MZ.nc``, or similar to provide
-  a unique path to required data files. The ``%`` components in the file path will evaluate the
-  filename based on the case study date.
+* Add a readable ``Model name`` which will be associated with the data in CSET
+  outputs.
+
+* Select ``Filesystem`` as the ``Data source`` to indicate that the test data is
+  on a locally mounted disk.
+
+* Enter the path to data, including wildcards and formatting to specify filename
+  structure. This should follow the format
+  ``/some/path/to/data/MODELA_%Y%m%dT%H%MZ.nc``, providing a unique path to the
+  data files. The ``%`` components in the file path will evaluate the filename
+  based on the case study date.
 
 .. image:: cset_uiB.png
     :alt: Screenshot of the CSET GUI for Model 01 options.
 
+Diagnostic options
+~~~~~~~~~~~~~~~~~~
 
-c) Diagnostic options
-~~~~~~~~~~~~~~~~~~~~~
+Next expand the ``Diagnostic options`` panel and open the ``Surface (2D)
+fields`` panel.
 
-Next expand the ``Diagnostic options`` panel. To illustrate the plotting options
-we first focus on an example of evaluating ``Surface (2D) fields``. This
-provides support for variables that are only defined on a single diagnostic
-level. Standard options for variables defined on multiple levels (e.g. pressure
-levels or vertical model levels) are similar, and editable on the relevant
-sub-panel selected from the left hand index.
+This panel provides option for processing and visualising variables that are
+only defined on a single diagnostic level such as, but not exclusively, surface
+fields. Set the following settings:
 
-* Select the ``Surface (2D) fields`` panel.
 * Click the ``+`` option to add a variable name to ``Surface (2D) fields`` and
-  add ``"temperature_at_screen_level"`` as a new variable to evaluate. Note the
-  list of fields can be extended to capture all variables of interest from input
-  data within the same CSET workflow run.
+  add ``"temperature_at_screen_level"``. This setting lists all 2D variables of
+  interest from the input data that CSET will process.
+
 * Set ``SPATIAL_SURFACE_FIELD`` to ``True`` to enable plotting of spatial maps.
-* Add any ``SPATIAL_SURFACE_FIELD_METHOD`` options required to set the mode for
-  spatial map plotting. For example, adding ``SEQ`` method will produce a series
-  of output maps for every diagnostic time through the forecast (e.g. hourly).
-  Adding a ``MEAN`` method will activate production of forecast-mean diagnostic
-  map plots. A number of methods can be specified in this list to generate all
-  within the same CSET workflow run.
-* Set any required ``SPATIAL_SURFACE_FIELD_AGGREGATION`` options. This selects
-  any methods for generating aggregated summary maps computed as a function of
-  lead time, hour of day, validity time, or to generate a single map summarising
-  all input data across all forecast periods.
-* Set ``SPATIAL_DIFFERENCE_SURFACE_FIELD`` to activate difference map plots
-  comparing ModelA to Model B, and then set required
-  ``SPATIAL_DIFFERENCE_SURFACE_FIELD_AGGREGATION`` options for aggregating
+
+* Set ``SPATIAL_SURFACE_FIELD_METHOD`` to ``"SEQ"`` and ``"MEAN"``. These are
+  the aggregation methods used by the spatial plotting. The ``SEQ`` method will
+  produce a series of output maps for every time through the forecast (typically
+  hourly), while the ``MEAN`` method will produce spatial plots meaned over
+  forecast period. Multiple methods can be specified in this list to generate
+  all within the same CSET workflow run.
+
+* Set the first, second, and fourth ``SPATIAL_SURFACE_FIELD_AGGREGATION``
+  options. This sets the methods for generating aggregated summary maps across
+  case studies computed as a function of lead time, hour of day, validity time,
+  or to generate a single map summarising all input data across all forecast
+  periods.
+
+* Set ``SPATIAL_DIFFERENCE_SURFACE_FIELD`` to ``True`` to enable plotting of
+  difference map plots comparing the two models.
+
+* Set the first, second, and fourth
+  ``SPATIAL_DIFFERENCE_SURFACE_FIELD_AGGREGATION`` options, enabling aggregated
   differences across multiple cases.
-* Scroll further down in the Surface (2D) fields panel to show other plot type
-  methods and options.
-* Set ``TIMESERIES_SURFACE_FIELD`` and select associated ``AGGREGATION`` options
-  to enable domain mean (or sub-area) time series plots.
-* Set ``HISTOGRAM_SURFACE_FIELD`` to create histogram plots of surface field
-  diagnostics. Leave ``HISTOGRAM_SURFACE_FIELD_SEQUENCE`` as ``False`` to
-  generate a single histogram from all data in the forecast, or set to ``True``
-  to output a new histogram for each output time. Set associated ``AGGREGATION``
+
+* Set ``TIMESERIES_SURFACE_FIELD`` to ``True`` to enable domain mean (or
+  sub-area) time series plots.
+
+* Set the first, second, and fourth ``TIMESERIES_SURFACE_FIELD_AGGREGATION``
+  options, enabling time series across multiple cases.
+
+* Set ``HISTOGRAM_SURFACE_FIELD`` to enable plotting of histograms.
+
+* Set the first, second, and fourth ``HISTOGRAM_SURFACE_FIELD_AGGREGATION``
   options to control plotting of aggregated outputs across forecasts.
-* Use ``SURFACE_SINGLE_POINT_TIME_SERIES`` to request a time series plot of
-  outputs at a user-selected location.
 
 .. image:: cset_uiC.png
     :alt: Screenshot of the CSET GUI for Surface 2D fields options - top.
+
 .. image:: cset_uiD.png
     :alt: Screenshot of the CSET GUI for Surface 2D fields options - lower.
 
-Next to add a 3D variable of interest, use the ``Pressure level fields`` panel.
 
-* Add ``"zonal_wind_at_pressure_levels"`` to the list of ``Pressure level fields``.
-* Add some pressure levels on which to generate outputs - for example by adding
-  ``200``, ``500`` and ``850`` to the list of ``PRESSURE_LEVELS``.
-* To generate spatial plots of the zonal wind on each selected pressure level,
-  enable ``SPATIAL_PLEVEL_FIELD`` to ``True``.
-* Assume we also wish to generate ``SPATIAL_DIFFERENCE_PLEVEL_FIELD`` plots of
-  mapped differences but only aggregation to a single output across all
-  forecasts.
-* Assume we do not require ``TIMESERIES_PLEVEL_FIELD`` or
-  ``HISTOGRAM_PLEVEL_FIELD`` outputs, so leave these settings as ``False``.
-* To activate vertical profile plots, select ``PROFILE_PLEVEL`` at ``True``, and
-  select all required ``AGGREGATION`` options to control the collation of
-  profile results across forecasts. Note this will only generate profiles from
-  the ``PRESSURE_LEVELS`` selected (i.e. data at 200 hPa, 500 hPa and 850 hPa in
-  this example), so ensure the number of requested levels is sufficiently high
-  to generate the required vertical resolution outputs.
-* Options for plotting vertical pressure level transects are activated using
-  ``EXTRACT_PLEVEL_TRANSECT``.
+Next, to add a 3D variable of interest, open the ``Pressure level fields``
+panel. Standard options for variables defined on multiple levels (e.g. pressure
+levels or vertical model levels) are similar, and editable on the relevant
+sub-panel selected from the left hand navigation tree. Set the following:
+
+* Add ``"zonal_wind_at_pressure_levels"`` to the list of ``Pressure level
+  fields``.
+
+* Add ``200``, ``500``, and ``850`` to the list of ``PRESSURE_LEVELS``, the
+  pressure levels on which to generate outputs.
+
+* Set ``SPATIAL_PLEVEL_FIELD`` to ``True`` to enable spatial plots on each
+  selected pressure level.
+
+* Set ``SPATIAL_DIFFERENCE_PLEVEL_FIELD`` to ``True`` to enable plotting of
+  spatial differences.
+
+* Set ``PROFILE_PLEVEL`` to enable vertical profile plots of the domain mean.
+  This will only generate profiles from the ``PRESSURE_LEVELS`` selected (i.e.
+  data at 200 hPa, 500 hPa and 850 hPa in this example), so ensure the number of
+  requested levels is sufficiently high to generate the required vertical
+  resolution outputs.
+
+* Set the first, second, and fourth ``PROFILE_PLEVEL_AGGREGATION`` options.
 
 .. image:: cset_uiE.png
-    :alt: Screenshot of the CSET GUI for Pressure level fields options - top.
+    :alt: Screenshot of the CSET GUI for Pressure level fields options - upper half.
+
 .. image:: cset_uiF.png
-    :alt: Screenshot of the CSET GUI for Pressure level fields options - lower.
+    :alt: Screenshot of the CSET GUI for Pressure level fields options - lower half.
 
-Requested variables defined as ``Model level fields`` on vertical model levels
-can be selected using the next panel, with options mirroring those provided for
-``Pressure level fields`` described above.
-
-Details for any of the available settings for ``Process-based`` methods and
-``Verification`` can be found using the rose GUI help.
-
-Ensure to save the configuration before closing ``rose edit``.
-
-4. Run workflow
----------------
-
-We are now ready to run CSET!
-
-* Within the cset-workflow folder, run ``cylc vip .``.
-* Monitor the progress by using either ``cylc tui`` on the command line, or
-  ``cylc gui``, which will open up a browser showing progress through the
-  workflow.
+Ensure you save the configuration before closing ``rose edit``. Once saved, you
+can validate your configuration with ``cylc validate`` to check for missed
+settings or unexpected values.
 
 .. code-block:: bash
 
-   cylc vip .
-   cylc gui
+    # Perform some quick checks to make sure the metadata is valid.
+    cylc validate .
 
+Run the workflow
+----------------
 
-5. View CSET outputs
---------------------
+After configuration via the rose GUI, the CSET workflow is ready to run.
 
-Once completed, the CSET workflow will send an email to confirm successful completion and link to
-outputs at the web address specified in the GUI.
+To run the workflow, use ``cylc vip`` within the ``cset-workflow-vX.Y.Z``
+directory. You can view the job's progress in the browser with the cylc GUI,
+accessible with the command ``cylc gui``, or in the terminal with ``cylc tui``.
 
-Outputs are stored in the ``web`` folder, located in ``~/cylc-run/cset-workflow/runN/share/web``
-(or an equivalent ``cylc-run`` path if running the CSET workflow with a specified run name).
+.. code-block:: bash
+
+    # Run workflow from within the cset-workflow-vX.Y.Z directory.
+    cylc vip .
+    # Monitor the workflow's progress.
+    cylc gui
+
+Other commands to control the workflow are described in the `cylc running
+workflows`_ documentation.
+
+Once CSET has finished running you will receive an email containing a link to
+the output page.
+
+View CSET outputs
+-----------------
+
+Once completed, the CSET workflow will send an email to confirm successful
+completion and link to outputs at the web address specified in the GUI.
+
+Outputs are stored in the ``web`` directory, located in
+``~/cylc-run/cset-workflow-vX.Y.Z/runN/share/web`` (or an equivalent
+``cylc-run`` path if running the CSET workflow with a specified run name).
 
 .. warning::
 
     If you ``cylc clean`` the workflow, this will delete the plot directory. To
-    keep the plots independently of the workflow directory, move the web folder
-    to a required alternative location and update the symlink to the ``web``
-    folder back to the ``Web directory`` location from which CSET outputs are
-    displayed.
+    keep the plots independently of the workflow directory, move the web
+    directory to a required alternative location and update the symlink to the
+    ``web`` directory back to the ``Web directory`` location from which CSET
+    outputs are displayed.
 
 .. image:: cset_web1.png
-    :alt: Screenshot of the CSET web interface.
+    :alt: Screenshot of the CSET web interface showing the landing page with workflow status information.
 
-CSET web outputs can be navigated using the index organised by type of plot, and by forecast date
-and aggregations. Plots can be displayed in either left-hand, central, or right-hand web views.
+CSET web outputs can be navigated using the sidebar organised by type of plot,
+and by forecast date and aggregations. Plots can be displayed in either
+left-hand, central, or right-hand web views.
 
 .. image:: cset_web2.png
-    :alt: Screenshot of the CSET web interface.
+    :alt: Screenshot of the CSET web interface showing a profile and a spatial plot displayed side-by-side.
+
+You have now run the CSET workflow! Take some time to explore the output
+webpage. You can find further information on configuring the workflow in
+:doc:`/usage/workflow-configure`.
 
 .. _Cylc 8: https://cylc.github.io/cylc-doc/stable/html/index.html
 .. _CSET Releases: https://github.com/MetOffice/CSET/releases
@@ -250,3 +363,6 @@ and aggregations. Plots can be displayed in either left-hand, central, or right-
 .. _MODELA_20230118T0000Z.nc: https://github.com/jwarner8/MO_Github_External/raw/refs/heads/master/CSET_exampledata/MODELA_20230118T0000Z.nc
 .. _MODELB_20230117T0000Z.nc: https://github.com/jwarner8/MO_Github_External/raw/refs/heads/master/CSET_exampledata/MODELB_20230117T0000Z.nc
 .. _MODELB_20230118T0000Z.nc: https://github.com/jwarner8/MO_Github_External/raw/refs/heads/master/CSET_exampledata/MODELB_20230118T0000Z.nc
+.. _cylc running workflows: https://cylc.github.io/cylc-doc/stable/html/user-guide/running-workflows/index.html
+.. _conda: https://docs.conda.io/en/latest/
+.. _conda-forge: https://anaconda.org/conda-forge/cset

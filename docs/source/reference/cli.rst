@@ -94,7 +94,7 @@ cset extract-workflow
 
 Unpack the CSET cylc workflow into a new directory under location. The current
 CSET conda environment is linked so it can be used by the workflow. For guided
-usage see :doc:`/getting-started/workflow-installation`.
+usage see :doc:`/getting-started/run_full_cylc_workflow`.
 
 .. code-block:: text
 

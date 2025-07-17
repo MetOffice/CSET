@@ -62,8 +62,6 @@ Additional panels are provided for settings associated with more bespoke
 ``Process-based`` methods (with a separate panel for each supported method) and
 ``Verification`` recipes.
 
-Further details are provided in the :doc:`worked example <run_full_cylc_workflow>`.
-
 .. image:: rose-edit-diagnostics.png
     :alt: rose edit GUI, showing an example of diagnostic setup options.
 
