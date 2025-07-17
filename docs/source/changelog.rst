@@ -13,6 +13,106 @@ Changelog
 .. Highlight any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+25.7.0 (2025-07-17)
+-------------------
+
+Over the last two months development of CSET has been steaming ahead. In this
+release we bring something for everyone.
+
+Figures have been improves so they are better layouts, colours and titles, and
+use consistent units.
+
+The output webpage now includes extra information so you can tell the provenance
+of the output you are looking at, and easily copy to settings into your own
+workflow.
+
+There is new functionality for trimming the domain boundaries (useful for
+removing regions where unphysical data exists), and new recipes for calculating summary statistics
+within a case, such as mean, min/max, or standard deviation.
+
+There have been a number of fixes to how common time points are selected; this
+has fixed a nasty issue with the diurnal cycle being offset by an hour under
+certain circumstances. Wind directions are now normalised to true North/East, to
+allow comparison between models with different conventions.
+
+The workflow has been streamlined, and is now faster due to using an external
+conda environment, and has an improved tutorial, so it is easier than ever to
+learn how to use it. The workflow is also easier to install; rather than having
+to download a separate tarball, it comes included with the ``cset`` command
+line.
+
+Developers are not forgotten either, with the development environment now being
+setup with a single ``make`` command, and the workflow code having moved into
+the main CSET package for easier testing and distribution.
+
+* Tidy up titles in CSET output by `@jwarner8`_ in :pr:`1395`
+* General improvements to plots by `@jwarner8`_ in :pr:`1394`
+* Ensure all lead time in common units (hours) between models by `@ukmo-huw-lewis`_ in :pr:`1405`
+* Add non-aggregated cell_methods constraint to all histogram plotting recipes for surface and level variables by `@ukmo-huw-lewis`_ in :pr:`1406`
+* Clean up task family inheritance in include files by `@jfrost-mo`_ in :pr:`1408`
+* Add copy of local rose-suite.conf into output pages by `@ukmo-huw-lewis`_ in :pr:`1400`
+* Set 20 minute runtime limit for GitHub Actions jobs by `@jfrost-mo`_ in :pr:`1420`
+* Add subarea configuration to example rose-suite.conf by `@jfrost-mo`_ in :pr:`1409`
+* Minor fixes and additional tests for run_cset_recipe by `@jfrost-mo`_ in :pr:`1422`
+* Allow other python version's tests to finish running after a failure by `@jfrost-mo`_ in :pr:`1424`
+* Simplify and test conversion from --input-dir to --INPUT_PATHS by `@jfrost-mo`_ in :pr:`1425`
+* Review and reduce plot title wordcount by `@ukmo-huw-lewis`_ in :pr:`1416`
+* More robustly test command line argument parser by `@jfrost-mo`_ in :pr:`1426`
+* Correct version number in changelog by `@jfrost-mo`_ in :pr:`1407`
+* Ensure common time points are selected before aggregating over hour of day by `@jwarner8`_ in :pr:`1290`
+* Remove environment section from bug report issue template by `@jfrost-mo`_ in :pr:`1421`
+* Provide value for placeholder in log message by `@jfrost-mo`_ in :pr:`1444`
+* Use correct recipe file for surface histogram case aggregation by `@jfrost-mo`_ in :pr:`1443`
+* Exclude additional VCS files from sdist manifest to prevent them being included in published packages by `@jfrost-mo`_ in :pr:`1412`
+* Add Makefile providing useful commands by `@jfrost-mo`_ in :pr:`1428`
+* Distribute workflow files inside main CSET package and add new `extract-workflow` command to unpack it for use by `@jfrost-mo`_ in :pr:`1413`
+* Add CSET version and date of workflow run to CSET webpage by `@ukmo-huw-lewis`_ in :pr:`1446`
+* Add model names to spatial_difference recipes by `@ukmo-huw-lewis`_ in :pr:`1439`
+* Create link to conda environment for workflow in `make setup` by `@jfrost-mo`_ in :pr:`1453`
+* Align time units and fix diurnal cycle aggregation bug by `@ukmo-huw-lewis`_ in :pr:`1450`
+* Add checks for non-hour inputs against both minute and second time parts by `@ukmo-huw-lewis`_ in :pr:`1432`
+* More flexible treatment of latitude/longitude and grid_latitude/grid_longitude across different model domain types by `@ukmo-huw-lewis`_ in :pr:`1403`
+* Add SELECT_SUBAREA method to trim cutout based on number of grid cells and add related tests by `@ukmo-huw-lewis`_ in :pr:`1433`
+* Filter down to required variables during workflow preprocessing to minimise data size by `@ukmo-huw-lewis`_ in :pr:`1411`
+* Fixes pressure model transect recipe by `@daflack`_ in :pr:`1467`
+* Update copyright year in README.md by `@Fraetor`_ in :pr:`1463`
+* Add new functionality to better control plot extents and colorbar definitions by `@ukmo-huw-lewis`_ in :pr:`1429`
+* Rename rose-suite.conf.txt to rose-suite.conf by `@jfrost-mo`_ in :pr:`1462`
+* Move `make setup` documentation to make it more prominent by `@jfrost-mo`_ in :pr:`1461`
+* Remove conda-environment link from development workflow to fix failing tests by `@jfrost-mo`_ in :pr:`1460`
+* Skip posting code coverage report on PRs made from forks by `@jfrost-mo`_ in :pr:`1468`
+* Include discrete colourbar for spatial visibility_in_air plots by `@Sylviabohnenstengel`_ in :pr:`1471`
+* Visibility follow up by `@jfrost-mo`_ in :pr:`1476`
+* Use temporary working directory for plotting tests by `@jfrost-mo`_ in :pr:`1475`
+* Update cell_methods constraint to process time aggregated input cubes by `@ukmo-huw-lewis`_ in :pr:`1472`
+* Add workaround for flaky preprocess tests by `@jfrost-mo`_ in :pr:`1477`
+* Remove dead links from documentation by `@jfrost-mo`_ in :pr:`1485`
+* Add extra cloud diagnostics to RAL3LFRic example config, and apply cloud diagnostic fixes  by `@ukmo-huw-lewis`_ in :pr:`1478`
+* Add support for rainfall amount diagnostics by `@ukmo-huw-lewis`_ in :pr:`1480`
+* Add summary statistic (mean, max, min,...) plots and introduce additional aggregation options by `@ukmo-huw-lewis`_ in :pr:`1377`
+* Simplify internal package structure to make workflow more easily findable by `@jfrost-mo`_ in :pr:`1474`
+* Move workflow utils into rose apps by `@jfrost-mo`_ in :pr:`1489`
+* Clarify adding a recipe to the CSET workflow by `@jfrost-mo`_ in :pr:`1487`
+* Update title for domain mean timeseries aggregation of all cases to remove model names from title by `@ukmo-huw-lewis`_ in :pr:`1491`
+* Increases memory for ensemble plotting by `@daflack`_ in :pr:`1506`
+* Draft documentation update for revised cset-workflow GUI and plot settings by `@ukmo-huw-lewis`_ in :pr:`1492`
+* Update ceilometer_cloud_amount_maxrnd by `@jfrost-mo`_ in :pr:`1499`
+* Allow ensembles to run for more than ten variables by `@daflack`_ in :pr:`1507`
+* Update the pre-commit hook ID for ruff-check by `@jfrost-mo`_ in :pr:`1488`
+* Rotate UM winds to true east and true north to match LFRic by `@JMEdwardsXtr`_ in :pr:`1469`
+* Update and improve the workflow tutorial by `@jfrost-mo`_ in :pr:`1512`
+* Remove preprocess task by `@jfrost-mo`_ in :pr:`1514`
+* Simplify release instructions to reflect the workflow being bundled into the CSET package by `@jfrost-mo`_ in :pr:`1515`
+* Add CSET v25.7.0 release notes to changelog by `@jfrost-mo`_ in :pr:`1516`
+
+New Contributors
+
+* `@JMEdwardsXtr`_ made their first contribution in :pr:`1469`
+* `@Fraetor`_ is an alternate account of @jfrost-mo
+
+.. _@JMEdwardsXtr: https://github.com/JMEdwardsXtr
+.. _@Fraetor: https://github.com/Fraetor
+
 25.5.2 (2025-05-23)
 -------------------
 
