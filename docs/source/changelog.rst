@@ -104,6 +104,7 @@ the main CSET package for easier testing and distribution.
 * Remove preprocess task by `@jfrost-mo`_ in :pr:`1514`
 * Simplify release instructions to reflect the workflow being bundled into the CSET package by `@jfrost-mo`_ in :pr:`1515`
 * Add CSET v25.7.0 release notes to changelog by `@jfrost-mo`_ in :pr:`1516`
+* Correct description for standard deviation time aggregation method in rose edit by `@Sylviabohnenstengel`_ in :pr:`1513`
 
 New Contributors
 
