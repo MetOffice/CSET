@@ -622,7 +622,7 @@ def _plot_and_save_line_series(
                     marker="o",
                     ls="-",
                     lw=3,
-                    label=f"{label}_control",
+                    label=f"{label} (control)",
                 )
             else:
                 iplt.plot(
@@ -632,7 +632,7 @@ def _plot_and_save_line_series(
                     ls="-",
                     lw=1.5,
                     alpha=0.75,
-                    label=f"{label}_member",
+                    label=f"{label} (member)",
                 )
 
         # Calculate the global min/max if multiple cubes are given.
@@ -671,7 +671,7 @@ def _plot_and_save_line_series(
     # create dummy dictionary to identify unique labels
     handles, labels = ax.get_legend_handles_labels()
     d = {label: handle for handle, label in zip(handles, labels, strict=True)}
-    legend_handles_labels = [(handle, label) for label, handle in d.items()]
+    legend_handles_labels = (d.values(), d.keys())
     ax.legend(legend_handles_labels, loc="best", ncol=1, frameon=False, fontsize=16)
 
     # Save plot.
