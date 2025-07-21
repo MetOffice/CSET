@@ -622,10 +622,18 @@ def _plot_and_save_line_series(
                     marker="o",
                     ls="-",
                     lw=3,
-                    label=label,
+                    label=f"{label}_control",
                 )
             else:
-                iplt.plot(coord, cube_slice, color=color, ls="-", lw=1.5, alpha=0.75)
+                iplt.plot(
+                    coord,
+                    cube_slice,
+                    color=color,
+                    ls="-",
+                    lw=1.5,
+                    alpha=0.75,
+                    label=f"{label}_member",
+                )
 
         # Calculate the global min/max if multiple cubes are given.
         _, levels, _ = _colorbar_map_levels(cube, axis="y")
@@ -660,8 +668,11 @@ def _plot_and_save_line_series(
 
     # Add gridlines
     ax.grid(linestyle="--", color="grey", linewidth=1)
-    if model_colors_map:
-        ax.legend(loc="best", ncol=1, frameon=False, fontsize=16)
+    # create dummy dictionary to identify unique labels
+    handles, labels = ax.get_legend_handles_labels()
+    d = {label: handle for handle, label in zip(handles, labels, strict=True)}
+    legend_handles_labels = [(handle, label) for label, handle in d.items()]
+    ax.legend(legend_handles_labels, loc="best", ncol=1, frameon=False, fontsize=16)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
