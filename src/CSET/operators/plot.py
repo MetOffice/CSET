@@ -613,8 +613,8 @@ def _plot_and_save_line_series(
         if model_colors_map:
             label = cube.attributes.get("model_name")
             color = model_colors_map.get(label)
-        for cube_slice in cube.slices_over("ensemble_coord"):
-            if cube_slice.coord("ensemble_coord").point == [0]:
+        for cube_slice in cube.slices_over(ensemble_coord):
+            if cube_slice.coord(ensemble_coord).point == [0]:
                 iplt.plot(
                     coord,
                     cube_slice,
