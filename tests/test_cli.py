@@ -25,7 +25,8 @@ from uuid import uuid4
 import pytest
 
 import CSET
-import CSET.workflow
+import CSET.extract_workflow
+import CSET.operators
 
 
 def test_command_line_invocation():
@@ -334,6 +335,8 @@ def test_extract_workflow_command(monkeypatch, tmp_path):
         ran = True
         assert location == tmp_path
 
-    monkeypatch.setattr(CSET.workflow, "install_workflow", dummy_install_workflow)
+    monkeypatch.setattr(
+        CSET.extract_workflow, "install_workflow", dummy_install_workflow
+    )
     CSET.main(["cset", "extract-workflow", str(tmp_path)])
     assert ran

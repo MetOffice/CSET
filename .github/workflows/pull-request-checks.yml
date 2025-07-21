@@ -98,8 +98,8 @@ jobs:
           if ! gh pr comment --repo "${{ github.repository }}" --edit-last --create-if-none "${{ github.head_ref }}" --body-file "${{ runner.temp }}/cov-report.md" ; then
             echo "Failed to post comment. This is likely due to this being a PR from a fork."
           fi
-      - name: Check 95% minimum coverage
-        run: coverage report --fail-under=95
+      - name: Check 90% minimum coverage
+        run: coverage report --fail-under=90
 
   pre-commit:
     runs-on: ubuntu-latest

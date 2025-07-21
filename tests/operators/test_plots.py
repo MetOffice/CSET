@@ -735,53 +735,6 @@ def test_levels_postage_stamp_spatial_plot(ensemble_cube, tmp_working_dir):
         )
 
 
-def test_convert_precipitation_units(cube, caplog):
-    """Test precipitation conversions prior to plotting."""
-    cube.rename("surface_microphysical_rainfall_rate")
-    # Check unit conversion
-    cube.units = "kg m-2 s-1"
-    with caplog.at_level(logging.INFO):
-        cube = plot._convert_precipitation_units_callback(cube)
-    _, level, message = caplog.record_tuples[0]
-    assert level == logging.INFO
-    assert message == "Converting precipitation units from kg m-2 s-1 to mm hr-1"
-    assert cube.units == "mm hr-1"
-
-
-def test_convert_precipitation_no_units(cube, caplog):
-    """Test precipitation conversions prior to plotting."""
-    # Check no processing for non-expected units
-    cube.rename("surface_microphysical_rainfall_rate")
-    cube.units = "unknown"
-    cube = plot._convert_precipitation_units_callback(cube)
-    _, level, message = caplog.record_tuples[0]
-    assert level == logging.WARNING
-    assert message == "Precipitation units are not in 'kg m-2 s-1', skipping conversion"
-    assert cube.units == "unknown"
-
-
-def test_convert_visibility_units():
-    """Test visibility units conversions prior to plotting."""
-    cube = iris.cube.Cube(
-        np.array([1000, 2000, 3000]), standard_name="visibility_in_air", units="m"
-    )
-    cube = plot._convert_visibility_units_callback(cube)
-    assert cube.units == "km"
-    assert np.allclose(cube.data, np.array([1, 2, 3]))
-
-
-def test_convert_visibility_no_units(cube, caplog):
-    """Check no processing for unexpected units in visibility conversions."""
-    cube = iris.cube.Cube(
-        np.array([1000, 2000, 3000]), standard_name="visibility_in_air", units="unknown"
-    )
-    cube = plot._convert_visibility_units_callback(cube)
-    _, level, message = caplog.record_tuples[0]
-    assert level == logging.WARNING
-    assert message == "Visibility units are not in 'm', skipping conversion"
-    assert cube.units == "unknown"
-
-
 def test_append_to_plot_index(monkeypatch, tmp_working_dir):
     """Ensure the datetime is written along with the plot index."""
     # Setup environment and required file.

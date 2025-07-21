@@ -1,7 +1,7 @@
 category: Surface Time Series
 title: "Domain mean $VARNAME time series\n Aggregation by hour of day"
 description: |
-  Plots a time series of the domain mean $VARNAME by averaging over
+  Plots a time series of the domain horizontal mean $VARNAME by averaging over
   all cases by using a consistent hour of day.
 
 steps:

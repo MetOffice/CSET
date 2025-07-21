@@ -98,7 +98,7 @@ Built recipe into CSET CLI
     link to the recipe directory.
 
 Adding a recipe in the CSET CLI enables running individual diagnostics recipes
-on the command line with the `cset bake` command and without running the whole
+on the command line with the ``cset bake`` command and without running the whole
 workflow. This is a useful step for testing new operators or recipes during
 development.
 
@@ -113,14 +113,14 @@ the cset command line program.
 Add recipe into CSET workflow
 -----------------------------
 
-This procedure will be simplified in the future. At the moment recipes are
-included in two locations. Once in the ``cset-workflow/includes`` directory and
-once in the ``src/CSET/recipes`` directory. This way we can run recipes with the
-`cset bake` command as well as running them through the CSET workflow.
+Recipes are defined in the ``src/CSET/recipes`` directory and can be run using
+the ``cset bake`` command. To enable recipes to be run through the CSET workflow
+it is also necessary to ensure the recipe is called from a file in the
+``src/CSET/cset_workflow/includes`` directory.
 
 * Create a Cylc include file at
-  ``cset-workflow/includes/<new_operator_include_file>.cylc``, copying an
-  existing include file for inspiration.
+  ``src/CSET/cset_workflow/includes/<new_operator_include_file>.cylc``, copying
+  an existing include file for inspiration.
 * ``meta/rose-meta.conf``: to add section for toggle button to allow selection
   of new recipe file.
 * ``rose-suite.conf.example``: add option for new recipe.

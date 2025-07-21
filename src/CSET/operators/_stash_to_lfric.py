@@ -294,10 +294,7 @@ STASH_TO_LFRIC = {
     ),  # Overwritten below.
     "m01s09i216": ("combined_cloud_amount_random_overlap", "face"),
     "m01s09i217": ("combined_cloud_amount_maximum_random_overlap", "face"),
-    "m01s09i233": (
-        "ceilometer_filtered_combined_cloud_amount_maximum_random_overlap",
-        "face",
-    ),
+    "m01s09i233": ("ceilometer_cloud_amount_maxrnd", "face"),
     "m01s10i185": ("eastward_wind_increment_from_solver", "face"),
     "m01s10i186": ("northward_wind_increment_from_solver", "face"),
     "m01s10i187": ("vertical_air_velocity_increment_from_solver", "face"),

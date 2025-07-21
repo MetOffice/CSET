@@ -74,6 +74,16 @@
     "max": 500,
     "min": -500
   },
+  "ceilometer_filtered_combined_cloud_amount_maximum_random_overlap": {
+    "cmap": "viridis",
+    "max": 1,
+    "min": 0
+  },
+  "ceilometer_filtered_combined_cloud_amount_maximum_random_overlap_difference": {
+    "cmap": "PRGn",
+    "max": 1,
+    "min": -1
+  },
   "cloud_area_fraction": {
     "cmap": "viridis",
     "max": 1,
@@ -487,6 +497,18 @@
     "max": 1400,
     "min": -1400
   },
+  "surface_microphysical_rainfall_amount": {
+    "cmap": "cividis",
+    "max": 256,
+    "min": 0,
+    "ymax": 1.0,
+    "ymin": 0.0
+  },
+  "surface_microphysical_rainfall_amount_difference": {
+    "cmap": "BrBG",
+    "max": 16.0,
+    "min": -16.0
+  },
   "surface_microphysical_rainfall_rate": {
     "cmap": "cividis",
     "levels": [
@@ -504,13 +526,25 @@
       128,
       256
     ],
-    "ymax": 0.01,
+    "ymax": 1.0,
     "ymin": 0.0
   },
   "surface_microphysical_rainfall_rate_difference": {
     "cmap": "BrBG",
     "max": 32.0,
     "min": -32.0
+  },
+  "surface_microphysical_snowfall_amount": {
+    "cmap": "cividis",
+    "max": 256,
+    "min": 0,
+    "ymax": 1.0,
+    "ymin": 0.0
+  },
+  "surface_microphysical_snowfall_amount_difference": {
+    "cmap": "BrBG",
+    "max": 4.0,
+    "min": -4.0
   },
   "surface_microphysical_snowfall_rate": {
     "cmap": "cool",
@@ -529,7 +563,7 @@
       128,
       256
     ],
-    "ymax": 0.01,
+    "ymax": 1.0,
     "ymin": 0.0
   },
   "surface_microphysical_snowfall_rate_difference": {
@@ -787,6 +821,16 @@
     "ymin": "auto"
   },
   "wet_bulb_potential_temperature_at_pressure_levels_difference": {
+    "cmap": "bwr",
+    "max": 5,
+    "min": -5
+  },
+  "wind_speed_at_10m": {
+    "cmap": "RdBu_r",
+    "max": 25,
+    "min": 0
+  },
+  "wind_speed_at_10m_difference": {
     "cmap": "bwr",
     "max": 5,
     "min": -5

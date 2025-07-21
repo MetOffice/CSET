@@ -69,6 +69,8 @@ def collapse(
     ValueError
         If additional_percent wasn't supplied while using PERCENTILE method.
     """
+    if method == "SEQ" or method == "" or method is None:
+        return cubes
     if method == "PERCENTILE" and additional_percent is None:
         raise ValueError("Must specify additional_percent")
     collapsed_cubes = iris.cube.CubeList([])
@@ -88,6 +90,10 @@ def collapse(
                         percent=additional_percent,
                     )
                 )
+            elif method == "RANGE":
+                cube_max = cube.collapsed(coordinate, iris.analysis.MAX)
+                cube_min = cube.collapsed(coordinate, iris.analysis.MIN)
+                collapsed_cubes.append(cube_max - cube_min)
             else:
                 collapsed_cubes.append(
                     cube.collapsed(coordinate, getattr(iris.analysis, method))

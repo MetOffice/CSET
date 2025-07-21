@@ -5,8 +5,8 @@ While the localhost site can be used for basic running on a single computer,
 sites with a compute cluster will want to setup the CSET cylc workflow to take
 advantage of it. This will involve the following steps:
 
-1. Add site file at cset-workflow/site/<site>.cylc
-2. Add entry to cset-workflow/meta/rose-meta.conf.jinja2
+1. Add site file at ``src/CSET/cset_workflow/site/<site>.cylc``
+2. Add entry to ``src/CSET/cset_workflow/meta/rose-meta.conf.jinja2``
 3. Select site in rose edit.
 
 In this example we will add the site configuration for the fictional ACME
@@ -17,7 +17,7 @@ Add site file
 
 First thing we need to add is a cylc include file to set the default compute
 platform for tasks within the CSET workflow. For ACME Corp. we are going to
-create a new file at ``cset-workflow/site/acme.cylc`` with the following
+create a new file at ``src/CSET/cset_workflow/site/acme.cylc`` with the following
 content:
 
 .. code-block:: ini
@@ -57,7 +57,7 @@ Add rose edit metadata entry for site
 
 With the site file created we now need to add our site to the rose
 configuration. This requires editing the metadata at
-``cset-workflow/meta/rose-meta.conf.jinja2``. Within that file find the
+``src/CSET/cset_workflow/meta/rose-meta.conf.jinja2``. Within that file find the
 definition for the SITE variable, and add your site to it. This requires adding
 a value that matches the filename (without the ``.cylc`` extension) of your site
 file, as well as a value title that is the display name of your site. For ACME

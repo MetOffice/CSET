@@ -1,0 +1,36 @@
+category: Surface Spatial Plot
+title: "$MODEL_NAME $VARNAME\n Aggregation over all cases"
+description: |
+  Extracts and plots the mean $VARNAME for all times in $MODEL_NAME. Case
+  aggregation occurs over all available times.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: $VARNAME
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: "pressure"
+        levels: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: aggregate.ensure_aggregatable_across_cases
+
+  - operator: collapse.collapse
+    coordinate: time
+    method: MEAN
+
+  - operator: plot.spatial_pcolormesh_plot
+    sequence_coordinate: time
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

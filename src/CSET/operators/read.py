@@ -25,12 +25,13 @@ from pathlib import Path
 from typing import Literal
 
 import iris
+import iris.coord_systems
 import iris.coords
 import iris.cube
 import iris.exceptions
 import iris.util
 import numpy as np
-from iris.analysis.cartography import rotate_pole
+from iris.analysis.cartography import rotate_pole, rotate_winds
 
 from CSET._common import iter_maybe
 from CSET.operators._stash_to_lfric import STASH_TO_LFRIC
@@ -71,7 +72,7 @@ def read_cube(
         Constraints to filter data by. Defaults to unconstrained.
     model_names: str | list[str], optional
         Names of the models that correspond to respective paths in file_paths.
-    subarea_type: "realworld" | "modelrelative", optional
+    subarea_type: "gridcells" | "modelrelative" | "realworld", optional
         Whether to constrain data by model relative coordinates or real world
         coordinates.
     subarea_extent: list, optional
@@ -185,9 +186,12 @@ def read_cubes(
     # Unify time units so different case studies can merge.
     iris.util.unify_time_units(cubes)
 
+    # Remove T0 from UM inputs to allow time-averaged comparison with LFRic.
+    # TODO: Remove this hack. (See docstring for issue.)
+    _remove_time0(cubes)
+
     # Select sub region.
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
-
     # Merge and concatenate cubes now metadata has been fixed.
     cubes = cubes.merge()
     cubes = cubes.concatenate()
@@ -219,6 +223,9 @@ def _load_model(
     cubes = iris.load(
         input_files, constraint, callback=_create_callback(is_ensemble=False)
     )
+    # Make the UM's winds consistent with LFRic.
+    _fix_um_winds(cubes)
+
     # Reload with ensemble handling if needed.
     if _is_ensemble(cubes):
         cubes = iris.load(
@@ -395,6 +402,8 @@ def _create_callback(is_ensemble: bool) -> callable:
         _fix_pressure_coord_callback(cube)
         _fix_um_radtime(cube)
         _fix_cell_methods(cube)
+        _convert_cube_units_callback(cube)
+        _fix_lfric_cloud_base_altitude(cube)
         _lfric_time_callback(cube)
         _lfric_forecast_period_standard_name_callback(cube)
 
@@ -538,7 +547,7 @@ def _longitude_fix_callback(cube: iris.cube.Cube):
         long_points -= 180.0
     long_coord.points = long_points
 
-    # Update coord bounds to be consistent with wrapping
+    # Update coord bounds to be consistent with wrapping.
     if long_coord.has_bounds() and np.size(long_coord) > 1:
         long_coord.bounds = None
         long_coord.guess_bounds()
@@ -683,6 +692,7 @@ def _fix_um_radtime(cube: iris.cube.Cube):
     """
     try:
         if cube.attributes["STASH"] in [
+            "m01s01i207",
             "m01s01i208",
             "m01s02i205",
             "m01s02i201",
@@ -695,7 +705,6 @@ def _fix_um_radtime(cube: iris.cube.Cube):
             # Convert time points to datetime objects
             time_unit = time_coord.units
             time_points = time_unit.num2date(time_coord.points)
-
             # Skip if times don't need fixing.
             if time_points[0].minute == 0 and time_points[0].second == 0:
                 return
@@ -775,6 +784,111 @@ def _fix_cell_methods(cube: iris.cube.Cube):
             )
 
 
+def _convert_cube_units_callback(cube: iris.cube.Cube):
+    """Adjust diagnostic units for specific variables.
+
+    Some precipitation diagnostics are output with unit kg m-2 s-1 and are
+    converted here to mm hr-1.
+
+    Visibility diagnostics are converted here from m to km to improve output
+    formatting.
+    """
+    # Convert precipitation diagnostic units if required.
+    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    if any("surface_microphysical" in name for name in varnames):
+        if cube.units == "kg m-2 s-1":
+            logging.info(
+                "Converting precipitation rate units from kg m-2 s-1 to mm hr-1"
+            )
+            # Convert from kg m-2 s-1 to mm s-1 assuming 1kg water = 1l water = 1dm^3 water.
+            # This is a 1:1 conversion, so we just change the units.
+            cube.units = "mm s-1"
+            # Convert the units to per hour.
+            cube.convert_units("mm hr-1")
+        elif cube.units == "kg m-2":
+            logging.info("Converting precipitation amount units from kg m-2 to mm")
+            # Convert from kg m-2 to mm assuming 1kg water = 1l water = 1dm^3 water.
+            # This is a 1:1 conversion, so we just change the units.
+            cube.units = "mm"
+        else:
+            logging.info(
+                "Precipitation units are not in 'kg m-2 s-1' or 'kg m-2', skipping conversion"
+            )
+
+    # Convert visibility diagnostic units if required.
+    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    if any("visibility" in name for name in varnames):
+        if cube.units == "m":
+            logging.info("Converting visibility units m to km.")
+            # Convert the units to km.
+            cube.convert_units("km")
+        else:
+            logging.info("Visibility units are not in 'm', skipping conversion")
+
+    return cube
+
+
+def _fix_lfric_cloud_base_altitude(cube: iris.cube.Cube):
+    """Mask cloud_base_altitude diagnostic in regions with no cloud."""
+    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    if any("cloud_base_altitude" in name for name in varnames):
+        # Mask cube where set > 144kft to catch default 144.35695538058164
+        cube.data = np.ma.masked_array(cube.data)
+        cube.data[cube.data > 144.0] = np.ma.masked
+
+
+def _fix_um_winds(cubes: iris.cube.CubeList):
+    """To make winds from the UM consistent with those from LFRic.
+
+    Diagnostics of wind are not always consistent between the UM
+    and LFric. Here, winds from the UM are adjusted to make them i
+    consistent with LFRic.
+    """
+    # Check whether we have components of the wind identified by STASH,
+    # (so this will apply only to cubes from the UM), but not the
+    # wind speed and calculate it if it is missing. Note that
+    # this will be biased low in general because the components will mostly
+    # be time averages. For simplicity, we do this only if there is just one
+    # cube of a component. A more complicated approach would be to consider
+    # the cell methods, but it may not be warranted.
+    u_constr = iris.AttributeConstraint(STASH="m01s03i225")
+    v_constr = iris.AttributeConstraint(STASH="m01s03i226")
+    speed_constr = iris.AttributeConstraint(STASH="m01s03i227")
+    try:
+        if cubes.extract(u_constr) and cubes.extract(v_constr):
+            if len(cubes.extract(u_constr)) == 1 and not cubes.extract(speed_constr):
+                _add_wind_speed_um(cubes)
+            # Convert winds in the UM to be relative to true east and true north.
+            _convert_wind_true_dirn_um(cubes)
+    except (KeyError, AttributeError):
+        pass
+
+
+def _add_wind_speed_um(cubes: iris.cube.CubeList):
+    """Add windspeeds to cubes from the UM."""
+    wspd10 = (
+        cubes.extract_cube(iris.AttributeConstraint(STASH="m01s03i225"))[0] ** 2
+        + cubes.extract_cube(iris.AttributeConstraint(STASH="m01s03i226"))[0] ** 2
+    ) ** 0.5
+    wspd10.attributes["STASH"] = "m01s03i227"
+    wspd10.standard_name = "wind_speed"
+    wspd10.long_name = "wind_speed_at_10m"
+    cubes.append(wspd10)
+
+
+def _convert_wind_true_dirn_um(cubes: iris.cube.CubeList):
+    """To convert winds to true directions.
+
+    Convert from the components relative to the grid to true directions.
+    This functionality only handles the simplest case.
+    """
+    u_grid = cubes.extract_cube(iris.AttributeConstraint(STASH="m01s03i225"))
+    v_grid = cubes.extract_cube(iris.AttributeConstraint(STASH="m01s03i226"))
+    true_u, true_v = rotate_winds(u_grid, v_grid, iris.coord_systems.GeogCS(6371229.0))
+    u_grid.data = true_u.data
+    v_grid.data = true_v.data
+
+
 def _normalise_var0_varname(cube: iris.cube.Cube):
     """Fix varnames for consistency to allow merging.
 
@@ -814,6 +928,7 @@ def _lfric_time_callback(cube: iris.cube.Cube):
     # Construct forecast_reference time if it doesn't exist.
     try:
         tcoord = cube.coord("time")
+        # Set time coordinate to common basis "hours since 1970"
         try:
             tcoord.convert_units("hours since 1970-01-01 00:00:00")
         except ValueError:
@@ -886,3 +1001,30 @@ def _lfric_forecast_period_standard_name_callback(cube: iris.cube.Cube):
             coord.standard_name = "forecast_period"
     except iris.exceptions.CoordinateNotFoundError:
         pass
+
+
+def _remove_time0(cubes: iris.cube.CubeList):
+    """Remove T0 from UM inputs to allow time-averaged comparison with LFRic.
+
+    A number of UM outputs contain T=0 initial time diagnostic fields, while
+    LFRic diagnostics begin from T=1 output step. This does not cause issues
+    for comparing UM with LFRic for hour-by-hour comparisons, for which times
+    are matched up in code. However, for any recipes requiring collapse by
+    time ahead of comparison, computing averages over e.g. 24h vs 25h window
+    results in different timestamps in each collapsed cube, breaking subsequent
+    CSET time-checking steps to compare like-with-like.
+
+    This function removes any outputs at T=0 to support time-processed comparisons.
+    """
+    valid_cubes = iris.cube.CubeList()
+    for cube in cubes:
+        if cube.coords("forecast_period"):
+            valid_cube = cube.extract(
+                iris.Constraint(forecast_period=lambda cell: cell >= 0.25)
+            )
+            if valid_cube:
+                valid_cubes.append(valid_cube)
+        else:
+            valid_cubes.append(cube)
+
+    return valid_cubes

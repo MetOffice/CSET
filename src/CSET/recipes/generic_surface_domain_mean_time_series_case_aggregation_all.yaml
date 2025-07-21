@@ -1,0 +1,40 @@
+category: Surface Time Series
+title: "Domain mean $VARNAME time series\n Aggregation over all cases"
+description: |
+  Plots a time series of the domain horizontal mean surface $VARNAME by averaging over
+  all cases for non-overlapping times.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: $VARNAME
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: "pressure"
+        levels: []
+
+  - operator: collapse.collapse
+    coordinate: [grid_latitude, grid_longitude]
+    method: MEAN
+
+  - operator: aggregate.ensure_aggregatable_across_cases
+
+  - operator: collapse.collapse_by_validity_time
+    method: SEQ
+
+  # Make a single NetCDF with all the data inside it.
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+  # Plot the data.
+  - operator: plot.plot_line_series
+    series_coordinate: time

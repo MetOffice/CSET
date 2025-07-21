@@ -1,0 +1,95 @@
+{% if True in SPATIAL_SURFACE_FIELD_AGGREGATION or True in SPATIAL_PLEVEL_FIELD_AGGREGATION or True in SPATIAL_MLEVEL_FIELD_AGGREGATION %}
+[[SPATIAL_AGGREGATION]]
+    inherit=PROCESS_CASE_AGGREGATION
+
+[runtime]
+    [[dummy_spatial_aggregation]]
+    inherit = DUMMY_TASK, SPATIAL_AGGREGATION
+{% endif %}
+
+# Loop over all models
+{% for model in models %}
+
+# Loop over aggregation types (hour_of_day, lead_time, validity_time, all)
+{% for atype in range(AGGREGATION_TYPES|count) %}
+
+# Surface (2D) fields
+{% if SPATIAL_SURFACE_FIELD_AGGREGATION[atype]|default(False) %}
+{% for field in SURFACE_FIELDS %}
+[runtime]
+    [[spatial_plot_aggregation_mean_{{AGGREGATION_TYPES[atype]|lower}}_m{{model["id"]}}_{{sanitise_task_name(field)}}]]
+    inherit = SPATIAL_AGGREGATION
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_surface_spatial_plot_sequence_case_aggregation_mean_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
+        CSET_ADDOPTS = """
+            --VARNAME='{{field}}'
+            --MODEL_NAME='{{model["name"]}}'
+            {% if SELECT_SUBAREA %}
+            --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
+            --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
+            {% else %}
+            --SUBAREA_TYPE='None'
+            --SUBAREA_EXTENT='None'
+            {% endif %}
+        """
+        MODEL_IDENTIFIERS = {{model["id"]}}
+{% endfor %}
+{% endif %}
+
+# Pressure level fields
+{% if SPATIAL_PLEVEL_FIELD_AGGREGATION[atype]|default(False) %}
+{% for field in PRESSURE_LEVEL_FIELDS %}
+{% for plevel in PRESSURE_LEVELS %}
+[runtime]
+    [[plevel_spatial_plot_aggregation_mean_{{AGGREGATION_TYPES[atype]|lower}}_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
+    inherit = SPATIAL_AGGREGATION
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_level_spatial_plot_sequence_case_aggregation_mean_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
+        CSET_ADDOPTS = """
+            --VARNAME='{{field}}'
+            --LEVELTYPE='pressure'
+            --LEVEL='{{plevel}}'
+            --MODEL_NAME='{{model["name"]}}'
+            {% if SELECT_SUBAREA %}
+            --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
+            --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
+            {% else %}
+            --SUBAREA_TYPE='None'
+            --SUBAREA_EXTENT='None'
+            {% endif %}
+        """
+        MODEL_IDENTIFIERS = {{model["id"]}}
+{% endfor %}
+{% endfor %}
+{% endif %}
+
+# Model level fields
+{% if SPATIAL_MLEVEL_FIELD_AGGREGATION[atype]|default(False) %}
+{% for field in MODEL_LEVEL_FIELDS %}
+{% for mlevel in MODEL_LEVELS %}
+[runtime]
+    [[mlevel_spatial_plot_aggregation_mean_{{AGGREGATION_TYPES[atype]|lower}}_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(mlevel)}}]]
+    inherit = SPATIAL_AGGREGATION
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_level_spatial_plot_sequence_case_aggregation_mean_{{AGGREGATION_TYPES[atype]|lower}}.yaml"
+        CSET_ADDOPTS = """
+            --VARNAME='{{field}}'
+            --LEVELTYPE='model_level_number'
+            --LEVEL='{{mlevel}}'
+            --MODEL_NAME='{{model["name"]}}'
+            {% if SELECT_SUBAREA %}
+            --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
+            --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
+            {% else %}
+            --SUBAREA_TYPE='None'
+            --SUBAREA_EXTENT='None'
+            {% endif %}
+        """
+        MODEL_IDENTIFIERS = {{model["id"]}}
+{% endfor %}
+{% endfor %}
+{% endif %}
+
+{% endfor %}
+
+{% endfor %}

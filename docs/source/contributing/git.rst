@@ -5,17 +5,17 @@ If you haven't used git before, it is worth spending some time learning it
 before getting stuck into development. git is the go-to code revision control
 system, and is useful whether you are working alone or with others.
 
-A good place to start learning is this `git and GitHub tutorial`_. Once you have
-done that it is worth reading about the `GitHub flow`_, which is the approximate
-way you should be using GitHub, as well as this short article on writing `good
-commit messages`_.
+A good place to start learning is the `Met Office git and GitHub tutorial`_.
+Once you have done that it is worth reading about the `GitHub flow`_, which is
+the approximate way you should be using GitHub, as well as this short article on
+writing `good commit messages`_.
 
 For using git locally, you can use either the CLI git program, or git
 functionality built into many IDEs, such as VSCode or PyCharm. As you get
 started with git on the command line, you may find this `git cheat sheet`_
 helpful.
 
-.. _git and GitHub tutorial: https://aaronosher.io/github-workshop/
+.. _Met Office git and GitHub tutorial: https://metoffice.github.io/git-novice/
 .. _GitHub flow: https://docs.github.com/en/get-started/quickstart/github-flow
 .. _good commit messages: https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
 .. _git cheat sheet: https://education.github.com/git-cheat-sheet-education.pdf
@@ -86,7 +86,7 @@ To avoid having to use a username and password you can switch to SSH:
 
     git remote set-url origin git@github.com:MetOffice/CSET.git
 
-.. _Git Credential Manager: https://github.com/GitCredentialManager/git-credential-manager/blob/main/README.md
+.. _Git Credential Manager: https://github.com/git-ecosystem/git-credential-manager/blob/main/README.md
 .. _GitHub CLI to authenticate: https://cli.github.com/manual/gh_auth_login
 .. _configure git to use it: https://cli.github.com/manual/gh_auth_setup-git
 .. _GitHub's documentation on SSH: https://docs.github.com/en/authentication/connecting-to-github-with-ssh
@@ -227,16 +227,13 @@ and the changes you have made will be applied to it sequentially.
 
 Git will try and do this automatically, however if a conflict occurs it needs to
 be manually resolved before running ``git rebase --continue`` to finish the
-rebase.
-
-There is a good overview of rebasing in `these slides`_, and the `official
-documentation on rebase`_ goes into a lot more detail.
+rebase. The `official documentation on rebase`_ contains a lot of detail on the
+specifics of rebasing.
 
 When rebasing or merging there are times when git cannot proceed. This is called
 a conflict and often occurs if you have changed a line that was also changed in
 the other branch. Git will stop and let you manually fix it. Read the
 `documentation on fixing merge conflicts`_ to find out how.
 
-.. _these slides: https://aaronosher.io/github-workshop/#rebase
 .. _official documentation on rebase: https://git-scm.com/book/en/v2/Git-Branching-Rebasing
 .. _documentation on fixing merge conflicts: https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging#_basic_merge_conflicts
