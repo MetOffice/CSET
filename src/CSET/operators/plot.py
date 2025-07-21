@@ -1535,8 +1535,8 @@ def plot_line_series(
             raise ValueError(
                 f"Cube must have a {series_coordinate} coordinate."
             ) from err
-        if cube.ndim > 1:
-            raise ValueError("Cube must be 1D.")
+        if cube.ndim > 2 or not cube.coords("realization"):
+            raise ValueError("Cube must be 1D or 2D with a realization coordinate.")
 
     # Do the actual plotting.
     _plot_and_save_line_series(cubes, coords, "realization", plot_filename, title)
