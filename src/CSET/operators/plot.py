@@ -625,7 +625,7 @@ def _plot_and_save_line_series(
                     label=label,
                 )
             else:
-                iplt.plot(coord, cube_slice, color=color, marker="o", ls="-", lw=1.5)
+                iplt.plot(coord, cube_slice, color=color, ls="-", lw=1.5, alpha=0.5)
 
         # Calculate the global min/max if multiple cubes are given.
         _, levels, _ = _colorbar_map_levels(cube, axis="y")
