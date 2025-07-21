@@ -577,6 +577,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
 def _plot_and_save_line_series(
     cubes: iris.cube.CubeList,
     coords: list[iris.coords.Coord],
+    ensemble_coord: str,
     filename: str,
     title: str,
     **kwargs,
@@ -589,6 +590,8 @@ def _plot_and_save_line_series(
         Cube or CubeList containing the cubes to plot on the y-axis.
     coords: list[Coord]
         Coordinates to plot on the x-axis, one per cube.
+    ensemble_coord: str
+        Ensemble coordinate in the cube.
     filename: str
         Filename of the plot to write.
     title: str
@@ -610,7 +613,19 @@ def _plot_and_save_line_series(
         if model_colors_map:
             label = cube.attributes.get("model_name")
             color = model_colors_map.get(label)
-        iplt.plot(coord, cube, color=color, marker="o", ls="-", lw=3, label=label)
+        for cube_slice in cube.slices_over("ensemble_coord"):
+            if cube_slice.coord("ensemble_coord").point == [0]:
+                iplt.plot(
+                    coord,
+                    cube_slice,
+                    color=color,
+                    marker="o",
+                    ls="-",
+                    lw=3,
+                    label=label,
+                )
+            else:
+                iplt.plot(coord, cube_slice, color=color, marker="o", ls="-", lw=1.5)
 
         # Calculate the global min/max if multiple cubes are given.
         _, levels, _ = _colorbar_map_levels(cube, axis="y")
@@ -1524,7 +1539,7 @@ def plot_line_series(
             raise ValueError("Cube must be 1D.")
 
     # Do the actual plotting.
-    _plot_and_save_line_series(cubes, coords, plot_filename, title)
+    _plot_and_save_line_series(cubes, coords, "realization", plot_filename, title)
 
     # Add list of plots to plot metadata.
     plot_index = _append_to_plot_index([plot_filename])
