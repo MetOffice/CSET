@@ -22,7 +22,7 @@ import warnings
 def calculate_power_spectrum(
     cube: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube:
-    r"""Power spectrum is calculated.
+    """Power spectrum is calculated.
 
     Arguments
     ---------
