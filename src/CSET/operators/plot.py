@@ -668,11 +668,14 @@ def _plot_and_save_line_series(
 
     # Add gridlines
     ax.grid(linestyle="--", color="grey", linewidth=1)
-    # create dummy dictionary to identify unique labels
-    handles, labels = ax.get_legend_handles_labels()
-    d = {label: handle for handle, label in zip(handles, labels, strict=True)}
-    legend_handles_labels = (d.values(), d.keys())
-    ax.legend(legend_handles_labels, loc="best", ncol=1, frameon=False, fontsize=16)
+    # Ientify unique labels for legend
+    handles = list(
+        {
+            label: handle
+            for (handle, label) in zip(*ax.get_legend_handles_labels(), strict=True)
+        }.values()
+    )
+    ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
