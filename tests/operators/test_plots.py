@@ -457,6 +457,15 @@ def test_plot_line_series_different_coord_lengths(tmp_working_dir):
     assert Path("plot.png").is_file()
 
 
+def test_plot_line_series_ensemble(ensemble_cube, tmp_working_dir):
+    """Save an ensemble line series plot."""
+    ensemble_cube = collapse.collapse(
+        ensemble_cube, ["grid_latitude", "grid_longitude"], "MEAN"
+    )
+    plot.plot_line_series(ensemble_cube, filename="ensemble_series.ext")
+    assert Path("ensemble_series.png").is_file()
+
+
 def test_plot_vertical_line_series(vertical_profile_cube, tmp_working_dir):
     """Save a vertical line series plot."""
     plot.plot_vertical_line_series(
