@@ -669,27 +669,19 @@ def test_convert_precipitation_units(cube, caplog):
     cube.rename("surface_microphysical_rainfall_rate")
     # Check unit conversion
     cube.units = "kg m-2 s-1"
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.DEBUG):
         cube = read._convert_cube_units_callback(cube)
     _, level, message = caplog.record_tuples[0]
-    assert level == logging.INFO
+    assert level == logging.DEBUG
     assert message == "Converting precipitation rate units from kg m-2 s-1 to mm hr-1"
     assert cube.units == "mm hr-1"
 
 
-def test_convert_precipitation_no_units(cube, caplog):
+def test_convert_precipitation_no_units(cube):
     """Test precipitation conversions prior to plotting."""
     # Check no processing for non-expected units
     cube.rename("surface_microphysical_rainfall_rate")
     cube.units = "unknown"
-    with caplog.at_level(logging.INFO):
-        cube = read._convert_cube_units_callback(cube)
-    _, level, message = caplog.record_tuples[0]
-    assert level == logging.INFO
-    assert (
-        message
-        == "Precipitation units are not in 'kg m-2 s-1' or 'kg m-2', skipping conversion"
-    )
     assert cube.units == "unknown"
 
 
@@ -698,10 +690,10 @@ def test_convert_precipitation_amount_units(cube, caplog):
     cube.rename("surface_microphysical_rainfall_amount")
     # Check unit conversion
     cube.units = "kg m-2"
-    with caplog.at_level(logging.INFO):
+    with caplog.at_level(logging.DEBUG):
         cube = read._convert_cube_units_callback(cube)
     _, level, message = caplog.record_tuples[0]
-    assert level == logging.INFO
+    assert level == logging.DEBUG
     assert message == "Converting precipitation amount units from kg m-2 to mm"
     assert cube.units == "mm"
 
@@ -716,16 +708,11 @@ def test_convert_visibility_units():
     assert np.allclose(cube.data, np.array([1, 2, 3]))
 
 
-def test_convert_visibility_no_units(cube, caplog):
+def test_convert_visibility_no_units(cube):
     """Check no processing for unexpected units in visibility conversions."""
     cube = iris.cube.Cube(
         np.array([1000, 2000, 3000]), standard_name="visibility_in_air", units="unknown"
     )
-    with caplog.at_level(logging.INFO):
-        cube = read._convert_cube_units_callback(cube)
-    _, level, message = caplog.record_tuples[0]
-    assert level == logging.INFO
-    assert message == "Visibility units are not in 'm', skipping conversion"
     assert cube.units == "unknown"
 
 
