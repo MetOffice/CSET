@@ -797,7 +797,7 @@ def _convert_cube_units_callback(cube: iris.cube.Cube):
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if any("surface_microphysical" in name for name in varnames):
         if cube.units == "kg m-2 s-1":
-            logging.info(
+            logging.debug(
                 "Converting precipitation rate units from kg m-2 s-1 to mm hr-1"
             )
             # Convert from kg m-2 s-1 to mm s-1 assuming 1kg water = 1l water = 1dm^3 water.
@@ -806,24 +806,18 @@ def _convert_cube_units_callback(cube: iris.cube.Cube):
             # Convert the units to per hour.
             cube.convert_units("mm hr-1")
         elif cube.units == "kg m-2":
-            logging.info("Converting precipitation amount units from kg m-2 to mm")
+            logging.debug("Converting precipitation amount units from kg m-2 to mm")
             # Convert from kg m-2 to mm assuming 1kg water = 1l water = 1dm^3 water.
             # This is a 1:1 conversion, so we just change the units.
             cube.units = "mm"
-        else:
-            logging.info(
-                "Precipitation units are not in 'kg m-2 s-1' or 'kg m-2', skipping conversion"
-            )
 
     # Convert visibility diagnostic units if required.
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if any("visibility" in name for name in varnames):
         if cube.units == "m":
-            logging.info("Converting visibility units m to km.")
+            logging.debug("Converting visibility units m to km.")
             # Convert the units to km.
             cube.convert_units("km")
-        else:
-            logging.info("Visibility units are not in 'm', skipping conversion")
 
     return cube
 
