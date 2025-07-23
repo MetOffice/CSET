@@ -17,7 +17,6 @@
 import iris
 import numpy as np
 import scipy.fft as fft
-import warnings
 
 def calculate_power_spectrum(
     cube: iris.cube.Cube | iris.cube.CubeList,
@@ -39,11 +38,10 @@ def calculate_power_spectrum(
         If the constraint doesn't produce a single cube.
     """
     # Calculate power spectra using discrete cosine transform
-    power_spectrum=DCT_ps(cube.data)
+    ps=DCT_ps(cube.data)
 
-    return power_spectrum
+    return ps
 
-#####################################################################
 def DCT_ps(y_2d):
 
     # Get max dims
@@ -74,7 +72,6 @@ def DCT_ps(y_2d):
 
     return ps
 
-#####################################################################
 def create_alpha_matrix(Ny,Nx):
 
     I=np.arange(Nx)+1
@@ -93,12 +90,5 @@ def create_alpha_matrix(Ny,Nx):
     alpha_matrix=(np.sqrt(I*I/Nx**2+J*J/Ny**2))
 
     return alpha_matrix
-
-
-#                     END OF PROGRAM                                     #
-##########################################################################
-if __name__ == '__main__':
-    
-    main()
 
 
