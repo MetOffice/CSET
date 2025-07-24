@@ -14,13 +14,14 @@
 
 """Useful functions for the workflow."""
 
+import base64
 import json
 from builtins import max, min, zip
 from glob import glob
 
 # Reexport functions for use within workflow.
 __all__ = [
-    "get_model_ids",
+    "b64_jsonget_model_ids",
     "get_model_names",
     "get_models",
     "sanitise_task_name",
@@ -94,3 +95,8 @@ def sanitise_task_name(s: str) -> str:
     if s.lower().startswith("_cylc"):
         s = f"sanitised_{s}"
     return s
+
+
+def b64_json(d: dict) -> str:
+    """Encode a dictionary as base64 encoded JSON for transport though cylc."""
+    return base64.b64encode(json.dumps(d).encode())
