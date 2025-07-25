@@ -430,6 +430,7 @@ def test_plot_line_series_too_many_dimensions(cube, tmp_working_dir):
 
 def test_plot_line_series_different_coord_lengths(tmp_working_dir):
     """Save a line series plot with specific filename and series coordinate."""
+    ens_coord = iris.coords.DimCoord(0, standard_name="realization", units="1")
     coord1 = iris.coords.DimCoord(
         [0, 1, 2, 3], standard_name="time", units="hours since 1970-01-01"
     )
@@ -437,6 +438,7 @@ def test_plot_line_series_different_coord_lengths(tmp_working_dir):
         [0, 1, 2, 3],
         long_name="my_var",
         dim_coords_and_dims=[(coord1, 0)],
+        aux_coords_and_dims=[(ens_coord, None)],
         attributes={"model_name": "m1"},
     )
     coord2 = iris.coords.DimCoord(
@@ -446,12 +448,22 @@ def test_plot_line_series_different_coord_lengths(tmp_working_dir):
         [3, 2, 1],
         long_name="my_var",
         dim_coords_and_dims=[(coord2, 0)],
+        aux_coords_and_dims=[(ens_coord, None)],
         attributes={"model_name": "m2"},
     )
     cubes = iris.cube.CubeList([cube1, cube2])
 
     plot.plot_line_series(cubes, filename="plot.png")
     assert Path("plot.png").is_file()
+
+
+def test_plot_line_series_ensemble(ensemble_cube, tmp_working_dir):
+    """Save an ensemble line series plot."""
+    ensemble_cube = collapse.collapse(
+        ensemble_cube, ["grid_latitude", "grid_longitude"], "MEAN"
+    )
+    plot.plot_line_series(ensemble_cube, filename="ensemble_series.ext")
+    assert Path("ensemble_series.png").is_file()
 
 
 def test_plot_vertical_line_series(vertical_profile_cube, tmp_working_dir):

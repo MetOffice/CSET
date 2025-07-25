@@ -577,6 +577,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
 def _plot_and_save_line_series(
     cubes: iris.cube.CubeList,
     coords: list[iris.coords.Coord],
+    ensemble_coord: str,
     filename: str,
     title: str,
     **kwargs,
@@ -589,6 +590,8 @@ def _plot_and_save_line_series(
         Cube or CubeList containing the cubes to plot on the y-axis.
     coords: list[Coord]
         Coordinates to plot on the x-axis, one per cube.
+    ensemble_coord: str
+        Ensemble coordinate in the cube.
     filename: str
         Filename of the plot to write.
     title: str
@@ -610,7 +613,27 @@ def _plot_and_save_line_series(
         if model_colors_map:
             label = cube.attributes.get("model_name")
             color = model_colors_map.get(label)
-        iplt.plot(coord, cube, color=color, marker="o", ls="-", lw=3, label=label)
+        for cube_slice in cube.slices_over(ensemble_coord):
+            if cube_slice.coord(ensemble_coord).points == [0]:
+                iplt.plot(
+                    coord,
+                    cube_slice,
+                    color=color,
+                    marker="o",
+                    ls="-",
+                    lw=3,
+                    label=f"{label} (control)",
+                )
+            else:
+                iplt.plot(
+                    coord,
+                    cube_slice,
+                    color=color,
+                    ls="-",
+                    lw=1.5,
+                    alpha=0.75,
+                    label=f"{label} (member)",
+                )
 
         # Calculate the global min/max if multiple cubes are given.
         _, levels, _ = _colorbar_map_levels(cube, axis="y")
@@ -645,8 +668,14 @@ def _plot_and_save_line_series(
 
     # Add gridlines
     ax.grid(linestyle="--", color="grey", linewidth=1)
-    if model_colors_map:
-        ax.legend(loc="best", ncol=1, frameon=False, fontsize=16)
+    # Ientify unique labels for legend
+    handles = list(
+        {
+            label: handle
+            for (handle, label) in zip(*ax.get_legend_handles_labels(), strict=True)
+        }.values()
+    )
+    ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -1520,11 +1549,11 @@ def plot_line_series(
             raise ValueError(
                 f"Cube must have a {series_coordinate} coordinate."
             ) from err
-        if cube.ndim > 1:
-            raise ValueError("Cube must be 1D.")
+        if cube.ndim > 2 or not cube.coords("realization"):
+            raise ValueError("Cube must be 1D or 2D with a realization coordinate.")
 
     # Do the actual plotting.
-    _plot_and_save_line_series(cubes, coords, plot_filename, title)
+    _plot_and_save_line_series(cubes, coords, "realization", plot_filename, title)
 
     # Add list of plots to plot metadata.
     plot_index = _append_to_plot_index([plot_filename])

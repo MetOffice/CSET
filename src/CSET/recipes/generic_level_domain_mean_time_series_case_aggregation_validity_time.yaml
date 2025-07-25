@@ -1,6 +1,10 @@
 category: $LEVELTYPE Level Time Series
 title: "$VARNAME $LEVEL domain mean time series\n Aggregation by validity time"
-description: Plots a time series of the domain mean $VARNAME at $LEVELTYPE $LEVEL by averaging over all cases by using a consistent validity time.
+description: |
+  Plots a time series of the domain mean $VARNAME at $LEVELTYPE $LEVEL by averaging
+  over all cases by using a consistent validity time. For ensembles, the control
+  member (assumed realization 0) is a thicker line with circles, the perturbed
+  members are thinner, paler, lines of the same colour.
 
 steps:
   - operator: read.read_cubes
