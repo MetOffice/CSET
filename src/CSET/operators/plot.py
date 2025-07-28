@@ -690,6 +690,7 @@ def _plot_and_save_line_series(
 def _plot_and_save_vertical_line_series(
     cubes: iris.cube.CubeList,
     coords: list[iris.coords.Coord],
+    ensemble_coord: str,
     filename: str,
     series_coordinate: str,
     title: str,
@@ -705,6 +706,8 @@ def _plot_and_save_vertical_line_series(
         1 dimensional Cube or CubeList of the data to plot on x-axis.
     coord: list[Coord]
         Coordinates to plot on the y-axis, one per cube.
+    ensemble_coord: str
+        Ensemble coordinate in the cube.
     filename: str
         Filename of the plot to write.
     series_coordinate: str
@@ -730,7 +733,27 @@ def _plot_and_save_vertical_line_series(
         if model_colors_map:
             label = cube.attributes.get("model_name")
             color = model_colors_map.get(label)
-        iplt.plot(cube, coord, color=color, marker="o", ls="-", lw=3, label=label)
+        for cube_slice in cube.slices_over(ensemble_coord):
+            if cube_slice.coord(ensemble_coord).points == [0]:
+                iplt.plot(
+                    coord,
+                    cube_slice,
+                    color=color,
+                    marker="o",
+                    ls="-",
+                    lw=3,
+                    label=f"{label} (control)",
+                )
+            else:
+                iplt.plot(
+                    coord,
+                    cube_slice,
+                    color=color,
+                    ls="-",
+                    lw=1.5,
+                    alpha=0.75,
+                    label=f"{label} (member)",
+                )
 
     # Get the current axis
     ax = plt.gca()
@@ -785,8 +808,14 @@ def _plot_and_save_vertical_line_series(
 
     # Add gridlines
     ax.grid(linestyle="--", color="grey", linewidth=1)
-    if model_colors_map:
-        ax.legend(loc="best", ncol=1, frameon=False, fontsize=16)
+    # Ientify unique labels for legend
+    handles = list(
+        {
+            label: handle
+            for (handle, label) in zip(*ax.get_legend_handles_labels(), strict=True)
+        }.values()
+    )
+    ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -1722,6 +1751,7 @@ def plot_vertical_line_series(
         _plot_and_save_vertical_line_series(
             cubes_slice,
             coords,
+            "realization",
             plot_filename,
             series_coordinate,
             title=title,
