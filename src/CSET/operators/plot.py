@@ -462,7 +462,7 @@ def _plot_and_save_spatial_plot(
 
     # Add colour bar.
     cbar = fig.colorbar(plot, orientation="horizontal", pad=0.042, shrink=0.7)
-    cbar.set_label(label=f"{cube.name()} ({cube.units})", size=16)
+    cbar.set_label(label=f"{cube.name()} ({cube.units})", size=14)
     # add ticks and tick_labels for every levels if less than 20 levels exist
     if levels is not None and len(levels) < 20:
         cbar.set_ticks(levels)
@@ -564,7 +564,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
     colorbar = fig.colorbar(
         plot, colorbar_axes, orientation="horizontal", pad=0.042, shrink=0.7
     )
-    colorbar.set_label(f"{cube.name()} ({cube.units})", size=16)
+    colorbar.set_label(f"{cube.name()} ({cube.units})", size=14)
 
     # Overall figure title.
     fig.suptitle(title, fontsize=16)
@@ -969,7 +969,7 @@ def _plot_and_save_vector_plot(
 
     # Add colour bar.
     cbar = fig.colorbar(plot, orientation="horizontal", pad=0.042, shrink=0.7)
-    cbar.set_label(label=f"{cube_vec_mag.name()} ({cube_vec_mag.units})", size=16)
+    cbar.set_label(label=f"{cube_vec_mag.name()} ({cube_vec_mag.units})", size=14)
     # add ticks and tick_labels for every levels if less than 20 levels exist
     if levels is not None and len(levels) < 20:
         cbar.set_ticks(levels)
