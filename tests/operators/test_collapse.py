@@ -76,6 +76,17 @@ def test_collapse_percentile(cube):
     assert repr(collapsed_cube) == expected_cube
 
 
+def test_collapse_multi_non_overlapping(long_forecast_multi_day):
+    """Identify when inputs have non-overlapping cubes."""
+    cube_day1 = long_forecast_multi_day[0:24, 0, :, :]
+    cube_day2 = long_forecast_multi_day[24:48, 2, :, :]
+    non_overlap_cubelist = iris.cube.CubeList([cube_day1, cube_day2])
+    with pytest.raises(
+        ValueError, match="No overlapping times detected in input cubes."
+    ):
+        collapse.collapse(non_overlap_cubelist, "time", "MEAN")
+
+
 def test_collapse_by_hour_of_day(long_forecast):
     """Convert and aggregates time dimension by hour of day."""
     collapsed_cube = collapse.collapse_by_hour_of_day(long_forecast, "MEAN")
@@ -211,11 +222,8 @@ def test_collapse_by_lead_time_single_cube(long_forecast_multi_day):
 
 def test_collapse_by_hour_of_day_multi_non_overlapping(long_forecast_multi_day):
     """Identify when inputs have non-overlapping cubes."""
-    print(long_forecast_multi_day)
     cube_day1 = long_forecast_multi_day[0:24, 0, :, :]
     cube_day2 = long_forecast_multi_day[24:48, 2, :, :]
-    print(cube_day1.coord("time"))
-    print(cube_day2.coord("time"))
     non_overlap_cubelist = iris.cube.CubeList([cube_day1, cube_day2])
     with pytest.raises(
         ValueError, match="No overlapping times detected in input cubes."
