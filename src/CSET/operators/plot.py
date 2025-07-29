@@ -614,7 +614,19 @@ def _plot_and_save_line_series(
             label = cube.attributes.get("model_name")
             color = model_colors_map.get(label)
         for cube_slice in cube.slices_over(ensemble_coord):
-            if cube_slice.coord(ensemble_coord).points == [0]:
+            # Label as the model if only one member.
+            if len(cube_slice.coord(ensemble_coord).points) == 1:
+                iplt.plot(
+                    coord,
+                    cube_slice,
+                    color=color,
+                    marker="o",
+                    ls="-",
+                    lw=3,
+                    label=f"{label}",
+                )
+            # Label with (control) if part of an ensemble.
+            elif cube_slice.coord(ensemble_coord).points == [0]:
                 iplt.plot(
                     coord,
                     cube_slice,
@@ -624,6 +636,7 @@ def _plot_and_save_line_series(
                     lw=3,
                     label=f"{label} (control)",
                 )
+            # Label with (perturbed) if part of an ensemble and not the control.
             else:
                 iplt.plot(
                     coord,
