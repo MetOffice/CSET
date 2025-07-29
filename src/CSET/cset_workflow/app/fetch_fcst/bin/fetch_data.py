@@ -17,6 +17,7 @@
 import abc
 import glob
 import itertools
+import json
 import logging
 import os
 import ssl
@@ -184,11 +185,11 @@ def _get_needed_environment_variables_obs() -> dict:
         "subtype": os.environ["OBS_SUBTYPE"],
         "data_time": datetime.fromisoformat(os.environ["CYLC_TASK_CYCLE_POINT"]),
         "forecast_length": isodate.parse_duration(os.environ["ANALYSIS_LENGTH"]),
-        "obs_fields": literal_eval(os.environ["SURFACE_SYNOP_FIELDS"]),
+        "obs_fields": ast.literal_eval(os.environ["SURFACE_SYNOP_FIELDS"]),
         "model_identifier": "OBS",
-        "wmo_nmbrs": literal_eval(os.environ.get("WMO_BLOCK_STTN_NMBRS")) \
+        "wmo_nmbrs": ast.literal_eval(os.environ.get("WMO_BLOCK_STTN_NMBRS")) \
             if len(os.environ.get("WMO_BLOCK_STTN_NMBRS")) > 0 else None,
-        "subarea_extent":literal_evals(os.environ.get("SUBAREA_EXTENT")) \
+        "subarea_extent":ast.literal_eval(os.environ.get("SUBAREA_EXTENT")) \
             if len(os.environ.get("SUBAREA_EXTENT")) > 0 else None,
         "obs_interval": isodate.parse_duration(os.environ["SURFACE_SYNOP_INTERVAL"]),
         "obs_offset": isodate.parse_duration(os.environ["SURFACE_SYNOP_OFFSET"]),
@@ -294,7 +295,7 @@ def fetch_data(file_retriever: FileRetrieverABC):
 
 
 def fetch_obs(obs_retriever: FileRetrieverABC = FilesystemFileRetriever):
-    """Fetch the observations correspomding to a model run.
+    """Fetch the observations corresponding to a model run.
 
     The following environment variables need to be set:
     * ANALYSIS_OFFSET
@@ -325,8 +326,13 @@ def fetch_obs(obs_retriever: FileRetrieverABC = FilesystemFileRetriever):
 
     # We will get just one file for now, but follow the templating
     # syntax for the model for consistency.
-    obs_base_path = v["subtype"] + "_" + "%Y%m%dT%H%MZ_dt_" + \
-        str(int(v["forecast_length"].total_seconds() // 3600)).zfill(3) + ".nc"
+    obs_base_path = (
+        v["subtype"]
+        + "_"
+        + "%Y%m%dT%H%MZ_dt_"
+        + str(int(v["forecast_length"].total_seconds() // 3600)).zfill(3)
+        + ".nc"
+    )
     paths = _template_file_path(
         obs_base_path,
         "initiation",
@@ -340,14 +346,20 @@ def fetch_obs(obs_retriever: FileRetrieverABC = FilesystemFileRetriever):
     # Use obs retriever to transfer data with multiple threads.
     # We shouldn't need to iterate as we do for the forecast data
     # because these files will be smaller. Passing None is a temporary
-    # measure until we can work out why python doesn't think this is a 
+    # measure until we can work out why python doesn't think this is a
     # class method.
     try:
-        obs_retriever.get_file (paths[0], 
-            v["subtype"], 
-            v["obs_fields"], v["data_time"],
-            v["obs_offset"], v["forecast_length"],
-            v["obs_interval"], cycle_obs_dir,
-            wmo_nmbrs=v["wmo_nmbrs"], subarea_extent=v["subarea_extent"])
+        obs_retriever.get_file(
+            paths[0],
+            v["subtype"],
+            v["obs_fields"],
+            v["data_time"],
+            v["obs_offset"],
+            v["forecast_length"],
+            v["obs_interval"],
+            cycle_obs_dir,
+            wmo_nmbrs=v["wmo_nmbrs"],
+            subarea_extent=v["subarea_extent"],
+        )
     except:
         raise FileNotFoundError("No observations available.")
