@@ -1,5 +1,5 @@
 category: Surface Spatial Plot Difference
-title: "$VARNAME\ndifference ($BASE_MODEL - $OTHER_MODEL)\nAggregation by lead time"
+title: "$VARNAME\nDifference ($BASE_MODEL - $OTHER_MODEL)\nAggregation by lead time"
 description: |
   Extracts and plot the difference in $VARNAME for all times. The cases
   are aggregated over lead time.
