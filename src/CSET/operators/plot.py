@@ -1316,7 +1316,10 @@ def _custom_colourmap_visibility_in_air(cube: iris.cube.Cube, cmap, levels, norm
     import matplotlib.colors as mcolors
 
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
-    if any("visibility_in_air" in name for name in varnames):
+    if (
+        any("visibility_in_air" in name for name in varnames)
+        and "difference" not in cube.long_name
+    ):
         # Define the levels and colors (in km)
         levels = [0, 0.05, 0.1, 0.2, 1.0, 2.0, 5.0, 10.0, 20.0, 30.0, 50.0, 70.0, 100.0]
         norm = mcolors.BoundaryNorm(levels, cmap.N)
