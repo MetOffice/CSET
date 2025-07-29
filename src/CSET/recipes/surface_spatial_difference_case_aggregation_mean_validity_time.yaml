@@ -1,5 +1,5 @@
 category: Surface Spatial Plot Difference
-title: "$VARNAME\n Difference ($BASE_MODEL - $OTHER_MODEL)\n Aggregation by validity time"
+title: "$VARNAME\nDifference ($BASE_MODEL - $OTHER_MODEL)\nAggregation by validity time"
 description: |
   Extracts and plot the difference in $VARNAME for all times. The cases
   are aggregated over validity time.
