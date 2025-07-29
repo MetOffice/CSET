@@ -44,8 +44,6 @@
 [runtime]
     [[plevel_spatial_plot_{{method}}_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
     inherit = SPATIAL
-        [[[directives]]]
-        --mem=4000
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_level_spatial_plot_sequence.yaml"
         CSET_ADDOPTS = """
@@ -76,7 +74,6 @@
 [runtime]
     [[mlevel_spatial_plot_{{method}}_m{{model["id"]}}_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(mlevel)}}]]
     inherit = SPATIAL
-        [[[directives]]]
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_level_spatial_plot_sequence.yaml"
         CSET_ADDOPTS = """
