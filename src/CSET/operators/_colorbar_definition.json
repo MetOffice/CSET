@@ -314,78 +314,78 @@
       "100": {
         "max": 100,
         "min": -100,
-        "xmax": 10,
-        "xmin": -10,
+        "xmax": 20,
+        "xmin": -20,
         "ymax": 10,
         "ymin": -10
       },
       "1000": {
         "max": 35,
         "min": -35,
-        "xmax": 10,
-        "xmin": -10,
+        "xmax": 20,
+        "xmin": -20,
         "ymax": 10,
         "ymin": -10
       },
       "200": {
         "max": 80,
         "min": -80,
-        "xmax": 10,
-        "xmin": -10,
+        "xmax": 20,
+        "xmin": -20,
         "ymax": 10,
         "ymin": -10
       },
       "250": {
         "max": 50,
         "min": -50,
-        "xmax": 10,
-        "xmin": -10,
+        "xmax": 20,
+        "xmin": -20,
         "ymax": 10,
         "ymin": -10
       },
       "300": {
         "max": 55,
         "min": -55,
-        "xmax": 10,
-        "xmin": -10,
+        "xmax": 20,
+        "xmin": -20,
         "ymax": 10,
         "ymin": -10
       },
       "500": {
         "max": 40,
         "min": -40,
-        "xmax": 10,
-        "xmin": -10,
+        "xmax": 20,
+        "xmin": -20,
         "ymax": 10,
         "ymin": -10
       },
       "700": {
         "max": 35,
         "min": -35,
-        "xmax": 10,
-        "xmin": -10,
+        "xmax": 20,
+        "xmin": -20,
         "ymax": 10,
         "ymin": -10
       },
       "850": {
         "max": 35,
         "min": -35,
-        "xmax": 10,
-        "xmin": -10,
+        "xmax": 20,
+        "xmin": -20,
         "ymax": 10,
         "ymin": -10
       },
       "950": {
         "max": 35,
         "min": -35,
-        "xmax": 10,
-        "xmin": -10,
+        "xmax": 20,
+        "xmin": -20,
         "ymax": 10,
         "ymin": -10
       }
     },
-    "xmax": 10,
-    "xmin": -10
+    "xmax": 20,
+    "xmin": -20
   },
   "meridional_wind_at_pressure_levels_difference": {
     "cmap": "bwr",
