@@ -74,11 +74,6 @@ def collapse(
     if method == "PERCENTILE" and additional_percent is None:
         raise ValueError("Must specify additional_percent")
 
-    # Remove T0 from UM inputs to allow time-averaged comparison with LFRic.
-    # This is intended as a short-term fix while different length inputs
-    # often used in comparing different models.
-    ####cubes = remove_time0(cubes)
-
     # Retain only common time points between different models if multiple model inputs.
     if isinstance(cubes, iris.cube.CubeList) and len(cubes) > 1:
         logging.debug(
