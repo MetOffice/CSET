@@ -733,40 +733,40 @@ def _plot_and_save_vertical_line_series(
         if model_colors_map:
             label = cube.attributes.get("model_name")
             color = model_colors_map.get(label)
-        for cube_slice in cube.slices_over(ensemble_coord):
-            # If only one member plotted just plot model name.
-            if len(cube_slice.coord(ensemble_coord).points) == 1:
-                iplt.plot(
-                    coord,
-                    cube_slice,
-                    color=color,
-                    marker="o",
-                    ls="-",
-                    lw=3,
-                    label=f"{label}",
-                )
-            # If ensemble data given plot control member with (control).
-            elif cube_slice.coord(ensemble_coord).points == [0]:
-                iplt.plot(
-                    coord,
-                    cube_slice,
-                    color=color,
-                    marker="o",
-                    ls="-",
-                    lw=3,
-                    label=f"{label} (control)",
-                )
-            # If ensemble data given plot perturbed members with (perturbed).
-            else:
-                iplt.plot(
-                    coord,
-                    cube_slice,
-                    color=color,
-                    ls="-",
-                    lw=1.5,
-                    alpha=0.75,
-                    label=f"{label} (member)",
-                )
+        if len(cube.coord(ensemble_coord).points) == 1:
+            iplt.plot(
+                coord,
+                cube,
+                color=color,
+                marker="o",
+                ls="-",
+                lw=3,
+                label=f"{label}",
+            )
+        else:
+            for cube_slice in cube.slices_over(ensemble_coord):
+                # If ensemble data given plot control member with (control).
+                if cube_slice.coord(ensemble_coord).points == [0]:
+                    iplt.plot(
+                        coord,
+                        cube_slice,
+                        color=color,
+                        marker="o",
+                        ls="-",
+                        lw=3,
+                        label=f"{label} (control)",
+                    )
+                # If ensemble data given plot perturbed members with (perturbed).
+                else:
+                    iplt.plot(
+                        coord,
+                        cube_slice,
+                        color=color,
+                        ls="-",
+                        lw=1.5,
+                        alpha=0.75,
+                        label=f"{label} (member)",
+                    )
 
     # Get the current axis
     ax = plt.gca()
