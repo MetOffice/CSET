@@ -735,8 +735,8 @@ def _plot_and_save_vertical_line_series(
             color = model_colors_map.get(label)
         if len(cube.coord(ensemble_coord).points) == 1:
             iplt.plot(
-                coord,
                 cube,
+                coord,
                 color=color,
                 marker="o",
                 ls="-",
@@ -748,8 +748,8 @@ def _plot_and_save_vertical_line_series(
                 # If ensemble data given plot control member with (control).
                 if cube_slice.coord(ensemble_coord).points == [0]:
                     iplt.plot(
-                        coord,
                         cube_slice,
+                        coord,
                         color=color,
                         marker="o",
                         ls="-",
@@ -759,8 +759,8 @@ def _plot_and_save_vertical_line_series(
                 # If ensemble data given plot perturbed members with (perturbed).
                 else:
                     iplt.plot(
-                        coord,
                         cube_slice,
+                        coord,
                         color=color,
                         ls="-",
                         lw=1.5,
@@ -1688,11 +1688,11 @@ def plot_vertical_line_series(
             ) from err
 
         try:
-            if cube.ndim > 1:
+            if cube.ndim > 1 or not cube.coords("realization"):
                 cube.coord(sequence_coordinate)
         except iris.exceptions.CoordinateNotFoundError as err:
             raise ValueError(
-                f"Cube must have a {sequence_coordinate} coordinate or be 1D."
+                f"Cube must have a {sequence_coordinate} coordinate or be 1D, or 2D with a realization coordinate."
             ) from err
 
         # Get minimum and maximum from levels information.
