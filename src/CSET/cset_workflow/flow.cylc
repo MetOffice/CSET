@@ -86,9 +86,7 @@ URL = https://metoffice.github.io/CSET
         {% for date in CSET_CASE_DATES %}
             R1/{{date}} = """
             setup_complete[^] =>
-            {% if SURFACE_SYNOP_OBS %}
-                 FETCH_OBS:succeed-all =>
-            {% endif %}
+            FETCH_OBS:succeed-all =>
             FETCH_DATA:succeed-all =>
             PREPROCESS_DATA:succeed-all =>
             fetch_complete =>
@@ -218,6 +216,9 @@ URL = https://metoffice.github.io/CSET
 
     [[cycle_complete]]
     inherit = DUMMY_TASK
+
+    [[dummy_fech_obs]]
+    inherit = DUMMY_TASK, FETCH_OBS
 
     [[dummy_process]]
     inherit = DUMMY_TASK, PROCESS

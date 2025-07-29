@@ -7,7 +7,7 @@
         [[[environment]]]
         CSET_RECIPE_NAME = "generic_obs_scatterplot.yaml"
         CSET_ADDOPTS = """
-            --VARNAME={{obs_field}}
+            --OBSVARNAME={{obs_field}}
             --SUBAREA_TYPE={{SUBAREA_TYPE | default("")}}
             --SUBAREA_EXTENT={{SUBAREA_TYPE | default("")}}
             --PLOTTING_PROJECTION={{PLOTTING_PROJECTION | default("")}}

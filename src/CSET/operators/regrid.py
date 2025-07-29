@@ -369,7 +369,6 @@ def transform_lat_long_points(lon, lat, cube):
 
 def interpolate_to_point_cube(fld: iris.cube.Cube | iris.cube.CubeList,
                               point_cube: iris.cube.Cube,
-                              output_difference: bool,
                               **kwargs) -> iris.cube.Cube | iris.cube.CubeList:
     #
     # As a basis, create a copy of the point cube.
@@ -417,9 +416,6 @@ def interpolate_to_point_cube(fld: iris.cube.Cube | iris.cube.CubeList,
                     fld_point_cube.coord('longitude').points[k]]).data 
                 if ~point_cube.data.mask[jt][k] else np.nan
                 for k in range(fld_point_cube.coord('latitude').points) ] )
-    #
-    if (output_difference):
-        fld_point_cube.data -= point_cube.data
     #
     return fld_point_cube
 

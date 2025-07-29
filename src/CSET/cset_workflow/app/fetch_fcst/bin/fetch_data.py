@@ -20,7 +20,7 @@ import itertools
 import logging
 import os
 import ssl
-import json
+import ast
 import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
@@ -184,11 +184,11 @@ def _get_needed_environment_variables_obs() -> dict:
         "subtype": os.environ["OBS_SUBTYPE"],
         "data_time": datetime.fromisoformat(os.environ["CYLC_TASK_CYCLE_POINT"]),
         "forecast_length": isodate.parse_duration(os.environ["ANALYSIS_LENGTH"]),
-        "obs_fields": json.loads(os.environ["SURFACE_SYNOP_FIELDS"].replace("'",'"')),
+        "obs_fields": literal_eval(os.environ["SURFACE_SYNOP_FIELDS"]),
         "model_identifier": "OBS",
-        "wmo_nmbrs": json.loads(os.environ.get("WMO_BLOCK_STTN_NMBRS").replace("'",'"')) \
+        "wmo_nmbrs": literal_eval(os.environ.get("WMO_BLOCK_STTN_NMBRS")) \
             if len(os.environ.get("WMO_BLOCK_STTN_NMBRS")) > 0 else None,
-        "subarea_extent": json.loads(os.environ.get("SUBAREA_EXTENT")) \
+        "subarea_extent":literal_evals(os.environ.get("SUBAREA_EXTENT")) \
             if len(os.environ.get("SUBAREA_EXTENT")) > 0 else None,
         "obs_interval": isodate.parse_duration(os.environ["SURFACE_SYNOP_INTERVAL"]),
         "obs_offset": isodate.parse_duration(os.environ["SURFACE_SYNOP_OFFSET"]),
