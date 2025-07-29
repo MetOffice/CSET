@@ -16,11 +16,11 @@ steps:
         coordinate: $LEVELTYPE
         levels: $LEVEL
 
+  - operator: aggregate.ensure_aggregatable_across_cases
+
   - operator: collapse.collapse
     coordinate: [grid_latitude, grid_longitude]
     method: MEAN
-
-  - operator: aggregate.ensure_aggregatable_across_cases
 
   - operator: collapse.collapse_by_validity_time
     method: SEQ
