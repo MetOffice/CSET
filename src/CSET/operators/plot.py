@@ -734,7 +734,19 @@ def _plot_and_save_vertical_line_series(
             label = cube.attributes.get("model_name")
             color = model_colors_map.get(label)
         for cube_slice in cube.slices_over(ensemble_coord):
-            if cube_slice.coord(ensemble_coord).points == [0]:
+            # If only one member plotted just plot model name.
+            if len(cube_slice.coord(ensemble_coord).points) == 1:
+                iplt.plot(
+                    coord,
+                    cube_slice,
+                    color=color,
+                    marker="o",
+                    ls="-",
+                    lw=3,
+                    label=f"{label}",
+                )
+            # If ensemble data given plot control member with (control).
+            elif cube_slice.coord(ensemble_coord).points == [0]:
                 iplt.plot(
                     coord,
                     cube_slice,
@@ -744,6 +756,7 @@ def _plot_and_save_vertical_line_series(
                     lw=3,
                     label=f"{label} (control)",
                 )
+            # If ensemble data given plot perturbed members with (perturbed).
             else:
                 iplt.plot(
                     coord,
