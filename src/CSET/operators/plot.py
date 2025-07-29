@@ -613,41 +613,29 @@ def _plot_and_save_line_series(
         if model_colors_map:
             label = cube.attributes.get("model_name")
             color = model_colors_map.get(label)
-        # Label as the model if only one member.
-        if len(cube.coord(ensemble_coord).points) == 1:
-            iplt.plot(
-                coord,
-                cube,
-                color=color,
-                marker="o",
-                ls="-",
-                lw=3,
-                label=f"{label}",
-            )
-        else:
-            for cube_slice in cube.slices_over(ensemble_coord):
-                # Label with (control) if part of an ensemble.
-                if cube_slice.coord(ensemble_coord).points == [0]:
-                    iplt.plot(
-                        coord,
-                        cube_slice,
-                        color=color,
-                        marker="o",
-                        ls="-",
-                        lw=3,
-                        label=f"{label} (control)",
-                    )
+        for cube_slice in cube.slices_over(ensemble_coord):
+            # Label with (control) if part of an ensemble or not otherwise.
+            if cube_slice.coord(ensemble_coord).points == [0]:
+                iplt.plot(
+                    coord,
+                    cube_slice,
+                    color=color,
+                    marker="o",
+                    ls="-",
+                    lw=3,
+                    label=f"{label}{' (control)' if len(cube.coord(ensemble_coord).points) > 1 else ''}",
+                )
                 # Label with (perturbed) if part of an ensemble and not the control.
-                else:
-                    iplt.plot(
-                        coord,
-                        cube_slice,
-                        color=color,
-                        ls="-",
-                        lw=1.5,
-                        alpha=0.75,
-                        label=f"{label} (member)",
-                    )
+            else:
+                iplt.plot(
+                    coord,
+                    cube_slice,
+                    color=color,
+                    ls="-",
+                    lw=1.5,
+                    alpha=0.75,
+                    label=f"{label} (member)",
+                )
 
         # Calculate the global min/max if multiple cubes are given.
         _, levels, _ = _colorbar_map_levels(cube, axis="y")
