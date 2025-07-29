@@ -623,7 +623,7 @@ def _plot_and_save_line_series(
                     marker="o",
                     ls="-",
                     lw=3,
-                    label=f"{label}{' (control)' if len(cube.coord(ensemble_coord).points) > 1 else ''}",
+                    label=f'{label} (control)' if len(cube.coord(ensemble_coord).points) > 1 else label,
                 )
                 # Label with (perturbed) if part of an ensemble and not the control.
             else:
