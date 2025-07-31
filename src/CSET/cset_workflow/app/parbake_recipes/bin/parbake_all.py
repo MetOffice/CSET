@@ -25,7 +25,7 @@ from pathlib import Path
 
 from ruamel.yaml import YAML
 
-from CSET._common import parse_recipe, slugify
+from CSET._common import parse_recipe, parse_variable_options, slugify
 
 # Load rose suite variables.
 ROSE_SUITE_VARIABLES = json.loads(
@@ -39,71 +39,77 @@ recipe_name: str = "generic_surface_spatial_plot_sequence.yaml"
 # Then needs to write the new recipe file based on this information.
 
 
-def parbake(recipe: Path, output_dir: Path, recipe_variables):
+def parbake(raw_recipe: Path, output_dir: Path, recipe_variables):
     """Parbake a recipe."""
-    recipe = parse_recipe(recipe, recipe_variables)
+    recipe = parse_recipe(raw_recipe, recipe_variables)
     output = output_dir / f"{slugify(recipe['title'])}.yaml"
     with open(output, "wt") as fp:
         with YAML(pure=True, output=fp) as yaml:
             yaml.dump(recipe)
 
 
-def recipe_file() -> str:
-    """Write the recipe file to disk and return its path as a string."""
-    # Ready recipe file to disk.
-    cset_recipe = os.environ["CSET_RECIPE_NAME"]
-    subprocess.run(("cset", "-v", "cookbook", cset_recipe), check=True)
-    return cset_recipe
+def get_const_args(environ=os.environ) -> dict:
+    """Gather arguments from environment variables that are constant."""
+    return {
+        "case_aggregation": bool(environ.get("DO_CASE_AGGREGATION")),
+        "rose_datac": Path(environ["ROSE_DATAC"]),
+        "share_dir": Path(environ["CYLC_WORKFLOW_SHARE_DIR"]),
+    }
 
 
-def data_directories(case_aggregation: bool) -> list[str]:
-    """Get the input data directories for the cycle."""
-    model_identifiers = sorted(os.environ["MODEL_IDENTIFIERS"].split())
-    if case_aggregation:
-        share_dir = os.environ["CYLC_WORKFLOW_SHARE_DIR"]
-        return [
-            f"{share_dir}/cycle/*/data/{model_id}" for model_id in model_identifiers
-        ]
-    else:
-        rose_datac = os.environ["ROSE_DATAC"]
-        return [f"{rose_datac}/data/{model_id}" for model_id in model_identifiers]
+def get_parbake_args(environ=os.environ) -> dict:
+    """Gather per-parbake arguments."""
+    return {
+        "recipe": Path(environ["CSET_RECIPE_NAME"]),
+        "model_identifiers": sorted(environ["MODEL_IDENTIFIERS"].split()),
+        "recipe_variables": parse_variable_options(
+            shlex.split(environ.get("CSET_ADDOPTS", ""))
+        ),
+    }
 
 
-def run_parbake():
+def run_parbake(
+    recipe: Path,
+    model_identifiers: list[str],
+    share_dir: Path,
+    rose_datac: Path,
+    case_aggregation: bool,
+    recipe_variables: dict,
+):
     """Pre-process recipe to bake in all variables."""
     print("Retrieving recipe from cookbook.")
-    recipe = recipe_file()
+    # Ready recipe file to disk.
+    subprocess.run(["cset", "-v", "cookbook", str(recipe)], check=True)
 
     # Collect configuration from environment.
-    case_aggregation = bool(os.getenv("DO_CASE_AGGREGATION"))
-    data_dirs = data_directories(case_aggregation)
-    # Construct the location for the recipe.
     if case_aggregation:
-        recipe_dir = f"{os.environ['ROSE_DATAC']}/aggregation_recipes/"
+        # Construct the location for the recipe.
+        recipe_dir = rose_datac / "aggregation_recipes"
+        # Construct the input data directories for the cycle.
+        data_dirs = [
+            share_dir / f"cycle/*/data/{model_id}" for model_id in model_identifiers
+        ]
     else:
-        recipe_dir = f"{os.environ['ROSE_DATAC']}/recipes/"
-    os.makedirs(recipe_dir, exist_ok=True)
-    output = f"{recipe_dir}{os.environ['CYLC_TASK_NAME']}.yaml"
+        recipe_dir = rose_datac / "recipes"
+        data_dirs = [rose_datac / f"data/{model_id}" for model_id in model_identifiers]
 
-    # Construct command to run.
-    command = ["cset", "parbake", "--recipe", recipe, "--output", output]
-    # Append input data paths.
-    command += ["--INPUT_PATHS", str(data_dirs)]
-    # Append additional command line arguments.
-    command += shlex.split(os.getenv("CSET_ADDOPTS", ""))
+    # Ensure recipe dir exists.
+    recipe_dir.mkdir(parents=True, exist_ok=True)
 
-    print("Running", shlex.join(command))
-    try:
-        subprocess.run(command, check=True)
-    except subprocess.CalledProcessError as err:
-        print(f"cset parbake exited with non-zero code {err.returncode}.")
-        raise
+    # Add input paths to recipe variables.
+    recipe_variables["INPUT_PATHS"] = str(data_dirs)
+
+    # Parbake recipe.
+    print("Parbaking recipe.")
+    parbake(raw_recipe=recipe, output_dir=recipe_dir, recipe_variables=recipe_variables)
 
 
 def run():
     """Run workflow script."""
     try:
-        run_parbake()
+        const_args = get_const_args()
+        args = get_parbake_args()
+        run_parbake(**const_args, **args)
     except subprocess.CalledProcessError:
         sys.exit(1)
 
