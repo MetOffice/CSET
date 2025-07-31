@@ -100,4 +100,8 @@ def sanitise_task_name(s: str) -> str:
 
 def b64_json(d: dict) -> str:
     """Encode a dictionary as base64 encoded JSON for transport though cylc."""
-    return base64.b64encode(json.dumps(d).encode())
+    # Remove circular reference to
+    new_d = d.copy()
+    del new_d["ROSE_SUITE_VARIABLES"]
+    output = base64.b64encode(json.dumps(new_d).encode()).decode()
+    return output

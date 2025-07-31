@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2025) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,12 +16,16 @@
 
 import importlib.resources
 import logging
+import subprocess
 import sys
 import warnings
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
 
-import ruamel.yaml
+from ruamel.yaml import YAML
+
+from CSET._common import parse_recipe, slugify
 
 
 class FileExistsWarning(UserWarning):
@@ -43,7 +47,7 @@ def _version_agnostic_importlib_resources_file() -> Path:
 
 
 def _recipe_files_in_tree(
-    recipe_name: str = None, input_dir: Path = None
+    recipe_name: str | None = None, input_dir: Path | None = None
 ) -> Iterable[Path]:
     """Yield recipe file Paths matching the recipe name."""
     if recipe_name is None:
@@ -58,7 +62,7 @@ def _recipe_files_in_tree(
             yield from _recipe_files_in_tree(recipe_name, file)
 
 
-def _get_recipe_file(recipe_name: str, input_dir: Path = None) -> Path:
+def _get_recipe_file(recipe_name: str, input_dir: Path | None = None) -> Path:
     """Return a Path to the recipe file."""
     if input_dir is None:
         input_dir = _version_agnostic_importlib_resources_file()
@@ -122,7 +126,99 @@ def detail_recipe(recipe_name: str) -> None:
         Partial match for the recipe name.
     """
     for file in _recipe_files_in_tree(recipe_name):
-        with ruamel.yaml.YAML(typ="safe", pure=True) as yaml:
+        with YAML(typ="safe", pure=True) as yaml:
             recipe = yaml.load(file)
         print(f"\n\t{file.name}\n\t{''.join('─' * len(file.name))}\n")
         print(recipe.get("description"))
+
+
+class RawRecipe:
+    """A recipe to be parbaked."""
+
+    recipe: str
+    model_ids: list[str]
+    variables: dict[str, str]
+    aggregation: bool
+
+    def __init__(
+        self,
+        recipe: str,
+        model_ids: list[str],
+        variables: dict[str, Any],
+        aggregation: bool,
+    ) -> None:
+        # Whether we have an aggregation recipe.
+        self.recipe = recipe
+        self.model_ids = model_ids
+        self.variables = variables
+        self.aggregation = aggregation
+
+    def parbake(self, ROSE_DATAC: Path, SHARE_DIR: Path) -> None:
+        """Pre-process recipe to bake in all variables."""
+        print("Retrieving recipe from cookbook.")
+        # Ready recipe file to disk.
+        subprocess.run(["cset", "-v", "cookbook", self.recipe], check=True)
+
+        # Collect configuration from environment.
+        if self.aggregation:
+            # Construct the location for the recipe.
+            recipe_dir = ROSE_DATAC / "aggregation_recipes"
+            # Construct the input data directories for the cycle.
+            data_dirs = [
+                SHARE_DIR / f"cycle/*/data/{model_id}" for model_id in self.model_ids
+            ]
+        else:
+            recipe_dir = ROSE_DATAC / "recipes"
+            data_dirs = [ROSE_DATAC / f"data/{model_id}" for model_id in self.model_ids]
+
+        # Ensure recipe dir exists.
+        recipe_dir.mkdir(parents=True, exist_ok=True)
+
+        # Add input paths to recipe variables.
+        self.variables["INPUT_PATHS"] = str(data_dirs)
+
+        # Parbake this recipe, saving into recipe_dir.
+        print("Parbaking recipe.")
+        recipe = parse_recipe(Path(self.recipe), self.variables)
+        output = recipe_dir / f"{slugify(recipe['title'])}.yaml"
+        with open(output, "wt") as fp:
+            with YAML(pure=True, output=fp) as yaml:
+                yaml.dump(recipe)
+
+
+class RecipeList:
+    """Collection of RawRecipes with easy adder function."""
+
+    recipes: list[RawRecipe] = []
+
+    def add(self, recipe, model_ids, variables, aggregation):
+        """Create a new RawRecipe and add it to the RecipeList."""
+        self.recipes.append(
+            RawRecipe(
+                recipe=recipe,
+                model_ids=model_ids,
+                variables=variables,
+                aggregation=aggregation,
+            )
+        )
+
+
+# Utility functions. Probably want to move into own file.
+def get_models(rose_variables: dict) -> list[dict]:
+    """Load per-model configuration into a single object.
+
+    Returns a list of dictionaries, each one containing a per-model
+    configuration.
+    """
+    models = []
+    for model in range(1, 20):
+        model_prefix = f"m{model}_"
+        model_vars = {
+            key.removeprefix(model_prefix): value
+            for key, value in rose_variables.items()
+            if key.startswith(model_prefix)
+        }
+        if model_vars:
+            model_vars["id"] = model
+            models.append(model_vars)
+    return models

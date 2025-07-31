@@ -206,9 +206,16 @@ URL = https://metoffice.github.io/CSET
     [[bake_recipes]]
     execution time limit = PT3H
     execution retry delays = 5*PT1M
+    pre-script = """
+    mkdir -p $CYLC_WORKFLOW_RUN_DIR/app/bake_recipes/opt
+    printf "[bunch-args]\nrecipe_file=$($RECIPE_DIR/*.yaml)\n" >> $CYLC_WORKFLOW_RUN_DIR/app/bake_recipes/opt/rose-app-$CYLC_TASK_CYCLE_POINT.conf
+    """
+    script = rose task-run -v --app-key=parbake_recipes --opt-conf-key="$CYLC_TASK_CYCLE_POINT"
     [[[directives]]]
         --ntasks=32
         --mem=64000
+    [[[environment]]]
+        RECIPE_DIR = $CYLC_WORKFLOW_SHARE_DIR/cycle/$CYLC_TASK_CYCLE_POINT/recipes
 
     [[bake_aggregation_recipes]]
     script = rose task-run -v --app-key=bake_recipes
@@ -220,6 +227,7 @@ URL = https://metoffice.github.io/CSET
         [[[environment]]]
         # As this process is used for case aggregation we hard code to True.
         DO_CASE_AGGREGATION = True
+        RECIPE_DIR=$CYLC_WORKFLOW_SHARE_DIR/cycle/$CYLC_TASK_CYCLE_POINT/aggregation_recipes
 
     [[housekeeping]]
     # Housekeep unprocessed data files and processed intermediate files.
