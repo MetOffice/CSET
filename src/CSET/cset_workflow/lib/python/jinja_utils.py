@@ -21,7 +21,8 @@ from glob import glob
 
 # Reexport functions for use within workflow.
 __all__ = [
-    "b64_jsonget_model_ids",
+    "b64_json",
+    "get_model_ids",
     "get_model_names",
     "get_models",
     "sanitise_task_name",

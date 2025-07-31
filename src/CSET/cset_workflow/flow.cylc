@@ -193,7 +193,7 @@ URL = https://metoffice.github.io/CSET
         ANALYSIS_OFFSET = {{model["analysis_offset"]}}
     {% endfor %}
 
-    [[parbake recipes]]
+    [[parbake_recipes]]
     # Parbake all the recipes for this cycle.
     script = rose task-run -v --app-key=parbake_recipes
     execution time limit = PT5M
@@ -214,10 +214,10 @@ URL = https://metoffice.github.io/CSET
     script = rose task-run -v --app-key=bake_recipes
     execution time limit = PT3H
     execution retry delays = 5*PT1M
-    [[[directives]]]
+        [[[directives]]]
         --ntasks=8
         --mem=64000
-    [[[environment]]]
+        [[[environment]]]
         # As this process is used for case aggregation we hard code to True.
         DO_CASE_AGGREGATION = True
 
