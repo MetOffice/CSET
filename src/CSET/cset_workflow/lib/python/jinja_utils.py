@@ -14,12 +14,14 @@
 
 """Useful functions for the workflow."""
 
+import base64
 import json
 from builtins import max, min, zip
 from glob import glob
 
 # Reexport functions for use within workflow.
 __all__ = [
+    "b64_json",
     "get_model_ids",
     "get_model_names",
     "get_models",
@@ -94,3 +96,12 @@ def sanitise_task_name(s: str) -> str:
     if s.lower().startswith("_cylc"):
         s = f"sanitised_{s}"
     return s
+
+
+def b64_json(d: dict) -> str:
+    """Encode a dictionary as base64 encoded JSON for transport though cylc."""
+    # Remove circular reference to
+    new_d = d.copy()
+    del new_d["ROSE_SUITE_VARIABLES"]
+    output = base64.b64encode(json.dumps(new_d).encode()).decode()
+    return output
