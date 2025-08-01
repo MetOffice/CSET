@@ -207,10 +207,12 @@ URL = https://metoffice.github.io/CSET
     execution time limit = PT3H
     execution retry delays = 5*PT1M
     pre-script = """
-    mkdir -p $CYLC_WORKFLOW_RUN_DIR/app/bake_recipes/opt
-    printf "[bunch-args]\nrecipe_file=$($RECIPE_DIR/*.yaml)\n" >> $CYLC_WORKFLOW_RUN_DIR/app/bake_recipes/opt/rose-app-$CYLC_TASK_CYCLE_POINT.conf
+    mkdir -p "$CYLC_WORKFLOW_RUN_DIR/app/bake_recipes/opt/"
+    opt_conf="$CYLC_WORKFLOW_RUN_DIR/app/bake_recipes/opt/rose-app-$CYLC_TASK_CYCLE_POINT.conf"
+    printf "[bunch-args]\nrecipe_file=" > "$opt_conf"
+    echo "$RECIPE_DIR"/*.yaml >> "$opt_conf"
     """
-    script = rose task-run -v --app-key=parbake_recipes --opt-conf-key="$CYLC_TASK_CYCLE_POINT"
+    script = rose task-run -v --app-key=bake_recipes --opt-conf-key="$CYLC_TASK_CYCLE_POINT"
     [[[directives]]]
         --ntasks=32
         --mem=64000
@@ -218,7 +220,7 @@ URL = https://metoffice.github.io/CSET
         RECIPE_DIR = $CYLC_WORKFLOW_SHARE_DIR/cycle/$CYLC_TASK_CYCLE_POINT/recipes
 
     [[bake_aggregation_recipes]]
-    script = rose task-run -v --app-key=bake_recipes
+    script = rose task-run -v --app-key=bake_recipes --opt-conf-key="$CYLC_TASK_CYCLE_POINT"
     execution time limit = PT3H
     execution retry delays = 5*PT1M
         [[[directives]]]
