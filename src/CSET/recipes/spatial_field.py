@@ -15,15 +15,14 @@
 """Construct all the recipes."""
 
 import itertools
+from collections.abc import Generator
+from typing import Any
 
-from CSET.recipes import RecipeList, get_models
+from CSET.recipes import RawRecipe, get_models
 
 
-# Generate recipes.
-def recipes(v: dict) -> RecipeList:
-    """Generate recipes from the given suite configuration."""
-    recipes = RecipeList()
-
+def load(v: dict[str, Any]) -> Generator[RawRecipe]:
+    """Yield recipes from the given suite configuration."""
     # Load a list of model detail dictionaries.
     models = get_models(v)
 
@@ -32,7 +31,7 @@ def recipes(v: dict) -> RecipeList:
         for model, field, method in itertools.product(
             models, v["SURFACE_FIELDS"], v["SPATIAL_SURFACE_FIELD_METHOD"]
         ):
-            recipes.add(
+            yield RawRecipe(
                 recipe="generic_surface_spatial_plot_sequence.yaml",
                 model_ids=model["id"],
                 variables={
@@ -55,7 +54,7 @@ def recipes(v: dict) -> RecipeList:
             v["PRESSURE_LEVELS"],
             v["SPATIAL_PLEVEL_FIELD_METHOD"],
         ):
-            recipes.add(
+            yield RawRecipe(
                 recipe="generic_level_spatial_plot_sequence.yaml",
                 variables={
                     "VARNAME": field,
@@ -80,7 +79,7 @@ def recipes(v: dict) -> RecipeList:
             v["MODEL_LEVELS"],
             v["SPATIAL_MLEVEL_FIELD_METHOD"],
         ):
-            recipes.add(
+            yield RawRecipe(
                 recipe="generic_level_spatial_plot_sequence.yaml",
                 variables={
                     "VARNAME": field,
@@ -97,18 +96,16 @@ def recipes(v: dict) -> RecipeList:
                 aggregation=False,
             )
 
-    # Case aggregation.
-
     # Create a list of case aggregation types.
-    AGGREGATION_TYPES = ["LEAD_TIME", "HOUR_OF_DAY", "VALIDITY_TIME", "ALL"]
+    AGGREGATION_TYPES = ["lead_time", "hour_of_day", "validity_time", "all"]
 
     # Surface (2D) fields.
     for model, atype, field in itertools.product(
-        models, range(len(AGGREGATION_TYPES)), v["SURFACE_FIELDS"]
+        models, AGGREGATION_TYPES, v["SURFACE_FIELDS"]
     ):
-        if v["SPATIAL_SURFACE_FIELD_AGGREGATION"][atype]:
-            recipes.add(
-                recipe=f"generic_surface_spatial_plot_sequence_case_aggregation_mean_{AGGREGATION_TYPES[atype].lower()}.yaml",
+        if v["SPATIAL_SURFACE_FIELD_AGGREGATION"][AGGREGATION_TYPES.index(atype)]:
+            yield RawRecipe(
+                recipe=f"generic_surface_spatial_plot_sequence_case_aggregation_mean_{atype}.yaml",
                 variables={
                     "VARNAME": field,
                     "MODEL_NAME": model["name"],
@@ -123,14 +120,11 @@ def recipes(v: dict) -> RecipeList:
 
     # Pressure level fields.
     for model, atype, field, plevel in itertools.product(
-        models,
-        range(len(AGGREGATION_TYPES)),
-        v["PRESSURE_LEVEL_FIELDS"],
-        v["PRESSURE_LEVELS"],
+        models, AGGREGATION_TYPES, v["PRESSURE_LEVEL_FIELDS"], v["PRESSURE_LEVELS"]
     ):
-        if v["SPATIAL_PLEVEL_FIELD_AGGREGATION"][atype]:
-            recipes.add(
-                recipe=f"generic_level_spatial_plot_sequence_case_aggregation_mean_{AGGREGATION_TYPES[atype].lower()}.yaml",
+        if v["SPATIAL_PLEVEL_FIELD_AGGREGATION"][AGGREGATION_TYPES.index(atype)]:
+            yield RawRecipe(
+                recipe=f"generic_level_spatial_plot_sequence_case_aggregation_mean_{atype}.yaml",
                 variables={
                     "VARNAME": field,
                     "LEVELTYPE": "pressure",
@@ -147,14 +141,11 @@ def recipes(v: dict) -> RecipeList:
 
     # Model level fields.
     for model, atype, field, mlevel in itertools.product(
-        models,
-        range(len(AGGREGATION_TYPES)),
-        v["MODEL_LEVEL_FIELDS"],
-        v["MODEL_LEVELS"],
+        models, AGGREGATION_TYPES, v["MODEL_LEVEL_FIELDS"], v["MODEL_LEVELS"]
     ):
-        if v["SPATIAL_MLEVEL_FIELD_AGGREGATION"][atype]:
-            recipes.add(
-                recipe=f"generic_level_spatial_plot_sequence_case_aggregation_mean_{AGGREGATION_TYPES[atype].lower()}.yaml",
+        if v["SPATIAL_MLEVEL_FIELD_AGGREGATION"][AGGREGATION_TYPES.index(atype)]:
+            yield RawRecipe(
+                recipe=f"generic_level_spatial_plot_sequence_case_aggregation_mean_{atype}.yaml",
                 variables={
                     "VARNAME": field,
                     "LEVELTYPE": "model_level_number",
@@ -168,5 +159,3 @@ def recipes(v: dict) -> RecipeList:
                 model_ids=model["id"],
                 aggregation=True,
             )
-
-    return recipes
