@@ -136,26 +136,40 @@ class RawRecipe:
     """A recipe to be parbaked."""
 
     recipe: str
-    model_ids: list[str]
+    model_ids: list[int]
     variables: dict[str, str]
     aggregation: bool
 
     def __init__(
         self,
         recipe: str,
-        model_ids: list[str],
+        model_ids: list[int],
         variables: dict[str, Any],
         aggregation: bool,
     ) -> None:
-        # Whether we have an aggregation recipe.
         self.recipe = recipe
-        self.model_ids = model_ids
+        self.model_ids = model_ids if isinstance(model_ids, list) else [model_ids]
         self.variables = variables
         self.aggregation = aggregation
 
+    def __str__(self) -> str:
+        """Return str(self)."""
+        # generic_surface_spatial_plot_sequence.yaml (model 1)
+        #     VARNAME        air_temperature
+        #     MODEL_NAME     Model A
+        #     METHOD         SEQ
+        #     SUBAREA_TYPE   None
+        #     SUBAREA_EXTENT None
+
+        plural = "s" if len(self.model_ids) > 1 else ""
+        ids = " ".join(str(m) for m in self.model_ids)
+        aggregation = ", Aggregation" if self.aggregation else ""
+        pad = max(len(k) for k in self.variables.keys())
+        variables = "\n".join(f"\t{k:<{pad}} {v}" for k, v in self.variables.items())
+        return f"{self.recipe} (model{plural} {ids}{aggregation})\n{variables}"
+
     def parbake(self, ROSE_DATAC: Path, SHARE_DIR: Path) -> None:
         """Pre-process recipe to bake in all variables."""
-        print("Retrieving recipe from cookbook.")
         # Ready recipe file to disk.
         subprocess.run(["cset", "-v", "cookbook", self.recipe], check=True)
 
@@ -178,7 +192,6 @@ class RawRecipe:
         self.variables["INPUT_PATHS"] = str(data_dirs)
 
         # Parbake this recipe, saving into recipe_dir.
-        print("Parbaking recipe.")
         recipe = parse_recipe(Path(self.recipe), self.variables)
         output = recipe_dir / f"{slugify(recipe['title'])}.yaml"
         with open(output, "wt") as fp:
@@ -186,26 +199,8 @@ class RawRecipe:
                 yaml.dump(recipe)
 
 
-class RecipeList:
-    """Collection of RawRecipes with easy adder function."""
-
-    recipes: list[RawRecipe] = []
-
-    def add(self, recipe, model_ids, variables, aggregation):
-        """Create a new RawRecipe and add it to the RecipeList."""
-        self.recipes.append(
-            RawRecipe(
-                recipe=recipe,
-                model_ids=model_ids,
-                variables=variables,
-                aggregation=aggregation,
-            )
-        )
-
-
-# Utility functions. Probably want to move into own file.
-def get_models(rose_variables: dict) -> list[dict]:
-    """Load per-model configuration into a single object.
+def get_models(rose_variables: dict[str, Any]) -> list[dict[str, Any]]:
+    """Arranges per-model configuration into a single object.
 
     Returns a list of dictionaries, each one containing a per-model
     configuration.
