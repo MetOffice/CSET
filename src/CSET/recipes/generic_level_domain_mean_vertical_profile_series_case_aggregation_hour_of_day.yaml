@@ -3,7 +3,9 @@ title: "Domain mean $VARNAME vertical profile\n Aggregation by hour of day"
 description: |
   Plots a time series of vertical profiles for the domain horizontal mean $VARNAME using a
   $LEVELTYPE coordinate. Multiple cases are aggregated together keeping the
-  hour of day consistent.
+  hour of day consistent. For ensembles, the control member (assumed realization 0)
+  is a thicker line with circles, the perturbed   members are thinner, paler, lines of
+  the same colour.
 
 steps:
   - operator: read.read_cubes
