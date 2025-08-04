@@ -365,9 +365,30 @@ def transform_lat_long_points(lon, lat, cube):
 
     return lon_rot, lat_rot
 
-def interpolate_to_point_cube(fld: iris.cube.Cube | iris.cube.CubeList,
-                              point_cube: iris.cube.Cube,
-                              **kwargs) -> iris.cube.Cube | iris.cube.CubeList:
+
+def interpolate_to_point_cube(
+    fld: iris.cube.Cube | iris.cube.CubeList, point_cube: iris.cube.Cube, **kwargs
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Interpolate from a 2D field to a set of points.
+
+    Interpolate the 2D field in fld to the set of points
+    specified in point_cube.
+
+    Parameters
+    ----------
+    fld: Cube
+        An iris cube containing a two-dimensional field.
+    point_cube: Cube
+        An iris cube specifying the point to which the data
+        will be interpolated.
+
+    Returns
+    -------
+    fld_point_cube: Cube
+        An iris cube containing interpolated values at the points
+        specified by the point cube.
+
+    """
     #
     # As a basis, create a copy of the point cube.
     fld_point_cube = point_cube.copy()
