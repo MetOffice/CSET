@@ -177,6 +177,7 @@ def _get_needed_environment_variables() -> dict:
     logging.debug("Environment variables loaded: %s", variables)
     return variables
 
+
 def _get_needed_environment_variables_obs() -> dict:
     """Load the needed variables from the environment."""
     variables = {
@@ -185,10 +186,12 @@ def _get_needed_environment_variables_obs() -> dict:
         "forecast_length": isodate.parse_duration(os.environ["ANALYSIS_LENGTH"]),
         "obs_fields": ast.literal_eval(os.environ["SURFACE_SYNOP_FIELDS"]),
         "model_identifier": "OBS",
-        "wmo_nmbrs": ast.literal_eval(os.environ.get("WMO_BLOCK_STTN_NMBRS")) \
-            if len(os.environ.get("WMO_BLOCK_STTN_NMBRS")) > 0 else None,
-        "subarea_extent":ast.literal_eval(os.environ.get("SUBAREA_EXTENT")) \
-            if len(os.environ.get("SUBAREA_EXTENT")) > 0 else None,
+        "wmo_nmbrs": ast.literal_eval(os.environ.get("WMO_BLOCK_STTN_NMBRS"))
+        if len(os.environ.get("WMO_BLOCK_STTN_NMBRS")) > 0
+        else None,
+        "subarea_extent": ast.literal_eval(os.environ.get("SUBAREA_EXTENT"))
+        if len(os.environ.get("SUBAREA_EXTENT")) > 0
+        else None,
         "obs_interval": isodate.parse_duration(os.environ["SURFACE_SYNOP_INTERVAL"]),
         "obs_offset": isodate.parse_duration(os.environ["SURFACE_SYNOP_OFFSET"]),
         "rose_datac": os.environ["ROSE_DATAC"],
@@ -292,7 +295,7 @@ def fetch_data(file_retriever: FileRetrieverABC):
         raise FileNotFoundError("No files found for model!")
 
 
-def fetch_obs(obs_retriever: FileRetrieverABC = FilesystemFileRetriever):
+def fetch_obs(obs_retriever: FileRetrieverABC):
     """Fetch the observations corresponding to a model run.
 
     The following environment variables need to be set:
@@ -343,9 +346,7 @@ def fetch_obs(obs_retriever: FileRetrieverABC = FilesystemFileRetriever):
 
     # Use obs retriever to transfer data with multiple threads.
     # We shouldn't need to iterate as we do for the forecast data
-    # because these files will be smaller. Passing None is a temporary
-    # measure until we can work out why python doesn't think this is a
-    # class method.
+    # because these files will be smaller.
     try:
         obs_retriever.get_file(
             paths[0],
@@ -359,5 +360,5 @@ def fetch_obs(obs_retriever: FileRetrieverABC = FilesystemFileRetriever):
             wmo_nmbrs=v["wmo_nmbrs"],
             subarea_extent=v["subarea_extent"],
         )
-    except:
-        raise FileNotFoundError("No observations available.")
+    except Exception as exc:
+        raise ValueError("No observations available.") from exc

@@ -1185,7 +1185,7 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
 
 
 def _plot_and_save_scattermap_plot(
-    cube: iris.cube.Cube, filename: str, title: str, projection=None: str, **kwargs
+    cube: iris.cube.Cube, filename: str, title: str, projection=None, **kwargs
 ):
     """Plot and save a geographical scatter plot.
 
@@ -1203,13 +1203,13 @@ def _plot_and_save_scattermap_plot(
     """
     # Setup plot details, size, resolution, etc.
     fig = plt.figure(figsize=(15, 15), facecolor="w", edgecolor="k")
-    if (projection is not None):
+    if projection is not None:
         # Apart from the default, the only projection we currently support is
         # a stereographic projection over the North Pole.
-        if (projection == 'NP_Stereo'):
+        if projection == "NP_Stereo":
             axes = plt.axes(projection=ccrs.NorthPolarStereo(central_longitude=0.0))
         else:
-            Raise ValueError(f"Unknown projection: {projection}")
+            raise ValueError(f"Unknown projection: {projection}")
     else:
         axes = plt.axes(projection=ccrs.PlateCarree())
 
@@ -1233,7 +1233,7 @@ def _plot_and_save_scattermap_plot(
 
     # Add coastlines.
     try:
-        axes.coastlines()
+        axes.coastlines(resolution="10m")
     except AttributeError:
         pass
 

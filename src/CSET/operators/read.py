@@ -851,30 +851,33 @@ def _fix_um_winds(cubes: iris.cube.CubeList):
     # this will be biased low in general because the components will mostly
     # be time averages. For simplicity, we do this only if there is just one
     # cube of a component. A more complicated approach would be to consider
-    # the cell methods, but it may not be warranted.
-    u_constr = iris.AttributeConstraint(STASH="m01s03i225")
-    v_constr = iris.AttributeConstraint(STASH="m01s03i226")
-    speed_constr = iris.AttributeConstraint(STASH="m01s03i227")
+    # the cell methods, but it may not be warranted. As LFRic does not
+    # have STASH attributes, we need a try...except... construct.
     try:
-        if cubes.extract(u_constr) and cubes.extract(v_constr):
-            if len(cubes.extract(u_constr)) == 1 and not cubes.extract(speed_constr):
-                _add_wind_speed_um(cubes)
-            # Convert winds in the UM to be relative to true east and true north.
+        u10m = cubes.extract(iris.AttributeConstraint(STASH="m01s03i225"))
+        v10m = cubes.extract(iris.AttributeConstraint(STASH="m01s03i226"))
+        m10m = cubes.extract(iris.AttributeConstraint(STASH="m01s03i227"))
+        if len(u10m) == 1 and len(v10m) == 1 and len(m10m) == 0:
+            for i in range(len(u10m)):
+                cubes.append(_add_wind_speed_um(u10m[i], v10m[i]))
+            # Convert winds in the UM to be relative to true east and
+            # true north.
             _convert_wind_true_dirn_um(cubes)
-    except (KeyError, AttributeError):
+    except ValueError:
         pass
 
 
-def _add_wind_speed_um(cubes: iris.cube.CubeList):
-    """Add windspeeds to cubes from the UM."""
-    wspd10 = (
-        cubes.extract_cube(iris.AttributeConstraint(STASH="m01s03i225"))[0] ** 2
-        + cubes.extract_cube(iris.AttributeConstraint(STASH="m01s03i226"))[0] ** 2
-    ) ** 0.5
+def _add_wind_speed_um(u10m: iris.cube.Cube, v10m: iris.cube.Cube) -> iris.cube.Cube:
+    """Calculate windspeed at 10m from components.
+
+    This is intended only for use with the UM and the result is
+    given a STASH attribute.
+    """
+    wspd10 = (u10m**2 + v10m**2) ** 0.5
     wspd10.attributes["STASH"] = "m01s03i227"
     wspd10.standard_name = "wind_speed"
     wspd10.long_name = "wind_speed_at_10m"
-    cubes.append(wspd10)
+    return wspd10
 
 
 def _convert_wind_true_dirn_um(cubes: iris.cube.CubeList):

@@ -7,10 +7,10 @@ steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
     constraint:
-      operator: constraints.combine_constraints
-      variable_constraint:
-        operator: constraints.generate_var_constraint
-        varname: $OBSVARNAME
+        operator: constraints.combine_constraints
+        variable_constraint:
+            operator: constraints.generate_var_constraint
+            varname: $OBSVARNAME
 
   - operator: plot.spatial_contour_plot
     sequence_coordinate: time
