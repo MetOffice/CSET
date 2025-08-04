@@ -2,7 +2,9 @@ category: Surface Time Series
 title: "Domain mean $VARNAME time series\n Aggregation by hour of day"
 description: |
   Plots a time series of the domain horizontal mean $VARNAME by averaging over
-  all cases by using a consistent hour of day.
+  all cases by using a consistent hour of day. For ensembles, the control
+  member (assumed realization 0) is a thicker line with circles, the perturbed
+  members are thinner, paler, lines of the same colour.
 
 steps:
   - operator: read.read_cubes
@@ -24,11 +26,11 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
+  - operator: aggregate.ensure_aggregatable_across_cases
+
   - operator: collapse.collapse
     coordinate: [grid_latitude, grid_longitude]
     method: MEAN
-
-  - operator: aggregate.ensure_aggregatable_across_cases
 
   - operator: collapse.collapse_by_hour_of_day
     method: MEAN

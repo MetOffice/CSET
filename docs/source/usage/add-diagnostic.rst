@@ -116,10 +116,10 @@ Add recipe into CSET workflow
 Recipes are defined in the ``src/CSET/recipes`` directory and can be run using
 the ``cset bake`` command. To enable recipes to be run through the CSET workflow
 it is also necessary to ensure the recipe is called from a file in the
-``src/CSET/cset-workflow/includes`` directory.
+``src/CSET/cset_workflow/includes`` directory.
 
 * Create a Cylc include file at
-  ``src/CSET/cset-workflow/includes/<new_operator_include_file>.cylc``, copying
+  ``src/CSET/cset_workflow/includes/<new_operator_include_file>.cylc``, copying
   an existing include file for inspiration.
 * ``meta/rose-meta.conf``: to add section for toggle button to allow selection
   of new recipe file.

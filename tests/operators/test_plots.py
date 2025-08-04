@@ -259,6 +259,40 @@ def test_contour_plot_sequence(cube, tmp_working_dir):
     assert Path("untitled_462149.0.png").is_file()
 
 
+def test_vector_plot_with_filename(vector_cubes, tmp_working_dir):
+    """Plot a vector plot of u10 and v10 components."""
+    cube_u = vector_cubes[0].slices_over("time").next()
+    cube_v = vector_cubes[1].slices_over("time").next()
+    plot.vector_plot(cube_u, cube_v, filename="testvector")
+    assert Path("testvector_0.0.png").is_file()
+
+
+def test_vector_plot_sequence(vector_cubes, tmp_working_dir):
+    """Plot a sequence of vector plots."""
+    plot.vector_plot(
+        vector_cubes[0],
+        vector_cubes[1],
+        filename="testvectorseq",
+        sequence_coordinate="time",
+    )
+    assert Path("testvectorseq_0.0.png").is_file()
+    assert Path("testvectorseq_6.0.png").is_file()
+    assert Path("testvectorseq_12.0.png").is_file()
+
+
+def test_vector_plot_check(vector_cubes, tmp_working_dir):
+    """Check error when cubes has no time coordinate."""
+    vector_cubes[0].remove_coord("time")
+    vector_cubes[1].remove_coord("time")
+    with pytest.raises(ValueError):
+        plot.vector_plot(
+            vector_cubes[0],
+            vector_cubes[1],
+            filename="testvector",
+            sequence_coordinate="time",
+        )
+
+
 def test_postage_stamp_contour_plot(ensemble_cube, monkeypatch, tmp_path):
     """Plot postage stamp plots of ensemble data."""
     # Get a single time step.
@@ -396,6 +430,7 @@ def test_plot_line_series_too_many_dimensions(cube, tmp_working_dir):
 
 def test_plot_line_series_different_coord_lengths(tmp_working_dir):
     """Save a line series plot with specific filename and series coordinate."""
+    ens_coord = iris.coords.DimCoord(0, standard_name="realization", units="1")
     coord1 = iris.coords.DimCoord(
         [0, 1, 2, 3], standard_name="time", units="hours since 1970-01-01"
     )
@@ -403,6 +438,7 @@ def test_plot_line_series_different_coord_lengths(tmp_working_dir):
         [0, 1, 2, 3],
         long_name="my_var",
         dim_coords_and_dims=[(coord1, 0)],
+        aux_coords_and_dims=[(ens_coord, None)],
         attributes={"model_name": "m1"},
     )
     coord2 = iris.coords.DimCoord(
@@ -412,12 +448,22 @@ def test_plot_line_series_different_coord_lengths(tmp_working_dir):
         [3, 2, 1],
         long_name="my_var",
         dim_coords_and_dims=[(coord2, 0)],
+        aux_coords_and_dims=[(ens_coord, None)],
         attributes={"model_name": "m2"},
     )
     cubes = iris.cube.CubeList([cube1, cube2])
 
     plot.plot_line_series(cubes, filename="plot.png")
     assert Path("plot.png").is_file()
+
+
+def test_plot_line_series_ensemble(ensemble_cube, tmp_working_dir):
+    """Save an ensemble line series plot."""
+    ensemble_cube = collapse.collapse(
+        ensemble_cube, ["grid_latitude", "grid_longitude"], "MEAN"
+    )
+    plot.plot_line_series(ensemble_cube, filename="ensemble_series.ext")
+    assert Path("ensemble_series.png").is_file()
 
 
 def test_plot_vertical_line_series(vertical_profile_cube, tmp_working_dir):

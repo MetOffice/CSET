@@ -1,6 +1,10 @@
 category: $LEVELTYPE Level Time Series
 title: "$VARNAME $LEVEL domain mean time series\n Aggregation by lead time"
-description: Plots a time series of the domain mean $VARNAME at $LEVELTYPE $LEVEL by averaging over all cases by using a consistent lead time.
+description: |
+  Plots a time series of the domain mean $VARNAME at $LEVELTYPE $LEVEL by averaging
+  over all cases by using a consistent lead time. For ensembles, the control
+  member (assumed realization 0) is a thicker line with circles, the perturbed
+  members are thinner, paler, lines of the same colour.
 
 steps:
   - operator: read.read_cubes
@@ -16,11 +20,11 @@ steps:
         coordinate: $LEVELTYPE
         levels: $LEVEL
 
+  - operator: aggregate.ensure_aggregatable_across_cases
+
   - operator: collapse.collapse
     coordinate: [grid_latitude, grid_longitude]
     method: MEAN
-
-  - operator: aggregate.ensure_aggregatable_across_cases
 
   - operator: collapse.collapse
     coordinate: "forecast_reference_time"

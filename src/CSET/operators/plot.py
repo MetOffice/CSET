@@ -463,7 +463,7 @@ def _plot_and_save_spatial_plot(
 
     # Add colour bar.
     cbar = fig.colorbar(plot, orientation="horizontal", pad=0.042, shrink=0.7)
-    cbar.set_label(label=f"{cube.name()} ({cube.units})", size=16)
+    cbar.set_label(label=f"{cube.name()} ({cube.units})", size=14)
     # add ticks and tick_labels for every levels if less than 20 levels exist
     if levels is not None and len(levels) < 20:
         cbar.set_ticks(levels)
@@ -565,7 +565,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
     colorbar = fig.colorbar(
         plot, colorbar_axes, orientation="horizontal", pad=0.042, shrink=0.7
     )
-    colorbar.set_label(f"{cube.name()} ({cube.units})", size=16)
+    colorbar.set_label(f"{cube.name()} ({cube.units})", size=14)
 
     # Overall figure title.
     fig.suptitle(title, fontsize=16)
@@ -578,6 +578,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
 def _plot_and_save_line_series(
     cubes: iris.cube.CubeList,
     coords: list[iris.coords.Coord],
+    ensemble_coord: str,
     filename: str,
     title: str,
     **kwargs,
@@ -590,6 +591,8 @@ def _plot_and_save_line_series(
         Cube or CubeList containing the cubes to plot on the y-axis.
     coords: list[Coord]
         Coordinates to plot on the x-axis, one per cube.
+    ensemble_coord: str
+        Ensemble coordinate in the cube.
     filename: str
         Filename of the plot to write.
     title: str
@@ -611,7 +614,31 @@ def _plot_and_save_line_series(
         if model_colors_map:
             label = cube.attributes.get("model_name")
             color = model_colors_map.get(label)
-        iplt.plot(coord, cube, color=color, marker="o", ls="-", lw=3, label=label)
+        for cube_slice in cube.slices_over(ensemble_coord):
+            # Label with (control) if part of an ensemble or not otherwise.
+            if cube_slice.coord(ensemble_coord).points == [0]:
+                iplt.plot(
+                    coord,
+                    cube_slice,
+                    color=color,
+                    marker="o",
+                    ls="-",
+                    lw=3,
+                    label=f"{label} (control)"
+                    if len(cube.coord(ensemble_coord).points) > 1
+                    else label,
+                )
+                # Label with (perturbed) if part of an ensemble and not the control.
+            else:
+                iplt.plot(
+                    coord,
+                    cube_slice,
+                    color=color,
+                    ls="-",
+                    lw=1.5,
+                    alpha=0.75,
+                    label=f"{label} (member)",
+                )
 
         # Calculate the global min/max if multiple cubes are given.
         _, levels, _ = _colorbar_map_levels(cube, axis="y")
@@ -646,8 +673,14 @@ def _plot_and_save_line_series(
 
     # Add gridlines
     ax.grid(linestyle="--", color="grey", linewidth=1)
-    if model_colors_map:
-        ax.legend(loc="best", ncol=1, frameon=False, fontsize=16)
+    # Ientify unique labels for legend
+    handles = list(
+        {
+            label: handle
+            for (handle, label) in zip(*ax.get_legend_handles_labels(), strict=True)
+        }.values()
+    )
+    ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -823,6 +856,134 @@ def _plot_and_save_scatter_plot(
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
     logging.info("Saved scatter plot to %s", filename)
+    plt.close(fig)
+
+
+def _plot_and_save_vector_plot(
+    cube_u: iris.cube.Cube,
+    cube_v: iris.cube.Cube,
+    filename: str,
+    title: str,
+    method: Literal["contourf", "pcolormesh"],
+    **kwargs,
+):
+    """Plot and save a 2D vector plot.
+
+    Parameters
+    ----------
+    cube_u: Cube
+        2 dimensional Cube of u component of the data.
+    cube_v: Cube
+        2 dimensional Cube of v component of the data.
+    filename: str
+        Filename of the plot to write.
+    title: str
+        Plot title.
+    """
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+
+    # Create a cube containing the magnitude of the vector field.
+    cube_vec_mag = (cube_u**2 + cube_v**2) ** 0.5
+    cube_vec_mag.rename(f"{cube_u.name()}_{cube_v.name()}_magnitude")
+
+    # Specify the color bar
+    cmap, levels, norm = _colorbar_map_levels(cube_vec_mag)
+
+    if method == "contourf":
+        # Filled contour plot of the field.
+        plot = iplt.contourf(cube_vec_mag, cmap=cmap, levels=levels, norm=norm)
+    elif method == "pcolormesh":
+        try:
+            vmin = min(levels)
+            vmax = max(levels)
+        except TypeError:
+            vmin, vmax = None, None
+        # pcolormesh plot of the field and ensure to use norm and not vmin/vmax
+        # if levels are defined.
+        if norm is not None:
+            vmin = None
+            vmax = None
+        plot = iplt.pcolormesh(cube_vec_mag, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax)
+    else:
+        raise ValueError(f"Unknown plotting method: {method}")
+
+    # Using pyplot interface here as we need iris to generate a cartopy GeoAxes.
+    axes = plt.gca()
+
+    # Add coastlines if cube contains x and y map coordinates.
+    # If is spatial map, fix extent to keep plot tight.
+    try:
+        lat_axis, lon_axis = get_cube_yxcoordname(cube_vec_mag)
+        axes.coastlines(resolution="10m")
+        x1 = np.min(cube_vec_mag.coord(lon_axis).points)
+        x2 = np.max(cube_vec_mag.coord(lon_axis).points)
+        y1 = np.min(cube_vec_mag.coord(lat_axis).points)
+        y2 = np.max(cube_vec_mag.coord(lat_axis).points)
+        # Adjust bounds within +/- 180.0 if x dimension extends beyond half-globe.
+        if (x2 - x1) > 180.0:
+            x1 = x1 - 180.0
+            x2 = x2 - 180.0
+        axes.set_extent([x1, x2, y1, y2])
+    except ValueError:
+        # Skip if no x and y map coordinates.
+        pass
+
+    # Check to see if transect, and if so, adjust y axis.
+    if is_transect(cube_vec_mag):
+        if "pressure" in [coord.name() for coord in cube_vec_mag.coords()]:
+            axes.invert_yaxis()
+            axes.set_yscale("log")
+            axes.set_ylim(1100, 100)
+        # If both model_level_number and level_height exists, iplt can construct
+        # plot as a function of height above orography (NOT sea level).
+        elif {"model_level_number", "level_height"}.issubset(
+            {coord.name() for coord in cube_vec_mag.coords()}
+        ):
+            axes.set_yscale("log")
+
+        axes.set_title(
+            f"{title}\n"
+            f"Start Lat: {cube_vec_mag.attributes['transect_coords'].split('_')[0]}"
+            f" Start Lon: {cube_vec_mag.attributes['transect_coords'].split('_')[1]}"
+            f" End Lat: {cube_vec_mag.attributes['transect_coords'].split('_')[2]}"
+            f" End Lon: {cube_vec_mag.attributes['transect_coords'].split('_')[3]}",
+            fontsize=16,
+        )
+
+    else:
+        # Add title.
+        axes.set_title(title, fontsize=16)
+
+    # Add watermark with min/max/mean. Currently not user togglable.
+    # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
+    axes.annotate(
+        f"Min: {np.min(cube_vec_mag.data):.3g} Max: {np.max(cube_vec_mag.data):.3g} Mean: {np.mean(cube_vec_mag.data):.3g}",
+        xy=(1, -0.05),
+        xycoords="axes fraction",
+        xytext=(-5, 5),
+        textcoords="offset points",
+        ha="right",
+        va="bottom",
+        size=11,
+        bbox=dict(boxstyle="round", fc="#cccccc", ec="#808080", alpha=0.9),
+    )
+
+    # Add colour bar.
+    cbar = fig.colorbar(plot, orientation="horizontal", pad=0.042, shrink=0.7)
+    cbar.set_label(label=f"{cube_vec_mag.name()} ({cube_vec_mag.units})", size=14)
+    # add ticks and tick_labels for every levels if less than 20 levels exist
+    if levels is not None and len(levels) < 20:
+        cbar.set_ticks(levels)
+        cbar.set_ticklabels([f"{level:.1f}" for level in levels])
+
+    # 30 barbs along the longest axis of the plot, or a barb per point for data
+    # with less than 30 points.
+    step = max(max(cube_u.shape) // 30, 1)
+    iplt.quiver(cube_u[::step, ::step], cube_v[::step, ::step], pivot="middle")
+
+    # Save plot.
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+    logging.info("Saved vector plot to %s", filename)
     plt.close(fig)
 
 
@@ -1236,7 +1397,10 @@ def _custom_colourmap_visibility_in_air(cube: iris.cube.Cube, cmap, levels, norm
     import matplotlib.colors as mcolors
 
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
-    if any("visibility_in_air" in name for name in varnames):
+    if (
+        any("visibility_in_air" in name for name in varnames)
+        and "difference" not in cube.long_name
+    ):
         # Define the levels and colors (in km)
         levels = [0, 0.05, 0.1, 0.2, 1.0, 2.0, 5.0, 10.0, 20.0, 30.0, 50.0, 70.0, 100.0]
         norm = mcolors.BoundaryNorm(levels, cmap.N)
@@ -1473,11 +1637,11 @@ def plot_line_series(
             raise ValueError(
                 f"Cube must have a {series_coordinate} coordinate."
             ) from err
-        if cube.ndim > 1:
-            raise ValueError("Cube must be 1D.")
+        if cube.ndim > 2 or not cube.coords("realization"):
+            raise ValueError("Cube must be 1D or 2D with a realization coordinate.")
 
     # Do the actual plotting.
-    _plot_and_save_line_series(cubes, coords, plot_filename, title)
+    _plot_and_save_line_series(cubes, coords, "realization", plot_filename, title)
 
     # Add list of plots to plot metadata.
     plot_index = _append_to_plot_index([plot_filename])
@@ -1749,6 +1913,62 @@ def scatter_plot(
     _make_plot_html_page(plot_index)
 
     return iris.cube.CubeList([cube_x, cube_y])
+
+
+def vector_plot(
+    cube_u: iris.cube.Cube,
+    cube_v: iris.cube.Cube,
+    filename: str = None,
+    sequence_coordinate: str = "time",
+    **kwargs,
+) -> iris.cube.CubeList:
+    """Plot a vector plot based on the input u and v components."""
+    recipe_title = get_recipe_metadata().get("title", "Untitled")
+
+    # Ensure we have a name for the plot file.
+    if filename is None:
+        filename = slugify(recipe_title)
+
+    # Cubes must have a matching sequence coordinate.
+    try:
+        # Check that the u and v cubes have the same sequence coordinate.
+        if cube_u.coord(sequence_coordinate) != cube_v.coord(sequence_coordinate):
+            raise ValueError("Coordinates do not match.")
+    except (iris.exceptions.CoordinateNotFoundError, ValueError) as err:
+        raise ValueError(
+            f"Cubes should have matching {sequence_coordinate} coordinate:\n{cube_u}\n{cube_v}"
+        ) from err
+
+    # Create a plot for each value of the sequence coordinate.
+    plot_index = []
+    for cube_u_slice, cube_v_slice in zip(
+        cube_u.slices_over(sequence_coordinate),
+        cube_v.slices_over(sequence_coordinate),
+        strict=True,
+    ):
+        # Use sequence value so multiple sequences can merge.
+        sequence_value = cube_u_slice.coord(sequence_coordinate).points[0]
+        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
+        coord = cube_u_slice.coord(sequence_coordinate)
+        # Format the coordinate value in a unit appropriate way.
+        title = f"{recipe_title}\n{coord.units.title(coord.points[0])}"
+        # Do the actual plotting.
+        _plot_and_save_vector_plot(
+            cube_u_slice,
+            cube_v_slice,
+            filename=plot_filename,
+            title=title,
+            method="contourf",
+        )
+        plot_index.append(plot_filename)
+
+    # Add list of plots to plot metadata.
+    complete_plot_index = _append_to_plot_index(plot_index)
+
+    # Make a page to display the plots.
+    _make_plot_html_page(complete_plot_index)
+
+    return iris.cube.CubeList([cube_u, cube_v])
 
 
 def plot_histogram_series(

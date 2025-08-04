@@ -169,7 +169,6 @@ def ensure_aggregatable_across_cases(
             to_merge.extend(
                 cube.slices_over(["forecast_period", "forecast_reference_time"])
             )
-        logging.debug("Cubes to merge:\n%s", to_merge)
         aggregatable_cube = to_merge.merge_cube()
 
         # Verify cube is now aggregatable.
