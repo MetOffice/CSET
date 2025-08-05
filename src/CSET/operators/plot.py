@@ -448,6 +448,11 @@ def _get_plot_resolution() -> int:
     return get_recipe_metadata().get("plot_resolution", 100)
 
 
+def _get_histogram_method() -> str:
+    """Get method to use when computing histograms."""
+    return get_recipe_metadata().get("histogram_method", "density").lower()
+
+
 def _plot_and_save_spatial_plot(
     cube: iris.cube.Cube,
     filename: str,
@@ -1062,6 +1067,100 @@ def _plot_and_save_vector_plot(
     plt.close(fig)
 
 
+def _plot_histogram(
+    data, method: str = "density", title: str = "", units: str = "", **kwargs
+) -> dict:
+    """Plot a histogram using a specified method to compute the histogram.
+
+    Histograms can be computed using any of three different methods:
+
+    frequency            - This is constructed from the raw counts within each bin.
+
+    normalised_frequency - The frequency counts are normalised so that the total
+                           counts is 1.
+
+    density              - The counts per bin are normalised by both the total
+                           counts and the bin widths. The sum of the areas of the
+                           bins is 1. This is the discrete sampling analogue of
+                           the continuous probability density function.
+
+    This function returns a dictionary of plotting labels to use on the histogram plot.
+    Keys available:
+
+       "ylabel" - label for the y-axis indicating the method used to compute the histogram.
+
+
+    It is possible to specify both the range of data values to consider for the
+    histogram and the number of bins to use. Using these options will set the bin
+    width to ( value_maximum - value_minimum ) / number of bins. See the documentation
+    for matplotlib.pyplot.hist for more details at:
+    https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.hist.html
+
+    Parameters
+    ----------
+    data: array
+        Input values of the data to use for computing the histogram.
+    method: "frequency" | "normalised_frequency" | "density", optional
+        The histogram method to use. Default is "density".
+    title: str
+        Title of the histogram.
+    units: str
+        Units of the data.
+    **kwargs: optional keyword arguments used by matplotlib.pyplot.hist
+        The keywords "density" and "weights" are set by the input "method", so
+        values should not be assigned to these keywords in the call to this function.
+    """
+    # Define the parameter settings in matplotlib.pyplot.hist
+    # required to implement the histogram methods "density",
+    # "normalised frequency" and "frequency".
+    hist_method = {
+        "density": {"method_args": {"density": True}, "labels": {"ylabel": "Density"}},
+        "normalised_frequency": {
+            "method_args": {
+                "density": False,
+                "weights": 1.0 / len(data) * np.ones(len(data)),
+            },
+            "labels": {"ylabel": "Normalised frequency"},
+        },
+        "frequency": {
+            "method_args": {"density": False},
+            "labels": {"ylabel": "Frequency"},
+        },
+    }
+
+    # Grab the parameter settings required for the histogram method
+    try:
+        args_method = hist_method[method]["method_args"]
+    except KeyError as err:
+        raise ValueError(
+            f"Unrecognised histogram method: {method}\n"
+            f"Method should be one of {', '.join(hist_method.keys())}"
+        ) from err
+
+    # If surface microphysical precipitation amounts calculate different histogram.
+    if "surface_microphysical" in title and "amount" in title:
+        bins = kwargs["bins"]
+        x, y = np.histogram(
+            data, bins=bins, density=args_method["method_args"]["density"]
+        )
+        bin_mean = (bins[:-1] + bins[1:]) / 2.0
+        x = x * bin_mean / x.sum()
+        x = x[1:]
+        y = y[1:]
+
+        ax = plt.gca()
+        ax.plot(y[:-1], x, marker="o", markersize=6, **kwargs)
+
+        args_method["labels"]["ylabel"] = f"Contribution to mean ({units})"
+    else:
+        # Use the function matplotlib.pyplot.hist to plot the histogram.
+        plt.hist(data, **args_method, **kwargs)
+
+    # Return from this function _plot_histogram, passing back the
+    # label to print on the y-axis of the histogram.
+    return hist_method[method]["labels"]
+
+
 def _plot_and_save_histogram_series(
     cubes: iris.cube.Cube | iris.cube.CubeList,
     filename: str,
@@ -1090,10 +1189,6 @@ def _plot_and_save_histogram_series(
 
     model_colors_map = _get_model_colors_map(cubes)
 
-    # Set default that histograms will produce probability density function
-    # at each bin (integral over range sums to 1).
-    density = True
-
     for cube in iter_maybe(cubes):
         # Easier to check title (where var name originates)
         # than seeing if long names exist etc.
@@ -1103,7 +1198,6 @@ def _plot_and_save_histogram_series(
                 # Compute histogram following Klingaman et al. (2017): ASoP
                 bin2 = np.exp(np.log(0.02) + 0.1 * np.linspace(0, 99, 100))
                 bins = np.pad(bin2, (1, 0), "constant", constant_values=0)
-                density = False
             else:
                 bins = 10.0 ** (
                     np.arange(-10, 27, 1) / 10.0
@@ -1133,30 +1227,26 @@ def _plot_and_save_histogram_series(
         if model_colors_map:
             label = cube.attributes.get("model_name")
             color = model_colors_map[label]
-        x, y = np.histogram(cube_data_1d, bins=bins, density=density)
-
-        # Compute area under curve.
-        if "surface_microphysical" in title and "amount" in title:
-            bin_mean = (bins[:-1] + bins[1:]) / 2.0
-            x = x * bin_mean / x.sum()
-            x = x[1:]
-            y = y[1:]
-
-        ax.plot(
-            y[:-1], x, color=color, linewidth=3, marker="o", markersize=6, label=label
+        # Plot the histogram.x, y = np.histogram(cube_data_1d, bins=bins, density=density)
+        y = _plot_histogram(
+            cube_data_1d,
+            method=_get_histogram_method(),
+            title=title,
+            units=cube.units,
+            bins=bins,
+            color=color,
+            linewidth=2,
+            histtype="step",
+            label=label,
         )
 
     # Add some labels and tweak the style.
-    ax.set_title(title, fontsize=16)
-    ax.set_xlabel(
-        f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}", fontsize=14
+    ax.set(
+        title=title,
+        xlabel=f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}",
+        ylabel=y["ylabel"],
+        xlim=(vmin, vmax),
     )
-    ax.set_ylabel("Normalised probability density", fontsize=14)
-    if "surface_microphysical" in title and "amount" in title:
-        ax.set_ylabel(
-            f"Contribution to mean ({iter_maybe(cubes)[0].units})", fontsize=14
-        )
-    ax.set_xlim(vmin, vmax)
     ax.tick_params(axis="both", labelsize=12)
 
     # Overlay grid-lines onto histogram plot.

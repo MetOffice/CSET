@@ -167,6 +167,7 @@ def execute_recipe(
     style_file: Path = None,
     plot_resolution: int = None,
     skip_write: bool = None,
+    histogram_method: str = None,
 ) -> None:
     """Parse and executes the steps from a recipe file.
 
@@ -182,6 +183,8 @@ def execute_recipe(
         Resolution of plots in dpi.
     skip_write: bool, optional
         Skip saving processed output alongside plots.
+    histogram_method: str, optional
+        Method to use to compute surface field histograms.
 
     Raises
     ------
@@ -221,6 +224,8 @@ def execute_recipe(
             recipe["plot_resolution"] = plot_resolution
         if skip_write:
             recipe["skip_write"] = skip_write
+        if histogram_method:
+            recipe["histogram_method"] = histogram_method
         _write_metadata(recipe)
 
         # Execute the recipe.

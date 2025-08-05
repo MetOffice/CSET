@@ -691,6 +691,52 @@ def test_plot_and_save_histogram_series_bins_lightning(
     assert Path("test.png").is_file()
 
 
+def test_get_histogram_method(tmp_working_dir):
+    """Test getting the histogram method."""
+    with open("meta.json", "wt", encoding="UTF-8") as fp:
+        fp.write('{"histogram_method": "density"}')
+    method = plot._get_histogram_method()
+    assert method == "density"
+
+
+def test_plot_histogram(histogram_cube, tmp_working_dir):
+    """Plot a histogram using the normalised_frequency method using plot._plot_histogram."""
+    cube_data_1d = (histogram_cube.data).flatten()
+
+    fig = mpl.pyplot.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+    y = plot._plot_histogram(
+        cube_data_1d,
+        method="normalised_frequency",
+        bins=50,
+        color="black",
+        linewidth=2,
+        histtype="step",
+        label="histogram",
+    )
+    fig.savefig("test_plot_histogram.png", bbox_inches="tight", dpi=100)
+    assert y["ylabel"] == "Normalised frequency"
+    assert Path("test_plot_histogram.png").is_file()
+
+
+def test_plot_and_save_histogram_series(histogram_cube, tmp_working_dir):
+    """Plot a histogram using the frequency method via plot._plot_histogram."""
+    with open("meta.json", "wt", encoding="UTF-8") as fp:
+        fp.write('{"histogram_method": "frequency"}')
+    plot._plot_and_save_histogram_series(
+        histogram_cube,
+        vmin=250,
+        vmax=350,
+        title="test_histogram",
+        filename="test_plot_and_save_histogram_series.png",
+        bins=50,
+        color="black",
+        linewidth=2,
+        histtype="step",
+        label="frequency",
+    )
+    assert Path("test_plot_and_save_histogram_series.png").is_file()
+
+
 def test_plot_and_save_postage_stamp_histogram_series(histogram_cube, tmp_working_dir):
     """Test plotting a postage stamp histogram."""
     plot._plot_and_save_postage_stamp_histogram_series(
