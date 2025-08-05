@@ -5,32 +5,30 @@ description = Workflow for running CSET.
 URL = https://metoffice.github.io/CSET
 
 # Import all of our Jinja utilities for use in the workflow.
-{% from "jinja_utils" import b64_json, get_model_names, get_model_ids, get_models, glob, max, min, zip, sanitise_task_name %}
+{% from "jinja_utils" import b64_json, get_models, glob, max, min, zip, sanitise_task_name %}
 # Load a list a model detail dictionaries.
 {% set models = get_models(ROSE_SUITE_VARIABLES) %}
-{% set model_ids = get_model_ids(models) %}
-{% set model_names = get_model_names(models) %}
 # Create a list of case aggregation types.
 {% set AGGREGATION_TYPES = ["LEAD_TIME", "HOUR_OF_DAY", "VALIDITY_TIME", "ALL"] %}
 
 
 [scheduling]
-    # Initial and final cycle points cover the entire period of interest.
-    {% if CSET_CYCLING_MODE == "case_study" %}
-        initial cycle point = {{ min(CSET_CASE_DATES) }}
-        final cycle point = {{ max(CSET_CASE_DATES) }}
-    {% elif CSET_CYCLING_MODE == "trial" %}
-        initial cycle point = {{CSET_TRIAL_START_DATE}}
-        # End date can be blank.
-        {% if CSET_TRIAL_END_DATE|default(False) %}
-            final cycle point = {{CSET_TRIAL_END_DATE}}
-        {% endif %}
+# Initial and final cycle points cover the entire period of interest.
+{% if CSET_CYCLING_MODE == "case_study" %}
+    initial cycle point = {{ min(CSET_CASE_DATES) }}
+    final cycle point = {{ max(CSET_CASE_DATES) }}
+{% elif CSET_CYCLING_MODE == "trial" %}
+    initial cycle point = {{CSET_TRIAL_START_DATE}}
+    # End date can be blank.
+    {% if CSET_TRIAL_END_DATE|default(False) %}
+        final cycle point = {{CSET_TRIAL_END_DATE}}
     {% endif %}
+{% endif %}
 
     [[special tasks]]
-        # cycle_complete depends on its previous instance. We then don't need to
-        # know the offset between the cycles.
-        sequential = fetch_complete, cycle_complete
+    # cycle_complete depends on its previous instance. We then don't need to
+    # know the offset between the cycles.
+    sequential = fetch_complete, cycle_complete
 
     [[graph]]
     # Only runs on the first cycle.
@@ -110,23 +108,6 @@ URL = https://metoffice.github.io/CSET
         SKIP_WRITE = True
         {% endif %}
 
-    [[PROCESS]]
-    script = rose task-run -v --app-key=parbake_recipe
-    execution time limit = PT2M
-    [[[directives]]]
-        --ntasks=1
-        --mem=500
-
-    [[PROCESS_CASE_AGGREGATION]]
-    script = rose task-run -v --app-key=parbake_recipe
-    execution time limit = PT2M
-        [[[directives]]]
-        --ntasks=1
-        --mem=500
-        [[[environment]]]
-        # As this process is used for case aggregation we hard code to True.
-        DO_CASE_AGGREGATION = True
-
     [[FETCH_DATA]]
     script = rose task-run -v --app-key=fetch_fcst
     execution time limit = PT1H
@@ -158,12 +139,6 @@ URL = https://metoffice.github.io/CSET
     [[cycle_complete]]
     inherit = DUMMY_TASK
 
-    [[dummy_parbake]]
-    inherit = DUMMY_TASK, PROCESS
-
-    [[dummy_parbake_case_aggregation]]
-    inherit = DUMMY_TASK, PROCESS_CASE_AGGREGATION
-
     [[validate_environment]]
     # Checks the environment works and the cset command is available.
 
@@ -178,7 +153,7 @@ URL = https://metoffice.github.io/CSET
     execution time limit = PT5M
         [[[environment]]]
         COLORBAR_FILE = {{COLORBAR_FILE}}
-        MODEL_NAMES = '{{model_names}}'
+        MODEL_NAMES = {{ b64_json(models|map(attribute="name")|list) }}
 
     {% for model in models %}
     [[fetch_fcst_m{{model["id"]}}]]
@@ -197,42 +172,35 @@ URL = https://metoffice.github.io/CSET
     # Parbake all the recipes for this cycle.
     script = rose task-run -v --app-key=parbake_recipes
     execution time limit = PT5M
-    [[[directives]]]
+        [[[directives]]]
         --ntasks=1
         --mem=500
-    [[[environment]]]
+        [[[environment]]]
         ENCODED_ROSE_SUITE_VARIABLES = {{b64_json(ROSE_SUITE_VARIABLES)}}
 
     [[bake_recipes]]
+    # Bake the parbaked recipes for this cycle.
+    script = "$CYLC_WORKFLOW_RUN_DIR/app/bake_recipes/bin/baker.sh"
     execution time limit = PT3H
-    execution retry delays = 5*PT1M
-    pre-script = """
-    mkdir -p "$CYLC_WORKFLOW_RUN_DIR/app/bake_recipes/opt/"
-    opt_conf="$CYLC_WORKFLOW_RUN_DIR/app/bake_recipes/opt/rose-app-$CYLC_TASK_CYCLE_POINT.conf"
-    printf "[bunch-args]\nrecipe_file=" > "$opt_conf"
-    echo "$RECIPE_DIR"/*.yaml >> "$opt_conf"
-    """
-    script = rose task-run -v --app-key=bake_recipes --opt-conf-key="$CYLC_TASK_CYCLE_POINT"
-    [[[directives]]]
+    execution retry delays = PT1M
+        [[[directives]]]
         --ntasks=32
         --mem=64000
-    [[[environment]]]
-        RECIPE_DIR = $CYLC_WORKFLOW_SHARE_DIR/cycle/$CYLC_TASK_CYCLE_POINT/recipes
 
     [[bake_aggregation_recipes]]
-    script = rose task-run -v --app-key=bake_recipes --opt-conf-key="$CYLC_TASK_CYCLE_POINT"
+    # Bake the parbaked aggregation recipes for this cycle.
+    script = "$CYLC_WORKFLOW_RUN_DIR/app/bake_recipes/bin/baker.sh"
     execution time limit = PT3H
-    execution retry delays = 5*PT1M
+    execution retry delays = PT1M
         [[[directives]]]
         --ntasks=8
         --mem=64000
         [[[environment]]]
         # As this process is used for case aggregation we hard code to True.
         DO_CASE_AGGREGATION = True
-        RECIPE_DIR=$CYLC_WORKFLOW_SHARE_DIR/cycle/$CYLC_TASK_CYCLE_POINT/aggregation_recipes
 
     [[housekeeping]]
-    # Housekeep unprocessed data files and processed intermediate files.
+    # Housekeep input data files.
         [[[environment]]]
         HOUSEKEEPING_MODE = {{HOUSEKEEPING_MODE}}
 
@@ -241,15 +209,9 @@ URL = https://metoffice.github.io/CSET
 
     [[send_email]]
     # Send email to notify that the workflow is complete.
-    platform = localhost
         [[[environment]]]
         WEB_ADDR = {{WEB_ADDR}}
         WEB_DIR = {{WEB_DIR}}
 
-# Include files bring their own graph and runtime sections.
-{% for include_file in glob("includes/*.cylc") %}
-{% include include_file %}
-{% endfor %}
-
-{# Site-specific details that add to (or override) the core suite definition #}
+# Site-specific details that add to or override the core workflow definition.
 {% include 'site/' ~ SITE ~ '.cylc' %}

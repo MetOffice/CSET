@@ -15,20 +15,18 @@
 
 """Run a recipe with the CSET CLI."""
 
-import base64
 import importlib
 import json
 import os
 import pkgutil
 import warnings
+from base64 import b64decode
 from pathlib import Path
 
 import CSET.recipes
 
 # Load rose suite variables.
-ROSE_SUITE_VARIABLES = json.loads(
-    base64.b64decode(os.environ["ENCODED_ROSE_SUITE_VARIABLES"], validate=True)
-)
+ROSE_SUITE_VARIABLES = json.loads(b64decode(os.environ["ENCODED_ROSE_SUITE_VARIABLES"]))
 
 # Constant directories.
 ROSE_DATAC = Path(os.environ["ROSE_DATAC"])

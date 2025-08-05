@@ -22,8 +22,6 @@ from glob import glob
 # Reexport functions for use within workflow.
 __all__ = [
     "b64_json",
-    "get_model_ids",
-    "get_model_names",
     "get_models",
     "sanitise_task_name",
     # Reexported functions.
@@ -52,17 +50,6 @@ def get_models(rose_variables: dict) -> list[dict]:
             model_vars["id"] = model
             models.append(model_vars)
     return models
-
-
-def get_model_names(models: list) -> str:
-    """Get a quoted JSON list literal of model names."""
-    json_text = json.dumps([model["name"] for model in models])
-    return json_text.replace('"', r"\"")
-
-
-def get_model_ids(models: list) -> str:
-    """Get space separated list of model identifiers."""
-    return " ".join(str(model["id"]) for model in models)
 
 
 def sanitise_task_name(s: str) -> str:
@@ -98,10 +85,11 @@ def sanitise_task_name(s: str) -> str:
     return s
 
 
-def b64_json(d: dict) -> str:
-    """Encode a dictionary as base64 encoded JSON for transport though cylc."""
-    # Remove circular reference to
+def b64_json(d: dict | list) -> str:
+    """Encode an object as base64 encoded JSON for transport though cylc."""
     new_d = d.copy()
-    del new_d["ROSE_SUITE_VARIABLES"]
+    if isinstance(new_d, dict):
+        # Remove circular reference to ROSE_SUITE_VARIABLES.
+        del new_d["ROSE_SUITE_VARIABLES"]
     output = base64.b64encode(json.dumps(new_d).encode()).decode()
     return output
