@@ -240,6 +240,7 @@ def test_bake_INPUT_PATHS_conversion(monkeypatch):
         style_file = None
         plot_resolution = None
         skip_write = None
+        histogram_method = None
 
     # Check --input-dir is converted.
     unparsed_args = []
