@@ -516,6 +516,21 @@ def _lfric_time_coord_fix_callback(cube: iris.cube.Cube, field, filename):
     return iris.util.squeeze(cube)
 
 
+def _calendar_conversion_callback(cube: iris.cube.Cube, field, filename):
+    """Change the calendar of a cube if proleptic_gregorian.
+
+    If the data use the proleptic_gregorian calendar, this is converted to the
+    standard_calendar without issue.
+
+    """
+    standard_calendar = iris.unit.Unit(
+        "seconds since 1970-01-01 00:00:00", calendar="standard"
+    )
+
+    if cube.coords("time").units.calendar == "proleptic_gregorian":
+        cube.coords("time").units = standard_calendar
+
+
 def _longitude_fix_callback(cube: iris.cube.Cube):
     """Check longitude coordinates are in the range -180 deg to 180 deg.
 
