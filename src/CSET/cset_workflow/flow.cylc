@@ -55,7 +55,6 @@ URL = https://metoffice.github.io/CSET
         setup_complete[^] =>
         FETCH_DATA:succeed-all =>
         fetch_complete =>
-        PROCESS:succeed-all =>
         bake_recipes:{% if LOGLEVEL == "DEBUG" %}succeed{% else %}finish{% endif %} =>
         cycle_complete
         """
@@ -67,7 +66,7 @@ URL = https://metoffice.github.io/CSET
         # Only runs on the final cycle.
         R1/$ = """
         fetch_complete =>
-        PROCESS_CASE_AGGREGATION:succeed-all =>
+        parbake_aggregation_recipes =>
         bake_recipes:{% if LOGLEVEL == "DEBUG" %}succeed{% else %}finish{% endif %} =>
         bake_aggregation_recipes:{% if LOGLEVEL == "DEBUG" %}succeed{% else %}finish{% endif %} =>
         cycle_complete => housekeeping
@@ -178,6 +177,17 @@ URL = https://metoffice.github.io/CSET
         [[[environment]]]
         ENCODED_ROSE_SUITE_VARIABLES = {{b64_json(ROSE_SUITE_VARIABLES)}}
 
+    [[parbake_aggregation_recipes]]
+    # Parbake all the aggregation recipes.
+    script = rose task-run -v --app-key=parbake_recipes
+    execution time limit = PT5M
+        [[[directives]]]
+        --ntasks=1
+        --mem=500
+        [[[environment]]]
+        ENCODED_ROSE_SUITE_VARIABLES = {{b64_json(ROSE_SUITE_VARIABLES)}}
+        DO_CASE_AGGREGATION = True
+
     [[bake_recipes]]
     # Bake the parbaked recipes for this cycle.
     script = "$CYLC_WORKFLOW_RUN_DIR/app/bake_recipes/bin/baker.sh"
@@ -188,7 +198,7 @@ URL = https://metoffice.github.io/CSET
         --mem=64000
 
     [[bake_aggregation_recipes]]
-    # Bake the parbaked aggregation recipes for this cycle.
+    # Bake the parbaked aggregation recipes.
     script = "$CYLC_WORKFLOW_RUN_DIR/app/bake_recipes/bin/baker.sh"
     execution time limit = PT3H
     execution retry delays = PT1M
@@ -196,7 +206,6 @@ URL = https://metoffice.github.io/CSET
         --ntasks=8
         --mem=64000
         [[[environment]]]
-        # As this process is used for case aggregation we hard code to True.
         DO_CASE_AGGREGATION = True
 
     [[housekeeping]]

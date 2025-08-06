@@ -4,7 +4,7 @@ set -euo pipefail
 
 # Use the appropriate recipes.
 optconfkey="$CYLC_TASK_CYCLE_POINT"
-if [[ $DO_CASE_AGGREGATION == True ]]; then
+if [ "${DO_CASE_AGGREGATION:-False}" = True ]; then
     RECIPE_DIR=$CYLC_WORKFLOW_SHARE_DIR/cycle/$CYLC_TASK_CYCLE_POINT/aggregation_recipes
     optconfkey="${optconfkey}-aggregation"
 else
@@ -14,7 +14,7 @@ export RECIPE_DIR
 
 # Determine parallelism.
 parallelism="$(nproc)"
-if [[ $CYLC_TASK_TRY_NUMBER -gt 1 ]]; then
+if [ "$CYLC_TASK_TRY_NUMBER" -gt 1 ]; then
     # This is a retry; enable DEBUG logging and run in serial.
     export LOGLEVEL="DEBUG"
     parallelism=1

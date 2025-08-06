@@ -189,7 +189,7 @@ class RawRecipe:
         recipe_dir.mkdir(parents=True, exist_ok=True)
 
         # Add input paths to recipe variables.
-        self.variables["INPUT_PATHS"] = str(data_dirs)
+        self.variables["INPUT_PATHS"] = data_dirs
 
         # Parbake this recipe, saving into recipe_dir.
         recipe = parse_recipe(Path(self.recipe), self.variables)
