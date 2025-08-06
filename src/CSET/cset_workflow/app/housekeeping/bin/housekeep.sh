@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # Removes intermediatory files to free up disk space. How thoroughly they are
