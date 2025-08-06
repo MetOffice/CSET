@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2025) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -116,25 +116,6 @@ def setup_argument_parser() -> argparse.ArgumentParser:
     )
     parser_bake.set_defaults(func=_bake_command)
 
-    parser_parbake = subparsers.add_parser(
-        "parbake", help="bake variables into a recipe file"
-    )
-    parser_parbake.add_argument(
-        "-r",
-        "--recipe",
-        type=Path,
-        required=True,
-        help="recipe file to read",
-    )
-    parser_parbake.add_argument(
-        "-o",
-        "--output",
-        type=Path,
-        required=True,
-        help="parbaked recipe file to write",
-    )
-    parser_parbake.set_defaults(func=_parbake_command)
-
     parser_graph = subparsers.add_parser("graph", help="visualise a recipe file")
     parser_graph.add_argument(
         "-d",
@@ -239,13 +220,8 @@ def setup_logging(verbosity: int):
 
 
 def _bake_command(args, unparsed_args):
-    from CSET._common import iter_maybe, parse_recipe, parse_variable_options
+    from CSET._common import parse_recipe, parse_variable_options
     from CSET.operators import execute_recipe
-
-    # Convert --input_dir=... to INPUT_PATHS recipe variable.
-    if args.input_dir:
-        abs_paths = [str(Path(p).absolute()) for p in iter_maybe(args.input_dir)]
-        unparsed_args.append(f"--INPUT_PATHS={abs_paths}")
 
     recipe_variables = parse_variable_options(unparsed_args)
     recipe = parse_recipe(args.recipe, recipe_variables)
@@ -256,18 +232,6 @@ def _bake_command(args, unparsed_args):
         args.plot_resolution,
         args.skip_write,
     )
-
-
-def _parbake_command(args, unparsed_args):
-    from ruamel.yaml import YAML
-
-    from CSET._common import parse_recipe, parse_variable_options
-
-    recipe_variables = parse_variable_options(unparsed_args)
-    recipe = parse_recipe(args.recipe, recipe_variables)
-    with open(args.output, "wt") as fp:
-        with YAML(pure=True, output=fp) as yaml:
-            yaml.dump(recipe)
 
 
 def _graph_command(args, unparsed_args):

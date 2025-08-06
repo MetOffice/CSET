@@ -24,24 +24,13 @@ from pathlib import Path
 
 import CSET.recipes
 
-# Load rose suite variables.
-ROSE_SUITE_VARIABLES = json.loads(b64decode(os.environ["ENCODED_ROSE_SUITE_VARIABLES"]))
-
-# Constant directories.
-ROSE_DATAC = Path(os.environ["ROSE_DATAC"])
-SHARE_DIR = Path(os.environ["CYLC_WORKFLOW_SHARE_DIR"])
-
-# Whether we are doing aggregation recipes.
-CASE_AGGREGATION = bool(os.getenv("DO_CASE_AGGREGATION"))
-
-
-def aggregation_enabled(recipe) -> bool:
-    """Filter to just aggregation or non-aggregation recipes."""
-    return recipe.aggregation == CASE_AGGREGATION
-
 
 def parbake_all():
     """Generate and parbake recipes from configuration."""
+    # Load rose suite variables.
+    rose_suite_variables = json.loads(
+        b64decode(os.environ["ENCODED_ROSE_SUITE_VARIABLES"])
+    )
     # Gather all recipes into a big list.
     recipes = []
     # Try to load recipes from all python modules in CSET.recipes.
@@ -52,7 +41,7 @@ def parbake_all():
         print(f"Loading recipes from {loader.name}")
         pkg = importlib.import_module(loader.name)
         try:
-            recipes.extend(pkg.load(ROSE_SUITE_VARIABLES))
+            recipes.extend(pkg.load(rose_suite_variables))
         except AttributeError as err:
             raise AttributeError(
                 f"{loader.name} should provide a `load` function."
@@ -61,10 +50,21 @@ def parbake_all():
     if not recipes:
         raise ValueError("At least one recipe should be enabled.")
 
+    # Whether we are doing aggregation recipes.
+    case_aggregation = bool(os.getenv("DO_CASE_AGGREGATION"))
+
+    def aggregation_enabled(recipe) -> bool:
+        """Filter to just aggregation or non-aggregation recipes."""
+        return recipe.aggregation == case_aggregation
+
+    # Constant directories.
+    rose_datac = Path(os.environ["ROSE_DATAC"])
+    share_dir = Path(os.environ["CYLC_WORKFLOW_SHARE_DIR"])
+
     # Parbake all recipes remaining after filtering aggregation recipes.
     for recipe in filter(aggregation_enabled, recipes):
         print(f"Parbaking {recipe}")
-        recipe.parbake(ROSE_DATAC, SHARE_DIR)
+        recipe.parbake(rose_datac, share_dir)
 
 
 if __name__ == "__main__":
