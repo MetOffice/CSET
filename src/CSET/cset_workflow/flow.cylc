@@ -66,9 +66,14 @@ URL = https://metoffice.github.io/CSET
         # Only runs on the final cycle.
         R1/$ = """
         fetch_complete =>
-        parbake_aggregation_recipes =>
         bake_recipes:{% if LOGLEVEL == "DEBUG" %}succeed{% else %}finish{% endif %} =>
         bake_aggregation_recipes:{% if LOGLEVEL == "DEBUG" %}succeed{% else %}finish{% endif %} =>
+        cycle_complete
+
+        fetch_complete =>
+        parbake_aggregation_recipes =>
+        cycle_complete
+
         cycle_complete => housekeeping
         cycle_complete => finish_website
         finish_website => send_email
