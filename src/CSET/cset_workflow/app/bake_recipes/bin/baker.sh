@@ -4,7 +4,7 @@ set -euo pipefail
 
 # Use the appropriate recipes.
 optconfkey="$CYLC_TASK_CYCLE_POINT"
-if [ "${DO_CASE_AGGREGATION:-False}" = True ]; then
+if [ -n "${DO_CASE_AGGREGATION-}" ]; then
     RECIPE_DIR=$CYLC_WORKFLOW_SHARE_DIR/cycle/$CYLC_TASK_CYCLE_POINT/aggregation_recipes
     optconfkey="${optconfkey}-aggregation"
 else
