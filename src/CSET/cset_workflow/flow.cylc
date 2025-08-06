@@ -5,24 +5,22 @@ description = Workflow for running CSET.
 URL = https://metoffice.github.io/CSET
 
 # Import all of our Jinja utilities for use in the workflow.
-{% from "jinja_utils" import b64_json, get_models, glob, max, min, zip, sanitise_task_name %}
-# Load a list a model detail dictionaries.
+{% from "jinja_utils" import b64json, get_models %}
+# Load a list of model detail dictionaries.
 {% set models = get_models(ROSE_SUITE_VARIABLES) %}
-# Create a list of case aggregation types.
-{% set AGGREGATION_TYPES = ["LEAD_TIME", "HOUR_OF_DAY", "VALIDITY_TIME", "ALL"] %}
 
 
 [scheduling]
+# As we only run a few tasks per cycle, set a large runahead limit to allow
+# parallelism.
+runahead limit = P20
 # Initial and final cycle points cover the entire period of interest.
 {% if CSET_CYCLING_MODE == "case_study" %}
-    initial cycle point = {{ min(CSET_CASE_DATES) }}
-    final cycle point = {{ max(CSET_CASE_DATES) }}
+    initial cycle point = {{ CSET_CASE_DATES|min }}
+    final cycle point = {{ CSET_CASE_DATES|max }}
 {% elif CSET_CYCLING_MODE == "trial" %}
     initial cycle point = {{CSET_TRIAL_START_DATE}}
-    # End date can be blank.
-    {% if CSET_TRIAL_END_DATE|default(False) %}
-        final cycle point = {{CSET_TRIAL_END_DATE}}
-    {% endif %}
+    final cycle point = {{CSET_TRIAL_END_DATE}}
 {% endif %}
 
     [[special tasks]]
@@ -41,44 +39,26 @@ URL = https://metoffice.github.io/CSET
         # Runs for every forecast initiation time to process the data in parallel.
         {% for date in CSET_CASE_DATES %}
             R1/{{date}} = """
-            setup_complete[^] =>
-            FETCH_DATA:succeed-all =>
-            fetch_complete =>
-            parbake_recipes =>
-            bake_recipes:{% if LOGLEVEL == "DEBUG" %}succeed{% else %}finish{% endif %} =>
-            cycle_complete
+            setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
+            fetch_complete & parbake_recipes => bake_recipes => cycle_complete
             """
         {% endfor %}
     {% elif CSET_CYCLING_MODE == "trial" %}
         # Analysis from each forecast.
         {{CSET_TRIAL_CYCLE_PERIOD}} = """
-        setup_complete[^] =>
-        FETCH_DATA:succeed-all =>
-        fetch_complete =>
-        bake_recipes:{% if LOGLEVEL == "DEBUG" %}succeed{% else %}finish{% endif %} =>
-        cycle_complete
+        setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
+        fetch_complete & parbake_recipes => bake_recipes => cycle_complete
         """
     {% endif %}
 
-    # Can only run tasks on final cycle point if it exists, so skip for
-    # continuous trials.
-    {% if CSET_CYCLING_MODE != "trial" or CSET_TRIAL_END_DATE|default(False) %}
-        # Only runs on the final cycle.
-        R1/$ = """
-        fetch_complete =>
-        bake_recipes:{% if LOGLEVEL == "DEBUG" %}succeed{% else %}finish{% endif %} =>
-        bake_aggregation_recipes:{% if LOGLEVEL == "DEBUG" %}succeed{% else %}finish{% endif %} =>
-        cycle_complete
-
-        fetch_complete =>
-        parbake_aggregation_recipes =>
-        cycle_complete
-
-        cycle_complete => housekeeping
-        cycle_complete => finish_website
-        finish_website => send_email
-        """
-    {% endif %}
+    # Only runs on the final cycle.
+    R1/$ = """
+    # Run aggregation recipes.
+    fetch_complete & parbake_aggregation_recipes => bake_aggregation_recipes => cycle_complete
+    # Finalise website and cleanup.
+    cycle_complete => finish_website => send_email
+    cycle_complete => housekeeping
+    """
 
 
 [runtime]
@@ -157,7 +137,7 @@ URL = https://metoffice.github.io/CSET
     execution time limit = PT5M
         [[[environment]]]
         COLORBAR_FILE = {{COLORBAR_FILE}}
-        MODEL_NAMES = {{ b64_json(models|map(attribute="name")|list) }}
+        MODEL_NAMES = {{ b64json(models|map(attribute="name")|list) }}
 
     {% for model in models %}
     [[fetch_fcst_m{{model["id"]}}]]
@@ -180,7 +160,7 @@ URL = https://metoffice.github.io/CSET
         --ntasks=1
         --mem=500
         [[[environment]]]
-        ENCODED_ROSE_SUITE_VARIABLES = {{b64_json(ROSE_SUITE_VARIABLES)}}
+        ENCODED_ROSE_SUITE_VARIABLES = {{b64json(ROSE_SUITE_VARIABLES)}}
 
     [[parbake_aggregation_recipes]]
     # Parbake all the aggregation recipes.
@@ -190,7 +170,7 @@ URL = https://metoffice.github.io/CSET
         --ntasks=1
         --mem=500
         [[[environment]]]
-        ENCODED_ROSE_SUITE_VARIABLES = {{b64_json(ROSE_SUITE_VARIABLES)}}
+        ENCODED_ROSE_SUITE_VARIABLES = {{b64json(ROSE_SUITE_VARIABLES)}}
         DO_CASE_AGGREGATION = True
 
     [[bake_recipes]]
