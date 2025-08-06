@@ -37,9 +37,9 @@ def make_script_executable(p: Path):
     """Make scripts (starting with a shebang) executable."""
     if p.is_file():
         with open(p, "rb") as fd:
-            shebang = fd.read(2)
-        # Assume the first two bytes of a script are #!
-        if shebang == b"#!":
+            shebang = fd.read(14)
+        # Assume the first 14 bytes of a script are #!/usr/bin/env
+        if shebang == b"#!/usr/bin/env":
             logger.debug("Changing file mode to executable: %s", p)
             mode = p.stat().st_mode
             # Make executable by all who can read.
