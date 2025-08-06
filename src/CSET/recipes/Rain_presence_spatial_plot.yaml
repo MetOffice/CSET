@@ -1,0 +1,26 @@
+category: Daily Weather
+title: Rain presence spatial plot
+description: |
+  Generates a mask of whether rain is present in a grid box and provides a
+  spatial plot.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: filters.generate_mask
+    mask_field:
+        operator: filters.filter_cubes
+        constraint:
+            operator: constraints.generate_var_constraint
+            varname: surface_microphysical_rainfall_rate
+    condition: '>'
+    value: 0.0
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
