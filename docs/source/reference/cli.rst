@@ -105,20 +105,3 @@ usage see :doc:`/getting-started/run_full_cylc_workflow`.
 
     options:
       -h, --help  show this help message and exit
-
-cset parbake
-~~~~~~~~~~~~
-
-"Parbake" a recipe. This acts as ``cset bake`` but instead of actually running
-the recipe it instead simply saves the recipe with its variables defined for
-later execution. This is used by the cset workflow to facilitate more efficient
-execution of many recipes.
-
-.. code-block:: text
-
-    usage: cset parbake [-h] -r RECIPE -o OUTPUT
-
-    options:
-    -h, --help           show this help message and exit
-    -r, --recipe RECIPE  recipe file to read
-    -o, --output OUTPUT  parbaked recipe file to write
