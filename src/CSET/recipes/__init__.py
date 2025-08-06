@@ -26,6 +26,15 @@ from typing import Any
 from ruamel.yaml import YAML
 
 from CSET._common import parse_recipe, slugify
+from CSET.cset_workflow.lib.python.jinja_utils import get_models
+
+__all__ = [
+    "detail_recipe",
+    "get_models",
+    "list_available_recipes",
+    "RawRecipe",
+    "unpack_recipe",
+]
 
 
 class FileExistsWarning(UserWarning):
@@ -197,23 +206,3 @@ class RawRecipe:
         with open(output, "wt") as fp:
             with YAML(pure=True, output=fp) as yaml:
                 yaml.dump(recipe)
-
-
-def get_models(rose_variables: dict[str, Any]) -> list[dict[str, Any]]:
-    """Arranges per-model configuration into a single object.
-
-    Returns a list of dictionaries, each one containing a per-model
-    configuration.
-    """
-    models = []
-    for model in range(1, 20):
-        model_prefix = f"m{model}_"
-        model_vars = {
-            key.removeprefix(model_prefix): value
-            for key, value in rose_variables.items()
-            if key.startswith(model_prefix)
-        }
-        if model_vars:
-            model_vars["id"] = model
-            models.append(model_vars)
-    return models
