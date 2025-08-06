@@ -18,7 +18,6 @@ import importlib.resources
 import logging
 import subprocess
 import sys
-import warnings
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
@@ -107,11 +106,7 @@ def unpack_recipe(recipe_dir: Path, recipe_name: str) -> None:
     output_file = recipe_dir / file.name
     logging.debug("Saving recipe to %s", output_file)
     if output_file.exists():
-        warnings.warn(
-            f"{file.name} already exists in target directory, skipping.",
-            FileExistsWarning,
-            stacklevel=2,
-        )
+        logging.info("%s already exists in target directory, skipping.", file.name)
         return
     logging.info("Unpacking %s to %s", file.name, output_file)
     output_file.write_bytes(file.read_bytes())
