@@ -19,14 +19,6 @@ from pathlib import Path
 
 import pytest
 
-<<<<<<< HEAD:tests/workflow_utils/test_run_cset_recipe.py
-from CSET.cset_workflow.app.run_cset_recipe.bin import run_cset_recipe
-||||||| parent of 4098d145 (Add cset parbake command):tests/workflow_utils/test_run_cset_recipe.py
-from CSET._workflow_utils import run_cset_recipe
-=======
-from CSET._workflow_utils import parbake_recipe
->>>>>>> 4098d145 (Add cset parbake command):tests/workflow_utils/test_parbake_recipe.py
-
 
 def test_recipe_file(monkeypatch, tmp_working_dir):
     """Bundled recipe file is written to disk."""
@@ -79,16 +71,8 @@ def test_entrypoint_exit_on_subprocess_exception(monkeypatch):
         assert exc_info.value.code == 1
 
 
-<<<<<<< HEAD:tests/workflow_utils/test_run_cset_recipe.py
-def test_run_recipe_steps(monkeypatch, tmp_working_dir):
-    """Test run recipe steps correctly runs CSET."""
-||||||| parent of 4098d145 (Add cset parbake command):tests/workflow_utils/test_run_cset_recipe.py
-def test_run_recipe_steps(monkeypatch, tmp_working_dir):
-    """Test run recipe steps correctly runs CSET and creates an archive."""
-=======
 def test_run_parbake(monkeypatch, tmp_working_dir):
     """Test run_parbake correctly runs cset parbake."""
->>>>>>> 4098d145 (Add cset parbake command):tests/workflow_utils/test_parbake_recipe.py
 
     def mock_func(*args, **kwargs):
         return ""
@@ -109,33 +93,6 @@ def test_run_parbake(monkeypatch, tmp_working_dir):
     assert (rose_datac / "recipes").is_dir()
 
 
-<<<<<<< HEAD:tests/workflow_utils/test_run_cset_recipe.py
-def test_run_recipe_steps_optional_args(monkeypatch, tmp_working_dir):
-    """Test run recipe steps correctly runs CSET with optional arguments."""
-
-    def mock_func(*args, **kwargs):
-        return ""
-
-    def mock_data_dirs(*args, **kwargs):
-        return [""]
-
-    monkeypatch.setattr(subprocess, "run", mock_func)
-    monkeypatch.setattr(run_cset_recipe, "recipe_file", mock_func)
-    monkeypatch.setattr(run_cset_recipe, "data_directories", mock_data_dirs)
-    monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", "/share")
-    monkeypatch.setenv("CYLC_TASK_ID", "20000101T0000Z/foo")
-    monkeypatch.setenv("PLOT_RESOLUTION", "72")
-    monkeypatch.setenv("SKIP_WRITE", "True")
-
-    run_cset_recipe.run_recipe_steps()
-
-
-def test_run_recipe_steps_exception(monkeypatch, tmp_working_dir):
-    """Test run recipe steps correctly raises exception on cset bake error."""
-||||||| parent of 4098d145 (Add cset parbake command):tests/workflow_utils/test_run_cset_recipe.py
-def test_run_recipe_steps_exception(monkeypatch, tmp_working_dir):
-    """Test run recipe steps correctly raises exception on cset bake error."""
-=======
 def test_run_parbake_case_aggregation(monkeypatch, tmp_working_dir):
     """Test run_parbake correctly runs cset parbake for case aggregation."""
 
@@ -161,7 +118,6 @@ def test_run_parbake_case_aggregation(monkeypatch, tmp_working_dir):
 
 def test_run_parbake_exception(monkeypatch, tmp_working_dir):
     """Test run_parbake raises exception on cset parbake error."""
->>>>>>> 4098d145 (Add cset parbake command):tests/workflow_utils/test_parbake_recipe.py
 
     def mock_subprocess_run(*args, **kwargs):
         raise subprocess.CalledProcessError(1, args, b"", b"")

@@ -19,7 +19,6 @@ import importlib
 import json
 import os
 import pkgutil
-import warnings
 from base64 import b64decode
 from pathlib import Path
 
@@ -54,10 +53,13 @@ def parbake_all():
         pkg = importlib.import_module(loader.name)
         try:
             recipes.extend(pkg.load(ROSE_SUITE_VARIABLES))
-        except AttributeError:
-            warnings.warn(
-                f"{loader.name} did not have a 'load' function.", stacklevel=2
-            )
+        except AttributeError as err:
+            raise AttributeError(
+                f"{loader.name} should provide a `load` function."
+            ) from err
+
+    if not recipes:
+        raise ValueError("At least one recipe should be enabled.")
 
     # Parbake all recipes remaining after filtering aggregation recipes.
     for recipe in filter(aggregation_enabled, recipes):
