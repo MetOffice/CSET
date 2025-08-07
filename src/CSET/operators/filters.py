@@ -209,11 +209,10 @@ def generate_mask(
         mask.attributes["mask"] = f"mask_for_{cube.name()}_{condition}_{value}"
         mask.standard_name = ""
         mask.short_name = ""
-        mask.long_name = ""
+        mask.var_name = None
         mask.rename(f"mask_for_{cube.name()}_{condition}_{value}")
         mask.units = "1"
         mask_list.append(mask)
-        print(mask)
 
     if len(mask_list) == 1:
         return mask_list[0]

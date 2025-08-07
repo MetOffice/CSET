@@ -302,7 +302,7 @@
     "ymin": 0
   },
   "mask_for_surface_microphysical_rainfall_rate_>_0.0_difference": {
-    "cmap": "Blues",
+    "cmap": "BrBG",
     "levels": [
       -2,
       -1,
