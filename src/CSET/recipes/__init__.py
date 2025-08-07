@@ -174,14 +174,18 @@ class RawRecipe:
         self.aggregation = aggregation
 
     def __str__(self) -> str:
-        """Return str(self)."""
-        # generic_surface_spatial_plot_sequence.yaml (model 1)
-        #     VARNAME        air_temperature
-        #     MODEL_NAME     Model A
-        #     METHOD         SEQ
-        #     SUBAREA_TYPE   None
-        #     SUBAREA_EXTENT None
+        """Return str(self).
 
+        Examples
+        --------
+        >>> print(raw_recipe)
+        generic_surface_spatial_plot_sequence.yaml (model 1)
+            VARNAME        air_temperature
+            MODEL_NAME     Model A
+            METHOD         SEQ
+            SUBAREA_TYPE   None
+            SUBAREA_EXTENT None
+        """
         plural = "s" if len(self.model_ids) > 1 else ""
         ids = " ".join(str(m) for m in self.model_ids)
         aggregation = ", Aggregation" if self.aggregation else ""
