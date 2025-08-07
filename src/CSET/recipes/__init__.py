@@ -137,17 +137,34 @@ def detail_recipe(recipe_name: str) -> None:
 
 
 class RawRecipe:
-    """A recipe to be parbaked."""
+    """A recipe to be parbaked.
+
+    Parameters
+    ----------
+    recipe: str
+        Name of the recipe file.
+    model_ids: int | list[int]
+        Model IDs to set the input paths for. Matches the corresponding workflow
+        model IDs.
+    variables: dict[str, Any] aggregation: bool
+        Recipe variables to be inserted into $VAR placeholders in the recipe.
+    aggregation: bool
+        Whether this is an aggregation recipe or just a single case.
+
+    Returns
+    -------
+    RawRecipe
+    """
 
     recipe: str
     model_ids: list[int]
-    variables: dict[str, str]
+    variables: dict[str, Any]
     aggregation: bool
 
     def __init__(
         self,
         recipe: str,
-        model_ids: list[int],
+        model_ids: int | list[int],
         variables: dict[str, Any],
         aggregation: bool,
     ) -> None:
