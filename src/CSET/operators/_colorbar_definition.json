@@ -281,6 +281,37 @@
     "max": 1,
     "min": -1
   },
+  "mask_for_stratiform_rainfall_flux_>_0.0": {
+    "cmap": "Blues",
+    "levels": [
+      0,
+      1,
+      2
+    ],
+    "ymax": 1,
+    "ymin": 0
+  },
+  "mask_for_surface_microphysical_rainfall_rate_>_0.0": {
+    "cmap": "Blues",
+    "levels": [
+      0,
+      1,
+      2
+    ],
+    "ymax": 1,
+    "ymin": 0
+  },
+  "mask_for_surface_microphysical_rainfall_rate_>_0.0_difference": {
+    "cmap": "Blues",
+    "levels": [
+      -2,
+      -1,
+      1,
+      2
+    ],
+    "ymax": 1,
+    "ymin": -1
+  },
   "mass_content_of_water_in_soil_layer": {
     "cmap": "ocean_r",
     "max": 500,
