@@ -21,6 +21,7 @@ import logging
 import re
 from collections.abc import Iterable
 from pathlib import Path
+from textwrap import dedent
 from typing import Any
 
 import ruamel.yaml
@@ -393,3 +394,25 @@ def sort_dict(d: dict) -> dict:
         k: sort_dict(v) if isinstance(v, dict) else v
         for k, v in human_sorted(d.items())
     }
+
+
+def sstrip(text):
+    """Dedent and strip text.
+
+    Parameters
+    ----------
+    text: str
+        The string to strip.
+
+    Examples
+    --------
+    >>> print(sstrip('''
+    ...     foo
+    ...       bar
+    ...     baz
+    ... '''))
+    foo
+      bar
+    baz
+    """
+    return dedent(text).strip()
