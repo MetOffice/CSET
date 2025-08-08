@@ -45,6 +45,7 @@ URL = https://metoffice.github.io/CSET
             R1/{{date}} = """
             setup_complete[^] =>
             FETCH_DATA:succeed-all =>
+            FETCH_OBS:succeed-all =>
             fetch_complete =>
             PROCESS:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} =>
             cycle_complete
@@ -55,6 +56,7 @@ URL = https://metoffice.github.io/CSET
         {{CSET_TRIAL_CYCLE_PERIOD}} = """
         setup_complete[^] =>
         FETCH_DATA:succeed-all =>
+        FETCH_OBS:succeed-all =>
         fetch_complete =>
         PROCESS:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} =>
         cycle_complete
@@ -112,6 +114,8 @@ URL = https://metoffice.github.io/CSET
     execution retry delays = PT1M, PT15M, PT1H
     [[[directives]]]
         --mem=10000
+    [[[environment]]]
+        PLOTTING_PROJECTION = {{PLOTTING_PROJECTION | default("")}}
 
     [[PROCESS_CASE_AGGREGATION]]
     script = rose task-run -v --app-key=run_cset_recipe
@@ -124,6 +128,12 @@ URL = https://metoffice.github.io/CSET
 
     [[FETCH_DATA]]
     script = rose task-run -v --app-key=fetch_fcst
+    execution time limit = PT1H
+        [[[environment]]]
+        ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
+
+    [[FETCH_OBS]]
+    script = rose task-run -v --app-key=fetch_obs
     execution time limit = PT1H
         [[[environment]]]
         ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
@@ -152,6 +162,9 @@ URL = https://metoffice.github.io/CSET
 
     [[cycle_complete]]
     inherit = DUMMY_TASK
+
+    [[dummy_fetch_obs]]
+    inherit = DUMMY_TASK, FETCH_OBS
 
     [[dummy_process]]
     inherit = DUMMY_TASK, PROCESS
@@ -187,6 +200,21 @@ URL = https://metoffice.github.io/CSET
         DATA_PERIOD = {{model["data_period"]}}
         ANALYSIS_OFFSET = {{model["analysis_offset"]}}
     {% endfor %}
+
+    {% if SURFACE_SYNOP_OBS %}
+    [[fetch_obs]]
+    # Fetch observations from the MetDB.
+    inherit = FETCH_OBS
+        [[[environment]]]
+        MODEL_IDENTIFIER = "OBS"
+        ROSE_APP_COMMAND_KEY = "metdb"
+        SURFACE_SYNOP_FIELDS = {{SURFACE_SYNOP_FIELDS}}
+        SURFACE_SYNOP_INTERVAL = {{SURFACE_SYNOP_INTERVAL}}
+        SURFACE_SYNOP_OFFSET = {{SURFACE_SYNOP_OFFSET}}
+        WMO_BLOCK_STTN_NMBRS = {{WMO_BLOCK_STTN_NMBRS | default("")}}
+        SUBAREA_EXTENT = {{SUBAREA_EXTENT | default("")}}
+        OBS_SUBTYPE = "LNDSYB"
+    {% endif %}
 
     [[housekeeping]]
     # Housekeep unprocessed data files and processed intermediate files.
