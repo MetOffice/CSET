@@ -147,6 +147,30 @@ def test_parse_variable_options_quoted():
     assert actual == expected
 
 
+def test_parse_variable_options_input_dir_conversion():
+    """--input-dir argument is converted to --INPUT_PATHS recipe variable."""
+    p = str(Path("foo").absolute())
+    expected = (p, [p])
+
+    # Check --input-dir is converted.
+    input_dir = "foo"
+    unparsed_args = []
+    variables = common.parse_variable_options(
+        arguments=unparsed_args, input_dir=input_dir
+    )
+    assert "INPUT_PATHS" in variables
+    assert variables["INPUT_PATHS"] in expected
+
+    # Check --INPUT_PATHS is directly used.
+    input_dir = None
+    unparsed_args = ["--INPUT_PATHS", p]
+    variables = common.parse_variable_options(
+        arguments=unparsed_args, input_dir=input_dir
+    )
+    assert "INPUT_PATHS" in variables
+    assert variables["INPUT_PATHS"] in expected
+
+
 def test_template_variables():
     """Multiple variables are correctly templated into recipe."""
     recipe = {
@@ -162,25 +186,45 @@ def test_template_variables():
 def test_template_variables_wrong_recipe_type():
     """Give wrong type for recipe."""
     with pytest.raises(TypeError):
-        common.template_variables(1, {})
+        common.template_variables(1, {})  # type: ignore
 
 
-def test_replace_template_variable():
+def test_replace_template_variable_substitution():
     """Placeholders are correctly substituted."""
-    # Test direct substitution.
-    vars = {"VAR": 1}
+    variables = {"VAR": 1}
     expected = 1
-    actual = common.replace_template_variable("$VAR", vars)
+    actual = common.replace_template_variable("$VAR", variables)
     assert actual == expected
 
-    # Insertion into a larger string.
+
+def test_replace_template_variable_insertion():
+    """Insertion into a larger string."""
+    variables = {"VAR": 1}
     expected = "The number 1"
-    actual = common.replace_template_variable("The number $VAR", vars)
+    actual = common.replace_template_variable("The number $VAR", variables)
     assert actual == expected
 
-    # Error when variable not provided.
+
+def test_replace_template_variable_missing():
+    """Error when variable not provided."""
     with pytest.raises(KeyError):
         common.replace_template_variable("$VAR", {})
+
+
+def test_replace_template_variable_path():
+    """Paths are handled specially."""
+    variables = {"VAR": Path("/dev/null")}
+    expected = "/dev/null"
+    actual = common.replace_template_variable("$VAR", variables)
+    assert actual == expected
+
+
+def test_replace_template_variable_path_list():
+    """Lists of Paths are handled specially."""
+    variables = {"VAR": [Path("/dev/null")]}
+    expected = ["/dev/null"]
+    actual = common.replace_template_variable("$VAR", variables)
+    assert actual == expected
 
 
 def test_get_recipe_meta(tmp_working_dir):
@@ -303,3 +347,23 @@ def test_sort_dicts():
     """Test recursively sorting a dictionary."""
     d = {"b": {"ba": 1, "bb": 2}, "a": {"ab": 2, "aa": 1}}
     assert common.sort_dict(d) == {"a": {"aa": 1, "ab": 2}, "b": {"ba": 1, "bb": 2}}
+
+
+def test_sstrip():
+    """Check strings are unindented and stripped properly."""
+    test_cases = [
+        ("normal", "normal"),
+        (" leading", "leading"),
+        ("trailing ", "trailing"),
+        (" both ", "both"),
+        ("", ""),
+        ("    indented\n    lines", "indented\nlines"),
+        ("not indented\n  indented", "not indented\n  indented"),
+        ("  indented\n    more indented", "indented\n  more indented"),
+        ("\n\n  indented\n\n", "indented"),
+        (" \n    indented\n    indented", "indented\nindented"),
+        ("internal \ntrailing \nspace", "internal \ntrailing \nspace"),
+    ]
+    # Test all those cases.
+    for case, expected in test_cases:
+        assert common.sstrip(case) == expected
