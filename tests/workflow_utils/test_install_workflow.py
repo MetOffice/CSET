@@ -68,7 +68,7 @@ def test_make_script_executable_not_script(tmp_path):
 
 
 def test_make_script_executable_short_file(tmp_path):
-    """Short files (<2 bytes) are not marked executable."""
+    """Short files (<14 bytes) are not marked executable."""
     f = tmp_path / "file"
     # Mode is u=rw,g=r,o=r
     f.touch(mode=stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
