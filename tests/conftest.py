@@ -233,3 +233,15 @@ def ensemble_cube_read_only():
 def ensemble_cube(ensemble_cube_read_only):
     """Get ensemble cube to run tests on. It is safe to modify."""
     return ensemble_cube_read_only.copy()
+
+
+@pytest.fixture(scope="session")
+def xwind_read_only():
+    """Get regridded xwind to run tests on. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/ageofair/aoa_in_rgd.nc", "x_wind")
+
+
+@pytest.fixture()
+def xwind(xwind_read_only):
+    """Get regridded xwind to run tests on. It is safe to modify."""
+    return xwind_read_only.copy()
