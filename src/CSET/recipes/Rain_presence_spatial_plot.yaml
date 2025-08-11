@@ -2,7 +2,8 @@ category: Daily Weather
 title: $MODEL_NAME Rain presence spatial plot
 description: |
   Generates a mask of whether rain is present in a grid box and provides a
-  spatial plot.
+  spatial plot. A value of one implies rain is present; a value of zero
+  implies rain is not present.
 
 steps:
   - operator: read.read_cubes

@@ -2,7 +2,9 @@ category: Daily Weather
 title: "Rain presence\nDifference ($BASE_MODEL - $OTHER_MODEL)"
 description: |
   Generates a mask of whether rain is present in a grid box and provides a
-  the difference between two models.
+  the difference between two models. Values will be positive or negative one
+  depending on which model has rain present at that location if the other
+  does not.
 
 steps:
   - operator: read.read_cubes
