@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2025) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 import argparse
 import logging
 import os
-import shlex
 import sys
 from importlib.metadata import version
 from pathlib import Path
@@ -33,16 +32,10 @@ def main(raw_cli_args: list[str] = sys.argv):
     Handles argument parsing, setting up logging, top level error capturing,
     and execution of the desired subcommand.
     """
-    # Read arguments from the command line and CSET_ADDOPTS environment variable
-    # into an args object.
     parser = setup_argument_parser()
-    cli_args = raw_cli_args[1:] + shlex.split(os.getenv("CSET_ADDOPTS", ""))
-    args, unparsed_args = parser.parse_known_args(cli_args)
+    args, unparsed_args = parser.parse_known_args(raw_cli_args[1:])
 
     setup_logging(args.verbose)
-
-    # Down here so runs after logging is setup.
-    logger.debug("CLI Arguments: %s", cli_args)
 
     if args.subparser is None:
         print("Please choose a command.", file=sys.stderr)
