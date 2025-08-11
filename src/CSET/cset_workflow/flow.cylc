@@ -15,17 +15,14 @@ URL = https://metoffice.github.io/CSET
 
 
 [scheduling]
-    # Initial and final cycle points cover the entire period of interest.
-    {% if CSET_CYCLING_MODE == "case_study" %}
-        initial cycle point = {{ min(CSET_CASE_DATES) }}
-        final cycle point = {{ max(CSET_CASE_DATES) }}
-    {% elif CSET_CYCLING_MODE == "trial" %}
-        initial cycle point = {{CSET_TRIAL_START_DATE}}
-        # End date can be blank.
-        {% if CSET_TRIAL_END_DATE|default(False) %}
-            final cycle point = {{CSET_TRIAL_END_DATE}}
-        {% endif %}
-    {% endif %}
+# Initial and final cycle points cover the entire period of interest.
+{% if CSET_CYCLING_MODE == "case_study" %}
+    initial cycle point = {{ CSET_CASE_DATES|min }}
+    final cycle point = {{ CSET_CASE_DATES|max }}
+{% elif CSET_CYCLING_MODE == "trial" %}
+    initial cycle point = {{CSET_TRIAL_START_DATE}}
+    final cycle point = {{CSET_TRIAL_END_DATE}}
+{% endif %}
 
     [[special tasks]]
         # cycle_complete depends on its previous instance. We then don't need to
