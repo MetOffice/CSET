@@ -135,7 +135,9 @@ def get_recipe_metadata() -> dict:
         return {}
 
 
-def parse_variable_options(arguments: list[str]) -> dict:
+def parse_variable_options(
+    arguments: list[str], input_dir: str | list[str] | None = None
+) -> dict:
     """Parse a list of arguments into a dictionary of variables.
 
     The variable name arguments start with two hyphen-minus (`--`), consisting
@@ -146,6 +148,8 @@ def parse_variable_options(arguments: list[str]) -> dict:
     ----------
     arguments: list[str]
         List of arguments, e.g: `["--LEVEL", "2", "--STASH=m01s01i001"]`
+    input_dir: str | list[str], optional
+        List of input directories to add into the returned variables.
 
     Returns
     -------
@@ -157,6 +161,10 @@ def parse_variable_options(arguments: list[str]) -> dict:
     ValueError
         If any arguments cannot be parsed.
     """
+    # Convert --input_dir=... to INPUT_PATHS recipe variable.
+    if input_dir is not None:
+        abs_paths = [str(Path(p).absolute()) for p in iter_maybe(input_dir)]
+        arguments.append(f"--INPUT_PATHS={abs_paths}")
     recipe_variables = {}
     i = 0
     while i < len(arguments):

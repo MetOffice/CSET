@@ -223,31 +223,25 @@ def test_bake_invalid_args(capsys):
     assert capsys.readouterr().err == "Unknown argument: --not-a-real-option\n"
 
 
-def test_bake_INPUT_PATHS_conversion(monkeypatch):
-    """--input-dir argument is converted to --INPUT_PATHS recipe variable."""
+def test_bake_no_input_dir_option(monkeypatch):
+    """Test running CSET recipe without specifying --input-dir."""
+    function_ran = False
 
-    def check_vars(*args, **kwargs):
-        assert "INPUT_PATHS" in args[2]
-        p = str(Path("foo").absolute())
-        assert args[2]["INPUT_PATHS"] in (p, [p])
+    def mock_execute_recipe(*args, **kwargs):
+        nonlocal function_ran
+        function_ran = True
 
-    monkeypatch.setattr(CSET.operators, "execute_recipe", check_vars)
+    monkeypatch.setattr(CSET.operators, "execute_recipe", mock_execute_recipe)
 
-    class args:
-        recipe = "recipe.yaml"
-        input_dir = "foo"
-        output_dir = Path("/dev/null")
-        style_file = None
-        plot_resolution = None
-        skip_write = None
-
-    # Check --input-dir is converted.
-    unparsed_args = []
-    CSET._bake_command(args, unparsed_args)
-    # Check --INPUT_PATHS is directly used.
-    args.input_dir = None
-    unparsed_args = ["--INPUT_PATHS", str(Path("foo").absolute())]
-    CSET._bake_command(args, unparsed_args)
+    CSET.main(
+        [
+            "cset",
+            "bake",
+            "--recipe=tests/test_data/noop_recipe.yaml",
+            "--output-dir=/dev/null",
+        ]
+    )
+    assert function_ran
 
 
 def test_graph_creation(tmp_path: Path):
