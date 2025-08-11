@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Copies the static files for the web interface into the correct location, and
 # creates a symbolic link under the web server's document root.
