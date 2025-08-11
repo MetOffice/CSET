@@ -1319,6 +1319,7 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
     if (
         any("surface_microphysical" in name for name in varnames)
         and "difference" not in cube.long_name
+        and "mask" not in cube.long_name
     ):
         # Define the levels and colors
         levels = [0, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
