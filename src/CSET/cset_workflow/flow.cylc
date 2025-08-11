@@ -208,10 +208,5 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         WEB_ADDR = {{WEB_ADDR}}
         WEB_DIR = {{WEB_DIR}}
 
-# Include files bring their own graph and runtime sections.
-{% for include_file in glob("includes/*.cylc") %}
-{% include include_file %}
-{% endfor %}
-
 # Site-specific details that add to or override the core workflow definition.
 {% include 'site/' ~ SITE ~ '.cylc' %}
