@@ -93,23 +93,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         SKIP_WRITE = True
         {% endif %}
 
-
-    [[PROCESS]]
-    script = rose task-run -v --app-key=run_cset_recipe
-    execution time limit = PT30M
-    execution retry delays = PT1M, PT15M, PT1H
-    [[[directives]]]
-        --mem=10000
-
-    [[PROCESS_CASE_AGGREGATION]]
-    script = rose task-run -v --app-key=run_cset_recipe
-    execution time limit = PT3H
-        [[[directives]]]
-        --mem=100000
-        [[[environment]]]
-        # As this process is used for case aggregation we hard code to True.
-        DO_CASE_AGGREGATION = True
-
     [[FETCH_DATA]]
     script = rose task-run -v --app-key=fetch_fcst
     execution time limit = PT1H
@@ -140,12 +123,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
 
     [[cycle_complete]]
     inherit = DUMMY_TASK
-
-    [[dummy_process]]
-    inherit = DUMMY_TASK, PROCESS
-
-    [[dummy_process_case_aggregation]]
-    inherit = DUMMY_TASK, PROCESS_CASE_AGGREGATION
 
     [[validate_environment]]
     # Checks the environment works and the cset command is available.
