@@ -5,13 +5,9 @@ description = Workflow for running CSET.
 URL = https://metoffice.github.io/CSET
 
 # Import all of our Jinja utilities for use in the workflow.
-{% from "jinja_utils" import b64json, get_model_names, get_model_ids, get_models, glob, max, min, zip, sanitise_task_name %}
+{% from "jinja_utils" import b64json, get_models %}
 # Load a list a model detail dictionaries.
 {% set models = get_models(ROSE_SUITE_VARIABLES) %}
-{% set model_ids = get_model_ids(models) %}
-{% set model_names = get_model_names(models) %}
-# Create a list of case aggregation types.
-{% set AGGREGATION_TYPES = ["LEAD_TIME", "HOUR_OF_DAY", "VALIDITY_TIME", "ALL"] %}
 
 
 [scheduling]
