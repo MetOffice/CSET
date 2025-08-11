@@ -14,6 +14,7 @@
 
 """Recipe tests."""
 
+import logging
 from pathlib import Path
 
 import pytest
@@ -33,13 +34,17 @@ def test_recipe_files_in_tree_from_package():
     assert any("CAPE_ratio_plot.yaml" == path.name for path in files)
 
 
-def test_unpack(tmp_path: Path):
-    """Unpack recipes."""
+def test_unpack_recipes(tmp_path: Path, caplog):
+    """Unpack a recipe and check a log message is produced when files collide."""
     recipes.unpack_recipe(tmp_path, "CAPE_ratio_plot.yaml")
     assert (tmp_path / "CAPE_ratio_plot.yaml").is_file()
-    # Unpack everything and check a warning is produced when files collide.
-    with pytest.warns():
+    with caplog.at_level("INFO"):
         recipes.unpack_recipe(tmp_path, "CAPE_ratio_plot.yaml")
+    _, level, message = caplog.record_tuples[0]
+    assert level == logging.INFO
+    assert (
+        message == "CAPE_ratio_plot.yaml already exists in target directory, skipping."
+    )
 
 
 def test_unpack_recipes_exception_collision(tmp_path: Path):
