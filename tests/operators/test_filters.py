@@ -179,6 +179,24 @@ def test_generate_mask_fail_wrong_condition(cube):
         filters.generate_mask(cube, "!<", 10)
 
 
+def test_generate_mask_rename(cube):
+    """Generates a mask and checks rename."""
+    mask = cube.copy()
+    mask.data[:] = 0
+    mask.data[cube.data == 276] = 1
+    mask.rename(f"mask_for_{cube.name()}_==_276")
+    assert mask.name() == filters.generate_mask(cube, "==", 276).name()
+
+
+def test_generate_mask_units(cube):
+    """Generates a mask and checks units."""
+    mask = cube.copy()
+    mask.data[:] = 0
+    mask.data[cube.data == 276] = 1
+    mask.units = "1"
+    assert mask.units == filters.generate_mask(cube, "==", 276).units
+
+
 def test_generate_mask_equal_to(cube):
     """Generates a mask with values equal to a specified value."""
     mask = cube.copy()
