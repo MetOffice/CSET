@@ -225,7 +225,7 @@ def setup_logging(verbosity: int):
 
 
 def _bake_command(args, unparsed_args):
-    from CSET._common import iter_maybe, parse_variable_options
+    from CSET._common import iter_maybe, parse_recipe, parse_variable_options
     from CSET.operators import execute_recipe
 
     # Convert --input_dir=... to INPUT_PATHS recipe variable.
@@ -234,10 +234,10 @@ def _bake_command(args, unparsed_args):
         unparsed_args.append(f"--INPUT_PATHS={abs_paths}")
 
     recipe_variables = parse_variable_options(unparsed_args)
+    recipe = parse_recipe(args.recipe, recipe_variables)
     execute_recipe(
-        args.recipe,
+        recipe,
         args.output_dir,
-        recipe_variables,
         args.style_file,
         args.plot_resolution,
         args.skip_write,
