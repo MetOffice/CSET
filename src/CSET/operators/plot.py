@@ -32,6 +32,7 @@ import iris.cube
 import iris.exceptions
 import iris.plot as iplt
 import matplotlib as mpl
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 from markdown_it import MarkdownIt
@@ -1352,10 +1353,33 @@ def _spatial_plot(
     _make_plot_html_page(complete_plot_index)
 
 
+def _custom_colourmap_mask(cube: iris.cube.Cube):
+    """Return a custom colour map for presence recipes."""
+    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    if any("mask_" in name for name in varnames) and "difference" not in cube.long_name:
+        # Define the levels and colors.
+        levels = []
+        colors = []
+        # Create a custom color map.
+        cmap = mcolors.ListedColormap(colors)
+        # Normalize the levels.
+        norm = mcolors.BoundaryNorm(levels, cmap.N)
+        logging.info("colourmap for mask of any variable.")
+        return cmap, levels, norm
+    elif any("mask_" in name for name in varnames) and "difference" in cube.long_name:
+        #
+        levels = []
+        colors = []
+        cmap = mcolors.ListedColormap(colors)
+        norm = mcolors.BoundaryNorm(levels, cmap.N)
+        logging.info("colourmap for the differences of masks for any variable.")
+        return cmap, levels, norm
+    else:
+        return
+
+
 def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
     """Return a custom colourmap for the current recipe."""
-    import matplotlib.colors as mcolors
-
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if (
         any("surface_microphysical" in name for name in varnames)
@@ -1394,12 +1418,11 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
 
 def _custom_colourmap_visibility_in_air(cube: iris.cube.Cube, cmap, levels, norm):
     """Return a custom colourmap for the current recipe."""
-    import matplotlib.colors as mcolors
-
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if (
         any("visibility_in_air" in name for name in varnames)
         and "difference" not in cube.long_name
+        and "mask" not in cube.long_name
     ):
         # Define the levels and colors (in km)
         levels = [0, 0.05, 0.1, 0.2, 1.0, 2.0, 5.0, 10.0, 20.0, 30.0, 50.0, 70.0, 100.0]
