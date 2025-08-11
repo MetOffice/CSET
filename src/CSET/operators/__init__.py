@@ -25,7 +25,6 @@ from iris import FUTURE
 
 # Import operators here so they are exported for use by recipes.
 import CSET.operators
-from CSET._common import parse_recipe
 from CSET.operators import (
     ageofair,
     aggregate,
@@ -163,9 +162,8 @@ def create_diagnostic_archive():
 
 
 def execute_recipe(
-    recipe_yaml: Path | str,
+    recipe: dict,
     output_directory: Path,
-    recipe_variables: dict = None,
     style_file: Path = None,
     plot_resolution: int = None,
     skip_write: bool = None,
@@ -174,14 +172,10 @@ def execute_recipe(
 
     Parameters
     ----------
-    recipe_yaml: Path | str
-        Path to a file containing, or a string of, a recipe's YAML describing
-        the operators that need running. If a Path is provided it is opened and
-        read.
+    recipe: dict
+        Parsed recipe.
     output_directory: Path
         Pathlike indicating desired location of output.
-    recipe_variables: dict, optional
-        Dictionary of variables for the recipe.
     style_file: Path, optional
         Path to a style file.
     plot_resolution: int, optional
@@ -200,7 +194,6 @@ def execute_recipe(
     TypeError
         The provided recipe is not a stream or Path.
     """
-    recipe = parse_recipe(recipe_yaml, recipe_variables)
     # Create output directory.
     try:
         output_directory.mkdir(parents=True, exist_ok=True)
