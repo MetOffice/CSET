@@ -522,6 +522,28 @@ def test_plot_vertical_line_series_too_many_dimensions(cube, tmp_working_dir):
         plot.plot_vertical_line_series(cube)
 
 
+def test_plot_vertical_line_series_ensemble(vertical_profile_cube, tmp_working_dir):
+    """Save a vertical line series plot with ensemble data."""
+    # Copy cube to create extra ensemble member.
+    cube2 = vertical_profile_cube.copy()
+    # Remove original realization coordinate.
+    cube2.remove_coord("realization")
+    # Create new realization coordinate and add to cube.
+    ens_coord = iris.coords.DimCoord(1, standard_name="realization", units="1")
+    cube2.add_aux_coord(ens_coord)
+    # Repeat process for original cube so realization coordinates identical.
+    vertical_profile_cube.remove_coord("realization")
+    ens_coord = iris.coords.DimCoord(0, standard_name="realization", units="1")
+    vertical_profile_cube.add_aux_coord(ens_coord)
+    # Create an ensemble cube.
+    cubes = iris.cube.CubeList([vertical_profile_cube, cube2]).merge_cube()
+    plot.plot_vertical_line_series(
+        cubes, series_coordinate="pressure", sequence_coordinate="time"
+    )
+    assert Path("untitled_473718.0.png").is_file()
+    assert Path("untitled_473721.0.png").is_file()
+
+
 def test_plot_histogram_no_sequence_coordinate(histogram_cube, tmp_working_dir):
     """Error when cube is missing sequence coordinate (time)."""
     histogram_cube.remove_coord("time")
