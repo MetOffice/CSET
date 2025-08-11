@@ -2026,17 +2026,31 @@ def _calculate_CFAD(
     bin_edges: list[float]
         The bin edges for the histogram. The bins need to be specified to
         ensure consistency across the CFAD, otherwise it cannot be interpreted.
+
+    Notes
+    -----
+    Contour Frequency by Altitude Diagrams (CFADs) were first designed by
+    Yuter and Houze (1995)[YuterandHouze95]. They are calculated by binning the
+    data by altitude and then by variable bins (e.g. temperature). The variable
+    bins are then normalised by each altitude. This essenitally creates a
+    normalised frequency distribution for each altitude. These are then stacked
+    and combined in a single plot.
+
+    References
+    ----------
+    .. [YuterandHouze95] Yuter S.E., and Houze, R.A. (1995) "Three-Dimensional
+       Kinematic and Microphysical Evolution of Florida Cumulonimbus. Part II:
+       Frequency Distributions of Vertical Velocity, Reflectivity, and
+       Differential Reflectivity" Monthly Weather Review,  vol. 123, 1941-1963,
+       doi: 10.1175/1520-0493(1995)123<1941:TDKAME>2.0.CO;2
     """
     # Setup empty array for containing the CFAD data.
     CFAD_values = np.zeros(
         (len(cube.coord(vertical_coordinate).points), len(bin_edges) - 1)
     )
 
-    # Set iterator for CFAD values.
-    i = 0
-
     # Calculate the CFAD as a histogram summing to one for each level.
-    for level_cube in cube.slices_over(vertical_coordinate):
+    for i, level_cube in enumerate(cube.slices_over(vertical_coordinate)):
         # Note setting density to True does not produce the correct
         # normalization for a CFAD, where each row must sum to one.
         CFAD_values[i, :] = (
@@ -2045,8 +2059,7 @@ def _calculate_CFAD(
             ]
             / level_cube.data.size
         )
-        i += 1
-    # calculate central points for bins
+    # Calculate central points for bins.
     bins = (np.array(bin_edges[:-1]) + np.array(bin_edges[1:])) / 2.0
     bin_bounds = np.array((bin_edges[:-1], bin_edges[1:])).T
     # Now construct the coordinates for the cube.
@@ -2058,10 +2071,11 @@ def _calculate_CFAD(
     CFAD = iris.cube.Cube(
         CFAD_values,
         dim_coords_and_dims=[(vert_coord, 0), (bin_coord, 1)],
+        long_name=f"{cube.name()}_cfad",
         standard_name=cube.standard_name,
         units="1",
     )
-    CFAD.attributes["type"] = "Contour Frequency by Altitude Diagram (CFAD)"
+    CFAD.rename(f"{cube.name()}_cfad")
     return CFAD
 
 

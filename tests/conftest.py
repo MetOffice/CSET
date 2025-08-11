@@ -315,3 +315,15 @@ def orography_4D_cube_read_only():
 def orography_4D_cube(orography_4D_cube_read_only):
     """Get 4D orography cube to run tests on. It is safe to modify."""
     return orography_4D_cube_read_only.copy()
+
+
+@pytest.fixture()
+def xwind_read_only():
+    """Get regridded xwind to run tests on. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/ageofair/aoa_in_rgd.nc", "x_wind")
+
+
+@pytest.fixture()
+def xwind(xwind_read_only):
+    """Get regridded xwind to run tests on. It is safe to modify."""
+    return xwind_read_only.copy()
