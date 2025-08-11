@@ -16,11 +16,24 @@
 
 import importlib.resources
 import logging
+import subprocess
 import sys
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
 
 from ruamel.yaml import YAML
+
+from CSET._common import parse_recipe, slugify
+from CSET.cset_workflow.lib.python.jinja_utils import get_models
+
+__all__ = [
+    "detail_recipe",
+    "get_models",
+    "list_available_recipes",
+    "RawRecipe",
+    "unpack_recipe",
+]
 
 
 def _version_agnostic_importlib_resources_file() -> Path:
@@ -117,3 +130,91 @@ def detail_recipe(recipe_name: str) -> None:
             recipe = yaml.load(file)
         print(f"\n\t{file.name}\n\t{''.join('─' * len(file.name))}\n")
         print(recipe.get("description"))
+
+
+class RawRecipe:
+    """A recipe to be parbaked.
+
+    Parameters
+    ----------
+    recipe: str
+        Name of the recipe file.
+    model_ids: int | list[int]
+        Model IDs to set the input paths for. Matches the corresponding workflow
+        model IDs.
+    variables: dict[str, Any] aggregation: bool
+        Recipe variables to be inserted into $VAR placeholders in the recipe.
+    aggregation: bool
+        Whether this is an aggregation recipe or just a single case.
+
+    Returns
+    -------
+    RawRecipe
+    """
+
+    recipe: str
+    model_ids: list[int]
+    variables: dict[str, Any]
+    aggregation: bool
+
+    def __init__(
+        self,
+        recipe: str,
+        model_ids: int | list[int],
+        variables: dict[str, Any],
+        aggregation: bool,
+    ) -> None:
+        self.recipe = recipe
+        self.model_ids = model_ids if isinstance(model_ids, list) else [model_ids]
+        self.variables = variables
+        self.aggregation = aggregation
+
+    def __str__(self) -> str:
+        """Return str(self).
+
+        Examples
+        --------
+        >>> print(raw_recipe)
+        generic_surface_spatial_plot_sequence.yaml (model 1)
+            VARNAME        air_temperature
+            MODEL_NAME     Model A
+            METHOD         SEQ
+            SUBAREA_TYPE   None
+            SUBAREA_EXTENT None
+        """
+        plural = "s" if len(self.model_ids) > 1 else ""
+        ids = " ".join(str(m) for m in self.model_ids)
+        aggregation = ", Aggregation" if self.aggregation else ""
+        pad = max(len(k) for k in self.variables.keys())
+        variables = "\n".join(f"\t{k:<{pad}} {v}" for k, v in self.variables.items())
+        return f"{self.recipe} (model{plural} {ids}{aggregation})\n{variables}"
+
+    def parbake(self, ROSE_DATAC: Path, SHARE_DIR: Path) -> None:
+        """Pre-process recipe to bake in all variables."""
+        # Ready recipe file to disk.
+        subprocess.run(["cset", "-v", "cookbook", self.recipe], check=True)
+
+        # Collect configuration from environment.
+        if self.aggregation:
+            # Construct the location for the recipe.
+            recipe_dir = ROSE_DATAC / "aggregation_recipes"
+            # Construct the input data directories for the cycle.
+            data_dirs = [
+                SHARE_DIR / f"cycle/*/data/{model_id}" for model_id in self.model_ids
+            ]
+        else:
+            recipe_dir = ROSE_DATAC / "recipes"
+            data_dirs = [ROSE_DATAC / f"data/{model_id}" for model_id in self.model_ids]
+
+        # Ensure recipe dir exists.
+        recipe_dir.mkdir(parents=True, exist_ok=True)
+
+        # Add input paths to recipe variables.
+        self.variables["INPUT_PATHS"] = data_dirs
+
+        # Parbake this recipe, saving into recipe_dir.
+        recipe = parse_recipe(Path(self.recipe), self.variables)
+        output = recipe_dir / f"{slugify(recipe['title'])}.yaml"
+        with open(output, "wt") as fp:
+            with YAML(pure=True, output=fp) as yaml:
+                yaml.dump(recipe)
