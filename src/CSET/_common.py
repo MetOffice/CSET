@@ -22,6 +22,7 @@ import re
 from collections.abc import Iterable
 from pathlib import Path
 from textwrap import dedent
+from typing import Any
 
 import ruamel.yaml
 
@@ -222,14 +223,25 @@ def template_variables(recipe: dict | list, variables: dict) -> dict:
     return recipe
 
 
-def replace_template_variable(s: str, variables):
+def replace_template_variable(s: str, variables: dict[str, Any]):
     """Fill all variable placeholders in the string."""
     for var_name, var_value in variables.items():
         placeholder = f"${var_name}"
         # If the value is just the placeholder we directly overwrite it
         # to keep the value type.
         if s == placeholder:
+            # Specially handle Paths and lists of Paths.
+            if isinstance(var_value, Path):
+                var_value = str(var_value)
+            if (
+                isinstance(var_value, list)
+                and var_value
+                and isinstance(var_value[0], Path)
+            ):
+                var_value = [str(p) for p in var_value]
             s = var_value
+            # We have replaced the whole string, so stop here to avoid
+            # interpreting the new value.
             break
         else:
             s = s.replace(placeholder, str(var_value))
