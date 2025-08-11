@@ -303,3 +303,23 @@ def test_sort_dicts():
     """Test recursively sorting a dictionary."""
     d = {"b": {"ba": 1, "bb": 2}, "a": {"ab": 2, "aa": 1}}
     assert common.sort_dict(d) == {"a": {"aa": 1, "ab": 2}, "b": {"ba": 1, "bb": 2}}
+
+
+def test_sstrip():
+    """Check strings are unindented and stripped properly."""
+    test_cases = [
+        ("normal", "normal"),
+        (" leading", "leading"),
+        ("trailing ", "trailing"),
+        (" both ", "both"),
+        ("", ""),
+        ("    indented\n    lines", "indented\nlines"),
+        ("not indented\n  indented", "not indented\n  indented"),
+        ("  indented\n    more indented", "indented\n  more indented"),
+        ("\n\n  indented\n\n", "indented"),
+        (" \n    indented\n    indented", "indented\nindented"),
+        ("internal \ntrailing \nspace", "internal \ntrailing \nspace"),
+    ]
+    # Test all those cases.
+    for case, expected in test_cases:
+        assert common.sstrip(case) == expected
