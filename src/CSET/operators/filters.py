@@ -21,6 +21,8 @@ import iris.cube
 import iris.exceptions
 import numpy as np
 
+from CSET._common import iter_maybe
+
 
 def apply_mask(
     original_field: iris.cube.Cube,
@@ -140,26 +142,28 @@ def filter_multiple_cubes(
 
 
 def generate_mask(
-    mask_field: iris.cube.Cube,
+    mask_field: iris.cube.Cube | iris.cube.CubeList,
     condition: str,
     value: float,
-) -> iris.cube.Cube:
+) -> iris.cube.Cube | iris.cube.CubeList:
     """Generate a mask to remove data not meeting conditions.
 
     Parameters
     ----------
-    mask_field: iris.cube.Cube
-        The field to be used for creating the mask.
+    mask_field: iris.cube.Cube | iris.cube.CubeList
+        The field(s) to be used for creating the mask.
     condition: str
         The type of condition applied, six available options:
-        '==','!=','<','<=','>', and '>='.
+        '==','!=','<','<=','>', and '>='. The condition is consistent
+        regardless of whether mask_field is a cube or CubeList.
     value: float
-        The value on the right hand side of the condition.
+        The value on the right hand side of the condition. The value is
+        consistent regardless of whether mask_field is a cube or CubeList.
 
     Returns
     -------
-    mask: iris.cube.Cube
-        Mask meeting the condition applied.
+    mask: iris.cube.Cube | iris.cube.CubeList
+        Mask(s) meeting the condition applied.
 
     Raises
     ------
@@ -182,23 +186,32 @@ def generate_mask(
     --------
     >>> land_mask = generate_mask(land_sea_mask,'==',1)
     """
-    mask = mask_field.copy()
-    mask.data = np.zeros(mask.data.shape)
-    match condition:
-        case "==":
-            mask.data[mask_field.data == value] = 1
-        case "!=":
-            mask.data[mask_field.data != value] = 1
-        case ">":
-            mask.data[mask_field.data > value] = 1
-        case ">=":
-            mask.data[mask_field.data >= value] = 1
-        case "<":
-            mask.data[mask_field.data < value] = 1
-        case "<=":
-            mask.data[mask_field.data <= value] = 1
-        case _:
-            raise ValueError("""Unexpected value for condition. Expected ==, !=,
-                              >, >=, <, <=. Got {condition}.""")
-    mask.attributes["mask"] = f"mask_for_{mask_field.name()}_{condition}_{value}"
-    return mask
+    mask_list = iris.cube.CubeList([])
+    for cube in iter_maybe(mask_field):
+        mask = cube.copy()
+        mask.data[:] = 0.0
+        match condition:
+            case "==":
+                mask.data[cube.data == value] = 1
+            case "!=":
+                mask.data[cube.data != value] = 1
+            case ">":
+                mask.data[cube.data > value] = 1
+            case ">=":
+                mask.data[cube.data >= value] = 1
+            case "<":
+                mask.data[cube.data < value] = 1
+            case "<=":
+                mask.data[cube.data <= value] = 1
+            case _:
+                raise ValueError("""Unexpected value for condition. Expected ==, !=,
+                                  >, >=, <, <=. Got {condition}.""")
+        mask.attributes["mask"] = f"mask_for_{cube.name()}_{condition}_{value}"
+        mask.rename(f"mask_for_{cube.name()}_{condition}_{value}")
+        mask.units = "1"
+        mask_list.append(mask)
+
+    if len(mask_list) == 1:
+        return mask_list[0]
+    else:
+        return mask_list

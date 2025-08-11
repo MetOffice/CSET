@@ -39,11 +39,10 @@ def test_read_cubes():
         assert repr(cube) in expected_cubes
 
 
-def test_read_cubes_no_cubes_warning():
-    """Warning emitted when constraint gives no cubes."""
-    with pytest.warns(UserWarning, match="No cubes loaded"):
-        cubes = read.read_cubes("tests/test_data/air_temp.nc", "non-existent")
-    assert len(cubes) == 0
+def test_read_cubes_no_cubes_exception():
+    """Exception raised when constraint gives no cubes."""
+    with pytest.raises(read.NoDataError):
+        read.read_cubes("tests/test_data/air_temp.nc", "non-existent")
 
 
 def test_read_cubes_ensemble_with_realization_coord():
