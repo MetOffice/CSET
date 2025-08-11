@@ -14,6 +14,7 @@
 
 """Test filter operators."""
 
+import cf_units
 import iris.cube
 import numpy as np
 import pytest
