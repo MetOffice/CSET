@@ -79,6 +79,7 @@ def test_regrid_onto_xyspacing_cubes(regrid_source_cube):
         cubelist_to_regrid, xspacing=0.5, yspacing=0.5, method="Linear"
     )
     # Check it regridded correctly.
+    # Input cube grid lats in range: -1 to 6.95; Input grid lons: 392. to 400.
     assert len(regridded_cubes) == 2
     for cube in regridded_cubes:
         lat_name, lon_name = _utils.get_cube_yxcoordname(cube)
@@ -86,8 +87,8 @@ def test_regrid_onto_xyspacing_cubes(regrid_source_cube):
         lon_coord = cube.coord(lon_name)
         # Inclusive interval from -1.0 to 6.5 in steps of 0.5.
         assert (lat_coord.points == [x / 10.0 for x in range(-10, 70, 5)]).all()
-        # Inclusive interval from 32.0 to 39.5 in steps of 0.5.
-        assert (lon_coord.points == [x / 10.0 for x in range(320, 400, 5)]).all()
+        # Inclusive interval from 392.0 to 399.5 in steps of 0.5.
+        assert (lon_coord.points == [x / 10.0 for x in range(3920, 3996, 5)]).all()
 
 
 def test_regrid_onto_cube_unknown_crs(regrid_source_cube, regrid_test_cube):
@@ -169,14 +170,33 @@ def test_regrid_onto_xyspacing_unknown_method(regrid_source_cube):
         )
 
 
+def test_regrid_to_single_point(cube):
+    """Test extracting a single point.
+
+    Input test cube is defined on rotated grid lon [354.94, 363.04], lat [-3.72, 7.04]
+    Test that the grid latitude rotation works without grid_longitude callback.
+    """
+    regrid_cube = regrid.regrid_to_single_point(
+        cube, 0.5, -1.5, "rotated", "Nearest", boundary_margin=1
+    )
+    lat_name, lon_name = _utils.get_cube_yxcoordname(regrid_cube)
+    lat_coord = regrid_cube.coord(lat_name)
+    lon_coord = regrid_cube.coord(lon_name)
+    assert lat_coord.shape == (1,)
+    assert lon_coord.shape == (1,)
+    assert lat_coord.points[0] == 0.5
+    assert lon_coord.points[0] == -1.5
+
+
 def test_regrid_to_single_point_east(cube):
     """Test extracting a single point.
 
+    Input test cube is defined on rotated grid lon [354.94, 363.04], lat [-3.72, 7.04]
     Test that the grid latitude rotation works when the
     centre of the grid is too far east (that is, the centre
     of the longitude range is further east than 180 deg).
     """
-    cube_fix = read._longitude_fix_callback(cube)
+    cube_fix = read._grid_longitude_fix_callback(cube)
     regrid_cube = regrid.regrid_to_single_point(
         cube_fix, 0.5, -1.5, "rotated", "Nearest", boundary_margin=1
     )
@@ -199,7 +219,7 @@ def test_regrid_to_single_point_west(cube):
     long_coord = cube.coord("grid_longitude").points.copy()
     long_coord -= 720.0
     cube.coord("grid_longitude").points = long_coord
-    cube_fix = read._longitude_fix_callback(cube)
+    cube_fix = read._grid_longitude_fix_callback(cube)
     regrid_cube = regrid.regrid_to_single_point(
         cube_fix, 0.5, -1.5, "rotated", "Nearest", boundary_margin=1
     )
@@ -255,10 +275,10 @@ def test_regrid_to_single_point_realworld(cube):
 
     Test that, if a real world coordinate is specified, the code is
     mapping this point correctly onto the rotated grid.
+    Note this test does not require longitude inputs within range +/- 180.
     """
-    cube_fix = read._longitude_fix_callback(cube)
     regrid_cube = regrid.regrid_to_single_point(
-        cube_fix, 52.98, -5.0, "realworld", "Nearest", boundary_margin=1
+        cube, 52.98, -5.0, "realworld", "Nearest", boundary_margin=1
     )
     expected_array = "array(288.59375, dtype=float32)"
     assert repr(regrid_cube[0].data) == expected_array
@@ -269,10 +289,10 @@ def test_regrid_to_single_point_rotated(cube):
 
     Test that, if a rotated coordinate is specified, the answer
     matches the corresponding coordinate on the real world grid.
+    Note this test does not require longitude inputs within range +/- 180.
     """
-    cube_fix = read._longitude_fix_callback(cube)
     regrid_cube = regrid.regrid_to_single_point(
-        cube_fix, 0.5, -1.5, "rotated", "Nearest", boundary_margin=1
+        cube, 0.5, -1.5, "rotated", "Nearest", boundary_margin=1
     )
     expected_array = "array(288.59375, dtype=float32)"
     assert repr(regrid_cube[0].data) == expected_array
@@ -300,13 +320,13 @@ def test_longitude_fix_callback_missing_coord(cube):
     # Missing X coordinate.
     source = cube.copy()
     source.remove_coord("grid_longitude")
-    cube_fix = read._longitude_fix_callback(source.copy())
+    cube_fix = read._grid_longitude_fix_callback(source.copy())
     assert cube_fix == source
 
     # Missing Y coordinate.
     source = cube.copy()
     source.remove_coord("grid_latitude")
-    cube_fix = read._longitude_fix_callback(source.copy())
+    cube_fix = read._grid_longitude_fix_callback(source.copy())
     assert cube_fix == source
 
 
