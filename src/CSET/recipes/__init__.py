@@ -17,15 +17,10 @@
 import importlib.resources
 import logging
 import sys
-import warnings
 from collections.abc import Iterable
 from pathlib import Path
 
 from ruamel.yaml import YAML
-
-
-class FileExistsWarning(UserWarning):
-    """Warning a file already exists, and some unusual action shall be taken."""
 
 
 def _version_agnostic_importlib_resources_file() -> Path:
@@ -58,7 +53,7 @@ def _recipe_files_in_tree(
             yield from _recipe_files_in_tree(recipe_name, file)
 
 
-def _get_recipe_file(recipe_name: str, input_dir: Path = None) -> Path:
+def _get_recipe_file(recipe_name: str, input_dir: Path | None = None) -> Path:
     """Return a Path to the recipe file."""
     if input_dir is None:
         input_dir = _version_agnostic_importlib_resources_file()
@@ -94,11 +89,7 @@ def unpack_recipe(recipe_dir: Path, recipe_name: str) -> None:
     output_file = recipe_dir / file.name
     logging.debug("Saving recipe to %s", output_file)
     if output_file.exists():
-        warnings.warn(
-            f"{file.name} already exists in target directory, skipping.",
-            FileExistsWarning,
-            stacklevel=2,
-        )
+        logging.info("%s already exists in target directory, skipping.", file.name)
         return
     logging.info("Unpacking %s to %s", file.name, output_file)
     output_file.write_bytes(file.read_bytes())
