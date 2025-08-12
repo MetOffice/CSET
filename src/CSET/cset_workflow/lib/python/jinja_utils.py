@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2025) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 
 """Useful functions for the workflow."""
 
+import base64
 import json
 from builtins import max, min, zip
 from glob import glob
@@ -94,3 +95,13 @@ def sanitise_task_name(s: str) -> str:
     if s.lower().startswith("_cylc"):
         s = f"sanitised_{s}"
     return s
+
+
+def b64json(d: dict | list) -> str:
+    """Encode an object as base64 encoded JSON for transport though cylc."""
+    new_d = d.copy()
+    if isinstance(new_d, dict):
+        # Remove circular reference to ROSE_SUITE_VARIABLES.
+        new_d.pop("ROSE_SUITE_VARIABLES", None)
+    output = base64.b64encode(json.dumps(new_d).encode()).decode()
+    return output
