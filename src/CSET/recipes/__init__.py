@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2025) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ def _version_agnostic_importlib_resources_file() -> Path:
 
 
 def _recipe_files_in_tree(
-    recipe_name: str = None, input_dir: Path = None
+    recipe_name: str | None = None, input_dir: Path | None = None
 ) -> Iterable[Path]:
     """Yield recipe file Paths matching the recipe name."""
     if recipe_name is None:
