@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Construct all the recipes."""
+"""Load spatial field recipes."""
 
 import itertools
 from collections.abc import Generator
