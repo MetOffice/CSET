@@ -316,7 +316,7 @@ def test_colorbar_map_axis_mask(cube, tmp_working_dir):
 def test_colorbar_map_axis_mask_difference(cube, tmp_working_dir):
     """Test to ensure axis picks up correct levels when mask difference defined."""
     cube.rename(f"mask_for_{cube.name()}_difference")
-    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="y")
+    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="x")
     assert cmap is None
     assert levels == [-1, 1]
     assert norm is None
