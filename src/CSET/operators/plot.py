@@ -2072,7 +2072,6 @@ def _calculate_CFAD(
         CFAD_values,
         dim_coords_and_dims=[(vert_coord, 0), (bin_coord, 1)],
         long_name=f"{cube.name()}_cfad",
-        standard_name=cube.standard_name,
         units="1",
     )
     CFAD.rename(f"{cube.name()}_cfad")
