@@ -21,7 +21,7 @@ import warnings
 from collections.abc import Iterable
 from pathlib import Path
 
-import ruamel.yaml
+from ruamel.yaml import YAML
 
 
 class FileExistsWarning(UserWarning):
@@ -122,7 +122,7 @@ def detail_recipe(recipe_name: str) -> None:
         Partial match for the recipe name.
     """
     for file in _recipe_files_in_tree(recipe_name):
-        with ruamel.yaml.YAML(typ="safe", pure=True) as yaml:
+        with YAML(typ="safe", pure=True) as yaml:
             recipe = yaml.load(file)
         print(f"\n\t{file.name}\n\t{''.join('─' * len(file.name))}\n")
         print(recipe.get("description"))
