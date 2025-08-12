@@ -187,6 +187,22 @@ def test_replace_template_variable_missing():
         common.replace_template_variable("$VAR", {})
 
 
+def test_replace_template_variable_path():
+    """Paths are handled specially."""
+    variables = {"VAR": Path("/dev/null")}
+    expected = "/dev/null"
+    actual = common.replace_template_variable("$VAR", variables)
+    assert actual == expected
+
+
+def test_replace_template_variable_path_list():
+    """Lists of Paths are handled specially."""
+    variables = {"VAR": [Path("/dev/null")]}
+    expected = ["/dev/null"]
+    actual = common.replace_template_variable("$VAR", variables)
+    assert actual == expected
+
+
 def test_get_recipe_meta(tmp_working_dir):
     """Reading metadata from disk."""
     # Default for missing file.
