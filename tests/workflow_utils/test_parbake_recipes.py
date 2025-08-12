@@ -14,12 +14,12 @@
 
 """Tests for parbake_recipe workflow utility."""
 
-from collections import defaultdict
 from pathlib import Path
 
 import pytest
 
 import CSET.cset_workflow.app.parbake_recipes.bin.parbake as parbake
+import CSET.recipes
 
 
 def test_main(monkeypatch):
@@ -53,52 +53,73 @@ def test_main(monkeypatch):
 
 
 def test_parbake_all_none_enabled(tmp_working_dir):
-    """Error when no recipes are enabled."""
+    """Error when no recipes are enabled.
+
+    This also tests that all loaders don't error and return no recipes when
+    variables are undefined.
+    """
+    # Non-aggregation recipes.
+    with pytest.raises(ValueError, match="At least one recipe should be enabled."):
+        parbake.parbake_all({}, tmp_working_dir, tmp_working_dir, False)
+    # Aggregation recipes.
+    with pytest.raises(ValueError, match="At least one recipe should be enabled."):
+        parbake.parbake_all({}, tmp_working_dir, tmp_working_dir, True)
+
+
+def test_parbake_all_missing_load_func(tmp_working_dir, monkeypatch):
+    """Error when loader doesn't provide a load() function."""
+    # Parbake module does not have a load() function.
+    monkeypatch.setattr(CSET.recipes, "loader_test", parbake)
+    with pytest.raises(
+        AttributeError,
+        match="CSET.recipes.loader_test should provide a `load` function.",
+    ):
+        parbake.parbake_all({}, tmp_working_dir, tmp_working_dir, False)
+
+
+def test_parbake_all(tmp_working_dir, monkeypatch):
+    """Recipes are correctly loaded and parbake called."""
     share_dir = tmp_working_dir / "share"
     rose_datac = share_dir / "cycle/20000101T0000Z"
+    variables = {"TESTING_RECIPE": True}
     aggregation = False
-    # Defaults non-existent keys to an empty list for testing, as it evaluates
-    # to False and can be iterated over.
-    variables = defaultdict(lambda: [], {})
-    with pytest.raises(ValueError, match="At least one recipe should be enabled."):
-        parbake.parbake_all(variables, rose_datac, share_dir, aggregation)
+    # Counter for number of times parbake was called.
+    recipes_parbaked = 0
+
+    def mock_parbake(self: CSET.recipes.RawRecipe, ROSE_DATAC: Path, SHARE_DIR: Path):
+        nonlocal recipes_parbaked
+        recipes_parbaked += 1
+        assert SHARE_DIR == share_dir
+        assert ROSE_DATAC == rose_datac
+        assert self.aggregation is aggregation
+        assert self.recipe == "test.yaml"
+        assert self.model_ids == [1]
+        assert self.variables == {}
+
+    monkeypatch.setattr(CSET.recipes.RawRecipe, "parbake", mock_parbake)
+    parbake.parbake_all(variables, rose_datac, share_dir, aggregation)
+    assert recipes_parbaked == 1
 
 
-# def test_parbake_all(tmp_working_dir):
-#     """Recipes are correctly loaded, parbaked, and written to disk."""
-#     share_dir = tmp_working_dir / "share"
-#     rose_datac = share_dir / "cycle/20000101T0000Z"
-#     aggregation = False
-#     # Defaults non-existent keys to an empty list for testing, as it evaluates
-#     # to False and can be iterated over.
-#     variables = defaultdict(
-#         lambda: [],
-#         {
-#             "SPATIAL_SURFACE_FIELD": True,
-#             "SURFACE_FIELDS": ["air_temperature"],
-#             "SPATIAL_SURFACE_FIELD_METHOD": ["MEAN"],
-#             "m1_name": "foo",
-#         },
-#     )
-#     parbake.parbake_all(variables, rose_datac, share_dir, aggregation)
+def test_parbake_all_aggregate(tmp_working_dir, monkeypatch):
+    """Aggregation recipes are correctly loaded and parbake called."""
+    share_dir = tmp_working_dir / "share"
+    rose_datac = share_dir / "cycle/20000101T0000Z"
+    variables = {"TESTING_RECIPE": True}
+    aggregation = True
+    # Counter for number of times parbake was called.
+    recipes_parbaked = 0
 
-#     # Check recipes directory is created.
-#     assert (rose_datac / "recipes").is_dir()
+    def mock_parbake(self: CSET.recipes.RawRecipe, ROSE_DATAC: Path, SHARE_DIR: Path):
+        nonlocal recipes_parbaked
+        recipes_parbaked += 1
+        assert SHARE_DIR == share_dir
+        assert ROSE_DATAC == rose_datac
+        assert self.aggregation is aggregation
+        assert self.recipe == "test.yaml"
+        assert self.model_ids == [1]
+        assert self.variables == {}
 
-#     raise NotImplementedError
-
-
-# def test_parbake_all_aggregate(tmp_working_dir):
-#     """Aggregation recipes are correctly loaded, parbaked, and written to disk."""
-#     share_dir = tmp_working_dir / "share"
-#     rose_datac = share_dir / "cycle/20000101T0000Z"
-#     aggregation = True
-#     # TODO: Add some variables.
-#     variables = {}
-
-#     parbake.parbake_all(variables, rose_datac, share_dir, aggregation)
-
-#     # Check recipes directory is created.
-#     assert (rose_datac / "aggregation_recipes").is_dir()
-
-#     raise NotImplementedError
+    monkeypatch.setattr(CSET.recipes.RawRecipe, "parbake", mock_parbake)
+    parbake.parbake_all(variables, rose_datac, share_dir, aggregation)
+    assert recipes_parbaked == 1
