@@ -40,7 +40,9 @@ def test_unpack_recipes(tmp_path: Path, caplog):
     assert (tmp_path / "CAPE_ratio_plot.yaml").is_file()
     with caplog.at_level("INFO"):
         recipes.unpack_recipe(tmp_path, "CAPE_ratio_plot.yaml")
-    _, level, message = caplog.record_tuples[0]
+    _, level, message = next(
+        filter(lambda r: "already exists" in r[2], caplog.record_tuples)
+    )
     assert level == logging.INFO
     assert (
         message == "CAPE_ratio_plot.yaml already exists in target directory, skipping."
