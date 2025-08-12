@@ -284,6 +284,42 @@ def test_setup_spatial_map_global(cube):
     assert bounds[1] == np.max(cube.coord("longitude").points) - 180.0
     assert bounds[2] == np.min(cube.coord("latitude").points)
     assert bounds[3] == np.max(cube.coord("latitude").points)
+def test_colorbar_map_mask(cube, tmp_working_dir):
+    """Test to ensure axis picks up correct colormap for a mask."""
+    cube.rename(f"mask_for_{cube.name()}")
+    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    assert cmap == mpl.colors.ListedColormap(["w", "dodgerblue"])
+    assert levels == [0, 1, 2]
+    assert isinstance(norm, mpl.colors.BoundaryNorm)
+    assert (norm.boundaries == levels).all()
+
+
+def test_colorbar_map_mask_difference(cube, tmp_working_dir):
+    """Test to ensure axis picks up correct colormap for a mask difference."""
+    cube.rename(f"mask_for_{cube.name()}_difference")
+    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    assert cmap == mpl.colors.ListedColormap(["goldenrod", "w", "teal"])
+    assert levels == [-2, -1, 1, 2]
+    assert isinstance(norm, mpl.colors.BoundaryNorm)
+    assert (norm.boundaries == levels).all()
+
+
+def test_colorbar_map_axis_mask(cube, tmp_working_dir):
+    """Test to ensure axis picks up correct levels when mask defined."""
+    cube.rename(f"mask_for_{cube.name()}")
+    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="y")
+    assert cmap is None
+    assert levels == [0, 1]
+    assert norm is None
+
+
+def test_colorbar_map_axis_mask_difference(cube, tmp_working_dir):
+    """Test to ensure axis picks up correct levels when mask difference defined."""
+    cube.rename(f"mask_for_{cube.name()}_difference")
+    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="y")
+    assert cmap is None
+    assert levels == [-1, 1]
+    assert norm is None
 
 
 def test_spatial_contour_plot(cube, tmp_working_dir):

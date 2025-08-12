@@ -225,7 +225,8 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
     combination of the built-in CSET colorbar definitions, and any user supplied
     definitions. As well as varying on variables, these definitions may also
     exist for specific pressure levels to account for variables with
-    significantly different ranges at different heights.
+    significantly different ranges at different heights. The colorbars also exist
+    for masks and mask differences for considering variable presence diagnostics.
     Specific variable ranges can be separately set in user-supplied definition
     for x- or y-axis limits, or indicate where automated range preferred.
 
