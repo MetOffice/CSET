@@ -34,17 +34,22 @@ else:
 
 
 def make_script_executable(p: Path):
-    """Make scripts (starting with a shebang) executable."""
+    """Make a script file (starting with a shebang) executable."""
     if p.is_file():
-        with open(p, "rb") as fd:
-            shebang = fd.read(14)
+        try:
+            with open(p, "rb") as fd:
+                shebang = fd.read(14)
+        except PermissionError:
+            # Skip files that can't be read.
+            logger.debug("Unreadable file: %s", p)
+            return
         # Assume the first 14 bytes of a script are #!/usr/bin/env
         if shebang == b"#!/usr/bin/env":
             logger.debug("Changing file mode to executable: %s", p)
             mode = p.stat().st_mode
-            # Make executable by all who can read.
-            if mode & stat.S_IRUSR:
-                mode |= stat.S_IXUSR
+            # User must be able to read if we read the file.
+            mode |= stat.S_IXUSR
+            # Make executable by group and/or others if they can read.
             if mode & stat.S_IRGRP:
                 mode |= stat.S_IXGRP
             if mode & stat.S_IROTH:

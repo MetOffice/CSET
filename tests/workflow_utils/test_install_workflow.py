@@ -51,6 +51,17 @@ def test_make_script_executable_script(tmp_path):
         and not (mode & stat.S_IXOTH)
     )
 
+    # Mode is unreadable.
+    f.chmod(mode=0)
+    extract_workflow.make_script_executable(f)
+    # Check that no one can execute.
+    mode = f.stat().st_mode
+    assert (
+        not (mode & stat.S_IXUSR)
+        and not (mode & stat.S_IXGRP)
+        and not (mode & stat.S_IXOTH)
+    )
+
 
 def test_make_script_executable_not_script(tmp_path):
     """Non-script files are not made executable."""
@@ -59,10 +70,29 @@ def test_make_script_executable_not_script(tmp_path):
     f.touch(mode=stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
     f.write_text("Not a script file.")
     extract_workflow.make_script_executable(f)
+    # Check that no one can execute.
     mode = f.stat().st_mode
     assert (
         not (mode & stat.S_IXUSR)
         and not (mode & stat.S_IXGRP)
+        and not (mode & stat.S_IXOTH)
+    )
+
+
+def test_make_script_executable_not_file(tmp_path):
+    """Non-files are not made executable."""
+    d = tmp_path / "dir"
+    d.mkdir(mode=0o500)
+    extract_workflow.make_script_executable(d)
+    assert d.is_dir()
+    # Check mode is unchanged.
+    mode = d.stat().st_mode
+    assert (
+        (mode & stat.S_IRUSR)
+        and (mode & stat.S_IXUSR)
+        and not (mode & stat.S_IRGRP)
+        and not (mode & stat.S_IXGRP)
+        and not (mode & stat.S_IROTH)
         and not (mode & stat.S_IXOTH)
     )
 
