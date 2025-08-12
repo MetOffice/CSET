@@ -147,6 +147,30 @@ def test_parse_variable_options_quoted():
     assert actual == expected
 
 
+def test_parse_variable_options_input_dir_conversion():
+    """--input-dir argument is converted to --INPUT_PATHS recipe variable."""
+    p = str(Path("foo").absolute())
+    expected = (p, [p])
+
+    # Check --input-dir is converted.
+    input_dir = "foo"
+    unparsed_args = []
+    variables = common.parse_variable_options(
+        arguments=unparsed_args, input_dir=input_dir
+    )
+    assert "INPUT_PATHS" in variables
+    assert variables["INPUT_PATHS"] in expected
+
+    # Check --INPUT_PATHS is directly used.
+    input_dir = None
+    unparsed_args = ["--INPUT_PATHS", p]
+    variables = common.parse_variable_options(
+        arguments=unparsed_args, input_dir=input_dir
+    )
+    assert "INPUT_PATHS" in variables
+    assert variables["INPUT_PATHS"] in expected
+
+
 def test_template_variables():
     """Multiple variables are correctly templated into recipe."""
     recipe = {
