@@ -17,17 +17,17 @@ URL = https://metoffice.github.io/CSET
 [scheduling]
 # Initial and final cycle points cover the entire period of interest.
 {% if CSET_CYCLING_MODE == "case_study" %}
-    initial cycle point = {{ CSET_CASE_DATES|min }}
-    final cycle point = {{ CSET_CASE_DATES|max }}
+initial cycle point = {{ CSET_CASE_DATES|min }}
+final cycle point = {{ CSET_CASE_DATES|max }}
 {% elif CSET_CYCLING_MODE == "trial" %}
-    initial cycle point = {{CSET_TRIAL_START_DATE}}
-    final cycle point = {{CSET_TRIAL_END_DATE}}
+initial cycle point = {{CSET_TRIAL_START_DATE}}
+final cycle point = {{CSET_TRIAL_END_DATE}}
 {% endif %}
 
     [[special tasks]]
-        # cycle_complete depends on its previous instance. We then don't need to
-        # know the offset between the cycles.
-        sequential = cycle_complete
+    # cycle_complete depends on its previous instance. We then don't need to
+    # know the offset between the cycles.
+    sequential = cycle_complete
 
     [[graph]]
     # Only runs on the first cycle.
@@ -48,7 +48,7 @@ URL = https://metoffice.github.io/CSET
             """
         {% endfor %}
     {% elif CSET_CYCLING_MODE == "trial" %}
-        # Analyse from each forecast.
+        # Analysis from each forecast.
         {{CSET_TRIAL_CYCLE_PERIOD}} = """
         setup_complete[^] =>
         FETCH_DATA:succeed-all =>
@@ -61,13 +61,13 @@ URL = https://metoffice.github.io/CSET
     # Can only run tasks on final cycle point if it exists, so skip for
     # continuous trials.
     {% if CSET_CYCLING_MODE != "trial" or CSET_TRIAL_END_DATE|default(False) %}
-        # Only runs on the final cycle.
-        R1/$ = """
-        cycle_complete =>
-        PROCESS_CASE_AGGREGATION:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} =>
-        finish_website => send_email
-        finish_website => housekeeping
-        """
+    # Only runs on the final cycle.
+    R1/$ = """
+    cycle_complete =>
+    PROCESS_CASE_AGGREGATION:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} =>
+    finish_website => send_email
+    finish_website => housekeeping
+    """
     {% endif %}
 
 
@@ -186,7 +186,7 @@ URL = https://metoffice.github.io/CSET
     {% endfor %}
 
     [[housekeeping]]
-    # Housekeep unprocessed data files and processed intermediate files.
+    # Housekeep input data files.
         [[[environment]]]
         HOUSEKEEPING_MODE = {{HOUSEKEEPING_MODE}}
 
@@ -195,7 +195,6 @@ URL = https://metoffice.github.io/CSET
 
     [[send_email]]
     # Send email to notify that the workflow is complete.
-    platform = localhost
         [[[environment]]]
         WEB_ADDR = {{WEB_ADDR}}
         WEB_DIR = {{WEB_DIR}}
@@ -205,5 +204,5 @@ URL = https://metoffice.github.io/CSET
 {% include include_file %}
 {% endfor %}
 
-{# Site-specific details that add to (or override) the core suite definition #}
+# Site-specific details that add to or override the core workflow definition.
 {% include 'site/' ~ SITE ~ '.cylc' %}
