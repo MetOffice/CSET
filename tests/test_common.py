@@ -162,23 +162,27 @@ def test_template_variables():
 def test_template_variables_wrong_recipe_type():
     """Give wrong type for recipe."""
     with pytest.raises(TypeError):
-        common.template_variables(1, {})
+        common.template_variables(1, {})  # type: ignore
 
 
-def test_replace_template_variable():
+def test_replace_template_variable_substitution():
     """Placeholders are correctly substituted."""
-    # Test direct substitution.
-    vars = {"VAR": 1}
+    variables = {"VAR": 1}
     expected = 1
-    actual = common.replace_template_variable("$VAR", vars)
+    actual = common.replace_template_variable("$VAR", variables)
     assert actual == expected
 
-    # Insertion into a larger string.
+
+def test_replace_template_variable_insertion():
+    """Insertion into a larger string."""
+    variables = {"VAR": 1}
     expected = "The number 1"
-    actual = common.replace_template_variable("The number $VAR", vars)
+    actual = common.replace_template_variable("The number $VAR", variables)
     assert actual == expected
 
-    # Error when variable not provided.
+
+def test_replace_template_variable_missing():
+    """Error when variable not provided."""
     with pytest.raises(KeyError):
         common.replace_template_variable("$VAR", {})
 
