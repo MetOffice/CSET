@@ -15,21 +15,19 @@
 """Load spatial field recipes."""
 
 import itertools
-from collections.abc import Generator
-from typing import Any
 
-from CSET.recipes import RawRecipe, get_models
+from CSET.recipes import Config, RawRecipe, get_models
 
 
-def load(v: dict[str, Any]) -> Generator[RawRecipe]:
-    """Yield recipes from the given suite configuration."""
+def load(conf: Config):
+    """Yield recipes from the given workflow configuration."""
     # Load a list of model detail dictionaries.
-    models = get_models(v)
+    models = get_models(conf.asdict())
 
     # Surface (2D) fields.
-    if v["SPATIAL_SURFACE_FIELD"]:
+    if conf.SPATIAL_SURFACE_FIELD:
         for model, field, method in itertools.product(
-            models, v["SURFACE_FIELDS"], v["SPATIAL_SURFACE_FIELD_METHOD"]
+            models, conf.SURFACE_FIELDS, conf.SPATIAL_SURFACE_FIELD_METHOD
         ):
             yield RawRecipe(
                 recipe="generic_surface_spatial_plot_sequence.yaml",
@@ -38,21 +36,21 @@ def load(v: dict[str, Any]) -> Generator[RawRecipe]:
                     "VARNAME": field,
                     "MODEL_NAME": model["name"],
                     "METHOD": method,
-                    "SUBAREA_TYPE": v["SUBAREA_TYPE"] if v["SELECT_SUBAREA"] else None,
-                    "SUBAREA_EXTENT": v["SUBAREA_EXTENT"]
-                    if v["SELECT_SUBAREA"]
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
                     else None,
                 },
                 aggregation=False,
             )
 
     # Pressure level fields.
-    if v["SPATIAL_PLEVEL_FIELD"]:
+    if conf.SPATIAL_PLEVEL_FIELD:
         for model, field, plevel, method in itertools.product(
             models,
-            v["PRESSURE_LEVEL_FIELDS"],
-            v["PRESSURE_LEVELS"],
-            v["SPATIAL_PLEVEL_FIELD_METHOD"],
+            conf.PRESSURE_LEVEL_FIELDS,
+            conf.PRESSURE_LEVELS,
+            conf.SPATIAL_PLEVEL_FIELD_METHOD,
         ):
             yield RawRecipe(
                 recipe="generic_level_spatial_plot_sequence.yaml",
@@ -62,9 +60,9 @@ def load(v: dict[str, Any]) -> Generator[RawRecipe]:
                     "LEVEL": plevel,
                     "MODEL_NAME": model["name"],
                     "METHOD": method,
-                    "SUBAREA_TYPE": v["SUBAREA_TYPE"] if v["SELECT_SUBAREA"] else None,
-                    "SUBAREA_EXTENT": v["SUBAREA_EXTENT"]
-                    if v["SELECT_SUBAREA"]
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
                     else None,
                 },
                 model_ids=model["id"],
@@ -72,12 +70,12 @@ def load(v: dict[str, Any]) -> Generator[RawRecipe]:
             )
 
     # Model level fields
-    if v["SPATIAL_MLEVEL_FIELD"]:
+    if conf.SPATIAL_MLEVEL_FIELD:
         for model, field, mlevel, method in itertools.product(
             models,
-            v["MODEL_LEVEL_FIELDS"],
-            v["MODEL_LEVELS"],
-            v["SPATIAL_MLEVEL_FIELD_METHOD"],
+            conf.MODEL_LEVEL_FIELDS,
+            conf.MODEL_LEVELS,
+            conf.SPATIAL_MLEVEL_FIELD_METHOD,
         ):
             yield RawRecipe(
                 recipe="generic_level_spatial_plot_sequence.yaml",
@@ -87,9 +85,9 @@ def load(v: dict[str, Any]) -> Generator[RawRecipe]:
                     "LEVEL": mlevel,
                     "MODEL_NAME": model["name"],
                     "METHOD": method,
-                    "SUBAREA_TYPE": v["SUBAREA_TYPE"] if v["SELECT_SUBAREA"] else None,
-                    "SUBAREA_EXTENT": v["SUBAREA_EXTENT"]
-                    if v["SELECT_SUBAREA"]
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
                     else None,
                 },
                 model_ids=model["id"],
@@ -97,9 +95,9 @@ def load(v: dict[str, Any]) -> Generator[RawRecipe]:
             )
 
     # Rain presence
-    if v["RAIN_PRESENCE_SPATIAL_PLOT"]:
+    if conf.RAIN_PRESENCE_SPATIAL_PLOT:
         for model, field, method in itertools.product(
-            models, v["SURFACE_FIELDS"], v["SPATIAL_SURFACE_FIELD_METHOD"]
+            models, conf.SURFACE_FIELDS, conf.SPATIAL_SURFACE_FIELD_METHOD
         ):
             yield RawRecipe(
                 recipe="rain_presence_spatial_plot.yaml",
@@ -108,9 +106,9 @@ def load(v: dict[str, Any]) -> Generator[RawRecipe]:
                     "VARNAME": field,
                     "MODEL_NAME": model["name"],
                     "METHOD": method,
-                    "SUBAREA_TYPE": v["SUBAREA_TYPE"] if v["SELECT_SUBAREA"] else None,
-                    "SUBAREA_EXTENT": v["SUBAREA_EXTENT"]
-                    if v["SELECT_SUBAREA"]
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
                     else None,
                 },
                 aggregation=False,
@@ -121,17 +119,17 @@ def load(v: dict[str, Any]) -> Generator[RawRecipe]:
 
     # Surface (2D) fields.
     for model, atype, field in itertools.product(
-        models, AGGREGATION_TYPES, v["SURFACE_FIELDS"]
+        models, AGGREGATION_TYPES, conf.SURFACE_FIELDS
     ):
-        if v["SPATIAL_SURFACE_FIELD_AGGREGATION"][AGGREGATION_TYPES.index(atype)]:
+        if conf.SPATIAL_SURFACE_FIELD_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
             yield RawRecipe(
                 recipe=f"generic_surface_spatial_plot_sequence_case_aggregation_mean_{atype}.yaml",
                 variables={
                     "VARNAME": field,
                     "MODEL_NAME": model["name"],
-                    "SUBAREA_TYPE": v["SUBAREA_TYPE"] if v["SELECT_SUBAREA"] else None,
-                    "SUBAREA_EXTENT": v["SUBAREA_EXTENT"]
-                    if v["SELECT_SUBAREA"]
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
                     else None,
                 },
                 model_ids=model["id"],
@@ -140,9 +138,9 @@ def load(v: dict[str, Any]) -> Generator[RawRecipe]:
 
     # Pressure level fields.
     for model, atype, field, plevel in itertools.product(
-        models, AGGREGATION_TYPES, v["PRESSURE_LEVEL_FIELDS"], v["PRESSURE_LEVELS"]
+        models, AGGREGATION_TYPES, conf.PRESSURE_LEVEL_FIELDS, conf.PRESSURE_LEVELS
     ):
-        if v["SPATIAL_PLEVEL_FIELD_AGGREGATION"][AGGREGATION_TYPES.index(atype)]:
+        if conf.SPATIAL_PLEVEL_FIELD_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
             yield RawRecipe(
                 recipe=f"generic_level_spatial_plot_sequence_case_aggregation_mean_{atype}.yaml",
                 variables={
@@ -150,9 +148,9 @@ def load(v: dict[str, Any]) -> Generator[RawRecipe]:
                     "LEVELTYPE": "pressure",
                     "LEVEL": plevel,
                     "MODEL_NAME": model["name"],
-                    "SUBAREA_TYPE": v["SUBAREA_TYPE"] if v["SELECT_SUBAREA"] else None,
-                    "SUBAREA_EXTENT": v["SUBAREA_EXTENT"]
-                    if v["SELECT_SUBAREA"]
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
                     else None,
                 },
                 model_ids=model["id"],
@@ -161,9 +159,9 @@ def load(v: dict[str, Any]) -> Generator[RawRecipe]:
 
     # Model level fields.
     for model, atype, field, mlevel in itertools.product(
-        models, AGGREGATION_TYPES, v["MODEL_LEVEL_FIELDS"], v["MODEL_LEVELS"]
+        models, AGGREGATION_TYPES, conf.MODEL_LEVEL_FIELDS, conf.MODEL_LEVELS
     ):
-        if v["SPATIAL_MLEVEL_FIELD_AGGREGATION"][AGGREGATION_TYPES.index(atype)]:
+        if conf.SPATIAL_MLEVEL_FIELD_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
             yield RawRecipe(
                 recipe=f"generic_level_spatial_plot_sequence_case_aggregation_mean_{atype}.yaml",
                 variables={
@@ -171,9 +169,9 @@ def load(v: dict[str, Any]) -> Generator[RawRecipe]:
                     "LEVELTYPE": "model_level_number",
                     "LEVEL": mlevel,
                     "MODEL_NAME": model["name"],
-                    "SUBAREA_TYPE": v["SUBAREA_TYPE"] if v["SELECT_SUBAREA"] else None,
-                    "SUBAREA_EXTENT": v["SUBAREA_EXTENT"]
-                    if v["SELECT_SUBAREA"]
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
                     else None,
                 },
                 model_ids=model["id"],
