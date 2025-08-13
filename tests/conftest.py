@@ -17,6 +17,8 @@
 https://docs.pytest.org/en/latest/reference/fixtures.html#conftest-py-sharing-fixtures-across-multiple-files
 """
 
+from pathlib import Path
+
 import iris.cube
 import pytest
 
@@ -24,7 +26,7 @@ from CSET.operators import constraints, filters, read
 
 
 @pytest.fixture()
-def tmp_working_dir(tmp_path, monkeypatch):
+def tmp_working_dir(tmp_path, monkeypatch) -> Path:
     """Change the working directory for a test."""
     monkeypatch.chdir(tmp_path)
     return tmp_path

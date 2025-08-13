@@ -21,6 +21,8 @@ import logging
 import re
 from collections.abc import Iterable
 from pathlib import Path
+from textwrap import dedent
+from typing import Any
 
 import ruamel.yaml
 
@@ -29,13 +31,15 @@ class ArgumentError(ValueError):
     """Provided arguments are not understood."""
 
 
-def parse_recipe(recipe_yaml: Path | str, variables: dict = None) -> dict:
+def parse_recipe(recipe_yaml: Path | str, variables: dict | None = None) -> dict:
     """Parse a recipe into a python dictionary.
 
     Parameters
     ----------
     recipe_yaml: Path | str
-        Path to recipe file, or the recipe YAML directly.
+        Path to a file containing, or a string of, a recipe's YAML describing
+        the operators that need running. If a Path is provided it is opened and
+        read.
     variables: dict
         Dictionary of recipe variables. If None templating is not attempted.
 
@@ -135,7 +139,9 @@ def get_recipe_metadata() -> dict:
         return {}
 
 
-def parse_variable_options(arguments: list[str]) -> dict:
+def parse_variable_options(
+    arguments: list[str], input_dir: str | list[str] | None = None
+) -> dict:
     """Parse a list of arguments into a dictionary of variables.
 
     The variable name arguments start with two hyphen-minus (`--`), consisting
@@ -146,6 +152,8 @@ def parse_variable_options(arguments: list[str]) -> dict:
     ----------
     arguments: list[str]
         List of arguments, e.g: `["--LEVEL", "2", "--STASH=m01s01i001"]`
+    input_dir: str | list[str], optional
+        List of input directories to add into the returned variables.
 
     Returns
     -------
@@ -157,6 +165,10 @@ def parse_variable_options(arguments: list[str]) -> dict:
     ValueError
         If any arguments cannot be parsed.
     """
+    # Convert --input_dir=... to INPUT_PATHS recipe variable.
+    if input_dir is not None:
+        abs_paths = [str(Path(p).absolute()) for p in iter_maybe(input_dir)]
+        arguments.append(f"--INPUT_PATHS={abs_paths}")
     recipe_variables = {}
     i = 0
     while i < len(arguments):
@@ -219,14 +231,25 @@ def template_variables(recipe: dict | list, variables: dict) -> dict:
     return recipe
 
 
-def replace_template_variable(s: str, variables):
+def replace_template_variable(s: str, variables: dict[str, Any]):
     """Fill all variable placeholders in the string."""
     for var_name, var_value in variables.items():
         placeholder = f"${var_name}"
         # If the value is just the placeholder we directly overwrite it
         # to keep the value type.
         if s == placeholder:
+            # Specially handle Paths and lists of Paths.
+            if isinstance(var_value, Path):
+                var_value = str(var_value)
+            if (
+                isinstance(var_value, list)
+                and var_value
+                and isinstance(var_value[0], Path)
+            ):
+                var_value = [str(p) for p in var_value]
             s = var_value
+            # We have replaced the whole string, so stop here to avoid
+            # interpreting the new value.
             break
         else:
             s = s.replace(placeholder, str(var_value))
@@ -371,3 +394,25 @@ def sort_dict(d: dict) -> dict:
         k: sort_dict(v) if isinstance(v, dict) else v
         for k, v in human_sorted(d.items())
     }
+
+
+def sstrip(text):
+    """Dedent and strip text.
+
+    Parameters
+    ----------
+    text: str
+        The string to strip.
+
+    Examples
+    --------
+    >>> print(sstrip('''
+    ...     foo
+    ...       bar
+    ...     baz
+    ... '''))
+    foo
+      bar
+    baz
+    """
+    return dedent(text).strip()

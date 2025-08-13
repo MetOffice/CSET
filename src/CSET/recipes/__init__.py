@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2025) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,15 +17,10 @@
 import importlib.resources
 import logging
 import sys
-import warnings
 from collections.abc import Iterable
 from pathlib import Path
 
-import ruamel.yaml
-
-
-class FileExistsWarning(UserWarning):
-    """Warning a file already exists, and some unusual action shall be taken."""
+from ruamel.yaml import YAML
 
 
 def _version_agnostic_importlib_resources_file() -> Path:
@@ -43,7 +38,7 @@ def _version_agnostic_importlib_resources_file() -> Path:
 
 
 def _recipe_files_in_tree(
-    recipe_name: str = None, input_dir: Path = None
+    recipe_name: str | None = None, input_dir: Path | None = None
 ) -> Iterable[Path]:
     """Yield recipe file Paths matching the recipe name."""
     if recipe_name is None:
@@ -58,7 +53,7 @@ def _recipe_files_in_tree(
             yield from _recipe_files_in_tree(recipe_name, file)
 
 
-def _get_recipe_file(recipe_name: str, input_dir: Path = None) -> Path:
+def _get_recipe_file(recipe_name: str, input_dir: Path | None = None) -> Path:
     """Return a Path to the recipe file."""
     if input_dir is None:
         input_dir = _version_agnostic_importlib_resources_file()
@@ -94,11 +89,7 @@ def unpack_recipe(recipe_dir: Path, recipe_name: str) -> None:
     output_file = recipe_dir / file.name
     logging.debug("Saving recipe to %s", output_file)
     if output_file.exists():
-        warnings.warn(
-            f"{file.name} already exists in target directory, skipping.",
-            FileExistsWarning,
-            stacklevel=2,
-        )
+        logging.info("%s already exists in target directory, skipping.", file.name)
         return
     logging.info("Unpacking %s to %s", file.name, output_file)
     output_file.write_bytes(file.read_bytes())
@@ -122,7 +113,7 @@ def detail_recipe(recipe_name: str) -> None:
         Partial match for the recipe name.
     """
     for file in _recipe_files_in_tree(recipe_name):
-        with ruamel.yaml.YAML(typ="safe", pure=True) as yaml:
+        with YAML(typ="safe", pure=True) as yaml:
             recipe = yaml.load(file)
         print(f"\n\t{file.name}\n\t{''.join('─' * len(file.name))}\n")
         print(recipe.get("description"))
