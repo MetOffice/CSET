@@ -25,17 +25,9 @@ from typing import Any
 from ruamel.yaml import YAML
 
 from CSET._common import parse_recipe, slugify
-from CSET.cset_workflow.lib.python.jinja_utils import get_models
+from CSET.cset_workflow.lib.python.jinja_utils import get_models as get_models
 
 logger = logging.getLogger(__name__)
-
-__all__ = [
-    "detail_recipe",
-    "get_models",
-    "list_available_recipes",
-    "RawRecipe",
-    "unpack_recipe",
-]
 
 
 def _version_agnostic_importlib_resources_file() -> Path:
