@@ -232,3 +232,31 @@ class RawRecipe:
         with open(output, "wt") as fp:
             with YAML(pure=True, output=fp) as yaml:
                 yaml.dump(recipe)
+
+
+class Config:
+    """Namespace for easy access to configuration values.
+
+    A namespace for easy access to configuration values (via config.variable),
+    where undefined attributes return an empty list. An empty list evaluates to
+    False in boolean contexts and can be safely iterated over, so it acts as an
+    effective unset value.
+
+    Parameters
+    ----------
+    config: dict
+        Configuration key-value pairs.
+    """
+
+    d: dict
+
+    def __init__(self, config: dict) -> None:
+        self.d = config
+
+    def __getattr__(self, name: str):
+        """Return an empty list for missing names."""
+        return self.d.get(name, [])
+
+    def asdict(self) -> dict:
+        """Return config as a dictionary."""
+        return self.d
