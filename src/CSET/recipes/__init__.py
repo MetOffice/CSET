@@ -27,6 +27,8 @@ from ruamel.yaml import YAML
 from CSET._common import parse_recipe, slugify
 from CSET.cset_workflow.lib.python.jinja_utils import get_models
 
+logger = logging.getLogger(__name__)
+
 __all__ = [
     "detail_recipe",
     "get_models",
@@ -59,7 +61,7 @@ def _recipe_files_in_tree(
     if input_dir is None:
         input_dir = _version_agnostic_importlib_resources_file()
     for file in input_dir.iterdir():
-        logging.debug("Testing %s", file)
+        logger.debug("Testing %s", file)
         if recipe_name in file.name and file.is_file() and file.suffix == ".yaml":
             yield file
         elif file.is_dir() and file.name[0] != "_":  # Excludes __pycache__
@@ -71,7 +73,7 @@ def _get_recipe_file(recipe_name: str, input_dir: Path | None = None) -> Path:
     if input_dir is None:
         input_dir = _version_agnostic_importlib_resources_file()
     file = input_dir / recipe_name
-    logging.debug("Getting recipe: %s", file)
+    logger.debug("Getting recipe: %s", file)
     if not file.is_file():
         raise FileNotFoundError("Recipe file does not exist.", recipe_name)
     return file
@@ -100,11 +102,11 @@ def unpack_recipe(recipe_dir: Path, recipe_name: str) -> None:
     file = _get_recipe_file(recipe_name)
     recipe_dir.mkdir(parents=True, exist_ok=True)
     output_file = recipe_dir / file.name
-    logging.debug("Saving recipe to %s", output_file)
+    logger.debug("Saving recipe to %s", output_file)
     if output_file.exists():
-        logging.info("%s already exists in target directory, skipping.", file.name)
+        logger.info("%s already exists in target directory, skipping.", file.name)
         return
-    logging.info("Unpacking %s to %s", file.name, output_file)
+    logger.info("Unpacking %s to %s", file.name, output_file)
     output_file.write_bytes(file.read_bytes())
 
 
