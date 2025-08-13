@@ -184,6 +184,17 @@ class RawRecipe:
         variables = "".join(f"\n\t{k:<{pad}} {v}" for k, v in self.variables.items())
         return f"{recipe} (model{plural} {ids}{aggregation}){variables}"
 
+    def __eq__(self, value: object) -> bool:
+        """Return self==value."""
+        if isinstance(value, self.__class__):
+            return (
+                self.recipe == value.recipe
+                and self.model_ids == value.model_ids
+                and self.variables == value.variables
+                and self.aggregation == value.aggregation
+            )
+        return NotImplemented
+
     def parbake(self, ROSE_DATAC: Path, SHARE_DIR: Path) -> None:
         """Pre-process recipe to bake in all variables."""
         # Ready recipe file to disk.
