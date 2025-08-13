@@ -196,7 +196,15 @@ class RawRecipe:
         return NotImplemented
 
     def parbake(self, ROSE_DATAC: Path, SHARE_DIR: Path) -> None:
-        """Pre-process recipe to bake in all variables."""
+        """Pre-process recipe to bake in all variables.
+
+        Parameters
+        ----------
+        ROSE_DATAC: Path
+            Workflow shared per-cycle data location.
+        SHARE_DIR: Path
+            Workflow shared data location.
+        """
         # Ready recipe file to disk.
         subprocess.run(["cset", "-v", "cookbook", self.recipe], check=True)
 
