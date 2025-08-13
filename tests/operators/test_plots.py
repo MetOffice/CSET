@@ -254,6 +254,9 @@ def test_setup_spatial_map(cube):
     assert bounds[2] == -90.0
     assert bounds[3] == 90.0
 
+
+def test_setup_spatial_map_dateline(cube):
+    """Setup spatial map for dateline-crossing example."""
     # Test for cube crossing dateline example.
     cube = read.read_cubes("tests/test_data/air_temperature_dateline.nc")[0]
     axes_dl = plot._setup_spatial_map(cube, mpl.colormaps["viridis"])
@@ -265,6 +268,9 @@ def test_setup_spatial_map(cube):
     assert round(bounds[2], 2) == -41.99
     assert round(bounds[3], 2) == -33.35
 
+
+def test_setup_spatial_map_global(cube):
+    """Setup spatial map for global cube example."""
     # Test for global cube example.
     cube = read.read_cubes("tests/test_data/air_temperature_global.nc")[0]
     axes_gl = plot._setup_spatial_map(cube, mpl.colormaps["viridis"])
