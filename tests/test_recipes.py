@@ -172,6 +172,19 @@ def test_RawRecipe_stringify_minimal():
     assert str(r) == expected
 
 
+def test_RawRecipe_eq():
+    """RawRecipe objects can be tested for equality."""
+    r1 = recipes.RawRecipe(recipe="", model_ids=1, variables={}, aggregation=False)
+    r2 = recipes.RawRecipe(recipe="", model_ids=1, variables={}, aggregation=False)
+    r3 = recipes.RawRecipe(recipe="", model_ids=1, variables={}, aggregation=True)
+    assert r1 == r1
+    assert r1 == r2
+    assert r1 != r3
+    # NotImplemented returned for non-matching types, allowing int __eq__ to
+    # take over and return False.
+    assert r1 != 1
+
+
 def test_RawRecipe_parbake(tmp_working_dir):
     """RawRecipe is parbaked correctly."""
     # Setup.
