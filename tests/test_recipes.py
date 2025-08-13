@@ -134,9 +134,8 @@ def test_RawRecipe_creation():
     assert r.aggregation is True
 
 
-def test_RawRecipe_stringify():
-    """RawRecipe object can be converted to a nicely formatted string."""
-    # Simple case with a single model_id, and not aggregation.
+def test_RawRecipe_stringify_standard():
+    """Simple case with a single model_id, and not aggregation."""
     r = recipes.RawRecipe(
         recipe="recipe.yaml",
         model_ids=1,
@@ -149,8 +148,9 @@ def test_RawRecipe_stringify():
     """)
     assert str(r) == expected
 
-    # More complex case with multiple model_ids, aggregation, and multiple
-    # variables to test the indentation consistency.
+
+def test_RawRecipe_stringify_complex():
+    """More complex case to test the indentation consistency."""
     r = recipes.RawRecipe(
         recipe="recipe.yaml",
         model_ids=[1, 2, 3],
@@ -158,10 +158,18 @@ def test_RawRecipe_stringify():
         aggregation=True,
     )
     expected = sstrip("""
-    recipe.yaml (models 1, 2, 3)
+    recipe.yaml (models 1 2 3, Aggregation)
     \tINPUT_PATHS /dev/null
     \tVAR         value
     """)
+    assert str(r) == expected
+
+
+def test_RawRecipe_stringify_minimal():
+    """Absolutely minimal case."""
+    r = recipes.RawRecipe(recipe="", model_ids=1, variables={}, aggregation=False)
+    expected = "<unknown> (model 1)"
+    assert str(r) == expected
 
 
 def test_RawRecipe_parbake(tmp_working_dir):

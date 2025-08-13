@@ -176,12 +176,13 @@ class RawRecipe:
             SUBAREA_TYPE   None
             SUBAREA_EXTENT None
         """
+        recipe = self.recipe if self.recipe else "<unknown>"
         plural = "s" if len(self.model_ids) > 1 else ""
         ids = " ".join(str(m) for m in self.model_ids)
         aggregation = ", Aggregation" if self.aggregation else ""
-        pad = max(len(k) for k in self.variables.keys())
-        variables = "\n".join(f"\t{k:<{pad}} {v}" for k, v in self.variables.items())
-        return f"{self.recipe} (model{plural} {ids}{aggregation})\n{variables}"
+        pad = max([0] + [len(k) for k in self.variables.keys()])
+        variables = "".join(f"\n\t{k:<{pad}} {v}" for k, v in self.variables.items())
+        return f"{recipe} (model{plural} {ids}{aggregation}){variables}"
 
     def parbake(self, ROSE_DATAC: Path, SHARE_DIR: Path) -> None:
         """Pre-process recipe to bake in all variables."""
