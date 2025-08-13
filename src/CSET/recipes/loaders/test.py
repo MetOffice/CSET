@@ -14,12 +14,12 @@
 
 """Load testing recipes."""
 
-from CSET.recipes import RawRecipe
+from CSET.recipes import Config, RawRecipe
 
 
-def load(v: dict):
-    """Yield recipes from the given suite configuration."""
-    if v.get("TESTING_RECIPE"):
+def load(conf: Config):
+    """Yield recipes from the given workflow configuration."""
+    if conf.TESTING_RECIPE:
         # test.yaml recipe doesn't actually exist.
         yield RawRecipe("test.yaml", 1, {}, aggregation=False)
-        yield RawRecipe("test.yaml", 1, {}, aggregation=True)
+        yield RawRecipe("test-agg.yaml", 1, {}, aggregation=True)
