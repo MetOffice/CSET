@@ -263,3 +263,17 @@ def test_RawRecipe_parbake_aggregation(tmp_working_dir):
     # Assert.
     assert parbaked_recipe_file.exists()
     assert parbaked_recipe_file.read_text() == expected
+
+
+def test_Config():
+    """Config allows accessing variables as attributes and defaults to []."""
+    conf = recipes.Config({"VARIABLE": "value"})
+    assert conf.VARIABLE == "value"
+    assert conf.UNDEFINED == []
+
+
+def test_Config_asdict():
+    """Config can return a dictionary."""
+    d = {"VARIABLE": "value"}
+    conf = recipes.Config(d)
+    assert conf.asdict() == d
