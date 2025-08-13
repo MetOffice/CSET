@@ -52,29 +52,19 @@ def test_main(monkeypatch):
     assert function_ran, "Function did not run!"
 
 
-def test_parbake_all_none_enabled(tmp_working_dir):
-    """Error when no recipes are enabled.
+def test_parbake_all_none_enabled(tmp_working_dir, monkeypatch):
+    """Error when no recipes are enabled."""
 
-    This also tests that all loaders don't error and return no recipes when
-    variables are undefined.
-    """
+    def mock_load_recipes(v):
+        yield from []
+
+    monkeypatch.setattr(parbake, "load_recipes", mock_load_recipes)
     # Non-aggregation recipes.
     with pytest.raises(ValueError, match="At least one recipe should be enabled."):
         parbake.parbake_all({}, tmp_working_dir, tmp_working_dir, False)
     # Aggregation recipes.
     with pytest.raises(ValueError, match="At least one recipe should be enabled."):
         parbake.parbake_all({}, tmp_working_dir, tmp_working_dir, True)
-
-
-def test_parbake_all_missing_load_func(tmp_working_dir, monkeypatch):
-    """Error when loader doesn't provide a load() function."""
-    # Parbake module does not have a load() function.
-    monkeypatch.setattr(CSET.recipes, "loader_test", parbake)
-    with pytest.raises(
-        AttributeError,
-        match="CSET.recipes.loader_test should provide a `load` function.",
-    ):
-        parbake.parbake_all({}, tmp_working_dir, tmp_working_dir, False)
 
 
 def test_parbake_all(tmp_working_dir, monkeypatch):
@@ -85,6 +75,11 @@ def test_parbake_all(tmp_working_dir, monkeypatch):
     aggregation = False
     # Counter for number of times parbake was called.
     recipes_parbaked = 0
+
+    def mock_load_recipes(v):
+        assert v == variables
+        yield CSET.recipes.RawRecipe("test.yaml", 1, {}, aggregation=False)
+        yield CSET.recipes.RawRecipe("test-agg.yaml", 1, {}, aggregation=True)
 
     def mock_parbake(self: CSET.recipes.RawRecipe, ROSE_DATAC: Path, SHARE_DIR: Path):
         nonlocal recipes_parbaked
@@ -97,6 +92,7 @@ def test_parbake_all(tmp_working_dir, monkeypatch):
         assert self.variables == {}
 
     monkeypatch.setattr(CSET.recipes.RawRecipe, "parbake", mock_parbake)
+    monkeypatch.setattr(parbake, "load_recipes", mock_load_recipes)
     parbake.parbake_all(variables, rose_datac, share_dir, aggregation)
     assert recipes_parbaked == 1
 
@@ -110,16 +106,22 @@ def test_parbake_all_aggregate(tmp_working_dir, monkeypatch):
     # Counter for number of times parbake was called.
     recipes_parbaked = 0
 
+    def mock_load_recipes(v):
+        assert v == variables
+        yield CSET.recipes.RawRecipe("test.yaml", 1, {}, aggregation=False)
+        yield CSET.recipes.RawRecipe("test-agg.yaml", 1, {}, aggregation=True)
+
     def mock_parbake(self: CSET.recipes.RawRecipe, ROSE_DATAC: Path, SHARE_DIR: Path):
         nonlocal recipes_parbaked
         recipes_parbaked += 1
         assert SHARE_DIR == share_dir
         assert ROSE_DATAC == rose_datac
         assert self.aggregation is aggregation
-        assert self.recipe == "test.yaml"
+        assert self.recipe == "test-agg.yaml"
         assert self.model_ids == [1]
         assert self.variables == {}
 
     monkeypatch.setattr(CSET.recipes.RawRecipe, "parbake", mock_parbake)
+    monkeypatch.setattr(parbake, "load_recipes", mock_load_recipes)
     parbake.parbake_all(variables, rose_datac, share_dir, aggregation)
     assert recipes_parbaked == 1
