@@ -277,3 +277,19 @@ def test_Config_asdict():
     d = {"VARIABLE": "value"}
     conf = recipes.Config(d)
     assert conf.asdict() == d
+
+
+def test_load_recipes_no_variables():
+    """All loaders return no recipes when variables are undefined."""
+    loaded_recipes = list(recipes.load_recipes({}))
+    assert len(loaded_recipes) == 0
+
+
+def test_load_recipes():
+    """Check that we can load recipes from a loader."""
+    loaded_recipes = list(recipes.load_recipes({"TESTING_RECIPE": True}))
+    expected = [
+        recipes.RawRecipe("test.yaml", 1, {}, aggregation=False),
+        recipes.RawRecipe("test-agg.yaml", 1, {}, aggregation=True),
+    ]
+    assert loaded_recipes == expected

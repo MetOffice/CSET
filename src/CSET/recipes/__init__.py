@@ -260,3 +260,38 @@ class Config:
     def asdict(self) -> dict:
         """Return config as a dictionary."""
         return self.d
+
+
+def load_recipes(variables: dict[str, Any]) -> Iterable[RawRecipe]:
+    """Load recipes enabled by configuration.
+
+    Recipes are loaded using all loaders (python modules) in
+    CSET.recipes.loaders. Each of these loaders must define a function with the
+    signature `load(v: dict) -> Iterable[RawRecipe]`, which will be called with
+    `variables`.
+
+    A minimal example can be found in `CSET.recipes.loaders.test`.
+
+    Parameters
+    ----------
+    variables: dict[str, Any]
+        Workflow configuration from ROSE_SUITE_VARIABLES.
+
+    Returns
+    -------
+    Iterable[RawRecipe]
+        Configured recipes.
+
+    Raises
+    ------
+    AttributeError
+        When a loader doesn't provide a `load` function.
+    """
+    # Import here to avoid circular import.
+    import CSET.recipes.loaders
+
+    config = Config(variables)
+    for loader in CSET.recipes.loaders.__all__:
+        logger.info("Loading recipes from %s", loader)
+        module = getattr(CSET.recipes.loaders, loader)
+        yield from module.load(config)
