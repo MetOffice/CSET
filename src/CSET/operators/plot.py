@@ -1386,11 +1386,7 @@ def _custom_colormap_mask(cube: iris.cube.Cube, axis: Literal["x", "y"] | None =
     norm:
         BoundaryNorm information.
     """
-    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
-    if (
-        any("mask_for_" in name for name in varnames)
-        and "difference" not in cube.long_name
-    ):
+    if "difference" not in cube.long_name:
         if axis:
             levels = [0, 1]
             # Complete settings based on levels.
