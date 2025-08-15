@@ -119,7 +119,7 @@
         CSET_ADDOPTS = """
             --MODEL_NAME='{{model_names}}'
             {% if SELECT_SUBAREA %}
-            --SUBREA_TYPE='{{SUBAREA_TYPE}}'
+            --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
             --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
             {% else %}
             --SUBAREA_TYPE='None'
