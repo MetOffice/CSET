@@ -11,7 +11,7 @@ steps:
     constraint:
         operator: constraints.combine_constraints
         varname_constraint:
-            operator: constraints.genereate_var_constraint
+            operator: constraints.generate_var_constraint
             varname: wind_speed_at_10m
         cell_methods_constraint:
             operator: constraints.generate_cell_methods_constraint
