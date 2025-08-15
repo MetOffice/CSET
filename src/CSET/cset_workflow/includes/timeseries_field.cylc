@@ -101,6 +101,7 @@
             --SUBAREA_TYPE='None'
             --SUBAREA_EXTENT='None'
             {% endif %}
+        """
         MODEL_IDENTIFIERS = '{{model_ids}}'
 
 {% endif %}
