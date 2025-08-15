@@ -160,7 +160,7 @@ def convert_to_beaufort_scale(
         # Convert units.
         wind_cube.units = "1"
         # Rename cube.
-        wind_cube.rename("wind_speed_on_Beaufort_Scale")
+        wind_cube.rename(f"{cube.name()}_on_Beaufort_Scale")
         winds.append(wind_cube)
     # Output as single cube or cubelist depending on if cube of cubelist given
     # as input.
