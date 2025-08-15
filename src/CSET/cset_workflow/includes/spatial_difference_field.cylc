@@ -105,7 +105,7 @@
 {% if RAIN_PRESENCE_SPATIAL_DIFFERENCE|default(False) %}
 [runtime]
     [[rain_presence_difference]]
-    inherit = PROCESS
+    inherit = SPATIAL_DIFFERENCE
 
         [[[directives]]]
             --mem=20000
