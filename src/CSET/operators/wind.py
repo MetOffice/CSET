@@ -20,7 +20,7 @@ import numpy as np
 from CSET._common import iter_maybe
 
 
-def convert_to_Beaufort_scale(
+def convert_to_beaufort_scale(
     cubes: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     r"""Convert windspeed from m/s to the Beaufort Scale.
@@ -41,88 +41,89 @@ def convert_to_Beaufort_scale(
     The relationship used to convert the windspeed from m/s to the Beaufort
     Scale is an empirical relationship (e.g., [Beer96]_):
 
-    .. math:: F = (\frac{v}{0.836})**(2/3)
+    .. math:: F = (\frac{v}{0.836})^{2/3}
 
     for F the Beaufort Force, and v the windspeed at 10 m in m/s.
 
     The Beaufort Scale was devised in 1805 by Rear Admiral Sir Francis Beaufort.
     It is a widely used windscale that categorises the winds into forces and provides
     human-understable names (e.g. gale). The table below shows the Beaufort Scale based
-    on the Handbook of Meteorology (Berry et al. 1945) [Berry45].
+    on the Handbook of Meteorology ([Berryetal45]_).
 
     .. list-table:: Beaufort Scale
-    : widths : 5 20 10 10 10
-    : header-rows : 1
-    * - Force [1]
-      - Descriptor
-      - Windspeed [m/s]
-      - Windspeed [kn]
-      - Windspeed [mph]
-    * - 0
-      - Calm
-      - < 0.4
-      - < 1
-      - < 1
-    * - 1
-      - Light Air
-      - 0.4 - 1.5
-      - 1 - 3
-      - 1 - 3
-    * - 2
-      - Light Breeze
-      - 1.6 - 3.3
-      - 4 - 6
-      - 4 - 7
-    * - 3
-      - Gentle Breeze
-      - 3.4 - 5.4
-      - 7 - 10
-      - 8 - 12
-    * - 4
-      - Moderate Breeze
-      - 5.5 - 7.9
-      - 11 - 16
-      - 13 - 18
-    * - 5
-      - Fresh Breeze
-      - 8.0 - 10.7
-      - 17 - 21
-      - 19 - 24
-    * - 6
-      - Strong Breeze
-      - 10.8 - 13.8
-      - 22 - 27
-      - 25 - 31
-    * - 7
-      - Near Gale
-      - 13.9 - 17.1
-      - 28 - 33
-      - 32 - 38
-    * - 8
-      - Gale
-      - 17.2 - 20.7
-      - 34 - 40
-      - 39 - 46
-    * - 9
-      - Strong Gale
-      - 20.8 - 24.4
-      - 41 - 47
-      - 47 - 54
-    * - 10
-      - Storm
-      - 24.5 - 28.4
-      - 48 - 55
-      - 55 - 63
-    * - 11
-      - Violent Storm
-      - 28.5 - 33.5
-      - 56 - 63
-      - 64 - 73
-    * - 12 (+)
-      - Hurricane
-      - > 33.6
-      - > 64
-      - > 74
+       :widths: 5 20 10 10 10
+       :header-rows: 1
+
+       * - Force [1]
+         - Descriptor
+         - Windspeed [m/s]
+         - Windspeed [kn]
+         - Windspeed [mph]
+       * - 0
+         - Calm
+         - < 0.4
+         - < 1
+         - < 1
+       * - 1
+         - Light Air
+         - 0.4 - 1.5
+         - 1 - 3
+         - 1 - 3
+       * - 2
+         - Light Breeze
+         - 1.6 - 3.3
+         - 4 - 6
+         - 4 - 7
+       * - 3
+         - Gentle Breeze
+         - 3.4 - 5.4
+         - 7 - 10
+         - 8 - 12
+       * - 4
+         - Moderate Breeze
+         - 5.5 - 7.9
+         - 11 - 16
+         - 13 - 18
+       * - 5
+         - Fresh Breeze
+         - 8.0 - 10.7
+         - 17 - 21
+         - 19 - 24
+       * - 6
+         - Strong Breeze
+         - 10.8 - 13.8
+         - 22 - 27
+         - 25 - 31
+       * - 7
+         - Near Gale
+         - 13.9 - 17.1
+         - 28 - 33
+         - 32 - 38
+       * - 8
+         - Gale
+         - 17.2 - 20.7
+         - 34 - 40
+         - 39 - 46
+       * - 9
+         - Strong Gale
+         - 20.8 - 24.4
+         - 41 - 47
+         - 47 - 54
+       * - 10
+         - Storm
+         - 24.5 - 28.4
+         - 48 - 55
+         - 55 - 63
+       * - 11
+         - Violent Storm
+         - 28.5 - 33.5
+         - 56 - 63
+         - 64 - 73
+       * - 12 (+)
+         - Hurricane
+         - > 33.6
+         - > 64
+         - > 74
 
     The modern names have been used in this table. However, it should be noted
     for historical accuracy that Force 7 was originally "Moderate Gale", Force 8
@@ -137,7 +138,7 @@ def convert_to_Beaufort_scale(
     ----------
     .. [Beer96] Beer, T. (1996) Environmental Oceanography, CRC Marince Science,
        Vol. 11, 2nd Edition, CRC Press, 402 pp.
-    .. [Berry45] Berry, F. A., Jr., E. Bollay, and N. R. Beers, ()1945) Handbook
+    .. [Berryetal45] Berry, F. A., Jr., E. Bollay, and N. R. Beers, (1945) Handbook
        of Meteorology. McGraw Hill, 1068 pp.
 
     Examples
