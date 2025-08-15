@@ -95,6 +95,15 @@ CSET.operators.mesoscale
 .. automodule:: CSET.operators.mesoscale
    :members:
 
+Wind Operators
+~~~~~~~~~~~~~~~~~~~
+
+CSET.operators.wind
+------------------------
+
+.. automodule:: CSET.operators.wind
+   :members:
+
 Other
 ~~~~~
 
