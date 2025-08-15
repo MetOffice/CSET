@@ -1,4 +1,4 @@
-{% if TIMESERIES_SURFACE_FIELD or TIMESERIES_PLEVEL_FIELD or TIMESERIES_MLEVEL_FIELD or RAIN_PRESENCE_DOMAIN_MEAN_TIMESERIES %}
+{% if TIMESERIES_SURFACE_FIELD or TIMESERIES_PLEVEL_FIELD or TIMESERIES_MLEVEL_FIELD or RAIN_PRESENCE_DOMAIN_MEAN_TIMESERIES or SFC_WIND_BEAUFORT_SCALE_DOMAIN_MEAN_TIMESERIES %}
 [[TIMESERIES]]
     inherit = PROCESS
 
@@ -105,4 +105,26 @@
             """
         MODEL_IDENTIFIERS = '{{model_ids}}'
 
+{% endif %}
+
+
+# Surface wind on Beaufort Scale
+{if SFC_WIND_BEAUFORT_SCALE_DOMAIN_MEAN_TIMESERIES|default(False) %}
+[runtime]
+    [[sfc_wind_beaufort_domain_mean_timeseries]]
+    inherit = TIMESERIES
+
+        [[[environment]]]
+        CSET_RECIPE_NAME="surface_wind_speed_on_beaufort_scale_domain_mean_time_series.yaml"
+        CSET_ADDOPTS = """
+            --MODEL_NAME='{{model_names}}'
+            {% if SELECT_SUBAREA %}
+            --SUBREA_TYPE='{{SUBAREA_TYPE}}'
+            --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
+            {% else %}
+            --SUBAREA_TYPE='None'
+            --SUBAREA_EXTENT='None'
+            {% endif %}
+            """
+        MODEL_IDENTIFIERS = '{{model_ids}}'
 {% endif %}
