@@ -109,7 +109,7 @@
 
 
 # Surface wind on Beaufort Scale
-{if SFC_WIND_BEAUFORT_SCALE_DOMAIN_MEAN_TIMESERIES|default(False) %}
+{% if SFC_WIND_BEAUFORT_SCALE_DOMAIN_MEAN_TIMESERIES|default(False) %}
 [runtime]
     [[sfc_wind_beaufort_domain_mean_timeseries]]
     inherit = TIMESERIES
