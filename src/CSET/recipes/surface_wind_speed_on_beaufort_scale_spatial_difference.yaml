@@ -1,0 +1,29 @@
+category: Daily Weather
+title: "Surface wind speed on Beaufort Scale\nDifference ($BASE_MODEL - $OTHER_MODEL)"
+description: |
+  Generates a the surface wind speed converted onto the Beaufort Scale and takes the
+  difference between two models. The Beaufort Scale can be found on the [Met Office website](https://weather.metoffice.gov.uk/guides/coast-and-sea/beaufort-scale). It allows human-understandable names to be given to wind bins.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: [$BASE_MODEL, $OTHER_MODEL]
+    constraint:
+        operator: constraints.combine_constraints
+        varname_constraint:
+            operator: constraints.genereate_var_constraint
+            varname: wind_speed_at_10m
+        cell_methods_constraint:
+            operator: constraints.generate_cell_methods_constraint
+            cell_methods: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: wind.convert_to_beaufort_scale
+
+  - operator: misc.difference
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
