@@ -146,7 +146,7 @@ def convert_to_beaufort_scale(
     >>> Beaufort_Scale=wind.convert_to_Beaufort_scale(winds)
     """
     # Create and empty cubelist.
-    winds = iris.cube.Cubelist([])
+    winds = iris.cube.CubeList([])
     # Loop over cubelist.
     for cube in iter_maybe(cubes):
         # Copy cube so we do not overwrite data.
@@ -160,7 +160,7 @@ def convert_to_beaufort_scale(
         # Convert units.
         wind_cube.units = "1"
         # Rename cube.
-        wind_cube.rename("wind_speed_at_10m_on_Beaufort_Scale")
+        wind_cube.rename("wind_speed_on_Beaufort_Scale")
         winds.append(wind_cube)
     # Output as single cube or cubelist depending on if cube of cubelist given
     # as input.
