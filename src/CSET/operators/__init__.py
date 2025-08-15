@@ -39,6 +39,7 @@ from CSET.operators import (
     read,
     regrid,
     transect,
+    wind,
     write,
 )
 
@@ -59,6 +60,7 @@ __all__ = [
     "read",
     "regrid",
     "transect",
+    "wind",
     "write",
 ]
 
