@@ -1,4 +1,4 @@
-{% if SPATIAL_SURFACE_FIELD or SPATIAL_PLEVEL_FIELD or SPATIAL_MLEVEL_FIELD or RAIN_PRESENCE_SPATIAL_PLOT %}
+{% if SPATIAL_SURFACE_FIELD or SPATIAL_PLEVEL_FIELD or SPATIAL_MLEVEL_FIELD or RAIN_PRESENCE_SPATIAL_PLOT or SFC_WIND_BEAUFORT_SCALE_SPATIAL %}
 [[SPATIAL]]
     inherit=PROCESS
 
@@ -119,4 +119,24 @@
 {% endif %}
 
 
+# Surface winds on Beaufort Scale
+{% if SFC_WIND_BEAUFORT_SCALE_SPATIAL|default(False) %}
+[runtime]
+    [[sfc_wind_speed_beaufort_spatial_plots_m{{model["id"]}}]]
+    inherit = SPATIAL
+
+        [[[environment]]]
+        CSET_RECIPE_NAME = "surface_wind_speed_on_beaufort_scale_spatial_plot.yaml"
+        CSET_ADDOPTS = """
+            --MODEL_NAME='{{model["name"]}}'
+            {% if SELECT_SUBAREA %}
+            --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
+            --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
+            {% else %}
+            --SUBAREA_TYPE='None'
+            --SUBAREA_EXTENT='None'
+            {% endif %}
+            """
+        MODEL_IDENTIFIERS = {{model["id"]}}
+{% endif %}
 {% endfor %}
