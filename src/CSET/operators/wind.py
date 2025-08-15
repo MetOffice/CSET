@@ -39,7 +39,7 @@ def convert_to_Beaufort_scale(
     Notes
     -----
     The relationship used to convert the windspeed from m/s to the Beaufort
-    Scale is an emprirical relationship (e.g., [Beer96]_):
+    Scale is an empirical relationship (e.g., [Beer96]_):
 
     .. math:: F = (\frac{v}{0.836})**(2/3)
 
