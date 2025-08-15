@@ -89,7 +89,7 @@
 
 [runtime]
     [[rain_presence_domain_mean_timeseries]]
-    inherit = PROCESS
+    inherit = TIMESERIES
 
         [[[directives]]]
             --mem=20000

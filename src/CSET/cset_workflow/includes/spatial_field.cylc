@@ -101,7 +101,7 @@
 {% if RAIN_PRESENCE_SPATIAL_PLOT|default(False) %}
 [runtime]
     [[rain_presence_spatial_plots_m{{model["id"]}}]]
-    inherit = PROCESS
+    inherit = SPATIAL
 
         [[[directives]]]
             --mem=20000
