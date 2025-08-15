@@ -64,7 +64,7 @@ def test_convert_to_beaufort_scale_cubelist(xwind):
 
 def test_convert_to_beaufort_scale_name(xwind):
     """Test naming of new beaufort scale wind."""
-    expected_name = "wind_speed_on_Beaufort_Scale"
+    expected_name = f"{xwind.name()}_on_Beaufort_Scale"
     assert expected_name == wind.convert_to_beaufort_scale(xwind).name()
 
 
