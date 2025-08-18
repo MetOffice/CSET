@@ -107,9 +107,6 @@
     [[rain_presence_difference]]
     inherit = SPATIAL_DIFFERENCE
 
-        [[[directives]]]
-            --mem=20000
-
         [[[environment]]]
         CSET_RECIPE_NAME = "rain_presence_spatial_difference.yaml"
         CSET_ADDOPTS = """

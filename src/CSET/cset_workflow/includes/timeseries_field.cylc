@@ -91,9 +91,6 @@
     [[rain_presence_domain_mean_timeseries]]
     inherit = TIMESERIES
 
-        [[[directives]]]
-            --mem=20000
-
         [[[environment]]]
         CSET_RECIPE_NAME = "rain_presence_domain_mean_time_series.yaml"
         CSET_ADDOPTS = """

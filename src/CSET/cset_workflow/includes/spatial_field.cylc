@@ -103,9 +103,6 @@
     [[rain_presence_spatial_plots_m{{model["id"]}}]]
     inherit = SPATIAL
 
-        [[[directives]]]
-            --mem=20000
-
         [[[environment]]]
         CSET_RECIPE_NAME = "rain_presence_spatial_plot.yaml"
         CSET_ADDOPTS = """
