@@ -962,7 +962,7 @@ def test_read_cubes_extract_subarea_dateline():
     assert round(cube_rw.coord("longitude").points[-1], 2) == -179.16
 
 
-def test_read_cubes_extract_subarea_datelinei_wrapping():
+def test_read_cubes_extract_subarea_dateline_wrapping():
     """Read cube with latlon coord across dateline and ensure appropriate subarea is extracted."""
     cube = read.read_cubes("tests/test_data/air_temperature_dateline.nc")[0]
     assert cube.coord("latitude").coord_system == iris.coord_systems.GeogCS(6371229.0)
