@@ -532,12 +532,12 @@ def _grid_longitude_fix_callback(cube: iris.cube.Cube):
         # Don't modify non-spatial cubes.
         return cube
 
+    long_coord = cube.coord(x)
     # Wrap longitudes if rotated pole coordinates
-    coord_system = cube.coord(x).coord_system
+    coord_system = long_coord.coord_system
     if x == "grid_longitude" and isinstance(
         coord_system, iris.coord_systems.RotatedGeogCS
     ):
-        long_coord = cube.coord(x)
         long_points = long_coord.points.copy()
         long_centre = np.median(long_points)
         while long_centre < -175.0:
