@@ -392,7 +392,7 @@ def _create_callback(is_ensemble: bool) -> callable:
         _um_normalise_callback(cube, field, filename)
         _lfric_normalise_callback(cube, field, filename)
         _lfric_time_coord_fix_callback(cube, field, filename)
-        _longitude_fix_callback(cube)
+        #        _longitude_fix_callback(cube)
         _normalise_var0_varname(cube)
         _fix_spatial_coords_callback(cube)
         _fix_pressure_coord_callback(cube)
@@ -516,19 +516,25 @@ def _lfric_time_coord_fix_callback(cube: iris.cube.Cube, field, filename):
     return iris.util.squeeze(cube)
 
 
-def _calendar_conversion_callback(cube: iris.cube.Cube, field, filename):
-    """Change the calendar of a cube if proleptic_gregorian.
-
-    If the data use the proleptic_gregorian calendar, this is converted to the
-    standard_calendar without issue.
-
-    """
-    standard_calendar = iris.unit.Unit(
-        "seconds since 1970-01-01 00:00:00", calendar="standard"
-    )
-
-    if cube.coords("time").units.calendar == "proleptic_gregorian":
-        cube.coords("time").units = standard_calendar
+# def _calendar_conversion_callback(cube: iris.cube.Cube):
+#    """Change the calendar of a cube if proleptic_gregorian.
+#
+#    If the data use the proleptic_gregorian or julian calendar, this is converted to the
+#    standard_calendar without issue.  Other calendars are not supported and the
+#    conversion is ignored if already standard calendar.
+#
+#    """
+#    standard_calendar = iris.unit.Unit(
+#        "seconds since 1970-01-01 00:00:00", calendar="standard"
+#    )
+#
+#
+#    if cube.coord("time").units.calendar in ["proleptic_gregorian", "julian"]:
+#        cube.coord("time").units = standard_calendar
+#    elif calendar == "standard":
+#        pass
+#    else:
+#        print(f"Unsupported calendar type: {calendar}")
 
 
 def _longitude_fix_callback(cube: iris.cube.Cube):
