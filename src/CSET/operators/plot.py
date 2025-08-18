@@ -419,7 +419,7 @@ def _setup_spatial_map(
             coastcol = "m"
         else:
             coastcol = "k"
-        logging.debug("Plotting coastlines %s.", coastcol)
+        logging.debug("Plotting coastlines in colour %s.", coastcol)
         axes.coastlines(resolution="10m", color=coastcol)
 
         # If is lat/lon spatial map, fix extent to keep plot tight.
