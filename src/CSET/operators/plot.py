@@ -416,9 +416,9 @@ def _setup_spatial_map(
 
         # Add coastlines if cube contains x and y map coordinates.
         if cmap.name in ["viridis", "Greys"]:
-            coastcol = "m"
+            coastcol = "magenta"
         else:
-            coastcol = "k"
+            coastcol = "black"
         logging.debug("Plotting coastlines in colour %s.", coastcol)
         axes.coastlines(resolution="10m", color=coastcol)
 

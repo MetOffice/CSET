@@ -422,7 +422,7 @@ def test_pcolormesh_coastline(cube, caplog, tmp_working_dir):
         plot.spatial_pcolormesh_plot(cube)
         message_match = False
         for _, _, message in caplog.record_tuples:
-            if message == "Plotting coastlines k.":
+            if message == "Plotting coastlines in colour black.":
                 message_match = True
         assert message_match
 
@@ -435,7 +435,7 @@ def test_pcolormesh_coastline_m(cube, caplog, tmp_working_dir):
         plot.spatial_pcolormesh_plot(cube)
         message_match = False
         for _, _, message in caplog.record_tuples:
-            if message == "Plotting coastlines m.":
+            if message == "Plotting coastlines in colour magenta.":
                 message_match = True
         assert message_match
 
