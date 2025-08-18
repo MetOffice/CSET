@@ -279,8 +279,7 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
         except KeyError:
             logging.debug("Cube name %s has no colorbar definition.", varname)
 
-    # Get colormap if it is a mask, note line 282 needs to be repeated or always
-    # returns False.
+    # Get colormap if it is a mask.
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if any("mask_for_" in name for name in varnames):
         cmap, levels, norm = _custom_colormap_mask(cube, axis=axis)
@@ -1394,12 +1393,12 @@ def _custom_colormap_mask(cube: iris.cube.Cube, axis: Literal["x", "y"] | None =
         else:
             # Define the levels and colors.
             levels = [0, 1, 2]
-            colors = ["w", "dodgerblue"]
+            colors = ["white", "dodgerblue"]
             # Create a custom color map.
             cmap = mcolors.ListedColormap(colors)
             # Normalize the levels.
             norm = mcolors.BoundaryNorm(levels, cmap.N)
-            logging.info("colourmap for %s.", cube.long_name)
+            logging.debug("Colourmap for %s.", cube.long_name)
             return cmap, levels, norm
     else:
         if axis:
@@ -1408,10 +1407,10 @@ def _custom_colormap_mask(cube: iris.cube.Cube, axis: Literal["x", "y"] | None =
         else:
             # Search for if mask difference.
             levels = [-2, -1, 1, 2]
-            colors = ["goldenrod", "w", "teal"]
+            colors = ["goldenrod", "white", "teal"]
             cmap = mcolors.ListedColormap(colors)
             norm = mcolors.BoundaryNorm(levels, cmap.N)
-            logging.info("colourmap for %s.", cube.long_name)
+            logging.debug("Colourmap for %s.", cube.long_name)
             return cmap, levels, norm
 
 
