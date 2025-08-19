@@ -1,4 +1,4 @@
-{% if SPATIAL_DIFFERENCE_SURFACE_FIELD or SPATIAL_DIFFERENCE_PLEVEL_FIELD or SPATIAL_DIFFERENCE_MLEVEL_FIELD %}
+{% if SPATIAL_DIFFERENCE_SURFACE_FIELD or SPATIAL_DIFFERENCE_PLEVEL_FIELD or SPATIAL_DIFFERENCE_MLEVEL_FIELD or RAIN_PRESENCE_SPATIAL_DIFFERENCE %}
 [[SPATIAL_DIFFERENCE]]
     inherit = PROCESS
 
@@ -101,4 +101,25 @@
 {% endfor %}
 {% endif %}
 
+# Rain presence
+{% if RAIN_PRESENCE_SPATIAL_DIFFERENCE|default(False) %}
+[runtime]
+    [[rain_presence_difference]]
+    inherit = SPATIAL_DIFFERENCE
+
+        [[[environment]]]
+        CSET_RECIPE_NAME = "rain_presence_spatial_difference.yaml"
+        CSET_ADDOPTS = """
+            --BASE_MODEL='{{base_model["name"]}}'
+            --OTHER_MODEL='{{model["name"]}}'
+            {% if SELECT_SUBAREA %}
+            --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
+            --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
+            {% else %}
+            --SUBAREA_TYPE='None'
+            --SUBAREA_EXTENT='None'
+            {% endif %}
+        """
+        MODEL_IDENTIFIERS = '1 {{model["id"]}}'
+{% endif %}
 {% endfor %}

@@ -1,4 +1,4 @@
-{% if SPATIAL_SURFACE_FIELD or SPATIAL_PLEVEL_FIELD or SPATIAL_MLEVEL_FIELD %}
+{% if SPATIAL_SURFACE_FIELD or SPATIAL_PLEVEL_FIELD or SPATIAL_MLEVEL_FIELD or RAIN_PRESENCE_SPATIAL %}
 [[SPATIAL]]
     inherit=PROCESS
 
@@ -95,5 +95,28 @@
 {% endfor %}
 {% endfor %}
 {% endif %}
+
+
+# Rain presence
+{% if RAIN_PRESENCE_SPATIAL_PLOT|default(False) %}
+[runtime]
+    [[rain_presence_spatial_plots_m{{model["id"]}}]]
+    inherit = SPATIAL
+
+        [[[environment]]]
+        CSET_RECIPE_NAME = "rain_presence_spatial_plot.yaml"
+        CSET_ADDOPTS = """
+            --MODEL_NAME='{{model["name"]}}'
+            {% if SELECT_SUBAREA %}
+            --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
+            --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
+            {% else %}
+            --SUBAREA_TYPE='None'
+            --SUBAREA_EXTENT='None'
+            {% endif %}
+            """
+        MODEL_IDENTIFIERS = {{model["id"]}}
+{% endif %}
+
 
 {% endfor %}

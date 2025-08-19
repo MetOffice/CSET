@@ -32,6 +32,7 @@ import iris.cube
 import iris.exceptions
 import iris.plot as iplt
 import matplotlib as mpl
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 from markdown_it import MarkdownIt
@@ -224,7 +225,8 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
     combination of the built-in CSET colorbar definitions, and any user supplied
     definitions. As well as varying on variables, these definitions may also
     exist for specific pressure levels to account for variables with
-    significantly different ranges at different heights.
+    significantly different ranges at different heights. The colorbars also exist
+    for masks and mask differences for considering variable presence diagnostics.
     Specific variable ranges can be separately set in user-supplied definition
     for x- or y-axis limits, or indicate where automated range preferred.
 
@@ -277,6 +279,12 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
         except KeyError:
             logging.debug("Cube name %s has no colorbar definition.", varname)
 
+    # Get colormap if it is a mask.
+    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    if any("mask_for_" in name for name in varnames):
+        cmap, levels, norm = _custom_colormap_mask(cube, axis=axis)
+        return cmap, levels, norm
+
     # If no valid colormap has been defined, use defaults and return.
     if not cmap:
         logging.warning("No colorbar definition exists for %s.", cube.name())
@@ -313,10 +321,7 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
             levels = None
         else:
             levels = [vmin, vmax]
-
-        # Complete settings based on levels.
         return None, levels, None
-
     # Get and use the colorbar levels for this variable if spatial or histogram.
     else:
         try:
@@ -1352,14 +1357,71 @@ def _spatial_plot(
     _make_plot_html_page(complete_plot_index)
 
 
+def _custom_colormap_mask(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = None):
+    """Get colourmap for mask.
+
+    If "mask_for_" appears anywhere in the name of a cube this function will be called
+    regardless of the name of the variable to ensure a consistent plot.
+
+    Parameters
+    ----------
+    cube: Cube
+        Cube of variable for which the colorbar information is desired.
+    axis: "x", "y", optional
+        Select the levels for just this axis of a line plot. The min and max
+        can be set by xmin/xmax or ymin/ymax respectively. For variables where
+        setting a universal range is not desirable (e.g. temperature), users
+        can set ymin/ymax values to "auto" in the colorbar definitions file.
+        Where no additional xmin/xmax or ymin/ymax values are provided, the
+        axis bounds default to use the vmin/vmax values provided.
+
+    Returns
+    -------
+    cmap:
+        Matplotlib colormap.
+    levels:
+        List of levels to use for plotting. For continuous plots the min and max
+        should be taken as the range.
+    norm:
+        BoundaryNorm information.
+    """
+    if "difference" not in cube.long_name:
+        if axis:
+            levels = [0, 1]
+            # Complete settings based on levels.
+            return None, levels, None
+        else:
+            # Define the levels and colors.
+            levels = [0, 1, 2]
+            colors = ["white", "dodgerblue"]
+            # Create a custom color map.
+            cmap = mcolors.ListedColormap(colors)
+            # Normalize the levels.
+            norm = mcolors.BoundaryNorm(levels, cmap.N)
+            logging.debug("Colourmap for %s.", cube.long_name)
+            return cmap, levels, norm
+    else:
+        if axis:
+            levels = [-1, 1]
+            return None, levels, None
+        else:
+            # Search for if mask difference, set to +/- 0.5 as values plotted <
+            # not <=.
+            levels = [-2, -0.5, 0.5, 2]
+            colors = ["goldenrod", "white", "teal"]
+            cmap = mcolors.ListedColormap(colors)
+            norm = mcolors.BoundaryNorm(levels, cmap.N)
+            logging.debug("Colourmap for %s.", cube.long_name)
+            return cmap, levels, norm
+
+
 def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
     """Return a custom colourmap for the current recipe."""
-    import matplotlib.colors as mcolors
-
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if (
         any("surface_microphysical" in name for name in varnames)
         and "difference" not in cube.long_name
+        and "mask" not in cube.long_name
     ):
         # Define the levels and colors
         levels = [0, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
@@ -1393,12 +1455,11 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
 
 def _custom_colourmap_visibility_in_air(cube: iris.cube.Cube, cmap, levels, norm):
     """Return a custom colourmap for the current recipe."""
-    import matplotlib.colors as mcolors
-
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if (
         any("visibility_in_air" in name for name in varnames)
         and "difference" not in cube.long_name
+        and "mask" not in cube.long_name
     ):
         # Define the levels and colors (in km)
         levels = [0, 0.05, 0.1, 0.2, 1.0, 2.0, 5.0, 10.0, 20.0, 30.0, 50.0, 70.0, 100.0]
