@@ -1405,8 +1405,9 @@ def _custom_colormap_mask(cube: iris.cube.Cube, axis: Literal["x", "y"] | None =
             levels = [-1, 1]
             return None, levels, None
         else:
-            # Search for if mask difference.
-            levels = [-2, -1, 1, 2]
+            # Search for if mask difference, set to +/- 0.5 as values plotted <
+            # not <=.
+            levels = [-2, -0.5, 0.5, 2]
             colors = ["goldenrod", "white", "teal"]
             cmap = mcolors.ListedColormap(colors)
             norm = mcolors.BoundaryNorm(levels, cmap.N)
