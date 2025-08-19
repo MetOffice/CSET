@@ -101,7 +101,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         {% if SKIP_WRITE|default(False) %}
         SKIP_WRITE = True
         {% endif %}
-        HISTOGRAM_METHOD = {{HISTOGRAM_METHOD|default("Frequency")}}
+        HISTOGRAM_METHOD = {{HISTOGRAM_METHOD|default("frequency")}}
 
 
     [[PROCESS]]
