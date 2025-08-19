@@ -48,3 +48,4 @@ steps:
 
   - operator: plot.plot_histogram_series
     sequence_coordinate: $SEQUENCE
+    histogram_method: $HISTOGRAM_METHOD
