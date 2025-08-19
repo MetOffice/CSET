@@ -25,6 +25,7 @@ import os
 import sys
 from typing import Literal
 
+import cartopy.crs as ccrs
 import iris
 import iris.coords
 import iris.cube
@@ -343,6 +344,105 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
         return cmap, levels, norm
 
 
+def _setup_spatial_map(
+    cube: iris.cube.Cube,
+    figure,
+    cmap,
+    grid_size: int | None = None,
+    subplot: int | None = None,
+):
+    """Define map projections, extent and add coastlines for spatial plots.
+
+    For spatial map plots, a relevant map projection for rotated or non-rotated inputs
+    is specified, and map extent defined based on the input data.
+
+    Parameters
+    ----------
+    cube: Cube
+        2 dimensional (lat and lon) Cube of the data to plot.
+    figure:
+        Matplotlib Figure object holding all plot elements.
+    cmap:
+        Matplotlib colormap.
+    grid_size: int, optional
+        Size of grid for subplots if multiple spatial subplots in figure.
+    subplot: int, optional
+        Subplot index if multiple spatial subplots in figure.
+
+    Returns
+    -------
+    axes:
+        Matplotlib GeoAxes definition.
+    """
+    # Identify min/max plot bounds.
+    try:
+        lat_axis, lon_axis = get_cube_yxcoordname(cube)
+        x1 = np.min(cube.coord(lon_axis).points)
+        x2 = np.max(cube.coord(lon_axis).points)
+        y1 = np.min(cube.coord(lat_axis).points)
+        y2 = np.max(cube.coord(lat_axis).points)
+
+        # Adjust bounds within +/- 180.0 if x dimension extends beyond half-globe.
+        if np.abs(x2 - x1) > 180.0:
+            x1 = x1 - 180.0
+            x2 = x2 - 180.0
+            logging.debug("Adjusting plot bounds to fit global extent.")
+
+        # Consider map projection orientation.
+        # Adapting orientation enables plotting across international dateline.
+        # Users can adapt the default central_longitude if alternative projections views.
+        if x2 > 180.0:
+            central_longitude = 180.0
+        else:
+            central_longitude = 0.0
+
+        # Define spatial map projection.
+        coord_system = cube.coord(lat_axis).coord_system
+        if isinstance(coord_system, iris.coord_systems.RotatedGeogCS):
+            # Define rotated pole map projection for rotated pole inputs.
+            projection = ccrs.RotatedPole(
+                pole_longitude=coord_system.grid_north_pole_longitude,
+                pole_latitude=coord_system.grid_north_pole_latitude,
+                central_rotated_longitude=0.0,
+            )
+            crs = projection
+        else:
+            # Define regular map projection for non-rotated pole inputs.
+            # Alternatives might include e.g. for global model outputs:
+            #    projection=ccrs.Robinson(central_longitude=X.y, globe=None)
+            # See also https://scitools.org.uk/cartopy/docs/v0.15/crs/projections.html.
+            projection = ccrs.PlateCarree(central_longitude=central_longitude)
+            crs = ccrs.PlateCarree()
+
+        # Define axes for plot (or subplot) with required map projection.
+        if subplot is not None:
+            axes = figure.add_subplot(
+                grid_size, grid_size, subplot, projection=projection
+            )
+        else:
+            axes = figure.add_subplot(projection=projection)
+
+        # Add coastlines if cube contains x and y map coordinates.
+        if cmap.name in ["viridis", "Greys"]:
+            coastcol = "magenta"
+        else:
+            coastcol = "black"
+        logging.debug("Plotting coastlines in colour %s.", coastcol)
+        axes.coastlines(resolution="10m", color=coastcol)
+
+        # If is lat/lon spatial map, fix extent to keep plot tight.
+        # Specifying crs within set_extent helps ensure only data region is shown.
+        if isinstance(coord_system, iris.coord_systems.GeogCS):
+            axes.set_extent([x1, x2, y1, y2], crs=crs)
+
+    except ValueError:
+        # Skip if not both x and y map coordinates.
+        axes = figure.gca()
+        pass
+
+    return axes
+
+
 def _get_plot_resolution() -> int:
     """Get resolution of rasterised plots in pixels per inch."""
     return get_recipe_metadata().get("plot_resolution", 100)
@@ -374,6 +474,10 @@ def _plot_and_save_spatial_plot(
     # Specify the color bar
     cmap, levels, norm = _colorbar_map_levels(cube)
 
+    # Setup plot map projection, extent and coastlines.
+    axes = _setup_spatial_map(cube, fig, cmap)
+
+    # Plot the field.
     if method == "contourf":
         # Filled contour plot of the field.
         plot = iplt.contourf(cube, cmap=cmap, levels=levels, norm=norm)
@@ -392,33 +496,6 @@ def _plot_and_save_spatial_plot(
         plot = iplt.pcolormesh(cube, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax)
     else:
         raise ValueError(f"Unknown plotting method: {method}")
-
-    # Using pyplot interface here as we need iris to generate a cartopy GeoAxes.
-    axes = plt.gca()
-
-    # Add coastlines if cube contains x and y map coordinates.
-    # If is spatial map, fix extent to keep plot tight.
-    try:
-        lat_axis, lon_axis = get_cube_yxcoordname(cube)
-        if cmap.name in ["viridis", "Greys"]:
-            coastcol = "m"
-        else:
-            coastcol = "k"
-        logging.debug("Plotting coastlines %s.", coastcol)
-        axes.coastlines(resolution="10m", color=coastcol)
-        x1 = np.min(cube.coord(lon_axis).points)
-        x2 = np.max(cube.coord(lon_axis).points)
-        y1 = np.min(cube.coord(lat_axis).points)
-        y2 = np.max(cube.coord(lat_axis).points)
-        # Adjust bounds within +/- 180.0 if x dimension extends beyond half-globe.
-        if np.abs(x2 - x1) > 180.0:
-            x1 = x1 - 180.0
-            x2 = x2 - 180.0
-            logging.debug("Adjusting plot bounds to fit global extent.")
-        axes.set_extent([x1, x2, y1, y2])
-    except ValueError:
-        # Skip if no x and y map coordinates.
-        pass
 
     # Check to see if transect, and if so, adjust y axis.
     if is_transect(cube):
@@ -515,9 +592,10 @@ def _plot_and_save_postage_stamp_spatial_plot(
     for member, subplot in zip(
         cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1), strict=False
     ):
-        # Implicit interface is much easier here, due to needing to have the
-        # cartopy GeoAxes generated.
-        plt.subplot(grid_size, grid_size, subplot)
+        # Setup subplot map projection, extent and coastlines.
+        axes = _setup_spatial_map(
+            member, fig, cmap, grid_size=grid_size, subplot=subplot
+        )
         if method == "contourf":
             # Filled contour plot of the field.
             plot = iplt.contourf(member, cmap=cmap, levels=levels, norm=norm)
@@ -537,27 +615,8 @@ def _plot_and_save_postage_stamp_spatial_plot(
             plot = iplt.pcolormesh(member, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax)
         else:
             raise ValueError(f"Unknown plotting method: {method}")
-        ax = plt.gca()
-        ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
-        ax.set_axis_off()
-
-        # Add coastlines if cube contains x and y map coordinates.
-        # If is spatial map, fix extent to keep plot tight.
-        try:
-            lat_axis, lon_axis = get_cube_yxcoordname(cube)
-            ax.coastlines(resolution="10m")
-            x1 = np.min(cube.coord(lon_axis).points)
-            x2 = np.max(cube.coord(lon_axis).points)
-            y1 = np.min(cube.coord(lat_axis).points)
-            y2 = np.max(cube.coord(lat_axis).points)
-            # Adjust bounds within +/- 180.0 if x dimension extends beyond half-globe.
-            if np.abs(x2 - x1) > 180.0:
-                x1 = x1 - 180.0
-                x2 = x2 - 180.0
-            ax.set_extent([x1, x2, y1, y2])
-        except ValueError:
-            # Skip if no x and y map coordinates.
-            pass
+        axes.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
+        axes.set_axis_off()
 
     # Put the shared colorbar in its own axes.
     colorbar_axes = fig.add_axes([0.15, 0.07, 0.7, 0.03])
@@ -923,6 +982,9 @@ def _plot_and_save_vector_plot(
     # Specify the color bar
     cmap, levels, norm = _colorbar_map_levels(cube_vec_mag)
 
+    # Setup plot map projection, extent and coastlines.
+    axes = _setup_spatial_map(cube_vec_mag, fig, cmap)
+
     if method == "contourf":
         # Filled contour plot of the field.
         plot = iplt.contourf(cube_vec_mag, cmap=cmap, levels=levels, norm=norm)
@@ -940,27 +1002,6 @@ def _plot_and_save_vector_plot(
         plot = iplt.pcolormesh(cube_vec_mag, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax)
     else:
         raise ValueError(f"Unknown plotting method: {method}")
-
-    # Using pyplot interface here as we need iris to generate a cartopy GeoAxes.
-    axes = plt.gca()
-
-    # Add coastlines if cube contains x and y map coordinates.
-    # If is spatial map, fix extent to keep plot tight.
-    try:
-        lat_axis, lon_axis = get_cube_yxcoordname(cube_vec_mag)
-        axes.coastlines(resolution="10m")
-        x1 = np.min(cube_vec_mag.coord(lon_axis).points)
-        x2 = np.max(cube_vec_mag.coord(lon_axis).points)
-        y1 = np.min(cube_vec_mag.coord(lat_axis).points)
-        y2 = np.max(cube_vec_mag.coord(lat_axis).points)
-        # Adjust bounds within +/- 180.0 if x dimension extends beyond half-globe.
-        if (x2 - x1) > 180.0:
-            x1 = x1 - 180.0
-            x2 = x2 - 180.0
-        axes.set_extent([x1, x2, y1, y2])
-    except ValueError:
-        # Skip if no x and y map coordinates.
-        pass
 
     # Check to see if transect, and if so, adjust y axis.
     if is_transect(cube_vec_mag):

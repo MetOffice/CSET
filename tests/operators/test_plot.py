@@ -24,7 +24,7 @@ import matplotlib as mpl
 import numpy as np
 import pytest
 
-from CSET.operators import collapse, plot
+from CSET.operators import collapse, plot, read
 
 
 def test_check_single_cube():
@@ -242,6 +242,50 @@ def test_colorbar_map_levels_missing_pressure_level(
         ]
 
 
+def test_setup_spatial_map(cube):
+    """Setup spatial map."""
+    # Test setup map function returns GeoAxes instance.
+    figure = mpl.figure.Figure()
+    axes = plot._setup_spatial_map(cube, figure, mpl.colormaps["viridis"])
+    assert axes == figure.gca()
+    # Test bounds - set as global as rotated pole input.
+    bounds = axes.get_extent()
+    assert bounds[0] == -180.0
+    assert bounds[1] == 180.0
+    assert bounds[2] == -90.0
+    assert bounds[3] == 90.0
+
+
+def test_setup_spatial_map_dateline(cube):
+    """Setup spatial map for dateline-crossing example."""
+    # Test for cube crossing dateline example.
+    cube = read.read_cubes("tests/test_data/air_temperature_dateline.nc")[0]
+    figure = mpl.figure.Figure()
+    axes_dl = plot._setup_spatial_map(cube, figure, mpl.colormaps["viridis"])
+    assert axes_dl == figure.gca()
+    # Test map bounds based on known pre-set domain KGO values.
+    bounds = axes_dl.get_extent()
+    assert round(bounds[0], 2) == -6.99
+    assert round(bounds[1], 2) == 1.65
+    assert round(bounds[2], 2) == -41.99
+    assert round(bounds[3], 2) == -33.35
+
+
+def test_setup_spatial_map_global(cube):
+    """Setup spatial map for global cube example."""
+    # Test for global cube example.
+    cube = read.read_cubes("tests/test_data/air_temperature_global.nc")[0]
+    figure = mpl.figure.Figure()
+    axes_gl = plot._setup_spatial_map(cube, figure, mpl.colormaps["viridis"])
+    assert axes_gl == figure.gca()
+    # Test map bounds based on cube-relative calculation of KGO values.
+    bounds = axes_gl.get_extent()
+    assert bounds[0] == np.min(cube.coord("longitude").points) - 180.0
+    assert bounds[1] == np.max(cube.coord("longitude").points) - 180.0
+    assert bounds[2] == np.min(cube.coord("latitude").points)
+    assert bounds[3] == np.max(cube.coord("latitude").points)
+
+
 def test_spatial_contour_plot(cube, tmp_working_dir):
     """Plot spatial contour plot of instant air temp."""
     # Remove realization coord to increase coverage, and as its not needed.
@@ -381,7 +425,7 @@ def test_pcolormesh_coastline(cube, caplog, tmp_working_dir):
         plot.spatial_pcolormesh_plot(cube)
         message_match = False
         for _, _, message in caplog.record_tuples:
-            if message == "Plotting coastlines k.":
+            if message == "Plotting coastlines in colour black.":
                 message_match = True
         assert message_match
 
@@ -394,7 +438,7 @@ def test_pcolormesh_coastline_m(cube, caplog, tmp_working_dir):
         plot.spatial_pcolormesh_plot(cube)
         message_match = False
         for _, _, message in caplog.record_tuples:
-            if message == "Plotting coastlines m.":
+            if message == "Plotting coastlines in colour magenta.":
                 message_match = True
         assert message_match
 
