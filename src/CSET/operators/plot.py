@@ -1455,19 +1455,19 @@ def _custom_beaufort_scale(cube: iris.cube.Cube, axis: Literal["x", "y"] | None 
         else:
             levels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
             colors = [
-                "w",
+                "black",
                 (0, 0, 0.6),
-                "b",
-                "c",
-                "g",
-                "y",
+                "blue",
+                "cyan",
+                "green",
+                "yellow",
                 (1, 0.5, 0),
-                "r",
+                "red",
                 "pink",
-                "m",
+                "magenta",
                 "purple",
                 "maroon",
-                "k",
+                "white",
             ]
             cmap = mcolors.ListedColormap(colors)
             norm = mcolors.BoundaryNorm(levels, cmap.N)
