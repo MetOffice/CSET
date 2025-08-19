@@ -119,11 +119,6 @@ def setup_argument_parser() -> argparse.ArgumentParser:
     parser_bake.add_argument(
         "--skip-write", action="store_true", help="Skip saving processed output"
     )
-    parser_bake.add_argument(
-        "--histogram-method",
-        type=str,
-        help="histogram method to use i.e. frequency, normalised_frequency or density",
-    )
     parser_bake.set_defaults(func=_bake_command)
 
     parser_graph = subparsers.add_parser("graph", help="visualise a recipe file")
@@ -241,7 +236,6 @@ def _bake_command(args, unparsed_args):
         args.style_file,
         args.plot_resolution,
         args.skip_write,
-        args.histogram_method,
     )
 
 

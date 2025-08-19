@@ -16,22 +16,17 @@ page.
     usage: cset bake [-h] [-i INPUT_DIR [INPUT_DIR ...]] -o OUTPUT_DIR -r RECIPE [-s STYLE_FILE] [--plot-resolution PLOT_RESOLUTION] [--skip-write]
 
     options:
-      -h, --help
-                              show this help message and exit
+      -h, --help            show this help message and exit
       -i, --input-dir INPUT_DIR [INPUT_DIR ...]
                               Alternate way to set the INPUT_PATHS recipe variable
       -o, --output-dir OUTPUT_DIR
                               directory to write output into
-      -r, --recipe RECIPE
-                              recipe file to read
+      -r, --recipe RECIPE   recipe file to read
       -s, --style-file STYLE_FILE
                               colour bar definition to use
       --plot-resolution PLOT_RESOLUTION
                               plotting resolution in dpi
-      --histogram-method HISTOGRAM_METHOD
-                              histogram method to use i.e. frequency, normalised_frequency or density
-      --skip-write
-                              Skip saving processed output
+      --skip-write          Skip saving processed output
 
 Here is an example to run a recipe making use of the templated variable
 ``VARNAME`` in the recipe. The '-v' is optional to give verbose output:
