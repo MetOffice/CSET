@@ -345,7 +345,11 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
 
 
 def _setup_spatial_map(
-    cube: iris.cube.Cube, cmap, grid_size: int | None = None, subplot: int | None = None
+    cube: iris.cube.Cube,
+    figure,
+    cmap,
+    grid_size: int | None = None,
+    subplot: int | None = None,
 ):
     """Define map projections, extent and add coastlines for spatial plots.
 
@@ -356,6 +360,8 @@ def _setup_spatial_map(
     ----------
     cube: Cube
         2 dimensional (lat and lon) Cube of the data to plot.
+    figure:
+        Matplotlib Figure object holding all plot elements.
     cmap:
         Matplotlib colormap.
     grid_size: int, optional
@@ -410,9 +416,11 @@ def _setup_spatial_map(
 
         # Define axes for plot (or subplot) with required map projection.
         if subplot is not None:
-            axes = plt.subplot(grid_size, grid_size, subplot, projection=projection)
+            axes = figure.add_subplot(
+                grid_size, grid_size, subplot, projection=projection
+            )
         else:
-            axes = plt.axes(projection=projection)
+            axes = figure.add_subplot(projection=projection)
 
         # Add coastlines if cube contains x and y map coordinates.
         if cmap.name in ["viridis", "Greys"]:
@@ -429,7 +437,7 @@ def _setup_spatial_map(
 
     except ValueError:
         # Skip if not both x and y map coordinates.
-        axes = plt.gca()
+        axes = figure.gca()
         pass
 
     return axes
@@ -467,7 +475,7 @@ def _plot_and_save_spatial_plot(
     cmap, levels, norm = _colorbar_map_levels(cube)
 
     # Setup plot map projection, extent and coastlines.
-    axes = _setup_spatial_map(cube, cmap)
+    axes = _setup_spatial_map(cube, fig, cmap)
 
     # Plot the field.
     if method == "contourf":
@@ -585,7 +593,9 @@ def _plot_and_save_postage_stamp_spatial_plot(
         cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1), strict=False
     ):
         # Setup subplot map projection, extent and coastlines.
-        axes = _setup_spatial_map(member, cmap, grid_size=grid_size, subplot=subplot)
+        axes = _setup_spatial_map(
+            member, fig, cmap, grid_size=grid_size, subplot=subplot
+        )
         if method == "contourf":
             # Filled contour plot of the field.
             plot = iplt.contourf(member, cmap=cmap, levels=levels, norm=norm)
@@ -973,7 +983,7 @@ def _plot_and_save_vector_plot(
     cmap, levels, norm = _colorbar_map_levels(cube_vec_mag)
 
     # Setup plot map projection, extent and coastlines.
-    axes = _setup_spatial_map(cube_vec_mag, cmap)
+    axes = _setup_spatial_map(cube_vec_mag, fig, cmap)
 
     if method == "contourf":
         # Filled contour plot of the field.
