@@ -409,7 +409,7 @@ def _setup_spatial_map(
             crs = ccrs.PlateCarree()
 
         # Define axes for plot (or subplot) with required map projection.
-        if subplot:
+        if subplot is not None:
             axes = plt.subplot(grid_size, grid_size, subplot, projection=projection)
         else:
             axes = plt.axes(projection=projection)
