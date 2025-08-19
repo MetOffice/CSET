@@ -448,11 +448,6 @@ def _get_plot_resolution() -> int:
     return get_recipe_metadata().get("plot_resolution", 100)
 
 
-def _get_histogram_method() -> str:
-    """Get method to use when computing histograms."""
-    return get_recipe_metadata().get("histogram_method", "density").lower()
-
-
 def _plot_and_save_spatial_plot(
     cube: iris.cube.Cube,
     filename: str,
@@ -1167,7 +1162,7 @@ def _plot_and_save_histogram_series(
     title: str,
     vmin: float,
     vmax: float,
-    **kwargs,
+    histogram_method: str,
 ):
     """Plot and save a histogram series.
 
@@ -1183,6 +1178,8 @@ def _plot_and_save_histogram_series(
         minimum for colorbar
     vmax: float
         maximum for colorbar
+    histogram_method: str
+        Histogram method to use i.e. frequency, normalised_frequency or density.
     """
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     ax = plt.gca()
@@ -1230,7 +1227,7 @@ def _plot_and_save_histogram_series(
         # Plot the histogram.x, y = np.histogram(cube_data_1d, bins=bins, density=density)
         y = _plot_histogram(
             cube_data_1d,
-            method=_get_histogram_method(),
+            method=histogram_method,
             title=title,
             units=cube.units,
             bins=bins,
@@ -1267,7 +1264,7 @@ def _plot_and_save_postage_stamp_histogram_series(
     stamp_coordinate: str,
     vmin: float,
     vmax: float,
-    **kwargs,
+    histogram_method: str,
 ):
     """Plot and save postage (ensemble members) stamps for a histogram series.
 
@@ -1285,6 +1282,9 @@ def _plot_and_save_postage_stamp_histogram_series(
         minimum for pdf x-axis
     vmax: float
         maximum for pdf x-axis
+    histogram_method: str
+        Histogram method to use i.e. frequency, normalised_frequency or density.
+
     """
     # Use the smallest square grid that will fit the members.
     grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
@@ -1320,7 +1320,7 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
     stamp_coordinate: str,
     vmin: float,
     vmax: float,
-    **kwargs,
+    histogram_method: str,
 ):
     fig, ax = plt.subplots(figsize=(10, 10), facecolor="w", edgecolor="k")
     ax.set_title(title, fontsize=16)
@@ -2004,7 +2004,7 @@ def scatter_plot(
 def vector_plot(
     cube_u: iris.cube.Cube,
     cube_v: iris.cube.Cube,
-    filename: str = None,
+    filename: str | None = None,
     sequence_coordinate: str = "time",
     **kwargs,
 ) -> iris.cube.CubeList:
@@ -2059,10 +2059,11 @@ def vector_plot(
 
 def plot_histogram_series(
     cubes: iris.cube.Cube | iris.cube.CubeList,
-    filename: str = None,
+    filename: str | None = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
     single_plot: bool = False,
+    histogram_method: str = "frequency",
     **kwargs,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Plot a histogram plot for each vertical level provided.
@@ -2095,6 +2096,8 @@ def plot_histogram_series(
         If True, all postage stamp plots will be plotted in a single plot. If
         False, each postage stamp plot will be plotted separately. Is only valid
         if stamp_coordinate exists and has more than a single point.
+    histogram_method: str
+        Histogram method to use i.e. frequency, normalised_frequency or density.
 
     Returns
     -------
@@ -2227,6 +2230,7 @@ def plot_histogram_series(
             title=title,
             vmin=vmin,
             vmax=vmax,
+            histogram_method=histogram_method,
         )
         plot_index.append(plot_filename)
 
