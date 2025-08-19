@@ -299,7 +299,7 @@ def test_colorbar_map_mask_difference(cube, tmp_working_dir):
     cube.rename(f"mask_for_{cube.name()}_difference")
     cmap, levels, norm = plot._colorbar_map_levels(cube)
     assert cmap == mpl.colors.ListedColormap(["goldenrod", "w", "teal"])
-    assert levels == [-2, -1, 1, 2]
+    assert levels == [-2, -0.5, 0.5, 2]
     assert isinstance(norm, mpl.colors.BoundaryNorm)
     assert (norm.boundaries == levels).all()
 
