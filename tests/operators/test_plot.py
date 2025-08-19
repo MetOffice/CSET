@@ -303,19 +303,19 @@ def test_colorbar_map_beaufort_scale(cube, tmp_working_dir):
     cmap, levels, norm = plot._colorbar_map_levels(cube)
     assert cmap == mpl.colors.ListedColormap(
         [
-            "w",
+            "black",
             (0, 0, 0.6),
-            "b",
-            "c",
-            "g",
-            "y",
+            "blue",
+            "cyan",
+            "green",
+            "yellow",
             (1, 0.5, 0),
-            "r",
+            "red",
             "pink",
-            "m",
+            "magenta",
             "purple",
             "maroon",
-            "k",
+            "white",
         ]
     )
     assert levels == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
