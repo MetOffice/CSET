@@ -284,6 +284,8 @@ def test_setup_spatial_map_global(cube):
     assert bounds[1] == np.max(cube.coord("longitude").points) - 180.0
     assert bounds[2] == np.min(cube.coord("latitude").points)
     assert bounds[3] == np.max(cube.coord("latitude").points)
+
+
 def test_colorbar_map_mask(cube, tmp_working_dir):
     """Test to ensure axis picks up correct colormap for a mask."""
     cube.rename(f"mask_for_{cube.name()}")
