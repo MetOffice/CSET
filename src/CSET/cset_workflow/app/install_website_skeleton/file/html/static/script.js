@@ -66,78 +66,61 @@ function ensure_dual_frame() {
   dual_frame.classList.remove("hidden");
 }
 
-function construct_sidebar_from_data(data) {
-  const sidebar = document.getElementById("plot-selector");
+function add_to_sidebar(record) {
+  const diagnostics_list = document.getElementById("diagnostics");
+
+  // Add entry's display name.
+  const entry_name = document.createElement("h3")
+  entry_name.textContent = record["name"];
+
+  const facets = document.createElement("dl");
+  for (const facet in record) {
+    const dt = document.createElement("dt");
+    dt.textContent = facet;
+    const dd = document.createElement("dd");
+    dd.textContent = record[facet];
+    facets.append(dt, dd);
+  }
+
+
+  // Container element for plot position chooser buttons.
+  const position_chooser = document.createElement("div");
+  position_chooser.classList.add("plot-position-chooser");
+
+  // Bind path to name in this scope to ensure it sticks around for callbacks.
+  const path = record["path"];
   // Button icons.
   const icons = { left: "◧", full: "▣", right: "◨" };
 
-  for (const category in data) {
-    // Details element for category.
-    const category_details = document.createElement("details");
+  // Add buttons for each position.
+  for (const position of ["left", "full", "right"]) {
+    // Create button.
+    const button = document.createElement("button");
+    button.classList.add(position);
+    button.textContent = icons[position];
 
-    // Title for category (summary element).
-    const category_summary = document.createElement("summary");
-    category_summary.textContent = category;
-    category_details.append(category_summary);
+    // Add a callback updating the iframe when the link is clicked.
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      // Set the appropriate frame layout.
+      position == "full" ? ensure_single_frame() : ensure_dual_frame();
+      document.getElementById(`plot-frame-${position}`).src = `plots/${path}`;
+    });
 
-    // Add each case date into category.
-    for (const case_date in data[category]) {
-      // Details element for case_date.
-      const case_details = document.createElement("details");
-
-      // Title for case_date.
-      const case_summary = document.createElement("summary");
-      case_summary.textContent = case_date;
-      case_details.append(case_summary);
-
-      // Menu of plots for this category and case_date.
-      const case_menu = document.createElement("menu");
-
-      // Add each plot.
-      for (const plot in data[category][case_date]) {
-        // Menu entry for plot.
-        const list_item = document.createElement("li");
-        list_item.textContent = data[category][case_date][plot];
-
-        // Container element for plot position chooser buttons.
-        const position_chooser = document.createElement("div");
-        position_chooser.classList.add("plot-position-chooser");
-
-        // Add buttons for each position.
-        for (const position of ["left", "full", "right"]) {
-          // Create button.
-          const button = document.createElement("button");
-          button.classList.add(position);
-          button.textContent = icons[position];
-
-          // Add a callback updating the iframe when the link is clicked.
-          button.addEventListener("click", (event) => {
-            event.preventDefault();
-            // Set the appropriate frame layout.
-            position == "full" ? ensure_single_frame() : ensure_dual_frame();
-            document.getElementById(`plot-frame-${position}`).src = `plots/${plot}`;
-          });
-
-          // Add button to chooser.
-          position_chooser.append(button);
-        }
-
-        // Add position chooser to entry.
-        list_item.append(position_chooser);
-
-        // Add entry to the menu.
-        case_menu.append(list_item);
-      }
-
-      // Finish constructing this case and add to its category.
-      case_details.append(case_menu);
-      category_details.append(case_details);
-    }
-
-    // Join category to the DOM.
-    sidebar.append(category_details);
+    // Add button to chooser.
+    position_chooser.append(button);
   }
+
+  // Create entry.
+  const entry = document.createElement("li");
+
+  // Add name, facets, and position chooser to entry.
+  entry.append(entry_name, facets, position_chooser);
+
+  // Join entry to the DOM.
+  diagnostics_list.append(entry);
 }
+
 
 // Plot selection sidebar
 function setup_plots_sidebar() {
@@ -146,7 +129,7 @@ function setup_plots_sidebar() {
     return;
   }
   // Loading of plot index file, and adding them to the sidebar.
-  fetch("plots/index.json")
+  fetch("plots/facets.jsonl")
     .then((response) => {
       // Display a message and stop if the fetch fails.
       if (!response.ok) {
@@ -155,7 +138,23 @@ function setup_plots_sidebar() {
         window.alert(message);
         return;
       }
-      response.json().then(construct_sidebar_from_data);
+      response.text().then((data) => {
+        for (let line of data.split("\n")) {
+          line = line.trim();
+          // Skip blank lines.
+          if (line.length) {
+            add_to_sidebar(JSON.parse(line));
+          }
+        }
+        // Do search if we already have a query specified in the URL.
+        const search = document.getElementById("filter-query");
+        const params = new URLSearchParams(document.location.search);
+        const initial_query = params.get("q");
+        if (initial_query) {
+          search.value = initial_query;
+          doSearch();
+        }
+      })
     })
     .catch((err) => {
       // Catch non-HTTP fetch errors.
@@ -176,7 +175,67 @@ function setup_clear_view_button() {
   clear_view_button.addEventListener("click", clear_frames);
 }
 
+// Parse the query, returning a comparison function.
+function parse_query(query) {
+  // TODO: Parse the query into an easily compared form.
+  const title = query.toLowerCase()
+
+  // Returns true or false for a given event based on the query.
+  function test(entry) {
+    // TODO: Implement comparison of facets.
+    return entry.textContent.includes(title)
+  }
+
+  return test
+}
+
+// Filter the displayed diagnostics by the query.
+function doSearch() {
+  const query = document.getElementById("filter-query").value;
+  // Update URL in address bar to match current query.
+  const url = new URL(document.location.href);
+  url.searchParams.set("q", query)
+  // Updates the URL without reloading the page.
+  history.pushState(history.state, "", url.href)
+
+  console.log("Search query:", query);
+  const test = parse_query(query)
+
+  // Filter all entries.
+  for (const entry of document.querySelectorAll("#diagnostics > li")) {
+    // Show entries matching filter and hide entries that don't.
+    if (test(entry)) {
+      entry.classList.remove("hidden")
+    } else {
+      entry.classList.add("hidden")
+    }
+  }
+}
+
+// For performance don't search on every keystroke immediately. Instead wait
+// until half a second of no typing has elapsed. To maximised perceived
+// responsiveness immediately perform the search if a space is typed, as that
+// indicates a completed search term.
+let searchTimeoutID = undefined;
+function debounce(e) {
+  clearTimeout(searchTimeoutID);
+  if (e.data == " ") {
+    doSearch();
+  } else {
+    searchTimeoutID = setTimeout(doSearch, 500);
+  }
+}
+
+// Diagnostic filtering searchbar.
+function setup_search() {
+  const search = document.getElementById("filter-query");
+  search.addEventListener("input", debounce);
+  // Immediately search if input is unfocused.
+  search.addEventListener("change", doSearch);
+}
+
 // Run everything.
 setup_description_toggle_button();
 setup_clear_view_button();
 setup_plots_sidebar();
+setup_search();
