@@ -36,7 +36,7 @@ nav > header > button {
 nav {
   display: inline;
   float: left;
-  width: 15em;
+  width: 35em;
   height: 100%;
   overflow-x: hidden;
   overflow-y: scroll;
@@ -48,7 +48,7 @@ nav summary {
   font-weight: bold;
 }
 
-nav menu {
+nav ul {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -58,7 +58,7 @@ nav details {
   margin: 8px;
 }
 
-nav menu > li {
+nav ul > li {
   background-color: lightgrey;
   margin: 8px 0;
   padding: 0 4px;
