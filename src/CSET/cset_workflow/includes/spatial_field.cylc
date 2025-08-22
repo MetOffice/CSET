@@ -1,4 +1,4 @@
-{% if SPATIAL_SURFACE_FIELD or SPATIAL_PLEVEL_FIELD or SPATIAL_MLEVEL_FIELD or RAIN_PRESENCE_SPATIAL %}
+{% if SPATIAL_SURFACE_FIELD or SPATIAL_PLEVEL_FIELD or SPATIAL_MLEVEL_FIELD or RAIN_PRESENCE_SPATIAL or DAILY_09_MAXIMUM_TEMPERATURE_SPATIAL_PLOT %}
 [[SPATIAL]]
     inherit=PROCESS
 
@@ -118,5 +118,24 @@
         MODEL_IDENTIFIERS = {{model["id"]}}
 {% endif %}
 
+# Daily maximum temperature
+{% if DAILY_09_MAXIMUM_TEMPERATURE_SPATIAL_PLOT|default(False) %}
+[runtime]
+    [[daily_maximum_temperature_spatial_plots_m{{model["id"]}}]]
+    inherit = SPATIAL
 
+        [[[environment]]]
+        CSET_RECIPE_NAME = "daily_09_maximum_temperature_spatial_plot.yaml"
+        CSET_ADDOPTS = """
+            --MODEL_NAME='{{model["name"]}}'
+            {% if SELECT_SUBAREA %}
+            --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
+            --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
+            {% else %}
+            --SUBAREA_TYPE='None'
+            --SUBAREA_EXTENT='None'
+            {% endif %}
+            """
+        MODEL_IDENTIFIERS = {{model["id"]}}
+{% endif %}
 {% endfor %}
