@@ -15,10 +15,13 @@ steps:
       operator: constraints.combine_constraints
       varname_constraint:
         operator: constraints.generate_var_constraint
-        varname: temperature_at_screen_level
+        varname: 'temperature_at_screen_level'
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
-        cell_methods: [method="maximum",coord="time",interval="1 hour"]
+        cell_methods: ['maximum']
+        varname: $VARNAME
+        coord: 'time'
+        interval: '1 hour'
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
