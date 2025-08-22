@@ -180,6 +180,28 @@ type=python_boolean
 compulsory=true
 sort-key=setup-h-out4
 
+[template variables=HISTOGRAM_METHOD]
+ns=Setup
+title=Histogram method
+description=Histogram method to use.
+help=This selects the method used to compute histograms. The options are:
+
+    "Density"               Computes the density histogram, i.e. the total area
+                            under the histogram is 1. This is the closest
+                            approximation to the continuous probability density
+                            function. This histogram shape is also invariant to
+                            the bin width.
+
+    "Frequency"             Computes the frequency histogram. This plots the
+                            number of counts in each bin.
+
+    "Normalised frequency"  Plots the number of counts in each bin normalised by the
+                            total number of counts. The sum of the counts is 1.
+values="density", "frequency", "normalised_frequency"
+value-titles=Density, Frequency, Normalised frequency
+compulsory=true
+sort-key=setup-h-out5
+
 [template variables=HOUSEKEEPING_MODE]
 ns=Setup
 title=Housekeeping mode
