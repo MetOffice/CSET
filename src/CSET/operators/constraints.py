@@ -20,8 +20,8 @@ from collections.abc import Iterable
 from datetime import datetime
 
 import iris
+import iris.coords
 import iris.cube
-import iris.exceptions
 
 from CSET._common import iter_maybe
 
@@ -126,7 +126,12 @@ def generate_level_constraint(
 
 
 def generate_cell_methods_constraint(
-    cell_methods: list, varname: str = None, **kwargs
+    cell_methods: list,
+    varname: str | None = None,
+    coord: iris.coords.Coord | None = None,
+    interval: str | None = None,
+    comment: str | None = None,
+    **kwargs,
 ) -> iris.Constraint:
     """Generate constraint from cell methods.
 
@@ -150,10 +155,6 @@ def generate_cell_methods_constraint(
             """Check that any cell methods are "point", meaning no aggregation."""
             return set(cm.method for cm in cube.cell_methods) <= {"point"}
 
-        def check_cell_mean(cube: iris.cube.Cube) -> bool:
-            """Check that any cell methods are "mean"."""
-            return set(cm.method for cm in cube.cell_methods) == {"mean"}
-
         def check_cell_sum(cube: iris.cube.Cube) -> bool:
             """Check that any cell methods are "sum"."""
             return set(cm.method for cm in cube.cell_methods) == {"sum"}
@@ -173,7 +174,13 @@ def generate_cell_methods_constraint(
     else:
         # If cell_method constraint set in recipe, check for required input.
         def check_cell_methods(cube: iris.cube.Cube) -> bool:
-            return cube.cell_methods == tuple(cell_methods)
+            return all(
+                iris.coords.CellMethod(
+                    method=cm, coords=coord, intervals=interval, comments=comment
+                )
+                in cube.cell_methods
+                for cm in cell_methods
+            )
 
         cell_methods_constraint = iris.Constraint(cube_func=check_cell_methods)
 
