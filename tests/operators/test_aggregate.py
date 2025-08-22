@@ -116,3 +116,32 @@ def test_add_hour_coordinate_cubelist(long_forecast_many_cubes):
         assert hour_coord
         assert hour_coord.units == "hours"
         assert len(set(hour_coord.points)) == 24
+
+
+def test_rolling_window_time_aggregation(long_forecast):
+    """Check that a rolling maximum is found in a cube."""
+    expected_cube = long_forecast.rolling_window("time", iris.analysis.MAX, 24)
+    actual_cube = aggregate.rolling_window_time_aggregation(long_forecast, "MAX", 24)
+    # Ensure expected and actual cubes are the same shape.
+    assert expected_cube.shape == actual_cube.shape
+    # Ensure rolling window has applied so shapes differ by window size -1 from original cube.
+    assert actual_cube.shape[0] == long_forecast.shape[0] - 23
+    # Ensure data is the same.
+    assert np.allclose(expected_cube.data, actual_cube.data, rtol=1e-6, atol=1e-2)
+
+
+def test_rolling_window_time_aggregation_cubelist(long_forecast):
+    """Check that a rolling maximum is found in a cubelist."""
+    cubelist = iris.cube.CubeList([long_forecast, long_forecast])
+    actual_cubelist = aggregate.rolling_window_time_aggregation(cubelist, "MAX", 24)
+    expected_cubes = iris.cube.CubeList([])
+    for cube in cubelist:
+        new_cube = cube.rolling_window("time", iris.analysis.MAX, 24)
+        expected_cubes.append(new_cube)
+
+    for cube_a, cube_b, cube_c in zip(
+        actual_cubelist, expected_cubes, cubelist, strict=True
+    ):
+        assert cube_a.shape == cube_b.shape
+        assert cube_a.shape[0] == cube_c.shape[0] - 23
+        assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
