@@ -339,14 +339,14 @@ def test_colorbar_map_beaufort_scale_difference(cube, tmp_working_dir):
     cmap, levels, norm = plot._colorbar_map_levels(cube)
     assert cmap == plt.get_cmap("bwr", 8)
     assert levels == [
-        -4,
-        -3,
-        -2,
-        -1,
-        1,
-        2,
-        3,
-        4,
+        -3.5,
+        -2.5,
+        -1.5,
+        -0.5,
+        0.5,
+        1.5,
+        2.5,
+        3.5,
     ]
     assert isinstance(norm, mpl.colors.BoundaryNorm)
     assert (norm.boundaries == levels).all()

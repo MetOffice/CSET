@@ -1477,14 +1477,14 @@ def _custom_beaufort_scale(cube: iris.cube.Cube, axis: Literal["x", "y"] | None 
             return None, levels, None
         else:
             levels = [
-                -4,
-                -3,
-                -2,
-                -1,
-                1,
-                2,
-                3,
-                4,
+                -3.5,
+                -2.5,
+                -1.5,
+                -0.5,
+                0.5,
+                1.5,
+                2.5,
+                3.5,
             ]
             cmap = plt.get_cmap("bwr", 8)
             norm = mcolors.BoundaryNorm(levels, cmap.N)
