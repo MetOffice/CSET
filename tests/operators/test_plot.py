@@ -337,16 +337,8 @@ def test_colorbar_map_beaufort_scale_difference(cube, tmp_working_dir):
     """Test to ensure picks up correct colormap for Beaufort Scale difference."""
     cube.rename("wind_speed_at_10m_on_Beaufort_Scale_difference")
     cmap, levels, norm = plot._colorbar_map_levels(cube)
-    assert cmap == plt.get_cmap("bwr", 24)
+    assert cmap == plt.get_cmap("bwr", 8)
     assert levels == [
-        -12,
-        -11,
-        -10,
-        -9,
-        -8,
-        -7,
-        -6,
-        -5,
         -4,
         -3,
         -2,
@@ -355,14 +347,6 @@ def test_colorbar_map_beaufort_scale_difference(cube, tmp_working_dir):
         2,
         3,
         4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12,
     ]
     assert isinstance(norm, mpl.colors.BoundaryNorm)
     assert (norm.boundaries == levels).all()
@@ -400,7 +384,7 @@ def test_colorbar_map_beaufort_scale_axis_difference(cube, tmp_working_dir):
     cube.rename("wind_speed_at_10m_on_Beaufort_Scale_difference")
     cmap, levels, norm = plot._colorbar_map_levels(cube, axis="x")
     assert cmap is None
-    assert levels == [-12, 12]
+    assert levels == [-4, 4]
     assert norm is None
 
 
