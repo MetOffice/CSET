@@ -21,6 +21,7 @@ from pathlib import Path
 import iris.coords
 import iris.cube
 import matplotlib as mpl
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
@@ -296,12 +297,57 @@ def test_colorbar_map_mask(cube, tmp_working_dir):
     assert (norm.boundaries == levels).all()
 
 
+def test_colorbar_map_beaufort_scale(cube, tmp_working_dir):
+    """Test to ensure picks up correct colormap for a cube in Beaufort Scale."""
+    cube.rename("wind_speed_at_10m_on_Beaufort_Scale")
+    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    assert cmap == mpl.colors.ListedColormap(
+        [
+            "black",
+            (0, 0, 0.6),
+            "blue",
+            "cyan",
+            "green",
+            "yellow",
+            (1, 0.5, 0),
+            "red",
+            "pink",
+            "magenta",
+            "purple",
+            "maroon",
+            "white",
+        ]
+    )
+    assert levels == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+    assert isinstance(norm, mpl.colors.BoundaryNorm)
+    assert (norm.boundaries == levels).all()
+
+
 def test_colorbar_map_mask_difference(cube, tmp_working_dir):
     """Test to ensure axis picks up correct colormap for a mask difference."""
     cube.rename(f"mask_for_{cube.name()}_difference")
     cmap, levels, norm = plot._colorbar_map_levels(cube)
     assert cmap == mpl.colors.ListedColormap(["goldenrod", "w", "teal"])
     assert levels == [-2, -0.5, 0.5, 2]
+    assert isinstance(norm, mpl.colors.BoundaryNorm)
+    assert (norm.boundaries == levels).all()
+
+
+def test_colorbar_map_beaufort_scale_difference(cube, tmp_working_dir):
+    """Test to ensure picks up correct colormap for Beaufort Scale difference."""
+    cube.rename("wind_speed_at_10m_on_Beaufort_Scale_difference")
+    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    assert cmap == plt.get_cmap("bwr", 8)
+    assert levels == [
+        -3.5,
+        -2.5,
+        -1.5,
+        -0.5,
+        0.5,
+        1.5,
+        2.5,
+        3.5,
+    ]
     assert isinstance(norm, mpl.colors.BoundaryNorm)
     assert (norm.boundaries == levels).all()
 
@@ -321,6 +367,24 @@ def test_colorbar_map_axis_mask_difference(cube, tmp_working_dir):
     cmap, levels, norm = plot._colorbar_map_levels(cube, axis="x")
     assert cmap is None
     assert levels == [-1, 1]
+    assert norm is None
+
+
+def test_colorbar_map_beaufort_scale_axis(cube, tmp_working_dir):
+    """Test to ensure axis picks up correct levels for a cube in Beaufort Scale."""
+    cube.rename("wind_speed_at_10m_on_Beaufort_Scale")
+    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="y")
+    assert cmap is None
+    assert levels == [0, 12]
+    assert norm is None
+
+
+def test_colorbar_map_beaufort_scale_axis_difference(cube, tmp_working_dir):
+    """Test to ensure axis picks up correct levels for a cube in Beaufort Scale difference."""
+    cube.rename("wind_speed_at_10m_on_Beaufort_Scale_difference")
+    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="x")
+    assert cmap is None
+    assert levels == [-4, 4]
     assert norm is None
 
 
