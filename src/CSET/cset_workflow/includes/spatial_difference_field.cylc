@@ -142,6 +142,6 @@
             --SUBAREA_EXTENT='None'
             {% endif %}
         """
-        MODEL_IDENTIFIES = '1 {{model["id"]}}'
+        MODEL_IDENTIFIERS = '1 {{model["id"]}}'
 {% endif %}
 {% endfor %}
