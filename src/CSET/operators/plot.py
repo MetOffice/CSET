@@ -268,7 +268,7 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
     # First try long name, then standard name, then var name. This order is used
     # as long name is the one we correct between models, so it most likely to be
     # consistent.
-    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    varnames = list(filter(None, [cube.long_name, cube.standard_name, cube.var_name]))
     for varname in varnames:
         # Get the colormap for this variable.
         try:
@@ -280,12 +280,10 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
             logging.debug("Cube name %s has no colorbar definition.", varname)
 
     # Get colormap if it is a mask.
-    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if any("mask_for_" in name for name in varnames):
         cmap, levels, norm = _custom_colormap_mask(cube, axis=axis)
         return cmap, levels, norm
     # If winds on Beaufort Scale use custom colorbar and levels
-    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if any("Beaufort_Scale" in name for name in varnames):
         cmap, levels, norm = _custom_beaufort_scale(cube, axis=axis)
         return cmap, levels, norm
@@ -1475,18 +1473,10 @@ def _custom_beaufort_scale(cube: iris.cube.Cube, axis: Literal["x", "y"] | None 
             return cmap, levels, norm
     else:
         if axis:
-            levels = [-12, 12]
+            levels = [-4, 4]
             return None, levels, None
         else:
             levels = [
-                -12,
-                -11,
-                -10,
-                -9,
-                -8,
-                -7,
-                -6,
-                -5,
                 -4,
                 -3,
                 -2,
@@ -1495,16 +1485,8 @@ def _custom_beaufort_scale(cube: iris.cube.Cube, axis: Literal["x", "y"] | None 
                 2,
                 3,
                 4,
-                5,
-                6,
-                7,
-                8,
-                9,
-                10,
-                11,
-                12,
             ]
-            cmap = plt.get_cmap("bwr", 24)
+            cmap = plt.get_cmap("bwr", 8)
             norm = mcolors.BoundaryNorm(levels, cmap.N)
             return cmap, levels, norm
 
