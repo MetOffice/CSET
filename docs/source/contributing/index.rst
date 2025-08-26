@@ -13,6 +13,7 @@ need to get started, and the links below go into more detail on specific topics.
     testing
     documentation
     code-review
+    dependencies
     releases
 
 Contributing checklist

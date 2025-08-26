@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#!/usr/bin/env python3
 # © Crown copyright, Met Office (2022-2025) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@
 import itertools
 import json
 import os
+from base64 import b64decode
 
 # matplotlib tab20[::2] + tab20[1::2]
 DISCRETE_COLORS = (
@@ -70,7 +71,7 @@ def create_model_colour_mapping(model_names: list[str]) -> dict:
 
 def main():
     """Create model name <-> colour mappings add to a copy of the style file."""
-    model_names = json.loads(os.environ["MODEL_NAMES"])
+    model_names = json.loads(b64decode(os.environ["MODEL_NAMES"]))
     print(f"Processing models: {', '.join(model_names)}")
 
     style_file = os.getenv("COLORBAR_FILE")

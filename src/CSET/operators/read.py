@@ -20,7 +20,6 @@ import functools
 import glob
 import itertools
 import logging
-import warnings
 from pathlib import Path
 from typing import Literal
 
@@ -38,8 +37,8 @@ from CSET.operators._stash_to_lfric import STASH_TO_LFRIC
 from CSET.operators._utils import get_cube_yxcoordname
 
 
-class NoDataWarning(UserWarning):
-    """Warning that no data has been loaded."""
+class NoDataError(FileNotFoundError):
+    """Error that no data has been loaded."""
 
 
 def read_cube(
@@ -201,9 +200,7 @@ def read_cubes(
 
     logging.info("Loaded cubes: %s", cubes)
     if len(cubes) == 0:
-        warnings.warn(
-            "No cubes loaded, check your constraints!", NoDataWarning, stacklevel=2
-        )
+        raise NoDataError("No cubes loaded, check your constraints!")
     return cubes
 
 

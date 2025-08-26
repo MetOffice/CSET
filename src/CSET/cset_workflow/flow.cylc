@@ -5,7 +5,7 @@ description = Workflow for running CSET.
 URL = https://metoffice.github.io/CSET
 
 # Import all of our Jinja utilities for use in the workflow.
-{% from "jinja_utils" import get_model_names, get_model_ids, get_models, glob, max, min, zip, sanitise_task_name %}
+{% from "jinja_utils" import b64json, get_model_names, get_model_ids, get_models, glob, max, min, zip, sanitise_task_name %}
 # Load a list a model detail dictionaries.
 {% set models = get_models(ROSE_SUITE_VARIABLES) %}
 {% set model_ids = get_model_ids(models) %}
@@ -15,22 +15,19 @@ URL = https://metoffice.github.io/CSET
 
 
 [scheduling]
-    # Initial and final cycle points cover the entire period of interest.
-    {% if CSET_CYCLING_MODE == "case_study" %}
-        initial cycle point = {{ min(CSET_CASE_DATES) }}
-        final cycle point = {{ max(CSET_CASE_DATES) }}
-    {% elif CSET_CYCLING_MODE == "trial" %}
-        initial cycle point = {{CSET_TRIAL_START_DATE}}
-        # End date can be blank.
-        {% if CSET_TRIAL_END_DATE|default(False) %}
-            final cycle point = {{CSET_TRIAL_END_DATE}}
-        {% endif %}
-    {% endif %}
+# Initial and final cycle points cover the entire period of interest.
+{% if CSET_CYCLING_MODE == "case_study" %}
+initial cycle point = {{ CSET_CASE_DATES|min }}
+final cycle point = {{ CSET_CASE_DATES|max }}
+{% elif CSET_CYCLING_MODE == "trial" %}
+initial cycle point = {{CSET_TRIAL_START_DATE}}
+final cycle point = {{CSET_TRIAL_END_DATE}}
+{% endif %}
 
     [[special tasks]]
-        # cycle_complete depends on its previous instance. We then don't need to
-        # know the offset between the cycles.
-        sequential = cycle_complete
+    # cycle_complete depends on its previous instance. We then don't need to
+    # know the offset between the cycles.
+    sequential = cycle_complete
 
     [[graph]]
     # Only runs on the first cycle.
@@ -52,7 +49,7 @@ URL = https://metoffice.github.io/CSET
             """
         {% endfor %}
     {% elif CSET_CYCLING_MODE == "trial" %}
-        # Analyse from each forecast.
+        # Analysis from each forecast.
         {{CSET_TRIAL_CYCLE_PERIOD}} = """
         setup_complete[^] =>
         FETCH_DATA:succeed-all =>
@@ -66,13 +63,13 @@ URL = https://metoffice.github.io/CSET
     # Can only run tasks on final cycle point if it exists, so skip for
     # continuous trials.
     {% if CSET_CYCLING_MODE != "trial" or CSET_TRIAL_END_DATE|default(False) %}
-        # Only runs on the final cycle.
-        R1/$ = """
-        cycle_complete =>
-        PROCESS_CASE_AGGREGATION:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} =>
-        finish_website => send_email
-        finish_website => housekeeping
-        """
+    # Only runs on the final cycle.
+    R1/$ = """
+    cycle_complete =>
+    PROCESS_CASE_AGGREGATION:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} =>
+    finish_website => send_email
+    finish_website => housekeeping
+    """
     {% endif %}
 
 
@@ -187,7 +184,7 @@ URL = https://metoffice.github.io/CSET
     execution time limit = PT5M
         [[[environment]]]
         COLORBAR_FILE = {{COLORBAR_FILE}}
-        MODEL_NAMES = '{{model_names}}'
+        MODEL_NAMES = {{ b64json(models|map(attribute="name")|list) }}
 
     {% for model in models %}
     [[fetch_fcst_m{{model["id"]}}]]
@@ -218,7 +215,7 @@ URL = https://metoffice.github.io/CSET
     {% endif %}
 
     [[housekeeping]]
-    # Housekeep unprocessed data files and processed intermediate files.
+    # Housekeep input data files.
         [[[environment]]]
         HOUSEKEEPING_MODE = {{HOUSEKEEPING_MODE}}
 
@@ -227,7 +224,6 @@ URL = https://metoffice.github.io/CSET
 
     [[send_email]]
     # Send email to notify that the workflow is complete.
-    platform = localhost
         [[[environment]]]
         WEB_ADDR = {{WEB_ADDR}}
         WEB_DIR = {{WEB_DIR}}
@@ -237,5 +233,5 @@ URL = https://metoffice.github.io/CSET
 {% include include_file %}
 {% endfor %}
 
-{# Site-specific details that add to (or override) the core suite definition #}
+# Site-specific details that add to or override the core workflow definition.
 {% include 'site/' ~ SITE ~ '.cylc' %}
