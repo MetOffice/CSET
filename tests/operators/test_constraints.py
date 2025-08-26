@@ -162,6 +162,28 @@ def test_generate_area_constraint_invalid_arguments():
         constraints.generate_area_constraint(None, None, None, 0)
 
 
+def test_generate_remove_single_ensemble_member_constraint():
+    """Generate a constraint to remove a single ensemble member using default value."""
+    single_member_constraint = (
+        constraints.generate_remove_single_ensemble_member_constraint()
+    )
+    assert (
+        "Constraint(coord_values={'realization': <function generate_remove_single_ensemble_member_constraint.<locals>.<lambda> at 0x"
+        in repr(single_member_constraint)
+    )
+
+
+def test_generate_remove_single_ensemble_member_constraint_any_value():
+    """Generate a constraint to remove a single ensemble member using chosen value."""
+    single_member_constraint = (
+        constraints.generate_remove_single_ensemble_member_constraint(2)
+    )
+    assert (
+        "Constraint(coord_values={'realization': <function generate_remove_single_ensemble_member_constraint.<locals>.<lambda> at 0x"
+        in repr(single_member_constraint)
+    )
+
+
 def test_combine_constraints():
     """Combine constraint."""
     stash_constraint = constraints.generate_stash_constraint("m01s03i236")

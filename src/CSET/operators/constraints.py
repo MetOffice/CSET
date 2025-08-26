@@ -279,6 +279,30 @@ def generate_area_constraint(
     return area_constraint
 
 
+def generate_remove_single_ensemble_member_constraint(
+    ens_member: int = 0, **kwargs
+) -> iris.Constraint:
+    """
+    Generate a constraint to remove a single ensemble member.
+
+    Operators that returns a constraint to remove the given ensemble member. By
+    default the ensemble member removed is the control member (assumed to have
+    a realization of zero). However, any ensemble member can be removed, thus
+    allowing a non-zero control member to be removed if the control is a
+    different member.
+
+    Arguments
+    ---------
+    ens_member: int
+        Default is 0. The ensemble member realization to remove.
+
+    Returns
+    -------
+        iris.Constraint
+    """
+    return iris.Constraint(realization=lambda m: m.point != ens_member)
+
+
 def combine_constraints(
     constraint: iris.Constraint = None, **kwargs
 ) -> iris.Constraint:
