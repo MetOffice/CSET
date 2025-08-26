@@ -184,6 +184,26 @@ def test_generate_remove_single_ensemble_member_constraint_any_value():
     )
 
 
+def test_generate_realization_constraint():
+    """Generate a constraint for a single realization."""
+    single_member_constraint = constraints.generate_realization_constraint(
+        ensemble_members=2
+    )
+    assert "Constraint(coord_values={'realization': (2,)})" in repr(
+        single_member_constraint
+    )
+
+
+def test_generate_realization_constraint_multiple_realizations():
+    """Generate a constraint for multiple realizations."""
+    multi_member_constraint = constraints.generate_realization_constraint(
+        ensemble_members=[2, 4, 6, 8]
+    )
+    assert "Constraint(coord_values={'realization': [2, 4, 6, 8]})" in repr(
+        multi_member_constraint
+    )
+
+
 def test_combine_constraints():
     """Combine constraint."""
     stash_constraint = constraints.generate_stash_constraint("m01s03i236")

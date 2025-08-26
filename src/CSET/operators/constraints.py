@@ -23,6 +23,8 @@ import iris
 import iris.cube
 import iris.exceptions
 
+from CSET._common import iter_maybe
+
 
 def generate_stash_constraint(stash: str, **kwargs) -> iris.AttributeConstraint:
     """Generate constraint from STASH code.
@@ -285,7 +287,7 @@ def generate_remove_single_ensemble_member_constraint(
     """
     Generate a constraint to remove a single ensemble member.
 
-    Operators that returns a constraint to remove the given ensemble member. By
+    Operator that returns a constraint to remove the given ensemble member. By
     default the ensemble member removed is the control member (assumed to have
     a realization of zero). However, any ensemble member can be removed, thus
     allowing a non-zero control member to be removed if the control is a
@@ -309,6 +311,30 @@ def generate_remove_single_ensemble_member_constraint(
     when it is not an equally-likely member of the ensemble.
     """
     return iris.Constraint(realization=lambda m: m.point != ensemble_member)
+
+
+def generate_realization_constraint(
+    ensemble_members: int | list[int], **kwargs
+) -> iris.Constraint:
+    """
+    Generate a constraint to subset ensemble members.
+
+    Operator that is given a list of ensemble members and returns a constraint
+    to select those ensemble members. This operator is particularly useful for
+    subsetting ensembles.
+
+    Arguments
+    ---------
+    ensemble_members: int | list[int]
+        The ensemble members to be subsetted over.
+
+    Returns
+    -------
+    iris.Constraint
+    """
+    # Ensure ensemble_members is iterable.
+    ensemble_members = iter_maybe(ensemble_members)
+    return iris.Constraint(realization=ensemble_members)
 
 
 def combine_constraints(

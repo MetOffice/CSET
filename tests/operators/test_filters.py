@@ -314,3 +314,27 @@ def test_generate_single_ensemble_member_constraint_reduced_member(ensemble_cube
     )
     # Assert remain ensemble member is expected one.
     assert filter_cube.coord("realization").points == [2]
+
+
+def test_generate_realization_constraint_single_member(ensemble_cube):
+    """Select a single ensemble member from a cube."""
+    single_member_constraint = constraints.generate_realization_constraint(
+        ensemble_members=1
+    )
+    filter_cube = filters.filter_cubes(
+        ensemble_cube, constraint=single_member_constraint
+    )
+    # Assert filtered realization coordinate matches expected coordinate point.
+    assert filter_cube.coord("realization").points == [1]
+
+
+def test_generate_realization_constraint_multiple_members(ensemble_cube):
+    """Select multiple ensemble members from a cube."""
+    multi_member_constraint = constraints.generate_realization_constraint(
+        ensemble_members=[1, 2]
+    )
+    filter_cube = filters.filter_cubes(
+        ensemble_cube, constraint=multi_member_constraint
+    )
+    # Assert filtered realization coordinates match expected realization coordinates.
+    assert (filter_cube.coord("realization").points == [1, 2]).all()
