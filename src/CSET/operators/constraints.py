@@ -280,7 +280,7 @@ def generate_area_constraint(
 
 
 def generate_remove_single_ensemble_member_constraint(
-    ens_member: int = 0, **kwargs
+    ensemble_member: int = 0, **kwargs
 ) -> iris.Constraint:
     """
     Generate a constraint to remove a single ensemble member.
@@ -308,7 +308,7 @@ def generate_remove_single_ensemble_member_constraint(
     control member. It is particularly useful to remove the control member
     when it is not an equally-likely member of the ensemble.
     """
-    return iris.Constraint(realization=lambda m: m.point != ens_member)
+    return iris.Constraint(realization=lambda m: m.point != ensemble_member)
 
 
 def combine_constraints(

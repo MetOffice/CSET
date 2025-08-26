@@ -176,7 +176,7 @@ def test_generate_remove_single_ensemble_member_constraint():
 def test_generate_remove_single_ensemble_member_constraint_any_value():
     """Generate a constraint to remove a single ensemble member using chosen value."""
     single_member_constraint = (
-        constraints.generate_remove_single_ensemble_member_constraint(2)
+        constraints.generate_remove_single_ensemble_member_constraint(ensemble_member=2)
     )
     assert (
         "Constraint(coord_values={'realization': <function generate_remove_single_ensemble_member_constraint.<locals>.<lambda> at 0x"

@@ -298,3 +298,19 @@ def test_apply_mask(cube):
         atol=1e-02,
         equal_nan=True,
     )
+
+
+def test_generate_single_ensemble_member_constraint_reduced_member(ensemble_cube):
+    """Remove a single ensemble member from a cube."""
+    remove_member_constraint = (
+        constraints.generate_remove_single_ensemble_member_constraint(ensemble_member=1)
+    )
+    filter_cube = filters.filter_cubes(
+        ensemble_cube, constraint=remove_member_constraint
+    )
+    # Assert one of the ensemble members have been removed.
+    assert len(filter_cube.coord("realization").points) == (
+        len(ensemble_cube.coord("realization").points) - 1
+    )
+    # Assert remain ensemble member is expected one.
+    assert filter_cube.coord("realization").points == [2]
