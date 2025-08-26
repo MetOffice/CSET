@@ -268,7 +268,7 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
     # First try long name, then standard name, then var name. This order is used
     # as long name is the one we correct between models, so it most likely to be
     # consistent.
-    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    varnames = list(filter(None, [cube.long_name, cube.standard_name, cube.var_name]))
     for varname in varnames:
         # Get the colormap for this variable.
         try:
@@ -280,9 +280,12 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
             logging.debug("Cube name %s has no colorbar definition.", varname)
 
     # Get colormap if it is a mask.
-    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if any("mask_for_" in name for name in varnames):
         cmap, levels, norm = _custom_colormap_mask(cube, axis=axis)
+        return cmap, levels, norm
+    # If winds on Beaufort Scale use custom colorbar and levels
+    if any("Beaufort_Scale" in name for name in varnames):
+        cmap, levels, norm = _custom_beaufort_scale(cube, axis=axis)
         return cmap, levels, norm
 
     # If no valid colormap has been defined, use defaults and return.
@@ -1412,6 +1415,79 @@ def _custom_colormap_mask(cube: iris.cube.Cube, axis: Literal["x", "y"] | None =
             cmap = mcolors.ListedColormap(colors)
             norm = mcolors.BoundaryNorm(levels, cmap.N)
             logging.debug("Colourmap for %s.", cube.long_name)
+            return cmap, levels, norm
+
+
+def _custom_beaufort_scale(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = None):
+    """Get a custom colorbar for a cube in the Beaufort Scale.
+
+    Specific variable ranges can be separately set in user-supplied definition
+    for x- or y-axis limits, or indicate where automated range preferred.
+
+    Parameters
+    ----------
+    cube: Cube
+        Cube of variable with Beaufort Scale in name.
+    axis: "x", "y", optional
+        Select the levels for just this axis of a line plot. The min and max
+        can be set by xmin/xmax or ymin/ymax respectively. For variables where
+        setting a universal range is not desirable (e.g. temperature), users
+        can set ymin/ymax values to "auto" in the colorbar definitions file.
+        Where no additional xmin/xmax or ymin/ymax values are provided, the
+        axis bounds default to use the vmin/vmax values provided.
+
+    Returns
+    -------
+    cmap:
+        Matplotlib colormap.
+    levels:
+        List of levels to use for plotting. For continuous plots the min and max
+        should be taken as the range.
+    norm:
+        BoundaryNorm information.
+    """
+    if "difference" not in cube.long_name:
+        if axis:
+            levels = [0, 12]
+            return None, levels, None
+        else:
+            levels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+            colors = [
+                "black",
+                (0, 0, 0.6),
+                "blue",
+                "cyan",
+                "green",
+                "yellow",
+                (1, 0.5, 0),
+                "red",
+                "pink",
+                "magenta",
+                "purple",
+                "maroon",
+                "white",
+            ]
+            cmap = mcolors.ListedColormap(colors)
+            norm = mcolors.BoundaryNorm(levels, cmap.N)
+            logging.info("change colormap for Beaufort Scale colorbar.")
+            return cmap, levels, norm
+    else:
+        if axis:
+            levels = [-4, 4]
+            return None, levels, None
+        else:
+            levels = [
+                -3.5,
+                -2.5,
+                -1.5,
+                -0.5,
+                0.5,
+                1.5,
+                2.5,
+                3.5,
+            ]
+            cmap = plt.get_cmap("bwr", 8)
+            norm = mcolors.BoundaryNorm(levels, cmap.N)
             return cmap, levels, norm
 
 
