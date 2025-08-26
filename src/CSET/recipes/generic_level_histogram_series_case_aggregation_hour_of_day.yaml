@@ -41,6 +41,7 @@ steps:
     # stamp_coordinate and single_plot optional and only required for ensemble data
     stamp_coordinate: "realization"
     single_plot: False
+    histogram_method: $HISTOGRAM_METHOD
 
   - operator: write.write_cube_to_nc
     overwrite: True

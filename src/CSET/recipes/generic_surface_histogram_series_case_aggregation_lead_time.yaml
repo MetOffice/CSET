@@ -39,3 +39,4 @@ steps:
 
   - operator: plot.plot_histogram_series
     sequence_coordinate: forecast_period
+    histogram_method: $HISTOGRAM_METHOD
