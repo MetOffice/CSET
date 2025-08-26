@@ -299,6 +299,14 @@ def generate_remove_single_ensemble_member_constraint(
     Returns
     -------
         iris.Constraint
+
+    Notes
+    -----
+    This operator is primarily used to remove the control member to allow
+    ensemble metrics to be calculated without the control member. For
+    example, the ensemble mean is not normally calculated including the
+    control member. It is particularly useful to remove the control member
+    when it is not an equally-likely member of the ensemble.
     """
     return iris.Constraint(realization=lambda m: m.point != ens_member)
 
