@@ -293,7 +293,7 @@ def generate_remove_single_ensemble_member_constraint(
 
     Arguments
     ---------
-    ens_member: int
+    ensemble_member: int
         Default is 0. The ensemble member realization to remove.
 
     Returns
