@@ -1,7 +1,7 @@
 category: Quick Look
 title: Observed values of $OBSVARNAME.
 description: |
-    Plot some observations.
+    Plot observations of OBSVARNAME as points at the locations of observation.
 
 steps:
   - operator: read.read_cubes

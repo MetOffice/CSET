@@ -1,7 +1,8 @@
 category: Quick Look
 title: Difference between modelled field of $VARNAME in model $MODEL_NAME and observation.
 description: |
-    Plot some observations.
+    Plot the difference between the model's value of the field $VARNAME and the
+    observed value at the points of observation.
 
 steps:
   - operator: read.read_cubes

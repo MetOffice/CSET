@@ -1,7 +1,6 @@
 {% if SURFACE_SYNOP_OBS and SURFACE_SYNOP_DIFFS %}
 {% for model in models %}
 {% for obs_field in (SURFACE_SYNOP_FIELDS | list) %}
-{#    {% set model_field = (SURFACE_SYNOP_MODEL_FIELDS | list)[SURFACE_SYNOP_FIELDS.index(obs_fields)] %} #}
 [runtime]
     [[obs_model_difference_scatterplot_m{{model["id"]}}_{{obs_field}}]]
     inherit = PROCESS

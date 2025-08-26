@@ -1202,7 +1202,7 @@ def _plot_and_save_scattermap_plot(
         Mapping projection to be used by cartopy.
     """
     # Setup plot details, size, resolution, etc.
-    fig = plt.figure(figsize=(15, 15), facecolor="w", edgecolor="k")
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     if projection is not None:
         # Apart from the default, the only projection we currently support is
         # a stereographic projection over the North Pole.
@@ -1213,8 +1213,14 @@ def _plot_and_save_scattermap_plot(
     else:
         axes = plt.axes(projection=ccrs.PlateCarree())
 
-    # Filled contour plot of the field.
-    mrk_size = int(np.sqrt(5000000.0 / len(cube.data)))
+    # Scatter plot of the field. The marker size is chosen to give
+    # symbols that decrease in size as the number of observations
+    # increases, although the fraction of the figure covered by
+    # symbols increases roughly as N^(1/2), disregarding overlaps,
+    # and has been selected for the default figure size of (10, 10).
+    # Should this be changed, the marker size should be adjusted in
+    # proportion to the area of the figure.
+    mrk_size = int(np.sqrt(2500000.0 / len(cube.data)))
     klon = None
     klat = None
     for kc in range(len(cube.aux_coords)):
