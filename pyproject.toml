@@ -62,7 +62,9 @@ testpaths = ["tests"]
 branch = true
 relative_files = true
 source = ["src"]
-omit = ["__main__.py"]
+# TODO: Figure out how to test loaders. This will likely involve having some
+# example configurations and may be part of the effort to test the workflow.
+omit = ["__main__.py", "src/CSET/recipes/loaders/*.py"]
 
 [tool.codespell]
 ignore-words-list = "lazyness,meaned,runn"
