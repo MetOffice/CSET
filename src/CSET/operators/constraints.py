@@ -23,6 +23,8 @@ import iris
 import iris.cube
 import iris.exceptions
 
+from CSET._common import iter_maybe
+
 
 def generate_stash_constraint(stash: str, **kwargs) -> iris.AttributeConstraint:
     """Generate constraint from STASH code.
@@ -331,8 +333,7 @@ def generate_realization_constraint(
     iris.Constraint
     """
     # Ensure ensemble_members is iterable.
-    if not isinstance(ensemble_members, Iterable):
-        ensemble_members = [ensemble_members]
+    ensemble_members = iter_maybe(ensemble_members)
     return iris.Constraint(realization=ensemble_members)
 
 

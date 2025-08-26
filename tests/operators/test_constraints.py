@@ -189,7 +189,7 @@ def test_generate_realization_constraint():
     single_member_constraint = constraints.generate_realization_constraint(
         ensemble_members=2
     )
-    assert "Constraint(coord_values={'realization': [2]})" in repr(
+    assert "Constraint(coord_values={'realization': (2,)})" in repr(
         single_member_constraint
     )
 
