@@ -147,7 +147,7 @@ def generate_cell_methods_constraint(
     coord: iris.coords.Coord, optional
         iris.coords.Coord to which the cell method is applied to.
     interval: str, optional
-        interval ove which the cell method is applied to (e.g. 1 hour).
+        interval over which the cell method is applied to (e.g. 1 hour).
     comment: str, optional
         any comments in Cube meta data associated with the cell method.
 
