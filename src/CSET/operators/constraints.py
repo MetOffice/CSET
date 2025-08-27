@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2025) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -141,9 +141,15 @@ def generate_cell_methods_constraint(
     Arguments
     ---------
     cell_methods: list
-        cube.cell_methods for filtering
+        cube.cell_methods for filtering.
     varname: str, optional
         CF compliant name of variable.
+    coord: iris.coords.Coord, optional
+        iris.coords.Coord to which the cell method is applied to.
+    interval: str, optional
+        interval ove which the cell method is applied to (e.g. 1 hour).
+    comment: str, optional
+        any comments in Cube meta data associated with the cell method.
 
     Returns
     -------
