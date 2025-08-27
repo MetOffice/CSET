@@ -88,11 +88,7 @@ def test_filter_multiple_cubes_multiple_out(cubes):
     constraint_single_2 = constraints.combine_constraints(
         constraints.generate_stash_constraint("m01s03i236"),
         a=constraints.generate_cell_methods_constraint(
-            [
-                iris.coords.CellMethod(
-                    method="minimum", coords="time", intervals="1 hour"
-                )
-            ]
+            cell_methods=["minimum"], coord="time", interval="1 hour"
         ),
     )
     filtered_multi_cubes = filters.filter_multiple_cubes(
