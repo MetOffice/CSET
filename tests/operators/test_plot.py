@@ -930,15 +930,11 @@ def test_append_to_plot_index(monkeypatch, tmp_working_dir):
     assert "datetime" not in meta
 
 
-def test_append_to_plot_index_case_aggregation_no_datetime(
-    monkeypatch, tmp_working_dir
-):
+def test_append_to_plot_index_aggregation(monkeypatch, tmp_working_dir):
     """Ensure the datetime is not written for aggregation plots."""
     # Setup environment and required file.
     monkeypatch.setenv("CYLC_TASK_CYCLE_POINT", "20000101T0000Z")
-    monkeypatch.setenv(
-        "CYLC_TASK_NAMESPACE_HIERARCHY", "root PROCESS_CASE_AGGREGATION task_name"
-    )
+    monkeypatch.setenv("DO_CASE_AGGREGATION", "True")
     with open("meta.json", "wt") as fp:
         fp.write("{}\n")
 

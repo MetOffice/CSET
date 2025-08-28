@@ -65,15 +65,8 @@ def _append_to_plot_index(plot_index: list) -> list:
         complete_plot_index = meta.get("plots", [])
         complete_plot_index = complete_plot_index + plot_index
         meta["plots"] = complete_plot_index
-        logging.debug(
-            "Cylc task namespace hierarchy: %s",
-            os.getenv(
-                "CYLC_TASK_NAMESPACE_HIERARCHY",
-                "$CYLC_TASK_NAMESPACE_HIERARCHY not set.",
-            ),
-        )
-        if "PROCESS_CASE_AGGREGATION" not in os.getenv(
-            "CYLC_TASK_NAMESPACE_HIERARCHY", ""
+        if os.getenv("CYLC_TASK_CYCLE_POINT") and not bool(
+            os.getenv("DO_CASE_AGGREGATION")
         ):
             meta["case_date"] = os.getenv("CYLC_TASK_CYCLE_POINT", "")
         fp.seek(0)
