@@ -206,14 +206,14 @@ def test_generate_realization_constraint_multiple_realizations():
 
 def test_generate_hour_constraint():
     """Generate hour constraint with hour_start."""
-    hour_constraint = constraints.generate_hour_constraint(12)
+    hour_constraint = constraints.generate_hour_constraint(hour_start=12)
     expected_hour_constraint = "Constraint(coord_values={'hour': <function generate_hour_constraint.<locals>.<lambda> at"
     assert expected_hour_constraint in repr(hour_constraint)
 
 
 def test_generate_hour_constraint_both_limits():
     """Generate hour constraint with hour_start and hour_end."""
-    hour_constraint = constraints.generate_hour_constraint(12, 15)
+    hour_constraint = constraints.generate_hour_constraint(hour_start=12, hour_end=15)
     expected_hour_constraint = "Constraint(coord_values={'hour': <function generate_hour_constraint.<locals>.<lambda> at"
     assert expected_hour_constraint in repr(hour_constraint)
 
@@ -221,19 +221,19 @@ def test_generate_hour_constraint_both_limits():
 def test_generate_hour_constraint_negative_values():
     """Generate hour constraint raises exception when arguments are negative."""
     with pytest.raises(ValueError):
-        constraints.generate_hour_constraint(-1, 0)
+        constraints.generate_hour_constraint(hour_start=-1)
 
     with pytest.raises(ValueError):
-        constraints.generate_hour_constraint(0, -1)
+        constraints.generate_hour_constraint(hour_start=0, hour_end=-1)
 
 
 def test_generate_hour_constraint_too_large_values():
     """Generate hour constraint raises exception when arguments are too big."""
     with pytest.raises(ValueError):
-        constraints.generate_hour_constraint(24)
+        constraints.generate_hour_constraint(hour_start=24)
 
     with pytest.raises(ValueError):
-        constraints.generate_hour_constraint(22, 24)
+        constraints.generate_hour_constraint(hour_start=22, hour_end=24)
 
 
 def test_combine_constraints():
