@@ -22,9 +22,11 @@ __all__ below.
 from CSET.recipes.loaders import (
     spatial_field,
     test,
+    timeseries,
 )
 
 __all__ = [
     "spatial_field",
     "test",
+    "timeseries",
 ]
