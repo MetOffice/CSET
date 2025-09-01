@@ -24,10 +24,10 @@ def load(conf: Config):
     # Load a list of model detail dictionaries.
     models = get_models(conf.asdict())
     # Models are listed in order, so model 1 is the first element.
-    base_model = models[0]
 
     # Surface (2D) fields.
     if conf.SPATIAL_DIFFERENCE_SURFACE_FIELD:
+        base_model = models[0]
         for model, field, method in itertools.product(
             models[1:], conf.SURFACE_FIELDS, conf.SPATIAL_SURFACE_FIELD_METHOD
         ):
@@ -49,6 +49,7 @@ def load(conf: Config):
 
     # Pressure level fields.
     if conf.SPATIAL_DIFFERENCE_PLEVEL_FIELD:
+        base_model = models[0]
         for model, field, plevel, method in itertools.product(
             models[1:],
             conf.PRESSURE_LEVEL_FIELDS,
@@ -75,6 +76,7 @@ def load(conf: Config):
 
     # Model level fields
     if conf.SPATIAL_MLEVEL_DIFFERENCE:
+        base_model = models[0]
         for model, field, mlevel, method in itertools.product(
             models[1:],
             conf.MODEL_LEVEL_FIELDS,
@@ -101,6 +103,7 @@ def load(conf: Config):
 
     # Rain presence
     if conf.RAIN_PRESENCE_SPATIAL_DIFFERENCE:
+        base_model = models[0]
         for model in models[1:]:
             yield RawRecipe(
                 recipe="rain_presence_spatial_difference.yaml",
@@ -118,6 +121,7 @@ def load(conf: Config):
 
     # Surface winds on Beaufort Scale
     if conf.SFC_WIND_BEAUFORT_SCALE_SPATIAL_DIFFERENCE:
+        base_model = models[0]
         for model in models[1:]:
             yield RawRecipe(
                 recipe="surface_wind_speed_on_beaufort_scale_spatial_difference.yaml",
@@ -143,6 +147,7 @@ def load(conf: Config):
         if conf.SPATIAL_DIFFERENCE_SURFACE_FIELD_AGGREGATION[
             AGGREGATION_TYPES.index(atype)
         ]:
+            base_model = models[0]
             yield RawRecipe(
                 recipe=f"surface_spatial_difference_case_aggregation_mean_{atype}.yaml",
                 variables={
@@ -165,6 +170,7 @@ def load(conf: Config):
         if conf.SPATIAL_DIFFERENCE_PLEVEL_FIELD_AGGREGATION[
             AGGREGATION_TYPES.index(atype)
         ]:
+            base_model = models[0]
             yield RawRecipe(
                 recipe=f"level_spatial_difference_case_aggregation_mean_{atype}.yaml",
                 variables={
@@ -189,6 +195,7 @@ def load(conf: Config):
         if conf.SPATIAL_DIFFERENCE_MLEVEL_FIELD_AGGREGATION[
             AGGREGATION_TYPES.index(atype)
         ]:
+            base_model = models[0]
             yield RawRecipe(
                 recipe=f"mlevel_spatial_difference_case_aggregation_mean_{atype}.yaml",
                 variables={
