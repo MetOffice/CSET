@@ -20,12 +20,14 @@ __all__ below.
 """
 
 from CSET.recipes.loaders import (
+    spatial_difference_field,
     spatial_field,
     test,
     timeseries,
 )
 
 __all__ = [
+    "spatial_difference_field",
     "spatial_field",
     "test",
     "timeseries",
