@@ -342,6 +342,7 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
         cmap, levels, norm = _custom_colourmap_visibility_in_air(
             cube, cmap, levels, norm
         )
+        cmap, levels, norm = _custom_colormap_celsius(cube, cmap, levels, norm)
         return cmap, levels, norm
 
 
@@ -1482,6 +1483,42 @@ def _custom_beaufort_scale(cube: iris.cube.Cube, axis: Literal["x", "y"] | None 
             cmap = plt.get_cmap("bwr", 8)
             norm = mcolors.BoundaryNorm(levels, cmap.N)
             return cmap, levels, norm
+
+
+def _custom_colormap_celsius(cube: iris.cube.Cube, cmap, levels, norm):
+    """Return altered colourmap for temperature with change in units to Celsius.
+
+    If "Celsius" appears anywhere in the name of a cube this function will be called.
+
+    Parameters
+    ----------
+    cube: Cube
+        Cube of variable for which the colorbar information is desired.
+    cmap: Matplotlib colormap.
+    levels: List
+        List of levels to use for plotting. For continuous plots the min and max
+        should be taken as the range.
+    norm: BoundaryNorm.
+
+    Returns
+    -------
+    cmap: Matplotlib colormap.
+    levels: List
+        List of levels to use for plotting. For continuous plots the min and max
+        should be taken as the range.
+    norm: BoundaryNorm.
+    """
+    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    if any("temperature" in name for name in varnames) and "Celsius" in cube.long_name:
+        levels = np.array(levels)
+        levels -= 273
+        levels = levels.tolist()
+    else:
+        # Do nothing keep the existing colourbar attributes
+        levels = levels
+    cmap = cmap
+    norm = norm
+    return cmap, levels, norm
 
 
 def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):

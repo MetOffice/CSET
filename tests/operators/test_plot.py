@@ -388,6 +388,20 @@ def test_colorbar_map_beaufort_scale_axis_difference(cube, tmp_working_dir):
     assert norm is None
 
 
+def test_colorbar_map_celsius(cube, tmp_working_dir):
+    """Test to ensure color bar is changed for temperature in Celsius."""
+    cube.rename("temperature_in_Celsius")
+    cmap = mpl.cm.RdYlBu
+    norm = None
+    levels = [273, 373]
+    cmap, levels, norm = plot._custom_colormap_celsius(
+        cube, cmap=cmap, levels=levels, norm=norm
+    )
+    assert cmap == mpl.cm.RdYlBu
+    assert norm is None
+    assert levels == [0, 100]
+
+
 def test_spatial_contour_plot(cube, tmp_working_dir):
     """Plot spatial contour plot of instant air temp."""
     # Remove realization coord to increase coverage, and as its not needed.
