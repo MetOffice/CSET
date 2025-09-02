@@ -280,7 +280,10 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
     if any("Beaufort_Scale" in name for name in varnames):
         cmap, levels, norm = _custom_beaufort_scale(cube, axis=axis)
         return cmap, levels, norm
-
+    # If probability is plotted use custom colorbar and levels
+    if any("probability_of_" in name for name in varnames):
+        cmap, levels, norm = _custom_colormap_probability(cube, axis=axis)
+        return cmap, levels, norm
     # If no valid colormap has been defined, use defaults and return.
     if not cmap:
         logging.warning("No colorbar definition exists for %s.", cube.name())
@@ -1519,6 +1522,60 @@ def _custom_colormap_celsius(cube: iris.cube.Cube, cmap, levels, norm):
     cmap = cmap
     norm = norm
     return cmap, levels, norm
+
+
+def _custom_colormap_probability(
+    cube: iris.cube.Cube, axis: Literal["x", "y"] | None = None
+):
+    """Get a custom colorbar for a probability cube.
+
+    Specific variable ranges can be separately set in user-supplied definition
+    for x- or y-axis limits, or indicate where automated range preferred.
+
+    Parameters
+    ----------
+    cube: Cube
+        Cube of variable with probability in name.
+    axis: "x", "y", optional
+        Select the levels for just this axis of a line plot. The min and max
+        can be set by xmin/xmax or ymin/ymax respectively. For variables where
+        setting a universal range is not desirable (e.g. temperature), users
+        can set ymin/ymax values to "auto" in the colorbar definitions file.
+        Where no additional xmin/xmax or ymin/ymax values are provided, the
+        axis bounds default to use the vmin/vmax values provided.
+
+    Returns
+    -------
+    cmap:
+        Matplotlib colormap.
+    levels:
+        List of levels to use for plotting. For continuous plots the min and max
+        should be taken as the range.
+    norm:
+        BoundaryNorm information.
+    """
+    if axis:
+        levels = [0, 1]
+        return None, levels, None
+    else:
+        cmap = mcolors.ListedColormap(
+            [
+                "#FFFFFF",
+                "#636363",
+                "#e1dada",
+                "#B5CAFF",
+                "#8FB3FF",
+                "#7F97FF",
+                "#ABCF63",
+                "#E8F59E",
+                "#FFFA14",
+                "#FFD121",
+                "#FFA30A",
+            ]
+        )
+        levels = [0.0, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+        norm = mcolors.BoundaryNorm(levels, cmap.N)
+        return cmap, levels, norm
 
 
 def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
