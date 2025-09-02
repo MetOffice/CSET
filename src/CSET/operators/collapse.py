@@ -161,8 +161,9 @@ def collapse(
                             function=lambda values: values <= threshold,
                         )
                     case _:
-                        raise ValueError("""Unexpected value for condition. Expected ==, !=,
-                                          >, >=, <, <=. Got {condition}.""")
+                        raise ValueError(
+                            """Unexpected value for condition. Expected ==, !=,>, >=, <, <=. Got {condition}."""
+                        )
                 new_cube.rename(f"probability_of_{cube.name()}_{condition}_{threshold}")
                 new_cube.units = "1"
                 collapsed_cubes.append(new_cube)
