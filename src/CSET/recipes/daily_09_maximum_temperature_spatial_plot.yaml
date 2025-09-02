@@ -35,6 +35,9 @@ steps:
       operator: constraints.generate_hour_constraint
       hour_start: 21
 
+  - operator: misc.convert_units
+    units: 'Celsius'
+
   - operator: plot.spatial_pcolormesh_plot
 
   - operator: write.write_cube_to_nc
