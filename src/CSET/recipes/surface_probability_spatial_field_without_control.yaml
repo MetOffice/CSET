@@ -1,0 +1,40 @@
+category: Surface Spatial Plot
+title: $MODEL_NAME $VARNAME probability $CONDITION $THRESHOLD
+description: Calculates the probability $CONDITION $THREHSOLD for $VARNAME for all members excluding the control.
+
+steps:
+  - operator: read.read_cube
+    file_paths: $INPUT_PATHS
+
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: $VARNAME
+      level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: "pressure"
+        levels: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: filters.filter_cubes
+    constraint:
+      operator: constraints.generate_remove_single_ensemble_member_constraint
+      ensemble_member: 0
+
+  - operator: collapse.collapse
+    coordinate: 'realization'
+    method: 'PROPORTION'
+    condition: $CONDITION
+    threshold: $THRESHOLD
+
+  - operator: plot.spatial_pcolormesh_plot
+    sequence_coordinate: time
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
