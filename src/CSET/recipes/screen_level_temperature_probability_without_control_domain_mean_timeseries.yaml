@@ -1,8 +1,9 @@
 category: Surface Time Series
-title: Domain mean probability of $VARNAME $CONDITION $THRESHOLD
+title: Domain mean probability of temperature at screen level $CONDITION $THRESHOLD
 description: |
-  Calculates the probability $CONDITION $THREHSOLD for $VARNAME for all members excluding the control
-  and plots the domain mean timeseries.
+  Calculates the probability $CONDITION $THREHSOLD for temperature at screen
+  level for all members excluding the control and plots the domain mean
+  timeseries.
 
 steps:
   - operator: read.read_cubes
@@ -12,15 +13,11 @@ steps:
       operator: constraints.combine_constraints
       varname_constraint:
         operator: constraints.generate_var_constraint
-        varname: $VARNAME
+        varname: 'temperatre_at_screen_level'
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
         varname: $VARNAME
-      pressure_level_constraint:
-        operator: constraints.generate_level_constraint
-        coordinate: "pressure"
-        levels: []
       subarea_type: $SUBAREA_TYPE
       subarea_extent: $SUBAREA_EXTENT
 

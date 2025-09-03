@@ -143,18 +143,16 @@ def load(conf: Config):
                 aggregation=False,
             )
 
-    # Surface probabilities
-    for model, field, condition, threshold in itertools.product(
+    # Screen-level temperature probabilities
+    for model, condition, threshold in itertools.product(
         models,
-        conf.SURFACE_FIELDS,
-        conf.PROB_CONDITION,
-        conf.PROB_THRESHOLD,
+        conf.PROB_TEMPERATURE_CONDITION,
+        conf.PROB_TEMPERATURE_THRESHOLD,
     ):
-        if conf.SPATIAL_SURFACE_PROBABILITY_WITHOUT_CONTROL_MEMBER:
+        if conf.SCREEN_LEVEL_TEMPERATURE_SPATIAL_PROBABILITY_WITHOUT_CONTROL_MEMBER:
             yield RawRecipe(
-                recipe="surface_probability_spatial_field_without_control.yaml",
+                recipe="screen_level_temperature_spatial_probability_without_control.yaml",
                 variables={
-                    "VARNAME": field,
                     "MODEL_NAME": model["name"],
                     "CONDITION": condition,
                     "THRESHOLD": threshold,
