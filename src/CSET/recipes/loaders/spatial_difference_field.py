@@ -43,7 +43,7 @@ def load(conf: Config):
                     if conf.SELECT_SUBAREA
                     else None,
                 },
-                model_ids=model["id"],
+                model_ids=[base_model["id"], model["id"]],
                 aggregation=False,
             )
 
@@ -70,7 +70,7 @@ def load(conf: Config):
                     if conf.SELECT_SUBAREA
                     else None,
                 },
-                model_ids=model["id"],
+                model_ids=[base_model["id"], model["id"]],
                 aggregation=False,
             )
 
@@ -97,7 +97,7 @@ def load(conf: Config):
                     if conf.SELECT_SUBAREA
                     else None,
                 },
-                model_ids=model["id"],
+                model_ids=[base_model["id"], model["id"]],
                 aggregation=False,
             )
 
@@ -115,7 +115,7 @@ def load(conf: Config):
                     if conf.SELECT_SUBAREA
                     else None,
                 },
-                model_ids=model["id"],
+                model_ids=[base_model["id"], model["id"]],
                 aggregation=False,
             )
 
@@ -133,7 +133,7 @@ def load(conf: Config):
                     if conf.SELECT_SUBAREA
                     else None,
                 },
-                model_ids=model["id"],
+                model_ids=[base_model["id"], model["id"]],
                 aggregation=False,
             )
 
@@ -159,7 +159,7 @@ def load(conf: Config):
                     if conf.SELECT_SUBAREA
                     else None,
                 },
-                model_ids=model["id"],
+                model_ids=[base_model["id"], model["id"]],
                 aggregation=True,
             )
 
@@ -184,7 +184,7 @@ def load(conf: Config):
                     if conf.SELECT_SUBAREA
                     else None,
                 },
-                model_ids=model["id"],
+                model_ids=[base_model["id"], model["id"]],
                 aggregation=True,
             )
 
@@ -209,6 +209,6 @@ def load(conf: Config):
                     if conf.SELECT_SUBAREA
                     else None,
                 },
-                model_ids=model["id"],
+                model_ids=[base_model["id"], model["id"]],
                 aggregation=True,
             )
