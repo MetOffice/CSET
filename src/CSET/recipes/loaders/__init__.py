@@ -20,6 +20,7 @@ __all__ below.
 """
 
 from CSET.recipes.loaders import (
+    aoa,
     histograms,
     profiles,
     spatial_difference_field,
@@ -30,6 +31,7 @@ from CSET.recipes.loaders import (
 )
 
 __all__ = [
+    "aoa",
     "histograms",
     "profiles",
     "spatial_difference_field",
