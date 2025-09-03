@@ -25,6 +25,7 @@ from CSET.recipes.loaders import (
     spatial_field,
     test,
     timeseries,
+    transects,
 )
 
 __all__ = [
@@ -33,4 +34,5 @@ __all__ = [
     "spatial_field",
     "test",
     "timeseries",
+    "transects",
 ]
