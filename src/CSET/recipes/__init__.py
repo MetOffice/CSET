@@ -246,6 +246,14 @@ class Config:
     ----------
     config: dict
         Configuration key-value pairs.
+
+    Example
+    -------
+    >>> conf = Config({"key": "value"})
+    >>> conf.key
+    'value'
+    >>> conf.missing
+    []
     """
 
     d: dict
