@@ -65,8 +65,7 @@ def load(conf: Config):
     # Model level fields
     if conf.TIMESERIES_MLEVEL_FIELD:
         for field, mlevel in itertools.product(
-            conf.MODEL_LEVEL_FIELDS,
-            conf.MODEL_LEVELS,
+            conf.MODEL_LEVEL_FIELDS, conf.MODEL_LEVELS
         ):
             yield RawRecipe(
                 recipe="generic_level_domain_mean_time_series.yaml",
