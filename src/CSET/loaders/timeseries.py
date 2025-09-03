@@ -109,6 +109,27 @@ def load(conf: Config):
             aggregation=False,
         )
 
+    # Screen-level temperature probability timeseries
+    if conf.SCREEN_LEVEL_TEMPERATURE_DOMAIN_MEAN_TIMESERIES_PROBABILITY_WITHOUT_CONTROL_MEMBER:
+        for condition, threshold in itertools.product(
+            conf.PROB_TEMPERATURE_CONDITION,
+            conf.PROB_TEMPERATURE_THRESHOLD,
+        ):
+            yield RawRecipe(
+                recipe="screen_level_temperature_probability_without_control_domain_mean_time_series.yaml",
+                variables={
+                    "MODEL_NAME": [model["name"] for model in models],
+                    "CONDITION": condition,
+                    "THRESHOLD": threshold,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[model["id"] for model in models],
+                aggregation=False,
+            )
+
     # Create a list of case aggregation types.
     AGGREGATION_TYPES = ["lead_time", "hour_of_day", "validity_time", "all"]
 
