@@ -1,7 +1,7 @@
 category: Surface Time Series
 title: Domain mean probability of temperature at screen level $CONDITION $THRESHOLD
 description: |
-  Calculates the probability $CONDITION $THREHSOLD for temperature at screen
+  Calculates the probability $CONDITION $THRESHOLD for temperature at screen
   level for all members excluding the control and plots the domain mean
   timeseries.
 
