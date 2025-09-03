@@ -143,6 +143,30 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+    # Surface probabilities
+    for model, field, condition, threshold in itertools.product(
+        models,
+        conf.SURFACE_FIELDS,
+        conf.PROB_CONDITION,
+        conf.PROB_THRESHOLD,
+    ):
+        if conf.SPATIAL_SURFACE_PROBABILITY_WITHOUT_CONTROL_MEMBER:
+            yield RawRecipe(
+                recipe="surface_probability_spatial_field_without_control.yaml",
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": model["name"],
+                    "CONDITION": condition,
+                    "THRESHOLD": threshold,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
+
     # Create a list of case aggregation types.
     AGGREGATION_TYPES = ["lead_time", "hour_of_day", "validity_time", "all"]
 
