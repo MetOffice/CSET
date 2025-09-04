@@ -40,13 +40,13 @@ def test_unpack_recipes(tmp_path: Path, caplog):
     """Unpack a recipe and check a log message is produced when files collide."""
     recipes.unpack_recipe(tmp_path, "CAPE_ratio_plot.yaml")
     assert (tmp_path / "CAPE_ratio_plot.yaml").is_file()
-    with caplog.at_level("INFO"):
+    with caplog.at_level("DEBUG"):
         recipes.unpack_recipe(tmp_path, "CAPE_ratio_plot.yaml")
     # Filter out unrelated log messages in case we are testing in parallel.
     _, level, message = next(
         filter(lambda r: "already exists" in r[2], caplog.record_tuples)
     )
-    assert level == logging.INFO
+    assert level == logging.DEBUG
     assert (
         message == "CAPE_ratio_plot.yaml already exists in target directory, skipping."
     )
