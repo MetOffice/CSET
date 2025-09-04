@@ -32,7 +32,7 @@ def parbake_all(variables: dict, rose_datac: Path, share_dir: Path, aggregation:
         raise ValueError("At least one recipe should be enabled.")
     # Parbake all recipes remaining after filtering aggregation recipes.
     for recipe in filter(lambda r: r.aggregation == aggregation, recipes):
-        print(f"Parbaking {recipe}")
+        print(f"Parbaking {recipe}", flush=True)
         recipe.parbake(rose_datac, share_dir)
 
 
