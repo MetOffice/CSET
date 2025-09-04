@@ -15,6 +15,7 @@
 """Operators to calculate various forms or properties of wind."""
 
 import iris
+import iris.cube
 import numpy as np
 
 from CSET._common import iter_maybe
