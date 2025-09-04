@@ -27,6 +27,8 @@ fi
 # Get filenames without leading directory.
 # Portability note: printf is specific to GNU find.
 recipes="$(find "$RECIPE_DIR" -iname '*.yaml' -type f -printf '%P ')"
+# Count and display number of recipes. (By counting the number of spaces.)
+echo "Baking $(echo "$recipes" | tr -dc ' ' | wc -c) recipes..."
 
 # Write rose-bunch optional configuration.
 mkdir -p "$CYLC_WORKFLOW_RUN_DIR/app/bake_recipes/opt/"
