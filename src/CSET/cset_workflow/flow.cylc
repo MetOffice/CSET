@@ -11,6 +11,8 @@ URL = https://metoffice.github.io/CSET
 
 
 [scheduling]
+# Allow many concurrent cycles to maximise workflow parallelism.
+runahead limit = P100
 # Initial and final cycle points cover the entire period of interest.
 {% if CSET_CYCLING_MODE == "case_study" %}
 initial cycle point = {{ CSET_CASE_DATES|min }}
