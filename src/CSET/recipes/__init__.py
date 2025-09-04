@@ -16,7 +16,6 @@
 
 import importlib.resources
 import logging
-import subprocess
 import sys
 from collections.abc import Iterable
 from pathlib import Path
@@ -206,7 +205,7 @@ class RawRecipe:
             Workflow shared data location.
         """
         # Ready recipe file to disk.
-        subprocess.run(["cset", "-v", "cookbook", self.recipe], check=True)
+        unpack_recipe(Path.cwd(), self.recipe)
 
         # Collect configuration from environment.
         if self.aggregation:
