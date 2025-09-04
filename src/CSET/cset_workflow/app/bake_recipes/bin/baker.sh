@@ -29,5 +29,5 @@ opt_conf="$CYLC_WORKFLOW_RUN_DIR/app/bake_recipes/opt/rose-app-${optconfkey}.con
 printf "[bunch]\npool-size=%s\n[bunch-args]\nrecipe_file=%s\n" "$parallelism" "$recipes" > "$opt_conf"
 unset opt_conf parallelism recipes
 
-# Run bake_recipes rose app.
-exec rose task-run -v --app-key=bake_recipes --opt-conf-key="${optconfkey}"
+# Run bake_recipes rose app inside of conda environment.
+exec app_env_wrapper rose task-run -v --app-key=bake_recipes --opt-conf-key="${optconfkey}"
