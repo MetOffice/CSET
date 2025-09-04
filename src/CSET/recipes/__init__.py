@@ -91,14 +91,14 @@ def unpack_recipe(recipe_dir: Path, recipe_name: str) -> None:
         If recipe_dir cannot be created, such as insufficient permissions, or
         lack of space.
     """
-    file = _get_recipe_file(recipe_name)
     recipe_dir.mkdir(parents=True, exist_ok=True)
-    output_file = recipe_dir / file.name
+    output_file = recipe_dir / recipe_name
     logger.debug("Saving recipe to %s", output_file)
     if output_file.exists():
-        logger.info("%s already exists in target directory, skipping.", file.name)
+        logger.debug("%s already exists in target directory, skipping.", recipe_name)
         return
-    logger.info("Unpacking %s to %s", file.name, output_file)
+    logger.info("Unpacking %s to %s", recipe_name, output_file)
+    file = _get_recipe_file(recipe_name)
     output_file.write_bytes(file.read_bytes())
 
 
