@@ -10,6 +10,10 @@ if [ -n "${DO_CASE_AGGREGATION-}" ]; then
 else
     RECIPE_DIR=$CYLC_WORKFLOW_SHARE_DIR/cycle/$CYLC_TASK_CYCLE_POINT/recipes
 fi
+if ! [ -d "$RECIPE_DIR" ]; then
+    echo "No recipes to bake in $RECIPE_DIR"
+    exit 0
+fi
 export RECIPE_DIR
 
 # Determine parallelism.
@@ -21,7 +25,8 @@ if [ "$CYLC_TASK_TRY_NUMBER" -gt 1 ]; then
 fi
 
 # Get filenames without leading directory.
-recipes="$(cd "$RECIPE_DIR" && echo *.yaml)"
+# Portability note: printf is specific to GNU find.
+recipes="$(find "$RECIPE_DIR" -iname '*.yaml' -type f -printf '%P ')"
 
 # Write rose-bunch optional configuration.
 mkdir -p "$CYLC_WORKFLOW_RUN_DIR/app/bake_recipes/opt/"
