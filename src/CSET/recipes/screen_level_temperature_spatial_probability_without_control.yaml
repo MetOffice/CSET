@@ -16,7 +16,7 @@ steps:
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
-        varname: 'temperatre_at_screen_level'
+        varname: 'temperature_at_screen_level'
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
