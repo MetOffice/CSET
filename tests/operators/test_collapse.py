@@ -16,6 +16,7 @@
 
 import datetime
 
+import cf_units
 import iris
 import iris.cube
 import numpy as np
@@ -293,3 +294,157 @@ def test_collapse_by_validity_time_percentile_fail(long_forecast_multi_day):
     """Test not specifying additional percent fails."""
     with pytest.raises(ValueError, match="Must specify additional_percent"):
         collapse.collapse_by_validity_time(long_forecast_multi_day, "PERCENTILE")
+
+
+def test_collapse_by_proportion_fail_no_condition(ensemble_cube):
+    """Test not specifying condition fails."""
+    with pytest.raises(
+        ValueError, match="Must specify a condition for the probability"
+    ):
+        collapse.collapse(ensemble_cube, coordinate="realization", method="PROPORTION")
+
+
+def test_collapse_by_proportion_fail_no_threshold(ensemble_cube):
+    """Test not specifying threshold fails."""
+    with pytest.raises(
+        ValueError, match="Must specify a threshold for the probability"
+    ):
+        collapse.collapse(
+            ensemble_cube, coordinate="realization", method="PROPORTION", condition="=="
+        )
+
+
+def test_collapse_by_proportion_wrong_condition(ensemble_cube):
+    """Test not specifying a correct condition fails."""
+    condition = "=>"
+    with pytest.raises(
+        ValueError,
+        match="""Unexpected value for condition. Expected ==, !=,>, >=, <, <=. Got {condition}.""",
+    ):
+        collapse.collapse(
+            ensemble_cube,
+            coordinate="realization",
+            method="PROPORTION",
+            condition=condition,
+            threshold=276,
+        )
+
+
+def test_collapse_by_proportion_units(ensemble_cube):
+    """Test units for collapse using proportion method."""
+    expected_units = cf_units.Unit("1")
+    assert (
+        collapse.collapse(
+            ensemble_cube,
+            coordinate="realization",
+            method="PROPORTION",
+            condition="==",
+            threshold=276,
+        ).units
+        == expected_units
+    )
+
+
+def test_collapse_by_proportion_name(ensemble_cube):
+    """Test renaming of cube when collapsing by proportion method."""
+    expected_name = f"probability_of_{ensemble_cube.name()}_==_276"
+    assert (
+        collapse.collapse(
+            ensemble_cube,
+            coordinate="realization",
+            method="PROPORTION",
+            condition="==",
+            threshold=276,
+        ).name()
+        == expected_name
+    )
+
+
+def test_collapse_by_proportion_equal_to(ensemble_cube):
+    """Test collapse using proportion method equal to."""
+    expected_cube = ensemble_cube.collapsed(
+        "realization", iris.analysis.PROPORTION, function=lambda values: values == 276
+    )
+    actual_cube = collapse.collapse(
+        ensemble_cube,
+        coordinate="realization",
+        method="PROPORTION",
+        condition="==",
+        threshold=276,
+    )
+    assert np.allclose(expected_cube.data, actual_cube.data, rtol=1e-6, atol=1e-2)
+
+
+def test_collapse_by_proportion_not_equal_to(ensemble_cube):
+    """Test collapse using proportion method equal to."""
+    expected_cube = ensemble_cube.collapsed(
+        "realization", iris.analysis.PROPORTION, function=lambda values: values != 276
+    )
+    actual_cube = collapse.collapse(
+        ensemble_cube,
+        coordinate="realization",
+        method="PROPORTION",
+        condition="!=",
+        threshold=276,
+    )
+    assert np.allclose(expected_cube.data, actual_cube.data, rtol=1e-6, atol=1e-2)
+
+
+def test_collapse_by_proportion_greater_than_or_equal_to(ensemble_cube):
+    """Test collapse using proportion method equal to."""
+    expected_cube = ensemble_cube.collapsed(
+        "realization", iris.analysis.PROPORTION, function=lambda values: values >= 276
+    )
+    actual_cube = collapse.collapse(
+        ensemble_cube,
+        coordinate="realization",
+        method="PROPORTION",
+        condition=">=",
+        threshold=276,
+    )
+    assert np.allclose(expected_cube.data, actual_cube.data, rtol=1e-6, atol=1e-2)
+
+
+def test_collapse_by_proportion_greater_than(ensemble_cube):
+    """Test collapse using proportion method greater than."""
+    expected_cube = ensemble_cube.collapsed(
+        "realization", iris.analysis.PROPORTION, function=lambda values: values > 276
+    )
+    actual_cube = collapse.collapse(
+        ensemble_cube,
+        coordinate="realization",
+        method="PROPORTION",
+        condition=">",
+        threshold=276,
+    )
+    assert np.allclose(expected_cube.data, actual_cube.data, rtol=1e-6, atol=1e-2)
+
+
+def test_collapse_by_proportion_less_than_or_equal_to(ensemble_cube):
+    """Test collapse using proportion method equal to."""
+    expected_cube = ensemble_cube.collapsed(
+        "realization", iris.analysis.PROPORTION, function=lambda values: values <= 276
+    )
+    actual_cube = collapse.collapse(
+        ensemble_cube,
+        coordinate="realization",
+        method="PROPORTION",
+        condition="<=",
+        threshold=276,
+    )
+    assert np.allclose(expected_cube.data, actual_cube.data, rtol=1e-6, atol=1e-2)
+
+
+def test_collapse_by_proportion_less_than(ensemble_cube):
+    """Test collapse using proportion method equal to."""
+    expected_cube = ensemble_cube.collapsed(
+        "realization", iris.analysis.PROPORTION, function=lambda values: values < 276
+    )
+    actual_cube = collapse.collapse(
+        ensemble_cube,
+        coordinate="realization",
+        method="PROPORTION",
+        condition="<",
+        threshold=276,
+    )
+    assert np.allclose(expected_cube.data, actual_cube.data, rtol=1e-6, atol=1e-2)

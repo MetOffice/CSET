@@ -94,9 +94,10 @@ def load(conf: Config):
                 aggregation=False,
             )
 
-    # Rain presence
-    if conf.RAIN_PRESENCE_SPATIAL_PLOT:
-        for model in models:
+    # adjusting loop order as following diagnostics require same loop.
+    for model in models:
+        # Rain presence
+        if conf.RAIN_PRESENCE_SPATIAL_PLOT:
             yield RawRecipe(
                 recipe="rain_presence_spatial_plot.yaml",
                 model_ids=model["id"],
@@ -110,9 +111,8 @@ def load(conf: Config):
                 aggregation=False,
             )
 
-    # Surface winds on Beaufort Scale
-    if conf.SFC_WIND_BEAUFORT_SCALE_SPATIAL:
-        for model in models:
+        # Surface winds on Beaufort Scale
+        if conf.SFC_WIND_BEAUFORT_SCALE_SPATIAL:
             yield RawRecipe(
                 recipe="surface_wind_speed_on_beaufort_scale_spatial_plot.yaml",
                 model_ids=model["id"],
@@ -123,6 +123,28 @@ def load(conf: Config):
                     if conf.SELECT_SUBAREA
                     else None,
                 },
+                aggregation=False,
+            )
+
+    # Screen-level temperature probabilities
+    for model, condition, threshold in itertools.product(
+        models,
+        conf.PROB_TEMPERATURE_CONDITION,
+        conf.PROB_TEMPERATURE_THRESHOLD,
+    ):
+        if conf.SCREEN_LEVEL_TEMPERATURE_SPATIAL_PROBABILITY_WITHOUT_CONTROL_MEMBER:
+            yield RawRecipe(
+                recipe="screen_level_temperature_spatial_probability_without_control.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "CONDITION": condition,
+                    "THRESHOLD": threshold,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
                 aggregation=False,
             )
 
