@@ -431,8 +431,6 @@ def convert_units(cubes: iris.cube.Cube | iris.cube.CubeList, units: str):
         cube_a = cube.copy()
         # Convert cube units.
         cube_a.convert_units(units)
-        # Rename new cube so units in title to help with colorbar selection.
-        cube_a.rename(f"{cube.name()}_{units.replace(' ', '_')}")
         new_cubelist.append(cube_a)
     if len(new_cubelist) == 1:
         return new_cubelist[0]
