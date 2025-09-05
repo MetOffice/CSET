@@ -1509,7 +1509,7 @@ def _custom_colormap_celsius(cube: iris.cube.Cube, cmap, levels, norm):
     norm: BoundaryNorm.
     """
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
-    if any("temperature" in name for name in varnames) and "Celsius" in cube.long_name:
+    if any("temperature" in name for name in varnames) and "Celsius" == cube.units:
         levels = np.array(levels)
         levels -= 273
         levels = levels.tolist()
