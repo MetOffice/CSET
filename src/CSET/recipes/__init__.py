@@ -272,12 +272,11 @@ class Config:
 def load_recipes(variables: dict[str, Any]) -> Iterable[RawRecipe]:
     """Load recipes enabled by configuration.
 
-    Recipes are loaded using all loaders (python modules) in
-    CSET.recipes.loaders. Each of these loaders must define a function with the
-    signature `load(v: dict) -> Iterable[RawRecipe]`, which will be called with
-    `variables`.
+    Recipes are loaded using all loaders (python modules) in CSET.loaders. Each
+    of these loaders must define a function with the signature `load(conf: dict)
+    -> Iterable[RawRecipe]`, which will be called with `variables`.
 
-    A minimal example can be found in `CSET.recipes.loaders.test`.
+    A minimal example can be found in `CSET.loaders.test`.
 
     Parameters
     ----------
@@ -295,10 +294,10 @@ def load_recipes(variables: dict[str, Any]) -> Iterable[RawRecipe]:
         When a loader doesn't provide a `load` function.
     """
     # Import here to avoid circular import.
-    import CSET.recipes.loaders
+    import CSET.loaders
 
     config = Config(variables)
-    for loader in CSET.recipes.loaders.__all__:
+    for loader in CSET.loaders.__all__:
         logger.info("Loading recipes from %s", loader)
-        module = getattr(CSET.recipes.loaders, loader)
+        module = getattr(CSET.loaders, loader)
         yield from module.load(config)

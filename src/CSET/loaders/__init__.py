@@ -19,7 +19,7 @@ Each loader should provide a `load` function and be imported and added to
 __all__ below.
 """
 
-from CSET.recipes.loaders import (
+from CSET.loaders import (
     aoa,
     histograms,
     profiles,
