@@ -8,11 +8,34 @@ where things live in the codebase.
 Operators
 ---------
 
+Operators provide the core functionality of CSET. Each operator is a function
+that takes some input and returns some output, possibly also producing side
+effects like saving plots.
+
+All of the operators in CSET are contained in modules in
+``src/CSET/operators/``, which group related operators. For example ``plot.py``
+contains various plotting operators.
+
 Recipes
 -------
 
+To produce a diagnostic, operators must be combined in recipes, which
+are YAML files containing a graph of operators to execute, along with
+any needed arguments and some metadata providing the diagnostic's title,
+description and broad category.
+
+The included recipes in CSET can be found in ``src/CSET/recipes/``.
+
+A recipe may optionally contain variables, such as ``$VARIABLE``, which is
+replaced by a value provided on the command line or by a loader.
+
 Loaders
 -------
+
+Loaders load recipes for use in the workflow, filling in any variables from the
+configuration provided in the ``rose-suite.conf``.
+
+The included loaders in CSET can be found in ``src/CSET/loaders/``.
 
 Workflow
 --------
