@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from CSET.operators import collapse, plot, read
+from CSET.operators import collapse, misc, plot, read
 
 
 def test_check_single_cube():
@@ -390,7 +390,7 @@ def test_colorbar_map_beaufort_scale_axis_difference(cube, tmp_working_dir):
 
 def test_colorbar_map_celsius(cube, tmp_working_dir):
     """Test to ensure color bar is changed for temperature in Celsius."""
-    cube.rename("temperature_in_Celsius")
+    cube = misc.convert_units(cube, "Celsius")
     cmap = mpl.cm.RdYlBu
     norm = None
     levels = [273, 373]
