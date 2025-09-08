@@ -64,7 +64,7 @@ relative_files = true
 source = ["src"]
 # TODO: Figure out how to test loaders. This will likely involve having some
 # example configurations and may be part of the effort to test the workflow.
-omit = ["__main__.py", "src/CSET/recipes/loaders/*.py"]
+omit = ["__main__.py", "src/CSET/loaders/*.py"]
 
 [tool.codespell]
 ignore-words-list = "lazyness,meaned,runn"
