@@ -32,7 +32,7 @@ Loaders
 Loaders load recipes for use in the workflow, filling in any variables from the
 configuration provided in the ``rose-suite.conf``.
 
-The included recipes in CSET can be found in ``src/CSET/recipes/loaders/``.
+The included loaders in CSET can be found in ``src/CSET/loaders/``.
 
 Workflow
 --------
