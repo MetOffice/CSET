@@ -29,7 +29,7 @@ steps:
                 constraint:
                     operator: constraints.generate_var_constraint
                     varname: surface_altitude
-            condition: '>'
+            condition: 'gt'
             value: 500
         multiplier:
             operator: filters.generate_mask
@@ -38,7 +38,7 @@ steps:
                 constraint:
                     operator: constraints.generate_var_constraint
                     varname: surface_air_temperature
-            condition: '<='
+            condition: 'le'
             value: 273
 
   - operator: collapse.collapse
