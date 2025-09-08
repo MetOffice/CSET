@@ -319,7 +319,7 @@ def test_collapse_by_proportion_wrong_condition(ensemble_cube):
     condition = "=>"
     with pytest.raises(
         ValueError,
-        match="""Unexpected value for condition. Expected ==, !=,>, >=, <, <=. Got {condition}.""",
+        match="""Unexpected value for condition. Expected eq, ne, gt, ge, lt, le. Got {condition}.""",
     ):
         collapse.collapse(
             ensemble_cube,
@@ -338,7 +338,7 @@ def test_collapse_by_proportion_units(ensemble_cube):
             ensemble_cube,
             coordinate="realization",
             method="PROPORTION",
-            condition="==",
+            condition="eq",
             threshold=276,
         ).units
         == expected_units
@@ -347,13 +347,13 @@ def test_collapse_by_proportion_units(ensemble_cube):
 
 def test_collapse_by_proportion_name(ensemble_cube):
     """Test renaming of cube when collapsing by proportion method."""
-    expected_name = f"probability_of_{ensemble_cube.name()}_==_276"
+    expected_name = f"probability_of_{ensemble_cube.name()}_eq_276"
     assert (
         collapse.collapse(
             ensemble_cube,
             coordinate="realization",
             method="PROPORTION",
-            condition="==",
+            condition="eq",
             threshold=276,
         ).name()
         == expected_name
@@ -369,7 +369,7 @@ def test_collapse_by_proportion_equal_to(ensemble_cube):
         ensemble_cube,
         coordinate="realization",
         method="PROPORTION",
-        condition="==",
+        condition="eq",
         threshold=276,
     )
     assert np.allclose(expected_cube.data, actual_cube.data, rtol=1e-6, atol=1e-2)
@@ -384,7 +384,7 @@ def test_collapse_by_proportion_not_equal_to(ensemble_cube):
         ensemble_cube,
         coordinate="realization",
         method="PROPORTION",
-        condition="!=",
+        condition="ne",
         threshold=276,
     )
     assert np.allclose(expected_cube.data, actual_cube.data, rtol=1e-6, atol=1e-2)
@@ -399,7 +399,7 @@ def test_collapse_by_proportion_greater_than_or_equal_to(ensemble_cube):
         ensemble_cube,
         coordinate="realization",
         method="PROPORTION",
-        condition=">=",
+        condition="ge",
         threshold=276,
     )
     assert np.allclose(expected_cube.data, actual_cube.data, rtol=1e-6, atol=1e-2)
@@ -414,7 +414,7 @@ def test_collapse_by_proportion_greater_than(ensemble_cube):
         ensemble_cube,
         coordinate="realization",
         method="PROPORTION",
-        condition=">",
+        condition="gt",
         threshold=276,
     )
     assert np.allclose(expected_cube.data, actual_cube.data, rtol=1e-6, atol=1e-2)
@@ -429,7 +429,7 @@ def test_collapse_by_proportion_less_than_or_equal_to(ensemble_cube):
         ensemble_cube,
         coordinate="realization",
         method="PROPORTION",
-        condition="<=",
+        condition="le",
         threshold=276,
     )
     assert np.allclose(expected_cube.data, actual_cube.data, rtol=1e-6, atol=1e-2)
@@ -444,7 +444,7 @@ def test_collapse_by_proportion_less_than(ensemble_cube):
         ensemble_cube,
         coordinate="realization",
         method="PROPORTION",
-        condition="<",
+        condition="lt",
         threshold=276,
     )
     assert np.allclose(expected_cube.data, actual_cube.data, rtol=1e-6, atol=1e-2)

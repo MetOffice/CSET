@@ -62,7 +62,7 @@ def collapse(
     additional_percent: float, optional
         Required for the PERCENTILE method. This is a number between 0 and 100.
     condition: str, optional
-        Required for the PROPORTION method. Expected arguments are ==, !=, <, >, <=, >=.
+        Required for the PROPORTION method. Expected arguments are eq, ne, lt, gt, le, ge.
     threshold: float, optional
         Required for the PROPORTION method.
 
@@ -124,37 +124,37 @@ def collapse(
                 collapsed_cubes.append(cube_max - cube_min)
             elif method == "PROPORTION":
                 match condition:
-                    case "==":
+                    case "eq":
                         new_cube = cube.collapsed(
                             coordinate,
                             getattr(iris.analysis, method),
                             function=lambda values: values == threshold,
                         )
-                    case "!=":
+                    case "ne":
                         new_cube = cube.collapsed(
                             coordinate,
                             getattr(iris.analysis, method),
                             function=lambda values: values != threshold,
                         )
-                    case ">":
+                    case "gt":
                         new_cube = cube.collapsed(
                             coordinate,
                             getattr(iris.analysis, method),
                             function=lambda values: values > threshold,
                         )
-                    case ">=":
+                    case "ge":
                         new_cube = cube.collapsed(
                             coordinate,
                             getattr(iris.analysis, method),
                             function=lambda values: values >= threshold,
                         )
-                    case "<":
+                    case "lt":
                         new_cube = cube.collapsed(
                             coordinate,
                             getattr(iris.analysis, method),
                             function=lambda values: values < threshold,
                         )
-                    case "<=":
+                    case "le":
                         new_cube = cube.collapsed(
                             coordinate,
                             getattr(iris.analysis, method),
@@ -162,7 +162,7 @@ def collapse(
                         )
                     case _:
                         raise ValueError(
-                            """Unexpected value for condition. Expected ==, !=,>, >=, <, <=. Got {condition}."""
+                            """Unexpected value for condition. Expected eq, ne, gt, ge, lt, le. Got {condition}."""
                         )
                 new_cube.rename(f"probability_of_{cube.name()}_{condition}_{threshold}")
                 new_cube.units = "1"
