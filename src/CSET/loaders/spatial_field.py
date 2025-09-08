@@ -153,9 +153,9 @@ def load(conf: Config):
             yield RawRecipe(
                 recipe="screen_level_temperature_spatial_probability_without_control.yaml",
                 variables={
-                    "MODEL_NAME": model["name"],
                     "CONDITION": condition,
                     "THRESHOLD": threshold,
+                    "MODEL_NAME": model["name"],
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
