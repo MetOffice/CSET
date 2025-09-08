@@ -242,7 +242,7 @@ def rolling_window_time_aggregation(
 
     Notes
     -----
-    This opereator is designed to be used to help create daily maxima and minima
+    This operator is designed to be used to help create daily maxima and minima
     for any variable.
     """
     new_cubelist = iris.cube.CubeList()
