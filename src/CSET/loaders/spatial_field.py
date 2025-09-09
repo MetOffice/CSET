@@ -94,9 +94,12 @@ def load(conf: Config):
                 aggregation=False,
             )
 
-    # Rain presence
-    if conf.RAIN_PRESENCE_SPATIAL_PLOT:
-        for model in models:
+    # Specific diagnostics require their own recipes for traceability. Therefore, these also
+    # require individual loaders.
+
+    for model in models:
+        # Rain presence.
+        if conf.RAIN_PRESENCE_SPATIAL_PLOT:
             yield RawRecipe(
                 recipe="rain_presence_spatial_plot.yaml",
                 model_ids=model["id"],
@@ -110,9 +113,8 @@ def load(conf: Config):
                 aggregation=False,
             )
 
-    # Surface winds on Beaufort Scale
-    if conf.SFC_WIND_BEAUFORT_SCALE_SPATIAL:
-        for model in models:
+        # Surface winds on Beaufort Scale.
+        if conf.SFC_WIND_BEAUFORT_SCALE_SPATIAL:
             yield RawRecipe(
                 recipe="surface_wind_speed_on_beaufort_scale_spatial_plot.yaml",
                 model_ids=model["id"],
@@ -123,6 +125,21 @@ def load(conf: Config):
                     if conf.SELECT_SUBAREA
                     else None,
                 },
+                aggregation=False,
+            )
+
+        # Daily maximum temperature 09-09 UTC
+        if conf.DAILY_09_MAXIMUM_TEMPERATURE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="daily_09_maximum_temperature_spatial_plot.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
                 aggregation=False,
             )
 

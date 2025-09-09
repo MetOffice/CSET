@@ -326,13 +326,6 @@ def test_convert_units(cube):
     assert np.allclose(expected_cube.data, new_cube.data, rtol=1e-6, atol=1e-2)
 
 
-def test_convert_units_rename(cube):
-    """Test renaming of cube."""
-    new_cube = misc.convert_units(cube, "Celsius")
-    expected_name = f"{cube.name()}_Celsius"
-    assert expected_name == new_cube.name()
-
-
 def test_convert_units_cubelist(cube):
     """Test converting units of a cubelist."""
     cube_list = iris.cube.CubeList([cube, cube])

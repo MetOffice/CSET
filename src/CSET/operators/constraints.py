@@ -350,6 +350,50 @@ def generate_realization_constraint(
     return iris.Constraint(realization=ensemble_members)
 
 
+def generate_hour_constraint(
+    hour_start: int,
+    hour_end: int = None,
+    **kwargs,
+) -> iris.Constraint:
+    """Generate an hour constraint between hour of day limits.
+
+    Operator that takes a set of hour of day limits and returns a constraint that
+    selects only hours within that time frame regardless of day.
+
+    Alternatively, the result can be constrained to a single hour by just entering
+    a starting hour.
+
+    Should any sub-hourly data be given these will have the same hour coordinate
+    (e.g., 12:00 and 12:05 both have an hour coordinate of 12) all
+    times will be selected with this constraint.
+
+    Arguments
+    ---------
+    hour_start: int
+        The hour of day for the lower bound, within 0 to 23.
+    hour_end: int | None
+        The hour of day for the upper bound, within 0 to 23. Alternatively,
+        set to None if only one hour required.
+
+    Returns
+    -------
+    hour_constraint: iris.Constraint
+
+    Raises
+    ------
+    ValueError
+        If the provided arguments are outside of the range 0 to 23.
+    """
+    if hour_end is None:
+        hour_end = hour_start
+
+    if (hour_start < 0) or (hour_start > 23) or (hour_end < 0) or (hour_end > 23):
+        raise ValueError("Hours must be between 0 and 23 inclusive.")
+
+    hour_constraint = iris.Constraint(hour=lambda h: hour_start <= h.point <= hour_end)
+    return hour_constraint
+
+
 def combine_constraints(
     constraint: iris.Constraint = None, **kwargs
 ) -> iris.Constraint:

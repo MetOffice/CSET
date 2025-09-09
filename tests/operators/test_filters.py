@@ -19,7 +19,7 @@ import iris.cube
 import numpy as np
 import pytest
 
-from CSET.operators import constraints, filters, read
+from CSET.operators import aggregate, constraints, filters, read
 
 constraint_single = constraints.combine_constraints(
     constraints.generate_stash_constraint("m01s03i236"),
@@ -334,3 +334,21 @@ def test_generate_realization_constraint_multiple_members(ensemble_cube):
     )
     # Assert filtered realization coordinates match expected realization coordinates.
     assert (filter_cube.coord("realization").points == [1, 2]).all()
+
+
+def test_generate_hour_constraint_single_hour(cube):
+    """Select a single hour of day from cube."""
+    new_cube = aggregate.add_hour_coordinate(cube)
+    expected_cube = filters.filter_cubes(
+        new_cube, constraints.generate_hour_constraint(hour_start=3)
+    )
+    assert expected_cube.coord("hour").points == [3]
+
+
+def test_generate_hour_constraint_hour_range(cube):
+    """Select hours of day within a given range."""
+    new_cube = aggregate.add_hour_coordinate(cube)
+    expected_cube = filters.filter_cubes(
+        new_cube, constraints.generate_hour_constraint(hour_start=3, hour_end=4)
+    )
+    assert (expected_cube.coord("hour").points == [3, 4]).all()
