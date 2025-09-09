@@ -13,7 +13,7 @@ steps:
         constraint:
             operator: constraints.generate_var_constraint
             varname: surface_altitude
-    condition: '>='
+    condition: 'ge'
     value: 500
 
   - operator: plot.spatial_pcolormesh_plot
