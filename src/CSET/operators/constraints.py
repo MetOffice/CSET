@@ -363,6 +363,10 @@ def generate_hour_constraint(
     Alternatively, the result can be constrained to a single hour by just entering
     a starting hour.
 
+    Should any sub-hourly data be given these will have the same hour coordinate
+    (e.g., 12:00 and 12:05 both have an hour coordinate of 12) all
+    times will be selected with this constraint.
+
     Arguments
     ---------
     hour_start: int

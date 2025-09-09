@@ -100,6 +100,8 @@ def load(conf: Config):
                 model_ids=[base_model["id"], model["id"]],
                 aggregation=False,
             )
+    # Specific diagnostics require their own recipes for traceability. Therefore, these also
+    # require individual loaders.
 
     # Rain presence.
     if conf.RAIN_PRESENCE_SPATIAL_DIFFERENCE:
