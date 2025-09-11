@@ -90,6 +90,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         {% if SKIP_WRITE|default(False) %}
         SKIP_WRITE = True
         {% endif %}
+        HISTOGRAM_METHOD = {{HISTOGRAM_METHOD|default("frequency")}}
 
     [[FETCH_DATA]]
     script = rose task-run -v --app-key=fetch_fcst

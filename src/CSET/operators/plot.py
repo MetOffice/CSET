@@ -1064,13 +1064,107 @@ def _plot_and_save_vector_plot(
     plt.close(fig)
 
 
+def _plot_histogram(
+    data, method: str = "density", title: str = "", units: str = "", **kwargs
+) -> dict:
+    """Plot a histogram using a specified method to compute the histogram.
+
+    Histograms can be computed using any of three different methods:
+
+    frequency            - This is constructed from the raw counts within each bin.
+
+    normalised_frequency - The frequency counts are normalised so that the total
+                           counts is 1.
+
+    density              - The counts per bin are normalised by both the total
+                           counts and the bin widths. The sum of the areas of the
+                           bins is 1. This is the discrete sampling analogue of
+                           the continuous probability density function.
+
+    This function returns a dictionary of plotting labels to use on the histogram plot.
+    Keys available:
+
+       "ylabel" - label for the y-axis indicating the method used to compute the histogram.
+
+
+    It is possible to specify both the range of data values to consider for the
+    histogram and the number of bins to use. Using these options will set the bin
+    width to ( value_maximum - value_minimum ) / number of bins. See the documentation
+    for matplotlib.pyplot.hist for more details at:
+    https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.hist.html
+
+    Parameters
+    ----------
+    data: array
+        Input values of the data to use for computing the histogram.
+    method: "frequency" | "normalised_frequency" | "density", optional
+        The histogram method to use. Default is "density".
+    title: str
+        Title of the histogram.
+    units: str
+        Units of the data.
+    **kwargs: optional keyword arguments used by matplotlib.pyplot.hist
+        The keywords "density" and "weights" are set by the input "method", so
+        values should not be assigned to these keywords in the call to this function.
+    """
+    # Define the parameter settings in matplotlib.pyplot.hist
+    # required to implement the histogram methods "density",
+    # "normalised frequency" and "frequency".
+    hist_method = {
+        "density": {"method_args": {"density": True}, "labels": {"ylabel": "Density"}},
+        "normalised_frequency": {
+            "method_args": {
+                "density": False,
+                "weights": 1.0 / len(data) * np.ones(len(data)),
+            },
+            "labels": {"ylabel": "Normalised frequency"},
+        },
+        "frequency": {
+            "method_args": {"density": False},
+            "labels": {"ylabel": "Frequency"},
+        },
+    }
+
+    # Grab the parameter settings required for the histogram method
+    try:
+        args_method = hist_method[method]["method_args"]
+    except KeyError as err:
+        raise ValueError(
+            f"Unrecognised histogram method: {method}\n"
+            f"Method should be one of {', '.join(hist_method.keys())}"
+        ) from err
+
+    # If surface microphysical precipitation amounts calculate different histogram.
+    if "surface_microphysical" in title and "amount" in title:
+        bins = kwargs["bins"]
+        x, y = np.histogram(
+            data, bins=bins, density=args_method["method_args"]["density"]
+        )
+        bin_mean = (bins[:-1] + bins[1:]) / 2.0
+        x = x * bin_mean / x.sum()
+        x = x[1:]
+        y = y[1:]
+
+        ax = plt.gca()
+        ax.plot(y[:-1], x, marker="o", markersize=6, **kwargs)
+
+        args_method["labels"]["ylabel"] = f"Contribution to mean ({units})"
+    else:
+        # Use the function matplotlib.pyplot.hist to plot the histogram.
+        plt.hist(data, **args_method, **kwargs)
+
+    # Return from this function _plot_histogram, passing back the
+    # label to print on the y-axis of the histogram.
+    return hist_method[method]["labels"]
+
+
 def _plot_and_save_histogram_series(
     cubes: iris.cube.Cube | iris.cube.CubeList,
     filename: str,
     title: str,
     vmin: float,
     vmax: float,
-    **kwargs,
+    histogram_method: str,
 ):
     """Plot and save a histogram series.
 
@@ -1086,15 +1180,13 @@ def _plot_and_save_histogram_series(
         minimum for colorbar
     vmax: float
         maximum for colorbar
+    histogram_method: str
+        Histogram method to use i.e. frequency, normalised_frequency or density.
     """
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     ax = plt.gca()
 
     model_colors_map = _get_model_colors_map(cubes)
-
-    # Set default that histograms will produce probability density function
-    # at each bin (integral over range sums to 1).
-    density = True
 
     for cube in iter_maybe(cubes):
         # Easier to check title (where var name originates)
@@ -1105,7 +1197,6 @@ def _plot_and_save_histogram_series(
                 # Compute histogram following Klingaman et al. (2017): ASoP
                 bin2 = np.exp(np.log(0.02) + 0.1 * np.linspace(0, 99, 100))
                 bins = np.pad(bin2, (1, 0), "constant", constant_values=0)
-                density = False
             else:
                 bins = 10.0 ** (
                     np.arange(-10, 27, 1) / 10.0
@@ -1135,30 +1226,26 @@ def _plot_and_save_histogram_series(
         if model_colors_map:
             label = cube.attributes.get("model_name")
             color = model_colors_map[label]
-        x, y = np.histogram(cube_data_1d, bins=bins, density=density)
-
-        # Compute area under curve.
-        if "surface_microphysical" in title and "amount" in title:
-            bin_mean = (bins[:-1] + bins[1:]) / 2.0
-            x = x * bin_mean / x.sum()
-            x = x[1:]
-            y = y[1:]
-
-        ax.plot(
-            y[:-1], x, color=color, linewidth=3, marker="o", markersize=6, label=label
+        # Plot the histogram.x, y = np.histogram(cube_data_1d, bins=bins, density=density)
+        y = _plot_histogram(
+            cube_data_1d,
+            method=histogram_method,
+            title=title,
+            units=cube.units,
+            bins=bins,
+            color=color,
+            linewidth=2,
+            histtype="step",
+            label=label,
         )
 
     # Add some labels and tweak the style.
-    ax.set_title(title, fontsize=16)
-    ax.set_xlabel(
-        f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}", fontsize=14
+    ax.set(
+        title=title,
+        xlabel=f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}",
+        ylabel=y["ylabel"],
+        xlim=(vmin, vmax),
     )
-    ax.set_ylabel("Normalised probability density", fontsize=14)
-    if "surface_microphysical" in title and "amount" in title:
-        ax.set_ylabel(
-            f"Contribution to mean ({iter_maybe(cubes)[0].units})", fontsize=14
-        )
-    ax.set_xlim(vmin, vmax)
     ax.tick_params(axis="both", labelsize=12)
 
     # Overlay grid-lines onto histogram plot.
@@ -1179,7 +1266,7 @@ def _plot_and_save_postage_stamp_histogram_series(
     stamp_coordinate: str,
     vmin: float,
     vmax: float,
-    **kwargs,
+    histogram_method: str,
 ):
     """Plot and save postage (ensemble members) stamps for a histogram series.
 
@@ -1197,6 +1284,9 @@ def _plot_and_save_postage_stamp_histogram_series(
         minimum for pdf x-axis
     vmax: float
         maximum for pdf x-axis
+    histogram_method: str
+        Histogram method to use i.e. frequency, normalised_frequency or density.
+
     """
     # Use the smallest square grid that will fit the members.
     grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
@@ -1232,7 +1322,7 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
     stamp_coordinate: str,
     vmin: float,
     vmax: float,
-    **kwargs,
+    histogram_method: str,
 ):
     fig, ax = plt.subplots(figsize=(10, 10), facecolor="w", edgecolor="k")
     ax.set_title(title, fontsize=16)
@@ -2081,7 +2171,7 @@ def scatter_plot(
 def vector_plot(
     cube_u: iris.cube.Cube,
     cube_v: iris.cube.Cube,
-    filename: str = None,
+    filename: str | None = None,
     sequence_coordinate: str = "time",
     **kwargs,
 ) -> iris.cube.CubeList:
@@ -2136,10 +2226,11 @@ def vector_plot(
 
 def plot_histogram_series(
     cubes: iris.cube.Cube | iris.cube.CubeList,
-    filename: str = None,
+    filename: str | None = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
     single_plot: bool = False,
+    histogram_method: str = "frequency",
     **kwargs,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Plot a histogram plot for each vertical level provided.
@@ -2172,6 +2263,8 @@ def plot_histogram_series(
         If True, all postage stamp plots will be plotted in a single plot. If
         False, each postage stamp plot will be plotted separately. Is only valid
         if stamp_coordinate exists and has more than a single point.
+    histogram_method: str
+        Histogram method to use i.e. frequency, normalised_frequency or density.
 
     Returns
     -------
@@ -2304,6 +2397,7 @@ def plot_histogram_series(
             title=title,
             vmin=vmin,
             vmax=vmax,
+            histogram_method=histogram_method,
         )
         plot_index.append(plot_filename)
 

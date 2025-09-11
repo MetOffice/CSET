@@ -35,6 +35,8 @@ steps:
 
   - operator: plot.plot_histogram_series
     sequence_coordinate: realization
+    histogram_method: $HISTOGRAM_METHOD
+
 
   - operator: write.write_cube_to_nc
     overwrite: True
