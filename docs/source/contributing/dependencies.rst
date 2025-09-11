@@ -9,7 +9,7 @@ requirements that must be installed separately.
 * conda - Used for managing the conda environment. Alternatively mamba or micromamba can be used.
 * cylc 8 - Used for running the workflow. As it typically requires significant site integration it is not installed with CSET.
 * GNU find - We use the ``-printf`` option that is GNU specific.
-* sqlite3 - Command line tool for sqlite. Used for doing bad things to rose_bunch.
+* sqlite3 - Command line tool for sqlite. Used for modifying the rose_bunch database to allow retriggering with a different level of parallelism.
 
 Requirements of a new dependency
 --------------------------------
