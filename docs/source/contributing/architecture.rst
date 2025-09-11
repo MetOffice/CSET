@@ -17,9 +17,10 @@ contains various plotting operators.
 Recipes
 -------
 
-To produce a diagnostic, operators must be combined with recipes, which are YAML
-files containing a graph of operators to execute, along with any needed
-arguments and a bit of metadata.
+To produce a diagnostic, operators must be combined in recipes, which
+are YAML files containing a graph of operators to execute, along with
+any needed arguments and some metadata providing the diagnostic's title,
+description and broad category.
 
 The included recipes in CSET can be found in ``src/CSET/recipes/``.
 
