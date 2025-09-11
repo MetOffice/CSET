@@ -1,10 +1,10 @@
 category: Aviation
-title: $MODEL_NAME Aviation colour state due to visibility spatial plot
+title: $MODEL_NAME aviation colour state due to visibility spatial plot
 description: |
-  Generates a spatial plot of the aviation colour state using the visibility.
-  The aviation colour states due to visibility can be found on the
-  [Met Office website](https://www.metoffice.gov.uk/services/transport/aviation/regulated/national-aviation/abs/faqs). This diagnostic allows understanding from a user perspective on what matters
-  for aviation purposes.
+  Generates a plot of the aviation colour state due to visibility
+  The aviation colour state can be found on the [Met Office website](https://www.metoffice.gov.uk/services/transport/aviation/regulated/national-aviation/abs/faqs). It provides a
+  user oriented diagnostic to understand the impacts of visibility on
+  aviation.
 
 steps:
   - operator: read.read_cubes
