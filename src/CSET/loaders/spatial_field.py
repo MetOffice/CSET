@@ -128,10 +128,25 @@ def load(conf: Config):
                 aggregation=False,
             )
 
-        # Daily maximum temperature 09-09 UTC
+        # Daily maximum temperature 09-09 UTC.
         if conf.DAILY_09_MAXIMUM_TEMPERATURE_SPATIAL_PLOT:
             yield RawRecipe(
                 recipe="daily_09_maximum_temperature_spatial_plot.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
+
+        # Aviation colour state due to visibility.
+        if conf.AVIATION_COLOUR_STATE_VISIBILITY:
+            yield RawRecipe(
+                recipe="aviation_colour_state_visibility_spatial_plot.yaml",
                 variables={
                     "MODEL_NAME": model["name"],
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
