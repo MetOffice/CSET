@@ -231,6 +231,20 @@ def load(conf: Config):
                 model_ids=model["id"],
                 aggregation=False,
             )
+        # Aviation colour state due to visibility.
+        if conf.AVIATION_COLOUR_STATE_VISIBILITY:
+            yield RawRecipe(
+                recipe="aviation_colour_state_visibility_spatial_plot.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
 
     # Screen-level temperature probabilities
     for model, condition, threshold in itertools.product(

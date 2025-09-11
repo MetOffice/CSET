@@ -95,7 +95,6 @@ def aviation_colour_state_cloud_base(
     if "sea_level" in cloud_base.long_name:
         logging.info("Cloud base given above sea level so subtracting orography.")
         # If cloud base is given above sea level check for an orography cube.
-        # Need to check how this was done for convection.inflow_layer_base (is this a separate misc._operator?)
         if orography is None:
             raise ValueError(
                 "An orography cube needs to be provided as data is above sea level."
