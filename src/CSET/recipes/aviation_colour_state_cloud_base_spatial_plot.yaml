@@ -1,0 +1,31 @@
+category: Aviation
+title: $MODEL_NAME aviation colour state due to cloud base spatial plot
+description: |
+  Generates a plot of the aviation colour state due to cloud base altitude
+  The aviation colour state can be found on the [Met Office website](https://www.metoffice.gov.uk/services/transport/aviation/regulated/national-aviation/abs/faqs). It provides a
+  user oriented diagnostic to understand the impacts of visibility on
+  aviation.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: aviation.aviation_colour_state_cloud_base
+    cloud_base:
+      operator: filters.filter_multiple_cubes
+      constraint:
+        operator: constraints.generate_var_constraint
+        varname: cloud_base_altitude
+    orography:
+      operator: filters.filter_multiple_cubes
+      constraint:
+        operator: constraints.generate_var_constraint
+        varname: surface_altitude
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

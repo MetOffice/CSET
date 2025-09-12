@@ -92,30 +92,31 @@ def aviation_colour_state_cloud_base(
     aviation_state_cloud_base_list = iris.cube.CubeList([])
 
     # Determine if the cloud base is above sea level or above ground level.
-    if "sea_level" in cloud_base.long_name:
-        logging.info("Cloud base given above sea level so subtracting orography.")
-        # If cloud base is given above sea level check for an orography cube.
-        if orography is None:
-            raise ValueError(
-                "An orography cube needs to be provided as data is above sea level."
-            )
-    else:
-        logging.info("Cloud base given above ground level.")
 
     # Now deal with CubeLists.
     for cld, orog in zip(iter_maybe(cloud_base), iter_maybe(orography), strict=True):
         # Convert the cloud base to above ground level using the orography cube.
         # Check dimensions for Orography cube and replace with 2D array if not 2D.
-        if orog.ndim == 3:
-            orog = orog.slices_over("realization").next()
-            logging.warning("Orography assumed not to vary with ensemble member")
-        elif orog.ndim == 4:
-            orog = orog.slices_over(("time", "realization")).next()
-            logging.warning(
-                "Orography assumed not to vary with time or ensemble member. "
-            )
         if "sea_level" in cld.long_name:
+            logging.info("Cloud base given above sea level so subtracting orography.")
+            # If cloud base is given above sea level check for an orography cube.
+            if orography is None:
+                raise ValueError(
+                    "An orography cube needs to be provided as data is above sea level."
+                )
+            # Process orography cube.
+            if orog.ndim == 3:
+                orog = orog.slices_over("realization").next()
+                logging.warning("Orography assumed not to vary with ensemble member")
+            elif orog.ndim == 4:
+                orog = orog.slices_over(("time", "realization")).next()
+                logging.warning(
+                    "Orography assumed not to vary with time or ensemble member. "
+                )
+            # Subtract orography from cloud base altitude.
             cld.data -= orog.data
+        else:
+            logging.info("Cloud base given above ground level.")
 
         # Create a cube for the aviation colour state and set all to zero.
         aviation_state_cloud_base = cld.copy()
