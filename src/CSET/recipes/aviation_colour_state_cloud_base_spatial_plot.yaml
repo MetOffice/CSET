@@ -3,7 +3,7 @@ title: $MODEL_NAME aviation colour state due to cloud base spatial plot
 description: |
   Generates a plot of the aviation colour state due to cloud base altitude
   The aviation colour state can be found on the [Met Office website](https://www.metoffice.gov.uk/services/transport/aviation/regulated/national-aviation/abs/faqs). It provides a
-  user oriented diagnostic to understand the impacts of visibility on
+  user oriented diagnostic to understand the impacts of cloud base on
   aviation.
 
 steps:
