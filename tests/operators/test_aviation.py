@@ -25,6 +25,9 @@ from CSET.operators import aviation
 
 def test_aviation_colour_state(visibility_cube, cloud_base_cube, orography_cube):
     """Check that the aviation colour state is calculated."""
+    cloud_base_cube.rename(
+        "cloud_base_altitude_above_sea_level_for_greater_than_2p5_oktas_coverage"
+    )
     vis = aviation.aviation_colour_state_visibility(visibility=visibility_cube)
     cld = aviation.aviation_colour_state_cloud_base(
         cloud_base=cloud_base_cube, orography=orography_cube
@@ -54,6 +57,9 @@ def test_aviation_colour_sate_cubelist(
     visibility_cube, cloud_base_cube, orography_cube
 ):
     """Check aviation colour state handles a CubeList."""
+    cloud_base_cube.rename(
+        "cloud_base_altitude_above_sea_level_for_greater_than_2p5_oktas_coverage"
+    )
     vis = aviation.aviation_colour_state_visibility(visibility=visibility_cube)
     cld = aviation.aviation_colour_state_cloud_base(
         cloud_base=cloud_base_cube, orography=orography_cube
@@ -97,7 +103,7 @@ def test_aviation_colour_state_visibility_name(visibility_cube):
     )
 
 
-def test_aviaiton_color_state_visibility_unit(visibility_cube):
+def test_aviation_color_state_visibility_unit(visibility_cube):
     """Check that the output cube has the expected units."""
     expected_units = cf_units.Unit("1")
     assert (
@@ -168,6 +174,9 @@ def test_aviation_colour_state_cloud_base_units(cloud_base_cube, orography_cube)
 
 def test_aviation_colour_state_cloud_base_cubelist(cloud_base_cube, orography_cube):
     """Check that aviation colour state due to cloud base is calculated for a cube list."""
+    cloud_base_cube.rename(
+        "cloud_base_altitude_above_sea_level_for_greater_than_2p5_oktas_coverage"
+    )
     expected_data = cloud_base_cube.copy()
     expected_data.data[:] = 0.0
     expected_data.data[(cloud_base_cube.data - orography_cube.data) < 2.5] += 1.0
