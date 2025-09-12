@@ -225,6 +225,9 @@ def test_aviation_colour_state_cloud_base_3D_orography(
     cloud_base_cube, orography_3D_cube
 ):
     """Check that a 3D orography cube is handled correctly."""
+    cloud_base_cube.rename(
+        "cloud_base_altitude_above_sea_level_for_greater_than_2p5_oktas_coverage"
+    )
     expected_data = cloud_base_cube.copy()
     expected_data.data[:] = 0.0
     expected_data.data[(cloud_base_cube.data - orography_3D_cube.data[0, :]) < 2.5] += (
@@ -259,6 +262,9 @@ def test_aviation_colour_state_cloud_base_4D_orography(
     cloud_base_cube, orography_4D_cube
 ):
     """Check that a 4D orography cube is handled correctly."""
+    cloud_base_cube.rename(
+        "cloud_base_altitude_above_sea_level_for_greater_than_2p5_oktas_coverage"
+    )
     expected_data = cloud_base_cube.copy()
     expected_data.data[:] = 0.0
     expected_data.data[
