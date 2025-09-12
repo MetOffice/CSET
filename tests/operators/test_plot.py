@@ -435,6 +435,27 @@ def test_colorbar_map_probabilities(cube, tmp_working_dir):
     assert (norm.boundaries == levels).all()
 
 
+def test_colorbar_map_aviation_colour_state(cube, tmp_working_dir):
+    """Test to ensure color bar is change for aviation colour states."""
+    cube.rename("aviation_colour_state")
+    expected_levels = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5]
+    expected_colors = [
+        "#0000ff",
+        "#ffffff",
+        "#008000",
+        "#ffff00",
+        "#ffd700",
+        "#ffa500",
+        "#ff0000",
+    ]
+    expected_cmap = mpl.colors.ListedColormap(expected_colors)
+    cmap, levels, norm = plot._custom_colormap_aviation_colour_state(cube)
+    assert cmap == expected_cmap
+    assert levels == expected_levels
+    assert isinstance(norm, mpl.colors.BoundaryNorm)
+    assert (norm.boundaries == levels).all()
+
+
 def test_spatial_contour_plot(cube, tmp_working_dir):
     """Plot spatial contour plot of instant air temp."""
     # Remove realization coord to increase coverage, and as its not needed.

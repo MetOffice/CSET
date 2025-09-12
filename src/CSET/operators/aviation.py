@@ -104,7 +104,7 @@ def aviation_colour_state_cloud_base(
                 raise ValueError(
                     "An orography cube needs to be provided as data is above sea level."
                 )
-            # Process orography cube.
+            # Process orographtest_ploty cube.
             if orog.ndim == 3:
                 orog = orog.slices_over("realization").next()
                 logging.warning("Orography assumed not to vary with ensemble member")
