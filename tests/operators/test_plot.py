@@ -446,7 +446,7 @@ def test_colorbar_map_aviation_colour_state(cube, tmp_working_dir):
         "#ffff00",
         "#ffd700",
         "#ffa500",
-        "#ff0000",
+        "#fe3620",
     ]
     expected_cmap = mpl.colors.ListedColormap(expected_colors)
     cmap, levels, norm = plot._custom_colormap_aviation_colour_state(cube)
