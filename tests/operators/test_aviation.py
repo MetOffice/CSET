@@ -18,16 +18,12 @@ import cf_units
 import iris
 import iris.cube
 import numpy as np
-import pytest
 
 from CSET.operators import aviation
 
 
 def test_aviation_colour_state(visibility_cube, cloud_base_cube, orography_cube):
     """Check that the aviation colour state is calculated."""
-    cloud_base_cube.rename(
-        "cloud_base_altitude_above_sea_level_for_greater_than_2p5_oktas_coverage"
-    )
     vis = aviation.aviation_colour_state_visibility(visibility=visibility_cube)
     cld = aviation.aviation_colour_state_cloud_base(
         cloud_base=cloud_base_cube, orography=orography_cube
@@ -57,9 +53,6 @@ def test_aviation_colour_sate_cubelist(
     visibility_cube, cloud_base_cube, orography_cube
 ):
     """Check aviation colour state handles a CubeList."""
-    cloud_base_cube.rename(
-        "cloud_base_altitude_above_sea_level_for_greater_than_2p5_oktas_coverage"
-    )
     vis = aviation.aviation_colour_state_visibility(visibility=visibility_cube)
     cld = aviation.aviation_colour_state_cloud_base(
         cloud_base=cloud_base_cube, orography=orography_cube
@@ -174,9 +167,6 @@ def test_aviation_colour_state_cloud_base_units(cloud_base_cube, orography_cube)
 
 def test_aviation_colour_state_cloud_base_cubelist(cloud_base_cube, orography_cube):
     """Check that aviation colour state due to cloud base is calculated for a cube list."""
-    cloud_base_cube.rename(
-        "cloud_base_altitude_above_sea_level_for_greater_than_2p5_oktas_coverage"
-    )
     expected_data = cloud_base_cube.copy()
     expected_data.data[:] = 0.0
     expected_data.data[(cloud_base_cube.data - orography_cube.data) < 2.5] += 1.0
@@ -197,9 +187,6 @@ def test_aviation_colour_state_cloud_base_cubelist(cloud_base_cube, orography_cu
 
 def test_aviation_colour_state_cloud_base_above_ground_level(cloud_base_cube):
     """Check that aviation colour state due to cloud base is calculated for above ground level data."""
-    cloud_base_cube.rename(
-        "cloud_base_altitude_above_ground_level_for_greater_than_2p5_oktas_coverage"
-    )
     expected_data = cloud_base_cube.copy()
     expected_data.data[:] = 0.0
     expected_data.data[cloud_base_cube.data < 2.5] += 1.0
@@ -216,27 +203,10 @@ def test_aviation_colour_state_cloud_base_above_ground_level(cloud_base_cube):
     )
 
 
-def test_aviation_colour_state_cloud_base_sea_level_error(cloud_base_cube):
-    """Check that an error is raised when data is above sea level and orography cube not given."""
-    cloud_base_cube.rename(
-        "cloud_base_altitude_above_sea_level_for_greater_than_2p5_oktas_coverage"
-    )
-    with pytest.raises(
-        ValueError,
-        match="An orography cube needs to be provided as data is above sea level.",
-    ):
-        aviation.aviation_colour_state_cloud_base(
-            cloud_base=cloud_base_cube, orography=None
-        )
-
-
 def test_aviation_colour_state_cloud_base_3D_orography(
     cloud_base_cube, orography_3D_cube
 ):
     """Check that a 3D orography cube is handled correctly."""
-    cloud_base_cube.rename(
-        "cloud_base_altitude_above_sea_level_for_greater_than_2p5_oktas_coverage"
-    )
     expected_data = cloud_base_cube.copy()
     expected_data.data[:] = 0.0
     expected_data.data[(cloud_base_cube.data - orography_3D_cube.data[0, :]) < 2.5] += (
@@ -271,9 +241,6 @@ def test_aviation_colour_state_cloud_base_4D_orography(
     cloud_base_cube, orography_4D_cube
 ):
     """Check that a 4D orography cube is handled correctly."""
-    cloud_base_cube.rename(
-        "cloud_base_altitude_above_sea_level_for_greater_than_2p5_oktas_coverage"
-    )
     expected_data = cloud_base_cube.copy()
     expected_data.data[:] = 0.0
     expected_data.data[
