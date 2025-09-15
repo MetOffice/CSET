@@ -1,4 +1,4 @@
-category: Surface Spatial Plot
+category: Ensemble
 title: $MODEL_NAME probability of temperature at screen level $CONDITION $THRESHOLD
 description: |
   Calculates the probability $CONDITION $THRESHOLD for teperature at screen level
