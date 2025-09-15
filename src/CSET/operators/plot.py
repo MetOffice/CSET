@@ -1648,7 +1648,7 @@ def _custom_colormap_aviation_colour_state(cube: iris.cube.Cube):
         "#ffff00",
         "#ffd700",
         "#ffa500",
-        "#ff0000",
+        "#fe3620",
     ]
     # Create a custom colormap
     cmap = mcolors.ListedColormap(colors)
