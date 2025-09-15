@@ -1642,9 +1642,9 @@ def _custom_colormap_aviation_colour_state(cube: iris.cube.Cube):
     """
     levels = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5]
     colors = [
-        "#0000ff",
+        "#87ceeb",
         "#ffffff",
-        "#008000",
+        "#8ced69",
         "#ffff00",
         "#ffd700",
         "#ffa500",
