@@ -112,7 +112,8 @@ def aviation_colour_state_cloud_base(
                 logging.warning(
                     "Orography assumed not to vary with time or ensemble member. "
                 )
-            # Subtract orography from cloud base altitude.
+            # Subtract orography from cloud base altitude after converting to same units.
+            orog.convert_units("kilofeet")
             cld.data -= orog.data
 
         # Create a cube for the aviation colour state and set all to zero.
@@ -139,7 +140,6 @@ def aviation_colour_state_cloud_base(
         aviation_state_cloud_base.rename(
             "aviation_colour_state_due_to_cloud_base_gt_2p5_oktas"
         )
-
         aviation_state_cloud_base_list.append(aviation_state_cloud_base)
 
     if len(aviation_state_cloud_base_list) == 1:

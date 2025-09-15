@@ -126,6 +126,7 @@ def test_aviation_colour_state_cloud_base(cloud_base_cube, orography_cube):
     """Check that aviation colour state due to cloud base is calculated."""
     expected_data = cloud_base_cube.copy()
     expected_data.data[:] = 0.0
+    orography_cube.convert_units("kilofeet")
     expected_data.data[(cloud_base_cube.data - orography_cube.data) < 2.5] += 1.0
     expected_data.data[(cloud_base_cube.data - orography_cube.data) < 1.5] += 1.0
     expected_data.data[(cloud_base_cube.data - orography_cube.data) < 0.7] += 1.0
@@ -169,6 +170,7 @@ def test_aviation_colour_state_cloud_base_cubelist(cloud_base_cube, orography_cu
     """Check that aviation colour state due to cloud base is calculated for a cube list."""
     expected_data = cloud_base_cube.copy()
     expected_data.data[:] = 0.0
+    orography_cube.convert_units("kilofeet")
     expected_data.data[(cloud_base_cube.data - orography_cube.data) < 2.5] += 1.0
     expected_data.data[(cloud_base_cube.data - orography_cube.data) < 1.5] += 1.0
     expected_data.data[(cloud_base_cube.data - orography_cube.data) < 0.7] += 1.0
@@ -209,6 +211,7 @@ def test_aviation_colour_state_cloud_base_3D_orography(
     """Check that a 3D orography cube is handled correctly."""
     expected_data = cloud_base_cube.copy()
     expected_data.data[:] = 0.0
+    orography_3D_cube.convert_units("kilofeet")
     expected_data.data[(cloud_base_cube.data - orography_3D_cube.data[0, :]) < 2.5] += (
         1.0
     )
@@ -243,6 +246,7 @@ def test_aviation_colour_state_cloud_base_4D_orography(
     """Check that a 4D orography cube is handled correctly."""
     expected_data = cloud_base_cube.copy()
     expected_data.data[:] = 0.0
+    orography_4D_cube.convert_units("kilofeet")
     expected_data.data[
         (cloud_base_cube.data - orography_4D_cube.data[0, 0, :]) < 2.5
     ] += 1.0
