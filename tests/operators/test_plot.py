@@ -440,9 +440,9 @@ def test_colorbar_map_aviation_colour_state(cube, tmp_working_dir):
     cube.rename("aviation_colour_state")
     expected_levels = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5]
     expected_colors = [
-        "#0000ff",
+        "#87ceeb",
         "#ffffff",
-        "#008000",
+        "#8ced69",
         "#ffff00",
         "#ffd700",
         "#ffa500",
