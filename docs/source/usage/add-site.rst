@@ -132,5 +132,5 @@ redistribute your site-specific configuration file within your organisation, and
 have users manually copy it into the workflow's site directory.
 
 .. _main CSET GitHub repository: https://github.com/MetOffice/CSET
-.. _CSET site-specific config repository: https://github.com/MetOffice/CSET-workflow
+.. _CSET site-specific config repository: https://github.com/MetOffice/CSET-restricted-files
 .. _open an issue on the CSET GitHub repository: https://github.com/MetOffice/CSET/issues
