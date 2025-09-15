@@ -27,7 +27,65 @@ def aviation_colour_state(
     aviation_state_visibility: iris.cube.Cube | iris.cube.CubeList,
     aviation_state_cloud_base: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Total aviation colour state."""
+    """Total aviation colour state.
+
+    Parameters
+    ----------
+    aviation_state_visibility: iris.cube.Cube | iris.cube.CubeList
+        A Cube or CubeList of the aviation state due to visibility.
+    aviation_state_cloud_base: iris.cube.Cube | iris.cube.CubeList
+        A Cube or CubeList of the aviation state due to cloud base altitude.
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+
+    Notes
+    -----
+    The aviation colour state is a colour-coded diagnostic that summarises
+    weather conditions at an airfield.
+
+    The aviation colour state is the maximum (i.e. worst conditions) from the
+    aviation colour state due to visibility and cloud base altitude. For the
+    purposes of this diagnostic we use the military airfield definition as would
+    be found on METARs. The table below from the `Met Office website <https://www.metoffice.gov.uk/services/transport/aviation/regulated/national-aviation/abs/faqs>`__ shows the minimum
+    weather conditions required for each colour. The redder the colour state
+    the poorer the conditions at the aerodrome.
+
+    .. list-table:: Aviation Colour State
+       :widths: 10 10 10
+       :header-rows: 1
+
+       * - Aerodrome Colour State
+         - Surface visibility
+         - Base of lowest cloud layer of 3/8 (SCT) or more in heights above ground level
+       * - Blue (BLU)
+         - 8.0 km
+         - 2.5 kft
+       * - White (WHT)
+         - 5.0 km
+         - 1.5 kft
+       * - Green (GRN)
+         - 3.7 km
+         - 0.7 kft
+       * - Yellow 1 (YLO1)
+         - 2.5 km
+         - 0.5 kft
+       * - Yellow 2 (YLO2)
+         - 1.6 km
+         - 0.3 kft
+       * - Amber (AMB)
+         - 0.8 km
+         - 0.2 kft
+       * - Red (RED)
+         - < 0.8 km
+         - < 0.2 kft
+
+
+    Examples
+    --------
+    >>> ACS = aviation.aviation_colour_state(vis,cloud_base)
+    """
     aviation_colour_state_list = iris.cube.CubeList([])
     for as_vis, as_cld in zip(
         iter_maybe(aviation_state_visibility),
@@ -51,7 +109,54 @@ def aviation_colour_state(
 def aviation_colour_state_visibility(
     visibility: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Aviation colour state due to visibility."""
+    """Aviation colour state due to visibility.
+
+    Parameters
+    ----------
+    visibility: iris.cube.Cube | iris.cube.CubeList
+        A Cube or CubeList of the screen level visibility.
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+
+    Notes
+    -----
+    The aviation colour state due to visibility is a colour-coded diagnostic
+    that summarises the visibility conditions at an airfield. The visibility
+    is from any source (e.g. precipitation and fog).
+
+    For the purposes of this diagnostic we use the military airfield definition
+    as would be found on METARs. The table below from the `Met Office website <https://www.metoffice.gov.uk/services/transport/aviation/regulated/national-aviation/abs/faqs>`__ shows the minimum
+    weather conditions required for each colour. The redder the colour state
+    the poorer the visibility conditions at the aerodrome.
+
+    .. list-table:: Aviation Colour State due to Visibility
+       :widths: 10 10
+       :header-rows: 1
+
+       * - Aerodrome Colour State
+         - Surface visibility
+       * - Blue (BLU)
+         - 8.0 km
+       * - White (WHT)
+         - 5.0 km
+       * - Green (GRN)
+         - 3.7 km
+       * - Yellow 1 (YLO1)
+         - 2.5 km
+       * - Yellow 2 (YLO2)
+         - 1.6 km
+       * - Amber (AMB)
+         - 0.8 km
+       * - Red (RED)
+         - < 0.8 km
+
+
+    Examples
+    --------
+    >>> ACS = aviation.aviation_colour_state_visibility(vis)
+    """
     aviation_state_visibility_list = iris.cube.CubeList([])
 
     for vis in iter_maybe(visibility):
@@ -88,7 +193,74 @@ def aviation_colour_state_cloud_base(
     cloud_base: iris.cube.Cube | iris.cube.CubeList,
     orography: iris.cube.CubeList | iris.cube.CubeList = None,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Aviation colour state due to cloud base."""
+    """Aviation colour state due to cloud base.
+
+    Parameters
+    ----------
+    cloud_base: iris.cube.Cube | iris.cube.CubeList
+        A Cube or CubeList of the cloud base altitude.
+    orography: iris.cube.Cube | iris.cube.CubeList, None, optional
+        A Cube or CubeList of the orography. The default is None.
+        This field should be included if your cloud_base_altitude is
+        defined above sea level as the colour states are defined for
+        aerodromes above ground level.
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+
+    Notes
+    -----
+    The aviation colour state is a colour-coded diagnostic that summarises
+    cloud base altitude above ground level at an airfield.
+
+    For the purposes of this diagnostic we use the military airfield definition as would
+    be found on METARs. The table below from the `Met Office website <https://www.metoffice.gov.uk/services/transport/aviation/regulated/national-aviation/abs/faqs>`__ shows the minimum
+    weather conditions required for each colour. The redder the colour state
+    the lower the cloud base at the aerodrome.
+
+    .. list-table:: Aviation Colour State due to Cloud Base Altitude
+       :widths: 10 10
+       :header-rows: 1
+
+       * - Aerodrome Colour State
+         - Base of lowest cloud layer of 3/8 (SCT) or more in heights above ground level
+       * - Blue (BLU)
+         - 2.5 kft
+       * - White (WHT)
+         - 1.5 kft
+       * - Green (GRN)
+         - 0.7 kft
+       * - Yellow 1 (YLO1)
+         - 0.5 kft
+       * - Yellow 2 (YLO2)
+         - 0.3 kft
+       * - Amber (AMB)
+         - 0.2 kft
+       * - Red (RED)
+         - < 0.2 kft
+
+    You might encounter warnings with the following text ``An orography cube should
+    be provided if cloud base altitude is above sea level. Please check your cloud
+    base altitude definition and adjust if required.`` when you do not define an
+    orography file. This warning is to ensure that the cloud base is defined above
+    ground level. Should your cloud base be defined above sea level and this warning
+    appears please correct and define an orography field so that the height correction
+    can take place.
+
+    You might further encounter warnings with the following text ``Orography assumed not
+    to vary with ensemble member.`` or ``Orography assumed not to vary with time
+    and ensemble member.`` these warnings are expected when the orography files
+    are not 2-dimensional, and do not cause any problems unless ordering is not
+    as expected.
+
+    Examples
+    --------
+    >>> # If cloud base is defined above sea level.
+    >>> ACS = aviation.aviation_colour_state_cloud_base(cloud_base,orography)
+    >>> # If cloud base is defined above ground level.
+    >>> ACS = aviation.aviation_colour_state_cloud_base(cloud_base)
+    """
     aviation_state_cloud_base_list = iris.cube.CubeList([])
 
     # Determine if the cloud base is above sea level or above ground level.
