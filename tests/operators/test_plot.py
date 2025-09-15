@@ -402,6 +402,39 @@ def test_colorbar_map_celsius(cube, tmp_working_dir):
     assert levels == [0, 100]
 
 
+def test_colorbar_map_probabilities_axis(cube, tmp_working_dir):
+    """Test to ensure axis picks up correct levels for a cube of probabilities."""
+    cube.rename("probability_of_temperature_>_276")
+    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="x")
+    assert cmap is None
+    assert levels == [0, 1]
+    assert norm is None
+
+
+def test_colorbar_map_probabilities(cube, tmp_working_dir):
+    """Test to ensure colorbar picks up correct maap for cube of probabilities."""
+    cube.rename("probability_of_temperature_>_276")
+    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    assert cmap == mpl.colors.ListedColormap(
+        [
+            "#FFFFFF",
+            "#636363",
+            "#e1dada",
+            "#B5CAFF",
+            "#8FB3FF",
+            "#7F97FF",
+            "#ABCF63",
+            "#E8F59E",
+            "#FFFA14",
+            "#FFD121",
+            "#FFA30A",
+        ]
+    )
+    assert levels == [0.0, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    assert isinstance(norm, mpl.colors.BoundaryNorm)
+    assert (norm.boundaries == levels).all()
+
+
 def test_spatial_contour_plot(cube, tmp_working_dir):
     """Plot spatial contour plot of instant air temp."""
     # Remove realization coord to increase coverage, and as its not needed.
