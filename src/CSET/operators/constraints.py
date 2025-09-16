@@ -17,11 +17,42 @@
 import numbers
 import re
 from collections.abc import Iterable
-from datetime import datetime
 
 import iris
 import iris.cube
-import iris.exceptions
+from iris.time import PartialDateTime
+
+
+def my_pdt_fromstring(datestring) -> iris.time.PartialDateTime:
+    """Generate PartialDateTime object.
+
+    Function that takes an ISO 8601 date string and returns a PartialDateTime object.
+
+    Arguments
+    ---------
+    datestring: str
+        ISO date
+
+    Returns
+    -------
+    time_object: iris.time.PartialDateTime
+    """
+    year = int(datestring[0:4])
+    month = int(datestring[5:7])
+    day = int(datestring[8:10])
+
+    # Default values
+    kwargs = dict(year=year, month=month, day=day)
+
+    # Add time fields only if present
+    if len(datestring) >= 13:
+        kwargs["hour"] = int(datestring[11:13])
+    if len(datestring) >= 16:
+        kwargs["minute"] = int(datestring[14:16])
+    if len(datestring) >= 19:
+        kwargs["second"] = int(datestring[17:19])
+
+    return PartialDateTime(**kwargs)
 
 
 def generate_stash_constraint(stash: str, **kwargs) -> iris.AttributeConstraint:
@@ -180,7 +211,7 @@ def generate_cell_methods_constraint(
 
 def generate_time_constraint(
     time_start: str, time_end: str = None, **kwargs
-) -> iris.AttributeConstraint:
+) -> iris.Constraint:
     """Generate constraint between times.
 
     Operator that takes one or two ISO 8601 date strings, and returns a
@@ -188,10 +219,10 @@ def generate_time_constraint(
 
     Arguments
     ---------
-    time_start: str | datetime.datetime
+    time_start: str | datetime.datetime | cftime.datetime
         ISO date for lower bound
 
-    time_end: str | datetime.datetime
+    time_end: str | datetime.datetime | cftime.datetime
         ISO date for upper bound. If omitted it defaults to the same as
         time_start
 
@@ -200,11 +231,11 @@ def generate_time_constraint(
     time_constraint: iris.Constraint
     """
     if isinstance(time_start, str):
-        time_start = datetime.fromisoformat(time_start)
+        time_start = my_pdt_fromstring(time_start)
     if time_end is None:
         time_end = time_start
     elif isinstance(time_end, str):
-        time_end = datetime.fromisoformat(time_end)
+        time_end = my_pdt_fromstring(time_end)
     time_constraint = iris.Constraint(time=lambda t: time_start <= t.point <= time_end)
     return time_constraint
 
