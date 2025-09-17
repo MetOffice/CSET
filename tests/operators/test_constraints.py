@@ -17,8 +17,70 @@
 from datetime import datetime
 
 import pytest
+from iris.time import PartialDateTime
 
 from CSET.operators import constraints
+
+
+def test_my_pdt_fromstring_returns_pdt():
+    """Output of the constraints.my_pdt_fromstring() function is a PartialDateTime."""
+    pdt = constraints.my_pdt_fromstring("2022-01-01")
+    assert isinstance(pdt, PartialDateTime)
+
+
+def test_year_month_day_parse_correctly():
+    """The constraints.my_pdt_fromstring() function correctly parses out the year, month, day coordinates."""
+    pdt = constraints.my_pdt_fromstring("2022-01-01")
+    assert pdt.year == 2022
+    assert pdt.month == 1
+    assert pdt.day == 1
+    assert pdt.hour == 0
+    assert pdt.minute == 0
+    assert pdt.second == 0
+
+
+def test_hour_parse_correctly():
+    """The constraints.my_pdt_fromstring() function correctly parses out only the hour coordinate."""
+    pdt = constraints.my_pdt_fromstring("2022-01-01T12")
+    assert pdt.year == 2022
+    assert pdt.month == 1
+    assert pdt.day == 1
+    assert pdt.hour == 12
+    assert pdt.minute == 0
+    assert pdt.second == 0
+
+
+def test_hour_minute_parse_correctly():
+    """The constraints.my_pdt_fromstring() function correctly parses out only the hour and minute coordinate."""
+    pdt = constraints.my_pdt_fromstring("2022-01-01T12:30")
+    assert pdt.year == 2022
+    assert pdt.month == 1
+    assert pdt.day == 1
+    assert pdt.hour == 12
+    assert pdt.minute == 30
+    assert pdt.second == 0
+
+
+def test_hour_minute_second_parse_correctly():
+    """The constraints.my_pdt_fromstring() function correctly parses out hour, minute and second coordinates."""
+    pdt = constraints.my_pdt_fromstring("2022-01-01T12:30:45")
+    assert pdt.year == 2022
+    assert pdt.month == 1
+    assert pdt.day == 1
+    assert pdt.hour == 12
+    assert pdt.minute == 30
+    assert pdt.second == 45
+
+
+def test_with_space_seperator_parse_correctly():
+    """The constraints.my_pdt_fromstring() function correctly parses out time coordinates when T is replaced with a space separation."""
+    pdt = constraints.my_pdt_fromstring("2022-01-01 12:30:45")
+    assert pdt.year == 2022
+    assert pdt.month == 1
+    assert pdt.day == 1
+    assert pdt.hour == 12
+    assert pdt.minute == 30
+    assert pdt.second == 45
 
 
 def test_generate_stash_constraint():

@@ -42,7 +42,7 @@ def my_pdt_fromstring(datestring) -> iris.time.PartialDateTime:
     day = int(datestring[8:10])
 
     # Default values
-    kwargs = dict(year=year, month=month, day=day)
+    kwargs = dict(year=year, month=month, day=day, hour=0, minute=0, second=0)
 
     # Add time fields only if present
     if len(datestring) >= 13:
