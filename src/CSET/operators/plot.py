@@ -1260,11 +1260,11 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
     # Close the figure
     plt.close(fig)
 
+
 def _plot_and_save_power_spectrum_series(
-    cube: iris.cube.Cube,
-    filename: str = None,
-    series_coordinate: str = "time",
-    **kwargs,
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+    filename: str,
+    title: str,
 ):
     """
     Plot the radial average power spectrum from the given 1D cube.
@@ -1276,20 +1276,39 @@ def _plot_and_save_power_spectrum_series(
     filename : str, optional
         The filename to save the plot. If None, the plot will be displayed.
     """
+    recipe_title = get_recipe_metadata().get("title", "Untitled")
+
+    # Ensure we have a name for the plot file.
+    if filename is None:
+        filename = slugify(recipe_title)
+
     # Extract data from the cube
-    radius = cube.coord("radius").points
-    power_spectrum = cube.data
+    frequency = cubes.coord("frequency").points
+    power_spectrum = cubes.data
 
-    # Plot the radial average power spectrum
-    plt.figure()
-    plt.plot(radius, power_spectrum)
-    plt.xlabel("Radius")
-    plt.ylabel("Average Power")
-    plt.title("Radial Average Power Spectrum")
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+    ax = plt.gca()
+    model_colors_map = _get_model_colors_map(cubes)
+    ax.plot(frequency, power_spectrum)
+    # Set log-log scale
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_title(title, fontsize=16)
+    ax.set_xlabel("Wavenumber")
+    ax.set_ylabel("DKE (m2/s2)")
 
-    # Save the plot if a filename is provided
-    if filename:
-        plt.savefig(filename)
+    # Add a legend
+    # ax.legend(fontsize=16)
+
+    # Overlay grid-lines onto plot.
+    ax.grid(linestyle="--", color="grey", linewidth=1)
+    if model_colors_map:
+        ax.legend(loc="best", ncol=1, frameon=False, fontsize=16)
+
+    # Save plot.
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+    logging.info("Saved line plot to %s", filename)
+    plt.close(fig)
 
 
 def _spatial_plot(
@@ -2345,7 +2364,8 @@ def plot_histogram_series(
     _make_plot_html_page(complete_plot_index)
 
     return cubes
-    
+
+
 def plot_power_spectrum(
     cube: iris.cube.Cube,
     filename: str = None,
@@ -2353,6 +2373,8 @@ def plot_power_spectrum(
     single_plot: bool = False,
     **kwargs,
 ) -> iris.cube.Cube:
+    # remove from the arguments
+    # single_plot: bool = False,
     """Plot a power spectrum.
 
     The cube must contain a power spectrum.
@@ -2388,9 +2410,6 @@ def plot_power_spectrum(
     if filename is None:
         filename = slugify(recipe_title)
 
-    # Ensure we've got a single cube.
-    cube = _check_single_cube(cube)
-
     # Internal plotting function.
     plotting_func = _plot_and_save_power_spectrum_series
 
@@ -2420,4 +2439,4 @@ def plot_power_spectrum(
     # Make a page to display the plots.
     _make_plot_html_page(complete_plot_index)
 
-    return cube    
+    return cube
