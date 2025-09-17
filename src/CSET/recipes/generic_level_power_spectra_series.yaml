@@ -2,7 +2,7 @@ category: Power Spectrum
 title: Power Spectrum $VARNAME $LEVELTYPE $LEVEL
 description: |
   Extracts and plots the power spectrum of $VARNAME from a
-  file at $LEVELTYPE level $LEVEL of $MODEL_NAME. 
+  file at $LEVELTYPE level $LEVEL of $MODEL_NAME.
 
 steps:
   - operator: read.read_cubes
@@ -24,16 +24,12 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
-    # New operator to calculate power spectra (can try different methods)
+    # Calculate power spectra (can try different methods)
   - operator: power_spectrum.calculate_power_spectrum
-    # Plot the power spectrum but, for now, hard wire the sequence to produce power
-    # spectra for every time (set sequence_coordinate to True) not averaged in any way.
+
+    # Plot the power spectrum
   - operator: plot.plot_power_spectrum
-    sequence_coordinate: True
-    # stamp_coordinate and single_plot optional and only required for ensemble data
-    # Leave this in for now.
-    stamp_coordinate: "realization"
-    single_plot: False
+    sequence_coordinate: $SEQUENCE
 
   - operator: write.write_cube_to_nc
     overwrite: True

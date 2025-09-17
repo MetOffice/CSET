@@ -15,13 +15,19 @@
 """Operator to calculate power spectrum from a 2D cube or CubeList."""
 
 import iris
+import iris.cube as icube
 import numpy as np
 import scipy.fft as fft
 
+
 def calculate_power_spectrum(
-    cube: iris.cube.Cube | iris.cube.CubeList,
+    #    cube: iris.cube.Cube | iris.cube.CubeList,
+    # ) -> iris.cube.Cube:
+    cube: iris.cube.Cube,
+    filename: str = None,
+    **kwargs,
 ) -> iris.cube.Cube:
-    """Power spectrum is calculated.
+    r"""Power spectrum is calculated.
 
     Arguments
     ---------
@@ -37,58 +43,121 @@ def calculate_power_spectrum(
     ValueError
         If the constraint doesn't produce a single cube.
     """
-    # Calculate power spectra using discrete cosine transform
-    ps=DCT_ps(cube.data)
+    # Extract the time coordinate of cube for use later
 
-    return ps
+    time_coord = cube[0].coord("time")
+
+    # Regional domains:
+    # Calculate power spectra using discrete cosine transform
+
+    ps = DCT_ps(cube[0].data)
+
+    # Reshape data to (time, frequency)
+    ps_cube = ps[np.newaxis, :]
+
+    # Create a frequency/wavelength array for
+
+    ps_len = ps.data.shape[0]
+    freqs = np.arange(1, ps_len + 1)
+    freq_coord = iris.coords.DimCoord(freqs, long_name="frequency", units="m2/s2")
+
+    # Add time and frequency coordinate to cube.
+
+    ps_cube.add_dim_coord(time_coord.copy(), 0)
+    ps_cube.add_dim_coord(freq_coord.copy(), 1)
+
+    return ps_cube
+
 
 def DCT_ps(y_2d):
+    """Calculate power spectra for regional domains.
 
-    # Get max dims
-    Ny,Nx=y_2d.shape
+    # Regional domains:
+    # Calculate power spectra over linited are domain using Discrete Cosine Transform (DCT)
+    # as described in Denis et al 2002 [Denis_etal_2002].
 
-    alpha_matrix=create_alpha_matrix(Ny,Nx)
+    References
+    ----------
+    .. [Denis_etal_2002] Bertrand Denis, Jean Côté and René Laprise (2002)
+        "Spectral Decomposition of Two-Dimensional Atmospheric Fields on
+        Limited-Area Domains Using the Discrete Cosine Transform (DCT)"
+        Monthly Weather Review, Vol. 130, 1812-1828
+        doi: https://doi.org/10.1175/1520-0493(2002)130<1812:SDOTDA>2.0.CO;2
+    """
+    # Find dimensions of array and create normalised 2D wavenumber
+    Ny, Nx = y_2d.shape
 
-    # Do DCT transformation and convert to dask
-    fkk=fft.dctn(y_2d)
+    alpha_matrix = create_alpha_matrix(Ny, Nx)
 
-    #Normalize
-    fkk=fkk/np.sqrt(Ny*Nx)
+    # Apply 2D DCT to transform y_2d from physical space to spectral space.
+    # fkk is a 2D array of DCT coefficients, representing the amplitudes of cosine basis functions
+    # at different spatial frequencies.
+
+    fkk = fft.dctn(y_2d)
+
+    # Normalise fkk
+    fkk = fkk / np.sqrt(Ny * Nx)
 
     # do variance of spectral coeff
-    sigma_2=fkk**2/Nx/Ny
+    sigma_2 = fkk**2 / Nx / Ny
 
-    #Max coefficient
-    Nmin=min(Nx-1,Ny-1)
+    # Max coefficient
+    Nmin = min(Nx - 1, Ny - 1)
 
-    ps=np.zeros(Nmin)
-    # Group elipses of alphas into the same wavenumber k/Nmin
-    for k in range(1,Nmin+1):
-        alpha=k/Nmin
-        alpha_p1=(k+1)/Nmin
+    ps = np.zeros(Nmin)
+    # Group ellipses of alphas into the same wavenumber k/Nmin
+    for k in range(1, Nmin + 1):
+        alpha = k / Nmin
+        alpha_p1 = (k + 1) / Nmin
         # Sum up elements matching k
-        mask_k=np.where((alpha_matrix >=alpha) & (alpha_matrix < alpha_p1))
-        ps[k-1]=np.sum(sigma_2[mask_k])
+        mask_k = np.where((alpha_matrix >= alpha) & (alpha_matrix < alpha_p1))
+        ps[k - 1] = np.sum(sigma_2[mask_k])
 
-    return ps
+        # Create the cube
+        ps_cube = icube.Cube(
+            ps,
+            long_name="power_spectra",
+        )
+    #            dim_coords_and_dims=[(wavelength, 0)]
 
-def create_alpha_matrix(Ny,Nx):
+    # N=len(ps_len)
+    # k=np.arange(1,N+1)
 
-    I=np.arange(Nx)+1
-    for n in range(1,Ny): 
-        I=np.append(I,np.arange(Nx)+1)
+    return ps_cube
 
-    I.resize(Ny,Nx)
 
-    J=np.arange(Ny)+1
-    for n in range(1,Nx): 
-        J=np.append(J,np.arange(Ny)+1)     
+def create_alpha_matrix(Ny, Nx):
+    """Construct an array of 2D wavenumbers from 2D wavenumber pair.
 
-    J.resize(Nx,Ny)
-    J=np.transpose(J)
+    Each pair is associated with a single-scale parameter. alpha_matrix is normalisation of
+    2D wavenumber axes, transforming the spectral domain into an elliptic coordinate system.
+    """
+    # Claudio's original code
+    #    for n in range(1, Ny):
+    #        I = np.append(I, np.arange(Nx) + 1)
+    #
+    #    I.resize(Ny, Nx)
+    #
+    #    J = np.arange(Ny) + 1
+    #    for n in range(1, Nx):
+    #        J = np.append(J, np.arange(Ny) + 1)
+    #
+    #    J.resize(Nx, Ny)
+    #    J = np.transpose(J)
+    #
+    #    alpha_matrix_old = np.sqrt(I * I / Nx**2 + J * J / Ny**2)
 
-    alpha_matrix=(np.sqrt(I*I/Nx**2+J*J/Ny**2))
+    # optimise using Copilot
+
+    # Create x_indices: each row is [1, 2, ..., Nx]
+    x_indices = np.tile(np.arange(1, Nx + 1), (Ny, 1))
+
+    # Create y_indices: each column is [1, 2, ..., Ny]
+    y_indices = np.tile(np.arange(1, Ny + 1).reshape(Ny, 1), (1, Nx))
+
+    # Compute alpha_matrix
+    alpha_matrix = np.sqrt((x_indices**2) / Nx**2 + (y_indices**2) / Ny**2)
+
+    #    print('Alpha ',np.max(alpha_matrix_old - alpha_matrix))
 
     return alpha_matrix
-
-
