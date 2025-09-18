@@ -25,21 +25,52 @@ def load(conf: Config):
     models = get_models(conf.asdict())
 
     # Basic Quantile-Quantile plots
-    if conf.BASIC_QQ_PLOT:
+    if conf.SURFACE_BASIC_QQ_PLOT:
+        base_model = models[0]
+        for (
+            model,
+            field,
+        ) in itertools.product(models[1:], conf.QQ_SURFACE_FIELDS):
+            yield RawRecipe(
+                recipe="surface_basic_qq_plot.yaml",
+                variables={
+                    "VARNAME": field,
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "COORD_LIST": conf.SURFACE_QQ_COORDINATE_LIST,
+                    "PERCENTILES": conf.SURFACE_QQ_PERCENTILES,
+                    "ONE_TO_ONE": conf.SURFACE_QQ_ONE_TO_ONE,
+                    "MODEL_NAMES": [base_model["name"], model["name"]],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
+    # Level Quantile-Quantile plots
+    if conf.LEVEL_BASIC_QQ_PLOT:
         base_model = models[0]
         for model, field, vert_coord, levels in itertools.product(
-            models[1:], conf.QQ_FIELDS, conf.QQ_VERTICAL_COORDINATE, conf.QQ_LEVELS
+            models[1:],
+            conf.QQ_LEVEL_FIELDS,
+            conf.QQ_VERTICAL_COORDINATE,
+            conf.QQ_LEVELS,
         ):
             yield RawRecipe(
-                recipe="generic_basic_qq_plot.yaml",
+                recipe="level_basic_qq_plot.yaml",
                 variables={
                     "VARNAME": field,
                     "BASE_MODEL": base_model["name"],
                     "OTHER_MODEL": model["name"],
                     "VERTICAL_COORDINATE": vert_coord,
                     "LEVELS": levels,
-                    "COORD_LIST": conf.QQ_COORDINATE_LIST,
-                    "ONE_TO_ONE": conf.QQ_ONE_TO_ONE,
+                    "COORD_LIST": conf.LEVEL_QQ_COORDINATE_LIST,
+                    "PERCENTILES": conf.LEVEL_QQ_PERCENTILES,
+                    "ONE_TO_ONE": conf.LEVEL_QQ_ONE_TO_ONE,
+                    "MODEL_NAMES": [base_model["name"], model["name"]],
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA

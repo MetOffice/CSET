@@ -1,0 +1,32 @@
+category: Q-Q plots
+title: Multi-level Q-Q plot for $VARNAME between $BASE_MODEL and $OTHER_MODEL
+description: Extracts $VARNAME, calculates the following quantiles $PERCENTILES. The quantiles are then plotted as $BASE_MODEL (x-axis) against $OTHER_MODEL (y-axis).
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: [$BASE_MODEL, $OTHER_MODEL]
+    constraint:
+      operator: constraints.combine_constraints
+      variable_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: $VARNAME
+      level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: $VERTICAL_COORDINATE
+        levels: $LEVELS
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: plot.qq_plot
+    coordinates: $COORD_LIST
+    percentiles: $PERCENTILES
+    one-to-one: $ONE_TO_ONE
+    model_names: [$BASE_MODEL, $OTHER_MODEL]
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

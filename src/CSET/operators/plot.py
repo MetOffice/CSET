@@ -36,6 +36,7 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.fft as fft
+from iris.cube import Cube
 from markdown_it import MarkdownIt
 
 from CSET._common import (
@@ -45,7 +46,14 @@ from CSET._common import (
     render_file,
     slugify,
 )
-from CSET.operators._utils import get_cube_yxcoordname, is_transect
+from CSET.operators._utils import (
+    fully_equalise_attributes,
+    get_cube_yxcoordname,
+    is_transect,
+)
+from CSET.operators.collapse import collapse
+from CSET.operators.misc import _extract_common_time_points
+from CSET.operators.regrid import regrid_onto_cube
 
 # Use a non-interactive plotting backend.
 mpl.use("agg")
@@ -905,6 +913,7 @@ def _plot_and_save_scatter_plot(
     filename: str,
     title: str,
     one_to_one: bool,
+    model_names: list[str] = None,
     **kwargs,
 ):
     """Plot and save a 2D scatter plot.
@@ -949,8 +958,16 @@ def _plot_and_save_scatter_plot(
     ax = plt.gca()
 
     # Add some labels and tweak the style.
-    ax.set_xlabel(f"{cube_x[0].name()} / {cube_x[0].units}", fontsize=14)
-    ax.set_ylabel(f"{cube_y[0].name()} / {cube_y[0].units}", fontsize=14)
+    if model_names is None:
+        ax.set_xlabel(f"{cube_x[0].name()} / {cube_x[0].units}", fontsize=14)
+        ax.set_ylabel(f"{cube_y[0].name()} / {cube_y[0].units}", fontsize=14)
+    else:
+        ax.set_xlabel(
+            f"{model_names[0]}_{cube_x[0].name()} / {cube_x[0].units}", fontsize=14
+        )
+        ax.set_ylabel(
+            f"{model_names[1]}_{cube_y[0].name()} / {cube_y[0].units}", fontsize=14
+        )
     ax.set_title(title, fontsize=16)
     ax.ticklabel_format(axis="y", useOffset=False)
     ax.tick_params(axis="x", labelrotation=15)
@@ -2268,6 +2285,168 @@ def plot_vertical_line_series(
     return cubes
 
 
+def qq_plot(
+    cubes: iris.cube.CubeList,
+    coordinates: list[str],
+    percentiles: list[float],
+    model_names: list[str],
+    filename: str = None,
+    one_to_one: bool = True,
+    **kwargs,
+) -> iris.cube.CubeList:
+    """Plot a Quantile-Quantile plot between two models.
+
+    The cubes will be normalised and collapsed within the operator.
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        Two cubes of the same variable with different models.
+    coordinate: list[str]
+        The list of coordinates to collapse over. This list should be
+        every coordinate within the cube to result in a 1D cube around
+        the percentile coordinate.
+    percent: list[float]
+        A list of percentiles to appear in the plot.
+    model_names: list[str]
+        A list of model names to appear on the axis of the plot.
+    filename: str, optional
+        Filename of the plot to write.
+    one_to_one: bool, optional
+        If True a 1:1 line is plotted; if False it is not. Default is True.
+
+    Raises
+    ------
+    ValueError
+        When the cubes are not compatible.
+
+    Notes
+    -----
+    The quantile-quantile plot is a variant on the scatter plot. This plot does
+    not use all data points, but the selected quantiles of each variable
+    instead. Quantile-quantile plots are valuable for comparing against
+    observations and other models. Identical percentiles between the variables
+    will lie on the one-to-one line implying the values correspond well to each
+    other. Where there is a deviation from the one-to-one line a range of
+    possibilities exist depending on how and where the data is shifted (e.g.,
+    Wilks 2011 [Wilks2011]_).
+
+    For distributions above the one-to-one line the distribution is left-skewed;
+    below is right-skewed. A distinct break implies a bimodal distribution, and
+    closer values/values further apart at the tails imply poor representation of
+    the extremes.
+
+    References
+    ----------
+    .. [Wilks2011] Wilks, D.S., (2011) "Statistical Methods in the Atmospheric
+       Sciences" Third Edition, vol. 100, Academic Press, Oxford, UK, 676 pp.
+    """
+    # Check cubes using same functionality as the difference operator.
+    if len(cubes) != 2:
+        raise ValueError("cubes should contain exactly 2 cubes.")
+    base: Cube = cubes.extract_cube(iris.AttributeConstraint(cset_comparison_base=1))
+    other: Cube = cubes.extract_cube(
+        iris.Constraint(
+            cube_func=lambda cube: "cset_comparison_base" not in cube.attributes
+        )
+    )
+
+    # Get spatial coord names.
+    base_lat_name, base_lon_name = get_cube_yxcoordname(base)
+    other_lat_name, other_lon_name = get_cube_yxcoordname(other)
+
+    # Ensure cubes to compare are on common differencing grid.
+    # This is triggered if either
+    #      i) latitude and longitude shapes are not the same. Note grid points
+    #         are not compared directly as these can differ through rounding
+    #         errors.
+    #     ii) or variables are known to often sit on different grid staggering
+    #         in different models (e.g. cell center vs cell edge), as is the case
+    #         for UM and LFRic comparisons.
+    # In future greater choice of regridding method might be applied depending
+    # on variable type. Linear regridding can in general be appropriate for smooth
+    # variables. Care should be taken with interpretation of differences
+    # given this dependency on regridding.
+    if (
+        base.coord(base_lat_name).shape != other.coord(other_lat_name).shape
+        or base.coord(base_lon_name).shape != other.coord(other_lon_name).shape
+    ) or (
+        base.long_name
+        in [
+            "eastward_wind_at_10m",
+            "northward_wind_at_10m",
+            "northward_wind_at_cell_centres",
+            "eastward_wind_at_cell_centres",
+            "zonal_wind_at_pressure_levels",
+            "meridional_wind_at_pressure_levels",
+            "potential_vorticity_at_pressure_levels",
+            "vapour_specific_humidity_at_pressure_levels_for_climate_averaging",
+        ]
+    ):
+        logging.debug(
+            "Linear regridding base cube to other grid to compute differences"
+        )
+        base = regrid_onto_cube(base, other, method="Linear")
+
+    def is_increasing(sequence: list) -> bool:
+        """Determine the direction of an ordered sequence.
+
+        Returns "increasing" or "decreasing" depending on whether the sequence
+        is going up or down. The sequence should already be monotonic, with no
+        duplicate values. An iris DimCoord's points fulfills this criteria.
+        """
+        return sequence[0] < sequence[1]
+
+    # Figure out if we are comparing between UM and LFRic; flip array if so.
+    base_lat_direction = is_increasing(base.coord(base_lat_name).points)
+    other_lat_direction = is_increasing(other.coord(other_lat_name).points)
+    if base_lat_direction != other_lat_direction:
+        other.data = np.flip(other.data, other.coord(other_lat_name).cube_dims(other))
+
+    # Extract just common time points.
+    base, other = _extract_common_time_points(base, other)
+
+    # Equalise attributes so we can merge.
+    fully_equalise_attributes([base, other])
+    logging.debug("Base: %s\nOther: %s", base, other)
+
+    # Collapse cubes.
+    base = collapse(
+        base,
+        coordinate=coordinates,
+        method="PERCENTILE",
+        additional_percent=percentiles,
+    )
+    other = collapse(
+        other,
+        coordinate=coordinates,
+        method="PERCENTILE",
+        additional_percent=percentiles,
+    )
+
+    # Ensure we have a name for the plot file.
+    title = get_recipe_metadata().get("title", "Untitled")
+
+    if filename is None:
+        filename = slugify(title)
+
+    # Add file extension.
+    plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
+
+    # Do the actual plotting on a scatter plot
+    _plot_and_save_scatter_plot(
+        base, other, plot_filename, title, one_to_one, model_names
+    )
+
+    # Add list of plots to plot metadata.
+    plot_index = _append_to_plot_index([plot_filename])
+
+    # Make a page to display the plots.
+    _make_plot_html_page(plot_index)
+
+    return iris.cube.CubeList([base, other])
+
+
 def scatter_plot(
     cube_x: iris.cube.Cube | iris.cube.CubeList,
     cube_y: iris.cube.Cube | iris.cube.CubeList,
@@ -2308,25 +2487,6 @@ def scatter_plot(
     Scatter plots are used for determining if there is a relationship between
     two variables. Positive relations have a slope going from bottom left to top
     right; Negative relations have a slope going from top left to bottom right.
-
-    A variant of the scatter plot is the quantile-quantile plot. This plot does
-    not use all data points, but the selected quantiles of each variable
-    instead. Quantile-quantile plots are valuable for comparing against
-    observations and other models. Identical percentiles between the variables
-    will lie on the one-to-one line implying the values correspond well to each
-    other. Where there is a deviation from the one-to-one line a range of
-    possibilities exist depending on how and where the data is shifted (e.g.,
-    Wilks 2011 [Wilks2011]_).
-
-    For distributions above the one-to-one line the distribution is left-skewed;
-    below is right-skewed. A distinct break implies a bimodal distribution, and
-    closer values/values further apart at the tails imply poor representation of
-    the extremes.
-
-    References
-    ----------
-    .. [Wilks2011] Wilks, D.S., (2011) "Statistical Methods in the Atmospheric
-       Sciences" Third Edition, vol. 100, Academic Press, Oxford, UK, 676 pp.
     """
     # Iterate over all cubes in cube or CubeList and plot.
     for cube_iter in iter_maybe(cube_x):
