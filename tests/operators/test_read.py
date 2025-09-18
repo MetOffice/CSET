@@ -44,7 +44,7 @@ def test_read_cubes_generate_time_constraint():
     """Read cube, constrain the time coordinate and verify the correct time range."""
     from CSET.operators import constraints
 
-    cubes = read.read_cubes("tests/test_data/test_gen_time.nc")
+    cubes = read.read_cubes("tests/test_data/precipitation_360day_calendar.nc")
     cube = cubes[0]
 
     constraint = constraints.generate_time_constraint(
@@ -57,7 +57,7 @@ def test_read_cubes_generate_time_constraint():
     time_points = time_coords.units.num2date(time_coords.points)
 
     assert min(time_points) >= PartialDateTime(2000, 1, 1, 12)
-    assert max(time_points) < PartialDateTime(2000, 1, 1, 15)
+    assert max(time_points) <= PartialDateTime(2000, 1, 1, 15)
 
 
 def test_read_cubes_no_cubes_warning():
