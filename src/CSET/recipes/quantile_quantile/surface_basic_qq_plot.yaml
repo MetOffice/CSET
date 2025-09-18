@@ -1,7 +1,6 @@
 category: Q-Q plots
-title: Q-Q plot for $VARNAME between $BASE_MODEL and $OTHER_MODEL
-description: Extracts $VARNAME, calculates quantiles, and plots $BASE_MODEL against $OTHER_MODEL.
-
+title: Surface Q-Q plot for $VARNAME between $BASE_MODEL and $OTHER_MODEL
+description: Extracts $VARNAME, calculates the following quantiles $PERCENTILES. The quantiles are then plotted as $BASE_MODEL (x-axis) against $OTHER_MODEL (y-axis).
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
@@ -17,15 +16,16 @@ steps:
         varname: $VARNAME
       level_constraint:
         operator: constraints.generate_level_constraint
-        coordinate: $VERTICAL_COORDINATE
-        levels: $LEVELS
+        coordinate: 'pressure'
+        levels: []
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
   - operator: plot.qq_plot
-    coordinate: $COORD_LIST
-    percent: [0,0.001,0.01,0.1,1,5,10,15,20,25,30,40,50,60,70,75,80,85,90,95,98,99,99.9,99.99,99.999,100]
+    coordinates: $COORD_LIST
+    percentiles: $PERCENTILES
     one-to-one: $ONE_TO_ONE
+    model_names: [$BASE_MODEL, $OTHER_MODEL]
 
   - operator: write.write_cube_to_nc
     overwrite: True
