@@ -1,0 +1,27 @@
+category: Diagnostics
+title: cell statistics plot
+description: |
+  TBD.
+
+steps:
+
+  - operator: cell_statistics.caller_thing
+
+    # "effective_radius_in_km" or "mean_value"
+    cell_attribute: $CELL_ATTRIBUTE
+
+    uk_ctrl_um:
+      operator: read.read_cubes
+      file_paths:
+        - "/data/scratch/byron.blay/RES_RETRIEVAL_CACHE/test_lfric/20240121T0000Z/uk_ctrl_um/20240121T0000Z_UK_672x672_1km_RAL3P3_pdiagb000.pp"
+        - "/data/scratch/byron.blay/RES_RETRIEVAL_CACHE/test_lfric/20240121T0000Z/uk_ctrl_um/20240121T0000Z_UK_672x672_1km_RAL3P3_pdiagb012.pp"
+    uk_expt_lfric:
+      operator: read.read_cubes
+      file_paths:
+        - "/data/scratch/byron.blay/RES_RETRIEVAL_CACHE/test_lfric/20240121T0000Z/uk_expt_lfric/20240121T0000Z_UK_672x672_1km_RAL3P3_lfric_slam_timeproc_000_006.nc"
+        - "/data/scratch/byron.blay/RES_RETRIEVAL_CACHE/test_lfric/20240121T0000Z/uk_expt_lfric/20240121T0000Z_UK_672x672_1km_RAL3P3_lfric_slam_timeproc_006_012.nc"
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+  - operator: plot.plot_histogram_series
