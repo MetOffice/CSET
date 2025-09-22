@@ -458,11 +458,13 @@ def _um_normalise_callback(cube: iris.cube.Cube, field, filename):
     Long name will be used consistently in output filename and titles.
     """
     # Convert STASH to LFRic variable name
+    # Remove standard_name to avoid conflict with LFRic variable name
     if "STASH" in cube.attributes:
         stash = cube.attributes["STASH"]
         try:
             (name, grid) = STASH_TO_LFRIC[str(stash)]
             cube.long_name = name
+            cube.standard_name = None
         except KeyError:
             # Don't change cubes with unknown stash codes.
             _warn_once(
