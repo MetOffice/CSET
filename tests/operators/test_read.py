@@ -32,8 +32,8 @@ def test_read_cubes():
     cubes = read.read_cubes("tests/test_data/air_temp.nc")
     assert len(cubes) == 3
     expected_cubes = [
-        "<iris 'Cube' of air_temperature / (K) (time: 2; grid_latitude: 17; grid_longitude: 13)>",
-        "<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>",
+        "<iris 'Cube' of temperature_at_screen_level / (K) (time: 2; grid_latitude: 17; grid_longitude: 13)>",
+        "<iris 'Cube' of temperature_at_screen_level / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>",
     ]
     for cube in cubes:
         assert repr(cube) in expected_cubes

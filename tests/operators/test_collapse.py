@@ -36,16 +36,14 @@ def test_collapse(cube):
     """Reduces dimension of cube."""
     # Test collapsing a single coordinate.
     collapsed_cube = collapse.collapse(cube, "time", "MEAN")
-    expected_cube = (
-        "<iris 'Cube' of air_temperature / (K) (grid_latitude: 17; grid_longitude: 13)>"
-    )
+    expected_cube = "<iris 'Cube' of temperature_at_screen_level / (K) (grid_latitude: 17; grid_longitude: 13)>"
     assert repr(collapsed_cube) == expected_cube
 
     # Test collapsing two coordinates.
     collapsed_cube = collapse.collapse(
         cube, ["grid_latitude", "grid_longitude"], "MEAN"
     )
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3)>"
+    expected_cube = "<iris 'Cube' of temperature_at_screen_level / (K) (time: 3)>"
     assert repr(collapsed_cube) == expected_cube
 
 
@@ -54,9 +52,7 @@ def test_collapse_cubelist(cube):
     cubes = iris.cube.CubeList([cube, cube])
     collapsed_cubes = collapse.collapse(cubes, "time", "MEAN")
     assert len(collapsed_cubes) == 2
-    expected_cube = (
-        "<iris 'Cube' of air_temperature / (K) (grid_latitude: 17; grid_longitude: 13)>"
-    )
+    expected_cube = "<iris 'Cube' of temperature_at_screen_level / (K) (grid_latitude: 17; grid_longitude: 13)>"
     for collapsed_cube in collapsed_cubes:
         assert repr(collapsed_cube) == expected_cube
 
@@ -70,9 +66,7 @@ def test_collapse_percentile(cube):
     collapsed_cube = collapse.collapse(
         cube, "time", "PERCENTILE", additional_percent=75
     )
-    expected_cube = (
-        "<iris 'Cube' of air_temperature / (K) (grid_latitude: 17; grid_longitude: 13)>"
-    )
+    expected_cube = "<iris 'Cube' of temperature_at_screen_level / (K) (grid_latitude: 17; grid_longitude: 13)>"
     assert repr(collapsed_cube) == expected_cube
 
 
@@ -90,7 +84,7 @@ def test_collapse_multi_non_overlapping(long_forecast_multi_day):
 def test_collapse_by_hour_of_day(long_forecast):
     """Convert and aggregates time dimension by hour of day."""
     collapsed_cube = collapse.collapse_by_hour_of_day(long_forecast, "MEAN")
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
+    expected_cube = "<iris 'Cube' of temperature_at_screen_level / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
 
 
@@ -99,7 +93,7 @@ def test_collapse_by_hour_of_day_single_day(long_forecast):
     # Read in only first 24h of input data.
     day_long_forecast = long_forecast[0:24]
     collapsed_cube = collapse.collapse_by_hour_of_day(day_long_forecast, "MEAN")
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
+    expected_cube = "<iris 'Cube' of temperature_at_screen_level / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
 
     # Ensure data has changed position in cube (averaging 1-day only).
@@ -110,7 +104,7 @@ def test_collapse_by_hour_of_day_single_day(long_forecast):
     # Select different segment from long_forecast input data.
     day_long_forecast_2 = long_forecast[56:80]
     collapsed_cube = collapse.collapse_by_hour_of_day(day_long_forecast_2, "MEAN")
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
+    expected_cube = "<iris 'Cube' of temperature_at_screen_level / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
 
     # Ensure cube data has changed position in cube (averaging 1-day only).
@@ -125,7 +119,7 @@ def test_collapse_by_hour_of_day_cubelist(long_forecast):
     collapsed_cubes = collapse.collapse_by_hour_of_day(cubes, "MEAN")
     assert isinstance(collapsed_cubes, iris.cube.CubeList)
     assert len(collapsed_cubes) == 2
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
+    expected_cube = "<iris 'Cube' of temperature_at_screen_level / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
     for collapsed_cube in collapsed_cubes:
         assert repr(collapsed_cube) == expected_cube
 
@@ -135,7 +129,7 @@ def test_collapse_by_hour_of_day_single_cubelist(long_forecast):
     # Test single cubelist entry.
     cubes = iris.cube.CubeList([long_forecast])
     collapsed_cube = collapse.collapse_by_hour_of_day(cubes, "MEAN")
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
+    expected_cube = "<iris 'Cube' of temperature_at_screen_level / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
 
 
@@ -145,7 +139,7 @@ def test_collapse_by_hour_of_day_percentile(long_forecast):
     collapsed_cube = collapse.collapse_by_hour_of_day(
         long_forecast, "PERCENTILE", additional_percent=[25, 75]
     )
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (percentile_over_hour: 2; hour: 24; grid_latitude: 3; grid_longitude: 3)>"
+    expected_cube = "<iris 'Cube' of temperature_at_screen_level / (K) (percentile_over_hour: 2; hour: 24; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
 
 
@@ -158,7 +152,7 @@ def test_collapse_by_hour_of_day_percentile_fail(long_forecast):
 def test_collapse_by_hour_of_day_multi_forecast_cube(long_forecast_multi_day):
     """Convert and aggregates time dimension by hour of day for a multi day cube."""
     collapsed_cube = collapse.collapse_by_hour_of_day(long_forecast_multi_day, "MEAN")
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
+    expected_cube = "<iris 'Cube' of temperature_at_screen_level / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
 
 
@@ -167,7 +161,7 @@ def test_collapse_by_hour_of_day_multi_forecast_single_day(long_forecast_multi_d
     # Ensure data components are as expected, working with first 24h inputs.
     long_forecast_pick_day = long_forecast_multi_day[0:24]
     collapsed_cube = collapse.collapse_by_hour_of_day(long_forecast_pick_day, "MEAN")
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
+    expected_cube = "<iris 'Cube' of temperature_at_screen_level / (K) (hour: 24; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
 
     # Ensure cube data has changed position in cube (averaging 1-day only).
@@ -242,7 +236,7 @@ def test_collapse_by_lead_time_single_cube_percentile_fail(long_forecast_multi_d
 def test_collapse_by_validity_time(long_forecast_multi_day):
     """Reduce a dimension of a cube by validity time."""
     collapsed_cube = collapse.collapse_by_validity_time(long_forecast_multi_day, "MEAN")
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 145; grid_latitude: 3; grid_longitude: 3)>"
+    expected_cube = "<iris 'Cube' of temperature_at_screen_level / (K) (time: 145; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
 
 
@@ -254,7 +248,7 @@ def test_collapse_by_validity_time_cubelist(long_forecast_multi_day):
     collapsed_cubes = collapse.collapse_by_validity_time(cubes, "MEAN")
     assert isinstance(collapsed_cubes, iris.cube.CubeList)
     assert len(collapsed_cubes) == 2
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 145; grid_latitude: 3; grid_longitude: 3)>"
+    expected_cube = "<iris 'Cube' of temperature_at_screen_level / (K) (time: 145; grid_latitude: 3; grid_longitude: 3)>"
     for collapsed_cube in collapsed_cubes:
         assert repr(collapsed_cube) == expected_cube
 
@@ -263,7 +257,7 @@ def test_collapse_by_validity_time_no_time_coordinate(long_forecast_multi_day):
     """Collapse a cube without a time coordinate by validity time."""
     long_forecast_multi_day.remove_coord("time")
     collapsed_cube = collapse.collapse_by_validity_time(long_forecast_multi_day, "MEAN")
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 145; grid_latitude: 3; grid_longitude: 3)>"
+    expected_cube = "<iris 'Cube' of temperature_at_screen_level / (K) (time: 145; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
 
 
@@ -285,7 +279,7 @@ def test_collapse_by_validity_time_percentile(long_forecast_multi_day):
     collapsed_cube = collapse.collapse_by_validity_time(
         long_forecast_multi_day, "PERCENTILE", additional_percent=[25, 75]
     )
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (percentile_over_equalised_validity_time: 2; time: 145; grid_latitude: 3; grid_longitude: 3)>"
+    expected_cube = "<iris 'Cube' of temperature_at_screen_level / (K) (percentile_over_equalised_validity_time: 2; time: 145; grid_latitude: 3; grid_longitude: 3)>"
     assert repr(collapsed_cube) == expected_cube
 
 

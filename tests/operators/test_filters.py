@@ -32,7 +32,7 @@ def test_filter_cubes_cubelist(cubes):
     constraint = constraints.generate_cell_methods_constraint([])
     cube = filters.filter_cubes(cubes, constraint)
     assert cube.cell_methods == ()
-    expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>"
+    expected_cube = "<iris 'Cube' of temperature_at_screen_level / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>"
     assert repr(cube) == expected_cube
 
 

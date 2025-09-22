@@ -108,14 +108,14 @@ def test_multiplication_failure(cube):
 def test_combine_single_cube_into_cubelist(cube):
     """Test case of single cube into cubelist."""
     cubelist = misc.combine_cubes_into_cubelist(cube)
-    expected_cubelist = "[<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>]"
+    expected_cubelist = "[<iris 'Cube' of temperature_at_screen_level / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>]"
     assert repr(cubelist) in expected_cubelist
 
 
 def test_combine_single_cubelist_into_cubelist(cube):
     """Test case of single cubelist into cubelist."""
     cubelist = misc.combine_cubes_into_cubelist(iris.cube.CubeList([cube, cube]))
-    expected_cubelist = "[<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>,\n<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>]"
+    expected_cubelist = "[<iris 'Cube' of temperature_at_screen_level / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>,\n<iris 'Cube' of temperature_at_screen_level / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>]"
     assert repr(cubelist) in expected_cubelist
 
 
@@ -128,7 +128,7 @@ def test_combine_single_noncompliant_into_cubelist():
 def test_combine_multiple_cube_into_cubelist(cube):
     """Test case of multiple cube into cubelist."""
     cubelist = misc.combine_cubes_into_cubelist(cube, a=cube)
-    expected_cubelist = "[<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>,\n<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>]"
+    expected_cubelist = "[<iris 'Cube' of temperature_at_screen_level / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>,\n<iris 'Cube' of temperature_at_screen_level / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>]"
     assert repr(cubelist) in expected_cubelist
 
 
@@ -142,7 +142,7 @@ def test_combine_multiple_cube_mixed_into_cubelist(cube):
     """Test case of multiple cubes and cubelist into cubelist."""
     cubelist = misc.combine_cubes_into_cubelist(cube, a=cube)
     out_cubelist = misc.combine_cubes_into_cubelist(cube, a=cubelist, b=cube)
-    expected_cubelist = "[<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>,\n<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>,\n<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>,\n<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>]"
+    expected_cubelist = "[<iris 'Cube' of temperature_at_screen_level / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>,\n<iris 'Cube' of temperature_at_screen_level / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>,\n<iris 'Cube' of temperature_at_screen_level / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>,\n<iris 'Cube' of temperature_at_screen_level / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>]"
     assert repr(out_cubelist) in expected_cubelist
 
 
@@ -162,7 +162,7 @@ def test_difference(cube: iris.cube.Cube):
         difference_cube.data, np.zeros_like(difference_cube.data), atol=1e-9
     )
     assert difference_cube.standard_name is None
-    assert difference_cube.long_name == cube.standard_name + "_difference"
+    assert difference_cube.long_name == cube.long_name + "_difference"
     assert difference_cube.var_name == cube.var_name + "_difference"
 
 
