@@ -94,7 +94,7 @@ The verification side of CSET utilises the Model Evaluation Tools (METplus) veri
 The justification side of CSET consists of a range of diagnostics derived from model output.
 These derived diagnostics include process-based diagnostics for specific atmospheric phenomena and impact-based diagnostics that can be used to understand how model changes will affect customers.
 
-Compared to alternative open source evaluation tools, such as ESMValTool [@esmvaltool], CSET is more focused on weather-relevant time scales and evaluating models towards a goal of operational usage.
+Compared to alternative open source evaluation tools, such as ESMValTool [@esmvaltool], CSET is focused on weather-relevant time scales and evaluating models towards a goal of operational usage.
 
 # Design
 
