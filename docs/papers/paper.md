@@ -52,9 +52,9 @@ affiliations:
   - name: Met Office, United Kingdom
     index: 1
     ror: 01ch2yn61
-  - name: NIWA, New Zealand
+  - name: National Institute of Water and Atmospheric Research, New Zealand
     index: 2
-    ror: 01ch2yn61
+    ror: 04hxcaz34
   - name: Interdisciplinary Centre for Mathematical and Computational Modelling, Poland
     index: 3
   - name: Centre for Climate Research Singapore, Meteorological Service Singapore, Singapore
