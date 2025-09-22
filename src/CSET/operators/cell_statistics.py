@@ -1,4 +1,5 @@
 """OMG YOU CAN'T COMMIT WITHOUT DOCSTRINGS, EVEN IN EXPLORATORY CODE."""
+
 import collections
 import datetime
 import inspect
@@ -451,7 +452,7 @@ def repeat_scalar_coord_along_dim_coord(cubelist, scalar_coord_name, dim_coord_n
 
 
 def RES_extract_overlapping(cubelist, coord_name):
-    '''
+    """
     Extracts regions from cubes in a :class:`iris.cube.CubeList` such that \
     the specified coordinate is the same across all cubes.
 
@@ -463,7 +464,7 @@ def RES_extract_overlapping(cubelist, coord_name):
 
     Returns a :class:`iris.cube.CubeList` where the coordinate corresponding \
     to coord_name is the same for all cubes.
-    '''
+    """
     # Build a list of all Cell instances for this coordinate by
     # looping through all cubes in the supplied cubelist
     all_cells = []
@@ -478,14 +479,17 @@ def RES_extract_overlapping(cubelist, coord_name):
     unique_cells = list(cell_counts.keys())
     unique_cell_counts = list(cell_counts.values())
     num_cubes = len(cubelist)
-    common_cells = [unique_cells[i] for i, count in
-                    enumerate(unique_cell_counts) if count == num_cubes]
+    common_cells = [
+        unique_cells[i]
+        for i, count in enumerate(unique_cell_counts)
+        if count == num_cubes
+    ]
     # ...and use these to subset the cubes in the cubelist
     constraint = iris.Constraint(
-        coord_values={coord_name: lambda cell: cell in common_cells})
+        coord_values={coord_name: lambda cell: cell in common_cells}
+    )
 
-    cubelist = iris.cube.CubeList([cube.extract(constraint)
-                                   for cube in cubelist])
+    cubelist = iris.cube.CubeList([cube.extract(constraint) for cube in cubelist])
     return cubelist
 
 
@@ -513,24 +517,21 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
         "forecast_period", "hour" or "time"
 
     """
-
     # DEV/DEBUGGING - REMOVE
     pkl_filename = Path("/home/users/byron.blay/git/CSET/delme/debug_cubes.pkl")
     # normal use - save pickle for faster subsequent runs
     if cubes and not pkl_filename.exists():
-        with open(pkl_filename, 'wb') as pkl_file:
+        with open(pkl_filename, "wb") as pkl_file:
             pickle.dump(cubes, pkl_file)
             print("now load that pickle")
             exit(0)
     # we'll be calling this instead of the yaml processing for a dev speed up
     if not cubes and pkl_filename.exists():
-        with open(pkl_filename, 'rb') as pkl_file:
+        with open(pkl_filename, "rb") as pkl_file:
             cubes = pickle.load(pkl_file)
 
     if not isinstance(cubes, CubeList):
         cubes = CubeList([cubes])
-
-
 
     # For now, thresholds are hard coded.
     thresholds = [0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0]
@@ -569,12 +570,14 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
 
         hist_cubes = CubeList([])
         for cube in cubes:
-            hist_cubes.append(something_like_cell_attribute_histogram(
-                cube,
-                attribute=cell_attribute,
-                bin_edges=get_bin_edges(cell_attribute),
-                threshold=threshold,
-            ))
+            hist_cubes.append(
+                something_like_cell_attribute_histogram(
+                    cube,
+                    attribute=cell_attribute,
+                    bin_edges=get_bin_edges(cell_attribute),
+                    threshold=threshold,
+                )
+            )
 
         # todo: res does a deep copy at this point for some reason - seems uneceeary? double check.
 
