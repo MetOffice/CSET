@@ -1,65 +1,65 @@
 ---
 title: "CSET: Toolkit for evaluation of weather and climate models"
-tags:
- - Python
- - Cylc
- - Weather
- - Climate
- - Atmospheric Science
-authors:
- - name: James Frost
- orcid: 0009-0009-8043-3802
- affiliation: 1
- - name: James Warner
- orcid:
- affiliation: 1
- - name: Sylvia Bohnenstengel
- orcid:
- affiliation: 1
- - name: David Flack
- orcid:
- affiliation: 1
- - name: Huw Lewis
- orcid:
- affiliation: 1
- - name: Dasha Shchepanovska
- orcid:
- affiliation: 1
- - name: Jon Shonk
- orcid:
- affiliation: 1
- - name: Bernard Claxton
- orcid:
- affiliation: 1
- - name: Jorge Bornemann
- orcid:
- affiliation: 2
- - name: Carol Halliwell
- orcid:
- affiliation: 1
- - name: Magdalena Gruziel
- orcid:
- affiliation: 3
- - name: Pluto ???
- orcid:
- affiliation: 4
- - name: John M Edwards
- orcid:
- affiliation: 1
-affiliations:
- - name: Met Office, United Kingdom
- index: 1
- ror: 01ch2yn61
- - name: NIWA, New Zealand
- index: 2
- ror: 01ch2yn61
- - name: Interdisciplinary Centre for Mathematical and Computational Modelling, Poland
- index: 3
- - name: Centre for Climate Research Singapore, Meteorological Service Singapore, Singapore
- index: 4
- ror: 025sv2d63
 date: 17 September 2025
 bibliography: paper.bib
+tags:
+  - Python
+  - Cylc
+  - Weather
+  - Climate
+  - Atmospheric Science
+authors:
+  - name: James Frost
+    orcid: 0009-0009-8043-3802
+    affiliation: 1
+  - name: James Warner
+    orcid:
+    affiliation: 1
+  - name: Sylvia Bohnenstengel
+    orcid:
+    affiliation: 1
+  - name: David Flack
+    orcid:
+    affiliation: 1
+  - name: Huw Lewis
+    orcid:
+    affiliation: 1
+  - name: Dasha Shchepanovska
+    orcid:
+    affiliation: 1
+  - name: Jon Shonk
+    orcid:
+    affiliation: 1
+  - name: Bernard Claxton
+    orcid:
+    affiliation: 1
+  - name: Jorge Bornemann
+    orcid:
+    affiliation: 2
+  - name: Carol Halliwell
+    orcid:
+    affiliation: 1
+  - name: Magdalena Gruziel
+    orcid:
+    affiliation: 3
+  - name: Pluto ???
+    orcid:
+    affiliation: 4
+  - name: John M Edwards
+    orcid:
+    affiliation: 1
+affiliations:
+  - name: Met Office, United Kingdom
+    index: 1
+    ror: 01ch2yn61
+  - name: NIWA, New Zealand
+    index: 2
+    ror: 01ch2yn61
+  - name: Interdisciplinary Centre for Mathematical and Computational Modelling, Poland
+    index: 3
+  - name: Centre for Climate Research Singapore, Meteorological Service Singapore, Singapore
+    index: 4
+    ror: 025sv2d63
 ---
 <!-- TODO: Get people's agreement on authorship, and their preferred names and ORCIDs. -->
 
