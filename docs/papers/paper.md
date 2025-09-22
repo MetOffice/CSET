@@ -61,6 +61,7 @@ affiliations:
 date: 17 September 2025
 bibliography: paper.bib
 ---
+<!-- TODO: Get people's agreement on authorship, and their preferred names and ORCIDs. -->
 
 # CSET: Toolkit for evaluation of weather and climate models.
 
@@ -87,7 +88,8 @@ CSET addresses the need for an evaluation system that supports consistent and co
 It gives users easy access to a wide selection of peer-reviewed diagnostics, including spatial plots, time series, vertical profiles, probability density functions, and aggregated analysis over multiple model simulations, replacing bespoke evaluation scripts.
 To cater for the full evaluation process, CSET provides a range of verification diagnostics to compare against observations and derived diagnostics based on model output, allowing for both physical process-based and impact-based understanding.
 
-<!-- TODO: Should we include a figure of the CSET web UI? -->
+<!-- TODO: Find a better image. -->
+![The website produced by CSET. The left column allows for navigating and selecting the displayed diagnostic(s). The main region of the interface displays a particular diagnostic, and documentation to aid interpretation.](cset_ui.png)
 
 <!-- TODO: Should METplus be mentioned given it isn't integrated yet? -->
 The verification side of CSET utilises the Model Evaluation Tools (METplus) verification system [@metplus] to provide a range of verification metrics that are aligned with operational verification best practices.
@@ -124,12 +126,15 @@ It has helped us to characterise the regional configuration and lead to improvem
 
 ## Conclusion
 
-
 CSET shows the benefits of open source evaluation software.
 It reduces redundant evaluation diagnostics development and supports easier collaboration across organisations involved in atmospheric model evaluation, helping to build a clear and consistent understanding of model characteristics and model improvement benefits.
 Major items on CSET's development roadmap are integrating METplus verification into the workflow, and increasing the number of supported observation sources.
 
 The CSET documentation is hosted at https://metoffice.github.io/CSET
+
+## Related software
+
+<!-- TODO: ESMValTool. -->
 
 ## Acknowledgements
 
@@ -140,10 +145,5 @@ We acknowledge contributions and support from the Met Office and Momentum® Part
 ## References
 
 <!-- A list of key references, including to other software addressing related needs. Note that the references should include full names of venues, e.g., journals and conferences, not abbreviations only understood in the context of a specific discipline. -->
-
-* @metplus
-* @cylc8
-* @scitools_iris
-* @lfric
 
 [momentum_partnership]: https://www.metoffice.gov.uk/research/approach/collaboration/momentum-partnership
