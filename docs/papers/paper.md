@@ -63,9 +63,7 @@ affiliations:
 ---
 <!-- TODO: Get people's agreement on authorship, and their preferred names and ORCIDs. -->
 
-# CSET: Toolkit for evaluation of weather and climate models.
-
-## Summary
+# Summary
 
 <!-- A summary describing the high-level functionality and purpose of the software for a diverse, non-specialist audience. -->
 
@@ -73,7 +71,7 @@ The _Convective- [and turbulence-] Scale Evaluation Toolkit_ (**CSET**) is a com
 Developed by the Met Office in collaboration with the [Momentum® Partnership][momentum_partnership] and broader research community, CSET provides a reproducible, modular, and extensible framework for model diagnostics and verification.
 It analyses numerical weather prediction (NWP) and climate modelling output, including from the next-generation LFRic model [@lfric], ML models, and observational data and visualises the output in an easily sharable static website to allow the development of a coherent evaluation story for weather and climate models across time and spatial scales.
 
-## Statement of need
+# Statement of need
 
 <!-- A Statement of need section that clearly illustrates the research purpose of the software and places it in the context of related work. -->
 
@@ -82,7 +80,7 @@ Typically, an evaluation includes both context and justification to demonstrate 
 The verification provides the context or baseline for understanding the model’s performance through comparison against observation.
 The evaluation then demonstrates the benefit through comparison against theoretical expectations or previous or different version of the model and other models for similar application areas using diagnostics derived from model output to explain the context.
 
-## Contribution to the field
+# Contribution to the field
 
 CSET addresses the need for an evaluation system that supports consistent and comparable evaluation.
 It gives users easy access to a wide selection of peer-reviewed diagnostics, including spatial plots, time series, vertical profiles, probability density functions, and aggregated analysis over multiple model simulations, replacing bespoke evaluation scripts.
@@ -117,14 +115,14 @@ It is built on a modern software stack that is underpinned by Cylc (a workflow e
 CSET is open source under the Apache-2.0 licence, and actively developed on GitHub, with extensive automatic unit and integration testing.
 It aims to be a community-based toolkit, thus contributing to CSET is made easy and actively encouraged with clear developer guidelines to help.
 
-## Research usage
+# Research usage
 
 <!-- Mention (if applicable) a representative set of past or ongoing research projects using the software and recent scholarly publications enabled by it. -->
 
 Recently, CSET has been the tool of choice in the development and evaluation of the Regional Atmosphere Land Configuration RAL3-LFRic in the Met Office and across the Momentum® Partnership (a cooperative partnership of institutions sharing a seamless modelling framework for weather and climate science and services), as part of the Met Office’s Next Generation Modelling System (NGMS) programme to transition from the Unified Model to LFRic.
 It has helped us to characterise the regional configuration and lead to improvements in our model.
 
-## Conclusion
+# Conclusion
 
 CSET shows the benefits of open source evaluation software.
 It reduces redundant evaluation diagnostics development and supports easier collaboration across organisations involved in atmospheric model evaluation, helping to build a clear and consistent understanding of model characteristics and model improvement benefits.
@@ -132,17 +130,13 @@ Major items on CSET's development roadmap are integrating METplus verification i
 
 The CSET documentation is hosted at https://metoffice.github.io/CSET
 
-## Related software
-
-<!-- TODO: ESMValTool. -->
-
-## Acknowledgements
+# Acknowledgements
 
 <!-- Acknowledgement of any financial support. -->
 
 We acknowledge contributions and support from the Met Office and Momentum® Partnership for this project.
 
-## References
+# References
 
 <!-- A list of key references, including to other software addressing related needs. Note that the references should include full names of venues, e.g., journals and conferences, not abbreviations only understood in the context of a specific discipline. -->
 
