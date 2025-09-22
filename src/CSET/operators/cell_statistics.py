@@ -1,9 +1,11 @@
 """OMG YOU CAN'T COMMIT WITHOUT DOCSTRINGS, EVEN IN EXPLORATORY CODE."""
-
+import collections
 import datetime
 import inspect
 import itertools
+import pickle
 from copy import deepcopy
+from pathlib import Path
 from typing import Callable
 
 import cftime
@@ -448,6 +450,52 @@ def repeat_scalar_coord_along_dim_coord(cubelist, scalar_coord_name, dim_coord_n
     return cubelist
 
 
+def RES_extract_overlapping(cubelist, coord_name):
+    '''
+    Extracts regions from cubes in a :class:`iris.cube.CubeList` such that \
+    the specified coordinate is the same across all cubes.
+
+    Arguments:
+
+    * **cubelist** - an input :class:`iris.cube.CubeList`.
+    * **coord_name** - a string specifying the name of the coordinate \
+                       over which to perform the extraction.
+
+    Returns a :class:`iris.cube.CubeList` where the coordinate corresponding \
+    to coord_name is the same for all cubes.
+    '''
+    # Build a list of all Cell instances for this coordinate by
+    # looping through all cubes in the supplied cubelist
+    all_cells = []
+    for cube in cubelist:
+        for cell in cube.coord(coord_name).cells():
+            all_cells.append(cell)
+
+    # Work out which coordinate Cell instances are common across
+    # all cubes in the cubelist...
+    cell_counts = collections.Counter(all_cells)
+    # unique_cells = cell_counts.keys()
+    unique_cells = list(cell_counts.keys())
+    unique_cell_counts = list(cell_counts.values())
+    num_cubes = len(cubelist)
+    common_cells = [unique_cells[i] for i, count in
+                    enumerate(unique_cell_counts) if count == num_cubes]
+    # ...and use these to subset the cubes in the cubelist
+    constraint = iris.Constraint(
+        coord_values={coord_name: lambda cell: cell in common_cells})
+
+    cubelist = iris.cube.CubeList([cube.extract(constraint)
+                                   for cube in cubelist])
+    return cubelist
+
+
+def ensure_bounds(cubes, coord_name):
+    for cube in cubes:
+        coord = cube.coord(coord_name)
+        if not coord.bounds is not None:
+            coord.guess_bounds()
+
+
 def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
     """
     Create a histogram from each given cube, for every threshold and cell attribute.
@@ -465,8 +513,24 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
         "forecast_period", "hour" or "time"
 
     """
+
+    # DEV/DEBUGGING - REMOVE
+    pkl_filename = Path("/home/users/byron.blay/git/CSET/delme/debug_cubes.pkl")
+    # normal use - save pickle for faster subsequent runs
+    if cubes and not pkl_filename.exists():
+        with open(pkl_filename, 'wb') as pkl_file:
+            pickle.dump(cubes, pkl_file)
+            print("now load that pickle")
+            exit(0)
+    # we'll be calling this instead of the yaml processing for a dev speed up
+    if not cubes and pkl_filename.exists():
+        with open(pkl_filename, 'rb') as pkl_file:
+            cubes = pickle.load(pkl_file)
+
     if not isinstance(cubes, CubeList):
         cubes = CubeList([cubes])
+
+
 
     # For now, thresholds are hard coded.
     thresholds = [0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0]
@@ -495,91 +559,106 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
     # bin_edges['mean_value'] = 10**(np.arange(-1, 2.7, 0.12))
     # bin_edges['mean_value'] = np.insert(bin_edges['mean_value'], 0, 0)
 
-    # model_histograms = {}
-    for cube in cubes:
-        for threshold in thresholds:
-            # todo: check var_name has been removed by this point, as RES removed it to help with merge
-            hist_cubes = something_like_cell_attribute_histogram(
+    for threshold in thresholds:
+        # todo: check var_name has been removed by this point, as RES removed it to help with merge
+        # hist_cubes = something_like_cell_attribute_histogram(
+        #     cube,
+        #     attribute=cell_attribute,
+        #     bin_edges=get_bin_edges(cell_attribute),
+        #     threshold=threshold) for cube in cubes]
+
+        hist_cubes = CubeList([])
+        for cube in cubes:
+            hist_cubes.append(something_like_cell_attribute_histogram(
                 cube,
                 attribute=cell_attribute,
                 bin_edges=get_bin_edges(cell_attribute),
                 threshold=threshold,
+            ))
+
+        # todo: res does a deep copy at this point for some reason - seems uneceeary? double check.
+
+        # todo: RES calls this here, but we get a cube, not a cubelist so we can't.
+        # RES used it's own version because Iris' was slow at the time. todo: is it fast now?
+        # hist_cubes = RES_extract_overlapping(hist_cubes, "forecast_period")
+        ensure_bounds(hist_cubes, "forecast_period")
+        hist_cubes = hist_cubes.extract_overlapping("forecast_period")
+
+        # Now we take the cell statistics and aggregate by "time_grouping".
+
+        # We should deep copy the cubes here becuase there is cube wrangling below,
+        # and it's possible that we'll be using the same cubes across iterations in this loop.
+        # (as extract doesn't always create a new cube).
+        hist_cubes = deepcopy(hist_cubes)
+
+        # Res comment for this bit is: preparation of data for averaging and plotting
+        # It removes the other time coords, other than that named by time_grouping.
+        hist_cubes, times = extract_unique(hist_cubes, time_grouping)
+
+        # Sum cell statistic histograms at each time in parallel
+        # input_params = [
+        #     (hist_cubes, time, iris.analysis.SUM, None) for time in times
+        # ]
+        # result_list = [
+        #     aggregate_at_time(input_param) for input_param in input_params
+        # ]
+        result_list = []
+        for time in times:
+            input_param = (hist_cubes, time, iris.analysis.SUM, None)
+            result = aggregate_at_time(input_param)
+            result_list.append(result)
+        cubes_group = iris.cube.CubeList(itertools.chain.from_iterable(result_list))
+        cubes_group = cubes_group.merge()
+
+        # If the number of cases at each time is the same, the
+        # above merge results in a scalar coordinate representing
+        # the number of cases. Replace this scalar coordinate with
+        # an auxillary coordinate that has the same length as the
+        # time coordinate
+        cubes_group = repeat_scalar_coord_along_dim_coord(
+            cubes_group, "num_cases", time_grouping
+        )
+
+        # At this point, RES extracts every time point into a separate cube list and plots it.
+        for time in times:
+            # Extract histogram at this time
+            time_constraint = iris.Constraint(
+                coord_values={time_grouping: lambda cell: cell.point in time.points}
             )
+            cubes_at_time = cubes_group.extract(time_constraint)
 
-            # todo: res does a deep copy at this point for some reason - seems uneceeary? double check.
+            # todo: RES creates a plot title here.
+            # Perhaps we should add a plot title attribute to each cube here?
+            if time_grouping == "forecast_period":
+                title = "T+{0:.1f}".format(time.points[0])
+            elif time_grouping == "hour":
+                title = "{0:.1f}Z".format(time.points[0])
+            elif time_grouping == "time":
+                time_unit = time.units
+                datetime = time_unit.num2date(time.points[0])
+                title = "{0:%Y/%m/%d} {1:%H%M}Z".format(datetime, datetime)
+            else:
+                raise ValueError(f"Unknown time grouping '{time_grouping}'")
 
-            # todo: RES calls this here, but we get a cube, not a cubelist so we can't.
-            # RES used it's own version because Iris' was slow at the time. todo: is it fast now?
-            # hist_cubes = cube_utils.extract_overlapping(cubes_group, "forecast_period")
-            hist_cubes = hist_cubes.extract_overlapping("forecast_period")
+            # todo: RES has some analysis of the number of cases used to construct the histogram at this point.
 
-            # Now we take the cell statistics and aggregate by "time_grouping".
-
-            # We should deep copy the cubes here becuase there is cube wrangling below,
-            # and it's possible that we'll be using the same cubes across iterations in this loop.
-            # (as extract doesn't always create a new cube).
-            hist_cubes = deepcopy(hist_cubes)
-
-            # Res comment for this bit is: preparation of data for averaging and plotting
-            hist_cubes, times = extract_unique(hist_cubes, time_grouping)
-
-            # Sum cell statistic histograms at each time in parallel
-            input_params = [
-                (hist_cubes, time, iris.analysis.SUM, None) for time in times
-            ]
-            result_list = [
-                aggregate_at_time(input_param) for input_param in input_params
-            ]
-            cubes_group = iris.cube.CubeList(itertools.chain.from_iterable(result_list))
-            cubes_group = cubes_group.merge()
-
-            # If the number of cases at each time is the same, the
-            # above merge results in a scalar coordinate representing
-            # the number of cases. Replace this scalar coordinate with
-            # an auxillary coordinate that has the same length as the
-            # time coordinate
-            cubes_group = repeat_scalar_coord_along_dim_coord(
-                cubes_group, "num_cases", time_grouping
-            )
-
-            # At this point, RES extracts every time point into a separate cube list and plots it.
-            for time in times:
-                # Extract histogram at this time
-                time_constraint = iris.Constraint(
-                    coord_values={time_grouping: lambda cell: cell.point in time.points}
-                )
-                cubes_at_time = cubes_group.extract(time_constraint)
-
-                # todo: RES creates a plot title here.
-                # Perhaps we should add a plot title attribute to each cube here?
-                if time_grouping == "forecast_time":
-                    title = "T+{0:.1f}".format(time.points[0])
-                elif time_grouping == "hour":
-                    title = "{0:.1f}Z".format(time.points[0])
-                elif time_grouping == "time":
-                    time_unit = time.units
-                    datetime = time_unit.num2date(time.points[0])
-                    title = "{0:%Y/%m/%d} {1:%H%M}Z".format(datetime, datetime)
-
-                # todo: RES has some analysis of the number of cases used to construct the histogram at this point.
-
-                # todo: RES plots each cube here.
-                for cube in cubes_at_time:
-                    # todo: Normalise histogram?
-                    # if y_axis == "relative_frequency":
-                    #     cube.data = ((100.0 * cube.data) / np.sum(cube.data, dtype=np.float64))
-
-                    print(f'adding "{title}" plot for "{cube.name()}"')
-
-            # Sum all histograms. This creates the data for the "all" time point.
-            for cube in cubes_group:
-                cube = cube.collapsed(time_grouping, iris.analysis.SUM)
-
+            # todo: RES plots each cube here.
+            for cube in cubes_at_time:
                 # todo: Normalise histogram?
                 # if y_axis == "relative_frequency":
                 #     cube.data = ((100.0 * cube.data) / np.sum(cube.data, dtype=np.float64))
 
-                print(f'adding "all" plot for collapsed "{cube.name()}"')
+                print(f'adding "{title}" plot for "{cube.name()}"')
+
+        # Sum all histograms. This creates the data for the "all" time point.
+        for cube in cubes_group:
+            cube = cube.collapsed(time_grouping, iris.analysis.SUM)
+
+            # todo: Normalise histogram?
+            # if y_axis == "relative_frequency":
+            #     cube.data = ((100.0 * cube.data) / np.sum(cube.data, dtype=np.float64))
+
+            print(f'adding "all" plot for collapsed "{cube.name()}"')
 
     # return cubes to plot. todo: in what exact arrangement?
     return None
