@@ -2208,3 +2208,30 @@ def plot_histogram_series(
     _make_plot_html_page(complete_plot_index)
 
     return cubes
+
+
+def plot_cell_stats_histograms(data: dict, cell_attribute: str, time_grouping: str):
+    """
+
+    Parameters
+    ----------
+    data:
+        A dict mapping thresholds to histogram data for each time point:
+            data[<threshold>][<time_point>][<model_name>] -> Cube
+
+        E.g, when time_grouping is 'forecast_period', we see a key like:
+            data['threshold 0.5']['T+0.5']['uk_ctrl_um']
+
+        The cube is one dimensional, with a dim coord of the given cell_attribute.
+
+    cell_attribute:
+        'effective_radius_in_km' or 'mean_value'
+
+    time_grouping:
+        'forecast_period', 'hour' or 'time'
+
+    Returns
+    -------
+
+    """
+    pass

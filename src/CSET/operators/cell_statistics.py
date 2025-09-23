@@ -4,9 +4,7 @@ import collections
 import datetime
 import inspect
 import itertools
-import pickle
 from copy import deepcopy
-from pathlib import Path
 from typing import Callable
 
 import cftime
@@ -517,18 +515,18 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
         "forecast_period", "hour" or "time"
 
     """
-    # DEV/DEBUGGING - REMOVE
-    pkl_filename = Path("/home/users/byron.blay/git/CSET/delme/debug_cubes.pkl")
-    # normal use - save pickle for faster subsequent runs
-    if cubes and not pkl_filename.exists():
-        with open(pkl_filename, "wb") as pkl_file:
-            pickle.dump(cubes, pkl_file)
-            print("now load that pickle")
-            exit(0)
-    # we'll be calling this instead of the yaml processing for a dev speed up
-    if not cubes and pkl_filename.exists():
-        with open(pkl_filename, "rb") as pkl_file:
-            cubes = pickle.load(pkl_file)
+    # # DEV/DEBUGGING - REMOVE
+    # pkl_filename = Path("/home/users/byron.blay/git/CSET/delme/debug_cubes.pkl")
+    # # normal use - save pickle for faster subsequent runs
+    # if cubes and not pkl_filename.exists():
+    #     with open(pkl_filename, "wb") as pkl_file:
+    #         pickle.dump(cubes, pkl_file)
+    #         print("now load that pickle")
+    #         exit(0)
+    # # we'll be calling this instead of the yaml processing for a dev speed up
+    # if not cubes and pkl_filename.exists():
+    #     with open(pkl_filename, "rb") as pkl_file:
+    #         cubes = pickle.load(pkl_file)
 
     if not isinstance(cubes, CubeList):
         cubes = CubeList([cubes])
@@ -560,7 +558,11 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
     # bin_edges['mean_value'] = 10**(np.arange(-1, 2.7, 0.12))
     # bin_edges['mean_value'] = np.insert(bin_edges['mean_value'], 0, 0)
 
+    result = {}
+
     for threshold in thresholds:
+        result[f"threshold {threshold}"] = threshold_result = {}
+
         # todo: check var_name has been removed by this point, as RES removed it to help with merge
         # hist_cubes = something_like_cell_attribute_histogram(
         #     cube,
@@ -598,50 +600,47 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
         # It removes the other time coords, other than that named by time_grouping.
         hist_cubes, times = extract_unique(hist_cubes, time_grouping)
 
-        # Sum cell statistic histograms at each time in parallel
-        # input_params = [
-        #     (hist_cubes, time, iris.analysis.SUM, None) for time in times
-        # ]
-        # result_list = [
-        #     aggregate_at_time(input_param) for input_param in input_params
-        # ]
-        result_list = []
+        # Sum cell statistic histograms at each time. todo: parallelise
+        summed_cubes = []
         for time in times:
             input_param = (hist_cubes, time, iris.analysis.SUM, None)
-            result = aggregate_at_time(input_param)
-            result_list.append(result)
-        cubes_group = iris.cube.CubeList(itertools.chain.from_iterable(result_list))
-        cubes_group = cubes_group.merge()
+            summed_cube = aggregate_at_time(input_param)
+            summed_cubes.append(summed_cube)
+        summed_cubes = iris.cube.CubeList(itertools.chain.from_iterable(summed_cubes))
+        summed_cubes = summed_cubes.merge()
 
         # If the number of cases at each time is the same, the
         # above merge results in a scalar coordinate representing
         # the number of cases. Replace this scalar coordinate with
         # an auxillary coordinate that has the same length as the
         # time coordinate
-        cubes_group = repeat_scalar_coord_along_dim_coord(
-            cubes_group, "num_cases", time_grouping
+        summed_cubes = repeat_scalar_coord_along_dim_coord(
+            summed_cubes, "num_cases", time_grouping
         )
 
         # At this point, RES extracts every time point into a separate cube list and plots it.
         for time in times:
-            # Extract histogram at this time
+            assert len(time.points) == 1
+            time_point = time.points[0]
+
+            if time_grouping == "forecast_period":
+                time_title = "T+{0:.1f}".format(time_point)
+            elif time_grouping == "hour":
+                time_title = "{0:.1f}Z".format(time_point)
+            elif time_grouping == "time":
+                time_unit = time.units
+                datetime = time_unit.num2date(time_point)
+                time_title = "{0:%Y/%m/%d} {1:%H%M}Z".format(datetime, datetime)
+            else:
+                raise ValueError(f"Unknown time grouping '{time_grouping}'")
+
+            threshold_result[time_title] = {}
+
+            # Extract histogram at this time.
             time_constraint = iris.Constraint(
                 coord_values={time_grouping: lambda cell: cell.point in time.points}
             )
-            cubes_at_time = cubes_group.extract(time_constraint)
-
-            # todo: RES creates a plot title here.
-            # Perhaps we should add a plot title attribute to each cube here?
-            if time_grouping == "forecast_period":
-                title = "T+{0:.1f}".format(time.points[0])
-            elif time_grouping == "hour":
-                title = "{0:.1f}Z".format(time.points[0])
-            elif time_grouping == "time":
-                time_unit = time.units
-                datetime = time_unit.num2date(time.points[0])
-                title = "{0:%Y/%m/%d} {1:%H%M}Z".format(datetime, datetime)
-            else:
-                raise ValueError(f"Unknown time grouping '{time_grouping}'")
+            cubes_at_time = summed_cubes.extract(time_constraint)
 
             # todo: RES has some analysis of the number of cases used to construct the histogram at this point.
 
@@ -651,20 +650,21 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
                 # if y_axis == "relative_frequency":
                 #     cube.data = ((100.0 * cube.data) / np.sum(cube.data, dtype=np.float64))
 
-                print(f'adding "{title}" plot for "{cube.name()}"')
+                threshold_result[time_title][cube.attributes["model_name"]] = cube
 
         # Sum all histograms. This creates the data for the "all" time point.
-        for cube in cubes_group:
+        threshold_result["all"] = {}
+        for cube in summed_cubes:
             cube = cube.collapsed(time_grouping, iris.analysis.SUM)
 
             # todo: Normalise histogram?
             # if y_axis == "relative_frequency":
             #     cube.data = ((100.0 * cube.data) / np.sum(cube.data, dtype=np.float64))
 
-            print(f'adding "all" plot for collapsed "{cube.name()}"')
+            threshold_result["all"][cube.attributes["model_name"]] = cube
 
     # return cubes to plot. todo: in what exact arrangement?
-    return None
+    return result
 
 
 def something_like_cell_attribute_histogram(cube, attribute, bin_edges, threshold=0.0):

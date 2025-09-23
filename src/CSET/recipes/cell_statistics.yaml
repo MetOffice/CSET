@@ -21,7 +21,9 @@ steps:
     cell_attribute: $CELL_ATTRIBUTE
     time_grouping: $TIME_GROUPING
 
-  - operator: write.write_cube_to_nc
-    overwrite: True
+#  - operator: write.write_cube_to_nc
+#    overwrite: True
 
-  - operator: plot.plot_histogram_series
+  - operator: plot.plot_cell_stats_histograms
+    cell_attribute: $CELL_ATTRIBUTE
+    time_grouping: $TIME_GROUPING
