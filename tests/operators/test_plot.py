@@ -1253,3 +1253,20 @@ def test_qq_plot_grid_staggering_regrid(cube, tmp_working_dir):
         model_names=["a", "b"],
     )
     assert Path("untitled.png").is_file()
+
+
+def test_qq_plot_different_model_types(cube, tmp_working_dir):
+    """Other cube is flipped when model types differ."""
+    flipped = cube.copy()
+    flipped_coord = flipped.coord("grid_latitude")
+    flipped_coord.points = np.flip(flipped_coord.points)
+    flipped.data = np.flip(flipped.data, flipped_coord.cube_dims(flipped))
+    del flipped.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([cube, flipped])
+    plot.qq_plot(
+        cubes,
+        coordinates=["time", "grid_latitude", "grid_longitude"],
+        percentiles=[0, 50, 100],
+        model_names=["a", "b"],
+    )
+    assert Path("untitled.png").is_file()
