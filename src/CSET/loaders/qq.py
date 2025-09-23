@@ -40,7 +40,6 @@ def load(conf: Config):
                     "COORD_LIST": conf.SURFACE_QQ_COORDINATE_LIST,
                     "PERCENTILES": conf.SURFACE_QQ_PERCENTILES,
                     "ONE_TO_ONE": conf.SURFACE_QQ_ONE_TO_ONE,
-                    "MODEL_NAMES": [base_model["name"], model["name"]],
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
@@ -70,7 +69,6 @@ def load(conf: Config):
                     "COORD_LIST": conf.LEVEL_QQ_COORDINATE_LIST,
                     "PERCENTILES": conf.LEVEL_QQ_PERCENTILES,
                     "ONE_TO_ONE": conf.LEVEL_QQ_ONE_TO_ONE,
-                    "MODEL_NAMES": [base_model["name"], model["name"]],
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
