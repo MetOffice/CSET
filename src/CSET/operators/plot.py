@@ -962,6 +962,7 @@ def _plot_and_save_scatter_plot(
         ax.set_xlabel(f"{cube_x[0].name()} / {cube_x[0].units}", fontsize=14)
         ax.set_ylabel(f"{cube_y[0].name()} / {cube_y[0].units}", fontsize=14)
     else:
+        # Add the model names, these should be order of base (x) and other (y).
         ax.set_xlabel(
             f"{model_names[0]}_{cube_x[0].name()} / {cube_x[0].units}", fontsize=14
         )
