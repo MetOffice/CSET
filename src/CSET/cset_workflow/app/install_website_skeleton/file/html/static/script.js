@@ -139,6 +139,8 @@ function setup_plots_sidebar() {
         return;
       }
       response.text().then((data) => {
+        // Remove throbber now download has finished.
+        document.querySelector("#diagnostics > loading-throbber").remove()
         for (let line of data.split("\n")) {
           line = line.trim();
           // Skip blank lines.
