@@ -67,6 +67,16 @@ nav ul > li {
   overflow-wrap: break-word;
 }
 
+search {
+  margin: 8px;
+}
+
+
+#filter-query {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
 .plot-position-chooser {
   display: flex;
   margin-bottom: 0.25em;
