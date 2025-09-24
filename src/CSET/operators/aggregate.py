@@ -215,3 +215,46 @@ def add_hour_coordinate(
         return new_cubelist[0]
     else:
         return new_cubelist
+
+
+def rolling_window_time_aggregation(
+    cubes: iris.cube.Cube | iris.cube.CubeList, method: str, window: int
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Aggregate a cube along the time dimension using a rolling window.
+
+    Arguments
+    ---------
+    cubes: iris.cube.Cube | iris.cube.CubeList
+        Cube or Cubelist of any variable to be aggregated over a rolling window
+        in time.
+    method: str
+        Type of aggregate i.e. method: 'MAX', getattr creates
+        iris.analysis.MAX, etc.
+    window: int
+        The rolling window size.
+
+    Returns
+    -------
+    cube: iris.cube.Cube | iris.cube.CubeList
+        A Cube or Cubelist of the rolling window aggregate. The Cubes will have
+        a time dimension that is reduced in size to the original cube by the
+        window size.
+
+    Notes
+    -----
+    This operator is designed to be used to help create daily maxima and minima
+    for any variable.
+    """
+    new_cubelist = iris.cube.CubeList()
+    for cube in iter_maybe(cubes):
+        # Use a rolling window in time to applied specified aggregation method
+        # over a specified window length.
+        window_cube = cube.rolling_window(
+            "time", getattr(iris.analysis, method), window
+        )
+        new_cubelist.append(window_cube)
+
+    if len(new_cubelist) == 1:
+        return new_cubelist[0]
+    else:
+        return new_cubelist

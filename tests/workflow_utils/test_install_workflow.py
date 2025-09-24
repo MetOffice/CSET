@@ -51,14 +51,10 @@ def test_make_script_executable_script(tmp_path):
         and not (mode & stat.S_IXOTH)
     )
 
-
-def test_make_script_executable_not_script(tmp_path):
-    """Non-script files are not made executable."""
-    f = tmp_path / "file"
-    # Mode is u=rw,g=r,o=r
-    f.touch(mode=stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
-    f.write_text("Not a script file.")
+    # Mode is unreadable.
+    f.chmod(mode=0)
     extract_workflow.make_script_executable(f)
+    # Check that no one can execute.
     mode = f.stat().st_mode
     assert (
         not (mode & stat.S_IXUSR)
@@ -67,8 +63,42 @@ def test_make_script_executable_not_script(tmp_path):
     )
 
 
+def test_make_script_executable_not_script(tmp_path):
+    """Non-script files are not made executable."""
+    f = tmp_path / "file"
+    # Mode is u=rw,g=r,o=r
+    f.touch(mode=stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
+    f.write_text("Not a script file.")
+    extract_workflow.make_script_executable(f)
+    # Check that no one can execute.
+    mode = f.stat().st_mode
+    assert (
+        not (mode & stat.S_IXUSR)
+        and not (mode & stat.S_IXGRP)
+        and not (mode & stat.S_IXOTH)
+    )
+
+
+def test_make_script_executable_not_file(tmp_path):
+    """Non-files are not made executable."""
+    d = tmp_path / "dir"
+    d.mkdir(mode=0o500)
+    extract_workflow.make_script_executable(d)
+    assert d.is_dir()
+    # Check mode is unchanged.
+    mode = d.stat().st_mode
+    assert (
+        (mode & stat.S_IRUSR)
+        and (mode & stat.S_IXUSR)
+        and not (mode & stat.S_IRGRP)
+        and not (mode & stat.S_IXGRP)
+        and not (mode & stat.S_IROTH)
+        and not (mode & stat.S_IXOTH)
+    )
+
+
 def test_make_script_executable_short_file(tmp_path):
-    """Short files (<2 bytes) are not marked executable."""
+    """Short files (<14 bytes) are not marked executable."""
     f = tmp_path / "file"
     # Mode is u=rw,g=r,o=r
     f.touch(mode=stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)

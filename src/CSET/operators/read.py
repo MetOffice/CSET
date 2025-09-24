@@ -20,7 +20,6 @@ import functools
 import glob
 import itertools
 import logging
-import warnings
 from pathlib import Path
 from typing import Literal
 
@@ -38,8 +37,8 @@ from CSET.operators._stash_to_lfric import STASH_TO_LFRIC
 from CSET.operators._utils import get_cube_yxcoordname
 
 
-class NoDataWarning(UserWarning):
-    """Warning that no data has been loaded."""
+class NoDataError(FileNotFoundError):
+    """Error that no data has been loaded."""
 
 
 def read_cube(
@@ -201,9 +200,7 @@ def read_cubes(
 
     logging.info("Loaded cubes: %s", cubes)
     if len(cubes) == 0:
-        warnings.warn(
-            "No cubes loaded, check your constraints!", NoDataWarning, stacklevel=2
-        )
+        raise NoDataError("No cubes loaded, check your constraints!")
     return cubes
 
 
@@ -326,9 +323,9 @@ def _cutout_cubes(
             lons = np.array(subarea_extent[2:4])
             # Ensure cutout longitudes are within +/- 180.0 bounds.
             while lons[0] < -180.0:
-                lons += 180.0
+                lons += 360.0
             while lons[1] > 180.0:
-                lons -= 180.0
+                lons -= 360.0
             # If the coordinate system is rotated we convert coordinates into
             # model-relative coordinates to extract the appropriate cutout.
             coord_system = cube.coord(lat_name).coord_system
@@ -351,8 +348,9 @@ def _cutout_cubes(
             cutout_cubes.append(cube.intersection(**intersection_args))
         except IndexError as err:
             raise ValueError(
-                "Cutout region requested should be within data area. "
-                "Check and update SUBAREA_EXTENT."
+                "Region cutout error. Check and update SUBAREA_EXTENT."
+                "Cutout region requested should be contained within data area. "
+                "Also check if cutout region requested is smaller than input grid spacing."
             ) from err
 
     return cutout_cubes
@@ -392,13 +390,13 @@ def _create_callback(is_ensemble: bool) -> callable:
         _um_normalise_callback(cube, field, filename)
         _lfric_normalise_callback(cube, field, filename)
         _lfric_time_coord_fix_callback(cube, field, filename)
-        _longitude_fix_callback(cube)
         _normalise_var0_varname(cube)
         _fix_spatial_coords_callback(cube)
         _fix_pressure_coord_callback(cube)
         _fix_um_radtime(cube)
         _fix_cell_methods(cube)
         _convert_cube_units_callback(cube)
+        _grid_longitude_fix_callback(cube)
         _fix_lfric_cloud_base_altitude(cube)
         _lfric_time_callback(cube)
         _lfric_forecast_period_standard_name_callback(cube)
@@ -516,14 +514,15 @@ def _lfric_time_coord_fix_callback(cube: iris.cube.Cube, field, filename):
     return iris.util.squeeze(cube)
 
 
-def _longitude_fix_callback(cube: iris.cube.Cube):
-    """Check longitude coordinates are in the range -180 deg to 180 deg.
+def _grid_longitude_fix_callback(cube: iris.cube.Cube):
+    """Check grid_longitude coordinates are in the range -180 deg to 180 deg.
 
     This is necessary if comparing two models with different conventions --
     for example, models where the prime meridian is defined as 0 deg or
-    360 deg. If not in the range -180 deg to 180 deg, we wrap the longitude
+    360 deg. If not in the range -180 deg to 180 deg, we wrap the grid_longitude
     so that it falls in this range. Checks are for near-180 bounds given
     model data bounds may not extend exactly to 0. or 360.
+    Input cubes on non-rotated grid coordinates are not impacted.
     """
     import CSET.operators._utils as utils
 
@@ -532,21 +531,27 @@ def _longitude_fix_callback(cube: iris.cube.Cube):
     except ValueError:
         # Don't modify non-spatial cubes.
         return cube
-    long_coord = cube.coord(x)
-    long_points = long_coord.points.copy()
-    long_centre = np.median(long_points)
-    while long_centre < -175.0:
-        long_centre += 180.0
-        long_points += 180.0
-    while long_centre >= 175.0:
-        long_centre -= 180.0
-        long_points -= 180.0
-    long_coord.points = long_points
 
-    # Update coord bounds to be consistent with wrapping.
-    if long_coord.has_bounds() and np.size(long_coord) > 1:
-        long_coord.bounds = None
-        long_coord.guess_bounds()
+    long_coord = cube.coord(x)
+    # Wrap longitudes if rotated pole coordinates
+    coord_system = long_coord.coord_system
+    if x == "grid_longitude" and isinstance(
+        coord_system, iris.coord_systems.RotatedGeogCS
+    ):
+        long_points = long_coord.points.copy()
+        long_centre = np.median(long_points)
+        while long_centre < -175.0:
+            long_centre += 360.0
+            long_points += 360.0
+        while long_centre >= 175.0:
+            long_centre -= 360.0
+            long_points -= 360.0
+        long_coord.points = long_points
+
+        # Update coord bounds to be consistent with wrapping.
+        if long_coord.has_bounds() and np.size(long_coord) > 1:
+            long_coord.bounds = None
+            long_coord.guess_bounds()
 
     return cube
 

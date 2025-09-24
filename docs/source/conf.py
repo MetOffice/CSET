@@ -52,8 +52,8 @@ linkcheck_ignore = [
     r"https://github.com/.+/(issues|pull)/\d+",
     # GNU.org has an aggressive rate limit.
     r"https://www.gnu.org/software/make/",
-    # CSET-workflow is a private repository.
-    r"https://github.com/MetOffice/CSET-workflow",
+    # CSET-restricted-files is a private repository.
+    r"https://github.com/MetOffice/CSET-restricted-files",
     # StackOverflow blocks requests.
     r"https://stackoverflow.com/.+",
 ]

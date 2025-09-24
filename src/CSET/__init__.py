@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2025) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 import argparse
 import logging
 import os
-import shlex
 import sys
 from importlib.metadata import version
 from pathlib import Path
@@ -33,16 +32,10 @@ def main(raw_cli_args: list[str] = sys.argv):
     Handles argument parsing, setting up logging, top level error capturing,
     and execution of the desired subcommand.
     """
-    # Read arguments from the command line and CSET_ADDOPTS environment variable
-    # into an args object.
     parser = setup_argument_parser()
-    cli_args = raw_cli_args[1:] + shlex.split(os.getenv("CSET_ADDOPTS", ""))
-    args, unparsed_args = parser.parse_known_args(cli_args)
+    args, unparsed_args = parser.parse_known_args(raw_cli_args[1:])
 
     setup_logging(args.verbose)
-
-    # Down here so runs after logging is setup.
-    logger.debug("CLI Arguments: %s", cli_args)
 
     if args.subparser is None:
         print("Please choose a command.", file=sys.stderr)
@@ -225,19 +218,14 @@ def setup_logging(verbosity: int):
 
 
 def _bake_command(args, unparsed_args):
-    from CSET._common import iter_maybe, parse_variable_options
+    from CSET._common import parse_recipe, parse_variable_options
     from CSET.operators import execute_recipe
 
-    # Convert --input_dir=... to INPUT_PATHS recipe variable.
-    if args.input_dir:
-        abs_paths = [str(Path(p).absolute()) for p in iter_maybe(args.input_dir)]
-        unparsed_args.append(f"--INPUT_PATHS={abs_paths}")
-
-    recipe_variables = parse_variable_options(unparsed_args)
+    recipe_variables = parse_variable_options(unparsed_args, args.input_dir)
+    recipe = parse_recipe(args.recipe, recipe_variables)
     execute_recipe(
-        args.recipe,
+        recipe,
         args.output_dir,
-        recipe_variables,
         args.style_file,
         args.plot_resolution,
         args.skip_write,

@@ -14,11 +14,12 @@
 
 """Test filter operators."""
 
+import cf_units
 import iris.cube
 import numpy as np
 import pytest
 
-from CSET.operators import constraints, filters, read
+from CSET.operators import aggregate, constraints, filters, read
 
 constraint_single = constraints.combine_constraints(
     constraints.generate_stash_constraint("m01s03i236"),
@@ -87,11 +88,7 @@ def test_filter_multiple_cubes_multiple_out(cubes):
     constraint_single_2 = constraints.combine_constraints(
         constraints.generate_stash_constraint("m01s03i236"),
         a=constraints.generate_cell_methods_constraint(
-            [
-                iris.coords.CellMethod(
-                    method="minimum", coords="time", intervals="1 hour"
-                )
-            ]
+            cell_methods=["minimum"], coord="time", interval="1 hour"
         ),
     )
     filtered_multi_cubes = filters.filter_multiple_cubes(
@@ -179,6 +176,18 @@ def test_generate_mask_fail_wrong_condition(cube):
         filters.generate_mask(cube, "!<", 10)
 
 
+def test_generate_mask_rename(cube):
+    """Generates a mask and checks rename."""
+    expected = f"mask_for_{cube.name()}_==_276"
+    assert filters.generate_mask(cube, "==", 276).name() == expected
+
+
+def test_generate_mask_units(cube):
+    """Generates a mask and checks units."""
+    expected = cf_units.Unit("1")
+    assert filters.generate_mask(cube, "==", 276).units == expected
+
+
 def test_generate_mask_equal_to(cube):
     """Generates a mask with values equal to a specified value."""
     mask = cube.copy()
@@ -257,6 +266,20 @@ def test_generate_mask_less_equal_to(cube):
     )
 
 
+def test_generate_mask_cube_list(cubes):
+    """Generates masks for a cubelist."""
+    masks = filters.generate_mask(cubes, "<=", 276)
+    assert isinstance(masks, iris.cube.CubeList)
+    masks_calc = iris.cube.CubeList([])
+    for cube in cubes:
+        mask = cube.copy()
+        mask.data[:] = 0.0
+        mask.data[cube.data <= 276] = 1
+        masks_calc.append(mask)
+    for cube, mask in zip(masks, masks_calc, strict=True):
+        assert np.allclose(cube.data, mask.data, rtol=1e-06, atol=1e-02)
+
+
 def test_apply_mask(cube):
     """Apply a mask to a cube."""
     mask = filters.generate_mask(cube, "==", 276)
@@ -271,3 +294,61 @@ def test_apply_mask(cube):
         atol=1e-02,
         equal_nan=True,
     )
+
+
+def test_generate_single_ensemble_member_constraint_reduced_member(ensemble_cube):
+    """Remove a single ensemble member from a cube."""
+    remove_member_constraint = (
+        constraints.generate_remove_single_ensemble_member_constraint(ensemble_member=1)
+    )
+    filter_cube = filters.filter_cubes(
+        ensemble_cube, constraint=remove_member_constraint
+    )
+    # Assert one of the ensemble members have been removed.
+    assert len(filter_cube.coord("realization").points) == (
+        len(ensemble_cube.coord("realization").points) - 1
+    )
+    # Assert remain ensemble member is expected one.
+    assert filter_cube.coord("realization").points == [2]
+
+
+def test_generate_realization_constraint_single_member(ensemble_cube):
+    """Select a single ensemble member from a cube."""
+    single_member_constraint = constraints.generate_realization_constraint(
+        ensemble_members=1
+    )
+    filter_cube = filters.filter_cubes(
+        ensemble_cube, constraint=single_member_constraint
+    )
+    # Assert filtered realization coordinate matches expected coordinate point.
+    assert filter_cube.coord("realization").points == [1]
+
+
+def test_generate_realization_constraint_multiple_members(ensemble_cube):
+    """Select multiple ensemble members from a cube."""
+    multi_member_constraint = constraints.generate_realization_constraint(
+        ensemble_members=[1, 2]
+    )
+    filter_cube = filters.filter_cubes(
+        ensemble_cube, constraint=multi_member_constraint
+    )
+    # Assert filtered realization coordinates match expected realization coordinates.
+    assert (filter_cube.coord("realization").points == [1, 2]).all()
+
+
+def test_generate_hour_constraint_single_hour(cube):
+    """Select a single hour of day from cube."""
+    new_cube = aggregate.add_hour_coordinate(cube)
+    expected_cube = filters.filter_cubes(
+        new_cube, constraints.generate_hour_constraint(hour_start=3)
+    )
+    assert expected_cube.coord("hour").points == [3]
+
+
+def test_generate_hour_constraint_hour_range(cube):
+    """Select hours of day within a given range."""
+    new_cube = aggregate.add_hour_coordinate(cube)
+    expected_cube = filters.filter_cubes(
+        new_cube, constraints.generate_hour_constraint(hour_start=3, hour_end=4)
+    )
+    assert (expected_cube.coord("hour").points == [3, 4]).all()

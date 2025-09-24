@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 
+import CSET._common
 import CSET.operators
 
 
@@ -50,32 +51,33 @@ def test_get_operator_exception_not_callable():
 def test_execute_recipe(tmp_path: Path):
     """Execute recipe to test happy case (this is really an integration test)."""
     variables = {"INPUT_PATHS": str(Path.cwd() / "tests/test_data/air_temp.nc")}
-    recipe = Path("tests/test_data/plot_instant_air_temp.yaml")
-    CSET.operators.execute_recipe(recipe, tmp_path, recipe_variables=variables)
+    recipe_file = Path("tests/test_data/plot_instant_air_temp.yaml")
+    recipe = CSET._common.parse_recipe(recipe_file, variables)
+    CSET.operators.execute_recipe(recipe, tmp_path)
 
 
 def test_execute_recipe_edge_cases(tmp_path: Path):
     """Test weird edge cases. Also tests data paths not being pathlib Paths."""
     variables = {"INPUT_PATHS": str(Path.cwd() / "tests/test_data/air_temp.nc")}
-    recipe = Path("tests/test_data/noop_recipe.yaml")
-    CSET.operators.execute_recipe(recipe, tmp_path, recipe_variables=variables)
+    recipe_file = Path("tests/test_data/noop_recipe.yaml")
+    recipe = CSET._common.parse_recipe(recipe_file, variables)
+    CSET.operators.execute_recipe(recipe, tmp_path)
 
 
 def test_execute_recipe_invalid_output_dir(tmp_path: Path):
     """Exception raised if output directory can't be created."""
-    variables = {"INPUT_PATHS": str(Path.cwd() / "tests/test_data/air_temp.nc")}
-    recipe = '{"steps":[{"operator": misc.noop}]}'
+    recipe = {"steps": [{"operator": "misc.noop"}]}
     output_dir = tmp_path / "actually_a_file"
     output_dir.touch()
     with pytest.raises((FileExistsError, NotADirectoryError)):
-        CSET.operators.execute_recipe(recipe, output_dir, recipe_variables=variables)
+        CSET.operators.execute_recipe(recipe, output_dir)
 
 
 def test_execute_recipe_style_file_metadata_written(tmp_path: Path):
     """Style file path metadata written out."""
     style_file_path = "/test/style_file_path.json"
     CSET.operators.execute_recipe(
-        '{"steps":[{"operator": misc.noop}]}',
+        {"steps": [{"operator": "misc.noop"}]},
         tmp_path,
         style_file=Path(style_file_path),
     )
@@ -87,7 +89,7 @@ def test_execute_recipe_style_file_metadata_written(tmp_path: Path):
 def test_execute_recipe_plot_resolution_metadata_written(tmp_path: Path):
     """Style file path metadata written out."""
     CSET.operators.execute_recipe(
-        '{"steps":[{"operator": misc.noop}]}', tmp_path, plot_resolution=72
+        {"steps": [{"operator": "misc.noop"}]}, tmp_path, plot_resolution=72
     )
     with open(tmp_path / "meta.json", "rb") as fp:
         metadata = json.load(fp)
@@ -97,7 +99,7 @@ def test_execute_recipe_plot_resolution_metadata_written(tmp_path: Path):
 def test_execute_recipe_skip_write_metadata_written(tmp_path: Path):
     """Skip write metadata written out."""
     CSET.operators.execute_recipe(
-        '{"steps":[{"operator": misc.noop}]}', tmp_path, skip_write=True
+        {"steps": [{"operator": "misc.noop"}]}, tmp_path, skip_write=True
     )
     with open(tmp_path / "meta.json", "rb") as fp:
         metadata = json.load(fp)

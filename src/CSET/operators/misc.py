@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2025) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -348,10 +348,9 @@ def difference(cubes: CubeList):
     # assuming we can rely on cubes having a long name, so we don't check for
     # its presents.
     difference.standard_name = None
-    if base.standard_name:
-        difference.long_name = base.standard_name + "_difference"
-    else:
-        difference.long_name = base.long_name + "_difference"
+    difference.long_name = (
+        base.long_name if base.long_name else base.name()
+    ) + "_difference"
     if base.var_name:
         difference.var_name = base.var_name + "_difference"
 
@@ -401,3 +400,38 @@ def _extract_common_time_points(base: Cube, other: Cube) -> tuple[Cube, Cube]:
     if base is None or other is None:
         raise ValueError("No common time points found!")
     return (base, other)
+
+
+def convert_units(cubes: iris.cube.Cube | iris.cube.CubeList, units: str):
+    """Convert the units of a cube.
+
+    Arguments
+    ---------
+    cubes: iris.cube.Cube | iris.cube.CubeList
+        A Cube or CubeList of a field for its units to be converted.
+
+    units: str
+        The unit that the original field is to be converted to. It takes
+        CF compliant units.
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        The field converted into the specified units.
+
+    Examples
+    --------
+    >>> T_in_F = misc.convert_units(temperature_in_K, "Fahrenheit")
+
+    """
+    new_cubelist = iris.cube.CubeList([])
+    for cube in iter_maybe(cubes):
+        # Copy cube to keep original data.
+        cube_a = cube.copy()
+        # Convert cube units.
+        cube_a.convert_units(units)
+        new_cubelist.append(cube_a)
+    if len(new_cubelist) == 1:
+        return new_cubelist[0]
+    else:
+        return new_cubelist
