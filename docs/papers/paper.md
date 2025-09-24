@@ -98,7 +98,7 @@ Compared to alternative open source evaluation tools, such as ESMValTool [@esmva
 
 # Design
 
-CSET is build using operators, recipes and a workflow:
+CSET is built using operators, recipes and a workflow:
 
 * **Operators** are small python functions performing a single task, such as reading, writing, filtering, executing a calculation, stratifying, or plotting.
 * **Recipes** are YAML files that compose operators together to produce diagnostics, such as a wind speed difference plot between two model configurations.
