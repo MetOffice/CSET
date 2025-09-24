@@ -97,7 +97,7 @@ def unpack_recipe(recipe_dir: Path, recipe_name: str) -> None:
         logger.debug("%s already exists in target directory, skipping.", recipe_name)
         return
     logger.info("Unpacking %s to %s", recipe_name, output_file)
-    file = _get_recipe_file(recipe_name)
+    file = _get_recipe_file(next(_recipe_files_in_tree(recipe_name)))
     output_file.write_bytes(file.read_bytes())
 
 
