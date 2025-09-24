@@ -77,7 +77,7 @@ It analyses numerical weather prediction (NWP) and climate modelling output, inc
 
 Evaluation is essential for the model development process in atmospheric sciences.
 Typically, an evaluation includes both context and justification to demonstrate the benefit of model changes against other models or previous model versions.
-The verification provides the context or baseline for understanding the model’s performance through comparison against observation.
+The verification provides the context or baseline for understanding the model’s performance through comparison against observations.
 The evaluation then demonstrates the benefit through comparison against theoretical expectations or previous or different version of the model and other models for similar application areas using diagnostics derived from model output to explain the context.
 
 # Contribution to the field
