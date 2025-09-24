@@ -46,18 +46,14 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         # Analysis from each forecast.
         {{CSET_TRIAL_CYCLE_PERIOD}} = """
         setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
-        fetch_complete & parbake_recipes:start_baking? => bake_recipes?
-
-        parbake_recipes:skip_baking? | bake_recipes? => cycle_complete
+        fetch_complete & parbake_recipes => bake_recipes => cycle_complete
         """
     {% endif %}
 
     # Only runs on the final cycle.
     R1/$ = """
     # Run aggregation recipes.
-    fetch_complete & parbake_aggregation_recipes:start_baking? => bake_aggregation_recipes?
-
-    parbake_aggregation_recipes:skip_baking? | bake_aggregation_recipes? => cycle_complete
+    fetch_complete & parbake_aggregation_recipes => bake_aggregation_recipes => cycle_complete
     # Finalise website and cleanup.
     cycle_complete => finish_website => send_email
     cycle_complete => housekeeping
@@ -100,11 +96,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     execution time limit = PT1H
         [[[environment]]]
         ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
-
-    [[PARBAKE]]
-        [[[outputs]]]
-            start_baking='start baking'
-            skip_baking='skip baking'
 
     [[METPLUS]]
         [[[environment]]]
@@ -162,7 +153,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
 
     [[parbake_recipes]]
     # Parbake all the recipes for this cycle.
-    inherit=PARBAKE
     script = rose task-run -v --app-key=parbake_recipes
     execution time limit = PT5M
         [[[directives]]]
@@ -173,7 +163,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
 
     [[parbake_aggregation_recipes]]
     # Parbake all the aggregation recipes.
-    inherit=PARBAKE
     script = rose task-run -v --app-key=parbake_recipes
     execution time limit = PT5M
         [[[directives]]]

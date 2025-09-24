@@ -14,7 +14,6 @@
 
 """Tests for parbake_recipe workflow utility."""
 
-import subprocess
 from pathlib import Path
 
 import pytest
@@ -26,28 +25,14 @@ import CSET.recipes
 def test_main(monkeypatch):
     """Check parbake.main() invokes parbake_all correctly."""
     function_ran = False
-    recipes_parbaked = 0
-    cylc_message_ran = False
-    cylc_message = ""
 
     def mock_parbake_all(variables, rose_datac, share_dir, aggregation):
         nonlocal function_ran
-        nonlocal recipes_parbaked
         function_ran = True
         assert variables == {"variable": "value"}
         assert rose_datac == Path("/share/cycle/20000101T0000Z")
         assert share_dir == Path("/share")
         assert isinstance(aggregation, bool)
-        return recipes_parbaked
-
-    def mock_run(cmd, **kwargs):
-        nonlocal cylc_message
-        nonlocal cylc_message_ran
-        cylc_message_ran = True
-        assert cmd[0:3] == ["cylc", "message", "--"]
-        assert cmd[3] == "test-workflow"
-        assert cmd[4] == "test-job"
-        assert cmd[5] == cylc_message
 
     monkeypatch.setattr(parbake, "parbake_all", mock_parbake_all)
 
@@ -65,25 +50,6 @@ def test_main(monkeypatch):
     monkeypatch.delenv("DO_CASE_AGGREGATION")
     parbake.main()
     assert function_ran, "Function did not run!"
-
-    # Retry with cylc environment variables set.
-    monkeypatch.setattr(subprocess, "run", mock_run)
-    monkeypatch.setenv("CYLC_WORKFLOW_ID", "test-workflow")
-    monkeypatch.setenv("CYLC_TASK_JOB", "test-job")
-
-    # No recipes parbaked.
-    function_ran = False
-    recipes_parbaked = 0
-    cylc_message = "skip baking"
-    parbake.main()
-    assert cylc_message_ran, "Cylc message function did not run!"
-
-    # Some recipes parbaked.
-    function_ran = False
-    recipes_parbaked = 3
-    cylc_message = "start baking"
-    parbake.main()
-    assert cylc_message_ran, "Cylc message function did not run!"
 
 
 def test_parbake_all_none_enabled(tmp_working_dir, monkeypatch):
