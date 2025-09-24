@@ -18,8 +18,8 @@ authors:
   - name: Sylvia Bohnenstengel
     orcid:
     affiliation: 1
-  - name: David Flack
-    orcid:
+  - name: David L. A. Flack
+    orcid: 0000-0001-7262-4937
     affiliation: 1
   - name: Huw Lewis
     orcid:
