@@ -83,7 +83,9 @@ def test_get_recipe_file_missing():
 
 def test_get_recipe_file_in_package():
     """Get a recipe file from the default location inside the package."""
-    file = recipes._get_recipe_file("CAPE_ratio_plot.yaml")
+    file = recipes._get_recipe_file(
+        next(recipes._recipe_files_in_tree("CAPE_ratio_plot.yaml"))
+    )
     assert file.is_file()
 
 
