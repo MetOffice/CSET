@@ -25,5 +25,6 @@ steps:
 #    overwrite: True
 
   - operator: plot.plot_cell_stats_histograms
+    varname: $VARNAME
     cell_attribute: $CELL_ATTRIBUTE
     time_grouping: $TIME_GROUPING

@@ -23,6 +23,7 @@ import logging
 import math
 import os
 import sys
+from pathlib import Path
 from typing import Literal
 
 import cartopy.crs as ccrs
@@ -2210,17 +2211,26 @@ def plot_histogram_series(
     return cubes
 
 
-def plot_cell_stats_histograms(data: dict, cell_attribute: str, time_grouping: str):
+def check_for_nan(cubes):
+    # The plot function was crashing when cube.data had nan in the min/max.
+    for cube in cubes:
+        # if np.nan in [cube.data.min, cube.data.max]:
+        if np.isnan(cube.data.min()) or np.isnan(cube.data.max()):
+            return True
+    return False
+
+
+def plot_cell_stats_histograms(data: dict, varname: str, cell_attribute: str, time_grouping: str):
     """
 
     Parameters
     ----------
     data:
         A dict mapping thresholds to histogram data for each time point:
-            data[<threshold>][<time_point>][<model_name>] -> Cube
+            data[<threshold>][<model_name>][<time_point>] -> Cube
 
         E.g, when time_grouping is 'forecast_period', we see a key like:
-            data['threshold 0.5']['T+0.5']['uk_ctrl_um']
+            data['threshold 0.5']['uk_ctrl_um']['T+0.5']
 
         The cube is one dimensional, with a dim coord of the given cell_attribute.
 
@@ -2234,4 +2244,72 @@ def plot_cell_stats_histograms(data: dict, cell_attribute: str, time_grouping: s
     -------
 
     """
-    pass
+
+    # at each threshold, we're going to combine model's each time points into a single cube
+    sequence_coord = time_grouping
+
+    for threshold, models in data.items():
+
+        models_merged = iris.cube.CubeList()  # for each model: data at every time, which we will merge for a time sequence plot
+        models_all = iris.cube.CubeList()  # for each model: aggregation of all times, created by the operator
+
+        for model_name, times in models.items():
+            models_all.append(times['all'])
+            del times['all']
+
+            # Put the time points together into a single cube.
+            # Except for the time_grouping coord, all other time coords will have been removed.
+            # Todo: why bother splitting them up in the first place?
+            #       was that just for the RES plotting, can we simplify the operator?
+            cubes = iris.cube.CubeList(times.values())
+            cubes = cubes.merge()
+            assert len(cubes) == 1
+            models_merged.extend(cubes)
+
+        if not models_merged:
+            logging.warning(f'no series data found for {varname} {cell_attribute} {time_grouping} {threshold}, skipping plot')
+            continue
+
+        if not models_all:
+            logging.warning(f'no aggregated data found for {varname} {cell_attribute} {time_grouping} {threshold}, skipping plot')
+            continue
+
+        root_folder = Path('/data/scratch/byron.blay/cset/cell_stats/out')
+        root_folder = root_folder / f'{varname}/{cell_attribute}/{time_grouping}/{threshold}'
+
+        orig_folder = os.getcwd()
+
+        # The plot function was crashing when cube.data had nan in the min/max.
+        if check_for_nan(models_merged):
+            logging.warning(
+                f'Series cube for {varname}, {cell_attribute}, {time_grouping}, {threshold} has nan. Skipping plot.')
+        else:
+            folder = root_folder / 'series'
+            folder.mkdir(parents=True, exist_ok=True)
+            os.chdir(folder)
+            filename = folder / 'image.png'
+            plot_histogram_series(
+                cubes=models_merged,
+                filename=str(filename),
+                sequence_coordinate=sequence_coord,
+                stamp_coordinate=None,  # is this useful?
+                single_plot=False,
+            )
+
+        if check_for_nan(models_all):
+            logging.warning(
+                f'Combnined cube for {varname}, {cell_attribute}, {time_grouping}, {threshold} has nan. Skipping plot.')
+        else:
+            folder = root_folder / 'all'
+            folder.mkdir(parents=True, exist_ok=True)
+            os.chdir(folder)
+            filename = folder / 'image.png'
+            plot_histogram_series(
+                cubes=models_all,
+                filename=str(filename),
+                sequence_coordinate=sequence_coord,  # todo: we don't need a time series for this plot!
+                stamp_coordinate=None,  # is this useful?
+                single_plot=False,
+            )
+
+        os.chdir(orig_folder)

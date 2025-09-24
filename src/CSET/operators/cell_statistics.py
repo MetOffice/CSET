@@ -515,18 +515,15 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
         "forecast_period", "hour" or "time"
 
     """
-    # # DEV/DEBUGGING - REMOVE
-    # pkl_filename = Path("/home/users/byron.blay/git/CSET/delme/debug_cubes.pkl")
-    # # normal use - save pickle for faster subsequent runs
-    # if cubes and not pkl_filename.exists():
-    #     with open(pkl_filename, "wb") as pkl_file:
-    #         pickle.dump(cubes, pkl_file)
-    #         print("now load that pickle")
-    #         exit(0)
-    # # we'll be calling this instead of the yaml processing for a dev speed up
-    # if not cubes and pkl_filename.exists():
-    #     with open(pkl_filename, "rb") as pkl_file:
-    #         cubes = pickle.load(pkl_file)
+
+    # todo: paramterise y_axis?
+    #   set to "frequency" for cell statistic histograms that are \
+    #   plain number counts in bins, or "relative_frequency" for \
+    #   histograms showing the overall proportion of data values in \
+    #   each bin (normalised to 100%). The default is \
+    #   "relative_frequency".
+    y_axis = "relative_frequency"
+
 
     if not isinstance(cubes, CubeList):
         cubes = CubeList([cubes])
@@ -646,9 +643,9 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
 
             # todo: RES plots each cube here.
             for cube in cubes_at_time:
-                # todo: Normalise histogram?
-                # if y_axis == "relative_frequency":
-                #     cube.data = ((100.0 * cube.data) / np.sum(cube.data, dtype=np.float64))
+                # Normalise histogram?
+                if y_axis == "relative_frequency":
+                    cube.data = ((100.0 * cube.data) / np.sum(cube.data, dtype=np.float64))
 
                 threshold_result[time_title][cube.attributes["model_name"]] = cube
 
@@ -657,14 +654,27 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
         for cube in summed_cubes:
             cube = cube.collapsed(time_grouping, iris.analysis.SUM)
 
-            # todo: Normalise histogram?
-            # if y_axis == "relative_frequency":
-            #     cube.data = ((100.0 * cube.data) / np.sum(cube.data, dtype=np.float64))
+            # Normalise histogram?
+            if y_axis == "relative_frequency":
+                cube.data = ((100.0 * cube.data) / np.sum(cube.data, dtype=np.float64))
 
             threshold_result["all"][cube.attributes["model_name"]] = cube
 
+
+    # For simpler code, the results were formed as:
+    #   data[<threshold>][<time_point>][<model_name>] -> Cube
+    # But the plot needs the model to be above the time points, so rearrange as:
+    #   data[<threshold>][<model_name>][<time_point>] -> Cube
+    reformed_result = {}
+    for threshold, threshold_result in result.items():
+        reformed_result[threshold] = {}
+        for time_title, model_cubes in threshold_result.items():
+            for model_name, cube in model_cubes.items():
+                reformed_result[threshold].setdefault(model_name, {})
+                reformed_result[threshold][model_name][time_title] = cube
+
     # return cubes to plot. todo: in what exact arrangement?
-    return result
+    return reformed_result
 
 
 def something_like_cell_attribute_histogram(cube, attribute, bin_edges, threshold=0.0):
