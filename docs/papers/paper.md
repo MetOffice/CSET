@@ -102,7 +102,7 @@ CSET is build using operators, recipes and a workflow:
 
 * **Operators** are small python functions performing a single task, such as reading, writing, filtering, executing a calculation, stratifying, or plotting.
 * **Recipes** are YAML files that compose operators together to produce diagnostics, such as a wind speed difference plot between two model configurations.
-* The **Workflow** runs the recipes across a larger number of models, variables, model domains and dates, collating the result into a website.
+* The **Workflow** runs the recipes across a larger number of models, variables, model domains, and dates; it collates the result into a website.
 
 The design provides a flexible software that is easily adaptable by scientists to address model evaluation questions while maintaining traceability.
 
