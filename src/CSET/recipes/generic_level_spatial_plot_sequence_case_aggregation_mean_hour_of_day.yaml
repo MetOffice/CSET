@@ -8,6 +8,12 @@ steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
     constraint:
+      operator: constraints.generate_var_constraint
+      varname: $VARNAME
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+  - operator: filters.filter_cubes
+    constraint:
       operator: constraints.combine_constraints
       variable_constraint:
         operator: constraints.generate_var_constraint
@@ -16,8 +22,6 @@ steps:
         operator: constraints.generate_level_constraint
         coordinate: $LEVELTYPE
         levels: $LEVEL
-    subarea_type: $SUBAREA_TYPE
-    subarea_extent: $SUBAREA_EXTENT
 
   - operator: aggregate.ensure_aggregatable_across_cases
 
