@@ -2,7 +2,11 @@ category: Ensemble
 title: $MODEL_NAME probability of temperature at screen level $CONDITION $THRESHOLD
 description: |
   Calculates the probability $CONDITION $THRESHOLD for teperature at screen level
-  for all members excluding the control and plots a spatial map.
+  for all members excluding the control and plots a spatial map. The diagnostic
+  be used when the control is not viewed as another equally-likely member of the ensemble.
+  In these situations the control is more likely than other members
+  (considered by definition of how we create ensemebles) or it could be used for
+  determining the impact of the control on the ensembles.
 
 steps:
   - operator: read.read_cube
