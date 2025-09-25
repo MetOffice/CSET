@@ -1295,7 +1295,7 @@ def _plot_and_save_power_spectrum_series(
     ax.set_yscale("log")
     ax.set_title(title, fontsize=16)
     ax.set_xlabel("Wavenumber")
-    ax.set_ylabel("DKE (m2/s2)")
+    ax.set_ylabel("Power Spectra")
 
     # Add a legend
     # ax.legend(fontsize=16)
@@ -2370,11 +2370,11 @@ def plot_power_spectrum(
     cube: iris.cube.Cube,
     filename: str = None,
     sequence_coordinate: str = "time",
-    single_plot: bool = False,
     **kwargs,
 ) -> iris.cube.Cube:
     # remove from the arguments
     # single_plot: bool = False,
+    # stamp_coordinate: str = "realization",
     """Plot a power spectrum.
 
     The cube must contain a power spectrum.

@@ -21,9 +21,7 @@ import scipy.fft as fft
 
 
 def calculate_power_spectrum(
-    #    cube: iris.cube.Cube | iris.cube.CubeList,
-    # ) -> iris.cube.Cube:
-    cube: iris.cube.Cube,
+    cube: iris.cube.Cube | iris.cube.CubeList,
     filename: str = None,
     **kwargs,
 ) -> iris.cube.Cube:
@@ -43,33 +41,58 @@ def calculate_power_spectrum(
     ValueError
         If the constraint doesn't produce a single cube.
     """
-    # Extract the time coordinate of cube for use later
+    # If cube is a CubeList, extract the first cube
+    if isinstance(cube, iris.cube.CubeList):
+        cube = cube[0]
 
-    time_coord = cube[0].coord("time")
+    # Extract time coordinate and convert to datetime
+    if cube.coords("time"):
+        time_coord = cube.coord("time")
+        time_points = time_coord.units.num2date(time_coord.points)
+        time_points_set = set(time_points)
+        time_constraints = iris.Constraint(
+            time=lambda cell: cell.point in time_points_set
+        )
+        cube_time_slice = cube.extract(time_constraints)
+
+        if cube_time_slice is None:
+            raise ValueError(f"No cube found for time points {time_points}")
+        else:
+            cube = cube_time_slice
 
     # Regional domains:
     # Calculate power spectra using discrete cosine transform
 
-    ps = DCT_ps(cube[0].data)
+    # Cube used in DCT_ps must be 3D. Reshape cubes with 1 time entry,
+    # to include a time dimension
+    if cube.ndim == 2:
+        cube_3d = cube.data[np.newaxis, :, :]
+    else:
+        cube_3d = cube.data
 
-    # Reshape data to (time, frequency)
-    ps_cube = ps[np.newaxis, :]
+    # Calculate spectra
+    ps_cube = DCT_ps(cube_3d)
 
-    # Create a frequency/wavelength array for
-
-    ps_len = ps.data.shape[0]
+    # Create a frequency/wavelength array for coordinate
+    ps_len = ps_cube.data.shape[1]
     freqs = np.arange(1, ps_len + 1)
-    freq_coord = iris.coords.DimCoord(freqs, long_name="frequency", units="m2/s2")
+    freq_coord = iris.coords.DimCoord(freqs, long_name="frequency", units="1")
 
-    # Add time and frequency coordinate to cube.
+    # Convert datetime to numeric time using original units
+    numeric_time = time_coord.units.date2num(time_points)
+    # Create a new DimCoord with numeric time
+    new_time_coord = iris.coords.DimCoord(
+        numeric_time, standard_name="time", units=time_coord.units
+    )
 
-    ps_cube.add_dim_coord(time_coord.copy(), 0)
+    # Add time and frequency coordinate to spectra cube.
+    ps_cube.add_dim_coord(new_time_coord.copy(), 0)
     ps_cube.add_dim_coord(freq_coord.copy(), 1)
 
     return ps_cube
 
 
-def DCT_ps(y_2d):
+def DCT_ps(y_3d):
     """Calculate power spectra for regional domains.
 
     # Regional domains:
@@ -84,44 +107,47 @@ def DCT_ps(y_2d):
         Monthly Weather Review, Vol. 130, 1812-1828
         doi: https://doi.org/10.1175/1520-0493(2002)130<1812:SDOTDA>2.0.CO;2
     """
-    # Find dimensions of array and create normalised 2D wavenumber
-    Ny, Nx = y_2d.shape
-
-    alpha_matrix = create_alpha_matrix(Ny, Nx)
-
-    # Apply 2D DCT to transform y_2d from physical space to spectral space.
-    # fkk is a 2D array of DCT coefficients, representing the amplitudes of cosine basis functions
-    # at different spatial frequencies.
-
-    fkk = fft.dctn(y_2d)
-
-    # Normalise fkk
-    fkk = fkk / np.sqrt(Ny * Nx)
-
-    # do variance of spectral coeff
-    sigma_2 = fkk**2 / Nx / Ny
+    Nt, Ny, Nx = y_3d.shape
 
     # Max coefficient
     Nmin = min(Nx - 1, Ny - 1)
 
-    ps = np.zeros(Nmin)
-    # Group ellipses of alphas into the same wavenumber k/Nmin
-    for k in range(1, Nmin + 1):
-        alpha = k / Nmin
-        alpha_p1 = (k + 1) / Nmin
-        # Sum up elements matching k
-        mask_k = np.where((alpha_matrix >= alpha) & (alpha_matrix < alpha_p1))
-        ps[k - 1] = np.sum(sigma_2[mask_k])
+    # Create alpha matrix (of wavenumbers)
+    alpha_matrix = create_alpha_matrix(Ny, Nx)
 
-        # Create the cube
-        ps_cube = icube.Cube(
-            ps,
-            long_name="power_spectra",
-        )
-    #            dim_coords_and_dims=[(wavelength, 0)]
+    # Prepare output array
+    ps_array = np.zeros((Nt, Nmin))
 
-    # N=len(ps_len)
-    # k=np.arange(1,N+1)
+    # Loop over time to get spectrum for each time.
+    for t in range(Nt):
+        y_2d = y_3d[t]
+
+        # Apply 2D DCT to transform y_3d[t] from physical space to spectral space.
+        # fkk is a 2D array of DCT coefficients, representing the amplitudes of
+        # cosine basis functions at different spatial frequencies.
+
+        fkk = fft.dctn(y_2d)
+
+        # Normalise fkk
+        fkk = fkk / np.sqrt(Ny * Nx)
+
+        # calculate variance of spectral coefficient
+        sigma_2 = fkk**2 / Nx / Ny
+
+        # Group ellipses of alphas into the same wavenumber k/Nmin
+        for k in range(1, Nmin + 1):
+            alpha = k / Nmin
+            alpha_p1 = (k + 1) / Nmin
+
+            # Sum up elements matching k
+            mask_k = np.where((alpha_matrix >= alpha) & (alpha_matrix < alpha_p1))
+            ps_array[t, k - 1] = np.sum(sigma_2[mask_k])
+
+    # Create cube
+    ps_cube = icube.Cube(
+        ps_array,
+        long_name="power_spectra",
+    )
 
     return ps_cube
 
@@ -132,23 +158,6 @@ def create_alpha_matrix(Ny, Nx):
     Each pair is associated with a single-scale parameter. alpha_matrix is normalisation of
     2D wavenumber axes, transforming the spectral domain into an elliptic coordinate system.
     """
-    # Claudio's original code
-    #    for n in range(1, Ny):
-    #        I = np.append(I, np.arange(Nx) + 1)
-    #
-    #    I.resize(Ny, Nx)
-    #
-    #    J = np.arange(Ny) + 1
-    #    for n in range(1, Nx):
-    #        J = np.append(J, np.arange(Ny) + 1)
-    #
-    #    J.resize(Nx, Ny)
-    #    J = np.transpose(J)
-    #
-    #    alpha_matrix_old = np.sqrt(I * I / Nx**2 + J * J / Ny**2)
-
-    # optimise using Copilot
-
     # Create x_indices: each row is [1, 2, ..., Nx]
     x_indices = np.tile(np.arange(1, Nx + 1), (Ny, 1))
 
@@ -157,7 +166,5 @@ def create_alpha_matrix(Ny, Nx):
 
     # Compute alpha_matrix
     alpha_matrix = np.sqrt((x_indices**2) / Nx**2 + (y_indices**2) / Ny**2)
-
-    #    print('Alpha ',np.max(alpha_matrix_old - alpha_matrix))
 
     return alpha_matrix
