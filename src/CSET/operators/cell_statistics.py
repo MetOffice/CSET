@@ -643,11 +643,9 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
 
             # todo: RES plots each cube here.
             for cube in cubes_at_time:
-                # Normalise histogram?
-                if y_axis == "relative_frequency":
-                    cube.data = (100.0 * cube.data) / np.sum(
-                        cube.data, dtype=np.float64
-                    )
+                # todo: Normalise histogram? I think this is done in the plotting, actually, unlike RES.
+                # if y_axis == "relative_frequency":
+                #     cube.data = (100.0 * cube.data) / np.sum(cube.data, dtype=np.float64)
 
                 threshold_result[time_title][cube.attributes["model_name"]] = cube
 
@@ -656,9 +654,9 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
         for cube in summed_cubes:
             cube = cube.collapsed(time_grouping, iris.analysis.SUM)
 
-            # Normalise histogram?
-            if y_axis == "relative_frequency":
-                cube.data = (100.0 * cube.data) / np.sum(cube.data, dtype=np.float64)
+            # todo: Normalise histogram? I think this is done in the plotting, actually, unlike RES.
+            # if y_axis == "relative_frequency":
+            #     cube.data = (100.0 * cube.data) / np.sum(cube.data, dtype=np.float64)
 
             threshold_result["all"][cube.attributes["model_name"]] = cube
 
