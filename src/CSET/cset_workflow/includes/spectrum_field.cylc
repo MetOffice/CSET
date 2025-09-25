@@ -1,0 +1,72 @@
+{% if SPECTRUM_PLEVEL_FIELD or SPECTRUM_MLEVEL_FIELD %}
+[[SPECTRUM]]
+    inherit = PROCESS
+
+[runtime]
+    [[dummy_spectrum]]
+    inherit = DUMMY_TASK, SPECTRUM
+{% endif %}
+
+# Pressure level fields
+{% if SPECTRUM_PLEVEL_FIELD|default(False) %}
+{% for field in SPECTRUM_LEVEL_FIELDS %}
+{% for plevel in SPECTRUM_LEVELS %}
+[runtime]
+    [[plevel_spectrum_series_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(plevel)}}]]
+    inherit = SPECTRUM
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_level_power_spectrum_series.yaml"
+        CSET_ADDOPTS = """
+            --VARNAME='{{field}}'
+            --LEVELTYPE='pressure'
+            --LEVEL='{{plevel}}'
+            --MODEL_NAME='{{model_names}}'
+            {% if SPECTRUM_PLEVEL_FIELD_SEQUENCE|default(False) %}
+            --SEQUENCE='time'
+            {% else %}
+            --SEQUENCE='realization'
+            {% endif %}
+            {% if SELECT_SUBAREA %}
+            --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
+            --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
+            {% else %}
+            --SUBAREA_TYPE='None'
+            --SUBAREA_EXTENT='None'
+            {% endif %}
+        """
+        MODEL_IDENTIFIERS = {{model_ids}}
+{% endfor %}
+{% endfor %}
+{% endif %}
+
+# Model level fields
+{% if SPECTRUM_MLEVEL_FIELD|default(False) %}
+{% for field in MODEL_LEVEL_FIELDS %}
+{% for mlevel in MODEL_LEVELS %}
+[runtime]
+    [[mlevel_spectrum_series_{{sanitise_task_name(field)}}_lv{{sanitise_task_name(mlevel)}}]]
+    inherit = SPECTRUM
+        [[[environment]]]
+        CSET_RECIPE_NAME = "generic_level_power_spectrum_series.yaml"
+        CSET_ADDOPTS = """
+            --VARNAME='{{field}}'
+            --LEVELTYPE='model_level_number'
+            --LEVEL='{{mlevel}}'
+            --MODEL_NAME='{{model_names}}'
+            {% if SPECTRUM_MLEVEL_FIELD_SEQUENCE|default(False) %}
+            --SEQUENCE='time'
+            {% else %}
+            --SEQUENCE='realization'
+            {% endif %}
+            {% if SELECT_SUBAREA %}
+            --SUBAREA_TYPE='{{SUBAREA_TYPE}}'
+            --SUBAREA_EXTENT='{{SUBAREA_EXTENT}}'
+            {% else %}
+            --SUBAREA_TYPE='None'
+            --SUBAREA_EXTENT='None'
+            {% endif %}
+        """
+        MODEL_IDENTIFIERS = {{model_ids}}
+{% endfor %}
+{% endfor %}
+{% endif %}
