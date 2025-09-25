@@ -97,7 +97,7 @@ def DCT_ps(y_3d):
 
     # Regional domains:
     # Calculate power spectra over limited are domain using Discrete Cosine Transform (DCT)
-    # as described in Denis et al 2002 [Denis_etal_2002].
+    # as described in Denis et al 2002 [Denis_etal_2002]_.
 
     References
     ----------
