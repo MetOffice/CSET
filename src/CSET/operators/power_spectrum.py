@@ -67,8 +67,12 @@ def calculate_power_spectrum(
     # to include a time dimension
     if cube.ndim == 2:
         cube_3d = cube.data[np.newaxis, :, :]
-    else:
+    elif cube.ndim == 3:
         cube_3d = cube.data
+    else:
+        raise ValueError(
+            f"Cube dimensions {cube.ndim} unsuitable for power spectra code"
+        )
 
     # Calculate spectra
     ps_cube = DCT_ps(cube_3d)
