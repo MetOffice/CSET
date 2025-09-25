@@ -3,6 +3,10 @@ title: Power Spectrum $VARNAME
 description: |
   Extracts and plots the power spectrum of surface $VARNAME
 
+  Power Spectra calculated on regional domains using Discrete Cosine Transform (DCT)
+  as described in
+  [Denis_etal_2002](https://doi.org/10.1175/1520-0493(2002)130<1812:SDOTDA>2.0.CO;2)
+
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
