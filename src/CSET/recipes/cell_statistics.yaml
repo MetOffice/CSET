@@ -5,6 +5,7 @@ description: |
 
 steps:
 
+  # todo: ideally we'd load just once and have a list of variable names to extract
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
     model_names: $MODEL_NAMES

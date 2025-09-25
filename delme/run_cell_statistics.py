@@ -42,9 +42,14 @@ time_groupings = ["forecast_period", "hour"]
 # exit(0)
 
 
-for cell_attribute in cell_attributes:
-    for var in vars:
+# todo: it's inefficient to keep reloading the data for each var/cell_attribute/time_grouping
+#  it would seem to be better to send the list of vars to the operator and plot functions, just once.
+for var in vars:
+    for cell_attribute in cell_attributes:
         for time_grouping in time_groupings:
+
+            print(f"\nrunning recipe for {var} {cell_attribute} {time_grouping}\n" )
+
             recipe_variables = {
                 "INPUT_PATHS": [i[1] for i in model_data],
                 "MODEL_NAMES": [i[0] for i in model_data],

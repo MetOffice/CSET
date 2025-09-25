@@ -4,6 +4,7 @@ import collections
 import datetime
 import inspect
 import itertools
+import logging
 from copy import deepcopy
 from typing import Callable
 
@@ -521,11 +522,16 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
     #   histograms showing the overall proportion of data values in \
     #   each bin (normalised to 100%). The default is \
     #   "relative_frequency".
-    y_axis = "relative_frequency"
+    # y_axis = "relative_frequency"
+
+    if cubes in (None, [], CubeList([])):
+        logging.warning(f'no cubes received for {cell_attribute} {time_grouping}')
+        return None
 
     if not isinstance(cubes, CubeList):
         cubes = CubeList([cubes])
 
+    # todo: is this correct? it caused more empty cube lists...
     # todo: put this cell method filtering into the yaml
     # we saw lfric data with "point" or "mean".
     def check_cell_methods(cube):
@@ -535,6 +541,10 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
                 return False
         return True
     cubes = CubeList([c for c in cubes if check_cell_methods(c)])
+
+    if len(cubes) == 0:
+        logging.warning(f'no cubes for {cell_attribute} {time_grouping} after cell method filtering')
+        return None
 
     # For now, thresholds are hard coded.
     thresholds = [0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0]
@@ -660,6 +670,8 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
 
             threshold_result["all"][cube.attributes["model_name"]] = cube
 
+    # todo: perhaps we should use metadata to organisethe results, and let the plotter work out what to plot.
+    #   that would let us stick with the cubelist convention...
     # For simpler code, the results were formed as:
     #   data[<threshold>][<time_point>][<model_name>] -> Cube
     # But the plot needs the model to be above the time points, so rearrange as:

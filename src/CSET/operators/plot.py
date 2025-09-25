@@ -2231,6 +2231,10 @@ def plot_cell_stats_histograms(
         A dict mapping thresholds to histogram data for each time point:
             data[<threshold>][<model_name>][<time_point>] -> Cube
 
+            NOTE: IT SHOULD PROBABLY BE A CUBE/CUBELIST
+                but that would seem to require considerable inefficiency/repetition in the cells stats
+                so we need to think about this a bit more
+
         E.g, when time_grouping is 'forecast_period', we see a key like:
             data['threshold 0.5']['uk_ctrl_um']['T+0.5']
 
@@ -2246,6 +2250,9 @@ def plot_cell_stats_histograms(
     -------
 
     """
+    if data is None:
+        return None
+
     # at each threshold, we're going to combine model's each time points into a single cube
     sequence_coord = time_grouping
 
@@ -2323,3 +2330,6 @@ def plot_cell_stats_histograms(
             )
 
         os.chdir(orig_folder)
+
+    # todo: by convention we should return the cubes, but it's not cubes
+    #   the cells stats produces a lot of stuff so it's currently passed as a dict
