@@ -448,47 +448,47 @@ def repeat_scalar_coord_along_dim_coord(cubelist, scalar_coord_name, dim_coord_n
 
     return cubelist
 
-
-def RES_extract_overlapping(cubelist, coord_name):
-    """
-    Extracts regions from cubes in a :class:`iris.cube.CubeList` such that \
-    the specified coordinate is the same across all cubes.
-
-    Arguments:
-
-    * **cubelist** - an input :class:`iris.cube.CubeList`.
-    * **coord_name** - a string specifying the name of the coordinate \
-                       over which to perform the extraction.
-
-    Returns a :class:`iris.cube.CubeList` where the coordinate corresponding \
-    to coord_name is the same for all cubes.
-    """
-    # Build a list of all Cell instances for this coordinate by
-    # looping through all cubes in the supplied cubelist
-    all_cells = []
-    for cube in cubelist:
-        for cell in cube.coord(coord_name).cells():
-            all_cells.append(cell)
-
-    # Work out which coordinate Cell instances are common across
-    # all cubes in the cubelist...
-    cell_counts = collections.Counter(all_cells)
-    # unique_cells = cell_counts.keys()
-    unique_cells = list(cell_counts.keys())
-    unique_cell_counts = list(cell_counts.values())
-    num_cubes = len(cubelist)
-    common_cells = [
-        unique_cells[i]
-        for i, count in enumerate(unique_cell_counts)
-        if count == num_cubes
-    ]
-    # ...and use these to subset the cubes in the cubelist
-    constraint = iris.Constraint(
-        coord_values={coord_name: lambda cell: cell in common_cells}
-    )
-
-    cubelist = iris.cube.CubeList([cube.extract(constraint) for cube in cubelist])
-    return cubelist
+# todo: no longer needed? we can use the iris version now (double check this is ok)
+# def RES_extract_overlapping(cubelist, coord_name):
+#     """
+#     Extracts regions from cubes in a :class:`iris.cube.CubeList` such that \
+#     the specified coordinate is the same across all cubes.
+#
+#     Arguments:
+#
+#     * **cubelist** - an input :class:`iris.cube.CubeList`.
+#     * **coord_name** - a string specifying the name of the coordinate \
+#                        over which to perform the extraction.
+#
+#     Returns a :class:`iris.cube.CubeList` where the coordinate corresponding \
+#     to coord_name is the same for all cubes.
+#     """
+#     # Build a list of all Cell instances for this coordinate by
+#     # looping through all cubes in the supplied cubelist
+#     all_cells = []
+#     for cube in cubelist:
+#         for cell in cube.coord(coord_name).cells():
+#             all_cells.append(cell)
+#
+#     # Work out which coordinate Cell instances are common across
+#     # all cubes in the cubelist...
+#     cell_counts = collections.Counter(all_cells)
+#     # unique_cells = cell_counts.keys()
+#     unique_cells = list(cell_counts.keys())
+#     unique_cell_counts = list(cell_counts.values())
+#     num_cubes = len(cubelist)
+#     common_cells = [
+#         unique_cells[i]
+#         for i, count in enumerate(unique_cell_counts)
+#         if count == num_cubes
+#     ]
+#     # ...and use these to subset the cubes in the cubelist
+#     constraint = iris.Constraint(
+#         coord_values={coord_name: lambda cell: cell in common_cells}
+#     )
+#
+#     cubelist = iris.cube.CubeList([cube.extract(constraint) for cube in cubelist])
+#     return cubelist
 
 
 def ensure_bounds(cubes, coord_name):
@@ -515,7 +515,6 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
         "forecast_period", "hour" or "time"
 
     """
-
     # todo: paramterise y_axis?
     #   set to "frequency" for cell statistic histograms that are \
     #   plain number counts in bins, or "relative_frequency" for \
@@ -524,9 +523,18 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
     #   "relative_frequency".
     y_axis = "relative_frequency"
 
-
     if not isinstance(cubes, CubeList):
         cubes = CubeList([cubes])
+
+    # todo: put this cell method filtering into the yaml
+    # we saw lfric data with "point" or "mean".
+    def check_cell_methods(cube):
+        """discard "means", we want "points" or empty cell methods"""
+        for cm in cube.cell_methods:
+            if cm.method != "point":
+                return False
+        return True
+    cubes = CubeList([c for c in cubes if check_cell_methods(c)])
 
     # For now, thresholds are hard coded.
     thresholds = [0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0]
@@ -569,21 +577,13 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
 
         hist_cubes = CubeList([])
         for cube in cubes:
-            hist_cubes.append(
-                something_like_cell_attribute_histogram(
-                    cube,
-                    attribute=cell_attribute,
-                    bin_edges=get_bin_edges(cell_attribute),
-                    threshold=threshold,
-                )
-            )
+            hist_cube = something_like_cell_attribute_histogram(
+                cube, attribute=cell_attribute, bin_edges=get_bin_edges(cell_attribute), threshold=threshold)
+            hist_cubes.append(hist_cube)
 
-        # todo: res does a deep copy at this point for some reason - seems uneceeary? double check.
-
-        # todo: RES calls this here, but we get a cube, not a cubelist so we can't.
         # RES used it's own version because Iris' was slow at the time. todo: is it fast now?
         # hist_cubes = RES_extract_overlapping(hist_cubes, "forecast_period")
-        ensure_bounds(hist_cubes, "forecast_period")
+        ensure_bounds(hist_cubes, "forecast_period")  # iris fails if only one has bounds
         hist_cubes = hist_cubes.extract_overlapping("forecast_period")
 
         # Now we take the cell statistics and aggregate by "time_grouping".
@@ -645,7 +645,9 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
             for cube in cubes_at_time:
                 # Normalise histogram?
                 if y_axis == "relative_frequency":
-                    cube.data = ((100.0 * cube.data) / np.sum(cube.data, dtype=np.float64))
+                    cube.data = (100.0 * cube.data) / np.sum(
+                        cube.data, dtype=np.float64
+                    )
 
                 threshold_result[time_title][cube.attributes["model_name"]] = cube
 
@@ -656,10 +658,9 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
 
             # Normalise histogram?
             if y_axis == "relative_frequency":
-                cube.data = ((100.0 * cube.data) / np.sum(cube.data, dtype=np.float64))
+                cube.data = (100.0 * cube.data) / np.sum(cube.data, dtype=np.float64)
 
             threshold_result["all"][cube.attributes["model_name"]] = cube
-
 
     # For simpler code, the results were formed as:
     #   data[<threshold>][<time_point>][<model_name>] -> Cube
