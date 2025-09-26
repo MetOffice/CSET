@@ -39,7 +39,7 @@ jobs:
             # Developer lock files.
             cp "requirements/environment.yml" "${{ runner.temp }}/${py_ver}_dev_environment.yml"
             echo -e "\n  - python = $py_ver" >> "${{ runner.temp }}/${py_ver}_dev_environment.yml"
-            conda-lock --channel conda-forge --kind explicit --file "${{ runner.temp }}/${py_ver}_dev_environment.yml" --platform linux-64 --filename-template "requirements/locks/py$(echo $py_ver | sed 's/\.//')-lock-linux-64.txt"
+            conda-lock --channel conda-forge --kind explicit --file "${{ runner.temp }}/${py_ver}_dev_environment.yml" --platform linux-64 --filename-template "requirements/locks/py$(echo $py_ver | sed 's/\.//')-lock-linux-64.txt" &
           done
           wait
 
@@ -94,6 +94,7 @@ jobs:
 
           # Create PR on GitHub using GitHub REST API.
           request_body='{"title":"[CI] Update conda lock files","body":"Created automatically by GitHub Actions.","base":"'"${base_branch_name}"'","head":"'"$(git branch --show-current)"'"}'
+          echo "Pull request:"
           curl -LsS --fail-with-body \
             -X POST \
             -H "Accept: application/vnd.github+json" \
