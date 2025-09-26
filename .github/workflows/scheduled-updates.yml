@@ -1,4 +1,4 @@
-name: "Update conda lock files"
+name: "Update conda lock files and pre-commit config"
 
 on:
   schedule:
@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 jobs:
-  update-conda-lock-files:
+  scheduled-updates:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -20,10 +20,10 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c
         with:
-          python-version: "3.11"
+          python-version: "3.x"
 
       - name: Install dependencies
-        run: pip install conda-lock
+        run: pip install conda-lock pre-commit
 
       - name: Update conda
         run: conda update --name base --channel conda-forge --quiet --all --yes
@@ -32,12 +32,12 @@ jobs:
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git switch -c "conda-lock-$(date +%s)"
+          git switch -c "scheduled-updates-$(date +%s)"
 
       - name: Update CSET developer and workflow lock files
         run: |
           py_vers="3.11 3.12 3.13"
-          for py_ver in $py_vers
+          for py_ver in ${py_vers}
           do
             # Developer lock files.
             cp "requirements/environment.yml" "${{ runner.temp }}/${py_ver}_dev_environment.yml"
@@ -46,14 +46,16 @@ jobs:
           done
           wait
 
-      - name: Sort lock files to make diffs easier to review
-        run: |
-          shopt -s globstar
+          # Sort lock files to make diffs easier to review.
           for file in requirements/locks/*.txt
           do
+            # Leave the file header unsorted.
             cat "$file" | (sed -u 4q; sort) > sorted.txt
             mv sorted.txt "$file"
           done
+
+      - name: Update pre-commit config
+        run: pre-commit autoupdate --freeze
 
       - name: Generate GitHub App Token
         uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42
@@ -62,38 +64,43 @@ jobs:
           app-id: ${{ secrets.AUTH_APP_ID }}
           private-key: ${{ secrets.AUTH_APP_PRIVATE_KEY }}
 
-      - name: Create pull requests
+      - name: Commit changes and create pull requests
         env:
           source_ref: ${{ github.ref }}
           source_ref_type: ${{ github.ref_type }}
+          gh_token: ${{ steps.app-token.outputs.token }}
+          repository: ${{ github.repository }}
         run: |
           # Display any changes in the log and exit early if there are none.
           if git diff --name-status --exit-code
           then
-            echo "Lock files unchanged. Skipping pull request..."
+            echo "No change, skipping pull request..."
             exit 0
           fi
 
           # Commit changed lockfiles.
-          git commit -am "[CI] Update conda lock files"
+          git commit -m "[CI] Update conda lock files" requirements/locks/*.txt || true
 
-          # If running from a branch target the created PR at that branch.
-          if [[ $source_ref_type = branch ]]
-          then
-            base_branch_name="$source_ref"
-          else
-            base_branch_name="main"
-          fi
+          # Commit changed pre-commit config.
+          git commit -m "[CI] Update .pre-commit-config.yaml" .pre-commit-config.yaml || true
 
           # Push branch to GitHub.
           git push --set-upstream origin HEAD
+
+          # If running from a branch target the created PR at that branch.
+          if [[ ${source_ref_type} = branch ]]
+          then
+            base_branch_name="${source_ref}"
+          else
+            base_branch_name="main"
+          fi
 
           # Create PR on GitHub using GitHub REST API.
           request_body='{"title":"[CI] Update conda lock files","body":"Created automatically by GitHub Actions.","base":"'"${base_branch_name}"'","head":"'"$(git branch --show-current)"'"}'
           curl -LsS --fail-with-body \
             -X POST \
             -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${{ steps.app-token.outputs.token }}" \
+            -H "Authorization: Bearer ${gh_token}" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
-            https://api.github.com/repos/${{ github.repository }}/pulls \
-            -d "$request_body"
+            https://api.github.com/repos/${repository}/pulls \
+            -d "${request_body}"
