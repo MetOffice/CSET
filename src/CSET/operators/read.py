@@ -996,3 +996,12 @@ def _lfric_forecast_period_standard_name_callback(cube: iris.cube.Cube):
             coord.standard_name = "forecast_period"
     except iris.exceptions.CoordinateNotFoundError:
         pass
+
+
+def read_pickle(filename):
+    """Helper to read the cell stats output, until it returns cubes."""
+    import pickle
+
+    with open(filename, "rb") as f:
+        data = pickle.load(f)
+    return data

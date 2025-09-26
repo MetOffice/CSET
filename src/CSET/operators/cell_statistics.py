@@ -516,6 +516,11 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
         "forecast_period", "hour" or "time"
 
     """
+    # todo: inorder to get everything on one page,
+    #   i think we might ahve to calculate all cell attributes in here,
+    #   and all time groupings, so that we can pass one big lump to the page plotter.
+
+
     # todo: paramterise y_axis?
     #   set to "frequency" for cell statistic histograms that are \
     #   plain number counts in bins, or "relative_frequency" for \
@@ -543,7 +548,7 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
     cubes = CubeList([c for c in cubes if check_cell_methods(c)])
 
     if len(cubes) == 0:
-        logging.warning(f'no cubes for {cell_attribute} {time_grouping} after cell method filtering')
+        logging.warning(f'no cubes for {cell_attribute}, {time_grouping} after cell method filtering')
         return None
 
     # For now, thresholds are hard coded.
@@ -576,7 +581,7 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
     result = {}
 
     for threshold in thresholds:
-        result[f"threshold {threshold}"] = threshold_result = {}
+        result[f"threshold {threshold}"] = time_data = {}
 
         # todo: check var_name has been removed by this point, as RES removed it to help with merge
         # hist_cubes = something_like_cell_attribute_histogram(
@@ -585,6 +590,7 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
         #     bin_edges=get_bin_edges(cell_attribute),
         #     threshold=threshold) for cube in cubes]
 
+        # todo: can't we just let mpl make the histogram at plot time?
         hist_cubes = CubeList([])
         for cube in cubes:
             hist_cube = something_like_cell_attribute_histogram(
@@ -641,7 +647,7 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
             else:
                 raise ValueError(f"Unknown time grouping '{time_grouping}'")
 
-            threshold_result[time_title] = {}
+            time_data[time_title] = {}
 
             # Extract histogram at this time.
             time_constraint = iris.Constraint(
@@ -657,10 +663,10 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
                 # if y_axis == "relative_frequency":
                 #     cube.data = (100.0 * cube.data) / np.sum(cube.data, dtype=np.float64)
 
-                threshold_result[time_title][cube.attributes["model_name"]] = cube
+                time_data[time_title][cube.attributes["model_name"]] = cube
 
         # Sum all histograms. This creates the data for the "all" time point.
-        threshold_result["all"] = {}
+        time_data["all"] = {}
         for cube in summed_cubes:
             cube = cube.collapsed(time_grouping, iris.analysis.SUM)
 
@@ -668,24 +674,25 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
             # if y_axis == "relative_frequency":
             #     cube.data = (100.0 * cube.data) / np.sum(cube.data, dtype=np.float64)
 
-            threshold_result["all"][cube.attributes["model_name"]] = cube
+            time_data["all"][cube.attributes["model_name"]] = cube
 
-    # todo: perhaps we should use metadata to organisethe results, and let the plotter work out what to plot.
-    #   that would let us stick with the cubelist convention...
-    # For simpler code, the results were formed as:
-    #   data[<threshold>][<time_point>][<model_name>] -> Cube
-    # But the plot needs the model to be above the time points, so rearrange as:
-    #   data[<threshold>][<model_name>][<time_point>] -> Cube
-    reformed_result = {}
-    for threshold, threshold_result in result.items():
-        reformed_result[threshold] = {}
-        for time_title, model_cubes in threshold_result.items():
-            for model_name, cube in model_cubes.items():
-                reformed_result[threshold].setdefault(model_name, {})
-                reformed_result[threshold][model_name][time_title] = cube
+    # don't bother rearranging thie dict now that we've got our own plotter
+    # # todo: perhaps we should use metadata to organisethe results, and let the plotter work out what to plot.
+    # #   that would let us stick with the cubelist convention...
+    # # For simpler code, the results were formed as:
+    # #   data[<threshold>][<time_point>][<model_name>] -> Cube
+    # # But the plot needs the model to be above the time points, so rearrange as:
+    # #   data[<threshold>][<model_name>][<time_point>] -> Cube
+    # reformed_result = {}
+    # for threshold, threshold_result in result.items():
+    #     reformed_result[threshold] = {}
+    #     for time_title, model_cubes in threshold_result.items():
+    #         for model_name, cube in model_cubes.items():
+    #             reformed_result[threshold].setdefault(model_name, {})
+    #             reformed_result[threshold][model_name][time_title] = cube
 
     # return cubes to plot. todo: in what exact arrangement?
-    return reformed_result
+    return result
 
 
 def something_like_cell_attribute_histogram(cube, attribute, bin_edges, threshold=0.0):

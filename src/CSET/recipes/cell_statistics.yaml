@@ -22,8 +22,11 @@ steps:
     cell_attribute: $CELL_ATTRIBUTE
     time_grouping: $TIME_GROUPING
 
-#  - operator: write.write_cube_to_nc
-#    overwrite: True
+#  these two are useful when working on the plotting
+#  - operator: write.write_pickle
+#    filename: /data/scratch/byron.blay/cset/cell_stats/out2/$VARNAME__$CELL_ATTRIBUTE__$TIME_GROUPING.pkl
+#  - operator: read.read_pickle
+#    filename: /data/scratch/byron.blay/cset/cell_stats/out2/$VARNAME__$CELL_ATTRIBUTE__$TIME_GROUPING.pkl
 
   - operator: plot.plot_cell_stats_histograms
     varname: $VARNAME

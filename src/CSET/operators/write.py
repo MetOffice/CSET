@@ -66,3 +66,15 @@ def write_cube_to_nc(
     # Save the file as nc compliant (iris should handle this)
     iris.save(cube, filename, zlib=True)
     return cube
+
+
+def write_pickle(data, filename):
+    """Helper to save the cell stats output, until it returns cubes."""
+    import pickle
+    if not data:
+        return
+
+    Path(filename).parent.mkdir(exist_ok=True, parents=True)
+    with open(filename, "wb") as f:
+        pickle.dump(data, f)
+    pass

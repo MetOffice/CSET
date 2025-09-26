@@ -3,7 +3,6 @@ from pathlib import Path
 from CSET._common import parse_recipe
 from CSET.operators import execute_recipe
 
-cell_attributes = ["effective_radius_in_km", "mean_value"]
 
 recipe_fpath = (
     Path(__file__).parent.parent / "src" / "CSET" / "recipes" / "cell_statistics.yaml"
@@ -27,13 +26,20 @@ model_data = [
     ),
 ]
 
+# # todo: restore this
+# cell_attributes = ["effective_radius_in_km", "mean_value"]
+#
+# vars = [
+#     "surface_microphysical_rainfall_amount",  # m01s04i201
+#     "surface_microphysical_rainfall_rate",  # m01s04i203 todo: seems to have missing data, needs investigation
+# ]
+#
+# time_groupings = ["forecast_period", "hour"]
 
-vars = [
-    "surface_microphysical_rainfall_amount",  # m01s04i201
-    "surface_microphysical_rainfall_rate",  # m01s04i203 todo: seems to have missing data, needs investigation
-]
-
-time_groupings = ["forecast_period", "hour"]
+# faster dev
+cell_attributes = ["effective_radius_in_km"]
+vars = ["surface_microphysical_rainfall_rate"]
+time_groupings = ["forecast_period"]
 
 
 # # DEBUG
@@ -48,7 +54,7 @@ for var in vars:
     for cell_attribute in cell_attributes:
         for time_grouping in time_groupings:
 
-            print(f"\nrunning recipe for {var} {cell_attribute} {time_grouping}\n" )
+            print(f"\nrunning recipe for {var}, {cell_attribute}, {time_grouping}\n" )
 
             recipe_variables = {
                 "INPUT_PATHS": [i[1] for i in model_data],
