@@ -5,10 +5,11 @@ description = Workflow for running CSET.
 URL = https://metoffice.github.io/CSET
 
 # Import all of our Jinja utilities for use in the workflow.
-{% from "jinja_utils" import b64json, get_models %}
+{% from "jinja_utils" import b64json, get_models, mix_recipes %}
 # Load a list a model detail dictionaries.
 {% set models = get_models(ROSE_SUITE_VARIABLES) %}
 
+{% set premixed_recipes = mix_recipes(ROSE_SUITE_VARIABLES) %}
 
 [scheduling]
 # Allow many concurrent cycles to maximise workflow parallelism.
@@ -39,21 +40,31 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         {% for date in CSET_CASE_DATES %}
             R1/{{date}} = """
             setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
-            fetch_complete & parbake_recipes => bake_recipes => cycle_complete
+            fetch_complete & parbake_recipes:start_baking?
+
+            parbake_recipes:skip_baking? | bake_recipes? => cycle_complete
             """
         {% endfor %}
     {% elif CSET_CYCLING_MODE == "trial" %}
         # Analysis from each forecast.
         {{CSET_TRIAL_CYCLE_PERIOD}} = """
         setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
-        fetch_complete & parbake_recipes => bake_recipes => cycle_complete
+        fetch_complete & parbake_recipes:start_baking? => bake_recipes?
+
+        parbake_recipes:skip_baking? | bake_recipes? => cycle_complete
         """
     {% endif %}
 
     # Only runs on the final cycle.
     R1/$ = """
+
+    {% if premixed_recipes.get('aggregation_recipes', False) %}
     # Run aggregation recipes.
-    fetch_complete & parbake_aggregation_recipes => bake_aggregation_recipes => cycle_complete
+    fetch_complete & parbake_aggregation_recipes:start_baking? => BAKE_AGGREGATION_RECIPES:succeed-all?
+
+    parbake_aggregation_recipes:skip_baking? | BAKE_AGGREGATION_RECIPES:succeed-all? => cycle_complete
+    {% endif %}
+
     # Finalise website and cleanup.
     cycle_complete => finish_website => send_email
     cycle_complete => housekeeping
@@ -96,6 +107,18 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     execution time limit = PT1H
         [[[environment]]]
         ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
+
+    [[PARBAKE]]
+    script = rose task-run -v --app-key=parbake_recipes
+    execution time limit = PT5M
+        [[[directives]]]
+        --ntasks=1
+        --mem=500
+        [[[environment]]]
+        ENCODED_ROSE_SUITE_VARIABLES = {{b64json(ROSE_SUITE_VARIABLES)}}
+        [[[outputs]]]
+        start_baking='start baking'
+        skip_baking='skip baking'
 
     [[METPLUS]]
         [[[environment]]]
@@ -153,23 +176,12 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
 
     [[parbake_recipes]]
     # Parbake all the recipes for this cycle.
-    script = rose task-run -v --app-key=parbake_recipes
-    execution time limit = PT5M
-        [[[directives]]]
-        --ntasks=1
-        --mem=500
-        [[[environment]]]
-        ENCODED_ROSE_SUITE_VARIABLES = {{b64json(ROSE_SUITE_VARIABLES)}}
+    inherit=PARBAKE
 
     [[parbake_aggregation_recipes]]
     # Parbake all the aggregation recipes.
-    script = rose task-run -v --app-key=parbake_recipes
-    execution time limit = PT5M
-        [[[directives]]]
-        --ntasks=1
-        --mem=500
+    inherit=PARBAKE
         [[[environment]]]
-        ENCODED_ROSE_SUITE_VARIABLES = {{b64json(ROSE_SUITE_VARIABLES)}}
         DO_CASE_AGGREGATION = True
 
     [[bake_recipes]]
@@ -181,16 +193,28 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         --ntasks=32
         --mem=64000
 
-    [[bake_aggregation_recipes]]
-    # Bake the parbaked aggregation recipes.
-    script = "$CYLC_WORKFLOW_RUN_DIR/app/bake_recipes/bin/baker.sh"
+    {% if premixed_recipes.get('aggregation_recipes', False) %}
+    [[BAKE_AGGREGATION_RECIPES]]
     execution time limit = PT3H
     execution retry delays = PT1M
         [[[directives]]]
-        --ntasks=8
+        --ntasks=2
         --mem=64000
         [[[environment]]]
         DO_CASE_AGGREGATION = True
+        ROSE_APP_OPT_CONF_KEYS = aggregation
+        ROSE_TASK_APP=bake_recipes
+        RECIPE_DIR=$CYLC_WORKFLOW_SHARE_DIR/cycle/$CYLC_TASK_CYCLE_POINT
+
+        {% for recipe_file, recipe_tasks in premixed_recipes['aggregation_recipes'] %}
+            {% for task in recipe_tasks %}
+    [[{{task}}]]
+        inherit=BAKE_AGGREGATION_RECIPES
+        [[[environment]]]
+            RECIPE_FILE={{recipe_file}}
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
 
     [[housekeeping]]
     # Housekeep input data files.
