@@ -31,7 +31,9 @@ class ArgumentError(ValueError):
     """Provided arguments are not understood."""
 
 
-def parse_recipe(recipe_yaml: Path | str, variables: dict | None = None) -> dict:
+def parse_recipe(
+    recipe_yaml: Path | str, variables: dict | None = None, allow_missing: bool = False
+) -> dict:
     """Parse a recipe into a python dictionary.
 
     Parameters
@@ -42,6 +44,9 @@ def parse_recipe(recipe_yaml: Path | str, variables: dict | None = None) -> dict
         read.
     variables: dict
         Dictionary of recipe variables. If None templating is not attempted.
+    allow_missing: bool
+        If True, do not raise an error if a variable in the recipe is missing
+        from the variables dictionary. Instead leave the placeholder in place.
 
     Returns
     -------
@@ -80,7 +85,7 @@ def parse_recipe(recipe_yaml: Path | str, variables: dict | None = None) -> dict
 
     if variables is not None:
         logging.debug("Recipe variables: %s", variables)
-        recipe = template_variables(recipe, variables)
+        recipe = template_variables(recipe, variables, allow_missing=allow_missing)
 
     logging.debug("Recipe after templating:\n%s", recipe)
     return recipe
@@ -195,7 +200,9 @@ def parse_variable_options(
     return recipe_variables
 
 
-def template_variables(recipe: dict | list, variables: dict) -> dict:
+def template_variables(
+    recipe: dict | list, variables: dict, allow_missing: bool = False
+) -> dict:
     """Insert variables into recipe.
 
     Parameters
@@ -204,6 +211,9 @@ def template_variables(recipe: dict | list, variables: dict) -> dict:
         The recipe as a python dictionary. It is updated in-place.
     variables: dict
         Dictionary of variables for the recipe.
+    allow_missing: bool
+        If True, do not raise an error if a variable in the recipe is missing
+        from the variables dictionary. Instead leave the placeholder in place.
 
     Returns
     -------
@@ -225,13 +235,19 @@ def template_variables(recipe: dict | list, variables: dict) -> dict:
 
     for i in index:
         if isinstance(recipe[i], (dict, list)):
-            recipe[i] = template_variables(recipe[i], variables)
+            recipe[i] = template_variables(
+                recipe[i], variables, allow_missing=allow_missing
+            )
         elif isinstance(recipe[i], str):
-            recipe[i] = replace_template_variable(recipe[i], variables)
+            recipe[i] = replace_template_variable(
+                recipe[i], variables, allow_missing=allow_missing
+            )
     return recipe
 
 
-def replace_template_variable(s: str, variables: dict[str, Any]):
+def replace_template_variable(
+    s: str, variables: dict[str, Any], allow_missing: bool = False
+):
     """Fill all variable placeholders in the string."""
     for var_name, var_value in variables.items():
         placeholder = f"${var_name}"
@@ -253,8 +269,10 @@ def replace_template_variable(s: str, variables: dict[str, Any]):
             break
         else:
             s = s.replace(placeholder, str(var_value))
-    if isinstance(s, str) and re.match(r"^.*\$[A-Z_].*", s):
-        raise KeyError("Variable without a value.", s)
+
+    if not allow_missing:
+        if isinstance(s, str) and re.match(r"^.*\$[A-Z_].*", s):
+            raise KeyError("Variable without a value.", s)
     return s
 
 
