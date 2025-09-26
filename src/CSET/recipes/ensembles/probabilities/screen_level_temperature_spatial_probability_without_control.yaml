@@ -1,0 +1,40 @@
+category: Ensemble
+title: $MODEL_NAME probability of temperature at screen level $CONDITION $THRESHOLD
+description: |
+  Calculates the probability $CONDITION $THRESHOLD for `temperature_at_screen_level`
+  for all members excluding the control and plots a spatial map. The diagnostic
+  can be used when the control is not viewed as another equally-likely member of the ensemble.
+  In these situations the control is more likely than other members
+  (considered by definition of how we create ensemebles) or it could be used for
+  determining the impact of the control on the ensembles.
+
+steps:
+  - operator: read.read_cube
+    file_paths: $INPUT_PATHS
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: 'temperature_at_screen_level'
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: 'temperature_at_screen_level'
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: filters.filter_cubes
+    constraint:
+      operator: constraints.generate_remove_single_ensemble_member_constraint
+      ensemble_member: 0
+
+  - operator: collapse.proportion
+    coordinate: 'realization'
+    condition: $CONDITION
+    threshold: $THRESHOLD
+
+  - operator: plot.spatial_pcolormesh_plot
+    sequence_coordinate: time
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

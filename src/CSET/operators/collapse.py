@@ -54,8 +54,8 @@ def collapse(
         be given.
     method: str
         Type of collapse i.e. method: 'MEAN', 'MAX', 'MIN', 'MEDIAN',
-        'PERCENTILE' getattr creates iris.analysis.MEAN, etc For PERCENTILE YAML
-        file requires i.e. method: 'PERCENTILE' additional_percent: 90
+        'PERCENTILE' getattr creates iris.analysis.MEAN, etc. For PERCENTILE YAML
+        file requires i.e. method: 'PERCENTILE' additional_percent: 90.
     additional_percent: float, optional
         Required for the PERCENTILE method. This is a number between 0 and 100.
 
@@ -335,6 +335,120 @@ def collapse_by_validity_time(
             ) from err
         collapsed_cube.remove_coord("equalised_validity_time")
         collapsed_cubes.append(collapsed_cube)
+
+    if len(collapsed_cubes) == 1:
+        return collapsed_cubes[0]
+    else:
+        return collapsed_cubes
+
+
+def proportion(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+    coordinate: str | list[str],
+    condition: str,
+    threshold: float,
+    **kwargs,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Find the proportion of an event for all cubes.
+
+    Find the proportion of points at a specified threhsold in each cube into a
+    cube collapsing around the specified coordinate(s).
+
+    Arguments
+    ---------
+    cubes: iris.cube.Cube | iris.cube.CubeList
+        Cube or CubeList to collapse and iterate over one dimension
+    coordinate: str | list[str]
+        Coordinate(s) to collapse over e.g. 'time', 'longitude', 'latitude',
+        'model_level_number', 'realization'. A list of multiple coordinates can
+        be given.
+    condition: str
+        The condition for the event. Expected arguments are eq, ne, lt, gt, le, ge.
+        The letters correspond to the following conditions
+        eq: equal to;
+        ne: not equal to;
+        lt: less than;
+        gt: greater than;
+        le: less than or equal to;
+        ge: greater than or equal to.
+    threshold: float
+        The value for the event.
+
+    Returns
+    -------
+    collapsed_cubes: iris.cube.Cube | iris.cube.CubeList
+        The proportion of the event.
+    """
+    # Set method
+    method = "PROPORTION"
+    # Retain only common time points between different models if multiple model inputs.
+    if isinstance(cubes, iris.cube.CubeList) and len(cubes) > 1:
+        logging.debug(
+            "Extracting common time points as multiple model inputs detected."
+        )
+        for cube in cubes:
+            cube.coord("forecast_reference_time").bounds = None
+            cube.coord("forecast_period").bounds = None
+        cubes = cubes.extract_overlapping(
+            ["forecast_reference_time", "forecast_period"]
+        )
+        if len(cubes) == 0:
+            raise ValueError("No overlapping times detected in input cubes.")
+
+    collapsed_cubes = iris.cube.CubeList([])
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore", "Cannot check if coordinate is contiguous", UserWarning
+        )
+        warnings.filterwarnings(
+            "ignore", "Collapsing spatial coordinate.+without weighting", UserWarning
+        )
+        for cube in iter_maybe(cubes):
+            match condition:
+                case "eq":
+                    new_cube = cube.collapsed(
+                        coordinate,
+                        getattr(iris.analysis, method),
+                        function=lambda values: values == threshold,
+                    )
+                case "ne":
+                    new_cube = cube.collapsed(
+                        coordinate,
+                        getattr(iris.analysis, method),
+                        function=lambda values: values != threshold,
+                    )
+                case "gt":
+                    new_cube = cube.collapsed(
+                        coordinate,
+                        getattr(iris.analysis, method),
+                        function=lambda values: values > threshold,
+                    )
+                case "ge":
+                    new_cube = cube.collapsed(
+                        coordinate,
+                        getattr(iris.analysis, method),
+                        function=lambda values: values >= threshold,
+                    )
+                case "lt":
+                    new_cube = cube.collapsed(
+                        coordinate,
+                        getattr(iris.analysis, method),
+                        function=lambda values: values < threshold,
+                    )
+                case "le":
+                    new_cube = cube.collapsed(
+                        coordinate,
+                        getattr(iris.analysis, method),
+                        function=lambda values: values <= threshold,
+                    )
+                case _:
+                    raise ValueError(
+                        """Unexpected value for condition. Expected eq, ne, gt, ge, lt, le. Got {condition}."""
+                    )
+            name = cube.long_name if cube.long_name else cube.name()
+            new_cube.rename(f"probability_of_{name}_{condition}_{threshold}")
+            new_cube.units = "1"
+            collapsed_cubes.append(new_cube)
 
     if len(collapsed_cubes) == 1:
         return collapsed_cubes[0]
