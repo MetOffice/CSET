@@ -15,6 +15,7 @@
 """Operators to perform various kind of filtering."""
 
 import logging
+from typing import Literal
 
 import iris
 import iris.cube
@@ -70,8 +71,9 @@ def apply_mask(
 def filter_cubes(
     cube: iris.cube.Cube | iris.cube.CubeList,
     constraint: iris.Constraint,
+    per_model: Literal[True] | Literal[False] = False,
     **kwargs,
-) -> iris.cube.Cube:
+) -> iris.cube.Cube | iris.cube.CubeList:
     """Filter a CubeList down to a single Cube based on a constraint.
 
     Arguments
@@ -80,28 +82,54 @@ def filter_cubes(
         Cube(s) to filter
     constraint: iris.Constraint
         Constraint to extract
+    per_model: bool
+        If True, the filter is expected to return a CubeList with
+        one cube per model, otherwise a single cube is expected.
 
     Returns
     -------
-    iris.cube.Cube
+    iris.cube.Cube | iris.cube.CubeList
 
     Raises
     ------
     ValueError
         If the constraint doesn't produce a single cube.
     """
+    model_names = set()
+
+    if per_model:
+        for c in iter_maybe(cube):
+            model_names.add(c.attributes.get("model_name", None))
+        if None in model_names:
+            raise ValueError(
+                "per_model mode can only be used if all cubes have a model_name attribute."
+            )
+
     filtered_cubes = cube.extract(constraint)
-    # Return directly if already a cube.
-    if isinstance(filtered_cubes, iris.cube.Cube):
-        return filtered_cubes
-    # Check filtered cubes is a CubeList containing one cube.
-    if isinstance(filtered_cubes, iris.cube.CubeList) and len(filtered_cubes) == 1:
-        return filtered_cubes[0]
-    else:
+
+    if per_model:
+        if isinstance(filtered_cubes, iris.cube.Cube) and len(model_names) == 1:
+            return iris.cube.CubeList((filtered_cubes,))
+        if isinstance(filtered_cubes, iris.cube.CubeList) and len(
+            filtered_cubes
+        ) == len(model_names):
+            return filtered_cubes
         raise ValueError(
-            f"Constraint doesn't produce single cube. Constraint: {constraint}"
+            f"Constraint doesn't produce one cube per model. Constraint: {constraint}"
             f"\nSource: {cube}\nResult: {filtered_cubes}"
         )
+    else:
+        # Return directly if already a cube.
+        if isinstance(filtered_cubes, iris.cube.Cube):
+            return filtered_cubes
+        # Check filtered cubes is a CubeList containing one cube.
+        if isinstance(filtered_cubes, iris.cube.CubeList) and len(filtered_cubes) == 1:
+            return filtered_cubes[0]
+        else:
+            raise ValueError(
+                f"Constraint doesn't produce single cube. Constraint: {constraint}"
+                f"\nSource: {cube}\nResult: {filtered_cubes}"
+            )
 
 
 def filter_multiple_cubes(
