@@ -55,8 +55,7 @@ def collapse(
     method: str
         Type of collapse i.e. method: 'MEAN', 'MAX', 'MIN', 'MEDIAN',
         'PERCENTILE' getattr creates iris.analysis.MEAN, etc. For PERCENTILE YAML
-        file requires i.e. method: 'PERCENTILE' additional_percent: 90. For
-        PROPORTION YAML file requires i.e. method: 'PROPORTION', condition: lt, threshold: 273.15.
+        file requires i.e. method: 'PERCENTILE' additional_percent: 90.
     additional_percent: float, optional
         Required for the PERCENTILE method. This is a number between 0 and 100.
 
