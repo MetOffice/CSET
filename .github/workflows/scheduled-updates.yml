@@ -25,12 +25,6 @@ jobs:
       - name: Install dependencies
         run: pip install conda-lock pre-commit
 
-      - name: Update conda
-        run: |
-          conda --version
-          conda update --name base --channel conda-forge --override-channels --quiet --all --yes
-          conda --version
-
       - name: Setup git user and branch
         run: |
           git config --local user.name "github-actions[bot]"
