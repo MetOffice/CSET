@@ -26,7 +26,10 @@ jobs:
         run: pip install conda-lock pre-commit
 
       - name: Update conda
-        run: conda update --name base --channel conda-forge --override-channels --quiet --all --yes
+        run: |
+          conda --version
+          conda update --name base --channel conda-forge --override-channels --quiet --all --yes
+          conda --version
 
       - name: Setup git user and branch
         run: |
