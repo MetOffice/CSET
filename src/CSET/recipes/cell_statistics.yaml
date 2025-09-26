@@ -1,0 +1,34 @@
+category: Diagnostics
+title: cell statistics plot
+description: |
+  TBD.
+
+steps:
+
+  # todo: ideally we'd load just once and have a list of variable names to extract
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAMES
+    constraint:
+      operator: constraints.generate_var_constraint
+      varname: $VARNAME
+
+  - operator: regrid.regrid_onto_xyspacing
+    xspacing: 0.5
+    yspacing: 0.5
+    method: Linear
+
+  - operator: cell_statistics.caller_thing
+    cell_attribute: $CELL_ATTRIBUTE
+    time_grouping: $TIME_GROUPING
+
+#  these two are useful when working on the plotting
+#  - operator: write.write_pickle
+#    filename: /data/scratch/byron.blay/cset/cell_stats/out2/$VARNAME__$CELL_ATTRIBUTE__$TIME_GROUPING.pkl
+#  - operator: read.read_pickle
+#    filename: /data/scratch/byron.blay/cset/cell_stats/out2/$VARNAME__$CELL_ATTRIBUTE__$TIME_GROUPING.pkl
+
+  - operator: plot.plot_cell_stats_histograms
+    varname: $VARNAME
+    cell_attribute: $CELL_ATTRIBUTE
+    time_grouping: $TIME_GROUPING

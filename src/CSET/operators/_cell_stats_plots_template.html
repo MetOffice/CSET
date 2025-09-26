@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+  
+    <style>
+    </style>
+  
+    <script type="module">
+
+        function set_threshold_options(threshold_select, threshold_keys) {
+            if (threshold_keys.length <= 0) {
+                return;
+            }
+            // const threshold_select = document.getElementById("threshold_select");
+
+            threshold_keys.forEach(key => {
+                const option = document.createElement("option");
+                option.value = key;
+                option.text = key;
+                threshold_select.appendChild(option);
+            });
+
+            threshold_select.selectedIndex = 0;
+            // threshold_select.value = threshold_keys[0];
+        }
+
+        function set_time_options(time_select, time_keys) {
+            if (time_keys.length <= 0) {
+                return;
+            }
+            // const time_select = document.getElementById("time_select");
+
+            // what value is currently selected? (it'll be "" if there's no options yet)
+            let keep_selected_value = time_select.value;
+
+            // remove existing options
+            time_select.innerHTML = "";
+
+            // add given options
+            time_keys.forEach(key => {
+                const option = document.createElement("option");
+                option.value = key;
+                option.text = key;
+                time_select.appendChild(option);
+            });
+
+            // select previous or first item
+            if (keep_selected_value !== "") {
+                time_select.value = keep_selected_value;
+            } else {
+                time_select.selectedIndex = 0;
+            }
+        }
+        
+        function display_sequence_controls(plot_urls) {
+            // plot_urls[threshold][time_title] = filename
+            
+            // threshold options
+            // const threshold_keys = Object.keys(plot_urls);
+            // const threshold_select = document.getElementById("threshold_select");
+            // if (threshold_keys.length <= 0) {
+            //     return;
+            // }
+            // threshold_keys.forEach(key => {
+            //     const option = document.createElement("option");
+            //     option.value = key;
+            //     option.text = key;
+            //     threshold_select.appendChild(option);
+            // });
+            // threshold_select.value = threshold_keys[0];
+            const threshold_select = document.getElementById("threshold_select");
+            const threshold_keys = Object.keys(plot_urls);
+            set_threshold_options(threshold_select, threshold_keys);
+            // threshold_select.value = threshold_keys[0];
+            // threshold_select.selectedIndex = 0;
+
+
+            // time options
+            // const time_select = document.getElementById("time_select");
+            // const time_keys = Object.keys(plot_urls[threshold_keys[0]]);
+            // if (time_keys.length <= 0) {
+            //     return;
+            // }
+            // time_keys.forEach(key => {
+            //     const option = document.createElement("option");
+            //     option.value = key;
+            //     option.text = key;
+            //     time_select.appendChild(option);
+            // });
+            // time_select.value = time_keys[0];
+            const time_select = document.getElementById("time_select");
+            const time_keys = Object.keys(plot_urls[threshold_keys[0]]);
+            set_time_options(time_select, time_keys);
+            // time_select.value = time_keys[0];
+
+
+            // set the initial image
+            const plot_img = document.getElementById("plot");
+            plot_img.src = plot_urls[threshold_keys[0]][time_keys[0]];
+
+
+            // selection events
+            threshold_select.addEventListener("change", () => {
+                const selected_threshold = threshold_select.value;
+                const time_keys = Object.keys(plot_urls[selected_threshold]);
+                set_time_options(time_select, time_keys);
+
+                const selected_time = time_select.value;
+                plot_img.src = plot_urls[selected_threshold][selected_time];
+            });
+
+            time_select.addEventListener("change", () => {
+                const selected_threshold = threshold_select.value;
+                const selected_time = time_select.value;
+                plot_img.src = plot_urls[selected_threshold][selected_time];
+            });
+
+
+        }
+
+        const plot_urls = {{plot_urls}}  // plot_urls[threshold][time_title] = filename
+        display_sequence_controls(plot_urls);
+
+        // preload images
+        // plot_urls.forEach(threshold_key => {
+        //     plot_urls[threshold_key].forEach(time_key => {
+        //         let img = new Image();
+        //         img.src = plot_urls[threshold_key][time_key];
+        //     });
+        // })
+        Object.keys(plot_urls).forEach(threshold_key => {
+            Object.keys(plot_urls[threshold_key]).forEach(time_key => {
+                let img = new Image();
+                img.src = plot_urls[threshold_key][time_key];
+            });
+        });
+
+
+    </script>
+  
+</head>
+
+<body>
+    <main>
+        
+        <fieldset id="controls">
+            
+            <label for="threshold_select">Threshold:</label>
+            <select id="threshold_select"></select>
+
+            <label for="time_select">Time:</label>
+            <select id="time_select"></select>
+
+        </fieldset>
+
+        <img id="plot" src="" alt="plot">
+
+    </main>
+</body>
+
+</html>
