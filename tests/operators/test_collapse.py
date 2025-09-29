@@ -327,7 +327,7 @@ def test_collapse_by_proportion_units(ensemble_cube):
 
 def test_collapse_by_proportion_name(ensemble_cube):
     """Test renaming of cube when collapsing by proportion method."""
-    name = ensemble_cube.long_name if ensemble_cube.long_name else ensemble_cube.name()
+    name = ensemble_cube.long_name
     expected_name = f"probability_of_{name}_eq_276"
     assert (
         collapse.proportion(
