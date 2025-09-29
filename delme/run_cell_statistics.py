@@ -26,20 +26,17 @@ model_data = [
     ),
 ]
 
-# # todo: restore this
+vars = [
+    "surface_microphysical_rainfall_rate",  # m01s04i203
+    "surface_microphysical_rainfall_amount",  # m01s04i201
+]
 # cell_attributes = ["effective_radius_in_km", "mean_value"]
-#
-# vars = [
-#     "surface_microphysical_rainfall_amount",  # m01s04i201
-#     "surface_microphysical_rainfall_rate",  # m01s04i203 todo: seems to have missing data, needs investigation
-# ]
-#
 # time_groupings = ["forecast_period", "hour"]
 
-# faster dev
-cell_attributes = ["effective_radius_in_km"]
-vars = ["surface_microphysical_rainfall_rate"]
-time_groupings = ["forecast_period"]
+# # faster dev
+# cell_attributes = ["effective_radius_in_km"]
+# vars = ["surface_microphysical_rainfall_rate"]
+# time_groupings = ["forecast_period"]
 
 
 # # DEBUG
@@ -51,18 +48,14 @@ time_groupings = ["forecast_period"]
 # todo: it's inefficient to keep reloading the data for each var/cell_attribute/time_grouping
 #  it would seem to be better to send the list of vars to the operator and plot functions, just once.
 for var in vars:
-    for cell_attribute in cell_attributes:
-        for time_grouping in time_groupings:
+    print(f"\nrunning recipe for {var}\n" )
 
-            print(f"\nrunning recipe for {var}, {cell_attribute}, {time_grouping}\n" )
+    recipe_variables = {
+        "INPUT_PATHS": [i[1] for i in model_data],
+        "MODEL_NAMES": [i[0] for i in model_data],
+        "VARNAME": var,
+        "OUTPUT_FOLDER": "/data/scratch/byron.blay/cset/cell_stats/out3",
+    }
 
-            recipe_variables = {
-                "INPUT_PATHS": [i[1] for i in model_data],
-                "MODEL_NAMES": [i[0] for i in model_data],
-                "VARNAME": var,
-                "CELL_ATTRIBUTE": cell_attribute,
-                "TIME_GROUPING": time_grouping,
-            }
-
-            recipe = parse_recipe(recipe_fpath, recipe_variables)
-            execute_recipe(recipe, Path(__file__).parent)
+    recipe = parse_recipe(recipe_fpath, recipe_variables)
+    execute_recipe(recipe, Path(__file__).parent)

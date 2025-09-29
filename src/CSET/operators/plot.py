@@ -2231,31 +2231,22 @@ def make_cell_stats_page(html_fpath, title, plot_urls):
         fp.write(html)
 
 
-def plot_cell_stats_histograms(
-    data: dict, varname: str, cell_attribute: str, time_grouping: str
-):
+def plot_cell_stats_histograms(data: dict, varname: str, output_folder: str):
     """
 
     Parameters
     ----------
     data:
         A dict mapping thresholds to histogram data for each time point:
-            data[<threshold>][<model_name>][<time_point>] -> Cube
+            data[cell_attribute][time_grouping][threshold][time_point][model_name] = cube
 
             NOTE: IT SHOULD PROBABLY BE A CUBE/CUBELIST
                 but that would seem to require considerable inefficiency/repetition in the cells stats
                 so we need to think about this a bit more
 
-        E.g, when time_grouping is 'forecast_period', we see a key like:
-            data['threshold 0.5']['uk_ctrl_um']['T+0.5']
+        E.g, data['effective_radius_in_km']['forecast_period']['0.5']['T+0.5']['uk_ctrl_um']
 
         The cube is one dimensional, with a dim coord of the given cell_attribute.
-
-    cell_attribute:
-        'effective_radius_in_km' or 'mean_value'
-
-    time_grouping:
-        'forecast_period', 'hour' or 'time'
 
     Returns
     -------
@@ -2264,118 +2255,52 @@ def plot_cell_stats_histograms(
     if data is None:
         return None
 
-    # # at each threshold, we're going to combine each model's time points into a single cube
-    # # todo: can't the operator do that?
-    # sequence_coord = time_grouping
-    #
-    #
-    # for threshold, models in data.items():
-    #
-    #     # for each model: data at every time, which we will merge for a time sequence plot
-    #     models_merged = iris.cube.CubeList()
-    #
-    #     # for each model: aggregation of all times, created by the operator
-    #     models_all = (iris.cube.CubeList())
-    #
-    #     for model_name, times in models.items():
-    #         models_all.append(times["all"])
-    #         del times["all"]
-    #
-    #         # Put the time points together into a single cube.
-    #         # Except for the time_grouping coord, all other time coords will have been removed.
-    #         # Todo: why bother splitting them up in the first place?
-    #         #       was that just for the RES plotting, can we simplify the operator?
-    #         cubes = iris.cube.CubeList(times.values())
-    #         cubes = cubes.merge()
-    #         assert len(cubes) == 1
-    #         models_merged.extend(cubes)
-    #
-    #     if not models_merged:
-    #         logging.warning(
-    #             f"no series data found for {varname} {cell_attribute} {time_grouping} {threshold}, skipping plot"
-    #         )
-    #         continue
-    #
-    #     if not models_all:
-    #         logging.warning(
-    #             f"no aggregated data found for {varname} {cell_attribute} {time_grouping} {threshold}, skipping plot"
-    #         )
-    #         continue
-    #
-    #     root_folder = Path("/data/scratch/byron.blay/cset/cell_stats/out")
-    #     root_folder = (
-    #         root_folder / f"{varname}/{cell_attribute}/{time_grouping}/{threshold}"
-    #     )
-    #
-    #     orig_folder = os.getcwd()
-    #
-    #     # The plot function was crashing when cube.data had nan in the min/max.
-    #     if check_for_nan(models_merged):
-    #         logging.warning(
-    #             f"Series cube for {varname}, {cell_attribute}, {time_grouping}, {threshold} has nan. Skipping plot."
-    #         )
-    #     else:
-    #         folder = root_folder / "series"
-    #         folder.mkdir(parents=True, exist_ok=True)
-    #         os.chdir(folder)
-    #         filename = folder / "image.png"
-    #         plot_histogram_series(
-    #             cubes=models_merged,
-    #             filename=str(filename),
-    #             sequence_coordinate=sequence_coord,
-    #             stamp_coordinate=None,  # is this useful?
-    #             single_plot=False,
-    #         )
-    #
-    #     if check_for_nan(models_all):
-    #         logging.warning(
-    #             f"Combnined cube for {varname}, {cell_attribute}, {time_grouping}, {threshold} has nan. Skipping plot."
-    #         )
-    #     else:
-    #         folder = root_folder / "all"
-    #         folder.mkdir(parents=True, exist_ok=True)
-    #         os.chdir(folder)
-    #         filename = folder / "image.png"
-    #         plot_histogram_series(
-    #             cubes=models_all,
-    #             filename=str(filename),
-    #             sequence_coordinate=sequence_coord,  # todo: we don't need a time series for this plot!
-    #             stamp_coordinate=None,  # is this useful?
-    #             single_plot=False,
-    #         )
-    #
-    #     os.chdir(orig_folder)
-
     plot_urls = {}
 
     # todo: parameterise this
-    root_folder = Path("/data/scratch/byron.blay/cset/cell_stats/out2")
+    root_folder = Path(output_folder) / varname
 
-    for threshold, time_data in data.items():
-        plot_urls[threshold] = {}
+    # for threshold, time_data in data.items():
+    #     plot_urls[threshold] = {}
+    #
+    #     # plot every time point, including the 'all' time point
+    #     for time_title, model_data in time_data.items():
+    #         filename = root_folder / varname / cell_attribute / threshold / time_grouping / f'{time_title}.png'
+    #
+    #         # # make a new plot for this combination of threshold & time
+    #         # plt.figure(figsize=(10, 10))
+    #         # plt.title(f'{varname}, {cell_attribute}, threshold {threshold}, at {time_grouping} {time_title}')
+    #         # for model_name, cube in model_data.items():
+    #         #     plt.plot(cube.coord(cell_attribute).points, cube.data)
+    #         #
+    #         # filename.parent.mkdir(parents=True, exist_ok=True)
+    #         # plt.savefig(filename)
+    #         # plt.close()
+    #
+    #         plot_urls[threshold][time_title] = str(filename)
 
-        # plot every time point, including the 'all' time point
-        for time_title, model_data in time_data.items():
-            filename = root_folder / varname / cell_attribute / threshold / time_grouping / f'{time_title}.png'
+    for cell_attribute, time_groupings in data.items():
+        plot_urls[cell_attribute] = {}
+        for time_grouping, thresholds in time_groupings.items():
+            plot_urls[cell_attribute][time_grouping] = {}
+            for threshold, time_points in thresholds.items():
+                plot_urls[cell_attribute][time_grouping][threshold] = {}
+                (root_folder / varname / cell_attribute / time_grouping / threshold).mkdir(parents=True, exist_ok=True)
+                for time_point, models in time_points.items():
+                    filename = root_folder / varname / cell_attribute / time_grouping / threshold / f'{time_point}.png'
+                    plot_urls[cell_attribute][time_grouping][threshold][time_point] = str(filename)
 
-            # # make a new plot for this combination of threshold & time
-            # plt.figure(figsize=(10, 10))
-            # plt.title(f'{varname}, {cell_attribute}, threshold {threshold}, at {time_grouping} {time_title}')
-            # for model_name, cube in model_data.items():
-            #     plt.plot(cube.coord(cell_attribute).points, cube.data)
-            #
-            # filename.parent.mkdir(parents=True, exist_ok=True)
-            # plt.savefig(filename)
-            # plt.close()
+                    # make a new plot for this combination of cell_attribute, time_grouping, threshold & time_point
+                    plt.figure(figsize=(10, 10))
+                    plt.title(f'{varname}, {cell_attribute}, {time_grouping}, threshold {threshold}, at {time_point}')
+                    for model_name, cube in models.items():
+                        plt.plot(cube.coord(cell_attribute).points, cube.data)
 
-            plot_urls[threshold][time_title] = str(filename)
+                    filename.parent.mkdir(parents=True, exist_ok=True)
+                    plt.savefig(filename)
+                    plt.close()
 
-    make_cell_stats_page(
-        root_folder / 'index.html',
-        title=f'{varname}, {cell_attribute}, {time_grouping}',
-        plot_urls=json.dumps(plot_urls),
-    )
-
+    make_cell_stats_page(root_folder / 'index.html', title=f'{varname}', plot_urls=json.dumps(plot_urls))
 
     # todo: by convention we should return the cubes, but it's not cubes
     #   the cells stats produces a lot of stuff and it's currently passed as a dict

@@ -499,7 +499,7 @@ def ensure_bounds(cubes, coord_name):
             coord.guess_bounds()
 
 
-def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
+def caller_thing(cubes: CubeList):
     """
     Create a histogram from each given cube, for every threshold and cell attribute.
 
@@ -515,10 +515,15 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
     time_grouping: str
         "forecast_period", "hour" or "time"
 
+    Returns a nested dictionary:
+        result[cell_attribute][time_grouping][threshold][time_point][model_name] = cube
+
     """
-    # todo: inorder to get everything on one page,
-    #   i think we might ahve to calculate all cell attributes in here,
-    #   and all time groupings, so that we can pass one big lump to the page plotter.
+    # We loop through these, producing a result per model for each combo.
+    # todo: we might not want to produce data for all cell attributes or time groupings, so we could paramterise.
+    cell_attributes = ["effective_radius_in_km", "mean_value"]
+    time_groupings = ["forecast_period", "hour"]  # todo: WE NEED "time" here too! should slot straight in?
+    thresholds = [0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0]  # todo: parametrise this?
 
 
     # todo: paramterise y_axis?
@@ -530,7 +535,7 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
     # y_axis = "relative_frequency"
 
     if cubes in (None, [], CubeList([])):
-        logging.warning(f'no cubes received for {cell_attribute} {time_grouping}')
+        logging.warning(f'no cubes received')
         return None
 
     if not isinstance(cubes, CubeList):
@@ -542,17 +547,14 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
     def check_cell_methods(cube):
         """discard "means", we want "points" or empty cell methods"""
         for cm in cube.cell_methods:
-            if cm.method != "point":
+            if cm.method == "mean":
                 return False
         return True
     cubes = CubeList([c for c in cubes if check_cell_methods(c)])
 
     if len(cubes) == 0:
-        logging.warning(f'no cubes for {cell_attribute}, {time_grouping} after cell method filtering')
+        logging.warning(f'no cubes after cell method filtering')
         return None
-
-    # For now, thresholds are hard coded.
-    thresholds = [0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0]
 
     # Get a list of the common forecast periods and hours
     # todo: For forecast time, this must contain "all", plus all the T+0.5 .. T+71.5
@@ -578,10 +580,20 @@ def caller_thing(cubes: CubeList, cell_attribute: str, time_grouping: str):
     # bin_edges['mean_value'] = 10**(np.arange(-1, 2.7, 0.12))
     # bin_edges['mean_value'] = np.insert(bin_edges['mean_value'], 0, 0)
 
+    # this will be a nested dict:
+    #  result[cell_attribute][time_grouping][threshold][time_point][model_name] = cube
     result = {}
 
-    for threshold in thresholds:
-        result[f"threshold {threshold}"] = time_data = {}
+
+    combos = itertools.product(cell_attributes, time_groupings, thresholds)
+    for cell_attribute, time_grouping, threshold in combos:
+        print(f'cell_attribute: {cell_attribute}, time_grouping: {time_grouping}, threshold: {threshold}')
+
+        # create the top three levels of nested dictionaries
+        result.setdefault(cell_attribute, {})
+        result[cell_attribute].setdefault(time_grouping, {})
+        result[cell_attribute][time_grouping].setdefault(str(threshold), {})
+        time_data = result[cell_attribute][time_grouping][str(threshold)]  # helper var
 
         # todo: check var_name has been removed by this point, as RES removed it to help with merge
         # hist_cubes = something_like_cell_attribute_histogram(

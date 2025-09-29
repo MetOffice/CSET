@@ -72,9 +72,10 @@ def write_pickle(data, filename):
     """Helper to save the cell stats output, until it returns cubes."""
     import pickle
     if not data:
-        return
+        return None
 
     Path(filename).parent.mkdir(exist_ok=True, parents=True)
     with open(filename, "wb") as f:
         pickle.dump(data, f)
-    pass
+
+    return data

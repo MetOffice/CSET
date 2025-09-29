@@ -13,22 +13,26 @@ steps:
       operator: constraints.generate_var_constraint
       varname: $VARNAME
 
+  # todo: check what the grid resolution should be
   - operator: regrid.regrid_onto_xyspacing
     xspacing: 0.5
     yspacing: 0.5
     method: Linear
 
+#  these two are useful when working on the cell stats
+  - operator: write.write_pickle
+    filename: $OUTPUT_FOLDER/$VARNAME.pkl
+#  - operator: read.read_pickle
+#    filename: $OUTPUT_FOLDER/$VARNAME.pkl
+
   - operator: cell_statistics.caller_thing
-    cell_attribute: $CELL_ATTRIBUTE
-    time_grouping: $TIME_GROUPING
 
 #  these two are useful when working on the plotting
-#  - operator: write.write_pickle
-#    filename: /data/scratch/byron.blay/cset/cell_stats/out2/$VARNAME__$CELL_ATTRIBUTE__$TIME_GROUPING.pkl
+  - operator: write.write_pickle
+    filename: $OUTPUT_FOLDER/$VARNAME_stats.pkl
 #  - operator: read.read_pickle
-#    filename: /data/scratch/byron.blay/cset/cell_stats/out2/$VARNAME__$CELL_ATTRIBUTE__$TIME_GROUPING.pkl
+#    filename: $OUTPUT_FOLDER/$VARNAME_stats.pkl
 
   - operator: plot.plot_cell_stats_histograms
     varname: $VARNAME
-    cell_attribute: $CELL_ATTRIBUTE
-    time_grouping: $TIME_GROUPING
+    output_folder: $OUTPUT_FOLDER
