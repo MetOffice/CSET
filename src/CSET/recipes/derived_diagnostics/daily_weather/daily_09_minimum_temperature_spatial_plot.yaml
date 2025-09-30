@@ -5,7 +5,7 @@ description: |
   the following day in $MODEL_NAME as per observation measurements. The minimum
   is created from a rolling 24 h window, adds hour of day coordinate, and then
   selects the 21 UTC hour from the rolling window as this represents the validity
-  time of the required range. The maximum temperature can occur any time in the 24
+  time of the required range. The minimum temperature can occur any time in the 24
   h window.
 
 steps:
