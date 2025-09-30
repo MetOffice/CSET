@@ -217,7 +217,7 @@ def load(conf: Config):
         ]:
             base_model = models[0]
             yield RawRecipe(
-                recipe=f"mlevel_spatial_difference_case_aggregation_mean_{atype}.yaml",
+                recipe=f"level_spatial_difference_case_aggregation_mean_{atype}.yaml",
                 variables={
                     "VARNAME": field,
                     "LEVELTYPE": "model_level_number",
