@@ -1,0 +1,44 @@
+category: Daily Weather
+title: $MODEL_NAME Daily minimum temperature at 0900 UTC
+description: |
+  Extracts and plots the daily minimum temperature between 0900 UTC and 0900 UTC
+  the following day in $MODEL_NAME as per observation measurements. The minimum
+  is created from a rolling 24 h window, adds hour of day coordinate, and then
+  selects the 21 UTC hour from the rolling window as this represents the validity
+  time of the required range. The maximum temperature can occur any time in the 24
+  h window.
+
+steps:
+  - operator: read.read_cube
+    file_paths: $INPUT_PATHS
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: 'temperature_at_screen_level'
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: ['minimum']
+        coord: 'time'
+        interval: '1 hour'
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: aggregate.rolling_window_time_aggregation
+    method: 'MIN'
+    window: 24
+
+  - operator: aggregate.add_hour_coordinate
+
+  - operator: filters.filter_cubes
+    constraint:
+      operator: constraints.generate_hour_constraint
+      hour_start: 21
+
+  - operator: misc.convert_units
+    units: 'Celsius'
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
