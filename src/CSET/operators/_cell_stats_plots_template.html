@@ -7,6 +7,29 @@
     <title>{{title}}</title>
   
     <style>
+        body {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            margin: 0;
+            font-family: sans-serif;
+        }
+
+        input:invalid {
+            box-shadow: 0 0 2px 2px red;
+        }
+
+        main {
+            flex: 30em;
+            height: 100vh;
+        }
+
+        main>img {
+            width: 100%;
+            height: calc(100% - 3em);
+            object-fit: contain;
+        }
+
     </style>
   
     <script type="module">
@@ -103,19 +126,11 @@
                 plot_img.src = plot_urls[cell_attribute_select.value][time_grouping_select.value][threshold_select.value][time_select.value];
             });
 
-
         }
 
         const plot_urls = {{plot_urls}}  // plot_urls[threshold][time_title] = filename
         display_sequence_controls(plot_urls);
 
-        // preload images
-        // plot_urls.forEach(threshold_key => {
-        //     plot_urls[threshold_key].forEach(time_key => {
-        //         let img = new Image();
-        //         img.src = plot_urls[threshold_key][time_key];
-        //     });
-        // })
         Object.keys(plot_urls).forEach(threshold_key => {
             Object.keys(plot_urls[threshold_key]).forEach(time_key => {
                 let img = new Image();

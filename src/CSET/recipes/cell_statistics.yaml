@@ -19,7 +19,7 @@ steps:
     yspacing: 0.5
     method: Linear
 
-#  these two are useful when working on the cell stats
+#  dev speedup
   - operator: write.write_pickle
     filename: $OUTPUT_FOLDER/$VARNAME.pkl
 #  - operator: read.read_pickle
@@ -27,7 +27,7 @@ steps:
 
   - operator: cell_statistics.caller_thing
 
-#  these two are useful when working on the plotting
+#  dev speedup
   - operator: write.write_pickle
     filename: $OUTPUT_FOLDER/$VARNAME_stats.pkl
 #  - operator: read.read_pickle

@@ -35,14 +35,6 @@ HOUR_IN_SECONDS = 3600
 # PLOT_PARAM="$CYLC_TASK_PARAM_cellplots"
 
 
-# is this going to be the cli usage?
-# export $INPUT_DIR=$SCRATCH/RES_RETRIEVAL_CACHE/test_quick
-# export OUTPUT_DIR=$SCRATCH/temp/cset
-# export RECIPE=cell_statistics.yaml
-# cset -v bake --input-dir=$INPUT_DIR --output-dir=$OUTPUT_DIR --recipe=$RECIPE
-#   --LAND_SEA_SPLIT=False
-
-
 def var_filter(cubes, long_name=None, stash=None):
     result = []
     for cube in cubes:
@@ -52,36 +44,6 @@ def var_filter(cubes, long_name=None, stash=None):
             result.append(cube)
 
     return iris.cube.CubeList(result)
-
-
-def get_cell_stat_vars(cubes):
-    vars = {}
-
-    # Large-scale rainfall rate
-    vars["rainfall rate"] = var_filter(
-        cubes, long_name="surface_microphysical_rainfall_rate", stash="m01s04i203"
-    )
-
-    # 1-hourly mean precipitation rate
-    vars["rainfall amount"] = var_filter(
-        cubes, long_name="surface_microphysical_rainfall_amount", stash="m01s04i201"
-    )
-    # vars["1-hourly mean precipitation rate"].extend(var_filter(cubes, stash="m01s04i202"))  # snow
-    # todo: RES has a switch for the following
-    # vars["1-hourly mean precipitation rate"].extend(var_filter(cubes, stash="m01s05i201"))
-    # vars["1-hourly mean precipitation rate"].extend(var_filter(cubes, stash="m01s05i202"))
-
-    # ensure at least one cube found for each variable
-    for k, v in vars.items():
-        assert len(v) > 0, f"No cubes found for variable '{k}'"
-
-    # # strictly one cube per variable?
-    # assert len(vars["Large-scale rainfall rate"]) == 1
-    # assert len(vars["1-hourly mean precipitation rate"]) == 1
-    # vars["Large-scale rainfall rate"] = vars["Large-scale rainfall rate"][0]
-    # vars["1-hourly mean precipitation rate"] = vars["1-hourly mean precipitation rate"][0]
-
-    return vars
 
 
 def get_bin_edges(cell_attribute):
@@ -449,48 +411,6 @@ def repeat_scalar_coord_along_dim_coord(cubelist, scalar_coord_name, dim_coord_n
 
     return cubelist
 
-# todo: no longer needed? we can use the iris version now (double check this is ok)
-# def RES_extract_overlapping(cubelist, coord_name):
-#     """
-#     Extracts regions from cubes in a :class:`iris.cube.CubeList` such that \
-#     the specified coordinate is the same across all cubes.
-#
-#     Arguments:
-#
-#     * **cubelist** - an input :class:`iris.cube.CubeList`.
-#     * **coord_name** - a string specifying the name of the coordinate \
-#                        over which to perform the extraction.
-#
-#     Returns a :class:`iris.cube.CubeList` where the coordinate corresponding \
-#     to coord_name is the same for all cubes.
-#     """
-#     # Build a list of all Cell instances for this coordinate by
-#     # looping through all cubes in the supplied cubelist
-#     all_cells = []
-#     for cube in cubelist:
-#         for cell in cube.coord(coord_name).cells():
-#             all_cells.append(cell)
-#
-#     # Work out which coordinate Cell instances are common across
-#     # all cubes in the cubelist...
-#     cell_counts = collections.Counter(all_cells)
-#     # unique_cells = cell_counts.keys()
-#     unique_cells = list(cell_counts.keys())
-#     unique_cell_counts = list(cell_counts.values())
-#     num_cubes = len(cubelist)
-#     common_cells = [
-#         unique_cells[i]
-#         for i, count in enumerate(unique_cell_counts)
-#         if count == num_cubes
-#     ]
-#     # ...and use these to subset the cubes in the cubelist
-#     constraint = iris.Constraint(
-#         coord_values={coord_name: lambda cell: cell in common_cells}
-#     )
-#
-#     cubelist = iris.cube.CubeList([cube.extract(constraint) for cube in cubelist])
-#     return cubelist
-
 
 def ensure_bounds(cubes, coord_name):
     for cube in cubes:
@@ -522,9 +442,8 @@ def caller_thing(cubes: CubeList):
     # We loop through these, producing a result per model for each combo.
     # todo: we might not want to produce data for all cell attributes or time groupings, so we could paramterise.
     cell_attributes = ["effective_radius_in_km", "mean_value"]
-    time_groupings = ["forecast_period", "hour"]  # todo: WE NEED "time" here too! should slot straight in?
+    time_groupings = ["forecast_period", "hour", "time"]
     thresholds = [0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0]  # todo: parametrise this?
-
 
     # todo: paramterise y_axis?
     #   set to "frequency" for cell statistic histograms that are \
@@ -532,7 +451,7 @@ def caller_thing(cubes: CubeList):
     #   histograms showing the overall proportion of data values in \
     #   each bin (normalised to 100%). The default is \
     #   "relative_frequency".
-    # y_axis = "relative_frequency"
+    y_axis = "relative_frequency"
 
     if cubes in (None, [], CubeList([])):
         logging.warning(f'no cubes received')
@@ -556,9 +475,10 @@ def caller_thing(cubes: CubeList):
         logging.warning(f'no cubes after cell method filtering')
         return None
 
-    # Get a list of the common forecast periods and hours
-    # todo: For forecast time, this must contain "all", plus all the T+0.5 .. T+71.5
-    # todo: For hourly, this must contain "all", plus all the 0.5Z .. 23.5Z
+    # Get a list of the common forecast periods and hours (i.e time groupings).
+    # For forecast time, this must contain "all", plus all the T+0.5 .. T+71.5
+    # For hourly, this must contain "all", plus all the 0.5Z .. 23.5Z
+    # todo: What about time?
     forecast_periods = set(cubes[0].coord("forecast_period").points)
     hours = set(cubes[0].coord("time").points)  # todo: check it's actually hourly?
     for cube in cubes[1:]:
@@ -571,19 +491,9 @@ def caller_thing(cubes: CubeList):
 
     # what about obs? GPM & UK_RADAR_2KM? ignore for now.
 
-    # different bins for the two cell attributes
-    # bin_edges = {}
-    #
-    # bin_edges['effective_radius_in_km'] = 10**(np.arange(0.0, 3.12, 0.12))
-    # bin_edges['effective_radius_in_km'] = np.insert(bin_edges['effective_radius_in_km'], 0, 0)
-    #
-    # bin_edges['mean_value'] = 10**(np.arange(-1, 2.7, 0.12))
-    # bin_edges['mean_value'] = np.insert(bin_edges['mean_value'], 0, 0)
-
     # this will be a nested dict:
     #  result[cell_attribute][time_grouping][threshold][time_point][model_name] = cube
     result = {}
-
 
     combos = itertools.product(cell_attributes, time_groupings, thresholds)
     for cell_attribute, time_grouping, threshold in combos:
@@ -596,13 +506,8 @@ def caller_thing(cubes: CubeList):
         time_data = result[cell_attribute][time_grouping][str(threshold)]  # helper var
 
         # todo: check var_name has been removed by this point, as RES removed it to help with merge
-        # hist_cubes = something_like_cell_attribute_histogram(
-        #     cube,
-        #     attribute=cell_attribute,
-        #     bin_edges=get_bin_edges(cell_attribute),
-        #     threshold=threshold) for cube in cubes]
 
-        # todo: can't we just let mpl make the histogram at plot time?
+        # todo: can't we just let mpl make the histograms at plot time?
         hist_cubes = CubeList([])
         for cube in cubes:
             hist_cube = something_like_cell_attribute_histogram(
@@ -625,7 +530,7 @@ def caller_thing(cubes: CubeList):
         # It removes the other time coords, other than that named by time_grouping.
         hist_cubes, times = extract_unique(hist_cubes, time_grouping)
 
-        # Sum cell statistic histograms at each time. todo: parallelise
+        # Sum cell statistic histograms at each time. todo: parallelise?
         summed_cubes = []
         for time in times:
             input_param = (hist_cubes, time, iris.analysis.SUM, None)
@@ -671,9 +576,9 @@ def caller_thing(cubes: CubeList):
 
             # todo: RES plots each cube here.
             for cube in cubes_at_time:
-                # todo: Normalise histogram? I think this is done in the plotting, actually, unlike RES.
-                # if y_axis == "relative_frequency":
-                #     cube.data = (100.0 * cube.data) / np.sum(cube.data, dtype=np.float64)
+                # todo: Normalise histogram? Again, should this be in the plotting?
+                if y_axis == "relative_frequency":
+                    cube.data = (100.0 * cube.data) / np.sum(cube.data, dtype=np.float64)
 
                 time_data[time_title][cube.attributes["model_name"]] = cube
 
@@ -682,26 +587,11 @@ def caller_thing(cubes: CubeList):
         for cube in summed_cubes:
             cube = cube.collapsed(time_grouping, iris.analysis.SUM)
 
-            # todo: Normalise histogram? I think this is done in the plotting, actually, unlike RES.
-            # if y_axis == "relative_frequency":
-            #     cube.data = (100.0 * cube.data) / np.sum(cube.data, dtype=np.float64)
+            # todo: Normalise histogram?
+            if y_axis == "relative_frequency":
+                cube.data = (100.0 * cube.data) / np.sum(cube.data, dtype=np.float64)
 
             time_data["all"][cube.attributes["model_name"]] = cube
-
-    # don't bother rearranging thie dict now that we've got our own plotter
-    # # todo: perhaps we should use metadata to organisethe results, and let the plotter work out what to plot.
-    # #   that would let us stick with the cubelist convention...
-    # # For simpler code, the results were formed as:
-    # #   data[<threshold>][<time_point>][<model_name>] -> Cube
-    # # But the plot needs the model to be above the time points, so rearrange as:
-    # #   data[<threshold>][<model_name>][<time_point>] -> Cube
-    # reformed_result = {}
-    # for threshold, threshold_result in result.items():
-    #     reformed_result[threshold] = {}
-    #     for time_title, model_cubes in threshold_result.items():
-    #         for model_name, cube in model_cubes.items():
-    #             reformed_result[threshold].setdefault(model_name, {})
-    #             reformed_result[threshold][model_name][time_title] = cube
 
     # return cubes to plot. todo: in what exact arrangement?
     return result
@@ -1039,91 +929,3 @@ def find_cells(cube, threshold=0.0, area_threshold=0.0, connectivity=1):
             cells.append(cell_cube)
 
     return cells
-
-
-# ignore
-
-# def cell_statistics(LAND_SEA_SPLIT: bool):
-
-
-# cell_attribute:
-#   effective_radius_in_km
-#   mean_value
-
-
-# RAIN_RATE = diagnostics.Field(
-#     long_name="Large-scale rainfall rate",
-#     short_name="rain_rate",
-#     stash=[diagnostics.STASHRequest(iris.fileformats.pp.STASH(1, 4, 203))],
-#     units="mm h-1",
-#     unit_conversion_factor=3600.0,
-#     thresholds=[0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0] if USE_LFRIC_CODE else None,
-#     regrid_method="two_stage"
-#     )
-
-
-# PRECIP_1HR_MEAN = diagnostics.Field(
-#     long_name="1-hourly mean precipitation rate",
-#     short_name="1hr_mean_precip",
-#     stash=PRECIP_1HR_MEAN_STASH,
-#     stash_operator=diagnostics.STASH_OPERATORS["ADD"],
-#     mean_period=1,
-#     use_running_accumulations=not USE_LFRIC_CODE,
-#     units="mm h-1",
-#     observations=["GPM", "UK_radar_2km", "Darwin_radar_rain_2.5km"],
-#     thresholds=[0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0],
-#     regrid_method="two_stage"
-#     )
-
-# PRECIP_1HR_MEAN_STASH = [
-#         diagnostics.STASHRequest(iris.fileformats.pp.STASH(1, 4, 201)),
-#         diagnostics.STASHRequest(iris.fileformats.pp.STASH(1, 4, 202))]
-# if not USE_LFRIC_CODE:
-#     PRECIP_1HR_MEAN_STASH.extend([
-#         diagnostics.STASHRequest(iris.fileformats.pp.STASH(1, 5, 201), is_optional=True),
-#         diagnostics.STASHRequest(iris.fileformats.pp.STASH(1, 5, 202), is_optional=True),
-#     ])
-
-
-# choose the thresholds according to the variable
-# todo: should these be [optionally] parameterised?
-
-
-# make a cube list of cell_attribute_histogram() for each cube
-
-
-# return for plotting
-# return some_cube
-
-
-"""
-
-category: Diagnostics
-title: cell statistics plot
-description: |
-  TBD.
-
-steps:
-
-  - operator: cell_statistics.caller_thing
-
-    # "effective_radius_in_km" or "mean_value"
-    cell_attribute: $CELL_ATTRIBUTE
-
-    uk_ctrl_um:
-      operator: read.read_cubes
-      file_paths:
-        - "/data/scratch/byron.blay/RES_RETRIEVAL_CACHE/test_lfric/20240121T0000Z/uk_ctrl_um/20240121T0000Z_UK_672x672_1km_RAL3P3_pdiagb000.pp"
-        - "/data/scratch/byron.blay/RES_RETRIEVAL_CACHE/test_lfric/20240121T0000Z/uk_ctrl_um/20240121T0000Z_UK_672x672_1km_RAL3P3_pdiagb012.pp"
-    uk_expt_lfric:
-      operator: read.read_cubes
-      file_paths:
-        - "/data/scratch/byron.blay/RES_RETRIEVAL_CACHE/test_lfric/20240121T0000Z/uk_expt_lfric/20240121T0000Z_UK_672x672_1km_RAL3P3_lfric_slam_timeproc_000_006.nc"
-        - "/data/scratch/byron.blay/RES_RETRIEVAL_CACHE/test_lfric/20240121T0000Z/uk_expt_lfric/20240121T0000Z_UK_672x672_1km_RAL3P3_lfric_slam_timeproc_006_012.nc"
-
-  - operator: write.write_cube_to_nc
-    overwrite: True
-
-  - operator: plot.plot_histogram_series
-
-"""

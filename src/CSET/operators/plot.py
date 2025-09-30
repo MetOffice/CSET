@@ -2260,25 +2260,6 @@ def plot_cell_stats_histograms(data: dict, varname: str, output_folder: str):
     # todo: parameterise this
     root_folder = Path(output_folder) / varname
 
-    # for threshold, time_data in data.items():
-    #     plot_urls[threshold] = {}
-    #
-    #     # plot every time point, including the 'all' time point
-    #     for time_title, model_data in time_data.items():
-    #         filename = root_folder / varname / cell_attribute / threshold / time_grouping / f'{time_title}.png'
-    #
-    #         # # make a new plot for this combination of threshold & time
-    #         # plt.figure(figsize=(10, 10))
-    #         # plt.title(f'{varname}, {cell_attribute}, threshold {threshold}, at {time_grouping} {time_title}')
-    #         # for model_name, cube in model_data.items():
-    #         #     plt.plot(cube.coord(cell_attribute).points, cube.data)
-    #         #
-    #         # filename.parent.mkdir(parents=True, exist_ok=True)
-    #         # plt.savefig(filename)
-    #         # plt.close()
-    #
-    #         plot_urls[threshold][time_title] = str(filename)
-
     for cell_attribute, time_groupings in data.items():
         plot_urls[cell_attribute] = {}
         for time_grouping, thresholds in time_groupings.items():
