@@ -143,6 +143,21 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+        # Snow presence.
+        if conf.SNOW_PRESENCE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="snow_presence_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
         # Surface winds on Beaufort Scale.
         if conf.SFC_WIND_BEAUFORT_SCALE_SPATIAL:
             yield RawRecipe(
