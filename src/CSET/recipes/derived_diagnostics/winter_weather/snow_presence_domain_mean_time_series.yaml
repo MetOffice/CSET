@@ -1,4 +1,4 @@
-category: Daily Weather
+category: Winter Weather
 title: $MODEL_NAME Snow presence domain mean time series
 description: |
  Generates a timeseries representing the average presence of snow across the domain.

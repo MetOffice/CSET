@@ -1,4 +1,4 @@
-category: Daily Weather
+category: Winter Weather
 title: $MODEL_NAME Snow presence spatial plot
 description: |
   Generates a mask of whether snow is present in a grid box and provides a

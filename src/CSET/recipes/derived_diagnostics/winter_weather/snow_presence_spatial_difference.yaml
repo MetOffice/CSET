@@ -1,4 +1,4 @@
-category: Daily Weather
+category: Winter Weather
 title: "Snow presence\nDifference ($BASE_MODEL - $OTHER_MODEL)"
 description: |
   Generates a mask of whether snow is present in a grid box. The diagnostic
