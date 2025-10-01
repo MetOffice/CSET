@@ -2,7 +2,7 @@ category: Daily Weather
 title: Rain presence domain mean timeseries
 description: |
   Generates a mask of whether rain is present in a grid box and provides a
-  timeseries representing the chance of rain anywhere within the domain.
+  timeseries representing the chance of air frost anywhere within the domain.
 
 steps:
   - operator: read.read_cubes
@@ -12,7 +12,7 @@ steps:
         operator: constraints.combine_constraints
         varname_constraint:
             operator: constraints.generate_var_constraint
-            varname: surface_microphysical_rainfall_rate
+            varname: 'temperature_at_screen_level'
         cell_methods_constraint:
             operator: constraints.generate_cell_methods_constraint
             cell_methods: []
@@ -20,8 +20,8 @@ steps:
     subarea_extent: $SUBAREA_EXTENT
 
   - operator: filters.generate_mask
-    condition: '>'
-    value: 0.0
+    condition: '<'
+    value: 273.15
 
   - operator: collapse.collapse
     coordinate: [grid_latitude, grid_longitude]
