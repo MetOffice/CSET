@@ -4,7 +4,7 @@ description:
   Generates a mask of whether thick fog is present in a grid box and provides a
   the difference between two models. Values will be positive or negative one
   depending on which model has thick fog present at that location if the other
-  does not.
+  does not. Thick fog is defined as visibility <= 100 m.
 
 
 steps:
