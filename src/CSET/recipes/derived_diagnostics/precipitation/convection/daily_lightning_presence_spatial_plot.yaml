@@ -1,0 +1,44 @@
+category: Convectin
+title: $MODEL_NAME Daily occurrence of lightning
+description: |
+  Extracts and plots the daily occurrence of lightning between 0900 UTC and
+  0900 UTC the following day in $MODEL_NAME. The minimum
+  is created from a rolling 24 h window, adds hour of day coordinate, and then
+  selects the 21 UTC hour from the rolling window as this represents the validity
+  time of the required range. The presence of lightning can occur any time in
+  the 24-h window.
+
+steps:
+  - operator: read.read_cube
+    file_paths: $INPUT_PATHS
+
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: "number_of_lightning_flashes_in_column"
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: filters.generate_mask
+    condition: '>'
+    value: 0.0
+
+  - operator: aggregate.rolling_window_time_aggregation
+    method: 'MIN'
+    window: 24
+
+  - operator: aggregate.add_hour_coordinate
+
+  - operator: filters.filter_cubes
+    constraint:
+      operator: constraints.generate_hour_constraint
+      hour_start: 21
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

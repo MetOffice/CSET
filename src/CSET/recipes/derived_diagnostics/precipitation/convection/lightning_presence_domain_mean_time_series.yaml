@@ -1,9 +1,9 @@
-category: Winter Weather
-title: $MODEL_NAME Air frost presence domain timeseries
+category: Convection
+title: Lightning presence domain mean timeseries
 description: |
-  Generates a mask of whether air frost is present in a grid box and provides
-  a timeseries representing the chance of frost anywhere within the domain
-  for every time step.
+  Generates a mask of whether lightning is present in a grid box column
+  and provides a timeseries representing the chance of lightning anywhere
+  within the domain.
 
 steps:
   - operator: read.read_cubes
@@ -13,23 +13,20 @@ steps:
         operator: constraints.combine_constraints
         varname_constraint:
             operator: constraints.generate_var_constraint
-            varname: 'temperature_at_screen_level'
+            varname: "number_of_lightning_flashes_in_column"
         cell_methods_constraint:
             operator: constraints.generate_cell_methods_constraint
-            cell_methods: ['minimum']
-            coord: 'time'
-            interval: '1 hour'
+            cell_methods: []
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
   - operator: filters.generate_mask
-    condition: '<'
-    value: 273.15
+    condition: '>'
+    value: 0.0
 
   - operator: collapse.collapse
     coordinate: [grid_latitude, grid_longitude]
-    method: MEAN
-
+    method: MAX
 
   # Plot the data.
   - operator: plot.plot_line_series
