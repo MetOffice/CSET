@@ -103,6 +103,24 @@ def load(conf: Config):
     # Specific diagnostics require their own recipes for traceability. Therefore, these also
     # require individual loaders.
 
+    # Aviation Fog presence.
+    if conf.AVIATION_FOG_PRESENCE_SPATIAL_DIFFERENCE:
+        base_model = models[0]
+        for model in models[1:]:
+            yield RawRecipe(
+                recipe="aviation_fog_presence_spatial_difference.yaml",
+                variables={
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
     # Rain presence.
     if conf.RAIN_PRESENCE_SPATIAL_DIFFERENCE:
         base_model = models[0]
@@ -235,7 +253,7 @@ def load(conf: Config):
         ]:
             base_model = models[0]
             yield RawRecipe(
-                recipe=f"mlevel_spatial_difference_case_aggregation_mean_{atype}.yaml",
+                recipe=f"level_spatial_difference_case_aggregation_mean_{atype}.yaml",
                 variables={
                     "VARNAME": field,
                     "LEVELTYPE": "model_level_number",
