@@ -3,7 +3,7 @@ title: "$MODEL_NAME Thick Fog presence spatial plot"
 description: |
   Generates a mask of whether thick fog is present in a grid box and provides a
   spatial plot. A value of one implies thick fog is present; a value of zero
-  implies thick fog is not present.
+  implies thick fog is not present. Thick fog is defined as visibility < = 100 m.
 
 steps:
   - operator: read.read_cubes
