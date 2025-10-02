@@ -19,6 +19,7 @@ import logging
 import sys
 from collections.abc import Iterable
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any
 
 from ruamel.yaml import YAML
@@ -194,6 +195,16 @@ class RawRecipe:
             )
         return NotImplemented
 
+    @property
+    def recipe_subdir(self) -> Path:
+        """Return the lowest level target directory for the recipe file(s)."""
+        return Path("aggregation_recipes" if self.aggregation else "recipes")
+
+    @staticmethod
+    def get_recipe_filename(parsed_recipe: dict) -> str:
+        """Return a suitable filename for the recipe."""
+        return f"{slugify(parsed_recipe['title'])}.yaml"
+
     def parbake(self, ROSE_DATAC: Path, SHARE_DIR: Path) -> None:
         """Pre-process recipe to bake in all variables.
 
@@ -210,13 +221,13 @@ class RawRecipe:
         # Collect configuration from environment.
         if self.aggregation:
             # Construct the location for the recipe.
-            recipe_dir = ROSE_DATAC / "aggregation_recipes"
+            recipe_dir = ROSE_DATAC / self.recipe_subdir
             # Construct the input data directories for the cycle.
             data_dirs = [
                 SHARE_DIR / f"cycle/*/data/{model_id}" for model_id in self.model_ids
             ]
         else:
-            recipe_dir = ROSE_DATAC / "recipes"
+            recipe_dir = ROSE_DATAC / self.recipe_subdir
             data_dirs = [ROSE_DATAC / f"data/{model_id}" for model_id in self.model_ids]
 
         # Ensure recipe dir exists.
@@ -227,10 +238,24 @@ class RawRecipe:
 
         # Parbake this recipe, saving into recipe_dir.
         recipe = parse_recipe(Path(self.recipe), self.variables)
-        output = recipe_dir / f"{slugify(recipe['title'])}.yaml"
+        output = recipe_dir / self.get_recipe_filename(recipe)
         with open(output, "wt") as fp:
             with YAML(pure=True, output=fp) as yaml:
                 yaml.dump(recipe)
+
+    def premixed_names(self) -> tuple[str, list[str]]:
+        """Pre-process recipe to generate a file name and list of rose task names."""
+        with TemporaryDirectory() as tmpdir:
+            unpack_path = Path(tmpdir)
+            unpack_recipe(unpack_path, self.recipe)
+            recipe = parse_recipe(
+                unpack_path / self.recipe, self.variables, allow_missing=True
+            )
+            title = recipe["title"]
+            filename = self.recipe_subdir / self.get_recipe_filename(recipe)
+
+            names = [slugify(f"{title}_{model_id})") for model_id in self.model_ids]
+            return str(filename), names
 
 
 class Config:
