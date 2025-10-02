@@ -3,6 +3,7 @@ title: "Thick Fog presence domain mean time series"
 description: |
   Generates a mask of whether thick fog is present in a grid box and provides a
   timeseries representing the chance of thick fog anywhere within the domain.
+  Thick fog is defined as visibility <= 100 m.
 
 steps:
   - operator: read.read_cubes
