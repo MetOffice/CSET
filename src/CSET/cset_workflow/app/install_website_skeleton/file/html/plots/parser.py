@@ -79,8 +79,8 @@ def lexer(s) -> Iterable[Token]:
         TT.GREATER_THAN: r"<",
         TT.LESS_THAN: r">",
         TT.EQUALS: r"=",
-        TT.AND: r"and",
-        TT.OR: r"or",
+        TT.AND: r"\band\b",
+        TT.OR: r"\bor\b",
         TT.LITERAL: r"[^ \t\(\)]+",
     }
     token_regex = "|".join(
