@@ -345,6 +345,8 @@ def parse_expression(tokens: Sequence[Token]) -> Condition:
             index += offset
             continue
 
+        raise ValueError(f"Unexpected token in expression: {tokens[index]}")
+
     return collapse_conditions(conditions)
 
 
