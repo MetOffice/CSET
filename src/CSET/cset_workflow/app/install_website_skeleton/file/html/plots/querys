@@ -21,11 +21,8 @@ field:x_wind OR field:y_wind
 (histogram AND field:temperature) OR (time_series AND field:humidity)
     Histograms of temperature and Time series of humidity. Parenthesis indicate precedence.
 
-# Possible alternate AND/OR syntax.
-(histogram & field:temperature) | (time_series field:humidity)
+histogram AND field:temperature OR time_series field:humidity
     Histograms of temperature and Time series of humidity. Parenthesis indicate precedence.
-
-histogram AND field:temperature OR time_series AND field:humidity
 
 !temperature
     "temperature" not in title.
