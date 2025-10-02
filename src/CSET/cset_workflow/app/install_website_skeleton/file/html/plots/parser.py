@@ -5,7 +5,7 @@
 import re
 from collections.abc import Iterable, Sequence
 from enum import Flag, auto
-from typing import Callable
+from typing import Callable, Literal
 
 
 class TT(Flag):
@@ -50,15 +50,15 @@ class Token:
     """Token, possibly with a value."""
 
     kind: TT
-    value: str | None
+    value: str
 
-    def __init__(self, kind, value=None) -> None:
+    def __init__(self, kind, value="") -> None:
         self.kind = kind
         self.value = value
 
     def __str__(self) -> str:
         """Return str(self)."""
-        if self.value is None:
+        if self.value == "":
             assert self.kind.name, "Token always has a name."
             return self.kind.name
         else:
@@ -191,7 +191,7 @@ def create_condition(
 
 
 def combiner_and(left: Condition, right: Condition) -> Condition:
-    """Logically combine two Condition with an AND."""
+    """Logically combine two Conditions with an AND."""
 
     def combined(d: dict) -> bool:
         return left(d) and right(d)
@@ -200,7 +200,7 @@ def combiner_and(left: Condition, right: Condition) -> Condition:
 
 
 def combiner_or(left: Condition, right: Condition) -> Condition:
-    """Logically combine two Condition with an OR."""
+    """Logically combine two Conditions with an OR."""
 
     def combined(d: dict) -> bool:
         return left(d) or right(d)
@@ -213,8 +213,8 @@ def parse_condition(tokens: Sequence[Token]) -> tuple[int, Condition | None]:
 
     Arguments
     ---------
-    tokens: list[Token]
-        List of tokens, starting from the potential condition.
+    tokens: Sequence[Token]
+        Sequence of tokens, starting from the potential condition.
 
     Returns
     -------
@@ -225,60 +225,253 @@ def parse_condition(tokens: Sequence[Token]) -> tuple[int, Condition | None]:
         The Condition function for this condition. None if there was not a
         condition.
     """
-    if len(tokens) == 1:
-        if tokens[0].kind == TT.LITERAL:
-            assert tokens[0].value, "Literal tokens always have a value."
-            return 1, create_condition(tokens[0].value)
-    elif len(tokens) > 1:
-        if tokens[0].kind in TT.OPERATOR and tokens[1].kind == TT.LITERAL:
-            assert tokens[1].value, "Literal tokens always have a value."
-            return 2, create_condition(tokens[1].value, operator=tokens[0].kind)
-        elif tokens[0].kind == TT.LITERAL and tokens[1].kind == TT.COLON:
-            facet = tokens[0].value
-            assert facet, "Literal tokens always have a value."
-            if tokens[2].kind in TT.OPERATOR and tokens[3].kind == TT.LITERAL:
-                assert tokens[3].value, "Literal tokens always have a value."
-                return 4, create_condition(
-                    tokens[3].value, facet=facet, operator=tokens[2].kind
-                )
-            elif tokens[2].kind == TT.LITERAL:
-                assert tokens[2].value, "Literal tokens always have a value."
-                return 3, create_condition(tokens[2].value, facet=facet)
-    # Not matched as a condition.
-    return 0, None
+    if (
+        # Just a value to search for.
+        len(tokens) >= 1
+        and tokens[0].kind == TT.LITERAL
+        and (len(tokens) == 1 or tokens[1].kind != TT.COLON)
+    ):
+        return 1, create_condition(tokens[0].value)
+    elif (
+        # Value to search for with operator.
+        len(tokens) >= 2
+        and tokens[0].kind in TT.OPERATOR
+        and tokens[1].kind == TT.LITERAL
+    ):
+        return 2, create_condition(tokens[1].value, operator=tokens[0].kind)
+    elif (
+        # Value to search for in facet.
+        len(tokens) >= 3
+        and tokens[0].kind == TT.LITERAL
+        and tokens[1].kind == TT.COLON
+        and tokens[2].kind == TT.LITERAL
+    ):
+        return 3, create_condition(tokens[2].value, facet=tokens[0].value)
+    elif (
+        # Value to search for in facet with operator.
+        len(tokens) >= 4
+        and tokens[0].kind == TT.LITERAL
+        and tokens[1].kind == TT.COLON
+        and tokens[2].kind in TT.OPERATOR
+        and tokens[3].kind == TT.LITERAL
+    ):
+        return 4, create_condition(
+            tokens[3].value, facet=tokens[0].value, operator=tokens[2].kind
+        )
+    else:
+        # Not matched as a condition.
+        return 0, None
 
 
-def parser(tokens: list[Token]):
-    """Parse tokens into AST."""
+def parse_grouped_expression(tokens: Sequence[Token]) -> int:
+    """Parse a grouped expression from a stream of tokens.
+
+    Arguments
+    ---------
+    tokens: Sequence[Token]
+        Sequence of tokens, starting from the potential grouped expression.
+
+    Returns
+    -------
+    offset: int
+        How many tokens were consumed by the grouped expression. A value of 0
+        indicates it was not a grouped expression.
+
+    Raises
+    ------
+    ValueError
+        If the parentheses are unmatched.
+    """
+    if len(tokens) < 2 or tokens[0].kind != TT.BEGIN_PARENTHESIS:
+        return 0
+
+    offset = 1
+    depth = 1
+    while depth > 0 and offset < len(tokens):
+        match tokens[offset].kind:
+            case TT.BEGIN_PARENTHESIS:
+                depth += 1
+            case TT.END_PARENTHESIS:
+                depth -= 1
+        offset += 1
+    if depth != 0:
+        raise ValueError("Unmatched parenthesis.")
+
+    return offset
+
+
+def parse_expression(tokens: Sequence[Token]) -> Condition:
+    """Parse an expression into a single Condition function.
+
+    Arguments
+    ---------
+    tokens: Sequence[Token]
+        Sequence of tokens to parse.
+
+    Returns
+    -------
+    Condition
+        The condition represented by the tokens.
+
+    Raises
+    ------
+    ValueError
+        If the tokens do not form a valid expression.
+    """
+    print("Parsing tokens:", " ".join(str(t) for t in tokens))
+
+    conditions: list[Condition | Literal[TT.AND] | Literal[TT.OR]] = []
     index = 0
     while index < len(tokens):
-        token = tokens[index]
-        match token.kind:
-            # case TT.BEGIN_PARENTHESIS:
-            #     collected = []
-            #     index += 1
-            #     token = tokens[index]
-            #     while token != TT.END_PARENTHESIS:
-            #         collected.append(token)
-            #         index += 1
-            #         token = tokens[index]
+        # Accounts for Literals and Operators.
+        offset, condition = parse_condition(tokens[index:])
+        if offset > 0:
+            index += offset
+            conditions.append(condition)
+            continue
 
-            case [TT.LITERAL, TT.COLON]:
-                pass
+        # Accounts for AND/OR.
+        if tokens[index].kind in TT.COMBINER:
+            conditions.append(tokens[index].kind)
+            index += 1
+            continue
 
-            case TT.OPERATOR:
-                pass
+        # Accounts for parentheses.
+        offset = parse_grouped_expression(tokens[index:])
+        if offset > 0:
+            # Recursively parse the grouped expression.
+            inner_condition = parse_expression(tokens[index + 1 : index + offset - 1])
+            conditions.append(inner_condition)
+            index += offset
+            continue
 
-            case _:
-                raise ValueError("Unknown token.")
+    return collapse_conditions(conditions)
+
+
+def collapse_conditions(
+    conditions: list[Condition | Literal[TT.AND] | Literal[TT.OR]],
+) -> Condition:
+    """Collapse a list of conditions and combiners into a single Condition.
+
+    Pairs of conditions without an explicit combiner are treated as AND.
+
+    The order of operations is:
+        1. Evaluate ANDs first, left to right.
+        2. Evaluate ORs next, left to right.
+        3. Conditions without explicit combiners, left to right.
+
+    Arguments
+    ---------
+    conditions: list[Condition | Literal[TT.AND] | Literal[TT.OR]]
+        List of conditions and combiners.
+
+    Returns
+    -------
+    Condition
+        The collapsed condition that results from combining the conditions.
+
+    Raises
+    ------
+    ValueError
+        If the conditions list is empty or has unpaired combiners.
+    """
+    print("Combining conditions:", conditions)
+
+    if not conditions:
+        raise ValueError("No conditions to collapse.")
+
+    # Evaluate ANDs first, left to right.
+    if len(conditions) >= 3:
+        collapsed_conditions = []
+        index = 0
+        while index < len(conditions):
+            match conditions[index : index + 3]:
+                case [left, TT.AND, right] if left not in (
+                    TT.AND,
+                    TT.OR,
+                ) and right not in (
+                    TT.AND,
+                    TT.OR,
+                ):
+                    collapsed_conditions.append(combiner_and(left, right))
+                    index += 3
+                case [left, *_] if left != TT.AND:
+                    collapsed_conditions.append(left)
+                    index += 1
+                case _:
+                    raise ValueError("Error when combining AND.")
+        conditions = collapsed_conditions
+
+    # Evaluate ORs second, left to right.
+    if len(conditions) >= 3:
+        collapsed_conditions = []
+        index = 0
+        while index < len(conditions):
+            match conditions[index : index + 3]:
+                case [left, TT.OR, right] if left != TT.OR and right != TT.OR:
+                    collapsed_conditions.append(combiner_or(left, right))
+                    index += 3
+                case [left, *_] if left != TT.OR:
+                    collapsed_conditions.append(left)
+                    index += 1
+                case _:
+                    raise ValueError("Error when combining OR.")
+        conditions = collapsed_conditions
+
+    # Verify we only have conditions at this point.
+    if any(condition in (TT.AND, TT.OR) for condition in conditions):
+        raise ValueError("Unprocessed combiner.")
+
+    # Evaluate implicit ANDs third, left to right.
+    collapsed_condition = conditions[0]
+    for condition in conditions[1:]:
+        collapsed_condition = combiner_and(collapsed_condition, condition)
+
+    return collapsed_condition
 
 
 query = "(histogram AND field : temperature) OR (time_series AND field:humidity) date:>= 2025-09-25T15:22Z ((!foo))"
+# query = "humidity OR !foo"
 tokens = list(lexer(query))
 for token in tokens:
     print(token)
 
 print("-" * 50)
 
-ast = parser(tokens)
-print(ast)
+query_func = parse_expression(tokens)
+
+print("-" * 50)
+
+for diagnostic in [
+    {
+        "title": "temperature_histogram_foo",
+        "field": "temperature",
+        "date": "2025-10-02T23:09Z",
+        "show": "NO",
+    },
+    {
+        "title": "temperature_histogram",
+        "field": "temperature",
+        "date": "2025-10-02T23:09Z",
+        "show": "YES",
+    },
+    {
+        "title": "old_temperature_histogram",
+        "field": "temperature",
+        "date": "2021-10-02T23:09Z",
+        "show": "NO",
+    },
+    {
+        "title": "humidity_histogram",
+        "field": "humidity",
+        "date": "2025-10-02T23:09Z",
+        "show": "NO",
+    },
+    {
+        "title": "humidity_time_series",
+        "field": "humidity",
+        "date": "2025-10-02T23:09Z",
+        "show": "YES",
+    },
+]:
+    print(f"{query_func(diagnostic)}\t{diagnostic}")
