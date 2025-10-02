@@ -22,7 +22,7 @@ field:x_wind OR field:y_wind
     Histograms of temperature and Time series of humidity. Parenthesis indicate precedence.
 
 histogram AND field:temperature OR time_series field:humidity
-    Histograms of temperature and Time series of humidity. Parenthesis indicate precedence.
+    Histograms of temperature and Time series of humidity.
 
 !temperature
     "temperature" not in title.
