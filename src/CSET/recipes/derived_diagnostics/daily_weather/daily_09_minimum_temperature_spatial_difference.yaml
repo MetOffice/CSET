@@ -1,16 +1,17 @@
 category: Daily Weather
-title: $MODEL_NAME Daily minimum temperature at 0900 UTC
+title: "Daily minimum temperature at 0900 UTC\nDifference ($BASE_MODEL - $OTHER_MODEL)"
 description: |
   Extracts and plots the daily minimum temperature between 0900 UTC and 0900 UTC
-  the following day in $MODEL_NAME as per observation measurements. The minimum
+  the following day as per observation measurements and plots the difference. The minimum
   is created from a rolling 24 h window, adds hour of day coordinate, and then
   selects the 21 UTC hour from the rolling window as this represents the validity
   time of the required range. The minimum temperature can occur any time in the 24
   h window.
 
 steps:
-  - operator: read.read_cube
+  - operator: read.read_cubes
     file_paths: $INPUT_PATHS
+    model_names: [$BASE_MODEL, $OTHER_MODEL]
     constraint:
       operator: constraints.combine_constraints
       varname_constraint:
@@ -28,15 +29,14 @@ steps:
     method: 'MIN'
     window: 24
 
+  - operator: misc.difference
+
   - operator: aggregate.add_hour_coordinate
 
-  - operator: filters.filter_cubes
+  - operator: filters.filter_multiple_cubes
     constraint:
       operator: constraints.generate_hour_constraint
       hour_start: 21
-
-  - operator: misc.convert_units
-    units: 'Celsius'
 
   - operator: plot.spatial_pcolormesh_plot
 
