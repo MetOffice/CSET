@@ -98,10 +98,10 @@ def load(conf: Config):
     # require individual loaders.
 
     for model in models:
-        # Dummy diagnostic.
-        if conf.NEW_AVIATION_DIAGNOSTIC_TUTORIAL_REBASE:
+        # Aviation Fog presence.
+        if conf.AVIATION_FOG_PRESENCE_SPATIAL_PLOT:
             yield RawRecipe(
-                recipe="new_aviation_diagnostic_tutorial_spatial_plot.yaml",
+                recipe="aviation_fog_presence_spatial_plot.yaml",
                 model_ids=model["id"],
                 variables={
                     "MODEL_NAME": model["name"],
