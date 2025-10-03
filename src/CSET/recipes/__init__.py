@@ -17,7 +17,7 @@
 import importlib.resources
 import logging
 import sys
-from collections.abc import Iterable
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
@@ -45,7 +45,7 @@ def _version_agnostic_importlib_resources_file() -> Path:
 
 def _recipe_files_in_tree(
     recipe_name: str | None = None, input_dir: Path | None = None
-) -> Iterable[Path]:
+) -> Iterator[Path]:
     """Yield recipe file Paths matching the recipe name."""
     if input_dir is None:
         input_dir = _version_agnostic_importlib_resources_file()
@@ -271,12 +271,12 @@ class Config:
         return self.d
 
 
-def load_recipes(variables: dict[str, Any]) -> Iterable[RawRecipe]:
+def load_recipes(variables: dict[str, Any]) -> Iterator[RawRecipe]:
     """Load recipes enabled by configuration.
 
     Recipes are loaded using all loaders (python modules) in CSET.loaders. Each
     of these loaders must define a function with the signature `load(conf: dict)
-    -> Iterable[RawRecipe]`, which will be called with `variables`.
+    -> Iterator[RawRecipe]`, which will be called with `variables`.
 
     A minimal example can be found in `CSET.loaders.test`.
 
@@ -287,7 +287,7 @@ def load_recipes(variables: dict[str, Any]) -> Iterable[RawRecipe]:
 
     Returns
     -------
-    Iterable[RawRecipe]
+    Iterator[RawRecipe]
         Configured recipes.
 
     Raises
