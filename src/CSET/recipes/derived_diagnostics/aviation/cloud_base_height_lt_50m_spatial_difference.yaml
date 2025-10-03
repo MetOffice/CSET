@@ -1,0 +1,36 @@
+category: Aviation
+title: "Cloud base height less than 50 m \nDifference ($BASE_MODEL - $OTHER_MODEL)"
+description: |
+  Generates a mask of whether the cloud base height is less than 50 m in a grid box and provides
+  the difference between the two models. Values will either be positive or negative one
+  depending on which model has cloud with a base height lower than 50 m at that location if the
+  other does not.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: [$BASE_MODEL, $OTHER_MODEL]
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: cloud_base_altitude
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: misc.convert_units
+    units: 'metre'
+
+  - operator: filters.generate_mask
+    condition: '<'
+    value: 50
+
+  - operator: misc.difference
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_nc
+    overwrite: True
