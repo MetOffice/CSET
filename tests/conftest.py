@@ -233,3 +233,63 @@ def ensemble_cube_read_only():
 def ensemble_cube(ensemble_cube_read_only):
     """Get ensemble cube to run tests on. It is safe to modify."""
     return ensemble_cube_read_only.copy()
+
+
+@pytest.fixture(scope="session")
+def visibility_cube_read_only():
+    """Get visibility cube to run tests on. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/aviation/vis_avi.nc")
+
+
+@pytest.fixture()
+def visibility_cube(visibility_cube_read_only):
+    """Get visibility cube to run tests on. It is safe to modify."""
+    return visibility_cube_read_only.copy()
+
+
+@pytest.fixture(scope="session")
+def cloud_base_cube_read_only():
+    """Get cloud base altitude cube to run tests on. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/aviation/cld_base_avi.nc")
+
+
+@pytest.fixture()
+def cloud_base_cube(cloud_base_cube_read_only):
+    """Get cloud base altitude cube to run tests on. It is safe to modify."""
+    return cloud_base_cube_read_only.copy()
+
+
+@pytest.fixture(scope="session")
+def orography_cube_read_only():
+    """Get orography cube to run tests on. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/aviation/Orography_2D_avi.nc")
+
+
+@pytest.fixture()
+def orography_cube(orography_cube_read_only):
+    """Get orography cube to run tets on. It is safe to modify."""
+    return orography_cube_read_only.copy()
+
+
+@pytest.fixture(scope="session")
+def orography_3D_cube_read_only():
+    """Get 3D orography cube to run tests on. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/aviation/Orography_3D_avi.nc")
+
+
+@pytest.fixture()
+def orography_3D_cube(orography_3D_cube_read_only):
+    """Get 3D orography cube to run tests on. It is safe to modify."""
+    return orography_3D_cube_read_only.copy()
+
+
+@pytest.fixture(scope="session")
+def orography_4D_cube_read_only():
+    """Get 4D orography cube to run tests on. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/aviation/Orography_4D_avi.nc")
+
+
+@pytest.fixture()
+def orography_4D_cube(orography_4D_cube_read_only):
+    """Get 4D orography cube to run tests on. It is safe to modify."""
+    return orography_4D_cube_read_only.copy()

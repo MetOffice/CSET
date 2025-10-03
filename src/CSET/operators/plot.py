@@ -284,6 +284,11 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
     if any("probability_of_" in name for name in varnames):
         cmap, levels, norm = _custom_colormap_probability(cube, axis=axis)
         return cmap, levels, norm
+    # If aviation colour state use custom colorbar and levels
+    if any("aviation_colour_state" in name for name in varnames):
+        cmap, levels, norm = _custom_colormap_aviation_colour_state(cube)
+        return cmap, levels, norm
+
     # If no valid colormap has been defined, use defaults and return.
     if not cmap:
         logging.warning("No colorbar definition exists for %s.", cube.name())
@@ -1613,6 +1618,42 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
         cmap = cmap
         levels = levels
         norm = norm
+    return cmap, levels, norm
+
+
+def _custom_colormap_aviation_colour_state(cube: iris.cube.Cube):
+    """Return custom colourmap for aviation colour state.
+
+    If "aviation_colour_state" appears anywhere in the name of a cube
+    this function will be called.
+
+    Parameters
+    ----------
+    cube: Cube
+        Cube of variable for which the colorbar information is desired.
+
+    Returns
+    -------
+    cmap: Matplotlib colormap.
+    levels: List
+        List of levels to use for plotting. For continuous plots the min and max
+        should be taken as the range.
+    norm: BoundaryNorm.
+    """
+    levels = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5]
+    colors = [
+        "#87ceeb",
+        "#ffffff",
+        "#8ced69",
+        "#ffff00",
+        "#ffd700",
+        "#ffa500",
+        "#fe3620",
+    ]
+    # Create a custom colormap
+    cmap = mcolors.ListedColormap(colors)
+    # Normalise the levels
+    norm = mcolors.BoundaryNorm(levels, cmap.N)
     return cmap, levels, norm
 
 
