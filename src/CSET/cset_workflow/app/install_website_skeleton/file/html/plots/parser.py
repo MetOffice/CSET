@@ -26,8 +26,9 @@ operator =
 
 """
 
+import itertools
 import re
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from enum import Enum, auto
 from typing import Literal
 
@@ -78,7 +79,11 @@ class LiteralToken:
 
     def __str__(self) -> str:
         """Return str(self)."""
-        return f"LITERAL[{self.value}]"
+        return f"LiteralToken[{self.value}]"
+
+    def __repr__(self) -> str:
+        """Return repr(self)."""
+        return f"LiteralToken({repr(self.value)})"
 
 
 class Facet:
@@ -91,7 +96,11 @@ class Facet:
 
     def __str__(self) -> str:
         """Return str(self)."""
-        return f"LITERAL[{self.value}]"
+        return f"Facet[{self.value}]"
+
+    def __repr__(self) -> str:
+        """Return repr(self)."""
+        return f"Facet({repr(self.value)})"
 
 
 Token = LiteralToken | Facet | Parenthesis | Combiner | Operator
@@ -116,12 +125,18 @@ def lexer(s: str) -> Iterable[Token]:
         LexOnly.FACET: r"[a-z_\-]+[ \t]*:",
         LexOnly.LITERAL: r"[^ \t\(\)]+",
     }
-    token_regex = "|".join(f"(?P<{key.name}>{val})" for key, val in token_spec.items())
+    token_regex = "|".join(
+        f"(?P<{str(key).replace('.', '_')}>{val})" for key, val in token_spec.items()
+    )
+    token_name_mapping = {str(key).replace(".", "_"): key for key in token_spec.keys()}
     for match in re.finditer(token_regex, s, flags=re.IGNORECASE):
         # Get the Enum object from token_spec matching the capture group name.
-        kind = next(key for key in token_spec.keys() if str(key) == match.lastgroup)
+        assert match.lastgroup, "match.lastgroup cannot be None."
+        kind = token_name_mapping[match.lastgroup]
         value = match.group()
         match kind:
+            case None:
+                raise ValueError("Oh no!")
             case LexOnly.WHITESPACE:
                 continue
             case LexOnly.FACET:
@@ -136,9 +151,11 @@ def lexer(s: str) -> Iterable[Token]:
 class Condition:
     """A condition."""
 
+    func: Callable
+
     def __init__(
         self,
-        value: LiteralToken,
+        value: LiteralToken | Callable,
         facet: Facet = Facet("title"),  # noqa: B008
         operator: Operator = Operator.IN,
     ):
@@ -146,8 +163,9 @@ class Condition:
 
         Arguments
         ---------
-        value: str
-            The value to check for within the facet.
+        value: str | Callable
+            The value to check for within the facet. May also be a callable to
+            determine this, in which case other arguments are ignored.
         facet: Facet, optional
             The facet to check. Defaults to title.
         operator: Operator, optional
@@ -160,6 +178,10 @@ class Condition:
             A function implementing the condition. It may raise a KeyError if
             the facet is not present, so calling code should capture that.
         """
+        if isinstance(value, Callable):
+            self.func = value
+            return
+
         v = value.value
         f = facet.value
 
@@ -198,14 +220,16 @@ class Condition:
                     return v <= d[f]
             case _:
                 raise ValueError(f"Invalid operator: {operator}")
-        # Overwrite cond(d).
-        self.__call__ = condition
+
+        self.func = condition
+
+    def __repr__(self) -> str:
+        """Return repr(self)."""
+        return f"<Condition {hex(id(self))}>"
 
     def __call__(self, d: dict[str, str]) -> bool:
         """Implement self(d)."""
-        raise NotImplementedError(
-            "Condition.__call__ should be overwritten during initialisation."
-        )
+        return self.func(d)
 
     def __and__(self, other):
         """Implement self & other."""
@@ -215,7 +239,7 @@ class Condition:
         def combined(d: dict[str, str]) -> bool:
             return self(d) and other(d)
 
-        return combined
+        return Condition(combined)
 
     def __or__(self, other):
         """Implement self | other."""
@@ -225,7 +249,7 @@ class Condition:
         def combined(d: dict[str, str]) -> bool:
             return self(d) or other(d)
 
-        return combined
+        return Condition(combined)
 
     def __invert__(self):
         """Implement ~self."""
@@ -233,7 +257,7 @@ class Condition:
         def combined(d: dict[str, str]) -> bool:
             return not self(d)
 
-        return combined
+        return Condition(combined)
 
 
 def parse_grouped_expression(tokens: list[Token]) -> tuple[int, Condition | None]:
@@ -293,14 +317,14 @@ def parse_condition(tokens: list[Token]) -> tuple[int, Condition | None]:
         The Condition function for this condition. None if there was not a
         condition.
     """
-    match tokens:
-        case [lt] if isinstance(lt, LiteralToken):
+    match tokens[:3]:
+        case [lt, *_] if isinstance(lt, LiteralToken):
             # Just a value to search for.
             return 1, Condition(lt)
-        case [op, lt] if isinstance(op, Operator) and isinstance(lt, LiteralToken):
+        case [op, lt, *_] if isinstance(op, Operator) and isinstance(lt, LiteralToken):
             # Value to search for with operator.
             return 2, Condition(lt, operator=op)
-        case [fc, lt] if isinstance(fc, Facet) and isinstance(lt, LiteralToken):
+        case [fc, lt, *_] if isinstance(fc, Facet) and isinstance(lt, LiteralToken):
             # Value to search for in facet.
             return 2, Condition(lt, facet=fc)
         case [fc, op, lt] if (
@@ -365,6 +389,7 @@ def parse_expression(tokens: list[Token]) -> Condition:
     return collapse_conditions(conditions)
 
 
+# TODO: Support multiple levels of NOT.
 def collapse_nots(
     conditions: list[Condition | Combiner],
 ) -> list[Condition | Literal[Combiner.AND] | Literal[Combiner.OR]]:
@@ -426,7 +451,14 @@ def collapse_ands(
     ValueError
         If any ANDs are unable to be processed due to an invalid expression.
     """
-    while len(conditions) > 1 and Combiner.AND in conditions:
+    while len(conditions) > 1 and (
+        Combiner.AND in conditions
+        # Pairs of conditions yet to be ANDed.
+        or any(
+            isinstance(a, Condition) and isinstance(b, Condition)
+            for a, b in itertools.pairwise(conditions)
+        )
+    ):
         collapsed_conditions = []
         index = 0
         while index < len(conditions):
@@ -517,23 +549,17 @@ def collapse_conditions(conditions: list[Condition | Combiner]) -> Condition:
     ValueError
         If the conditions list is empty or has unpaired combiners.
     """
-    print("Combining conditions:", conditions)
-
     if not conditions:
         raise ValueError("No conditions to collapse.")
-    print("Point A:", conditions)
 
     # Evaluate NOTs first, left to right.
     collapsed = collapse_nots(conditions)
-    print("Point B:", collapsed)
 
     # Evaluate ANDs second, left to right.
     collapsed = collapse_ands(collapsed)
-    print("Point C:", collapsed)
 
     # Evaluate ORs third, left to right.
     collapsed = collapse_ors(collapsed)
-    print("Point D:", collapsed)
 
     # Verify we only have a single condition at this point.
     if len(collapsed) != 1 or not isinstance(collapsed[0], Condition):
@@ -543,8 +569,9 @@ def collapse_conditions(conditions: list[Condition | Combiner]) -> Condition:
 
 
 if __name__ == "__main__":
-    # query = "(histogram AND field : temperature) OR (time_series AND field:humidity) date:>= 2025-09-25T15:22Z ((!foo))"
-    query = "temperature NOT(!foo)"
+    # query = "((histogram AND field : temperature) OR (time_series AND field:humidity)) date:>= 2025-09-25T15:22Z ((!foo))"
+    query = "NOT NOT NOT NOT foo"
+    # query = "temperature NOT(!foo)"
     tokens = list(lexer(query))
     for token in tokens:
         print(token)
