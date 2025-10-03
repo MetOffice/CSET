@@ -47,13 +47,15 @@ def _recipe_files_in_tree(
     recipe_name: str | None = None, input_dir: Path | None = None
 ) -> Iterable[Path]:
     """Yield recipe file Paths matching the recipe name."""
-    if recipe_name is None:
-        recipe_name = ""
     if input_dir is None:
         input_dir = _version_agnostic_importlib_resources_file()
     for file in input_dir.iterdir():
         logger.debug("Testing %s", file)
-        if recipe_name in file.name and file.is_file() and file.suffix == ".yaml":
+        if (
+            (recipe_name is None or recipe_name == file.name)
+            and file.is_file()
+            and file.suffix == ".yaml"
+        ):
             yield file
         elif file.is_dir() and file.name[0] != "_":  # Excludes __pycache__
             yield from _recipe_files_in_tree(recipe_name, file)
