@@ -116,7 +116,7 @@ def load(conf: Config):
         # Lightning presence.
         if conf.LIGHTNING_PRESENCE_SPATIAL_PLOT:
             yield RawRecipe(
-                recipe="lightning_presence_spatial_plot.yaml",
+                recipe="lightning_presence_spatial_seq_plot.yaml",
                 model_ids=model["id"],
                 variables={
                     "MODEL_NAME": model["name"],
