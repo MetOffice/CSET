@@ -21,7 +21,7 @@ class TT(Flag):
     COLON = auto()
     # Operators.
     IN = auto()
-    NOT = auto()
+    NOT_IN = auto()
     EQUALS = auto()
     NOT_EQUALS = auto()
     GREATER_THAN = auto()
@@ -30,7 +30,7 @@ class TT(Flag):
     LESS_THAN_OR_EQUALS = auto()
     OPERATOR = (
         IN
-        | NOT
+        | NOT_IN
         | EQUALS
         | NOT_EQUALS
         | GREATER_THAN
@@ -41,7 +41,8 @@ class TT(Flag):
     # Combiners.
     AND = auto()
     OR = auto()
-    COMBINER = AND | OR
+    NOT = auto()
+    COMBINER = AND | OR | NOT
     # Literal value.
     LITERAL = auto()
 
@@ -76,12 +77,13 @@ def lexer(s) -> Iterable[Token]:
         TT.GREATER_THAN_OR_EQUALS: r"<=",
         TT.LESS_THAN_OR_EQUALS: r">=",
         # TODO: Consider using `-` instead of `!`, as that is what is used by GitHub and Danbooru.
-        TT.NOT: r"!",
+        TT.NOT_IN: r"!",
         TT.GREATER_THAN: r"<",
         TT.LESS_THAN: r">",
         TT.EQUALS: r"=",
         TT.AND: r"\band\b",
         TT.OR: r"\bor\b",
+        TT.NOT: r"\bnot\b",
         TT.LITERAL: r"[^ \t\(\)]+",
     }
     token_regex = "|".join(
@@ -158,7 +160,7 @@ def create_condition(
 
             def condition(d: dict[str, str]) -> bool:
                 return value in d[facet]
-        case TT.NOT:
+        case TT.NOT_IN:
 
             def condition(d: dict[str, str]) -> bool:
                 return value not in d[facet]
@@ -346,7 +348,7 @@ def parse_expression(tokens: Sequence[Token]) -> Condition:
             index += 1
             continue
 
-        if tokens[index].kind == TT.NOT:
+        if tokens[index].kind == TT.NOT_IN:
             conditions.append(tokens[index].kind)
             index += 1
             continue
@@ -371,7 +373,6 @@ def parse_expression(tokens: Sequence[Token]) -> Condition:
 # similar search systems, like GitHub or Danbooru.
 
 
-# TODO: Add support for NOT in conditions.
 def collapse_conditions(
     conditions: list[Condition | Literal[TT.AND] | Literal[TT.OR]],
 ) -> Condition:
@@ -471,7 +472,7 @@ def collapse_conditions(
 
 
 # query = "(histogram AND field : temperature) OR (time_series AND field:humidity) date:>= 2025-09-25T15:22Z ((!foo))"
-query = "temperature !(foo)"
+query = "temperature NOT(!foo)"
 tokens = list(lexer(query))
 for token in tokens:
     print(token)
