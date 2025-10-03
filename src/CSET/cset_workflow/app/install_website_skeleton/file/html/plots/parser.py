@@ -16,12 +16,12 @@ class TT(Flag):
     BEGIN_PARENTHESIS = auto()
     END_PARENTHESIS = auto()
     GROUPING = BEGIN_PARENTHESIS | END_PARENTHESIS
-    # Facets
+    # Facets.
     FACET = auto()
     COLON = auto()
     # Operators.
     IN = auto()
-    NOT_IN = auto()
+    NOT = auto()
     EQUALS = auto()
     NOT_EQUALS = auto()
     GREATER_THAN = auto()
@@ -30,7 +30,7 @@ class TT(Flag):
     LESS_THAN_OR_EQUALS = auto()
     OPERATOR = (
         IN
-        | NOT_IN
+        | NOT
         | EQUALS
         | NOT_EQUALS
         | GREATER_THAN
@@ -38,7 +38,7 @@ class TT(Flag):
         | LESS_THAN
         | LESS_THAN_OR_EQUALS
     )
-    # Combiners
+    # Combiners.
     AND = auto()
     OR = auto()
     COMBINER = AND | OR
@@ -76,7 +76,7 @@ def lexer(s) -> Iterable[Token]:
         TT.GREATER_THAN_OR_EQUALS: r"<=",
         TT.LESS_THAN_OR_EQUALS: r">=",
         # TODO: Consider using `-` instead of `!`, as that is what is used by GitHub and Danbooru.
-        TT.NOT_IN: r"!",
+        TT.NOT: r"!",
         TT.GREATER_THAN: r"<",
         TT.LESS_THAN: r">",
         TT.EQUALS: r"=",
@@ -158,7 +158,7 @@ def create_condition(
 
             def condition(d: dict[str, str]) -> bool:
                 return value in d[facet]
-        case TT.NOT_IN:
+        case TT.NOT:
 
             def condition(d: dict[str, str]) -> bool:
                 return value not in d[facet]
@@ -205,6 +205,15 @@ def combiner_or(left: Condition, right: Condition) -> Condition:
 
     def combined(d: dict) -> bool:
         return left(d) or right(d)
+
+    return combined
+
+
+def combiner_not(right: Condition) -> Condition:
+    """Logically NOT a Condition."""
+
+    def combined(d: dict) -> bool:
+        return not right(d)
 
     return combined
 
@@ -337,7 +346,7 @@ def parse_expression(tokens: Sequence[Token]) -> Condition:
             index += 1
             continue
 
-        if tokens[index].kind == TT.NOT_IN:
+        if tokens[index].kind == TT.NOT:
             conditions.append(tokens[index].kind)
             index += 1
             continue
@@ -371,9 +380,9 @@ def collapse_conditions(
     Pairs of conditions without an explicit combiner are treated as AND.
 
     The order of operations is:
-        1. Evaluate ANDs first, left to right.
-        2. Evaluate ORs next, left to right.
-        3. Conditions without explicit combiners, left to right.
+        1. Evaluate NOTs first, left to right.
+        2. Evaluate ANDs (explicit and implicit) second, left to right.
+        3. Evaluate ORs third, left to right.
 
     Arguments
     ---------
@@ -395,46 +404,62 @@ def collapse_conditions(
     if not conditions:
         raise ValueError("No conditions to collapse.")
 
-    # Evaluate ANDs first, left to right.
+    combiners = (TT.AND, TT.OR, TT.NOT)
+
+    # Evaluate NOTs first, left to right.
+    if len(conditions) >= 2:
+        collapsed_conditions = []
+        index = 0
+        while index < len(conditions):
+            match conditions[index : index + 2]:
+                case [TT.NOT, right] if right not in combiners:
+                    collapsed_conditions.append(combiner_not(right))
+                    index += 2
+                case [left, *_] if left != TT.NOT:
+                    collapsed_conditions.append(left)
+                    index += 1
+        conditions = collapsed_conditions
+
+    # Evaluate ANDs second, left to right.
     if len(conditions) >= 3:
         collapsed_conditions = []
         index = 0
         while index < len(conditions):
             match conditions[index : index + 3]:
-                case [left, TT.AND, right] if left not in (
-                    TT.AND,
-                    TT.OR,
-                ) and right not in (
-                    TT.AND,
-                    TT.OR,
+                case [left, TT.AND, right] if (
+                    left not in combiners and right not in combiners
                 ):
                     collapsed_conditions.append(combiner_and(left, right))
                     index += 3
+                case [left, right, *_] if (
+                    left not in combiners and right not in combiners
+                ):
+                    # TODO: Need this to loop.
+                    collapsed_conditions.append(combiner_and(left, right))
+                    index += 2
                 case [left, *_] if left != TT.AND:
                     collapsed_conditions.append(left)
                     index += 1
-                case _:
-                    raise ValueError("Error when combining AND.")
         conditions = collapsed_conditions
 
-    # Evaluate ORs second, left to right.
+    # Evaluate ORs third, left to right.
     if len(conditions) >= 3:
         collapsed_conditions = []
         index = 0
         while index < len(conditions):
             match conditions[index : index + 3]:
-                case [left, TT.OR, right] if left != TT.OR and right != TT.OR:
+                case [left, TT.OR, right] if (
+                    left not in combiners and right not in combiners
+                ):
                     collapsed_conditions.append(combiner_or(left, right))
                     index += 3
                 case [left, *_] if left != TT.OR:
                     collapsed_conditions.append(left)
                     index += 1
-                case _:
-                    raise ValueError("Error when combining OR.")
         conditions = collapsed_conditions
 
     # Verify we only have conditions at this point.
-    if any(condition in (TT.AND, TT.OR) for condition in conditions):
+    if any(condition in combiners for condition in conditions):
         raise ValueError("Unprocessed combiner.")
 
     # Evaluate implicit ANDs third, left to right.
