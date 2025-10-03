@@ -141,7 +141,7 @@ def load(conf: Config):
                     else None,
                 },
                 aggregation=False,
-            )              
+            )
         # Air frost presence.
         if conf.AIR_FROST_PRESENCE_SPATIAL_PLOT:
             yield RawRecipe(
