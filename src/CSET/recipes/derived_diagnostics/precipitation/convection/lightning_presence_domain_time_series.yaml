@@ -1,9 +1,9 @@
 category: Convection
-title: "$MODEL_NAME Lightning presence spatial plot"
+title: "Lightning presence domain timeseries"
 description: |
-  Generates a mask of whether lightning is present in a grid box and provides a
-  spatial plot. A value of one implies lightning is present in the column;
-  a value of zero implies lightning is not present in the grid box column.
+  Generates a mask of whether lightning is present in a grid box column
+  and provides a timeseries representing the chance of lightning anywhere
+  within the domain.
 
 steps:
   - operator: read.read_cubes
@@ -24,7 +24,12 @@ steps:
     condition: '>'
     value: 0.0
 
-  - operator: plot.spatial_pcolormesh_plot
+  - operator: collapse.collapse
+    coordinate: [grid_latitude, grid_longitude]
+    method: MAX
+
+  # Plot the data.
+  - operator: plot.plot_line_series
 
   - operator: write.write_cube_to_nc
     overwrite: True

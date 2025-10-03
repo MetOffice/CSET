@@ -1,4 +1,4 @@
-category: Convectin
+category: Convection
 title: $MODEL_NAME Daily occurrence of lightning
 description: |
   Extracts and plots the daily occurrence of lightning between 0900 UTC and
