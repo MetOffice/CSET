@@ -121,7 +121,7 @@ def load(conf: Config):
             model_ids=[model["id"] for model in models],
             aggregation=False,
         )
- 
+
     # Thick fog presence
     if conf.THICK_FOG_PRESENCE_DOMAIN_MEAN_TIMESERIES:
         yield RawRecipe(
