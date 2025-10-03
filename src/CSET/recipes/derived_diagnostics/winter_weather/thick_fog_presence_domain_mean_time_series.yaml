@@ -1,8 +1,9 @@
-category: Daily Weather
-title: Rain presence domain mean timeseries
+category: Winter Weather
+title: "Thick Fog presence domain mean time series"
 description: |
-  Generates a mask of whether rain is present in a grid box and provides a
-  timeseries representing the chance of rain anywhere within the domain.
+  Generates a mask of whether thick fog is present in a grid box and provides a
+  timeseries representing the chance of thick fog anywhere within the domain.
+  Thick fog is defined as visibility <= 100 m.
 
 steps:
   - operator: read.read_cubes
@@ -12,7 +13,7 @@ steps:
         operator: constraints.combine_constraints
         varname_constraint:
             operator: constraints.generate_var_constraint
-            varname: 'surface_microphysical_rainfall_rate'
+            varname: visibility_in_air
         cell_methods_constraint:
             operator: constraints.generate_cell_methods_constraint
             cell_methods: []
@@ -20,14 +21,13 @@ steps:
     subarea_extent: $SUBAREA_EXTENT
 
   - operator: filters.generate_mask
-    condition: '>'
-    value: 0.0
+    condition: '<='
+    value: 0.1
 
   - operator: collapse.collapse
     coordinate: [grid_latitude, grid_longitude]
     method: MEAN
 
-  # Plot the data.
   - operator: plot.plot_line_series
 
   - operator: write.write_cube_to_nc
