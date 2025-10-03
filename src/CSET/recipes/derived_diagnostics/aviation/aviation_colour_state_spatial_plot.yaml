@@ -5,8 +5,7 @@ description: |
   maximum colour state (i.e. the worst conditions) from the colour state due to
   visibility and cloud base altitude at an airfield. The aviation colour state
   can be found on the [Met Office website](https://www.metoffice.gov.uk/services/transport/aviation/regulated/national-aviation/abs/faqs). The colours are more important than the values which are used to create
-  the colourbar and calculate the aviation colour state. Blue represents the best conditions; Red
-  represents the worst conditions.
+  the colourbar and calculate the aviation colour state.
 
   If your cloud base altitude is above sea level please remember to include an
   orography file so that it can be adjusted to ground level. If the data is above
