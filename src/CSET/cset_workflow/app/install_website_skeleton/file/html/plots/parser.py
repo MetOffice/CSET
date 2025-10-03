@@ -75,6 +75,7 @@ def lexer(s) -> Iterable[Token]:
         TT.NOT_EQUALS: r"!=",
         TT.GREATER_THAN_OR_EQUALS: r"<=",
         TT.LESS_THAN_OR_EQUALS: r">=",
+        # TODO: Consider using `-` instead of `!`, as that is what is used by GitHub and Danbooru.
         TT.NOT_IN: r"!",
         TT.GREATER_THAN: r"<",
         TT.LESS_THAN: r">",
@@ -336,6 +337,11 @@ def parse_expression(tokens: Sequence[Token]) -> Condition:
             index += 1
             continue
 
+        if tokens[index].kind == TT.NOT_IN:
+            conditions.append(tokens[index].kind)
+            index += 1
+            continue
+
         # Accounts for parentheses.
         offset = parse_grouped_expression(tokens[index:])
         if offset > 0:
@@ -350,6 +356,13 @@ def parse_expression(tokens: Sequence[Token]) -> Condition:
     return collapse_conditions(conditions)
 
 
+# TODO: Change precedence so that implicit ands are evaluated with the same
+# precedence as explicit ANDs. This is probably more useful/less surprising
+# given what an OR is typically used for. It also matches the behaviour of other
+# similar search systems, like GitHub or Danbooru.
+
+
+# TODO: Add support for NOT in conditions.
 def collapse_conditions(
     conditions: list[Condition | Literal[TT.AND] | Literal[TT.OR]],
 ) -> Condition:
@@ -432,8 +445,8 @@ def collapse_conditions(
     return collapsed_condition
 
 
-query = "(histogram AND field : temperature) OR (time_series AND field:humidity) date:>= 2025-09-25T15:22Z ((!foo))"
-# query = "humidity OR !foo"
+# query = "(histogram AND field : temperature) OR (time_series AND field:humidity) date:>= 2025-09-25T15:22Z ((!foo))"
+query = "temperature !(foo)"
 tokens = list(lexer(query))
 for token in tokens:
     print(token)
