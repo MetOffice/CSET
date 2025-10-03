@@ -1,8 +1,9 @@
-category: Daily Weather
-title: Rain presence domain mean timeseries
+category: Winter Weather
+title: $MODEL_NAME Air frost presence spatial plot
 description: |
-  Generates a mask of whether rain is present in a grid box and provides a
-  timeseries representing the chance of rain anywhere within the domain.
+  Generates a mask of whether air frost is present in a grid box and provides a
+  spatial plot. A value of one implies air frost is present; a value of zero
+  implies air frost is not present.
 
 steps:
   - operator: read.read_cubes
@@ -12,7 +13,7 @@ steps:
         operator: constraints.combine_constraints
         varname_constraint:
             operator: constraints.generate_var_constraint
-            varname: 'surface_microphysical_rainfall_rate'
+            varname: 'temperature_at_screen_level'
         cell_methods_constraint:
             operator: constraints.generate_cell_methods_constraint
             cell_methods: []
@@ -20,15 +21,10 @@ steps:
     subarea_extent: $SUBAREA_EXTENT
 
   - operator: filters.generate_mask
-    condition: '>'
-    value: 0.0
+    condition: '<'
+    value: 273.15
 
-  - operator: collapse.collapse
-    coordinate: [grid_latitude, grid_longitude]
-    method: MEAN
-
-  # Plot the data.
-  - operator: plot.plot_line_series
+  - operator: plot.spatial_pcolormesh_plot
 
   - operator: write.write_cube_to_nc
     overwrite: True
