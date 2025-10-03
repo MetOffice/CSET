@@ -26,16 +26,9 @@ steps:
     condition: '<'
     value: 273.15
 
-  - operator: aggregate.rolling_window_time_aggregation
-    method: 'MIN'
-    window: 24
-
-  - operator: aggregate.add_hour_coordinate
-
-  - operator: filters.filter_cubes
-    constraint:
-      operator: constraints.generate_hour_constraint
-      hour_start: 21
+  - operator: collapse.collapse
+    coordinate: [grid_latitude, grid_longitude]
+    method: MEAN
 
   # Plot the data.
   - operator: plot.plot_line_series
