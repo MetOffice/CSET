@@ -228,6 +228,24 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+        # Presence of cloud base height less than 50 m.
+    if conf.CLOUD_BASE_HEIGHT_LESS_THAN_50_M_SPATIAL_DIFFERENCE:
+        base_model = models[0]
+        for model in models[1:]:
+            yield RawRecipe(
+                recipe="cloud_base_height_lt_50m_spatial_difference.yaml",
+                variables={
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
     # Create a list of case aggregation types.
     AGGREGATION_TYPES = ["lead_time", "hour_of_day", "validity_time", "all"]
 

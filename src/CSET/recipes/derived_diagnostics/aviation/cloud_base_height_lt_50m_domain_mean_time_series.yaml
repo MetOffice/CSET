@@ -1,0 +1,37 @@
+category: Aviation
+title: "Cloud base height less than 50 m domain mean timeseries"
+description: |
+  Generates a mask of whether the cloud base height is less than 50 m and provides a
+  timeseries representing the chance of cloud with a base height less than 50 m anywhere
+  within the domain.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: cloud_base_altitude
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: misc.convert_units
+    units: 'metre'
+
+  - operator: filters.generate_mask
+    condition: '<'
+    value: 50
+
+  - operator: collapse.collapse
+    coordinate: [grid_latitude, grid_longitude]
+    method: MEAN
+
+  - operator: plot.plot_line_series
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
