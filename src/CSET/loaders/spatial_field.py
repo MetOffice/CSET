@@ -113,6 +113,21 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+        # Presence of cloud base height lower than 50 m.
+        if conf.CLOUD_BASE_HEIGHT_LESS_THAN_50_M_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="cloud_base_height_lt_50m_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
         # Surface winds on Beaufort Scale.
         if conf.SFC_WIND_BEAUFORT_SCALE_SPATIAL:
             yield RawRecipe(
