@@ -32,5 +32,5 @@ steps:
 
   - operator: plot.spatial_pcolormesh_plot
 
-  - operator: write.write_cube_nc
+  - operator: write.write_cube_to_nc
     overwrite: True
