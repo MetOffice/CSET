@@ -98,6 +98,21 @@ def load(conf: Config):
     # require individual loaders.
 
     for model in models:
+        # Aviation Fog presence.
+        if conf.AVIATION_FOG_PRESENCE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="aviation_fog_presence_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
         # Rain presence.
         if conf.RAIN_PRESENCE_SPATIAL_PLOT:
             yield RawRecipe(
@@ -117,6 +132,36 @@ def load(conf: Config):
         if conf.AIR_FROST_PRESENCE_SPATIAL_PLOT:
             yield RawRecipe(
                 recipe="air_frost_presence_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
+        # Thick fog presence.
+        if conf.THICK_FOG_PRESENCE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="thick_fog_presence_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
+        # Snow presence.
+        if conf.SNOW_PRESENCE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="snow_presence_spatial_plot.yaml",
                 model_ids=model["id"],
                 variables={
                     "MODEL_NAME": model["name"],

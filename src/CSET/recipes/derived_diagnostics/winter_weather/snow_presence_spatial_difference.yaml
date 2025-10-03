@@ -1,0 +1,33 @@
+category: Winter Weather
+title: "Snow presence\nDifference ($BASE_MODEL - $OTHER_MODEL)"
+description: |
+  Generates a mask of whether snow is present in a grid box. The diagnostic
+  provides the difference between two models. Values will be positive or negative
+  depending on which model has snow present at that location if the other
+  does not.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: [$BASE_MODEL, $OTHER_MODEL]
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: surface_microphysical_snowfall_rate
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: filters.generate_mask
+    condition: '>'
+    value: 0.0
+
+  - operator: misc.difference
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
