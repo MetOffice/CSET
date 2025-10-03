@@ -24,11 +24,14 @@ field:x_wind OR field:y_wind
 histogram AND field:temperature OR time_series field:humidity
     Histograms of temperature and Time series of humidity.
 
+NOT temperature
+    Not "temperature" in title.
+
 !temperature
     "temperature" not in title.
 
 field:!temperature
     "temperature" not in field.
 
-!field:temperature
+NOT field:temperature
     "temperature" not in field.
