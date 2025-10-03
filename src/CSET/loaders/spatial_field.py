@@ -98,6 +98,21 @@ def load(conf: Config):
     # require individual loaders.
 
     for model in models:
+        # Dummy diagnostic.
+        if conf.NEW_AVIATION_DIAGNOSTIC_TUTORIAL_REBASE:
+            yield RawRecipe(
+                recipe="new_aviation_diagnostic_tutorial_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
         # Rain presence.
         if conf.RAIN_PRESENCE_SPATIAL_PLOT:
             yield RawRecipe(
