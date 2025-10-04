@@ -226,7 +226,7 @@ class Condition:
         return f"<Condition {hex(id(self))}>"
 
     def __call__(self, d: dict[str, str]) -> bool:
-        """Implement self(d)."""
+        """Test whether a dictionary matches this condition."""
         return self.func(d)
 
     def __and__(self, other):
@@ -474,6 +474,15 @@ def parse_expression(tokens: list[Token]) -> Condition:
         raise ValueError("Collapse should produce a single condition.")
 
     return conditions[0]
+
+
+def query2condition(query: str) -> Condition:
+    """Convert a query string into a query function, or error."""
+    try:
+        tokens = list(lexer(query))
+        return parse_expression(tokens)
+    except ValueError as err:
+        raise ValueError("Query failed to parse.") from err
 
 
 if __name__ == "__main__":
