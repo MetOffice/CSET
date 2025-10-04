@@ -494,24 +494,22 @@ def collapse_ors(
     ValueError
         If any ORs are unable to be processed due to an invalid expression.
     """
-    if len(conditions) > 1 and Combiner.OR in conditions:
-        collapsed_conditions = []
-        index = 0
-        while index < len(conditions):
-            match conditions[index : index + 3]:
-                case [left, Combiner.OR, right] if isinstance(
-                    left, Condition
-                ) and isinstance(right, Condition):
-                    collapsed_conditions.append(left | right)
-                    index += 3
-                case [left, *_] if left != Combiner.OR:
-                    collapsed_conditions.append(left)
-                    index += 1
-                case _:
-                    raise ValueError("Unprocessable OR.")
-        conditions = collapsed_conditions
-    assert len(conditions) == 1 and Combiner.OR not in conditions
-    return conditions  # type: ignore
+    collapsed = []
+    index = 0
+    while index < len(conditions):
+        match conditions[index : index + 3]:
+            case [left, Combiner.OR, right] if isinstance(
+                left, Condition
+            ) and isinstance(right, Condition):
+                collapsed.append(left | right)
+                index += 3
+            case [left, *_] if left != Combiner.OR:
+                collapsed.append(left)
+                index += 1
+            case _:
+                raise ValueError("Unprocessable OR.")
+    assert len(collapsed) == 1 and Combiner.OR not in conditions
+    return collapsed
 
 
 def collapse_conditions(conditions: list[Condition | Combiner]) -> Condition:
