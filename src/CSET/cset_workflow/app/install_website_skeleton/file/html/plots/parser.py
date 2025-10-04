@@ -103,34 +103,38 @@ class Facet:
 
 Token = LiteralToken | Facet | Parenthesis | Combiner | Operator
 
+TOKEN_SPEC = {
+    Parenthesis.BEGIN: r"\(",
+    Parenthesis.END: r"\)",
+    Operator.GREATER_THAN_OR_EQUALS: r"<=",
+    Operator.GREATER_THAN: r"<",
+    Operator.LESS_THAN_OR_EQUALS: r">=",
+    Operator.LESS_THAN: r">",
+    Operator.NOT_EQUALS: r"!=",
+    Operator.EQUALS: r"=",
+    Operator.NOT_IN: r"!",
+    Combiner.NOT: r"\bnot\b",
+    Combiner.AND: r"\band\b",
+    Combiner.OR: r"\bor\b",
+    LexOnly.WHITESPACE: r"[ \t]+",
+    LexOnly.FACET: r"[a-z_\-]+[ \t]*:",
+    LexOnly.LITERAL: r"[^ \t\(\)]+",  # Should we support quoted literals?
+}
+TOKEN_REGEX = re.compile(
+    "|".join(
+        f"(?P<{str(key).replace('.', '_')}>{val})" for key, val in TOKEN_SPEC.items()
+    ),
+    flags=re.IGNORECASE,
+)
+TOKEN_NAME_MAPPING = {str(key).replace(".", "_"): key for key in TOKEN_SPEC.keys()}
+
 
 def lexer(s: str) -> Iterable[Token]:
     """Lex input string into tokens."""
-    token_spec = {
-        Parenthesis.BEGIN: r"\(",
-        Parenthesis.END: r"\)",
-        Operator.GREATER_THAN_OR_EQUALS: r"<=",
-        Operator.GREATER_THAN: r"<",
-        Operator.LESS_THAN_OR_EQUALS: r">=",
-        Operator.LESS_THAN: r">",
-        Operator.NOT_EQUALS: r"!=",
-        Operator.EQUALS: r"=",
-        Operator.NOT_IN: r"!",
-        Combiner.NOT: r"\bnot\b",
-        Combiner.AND: r"\band\b",
-        Combiner.OR: r"\bor\b",
-        LexOnly.WHITESPACE: r"[ \t]+",
-        LexOnly.FACET: r"[a-z_\-]+[ \t]*:",
-        LexOnly.LITERAL: r"[^ \t\(\)]+",  # Should we support quoted literals?
-    }
-    token_regex = "|".join(
-        f"(?P<{str(key).replace('.', '_')}>{val})" for key, val in token_spec.items()
-    )
-    token_name_mapping = {str(key).replace(".", "_"): key for key in token_spec.keys()}
-    for match in re.finditer(token_regex, s, flags=re.IGNORECASE):
+    for match in re.finditer(TOKEN_REGEX, s):
         # Get the Enum object from token_spec matching the capture group name.
         assert match.lastgroup, "match.lastgroup cannot be None."
-        kind = token_name_mapping[match.lastgroup]
+        kind = TOKEN_NAME_MAPPING[match.lastgroup]
         value = match.group()
         match kind:
             case None:
