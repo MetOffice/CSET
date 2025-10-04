@@ -557,8 +557,8 @@ def collapse_conditions(conditions: list[Condition | Combiner]) -> Condition:
 
 
 if __name__ == "__main__":
-    # query = "((histogram AND field : temperature) OR (time_series AND field:humidity)) date:>= 2025-09-25T15:22Z ((!foo))"
-    query = "NOT NOT NOT NOT NOT foo"
+    query = "((histogram AND field : temperature) OR (time_series AND field:humidity)) date:>= 2025-09-25T15:22Z ((!foo))"
+    # query = "NOT NOT NOT NOT NOT foo"
     # query = "temperature NOT(!foo)"
     tokens = list(lexer(query))
     for token in tokens:
