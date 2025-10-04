@@ -29,7 +29,6 @@ operator =
 import re
 from collections.abc import Callable, Iterable
 from enum import Enum, auto
-from typing import Literal
 
 
 class Combiner(Enum):
@@ -338,8 +337,81 @@ def parse_condition(tokens: list[Token]) -> tuple[int, Condition | None]:
             return 0, None
 
 
+def evaluate_not(conditions):
+    """Collapse all NOTs in a list of conditions."""
+    negated_conditions = []
+    index = 0
+    while index < len(conditions):
+        match conditions[index : index + 2]:
+            case [Combiner.NOT, Combiner.NOT]:
+                # Skip double NOTs, as they negate each other.
+                index += 2
+            case [Combiner.NOT, right] if isinstance(right, Condition):
+                negated_conditions.append(~right)
+                index += 2
+            case [left, *_] if left != Combiner.NOT:
+                negated_conditions.append(left)
+                index += 1
+            case _:
+                raise ValueError("Unprocessable NOT.")
+    return negated_conditions
+
+
+def evaluate_and(conditions):
+    """Collapse all explicit and implicit ANDs in a list of conditions."""
+    anded_conditions = []
+    index = 0
+    while index < len(conditions):
+        left = anded_conditions.pop() if anded_conditions else None
+        match conditions[index : index + 2]:
+            case [Combiner.AND, right] if isinstance(left, Condition) and isinstance(
+                right, Condition
+            ):
+                anded_conditions.append(left & right)
+                index += 2
+            case [right, *_] if isinstance(left, Condition) and isinstance(
+                right, Condition
+            ):
+                anded_conditions.append(left & right)
+                index += 1
+            case [right, *_] if right != Combiner.AND:
+                if left is not None:
+                    anded_conditions.append(left)
+                anded_conditions.append(right)
+                index += 1
+            case _:
+                raise ValueError("Unprocessable AND.")
+    return anded_conditions
+
+
+def evaluate_or(conditions):
+    """Collapse all ORs in a list of conditions."""
+    ored_conditions = []
+    index = 0
+    while index < len(conditions):
+        match conditions[index : index + 3]:
+            case [left, Combiner.OR, right] if isinstance(
+                left, Condition
+            ) and isinstance(right, Condition):
+                ored_conditions.append(left | right)
+                index += 3
+            case [left, *_] if left != Combiner.OR:
+                ored_conditions.append(left)
+                index += 1
+            case _:
+                raise ValueError("Unprocessable OR.")
+    return ored_conditions
+
+
 def parse_expression(tokens: list[Token]) -> Condition:
     """Parse an expression into a single Condition function.
+
+    Pairs of conditions without an explicit combiner are treated as AND.
+
+    The order of operations is:
+        1. Evaluate NOTs first, left to right.
+        2. Evaluate ANDs (explicit and implicit) second, left to right.
+        3. Evaluate ORs third, left to right.
 
     Arguments
     ---------
@@ -385,175 +457,20 @@ def parse_expression(tokens: list[Token]) -> Condition:
 
         raise ValueError(f"Unexpected token in expression: {tokens[index]}")
 
-    return collapse_conditions(conditions)
-
-
-def collapse_nots(
-    conditions: list[Condition | Combiner],
-) -> list[Condition | Literal[Combiner.AND] | Literal[Combiner.OR]]:
-    """Collapse all NOTs in the list of conditions.
-
-    Parameters
-    ----------
-    conditions: list[Condition | Combiner]
-        List of conditions and combiners.
-
-    Returns
-    -------
-    collapsed_conditions: list[Condition | Combiner.AND | Combiner.OR]
-        List of collapsed conditions. All NOTs have been removed.
-
-    Raises
-    ------
-    ValueError
-        If any NOTs are unable to be processed due to an invalid expression.
-    """
-    collapsed = []
-    index = 0
-    while index < len(conditions):
-        match conditions[index : index + 2]:
-            case [Combiner.NOT, Combiner.NOT]:
-                # Skip double NOTs, as they negate each other.
-                index += 2
-            case [Combiner.NOT, right] if isinstance(right, Condition):
-                collapsed.append(~right)
-                index += 2
-            case [left, *_] if left != Combiner.NOT:
-                collapsed.append(left)
-                index += 1
-            case _:
-                raise ValueError("Unprocessable NOT.")
-    assert Combiner.NOT not in collapsed
-    return collapsed
-
-
-def collapse_ands(
-    conditions: list[Condition | Literal[Combiner.AND] | Literal[Combiner.OR]],
-) -> list[Condition | Literal[Combiner.OR]]:
-    """Collapse all ANDs in the list of conditions.
-
-    Parameters
-    ----------
-    conditions: list[Condition | Combiner.AND | Combiner.OR]
-        List of conditions and combiners.
-
-    Returns
-    -------
-    collapsed_conditions: list[Condition | Combiner.OR]
-        List of collapsed conditions. All ANDs have been removed.
-
-    Raises
-    ------
-    ValueError
-        If any ANDs are unable to be processed due to an invalid expression.
-    """
-    collapsed: list[Condition | Literal[Combiner.OR]] = []
-    index = 0
-    while index < len(conditions):
-        left = collapsed.pop() if collapsed else None
-        match conditions[index : index + 2]:
-            case [Combiner.AND, right] if isinstance(left, Condition) and isinstance(
-                right, Condition
-            ):
-                collapsed.append(left & right)
-                index += 2
-            case [right, *_] if isinstance(left, Condition) and isinstance(
-                right, Condition
-            ):
-                collapsed.append(left & right)
-                index += 1
-            case [right, *_] if right != Combiner.AND:
-                if left is not None:
-                    collapsed.append(left)
-                collapsed.append(right)
-                index += 1
-            case _:
-                raise ValueError("Unprocessable AND.")
-    assert Combiner.AND not in collapsed
-    return collapsed
-
-
-def collapse_ors(
-    conditions: list[Condition | Literal[Combiner.OR]],
-) -> list[Condition]:
-    """Collapse all ORs in the list of conditions.
-
-    Parameters
-    ----------
-    conditions: list[Condition | Literal[TT.OR]]
-        List of conditions and combiners.
-
-    Returns
-    -------
-    collapsed_condition: List[Condition]
-        A single element list containing the final condition. All ORs have been
-        removed, so only a single condition should remains.
-
-    Raises
-    ------
-    ValueError
-        If any ORs are unable to be processed due to an invalid expression.
-    """
-    collapsed = []
-    index = 0
-    while index < len(conditions):
-        match conditions[index : index + 3]:
-            case [left, Combiner.OR, right] if isinstance(
-                left, Condition
-            ) and isinstance(right, Condition):
-                collapsed.append(left | right)
-                index += 3
-            case [left, *_] if left != Combiner.OR:
-                collapsed.append(left)
-                index += 1
-            case _:
-                raise ValueError("Unprocessable OR.")
-    assert len(collapsed) == 1 and Combiner.OR not in conditions
-    return collapsed
-
-
-def collapse_conditions(conditions: list[Condition | Combiner]) -> Condition:
-    """Collapse a list of conditions and combiners into a single Condition.
-
-    Pairs of conditions without an explicit combiner are treated as AND.
-
-    The order of operations is:
-        1. Evaluate NOTs first, left to right.
-        2. Evaluate ANDs (explicit and implicit) second, left to right.
-        3. Evaluate ORs third, left to right.
-
-    Arguments
-    ---------
-    conditions: list[Condition | Literal[TT.AND] | Literal[TT.OR]]
-        List of conditions and combiners.
-
-    Returns
-    -------
-    Condition
-        The collapsed condition that results from combining the conditions.
-
-    Raises
-    ------
-    ValueError
-        If the conditions list is empty or has unpaired combiners.
-    """
-    if not conditions:
-        raise ValueError("No conditions to collapse.")
-
     # Evaluate NOTs first, left to right.
-    collapsed = collapse_nots(conditions)
+    conditions = evaluate_not(conditions)
 
     # Evaluate ANDs second, left to right.
-    collapsed = collapse_ands(collapsed)
+    conditions = evaluate_and(conditions)
 
     # Evaluate ORs third, left to right.
-    collapsed = collapse_ors(collapsed)
+    conditions = evaluate_or(conditions)
 
-    # Verify we only have a single condition at this point.
-    if len(collapsed) != 1 or not isinstance(collapsed[0], Condition):
+    # Verify we have collapsed down to a single condition at this point.
+    if len(conditions) != 1 or not isinstance(conditions[0], Condition):
         raise ValueError("Collapse should produce a single condition.")
 
-    return collapsed[0]
+    return conditions[0]
 
 
 if __name__ == "__main__":
