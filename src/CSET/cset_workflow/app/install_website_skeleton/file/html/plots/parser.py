@@ -26,7 +26,6 @@ operator =
 
 """
 
-import itertools
 import re
 from collections.abc import Callable, Iterable
 from enum import Enum, auto
@@ -409,7 +408,7 @@ def collapse_nots(
     ValueError
         If any NOTs are unable to be processed due to an invalid expression.
     """
-    collapsed_conditions = []
+    collapsed = []
     index = 0
     while index < len(conditions):
         match conditions[index : index + 2]:
@@ -417,15 +416,15 @@ def collapse_nots(
                 # Skip double NOTs, as they negate each other.
                 index += 2
             case [Combiner.NOT, right] if isinstance(right, Condition):
-                collapsed_conditions.append(~right)
+                collapsed.append(~right)
                 index += 2
             case [left, *_] if left != Combiner.NOT:
-                collapsed_conditions.append(left)
+                collapsed.append(left)
                 index += 1
             case _:
                 raise ValueError("Unprocessable NOT.")
-    assert Combiner.NOT not in collapsed_conditions
-    return collapsed_conditions
+    assert Combiner.NOT not in collapsed
+    return collapsed
 
 
 def collapse_ands(
@@ -448,36 +447,30 @@ def collapse_ands(
     ValueError
         If any ANDs are unable to be processed due to an invalid expression.
     """
-    while len(conditions) > 1 and (
-        Combiner.AND in conditions
-        # Pairs of conditions yet to be ANDed.
-        or any(
-            isinstance(a, Condition) and isinstance(b, Condition)
-            for a, b in itertools.pairwise(conditions)
-        )
-    ):
-        collapsed_conditions = []
-        index = 0
-        while index < len(conditions):
-            match conditions[index : index + 3]:
-                case [left, Combiner.AND, right] if isinstance(
-                    left, Condition
-                ) and isinstance(right, Condition):
-                    collapsed_conditions.append(left & right)
-                    index += 3
-                case [left, right, *_] if isinstance(left, Condition) and isinstance(
-                    right, Condition
-                ):
-                    collapsed_conditions.append(left & right)
-                    index += 2
-                case [left, *_] if left != Combiner.AND:
-                    collapsed_conditions.append(left)
-                    index += 1
-                case _:
-                    raise ValueError("Unprocessable AND.")
-        conditions = collapsed_conditions
-    assert Combiner.AND not in conditions
-    return conditions  # type: ignore
+    collapsed: list[Condition | Literal[Combiner.OR]] = []
+    index = 0
+    while index < len(conditions):
+        left = collapsed.pop() if collapsed else None
+        match conditions[index : index + 2]:
+            case [Combiner.AND, right] if isinstance(left, Condition) and isinstance(
+                right, Condition
+            ):
+                collapsed.append(left & right)
+                index += 2
+            case [right, *_] if isinstance(left, Condition) and isinstance(
+                right, Condition
+            ):
+                collapsed.append(left & right)
+                index += 1
+            case [right, *_] if right != Combiner.AND:
+                if left is not None:
+                    collapsed.append(left)
+                collapsed.append(right)
+                index += 1
+            case _:
+                raise ValueError("Unprocessable AND.")
+    assert Combiner.AND not in collapsed
+    return collapsed
 
 
 def collapse_ors(
