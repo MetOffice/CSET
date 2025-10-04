@@ -428,8 +428,6 @@ def parse_expression(tokens: list[Token]) -> Condition:
     ValueError
         If the tokens do not form a valid expression.
     """
-    print("Parsing tokens:", " ".join(str(t) for t in tokens))
-
     conditions: list[Condition | Combiner] = []
     index = 0
     while index < len(tokens):
