@@ -118,7 +118,7 @@ TOKEN_SPEC = {
     Combiner.OR: r"\bor\b",
     LexOnly.WHITESPACE: r"[ \t]+",
     LexOnly.FACET: r"[a-z_\-]+[ \t]*:",
-    LexOnly.LITERAL: r"[^ \t\(\)]+",  # Should we support quoted literals?
+    LexOnly.LITERAL: r"""'[^']*'|"[^"]*"|[^ \t\(\)]+""",
 }
 TOKEN_REGEX = re.compile(
     "|".join(
@@ -145,6 +145,10 @@ def lexer(s: str) -> Iterable[Token]:
                 facet_name = value.rstrip(" \t:")
                 yield Facet(facet_name)
             case LexOnly.LITERAL:
+                if (value.startswith("'") and value.endswith("'")) or (
+                    value.startswith('"') and value.endswith('"')
+                ):
+                    value = value[1:-1]
                 yield LiteralToken(value)
             case _:
                 yield kind
