@@ -194,9 +194,9 @@ function parse_query(query) {
 // Filter the displayed diagnostics by the query.
 function doSearch() {
   const query = document.getElementById("filter-query").value;
-  // Update URL in address bar to match current query.
+  // Update URL in address bar to match current query, deleting if blank.
   const url = new URL(document.location.href);
-  url.searchParams.set("q", query)
+  query ? url.searchParams.set("q", query) : url.searchParams.delete("q");
   // Updates the URL without reloading the page.
   history.pushState(history.state, "", url.href)
 
