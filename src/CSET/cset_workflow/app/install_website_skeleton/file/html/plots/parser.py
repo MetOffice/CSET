@@ -178,7 +178,7 @@ class Condition:
             A function implementing the condition. It may raise a KeyError if
             the facet is not present, so calling code should capture that.
         """
-        if isinstance(value, Callable):
+        if callable(value):
             self.func = value
             return
 
