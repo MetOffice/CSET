@@ -389,7 +389,6 @@ def parse_expression(tokens: list[Token]) -> Condition:
     return collapse_conditions(conditions)
 
 
-# TODO: Support multiple levels of NOT.
 def collapse_nots(
     conditions: list[Condition | Combiner],
 ) -> list[Condition | Literal[Combiner.AND] | Literal[Combiner.OR]]:
@@ -416,6 +415,9 @@ def collapse_nots(
         index = 0
         while index < len(conditions):
             match conditions[index : index + 2]:
+                case [Combiner.NOT, Combiner.NOT]:
+                    # Skip double NOTs, as they negate each other.
+                    index += 2
                 case [Combiner.NOT, right] if not isinstance(right, Combiner):
                     collapsed_conditions.append(~right)
                     index += 2
@@ -570,7 +572,7 @@ def collapse_conditions(conditions: list[Condition | Combiner]) -> Condition:
 
 if __name__ == "__main__":
     # query = "((histogram AND field : temperature) OR (time_series AND field:humidity)) date:>= 2025-09-25T15:22Z ((!foo))"
-    query = "NOT NOT NOT NOT foo"
+    query = "NOT NOT NOT NOT NOT foo"
     # query = "temperature NOT(!foo)"
     tokens = list(lexer(query))
     for token in tokens:
