@@ -457,6 +457,9 @@ def parse_expression(tokens: list[Token]) -> Condition:
 
         raise ValueError(f"Unexpected token in expression: {tokens[index]}")
 
+    # TODO: Investigate Pratt parsing for handling combiner precedence in a
+    # single pass. It should allow parsing them in the while loop above.
+
     # Evaluate NOTs first, left to right.
     conditions = evaluate_not(conditions)
 
