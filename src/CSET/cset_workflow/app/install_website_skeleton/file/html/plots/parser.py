@@ -123,7 +123,7 @@ def lexer(s: str) -> Iterable[Token]:
         Combiner.OR: r"\bor\b",
         LexOnly.WHITESPACE: r"[ \t]+",
         LexOnly.FACET: r"[a-z_\-]+[ \t]*:",
-        LexOnly.LITERAL: r"[^ \t\(\)]+",
+        LexOnly.LITERAL: r"[^ \t\(\)]+",  # Should we support quoted literals?
     }
     token_regex = "|".join(
         f"(?P<{str(key).replace('.', '_')}>{val})" for key, val in token_spec.items()
@@ -409,28 +409,23 @@ def collapse_nots(
     ValueError
         If any NOTs are unable to be processed due to an invalid expression.
     """
-    last_length = 0
-    while len(conditions) > 1 and Combiner.NOT in conditions:
-        collapsed_conditions = []
-        index = 0
-        while index < len(conditions):
-            match conditions[index : index + 2]:
-                case [Combiner.NOT, Combiner.NOT]:
-                    # Skip double NOTs, as they negate each other.
-                    index += 2
-                case [Combiner.NOT, right] if not isinstance(right, Combiner):
-                    collapsed_conditions.append(~right)
-                    index += 2
-                    break
-                case [left, *_]:
-                    collapsed_conditions.append(left)
-                    index += 1
-        if last_length == len(conditions):
-            raise ValueError("Unprocessable NOT.")
-        conditions = collapsed_conditions
-        last_length = len(conditions)
-    assert Combiner.NOT not in conditions
-    return conditions  # type: ignore
+    collapsed_conditions = []
+    index = 0
+    while index < len(conditions):
+        match conditions[index : index + 2]:
+            case [Combiner.NOT, Combiner.NOT]:
+                # Skip double NOTs, as they negate each other.
+                index += 2
+            case [Combiner.NOT, right] if isinstance(right, Condition):
+                collapsed_conditions.append(~right)
+                index += 2
+            case [left, *_] if left != Combiner.NOT:
+                collapsed_conditions.append(left)
+                index += 1
+            case _:
+                raise ValueError("Unprocessable NOT.")
+    assert Combiner.NOT not in collapsed_conditions
+    return collapsed_conditions
 
 
 def collapse_ands(
