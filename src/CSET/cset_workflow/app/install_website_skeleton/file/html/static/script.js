@@ -70,18 +70,17 @@ function add_to_sidebar(record) {
   const diagnostics_list = document.getElementById("diagnostics");
 
   // Add entry's display name.
-  const entry_name = document.createElement("h3")
-  entry_name.textContent = record["name"];
+  const entry_title = document.createElement("h2")
+  entry_title.textContent = record["title"];
 
-  const facets = document.createElement("dl");
+  const facets = document.createElement("ul");
   for (const facet in record) {
-    const dt = document.createElement("dt");
-    dt.textContent = facet;
-    const dd = document.createElement("dd");
-    dd.textContent = record[facet];
-    facets.append(dt, dd);
+    if (facet != "title" && facet != "path") {
+      const li = document.createElement("li");
+      li.textContent = `${facet}: ${record[facet]}`;
+      facets.append(li);
+    }
   }
-
 
   // Container element for plot position chooser buttons.
   const position_chooser = document.createElement("div");
@@ -90,10 +89,10 @@ function add_to_sidebar(record) {
   // Bind path to name in this scope to ensure it sticks around for callbacks.
   const path = record["path"];
   // Button icons.
-  const icons = { left: "◧", full: "▣", right: "◨" };
+  const icons = { left: "◧", full: "▣", right: "◨", popup: "↗" };
 
   // Add buttons for each position.
-  for (const position of ["left", "full", "right"]) {
+  for (const position of ["left", "full", "right", "popup"]) {
     // Create button.
     const button = document.createElement("button");
     button.classList.add(position);
@@ -102,6 +101,11 @@ function add_to_sidebar(record) {
     // Add a callback updating the iframe when the link is clicked.
     button.addEventListener("click", (event) => {
       event.preventDefault();
+      // Open new window for popup.
+      if (position == "popup") {
+        window.open(`plots/${path}`, "_blank", "popup,width=800,height=600")
+        return;
+      }
       // Set the appropriate frame layout.
       position == "full" ? ensure_single_frame() : ensure_dual_frame();
       document.getElementById(`plot-frame-${position}`).src = `plots/${path}`;
@@ -115,7 +119,7 @@ function add_to_sidebar(record) {
   const entry = document.createElement("li");
 
   // Add name, facets, and position chooser to entry.
-  entry.append(entry_name, facets, position_chooser);
+  entry.append(entry_title, facets, position_chooser);
 
   // Join entry to the DOM.
   diagnostics_list.append(entry);
