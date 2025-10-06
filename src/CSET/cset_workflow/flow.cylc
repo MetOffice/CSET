@@ -109,7 +109,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     # Noop tasks to ensure a complete/efficient workflow graph.
     [[DUMMY_TASK]]
     script = true
-    platform = localhost
     execution time limit = PT1M
     run mode = skip
 
@@ -155,9 +154,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     # Parbake all the recipes for this cycle.
     script = rose task-run -v --app-key=parbake_recipes
     execution time limit = PT5M
-        [[[directives]]]
-        --ntasks=1
-        --mem=500
         [[[environment]]]
         ENCODED_ROSE_SUITE_VARIABLES = {{b64json(ROSE_SUITE_VARIABLES)}}
 
@@ -165,9 +161,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     # Parbake all the aggregation recipes.
     script = rose task-run -v --app-key=parbake_recipes
     execution time limit = PT5M
-        [[[directives]]]
-        --ntasks=1
-        --mem=500
         [[[environment]]]
         ENCODED_ROSE_SUITE_VARIABLES = {{b64json(ROSE_SUITE_VARIABLES)}}
         DO_CASE_AGGREGATION = True
@@ -177,18 +170,12 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     script = "$CYLC_WORKFLOW_RUN_DIR/app/bake_recipes/bin/baker.sh"
     execution time limit = PT3H
     execution retry delays = PT1M
-        [[[directives]]]
-        --ntasks=32
-        --mem=64000
 
     [[bake_aggregation_recipes]]
     # Bake the parbaked aggregation recipes.
     script = "$CYLC_WORKFLOW_RUN_DIR/app/bake_recipes/bin/baker.sh"
     execution time limit = PT3H
     execution retry delays = PT1M
-        [[[directives]]]
-        --ntasks=8
-        --mem=64000
         [[[environment]]]
         DO_CASE_AGGREGATION = True
 
