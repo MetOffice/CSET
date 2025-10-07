@@ -1,8 +1,8 @@
 category: Convection
-title: $MODEL_NAME Daily occurrence of lightning
+title: "$MODEL_NAME Daily occurrence of lightning at 0900 UTC"
 description: |
-  Extracts and plots the daily occurrence of lightning between 0900 UTC and
-  0900 UTC the following day in $MODEL_NAME. The minimum
+  Extracts and plots the daily occurrence of lightning between 0900 UTC and 0900 UTC
+  the following day in $MODEL_NAME. The presence
   is created from a rolling 24 h window, adds hour of day coordinate, and then
   selects the 21 UTC hour from the rolling window as this represents the validity
   time of the required range. The presence of lightning can occur any time in
@@ -28,7 +28,7 @@ steps:
     value: 0.0
 
   - operator: aggregate.rolling_window_time_aggregation
-    method: 'MIN'
+    method: 'MAX'
     window: 24
 
   - operator: aggregate.add_hour_coordinate
