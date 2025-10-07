@@ -219,7 +219,7 @@ function doSearch() {
 }
 
 // For performance don't search on every keystroke immediately. Instead wait
-// until half a second of no typing has elapsed. To maximised perceived
+// until quarter of a second of no typing has elapsed. To maximised perceived
 // responsiveness immediately perform the search if a space is typed, as that
 // indicates a completed search term.
 let searchTimeoutID = undefined;
@@ -228,7 +228,7 @@ function debounce(e) {
   if (e.data == " ") {
     doSearch();
   } else {
-    searchTimeoutID = setTimeout(doSearch, 500);
+    searchTimeoutID = setTimeout(doSearch, 250);
   }
 }
 
