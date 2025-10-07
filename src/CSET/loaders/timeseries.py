@@ -121,7 +121,7 @@ def load(conf: Config):
             model_ids=[model["id"] for model in models],
             aggregation=False,
         )
-        
+
     # Presence of cloud base height lower than 50 m
     if conf.CLOUD_BASE_HEIGHT_LESS_THAN_50_M_DOMAIN_MEAN_TIMESERIES:
         yield RawRecipe(

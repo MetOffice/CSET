@@ -142,7 +142,7 @@ def load(conf: Config):
                 },
                 aggregation=False,
             )
-            
+
         # Presence of cloud base height lower than 50 m.
         if conf.CLOUD_BASE_HEIGHT_LESS_THAN_50_M_SPATIAL_PLOT:
             yield RawRecipe(
