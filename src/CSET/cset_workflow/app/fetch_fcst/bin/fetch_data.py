@@ -177,6 +177,17 @@ def _get_needed_environment_variables() -> dict:
     return variables
 
 
+def _get_needed_environment_variables_nimrod() -> dict:
+    """Load the needed variables from the environment to retrieve UK Nimrod data."""
+    variables = {
+        "field": os.environ["NIMROD_FIELDS"],
+        "raw_path": "/data/users/radar/UKnimrod",
+        "rose_datac": os.environ["ROSE_DATAC"],
+    }
+    logging.debug("Environment variables loaded for Nimrod: %s", variables)
+    return variables
+
+
 def _template_file_path(
     raw_path: str,
     date_type: Literal["validity", "initiation"],
@@ -270,3 +281,35 @@ def fetch_data(file_retriever: FileRetrieverABC):
     # exiting the with block.
     if not files_found:
         raise FileNotFoundError("No files found for model!")
+
+
+def fetch_nimrod(nimrod_retriever: FileRetrieverABC):
+    """Fetch the observations corresponding to a model run.
+
+    The following environment variables need to be set:
+    * NIMROD_FIELDs
+    #* ANALYSIS_OFFSET
+    #* ANALYSIS_LENGTH
+    #* CYLC_TASK_CYCLE_POINT
+    * DATA_PATH
+    #* DATA_PERIOD
+    #* DATE_TYPE
+    #* MODEL_IDENTIFIER
+    * ROSE_DATAC
+
+    Parameters
+    ----------
+    nimrod_retriever: ObsRetriever
+        ObsRetriever implementation to use. Defaults to FilesystemFileRetriever.
+
+    Raises
+    ------
+    FileNotFound:
+        If no observations are available.
+    """
+    v = _get_needed_environment_variables_nimrod()
+
+    # Prepare output directory.
+    cycle_obs_dir = f"{v['rose_datac']}/data/Nimrod"
+    os.makedirs(cycle_obs_dir, exist_ok=True)
+    logging.debug("Output directory: %s", cycle_obs_dir)
