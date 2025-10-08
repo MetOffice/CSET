@@ -38,14 +38,14 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         # Runs for every forecast initiation time to process the data in parallel.
         {% for date in CSET_CASE_DATES %}
             R1/{{date}} = """
-            setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
+            setup_complete[^] => FETCH_DATA:succeed-all => FETCH_NIMROD:succeed-all => fetch_complete
             fetch_complete & parbake_recipes => bake_recipes => cycle_complete
             """
         {% endfor %}
     {% elif CSET_CYCLING_MODE == "trial" %}
         # Analysis from each forecast.
         {{CSET_TRIAL_CYCLE_PERIOD}} = """
-        setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
+        setup_complete[^] => FETCH_DATA:succeed-all => FETCH_NIMROD:succeed-all => fetch_complete
         fetch_complete & parbake_recipes => bake_recipes => cycle_complete
         """
     {% endif %}
@@ -97,6 +97,12 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         [[[environment]]]
         ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
 
+    [[FETCH_NIMROD]]
+    script = rose task-run -v --app-key=fetch_nimrod
+    execution time limit = PT1H
+        [[[environment]]]
+        ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
+
     [[METPLUS]]
         [[[environment]]]
         {% if METPLUS_GRID_STAT|default(False) %}
@@ -117,6 +123,9 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
 
     [[fetch_complete]]
     inherit = DUMMY_TASK
+
+    [[dummy_fetch_nimrod]]
+    inherit = DUMMY_TASK, FETCH_NIMROD
 
     [[cycle_complete]]
     inherit = DUMMY_TASK
@@ -178,6 +187,15 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     execution retry delays = PT1M
         [[[environment]]]
         DO_CASE_AGGREGATION = True
+
+    {% if NIMROD_RADAR_OBS %}
+    [[fetch_nimrod]]
+    # Fetch Nimrod radar observations.
+    inherit = FETCH_NIMROD
+        [[[environment]]]
+        ROSE_APP_COMMAND_KEY = "fetchnimrod"
+        NIMROD_FIELDS = {{NIMROD_FIELDS}}
+    {% endif %}
 
     [[housekeeping]]
     # Housekeep input data files.
