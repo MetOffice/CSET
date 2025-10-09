@@ -30,7 +30,6 @@ steps:
     coordinate: [grid_latitude, grid_longitude]
     method: MEAN
 
-
   # Plot the data.
   - operator: plot.plot_line_series
 
