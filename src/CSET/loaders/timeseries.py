@@ -112,7 +112,7 @@ def load(conf: Config):
     # Lightning presence
     if conf.LIGHTNING_PRESENCE_DOMAIN_TIME_SERIES:
         yield RawRecipe(
-            recipe="lightning_presence_domain_time_series.yaml",
+            recipe="lightning_presence_domain_mean_time_series.yaml",
             variables={
                 "MODEL_NAME": [model["name"] for model in models],
                 "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
