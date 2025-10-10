@@ -17,13 +17,109 @@
 import numbers
 import re
 from collections.abc import Iterable
-from datetime import datetime
+from datetime import timedelta
 
 import iris
 import iris.coords
 import iris.cube
+from iris.time import PartialDateTime
 
 from CSET._common import iter_maybe
+
+
+def my_pdt_fromstring(
+    datestring,
+) -> tuple[iris.time.PartialDateTime, timedelta | None]:
+    """Generate PartialDateTime object.
+
+    Function that takes an ISO 8601 date string and returns a PartialDateTime object.
+
+    Arguments
+    ---------
+    datestring: str
+        ISO date
+
+    Returns
+    -------
+    time_object: iris.time.PartialDateTime
+    """
+    # Remove the microseconds coord due to no support in PartialDateTime
+    datestring = re.sub(r"\.\d+", "", datestring)
+
+    # Split the datestring from the offset
+    offset = None
+
+    match = re.match(r"^(.+?)([+-]\d{2}:\d{2})$", datestring)
+
+    if match:
+        datestring = match.group(1)
+        offset_part = match.group(2)
+
+        offset_sign = 1 if offset_part[0] == "+" else -1
+
+        offset_hours, offset_minutes = map(int, offset_part[1:].split(":"))
+        offset = timedelta(
+            hours=offset_sign * offset_hours, minutes=offset_sign * offset_minutes
+        )
+
+    # Normalise the date and time parts of the datetime string into standard format
+    if re.fullmatch(r"\d{8}", datestring):
+        datestring = f"{datestring[0:4]}-{datestring[4:6]}-{datestring[6:8]}"
+
+    if re.fullmatch(r"\d{6}", datestring):
+        datestring = f"{datestring[0:4]}-{datestring[4:6]}"
+
+    if re.fullmatch(r"\d{8}T\d{2,6}", datestring):
+        date = f"{datestring[0:4]}-{datestring[4:6]}-{datestring[6:8]}"
+        time_part = f"{datestring[9:]}"
+
+        time = f"{time_part[0:2]}"
+
+        if len(time_part) >= 4:
+            time += f":{time_part[2:4]}"
+        else:
+            time += ":00"
+
+        if len(time_part) >= 6:
+            time += f":{time_part[4:6]}"
+        else:
+            time += ":00"
+
+        datestring = f"{date}T{time}"
+
+    if len(datestring) < 7:
+        raise ValueError(
+            "Invalid datestring: {datestring}, string must have at least YYYY-MM"
+        )
+
+    # Returning a PartialDateTime for the special case of string form "YYYY-MM"
+    if re.fullmatch(r"\d{4}-\d{2}", datestring):
+        pdt = PartialDateTime(
+            year=int(datestring[0:4]),
+            month=int(datestring[5:7]),
+            day=None,
+            hour=0,
+            minute=0,
+            second=0,
+        )
+        return pdt, offset
+
+    year = int(datestring[0:4])
+    month = int(datestring[5:7])
+    day = int(datestring[8:10])
+
+    kwargs = dict(year=year, month=month, day=day, hour=0, minute=0, second=0)
+
+    if len(datestring) >= 13:
+        kwargs["hour"] = int(datestring[11:13])
+    if len(datestring) >= 16:
+        kwargs["minute"] = int(datestring[14:16])
+    if len(datestring) >= 19:
+        kwargs["second"] = int(datestring[17:19])
+
+    pdt = PartialDateTime(**kwargs)
+
+    return pdt, offset
 
 
 def generate_stash_constraint(stash: str, **kwargs) -> iris.AttributeConstraint:
@@ -195,7 +291,7 @@ def generate_cell_methods_constraint(
 
 def generate_time_constraint(
     time_start: str, time_end: str = None, **kwargs
-) -> iris.AttributeConstraint:
+) -> iris.Constraint:
     """Generate constraint between times.
 
     Operator that takes one or two ISO 8601 date strings, and returns a
@@ -203,10 +299,10 @@ def generate_time_constraint(
 
     Arguments
     ---------
-    time_start: str | datetime.datetime
+    time_start: str | datetime.datetime | cftime.datetime
         ISO date for lower bound
 
-    time_end: str | datetime.datetime
+    time_end: str | datetime.datetime | cftime.datetime
         ISO date for upper bound. If omitted it defaults to the same as
         time_start
 
@@ -215,12 +311,31 @@ def generate_time_constraint(
     time_constraint: iris.Constraint
     """
     if isinstance(time_start, str):
-        time_start = datetime.fromisoformat(time_start)
+        pdt_start, offset_start = my_pdt_fromstring(time_start)
+    else:
+        pdt_start, offset_start = time_start, timedelta(0)
+
     if time_end is None:
-        time_end = time_start
+        pdt_end, offset_end = time_start, offset_start
     elif isinstance(time_end, str):
-        time_end = datetime.fromisoformat(time_end)
-    time_constraint = iris.Constraint(time=lambda t: time_start <= t.point <= time_end)
+        pdt_end, offset_end = my_pdt_fromstring(time_end)
+        print(pdt_end)
+        print(offset_end)
+    else:
+        pdt_end, offset_end = time_end, timedelta(0)
+
+    if offset_start is None:
+        offset_start = timedelta(0)
+    if offset_end is None:
+        offset_end = timedelta(0)
+
+    time_constraint = iris.Constraint(
+        time=lambda t: (
+            (pdt_start <= (t.point - offset_start))
+            and ((t.point - offset_end) <= pdt_end)
+        )
+    )
+
     return time_constraint
 
 

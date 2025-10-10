@@ -14,11 +14,151 @@
 
 """Test constraint operators."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
+from iris.time import PartialDateTime
 
 from CSET.operators import constraints
+
+
+def test_my_pdt_fromstring_returns_pdt():
+    """Output of the constraints.my_pdt_fromstring() function is a PartialDateTime."""
+    pdt, offset = constraints.my_pdt_fromstring("2022-01-01")
+    assert isinstance(pdt, PartialDateTime)
+    assert offset is None
+
+
+def test_year_month_day_parse_correctly():
+    """The constraints.my_pdt_fromstring() function correctly parses out the year, month, day coordinates."""
+    pdt, offset = constraints.my_pdt_fromstring("2022-01-01")
+    assert pdt.year == 2022
+    assert pdt.month == 1
+    assert pdt.day == 1
+    assert pdt.hour == 0
+    assert pdt.minute == 0
+    assert pdt.second == 0
+    assert offset is None
+
+
+def test_hour_parse_correctly():
+    """The constraints.my_pdt_fromstring() function correctly parses out only the hour coordinate."""
+    pdt, offset = constraints.my_pdt_fromstring("2022-01-01T12")
+    assert pdt.year == 2022
+    assert pdt.month == 1
+    assert pdt.day == 1
+    assert pdt.hour == 12
+    assert pdt.minute == 0
+    assert pdt.second == 0
+    assert offset is None
+
+
+def test_hour_minute_parse_correctly():
+    """The constraints.my_pdt_fromstring() function correctly parses out only the hour and minute coordinate."""
+    pdt, offset = constraints.my_pdt_fromstring("2022-01-01T12:30")
+    assert pdt.year == 2022
+    assert pdt.month == 1
+    assert pdt.day == 1
+    assert pdt.hour == 12
+    assert pdt.minute == 30
+    assert pdt.second == 0
+    assert offset is None
+
+
+def test_hour_minute_second_parse_correctly():
+    """The constraints.my_pdt_fromstring() function correctly parses out hour, minute and second coordinates."""
+    pdt, offset = constraints.my_pdt_fromstring("2022-01-01T12:30:45")
+    assert pdt.year == 2022
+    assert pdt.month == 1
+    assert pdt.day == 1
+    assert pdt.hour == 12
+    assert pdt.minute == 30
+    assert pdt.second == 45
+    assert offset is None
+
+
+def test_basic_year_month_parse_correctly():
+    """The constraints.my_pdt_fromstring() function correctly parses out the year and month coordinates for a basic format."""
+    pdt, offset = constraints.my_pdt_fromstring("202201")
+    assert pdt.year == 2022
+    assert pdt.month == 1
+    assert pdt.day is None
+    assert pdt.hour == 0
+    assert pdt.minute == 0
+    assert pdt.second == 0
+    assert offset is None
+
+
+def test_basic_year_month_day_parse_correctly():
+    """The constraints.my_pdt_fromstring() function correctly parses out the year, month, day coordinates for a basic format."""
+    pdt, offset = constraints.my_pdt_fromstring("20220101")
+    assert pdt.year == 2022
+    assert pdt.month == 1
+    assert pdt.day == 1
+    assert pdt.hour == 0
+    assert pdt.minute == 0
+    assert pdt.second == 0
+    assert offset is None
+
+
+def test_basic_with_time_hour_minute_second_parse_correctly():
+    """The constraints.my_pdt_fromstring() function correctly parses out hour, minute and second coordinates for a basic format."""
+    pdt, offset = constraints.my_pdt_fromstring("20220101T123030")
+    assert pdt.year == 2022
+    assert pdt.month == 1
+    assert pdt.day == 1
+    assert pdt.hour == 12
+    assert pdt.minute == 30
+    assert pdt.second == 30
+    assert offset is None
+
+
+def test_microseconds_parse_correctly():
+    """The constraints.my_pdt_fromstring() function correctly removes microsecond resolution."""
+    pdt, offset = constraints.my_pdt_fromstring("2022-01-01T12:30:30.123456")
+    assert pdt.year == 2022
+    assert pdt.month == 1
+    assert pdt.day == 1
+    assert pdt.hour == 12
+    assert pdt.minute == 30
+    assert pdt.second == 30
+    assert offset is None
+
+
+def test_month_precision_parse_correctly():
+    """The constraints.my_pdt_fromstring() function correctly parses out the year and month coordinates."""
+    pdt, offset = constraints.my_pdt_fromstring("2022-01")
+    assert pdt.year == 2022
+    assert pdt.month == 1
+    assert pdt.day is None
+    assert pdt.hour == 0
+    assert pdt.minute == 0
+    assert pdt.second == 0
+    assert offset is None
+
+
+def test_alternate_UTC_representation():
+    """The constraints.my_pdt_fromstring() function correctly removes offset of +-00:00."""
+    pdt, offset = constraints.my_pdt_fromstring("2022-01-01T12:30+00:00")
+    assert pdt.year == 2022
+    assert pdt.month == 1
+    assert pdt.day == 1
+    assert pdt.hour == 12
+    assert pdt.minute == 30
+    assert pdt.second == 0
+    assert offset == timedelta(0)
+
+
+def test_Indian_standard_time():
+    """The constraints.my_pdt_fromstring() function correctly parses the offset."""
+    pdt, offset = constraints.my_pdt_fromstring("2022-01-01T12:30+05:30")
+    assert pdt.year == 2022
+    assert pdt.month == 1
+    assert pdt.day == 1
+    assert pdt.hour == 12
+    assert pdt.minute == 30
+    assert pdt.second == 0
+    assert offset == timedelta(seconds=19800)
 
 
 def test_generate_stash_constraint():
