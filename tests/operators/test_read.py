@@ -23,6 +23,7 @@ import iris.coords
 import iris.cube
 import numpy as np
 import pytest
+from iris.time import PartialDateTime
 
 from CSET.operators import read
 
@@ -37,6 +38,30 @@ def test_read_cubes():
     ]
     for cube in cubes:
         assert repr(cube) in expected_cubes
+
+
+def test_read_cubes_generate_time_constraint():
+    """Read cube, constrain the time coordinate and verify the correct time range."""
+    from CSET.operators import constraints
+
+    cubes = read.read_cubes("tests/test_data/precipitation_360_day_calendar.nc")
+    cube = cubes[0]
+
+    print(cube.coord("time"))
+
+    constraint = constraints.generate_time_constraint(
+        time_start="2000-01-01T12", time_end="2000-01-01T15"
+    )
+
+    cube_constrained = cube.extract(constraint)
+
+    time_coords = cube_constrained.coord("time")
+    time_points = time_coords.units.num2date(time_coords.points)
+
+    assert min(time_points) >= PartialDateTime(2000, 1, 1, 12, 0, 0)
+    assert max(time_points) <= PartialDateTime(2000, 1, 1, 15, 0, 0)
+
+    print(time_coords)
 
 
 def test_read_cubes_no_cubes_exception():
