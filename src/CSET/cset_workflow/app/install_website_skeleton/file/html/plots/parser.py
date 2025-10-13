@@ -4,26 +4,29 @@
 
 EBNF to implement:
 
-query =
-    expression
+query = expression ;
 
-expression =
-    condition | condition combiner? expression | NOT expression | "(" expression ")"
+expression = condition
+           | expression , combiner ? , expression
+           | "NOT" , expression
+           | "(" , expression , ")" ;
 
-combiner =
-    AND | OR
+combiner = "AND"
+         | "OR" ;
 
-condition =
-    facet? operator? value
+condition = facet ? , operator ? , value ;
 
-facet =
-    LITERAL ":"
+facet = LITERAL , ":" ;
 
-value = LITERAL
+value = LITERAL ;
 
-operator =
-    NOT | GREATER_THAN | GREATER_THAN_OR_EQUALS | LESS_THAN | LESS_THAN_OR_EQUALS | NOT_EQUALS | EQUALS
-
+operator = NOT
+         | GREATER_THAN
+         | GREATER_THAN_OR_EQUALS
+         | LESS_THAN
+         | LESS_THAN_OR_EQUALS
+         | NOT_EQUALS
+         | EQUALS ;
 """
 
 import re
@@ -133,7 +136,8 @@ def lexer(s: str) -> Iterable[Token]:
     """Lex input string into tokens."""
     for match in re.finditer(TOKEN_REGEX, s):
         # Get the Enum object from token_spec matching the capture group name.
-        assert match.lastgroup, "match.lastgroup cannot be None."
+        if match.lastgroup is None:
+            raise ValueError("Query did not consist of valid tokens.")
         kind = TOKEN_NAME_MAPPING[match.lastgroup]
         value = match.group()
         match kind:
