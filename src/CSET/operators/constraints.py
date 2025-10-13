@@ -46,57 +46,52 @@ def my_pdt_fromstring(
     # Remove the microseconds coord due to no support in PartialDateTime
     datestring = re.sub(r"\.\d+", "", datestring)
 
-    # Split the datestring from the offset
+    def make_offset(sign, value) -> timedelta:
+        if len(value) not in [2, 4, 5]:
+            raise ValueError(f'expected "hh", "hhmm", or "hh:mm", got {value}')
+
+        hours = int(value[:2])
+        minutes = 0
+        if len(value) in [4, 5]:
+            minutes = int(value[-2:])
+        return timedelta(hours=sign * hours, minutes=sign * minutes)
+
+    datetime_split = datestring.split("T")
+    date = datetime_split[0]
+    if len(datetime_split) == 1:
+        time = ""
+    elif len(datetime_split) == 2:
+        time = datetime_split[1]
+
+    else:
+        raise ValueError("datesting in an unexpected format")
+
     offset = None
-
-    match = re.match(r"^(.+?)([+-]\d{2}:\d{2})$", datestring)
-
-    if match:
-        datestring = match.group(1)
-        offset_part = match.group(2)
-
-        offset_sign = 1 if offset_part[0] == "+" else -1
-
-        offset_hours, offset_minutes = map(int, offset_part[1:].split(":"))
-        offset = timedelta(
-            hours=offset_sign * offset_hours, minutes=offset_sign * offset_minutes
-        )
-
-    # Normalise the date and time parts of the datetime string into standard format
-    if re.fullmatch(r"\d{8}", datestring):
-        datestring = f"{datestring[0:4]}-{datestring[4:6]}-{datestring[6:8]}"
-
-    if re.fullmatch(r"\d{6}", datestring):
-        datestring = f"{datestring[0:4]}-{datestring[4:6]}"
-
-    if re.fullmatch(r"\d{8}T\d{2,6}", datestring):
-        date = f"{datestring[0:4]}-{datestring[4:6]}-{datestring[6:8]}"
-        time_part = f"{datestring[9:]}"
-
-        time = f"{time_part[0:2]}"
-
-        if len(time_part) >= 4:
-            time += f":{time_part[2:4]}"
+    time_split = time.split("+")
+    if len(time_split) == 2:
+        time = time_split[0]
+        offset = make_offset(1, time_split[1])
+    else:
+        time_split = time.split("-")
+        if len(time_split) == 2:
+            time = time_split[0]
+            offset = make_offset(-1, time_split[1])
         else:
-            time += ":00"
+            offset = None
 
-        if len(time_part) >= 6:
-            time += f":{time_part[4:6]}"
-        else:
-            time += ":00"
+    if re.fullmatch(r"\d{8}", date):
+        date = f"{date[0:4]}-{date[4:6]}-{date[6:8]}"
+    elif re.fullmatch(r"\d{6}", date):
+        date = f"{date[0:4]}-{date[4:6]}"
 
-        datestring = f"{date}T{time}"
-
-    if len(datestring) < 7:
-        raise ValueError(
-            "Invalid datestring: {datestring}, string must have at least YYYY-MM"
-        )
+    if len(date) < 7:
+        raise ValueError(f"Invalid datestring: {datestring}, must be at least YYYY-MM")
 
     # Returning a PartialDateTime for the special case of string form "YYYY-MM"
-    if re.fullmatch(r"\d{4}-\d{2}", datestring):
+    if re.fullmatch(r"\d{4}-\d{2}", date):
         pdt = PartialDateTime(
-            year=int(datestring[0:4]),
-            month=int(datestring[5:7]),
+            year=int(date[0:4]),
+            month=int(date[5:7]),
             day=None,
             hour=0,
             minute=0,
@@ -104,18 +99,24 @@ def my_pdt_fromstring(
         )
         return pdt, offset
 
-    year = int(datestring[0:4])
-    month = int(datestring[5:7])
-    day = int(datestring[8:10])
+    year = int(date[0:4])
+    month = int(date[5:7])
+    day = int(date[8:10])
 
     kwargs = dict(year=year, month=month, day=day, hour=0, minute=0, second=0)
 
-    if len(datestring) >= 13:
-        kwargs["hour"] = int(datestring[11:13])
-    if len(datestring) >= 16:
-        kwargs["minute"] = int(datestring[14:16])
-    if len(datestring) >= 19:
-        kwargs["second"] = int(datestring[17:19])
+    # Normalise the time parts into standard format
+    if re.fullmatch(r"\d{4}", time):
+        time = f"{time[0:2]}:{time[2:4]}"
+    if re.fullmatch(r"\d{6}", time):
+        time = f"{time[0:2]}:{time[2:4]}:{time[4:6]}"
+
+    if len(time) >= 2:
+        kwargs["hour"] = int(time[0:2])
+    if len(time) >= 5:
+        kwargs["minute"] = int(time[3:5])
+    if len(time) >= 8:
+        kwargs["second"] = int(time[6:8])
 
     pdt = PartialDateTime(**kwargs)
 
