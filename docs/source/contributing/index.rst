@@ -15,6 +15,7 @@ need to get started, and the links below go into more detail on specific topics.
     code-review
     dependencies
     releases
+    architecture
 
 Contributing checklist
 ----------------------
