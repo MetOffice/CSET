@@ -252,12 +252,11 @@ function setup_clear_search_button() {
 
 // Parse the query, returning a comparison function.
 function parse_query(query) {
-  // TODO: Parse the query into an easily compared form.
+  // TODO: Port query parser from parser.py
   const title = query.toLowerCase();
 
   // Returns true or false for a given event based on the query.
   function test(entry) {
-    // TODO: Implement comparison of facets.
     return entry.textContent.includes(title);
   }
 
