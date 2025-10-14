@@ -173,7 +173,7 @@ class Condition:
 
         Arguments
         ---------
-        value: str | Callable
+        value: LiteralToken | Callable
             The value to check for within the facet. May also be a callable to
             determine this, in which case other arguments are ignored.
         facet: Facet, optional
