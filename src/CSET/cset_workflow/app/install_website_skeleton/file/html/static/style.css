@@ -48,6 +48,11 @@ nav {
         margin: 8px 0;
         border-radius: 3em;
       }
+
+      fieldset select {
+        display: block;
+        margin-bottom: 4px;
+      }
     }
   }
 
