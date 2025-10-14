@@ -83,9 +83,9 @@ def test_basic_year_month_parse_correctly():
     assert pdt.year == 2022
     assert pdt.month == 1
     assert pdt.day is None
-    assert pdt.hour == 0
-    assert pdt.minute == 0
-    assert pdt.second == 0
+    assert pdt.hour is None
+    assert pdt.minute is None
+    assert pdt.second is None
     assert offset is None
 
 
@@ -131,9 +131,9 @@ def test_month_precision_parse_correctly():
     assert pdt.year == 2022
     assert pdt.month == 1
     assert pdt.day is None
-    assert pdt.hour == 0
-    assert pdt.minute == 0
-    assert pdt.second == 0
+    assert pdt.hour is None
+    assert pdt.minute is None
+    assert pdt.second is None
     assert offset is None
 
 

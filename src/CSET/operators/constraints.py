@@ -43,8 +43,6 @@ def my_pdt_fromstring(
     -------
     time_object: iris.time.PartialDateTime
     """
-    # Remove the microseconds coord due to no support in PartialDateTime
-    datestring = re.sub(r"\.\d+", "", datestring)
 
     def make_offset(sign, value) -> timedelta:
         if len(value) not in [2, 4, 5]:
@@ -55,6 +53,9 @@ def my_pdt_fromstring(
         if len(value) in [4, 5]:
             minutes = int(value[-2:])
         return timedelta(hours=sign * hours, minutes=sign * minutes)
+
+    # Remove the microseconds coord due to no support in PartialDateTime
+    datestring = re.sub(r"\.\d+", "", datestring)
 
     datetime_split = datestring.split("T")
     date = datetime_split[0]
@@ -93,9 +94,9 @@ def my_pdt_fromstring(
             year=int(date[0:4]),
             month=int(date[5:7]),
             day=None,
-            hour=0,
-            minute=0,
-            second=0,
+            hour=None,
+            minute=None,
+            second=None,
         )
         return pdt, offset
 
