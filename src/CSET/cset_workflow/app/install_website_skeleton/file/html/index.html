@@ -15,32 +15,12 @@
         <header>
             <h1>CSET</h1>
             <button id="clear-plots">⎚ Clear view</button>
+            <button id="clear-query">⌫ Clear search</button>
             <button id="description-toggle">⇲ Hide description</button>
             <search>
                 <input type="search" name="query" id="filter-query" placeholder="Filter...">
-                <fieldset>
+                <fieldset id="filter-facets">
                     <legend>Search facets</legend>
-                    <div>
-                        <input type="checkbox" name="frobnicate" id="filter-foo">
-                        <label for="filter-foo">Frobnicate</label>
-                    </div>
-                    <div>
-                        <label for="filter-start-date">Start</label>
-                        <input type="date" name="start-date" id="filder-start-date">
-                        to
-                        <label for="filter-end-date">End</label>
-                        <input type="date" name="end-date" id="filder-end-date">
-                    </div>
-                    <div>
-                        <label for="filter-field">Field</label>
-                        <select name="field" id="filter-field">
-                            <option value="" selected>Any</option>
-                            <option>temperature_at_screen_level</option>
-                            <option>relative_humidity_at_screen_level</option>
-                            <option>x_wind</option>
-                            <option>y_wind</option>
-                        </select>
-                    </div>
                 </fieldset>
             </search>
         </header>
