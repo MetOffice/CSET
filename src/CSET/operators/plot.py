@@ -1264,6 +1264,140 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
     plt.close(fig)
 
 
+def _plot_and_save_power_spectrum_series(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+    filename: str,
+    title: str,
+    **kwargs,
+):
+    """Plot and save a power spectrum series.
+
+    Parameters
+    ----------
+    cubes: Cube or CubeList
+        2 dimensional Cube or CubeList of the data to plot as power spectrum.
+    filename: str
+        Filename of the plot to write.
+    title: str
+        Plot title.
+    """
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+    ax = plt.gca()
+
+    model_colors_map = _get_model_colors_map(cubes)
+
+    for cube in iter_maybe(cubes):
+        # Extract data from the cube
+        frequency = cube.coord("frequency").points
+        power_spectrum = cube.data
+
+        label = None
+        color = "black"
+        if model_colors_map:
+            label = cube.attributes.get("model_name")
+            color = model_colors_map[label]
+        ax.plot(frequency, power_spectrum, color=color, label=label)
+
+    # Add some labels and tweak the style.
+    ax.set_title(title, fontsize=16)
+    ax.set_xlabel(
+        f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}", fontsize=14
+    )
+    ax.set_ylabel("Power", fontsize=14)
+    ax.tick_params(axis="both", labelsize=12)
+
+    # Set log-log scale
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+
+    # Overlay grid-lines onto power spectrum plot.
+    ax.grid(linestyle="--", color="grey", linewidth=1)
+    if model_colors_map:
+        ax.legend(loc="best", ncol=1, frameon=False, fontsize=16)
+
+    # Save plot.
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+    logging.info("Saved line plot to %s", filename)
+    plt.close(fig)
+
+
+def _plot_and_save_postage_stamp_power_spectrum_series(
+    cube: iris.cube.Cube,
+    filename: str,
+    title: str,
+    stamp_coordinate: str,
+    **kwargs,
+):
+    """Plot and save postage (ensemble members) stamps for a power spectrum series.
+
+    Parameters
+    ----------
+    cube: Cube
+        2 dimensional Cube of the data to plot as power spectrum.
+    filename: str
+        Filename of the plot to write.
+    title: str
+        Plot title.
+    stamp_coordinate: str
+        Coordinate that becomes different plots.
+    """
+    # Use the smallest square grid that will fit the members.
+    grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
+
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+    # Make a subplot for each member.
+    for member, subplot in zip(
+        cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1), strict=False
+    ):
+        # Implicit interface is much easier here, due to needing to have the
+        # cartopy GeoAxes generated.
+        plt.subplot(grid_size, grid_size, subplot)
+
+        frequency = member.coord("frequency").points
+        power_spectrum = member.data
+        ax = plt.gca()
+        ax.plot(frequency, power_spectrum)
+        ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
+
+    # Overall figure title.
+    fig.suptitle(title, fontsize=16)
+
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+    logging.info("Saved power spectra postage stamp plot to %s", filename)
+    plt.close(fig)
+
+
+def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
+    cube: iris.cube.Cube,
+    filename: str,
+    title: str,
+    stamp_coordinate: str,
+    **kwargs,
+):
+    fig, ax = plt.subplots(figsize=(10, 10), facecolor="w", edgecolor="k")
+    ax.set_title(title, fontsize=16)
+    ax.set_xlabel(f"{cube.name()} / {cube.units}", fontsize=14)
+    ax.set_ylabel("Power", fontsize=14)
+    # Loop over all slices along the stamp_coordinate
+    for member in cube.slices_over(stamp_coordinate):
+        frequency = member.coord("frequency").points
+        power_spectrum = member.data
+        ax.plot(
+            frequency,
+            power_spectrum,
+            label=f"Member #{member.coord(stamp_coordinate).points[0]}",
+        )
+
+    # Add a legend
+    ax.legend(fontsize=16)
+
+    # Save the figure to a file
+    plt.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+
+    # Close the figure
+    plt.close(fig)
+
+
 def _spatial_plot(
     method: Literal["contourf", "pcolormesh"],
     cube: iris.cube.Cube,
@@ -2361,6 +2495,164 @@ def plot_histogram_series(
             title=title,
             vmin=vmin,
             vmax=vmax,
+        )
+        plot_index.append(plot_filename)
+
+    # Add list of plots to plot metadata.
+    complete_plot_index = _append_to_plot_index(plot_index)
+
+    # Make a page to display the plots.
+    _make_plot_html_page(complete_plot_index)
+
+    return cubes
+
+
+def plot_power_spectrum_series(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+    filename: str = None,
+    sequence_coordinate: str = "time",
+    stamp_coordinate: str = "realization",
+    single_plot: bool = False,
+    **kwargs,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Plot a power spectrum plot for each vertical level provided.
+
+    A power spectrum plot can be plotted, but if the sequence_coordinate (i.e. time)
+    is present then a sequence of plots will be produced using the time slider
+    functionality to scroll through power spectra against time. If a
+    stamp_coordinate is present then postage stamp plots will be produced. If
+    stamp_coordinate and single_plot is True, all postage stamp plots will be
+    plotted in a single plot instead of separate postage stamp plots.
+
+    Parameters
+    ----------
+    cubes: Cube | iris.cube.CubeList
+        Iris cube or CubeList of the data to plot. It should have a single dimension other
+        than the stamp coordinate.
+        The cubes should cover the same phenomenon i.e. all cubes contain temperature data.
+        We do not support different data such as temperature and humidity in the same CubeList for plotting.
+    filename: str, optional
+        Name of the plot to write, used as a prefix for plot sequences. Defaults
+        to the recipe name.
+    sequence_coordinate: str, optional
+        Coordinate about which to make a plot sequence. Defaults to ``"time"``.
+        This coordinate must exist in the cube and will be used for the time
+        slider.
+    stamp_coordinate: str, optional
+        Coordinate about which to plot postage stamp plots. Defaults to
+        ``"realization"``.
+    single_plot: bool, optional
+        If True, all postage stamp plots will be plotted in a single plot. If
+        False, each postage stamp plot will be plotted separately. Is only valid
+        if stamp_coordinate exists and has more than a single point.
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        The original Cube or CubeList (so further operations can be applied).
+        Plotted data.
+
+    Raises
+    ------
+    ValueError
+        If the cube doesn't have the right dimensions.
+    TypeError
+        If the cube isn't a Cube or CubeList.
+    """
+    recipe_title = get_recipe_metadata().get("title", "Untitled")
+
+    cubes = iter_maybe(cubes)
+
+    # Ensure we have a name for the plot file.
+    if filename is None:
+        filename = slugify(recipe_title)
+
+    # Internal plotting function.
+    plotting_func = _plot_and_save_power_spectrum_series
+
+    num_models = _get_num_models(cubes)
+
+    _validate_cube_shape(cubes, num_models)
+
+    # If several power spectra are plotted with time as sequence_coordinate for the
+    # time slider option.
+    for cube in cubes:
+        try:
+            cube.coord(sequence_coordinate)
+        except iris.exceptions.CoordinateNotFoundError as err:
+            raise ValueError(
+                f"Cube must have a {sequence_coordinate} coordinate."
+            ) from err
+
+    # Make postage stamp plots if stamp_coordinate exists and has more than a
+    # single point. If single_plot is True:
+    # -- all postage stamp plots will be plotted in a single plot instead of
+    # separate postage stamp plots.
+    # -- model names (hidden in cube attrs) are ignored, that is stamp plots are
+    # produced per single model only
+    if num_models == 1:
+        if (
+            stamp_coordinate in [c.name() for c in cubes[0].coords()]
+            and cubes[0].coord(stamp_coordinate).shape[0] > 1
+        ):
+            if single_plot:
+                plotting_func = (
+                    _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series
+                )
+            else:
+                plotting_func = _plot_and_save_postage_stamp_power_spectrum_series
+        cube_iterables = cubes[0].slices_over(sequence_coordinate)
+    else:
+        all_points = sorted(
+            set(
+                itertools.chain.from_iterable(
+                    cb.coord(sequence_coordinate).points for cb in cubes
+                )
+            )
+        )
+        all_slices = list(
+            itertools.chain.from_iterable(
+                cb.slices_over(sequence_coordinate) for cb in cubes
+            )
+        )
+        # Matched slices (matched by seq coord point; it may happen that
+        # evaluated models do not cover the same seq coord range, hence matching
+        # necessary)
+        cube_iterables = [
+            iris.cube.CubeList(
+                s for s in all_slices if s.coord(sequence_coordinate).points[0] == point
+            )
+            for point in all_points
+        ]
+
+    plot_index = []
+    nplot = np.size(cube.coord(sequence_coordinate).points)
+    # Create a plot for each value of the sequence coordinate. Allowing for
+    # multiple cubes in a CubeList to be plotted in the same plot for similar
+    # sequence values. Passing a CubeList into the internal plotting function
+    # for similar values of the sequence coordinate. cube_slice can be an
+    # iris.cube.Cube or an iris.cube.CubeList.
+    for cube_slice in cube_iterables:
+        single_cube = cube_slice
+        if isinstance(cube_slice, iris.cube.CubeList):
+            single_cube = cube_slice[0]
+
+        # Use sequence value so multiple sequences can merge.
+        sequence_value = single_cube.coord(sequence_coordinate).points[0]
+        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
+        coord = single_cube.coord(sequence_coordinate)
+        # Format the coordinate value in a unit appropriate way.
+        title = f"{recipe_title}\n [{coord.units.title(coord.points[0])}]"
+        # Use sequence (e.g. time) bounds if plotting single non-sequence outputs
+        if nplot == 1 and coord.has_bounds:
+            if np.size(coord.bounds) > 1:
+                title = f"{recipe_title}\n [{coord.units.title(coord.bounds[0][0])} to {coord.units.title(coord.bounds[0][1])}]"
+        # Do the actual plotting.
+        plotting_func(
+            cube_slice,
+            filename=plot_filename,
+            stamp_coordinate=stamp_coordinate,
+            title=title,
         )
         plot_index.append(plot_filename)
 
