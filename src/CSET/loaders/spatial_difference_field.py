@@ -246,6 +246,24 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+    # Daily minimum temperature.
+    if conf.DAILY_09_MINIMUM_TEMPERATURE_SPATIAL_DIFFERENCE:
+        base_model = models[0]
+        for model in models[1:]:
+            yield RawRecipe(
+                recipe="daily_09_minimum_temperature_spatial_difference.yaml",
+                variables={
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
     # Create a list of case aggregation types.
     AGGREGATION_TYPES = ["lead_time", "hour_of_day", "validity_time", "all"]
 
