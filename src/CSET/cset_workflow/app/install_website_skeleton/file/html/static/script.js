@@ -43,31 +43,32 @@ class Facet {
 }
 
 const TOKEN_SPEC = new Map([
-  ["Parenthesis.BEGIN", "\\("],
-  ["Parenthesis.END", "\\)"],
-  ["Operator.GREATER_THAN_OR_EQUALS", "<="],
-  ["Operator.GREATER_THAN", "<"],
-  ["Operator.LESS_THAN_OR_EQUALS", ">="],
-  ["Operator.LESS_THAN", ">"],
-  ["Operator.NOT_EQUALS", "!="],
-  ["Operator.EQUALS", "="],
-  ["Operator.NOT_IN", "!"],
-  ["Combiner.NOT", "\\bnot\\b"],
-  ["Combiner.AND", "\\band\\b"],
-  ["Combiner.OR", "\\bor\\b"],
-  ["LexOnly.WHITESPACE", "[ \\t]+"],
-  ["LexOnly.FACET", "[a-z_\\-]+[ \\t]*:"],
-  ["LexOnly.LITERAL", `'[^']*'|"[^"]*"|[^ \\t\\(\\)]+`],
+  ["Parenthesis_BEGIN", "\\("],
+  ["Parenthesis_END", "\\)"],
+  ["Operator_GREATER_THAN_OR_EQUALS", "<="],
+  ["Operator_GREATER_THAN", "<"],
+  ["Operator_LESS_THAN_OR_EQUALS", ">="],
+  ["Operator_LESS_THAN", ">"],
+  ["Operator_NOT_EQUALS", "!="],
+  ["Operator_EQUALS", "="],
+  ["Operator_NOT_IN", "!"],
+  ["Combiner_NOT", "\\bnot\\b"],
+  ["Combiner_AND", "\\band\\b"],
+  ["Combiner_OR", "\\bor\\b"],
+  ["LexOnly_WHITESPACE", "[ \\t]+"],
+  ["LexOnly_FACET", "[a-z_\\-]+[ \\t]*:"],
+  ["LexOnly_LITERAL", `'[^']*'|"[^"]*"|[^ \\t\\(\\)]+`],
 ]);
 
 const TOKEN_REGEX = RegExp(
-  TOKEN_SPEC.values()
-    .map((key, val) => {
-      `(?P<${key}>${val})`;
+  Array.from(
+    TOKEN_SPEC.entries().map((pair) => {
+      return `(?<${pair[0]}>${pair[1]})`;
     })
-    .join("|"),
-  "i"
+  ).join("|"),
+  "ig"
 );
+
 // Lex input string into tokens.
 function lexer(query) {
   const tokens = [];
@@ -76,26 +77,25 @@ function lexer(query) {
     if (!match.groups) {
       throw new SyntaxError("Query did not consist of valid tokens.");
     }
-
-    const entries = Object.entries(match.groups)[0];
-    const kind = entries[0];
-    let value = entries[1];
+    let [kind, value] = Object.entries(match.groups).filter(
+      (pair) => pair[1] !== undefined
+    )[0];
 
     switch (kind) {
-      case "LexOnly.WHITESPACE":
+      case "LexOnly_WHITESPACE":
         continue;
-      case "LexOnly.FACET":
+      case "LexOnly_FACET":
         const facet_name = value.replace(/[ \t]*:$/, "");
-        tokens.append(Facet(facet_name));
+        tokens.push(new Facet(facet_name));
         break;
-      case "LexOnly.LITERAL":
+      case "LexOnly_LITERAL":
         if (/^".*"$|^'.+'$/.test(value)) {
           value = value.slice(1, -1);
         }
-        tokens.append(Literal(value));
+        tokens.push(new Literal(value));
         break;
       default:
-        tokens.append(kind);
+        tokens.push(kind);
         break;
     }
   }
@@ -103,58 +103,61 @@ function lexer(query) {
 }
 
 class Condition {
-  constructor(value, facet, operator) {
+  constructor(value, facet = new Facet("title"), operator = "Operator_IN") {
     if (typeof value == "function") {
       this.func = value;
       return;
     }
 
-    v = value.value;
-    f = facet.value;
+    const v = value.value;
+    const f = facet.value;
 
-    switch (operator) {
-      case "Operator.IN":
-        this.func = (d) => {
-          return d[f].includes(v);
-        };
-        break;
-      case "Operator.NOT_IN":
-        this.func = (d) => {
-          return !d[f].includes(v);
-        };
-      case "Operator.EQUALS":
-        this.func = (d) => {
-          return v == d[f];
-        };
-        break;
-      case "Operator.NOT_EQUALS":
-        this.func = (d) => {
-          return v != d[f];
-        };
-        break;
-      case "Operator.GREATER_THAN":
-        this.func = (d) => {
-          return v > d[f];
-        };
-        break;
-      case "Operator.GREATER_THAN_OR_EQUALS":
-        this.func = (d) => {
-          return v >= d[f];
-        };
-        break;
-      case "Operator.LESS_THAN":
-        this.func = (d) => {
-          return v < d[f];
-        };
-        break;
-      case "Operator.LESS_THAN_OR_EQUALS":
-        this.func = (d) => {
-          return v <= d[f];
-        };
-        break;
-      default:
-        throw Error(`Invalid operator: ${operator}`);
+    let condition_function = null;
+
+    if (operator === "Operator_IN") {
+      function cond(d) {
+        return d[f].includes(v);
+      }
+      condition_function = cond;
+    } else if (operator === "Operator_NOT_IN") {
+      function cond(d) {
+        return !d[f].includes(v);
+      }
+      condition_function = cond;
+    } else if (operator === "Operator_EQUALS") {
+      function cond(d) {
+        return v == d[f];
+      }
+      condition_function = cond;
+    } else if (operator === "Operator_NOT_EQUALS") {
+      function cond(d) {
+        return v != d[f];
+      }
+      condition_function = cond;
+    } else if (operator === "Operator_GREATER_THAN") {
+      function cond(d) {
+        return v > d[f];
+      }
+      condition_function = cond;
+    } else if (operator === "Operator_GREATER_THAN_OR_EQUALS") {
+      function cond(d) {
+        return v >= d[f];
+      }
+      condition_function = cond;
+    } else if (operator === "Operator_LESS_THAN") {
+      function cond(d) {
+        return v < d[f];
+      }
+      condition_function = cond;
+    } else if (operator === "Operator_LESS_THAN_OR_EQUALS") {
+      function cond(d) {
+        return v <= d[f];
+      }
+      condition_function = cond;
+    } else {
+      throw new Error(`Invalid operator: ${operator}`);
     }
+    this.func = condition_function;
   }
 
   test(d) {
@@ -163,56 +166,44 @@ class Condition {
 
   // Implement self & other.
   and(other) {
-    function combined(d) {
-      return this.test(d) && other.test(d);
-    }
-
-    return Condition(combined);
+    return new Condition((d) => this.test(d) && other.test(d));
   }
 
   // Implement self | other.
   or(other) {
-    function combined(d) {
-      return this.test(d) || other.test(d);
-    }
-
-    return Condition(combined);
+    return new Condition((d) => this.test(d) || other.test(d));
   }
 
   // Implement ~self.
   invert() {
-    function combined(d) {
-      return !this.test(d);
-    }
-
-    return Condition(combined);
+    return new Condition((d) => !this.test(d));
   }
 }
 
 // Parse a grouped expression from a stream of tokens.
 function parse_grouped_expression(tokens) {
-  if (len(tokens) < 2 || tokens[0] !== "Parenthesis.BEGIN") {
-    return 0, null;
+  if (tokens.length < 2 || tokens[0] !== "Parenthesis_BEGIN") {
+    return [0, null];
   }
   let offset = 1;
   let depth = 1;
   while (depth > 0 && offset < tokens.length) {
     switch (tokens[offset]) {
-      case "Parenthesis.BEGIN":
+      case "Parenthesis_BEGIN":
         depth += 1;
         break;
-      case "Parenthesis.END":
+      case "Parenthesis_END":
         depth -= 1;
         offset += 1;
         break;
     }
   }
   if (depth != 0) {
-    throw Error("Unmatched parenthesis.");
+    throw new Error("Unmatched parenthesis.");
   }
   // Recursively parse the grouped expression.
   inner_expression = parse_expression(tokens.slice(1, offset - 1));
-  return offset, inner_expression;
+  return [offset, inner_expression];
 }
 
 // Parse a condition from a stream of tokens.
@@ -220,27 +211,31 @@ function parse_condition(tokens) {
   if (tokens[0] instanceof Literal) {
     // Just a value to search for.
     const lt = tokens[0];
-    return 1, Condition(lt);
-  } else if (tokens[0].startsWith("Operator.") && tokens[1] instanceof Literal) {
+    return [1, new Condition(lt)];
+  } else if (
+    typeof tokens[0] === "string" &&
+    tokens[0].startsWith("Operator.") &&
+    tokens[1] instanceof Literal
+  ) {
     // Value to search for with operator.
     const op = tokens[0];
     const lt = tokens[1];
-    return 2, Condition(lt, op);
+    return [2, new Condition(lt, op)];
   } else if (tokens[0] instanceof Facet && tokens[1] instanceof Literal) {
     // Value to search for in facet.
     const fc = tokens[0];
     const lt = tokens[1];
-    return 2, Condition(lt, (facet = fc));
+    return [2, new Condition(lt, (facet = fc))];
   } else if (
     tokens[0] instanceof Facet &&
     tokens[1].startsWith("Operator.") &&
     tokens[1] instanceof Literal
   ) {
     // Value to search for in facet with operator.
-    return 3, Condition(lt, (facet = fc), (operator = op));
+    return [3, new Condition(lt, (facet = fc), (operator = op))];
   } else {
     // Not matched as a condition.
-    return 0, None;
+    return [0, null];
   }
 }
 
@@ -250,23 +245,23 @@ function evaluate_not(conditions) {
   let index = 0;
   while (index < conditions.length) {
     if (
-      conditions[index] == "Combiner.NOT" &&
-      conditions[index + 1] == "Combiner.NOT"
+      conditions[index] == "Combiner_NOT" &&
+      conditions[index + 1] == "Combiner_NOT"
     ) {
       // Skip double NOTs, as they negate each other.
       index += 2;
     } else if (
-      conditions[index] == "Combiner.NOT" &&
+      conditions[index] == "Combiner_NOT" &&
       conditions[index + 1] instanceof Condition
     ) {
       const right = conditions[index + 1];
-      negated_conditions.append(right.invert());
+      negated_conditions.push(right.invert());
       index += 2;
-    } else if (conditions[index] != "Combiner.NOT") {
-      negated_conditions.append(left);
+    } else if (conditions[index] != "Combiner_NOT") {
+      negated_conditions.push(conditions[index]);
       index += 1;
     } else {
-      throw Error("Unprocessable NOT.");
+      throw new Error("Unprocessable NOT.");
     }
   }
   return negated_conditions;
@@ -274,9 +269,9 @@ function evaluate_not(conditions) {
 
 // Collapse all explicit and implicit ANDs in a list of conditions.
 function evaluate_and(conditions) {
-  anded_conditions = [];
-  index = 0;
-  while (index < len(conditions)) {
+  const anded_conditions = [];
+  let index = 0;
+  while (index < conditions.length) {
     let left;
     if (anded_conditions.length) {
       left = anded_conditions.pop();
@@ -286,25 +281,25 @@ function evaluate_and(conditions) {
 
     if (
       left instanceof Condition &&
-      conditions[index] == "Combiner.AND" &&
+      conditions[index] == "Combiner_AND" &&
       conditions[index + 1] instanceof Condition
     ) {
       const right = conditions[index + 1];
-      anded_conditions.append(left.and(right));
+      anded_conditions.push(left.and(right));
       index += 2;
     } else if (left instanceof Condition && conditions[index] instanceof Condition) {
       const right = conditions[index];
-      anded_conditions.append(left.and(right));
+      anded_conditions.push(left.and(right));
       index += 2;
-    } else if (conditions[index] != "Combiner.AND") {
+    } else if (conditions[index] != "Combiner_AND") {
       if (left !== null) {
-        anded_conditions.append(left);
+        anded_conditions.push(left);
       }
       const right = conditions[index];
-      anded_conditions.append(right);
+      anded_conditions.push(right);
       index += 1;
     } else {
-      throw Error("Unprocessable AND.");
+      throw new Error("Unprocessable AND.");
     }
   }
   return anded_conditions;
@@ -317,18 +312,18 @@ function evaluate_or(conditions) {
   while (index < conditions.length) {
     if (
       conditions[index] instanceof Condition &&
-      conditions[index + 1] === "Combiner.OR" &&
+      conditions[index + 1] === "Combiner_OR" &&
       conditions[index + 2]
     ) {
       const left = conditions[index];
       const right = conditions[index + 2];
-      ored_conditions.append(left.or(right));
+      ored_conditions.push(left.or(right));
       index += 3;
-    } else if (conditions[index] !== "Combiner.OR") {
-      ored_conditions.append(conditions[index]);
+    } else if (conditions[index] !== "Combiner_OR") {
+      ored_conditions.push(conditions[index]);
       index += 1;
     } else {
-      throw Error("Unprocessable OR.");
+      throw new Error("Unprocessable OR.");
     }
   }
   return ored_conditions;
@@ -336,34 +331,37 @@ function evaluate_or(conditions) {
 
 // Parse an expression into a single Condition function.
 function parse_expression(tokens) {
+  console.log(tokens);
   let conditions = [];
   let index = 0;
   while (index < tokens.length) {
+    console.log(conditions);
+    console.log(index);
     // Accounts for AND/OR/NOT.
-    if (tokens[index] instanceof Combiner) {
-      conditions.append(combiner);
+    if (typeof tokens[index] === "string" && tokens[index].startsWith("Combiner_")) {
+      conditions.push(tokens[index]);
       index += 1;
       continue;
     }
 
     // Accounts for parentheses.
-    let offset,
-      condition = parse_grouped_expression(tokens.slice(index));
+    let [offset, condition] = parse_grouped_expression(tokens.slice(index));
     if (offset > 0 && condition !== null) {
-      conditions.append(condition);
+      conditions.push(condition);
       index += offset;
       continue;
     }
 
     // Accounts for Facets, Operators, and Literals.
-    offset, (condition = parse_condition(tokens.slide(index)));
+    [offset, condition] = parse_condition(tokens.slice(index));
     if (offset > 0 && condition !== null) {
-      conditions.append(condition);
+      conditions.push(condition);
       index += offset;
       continue;
     }
 
-    throw Error(`Unexpected token in expression: ${tokens[index]}`);
+    console.error(tokens[index]);
+    throw new Error(`Unexpected token in expression: ${tokens[index]}`);
   }
 
   // TODO: Investigate Pratt parsing for handling combiner precedence in a
@@ -380,7 +378,7 @@ function parse_expression(tokens) {
 
   // Verify we have collapsed down to a single condition at this point.
   if (conditions.length !== 1 || !conditions[0] instanceof Condition) {
-    throw Error("Collapse should produce a single condition.");
+    throw new Error("Collapse should produce a single condition.");
   }
 
   return conditions[0];
@@ -390,9 +388,13 @@ function parse_expression(tokens) {
 function query2condition(query) {
   try {
     const tokens = lexer(query);
+    if (tokens.length === 0) {
+      return new Condition((_) => true);
+    }
     return parse_expression(tokens);
-  } catch (Error) {
+  } catch (error) {
     console.error("Query failed to parse.");
+    console.error(error);
     // TODO: Add invalid class to input, so user gets feedback.
   }
 }
@@ -571,7 +573,7 @@ function updateFacetQuery(e) {
   let new_query;
   // Construct regular expression matching facet condition.
   const pattern = RegExp(`${facet}:\\s*('[^']*'|"[^"]*"|[^ \\t\\(\\)]+)`, "i");
-  if (value == "" && pattern.test(query)) {
+  if (value == "") {
     // Facet unselected, remove from query.
     new_query = query.replace(pattern, "");
   } else if (pattern.test(query)) {
@@ -660,12 +662,12 @@ function doSearch() {
   history.pushState(history.state, "", url.href);
 
   console.log("Search query:", query);
-  const test = query2condition(query);
+  const condition = query2condition(query);
 
   // Filter all entries.
   for (const entry of document.querySelectorAll("#diagnostics > li")) {
     // Show entries matching filter and hide entries that don't.
-    if (test(entry)) {
+    if (condition.test(entry)) {
       entry.classList.remove("hidden");
     } else {
       entry.classList.add("hidden");
