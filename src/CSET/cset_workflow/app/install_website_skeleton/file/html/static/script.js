@@ -30,399 +30,371 @@
  *          | EQUALS ;
  */
 
+class Literal {
+  constructor(value) {
+    this.value = value;
+  }
+}
+
+class Facet {
+  constructor(value) {
+    this.value = value;
+  }
+}
+
+const TOKEN_SPEC = new Map([
+  ["Parenthesis.BEGIN", "\\("],
+  ["Parenthesis.END", "\\)"],
+  ["Operator.GREATER_THAN_OR_EQUALS", "<="],
+  ["Operator.GREATER_THAN", "<"],
+  ["Operator.LESS_THAN_OR_EQUALS", ">="],
+  ["Operator.LESS_THAN", ">"],
+  ["Operator.NOT_EQUALS", "!="],
+  ["Operator.EQUALS", "="],
+  ["Operator.NOT_IN", "!"],
+  ["Combiner.NOT", "\\bnot\\b"],
+  ["Combiner.AND", "\\band\\b"],
+  ["Combiner.OR", "\\bor\\b"],
+  ["LexOnly.WHITESPACE", "[ \\t]+"],
+  ["LexOnly.FACET", "[a-z_\\-]+[ \\t]*:"],
+  ["LexOnly.LITERAL", `'[^']*'|"[^"]*"|[^ \\t\\(\\)]+`],
+]);
+
+const TOKEN_REGEX = RegExp(
+  TOKEN_SPEC.values()
+    .map((key, val) => {
+      `(?P<${key}>${val})`;
+    })
+    .join("|"),
+  "i"
+);
+// Lex input string into tokens.
+function lexer(query) {
+  const tokens = [];
+  for (const match of query.matchAll(TOKEN_REGEX)) {
+    // Get the Enum object from TOKEN_SPEC matching the capture group name.
+    if (!match.groups) {
+      throw new SyntaxError("Query did not consist of valid tokens.");
+    }
+
+    const entries = Object.entries(match.groups)[0];
+    const kind = entries[0];
+    let value = entries[1];
+
+    switch (kind) {
+      case "LexOnly.WHITESPACE":
+        continue;
+      case "LexOnly.FACET":
+        const facet_name = value.replace(/[ \t]*:$/, "");
+        tokens.append(Facet(facet_name));
+        break;
+      case "LexOnly.LITERAL":
+        if (/^".*"$|^'.+'$/.test(value)) {
+          value = value.slice(1, -1);
+        }
+        tokens.append(Literal(value));
+        break;
+      default:
+        tokens.append(kind);
+        break;
+    }
+  }
+  return tokens;
+}
+
+class Condition {
+  constructor(value, facet, operator) {
+    if (typeof value == "function") {
+      this.func = value;
+      return;
+    }
+
+    v = value.value;
+    f = facet.value;
+
+    switch (operator) {
+      case "Operator.IN":
+        this.func = (d) => {
+          return d[f].includes(v);
+        };
+        break;
+      case "Operator.NOT_IN":
+        this.func = (d) => {
+          return !d[f].includes(v);
+        };
+      case "Operator.EQUALS":
+        this.func = (d) => {
+          return v == d[f];
+        };
+        break;
+      case "Operator.NOT_EQUALS":
+        this.func = (d) => {
+          return v != d[f];
+        };
+        break;
+      case "Operator.GREATER_THAN":
+        this.func = (d) => {
+          return v > d[f];
+        };
+        break;
+      case "Operator.GREATER_THAN_OR_EQUALS":
+        this.func = (d) => {
+          return v >= d[f];
+        };
+        break;
+      case "Operator.LESS_THAN":
+        this.func = (d) => {
+          return v < d[f];
+        };
+        break;
+      case "Operator.LESS_THAN_OR_EQUALS":
+        this.func = (d) => {
+          return v <= d[f];
+        };
+        break;
+      default:
+        throw Error(`Invalid operator: ${operator}`);
+    }
+  }
+
+  test(d) {
+    return this.func(d);
+  }
+
+  // Implement self & other.
+  and(other) {
+    function combined(d) {
+      return this.test(d) && other.test(d);
+    }
+
+    return Condition(combined);
+  }
+
+  // Implement self | other.
+  or(other) {
+    function combined(d) {
+      return this.test(d) || other.test(d);
+    }
+
+    return Condition(combined);
+  }
+
+  // Implement ~self.
+  invert() {
+    function combined(d) {
+      return !this.test(d);
+    }
+
+    return Condition(combined);
+  }
+}
+
+// Parse a grouped expression from a stream of tokens.
+function parse_grouped_expression(tokens) {
+  if (len(tokens) < 2 || tokens[0] !== "Parenthesis.BEGIN") {
+    return 0, null;
+  }
+  let offset = 1;
+  let depth = 1;
+  while (depth > 0 && offset < tokens.length) {
+    switch (tokens[offset]) {
+      case "Parenthesis.BEGIN":
+        depth += 1;
+        break;
+      case "Parenthesis.END":
+        depth -= 1;
+        offset += 1;
+        break;
+    }
+  }
+  if (depth != 0) {
+    throw Error("Unmatched parenthesis.");
+  }
+  // Recursively parse the grouped expression.
+  inner_expression = parse_expression(tokens.slice(1, offset - 1));
+  return offset, inner_expression;
+}
+
+// Parse a condition from a stream of tokens.
+function parse_condition(tokens) {
+  if (tokens[0] instanceof Literal) {
+    // Just a value to search for.
+    const lt = tokens[0];
+    return 1, Condition(lt);
+  } else if (tokens[0].startsWith("Operator.") && tokens[1] instanceof Literal) {
+    // Value to search for with operator.
+    const op = tokens[0];
+    const lt = tokens[1];
+    return 2, Condition(lt, op);
+  } else if (tokens[0] instanceof Facet && tokens[1] instanceof Literal) {
+    // Value to search for in facet.
+    const fc = tokens[0];
+    const lt = tokens[1];
+    return 2, Condition(lt, (facet = fc));
+  } else if (
+    tokens[0] instanceof Facet &&
+    tokens[1].startsWith("Operator.") &&
+    tokens[1] instanceof Literal
+  ) {
+    // Value to search for in facet with operator.
+    return 3, Condition(lt, (facet = fc), (operator = op));
+  } else {
+    // Not matched as a condition.
+    return 0, None;
+  }
+}
+
+// Collapse all NOTs in a list of conditions.
+function evaluate_not(conditions) {
+  const negated_conditions = [];
+  let index = 0;
+  while (index < conditions.length) {
+    if (
+      conditions[index] == "Combiner.NOT" &&
+      conditions[index + 1] == "Combiner.NOT"
+    ) {
+      // Skip double NOTs, as they negate each other.
+      index += 2;
+    } else if (
+      conditions[index] == "Combiner.NOT" &&
+      conditions[index + 1] instanceof Condition
+    ) {
+      const right = conditions[index + 1];
+      negated_conditions.append(right.invert());
+      index += 2;
+    } else if (conditions[index] != "Combiner.NOT") {
+      negated_conditions.append(left);
+      index += 1;
+    } else {
+      throw Error("Unprocessable NOT.");
+    }
+  }
+  return negated_conditions;
+}
+
+// Collapse all explicit and implicit ANDs in a list of conditions.
+function evaluate_and(conditions) {
+  anded_conditions = [];
+  index = 0;
+  while (index < len(conditions)) {
+    let left;
+    if (anded_conditions.length) {
+      left = anded_conditions.pop();
+    } else {
+      left = null;
+    }
+
+    if (
+      left instanceof Condition &&
+      conditions[index] == "Combiner.AND" &&
+      conditions[index + 1] instanceof Condition
+    ) {
+      const right = conditions[index + 1];
+      anded_conditions.append(left.and(right));
+      index += 2;
+    } else if (left instanceof Condition && conditions[index] instanceof Condition) {
+      const right = conditions[index];
+      anded_conditions.append(left.and(right));
+      index += 2;
+    } else if (conditions[index] != "Combiner.AND") {
+      if (left !== null) {
+        anded_conditions.append(left);
+      }
+      const right = conditions[index];
+      anded_conditions.append(right);
+      index += 1;
+    } else {
+      throw Error("Unprocessable AND.");
+    }
+  }
+  return anded_conditions;
+}
+
+// Collapse all ORs in a list of conditions.
+function evaluate_or(conditions) {
+  const ored_conditions = [];
+  let index = 0;
+  while (index < conditions.length) {
+    if (
+      conditions[index] instanceof Condition &&
+      conditions[index + 1] === "Combiner.OR" &&
+      conditions[index + 2]
+    ) {
+      const left = conditions[index];
+      const right = conditions[index + 2];
+      ored_conditions.append(left.or(right));
+      index += 3;
+    } else if (conditions[index] !== "Combiner.OR") {
+      ored_conditions.append(conditions[index]);
+      index += 1;
+    } else {
+      throw Error("Unprocessable OR.");
+    }
+  }
+  return ored_conditions;
+}
+
+// Parse an expression into a single Condition function.
+function parse_expression(tokens) {
+  let conditions = [];
+  let index = 0;
+  while (index < tokens.length) {
+    // Accounts for AND/OR/NOT.
+    if (tokens[index] instanceof Combiner) {
+      conditions.append(combiner);
+      index += 1;
+      continue;
+    }
+
+    // Accounts for parentheses.
+    let offset,
+      condition = parse_grouped_expression(tokens.slice(index));
+    if (offset > 0 && condition !== null) {
+      conditions.append(condition);
+      index += offset;
+      continue;
+    }
+
+    // Accounts for Facets, Operators, and Literals.
+    offset, (condition = parse_condition(tokens.slide(index)));
+    if (offset > 0 && condition !== null) {
+      conditions.append(condition);
+      index += offset;
+      continue;
+    }
+
+    throw Error(`Unexpected token in expression: ${tokens[index]}`);
+  }
+
+  // TODO: Investigate Pratt parsing for handling combiner precedence in a
+  // single pass. It should allow parsing them in the while loop above.
+
+  // Evaluate NOTs first, left to right.
+  conditions = evaluate_not(conditions);
+
+  // Evaluate ANDs second, left to right.
+  conditions = evaluate_and(conditions);
+
+  // Evaluate ORs third, left to right.
+  conditions = evaluate_or(conditions);
+
+  // Verify we have collapsed down to a single condition at this point.
+  if (conditions.length !== 1 || !conditions[0] instanceof Condition) {
+    throw Error("Collapse should produce a single condition.");
+  }
+
+  return conditions[0];
+}
+
 // Parse the query, returning a comparison function.
 function query2condition(query) {
-  // // Enum of combiners.
-  // const Combiner = Object.freeze({
-  //   NOT: Symbol("NOT"),
-  //   AND: Symbol("AND"),
-  //   OR: Symbol("OR"),
-  // });
-
-  // // Enum of operators.
-  // const Operator = Object.freeze({
-  //   IN: Symbol("in"),
-  //   NOT_IN: Symbol("NOT_IN"),
-  //   EQUALS: Symbol("EQUALS"),
-  //   NOT_EQUALS: Symbol("NOT_EQUALS"),
-  //   GREATER_THAN: Symbol("GREATER_THAN"),
-  //   GREATER_THAN_OR_EQUALS: Symbol(GREATER_THAN_OR_EQUALS),
-  //   LESS_THAN: Symbol("LESS_THAN"),
-  //   LESS_THAN_OR_EQUALS: Symbol("LESS_THAN_OR_EQUALS"),
-  // });
-
-  // // Enum of parenthesis.
-  // const Parenthesis = Object.freeze({
-  //   BEGIN: Symbol("BEGIN"),
-  //   END: Symbol("END"),
-  // });
-
-  // // Enum of tokens converted to richer types during lexing.
-  // const LexOnly = Object.freeze({
-  //   WHITESPACE: Symbol("WHITESPACE"),
-  //   FACET: Symbol("FACET"),
-  //   LITERAL: Symbol("LITERAL"),
-  // });
-
-  class Literal {
-    constructor(value) {
-      this.value = value;
-    }
+  try {
+    const tokens = lexer(query);
+    return parse_expression(tokens);
+  } catch (Error) {
+    console.error("Query failed to parse.");
+    // TODO: Add invalid class to input, so user gets feedback.
   }
-
-  class Facet {
-    constructor(value) {
-      this.value = value;
-    }
-  }
-
-  const TOKEN_SPEC = new Map([
-    ["Parenthesis.BEGIN", "\\("],
-    ["Parenthesis.END", "\\)"],
-    ["Operator.GREATER_THAN_OR_EQUALS", "<="],
-    ["Operator.GREATER_THAN", "<"],
-    ["Operator.LESS_THAN_OR_EQUALS", ">="],
-    ["Operator.LESS_THAN", ">"],
-    ["Operator.NOT_EQUALS", "!="],
-    ["Operator.EQUALS", "="],
-    ["Operator.NOT_IN", "!"],
-    ["Combiner.NOT", "\\bnot\\b"],
-    ["Combiner.AND", "\\band\\b"],
-    ["Combiner.OR", "\\bor\\b"],
-    ["LexOnly.WHITESPACE", "[ \\t]+"],
-    ["LexOnly.FACET", "[a-z_\\-]+[ \\t]*:"],
-    ["LexOnly.LITERAL", `'[^']*'|"[^"]*"|[^ \\t\\(\\)]+`],
-  ]);
-
-  const TOKEN_REGEX = RegExp(
-    TOKEN_SPEC.values()
-      .map((key, val) => {
-        `(?P<${key}>${val})`;
-      })
-      .join("|"),
-    "i"
-  );
-  // Lex input string into tokens.
-  function lexer(query) {
-    const tokens = [];
-    for (const match of query.matchAll(TOKEN_REGEX)) {
-      // Get the Enum object from TOKEN_SPEC matching the capture group name.
-      if (!match.groups) {
-        throw new SyntaxError("Query did not consist of valid tokens.");
-      }
-
-      const entries = Object.entries(match.groups)[0];
-      const kind = entries[0];
-      let value = entries[1];
-
-      switch (kind) {
-        case "LexOnly.WHITESPACE":
-          continue;
-        case "LexOnly.FACET":
-          const facet_name = value.replace(/[ \t]*:$/, "");
-          tokens.append(Facet(facet_name));
-          break;
-        case "LexOnly.LITERAL":
-          if (/^".*"$|^'.+'$/.test(value)) {
-            value = value.slice(1, -1);
-          }
-          tokens.append(Literal(value));
-          break;
-        default:
-          tokens.append(kind);
-          break;
-      }
-    }
-    return tokens;
-  }
-
-  class Condition {
-    constructor(value, facet, operator) {
-      if (typeof value == "function") {
-        this.func = value;
-        return;
-      }
-
-      v = value.value;
-      f = facet.value;
-
-      switch (operator) {
-        case "Operator.IN":
-          this.func = (d) => {
-            return d[f].includes(v);
-          };
-          break;
-        case "Operator.NOT_IN":
-          this.func = (d) => {
-            return !d[f].includes(v);
-          };
-        case "Operator.EQUALS":
-          this.func = (d) => {
-            return v == d[f];
-          };
-          break;
-        case "Operator.NOT_EQUALS":
-          this.func = (d) => {
-            return v != d[f];
-          };
-          break;
-        case "Operator.GREATER_THAN":
-          this.func = (d) => {
-            return v > d[f];
-          };
-          break;
-        case "Operator.GREATER_THAN_OR_EQUALS":
-          this.func = (d) => {
-            return v >= d[f];
-          };
-          break;
-        case "Operator.LESS_THAN":
-          this.func = (d) => {
-            return v < d[f];
-          };
-          break;
-        case "Operator.LESS_THAN_OR_EQUALS":
-          this.func = (d) => {
-            return v <= d[f];
-          };
-          break;
-        default:
-          throw Error(`Invalid operator: ${operator}`);
-      }
-    }
-
-    test(d) {
-      return this.func(d);
-    }
-
-    // Implement self & other.
-    and(other) {
-      function combined(d) {
-        return this.test(d) && other.test(d);
-      }
-
-      return Condition(combined);
-    }
-
-    // Implement self | other.
-    or(other) {
-      function combined(d) {
-        return this.test(d) || other.test(d);
-      }
-
-      return Condition(combined);
-    }
-
-    // Implement ~self.
-    invert() {
-      function combined(d) {
-        return !this.test(d);
-      }
-
-      return Condition(combined);
-    }
-  }
-
-  // Parse a grouped expression from a stream of tokens.
-  function parse_grouped_expression(tokens) {
-    if (len(tokens) < 2 || tokens[0] !== "Parenthesis.BEGIN") {
-      return 0, null;
-    }
-    let offset = 1;
-    let depth = 1;
-    while (depth > 0 && offset < tokens.length) {
-      switch (tokens[offset]) {
-        case "Parenthesis.BEGIN":
-          depth += 1;
-          break;
-        case "Parenthesis.END":
-          depth -= 1;
-          offset += 1;
-          break;
-      }
-    }
-    if (depth != 0) {
-      throw Error("Unmatched parenthesis.");
-    }
-    // Recursively parse the grouped expression.
-    inner_expression = parse_expression(tokens.slice(1, offset - 1));
-    return offset, inner_expression;
-  }
-
-  // Parse a condition from a stream of tokens.
-  function parse_condition(tokens) {
-    if (tokens[0] instanceof Literal) {
-      // Just a value to search for.
-      const lt = tokens[0];
-      return 1, Condition(lt);
-    } else if (tokens[0].startsWith("Operator.") && tokens[1] instanceof Literal) {
-      // Value to search for with operator.
-      const op = tokens[0];
-      const lt = tokens[1];
-      return 2, Condition(lt, op);
-    } else if (tokens[0] instanceof Facet && tokens[1] instanceof Literal) {
-      // Value to search for in facet.
-      const fc = tokens[0];
-      const lt = tokens[1];
-      return 2, Condition(lt, (facet = fc));
-    } else if (
-      tokens[0] instanceof Facet &&
-      tokens[1].startsWith("Operator.") &&
-      tokens[1] instanceof Literal
-    ) {
-      // Value to search for in facet with operator.
-      return 3, Condition(lt, (facet = fc), (operator = op));
-    } else {
-      // Not matched as a condition.
-      return 0, None;
-    }
-  }
-
-  /*
-
-def evaluate_not(conditions):
-    """Collapse all NOTs in a list of conditions."""
-    negated_conditions = []
-    index = 0
-    while index < len(conditions):
-        match conditions[index : index + 2]:
-            case [Combiner.NOT, Combiner.NOT]:
-                # Skip double NOTs, as they negate each other.
-                index += 2
-            case [Combiner.NOT, right] if isinstance(right, Condition):
-                negated_conditions.append(~right)
-                index += 2
-            case [left, *_] if left != Combiner.NOT:
-                negated_conditions.append(left)
-                index += 1
-            case _:
-                raise ValueError("Unprocessable NOT.")
-    return negated_conditions
-
-
-def evaluate_and(conditions):
-    """Collapse all explicit and implicit ANDs in a list of conditions."""
-    anded_conditions = []
-    index = 0
-    while index < len(conditions):
-        left = anded_conditions.pop() if anded_conditions else None
-        match conditions[index : index + 2]:
-            case [Combiner.AND, right] if isinstance(left, Condition) and isinstance(
-                right, Condition
-            ):
-                anded_conditions.append(left & right)
-                index += 2
-            case [right, *_] if isinstance(left, Condition) and isinstance(
-                right, Condition
-            ):
-                anded_conditions.append(left & right)
-                index += 1
-            case [right, *_] if right != Combiner.AND:
-                if left is not None:
-                    anded_conditions.append(left)
-                anded_conditions.append(right)
-                index += 1
-            case _:
-                raise ValueError("Unprocessable AND.")
-    return anded_conditions
-
-
-def evaluate_or(conditions):
-    """Collapse all ORs in a list of conditions."""
-    ored_conditions = []
-    index = 0
-    while index < len(conditions):
-        match conditions[index : index + 3]:
-            case [left, Combiner.OR, right] if isinstance(
-                left, Condition
-            ) and isinstance(right, Condition):
-                ored_conditions.append(left | right)
-                index += 3
-            case [left, *_] if left != Combiner.OR:
-                ored_conditions.append(left)
-                index += 1
-            case _:
-                raise ValueError("Unprocessable OR.")
-    return ored_conditions
-
-
-def parse_expression(tokens: list[Token]) -> Condition:
-    """Parse an expression into a single Condition function.
-
-    Pairs of conditions without an explicit combiner are treated as AND.
-
-    The order of operations is:
-        1. Evaluate NOTs first, left to right.
-        2. Evaluate ANDs (explicit and implicit) second, left to right.
-        3. Evaluate ORs third, left to right.
-
-    Arguments
-    ---------
-    tokens: list[Token]
-        List of tokens to parse.
-
-    Returns
-    -------
-    Condition
-        The condition represented by the tokens.
-
-    Raises
-    ------
-    ValueError
-        If the tokens do not form a valid expression.
-    """
-    conditions: list[Condition | Combiner] = []
-    index = 0
-    while index < len(tokens):
-        # Accounts for AND/OR/NOT.
-        if isinstance(combiner := tokens[index], Combiner):
-            conditions.append(combiner)
-            index += 1
-            continue
-
-        # Accounts for parentheses.
-        offset, condition = parse_grouped_expression(tokens[index:])
-        if offset > 0:
-            assert condition is not None, "Only an offset of 0 returns None."
-            conditions.append(condition)
-            index += offset
-            continue
-
-        # Accounts for Facets, Operators, and Literals.
-        offset, condition = parse_condition(tokens[index:])
-        if offset > 0:
-            assert condition is not None, "Only an offset of 0 returns None."
-            conditions.append(condition)
-            index += offset
-            continue
-
-        raise ValueError(f"Unexpected token in expression: {tokens[index]}")
-
-    # TODO: Investigate Pratt parsing for handling combiner precedence in a
-    # single pass. It should allow parsing them in the while loop above.
-
-    # Evaluate NOTs first, left to right.
-    conditions = evaluate_not(conditions)
-
-    # Evaluate ANDs second, left to right.
-    conditions = evaluate_and(conditions)
-
-    # Evaluate ORs third, left to right.
-    conditions = evaluate_or(conditions)
-
-    # Verify we have collapsed down to a single condition at this point.
-    if len(conditions) != 1 or not isinstance(conditions[0], Condition):
-        raise ValueError("Collapse should produce a single condition.")
-
-    return conditions[0]
-
-*/
-
-  function test(d) {
-    return true;
-  }
-
-  return test;
 }
 
 /**
