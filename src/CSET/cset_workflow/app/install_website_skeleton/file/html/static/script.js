@@ -194,9 +194,9 @@ function parse_grouped_expression(tokens) {
         break;
       case "Parenthesis_END":
         depth -= 1;
-        offset += 1;
         break;
     }
+    offset += 1;
   }
   if (depth != 0) {
     throw new Error("Unmatched parenthesis.");
@@ -475,13 +475,17 @@ function add_to_sidebar(record, facet_values) {
   const entry_title = document.createElement("h2");
   entry_title.textContent = record["title"];
 
-  const facets = document.createElement("ul");
+  // Create card for diagnostic.
+  const facets = document.createElement("dl");
   for (const facet in record) {
     if (facet != "title" && facet != "path") {
-      // Create card for diagnostic.
-      const li = document.createElement("li");
-      li.textContent = `${facet}: ${record[facet]}`;
-      facets.append(li);
+      const facet_node = document.createElement("div");
+      const facet_name = document.createElement("dt");
+      const facet_value = document.createElement("dd");
+      facet_name.textContent = facet;
+      facet_value.textContent = record[facet];
+      facet_node.append(facet_name, facet_value);
+      facets.append(facet_node);
       // Record facet values.
       if (!(facet in facet_values)) {
         facet_values[facet] = new Set();
@@ -665,12 +669,20 @@ function doSearch() {
   const condition = query2condition(query);
 
   // Filter all entries.
-  for (const entry of document.querySelectorAll("#diagnostics > li")) {
+  for (const entryElem of document.querySelectorAll("#diagnostics > li")) {
+    const entry = {};
+    entry["title"] = entryElem.querySelector("h2").textContent;
+    for (const facet_node of entryElem.querySelector("dl").children) {
+      const facet = facet_node.firstChild.textContent;
+      const value = facet_node.lastChild.textContent;
+      entry[facet] = value;
+    }
+
     // Show entries matching filter and hide entries that don't.
     if (condition.test(entry)) {
-      entry.classList.remove("hidden");
+      entryElem.classList.remove("hidden");
     } else {
-      entry.classList.add("hidden");
+      entryElem.classList.add("hidden");
     }
   }
 }

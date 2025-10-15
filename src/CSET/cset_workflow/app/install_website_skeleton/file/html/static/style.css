@@ -74,10 +74,22 @@ nav {
         font-size: medium;
       }
 
-      >ul {
-        list-style: none;
+      >dl {
         font-size: small;
         margin: 4px 0;
+
+        dt {
+          display: inline;
+        }
+
+        dt:after {
+          content: ": ";
+        }
+        
+        dd {
+          display: inline;
+          margin-left: 0;
+        }
       }
 
       .plot-position-chooser {
