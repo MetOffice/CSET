@@ -231,6 +231,20 @@ def load(conf: Config):
                 model_ids=model["id"],
                 aggregation=False,
             )
+        # Aviation colour state due to visibility.
+        if conf.AVIATION_COLOUR_STATE_VISIBILITY:
+            yield RawRecipe(
+                recipe="aviation_colour_state_visibility_spatial_plot.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
 
     # Screen-level temperature probabilities
     for model, condition, threshold in itertools.product(
@@ -244,6 +258,35 @@ def load(conf: Config):
                 variables={
                     "CONDITION": condition,
                     "THRESHOLD": threshold,
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
+        # Aviation colour state due to cloud base.
+        if conf.AVIATION_COLOUR_STATE_CLOUD_BASE:
+            yield RawRecipe(
+                recipe="aviation_colour_state_cloud_base_spatial_plot.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
+
+        # Aviation colour state.
+        if conf.AVIATION_COLOUR_STATE:
+            yield RawRecipe(
+                recipe="aviation_colour_state_spatial_plot.yaml",
+                variables={
                     "MODEL_NAME": model["name"],
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
