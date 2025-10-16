@@ -109,6 +109,19 @@ def load(conf: Config):
             aggregation=False,
         )
 
+    # Lightning presence
+    if conf.LIGHTNING_PRESENCE_DOMAIN_TIME_SERIES:
+        yield RawRecipe(
+            recipe="lightning_presence_domain_mean_time_series.yaml",
+            variables={
+                "MODEL_NAME": [model["name"] for model in models],
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+            },
+            model_ids=[model["id"] for model in models],
+            aggregation=False,
+        )
+
     # Presence of cloud base height lower than 50 m
     if conf.CLOUD_BASE_HEIGHT_LESS_THAN_50_M_DOMAIN_MEAN_TIMESERIES:
         yield RawRecipe(
@@ -121,6 +134,7 @@ def load(conf: Config):
             model_ids=[model["id"] for model in models],
             aggregation=False,
         )
+
     # Air frost presence
     if conf.AIR_FROST_PRESENCE_DOMAIN_MEAN_TIMESERIES:
         yield RawRecipe(
