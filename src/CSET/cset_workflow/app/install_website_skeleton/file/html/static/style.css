@@ -85,7 +85,7 @@ nav {
         dt:after {
           content: ": ";
         }
-        
+
         dd {
           display: inline;
           margin-left: 0;
