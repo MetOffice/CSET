@@ -29,10 +29,75 @@ from CSET.operators.regrid import regrid_onto_cube
 def structural_similarity_model_comparisons(
     cubes: iris.cube.CubeList, sigma: float = 1.5, spatial_plot: bool = False
 ) -> iris.cube.Cube:
-    """
-    Calculate the structural similarity and produces a spatial plot or timeseries.
+    r"""Calculate the structural similarity and produces a spatial plot or timeseries.
 
-    Further details.
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        A list of exactly two cubes. One must have the cset_comparison_base
+        attribute set to 1, and will be used as the base of the comparison.
+    sigma: float, optional
+        The standard deviation of the Gaussian kernel to be used. The default
+        is set to 1.5 to mimic the human eye following [Wangetal2004]_.
+    spatial_plot: bool, optional
+        If set to True a 2D field of the structural similarity will be output;
+        if set to False a 1D field of the mean structural similarity is output.
+        Default is False.
+
+    Returns
+    -------
+    iris.cube.Cube
+
+    Raises
+    ------
+    ValueError
+        When the cubes are not compatible.
+
+    Notes
+    -----
+    This diagnostic was introduced by Wang et al. (2004) [Wangetal2004]_. It is
+    an image processing diagnostic that takes into account three factors asscoiated
+    with an image: i) luminace, ii) contrast, iii) structure. In calculation terms
+    it is a combination of the intensity, variance, and co-variance of an image. It is
+    calculated as follows:
+
+    .. math:: SSIM(x,y) = \frac{(2\mu_{x}\mu_{y} + C_{1})(2\sigma_{xy} + C_{2})}{(\mu^{2}_{x}\mu^{2}_{y} + C_{1})(\sigma^{2}_{x}\sigma^{2}_{y} + C_{2})}
+
+    for images, x and y, and small constancts C1 and C2, with the other symbols having
+    their usual statistical meaning.
+
+    The diagnostic varies between positive and negative one, on the most part.
+    However, should the data being compared lie outside of the specified data
+    range values larger or smaller can occur. Values close to or exactly 1 imply
+    a perceptably similar image; values close to or exactly -1 imply an anticorrelated
+    image; small values imply the fields are perceptably different.
+
+    The diagnostic has been setup with default values that are designed to mimic the
+    human eye and so are universally applicable irrespective of model resolution.
+
+    Further details, including caveats, can be found in Wang et al. (2004)
+    [Wangetal2004]_.
+
+    References
+    ----------
+    .. [Wangetal2004] Wang, Z., Bovik, A.C., Sheikh, H.R., Simoncelli, E.P. (2004)
+       "Image Quality Assessment: From Error Visibility to Structural Similarity."
+       IEEE Transactions on Image Processing, vol. 13, 600-612,
+       doi: 10.1109/TIP.2003.819861
+
+    Examples
+    --------
+    >>> MSSIM = imageprocessing.structural_similarity_model_comparisons(
+            cubes,sigma=1.5, spatial_plot=False)
+    >>> iplt.plot(MSSIM)
+
+    >>> SSIM = imageprocessing.structural_similarity_model_comparisons(
+            cubes, sigma=1.5, spatial_plot=True)
+    >>> iplt.pcolormesh(SSIM[0,:], cmap=mpl.cm.bwr)
+    >>> plt.gca().coastlines('10m')
+    >>> plt.clim(-1, 1)
+    >>> plt.colorbar()
+    >>> plt.show()
     """
     if len(cubes) != 2:
         raise ValueError("cubes should contain exactly 2 cubes.")
