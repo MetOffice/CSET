@@ -86,6 +86,15 @@ CSET.operators.ensembles
 .. automodule:: CSET.operators.ensembles
    :members:
 
+Image Processing Operators
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+CSET.operators.imageprocessing
+------------------------------
+
+.. automodule:: CSET.operators.imageprocessing
+   :members:
+
 Mesoscale Operators
 ~~~~~~~~~~~~~~~~~~~
 
