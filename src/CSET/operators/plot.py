@@ -1298,14 +1298,9 @@ def _plot_and_save_power_spectrum_series(
         if cube.coords("time"):
             time_coord = cube.coord("time")
             time_points = time_coord.units.num2date(time_coord.points)
-            #            time_points_set = set(time_points)
 
             # Choose one time point (e.g., the first one)
             target_time = time_points[0]
-
-            #            time_constraints = iris.Constraint(
-            #                time=lambda cell: cell.point in time_points_set
-            #            )
 
             # Bind target_time inside the lambda using a default argument
             time_constraint = iris.Constraint(
