@@ -30,9 +30,6 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
-    # Calculate power spectra (can try different methods)
-  - operator: power_spectrum.calculate_power_spectrum
-
   - operator: plot.plot_power_spectrum_series
     sequence_coordinate: $SEQUENCE
     # stamp_coordinate and single_plot optional and only required for ensemble data
