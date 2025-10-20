@@ -11,6 +11,9 @@ description: |
   values close to -1 imply the values are anticorrelated. Smaller values imply the
   fields differ.
 
+  The mean structural similarity is the mean over all windows (Gaussian kernels).
+  Therefore, it is not the same as the domain mean structural similarity.
+
   The structural similarity has been setup with a Gaussian kernel with a standard
   deviation of 1.5. This value has been chosen to mimic the perception of the
   human eye, and thus indicate differences detected at a glance.

@@ -74,6 +74,10 @@ def structural_similarity_model_comparisons(
 
     The diagnostic has been setup with default values that are designed to mimic the
     human eye and so are universally applicable irrespective of model resolution.
+    However, it should be noted that the mean structural similarity is not
+    identical to the domain mean of the structural similarity. This difference
+    occurs because the former is calculated over the mean of all the windows
+    (Gaussian kernels) rather than the mean of the grid boxes.
 
     Further details, including caveats, can be found in Wang et al. (2004)
     [Wangetal2004]_.
