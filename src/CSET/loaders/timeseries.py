@@ -128,7 +128,7 @@ def load(conf: Config):
             )
 
     # Model level fields Mean Structural Similarity.
-    if conf.SPATIAL_STRUCTURAL_SIMILARITY_MLEVEL:
+    if conf.MEAN_STRUCTURAL_SIMILARITY_MLEVEL:
         base_model = models[0]
         for model, field, mlevel in itertools.product(
             models[1:],
