@@ -83,6 +83,75 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+    # Surface Mean Structural Similarity.
+    if conf.MEAN_STRUCTURAL_SIMILARITY_SURFACE_FIELD:
+        base_model = models[0]
+        for model, field in itertools.product(models[1:], conf.SURFACE_FIELDS):
+            yield RawRecipe(
+                recipe="surface_structural_similarity_mean.yaml",
+                variables={
+                    "VARNAME": field,
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
+    # Pressure level fields Mean Structural Similarity.
+    if conf.MEAN_STRUCTURAL_SIMILARITY_PLEVEL_FIELD:
+        base_model = models[0]
+        for model, field, plevel in itertools.product(
+            models[1:],
+            conf.PRESSURE_LEVEL_FIELDS,
+            conf.PRESSURE_LEVELS,
+        ):
+            yield RawRecipe(
+                recipe="level_structural_similarity_mean.yaml",
+                variables={
+                    "VARNAME": field,
+                    "LEVELTYPE": "pressure",
+                    "LEVEL": plevel,
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
+    # Model level fields Mean Structural Similarity.
+    if conf.SPATIAL_STRUCTURAL_SIMILARITY_MLEVEL:
+        base_model = models[0]
+        for model, field, mlevel in itertools.product(
+            models[1:],
+            conf.MODEL_LEVEL_FIELDS,
+            conf.MODEL_LEVELS,
+        ):
+            yield RawRecipe(
+                recipe="level_structural_similarity_mean.yaml",
+                variables={
+                    "VARNAME": field,
+                    "LEVELTYPE": "model_level_number",
+                    "LEVEL": mlevel,
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
     # Aviation Fog presence
     if conf.AVIATION_FOG_PRESENCE_DOMAIN_MEAN_TIMESERIES:
         yield RawRecipe(
