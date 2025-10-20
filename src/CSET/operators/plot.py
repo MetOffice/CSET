@@ -1353,6 +1353,8 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
         # cartopy GeoAxes generated.
         plt.subplot(grid_size, grid_size, subplot)
 
+        print(" CUBE PS INFO ", member)
+
         frequency = member.coord("frequency").points
         power_spectrum = member.data
         ax = plt.gca()

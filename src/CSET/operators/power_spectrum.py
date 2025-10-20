@@ -70,9 +70,7 @@ def calculate_power_spectrum(
     elif cube.ndim == 3:
         cube_3d = cube.data
     else:
-        raise ValueError(
-            f"Cube dimensions {cube.ndim} unsuitable for power spectra code"
-        )
+        raise ValueError("Cube dimensions unsuitable for power spectra code")
 
     # Calculate spectra
     #    ps_cube = DCT_ps(cube_3d)

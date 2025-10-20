@@ -870,6 +870,53 @@ def test_plot_and_save_postage_stamps_in_single_plot_histogram_series(
     assert Path("test.png").is_file()
 
 
+def test_plot_power_spectrum_no_sequence_coordinate(
+    power_spectrum_cube, tmp_working_dir
+):
+    """Error when cube is missing sequence coordinate (time)."""
+    power_spectrum_cube.remove_coord("time")
+    with pytest.raises(ValueError, match="Cube must have a time coordinate."):
+        plot.plot_power_spectrum_series(
+            power_spectrum_cube, series_coordinate="pressure"
+        )
+
+
+def test_plot_power_spectrum_with_filename(power_spectrum_cube, tmp_working_dir):
+    """Plot sequence of contour plots."""
+    plot.plot_power_spectrum_series(
+        power_spectrum_cube, filename="test", sequence_coordinate="time"
+    )
+    assert Path("test_459456.0.png").is_file()
+
+
+def test_plot_and_save_postage_stamp_power_spectrum_series(
+    power_spectrum_cube, tmp_working_dir
+):
+    """Test plotting a postage stamp power_spectrum."""
+    plot._plot_and_save_postage_stamp_power_spectrum_series(
+        cube=power_spectrum_cube,
+        filename="test.png",
+        title="Test",
+        stamp_coordinate="realization",
+        histtype="step",
+    )
+    assert Path("test.png").is_file()
+
+
+def test_plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
+    power_spectrum_cube, tmp_working_dir
+):
+    """Test plotting a multiline power_spectrum for multiple ensemble members."""
+    plot._plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
+        cube=power_spectrum_cube,
+        filename="test.png",
+        title="Test",
+        stamp_coordinate="realization",
+        histtype="step",
+    )
+    assert Path("test.png").is_file()
+
+
 def test_scatter_plot(cube, vertical_profile_cube, tmp_working_dir):
     """Save a scatter plot."""
     cube_y = collapse.collapse(cube, ["time", "grid_longitude"], "MEAN")[0:4]

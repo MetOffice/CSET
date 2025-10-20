@@ -132,6 +132,22 @@ def histogram_cube(histogram_cube_readonly):
 
 
 @pytest.fixture(scope="session")
+def power_spectrum_cube_readonly():
+    """Get a power spectrum Cube. It is NOT safe to modify."""
+    from CSET.operators import read
+
+    return read.read_cube(
+        "tests/test_data/power_spectrum_temperature_at_pressure_levels_pressure_250_1time.nc"
+    )
+
+
+@pytest.fixture()
+def power_spectrum_cube(power_spectrum_cube_readonly):
+    """Get a power spectrum Cube."""
+    return power_spectrum_cube_readonly.copy()
+
+
+@pytest.fixture(scope="session")
 def regrid_rectilinear_cube_readonly():
     """Get a cube to test with. It is NOT safe to modify."""
     return read.read_cube(
