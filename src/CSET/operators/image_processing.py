@@ -1,0 +1,203 @@
+# © Crown copyright, Met Office (2022-2025) and CSET contributors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Operators to perform various kinds of image processing."""
+
+import logging
+
+import iris
+import iris.cube
+import numpy as np
+from skimage.metrics import structural_similarity
+
+from CSET.operators._utils import fully_equalise_attributes, get_cube_yxcoordname
+from CSET.operators.misc import _extract_common_time_points
+from CSET.operators.regrid import regrid_onto_cube
+
+
+def structural_similarity_model_comparisons(
+    cubes: iris.cube.CubeList, sigma: float = 1.5, spatial_plot: bool = False
+) -> iris.cube.Cube:
+    """
+    Calculate the structural similarity and produces a spatial plot or timeseries.
+
+    Further details.
+    """
+    if len(cubes) != 2:
+        raise ValueError("cubes should contain exactly 2 cubes.")
+    base: iris.cube.Cube = cubes.extract_cube(
+        iris.AttributeConstraint(cset_comparison_base=1)
+    )
+    other: iris.cube.Cube = cubes.extract_cube(
+        iris.Constraint(
+            cube_func=lambda cube: "cset_comparison_base" not in cube.attributes
+        )
+    )
+
+    # Get spatial coord names.
+    base_lat_name, base_lon_name = get_cube_yxcoordname(base)
+    other_lat_name, other_lon_name = get_cube_yxcoordname(other)
+
+    # Ensure cubes to compare are on common differencing grid.
+    # This is triggered if either
+    #      i) latitude and longitude shapes are not the same. Note grid points
+    #         are not compared directly as these can differ through rounding
+    #         errors.
+    #     ii) or variables are known to often sit on different grid staggering
+    #         in different models (e.g. cell center vs cell edge), as is the case
+    #         for UM and LFRic comparisons.
+    # In future greater choice of regridding method might be applied depending
+    # on variable type. Linear regridding can in general be appropriate for smooth
+    # variables. Care should be taken with interpretation of differences
+    # given this dependency on regridding.
+    if (
+        base.coord(base_lat_name).shape != other.coord(other_lat_name).shape
+        or base.coord(base_lon_name).shape != other.coord(other_lon_name).shape
+    ) or (
+        base.long_name
+        in [
+            "eastward_wind_at_10m",
+            "northward_wind_at_10m",
+            "northward_wind_at_cell_centres",
+            "eastward_wind_at_cell_centres",
+            "zonal_wind_at_pressure_levels",
+            "meridional_wind_at_pressure_levels",
+            "potential_vorticity_at_pressure_levels",
+            "vapour_specific_humidity_at_pressure_levels_for_climate_averaging",
+        ]
+    ):
+        logging.debug(
+            "Linear regridding base cube to other grid to compute differences"
+        )
+        base = regrid_onto_cube(base, other, method="Linear")
+
+    def is_increasing(sequence: list) -> bool:
+        """Determine the direction of an ordered sequence.
+
+        Returns "increasing" or "decreasing" depending on whether the sequence
+        is going up or down. The sequence should already be monotonic, with no
+        duplicate values. An iris DimCoord's points fulfills this criteria.
+        """
+        return sequence[0] < sequence[1]
+
+    # Figure out if we are comparing between UM and LFRic; flip array if so.
+    base_lat_direction = is_increasing(base.coord(base_lat_name).points)
+    other_lat_direction = is_increasing(other.coord(other_lat_name).points)
+    if base_lat_direction != other_lat_direction:
+        other.data = np.flip(other.data, other.coord(other_lat_name).cube_dims(other))
+
+    # Extract just common time points.
+    base, other = _extract_common_time_points(base, other)
+
+    # Equalise attributes so we can merge.
+    fully_equalise_attributes([base, other])
+    logging.debug("Base: %s\nOther: %s", base, other)
+
+    # Get the name of the first non-scalar time coordinate.
+    time_coord = next(
+        map(
+            lambda coord: coord.name(),
+            filter(
+                lambda coord: coord.shape > (1,) and coord.name() in ["time", "hour"],
+                base.coords(),
+            ),
+        ),
+        None,
+    )
+
+    # Create and empty CubeList for storing the time or realization data.
+    ssim = iris.cube.CubeList()
+
+    # Use boolean input to determine if a spatial plot is being output or the mean SSIM.
+    if not spatial_plot:
+        # Loop over realization and time coordinates.
+        for base_r, other_r in zip(
+            base.slices_over("realization"),
+            other.slices_over("realization"),
+            strict=True,
+        ):
+            if time_coord == "hour":
+                for base_t, other_t in zip(
+                    base_r.slices_over("hour"), other_r.slices_over("hour"), strict=True
+                ):
+                    # The MSSIM (Mean structural similarity) is compression to
+                    # a single point. Therefore, copying cube data for one
+                    # point in the domain to keep cube consistency.
+                    mssim = base_t[0, 0].copy()
+                    mssim.data = structural_similarity(
+                        base_t.data,
+                        other_t.data,
+                        data_range=other_t.data.max() - other_t.data.min(),
+                        gaussian_weights=True,
+                        sigma=sigma,
+                    )
+                    ssim.append(mssim)
+            elif time_coord == "time":
+                for base_t, other_t in zip(
+                    base_r.slices_over("time"), other_r.slices_over("time"), strict=True
+                ):
+                    # The MSSIM (Mean structural similarity) is compression to
+                    # a single point. Therefore, copying cube data for one
+                    # point in the domain to keep cube consistency.
+                    mssim = base_t[0, 0].copy()
+                    mssim.data = structural_similarity(
+                        base_t.data,
+                        other_t.data,
+                        data_range=other_t.data.max() - other_t.data.min(),
+                        gaussian_weights=True,
+                        sigma=sigma,
+                    )
+                    ssim.append(mssim)
+    else:
+        # Loop over realization and time coordinates.
+        for base_r, other_r in zip(
+            base.slices_over("realization"),
+            other.slices_over("realization"),
+            strict=True,
+        ):
+            if time_coord == "hour":
+                for base_t, other_t in zip(
+                    base_r.slices_over("hour"), other_r.slices_over("hour"), strict=True
+                ):
+                    # Use the full array as output will be as a 2D map.
+                    ssim_map = base_t.copy()
+                    _, ssim_map.data = structural_similarity(
+                        base_t.data,
+                        other_t.data,
+                        data_range=other_t.data.max() - other_t.data.min(),
+                        gaussian_weights=True,
+                        sigma=sigma,
+                        full=True,
+                    )
+                    ssim.append(ssim_map)
+            elif time_coord == "time":
+                for base_t, other_t in zip(
+                    base_r.slices_over("time"), other_r.slices_over("time"), strict=True
+                ):
+                    # Use the full array as output will be as a 2D map.
+                    ssim_map = base_t.copy()
+                    _, ssim_map.data = structural_similarity(
+                        base_t.data,
+                        other_t.data,
+                        data_range=other_t.data.max() - other_t.data.min(),
+                        gaussian_weights=True,
+                        sigma=sigma,
+                        full=True,
+                    )
+                    ssim.append(ssim_map)
+    # Merge the cube slices into one cube and rename.
+    ssim = ssim.merge_cube()
+    ssim.standard_name = None
+    ssim.long_name = "structural_similarity"
+    return ssim
