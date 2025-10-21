@@ -24,7 +24,7 @@ import iris.exceptions
 import numpy as np
 import pytest
 
-from CSET.operators import imageprocessing
+from CSET.operators import aggregate, imageprocessing
 
 
 def test_structural_similarity_model_comparisons_MSSIM(cube: iris.cube.Cube):
@@ -191,3 +191,41 @@ def test_SSIM_different_model_types(cube: iris.cube.Cube):
     assert isinstance(MSSIM_cube, iris.cube.Cube)
     # As both cubes use the same data, check the MSSIM is one.
     assert np.allclose(MSSIM_cube.data, np.ones_like(MSSIM_cube.data), atol=1e-9)
+
+
+def test_MSSIM_hour_coordinates(cube: iris.cube.Cube):
+    """Test MSSIM with hour coordinate."""
+    # Data preparation.
+    other_cube = cube.copy()
+    del other_cube.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([cube, other_cube])
+    cubes = aggregate.add_hour_coordinate(cubes)
+    for cube in cubes:
+        cube.remove_coord("time")
+    # Find MSSIM.
+    MSSIM_cube = imageprocessing.structural_similarity_model_comparisons(
+        cubes, sigma=1.5, spatial_plot=False
+    )
+
+    # As both cubes use the same data, check the MSSIM is one.
+    assert isinstance(MSSIM_cube, iris.cube.Cube)
+    assert np.allclose(MSSIM_cube.data, np.ones_like(MSSIM_cube.data), atol=1e-9)
+
+
+def test_SSIM_hour_coordinates(cube: iris.cube.Cube):
+    """Test SSIM with hour coordinate."""
+    # Data preparation.
+    other_cube = cube.copy()
+    del other_cube.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([cube, other_cube])
+    cubes = aggregate.add_hour_coordinate(cubes)
+    for cube in cubes:
+        cube.remove_coord("time")
+    # Find SSIM.
+    SSIM_cube = imageprocessing.structural_similarity_model_comparisons(
+        cubes, sigma=1.5, spatial_plot=True
+    )
+
+    # As both cubes use the same data, check the SSIM is one.
+    assert isinstance(SSIM_cube, iris.cube.Cube)
+    assert np.allclose(SSIM_cube.data, np.ones_like(SSIM_cube.data), atol=1e-9)
