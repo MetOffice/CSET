@@ -128,6 +128,21 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+        # Lightning presence.
+        if conf.LIGHTNING_PRESENCE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="lightning_presence_spatial_seq_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
         # Presence of cloud base height lower than 50 m.
         if conf.CLOUD_BASE_HEIGHT_LESS_THAN_50_M_SPATIAL_PLOT:
             yield RawRecipe(
@@ -142,6 +157,22 @@ def load(conf: Config):
                 },
                 aggregation=False,
             )
+
+        # Daily lightning presence.
+        if conf.DAILY_LIGHTNING_PRESENCE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="daily_lightning_presence_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
         # Air frost presence.
         if conf.AIR_FROST_PRESENCE_SPATIAL_PLOT:
             yield RawRecipe(
