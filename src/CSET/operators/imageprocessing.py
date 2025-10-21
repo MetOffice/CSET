@@ -36,6 +36,7 @@ def structural_similarity_model_comparisons(
     cubes: iris.cube.CubeList
         A list of exactly two cubes. One must have the cset_comparison_base
         attribute set to 1, and will be used as the base of the comparison.
+        The cubes must contain a time coordinate.
     sigma: float, optional
         The standard deviation of the Gaussian kernel to be used. The default
         is set to 1.5 to mimic the human eye following [Wangetal2004]_.
@@ -51,7 +52,7 @@ def structural_similarity_model_comparisons(
     Raises
     ------
     ValueError
-        When the cubes are not compatible.
+        When the cubes are not compatible, or no time coordinate.
 
     Notes
     -----
@@ -185,6 +186,8 @@ def structural_similarity_model_comparisons(
         None,
     )
 
+    if time_coord is None:
+        raise ValueError("Cubes should contain a time coordinate.")
     # Create and empty CubeList for storing the time or realization data.
     ssim = iris.cube.CubeList()
 
