@@ -265,8 +265,9 @@ def structural_similarity_model_comparisons(
                         full=True,
                     )
                     ssim.append(ssim_map)
-    # Merge the cube slices into one cube and rename.
+    # Merge the cube slices into one cube, rename, and change units.
     ssim = ssim.merge_cube()
     ssim.standard_name = None
     ssim.long_name = "structural_similarity"
+    ssim.units = "1"
     return ssim
