@@ -215,7 +215,8 @@ def structural_similarity_model_comparisons(
                         sigma=sigma,
                     )
                     ssim.append(mssim)
-            elif time_coord == "time":
+            else:
+                logging.debug("Assume time_coord is 'time'.")
                 for base_t, other_t in zip(
                     base_r.slices_over("time"), other_r.slices_over("time"), strict=True
                 ):
@@ -253,7 +254,8 @@ def structural_similarity_model_comparisons(
                         full=True,
                     )
                     ssim.append(ssim_map)
-            elif time_coord == "time":
+            else:
+                logging.debug("Assume time_coord is 'time'.")
                 for base_t, other_t in zip(
                     base_r.slices_over("time"), other_r.slices_over("time"), strict=True
                 ):
