@@ -1,0 +1,36 @@
+category: Daily Weather
+title: Fog presence domain mean timeseries
+description: |
+  Generates a mask of whether fog is present in a grid box and provides a
+  timeseries representing the chance of aviation fog anywhere within the domain.
+  Here, fog is defined as when the visibility drops below 250 m (a traditional
+  thickness considered by the public for fog).
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    constraint:
+        operator: constraints.combine_constraints
+        varname_constraint:
+            operator: constraints.generate_var_constraint
+            varname: visibility_in_air
+        cell_methods_constraint:
+            operator: constraints.generate_cell_methods_constraint
+            cell_methods: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: filters.generate_mask
+    condition: '<'
+    value: 0.25
+
+  - operator: collapse.collapse
+    coordinate: [grid_latitude, grid_longitude]
+    method: MEAN
+
+  # Plot the data.
+  - operator: plot.plot_line_series
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
