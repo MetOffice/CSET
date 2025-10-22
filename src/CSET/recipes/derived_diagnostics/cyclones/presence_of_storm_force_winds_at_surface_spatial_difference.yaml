@@ -1,5 +1,5 @@
 category: Cyclones
-title: "Presence of storm Force winds at the surface\nDifference ($BASE_MODEL - $OTHER_MODEL)"
+title: "Presence of storm force winds at the surface\nDifference ($BASE_MODEL - $OTHER_MODEL)"
 description: |
   Generates a the surface wind speed converted onto the Beaufort Scale and filters
   for winds that are storm force or above (Force 10 or above). It takes the
