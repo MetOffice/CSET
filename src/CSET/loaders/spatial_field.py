@@ -278,6 +278,21 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+        # Hurricane force winds presence.
+        if conf.SFC_HURRICANE_FORCE_WINDS_PRESENCE_SPATIAL:
+            yield RawRecipe(
+                recipe="presence_of_hurricane_force_winds_at_surface_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
         # Daily maximum temperature 09-09 UTC.
         if conf.DAILY_09_MAXIMUM_TEMPERATURE_SPATIAL_PLOT:
             yield RawRecipe(
