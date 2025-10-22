@@ -1,7 +1,7 @@
 category: Daily Weather
 title: "Fog presence\nDifference ($BASE_MODEL - $OTHER_MODEL)"
 description: |
-  Generates a mask of whether fog is present in a grid box and provides a
+  Generates a mask of whether fog is present in a grid box and provides
   the difference between two models. Values will be positive or negative one
   depending on which model has aviation fog present at that location if the other
   does not. Here, fog is defined as when the visibility drops below 250 m (a
