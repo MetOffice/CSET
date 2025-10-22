@@ -1307,12 +1307,13 @@ def _plot_and_save_power_spectrum_series(
                 time=lambda cell, target_time=target_time: cell.point == target_time
             )
 
-            cube_time_slice = cube.extract(time_constraint)
+            cube = cube.extract(time_constraint)
+        #            cube_time_slice = cube.extract(time_constraint)
 
-            if cube_time_slice is None:
-                raise ValueError(f"No cube found for time points {time_points}")
-            else:
-                cube = cube_time_slice
+        #            if cube_time_slice is None:
+        #                raise ValueError(f"No cube found for time points {time_points}")
+        #            else:
+        #                cube = cube_time_slice
 
         # Regional domains:
         # Calculate power spectra using discrete cosine transform
@@ -1424,8 +1425,9 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
 
         frequency = member.coord("frequency").points
         power_spectrum = member.data
+
         ax = plt.gca()
-        ax.plot(frequency, power_spectrum)
+        ax.plot(frequency, power_spectrum[0])
         ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
 
     # Overall figure title.
@@ -1453,7 +1455,7 @@ def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
         power_spectrum = member.data
         ax.plot(
             frequency,
-            power_spectrum,
+            power_spectrum[0],
             label=f"Member #{member.coord(stamp_coordinate).points[0]}",
         )
 
@@ -2631,7 +2633,6 @@ def plot_power_spectrum_series(
     recipe_title = get_recipe_metadata().get("title", "Untitled")
 
     cubes = iter_maybe(cubes)
-
     # Ensure we have a name for the plot file.
     if filename is None:
         filename = slugify(recipe_title)

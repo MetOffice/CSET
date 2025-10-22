@@ -132,8 +132,22 @@ def histogram_cube(histogram_cube_readonly):
 
 
 @pytest.fixture(scope="session")
+def field2d_cube_readonly():
+    """Get a 2D Cube for testing power spectrum code. It is NOT safe to modify."""
+    from CSET.operators import read
+
+    return read.read_cube("tests/test_data/air_temperature_lat_lon.nc")
+
+
+@pytest.fixture()
+def field2d_cube(field2d_cube_readonly):
+    """Get a 2D cube for testing power spectrum code."""
+    return field2d_cube_readonly.copy()
+
+
+@pytest.fixture(scope="session")
 def power_spectrum_cube_readonly():
-    """Get a power spectrum Cube. It is NOT safe to modify."""
+    """Get a Cube for testing power spectrum code. It is NOT safe to modify."""
     from CSET.operators import read
 
     return read.read_cube(
@@ -143,7 +157,7 @@ def power_spectrum_cube_readonly():
 
 @pytest.fixture()
 def power_spectrum_cube(power_spectrum_cube_readonly):
-    """Get a power spectrum Cube."""
+    """Get a Cube for testing power spectrum code."""
     return power_spectrum_cube_readonly.copy()
 
 

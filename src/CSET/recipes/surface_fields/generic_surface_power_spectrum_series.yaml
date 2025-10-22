@@ -27,9 +27,6 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
-    # Calculate power spectra (can try different methods)
-  - operator: power_spectrum.calculate_power_spectrum
-
   - operator: write.write_cube_to_nc
     overwrite: True
 
