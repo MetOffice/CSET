@@ -1,0 +1,33 @@
+category: Winter Weather
+title: "Ground frost presence\nDifference ($BASE_MODEL - $OTHER_MODEL)"
+description: |
+  Generates a mask of whether ground frost is present in a grid box and provides a
+  the difference between two models. Values will be positive or negative one
+  depending on which model has ground frost present at that location if the other
+  does not.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: [$BASE_MODEL, $OTHER_MODEL]
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: 'grid_surface_temperature'
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: filters.generate_mask
+    condition: '<'
+    value: 273.15
+
+  - operator: misc.difference
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
