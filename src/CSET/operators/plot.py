@@ -2791,15 +2791,6 @@ def DCT_ps(y_3d):
     return ps_array
 
 
-#    # Create cube
-#    ps_cube = iris.cube.Cube(
-#        ps_array,
-#        long_name="power_spectra",
-#    )
-#
-#    return ps_cube
-
-
 def create_alpha_matrix(Ny, Nx):
     """Construct an array of 2D wavenumbers from 2D wavenumber pair.
 
