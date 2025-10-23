@@ -1,5 +1,5 @@
 category: Winter Weather
-title: $MODEL_NAME Ground frost presence domain timeseries
+title: $MODEL_NAME Ground frost presence domain mean timeseries
 description: |
   Generates a mask of whether ground frost is present in a grid box and provides
   a timeseries representing the chance of frost anywhere within the domain
@@ -16,9 +16,7 @@ steps:
             varname: 'grid_surface_temperature'
         cell_methods_constraint:
             operator: constraints.generate_cell_methods_constraint
-            cell_methods: ['minimum']
-            coord: 'time'
-            interval: '1 hour'
+            cell_methods: []
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
