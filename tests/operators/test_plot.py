@@ -871,7 +871,7 @@ def test_plot_and_save_postage_stamps_in_single_plot_histogram_series(
 
 
 def test_plot_power_spectrum_with_filename(field2d_cube, tmp_working_dir):
-    """Plot sequence of contour plots."""
+    """Testing power spectrum code produces file."""
     plot.plot_power_spectrum_series(
         field2d_cube, filename="test", sequence_coordinate="time"
     )

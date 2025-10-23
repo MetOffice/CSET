@@ -1308,18 +1308,7 @@ def _plot_and_save_power_spectrum_series(
             )
 
             cube = cube.extract(time_constraint)
-        #            cube_time_slice = cube.extract(time_constraint)
 
-        #            if cube_time_slice is None:
-        #                raise ValueError(f"No cube found for time points {time_points}")
-        #            else:
-        #                cube = cube_time_slice
-
-        # Regional domains:
-        # Calculate power spectra using discrete cosine transform
-
-        # Cube used in DCT_ps must be 3D. Reshape cubes with 1 time entry,
-        # to include a time dimension
         if cube.ndim == 2:
             cube_3d = cube.data[np.newaxis, :, :]
         elif cube.ndim == 3:
@@ -1336,8 +1325,6 @@ def _plot_and_save_power_spectrum_series(
             long_name="power_spectra",
         )
 
-        #    ps_cube.__dict__.update(cube.__dict__)
-        # Copy model_name attribute (might need oethers at some point)
         ps_cube.attributes["model_name"] = cube.attributes.get("model_name")
 
         # Create a frequency/wavelength array for coordinate
@@ -2590,7 +2577,7 @@ def plot_power_spectrum_series(
 
     A power spectrum plot can be plotted, but if the sequence_coordinate (i.e. time)
     is present then a sequence of plots will be produced using the time slider
-    functionality to scroll through power spectra against time. If a
+    functionality to scroll through power spectrum against time. If a
     stamp_coordinate is present then postage stamp plots will be produced. If
     stamp_coordinate and single_plot is True, all postage stamp plots will be
     plotted in a single plot instead of separate postage stamp plots.
@@ -2769,8 +2756,7 @@ def DCT_ps(y_3d):
         # fkk is a 2D array of DCT coefficients, representing the amplitudes of
         # cosine basis functions at different spatial frequencies.
 
-        # fkk = fft.dctn(y_2d)
-        # normalise spectrum
+        # normalise spectrum to allow comparison between models.
         fkk = fft.dctn(y_2d, norm="ortho")
 
         # Normalise fkk
