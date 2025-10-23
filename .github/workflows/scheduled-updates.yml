@@ -75,10 +75,12 @@ jobs:
           fi
 
           # Commit changed lockfiles.
-          git commit -m "[CI] Update conda lock files" requirements/locks/*.txt || true
+          git add requirements/locks/*.txt
+          git commit -m "[CI] Update conda lock files" || true
 
           # Commit changed pre-commit config.
-          git commit -m "[CI] Update .pre-commit-config.yaml" .pre-commit-config.yaml || true
+          git add .pre-commit-config.yaml
+          git commit -m "[CI] Update .pre-commit-config.yaml" || true
 
           # Push branch to GitHub.
           git push origin HEAD
