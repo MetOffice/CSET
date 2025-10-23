@@ -1357,9 +1357,7 @@ def _plot_and_save_power_spectrum_series(
 
     # Add some labels and tweak the style.
     ax.set_title(title, fontsize=16)
-    ax.set_xlabel(
-        f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}", fontsize=14
-    )
+    ax.set_xlabel("Wavenumber", fontsize=14)
     ax.set_ylabel("Power", fontsize=14)
     ax.tick_params(axis="both", labelsize=12)
 
