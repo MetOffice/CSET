@@ -94,6 +94,82 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+    # Surface Spatial Structural Similarity.
+    if conf.SPATIAL_STRUCTURAL_SIMILARITY_SURFACE_FIELD:
+        base_model = models[0]
+        for model, field, method in itertools.product(
+            models[1:], conf.SURFACE_FIELDS, conf.SPATIAL_SURFACE_FIELD_METHOD
+        ):
+            yield RawRecipe(
+                recipe="surface_structural_similarity_spatial_plot.yaml",
+                variables={
+                    "VARNAME": field,
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "METHOD": method,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
+    # Pressure level fields Spatial Structural Similarity.
+    if conf.SPATIAL_STRUCTURAL_SIMILARITY_PLEVEL_FIELD:
+        base_model = models[0]
+        for model, field, plevel, method in itertools.product(
+            models[1:],
+            conf.PRESSURE_LEVEL_FIELDS,
+            conf.PRESSURE_LEVELS,
+            conf.SPATIAL_PLEVEL_FIELD_METHOD,
+        ):
+            yield RawRecipe(
+                recipe="level_structural_similarity_spatial_plot.yaml",
+                variables={
+                    "VARNAME": field,
+                    "LEVELTYPE": "pressure",
+                    "LEVEL": plevel,
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "METHOD": method,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
+    # Model level fields Spatial Structural Similarity.
+    if conf.SPATIAL_STRUCTURAL_SIMILARITY_MLEVEL:
+        base_model = models[0]
+        for model, field, mlevel, method in itertools.product(
+            models[1:],
+            conf.MODEL_LEVEL_FIELDS,
+            conf.MODEL_LEVELS,
+            conf.SPATIAL_MLEVEL_FIELD_METHOD,
+        ):
+            yield RawRecipe(
+                recipe="level_structural_similarity_spatial_plot.yaml",
+                variables={
+                    "VARNAME": field,
+                    "LEVELTYPE": "model_level_number",
+                    "LEVEL": mlevel,
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "METHOD": method,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
     # Specific diagnostics require their own recipes for traceability. Therefore, these also
     # require individual loaders.
 
