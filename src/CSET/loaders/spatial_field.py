@@ -203,6 +203,21 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+        # Ground frost presence.
+        if conf.GROUND_FROST_PRESENCE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="ground_frost_presence_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
         # Thick fog presence.
         if conf.THICK_FOG_PRESENCE_SPATIAL_PLOT:
             yield RawRecipe(

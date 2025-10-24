@@ -1,0 +1,30 @@
+category: Winter Weather
+title: $MODEL_NAME Ground frost presence spatial plot
+description: |
+  Generates a mask of whether ground frost is present in a grid box and provides a
+  spatial plot. A value of unity implies ground frost is present; a value of zero
+  implies air frost is not present.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    constraint:
+        operator: constraints.combine_constraints
+        varname_constraint:
+            operator: constraints.generate_var_constraint
+            varname: 'grid_surface_temperature'
+        cell_methods_constraint:
+            operator: constraints.generate_cell_methods_constraint
+            cell_methods: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: filters.generate_mask
+    condition: '<'
+    value: 273.15
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
