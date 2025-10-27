@@ -1,7 +1,7 @@
 category: Cyclones
 title: "Presence of gale force winds at the surface\nDifference ($BASE_MODEL - $OTHER_MODEL)"
 description: |
-  Generates a the surface wind speed converted onto the Beaufort Scale and filters
+  Generates the surface wind speed converted onto the Beaufort Scale and filters
   for winds that are gale force or above (Force 8 or above). It takes the
   difference between two models. The Beaufort Scale can be found on the [Met Office website](https://weather.metoffice.gov.uk/guides/coast-and-sea/beaufort-scale).
 
