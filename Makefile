@@ -11,14 +11,13 @@ help: ## Display this help message.
 	| sed -n 's/^\(.*:\) \(.*\)##\(.*\)/  \1\3/p'
 
 conda:
-	conda create -n cset-dev --file requirements/locks/py313-lock-linux-64.txt
+	conda create -n cset-dev --file requirements/locks/latest
 	@echo "Run 'conda activate cset-dev' to use conda environment."
 
 .git/hooks/pre-commit: conda
 	conda run -n cset-dev pre-commit install
 
 setup: conda .git/hooks/pre-commit ## Setup development environment.
-	rm -f src/CSET/workflow/files/conda-environment # Temporary fix for #1459
 	conda run -n cset-dev pip install --no-deps -e .
 
 docs: ## Build documentation.

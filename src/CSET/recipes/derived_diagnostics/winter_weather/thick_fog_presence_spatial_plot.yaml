@@ -1,0 +1,30 @@
+category: Winter Weather
+title: "$MODEL_NAME Thick Fog presence spatial plot"
+description: |
+  Generates a mask of whether thick fog is present in a grid box and provides a
+  spatial plot. A value of one implies thick fog is present; a value of zero
+  implies thick fog is not present. Thick fog is defined as visibility < = 100 m.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    constraint:
+        operator: constraints.combine_constraints
+        varname_constraint:
+            operator: constraints.generate_var_constraint
+            varname: visibility_in_air
+        cell_methods_constraint:
+            operator: constraints.generate_cell_methods_constraint
+            cell_methods: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: filters.generate_mask
+    condition: 'le'
+    value: 0.1
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

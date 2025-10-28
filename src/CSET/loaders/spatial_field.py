@@ -98,10 +98,145 @@ def load(conf: Config):
     # require individual loaders.
 
     for model in models:
+        # Aviation Fog presence.
+        if conf.AVIATION_FOG_PRESENCE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="aviation_fog_presence_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
+        # Fog presence.
+        if conf.FOG_PRESENCE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="fog_presence_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
         # Rain presence.
         if conf.RAIN_PRESENCE_SPATIAL_PLOT:
             yield RawRecipe(
                 recipe="rain_presence_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
+        # Lightning presence.
+        if conf.LIGHTNING_PRESENCE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="lightning_presence_spatial_seq_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
+        # Presence of cloud base height lower than 50 m.
+        if conf.CLOUD_BASE_HEIGHT_LESS_THAN_50_M_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="cloud_base_height_lt_50m_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
+        # Daily lightning presence.
+        if conf.DAILY_LIGHTNING_PRESENCE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="daily_lightning_presence_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
+        # Air frost presence.
+        if conf.AIR_FROST_PRESENCE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="air_frost_presence_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
+        # Ground frost presence.
+        if conf.GROUND_FROST_PRESENCE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="ground_frost_presence_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
+        # Thick fog presence.
+        if conf.THICK_FOG_PRESENCE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="thick_fog_presence_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
+        # Snow presence.
+        if conf.SNOW_PRESENCE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="snow_presence_spatial_plot.yaml",
                 model_ids=model["id"],
                 variables={
                     "MODEL_NAME": model["name"],
@@ -128,11 +263,93 @@ def load(conf: Config):
                 aggregation=False,
             )
 
-        # Daily maximum temperature 09-09 UTC
+        # Gale force winds presence.
+        if conf.SFC_GALE_FORCE_WINDS_PRESENCE_SPATIAL:
+            yield RawRecipe(
+                recipe="presence_of_gale_force_winds_at_surface_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
+        # Storm force winds presence.
+        if conf.SFC_STORM_FORCE_WINDS_PRESENCE_SPATIAL:
+            yield RawRecipe(
+                recipe="presence_of_storm_force_winds_at_surface_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
+        # Hurricane force winds presence.
+        if conf.SFC_HURRICANE_FORCE_WINDS_PRESENCE_SPATIAL:
+            yield RawRecipe(
+                recipe="presence_of_hurricane_force_winds_at_surface_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
+        # Daily maximum temperature 09-09 UTC.
         if conf.DAILY_09_MAXIMUM_TEMPERATURE_SPATIAL_PLOT:
             yield RawRecipe(
                 recipe="daily_09_maximum_temperature_spatial_plot.yaml",
                 variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
+
+        # Daily minimum temperature 09-09 UTC.
+        if conf.DAILY_09_MINIMUM_TEMPERATURE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="daily_09_minimum_temperature_spatial_plot.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
+
+    # Screen-level temperature probabilities
+    for model, condition, threshold in itertools.product(
+        models,
+        conf.PROB_TEMPERATURE_CONDITION,
+        conf.PROB_TEMPERATURE_THRESHOLD,
+    ):
+        if conf.SCREEN_LEVEL_TEMPERATURE_SPATIAL_PROBABILITY_WITHOUT_CONTROL_MEMBER:
+            yield RawRecipe(
+                recipe="screen_level_temperature_spatial_probability_without_control.yaml",
+                variables={
+                    "CONDITION": condition,
+                    "THRESHOLD": threshold,
                     "MODEL_NAME": model["name"],
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT

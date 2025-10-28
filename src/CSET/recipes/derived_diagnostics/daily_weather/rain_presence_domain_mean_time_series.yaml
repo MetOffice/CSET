@@ -12,7 +12,7 @@ steps:
         operator: constraints.combine_constraints
         varname_constraint:
             operator: constraints.generate_var_constraint
-            varname: surface_microphysical_rainfall_rate
+            varname: 'surface_microphysical_rainfall_rate'
         cell_methods_constraint:
             operator: constraints.generate_cell_methods_constraint
             cell_methods: []
@@ -20,7 +20,7 @@ steps:
     subarea_extent: $SUBAREA_EXTENT
 
   - operator: filters.generate_mask
-    condition: '>'
+    condition: 'gt'
     value: 0.0
 
   - operator: collapse.collapse
