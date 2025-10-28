@@ -21,7 +21,7 @@ steps:
     subarea_extent: $SUBAREA_EXTENT
 
   - operator: filters.generate_mask
-    condition: '>'
+    condition: 'gt'
     value: 0.0
 
   - operator: plot.spatial_pcolormesh_plot

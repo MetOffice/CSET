@@ -24,7 +24,7 @@ steps:
   - operator: wind.convert_to_beaufort_scale
 
   - operator: filters.generate_mask
-    condition: '>='
+    condition: 'ge'
     value: 8.0
 
   - operator: collapse.collapse
