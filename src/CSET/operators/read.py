@@ -807,7 +807,7 @@ def _convert_cube_units_callback(cube: iris.cube.Cube):
     """
     # Convert precipitation diagnostic units if required.
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
-    if any("surface_microphysical" in name for name in varnames):
+    if any("surface_microphysical" or "precipitation" in name for name in varnames):
         if cube.units == "kg m-2 s-1":
             logging.debug(
                 "Converting precipitation rate units from kg m-2 s-1 to mm hr-1"
