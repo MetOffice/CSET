@@ -23,6 +23,7 @@ import logging
 import math
 import os
 import sys
+from pathlib import Path
 from typing import Literal
 
 import cartopy.crs as ccrs
@@ -2371,3 +2372,80 @@ def plot_histogram_series(
     _make_plot_html_page(complete_plot_index)
 
     return cubes
+
+
+def check_for_nan(cubes):
+    # The plot function was crashing when cube.data had nan in the min/max.
+    for cube in cubes:
+        # if np.nan in [cube.data.min, cube.data.max]:
+        if np.isnan(cube.data.min()) or np.isnan(cube.data.max()):
+            return True
+    return False
+
+
+def make_cell_stats_page(html_fpath, title, plot_urls):
+    template_file = Path(__file__).parent / "_cell_stats_plots_template.html"
+    variables = {
+        'title': '',
+        'plot_urls': plot_urls,
+    }
+    html = render_file(str(template_file), **variables)
+    with open(html_fpath, "wt", encoding="UTF-8") as fp:
+        fp.write(html)
+
+
+def plot_cell_stats_histograms(data: dict, varname: str, output_folder: str):
+    """
+
+    Parameters
+    ----------
+    data:
+        A dict mapping thresholds to histogram data for each time point:
+            data[cell_attribute][time_grouping][threshold][time_point][model_name] = cube
+
+            NOTE: IT SHOULD PROBABLY BE A CUBE/CUBELIST
+                but that would seem to require considerable inefficiency/repetition in the cells stats
+                so we need to think about this a bit more
+
+        E.g, data['effective_radius_in_km']['forecast_period']['0.5']['T+0.5']['uk_ctrl_um']
+
+        The cube is one dimensional, with a dim coord of the given cell_attribute.
+
+    Returns
+    -------
+
+    """
+    if data is None:
+        return None
+
+    plot_urls = {}
+
+    # todo: parameterise this
+    root_folder = Path(output_folder) / varname
+
+    for cell_attribute, time_groupings in data.items():
+        plot_urls[cell_attribute] = {}
+        for time_grouping, thresholds in time_groupings.items():
+            plot_urls[cell_attribute][time_grouping] = {}
+            for threshold, time_points in thresholds.items():
+                plot_urls[cell_attribute][time_grouping][threshold] = {}
+                (root_folder / varname / cell_attribute / time_grouping / threshold).mkdir(parents=True, exist_ok=True)
+                for time_point, models in time_points.items():
+                    filename = root_folder / varname / cell_attribute / time_grouping / threshold / f'{time_point}.png'
+                    plot_urls[cell_attribute][time_grouping][threshold][time_point] = str(filename)
+
+                    # make a new plot for this combination of cell_attribute, time_grouping, threshold & time_point
+                    plt.figure(figsize=(10, 10))
+                    plt.title(f'{varname}, {cell_attribute}, {time_grouping}, threshold {threshold}, at {time_point}')
+                    for model_name, cube in models.items():
+                        plt.plot(cube.coord(cell_attribute).points, cube.data)
+
+                    filename.parent.mkdir(parents=True, exist_ok=True)
+                    plt.savefig(filename)
+                    plt.close()
+
+    make_cell_stats_page(root_folder / 'index.html', title=f'{varname}', plot_urls=json.dumps(plot_urls))
+
+    # todo: by convention we should return the cubes, but it's not cubes
+    #   the cells stats produces a lot of stuff and it's currently passed as a dict
+    return None

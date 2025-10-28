@@ -28,6 +28,7 @@ import CSET.operators
 from CSET.operators import (
     ageofair,
     aggregate,
+    cell_statistics,
     collapse,
     constraints,
     convection,
@@ -47,6 +48,7 @@ from CSET.operators import (
 __all__ = [
     "ageofair",
     "aggregate",
+    "cell_statistics",
     "collapse",
     "constraints",
     "convection",

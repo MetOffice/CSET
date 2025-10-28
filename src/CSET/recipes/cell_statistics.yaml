@@ -1,0 +1,38 @@
+category: Diagnostics
+title: cell statistics plot
+description: |
+  TBD.
+
+steps:
+
+  # todo: ideally we'd load just once and have a list of variable names to extract
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAMES
+    constraint:
+      operator: constraints.generate_var_constraint
+      varname: $VARNAME
+
+  # todo: check what the grid resolution should be
+  - operator: regrid.regrid_onto_xyspacing
+    xspacing: 0.5
+    yspacing: 0.5
+    method: Linear
+
+#  dev speedup
+  - operator: write.write_pickle
+    filename: $OUTPUT_FOLDER/$VARNAME.pkl
+#  - operator: read.read_pickle
+#    filename: $OUTPUT_FOLDER/$VARNAME.pkl
+
+  - operator: cell_statistics.caller_thing
+
+#  dev speedup
+  - operator: write.write_pickle
+    filename: $OUTPUT_FOLDER/$VARNAME_stats.pkl
+#  - operator: read.read_pickle
+#    filename: $OUTPUT_FOLDER/$VARNAME_stats.pkl
+
+  - operator: plot.plot_cell_stats_histograms
+    varname: $VARNAME
+    output_folder: $OUTPUT_FOLDER

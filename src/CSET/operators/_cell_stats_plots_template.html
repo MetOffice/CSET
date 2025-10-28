@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+  
+    <style>
+        body {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            margin: 0;
+            font-family: sans-serif;
+        }
+
+        input:invalid {
+            box-shadow: 0 0 2px 2px red;
+        }
+
+        main {
+            flex: 30em;
+            height: 100vh;
+        }
+
+        main>img {
+            width: 100%;
+            height: calc(100% - 3em);
+            object-fit: contain;
+        }
+
+    </style>
+  
+    <script type="module">
+
+        function set_select_options(element, keys) {
+            if (keys.length <= 0) {
+                return;
+            }
+
+            // remove existing options
+            let keep_selected = element.value;
+            element.innerHTML = "";
+
+            // add given options
+            keys.forEach(key => {
+                const option = document.createElement("option");
+                option.value = key;
+                option.text = key;
+                element.appendChild(option);
+            });
+
+            // select same or first item
+            if (keep_selected !== "" && keys.includes(keep_selected)) {
+                element.value = keep_selected;
+            } else {
+                element.selectedIndex = 0;
+            }
+        }
+
+        function display_sequence_controls(plot_urls) {
+            // plot_urls[cell_attribute][time_grouping][threshold][time_point] = filename
+            
+            // cell_attribute options
+            const cell_attribute_select = document.getElementById("cell_attribute_select");
+            const cell_attribute_keys = Object.keys(plot_urls);
+            set_select_options(cell_attribute_select, cell_attribute_keys);
+
+            // time_grouping options
+            const time_grouping_select = document.getElementById("time_grouping_select");
+            const time_grouping_keys = Object.keys(plot_urls[cell_attribute_keys[0]]);
+            set_select_options(time_grouping_select, time_grouping_keys);
+
+            // threshold options
+            const threshold_select = document.getElementById("threshold_select");
+            const threshold_keys = Object.keys(plot_urls[cell_attribute_keys[0]][time_grouping_keys[0]]);
+            set_select_options(threshold_select, threshold_keys);
+
+            // time options
+            const time_select = document.getElementById("time_select");
+            const time_keys = Object.keys(plot_urls[cell_attribute_keys[0]][time_grouping_keys[0]][threshold_keys[0]]);
+            set_select_options(time_select, time_keys);
+
+
+            // set the initial image
+            const plot_img = document.getElementById("plot");
+            plot_img.src = plot_urls[cell_attribute_keys[0]][time_grouping_keys[0]][threshold_keys[0]][time_keys[0]];
+
+
+            // selection events
+            cell_attribute_select.addEventListener("change", () => {
+
+                // update the time_group options for the selected cell_attribute
+                // Note: possible overkill because they will probably all be the same
+                const time_grouping_keys = Object.keys(plot_urls[cell_attribute_select.value]);
+                set_select_options(time_grouping_select, time_grouping_keys);
+
+                const threshold_keys = Object.keys(plot_urls[cell_attribute_select.value][time_grouping_select.value]);
+                set_select_options(threshold_select, threshold_keys);
+
+                const time_keys = Object.keys(plot_urls[cell_attribute_select.value][time_grouping_select.value][threshold_select.value]);
+                set_select_options(time_select, time_keys);
+
+                plot_img.src = plot_urls[cell_attribute_select.value][time_grouping_select.value][threshold_select.value][time_select.value];
+            });
+
+            time_grouping_select.addEventListener("change", () => {
+                const threshold_keys = Object.keys(plot_urls[cell_attribute_select.value][time_grouping_select.value]);
+                set_select_options(threshold_select, threshold_keys);
+
+                const time_keys = Object.keys(plot_urls[cell_attribute_select.value][time_grouping_select.value][threshold_select.value]);
+                set_select_options(time_select, time_keys);
+
+                plot_img.src = plot_urls[cell_attribute_select.value][time_grouping_select.value][threshold_select.value][time_select.value];
+            });
+
+            threshold_select.addEventListener("change", () => {
+                const time_keys = Object.keys(plot_urls[cell_attribute_select.value][time_grouping_select.value][threshold_select.value]);
+                set_select_options(time_select, time_keys);
+
+                plot_img.src = plot_urls[cell_attribute_select.value][time_grouping_select.value][threshold_select.value][time_select.value];
+            });
+
+            time_select.addEventListener("change", () => {
+                plot_img.src = plot_urls[cell_attribute_select.value][time_grouping_select.value][threshold_select.value][time_select.value];
+            });
+
+        }
+
+        const plot_urls = {{plot_urls}}  // plot_urls[threshold][time_title] = filename
+        display_sequence_controls(plot_urls);
+
+        Object.keys(plot_urls).forEach(threshold_key => {
+            Object.keys(plot_urls[threshold_key]).forEach(time_key => {
+                let img = new Image();
+                img.src = plot_urls[threshold_key][time_key];
+            });
+        });
+
+
+    </script>
+  
+</head>
+
+<body>
+    <main>
+        
+        <fieldset id="controls">
+
+            <label for="cell_attribute_select">Cell Attribute:</label>
+            <select id="cell_attribute_select"></select>
+
+            <label for="time_grouping_select">Time grouping:</label>
+            <select id="time_grouping_select"></select>
+
+            <label for="threshold_select">Threshold:</label>
+            <select id="threshold_select"></select>
+
+            <label for="time_select">Time Point:</label>
+            <select id="time_select"></select>
+
+        </fieldset>
+
+        <img id="plot" src="" alt="plot">
+
+    </main>
+</body>
+
+</html>
