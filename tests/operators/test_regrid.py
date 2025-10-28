@@ -392,10 +392,14 @@ def test_regrid_to_single_point_realworld_cubelist(cube):
     mapping this point correctly onto the rotated grid.
     Note this test does not require longitude inputs within range +/- 180.
     """
+    # Create a cube list from cube.
     cubes = iris.cube.CubeList([cube, cube])
     regrid_cubes = regrid.regrid_to_single_point(
         cubes, 52.98, -5.0, "realworld", "Nearest", boundary_margin=1
     )
     expected_array = "array(288.59375, dtype=float32)"
+    # Assert no data is lost.
+    assert len(regrid_cubes) == 2
+    # Assert each cube matches expected array.
     for regrid_cube in regrid_cubes:
         assert repr(regrid_cube[0].data) == expected_array
