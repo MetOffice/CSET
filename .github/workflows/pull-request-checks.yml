@@ -52,7 +52,7 @@ jobs:
           pytest -n logical --verbose --cov --cov-append --cov-config=pyproject.toml
           echo '::endgroup::'
           mv .coverage ".coverage.${{ matrix.py-ver }}"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         with:
           name: coverage-data-${{ matrix.py-ver }}
           path: .coverage.*
@@ -155,7 +155,7 @@ jobs:
           sphinx-build -b html --color --fail-on-warning "docs/source" "docs/build/html"
           echo '::endgroup::'
       - name: Upload documentation artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         with:
           name: html-docs
           path: docs/build/html/
