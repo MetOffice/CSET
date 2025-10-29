@@ -239,37 +239,20 @@ def structural_similarity_model_comparisons(
             other.slices_over("realization"),
             strict=True,
         ):
-            if time_coord == "hour":
-                for base_t, other_t in zip(
-                    base_r.slices_over("hour"), other_r.slices_over("hour"), strict=True
-                ):
-                    # Use the full array as output will be as a 2D map.
-                    ssim_map = base_t.copy()
-                    _, ssim_map.data = structural_similarity(
-                        base_t.data,
-                        other_t.data,
-                        data_range=other_t.data.max() - other_t.data.min(),
-                        gaussian_weights=True,
-                        sigma=sigma,
-                        full=True,
-                    )
-                    ssim.append(ssim_map)
-            else:
-                logging.debug("Assume time_coord is 'time'.")
-                for base_t, other_t in zip(
-                    base_r.slices_over("time"), other_r.slices_over("time"), strict=True
-                ):
-                    # Use the full array as output will be as a 2D map.
-                    ssim_map = base_t.copy()
-                    _, ssim_map.data = structural_similarity(
-                        base_t.data,
-                        other_t.data,
-                        data_range=other_t.data.max() - other_t.data.min(),
-                        gaussian_weights=True,
-                        sigma=sigma,
-                        full=True,
-                    )
-                    ssim.append(ssim_map)
+            for base_t, other_t in zip(
+                base_r.slices_over(time_coord), other_r.slices_over(time_coord), strict=True
+            ):
+                # Use the full array as output will be as a 2D map.
+                ssim_map = base_t.copy()
+                _, ssim_map.data = structural_similarity(
+                    base_t.data,
+                    other_t.data,
+                    data_range=other_t.data.max() - other_t.data.min(),
+                    gaussian_weights=True,
+                    sigma=sigma,
+                    full=True,
+                )
+                ssim.append(ssim_map)
     # Merge the cube slices into one cube, rename, and change units.
     ssim = ssim.merge_cube()
     ssim.standard_name = None
