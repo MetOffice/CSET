@@ -1119,7 +1119,22 @@ def _plot_and_save_histogram_series(
         # Easier to check title (where var name originates)
         # than seeing if long names exist etc.
         # Exception case, where distribution better fits log scales/bins.
-        if "surface_microphysical" or "precipitation" in title:
+        if "surface_microphysical" in title:
+            if "amount" in title:
+                # Compute histogram following Klingaman et al. (2017): ASoP
+                bin2 = np.exp(np.log(0.02) + 0.1 * np.linspace(0, 99, 100))
+                bins = np.pad(bin2, (1, 0), "constant", constant_values=0)
+                density = False
+            else:
+                bins = 10.0 ** (
+                    np.arange(-10, 27, 1) / 10.0
+                )  # Suggestion from RMED toolbox.
+                bins = np.insert(bins, 0, 0)
+                ax.set_yscale("log")
+            vmin = bins[1]
+            vmax = bins[-1]  # Manually set vmin/vmax to override json derived value.
+            ax.set_xscale("log")
+        elif "precipitation" in title:
             if "amount" in title:
                 # Compute histogram following Klingaman et al. (2017): ASoP
                 bin2 = np.exp(np.log(0.02) + 0.1 * np.linspace(0, 99, 100))
@@ -1157,7 +1172,12 @@ def _plot_and_save_histogram_series(
         x, y = np.histogram(cube_data_1d, bins=bins, density=density)
 
         # Compute area under curve.
-        if "surface_microphysical" or "precipitation" in title and "amount" in title:
+        if "surface_microphysical" in title and "amount" in title:
+            bin_mean = (bins[:-1] + bins[1:]) / 2.0
+            x = x * bin_mean / x.sum()
+            x = x[1:]
+            y = y[1:]
+        elif "precipitation" in title and "amount" in title:
             bin_mean = (bins[:-1] + bins[1:]) / 2.0
             x = x * bin_mean / x.sum()
             x = x[1:]
@@ -1173,7 +1193,11 @@ def _plot_and_save_histogram_series(
         f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}", fontsize=14
     )
     ax.set_ylabel("Normalised probability density", fontsize=14)
-    if "surface_microphysical" or "precipitation" in title and "amount" in title:
+    if "surface_microphysical" in title and "amount" in title:
+        ax.set_ylabel(
+            f"Contribution to mean ({iter_maybe(cubes)[0].units})", fontsize=14
+        )
+    elif "precipitation" in title and "amount" in title:
         ax.set_ylabel(
             f"Contribution to mean ({iter_maybe(cubes)[0].units})", fontsize=14
         )
@@ -1866,7 +1890,8 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
     """Return a custom colourmap for the current recipe."""
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if (
-        any("surface_microphysical" or "precipitation" in name for name in varnames)
+        any("surface_microphysical" in name for name in varnames)
+        or any("precipitation" in name for name in varnames)
         and "difference" not in cube.long_name
         and "mask" not in cube.long_name
     ):
