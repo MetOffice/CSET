@@ -56,7 +56,7 @@ def test_structural_similarity_model_comparisons_SSIM(cube: iris.cube.Cube):
         cubes, sigma=1.5, spatial_plot=True
     )
 
-    # As both cubes use the same data, check the MSSIM is one.
+    # As both cubes use the same data, check the SSIM is one everywhere.
     assert isinstance(SSIM_cube, iris.cube.Cube)
     assert np.allclose(SSIM_cube.data, np.ones_like(SSIM_cube.data), atol=1e-9)
 
