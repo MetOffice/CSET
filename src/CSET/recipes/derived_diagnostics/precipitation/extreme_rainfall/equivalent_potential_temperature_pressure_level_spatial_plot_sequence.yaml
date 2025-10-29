@@ -1,0 +1,34 @@
+category: Extreme Precipitation
+title: $MODEL_NAME equivalent potenital temperature $LEVELTYPE$LEVEL $METHOD
+description: |
+  Calculates and plots the $METHOD of equivalent potenital temperature from $MODEL_NAME at $LEVELTYPE level $LEVEL.
+
+steps:
+  - operator: read.read_cube
+    file_paths: $INPUT_PATHS
+    constraint:
+      operator: constraints.combine_constraints
+      variable_constraint:
+        operator: constraints.generate_var_constraint
+        varname: 'temperature_at_pressure_levels'
+      variable_2_constraint:
+        operator: constraints.generate_var_constraint
+        varname: 'relative_humidity_wrt_water_at_pressure_levels'
+      level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: $LEVELTYPE
+        levels: $LEVEL
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: temperature.equivalent_potential_temperature_pressure_levels
+
+  - operator: collapse.collapse
+    coordinate: [time]
+    method: $METHOD
+
+  - operator: plot.spatial_contour_plot
+    sequence_coordinate: time
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

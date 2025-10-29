@@ -390,6 +390,31 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+    # Pressure level fields.
+    if conf.SPATIAL_DIFFERENCE_PLEVEL_THETA_E:
+        base_model = models[0]
+        for model, plevel, method in itertools.product(
+            models[1:],
+            conf.PRESSURE_LEVELS,
+            conf.SPATIAL_PLEVEL_FIELD_METHOD,
+        ):
+            yield RawRecipe(
+                recipe="level_spatial_difference.yaml",
+                variables={
+                    "LEVELTYPE": "pressure",
+                    "LEVEL": plevel,
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "METHOD": method,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
     # Create a list of case aggregation types.
     AGGREGATION_TYPES = ["lead_time", "hour_of_day", "validity_time", "all"]
 
