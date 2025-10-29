@@ -249,7 +249,7 @@ def mean_structural_similarity_model_comparisons(
         The cubes must contain a time coordinate.
     sigma: float, optional
         The standard deviation of the Gaussian kernel to be used. The default
-        is set to 1.5 to mimic the human eye following [Wangetal2004]_.
+        is set to 1.5 to mimic the human eye following [Wangetal2004a]_.
 
     Returns
     -------
@@ -262,7 +262,7 @@ def mean_structural_similarity_model_comparisons(
 
     Notes
     -----
-    This diagnostic was introduced by Wang et al. (2004) [Wangetal2004]_. It is
+    This diagnostic was introduced by Wang et al. (2004) [Wangetal2004a]_. It is
     an image processing diagnostic that takes into account three factors asscoiated
     with an image: i) luminace, ii) contrast, iii) structure. In calculation terms
     it is a combination of the intensity, variance, and co-variance of an image. It is
@@ -287,11 +287,11 @@ def mean_structural_similarity_model_comparisons(
     (Gaussian kernels) rather than the mean of the grid boxes.
 
     Further details, including caveats, can be found in Wang et al. (2004)
-    [Wangetal2004]_.
+    [Wangetal2004a]_.
 
     References
     ----------
-    .. [Wangetal2004] Wang, Z., Bovik, A.C., Sheikh, H.R., Simoncelli, E.P. (2004)
+    .. [Wangetal2004a] Wang, Z., Bovik, A.C., Sheikh, H.R., Simoncelli, E.P. (2004)
        "Image Quality Assessment: From Error Visibility to Structural Similarity."
        IEEE Transactions on Image Processing, vol. 13, 600-612,
        doi: 10.1109/TIP.2003.819861
