@@ -453,7 +453,7 @@
     "ymax": 1.0,
     "ymin": 0.0
   },
-  "precipitation_flux_difference": {
+  "precipitation_rate_difference": {
     "cmap": "BrBG",
     "max": 32.0,
     "min": -32.0
@@ -751,13 +751,13 @@
   },
   "undilute_cape": {
     "cmap": "Oranges",
-    "max": 2000,
+    "max": 2500,
     "min": 0
   },
   "undilute_cape_difference": {
     "cmap": "BrBG",
-    "max": 250,
-    "min": -250
+    "max": 2500,
+    "min": -2500
   },
   "vapour_specific_humidity_at_pressure_levels_for_climate_averaging": {
     "cmap": "Blues",
