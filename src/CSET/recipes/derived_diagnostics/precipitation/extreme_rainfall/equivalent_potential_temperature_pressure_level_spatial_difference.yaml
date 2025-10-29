@@ -1,0 +1,35 @@
+category: Extreme Precipitation
+title: "$METHOD equivalent potential temperature $LEVELTYPE$LEVEL\n Difference ($BASE_MODEL - $OTHER_MODEL)"
+description: Calculates and plot the difference in $METHOD of equivalent potential temperature on $LEVELTYPE level $LEVEL for all times.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: [$BASE_MODEL, $OTHER_MODEL]
+    constraint:
+      operator: constraints.combine_constraints
+      variable_constraint:
+        operator: constraints.generate_var_constraint
+        varname: 'temperature_at_pressure_levels'
+      variable_2_constraint:
+        operator: constraints.generate_var_constraint
+        varname: 'relative_humidity_wrt_water_at_pressure_levels'
+      level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: $LEVELTYPE
+        levels: $LEVEL
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: temperature.equivalent_potential_temperature_pressure_levels
+
+  - operator: collapse.collapse
+    coordinate: [time]
+    method: $METHOD
+
+  - operator: misc.difference
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
