@@ -2,17 +2,17 @@ category: Surface Structural Similarity
 title: "$METHOD $VARNAME\nStructural Similarity between $BASE_MODEL and $OTHER_MODEL"
 description: |
   Extracts $VARNAME for $BASE_MODEL and $OTHER_MODEL. These fields then have the
-  structural similarity calculated between them. The $METHOD is applied to the
-  structural similarity and the result is plotted as a spatial plot.
+  structural similarity (SSIM) calculated between them. The $METHOD is applied to the
+  SSIM and the result is plotted as a spatial plot.
 
-  The structural similarity often varies between +/- 1, although values can
+  The SSIM often varies between +/- 1, although values can
   be outside of this range if the values are outside of
-  the expected data range. Values close to 1 imply the fields are similar;
-  values close to -1 imply the values are anticorrelated. Smaller values imply the
-  fields differ. On maps of the structural similarity smaller, and negative values
+  the expected data range (maximum - minimum of $OTHER_MODEL). Values close to 1 imply the fields are similar;
+  values close to -1 imply the values are anticorrelated. Values close to 0 imply the
+  fields differ. On maps of the SSIM smaller, and negative values
   appear in the region where the differences occur.
 
-  The structural similarity has been setup with a Gaussian kernel with a standard
+  The SSIM has been setup with a Gaussian kernel with a standard
   deviation of 1.5. This value has been chosen to mimic the perception of the
   human eye, and thus indicate differences detected at a glance.
 

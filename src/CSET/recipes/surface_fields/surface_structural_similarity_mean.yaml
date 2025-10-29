@@ -2,18 +2,18 @@ category: Surface Structural Similarity
 title: "$VARNAME\nMean Structural Similarity between $BASE_MODEL and $OTHER_MODEL"
 description: |
   Extracts $VARNAME for $BASE_MODEL and $OTHER_MODEL. These fields then have the
-  mean structural similarity calculated between them and plotted as a line plot.
+  mean structural similarity (MSSIM) calculated between them and plotted as a line plot.
 
-  The structural similarity often varies between +/- 1, although values can
+  The structural similarity (SSIM) often varies between +/- 1, although values can
   be outside of this range if the values are outside of
-  the expected data range. Values close to 1 imply the fields are similar;
-  values close to -1 imply the values are anticorrelated. Smaller values imply the
+  the expected data range (maximum - minimum of $OTHER_MODEL). Values close to 1 imply the fields are similar;
+  values close to -1 imply the values are anticorrelated. Values close to 0 imply the
   fields differ.
 
-  The mean structural similarity is the mean over all windows (Gaussian kernels).
-  Therefore, it is not the same as the domain mean structural similarity.
+  The MSSIM is the mean over all windows (Gaussian kernels).
+  Therefore, it is not the same as the domain mean SSIM.
 
-  The structural similarity has been setup with a Gaussian kernel with a standard
+  The SSIM has been setup with a Gaussian kernel with a standard
   deviation of 1.5. This value has been chosen to mimic the perception of the
   human eye, and thus indicate differences detected at a glance.
 
