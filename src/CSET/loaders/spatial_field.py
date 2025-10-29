@@ -459,6 +459,29 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+    # Equivalent potential temperature on pressure levels.
+    if conf.SPATIAL_PLEVEL_THETA_E:
+        for model, plevel, method in itertools.product(
+            models,
+            conf.PRESSURE_LEVELS,
+            conf.SPATIAL_PLEVEL_FIELD_METHOD,
+        ):
+            yield RawRecipe(
+                recipe="equivalent_potential_temperature_pressure_level_spatial_plot_sequence.yaml",
+                variables={
+                    "LEVELTYPE": "pressure",
+                    "LEVEL": plevel,
+                    "MODEL_NAME": model["name"],
+                    "METHOD": method,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
+
     # Screen-level temperature probabilities
     for model, condition, threshold in itertools.product(
         models,
