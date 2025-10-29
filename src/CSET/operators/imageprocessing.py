@@ -199,39 +199,21 @@ def structural_similarity_model_comparisons(
             other.slices_over("realization"),
             strict=True,
         ):
-            if time_coord == "hour":
-                for base_t, other_t in zip(
-                    base_r.slices_over("hour"), other_r.slices_over("hour"), strict=True
-                ):
-                    # The MSSIM (Mean structural similarity) is compression to
-                    # a single point. Therefore, copying cube data for one
-                    # point in the domain to keep cube consistency.
-                    mssim = base_t[0, 0].copy()
-                    mssim.data = structural_similarity(
-                        base_t.data,
-                        other_t.data,
-                        data_range=other_t.data.max() - other_t.data.min(),
-                        gaussian_weights=True,
-                        sigma=sigma,
-                    )
-                    ssim.append(mssim)
-            else:
-                logging.debug("Assume time_coord is 'time'.")
-                for base_t, other_t in zip(
-                    base_r.slices_over("time"), other_r.slices_over("time"), strict=True
-                ):
-                    # The MSSIM (Mean structural similarity) is compression to
-                    # a single point. Therefore, copying cube data for one
-                    # point in the domain to keep cube consistency.
-                    mssim = base_t[0, 0].copy()
-                    mssim.data = structural_similarity(
-                        base_t.data,
-                        other_t.data,
-                        data_range=other_t.data.max() - other_t.data.min(),
-                        gaussian_weights=True,
-                        sigma=sigma,
-                    )
-                    ssim.append(mssim)
+            for base_t, other_t in zip(
+                base_r.slices_over(time_coord), other_r.slices_over(time_coord), strict=True
+            ):
+                # The MSSIM (Mean structural similarity) is compression to
+                # a single point. Therefore, copying cube data for one
+                # point in the domain to keep cube consistency.
+                mssim = base_t[0, 0].copy()
+                mssim.data = structural_similarity(
+                    base_t.data,
+                    other_t.data,
+                    data_range=other_t.data.max() - other_t.data.min(),
+                    gaussian_weights=True,
+                    sigma=sigma,
+                )
+                ssim.append(mssim)
     else:
         # Loop over realization and time coordinates.
         for base_r, other_r in zip(
