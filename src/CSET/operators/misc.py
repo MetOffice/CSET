@@ -322,9 +322,9 @@ def difference(cubes: CubeList):
     def is_increasing(sequence: list) -> bool:
         """Determine the direction of an ordered sequence.
 
-        Returns "increasing" or "decreasing" depending on whether the sequence
-        is going up or down. The sequence should already be monotonic, with no
-        duplicate values. An iris DimCoord's points fulfills this criteria.
+        Returns a boolean indicating that the values of a sequence are
+        increasing. The sequence should already be monotonic, with no
+        duplicate values. An iris DimCoord's points fulfils this criteria.
         """
         return sequence[0] < sequence[1]
 
