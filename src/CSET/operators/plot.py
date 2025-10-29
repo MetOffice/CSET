@@ -338,6 +338,7 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
         # require custom colorbar_map as these can not be defined in the
         # JSON file.
         cmap, levels, norm = _custom_colourmap_precipitation(cube, cmap, levels, norm)
+        cmap, levels, norm = _custom_colourmap_ppn(cube, cmap, levels, norm)
         cmap, levels, norm = _custom_colourmap_visibility_in_air(
             cube, cmap, levels, norm
         )
@@ -1891,7 +1892,6 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if (
         any("surface_microphysical" in name for name in varnames)
-        or any("precipitation" in name for name in varnames)
         and "difference" not in cube.long_name
         and "mask" not in cube.long_name
     ):
@@ -1916,9 +1916,45 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
         cmap = mcolors.ListedColormap(colors)
         # Normalize the levels
         norm = mcolors.BoundaryNorm(levels, cmap.N)
-        logging.info(
-            "change colormap for surface_microphysical or precipitation variable colorbar."
-        )
+        logging.info("change colormap for surface_microphysical variable colorbar.")
+    else:
+        # do nothing and keep existing colorbar attributes
+        cmap = cmap
+        levels = levels
+        norm = norm
+    return cmap, levels, norm
+
+
+def _custom_colourmap_ppn(cube: iris.cube.Cube, cmap, levels, norm):
+    """Return a custom colourmap for the current recipe."""
+    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    if (
+        any("precipitation" in name for name in varnames)
+        and "difference" not in cube.long_name
+        and "mask" not in cube.long_name
+    ):
+        # Define the levels and colors
+        levels = [0, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
+        colors = [
+            "w",
+            (0, 0, 0.6),
+            "b",
+            "c",
+            "g",
+            "y",
+            (1, 0.5, 0),
+            "r",
+            "pink",
+            "m",
+            "purple",
+            "maroon",
+            "gray",
+        ]
+        # Create a custom colormap
+        cmap = mcolors.ListedColormap(colors)
+        # Normalize the levels
+        norm = mcolors.BoundaryNorm(levels, cmap.N)
+        logging.info("change colormap for precipitation variable colorbar.")
     else:
         # do nothing and keep existing colorbar attributes
         cmap = cmap
