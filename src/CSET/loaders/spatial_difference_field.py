@@ -490,7 +490,7 @@ def load(conf: Config):
             conf.SPATIAL_PLEVEL_FIELD_METHOD,
         ):
             yield RawRecipe(
-                recipe="level_spatial_difference.yaml",
+                recipe="equivalent_potential_temperature_pressure_level_spatial_difference.yaml",
                 variables={
                     "LEVELTYPE": "pressure",
                     "LEVEL": plevel,
