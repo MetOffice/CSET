@@ -22,106 +22,9 @@ from datetime import timedelta
 import iris
 import iris.coords
 import iris.cube
-from iris.time import PartialDateTime
 
+import CSET.operators._utils as operator_utils
 from CSET._common import iter_maybe
-
-
-def my_pdt_fromstring(
-    datestring,
-) -> tuple[iris.time.PartialDateTime, timedelta | None]:
-    """Generate PartialDateTime object.
-
-    Function that takes an ISO 8601 date string and returns a PartialDateTime object.
-
-    Arguments
-    ---------
-    datestring: str
-        ISO date
-
-    Returns
-    -------
-    time_object: iris.time.PartialDateTime
-    """
-
-    def make_offset(sign, value) -> timedelta:
-        if len(value) not in [2, 4, 5]:
-            raise ValueError(f'expected "hh", "hhmm", or "hh:mm", got {value}')
-
-        hours = int(value[:2])
-        minutes = 0
-        if len(value) in [4, 5]:
-            minutes = int(value[-2:])
-        return timedelta(hours=sign * hours, minutes=sign * minutes)
-
-    # Remove the microseconds coord due to no support in PartialDateTime
-    datestring = re.sub(r"\.\d+", "", datestring)
-
-    datetime_split = datestring.split("T")
-    date = datetime_split[0]
-    if len(datetime_split) == 1:
-        time = ""
-    elif len(datetime_split) == 2:
-        time = datetime_split[1]
-
-    else:
-        raise ValueError("datesting in an unexpected format")
-
-    offset = None
-    time_split = time.split("+")
-    if len(time_split) == 2:
-        time = time_split[0]
-        offset = make_offset(1, time_split[1])
-    else:
-        time_split = time.split("-")
-        if len(time_split) == 2:
-            time = time_split[0]
-            offset = make_offset(-1, time_split[1])
-        else:
-            offset = None
-
-    if re.fullmatch(r"\d{8}", date):
-        date = f"{date[0:4]}-{date[4:6]}-{date[6:8]}"
-    elif re.fullmatch(r"\d{6}", date):
-        date = f"{date[0:4]}-{date[4:6]}"
-
-    if len(date) < 7:
-        raise ValueError(f"Invalid datestring: {datestring}, must be at least YYYY-MM")
-
-    # Returning a PartialDateTime for the special case of string form "YYYY-MM"
-    if re.fullmatch(r"\d{4}-\d{2}", date):
-        pdt = PartialDateTime(
-            year=int(date[0:4]),
-            month=int(date[5:7]),
-            day=None,
-            hour=None,
-            minute=None,
-            second=None,
-        )
-        return pdt, offset
-
-    year = int(date[0:4])
-    month = int(date[5:7])
-    day = int(date[8:10])
-
-    kwargs = dict(year=year, month=month, day=day, hour=0, minute=0, second=0)
-
-    # Normalise the time parts into standard format
-    if re.fullmatch(r"\d{4}", time):
-        time = f"{time[0:2]}:{time[2:4]}"
-    if re.fullmatch(r"\d{6}", time):
-        time = f"{time[0:2]}:{time[2:4]}:{time[4:6]}"
-
-    if len(time) >= 2:
-        kwargs["hour"] = int(time[0:2])
-    if len(time) >= 5:
-        kwargs["minute"] = int(time[3:5])
-    if len(time) >= 8:
-        kwargs["second"] = int(time[6:8])
-
-    pdt = PartialDateTime(**kwargs)
-
-    return pdt, offset
 
 
 def generate_stash_constraint(stash: str, **kwargs) -> iris.AttributeConstraint:
@@ -313,14 +216,14 @@ def generate_time_constraint(
     time_constraint: iris.Constraint
     """
     if isinstance(time_start, str):
-        pdt_start, offset_start = my_pdt_fromstring(time_start)
+        pdt_start, offset_start = operator_utils.pdt_fromisoformat(time_start)
     else:
         pdt_start, offset_start = time_start, timedelta(0)
 
     if time_end is None:
         pdt_end, offset_end = time_start, offset_start
     elif isinstance(time_end, str):
-        pdt_end, offset_end = my_pdt_fromstring(time_end)
+        pdt_end, offset_end = operator_utils.pdt_fromisoformat(time_end)
         print(pdt_end)
         print(offset_end)
     else:

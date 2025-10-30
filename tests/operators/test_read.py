@@ -25,7 +25,7 @@ import numpy as np
 import pytest
 from iris.time import PartialDateTime
 
-from CSET.operators import read
+from CSET.operators import constraints, read
 
 
 def test_read_cubes():
@@ -42,8 +42,6 @@ def test_read_cubes():
 
 def test_read_cubes_generate_time_constraint():
     """Read cube, constrain the time coordinate and verify the correct time range."""
-    from CSET.operators import constraints
-
     cubes = read.read_cubes("tests/test_data/precipitation_360_day_calendar.nc")
     cube = cubes[0]
 
