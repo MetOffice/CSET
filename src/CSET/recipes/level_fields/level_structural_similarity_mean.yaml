@@ -1,0 +1,47 @@
+category: $LEVELTYPE Level Structural Similarity
+title: "$VARNAME $LEVEL\nMean Structural Similarity between $BASE_MODEL and $OTHER_MODEL"
+description: |
+  Extracts $VARNAME at $LEVELTYPE $LEVEL for $BASE_MODEL and $OTHER_MODEL.
+  These fields then have the
+  mean structural similarity (MSSIM) calculated between them and plotted as a line plot.
+
+  The structural similarity (SSIM) often varies between +/- 1, although values can
+  be outside of this range if the values are outside of
+  the expected data range (maximum - minimum of $OTHER_MODEL). Values close to 1 imply the fields are similar;
+  values close to -1 imply the values are anticorrelated. Values close to 0 imply the
+  fields differ.
+
+  The MSSIM is the mean over all windows (Gaussian kernels).
+  Therefore, it is not the same as the domain mean SSIM.
+
+  The SSIM has been setup with a Gaussian kernel with a standard
+  deviation of 1.5. This value has been chosen to mimic the perception of the
+  human eye, and thus indicate differences detected at a glance.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: [$BASE_MODEL, $OTHER_MODEL]
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: $VARNAME
+      level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: $LEVELTYPE
+        levels: $LEVEL
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: imageprocessing.mean_structural_similarity_model_comparisons
+    sigma: 1.5
+
+  - operator: plot.plot_line_series
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
