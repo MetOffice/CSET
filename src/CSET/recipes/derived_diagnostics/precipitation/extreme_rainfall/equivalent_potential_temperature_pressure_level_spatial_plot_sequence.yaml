@@ -7,19 +7,19 @@ steps:
   - operator: read.read_cube
     file_paths: $INPUT_PATHS
     constraint:
-      operator: constraints.combine_constraints
-      variable_constraint:
-        operator: constraints.generate_var_constraint
-        varname: 'temperature_at_pressure_levels'
-      variable_2_constraint:
-        operator: constraints.generate_var_constraint
-        varname: 'relative_humidity_wrt_water_at_pressure_levels'
-      level_constraint:
-        operator: constraints.generate_level_constraint
-        coordinate: $LEVELTYPE
-        levels: $LEVEL
+      operator: constraints.generate_level_constraint
+      coordinate: $LEVELTYPE
+      levels: $LEVEL
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
+
+  - operator: filter.filter_multiple_cubes
+    variable_constraint:
+      operator: constraints.generate_var_constraint
+      varname: 'temperature_at_pressure_levels'
+    variable_2_constraint:
+      operator: constraints.generate_var_constraint
+      varname: 'relative_humidity_wrt_water_at_pressure_levels'
 
   - operator: temperature.equivalent_potential_temperature_pressure_levels
 
