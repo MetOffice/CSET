@@ -48,7 +48,7 @@ def aviation_colour_state(
     The aviation colour state is the maximum (i.e. worst conditions) from the
     aviation colour state due to visibility and cloud base altitude. For the
     purposes of this diagnostic we use the military airfield definition as would
-    be found on METARs. The table below from the `Met Office website <https://www.metoffice.gov.uk/services/transport/aviation/regulated/national-aviation/abs/faqs>`__ shows the minimum
+    be found on METARs. The table below from the `Met Office website <https://www.metoffice.gov.uk/services/transport/aviation/regulated/national-aviation/abs/faqs>`_ shows the minimum
     weather conditions required for each colour. The redder the colour state
     the poorer the conditions at the aerodrome.
 
@@ -127,7 +127,7 @@ def aviation_colour_state_visibility(
     is from any source (e.g. precipitation and fog).
 
     For the purposes of this diagnostic we use the military airfield definition
-    as would be found on METARs. The table below from the `Met Office website <https://www.metoffice.gov.uk/services/transport/aviation/regulated/national-aviation/abs/faqs>`__ shows the minimum
+    as would be found on METARs. The table below from the `Met Office website <https://www.metoffice.gov.uk/services/transport/aviation/regulated/national-aviation/abs/faqs>`_ shows the minimum
     weather conditions required for each colour. The redder the colour state
     the poorer the visibility conditions at the aerodrome.
 
@@ -215,7 +215,7 @@ def aviation_colour_state_cloud_base(
     cloud base altitude above ground level at an airfield.
 
     For the purposes of this diagnostic we use the military airfield definition as would
-    be found on METARs. The table below from the `Met Office website <https://www.metoffice.gov.uk/services/transport/aviation/regulated/national-aviation/abs/faqs>`__ shows the minimum
+    be found on METARs. The table below from the `Met Office website <https://www.metoffice.gov.uk/services/transport/aviation/regulated/national-aviation/abs/faqs>`_ shows the minimum
     weather conditions required for each colour. The redder the colour state
     the lower the cloud base at the aerodrome.
 

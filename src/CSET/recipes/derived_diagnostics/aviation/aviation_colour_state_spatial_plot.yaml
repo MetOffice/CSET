@@ -3,7 +3,7 @@ title: $MODEL_NAME aviation colour state spatial plot
 description: |
   Generates a plot of the aviation colour state. The aviation colour state is the
   maximum colour state (i.e. the worst conditions) from the colour state due to
-  visibility and cloud base altitude at an airfield. The aviation colour state
+  visibility and cloud base altitude at the surface. The aviation colour state
   can be found on the [Met Office website](https://www.metoffice.gov.uk/services/transport/aviation/regulated/national-aviation/abs/faqs). The colours are more important than the values which are used to create
   the colourbar and calculate the aviation colour state.
 

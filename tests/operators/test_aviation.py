@@ -49,7 +49,7 @@ def test_aviation_colour_state_name(visibility_cube, cloud_base_cube, orography_
     assert expected_name == aviation.aviation_colour_state(vis, cld).name()
 
 
-def test_aviation_colour_sate_cubelist(
+def test_aviation_colour_state_cubelist(
     visibility_cube, cloud_base_cube, orography_cube
 ):
     """Check aviation colour state handles a CubeList."""
