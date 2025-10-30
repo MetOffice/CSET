@@ -158,6 +158,74 @@
     "max": 25.0,
     "min": 0.0
   },
+  "equivalent_potential_temperature": {
+    "cmap": "RdYlBu_r",
+    "max": 350,
+    "min": 240,
+    "pressure_levels": {
+      "100": {
+        "max": 240,
+        "min": 200,
+        "ymax": "auto",
+        "ymin": "auto"
+      },
+      "1000": {
+        "max": 320,
+        "min": 240,
+        "ymax": "auto",
+        "ymin": "auto"
+      },
+      "200": {
+        "max": 240,
+        "min": 200,
+        "ymax": "auto",
+        "ymin": "auto"
+      },
+      "250": {
+        "max": 300,
+        "min": 200,
+        "ymax": "auto",
+        "ymin": "auto"
+      },
+      "300": {
+        "max": 250,
+        "min": 200,
+        "ymax": "auto",
+        "ymin": "auto"
+      },
+      "500": {
+        "max": 300,
+        "min": 220,
+        "ymax": "auto",
+        "ymin": "auto"
+      },
+      "700": {
+        "max": 300,
+        "min": 240,
+        "ymax": "auto",
+        "ymin": "auto"
+      },
+      "850": {
+        "max": 340,
+        "min": 250,
+        "ymax": "auto",
+        "ymin": "auto"
+      },
+      "950": {
+        "max": 310,
+        "min": 250,
+        "ymax": "auto",
+        "ymin": "auto"
+      }
+    },
+    "ymax": "auto",
+    "ymin": "auto"
+  },
+  "equivalent_potential_temperature_difference": {
+    "cmap": "bwr",
+    "max": 10,
+    "min": -10
+  },
   "exner_pressure_at_cell_interfaces": {
     "cmap": "coolwarm",
     "max": 1.1,
