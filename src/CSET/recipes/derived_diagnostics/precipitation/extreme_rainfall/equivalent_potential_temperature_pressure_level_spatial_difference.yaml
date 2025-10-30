@@ -9,27 +9,29 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
-  - operator: filters.filter_multiple_cubes
-    temperature_constraint:
-      operator: constraints.combine_constraints
-      var_constriant:
-        operator: constraints.generate_var_constraint
-        varname: 'temperature_at_pressure_levels'
-      level_constraint:
-        operator: constraints.generate_level_constraint
-        coordinate: $LEVELTYPE
-        levels: $LEVEL
-    humidity_constraint:
-      operator: constraints.combine_constraints
-      var_constraint:
-        operator: constraints.generate_var_constraint
-        varname: 'relative_humidity_wrt_water_at_pressure_levels'
-      level_constraint:
-        operator: constraints.generate_level_constraint
-        coordinate: $LEVELTYPE
-        levels: $LEVEL
-
   - operator: temperature.equivalent_potential_temperature_pressure_levels
+    relative_humidity:
+      operator: filters.filter_cubes
+      constraint:
+        operator: constraints.combine_constraints
+        var_constraint:
+          operator: constraints.generate_var_constraint
+          varname: 'relative_humidity_wrt_water_at_pressure_levels'
+        level_constraint:
+          operator: constraints.generate_level_constraint
+          coordinate: $LEVELTYPE
+          levels: $LEVEL
+    temperature:
+      operator: filters.filter_cubes
+      constraint:
+        operator: constraints.combine_constraints
+        var_constriant:
+          operator: constraints.generate_var_constraint
+          varname: 'temperature_at_pressure_levels'
+        level_constraint:
+          operator: constraints.generate_level_constraint
+          coordinate: $LEVELTYPE
+          levels: $LEVEL
 
   - operator: collapse.collapse
     coordinate: [time]
