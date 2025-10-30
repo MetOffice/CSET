@@ -68,6 +68,15 @@ CSET.operators.write
 .. automodule:: CSET.operators.write
    :members:
 
+Aviation Operators
+~~~~~~~~~~~~~~~~~~
+
+CSET.operators.aviation
+-----------------------
+
+.. automodule:: CSET.operators.aviation
+   :members:
+
 Convection Operators
 ~~~~~~~~~~~~~~~~~~~~
 
