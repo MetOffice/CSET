@@ -26,7 +26,7 @@ from CSET._common import iter_maybe
 def equivalent_potential_temperature_pressure_levels(relative_humidity, temperature):
     """Calculate the equivalent potential temperature."""
     theta_e_list = iris.cube.CubeList([])
-    # Constansts.
+    # Constants.
     p0 = 1000.0
     Rd = 287.0
     Rv = 461.0
