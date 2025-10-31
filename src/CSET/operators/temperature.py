@@ -37,7 +37,7 @@ def equivalent_potential_temperature_pressure_levels(relative_humidity, temperat
         iter_maybe(relative_humidity), iter_maybe(temperature), strict=True
     ):
         logging.debug("Convert relative humidity to mixing ratio.")
-        if RH.data.max() > 100:
+        if RH.units == "%":
             RH /= 100.0
         TT = 17.27 * (T - 273.16) / (T - 35.86)
         es = e0 * np.exp(TT.core_data())
