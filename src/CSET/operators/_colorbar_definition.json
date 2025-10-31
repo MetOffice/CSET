@@ -170,7 +170,7 @@
         "ymin": "auto"
       },
       "1000": {
-        "max": 320,
+        "max": 350,
         "min": 240,
         "ymax": "auto",
         "ymin": "auto"
@@ -182,8 +182,8 @@
         "ymin": "auto"
       },
       "250": {
-        "max": 300,
-        "min": 200,
+        "max": 350,
+        "min": 250,
         "ymax": "auto",
         "ymin": "auto"
       },
@@ -194,8 +194,8 @@
         "ymin": "auto"
       },
       "500": {
-        "max": 300,
-        "min": 220,
+        "max": 350,
+        "min": 250,
         "ymax": "auto",
         "ymin": "auto"
       },
@@ -206,7 +206,7 @@
         "ymin": "auto"
       },
       "850": {
-        "max": 340,
+        "max": 350,
         "min": 250,
         "ymax": "auto",
         "ymin": "auto"
