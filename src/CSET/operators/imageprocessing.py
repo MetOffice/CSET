@@ -21,6 +21,7 @@ import iris.cube
 import numpy as np
 from skimage.metrics import structural_similarity
 
+from CSET._common import is_increasing
 from CSET.operators._utils import fully_equalise_attributes, get_cube_yxcoordname
 from CSET.operators.misc import _extract_common_time_points
 from CSET.operators.regrid import regrid_onto_cube
@@ -94,15 +95,6 @@ def _SSIM_cube_preparation(
             "Linear regridding base cube to other grid to compute differences"
         )
         base = regrid_onto_cube(base, other, method="Linear")
-
-    def is_increasing(sequence: list) -> bool:
-        """Determine the direction of an ordered sequence.
-
-        Returns a boolean indicating that the values of a sequence are
-        increasing. The sequence should already be monotonic, with no
-        duplicate values. An iris DimCoord's points fulfils this criteria.
-        """
-        return sequence[0] < sequence[1]
 
     # Figure out if we are comparing between UM and LFRic; flip array if so.
     base_lat_direction = is_increasing(base.coord(base_lat_name).points)
