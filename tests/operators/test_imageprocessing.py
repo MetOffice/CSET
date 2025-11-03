@@ -90,20 +90,9 @@ def test_structural_similarity_model_comparisons_MSSIM_name(cube: iris.cube.Cube
 
     # Find MSSIM.
     MSSIM_cube = imageprocessing.mean_structural_similarity_model_comparisons(cubes)
-    assert MSSIM_cube.standard_name is None
-    assert MSSIM_cube.long_name == "structural_similarity"
-
-
-def test_structural_similarity_model_comparisons_MSSIM_units(cube: iris.cube.Cube):
-    """Test renaming of cube."""
-    # Data preparation.
-    other_cube = cube.copy()
-    del other_cube.attributes["cset_comparison_base"]
-    cubes = iris.cube.CubeList([cube, other_cube])
-
-    assert imageprocessing.mean_structural_similarity_model_comparisons(
-        cubes
-    ).units == cf_units.Unit("1")
+    assert MSSIM_cube.standard_name is None, "Standard name does not match."
+    assert MSSIM_cube.long_name == "structural_similarity", "Long name does not match."
+    assert MSSIM_cube.units == cf_units.Unit("1"), "Units do not match."
 
 
 def test_structural_similarity_model_comparisons_SSIM_name(cube: iris.cube.Cube):
@@ -113,22 +102,11 @@ def test_structural_similarity_model_comparisons_SSIM_name(cube: iris.cube.Cube)
     del other_cube.attributes["cset_comparison_base"]
     cubes = iris.cube.CubeList([cube, other_cube])
 
-    # Find MSSIM.
-    MSSIM_cube = imageprocessing.spatial_structural_similarity_model_comparisons(cubes)
-    assert MSSIM_cube.standard_name is None
-    assert MSSIM_cube.long_name == "structural_similarity"
-
-
-def test_structural_similarity_model_comparisons_SSIM_units(cube: iris.cube.Cube):
-    """Test renaming of cube."""
-    # Data preparation.
-    other_cube = cube.copy()
-    del other_cube.attributes["cset_comparison_base"]
-    cubes = iris.cube.CubeList([cube, other_cube])
-
-    assert imageprocessing.spatial_structural_similarity_model_comparisons(
-        cubes
-    ).units == cf_units.Unit("1")
+    # Find SSIM.
+    SSIM_cube = imageprocessing.spatial_structural_similarity_model_comparisons(cubes)
+    assert SSIM_cube.standard_name is None, "Standard name does not match."
+    assert SSIM_cube.long_name == "structural_similarity", "Long name does not match."
+    assert SSIM_cube.units == cf_units.Unit("1"), "Units do not match."
 
 
 def test_SSIM_no_common_points(cube: iris.cube.Cube):
