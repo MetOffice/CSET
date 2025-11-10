@@ -21,7 +21,7 @@ setup: conda .git/hooks/pre-commit ## Setup development environment.
 	conda run -n cset-dev pip install --no-deps -e .
 
 docs: ## Build documentation.
-	cd docs && make html
+	make --directory=docs html
 
 pre-commit:
 	pre-commit run --all-files
