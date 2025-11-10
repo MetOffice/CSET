@@ -764,4 +764,5 @@ class NimrodRetriever(FileRetrieverABC):
         return True
 
 
-fetch_nimrod(NimrodRetriever())
+# fetch_nimrod(NimrodRetriever())
+fetch_nimrod()
