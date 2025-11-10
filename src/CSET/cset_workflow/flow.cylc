@@ -194,7 +194,9 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     inherit = FETCH_NIMROD
         [[[environment]]]
         ROSE_APP_COMMAND_KEY = "fetchnimrod"
-        NIMROD_FIELDS = {{NIMROD_FIELDS}}
+        NIMROD_FIELDS_COMP_HOUR = {{NIMROD_FIELDS_COMP_HOUR}}
+        NIMROD_FIELDS_1KM = {{NIMROD_FIELDS_1KM}}
+        NIMROD_FIELDS_2KM = {{NIMROD_FIELDS_2KM}}
     {% endif %}
 
     [[housekeeping]]
