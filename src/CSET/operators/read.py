@@ -927,7 +927,7 @@ def _lfric_time_callback(cube: iris.cube.Cube):
         try:
             tcoord.convert_units("hours since 1970-01-01 00:00:00")
         except ValueError:
-            logging.error("Unrecognised base time unit: {tcoord.units}")
+            logging.warning("Unrecognised base time unit: %s", tcoord.units)
 
         if not cube.coords("forecast_reference_time"):
             try:
