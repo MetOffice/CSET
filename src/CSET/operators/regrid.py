@@ -15,6 +15,7 @@
 """Operators to regrid cubes."""
 
 import warnings
+from typing import Literal
 
 import iris
 import iris.coord_systems
@@ -203,7 +204,7 @@ def regrid_to_single_point(
     cubes: iris.cube.Cube | iris.cube.CubeList,
     lat_pt: float,
     lon_pt: float,
-    latlon_in_type: str = "rotated",
+    latlon_in_type: Literal["rotated"] | Literal["realworld"] = "rotated",
     method: str = "Nearest",
     boundary_margin: int = 8,
     **kwargs,
@@ -225,6 +226,9 @@ def regrid_to_single_point(
     lat_pt: float
         Selected value of latitude: this should be in the range -90 degrees to
         90 degrees.
+    latlon_in_type: "rotated" | "realworld"
+        Whether to interpret the provided coordinates as relative to the
+        "rotated" model grid, or the "realworld" coordinates
     method: str
         Method used to determine the values at the selected longitude and
         latitude. The recommended approach is to use iris.analysis.Nearest(),
