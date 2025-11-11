@@ -1,0 +1,30 @@
+category: Convection
+title: "$MODEL_NAME Lightning presence spatial plot"
+description: |
+  Generates a mask of whether lightning is present in a grid box and provides a
+  spatial plot. A value of one implies lightning is present in the column;
+  a value of zero implies lightning is not present in the grid box column.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    constraint:
+        operator: constraints.combine_constraints
+        varname_constraint:
+            operator: constraints.generate_var_constraint
+            varname: "number_of_lightning_flashes_in_column"
+        cell_methods_constraint:
+            operator: constraints.generate_cell_methods_constraint
+            cell_methods: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: filters.generate_mask
+    condition: 'gt'
+    value: 0.0
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

@@ -178,14 +178,14 @@ def test_generate_mask_fail_wrong_condition(cube):
 
 def test_generate_mask_rename(cube):
     """Generates a mask and checks rename."""
-    expected = f"mask_for_{cube.name()}_==_276"
-    assert filters.generate_mask(cube, "==", 276).name() == expected
+    expected = f"mask_for_{cube.name()}_eq_276"
+    assert filters.generate_mask(cube, "eq", 276).name() == expected
 
 
 def test_generate_mask_units(cube):
     """Generates a mask and checks units."""
     expected = cf_units.Unit("1")
-    assert filters.generate_mask(cube, "==", 276).units == expected
+    assert filters.generate_mask(cube, "eq", 276).units == expected
 
 
 def test_generate_mask_equal_to(cube):
@@ -194,7 +194,7 @@ def test_generate_mask_equal_to(cube):
     mask.data = np.zeros(mask.data.shape)
     mask.data[cube.data == 276] = 1
     assert np.allclose(
-        filters.generate_mask(cube, "==", 276).data,
+        filters.generate_mask(cube, "eq", 276).data,
         mask.data,
         rtol=1e-06,
         atol=1e-02,
@@ -207,7 +207,7 @@ def test_generate_mask_not_equal_to(cube):
     mask.data = np.zeros(mask.data.shape)
     mask.data[cube.data != 276] = 1
     assert np.allclose(
-        filters.generate_mask(cube, "!=", 276).data,
+        filters.generate_mask(cube, "ne", 276).data,
         mask.data,
         rtol=1e-06,
         atol=1e-02,
@@ -220,7 +220,7 @@ def test_generate_mask_greater_than(cube):
     mask.data = np.zeros(mask.data.shape)
     mask.data[cube.data > 276] = 1
     assert np.allclose(
-        filters.generate_mask(cube, ">", 276).data,
+        filters.generate_mask(cube, "gt", 276).data,
         mask.data,
         rtol=1e-06,
         atol=1e-02,
@@ -233,7 +233,7 @@ def test_generate_mask_greater_equal_to(cube):
     mask.data = np.zeros(mask.data.shape)
     mask.data[cube.data >= 276] = 1
     assert np.allclose(
-        filters.generate_mask(cube, ">=", 276).data,
+        filters.generate_mask(cube, "ge", 276).data,
         mask.data,
         rtol=1e-06,
         atol=1e-02,
@@ -246,7 +246,7 @@ def test_generate_mask_less_than(cube):
     mask.data = np.zeros(mask.data.shape)
     mask.data[cube.data < 276] = 1
     assert np.allclose(
-        filters.generate_mask(cube, "<", 276).data,
+        filters.generate_mask(cube, "lt", 276).data,
         mask.data,
         rtol=1e-06,
         atol=1e-02,
@@ -259,7 +259,7 @@ def test_generate_mask_less_equal_to(cube):
     mask.data = np.zeros(mask.data.shape)
     mask.data[cube.data <= 276] = 1
     assert np.allclose(
-        filters.generate_mask(cube, "<=", 276).data,
+        filters.generate_mask(cube, "le", 276).data,
         mask.data,
         rtol=1e-06,
         atol=1e-02,
@@ -268,7 +268,7 @@ def test_generate_mask_less_equal_to(cube):
 
 def test_generate_mask_cube_list(cubes):
     """Generates masks for a cubelist."""
-    masks = filters.generate_mask(cubes, "<=", 276)
+    masks = filters.generate_mask(cubes, "le", 276)
     assert isinstance(masks, iris.cube.CubeList)
     masks_calc = iris.cube.CubeList([])
     for cube in cubes:
@@ -282,7 +282,7 @@ def test_generate_mask_cube_list(cubes):
 
 def test_apply_mask(cube):
     """Apply a mask to a cube."""
-    mask = filters.generate_mask(cube, "==", 276)
+    mask = filters.generate_mask(cube, "eq", 276)
     mask.data[mask.data == 0] = np.nan
     mask.data[~np.isnan(mask.data)] = 1
     test_data = cube.copy()

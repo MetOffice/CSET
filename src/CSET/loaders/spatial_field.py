@@ -94,6 +94,82 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+    # Surface Spatial Structural Similarity.
+    if conf.SPATIAL_STRUCTURAL_SIMILARITY_SURFACE_FIELD:
+        base_model = models[0]
+        for model, field, method in itertools.product(
+            models[1:], conf.SURFACE_FIELDS, conf.SPATIAL_SURFACE_FIELD_METHOD
+        ):
+            yield RawRecipe(
+                recipe="surface_structural_similarity_spatial_plot.yaml",
+                variables={
+                    "VARNAME": field,
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "METHOD": method,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
+    # Pressure level fields Spatial Structural Similarity.
+    if conf.SPATIAL_STRUCTURAL_SIMILARITY_PLEVEL_FIELD:
+        base_model = models[0]
+        for model, field, plevel, method in itertools.product(
+            models[1:],
+            conf.PRESSURE_LEVEL_FIELDS,
+            conf.PRESSURE_LEVELS,
+            conf.SPATIAL_PLEVEL_FIELD_METHOD,
+        ):
+            yield RawRecipe(
+                recipe="level_structural_similarity_spatial_plot.yaml",
+                variables={
+                    "VARNAME": field,
+                    "LEVELTYPE": "pressure",
+                    "LEVEL": plevel,
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "METHOD": method,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
+    # Model level fields Spatial Structural Similarity.
+    if conf.SPATIAL_STRUCTURAL_SIMILARITY_MLEVEL:
+        base_model = models[0]
+        for model, field, mlevel, method in itertools.product(
+            models[1:],
+            conf.MODEL_LEVEL_FIELDS,
+            conf.MODEL_LEVELS,
+            conf.SPATIAL_MLEVEL_FIELD_METHOD,
+        ):
+            yield RawRecipe(
+                recipe="level_structural_similarity_spatial_plot.yaml",
+                variables={
+                    "VARNAME": field,
+                    "LEVELTYPE": "model_level_number",
+                    "LEVEL": mlevel,
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "METHOD": method,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
     # Specific diagnostics require their own recipes for traceability. Therefore, these also
     # require individual loaders.
 
@@ -102,6 +178,21 @@ def load(conf: Config):
         if conf.AVIATION_FOG_PRESENCE_SPATIAL_PLOT:
             yield RawRecipe(
                 recipe="aviation_fog_presence_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
+        # Fog presence.
+        if conf.FOG_PRESENCE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="fog_presence_spatial_plot.yaml",
                 model_ids=model["id"],
                 variables={
                     "MODEL_NAME": model["name"],
@@ -128,6 +219,21 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+        # Lightning presence.
+        if conf.LIGHTNING_PRESENCE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="lightning_presence_spatial_seq_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
         # Presence of cloud base height lower than 50 m.
         if conf.CLOUD_BASE_HEIGHT_LESS_THAN_50_M_SPATIAL_PLOT:
             yield RawRecipe(
@@ -142,10 +248,41 @@ def load(conf: Config):
                 },
                 aggregation=False,
             )
+
+        # Daily lightning presence.
+        if conf.DAILY_LIGHTNING_PRESENCE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="daily_lightning_presence_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
         # Air frost presence.
         if conf.AIR_FROST_PRESENCE_SPATIAL_PLOT:
             yield RawRecipe(
                 recipe="air_frost_presence_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
+        # Ground frost presence.
+        if conf.GROUND_FROST_PRESENCE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="ground_frost_presence_spatial_plot.yaml",
                 model_ids=model["id"],
                 variables={
                     "MODEL_NAME": model["name"],
@@ -202,6 +339,51 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+        # Gale force winds presence.
+        if conf.SFC_GALE_FORCE_WINDS_PRESENCE_SPATIAL:
+            yield RawRecipe(
+                recipe="presence_of_gale_force_winds_at_surface_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
+        # Storm force winds presence.
+        if conf.SFC_STORM_FORCE_WINDS_PRESENCE_SPATIAL:
+            yield RawRecipe(
+                recipe="presence_of_storm_force_winds_at_surface_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
+        # Hurricane force winds presence.
+        if conf.SFC_HURRICANE_FORCE_WINDS_PRESENCE_SPATIAL:
+            yield RawRecipe(
+                recipe="presence_of_hurricane_force_winds_at_surface_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
         # Daily maximum temperature 09-09 UTC.
         if conf.DAILY_09_MAXIMUM_TEMPERATURE_SPATIAL_PLOT:
             yield RawRecipe(
@@ -244,6 +426,51 @@ def load(conf: Config):
                 variables={
                     "CONDITION": condition,
                     "THRESHOLD": threshold,
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
+
+        # Aviation colour state due to visibility.
+        if conf.AVIATION_COLOUR_STATE_VISIBILITY:
+            yield RawRecipe(
+                recipe="aviation_colour_state_visibility_spatial_plot.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
+
+        # Aviation colour state due to cloud base.
+        if conf.AVIATION_COLOUR_STATE_CLOUD_BASE:
+            yield RawRecipe(
+                recipe="aviation_colour_state_cloud_base_spatial_plot.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
+
+        # Aviation colour state.
+        if conf.AVIATION_COLOUR_STATE:
+            yield RawRecipe(
+                recipe="aviation_colour_state_spatial_plot.yaml",
+                variables={
                     "MODEL_NAME": model["name"],
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT

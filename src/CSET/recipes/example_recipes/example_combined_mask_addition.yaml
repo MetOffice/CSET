@@ -29,7 +29,7 @@ steps:
                 constraint:
                     operator: constraints.generate_var_constraint
                     varname: surface_altitude
-            condition: '<'
+            condition: 'lt'
             value: 500
         addend_2:
             operator: filters.generate_mask
@@ -38,7 +38,7 @@ steps:
                 constraint:
                     operator: constraints.generate_var_constraint
                     varname: surface_altitude
-            condition: '>'
+            condition: 'gt'
             value: 200
 
   - operator: collapse.collapse

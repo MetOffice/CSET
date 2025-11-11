@@ -83,10 +83,92 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+    # Surface Mean Structural Similarity.
+    if conf.MEAN_STRUCTURAL_SIMILARITY_SURFACE_FIELD:
+        base_model = models[0]
+        for model, field in itertools.product(models[1:], conf.SURFACE_FIELDS):
+            yield RawRecipe(
+                recipe="surface_structural_similarity_mean.yaml",
+                variables={
+                    "VARNAME": field,
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
+    # Pressure level fields Mean Structural Similarity.
+    if conf.MEAN_STRUCTURAL_SIMILARITY_PLEVEL_FIELD:
+        base_model = models[0]
+        for model, field, plevel in itertools.product(
+            models[1:],
+            conf.PRESSURE_LEVEL_FIELDS,
+            conf.PRESSURE_LEVELS,
+        ):
+            yield RawRecipe(
+                recipe="level_structural_similarity_mean.yaml",
+                variables={
+                    "VARNAME": field,
+                    "LEVELTYPE": "pressure",
+                    "LEVEL": plevel,
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
+    # Model level fields Mean Structural Similarity.
+    if conf.MEAN_STRUCTURAL_SIMILARITY_MLEVEL:
+        base_model = models[0]
+        for model, field, mlevel in itertools.product(
+            models[1:],
+            conf.MODEL_LEVEL_FIELDS,
+            conf.MODEL_LEVELS,
+        ):
+            yield RawRecipe(
+                recipe="level_structural_similarity_mean.yaml",
+                variables={
+                    "VARNAME": field,
+                    "LEVELTYPE": "model_level_number",
+                    "LEVEL": mlevel,
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
     # Aviation Fog presence
     if conf.AVIATION_FOG_PRESENCE_DOMAIN_MEAN_TIMESERIES:
         yield RawRecipe(
             recipe="aviation_fog_presence_domain_mean_time_series.yaml",
+            variables={
+                "MODEL_NAME": [model["name"] for model in models],
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+            },
+            model_ids=[model["id"] for model in models],
+            aggregation=False,
+        )
+
+    # Fog presence.
+    if conf.FOG_PRESENCE_DOMAIN_MEAN_TIMESERIES:
+        yield RawRecipe(
+            recipe="fog_presence_domain_mean_time_series.yaml",
             variables={
                 "MODEL_NAME": [model["name"] for model in models],
                 "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
@@ -109,6 +191,19 @@ def load(conf: Config):
             aggregation=False,
         )
 
+    # Lightning presence
+    if conf.LIGHTNING_PRESENCE_DOMAIN_TIME_SERIES:
+        yield RawRecipe(
+            recipe="lightning_presence_domain_mean_time_series.yaml",
+            variables={
+                "MODEL_NAME": [model["name"] for model in models],
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+            },
+            model_ids=[model["id"] for model in models],
+            aggregation=False,
+        )
+
     # Presence of cloud base height lower than 50 m
     if conf.CLOUD_BASE_HEIGHT_LESS_THAN_50_M_DOMAIN_MEAN_TIMESERIES:
         yield RawRecipe(
@@ -121,10 +216,24 @@ def load(conf: Config):
             model_ids=[model["id"] for model in models],
             aggregation=False,
         )
+
     # Air frost presence
     if conf.AIR_FROST_PRESENCE_DOMAIN_MEAN_TIMESERIES:
         yield RawRecipe(
             recipe="air_frost_presence_domain_mean_time_series.yaml",
+            variables={
+                "MODEL_NAME": [model["name"] for model in models],
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+            },
+            model_ids=[model["id"] for model in models],
+            aggregation=False,
+        )
+
+    # Ground frost presence
+    if conf.GROUND_FROST_PRESENCE_DOMAIN_MEAN_TIMESERIES:
+        yield RawRecipe(
+            recipe="ground_frost_presence_domain_mean_time_series.yaml",
             variables={
                 "MODEL_NAME": [model["name"] for model in models],
                 "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
@@ -164,6 +273,45 @@ def load(conf: Config):
     if conf.SFC_WIND_BEAUFORT_SCALE_DOMAIN_MEAN_TIMESERIES:
         yield RawRecipe(
             recipe="surface_wind_speed_on_beaufort_scale_domain_mean_time_series.yaml",
+            variables={
+                "MODEL_NAME": [model["name"] for model in models],
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+            },
+            model_ids=[model["id"] for model in models],
+            aggregation=False,
+        )
+
+    # Gale force winds presence.
+    if conf.SFC_GALE_FORCE_WINDS_PRESENCE_DOMAIN_MEAN_TIMESERIES:
+        yield RawRecipe(
+            recipe="presence_of_gale_force_winds_at_surface_domain_mean_time_series.yaml",
+            variables={
+                "MODEL_NAME": [model["name"] for model in models],
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+            },
+            model_ids=[model["id"] for model in models],
+            aggregation=False,
+        )
+
+    # Storm force winds presence.
+    if conf.SFC_STORM_FORCE_WINDS_PRESENCE_DOMAIN_MEAN_TIMESERIES:
+        yield RawRecipe(
+            recipe="presence_of_storm_force_winds_at_surface_domain_mean_time_series.yaml",
+            variables={
+                "MODEL_NAME": [model["name"] for model in models],
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+            },
+            model_ids=[model["id"] for model in models],
+            aggregation=False,
+        )
+
+    # Hurricane force winds presence.
+    if conf.SFC_HURRICANE_FORCE_WINDS_PRESENCE_DOMAIN_MEAN_TIMESERIES:
+        yield RawRecipe(
+            recipe="presence_of_hurricane_force_winds_at_surface_domain_mean_time_series.yaml",
             variables={
                 "MODEL_NAME": [model["name"] for model in models],
                 "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,

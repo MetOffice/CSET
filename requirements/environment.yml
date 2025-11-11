@@ -15,6 +15,7 @@ dependencies:
   - iris-grib
   - scipy
   - importlib_resources # For python < 3.12
+  - scikit-image # For image processing techniques.
 
   # Build dependencies
   - setuptools>=64

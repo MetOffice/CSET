@@ -17,7 +17,7 @@ jobs:
         id: conda-env-cache
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
-          key: conda|${{runner.os}}-${{runner.arch}}|${{hashFiles('requirements/locks/py313-lock-linux-64.txt')}}
+          key: conda|${{runner.os}}-${{runner.arch}}|${{hashFiles('requirements/locks/latest')}}
           path: |
             ~/conda-env
             ~/.local/share/cartopy
@@ -27,7 +27,7 @@ jobs:
         run: |
           # Check cache hasn't pulled a partial key match.
           test ! -e "${HOME}/conda-env"
-          conda create --prefix="${HOME}/conda-env" --file=requirements/locks/py313-lock-linux-64.txt
+          conda create --prefix="${HOME}/conda-env" --file=requirements/locks/latest
 
       - name: Add conda environment to PATH
         run: echo "${HOME}/conda-env/bin" >> $GITHUB_PATH
@@ -45,7 +45,7 @@ jobs:
           echo '::group::Checking for broken hyperlinks'
           sphinx-build -b linkcheck --color -W --keep-going "docs/source" "docs/build/linkcheck"
           echo '::endgroup::'
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         with:
           name: html-docs
           path: docs/build/html/

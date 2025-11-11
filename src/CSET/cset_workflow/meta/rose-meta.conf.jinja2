@@ -257,7 +257,7 @@ ns=Models
 title=Trial cycle period
 description=The period between model runs of the trial.
 help=The cycle period of the trial, as an ISO 8601 duration. This is the time
-    between each forecast initiation of the model. For example: PT48H
+    between each forecast initiation of the model. For example: PT48H or P7D
 type=quoted
 compulsory=true
 sort-key=models-c3
@@ -424,7 +424,7 @@ title=Data period
 description=Output frequency of the underlying data, e.g. PT1H
 help=The period of the input data in each file as an ISO 8601 duration. This
     is used to fetch files at regular validity or lead times.
-
+    For example: PT48H or P7D
 type=quoted
 compulsory=true
 sort-key=b2
@@ -434,9 +434,11 @@ ns=Models/Model {{ "%02d" % model_id }}
 title=Analysis offset
 description=Offset from forecast initiation to verification start, e.g. PT1H
 help=The offset in time between the forecast initiation and the start of the
-    analysis period, AKA the first validity time, as an ISO 8601 duration. This
-    is useful when required fields are not output on the first time step; if
-    they are it should probably be set to PT0H, meaning no offset.
+    analysis period, AKA the first validity time, as an ISO 8601 duration.
+    For example: PT48H or P7D
+
+    This is useful when required fields are not output on the first time step;
+    if they are it should probably be set to PT0H, meaning no offset.
 type=quoted
 compulsory=true
 sort-key=b3
