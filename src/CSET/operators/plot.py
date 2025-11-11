@@ -1290,35 +1290,34 @@ def _plot_and_save_power_spectrum_series(
     for cube in iter_maybe(cubes):
         # Calculate power spectrum
 
-        # If cube is a CubeList, extract the first cube
-        if isinstance(cube, iris.cube.CubeList):
-            cube = cube[0]
-
         # Extract time coordinate and convert to datetime
-        if cube.coords("time"):
-            time_coord = cube.coord("time")
-            time_points = time_coord.units.num2date(time_coord.points)
+        #        if cube.coords("time"):
+        time_coord = cube.coord("time")
+        time_points = time_coord.units.num2date(time_coord.points)
 
-            # Choose one time point (e.g., the first one)
-            target_time = time_points[0]
+        # Choose one time point (e.g., the first one)
+        target_time = time_points[0]
 
-            # Bind target_time inside the lambda using a default argument
-            time_constraint = iris.Constraint(
-                time=lambda cell, target_time=target_time: cell.point == target_time
-            )
+        # Bind target_time inside the lambda using a default argument
+        time_constraint = iris.Constraint(
+            time=lambda cell, target_time=target_time: cell.point == target_time
+        )
 
-            cube = cube.extract(time_constraint)
+        cube = cube.extract(time_constraint)
 
         if cube.ndim == 2:
             cube_3d = cube.data[np.newaxis, :, :]
+            logging.debug("Adding in new axis for a 2 dimensional cube.")
         elif cube.ndim == 3:
             cube_3d = cube.data
         else:
             raise ValueError("Cube dimensions unsuitable for power spectra code")
+            raise ValueError(
+                f"Cube is {cube.ndim} dimensional. Cube should be 2 or 3 dimensional."
+            )
 
         # Calculate spectra
-        #    ps_cube = DCT_ps(cube_3d)
-        ps_array = DCT_ps(cube_3d)
+        ps_array = _DCT_ps(cube_3d)
 
         ps_cube = iris.cube.Cube(
             ps_array,
@@ -2720,11 +2719,20 @@ def plot_power_spectrum_series(
     return cubes
 
 
-def DCT_ps(y_3d):
+def _DCT_ps(y_3d):
     """Calculate power spectra for regional domains.
 
-    # Regional domains:
-    # Calculate power spectra over limited are domain using Discrete Cosine Transform (DCT)
+    Parameters
+    ----------
+    y_3d: 3D array
+        3 dimensional array to calculate spectrum for.
+        (2D field data with 3rd dimension of time)
+
+    Returns: ps_array
+        Array of power spectra values calculated for input field (for each time)
+
+    # Method for regional domains:
+    # Calculate power spectra over limited area domain using Discrete Cosine Transform (DCT)
     # as described in Denis et al 2002 [Denis_etal_2002]_.
 
     References
@@ -2741,7 +2749,7 @@ def DCT_ps(y_3d):
     Nmin = min(Nx - 1, Ny - 1)
 
     # Create alpha matrix (of wavenumbers)
-    alpha_matrix = create_alpha_matrix(Ny, Nx)
+    alpha_matrix = _create_alpha_matrix(Ny, Nx)
 
     # Prepare output array
     ps_array = np.zeros((Nt, Nmin))
@@ -2775,11 +2783,20 @@ def DCT_ps(y_3d):
     return ps_array
 
 
-def create_alpha_matrix(Ny, Nx):
+def _create_alpha_matrix(Ny, Nx):
     """Construct an array of 2D wavenumbers from 2D wavenumber pair.
 
-    Each pair is associated with a single-scale parameter. alpha_matrix is normalisation of
-    2D wavenumber axes, transforming the spectral domain into an elliptic coordinate system.
+    Parameters
+    ----------
+    Ny, Nx:
+        Dimensions of the 2D field for which the power spectra is calculated. Used to
+        create the array of 2D wavenumbers. Each Ny, Nx pair is associated with a
+        single-scale parameter.
+
+    Returns: alpha_matrix
+        normalisation of 2D wavenumber axes, transforming the spectral domain into
+        an elliptic coordinate system.
+
     """
     # Create x_indices: each row is [1, 2, ..., Nx]
     x_indices = np.tile(np.arange(1, Nx + 1), (Ny, 1))

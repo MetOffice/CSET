@@ -10,6 +10,17 @@ description: |
   In case of ensemble data choose from postage stamp plot or
   single plot via the single_plot option in the recipe directly.
 
+  Power spectra can be used to identify how the variance (energy) of a field is distributed across scales.
+  The power (energy) is plotted against wavenumber, where low wavenumbers represent large-scale features
+  and high numbers represent small-scale features.  Using a log-log scale for plotting allows for ease of
+  interpretation and the spectra are normalised to allow for comparison between different models.
+
+  The dominant scales of motion can be identified by peaks in the spectrum and the slope of the curve shows
+  how the energy cascades across scales; the slope can be used to identify, for example, the inertial subrange
+  (slope of gradient -5/3).  Caution is advised when interpreting the spectra at high wavenumbers due to,
+  for example, aliasing which can occur when the grid is too coarse to resolve the smallest-scale features
+  and often manifests as spurious spikes or increases in the power at the high wavenumbers.
+
 steps:
   - operator: read.read_cubes
     model_names: $MODEL_NAME
