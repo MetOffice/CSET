@@ -262,11 +262,11 @@ def fetch_data(file_retriever: FileRetrieverABC):
 
     # Use file retriever to transfer data with multiple threads.
     with file_retriever() as retriever, ThreadPoolExecutor() as executor:
-        files_found = any(
-            executor.map(retriever.get_file, paths, itertools.repeat(cycle_data_dir))
+        files_found = executor.map(
+            retriever.get_file, paths, itertools.repeat(cycle_data_dir)
         )
-    # We don't need to exhaust the iterator, as all futures are submitted
-    # before map yields anything. Therefore they will all be resolved upon
-    # exiting the with block.
-    if not files_found:
+        # Exhaust the iterator with list so all futures get resolved before we
+        # exit the with block, ensuring all files are retrieved.
+        any_files_found = any(list(files_found))
+    if not any_files_found:
         raise FileNotFoundError("No files found for model!")
