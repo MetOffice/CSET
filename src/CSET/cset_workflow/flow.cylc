@@ -104,7 +104,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         script = rose task-run -v --app-key=parbake_recipes
         execution time limit = PT5M
         [[[environment]]]
-        ENCODED_ROSE_SUITE_VARIABLES = {{b64json(ROSE_SUITE_VARIABLES)}}
+            ENCODED_ROSE_SUITE_VARIABLES = {{b64json(ROSE_SUITE_VARIABLES)}}
         [[[outputs]]]
             start_baking='start baking'
             skip_baking='skip baking'

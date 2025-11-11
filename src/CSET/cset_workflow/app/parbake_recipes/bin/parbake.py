@@ -53,8 +53,8 @@ def main():
     recipe_count = parbake_all(variables, rose_datac, share_dir, aggregation)
 
     # If running under cylc, notify cylc of task completion.
-    cylc_workflow_id = os.environ.get("CYLC_WORKFLOW_ID", None)
-    cylc_task_job = os.environ.get("CYLC_TASK_JOB", None)
+    cylc_workflow_id = os.getenv("CYLC_WORKFLOW_ID")
+    cylc_task_job = os.getenv("CYLC_TASK_JOB")
     if cylc_workflow_id and cylc_task_job:
         message_command = [
             "cylc",
@@ -63,10 +63,10 @@ def main():
             cylc_workflow_id,
             cylc_task_job,
         ]
-        if recipe_count > 0:
-            subprocess.run(message_command + ["start baking"])
+        if recipe_count:
+            subprocess.run(message_command + ["start baking"], check=True)
         else:
-            subprocess.run(message_command + ["skip baking"])
+            subprocess.run(message_command + ["skip baking"], check=True)
 
 
 if __name__ == "__main__":  # pragma: no cover
