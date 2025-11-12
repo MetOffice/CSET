@@ -2770,9 +2770,9 @@ def _DCT_ps(y_3d):
     Returns: ps_array
         Array of power spectra values calculated for input field (for each time)
 
-    # Method for regional domains:
-    # Calculate power spectra over limited area domain using Discrete Cosine Transform (DCT)
-    # as described in Denis et al 2002 [Denis_etal_2002]_.
+    Method for regional domains:
+    Calculate power spectra over limited area domain using Discrete Cosine Transform (DCT)
+    as described in Denis et al 2002 [Denis_etal_2002]_.
 
     References
     ----------
