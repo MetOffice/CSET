@@ -1296,7 +1296,6 @@ def _plot_and_save_power_spectrum_series(
         # Calculate power spectrum
 
         # Extract time coordinate and convert to datetime
-        #        if cube.coords("time"):
         time_coord = cube.coord("time")
         time_points = time_coord.units.num2date(time_coord.points)
 
