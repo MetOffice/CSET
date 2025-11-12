@@ -1347,7 +1347,6 @@ def _plot_and_save_power_spectrum_series(
         ps_cube.add_dim_coord(new_time_coord.copy(), 0)
         ps_cube.add_dim_coord(freq_coord.copy(), 1)
 
-        #    for cube in iter_maybe(cubes):
         # Extract data from the cube
         frequency = ps_cube.coord("frequency").points
         power_spectrum = ps_cube.data
