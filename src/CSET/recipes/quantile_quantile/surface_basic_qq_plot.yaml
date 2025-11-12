@@ -1,6 +1,6 @@
 category: Q-Q plots
 title: Surface Q-Q plot for $VARNAME between $BASE_MODEL and $OTHER_MODEL
-description: Extracts $VARNAME, calculates the following quantiles $PERCENTILES collapsing the data across $COORD_LIST and including ensemble members and shared time points. The quantiles are then plotted as $BASE_MODEL (x-axis) against $OTHER_MODEL (y-axis).
+description: Extracts $VARNAME, calculates the following quantiles $PERCENTILES collapsing the data across $COORD_LIST and including ensemble members and shared time points. The quantiles are then plotted as $BASE_MODEL (x-axis) against $OTHER_MODEL (y-axis). Data on or near the 45 degree line suggest both datasets have similar distributions. Wide scatter around the line indicates variability or outliers. Above or below the line suggest one dataset hjas larger or smaller values. Curvature (concave or convex) in the tails indicates one distribution has a heavier tail than the other. 
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
