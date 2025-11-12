@@ -2297,7 +2297,8 @@ def qq_plot(
 ) -> iris.cube.CubeList:
     """Plot a Quantile-Quantile plot between two models.
 
-    The cubes will be normalised and collapsed within the operator.
+    The cubes will be normalised by collapsing each cube to its percentiles and 
+    collapsed within the operator.
 
     Parameters
     ----------
@@ -2323,9 +2324,13 @@ def qq_plot(
 
     Notes
     -----
-    The quantile-quantile plot is a variant on the scatter plot. This plot does
-    not use all data points, but the selected quantiles of each variable
-    instead. Quantile-quantile plots are valuable for comparing against
+    The quantile-quantile plot is a variant on the scatter plot representing 
+    two datasets by their quantiles (percentiles). 
+    This plot does not use a theoretical distribution to compare against, but 
+    compares percentiles of two datasets. This plot does
+    not use all raw data points, but the selected percentiles (quantiles) of 
+    each variable instead, thereby normalising the data for a direct comparison. 
+    Quantile-quantile plots are valuable for comparing against
     observations and other models. Identical percentiles between the variables
     will lie on the one-to-one line implying the values correspond well to each
     other. Where there is a deviation from the one-to-one line a range of
