@@ -17,6 +17,7 @@
 import datetime
 import logging
 
+import cf_units
 import iris
 import iris.coord_systems
 import iris.coords
@@ -1050,3 +1051,22 @@ def test_read_cubes_unknown_subarea_method():
             subarea_type="any_old_method",
             subarea_extent=[-5.5, 5.5, -125.5, 125.5],
         )[0]
+
+
+def test_proleptic_gregorian_fix():
+    """Ensure proleptic gregorian calendars are normalised to standard."""
+    time_coord = iris.coords.DimCoord(
+        [1, 2, 3],
+        standard_name="time",
+        units=cf_units.Unit(
+            "hours since 1970-01-01T00:00:00", calendar="proleptic_gregorian"
+        ),
+    )
+    cube = iris.cube.Cube(
+        [1, 2, 3], var_name="test", dim_coords_and_dims=[(time_coord, 0)]
+    )
+    assert cube.coord("time").units.calendar == "proleptic_gregorian"
+
+    read._proleptic_gregorian_fix(cube)
+    assert cube.coord("time").units.calendar == "standard"
+    assert cube.coord("time").units.origin == "hours since 1970-01-01T00:00:00"
