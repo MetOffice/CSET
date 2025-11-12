@@ -2295,9 +2295,9 @@ def qq_plot(
     one_to_one: bool = True,
     **kwargs,
 ) -> iris.cube.CubeList:
-    """Plot a Quantile-Quantile plot between two models.
+    """Plot a Quantile-Quantile plot between two models for common time points.
 
-    The cubes will be normalised by collapsing each cube to its percentiles. It is
+    The cubes will be normalised by collapsing each cube to its percentiles. Cubes are
     collapsed within the operator over all specified coordinates such as 
     grid_latitude, grid_longitude, vertical levels, but also realisation representing 
     ensemble members to ensure a 1D cube (array).
@@ -2327,7 +2327,7 @@ def qq_plot(
     Notes
     -----
     The quantile-quantile plot is a variant on the scatter plot representing 
-    two datasets by their quantiles (percentiles). 
+    two datasets by their quantiles (percentiles) for common time points. 
     This plot does not use a theoretical distribution to compare against, but 
     compares percentiles of two datasets. This plot does
     not use all raw data points, but plots the selected percentiles (quantiles) of 
