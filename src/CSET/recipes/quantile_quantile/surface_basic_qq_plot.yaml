@@ -1,6 +1,6 @@
 category: Q-Q plots
 title: Surface Q-Q plot for $VARNAME between $BASE_MODEL and $OTHER_MODEL
-description: Extracts $VARNAME, calculates the following quantiles $PERCENTILES. The quantiles are then plotted as $BASE_MODEL (x-axis) against $OTHER_MODEL (y-axis).
+description: Extracts $VARNAME, calculates the following quantiles $PERCENTILES collapsing the data across $COORD_LIST and including ensemble members and shared time points. The quantiles are then plotted as $BASE_MODEL (x-axis) against $OTHER_MODEL (y-axis).
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
