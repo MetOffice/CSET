@@ -945,10 +945,10 @@ def test_create_alpha_matrix_values():
 
 
 def test_dct_ps_output_shape():
-    """Test shape of power spectrum output from DCT_ps."""
+    """Test shape of power spectrum output from _DCT_ps."""
     Nt, Ny, Nx = 5, 10, 10
     y_3d = np.random.rand(Nt, Ny, Nx)
-    ps = plot.DCT_ps(y_3d)
+    ps = plot._DCT_ps(y_3d)
     expected_shape = (Nt, min(Nx - 1, Ny - 1))
     assert ps.shape == expected_shape, "Power spectrum output shape mismatch"
 
@@ -957,16 +957,16 @@ def test_dct_ps_non_negative():
     """Test power spectrum only contains positive values."""
     Nt, Ny, Nx = 3, 8, 8
     y_3d = np.random.rand(Nt, Ny, Nx)
-    ps = plot.DCT_ps(y_3d)
+    ps = plot._DCT_ps(y_3d)
     assert np.all(ps >= 0), "Power spectrum contains negative values"
 
 
 def test_dct_ps_known_input():
-    """Test DCT_ps produces non-zero spectrum for constant input."""
+    """Test _DCT_ps produces non-zero spectrum for constant input."""
     # Use a constant field to test expected behavior
     Nt, Ny, Nx = 2, 4, 4
     y_3d = np.ones((Nt, Ny, Nx))
-    ps = plot.DCT_ps(y_3d)
+    ps = plot._DCT_ps(y_3d)
     assert np.allclose(ps[:, 1:], 0, atol=1e-6), "Non-zero spectrum for constant input"
 
 
