@@ -930,14 +930,14 @@ def test_plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
 def test_create_alpha_matrix_shape():
     """Test shape of alpha matrix used in power spectrum calculation."""
     Ny, Nx = 10, 15
-    alpha = plot.create_alpha_matrix(Ny, Nx)
+    alpha = plot._create_alpha_matrix(Ny, Nx)
     assert alpha.shape == (Ny, Nx), "Alpha matrix shape mismatch"
 
 
 def test_create_alpha_matrix_values():
     """Test alpha matrix contains only positive values."""
     Ny, Nx = 4, 4
-    alpha = plot.create_alpha_matrix(Ny, Nx)
+    alpha = plot._create_alpha_matrix(Ny, Nx)
     assert np.all(alpha >= 0), "Alpha matrix contains negative values"
     assert np.isclose(alpha[0, 0], np.sqrt((1 / Nx) ** 2 + (1 / Ny) ** 2)), (
         "Alpha matrix value incorrect"
