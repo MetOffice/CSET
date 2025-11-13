@@ -507,11 +507,10 @@ def test_vector_plot_check(vector_cubes, tmp_working_dir):
         )
 
 
-def test_postage_stamp_contour_plot(ensemble_cube, monkeypatch, tmp_path):
+def test_postage_stamp_contour_plot(ensemble_cube, tmp_working_dir):
     """Plot postage stamp plots of ensemble data."""
     # Get a single time step.
     ensemble_cube_3d = next(ensemble_cube.slices_over("time"))
-    monkeypatch.chdir(tmp_path)
     plot.spatial_contour_plot(ensemble_cube_3d)
     assert Path("untitled_463858.0.png").is_file()
 
@@ -572,11 +571,10 @@ def test_pcolormesh_plot_global(global_cube, caplog, tmp_working_dir):
     assert message_match
 
 
-def test_postage_stamp_pcolormesh_plot(ensemble_cube, monkeypatch, tmp_path):
+def test_postage_stamp_pcolormesh_plot(ensemble_cube, tmp_working_dir):
     """Plot postage stamp plots of ensemble data."""
     # Get a single time step.
     ensemble_cube_3d = next(ensemble_cube.slices_over("time"))
-    monkeypatch.chdir(tmp_path)
     plot.spatial_pcolormesh_plot(ensemble_cube_3d)
     assert Path("untitled_463858.0.png").is_file()
 
@@ -995,7 +993,7 @@ def make_test_cube_power_spectrum(shape=(1, 10, 10), time_points=None):
     return cube
 
 
-def test_calculate_power_spectrum_raises_for_bad_dim():
+def test_calculate_power_spectrum_raises_for_bad_dim(tmp_working_dir):
     """Check error is raised if the cube has too many dimensions."""
     cube_3d = make_test_cube_power_spectrum()
 
@@ -1023,7 +1021,7 @@ def test_calculate_power_spectrum_raises_for_bad_dim():
         plot.plot_power_spectrum_series(cubes=cube_5d)
 
 
-def test_calculate_power_spectrum_raises_for_bad_dim_1D():
+def test_calculate_power_spectrum_raises_for_bad_dim_1D(tmp_working_dir):
     """Check error is raised if the cube has too few dimensions."""
     cube_3d = make_test_cube_power_spectrum()
 
