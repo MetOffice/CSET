@@ -1,0 +1,46 @@
+category: Convection
+title: "Daily occurrence of lightning at 0900 UTC\nDifference ($BASE_MODEL - $OTHER_MODEL)"
+description: |
+  Extracts and plots the daily presence of lightning between 0900 UTC and 0900 UTC
+  the following day and plots the difference. The presence
+  is created from a rolling 24 h window, adds hour of day coordinate, and then
+  selects the 21 UTC hour from the rolling window as this represents the validity
+  time of the required range. The lightning can occur any time in the 24
+  h window.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: [$BASE_MODEL, $OTHER_MODEL]
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: "number_of_lightning_flashes_in_column"
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: filters.generate_mask
+    condition: 'gt'
+    value: 0.0
+
+  - operator: aggregate.rolling_window_time_aggregation
+    method: 'MAX'
+    window: 24
+
+  - operator: misc.difference
+
+  - operator: aggregate.add_hour_coordinate
+
+  - operator: filters.filter_multiple_cubes
+    constraint:
+      operator: constraints.generate_hour_constraint
+      hour_start: 21
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

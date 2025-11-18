@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2025) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -162,8 +162,24 @@ def test_difference(cube: iris.cube.Cube):
         difference_cube.data, np.zeros_like(difference_cube.data), atol=1e-9
     )
     assert difference_cube.standard_name is None
-    assert difference_cube.long_name == cube.standard_name + "_difference"
-    assert difference_cube.var_name == cube.var_name + "_difference"
+    assert difference_cube.long_name == "temperature_at_screen_level_difference"
+    assert difference_cube.var_name == "air_temperature_difference"
+
+
+def test_difference_standard_name_fallback(cube: iris.cube.Cube):
+    """Test falling back to the standard name if no long name."""
+    # Data preparation.
+    cube.long_name = None
+    other_cube = cube.copy()
+    del other_cube.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([cube, other_cube])
+
+    # Take difference.
+    difference_cube = misc.difference(cubes)
+
+    assert difference_cube.standard_name is None
+    assert difference_cube.long_name == "air_temperature_difference"
+    assert difference_cube.var_name == "air_temperature_difference"
 
 
 def test_difference_no_time_coord(cube):
@@ -313,3 +329,29 @@ def test_extract_common_time_points_no_overlap():
     )
     with pytest.raises(ValueError, match="No common time points found!"):
         misc._extract_common_time_points(c1, c2)
+
+
+def test_convert_units(cube):
+    """Test conversion of units."""
+    new_cube = misc.convert_units(cube, "Celsius")
+    expected_cube = cube.copy()
+    expected_cube -= 273.15
+    expected_cube.units = "Celsius"
+    expected_cube.rename(f"{expected_cube.name()}_{expected_cube.units}")
+    assert expected_cube.units == new_cube.units
+    assert np.allclose(expected_cube.data, new_cube.data, rtol=1e-6, atol=1e-2)
+
+
+def test_convert_units_cubelist(cube):
+    """Test converting units of a cubelist."""
+    cube_list = iris.cube.CubeList([cube, cube])
+    new_cubelist = misc.convert_units(cube_list, "Celsius")
+    expected_cubelist = iris.cube.CubeList([])
+    for cube in cube_list:
+        cube_a = cube.copy()
+        cube_a -= 273.15
+        cube_a.units = "Celsius"
+        expected_cubelist.append(cube_a)
+    for actual, expected in zip(new_cubelist, expected_cubelist, strict=True):
+        assert actual.units == expected.units
+        assert np.allclose(actual.data, expected.data, rtol=1e-6, atol=1e-2)

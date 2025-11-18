@@ -367,3 +367,9 @@ def test_sstrip():
     # Test all those cases.
     for case, expected in test_cases:
         assert common.sstrip(case) == expected
+
+
+def test_is_increasing():
+    """Check order of strictly monotonic sequences is determined."""
+    assert common.is_increasing([1, 2, 3])
+    assert not common.is_increasing([3, 2, 1])

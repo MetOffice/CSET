@@ -5,16 +5,14 @@ description = Workflow for running CSET.
 URL = https://metoffice.github.io/CSET
 
 # Import all of our Jinja utilities for use in the workflow.
-{% from "jinja_utils" import b64json, get_model_names, get_model_ids, get_models, glob, max, min, zip, sanitise_task_name %}
+{% from "jinja_utils" import b64json, get_models %}
 # Load a list a model detail dictionaries.
 {% set models = get_models(ROSE_SUITE_VARIABLES) %}
-{% set model_ids = get_model_ids(models) %}
-{% set model_names = get_model_names(models) %}
-# Create a list of case aggregation types.
-{% set AGGREGATION_TYPES = ["LEAD_TIME", "HOUR_OF_DAY", "VALIDITY_TIME", "ALL"] %}
 
 
 [scheduling]
+# Allow many concurrent cycles to maximise workflow parallelism.
+runahead limit = P100
 # Initial and final cycle points cover the entire period of interest.
 {% if CSET_CYCLING_MODE == "case_study" %}
 initial cycle point = {{ CSET_CASE_DATES|min }}
@@ -27,7 +25,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     [[special tasks]]
     # cycle_complete depends on its previous instance. We then don't need to
     # know the offset between the cycles.
-    sequential = cycle_complete
+    sequential = fetch_complete, cycle_complete
 
     [[graph]]
     # Only runs on the first cycle.
@@ -40,37 +38,28 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         # Runs for every forecast initiation time to process the data in parallel.
         {% for date in CSET_CASE_DATES %}
             R1/{{date}} = """
-            setup_complete[^] =>
-            FETCH_DATA:succeed-all =>
-            FETCH_OBS:succeed-all =>
-            fetch_complete =>
-            PROCESS:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} =>
-            cycle_complete
+            setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
+            setup_complete[^] => FETCH_OBS:succeed-all => fetch_complete
+            fetch_complete & parbake_recipes => bake_recipes => cycle_complete
             """
         {% endfor %}
     {% elif CSET_CYCLING_MODE == "trial" %}
         # Analysis from each forecast.
         {{CSET_TRIAL_CYCLE_PERIOD}} = """
-        setup_complete[^] =>
-        FETCH_DATA:succeed-all =>
-        FETCH_OBS:succeed-all =>
-        fetch_complete =>
-        PROCESS:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} =>
-        cycle_complete
+        setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
+        setup_complete[^] => FETCH_OBS:succeed-all => fetch_complete
+        fetch_complete & parbake_recipes => bake_recipes => cycle_complete
         """
     {% endif %}
 
-    # Can only run tasks on final cycle point if it exists, so skip for
-    # continuous trials.
-    {% if CSET_CYCLING_MODE != "trial" or CSET_TRIAL_END_DATE|default(False) %}
     # Only runs on the final cycle.
     R1/$ = """
-    cycle_complete =>
-    PROCESS_CASE_AGGREGATION:{% if LOGLEVEL == "DEBUG" %}succeed-all{% else %}finish-all{% endif %} =>
-    finish_website => send_email
-    finish_website => housekeeping
+    # Run aggregation recipes.
+    fetch_complete & parbake_aggregation_recipes => bake_aggregation_recipes => cycle_complete
+    # Finalise website and cleanup.
+    cycle_complete => finish_website => send_email
+    cycle_complete => housekeeping
     """
-    {% endif %}
 
 
 [runtime]
@@ -104,26 +93,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         SKIP_WRITE = True
         {% endif %}
 
-
-    [[PROCESS]]
-    script = rose task-run -v --app-key=run_cset_recipe
-    execution time limit = PT30M
-    execution retry delays = PT1M, PT15M, PT1H
-    [[[directives]]]
-        --mem=10000
-    [[[environment]]]
-        PLOTTING_PROJECTION = {{PLOTTING_PROJECTION | default("")}}
-
-    [[PROCESS_CASE_AGGREGATION]]
-    script = rose task-run -v --app-key=run_cset_recipe
-    execution time limit = PT3H
-        [[[directives]]]
-        --mem=100000
-        [[[environment]]]
-        PLOTTING_PROJECTION = {{PLOTTING_PROJECTION | default("")}}
-        # As this process is used for case aggregation we hard code to True.
-        DO_CASE_AGGREGATION = True
-
     [[FETCH_DATA]]
     script = rose task-run -v --app-key=fetch_fcst
     execution time limit = PT1H
@@ -148,7 +117,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     # Noop tasks to ensure a complete/efficient workflow graph.
     [[DUMMY_TASK]]
     script = true
-    platform = localhost
     execution time limit = PT1M
     run mode = skip
 
@@ -160,15 +128,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
 
     [[cycle_complete]]
     inherit = DUMMY_TASK
-
-    [[dummy_fetch_obs]]
-    inherit = DUMMY_TASK, FETCH_OBS
-
-    [[dummy_process]]
-    inherit = DUMMY_TASK, PROCESS
-
-    [[dummy_process_case_aggregation]]
-    inherit = DUMMY_TASK, PROCESS_CASE_AGGREGATION
 
     [[validate_environment]]
     # Checks the environment works and the cset command is available.
@@ -214,6 +173,33 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         OBS_SUBTYPE = "LNDSYB"
     {% endif %}
 
+    [[parbake_recipes]]
+    # Parbake all the recipes for this cycle.
+    script = rose task-run -v --app-key=parbake_recipes
+    execution time limit = PT5M
+        [[[environment]]]
+        ENCODED_ROSE_SUITE_VARIABLES = {{b64json(ROSE_SUITE_VARIABLES)}}
+
+    [[parbake_aggregation_recipes]]
+    # Parbake all the aggregation recipes.
+    script = rose task-run -v --app-key=parbake_recipes
+    execution time limit = PT5M
+        [[[environment]]]
+        ENCODED_ROSE_SUITE_VARIABLES = {{b64json(ROSE_SUITE_VARIABLES)}}
+        DO_CASE_AGGREGATION = True
+
+    [[bake_recipes]]
+    # Bake the parbaked recipes for this cycle.
+    script = "$CYLC_WORKFLOW_RUN_DIR/app/bake_recipes/bin/baker.sh"
+    execution time limit = PT3H
+
+    [[bake_aggregation_recipes]]
+    # Bake the parbaked aggregation recipes.
+    script = "$CYLC_WORKFLOW_RUN_DIR/app/bake_recipes/bin/baker.sh"
+    execution time limit = PT3H
+        [[[environment]]]
+        DO_CASE_AGGREGATION = True
+
     [[housekeeping]]
     # Housekeep input data files.
         [[[environment]]]
@@ -227,11 +213,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         [[[environment]]]
         WEB_ADDR = {{WEB_ADDR}}
         WEB_DIR = {{WEB_DIR}}
-
-# Include files bring their own graph and runtime sections.
-{% for include_file in glob("includes/*.cylc") %}
-{% include include_file %}
-{% endfor %}
 
 # Site-specific details that add to or override the core workflow definition.
 {% include 'site/' ~ SITE ~ '.cylc' %}

@@ -8,20 +8,20 @@ show_help()
   cat << EOF
 Usage: ${0} [-b branch-name] [-R repository]
 
-  * Repository defaults to https://github.com/MetOffice/CSET-workflow
+  * Repository defaults to https://github.com/MetOffice/CSET-restricted-files
   * Branch defaults to main
   * Most people should omit both, and use the default values
 
 This script downloads and install Momentum® Partnership restricted files and
 code for use in CSET. Make sure you have git authentication setup for the
-repository at https://github.com/MetOffice/CSET-workflow
+repository at https://github.com/MetOffice/CSET-restricted-files
 EOF
   exit "$1"
 }
 
 # Set defaults. These are left unchanged if the option isn't specified.
 branch="main"
-httpurl="https://github.com/MetOffice/CSET-workflow"
+httpurl="https://github.com/MetOffice/CSET-restricted-files"
 
 # Parse options.
 while getopts "hb:R:" opt

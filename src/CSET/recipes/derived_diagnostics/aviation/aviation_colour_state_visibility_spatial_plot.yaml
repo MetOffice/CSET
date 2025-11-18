@@ -1,0 +1,29 @@
+category: Aviation
+title: $MODEL_NAME aviation colour state due to visibility spatial plot
+description: |
+  Generates a plot of the aviation colour state due to visibility at the surface.
+  The aviation colour state can be found on the [Met Office website](https://www.metoffice.gov.uk/services/transport/aviation/regulated/national-aviation/abs/faqs). The colours
+  are more important than the values which are used to create the colourbar and
+  calculate the aviation colour state.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    constraint:
+        operator: constraints.combine_constraints
+        varname_constraint:
+            operator: constraints.generate_var_constraint
+            varname: visibility_in_air
+        cell_methods_constraint:
+            operator: constraints.generate_cell_methods_constraint
+            cell_methods: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: aviation.aviation_colour_state_visibility
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

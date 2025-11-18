@@ -21,10 +21,11 @@ from pathlib import Path
 import iris.coords
 import iris.cube
 import matplotlib as mpl
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from CSET.operators import collapse, plot
+from CSET.operators import collapse, misc, plot, read
 
 
 def test_check_single_cube():
@@ -242,6 +243,219 @@ def test_colorbar_map_levels_missing_pressure_level(
         ]
 
 
+def test_setup_spatial_map(cube):
+    """Setup spatial map."""
+    # Test setup map function returns GeoAxes instance.
+    figure = mpl.figure.Figure()
+    axes = plot._setup_spatial_map(cube, figure, mpl.colormaps["viridis"])
+    assert axes == figure.gca()
+    # Test bounds - set as global as rotated pole input.
+    bounds = axes.get_extent()
+    assert bounds[0] == -180.0
+    assert bounds[1] == 180.0
+    assert bounds[2] == -90.0
+    assert bounds[3] == 90.0
+
+
+def test_setup_spatial_map_dateline(cube):
+    """Setup spatial map for dateline-crossing example."""
+    # Test for cube crossing dateline example.
+    cube = read.read_cubes("tests/test_data/air_temperature_dateline.nc")[0]
+    figure = mpl.figure.Figure()
+    axes_dl = plot._setup_spatial_map(cube, figure, mpl.colormaps["viridis"])
+    assert axes_dl == figure.gca()
+    # Test map bounds based on known pre-set domain KGO values.
+    bounds = axes_dl.get_extent()
+    assert round(bounds[0], 2) == -6.99
+    assert round(bounds[1], 2) == 1.65
+    assert round(bounds[2], 2) == -41.99
+    assert round(bounds[3], 2) == -33.35
+
+
+def test_setup_spatial_map_global(cube):
+    """Setup spatial map for global cube example."""
+    # Test for global cube example.
+    cube = read.read_cubes("tests/test_data/air_temperature_global.nc")[0]
+    figure = mpl.figure.Figure()
+    axes_gl = plot._setup_spatial_map(cube, figure, mpl.colormaps["viridis"])
+    assert axes_gl == figure.gca()
+    # Test map bounds based on cube-relative calculation of KGO values.
+    bounds = axes_gl.get_extent()
+    assert bounds[0] == np.min(cube.coord("longitude").points) - 180.0
+    assert bounds[1] == np.max(cube.coord("longitude").points) - 180.0
+    assert bounds[2] == np.min(cube.coord("latitude").points)
+    assert bounds[3] == np.max(cube.coord("latitude").points)
+
+
+def test_colorbar_map_mask(cube, tmp_working_dir):
+    """Test to ensure axis picks up correct colormap for a mask."""
+    cube.rename(f"mask_for_{cube.name()}")
+    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    assert cmap == mpl.colors.ListedColormap(["w", "dodgerblue"])
+    assert levels == [0, 1, 2]
+    assert isinstance(norm, mpl.colors.BoundaryNorm)
+    assert (norm.boundaries == levels).all()
+
+
+def test_colorbar_map_beaufort_scale(cube, tmp_working_dir):
+    """Test to ensure picks up correct colormap for a cube in Beaufort Scale."""
+    cube.rename("wind_speed_at_10m_on_Beaufort_Scale")
+    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    assert cmap == mpl.colors.ListedColormap(
+        [
+            "black",
+            (0, 0, 0.6),
+            "blue",
+            "cyan",
+            "green",
+            "yellow",
+            (1, 0.5, 0),
+            "red",
+            "pink",
+            "magenta",
+            "purple",
+            "maroon",
+            "white",
+        ]
+    )
+    assert levels == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+    assert isinstance(norm, mpl.colors.BoundaryNorm)
+    assert (norm.boundaries == levels).all()
+
+
+def test_colorbar_map_mask_difference(cube, tmp_working_dir):
+    """Test to ensure axis picks up correct colormap for a mask difference."""
+    cube.rename(f"mask_for_{cube.name()}_difference")
+    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    assert cmap == mpl.colors.ListedColormap(["goldenrod", "w", "teal"])
+    assert levels == [-2, -0.5, 0.5, 2]
+    assert isinstance(norm, mpl.colors.BoundaryNorm)
+    assert (norm.boundaries == levels).all()
+
+
+def test_colorbar_map_beaufort_scale_difference(cube, tmp_working_dir):
+    """Test to ensure picks up correct colormap for Beaufort Scale difference."""
+    cube.rename("wind_speed_at_10m_on_Beaufort_Scale_difference")
+    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    assert cmap == plt.get_cmap("bwr", 8)
+    assert levels == [
+        -3.5,
+        -2.5,
+        -1.5,
+        -0.5,
+        0.5,
+        1.5,
+        2.5,
+        3.5,
+    ]
+    assert isinstance(norm, mpl.colors.BoundaryNorm)
+    assert (norm.boundaries == levels).all()
+
+
+def test_colorbar_map_axis_mask(cube, tmp_working_dir):
+    """Test to ensure axis picks up correct levels when mask defined."""
+    cube.rename(f"mask_for_{cube.name()}")
+    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="y")
+    assert cmap is None
+    assert levels == [0, 1]
+    assert norm is None
+
+
+def test_colorbar_map_axis_mask_difference(cube, tmp_working_dir):
+    """Test to ensure axis picks up correct levels when mask difference defined."""
+    cube.rename(f"mask_for_{cube.name()}_difference")
+    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="x")
+    assert cmap is None
+    assert levels == [-1, 1]
+    assert norm is None
+
+
+def test_colorbar_map_beaufort_scale_axis(cube, tmp_working_dir):
+    """Test to ensure axis picks up correct levels for a cube in Beaufort Scale."""
+    cube.rename("wind_speed_at_10m_on_Beaufort_Scale")
+    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="y")
+    assert cmap is None
+    assert levels == [0, 12]
+    assert norm is None
+
+
+def test_colorbar_map_beaufort_scale_axis_difference(cube, tmp_working_dir):
+    """Test to ensure axis picks up correct levels for a cube in Beaufort Scale difference."""
+    cube.rename("wind_speed_at_10m_on_Beaufort_Scale_difference")
+    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="x")
+    assert cmap is None
+    assert levels == [-4, 4]
+    assert norm is None
+
+
+def test_colorbar_map_celsius(cube, tmp_working_dir):
+    """Test to ensure color bar is changed for temperature in Celsius."""
+    cube = misc.convert_units(cube, "Celsius")
+    cmap = mpl.cm.RdYlBu
+    norm = None
+    levels = [273, 373]
+    cmap, levels, norm = plot._custom_colormap_celsius(
+        cube, cmap=cmap, levels=levels, norm=norm
+    )
+    assert cmap == mpl.cm.RdYlBu
+    assert norm is None
+    assert levels == [0, 100]
+
+
+def test_colorbar_map_probabilities_axis(cube, tmp_working_dir):
+    """Test to ensure axis picks up correct levels for a cube of probabilities."""
+    cube.rename("probability_of_temperature_>_276")
+    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="x")
+    assert cmap is None
+    assert levels == [0, 1]
+    assert norm is None
+
+
+def test_colorbar_map_probabilities(cube, tmp_working_dir):
+    """Test to ensure colorbar picks up correct maap for cube of probabilities."""
+    cube.rename("probability_of_temperature_>_276")
+    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    assert cmap == mpl.colors.ListedColormap(
+        [
+            "#FFFFFF",
+            "#636363",
+            "#e1dada",
+            "#B5CAFF",
+            "#8FB3FF",
+            "#7F97FF",
+            "#ABCF63",
+            "#E8F59E",
+            "#FFFA14",
+            "#FFD121",
+            "#FFA30A",
+        ]
+    )
+    assert levels == [0.0, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    assert isinstance(norm, mpl.colors.BoundaryNorm)
+    assert (norm.boundaries == levels).all()
+
+
+def test_colorbar_map_aviation_colour_state(cube, tmp_working_dir):
+    """Test to ensure color bar is change for aviation colour states."""
+    cube.rename("aviation_colour_state")
+    expected_levels = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5]
+    expected_colors = [
+        "#87ceeb",
+        "#ffffff",
+        "#8ced69",
+        "#ffff00",
+        "#ffd700",
+        "#ffa500",
+        "#fe3620",
+    ]
+    expected_cmap = mpl.colors.ListedColormap(expected_colors)
+    cmap, levels, norm = plot._custom_colormap_aviation_colour_state(cube)
+    assert cmap == expected_cmap
+    assert levels == expected_levels
+    assert isinstance(norm, mpl.colors.BoundaryNorm)
+    assert (norm.boundaries == levels).all()
+
+
 def test_spatial_contour_plot(cube, tmp_working_dir):
     """Plot spatial contour plot of instant air temp."""
     # Remove realization coord to increase coverage, and as its not needed.
@@ -293,11 +507,10 @@ def test_vector_plot_check(vector_cubes, tmp_working_dir):
         )
 
 
-def test_postage_stamp_contour_plot(ensemble_cube, monkeypatch, tmp_path):
+def test_postage_stamp_contour_plot(ensemble_cube, tmp_working_dir):
     """Plot postage stamp plots of ensemble data."""
     # Get a single time step.
     ensemble_cube_3d = next(ensemble_cube.slices_over("time"))
-    monkeypatch.chdir(tmp_path)
     plot.spatial_contour_plot(ensemble_cube_3d)
     assert Path("untitled_463858.0.png").is_file()
 
@@ -358,11 +571,10 @@ def test_pcolormesh_plot_global(global_cube, caplog, tmp_working_dir):
     assert message_match
 
 
-def test_postage_stamp_pcolormesh_plot(ensemble_cube, monkeypatch, tmp_path):
+def test_postage_stamp_pcolormesh_plot(ensemble_cube, tmp_working_dir):
     """Plot postage stamp plots of ensemble data."""
     # Get a single time step.
     ensemble_cube_3d = next(ensemble_cube.slices_over("time"))
-    monkeypatch.chdir(tmp_path)
     plot.spatial_pcolormesh_plot(ensemble_cube_3d)
     assert Path("untitled_463858.0.png").is_file()
 
@@ -381,7 +593,7 @@ def test_pcolormesh_coastline(cube, caplog, tmp_working_dir):
         plot.spatial_pcolormesh_plot(cube)
         message_match = False
         for _, _, message in caplog.record_tuples:
-            if message == "Plotting coastlines k.":
+            if message == "Plotting coastlines in colour black.":
                 message_match = True
         assert message_match
 
@@ -394,7 +606,7 @@ def test_pcolormesh_coastline_m(cube, caplog, tmp_working_dir):
         plot.spatial_pcolormesh_plot(cube)
         message_match = False
         for _, _, message in caplog.record_tuples:
-            if message == "Plotting coastlines m.":
+            if message == "Plotting coastlines in colour magenta.":
                 message_match = True
         assert message_match
 
@@ -677,6 +889,155 @@ def test_plot_and_save_postage_stamps_in_single_plot_histogram_series(
     assert Path("test.png").is_file()
 
 
+def test_plot_power_spectrum_with_filename(field2d_cube, tmp_working_dir):
+    """Testing power spectrum code produces file."""
+    plot.plot_power_spectrum_series(
+        field2d_cube, filename="test", sequence_coordinate="time"
+    )
+    assert Path("test_464569.0.png").is_file()
+
+
+def test_plot_and_save_postage_stamp_power_spectrum_series(
+    power_spectrum_cube, tmp_working_dir
+):
+    """Test plotting a postage stamp power spectrum."""
+    plot._plot_and_save_postage_stamp_power_spectrum_series(
+        cube=power_spectrum_cube,
+        filename="test.png",
+        title="Test",
+        stamp_coordinate="realization",
+        histtype="step",
+    )
+    assert Path("test.png").is_file()
+
+
+def test_plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
+    power_spectrum_cube, tmp_working_dir
+):
+    """Test plotting a multiline power spectrum for multiple ensemble members."""
+    plot._plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
+        cube=power_spectrum_cube,
+        filename="test.png",
+        title="Test",
+        stamp_coordinate="realization",
+        histtype="step",
+    )
+    assert Path("test.png").is_file()
+
+
+def test_create_alpha_matrix_shape():
+    """Test shape of alpha matrix used in power spectrum calculation."""
+    Ny, Nx = 10, 15
+    alpha = plot._create_alpha_matrix(Ny, Nx)
+    assert alpha.shape == (Ny, Nx), "Alpha matrix shape mismatch"
+
+
+def test_create_alpha_matrix_values():
+    """Test alpha matrix contains only positive values."""
+    Ny, Nx = 4, 4
+    alpha = plot._create_alpha_matrix(Ny, Nx)
+    assert np.all(alpha >= 0), "Alpha matrix contains negative values"
+    assert np.isclose(alpha[0, 0], np.sqrt((1 / Nx) ** 2 + (1 / Ny) ** 2)), (
+        "Alpha matrix value incorrect"
+    )
+
+
+def test_dct_ps_output_shape():
+    """Test shape of power spectrum output from _DCT_ps."""
+    Nt, Ny, Nx = 5, 10, 10
+    y_3d = np.random.rand(Nt, Ny, Nx)
+    ps = plot._DCT_ps(y_3d)
+    expected_shape = (Nt, min(Nx - 1, Ny - 1))
+    assert ps.shape == expected_shape, "Power spectrum output shape mismatch"
+
+
+def test_dct_ps_non_negative():
+    """Test power spectrum only contains positive values."""
+    Nt, Ny, Nx = 3, 8, 8
+    y_3d = np.random.rand(Nt, Ny, Nx)
+    ps = plot._DCT_ps(y_3d)
+    assert np.all(ps >= 0), "Power spectrum contains negative values"
+
+
+def test_dct_ps_known_input():
+    """Test _DCT_ps produces non-zero spectrum for constant input."""
+    # Use a constant field to test expected behavior
+    Nt, Ny, Nx = 2, 4, 4
+    y_3d = np.ones((Nt, Ny, Nx))
+    ps = plot._DCT_ps(y_3d)
+    assert np.allclose(ps[:, 1:], 0, atol=1e-6), "Non-zero spectrum for constant input"
+
+
+def test_plot_power_spectrum_no_sequence_coordinate(field2d_cube, tmp_working_dir):
+    """Error when cube is missing sequence coordinate (time)."""
+    field2d_cube.remove_coord("time")
+    with pytest.raises(ValueError, match="Cube must have a time coordinate."):
+        plot.plot_power_spectrum_series(field2d_cube, series_coordinate="pressure")
+
+
+def make_test_cube_power_spectrum(shape=(1, 10, 10), time_points=None):
+    """Create test cube for use with the power spectrum tests."""
+    data = np.random.rand(*shape)
+    if time_points is None:
+        time_points = [0]
+    time_coord = iris.coords.DimCoord(
+        time_points, standard_name="time", units="hours since 1970-01-01 00:00:00"
+    )
+    y_coord = iris.coords.DimCoord(np.arange(shape[1]), long_name="y", units="1")
+    x_coord = iris.coords.DimCoord(np.arange(shape[2]), long_name="x", units="1")
+    cube = iris.cube.Cube(
+        data,
+        dim_coords_and_dims=[(time_coord, 0), (y_coord, 1), (x_coord, 2)],
+        long_name="test_data",
+    )
+    return cube
+
+
+def test_calculate_power_spectrum_raises_for_bad_dim(tmp_working_dir):
+    """Check error is raised if the cube has too many dimensions."""
+    cube_3d = make_test_cube_power_spectrum()
+
+    # Add 2 new dimensions to cube_3d to make 5D
+    new_data = cube_3d.data[np.newaxis, np.newaxis, :, :, :]
+
+    # Create dummy coordinates for the new dimensions
+    coord_0 = iris.coords.DimCoord([0], long_name="extra_dim_0")
+    coord_1 = iris.coords.DimCoord([0], long_name="extra_dim_1")
+
+    # Build dim_coords_and_dims manually
+    dim_coords_and_dims = [(coord_0, 0), (coord_1, 1)]
+    for i, coord in enumerate(cube_3d.dim_coords):
+        dim_coords_and_dims.append((coord, i + 2))  # shift by 2 for new axes
+
+    # Create the new 4D cube
+    cube_5d = iris.cube.Cube(new_data, dim_coords_and_dims=dim_coords_and_dims)
+
+    if isinstance(cube_5d, iris.cube.CubeList):
+        cube_5d = cube_5d[0]
+
+    with pytest.raises(
+        ValueError, match="Cube dimensions unsuitable for power spectra code"
+    ):
+        plot.plot_power_spectrum_series(cubes=cube_5d)
+
+
+def test_calculate_power_spectrum_raises_for_bad_dim_1D(tmp_working_dir):
+    """Check error is raised if the cube has too few dimensions."""
+    cube_3d = make_test_cube_power_spectrum()
+
+    # Make a 1D field
+
+    cube_1d = cube_3d.collapsed(["x", "y"], iris.analysis.MEAN)
+
+    if isinstance(cube_1d, iris.cube.CubeList):
+        cube_1d = cube_1d[0]
+
+    with pytest.raises(
+        ValueError, match="Cube dimensions unsuitable for power spectra code"
+    ):
+        plot.plot_power_spectrum_series(cubes=cube_1d)
+
+
 def test_scatter_plot(cube, vertical_profile_cube, tmp_working_dir):
     """Save a scatter plot."""
     cube_y = collapse.collapse(cube, ["time", "grid_longitude"], "MEAN")[0:4]
@@ -784,15 +1145,11 @@ def test_append_to_plot_index(monkeypatch, tmp_working_dir):
     assert "datetime" not in meta
 
 
-def test_append_to_plot_index_case_aggregation_no_datetime(
-    monkeypatch, tmp_working_dir
-):
+def test_append_to_plot_index_aggregation(monkeypatch, tmp_working_dir):
     """Ensure the datetime is not written for aggregation plots."""
     # Setup environment and required file.
     monkeypatch.setenv("CYLC_TASK_CYCLE_POINT", "20000101T0000Z")
-    monkeypatch.setenv(
-        "CYLC_TASK_NAMESPACE_HIERARCHY", "root PROCESS_CASE_AGGREGATION task_name"
-    )
+    monkeypatch.setenv("DO_CASE_AGGREGATION", "True")
     with open("meta.json", "wt") as fp:
         fp.write("{}\n")
 

@@ -1,0 +1,37 @@
+category: Winter Weather
+title: $MODEL_NAME Air frost presence domain timeseries
+description: |
+  Generates a mask of whether air frost is present in a grid box and provides
+  a timeseries representing the chance of frost anywhere within the domain
+  for every time step.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    constraint:
+        operator: constraints.combine_constraints
+        varname_constraint:
+            operator: constraints.generate_var_constraint
+            varname: 'temperature_at_screen_level'
+        cell_methods_constraint:
+            operator: constraints.generate_cell_methods_constraint
+            cell_methods: ['minimum']
+            coord: 'time'
+            interval: '1 hour'
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: filters.generate_mask
+    condition: 'lt'
+    value: 273.15
+
+  - operator: collapse.collapse
+    coordinate: [grid_latitude, grid_longitude]
+    method: MEAN
+
+  # Plot the data.
+  - operator: plot.plot_line_series
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

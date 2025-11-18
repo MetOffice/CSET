@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2025) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,11 +17,14 @@
 import numbers
 import re
 from collections.abc import Iterable
-from datetime import datetime
+from datetime import timedelta
 
 import iris
+import iris.coords
 import iris.cube
-import iris.exceptions
+
+import CSET.operators._utils as operator_utils
+from CSET._common import iter_maybe
 
 
 def generate_stash_constraint(stash: str, **kwargs) -> iris.AttributeConstraint:
@@ -124,7 +127,12 @@ def generate_level_constraint(
 
 
 def generate_cell_methods_constraint(
-    cell_methods: list, varname: str = None, **kwargs
+    cell_methods: list,
+    varname: str | None = None,
+    coord: iris.coords.Coord | None = None,
+    interval: str | None = None,
+    comment: str | None = None,
+    **kwargs,
 ) -> iris.Constraint:
     """Generate constraint from cell methods.
 
@@ -134,9 +142,15 @@ def generate_cell_methods_constraint(
     Arguments
     ---------
     cell_methods: list
-        cube.cell_methods for filtering
+        cube.cell_methods for filtering.
     varname: str, optional
         CF compliant name of variable.
+    coord: iris.coords.Coord, optional
+        iris.coords.Coord to which the cell method is applied to.
+    interval: str, optional
+        interval over which the cell method is applied to (e.g. 1 hour).
+    comment: str, optional
+        any comments in Cube meta data associated with the cell method.
 
     Returns
     -------
@@ -147,10 +161,6 @@ def generate_cell_methods_constraint(
         def check_no_aggregation(cube: iris.cube.Cube) -> bool:
             """Check that any cell methods are "point", meaning no aggregation."""
             return set(cm.method for cm in cube.cell_methods) <= {"point"}
-
-        def check_cell_mean(cube: iris.cube.Cube) -> bool:
-            """Check that any cell methods are "mean"."""
-            return set(cm.method for cm in cube.cell_methods) == {"mean"}
 
         def check_cell_sum(cube: iris.cube.Cube) -> bool:
             """Check that any cell methods are "sum"."""
@@ -171,7 +181,13 @@ def generate_cell_methods_constraint(
     else:
         # If cell_method constraint set in recipe, check for required input.
         def check_cell_methods(cube: iris.cube.Cube) -> bool:
-            return cube.cell_methods == tuple(cell_methods)
+            return all(
+                iris.coords.CellMethod(
+                    method=cm, coords=coord, intervals=interval, comments=comment
+                )
+                in cube.cell_methods
+                for cm in cell_methods
+            )
 
         cell_methods_constraint = iris.Constraint(cube_func=check_cell_methods)
 
@@ -180,7 +196,7 @@ def generate_cell_methods_constraint(
 
 def generate_time_constraint(
     time_start: str, time_end: str = None, **kwargs
-) -> iris.AttributeConstraint:
+) -> iris.Constraint:
     """Generate constraint between times.
 
     Operator that takes one or two ISO 8601 date strings, and returns a
@@ -188,10 +204,10 @@ def generate_time_constraint(
 
     Arguments
     ---------
-    time_start: str | datetime.datetime
+    time_start: str | datetime.datetime | cftime.datetime
         ISO date for lower bound
 
-    time_end: str | datetime.datetime
+    time_end: str | datetime.datetime | cftime.datetime
         ISO date for upper bound. If omitted it defaults to the same as
         time_start
 
@@ -200,12 +216,31 @@ def generate_time_constraint(
     time_constraint: iris.Constraint
     """
     if isinstance(time_start, str):
-        time_start = datetime.fromisoformat(time_start)
+        pdt_start, offset_start = operator_utils.pdt_fromisoformat(time_start)
+    else:
+        pdt_start, offset_start = time_start, timedelta(0)
+
     if time_end is None:
-        time_end = time_start
+        pdt_end, offset_end = time_start, offset_start
     elif isinstance(time_end, str):
-        time_end = datetime.fromisoformat(time_end)
-    time_constraint = iris.Constraint(time=lambda t: time_start <= t.point <= time_end)
+        pdt_end, offset_end = operator_utils.pdt_fromisoformat(time_end)
+        print(pdt_end)
+        print(offset_end)
+    else:
+        pdt_end, offset_end = time_end, timedelta(0)
+
+    if offset_start is None:
+        offset_start = timedelta(0)
+    if offset_end is None:
+        offset_end = timedelta(0)
+
+    time_constraint = iris.Constraint(
+        time=lambda t: (
+            (pdt_start <= (t.point - offset_start))
+            and ((t.point - offset_end) <= pdt_end)
+        )
+    )
+
     return time_constraint
 
 
@@ -277,6 +312,106 @@ def generate_area_constraint(
         coord_values={"grid_latitude": bound_lat, "grid_longitude": bound_lon}
     )
     return area_constraint
+
+
+def generate_remove_single_ensemble_member_constraint(
+    ensemble_member: int = 0, **kwargs
+) -> iris.Constraint:
+    """
+    Generate a constraint to remove a single ensemble member.
+
+    Operator that returns a constraint to remove the given ensemble member. By
+    default the ensemble member removed is the control member (assumed to have
+    a realization of zero). However, any ensemble member can be removed, thus
+    allowing a non-zero control member to be removed if the control is a
+    different member.
+
+    Arguments
+    ---------
+    ensemble_member: int
+        Default is 0. The ensemble member realization to remove.
+
+    Returns
+    -------
+        iris.Constraint
+
+    Notes
+    -----
+    This operator is primarily used to remove the control member to allow
+    ensemble metrics to be calculated without the control member. For
+    example, the ensemble mean is not normally calculated including the
+    control member. It is particularly useful to remove the control member
+    when it is not an equally-likely member of the ensemble.
+    """
+    return iris.Constraint(realization=lambda m: m.point != ensemble_member)
+
+
+def generate_realization_constraint(
+    ensemble_members: int | list[int], **kwargs
+) -> iris.Constraint:
+    """
+    Generate a constraint to subset ensemble members.
+
+    Operator that is given a list of ensemble members and returns a constraint
+    to select those ensemble members. This operator is particularly useful for
+    subsetting ensembles.
+
+    Arguments
+    ---------
+    ensemble_members: int | list[int]
+        The ensemble members to be subsetted over.
+
+    Returns
+    -------
+    iris.Constraint
+    """
+    # Ensure ensemble_members is iterable.
+    ensemble_members = iter_maybe(ensemble_members)
+    return iris.Constraint(realization=ensemble_members)
+
+
+def generate_hour_constraint(
+    hour_start: int,
+    hour_end: int = None,
+    **kwargs,
+) -> iris.Constraint:
+    """Generate an hour constraint between hour of day limits.
+
+    Operator that takes a set of hour of day limits and returns a constraint that
+    selects only hours within that time frame regardless of day.
+
+    Alternatively, the result can be constrained to a single hour by just entering
+    a starting hour.
+
+    Should any sub-hourly data be given these will have the same hour coordinate
+    (e.g., 12:00 and 12:05 both have an hour coordinate of 12) all
+    times will be selected with this constraint.
+
+    Arguments
+    ---------
+    hour_start: int
+        The hour of day for the lower bound, within 0 to 23.
+    hour_end: int | None
+        The hour of day for the upper bound, within 0 to 23. Alternatively,
+        set to None if only one hour required.
+
+    Returns
+    -------
+    hour_constraint: iris.Constraint
+
+    Raises
+    ------
+    ValueError
+        If the provided arguments are outside of the range 0 to 23.
+    """
+    if hour_end is None:
+        hour_end = hour_start
+
+    if (hour_start < 0) or (hour_start > 23) or (hour_end < 0) or (hour_end > 23):
+        raise ValueError("Hours must be between 0 and 23 inclusive.")
+
+    hour_constraint = iris.Constraint(hour=lambda h: hour_start <= h.point <= hour_end)
+    return hour_constraint
 
 
 def combine_constraints(

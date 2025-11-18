@@ -28,17 +28,20 @@ import CSET.operators
 from CSET.operators import (
     ageofair,
     aggregate,
+    aviation,
     collapse,
     constraints,
     convection,
     ensembles,
     filters,
+    imageprocessing,
     mesoscale,
     misc,
     plot,
     read,
     regrid,
     transect,
+    wind,
     write,
 )
 
@@ -46,6 +49,7 @@ from CSET.operators import (
 __all__ = [
     "ageofair",
     "aggregate",
+    "aviation",
     "collapse",
     "constraints",
     "convection",
@@ -53,12 +57,14 @@ __all__ = [
     "execute_recipe",
     "filters",
     "get_operator",
+    "imageprocessing",
     "mesoscale",
     "misc",
     "plot",
     "read",
     "regrid",
     "transect",
+    "wind",
     "write",
 ]
 

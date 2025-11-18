@@ -68,6 +68,15 @@ CSET.operators.write
 .. automodule:: CSET.operators.write
    :members:
 
+Aviation Operators
+~~~~~~~~~~~~~~~~~~
+
+CSET.operators.aviation
+-----------------------
+
+.. automodule:: CSET.operators.aviation
+   :members:
+
 Convection Operators
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -86,6 +95,15 @@ CSET.operators.ensembles
 .. automodule:: CSET.operators.ensembles
    :members:
 
+Image Processing Operators
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+CSET.operators.imageprocessing
+------------------------------
+
+.. automodule:: CSET.operators.imageprocessing
+   :members:
+
 Mesoscale Operators
 ~~~~~~~~~~~~~~~~~~~
 
@@ -93,6 +111,15 @@ CSET.operators.mesoscale
 ------------------------
 
 .. automodule:: CSET.operators.mesoscale
+   :members:
+
+Wind Operators
+~~~~~~~~~~~~~~~~~~~
+
+CSET.operators.wind
+------------------------
+
+.. automodule:: CSET.operators.wind
    :members:
 
 Other

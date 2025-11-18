@@ -23,8 +23,9 @@ import iris.coords
 import iris.cube
 import numpy as np
 import pytest
+from iris.time import PartialDateTime
 
-from CSET.operators import read
+from CSET.operators import constraints, read
 
 
 def test_read_cubes():
@@ -37,6 +38,29 @@ def test_read_cubes():
     ]
     for cube in cubes:
         assert repr(cube) in expected_cubes
+
+
+def test_read_cubes_generate_time_constraint():
+    """Read cube, constrain the time coordinate and verify the correct time range."""
+    cubes = read.read_cubes("tests/test_data/precipitation_360_day_calendar.nc")
+    cube = cubes[0]
+
+    print(cube.coord("time"))
+
+    constraint = constraints.generate_time_constraint(
+        time_start="2000-01-01T12:30", time_end="2000-01-01T14:00+01"
+    )
+
+    cube_constrained = cube.extract(constraint)
+
+    time_coords = cube_constrained.coord("time")
+    time_points = time_coords.units.num2date(time_coords.points)
+
+    assert min(time_points) == PartialDateTime(2000, 1, 1, 12, 30, 0)
+    # 14:30 is the max time below 15:00 within the file used for this test
+    assert max(time_points) == PartialDateTime(2000, 1, 1, 14, 30, 0)
+
+    print(time_coords)
 
 
 def test_read_cubes_no_cubes_exception():
@@ -858,11 +882,12 @@ def test_read_cubes_extract_subarea_latlon():
     assert cube.coord("latitude").coord_system == iris.coord_systems.GeogCS(6371229.0)
 
     # Cutout real world coordinates, using latitude bound -30.0 to 30.0 and
-    # longitude bound -4.5 to -2.5
+    # longitude bound -60 to -55 [300.0 - 305.0].
+    # Note original cube has latitude 0-360., with end points 354.445, 358.664
     cube_rw = read.read_cubes(
         "tests/test_data/air_temperature_global.nc",
         subarea_type="realworld",
-        subarea_extent=[-30.0, 30.0, -4.5, -2.5],
+        subarea_extent=[-30.0, 30.0, -60.0, -55.0],
     )[0]
     assert isinstance(cube_rw, iris.cube.Cube)
 
@@ -873,11 +898,41 @@ def test_read_cubes_extract_subarea_latlon():
         cube_rw.coord("latitude").points, cube.coord("latitude").points
     )
 
-    # Ensure extracted region has required coordinates
+    # Ensure extracted regions have required coordinates
     assert round(cube_rw.coord("latitude").points[0], 2) == -28.08
     assert round(cube_rw.coord("latitude").points[-1], 2) == 28.17
     assert np.size(cube_rw.coord("longitude")) == 1
-    assert round(cube_rw.coord("longitude").points[0], 2) == -2.74
+    assert round(cube_rw.coord("longitude").points[0], 2) == -56.18
+
+
+def test_read_cubes_extract_subarea_latlon_wrap_lons():
+    """Read cube with latlon coord and ensure appropriate subarea is extracted."""
+    # Read in global test data
+    cube = read.read_cubes("tests/test_data/air_temperature_global.nc")[0]
+    assert cube.coord("latitude").coord_system == iris.coord_systems.GeogCS(6371229.0)
+
+    # Cutout real world coordinates, using latitude bound -30.0 to 30.0 and
+    # longitude bound 300 to 305 [-60 to -55].
+    # Note original cube has latitude 0-360., with end points 354.445, 358.664
+    cube_rw = read.read_cubes(
+        "tests/test_data/air_temperature_global.nc",
+        subarea_type="realworld",
+        subarea_extent=[-30.0, 30.0, 300.0, 305.0],
+    )[0]
+    assert isinstance(cube_rw, iris.cube.Cube)
+
+    # Compare the latitude coordinates to check it has extracted same region. We
+    # use latitude as there is little difference in spacing from the equator to
+    # pole, but longitude varies (converges to zero at pole).
+    assert not np.array_equal(
+        cube_rw.coord("latitude").points, cube.coord("latitude").points
+    )
+
+    # Ensure extracted regions have required coordinates
+    assert round(cube_rw.coord("latitude").points[0], 2) == -28.08
+    assert round(cube_rw.coord("latitude").points[-1], 2) == 28.17
+    assert np.size(cube_rw.coord("longitude")) == 1
+    assert round(cube_rw.coord("longitude").points[0], 2) == -56.18
 
 
 def test_read_cubes_extract_subarea_outside_bounds():
@@ -898,10 +953,11 @@ def test_read_cubes_extract_subarea_outside_bounds():
     )
 
     # Ensure extracted region has required coordinates
+    # Requesting -544.5 to -542.5 equates to 175.5 to 177.5 in +/-180 range.
     assert round(cube_rw.coord("latitude").points[0], 2) == -28.08
     assert round(cube_rw.coord("latitude").points[-1], 2) == 28.17
     assert np.size(cube_rw.coord("longitude")) == 1
-    assert round(cube_rw.coord("longitude").points[0], 2) == -2.74
+    assert round(cube_rw.coord("longitude").points[0], 2) == 177.26
 
 
 def test_read_cubes_extract_subarea_dateline():
@@ -926,36 +982,43 @@ def test_read_cubes_extract_subarea_dateline():
     # Ensure extracted region has required coordinates
     assert round(cube_rw.coord("latitude").points[0], 2) == -39.83
     assert round(cube_rw.coord("latitude").points[-1], 2) == -35.24
-    assert round(cube_rw.coord("longitude").points[0], 2) == -4.83
-    assert round(cube_rw.coord("longitude").points[-1], 2) == 0.84
+    assert round(cube_rw.coord("longitude").points[0], 2) == -184.83
+    assert round(cube_rw.coord("longitude").points[-1], 2) == -179.16
+
+
+def test_read_cubes_extract_subarea_dateline_wrapping():
+    """Read cube with latlon coord across dateline and ensure appropriate subarea is extracted."""
+    cube = read.read_cubes("tests/test_data/air_temperature_dateline.nc")[0]
+    assert cube.coord("latitude").coord_system == iris.coord_systems.GeogCS(6371229.0)
 
     # Cutout real world coordinates, using latitude bound -40.0 to -35.0 and
-    # longitude bound -5.0 to 1.0
-    cube_rw_2 = read.read_cubes(
+    # longitude bound -185.0 to -179.0
+    cube_rw = read.read_cubes(
         "tests/test_data/air_temperature_dateline.nc",
         subarea_type="realworld",
-        subarea_extent=[-40.0, -35.0, -5.0, 1.0],
+        subarea_extent=[-40.0, -35.0, -185.0, -179.0],
     )[0]
-    assert isinstance(cube_rw_2, iris.cube.Cube)
+    assert isinstance(cube_rw, iris.cube.Cube)
 
     # Compare the longitude coordinates to check it has extracted a region.
     assert not np.array_equal(
-        cube_rw_2.coord("latitude").points, cube.coord("latitude").points
+        cube_rw.coord("latitude").points, cube.coord("latitude").points
     )
 
     # Ensure extracted region has required coordinates
-    assert round(cube_rw_2.coord("latitude").points[0], 2) == -39.83
-    assert round(cube_rw_2.coord("latitude").points[-1], 2) == -35.24
-    assert round(cube_rw_2.coord("longitude").points[0], 2) == -4.83
-    assert round(cube_rw_2.coord("longitude").points[-1], 2) == 0.84
+    assert round(cube_rw.coord("latitude").points[0], 2) == -39.83
+    assert round(cube_rw.coord("latitude").points[-1], 2) == -35.24
+    assert round(cube_rw.coord("longitude").points[0], 2) == -184.83
+    assert round(cube_rw.coord("longitude").points[-1], 2) == -179.16
 
 
 def test_read_cubes_outofbounds_subarea():
     """Ensure correct failure if subarea outside cube extent."""
     with pytest.raises(
         ValueError,
-        match=r"Cutout region requested should be within data area. "
-        "Check and update SUBAREA_EXTENT.",
+        match=r"Region cutout error. Check and update SUBAREA_EXTENT."
+        "Cutout region requested should be contained within data area. "
+        "Also check if cutout region requested is smaller than input grid spacing.",
     ):
         read.read_cubes(
             "tests/test_data/air_temp.nc",
@@ -965,8 +1028,9 @@ def test_read_cubes_outofbounds_subarea():
 
     with pytest.raises(
         ValueError,
-        match=r"Cutout region requested should be within data area. "
-        "Check and update SUBAREA_EXTENT.",
+        match=r"Region cutout error. Check and update SUBAREA_EXTENT."
+        "Cutout region requested should be contained within data area. "
+        "Also check if cutout region requested is smaller than input grid spacing.",
     ):
         read.read_cubes(
             "tests/test_data/air_temperature_dateline.nc",

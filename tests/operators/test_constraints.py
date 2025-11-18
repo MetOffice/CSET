@@ -162,6 +162,80 @@ def test_generate_area_constraint_invalid_arguments():
         constraints.generate_area_constraint(None, None, None, 0)
 
 
+def test_generate_remove_single_ensemble_member_constraint():
+    """Generate a constraint to remove a single ensemble member using default value."""
+    single_member_constraint = (
+        constraints.generate_remove_single_ensemble_member_constraint()
+    )
+    assert (
+        "Constraint(coord_values={'realization': <function generate_remove_single_ensemble_member_constraint.<locals>.<lambda> at 0x"
+        in repr(single_member_constraint)
+    )
+
+
+def test_generate_remove_single_ensemble_member_constraint_any_value():
+    """Generate a constraint to remove a single ensemble member using chosen value."""
+    single_member_constraint = (
+        constraints.generate_remove_single_ensemble_member_constraint(ensemble_member=2)
+    )
+    assert (
+        "Constraint(coord_values={'realization': <function generate_remove_single_ensemble_member_constraint.<locals>.<lambda> at 0x"
+        in repr(single_member_constraint)
+    )
+
+
+def test_generate_realization_constraint():
+    """Generate a constraint for a single realization."""
+    single_member_constraint = constraints.generate_realization_constraint(
+        ensemble_members=2
+    )
+    assert "Constraint(coord_values={'realization': (2,)})" in repr(
+        single_member_constraint
+    )
+
+
+def test_generate_realization_constraint_multiple_realizations():
+    """Generate a constraint for multiple realizations."""
+    multi_member_constraint = constraints.generate_realization_constraint(
+        ensemble_members=[2, 4, 6, 8]
+    )
+    assert "Constraint(coord_values={'realization': [2, 4, 6, 8]})" in repr(
+        multi_member_constraint
+    )
+
+
+def test_generate_hour_constraint():
+    """Generate hour constraint with hour_start."""
+    hour_constraint = constraints.generate_hour_constraint(hour_start=12)
+    expected_hour_constraint = "Constraint(coord_values={'hour': <function generate_hour_constraint.<locals>.<lambda> at"
+    assert expected_hour_constraint in repr(hour_constraint)
+
+
+def test_generate_hour_constraint_both_limits():
+    """Generate hour constraint with hour_start and hour_end."""
+    hour_constraint = constraints.generate_hour_constraint(hour_start=12, hour_end=15)
+    expected_hour_constraint = "Constraint(coord_values={'hour': <function generate_hour_constraint.<locals>.<lambda> at"
+    assert expected_hour_constraint in repr(hour_constraint)
+
+
+def test_generate_hour_constraint_negative_values():
+    """Generate hour constraint raises exception when arguments are negative."""
+    with pytest.raises(ValueError):
+        constraints.generate_hour_constraint(hour_start=-1)
+
+    with pytest.raises(ValueError):
+        constraints.generate_hour_constraint(hour_start=0, hour_end=-1)
+
+
+def test_generate_hour_constraint_too_large_values():
+    """Generate hour constraint raises exception when arguments are too big."""
+    with pytest.raises(ValueError):
+        constraints.generate_hour_constraint(hour_start=24)
+
+    with pytest.raises(ValueError):
+        constraints.generate_hour_constraint(hour_start=22, hour_end=24)
+
+
 def test_combine_constraints():
     """Combine constraint."""
     stash_constraint = constraints.generate_stash_constraint("m01s03i236")
