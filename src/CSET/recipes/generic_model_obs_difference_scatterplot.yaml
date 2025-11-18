@@ -37,7 +37,6 @@ steps:
             operator: constraints.generate_var_constraint
             varname: $OBSVARNAME
 
-
   - operator: plot.spatial_contour_plot
     sequence_coordinate: time
     projection: $PLOTTING_PROJECTION

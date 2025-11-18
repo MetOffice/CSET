@@ -518,7 +518,6 @@ def _lfric_time_coord_fix_callback(cube: iris.cube.Cube, field, filename):
                         ]
                         for i in range(len(time_coord.bounds))
                     ]
-
             iris.util.promote_aux_coord_to_dim_coord(cube, time_coord)
 
     # Force single-valued coordinates to be scalar coordinates.

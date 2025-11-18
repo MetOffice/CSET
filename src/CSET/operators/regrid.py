@@ -468,5 +468,4 @@ def interpolate_to_point_cube(
                     for k in range(fld_point_cube.coord("latitude").points)
                 ]
             )
-    #
     return fld_point_cube
