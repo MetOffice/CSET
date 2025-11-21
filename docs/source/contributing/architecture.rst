@@ -9,8 +9,7 @@ Operators
 ---------
 
 Operators provide the core functionality of CSET. Each operator is a function
-that takes some input and returns some output, possibly also producing side
-effects like saving plots.
+that takes some input and returns some output, in some cases producing plots.
 
 All of the operators in CSET are contained in modules in
 ``src/CSET/operators/``, which group related operators. For example ``plot.py``
@@ -72,7 +71,7 @@ install_website_skeleton
 Copies static files for the visualisation website to use and creates a symlink
 from the configured WEB_DIR to ``$CYLC_WORKFLOW_SHARE_DIR/web``.
 
-This app should probably be merged into finish_website.
+In future this app is likely to be merged into finish_website.
 
 fetch_fcst
 ~~~~~~~~~~
