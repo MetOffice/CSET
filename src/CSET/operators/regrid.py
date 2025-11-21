@@ -225,6 +225,10 @@ def regrid_to_single_point(
     lat_pt: float
         Selected value of latitude: this should be in the range -90 degrees to
         90 degrees.
+    latlon_in_type: str, optional
+        Specify whether the input longitude and latitude point is in standard
+        geographic realworld coordinates ("realworld") or on the rotated grid
+        of the cube ("rotated"). Default is "rotated".
     method: str
         Method used to determine the values at the selected longitude and
         latitude. The recommended approach is to use iris.analysis.Nearest(),
