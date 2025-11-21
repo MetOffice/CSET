@@ -398,6 +398,7 @@ def _create_callback(is_ensemble: bool) -> callable:
         _convert_cube_units_callback(cube)
         _grid_longitude_fix_callback(cube)
         _fix_lfric_cloud_base_altitude(cube)
+        _proleptic_gregorian_fix(cube)
         _lfric_time_callback(cube)
         _lfric_forecast_period_standard_name_callback(cube)
 
@@ -904,6 +905,20 @@ def _normalise_var0_varname(cube: iris.cube.Cube):
 
     if cube.var_name and cube.var_name.endswith("_0"):
         cube.var_name = cube.var_name.removesuffix("_0")
+
+
+def _proleptic_gregorian_fix(cube: iris.cube.Cube):
+    """Convert the calendars of time units to use a standard calendar."""
+    try:
+        time_coord = cube.coord("time")
+        if time_coord.units.calendar == "proleptic_gregorian":
+            logging.debug(
+                "Changing proleptic Gregorian calendar to standard calendar for %s",
+                repr(time_coord.units),
+            )
+            time_coord.units = time_coord.units.change_calendar("standard")
+    except iris.exceptions.CoordinateNotFoundError:
+        pass
 
 
 def _lfric_time_callback(cube: iris.cube.Cube):
