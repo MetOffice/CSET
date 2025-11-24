@@ -13,7 +13,7 @@ CSET Documentation
    changelog
    GitHub <https://github.com/MetOffice/CSET>
 
-CSET (Convective- and turbulence-scale Evaluation and verification Toolkit) is
+CSET, the Community Seamless Evaluation Toolkit, is
 an open-source toolkit for evaluation, verification and investigation of
 convective- and turbulence-scale numerical models for weather and climate
 applications, cutting across time and space scales with a focus on regional
