@@ -37,9 +37,9 @@ jobs:
           for py_ver in ${py_vers}
           do
             # Developer lock files.
-            cp "requirements/environment.yml" "${{ runner.temp }}/${py_ver}_dev_environment.yml"
-            echo -e "\n  - python = $py_ver" >> "${{ runner.temp }}/${py_ver}_dev_environment.yml"
-            conda-lock --channel conda-forge --kind explicit --file "${{ runner.temp }}/${py_ver}_dev_environment.yml" --platform linux-64 --filename-template "requirements/locks/py$(echo $py_ver | sed 's/\.//')-lock-linux-64.txt"
+            cp "requirements/environment.yml" "${RUNNER_TEMP}/${py_ver}_dev_environment.yml"
+            echo -e "\n  - python = $py_ver" >> "${RUNNER_TEMP}/${py_ver}_dev_environment.yml"
+            conda-lock --channel conda-forge --kind explicit --file "${RUNNER_TEMP}/${py_ver}_dev_environment.yml" --platform linux-64 --filename-template "requirements/locks/py$(echo $py_ver | sed 's/\.//')-lock-linux-64.txt"
           done
 
           # Sort lock files to make diffs easier to review.
