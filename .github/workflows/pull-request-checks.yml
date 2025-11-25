@@ -43,10 +43,12 @@ jobs:
 
       - name: Create conda environment
         if: steps.conda-env-cache.outputs.cache-hit != 'true'
+        env:
+          py_ver: ${{ matrix.py-ver }}
         run: |
           # Check cache hasn't pulled a partial key match.
           test ! -e "${HOME}/conda-env"
-          conda create --prefix="${HOME}/conda-env" --file=requirements/locks/${{ matrix.py-ver }}-lock-linux-64.txt
+          conda create --prefix="${HOME}/conda-env" --file=requirements/locks/${py_ver}-lock-linux-64.txt
 
       - name: Add conda environment to PATH
         run: echo "${HOME}/conda-env/bin" >> $GITHUB_PATH
@@ -54,6 +56,7 @@ jobs:
       - name: Run tests
         env:
           PY_COLORS: "1"
+          py_ver: ${{ matrix.py-ver }}
         run: |
           # Install package and run pytest.
           echo '::group::Installing local package'
@@ -62,7 +65,7 @@ jobs:
           echo '::group::Running unit tests'
           pytest -n logical --verbose --cov --cov-append --cov-config=pyproject.toml
           echo '::endgroup::'
-          mv .coverage ".coverage.${{ matrix.py-ver }}"
+          mv .coverage ".coverage.${py_ver}"
 
       - name: Upload coverage data as artifact
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
