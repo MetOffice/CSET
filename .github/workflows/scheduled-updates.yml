@@ -5,14 +5,16 @@ on:
     - cron: "37 5 * * 1"
   workflow_dispatch:
 
-permissions:
-  pull-requests: write
-  contents: write
+# Minimise default GITHUB_TOKEN permissions.
+permissions: {}
 
 jobs:
   scheduled-updates:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      pull-requests: write
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3

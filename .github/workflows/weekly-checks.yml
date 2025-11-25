@@ -5,10 +5,15 @@ on:
     - cron: "8 4 * * 1"
   workflow_dispatch:
 
+# Minimise default GITHUB_TOKEN permissions.
+permissions: {}
+
 jobs:
   check-documentation-hyperlinks:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3

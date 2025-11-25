@@ -9,10 +9,15 @@ concurrency:
   group: "release"
   cancel-in-progress: false
 
+# Minimise default GITHUB_TOKEN permissions.
+permissions: {}
+
 jobs:
   build-package:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
