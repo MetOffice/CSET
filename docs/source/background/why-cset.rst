@@ -3,7 +3,7 @@ Why use CSET?
 
 When evaluating weather and climate models, we are trying to understand the
 characteristics of our model configurations and the physical processes that
-lead to biases. We also seek to compare these models (physical and machine learned),
+lead to biases. We compare these models (physical and machine learned),
 model configurations, and observations. This is an iterative process, and each
 step of evaluation unveils more questions that need investigations. Evaluation
 often follows an individual approach by researchers spending significant
@@ -17,9 +17,10 @@ regridding are provided to reduce duplication of effort.
 CSET provides a legacy for user-developed evaluation methods and diagnostics to
 be shared and documented, with :doc:`well-defined working practices and review
 processes</contributing/index>`. It ensures best practice for evaluation and
-verification linked to physical numerical models, ML models, and observational weather
-and climate data, primarily targeting convective- and turbulence-scale model
-configurations, but not limited to them, across weather and climate time scales.
+verification linked to physical (atmospheric) numerical models, ML models, and
+observational weather
+and climate data. CSET primarily targets convective- and turbulence-scale model
+configurations for regional and global domains across weather and climate time scales.
 Therefore, it provides many benefits in reproducibility, portability,
 accessibility, maintainability, and quality assurance. By contributing newly
 developed diagnostics to CSET you ensure their legacy, ensure their quality
