@@ -21,6 +21,7 @@ jobs:
       matrix:
         py-ver: ["py311", "py312", "py313"]
     steps:
+      - uses: GitHubSecurityLab/actions-permissions/monitor@v1
       - name: Checkout code
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
         with:
