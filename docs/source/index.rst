@@ -15,7 +15,7 @@ CSET Documentation
 
 CSET, the Community Seamless Evaluation Toolkit, is
 an open-source toolkit for the seamless evaluation, verification and investigation
-of weather and climate models. It supports the evaluation of physical and ML numerical
+of weather and climate models. It supports the evaluation of physical numerical models and ML
 models as well as observations across time and space scales with a focus on, but not
 limited to, convective and turbulence scales.
 
@@ -23,7 +23,7 @@ CSET provides a centralised and peer-reviewed source of tools to aid
 process-oriented evaluation for UM, LFRic physical and ML models, supporting both
 deterministic and ensemble configurations.
 
-CSET is expanding it's support for verification and evaluation of machine learn models
+CSET is expanding it's support for verification and evaluation of machine learned models
 and utilises observations from a range of sources to aid in the evaluation process.
 It will utilise the Model Evaluation Tools (MET) software to provide a range of
 verification metrics aligned with operational verification best practices.
