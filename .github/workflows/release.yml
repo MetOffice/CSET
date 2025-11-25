@@ -14,6 +14,7 @@ permissions: {}
 
 jobs:
   build-package:
+    name: Build release package
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -37,7 +38,8 @@ jobs:
       - name: Build package
         run: python3 -m build
 
-      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      - name: "Upload package as artifact"
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         with:
           name: packages
           path: dist/
@@ -54,7 +56,8 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53
+      - name: Download package artifact
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53
         with:
           name: packages
           path: dist/

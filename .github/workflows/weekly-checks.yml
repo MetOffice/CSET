@@ -10,6 +10,7 @@ permissions: {}
 
 jobs:
   check-documentation-hyperlinks:
+    name: Check documentation hyperlinks
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -52,7 +53,9 @@ jobs:
           echo '::group::Checking for broken hyperlinks'
           sphinx-build -b linkcheck --color -W --keep-going "docs/source" "docs/build/linkcheck"
           echo '::endgroup::'
-      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+
+      - name: Upload build documentation as artifact
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         with:
           name: html-docs
           path: docs/build/html/
