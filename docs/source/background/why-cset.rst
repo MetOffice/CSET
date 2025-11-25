@@ -9,15 +9,17 @@ step of evaluation unveils more questions that need investigations. Evaluation
 often follows an individual approach by researchers spending significant
 resource on scientific and technical development.
 
-CSET aids in this by providing a flexible way to interrogate model data, using
-diagnostics that can be quickly created by the combination of operators in
+CSET aids in this by providing a flexible way to interrogate model and observational
+data, using diagnostics that can be quickly created by the combination of operators in
 :doc:`/usage/operator-recipes`. Common operations such as reading, writing, and
 regridding are provided to reduce duplication of effort.
 
 CSET provides a legacy for user-developed evaluation methods and diagnostics to
 be shared and documented, with :doc:`well-defined working practices and review
 processes</contributing/index>` to ensure best practice for evaluation and
-verification linked to convective- and turbulence-scale model configurations.
+verification linked to physical model, ML model and observational weather and climate data
+mainly targeting but not restricted to convective- and turbulence-scale model
+configurations across weather and climate time scales.
 Therefore, it provides many benefits in reproducibility, portability,
 accessibility, maintainability, and quality assurance. By contributing newly
 developed diagnostics to CSET you ensure their legacy, ensure their quality
