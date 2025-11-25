@@ -14,9 +14,10 @@ CSET Documentation
    GitHub <https://github.com/MetOffice/CSET>
 
 CSET, the Community Seamless Evaluation Toolkit, is
-an open-source toolkit for the seamless evaluation, verification and investigation
+a community-developed open-source toolkit for the seamless evaluation, verification
+and investigation
 of weather and climate models. It supports the evaluation of physical numerical models and ML
-models as well as observations across time and space scales with a focus on, but not
+models as well as observations seamlessly across time and space scales with a focus on, but not
 limited to, convective and turbulence scales.
 
 CSET provides a centralised and peer-reviewed source of tools to aid
