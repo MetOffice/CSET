@@ -38,6 +38,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         # Runs for every forecast initiation time to process the data in parallel.
         {% for date in CSET_CASE_DATES %}
             R1/{{date}} = """
+            setup_complete[^] => parbake_recipes
             setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
             fetch_complete & parbake_recipes => bake_recipes => cycle_complete
             """
@@ -45,6 +46,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     {% elif CSET_CYCLING_MODE == "trial" %}
         # Analysis from each forecast.
         {{CSET_TRIAL_CYCLE_PERIOD}} = """
+        setup_complete[^] => parbake_recipes
         setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
         fetch_complete & parbake_recipes => bake_recipes => cycle_complete
         """
@@ -53,6 +55,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     # Only runs on the final cycle.
     R1/$ = """
     # Run aggregation recipes.
+    setup_complete[^] => parbake_aggregation_recipes
     fetch_complete & parbake_aggregation_recipes => bake_aggregation_recipes => cycle_complete
     # Finalise website and cleanup.
     cycle_complete => finish_website => send_email
