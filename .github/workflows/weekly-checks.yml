@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+        with:
+          persist-credentials: false
 
       - name: Cache conda environment
         id: conda-env-cache
