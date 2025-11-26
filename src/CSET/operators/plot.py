@@ -2298,8 +2298,8 @@ def qq_plot(
     """Plot a Quantile-Quantile plot between two models for common time points.
 
     The cubes will be normalised by collapsing each cube to its percentiles. Cubes are
-    collapsed within the operator over all specified coordinates such as 
-    grid_latitude, grid_longitude, vertical levels, but also realisation representing 
+    collapsed within the operator over all specified coordinates such as
+    grid_latitude, grid_longitude, vertical levels, but also realisation representing
     ensemble members to ensure a 1D cube (array).
 
     Parameters
@@ -2326,14 +2326,14 @@ def qq_plot(
 
     Notes
     -----
-    The quantile-quantile plot is a variant on the scatter plot representing 
-    two datasets by their quantiles (percentiles) for common time points. 
-    This plot does not use a theoretical distribution to compare against, but 
+    The quantile-quantile plot is a variant on the scatter plot representing
+    two datasets by their quantiles (percentiles) for common time points.
+    This plot does not use a theoretical distribution to compare against, but
     compares percentiles of two datasets. This plot does
-    not use all raw data points, but plots the selected percentiles (quantiles) of 
-    each variable instead for the two datasets, thereby normalising the data for a 
-    direct comparison between the selected percentiles of the two dataset distributions. 
-    
+    not use all raw data points, but plots the selected percentiles (quantiles) of
+    each variable instead for the two datasets, thereby normalising the data for a
+    direct comparison between the selected percentiles of the two dataset distributions.
+
     Quantile-quantile plots are valuable for comparing against
     observations and other models. Identical percentiles between the variables
     will lie on the one-to-one line implying the values correspond well to each
