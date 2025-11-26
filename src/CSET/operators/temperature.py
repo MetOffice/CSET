@@ -40,7 +40,6 @@ def equivalent_potential_temperature_pressure_levels(relative_humidity, temperat
         if RH.units == "%":
             RH /= 100.0
             RH.units = "1"
-        print(RH.units)
         TT = 17.27 * (T - 273.16) / (T - 35.86)
         es = e0 * np.exp(TT.core_data())
         mr = RH * (0.622 * (es / (T.coord("pressure").points - es)))
