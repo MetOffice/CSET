@@ -13,35 +13,66 @@ CSET Documentation
    changelog
    GitHub <https://github.com/MetOffice/CSET>
 
+Key Principles of CSET
+----------------------
+
+**Community**: Evaluation software developed for and by a wide network of model development and
+evaluation scientists, enabling common approaches to distributed evaluation activities.
+**Seamless**: Supporting assessment, evaluation, verification and understanding of physical and
+machine learning models as well as observations across time and space scales, and from regional to global application.
+**Evaluation**: Providing a process-oriented focus to model assessment, supporting depth of
+comparison between different model configurations and assessment relative to a range of observations.
+**Toolkit**: A flexible software including code, recipes and workflow to manage a range of
+user requirements, underpinned by modern software development practices.
+
+Overview of CSET
+----------------
+
 CSET, the Community Seamless Evaluation Toolkit, is
 a community-developed open-source toolkit for the seamless evaluation, verification
 and investigation
-of weather and climate models. It supports the evaluation of physical numerical models and ML
-models as well as observations seamlessly across time and space scales with a focus on, but not
-limited to, convective and turbulence scales.
+of weather and climate models. It supports the evaluation of physical numerical models and machine learning models
+as well as observations seamlessly across time and space scales. CSET primarily targets,
+but is not limited to, higher resolution atmosphere model processes (i.e. convective-scale
+with grid-spacing of order km's and turbulence-scale with sub-km grid spacing) on regional
+to global domains.
 
 CSET provides a centralised and peer-reviewed source of tools to aid
-process-oriented evaluation for UM, LFRic physical and ML models, supporting both
+process-oriented evaluation for UM, LFRic physical and machine learning models, supporting both
 deterministic and ensemble configurations.
 
-CSET is expanding it's support for verification and evaluation of machine learned models
-and utilises observations from a range of sources to aid in the evaluation process.
-It will utilise the Model Evaluation Tools (MET) software to provide a range of
-verification metrics aligned with operational verification best practices.
+CSET is designed to be continuously evolving and improving, driven by community inputs.
+Support for verification and evaluation of a range of machine learning models is expected
+to grow, alongside use of observations from an increasing range of sources to support
+evaluation. It will utilise the Model Evaluation Tools (MET) software to provide a
+range of verification metrics aligned with operational verification best practices.
+Where relevant, CSET will provide interfaces to utilise other evaluation packages to
+support particular evaluation requirements.
 
-For CSET model and diagnostics developers, CSET offers well documented and peer
-reviewed evaluation tools with a clearly defined release cycle and flexible
-evaluation code that can adapt to user needs. CSET is built with portability in
-mind and can be run on a range of platforms from local desktops to HPC systems
-and cloud servers. It ensures traceable and reproducible results during the
-regional model assessment cycle and offers diagnostics access to observations
-and a legacy through continued maintenance and improved discoverability.
+CSET is closely aligned to parametrisation development, diagnostic development and
+evaluation research in the Met Office and Momentum® Partnership, serving as an
+integral part of the Regional Atmosphere and Land (RAL) model development process
+focussed on the Unified Model and LFRic atmosphere model codes.
 
-It aligns parametrisation development, diagnostic development and evaluation
-research, feeding back into Regional Atmosphere and Land (RAL) model development
-across the Met Office and Momentum® Partnership.
+- For CSET model and diagnostics developers, CSET offers:
+   - Well-documented and peer-reviewed evaluation tools.
+   - Community development through open access and agreed working practices.
+   - A clearly defined release cycle.
+   - Automatic testing.
+   - Flexible evaluation code that can adapt to user needs.
+- CSET is built with portability in mind and can be run on:
+   - Local desktops.
+   - HPC systems.
+   - Cloud servers.
+- CSET ensures:
+   - Traceable and reproducible results during a model development and assessment cycle.
+   - Diagnostics access to observations.
+   - A legacy through continued maintenance and improved discoverability.
+- CSET is built using a modern software stack, underpinned by
+   - python3,
+   - iris and
+   - METplus.
 
-It is built using a modern software stack underpinned by python 3 and METplus.
 Contributions to CSET are promoted by clear documentation and working practices,
 automatic testing, and an open access GitHub code base.
 
