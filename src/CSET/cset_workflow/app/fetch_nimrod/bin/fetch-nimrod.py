@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-"""Retrieve observations from the MetDB. Specific to the Met Office."""
+"""Retrieve UK radar observations. Specific to the Met Office."""
 
 import datetime
 
