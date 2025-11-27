@@ -1,0 +1,35 @@
+category: Surface Spatial Plot
+#title: $MODEL_NAME $VARNAME $METHOD
+#description: Extracts and plots the $METHOD of $VARNAME from all times in $MODEL_NAME.
+title: $VARNAME
+description: Extracts and plots radar data.
+
+steps:
+  - operator: read.read_cube
+    file_paths: $INPUT_PATHS
+
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+#      cell_methods_constraint:
+#        operator: constraints.generate_cell_methods_constraint
+#        cell_methods: []
+#        varname: $VARNAME
+#      level_constraint:
+#        operator: constraints.generate_level_constraint
+#        coordinate: "pressure"
+#        levels: []
+#    subarea_type: $SUBAREA_TYPE
+#    subarea_extent: $SUBAREA_EXTENT
+
+#  - operator: collapse.collapse
+#    coordinate: [time]
+#    method: $METHOD
+
+  - operator: plot.spatial_pcolormesh_plot
+    sequence_coordinate: time
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
