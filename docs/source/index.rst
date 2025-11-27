@@ -22,7 +22,7 @@ evaluation scientists, enabling common approaches to distributed evaluation acti
 machine learning models as well as observations across time and space scales, and from regional to global application.
 **Evaluation**: Providing a process-oriented focus to model assessment, supporting depth of
 comparison between different model configurations and assessment relative to a range of observations.
-**Toolkit**: A flexible software including code, recipes and workflow to manage a range of
+**Toolkit**: A flexible software including code, recipes, diagnostics and workflow to manage a range of
 user requirements, underpinned by modern software development practices.
 
 Overview of CSET
