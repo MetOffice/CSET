@@ -1,4 +1,11 @@
 {
+  "Hourly rain accumulation": {
+    "cmap": "cividis",
+    "max": 256,
+    "min": 0,
+    "ymax": 1.0,
+    "ymin": 0.0
+  },
   "air_potential_temperature": {
     "cmap": "RdYlBu_r",
     "max": 350,

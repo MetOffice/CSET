@@ -24,6 +24,27 @@ def load(conf: Config):
     # Load a list of model detail dictionaries.
     models = get_models(conf.asdict())
 
+    # Surface (2D) fields for radar.
+    if conf.SPATIAL_SURFACE_FIELD:
+        #        for model, field, method in itertools.product(
+        for model, field in itertools.product(
+            models, conf.SURFACE_FIELDS, conf.SPATIAL_SURFACE_FIELD_METHOD
+        ):
+            yield RawRecipe(
+                recipe="generic_surface_spatial_plot_sequence_radar.yaml",
+                model_ids=model["id"],
+                variables={
+                    "VARNAME": field,
+                    #                    "MODEL_NAME": model["name"],
+                    #                    "METHOD": method,
+                    #                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    #                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    #                    if conf.SELECT_SUBAREA
+                    #                    else None,
+                },
+                aggregation=False,
+            )
+
     # Surface (2D) fields.
     if conf.SPATIAL_SURFACE_FIELD:
         for model, field, method in itertools.product(
