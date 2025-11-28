@@ -13,4 +13,5 @@ updates:
     cooldown:
       default-days: 7
     groups:
-        actions-dependencies:
+      actions-dependencies:
+        update-types: ["major", "minor", "patch"]
