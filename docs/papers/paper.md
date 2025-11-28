@@ -69,8 +69,8 @@ affiliations:
 
 <!-- A summary describing the high-level functionality and purpose of the software for a diverse, non-specialist audience. -->
 
-The _Convective- [and turbulence-] Scale Evaluation Toolkit_ (**CSET**) is a community-driven open source library, command line tool, and workflow designed to support the evaluation of weather and climate models at convective and turbulent scales.
-Developed by the Met Office in collaboration with the [Momentum® Partnership][momentum_partnership] and broader research community, CSET provides a reproducible, modular, and extensible framework for model diagnostics and verification.
+The _Community Seamless Evaluation Toolkit_ (**CSET**) is a community-driven open source library, command line tool, and workflow designed to support the evaluation of weather and climate models at kilometre and hundred metre scales.
+Developed by the Met Office in collaboration with the [Momentum® Partnership][momentum_partnership] and academia, CSET provides a reproducible, modular, and extensible framework for model diagnostics and verification.
 It analyses numerical weather prediction (NWP) and climate modelling output, including from the next-generation LFRic model [@lfric], ML models, and observational data and visualises the output in an easily sharable static website to allow the development of a coherent evaluation story for weather and climate models across time and spatial scales.
 
 # Statement of need
