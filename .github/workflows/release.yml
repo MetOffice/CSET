@@ -9,16 +9,23 @@ concurrency:
   group: "release"
   cancel-in-progress: false
 
+# Minimise default GITHUB_TOKEN permissions.
+permissions: {}
+
 jobs:
   build-package:
+    name: Build release package
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
         with:
           # Get full history to ensure setuptools_scm is happy.
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Setup python
         uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c
@@ -31,7 +38,8 @@ jobs:
       - name: Build package
         run: python3 -m build
 
-      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      - name: "Upload package as artifact"
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         with:
           name: packages
           path: dist/
@@ -48,7 +56,8 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53
+      - name: Download package artifact
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53
         with:
           name: packages
           path: dist/

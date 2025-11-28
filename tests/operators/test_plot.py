@@ -478,7 +478,7 @@ def test_vector_plot_with_filename(vector_cubes, tmp_working_dir):
     cube_u = vector_cubes[0].slices_over("time").next()
     cube_v = vector_cubes[1].slices_over("time").next()
     plot.vector_plot(cube_u, cube_v, filename="testvector")
-    assert Path("testvector_0.0.png").is_file()
+    assert Path("testvector_482016.0.png").is_file()
 
 
 def test_vector_plot_sequence(vector_cubes, tmp_working_dir):
@@ -489,9 +489,9 @@ def test_vector_plot_sequence(vector_cubes, tmp_working_dir):
         filename="testvectorseq",
         sequence_coordinate="time",
     )
-    assert Path("testvectorseq_0.0.png").is_file()
-    assert Path("testvectorseq_6.0.png").is_file()
-    assert Path("testvectorseq_12.0.png").is_file()
+    assert Path("testvectorseq_482016.0.png").is_file()
+    assert Path("testvectorseq_482022.0.png").is_file()
+    assert Path("testvectorseq_482028.0.png").is_file()
 
 
 def test_vector_plot_check(vector_cubes, tmp_working_dir):
@@ -1158,3 +1158,98 @@ def test_append_to_plot_index_aggregation(monkeypatch, tmp_working_dir):
     with open("meta.json", "rt") as fp:
         meta = json.load(fp)
     assert "case_date" not in meta
+
+
+def test_qq_plot(cube, tmp_working_dir):
+    """Test that qq plot creates an untitled image."""
+    # Data preparation.
+    other_cube = cube.copy()
+    del other_cube.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([cube, other_cube])
+    plot.qq_plot(
+        cubes,
+        coordinates=["time", "grid_latitude", "grid_longitude"],
+        percentiles=[0, 50, 100],
+        model_names=["a", "b"],
+    )
+    assert Path("untitled.png").is_file()
+
+
+def test_qq_plot_named(cube, tmp_working_dir):
+    """Test that qq plot creates a named image."""
+    # Data preparation.
+    other_cube = cube.copy()
+    del other_cube.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([cube, other_cube])
+    plot.qq_plot(
+        cubes,
+        coordinates=["time", "grid_latitude", "grid_longitude"],
+        percentiles=[0, 50, 100],
+        model_names=["a", "b"],
+        filename="qq_plot.ext",
+        one_to_one=True,
+    )
+    assert Path("qq_plot.png").is_file()
+
+
+def test_qq_plot_incorrect_number_of_cubes(cube, tmp_working_dir):
+    """Test exception when incorrect number of cubes provided."""
+    no_cubes = iris.cube.CubeList([])
+    with pytest.raises(ValueError, match="cubes should contain exactly 2 cubes."):
+        plot.qq_plot(
+            no_cubes,
+            coordinates=["time", "grid_latitude", "grid_longitude"],
+            percentiles=[0, 50, 100],
+            model_names=["a", "b"],
+        )
+
+    one_cube = iris.cube.CubeList([cube])
+    with pytest.raises(ValueError, match="cubes should contain exactly 2 cubes."):
+        plot.qq_plot(
+            one_cube,
+            coordinates=["time", "grid_latitude", "grid_longitude"],
+            percentiles=[0, 50, 100],
+            model_names=["a", "b"],
+        )
+
+    three_cubes = iris.cube.CubeList([cube, cube, cube])
+    with pytest.raises(ValueError, match="cubes should contain exactly 2 cubes."):
+        plot.qq_plot(
+            three_cubes,
+            coordinates=["time", "grid_latitude", "grid_longitude"],
+            percentiles=[0, 50, 100],
+            model_names=["a", "b"],
+        )
+
+
+def test_qq_plot_different_data_shape_regrid(cube, tmp_working_dir):
+    """Test when data shape differs, but gets regridded.
+
+    For any cube shapes differ.
+    """
+    rearranged_cube = cube.copy()
+    rearranged_cube = rearranged_cube[:, :, 1:]
+    del cube.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([rearranged_cube, cube])
+    plot.qq_plot(
+        cubes,
+        coordinates=["time", "grid_latitude", "grid_longitude"],
+        percentiles=[0, 50, 100],
+        model_names=["a", "b"],
+    )
+    assert Path("untitled.png").is_file()
+
+
+def test_qq_plot_grid_staggering_regrid(cube, tmp_working_dir):
+    """Test when data considered on staggered grid, so gets regridded."""
+    rearranged_cube = cube.copy()
+    rearranged_cube.rename("eastward_wind_at_10m")
+    del cube.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([rearranged_cube, cube])
+    plot.qq_plot(
+        cubes,
+        coordinates=["time", "grid_latitude", "grid_longitude"],
+        percentiles=[0, 50, 100],
+        model_names=["a", "b"],
+    )
+    assert Path("untitled.png").is_file()

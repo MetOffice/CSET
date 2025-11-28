@@ -38,6 +38,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         # Runs for every forecast initiation time to process the data in parallel.
         {% for date in CSET_CASE_DATES %}
             R1/{{date}} = """
+            setup_complete[^] => parbake_recipes
             setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
             setup_complete[^] => FETCH_OBS:succeed-all => fetch_complete
             fetch_complete & parbake_recipes => bake_recipes => cycle_complete
@@ -46,6 +47,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     {% elif CSET_CYCLING_MODE == "trial" %}
         # Analysis from each forecast.
         {{CSET_TRIAL_CYCLE_PERIOD}} = """
+        setup_complete[^] => parbake_recipes
         setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
         setup_complete[^] => FETCH_OBS:succeed-all => fetch_complete
         fetch_complete & parbake_recipes => bake_recipes => cycle_complete
@@ -55,6 +57,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     # Only runs on the final cycle.
     R1/$ = """
     # Run aggregation recipes.
+    setup_complete[^] => parbake_aggregation_recipes
     fetch_complete & parbake_aggregation_recipes => bake_aggregation_recipes => cycle_complete
     # Finalise website and cleanup.
     cycle_complete => finish_website => send_email
@@ -104,6 +107,12 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     execution time limit = PT1H
         [[[environment]]]
         ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
+
+    [[PARBAKE]]
+        script = rose task-run -v --app-key=parbake_recipes
+        execution time limit = PT5M
+        [[[environment]]]
+            ENCODED_ROSE_SUITE_VARIABLES = {{b64json(ROSE_SUITE_VARIABLES)}}
 
     [[METPLUS]]
         [[[environment]]]
@@ -175,17 +184,12 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
 
     [[parbake_recipes]]
     # Parbake all the recipes for this cycle.
-    script = rose task-run -v --app-key=parbake_recipes
-    execution time limit = PT5M
-        [[[environment]]]
-        ENCODED_ROSE_SUITE_VARIABLES = {{b64json(ROSE_SUITE_VARIABLES)}}
+    inherit=PARBAKE
 
     [[parbake_aggregation_recipes]]
     # Parbake all the aggregation recipes.
-    script = rose task-run -v --app-key=parbake_recipes
-    execution time limit = PT5M
+    inherit=PARBAKE
         [[[environment]]]
-        ENCODED_ROSE_SUITE_VARIABLES = {{b64json(ROSE_SUITE_VARIABLES)}}
         DO_CASE_AGGREGATION = True
 
     [[bake_recipes]]
