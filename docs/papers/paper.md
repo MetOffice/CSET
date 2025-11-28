@@ -17,7 +17,7 @@ authors:
     affiliation: 1
   - name: Sylvia Bohnenstengel
     orcid:
-    affiliation: 1
+    affiliation: 5
   - name: David L. A. Flack
     orcid: 0000-0001-7262-4937
     affiliation: 1
@@ -29,7 +29,7 @@ authors:
     affiliation: 1
   - name: Jon Shonk
     orcid:
-    affiliation: 1
+    affiliation: 5
   - name: Bernard Claxton
     orcid:
     affiliation: 1
@@ -38,7 +38,7 @@ authors:
     affiliation: 2
   - name: Carol Halliwell
     orcid:
-    affiliation: 1
+    affiliation: 5
   - name: Magdalena Gruziel
     orcid:
     affiliation: 3
@@ -52,6 +52,8 @@ affiliations:
   - name: Met Office, United Kingdom
     index: 1
     ror: 01ch2yn61
+  - name: MetOffice@Reading
+    index: 5
   - name: National Institute of Water and Atmospheric Research, New Zealand
     index: 2
     ror: 04hxcaz34
