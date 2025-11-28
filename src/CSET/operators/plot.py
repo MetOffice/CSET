@@ -1288,6 +1288,78 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
     plt.close(fig)
 
 
+def _plot_and_save_scattermap_plot(
+    cube: iris.cube.Cube, filename: str, title: str, projection=None, **kwargs
+):
+    """Plot and save a geographical scatter plot.
+
+    Parameters
+    ----------
+    cube: Cube
+        1 dimensional Cube of the data points with auxiliary latitude and
+        longitude coordinates,
+    filename: str
+        Filename of the plot to write.
+    title: str
+        Plot title.
+    projection: str
+        Mapping projection to be used by cartopy.
+    """
+    # Setup plot details, size, resolution, etc.
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+    if projection is not None:
+        # Apart from the default, the only projection we currently support is
+        # a stereographic projection over the North Pole.
+        if projection == "NP_Stereo":
+            axes = plt.axes(projection=ccrs.NorthPolarStereo(central_longitude=0.0))
+        else:
+            raise ValueError(f"Unknown projection: {projection}")
+    else:
+        axes = plt.axes(projection=ccrs.PlateCarree())
+
+    # Scatter plot of the field. The marker size is chosen to give
+    # symbols that decrease in size as the number of observations
+    # increases, although the fraction of the figure covered by
+    # symbols increases roughly as N^(1/2), disregarding overlaps,
+    # and has been selected for the default figure size of (10, 10).
+    # Should this be changed, the marker size should be adjusted in
+    # proportion to the area of the figure.
+    mrk_size = int(np.sqrt(2500000.0 / len(cube.data)))
+    klon = None
+    klat = None
+    for kc in range(len(cube.aux_coords)):
+        if cube.aux_coords[kc].standard_name == "latitude":
+            klat = kc
+        elif cube.aux_coords[kc].standard_name == "longitude":
+            klon = kc
+    scatter_map = iplt.scatter(
+        cube.aux_coords[klon],
+        cube.aux_coords[klat],
+        c=cube.data[:],
+        s=mrk_size,
+        cmap="jet",
+        edgecolors="k",
+    )
+
+    # Add coastlines.
+    try:
+        axes.coastlines(resolution="10m")
+    except AttributeError:
+        pass
+
+    # Add title.
+    axes.set_title(title, fontsize=16)
+
+    # Add colour bar.
+    cbar = fig.colorbar(scatter_map)
+    cbar.set_label(label=f"{cube.name()} ({cube.units})", size=20)
+
+    # Save plot.
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+    logging.info("Saved geographical scatter plot to %s", filename)
+    plt.close(fig)
+
+
 def _plot_and_save_power_spectrum_series(
     cubes: iris.cube.Cube | iris.cube.CubeList,
     filename: str,
@@ -1480,6 +1552,7 @@ def _spatial_plot(
     filename: str | None,
     sequence_coordinate: str,
     stamp_coordinate: str,
+    **kwargs,
 ):
     """Plot a spatial variable onto a map from a 2D, 3D, or 4D cube.
 
@@ -1530,6 +1603,14 @@ def _spatial_plot(
     except iris.exceptions.CoordinateNotFoundError:
         pass
 
+    # Produce a geographical scatter plot if the data have a
+    # dimension called observation or model_obs_error
+    if any(
+        crd.var_name == "station" or crd.var_name == "model_obs_error"
+        for crd in cube.coords()
+    ):
+        plotting_func = _plot_and_save_scattermap_plot
+
     # Must have a sequence coordinate.
     try:
         cube.coord(sequence_coordinate)
@@ -1557,6 +1638,7 @@ def _spatial_plot(
             stamp_coordinate=stamp_coordinate,
             title=title,
             method=method,
+            **kwargs,
         )
         plot_index.append(plot_filename)
 
@@ -1985,7 +2067,9 @@ def spatial_contour_plot(
     TypeError
         If the cube isn't a single cube.
     """
-    _spatial_plot("contourf", cube, filename, sequence_coordinate, stamp_coordinate)
+    _spatial_plot(
+        "contourf", cube, filename, sequence_coordinate, stamp_coordinate, **kwargs
+    )
     return cube
 
 
@@ -2034,7 +2118,9 @@ def spatial_pcolormesh_plot(
     TypeError
         If the cube isn't a single cube.
     """
-    _spatial_plot("pcolormesh", cube, filename, sequence_coordinate, stamp_coordinate)
+    _spatial_plot(
+        "pcolormesh", cube, filename, sequence_coordinate, stamp_coordinate, **kwargs
+    )
     return cube
 
 

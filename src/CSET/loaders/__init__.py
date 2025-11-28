@@ -22,6 +22,7 @@ __all__ below.
 from CSET.loaders import (
     aoa,
     histograms,
+    observations,
     power_spectrum,
     profiles,
     qq,
@@ -35,6 +36,7 @@ from CSET.loaders import (
 __all__ = [
     "aoa",
     "histograms",
+    "observations",
     "power_spectrum",
     "profiles",
     "qq",

@@ -40,6 +40,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
             R1/{{date}} = """
             setup_complete[^] => parbake_recipes
             setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
+            setup_complete[^] => FETCH_OBS:succeed-all => fetch_complete
             fetch_complete & parbake_recipes => bake_recipes => cycle_complete
             """
         {% endfor %}
@@ -48,6 +49,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         {{CSET_TRIAL_CYCLE_PERIOD}} = """
         setup_complete[^] => parbake_recipes
         setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
+        setup_complete[^] => FETCH_OBS:succeed-all => fetch_complete
         fetch_complete & parbake_recipes => bake_recipes => cycle_complete
         """
     {% endif %}
@@ -96,6 +98,12 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
 
     [[FETCH_DATA]]
     script = rose task-run -v --app-key=fetch_fcst
+    execution time limit = PT1H
+        [[[environment]]]
+        ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
+
+    [[FETCH_OBS]]
+    script = rose task-run -v --app-key=fetch_obs
     execution time limit = PT1H
         [[[environment]]]
         ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
@@ -158,6 +166,21 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         DATA_PERIOD = {{model["data_period"]}}
         ANALYSIS_OFFSET = {{model["analysis_offset"]}}
     {% endfor %}
+
+    {% if SURFACE_SYNOP_OBS %}
+    [[fetch_obs]]
+    # Fetch observations from the MetDB.
+    inherit = FETCH_OBS
+        [[[environment]]]
+        MODEL_IDENTIFIER = "OBS"
+        ROSE_APP_COMMAND_KEY = "metdb"
+        SURFACE_SYNOP_FIELDS = {{SURFACE_SYNOP_FIELDS}}
+        SURFACE_SYNOP_INTERVAL = {{SURFACE_SYNOP_INTERVAL}}
+        SURFACE_SYNOP_OFFSET = {{SURFACE_SYNOP_OFFSET}}
+        WMO_BLOCK_STTN_NMBRS = {{WMO_BLOCK_STTN_NMBRS | default("")}}
+        SUBAREA_EXTENT = {{SUBAREA_EXTENT | default("")}}
+        OBS_SUBTYPE = "LNDSYB"
+    {% endif %}
 
     [[parbake_recipes]]
     # Parbake all the recipes for this cycle.
