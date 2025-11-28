@@ -1,67 +1,34 @@
 # CSET: Community Seamless Evaluation Toolkit
 
-CSET, the Community Seamless Evaluation Toolkit, is an open-source toolkit for evaluating weather and climate models, including physical numerical and machine learning models, as well as observations. It focuses on high-resolution atmospheric processes, from convective to turbulence scales, across regional to global domains.
+> [!TIP]
+> Useful links: [Documentation](https://metoffice.github.io/CSET) | [Source Code](https://github.com/MetOffice/CSET) | [Issue Tracker](https://github.com/MetOffice/CSET/issues) | [Releases](https://github.com/MetOffice/CSET/releases) | [Discussion Forum](https://github.com/MetOffice/simulation-systems/discussions/categories/cset-toolkit)
 
-CSET supports parametrisation, diagnostics, and evaluation research at the Met Office and Momentum® Partnership, and is integral to the Regional Atmosphere and Land (RAL) model development for the Unified Model and LFRic codes.
+The Community Seamless Evaluation Toolkit, CSET, is a community-developed open source toolkit for evaluation, verification, and investigation of weather and climate models. It supports the evaluation of physical numerical models, machine learning models, and observations seamlessly across time and space scales. CSET primarily targets, but is not limited to, high-resolution atmospheric processes, from convective to turbulence scales (i.e. kilometre to sub-kilometre grid spacing), across regional or global domains.
 
-CSET provides a centralised and peer-reviewed source of tools to aid
-process-oriented verification and evaluation for UM, LFRic physical and machine learning models, supporting both deterministic and ensemble configurations.
+CSET provides a centralised and peer-reviewed set of tools to aid process-oriented verification and evaluation for UM, LFRic, and machine learning models, supporting both deterministic and ensemble configurations.
 
-For CSET model and diagnostics developers, CSET offers:
-   - Well-documented and peer-reviewed evaluation tools.
-   - Community development through open access and agreed working practices.
-   - A clearly defined release cycle.
-   - Automatic testing.
-   - Flexible evaluation code that can adapt to user needs.
+At the Met Office and Momentum® Partnership CSET supports parametrisation development, diagnostic development and evaluation research. It is integral to the Regional Atmosphere and Land (RAL) model development process for the Unified Model and LFRic atmospheric modelling codes.
 
-CSET is built with portability in mind and can be run on:
-   - Local desktops.
-   - HPC systems.
-   - Cloud servers.
+CSET is designed to be continuously evolving and improving, driven by community inputs. Support for verification and evaluation of a range of machine learning models is expected to grow, alongside use of observations from an increasing range of sources to support evaluation. It will utilise the Model Evaluation Tools (MET) software to provide a range of verification metrics aligned with operational verification best practices. Where relevant, CSET will provide interfaces to utilise other evaluation packages to support particular evaluation requirements.
 
-CSET ensures:
-   - Traceable and reproducible results during a model development and assessment cycle.
-   - Diagnostics access to observations.
-   - A legacy for model and observation based diagnostics through continued maintenance and improved discoverability.
+Please [visit the documentation](https://metoffice.github.io/CSET) to learn more about CSET and how to use it.
 
-CSET is built using a modern software stack, underpinned by
-- python3,
-- iris and
-- METplus.
-
-
-
-Please read [the documentation](https://metoffice.github.io/CSET) to learn more
-about CSET, and how to use it.
-
-If you want to ask or share with the CSET community, please use the relevant
-category of the [Simulation Systems Discussions
-Forum](https://github.com/MetOffice/simulation-systems/discussions/categories/cset-toolkit).
+If you want to ask or share with the CSET community, please use the relevant category of the [Simulation Systems Discussions Forum](https://github.com/MetOffice/simulation-systems/discussions/categories/cset-toolkit).
 
 ## Contributing
 
-Contributions are readily welcomed! To get started with developing CSET visit
-the [Contributing](https://metoffice.github.io/CSET/contributing/) section of
-the documentation.
+Contributions are readily welcomed! Visit the [contributing documentation](https://metoffice.github.io/CSET/contributing/) to get started with developing CSET.
 
-In addition to reading the working practices, the key
-recommendation is early communication. Open an [issue on
-Github](https://github.com/MetOffice/CSET/issues) with your proposed change or
-addition in the design phase, and then others can provide guidance early.
+In addition to reading the working practices, the key recommendation is early communication. Open an [issue on GitHub](https://github.com/MetOffice/CSET/issues) while your proposed change or addition in the design phase so others can provide guidance.
 
 ## Licence
 
 © Crown copyright, Met Office (2022-2025) and CSET contributors.
 
-Licensed under the [Apache License, Version 2.0](LICENCE) (the "License"); you
-may not use this file except in compliance with the License. You may obtain a
-copy of the License at
+Licensed under the [Apache License, Version 2.0](LICENCE) (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 
 <http://www.apache.org/licenses/LICENSE-2.0>
 
-Unless required by applicable law or agreed to in writing, software distributed
-under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-CONDITIONS OF ANY KIND, either express or implied. See the License for the
-specific language governing permissions and limitations under the License.
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 GitHub Copilot was used in the development of this software.
