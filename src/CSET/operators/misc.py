@@ -22,7 +22,7 @@ import iris
 import numpy as np
 from iris.cube import Cube, CubeList
 
-from CSET._common import iter_maybe
+from CSET._common import is_increasing, iter_maybe
 from CSET.operators._utils import fully_equalise_attributes, get_cube_yxcoordname
 from CSET.operators.regrid import regrid_onto_cube
 
@@ -318,15 +318,6 @@ def difference(cubes: CubeList):
             "Linear regridding base cube to other grid to compute differences"
         )
         base = regrid_onto_cube(base, other, method="Linear")
-
-    def is_increasing(sequence: list) -> bool:
-        """Determine the direction of an ordered sequence.
-
-        Returns "increasing" or "decreasing" depending on whether the sequence
-        is going up or down. The sequence should already be monotonic, with no
-        duplicate values. An iris DimCoord's points fulfills this criteria.
-        """
-        return sequence[0] < sequence[1]
 
     # Figure out if we are comparing between UM and LFRic; flip array if so.
     base_lat_direction = is_increasing(base.coord(base_lat_name).points)

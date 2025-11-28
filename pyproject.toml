@@ -30,6 +30,8 @@ dependencies = [
     "markdown-it-py >= 3.0",
     "nc-time-axis",
     "iris-grib",
+    "scipy",
+    "scikit-image",
 ]
 
 [project.urls]
