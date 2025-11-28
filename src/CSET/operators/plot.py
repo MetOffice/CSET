@@ -44,7 +44,7 @@ from CSET._common import (
     render_file,
     slugify,
 )
-from CSET.operators._utils import get_cube_yxcoordname, is_transect
+from CSET.operators._utils import get_cube_yxcoordname, is_transect, slice_over_maybe
 
 # Use a non-interactive plotting backend.
 mpl.use("agg")
@@ -458,6 +458,8 @@ def _plot_and_save_spatial_plot(
     filename: str,
     title: str,
     method: Literal["contourf", "pcolormesh"],
+    overlay_cube: iris.cube.Cube | None = None,
+    contour_cube: iris.cube.Cube | None = None,
     **kwargs,
 ):
     """Plot and save a spatial plot.
@@ -472,12 +474,22 @@ def _plot_and_save_spatial_plot(
         Plot title.
     method: "contourf" | "pcolormesh"
         The plotting method to use.
+    overlay_cube: Cube, optional
+        Optional 2 dimensional (lat and lon) Cube of data to overplot on top of base cube
+    contour_cube: Cube, optional
+        Optional 2 dimensional (lat and lon) Cube of data to overplot as contours over base cube
     """
     # Setup plot details, size, resolution, etc.
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
     # Specify the color bar
     cmap, levels, norm = _colorbar_map_levels(cube)
+
+    # If overplotting, set required colorbars
+    if overlay_cube:
+        over_cmap, over_levels, over_norm = _colorbar_map_levels(overlay_cube)
+    if contour_cube:
+        cntr_cmap, cntr_levels, cntr_norm = _colorbar_map_levels(contour_cube)
 
     # Setup plot map projection, extent and coastlines.
     axes = _setup_spatial_map(cube, fig, cmap)
@@ -501,6 +513,36 @@ def _plot_and_save_spatial_plot(
         plot = iplt.pcolormesh(cube, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax)
     else:
         raise ValueError(f"Unknown plotting method: {method}")
+
+    # Overplot overlay field, if required
+    if overlay_cube:
+        try:
+            over_vmin = min(over_levels)
+            over_vmax = max(over_levels)
+        except TypeError:
+            over_vmin, over_vmax = None, None
+        if over_norm is not None:
+            over_vmin = None
+            over_vmax = None
+        iplt.pcolormesh(
+            overlay_cube,
+            cmap=over_cmap,
+            norm=over_norm,
+            alpha=0.8,
+            vmin=over_vmin,
+            vmax=over_vmax,
+        )
+    # Overplot contour field, if required
+    if contour_cube:
+        iplt.contour(
+            contour_cube,
+            colors="darkgray",
+            levels=cntr_levels,
+            norm=cntr_norm,
+            alpha=0.5,
+            linestyles="--",
+            linewidths=1,
+        )
 
     # Check to see if transect, and if so, adjust y axis.
     if is_transect(cube):
@@ -565,6 +607,8 @@ def _plot_and_save_postage_stamp_spatial_plot(
     stamp_coordinate: str,
     title: str,
     method: Literal["contourf", "pcolormesh"],
+    overlay_cube: iris.cube.Cube | None = None,
+    contour_cube: iris.cube.Cube | None = None,
     **kwargs,
 ):
     """Plot postage stamp spatial plots from an ensemble.
@@ -579,6 +623,10 @@ def _plot_and_save_postage_stamp_spatial_plot(
         Coordinate that becomes different plots.
     method: "contourf" | "pcolormesh"
         The plotting method to use.
+    overlay_cube: Cube, optional
+        Optional 2 dimensional (lat and lon) Cube of data to overplot on top of base cube
+    contour_cube: Cube, optional
+        Optional 2 dimensional (lat and lon) Cube of data to overplot as contours over base cube
 
     Raises
     ------
@@ -592,6 +640,11 @@ def _plot_and_save_postage_stamp_spatial_plot(
 
     # Specify the color bar
     cmap, levels, norm = _colorbar_map_levels(cube)
+    # If overplotting, set required colorbars
+    if overlay_cube:
+        over_cmap, over_levels, over_norm = _colorbar_map_levels(overlay_cube)
+    if contour_cube:
+        cntr_cmap, cntr_levels, cntr_norm = _colorbar_map_levels(contour_cube)
 
     # Make a subplot for each member.
     for member, subplot in zip(
@@ -620,6 +673,36 @@ def _plot_and_save_postage_stamp_spatial_plot(
             plot = iplt.pcolormesh(member, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax)
         else:
             raise ValueError(f"Unknown plotting method: {method}")
+
+        # Overplot overlay field, if required
+        if overlay_cube:
+            try:
+                over_vmin = min(over_levels)
+                over_vmax = max(over_levels)
+            except TypeError:
+                over_vmin, over_vmax = None, None
+            if over_norm is not None:
+                over_vmin = None
+                over_vmax = None
+            iplt.pcolormesh(
+                overlay_cube[member.coord(stamp_coordinate).points[0]],
+                cmap=over_cmap,
+                norm=over_norm,
+                alpha=0.6,
+                vmin=over_vmin,
+                vmax=over_vmax,
+            )
+        # Overplot contour field, if required
+        if contour_cube:
+            iplt.contour(
+                contour_cube[member.coord(stamp_coordinate).points[0]],
+                colors="darkgray",
+                levels=cntr_levels,
+                norm=cntr_norm,
+                alpha=0.6,
+                linestyles="--",
+                linewidths=1,
+            )
         axes.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
         axes.set_axis_off()
 
@@ -1270,12 +1353,17 @@ def _spatial_plot(
     filename: str | None,
     sequence_coordinate: str,
     stamp_coordinate: str,
+    overlay_cube: iris.cube.Cube | None = None,
+    contour_cube: iris.cube.Cube | None = None,
 ):
     """Plot a spatial variable onto a map from a 2D, 3D, or 4D cube.
 
     A 2D spatial field can be plotted, but if the sequence_coordinate is present
     then a sequence of plots will be produced. Similarly if the stamp_coordinate
     is present then postage stamp plots will be produced.
+
+    If an overlay_cube and/or contour_cube are specified, multiple variables can
+    be overplotted on the same figure.
 
     Parameters
     ----------
@@ -1294,6 +1382,10 @@ def _spatial_plot(
     stamp_coordinate: str
         Coordinate about which to plot postage stamp plots. Defaults to
         ``"realization"``.
+    overlay_cube: Cube | None, optional
+        Optional 2 dimensional (lat and lon) Cube of data to overplot on top of base cube
+    contour_cube: Cube | None, optional
+        Optional 2 dimensional (lat and lon) Cube of data to overplot as contours over base cube
 
     Raises
     ------
@@ -1329,7 +1421,8 @@ def _spatial_plot(
     # Create a plot for each value of the sequence coordinate.
     plot_index = []
     nplot = np.size(cube.coord(sequence_coordinate).points)
-    for cube_slice in cube.slices_over(sequence_coordinate):
+
+    for iseq, cube_slice in enumerate(cube.slices_over(sequence_coordinate)):
         # Use sequence value so multiple sequences can merge.
         sequence_value = cube_slice.coord(sequence_coordinate).points[0]
         plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
@@ -1340,6 +1433,15 @@ def _spatial_plot(
         if nplot == 1 and coord.has_bounds:
             if np.size(coord.bounds) > 1:
                 title = f"{recipe_title}\n [{coord.units.title(coord.bounds[0][0])} to {coord.units.title(coord.bounds[0][1])}]"
+
+        # Extract sequence slice for overlay_cube and contour_cube if required.
+        overlay_slice = slice_over_maybe(
+            overlay_cube, sequence_coordinate, iseq
+        )  # uence_value)
+        contour_slice = slice_over_maybe(
+            contour_cube, sequence_coordinate, iseq
+        )  # uence_value)
+
         # Do the actual plotting.
         plotting_func(
             cube_slice,
@@ -1347,6 +1449,8 @@ def _spatial_plot(
             stamp_coordinate=stamp_coordinate,
             title=title,
             method=method,
+            overlay_cube=overlay_slice,
+            contour_cube=contour_slice,
         )
         plot_index.append(plot_filename)
 
@@ -1790,6 +1894,79 @@ def spatial_pcolormesh_plot(
     """
     _spatial_plot("pcolormesh", cube, filename, sequence_coordinate, stamp_coordinate)
     return cube
+
+
+def spatial_multi_pcolormesh_plot(
+    cube: iris.cube.Cube,
+    overlay_cube: iris.cube.Cube,
+    contour_cube: iris.cube.Cube,
+    filename: str = None,
+    sequence_coordinate: str = "time",
+    stamp_coordinate: str = "realization",
+    **kwargs,
+) -> iris.cube.Cube:
+    """Plot a set of spatial variables onto a map from a 2D, 3D, or 4D cube.
+
+    A 2D basis cube spatial field can be plotted, but if the sequence_coordinate is present
+    then a sequence of plots will be produced. Similarly if the stamp_coordinate
+    is present then postage stamp plots will be produced.
+
+    If specified, a masked overlay_cube can be overplotted on top of the base cube.
+
+    If specified, contours of a contour_cube can be overplotted on top of those.
+
+    For single-variable equivalent of this routine, use spatial_pcolormesh_plot.
+
+    This function is significantly faster than ``spatial_contour_plot``,
+    especially at high resolutions, and should be preferred unless contiguous
+    contour areas are important.
+
+    Parameters
+    ----------
+    cube: Cube
+        Iris cube of the data to plot. It should have two spatial dimensions,
+        such as lat and lon, and may also have a another two dimension to be
+        plotted sequentially and/or as postage stamp plots.
+    overlay_cube: Cube
+        Iris cube of the data to plot as an overlay on top of basis cube. It should have two spatial dimensions,
+        such as lat and lon, and may also have a another two dimension to be
+        plotted sequentially and/or as postage stamp plots. This is likely to be a masked cube in order not to hide the underlying basis cube.
+    contour_cube: Cube
+        Iris cube of the data to plot as a contour overlay on top of basis cube and overlay_cube. It should have two spatial dimensions,
+        such as lat and lon, and may also have a another two dimension to be
+        plotted sequentially and/or as postage stamp plots.
+    filename: str, optional
+        Name of the plot to write, used as a prefix for plot sequences. Defaults
+        to the recipe name.
+    sequence_coordinate: str, optional
+        Coordinate about which to make a plot sequence. Defaults to ``"time"``.
+        This coordinate must exist in the cube.
+    stamp_coordinate: str, optional
+        Coordinate about which to plot postage stamp plots. Defaults to
+        ``"realization"``.
+
+    Returns
+    -------
+    Cube
+        The original cube (so further operations can be applied).
+
+    Raises
+    ------
+    ValueError
+        If the cube doesn't have the right dimensions.
+    TypeError
+        If the cube isn't a single cube.
+    """
+    _spatial_plot(
+        "pcolormesh",
+        cube,
+        filename,
+        sequence_coordinate,
+        stamp_coordinate,
+        overlay_cube=overlay_cube,
+        contour_cube=contour_cube,
+    )
+    return cube, overlay_cube, contour_cube
 
 
 # TODO: Expand function to handle ensemble data.
