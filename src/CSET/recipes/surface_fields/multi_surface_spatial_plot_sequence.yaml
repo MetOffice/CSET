@@ -1,0 +1,64 @@
+category: Multivar Spatial Plot
+title: $MODEL_NAME $VARNAME_BASE m$METHOD
+description: Extracts and overplots the $METHOD of $VARNAME_BASE, $VARNAME_OVER and $VARNAME_CONTOUR from all times in $MODEL_NAME.
+
+steps:
+
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: collapse.collapse
+    coordinate: [time]
+    method: $METHOD
+
+  - operator: plot.spatial_multi_pcolormesh_plot
+    cube:
+        operator: filters.filter_cubes
+        constraint:
+            operator: constraints.combine_constraints
+            variable_constraint:
+                operator: constraints.generate_var_constraint
+                varname: $VARNAME_BASE
+            cell_methods_constraint:
+                operator: constraints.generate_cell_methods_constraint
+                cell_methods: []
+                varname: $VARNAME_BASE
+
+    overlay_cube:
+        operator: filters.apply_mask
+        original_field:
+            operator: filters.filter_cubes
+            constraint:
+                 operator: constraints.combine_constraints
+                 variable_constraint:
+                     operator: constraints.generate_var_constraint
+                     varname: $VARNAME_OVER
+                 cell_methods_constraint:
+                     operator: constraints.generate_cell_methods_constraint
+                     cell_methods: []
+                     varname: $VARNAME_OVER
+        mask:
+            operator: filters.generate_mask
+            mask_field:
+              operator: filters.filter_cubes
+              constraint:
+                 operator: constraints.combine_constraints
+                 variable_constraint:
+                   operator: constraints.generate_var_constraint
+                   varname: $VARNAME_OVER
+                 cell_methods_constraint:
+                   operator: constraints.generate_cell_methods_constraint
+                   cell_methods: []
+                   varname: $VARNAME_OVER
+            condition: '>='
+            value: $OVERLAY_MASK_VALUE
+
+    contour_cube:
+        operator: filters.filter_cubes
+        constraint:
+            operator: constraints.combine_constraints
+            variable_constraint:
+                operator: constraints.generate_var_constraint
+                varname: $VARNAME_CONTOUR

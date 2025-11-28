@@ -247,6 +247,34 @@ def is_spatialdim(cube: iris.cube.Cube) -> bool:
         return False
 
 
+def is_coorddim(cube: iris.cube.Cube, coord_name) -> bool:
+    """Determine whether a cube has specified dimension coordinates.
+
+    Arguments
+    ---------
+    cube: iris.cube.Cube
+        An iris cube which will be checked to see if it contains coordinate
+        names that match a pre-defined list of acceptable coordinate names.
+
+    coord_name: str
+        A cube dimension name
+
+    Returns
+    -------
+    bool
+        If true, then the cube has a spatial projection and thus can be plotted
+        as a map.
+    """
+    # Get a list of dimension coordinate names for the cube
+    coord_names = [coord.name() for coord in cube.coords(dim_coords=True)]
+
+    # Check if requested dimension is found in cube and get index
+    if coord_name in coord_names:
+        return True
+    else:
+        return False
+
+
 def is_transect(cube: iris.cube.Cube) -> bool:
     """Determine whether a cube is a transect.
 
@@ -330,6 +358,39 @@ def fully_equalise_attributes(cubes: iris.cube.CubeList):
         logging.debug("Removed attributes from coordinate %s: %s", coord, removed)
 
     return cubes
+
+
+def slice_over_maybe(cube: iris.cube.Cube, coord_name, index):
+    """Test slicing over cube if exists.
+
+    Return None if not existing.
+
+    Arguments
+    ---------
+    cube: iris.cube.Cube
+        An iris cube which will be checked to see if it can be sliced over
+        given coordinate.
+    coord_name: coord
+        An iris coordinate over which to slide cube.
+    index:
+        Coordinate value to extract
+
+    Returns
+    -------
+    cube_slice: iris.cube.Cube
+        A slice of iris cube, if available to slice.
+    """
+    if cube:
+        if is_coorddim(cube, coord_name):
+            cube_slice = cube[index]
+            if cube.ndim > 3:  ## More elegant way to subset?? Deal with ens
+                cube_slice = cube[:, index]
+            print(cube_slice)
+        else:
+            cube_slice = cube
+    else:
+        cube_slice = None
+    return cube_slice
 
 
 def is_time_aggregatable(cube: iris.cube.Cube) -> bool:
