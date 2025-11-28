@@ -60,6 +60,6 @@ def load(conf: Config):
                     if conf.PLOTTING_PROJECTION
                     else None,
                 },
-                model_ids="OBS",
+                model_ids=[model["id"], "OBS"],
                 aggregation=False,
             )
