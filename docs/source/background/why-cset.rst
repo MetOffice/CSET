@@ -32,22 +32,3 @@ CSET provides many benefits to users and developers, including:
 * A legacy for user-developed evaluation methods and diagnostics to be shared and documented, with :doc:`well-defined working practices and review processes</contributing/index>`.
 * A route for contributors to CSET to ensure legacy of newly developed diagnostics, to ensure benefit to wider weather and climate modelling communities.
 * Reproducibility, portability, accessibility, maintainability, and quality assurance of evaluation tools to support a range of applications.
-
-Key Principles of CSET
-----------------------
-
-Community
-    Evaluation software developed for and by a wide network of model development and
-    evaluation scientists, enabling common approaches to distributed evaluation activities.
-
-Seamless
-    Supporting assessment, evaluation, verification and understanding of physical and
-    machine learning models as well as observations across time and space scales, and from regional to global application.
-
-Evaluation
-    Providing a process-oriented focus to model assessment, supporting depth of
-    comparison between different model configurations and assessment relative to a range of observations.
-
-Toolkit
-    A flexible software including code, recipes, diagnostics and workflow to manage a range of
-    user requirements, underpinned by modern software development practices.

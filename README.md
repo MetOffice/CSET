@@ -5,6 +5,8 @@
 
 The Community Seamless Evaluation Toolkit, CSET, is a community-developed open source toolkit for evaluation, verification, and investigation of weather and climate models. It supports the evaluation of physical numerical models, machine learning models, and observations seamlessly across time and space scales. CSET primarily targets, but is not limited to, high-resolution atmospheric processes, from convective to turbulence scales (i.e. kilometre to sub-kilometre grid spacing), across regional or global domains.
 
+## Overview of CSET
+
 CSET provides a centralised and peer-reviewed set of tools to aid process-oriented verification and evaluation for UM, LFRic, and machine learning models, supporting both deterministic and ensemble configurations.
 
 At the Met Office and Momentum® Partnership CSET supports parametrisation development, diagnostic development and evaluation research. It is integral to the Regional Atmosphere and Land (RAL) model development process for the Unified Model and LFRic atmospheric modelling codes.
@@ -14,6 +16,24 @@ CSET is designed to be continuously evolving and improving, driven by community 
 Please [visit the documentation](https://metoffice.github.io/CSET) to learn more about CSET and how to use it.
 
 If you want to ask or share with the CSET community, please use the relevant category of the [Simulation Systems Discussions Forum](https://github.com/MetOffice/simulation-systems/discussions/categories/cset-toolkit).
+
+## Key Principles of CSET
+
+### Community
+
+Evaluation software developed for and by a wide network of model development and evaluation scientists, enabling common approaches to distributed evaluation activities.
+
+### Seamless
+
+Supporting assessment, evaluation, verification and understanding of physical and machine learning models as well as observations across time and space scales, and from regional to global application.
+
+### Evaluation
+
+Providing a process-oriented focus to model assessment, supporting depth of comparison between different model configurations and assessment relative to a range of observations.
+
+### Toolkit
+
+A flexible software including code, recipes, diagnostics and workflow to manage a range of user requirements, underpinned by modern software development practices.
 
 ## Contributing
 
