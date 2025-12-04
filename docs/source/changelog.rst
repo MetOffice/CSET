@@ -13,7 +13,7 @@ Changelog
 .. Highlight any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
-25.12.0 (2025-12-01)
+25.12.0 (2025-12-04)
 --------------------
 
 The end of the year brings many things, including a name change to CSET. While
