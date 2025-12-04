@@ -13,6 +13,26 @@ CSET Documentation
    changelog
    GitHub <https://github.com/MetOffice/CSET>
 
+Key Principles of CSET
+----------------------
+
+Community
+    Evaluation software developed for and by a wide network of model development and
+    evaluation scientists, enabling common approaches to distributed evaluation activities.
+
+Seamless
+    Supporting assessment, evaluation, verification and understanding of physical and
+    machine learning models as well as observations across time and space scales, and from regional to global application.
+
+Evaluation
+    Providing a process-oriented focus to model assessment, supporting depth of
+    comparison between different model configurations and assessment relative to a range of observations.
+
+Toolkit
+    A flexible software including code, recipes, diagnostics and workflow to manage a range of
+    user requirements, underpinned by modern software development practices.
+
+
 Overview of CSET
 ----------------
 
