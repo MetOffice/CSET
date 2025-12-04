@@ -13,36 +13,44 @@ CSET Documentation
    changelog
    GitHub <https://github.com/MetOffice/CSET>
 
-CSET, the Community Seamless Evaluation Toolkit, is
-an open-source toolkit for evaluation, verification and investigation of
-convective- and turbulence-scale numerical models for weather and climate
-applications, cutting across time and space scales with a focus on regional
-domains.
+Overview of CSET
+----------------
 
-CSET provides a centralised and peer-reviewed source of tools to aid
-process-oriented evaluation for UM and LFRic models, supporting both
-deterministic and ensemble configurations.
+The Community Seamless Evaluation Toolkit, CSET, is a community-developed open
+source toolkit for evaluation, verification, and investigation of weather and
+climate models. It supports the evaluation of physical numerical models, machine
+learning models, and observations seamlessly across time and space scales. CSET
+primarily targets, but is not limited to, high-resolution atmospheric processes,
+from convective to turbulence scales (i.e. kilometre to sub-kilometre grid
+spacing), across regional or global domains.
 
-In the future, it will support evaluation of machine learning models and utilise
-observations from a range of sources to aid in the evaluation process. It will
-utilise the Model Evaluation Tools (MET) software to provide a range of
-verification metrics aligned with operational verification best practices.
+CSET provides a centralised and peer-reviewed set of tools to aid
+process-oriented verification and evaluation for UM, LFRic, and machine learning
+models, supporting both deterministic and ensemble configurations.
 
-For CSET model and diagnostics developers, CSET offers well documented and peer
-reviewed evaluation tools with a well defined release cycle and flexible
-evaluation code that can adapt to user needs. CSET is built with portability in
-mind and can be run on a range of platforms from local desktops to HPC systems
-and cloud servers. It ensures traceable and reproducible results during the
-regional model assessment cycle and offers diagnostics access to observations
-and a legacy through continued maintenance and improved discoverability.
+At the Met Office and Momentum® Partnership CSET supports parametrisation
+development, diagnostic development and evaluation research. It is integral to
+the Regional Atmosphere and Land (RAL) model development process for the Unified
+Model and LFRic atmospheric modelling codes.
 
-It aligns parametrisation development, diagnostic development and evaluation
-research, feeding back into Regional Atmosphere and Land (RAL) model development
-across the Met Office and Momentum® Partnership.
+CSET is designed to be continuously evolving and improving, driven by community
+inputs. Support for verification and evaluation of a range of machine learning
+models is expected to grow, alongside use of observations from an increasing
+range of sources to support evaluation. It will utilise the Model Evaluation
+Tools (MET) software to provide a range of verification metrics aligned with
+operational verification best practices. Where relevant, CSET will provide
+interfaces to utilise other evaluation packages to support particular evaluation
+requirements.
 
-It is built using a modern software stack underpinned by python 3 and METplus.
-Contributions to CSET are promoted by clear documentation and working practices,
-automatic testing, and an open access GitHub code base.
+For model and diagnostics developers, CSET offers:
+
+* Well-documented, tested, and peer-reviewed evaluation tools.
+* Flexible evaluation code that can adapt to user needs.
+* Traceable and reproducible results during a model development and assessment cycle.
+* Community development through open access and agreed working practices.
+* Access to bespoke observations for diagnostics.
+* A legacy for diagnostics through continued maintenance and improved discoverability.
+* Portability across sites, including :doc:`easy installation </getting-started/installation>`.
 
 For information on how to use CSET, see :doc:`getting-started/index`.
 
