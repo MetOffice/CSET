@@ -1,10 +1,10 @@
-CSET Documentation
-==================
+Community Seamless Evaluation Toolkit (CSET) Documentation
+==========================================================
 
 .. toctree::
    :hidden:
 
-   self
+   CSET Documentation <self>
    getting-started/index
    usage/index
    reference/index
@@ -13,7 +13,6 @@ CSET Documentation
    changelog
    GitHub <https://github.com/MetOffice/CSET>
 
-
 The **Community Seamless Evaluation Toolkit**, CSET, is a community-developed open
 source toolkit for evaluation, verification, and investigation of weather and
 climate models. It supports the evaluation of physical numerical models, machine
@@ -21,6 +20,21 @@ learning models, and observations seamlessly across time and space scales. CSET
 primarily targets, but is not limited to, high-resolution atmospheric processes,
 from convective to turbulence scales (i.e. kilometre to sub-kilometre grid
 spacing), across regional or global domains.
+
+Useful links
+------------
+
+`Source Code`_ | `Issue Tracker`_ | Releases_ | `Discussion Forum`_
+
+For information on how to use CSET, see :doc:`getting-started/index`.
+
+For information on getting involved as a developer, see
+:doc:`contributing/index`.
+
+.. _Source Code: https://github.com/MetOffice/CSET
+.. _Issue Tracker: https://github.com/MetOffice/CSET/issues
+.. _Releases: https://github.com/MetOffice/CSET/releases
+.. _Discussion Forum: https://github.com/MetOffice/simulation-systems/discussions/categories/cset-toolkit
 
 Overview of CSET
 ----------------
@@ -78,16 +92,6 @@ Evaluation
 Toolkit
     A flexible software including code, recipes, diagnostics and workflow to manage a range of
     user requirements, underpinned by modern software development practices.
-
-Useful Links
-------------
-
-`Source Code`_ | `Issue Tracker`_ | Releases_ | `Discussion Forum`_
-
-.. _Source Code: https://github.com/MetOffice/CSET
-.. _Issue Tracker: https://github.com/MetOffice/CSET/issues
-.. _Releases: https://github.com/MetOffice/CSET/releases
-.. _Discussion Forum: https://github.com/MetOffice/simulation-systems/discussions/categories/cset-toolkit
 
 Code of Conduct
 ---------------
