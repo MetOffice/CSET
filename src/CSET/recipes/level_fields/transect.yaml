@@ -11,6 +11,10 @@ steps:
   - operator: read.read_cube
     file_paths: $INPUT_PATHS
     constraint:
+      operator: constraints.generate_var_constraint
+      varname: $VARNAME
+  - operator: filters.filter_cubes
+    constraint:
         operator: constraints.combine_constraints
         cell_method_constraint:
             operator: constraints.generate_cell_methods_constraint
