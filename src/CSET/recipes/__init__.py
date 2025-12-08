@@ -16,7 +16,6 @@
 
 import importlib.resources
 import logging
-import sys
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -29,26 +28,12 @@ from CSET.cset_workflow.lib.python.jinja_utils import get_models as get_models
 logger = logging.getLogger(__name__)
 
 
-def _version_agnostic_importlib_resources_file() -> Path:
-    """Transitional wrapper to importlib.resources.files().
-
-    Importlib behaviour changed in 3.12 to avoid circular dependencies.
-    """
-    if sys.version_info.minor >= 12:
-        input_dir = importlib.resources.files()
-    else:
-        import CSET.recipes
-
-        input_dir = importlib.resources.files(CSET.recipes)
-    return input_dir
-
-
 def _recipe_files_in_tree(
     recipe_name: str | None = None, input_dir: Path | None = None
 ) -> Iterator[Path]:
     """Yield recipe file Paths matching the recipe name."""
     if input_dir is None:
-        input_dir = _version_agnostic_importlib_resources_file()
+        input_dir = importlib.resources.files()
     for file in input_dir.iterdir():
         logger.debug("Testing %s", file)
         if (
@@ -64,7 +49,7 @@ def _recipe_files_in_tree(
 def _get_recipe_file(recipe_name: str, input_dir: Path | None = None) -> Path:
     """Return a Path to the recipe file."""
     if input_dir is None:
-        input_dir = _version_agnostic_importlib_resources_file()
+        input_dir = importlib.resources.files()
     file = input_dir / recipe_name
     logger.debug("Getting recipe: %s", file)
     if not file.is_file():

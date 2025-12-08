@@ -22,7 +22,6 @@ import json
 import logging
 import math
 import os
-import sys
 from typing import Literal
 
 import cartopy.crs as ccrs
@@ -113,28 +112,13 @@ def _check_single_cube(cube: iris.cube.Cube | iris.cube.CubeList) -> iris.cube.C
     raise TypeError("Must have a single cube", cube)
 
 
-def _py312_importlib_resources_files_shim():
-    """Importlib behaviour changed in 3.12 to avoid circular dependencies.
-
-    This shim is needed until python 3.12 is our oldest supported version, after
-    which it can just be replaced by directly using importlib.resources.files.
-    """
-    if sys.version_info.minor >= 12:
-        files = importlib.resources.files()
-    else:
-        import CSET.operators
-
-        files = importlib.resources.files(CSET.operators)
-    return files
-
-
 def _make_plot_html_page(plots: list):
     """Create a HTML page to display a plot image."""
     # Debug check that plots actually contains some strings.
     assert isinstance(plots[0], str)
 
     # Load HTML template file.
-    operator_files = _py312_importlib_resources_files_shim()
+    operator_files = importlib.resources.files()
     template_file = operator_files.joinpath("_plot_page_template.html")
 
     # Get some metadata.
@@ -165,9 +149,7 @@ def _load_colorbar_map(user_colorbar_file: str = None) -> dict:
 
     This is a separate function to make it cacheable.
     """
-    colorbar_file = _py312_importlib_resources_files_shim().joinpath(
-        "_colorbar_definition.json"
-    )
+    colorbar_file = importlib.resources.files().joinpath("_colorbar_definition.json")
     with open(colorbar_file, "rt", encoding="UTF-8") as fp:
         colorbar = json.load(fp)
 

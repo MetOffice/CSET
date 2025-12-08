@@ -236,11 +236,9 @@ def test_FilesystemFileRetriever(tmp_path):
         files_found = ffr.get_file("tests/test_data/exeter_em*.nc", str(tmp_path))
     # Correct return value.
     assert files_found
-    # Symlinks created. Technically this checks that the files the symlink
-    # points to exists, but that is good enough here, and the follow_symlinks
-    # argument requires python 3.12.
-    assert (tmp_path / "exeter_em01.nc").exists()
-    assert (tmp_path / "exeter_em02.nc").exists()
+    # Symlinks created.
+    assert (tmp_path / "exeter_em01.nc").exists(follow_symlinks=False)
+    assert (tmp_path / "exeter_em02.nc").exists(follow_symlinks=False)
     # Check symlink points to correct file.
     with open((tmp_path / "exeter_em01.nc"), "rb") as fp:
         digest = hashlib.file_digest(fp, "sha256").hexdigest()
