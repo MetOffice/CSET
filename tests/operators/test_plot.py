@@ -18,6 +18,7 @@ import json
 import logging
 from pathlib import Path
 
+import cf_units
 import iris.coords
 import iris.cube
 import matplotlib as mpl
@@ -1253,3 +1254,44 @@ def test_qq_plot_grid_staggering_regrid(cube, tmp_working_dir):
         model_names=["a", "b"],
     )
     assert Path("untitled.png").is_file()
+
+
+def test_calculate_CFAD(xwind):
+    """Test calculating a CFAD."""
+    bins = np.array([-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50])
+    calculated_CFAD = np.zeros((len(xwind.coord("pressure").points), len(bins) - 1))
+    for j, level_cube in enumerate(xwind.slices_over("pressure")):
+        calculated_CFAD[j, :] = (
+            np.histogram(level_cube.data.reshape(level_cube.data.size), bins=bins)[0]
+            / level_cube.data.size
+        )
+    assert np.allclose(
+        plot._calculate_CFAD(
+            xwind, "pressure", [-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50]
+        ).data,
+        calculated_CFAD,
+        rtol=1e-06,
+        atol=1e-02,
+    )
+
+
+def test_name_CFAD(xwind):
+    """Test naming of CFAD cube."""
+    expected_name = f"{xwind.name()}_cfad"
+    assert (
+        plot._calculate_CFAD(
+            xwind, "pressure", [-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50]
+        ).name()
+        == expected_name
+    )
+
+
+def test_units_CFAD(xwind):
+    """Test units of CFAD cube."""
+    expected_units = cf_units.Unit("1")
+    assert (
+        plot._calculate_CFAD(
+            xwind, "pressure", [-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50]
+        ).units
+        == expected_units
+    )
