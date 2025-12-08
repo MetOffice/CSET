@@ -22,7 +22,7 @@ classifiers = [
 ]
 dependencies = [
     "numpy",
-    "scitools-iris >= 3.12.2",
+    "scitools-iris >= 3.14.1",
     "ruamel.yaml >= 0.17",
     "pygraphviz >= 1.11",
     "mo_pack >= 0.3.0",
