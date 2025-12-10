@@ -598,7 +598,7 @@ function setup_plots_sidebar() {
     return;
   }
   // Loading of plot index file, and adding them to the sidebar.
-  fetch("plots/facets.jsonl")
+  fetch("plots/index.jsonl")
     .then((response) => {
       // Display a message and stop if the fetch fails.
       if (!response.ok) {
