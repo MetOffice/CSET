@@ -13,6 +13,197 @@ Changelog
 .. Highlight any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+25.12.0 (2025-12-04)
+--------------------
+
+The end of the year brings many things, including a name change to CSET. While
+the acronym remains the same, its meaning has been updated. **CSET is now the
+Community Seamless Evaluation Toolkit**. This new name reflects a widened scope
+and ambition for CSET. Please see the updated documentation for further details
+on CSET's scope.
+
+Over the last four months there have been over 670 commits made to CSET,
+including from six new contributors. This release brings a host of improvements,
+including:
+
+* New vector plot type, for showing the direction of a field such as wind on top
+  of its magnitude.
+
+* Many new recipes, including a selection of impact focused diagnostics
+  highlighting impactful weather conditions for specific customers.
+
+* Added the ability to load and plot observations. This is currently only setup
+  for the Met Office-specific MetDB, but other observation sources will be
+  added in future releases.
+
+* An optimised CSET workflow now runs multiple recipes inside the same job. This
+  avoids the overhead of scheduling many small jobs on cluster systems, and
+  greatly reduces the total runtime of CSET.
+
+* The jinja include files for adding recipes into the workflow have been
+  replaced with python loaders, which are more readable, flexible, and
+  performant.
+  Loaders template values into generic recipes, looping over models, variables,
+  fields, and the method of plotting to produce the recipes that are baked in
+  the workflow.
+  You can find out more about implementation details like this in the new
+  :doc:`CSET architecture documentation <contributing/architecture>`.
+
+There are many more fixes and improvements. See below for the full details.
+
+⚙️ Operators
+~~~~~~~~~~~~
+
+* Add surface wind vector plots recipe and related function by `@plutowing`_ in :pr:`1484`. This was their first contribution 🎉
+* Allow timeseries plotting for ensembles by `@daflack`_ in :pr:`1522`
+* Update collapse to ensure processing overlapping times only where multiple model inputs by `@ukmo-huw-lewis`_ in :pr:`1536`
+* Increase default wind profile x-axis range by `@ukmo-huw-lewis`_ in :pr:`1539`
+* Visibility_in_air difference spatial plots use correct colorscale by `@ukmo-huw-lewis`_ in :pr:`1541`
+* Adjusts legend for timeseries for a single model so it is different from ensemble plots by `@daflack`_ in :pr:`1538`
+* Fix ensemble plotting of profiles by `@daflack`_ in :pr:`1533`
+* Error when no cubes loaded by read.read_cubes by `@jfrost-mo`_ in :pr:`1585`
+* Update generate mask operator by `@daflack`_ in :pr:`1583`
+* Update spatial map setup and support for non-rotated grids by `@ukmo-huw-lewis`_ in :pr:`1593`
+* Add windspeed Beaufort Scale converter by `@daflack`_ in :pr:`1616`
+* Add constraint to remove single ensemble member by `@daflack`_ in :pr:`1631`
+* Add a realization coordinate constraint by `@daflack`_ in :pr:`1632`
+* Update cell_methods constraint to handle maximum and minimum cell methods by `@jfrost-mo`_ in :pr:`1623`
+* Add unit conversion operator by `@daflack`_ in :pr:`1640`
+* Title wrong in transects by `@jwarner8`_ in :pr:`1686`
+* Use long_name for resulting difference cube before standard_name by `@jfrost-mo`_ in :pr:`1712`
+* Loop over multiple cubes in regrid_to_single_point by `@Fraetor`_ in :pr:`1753`
+* Update mask operator and related recipes to use letters rather than symbols by `@daflack`_ in :pr:`1693`
+* Add Structural Similarity Index by `@daflack`_ in :pr:`1768`
+* Operator constraint update: Adding support for idealised calendars (eg. 360 day) by `@tdh2005`_ in :pr:`1705`. This was their first contribution 🎉
+* Regional power spectra using Discrete Cosine Transform (DCT) by `@cehalliwell`_ in :pr:`1765`
+* Convert proleptic Gregorian time units to standard calendar in load callback by `@jfrost-mo`_ in :pr:`1805`
+* Update QQ plots for multiple models by `@daflack`_ in :pr:`1702`
+
+🥣 Recipes
+~~~~~~~~~~
+
+* Update surface_spatial_difference recipes to shorten plot title widths by `@ukmo-huw-lewis`_ in :pr:`1543`
+* Uppercase "Difference" in plot title by `@jfrost-mo`_ in :pr:`1545`
+* Rename process-based diagnostics and add placeholder sections for new diagnostics by `@daflack`_ in :pr:`1581`
+* Rename derived section to derived diagnostics for clarity by `@daflack`_ in :pr:`1589`
+* Add presence of rain diagnostics by `@daflack`_ in :pr:`1584`
+* Add diagnostic for daily maximum temperature between 0900 UTC and 0900 UTC by `@daflack`_ in :pr:`1622`
+* Add ensemble probability without control member diagnostic for temperature at screen level by `@daflack`_ in :pr:`1677`
+* Add daily 09 UTC minimum temperature diagnostic by `@daflack`_ in :pr:`1737`
+* Presence of Aviation Fog by `@mo-sanamahmood`_ in :pr:`1743`
+* Presence of thick fog by `@AlfieBG`_ in :pr:`1745`. This was their first contribution 🎉
+* Add a snow presence diagnostic to CSET by `@mo-jbrooke`_ in :pr:`1746`. This was their first contribution 🎉
+* Presence of air frost by `@mo-sro`_ in :pr:`1747`. This was their first contribution 🎉
+* Add cloud base height less than 50 m by `@mo-jthornton`_ in :pr:`1751`. This was their first contribution 🎉
+* Add spatial difference for min temperature by `@daflack`_ in :pr:`1742`
+* Add lightning presence recipes by `@mo-sro`_ in :pr:`1760`
+* Add presence of fog diagnostic by `@daflack`_ in :pr:`1771`
+* Add presence of gale force wind diagnostics by `@daflack`_ in :pr:`1772`
+* Add presence of storm force winds diagnostic by `@daflack`_ in :pr:`1773`
+* Add presence of hurricane force winds diagnostics by `@daflack`_ in :pr:`1774`
+* Presence of ground frost by `@mo-sro`_ in :pr:`1775`
+* Add diagnostics for aviation colour state by `@daflack`_ in :pr:`1695`
+
+🔄 Workflow
+~~~~~~~~~~~
+
+* Explicitly check for existence of cset-dev environment when running development CSET by `@jfrost-mo`_ in :pr:`1524`
+* Removes memory directives for spatial plots with pressure levels to prevent OOM by `@daflack`_ in :pr:`1544`
+* Make the trial end date required by `@jfrost-mo`_ in :pr:`1608`
+* Update spatial_field includes file for correct call to RAIN_PRESENCE_SPATIAL_PLOT by `@daflack`_ in :pr:`1625`
+* Don't set plot date if DO_CASE_AGGREGATION by `@jfrost-mo`_ in :pr:`1633`
+* #837 part 1: Add `bake_recipes` rose app by `@jfrost-mo`_ in :pr:`1634`
+* #837 part 2: Parbake and recipe loader infrastructure by `@jfrost-mo`_ in :pr:`1635`
+* #837 part 3: Add `parbake_recipes` rose app by `@jfrost-mo`_ in :pr:`1636`
+* #837 part 4: Convert spatial_field include files into python recipe loader by `@jfrost-mo`_ in :pr:`1637`
+* #837 part 4p1: Convert timeseries include files into python recipe loader by `@daflack`_ in :pr:`1670`
+* #837 part 4p2: Convert spatial_difference include files into python recipe loader by `@daflack`_ in :pr:`1671`
+* #837 part 4p3: Convert profile includes files into python recipe loader by `@daflack`_ in :pr:`1672`
+* #837 part 4p4: Convert transect includes files into python recipe loader by `@daflack`_ in :pr:`1673`
+* #837 part 4p5: Convert histogram includes files into python recipe loader by `@daflack`_ in :pr:`1674`
+* #837 part 4p6: Convert ageofair includes file into python recipe loader by `@daflack`_ in :pr:`1675`
+* #837 part 6: Delete unneeded code by `@jfrost-mo`_ in :pr:`1639`
+* #837 part 8: Optimise parbake by `@jfrost-mo`_ in :pr:`1682`
+* #837 part 5: Modify graphing to use parbake_recipes and bake_recipes by `@jfrost-mo`_ in :pr:`1638`
+* Allow many concurrent cycles to maximise parallelism by `@jfrost-mo`_ in :pr:`1681`
+* Use rose-bunch incremental mode when baking by `@jfrost-mo`_ in :pr:`1687`
+* Load correct recipe for model level difference aggregation by `@jfrost-mo`_ in :pr:`1721`
+* Remove resource directives from flow.cylc by `@jfrost-mo`_ in :pr:`1758`
+* Don't automatically retrigger or reduce parallelism when baking fails by `@jfrost-mo`_ in :pr:`1741`
+* Finish setup before running parbake by `@jfrost-mo`_ in :pr:`1820`
+* Move parbake runtime configuration into family by `@jfrost-mo`_ in :pr:`1821`
+* Update rose-suite.conf.example by `@jfrost-mo`_ in :pr:`1822`
+* Ingestion of synoptic observations by `@JMEdwardsXtr`_ in :pr:`1579`
+
+📖 Documentation
+~~~~~~~~~~~~~~~~
+
+* Correct workflow path in documentation by `@jfrost-mo`_ in :pr:`1518`
+* Document how to add new dependencies to CSET by `@jfrost-mo`_ in :pr:`1440`
+* Correct docstring for misc.difference is_increasing function by `@jfrost-mo`_ in :pr:`1790`
+* Add examples of ISO 8601 durations to analysis period and offset by `@jfrost-mo`_ in :pr:`1789`
+* Define LATLON_IN_TYPE in documentation by `@Sylviabohnenstengel`_ in :pr:`1801`
+* Document CSET architecture and workflow apps by `@jfrost-mo`_ in :pr:`1688`
+* Change CSET to mean Community Seamless Evaluation Toolkit by `@jfrost-mo`_ in :pr:`1815`
+* Update documentation to reflect larger remit of CSET by `@Sylviabohnenstengel`_ in :pr:`1824`
+* Move CSET key principles to the top of the documentation by `@Sylviabohnenstengel`_ in :pr:`1834`
+
+🏗️ Infrastructure
+~~~~~~~~~~~~~~~~~
+
+* Reduce required code coverage by `@jfrost-mo`_ in :pr:`1523`
+* Live stream logs from conda run by `@jfrost-mo`_ in :pr:`1519`
+* Stop writing overly verbose logs by `@jfrost-mo`_ in :pr:`1525`
+* Use python 3.13 when creating developer conda environment by `@jfrost-mo`_ in :pr:`1547`
+* Normalise shebangs to use `/usr/bin/env` by `@jfrost-mo`_ in :pr:`1587`
+* Only import YAML class, rather than whole module by `@jfrost-mo`_ in :pr:`1606`
+* Rename `test_plots.py` to `test_plot.py` for consistency with `plot.py` by `@jfrost-mo`_ in :pr:`1597`
+* Update copyright and fix function type signature by `@jfrost-mo`_ in :pr:`1607`
+* Split replace_template_variable test into more specific tests by `@jfrost-mo`_ in :pr:`1604`
+* Minor cleanup in flow.cylc by `@jfrost-mo`_ in :pr:`1603`
+* Improve docstring for CSET._common.parse_recipe by `@jfrost-mo`_ in :pr:`1599`
+* Add return type for `tmp_working_dir` fixture by `@jfrost-mo`_ in :pr:`1598`
+* Exclude script entry points from coverage by `@jfrost-mo`_ in :pr:`1594`
+* Add sstrip utility function by `@jfrost-mo`_ in :pr:`1595`
+* Log rather than warn for existing unpacked recipes by `@jfrost-mo`_ in :pr:`1614`
+* Add special handling for Paths in replace_template_variable by `@jfrost-mo`_ in :pr:`1605`
+* Handle unreadable files in make_script_executable by `@jfrost-mo`_ in :pr:`1612`
+* Parse recipe separately from executing it by `@jfrost-mo`_ in :pr:`1600`
+* Add `b64json` jinja utility function by `@jfrost-mo`_ in :pr:`1602`
+* Add usage example for Config class by `@jfrost-mo`_ in :pr:`1678`
+* Import iris.cube into wind.py to allow for constructing a CubeList by `@jfrost-mo`_ in :pr:`1680`
+* Move loaders to CSET.loaders by `@jfrost-mo`_ in :pr:`1689`
+* Update restricted files repository URL by `@jfrost-mo`_ in :pr:`1699`
+* Reorganise recipes into sub-directories for navigation ease by `@daflack`_ in :pr:`1717`
+* Remove workaround for conda environment symlink by `@Fraetor`_ in :pr:`1732`
+* Require exact match to return recipe from `unpack_recipes` by `@Fraetor`_ in :pr:`1754`
+* Merge pre-commit update and conda-lockfile update actions by `@jfrost-mo`_ in :pr:`1722`
+* Lockfile update improvements by `@jfrost-mo`_ in :pr:`1780`
+* Ensure all file retriever futures are resolved before returning from the Executor context by `@jfrost-mo`_ in :pr:`1796`
+* Use trusted publishing for uploading PyPI package by `@jfrost-mo`_ in :pr:`1797`
+* Add test for multiple cubes in regrid_to_single_point by `@daflack`_ in :pr:`1787`
+* Warn rather than error for unrecognised base time units by `@jfrost-mo`_ in :pr:`1803`
+* Change working directory in power spectrum tests by `@jfrost-mo`_ in :pr:`1806`
+* Zizmor GitHub Actions audit improvements by `@jfrost-mo`_ in :pr:`1819`
+* Fix syntax error in dependabot configuration by `@jfrost-mo`_ in :pr:`1830`
+
+👷 New Contributors
+~~~~~~~~~~~~~~~~~~~
+
+* `@plutowing`_ made their first contribution in :pr:`1484`
+* `@AlfieBG`_ made their first contribution in :pr:`1745`
+* `@mo-jbrooke`_ made their first contribution in :pr:`1746`
+* `@mo-sro`_ made their first contribution in :pr:`1747`
+* `@mo-jthornton`_ made their first contribution in :pr:`1751`
+* `@tdh2005`_ made their first contribution in :pr:`1705`
+
+.. _@plutowing: https://github.com/plutowing
+.. _@AlfieBG: https://github.com/AlfieBG
+.. _@mo-jbrooke: https://github.com/mo-jbrooke
+.. _@mo-sro: https://github.com/mo-sro
+.. _@mo-jthornton: https://github.com/mo-jthornton
+.. _@tdh2005: https://github.com/tdh2005
+
 25.7.0 (2025-07-17)
 -------------------
 

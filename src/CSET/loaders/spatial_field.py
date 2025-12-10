@@ -414,28 +414,6 @@ def load(conf: Config):
                 aggregation=False,
             )
 
-    # Screen-level temperature probabilities
-    for model, condition, threshold in itertools.product(
-        models,
-        conf.PROB_TEMPERATURE_CONDITION,
-        conf.PROB_TEMPERATURE_THRESHOLD,
-    ):
-        if conf.SCREEN_LEVEL_TEMPERATURE_SPATIAL_PROBABILITY_WITHOUT_CONTROL_MEMBER:
-            yield RawRecipe(
-                recipe="screen_level_temperature_spatial_probability_without_control.yaml",
-                variables={
-                    "CONDITION": condition,
-                    "THRESHOLD": threshold,
-                    "MODEL_NAME": model["name"],
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
-                },
-                model_ids=model["id"],
-                aggregation=False,
-            )
-
         # Aviation colour state due to visibility.
         if conf.AVIATION_COLOUR_STATE_VISIBILITY:
             yield RawRecipe(
@@ -471,6 +449,28 @@ def load(conf: Config):
             yield RawRecipe(
                 recipe="aviation_colour_state_spatial_plot.yaml",
                 variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
+
+    # Screen-level temperature probabilities
+    for model, condition, threshold in itertools.product(
+        models,
+        conf.PROB_TEMPERATURE_CONDITION,
+        conf.PROB_TEMPERATURE_THRESHOLD,
+    ):
+        if conf.SCREEN_LEVEL_TEMPERATURE_SPATIAL_PROBABILITY_WITHOUT_CONTROL_MEMBER:
+            yield RawRecipe(
+                recipe="screen_level_temperature_spatial_probability_without_control.yaml",
+                variables={
+                    "CONDITION": condition,
+                    "THRESHOLD": threshold,
                     "MODEL_NAME": model["name"],
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
