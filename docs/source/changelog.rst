@@ -13,6 +13,31 @@ Changelog
 .. Highlight any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+25.12.1 (2025-12-10)
+--------------------
+
+A small patch release fixing a couple of critical issues and adding support for
+python 3.14.
+
+🔄 Workflow
+~~~~~~~~~~~
+
+* Fetch observations within FETCH_DATA family, allowing workflow to validate by `@jfrost-mo`_ in :pr:`1841`
+* Move aviation_colour_state loaders to correct for loop by `@daflack`_ in :pr:`1843`
+* Skip baking task when parbake task didn't find any required recipes by `@SGallagherMet`_ in :pr:`1704`. This was their first contribution 🎉
+
+🏗️ Infrastructure
+~~~~~~~~~~~~~~~~~
+
+* Support python 3.14 by `@jfrost-mo`_ in :pr:`1778`
+
+👷 New Contributors
+~~~~~~~~~~~~~~~~~~~
+
+* `@SGallagherMet`_ made their first contribution in :pr:`1704` (They have previously given a great deal of advice.)
+
+.. _@SGallagherMet: https://github.com/SGallagherMet
+
 25.12.0 (2025-12-04)
 --------------------
 
