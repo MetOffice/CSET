@@ -40,7 +40,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
             R1/{{date}} = """
             setup_complete[^] => parbake_recipes
             setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
-            setup_complete[^] => FETCH_OBS:succeed-all => fetch_complete
             fetch_complete & parbake_recipes => bake_recipes => cycle_complete
             """
         {% endfor %}
@@ -49,7 +48,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         {{CSET_TRIAL_CYCLE_PERIOD}} = """
         setup_complete[^] => parbake_recipes
         setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
-        setup_complete[^] => FETCH_OBS:succeed-all => fetch_complete
         fetch_complete & parbake_recipes => bake_recipes => cycle_complete
         """
     {% endif %}
@@ -97,13 +95,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         {% endif %}
 
     [[FETCH_DATA]]
-    script = rose task-run -v --app-key=fetch_fcst
-    execution time limit = PT1H
-        [[[environment]]]
-        ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
-
-    [[FETCH_OBS]]
-    script = rose task-run -v --app-key=fetch_obs
     execution time limit = PT1H
         [[[environment]]]
         ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
@@ -158,6 +149,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     [[fetch_fcst_m{{model["id"]}}]]
     # Fetch data from disk or a file based archival system.
     inherit = FETCH_DATA
+    script = rose task-run -v --app-key=fetch_fcst
         [[[environment]]]
         MODEL_IDENTIFIER = {{model["id"]}}
         ROSE_APP_COMMAND_KEY = {{model["data_source"]}}
@@ -170,7 +162,8 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     {% if SURFACE_SYNOP_OBS %}
     [[fetch_obs]]
     # Fetch observations from the MetDB.
-    inherit = FETCH_OBS
+    inherit = FETCH_DATA
+    script = rose task-run -v --app-key=fetch_obs
         [[[environment]]]
         MODEL_IDENTIFIER = "OBS"
         ROSE_APP_COMMAND_KEY = "metdb"
