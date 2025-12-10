@@ -61,6 +61,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     # Run aggregation recipes.
     setup_complete[^] => parbake_aggregation_recipes
     fetch_complete & parbake_aggregation_recipes:start_baking? => bake_aggregation_recipes
+    parbake_aggregation_recipes:skip_baking? => ! bake_aggregation_recipes
     parbake_aggregation_recipes:skip_baking? | bake_aggregation_recipes => cycle_complete
     # Finalise website and cleanup.
     cycle_complete => finish_website => send_email
