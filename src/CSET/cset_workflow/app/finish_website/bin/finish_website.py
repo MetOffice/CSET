@@ -28,7 +28,7 @@ import shutil
 from importlib.metadata import version
 from pathlib import Path
 
-from CSET._common import combine_dicts, sort_dict
+from CSET._common import sort_dict
 
 logging.basicConfig(
     level=os.getenv("LOGLEVEL", "INFO"), format="%(asctime)s %(levelname)s %(message)s"
@@ -41,36 +41,23 @@ def construct_index():
     Index should has the form ``{"Category Name": {"recipe_id": "Plot Name"}}``
     where ``recipe_id`` is the name of the plot's directory.
     """
-    index = {}
     plots_dir = Path(os.environ["CYLC_WORKFLOW_SHARE_DIR"]) / "web/plots"
-    # Loop over all diagnostics and append to index.
-    for metadata_file in plots_dir.glob("**/*/meta.json"):
-        try:
-            with open(metadata_file, "rt", encoding="UTF-8") as fp:
-                plot_metadata = json.load(fp)
-
-            category = plot_metadata["category"]
-            case_date = plot_metadata.get("case_date", "")
-            relative_url = str(metadata_file.parent.relative_to(plots_dir))
-
-            record = {
-                category: {
-                    case_date if case_date else "Aggregation": {
-                        relative_url: plot_metadata["title"].strip()
-                    }
-                }
-            }
-        except (json.JSONDecodeError, KeyError, TypeError) as err:
-            logging.error("%s is invalid, skipping.\n%s", metadata_file, err)
-            continue
-        index = combine_dicts(index, record)
-
-    # Sort index of diagnostics.
-    index = sort_dict(index)
-
-    # Write out website index.
-    with open(plots_dir / "index.json", "wt", encoding="UTF-8") as fp:
-        json.dump(index, fp, indent=2)
+    with open(plots_dir / "index.jsonl", "wt", encoding="UTF-8") as index_fp:
+        # Loop over all diagnostics and append to index. The glob is sorted to
+        # ensure a consistent ordering.
+        for metadata_file in sorted(plots_dir.glob("**/*/meta.json")):
+            try:
+                with open(metadata_file, "rt", encoding="UTF-8") as plot_fp:
+                    plot_metadata = json.load(plot_fp)
+                plot_metadata["path"] = str(metadata_file.parent.relative_to(plots_dir))
+                # Sort plot metadata.
+                plot_metadata = sort_dict(plot_metadata)
+                # Write metadata into website index.
+                json.dump(plot_metadata, index_fp, separators=(",", ":"))
+                index_fp.write("\n")
+            except (json.JSONDecodeError, KeyError, TypeError) as err:
+                logging.error("%s is invalid, skipping.\n%s", metadata_file, err)
+                continue
 
 
 def update_workflow_status():
