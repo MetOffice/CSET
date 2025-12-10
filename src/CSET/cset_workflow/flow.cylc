@@ -40,7 +40,9 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
             R1/{{date}} = """
             setup_complete[^] => parbake_recipes
             setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
-            fetch_complete & parbake_recipes => bake_recipes => cycle_complete
+            fetch_complete & parbake_recipes:start_baking? => bake_recipes
+            parbake_recipes:skip_baking? => ! bake_recipes
+            parbake_recipes:skip_baking? | bake_recipes => cycle_complete
             """
         {% endfor %}
     {% elif CSET_CYCLING_MODE == "trial" %}
@@ -48,7 +50,9 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         {{CSET_TRIAL_CYCLE_PERIOD}} = """
         setup_complete[^] => parbake_recipes
         setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
-        fetch_complete & parbake_recipes => bake_recipes => cycle_complete
+        fetch_complete & parbake_recipes:start_baking? => bake_recipes
+        parbake_recipes:skip_baking? => ! bake_recipes
+        parbake_recipes:skip_baking? | bake_recipes => cycle_complete
         """
     {% endif %}
 
@@ -56,7 +60,9 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     R1/$ = """
     # Run aggregation recipes.
     setup_complete[^] => parbake_aggregation_recipes
-    fetch_complete & parbake_aggregation_recipes => bake_aggregation_recipes => cycle_complete
+    fetch_complete & parbake_aggregation_recipes:start_baking? => bake_aggregation_recipes
+    parbake_aggregation_recipes:skip_baking? => ! bake_aggregation_recipes
+    parbake_aggregation_recipes:skip_baking? | bake_aggregation_recipes => cycle_complete
     # Finalise website and cleanup.
     cycle_complete => finish_website => send_email
     cycle_complete => housekeeping
@@ -102,8 +108,12 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     [[PARBAKE]]
         script = rose task-run -v --app-key=parbake_recipes
         execution time limit = PT5M
+        completion = succeeded and (start_baking or skip_baking)
         [[[environment]]]
             ENCODED_ROSE_SUITE_VARIABLES = {{b64json(ROSE_SUITE_VARIABLES)}}
+        [[[outputs]]]
+            start_baking='start baking'
+            skip_baking='skip baking'
 
     [[METPLUS]]
         [[[environment]]]
