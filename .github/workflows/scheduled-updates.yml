@@ -39,7 +39,7 @@ jobs:
 
       - name: Update CSET developer and workflow lock files
         run: |
-          py_vers="3.11 3.12 3.13"
+          py_vers="3.11 3.12 3.13 3.14"
           for py_ver in ${py_vers}
           do
             # Developer lock files.
@@ -73,12 +73,8 @@ jobs:
           gh_token: ${{ steps.app-token.outputs.token }}
           repository: ${{ github.repository }}
         run: |
-          # Display any changes in the log and exit early if there are none.
-          if git diff --name-status --exit-code
-          then
-            echo "No change, skipping pull request..."
-            exit 0
-          fi
+          original_commit="$(git rev-parse --verify HEAD)"
+          git diff --stat
 
           # Commit changed lockfiles.
           git add requirements/locks/*.txt
@@ -87,6 +83,13 @@ jobs:
           # Commit changed pre-commit config.
           git add .pre-commit-config.yaml
           git commit -m "[CI] Update .pre-commit-config.yaml" || true
+
+          # Exit early if there are no changes.
+          if [[ ${original_commit} == "$(git rev-parse --verify HEAD)" ]]
+          then
+            echo "No change, skipping pull request..."
+            exit 0
+          fi
 
           # Push branch to GitHub.
           git push origin HEAD
