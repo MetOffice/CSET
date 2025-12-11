@@ -71,11 +71,14 @@ def test_construct_index(monkeypatch, tmp_path):
     finish_website.construct_index()
 
     # Check index.
-    index_file = plots_dir / "index.json"
+    index_file = plots_dir / "index.jsonl"
     assert index_file.is_file()
     with open(index_file, "rt", encoding="UTF-8") as fp:
-        index = json.load(fp)
-    expected = {"Category": {"20250101": {"p1": "P1", "p2": "P2"}}}
+        index = fp.read()
+    expected = (
+        '{"case_date":"20250101","category":"Category","path":"p1","title":"P1"}\n'
+        '{"case_date":"20250101","category":"Category","path":"p2","title":"P2"}\n'
+    )
     assert index == expected
 
 
@@ -94,11 +97,11 @@ def test_construct_index_aggregation_case(monkeypatch, tmp_path):
     finish_website.construct_index()
 
     # Check index.
-    index_file = plots_dir / "index.json"
+    index_file = plots_dir / "index.jsonl"
     assert index_file.is_file()
     with open(index_file, "rt", encoding="UTF-8") as fp:
         index = json.load(fp)
-    expected = {"Category": {"Aggregation": {"p1": "P1"}}}
+    expected = {"category": "Category", "path": "p1", "title": "P1"}
     assert index == expected
 
 
@@ -121,12 +124,9 @@ def test_construct_index_invalid(monkeypatch, tmp_path, caplog):
     assert level == logging.ERROR
     assert "p1/meta.json is invalid, skipping." in message
 
-    index_file = plots_dir / "index.json"
+    index_file = plots_dir / "index.jsonl"
     assert index_file.is_file()
-    with open(index_file, "rt", encoding="UTF-8") as fp:
-        index = json.load(fp)
-    expected = {}
-    assert index == expected
+    assert index_file.stat().st_size == 0
 
 
 def test_entrypoint(monkeypatch):
