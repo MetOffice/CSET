@@ -392,7 +392,7 @@ def _setup_spatial_map(
         # Consider map projection orientation.
         # Adapting orientation enables plotting across international dateline.
         # Users can adapt the default central_longitude if alternative projections views.
-        if x2 > 180.0:
+        if x2 > 180.0 or x1 < -180.0:
             central_longitude = 180.0
         else:
             central_longitude = 0.0
@@ -404,7 +404,7 @@ def _setup_spatial_map(
             projection = ccrs.RotatedPole(
                 pole_longitude=coord_system.grid_north_pole_longitude,
                 pole_latitude=coord_system.grid_north_pole_latitude,
-                central_rotated_longitude=0.0,
+                central_rotated_longitude=central_longitude,
             )
             crs = projection
         else:
