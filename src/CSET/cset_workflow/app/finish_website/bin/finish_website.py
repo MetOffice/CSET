@@ -25,6 +25,7 @@ import datetime
 import json
 import logging
 import os
+import shutil
 from importlib.metadata import version
 from pathlib import Path
 
@@ -47,8 +48,7 @@ def install_website_skeleton(www_root_link: Path, www_content: Path):
     www_content.mkdir(parents=True, exist_ok=True)
     # Copy static HTML/CSS/JS.
     html_source = Path.cwd() / "html"
-    for file in html_source.iterdir():
-        file.copy_into(www_content)
+    shutil.copytree(html_source, www_content, dirs_exist_ok=True)
     # Create directory for plots.
     plot_dir = www_content / "plots"
     plot_dir.mkdir(exist_ok=True)
@@ -104,7 +104,7 @@ def copy_rose_config(www_content: Path):
     """Copy the rose-suite.conf file to add to output web directory."""
     rose_suite_conf = Path(os.environ["CYLC_WORKFLOW_RUN_DIR"]) / "rose-suite.conf"
     web_conf_file = www_content / "rose-suite.conf"
-    rose_suite_conf.copy(web_conf_file)
+    shutil.copyfile(rose_suite_conf, web_conf_file)
 
 
 def run():
