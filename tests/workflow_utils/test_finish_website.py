@@ -22,6 +22,20 @@ from pathlib import Path
 from CSET.cset_workflow.app.finish_website.bin import finish_website
 
 
+def test_install_website_skeleton(monkeypatch, tmp_path):
+    """Check static files are copied correctly."""
+    www_content = tmp_path / "web"
+    www_root_link = tmp_path / "www/CSET"
+    monkeypatch.chdir("src/CSET/cset_workflow/app/finish_website/file")
+    finish_website.install_website_skeleton(www_root_link, www_content)
+    assert www_content.is_dir()
+    assert (www_content / "index.html").is_file()
+    assert (www_content / "static/script.js").is_file()
+    assert (www_content / "plots").is_dir()
+    assert www_root_link.is_symlink()
+    assert www_root_link.resolve() == www_content.resolve()
+
+
 def test_copy_rose_config(monkeypatch, tmp_path):
     """Copy rose-suite.conf to web dir."""
     rose_suite_conf = tmp_path / "rose-suite.conf"
