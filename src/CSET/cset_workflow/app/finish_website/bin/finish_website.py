@@ -112,7 +112,7 @@ def run():
     # Strip trailing slashes in case they have been added in the config.
     # Otherwise they break the symlinks.
     www_root_link = Path(os.environ["WEB_DIR"].rstrip("/"))
-    www_content = Path(os.environ["CYLC_WORKFLOW_SHARE_DIR"]) / "web"
+    www_content = Path(os.environ["CYLC_WORKFLOW_SHARE_DIR"] + "/web")
 
     install_website_skeleton(www_root_link, www_content)
     construct_index(www_content)
