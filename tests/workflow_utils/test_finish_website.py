@@ -105,6 +105,31 @@ def test_construct_index_aggregation_case(monkeypatch, tmp_path):
     assert index == expected
 
 
+def test_construct_index_remove_keys(monkeypatch, tmp_path):
+    """Unneeded keys are removed from the index."""
+    monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", str(tmp_path))
+    plots_dir = tmp_path / "web/plots"
+    plots_dir.mkdir(parents=True)
+
+    # Plot directories.
+    plot1 = plots_dir / "p1/meta.json"
+    plot1.parent.mkdir()
+    plot1.write_text(
+        '{"category": "Category", "title": "P1", "case_date": "20250101", "plots": ["a.png"], "description": "Foo"}'
+    )
+
+    # Construct index.
+    finish_website.construct_index()
+
+    # Check index.
+    index_file = plots_dir / "index.jsonl"
+    assert index_file.is_file()
+    with open(index_file, "rt", encoding="UTF-8") as fp:
+        index = json.loads(fp.readline())
+    assert "plots" not in index
+    assert "description" not in index
+
+
 def test_construct_index_invalid(monkeypatch, tmp_path, caplog):
     """Test constructing index when metadata is invalid."""
     monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", str(tmp_path))

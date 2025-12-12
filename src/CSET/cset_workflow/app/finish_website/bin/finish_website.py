@@ -50,6 +50,9 @@ def construct_index():
                 with open(metadata_file, "rt", encoding="UTF-8") as plot_fp:
                     plot_metadata = json.load(plot_fp)
                 plot_metadata["path"] = str(metadata_file.parent.relative_to(plots_dir))
+                # Remove keys that are not useful for the index.
+                plot_metadata.pop("description", None)
+                plot_metadata.pop("plots", None)
                 # Sort plot metadata.
                 plot_metadata = sort_dict(plot_metadata)
                 # Write metadata into website index.
