@@ -119,10 +119,13 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         [[[environment]]]
         {% if METPLUS_GRID_STAT|default(False) %}
             METPLUS_ANA_DIR = {{METPLUS_ANA_DIR}}
-            METPLUS_FCST_DIR = {{METPLUS_FCST_DIR}}
-            METPLUS_OBS_DIR = {{METPLUS_OBS_DIR}}
-            ROSE_APP_OPT_CONF_KEYS = {{METPLUS_OPT_CONFIG_KEYS}}
         {% endif %}
+        METPLUS_FCST_DIR = {{METPLUS_FCST_DIR}}
+        METPLUS_OBS_DIR = {{METPLUS_OBS_DIR}}
+        TASK_END_TIME = $(cylc cyclepoint --offset={{ANALYSIS_LENGTH}})
+        ROSE_APP_OPT_CONF_KEYS = {{METPLUS_OPT_CONFIG_KEYS}}
+        FORECAST_LENGTH = $(isodatetime -p "PT%HH" {{ANALYSIS_LENGTH}} --print-format "%H")
+
 
     # Noop tasks to ensure a complete/efficient workflow graph.
     [[DUMMY_TASK]]
@@ -223,3 +226,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
 
 # Site-specific details that add to or override the core workflow definition.
 {% include 'site/' ~ SITE ~ '.cylc' %}
+
+# METplus includes
+{% include 'includes/point_stat.cylc' %}
