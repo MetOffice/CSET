@@ -109,3 +109,27 @@ def mixing_ratio_from_RH(
         return w[0]
     else:
         return w
+
+
+def specific_humidity_from_RH(
+    temperature: iris.cube.Cube | iris.cube.CubeList,
+    pressure: iris.cube.Cube | iris.cube.CubeList,
+    relative_humidity: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Calculate the mixing ratio from RH."""
+    q = iris.cube.CubeList([])
+    for T, P, RH in zip(
+        iter_maybe(temperature),
+        iter_maybe(pressure),
+        iter_maybe(relative_humidity),
+        strict=True,
+    ):
+        if RH.units == "%":
+            RH /= 100.0
+            RH.units = "1"
+        sh = saturation_specific_humidity(T, P) * RH
+        q.append(sh)
+    if len(q) == 1:
+        return q[0]
+    else:
+        return q
