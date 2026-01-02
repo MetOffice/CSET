@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2026) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -101,13 +101,6 @@ def test_filter_multiple_cubes_no_constraint_exception(cubes):
     """Test exception when no constraints given."""
     with pytest.raises(ValueError):
         filters.filter_multiple_cubes(cubes)
-
-
-def test_filter_multiple_cubes_returned(cubes):
-    """Test exception when multiple cubes returned."""
-    constraint_multiple = constraints.generate_stash_constraint("m01s03i236")
-    with pytest.raises(ValueError):
-        filters.filter_multiple_cubes(cubes, c=constraint_multiple)
 
 
 def test_filter_multiple_cubes_none_returned(cubes):

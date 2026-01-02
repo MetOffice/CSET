@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2025) and CSET contributors.
+# © Crown copyright, Met Office (2022-2026) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -132,12 +132,14 @@ def filter_multiple_cubes(
         cubes = iris.cube.CubeList((cubes,))
     if len(kwargs) < 1:
         raise ValueError("Must have at least one constraint.")
+    # Switch to extract due to lack of instance requiriing one cube per
+    # constraint.
     try:
-        filtered_cubes = cubes.extract_cubes(kwargs.values())
+        filtered_cubes = cubes.extract(kwargs.values())
     except iris.exceptions.ConstraintMismatchError as err:
-        raise ValueError(
-            "The constraints don't produce a single cube per constraint."
-        ) from err
+        raise ValueError("The constraints don't produce a cube or cubelist.") from err
+    if len(filtered_cubes) == 0:
+        raise ValueError("No cubes loaded. Please check your constraints.")
     return filtered_cubes
 
 
