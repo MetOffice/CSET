@@ -17,6 +17,8 @@
 import iris.cube
 
 from CSET._common import iter_maybe
+from CSET.operators.constants import EPSILON
+from CSET.operators.pressure import vapour_pressure
 
 
 def specific_humidity_to_mixing_ratio(
@@ -43,6 +45,40 @@ def mixing_ratio_to_specific_humidity(
     for cube in iter_maybe(cubes):
         sh = cube.copy()
         sh = cube / (1 + cube)
+        sh.rename("specific_humidity")
+        q.append(sh)
+    if len(q) == 1:
+        return q[0]
+    else:
+        return q
+
+
+def saturation_mixing_ratio(
+    temperature: iris.cube.Cube | iris.cube.CubeList,
+    pressure: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Calculate saturation mixing ratio."""
+    w = iris.cube.CubeList([])
+    for T, P in zip(iter_maybe(temperature), iter_maybe(pressure), strict=True):
+        mr = (EPSILON * vapour_pressure(T)) / ((P / 100.0) - vapour_pressure(T))
+        mr.units("kg/kg")
+        mr.rename("mixing_ratio")
+        w.append(mr)
+    if len(w) == 1:
+        return w[0]
+    else:
+        return w
+
+
+def saturation_specific_humidity(
+    temperature: iris.cube.Cube | iris.cube.CubeList,
+    pressure: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Calculate saturation specific humidity."""
+    q = iris.cube.CubeList([])
+    for T, P in zip(iter_maybe(temperature), iter_maybe(pressure), strict=True):
+        sh = (EPSILON * vapour_pressure(T)) / (P / 100.0)
+        sh.units("kg/kg")
         sh.rename("specific_humidity")
         q.append(sh)
     if len(q) == 1:
