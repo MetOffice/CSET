@@ -133,3 +133,47 @@ def specific_humidity_from_RH(
         return q[0]
     else:
         return q
+
+
+def relative_humidity_from_mixing_ratio(
+    mixing_ratio: iris.cube.Cube | iris.cube.CubeList,
+    temperature: iris.cube.Cube | iris.cube.CubeList,
+    pressure: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Convert mixing ratio to relative humidity."""
+    RH = iris.cube.CubeList([])
+    for W, T, P in zip(
+        iter_maybe(mixing_ratio),
+        iter_maybe(temperature),
+        iter_maybe(pressure),
+        strict=True,
+    ):
+        rel_h = W / saturation_mixing_ratio(T, P)
+        rel_h.rename("relative_humidity")
+        RH.append(rel_h)
+    if len(RH) == 1:
+        return RH[0]
+    else:
+        return RH
+
+
+def relative_humidity_from_specific_humidity(
+    specific_humidity: iris.cube.Cube | iris.cube.CubeList,
+    temperature: iris.cube.Cube | iris.cube.CubeList,
+    pressure: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Convert specific humidity to relative humidity."""
+    RH = iris.cube.CubeList([])
+    for Q, T, P in zip(
+        iter_maybe(specific_humidity),
+        iter_maybe(temperature),
+        iter_maybe(pressure),
+        strict=True,
+    ):
+        rel_h = Q / saturation_specific_humidity(T, P)
+        rel_h.rename("relative_humidity")
+        RH.append(rel_h)
+    if len(RH) == 1:
+        return RH[0]
+    else:
+        return RH
