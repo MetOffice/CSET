@@ -18,11 +18,11 @@ import iris.cube
 import numpy as np
 
 from CSET._common import iter_maybe
-from CSET.operators.constants import T0
+from CSET.operators.constants import EPSILON, T0
 from CSET.operators.pressure import vapour_pressure
 
 
-def dewpoint(
+def dewpoint_temperature(
     temperature: iris.cube.Cube | iris.cube.CubeList,
     relative_humidity: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
@@ -45,3 +45,19 @@ def dewpoint(
         return Td[0]
     else:
         return Td
+
+
+def virtual_temperature(
+    temperature: iris.cube.Cube | iris.cube.CubeList,
+    mixing_ratio: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Calculate the virtual temperature."""
+    Tv = iris.cube.CubeList([])
+    for T, W in zip(iter_maybe(temperature), iter_maybe(mixing_ratio), strict=True):
+        virT = T * ((W + EPSILON) / (EPSILON * (1 + W)))
+        virT.rename("virtual_temperature")
+        Tv.append(virT)
+    if len(Tv) == 1:
+        return Tv[0]
+    else:
+        return Tv
