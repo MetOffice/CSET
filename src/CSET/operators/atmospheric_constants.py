@@ -36,3 +36,6 @@ T0 = 273.15  # K
 
 # Ratio between mixing ratio of dry and moist air.
 EPSILON = 0.622
+
+# Ratio between specific gas constant and specific heat capacity.
+KAPPA = RD / CPD
