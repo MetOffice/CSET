@@ -33,3 +33,19 @@ def specific_humidity_to_mixing_ratio(
         return w[0]
     else:
         return w
+
+
+def mixing_ratio_to_specific_humidity(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Convert mixing ratio to specific humidity."""
+    q = iris.cube.CubeList([])
+    for cube in iter_maybe(cubes):
+        sh = cube.copy()
+        sh = cube / (1 + cube)
+        sh.rename("specific_humidity")
+        q.append(sh)
+    if len(q) == 1:
+        return q[0]
+    else:
+        return q
