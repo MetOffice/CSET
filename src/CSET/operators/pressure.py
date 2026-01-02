@@ -30,7 +30,29 @@ def vapour_pressure(
         es = T.copy()
         exponent = 17.27 * (T - 273.16) / (T - 35.86)
         es.data[:] = E0 * np.exp(exponent.core_data())
+        es.units = "hPa"
+        es.rename("vapour_pressure")
         vapour_pressure.append(es)
+    if len(vapour_pressure) == 1:
+        return vapour_pressure[0]
+    else:
+        return vapour_pressure
+
+
+def vapour_pressure_if_Td_unknown(
+    temperature: iris.cube.Cube | iris.cube.CubeList,
+    relative_humidity: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Calculate the vapour pressure using RH."""
+    vapour_pressure = iris.cube.CubeList([])
+    for T, RH in zip(
+        iter_maybe(temperature), iter_maybe(relative_humidity), strict=True
+    ):
+        if RH.units == "%":
+            RH /= 100.0
+            RH.units = "1"
+        vp = vapour_pressure(T) * RH
+        vapour_pressure.append(vp)
     if len(vapour_pressure) == 1:
         return vapour_pressure[0]
     else:
