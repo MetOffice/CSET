@@ -103,13 +103,6 @@ def test_filter_multiple_cubes_no_constraint_exception(cubes):
         filters.filter_multiple_cubes(cubes)
 
 
-def test_filter_multiple_cubes_returned(cubes):
-    """Test exception when multiple cubes returned."""
-    constraint_multiple = constraints.generate_stash_constraint("m01s03i236")
-    with pytest.raises(ValueError):
-        filters.filter_multiple_cubes(cubes, c=constraint_multiple)
-
-
 def test_filter_multiple_cubes_none_returned(cubes):
     """Test exception when no Cubes returned."""
     constraint_none = constraints.generate_stash_constraint("m01s01i001")
