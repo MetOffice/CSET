@@ -19,7 +19,7 @@ import numpy as np
 
 from CSET._common import iter_maybe
 from CSET.operators.constants import CPD, EPSILON, LV, RV, T0
-from CSET.operators.humidity import mixing_ratio_from_RH
+from CSET.operators.humidity import mixing_ratio_from_RH, saturation_mixing_ratio
 from CSET.operators.misc import convert_units
 from CSET.operators.pressure import exner_pressure, vapour_pressure
 
@@ -200,3 +200,28 @@ def wet_bulb_potential_temperature(
         return theta_w[0]
     else:
         return theta_w
+
+
+def saturation_equivalent_potential_temperature(
+    temperature: iris.cube.Cube | iris.cube.CubeList,
+    pressure: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Calculate the saturation equivalent potenital temperature."""
+    theta_s = iris.cube.CubeList([])
+    for T, P in zip(
+        iter_maybe(temperature),
+        iter_maybe(pressure),
+        strict=True,
+    ):
+        theta = potential_temperature(T, P)
+        ws = saturation_mixing_ratio(T, P)
+        second_term_power = LV * ws / (CPD * T)
+        second_term = np.exp(second_term_power.core_data())
+        TH_S = theta * second_term
+        TH_S.rename("saturation_equivalent_potential_temperature")
+        TH_S.units = "K"
+        theta_s.append(TH_S)
+    if len(theta_s) == 1:
+        return theta_s[0]
+    else:
+        return theta_s
