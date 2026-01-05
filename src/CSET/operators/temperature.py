@@ -19,7 +19,7 @@ import numpy as np
 
 from CSET._common import iter_maybe
 from CSET.operators.constants import EPSILON, T0
-from CSET.operators.pressure import vapour_pressure
+from CSET.operators.pressure import exner_pressure, vapour_pressure
 
 
 def dewpoint_temperature(
@@ -61,3 +61,20 @@ def virtual_temperature(
         return Tv[0]
     else:
         return Tv
+
+
+def potential_temperature(
+    temperature: iris.cube.Cube | iris.cube.CubeList,
+    pressure: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Calculate the potenital temperature."""
+    theta = iris.cube.CubeList([])
+    for T, P in zip(iter_maybe(temperature), iter_maybe(pressure), strict=True):
+        TH = T / exner_pressure(P)
+        TH.rename("potential_temperature")
+        TH.units("K")
+        theta.append(TH)
+    if len(theta) == 1:
+        return theta[0]
+    else:
+        return theta
