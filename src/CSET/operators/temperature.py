@@ -65,6 +65,35 @@ def virtual_temperature(
         return Tv
 
 
+def wet_bulb_temperature(
+    temperature: iris.cube.Cube | iris.cube.CubeList,
+    relative_humidity: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Calculate the wet-bulb temperature."""
+    Tw = iris.cube.CubeList([])
+    for T, RH in zip(
+        iter_maybe(temperature), iter_maybe(relative_humidity), strict=True
+    ):
+        RH = convert_units(RH, "1")
+        T = convert_units(T, "Celsius")
+        wetT = (
+            T * np.arctan(0.151977 * (RH.core_data() + 8.313659) ** 0.5)
+            + np.arctan(T.core_data() + RH.core_data())
+            - np.arctan(RH.core_data() - 1.676331)
+            + 0.00391838
+            * (RH.core_data()) ** (3.0 / 2.0)
+            * np.arctan(0.023101 * RH.core_data())
+            - 4.686035
+        )
+        wetT.rename("wet_bulb_temperature")
+        wetT = convert_units(wetT, "K")
+        Tw.append(wetT)
+    if len(Tw) == 1:
+        return Tw[0]
+    else:
+        return Tw
+
+
 def potential_temperature(
     temperature: iris.cube.Cube | iris.cube.CubeList,
     pressure: iris.cube.Cube | iris.cube.CubeList,
