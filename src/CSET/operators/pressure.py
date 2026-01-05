@@ -19,6 +19,7 @@ import numpy as np
 
 from CSET._common import iter_maybe
 from CSET.operators.atmospheric_constants import E0, KAPPA, P0
+from CSET.operators.misc import convert_units
 
 
 def vapour_pressure(
@@ -48,9 +49,7 @@ def vapour_pressure_from_RH(
     for T, RH in zip(
         iter_maybe(temperature), iter_maybe(relative_humidity), strict=True
     ):
-        if RH.units == "%":
-            RH /= 100.0
-            RH.units = "1"
+        RH = convert_units(RH, "1")
         vp = vapour_pressure(T) * RH
         v_pressure.append(vp)
     if len(v_pressure) == 1:
