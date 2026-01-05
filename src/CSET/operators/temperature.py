@@ -28,7 +28,7 @@ def dewpoint_temperature(
     temperature: iris.cube.Cube | iris.cube.CubeList,
     relative_humidity: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Calculate the dewpoint temperature."""
+    """Calculate the dewpoint temperature following Bolton (1980)."""
     Td = iris.cube.CubeList([])
     for T, RH in zip(
         iter_maybe(temperature), iter_maybe(relative_humidity), strict=True
@@ -69,7 +69,7 @@ def wet_bulb_temperature(
     temperature: iris.cube.Cube | iris.cube.CubeList,
     relative_humidity: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Calculate the wet-bulb temperature."""
+    """Calculate the wet-bulb temperature following Stull (2011)."""
     Tw = iris.cube.CubeList([])
     for T, RH in zip(
         iter_maybe(temperature), iter_maybe(relative_humidity), strict=True
