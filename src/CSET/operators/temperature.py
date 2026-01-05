@@ -18,7 +18,7 @@ import iris.cube
 import numpy as np
 
 from CSET._common import iter_maybe
-from CSET.operators.constants import CPD, EPSILON, LV, RV, T0
+from CSET.operators._atmospheric_constants import CPD, EPSILON, LV, RV, T0
 from CSET.operators.humidity import mixing_ratio_from_RH, saturation_mixing_ratio
 from CSET.operators.misc import convert_units
 from CSET.operators.pressure import exner_pressure, vapour_pressure

@@ -17,7 +17,7 @@
 import iris.cube
 
 from CSET._common import iter_maybe
-from CSET.operators.constants import EPSILON
+from CSET.operators._atmospheric_constants import EPSILON
 from CSET.operators.misc import convert_units
 from CSET.operators.pressure import vapour_pressure
 
