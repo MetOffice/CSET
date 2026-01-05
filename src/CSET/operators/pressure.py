@@ -18,7 +18,7 @@ import iris.cube
 import numpy as np
 
 from CSET._common import iter_maybe
-from CSET.operators.atmospheric_constants import E0
+from CSET.operators.atmospheric_constants import E0, KAPPA, P0
 
 
 def vapour_pressure(
@@ -57,3 +57,20 @@ def vapour_pressure_from_RH(
         return v_pressure[0]
     else:
         return v_pressure
+
+
+def exner_pressure(
+    pressure: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Calculate the exner pressure."""
+    pi = iris.cube.CubeList([])
+    for P in iter_maybe(pressure):
+        PI = P.copy()
+        PI.data[:] = (P.core_data() / P0) ** KAPPA
+        PI.rename("exner_pressure")
+        PI.units("1")
+        pi.append(PI)
+    if len(pi) == 1:
+        return pi[0]
+    else:
+        return pi
