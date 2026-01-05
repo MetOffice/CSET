@@ -68,7 +68,7 @@ def exner_pressure(
         PI = P.copy()
         PI.data[:] = (P.core_data() / P0) ** KAPPA
         PI.rename("exner_pressure")
-        PI.units("1")
+        PI.units = "1"
         pi.append(PI)
     if len(pi) == 1:
         return pi[0]

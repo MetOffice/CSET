@@ -18,7 +18,8 @@ import iris.cube
 import numpy as np
 
 from CSET._common import iter_maybe
-from CSET.operators.constants import EPSILON, T0
+from CSET.operators.constants import CPD, EPSILON, LV, RV, T0
+from CSET.operators.humidity import mixing_ratio_from_RH
 from CSET.operators.pressure import exner_pressure, vapour_pressure
 
 
@@ -38,7 +39,7 @@ def dewpoint_temperature(
         )
         td.data[td.data - T0 < -35.0] = np.nan
         td.data[td.data - T0 > 35.0] = np.nan
-        td.units("K")
+        td.units = "K"
         td.rename("dewpoint temperature")
         Td.append(td)
     if len(Td) == 1:
@@ -99,3 +100,35 @@ def virtual_potential_temperature(
         return theta_v[0]
     else:
         return theta_v
+
+
+def equivalent_potential_temperature(
+    temperature: iris.cube.Cube | iris.cube.CubeList,
+    relative_humidity: iris.cube.Cube | iris.cube.CubeList,
+    pressure: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Calculate the equivalent potenital temperature."""
+    theta_e = iris.cube.CubeList([])
+    for T, RH, P in zip(
+        iter_maybe(temperature),
+        iter_maybe(relative_humidity),
+        iter_maybe(pressure),
+        strict=True,
+    ):
+        if RH.units == "%":
+            RH /= 100.0
+            RH.units = "1"
+        theta = potential_temperature(T, P)
+        w = mixing_ratio_from_RH(T, P, RH)
+        second_term_power = -(w * RV) / CPD
+        second_term = RH.core_data() ** second_term_power.core_data()
+        third_term_power = LV * w / (CPD * T)
+        third_term = np.exp(third_term_power.core_data())
+        TH_E = theta * second_term * third_term
+        TH_E.rename("equivalent_potential_temperature")
+        TH_E.units = "K"
+        theta_e.append(TH_E)
+    if len(theta_e) == 1:
+        return theta_e[0]
+    else:
+        return theta_e
