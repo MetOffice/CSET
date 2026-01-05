@@ -18,7 +18,7 @@ import iris.cube
 import numpy as np
 
 from CSET._common import iter_maybe
-from CSET.operators.atmospheric_constants import E0, KAPPA, P0
+from CSET.operators._atmospheric_constants import E0, KAPPA, P0
 from CSET.operators.misc import convert_units
 
 
