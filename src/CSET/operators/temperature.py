@@ -160,3 +160,43 @@ def equivalent_potential_temperature(
         return theta_e[0]
     else:
         return theta_e
+
+
+def wet_bulb_potential_temperature(
+    temperature: iris.cube.Cube | iris.cube.CubeList,
+    relative_humidity: iris.cube.Cube | iris.cube.CubeList,
+    pressure: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Calculate wet-bulb potential temperature after Davies-Jones (2008)."""
+    theta_w = iris.cube.CubeList([])
+    for T, RH, P in zip(
+        iter_maybe(temperature),
+        iter_maybe(relative_humidity),
+        iter_maybe(pressure),
+        strict=True,
+    ):
+        TH_E = equivalent_potential_temperature(T, P, RH)
+        X = TH_E / T0
+        X.units = "1"
+        A0 = 7.101574
+        A1 = -20.68208
+        A2 = 16.11182
+        A3 = 2.574631
+        A4 = -5.205688
+        B1 = -3.552497
+        B2 = 3.781782
+        B3 = -0.6899655
+        B4 = -0.5929340
+        exponent = (A0 + A1 * X + A2 * X**2 + A3 * X**3 + A4 * X**4) / (
+            1.0 + B1 * X + B2 * X**2 + B3 * X**3 + B4 * X**4
+        )
+        TH_W = TH_E.copy()
+        TH_W.data[:] = TH_E.core_data() - np.exp(exponent.core_data())
+        TH_W.rename("wet_bulb_potential_temperature")
+        TH_W.data[TH_W.data - T0 < -30.0] = np.nan
+        TH_W.data[TH_W.data - T0 > 50.0] = np.nan
+        theta_w.append(TH_W)
+    if len(theta_w) == 1:
+        return theta_w[0]
+    else:
+        return theta_w
