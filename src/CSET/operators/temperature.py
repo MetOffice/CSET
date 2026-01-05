@@ -20,6 +20,7 @@ import numpy as np
 from CSET._common import iter_maybe
 from CSET.operators.constants import CPD, EPSILON, LV, RV, T0
 from CSET.operators.humidity import mixing_ratio_from_RH
+from CSET.operators.misc import convert_units
 from CSET.operators.pressure import exner_pressure, vapour_pressure
 
 
@@ -115,9 +116,7 @@ def equivalent_potential_temperature(
         iter_maybe(pressure),
         strict=True,
     ):
-        if RH.units == "%":
-            RH /= 100.0
-            RH.units = "1"
+        RH = convert_units(RH, "1")
         theta = potential_temperature(T, P)
         w = mixing_ratio_from_RH(T, P, RH)
         second_term_power = -(w * RV) / CPD

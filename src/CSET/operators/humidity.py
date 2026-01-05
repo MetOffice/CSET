@@ -18,6 +18,7 @@ import iris.cube
 
 from CSET._common import iter_maybe
 from CSET.operators.constants import EPSILON
+from CSET.operators.misc import convert_units
 from CSET.operators.pressure import vapour_pressure
 
 
@@ -100,9 +101,7 @@ def mixing_ratio_from_RH(
         iter_maybe(relative_humidity),
         strict=True,
     ):
-        if RH.units == "%":
-            RH /= 100.0
-            RH.units = "1"
+        RH = convert_units(RH, "1")
         mr = saturation_mixing_ratio(T, P) * RH
         w.append(mr)
     if len(w) == 1:
@@ -124,9 +123,7 @@ def specific_humidity_from_RH(
         iter_maybe(relative_humidity),
         strict=True,
     ):
-        if RH.units == "%":
-            RH /= 100.0
-            RH.units = "1"
+        RH = convert_units(RH, "1")
         sh = saturation_specific_humidity(T, P) * RH
         q.append(sh)
     if len(q) == 1:
