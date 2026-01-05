@@ -72,9 +72,30 @@ def potential_temperature(
     for T, P in zip(iter_maybe(temperature), iter_maybe(pressure), strict=True):
         TH = T / exner_pressure(P)
         TH.rename("potential_temperature")
-        TH.units("K")
         theta.append(TH)
     if len(theta) == 1:
         return theta[0]
     else:
         return theta
+
+
+def virtual_potential_temperature(
+    temperature: iris.cube.Cube | iris.cube.CubeList,
+    mixing_ratio: iris.cube.Cube | iris.cube.CubeList,
+    pressure: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Calculate the virtual potential temperature."""
+    theta_v = iris.cube.CubeList([])
+    for T, W, P in zip(
+        iter_maybe(temperature),
+        iter_maybe(mixing_ratio),
+        iter_maybe(pressure),
+        strict=True,
+    ):
+        TH_V = virtual_temperature(T, W) / exner_pressure(P)
+        TH_V.rename("virtual_potential_temperature")
+        theta_v.append(TH_V)
+    if len(theta_v) == 1:
+        return theta_v[0]
+    else:
+        return theta_v
