@@ -61,7 +61,8 @@ def saturation_mixing_ratio(
     """Calculate saturation mixing ratio."""
     w = iris.cube.CubeList([])
     for T, P in zip(iter_maybe(temperature), iter_maybe(pressure), strict=True):
-        mr = (EPSILON * vapour_pressure(T)) / ((P / 100.0) - vapour_pressure(T))
+        P = convert_units(P, "hPa")
+        mr = (EPSILON * vapour_pressure(T)) / (P - vapour_pressure(T))
         mr.units = "kg/kg"
         mr.rename("mixing_ratio")
         w.append(mr)
@@ -78,7 +79,8 @@ def saturation_specific_humidity(
     """Calculate saturation specific humidity."""
     q = iris.cube.CubeList([])
     for T, P in zip(iter_maybe(temperature), iter_maybe(pressure), strict=True):
-        sh = (EPSILON * vapour_pressure(T)) / (P / 100.0)
+        P = convert_units(P, "hPa")
+        sh = (EPSILON * vapour_pressure(T)) / P
         sh.units = "kg/kg"
         sh.rename("specific_humidity")
         q.append(sh)
