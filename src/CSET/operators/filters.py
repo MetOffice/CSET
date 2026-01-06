@@ -125,14 +125,14 @@ def filter_multiple_cubes(
     Raises
     ------
     ValueError
-        The constraints don't produce a single cube per constraint.
+        Some constraints don't produce any cubes.
     """
     # Ensure input is a CubeList.
     if isinstance(cubes, iris.cube.Cube):
         cubes = iris.cube.CubeList((cubes,))
     if len(kwargs) < 1:
         raise ValueError("Must have at least one constraint.")
-    # Switch to extract due to lack of instance requiriing one cube per
+    # Switch to extract due to lack of instance requiring one cube per
     # constraint.
     try:
         filtered_cubes = cubes.extract(kwargs.values())
