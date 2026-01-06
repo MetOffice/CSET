@@ -23,13 +23,13 @@ from CSET.operators.pressure import vapour_pressure
 
 
 def specific_humidity_to_mixing_ratio(
-    cubes: iris.cube.Cube | iris.cube.CubeList,
+    specific_humidity: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Convert specific humidity to mixing ratio."""
     w = iris.cube.CubeList([])
-    for cube in iter_maybe(cubes):
-        mr = cube.copy()
-        mr = cube / (1 - cube)
+    for q in iter_maybe(specific_humidity):
+        mr = q.copy()
+        mr = q / (1 - q)
         mr.rename("mixing_ratio")
         w.append(mr)
     if len(w) == 1:
@@ -39,13 +39,13 @@ def specific_humidity_to_mixing_ratio(
 
 
 def mixing_ratio_to_specific_humidity(
-    cubes: iris.cube.Cube | iris.cube.CubeList,
+    mixing_ratio: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Convert mixing ratio to specific humidity."""
     q = iris.cube.CubeList([])
-    for cube in iter_maybe(cubes):
-        sh = cube.copy()
-        sh = cube / (1 + cube)
+    for w in iter_maybe(mixing_ratio):
+        sh = w.copy()
+        sh = w / (1 + w)
         sh.rename("specific_humidity")
         q.append(sh)
     if len(q) == 1:
