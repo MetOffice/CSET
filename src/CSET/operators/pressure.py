@@ -40,7 +40,7 @@ def vapour_pressure(
         return v_pressure
 
 
-def relative_humidity_to_vapour_pressure(
+def vapour_pressure_from_relative_humidity(
     temperature: iris.cube.Cube | iris.cube.CubeList,
     relative_humidity: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
