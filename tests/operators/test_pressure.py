@@ -136,3 +136,48 @@ def test_relative_humidity_to_vapour_pressure_cubelist(
     )
     for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
         assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
+
+
+def test_exner_pressure(pressure_for_conversions_cube):
+    """Test calculation of exner pressure."""
+    expected_data = pressure_for_conversions_cube.copy()
+    expected_data.data = (
+        (pressure_for_conversions_cube / 100).core_data() / 1000.0
+    ) ** (1005.7 / 287.0)
+    assert np.allclose(
+        expected_data.data,
+        pressure.exner_pressure(pressure_for_conversions_cube).data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
+def test_exner_pressure_name(pressure_for_conversions_cube):
+    """Test naming of exner pressure."""
+    expected_name = "exner_pressure"
+    assert (
+        expected_name == pressure.exner_pressure(pressure_for_conversions_cube).name()
+    )
+
+
+def test_exner_pressure_units(pressure_for_conversions_cube):
+    """Test units of exner pressure."""
+    expected_units = cf_units.Unit("1")
+    assert (
+        expected_units == pressure.exner_pressure(pressure_for_conversions_cube).units
+    )
+
+
+def test_exner_pressure_cubelist(pressure_for_conversions_cube):
+    """Test calculation of exner pressure for a CubeList."""
+    expected_data = pressure_for_conversions_cube.copy()
+    expected_data.data = (
+        (pressure_for_conversions_cube / 100).core_data() / 1000.0
+    ) ** (1005.7 / 287.0)
+    expected_list = iris.cube.CubeList([expected_data, expected_data])
+    input_list = iris.cube.CubeList(
+        [pressure_for_conversions_cube, pressure_for_conversions_cube]
+    )
+    actual_cubelist = pressure.exner_pressure(input_list)
+    for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
+        assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
