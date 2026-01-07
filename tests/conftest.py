@@ -315,3 +315,41 @@ def orography_4D_cube_read_only():
 def orography_4D_cube(orography_4D_cube_read_only):
     """Get 4D orography cube to run tests on. It is safe to modify."""
     return orography_4D_cube_read_only.copy()
+
+
+@pytest.fixture()
+def temperature_for_conversions_cube_read_only():
+    """Get temperature cube for conversions to run tests on. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/pressure/air_temperature.nc")
+
+
+@pytest.fixture()
+def temperature_for_conversions_cube(temperature_for_conversions_cube_read_only):
+    """Get temperature cube for conversions to run tests on. It is safe to modify."""
+    return temperature_for_conversions_cube_read_only.copy()
+
+
+@pytest.fixture()
+def pressure_for_conversions_cube_read_only():
+    """Get pressure cube for conversions to run tests on. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/pressure/pressure.nc")
+
+
+@pytest.fixture()
+def pressure_for_conversions_cube(pressure_for_conversions_cube_read_only):
+    """Get pressure cube for conversions to run tests on. It is safe to modify."""
+    return pressure_for_conversions_cube_read_only.copy()
+
+
+@pytest.fixture()
+def relative_humidity_for_conversions_cube_read_only():
+    """Get relative humidity cube for conversions to run tests on. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/pressure/relative_humidity.nc")
+
+
+@pytest.fixture()
+def relative_humidity_for_conversions_cube(
+    relative_humidity_for_conversions_cube_read_only,
+):
+    """Get relative humidity cube for conversions to run tests on. It is safe to modify."""
+    return relative_humidity_for_conversions_cube_read_only.copy()
