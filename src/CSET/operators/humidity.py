@@ -22,7 +22,7 @@ from CSET.operators.misc import convert_units
 from CSET.operators.pressure import vapour_pressure
 
 
-def specific_humidity_to_mixing_ratio(
+def mixing_ratio_from_specific_humidity(
     specific_humidity: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Convert specific humidity to mixing ratio."""
@@ -38,7 +38,7 @@ def specific_humidity_to_mixing_ratio(
         return w
 
 
-def mixing_ratio_to_specific_humidity(
+def specific_humidity_from_mixing_ratio(
     mixing_ratio: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Convert mixing ratio to specific humidity."""
@@ -90,7 +90,7 @@ def saturation_specific_humidity(
         return q
 
 
-def mixing_ratio_from_RH(
+def mixing_ratio_from_relative_humidity(
     temperature: iris.cube.Cube | iris.cube.CubeList,
     pressure: iris.cube.Cube | iris.cube.CubeList,
     relative_humidity: iris.cube.Cube | iris.cube.CubeList,
@@ -114,7 +114,7 @@ def mixing_ratio_from_RH(
         return w
 
 
-def specific_humidity_from_RH(
+def specific_humidity_from_relative_humidity(
     temperature: iris.cube.Cube | iris.cube.CubeList,
     pressure: iris.cube.Cube | iris.cube.CubeList,
     relative_humidity: iris.cube.Cube | iris.cube.CubeList,
