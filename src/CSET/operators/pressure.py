@@ -30,7 +30,7 @@ def vapour_pressure(
     for T in iter_maybe(temperature):
         es = T.copy()
         exponent = 17.27 * (T - 273.16) / (T - 35.86)
-        es.data[:] = E0 * np.exp(exponent.core_data())
+        es.data = E0 * np.exp(exponent.core_data())
         es.units = "hPa"
         es.rename("vapour_pressure")
         v_pressure.append(es)
@@ -68,7 +68,7 @@ def exner_pressure(
     for P in iter_maybe(pressure):
         PI = P.copy()
         P = convert_units(P, "hPa")
-        PI.data[:] = (P.core_data() / P0) ** KAPPA
+        PI.data = (P.core_data() / P0) ** KAPPA
         PI.rename("exner_pressure")
         PI.units = "1"
         pi.append(PI)
