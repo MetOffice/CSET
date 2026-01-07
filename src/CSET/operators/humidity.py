@@ -64,7 +64,7 @@ def saturation_mixing_ratio(
         P = convert_units(P, "hPa")
         mr = (EPSILON * vapour_pressure(T)) / (P - vapour_pressure(T))
         mr.units = "kg/kg"
-        mr.rename("mixing_ratio")
+        mr.rename("saturation_mixing_ratio")
         w.append(mr)
     if len(w) == 1:
         return w[0]
@@ -82,7 +82,7 @@ def saturation_specific_humidity(
         P = convert_units(P, "hPa")
         sh = (EPSILON * vapour_pressure(T)) / P
         sh.units = "kg/kg"
-        sh.rename("specific_humidity")
+        sh.rename("saturation_specific_humidity")
         q.append(sh)
     if len(q) == 1:
         return q[0]
@@ -105,6 +105,8 @@ def mixing_ratio_from_RH(
     ):
         RH = convert_units(RH, "1")
         mr = saturation_mixing_ratio(T, P) * RH
+        mr.rename("mixing_ratio")
+        mr.units = "kg/kg"
         w.append(mr)
     if len(w) == 1:
         return w[0]
@@ -127,6 +129,8 @@ def specific_humidity_from_RH(
     ):
         RH = convert_units(RH, "1")
         sh = saturation_specific_humidity(T, P) * RH
+        sh.rename("specific_humidity")
+        sh.units = "kg/kg"
         q.append(sh)
     if len(q) == 1:
         return q[0]
