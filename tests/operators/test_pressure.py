@@ -18,7 +18,7 @@ import cf_units
 import iris.cube
 import numpy as np
 
-from CSET.operators import pressure
+from CSET.operators import _atmospheric_constants, pressure
 
 
 def test_vapour_pressure(temperature_for_conversions_cube):
@@ -29,7 +29,7 @@ def test_vapour_pressure(temperature_for_conversions_cube):
         * (temperature_for_conversions_cube - 273.16)
         / (temperature_for_conversions_cube - 35.86)
     )
-    expected_data.data = 6.1078 * np.exp(exponent.core_data())
+    expected_data.data = _atmospheric_constants.E0 * np.exp(exponent.core_data())
     assert np.allclose(
         expected_data.data,
         pressure.vapour_pressure(temperature_for_conversions_cube).data,
@@ -64,7 +64,7 @@ def test_vapour_pressure_cube_list(temperature_for_conversions_cube):
         * (temperature_for_conversions_cube - 273.16)
         / (temperature_for_conversions_cube - 35.86)
     )
-    expected_data.data = 6.1078 * np.exp(exponent.core_data())
+    expected_data.data = _atmospheric_constants.E0 * np.exp(exponent.core_data())
     expected_list = iris.cube.CubeList([expected_data, expected_data])
     input_cubelist = iris.cube.CubeList(
         [temperature_for_conversions_cube, temperature_for_conversions_cube]
@@ -142,8 +142,8 @@ def test_exner_pressure(pressure_for_conversions_cube):
     """Test calculation of exner pressure."""
     expected_data = pressure_for_conversions_cube.copy()
     expected_data.data = (
-        (pressure_for_conversions_cube / 100).core_data() / 1000.0
-    ) ** (1005.7 / 287.0)
+        (pressure_for_conversions_cube / 100).core_data() / _atmospheric_constants.P0
+    ) ** _atmospheric_constants.KAPPA
     assert np.allclose(
         expected_data.data,
         pressure.exner_pressure(pressure_for_conversions_cube).data,
@@ -172,8 +172,8 @@ def test_exner_pressure_cubelist(pressure_for_conversions_cube):
     """Test calculation of exner pressure for a CubeList."""
     expected_data = pressure_for_conversions_cube.copy()
     expected_data.data = (
-        (pressure_for_conversions_cube / 100).core_data() / 1000.0
-    ) ** (1005.7 / 287.0)
+        (pressure_for_conversions_cube / 100).core_data() / _atmospheric_constants.P0
+    ) ** _atmospheric_constants.KAPPA
     expected_list = iris.cube.CubeList([expected_data, expected_data])
     input_list = iris.cube.CubeList(
         [pressure_for_conversions_cube, pressure_for_conversions_cube]
