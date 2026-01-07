@@ -51,6 +51,8 @@ def vapour_pressure_from_RH(
     ):
         RH = convert_units(RH, "1")
         vp = vapour_pressure(T) * RH
+        vp.units = "hPa"
+        vp.rename("vapour_pressure")
         v_pressure.append(vp)
     if len(v_pressure) == 1:
         return v_pressure[0]

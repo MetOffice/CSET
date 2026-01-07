@@ -74,7 +74,7 @@ def wet_bulb_temperature(
     for T, RH in zip(
         iter_maybe(temperature), iter_maybe(relative_humidity), strict=True
     ):
-        RH = convert_units(RH, "1")
+        RH = convert_units(RH, "%")
         T = convert_units(T, "Celsius")
         wetT = (
             T * np.arctan(0.151977 * (RH.core_data() + 8.313659) ** 0.5)
