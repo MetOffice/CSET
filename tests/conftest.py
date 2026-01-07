@@ -361,3 +361,31 @@ def relative_humidity_for_conversions_cube(
 ):
     """Get relative humidity cube for conversions to run tests on. It is safe to modify."""
     return relative_humidity_for_conversions_cube_read_only.copy()
+
+
+@pytest.fixture()
+def specific_humidity_for_conversions_cube_read_only():
+    """Get specific humidity cube for conversions to run tests on. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/humidity/specific_humidity.nc")
+
+
+@pytest.fixture()
+def specific_humidity_for_conversions_cube(
+    specific_humidity_for_conversions_cube_read_only,
+):
+    """Get specific humidity cube for conversions to run tests on. It is safe to modify."""
+    return specific_humidity_for_conversions_cube_read_only.copy()
+
+
+@pytest.fixture()
+def mixing_ratio_for_conversions_cube_read_only():
+    """Get mixing ratio cube for conversions to run tests on. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/humidity/mixing_ratio.nc")
+
+
+@pytest.fixture()
+def mixing_ratio_for_conversions_cube(
+    mixing_ratio_for_conversions_cube_read_only,
+):
+    """Get mixing ratio cube for conversions to run tests on. It is safe to modify."""
+    return mixing_ratio_for_conversions_cube_read_only.copy()
