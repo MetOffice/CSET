@@ -19,7 +19,10 @@ import numpy as np
 
 from CSET._common import iter_maybe
 from CSET.operators._atmospheric_constants import CPD, EPSILON, LV, RV, T0
-from CSET.operators.humidity import mixing_ratio_from_RH, saturation_mixing_ratio
+from CSET.operators.humidity import (
+    mixing_ratio_from_relative_humidity,
+    saturation_mixing_ratio,
+)
 from CSET.operators.misc import convert_units
 from CSET.operators.pressure import exner_pressure, vapour_pressure
 
@@ -147,7 +150,7 @@ def equivalent_potential_temperature(
     ):
         RH = convert_units(RH, "1")
         theta = potential_temperature(T, P)
-        w = mixing_ratio_from_RH(T, P, RH)
+        w = mixing_ratio_from_relative_humidity(T, P, RH)
         second_term_power = -(w * RV) / CPD
         second_term = RH.core_data() ** second_term_power.core_data()
         third_term_power = LV * w / (CPD * T)
