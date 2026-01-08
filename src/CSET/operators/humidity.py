@@ -153,6 +153,7 @@ def relative_humidity_from_mixing_ratio(
     ):
         rel_h = W / saturation_mixing_ratio(T, P)
         rel_h.rename("relative_humidity")
+        rel_h = convert_units(rel_h, "%")
         RH.append(rel_h)
     if len(RH) == 1:
         return RH[0]
@@ -175,6 +176,7 @@ def relative_humidity_from_specific_humidity(
     ):
         rel_h = Q / saturation_specific_humidity(T, P)
         rel_h.rename("relative_humidity")
+        rel_h = convert_units(rel_h, "%")
         RH.append(rel_h)
     if len(RH) == 1:
         return RH[0]
