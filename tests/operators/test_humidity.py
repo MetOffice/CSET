@@ -377,6 +377,29 @@ def test_mixing_ratio_from_relative_humidity_cubelist(
         assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
 
 
+def test_mixing_ratio_from_relative_humidity_calculated(
+    temperature_for_conversions_cube,
+    pressure_for_conversions_cube,
+    mixing_ratio_for_conversions_cube,
+):
+    """Test mixing ratio from relative humidity using calculated relative humidity."""
+    calculated_w = humidity.mixing_ratio_from_relative_humidity(
+        temperature_for_conversions_cube,
+        pressure_for_conversions_cube,
+        humidity.relative_humidity_from_mixing_ratio(
+            mixing_ratio_for_conversions_cube,
+            temperature_for_conversions_cube,
+            pressure_for_conversions_cube,
+        ),
+    )
+    assert np.allclose(
+        calculated_w.data,
+        mixing_ratio_for_conversions_cube.data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
 def test_specific_humidity_from_relative_humidity(
     temperature_for_conversions_cube,
     pressure_for_conversions_cube,
@@ -456,3 +479,50 @@ def test_specific_humidity_from_relative_humidity_cubelist(
     )
     for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
         assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
+
+
+def test_relative_humidity_from_mixing_ratio(
+    mixing_ratio_for_conversions_cube,
+    temperature_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test calculation of relative humidity from mixing ratio."""
+    expected_data = (
+        mixing_ratio_for_conversions_cube
+        / humidity.saturation_mixing_ratio(
+            temperature_for_conversions_cube, pressure_for_conversions_cube
+        )
+    )
+    assert np.allclose(
+        expected_data.data,
+        humidity.relative_humidity_from_mixing_ratio(
+            mixing_ratio_for_conversions_cube,
+            temperature_for_conversions_cube,
+            pressure_for_conversions_cube,
+        ).data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
+def test_relative_humidity_from_mixing_ratio_calculated(
+    temperature_for_conversions_cube,
+    pressure_for_conversions_cube,
+    relative_humidity_for_conversions_cube,
+):
+    """Test relative humidity from mixing ratio using calculated mixing ratio."""
+    calculated_rh = humidity.relative_humidity_from_mixing_ratio(
+        humidity.mixing_ratio_from_relative_humidity(
+            temperature_for_conversions_cube,
+            pressure_for_conversions_cube,
+            relative_humidity_for_conversions_cube,
+        ),
+        temperature_for_conversions_cube,
+        pressure_for_conversions_cube,
+    )
+    assert np.allclose(
+        calculated_rh.data,
+        misc.convert_units(relative_humidity_for_conversions_cube, "1").data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
