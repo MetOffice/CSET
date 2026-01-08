@@ -228,3 +228,69 @@ def test_saturation_mixing_ratio_cubelist(
     actual_cubelist = humidity.saturation_mixing_ratio(temperature_list, pressure_list)
     for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
         assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
+
+
+def test_saturation_specific_humidity(
+    temperature_for_conversions_cube, pressure_for_conversions_cube
+):
+    """Test calculation of saturation specific humidity."""
+    expected_data = (
+        _atmospheric_constants.EPSILON
+        * pressure.vapour_pressure(temperature_for_conversions_cube)
+    ) / misc.convert_units(pressure_for_conversions_cube, "hPa")
+    assert np.allclose(
+        expected_data.data,
+        humidity.saturation_specific_humidity(
+            temperature_for_conversions_cube, pressure_for_conversions_cube
+        ).data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
+def test_saturation_specific_humidity_name(
+    temperature_for_conversions_cube, pressure_for_conversions_cube
+):
+    """Test naming of saturation specific humidity cube."""
+    expected_name = "saturation_specific_humidity"
+    assert (
+        expected_name
+        == humidity.saturation_specific_humidity(
+            temperature_for_conversions_cube, pressure_for_conversions_cube
+        ).name()
+    )
+
+
+def test_saturation_specific_humidity_units(
+    temperature_for_conversions_cube, pressure_for_conversions_cube
+):
+    """Test units of saturation specific humidity."""
+    expected_units = cf_units.Unit("kg/kg")
+    assert (
+        expected_units
+        == humidity.saturation_specific_humidity(
+            temperature_for_conversions_cube, pressure_for_conversions_cube
+        ).units
+    )
+
+
+def test_saturation_specific_humidity_cubelist(
+    temperature_for_conversions_cube, pressure_for_conversions_cube
+):
+    """Test calculation of saturation specific humidity for a CubeList."""
+    expected_data = (
+        _atmospheric_constants.EPSILON
+        * pressure.vapour_pressure(temperature_for_conversions_cube)
+    ) / misc.convert_units(pressure_for_conversions_cube, "hPa")
+    expected_list = iris.cube.CubeList([expected_data, expected_data])
+    temperature_list = iris.cube.CubeList(
+        [temperature_for_conversions_cube, temperature_for_conversions_cube]
+    )
+    pressure_list = iris.cube.CubeList(
+        [pressure_for_conversions_cube, pressure_for_conversions_cube]
+    )
+    actual_cubelist = humidity.saturation_specific_humidity(
+        temperature_list, pressure_list
+    )
+    for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
+        assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
