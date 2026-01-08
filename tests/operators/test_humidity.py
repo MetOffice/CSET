@@ -487,7 +487,7 @@ def test_relative_humidity_from_mixing_ratio(
     pressure_for_conversions_cube,
 ):
     """Test calculation of relative humidity from mixing ratio."""
-    expected_data = (
+    expected_data = 100.0 * (
         mixing_ratio_for_conversions_cube
         / humidity.saturation_mixing_ratio(
             temperature_for_conversions_cube, pressure_for_conversions_cube
@@ -522,7 +522,70 @@ def test_relative_humidity_from_mixing_ratio_calculated(
     )
     assert np.allclose(
         calculated_rh.data,
-        misc.convert_units(relative_humidity_for_conversions_cube, "1").data,
+        relative_humidity_for_conversions_cube.data,
         rtol=1e-6,
         atol=1e-2,
     )
+
+
+def test_relative_humidity_from_mixing_ratio_name(
+    mixing_ratio_for_conversions_cube,
+    temperature_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test name of relative humidity cube."""
+    expected_name = "relative_humidity"
+    assert (
+        expected_name
+        == humidity.relative_humidity_from_mixing_ratio(
+            mixing_ratio_for_conversions_cube,
+            temperature_for_conversions_cube,
+            pressure_for_conversions_cube,
+        ).name()
+    )
+
+
+def test_relative_humidity_from_mixing_ratio_units(
+    mixing_ratio_for_conversions_cube,
+    temperature_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test units of relative humidity cube."""
+    expected_units = cf_units.Unit("%")
+    assert (
+        expected_units
+        == humidity.relative_humidity_from_mixing_ratio(
+            mixing_ratio_for_conversions_cube,
+            temperature_for_conversions_cube,
+            pressure_for_conversions_cube,
+        ).units
+    )
+
+
+def test_relative_humidity_from_mixing_ratio_cubelist(
+    mixing_ratio_for_conversions_cube,
+    temperature_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test calculation of relative humidity from mixing ratio for a CubeList."""
+    expected_data = 100.0 * (
+        mixing_ratio_for_conversions_cube
+        / humidity.saturation_mixing_ratio(
+            temperature_for_conversions_cube, pressure_for_conversions_cube
+        )
+    )
+    expected_list = iris.cube.CubeList([expected_data, expected_data])
+    mixing_ratio_list = iris.cube.CubeList(
+        [mixing_ratio_for_conversions_cube, mixing_ratio_for_conversions_cube]
+    )
+    temperature_list = iris.cube.CubeList(
+        [temperature_for_conversions_cube, temperature_for_conversions_cube]
+    )
+    pressure_list = iris.cube.CubeList(
+        [pressure_for_conversions_cube, pressure_for_conversions_cube]
+    )
+    actual_cubelist = humidity.relative_humidity_from_mixing_ratio(
+        mixing_ratio_list, temperature_list, pressure_list
+    )
+    for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
+        assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
