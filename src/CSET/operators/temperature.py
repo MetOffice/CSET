@@ -24,7 +24,10 @@ from CSET.operators.humidity import (
     saturation_mixing_ratio,
 )
 from CSET.operators.misc import convert_units
-from CSET.operators.pressure import exner_pressure, vapour_pressure
+from CSET.operators.pressure import (
+    exner_pressure,
+    vapour_pressure_from_relative_humidity,
+)
 
 
 def dewpoint_temperature(
@@ -36,15 +39,16 @@ def dewpoint_temperature(
     for T, RH in zip(
         iter_maybe(temperature), iter_maybe(relative_humidity), strict=True
     ):
-        vp = vapour_pressure(T, RH)
+        vp = vapour_pressure_from_relative_humidity(T, RH)
         td = vp.copy()
-        td.data = (243.5 * np.log(vp.core_data()) - 440.8) / (
+        td.data = ((243.5 * np.log(vp.core_data())) - 440.8) / (
             19.48 - np.log(vp.core_data())
         )
-        td.data[td.data - T0 < -35.0] = np.nan
-        td.data[td.data - T0 > 35.0] = np.nan
-        td.units = "K"
-        td.rename("dewpoint temperature")
+        td.data[T.data - T0 < -35.0] = np.nan
+        td.data[T.data - T0 > 35.0] = np.nan
+        td.units = "Celsius"
+        td.rename("dewpoint_temperature")
+        td = convert_units(td, "K")
         Td.append(td)
     if len(Td) == 1:
         return Td[0]
