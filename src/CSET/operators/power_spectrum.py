@@ -1,0 +1,214 @@
+# © Crown copyright, Met Office (2022-2025) and CSET contributors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Operators for calculating power spectra."""
+
+import logging
+
+import iris
+import iris.coords
+import iris.cube
+import numpy as np
+import scipy.fft as fft
+
+
+def calculate_power_spectrum(
+    cube: iris.cube.Cube,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Calculate power spectrum plot for 1 vertical level at 1 time.
+
+    Parameters
+    ----------
+    cubes: Cube
+        2 dimensional Cube of the data to plot as power spectrum.
+        It should have a single dimension other than the stamp coordinate.
+        The cubes should cover the same phenomenon i.e. all cubes contain temperature data.
+        We do not support different data such as temperature and humidity in the same CubeList for plotting.
+    plev: int
+        The pressure level of which to compute the power spectrum on. The function will search to
+        see if this exists and if not, will raise an exception.
+
+    Returns
+    -------
+    iris.cube.Cube
+        The power spectra of the data.
+        To be plotted and aggregation performed after.
+
+    Raises
+    ------
+    ValueError
+        If the cube doesn't have the right dimensions.
+    TypeError
+        If the cube isn't a Cube.
+    """
+    cube = cube[0]
+
+    ## Get array index for user specified pressure level.
+    # print('Levels ',cube.coord("pressure").points)
+    # if plev not in cube.coord("pressure").points:
+    #    raise IndexError(f"Can't find plev {plev} in {cube.coord('pressure').points}")
+    #
+    ## Find corresponding pressure level index
+    # plev_idx = np.where(cube.coord("pressure").points == plev)[0][0]
+
+    # Extract time coordinate and convert to datetime
+    time_coord = cube.coord("time")
+    time_points = time_coord.units.num2date(time_coord.points)
+
+    if cube.ndim == 2:
+        cube_3d = cube.data[np.newaxis, :, :]
+        logging.debug("Adding in new axis for a 2 dimensional cube.")
+    elif cube.ndim == 3:
+        cube_3d = cube.data
+    else:
+        raise ValueError("Cube dimensions unsuitable for power spectra code")
+        raise ValueError(
+            f"Cube is {cube.ndim} dimensional. Cube should be 2 or 3 dimensional."
+        )
+
+    # Calculate spectrum
+    ps_array = _DCT_ps(cube_3d)
+
+    ps_cube = iris.cube.Cube(
+        ps_array,
+        long_name="power_spectra",
+    )
+
+    # Create a frequency/wavelength array for new coordinate
+    ps_len = ps_cube.data.shape[1]
+    freqs = np.arange(1, ps_len + 1)
+
+    # Create a new DimCoord with frequency
+    freq_coord = iris.coords.DimCoord(freqs, long_name="frequency", units="1")
+
+    # Convert datetime to numeric time using original units
+    numeric_time = time_coord.units.date2num(time_points)
+
+    # Create a new DimCoord with numeric time
+    new_time_coord = iris.coords.DimCoord(
+        numeric_time, standard_name="time", units=time_coord.units
+    )
+
+    # Create a new cube
+    new_data = ps_cube.data.copy()
+    new_cube = iris.cube.Cube(new_data, long_name=ps_cube.long_name)
+
+    # Add time and frequency coordinates
+    new_cube.add_dim_coord(new_time_coord, 0)  # time axis
+    new_cube.add_dim_coord(freq_coord, 1)  # frequency axis
+
+    # Power spectrum cube
+    ps_cube = new_cube
+
+    # Ensure cube has a realisation coordinate by creating and adding to cube
+    realization_coord = iris.coords.AuxCoord(0, standard_name="realization", units="1")
+    ps_cube.add_aux_coord(realization_coord)
+
+    # cubes = [ps_cube[0]]  # list of cubes
+    # coords = [ps_cube[0].coord('frequency')]  # matching coordinate
+
+    # series_coordinate="frequency"
+
+    return ps_cube
+
+
+def _DCT_ps(y_3d):
+    """Calculate power spectra for regional domains.
+
+    Parameters
+    ----------
+    y_3d: 3D array
+        3 dimensional array to calculate spectrum for.
+        (2D field data with 3rd dimension of time)
+
+    Returns: ps_array
+        Array of power spectra values calculated for input field (for each time)
+
+    Method for regional domains:
+    Calculate power spectra over limited area domain using Discrete Cosine Transform (DCT)
+    as described in Denis et al 2002 [Denis_etal_2002]_.
+
+    References
+    ----------
+    .. [Denis_etal_2002] Bertrand Denis, Jean Côté and René Laprise (2002)
+        "Spectral Decomposition of Two-Dimensional Atmospheric Fields on
+        Limited-Area Domains Using the Discrete Cosine Transform (DCT)"
+        Monthly Weather Review, Vol. 130, 1812-1828
+        doi: https://doi.org/10.1175/1520-0493(2002)130<1812:SDOTDA>2.0.CO;2
+    """
+    Nt, Ny, Nx = y_3d.shape
+
+    # Max coefficient
+    Nmin = min(Nx - 1, Ny - 1)
+
+    # Create alpha matrix (of wavenumbers)
+    alpha_matrix = _create_alpha_matrix(Ny, Nx)
+
+    # Prepare output array
+    ps_array = np.zeros((Nt, Nmin))
+
+    # Loop over time to get spectrum for each time.
+    for t in range(Nt):
+        y_2d = y_3d[t]
+
+        # Apply 2D DCT to transform y_3d[t] from physical space to spectral space.
+        # fkk is a 2D array of DCT coefficients, representing the amplitudes of
+        # cosine basis functions at different spatial frequencies.
+
+        # normalise spectrum to allow comparison between models.
+        fkk = fft.dctn(y_2d, norm="ortho")
+
+        # Normalise fkk
+        fkk = fkk / np.sqrt(Ny * Nx)
+
+        # calculate variance of spectral coefficient
+        sigma_2 = fkk**2 / Nx / Ny
+
+        # Group ellipses of alphas into the same wavenumber k/Nmin
+        for k in range(1, Nmin + 1):
+            alpha = k / Nmin
+            alpha_p1 = (k + 1) / Nmin
+
+            # Sum up elements matching k
+            mask_k = np.where((alpha_matrix >= alpha) & (alpha_matrix < alpha_p1))
+            ps_array[t, k - 1] = np.sum(sigma_2[mask_k])
+
+    return ps_array
+
+
+def _create_alpha_matrix(Ny, Nx):
+    """Construct an array of 2D wavenumbers from 2D wavenumber pair.
+
+    Parameters
+    ----------
+    Ny, Nx:
+        Dimensions of the 2D field for which the power spectra is calculated. Used to
+        create the array of 2D wavenumbers. Each Ny, Nx pair is associated with a
+        single-scale parameter.
+
+    Returns: alpha_matrix
+        normalisation of 2D wavenumber axes, transforming the spectral domain into
+        an elliptic coordinate system.
+
+    """
+    # Create x_indices: each row is [1, 2, ..., Nx]
+    x_indices = np.tile(np.arange(1, Nx + 1), (Ny, 1))
+
+    # Create y_indices: each column is [1, 2, ..., Ny]
+    y_indices = np.tile(np.arange(1, Ny + 1).reshape(Ny, 1), (1, Nx))
+
+    # Compute alpha_matrix
+    alpha_matrix = np.sqrt((x_indices**2) / Nx**2 + (y_indices**2) / Ny**2)
+
+    return alpha_matrix
