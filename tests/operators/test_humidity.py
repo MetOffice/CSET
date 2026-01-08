@@ -481,6 +481,29 @@ def test_specific_humidity_from_relative_humidity_cubelist(
         assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
 
 
+def test_specific_humidity_from_relative_humidity_calculated(
+    temperature_for_conversions_cube,
+    pressure_for_conversions_cube,
+    specific_humidity_for_conversions_cube,
+):
+    """Test specific humidity from relative humidity using calculated relative humidity."""
+    calculated_q = humidity.specific_humidity_from_relative_humidity(
+        temperature_for_conversions_cube,
+        pressure_for_conversions_cube,
+        humidity.relative_humidity_from_specific_humidity(
+            specific_humidity_for_conversions_cube,
+            temperature_for_conversions_cube,
+            pressure_for_conversions_cube,
+        ),
+    )
+    assert np.allclose(
+        calculated_q.data,
+        specific_humidity_for_conversions_cube.data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
 def test_relative_humidity_from_mixing_ratio(
     mixing_ratio_for_conversions_cube,
     temperature_for_conversions_cube,
@@ -586,6 +609,116 @@ def test_relative_humidity_from_mixing_ratio_cubelist(
     )
     actual_cubelist = humidity.relative_humidity_from_mixing_ratio(
         mixing_ratio_list, temperature_list, pressure_list
+    )
+    for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
+        assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
+
+
+def test_relative_humidity_from_specific_humidity(
+    specific_humidity_for_conversions_cube,
+    temperature_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test calculation of relative humidity from specific humidity."""
+    expected_data = 100.0 * (
+        specific_humidity_for_conversions_cube
+        / humidity.saturation_specific_humidity(
+            temperature_for_conversions_cube, pressure_for_conversions_cube
+        )
+    )
+    assert np.allclose(
+        expected_data.data,
+        humidity.relative_humidity_from_specific_humidity(
+            specific_humidity_for_conversions_cube,
+            temperature_for_conversions_cube,
+            pressure_for_conversions_cube,
+        ).data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
+def test_relative_humidity_from_specific_humidity_calculated(
+    temperature_for_conversions_cube,
+    pressure_for_conversions_cube,
+    relative_humidity_for_conversions_cube,
+):
+    """Test relative humidity from specific humidity using calculated specific humidity."""
+    calculated_rh = humidity.relative_humidity_from_specific_humidity(
+        humidity.specific_humidity_from_relative_humidity(
+            temperature_for_conversions_cube,
+            pressure_for_conversions_cube,
+            relative_humidity_for_conversions_cube,
+        ),
+        temperature_for_conversions_cube,
+        pressure_for_conversions_cube,
+    )
+    assert np.allclose(
+        calculated_rh.data,
+        relative_humidity_for_conversions_cube.data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
+def test_relative_humidity_from_specific_humidity_name(
+    specific_humidity_for_conversions_cube,
+    temperature_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test name of relative humidity cube."""
+    expected_name = "relative_humidity"
+    assert (
+        expected_name
+        == humidity.relative_humidity_from_specific_humidity(
+            specific_humidity_for_conversions_cube,
+            temperature_for_conversions_cube,
+            pressure_for_conversions_cube,
+        ).name()
+    )
+
+
+def test_relative_humidity_from_specific_humidity_units(
+    specific_humidity_for_conversions_cube,
+    temperature_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test units of relative humidity cube."""
+    expected_units = cf_units.Unit("%")
+    assert (
+        expected_units
+        == humidity.relative_humidity_from_specific_humidity(
+            specific_humidity_for_conversions_cube,
+            temperature_for_conversions_cube,
+            pressure_for_conversions_cube,
+        ).units
+    )
+
+
+def test_relative_humidity_from_specific_humidity_cubelist(
+    specific_humidity_for_conversions_cube,
+    temperature_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test calculation of relative humidity from specific humidity for a CubeList."""
+    expected_data = 100.0 * (
+        specific_humidity_for_conversions_cube
+        / humidity.saturation_specific_humidity(
+            temperature_for_conversions_cube, pressure_for_conversions_cube
+        )
+    )
+    expected_list = iris.cube.CubeList([expected_data, expected_data])
+    specific_humidity_list = iris.cube.CubeList(
+        [specific_humidity_for_conversions_cube, specific_humidity_for_conversions_cube]
+    )
+    temperature_list = iris.cube.CubeList(
+        [temperature_for_conversions_cube, temperature_for_conversions_cube]
+    )
+    pressure_list = iris.cube.CubeList(
+        [pressure_for_conversions_cube, pressure_for_conversions_cube]
+    )
+    actual_cubelist = humidity.relative_humidity_from_specific_humidity(
+        specific_humidity_list, temperature_list, pressure_list
     )
     for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
         assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
