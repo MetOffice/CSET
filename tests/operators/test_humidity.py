@@ -18,7 +18,7 @@ import cf_units
 import iris.cube
 import numpy as np
 
-from CSET.operators import humidity
+from CSET.operators import _atmospheric_constants, humidity, misc, pressure
 
 
 def test_mixing_ratio_from_specific_humidity(specific_humidity_for_conversions_cube):
@@ -158,3 +158,73 @@ def test_specific_humidity_from_mixing_ratio_using_calculated(
         rtol=1e-6,
         atol=1e-2,
     )
+
+
+def test_saturation_mixing_ratio(
+    temperature_for_conversions_cube, pressure_for_conversions_cube
+):
+    """Test calculation of saturation mixing ratio."""
+    expected_data = (
+        _atmospheric_constants.EPSILON
+        * pressure.vapour_pressure(temperature_for_conversions_cube)
+    ) / (
+        (misc.convert_units(pressure_for_conversions_cube, "hPa"))
+        - pressure.vapour_pressure(temperature_for_conversions_cube)
+    )
+    assert np.allclose(
+        expected_data.data,
+        humidity.saturation_mixing_ratio(
+            temperature_for_conversions_cube, pressure_for_conversions_cube
+        ).data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
+def test_saturation_mixing_ratio_name(
+    temperature_for_conversions_cube, pressure_for_conversions_cube
+):
+    """Test naming of saturation mixing ratio cube."""
+    expected_name = "saturation_mixing_ratio"
+    assert (
+        expected_name
+        == humidity.saturation_mixing_ratio(
+            temperature_for_conversions_cube, pressure_for_conversions_cube
+        ).name()
+    )
+
+
+def test_saturation_mixing_ratio_units(
+    temperature_for_conversions_cube, pressure_for_conversions_cube
+):
+    """Test units of saturation mixing ratio cube."""
+    expected_units = cf_units.Unit("kg/kg")
+    assert (
+        expected_units
+        == humidity.saturation_mixing_ratio(
+            temperature_for_conversions_cube, pressure_for_conversions_cube
+        ).units
+    )
+
+
+def test_saturation_mixing_ratio_cubelist(
+    temperature_for_conversions_cube, pressure_for_conversions_cube
+):
+    """Test calculation of saturation mixing ratio as CubeList."""
+    expected_data = (
+        _atmospheric_constants.EPSILON
+        * pressure.vapour_pressure(temperature_for_conversions_cube)
+    ) / (
+        (misc.convert_units(pressure_for_conversions_cube, "hPa"))
+        - pressure.vapour_pressure(temperature_for_conversions_cube)
+    )
+    expected_list = iris.cube.CubeList([expected_data, expected_data])
+    temperature_list = iris.cube.CubeList(
+        [temperature_for_conversions_cube, temperature_for_conversions_cube]
+    )
+    pressure_list = iris.cube.CubeList(
+        [pressure_for_conversions_cube, pressure_for_conversions_cube]
+    )
+    actual_cubelist = humidity.saturation_mixing_ratio(temperature_list, pressure_list)
+    for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
+        assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
