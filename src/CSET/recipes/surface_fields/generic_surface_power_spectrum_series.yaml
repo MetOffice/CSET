@@ -38,8 +38,10 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
+  - operator: power_spectrum.calculate_power_spectrum
+
+  - operator: plot.plot_line_series
+    series_coordinate: "frequency"
+
   - operator: write.write_cube_to_nc
     overwrite: True
-
-  - operator: plot.plot_power_spectrum_series
-    sequence_coordinate: $SEQUENCE

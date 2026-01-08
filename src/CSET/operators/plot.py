@@ -747,6 +747,138 @@ def _plot_and_save_line_series(
     plt.close(fig)
 
 
+def _plot_and_save_line_power_spectrum(
+    cubes: iris.cube.CubeList,
+    coords: list[iris.coords.Coord],
+    ensemble_coord: str,
+    filename: str,
+    title: str,
+    **kwargs,
+):
+    """Plot and save a 1D line series.
+
+    Parameters
+    ----------
+    cubes: Cube or CubeList
+        Cube or CubeList containing the cubes to plot on the y-axis.
+    coords: list[Coord]
+        Coordinates to plot on the x-axis, one per cube.
+    ensemble_coord: str
+        Ensemble coordinate in the cube.
+    filename: str
+        Filename of the plot to write.
+    title: str
+        Plot title.
+    """
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+
+    model_colors_map = _get_model_colors_map(cubes)
+
+    # Store min/max ranges.
+    y_levels = []
+
+    # Check match-up across sequence coords gives consistent sizes
+    _validate_cubes_coords(cubes, coords)
+
+    if "Spectrum" in title:
+        line_marker = None
+        line_width = 1
+    else:
+        line_marker = "o"
+        line_width = 3
+
+    for cube, coord in zip(cubes, coords, strict=True):
+        label = None
+        color = "black"
+        if model_colors_map:
+            label = cube.attributes.get("model_name")
+            color = model_colors_map.get(label)
+        for cube_slice in cube.slices_over(ensemble_coord):
+            # Label with (control) if part of an ensemble or not otherwise.
+            if cube_slice.coord(ensemble_coord).points == [0]:
+                iplt.plot(
+                    coord,
+                    cube_slice,
+                    color=color,
+                    marker=line_marker,
+                    ls="-",
+                    lw=line_width,
+                    label=f"{label} (control)"
+                    if len(cube.coord(ensemble_coord).points) > 1
+                    else label,
+                )
+                # Label with (perturbed) if part of an ensemble and not the control.
+            else:
+                iplt.plot(
+                    coord,
+                    cube_slice,
+                    color=color,
+                    ls="-",
+                    lw=1.5,
+                    alpha=0.75,
+                    label=f"{label} (member)",
+                )
+
+        # Calculate the global min/max if multiple cubes are given.
+        _, levels, _ = _colorbar_map_levels(cube, axis="y")
+        if levels is not None:
+            y_levels.append(min(levels))
+            y_levels.append(max(levels))
+
+    # Get the current axes.
+    ax = plt.gca()
+
+    # Add some labels and tweak the style.
+    # check if cubes[0] works for single cube if not CubeList
+    if "Spectrum" in title:
+        title = f"{title}\n [{coord.units.title(coord.points[0])}]"
+        ax.set_title(title, fontsize=16)
+        ax.set_xlabel("Wavenumber", fontsize=14)
+        ax.set_ylabel("Power", fontsize=14)
+        ax.tick_params(axis="both", labelsize=12)
+    else:
+        ax.set_xlabel(f"{coords[0].name()} / {coords[0].units}", fontsize=14)
+        ax.set_ylabel(f"{cubes[0].name()} / {cubes[0].units}", fontsize=14)
+        ax.set_title(title, fontsize=16)
+
+        ax.ticklabel_format(axis="y", useOffset=False)
+        ax.tick_params(axis="x", labelrotation=15)
+        ax.tick_params(axis="both", labelsize=12)
+
+    # Set y limits to global min and max, autoscale if colorbar doesn't exist.
+    if "Spectrum" in title:
+        # Set log-log scale
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+
+    elif y_levels:
+        ax.set_ylim(min(y_levels), max(y_levels))
+        # Add zero line.
+        if min(y_levels) < 0.0 and max(y_levels) > 0.0:
+            ax.axhline(y=0, xmin=0, xmax=1, ls="-", color="grey", lw=2)
+        logging.debug(
+            "Line plot with y-axis limits %s-%s", min(y_levels), max(y_levels)
+        )
+    else:
+        ax.autoscale()
+
+    # Add gridlines
+    ax.grid(linestyle="--", color="grey", linewidth=1)
+    # Ientify unique labels for legend
+    handles = list(
+        {
+            label: handle
+            for (handle, label) in zip(*ax.get_legend_handles_labels(), strict=True)
+        }.values()
+    )
+    ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
+
+    # Save plot.
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+    logging.info("Saved line plot to %s", filename)
+    plt.close(fig)
+
+
 def _plot_and_save_vertical_line_series(
     cubes: iris.cube.CubeList,
     coords: list[iris.coords.Coord],
@@ -2114,6 +2246,7 @@ def plot_line_series(
     cube: iris.cube.Cube | iris.cube.CubeList,
     filename: str = None,
     series_coordinate: str = "time",
+    sequence_coordinate: str = "time",
     # line_coordinate: str = "realization",
     **kwargs,
 ) -> iris.cube.Cube | iris.cube.CubeList:
@@ -2148,12 +2281,12 @@ def plot_line_series(
         If the cube isn't a Cube or CubeList.
     """
     # Ensure we have a name for the plot file.
-    title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", "Untitled")
 
     if filename is None:
-        filename = slugify(title)
+        filename = slugify(recipe_title)
 
-    # Add file extension.
+    # Add file extension. This may be overwritten later on.
     plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
 
     num_models = _get_num_models(cube)
@@ -2173,14 +2306,98 @@ def plot_line_series(
         if cube.ndim > 2 or not cube.coords("realization"):
             raise ValueError("Cube must be 1D or 2D with a realization coordinate.")
 
-    # Do the actual plotting.
-    _plot_and_save_line_series(cubes, coords, "realization", plot_filename, title)
+    plot_index = []
+    if series_coordinate == "time":
+        # Do the actual plotting for timeseries.
+        _plot_and_save_line_series(
+            cubes, coords, "realization", plot_filename, recipe_title
+        )
 
-    # Add list of plots to plot metadata.
-    plot_index = _append_to_plot_index([plot_filename])
+        plot_index.append(plot_filename)
+    else:
+        # If series coordinate is not time, for example power spectra with series
+        # coordinate frequency/wavelength.
+        # If several power spectra are plotted with time as sequence_coordinate for the
+        # time slider option.
+        for cube in cubes:
+            try:
+                cube.coord(sequence_coordinate)
+            except iris.exceptions.CoordinateNotFoundError as err:
+                raise ValueError(
+                    f"Cube must have a {sequence_coordinate} coordinate."
+                ) from err
+
+        if num_models == 1:
+            cube_iterables = cubes[0].slices_over(sequence_coordinate)
+        else:
+            all_points = sorted(
+                set(
+                    itertools.chain.from_iterable(
+                        cb.coord(sequence_coordinate).points for cb in cubes
+                    )
+                )
+            )
+            all_slices = list(
+                itertools.chain.from_iterable(
+                    cb.slices_over(sequence_coordinate) for cb in cubes
+                )
+            )
+            # Matched slices (matched by seq coord point; it may happen that
+            # evaluated models do not cover the same seq coord range, hence matching
+            # necessary)
+            cube_iterables = [
+                iris.cube.CubeList(
+                    s
+                    for s in all_slices
+                    if s.coord(sequence_coordinate).points[0] == point
+                )
+                for point in all_points
+            ]
+
+        # plot_index = []
+        nplot = np.size(cube.coord(sequence_coordinate).points)
+
+        # Create a plot for each value of the sequence coordinate. Allowing for
+        # multiple cubes in a CubeList to be plotted in the same plot for similar
+        # sequence values. Passing a CubeList into the internal plotting function
+        # for similar values of the sequence coordinate. cube_slice can be an
+        # iris.cube.Cube or an iris.cube.CubeList.
+        for cube_slice in cube_iterables:
+            # Normalize cube_slice to a list of cubes
+            if isinstance(cube_slice, iris.cube.CubeList):
+                cubes = list(cube_slice)
+            elif isinstance(cube_slice, iris.cube.Cube):
+                cubes = [cube_slice]
+            else:
+                raise TypeError(f"Expected Cube or CubeList, got {type(cube_slice)}")
+
+            single_cube = cubes[0]
+
+            # Use sequence value so multiple sequences can merge.
+            sequence_value = single_cube.coord(sequence_coordinate).points[0]
+            plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
+            coord = single_cube.coord(sequence_coordinate)
+
+            # Format the coordinate value in a unit appropriate way.
+            title = f"{recipe_title}\n [{coord.units.title(coord.points[0])}]"
+
+            # Use sequence (e.g. time) bounds if plotting single non-sequence outputs
+            if nplot == 1 and coord.has_bounds:
+                if np.size(coord.bounds) > 1:
+                    title = f"{recipe_title}\n [{coord.units.title(coord.bounds[0][0])} to {coord.units.title(coord.bounds[0][1])}]"
+
+            # Do the actual plotting.
+            _plot_and_save_line_power_spectrum(
+                cubes, coords, "realization", plot_filename, title
+            )
+
+            plot_index.append(plot_filename)
+    # not sure what the indent should be here (4 or 8 spaces)
+    # append plot to list of plots
+    complete_plot_index = _append_to_plot_index(plot_index)
 
     # Make a page to display the plots.
-    _make_plot_html_page(plot_index)
+    _make_plot_html_page(complete_plot_index)
 
     return cube
 
