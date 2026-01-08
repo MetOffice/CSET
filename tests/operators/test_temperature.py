@@ -105,3 +105,69 @@ def test_dewpoint_temperature_cubelist(
     actual_cubelist = temperature.dewpoint_temperature(temperature_list, rh_list)
     for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
         assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
+
+
+def test_virtual_temperature(
+    temperature_for_conversions_cube, mixing_ratio_for_conversions_cube
+):
+    """Test to calculate virtual temperature."""
+    expected_data = temperature_for_conversions_cube * (
+        (mixing_ratio_for_conversions_cube + _atmospheric_constants.EPSILON)
+        / (_atmospheric_constants.EPSILON * (1 + mixing_ratio_for_conversions_cube))
+    )
+    assert np.allclose(
+        expected_data.data,
+        temperature.virtual_temperature(
+            temperature_for_conversions_cube, mixing_ratio_for_conversions_cube
+        ).data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
+def test_virtual_temperature_name(
+    temperature_for_conversions_cube, mixing_ratio_for_conversions_cube
+):
+    """Test name of virtual temperature cube."""
+    expected_name = "virtual_temperature"
+    assert (
+        expected_name
+        == temperature.virtual_temperature(
+            temperature_for_conversions_cube, mixing_ratio_for_conversions_cube
+        ).name()
+    )
+
+
+def test_virtual_temperature_units(
+    temperature_for_conversions_cube, mixing_ratio_for_conversions_cube
+):
+    """Test units of virtual temperature cube."""
+    expected_units = cf_units.Unit("K")
+    assert (
+        expected_units
+        == temperature.virtual_temperature(
+            temperature_for_conversions_cube, mixing_ratio_for_conversions_cube
+        ).units
+    )
+
+
+def test_virtual_temperature_cubelist(
+    temperature_for_conversions_cube, mixing_ratio_for_conversions_cube
+):
+    """Test to calculate virtual temperature for a CubeList."""
+    expected_data = temperature_for_conversions_cube * (
+        (mixing_ratio_for_conversions_cube + _atmospheric_constants.EPSILON)
+        / (_atmospheric_constants.EPSILON * (1 + mixing_ratio_for_conversions_cube))
+    )
+    expected_list = iris.cube.CubeList([expected_data, expected_data])
+    temperature_list = iris.cube.CubeList(
+        [temperature_for_conversions_cube, temperature_for_conversions_cube]
+    )
+    mixing_ratio_list = iris.cube.CubeList(
+        [mixing_ratio_for_conversions_cube, mixing_ratio_for_conversions_cube]
+    )
+    actual_cubelist = temperature.virtual_temperature(
+        temperature_list, mixing_ratio_list
+    )
+    for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
+        assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
