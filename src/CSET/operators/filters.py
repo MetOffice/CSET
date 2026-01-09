@@ -56,7 +56,8 @@ def apply_mask(
     """
     masked_fields = iris.cube.CubeList([])
     for M, F in zip(iter_maybe(mask), iter_maybe(original_field), strict=True):
-        # Ensure mask is only 1s or NaNs.
+        # Ensure mask data are floats and only 1s or NaNs.
+        M.data = np.float64(M.data)
         M.data[M.data == 0.0] = np.nan
         M.data[~np.isnan(M.data)] = 1.0
         logging.info(
