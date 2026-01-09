@@ -27,15 +27,15 @@ steps:
           operator: constraints.generate_level_constraint
           coordinate: "pressure"
           levels: []
-      masks:
-        operator: filters.generate_mask
-        mask_field:
-          operator: filters.filter_multiple_cubes
-          constraint:
-            operator: constraints.generate_var_constraint
-            varname: "land_binary_mask"
-        condition: 'eq'
-        value: 0
+    masks:
+      operator: filters.generate_mask
+      mask_field:
+        operator: filters.filter_multiple_cubes
+        constraint:
+          operator: constraints.generate_var_constraint
+          varname: "land_binary_mask"
+      condition: 'eq'
+      value: 0
 
   - operator: collapse.collapse
     coordinate: [grid_latitude, grid_longitude]
