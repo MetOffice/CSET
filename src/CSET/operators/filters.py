@@ -57,8 +57,8 @@ def apply_mask(
     masked_fields = iris.cube.CubeList([])
     for M, F in zip(iter_maybe(mask), iter_maybe(original_field), strict=True):
         # Ensure mask is only 1s or NaNs.
-        M.data[M.data == 0] = np.nan
-        M.data[~np.isnan(M.data)] = 1
+        M.data[M.data == 0.0] = np.nan
+        M.data[~np.isnan(M.data)] = 1.0
         logging.info(
             "Mask set to 1 or 0s, if addition of multiple masks results"
             "in values > 1 these are set to 1."
@@ -207,17 +207,17 @@ def generate_mask(
         mask.data[:] = 0.0
         match condition:
             case "eq":
-                mask.data[cube.data == value] = 1
+                mask.data[cube.data == value] = 1.0
             case "ne":
-                mask.data[cube.data != value] = 1
+                mask.data[cube.data != value] = 1.0
             case "gt":
-                mask.data[cube.data > value] = 1
+                mask.data[cube.data > value] = 1.0
             case "ge":
-                mask.data[cube.data >= value] = 1
+                mask.data[cube.data >= value] = 1.0
             case "lt":
-                mask.data[cube.data < value] = 1
+                mask.data[cube.data < value] = 1.0
             case "le":
-                mask.data[cube.data <= value] = 1
+                mask.data[cube.data <= value] = 1.0
             case _:
                 raise ValueError("""Unexpected value for condition. Expected eq, ne,
                                   gt, ge, lt, le. Got {condition}.""")
