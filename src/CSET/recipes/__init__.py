@@ -14,9 +14,11 @@
 
 """Operations on recipes."""
 
+import hashlib
 import importlib.resources
 import logging
 from collections.abc import Iterator
+from io import StringIO
 from pathlib import Path
 from typing import Any
 
@@ -214,10 +216,18 @@ class RawRecipe:
 
         # Parbake this recipe, saving into recipe_dir.
         recipe = parse_recipe(Path(self.recipe), self.variables)
-        output = recipe_dir / f"{slugify(recipe['title'])}.yaml"
-        with open(output, "wt") as fp:
-            with YAML(pure=True, output=fp) as yaml:
+
+        # Serialise into memory, as we use the serialised value twice.
+        with StringIO() as s:
+            with YAML(pure=True, output=s) as yaml:
                 yaml.dump(recipe)
+            serialised_recipe = s.getvalue().encode()
+        # Include shortened hash in filename to avoid collisions between recipes
+        # with the same title.
+        digest = hashlib.sha256(serialised_recipe).hexdigest()
+        output_filename = recipe_dir / f"{slugify(recipe['title'])}_{digest[:12]}.yaml"
+        with open(output_filename, "wb") as fp:
+            fp.write(serialised_recipe)
 
 
 class Config:
