@@ -27,7 +27,7 @@ steps:
           operator: constraints.generate_level_constraint
           coordinate: "pressure"
           levels: []
-    masks:
+    mask:
       operator: filters.generate_mask
       mask_field:
         operator: filters.filter_multiple_cubes
