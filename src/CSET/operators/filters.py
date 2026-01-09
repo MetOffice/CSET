@@ -25,22 +25,22 @@ from CSET._common import iter_maybe
 
 
 def apply_mask(
-    original_field: iris.cube.Cube,
-    mask: iris.cube.Cube,
-) -> iris.cube.Cube:
+    original_field: iris.cube.Cube | iris.cube.CubeList,
+    mask: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
     """Apply a mask to given data as a masked array.
 
     Parameters
     ----------
-    original_field: iris.cube.Cube
-        The field to be masked.
-    mask: iris.cube.Cube
-        The mask being applied to the original field.
+    original_field: iris.cube.Cube | iris.cube.CubeList
+        The field(s) to be masked.
+    mask: iris.cube.Cube | iris.cube.CubeList
+        The mask(s) being applied to the original field(s).
 
     Returns
     -------
-    masked_field: iris.cube.Cube
-        A cube of the masked field.
+    masked_field: iris.cube.Cube | iris.cube.CubeList
+        A cube or cubelist of the masked field(s).
 
     Notes
     -----
@@ -54,17 +54,23 @@ def apply_mask(
     --------
     >>> land_points_only = apply_mask(temperature, land_mask)
     """
-    # Ensure mask is only 1s or NaNs.
-    mask.data[mask.data == 0] = np.nan
-    mask.data[~np.isnan(mask.data)] = 1
-    logging.info(
-        "Mask set to 1 or 0s, if addition of multiple masks results"
-        "in values > 1 these are set to 1."
-    )
-    masked_field = original_field.copy()
-    masked_field.data *= mask.data
-    masked_field.attributes["mask"] = f"mask_of_{original_field.name()}"
-    return masked_field
+    masked_fields = iris.cube.CubeList([])
+    for M, F in zip(iter_maybe(mask), iter_maybe(original_field), strict=True):
+        # Ensure mask is only 1s or NaNs.
+        M.data[M.data == 0] = np.nan
+        M.data[~np.isnan(M.data)] = 1
+        logging.info(
+            "Mask set to 1 or 0s, if addition of multiple masks results"
+            "in values > 1 these are set to 1."
+        )
+        masked_field = F.copy()
+        masked_field.data *= M.data
+        masked_field.attributes["mask"] = f"mask_of_{F.name()}"
+        masked_fields.append(masked_field)
+    if len(masked_fields) == 1:
+        return masked_fields[0]
+    else:
+        return masked_fields
 
 
 def filter_cubes(

@@ -289,6 +289,21 @@ def test_apply_mask(cube):
     )
 
 
+def test_apply_mask_cubelist(cube):
+    """Apply a mask to a cube list."""
+    mask = filters.generate_mask(cube, "eq", 276)
+    mask.data[mask.data == 0] = np.nan
+    mask.data[~np.isnan(mask.data)] = 1
+    test_data = cube.copy()
+    test_data.data *= mask.data
+    expected_list = iris.cube.CubeList([test_data, test_data])
+    mask_list = iris.cube.CubeList([mask, mask])
+    input_list = iris.cube.CubeList([cube, cube])
+    actual_cubelist = filters.apply_mask(input_list, mask_list)
+    for cube, mask in zip(expected_list, actual_cubelist, strict=True):
+        assert np.allclose(cube.data, mask.data, rtol=1e-06, atol=1e-02, equal_nan=True)
+
+
 def test_generate_single_ensemble_member_constraint_reduced_member(ensemble_cube):
     """Remove a single ensemble member from a cube."""
     remove_member_constraint = (
