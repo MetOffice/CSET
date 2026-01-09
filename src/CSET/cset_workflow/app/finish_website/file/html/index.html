@@ -14,10 +14,20 @@
         <header>
             <h1>CSET</h1>
             <button id="clear-plots">⎚ Clear view</button>
+            <button id="clear-query">⌫ Clear search</button>
             <button id="description-toggle">⇲ Hide description</button>
+            <search>
+                <input type="search" name="query" id="filter-query" placeholder="Filter...">
+                <!-- TODO: Add help for query syntax. -->
+                <fieldset id="filter-facets">
+                    <legend>Search facets</legend>
+                </fieldset>
+            </search>
         </header>
-        <hr>
-        <!-- Links to diagnostics get inserted here. -->
+        <ul id="diagnostics">
+            <!-- Links to diagnostics get inserted here. -->
+            <loading-throbber></loading-throbber>
+        </ul>
     </nav>
     <main>
         <article id="single-frame">
