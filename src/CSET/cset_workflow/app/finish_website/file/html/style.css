@@ -20,83 +20,122 @@ a:hover {
   text-decoration-thickness: max(3px, 0.12em);
 }
 
-nav > header {
-  margin: 8px;
-}
-
-nav > header > h1 {
-  font-size: xx-large;
-  margin: 0;
-}
-
-nav > header > button {
-  margin: 4px 0;
-}
-
 nav {
   display: inline;
   float: left;
-  width: 15em;
+  width: 35em;
   height: 100%;
-  overflow-x: hidden;
   overflow-y: scroll;
   background-color: whitesmoke;
   border-right: 1px solid black;
-}
 
-nav summary {
-  font-weight: bold;
-}
+  >header {
+    margin: 8px;
 
-nav menu {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
+    >h1 {
+      font-size: xx-large;
+      margin: 0;
+    }
 
-nav details {
-  margin: 8px;
-}
+    >button {
+      margin: 4px 0;
+    }
 
-nav menu > li {
-  background-color: lightgrey;
-  margin: 8px 0;
-  padding: 0 4px;
-  border: 1px solid black;
-  font-size: small;
-  overflow-wrap: break-word;
-}
+    >search {
+      #filter-query {
+        width: 100%;
+        padding: 0.5em 1em;
+        margin: 8px 0;
+        border-radius: 3em;
 
-.plot-position-chooser {
-  display: flex;
-  margin-bottom: 0.25em;
-  font-size: medium;
-}
+        &:invalid {
+          box-shadow: 0px 0px 4px 4px red;
+        }
+      }
 
-.plot-position-chooser button {
-  margin: 0 4px;
-  cursor: pointer;
-  width: 33%;
-}
+      fieldset select {
+        display: block;
+        margin-bottom: 4px;
+      }
+    }
+  }
 
-.plot-position-chooser button.left {
-  background-color: #b8dcfd;
-  border-top-left-radius: 25% 50%;
-  border-bottom-left-radius: 25% 50%;
-}
-.plot-position-chooser button.full {
-  background-color: #c5e836;
-}
-.plot-position-chooser button.right {
-  background-color: #fdcabb;
-  border-top-right-radius: 25% 50%;
-  border-bottom-right-radius: 25% 50%;
-}
+  >ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 8px;
 
-.plot-position-chooser button:focus,
-.plot-position-chooser button:hover {
-  background-color: #1a1a1a;
-  color: white;
+    >li {
+      background-color: lightgrey;
+      margin: 8px 0;
+      padding: 4px;
+      border-top: 1px solid black;
+      border-bottom: 1px solid black;
+      overflow-wrap: break-word;
+
+      >h2 {
+        margin: 0;
+        font-size: medium;
+      }
+
+      >dl {
+        font-size: small;
+        margin: 4px 0;
+
+        dt {
+          display: inline;
+        }
+
+        dt:after {
+          content: ": ";
+        }
+
+        dd {
+          display: inline;
+          margin-left: 0;
+        }
+      }
+
+      .plot-position-chooser {
+        display: flex;
+        margin: 4px auto;
+        font-size: medium;
+
+        button {
+          margin: 0 4px;
+          cursor: pointer;
+          width: 33%;
+
+          &.left {
+            background-color: #b8dcfd;
+            border-top-left-radius: 3em;
+            border-bottom-left-radius: 3em;
+          }
+
+          &.full {
+            background-color: #cae387;
+          }
+
+          &.right {
+            background-color: #fdcabb;
+            border-top-right-radius: 3em;
+            border-bottom-right-radius: 3em;
+          }
+
+          &.popup {
+            background-color: #e2dd92;
+            border-radius: 3em;
+          }
+
+          &:focus,
+          &:hover {
+            background-color: #1a1a1a;
+            color: white;
+          }
+        }
+      }
+    }
+  }
 }
 
 .vsplit {
@@ -130,7 +169,7 @@ main article {
   height: 100%;
 }
 
-main article > iframe {
+main article>iframe {
   border: none;
   height: 100%;
   width: 100%;
@@ -139,3 +178,51 @@ main article > iframe {
 .hidden {
   display: none;
 }
+
+/* Loading throbber from https://cssloaders.github.io/
+
+MIT License
+
+Copyright (c) 2020 Vineeth.TR
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+loading-throbber {
+  display: block;
+  margin: 48px auto;
+  width: 48px;
+  height: 48px;
+  border: 5px solid black;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* End loading throbber. */
