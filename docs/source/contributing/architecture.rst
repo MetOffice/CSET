@@ -65,14 +65,6 @@ Runs at the start of the workflow to assign each model a colour, so that
 different line plots and such can use consistent colours for each model. The
 colours are assigned into a style file which is used when baking the recipes.
 
-install_website_skeleton
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Copies static files for the visualisation website to use and creates a symlink
-from the configured WEB_DIR to ``$CYLC_WORKFLOW_SHARE_DIR/web``.
-
-In future this app is likely to be merged into finish_website.
-
 fetch_fcst
 ~~~~~~~~~~
 
@@ -108,8 +100,11 @@ using it.
 finish_website
 ~~~~~~~~~~~~~~
 
-Runs at the end of the workflow and constructs the index for the visualisation
-website from all of the produced diagnostics.
+Runs at the end of the workflow and creates the visualisation website.
+
+It copies static files for the website to use, constructs the index of the
+produced diagnostics, and creates a symlink from the configured WEB_DIR to
+``$CYLC_WORKFLOW_SHARE_DIR/web``.
 
 housekeeping
 ~~~~~~~~~~~~
