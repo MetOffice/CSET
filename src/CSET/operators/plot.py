@@ -1646,12 +1646,8 @@ def _spatial_plot(
                 title = f"{recipe_title}\n [{coord.units.title(coord.bounds[0][0])} to {coord.units.title(coord.bounds[0][1])}]"
 
         # Extract sequence slice for overlay_cube and contour_cube if required.
-        overlay_slice = slice_over_maybe(
-            overlay_cube, sequence_coordinate, iseq
-        )  # uence_value)
-        contour_slice = slice_over_maybe(
-            contour_cube, sequence_coordinate, iseq
-        )  # uence_value)
+        overlay_slice = slice_over_maybe(overlay_cube, sequence_coordinate, iseq)
+        contour_slice = slice_over_maybe(contour_cube, sequence_coordinate, iseq)
 
         # Do the actual plotting.
         plotting_func(

@@ -371,9 +371,9 @@ def slice_over_maybe(cube: iris.cube.Cube, coord_name, index):
         An iris cube which will be checked to see if it can be sliced over
         given coordinate.
     coord_name: coord
-        An iris coordinate over which to slide cube.
+        An iris coordinate over which to slice cube.
     index:
-        Coordinate value to extract
+        Coordinate index value to extract
 
     Returns
     -------
@@ -383,9 +383,10 @@ def slice_over_maybe(cube: iris.cube.Cube, coord_name, index):
     if cube:
         if is_coorddim(cube, coord_name):
             cube_slice = cube[index]
-            if cube.ndim > 3:  ## More elegant way to subset?? Deal with ens
+            if (
+                cube.ndim > 3
+            ):  ## More elegant way to subset?? Need to handle ensemble inputs
                 cube_slice = cube[:, index]
-            print(cube_slice)
         else:
             cube_slice = cube
     else:
