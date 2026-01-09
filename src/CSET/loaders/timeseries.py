@@ -41,6 +41,40 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+    # Surface time series: land mask.
+    if conf.TIMESERIES_SURFACE_FIELD_LAND_MASK:
+        for field in conf.SURFACE_FIELDS:
+            yield RawRecipe(
+                recipe="land_mask_for_surface_domain_mean_time_series.yaml",
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": [model["name"] for model in models],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[model["id"] for model in models],
+                aggregation=False,
+            )
+
+    # Surface time series: sea mask.
+    if conf.TIMESERIES_SURFACE_FIELD_SEA_MASK:
+        for field in conf.SURFACE_FIELDS:
+            yield RawRecipe(
+                recipe="sea_mask_for_surface_domain_mean_time_series.yaml",
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": [model["name"] for model in models],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[model["id"] for model in models],
+                aggregation=False,
+            )
+
     # Pressure level fields.
     if conf.TIMESERIES_PLEVEL_FIELD:
         for field, plevel in itertools.product(
