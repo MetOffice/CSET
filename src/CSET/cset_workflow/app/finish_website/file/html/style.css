@@ -42,6 +42,10 @@ nav {
     }
 
     >search {
+      dt {
+        font-family: monospace;
+      }
+
       #filter-query {
         width: 100%;
         padding: 0.5em 1em;
