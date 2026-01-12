@@ -3,7 +3,7 @@
 
 /** Search query lexer and parser.
  *
- * EBNF to implement:
+ * EBNF for filter.
  *
  * query = expression ;
  *
@@ -17,17 +17,16 @@
  *
  * condition = facet ? , operator ? , value ;
  *
- * facet = LITERAL , ":" ;
+ * facet = LITERAL ;
  *
  * value = LITERAL ;
  *
- * operator = NOT
- *          | GREATER_THAN
- *          | GREATER_THAN_OR_EQUALS
- *          | LESS_THAN
- *          | LESS_THAN_OR_EQUALS
- *          | NOT_EQUALS
+ * operator = IN
  *          | EQUALS ;
+ *          | LESS_THAN
+ *          | GREATER_THAN
+ *          | LESS_THAN_OR_EQUALS
+ *          | GREATER_THAN_OR_EQUALS
  */
 
 class Literal {
@@ -36,37 +35,56 @@ class Literal {
   }
 }
 
-class Facet {
-  constructor(value) {
-    this.value = value;
-  }
-}
+const Parenthesis = {
+  BEGIN: "BEGIN",
+  END: "END",
+};
 
-const TOKEN_SPEC = new Map([
-  ["Parenthesis_BEGIN", "\\("],
-  ["Parenthesis_END", "\\)"],
-  ["Operator_GREATER_THAN_OR_EQUALS", "<="],
-  ["Operator_GREATER_THAN", "<"],
-  ["Operator_LESS_THAN_OR_EQUALS", ">="],
-  ["Operator_LESS_THAN", ">"],
-  ["Operator_NOT_EQUALS", "!="],
-  ["Operator_EQUALS", "="],
-  ["Operator_NOT_IN", "!"],
-  ["Combiner_NOT", "\\bnot\\b"],
-  ["Combiner_AND", "\\band\\b"],
-  ["Combiner_OR", "\\bor\\b"],
-  ["LexOnly_WHITESPACE", "\\s+"],
-  ["LexOnly_FACET", "[a-z_\\-]+\\s*:"],
-  ["LexOnly_LITERAL", `'[^']*'|"[^"]*"|[^\\s\\(\\)]+`],
-]);
+const Operator = {
+  IN: "IN",
+  EQUALS: "EQUALS",
+  LESS_THAN: "LESS_THAN",
+  GREATER_THAN: "GREATER_THAN",
+  LESS_THAN_OR_EQUALS: "LESS_THAN_OR_EQUALS",
+  GREATER_THAN_OR_EQUALS: "GREATER_THAN_OR_EQUALS",
+};
+
+const Combiner = {
+  NOT: "NOT",
+  AND: "AND",
+  OR: "OR",
+};
+
+const TokenTypes = {
+  Literal: Literal,
+  Parenthesis: Parenthesis,
+  Operator: Operator,
+  Combiner: Combiner,
+};
+
+const TOKEN_SPEC = {
+  Parenthesis_BEGIN: "\\(",
+  Parenthesis_END: "\\)",
+  Operator_GREATER_THAN_OR_EQUALS: "<=",
+  Operator_GREATER_THAN: "<",
+  Operator_LESS_THAN_OR_EQUALS: ">=",
+  Operator_LESS_THAN: ">",
+  Operator_EQUALS: "=",
+  Operator_IN: ":",
+  Combiner_NOT: "\\bnot\\b",
+  Combiner_AND: "\\band\\b",
+  Combiner_OR: "\\bor\\b",
+  LexOnly_WHITESPACE: "\\s+",
+  LexOnly_LITERAL: `'[^']*'|"[^"]*"|[^\\s\\(\\):=<>]+`,
+};
 
 const TOKEN_REGEX = RegExp(
   Array.from(
-    TOKEN_SPEC.entries().map((pair) => {
+    Object.entries(TOKEN_SPEC).map((pair) => {
       return `(?<${pair[0]}>${pair[1]})`;
-    })
+    }),
   ).join("|"),
-  "ig"
+  "ig",
 );
 
 // Lex input string into tokens.
@@ -78,24 +96,25 @@ function lexer(query) {
       throw new SyntaxError("Query did not consist of valid tokens.");
     }
     let [kind, value] = Object.entries(match.groups).filter(
-      (pair) => pair[1] !== undefined
+      (pair) => pair[1] !== undefined,
     )[0];
-
     switch (kind) {
       case "LexOnly_WHITESPACE":
+        // Skip whitespace.
         continue;
-      case "LexOnly_FACET":
-        const facet_name = value.replace(/\s*:$/, "");
-        tokens.push(new Facet(facet_name));
-        break;
       case "LexOnly_LITERAL":
+        // Unquote and store value for literals.
         if (/^".*"$|^'.+'$/.test(value)) {
           value = value.slice(1, -1);
         }
         tokens.push(new Literal(value));
         break;
       default:
-        tokens.push(kind);
+        // Tokens for Operators and Combiners.
+        const kind_split_position = kind.indexOf("_");
+        const kind_type = kind.slice(0, kind_split_position);
+        const kind_value = kind.slice(kind_split_position + 1);
+        tokens.push(TokenTypes[kind_type][kind_value]);
         break;
     }
   }
@@ -103,54 +122,44 @@ function lexer(query) {
 }
 
 class Condition {
-  constructor(value, facet = new Facet("title"), operator = "Operator_IN") {
-    if (typeof value == "function") {
+  constructor(value, facet, operator) {
+    // Allow constructing a Condition from a Condition, e.g: (((Condition)))
+    if (typeof value === "function") {
       this.func = value;
       return;
     }
-
-    const v = value.value;
+    const v = value.value.toLowerCase();
     const f = facet.value;
     let cond_func;
     switch (operator) {
-      case "Operator_IN":
+      case Operator.IN:
         cond_func = function cond_in(d) {
-          return f in d && d[f].includes(v);
+          return f in d && d[f].toLowerCase().includes(v);
         };
         break;
-      case "Operator_NOT_IN":
-        cond_func = function cond_nin(d) {
-          return f in d && !d[f].includes(v);
-        };
-        break;
-      case "Operator_EQUALS":
+      case Operator.EQUALS:
         cond_func = function cond_eq(d) {
-          return f in d && v == d[f];
+          return f in d && v === d[f].toLowerCase();
         };
         break;
-      case "Operator_NOT_EQUALS":
-        cond_func = function cond_neq(d) {
-          return f in d && v != d[f];
-        };
-        break;
-      case "Operator_GREATER_THAN":
+      case Operator.GREATER_THAN:
         cond_func = function cond_gt(d) {
-          return f in d && v > d[f];
+          return f in d && v > d[f].toLowerCase();
         };
         break;
-      case "Operator_GREATER_THAN_OR_EQUALS":
+      case Operator.GREATER_THAN_OR_EQUALS:
         cond_func = function cond_gte(d) {
-          return f in d && v >= d[f];
+          return f in d && v >= d[f].toLowerCase();
         };
         break;
-      case "Operator_LESS_THAN":
+      case Operator.LESS_THAN:
         cond_func = function cond_lt(d) {
-          return f in d && v < d[f];
+          return f in d && v < d[f].toLowerCase();
         };
         break;
-      case "Operator_LESS_THAN_OR_EQUALS":
+      case Operator.LESS_THAN_OR_EQUALS:
         cond_func = function cond_lte(d) {
-          return f in d && v <= d[f];
+          return f in d && v <= d[f].toLowerCase();
         };
         break;
       default:
@@ -163,17 +172,14 @@ class Condition {
     return this.func(d);
   }
 
-  // Implement self & other.
   and(other) {
     return new Condition((d) => this.test(d) && other.test(d));
   }
 
-  // Implement self | other.
   or(other) {
     return new Condition((d) => this.test(d) || other.test(d));
   }
 
-  // Implement ~self.
   invert() {
     return new Condition((d) => !this.test(d));
   }
@@ -181,23 +187,23 @@ class Condition {
 
 // Parse a grouped expression from a stream of tokens.
 function parse_grouped_expression(tokens) {
-  if (tokens.length < 2 || tokens[0] !== "Parenthesis_BEGIN") {
+  if (tokens.length < 2 || tokens[0] !== Parenthesis.BEGIN) {
     return [0, null];
   }
   let offset = 1;
   let depth = 1;
   while (depth > 0 && offset < tokens.length) {
     switch (tokens[offset]) {
-      case "Parenthesis_BEGIN":
+      case Parenthesis.BEGIN:
         depth += 1;
         break;
-      case "Parenthesis_END":
+      case Parenthesis.END:
         depth -= 1;
         break;
     }
     offset += 1;
   }
-  if (depth != 0) {
+  if (depth !== 0) {
     throw new Error("Unmatched parenthesis.");
   }
   // Recursively parse the grouped expression.
@@ -207,31 +213,23 @@ function parse_grouped_expression(tokens) {
 
 // Parse a condition from a stream of tokens.
 function parse_condition(tokens) {
-  if (tokens[0] instanceof Literal) {
-    // Just a value to search for.
-    const lt = tokens[0];
-    return [1, new Condition(lt)];
-  } else if (
-    typeof tokens[0] === "string" &&
-    tokens[0].startsWith("Operator.") &&
-    tokens[1] instanceof Literal
-  ) {
-    // Value to search for with operator.
-    const op = tokens[0];
-    const lt = tokens[1];
-    return [2, new Condition(lt, op)];
-  } else if (tokens[0] instanceof Facet && tokens[1] instanceof Literal) {
-    // Value to search for in facet.
-    const fc = tokens[0];
-    const lt = tokens[1];
-    return [2, new Condition(lt, (facet = fc))];
-  } else if (
-    tokens[0] instanceof Facet &&
-    tokens[1].startsWith("Operator.") &&
-    tokens[1] instanceof Literal
+  if (
+    tokens[0] instanceof Literal &&
+    tokens[1] in Operator &&
+    tokens[2] instanceof Literal
   ) {
     // Value to search for in facet with operator.
-    return [3, new Condition(lt, (facet = fc), (operator = op))];
+    return [3, new Condition(tokens[2], (facet = tokens[0]), (operator = tokens[1]))];
+  } else if (tokens[0] instanceof Literal) {
+    // Just a value to search for.
+    return [
+      1,
+      new Condition(
+        tokens[0],
+        (facet = new Literal("title")),
+        (operator = Operator.IN),
+      ),
+    ];
   } else {
     // Not matched as a condition.
     return [0, null];
@@ -243,20 +241,17 @@ function evaluate_not(conditions) {
   const negated_conditions = [];
   let index = 0;
   while (index < conditions.length) {
-    if (
-      conditions[index] == "Combiner_NOT" &&
-      conditions[index + 1] == "Combiner_NOT"
-    ) {
+    if (conditions[index] === Combiner.NOT && conditions[index + 1] === Combiner.NOT) {
       // Skip double NOTs, as they negate each other.
       index += 2;
     } else if (
-      conditions[index] == "Combiner_NOT" &&
+      conditions[index] === Combiner.NOT &&
       conditions[index + 1] instanceof Condition
     ) {
       const right = conditions[index + 1];
       negated_conditions.push(right.invert());
       index += 2;
-    } else if (conditions[index] != "Combiner_NOT") {
+    } else if (conditions[index] !== Combiner.NOT) {
       negated_conditions.push(conditions[index]);
       index += 1;
     } else {
@@ -271,16 +266,13 @@ function evaluate_and(conditions) {
   const anded_conditions = [];
   let index = 0;
   while (index < conditions.length) {
-    let left;
+    let left = null;
     if (anded_conditions.length) {
       left = anded_conditions.pop();
-    } else {
-      left = null;
     }
-
     if (
       left instanceof Condition &&
-      conditions[index] == "Combiner_AND" &&
+      conditions[index] === Combiner.AND &&
       conditions[index + 1] instanceof Condition
     ) {
       const right = conditions[index + 1];
@@ -290,7 +282,7 @@ function evaluate_and(conditions) {
       const right = conditions[index];
       anded_conditions.push(left.and(right));
       index += 2;
-    } else if (conditions[index] != "Combiner_AND") {
+    } else if (conditions[index] !== Combiner.AND) {
       if (left !== null) {
         anded_conditions.push(left);
       }
@@ -311,14 +303,14 @@ function evaluate_or(conditions) {
   while (index < conditions.length) {
     if (
       conditions[index] instanceof Condition &&
-      conditions[index + 1] === "Combiner_OR" &&
+      conditions[index + 1] === Combiner.OR &&
       conditions[index + 2]
     ) {
       const left = conditions[index];
       const right = conditions[index + 2];
       ored_conditions.push(left.or(right));
       index += 3;
-    } else if (conditions[index] !== "Combiner_OR") {
+    } else if (conditions[index] !== Combiner.OR) {
       ored_conditions.push(conditions[index]);
       index += 1;
     } else {
@@ -336,12 +328,11 @@ function parse_expression(tokens) {
     console.log("Conditions:", conditions);
     console.log("Token index:", index);
     // Accounts for AND/OR/NOT.
-    if (typeof tokens[index] === "string" && tokens[index].startsWith("Combiner_")) {
+    if (tokens[index] in Combiner) {
       conditions.push(tokens[index]);
       index += 1;
       continue;
     }
-
     // Accounts for parentheses.
     let [offset, condition] = parse_grouped_expression(tokens.slice(index));
     if (offset > 0 && condition !== null) {
@@ -349,7 +340,6 @@ function parse_expression(tokens) {
       index += offset;
       continue;
     }
-
     // Accounts for Facets, Operators, and Literals.
     [offset, condition] = parse_condition(tokens.slice(index));
     if (offset > 0 && condition !== null) {
@@ -357,28 +347,19 @@ function parse_expression(tokens) {
       index += offset;
       continue;
     }
-
     console.error(tokens[index]);
     throw new Error(`Unexpected token in expression: ${tokens[index]}`);
   }
-
-  // TODO: Investigate Pratt parsing for handling combiner precedence in a
-  // single pass. It should allow parsing them in the while loop above.
-
   // Evaluate NOTs first, left to right.
   conditions = evaluate_not(conditions);
-
   // Evaluate ANDs second, left to right.
   conditions = evaluate_and(conditions);
-
   // Evaluate ORs third, left to right.
   conditions = evaluate_or(conditions);
-
   // Verify we have collapsed down to a single condition at this point.
-  if (conditions.length !== 1 || !conditions[0] instanceof Condition) {
-    throw new Error("Collapse should produce a single condition.");
+  if (conditions.length !== 1 || !(conditions[0] instanceof Condition)) {
+    throw new Error("Collapse should produce a single Condition.");
   }
-
   return conditions[0];
 }
 
@@ -387,6 +368,7 @@ function query2condition(query) {
   const tokens = lexer(query);
   console.log("Tokens:", tokens);
   if (tokens.length === 0) {
+    // If query is empty show everything.
     return new Condition((_) => true);
   }
   return parse_expression(tokens);
@@ -409,7 +391,7 @@ function enforce_description_toggle() {
   }
   label: for (plot_frame of document.querySelectorAll("iframe")) {
     const description_container = plot_frame.contentDocument.getElementById(
-      "description-container"
+      "description-container",
     );
     // Skip doing anything if plot not loaded.
     if (!description_container) {
@@ -471,7 +453,7 @@ function add_to_sidebar(record, facet_values) {
   // Create card for diagnostic.
   const facets = document.createElement("dl");
   for (const facet in record) {
-    if (facet != "title" && facet != "path") {
+    if (facet !== "title" && facet !== "path") {
       const facet_node = document.createElement("div");
       const facet_name = document.createElement("dt");
       const facet_value = document.createElement("dd");
@@ -508,12 +490,12 @@ function add_to_sidebar(record, facet_values) {
     button.addEventListener("click", (event) => {
       event.preventDefault();
       // Open new window for popup.
-      if (position == "popup") {
+      if (position === "popup") {
         window.open(`${PLOTS_PATH}/${path}`, "_blank", "popup,width=800,height=600");
         return;
       }
       // Set the appropriate frame layout.
-      position == "full" ? ensure_single_frame() : ensure_dual_frame();
+      position === "full" ? ensure_single_frame() : ensure_dual_frame();
       document.getElementById(`plot-frame-${position}`).src = `${PLOTS_PATH}/${path}`;
     });
 
@@ -570,7 +552,7 @@ function updateFacetQuery(e) {
   let new_query;
   // Construct regular expression matching facet condition.
   const pattern = RegExp(`${facet}:\\s*('[^']*'|"[^"]*"|[^ \\t\\(\\)]+)`, "i");
-  if (value == "") {
+  if (value === "") {
     // Facet unselected, remove from query.
     new_query = query.replace(pattern, "");
   } else if (pattern.test(query)) {
@@ -701,7 +683,7 @@ function doSearch() {
 let searchTimeoutID = undefined;
 function debounce(e) {
   clearTimeout(searchTimeoutID);
-  if (e.data == " ") {
+  if (e.data === " ") {
     doSearch();
   } else {
     searchTimeoutID = setTimeout(doSearch, 250);
