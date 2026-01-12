@@ -49,6 +49,22 @@ def test_copy_rose_config(monkeypatch, tmp_path):
         assert fp.read() == "Test rose-suite.conf file\n"
 
 
+def test_bust_cache(tmp_path):
+    """Cache busting query string is added where requested."""
+    with open(tmp_path / "index.html", "wt") as fp:
+        fp.write('<img href="image.jpg?v=CACHEBUSTER" />\n')
+    (tmp_path / "plots").mkdir()
+    finish_website.bust_cache(tmp_path)
+    # Check cache busting query has been added.
+    with open(tmp_path / "index.html", "rt") as fp:
+        content = fp.read()
+    assert "CACHEBUSTER" not in content
+    assert re.search(r"\?v=\d+", content)
+    renamed_plot_dir = list(tmp_path.glob("plots-*"))
+    assert len(renamed_plot_dir) == 1
+    assert renamed_plot_dir[0].is_dir()
+
+
 def test_write_workflow_status(tmp_path):
     """Workflow finish status gets written to placeholder file."""
     web_dir = tmp_path / "web"
@@ -150,22 +166,27 @@ def test_entrypoint(monkeypatch):
     # are all run.
     counter = 0
 
+    def increment_counter(*args, **kwargs):
+        nonlocal counter
+        counter += 1
+
+    def check_single_arg(www_content: Path):
+        assert www_content == Path("/share/web")
+        increment_counter()
+
     def check_args(www_root_link: Path, www_content: Path):
         assert www_root_link == Path("/var/www/cset")
         assert www_content == Path("/share/web")
         increment_counter()
 
-    def increment_counter(*args, **kwargs):
-        nonlocal counter
-        counter += 1
-
     monkeypatch.setattr(finish_website, "install_website_skeleton", check_args)
-    monkeypatch.setattr(finish_website, "construct_index", increment_counter)
-    monkeypatch.setattr(finish_website, "update_workflow_status", increment_counter)
-    monkeypatch.setattr(finish_website, "copy_rose_config", increment_counter)
+    monkeypatch.setattr(finish_website, "copy_rose_config", check_single_arg)
+    monkeypatch.setattr(finish_website, "construct_index", check_single_arg)
+    monkeypatch.setattr(finish_website, "bust_cache", check_single_arg)
+    monkeypatch.setattr(finish_website, "update_workflow_status", check_single_arg)
     monkeypatch.setenv("WEB_DIR", "/var/www/cset")
     monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", "/share")
 
     # Check that it runs all the needed subfunctions.
     finish_website.run()
-    assert counter == 4
+    assert counter == 5
