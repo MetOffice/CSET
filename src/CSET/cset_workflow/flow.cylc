@@ -30,7 +30,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     [[graph]]
     # Only runs on the first cycle.
     R1/^ = """
-    validate_environment => install_website_skeleton => setup_complete
     validate_environment => assign_model_colours => setup_complete
     """
 
@@ -142,11 +141,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     [[validate_environment]]
     # Checks the environment works and the cset command is available.
 
-    [[install_website_skeleton]]
-    # Copies the static files that make up the web interface.
-        [[[environment]]]
-        WEB_DIR = {{WEB_DIR}}
-
     [[assign_model_colours]]
     # Copies the style file, inserting per-model colour definitions to ensure
     # consistency between the many runs.
@@ -213,7 +207,9 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         HOUSEKEEPING_MODE = {{HOUSEKEEPING_MODE}}
 
     [[finish_website]]
-    # Updates the workflow info in the web interface.
+    # Create the diagnostic viewing website.
+        [[[environment]]]
+        WEB_DIR = {{WEB_DIR}}
 
     [[send_email]]
     # Send email to notify that the workflow is complete.
