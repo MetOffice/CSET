@@ -21,11 +21,11 @@ index, and updates the workflow status on the front page of the
 web interface.
 """
 
-import datetime
 import json
 import logging
 import os
 import shutil
+import time
 from importlib.metadata import version
 from pathlib import Path
 
@@ -95,11 +95,30 @@ def construct_index(www_content: Path):
         json.dump(index, fp, indent=2)
 
 
+def bust_cache(www_content: Path):
+    """Add a unique query string to static requests to avoid stale caches.
+
+    We only need to do this for static resources referenced from the index page,
+    as each plot already uses a unique filename based on the recipe.
+    """
+    # Search and replace the string "CACHEBUSTER".
+    CACHEBUSTER = str(int(time.time()))
+    with open(www_content / "index.html", "r+t") as fp:
+        content = fp.read()
+        new_content = content.replace("CACHEBUSTER", CACHEBUSTER)
+        fp.seek(0)
+        fp.truncate()
+        fp.write(new_content)
+
+    # Move plots directory so it has a unique name.
+    os.rename(www_content / "plots", www_content / f"plots-{CACHEBUSTER}")
+
+
 def update_workflow_status(www_content: Path):
     """Update the workflow status on the front page of the web interface."""
     with open(www_content / "placeholder.html", "r+t") as fp:
         content = fp.read()
-        finish_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        finish_time = time.strftime("%Y-%m-%d %H:%M", time.localtime())
         status = f"Completed at {finish_time} using CSET v{version('CSET')}"
         new_content = content.replace(
             '<p id="workflow-status">Unknown</p>',
@@ -125,9 +144,10 @@ def run():
     www_content = Path(os.environ["CYLC_WORKFLOW_SHARE_DIR"] + "/web")
 
     install_website_skeleton(www_root_link, www_content)
-    construct_index(www_content)
-    update_workflow_status(www_content)
     copy_rose_config(www_content)
+    construct_index(www_content)
+    bust_cache(www_content)
+    update_workflow_status(www_content)
 
 
 if __name__ == "__main__":  # pragma: no cover
