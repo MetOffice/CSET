@@ -171,3 +171,83 @@ def test_virtual_temperature_cubelist(
     )
     for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
         assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
+
+
+def test_wet_bulb_temperature(
+    temperature_for_conversions_cube, relative_humidity_for_conversions_cube
+):
+    """Test to calculate wet-bulb temperature."""
+    T_units = misc.convert_units(temperature_for_conversions_cube, "Celsius")
+    RH_units = misc.convert_units(relative_humidity_for_conversions_cube, "%")
+    TW = (
+        T_units * np.arctan(0.151977 * (RH_units.core_data() + 8.313659) ** 0.5)
+        + np.arctan(T_units.core_data() + RH_units.core_data())
+        - np.arctan(RH_units.core_data() - 1.676331)
+        + 0.00391838
+        * (RH_units.core_data()) ** (3.0 / 2.0)
+        * np.arctan(0.023101 * RH_units.core_data())
+        - 4.686035
+    )
+    TW = misc.convert_units(TW, "K")
+    assert np.allclose(
+        TW.data,
+        temperature.wet_bulb_temperature(
+            temperature_for_conversions_cube, relative_humidity_for_conversions_cube
+        ).data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
+def test_wet_bulb_temperature_units(
+    temperature_for_conversions_cube, relative_humidity_for_conversions_cube
+):
+    """Test units for wet bulb temperature cube."""
+    expected_units = cf_units.Unit("K")
+    assert (
+        expected_units
+        == temperature.wet_bulb_temperature(
+            temperature_for_conversions_cube, relative_humidity_for_conversions_cube
+        ).units
+    )
+
+
+def test_wet_bulb_temperature_name(
+    temperature_for_conversions_cube, relative_humidity_for_conversions_cube
+):
+    """Test name for wet bulb temperature cube."""
+    expected_name = "wet_bulb_temperature"
+    assert (
+        expected_name
+        == temperature.wet_bulb_temperature(
+            temperature_for_conversions_cube, relative_humidity_for_conversions_cube
+        ).name()
+    )
+
+
+def test_wet_bulb_temperature_cubelist(
+    temperature_for_conversions_cube, relative_humidity_for_conversions_cube
+):
+    """Test to calculate wet-bulb temperature for a CubeList."""
+    T_units = misc.convert_units(temperature_for_conversions_cube, "Celsius")
+    RH_units = misc.convert_units(relative_humidity_for_conversions_cube, "%")
+    TW = (
+        T_units * np.arctan(0.151977 * (RH_units.core_data() + 8.313659) ** 0.5)
+        + np.arctan(T_units.core_data() + RH_units.core_data())
+        - np.arctan(RH_units.core_data() - 1.676331)
+        + 0.00391838
+        * (RH_units.core_data()) ** (3.0 / 2.0)
+        * np.arctan(0.023101 * RH_units.core_data())
+        - 4.686035
+    )
+    TW = misc.convert_units(TW, "K")
+    expected_list = iris.cube.CubeList([TW, TW])
+    temperature_list = iris.cube.CubeList(
+        [temperature_for_conversions_cube, temperature_for_conversions_cube]
+    )
+    rh_list = iris.cube.CubeList(
+        [relative_humidity_for_conversions_cube, relative_humidity_for_conversions_cube]
+    )
+    actual_cubelist = temperature.wet_bulb_temperature(temperature_list, rh_list)
+    for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
+        assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
