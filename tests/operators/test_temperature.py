@@ -501,3 +501,94 @@ def test_equivalent_potential_temperature_cubelist(
     )
     for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
         assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
+
+
+def test_saturation_equivalent_potential_temperature(
+    temperature_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test calculation of saturation equivalent potential temperature."""
+    theta = temperature.potential_temperature(
+        temperature_for_conversions_cube, pressure_for_conversions_cube
+    )
+    ws = humidity.saturation_mixing_ratio(
+        temperature_for_conversions_cube, pressure_for_conversions_cube
+    )
+    third_term_power = (
+        _atmospheric_constants.LV
+        * ws
+        / (_atmospheric_constants.CPD * temperature_for_conversions_cube)
+    )
+    third_term = np.exp(third_term_power.core_data())
+    expected_data = theta * third_term
+    assert np.allclose(
+        expected_data.data,
+        temperature.saturation_equivalent_potential_temperature(
+            temperature_for_conversions_cube,
+            pressure_for_conversions_cube,
+        ).data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
+def test_saturation_equivalent_potenital_temperature_name(
+    temperature_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test name of saturation potential temperature cube."""
+    expected_name = "saturation_equivalent_potential_temperature"
+    assert (
+        expected_name
+        == temperature.saturation_equivalent_potential_temperature(
+            temperature_for_conversions_cube,
+            pressure_for_conversions_cube,
+        ).name()
+    )
+
+
+def test_saturation_equivalent_potenital_temperature_units(
+    temperature_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test units of saturation equivalent potential temperature cube."""
+    expected_units = cf_units.Unit("K")
+    assert (
+        expected_units
+        == temperature.saturation_equivalent_potential_temperature(
+            temperature_for_conversions_cube,
+            pressure_for_conversions_cube,
+        ).units
+    )
+
+
+def test_saturation_equivalent_potential_temperature_cubelist(
+    temperature_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test calculation of saturation equivalent potential temperature for a CubeList."""
+    theta = temperature.potential_temperature(
+        temperature_for_conversions_cube, pressure_for_conversions_cube
+    )
+    ws = humidity.saturation_mixing_ratio(
+        temperature_for_conversions_cube, pressure_for_conversions_cube
+    )
+    third_term_power = (
+        _atmospheric_constants.LV
+        * ws
+        / (_atmospheric_constants.CPD * temperature_for_conversions_cube)
+    )
+    third_term = np.exp(third_term_power.core_data())
+    expected_data = theta * third_term
+    expected_list = iris.cube.CubeList([expected_data, expected_data])
+    temperature_list = iris.cube.CubeList(
+        [temperature_for_conversions_cube, temperature_for_conversions_cube]
+    )
+    pressure_list = iris.cube.CubeList(
+        [pressure_for_conversions_cube, pressure_for_conversions_cube]
+    )
+    actual_cubelist = temperature.saturation_equivalent_potential_temperature(
+        temperature_list, pressure_list
+    )
+    for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
+        assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
