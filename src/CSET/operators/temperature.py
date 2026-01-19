@@ -52,7 +52,7 @@ def dewpoint_temperature(
     -----
     The dewpoint temperature provides the temperature at which the air must be
     cooled for dew to form (i.e. the water vapour condenses to liquid water).
-    It is calculated based upon [Bolton80]
+    It is calculated based upon [Bolton80]_
 
     .. math:: T_d = \frac{243.5 * ln(e) - 440.8}{19.48 - ln(e)}
 
@@ -61,8 +61,8 @@ def dewpoint_temperature(
     `pressure.vapour_pressure_from_relative_humidity`.
 
     The dewpoint temperature is presented when -35.0 C < T < 35.0 C as this is
-    when the calculation is the most accurate [Bolton80] this roughly equates to
-    exclusion of dewpoints on pressures of 400 hPa and above (e.g. [Flack24]).
+    when the calculation is the most accurate [Bolton80]_ this roughly equates to
+    exclusion of dewpoints on pressures of 400 hPa and above (e.g. [Flack24]_).
 
     When :math:`T_d` is equivalent to T the relative humidity will be 100 %.
 
