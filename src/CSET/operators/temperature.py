@@ -182,7 +182,7 @@ def wet_bulb_potential_temperature(
         iter_maybe(pressure),
         strict=True,
     ):
-        TH_E = equivalent_potential_temperature(T, P, RH)
+        TH_E = equivalent_potential_temperature(T, RH, P)
         X = TH_E / T0
         X.units = "1"
         A0 = 7.101574
