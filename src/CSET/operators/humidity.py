@@ -25,7 +25,36 @@ from CSET.operators.pressure import vapour_pressure
 def mixing_ratio_from_specific_humidity(
     specific_humidity: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Convert specific humidity to mixing ratio."""
+    r"""Convert specific humidity to mixing ratio.
+
+    Arguments
+    ---------
+    specific_humidity: iris.cube.Cube | iris.cube.CubeList
+        Cubes of specific humidity to be converted to mixing ratio.
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        Converted mixing ratio.
+
+    Notes
+    -----
+    Atmospheric water vapour can be described by multiple quantities. Here,
+    we convert the specific humidity to the mixing ratio using the following
+    relation
+
+    .. math:: w = \frac{q}{1 - q}
+
+    for w the mixing ratio and q the specific humidity.
+
+    Larger mixing ratios imply more moisture in the atmosphere. The mixing
+    ratio will have the same units as the specific humidity (kg/kg).
+
+
+    Examples
+    --------
+    >>> w = humidity.mixing_ratio_from_specific_humidity(specific_humidity)
+    """
     w = iris.cube.CubeList([])
     for q in iter_maybe(specific_humidity):
         mr = q.copy()
@@ -41,7 +70,34 @@ def mixing_ratio_from_specific_humidity(
 def specific_humidity_from_mixing_ratio(
     mixing_ratio: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Convert mixing ratio to specific humidity."""
+    r"""Convert mixing ratio to specific humidity.
+
+    Arguments
+    ---------
+    mixing_ratio: iris.cube.Cube | iris.Cube.CubeList
+        Cubes of mixing ratio to be converted to specific humidity.
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        Converted specific humidity.
+
+    Notes
+    -----
+    Here, we invert the relationship from `humidity.mixing_ratio_from_specific_humidity`
+    for the following relation
+
+    .. math:: q = \frac{w}{1 + w}
+
+    for q the specific humidity and w the mixing ratio.
+
+    A larger specific humidity implies a more moist atmosphere. The specific
+    humidity will have the same units as the mixing ratio (kg/kg).
+
+    Examples
+    --------
+    >>> q = humidity.specific_humidity_from_mixing_ratio(mixing_ratio)
+    """
     q = iris.cube.CubeList([])
     for w in iter_maybe(mixing_ratio):
         sh = w.copy()
@@ -58,7 +114,28 @@ def saturation_mixing_ratio(
     temperature: iris.cube.Cube | iris.cube.CubeList,
     pressure: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Calculate saturation mixing ratio."""
+    r"""Calculate saturation mixing ratio.
+
+    Arguments
+    ---------
+    s
+
+    Returns
+    -------
+    s
+
+    Notes
+    -----
+    s
+
+    References
+    ----------
+    s
+
+    Examples
+    --------
+    >>> s
+    """
     w = iris.cube.CubeList([])
     for T, P in zip(iter_maybe(temperature), iter_maybe(pressure), strict=True):
         P = convert_units(P, "hPa")
@@ -76,7 +153,28 @@ def saturation_specific_humidity(
     temperature: iris.cube.Cube | iris.cube.CubeList,
     pressure: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Calculate saturation specific humidity."""
+    r"""Calculate saturation specific humidity.
+
+    Arguments
+    ---------
+    s
+
+    Returns
+    -------
+    s
+
+    Notes
+    -----
+    s
+
+    References
+    ----------
+    s
+
+    Examples
+    --------
+    >>> s
+    """
     q = iris.cube.CubeList([])
     for T, P in zip(iter_maybe(temperature), iter_maybe(pressure), strict=True):
         P = convert_units(P, "hPa")
@@ -95,7 +193,28 @@ def mixing_ratio_from_relative_humidity(
     pressure: iris.cube.Cube | iris.cube.CubeList,
     relative_humidity: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Calculate the mixing ratio from RH."""
+    r"""Calculate the mixing ratio from RH.
+
+    Arguments
+    ---------
+    s
+
+    Returns
+    -------
+    s
+
+    Notes
+    -----
+    s
+
+    References
+    ----------
+    s
+
+    Examples
+    --------
+    >>> s
+    """
     w = iris.cube.CubeList([])
     for T, P, RH in zip(
         iter_maybe(temperature),
@@ -119,7 +238,28 @@ def specific_humidity_from_relative_humidity(
     pressure: iris.cube.Cube | iris.cube.CubeList,
     relative_humidity: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Calculate the mixing ratio from RH."""
+    r"""Calculate the mixing ratio from RH.
+
+    Arguments
+    ---------
+    s
+
+    Returns
+    -------
+    s
+
+    Notes
+    -----
+    s
+
+    References
+    ----------
+    s
+
+    Examples
+    --------
+    >>> s
+    """
     q = iris.cube.CubeList([])
     for T, P, RH in zip(
         iter_maybe(temperature),
@@ -143,7 +283,28 @@ def relative_humidity_from_mixing_ratio(
     temperature: iris.cube.Cube | iris.cube.CubeList,
     pressure: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Convert mixing ratio to relative humidity."""
+    r"""Convert mixing ratio to relative humidity.
+
+    Arguments
+    ---------
+    s
+
+    Returns
+    -------
+    s
+
+    Notes
+    -----
+    s
+
+    References
+    ----------
+    s
+
+    Examples
+    --------
+    >>> s
+    """
     RH = iris.cube.CubeList([])
     for W, T, P in zip(
         iter_maybe(mixing_ratio),
@@ -166,7 +327,28 @@ def relative_humidity_from_specific_humidity(
     temperature: iris.cube.Cube | iris.cube.CubeList,
     pressure: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Convert specific humidity to relative humidity."""
+    r"""Convert specific humidity to relative humidity.
+
+    Arguments
+    ---------
+    s
+
+    Returns
+    -------
+    s
+
+    Notes
+    -----
+    s
+
+    References
+    ----------
+    s
+
+    Examples
+    --------
+    >>> s
+    """
     RH = iris.cube.CubeList([])
     for Q, T, P in zip(
         iter_maybe(specific_humidity),
