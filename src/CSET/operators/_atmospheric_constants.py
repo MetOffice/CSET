@@ -14,25 +14,25 @@
 """Constants for the atmosphere."""
 
 # Reference pressure.
-P0 = 1000.0  # hPa
+P0 = 1000.0  # hPa.
 
 # Specific gas constant for dry air.
-RD = 287.0
+RD = 287.0  # J/kg/K.
 
 # Specific gas constant for water vapour.
-RV = 461.0
+RV = 461.0  # J/kg/K.
 
 # Specific heat capacity for dry air.
-CPD = 1005.7
+CPD = 1005.7  # J/kg/K.
 
 # Latent heat of vaporization.
-LV = 2.501e6
+LV = 2.501e6  # J/kg/K.
 
 # Reference vapour pressure.
-E0 = 6.1078  # hPa
+E0 = 6.1078  # hPa.
 
 # Reference temperature.
-T0 = 273.15  # K
+T0 = 273.15  # K.
 
 # Ratio between mixing ratio of dry and moist air.
 EPSILON = 0.622
