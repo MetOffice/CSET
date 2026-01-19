@@ -34,7 +34,28 @@ def dewpoint_temperature(
     temperature: iris.cube.Cube | iris.cube.CubeList,
     relative_humidity: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Calculate the dewpoint temperature following Bolton (1980)."""
+    r"""Calculate the dewpoint temperature following Bolton (1980).
+
+    Arguments
+    ---------
+    s
+
+    Returns
+    -------
+    s
+
+    Notes
+    -----
+    s
+
+    References
+    ----------
+    s
+
+    Examples
+    --------
+    >>> s
+    """
     Td = iris.cube.CubeList([])
     for T, RH in zip(
         iter_maybe(temperature), iter_maybe(relative_humidity), strict=True
@@ -60,7 +81,28 @@ def virtual_temperature(
     temperature: iris.cube.Cube | iris.cube.CubeList,
     mixing_ratio: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Calculate the virtual temperature."""
+    r"""Calculate the virtual temperature.
+
+    Arguments
+    ---------
+    s
+
+    Returns
+    -------
+    s
+
+    Notes
+    -----
+    s
+
+    References
+    ----------
+    s
+
+    Examples
+    --------
+    >>> s
+    """
     Tv = iris.cube.CubeList([])
     for T, W in zip(iter_maybe(temperature), iter_maybe(mixing_ratio), strict=True):
         virT = T * ((W + EPSILON) / (EPSILON * (1 + W)))
@@ -76,7 +118,28 @@ def wet_bulb_temperature(
     temperature: iris.cube.Cube | iris.cube.CubeList,
     relative_humidity: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Calculate the wet-bulb temperature following Stull (2011)."""
+    r"""Calculate the wet-bulb temperature following Stull (2011).
+
+    Arguments
+    ---------
+    s
+
+    Returns
+    -------
+    s
+
+    Notes
+    -----
+    s
+
+    References
+    ----------
+    s
+
+    Examples
+    --------
+    >>> s
+    """
     Tw = iris.cube.CubeList([])
     for T, RH in zip(
         iter_maybe(temperature), iter_maybe(relative_humidity), strict=True
@@ -105,7 +168,28 @@ def potential_temperature(
     temperature: iris.cube.Cube | iris.cube.CubeList,
     pressure: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Calculate the potenital temperature."""
+    r"""Calculate the potenital temperature.
+
+    Arguments
+    ---------
+    s
+
+    Returns
+    -------
+    s
+
+    Notes
+    -----
+    s
+
+    References
+    ----------
+    s
+
+    Examples
+    --------
+    >>> s
+    """
     theta = iris.cube.CubeList([])
     for T, P in zip(iter_maybe(temperature), iter_maybe(pressure), strict=True):
         TH = T / exner_pressure(P)
@@ -122,7 +206,28 @@ def virtual_potential_temperature(
     mixing_ratio: iris.cube.Cube | iris.cube.CubeList,
     pressure: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Calculate the virtual potential temperature."""
+    r"""Calculate the virtual potential temperature.
+
+    Arguments
+    ---------
+    s
+
+    Returns
+    -------
+    s
+
+    Notes
+    -----
+    s
+
+    References
+    ----------
+    s
+
+    Examples
+    --------
+    >>> s
+    """
     theta_v = iris.cube.CubeList([])
     for T, W, P in zip(
         iter_maybe(temperature),
@@ -144,7 +249,28 @@ def equivalent_potential_temperature(
     relative_humidity: iris.cube.Cube | iris.cube.CubeList,
     pressure: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Calculate the equivalent potenital temperature."""
+    r"""Calculate the equivalent potenital temperature.
+
+    Arguments
+    ---------
+    s
+
+    Returns
+    -------
+    s
+
+    Notes
+    -----
+    s
+
+    References
+    ----------
+    s
+
+    Examples
+    --------
+    >>> s
+    """
     theta_e = iris.cube.CubeList([])
     for T, RH, P in zip(
         iter_maybe(temperature),
@@ -174,7 +300,28 @@ def wet_bulb_potential_temperature(
     relative_humidity: iris.cube.Cube | iris.cube.CubeList,
     pressure: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Calculate wet-bulb potential temperature after Davies-Jones (2008)."""
+    r"""Calculate wet-bulb potential temperature after Davies-Jones (2008).
+
+    Arguments
+    ---------
+    s
+
+    Returns
+    -------
+    s
+
+    Notes
+    -----
+    s
+
+    References
+    ----------
+    s
+
+    Examples
+    --------
+    >>> s
+    """
     theta_w = iris.cube.CubeList([])
     for T, RH, P in zip(
         iter_maybe(temperature),
@@ -213,7 +360,28 @@ def saturation_equivalent_potential_temperature(
     temperature: iris.cube.Cube | iris.cube.CubeList,
     pressure: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Calculate the saturation equivalent potenital temperature."""
+    r"""Calculate the saturation equivalent potenital temperature.
+
+    Arguments
+    ---------
+    s
+
+    Returns
+    -------
+    s
+
+    Notes
+    -----
+    s
+
+    References
+    ----------
+    s
+
+    Examples
+    --------
+    >>> s
+    """
     theta_s = iris.cube.CubeList([])
     for T, P in zip(
         iter_maybe(temperature),
