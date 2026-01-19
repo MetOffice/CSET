@@ -118,23 +118,33 @@ def saturation_mixing_ratio(
 
     Arguments
     ---------
-    s
+    temperature: iris.cube.Cube | iris.cube.CubeList
+        Cubes of temperature in Kelvin.
+    pressure: iris.cube.Cube | iris.cube.CubeList
+        Cubes of pressure.
 
     Returns
     -------
-    s
+    iris.cube.Cube | iris.cube.CubeList
+        Saturation mixing ratio in kg/kg.
 
     Notes
     -----
-    s
+    The saturation mixing ratio is required to help calculate the relative
+    humidity and other diagnostics with respect to the mixing ratio. It can
+    be calculated from
 
-    References
-    ----------
-    s
+    .. math:: w = \epsilon \frac{e}{P - e}
+
+    for w the mixing ratio, :math:`\epsilon` the ratio between the mixing ratio
+    of dry and moist air equating to 0.622, P the pressure and e the vapour
+    pressure. To ensure that the saturation mixing ratio (:math:`w_s`) is
+    calculated the vapour pressure calculated should be with the (dry-bulb)
+    temperature to ensure it is the saturated vapour pressure.
 
     Examples
     --------
-    >>> s
+    >>> w_s = humidity.saturation_mixing_ratio(temperature, pressure)
     """
     w = iris.cube.CubeList([])
     for T, P in zip(iter_maybe(temperature), iter_maybe(pressure), strict=True):
@@ -157,23 +167,33 @@ def saturation_specific_humidity(
 
     Arguments
     ---------
-    s
+    temperature: iris.cube.Cube | iris.cube.CubeList
+        Cubes of temperature in Kelvin.
+    pressure: iris.cube.Cube | iris.cube.CubeList
+        Cubes of pressure.
 
     Returns
     -------
-    s
+    iris.cube.Cube | iris.cube.CubeList
+        Saturation specific humidity in kg/kg.
 
     Notes
     -----
-    s
+    The saturation specific humidity is required to help calculate the relative
+    humidity and other diagnostics with respect to the mixing ratio. It can
+    be calculated from
 
-    References
-    ----------
-    s
+    .. math:: q = \epsilon \frac{e}{P}
+
+    for q the specific humidity, :math:`\epsilon` the ratio between the mixing ratio
+    of dry and moist air equating to 0.622, P the pressure and e the vapour
+    pressure. To ensure that the saturation specific humidity (:math:`q_{sat}`) is
+    calculated the vapour pressure calculated should be with the (dry-bulb)
+    temperature to ensure it is the saturated vapour pressure.
 
     Examples
     --------
-    >>> s
+    >>> q_sat = humidity.saturation_specific_humidity(temperature, pressure)
     """
     q = iris.cube.CubeList([])
     for T, P in zip(iter_maybe(temperature), iter_maybe(pressure), strict=True):
@@ -197,23 +217,35 @@ def mixing_ratio_from_relative_humidity(
 
     Arguments
     ---------
-    s
+    temperature: iris.cube.Cube | iris.cube.CubeList
+        Cubes of temperature in Kelvin.
+    pressure: iris.cube.Cube | iris.cube.CubeList
+        Cubes of pressure.
+    relative_humidity: iris.cube.Cube | iris.cube.CubeList
+        Cubes of relative humidity.
 
     Returns
     -------
-    s
+    iris.cube.Cube | iris.cube.CubeList
+        Calculated mixing ratio from relative humidity in kg/kg.
 
     Notes
     -----
-    s
+    The mixing ratio can be calculated from temperature, pressure, and
+    relative humidity using the following relation
 
-    References
-    ----------
-    s
+    .. math:: w = RH * w_s
+
+    for w the mixing ratio, :math:`w_s` the saturation mixing ratio, and
+    RH the relative humidity.
+
+    The operator usese `humidity.saturation_mixing_ratio` to calculate the
+    saturation mixing ratio from the temperature and pressure. The relative
+    humidity is converted into a decimal before the multiplication occurs.
 
     Examples
     --------
-    >>> s
+    >>> w = humidity.mixing_ratio_from_relative_humidity(T, P, RH)
     """
     w = iris.cube.CubeList([])
     for T, P, RH in zip(
@@ -242,23 +274,35 @@ def specific_humidity_from_relative_humidity(
 
     Arguments
     ---------
-    s
+    temperature: iris.cube.Cube | iris.cube.CubeList
+        Cubes of temperature in Kelvin.
+    pressure: iris.cube.Cube | iris.cube.CubeList
+        Cubes of pressure.
+    relative_humidity: iris.cube.Cube | iris.cube.CubeList
+        Cubes of relative humidity.
 
     Returns
     -------
-    s
+    iris.cube.Cube | iris.cube.CubeList
+        Calculated specific humidity from relative humidity in kg/kg.
 
     Notes
     -----
-    s
+    The specific humidity can be calculated from temperature, pressure, and
+    relative humidity using the following relation
 
-    References
-    ----------
-    s
+    .. math:: q = RH * q_{sat}
+
+    for q the specific humidity, :math:`q_{sat}` the saturation specific
+    humidity, and RH the relative humidity.
+
+    The operator usese `humidity.saturation_specific_humidity` to calculate the
+    saturation specific humidity from the temperature and pressure. The relative
+    humidity is converted into a decimal before the multiplication occurs.
 
     Examples
     --------
-    >>> s
+    >>> q = humidity.specific_humidity_from_relative_humidity(T, P, RH)
     """
     q = iris.cube.CubeList([])
     for T, P, RH in zip(
