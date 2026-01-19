@@ -63,7 +63,45 @@ def vapour_pressure_from_relative_humidity(
 def exner_pressure(
     pressure: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Calculate the exner pressure."""
+    r"""Calculate the exner pressure.
+
+    Arguments
+    ---------
+    pressure: iris.cube.Cube | iris.cube.CubeList
+        Cubes of pressure to be converted.
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        Converted pressure.
+
+    Notes
+    -----
+    The Exner pressure is also referred to as the Exner function. It is a
+    dimensionless parameter that can be used either as a vertical coordinate or
+    more frequently as a means to simplifying conversions between different
+    parameters (e.g. Temperature and Potential Temperature; [Holton13]_).
+    It is calculated as
+
+    .. math:: \Pi = \left(\frac{P}{P_0}\right)^{\frac{R_d}{c_p}}
+
+    for :math:`\Pi` the Exner Pressure, P the pressure in hPa, :math:`P_0` a reference pressure
+    of 1000 hPa, :math:`R_d` the specific gas constant of dry air taken as 297 :math:`J kg^{-1} K^{-1}`,
+    :math:`c_p` the specific heat capacity at constant pressure taken as 1005.7 :math:`J kg^{-1} K^{-1}`.
+
+    A value below one implies the pressure is higher than the reference pressure;
+    values above one implies the pressure is lower than the reference pressure; a
+    value of one implies the pressure is equal to the reference pressure.
+
+    References
+    ----------
+    .. [Holton13] Holton, J.R. and Hakim G.J. (2013) An Introduction to Dynamic
+       Meteorology. 5th Edition, Burlington, MA, Elsevier Academic Press, 532 pp.
+
+    Examples
+    --------
+    >>> Exner_pressure = pressure.exner_pressure(pressure)
+    """
     pi = iris.cube.CubeList([])
     for P in iter_maybe(pressure):
         PI = P.copy()
