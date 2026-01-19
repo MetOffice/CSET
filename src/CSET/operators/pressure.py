@@ -31,11 +31,12 @@ def vapour_pressure(
     ---------
     temperature: iris.cube.Cube | iris.cube.CubeList
         Cubes of temperature to be converted into vapour pressure.
+        Temperature must be provided in Kelvin.
 
     Returns
     -------
     iris.cube.Cube | iris.cube.CubeList
-        Vapour pressure.
+        Vapour pressure in hPa.
 
     Notes
     -----
@@ -45,11 +46,14 @@ def vapour_pressure(
     on empirical relations that are used to calculate the vapour pressure. Here,
     we calculate the vapour pressure based on [Tetens30]_ equation:
 
-    .. math:: e = e_0 exp\left(17.27\frac{T - 273.16}{T - 35.86}\right)
+    .. math:: e = e_0 * exp\left(17.27\frac{T - 273.16}{T - 35.86}\right)
 
     for e the vapour pressure, :math:`e_0` the saturation vapour pressure at
     a reference temperature of 273.15 K with a value of 6.1078 hPa, and T the
     temperature.
+
+    The temperature is provided in Kelvin, and the vapour pressure is returned
+    in hPa.
 
     If the (dry-bulb) temperature is used the value given by the vapour pressure
     will be the saturation vapour pressure. On the other hand, if the dewpoint
@@ -82,7 +86,39 @@ def vapour_pressure_from_relative_humidity(
     temperature: iris.cube.Cube | iris.cube.CubeList,
     relative_humidity: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Calculate the vapour pressure using RH."""
+    r"""Calculate the vapour pressure using RH.
+
+    Arguments
+    ---------
+    temperature: iris.cube.Cube | iris.cube.CubeList
+        Cubes of temperature to be converted into saturation vapour pressure.
+        Temperature must be provided in Kelvin.
+    relative_humidity: iris.cube.Cube | iris.cube.CubeList
+        Cubes of relative humidity to be converted into vapour pressure.
+        Relative humidity will be converted to a decimal by the operator.
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        Vapour pressure in hPa.
+
+    Notes
+    -----
+    The vapour pressure can be derived from the relative humidity and
+    temperature based on the following relation
+
+    .. math:: e = RH * e_s
+
+    for e the vapour pressure, :math:`e_s` the saturation vapour pressure,
+    and RH the relative humidity.
+
+    The relative humidity is converted to a decimal. The saturation vapour
+    pressure is calculated using `pressure.vapour_pressure`.
+
+    Examples
+    --------
+    >>> vapour_pressure = pressure.vapour_pressure_from_relative_humidity(temperature, relative_humidity)
+    """
     v_pressure = iris.cube.CubeList([])
     for T, RH in zip(
         iter_maybe(temperature), iter_maybe(relative_humidity), strict=True
