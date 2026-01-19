@@ -61,7 +61,7 @@ def vapour_pressure(
 
     References
     ----------
-    .. [Tetens30] Tetens, O. (1930) Über einige meteorologische Begriffe.
+    .. [Tetens30] Tetens, O. (1930) "Über einige meteorologische Begriffe".
        Z. Geophys 6: 297-309.
 
     Examples
@@ -169,8 +169,8 @@ def exner_pressure(
 
     References
     ----------
-    .. [Holton13] Holton, J.R. and Hakim G.J. (2013) An Introduction to Dynamic
-       Meteorology. 5th Edition, Burlington, MA, Elsevier Academic Press, 532 pp.
+    .. [Holton13] Holton, J.R. and Hakim G.J. (2013) "An Introduction to Dynamic
+       Meteorology." 5th Edition, Burlington, MA, Elsevier Academic Press, 532 pp.
 
     Examples
     --------
