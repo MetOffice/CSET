@@ -165,7 +165,7 @@ def wet_bulb_temperature(
     Returns
     -------
     iris.cube.Cube | iris.cube.CubeList
-        Calculated wet-bulb temperature.
+        Calculated wet-bulb temperature in Kelvin.
 
     Notes
     -----
@@ -232,23 +232,32 @@ def potential_temperature(
 
     Arguments
     ---------
-    s
+    temperature: iris.cube.Cube | iris.cube.CubeList
+        Cubes of temperature.
+    pressure: iris.cube.Cube | iris.cube.CuebList
+        Cubes of pressure.
 
     Returns
     -------
-    s
+    iris.cube.Cube | iris.cube.CubeList
+        Calculated potential temperature in Kelvin.
 
     Notes
     -----
-    s
+    The potential temperature is the temperature at which an air parcel would reach
+    if it was moved adiabatically to a reference pressure. Here we use 1000 hPa
+    as the reference pressure. It is calculated from
 
-    References
-    ----------
-    s
+    .. math:: \theta = \frac{T}{\Pi}
+
+    for :math:`\theta` the potential temperature, T the temperature, and :math:`\Pi`
+    the exner pressure. The exner pressure is calculated using `pressure.exner_pressure`.
+
+    All cubes must be on the same grid.
 
     Examples
     --------
-    >>> s
+    >>> Theta = temperature.potential_temperature(T, P)
     """
     theta = iris.cube.CubeList([])
     for T, P in zip(iter_maybe(temperature), iter_maybe(pressure), strict=True):
