@@ -110,23 +110,33 @@ def virtual_temperature(
 
     Arguments
     ---------
-    s
+    temperature: iris.cube.Cube | iris.cube.CubeList
+        Cubes of temperature.
+    mixing_ratio: iris.cube.Cube | iris.cube.CubeList
+        Cubes of mixing ratio.
 
     Returns
     -------
-    s
+    iris.cube.Cube | iris.cube.CubeList
+        Calculated virtual temperature.
 
     Notes
     -----
-    s
+    The virtual temperature is that required for a dry parcel to have the
+    same density as a moist parcel at the same pressure. It is calculated
+    as
 
-    References
-    ----------
-    s
+    .. math:: T_v = T * \frac{w + \epsilon}{\epsilon (1 + w)}
+
+    for :math:`T_v` the virtual temperature, T the temperature, w the mixing
+    ratio, and :math:`\epsilon` the ratio between dry and moist air equating
+    to 0.622.
+
+    All cubes must be on the same grid.
 
     Examples
     --------
-    >>> s
+    >>> Tv = temperature.virtual_temperature(T, w)
     """
     Tv = iris.cube.CubeList([])
     for T, W in zip(iter_maybe(temperature), iter_maybe(mixing_ratio), strict=True):
