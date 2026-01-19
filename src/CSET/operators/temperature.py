@@ -169,7 +169,8 @@ def wet_bulb_temperature(
 
     Notes
     -----
-    The wet-bulb temperature can be calculated from temperature in Celsius
+    The wet-bulb temperature is the temperature the air reaches when all the
+    water has been evaporated out of it. It can be calculated from temperature in Celsius
     and relative humidity in percent following [Stull11]_
 
     .. math:: T_w = T * arctan\left(0.151977*(RH + 8.313659)^{0.5}\right) + arctan(T + RH) - arctan(RH - 1.676331) + 0.00391838*RH^{\frac{3}{2}}*arctan(0.023101*RH) - 4.686035
