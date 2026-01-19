@@ -25,7 +25,45 @@ from CSET.operators.misc import convert_units
 def vapour_pressure(
     temperature: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Calculate the vapour pressure of the atmosphere."""
+    r"""Calculate the vapour pressure of the atmosphere.
+
+    Arguments
+    ---------
+    temperature: iris.cube.Cube | iris.cube.CubeList
+        Cubes of temperature to be converted into vapour pressure.
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        Vapour pressure.
+
+    Notes
+    -----
+    The vapour pressure represents the pressure exerted by water vapour on the
+    atmosphere. It is related to atmospheric temperature through the
+    Calusius-Clapeyron equation. There are several different formulations based
+    on empirical relations that are used to calculate the vapour pressure. Here,
+    we calculate the vapour pressure based on [Tetens30]_ equation:
+
+    .. math:: e = e_0 exp\left(17.27\frac{T - 273.16}{T - 35.86}\right)
+
+    for e the vapour pressure, :math:`e_0` the saturation vapour pressure at
+    a reference temperature of 273.15 K with a value of 6.1078 hPa, and T the
+    temperature.
+
+    If the (dry-bulb) temperature is used the value given by the vapour pressure
+    will be the saturation vapour pressure. On the other hand, if the dewpoint
+    temperature is used the vapour pressure will be calculated.
+
+    References
+    ----------
+    .. [Tetens30] Tetens, O. (1930) Über einige meteorologische Begriffe.
+       Z. Geophys 6: 297-309.
+
+    Examples
+    --------
+    >>> vapour_pressure = pressure.vapour_pressure(temperature)
+    """
     v_pressure = iris.cube.CubeList([])
     for T in iter_maybe(temperature):
         es = T.copy()
@@ -73,7 +111,7 @@ def exner_pressure(
     Returns
     -------
     iris.cube.Cube | iris.cube.CubeList
-        Converted pressure.
+        Exner pressure.
 
     Notes
     -----
