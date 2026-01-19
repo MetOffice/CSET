@@ -189,6 +189,10 @@ def test_wet_bulb_temperature(
         - 4.686035
     )
     TW = misc.convert_units(TW, "K")
+    TW.data[T_units.data < -20.0] = np.nan
+    TW.data[T_units.data > 50.0] = np.nan
+    TW.data[RH_units.data < 5.0] = np.nan
+    TW.data[RH_units.data > 99.0] = np.nan
     assert np.allclose(
         TW.data,
         temperature.wet_bulb_temperature(
@@ -241,6 +245,10 @@ def test_wet_bulb_temperature_cubelist(
         - 4.686035
     )
     TW = misc.convert_units(TW, "K")
+    TW.data[T_units.data < -20.0] = np.nan
+    TW.data[T_units.data > 50.0] = np.nan
+    TW.data[RH_units.data < 5.0] = np.nan
+    TW.data[RH_units.data > 99.0] = np.nan
     expected_list = iris.cube.CubeList([TW, TW])
     temperature_list = iris.cube.CubeList(
         [temperature_for_conversions_cube, temperature_for_conversions_cube]

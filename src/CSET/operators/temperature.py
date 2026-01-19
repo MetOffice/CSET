@@ -111,14 +111,14 @@ def virtual_temperature(
     Arguments
     ---------
     temperature: iris.cube.Cube | iris.cube.CubeList
-        Cubes of temperature.
+        Cubes of temperature in Kelvin.
     mixing_ratio: iris.cube.Cube | iris.cube.CubeList
         Cubes of mixing ratio.
 
     Returns
     -------
     iris.cube.Cube | iris.cube.CubeList
-        Calculated virtual temperature.
+        Calculated virtual temperature in Kelvin.
 
     Notes
     -----
@@ -153,27 +153,47 @@ def wet_bulb_temperature(
     temperature: iris.cube.Cube | iris.cube.CubeList,
     relative_humidity: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    r"""Calculate the wet-bulb temperature following Stull (2011).
+    r"""Calculate the wet-bulb temperature.
 
     Arguments
     ---------
-    s
+    temperature: iris.cube.Cube | iris.cube.CubeList
+        Cubes of temperature.
+    relative_humidity: iris.cube.Cube | iris.cube.CubeList
+        Cubes of relative humidity.
 
     Returns
     -------
-    s
+    iris.cube.Cube | iris.cube.CubeList
+        Calculated wet-bulb temperature.
 
     Notes
     -----
-    s
+    The wet-bulb temperature can be calculated from temperature in Celsius
+    and relative humidity in percent following [Stull11]_
+
+    .. math:: T_w = T * arctan\left(0.151977*(RH + 8.313659)^{0.5}\right) + arctan(T + RH) - arctan(RH - 1.676331) + 0.00391838*RH^{\frac{3}{2}}*arctan(0.023101*RH) - 4.686035
+
+    for :math:`T_w` the wet-bulb temperature, T the temperature, and RH the relative
+    humidity.
+
+    The equation is valid for 5% < RH < 99% and -20 C < T < 50 C, and results are
+    only presented for these values.
+
+    The temperature and relative humidity unit conversions are applied in the
+    operator.
+
+    All cubes should be on the same grid.
 
     References
     ----------
-    s
+    .. [Stull11] Stull, R. (2011) "Wet-Bulb Temperature from Relative Humidity
+       and air temperature." Journal of Applied Meteorology and Climatology, vol. 50,
+       2267-2269, doi: 10.1175/JAMC-D-11-0143.1
 
     Examples
     --------
-    >>> s
+    >>> Tw = temperature.wet_bulb_temperature(T, RH)
     """
     Tw = iris.cube.CubeList([])
     for T, RH in zip(
@@ -192,6 +212,10 @@ def wet_bulb_temperature(
         )
         wetT.rename("wet_bulb_temperature")
         wetT = convert_units(wetT, "K")
+        wetT.data[T.core_data() < -20.0] = np.nan
+        wetT.data[T.core_data() > 50.0] = np.nan
+        wetT.data[RH.core_data() < 5.0] = np.nan
+        wetT.data[RH.core_data() > 99.0] = np.nan
         Tw.append(wetT)
     if len(Tw) == 1:
         return Tw[0]
