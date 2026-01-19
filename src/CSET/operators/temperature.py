@@ -34,27 +34,52 @@ def dewpoint_temperature(
     temperature: iris.cube.Cube | iris.cube.CubeList,
     relative_humidity: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    r"""Calculate the dewpoint temperature following Bolton (1980).
+    r"""Calculate the dewpoint temperature.
 
     Arguments
     ---------
-    s
+    temperature: iris.cube.Cube | iris.cube.CubeList
+        Cubes of temperature in Kelvin.
+    relative_humidity: iris.cube.Cube | iris.cube.CubeList
+        Cubes of relative humidity.
 
     Returns
     -------
-    s
+    iris.cube.Cube | iris.cueb.CubeList
+        Calculated dewpoint temperature in Kelvin.
 
     Notes
     -----
-    s
+    The dewpoint temperature provides the temperature at which the air must be
+    cooled for dew to form (i.e. the water vapour condenses to liquid water).
+    It is calculated based upon [Bolton80]
+
+    .. math:: T_d = \frac{243.5 * ln(e) - 440.8}{19.48 - ln(e)}
+
+    for :math:`T_d` the dewpoint temperature and e the vapour pressure. Here the
+    vapour pressure is calculated from relative humidity using
+    `pressure.vapour_pressure_from_relative_humidity`.
+
+    The dewpoint temperature is presented when -35.0 C < T < 35.0 C as this is
+    when the calculation is the most accurate [Bolton80] this roughly equates to
+    exclusion of dewpoints on pressures of 400 hPa and above (e.g. [Flack24]).
+
+    When :math:`T_d` is equivalent to T the relative humidity will be 100 %.
+
+    All cubes must be on the same grid.
 
     References
     ----------
-    s
+    .. [Bolton80] Bolton. D. (1980) "The computation of equivalent potential
+       temperature". Monthly Weather Review, vol. 108, 1046-1053,
+       doi: 10.1175/1520-0493(1980)108<1046:TCOEPT>2.0.CO;2
+    .. [Flack24] Flack, D.L.A. (2024) "Stratification of the vertical spread-skill
+       relation by radiosonde drift in a convective-scale ensemble."
+       Atmospheric Science Letters, vol. 25, e1194, doi: 10.1002/asl.1194
 
     Examples
     --------
-    >>> s
+    >>> Td = temperature.dewpoint_temperature(T, RH)
     """
     Td = iris.cube.CubeList([])
     for T, RH in zip(
