@@ -15,22 +15,16 @@
 """Extract the CSET cylc workflow for use."""
 
 import importlib.metadata
+import importlib.resources
 import logging
 import os
 import shutil
 import stat
-import sys
 from pathlib import Path
 
 import CSET.cset_workflow
 
 logger = logging.getLogger(__name__)
-
-# The as_file interface only supports directories from python 3.12.
-if sys.version_info.minor < 12:
-    import importlib_resources
-else:
-    import importlib.resources as importlib_resources
 
 
 def make_script_executable(p: Path):
@@ -72,8 +66,8 @@ def install_workflow(location: Path):
     workflow_dir = location / f"cset-workflow-v{importlib.metadata.version('CSET')}"
 
     # Write workflow content into workflow_dir.
-    workflow_files = importlib_resources.files(CSET.cset_workflow)
-    with importlib_resources.as_file(workflow_files) as w:
+    workflow_files = importlib.resources.files(CSET.cset_workflow)
+    with importlib.resources.as_file(workflow_files) as w:
         logger.info("Copying workflow files into place.")
         try:
             shutil.copytree(w, workflow_dir)

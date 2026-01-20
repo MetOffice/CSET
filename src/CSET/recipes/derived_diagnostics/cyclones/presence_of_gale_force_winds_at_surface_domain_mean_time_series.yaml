@@ -1,0 +1,37 @@
+category: Cyclones
+title: $MODEL_NAME presence of gale force winds at the surface domain mean timeseries
+description: |
+  Generates the surface wind speed converted onto the Beaufort Scale and filters
+  based upon whether the wind speed is gale force or above (Force 8 or above). It provides
+  a timeseries representing the chance of gale force winds across the domain.
+  The Beaufort Scale can be found on the [Met Office website](https://weather.metoffice.gov.uk/guides/coast-and-sea/beaufort-scale).
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    constraint:
+        operator: constraints.combine_constraints
+        varname_constraint:
+            operator: constraints.generate_var_constraint
+            varname: wind_speed_at_10m
+        cell_methods_constraint:
+            operator: constraints.generate_cell_methods_constraint
+            cell_methods: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: wind.convert_to_beaufort_scale
+
+  - operator: filters.generate_mask
+    condition: 'ge'
+    value: 8.0
+
+  - operator: collapse.collapse
+    coordinate: [grid_latitude, grid_longitude]
+    method: MEAN
+
+  - operator: plot.plot_line_series
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

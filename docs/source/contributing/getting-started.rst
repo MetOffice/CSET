@@ -79,7 +79,7 @@ to use.
 .. code-block:: bash
 
     # Creates a conda environment named "cset-dev".
-    conda create -n cset-dev --file requirements/locks/py313-lock-linux-64.txt
+    conda create -n cset-dev --file requirements/locks/latest
     # Activates the conda environment.
     conda activate cset-dev
     # Adds extra checks when you commit something with git.

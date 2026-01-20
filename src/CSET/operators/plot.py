@@ -22,7 +22,6 @@ import json
 import logging
 import math
 import os
-import sys
 from typing import Literal
 
 import cartopy.crs as ccrs
@@ -35,6 +34,8 @@ import matplotlib as mpl
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.fft as fft
+from iris.cube import Cube
 from markdown_it import MarkdownIt
 
 from CSET._common import (
@@ -44,7 +45,14 @@ from CSET._common import (
     render_file,
     slugify,
 )
-from CSET.operators._utils import get_cube_yxcoordname, is_transect
+from CSET.operators._utils import (
+    fully_equalise_attributes,
+    get_cube_yxcoordname,
+    is_transect,
+)
+from CSET.operators.collapse import collapse
+from CSET.operators.misc import _extract_common_time_points
+from CSET.operators.regrid import regrid_onto_cube
 
 # Use a non-interactive plotting backend.
 mpl.use("agg")
@@ -104,28 +112,13 @@ def _check_single_cube(cube: iris.cube.Cube | iris.cube.CubeList) -> iris.cube.C
     raise TypeError("Must have a single cube", cube)
 
 
-def _py312_importlib_resources_files_shim():
-    """Importlib behaviour changed in 3.12 to avoid circular dependencies.
-
-    This shim is needed until python 3.12 is our oldest supported version, after
-    which it can just be replaced by directly using importlib.resources.files.
-    """
-    if sys.version_info.minor >= 12:
-        files = importlib.resources.files()
-    else:
-        import CSET.operators
-
-        files = importlib.resources.files(CSET.operators)
-    return files
-
-
 def _make_plot_html_page(plots: list):
     """Create a HTML page to display a plot image."""
     # Debug check that plots actually contains some strings.
     assert isinstance(plots[0], str)
 
     # Load HTML template file.
-    operator_files = _py312_importlib_resources_files_shim()
+    operator_files = importlib.resources.files()
     template_file = operator_files.joinpath("_plot_page_template.html")
 
     # Get some metadata.
@@ -156,9 +149,7 @@ def _load_colorbar_map(user_colorbar_file: str = None) -> dict:
 
     This is a separate function to make it cacheable.
     """
-    colorbar_file = _py312_importlib_resources_files_shim().joinpath(
-        "_colorbar_definition.json"
-    )
+    colorbar_file = importlib.resources.files().joinpath("_colorbar_definition.json")
     with open(colorbar_file, "rt", encoding="UTF-8") as fp:
         colorbar = json.load(fp)
 
@@ -284,6 +275,11 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
     if any("probability_of_" in name for name in varnames):
         cmap, levels, norm = _custom_colormap_probability(cube, axis=axis)
         return cmap, levels, norm
+    # If aviation colour state use custom colorbar and levels
+    if any("aviation_colour_state" in name for name in varnames):
+        cmap, levels, norm = _custom_colormap_aviation_colour_state(cube)
+        return cmap, levels, norm
+
     # If no valid colormap has been defined, use defaults and return.
     if not cmap:
         logging.warning("No colorbar definition exists for %s.", cube.name())
@@ -396,7 +392,7 @@ def _setup_spatial_map(
         # Consider map projection orientation.
         # Adapting orientation enables plotting across international dateline.
         # Users can adapt the default central_longitude if alternative projections views.
-        if x2 > 180.0:
+        if x2 > 180.0 or x1 < -180.0:
             central_longitude = 180.0
         else:
             central_longitude = 0.0
@@ -408,7 +404,17 @@ def _setup_spatial_map(
             projection = ccrs.RotatedPole(
                 pole_longitude=coord_system.grid_north_pole_longitude,
                 pole_latitude=coord_system.grid_north_pole_latitude,
-                central_rotated_longitude=0.0,
+                central_rotated_longitude=central_longitude,
+            )
+            crs = projection
+        elif isinstance(coord_system, iris.coord_systems.TransverseMercator):
+            # Define Transverse Mercator projection for TM inputs.
+            projection = ccrs.TransverseMercator(
+                central_longitude=coord_system.longitude_of_central_meridian,
+                central_latitude=coord_system.latitude_of_projection_origin,
+                false_easting=coord_system.false_easting,
+                false_northing=coord_system.false_northing,
+                scale_factor=coord_system.scale_factor_at_central_meridian,
             )
             crs = projection
         else:
@@ -899,6 +905,7 @@ def _plot_and_save_scatter_plot(
     filename: str,
     title: str,
     one_to_one: bool,
+    model_names: list[str] = None,
     **kwargs,
 ):
     """Plot and save a 2D scatter plot.
@@ -943,8 +950,17 @@ def _plot_and_save_scatter_plot(
     ax = plt.gca()
 
     # Add some labels and tweak the style.
-    ax.set_xlabel(f"{cube_x[0].name()} / {cube_x[0].units}", fontsize=14)
-    ax.set_ylabel(f"{cube_y[0].name()} / {cube_y[0].units}", fontsize=14)
+    if model_names is None:
+        ax.set_xlabel(f"{cube_x[0].name()} / {cube_x[0].units}", fontsize=14)
+        ax.set_ylabel(f"{cube_y[0].name()} / {cube_y[0].units}", fontsize=14)
+    else:
+        # Add the model names, these should be order of base (x) and other (y).
+        ax.set_xlabel(
+            f"{model_names[0]}_{cube_x[0].name()} / {cube_x[0].units}", fontsize=14
+        )
+        ax.set_ylabel(
+            f"{model_names[1]}_{cube_y[0].name()} / {cube_y[0].units}", fontsize=14
+        )
     ax.set_title(title, fontsize=16)
     ax.ticklabel_format(axis="y", useOffset=False)
     ax.tick_params(axis="x", labelrotation=15)
@@ -1264,12 +1280,271 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
     plt.close(fig)
 
 
+def _plot_and_save_scattermap_plot(
+    cube: iris.cube.Cube, filename: str, title: str, projection=None, **kwargs
+):
+    """Plot and save a geographical scatter plot.
+
+    Parameters
+    ----------
+    cube: Cube
+        1 dimensional Cube of the data points with auxiliary latitude and
+        longitude coordinates,
+    filename: str
+        Filename of the plot to write.
+    title: str
+        Plot title.
+    projection: str
+        Mapping projection to be used by cartopy.
+    """
+    # Setup plot details, size, resolution, etc.
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+    if projection is not None:
+        # Apart from the default, the only projection we currently support is
+        # a stereographic projection over the North Pole.
+        if projection == "NP_Stereo":
+            axes = plt.axes(projection=ccrs.NorthPolarStereo(central_longitude=0.0))
+        else:
+            raise ValueError(f"Unknown projection: {projection}")
+    else:
+        axes = plt.axes(projection=ccrs.PlateCarree())
+
+    # Scatter plot of the field. The marker size is chosen to give
+    # symbols that decrease in size as the number of observations
+    # increases, although the fraction of the figure covered by
+    # symbols increases roughly as N^(1/2), disregarding overlaps,
+    # and has been selected for the default figure size of (10, 10).
+    # Should this be changed, the marker size should be adjusted in
+    # proportion to the area of the figure.
+    mrk_size = int(np.sqrt(2500000.0 / len(cube.data)))
+    klon = None
+    klat = None
+    for kc in range(len(cube.aux_coords)):
+        if cube.aux_coords[kc].standard_name == "latitude":
+            klat = kc
+        elif cube.aux_coords[kc].standard_name == "longitude":
+            klon = kc
+    scatter_map = iplt.scatter(
+        cube.aux_coords[klon],
+        cube.aux_coords[klat],
+        c=cube.data[:],
+        s=mrk_size,
+        cmap="jet",
+        edgecolors="k",
+    )
+
+    # Add coastlines.
+    try:
+        axes.coastlines(resolution="10m")
+    except AttributeError:
+        pass
+
+    # Add title.
+    axes.set_title(title, fontsize=16)
+
+    # Add colour bar.
+    cbar = fig.colorbar(scatter_map)
+    cbar.set_label(label=f"{cube.name()} ({cube.units})", size=20)
+
+    # Save plot.
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+    logging.info("Saved geographical scatter plot to %s", filename)
+    plt.close(fig)
+
+
+def _plot_and_save_power_spectrum_series(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+    filename: str,
+    title: str,
+    **kwargs,
+):
+    """Plot and save a power spectrum series.
+
+    Parameters
+    ----------
+    cubes: Cube or CubeList
+        2 dimensional Cube or CubeList of the data to plot as power spectrum.
+    filename: str
+        Filename of the plot to write.
+    title: str
+        Plot title.
+    """
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+    ax = plt.gca()
+
+    model_colors_map = _get_model_colors_map(cubes)
+
+    for cube in iter_maybe(cubes):
+        # Calculate power spectrum
+
+        # Extract time coordinate and convert to datetime
+        time_coord = cube.coord("time")
+        time_points = time_coord.units.num2date(time_coord.points)
+
+        # Choose one time point (e.g., the first one)
+        target_time = time_points[0]
+
+        # Bind target_time inside the lambda using a default argument
+        time_constraint = iris.Constraint(
+            time=lambda cell, target_time=target_time: cell.point == target_time
+        )
+
+        cube = cube.extract(time_constraint)
+
+        if cube.ndim == 2:
+            cube_3d = cube.data[np.newaxis, :, :]
+            logging.debug("Adding in new axis for a 2 dimensional cube.")
+        elif cube.ndim == 3:
+            cube_3d = cube.data
+        else:
+            raise ValueError("Cube dimensions unsuitable for power spectra code")
+            raise ValueError(
+                f"Cube is {cube.ndim} dimensional. Cube should be 2 or 3 dimensional."
+            )
+
+        # Calculate spectra
+        ps_array = _DCT_ps(cube_3d)
+
+        ps_cube = iris.cube.Cube(
+            ps_array,
+            long_name="power_spectra",
+        )
+
+        ps_cube.attributes["model_name"] = cube.attributes.get("model_name")
+
+        # Create a frequency/wavelength array for coordinate
+        ps_len = ps_cube.data.shape[1]
+        freqs = np.arange(1, ps_len + 1)
+        freq_coord = iris.coords.DimCoord(freqs, long_name="frequency", units="1")
+
+        # Convert datetime to numeric time using original units
+        numeric_time = time_coord.units.date2num(time_points)
+        # Create a new DimCoord with numeric time
+        new_time_coord = iris.coords.DimCoord(
+            numeric_time, standard_name="time", units=time_coord.units
+        )
+
+        # Add time and frequency coordinate to spectra cube.
+        ps_cube.add_dim_coord(new_time_coord.copy(), 0)
+        ps_cube.add_dim_coord(freq_coord.copy(), 1)
+
+        # Extract data from the cube
+        frequency = ps_cube.coord("frequency").points
+        power_spectrum = ps_cube.data
+
+        label = None
+        color = "black"
+        if model_colors_map:
+            label = ps_cube.attributes.get("model_name")
+            color = model_colors_map[label]
+        ax.plot(frequency, power_spectrum[0], color=color, label=label)
+
+    # Add some labels and tweak the style.
+    ax.set_title(title, fontsize=16)
+    ax.set_xlabel("Wavenumber", fontsize=14)
+    ax.set_ylabel("Power", fontsize=14)
+    ax.tick_params(axis="both", labelsize=12)
+
+    # Set log-log scale
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+
+    # Overlay grid-lines onto power spectrum plot.
+    ax.grid(linestyle="--", color="grey", linewidth=1)
+    if model_colors_map:
+        ax.legend(loc="best", ncol=1, frameon=False, fontsize=16)
+
+    # Save plot.
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+    logging.info("Saved line plot to %s", filename)
+    plt.close(fig)
+
+
+def _plot_and_save_postage_stamp_power_spectrum_series(
+    cube: iris.cube.Cube,
+    filename: str,
+    title: str,
+    stamp_coordinate: str,
+    **kwargs,
+):
+    """Plot and save postage (ensemble members) stamps for a power spectrum series.
+
+    Parameters
+    ----------
+    cube: Cube
+        2 dimensional Cube of the data to plot as power spectrum.
+    filename: str
+        Filename of the plot to write.
+    title: str
+        Plot title.
+    stamp_coordinate: str
+        Coordinate that becomes different plots.
+    """
+    # Use the smallest square grid that will fit the members.
+    grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
+
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+    # Make a subplot for each member.
+    for member, subplot in zip(
+        cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1), strict=False
+    ):
+        # Implicit interface is much easier here, due to needing to have the
+        # cartopy GeoAxes generated.
+        plt.subplot(grid_size, grid_size, subplot)
+
+        frequency = member.coord("frequency").points
+        power_spectrum = member.data
+
+        ax = plt.gca()
+        ax.plot(frequency, power_spectrum[0])
+        ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
+
+    # Overall figure title.
+    fig.suptitle(title, fontsize=16)
+
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+    logging.info("Saved power spectra postage stamp plot to %s", filename)
+    plt.close(fig)
+
+
+def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
+    cube: iris.cube.Cube,
+    filename: str,
+    title: str,
+    stamp_coordinate: str,
+    **kwargs,
+):
+    fig, ax = plt.subplots(figsize=(10, 10), facecolor="w", edgecolor="k")
+    ax.set_title(title, fontsize=16)
+    ax.set_xlabel(f"{cube.name()} / {cube.units}", fontsize=14)
+    ax.set_ylabel("Power", fontsize=14)
+    # Loop over all slices along the stamp_coordinate
+    for member in cube.slices_over(stamp_coordinate):
+        frequency = member.coord("frequency").points
+        power_spectrum = member.data
+        ax.plot(
+            frequency,
+            power_spectrum[0],
+            label=f"Member #{member.coord(stamp_coordinate).points[0]}",
+        )
+
+    # Add a legend
+    ax.legend(fontsize=16)
+
+    # Save the figure to a file
+    plt.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+
+    # Close the figure
+    plt.close(fig)
+
+
 def _spatial_plot(
     method: Literal["contourf", "pcolormesh"],
     cube: iris.cube.Cube,
     filename: str | None,
     sequence_coordinate: str,
     stamp_coordinate: str,
+    **kwargs,
 ):
     """Plot a spatial variable onto a map from a 2D, 3D, or 4D cube.
 
@@ -1320,6 +1595,14 @@ def _spatial_plot(
     except iris.exceptions.CoordinateNotFoundError:
         pass
 
+    # Produce a geographical scatter plot if the data have a
+    # dimension called observation or model_obs_error
+    if any(
+        crd.var_name == "station" or crd.var_name == "model_obs_error"
+        for crd in cube.coords()
+    ):
+        plotting_func = _plot_and_save_scattermap_plot
+
     # Must have a sequence coordinate.
     try:
         cube.coord(sequence_coordinate)
@@ -1347,6 +1630,7 @@ def _spatial_plot(
             stamp_coordinate=stamp_coordinate,
             title=title,
             method=method,
+            **kwargs,
         )
         plot_index.append(plot_filename)
 
@@ -1616,6 +1900,42 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
     return cmap, levels, norm
 
 
+def _custom_colormap_aviation_colour_state(cube: iris.cube.Cube):
+    """Return custom colourmap for aviation colour state.
+
+    If "aviation_colour_state" appears anywhere in the name of a cube
+    this function will be called.
+
+    Parameters
+    ----------
+    cube: Cube
+        Cube of variable for which the colorbar information is desired.
+
+    Returns
+    -------
+    cmap: Matplotlib colormap.
+    levels: List
+        List of levels to use for plotting. For continuous plots the min and max
+        should be taken as the range.
+    norm: BoundaryNorm.
+    """
+    levels = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5]
+    colors = [
+        "#87ceeb",
+        "#ffffff",
+        "#8ced69",
+        "#ffff00",
+        "#ffd700",
+        "#ffa500",
+        "#fe3620",
+    ]
+    # Create a custom colormap
+    cmap = mcolors.ListedColormap(colors)
+    # Normalise the levels
+    norm = mcolors.BoundaryNorm(levels, cmap.N)
+    return cmap, levels, norm
+
+
 def _custom_colourmap_visibility_in_air(cube: iris.cube.Cube, cmap, levels, norm):
     """Return a custom colourmap for the current recipe."""
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
@@ -1739,7 +2059,9 @@ def spatial_contour_plot(
     TypeError
         If the cube isn't a single cube.
     """
-    _spatial_plot("contourf", cube, filename, sequence_coordinate, stamp_coordinate)
+    _spatial_plot(
+        "contourf", cube, filename, sequence_coordinate, stamp_coordinate, **kwargs
+    )
     return cube
 
 
@@ -1788,7 +2110,9 @@ def spatial_pcolormesh_plot(
     TypeError
         If the cube isn't a single cube.
     """
-    _spatial_plot("pcolormesh", cube, filename, sequence_coordinate, stamp_coordinate)
+    _spatial_plot(
+        "pcolormesh", cube, filename, sequence_coordinate, stamp_coordinate, **kwargs
+    )
     return cube
 
 
@@ -2040,6 +2364,162 @@ def plot_vertical_line_series(
     return cubes
 
 
+def qq_plot(
+    cubes: iris.cube.CubeList,
+    coordinates: list[str],
+    percentiles: list[float],
+    model_names: list[str],
+    filename: str = None,
+    one_to_one: bool = True,
+    **kwargs,
+) -> iris.cube.CubeList:
+    """Plot a Quantile-Quantile plot between two models for common time points.
+
+    The cubes will be normalised by collapsing each cube to its percentiles. Cubes are
+    collapsed within the operator over all specified coordinates such as
+    grid_latitude, grid_longitude, vertical levels, but also realisation representing
+    ensemble members to ensure a 1D cube (array).
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        Two cubes of the same variable with different models.
+    coordinate: list[str]
+        The list of coordinates to collapse over. This list should be
+        every coordinate within the cube to result in a 1D cube around
+        the percentile coordinate.
+    percent: list[float]
+        A list of percentiles to appear in the plot.
+    model_names: list[str]
+        A list of model names to appear on the axis of the plot.
+    filename: str, optional
+        Filename of the plot to write.
+    one_to_one: bool, optional
+        If True a 1:1 line is plotted; if False it is not. Default is True.
+
+    Raises
+    ------
+    ValueError
+        When the cubes are not compatible.
+
+    Notes
+    -----
+    The quantile-quantile plot is a variant on the scatter plot representing
+    two datasets by their quantiles (percentiles) for common time points.
+    This plot does not use a theoretical distribution to compare against, but
+    compares percentiles of two datasets. This plot does
+    not use all raw data points, but plots the selected percentiles (quantiles) of
+    each variable instead for the two datasets, thereby normalising the data for a
+    direct comparison between the selected percentiles of the two dataset distributions.
+
+    Quantile-quantile plots are valuable for comparing against
+    observations and other models. Identical percentiles between the variables
+    will lie on the one-to-one line implying the values correspond well to each
+    other. Where there is a deviation from the one-to-one line a range of
+    possibilities exist depending on how and where the data is shifted (e.g.,
+    Wilks 2011 [Wilks2011]_).
+
+    For distributions above the one-to-one line the distribution is left-skewed;
+    below is right-skewed. A distinct break implies a bimodal distribution, and
+    closer values/values further apart at the tails imply poor representation of
+    the extremes.
+
+    References
+    ----------
+    .. [Wilks2011] Wilks, D.S., (2011) "Statistical Methods in the Atmospheric
+       Sciences" Third Edition, vol. 100, Academic Press, Oxford, UK, 676 pp.
+    """
+    # Check cubes using same functionality as the difference operator.
+    if len(cubes) != 2:
+        raise ValueError("cubes should contain exactly 2 cubes.")
+    base: Cube = cubes.extract_cube(iris.AttributeConstraint(cset_comparison_base=1))
+    other: Cube = cubes.extract_cube(
+        iris.Constraint(
+            cube_func=lambda cube: "cset_comparison_base" not in cube.attributes
+        )
+    )
+
+    # Get spatial coord names.
+    base_lat_name, base_lon_name = get_cube_yxcoordname(base)
+    other_lat_name, other_lon_name = get_cube_yxcoordname(other)
+
+    # Ensure cubes to compare are on common differencing grid.
+    # This is triggered if either
+    #      i) latitude and longitude shapes are not the same. Note grid points
+    #         are not compared directly as these can differ through rounding
+    #         errors.
+    #     ii) or variables are known to often sit on different grid staggering
+    #         in different models (e.g. cell center vs cell edge), as is the case
+    #         for UM and LFRic comparisons.
+    # In future greater choice of regridding method might be applied depending
+    # on variable type. Linear regridding can in general be appropriate for smooth
+    # variables. Care should be taken with interpretation of differences
+    # given this dependency on regridding.
+    if (
+        base.coord(base_lat_name).shape != other.coord(other_lat_name).shape
+        or base.coord(base_lon_name).shape != other.coord(other_lon_name).shape
+    ) or (
+        base.long_name
+        in [
+            "eastward_wind_at_10m",
+            "northward_wind_at_10m",
+            "northward_wind_at_cell_centres",
+            "eastward_wind_at_cell_centres",
+            "zonal_wind_at_pressure_levels",
+            "meridional_wind_at_pressure_levels",
+            "potential_vorticity_at_pressure_levels",
+            "vapour_specific_humidity_at_pressure_levels_for_climate_averaging",
+        ]
+    ):
+        logging.debug(
+            "Linear regridding base cube to other grid to compute differences"
+        )
+        base = regrid_onto_cube(base, other, method="Linear")
+
+    # Extract just common time points.
+    base, other = _extract_common_time_points(base, other)
+
+    # Equalise attributes so we can merge.
+    fully_equalise_attributes([base, other])
+    logging.debug("Base: %s\nOther: %s", base, other)
+
+    # Collapse cubes.
+    base = collapse(
+        base,
+        coordinate=coordinates,
+        method="PERCENTILE",
+        additional_percent=percentiles,
+    )
+    other = collapse(
+        other,
+        coordinate=coordinates,
+        method="PERCENTILE",
+        additional_percent=percentiles,
+    )
+
+    # Ensure we have a name for the plot file.
+    title = get_recipe_metadata().get("title", "Untitled")
+
+    if filename is None:
+        filename = slugify(title)
+
+    # Add file extension.
+    plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
+
+    # Do the actual plotting on a scatter plot
+    _plot_and_save_scatter_plot(
+        base, other, plot_filename, title, one_to_one, model_names
+    )
+
+    # Add list of plots to plot metadata.
+    plot_index = _append_to_plot_index([plot_filename])
+
+    # Make a page to display the plots.
+    _make_plot_html_page(plot_index)
+
+    return iris.cube.CubeList([base, other])
+
+
 def scatter_plot(
     cube_x: iris.cube.Cube | iris.cube.CubeList,
     cube_y: iris.cube.Cube | iris.cube.CubeList,
@@ -2080,25 +2560,6 @@ def scatter_plot(
     Scatter plots are used for determining if there is a relationship between
     two variables. Positive relations have a slope going from bottom left to top
     right; Negative relations have a slope going from top left to bottom right.
-
-    A variant of the scatter plot is the quantile-quantile plot. This plot does
-    not use all data points, but the selected quantiles of each variable
-    instead. Quantile-quantile plots are valuable for comparing against
-    observations and other models. Identical percentiles between the variables
-    will lie on the one-to-one line implying the values correspond well to each
-    other. Where there is a deviation from the one-to-one line a range of
-    possibilities exist depending on how and where the data is shifted (e.g.,
-    Wilks 2011 [Wilks2011]_).
-
-    For distributions above the one-to-one line the distribution is left-skewed;
-    below is right-skewed. A distinct break implies a bimodal distribution, and
-    closer values/values further apart at the tails imply poor representation of
-    the extremes.
-
-    References
-    ----------
-    .. [Wilks2011] Wilks, D.S., (2011) "Statistical Methods in the Atmospheric
-       Sciences" Third Edition, vol. 100, Academic Press, Oxford, UK, 676 pp.
     """
     # Iterate over all cubes in cube or CubeList and plot.
     for cube_iter in iter_maybe(cube_x):
@@ -2371,3 +2832,251 @@ def plot_histogram_series(
     _make_plot_html_page(complete_plot_index)
 
     return cubes
+
+
+def plot_power_spectrum_series(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+    filename: str = None,
+    sequence_coordinate: str = "time",
+    stamp_coordinate: str = "realization",
+    single_plot: bool = False,
+    **kwargs,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Plot a power spectrum plot for each vertical level provided.
+
+    A power spectrum plot can be plotted, but if the sequence_coordinate (i.e. time)
+    is present then a sequence of plots will be produced using the time slider
+    functionality to scroll through power spectrum against time. If a
+    stamp_coordinate is present then postage stamp plots will be produced. If
+    stamp_coordinate and single_plot is True, all postage stamp plots will be
+    plotted in a single plot instead of separate postage stamp plots.
+
+    Parameters
+    ----------
+    cubes: Cube | iris.cube.CubeList
+        Iris cube or CubeList of the data to plot. It should have a single dimension other
+        than the stamp coordinate.
+        The cubes should cover the same phenomenon i.e. all cubes contain temperature data.
+        We do not support different data such as temperature and humidity in the same CubeList for plotting.
+    filename: str, optional
+        Name of the plot to write, used as a prefix for plot sequences. Defaults
+        to the recipe name.
+    sequence_coordinate: str, optional
+        Coordinate about which to make a plot sequence. Defaults to ``"time"``.
+        This coordinate must exist in the cube and will be used for the time
+        slider.
+    stamp_coordinate: str, optional
+        Coordinate about which to plot postage stamp plots. Defaults to
+        ``"realization"``.
+    single_plot: bool, optional
+        If True, all postage stamp plots will be plotted in a single plot. If
+        False, each postage stamp plot will be plotted separately. Is only valid
+        if stamp_coordinate exists and has more than a single point.
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        The original Cube or CubeList (so further operations can be applied).
+        Plotted data.
+
+    Raises
+    ------
+    ValueError
+        If the cube doesn't have the right dimensions.
+    TypeError
+        If the cube isn't a Cube or CubeList.
+    """
+    recipe_title = get_recipe_metadata().get("title", "Untitled")
+
+    cubes = iter_maybe(cubes)
+    # Ensure we have a name for the plot file.
+    if filename is None:
+        filename = slugify(recipe_title)
+
+    # Internal plotting function.
+    plotting_func = _plot_and_save_power_spectrum_series
+
+    num_models = _get_num_models(cubes)
+
+    _validate_cube_shape(cubes, num_models)
+
+    # If several power spectra are plotted with time as sequence_coordinate for the
+    # time slider option.
+    for cube in cubes:
+        try:
+            cube.coord(sequence_coordinate)
+        except iris.exceptions.CoordinateNotFoundError as err:
+            raise ValueError(
+                f"Cube must have a {sequence_coordinate} coordinate."
+            ) from err
+
+    # Make postage stamp plots if stamp_coordinate exists and has more than a
+    # single point. If single_plot is True:
+    # -- all postage stamp plots will be plotted in a single plot instead of
+    # separate postage stamp plots.
+    # -- model names (hidden in cube attrs) are ignored, that is stamp plots are
+    # produced per single model only
+    if num_models == 1:
+        if (
+            stamp_coordinate in [c.name() for c in cubes[0].coords()]
+            and cubes[0].coord(stamp_coordinate).shape[0] > 1
+        ):
+            if single_plot:
+                plotting_func = (
+                    _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series
+                )
+            else:
+                plotting_func = _plot_and_save_postage_stamp_power_spectrum_series
+        cube_iterables = cubes[0].slices_over(sequence_coordinate)
+    else:
+        all_points = sorted(
+            set(
+                itertools.chain.from_iterable(
+                    cb.coord(sequence_coordinate).points for cb in cubes
+                )
+            )
+        )
+        all_slices = list(
+            itertools.chain.from_iterable(
+                cb.slices_over(sequence_coordinate) for cb in cubes
+            )
+        )
+        # Matched slices (matched by seq coord point; it may happen that
+        # evaluated models do not cover the same seq coord range, hence matching
+        # necessary)
+        cube_iterables = [
+            iris.cube.CubeList(
+                s for s in all_slices if s.coord(sequence_coordinate).points[0] == point
+            )
+            for point in all_points
+        ]
+
+    plot_index = []
+    nplot = np.size(cube.coord(sequence_coordinate).points)
+    # Create a plot for each value of the sequence coordinate. Allowing for
+    # multiple cubes in a CubeList to be plotted in the same plot for similar
+    # sequence values. Passing a CubeList into the internal plotting function
+    # for similar values of the sequence coordinate. cube_slice can be an
+    # iris.cube.Cube or an iris.cube.CubeList.
+    for cube_slice in cube_iterables:
+        single_cube = cube_slice
+        if isinstance(cube_slice, iris.cube.CubeList):
+            single_cube = cube_slice[0]
+
+        # Use sequence value so multiple sequences can merge.
+        sequence_value = single_cube.coord(sequence_coordinate).points[0]
+        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
+        coord = single_cube.coord(sequence_coordinate)
+        # Format the coordinate value in a unit appropriate way.
+        title = f"{recipe_title}\n [{coord.units.title(coord.points[0])}]"
+        # Use sequence (e.g. time) bounds if plotting single non-sequence outputs
+        if nplot == 1 and coord.has_bounds:
+            if np.size(coord.bounds) > 1:
+                title = f"{recipe_title}\n [{coord.units.title(coord.bounds[0][0])} to {coord.units.title(coord.bounds[0][1])}]"
+        # Do the actual plotting.
+        plotting_func(
+            cube_slice,
+            filename=plot_filename,
+            stamp_coordinate=stamp_coordinate,
+            title=title,
+        )
+        plot_index.append(plot_filename)
+
+    # Add list of plots to plot metadata.
+    complete_plot_index = _append_to_plot_index(plot_index)
+
+    # Make a page to display the plots.
+    _make_plot_html_page(complete_plot_index)
+
+    return cubes
+
+
+def _DCT_ps(y_3d):
+    """Calculate power spectra for regional domains.
+
+    Parameters
+    ----------
+    y_3d: 3D array
+        3 dimensional array to calculate spectrum for.
+        (2D field data with 3rd dimension of time)
+
+    Returns: ps_array
+        Array of power spectra values calculated for input field (for each time)
+
+    Method for regional domains:
+    Calculate power spectra over limited area domain using Discrete Cosine Transform (DCT)
+    as described in Denis et al 2002 [Denis_etal_2002]_.
+
+    References
+    ----------
+    .. [Denis_etal_2002] Bertrand Denis, Jean Côté and René Laprise (2002)
+        "Spectral Decomposition of Two-Dimensional Atmospheric Fields on
+        Limited-Area Domains Using the Discrete Cosine Transform (DCT)"
+        Monthly Weather Review, Vol. 130, 1812-1828
+        doi: https://doi.org/10.1175/1520-0493(2002)130<1812:SDOTDA>2.0.CO;2
+    """
+    Nt, Ny, Nx = y_3d.shape
+
+    # Max coefficient
+    Nmin = min(Nx - 1, Ny - 1)
+
+    # Create alpha matrix (of wavenumbers)
+    alpha_matrix = _create_alpha_matrix(Ny, Nx)
+
+    # Prepare output array
+    ps_array = np.zeros((Nt, Nmin))
+
+    # Loop over time to get spectrum for each time.
+    for t in range(Nt):
+        y_2d = y_3d[t]
+
+        # Apply 2D DCT to transform y_3d[t] from physical space to spectral space.
+        # fkk is a 2D array of DCT coefficients, representing the amplitudes of
+        # cosine basis functions at different spatial frequencies.
+
+        # normalise spectrum to allow comparison between models.
+        fkk = fft.dctn(y_2d, norm="ortho")
+
+        # Normalise fkk
+        fkk = fkk / np.sqrt(Ny * Nx)
+
+        # calculate variance of spectral coefficient
+        sigma_2 = fkk**2 / Nx / Ny
+
+        # Group ellipses of alphas into the same wavenumber k/Nmin
+        for k in range(1, Nmin + 1):
+            alpha = k / Nmin
+            alpha_p1 = (k + 1) / Nmin
+
+            # Sum up elements matching k
+            mask_k = np.where((alpha_matrix >= alpha) & (alpha_matrix < alpha_p1))
+            ps_array[t, k - 1] = np.sum(sigma_2[mask_k])
+
+    return ps_array
+
+
+def _create_alpha_matrix(Ny, Nx):
+    """Construct an array of 2D wavenumbers from 2D wavenumber pair.
+
+    Parameters
+    ----------
+    Ny, Nx:
+        Dimensions of the 2D field for which the power spectra is calculated. Used to
+        create the array of 2D wavenumbers. Each Ny, Nx pair is associated with a
+        single-scale parameter.
+
+    Returns: alpha_matrix
+        normalisation of 2D wavenumber axes, transforming the spectral domain into
+        an elliptic coordinate system.
+
+    """
+    # Create x_indices: each row is [1, 2, ..., Nx]
+    x_indices = np.tile(np.arange(1, Nx + 1), (Ny, 1))
+
+    # Create y_indices: each column is [1, 2, ..., Ny]
+    y_indices = np.tile(np.arange(1, Ny + 1).reshape(Ny, 1), (1, Nx))
+
+    # Compute alpha_matrix
+    alpha_matrix = np.sqrt((x_indices**2) / Nx**2 + (y_indices**2) / Ny**2)
+
+    return alpha_matrix

@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2025) and CSET contributors.
+# © Crown copyright, Met Office (2022-2026) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -125,19 +125,21 @@ def filter_multiple_cubes(
     Raises
     ------
     ValueError
-        The constraints don't produce a single cube per constraint.
+        Some constraints don't produce any cubes.
     """
     # Ensure input is a CubeList.
     if isinstance(cubes, iris.cube.Cube):
         cubes = iris.cube.CubeList((cubes,))
     if len(kwargs) < 1:
         raise ValueError("Must have at least one constraint.")
+    # Switch to extract due to lack of instance requiring one cube per
+    # constraint.
     try:
-        filtered_cubes = cubes.extract_cubes(kwargs.values())
+        filtered_cubes = cubes.extract(kwargs.values())
     except iris.exceptions.ConstraintMismatchError as err:
-        raise ValueError(
-            "The constraints don't produce a single cube per constraint."
-        ) from err
+        raise ValueError("The constraints don't produce a cube or cubelist.") from err
+    if len(filtered_cubes) == 0:
+        raise ValueError("No cubes loaded. Please check your constraints.")
     return filtered_cubes
 
 
@@ -154,8 +156,15 @@ def generate_mask(
         The field(s) to be used for creating the mask.
     condition: str
         The type of condition applied, six available options:
-        '==','!=','<','<=','>', and '>='. The condition is consistent
+        'eq','ne','lt','le','gt', and 'ge'. The condition is consistent
         regardless of whether mask_field is a cube or CubeList.
+        The conditions are as follows
+        eq: equal to,
+        ne: not equal to,
+        lt: less than,
+        le: less than or equal to,
+        gt: greater than,
+        ge: greater than or equal to.
     value: float
         The value on the right hand side of the condition. The value is
         consistent regardless of whether mask_field is a cube or CubeList.
@@ -167,7 +176,7 @@ def generate_mask(
 
     Raises
     ------
-    ValueError: Unexpected value for condition. Expected ==, !=, >, >=, <, <=.
+    ValueError: Unexpected value for condition. Expected eq, ne, gt, ge, lt, le.
                 Got {condition}.
         Raised when condition is not supported.
 
@@ -184,28 +193,28 @@ def generate_mask(
 
     Examples
     --------
-    >>> land_mask = generate_mask(land_sea_mask,'==',1)
+    >>> land_mask = generate_mask(land_sea_mask,'gt',1)
     """
     mask_list = iris.cube.CubeList([])
     for cube in iter_maybe(mask_field):
         mask = cube.copy()
         mask.data[:] = 0.0
         match condition:
-            case "==":
+            case "eq":
                 mask.data[cube.data == value] = 1
-            case "!=":
+            case "ne":
                 mask.data[cube.data != value] = 1
-            case ">":
+            case "gt":
                 mask.data[cube.data > value] = 1
-            case ">=":
+            case "ge":
                 mask.data[cube.data >= value] = 1
-            case "<":
+            case "lt":
                 mask.data[cube.data < value] = 1
-            case "<=":
+            case "le":
                 mask.data[cube.data <= value] = 1
             case _:
-                raise ValueError("""Unexpected value for condition. Expected ==, !=,
-                                  >, >=, <, <=. Got {condition}.""")
+                raise ValueError("""Unexpected value for condition. Expected eq, ne,
+                                  gt, ge, lt, le. Got {condition}.""")
         mask.attributes["mask"] = f"mask_for_{cube.name()}_{condition}_{value}"
         mask.rename(f"mask_for_{cube.name()}_{condition}_{value}")
         mask.units = "1"

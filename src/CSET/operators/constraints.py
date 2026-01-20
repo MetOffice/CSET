@@ -17,12 +17,13 @@
 import numbers
 import re
 from collections.abc import Iterable
-from datetime import datetime
+from datetime import timedelta
 
 import iris
 import iris.coords
 import iris.cube
 
+import CSET.operators._utils as operator_utils
 from CSET._common import iter_maybe
 
 
@@ -195,7 +196,7 @@ def generate_cell_methods_constraint(
 
 def generate_time_constraint(
     time_start: str, time_end: str = None, **kwargs
-) -> iris.AttributeConstraint:
+) -> iris.Constraint:
     """Generate constraint between times.
 
     Operator that takes one or two ISO 8601 date strings, and returns a
@@ -203,10 +204,10 @@ def generate_time_constraint(
 
     Arguments
     ---------
-    time_start: str | datetime.datetime
+    time_start: str | datetime.datetime | cftime.datetime
         ISO date for lower bound
 
-    time_end: str | datetime.datetime
+    time_end: str | datetime.datetime | cftime.datetime
         ISO date for upper bound. If omitted it defaults to the same as
         time_start
 
@@ -215,12 +216,31 @@ def generate_time_constraint(
     time_constraint: iris.Constraint
     """
     if isinstance(time_start, str):
-        time_start = datetime.fromisoformat(time_start)
+        pdt_start, offset_start = operator_utils.pdt_fromisoformat(time_start)
+    else:
+        pdt_start, offset_start = time_start, timedelta(0)
+
     if time_end is None:
-        time_end = time_start
+        pdt_end, offset_end = time_start, offset_start
     elif isinstance(time_end, str):
-        time_end = datetime.fromisoformat(time_end)
-    time_constraint = iris.Constraint(time=lambda t: time_start <= t.point <= time_end)
+        pdt_end, offset_end = operator_utils.pdt_fromisoformat(time_end)
+        print(pdt_end)
+        print(offset_end)
+    else:
+        pdt_end, offset_end = time_end, timedelta(0)
+
+    if offset_start is None:
+        offset_start = timedelta(0)
+    if offset_end is None:
+        offset_end = timedelta(0)
+
+    time_constraint = iris.Constraint(
+        time=lambda t: (
+            (pdt_start <= (t.point - offset_start))
+            and ((t.point - offset_end) <= pdt_end)
+        )
+    )
+
     return time_constraint
 
 

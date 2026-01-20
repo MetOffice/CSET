@@ -9,9 +9,9 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
+    cooldown:
+      default-days: 7
     groups:
-        actions-dependencies:
-          # Only group minor and patch updates. We want to carefully review
-          # major updates.
-          update-types: [minor, patch]
+      actions-dependencies:
+        update-types: ["major", "minor", "patch"]

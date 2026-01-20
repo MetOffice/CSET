@@ -16,6 +16,7 @@
 
 import datetime
 import hashlib
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
@@ -106,7 +107,7 @@ def test_fetch_data(monkeypatch):
     actually_called = False
 
     class MockFileRetriever(fetch_data.FileRetrieverABC):
-        def get_file(self, file_path: str, output_dir: str) -> None:
+        def get_file(self, file_path: str, output_dir: str) -> bool:
             nonlocal actually_called
             actually_called = True
             return True
@@ -126,7 +127,7 @@ def test_fetch_data_no_files_found(monkeypatch):
     actually_called = False
 
     class MockFileRetrieverNoFiles(fetch_data.FileRetrieverABC):
-        def get_file(self, file_path: str, output_dir: str) -> None:
+        def get_file(self, file_path: str, output_dir: str) -> bool:
             nonlocal actually_called
             actually_called = True
             return False
@@ -141,6 +142,32 @@ def test_fetch_data_no_files_found(monkeypatch):
         fetch_data.fetch_data(MockFileRetrieverNoFiles)
 
     assert actually_called
+
+
+def test_fetch_data_iterator_exhausted(monkeypatch):
+    """Check that all the futures get resolved before we stop fetching data."""
+    i = iter(range(1000))
+
+    def mock_map(*args, **kwargs):
+        return i
+
+    monkeypatch.setattr(ThreadPoolExecutor, "map", mock_map)
+
+    class MockFileRetriever(fetch_data.FileRetrieverABC):
+        def get_file(self, file_path: str, output_dir: str) -> bool:
+            return True
+
+    monkeypatch.setattr(
+        fetch_data,
+        "_get_needed_environment_variables",
+        mock_get_needed_environment_variables,
+    )
+    monkeypatch.setattr(fetch_data, "_template_file_path", mock_template_file_path)
+    fetch_data.fetch_data(MockFileRetriever)
+
+    # Check we have exhausted the iterator.
+    with pytest.raises(StopIteration):
+        next(i)
 
 
 def test_template_file_path_validity_time():
@@ -209,11 +236,9 @@ def test_FilesystemFileRetriever(tmp_path):
         files_found = ffr.get_file("tests/test_data/exeter_em*.nc", str(tmp_path))
     # Correct return value.
     assert files_found
-    # Symlinks created. Technically this checks that the files the symlink
-    # points to exists, but that is good enough here, and the follow_symlinks
-    # argument requires python 3.12.
-    assert (tmp_path / "exeter_em01.nc").exists()
-    assert (tmp_path / "exeter_em02.nc").exists()
+    # Symlinks created.
+    assert (tmp_path / "exeter_em01.nc").exists(follow_symlinks=False)
+    assert (tmp_path / "exeter_em02.nc").exists(follow_symlinks=False)
     # Check symlink points to correct file.
     with open((tmp_path / "exeter_em01.nc"), "rb") as fp:
         digest = hashlib.file_digest(fp, "sha256").hexdigest()
