@@ -279,23 +279,36 @@ def virtual_potential_temperature(
 
     Arguments
     ---------
-    s
+    temperature: iris.cube.Cube | iris.cube.CubeList
+        Cubes of temperature.
+    mixing_ratio: iris.cube.Cube | iris.cube.CubeList
+        Cubes of mixing ratio.
+    pressure: iris.cube.Cube | iris.cube.CubeList
+        Cubes of pressure.
 
     Returns
     -------
-    s
+    iris.cube.Cube | iris.cube.CubeList
+        Calculated virtual potential temperature in Kelvin.
 
     Notes
     -----
-    s
+    The virtual potenital temperature is mechanistically equivalent to the
+    potential temperature, except rather than using the (dry-bulb) temperature
+    the virtual temperature is adiabatically moved to a reference pressure
+    (1000 hPa). It is calculated as
 
-    References
-    ----------
-    s
+    .. math:: \theta_v = \frac{T_v}{\Pi}
+
+    for :math:`\theta_v` the virtual potenital temperature, :math:`T_v` the
+    virtual temperature, and :math:`\Pi` the exner pressure. The exner pressure
+    is calculated using `pressure.exner_pressure`.
+
+    All cubes must be on the same grid.
 
     Examples
     --------
-    >>> s
+    >>> Theta_v = temperature.virtual_potenital_temperature(T, W, P)
     """
     theta_v = iris.cube.CubeList([])
     for T, W, P in zip(
