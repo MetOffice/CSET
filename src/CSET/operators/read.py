@@ -398,6 +398,7 @@ def _create_callback(is_ensemble: bool) -> callable:
         _convert_cube_units_callback(cube)
         _grid_longitude_fix_callback(cube)
         _fix_lfric_cloud_base_altitude(cube)
+        _proleptic_gregorian_fix(cube)
         _lfric_time_callback(cube)
         _lfric_forecast_period_standard_name_callback(cube)
 
@@ -508,6 +509,16 @@ def _lfric_time_coord_fix_callback(cube: iris.cube.Cube, field, filename):
             not isinstance(time_coord, iris.coords.DimCoord)
             and len(cube.coord_dims(time_coord)) == 1
         ):
+            # Fudge the bounds to foil checking for strict monotonicity.
+            if time_coord.has_bounds():
+                if (time_coord.bounds[-1][0] - time_coord.bounds[0][0]) < 1.0e-8:
+                    time_coord.bounds = [
+                        [
+                            time_coord.bounds[i][0] + 1.0e-8 * float(i),
+                            time_coord.bounds[i][1],
+                        ]
+                        for i in range(len(time_coord.bounds))
+                    ]
             iris.util.promote_aux_coord_to_dim_coord(cube, time_coord)
 
     # Force single-valued coordinates to be scalar coordinates.
@@ -906,6 +917,20 @@ def _normalise_var0_varname(cube: iris.cube.Cube):
         cube.var_name = cube.var_name.removesuffix("_0")
 
 
+def _proleptic_gregorian_fix(cube: iris.cube.Cube):
+    """Convert the calendars of time units to use a standard calendar."""
+    try:
+        time_coord = cube.coord("time")
+        if time_coord.units.calendar == "proleptic_gregorian":
+            logging.debug(
+                "Changing proleptic Gregorian calendar to standard calendar for %s",
+                repr(time_coord.units),
+            )
+            time_coord.units = time_coord.units.change_calendar("standard")
+    except iris.exceptions.CoordinateNotFoundError:
+        pass
+
+
 def _lfric_time_callback(cube: iris.cube.Cube):
     """Fix time coordinate metadata if missing dimensions.
 
@@ -927,7 +952,7 @@ def _lfric_time_callback(cube: iris.cube.Cube):
         try:
             tcoord.convert_units("hours since 1970-01-01 00:00:00")
         except ValueError:
-            logging.error("Unrecognised base time unit: {tcoord.units}")
+            logging.warning("Unrecognised base time unit: %s", tcoord.units)
 
         if not cube.coords("forecast_reference_time"):
             try:

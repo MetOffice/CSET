@@ -24,7 +24,7 @@ steps:
     units: 'metre'
 
   - operator: filters.generate_mask
-    condition: '<'
+    condition: 'lt'
     value: 50
 
   - operator: collapse.collapse

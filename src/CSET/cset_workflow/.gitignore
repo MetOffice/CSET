@@ -2,7 +2,9 @@
 site/
 opt/
 demo_pointstat/
+*metdb*
 restricted*
 
 # User workflow configuration.
-rose-suite.conf
+/*rose-suite*
+!/rose-suite.conf.example
