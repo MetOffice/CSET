@@ -714,7 +714,11 @@ class NimrodRetriever(FileRetrieverABC):
 
         # bmc debugging
         print(" Nimrod metadata  standard_name ", uk_radar_cube.standard_name)
-        debug_dim_coords_and_dims=[(time_coord, 0), (y_coord, y_dim), (x_coord, x_dim)]
+        debug_dim_coords_and_dims = [
+            (time_coord, 0),
+            (y_coord, y_dim),
+            (x_coord, x_dim),
+        ]
         print(" Nimrod metadata  dim_coords_and_dims ", debug_dim_coords_and_dims)
         print(" Nimrod metadata  cell_methods ", (cell_method))
 
