@@ -335,23 +335,53 @@ def equivalent_potential_temperature(
 
     Arguments
     ---------
-    s
+    temperature: iris.cube.Cube | iris.cube.CubeList
+        Cubes of temperature.
+    relative_humidity: iris.cube.Cube | iris.cube.CubeList
+        Cubes of relative humidity.
+    pressure: iris.cube.Cube | iris.cube.CubeList
+        Cubes of pressure.
 
     Returns
     -------
-    s
+    iris.cube.Cube | iris.cube.CubeList
+        Calculated equivalent potential temperature.
 
     Notes
     -----
-    s
+    The equivalent potential temperature is the temperature an air parcel
+    would have if it was raised until all of the water vapour in it was
+    condensed out and then brought adiabatically to the reference pressure,
+    here taken as 1000 hPa. It is calculated as
+
+    .. math:: \theta_e = \theta * RH^{- \frac{w R_v}{c_p}} * exp\left(\frac{L_v w}{c_p T} \right)
+
+    for :math:`\theta_e` the equivalent potenital temperature, :math:`\theta` the
+    potential temperature, RH the relative humidity, w the mixing ratio,
+    :math:`R_v` the specific gas constant of water vapour (461
+    :math:`J kg^{-1} K^{-1}`), :math:`c_p` the specific heat capacity of dry air
+    (1005.7 :math:`J kg^{-1} K^{-1}`), :math:`L_v` the latent heat of vapourization
+    (2.5 x :math:`10^6 J kg^{-1} K^{-1}`), and T the temperature.
+
+    This is a simplification of [Paluch79]_ following [Bolton80b]_ and [Emanuel94]_,
+    whilst still holding reasonable accuracy.
+
+    All cubes must be on the same grid.
 
     References
     ----------
-    s
+    .. [Bolton80b] Bolton. D. (1980) "The computation of equivalent potential
+       temperature". Monthly Weather Review, vol. 108, 1046-1053,
+       doi: 10.1175/1520-0493(1980)108<1046:TCOEPT>2.0.CO;2
+    .. [Emanuel94] Emanuel, K.A. (1994) "Atmospheric Convection" Oxford University
+       Press, 580 pp.
+    .. [Paluch79] Paluch, I.R., (1979) "The entrainment mechanism in Colorado
+       Cumuli" Journal of the Atmospheric Sciences, vol. 36, 2467-2478,
+       doi: 10.1175/1520-0469(1979)036<2467:TEMICC>2.0.CO;2
 
     Examples
     --------
-    >>> s
+    >>> Theta_e = temperature.equivalent_potential_temperature(T, RH, P)
     """
     theta_e = iris.cube.CubeList([])
     for T, RH, P in zip(
