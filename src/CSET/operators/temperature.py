@@ -382,27 +382,54 @@ def wet_bulb_potential_temperature(
     relative_humidity: iris.cube.Cube | iris.cube.CubeList,
     pressure: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    r"""Calculate wet-bulb potential temperature after Davies-Jones (2008).
+    r"""Calculate wet-bulb potential temperature.
 
     Arguments
     ---------
-    s
+    temperature: iris.cube.Cube | iris.cube.CubeList
+        Cubes of temperature.
+    relative_humidity: iris.cube.Cube | iris.cube.CubeList
+        Cubes of relative humidity.
+    pressure: iris.cube.Cube | iris.cube.CubeList
+        Cubes of pressure.
 
     Returns
     -------
-    s
+    iris.cube.Cube | iris.cube.CubeList
+        Calculated wet-bulb potential temperature in Kelvin.
 
     Notes
     -----
-    s
+    The wet-bulb potential temperature represents the temperature an air parcel
+    would have if coold adiabatically until saturation and then taken down to
+    a reference pressure (1000 hPa) whilst conserving the moisture (i.e. along a
+    psuedoadiabat). It can be calculated either through a series of iterations,
+    or through empirical relations. Here, we use the [DaviesJones08]_ formulation:
+
+    .. math:: \theta_w = \theta_e - exp\left(\frac{a_0 + a_1 X + a_2 X^2 + a_3 X^3 + a_4 X^4}{1.0 + b_1 X + b_2 X^2 + b_3 X^3 + b_4 X^4} \right)
+
+    for :math:`\theta_w` the wet-bulb potential temperature, :math:`\theta_e` the
+    equivalent potenital temperature, X = :math:`\theta_e` / 273.15 K, and a
+    series of constants :math:`a_0` = 7.101574, :math:`a_1` = -20.68208,
+    :math:`a_2` = 16.11182, :math:`a_3` = 2.574631, :math:`a_4` = -5.205688,
+    :math:`b_1` = -3.552497, :math:`b_2` = 3.781782, :math:`b_3` = -0.6899655, and
+    :math:`b_4` = -0.5929340.
+
+    The wet-bulb potential temperature calculated for this method is valid for
+    the range -30 C < :math:`\theta_w` < 50 C and is thus set to NaN outside of
+    this range.
+
+    All cubes must be on the same grid.
 
     References
     ----------
-    s
+    .. [DaviesJones08] Davies-Jones, R. (2008) "An Efficient and Accurate
+       Method for Computing the Wet-Bulb Temperature along Pseudoadiabats"
+       Monthly Weather Review, vol. 136, 2764-2785, doi: 10.1175/2007MWR2224.1
 
     Examples
     --------
-    >>> s
+    >>> Theta_w = temperature.wet_bulb_potential_temperature(T, RH, P)
     """
     theta_w = iris.cube.CubeList([])
     for T, RH, P in zip(
