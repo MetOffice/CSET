@@ -345,7 +345,7 @@ def equivalent_potential_temperature(
     Returns
     -------
     iris.cube.Cube | iris.cube.CubeList
-        Calculated equivalent potential temperature.
+        Calculated equivalent potential temperature in Kelvin.
 
     Notes
     -----
@@ -367,16 +367,13 @@ def equivalent_potential_temperature(
     `humidity.mixing_ratio_from_relative_humidity` and the potential temperature
     is calculated from `temperature.potential_temperature`.
 
-    This is a simplification of [Paluch79]_ following [Bolton80b]_ and [Emanuel94]_,
+    This equation is a simplification of [Paluch79]_ following [Emanuel94]_,
     whilst still holding reasonable accuracy.
 
     All cubes must be on the same grid.
 
     References
     ----------
-    .. [Bolton80b] Bolton. D. (1980) "The computation of equivalent potential
-       temperature". Monthly Weather Review, vol. 108, 1046-1053,
-       doi: 10.1175/1520-0493(1980)108<1046:TCOEPT>2.0.CO;2
     .. [Emanuel94] Emanuel, K.A. (1994) "Atmospheric Convection" Oxford University
        Press, 580 pp.
     .. [Paluch79] Paluch, I.R., (1979) "The entrainment mechanism in Colorado
@@ -507,25 +504,42 @@ def saturation_equivalent_potential_temperature(
 
     Arguments
     ---------
-    s
+    temperature: iris.cube.Cube | iris.cube.CubeList
+        Cubes of temperature.
+    pressure: iris.cube.Cube | iris.cube.CubeList
+        Cubes of pressure.
 
     Returns
     -------
-    s
+    iris.cube.Cube | iris.cube.CubeList
+        Calculated saturation equivalent potenital temperature in Kelvin.
 
     Notes
     -----
-    s
+    The saturation equivalent potential temperature, also referred to as the
+    saturation potential temperature is as the equivalent potenital temperature
+    following a saturated process throughout. It is calculated as
 
-    References
-    ----------
-    s
+    .. math:: \theta_{es} = \theta * exp\left(\frac{L_v w}{c_p T} \right)
+
+    for :math:`\theta_{es}` the saturation equivalent potenital temperature,
+    :math:`\theta` the potential temperature, w the mixing ratio,
+    :math:`c_p` the specific heat capacity of dry air (1005.7
+    :math:`J kg^{-1} K^{-1}`), :math:`L_v` the latent heat of vapourization
+    (2.5 x :math:`10^6 J kg^{-1} K^{-1}`), and T the temperature.
+
+    As a saturated process is assumed throughout the RH multiplier in the
+    equivalent potenital temperature will always be a value of one, and is thus
+    omitted. In this operator the potential temperature is calculated from
+    `temperature.potential_temperature`.
+
+    All cubes must be on the same grid.
 
     Examples
     --------
-    >>> s
+    >>> theta_es = temperature.saturation_equivalent_potential_temperature(T, P)
     """
-    theta_s = iris.cube.CubeList([])
+    theta_es = iris.cube.CubeList([])
     for T, P in zip(
         iter_maybe(temperature),
         iter_maybe(pressure),
@@ -535,11 +549,11 @@ def saturation_equivalent_potential_temperature(
         ws = saturation_mixing_ratio(T, P)
         second_term_power = LV * ws / (CPD * T)
         second_term = np.exp(second_term_power.core_data())
-        TH_S = theta * second_term
-        TH_S.rename("saturation_equivalent_potential_temperature")
-        TH_S.units = "K"
-        theta_s.append(TH_S)
-    if len(theta_s) == 1:
-        return theta_s[0]
+        TH_ES = theta * second_term
+        TH_ES.rename("saturation_equivalent_potential_temperature")
+        TH_ES.units = "K"
+        theta_es.append(TH_ES)
+    if len(theta_es) == 1:
+        return theta_es[0]
     else:
-        return theta_s
+        return theta_es
