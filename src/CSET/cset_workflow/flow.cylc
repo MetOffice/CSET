@@ -38,7 +38,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         {% for date in CSET_CASE_DATES %}
             R1/{{date}} = """
             setup_complete[^] => parbake_recipes
-            setup_complete[^] => FETCH_DATA:succeed-all => FITCH_NIMROD:succeed-all => fetch_complete
+            setup_complete[^] => FETCH_DATA:succeed-all => FETCH_NIMROD:succeed-all => fetch_complete
             fetch_complete & parbake_recipes:start_baking? => bake_recipes
             parbake_recipes:skip_baking? => ! bake_recipes
             parbake_recipes:skip_baking? | bake_recipes => cycle_complete
