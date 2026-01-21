@@ -63,3 +63,18 @@ def load(conf: Config):
                 model_ids=[model["id"], "OBS"],
                 aggregation=False,
             )
+
+    # Surface spatial plot NIMROD radar observations, no model data.
+    if conf.NIMROD_RADAR_OBS:
+        for radar_field in conf.NIMROD_RADAR_FIELDS:
+            yield RawRecipe(
+                recipe="generic_surface_spatial_plot_sequence_radar.yaml",
+                variables={
+                    "RADARVARNAME": radar_field,
+                    "PLOTTING_PROJECTION": conf.PLOTTING_PROJECTION
+                    if conf.PLOTTING_PROJECTION
+                    else None,
+                },
+                model_ids="RADAR_NIMROD",
+                aggregation=False,
+            )

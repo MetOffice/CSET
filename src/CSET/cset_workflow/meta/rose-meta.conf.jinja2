@@ -597,6 +597,32 @@ compulsory=true
 type=python_list
 sort-key=0radar1d
 
+[template variables=NIMROD_RADAR_DATA_PATH]
+ns=Observations/Types/Radar
+title=NIMROD radar data path
+description=Path to NIMROD radar data files
+help=Full path (including file name) to the NIMROD radar data. Can contain wildcards and strftime format strings.
+compulsory=true
+type=quoted
+sort-key=0radar1e
+
+[template variables=NIMROD_RADAR_DATA_PERIOD]
+ns=Observations/Types/Radar
+title=NIMROD radar data period
+description=Output frequency of the NIMROD radar data
+help=The period of the NIMROD radar data as an ISO 8601 duration. For example: PT1H
+compulsory=true
+type=quoted
+sort-key=0radar1f
+
+[template variables=NIMROD_RADAR_ANALYSIS_OFFSET]
+ns=Observations/Types/Radar
+title=NIMROD radar analysis offset
+description=Offset from forecast initiation to radar data start
+help=The offset in time between the forecast initiation and the start of the radar data analysis period, as an ISO 8601 duration. For example: PT0H
+compulsory=true
+type=quoted
+sort-key=0radar1f2
 
 [template variables=NIMROD_RADAR_INTERVAL]
 ns=Observations/Types/Radar
