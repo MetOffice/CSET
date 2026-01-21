@@ -76,8 +76,9 @@ def construct_index(www_content: Path):
                     plot_metadata = json.load(plot_fp)
                 plot_metadata["path"] = str(metadata_file.parent.relative_to(plots_dir))
                 # Remove keys that are not useful for the index.
-                plot_metadata.pop("description", None)
-                plot_metadata.pop("plots", None)
+                removed_index_keys = ["description", "plots", "plot_resolution"]
+                for key in removed_index_keys:
+                    plot_metadata.pop(key, None)
                 # Sort plot metadata.
                 plot_metadata = sort_dict(plot_metadata)
                 # Write metadata into website index.
