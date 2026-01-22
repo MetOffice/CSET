@@ -187,6 +187,7 @@ def read_cubes(
 
     # Select sub region.
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
+
     # Merge and concatenate cubes now metadata has been fixed.
     cubes = cubes.merge()
     cubes = cubes.concatenate()
@@ -213,17 +214,9 @@ def _load_model(
     input_files = _check_input_files(paths)
     # If unset, a constraint of None lets everything be loaded.
     logging.debug("Constraint: %s", constraint)
-    cubes = iris.load(
-        input_files, constraint, callback=_create_callback(is_ensemble=False)
-    )
+    cubes = iris.load(input_files, constraint, callback=_loading_callback)
     # Make the UM's winds consistent with LFRic.
     _fix_um_winds(cubes)
-
-    # Reload with ensemble handling if needed.
-    if _is_ensemble(cubes):
-        cubes = iris.load(
-            input_files, constraint, callback=_create_callback(is_ensemble=True)
-        )
 
     # Add model_name attribute to each cube to make it available at any further
     # step without needing to pass it as function parameter.
@@ -356,84 +349,26 @@ def _cutout_cubes(
     return cutout_cubes
 
 
-def _is_ensemble(cubelist: iris.cube.CubeList) -> bool:
-    """Test if a CubeList is likely to be ensemble data.
-
-    If cubes either have a realization dimension, or there are multiple files
-    for the same time-step, we can assume it is ensemble data.
-    """
-    unique_cubes = set()
-    for cube in cubelist:
-        # Ignore realization of 0, as that is given to deterministic data.
-        if cube.coords("realization") and any(cube.coord("realization").points != 0):
-            return True
-        # Compare XML representation of cube structure check for duplicates.
-        cube_content = cube.xml()
-        if cube_content in unique_cubes:
-            logging.info("Ensemble data loaded.")
-            return True
-        else:
-            unique_cubes.add(cube_content)
-    logging.info("Deterministic data loaded.")
-    return False
-
-
-def _create_callback(is_ensemble: bool) -> callable:
+def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.Cube:
     """Compose together the needed callbacks into a single function."""
-
-    def callback(cube: iris.cube.Cube, field, filename: str):
-        if is_ensemble:
-            _ensemble_callback(cube, field, filename)
-        else:
-            _deterministic_callback(cube, field, filename)
-
-        _um_normalise_callback(cube, field, filename)
-        _lfric_normalise_callback(cube, field, filename)
-        _lfric_time_coord_fix_callback(cube, field, filename)
-        _normalise_var0_varname(cube)
-        _fix_spatial_coords_callback(cube)
-        _fix_pressure_coord_callback(cube)
-        _fix_um_radtime(cube)
-        _fix_cell_methods(cube)
-        _convert_cube_units_callback(cube)
-        _grid_longitude_fix_callback(cube)
-        _fix_lfric_cloud_base_altitude(cube)
-        _proleptic_gregorian_fix(cube)
-        _lfric_time_callback(cube)
-        _lfric_forecast_period_standard_name_callback(cube)
-
-    return callback
+    _realization_callback(cube, field, filename)
+    _um_normalise_callback(cube, field, filename)
+    _lfric_normalise_callback(cube, field, filename)
+    _lfric_time_coord_fix_callback(cube, field, filename)
+    _normalise_var0_varname(cube)
+    _fix_spatial_coords_callback(cube)
+    _fix_pressure_coord_callback(cube)
+    _fix_um_radtime(cube)
+    _fix_cell_methods(cube)
+    _convert_cube_units_callback(cube)
+    _grid_longitude_fix_callback(cube)
+    _fix_lfric_cloud_base_altitude(cube)
+    _proleptic_gregorian_fix(cube)
+    _lfric_time_callback(cube)
+    _lfric_forecast_period_standard_name_callback(cube)
 
 
-def _ensemble_callback(cube, field, filename):
-    """Add a realization coordinate to a cube.
-
-    Uses the filename to add an ensemble member ('realization') to each cube.
-    Assumes data is formatted enuk_um_0XX/enukaa_pd0HH.pp where XX is the
-    ensemble member.
-
-    Arguments
-    ---------
-    cube: Cube
-        ensemble member cube
-    field
-        Raw data variable, unused.
-    filename: str
-        filename of ensemble member data
-    """
-    if not cube.coords("realization"):
-        if "em" in filename:
-            # Assuming format is *emXX*
-            loc = filename.find("em") + 2
-            member = np.int32(filename[loc : loc + 2])
-        else:
-            # Assuming raw fields files format is enuk_um_0XX/enukaa_pd0HH
-            member = np.int32(filename[-15:-13])
-
-        cube.add_aux_coord(iris.coords.AuxCoord(member, standard_name="realization"))
-
-
-def _deterministic_callback(cube, field, filename):
+def _realization_callback(cube, field, filename):
     """Give deterministic cubes a realization of 0.
 
     This means they can be handled in the same way as ensembles through the rest
@@ -442,7 +377,7 @@ def _deterministic_callback(cube, field, filename):
     # Only add if realization coordinate does not exist.
     if not cube.coords("realization"):
         cube.add_aux_coord(
-            iris.coords.AuxCoord(np.int32(0), standard_name="realization", units="1")
+            iris.coords.DimCoord(0, standard_name="realization", units="1")
         )
 
 

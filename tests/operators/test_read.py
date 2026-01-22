@@ -121,14 +121,6 @@ def test_read_cubes_incorrect_number_of_model_names():
         )
 
 
-def test_fieldsfile_ensemble_naming():
-    """Extracting the realization from the fields file naming convention."""
-    cube = iris.cube.Cube([0])
-    filename = "myfieldsfile_enuk_um_001/enukaa_pd000"
-    read._ensemble_callback(cube, None, filename)
-    assert cube.coord("realization").points[0] == 1
-
-
 def test_read_cube():
     """Returns a Cube rather than CubeList."""
     from CSET.operators import constraints
