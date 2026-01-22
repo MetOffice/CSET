@@ -91,9 +91,8 @@ def test_read_cubes_ensemble_separate_files():
     )
     # Check ensemble members have been merged into a single cube.
     assert len(cubes) == 1
-    cube = cubes[0]
     # Check realization is an integer.
-    for point in cube.coord("realization").points:
+    for point in cubes[0].coord("realization").points:
         assert isinstance(int(point), int)
 
 
