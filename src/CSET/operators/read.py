@@ -351,21 +351,23 @@ def _cutout_cubes(
 
 def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.Cube:
     """Compose together the needed callbacks into a single function."""
+    # Most callbacks operate in-place, but save the cube when returned!
     _realization_callback(cube, field, filename)
     _um_normalise_callback(cube, field, filename)
     _lfric_normalise_callback(cube, field, filename)
-    _lfric_time_coord_fix_callback(cube, field, filename)
+    cube = _lfric_time_coord_fix_callback(cube, field, filename)
     _normalise_var0_varname(cube)
     _fix_spatial_coords_callback(cube)
     _fix_pressure_coord_callback(cube)
     _fix_um_radtime(cube)
     _fix_cell_methods(cube)
-    _convert_cube_units_callback(cube)
-    _grid_longitude_fix_callback(cube)
+    cube = _convert_cube_units_callback(cube)
+    cube = _grid_longitude_fix_callback(cube)
     _fix_lfric_cloud_base_altitude(cube)
     _proleptic_gregorian_fix(cube)
     _lfric_time_callback(cube)
     _lfric_forecast_period_standard_name_callback(cube)
+    return cube
 
 
 def _realization_callback(cube, field, filename):
@@ -429,7 +431,9 @@ def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
         cube.attributes["um_stash_source"] = str(sorted(ast.literal_eval(stash_list)))
 
 
-def _lfric_time_coord_fix_callback(cube: iris.cube.Cube, field, filename):
+def _lfric_time_coord_fix_callback(
+    cube: iris.cube.Cube, field, filename
+) -> iris.cube.Cube:
     """Ensure the time coordinate is a DimCoord rather than an AuxCoord.
 
     The coordinate is converted and replaced if not. SLAMed LFRic data has this
@@ -460,7 +464,7 @@ def _lfric_time_coord_fix_callback(cube: iris.cube.Cube, field, filename):
     return iris.util.squeeze(cube)
 
 
-def _grid_longitude_fix_callback(cube: iris.cube.Cube):
+def _grid_longitude_fix_callback(cube: iris.cube.Cube) -> iris.cube.Cube:
     """Check grid_longitude coordinates are in the range -180 deg to 180 deg.
 
     This is necessary if comparing two models with different conventions --
@@ -517,7 +521,7 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
     # Check if cube is spatial.
     if not utils.is_spatialdim(cube):
         # Don't modify non-spatial cubes.
-        return cube
+        return
 
     # Get spatial coords and dimension index.
     y_name, x_name = utils.get_cube_yxcoordname(cube)
