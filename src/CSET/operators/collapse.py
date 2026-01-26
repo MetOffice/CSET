@@ -97,6 +97,9 @@ def collapse(
             "ignore", "Collapsing spatial coordinate.+without weighting", UserWarning
         )
         for cube in iter_maybe(cubes):
+            # Apply a mask to check for invalid data, this will allow NaNs to
+            # be ignored.
+            cube.data = np.ma.masked_invalid(cube.data)
             if method == "PERCENTILE":
                 collapsed_cubes.append(
                     cube.collapsed(
@@ -218,6 +221,10 @@ def collapse_by_hour_of_day(
         # Recombine cube slices.
         cube = sorted_cube.merge_cube()
 
+        # Apply a mask to check for invalid data, this will allow NaNs to
+        # be ignored.
+        cube.data = np.ma.masked_invalid(cube.data)
+
         if cube.coords("forecast_reference_time", dim_coords=True):
             # Collapse by forecast reference time to get a single cube.
             cube = collapse(
@@ -320,6 +327,10 @@ def collapse_by_validity_time(
         final_cube = merged_list_1.merge_cube()
         logging.debug("Pre-collapse validity time cube:\n%s", final_cube)
 
+        # Apply a mask to check for invalid data, this will allow NaNs to
+        # be ignored.
+        final_cube.data = np.ma.masked_invalid(final_cube.data)
+
         # Collapse over equalised_validity_time as a proxy for equal validity
         # time.
         try:
@@ -404,6 +415,9 @@ def proportion(
             "ignore", "Collapsing spatial coordinate.+without weighting", UserWarning
         )
         for cube in iter_maybe(cubes):
+            # Apply a mask to check for invalid data, this will allow NaNs to
+            # be ignored.
+            cube.data = np.ma.masked_invalid(cube.data)
             match condition:
                 case "eq":
                     new_cube = cube.collapsed(
