@@ -20,6 +20,8 @@ import json
 import os
 from base64 import b64decode
 
+from CSET._common import human_sorted
+
 # matplotlib tab20[::2] + tab20[1::2]
 DISCRETE_COLORS = (
     "#1f77b4",
@@ -65,7 +67,9 @@ def create_model_colour_mapping(model_names: list[str]) -> dict:
     infinite_colours = itertools.cycle(DISCRETE_COLORS)
     return {
         model: color
-        for model, color in zip(sorted(model_names), infinite_colours, strict=False)
+        for model, color in zip(
+            human_sorted(model_names), infinite_colours, strict=False
+        )
     }
 
 

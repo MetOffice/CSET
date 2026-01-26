@@ -406,6 +406,16 @@ def _setup_spatial_map(
                 central_rotated_longitude=central_longitude,
             )
             crs = projection
+        elif isinstance(coord_system, iris.coord_systems.TransverseMercator):
+            # Define Transverse Mercator projection for TM inputs.
+            projection = ccrs.TransverseMercator(
+                central_longitude=coord_system.longitude_of_central_meridian,
+                central_latitude=coord_system.latitude_of_projection_origin,
+                false_easting=coord_system.false_easting,
+                false_northing=coord_system.false_northing,
+                scale_factor=coord_system.scale_factor_at_central_meridian,
+            )
+            crs = projection
         else:
             # Define regular map projection for non-rotated pole inputs.
             # Alternatives might include e.g. for global model outputs:

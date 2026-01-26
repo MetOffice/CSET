@@ -115,7 +115,7 @@ function construct_sidebar_from_data(data) {
             event.preventDefault();
             // Set the appropriate frame layout.
             position == "full" ? ensure_single_frame() : ensure_dual_frame();
-            document.getElementById(`plot-frame-${position}`).src = `plots/${plot}`;
+            document.getElementById(`plot-frame-${position}`).src = `${PLOTS_PATH}/${plot}`;
           });
 
           // Add button to chooser.
@@ -146,7 +146,7 @@ function setup_plots_sidebar() {
     return;
   }
   // Loading of plot index file, and adding them to the sidebar.
-  fetch("plots/index.json")
+  fetch(`${PLOTS_PATH}/index.json`)
     .then((response) => {
       // Display a message and stop if the fetch fails.
       if (!response.ok) {
