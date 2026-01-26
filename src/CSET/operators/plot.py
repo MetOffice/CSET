@@ -746,7 +746,8 @@ def _plot_and_save_line_series(
     plt.close(fig)
 
 
-def _plot_and_save_line_power_spectrum(
+# def _plot_and_save_line_power_spectrum(
+def _plot_and_save_line_1D(
     cubes: iris.cube.CubeList,
     coords: list[iris.coords.Coord],
     ensemble_coord: str,
@@ -769,15 +770,14 @@ def _plot_and_save_line_power_spectrum(
     title: str
         Plot title.
     """
-    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+    xn = coords[0].name()  # x-axis (e.g. frequency)
 
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     model_colors_map = _get_model_colors_map(cubes)
+    ax = plt.gca()
 
     # Store min/max ranges.
     y_levels = []
-
-    # Check match-up across sequence coords gives consistent sizes
-    _validate_cubes_coords(cubes, coords)
 
     if "Spectrum" in title:
         line_marker = None
@@ -786,7 +786,10 @@ def _plot_and_save_line_power_spectrum(
         line_marker = "o"
         line_width = 3
 
-    for cube, coord in zip(cubes, coords, strict=True):
+    #    for cube, coord in zip(cubes, coords, strict=True):
+    for cube in iter_maybe(cubes):
+        xname = cube.coord(xn).points  # frequency
+        yfield = cube.data  # power spectrum
         label = None
         color = "black"
         if model_colors_map:
@@ -795,9 +798,9 @@ def _plot_and_save_line_power_spectrum(
         for cube_slice in cube.slices_over(ensemble_coord):
             # Label with (control) if part of an ensemble or not otherwise.
             if cube_slice.coord(ensemble_coord).points == [0]:
-                iplt.plot(
-                    coord,
-                    cube_slice,
+                ax.plot(
+                    xname,
+                    yfield,
                     color=color,
                     marker=line_marker,
                     ls="-",
@@ -808,9 +811,9 @@ def _plot_and_save_line_power_spectrum(
                 )
                 # Label with (perturbed) if part of an ensemble and not the control.
             else:
-                iplt.plot(
-                    coord,
-                    cube_slice,
+                ax.plot(
+                    xname,
+                    yfield,
                     color=color,
                     ls="-",
                     lw=1.5,
@@ -824,13 +827,11 @@ def _plot_and_save_line_power_spectrum(
             y_levels.append(min(levels))
             y_levels.append(max(levels))
 
-    # Get the current axes.
-    ax = plt.gca()
-
     # Add some labels and tweak the style.
     # check if cubes[0] works for single cube if not CubeList
     if "Spectrum" in title:
-        title = f"{title}\n [{coord.units.title(coord.points[0])}]"
+        #        title = f"{title}\n [{coords.units.title(coords.points[0])}]"
+        title = f"{title}"
         ax.set_title(title, fontsize=16)
         ax.set_xlabel("Wavenumber", fontsize=14)
         ax.set_ylabel("Power", fontsize=14)
@@ -2108,6 +2109,7 @@ def plot_line_series(
 
     # Iterate over all cubes and extract coordinate to plot.
     cubes = iter_maybe(cube)
+
     coords = []
     for cube in cubes:
         try:
@@ -2167,7 +2169,6 @@ def plot_line_series(
                 for point in all_points
             ]
 
-        # plot_index = []
         nplot = np.size(cube.coord(sequence_coordinate).points)
 
         # Create a plot for each value of the sequence coordinate. Allowing for
@@ -2175,6 +2176,7 @@ def plot_line_series(
         # sequence values. Passing a CubeList into the internal plotting function
         # for similar values of the sequence coordinate. cube_slice can be an
         # iris.cube.Cube or an iris.cube.CubeList.
+
         for cube_slice in cube_iterables:
             # Normalize cube_slice to a list of cubes
             if isinstance(cube_slice, iris.cube.CubeList):
@@ -2200,8 +2202,9 @@ def plot_line_series(
                     title = f"{recipe_title}\n [{coord.units.title(coord.bounds[0][0])} to {coord.units.title(coord.bounds[0][1])}]"
 
             # Do the actual plotting.
-            _plot_and_save_line_power_spectrum(
-                cubes, coords, "realization", plot_filename, title
+
+            _plot_and_save_line_1D(
+                cube_slice, coords, "realization", plot_filename, title
             )
 
             plot_index.append(plot_filename)
@@ -2777,6 +2780,7 @@ def plot_histogram_series(
     # separate postage stamp plots.
     # -- model names (hidden in cube attrs) are ignored, that is stamp plots are
     # produced per single model only
+
     if num_models == 1:
         if (
             stamp_coordinate in [c.name() for c in cubes[0].coords()]
@@ -2835,6 +2839,7 @@ def plot_histogram_series(
             if np.size(coord.bounds) > 1:
                 title = f"{recipe_title}\n [{coord.units.title(coord.bounds[0][0])} to {coord.units.title(coord.bounds[0][1])}]"
         # Do the actual plotting.
+
         plotting_func(
             cube_slice,
             filename=plot_filename,

@@ -23,8 +23,39 @@ import numpy as np
 import scipy.fft as fft
 
 
-def calculate_power_spectrum(
-    cube: iris.cube.Cube,
+def calculate_power_spectrum(cubes):
+    """Wrap power spectra code.
+
+    Cubes is split up into a cube
+    for each model and time and power spectrum calculated for each before
+    combining into one cube before plotting.  This is done to retain the
+    model_name attribute for different models.
+
+    Input: Cube OR CubeList
+    Output: CubeList of power spectra.
+    """
+    print("CUBES IN PS ", cubes[0])
+    # Multi-model input (CubeList)
+    if isinstance(cubes, iris.cube.CubeList):
+        out = iris.cube.CubeList()
+        for cube in cubes:
+            model = cube.attributes.get("model_name")
+            ps = _power_spectrum(cube)
+            if model is not None:
+                ps.attributes["model_name"] = model
+            out.append(ps)
+        return out
+
+    # Single cube (one model)
+    model = cubes.attributes.get("model_name")
+    ps = _power_spectrum(cubes)
+    if model is not None:
+        ps.attributes["model_name"] = model
+    return iris.cube.CubeList([ps])
+
+
+def _power_spectrum(
+    cube: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Calculate power spectrum plot for 1 vertical level at 1 time.
 
@@ -52,16 +83,6 @@ def calculate_power_spectrum(
     TypeError
         If the cube isn't a Cube.
     """
-    cube = cube[0]
-
-    ## Get array index for user specified pressure level.
-    # print('Levels ',cube.coord("pressure").points)
-    # if plev not in cube.coord("pressure").points:
-    #    raise IndexError(f"Can't find plev {plev} in {cube.coord('pressure').points}")
-    #
-    ## Find corresponding pressure level index
-    # plev_idx = np.where(cube.coord("pressure").points == plev)[0][0]
-
     # Extract time coordinate and convert to datetime
     time_coord = cube.coord("time")
     time_points = time_coord.units.num2date(time_coord.points)
@@ -80,6 +101,10 @@ def calculate_power_spectrum(
     # Calculate spectrum
     ps_array = _DCT_ps(cube_3d)
 
+    # ADD # Ensure power spectrum output is 2D: (time, frequency)
+    if ps_array.ndim == 1:
+        ps_array = ps_array[np.newaxis, :]
+
     ps_cube = iris.cube.Cube(
         ps_array,
         long_name="power_spectra",
@@ -92,33 +117,58 @@ def calculate_power_spectrum(
     # Create a new DimCoord with frequency
     freq_coord = iris.coords.DimCoord(freqs, long_name="frequency", units="1")
 
-    # Convert datetime to numeric time using original units
-    numeric_time = time_coord.units.date2num(time_points)
+    #    # Convert datetime to numeric time using original units
+    #    numeric_time = time_coord.units.date2num(time_points)
+    #
+    #    # Create a new DimCoord with numeric time
+    #    new_time_coord = iris.coords.DimCoord(
+    #        numeric_time, standard_name="time", units=time_coord.units
+    #    )
 
-    # Create a new DimCoord with numeric time
+    # replace
+    numeric_time = time_coord.units.date2num(time_points)
+    numeric_time = np.atleast_1d(numeric_time)
+
+    # Make time coord length match the number of spectra
+    if len(numeric_time) != ps_array.shape[0]:
+        numeric_time = np.repeat(numeric_time[0], ps_array.shape[0])
+
     new_time_coord = iris.coords.DimCoord(
-        numeric_time, standard_name="time", units=time_coord.units
+        numeric_time,
+        standard_name="time",
+        units=time_coord.units,
     )
 
-    # Create a new cube
-    new_data = ps_cube.data.copy()
-    new_cube = iris.cube.Cube(new_data, long_name=ps_cube.long_name)
+    # end replace
 
-    # Add time and frequency coordinates
-    new_cube.add_dim_coord(new_time_coord, 0)  # time axis
-    new_cube.add_dim_coord(freq_coord, 1)  # frequency axis
+    #    # Create a new cube
+    #    new_data = ps_cube.data.copy()
+    #    new_cube = iris.cube.Cube(new_data, long_name=ps_cube.long_name)
+    #
+    #    # Add time and frequency coordinates
+    #    new_cube.add_dim_coord(new_time_coord, 0)  # time axis
+    #    new_cube.add_dim_coord(freq_coord, 1)  # frequency axis
+    #
+    #    # Power spectrum cube
+    #    ps_cube = new_cube
 
-    # Power spectrum cube
-    ps_cube = new_cube
+    # replace
+
+    ps_cube = iris.cube.Cube(
+        ps_array,
+        dim_coords_and_dims=[
+            (new_time_coord, 0),
+            (freq_coord, 1),
+        ],
+        long_name="power_spectra",
+    )
+    print("NEW CUBE ", ps_cube)
+
+    # end replace
 
     # Ensure cube has a realisation coordinate by creating and adding to cube
     realization_coord = iris.coords.AuxCoord(0, standard_name="realization", units="1")
     ps_cube.add_aux_coord(realization_coord)
-
-    # cubes = [ps_cube[0]]  # list of cubes
-    # coords = [ps_cube[0].coord('frequency')]  # matching coordinate
-
-    # series_coordinate="frequency"
 
     return ps_cube
 
