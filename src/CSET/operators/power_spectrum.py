@@ -24,12 +24,12 @@ import scipy.fft as fft
 
 
 def calculate_power_spectrum(cubes):
-    """Wrap power spectra code.
+    """Wrap power spectrum code.
 
-    Cubes is split up into a cube
-    for each model and time and power spectrum calculated for each before
-    combining into one cube before plotting.  This is done to retain the
-    model_name attribute for different models.
+    The input cube is split up into a cube
+    for each model and time and a power spectrum calculated for each before
+    combining into one cube ahead of plotting.  This is done to retain the
+    model_name attribute correctly for different models.
 
     Input: Cube OR CubeList
     Output: CubeList of power spectra.
@@ -39,6 +39,7 @@ def calculate_power_spectrum(cubes):
         out = iris.cube.CubeList()
         for cube in cubes:
             model = cube.attributes.get("model_name")
+            # Calculate power spectrum
             ps = _power_spectrum(cube)
             if model is not None:
                 ps.attributes["model_name"] = model
@@ -47,6 +48,7 @@ def calculate_power_spectrum(cubes):
 
     # Single cube (one model)
     model = cubes.attributes.get("model_name")
+    # Calculate power spectrum
     ps = _power_spectrum(cubes)
     if model is not None:
         ps.attributes["model_name"] = model
@@ -56,23 +58,19 @@ def calculate_power_spectrum(cubes):
 def _power_spectrum(
     cube: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Calculate power spectrum plot for 1 vertical level at 1 time.
+    """Calculate power spectrum for 1 vertical level at 1 time.
 
     Parameters
     ----------
-    cubes: Cube
-        2 dimensional Cube of the data to plot as power spectrum.
-        It should have a single dimension other than the stamp coordinate.
+    cube: Cube
+        Data to plot as power spectrum.
         The cubes should cover the same phenomenon i.e. all cubes contain temperature data.
         We do not support different data such as temperature and humidity in the same CubeList for plotting.
-    plev: int
-        The pressure level of which to compute the power spectrum on. The function will search to
-        see if this exists and if not, will raise an exception.
 
     Returns
     -------
     iris.cube.Cube
-        The power spectra of the data.
+        The power spectrum of the data.
         To be plotted and aggregation performed after.
 
     Raises
@@ -100,7 +98,7 @@ def _power_spectrum(
     # Calculate spectrum
     ps_array = _DCT_ps(cube_3d)
 
-    # ADD # Ensure power spectrum output is 2D: (time, frequency)
+    # Ensure power spectrum output is 2D: (time, frequency)
     if ps_array.ndim == 1:
         ps_array = ps_array[np.newaxis, :]
 
@@ -116,15 +114,6 @@ def _power_spectrum(
     # Create a new DimCoord with frequency
     freq_coord = iris.coords.DimCoord(freqs, long_name="frequency", units="1")
 
-    #    # Convert datetime to numeric time using original units
-    #    numeric_time = time_coord.units.date2num(time_points)
-    #
-    #    # Create a new DimCoord with numeric time
-    #    new_time_coord = iris.coords.DimCoord(
-    #        numeric_time, standard_name="time", units=time_coord.units
-    #    )
-
-    # replace
     numeric_time = time_coord.units.date2num(time_points)
     numeric_time = np.atleast_1d(numeric_time)
 
@@ -138,21 +127,6 @@ def _power_spectrum(
         units=time_coord.units,
     )
 
-    # end replace
-
-    #    # Create a new cube
-    #    new_data = ps_cube.data.copy()
-    #    new_cube = iris.cube.Cube(new_data, long_name=ps_cube.long_name)
-    #
-    #    # Add time and frequency coordinates
-    #    new_cube.add_dim_coord(new_time_coord, 0)  # time axis
-    #    new_cube.add_dim_coord(freq_coord, 1)  # frequency axis
-    #
-    #    # Power spectrum cube
-    #    ps_cube = new_cube
-
-    # replace
-
     ps_cube = iris.cube.Cube(
         ps_array,
         dim_coords_and_dims=[
@@ -161,8 +135,6 @@ def _power_spectrum(
         ],
         long_name="power_spectra",
     )
-
-    # end replace
 
     # Ensure cube has a realisation coordinate by creating and adding to cube
     realization_coord = iris.coords.AuxCoord(0, standard_name="realization", units="1")

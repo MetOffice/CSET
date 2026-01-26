@@ -756,7 +756,6 @@ def _plot_and_save_line_series(
     plt.close(fig)
 
 
-# def _plot_and_save_line_power_spectrum(
 def _plot_and_save_line_1D(
     cubes: iris.cube.CubeList,
     coords: list[iris.coords.Coord],
@@ -2218,7 +2217,7 @@ def plot_line_series(
             )
 
             plot_index.append(plot_filename)
-    # not sure what the indent should be here (4 or 8 spaces)
+
     # append plot to list of plots
     complete_plot_index = _append_to_plot_index(plot_index)
 
