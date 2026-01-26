@@ -65,7 +65,8 @@ def _power_spectrum(
     cube: Cube
         Data to plot as power spectrum.
         The cubes should cover the same phenomenon i.e. all cubes contain temperature data.
-        We do not support different data such as temperature and humidity in the same CubeList for plotting.
+        We do not support different data such as temperature and humidity in the same CubeList
+        for plotting.
 
     Returns
     -------
