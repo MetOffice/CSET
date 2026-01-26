@@ -34,7 +34,6 @@ def calculate_power_spectrum(cubes):
     Input: Cube OR CubeList
     Output: CubeList of power spectra.
     """
-    print("CUBES IN PS ", cubes[0])
     # Multi-model input (CubeList)
     if isinstance(cubes, iris.cube.CubeList):
         out = iris.cube.CubeList()
@@ -162,7 +161,6 @@ def _power_spectrum(
         ],
         long_name="power_spectra",
     )
-    print("NEW CUBE ", ps_cube)
 
     # end replace
 
