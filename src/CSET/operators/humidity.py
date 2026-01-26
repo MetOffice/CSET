@@ -89,7 +89,7 @@ def specific_humidity_from_mixing_ratio(
 
     .. math:: q = \frac{w}{1 + w}
 
-    for q the specific humidity and w the mixing ratio.
+    with q the specific humidity and w the mixing ratio.
 
     A larger specific humidity implies a more moist atmosphere. The specific
     humidity will have the same units as the mixing ratio (kg/kg).
