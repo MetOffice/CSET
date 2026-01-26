@@ -277,7 +277,7 @@ def specific_humidity_from_relative_humidity(
     pressure: iris.cube.Cube | iris.cube.CubeList,
     relative_humidity: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    r"""Calculate the mixing ratio from RH.
+    r"""Calculate the specific humidity from relative humidity.
 
     Arguments
     ---------
