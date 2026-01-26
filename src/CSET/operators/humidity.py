@@ -303,7 +303,7 @@ def specific_humidity_from_relative_humidity(
     for q the specific humidity, :math:`q_{sat}` the saturation specific
     humidity, and RH the relative humidity.
 
-    The operator usese `humidity.saturation_specific_humidity` to calculate the
+    The operator uses `humidity.saturation_specific_humidity` to calculate the
     saturation specific humidity from the temperature and pressure. The relative
     humidity is converted into a decimal before the multiplication occurs.
 
