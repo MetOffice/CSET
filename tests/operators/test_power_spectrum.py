@@ -28,12 +28,10 @@ def test_plot_power_spectrum_with_filename(
     power_spectrum_cube_readonly, tmp_working_dir
 ):
     """Testing power spectrum code produces file."""
-    #    power_spectrum.calculate_power_spectrum(
-    #        field2d_cube
-    #    )
-
-    plot.plot_line_series(power_spectrum_cube_readonly, filename="test")
-    assert Path("test_464569.0.png").is_file()
+    plot.plot_line_series(
+        power_spectrum_cube_readonly, series_coordinate="frequency", filename="test"
+    )
+    assert Path("test_459456.0.png").is_file()
 
 
 def test_create_alpha_matrix_shape():
