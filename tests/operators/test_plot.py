@@ -618,6 +618,12 @@ def test_plot_line_series(cube, tmp_working_dir):
     assert Path("untitled.png").is_file()
 
 
+def test_plot_power_spectrum(power_spectrum_cube_readonly, tmp_working_dir):
+    """Save a power_spectrum plot using line series plot."""
+    plot.plot_line_series(power_spectrum_cube_readonly, series_coordinate="frequency")
+    assert Path("untitled_459456.0.png").is_file()
+
+
 def test_plot_line_series_with_filename(cube, tmp_working_dir):
     """Save a line series plot with specific filename and series coordinate."""
     cube = collapse.collapse(cube, ["time", "grid_longitude"], "MEAN")
@@ -627,11 +633,30 @@ def test_plot_line_series_with_filename(cube, tmp_working_dir):
     assert Path("latitude_average_462148.0.png").is_file()
 
 
+def test_plot_power_spectrum_with_filename(
+    power_spectrum_cube_readonly, tmp_working_dir
+):
+    """Testing power spectrum plot in plot_line_series produces file."""
+    plot.plot_line_series(
+        power_spectrum_cube_readonly, series_coordinate="frequency", filename="test"
+    )
+    assert Path("test_459456.0.png").is_file()
+
+
 def test_plot_line_series_no_series_coordinate(tmp_working_dir):
     """Error when cube is missing series coordinate (time)."""
     cube = iris.cube.Cube([], var_name="nothing")
     with pytest.raises(ValueError):
         plot.plot_line_series(cube)
+
+
+def test_plot_power_spectrum_no_sequence_coordinate(
+    power_spectrum_cube, tmp_working_dir
+):
+    """Error when cube is missing sequence coordinate (time)."""
+    power_spectrum_cube.remove_coord("time")
+    with pytest.raises(ValueError, match="Cube must have a time coordinate."):
+        plot.plot_line_series(power_spectrum_cube, series_coordinate="frequency")
 
 
 def test_plot_line_series_too_many_dimensions(cube, tmp_working_dir):

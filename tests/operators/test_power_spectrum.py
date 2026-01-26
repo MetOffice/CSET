@@ -14,24 +14,12 @@
 
 """Test power spectrum operator."""
 
-from pathlib import Path
-
 import iris.coords
 import iris.cube
 import numpy as np
 import pytest
 
-from CSET.operators import plot, power_spectrum
-
-
-def test_plot_power_spectrum_with_filename(
-    power_spectrum_cube_readonly, tmp_working_dir
-):
-    """Testing power spectrum code produces file."""
-    plot.plot_line_series(
-        power_spectrum_cube_readonly, series_coordinate="frequency", filename="test"
-    )
-    assert Path("test_459456.0.png").is_file()
+from CSET.operators import power_spectrum
 
 
 def test_create_alpha_matrix_shape():
