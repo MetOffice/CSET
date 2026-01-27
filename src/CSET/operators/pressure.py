@@ -95,7 +95,8 @@ def vapour_pressure_from_relative_humidity(
         Temperature must be provided in Kelvin.
     relative_humidity: iris.cube.Cube | iris.cube.CubeList
         Cubes of relative humidity to be converted into vapour pressure.
-        Relative humidity will be converted to a decimal by the operator.
+        Relative humidity must be provided in percentage and 
+        will be converted to a decimal by the operator.
 
     Returns
     -------
