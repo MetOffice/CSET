@@ -132,6 +132,7 @@ def virtual_temperature(
     ratio, and :math:`\epsilon` the ratio between dry and moist air equating
     to 0.622.
 
+    T is given in K and w is given in kg kg-1.
     All cubes must be on the same grid.
 
     Examples
