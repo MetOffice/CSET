@@ -86,7 +86,7 @@ def vapour_pressure_from_relative_humidity(
     temperature: iris.cube.Cube | iris.cube.CubeList,
     relative_humidity: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    r"""Calculate the vapour pressure using RH.
+    r"""Calculate the vapour pressure using relative humidity RH.
 
     Arguments
     ---------
