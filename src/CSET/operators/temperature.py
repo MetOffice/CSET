@@ -367,6 +367,10 @@ def equivalent_potential_temperature(
     (1005.7 :math:`J kg^{-1} K^{-1}`), :math:`L_v` the latent heat of vapourization
     (2.5 x :math:`10^6 J kg^{-1} K^{-1}`), and T the temperature.
 
+    Potential temperature and temperature in K.
+    Relative humidity in percentage and will be converted to fraction.
+    Mixing ratio in kg kg-1 (dimensionless).
+    
     In this operator the mixing ratio is calculated from
     `humidity.mixing_ratio_from_relative_humidity` and the potential temperature
     is calculated from `temperature.potential_temperature`.
