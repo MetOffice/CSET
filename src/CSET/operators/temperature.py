@@ -365,7 +365,7 @@ def equivalent_potential_temperature(
     :math:`R_v` the specific gas constant of water vapour (461
     :math:`J kg^{-1} K^{-1}`), :math:`c_p` the specific heat capacity of dry air
     (1005.7 :math:`J kg^{-1} K^{-1}`), :math:`L_v` the latent heat of vapourization
-    (2.5 x :math:`10^6 J kg^{-1} K^{-1}`), and T the temperature.
+    (2.5 x :math:`10^6 J kg^{-1}`), and T the temperature.
 
     Potential temperature and temperature in K.
     Relative humidity in percentage and will be converted to fraction.
