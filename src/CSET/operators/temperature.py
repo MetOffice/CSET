@@ -296,10 +296,11 @@ def virtual_potential_temperature(
 
     Notes
     -----
-    The virtual potenital temperature is mechanistically equivalent to the
+    The virtual potential temperature is mechanistically equivalent to the
     potential temperature, except rather than using the (dry-bulb) temperature
-    the virtual temperature is adiabatically moved to a reference pressure
-    (1000 hPa). It is calculated as
+    the virtual temperature used. The virtual potential temperature is the potential 
+    temperature a parcel would have if its temperature was replaced by its virtual temperature 
+    and then the parcel is brought adiabatically to 1000 hPa. It is calculated as
 
     .. math:: \theta_v = \frac{T_v}{\Pi}
 
