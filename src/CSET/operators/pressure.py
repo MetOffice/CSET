@@ -42,7 +42,7 @@ def vapour_pressure(
     -----
     The vapour pressure represents the pressure exerted by water vapour on the
     atmosphere. It is related to atmospheric temperature through the
-    Calusius-Clapeyron equation. There are several different formulations based
+    Clausius-Clapeyron equation. There are several different formulations based
     on empirical relations that are used to calculate the vapour pressure. Here,
     we calculate the vapour pressure based on [Tetens30]_ equation:
 
