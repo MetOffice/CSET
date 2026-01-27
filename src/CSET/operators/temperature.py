@@ -254,6 +254,8 @@ def potential_temperature(
     for :math:`\theta` the potential temperature, T the temperature, and :math:`\Pi`
     the exner pressure. The exner pressure is calculated using `pressure.exner_pressure`.
 
+    Temperature must be in Kelvin. 
+    
     All cubes must be on the same grid.
 
     Examples
