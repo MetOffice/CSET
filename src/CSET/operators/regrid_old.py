@@ -17,7 +17,6 @@
 import warnings
 
 import iris
-import iris.coord_systems
 import iris.cube
 import numpy as np
 
@@ -200,7 +199,7 @@ def regrid_onto_xyspacing(
 
 
 def regrid_to_single_point(
-    cubes: iris.cube.Cube | iris.cube.CubeList,
+    cube: iris.cube.Cube,
     lat_pt: float,
     lon_pt: float,
     latlon_in_type: str = "rotated",
@@ -216,9 +215,9 @@ def regrid_to_single_point(
 
     Parameters
     ----------
-    cubes: Cube | CubeList
-        An iris cube or CubeList of the data to regrid. As a minimum, it needs
-        to be 2D with latitude, longitude coordinates.
+    cube: Cube
+        An iris cube of the data to regrid. As a minimum, it needs to be 2D with
+        latitude, longitude coordinates.
     lon_pt: float
         Selected value of longitude: this should be in the range -180 degrees to
         180 degrees.
@@ -237,9 +236,9 @@ def regrid_to_single_point(
 
     Returns
     -------
-    regridded_cubes: Cube | CubeList
-        An iris cube or CubeList of the data at the specified point (this may
-        have time and/or height dimensions).
+    cube_rgd: Cube
+        An iris cube of the data at the specified point (this may have time
+        and/or height dimensions).
 
     Raises
     ------
@@ -260,87 +259,75 @@ def regrid_to_single_point(
     is potentially unreliable.
 
     """
-    # To store regridded cubes.
-    regridded_cubes = iris.cube.CubeList()
+    # Get x and y coordinate names.
+    y_coord, x_coord = get_cube_yxcoordname(cube)
 
-    # Iterate over all cubes and regrid.
-    for cube in iter_maybe(cubes):
-        # Get x and y coordinate names.
-        y_coord, x_coord = get_cube_yxcoordname(cube)
-
-        # List of supported grids - check if it is compatible
-        # NOTE: The "RotatedGeogCS" option below seems to be required for rotated grids --
-        #  this may need to be added in other places in these Operators.
-        supported_grids = (iris.coord_systems.GeogCS, iris.coord_systems.RotatedGeogCS)
-        if not isinstance(cube.coord(x_coord).coord_system, supported_grids):
-            raise NotImplementedError(
-                f"Does not currently support {cube.coord(x_coord).coord_system} regrid method"
-            )
-        if not isinstance(cube.coord(y_coord).coord_system, supported_grids):
-            raise NotImplementedError(
-                f"Does not currently support {cube.coord(y_coord).coord_system} regrid method"
-            )
-
-        # Transform input coordinates onto rotated grid if requested
-        if latlon_in_type == "realworld":
-            lon_tr, lat_tr = transform_lat_long_points(lon_pt, lat_pt, cube)
-        elif latlon_in_type == "rotated":
-            lon_tr, lat_tr = lon_pt, lat_pt
-
-        # Get axis
-        lat, lon = cube.coord(y_coord), cube.coord(x_coord)
-
-        # Get bounds
-        lat_min, lon_min = lat.points.min(), lon.points.min()
-        lat_max, lon_max = lat.points.max(), lon.points.max()
-
-        # Get boundaries of frame to avoid selecting gridpoint close to domain edge
-        lat_min_bound, lon_min_bound = (
-            lat.points[boundary_margin - 1],
-            lon.points[boundary_margin - 1],
+    # List of supported grids - check if it is compatible
+    # NOTE: The "RotatedGeogCS" option below seems to be required for rotated grids --
+    #  this may need to be added in other places in these Operators.
+    supported_grids = (iris.coord_systems.GeogCS, iris.coord_systems.RotatedGeogCS)
+    if not isinstance(cube.coord(x_coord).coord_system, supported_grids):
+        raise NotImplementedError(
+            f"Does not currently support {cube.coord(x_coord).coord_system} regrid method"
         )
-        lat_max_bound, lon_max_bound = (
-            lat.points[-boundary_margin],
-            lon.points[-boundary_margin],
+    if not isinstance(cube.coord(y_coord).coord_system, supported_grids):
+        raise NotImplementedError(
+            f"Does not currently support {cube.coord(y_coord).coord_system} regrid method"
         )
 
-        # Check to see if selected point is outside the domain
-        if (lat_tr < lat_min) or (lat_tr > lat_max):
-            raise ValueError("Selected point is outside the domain.")
-        else:
-            if (lon_tr < lon_min) or (lon_tr > lon_max):
-                if (lon_tr + 360.0 >= lon_min) and (lon_tr + 360.0 <= lon_max):
-                    lon_tr += 360.0
-                elif (lon_tr - 360.0 >= lon_min) and (lon_tr - 360.0 <= lon_max):
-                    lon_tr -= 360.0
-                else:
-                    raise ValueError("Selected point is outside the domain.")
+    # Transform input coordinates onto rotated grid if requested
+    if latlon_in_type == "realworld":
+        lon_tr, lat_tr = transform_lat_long_points(lon_pt, lat_pt, cube)
+    elif latlon_in_type == "rotated":
+        lon_tr, lat_tr = lon_pt, lat_pt
 
-        # Check to see if selected point is near the domain boundaries
-        if (
-            (lat_tr < lat_min_bound)
-            or (lat_tr > lat_max_bound)
-            or (lon_tr < lon_min_bound)
-            or (lon_tr > lon_max_bound)
-        ):
-            warnings.warn(
-                f"Selected point is within {boundary_margin} gridlengths of the domain edge, data may be unreliable.",
-                category=BoundaryWarning,
-                stacklevel=2,
-            )
+    # Get axis
+    lat, lon = cube.coord(y_coord), cube.coord(x_coord)
 
-        regrid_method = getattr(iris.analysis, method, None)
-        if not callable(regrid_method):
-            raise NotImplementedError(
-                f"Does not currently support {method} regrid method"
-            )
-        cube_rgd = cube.interpolate(((lat, lat_tr), (lon, lon_tr)), regrid_method())
-        regridded_cubes.append(cube_rgd)
-    # Preserve returning a cube if only a cube has been supplied to regrid.
-    if len(regridded_cubes) == 1:
-        return regridded_cubes[0]
+    # Get bounds
+    lat_min, lon_min = lat.points.min(), lon.points.min()
+    lat_max, lon_max = lat.points.max(), lon.points.max()
+
+    # Get boundaries of frame to avoid selecting gridpoint close to domain edge
+    lat_min_bound, lon_min_bound = (
+        lat.points[boundary_margin - 1],
+        lon.points[boundary_margin - 1],
+    )
+    lat_max_bound, lon_max_bound = (
+        lat.points[-boundary_margin],
+        lon.points[-boundary_margin],
+    )
+
+    # Check to see if selected point is outside the domain
+    if (lat_tr < lat_min) or (lat_tr > lat_max):
+        raise ValueError("Selected point is outside the domain.")
     else:
-        return regridded_cubes
+        if (lon_tr < lon_min) or (lon_tr > lon_max):
+            if (lon_tr + 360.0 >= lon_min) and (lon_tr + 360.0 <= lon_max):
+                lon_tr += 360.0
+            elif (lon_tr - 360.0 >= lon_min) and (lon_tr - 360.0 <= lon_max):
+                lon_tr -= 360.0
+            else:
+                raise ValueError("Selected point is outside the domain.")
+
+    # Check to see if selected point is near the domain boundaries
+    if (
+        (lat_tr < lat_min_bound)
+        or (lat_tr > lat_max_bound)
+        or (lon_tr < lon_min_bound)
+        or (lon_tr > lon_max_bound)
+    ):
+        warnings.warn(
+            f"Selected point is within {boundary_margin} gridlengths of the domain edge, data may be unreliable.",
+            category=BoundaryWarning,
+            stacklevel=2,
+        )
+
+    regrid_method = getattr(iris.analysis, method, None)
+    if not callable(regrid_method):
+        raise NotImplementedError(f"Does not currently support {method} regrid method")
+    cube_rgd = cube.interpolate(((lat, lat_tr), (lon, lon_tr)), regrid_method())
+    return cube_rgd
 
 
 def transform_lat_long_points(lon, lat, cube):
