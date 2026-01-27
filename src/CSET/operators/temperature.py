@@ -245,7 +245,7 @@ def potential_temperature(
 
     Notes
     -----
-    The potential temperature is the temperature at which an air parcel would reach
+    The potential temperature is the temperature an air parcel would reach
     if it was moved adiabatically to a reference pressure. Here we use 1000 hPa
     as the reference pressure. It is calculated from
 
