@@ -440,7 +440,7 @@ def wet_bulb_potential_temperature(
     Notes
     -----
     The wet-bulb potential temperature represents the temperature an air parcel
-    would have if coold adiabatically until saturation and then taken down to
+    would have if cooled adiabatically until saturation and then taken down to
     a reference pressure (1000 hPa) whilst conserving the moisture (i.e. along a
     psuedoadiabat). It can be calculated either through a series of iterations,
     or through empirical relations. Here, we use the [DaviesJones08]_ formulation:
@@ -448,7 +448,7 @@ def wet_bulb_potential_temperature(
     .. math:: \theta_w = \theta_e - exp\left(\frac{a_0 + a_1 X + a_2 X^2 + a_3 X^3 + a_4 X^4}{1.0 + b_1 X + b_2 X^2 + b_3 X^3 + b_4 X^4} \right)
 
     for :math:`\theta_w` the wet-bulb potential temperature, :math:`\theta_e` the
-    equivalent potenital temperature, X = :math:`\theta_e` / 273.15 K, and a
+    equivalent potential temperature, X = :math:`\theta_e` / 273.15 K, and a
     series of constants :math:`a_0` = 7.101574, :math:`a_1` = -20.68208,
     :math:`a_2` = 16.11182, :math:`a_3` = 2.574631, :math:`a_4` = -5.205688,
     :math:`b_1` = -3.552497, :math:`b_2` = 3.781782, :math:`b_3` = -0.6899655, and
@@ -508,7 +508,7 @@ def saturation_equivalent_potential_temperature(
     temperature: iris.cube.Cube | iris.cube.CubeList,
     pressure: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    r"""Calculate the saturation equivalent potenital temperature.
+    r"""Calculate the saturation equivalent potential temperature.
 
     Arguments
     ---------
@@ -525,16 +525,16 @@ def saturation_equivalent_potential_temperature(
     Notes
     -----
     The saturation equivalent potential temperature, also referred to as the
-    saturation potential temperature is as the equivalent potenital temperature
+    saturation potential temperature is as the equivalent potential temperature
     following a saturated process throughout. It is calculated as
 
     .. math:: \theta_{es} = \theta * exp\left(\frac{L_v w}{c_p T} \right)
 
-    for :math:`\theta_{es}` the saturation equivalent potenital temperature,
+    for :math:`\theta_{es}` the saturation equivalent potential temperature,
     :math:`\theta` the potential temperature, w the mixing ratio,
     :math:`c_p` the specific heat capacity of dry air (1005.7
     :math:`J kg^{-1} K^{-1}`), :math:`L_v` the latent heat of vapourization
-    (2.5 x :math:`10^6 J kg^{-1} K^{-1}`), and T the temperature.
+    (2.5 x :math:`10^6 J kg^{-1}`), and T the temperature.
 
     As a saturated process is assumed throughout the RH multiplier in the
     equivalent potenital temperature will always be a value of one, and is thus
