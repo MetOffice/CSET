@@ -465,8 +465,7 @@ function add_to_sidebar(record, facet_values) {
       if (!(facet in facet_values)) {
         facet_values[facet] = new Set();
       }
-      const values = facet_values[facet];
-      values.add(record[facet]);
+      facet_values[facet].add(record[facet]);
     }
   }
 
@@ -514,7 +513,7 @@ function add_to_sidebar(record, facet_values) {
 }
 
 function add_facet_dropdowns(facet_values) {
-  const fieldset = document.getElementById("filter-facets");
+  const facets_container = document.getElementById("filter-facets");
 
   for (const facet in facet_values) {
     const label = document.createElement("label");
@@ -537,9 +536,11 @@ function add_facet_dropdowns(facet_values) {
       select.append(option);
     }
     select.addEventListener("change", updateFacetQuery);
-
+    // Put label and select in row.
+    const facet_row = document.createElement("div");
+    facet_row.append(label, select);
     // Add to DOM.
-    fieldset.append(label, select);
+    facets_container.append(facet_row);
   }
 }
 
