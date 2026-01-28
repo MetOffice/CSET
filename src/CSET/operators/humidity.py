@@ -241,7 +241,7 @@ def mixing_ratio_from_relative_humidity(
     .. math:: w = RH * w_s
 
     for w the mixing ratio, :math:`w_s` the saturation mixing ratio, and
-    RH the relative humidity. RH is converted to dimensionless fraction rather 
+    RH the relative humidity. RH is converted to dimensionless fraction rather
     than percentage.
 
     The operator uses `humidity.saturation_mixing_ratio` to calculate the
