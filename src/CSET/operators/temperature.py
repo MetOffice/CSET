@@ -229,7 +229,7 @@ def potential_temperature(
     temperature: iris.cube.Cube | iris.cube.CubeList,
     pressure: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    r"""Calculate the potenital temperature.
+    r"""Calculate the potential temperature.
 
     Arguments
     ---------
@@ -254,8 +254,8 @@ def potential_temperature(
     for :math:`\theta` the potential temperature, T the temperature, and :math:`\Pi`
     the exner pressure. The exner pressure is calculated using `pressure.exner_pressure`.
 
-    Temperature must be in Kelvin. 
-    
+    Temperature must be in Kelvin.
+
     All cubes must be on the same grid.
 
     Examples
@@ -298,13 +298,13 @@ def virtual_potential_temperature(
     -----
     The virtual potential temperature is mechanistically equivalent to the
     potential temperature, except rather than using the (dry-bulb) temperature
-    the virtual temperature used. The virtual potential temperature is the potential 
-    temperature a parcel would have if its temperature was replaced by its virtual temperature 
+    the virtual temperature used. The virtual potential temperature is the potential
+    temperature a parcel would have if its temperature was replaced by its virtual temperature
     and then the parcel is brought adiabatically to 1000 hPa. It is calculated as
 
     .. math:: \theta_v = \frac{T_v}{\Pi}
 
-    for :math:`\theta_v` the virtual potenital temperature, :math:`T_v` the
+    for :math:`\theta_v` the virtual potential temperature, :math:`T_v` the
     virtual temperature, and :math:`\Pi` the exner pressure. The exner pressure
     is calculated using `pressure.exner_pressure`.
 
@@ -312,7 +312,7 @@ def virtual_potential_temperature(
 
     Examples
     --------
-    >>> Theta_v = temperature.virtual_potenital_temperature(T, W, P)
+    >>> Theta_v = temperature.virtual_potential_temperature(T, W, P)
     """
     theta_v = iris.cube.CubeList([])
     for T, W, P in zip(
@@ -335,7 +335,7 @@ def equivalent_potential_temperature(
     relative_humidity: iris.cube.Cube | iris.cube.CubeList,
     pressure: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    r"""Calculate the equivalent potenital temperature.
+    r"""Calculate the equivalent potential temperature.
 
     Arguments
     ---------
@@ -360,7 +360,7 @@ def equivalent_potential_temperature(
 
     .. math:: \theta_e = \theta * RH^{- \frac{w R_v}{c_p}} * exp\left(\frac{L_v w}{c_p T} \right)
 
-    for :math:`\theta_e` the equivalent potenital temperature, :math:`\theta` the
+    for :math:`\theta_e` the equivalent potential temperature, :math:`\theta` the
     potential temperature, RH the relative humidity, w the mixing ratio,
     :math:`R_v` the specific gas constant of water vapour (461
     :math:`J kg^{-1} K^{-1}`), :math:`c_p` the specific heat capacity of dry air
@@ -370,7 +370,7 @@ def equivalent_potential_temperature(
     Potential temperature and temperature in K.
     Relative humidity in percentage and will be converted to fraction.
     Mixing ratio in kg kg-1 (dimensionless).
-    
+
     In this operator the mixing ratio is calculated from
     `humidity.mixing_ratio_from_relative_humidity` and the potential temperature
     is calculated from `temperature.potential_temperature`.
@@ -520,7 +520,7 @@ def saturation_equivalent_potential_temperature(
     Returns
     -------
     iris.cube.Cube | iris.cube.CubeList
-        Calculated saturation equivalent potenital temperature in Kelvin.
+        Calculated saturation equivalent potential temperature in Kelvin.
 
     Notes
     -----
@@ -537,7 +537,7 @@ def saturation_equivalent_potential_temperature(
     (2.5 x :math:`10^6 J kg^{-1}`), and T the temperature.
 
     As a saturated process is assumed throughout the RH multiplier in the
-    equivalent potenital temperature will always be a value of one, and is thus
+    equivalent potential temperature will always be a value of one, and is thus
     omitted. In this operator the potential temperature is calculated from
     `temperature.potential_temperature`.
 
