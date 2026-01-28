@@ -17,16 +17,16 @@
 P0 = 1000.0  # hPa.
 
 # Specific gas constant for dry air.
-RD = 287.0  # J/kg/K.
+RD = 287.05  # J/kg/K.
 
 # Specific gas constant for water vapour.
-RV = 461.0  # J/kg/K.
+RV = 461.52  # J/kg/K.
 
 # Specific heat capacity for dry air.
 CPD = 1005.7  # J/kg/K.
 
 # Latent heat of vaporization.
-LV = 2.501e6  # J/kg/K.
+LV = 2.501e6  # J/kg.
 
 # Reference vapour pressure.
 E0 = 6.1078  # hPa.
