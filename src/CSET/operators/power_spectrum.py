@@ -26,11 +26,18 @@ import scipy.fft as fft
 def calculate_power_spectrum(cubes):
     """Wrap power spectrum code.
 
+    This function is a wrapper that handles power spectrum 
+    calculations for both single cubes and cube lists.
+    
     The input cube is split up into a cube
     for each model and time and a power spectrum calculated for each before
     combining into one cube ahead of plotting.  This is done to retain the
     model_name attribute correctly for different models.
 
+    In case of a CubeList (Mutiple models): It iterates through 
+    each cube and calculates an individual power spectrum. In case of a 
+    single cube (one model) it directly calculates the power spectrum.
+    
     Input: Cube OR CubeList
     Output: CubeList of power spectra.
     """
