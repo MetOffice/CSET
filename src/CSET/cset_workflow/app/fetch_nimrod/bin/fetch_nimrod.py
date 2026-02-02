@@ -34,9 +34,9 @@ def _get_needed_environment_variables_nimrod() -> dict:
     """Load the needed variables from the environment to retrieve UK Nimrod data."""
     variables = {
         "field": [
-            os.environ["NIMROD_FIELDS_COMP_HOUR"],
-            os.environ["NIMROD_FIELDS_1KM"],
-            os.environ["NIMROD_FIELDS_2KM"],
+            os.environ["NIMROD_COMP_XKM"],
+            os.environ["NIMROD_COMP_1KM"],
+            os.environ["NIMROD_COMP_2KM"],
         ],
         "raw_path": "/data/users/radar/UKnimrod",
         "date_type": "initiation",
