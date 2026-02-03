@@ -391,6 +391,7 @@ def _create_callback(is_ensemble: bool) -> callable:
         _lfric_normalise_callback(cube, field, filename)
         _lfric_time_coord_fix_callback(cube, field, filename)
         _normalise_var0_varname(cube)
+        _fix_no_spatial_coords_callback(cube)
         _fix_spatial_coords_callback(cube)
         _fix_pressure_coord_callback(cube)
         _fix_um_radtime(cube)
@@ -554,6 +555,50 @@ def _grid_longitude_fix_callback(cube: iris.cube.Cube):
             long_coord.guess_bounds()
 
     return cube
+
+
+def _fix_no_spatial_coords_callback(cube: iris.cube.Cube):
+    import CSET.operators._utils as utils
+
+    # # Don't modify spatial cubes that already have spatial dimensions
+    if utils.is_spatialdim(cube):
+        return cube
+
+    elif not utils.is_spatialdim(cube):
+        lat_min = cube.attributes.get("geospatial_lat_min")
+        lat_max = cube.attributes.get("geospatial_lat_max")
+        lon_min = cube.attributes.get("geospatial_lon_min")
+        lon_max = cube.attributes.get("geospatial_lon_max")
+
+        if None in (lat_min, lat_max, lon_min, lon_max):
+            raise ValueError("No geospatial metadata available")
+
+        lon_val = (lon_min + lon_max) / 2.0
+        lat_val = (lat_min + lat_max) / 2.0
+
+        #       print (lat_val, lon_val)
+        lat_coord = iris.coords.DimCoord(
+            lat_val,
+            standard_name="latitude",
+            units="degrees_north",
+            var_name="latitude",
+            coord_system=iris.coord_systems.GeogCS(6371229.0),
+            circular=True,
+        )
+
+        lon_coord = iris.coords.DimCoord(
+            lon_val,
+            standard_name="longitude",
+            units="degrees_east",
+            var_name="longitude",
+            coord_system=iris.coord_systems.GeogCS(6371229.0),
+            circular=True,
+        )
+
+        cube.add_aux_coord(lat_coord)
+        cube.add_aux_coord(lon_coord)
+
+        return cube
 
 
 def _fix_spatial_coords_callback(cube: iris.cube.Cube):

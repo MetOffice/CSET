@@ -1676,8 +1676,11 @@ def _validate_cube_shape(
     if isinstance(cube, iris.cube.CubeList) and len(cube) != num_models:
         raise ValueError(
             f"The number of model names ({num_models}) should equal the number "
-            f"of cubes ({len(cube)})."
+            f"of cubes ({len(cube)}).  {cube}"
         )
+
+
+# {cube.dim_coords}, {cube.ndim},
 
 
 def _validate_cubes_coords(
