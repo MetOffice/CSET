@@ -1,12 +1,15 @@
 category: Power Spectrum
 title: Power Spectrum $VARNAME $LEVELTYPE $LEVEL
 description: |
-  Extracts and plots the power spectrum of $VARNAME from a
+  Extracts and plots the power spectral density of $VARNAME from a
   file at $LEVELTYPE level $LEVEL of $MODEL_NAME.
 
   Power Spectra calculated on regional domains using Discrete Cosine Transform (DCT)
   as described in
-  [Denis_etal_2002](https://doi.org/10.1175/1520-0493(2002)130<1812:SDOTDA>2.0.CO;2)
+  [Denis_etal_2002](https://doi.org/10.1175/1520-0493(2002)130<1812:SDOTDA>2.0.CO;2). 
+  The power spectra is then converted into a power spectral density to enable fair comparison
+  between different model resolutions, comparison with observations with different number of data points
+  or comparison of models between different domain sizes, cases, run lengths.
   In case of ensemble data choose from postage stamp plot or
   single plot via the single_plot option in the recipe directly.
 
