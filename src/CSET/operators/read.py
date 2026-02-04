@@ -888,11 +888,12 @@ def _convert_wind_true_dirn_um(cubes: iris.cube.CubeList):
     Convert from the components relative to the grid to true directions.
     This functionality only handles the simplest case.
     """
-    u_grid = cubes.extract_cube(iris.AttributeConstraint(STASH="m01s03i225"))
-    v_grid = cubes.extract_cube(iris.AttributeConstraint(STASH="m01s03i226"))
-    true_u, true_v = rotate_winds(u_grid, v_grid, iris.coord_systems.GeogCS(6371229.0))
-    u_grid.data = true_u.data
-    v_grid.data = true_v.data
+    u_grids = cubes.extract(iris.AttributeConstraint(STASH="m01s03i225"))
+    v_grids = cubes.extract(iris.AttributeConstraint(STASH="m01s03i226"))
+    for u, v in zip(u_grids, v_grids, strict=True):
+        true_u, true_v = rotate_winds(u, v, iris.coord_systems.GeogCS(6371229.0))
+        u.data = true_u.data
+        v.data = true_v.data
 
 
 def _normalise_var0_varname(cube: iris.cube.Cube):
