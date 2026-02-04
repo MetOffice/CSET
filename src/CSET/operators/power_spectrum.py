@@ -112,7 +112,7 @@ def _power_spectrum(
 
     ps_cube = iris.cube.Cube(
         ps_array,
-        long_name="power_spectra",
+        long_name="power_spectral_density",
     )
 
     # Create a frequency/wavelength array for new coordinate
@@ -210,7 +210,8 @@ def _DCT_ps(y_3d):
 
             # Sum up elements matching k
             mask_k = np.where((alpha_matrix >= alpha) & (alpha_matrix < alpha_p1))
-            ps_array[t, k - 1] = np.sum(sigma_2[mask_k])
+            # Divide by number of coefficients in bin to get power spectral density insetad of power spectrum
+            ps_array[t, k - 1] = np.sum(sigma_2[mask_k]) / len(mask_k[0])
 
     return ps_array
 
