@@ -141,7 +141,7 @@ def _power_spectrum(
             (new_time_coord, 0),
             (freq_coord, 1),
         ],
-        long_name="power_spectra",
+        long_name="power_spectral_density",
     )
 
     # Ensure cube has a realisation coordinate by creating and adding to cube
