@@ -133,33 +133,33 @@ class Condition {
     let cond_func;
     switch (operator) {
       case Operator.IN:
-        cond_func = function cond_in(d) {
-          return f in d && d[f].toLowerCase().includes(v);
+        cond_func = function cond_in(diagnostic) {
+          return f in diagnostic && diagnostic[f].toLowerCase().includes(v);
         };
         break;
       case Operator.EQUALS:
-        cond_func = function cond_eq(d) {
-          return f in d && v === d[f].toLowerCase();
+        cond_func = function cond_eq(diagnostic) {
+          return f in diagnostic && v === diagnostic[f].toLowerCase();
         };
         break;
       case Operator.GREATER_THAN:
-        cond_func = function cond_gt(d) {
-          return f in d && v > d[f].toLowerCase();
+        cond_func = function cond_gt(diagnostic) {
+          return f in diagnostic && v > diagnostic[f].toLowerCase();
         };
         break;
       case Operator.GREATER_THAN_OR_EQUALS:
-        cond_func = function cond_gte(d) {
-          return f in d && v >= d[f].toLowerCase();
+        cond_func = function cond_gte(diagnostic) {
+          return f in diagnostic && v >= diagnostic[f].toLowerCase();
         };
         break;
       case Operator.LESS_THAN:
-        cond_func = function cond_lt(d) {
-          return f in d && v < d[f].toLowerCase();
+        cond_func = function cond_lt(diagnostic) {
+          return f in diagnostic && v < diagnostic[f].toLowerCase();
         };
         break;
       case Operator.LESS_THAN_OR_EQUALS:
-        cond_func = function cond_lte(d) {
-          return f in d && v <= d[f].toLowerCase();
+        cond_func = function cond_lte(diagnostic) {
+          return f in diagnostic && v <= diagnostic[f].toLowerCase();
         };
         break;
       default:
@@ -168,20 +168,24 @@ class Condition {
     this.func = cond_func;
   }
 
-  test(d) {
-    return this.func(d);
+  test(diagnostic) {
+    return this.func(diagnostic);
   }
 
   and(other) {
-    return new Condition((d) => this.test(d) && other.test(d));
+    return new Condition(
+      (diagnostic) => this.test(diagnostic) && other.test(diagnostic),
+    );
   }
 
   or(other) {
-    return new Condition((d) => this.test(d) || other.test(d));
+    return new Condition(
+      (diagnostic) => this.test(diagnostic) || other.test(diagnostic),
+    );
   }
 
   invert() {
-    return new Condition((d) => !this.test(d));
+    return new Condition((diagnostic) => !this.test(diagnostic));
   }
 }
 
@@ -545,9 +549,9 @@ function add_facet_dropdowns(facet_values) {
 }
 
 // Update query based on facet dropdown value.
-function updateFacetQuery(e) {
-  const facet = e.target.name;
-  const value = e.target.value;
+function updateFacetQuery(event) {
+  const facet = event.target.name;
+  const value = event.target.value;
   const queryElem = document.getElementById("filter-query");
   const query = queryElem.value;
   let new_query;
@@ -682,9 +686,9 @@ function doSearch() {
 // responsiveness immediately perform the search if a space is typed, as that
 // indicates a completed search term.
 let searchTimeoutID = undefined;
-function debounce(e) {
+function debounce(event) {
   clearTimeout(searchTimeoutID);
-  if (e.data === " ") {
+  if (event.data === " ") {
     doSearch();
   } else {
     searchTimeoutID = setTimeout(doSearch, 250);
