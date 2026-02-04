@@ -1,11 +1,14 @@
 category: Power Spectrum
 title: Power Spectrum $VARNAME
 description: |
-  Extracts and plots the power spectrum of surface $VARNAME
+  Extracts and plots the power spectral density of surface $VARNAME
 
   Power Spectra calculated on regional domains using Discrete Cosine Transform (DCT)
   as described in
-  [Denis_etal_2002](https://doi.org/10.1175/1520-0493(2002)130<1812:SDOTDA>2.0.CO;2)
+  [Denis_etal_2002](https://doi.org/10.1175/1520-0493(2002)130<1812:SDOTDA>2.0.CO;2). The 
+  power spectra is then converted into a power spectral density to enable fair comparison
+  between different model resolutions, comparison with observations with different number of data points
+  or comparison of models between different domain sizes, cases, run lengths.
 
   Power spectra can be used to identify how the variance (energy) of a field is distributed across scales.
   The power (energy) is plotted against wavenumber, where low wavenumbers represent large-scale features
