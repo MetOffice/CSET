@@ -26,18 +26,18 @@ import scipy.fft as fft
 def calculate_power_spectrum(cubes):
     """Wrap power spectrum code.
 
-    This function is a wrapper that handles power spectrum 
+    This function is a wrapper that handles power spectrum
     calculations for both single cubes and cube lists.
-    
+
     The input cube is split up into a cube
     for each model and time and a power spectrum calculated for each before
     combining into one cube ahead of plotting.  This is done to retain the
     model_name attribute correctly for different models.
 
-    In case of a CubeList (Mutiple models): It iterates through 
-    each cube and calculates an individual power spectrum. In case of a 
+    In case of a CubeList (Multiple models): It iterates through
+    each cube and calculates an individual power spectrum. In case of a
     single cube (one model) it directly calculates the power spectrum.
-    
+
     Input: Cube OR CubeList
     Output: CubeList of power spectra.
     """
@@ -210,7 +210,7 @@ def _DCT_ps(y_3d):
 
             # Sum up elements matching k
             mask_k = np.where((alpha_matrix >= alpha) & (alpha_matrix < alpha_p1))
-            # Divide by number of coefficients in bin to get power spectral density insetad of power spectrum
+            # Divide by number of coefficients in bin to get power spectral density instead of power spectrum
             ps_array[t, k - 1] = np.sum(sigma_2[mask_k]) / len(mask_k[0])
 
     return ps_array

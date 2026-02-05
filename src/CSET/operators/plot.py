@@ -2141,7 +2141,7 @@ def plot_line_series(
     #    else:
     if series_coordinate == "frequency":
         # If series coordinate is frequency, for example power spectra with series
-        # coordinate frequency/wavelength.
+        # coordinate frequency/wavenumber.
         # If several power spectra are plotted with time as sequence_coordinate for the
         # time slider option.
         for cube in cubes:
