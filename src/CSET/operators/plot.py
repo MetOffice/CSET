@@ -53,6 +53,9 @@ from CSET.operators.collapse import collapse
 from CSET.operators.misc import _extract_common_time_points
 from CSET.operators.regrid import regrid_onto_cube
 
+# Suppress matplotlib debug output
+# logging.getLogger('matplotlib.ticker').setLevel(logging.WARNING)
+
 # Use a non-interactive plotting backend.
 mpl.use("agg")
 

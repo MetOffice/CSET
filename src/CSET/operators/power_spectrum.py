@@ -269,25 +269,29 @@ def _DCT_ps(y_3d):
         # fkk is a 2D array of DCT coefficients, representing the amplitudes of
         # cosine basis functions at different spatial frequencies.
 
-        # normalise spectrum to allow comparison between models.
+        # DCT transform and normalise spectrum to allow comparison between models.
         fkk = fft.dctn(y_2d, norm="ortho")
 
         # Normalise fkk
         fkk = fkk / np.sqrt(Ny * Nx)
 
-        # calculate variance of spectral coefficient
+        # calculate variance (energy) of spectral coefficient at each wavenumber pair (k_x, k_y)
+        # as the square of the DCT coefficient, normalised by the total number of grid points (Nx * Ny).
         sigma_2 = fkk**2 / Nx / Ny
 
         # Group ellipses of alphas into the same wavenumber k/Nmin
         for k in range(1, Nmin + 1):
+            # Define the bounds of the current normalised wavenumber magnitude of bin k
             alpha = k / Nmin
             alpha_p1 = (k + 1) / Nmin
 
-            # Sum up elements matching k and divide by bin size
+            # Sum up elements matching in bin k and divide by bin size
             mask_k = np.where((alpha_matrix >= alpha) & (alpha_matrix < alpha_p1))
-            n_coeffs = len(mask_k[0])
+            n_coeffs = len(mask_k[0])  # number of coefficients in bin k
             if n_coeffs > 0:
-                ps_array[t, k - 1] = np.sum(sigma_2[mask_k]) / n_coeffs
+                ps_array[t, k - 1] = (
+                    np.sum(sigma_2[mask_k]) / n_coeffs
+                )  # average power in bin k
             else:
                 ps_array[t, k - 1] = 0.0
 

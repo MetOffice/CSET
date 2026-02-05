@@ -14,6 +14,9 @@ description: |
   The power (energy) is plotted against wavenumber, where low wavenumbers represent large-scale features
   and high numbers represent small-scale features.  Using a log-log scale for plotting allows for ease of
   interpretation and the spectra are normalised to allow for comparison between different models.
+  Alternatively the power spectral density can be plotted against wavelength (needs to be selected in recipe),
+  where low wavelengths represent small-scale features and high wavelengths represent large-scale features.
+
 
   The dominant scales of motion can be identified by peaks in the spectrum and the slope of the curve shows
   how the energy cascades across scales; the slope can be used to identify, for example, the inertial subrange
@@ -44,7 +47,7 @@ steps:
   - operator: power_spectrum.calculate_power_spectrum
 
   - operator: plot.plot_line_series
-    series_coordinate: "physical_wavenumber"
+    series_coordinate: "wavelength"
 
   - operator: write.write_cube_to_nc
     overwrite: True
