@@ -2131,15 +2131,16 @@ def plot_line_series(
             raise ValueError("Cube must be 1D or 2D with a realization coordinate.")
 
     plot_index = []
-    if series_coordinate == "time":
-        # Do the actual plotting for timeseries.
-        _plot_and_save_line_series(
-            cubes, coords, "realization", plot_filename, recipe_title
-        )
-
-        plot_index.append(plot_filename)
-    else:
-        # If series coordinate is not time, for example power spectra with series
+    #    if series_coordinate == "time":
+    #        # Do the actual plotting for timeseries.
+    #        _plot_and_save_line_series(
+    #            cubes, coords, "realization", plot_filename, recipe_title
+    #        )
+    #
+    #        plot_index.append(plot_filename)
+    #    else:
+    if series_coordinate == "frequency":
+        # If series coordinate is frequency, for example power spectra with series
         # coordinate frequency/wavelength.
         # If several power spectra are plotted with time as sequence_coordinate for the
         # time slider option.
@@ -2217,6 +2218,13 @@ def plot_line_series(
             )
 
             plot_index.append(plot_filename)
+    else:
+        # Do the actual plotting for all other series coordinate options.
+        _plot_and_save_line_series(
+            cubes, coords, "realization", plot_filename, recipe_title
+        )
+
+        plot_index.append(plot_filename)
 
     # append plot to list of plots
     complete_plot_index = _append_to_plot_index(plot_index)
