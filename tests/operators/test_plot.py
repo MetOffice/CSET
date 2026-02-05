@@ -618,13 +618,29 @@ def test_plot_line_series(cube, tmp_working_dir):
     assert Path("untitled.png").is_file()
 
 
+def test_plot_power_spectrum(power_spectrum_cube_readonly, tmp_working_dir):
+    """Save a power_spectrum plot using line series plot."""
+    plot.plot_line_series(power_spectrum_cube_readonly, series_coordinate="frequency")
+    assert Path("untitled_459456.0.png").is_file()
+
+
 def test_plot_line_series_with_filename(cube, tmp_working_dir):
     """Save a line series plot with specific filename and series coordinate."""
     cube = collapse.collapse(cube, ["time", "grid_longitude"], "MEAN")
     plot.plot_line_series(
         cube, filename="latitude_average.ext", series_coordinate="grid_latitude"
     )
-    assert Path("latitude_average.png").is_file()
+    assert Path("latitude_average_462148.0.png").is_file()
+
+
+def test_plot_power_spectrum_with_filename(
+    power_spectrum_cube_readonly, tmp_working_dir
+):
+    """Testing power spectrum plot in plot_line_series produces file."""
+    plot.plot_line_series(
+        power_spectrum_cube_readonly, series_coordinate="frequency", filename="test"
+    )
+    assert Path("test_459456.0.png").is_file()
 
 
 def test_plot_line_series_no_series_coordinate(tmp_working_dir):
@@ -632,6 +648,15 @@ def test_plot_line_series_no_series_coordinate(tmp_working_dir):
     cube = iris.cube.Cube([], var_name="nothing")
     with pytest.raises(ValueError):
         plot.plot_line_series(cube)
+
+
+def test_plot_power_spectrum_no_sequence_coordinate(
+    power_spectrum_cube, tmp_working_dir
+):
+    """Error when cube is missing sequence coordinate (time)."""
+    power_spectrum_cube.remove_coord("time")
+    with pytest.raises(ValueError, match="Cube must have a time coordinate."):
+        plot.plot_line_series(power_spectrum_cube, series_coordinate="frequency")
 
 
 def test_plot_line_series_too_many_dimensions(cube, tmp_working_dir):
@@ -887,155 +912,6 @@ def test_plot_and_save_postage_stamps_in_single_plot_histogram_series(
         histtype="step",
     )
     assert Path("test.png").is_file()
-
-
-def test_plot_power_spectrum_with_filename(field2d_cube, tmp_working_dir):
-    """Testing power spectrum code produces file."""
-    plot.plot_power_spectrum_series(
-        field2d_cube, filename="test", sequence_coordinate="time"
-    )
-    assert Path("test_464569.0.png").is_file()
-
-
-def test_plot_and_save_postage_stamp_power_spectrum_series(
-    power_spectrum_cube, tmp_working_dir
-):
-    """Test plotting a postage stamp power spectrum."""
-    plot._plot_and_save_postage_stamp_power_spectrum_series(
-        cube=power_spectrum_cube,
-        filename="test.png",
-        title="Test",
-        stamp_coordinate="realization",
-        histtype="step",
-    )
-    assert Path("test.png").is_file()
-
-
-def test_plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
-    power_spectrum_cube, tmp_working_dir
-):
-    """Test plotting a multiline power spectrum for multiple ensemble members."""
-    plot._plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
-        cube=power_spectrum_cube,
-        filename="test.png",
-        title="Test",
-        stamp_coordinate="realization",
-        histtype="step",
-    )
-    assert Path("test.png").is_file()
-
-
-def test_create_alpha_matrix_shape():
-    """Test shape of alpha matrix used in power spectrum calculation."""
-    Ny, Nx = 10, 15
-    alpha = plot._create_alpha_matrix(Ny, Nx)
-    assert alpha.shape == (Ny, Nx), "Alpha matrix shape mismatch"
-
-
-def test_create_alpha_matrix_values():
-    """Test alpha matrix contains only positive values."""
-    Ny, Nx = 4, 4
-    alpha = plot._create_alpha_matrix(Ny, Nx)
-    assert np.all(alpha >= 0), "Alpha matrix contains negative values"
-    assert np.isclose(alpha[0, 0], np.sqrt((1 / Nx) ** 2 + (1 / Ny) ** 2)), (
-        "Alpha matrix value incorrect"
-    )
-
-
-def test_dct_ps_output_shape():
-    """Test shape of power spectrum output from _DCT_ps."""
-    Nt, Ny, Nx = 5, 10, 10
-    y_3d = np.random.rand(Nt, Ny, Nx)
-    ps = plot._DCT_ps(y_3d)
-    expected_shape = (Nt, min(Nx - 1, Ny - 1))
-    assert ps.shape == expected_shape, "Power spectrum output shape mismatch"
-
-
-def test_dct_ps_non_negative():
-    """Test power spectrum only contains positive values."""
-    Nt, Ny, Nx = 3, 8, 8
-    y_3d = np.random.rand(Nt, Ny, Nx)
-    ps = plot._DCT_ps(y_3d)
-    assert np.all(ps >= 0), "Power spectrum contains negative values"
-
-
-def test_dct_ps_known_input():
-    """Test _DCT_ps produces non-zero spectrum for constant input."""
-    # Use a constant field to test expected behavior
-    Nt, Ny, Nx = 2, 4, 4
-    y_3d = np.ones((Nt, Ny, Nx))
-    ps = plot._DCT_ps(y_3d)
-    assert np.allclose(ps[:, 1:], 0, atol=1e-6), "Non-zero spectrum for constant input"
-
-
-def test_plot_power_spectrum_no_sequence_coordinate(field2d_cube, tmp_working_dir):
-    """Error when cube is missing sequence coordinate (time)."""
-    field2d_cube.remove_coord("time")
-    with pytest.raises(ValueError, match="Cube must have a time coordinate."):
-        plot.plot_power_spectrum_series(field2d_cube, series_coordinate="pressure")
-
-
-def make_test_cube_power_spectrum(shape=(1, 10, 10), time_points=None):
-    """Create test cube for use with the power spectrum tests."""
-    data = np.random.rand(*shape)
-    if time_points is None:
-        time_points = [0]
-    time_coord = iris.coords.DimCoord(
-        time_points, standard_name="time", units="hours since 1970-01-01 00:00:00"
-    )
-    y_coord = iris.coords.DimCoord(np.arange(shape[1]), long_name="y", units="1")
-    x_coord = iris.coords.DimCoord(np.arange(shape[2]), long_name="x", units="1")
-    cube = iris.cube.Cube(
-        data,
-        dim_coords_and_dims=[(time_coord, 0), (y_coord, 1), (x_coord, 2)],
-        long_name="test_data",
-    )
-    return cube
-
-
-def test_calculate_power_spectrum_raises_for_bad_dim(tmp_working_dir):
-    """Check error is raised if the cube has too many dimensions."""
-    cube_3d = make_test_cube_power_spectrum()
-
-    # Add 2 new dimensions to cube_3d to make 5D
-    new_data = cube_3d.data[np.newaxis, np.newaxis, :, :, :]
-
-    # Create dummy coordinates for the new dimensions
-    coord_0 = iris.coords.DimCoord([0], long_name="extra_dim_0")
-    coord_1 = iris.coords.DimCoord([0], long_name="extra_dim_1")
-
-    # Build dim_coords_and_dims manually
-    dim_coords_and_dims = [(coord_0, 0), (coord_1, 1)]
-    for i, coord in enumerate(cube_3d.dim_coords):
-        dim_coords_and_dims.append((coord, i + 2))  # shift by 2 for new axes
-
-    # Create the new 4D cube
-    cube_5d = iris.cube.Cube(new_data, dim_coords_and_dims=dim_coords_and_dims)
-
-    if isinstance(cube_5d, iris.cube.CubeList):
-        cube_5d = cube_5d[0]
-
-    with pytest.raises(
-        ValueError, match="Cube dimensions unsuitable for power spectra code"
-    ):
-        plot.plot_power_spectrum_series(cubes=cube_5d)
-
-
-def test_calculate_power_spectrum_raises_for_bad_dim_1D(tmp_working_dir):
-    """Check error is raised if the cube has too few dimensions."""
-    cube_3d = make_test_cube_power_spectrum()
-
-    # Make a 1D field
-
-    cube_1d = cube_3d.collapsed(["x", "y"], iris.analysis.MEAN)
-
-    if isinstance(cube_1d, iris.cube.CubeList):
-        cube_1d = cube_1d[0]
-
-    with pytest.raises(
-        ValueError, match="Cube dimensions unsuitable for power spectra code"
-    ):
-        plot.plot_power_spectrum_series(cubes=cube_1d)
 
 
 def test_scatter_plot(cube, vertical_profile_cube, tmp_working_dir):
