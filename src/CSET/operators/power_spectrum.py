@@ -283,10 +283,13 @@ def _DCT_ps(y_3d):
             alpha = k / Nmin
             alpha_p1 = (k + 1) / Nmin
 
-            # Sum up elements matching k
+            # Sum up elements matching k and divide by bin size
             mask_k = np.where((alpha_matrix >= alpha) & (alpha_matrix < alpha_p1))
-            # Divide by number of coefficients in bin to get power spectral density instead of power spectrum
-            ps_array[t, k - 1] = np.sum(sigma_2[mask_k]) / len(mask_k[0])
+            n_coeffs = len(mask_k[0])
+            if n_coeffs > 0:
+                ps_array[t, k - 1] = np.sum(sigma_2[mask_k]) / n_coeffs
+            else:
+                ps_array[t, k - 1] = 0.0
 
     return ps_array
 
