@@ -762,6 +762,7 @@ def _plot_and_save_line_1D(
     ensemble_coord: str,
     filename: str,
     title: str,
+    series_coordinate: str = None,
     **kwargs,
 ):
     """Plot and save a 1D line series.
@@ -778,8 +779,10 @@ def _plot_and_save_line_1D(
         Filename of the plot to write.
     title: str
         Plot title.
+    series_coordinate: str, optional
+        Coordinate being plotted on x-axis. In case of spectra frequency, physical_wavenumber, or wavelength.
     """
-    xn = coords[0].name()  # x-axis (e.g. frequency)
+    # xn = coords[0].name()  # x-axis (e.g. frequency)
 
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     model_colors_map = _get_model_colors_map(cubes)
@@ -788,7 +791,14 @@ def _plot_and_save_line_1D(
     # Store min/max ranges.
     y_levels = []
 
-    if "Spectrum" in title:
+    # Check if spectral plot to adjust line style and markers accordingly.
+    is_spectral_plot = series_coordinate in [
+        "frequency",
+        "physical_wavenumber",
+        "wavelength",
+    ]
+
+    if is_spectral_plot:
         line_marker = None
         line_width = 1
     else:
@@ -797,7 +807,32 @@ def _plot_and_save_line_1D(
 
     #    for cube, coord in zip(cubes, coords, strict=True):
     for cube in iter_maybe(cubes):
-        xname = cube.coord(xn).points  # frequency
+        # Try to get the series coordinate, with fallback to alternatives
+        try:
+            xcoord = cube.coord(series_coordinate)
+            xname = xcoord.points
+        except iris.exceptions.CoordinateNotFoundError:
+            # Fallback logic for spectral coordinates
+            if series_coordinate == "frequency":
+                try:
+                    xcoord = cube.coord("physical_wavenumber")
+                except iris.exceptions.CoordinateNotFoundError:
+                    xcoord = cube.coord("wavelength")
+            elif series_coordinate == "physical_wavenumber":
+                try:
+                    xcoord = cube.coord("frequency")
+                except iris.exceptions.CoordinateNotFoundError:
+                    xcoord = cube.coord("wavelength")
+            elif series_coordinate == "wavelength":
+                try:
+                    xcoord = cube.coord("frequency")
+                except iris.exceptions.CoordinateNotFoundError:
+                    xcoord = cube.coord("physical_wavenumber")
+            else:
+                raise
+            xname = xcoord.points
+
+        # xname = cube.coord(xn).points  # frequency
         yfield = cube.data  # power spectrum
         label = None
         color = "black"
@@ -838,12 +873,27 @@ def _plot_and_save_line_1D(
 
     # Add some labels and tweak the style.
     # check if cubes[0] works for single cube if not CubeList
-    if "Spectrum" in title:
+    if is_spectral_plot:
         #        title = f"{title}\n [{coords.units.title(coords.points[0])}]"
         title = f"{title}"
         ax.set_title(title, fontsize=16)
-        ax.set_xlabel("Wavenumber", fontsize=14)
-        ax.set_ylabel("Power", fontsize=14)
+
+        # Set appropriate x-axis label based on coordinate
+        if series_coordinate == "wavelength" or (
+            hasattr(xcoord, "long_name") and xcoord.long_name == "wavelength"
+        ):
+            ax.set_xlabel("Wavelength (km)", fontsize=14)
+        elif series_coordinate == "physical_wavenumber" or (
+            hasattr(xcoord, "long_name") and xcoord.long_name == "physical_wavenumber"
+        ):
+            ax.set_xlabel("Wavenumber (km⁻¹)", fontsize=14)
+        else:  # frequency or check units
+            if hasattr(xcoord, "units") and str(xcoord.units) == "km-1":
+                ax.set_xlabel("Wavenumber (km⁻¹)", fontsize=14)
+            else:
+                ax.set_xlabel("Wavenumber", fontsize=14)
+
+        ax.set_ylabel("Power Spectral Density", fontsize=14)
         ax.tick_params(axis="both", labelsize=12)
     else:
         ax.set_xlabel(f"{coords[0].name()} / {coords[0].units}", fontsize=14)
@@ -855,7 +905,7 @@ def _plot_and_save_line_1D(
         ax.tick_params(axis="both", labelsize=12)
 
     # Set y limits to global min and max, autoscale if colorbar doesn't exist.
-    if "Spectrum" in title:
+    if is_spectral_plot:
         # Set log-log scale
         ax.set_xscale("log")
         ax.set_yscale("log")
@@ -2139,8 +2189,16 @@ def plot_line_series(
     #
     #        plot_index.append(plot_filename)
     #    else:
-    if series_coordinate == "frequency":
-        # If series coordinate is frequency, for example power spectra with series
+
+    # Check if this is a spectral plot by looking for spectral coordinates
+    is_spectral_plot = series_coordinate in [
+        "frequency",
+        "physical_wavenumber",
+        "wavelength",
+    ]
+
+    if is_spectral_plot:
+        # If series coordinate is frequency, physical_wavenumber or wavelength, for example power spectra with series
         # coordinate frequency/wavenumber.
         # If several power spectra are plotted with time as sequence_coordinate for the
         # time slider option.
@@ -2214,7 +2272,12 @@ def plot_line_series(
             # Do the actual plotting.
 
             _plot_and_save_line_1D(
-                cube_slice, coords, "realization", plot_filename, title
+                cube_slice,
+                coords,
+                "realization",
+                plot_filename,
+                title,
+                series_coordinate,
             )
 
             plot_index.append(plot_filename)

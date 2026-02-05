@@ -5,7 +5,7 @@ description: |
 
   Power Spectra calculated on regional domains using Discrete Cosine Transform (DCT)
   as described in
-  [Denis_etal_2002](https://doi.org/10.1175/1520-0493(2002)130<1812:SDOTDA>2.0.CO;2). The 
+  [Denis_etal_2002](https://doi.org/10.1175/1520-0493(2002)130<1812:SDOTDA>2.0.CO;2). The
   power spectra is then converted into a power spectral density to enable fair comparison
   between different model resolutions, comparison with observations with different number of data points
   or comparison of models between different domain sizes, cases, run lengths.
@@ -44,7 +44,7 @@ steps:
   - operator: power_spectrum.calculate_power_spectrum
 
   - operator: plot.plot_line_series
-    series_coordinate: "frequency"
+    series_coordinate: "physical_wavenumber"
 
   - operator: write.write_cube_to_nc
     overwrite: True
