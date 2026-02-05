@@ -161,7 +161,7 @@
   "equivalent_potential_temperature": {
     "cmap": "RdYlBu_r",
     "max": 350,
-    "min": 240,
+    "min": 250,
     "pressure_levels": {
       "100": {
         "max": 240,
@@ -171,13 +171,13 @@
       },
       "1000": {
         "max": 350,
-        "min": 240,
+        "min": 250,
         "ymax": "auto",
         "ymin": "auto"
       },
       "200": {
-        "max": 240,
-        "min": 200,
+        "max": 350,
+        "min": 250,
         "ymax": "auto",
         "ymin": "auto"
       },
@@ -188,8 +188,8 @@
         "ymin": "auto"
       },
       "300": {
-        "max": 250,
-        "min": 200,
+        "max": 350,
+        "min": 250,
         "ymax": "auto",
         "ymin": "auto"
       },
@@ -200,8 +200,8 @@
         "ymin": "auto"
       },
       "700": {
-        "max": 300,
-        "min": 240,
+        "max": 350,
+        "min": 250,
         "ymax": "auto",
         "ymin": "auto"
       },
@@ -212,7 +212,7 @@
         "ymin": "auto"
       },
       "950": {
-        "max": 310,
+        "max": 350,
         "min": 250,
         "ymax": "auto",
         "ymin": "auto"
