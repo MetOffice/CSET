@@ -98,7 +98,6 @@ def _power_spectrum(
     elif cube.ndim == 3:
         cube_3d = cube.data
     else:
-        raise ValueError("Cube dimensions unsuitable for power spectra code")
         raise ValueError(
             f"Cube is {cube.ndim} dimensional. Cube should be 2 or 3 dimensional."
         )
@@ -106,22 +105,44 @@ def _power_spectrum(
     # Calculate spectrum
     ps_array = _DCT_ps(cube_3d)
 
+    # Make wavenumber comparable between models with different domain sizes and resolutions.
+    # Grid spacing
+    lat_coord = cube.coord("latitude")
+    lon_coord = cube.coord("longitude")
+    R_earth = 6371000  # meters
+    lat_mid = np.mean(lat_coord.points)
+    dx = (
+        np.abs(np.diff(lon_coord.points).mean())
+        * np.pi
+        / 180
+        * R_earth
+        * np.cos(lat_mid * np.pi / 180)
+    )
+    dy = np.abs(np.diff(lat_coord.points).mean()) * np.pi / 180 * R_earth
+    domain_size_km = ((dx * cube_3d.shape[2]) + (dy * cube_3d.shape[1])) / 2 / 1000
+
+    # Convert wavenumber into physically meaningful wavenumber coordinate in
+    # cycles per km rather than wavenumber per index k.
+    ps_len = ps_array.shape[1]
+    k_indices = np.arange(1, ps_len + 1)
+    physical_wavenumbers = k_indices / domain_size_km  # cycles/km
+
+    # Create a new DimCoord with physical wavenumber
+    physical_wavenumbers_coord = iris.coords.DimCoord(
+        physical_wavenumbers, long_name="physical_wavenumber", units="km-1"
+    )
+
+    # Calculate wavelength and add as auxiliary coordinate
+    wavelengths = domain_size_km / k_indices  # km
+    wavelength_coord = iris.coords.AuxCoord(
+        wavelengths, long_name="wavelength", units="km"
+    )
+
     # Ensure power spectrum output is 2D: (time, frequency)
     if ps_array.ndim == 1:
         ps_array = ps_array[np.newaxis, :]
 
-    ps_cube = iris.cube.Cube(
-        ps_array,
-        long_name="power_spectral_density",
-    )
-
-    # Create a frequency/wavelength array for new coordinate
-    ps_len = ps_cube.data.shape[1]
-    freqs = np.arange(1, ps_len + 1)
-
-    # Create a new DimCoord with frequency
-    freq_coord = iris.coords.DimCoord(freqs, long_name="frequency", units="1")
-
+    # Prepare time coordinate
     numeric_time = time_coord.units.date2num(time_points)
     numeric_time = np.atleast_1d(numeric_time)
 
@@ -135,14 +156,18 @@ def _power_spectrum(
         units=time_coord.units,
     )
 
+    # Create output cube with physical coordinates
     ps_cube = iris.cube.Cube(
         ps_array,
         dim_coords_and_dims=[
             (new_time_coord, 0),
-            (freq_coord, 1),
+            (physical_wavenumbers_coord, 1),
         ],
         long_name="power_spectral_density",
     )
+
+    # Add wavelength as auxiliary coordinate
+    ps_cube.add_aux_coord(wavelength_coord, data_dims=1)
 
     # Ensure cube has a realisation coordinate by creating and adding to cube
     realization_coord = iris.coords.AuxCoord(0, standard_name="realization", units="1")
