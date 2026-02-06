@@ -26,7 +26,8 @@ import sys
 from textwrap import dedent
 from typing import Any
 
-import ruamel.yaml
+from ruamel.yaml import YAML
+from ruamel.yaml.parser import ParserError
 
 
 class ArgumentError(ValueError):
@@ -85,7 +86,7 @@ def parse_recipe(recipe_yaml: Path | str, variables: dict | None = None) -> dict
         Path to a file containing, or a string of, a recipe's YAML describing
         the operators that need running. If a Path is provided it is opened and
         read.
-    variables: dict
+    variables: dict, optional
         Dictionary of recipe variables. If None templating is not attempted.
 
     Returns
@@ -114,10 +115,10 @@ def parse_recipe(recipe_yaml: Path | str, variables: dict | None = None) -> dict
         raise TypeError("recipe_yaml must be a str or Path.")
 
     # Parse the recipe YAML.
-    with ruamel.yaml.YAML(typ="safe", pure=True) as yaml:
+    with YAML(typ="safe", pure=True) as yaml:
         try:
             recipe = yaml.load(recipe_yaml)
-        except ruamel.yaml.parser.ParserError as err:
+        except ParserError as err:
             raise ValueError("ParserError: Invalid YAML") from err
 
     logging.debug("Recipe before templating:\n%s", recipe)
