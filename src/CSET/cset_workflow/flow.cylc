@@ -191,12 +191,10 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
 
     [[bake_recipes]]
     # Bake the parbaked recipes for this cycle.
-    script = "$CYLC_WORKFLOW_RUN_DIR/app/bake_recipes/bin/baker.sh"
     execution time limit = PT3H
 
     [[bake_aggregation_recipes]]
     # Bake the parbaked aggregation recipes.
-    script = "$CYLC_WORKFLOW_RUN_DIR/app/bake_recipes/bin/baker.sh"
     execution time limit = PT3H
         [[[environment]]]
         DO_CASE_AGGREGATION = True
