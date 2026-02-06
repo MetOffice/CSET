@@ -472,3 +472,20 @@ def is_increasing(sequence: list) -> bool:
     duplicate values. An iris DimCoord's points fulfils this criteria.
     """
     return sequence[0] < sequence[1]
+
+
+def format_duration(seconds: float) -> str:
+    """Format a number of seconds as a human readable string."""
+    # Show milliseconds for short durations.
+    if seconds < 60:
+        return f"{seconds:.3f} seconds"
+    whole_seconds = int(seconds)
+    secs = (whole_seconds) % 60
+    mins = (whole_seconds // 60) % 60
+    hours = (whole_seconds // 3600) % 24
+    days = whole_seconds // 86400
+    time_string = f"{hours}h{mins}m{secs}s"
+    if days:
+        return f"{days} {'day' if days == 1 else 'days'} {time_string}"
+    else:
+        return time_string
