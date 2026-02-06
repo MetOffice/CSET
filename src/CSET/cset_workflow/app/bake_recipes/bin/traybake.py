@@ -7,12 +7,52 @@ import logging
 import os
 import sys
 import time
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 from CSET._common import format_duration, parse_recipe, setup_logging
 from CSET.operators import execute_recipe
 
 logger = logging.getLogger(__name__)
+
+
+class ProcessLoggingContext:
+    """Write this process's logs to a separate file.
+
+    Log messages are filtered out from others.
+    """
+
+    def __init__(self, logger: logging.Logger, log_file: Path):
+        self.logger = logger
+        self.handler = logging.FileHandler(log_file)
+
+        # Construct some filtering functions.
+        process_id = os.getpid()
+
+        def keep_process_logs(record: logging.LogRecord) -> bool:
+            return record.process == process_id
+
+        def discard_process_logs(record: logging.LogRecord) -> bool:
+            return record.process != process_id
+
+        self.handler.addFilter(keep_process_logs)
+        self.filter = discard_process_logs
+
+    def __enter__(self):
+        """Attach handler and filter when entering the context."""
+        # Add filter for this process's log messages to existing handlers.
+        for handler in self.logger.handlers:
+            handler.addFilter(self.filter)
+        # Add a handler without the filter.
+        self.logger.addHandler(self.handler)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """Remove handler and filter and clean up when leaving the context."""
+        self.logger.removeHandler(self.handler)
+        # Remove filter from other handlers.
+        for handler in self.logger.handlers:
+            handler.removeFilter(self.filter)
+        self.handler.close()
 
 
 def bake_recipe(
@@ -29,43 +69,44 @@ def bake_recipe(
     # Put together path to output dir from nice name for recipe.
     output_dir = cycle_output_dir / recipe_name
 
-    # Make a recipe-specific logger.
+    # Log this recipe's logs to a separate file.
     log_file = log_dir / f"{recipe_name}.log"
-    recipe_logger = logging.getLogger(f"{__name__}.recipe.{recipe_name}")
-    recipe_logger.propagate = False
-    file_handler = logging.FileHandler(log_file)
-    recipe_logger.addHandler(file_handler)
-
-    # Log the equivalent bake command for easy rerunning.
-    recipe_summary = f"""Baking recipe:
-Recipe:\t{recipe}
-Output:\t{output_dir}
-Equivalent bake command:
-cset -vv bake --recipe='{recipe}' --output-dir='{output_dir}' --style-file='{style_file}' --plot_resolution={plot_resolution}{" --skip-write" if skip_write else ""}
-"""
-    recipe_logger.info(recipe_summary)
-    start_time = time.time()
-
-    # Bake recipe.
-    try:
-        parsed_recipe = parse_recipe(recipe)
-        execute_recipe(
-            recipe=parsed_recipe,
-            output_directory=output_dir,
-            style_file=style_file,
-            plot_resolution=plot_resolution,
-            skip_write=skip_write,
+    root_logger = logging.getLogger()
+    with ProcessLoggingContext(logger=root_logger, log_file=log_file):
+        # Log the equivalent bake command for easy rerunning.
+        recipe_summary = (
+            f"Baking recipe {recipe_name}\n"
+            "Equivalent bake command:\n"
+            "cset -vv bake \\\n"
+            f"    --recipe='{recipe}' \\\n"
+            f"    --output-dir='{output_dir}' \\\n"
+            f"    --style-file='{style_file}' \\\n"
+            f"    --plot_resolution={plot_resolution}"
+            f"{' \\\n    --skip-write' if skip_write else ''}"
         )
-    except Exception as err:
-        recipe_logger.exception(
-            "An unhandled exception occurred:\n%s",
-            str(err),
-            exc_info=True,
-            stack_info=True,
-        )
-        logger.error("Recipe %s failed to bake. See %s", recipe_name, log_file)
-    duration = time.time() - start_time
-    recipe_logger.info("Recipe baked in %s.", format_duration(duration))
+        logger.info(recipe_summary)
+        start_time = time.time()
+
+        # Bake recipe.
+        try:
+            parsed_recipe = parse_recipe(recipe)
+            execute_recipe(
+                recipe=parsed_recipe,
+                output_directory=output_dir,
+                style_file=style_file,
+                plot_resolution=plot_resolution,
+                skip_write=skip_write,
+            )
+        except Exception as err:
+            logger.exception(
+                "An unhandled exception occurred:\n%s",
+                err,
+                exc_info=True,
+                stack_info=True,
+            )
+            logger.error("Recipe %s failed to bake. See %s", recipe_name, log_file)
+        duration = time.time() - start_time
+        logger.info("Recipe baked in %s.", format_duration(duration))
 
 
 def traybake():
@@ -91,9 +132,6 @@ def traybake():
     plot_resolution = int(os.getenv("PLOT_RESOLUTION", 72))
     skip_write = bool(os.getenv("SKIP_WRITE", False))
 
-    # TODO: Replace with os.process_cpu_count once python 3.13 is our minimum.
-    # max_parallelism = len(os.sched_getaffinity(0))
-
     recipes = list(filter(lambda p: p.is_file(), recipe_dir.glob("*.yaml")))
     if len(recipes):
         logger.info("Baking %s recipes...", len(recipes))
@@ -111,9 +149,13 @@ def traybake():
         skip_write=skip_write,
     )
 
+    # TODO: Replace with os.process_cpu_count once python 3.13 is our minimum.
+    max_parallelism = len(os.sched_getaffinity(0))
+
     # TODO: Use a parallel executor.
-    for recipe in recipes:
-        partial_bake(recipe)
+    with ProcessPoolExecutor(max_workers=max_parallelism) as pool:
+        futures = [pool.submit(partial_bake, recipe) for recipe in recipes]
+        # TODO: Log when each future is finished.
 
 
 if __name__ == "__main__":
