@@ -18,9 +18,11 @@ import ast
 import io
 import json
 import logging
+import os
 import re
 from collections.abc import Iterable
 from pathlib import Path
+import sys
 from textwrap import dedent
 from typing import Any
 
@@ -29,6 +31,49 @@ import ruamel.yaml
 
 class ArgumentError(ValueError):
     """Provided arguments are not understood."""
+
+
+def setup_logging(verbosity: int):
+    """Configure logging level, format and output stream.
+
+    Level is based on verbose argument and the LOGLEVEL environment variable.
+    """
+    logging.captureWarnings(True)
+
+    # Calculate logging level.
+    # Level from CLI flags.
+    if verbosity >= 2:
+        cli_loglevel = logging.DEBUG
+    elif verbosity == 1:
+        cli_loglevel = logging.INFO
+    else:
+        cli_loglevel = logging.WARNING
+
+    # Level from $LOGLEVEL environment variable.
+    env_loglevel = logging.getLevelNamesMapping().get(
+        os.getenv("LOGLEVEL"), logging.ERROR
+    )
+
+    # Logging verbosity is the most verbose of CLI and environment setting.
+    loglevel = min(cli_loglevel, env_loglevel)
+
+    # Configure the root logger.
+    logger = logging.getLogger()
+    # Set logging level.
+    logger.setLevel(loglevel)
+
+    # Hide matplotlib's many font messages.
+    class NoFontMessageFilter(logging.Filter):
+        def filter(self, record):
+            return not record.getMessage().startswith("findfont:")
+
+    logging.getLogger("matplotlib.font_manager").addFilter(NoFontMessageFilter())
+
+    stderr_log = logging.StreamHandler(stream=sys.stdout)
+    stderr_log.setFormatter(
+        logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s")
+    )
+    logger.addHandler(stderr_log)
 
 
 def parse_recipe(recipe_yaml: Path | str, variables: dict | None = None) -> dict:

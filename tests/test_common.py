@@ -14,12 +14,37 @@
 
 """Tests for common functionality across CSET."""
 
+import logging
 from collections.abc import Iterable
 from pathlib import Path
 
 import pytest
 
 import CSET._common as common
+
+
+def test_setup_logging():
+    """Tests the logging setup at various verbosity levels."""
+    root_logger = logging.getLogger()
+    # Log has a minimum of WARNING.
+    common.setup_logging(0)
+    assert root_logger.level == logging.WARNING
+    # -v
+    common.setup_logging(1)
+    assert root_logger.level == logging.INFO
+    # -vv
+    common.setup_logging(2)
+    assert root_logger.level == logging.DEBUG
+
+
+def test_setup_logging_mpl_font_logs_filtered(caplog):
+    """Test matplotlib log messages about fonts are filtered out."""
+    common.setup_logging(2)
+    logger = logging.getLogger("matplotlib.font_manager")
+    logger.debug("findfont: message")
+    logger.debug("other message")
+    assert len(caplog.records) == 1
+    assert caplog.records[0].getMessage() == "other message"
 
 
 def test_parse_recipe_string():
