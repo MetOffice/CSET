@@ -5,15 +5,18 @@
 import functools
 import logging
 import os
-import sys
 import time
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
 from CSET._common import format_duration, parse_recipe, setup_logging
 from CSET.operators import execute_recipe
 
 logger = logging.getLogger(__name__)
+
+
+class RecipeError(RuntimeError):
+    """Recipe failed to bake."""
 
 
 class ProcessLoggingContext:
@@ -63,7 +66,7 @@ def bake_recipe(
     plot_resolution: int,
     skip_write: bool,
 ):
-    """Bake a single recipe. Returns whether it succeeded."""
+    """Bake a single recipe."""
     recipe_name = recipe.name.removesuffix(".yaml")
 
     # Put together path to output dir from nice name for recipe.
@@ -104,7 +107,9 @@ def bake_recipe(
                 exc_info=True,
                 stack_info=True,
             )
-            logger.error("Recipe %s failed to bake. See %s", recipe_name, log_file)
+            raise RecipeError(
+                f"Recipe {recipe_name} failed to bake. See {log_file}"
+            ) from err
         duration = time.time() - start_time
         logger.info("Recipe baked in %s.", format_duration(duration))
 
@@ -132,14 +137,16 @@ def traybake():
     plot_resolution = int(os.getenv("PLOT_RESOLUTION", 72))
     skip_write = bool(os.getenv("SKIP_WRITE", False))
 
+    # Find recipes to bake.
     recipes = list(filter(lambda p: p.is_file(), recipe_dir.glob("*.yaml")))
-    if len(recipes):
-        logger.info("Baking %s recipes...", len(recipes))
+    num_recipes = len(recipes)
+    if num_recipes:
+        logger.info("Baking %s recipes...", num_recipes)
     else:
         logger.warning("No recipes to bake in %s", recipe_dir)
-        sys.exit(0)
+        return
 
-    # Fill in all the constant arguments. (Everything but recipe.)
+    # Fill in constant arguments. (All but recipe.)
     partial_bake = functools.partial(
         bake_recipe,
         cycle_output_dir=cycle_output_dir,
@@ -149,13 +156,27 @@ def traybake():
         skip_write=skip_write,
     )
 
-    # TODO: Replace with os.process_cpu_count once python 3.13 is our minimum.
+    # Get number of usable CPUs.
     max_parallelism = len(os.sched_getaffinity(0))
 
-    # TODO: Use a parallel executor.
+    number_length = len(str(num_recipes))  # For formatting.
+    num_baked = 0
+    num_failed = 0
+
+    # Bake the recipes in parallel.
     with ProcessPoolExecutor(max_workers=max_parallelism) as pool:
         futures = [pool.submit(partial_bake, recipe) for recipe in recipes]
-        # TODO: Log when each future is finished.
+        for future in as_completed(futures):
+            num_baked += 1
+            try:
+                future.result()
+                logging.info(f"{num_baked: {number_length}}/{num_recipes}")
+            except RecipeError as err:
+                num_failed += 1
+                logger.error(err)
+    logger.info("Baking complete!")
+    if num_failed:
+        logger.warning("%s/%s recipes failed to bake.", num_failed, num_recipes)
 
 
 if __name__ == "__main__":
