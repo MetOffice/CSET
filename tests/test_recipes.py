@@ -216,6 +216,7 @@ def test_RawRecipe_parbake(tmp_working_dir):
         - operator: misc.noop
           paths:
           - {rose_datac / "data/1"}
+        VAR: value
         """
     )
     # Act.
@@ -257,6 +258,7 @@ def test_RawRecipe_parbake_aggregation(tmp_working_dir):
           - {tmp_working_dir / "cycle/*/data/1"}
           - {tmp_working_dir / "cycle/*/data/2"}
           - {tmp_working_dir / "cycle/*/data/3"}
+        VAR: value
         """
     )
     # Act.
