@@ -34,7 +34,11 @@ from iris.analysis.cartography import rotate_pole, rotate_winds
 
 from CSET._common import iter_maybe
 from CSET.operators._stash_to_lfric import STASH_TO_LFRIC
-from CSET.operators._utils import get_cube_yxcoordname
+from CSET.operators._utils import (
+    get_cube_coordindex,
+    get_cube_yxcoordname,
+    is_spatialdim,
+)
 
 
 class NoDataError(FileNotFoundError):
@@ -475,10 +479,8 @@ def _grid_longitude_fix_callback(cube: iris.cube.Cube) -> iris.cube.Cube:
     model data bounds may not extend exactly to 0. or 360.
     Input cubes on non-rotated grid coordinates are not impacted.
     """
-    import CSET.operators._utils as utils
-
     try:
-        y, x = utils.get_cube_yxcoordname(cube)
+        y, x = get_cube_yxcoordname(cube)
     except ValueError:
         # Don't modify non-spatial cubes.
         return cube
@@ -517,17 +519,15 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
     particularly where comparing multiple input models with differing spatial
     coordinates.
     """
-    import CSET.operators._utils as utils
-
     # Check if cube is spatial.
-    if not utils.is_spatialdim(cube):
+    if not is_spatialdim(cube):
         # Don't modify non-spatial cubes.
         return
 
     # Get spatial coords and dimension index.
-    y_name, x_name = utils.get_cube_yxcoordname(cube)
-    ny = utils.get_cube_coordindex(cube, y_name)
-    nx = utils.get_cube_coordindex(cube, x_name)
+    y_name, x_name = get_cube_yxcoordname(cube)
+    ny = get_cube_coordindex(cube, y_name)
+    nx = get_cube_coordindex(cube, x_name)
 
     # Translate [grid_latitude, grid_longitude] to an unrotated 1-d DimCoord
     # [latitude, longitude] for instances where rotated_pole=90.0
