@@ -47,7 +47,7 @@ steps:
   - operator: power_spectrum.calculate_power_spectrum
 
   - operator: plot.plot_line_series
-    series_coordinate: "wavelength"
+    series_coordinate: "physical_wavenumber"
 
   - operator: write.write_cube_to_nc
     overwrite: True
