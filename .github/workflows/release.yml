@@ -16,7 +16,7 @@ jobs:
   build-package:
     name: Build release package
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 5
     permissions:
       contents: read
     steps:
@@ -43,13 +43,13 @@ jobs:
         with:
           name: packages
           path: dist/
-          retention-days: 10
+          retention-days: 1
           if-no-files-found: error
 
   pypi-publish:
     name: Publish to PyPI
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 5
     needs: build-package
     environment:
       name: release
