@@ -43,7 +43,7 @@ jobs:
         with:
           name: packages
           path: dist/
-          retention-days: 10
+          retention-days: 1
           if-no-files-found: error
 
   pypi-publish:
