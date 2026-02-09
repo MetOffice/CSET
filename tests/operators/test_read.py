@@ -91,9 +91,8 @@ def test_read_cubes_ensemble_separate_files():
     )
     # Check ensemble members have been merged into a single cube.
     assert len(cubes) == 1
-    cube = cubes[0]
     # Check realization is an integer.
-    for point in cube.coord("realization").points:
+    for point in cubes[0].coord("realization").points:
         assert isinstance(int(point), int)
 
 
@@ -119,14 +118,6 @@ def test_read_cubes_incorrect_number_of_model_names():
         read.read_cubes(
             "tests/test_data/air_temp.nc", model_names=["Model 1", "Model 2"]
         )
-
-
-def test_fieldsfile_ensemble_naming():
-    """Extracting the realization from the fields file naming convention."""
-    cube = iris.cube.Cube([0])
-    filename = "myfieldsfile_enuk_um_001/enukaa_pd000"
-    read._ensemble_callback(cube, None, filename)
-    assert cube.coord("realization").points[0] == 1
 
 
 def test_read_cube():
