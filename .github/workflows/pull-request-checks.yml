@@ -78,7 +78,7 @@ jobs:
     if: github.event_name == 'pull_request'
     name: Produce coverage report
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 5
     needs: tests
     permissions:
       contents: read
@@ -131,7 +131,7 @@ jobs:
 
   pre-commit:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 5
     permissions:
       contents: read
     steps:
@@ -161,7 +161,7 @@ jobs:
 
   build-docs:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 5
     permissions:
       contents: read
     steps:
@@ -217,8 +217,8 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
     needs: build-docs
     steps:
       - name: Download built documentation artifact

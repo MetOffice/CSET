@@ -12,6 +12,7 @@ jobs:
   check-documentation-hyperlinks:
     name: Check documentation hyperlinks
     runs-on: ubuntu-latest
+    # Give plenty of time as link checking third-party sites might be slow.
     timeout-minutes: 20
     permissions:
       contents: read
