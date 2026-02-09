@@ -533,7 +533,7 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
     # [latitude, longitude] for instances where rotated_pole=90.0
     if "grid_latitude" in [coord.name() for coord in cube.coords(dim_coords=True)]:
         coord_system = cube.coord("grid_latitude").coord_system
-        pole_lat = coord_system.grid_north_pole_latitude
+        pole_lat = getattr(coord_system, "grid_north_pole_latitude", None)
         if pole_lat == 90.0:
             lats = cube.coord("grid_latitude").points
             lons = cube.coord("grid_longitude").points
