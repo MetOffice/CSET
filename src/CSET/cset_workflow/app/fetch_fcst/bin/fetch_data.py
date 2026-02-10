@@ -20,6 +20,7 @@ import glob
 import itertools
 import logging
 import os
+import pickle
 import ssl
 import urllib.parse
 import urllib.request
@@ -29,6 +30,8 @@ from pathlib import Path
 from typing import Literal
 
 import isodate
+
+from CSET.operators import read
 
 logging.basicConfig(
     level=os.getenv("LOGLEVEL", "INFO"), format="%(asctime)s %(levelname)s %(message)s"
@@ -293,6 +296,23 @@ def fetch_data(file_retriever: FileRetrieverABC):
         any_files_found = any(list(files_found))
     if not any_files_found:
         raise FileNotFoundError("No files found for model!")
+
+    # Create the load cache for this model.
+    prime_load_cache(cycle_data_dir)
+
+
+def prime_load_cache(data_directory: str):
+    """Create the load cache for directory."""
+    # Load in the cubes, applying all the callbacks and such.
+    logging.info("Reading in cubes for caching.")
+    cubes = read.read_cubes(data_directory)
+    # Remove the added cset_comparison_base attribute.
+    for cube in cubes:
+        del cube.attributes["cset_comparison_base"]
+    logging.info("Writing cache file.")
+    # Pickle to a cache file.
+    with open(Path(data_directory, "loadcache.pickle"), "wb") as fp:
+        pickle.dump(cubes, fp)
 
 
 def fetch_obs(obs_retriever: FileRetrieverABC):
