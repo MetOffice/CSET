@@ -52,7 +52,7 @@ def run():
     except ValueError:
         body = "The webpage for your run of CSET is now ready, though the address could not be determined.\nCheck that WEB_ADDR and WEB_DIR are set correctly, then consider filing a bug report at https://github.com/MetOffice/CSET"
     subprocess.run(
-        f'printf "{body}" | mail -s "{subject}" -S "from=notifications" "$USER"',
+        f'printf "{body}" | mail -s "{subject}" "$USER"',
         check=True,
         shell=True,
     )
