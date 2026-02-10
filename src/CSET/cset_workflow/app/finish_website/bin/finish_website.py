@@ -25,6 +25,7 @@ import json
 import logging
 import os
 import shutil
+import sys
 import time
 from importlib.metadata import version
 from pathlib import Path
@@ -32,7 +33,9 @@ from pathlib import Path
 from CSET._common import combine_dicts, sort_dict
 
 logging.basicConfig(
-    level=os.getenv("LOGLEVEL", "INFO"), format="%(asctime)s %(levelname)s %(message)s"
+    level=os.getenv("LOGLEVEL", "INFO"),
+    format="%(asctime)s %(levelname)s %(message)s",
+    stream=sys.stdout,
 )
 logger = logging.getLogger(__name__)
 
