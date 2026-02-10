@@ -18,17 +18,63 @@ import ast
 import io
 import json
 import logging
+import os
 import re
 from collections.abc import Iterable
 from pathlib import Path
+import sys
 from textwrap import dedent
 from typing import Any
 
-import ruamel.yaml
+from ruamel.yaml import YAML
+from ruamel.yaml.parser import ParserError
 
 
 class ArgumentError(ValueError):
     """Provided arguments are not understood."""
+
+
+def setup_logging(verbosity: int):
+    """Configure logging level, format and output stream.
+
+    Level is based on verbose argument and the LOGLEVEL environment variable.
+    """
+    logging.captureWarnings(True)
+
+    # Calculate logging level.
+    # Level from CLI flags.
+    if verbosity >= 2:
+        cli_loglevel = logging.DEBUG
+    elif verbosity == 1:
+        cli_loglevel = logging.INFO
+    else:
+        cli_loglevel = logging.WARNING
+
+    # Level from $LOGLEVEL environment variable.
+    env_loglevel = logging.getLevelNamesMapping().get(
+        os.getenv("LOGLEVEL"), logging.ERROR
+    )
+
+    # Logging verbosity is the most verbose of CLI and environment setting.
+    loglevel = min(cli_loglevel, env_loglevel)
+
+    # Configure the root logger.
+    logger = logging.getLogger()
+    # Set logging level.
+    logger.setLevel(loglevel)
+
+    # Hide matplotlib's many font messages.
+    class NoFontMessageFilter(logging.Filter):
+        def filter(self, record):
+            return not record.getMessage().startswith("findfont:")
+
+    logging.getLogger("matplotlib.font_manager").addFilter(NoFontMessageFilter())
+
+    stderr_log = logging.StreamHandler(stream=sys.stdout)
+    stderr_log.setFormatter(
+        logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s")
+    )
+    logger.addHandler(stderr_log)
 
 
 def parse_recipe(recipe_yaml: Path | str, variables: dict | None = None) -> dict:
@@ -40,7 +86,7 @@ def parse_recipe(recipe_yaml: Path | str, variables: dict | None = None) -> dict
         Path to a file containing, or a string of, a recipe's YAML describing
         the operators that need running. If a Path is provided it is opened and
         read.
-    variables: dict
+    variables: dict, optional
         Dictionary of recipe variables. If None templating is not attempted.
 
     Returns
@@ -69,10 +115,10 @@ def parse_recipe(recipe_yaml: Path | str, variables: dict | None = None) -> dict
         raise TypeError("recipe_yaml must be a str or Path.")
 
     # Parse the recipe YAML.
-    with ruamel.yaml.YAML(typ="safe", pure=True) as yaml:
+    with YAML(typ="safe", pure=True) as yaml:
         try:
             recipe = yaml.load(recipe_yaml)
-        except ruamel.yaml.parser.ParserError as err:
+        except ParserError as err:
             raise ValueError("ParserError: Invalid YAML") from err
 
     logging.debug("Recipe before templating:\n%s", recipe)
@@ -426,3 +472,20 @@ def is_increasing(sequence: list) -> bool:
     duplicate values. An iris DimCoord's points fulfils this criteria.
     """
     return sequence[0] < sequence[1]
+
+
+def format_duration(seconds: float) -> str:
+    """Format a number of seconds as a human readable string."""
+    # Show milliseconds for short durations.
+    if seconds < 60:
+        return f"{seconds:.3f} seconds"
+    whole_seconds = int(seconds)
+    secs = (whole_seconds) % 60
+    mins = (whole_seconds // 60) % 60
+    hours = (whole_seconds // 3600) % 24
+    days = whole_seconds // 86400
+    time_string = f"{hours}h{mins}m{secs}s"
+    if days:
+        return f"{days} {'day' if days == 1 else 'days'} {time_string}"
+    else:
+        return time_string
