@@ -630,7 +630,7 @@ def test_plot_line_series_with_filename(cube, tmp_working_dir):
     plot.plot_line_series(
         cube, filename="latitude_average.ext", series_coordinate="grid_latitude"
     )
-    assert Path("latitude_average_462148.0.png").is_file()
+    assert Path("latitude_average.png").is_file()
 
 
 def test_plot_power_spectrum_with_filename(

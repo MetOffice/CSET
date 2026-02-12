@@ -105,9 +105,7 @@ def test_calculate_power_spectrum_raises_for_bad_dim(tmp_working_dir):
     if isinstance(cube_5d, iris.cube.CubeList):
         cube_5d = cube_5d[0]
 
-    with pytest.raises(
-        ValueError, match="Cube dimensions unsuitable for power spectra code"
-    ):
+    with pytest.raises(ValueError, match="Cube should be 2 or 3 dimensional"):
         power_spectrum.calculate_power_spectrum(cube_5d)
 
 
@@ -122,7 +120,5 @@ def test_calculate_power_spectrum_raises_for_bad_dim_1D(tmp_working_dir):
     if isinstance(cube_1d, iris.cube.CubeList):
         cube_1d = cube_1d[0]
 
-    with pytest.raises(
-        ValueError, match="Cube dimensions unsuitable for power spectra code"
-    ):
+    with pytest.raises(ValueError, match="Cube should be 2 or 3 dimensional"):
         power_spectrum.calculate_power_spectrum(cube_1d)
