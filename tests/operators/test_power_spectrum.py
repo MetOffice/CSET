@@ -122,3 +122,16 @@ def test_calculate_power_spectrum_raises_for_bad_dim_1D(tmp_working_dir):
 
     with pytest.raises(ValueError, match="Cube should be 2 or 3 dimensional"):
         power_spectrum.calculate_power_spectrum(cube_1d)
+
+
+def test_calculate_power_spectrum_raises_for_missing_horiz_coords(tmp_working_dir):
+    """Check error is raised if the cube is missing appropriate horizontal coord names."""
+    cube_3d = make_test_cube_power_spectrum()
+
+    if isinstance(cube_3d, iris.cube.CubeList):
+        cube_3d = cube_3d[0]
+
+    with pytest.raises(
+        ValueError, match="Could not find appropriate spatial coordinates"
+    ):
+        power_spectrum.calculate_power_spectrum(cube_3d)
