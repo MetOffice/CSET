@@ -23,12 +23,6 @@ from CSET.operators import ageofair, read
 
 
 @pytest.fixture()
-def xwind() -> iris.cube.Cube:
-    """Get regridded xwind to run tests on."""
-    return read.read_cube("tests/test_data/ageofair/aoa_in_rgd.nc", "x_wind")
-
-
-@pytest.fixture()
 def ywind() -> iris.cube.Cube:
     """Get regridded ywind to run tests on."""
     return read.read_cube("tests/test_data/ageofair/aoa_in_rgd.nc", "y_wind")
