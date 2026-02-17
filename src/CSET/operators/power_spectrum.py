@@ -272,9 +272,6 @@ def _DCT_ps(y_3d):
         # DCT transform and normalise spectrum to allow comparison between models.
         fkk = fft.dctn(y_2d, norm="ortho")
 
-        # Normalise fkk
-        fkk = fkk / np.sqrt(Ny * Nx)
-
         # calculate variance (energy) of spectral coefficient at each wavenumber pair (k_x, k_y)
         # as the square of the DCT coefficient, normalised by the total number of grid points (Nx * Ny).
         sigma_2 = fkk**2 / Nx / Ny
