@@ -52,21 +52,23 @@ def main():
     # Parbake recipes for cycle.
     recipe_count = parbake_all(variables, rose_datac, share_dir, aggregation)
 
-    # If running under cylc, notify cylc of task completion.
+    # If running under cylc, skip baking if we have no recipes.
     cylc_workflow_id = os.getenv("CYLC_WORKFLOW_ID")
-    cylc_task_job = os.getenv("CYLC_TASK_JOB")
-    if cylc_workflow_id and cylc_task_job:
-        message_command = [
+    cylc_cycle = os.getenv("CYLC_TASK_CYCLE_POINT")
+    if cylc_workflow_id and cylc_cycle and not recipe_count:
+        print("No recipes needing to be baked; asking cylc to skip baking.")
+        broadcast_command = [
             "cylc",
-            "message",
-            "--",
+            "broadcast",
+            "--point",
+            cylc_cycle,
+            "--namespace",
+            "bake_aggregation_recipes" if aggregation else "bake_recipes",
+            "--set",
+            "run mode = skip",
             cylc_workflow_id,
-            cylc_task_job,
         ]
-        if recipe_count:
-            subprocess.run(message_command + ["start baking"], check=True)
-        else:
-            subprocess.run(message_command + ["skip baking"], check=True)
+        subprocess.run(broadcast_command, check=True)
 
 
 if __name__ == "__main__":  # pragma: no cover
