@@ -210,7 +210,7 @@ def setup_logging(verbosity: int):
 
     logging.getLogger("matplotlib.font_manager").addFilter(NoFontMessageFilter())
 
-    stderr_log = logging.StreamHandler()
+    stderr_log = logging.StreamHandler(stream=sys.stdout)
     stderr_log.setFormatter(
         logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s")
     )
