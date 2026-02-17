@@ -217,13 +217,13 @@ def _template_file_path(
     match date_type:
         case "validity":
             date = data_time
-            while date < data_time + forecast_length:
+            while date <= data_time + forecast_length:
                 placeholder_times.append(date)
                 date += data_period
         case "initiation":
             placeholder_times.append(data_time)
             lead_time = forecast_offset
-            while lead_time < forecast_length:
+            while lead_time <= forecast_length:
                 lead_times.append(lead_time)
                 lead_time += data_period
         case _:
