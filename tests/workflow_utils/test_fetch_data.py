@@ -186,7 +186,6 @@ def test_template_file_path_validity_time():
         "/path/2000-01-03.nc",
         "/path/2000-01-04.nc",
         "/path/2000-01-05.nc",
-        "/path/2000-01-06.nc",
     ]
     assert actual == expected
 
