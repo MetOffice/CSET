@@ -20,6 +20,19 @@ steps:
         levels: []
         coordinate: "pressure"
 
+  - operator: misc.remove_attribute
+    attribute: ['time_coverage_end', 'time_coverage_start', 'valid_min', 'valid_max', 'date', 'date_created']
+
+  - operator: filters.filter_multiple_cubes
+    cardington:
+        operator: constraints.generate_attribute_constraint
+        attribute: 'height'
+        value: 1.2
+    model:
+        operator: constraints.generate_attribute_constraint
+        # This currently only works for UM. Maybe we need another operator to make this nicer?
+        attribute: STASH
+
   - operator: regrid.regrid_to_single_point
     lat_pt: 52.10438
     lon_pt: -0.42286

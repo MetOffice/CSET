@@ -71,6 +71,9 @@ def remove_attribute(
     for cube in cubes:
         for attr in iter_maybe(attribute):
             cube.attributes.pop(attr, None)
+
+    cubes = cubes.merge()
+    cubes = cubes.concatenate()
     return cubes
 
 
