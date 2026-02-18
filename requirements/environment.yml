@@ -29,6 +29,7 @@ dependencies:
   - pytest >= 7.0
   - pytest-cov
   - pytest-xdist
+  - pytest-playwright
 
   # Documentation dependencies
   - sphinx >= 6.0
