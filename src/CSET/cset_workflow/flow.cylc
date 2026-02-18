@@ -114,18 +114,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
             start_baking='start baking'
             skip_baking='skip baking'
 
-    [[METPLUS]]
-        [[[environment]]]
-        METPLUS_ANA_DIR = {{METPLUS_ANA_DIR}}
-        METPLUS_FCST_DIR = {{METPLUS_FCST_DIR}}
-        METPLUS_OBS_DIR = {{METPLUS_OBS_DIR}}
-        ROSE_APP_OPT_CONF_KEYS = {{METPLUS_OPT_CONFIG_KEYS}}
-        TASK_START_TIME = $(cylc cyclepoint --template CCYYMMDDThh)
-        # Using sed to parse only the numerical values of ANALYSIS_LENGTH, assumes is always in the format PThhH
-        # Done this way because isodatetime CLI doesn't seem to be able to parse durations
-        FORECAST_LENGTH = $(echo {{ ANALYSIS_LENGTH }} | sed 's/[^0-9]//g')
-        TASK_END_TIME = $(cylc cyclepoint --offset-hours ${FORECAST_LENGTH} --template CCYYMMDDThh)
-
     # Noop tasks to ensure a complete/efficient workflow graph.
     [[DUMMY_TASK]]
     script = true
@@ -221,6 +209,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         WEB_DIR = {{WEB_DIR}}
 
 # Include files bring their own graph and runtime sections.
+{% include 'includes/metplus_common.cylc' %}
 {% include 'includes/metplus_point_stat.cylc' %}
 {% include 'includes/metplus_grid_stat.cylc' %}
 
