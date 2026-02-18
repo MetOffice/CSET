@@ -26,11 +26,15 @@ docs: ## Build documentation.
 pre-commit:
 	pre-commit run --all-files
 
-pytest:
-	pytest -vv
+test: pre-commit ## Run linting and unit tests.
+	pytest -vv -m 'not slow'
 
-test: pre-commit pytest ## Run linting and unit tests.
+test-fast: ## Run fast local tests only.
+	pytest -vv --cov --cov-append --cov-config=pyproject.toml --numprocesses logical -m 'not slow and not network'
+
+test-full: pre-commit ## Run all tests, including slow or network reliant.
+	pytest -vv --cov --cov-append --cov-config=pyproject.toml --numprocesses logical
 
 # Mark targets as 'phony' to indicate they don't actually produce a file with
 # the same name as their target. Basically for actions rather than files.
-.PHONY: help setup docs test
+.PHONY: help setup docs test test-fast test-full
