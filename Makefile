@@ -11,7 +11,7 @@ help: ## Display this help message.
 	| sed -n 's/^\(.*:\) \(.*\)##\(.*\)/  \1\3/p'
 
 conda:
-	conda create -n cset-dev --file requirements/locks/py313-lock-linux-64.txt
+	conda create -n cset-dev --file requirements/locks/latest
 	@echo "Run 'conda activate cset-dev' to use conda environment."
 
 .git/hooks/pre-commit: conda
@@ -21,16 +21,20 @@ setup: conda .git/hooks/pre-commit ## Setup development environment.
 	conda run -n cset-dev pip install --no-deps -e .
 
 docs: ## Build documentation.
-	cd docs && make html
+	make --directory=docs html
 
 pre-commit:
 	pre-commit run --all-files
 
-pytest:
-	pytest -vv
+test: pre-commit ## Run linting and unit tests.
+	pytest -vv -m 'not slow'
 
-test: pre-commit pytest ## Run linting and unit tests.
+test-fast: ## Run fast local tests only.
+	pytest -vv --cov --cov-append --cov-config=pyproject.toml --numprocesses logical -m 'not slow and not network'
+
+test-full: pre-commit ## Run all tests, including slow or network reliant.
+	pytest -vv --cov --cov-append --cov-config=pyproject.toml --numprocesses logical
 
 # Mark targets as 'phony' to indicate they don't actually produce a file with
 # the same name as their target. Basically for actions rather than files.
-.PHONY: help setup docs test
+.PHONY: help setup docs test test-fast test-full

@@ -14,6 +14,7 @@
 
 """Tests for parbake_recipe workflow utility."""
 
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -25,14 +26,23 @@ import CSET.recipes
 def test_main(monkeypatch):
     """Check parbake.main() invokes parbake_all correctly."""
     function_ran = False
+    recipes_parbaked = 0
+    cylc_broadcast_ran = False
 
     def mock_parbake_all(variables, rose_datac, share_dir, aggregation):
         nonlocal function_ran
+        nonlocal recipes_parbaked
         function_ran = True
         assert variables == {"variable": "value"}
         assert rose_datac == Path("/share/cycle/20000101T0000Z")
         assert share_dir == Path("/share")
         assert isinstance(aggregation, bool)
+        return recipes_parbaked
+
+    def mock_run(cmd, **kwargs):
+        nonlocal cylc_broadcast_ran
+        cylc_broadcast_ran = True
+        assert cmd[0:2] == ["cylc", "broadcast"]
 
     monkeypatch.setattr(parbake, "parbake_all", mock_parbake_all)
 
@@ -46,10 +56,31 @@ def test_main(monkeypatch):
     assert function_ran, "Function did not run!"
 
     # Retry without DO_CASE_AGGREGATION
-    function_ran = False
     monkeypatch.delenv("DO_CASE_AGGREGATION")
+    function_ran = False
     parbake.main()
     assert function_ran, "Function did not run!"
+
+    # Retry with cylc environment variables set.
+    monkeypatch.setattr(subprocess, "run", mock_run)
+    monkeypatch.setenv("CYLC_WORKFLOW_ID", "test-workflow")
+    monkeypatch.setenv("CYLC_TASK_CYCLE_POINT", "20000101T0000Z")
+
+    # No recipes parbaked.
+    function_ran = False
+    cylc_broadcast_ran = False
+    recipes_parbaked = 0
+    parbake.main()
+    assert function_ran, "Function did not run!"
+    assert cylc_broadcast_ran, "Cylc broadcast should have run."
+
+    # Some recipes parbaked.
+    function_ran = False
+    cylc_broadcast_ran = False
+    recipes_parbaked = 3
+    parbake.main()
+    assert function_ran, "Function did not run!"
+    assert not cylc_broadcast_ran, "Cylc broadcast should not have run."
 
 
 def test_parbake_all_none_enabled(tmp_working_dir, monkeypatch):

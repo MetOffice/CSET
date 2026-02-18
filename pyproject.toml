@@ -5,15 +5,15 @@ description = "Toolkit for evaluation and investigation of numerical models for 
 authors = [{ name = "Met Office" }, { name = "NIWA" }]
 readme = "README.md"
 license = "Apache-2.0"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python",
     "Topic :: Scientific/Engineering :: Atmospheric Science",
     "Topic :: Scientific/Engineering :: GIS",
@@ -22,7 +22,7 @@ classifiers = [
 ]
 dependencies = [
     "numpy",
-    "scitools-iris >= 3.12.2",
+    "scitools-iris >= 3.14.1",
     "ruamel.yaml >= 0.17",
     "pygraphviz >= 1.11",
     "mo_pack >= 0.3.0",
@@ -30,6 +30,8 @@ dependencies = [
     "markdown-it-py >= 3.0",
     "nc-time-axis",
     "iris-grib",
+    "scipy",
+    "scikit-image",
 ]
 
 [project.urls]
@@ -53,7 +55,10 @@ filterwarnings = [
     # first CI run on each branch.
     "ignore::cartopy.io.DownloadWarning",
 ]
-markers = ["network: marks tests that use external network resources"]
+markers = [
+    "network: test uses external network resources",
+    "slow: test is slow to run",
+]
 minversion = "7"
 pythonpath = ["src"]
 testpaths = ["tests"]

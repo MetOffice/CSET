@@ -1,0 +1,11 @@
+{% if METPLUS_GRID_STAT|default(False) or METPLUS_POINT_STAT|default(False) %}
+    [[METPLUS]]
+        [[[environment]]]
+        METPLUS_ANA_DIR = {{METPLUS_ANA_DIR}}
+        METPLUS_FCST_DIR = {{METPLUS_FCST_DIR}}
+        METPLUS_OBS_DIR = {{METPLUS_OBS_DIR}}
+        ROSE_APP_OPT_CONF_KEYS = {{METPLUS_OPT_CONFIG_KEYS}}
+        TASK_START_TIME = $(cylc cyclepoint --template CCYYMMDDThh)
+        FORECAST_LENGTH = $(isodatetime --as-total H -- {{ANALYSIS_LENGTH}})
+        TASK_END_TIME = $(cylc cyclepoint --offset {{ANALYSIS_LENGTH}} --template CCYYMMDDThh)
+{% endif %}

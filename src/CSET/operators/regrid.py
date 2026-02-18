@@ -225,6 +225,10 @@ def regrid_to_single_point(
     lat_pt: float
         Selected value of latitude: this should be in the range -90 degrees to
         90 degrees.
+    latlon_in_type: str, optional
+        Specify whether the input longitude and latitude point is in standard
+        geographic realworld coordinates ("realworld") or on the rotated grid
+        of the cube ("rotated"). Default is "rotated".
     method: str
         Method used to determine the values at the selected longitude and
         latitude. The recommended approach is to use iris.analysis.Nearest(),
@@ -304,6 +308,7 @@ def regrid_to_single_point(
             lon.points[-boundary_margin],
         )
 
+        # Use different logic for single point obs data.
         if len(cube.coord(x_coord).points) > 1:
             # Check to see if selected point is outside the domain
             if (lat_tr < lat_min) or (lat_tr > lat_max):
@@ -387,3 +392,91 @@ def transform_lat_long_points(lon, lat, cube):
     lat_rot = rot_coords[1]
 
     return lon_rot, lat_rot
+
+
+def interpolate_to_point_cube(
+    fld: iris.cube.Cube | iris.cube.CubeList, point_cube: iris.cube.Cube, **kwargs
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Interpolate from a 2D field to a set of points.
+
+    Interpolate the 2D field in fld to the set of points
+    specified in point_cube.
+
+    Parameters
+    ----------
+    fld: Cube
+        An iris cube containing a two-dimensional field.
+    point_cube: Cube
+        An iris cube specifying the point to which the data
+        will be interpolated.
+
+    Returns
+    -------
+    fld_point_cube: Cube
+        An iris cube containing interpolated values at the points
+        specified by the point cube.
+
+    """
+    #
+    # As a basis, create a copy of the point cube.
+    fld_point_cube = point_cube.copy()
+    # Get indices of positional coordinates. We assume that the
+    # point cube is unrotated.
+    klon = None
+    klat = None
+    for kc in range(len(fld_point_cube.aux_coords)):
+        if fld_point_cube.aux_coords[kc].standard_name == "latitude":
+            klat = kc
+        elif fld_point_cube.aux_coords[kc].standard_name == "longitude":
+            klon = kc
+    #
+    # The input may have a rotated coordinate system.
+    if len(fld.coords("grid_latitude")) > 0:
+        # Interpolate in rotated coordinates.
+        rot_csyst = fld.coords("grid_latitude")[0].coord_system
+        rotpt = iris.analysis.cartography.rotate_pole(
+            fld_point_cube.aux_coords[klon].points,
+            fld_point_cube.aux_coords[klat].points,
+            rot_csyst.grid_north_pole_longitude,
+            rot_csyst.grid_north_pole_latitude,
+        )
+        # Add other interpolation options later.
+        fld_interpolator = iris.analysis.Linear(extrapolation_mode="mask").interpolator(
+            fld, ["time", "grid_latitude", "grid_longitude"]
+        )
+        for jt in range(len(fld_point_cube.coords("time")[0].points)):
+            fld_point_cube.data[jt, :] = np.ma.masked_invalid(
+                [
+                    fld_interpolator(
+                        [
+                            fld_point_cube.coord("time").points[jt],
+                            rotpt[1][k],
+                            rotpt[0][k],
+                        ]
+                    ).data
+                    if ~point_cube.data.mask[jt][k]
+                    else np.nan
+                    for k in range(len(rotpt[0]))
+                ]
+            )
+    else:
+        # Add other interpolation options later.
+        fld_interpolator = iris.analysis.Linear(extrapolation_mode="mask").interpolator(
+            fld, ["time", "latitude", "longitude"]
+        )
+        for jt in range(len(fld_point_cube.coords("time")[0].points)):
+            fld_point_cube.data[jt, :] = np.ma.masked_invalid(
+                [
+                    fld_interpolator(
+                        [
+                            fld_point_cube.coords("time")[0].points[jt],
+                            fld_point_cube.coord("latitude").points[k],
+                            fld_point_cube.coord("longitude").points[k],
+                        ]
+                    ).data
+                    if ~point_cube.data.mask[jt][k]
+                    else np.nan
+                    for k in range(fld_point_cube.coord("latitude").points)
+                ]
+            )
+    return fld_point_cube

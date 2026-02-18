@@ -19,16 +19,8 @@ export RECIPE_DIR
 # Determine parallelism.
 parallelism="$(nproc)"
 if [ "$CYLC_TASK_SUBMIT_NUMBER" -gt 1 ]; then
-    # This is a retry; enable DEBUG logging and run in serial.
+    # This is a retry; enable DEBUG logging.
     export LOGLEVEL="DEBUG"
-    parallelism=1
-fi
-
-if [ -f .rose-bunch.db ]; then
-    # Set the pool-size in the rose_bunch database, so we don't rerun succeeded
-    # tasks. We need to do this as rose_bunch normally clears the database if
-    # the configuration has changed.
-    sqlite3 .rose-bunch.db "UPDATE config SET value=$parallelism WHERE "'key="bunch_pool-size";'
 fi
 
 # Get filenames without leading directory.

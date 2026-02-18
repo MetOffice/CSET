@@ -21,7 +21,7 @@ steps:
     subarea_extent: $SUBAREA_EXTENT
 
   - operator: filters.generate_mask
-    condition: '<'
+    condition: 'lt'
     value: 273.15
 
   - operator: plot.spatial_pcolormesh_plot

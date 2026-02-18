@@ -17,14 +17,16 @@
 import datetime
 import logging
 
+import cf_units
 import iris
 import iris.coord_systems
 import iris.coords
 import iris.cube
 import numpy as np
 import pytest
+from iris.time import PartialDateTime
 
-from CSET.operators import read
+from CSET.operators import constraints, read
 
 
 def test_read_cubes():
@@ -37,6 +39,29 @@ def test_read_cubes():
     ]
     for cube in cubes:
         assert repr(cube) in expected_cubes
+
+
+def test_read_cubes_generate_time_constraint():
+    """Read cube, constrain the time coordinate and verify the correct time range."""
+    cubes = read.read_cubes("tests/test_data/precipitation_360_day_calendar.nc")
+    cube = cubes[0]
+
+    print(cube.coord("time"))
+
+    constraint = constraints.generate_time_constraint(
+        time_start="2000-01-01T12:30", time_end="2000-01-01T14:00+01"
+    )
+
+    cube_constrained = cube.extract(constraint)
+
+    time_coords = cube_constrained.coord("time")
+    time_points = time_coords.units.num2date(time_coords.points)
+
+    assert min(time_points) == PartialDateTime(2000, 1, 1, 12, 30, 0)
+    # 14:30 is the max time below 15:00 within the file used for this test
+    assert max(time_points) == PartialDateTime(2000, 1, 1, 14, 30, 0)
+
+    print(time_coords)
 
 
 def test_read_cubes_no_cubes_exception():
@@ -66,9 +91,8 @@ def test_read_cubes_ensemble_separate_files():
     )
     # Check ensemble members have been merged into a single cube.
     assert len(cubes) == 1
-    cube = cubes[0]
     # Check realization is an integer.
-    for point in cube.coord("realization").points:
+    for point in cubes[0].coord("realization").points:
         assert isinstance(int(point), int)
 
 
@@ -94,14 +118,6 @@ def test_read_cubes_incorrect_number_of_model_names():
         read.read_cubes(
             "tests/test_data/air_temp.nc", model_names=["Model 1", "Model 2"]
         )
-
-
-def test_fieldsfile_ensemble_naming():
-    """Extracting the realization from the fields file naming convention."""
-    cube = iris.cube.Cube([0])
-    filename = "myfieldsfile_enuk_um_001/enukaa_pd000"
-    read._ensemble_callback(cube, None, filename)
-    assert cube.coord("realization").points[0] == 1
 
 
 def test_read_cube():
@@ -1026,3 +1042,22 @@ def test_read_cubes_unknown_subarea_method():
             subarea_type="any_old_method",
             subarea_extent=[-5.5, 5.5, -125.5, 125.5],
         )[0]
+
+
+def test_proleptic_gregorian_fix():
+    """Ensure proleptic gregorian calendars are normalised to standard."""
+    time_coord = iris.coords.DimCoord(
+        [1, 2, 3],
+        standard_name="time",
+        units=cf_units.Unit(
+            "hours since 1970-01-01T00:00:00", calendar="proleptic_gregorian"
+        ),
+    )
+    cube = iris.cube.Cube(
+        [1, 2, 3], var_name="test", dim_coords_and_dims=[(time_coord, 0)]
+    )
+    assert cube.coord("time").units.calendar == "proleptic_gregorian"
+
+    read._proleptic_gregorian_fix(cube)
+    assert cube.coord("time").units.calendar == "standard"
+    assert cube.coord("time").units.origin == "hours since 1970-01-01T00:00:00"

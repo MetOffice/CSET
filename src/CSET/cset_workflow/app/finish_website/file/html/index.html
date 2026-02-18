@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSET</title>
+    <link rel="stylesheet" href="style.css?v=CACHEBUSTER">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+    <nav id="plot-selector">
+        <header>
+            <h1>CSET</h1>
+            <button id="clear-plots">⎚ Clear view</button>
+            <button id="description-toggle">⇲ Hide description</button>
+        </header>
+        <hr>
+        <!-- Links to diagnostics get inserted here. -->
+    </nav>
+    <main>
+        <article id="single-frame">
+            <iframe class="frame" id=plot-frame-full src="placeholder.html"></iframe>
+        </article>
+        <div id="dual-frame" class="vsplit hidden">
+            <article class="websplit-container">
+                <iframe class="frame" id=plot-frame-left src="placeholder.html"></iframe>
+            </article>
+            <article class="websplit-container">
+                <iframe class="frame" id=plot-frame-right src="placeholder.html"></iframe>
+            </article>
+        </div>
+    </main>
+    <script>const PLOTS_PATH = "plots-CACHEBUSTER";</script>
+    <script src="script.js?v=CACHEBUSTER"></script>
+</body>
+
+</html>

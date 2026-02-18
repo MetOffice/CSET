@@ -1,0 +1,114 @@
+name: "Update conda lock files and pre-commit config"
+
+on:
+  schedule:
+    - cron: "37 5 * * 1"
+  workflow_dispatch:
+
+# Minimise default GITHUB_TOKEN permissions.
+permissions: {}
+
+jobs:
+  scheduled-updates:
+    name: Regular conda and pre-commit updates
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          # Persist credentials so we can push back to GitHub.
+          persist-credentials: true
+
+      - name: Setup python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: "3.x"
+
+      - name: Install dependencies
+        run: pip install conda-lock pre-commit
+
+      - name: Setup git user and branch
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git switch -c "scheduled-updates-$(date +%s)"
+
+      - name: Update CSET developer and workflow lock files
+        run: |
+          py_vers="3.12 3.13 3.14"
+          for py_ver in ${py_vers}
+          do
+            # Developer lock files.
+            cp "requirements/environment.yml" "${RUNNER_TEMP}/${py_ver}_dev_environment.yml"
+            echo -e "\n  - python = $py_ver" >> "${RUNNER_TEMP}/${py_ver}_dev_environment.yml"
+            conda-lock --channel conda-forge --kind explicit --file "${RUNNER_TEMP}/${py_ver}_dev_environment.yml" --platform linux-64 --filename-template "requirements/locks/py$(echo $py_ver | sed 's/\.//')-lock-linux-64.txt"
+          done
+
+          # Sort lock files to make diffs easier to review.
+          for file in requirements/locks/*.txt
+          do
+            # Leave the file header unsorted.
+            cat "$file" | (sed -u 4q; sort) > sorted.txt
+            mv sorted.txt "$file"
+          done
+
+      - name: Update pre-commit config
+        run: pre-commit autoupdate --freeze
+
+      - name: Generate GitHub App Token
+        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf
+        id: app-token
+        with:
+          app-id: ${{ secrets.AUTH_APP_ID }}
+          private-key: ${{ secrets.AUTH_APP_PRIVATE_KEY }}
+
+      - name: Commit changes and create pull requests
+        env:
+          source_ref: ${{ github.ref }}
+          source_ref_type: ${{ github.ref_type }}
+          gh_token: ${{ steps.app-token.outputs.token }}
+          repository: ${{ github.repository }}
+        run: |
+          original_commit="$(git rev-parse --verify HEAD)"
+          git diff --stat
+
+          # Commit changed lockfiles.
+          git add requirements/locks/*.txt
+          git commit -m "[CI] Update conda lock files" || true
+
+          # Commit changed pre-commit config.
+          git add .pre-commit-config.yaml
+          git commit -m "[CI] Update .pre-commit-config.yaml" || true
+
+          # Exit early if there are no changes.
+          if [[ ${original_commit} == "$(git rev-parse --verify HEAD)" ]]
+          then
+            echo "No change, skipping pull request..."
+            exit 0
+          fi
+
+          # Push branch to GitHub.
+          git push origin HEAD
+
+          # If running from a branch target the created PR at that branch.
+          if [[ ${source_ref_type} = branch ]]
+          then
+            base_branch_name="${source_ref}"
+          else
+            base_branch_name="main"
+          fi
+
+          # Create PR on GitHub using GitHub REST API.
+          request_body='{"title":"[CI] Scheduled updates","body":"Created automatically by GitHub Actions.","base":"'"${base_branch_name}"'","head":"'"$(git branch --show-current)"'"}'
+          printf "Pull request:"
+          curl -LsS --fail-with-body \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${gh_token}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/${repository}/pulls \
+            -d "${request_body}" | jq .html_url

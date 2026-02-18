@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""CSET: Convective and turbulence Scale Evaluation Tool."""
+"""CSET: Community Seamless Evaluation Toolkit."""
 
 import argparse
 import logging
@@ -63,7 +63,7 @@ def main(raw_cli_args: list[str] = sys.argv):
 def setup_argument_parser() -> argparse.ArgumentParser:
     """Create argument parser for CSET CLI."""
     parser = argparse.ArgumentParser(
-        prog="cset", description="Convective Scale Evaluation Tool"
+        prog="cset", description="Community Seamless Evaluation Toolkit"
     )
     parser.add_argument(
         "-v",
@@ -210,7 +210,7 @@ def setup_logging(verbosity: int):
 
     logging.getLogger("matplotlib.font_manager").addFilter(NoFontMessageFilter())
 
-    stderr_log = logging.StreamHandler()
+    stderr_log = logging.StreamHandler(stream=sys.stdout)
     stderr_log.setFormatter(
         logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s")
     )

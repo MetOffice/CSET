@@ -14,10 +14,11 @@
 
 """Operations on recipes."""
 
+import hashlib
 import importlib.resources
 import logging
-import sys
-from collections.abc import Iterable
+from collections.abc import Iterator
+from io import StringIO
 from pathlib import Path
 from typing import Any
 
@@ -29,31 +30,19 @@ from CSET.cset_workflow.lib.python.jinja_utils import get_models as get_models
 logger = logging.getLogger(__name__)
 
 
-def _version_agnostic_importlib_resources_file() -> Path:
-    """Transitional wrapper to importlib.resources.files().
-
-    Importlib behaviour changed in 3.12 to avoid circular dependencies.
-    """
-    if sys.version_info.minor >= 12:
-        input_dir = importlib.resources.files()
-    else:
-        import CSET.recipes
-
-        input_dir = importlib.resources.files(CSET.recipes)
-    return input_dir
-
-
 def _recipe_files_in_tree(
     recipe_name: str | None = None, input_dir: Path | None = None
-) -> Iterable[Path]:
+) -> Iterator[Path]:
     """Yield recipe file Paths matching the recipe name."""
-    if recipe_name is None:
-        recipe_name = ""
     if input_dir is None:
-        input_dir = _version_agnostic_importlib_resources_file()
+        input_dir = importlib.resources.files()
     for file in input_dir.iterdir():
         logger.debug("Testing %s", file)
-        if recipe_name in file.name and file.is_file() and file.suffix == ".yaml":
+        if (
+            (recipe_name is None or recipe_name == file.name)
+            and file.is_file()
+            and file.suffix == ".yaml"
+        ):
             yield file
         elif file.is_dir() and file.name[0] != "_":  # Excludes __pycache__
             yield from _recipe_files_in_tree(recipe_name, file)
@@ -62,7 +51,7 @@ def _recipe_files_in_tree(
 def _get_recipe_file(recipe_name: str, input_dir: Path | None = None) -> Path:
     """Return a Path to the recipe file."""
     if input_dir is None:
-        input_dir = _version_agnostic_importlib_resources_file()
+        input_dir = importlib.resources.files()
     file = input_dir / recipe_name
     logger.debug("Getting recipe: %s", file)
     if not file.is_file():
@@ -227,10 +216,18 @@ class RawRecipe:
 
         # Parbake this recipe, saving into recipe_dir.
         recipe = parse_recipe(Path(self.recipe), self.variables)
-        output = recipe_dir / f"{slugify(recipe['title'])}.yaml"
-        with open(output, "wt") as fp:
-            with YAML(pure=True, output=fp) as yaml:
+
+        # Serialise into memory, as we use the serialised value twice.
+        with StringIO() as s:
+            with YAML(pure=True, output=s) as yaml:
                 yaml.dump(recipe)
+            serialised_recipe = s.getvalue().encode()
+        # Include shortened hash in filename to avoid collisions between recipes
+        # with the same title.
+        digest = hashlib.sha256(serialised_recipe).hexdigest()
+        output_filename = recipe_dir / f"{slugify(recipe['title'])}_{digest[:12]}.yaml"
+        with open(output_filename, "wb") as fp:
+            fp.write(serialised_recipe)
 
 
 class Config:
@@ -269,12 +266,12 @@ class Config:
         return self.d
 
 
-def load_recipes(variables: dict[str, Any]) -> Iterable[RawRecipe]:
+def load_recipes(variables: dict[str, Any]) -> Iterator[RawRecipe]:
     """Load recipes enabled by configuration.
 
     Recipes are loaded using all loaders (python modules) in CSET.loaders. Each
     of these loaders must define a function with the signature `load(conf: dict)
-    -> Iterable[RawRecipe]`, which will be called with `variables`.
+    -> Iterator[RawRecipe]`, which will be called with `variables`.
 
     A minimal example can be found in `CSET.loaders.test`.
 
@@ -285,7 +282,7 @@ def load_recipes(variables: dict[str, Any]) -> Iterable[RawRecipe]:
 
     Returns
     -------
-    Iterable[RawRecipe]
+    Iterator[RawRecipe]
         Configured recipes.
 
     Raises
