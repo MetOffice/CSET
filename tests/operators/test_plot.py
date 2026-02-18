@@ -473,6 +473,7 @@ def test_contour_plot_sequence(cube, tmp_working_dir):
     assert Path("untitled_462149.0.png").is_file()
 
 
+@pytest.mark.slow
 def test_vector_plot_with_filename(vector_cubes, tmp_working_dir):
     """Plot a vector plot of u10 and v10 components."""
     cube_u = vector_cubes[0].slices_over("time").next()
@@ -481,6 +482,7 @@ def test_vector_plot_with_filename(vector_cubes, tmp_working_dir):
     assert Path("testvector_482016.0.png").is_file()
 
 
+@pytest.mark.slow
 def test_vector_plot_sequence(vector_cubes, tmp_working_dir):
     """Plot a sequence of vector plots."""
     plot.vector_plot(
