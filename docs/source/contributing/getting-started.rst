@@ -91,7 +91,7 @@ to use.
 .. _GNU make: https://www.gnu.org/software/make/
 
 Updating tooling
-------------------
+----------------
 
 If it has been some time since you created your conda environment it might be
 worth recreating it to get the latest tools and dependencies.
