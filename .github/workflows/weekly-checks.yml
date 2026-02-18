@@ -49,3 +49,47 @@ jobs:
 
       - name: Check for broken hyperlinks
         run: sphinx-build -b linkcheck --color -W --keep-going "docs/source" "docs/build/linkcheck"
+
+  full-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        py-ver: ["py312", "py313", "py314"]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Cache conda environment
+        id: conda-env-cache
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
+        with:
+          key: conda|${{runner.os}}-${{runner.arch}}|${{ hashFiles(format('requirements/locks/{0}-lock-linux-64.txt', matrix.py-ver)) }}
+          path: |
+            ~/conda-env
+            ~/.local/share/cartopy
+
+      - name: Create conda environment
+        if: steps.conda-env-cache.outputs.cache-hit != 'true'
+        env:
+          py_ver: ${{ matrix.py-ver }}
+        run: |
+          # Check cache hasn't pulled a partial key match.
+          test ! -e "${HOME}/conda-env"
+          conda create --prefix="${HOME}/conda-env" --file=requirements/locks/${py_ver}-lock-linux-64.txt
+
+      - name: Add conda environment to PATH
+        run: echo "${HOME}/conda-env/bin" >> $GITHUB_PATH
+
+      - name: Install local package
+        run: pip install --no-deps .
+
+      - name: Run full test suite
+        env:
+          PY_COLORS: "1"
+        run: make test-full
