@@ -1,5 +1,66 @@
-Automatic Testing
-=================
+Testing
+=======
+
+Running tests
+-------------
+
+.. note::
+
+    Before running the tests, you will need to make sure you have the conda
+    environment activated and that CSET is installed. See :ref:`setup_tooling`.
+
+You can run the tests of CSET with the following command:
+
+.. code-block:: bash
+
+    pytest
+
+There are a number of different sets of tests that can be run:
+
+* ``make test`` runs the unit tests and short integration tests of CSET, and is
+  intended for locally testing your changes. It should run in under a minute.
+* ``make test-fast`` is run on every commit pushed to the CSET GitHub
+  repository. Compared to ``make test``, this additionally excludes tests
+  requiring network access to maximise reliability.
+* ``make test-full`` runs the full test suite, including slow integration tests.
+  The full test suite is run weekly on GitHub to identify issues without slowing
+  development. It should also be run before making a release.
+
+Quickly running specific tests during development
+-------------------------------------------------
+
+Running all test when developing new tests and debugging might take some time.
+Fortunately individual tests can be run on the command line with:
+
+.. code-block:: bash
+
+    pytest -k name_of_test
+
+You can also run all of the tests in a file, by giving the name of the file. For
+example, the following command will run all of the plotting tests.
+
+.. code-block:: bash
+
+    pytest -k test_plots
+
+Pre-commit checks
+-----------------
+
+Pre-commit checks are very quick checks to catch any obvious mistakes. They are
+usually setup to run automatically when you make a commit. The checks are
+installed from .pre-commit-config.yaml, and currently involve formatting python
+code, linting, and checking all files are well formed (no trailing whitespace,
+etc.).
+
+.. code-block:: bash
+
+    # Ensure your conda environment is activated.
+    conda activate cset-dev
+    # Install the checks into git
+    pre-commit install
+
+Testing background
+------------------
 
 Doing testing more frequently makes it better, as it is much easier to narrow
 down what broke. Don't just test when it is time to release. Semi-regular
@@ -15,42 +76,8 @@ of the project.
 Having tooling to aid in comparing output to KGO is useful, especially if we
 want to get into automated functional testing.
 
-You can run the tests of CSET with the following command:
-
-.. code-block:: bash
-
-    pytest
-
-.. note::
-
-    You will need to make sure you have the conda environment activated, and that
-    CSET is installed into it with:
-
-    .. code-block:: bash
-
-        conda activate cset-dev
-        pip install --no-deps -e .
-
-Quick testing of individual components during development
----------------------------------------------------------
-
-Running all test when developing new tests and debugging might take some time.
-Fortunately individual tests can be run on the command line with:
-
-.. code-block:: bash
-
-    pytest -k name_of_test
-
-
-You can also run all of the tests in a file, by giving the name of the file. For
-example, the following command will run all of the plotting tests.
-
-.. code-block:: bash
-
-    pytest -k test_plots
-
-Unit Testing
-------------
+Unit testing
+~~~~~~~~~~~~
 
 One of the ways we can make CSET much more sustainable is by liberal use of unit
 testing.
@@ -73,8 +100,8 @@ have probably written an integration test instead.
 `Stack Overflow answers giving good overview of unit testing
 <https://stackoverflow.com/questions/3258733/new-to-unit-testing-how-to-write-great-tests>`_
 
-Integration Testing
--------------------
+Integration testing
+~~~~~~~~~~~~~~~~~~~
 
 Testing of multiple related units, especially around the interaction between
 them when they are integrated together. They are very useful for preventing
@@ -86,8 +113,8 @@ same data in turn. They are written in generally the same way as unit tests, but
 they might require more setup. This is where PyTest fixtures might come in
 handy.
 
-Functional Testing
-------------------
+Functional testing
+~~~~~~~~~~~~~~~~~~
 
 Testing of larger segments of code, often mimicking an actual use case. This
 might be running a workflow, or a similar test that should exercise most of the
@@ -97,31 +124,10 @@ really help narrow down where the issue is.
 We may not have the resource to do much automatic functional testing, but it
 would be a really nice thing to have.
 
-Documenting Tests
------------------
-
-.. attention::
-
-    🚧 Section under construction. 🚧
-
+Documenting tests
+~~~~~~~~~~~~~~~~~
 
 Much like the rest of the codebase, tests need documenting. `This article`_ has
 some good points on writing docstrings for unit tests.
 
 .. _This article: https://jml.io/pages/test-docstrings.html
-
-Pre-commit Checks
------------------
-
-Pre-commit checks are very quick checks to catch any obvious mistakes. They are
-usually setup to run automatically when you make a commit. The checks are
-installed from .pre-commit-config.yaml, and currently involve formatting python
-code, linting, and checking all files are well formed (no trailing whitespace,
-etc.).
-
-.. code-block:: bash
-
-    # Ensure your conda environment is activated.
-    conda activate cset-dev
-    # Install the checks into git
-    pre-commit install
