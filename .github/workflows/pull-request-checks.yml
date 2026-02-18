@@ -18,7 +18,7 @@ permissions: {}
 jobs:
   tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 5
     permissions:
       contents: read
     strategy:
@@ -52,18 +52,15 @@ jobs:
       - name: Add conda environment to PATH
         run: echo "${HOME}/conda-env/bin" >> $GITHUB_PATH
 
-      - name: Run tests
+      - name: Install local package
+        run: pip install --no-deps .
+
+      - name: Run fast tests
         env:
           PY_COLORS: "1"
           py_ver: ${{ matrix.py-ver }}
         run: |
-          # Install package and run pytest.
-          echo '::group::Installing local package'
-          pip install --no-deps .
-          echo '::endgroup::'
-          echo '::group::Running unit tests'
-          pytest -n logical --verbose --cov --cov-append --cov-config=pyproject.toml
-          echo '::endgroup::'
+          make test-fast
           mv .coverage ".coverage.${py_ver}"
 
       - name: Upload coverage data as artifact
