@@ -1,0 +1,24 @@
+{% if METPLUS_POINT_STAT|default(False) %}
+[scheduling]
+    [[graph]]
+    {% if CSET_CYCLING_MODE == "case_study" %}
+        {% for date in CSET_CASE_DATES %}
+            R1/{{date}} = """
+                metplus_ascii2nc => metplus_point_stat
+                """
+        {% endfor %}
+    {% elif CSET_CYCLING_MODE == "trial" %}
+        {{CSET_TRIAL_CYCLE_PERIOD}} = """
+               metplus_ascii2nc => metplus_point_stat
+               """
+    {% endif %}
+
+[runtime]
+    [[metplus_ascii2nc]]
+    # Runs METplus wrappers for ASCII to nc ingestion of obs.
+        inherit = METPLUS
+
+    [[metplus_point_stat]]
+    # Runs METplus wrappers for point stat calculations.
+        inherit = METPLUS
+{% endif %}
