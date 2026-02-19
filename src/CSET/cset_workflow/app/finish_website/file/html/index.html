@@ -12,60 +12,63 @@
 <body>
     <nav id="plot-selector">
         <header>
-            <h1>CSET</h1>
-            <button id="clear-plots">⎚ Clear view</button>
-            <button id="clear-query">⌫ Clear search</button>
-            <button id="description-toggle">⇲ Hide description</button>
+            <div>
+                <h1>CSET</h1>
+                <button id="clear-plots">⎚ Clear view</button>
+                <button id="clear-query">⌫ Clear search</button>
+                <button id="description-toggle">⇲ Hide description</button>
+            </div>
             <search>
-                <details>
-                    <summary>Filter help</summary>
-                    <p>
-                        The filter consists of a space separated list of conditions.
-                        A diagnostic is shown if <em>all conditions are true</em>.
-                        Each condition takes the form:
-                    </p>
-                    <!-- <code>[ facet ] [ : | = | &lt; | &gt; | &lt;= | &gt;= ] value</code> -->
-                    <code>[ facet ] [ operator ] value</code>
-                    <p>
-                        Where the facet is the name of the attribute of the diagnostic to test, and the operator is one of:
-                    </p>
-                    <dl>
-                        <dt>:</dt>
-                        <dd>A colon tests whether the value is <em>in</em> (is a substring of) the facet.</dd>
-                        <dt>=</dt>
-                        <dd>An equals sign tests whether the value is <em>exactly equal</em> to the facet.</dd>
-                        <dt>&lt;, &gt;, &lt;=, &gt;=</dt>
-                        <dd>A less-than, greater-than, less-than-or-equal or greater-than-or-equal sign tests whether the value sorts before or after the facet, allowing for ranges of dates and numbers.</dd>
-                    </dl>
-                    <p>
-                        If no facet is specified it defaults to checking the value is in the title, equivalent to <code>title:value</code>.
-                        Values may be quoted to include special characters, such as spaces.
-                    </p>
-                    <p>Conditions may be combined with <code>AND</code> or <code>OR</code>, or prefixed with <code>NOT</code> to get the inverse.</p>
-                    <h3>Examples</h3>
-                    <dl>
-                        <dt>histogram</dt>
-                        <dd>"histogram" in the title.</dd>
-                        <dt>title:"air temperature"</dt>
-                        <dd>"air temperature" in the title.</dd>
-                        <dt>field:temperature</dt>
-                        <dd>"temperature" in facet "field".</dd>
-                        <dt>field=temperature</dt>
-                        <dd>"temperature" exactly matches field.</dd>
-                        <dt>NOT temperature</dt>
-                        <dd>"temperature" is not in title.</dd>
-                        <dt>field=x_wind OR field=y_wind</dt>
-                        <dd>Field equals "x_wind" or "y_wind".</dd>
-                        <dt>histogram AND field:temperature</dt>
-                        <dd>"histogram" in title and "temperature in facet "field".</dd>
-                        <dt>(histogram AND field:temperature) OR (time_series AND field:humidity)</dt>
-                        <dd>Histograms of temperature and time series of humidity. Parenthesis indicate precedence.</dd>
-                    </dl>
-                </details>
-                <details id="filter-facets">
-                    <summary>Search facet dropdowns</summary>
-                </details>
                 <input type="search" name="query" id="filter-query" placeholder="Filter...">
+                <div>
+                    <details>
+                        <summary>Filter help</summary>
+                        <p>
+                            The filter consists of a space separated list of conditions.
+                            A diagnostic is shown if <em>all conditions are true</em>.
+                            Each condition takes the form:
+                        </p>
+                        <code>[ facet ] [ operator ] value</code>
+                        <p>
+                            Where the facet is the name of the attribute of the diagnostic to test, and the operator is one of:
+                        </p>
+                        <dl>
+                            <dt>:</dt>
+                            <dd>A colon tests whether the value is <em>in</em> (is a substring of) the facet.</dd>
+                            <dt>=</dt>
+                            <dd>An equals sign tests whether the value is <em>exactly equal</em> to the facet.</dd>
+                            <dt>&lt;, &gt;, &lt;=, &gt;=</dt>
+                            <dd>A less-than, greater-than, less-than-or-equal or greater-than-or-equal sign tests whether the value sorts before or after the facet, allowing for ranges of dates and numbers.</dd>
+                        </dl>
+                        <p>
+                            If no facet is specified it defaults to checking the value is in the title, equivalent to <code>title:value</code>.
+                            Values may be quoted to include special characters, such as spaces.
+                        </p>
+                        <p>Conditions may be combined with <code>AND</code> or <code>OR</code>, or prefixed with <code>NOT</code> to get the inverse.</p>
+                        <h3>Examples</h3>
+                        <dl>
+                            <dt>histogram</dt>
+                            <dd>"histogram" in the title.</dd>
+                            <dt>title:"air temperature"</dt>
+                            <dd>"air temperature" in the title.</dd>
+                            <dt>field:temperature</dt>
+                            <dd>"temperature" in facet "field".</dd>
+                            <dt>field=temperature</dt>
+                            <dd>"temperature" exactly matches field.</dd>
+                            <dt>NOT temperature</dt>
+                            <dd>"temperature" is not in title.</dd>
+                            <dt>field=x_wind OR field=y_wind</dt>
+                            <dd>Field equals "x_wind" or "y_wind".</dd>
+                            <dt>histogram AND field:temperature</dt>
+                            <dd>"histogram" in title and "temperature in facet "field".</dd>
+                            <dt>(histogram AND field:temperature) OR (time_series AND field:humidity)</dt>
+                            <dd>Histograms of temperature and time series of humidity. Parenthesis indicate precedence.</dd>
+                        </dl>
+                    </details>
+                    <details id="filter-facets">
+                        <summary>Search facet dropdowns</summary>
+                    </details>
+                </div>
             </search>
         </header>
         <ul id="diagnostics">
