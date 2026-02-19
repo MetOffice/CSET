@@ -560,16 +560,16 @@ function updateFacetQuery(event) {
   const query = queryElem.value;
   let new_query;
   // Construct regular expression matching facet condition.
-  const pattern = RegExp(`${facet}:\\s*('[^']*'|"[^"]*"|[^ \\t\\(\\)]+)`, "i");
+  const pattern = RegExp(`${facet}=\\s*('[^']*'|"[^"]*"|[^ \\t\\(\\)]+)`, "i");
   if (value === "") {
     // Facet unselected, remove from query.
     new_query = query.replace(pattern, "");
   } else if (pattern.test(query)) {
     // Facet value selected, update the query.
-    new_query = query.replace(pattern, `${facet}:"${value}"`);
+    new_query = query.replace(pattern, `${facet}="${value}"`);
   } else {
     // Facet value selected, add the query.
-    new_query = query + ` ${facet}:"${value}"`;
+    new_query = query + ` ${facet}="${value}"`;
   }
   queryElem.value = new_query.trim();
   doSearch();
