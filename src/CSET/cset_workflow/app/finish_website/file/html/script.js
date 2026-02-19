@@ -425,7 +425,7 @@ function setup_description_toggle_button() {
   });
   // Ensure the description toggle persists across changing the frame content.
   for (const plot_frame of document.querySelectorAll("iframe")) {
-    plot_frame.addEventListener("load", () => {
+    plot_frame.addEventListener("DOMContentLoaded", () => {
       enforce_description_toggle();
     });
   }
@@ -447,9 +447,9 @@ function ensure_dual_frame() {
   dual_frame.classList.remove("hidden");
 }
 
-function add_to_sidebar(record, facet_values) {
-  const diagnostics_list = document.getElementById("diagnostics");
-
+// Create a list entry element for a single diagnostic.
+// Unseen facet values are recorded in facet_values.
+function create_diagnostic_element(record, facet_values) {
   // Add entry's display name.
   const entry_title = document.createElement("h2");
   entry_title.textContent = record["title"];
@@ -459,12 +459,13 @@ function add_to_sidebar(record, facet_values) {
   for (const facet in record) {
     if (facet !== "title" && facet !== "path") {
       const facet_node = document.createElement("div");
-      const facet_name = document.createElement("dt");
-      const facet_value = document.createElement("dd");
-      facet_name.textContent = facet;
-      facet_value.textContent = record[facet];
-      facet_node.append(facet_name, facet_value);
-      facets.append(facet_node);
+      const name = document.createElement("dt");
+      const value = document.createElement("dd");
+      name.textContent = facet;
+      value.textContent = record[facet];
+      facet_node.appendChild(name);
+      facet_node.appendChild(value);
+      facets.appendChild(facet_node);
       // Record facet values.
       if (!(facet in facet_values)) {
         facet_values[facet] = new Set();
@@ -503,22 +504,22 @@ function add_to_sidebar(record, facet_values) {
     });
 
     // Add button to chooser.
-    position_chooser.append(button);
+    position_chooser.appendChild(button);
   }
 
-  // Create entry.
-  const entry = document.createElement("li");
+  // Create list entry for diagnostic.
+  const diagnostic_entry = document.createElement("li");
 
   // Add name, facets, and position chooser to entry.
-  entry.append(entry_title, facets, position_chooser);
+  diagnostic_entry.appendChild(entry_title);
+  diagnostic_entry.appendChild(facets);
+  diagnostic_entry.appendChild(position_chooser);
 
-  // Join entry to the DOM.
-  diagnostics_list.append(entry);
+  return diagnostic_entry;
 }
 
 function add_facet_dropdowns(facet_values) {
-  const facets_container = document.getElementById("filter-facets");
-
+  const facets_dropdowns = document.createDocumentFragment();
   for (const facet in facet_values) {
     const label = document.createElement("label");
     label.setAttribute("for", `facet-${facet}`);
@@ -530,22 +531,25 @@ function add_facet_dropdowns(facet_values) {
     null_option.value = "";
     null_option.defaultSelected = true;
     null_option.textContent = "--- Any ---";
-    select.append(null_option);
+    select.appendChild(null_option);
     // Sort facet values.
     const values = Array.from(facet_values[facet]);
     values.sort();
     for (const value of values) {
       const option = document.createElement("option");
       option.textContent = value;
-      select.append(option);
+      select.appendChild(option);
     }
     select.addEventListener("change", updateFacetQuery);
     // Put label and select in row.
     const facet_row = document.createElement("div");
-    facet_row.append(label, select);
-    // Add to DOM.
-    facets_container.append(facet_row);
+    facet_row.appendChild(label);
+    facet_row.appendChild(select);
+    facets_dropdowns.appendChild(facet_row);
   }
+  // Add to DOM.
+  const facets_container = document.getElementById("filter-facets");
+  facets_container.appendChild(facets_dropdowns);
 }
 
 // Update query based on facet dropdown value.
@@ -588,25 +592,23 @@ function setup_plots_sidebar() {
         return;
       }
       response.text().then((data) => {
+        const diagnostics = document.createDocumentFragment();
         const facet_values = {};
-        // Remove throbber now download has finished.
-        document.querySelector("#diagnostics > loading-throbber").remove();
         for (let line of data.split("\n")) {
           line = line.trim();
           // Skip blank lines.
           if (line.length) {
-            add_to_sidebar(JSON.parse(line), facet_values);
+            const diagnostic = create_diagnostic_element(
+              JSON.parse(line),
+              facet_values,
+            );
+            diagnostics.appendChild(diagnostic);
           }
         }
+        // Replace the throbber with the diagnostics.
+        const diagnostics_list = document.getElementById("diagnostics");
+        diagnostics_list.replaceChildren(diagnostics);
         add_facet_dropdowns(facet_values);
-        // Do search if we already have a query specified in the URL.
-        const search = document.getElementById("filter-query");
-        const params = new URLSearchParams(document.location.search);
-        const initial_query = params.get("q");
-        if (initial_query) {
-          search.value = initial_query;
-          doSearch();
-        }
       });
     })
     .catch((err) => {
@@ -639,8 +641,13 @@ function setup_clear_search_button() {
   });
 }
 
+// Track the current timeout for search debouncing.
+let searchTimeoutID = undefined;
+
 // Filter the displayed diagnostics by the query.
 function doSearch() {
+  // Clear timeout to prevent searching on both input and change events.
+  clearTimeout(searchTimeoutID);
   const queryElem = document.getElementById("filter-query");
   const query = queryElem.value;
   // Update URL in address bar to match current query, deleting if blank.
@@ -685,7 +692,6 @@ function doSearch() {
 // until quarter of a second of no typing has elapsed. To maximised perceived
 // responsiveness immediately perform the search if a space is typed, as that
 // indicates a completed search term.
-let searchTimeoutID = undefined;
 function debounce(event) {
   clearTimeout(searchTimeoutID);
   if (event.data === " ") {
@@ -699,8 +705,15 @@ function debounce(event) {
 function setup_search() {
   const search = document.getElementById("filter-query");
   search.addEventListener("input", debounce);
-  // Immediately search if input is unfocused.
+  // Trigger search immediately when input is unfocused.
   search.addEventListener("change", doSearch);
+  // Do initial search if we already have a query specified in the URL.
+  const params = new URLSearchParams(document.location.search);
+  const initial_query = params.get("q");
+  if (initial_query) {
+    search.value = initial_query;
+    doSearch();
+  }
 }
 
 // Run everything.
