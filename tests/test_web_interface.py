@@ -89,3 +89,18 @@ def test_filter_title(page: Page, webserver: str):
     page.get_by_role("button", name="⌫ Clear search").click()
     expect(page.get_by_role("heading", name="Model A").first).to_be_visible()
     expect(page.get_by_role("heading", name="Model B").first).to_be_visible()
+
+
+@pytest.mark.slow
+def test_facet_dropdown(page: Page, webserver: str):
+    """Test filtering diagnostics via the facet dropdowns."""
+    page.goto(webserver)
+
+    # Open the facets panel, then select a value for a facet.
+    page.get_by_text("Search facet dropdowns").click()
+    page.get_by_label("unique").select_option("foo")
+
+    # Check we filtered correctly.
+    expect(page.get_by_role("listitem")).to_contain_text("uniquefoo")
+    # Line duplicated so we don't immediately close the browser during the demo.
+    expect(page.get_by_role("listitem")).to_contain_text("uniquefoo")
