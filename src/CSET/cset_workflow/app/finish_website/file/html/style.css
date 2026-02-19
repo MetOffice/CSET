@@ -34,7 +34,6 @@ a:hover {
 }
 
 nav {
-  display: inline;
   float: left;
   width: 35em;
   height: 100%;
@@ -43,18 +42,30 @@ nav {
   border-right: 1px solid var(--secondary-fg-colour);
 
   > header {
-    margin: 8px;
+    position: sticky;
+    top: 0;
+    background-color: var(--secondary-bg-colour);
 
-    > h1 {
-      font-size: xx-large;
-      margin: 0;
-    }
+    > div {
+      padding: 0 8px;
+      display: flex;
+      justify-content: space-between;
 
-    > button {
-      margin: 4px 0;
+      > h1 {
+        font-size: xx-large;
+        margin: 0;
+      }
     }
 
     > search {
+      padding: 8px;
+      box-shadow: 0 4px 4px var(--shadow-colour);
+
+      > div {
+        max-height: 66vh;
+        overflow-y: auto;
+      }
+
       dt {
         font-family: monospace;
       }
@@ -62,7 +73,6 @@ nav {
       #filter-query {
         width: 100%;
         padding: 0.5em 1em;
-        margin: 8px 0;
         border-radius: 3em;
 
         &:invalid {
@@ -89,7 +99,7 @@ nav {
   > ul {
     list-style: none;
     padding: 0;
-    margin-top: 8px;
+    margin: 0;
 
     > li {
       padding: 5px 4px 3px;
