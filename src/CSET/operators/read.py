@@ -518,14 +518,17 @@ def _fix_no_spatial_coords_callback(cube: iris.cube.Cube):
         return cube
 
     elif not utils.is_spatialdim(cube):
-        lat_min = cube.attributes.get("geospatial_lat_min")
-        lat_max = cube.attributes.get("geospatial_lat_max")
-        lon_min = cube.attributes.get("geospatial_lon_min")
-        lon_max = cube.attributes.get("geospatial_lon_max")
-
-        if None in (lat_min, lat_max, lon_min, lon_max):
-            # Nothing here--> leave cube untouched
+        try:
+            lat_min = cube.attributes.get("geospatial_lat_min")
+            lat_max = cube.attributes.get("geospatial_lat_max")
+            lon_min = cube.attributes.get("geospatial_lon_min")
+            lon_max = cube.attributes.get("geospatial_lon_max")
+        except ValueError:
+        # Don't modify non-spatial cubes.
             return cube
+    #    if None in (lat_min, lat_max, lon_min, lon_max):
+            # Nothing here--> leave cube untouched
+     #       return cube
 
         lon_val = (lon_min + lon_max) / 2.0
         lat_val = (lat_min + lat_max) / 2.0
