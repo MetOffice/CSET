@@ -144,7 +144,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         ANALYSIS_OFFSET = {{model["analysis_offset"]}}
     {% endfor %}
 
-    {% if SURFACE_SYNOP_OBS is defined and SURFACE_SYNOP_OBS %}
+    {% if SURFACE_SYNOP_OBS %}
     [[fetch_obs]]
     # Fetch observations from the MetDB.
     inherit = FETCH_DATA
