@@ -513,7 +513,7 @@ def _grid_longitude_fix_callback(cube: iris.cube.Cube) -> iris.cube.Cube:
 def _fix_no_spatial_coords_callback(cube: iris.cube.Cube):
     import CSET.operators._utils as utils
 
-    # # Don't modify spatial cubes that already have spatial dimensions
+    # Don't modify spatial cubes that already have spatial dimensions
     if utils.is_spatialdim(cube):
         return cube
 
@@ -524,12 +524,12 @@ def _fix_no_spatial_coords_callback(cube: iris.cube.Cube):
         lon_max = cube.attributes.get("geospatial_lon_max")
 
         if None in (lat_min, lat_max, lon_min, lon_max):
-            raise ValueError("No geospatial metadata available")
+            # Nothing here--> leave cube untouched
+            return cube
 
         lon_val = (lon_min + lon_max) / 2.0
         lat_val = (lat_min + lat_max) / 2.0
 
-        #       print (lat_val, lon_val)
         lat_coord = iris.coords.DimCoord(
             lat_val,
             standard_name="latitude",

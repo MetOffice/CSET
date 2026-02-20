@@ -73,6 +73,7 @@ def remove_attribute(
             cube.attributes.pop(attr, None)
 
     cubes = cubes.merge()
+    # combine items that can be merged after removing unwanted attributes
     cubes = cubes.concatenate()
     return cubes
 
