@@ -1493,9 +1493,10 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
         plt.subplot(grid_size, grid_size, subplot)
 
         frequency = member.coord("frequency").points
+        power_spectrum = member.data
 
         ax = plt.gca()
-        ax.plot(frequency, member.data)
+        ax.plot(frequency, power_spectrum[0])
         ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
 
     # Overall figure title.
@@ -1520,9 +1521,10 @@ def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
     # Loop over all slices along the stamp_coordinate
     for member in cube.slices_over(stamp_coordinate):
         frequency = member.coord("frequency").points
+        power_spectrum = member.data
         ax.plot(
             frequency,
-            member.data,
+            power_spectrum[0],
             label=f"Member #{member.coord(stamp_coordinate).points[0]}",
         )
 
@@ -1994,11 +1996,8 @@ def _validate_cube_shape(
     if isinstance(cube, iris.cube.CubeList) and len(cube) != num_models:
         raise ValueError(
             f"The number of model names ({num_models}) should equal the number "
-            f"of cubes ({len(cube)}).  {cube}"
+            f"of cubes ({len(cube)})."
         )
-
-
-# {cube.dim_coords}, {cube.ndim},
 
 
 def _validate_cubes_coords(
