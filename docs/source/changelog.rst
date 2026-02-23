@@ -5,6 +5,25 @@ Changelog
     Title: version (release date)
     Short prose summary of most important changes.
     List of changes with who made them and a link to the PR.
+    Arrange the changes under the following headings:
+
+    ⚙️ Operators
+    ~~~~~~~~~~~~
+
+    🥣 Recipes
+    ~~~~~~~~~~
+
+    🔄 Workflow
+    ~~~~~~~~~~~
+
+    📖 Documentation
+    ~~~~~~~~~~~~~~~~
+
+    🏗️ Infrastructure
+    ~~~~~~~~~~~~~~~~~
+
+    👷 New Contributors
+    ~~~~~~~~~~~~~~~~~~~
 
 .. Unreleased
 .. ----------
@@ -12,6 +31,59 @@ Changelog
 .. Add changes here, probably taken from GitHub release notes.
 .. Highlight any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
+
+26.2.0 (2026-02-23)
+-------------------
+
+Contained within the first release of 2026 are a number of quality of life
+tweaks, including improvements to ensemble data reading, new land and sea mask
+recipes, better plotting of rotated pole domains, improvements to the
+reliability of the web interface, and improvements to the logging of the
+workflow so the logs are not split between job.err and job.out, aiding
+debugging.
+
+⚙️ Operators
+~~~~~~~~~~~~
+
+* Add attribute constraint operator by `@jfrost-mo`_ in :pr:`1044`
+* Allow rotated pole plots to centre on 180 meridian if required by `@JorgeBornemann`_ in :pr:`1848`
+* Convert filter multiple cubes from extract_cube to extract by `@daflack`_ in :pr:`1861`
+* Revert "Update ceilometer_cloud_amount_maxrnd" by `@jfrost-mo`_ in :pr:`1869`
+* Enable transverse mercator plotting in spatial plot operator by `@Sylviabohnenstengel`_ in :pr:`1885`
+* Remove ensemble loading heuristics by `@jfrost-mo`_ in :pr:`1888`
+* Handle converting multiple wind cubes to point to true north by `@jfrost-mo`_ in :pr:`1892`
+
+🥣 Recipes
+~~~~~~~~~~
+
+* Add land and sea mask recipes for timeseries by `@daflack`_ in :pr:`1874`
+
+🔄 Workflow
+~~~~~~~~~~~
+
+* Include hash in parbaked recipe filename to avoid collisions by `@jfrost-mo`_ in :pr:`1875`
+* Move static web resources to top level by `@jfrost-mo`_ in :pr:`1878`
+* Unify install_website_skeleton and finish_website by `@jfrost-mo`_ in :pr:`1879`
+* Add cache busting to CSET web UI to avoid showing old versions by `@jfrost-mo`_ in :pr:`1880`
+* Change sorted function when assigning model colours by `@mo-sanamahmood`_ in :pr:`1881`
+* No longer set sender in mail command by `@jfrost-mo`_ in :pr:`1902`
+* Send logs to stdout instead of stderr by `@jfrost-mo`_ in :pr:`1903`
+* Skip rather than suicide bake task when there are no recipes by `@jfrost-mo`_ in :pr:`1904`
+* Modify METPlus apps to facilitate using at multiple sites by `@JorgeBornemann`_ in :pr:`1906`
+* Met Office METplus observations support via ASCII2NC by `@RachelNorth`_ in :pr:`1918`
+
+📖 Documentation
+~~~~~~~~~~~~~~~~
+
+* Suggest make test and rearrange for clarity in testing docs by `@jfrost-mo`_ in :pr:`1915`
+
+🏗️ Infrastructure
+~~~~~~~~~~~~~~~~~
+
+* Cleanup unnecessary imports in conftest.py by `@jfrost-mo`_ in :pr:`1887`
+* Use API key for uploading coverage reports to tmpweb.net by `@jfrost-mo`_ in :pr:`1895`
+* Tighten Actions timeouts and use slim runner for pages publication by `@jfrost-mo`_ in :pr:`1900`
+* Skip slow tests in CI, only running them weekly by `@jfrost-mo`_ in :pr:`1914`
 
 25.12.1 (2025-12-10)
 --------------------
