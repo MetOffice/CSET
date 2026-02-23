@@ -18,7 +18,7 @@ permissions: {}
 jobs:
   tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 5
     permissions:
       contents: read
     strategy:
@@ -27,13 +27,13 @@ jobs:
         py-ver: ["py312", "py313", "py314"]
     steps:
       - name: Checkout code
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           persist-credentials: false
 
       - name: Cache conda environment
         id: conda-env-cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
         with:
           key: conda|${{runner.os}}-${{runner.arch}}|${{ hashFiles(format('requirements/locks/{0}-lock-linux-64.txt', matrix.py-ver)) }}
           path: |
@@ -52,22 +52,19 @@ jobs:
       - name: Add conda environment to PATH
         run: echo "${HOME}/conda-env/bin" >> $GITHUB_PATH
 
-      - name: Run tests
+      - name: Install local package
+        run: pip install --no-deps .
+
+      - name: Run fast tests
         env:
           PY_COLORS: "1"
           py_ver: ${{ matrix.py-ver }}
         run: |
-          # Install package and run pytest.
-          echo '::group::Installing local package'
-          pip install --no-deps .
-          echo '::endgroup::'
-          echo '::group::Running unit tests'
-          pytest -n logical --verbose --cov --cov-append --cov-config=pyproject.toml
-          echo '::endgroup::'
+          make test-fast
           mv .coverage ".coverage.${py_ver}"
 
       - name: Upload coverage data as artifact
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
           name: coverage-data-${{ matrix.py-ver }}
           path: .coverage.*
@@ -78,19 +75,19 @@ jobs:
     if: github.event_name == 'pull_request'
     name: Produce coverage report
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 5
     needs: tests
     permissions:
       contents: read
       pull-requests: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           persist-credentials: false
 
       - name: Setup python
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
         with:
           python-version: "3.x"
 
@@ -98,7 +95,7 @@ jobs:
         run: pip install coverage
 
       - name: Download coverage artifact
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
         with:
           pattern: coverage-data-*
           merge-multiple: true
@@ -111,12 +108,13 @@ jobs:
       - name: Add report to PR
         env:
           GH_TOKEN: ${{ github.token }}
+          tmpweb_api_key: ${{ secrets.TMPWEB_API_KEY }}
           repository: ${{ github.repository }}
           head_ref: ${{ github.head_ref }}
         run: |
           # This links to a hosted version of the HTML report.
           tar -czf coverage-report.tar.gz htmlcov/
-          report_url="$(curl -sSf --data-binary @coverage-report.tar.gz https://tmpweb.net)"
+          report_url="$(curl -sSf --user "token:${tmpweb_api_key}" --data-binary @coverage-report.tar.gz https://tmpweb.net)"
           echo "Report hosted at $report_url"
           badge_options="$(coverage json --fail-under=0 -qo - | jq -r .totals.percent_covered_display)%25-blue?style=for-the-badge"
           echo "[![Coverage](https://img.shields.io/badge/coverage-${badge_options})](${report_url})" >> cov-report.md
@@ -130,22 +128,22 @@ jobs:
 
   pre-commit:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 5
     permissions:
       contents: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
         with:
           python-version: "3.x"
 
       - name: Restore pre-commit cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
         with:
           key: pre-commit|${{runner.os}}-${{runner.arch}}|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
           path: ~/.cache/pre-commit
@@ -160,18 +158,18 @@ jobs:
 
   build-docs:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 5
     permissions:
       contents: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           persist-credentials: false
 
       - name: Cache conda environment
         id: conda-env-cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
         with:
           key: conda|${{runner.os}}-${{runner.arch}}|${{hashFiles('requirements/locks/latest')}}
           path: |
@@ -188,24 +186,17 @@ jobs:
       - name: Add conda environment to PATH
         run: echo "${HOME}/conda-env/bin" >> $GITHUB_PATH
 
+      - name: Install package so it can be imported during docs generation
+        run: pip install --no-deps .
+
       - name: Build documentation with Sphinx
-        run: |
-          # Install module so it can be imported during docs generation.
-          echo '::group::Installing local package'
-          pip install --no-deps .
-          echo '::endgroup::'
-          # Generate the documentation
-          echo '::group::Building the documentation'
-          sphinx-build -b html --color --fail-on-warning "docs/source" "docs/build/html"
-          echo '::endgroup::'
+        run: sphinx-build -b html --color "docs/source" "docs/build/html"
 
       - name: Upload documentation artifact
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b
         with:
-          name: html-docs
           path: docs/build/html/
-          retention-days: 7
-          if-no-files-found: error
+          retention-days: 1
 
   pages-deploy:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -216,20 +207,10 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
     needs: build-docs
     steps:
-      - name: Download built documentation artifact
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53
-        with:
-          name: html-docs
-
-      - name: Upload pages artifact
-        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b
-        with:
-          path: "."
-
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e

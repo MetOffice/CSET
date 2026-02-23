@@ -16,19 +16,19 @@ jobs:
   build-package:
     name: Build release package
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 5
     permissions:
       contents: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           # Get full history to ensure setuptools_scm is happy.
           fetch-depth: 0
           persist-credentials: false
 
       - name: Setup python
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
         with:
             python-version: "3.x"
 
@@ -39,17 +39,17 @@ jobs:
         run: python3 -m build
 
       - name: "Upload package as artifact"
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
           name: packages
           path: dist/
-          retention-days: 10
+          retention-days: 1
           if-no-files-found: error
 
   pypi-publish:
     name: Publish to PyPI
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 5
     needs: build-package
     environment:
       name: release
@@ -57,7 +57,7 @@ jobs:
       id-token: write
     steps:
       - name: Download package artifact
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
         with:
           name: packages
           path: dist/
