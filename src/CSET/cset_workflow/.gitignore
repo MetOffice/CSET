@@ -1,6 +1,7 @@
 # Exclude site-specific files that are held in a separate private repo.
-site/
-demo_pointstat/
+/site/
+/opt/
+/app/demo_pointstat/
 *metdb*
 restricted*
 
