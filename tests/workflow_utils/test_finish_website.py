@@ -79,9 +79,8 @@ def test_write_workflow_status(tmp_path):
     assert re.search(pattern, content)
 
 
-def test_construct_index(monkeypatch, tmp_path):
+def test_construct_index(tmp_path):
     """Test putting the index together."""
-    monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", str(tmp_path))
     plots_dir = tmp_path / "web/plots"
     plots_dir.mkdir(parents=True)
 
@@ -102,17 +101,19 @@ def test_construct_index(monkeypatch, tmp_path):
     finish_website.construct_index(plots_dir.parent)
 
     # Check index.
-    index_file = plots_dir / "index.json"
+    index_file = plots_dir / "index.jsonl"
     assert index_file.is_file()
     with open(index_file, "rt", encoding="UTF-8") as fp:
-        index = json.load(fp)
-    expected = {"Category": {"20250101": {"p1": "P1", "p2": "P2"}}}
+        index = fp.read()
+    expected = (
+        '{"case_date":"20250101","category":"Category","path":"p1","title":"P1"}\n'
+        '{"case_date":"20250101","category":"Category","path":"p2","title":"P2"}\n'
+    )
     assert index == expected
 
 
-def test_construct_index_aggregation_case(monkeypatch, tmp_path):
+def test_construct_index_aggregation_case(tmp_path):
     """Construct the index from a diagnostics without a case date."""
-    monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", str(tmp_path))
     plots_dir = tmp_path / "web/plots"
     plots_dir.mkdir(parents=True)
 
@@ -125,17 +126,40 @@ def test_construct_index_aggregation_case(monkeypatch, tmp_path):
     finish_website.construct_index(plots_dir.parent)
 
     # Check index.
-    index_file = plots_dir / "index.json"
+    index_file = plots_dir / "index.jsonl"
     assert index_file.is_file()
     with open(index_file, "rt", encoding="UTF-8") as fp:
         index = json.load(fp)
-    expected = {"Category": {"Aggregation": {"p1": "P1"}}}
+    expected = {"category": "Category", "path": "p1", "title": "P1"}
     assert index == expected
 
 
-def test_construct_index_invalid(monkeypatch, tmp_path, caplog):
+def test_construct_index_remove_keys(tmp_path):
+    """Unneeded keys are removed from the index."""
+    plots_dir = tmp_path / "web/plots"
+    plots_dir.mkdir(parents=True)
+
+    # Plot directories.
+    plot1 = plots_dir / "p1/meta.json"
+    plot1.parent.mkdir()
+    plot1.write_text(
+        '{"category": "Category", "title": "P1", "case_date": "20250101", "plots": ["a.png"], "description": "Foo"}'
+    )
+
+    # Construct index.
+    finish_website.construct_index(plots_dir.parent)
+
+    # Check index.
+    index_file = plots_dir / "index.jsonl"
+    assert index_file.is_file()
+    with open(index_file, "rt", encoding="UTF-8") as fp:
+        index = json.loads(fp.readline())
+    assert "plots" not in index
+    assert "description" not in index
+
+
+def test_construct_index_invalid(tmp_path, caplog):
     """Test constructing index when metadata is invalid."""
-    monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", str(tmp_path))
     plots_dir = tmp_path / "web/plots"
     plots_dir.mkdir(parents=True)
 
@@ -152,12 +176,9 @@ def test_construct_index_invalid(monkeypatch, tmp_path, caplog):
     assert level == logging.ERROR
     assert "p1/meta.json is invalid, skipping." in message
 
-    index_file = plots_dir / "index.json"
+    index_file = plots_dir / "index.jsonl"
     assert index_file.is_file()
-    with open(index_file, "rt", encoding="UTF-8") as fp:
-        index = json.load(fp)
-    expected = {}
-    assert index == expected
+    assert index_file.stat().st_size == 0
 
 
 def test_entrypoint(monkeypatch):
