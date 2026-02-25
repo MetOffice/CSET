@@ -316,6 +316,32 @@ def load(conf: Config):
             aggregation=False,
         )
 
+    # Cardington air temperature time series.
+    if conf.CARDINGTON_AIR_TEMPERATURE_SINGLE_POINT_TIME_SERIES:
+        base_model = models[0]
+        for model in models[1:]:
+            yield RawRecipe(
+                recipe="cardington_air_temperature_single_point_time_series.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
+    # Cardington relative humidity time series.
+    if conf.CARDINGTON_RELATIVE_HUMIDITY_SINGLE_POINT_TIME_SERIES:
+        base_model = models[0]
+        for model in models[1:]:
+            yield RawRecipe(
+                recipe="cardington_relative_humidity_single_point_time_series.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
     # Gale force winds presence.
     if conf.SFC_GALE_FORCE_WINDS_PRESENCE_DOMAIN_MEAN_TIMESERIES:
         yield RawRecipe(

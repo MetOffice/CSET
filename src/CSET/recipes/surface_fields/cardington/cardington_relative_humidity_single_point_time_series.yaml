@@ -1,0 +1,48 @@
+category: Time series of relative humidity at Cardington single point
+title: Time series of 'relative humidity' at lat_pt:52.10438, lon_pt:-0.42286 specific to Cardington gridpoint.
+description: Plots a time series of the relative humidity at a selected Cardington gridpoint.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: ['Cardington','$MODEL_NAME']
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: 'relative_humidity'
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: 'relative_humidity'
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        levels: []
+        coordinate: "pressure"
+
+  - operator: misc.remove_attribute
+    attribute: ['time_coverage_end', 'time_coverage_start', 'valid_min', 'valid_max', 'date', 'date_created']
+
+  - operator: filters.filter_multiple_cubes
+    cardington:
+        operator: constraints.generate_attribute_constraint
+        attribute: 'height'
+        value: 1.2
+    model:
+        operator: constraints.generate_attribute_constraint
+        # This currently only works for UM. Maybe we need another operator to make this nicer?
+        attribute: STASH
+
+  - operator: regrid.regrid_to_single_point
+    lat_pt: 52.10438
+    lon_pt: -0.42286
+    latlon_in_type: "realworld"
+    method: "Nearest"
+    boundary_margin: 0
+
+  # Make a single NetCDF with all the data inside it.
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+  # Plot the data.
+  - operator: plot.plot_line_series
