@@ -344,11 +344,16 @@ def regrid_to_single_point(
             cube_rgd = cube.interpolate(((lat, lat_tr), (lon, lon_tr)), regrid_method())
             regridded_cubes.append(cube_rgd)
         else:
-            if np.abs((lat_tr - lat_pt)) > 0.1 or np.abs((lat_tr > lat_pt)) > 0.1:
+            if np.abs((lat_tr - lat_pt)) > 0.1 or np.abs((lon_tr - lon_pt)) > 0.1:
                 raise ValueError(
                     "Selected point is too far from the specified coordinates."
                 )
             else:
+                print(
+                    "*** lat/long diffs",
+                    np.abs(lat_tr - lat_pt),
+                    np.abs(lon_tr - lon_pt),
+                )
                 regridded_cubes.append(cube)
 
     # Preserve returning a cube if only a cube has been supplied to regrid.

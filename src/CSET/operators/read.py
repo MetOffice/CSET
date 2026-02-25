@@ -530,6 +530,8 @@ def _fix_no_spatial_coords_callback(cube: iris.cube.Cube):
         lon_val = (lon_min + lon_max) / 2.0
         lat_val = (lat_min + lat_max) / 2.0
 
+        print("*** lat / long from NetCDF ***", lon_val, lat_val)
+
         lat_coord = iris.coords.DimCoord(
             lat_val,
             standard_name="latitude",
