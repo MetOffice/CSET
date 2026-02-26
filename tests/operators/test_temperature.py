@@ -1,0 +1,723 @@
+# © Crown copyright, Met Office (2022-2026) and CSET contributors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Test temperature operators."""
+
+import cf_units
+import iris.cube
+import numpy as np
+
+from CSET.operators import _atmospheric_constants, humidity, misc, pressure, temperature
+
+
+def test_dewpoint_temperature(
+    temperature_for_conversions_cube, relative_humidity_for_conversions_cube
+):
+    """Test calculation of dewpoint temperature."""
+    vp = pressure.vapour_pressure_from_relative_humidity(
+        temperature_for_conversions_cube, relative_humidity_for_conversions_cube
+    )
+    expected_data = vp.copy()
+    expected_data.data = (243.5 * np.log(vp.core_data()) - 440.8) / (
+        19.48 - np.log(vp.core_data())
+    )
+    expected_data.data[
+        temperature_for_conversions_cube.data - _atmospheric_constants.T0 < -35.0
+    ] = np.nan
+    expected_data.data[
+        temperature_for_conversions_cube.data - _atmospheric_constants.T0 > 35.0
+    ] = np.nan
+    expected_data.units = "Celsius"
+    expected_data = misc.convert_units(expected_data, "K")
+    assert np.allclose(
+        expected_data.data,
+        temperature.dewpoint_temperature(
+            temperature_for_conversions_cube, relative_humidity_for_conversions_cube
+        ).data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
+def test_dewpoint_temperature_name(
+    temperature_for_conversions_cube, relative_humidity_for_conversions_cube
+):
+    """Test name of dewpoint temperature cube."""
+    expected_name = "dewpoint_temperature"
+    assert (
+        expected_name
+        == temperature.dewpoint_temperature(
+            temperature_for_conversions_cube, relative_humidity_for_conversions_cube
+        ).name()
+    )
+
+
+def test_dewpoint_temperature_unit(
+    temperature_for_conversions_cube, relative_humidity_for_conversions_cube
+):
+    """Test units for dewpoint temperature cube."""
+    expected_units = cf_units.Unit("K")
+    assert (
+        expected_units
+        == temperature.dewpoint_temperature(
+            temperature_for_conversions_cube, relative_humidity_for_conversions_cube
+        ).units
+    )
+
+
+def test_dewpoint_temperature_cubelist(
+    temperature_for_conversions_cube, relative_humidity_for_conversions_cube
+):
+    """Test calculation of dewpoint temperature for a CubeList."""
+    vp = pressure.vapour_pressure_from_relative_humidity(
+        temperature_for_conversions_cube, relative_humidity_for_conversions_cube
+    )
+    expected_data = vp.copy()
+    expected_data.data = (243.5 * np.log(vp.core_data()) - 440.8) / (
+        19.48 - np.log(vp.core_data())
+    )
+    expected_data.data[
+        temperature_for_conversions_cube.data - _atmospheric_constants.T0 < -35.0
+    ] = np.nan
+    expected_data.data[
+        temperature_for_conversions_cube.data - _atmospheric_constants.T0 > 35.0
+    ] = np.nan
+    expected_data.units = "Celsius"
+    expected_data = misc.convert_units(expected_data, "K")
+    expected_list = iris.cube.CubeList([expected_data, expected_data])
+    temperature_list = iris.cube.CubeList(
+        [temperature_for_conversions_cube, temperature_for_conversions_cube]
+    )
+    rh_list = iris.cube.CubeList(
+        [relative_humidity_for_conversions_cube, relative_humidity_for_conversions_cube]
+    )
+    actual_cubelist = temperature.dewpoint_temperature(temperature_list, rh_list)
+    for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
+        assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
+
+
+def test_virtual_temperature(
+    temperature_for_conversions_cube, mixing_ratio_for_conversions_cube
+):
+    """Test to calculate virtual temperature."""
+    expected_data = temperature_for_conversions_cube * (
+        (mixing_ratio_for_conversions_cube + _atmospheric_constants.EPSILON)
+        / (_atmospheric_constants.EPSILON * (1 + mixing_ratio_for_conversions_cube))
+    )
+    assert np.allclose(
+        expected_data.data,
+        temperature.virtual_temperature(
+            temperature_for_conversions_cube, mixing_ratio_for_conversions_cube
+        ).data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
+def test_virtual_temperature_name(
+    temperature_for_conversions_cube, mixing_ratio_for_conversions_cube
+):
+    """Test name of virtual temperature cube."""
+    expected_name = "virtual_temperature"
+    assert (
+        expected_name
+        == temperature.virtual_temperature(
+            temperature_for_conversions_cube, mixing_ratio_for_conversions_cube
+        ).name()
+    )
+
+
+def test_virtual_temperature_units(
+    temperature_for_conversions_cube, mixing_ratio_for_conversions_cube
+):
+    """Test units of virtual temperature cube."""
+    expected_units = cf_units.Unit("K")
+    assert (
+        expected_units
+        == temperature.virtual_temperature(
+            temperature_for_conversions_cube, mixing_ratio_for_conversions_cube
+        ).units
+    )
+
+
+def test_virtual_temperature_cubelist(
+    temperature_for_conversions_cube, mixing_ratio_for_conversions_cube
+):
+    """Test to calculate virtual temperature for a CubeList."""
+    expected_data = temperature_for_conversions_cube * (
+        (mixing_ratio_for_conversions_cube + _atmospheric_constants.EPSILON)
+        / (_atmospheric_constants.EPSILON * (1 + mixing_ratio_for_conversions_cube))
+    )
+    expected_list = iris.cube.CubeList([expected_data, expected_data])
+    temperature_list = iris.cube.CubeList(
+        [temperature_for_conversions_cube, temperature_for_conversions_cube]
+    )
+    mixing_ratio_list = iris.cube.CubeList(
+        [mixing_ratio_for_conversions_cube, mixing_ratio_for_conversions_cube]
+    )
+    actual_cubelist = temperature.virtual_temperature(
+        temperature_list, mixing_ratio_list
+    )
+    for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
+        assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
+
+
+def test_wet_bulb_temperature(
+    temperature_for_conversions_cube, relative_humidity_for_conversions_cube
+):
+    """Test to calculate wet-bulb temperature."""
+    T_units = misc.convert_units(temperature_for_conversions_cube, "Celsius")
+    RH_units = misc.convert_units(relative_humidity_for_conversions_cube, "%")
+    TW = (
+        T_units * np.arctan(0.151977 * (RH_units.core_data() + 8.313659) ** 0.5)
+        + np.arctan(T_units.core_data() + RH_units.core_data())
+        - np.arctan(RH_units.core_data() - 1.676331)
+        + 0.00391838
+        * (RH_units.core_data()) ** (3.0 / 2.0)
+        * np.arctan(0.023101 * RH_units.core_data())
+        - 4.686035
+    )
+    TW = misc.convert_units(TW, "K")
+    TW.data[T_units.data < -20.0] = np.nan
+    TW.data[T_units.data > 50.0] = np.nan
+    TW.data[RH_units.data < 5.0] = np.nan
+    TW.data[RH_units.data > 99.0] = np.nan
+    assert np.allclose(
+        TW.data,
+        temperature.wet_bulb_temperature(
+            temperature_for_conversions_cube, relative_humidity_for_conversions_cube
+        ).data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
+def test_wet_bulb_temperature_units(
+    temperature_for_conversions_cube, relative_humidity_for_conversions_cube
+):
+    """Test units for wet bulb temperature cube."""
+    expected_units = cf_units.Unit("K")
+    assert (
+        expected_units
+        == temperature.wet_bulb_temperature(
+            temperature_for_conversions_cube, relative_humidity_for_conversions_cube
+        ).units
+    )
+
+
+def test_wet_bulb_temperature_name(
+    temperature_for_conversions_cube, relative_humidity_for_conversions_cube
+):
+    """Test name for wet bulb temperature cube."""
+    expected_name = "wet_bulb_temperature"
+    assert (
+        expected_name
+        == temperature.wet_bulb_temperature(
+            temperature_for_conversions_cube, relative_humidity_for_conversions_cube
+        ).name()
+    )
+
+
+def test_wet_bulb_temperature_cubelist(
+    temperature_for_conversions_cube, relative_humidity_for_conversions_cube
+):
+    """Test to calculate wet-bulb temperature for a CubeList."""
+    T_units = misc.convert_units(temperature_for_conversions_cube, "Celsius")
+    RH_units = misc.convert_units(relative_humidity_for_conversions_cube, "%")
+    TW = (
+        T_units * np.arctan(0.151977 * (RH_units.core_data() + 8.313659) ** 0.5)
+        + np.arctan(T_units.core_data() + RH_units.core_data())
+        - np.arctan(RH_units.core_data() - 1.676331)
+        + 0.00391838
+        * (RH_units.core_data()) ** (3.0 / 2.0)
+        * np.arctan(0.023101 * RH_units.core_data())
+        - 4.686035
+    )
+    TW = misc.convert_units(TW, "K")
+    TW.data[T_units.data < -20.0] = np.nan
+    TW.data[T_units.data > 50.0] = np.nan
+    TW.data[RH_units.data < 5.0] = np.nan
+    TW.data[RH_units.data > 99.0] = np.nan
+    expected_list = iris.cube.CubeList([TW, TW])
+    temperature_list = iris.cube.CubeList(
+        [temperature_for_conversions_cube, temperature_for_conversions_cube]
+    )
+    rh_list = iris.cube.CubeList(
+        [relative_humidity_for_conversions_cube, relative_humidity_for_conversions_cube]
+    )
+    actual_cubelist = temperature.wet_bulb_temperature(temperature_list, rh_list)
+    for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
+        assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
+
+
+def test_potential_temperature(
+    temperature_for_conversions_cube, pressure_for_conversions_cube
+):
+    """Test to calculate potenital temperature."""
+    expected_data = temperature_for_conversions_cube / pressure.exner_pressure(
+        pressure_for_conversions_cube
+    )
+    assert np.allclose(
+        expected_data.data,
+        temperature.potential_temperature(
+            temperature_for_conversions_cube, pressure_for_conversions_cube
+        ).data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
+def test_potenital_temperature_name(
+    temperature_for_conversions_cube, pressure_for_conversions_cube
+):
+    """Test name of potential temperature cube."""
+    expected_name = "potential_temperature"
+    assert (
+        expected_name
+        == temperature.potential_temperature(
+            temperature_for_conversions_cube, pressure_for_conversions_cube
+        ).name()
+    )
+
+
+def test_potential_temperature_units(
+    temperature_for_conversions_cube, pressure_for_conversions_cube
+):
+    """Test units of potential temperature cueb."""
+    expected_units = cf_units.Unit("K")
+    assert (
+        expected_units
+        == temperature.potential_temperature(
+            temperature_for_conversions_cube, pressure_for_conversions_cube
+        ).units
+    )
+
+
+def test_potenital_temperature_cubelist(
+    temperature_for_conversions_cube, pressure_for_conversions_cube
+):
+    """Test calculation of potenital temperature for a CubeList."""
+    expected_data = temperature_for_conversions_cube / pressure.exner_pressure(
+        pressure_for_conversions_cube
+    )
+    expected_list = iris.cube.CubeList([expected_data, expected_data])
+    temperature_list = iris.cube.CubeList(
+        [temperature_for_conversions_cube, temperature_for_conversions_cube]
+    )
+    pressure_list = iris.cube.CubeList(
+        [pressure_for_conversions_cube, pressure_for_conversions_cube]
+    )
+    actual_cubelist = temperature.potential_temperature(temperature_list, pressure_list)
+    for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
+        assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
+
+
+def test_virtual_potential_temperature(
+    temperature_for_conversions_cube,
+    mixing_ratio_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test calculation of virtual potential temperature."""
+    expected_data = temperature.virtual_temperature(
+        temperature_for_conversions_cube, mixing_ratio_for_conversions_cube
+    ) / pressure.exner_pressure(pressure_for_conversions_cube)
+    assert np.allclose(
+        expected_data.data,
+        temperature.virtual_potential_temperature(
+            temperature_for_conversions_cube,
+            mixing_ratio_for_conversions_cube,
+            pressure_for_conversions_cube,
+        ).data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
+def test_virtual_potential_temperature_name(
+    temperature_for_conversions_cube,
+    mixing_ratio_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test name of virtual potential temperature cube."""
+    expected_name = "virtual_potential_temperature"
+    assert (
+        expected_name
+        == temperature.virtual_potential_temperature(
+            temperature_for_conversions_cube,
+            mixing_ratio_for_conversions_cube,
+            pressure_for_conversions_cube,
+        ).name()
+    )
+
+
+def test_virtual_potential_temperature_units(
+    temperature_for_conversions_cube,
+    mixing_ratio_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test units of virtual potenital temperature cube."""
+    expected_units = cf_units.Unit("K")
+    assert (
+        expected_units
+        == temperature.virtual_potential_temperature(
+            temperature_for_conversions_cube,
+            mixing_ratio_for_conversions_cube,
+            pressure_for_conversions_cube,
+        ).units
+    )
+
+
+def test_virtual_potential_temperature_cubelist(
+    temperature_for_conversions_cube,
+    mixing_ratio_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test calculation of virtual potenital temperature for a CubeList."""
+    expected_data = temperature.virtual_temperature(
+        temperature_for_conversions_cube, mixing_ratio_for_conversions_cube
+    ) / pressure.exner_pressure(pressure_for_conversions_cube)
+    expected_list = iris.cube.CubeList([expected_data, expected_data])
+    temperature_list = iris.cube.CubeList(
+        [temperature_for_conversions_cube, temperature_for_conversions_cube]
+    )
+    mixing_ratio_list = iris.cube.CubeList(
+        [mixing_ratio_for_conversions_cube, mixing_ratio_for_conversions_cube]
+    )
+    pressure_list = iris.cube.CubeList(
+        [pressure_for_conversions_cube, pressure_for_conversions_cube]
+    )
+    actual_cubelist = temperature.virtual_potential_temperature(
+        temperature_list, mixing_ratio_list, pressure_list
+    )
+    for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
+        assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
+
+
+def test_equivalent_potential_temperature(
+    temperature_for_conversions_cube,
+    relative_humidity_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test calculation of equivalent potential temperature."""
+    RH = misc.convert_units(relative_humidity_for_conversions_cube, "1")
+    theta = temperature.potential_temperature(
+        temperature_for_conversions_cube, pressure_for_conversions_cube
+    )
+    w = humidity.mixing_ratio_from_relative_humidity(
+        temperature_for_conversions_cube, pressure_for_conversions_cube, RH
+    )
+    second_term_power = -(w * _atmospheric_constants.RV) / _atmospheric_constants.CPD
+    second_term = RH.core_data() ** second_term_power.core_data()
+    third_term_power = (
+        _atmospheric_constants.LV
+        * w
+        / (_atmospheric_constants.CPD * temperature_for_conversions_cube)
+    )
+    third_term = np.exp(third_term_power.core_data())
+    expected_data = theta * second_term * third_term
+    assert np.allclose(
+        expected_data.data,
+        temperature.equivalent_potential_temperature(
+            temperature_for_conversions_cube,
+            relative_humidity_for_conversions_cube,
+            pressure_for_conversions_cube,
+        ).data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
+def test_equivalent_potenital_temperature_name(
+    temperature_for_conversions_cube,
+    relative_humidity_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test name of equivalent potential temperature cube."""
+    expected_name = "equivalent_potential_temperature"
+    assert (
+        expected_name
+        == temperature.equivalent_potential_temperature(
+            temperature_for_conversions_cube,
+            relative_humidity_for_conversions_cube,
+            pressure_for_conversions_cube,
+        ).name()
+    )
+
+
+def test_equivalent_potenital_temperature_units(
+    temperature_for_conversions_cube,
+    relative_humidity_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test units of equivalent potential temperature cube."""
+    expected_units = cf_units.Unit("K")
+    assert (
+        expected_units
+        == temperature.equivalent_potential_temperature(
+            temperature_for_conversions_cube,
+            relative_humidity_for_conversions_cube,
+            pressure_for_conversions_cube,
+        ).units
+    )
+
+
+def test_equivalent_potential_temperature_cubelist(
+    temperature_for_conversions_cube,
+    relative_humidity_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test calculation of equivalent potential temperature for a CubeList."""
+    RH = misc.convert_units(relative_humidity_for_conversions_cube, "1")
+    theta = temperature.potential_temperature(
+        temperature_for_conversions_cube, pressure_for_conversions_cube
+    )
+    w = humidity.mixing_ratio_from_relative_humidity(
+        temperature_for_conversions_cube, pressure_for_conversions_cube, RH
+    )
+    second_term_power = -(w * _atmospheric_constants.RV) / _atmospheric_constants.CPD
+    second_term = RH.core_data() ** second_term_power.core_data()
+    third_term_power = (
+        _atmospheric_constants.LV
+        * w
+        / (_atmospheric_constants.CPD * temperature_for_conversions_cube)
+    )
+    third_term = np.exp(third_term_power.core_data())
+    expected_data = theta * second_term * third_term
+    expected_list = iris.cube.CubeList([expected_data, expected_data])
+    temperature_list = iris.cube.CubeList(
+        [temperature_for_conversions_cube, temperature_for_conversions_cube]
+    )
+    rh_list = iris.cube.CubeList(
+        [relative_humidity_for_conversions_cube, relative_humidity_for_conversions_cube]
+    )
+    pressure_list = iris.cube.CubeList(
+        [pressure_for_conversions_cube, pressure_for_conversions_cube]
+    )
+    actual_cubelist = temperature.equivalent_potential_temperature(
+        temperature_list, rh_list, pressure_list
+    )
+    for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
+        assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
+
+
+def test_saturation_equivalent_potential_temperature(
+    temperature_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test calculation of saturation equivalent potential temperature."""
+    theta = temperature.potential_temperature(
+        temperature_for_conversions_cube, pressure_for_conversions_cube
+    )
+    ws = humidity.saturation_mixing_ratio(
+        temperature_for_conversions_cube, pressure_for_conversions_cube
+    )
+    third_term_power = (
+        _atmospheric_constants.LV
+        * ws
+        / (_atmospheric_constants.CPD * temperature_for_conversions_cube)
+    )
+    third_term = np.exp(third_term_power.core_data())
+    expected_data = theta * third_term
+    assert np.allclose(
+        expected_data.data,
+        temperature.saturation_equivalent_potential_temperature(
+            temperature_for_conversions_cube,
+            pressure_for_conversions_cube,
+        ).data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
+def test_saturation_equivalent_potenital_temperature_name(
+    temperature_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test name of saturation potential temperature cube."""
+    expected_name = "saturation_equivalent_potential_temperature"
+    assert (
+        expected_name
+        == temperature.saturation_equivalent_potential_temperature(
+            temperature_for_conversions_cube,
+            pressure_for_conversions_cube,
+        ).name()
+    )
+
+
+def test_saturation_equivalent_potenital_temperature_units(
+    temperature_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test units of saturation equivalent potential temperature cube."""
+    expected_units = cf_units.Unit("K")
+    assert (
+        expected_units
+        == temperature.saturation_equivalent_potential_temperature(
+            temperature_for_conversions_cube,
+            pressure_for_conversions_cube,
+        ).units
+    )
+
+
+def test_saturation_equivalent_potential_temperature_cubelist(
+    temperature_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test calculation of saturation equivalent potential temperature for a CubeList."""
+    theta = temperature.potential_temperature(
+        temperature_for_conversions_cube, pressure_for_conversions_cube
+    )
+    ws = humidity.saturation_mixing_ratio(
+        temperature_for_conversions_cube, pressure_for_conversions_cube
+    )
+    third_term_power = (
+        _atmospheric_constants.LV
+        * ws
+        / (_atmospheric_constants.CPD * temperature_for_conversions_cube)
+    )
+    third_term = np.exp(third_term_power.core_data())
+    expected_data = theta * third_term
+    expected_list = iris.cube.CubeList([expected_data, expected_data])
+    temperature_list = iris.cube.CubeList(
+        [temperature_for_conversions_cube, temperature_for_conversions_cube]
+    )
+    pressure_list = iris.cube.CubeList(
+        [pressure_for_conversions_cube, pressure_for_conversions_cube]
+    )
+    actual_cubelist = temperature.saturation_equivalent_potential_temperature(
+        temperature_list, pressure_list
+    )
+    for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
+        assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
+
+
+def test_wet_bulb_potential_temperature(
+    temperature_for_conversions_cube,
+    relative_humidity_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test calculation for wet-bulb potential temperature."""
+    TH_E = temperature.equivalent_potential_temperature(
+        temperature_for_conversions_cube,
+        relative_humidity_for_conversions_cube,
+        pressure_for_conversions_cube,
+    )
+    X = TH_E / _atmospheric_constants.T0
+    X.units = "1"
+    A0 = 7.101574
+    A1 = -20.68208
+    A2 = 16.11182
+    A3 = 2.574631
+    A4 = -5.205688
+    B1 = -3.552497
+    B2 = 3.781782
+    B3 = -0.6899655
+    B4 = -0.5929340
+    exponent = (A0 + A1 * X + A2 * X**2 + A3 * X**3 + A4 * X**4) / (
+        1.0 + B1 * X + B2 * X**2 + B3 * X**3 + B4 * X**4
+    )
+    expected_data = TH_E.copy()
+    expected_data.data[:] = TH_E.core_data() - np.exp(exponent.core_data())
+    expected_data.data[expected_data.data - _atmospheric_constants.T0 < -30.0] = np.nan
+    expected_data.data[expected_data.data - _atmospheric_constants.T0 > 50.0] = np.nan
+    assert np.allclose(
+        expected_data.data,
+        temperature.wet_bulb_potential_temperature(
+            temperature_for_conversions_cube,
+            relative_humidity_for_conversions_cube,
+            pressure_for_conversions_cube,
+        ).data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
+def test_wet_bulb_potential_temperature_name(
+    temperature_for_conversions_cube,
+    relative_humidity_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test name of wet-bulb potenital temperature cube."""
+    expected_name = "wet_bulb_potential_temperature"
+    assert (
+        expected_name
+        == temperature.wet_bulb_potential_temperature(
+            temperature_for_conversions_cube,
+            relative_humidity_for_conversions_cube,
+            pressure_for_conversions_cube,
+        ).name()
+    )
+
+
+def test_wet_bulb_potential_temperature_units(
+    temperature_for_conversions_cube,
+    relative_humidity_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test units of wet-bulb potenital temperature cube."""
+    expected_units = cf_units.Unit("K")
+    assert (
+        expected_units
+        == temperature.wet_bulb_potential_temperature(
+            temperature_for_conversions_cube,
+            relative_humidity_for_conversions_cube,
+            pressure_for_conversions_cube,
+        ).units
+    )
+
+
+def test_wet_bulb_potential_temperature_cubelist(
+    temperature_for_conversions_cube,
+    relative_humidity_for_conversions_cube,
+    pressure_for_conversions_cube,
+):
+    """Test calculation for wet-bulb potential temperature."""
+    TH_E = temperature.equivalent_potential_temperature(
+        temperature_for_conversions_cube,
+        relative_humidity_for_conversions_cube,
+        pressure_for_conversions_cube,
+    )
+    X = TH_E / _atmospheric_constants.T0
+    X.units = "1"
+    A0 = 7.101574
+    A1 = -20.68208
+    A2 = 16.11182
+    A3 = 2.574631
+    A4 = -5.205688
+    B1 = -3.552497
+    B2 = 3.781782
+    B3 = -0.6899655
+    B4 = -0.5929340
+    exponent = (A0 + A1 * X + A2 * X**2 + A3 * X**3 + A4 * X**4) / (
+        1.0 + B1 * X + B2 * X**2 + B3 * X**3 + B4 * X**4
+    )
+    expected_data = TH_E.copy()
+    expected_data.data[:] = TH_E.core_data() - np.exp(exponent.core_data())
+    expected_data.data[expected_data.data - _atmospheric_constants.T0 < -30.0] = np.nan
+    expected_data.data[expected_data.data - _atmospheric_constants.T0 > 50.0] = np.nan
+    expected_list = iris.cube.CubeList([expected_data, expected_data])
+    temperature_list = iris.cube.CubeList(
+        [temperature_for_conversions_cube, temperature_for_conversions_cube]
+    )
+    rh_list = iris.cube.CubeList(
+        [relative_humidity_for_conversions_cube, relative_humidity_for_conversions_cube]
+    )
+    pressure_list = iris.cube.CubeList(
+        [pressure_for_conversions_cube, pressure_for_conversions_cube]
+    )
+    actual_cubelist = temperature.wet_bulb_potential_temperature(
+        temperature_list, rh_list, pressure_list
+    )
+    for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
+        assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)

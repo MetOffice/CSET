@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2026) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,12 +34,15 @@ from CSET.operators import (
     convection,
     ensembles,
     filters,
+    humidity,
     imageprocessing,
     mesoscale,
     misc,
     plot,
+    pressure,
     read,
     regrid,
+    temperature,
     transect,
     wind,
     write,
@@ -56,13 +59,16 @@ __all__ = [
     "ensembles",
     "execute_recipe",
     "filters",
+    "humidity",
     "get_operator",
     "imageprocessing",
     "mesoscale",
     "misc",
     "plot",
+    "pressure",
     "read",
     "regrid",
+    "temperature",
     "transect",
     "wind",
     "write",

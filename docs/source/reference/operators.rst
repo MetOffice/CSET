@@ -95,6 +95,15 @@ CSET.operators.ensembles
 .. automodule:: CSET.operators.ensembles
    :members:
 
+Humidity Operators
+~~~~~~~~~~~~~~~~~~
+
+CSET.operators.humidity
+-----------------------
+
+.. automodule:: CSET.operators.humidity
+   :members:
+
 Image Processing Operators
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -111,6 +120,24 @@ CSET.operators.mesoscale
 ------------------------
 
 .. automodule:: CSET.operators.mesoscale
+   :members:
+
+Pressure Operators
+~~~~~~~~~~~~~~~~~~
+
+CSET.operators.pressure
+-----------------------
+
+.. automodule:: CSET.operators.pressure
+   :members:
+
+Temperature Operators
+~~~~~~~~~~~~~~~~~~~~~
+
+CSET.operators.temperature
+--------------------------
+
+.. automodule:: CSET.operators.temperature
    :members:
 
 Wind Operators
