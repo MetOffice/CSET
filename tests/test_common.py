@@ -14,12 +14,37 @@
 
 """Tests for common functionality across CSET."""
 
+import logging
 from collections.abc import Iterable
 from pathlib import Path
 
 import pytest
 
 import CSET._common as common
+
+
+def test_setup_logging():
+    """Tests the logging setup at various verbosity levels."""
+    root_logger = logging.getLogger()
+    # Log has a minimum of WARNING.
+    common.setup_logging(0)
+    assert root_logger.level == logging.WARNING
+    # -v
+    common.setup_logging(1)
+    assert root_logger.level == logging.INFO
+    # -vv
+    common.setup_logging(2)
+    assert root_logger.level == logging.DEBUG
+
+
+def test_setup_logging_mpl_font_logs_filtered(caplog):
+    """Test matplotlib log messages about fonts are filtered out."""
+    common.setup_logging(2)
+    logger = logging.getLogger("matplotlib.font_manager")
+    logger.debug("findfont: message")
+    logger.debug("other message")
+    assert len(caplog.records) == 1
+    assert caplog.records[0].getMessage() == "other message"
 
 
 def test_parse_recipe_string():
@@ -373,3 +398,19 @@ def test_is_increasing():
     """Check order of strictly monotonic sequences is determined."""
     assert common.is_increasing([1, 2, 3])
     assert not common.is_increasing([3, 2, 1])
+
+
+def test_format_duration():
+    """Check formatting of different durations."""
+    # Integer short duration.
+    assert common.format_duration(1) == "1.000 seconds"
+    # Float short duration.
+    assert common.format_duration(9.876543) == "9.877 seconds"
+    # Integer hours duration.
+    assert common.format_duration(3661) == "1h1m1s"
+    # Float hours duration.
+    assert common.format_duration(3661.999) == "1h1m1s"
+    # Days.
+    assert common.format_duration(86700) == "1 day 0h5m0s"
+    # Many days.
+    assert common.format_duration(8640000) == "100 days 0h0m0s"
