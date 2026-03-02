@@ -85,6 +85,13 @@ debugging.
 * Tighten Actions timeouts and use slim runner for pages publication by `@jfrost-mo`_ in :pr:`1900`
 * Skip slow tests in CI, only running them weekly by `@jfrost-mo`_ in :pr:`1914`
 
+    👷 New Contributors
+    ~~~~~~~~~~~~~~~~~~~
+
+    * `@RachelNorth`_ made their first contribution in :pr:`1918`
+
+    .. _@RachelNorth: https://github.com/RachelNorth
+
 25.12.1 (2025-12-10)
 --------------------
 
