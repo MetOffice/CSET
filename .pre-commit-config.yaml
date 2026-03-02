@@ -11,7 +11,7 @@ repos:
         exclude: src/CSET/cset_workflow/app/metplus_point_stat/file/metoffice/PointStat_METplus_UKV.conf
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 0839f92796ae388643a08a21640a029b322be5c2  # frozen: v0.15.2
+    rev: a27a2e47c7751b639d2b5badf0ef6ff11fee893f  # frozen: v0.15.4
     hooks:
       - id: ruff-check
         args: [--fix, --show-fixes, --exit-non-zero-on-fix]
