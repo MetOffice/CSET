@@ -72,8 +72,6 @@ debugging.
 * Modify METPlus apps to facilitate using at multiple sites by `@JorgeBornemann`_ in :pr:`1906`
 * Met Office METplus observations support via ASCII2NC by `@RachelNorth`_ in :pr:`1918`
 
-.. _@RachelNorth: https://github.com/RachelNorth
-
 📖 Documentation
 ~~~~~~~~~~~~~~~~
 
