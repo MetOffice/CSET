@@ -87,9 +87,9 @@ debugging.
 
     👷 New Contributors
     ~~~~~~~~~~~~~~~~~~~
-    
+
     * `@RachelNorth`_ made their first contribution in :pr:`1918`
-    
+
     .. _@RachelNorth: https://github.com/RachelNorth
 
 25.12.1 (2025-12-10)
