@@ -4,6 +4,8 @@
         METPLUS_ANA_DIR = {{METPLUS_ANA_DIR}}
         METPLUS_FCST_DIR = {{METPLUS_FCST_DIR}}
         METPLUS_OBS_DIR = {{METPLUS_OBS_DIR}}
+        METPLUS_AREA_DIR = {{METPLUS_AREA_DIR}}
+        METPLUS_STN_DIR = {{METPLUS_STN_DIR}}
         ROSE_APP_OPT_CONF_KEYS = {{METPLUS_OPT_CONFIG_KEYS}}
         TASK_START_TIME = $(cylc cyclepoint --template CCYYMMDDThh)
         FORECAST_LENGTH = $(isodatetime --as-total H -- {{ANALYSIS_LENGTH}})
