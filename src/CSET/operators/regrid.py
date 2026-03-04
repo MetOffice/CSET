@@ -250,7 +250,8 @@ def regrid_to_single_point(
     ValueError
         If a unique x/y coordinate cannot be found; also if, for selecting a
         single gridpoint, the chosen longitude and latitude point is outside the
-        domain.
+        domain; also (currently) if the difference between the actual and target
+        points exceed 0.1 degrees.
     NotImplementedError
         If the cubes grid, or the method for regridding, is not yet supported.
 
@@ -262,6 +263,7 @@ def regrid_to_single_point(
     grids (uniform) are supported. Warnings are raised if the selected gridpoint
     is within boundary_margin grid lengths of the domain boundary as data here
     is potentially unreliable.
+
 
     """
     # To store regridded cubes.
@@ -346,7 +348,7 @@ def regrid_to_single_point(
         else:
             if np.abs((lat_tr - lat_pt)) > 0.1 or np.abs((lon_tr - lon_pt)) > 0.1:
                 raise ValueError(
-                    "Selected point is too far from the specified coordinates."
+                    "Selected point is too far from the specified coordinates. It should be within 0.1 degrees."
                 )
             else:
                 print(
