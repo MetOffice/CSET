@@ -344,7 +344,7 @@ def difference(cubes: CubeList):
     ) + "_difference"
     if base.var_name:
         difference.var_name = base.var_name + "_difference"
-    else:
+    elif base.standard_name:
         difference.var_name = base.standard_name + "_difference"
 
     difference.data = base.data - other.data
