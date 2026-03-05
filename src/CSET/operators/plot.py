@@ -555,7 +555,7 @@ def _plot_and_save_spatial_plot(
     if levels is not None and len(levels) < 20:
         cbar.set_ticks(levels)
         cbar.set_ticklabels([f"{level:.2f}" for level in levels])
-        if "visibility" in cube.name():
+        if "rainfall" or "snowfall" or "visibility" in cube.name():
             cbar.set_ticklabels([f"{level:.3g}" for level in levels])
         logging.debug("Set colorbar ticks and labels.")
 
