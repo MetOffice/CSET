@@ -502,7 +502,7 @@ def _grid_longitude_fix_callback(cube: iris.cube.Cube) -> iris.cube.Cube:
         long_coord.points = long_points
 
         # Update coord bounds to be consistent with wrapping.
-        if long_coord.has_bounds() and np.size(long_coord) > 1:
+        if long_coord.has_bounds():
             long_coord.bounds = None
             long_coord.guess_bounds()
 
