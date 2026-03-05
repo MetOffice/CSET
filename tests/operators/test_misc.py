@@ -182,6 +182,22 @@ def test_difference_standard_name_fallback(cube: iris.cube.Cube):
     assert difference_cube.var_name == "air_temperature_difference"
 
 
+def test_difference_no_var_name_fallback(cube: iris.cube.Cube):
+    """Test falling back to standard name if no var name."""
+    # Data preparation.
+    cube.var_name = None
+    other_cube = cube.copy()
+    del other_cube.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([cube, other_cube])
+
+    # Take difference.
+    difference_cube = misc.difference(cubes)
+
+    assert difference_cube.standard_name is None
+    assert difference_cube.long_name == "temperature_at_screen_level_difference"
+    assert difference_cube.var_name == "air_temperature_difference"
+
+
 def test_difference_no_time_coord(cube):
     """Difference of cubes with no time coordinate."""
     c1 = cube.extract(iris.Constraint(time=datetime.datetime(2022, 9, 21, 3, 30)))
