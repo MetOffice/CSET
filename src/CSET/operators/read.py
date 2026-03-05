@@ -529,6 +529,15 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
     ny = get_cube_coordindex(cube, y_name)
     nx = get_cube_coordindex(cube, x_name)
 
+    # Remove spatial coords bounds if erroneous values detected.
+    # Aims to catch some errors in input coord bounds.
+    if cube.coord(x_name).has_bounds() and cube.coord(y_name).has_bounds():
+        bx_max = np.max(np.abs(cube.coord(x_name).bounds))
+        by_max = np.max(np.abs(cube.coord(y_name).bounds))
+        if bx_max > 3600.0 or by_max > 3600.0:
+            cube.coord(x_name).bounds = None
+            cube.coord(y_name).bounds = None
+
     # Translate [grid_latitude, grid_longitude] to an unrotated 1-d DimCoord
     # [latitude, longitude] for instances where rotated_pole=90.0
     if "grid_latitude" in [coord.name() for coord in cube.coords(dim_coords=True)]:
