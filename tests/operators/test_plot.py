@@ -462,15 +462,15 @@ def test_spatial_contour_plot(cube, tmp_working_dir):
     cube.remove_coord("realization")
     cube_2d = cube.slices_over("time").next()
     plot.spatial_contour_plot(cube_2d, filename="plot")
-    assert Path("plot_462147.0.png").is_file()
+    assert Path("plot_20220921023000_20220921033000.png").is_file()
 
 
 def test_contour_plot_sequence(cube, tmp_working_dir):
     """Plot sequence of contour plots."""
     plot.spatial_contour_plot(cube, sequence_coordinate="time")
-    assert Path("untitled_462147.0.png").is_file()
-    assert Path("untitled_462148.0.png").is_file()
-    assert Path("untitled_462149.0.png").is_file()
+    assert Path("untitled_20220921030000.png").is_file()
+    assert Path("untitled_20220921040000.png").is_file()
+    assert Path("untitled_20220921050000.png").is_file()
 
 
 @pytest.mark.slow
@@ -479,7 +479,7 @@ def test_vector_plot_with_filename(vector_cubes, tmp_working_dir):
     cube_u = vector_cubes[0].slices_over("time").next()
     cube_v = vector_cubes[1].slices_over("time").next()
     plot.vector_plot(cube_u, cube_v, filename="testvector")
-    assert Path("testvector_482016.0.png").is_file()
+    assert Path("testvector_20241227000000.png").is_file()
 
 
 @pytest.mark.slow
@@ -491,9 +491,9 @@ def test_vector_plot_sequence(vector_cubes, tmp_working_dir):
         filename="testvectorseq",
         sequence_coordinate="time",
     )
-    assert Path("testvectorseq_482016.0.png").is_file()
-    assert Path("testvectorseq_482022.0.png").is_file()
-    assert Path("testvectorseq_482028.0.png").is_file()
+    assert Path("testvectorseq_20241227000000.png").is_file()
+    assert Path("testvectorseq_20241227060000.png").is_file()
+    assert Path("testvectorseq_20241227120000.png").is_file()
 
 
 def test_vector_plot_check(vector_cubes, tmp_working_dir):
@@ -514,7 +514,7 @@ def test_postage_stamp_contour_plot(ensemble_cube, tmp_working_dir):
     # Get a single time step.
     ensemble_cube_3d = next(ensemble_cube.slices_over("time"))
     plot.spatial_contour_plot(ensemble_cube_3d)
-    assert Path("untitled_463858.0.png").is_file()
+    assert Path("untitled_20221201100000.png").is_file()
 
 
 def test_postage_stamp_contour_plot_sequence_coord_check(cube, tmp_working_dir):
@@ -531,7 +531,7 @@ def test_spatial_pcolormesh_plot(cube, tmp_working_dir):
     cube.remove_coord("realization")
     cube_2d = cube.slices_over("time").next()
     plot.spatial_pcolormesh_plot(cube_2d, filename="plot")
-    assert Path("plot_462147.0.png").is_file()
+    assert Path("plot_20220921023000_20220921033000.png").is_file()
 
 
 def test_spatial_pcolormesh_levels(cube, tmp_working_dir, caplog):
@@ -549,17 +549,17 @@ def test_spatial_pcolormesh_levels(cube, tmp_working_dir, caplog):
                 message_matchB = True
         assert message_matchA
         assert message_matchB
-    assert Path("untitled_462147.0.png").is_file()
-    assert Path("untitled_462148.0.png").is_file()
-    assert Path("untitled_462149.0.png").is_file()
+    assert Path("untitled_20220921030000.png").is_file()
+    assert Path("untitled_20220921040000.png").is_file()
+    assert Path("untitled_20220921050000.png").is_file()
 
 
 def test_pcolormesh_plot_sequence(cube, tmp_working_dir):
     """Plot sequence of pcolormesh plots."""
     plot.spatial_pcolormesh_plot(cube, sequence_coordinate="time")
-    assert Path("untitled_462147.0.png").is_file()
-    assert Path("untitled_462148.0.png").is_file()
-    assert Path("untitled_462149.0.png").is_file()
+    assert Path("untitled_20220921030000.png").is_file()
+    assert Path("untitled_20220921040000.png").is_file()
+    assert Path("untitled_20220921050000.png").is_file()
 
 
 def test_pcolormesh_plot_global(global_cube, caplog, tmp_working_dir):
@@ -578,7 +578,7 @@ def test_postage_stamp_pcolormesh_plot(ensemble_cube, tmp_working_dir):
     # Get a single time step.
     ensemble_cube_3d = next(ensemble_cube.slices_over("time"))
     plot.spatial_pcolormesh_plot(ensemble_cube_3d)
-    assert Path("untitled_463858.0.png").is_file()
+    assert Path("untitled_20221201100000.png").is_file()
 
 
 def test_postage_stamp_pcolormesh_plot_sequence_coord_check(cube, tmp_working_dir):
