@@ -622,6 +622,31 @@ def test_spatial_coord_not_exist_callback():
     )
 
 
+def test_spatial_coord_valid_bounds():
+    """Check that spatial coord callback preserves valid bounds."""
+    cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
+    cube.coord("latitude").guess_bounds()
+    cube.coord("longitude").guess_bounds()
+
+    # Ensure valid input bounds are preserved
+    read._fix_spatial_coords_callback(cube)
+    assert cube.coord("latitude").has_bounds()
+    assert cube.coord("longitude").has_bounds()
+
+
+def test_spatial_coord_invalid_bounds():
+    """Check that spatial coord callback removes invalid bounds."""
+    cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
+    cube.coord("latitude").guess_bounds()
+    cube.coord("longitude").guess_bounds()
+
+    # Test non-physical bounds values to ensure bounds removed
+    cube.coord("latitude").bounds = cube.coord("latitude").bounds + 50000.0
+    read._fix_spatial_coords_callback(cube)
+    assert not cube.coord("latitude").has_bounds()
+    assert not cube.coord("longitude").has_bounds()
+
+
 def test_lfric_time_callback_forecast_reference_time(slammed_lfric_cube):
     """Check that read callback creates an appropriate forecast_reference_time coord."""
     slammed_lfric_cube.remove_coord("forecast_reference_time")

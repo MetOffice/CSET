@@ -502,7 +502,7 @@ def _grid_longitude_fix_callback(cube: iris.cube.Cube) -> iris.cube.Cube:
         long_coord.points = long_points
 
         # Update coord bounds to be consistent with wrapping.
-        if long_coord.has_bounds() and np.size(long_coord) > 1:
+        if long_coord.has_bounds():
             long_coord.bounds = None
             long_coord.guess_bounds()
 
@@ -528,6 +528,16 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
     y_name, x_name = get_cube_yxcoordname(cube)
     ny = get_cube_coordindex(cube, y_name)
     nx = get_cube_coordindex(cube, x_name)
+
+    # Remove spatial coords bounds if erroneous values detected.
+    # Aims to catch some errors in input coord bounds by setting
+    # invalid threshold of 10000.0
+    if cube.coord(x_name).has_bounds() and cube.coord(y_name).has_bounds():
+        bx_max = np.max(np.abs(cube.coord(x_name).bounds))
+        by_max = np.max(np.abs(cube.coord(y_name).bounds))
+        if bx_max > 10000.0 or by_max > 10000.0:
+            cube.coord(x_name).bounds = None
+            cube.coord(y_name).bounds = None
 
     # Translate [grid_latitude, grid_longitude] to an unrotated 1-d DimCoord
     # [latitude, longitude] for instances where rotated_pole=90.0
