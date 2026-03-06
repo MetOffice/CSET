@@ -530,11 +530,12 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
     nx = get_cube_coordindex(cube, x_name)
 
     # Remove spatial coords bounds if erroneous values detected.
-    # Aims to catch some errors in input coord bounds.
+    # Aims to catch some errors in input coord bounds by setting
+    # invalid threshold of 10000.0
     if cube.coord(x_name).has_bounds() and cube.coord(y_name).has_bounds():
         bx_max = np.max(np.abs(cube.coord(x_name).bounds))
         by_max = np.max(np.abs(cube.coord(y_name).bounds))
-        if bx_max > 3600.0 or by_max > 3600.0:
+        if bx_max > 10000.0 or by_max > 10000.0:
             cube.coord(x_name).bounds = None
             cube.coord(y_name).bounds = None
 
