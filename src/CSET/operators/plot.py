@@ -40,6 +40,7 @@ from markdown_it import MarkdownIt
 
 from CSET._common import (
     combine_dicts,
+    filename_slugify,
     get_recipe_metadata,
     iter_maybe,
     render_file,
@@ -1611,16 +1612,22 @@ def _spatial_plot(
     plot_index = []
     nplot = np.size(cube.coord(sequence_coordinate).points)
     for cube_slice in cube.slices_over(sequence_coordinate):
-        # Use sequence value so multiple sequences can merge.
-        sequence_value = cube_slice.coord(sequence_coordinate).points[0]
-        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
-        coord = cube_slice.coord(sequence_coordinate)
         # Format the coordinate value in a unit appropriate way.
-        title = f"{recipe_title}\n [{coord.units.title(coord.points[0])}]"
+        coord = cube_slice.coord(sequence_coordinate)
+        sequence_title = f"[{coord.units.title(coord.points[0])}]"
+        sequence_fileid = f"{filename_slugify(coord.units.title(coord.points[0]))}"
         # Use sequence (e.g. time) bounds if plotting single non-sequence outputs
         if nplot == 1 and coord.has_bounds:
             if np.size(coord.bounds) > 1:
-                title = f"{recipe_title}\n [{coord.units.title(coord.bounds[0][0])} to {coord.units.title(coord.bounds[0][1])}]"
+                startstring = coord.units.title(coord.bounds[0][0])
+                endstring = coord.units.title(coord.bounds[0][1])
+                sequence_title = f"[{startstring} to {endstring}]"
+                sequence_fileid = (
+                    f"{filename_slugify(startstring)}_{filename_slugify(endstring)}"
+                )
+        # Set plot title and filename
+        title = f"{recipe_title}\n {sequence_title}"
+        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_fileid}.png"
         # Do the actual plotting.
         plotting_func(
             cube_slice,
@@ -2626,11 +2633,11 @@ def vector_plot(
         strict=True,
     ):
         # Use sequence value so multiple sequences can merge.
-        sequence_value = cube_u_slice.coord(sequence_coordinate).points[0]
-        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
         coord = cube_u_slice.coord(sequence_coordinate)
+        sequence_fileid = f"{filename_slugify(coord.units.title(coord.points[0]))}"
+        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_fileid}.png"
         # Format the coordinate value in a unit appropriate way.
-        title = f"{recipe_title}\n{coord.units.title(coord.points[0])}"
+        title = f"{recipe_title}\n [{coord.units.title(coord.points[0])}]"
         # Do the actual plotting.
         _plot_and_save_vector_plot(
             cube_u_slice,
