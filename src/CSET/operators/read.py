@@ -969,6 +969,8 @@ def _lfric_forecast_period_standard_name_callback(cube: iris.cube.Cube):
     """Add forecast_period standard name if missing."""
     try:
         coord = cube.coord("forecast_period")
+        if coord.units != "hours":
+            cube.coord("forecast_period").convert_units("hours")
         if not coord.standard_name:
             coord.standard_name = "forecast_period"
     except iris.exceptions.CoordinateNotFoundError:
