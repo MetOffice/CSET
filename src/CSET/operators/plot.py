@@ -2284,14 +2284,11 @@ def plot_vertical_line_series(
             all_data.append(cube.data)
 
     if len(x_levels) == 0:
-        # Combine all data into a single NumPy array
-        combined_data = np.concatenate(all_data)
-
         # Set the lower and upper limit for the x-axis to ensure all plots have
         # same range. This needs to read the whole cube over the range of the
         # sequence and if applicable postage stamp coordinate.
-        vmin = np.floor(combined_data.min())
-        vmax = np.ceil(combined_data.max())
+        vmin = np.floor(min(arr.min() for arr in all_data))
+        vmax = np.ceil(max(arr.max() for arr in all_data))
     else:
         vmin = min(x_levels)
         vmax = max(x_levels)
