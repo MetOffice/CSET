@@ -430,6 +430,7 @@ def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
     cube.attributes.pop("timeStamp", None)
     cube.attributes.pop("uuid", None)
     cube.attributes.pop("name", None)
+    cube.attributes.pop("history", None)
 
     # Sort STASH code list.
     stash_list = cube.attributes.get("um_stash_source")
