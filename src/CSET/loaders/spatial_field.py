@@ -219,6 +219,20 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+        # Light rain presence.
+        if conf.LIGHT_RAIN_PRESENCE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="light_rain_presence_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
         # Lightning presence.
         if conf.LIGHTNING_PRESENCE_SPATIAL_PLOT:
             yield RawRecipe(
