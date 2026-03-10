@@ -173,19 +173,21 @@ def division(numerator, denominator):
     return numerator / denominator
 
 
-def multiplication(multiplicand, multiplier):
+def multiplication(
+    multiplicand: Cube | CubeList, multiplier: Cube | CubeList
+) -> Cube | CubeList:
     """Multiplication of two fields.
 
     Parameters
     ----------
-    multiplicand: Cube
+    multiplicand: Cube | CubeList
         Any field to be multiplied by another field.
-    multiplier: Cube
+    multiplier: Cube | CubeList
         Any field to be multiplied to another field.
 
     Returns
     -------
-    Cube
+    Cube | CubeList
 
     Raises
     ------
@@ -195,14 +197,23 @@ def multiplication(multiplicand, multiplier):
     Notes
     -----
     This is a simple operator designed for combination of diagnostics or
-    creating new diagnostics by using recipes.
+    creating new diagnostics by using recipes. CubeLists are multiplied
+    on a strict ordering (e.g. first cube with first cube).
 
     Examples
     --------
     >>> filtered_CAPE_ratio = misc.multiplication(CAPE_ratio, inflow_layer_properties)
 
     """
-    return multiplicand * multiplier
+    new_cubelist = iris.cube.CubeList([])
+    for cube_a, cube_b in zip(
+        iter_maybe(multiplicand), iter_maybe(multiplier), strict=True
+    ):
+        new_cubelist.append(cube_a * cube_b)
+    if len(new_cubelist) == 1:
+        return new_cubelist[0]
+    else:
+        return new_cubelist
 
 
 def combine_cubes_into_cubelist(first: Cube | CubeList, **kwargs) -> CubeList:

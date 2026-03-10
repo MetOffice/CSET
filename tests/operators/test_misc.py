@@ -98,6 +98,18 @@ def test_multiplication(cube):
     assert np.allclose(b.data, a.data, atol=1e-5, equal_nan=True)
 
 
+def test_multiplication_cubelist(cube):
+    """Multiplies one object by another as a CubeList."""
+    a = cube * cube
+    expected_list = iris.cube.CubeList([a, a])
+    input_cubes = iris.cube.CubeList([cube, cube])
+    actual_cubelist = misc.multiplication(input_cubes, input_cubes)
+    for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
+        assert np.allclose(
+            cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2, equal_nan=True
+        )
+
+
 def test_multiplication_failure(cube):
     """Tests arrays of different shapes produces an error."""
     a = read.read_cube("tests/test_data/convection/ECFlagB.nc")
