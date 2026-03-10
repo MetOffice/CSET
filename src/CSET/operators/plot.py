@@ -461,7 +461,7 @@ def _get_plot_resolution() -> int:
 
 
 def _set_title_and_filename(
-    seq_coord: iris.cube.Coord,
+    seq_coord: iris.coords.Coord,
     nplot: int,
     recipe_title: str,
     filename: str,
@@ -470,7 +470,7 @@ def _set_title_and_filename(
 
     Parameters
     ----------
-    sequence_coordinate: iris.cube.Coord
+    sequence_coordinate: iris.coords.Coord
         Coordinate about which to make a plot sequence.
     nplot: int
         Number of output plots to generate - controls title/naming.
