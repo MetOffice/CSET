@@ -209,7 +209,9 @@ def multiplication(
     for cube_a, cube_b in zip(
         iter_maybe(multiplicand), iter_maybe(multiplier), strict=True
     ):
-        new_cubelist.append(cube_a * cube_b)
+        multiplied_cube = cube_a * cube_b
+        multiplied_cube.rename(f"{cube_a.name()}_x_{cube_b.name()}")
+        new_cubelist.append(multiplied_cube)
     if len(new_cubelist) == 1:
         return new_cubelist[0]
     else:

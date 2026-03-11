@@ -110,6 +110,12 @@ def test_multiplication_cubelist(cube):
         )
 
 
+def test_multiplication_rename(cube):
+    """Tests renaming of multiplication cube."""
+    expected_name = f"{cube.name()}_x_{cube.name()}"
+    assert expected_name == misc.multiplication(cube, cube).name()
+
+
 def test_multiplication_failure(cube):
     """Tests arrays of different shapes produces an error."""
     a = read.read_cube("tests/test_data/convection/ECFlagB.nc")
