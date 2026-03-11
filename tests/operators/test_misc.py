@@ -389,3 +389,17 @@ def test_convert_units_cubelist(cube):
     for actual, expected in zip(new_cubelist, expected_cubelist, strict=True):
         assert actual.units == expected.units
         assert np.allclose(actual.data, expected.data, rtol=1e-6, atol=1e-2)
+
+
+def test_rename_cube(cube):
+    """Test renaming of a cube."""
+    new_cube = misc.rename_cube(cube, "air_temperature_at_screen_level")
+    assert new_cube.name() == "air_temperature_at_screen_level"
+
+
+def test_rename_cube_for_cubelist(cube):
+    """Test renaming of cubes in a cubelist."""
+    cube_list = iris.cube.CubeList([cube, cube])
+    new_cubelist = misc.rename_cube(cube_list, "air_temperature_at_screen_level")
+    for new in new_cubelist:
+        assert new.name() == "air_temperature_at_screen_level"

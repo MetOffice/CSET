@@ -441,3 +441,40 @@ def convert_units(cubes: iris.cube.Cube | iris.cube.CubeList, units: str):
         return new_cubelist[0]
     else:
         return new_cubelist
+
+
+def rename_cube(cubes: iris.cube.Cube | iris.cube.CubeList, name: str):
+    """Rename a cube.
+
+    Arguments
+    ---------
+    cubes: iris.cube.Cube | iris.cube.CubeList
+        A Cube or CubeList of a field to be renamed.
+
+    name: str
+        The new name of the cube. It should be CF compliant.
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        The renamed field.
+
+    Notes
+    -----
+    This operator is designed to be used when the output field name does not
+    match expectations or needs to be clearer. For example, if combining masks
+    to create light rain you would like the field to be named "mask_for_light_rain"
+    rather than "mask_for_microphysical_precip_gt_0.0_x_mask_for_microphysical_precip_lt_2.0".
+
+    Examples
+    --------
+    >>> light_rain_mask = misc.rename_cube(light_rain_mask,"mask_for_light_rainfall"
+    """
+    new_cubelist = iris.cube.CubeList([])
+    for cube in iter_maybe(cubes):
+        cube.rename(name)
+        new_cubelist.append(cube)
+    if len(new_cubelist) == 1:
+        return new_cubelist[0]
+    else:
+        return new_cubelist
