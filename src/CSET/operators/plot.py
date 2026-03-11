@@ -481,41 +481,50 @@ def _set_title_and_filename(
 
     Returns
     -------
-    plot_filename: str
     plot_title: str
+        Output formatted plot title string, based on plotted data.
+    plot_filename: str
+        Output formatted plot filename string.
     """
     # Set default based on coord point value where only plotting single output
+    ndim = seq_coord.ndim
     npoints = np.size(seq_coord.points)
-    sequence_value = seq_coord.units.title(seq_coord.points[0])
-    sequence_title = f"[{sequence_value}]"
-    sequence_fname = f"{filename_slugify(sequence_value)}"
+
+    if ndim == 1:
+        sequence_value = seq_coord.units.title(seq_coord.points[0])
+        sequence_title = f"\n [{sequence_value}]"
+        sequence_fname = f"_{filename_slugify(sequence_value)}"
+    else:
+        # Account for case with multi-dimension sequence (e.g. aggregation)
+        sequence_title = ""
+        sequence_fname = ""
 
     # Use sequence (e.g. time) bounds if plotting single non-sequence outputs
-    if nplot == 1 and seq_coord.has_bounds():
-        # Take title endpoints from coord points where series input (e.g. timeseries)
-        if npoints > 1:
-            startstring = seq_coord.units.title(seq_coord.points[0])
-            endstring = seq_coord.units.title(seq_coord.points[-1])
-        else:
+    if ndim == 1 and nplot == 1:
+        if seq_coord.has_bounds():
+            # Take title endpoints from coord points where series input (e.g. timeseries)
+            if npoints > 1:
+                startstring = seq_coord.units.title(seq_coord.points[0])
+                endstring = seq_coord.units.title(seq_coord.points[-1])
             # Take title endpoint from coord bounds where single input (e.g. map)
-            if seq_coord.has_bounds():
+            else:
                 startstring = seq_coord.units.title(seq_coord.bounds[0][0])
                 endstring = seq_coord.units.title(seq_coord.bounds[0][1])
-        sequence_title = f"[{startstring} to {endstring}]"
-        sequence_fname = (
-            f"{filename_slugify(startstring)}_{filename_slugify(endstring)}"
-        )
+            sequence_title = f"\n [{startstring} to {endstring}]"
+            sequence_fname = (
+                f"_{filename_slugify(startstring)}_{filename_slugify(endstring)}"
+            )
 
     # Set plot title and filename
-    plot_title = f"{recipe_title}\n {sequence_title}"
+    plot_title = f"{recipe_title}{sequence_title}"
 
     # Set plot filename, defaulting to user input if provided.
     if filename is None:
         filename = slugify(recipe_title)
-        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_fname}.png"
+        plot_filename = f"{filename.rsplit('.', 1)[0]}{sequence_fname}.png"
     else:
         if nplot > 1:
-            plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_fname}.png"
+            plot_filename = f"{filename.rsplit('.', 1)[0]}{sequence_fname}.png"
         else:
             plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
 

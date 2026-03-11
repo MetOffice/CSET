@@ -287,6 +287,61 @@ def test_setup_spatial_map_global(cube):
     assert bounds[3] == np.max(cube.coord("latitude").points)
 
 
+def test_set_title_and_filename_filename_single(cube):
+    """Setup plot title and filename for single output spanning endpoints."""
+    seq_coord = cube.coord("time")
+    nplot = 1
+    plot_title, plot_filename = plot._set_title_and_filename(
+        seq_coord, nplot, "recipe", "filename"
+    )
+    assert plot_filename == "filename.png"
+    assert plot_title == "recipe\n [2022-09-21 03:00:00 to 2022-09-21 05:00:00]"
+
+
+def test_set_title_and_filename_filename_sequence(cube):
+    """Setup plot title and filename for single output spanning endpoints."""
+    seq_coord = cube.coord("time")[0]
+    nplot = np.size(cube.coord("time").points)
+    plot_title, plot_filename = plot._set_title_and_filename(
+        seq_coord, nplot, "recipe", "filename"
+    )
+    assert plot_filename == "filename_20220921030000.png"
+    assert plot_title == "recipe\n [2022-09-21 03:00:00]"
+
+
+def test_set_title_and_filename_endpoints(cube):
+    """Setup plot title and filename for single output spanning endpoints."""
+    seq_coord = cube.coord("time")
+    nplot = 1
+    plot_title, plot_filename = plot._set_title_and_filename(
+        seq_coord, nplot, "recipe", None
+    )
+    assert plot_filename == "recipe_20220921030000_20220921050000.png"
+    assert plot_title == "recipe\n [2022-09-21 03:00:00 to 2022-09-21 05:00:00]"
+
+
+def test_set_title_and_filename_endbounds(cube):
+    """Setup plot title and filename for single output with endbounds."""
+    seq_coord = cube.coord("time")[0]
+    nplot = 1
+    plot_title, plot_filename = plot._set_title_and_filename(
+        seq_coord, nplot, "recipe", None
+    )
+    assert plot_filename == "recipe_20220921023000_20220921033000.png"
+    assert plot_title == "recipe\n [2022-09-21 02:30:00 to 2022-09-21 03:30:00]"
+
+
+def test_set_title_and_filename_sequence(cube):
+    """Setup plot title and filename for sequence output."""
+    seq_coord = cube.coord("time")[0]
+    nplot = np.size(cube.coord("time").points)
+    plot_title, plot_filename = plot._set_title_and_filename(
+        seq_coord, nplot, "recipe", None
+    )
+    assert plot_filename == "recipe_20220921030000.png"
+    assert plot_title == "recipe\n [2022-09-21 03:00:00]"
+
+
 def test_colorbar_map_mask(cube, tmp_working_dir):
     """Test to ensure axis picks up correct colormap for a mask."""
     cube.rename(f"mask_for_{cube.name()}")
