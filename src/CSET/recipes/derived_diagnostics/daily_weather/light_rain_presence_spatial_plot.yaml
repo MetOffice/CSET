@@ -30,6 +30,9 @@ steps:
         condition: 'lt'
         value: 2.0
 
+  - operator: misc.rename_cube
+    name: "mask_for_0.0_gt_surface_microphysical_rainfall_rate_lt_2.0"
+
   - operator: plot.spatial_pcolormesh_plot
 
   - operator: write.write_cube_to_nc
