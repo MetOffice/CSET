@@ -16,12 +16,11 @@
 
 import argparse
 import logging
-import os
 import sys
 from importlib.metadata import version
 from pathlib import Path
 
-from CSET._common import ArgumentError
+from CSET._common import ArgumentError, setup_logging
 
 logger = logging.getLogger(__name__)
 
@@ -172,49 +171,6 @@ def setup_argument_parser() -> argparse.ArgumentParser:
     parser_extract_workflow.set_defaults(func=_extract_workflow_command)
 
     return parser
-
-
-def setup_logging(verbosity: int):
-    """Configure logging level, format and output stream.
-
-    Level is based on verbose argument and the LOGLEVEL environment variable.
-    """
-    logging.captureWarnings(True)
-
-    # Calculate logging level.
-    # Level from CLI flags.
-    if verbosity >= 2:
-        cli_loglevel = logging.DEBUG
-    elif verbosity == 1:
-        cli_loglevel = logging.INFO
-    else:
-        cli_loglevel = logging.WARNING
-
-    # Level from $LOGLEVEL environment variable.
-    env_loglevel = logging.getLevelNamesMapping().get(
-        os.getenv("LOGLEVEL"), logging.ERROR
-    )
-
-    # Logging verbosity is the most verbose of CLI and environment setting.
-    loglevel = min(cli_loglevel, env_loglevel)
-
-    # Configure the root logger.
-    logger = logging.getLogger()
-    # Set logging level.
-    logger.setLevel(loglevel)
-
-    # Hide matplotlib's many font messages.
-    class NoFontMessageFilter(logging.Filter):
-        def filter(self, record):
-            return not record.getMessage().startswith("findfont:")
-
-    logging.getLogger("matplotlib.font_manager").addFilter(NoFontMessageFilter())
-
-    stderr_log = logging.StreamHandler(stream=sys.stdout)
-    stderr_log.setFormatter(
-        logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s")
-    )
-    logger.addHandler(stderr_log)
 
 
 def _bake_command(args, unparsed_args):
