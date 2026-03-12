@@ -25,7 +25,7 @@ steps:
     coordinate: "forecast_reference_time"
     method: MEAN
 
-  - operator: plot.spatial_contour_plot
+  - operator: plot.spatial_pcolormesh_plot
     sequence_coordinate: forecast_period
 
   - operator: write.write_cube_to_nc
