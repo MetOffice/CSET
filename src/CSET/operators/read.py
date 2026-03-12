@@ -101,6 +101,7 @@ def read_cube(
         subarea_type=subarea_type,
         subarea_extent=subarea_extent,
     )
+
     # Check filtered cubes is a CubeList containing one cube.
     if len(cubes) == 1:
         return cubes[0]
@@ -431,6 +432,8 @@ def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
     cube.attributes.pop("uuid", None)
     cube.attributes.pop("name", None)
     cube.attributes.pop("history", None)
+    cube.attributes.pop("analysis_source", None)
+    cube.attributes.pop("source", None)
 
     # Sort STASH code list.
     stash_list = cube.attributes.get("um_stash_source")
