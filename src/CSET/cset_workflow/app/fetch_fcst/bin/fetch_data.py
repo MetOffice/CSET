@@ -21,6 +21,7 @@ import itertools
 import logging
 import os
 import ssl
+import sys
 import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
@@ -31,7 +32,9 @@ from typing import Literal
 import isodate
 
 logging.basicConfig(
-    level=os.getenv("LOGLEVEL", "INFO"), format="%(asctime)s %(levelname)s %(message)s"
+    level=os.getenv("LOGLEVEL", "INFO"),
+    format="%(asctime)s %(levelname)s %(message)s",
+    stream=sys.stdout,
 )
 
 

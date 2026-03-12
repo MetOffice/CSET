@@ -55,7 +55,10 @@ filterwarnings = [
     # first CI run on each branch.
     "ignore::cartopy.io.DownloadWarning",
 ]
-markers = ["network: marks tests that use external network resources"]
+markers = [
+    "network: test uses external network resources",
+    "slow: test is slow to run",
+]
 minversion = "7"
 pythonpath = ["src"]
 testpaths = ["tests"]
