@@ -192,38 +192,6 @@ def _power_spectrum(
             f"Cube is {cube.ndim} dimensional. Cube should be 2 or 3 dimensional."
         )
 
-    # TEST WINDOWING
-
-    # pre-process data
-
-    apply_window = True
-    normalise_window = False
-    if apply_window:
-        data = cube_3d.copy()
-        # Remove mean
-
-        data = data - np.mean(data)
-
-        ## Apply Hanning window
-        # win = np.hanning(data.size)
-
-        # if normalise_window:
-        #    win = win / np.mean(win)
-
-        # hanning, bartlett, blackman, hamming, kaiser
-        win_y = np.hanning(data.shape[1])
-        win_x = np.hanning(data.shape[2])
-        win2d = np.outer(win_y, win_x)
-
-        if normalise_window:
-            win2d = win2d / np.mean(win2d)
-
-        data = data * win2d[None, :, :]
-
-        cube_3d = data
-
-    # END TEST WINDOWING
-
     # Calculate spectrum
     ps_array = _DCT_ps(cube_3d)
 
