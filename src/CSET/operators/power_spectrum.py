@@ -21,44 +21,134 @@ import iris.coords
 import iris.cube
 import numpy as np
 import scipy.fft as fft
+from iris.util import new_axis
 
 
 def calculate_power_spectrum(cubes):
     """Wrap power spectrum code.
 
     This function is a wrapper that handles power spectrum
-    calculations for both single cubes and cube lists.
+    calculations for both single cubes and cube lists and includes ensembles.
 
-    The input cube is split up into a cube
-    for each model and time and a power spectrum calculated for each before
+    The input cube is split up into a cube for each model,
+    time and realization and a power spectrum calculated for each before
     combining into one cube ahead of plotting.  This is done to retain the
     model_name attribute correctly for different models.
 
-    In case of a CubeList (Multiple models): It iterates through
+    In case of a CubeList (Multiple models and ensembles): It iterates through
     each cube and calculates an individual power spectrum. In case of a
     single cube (one model) it directly calculates the power spectrum.
 
     Input: Cube OR CubeList
     Output: CubeList of power spectra.
     """
-    # Multi-model input (CubeList)
+    # ------------------------------------------------------------
+    # Cube list
+    # ------------------------------------------------------------
+
     if isinstance(cubes, iris.cube.CubeList):
         out = iris.cube.CubeList()
+
         for cube in cubes:
             model = cube.attributes.get("model_name")
-            # Calculate power spectrum
-            ps = _power_spectrum(cube)
-            if model is not None:
-                ps.attributes["model_name"] = model
-            out.append(ps)
-        return out
 
-    # Single cube (one model)
-    model = cubes.attributes.get("model_name")
-    # Calculate power spectrum
-    ps = _power_spectrum(cubes)
-    if model is not None:
+            # Ensembles:
+            # Check whether data has more than 1 realization coord
+
+            real_coord = cube.coords("realization")
+            is_ensemble = real_coord and len(real_coord[0].points) > 1
+
+            if is_ensemble:
+                # Ensemble: Loop over each realization
+                for subcube in cube.slices_over("realization"):
+                    real = int(subcube.coord("realization").points[0])
+                    # calculate power spectrum of subcube
+                    ps = _power_spectrum(subcube)
+
+                    # Attach model name if available
+                    if model:
+                        ps.attributes["model_name"] = model
+
+                    # REMOVE any existing realization coord added by _power_spectrum
+                    while ps.coords("realization"):
+                        ps.remove_coord(ps.coord("realization"))
+
+                    # ADD the correct realization from the parent cube
+                    ps.add_aux_coord(
+                        iris.coords.AuxCoord(real, long_name="realization", units="1")
+                    )
+
+                    # PROMOTE realization coordinate to dimension
+                    ps = new_axis(ps, "realization")
+
+                    out.append(ps)
+
+            else:
+                # Not ensemble (or only 1 ensemble member)
+                ps = _power_spectrum(cube)
+                if model:
+                    ps.attributes["model_name"] = model
+                out.append(ps)
+
+        if is_ensemble:
+            # Merge the individual realization cubes into a single cube
+            # for ensemble data
+            merged = out.concatenate_cube()
+
+            return merged
+
+        else:
+            return out
+
+    # ------------------------------------------------------------
+    # Single cube with realization coord
+    cube = cubes
+    out = iris.cube.CubeList()
+    model = cube.attributes.get("model_name")
+
+    # Ensembles:
+    # Check whether data has more than 1 realization coord
+
+    real_coord = cube.coords("realization")
+    is_ensemble = real_coord and len(real_coord[0].points) > 1
+
+    if is_ensemble:
+        # Ensemble: Loop over each realization
+        for subcube in cube.slices_over("realization"):
+            real = int(subcube.coord("realization").points[0])
+            ps = _power_spectrum(subcube)
+
+            # Attach model name if available
+            if model:
+                ps.attributes["model_name"] = model
+
+            # REMOVE any existing realization coord added by _power_spectrum
+            while ps.coords("realization"):
+                ps.remove_coord(ps.coord("realization"))
+
+            # ADD the correct realization from the parent cube
+            ps.add_aux_coord(
+                iris.coords.AuxCoord(real, long_name="realization", units="1")
+            )
+
+            # PROMOTE to dimension
+            ps = new_axis(ps, "realization")
+
+            out.append(ps)
+
+        # Merge the individual realization cubes into a single cube
+        # for ensemble data
+        merged = out.concatenate_cube()
+
+        return merged
+
+    # ------------------------------------------------------------
+    # Single cube, no realizations
+    # ------------------------------------------------------------
+    ps = _power_spectrum(cube)
+    if model:
         ps.attributes["model_name"] = model
+
     return iris.cube.CubeList([ps])
 
 
@@ -101,6 +191,38 @@ def _power_spectrum(
         raise ValueError(
             f"Cube is {cube.ndim} dimensional. Cube should be 2 or 3 dimensional."
         )
+
+    # TEST WINDOWING
+
+    # pre-process data
+
+    apply_window = True
+    normalise_window = False
+    if apply_window:
+        data = cube_3d.copy()
+        # Remove mean
+
+        data = data - np.mean(data)
+
+        ## Apply Hanning window
+        # win = np.hanning(data.size)
+
+        # if normalise_window:
+        #    win = win / np.mean(win)
+
+        # hanning, bartlett, blackman, hamming, kaiser
+        win_y = np.hanning(data.shape[1])
+        win_x = np.hanning(data.shape[2])
+        win2d = np.outer(win_y, win_x)
+
+        if normalise_window:
+            win2d = win2d / np.mean(win2d)
+
+        data = data * win2d[None, :, :]
+
+        cube_3d = data
+
+    # END TEST WINDOWING
 
     # Calculate spectrum
     ps_array = _DCT_ps(cube_3d)
@@ -220,6 +342,7 @@ def _power_spectrum(
     ps_cube.add_aux_coord(wavelength_coord, data_dims=1)
 
     # Ensure cube has a realisation coordinate by creating and adding to cube
+    # should this be moved to _calculate_power_spectrum?
     realization_coord = iris.coords.AuxCoord(0, standard_name="realization", units="1")
     ps_cube.add_aux_coord(realization_coord)
 

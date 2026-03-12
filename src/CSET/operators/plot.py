@@ -941,6 +941,158 @@ def _plot_and_save_line_1D(
     plt.close(fig)
 
 
+def _plot_and_save_line_power_spectrum_series(
+    cubes: iris.cube.CubeList,
+    coords: list[iris.coords.Coord],
+    ensemble_coord: str,
+    filename: str,
+    title: str,
+    series_coordinate: str = None,
+    **kwargs,
+):
+    """Plot and save a 1D line series.
+
+    Parameters
+    ----------
+    cubes: Cube or CubeList
+        Cube or CubeList containing the cubes to plot on the y-axis.
+    coords: list[Coord]
+        Coordinates to plot on the x-axis, one per cube.
+    ensemble_coord: str
+        Ensemble coordinate in the cube.
+    filename: str
+        Filename of the plot to write.
+    title: str
+        Plot title.
+    series_coordinate: str, optional
+        Coordinate being plotted on x-axis. In case of spectra frequency, physical_wavenumber, or wavelength.
+    """
+    # xn = coords[0].name()  # x-axis (e.g. frequency)
+
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+    model_colors_map = _get_model_colors_map(cubes)
+    ax = plt.gca()
+
+    # Store min/max ranges.
+    y_levels = []
+
+    line_marker = None
+    line_width = 1
+
+    #    for cube, coord in zip(cubes, coords, strict=True):
+    for cube in iter_maybe(cubes):
+        # Try to get the series coordinate, with fallback to alternatives
+        try:
+            xcoord = cube.coord(series_coordinate)
+            xname = xcoord.points
+        except iris.exceptions.CoordinateNotFoundError:
+            # Fallback logic for spectral coordinates
+            if series_coordinate == "frequency":
+                try:
+                    xcoord = cube.coord("physical_wavenumber")
+                except iris.exceptions.CoordinateNotFoundError:
+                    xcoord = cube.coord("wavelength")
+            elif series_coordinate == "physical_wavenumber":
+                try:
+                    xcoord = cube.coord("frequency")
+                except iris.exceptions.CoordinateNotFoundError:
+                    xcoord = cube.coord("wavelength")
+            elif series_coordinate == "wavelength":
+                try:
+                    xcoord = cube.coord("frequency")
+                except iris.exceptions.CoordinateNotFoundError:
+                    xcoord = cube.coord("physical_wavenumber")
+            else:
+                raise
+            xname = xcoord.points
+
+        # xname = cube.coord(xn).points  # frequency
+        yfield = cube.data  # power spectrum
+        label = None
+        color = "black"
+        if model_colors_map:
+            label = cube.attributes.get("model_name")
+            color = model_colors_map.get(label)
+        for cube_slice in cube.slices_over(ensemble_coord):
+            # Label with (control) if part of an ensemble or not otherwise.
+            if cube_slice.coord(ensemble_coord).points == [0]:
+                ax.plot(
+                    xname,
+                    yfield,
+                    color=color,
+                    marker=line_marker,
+                    ls="-",
+                    lw=line_width,
+                    label=f"{label} (control)"
+                    if len(cube.coord(ensemble_coord).points) > 1
+                    else label,
+                )
+                # Label with (perturbed) if part of an ensemble and not the control.
+            else:
+                ax.plot(
+                    xname,
+                    yfield,
+                    color=color,
+                    ls="-",
+                    lw=1.5,
+                    alpha=0.75,
+                    label=f"{label} (member)",
+                )
+
+        # Calculate the global min/max if multiple cubes are given.
+        _, levels, _ = _colorbar_map_levels(cube, axis="y")
+        if levels is not None:
+            y_levels.append(min(levels))
+            y_levels.append(max(levels))
+
+    # Add some labels and tweak the style.
+    # check if cubes[0] works for single cube if not CubeList
+
+    #        title = f"{title}\n [{coords.units.title(coords.points[0])}]"
+    title = f"{title}"
+    ax.set_title(title, fontsize=16)
+
+    # Set appropriate x-axis label based on coordinate
+    if series_coordinate == "wavelength" or (
+        hasattr(xcoord, "long_name") and xcoord.long_name == "wavelength"
+    ):
+        ax.set_xlabel("Wavelength (km)", fontsize=14)
+    elif series_coordinate == "physical_wavenumber" or (
+        hasattr(xcoord, "long_name") and xcoord.long_name == "physical_wavenumber"
+    ):
+        ax.set_xlabel("Wavenumber (km⁻¹)", fontsize=14)
+    else:  # frequency or check units
+        if hasattr(xcoord, "units") and str(xcoord.units) == "km-1":
+            ax.set_xlabel("Wavenumber (km⁻¹)", fontsize=14)
+        else:
+            ax.set_xlabel("Wavenumber", fontsize=14)
+
+    ax.set_ylabel("Power Spectral Density", fontsize=14)
+    ax.tick_params(axis="both", labelsize=12)
+
+    # Set y limits to global min and max, autoscale if colorbar doesn't exist.
+
+    # Set log-log scale
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+
+    # Add gridlines
+    ax.grid(linestyle="--", color="grey", linewidth=1)
+    # Ientify unique labels for legend
+    handles = list(
+        {
+            label: handle
+            for (handle, label) in zip(*ax.get_legend_handles_labels(), strict=True)
+        }.values()
+    )
+    ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
+
+    # Save plot.
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+    logging.info("Saved line plot to %s", filename)
+    plt.close(fig)
+
+
 def _plot_and_save_vertical_line_series(
     cubes: iris.cube.CubeList,
     coords: list[iris.coords.Coord],
@@ -1456,6 +1608,299 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
 
     # Add a legend
     ax.legend(fontsize=16)
+
+    # Save the figure to a file
+    plt.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+
+    # Close the figure
+    plt.close(fig)
+
+
+def _plot_and_save_postage_stamp_power_spectrum_series(
+    cubes: iris.cube.Cube,
+    coords: list[iris.coords.Coord],
+    stamp_coordinate: str,
+    filename: str,
+    title: str,
+    series_coordinate: str = None,
+    **kwargs,
+):
+    """Plot and save postage (ensemble members) stamps for a power spectrum series.
+
+    Parameters
+    ----------
+    cubes: Cube
+        Cube of the power spectrum data.
+    filename: str
+        Filename of the plot to write.
+    title: str
+        Plot title.
+    stamp_coordinate: str
+        Coordinate that becomes different plots.
+    vmin: float
+        minimum for pdf x-axis
+    vmax: float
+        maximum for pdf x-axis
+    """
+    # Use the smallest square grid that will fit the members.
+    grid_size = int(math.ceil(math.sqrt(len(cubes.coord(stamp_coordinate).points))))
+
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+    model_colors_map = _get_model_colors_map(cubes)
+    # ax = plt.gca()
+    # Make a subplot for each member.
+    for member, subplot in zip(
+        cubes.slices_over(stamp_coordinate), range(1, grid_size**2 + 1), strict=False
+    ):
+        ax = plt.subplot(grid_size, grid_size, subplot)
+
+        # Store min/max ranges.
+        y_levels = []
+
+        line_marker = None
+        line_width = 1
+
+        for cube in iter_maybe(member):
+            # Try to get the series coordinate, with fallback to alternatives
+            try:
+                xcoord = cube.coord(series_coordinate)
+                xname = xcoord.points
+            except iris.exceptions.CoordinateNotFoundError:
+                # Fallback logic for spectral coordinates
+                if series_coordinate == "frequency":
+                    try:
+                        xcoord = cube.coord("physical_wavenumber")
+                    except iris.exceptions.CoordinateNotFoundError:
+                        xcoord = cube.coord("wavelength")
+                elif series_coordinate == "physical_wavenumber":
+                    try:
+                        xcoord = cube.coord("frequency")
+                    except iris.exceptions.CoordinateNotFoundError:
+                        xcoord = cube.coord("wavelength")
+                elif series_coordinate == "wavelength":
+                    try:
+                        xcoord = cube.coord("frequency")
+                    except iris.exceptions.CoordinateNotFoundError:
+                        xcoord = cube.coord("physical_wavenumber")
+                else:
+                    raise
+                xname = xcoord.points
+
+            yfield = cube.data  # power spectrum
+            label = None
+            color = "black"
+            if model_colors_map:
+                label = cube.attributes.get("model_name")
+                color = model_colors_map.get(label)
+
+            if member.coord(stamp_coordinate).points == [0]:
+                ax.plot(
+                    xname,
+                    yfield,
+                    color=color,
+                    marker=line_marker,
+                    ls="-",
+                    lw=line_width,
+                    label=f"{label} (control)"
+                    if len(cube.coord(stamp_coordinate).points) > 1
+                    else label,
+                )
+                # Label with member if part of an ensemble and not the control.
+            else:
+                ax.plot(
+                    xname,
+                    yfield,
+                    color=color,
+                    ls="-",
+                    lw=1.5,
+                    alpha=0.75,
+                    label=f"{label} (member)",
+                )
+
+            # Calculate the global min/max if multiple cubes are given.
+            _, levels, _ = _colorbar_map_levels(cube, axis="y")
+            if levels is not None:
+                y_levels.append(min(levels))
+                y_levels.append(max(levels))
+
+        # Add some labels and tweak the style.
+        title = f"{title}"
+        ax.set_title(title, fontsize=16)
+
+        # Set appropriate x-axis label based on coordinate
+        if series_coordinate == "wavelength" or (
+            hasattr(xcoord, "long_name") and xcoord.long_name == "wavelength"
+        ):
+            ax.set_xlabel("Wavelength (km)", fontsize=14)
+        elif series_coordinate == "physical_wavenumber" or (
+            hasattr(xcoord, "long_name") and xcoord.long_name == "physical_wavenumber"
+        ):
+            ax.set_xlabel("Wavenumber (km⁻¹)", fontsize=14)
+        else:  # frequency or check units
+            if hasattr(xcoord, "units") and str(xcoord.units) == "km-1":
+                ax.set_xlabel("Wavenumber (km⁻¹)", fontsize=14)
+            else:
+                ax.set_xlabel("Wavenumber", fontsize=14)
+
+        ax.set_ylabel("Power Spectral Density", fontsize=14)
+        ax.tick_params(axis="both", labelsize=12)
+
+        # Set log-log scale
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+
+        # Add gridlines
+        ax.grid(linestyle="--", color="grey", linewidth=1)
+        # Ientify unique labels for legend
+        handles = list(
+            {
+                label: handle
+                for (handle, label) in zip(*ax.get_legend_handles_labels(), strict=True)
+            }.values()
+        )
+        ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
+
+        ax = plt.gca()
+        ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
+
+    # Overall figure title.
+    fig.suptitle(title, fontsize=16)
+
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+    logging.info("Saved histogram postage stamp plot to %s", filename)
+    plt.close(fig)
+
+
+def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
+    cubes: iris.cube.Cube,
+    coords: list[iris.coords.Coord],
+    stamp_coordinate: str,
+    filename: str,
+    title: str,
+    series_coordinate: str = None,
+    **kwargs,
+):
+    fig, ax = plt.subplots(figsize=(10, 10), facecolor="w", edgecolor="k")
+    model_colors_map = _get_model_colors_map(cubes)
+
+    line_marker = None
+    line_width = 1
+
+    # Compute ensemble statistics to show spread
+    mean_cube = cubes.collapsed(stamp_coordinate, iris.analysis.MEAN)
+    min_cube = cubes.collapsed(stamp_coordinate, iris.analysis.MIN)
+    max_cube = cubes.collapsed(stamp_coordinate, iris.analysis.MAX)
+
+    xcoord_global = mean_cube.coord(series_coordinate)
+    x_global = xcoord_global.points
+
+    for i, member in enumerate(cubes.slices_over(stamp_coordinate)):
+        try:
+            xcoord = member.coord(series_coordinate)
+            xname = xcoord.points
+        except iris.exceptions.CoordinateNotFoundError:
+            # Fallback logic for spectral coordinates
+            if series_coordinate == "frequency":
+                try:
+                    xcoord = member.coord("physical_wavenumber")
+                except iris.exceptions.CoordinateNotFoundError:
+                    xcoord = member.coord("wavelength")
+            elif series_coordinate == "physical_wavenumber":
+                try:
+                    xcoord = member.coord("frequency")
+                except iris.exceptions.CoordinateNotFoundError:
+                    xcoord = member.coord("wavelength")
+            elif series_coordinate == "wavelength":
+                try:
+                    xcoord = member.coord("frequency")
+                except iris.exceptions.CoordinateNotFoundError:
+                    xcoord = member.coord("physical_wavenumber")
+            else:
+                raise
+            xname = xcoord.points
+
+        yfield = member.data  # power spectrum
+        color = "black"
+        if model_colors_map:
+            label = member.attributes.get("model_name") if i == 0 else None
+            color = model_colors_map.get(label)
+
+        if member.coord(stamp_coordinate).points == [0]:
+            ax.plot(
+                xname,
+                yfield,
+                color=color,
+                marker=line_marker,
+                ls="-",
+                lw=line_width,
+                label=f"{label} (control)"
+                if len(member.coord(stamp_coordinate).points) > 1
+                else label,
+            )
+            # Label with member number if part of an ensemble and not the control.
+        else:
+            ax.plot(
+                xname,
+                yfield,
+                color=color,
+                ls="-",
+                lw=1.5,
+                alpha=0.75,
+                label=label,
+            )
+
+    # Set appropriate x-axis label based on coordinate
+    if series_coordinate == "wavelength" or (
+        hasattr(xcoord, "long_name") and xcoord.long_name == "wavelength"
+    ):
+        ax.set_xlabel("Wavelength (km)", fontsize=14)
+    elif series_coordinate == "physical_wavenumber" or (
+        hasattr(xcoord, "long_name") and xcoord.long_name == "physical_wavenumber"
+    ):
+        ax.set_xlabel("Wavenumber (km⁻¹)", fontsize=14)
+    else:  # frequency or check units
+        if hasattr(xcoord, "units") and str(xcoord.units) == "km-1":
+            ax.set_xlabel("Wavenumber (km⁻¹)", fontsize=14)
+        else:
+            ax.set_xlabel("Wavenumber", fontsize=14)
+
+    # Add ensemble spread shading
+    ax.fill_between(
+        x_global,
+        min_cube.data,
+        max_cube.data,
+        color="grey",
+        alpha=0.3,
+        label="Ensemble spread",
+    )
+
+    # Add ensemble mean line
+    ax.plot(x_global, mean_cube.data, color="black", lw=1, label="Ensemble mean")
+
+    ax.set_ylabel("Power Spectral Density", fontsize=14)
+    ax.tick_params(axis="both", labelsize=12)
+
+    # Set y limits to global min and max, autoscale if colorbar doesn't exist.
+    # Set log-log scale
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+
+    # Add gridlines
+    ax.grid(linestyle="--", color="grey", linewidth=1)
+    # Identify unique labels for legend
+    handles = list(
+        {
+            label: handle
+            for (handle, label) in zip(*ax.get_legend_handles_labels(), strict=True)
+        }.values()
+    )
+    ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
+
+    # Add a legend
+    ax.legend(fontsize=16)
+
+    # Figure title.
+    ax.set_title(title, fontsize=16)
 
     # Save the figure to a file
     plt.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -2123,7 +2568,9 @@ def plot_line_series(
     filename: str = None,
     series_coordinate: str = "time",
     sequence_coordinate: str = "time",
-    # line_coordinate: str = "realization",
+    # add the following for ensembles
+    stamp_coordinate: str = "realization",
+    single_plot: bool = False,
     **kwargs,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Plot a line plot for the specified coordinate.
@@ -2156,6 +2603,7 @@ def plot_line_series(
     TypeError
         If the cube isn't a Cube or CubeList.
     """
+    stamp_coordinate = "realization"
     # Ensure we have a name for the plot file.
     recipe_title = get_recipe_metadata().get("title", "Untitled")
 
@@ -2180,18 +2628,12 @@ def plot_line_series(
             raise ValueError(
                 f"Cube must have a {series_coordinate} coordinate."
             ) from err
-        if cube.ndim > 2 or not cube.coords("realization"):
-            raise ValueError("Cube must be 1D or 2D with a realization coordinate.")
-
+        if cube.coords("realization"):
+            if cube.ndim > 3:
+                raise ValueError("Cube must be 1D or 2D with a realization coordinate.")
+        else:
+            raise ValueError("Cube must have a realization coordinate.")
     plot_index = []
-    #    if series_coordinate == "time":
-    #        # Do the actual plotting for timeseries.
-    #        _plot_and_save_line_series(
-    #            cubes, coords, "realization", plot_filename, recipe_title
-    #        )
-    #
-    #        plot_index.append(plot_filename)
-    #    else:
 
     # Check if this is a spectral plot by looking for spectral coordinates
     is_spectral_plot = series_coordinate in [
@@ -2205,6 +2647,10 @@ def plot_line_series(
         # coordinate frequency/wavenumber.
         # If several power spectra are plotted with time as sequence_coordinate for the
         # time slider option.
+
+        # Internal plotting function.
+        plotting_func = _plot_and_save_line_power_spectrum_series
+
         for cube in cubes:
             try:
                 cube.coord(sequence_coordinate)
@@ -2214,6 +2660,17 @@ def plot_line_series(
                 ) from err
 
         if num_models == 1:
+            # check for ensembles
+            if (
+                stamp_coordinate in [c.name() for c in cubes[0].coords()]
+                and cubes[0].coord(stamp_coordinate).shape[0] > 1
+            ):
+                if single_plot:
+                    # Plot spectra, mean and ensemble spread on 1 plot
+                    plotting_func = _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series
+                else:
+                    # Plot postage stamps
+                    plotting_func = _plot_and_save_postage_stamp_power_spectrum_series
             cube_iterables = cubes[0].slices_over(sequence_coordinate)
         else:
             all_points = sorted(
@@ -2273,11 +2730,10 @@ def plot_line_series(
                     title = f"{recipe_title}\n [{coord.units.title(coord.bounds[0][0])} to {coord.units.title(coord.bounds[0][1])}]"
 
             # Do the actual plotting.
-
-            _plot_and_save_line_1D(
+            plotting_func(
                 cube_slice,
                 coords,
-                "realization",
+                stamp_coordinate,
                 plot_filename,
                 title,
                 series_coordinate,
@@ -2287,7 +2743,7 @@ def plot_line_series(
     else:
         # Do the actual plotting for all other series coordinate options.
         _plot_and_save_line_series(
-            cubes, coords, "realization", plot_filename, recipe_title
+            cubes, coords, stamp_coordinate, plot_filename, recipe_title
         )
 
         plot_index.append(plot_filename)
@@ -2813,7 +3269,6 @@ def plot_histogram_series(
     recipe_title = get_recipe_metadata().get("title", "Untitled")
 
     cubes = iter_maybe(cubes)
-
     # Ensure we have a name for the plot file.
     if filename is None:
         filename = slugify(recipe_title)

@@ -48,6 +48,9 @@ steps:
 
   - operator: plot.plot_line_series
     series_coordinate: "physical_wavenumber"
+    stamp_coordinate: "realization"
+    single_plot: $SPECTRUM_SURFACE_FIELD_SEQUENCE
+
 
   - operator: write.write_cube_to_nc
     overwrite: True
