@@ -3268,6 +3268,23 @@ def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
     series_coordinate: str = None,
     **kwargs,
 ):
+    """Plot and save postage (ensemble members) stamps for a power spectrum series.
+
+    Parameters
+    ----------
+    cubes: Cube
+        Cube of the power spectrum data.
+    filename: str
+        Filename of the plot to write.
+    title: str
+        Plot title.
+    stamp_coordinate: str
+        Coordinate that becomes different plots.
+    vmin: float
+        minimum for pdf x-axis
+    vmax: float
+        maximum for pdf x-axis
+    """
     fig, ax = plt.subplots(figsize=(10, 10), facecolor="w", edgecolor="k")
     model_colors_map = _get_model_colors_map(cubes)
 
