@@ -1688,82 +1688,6 @@ def _plot_and_save_scattermap_plot(
     plt.close(fig)
 
 
-def _plot_and_save_postage_stamp_power_spectrum_series(
-    cube: iris.cube.Cube,
-    filename: str,
-    title: str,
-    stamp_coordinate: str,
-    **kwargs,
-):
-    """Plot and save postage (ensemble members) stamps for a power spectrum series.
-
-    Parameters
-    ----------
-    cube: Cube
-        2 dimensional Cube of the data to plot as power spectrum.
-    filename: str
-        Filename of the plot to write.
-    title: str
-        Plot title.
-    stamp_coordinate: str
-        Coordinate that becomes different plots.
-    """
-    # Use the smallest square grid that will fit the members.
-    grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
-
-    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
-    # Make a subplot for each member.
-    for member, subplot in zip(
-        cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1), strict=False
-    ):
-        # Implicit interface is much easier here, due to needing to have the
-        # cartopy GeoAxes generated.
-        plt.subplot(grid_size, grid_size, subplot)
-
-        frequency = member.coord("frequency").points
-
-        ax = plt.gca()
-        ax.plot(frequency, member.data)
-        ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
-
-    # Overall figure title.
-    fig.suptitle(title, fontsize=16)
-
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved power spectra postage stamp plot to %s", filename)
-    plt.close(fig)
-
-
-def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
-    cube: iris.cube.Cube,
-    filename: str,
-    title: str,
-    stamp_coordinate: str,
-    **kwargs,
-):
-    fig, ax = plt.subplots(figsize=(10, 10), facecolor="w", edgecolor="k")
-    ax.set_title(title, fontsize=16)
-    ax.set_xlabel(f"{cube.name()} / {cube.units}", fontsize=14)
-    ax.set_ylabel("Power", fontsize=14)
-    # Loop over all slices along the stamp_coordinate
-    for member in cube.slices_over(stamp_coordinate):
-        frequency = member.coord("frequency").points
-        ax.plot(
-            frequency,
-            member.data,
-            label=f"Member #{member.coord(stamp_coordinate).points[0]}",
-        )
-
-    # Add a legend
-    ax.legend(fontsize=16)
-
-    # Save the figure to a file
-    plt.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-
-    # Close the figure
-    plt.close(fig)
-
-
 def _spatial_plot(
     method: Literal["contourf", "pcolormesh"],
     cube: iris.cube.Cube,
@@ -3193,18 +3117,19 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
 
     Parameters
     ----------
-    cubes: Cube
-        Cube of the power spectrum data.
+    cubes: Cube or CubeList
+        Cube or Cubelist of the power spectrum data.
+    coords: list[Coord]
+        Coordinates to plot on the x-axis, one per cube.
+    stamp_coordinate: str
+        Coordinate that becomes different plots.
     filename: str
         Filename of the plot to write.
     title: str
         Plot title.
-    stamp_coordinate: str
-        Coordinate that becomes different plots.
-    vmin: float
-        minimum for pdf x-axis
-    vmax: float
-        maximum for pdf x-axis
+    series_coordinate: str, optional
+        Coordinate being plotted on x-axis. In case of spectra frequency, physical_wavenumber, or wavelength.
+
     """
     # Use the smallest square grid that will fit the members.
     grid_size = int(math.ceil(math.sqrt(len(cubes.coord(stamp_coordinate).points))))
@@ -3344,22 +3269,23 @@ def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
     series_coordinate: str = None,
     **kwargs,
 ):
-    """Plot and save postage (ensemble members) stamps for a power spectrum series.
+    """Plot and save power spectra for ensemble members in single plot.
 
     Parameters
     ----------
-    cubes: Cube
-        Cube of the power spectrum data.
+    cubes: Cube or CubeList
+        Cube or Cubelist of the power spectrum data.
+    coords: list[Coord]
+        Coordinates to plot on the x-axis, one per cube.
+    stamp_coordinate: str
+        Coordinate that becomes different plots.
     filename: str
         Filename of the plot to write.
     title: str
         Plot title.
-    stamp_coordinate: str
-        Coordinate that becomes different plots.
-    vmin: float
-        minimum for pdf x-axis
-    vmax: float
-        maximum for pdf x-axis
+    series_coordinate: str, optional
+        Coordinate being plotted on x-axis. In case of spectra frequency, physical_wavenumber, or wavelength.
+
     """
     fig, ax = plt.subplots(figsize=(10, 10), facecolor="w", edgecolor="k")
     model_colors_map = _get_model_colors_map(cubes)
