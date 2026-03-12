@@ -11,6 +11,8 @@ steps:
         variable_constraint:
             operator: constraints.generate_var_constraint
             varname: $OBSVARNAME
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
 
   - operator: plot.spatial_contour_plot
     sequence_coordinate: time
