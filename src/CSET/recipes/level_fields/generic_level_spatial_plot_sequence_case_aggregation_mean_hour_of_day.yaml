@@ -24,7 +24,7 @@ steps:
   - operator: collapse.collapse_by_hour_of_day
     method: MEAN
 
-  - operator: plot.spatial_contour_plot
+  - operator: plot.spatial_pcolormesh_plot
     sequence_coordinate: hour
 
   - operator: write.write_cube_to_nc
