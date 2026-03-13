@@ -339,6 +339,21 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+        # Surface wind gusts on Beaufort Scale.
+        if conf.SFC_WIND_GUSTS_BEAUFORT_SCALE_SPATIAL:
+            yield RawRecipe(
+                recipe="surface_wind_gusts_on_beaufort_scale_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
         # Gale force winds presence.
         if conf.SFC_GALE_FORCE_WINDS_PRESENCE_SPATIAL:
             yield RawRecipe(
