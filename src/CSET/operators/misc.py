@@ -188,6 +188,7 @@ def multiplication(
     Returns
     -------
     Cube | CubeList
+        The result of multiplicand x multiplier.
 
     Raises
     ------
@@ -462,7 +463,8 @@ def rename_cube(cubes: iris.cube.Cube | iris.cube.CubeList, name: str):
     Notes
     -----
     This operator is designed to be used when the output field name does not
-    match expectations or needs to be clearer. For example, if combining masks
+    match expectations or needs to be different to defaults in standard_name, var_name or
+    long_name. For example, if combining masks
     to create light rain you would like the field to be named "mask_for_light_rain"
     rather than "mask_for_microphysical_precip_gt_0.0_x_mask_for_microphysical_precip_lt_2.0".
 

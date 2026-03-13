@@ -100,9 +100,13 @@ def test_multiplication(cube):
 
 def test_multiplication_cubelist(cube):
     """Multiplies one object by another as a CubeList."""
+    # First setup expected cube by using a squared approach as the simplest example.
     a = cube * cube
+    # Next create a CubeList from the expected cube output, for efficiency this is kept the same.
     expected_list = iris.cube.CubeList([a, a])
+    # Create a list of input cubes to be tested that will match the result from the expected.
     input_cubes = iris.cube.CubeList([cube, cube])
+    # Use the operator and test match with expected data.
     actual_cubelist = misc.multiplication(input_cubes, input_cubes)
     for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
         assert np.allclose(
