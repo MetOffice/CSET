@@ -98,6 +98,28 @@ def test_multiplication(cube):
     assert np.allclose(b.data, a.data, atol=1e-5, equal_nan=True)
 
 
+def test_multiplication_cubelist(cube):
+    """Multiplies one object by another as a CubeList."""
+    # First setup expected cube by using a squared approach as the simplest example.
+    a = cube * cube
+    # Next create a CubeList from the expected cube output, for efficiency this is kept the same.
+    expected_list = iris.cube.CubeList([a, a])
+    # Create a list of input cubes to be tested that will match the result from the expected.
+    input_cubes = iris.cube.CubeList([cube, cube])
+    # Use the operator and test match with expected data.
+    actual_cubelist = misc.multiplication(input_cubes, input_cubes)
+    for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
+        assert np.allclose(
+            cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2, equal_nan=True
+        )
+
+
+def test_multiplication_rename(cube):
+    """Tests renaming of multiplication cube."""
+    expected_name = f"{cube.name()}_x_{cube.name()}"
+    assert expected_name == misc.multiplication(cube, cube).name()
+
+
 def test_multiplication_failure(cube):
     """Tests arrays of different shapes produces an error."""
     a = read.read_cube("tests/test_data/convection/ECFlagB.nc")
@@ -371,3 +393,17 @@ def test_convert_units_cubelist(cube):
     for actual, expected in zip(new_cubelist, expected_cubelist, strict=True):
         assert actual.units == expected.units
         assert np.allclose(actual.data, expected.data, rtol=1e-6, atol=1e-2)
+
+
+def test_rename_cube(cube):
+    """Test renaming of a cube."""
+    new_cube = misc.rename_cube(cube, "air_temperature_at_screen_level")
+    assert new_cube.name() == "air_temperature_at_screen_level"
+
+
+def test_rename_cube_for_cubelist(cube):
+    """Test renaming of cubes in a cubelist."""
+    cube_list = iris.cube.CubeList([cube, cube])
+    new_cubelist = misc.rename_cube(cube_list, "air_temperature_at_screen_level")
+    for new in new_cubelist:
+        assert new.name() == "air_temperature_at_screen_level"
