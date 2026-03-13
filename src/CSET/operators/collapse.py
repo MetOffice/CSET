@@ -114,9 +114,6 @@ def collapse(
                 cube_min = cube.collapsed(coordinate, iris.analysis.MIN)
                 collapsed_cubes.append(cube_max - cube_min)
             elif method == "AREA_AVG":
-                # for now, just deal with forecast_period, valid time and hour plot types can come later
-                # drop scalar coords cube.coord('forecast_reference_time')
-
                 # Mask nans
                 if np.count_nonzero(np.isnan(cube.data)) > 0:
                     cube.data = np.ma.masked_invalid(cube.data)
