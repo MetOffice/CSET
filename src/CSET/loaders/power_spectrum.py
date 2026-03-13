@@ -39,6 +39,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SPECTRUM_SURFACE_FIELD_SEQUENCE": conf.SPECTRUM_SURFACE_FIELD_SEQUENCE,
                 },
                 model_ids=[model["id"] for model in models],
                 aggregation=False,
@@ -64,6 +65,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SPECTRUM_SURFACE_FIELD_SEQUENCE": conf.SPECTRUM_SURFACE_FIELD_SEQUENCE,
                 },
                 model_ids=[model["id"] for model in models],
                 aggregation=False,
@@ -89,6 +91,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SPECTRUM_SURFACE_FIELD_SEQUENCE": conf.SPECTRUM_SURFACE_FIELD_SEQUENCE,
                 },
                 model_ids=[model["id"] for model in models],
                 aggregation=False,
