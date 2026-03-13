@@ -428,3 +428,39 @@ def convert_units(cubes: iris.cube.Cube | iris.cube.CubeList, units: str):
         return new_cubelist[0]
     else:
         return new_cubelist
+
+
+def guess_bounds(cube):
+    """
+    Guess bounds for x and y coordinates on a cube.
+
+    Arguments
+    ---------
+    cube: iris.cube.Cube
+        Input cube whose x and y coordinate bounds will be guessed if missing.
+
+    Returns
+    -------
+    iris.cube.Cube
+        The same cube with bounds added to x and y coordinates where absent.
+
+    Raises
+    ------
+    ValueError
+        If the cube uses a variable resolution grid where bounds cannot be
+        guessed reliably.
+    """
+    # Loop over spatial coordinates
+    for axis in ["x", "y"]:
+        coord = cube.coord(axis=axis)
+        try:
+            _ = iris.util.regular_step(coord)
+        except ValueError as e:
+            logging.warning(
+                "Cannot guess bounds for a variable resolution (non-regular) grid: %s",
+                e,
+            )
+        # Guess bounds if there aren't any
+        if coord.bounds is None:
+            coord.guess_bounds()
+    return cube

@@ -29,6 +29,7 @@ import numpy as np
 
 from CSET._common import iter_maybe
 from CSET.operators.aggregate import add_hour_coordinate
+from CSET.operators.misc import guess_bounds
 
 
 def collapse(
@@ -112,6 +113,18 @@ def collapse(
                 cube_max = cube.collapsed(coordinate, iris.analysis.MAX)
                 cube_min = cube.collapsed(coordinate, iris.analysis.MIN)
                 collapsed_cubes.append(cube_max - cube_min)
+            elif method == "AREA_AVG":
+                # Mask nans
+                if np.count_nonzero(np.isnan(cube.data)) > 0:
+                    cube.data = np.ma.masked_invalid(cube.data)
+
+                # Compute grid cell areas
+                cube = guess_bounds(cube)
+                grid_areas = iris.analysis.cartography.area_weights(cube)
+
+                collapsed_cubes.append(
+                    cube.collapsed(coordinate, iris.analysis.MEAN, weights=grid_areas)
+                )
             else:
                 collapsed_cubes.append(
                     cube.collapsed(coordinate, getattr(iris.analysis, method))
