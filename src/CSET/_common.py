@@ -127,6 +127,14 @@ def slugify(s: str) -> str:
     return re.sub(r"[^a-z0-9\._-]+", "_", s.casefold()).strip("_")
 
 
+def filename_slugify(s: str) -> str:
+    """Turn a string into a version that can be used in filenames.
+
+    The resultant string will only consist of a-z, 0-9.
+    """
+    return re.sub(r"[^a-z0-9\.]+", "", s.casefold()).strip("_")
+
+
 def get_recipe_metadata() -> dict:
     """Get the metadata of the running recipe."""
     try:
