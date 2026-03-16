@@ -179,19 +179,22 @@ def division(numerator, denominator):
     return numerator / denominator
 
 
-def multiplication(multiplicand, multiplier):
+def multiplication(
+    multiplicand: Cube | CubeList, multiplier: Cube | CubeList
+) -> Cube | CubeList:
     """Multiplication of two fields.
 
     Parameters
     ----------
-    multiplicand: Cube
+    multiplicand: Cube | CubeList
         Any field to be multiplied by another field.
-    multiplier: Cube
+    multiplier: Cube | CubeList
         Any field to be multiplied to another field.
 
     Returns
     -------
-    Cube
+    Cube | CubeList
+        The result of multiplicand x multiplier.
 
     Raises
     ------
@@ -201,14 +204,25 @@ def multiplication(multiplicand, multiplier):
     Notes
     -----
     This is a simple operator designed for combination of diagnostics or
-    creating new diagnostics by using recipes.
+    creating new diagnostics by using recipes. CubeLists are multiplied
+    on a strict ordering (e.g. first cube with first cube).
 
     Examples
     --------
     >>> filtered_CAPE_ratio = misc.multiplication(CAPE_ratio, inflow_layer_properties)
 
     """
-    return multiplicand * multiplier
+    new_cubelist = iris.cube.CubeList([])
+    for cube_a, cube_b in zip(
+        iter_maybe(multiplicand), iter_maybe(multiplier), strict=True
+    ):
+        multiplied_cube = cube_a * cube_b
+        multiplied_cube.rename(f"{cube_a.name()}_x_{cube_b.name()}")
+        new_cubelist.append(multiplied_cube)
+    if len(new_cubelist) == 1:
+        return new_cubelist[0]
+    else:
+        return new_cubelist
 
 
 def combine_cubes_into_cubelist(first: Cube | CubeList, **kwargs) -> CubeList:
@@ -350,6 +364,8 @@ def difference(cubes: CubeList):
     ) + "_difference"
     if base.var_name:
         difference.var_name = base.var_name + "_difference"
+    elif base.standard_name:
+        difference.var_name = base.standard_name + "_difference"
 
     difference.data = base.data - other.data
     return difference
@@ -428,6 +444,44 @@ def convert_units(cubes: iris.cube.Cube | iris.cube.CubeList, units: str):
         # Convert cube units.
         cube_a.convert_units(units)
         new_cubelist.append(cube_a)
+    if len(new_cubelist) == 1:
+        return new_cubelist[0]
+    else:
+        return new_cubelist
+
+
+def rename_cube(cubes: iris.cube.Cube | iris.cube.CubeList, name: str):
+    """Rename a cube.
+
+    Arguments
+    ---------
+    cubes: iris.cube.Cube | iris.cube.CubeList
+        A Cube or CubeList of a field to be renamed.
+
+    name: str
+        The new name of the cube. It should be CF compliant.
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        The renamed field.
+
+    Notes
+    -----
+    This operator is designed to be used when the output field name does not
+    match expectations or needs to be different to defaults in standard_name, var_name or
+    long_name. For example, if combining masks
+    to create light rain you would like the field to be named "mask_for_light_rain"
+    rather than "mask_for_microphysical_precip_gt_0.0_x_mask_for_microphysical_precip_lt_2.0".
+
+    Examples
+    --------
+    >>> light_rain_mask = misc.rename_cube(light_rain_mask,"mask_for_light_rainfall"
+    """
+    new_cubelist = iris.cube.CubeList([])
+    for cube in iter_maybe(cubes):
+        cube.rename(name)
+        new_cubelist.append(cube)
     if len(new_cubelist) == 1:
         return new_cubelist[0]
     else:
