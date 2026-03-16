@@ -287,19 +287,19 @@ def test_setup_spatial_map_global(cube):
     assert bounds[3] == np.max(cube.coord("latitude").points)
 
 
-def test_set_title_and_filename_filename_single(cube):
-    """Setup plot title and filename for single output spanning endpoints."""
+def test_set_title_and_filename_filename_single_sequence(cube):
+    """Setup plot title and filename for single output, sequence input."""
     seq_coord = cube.coord("time")
     nplot = 1
     plot_title, plot_filename = plot._set_title_and_filename(
         seq_coord, nplot, "recipe", "filename"
     )
     assert plot_filename == "filename.png"
-    assert plot_title == "recipe\n [2022-09-21 03:00:00 to 2022-09-21 05:00:00]"
+    assert plot_title == "recipe\n [2022-09-21 02:30:00 to 2022-09-21 05:30:00]"
 
 
-def test_set_title_and_filename_filename_sequence(cube):
-    """Setup plot title and filename for single output spanning endpoints."""
+def test_set_title_and_filename_filename_single_nosequence(cube):
+    """Setup plot title and filename for single output, no sequence."""
     seq_coord = cube.coord("time")[0]
     nplot = np.size(cube.coord("time").points)
     plot_title, plot_filename = plot._set_title_and_filename(
@@ -309,29 +309,30 @@ def test_set_title_and_filename_filename_sequence(cube):
     assert plot_title == "recipe\n [2022-09-21 03:00:00]"
 
 
-def test_set_title_and_filename_endpoints(cube):
-    """Setup plot title and filename for single output spanning endpoints."""
+def test_set_title_and_filename_nofilename_single_sequence(cube):
+    """Setup plot title and filename for single output with multi-sequence."""
     seq_coord = cube.coord("time")
     nplot = 1
     plot_title, plot_filename = plot._set_title_and_filename(
         seq_coord, nplot, "recipe", None
     )
-    assert plot_filename == "recipe_20220921030000_20220921050000.png"
-    assert plot_title == "recipe\n [2022-09-21 03:00:00 to 2022-09-21 05:00:00]"
+    assert plot_filename == "recipe_20220921023000_20220921053000.png"
+    assert plot_title == "recipe\n [2022-09-21 02:30:00 to 2022-09-21 05:30:00]"
 
 
-def test_set_title_and_filename_endbounds(cube):
-    """Setup plot title and filename for single output with endbounds."""
+def test_set_title_and_filename_nofilename_single_nobounds(cube):
+    """Setup plot title and filename for single output with single sequence."""
     seq_coord = cube.coord("time")[0]
+    seq_coord.bounds = None
     nplot = 1
     plot_title, plot_filename = plot._set_title_and_filename(
         seq_coord, nplot, "recipe", None
     )
-    assert plot_filename == "recipe_20220921023000_20220921033000.png"
-    assert plot_title == "recipe\n [2022-09-21 02:30:00 to 2022-09-21 03:30:00]"
+    assert plot_filename == "recipe.png"
+    assert plot_title == "recipe"
 
 
-def test_set_title_and_filename_sequence(cube):
+def test_set_title_and_filename_nofilename_multi_sequence(cube):
     """Setup plot title and filename for sequence output."""
     seq_coord = cube.coord("time")[0]
     nplot = np.size(cube.coord("time").points)
@@ -569,7 +570,7 @@ def test_postage_stamp_contour_plot(ensemble_cube, tmp_working_dir):
     # Get a single time step.
     ensemble_cube_3d = next(ensemble_cube.slices_over("time"))
     plot.spatial_contour_plot(ensemble_cube_3d)
-    assert Path("untitled_20221201100000.png").is_file()
+    assert Path("untitled.png").is_file()
 
 
 def test_postage_stamp_contour_plot_sequence_coord_check(cube, tmp_working_dir):
@@ -633,7 +634,7 @@ def test_postage_stamp_pcolormesh_plot(ensemble_cube, tmp_working_dir):
     # Get a single time step.
     ensemble_cube_3d = next(ensemble_cube.slices_over("time"))
     plot.spatial_pcolormesh_plot(ensemble_cube_3d)
-    assert Path("untitled_20221201100000.png").is_file()
+    assert Path("untitled.png").is_file()
 
 
 def test_postage_stamp_pcolormesh_plot_sequence_coord_check(cube, tmp_working_dir):
@@ -672,7 +673,7 @@ def test_plot_line_series(cube, tmp_working_dir):
     """Save a line series plot."""
     cube = collapse.collapse(cube, ["grid_latitude", "grid_longitude"], "MEAN")
     plot.plot_line_series(cube)
-    assert Path("untitled_20220921030000_20220921050000.png").is_file()
+    assert Path("untitled_20220921023000_20220921053000.png").is_file()
 
 
 def test_plot_line_series_with_filename(cube, tmp_working_dir):

@@ -486,30 +486,37 @@ def _set_title_and_filename(
     plot_filename: str
         Output formatted plot filename string.
     """
-    # Set default based on coord point value where only plotting single output
     ndim = seq_coord.ndim
     npoints = np.size(seq_coord.points)
+    sequence_title = ""
+    sequence_fname = ""
 
-    if ndim == 1:
-        sequence_value = seq_coord.units.title(seq_coord.points[0])
-        sequence_title = f"\n [{sequence_value}]"
-        sequence_fname = f"_{filename_slugify(sequence_value)}"
+    # Account for case with multi-dimension sequence input (e.g. aggregation)
+    if ndim > 1:
+        sequence_title = f"\n [{ndim} cases]"
+        sequence_fname = f"_{ndim}cases"
+
     else:
-        # Account for case with multi-dimension sequence (e.g. aggregation)
-        sequence_title = ""
-        sequence_fname = ""
-
-    # Use sequence (e.g. time) bounds if plotting single non-sequence outputs
-    if ndim == 1 and nplot == 1:
-        if seq_coord.has_bounds():
+        if npoints == 1:
+            if nplot > 1:
+                # Set default labels for sequence inputs
+                sequence_value = seq_coord.units.title(seq_coord.points[0])
+                sequence_title = f"\n [{sequence_value}]"
+                sequence_fname = f"_{filename_slugify(sequence_value)}"
+            elif seq_coord.has_bounds():
+                ncase = np.size(seq_coord.bounds)
+                sequence_title = f"\n [{ncase} cases]"
+                sequence_fname = f"_{ncase}cases"
+            # Use sequence (e.g. time) bounds if plotting single non-sequence outputs
             # Take title endpoints from coord points where series input (e.g. timeseries)
-            if npoints > 1:
+        if npoints > 1:
+            if not seq_coord.has_bounds():
                 startstring = seq_coord.units.title(seq_coord.points[0])
                 endstring = seq_coord.units.title(seq_coord.points[-1])
-            # Take title endpoint from coord bounds where single input (e.g. map)
             else:
-                startstring = seq_coord.units.title(seq_coord.bounds[0][0])
-                endstring = seq_coord.units.title(seq_coord.bounds[0][1])
+                # Take title endpoint from coord bounds where single input (e.g. map)
+                startstring = seq_coord.units.title(seq_coord.bounds.flatten()[0])
+                endstring = seq_coord.units.title(seq_coord.bounds.flatten()[-1])
             sequence_title = f"\n [{startstring} to {endstring}]"
             sequence_fname = (
                 f"_{filename_slugify(startstring)}_{filename_slugify(endstring)}"
