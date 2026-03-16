@@ -343,6 +343,41 @@ def test_set_title_and_filename_nofilename_multi_sequence(cube):
     assert plot_title == "recipe\n [2022-09-21 03:00:00]"
 
 
+def test_set_title_and_filename_filename_aggregated(long_forecast_multi_day):
+    """Setup plot title and filename for aggregated output with filename."""
+    collapsed_cube = collapse.collapse_by_hour_of_day(long_forecast_multi_day, "MEAN")
+    seq_coord = collapsed_cube.coord("hour")
+    nplot = 1
+    plot_title, plot_filename = plot._set_title_and_filename(
+        seq_coord, nplot, "recipe", "filename"
+    )
+    assert plot_filename == "filename.png"
+    assert plot_title == "recipe\n [0 hours to 23 hours]"
+
+
+def test_set_title_and_filename_nofilename_aggregated(long_forecast_multi_day):
+    """Setup plot title and filename for aggregated output, no filename."""
+    collapsed_cube = collapse.collapse_by_hour_of_day(long_forecast_multi_day, "MEAN")
+    seq_coord = collapsed_cube.coord("hour")
+    nplot = 1
+    plot_title, plot_filename = plot._set_title_and_filename(
+        seq_coord, nplot, "recipe", None
+    )
+    assert plot_filename == "recipe_0hours_23hours.png"
+    assert plot_title == "recipe\n [0 hours to 23 hours]"
+
+
+def test_set_title_and_filename_multidim_aggregated(long_forecast_multi_day):
+    """Setup plot title and filename for 2D time aggregated output."""
+    seq_coord = long_forecast_multi_day.coord("time")
+    nplot = 1
+    plot_title, plot_filename = plot._set_title_and_filename(
+        seq_coord, nplot, "recipe", None
+    )
+    assert plot_filename == "recipe_2cases.png"
+    assert plot_title == "recipe\n [2 cases]"
+
+
 def test_colorbar_map_mask(cube, tmp_working_dir):
     """Test to ensure axis picks up correct colormap for a mask."""
     cube.rename(f"mask_for_{cube.name()}")
