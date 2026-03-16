@@ -2,7 +2,7 @@ category: Daily Weather
 title: "Moderate rain presence\nDifference ($BASE_MODEL - $OTHER_MODEL)"
 description: |
   Generates a mask of whether moderate rain is present in a grid box and provides
-  the difference between two models. Values will be positive or negative one
+  the difference between two datasets. Values will be positive or negative one
   depending on which model has moderate rain present at that location if the other
   does not.
   Moderate rain is defined via the Forecasting Handbook as rainfall between 2 and 10 mm/h.
