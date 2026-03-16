@@ -238,16 +238,16 @@ def load(conf: Config):
             aggregation=False,
         )
 
-    # Moderate rain presence.
-    if conf.MODERATE_RAIN_PRESENCE_SPATIAL_PLOT:
+    # Moderate rain presence
+    if conf.MODERATE_RAIN_PRESENCE_DOMAIN_MEAN_TIMESERIES:
         yield RawRecipe(
-            recipe="moderate_rain_presence_spatial_plot.yaml",
-            model_ids=model["id"],
+            recipe="moderate_rain_presence_domain_mean_time_series.yaml",
             variables={
-                "MODEL_NAME": model["name"],
+                "MODEL_NAME": [model["name"] for model in models],
                 "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                 "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
             },
+            model_ids=[model["id"] for model in models],
             aggregation=False,
         )
 
