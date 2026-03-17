@@ -248,7 +248,7 @@ def load(conf: Config):
                 },
                 aggregation=False,
             )
-            
+
         # Violent rain presence.
         if conf.VIOLENT_RAIN_PRESENCE_SPATIAL_PLOT:
             yield RawRecipe(
