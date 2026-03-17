@@ -506,7 +506,7 @@ def differentiate(
     The differential is calculated based on a carteisan grid. This calculation
     is then suitable for vertical and temporal derivatives. It is not sensible
     for horizontal derivatives if they are based on spherical coordinates (e.g.
-    latitude and longitude). In essensce this operator is a CSET wrapper around
+    latitude and longitude). In essence this operator is a CSET wrapper around
     `iris.analysis.calculus.differentiate <https://scitools-iris.readthedocs.io/en/stable/generated/api/iris.analysis.calculus.html#iris.analysis.calculus.differentiate>`_.
 
     Examples
