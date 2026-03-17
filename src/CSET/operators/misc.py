@@ -19,7 +19,7 @@ import logging
 from collections.abc import Iterable
 
 import iris
-import iris.analysis.calculus as iac
+import iris.analysis.calculus
 import numpy as np
 from iris.cube import Cube, CubeList
 
@@ -461,7 +461,7 @@ def differentiate(
     """
     new_cubelist = iris.cube.CubeList([])
     for cube in iter_maybe(cubes):
-        dcube = iac.differentiate(cube, coordinate)
+        dcube = iris.analysis.calculus.differentiate(cube, coordinate)
         new_cubelist.append(dcube)
     if len(new_cubelist) == 1:
         return new_cubelist[0]
