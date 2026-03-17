@@ -1,0 +1,33 @@
+category: Daily Weather
+title: $MODEL_NAME Violent rain presence spatial plot
+description: |
+  Generates a mask of whether violent rain is present in a grid box and provides a
+  spatial plot. A value of one implies violent rain is present; a value of zero
+  implies violent rain is not present.
+  Violent rain is defined in the Forecasting Handbook as rainfall exceeding 50 mm/h.
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    constraint:
+        operator: constraints.combine_constraints
+        varname_constraint:
+            operator: constraints.generate_var_constraint
+            varname: surface_microphysical_rainfall_rate
+        cell_methods_constraint:
+            operator: constraints.generate_cell_methods_constraint
+            cell_methods: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: filters.generate_mask
+    condition: 'ge'
+    value: 50.0
+
+  - operator: misc.rename_cube
+    name: "mask_for_violent_rainfall_rate"
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
