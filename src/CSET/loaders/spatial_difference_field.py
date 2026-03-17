@@ -192,7 +192,7 @@ def load(conf: Config):
                 model_ids=[base_model["id"], model["id"]],
                 aggregation=False,
             )
-            
+
     # Violent rain presence.
     if conf.VIOLENT_RAIN_PRESENCE_SPATIAL_DIFFERENCE:
         base_model = models[0]
