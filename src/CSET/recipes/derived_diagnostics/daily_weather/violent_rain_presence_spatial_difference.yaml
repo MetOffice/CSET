@@ -1,0 +1,37 @@
+category: Daily Weather
+title: "Violent rain presence\nDifference ($BASE_MODEL - $OTHER_MODEL)"
+description: |
+  Generates a mask of whether violent rain is present in a grid box and provides a
+  the difference between two datasets. Values will be positive or negative one
+  depending on which model has violent rain present at that location if the other
+  does not.
+  Violent rain is defined in the Forecasting Handbook as rainfall exceeding 50 mm/h.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: [$BASE_MODEL, $OTHER_MODEL]
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: surface_microphysical_rainfall_rate
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: filters.generate_mask
+    condition: 'ge'
+    value: 50.0
+
+  - operator: misc.rename_cube
+    name: "mask_for_violent_rainfall_rate"
+
+  - operator: misc.difference
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
