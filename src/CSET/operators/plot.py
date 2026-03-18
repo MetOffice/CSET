@@ -1785,26 +1785,15 @@ def _spatial_plot(
     nplot = np.size(cube.coord(sequence_coordinate).points)
 
     for iseq, cube_slice in enumerate(cube.slices_over(sequence_coordinate)):
-        # Use sequence value so multiple sequences can merge.
-        sequence_value = cube_slice.coord(sequence_coordinate).points[0]
-        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
-        coord = cube_slice.coord(sequence_coordinate)
-        # Format the coordinate value in a unit appropriate way.
-        title = f"{recipe_title}\n [{coord.units.title(coord.points[0])}]"
-        # Use sequence (e.g. time) bounds if plotting single non-sequence outputs
-        if nplot == 1 and coord.has_bounds:
-            if np.size(coord.bounds) > 1:
-                title = f"{recipe_title}\n [{coord.units.title(coord.bounds[0][0])} to {coord.units.title(coord.bounds[0][1])}]"
-
-        # Extract sequence slice for overlay_cube and contour_cube if required.
-        overlay_slice = slice_over_maybe(overlay_cube, sequence_coordinate, iseq)
-        contour_slice = slice_over_maybe(contour_cube, sequence_coordinate, iseq)
-    for cube_slice in cube.slices_over(sequence_coordinate):
         # Set plot titles and filename
         seq_coord = cube_slice.coord(sequence_coordinate)
         plot_title, plot_filename = _set_title_and_filename(
             seq_coord, nplot, recipe_title, filename
         )
+
+        # Extract sequence slice for overlay_cube and contour_cube if required.
+        overlay_slice = slice_over_maybe(overlay_cube, sequence_coordinate, iseq)
+        contour_slice = slice_over_maybe(contour_cube, sequence_coordinate, iseq)
 
         # Do the actual plotting.
         plotting_func(

@@ -240,7 +240,7 @@ def test_is_spatialdim_true(transect_source_cube):
 
 def test_is_coordim_false(transect_source_cube):
     """Check that is coorddim test returns false if cube does not contain specified spatial coordinate."""
-    assert not operator_utils.is_coorddim(transect_source_cube, "time")
+    assert not operator_utils.is_coorddim(transect_source_cube, "realization")
 
 
 def test_is_coordim_true(transect_source_cube):
