@@ -14,12 +14,15 @@
 
 """Test power spectrum operator."""
 
+import glob
+
 import iris.coords
 import iris.cube
 import numpy as np
 import pytest
+from iris.cube import CubeList
 
-from CSET.operators import power_spectrum
+from CSET.operators import constraints, power_spectrum, read
 
 
 def test_create_alpha_matrix_shape():
@@ -135,3 +138,102 @@ def test_calculate_power_spectrum_raises_for_missing_horiz_coords(tmp_working_di
         ValueError, match="Could not find appropriate spatial coordinates"
     ):
         power_spectrum.calculate_power_spectrum(cube_3d)
+
+
+def test_power_spectrum_cubelist_ensemble():
+    """Check realization coordinate is treated correctly when using ensemble data."""
+    # Read in ensemble data (multiple realizations)
+    cubes = read.read_cubes(
+        "tests/test_data/exeter_em*.nc",
+        constraint=constraints.generate_stash_constraint("m01s03i236"),
+    )
+
+    # Calculate spectra for ensemble data and check for cube
+    ps_cube = power_spectrum.calculate_power_spectrum(cubes)
+    assert isinstance(ps_cube, iris.cube.Cube)
+
+    # Check output ps_cube has 1 realization and it is attached to a dimension
+    assert len(ps_cube.coords("realization")) == 1
+    dims = ps_cube.coord_dims("realization")
+    assert len(dims) == 1
+
+    # Check the number of realizations matches number of input files
+    expected = len(glob.glob("tests/test_data/exeter_em*.nc"))
+    assert ps_cube.coord("realization").shape[0] == expected
+    for v in ps_cube.coord("realization").points:
+        assert isinstance(int(v), int)
+
+
+def test_power_spectrum_cubelist_nonensemble():
+    """Check CubeList with no realizations returns a spectra CubeList without realization."""
+    # Read in ensemble data (multiple realizations) and get cube
+    cube = read.read_cubes(
+        "tests/test_data/exeter_em01.nc",
+        constraint=constraints.generate_stash_constraint("m01s03i236"),
+    )[0]
+
+    # Remove realization coordinate and take copy of cube
+    cube.remove_coord(cube.coord("realization"))
+    cubes = CubeList([cube, cube.copy()])
+
+    # Calculate power spectrum and check coordinates
+    ps = power_spectrum.calculate_power_spectrum(cubes)
+    assert isinstance(ps, CubeList)
+    assert len(ps) == 2
+    assert len(ps[0].coords("realization")) == 1
+    assert ps[0].coord_dims("realization") == ()
+    assert ps[0].coord("realization").shape == (1,)
+
+
+def test_power_spectrum_singlecube_nonensemble():
+    """Single non-ensemble cube returns CubeList([spectrum]) without a realization DimCoord."""
+    cube = read.read_cubes(
+        "tests/test_data/exeter_em01.nc",
+        constraint=constraints.generate_stash_constraint("m01s03i236"),
+    )[0]
+
+    cube.remove_coord(cube.coord("realization"))
+
+    ps = power_spectrum.calculate_power_spectrum(cube)
+
+    assert isinstance(ps, CubeList)
+    assert len(ps) == 1
+    assert len(ps[0].coords("realization")) == 1
+    assert ps[0].coord_dims("realization") == ()
+    assert ps[0].coord("realization").shape == (1,)
+
+
+def test_power_spectrum_singlecube_single_realization():
+    """Single non-ensemble cube returns CubeList([spectrum]) with a single AuxCoord realization."""
+    cube = read.read_cubes(
+        "tests/test_data/exeter_em01.nc",
+        constraint=constraints.generate_stash_constraint("m01s03i236"),
+    )[0]
+
+    cube.remove_coord(cube.coord("realization"))
+
+    ps = power_spectrum.calculate_power_spectrum(cube)
+
+    assert isinstance(ps, CubeList)
+    assert len(ps) == 1
+
+    # one realization AuxCoord present (added by _power_spectrum)
+    assert len(ps[0].coords("realization")) == 1
+
+    # realization is an AuxCoord → attached to no dimensions
+    assert ps[0].coord_dims("realization") == ()
+
+    # single scalar value stored as a length-1 array
+    assert ps[0].coord("realization").shape == (1,)
+
+
+def test_power_spectrum_model_attribute_preserved():
+    """model_name attribute on inputs is preserved on the output spectra."""
+    cubes = read.read_cubes(
+        "tests/test_data/exeter_em*.nc",
+        constraint=constraints.generate_stash_constraint("m01s03i236"),
+    )
+    for c in cubes:
+        c.attributes["model_name"] = "TestModel"
+    ps = power_spectrum.calculate_power_spectrum(cubes)
+    assert ps.attributes["model_name"] == "TestModel"

@@ -796,6 +796,103 @@ def test_plot_line_series_ensemble(ensemble_cube, tmp_working_dir):
     assert Path("ensemble_series.png").is_file()
 
 
+def test_plot_and_save_postage_stamp_power_spectrum_series_single_member():
+    """Test plotting a postage stamp power_spectrum for single ensemble member."""
+    # Create single member 1D PSD cube
+
+    freq = iris.coords.DimCoord(np.arange(420), long_name="physical_wavenumber")
+    real = iris.coords.DimCoord([0], long_name="realization")
+    data = np.random.rand(1, 420)
+    cube = iris.cube.Cube(
+        data, dim_coords_and_dims=[(real, 0), (freq, 1)], long_name="power_spectra"
+    )
+
+    coords = cube.coords()
+
+    plot._plot_and_save_postage_stamp_power_spectrum_series(
+        cubes=cube,
+        coords=coords,
+        stamp_coordinate="realization",
+        filename="test.png",
+        title="Test",
+        series_coordinate="physical_wavenumber",
+    )
+    assert Path("test.png").is_file()
+
+
+def test_plot_and_save_postage_stamp_power_spectrum_series_multi_member():
+    """Test plotting a postage stamp power_spectrum for multiple ensemble members."""
+    # Create two-realization 1D PSD cube
+    freq = iris.coords.DimCoord(np.arange(420), long_name="physical_wavenumber")
+    real = iris.coords.DimCoord([0, 1], long_name="realization")
+    data = np.random.rand(2, 420)
+    cube = iris.cube.Cube(
+        data, dim_coords_and_dims=[(real, 0), (freq, 1)], long_name="power_spectra"
+    )
+
+    coords = cube.coords()
+
+    plot._plot_and_save_postage_stamp_power_spectrum_series(
+        cubes=cube,
+        coords=coords,
+        stamp_coordinate="realization",
+        filename="test.png",
+        title="Test",
+        series_coordinate="physical_wavenumber",
+    )
+    assert Path("test.png").is_file()
+
+
+def test_plot_and_save_postage_stamps_in_single_plot_power_spectrum_series_single_member():
+    """Test plotting a multiline power_spectrum for multiple ensemble members."""
+    # Create two-realization 1D PSD cube
+    freq = iris.coords.DimCoord(np.arange(420), long_name="physical_wavenumber")
+    real = iris.coords.DimCoord([0], long_name="realization")
+    data = np.random.rand(1, 420)
+    cube = iris.cube.Cube(
+        data, dim_coords_and_dims=[(real, 0), (freq, 1)], long_name="power_spectra"
+    )
+
+    cube.attributes["model_name"] = "UM"
+
+    coords = cube.coords()
+
+    plot._plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
+        cubes=cube,
+        coords=coords,
+        stamp_coordinate="realization",
+        filename="test.png",
+        title="Test",
+        series_coordinate="physical_wavenumber",
+    )
+    assert Path("test.png").is_file()
+
+
+def test_plot_and_save_postage_stamps_in_single_plot_power_spectrum_series_multi_member():
+    """Test plotting a multiline power_spectrum for multiple ensemble members."""
+    # Create two-realization 1D PSD cube
+    freq = iris.coords.DimCoord(np.arange(420), long_name="physical_wavenumber")
+    real = iris.coords.DimCoord([0, 1], long_name="realization")
+    data = np.random.rand(2, 420)
+    cube = iris.cube.Cube(
+        data, dim_coords_and_dims=[(real, 0), (freq, 1)], long_name="power_spectra"
+    )
+
+    cube.attributes["model_name"] = "UM"
+
+    coords = cube.coords()
+
+    plot._plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
+        cubes=cube,
+        coords=coords,
+        stamp_coordinate="realization",
+        filename="test.png",
+        title="Test",
+        series_coordinate="physical_wavenumber",
+    )
+    assert Path("test.png").is_file()
+
+
 def test_plot_vertical_line_series(vertical_profile_cube, tmp_working_dir):
     """Save a vertical line series plot."""
     plot.plot_vertical_line_series(
