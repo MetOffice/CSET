@@ -225,6 +225,32 @@ def load(conf: Config):
             aggregation=False,
         )
 
+    # Light rain presence
+    if conf.LIGHT_RAIN_PRESENCE_DOMAIN_MEAN_TIMESERIES:
+        yield RawRecipe(
+            recipe="light_rain_presence_domain_mean_time_series.yaml",
+            variables={
+                "MODEL_NAME": [model["name"] for model in models],
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+            },
+            model_ids=[model["id"] for model in models],
+            aggregation=False,
+        )
+
+    # Moderate rain presence
+    if conf.MODERATE_RAIN_PRESENCE_DOMAIN_MEAN_TIMESERIES:
+        yield RawRecipe(
+            recipe="moderate_rain_presence_domain_mean_time_series.yaml",
+            variables={
+                "MODEL_NAME": [model["name"] for model in models],
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+            },
+            model_ids=[model["id"] for model in models],
+            aggregation=False,
+        )
+
     # Lightning presence
     if conf.LIGHTNING_PRESENCE_DOMAIN_TIME_SERIES:
         yield RawRecipe(
@@ -307,6 +333,19 @@ def load(conf: Config):
     if conf.SFC_WIND_BEAUFORT_SCALE_DOMAIN_MEAN_TIMESERIES:
         yield RawRecipe(
             recipe="surface_wind_speed_on_beaufort_scale_domain_mean_time_series.yaml",
+            variables={
+                "MODEL_NAME": [model["name"] for model in models],
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+            },
+            model_ids=[model["id"] for model in models],
+            aggregation=False,
+        )
+
+    # Surface wind gusts on Beaufort Scale
+    if conf.SFC_WIND_GUSTS_BEAUFORT_SCALE_DOMAIN_MEAN_TIMESERIES:
+        yield RawRecipe(
+            recipe="surface_wind_gusts_on_beaufort_scale_domain_mean_time_series.yaml",
             variables={
                 "MODEL_NAME": [model["name"] for model in models],
                 "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,

@@ -125,6 +125,23 @@ def test_slugify():
     assert common.slugify("あいうえお") == ""
 
 
+def test_filename_slugify():
+    """Slugify removes special characters."""
+    assert common.filename_slugify("Test") == "test"
+    assert (
+        common.filename_slugify("Mean Surface Air Temperature Spatial Plot")
+        == "meansurfaceairtemperaturespatialplot"
+    )
+    assert common.filename_slugify("file-name.yaml") == "filename.yaml"
+    assert common.filename_slugify("First Line\nSecond Line") == "firstlinesecondline"
+    assert common.filename_slugify("greekαβγδchars") == "greekchars"
+    assert common.filename_slugify("  ABC ") == "abc"
+    # Multi-byte unicode characters are removed.
+    assert common.filename_slugify("あいうえお") == ""
+    # Datetime characters to single string.
+    assert common.filename_slugify("1970 01 01 00:00:00") == "19700101000000"
+
+
 def test_parse_variable_options():
     """Variable arguments are parsed correctly."""
     args = ("--STASH=m01s01i001", "--COUNT", "3", "--CELL_METHODS=[]")
