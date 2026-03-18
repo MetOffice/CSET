@@ -17,13 +17,16 @@
 
 import json
 import os
+import subprocess
 from base64 import b64decode
 from pathlib import Path
 
 from CSET.recipes import load_recipes
 
 
-def parbake_all(variables: dict, rose_datac: Path, share_dir: Path, aggregation: bool):
+def parbake_all(
+    variables: dict, rose_datac: Path, share_dir: Path, aggregation: bool
+) -> int:
     """Generate and parbake recipes from configuration."""
     # Gather all recipes into a big list.
     recipes = list(load_recipes(variables))
@@ -31,9 +34,12 @@ def parbake_all(variables: dict, rose_datac: Path, share_dir: Path, aggregation:
     if not recipes:
         raise ValueError("At least one recipe should be enabled.")
     # Parbake all recipes remaining after filtering aggregation recipes.
+    recipe_count = 0
     for recipe in filter(lambda r: r.aggregation == aggregation, recipes):
         print(f"Parbaking {recipe}", flush=True)
         recipe.parbake(rose_datac, share_dir)
+        recipe_count += 1
+    return recipe_count
 
 
 def main():
@@ -44,7 +50,25 @@ def main():
     share_dir = Path(os.environ["CYLC_WORKFLOW_SHARE_DIR"])
     aggregation = bool(os.getenv("DO_CASE_AGGREGATION"))
     # Parbake recipes for cycle.
-    parbake_all(variables, rose_datac, share_dir, aggregation)
+    recipe_count = parbake_all(variables, rose_datac, share_dir, aggregation)
+
+    # If running under cylc, skip baking if we have no recipes.
+    cylc_workflow_id = os.getenv("CYLC_WORKFLOW_ID")
+    cylc_cycle = os.getenv("CYLC_TASK_CYCLE_POINT")
+    if cylc_workflow_id and cylc_cycle and not recipe_count:
+        print("No recipes needing to be baked; asking cylc to skip baking.")
+        broadcast_command = [
+            "cylc",
+            "broadcast",
+            "--point",
+            cylc_cycle,
+            "--namespace",
+            "bake_aggregation_recipes" if aggregation else "bake_recipes",
+            "--set",
+            "run mode = skip",
+            cylc_workflow_id,
+        ]
+        subprocess.run(broadcast_command, check=True)
 
 
 if __name__ == "__main__":  # pragma: no cover

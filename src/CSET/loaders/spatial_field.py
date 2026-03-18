@@ -219,6 +219,36 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+        # Light rain presence.
+        if conf.LIGHT_RAIN_PRESENCE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="light_rain_presence_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
+        # Moderate rain presence.
+        if conf.MODERATE_RAIN_PRESENCE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="moderate_rain_presence_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
         # Lightning presence.
         if conf.LIGHTNING_PRESENCE_SPATIAL_PLOT:
             yield RawRecipe(
@@ -339,6 +369,21 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+        # Surface wind gusts on Beaufort Scale.
+        if conf.SFC_WIND_GUSTS_BEAUFORT_SCALE_SPATIAL:
+            yield RawRecipe(
+                recipe="surface_wind_gusts_on_beaufort_scale_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
         # Gale force winds presence.
         if conf.SFC_GALE_FORCE_WINDS_PRESENCE_SPATIAL:
             yield RawRecipe(
@@ -414,28 +459,6 @@ def load(conf: Config):
                 aggregation=False,
             )
 
-    # Screen-level temperature probabilities
-    for model, condition, threshold in itertools.product(
-        models,
-        conf.PROB_TEMPERATURE_CONDITION,
-        conf.PROB_TEMPERATURE_THRESHOLD,
-    ):
-        if conf.SCREEN_LEVEL_TEMPERATURE_SPATIAL_PROBABILITY_WITHOUT_CONTROL_MEMBER:
-            yield RawRecipe(
-                recipe="screen_level_temperature_spatial_probability_without_control.yaml",
-                variables={
-                    "CONDITION": condition,
-                    "THRESHOLD": threshold,
-                    "MODEL_NAME": model["name"],
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
-                },
-                model_ids=model["id"],
-                aggregation=False,
-            )
-
         # Aviation colour state due to visibility.
         if conf.AVIATION_COLOUR_STATE_VISIBILITY:
             yield RawRecipe(
@@ -471,6 +494,28 @@ def load(conf: Config):
             yield RawRecipe(
                 recipe="aviation_colour_state_spatial_plot.yaml",
                 variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
+
+    # Screen-level temperature probabilities
+    for model, condition, threshold in itertools.product(
+        models,
+        conf.PROB_TEMPERATURE_CONDITION,
+        conf.PROB_TEMPERATURE_THRESHOLD,
+    ):
+        if conf.SCREEN_LEVEL_TEMPERATURE_SPATIAL_PROBABILITY_WITHOUT_CONTROL_MEMBER:
+            yield RawRecipe(
+                recipe="screen_level_temperature_spatial_probability_without_control.yaml",
+                variables={
+                    "CONDITION": condition,
+                    "THRESHOLD": threshold,
                     "MODEL_NAME": model["name"],
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT

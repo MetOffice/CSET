@@ -156,6 +156,43 @@ def load(conf: Config):
                 model_ids=[base_model["id"], model["id"]],
                 aggregation=False,
             )
+
+    # Light rain presence.
+    if conf.LIGHT_RAIN_PRESENCE_SPATIAL_DIFFERENCE:
+        base_model = models[0]
+        for model in models[1:]:
+            yield RawRecipe(
+                recipe="light_rain_presence_spatial_difference.yaml",
+                variables={
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
+    # Moderate rain presence.
+    if conf.MODERATE_RAIN_PRESENCE_SPATIAL_DIFFERENCE:
+        base_model = models[0]
+        for model in models[1:]:
+            yield RawRecipe(
+                recipe="moderate_rain_presence_spatial_difference.yaml",
+                variables={
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
     # Lightning presence.
     if conf.LIGHTNING_PRESENCE_SPATIAL_DIFFERENCE:
         base_model = models[0]
@@ -270,6 +307,24 @@ def load(conf: Config):
         for model in models[1:]:
             yield RawRecipe(
                 recipe="surface_wind_speed_on_beaufort_scale_spatial_difference.yaml",
+                variables={
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
+    # Surface wind gusts on Beaufort Scale.
+    if conf.SFC_WIND_GUSTS_BEAUFORT_SCALE_SPATIAL_DIFFERENCE:
+        base_model = models[0]
+        for model in models[1:]:
+            yield RawRecipe(
+                recipe="surface_wind_gusts_on_beaufort_scale_spatial_difference.yaml",
                 variables={
                     "BASE_MODEL": base_model["name"],
                     "OTHER_MODEL": model["name"],

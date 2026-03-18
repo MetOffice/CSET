@@ -22,7 +22,6 @@ import json
 import logging
 import math
 import os
-import sys
 from typing import Literal
 
 import cartopy.crs as ccrs
@@ -41,6 +40,7 @@ from markdown_it import MarkdownIt
 
 from CSET._common import (
     combine_dicts,
+    filename_slugify,
     get_recipe_metadata,
     iter_maybe,
     render_file,
@@ -114,28 +114,13 @@ def _check_single_cube(cube: iris.cube.Cube | iris.cube.CubeList) -> iris.cube.C
     raise TypeError("Must have a single cube", cube)
 
 
-def _py312_importlib_resources_files_shim():
-    """Importlib behaviour changed in 3.12 to avoid circular dependencies.
-
-    This shim is needed until python 3.12 is our oldest supported version, after
-    which it can just be replaced by directly using importlib.resources.files.
-    """
-    if sys.version_info.minor >= 12:
-        files = importlib.resources.files()
-    else:
-        import CSET.operators
-
-        files = importlib.resources.files(CSET.operators)
-    return files
-
-
 def _make_plot_html_page(plots: list):
     """Create a HTML page to display a plot image."""
     # Debug check that plots actually contains some strings.
     assert isinstance(plots[0], str)
 
     # Load HTML template file.
-    operator_files = _py312_importlib_resources_files_shim()
+    operator_files = importlib.resources.files()
     template_file = operator_files.joinpath("_plot_page_template.html")
 
     # Get some metadata.
@@ -166,9 +151,7 @@ def _load_colorbar_map(user_colorbar_file: str = None) -> dict:
 
     This is a separate function to make it cacheable.
     """
-    colorbar_file = _py312_importlib_resources_files_shim().joinpath(
-        "_colorbar_definition.json"
-    )
+    colorbar_file = importlib.resources.files().joinpath("_colorbar_definition.json")
     with open(colorbar_file, "rt", encoding="UTF-8") as fp:
         colorbar = json.load(fp)
 
@@ -411,7 +394,7 @@ def _setup_spatial_map(
         # Consider map projection orientation.
         # Adapting orientation enables plotting across international dateline.
         # Users can adapt the default central_longitude if alternative projections views.
-        if x2 > 180.0:
+        if x2 > 180.0 or x1 < -180.0:
             central_longitude = 180.0
         else:
             central_longitude = 0.0
@@ -423,7 +406,17 @@ def _setup_spatial_map(
             projection = ccrs.RotatedPole(
                 pole_longitude=coord_system.grid_north_pole_longitude,
                 pole_latitude=coord_system.grid_north_pole_latitude,
-                central_rotated_longitude=0.0,
+                central_rotated_longitude=central_longitude,
+            )
+            crs = projection
+        elif isinstance(coord_system, iris.coord_systems.TransverseMercator):
+            # Define Transverse Mercator projection for TM inputs.
+            projection = ccrs.TransverseMercator(
+                central_longitude=coord_system.longitude_of_central_meridian,
+                central_latitude=coord_system.latitude_of_projection_origin,
+                false_easting=coord_system.false_easting,
+                false_northing=coord_system.false_northing,
+                scale_factor=coord_system.scale_factor_at_central_meridian,
             )
             crs = projection
         else:
@@ -466,6 +459,84 @@ def _setup_spatial_map(
 def _get_plot_resolution() -> int:
     """Get resolution of rasterised plots in pixels per inch."""
     return get_recipe_metadata().get("plot_resolution", 100)
+
+
+def _set_title_and_filename(
+    seq_coord: iris.coords.Coord,
+    nplot: int,
+    recipe_title: str,
+    filename: str,
+):
+    """Set plot title and filename based on cube coordinate.
+
+    Parameters
+    ----------
+    sequence_coordinate: iris.coords.Coord
+        Coordinate about which to make a plot sequence.
+    nplot: int
+        Number of output plots to generate - controls title/naming.
+    recipe_title: str
+        Default plot title, potentially to update.
+    filename: str
+        Input plot filename, potentially to update.
+
+    Returns
+    -------
+    plot_title: str
+        Output formatted plot title string, based on plotted data.
+    plot_filename: str
+        Output formatted plot filename string.
+    """
+    ndim = seq_coord.ndim
+    npoints = np.size(seq_coord.points)
+    sequence_title = ""
+    sequence_fname = ""
+
+    # Account for case with multi-dimension sequence input (e.g. aggregation)
+    if ndim > 1:
+        sequence_title = f"\n [{ndim} cases]"
+        sequence_fname = f"_{ndim}cases"
+
+    else:
+        if npoints == 1:
+            if nplot > 1:
+                # Set default labels for sequence inputs
+                sequence_value = seq_coord.units.title(seq_coord.points[0])
+                sequence_title = f"\n [{sequence_value}]"
+                sequence_fname = f"_{filename_slugify(sequence_value)}"
+            elif seq_coord.has_bounds():
+                ncase = np.size(seq_coord.bounds)
+                sequence_title = f"\n [{ncase} cases]"
+                sequence_fname = f"_{ncase}cases"
+            # Use sequence (e.g. time) bounds if plotting single non-sequence outputs
+            # Take title endpoints from coord points where series input (e.g. timeseries)
+        if npoints > 1:
+            if not seq_coord.has_bounds():
+                startstring = seq_coord.units.title(seq_coord.points[0])
+                endstring = seq_coord.units.title(seq_coord.points[-1])
+            else:
+                # Take title endpoint from coord bounds where single input (e.g. map)
+                startstring = seq_coord.units.title(seq_coord.bounds.flatten()[0])
+                endstring = seq_coord.units.title(seq_coord.bounds.flatten()[-1])
+            sequence_title = f"\n [{startstring} to {endstring}]"
+            sequence_fname = (
+                f"_{filename_slugify(startstring)}_{filename_slugify(endstring)}"
+            )
+
+    # Set plot title and filename
+    plot_title = f"{recipe_title}{sequence_title}"
+
+    # Set plot filename, defaulting to user input if provided.
+    if filename is None:
+        filename = slugify(recipe_title)
+        plot_filename = f"{filename.rsplit('.', 1)[0]}{sequence_fname}.png"
+    else:
+        if nplot > 1:
+            plot_filename = f"{filename.rsplit('.', 1)[0]}{sequence_fname}.png"
+        else:
+            plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
+
+    return plot_title, plot_filename
 
 
 def _plot_and_save_spatial_plot(
@@ -606,7 +677,7 @@ def _plot_and_save_spatial_plot(
     if levels is not None and len(levels) < 20:
         cbar.set_ticks(levels)
         cbar.set_ticklabels([f"{level:.2f}" for level in levels])
-        if "visibility" in cube.name():
+        if "rainfall" or "snowfall" or "visibility" in cube.name():
             cbar.set_ticklabels([f"{level:.3g}" for level in levels])
         logging.debug("Set colorbar ticks and labels.")
 
@@ -812,7 +883,10 @@ def _plot_and_save_line_series(
 
     # Add some labels and tweak the style.
     # check if cubes[0] works for single cube if not CubeList
-    ax.set_xlabel(f"{coords[0].name()} / {coords[0].units}", fontsize=14)
+    if coords[0].name() == "time":
+        ax.set_xlabel(f"{coords[0].name()}", fontsize=14)
+    else:
+        ax.set_xlabel(f"{coords[0].name()} / {coords[0].units}", fontsize=14)
     ax.set_ylabel(f"{cubes[0].name()} / {cubes[0].units}", fontsize=14)
     ax.set_title(title, fontsize=16)
 
@@ -1279,7 +1353,7 @@ def _plot_and_save_histogram_series(
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved line plot to %s", filename)
+    logging.info("Saved histogram plot to %s", filename)
     plt.close(fig)
 
 
@@ -1367,8 +1441,81 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
 
     # Save the figure to a file
     plt.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+    logging.info("Saved histogram postage stamp plot to %s", filename)
 
     # Close the figure
+    plt.close(fig)
+
+
+def _plot_and_save_scattermap_plot(
+    cube: iris.cube.Cube, filename: str, title: str, projection=None, **kwargs
+):
+    """Plot and save a geographical scatter plot.
+
+    Parameters
+    ----------
+    cube: Cube
+        1 dimensional Cube of the data points with auxiliary latitude and
+        longitude coordinates,
+    filename: str
+        Filename of the plot to write.
+    title: str
+        Plot title.
+    projection: str
+        Mapping projection to be used by cartopy.
+    """
+    # Setup plot details, size, resolution, etc.
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+    if projection is not None:
+        # Apart from the default, the only projection we currently support is
+        # a stereographic projection over the North Pole.
+        if projection == "NP_Stereo":
+            axes = plt.axes(projection=ccrs.NorthPolarStereo(central_longitude=0.0))
+        else:
+            raise ValueError(f"Unknown projection: {projection}")
+    else:
+        axes = plt.axes(projection=ccrs.PlateCarree())
+
+    # Scatter plot of the field. The marker size is chosen to give
+    # symbols that decrease in size as the number of observations
+    # increases, although the fraction of the figure covered by
+    # symbols increases roughly as N^(1/2), disregarding overlaps,
+    # and has been selected for the default figure size of (10, 10).
+    # Should this be changed, the marker size should be adjusted in
+    # proportion to the area of the figure.
+    mrk_size = int(np.sqrt(2500000.0 / len(cube.data)))
+    klon = None
+    klat = None
+    for kc in range(len(cube.aux_coords)):
+        if cube.aux_coords[kc].standard_name == "latitude":
+            klat = kc
+        elif cube.aux_coords[kc].standard_name == "longitude":
+            klon = kc
+    scatter_map = iplt.scatter(
+        cube.aux_coords[klon],
+        cube.aux_coords[klat],
+        c=cube.data[:],
+        s=mrk_size,
+        cmap="jet",
+        edgecolors="k",
+    )
+
+    # Add coastlines.
+    try:
+        axes.coastlines(resolution="10m")
+    except AttributeError:
+        pass
+
+    # Add title.
+    axes.set_title(title, fontsize=16)
+
+    # Add colour bar.
+    cbar = fig.colorbar(scatter_map)
+    cbar.set_label(label=f"{cube.name()} ({cube.units})", size=20)
+
+    # Save plot.
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+    logging.info("Saved geographical scatter plot to %s", filename)
     plt.close(fig)
 
 
@@ -1476,7 +1623,7 @@ def _plot_and_save_power_spectrum_series(
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved line plot to %s", filename)
+    logging.info("Saved power spectrum plot to %s", filename)
     plt.close(fig)
 
 
@@ -1513,10 +1660,9 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
         plt.subplot(grid_size, grid_size, subplot)
 
         frequency = member.coord("frequency").points
-        power_spectrum = member.data
 
         ax = plt.gca()
-        ax.plot(frequency, power_spectrum[0])
+        ax.plot(frequency, member.data)
         ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
 
     # Overall figure title.
@@ -1541,10 +1687,9 @@ def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
     # Loop over all slices along the stamp_coordinate
     for member in cube.slices_over(stamp_coordinate):
         frequency = member.coord("frequency").points
-        power_spectrum = member.data
         ax.plot(
             frequency,
-            power_spectrum[0],
+            member.data,
             label=f"Member #{member.coord(stamp_coordinate).points[0]}",
         )
 
@@ -1553,6 +1698,7 @@ def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
 
     # Save the figure to a file
     plt.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+    logging.info("Saved power spectra plot to %s", filename)
 
     # Close the figure
     plt.close(fig)
@@ -1566,6 +1712,7 @@ def _spatial_plot(
     stamp_coordinate: str,
     overlay_cube: iris.cube.Cube | None = None,
     contour_cube: iris.cube.Cube | None = None,
+    **kwargs,
 ):
     """Plot a spatial variable onto a map from a 2D, 3D, or 4D cube.
 
@@ -1607,10 +1754,6 @@ def _spatial_plot(
     """
     recipe_title = get_recipe_metadata().get("title", "Untitled")
 
-    # Ensure we have a name for the plot file.
-    if filename is None:
-        filename = slugify(recipe_title)
-
     # Ensure we've got a single cube.
     cube = _check_single_cube(cube)
 
@@ -1622,6 +1765,14 @@ def _spatial_plot(
             plotting_func = _plot_and_save_postage_stamp_spatial_plot
     except iris.exceptions.CoordinateNotFoundError:
         pass
+
+    # Produce a geographical scatter plot if the data have a
+    # dimension called observation or model_obs_error
+    if any(
+        crd.var_name == "station" or crd.var_name == "model_obs_error"
+        for crd in cube.coords()
+    ):
+        plotting_func = _plot_and_save_scattermap_plot
 
     # Must have a sequence coordinate.
     try:
@@ -1648,16 +1799,23 @@ def _spatial_plot(
         # Extract sequence slice for overlay_cube and contour_cube if required.
         overlay_slice = slice_over_maybe(overlay_cube, sequence_coordinate, iseq)
         contour_slice = slice_over_maybe(contour_cube, sequence_coordinate, iseq)
+    for cube_slice in cube.slices_over(sequence_coordinate):
+        # Set plot titles and filename
+        seq_coord = cube_slice.coord(sequence_coordinate)
+        plot_title, plot_filename = _set_title_and_filename(
+            seq_coord, nplot, recipe_title, filename
+        )
 
         # Do the actual plotting.
         plotting_func(
             cube_slice,
             filename=plot_filename,
             stamp_coordinate=stamp_coordinate,
-            title=title,
+            title=plot_title,
             method=method,
             overlay_cube=overlay_slice,
             contour_cube=contour_slice,
+            **kwargs,
         )
         plot_index.append(plot_filename)
 
@@ -2086,7 +2244,9 @@ def spatial_contour_plot(
     TypeError
         If the cube isn't a single cube.
     """
-    _spatial_plot("contourf", cube, filename, sequence_coordinate, stamp_coordinate)
+    _spatial_plot(
+        "contourf", cube, filename, sequence_coordinate, stamp_coordinate, **kwargs
+    )
     return cube
 
 
@@ -2135,7 +2295,9 @@ def spatial_pcolormesh_plot(
     TypeError
         If the cube isn't a single cube.
     """
-    _spatial_plot("pcolormesh", cube, filename, sequence_coordinate, stamp_coordinate)
+    _spatial_plot(
+        "pcolormesh", cube, filename, sequence_coordinate, stamp_coordinate, **kwargs
+    )
     return cube
 
 
@@ -2254,13 +2416,7 @@ def plot_line_series(
         If the cube isn't a Cube or CubeList.
     """
     # Ensure we have a name for the plot file.
-    title = get_recipe_metadata().get("title", "Untitled")
-
-    if filename is None:
-        filename = slugify(title)
-
-    # Add file extension.
-    plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
+    recipe_title = get_recipe_metadata().get("title", "Untitled")
 
     num_models = _get_num_models(cube)
 
@@ -2279,8 +2435,15 @@ def plot_line_series(
         if cube.ndim > 2 or not cube.coords("realization"):
             raise ValueError("Cube must be 1D or 2D with a realization coordinate.")
 
+    # Format the title and filename using plotted series coordinate
+    nplot = 1
+    seq_coord = coords[0]
+    plot_title, plot_filename = _set_title_and_filename(
+        seq_coord, nplot, recipe_title, filename
+    )
+
     # Do the actual plotting.
-    _plot_and_save_line_series(cubes, coords, "realization", plot_filename, title)
+    _plot_and_save_line_series(cubes, coords, "realization", plot_filename, plot_title)
 
     # Add list of plots to plot metadata.
     plot_index = _append_to_plot_index([plot_filename])
@@ -2339,9 +2502,6 @@ def plot_vertical_line_series(
     """
     # Ensure we have a name for the plot file.
     recipe_title = get_recipe_metadata().get("title", "Untitled")
-
-    if filename is None:
-        filename = slugify(recipe_title)
 
     cubes = iter_maybe(cubes)
     # Initialise empty list to hold all data from all cubes in a CubeList
@@ -2428,16 +2588,12 @@ def plot_vertical_line_series(
     plot_index = []
     nplot = np.size(cubes[0].coord(sequence_coordinate).points)
     for cubes_slice in cube_iterables:
-        # Use sequence value so multiple sequences can merge.
-        seq_coord = cubes_slice[0].coord(sequence_coordinate)
-        sequence_value = seq_coord.points[0]
-        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
         # Format the coordinate value in a unit appropriate way.
-        title = f"{recipe_title}\n [{seq_coord.units.title(sequence_value)}]"
-        # Use sequence (e.g. time) bounds if plotting single non-sequence outputs
-        if nplot == 1 and seq_coord.has_bounds:
-            if np.size(seq_coord.bounds) > 1:
-                title = f"{recipe_title}\n [{seq_coord.units.title(seq_coord.bounds[0][0])} to {seq_coord.units.title(seq_coord.bounds[0][1])}]"
+        seq_coord = cubes_slice[0].coord(sequence_coordinate)
+        plot_title, plot_filename = _set_title_and_filename(
+            seq_coord, nplot, recipe_title, filename
+        )
+
         # Do the actual plotting.
         _plot_and_save_vertical_line_series(
             cubes_slice,
@@ -2445,7 +2601,7 @@ def plot_vertical_line_series(
             "realization",
             plot_filename,
             series_coordinate,
-            title=title,
+            title=plot_title,
             vmin=vmin,
             vmax=vmax,
         )
@@ -2594,10 +2750,11 @@ def qq_plot(
     )
 
     # Ensure we have a name for the plot file.
-    title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    title = f"{recipe_title}"
 
     if filename is None:
-        filename = slugify(title)
+        filename = slugify(recipe_title)
 
     # Add file extension.
     plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
@@ -2672,10 +2829,11 @@ def scatter_plot(
             raise ValueError("cube_y must be 1D.")
 
     # Ensure we have a name for the plot file.
-    title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    title = f"{recipe_title}"
 
     if filename is None:
-        filename = slugify(title)
+        filename = slugify(recipe_title)
 
     # Add file extension.
     plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
@@ -2702,10 +2860,6 @@ def vector_plot(
     """Plot a vector plot based on the input u and v components."""
     recipe_title = get_recipe_metadata().get("title", "Untitled")
 
-    # Ensure we have a name for the plot file.
-    if filename is None:
-        filename = slugify(recipe_title)
-
     # Cubes must have a matching sequence coordinate.
     try:
         # Check that the u and v cubes have the same sequence coordinate.
@@ -2718,23 +2872,24 @@ def vector_plot(
 
     # Create a plot for each value of the sequence coordinate.
     plot_index = []
+    nplot = np.size(cube_u[0].coord(sequence_coordinate).points)
     for cube_u_slice, cube_v_slice in zip(
         cube_u.slices_over(sequence_coordinate),
         cube_v.slices_over(sequence_coordinate),
         strict=True,
     ):
-        # Use sequence value so multiple sequences can merge.
-        sequence_value = cube_u_slice.coord(sequence_coordinate).points[0]
-        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
-        coord = cube_u_slice.coord(sequence_coordinate)
         # Format the coordinate value in a unit appropriate way.
-        title = f"{recipe_title}\n{coord.units.title(coord.points[0])}"
+        seq_coord = cube_u_slice.coord(sequence_coordinate)
+        plot_title, plot_filename = _set_title_and_filename(
+            seq_coord, nplot, recipe_title, filename
+        )
+
         # Do the actual plotting.
         _plot_and_save_vector_plot(
             cube_u_slice,
             cube_v_slice,
             filename=plot_filename,
-            title=title,
+            title=plot_title,
             method="contourf",
         )
         plot_index.append(plot_filename)
@@ -2803,10 +2958,6 @@ def plot_histogram_series(
     recipe_title = get_recipe_metadata().get("title", "Untitled")
 
     cubes = iter_maybe(cubes)
-
-    # Ensure we have a name for the plot file.
-    if filename is None:
-        filename = slugify(recipe_title)
 
     # Internal plotting function.
     plotting_func = _plot_and_save_histogram_series
@@ -2900,22 +3051,21 @@ def plot_histogram_series(
         if isinstance(cube_slice, iris.cube.CubeList):
             single_cube = cube_slice[0]
 
-        # Use sequence value so multiple sequences can merge.
-        sequence_value = single_cube.coord(sequence_coordinate).points[0]
-        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
-        coord = single_cube.coord(sequence_coordinate)
-        # Format the coordinate value in a unit appropriate way.
-        title = f"{recipe_title}\n [{coord.units.title(coord.points[0])}]"
-        # Use sequence (e.g. time) bounds if plotting single non-sequence outputs
-        if nplot == 1 and coord.has_bounds:
-            if np.size(coord.bounds) > 1:
-                title = f"{recipe_title}\n [{coord.units.title(coord.bounds[0][0])} to {coord.units.title(coord.bounds[0][1])}]"
+        # Set plot titles and filename, based on sequence coordinate
+        seq_coord = single_cube.coord(sequence_coordinate)
+        # Use time coordinate in title and filename if single histogram output.
+        if sequence_coordinate == "realization" and nplot == 1:
+            seq_coord = single_cube.coord("time")
+        plot_title, plot_filename = _set_title_and_filename(
+            seq_coord, nplot, recipe_title, filename
+        )
+
         # Do the actual plotting.
         plotting_func(
             cube_slice,
             filename=plot_filename,
             stamp_coordinate=stamp_coordinate,
-            title=title,
+            title=plot_title,
             vmin=vmin,
             vmax=vmax,
         )
@@ -2985,9 +3135,6 @@ def plot_power_spectrum_series(
     recipe_title = get_recipe_metadata().get("title", "Untitled")
 
     cubes = iter_maybe(cubes)
-    # Ensure we have a name for the plot file.
-    if filename is None:
-        filename = slugify(recipe_title)
 
     # Internal plotting function.
     plotting_func = _plot_and_save_power_spectrum_series
@@ -3059,22 +3206,18 @@ def plot_power_spectrum_series(
         if isinstance(cube_slice, iris.cube.CubeList):
             single_cube = cube_slice[0]
 
-        # Use sequence value so multiple sequences can merge.
-        sequence_value = single_cube.coord(sequence_coordinate).points[0]
-        plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
-        coord = single_cube.coord(sequence_coordinate)
-        # Format the coordinate value in a unit appropriate way.
-        title = f"{recipe_title}\n [{coord.units.title(coord.points[0])}]"
-        # Use sequence (e.g. time) bounds if plotting single non-sequence outputs
-        if nplot == 1 and coord.has_bounds:
-            if np.size(coord.bounds) > 1:
-                title = f"{recipe_title}\n [{coord.units.title(coord.bounds[0][0])} to {coord.units.title(coord.bounds[0][1])}]"
+        # Set plot title and filenames based on sequence values
+        seq_coord = single_cube.coord(sequence_coordinate)
+        plot_title, plot_filename = _set_title_and_filename(
+            seq_coord, nplot, recipe_title, filename
+        )
+
         # Do the actual plotting.
         plotting_func(
             cube_slice,
             filename=plot_filename,
             stamp_coordinate=stamp_coordinate,
-            title=title,
+            title=plot_title,
         )
         plot_index.append(plot_filename)
 

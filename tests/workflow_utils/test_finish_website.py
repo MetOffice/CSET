@@ -17,8 +17,23 @@
 import json
 import logging
 import re
+from pathlib import Path
 
 from CSET.cset_workflow.app.finish_website.bin import finish_website
+
+
+def test_install_website_skeleton(monkeypatch, tmp_path):
+    """Check static files are copied correctly."""
+    www_content = tmp_path / "web"
+    www_root_link = tmp_path / "www/CSET"
+    monkeypatch.chdir("src/CSET/cset_workflow/app/finish_website/file")
+    finish_website.install_website_skeleton(www_root_link, www_content)
+    assert www_content.is_dir()
+    assert (www_content / "index.html").is_file()
+    assert (www_content / "script.js").is_file()
+    assert (www_content / "plots").is_dir()
+    assert www_root_link.is_symlink()
+    assert www_root_link.resolve() == www_content.resolve()
 
 
 def test_copy_rose_config(monkeypatch, tmp_path):
@@ -29,23 +44,39 @@ def test_copy_rose_config(monkeypatch, tmp_path):
     web_dir = tmp_path / "web"
     web_dir.mkdir()
     monkeypatch.setenv("CYLC_WORKFLOW_RUN_DIR", str(tmp_path))
-    monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", str(tmp_path))
-    finish_website.copy_rose_config()
+    finish_website.copy_rose_config(web_dir)
     with open(web_dir / "rose-suite.conf", "rt", encoding="UTF-8") as fp:
         assert fp.read() == "Test rose-suite.conf file\n"
 
 
-def test_write_workflow_status(monkeypatch, tmp_path):
-    """Workflow  finish status gets written to status file."""
+def test_bust_cache(tmp_path):
+    """Cache busting query string is added where requested."""
+    with open(tmp_path / "index.html", "wt") as fp:
+        fp.write('<img href="image.jpg?v=CACHEBUSTER" />\n')
+    (tmp_path / "plots").mkdir()
+    finish_website.bust_cache(tmp_path)
+    # Check cache busting query has been added.
+    with open(tmp_path / "index.html", "rt") as fp:
+        content = fp.read()
+    assert "CACHEBUSTER" not in content
+    assert re.search(r"\?v=\d+", content)
+    renamed_plot_dir = list(tmp_path.glob("plots-*"))
+    assert len(renamed_plot_dir) == 1
+    assert renamed_plot_dir[0].is_dir()
+
+
+def test_write_workflow_status(tmp_path):
+    """Workflow finish status gets written to placeholder file."""
     web_dir = tmp_path / "web"
     web_dir.mkdir()
-    monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", str(tmp_path))
-    finish_website.update_workflow_status()
-    with open(web_dir / "status.html", "rt", encoding="UTF-8") as fp:
-        content = fp.read()
+    with open(web_dir / "placeholder.html", "wt") as fp:
+        fp.write('<h3>Workflow status</h3>\n<p id="workflow-status">Unknown</p>\n')
+    finish_website.update_workflow_status(web_dir)
     # Check status is written correctly.
-    pattern = r"<p>Completed at \d{4}-\d\d-\d\d \d\d:\d\d using CSET v.+</p>\n"
-    assert re.fullmatch(pattern, content)
+    pattern = r"Completed at \d{4}-\d\d-\d\d \d\d:\d\d using CSET v\d+"
+    with open(web_dir / "placeholder.html", "rt", encoding="UTF-8") as fp:
+        content = fp.read()
+    assert re.search(pattern, content)
 
 
 def test_construct_index(monkeypatch, tmp_path):
@@ -68,7 +99,7 @@ def test_construct_index(monkeypatch, tmp_path):
     static_resource.touch()
 
     # Construct index.
-    finish_website.construct_index()
+    finish_website.construct_index(plots_dir.parent)
 
     # Check index.
     index_file = plots_dir / "index.json"
@@ -91,7 +122,7 @@ def test_construct_index_aggregation_case(monkeypatch, tmp_path):
     plot1.write_text('{"category": "Category", "title": "P1"}')
 
     # Construct index.
-    finish_website.construct_index()
+    finish_website.construct_index(plots_dir.parent)
 
     # Check index.
     index_file = plots_dir / "index.json"
@@ -114,7 +145,7 @@ def test_construct_index_invalid(monkeypatch, tmp_path, caplog):
     plot.write_text('"Not JSON!"')
 
     # Construct index.
-    finish_website.construct_index()
+    finish_website.construct_index(plots_dir.parent)
 
     # Check log message.
     _, level, message = caplog.record_tuples[0]
@@ -132,17 +163,30 @@ def test_construct_index_invalid(monkeypatch, tmp_path, caplog):
 def test_entrypoint(monkeypatch):
     """Test running the finish_website module."""
     # Count the number of times the other functions are run, to ensure they
-    # are both run.
+    # are all run.
     counter = 0
 
-    def increment_counter():
+    def increment_counter(*args, **kwargs):
         nonlocal counter
         counter += 1
 
-    monkeypatch.setattr(finish_website, "construct_index", increment_counter)
-    monkeypatch.setattr(finish_website, "update_workflow_status", increment_counter)
-    monkeypatch.setattr(finish_website, "copy_rose_config", increment_counter)
+    def check_single_arg(www_content: Path):
+        assert www_content == Path("/share/web")
+        increment_counter()
 
-    # Just check that it runs all the needed subfunctions.
+    def check_args(www_root_link: Path, www_content: Path):
+        assert www_root_link == Path("/var/www/cset")
+        assert www_content == Path("/share/web")
+        increment_counter()
+
+    monkeypatch.setattr(finish_website, "install_website_skeleton", check_args)
+    monkeypatch.setattr(finish_website, "copy_rose_config", check_single_arg)
+    monkeypatch.setattr(finish_website, "construct_index", check_single_arg)
+    monkeypatch.setattr(finish_website, "bust_cache", check_single_arg)
+    monkeypatch.setattr(finish_website, "update_workflow_status", check_single_arg)
+    monkeypatch.setenv("WEB_DIR", "/var/www/cset")
+    monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", "/share")
+
+    # Check that it runs all the needed subfunctions.
     finish_website.run()
-    assert counter == 3
+    assert counter == 5

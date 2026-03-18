@@ -209,7 +209,6 @@ def test_RawRecipe_parbake(tmp_working_dir):
         )
     )
     # Expected.
-    parbaked_recipe_file = rose_datac / "recipes/recipe_value.yaml"
     expected = dedent(
         f"""\
         title: Recipe value
@@ -222,6 +221,7 @@ def test_RawRecipe_parbake(tmp_working_dir):
     # Act.
     r.parbake(rose_datac, tmp_working_dir)
     # Assert.
+    parbaked_recipe_file = next((rose_datac / "recipes").glob("recipe_value_*.yaml"))
     assert parbaked_recipe_file.exists()
     assert parbaked_recipe_file.read_text() == expected
 
@@ -248,7 +248,6 @@ def test_RawRecipe_parbake_aggregation(tmp_working_dir):
         )
     )
     # Expected.
-    parbaked_recipe_file = rose_datac / "aggregation_recipes/recipe_value.yaml"
     expected = dedent(
         f"""\
         title: Recipe value
@@ -263,6 +262,9 @@ def test_RawRecipe_parbake_aggregation(tmp_working_dir):
     # Act.
     r.parbake(rose_datac, tmp_working_dir)
     # Assert.
+    parbaked_recipe_file = next(
+        (rose_datac / "aggregation_recipes").glob("recipe_value_*.yaml")
+    )
     assert parbaked_recipe_file.exists()
     assert parbaked_recipe_file.read_text() == expected
 

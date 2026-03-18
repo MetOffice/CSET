@@ -16,6 +16,8 @@ steps:
         operator: constraints.generate_level_constraint
         coordinate: $LEVELTYPE
         levels: $LEVEL
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
 
   - operator: aggregate.ensure_aggregatable_across_cases
 
@@ -23,7 +25,7 @@ steps:
     coordinate: time
     method: MEAN
 
-  - operator: plot.spatial_contour_plot
+  - operator: plot.spatial_pcolormesh_plot
     sequence_coordinate: time
 
   - operator: write.write_cube_to_nc

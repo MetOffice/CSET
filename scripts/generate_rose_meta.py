@@ -31,4 +31,7 @@ destination = rose_meta_folder / "rose-meta.conf"
 
 env = jinja2.Environment(autoescape=False, lstrip_blocks=True, trim_blocks=True)
 template = env.from_string(source.read_text())
-destination.write_text(template.render())
+rendered = template.render()
+if not rendered.endswith("\n"):
+    rendered = rendered + "\n"
+destination.write_text(rendered)

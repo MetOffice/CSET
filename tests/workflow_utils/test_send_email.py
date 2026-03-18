@@ -69,7 +69,7 @@ def test_send_email(monkeypatch):
     def mock_subprocess_run(args, check, shell):
         assert (
             args
-            == 'printf "The webpage for your run of CSET is now ready. You can view it here:\nhttps://example.com/~user/CSET" | mail -s "CSET webpage ready" -S "from=notifications" "$USER"'
+            == 'printf "The webpage for your run of CSET is now ready. You can view it here:\nhttps://example.com/~user/CSET" | mail -s "CSET webpage ready" "$USER"'
         )
         assert check
         assert shell
@@ -84,7 +84,7 @@ def test_send_email_invalid_environment_variables(monkeypatch):
     def mock_subprocess_run(args, check, shell):
         assert (
             args
-            == 'printf "The webpage for your run of CSET is now ready, though the address could not be determined.\nCheck that WEB_ADDR and WEB_DIR are set correctly, then consider filing a bug report at https://github.com/MetOffice/CSET" | mail -s "CSET webpage ready" -S "from=notifications" "$USER"'
+            == 'printf "The webpage for your run of CSET is now ready, though the address could not be determined.\nCheck that WEB_ADDR and WEB_DIR are set correctly, then consider filing a bug report at https://github.com/MetOffice/CSET" | mail -s "CSET webpage ready" "$USER"'
         )
         assert check
         assert shell

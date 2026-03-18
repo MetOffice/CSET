@@ -1,28 +1,34 @@
 Why use CSET?
 =============
 
-When evaluating weather and climate models we are trying to understand the
-characteristics of our model configurations, the physical processes that lead to
-biases, and how they compares to other models (physical and machine learned),
-model configurations and observations. This is an iterative process, and each
-step of evaluation unveils more questions that need investigations. Evaluation
-often follows an individual approach by researchers spending significant
-resource on scientific and technical development.
+Evaluation of weather and climate models requires an assessment of model
+characteristics, and the ability to understand what drives them. This typically
+involves comparing different models (whether physics-based or machine learned,
+or hybrid approaches) to each other and to a variety of observations across a
+range of model diagnostics. For model development, there is a requirement to
+assess the impacts of different model configurations and choices on results.
+Evaluation is an iterative process, and each step can unveil more questions
+that leads to a need for deeper investigation.
 
-CSET aids in this by providing a flexible way to interrogate model data, using
-diagnostics that can be quickly created by the combination of operators in
-:doc:`/usage/operator-recipes`. Common operations such as reading, writing, and
-regridding are provided to reduce duplication of effort.
+CSET aids in this by providing a flexible way to interrogate model and
+observational data, using diagnostics that can be quickly created by the
+combination of operators in :doc:`operator recipes </usage/operator-recipes>`.
+Common operations such as reading, writing, and regridding are provided to
+reduce duplication of effort.
 
 CSET provides a legacy for user-developed evaluation methods and diagnostics to
 be shared and documented, with :doc:`well-defined working practices and review
-processes</contributing/index>` to ensure best practice for evaluation and
-verification linked to convective- and turbulence-scale model configurations.
-Therefore, it provides many benefits in reproducibility, portability,
-accessibility, maintainability, and quality assurance. By contributing newly
-developed diagnostics to CSET you ensure their legacy, ensure their quality
-assurance and benefit to the entire modelling community. Furthermore, any
-operators that the community finds especially useful will be contributed back to
-METplus_, so they can serve an even wider community.
+processes</contributing/index>`. It aims to embed and share best practice for
+evaluation and verification of weather and climate models using observational
+data. CSET primarily targets higher resolution atmosphere model processes
+(i.e. convective-scale with grid-spacing of order km's and turbulence-scale
+with sub-km grid spacing) on regional to global domains across weather and
+climate timescales. CSET provides flexibility to provide consistent evaluation
+of physics-based or machine learning approaches, and to compare these directly.
 
-.. _METplus: https://dtcenter.org/community-code/metplus
+CSET provides many benefits to users and developers, including:
+
+* Embeds and shares best practice for evaluation and verification of weather and climate models using observational data.
+* A legacy for user-developed evaluation methods and diagnostics to be shared and documented, with :doc:`well-defined working practices and review processes</contributing/index>`.
+* A route for contributors to CSET to ensure legacy of newly developed diagnostics, to ensure benefit to wider weather and climate modelling communities.
+* Reproducibility, portability, accessibility, maintainability, and quality assurance of evaluation tools to support a range of applications.

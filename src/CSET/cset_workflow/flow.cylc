@@ -30,7 +30,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     [[graph]]
     # Only runs on the first cycle.
     R1/^ = """
-    validate_environment => install_website_skeleton => setup_complete
     validate_environment => assign_model_colours => setup_complete
     """
 
@@ -95,7 +94,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         {% endif %}
 
     [[FETCH_DATA]]
-    script = rose task-run -v --app-key=fetch_fcst
     execution time limit = PT1H
         [[[environment]]]
         ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
@@ -105,15 +103,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         execution time limit = PT5M
         [[[environment]]]
             ENCODED_ROSE_SUITE_VARIABLES = {{b64json(ROSE_SUITE_VARIABLES)}}
-
-    [[METPLUS]]
-        [[[environment]]]
-        {% if METPLUS_GRID_STAT|default(False) %}
-            METPLUS_ANA_DIR = {{METPLUS_ANA_DIR}}
-            METPLUS_FCST_DIR = {{METPLUS_FCST_DIR}}
-            METPLUS_OBS_DIR = {{METPLUS_OBS_DIR}}
-            ROSE_APP_OPT_CONF_KEYS = {{METPLUS_OPT_CONFIG_KEYS}}
-        {% endif %}
 
     # Noop tasks to ensure a complete/efficient workflow graph.
     [[DUMMY_TASK]]
@@ -133,11 +122,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     [[validate_environment]]
     # Checks the environment works and the cset command is available.
 
-    [[install_website_skeleton]]
-    # Copies the static files that make up the web interface.
-        [[[environment]]]
-        WEB_DIR = {{WEB_DIR}}
-
     [[assign_model_colours]]
     # Copies the style file, inserting per-model colour definitions to ensure
     # consistency between the many runs.
@@ -150,6 +134,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     [[fetch_fcst_m{{model["id"]}}]]
     # Fetch data from disk or a file based archival system.
     inherit = FETCH_DATA
+    script = rose task-run -v --app-key=fetch_fcst
         [[[environment]]]
         MODEL_IDENTIFIER = {{model["id"]}}
         ROSE_APP_COMMAND_KEY = {{model["data_source"]}}
@@ -158,6 +143,22 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         DATA_PERIOD = {{model["data_period"]}}
         ANALYSIS_OFFSET = {{model["analysis_offset"]}}
     {% endfor %}
+
+    {% if SURFACE_SYNOP_OBS %}
+    [[fetch_obs]]
+    # Fetch observations from the MetDB.
+    inherit = FETCH_DATA
+    script = rose task-run -v --app-key=fetch_obs
+        [[[environment]]]
+        MODEL_IDENTIFIER = "OBS"
+        ROSE_APP_COMMAND_KEY = "metdb"
+        SURFACE_SYNOP_FIELDS = {{SURFACE_SYNOP_FIELDS}}
+        SURFACE_SYNOP_INTERVAL = {{SURFACE_SYNOP_INTERVAL}}
+        SURFACE_SYNOP_OFFSET = {{SURFACE_SYNOP_OFFSET}}
+        WMO_BLOCK_STTN_NMBRS = {{WMO_BLOCK_STTN_NMBRS | default("")}}
+        SUBAREA_EXTENT = {{SUBAREA_EXTENT | default("")}}
+        OBS_SUBTYPE = "LNDSYB"
+    {% endif %}
 
     [[parbake_recipes]]
     # Parbake all the recipes for this cycle.
@@ -187,13 +188,20 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         HOUSEKEEPING_MODE = {{HOUSEKEEPING_MODE}}
 
     [[finish_website]]
-    # Updates the workflow info in the web interface.
+    # Create the diagnostic viewing website.
+        [[[environment]]]
+        WEB_DIR = {{WEB_DIR}}
 
     [[send_email]]
     # Send email to notify that the workflow is complete.
         [[[environment]]]
         WEB_ADDR = {{WEB_ADDR}}
         WEB_DIR = {{WEB_DIR}}
+
+# Include files bring their own graph and runtime sections.
+{% include 'includes/metplus_common.cylc' %}
+{% include 'includes/metplus_point_stat.cylc' %}
+{% include 'includes/metplus_grid_stat.cylc' %}
 
 # Site-specific details that add to or override the core workflow definition.
 {% include 'site/' ~ SITE ~ '.cylc' %}

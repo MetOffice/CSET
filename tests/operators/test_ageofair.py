@@ -77,6 +77,7 @@ def test_calc_dist():
     assert np.allclose(dist, actual_distance, rtol=1e-06, atol=20000)
 
 
+@pytest.mark.slow
 def test_aoa_nocyclic(xwind, ywind, wwind, geopot):
     """Test case when not cyclic."""
     assert np.allclose(
@@ -89,6 +90,7 @@ def test_aoa_nocyclic(xwind, ywind, wwind, geopot):
     )
 
 
+@pytest.mark.slow
 def test_aoa_cyclic_parallel_processing(xwind, ywind, wwind, geopot):
     """Test case when cyclic with parallel processing."""
     assert np.allclose(
@@ -176,6 +178,7 @@ def test_aoa_ens(ens_regridded, ens_regridded_out):
     )
 
 
+@pytest.mark.slow
 def test_aoa_ens_multicore(ens_regridded, ens_regridded_out):
     """Test case with ensembles ensuring that single core and multicore produce identical values."""
     assert np.allclose(
