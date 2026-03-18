@@ -2415,6 +2415,12 @@ def plot_line_series(
                 raise ValueError("Cube must be 1D or 2D with a realization coordinate.")
         else:
             raise ValueError("Cube must have a realization coordinate.")
+    # Format the title and filename using plotted series coordinate
+    nplot = 1
+    seq_coord = coords[0]
+    plot_title, plot_filename = _set_title_and_filename(
+        seq_coord, nplot, recipe_title, filename
+    )
     plot_index = []
 
     # Check if this is a spectral plot by looking for spectral coordinates
