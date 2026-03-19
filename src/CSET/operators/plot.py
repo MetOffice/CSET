@@ -2389,12 +2389,12 @@ def plot_line_series(
     # Ensure we have a name for the plot file.
     recipe_title = get_recipe_metadata().get("title", "Untitled")
 
-    if filename is None:
-        filename = slugify(recipe_title)
+    ##if filename is None:
+    ##    filename = slugify(recipe_title)
 
-    # Add file extension. This may be overwritten later on.
-    plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
-
+    ## Add file extension. This may be overwritten later on.
+    ##plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
+    ##print(plot_filename)
     num_models = _get_num_models(cube)
 
     _validate_cube_shape(cube, num_models)
@@ -2415,8 +2415,9 @@ def plot_line_series(
                 raise ValueError("Cube must be 1D or 2D with a realization coordinate.")
         else:
             raise ValueError("Cube must have a realization coordinate.")
-    plot_index = []
 
+    plot_index = []
+    print("about to plot cube")
     # Check if this is a spectral plot by looking for spectral coordinates
     is_spectral_plot = series_coordinate in [
         "frequency",
@@ -2527,11 +2528,11 @@ def plot_line_series(
         nplot = 1
         seq_coord = coords[0]
         plot_title, plot_filename = _set_title_and_filename(
-        seq_coord, nplot, recipe_title, filename
+            seq_coord, nplot, recipe_title, filename
         )
         # Do the actual plotting for all other series coordinate options.
         _plot_and_save_line_series(
-            cubes, coords, stamp_coordinate, plot_filename, recipe_title
+            cubes, coords, stamp_coordinate, plot_filename, plot_title
         )
 
         plot_index.append(plot_filename)
