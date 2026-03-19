@@ -2495,7 +2495,10 @@ def plot_line_series(
 
             # Use sequence value so multiple sequences can merge.
             sequence_value = single_cube.coord(sequence_coordinate).points[0]
-            plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
+            # plot_filename = f"{filename.rsplit('.', 1)[0]}_{sequence_value}.png"
+            plot_title, plot_filename = _set_title_and_filename(
+                sequence_value, nplot, recipe_title, filename
+            )
             coord = single_cube.coord(sequence_coordinate)
 
             # Format the coordinate value in a unit appropriate way.
