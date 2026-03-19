@@ -517,7 +517,7 @@ def _fix_no_spatial_coords_callback(cube: iris.cube.Cube):
     if utils.is_spatialdim(cube):
         return cube
 
-    elif not utils.is_spatialdim(cube):
+    else:
         # attempt to get lat/long from cube attributes
         try:
             lat_min = cube.attributes.get("geospatial_lat_min")
