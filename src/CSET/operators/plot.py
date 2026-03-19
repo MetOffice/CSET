@@ -2389,12 +2389,6 @@ def plot_line_series(
     # Ensure we have a name for the plot file.
     recipe_title = get_recipe_metadata().get("title", "Untitled")
 
-    ##if filename is None:
-    ##    filename = slugify(recipe_title)
-
-    ## Add file extension. This may be overwritten later on.
-    ##plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
-    ##print(plot_filename)
     num_models = _get_num_models(cube)
 
     _validate_cube_shape(cube, num_models)
@@ -2417,7 +2411,7 @@ def plot_line_series(
             raise ValueError("Cube must have a realization coordinate.")
 
     plot_index = []
-    print("about to plot cube")
+
     # Check if this is a spectral plot by looking for spectral coordinates
     is_spectral_plot = series_coordinate in [
         "frequency",
