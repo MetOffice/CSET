@@ -1,5 +1,5 @@
 category: Multivar Spatial Plot
-title: $MODEL_NAME $VARNAME_BASE m$METHOD
+title: $MODEL_NAME multi-variable $VARNAME_BASE $METHOD
 description: Extracts and overplots the $METHOD of $VARNAME_BASE, $VARNAME_OVER and $VARNAME_CONTOUR from all times in $MODEL_NAME.
 
 steps:
@@ -9,6 +9,9 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
+  # Comment for review: Note placement of this operator here will compute time collapse on
+  # all cubes captured in read.read_cubes. This can be very slow / memory hungry on command line
+  # where multiple inputs capturing many input cube variables.
   - operator: collapse.collapse
     coordinate: [time]
     method: $METHOD
@@ -52,7 +55,7 @@ steps:
                    operator: constraints.generate_cell_methods_constraint
                    cell_methods: []
                    varname: $VARNAME_OVER
-            condition: '>='
+            condition: $OVERLAY_MASK_CONDITION
             value: $OVERLAY_MASK_VALUE
 
     contour_cube:
