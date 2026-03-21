@@ -24,6 +24,51 @@ def load(conf: Config):
     # Load a list of model detail dictionaries.
     models = get_models(conf.asdict())
 
+    # Surface (2D) fields for radar.
+    if conf.NIMROD_COMP_XKM:
+        yield RawRecipe(
+            recipe="generic_surface_spatial_plot_sequence_radar.yaml",
+            model_ids="Nimrodxkm",  # -> Becomes $INPUT_PATHS
+            variables={"VARNAME": "Hourly rain accumulation"},
+            aggregation=False,
+        )
+
+    if conf.NIMROD_COMP_1KM:
+        yield RawRecipe(
+            recipe="generic_surface_spatial_plot_sequence_radar.yaml",
+            model_ids="Nimrod1km",  # -> Becomes $INPUT_PATHS
+            variables={"VARNAME": "1km hourly rain accumulation"},
+            aggregation=False,
+        )
+
+    if conf.NIMROD_COMP_2KM:
+        yield RawRecipe(
+            recipe="generic_surface_spatial_plot_sequence_radar.yaml",
+            model_ids="Nimrod2km",  # -> Becomes $INPUT_PATHS
+            variables={"VARNAME": "2km hourly rain accumulation"},
+            aggregation=False,
+        )
+
+    #    if conf.SPATIAL_SURFACE_FIELD:
+    #        #        for model, field, method in itertools.product(
+    #        for model, field in itertools.product(
+    #            models, conf.SURFACE_FIELDS
+    #        ):
+    #            yield RawRecipe(
+    #                recipe="generic_surface_spatial_plot_sequence_radar.yaml",
+    #                model_ids=model["id"],
+    #                variables={
+    #                    "VARNAME": field,
+    #                    #                    "MODEL_NAME": model["name"],
+    #                    #                    "METHOD": method,
+    #                    #                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+    #                    #                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+    #                    #                    if conf.SELECT_SUBAREA
+    #                    #                    else None,
+    #                },
+    #                aggregation=False,
+    #            )
+
     # Surface (2D) fields.
     if conf.SPATIAL_SURFACE_FIELD:
         for model, field, method in itertools.product(
