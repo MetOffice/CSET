@@ -9,13 +9,6 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
-  # Comment for review: Note placement of this operator here will compute time collapse on
-  # all cubes captured in read.read_cubes. This can be very slow / memory hungry on command line
-  # where multiple inputs capturing many input cube variables.
-  - operator: collapse.collapse
-    coordinate: [time]
-    method: $METHOD
-
   - operator: plot.spatial_multi_pcolormesh_plot
     cube:
         operator: filters.filter_cubes
