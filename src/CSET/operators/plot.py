@@ -491,6 +491,7 @@ def _plot_and_save_spatial_plot(
     # Plot the field.
     if method == "contourf":
         # Filled contour plot of the field.
+        logging.info("testing!")
         plot = iplt.contourf(cube, cmap=cmap, levels=levels, norm=norm)
     elif method == "pcolormesh":
         try:
@@ -529,6 +530,63 @@ def _plot_and_save_spatial_plot(
             f" End Lon: {cube.attributes['transect_coords'].split('_')[3]}",
             fontsize=16,
         )
+
+        # Inset code
+        import cartopy.feature as cfeature
+        from cartopy.mpl.geoaxes import GeoAxes
+        from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+
+        axins = inset_axes(
+            axes,
+            width="20%",
+            height="20%",
+            loc="upper right",
+            axes_class=GeoAxes,
+            axes_kwargs=dict(map_projection=ccrs.PlateCarree()),
+        )
+
+        axins.coastlines(resolution="50m")
+        axins.add_feature(cfeature.BORDERS, linewidth=0.3)
+
+        SLat = float(cube.attributes["transect_coords"].split("_")[0])
+        SLon = float(cube.attributes["transect_coords"].split("_")[1])
+        ELat = float(cube.attributes["transect_coords"].split("_")[2])
+        ELon = float(cube.attributes["transect_coords"].split("_")[3])
+
+        # Plot points (note: lon, lat order for Cartopy)
+        axins.plot(SLon, SLat, marker="x", color="green", transform=ccrs.PlateCarree())
+        axins.plot(ELon, ELat, marker="x", color="red", transform=ccrs.PlateCarree())
+
+        # Draw line between them
+        axins.plot(
+            [SLon, ELon], [SLat, ELat], color="black", transform=ccrs.PlateCarree()
+        )
+
+        lon_min, lon_max = sorted([SLon, ELon])
+        lat_min, lat_max = sorted([SLat, ELat])
+
+        # Midpoints
+        lon_mid = (lon_min + lon_max) / 2
+        lat_mid = (lat_min + lat_max) / 2
+
+        # Maximum half-range
+        half_range = max(lon_max - lon_min, lat_max - lat_min) / 2
+        if half_range == 0:  # points identical → provide small default
+            half_range = 1
+
+        # Set square extent
+        axins.set_extent(
+            [
+                lon_mid - half_range,
+                lon_mid + half_range,
+                lat_mid - half_range,
+                lat_mid + half_range,
+            ],
+            crs=ccrs.PlateCarree(),
+        )
+
+        # Ensure square aspect
+        axins.set_aspect("equal")
 
     else:
         # Add title.
