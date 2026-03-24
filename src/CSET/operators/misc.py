@@ -288,6 +288,13 @@ def difference(cubes: CubeList):
 
     """
     if len(cubes) != 2:
+        logging.info('DEBUGGING')
+        logging.info(cubes)
+        logging.info(cubes[0])
+        logging.info(cubes[1])
+        logging.info(cubes[2])
+        logging.info('FURTHER')
+        test = iris.merge_cubes(cubes[1],cubes[2])
         raise ValueError("cubes should contain exactly 2 cubes.")
     base: Cube = cubes.extract_cube(iris.AttributeConstraint(cset_comparison_base=1))
     other: Cube = cubes.extract_cube(

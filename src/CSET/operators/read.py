@@ -26,6 +26,7 @@ from typing import Literal
 import iris
 import iris.coord_systems
 import iris.coords
+import iris.coords as icoords
 import iris.cube
 import iris.exceptions
 import iris.util
@@ -105,6 +106,9 @@ def read_cube(
     if len(cubes) == 1:
         return cubes[0]
     else:
+        logging.info('DEBUGGING')
+        logging.info(cubes[0])
+        logging.info(cubes[1])
         raise ValueError(
             f"Constraint doesn't produce single cube: {constraint}\n{cubes}"
         )
@@ -209,6 +213,12 @@ def read_cubes(
     logging.info("Loaded cubes: %s", cubes)
     if len(cubes) == 0:
         raise NoDataError("No cubes loaded, check your constraints!")
+    
+    logging.info('HERE ARE CUBES')
+    logging.info(cubes[0])
+    logging.info(cubes[1])
+    logging.info(cubes[2])
+
     return cubes
 
 
@@ -359,9 +369,9 @@ def _cutout_cubes(
 def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.Cube:
     """Compose together the needed callbacks into a single function."""
     # Most callbacks operate in-place, but save the cube when returned!
+    _lfric_normalise_callback(cube, field, filename)
     _realization_callback(cube, field, filename)
     _um_normalise_callback(cube, field, filename)
-    _lfric_normalise_callback(cube, field, filename)
     cube = _lfric_time_coord_fix_callback(cube, field, filename)
     _normalise_var0_varname(cube)
     _fix_spatial_coords_callback(cube)
@@ -374,6 +384,7 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     _proleptic_gregorian_fix(cube)
     _lfric_time_callback(cube)
     _lfric_forecast_period_standard_name_callback(cube)
+ #   _final_dim_check(cube)
     return cube
 
 
@@ -429,6 +440,8 @@ def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
     # Remove unwanted attributes.
     cube.attributes.pop("timeStamp", None)
     cube.attributes.pop("uuid", None)
+    cube.attributes.pop("analysis_source", None)
+    cube.attributes.pop("source", None)
     cube.attributes.pop("name", None)
 
     # Sort STASH code list.
@@ -968,7 +981,60 @@ def _lfric_forecast_period_standard_name_callback(cube: iris.cube.Cube):
     """Add forecast_period standard name if missing."""
     try:
         coord = cube.coord("forecast_period")
+        if coord.units != "hours":
+            cube.coord("forecast_period").convert_units("hours")
         if not coord.standard_name:
             coord.standard_name = "forecast_period"
     except iris.exceptions.CoordinateNotFoundError:
         pass
+
+
+def _final_dim_check(cube: iris.cube.Cube):
+
+    logging.info('FINAL TEST OF COORDS')
+    logging.info(cube)
+    try:
+        cube = iris.util.new_axis(cube, 'time')
+        logging.info(cube)
+
+        fp = cube.coord('forecast_period')
+        dims = cube.coord_dims(fp)
+
+        # Already scalar → nothing to do
+        if dims == ():
+            return cube
+
+        # If mapped to a time axis (likely length 1 after new_axis), collapse to scalar
+        c2 = cube.copy()
+        c2.remove_coord('forecast_period')
+
+        # Choose the representative value to keep as scalar:
+        # - If length==1 along time, take the single element.
+        # - If longer (unexpected here), take the first or validate they’re constant.
+        pts = fp.points
+        if pts.ndim == 0:
+            scalar_val = pts.item()
+        else:
+            scalar_val = np.atleast_1d(pts).flat[0]
+
+        fp_scalar = icoords.AuxCoord(
+            scalar_val,
+            standard_name='forecast_period',
+            units=fp.units
+        )
+        # Adding an AuxCoord with *no* dimension mapping makes it scalar.
+        c2.add_aux_coord(fp_scalar)
+
+        logging.info(c2)
+
+        return c2
+
+
+    except ValueError:
+        pass
+    
+    # logging.info(cube.coord('time').ndim)
+    # if cube.coord('time').ndim == 0:
+    #     logging.info('DEBUG: fixing time')
+    #     cube = iris.util.new_axis(cube, 'time')
+    #     logging.info(cube.coord('time').ndim)
