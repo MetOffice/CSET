@@ -182,6 +182,19 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         [[[environment]]]
         DO_CASE_AGGREGATION = True
 
+    {% if NIMROD_RADAR_OBS %}
+    [[fetch_nimrod]]
+    # Fetch Nimrod radar observations.
+    inherit = FETCH_DATA
+    script = rose task-run -v --app-key=fetch_nimrod
+        [[[environment]]]
+        ROSE_APP_COMMAND_KEY = "fetchnimrod"
+        NIMROD_COMP_XKM = {{NIMROD_COMP_XKM}}
+        NIMROD_COMP_1KM = {{NIMROD_COMP_1KM}}
+        NIMROD_COMP_2KM = {{NIMROD_COMP_2KM}}
+        NIMROD_COMP_5MIN = {{NIMROD_COMP_5MIN}}
+    {% endif %}
+
     [[housekeeping]]
     # Housekeep input data files.
         [[[environment]]]
