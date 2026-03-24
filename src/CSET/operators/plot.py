@@ -610,7 +610,7 @@ def _plot_and_save_spatial_plot(
         if over_norm is not None:
             over_vmin = None
             over_vmax = None
-        iplt.pcolormesh(
+        overlay = iplt.pcolormesh(
             overlay_cube,
             cmap=over_cmap,
             norm=over_norm,
@@ -618,9 +618,9 @@ def _plot_and_save_spatial_plot(
             vmin=over_vmin,
             vmax=over_vmax,
         )
-    # Overplot contour field, if required
+    # Overplot contour field, if required, with contour labelling.
     if contour_cube:
-        iplt.contour(
+        contour = iplt.contour(
             contour_cube,
             colors="darkgray",
             levels=cntr_levels,
@@ -629,6 +629,7 @@ def _plot_and_save_spatial_plot(
             linestyles="--",
             linewidths=1,
         )
+        plt.clabel(contour)
 
     # Check to see if transect, and if so, adjust y axis.
     if is_transect(cube):
@@ -670,8 +671,24 @@ def _plot_and_save_spatial_plot(
         bbox=dict(boxstyle="round", fc="#cccccc", ec="#808080", alpha=0.9),
     )
 
-    # Add colour bar.
-    cbar = fig.colorbar(plot, orientation="horizontal", pad=0.042, shrink=0.7)
+    # Add secondary colour bar for overlay_cube field if required.
+    if overlay_cube:
+        cbarB = fig.colorbar(
+            overlay, orientation="horizontal", location="bottom", pad=0.0, shrink=0.7
+        )
+        cbarB.set_label(label=f"{overlay_cube.name()} ({overlay_cube.units})", size=14)
+        # add ticks and tick_labels for every levels if less than 20 levels exist
+        if over_levels is not None and len(over_levels) < 20:
+            cbarB.set_ticks(over_levels)
+            cbarB.set_ticklabels([f"{level:.2f}" for level in over_levels])
+            if "rainfall" or "snowfall" or "visibility" in overlay_cube.name():
+                cbarB.set_ticklabels([f"{level:.3g}" for level in over_levels])
+            logging.debug("Set secondary colorbar ticks and labels.")
+
+    # Add main colour bar.
+    cbar = fig.colorbar(
+        plot, orientation="horizontal", location="bottom", pad=0.042, shrink=0.7
+    )
     cbar.set_label(label=f"{cube.name()} ({cube.units})", size=14)
     # add ticks and tick_labels for every levels if less than 20 levels exist
     if levels is not None and len(levels) < 20:

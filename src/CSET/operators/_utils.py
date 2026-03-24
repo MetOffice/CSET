@@ -380,18 +380,23 @@ def slice_over_maybe(cube: iris.cube.Cube, coord_name, index):
     cube_slice: iris.cube.Cube
         A slice of iris cube, if available to slice.
     """
-    if cube:
-        if is_coorddim(cube, coord_name):
-            cube_slice = cube[index]
-            if (
-                cube.ndim > 3
-            ):  ## More elegant way to subset?? Need to handle ensemble inputs
-                cube_slice = cube[:, index]
-        else:
-            cube_slice = cube
-    else:
-        cube_slice = None
-    return cube_slice
+    if cube is None:
+        return None
+
+    # Check if coord exists as dimension coordinate
+    if not is_coorddim(cube, coord_name):
+        return cube
+
+    # Use iris to find which axis the dimension coordinate corresponds to
+    dim = cube.coord_dims(coord_name)[0]
+
+    # Create list of slices for each dimension
+    slices = [slice(None)] * cube.ndim
+
+    # Only replace the slice for the dim to be extracted
+    slices[dim] = index
+
+    return cube[tuple(slices)]
 
 
 def is_time_aggregatable(cube: iris.cube.Cube) -> bool:

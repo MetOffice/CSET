@@ -332,14 +332,15 @@ def test_slice_over_ensemble(long_forecast):
     ensemble_cube_4d = iris.cube.CubeList(
         [ensemble_cube_em01, ensemble_cube_em02]
     ).merge_cube()
-    #### NEED TO UPDATE/IMPROVE THIS TESTING ASSUMPTION - DEPENDS ON ORDERING OF CUBE DIMS ONLY ####
+    # Attempt to extract time slice index 20 from 4D ensemble cube
     assert (
-        operator_utils.slice_over_maybe(ensemble_cube_4d, "time", 0)
-        == ensemble_cube_4d[:, 0, :, :]
+        operator_utils.slice_over_maybe(ensemble_cube_4d, "time", 20)
+        == ensemble_cube_4d[:, 20, :, :]
     )
+    # Attempt to extract realization index 1 from 4D ensemble cube
     assert (
         operator_utils.slice_over_maybe(ensemble_cube_4d, "realization", 1)
-        == ensemble_cube_4d[:, 1, :, :]
+        == ensemble_cube_4d[1, :, :, :]
     )
 
 
