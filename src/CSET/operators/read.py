@@ -842,8 +842,8 @@ def _convert_wind_true_dirn_um(cubes: iris.cube.CubeList):
     v_grids = cubes.extract(iris.AttributeConstraint(STASH="m01s03i226"))
     for u, v in zip(u_grids, v_grids, strict=True):
         true_u, true_v = rotate_winds(u, v, iris.coord_systems.GeogCS(6371229.0))
-        u.data = true_u.data
-        v.data = true_v.data
+        u.data = true_u.core_data()
+        v.data = true_v.core_data()
 
 
 def _normalise_var0_varname(cube: iris.cube.Cube):
