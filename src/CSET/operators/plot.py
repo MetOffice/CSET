@@ -1342,7 +1342,6 @@ def _plot_and_save_histogram_series(
     vmax: float
         maximum for colorbar
     """
-    print("CUBES before histogram plot", cubes[0])
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     ax = plt.gca()
 
@@ -2310,23 +2309,19 @@ def plot_line_series(
             else:
                 raise TypeError(f"Expected Cube or CubeList, got {type(cube_slice)}")
 
-            single_cube = cubes[0]
-
             # Use sequence value so multiple sequences can merge.
-            # sequence_value = single_cube.coord(sequence_coordinate).points[0]
-            seq_coord = cube_slice.coord(sequence_coordinate)
+            seq_coord = cube_slice[0].coord(sequence_coordinate)
             plot_title, plot_filename = _set_title_and_filename(
                 seq_coord, nplot, recipe_title, filename
             )
-            coord = single_cube.coord(sequence_coordinate)
 
             # Format the coordinate value in a unit appropriate way.
-            title = f"{recipe_title}\n [{coord.units.title(coord.points[0])}]"
+            title = f"{recipe_title}\n [{seq_coord.units.title(seq_coord.points[0])}]"
 
             # Use sequence (e.g. time) bounds if plotting single non-sequence outputs
-            if nplot == 1 and coord.has_bounds:
-                if np.size(coord.bounds) > 1:
-                    title = f"{recipe_title}\n [{coord.units.title(coord.bounds[0][0])} to {coord.units.title(coord.bounds[0][1])}]"
+            if nplot == 1 and seq_coord.has_bounds:
+                if np.size(seq_coord.bounds) > 1:
+                    title = f"{recipe_title}\n [{seq_coord.units.title(seq_coord.bounds[0][0])} to {seq_coord.units.title(seq_coord.bounds[0][1])}]"
 
             # Do the actual plotting.
             plotting_func(
