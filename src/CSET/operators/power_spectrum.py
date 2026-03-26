@@ -61,7 +61,7 @@ def calculate_power_spectrum(cubes):
             if is_ensemble:
                 # Ensemble: Loop over each realization
                 for subcube in cube.slices_over("realization"):
-                    real = int(subcube.coord("realization").points[0])
+                    realiz = int(subcube.coord("realization").points[0])
                     # calculate power spectrum of subcube
                     ps = _power_spectrum(subcube)
 
@@ -69,13 +69,9 @@ def calculate_power_spectrum(cubes):
                     if model:
                         ps.attributes["model_name"] = model
 
-                    # REMOVE any existing realization coord added by _power_spectrum
-                    while ps.coords("realization"):
-                        ps.remove_coord(ps.coord("realization"))
-
                     # ADD the correct realization from the parent cube
                     ps.add_aux_coord(
-                        iris.coords.AuxCoord(real, long_name="realization", units="1")
+                        iris.coords.AuxCoord(realiz, long_name="realization", units="1")
                     )
 
                     # PROMOTE realization coordinate to dimension
@@ -88,6 +84,13 @@ def calculate_power_spectrum(cubes):
                 ps = _power_spectrum(cube)
                 if model:
                     ps.attributes["model_name"] = model
+
+                # ADD the correct realization from the parent cube
+                # Promotion to dimension not required.
+                ps.add_aux_coord(
+                    iris.coords.AuxCoord(0, long_name="realization", units="1")
+                )
+
                 out.append(ps)
 
         if is_ensemble:
@@ -115,20 +118,16 @@ def calculate_power_spectrum(cubes):
     if is_ensemble:
         # Ensemble: Loop over each realization
         for subcube in cube.slices_over("realization"):
-            real = int(subcube.coord("realization").points[0])
+            realiz = int(subcube.coord("realization").points[0])
             ps = _power_spectrum(subcube)
 
             # Attach model name if available
             if model:
                 ps.attributes["model_name"] = model
 
-            # REMOVE any existing realization coord added by _power_spectrum
-            while ps.coords("realization"):
-                ps.remove_coord(ps.coord("realization"))
-
             # ADD the correct realization from the parent cube
             ps.add_aux_coord(
-                iris.coords.AuxCoord(real, long_name="realization", units="1")
+                iris.coords.AuxCoord(realiz, long_name="realization", units="1")
             )
 
             # PROMOTE to dimension
@@ -148,6 +147,10 @@ def calculate_power_spectrum(cubes):
     ps = _power_spectrum(cube)
     if model:
         ps.attributes["model_name"] = model
+
+        # ADD the correct realization from the parent cube
+        # Promotion to dimension not required
+        ps.add_aux_coord(iris.coords.AuxCoord(0, long_name="realization", units="1"))
 
     return iris.cube.CubeList([ps])
 
@@ -307,12 +310,8 @@ def _power_spectrum(
     )
 
     # Add wavelength as auxiliary coordinate
+    # Realization coordinate is added in _calculate_power_spectrum
     ps_cube.add_aux_coord(wavelength_coord, data_dims=1)
-
-    # Ensure cube has a realisation coordinate by creating and adding to cube
-    # should this be moved to _calculate_power_spectrum?
-    realization_coord = iris.coords.AuxCoord(0, standard_name="realization", units="1")
-    ps_cube.add_aux_coord(realization_coord)
 
     return ps_cube
 
