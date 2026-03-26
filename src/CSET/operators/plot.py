@@ -592,11 +592,19 @@ def _plot_and_save_spatial_plot(
         # Add title.
         axes.set_title(title, fontsize=16)
 
+    # Adjust padding if spatial plot or transect
+    if is_transect(cube):
+        yinfopad = -0.1
+        ycbarpad = 0.1
+    else:
+        yinfopad = -0.05
+        ycbarpad = 0.042
+
     # Add watermark with min/max/mean. Currently not user togglable.
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
     axes.annotate(
         f"Min: {np.min(cube.data):.3g} Max: {np.max(cube.data):.3g} Mean: {np.mean(cube.data):.3g}",
-        xy=(1, -0.05),
+        xy=(1, yinfopad),
         xycoords="axes fraction",
         xytext=(-5, 5),
         textcoords="offset points",
@@ -607,7 +615,7 @@ def _plot_and_save_spatial_plot(
     )
 
     # Add colour bar.
-    cbar = fig.colorbar(plot, orientation="horizontal", pad=0.042, shrink=0.7)
+    cbar = fig.colorbar(plot, orientation="horizontal", pad=ycbarpad, shrink=0.7)
     cbar.set_label(label=f"{cube.name()} ({cube.units})", size=14)
     # add ticks and tick_labels for every levels if less than 20 levels exist
     if levels is not None and len(levels) < 20:
