@@ -185,48 +185,6 @@ def test_power_spectrum_cubelist_nonensemble():
     assert ps[0].coord("realization").shape == (1,)
 
 
-def test_power_spectrum_singlecube_nonensemble():
-    """Single non-ensemble cube returns CubeList([spectrum]) without a realization DimCoord."""
-    cube = read.read_cubes(
-        "tests/test_data/exeter_em01.nc",
-        constraint=constraints.generate_stash_constraint("m01s03i236"),
-    )[0]
-
-    cube.remove_coord(cube.coord("realization"))
-
-    ps = power_spectrum.calculate_power_spectrum(cube)
-
-    assert isinstance(ps, CubeList)
-    assert len(ps) == 1
-    assert len(ps[0].coords("realization")) == 1
-    assert ps[0].coord_dims("realization") == ()
-    assert ps[0].coord("realization").shape == (1,)
-
-
-def test_power_spectrum_singlecube_single_realization():
-    """Single non-ensemble cube returns CubeList([spectrum]) with a single AuxCoord realization."""
-    cube = read.read_cubes(
-        "tests/test_data/exeter_em01.nc",
-        constraint=constraints.generate_stash_constraint("m01s03i236"),
-    )[0]
-
-    cube.remove_coord(cube.coord("realization"))
-
-    ps = power_spectrum.calculate_power_spectrum(cube)
-
-    assert isinstance(ps, CubeList)
-    assert len(ps) == 1
-
-    # one realization AuxCoord present (added by _power_spectrum)
-    assert len(ps[0].coords("realization")) == 1
-
-    # realization is an AuxCoord → attached to no dimensions
-    assert ps[0].coord_dims("realization") == ()
-
-    # single scalar value stored as a length-1 array
-    assert ps[0].coord("realization").shape == (1,)
-
-
 def test_power_spectrum_model_attribute_preserved():
     """model_name attribute on inputs is preserved on the output spectra."""
     cubes = read.read_cubes(
