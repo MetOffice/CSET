@@ -1874,24 +1874,20 @@ def _custom_colormap_probability(
 
 def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
     """Return a custom colourmap for the current recipe."""
-    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
-    #    varnames = [cube.long_name, cube.standard_name, cube.var_name]
-    print("hello - trying the rainfall test varnames is ", varnames)
-    print("hello - cube.long_name", cube.long_name)
-    print("hello - cube.standard_name", cube.standard_name)
-    print("hello - cube.var_name", cube.var_name)
-    #    if (
-    #        any("surface_microphysical" in name for name in varnames)
-    #        any(("surface_microphysical" or "hourly_rain_accumulation") in name for name in varnames)
-    #        (  (any("surface_microphysical" in name for name in varnames))
-    #        or (any("hourly_rain_accumulation" in name for name in varnames)) )
-    #        and "difference" not in cube.long_name
-    #        and "mask" not in cube.long_name
-    #    ):
-    ##    if "hourly_rain_accumulation" in cube.var_name:
-    if "rain_accumulation" in cube.long_name:
-        # Define the levels and colors
-        print("hello - defining the rainfall colorbar")
+    varnames = [n for n in (cube.long_name, cube.standard_name, cube.var_name) if n]
+    varnames_lower = [n.lower() for n in varnames]
+
+    is_rainfall_var = any(
+        key in name
+        for name in varnames_lower
+        for key in (
+            "microphysical_rainfall_rate",
+            "rain_accumulation",
+            "rain_accummulation",  # keep typo variant for compatibility
+        )
+    )
+
+    if is_rainfall_var:
         levels = [0, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
         colors = [
             "w",
@@ -1912,13 +1908,8 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
         cmap = mcolors.ListedColormap(colors)
         # Normalize the levels
         norm = mcolors.BoundaryNorm(levels, cmap.N)
-        logging.info("change colormap for surface_microphysical variable colorbar.")
-    else:
-        # do nothing and keep existing colorbar attributes
-        cmap = cmap
-        levels = levels
-        norm = norm
-    print("hello - returning from defining rainfall colorbar")
+        logging.info("Using custom rainfall colourmap.")
+
     return cmap, levels, norm
 
 
@@ -2170,7 +2161,7 @@ def plot_line_series(
     -------
     iris.cube.Cube | iris.cube.CubeList
         The original Cube or CubeList (so further operations can be applied).
-        plotted data.
+        Plotted data.
 
     Raises
     ------
@@ -2839,7 +2830,6 @@ def plot_histogram_series(
             if np.size(coord.bounds) > 1:
                 title = f"{recipe_title}\n [{coord.units.title(coord.bounds[0][0])} to {coord.units.title(coord.bounds[0][1])}]"
         # Do the actual plotting.
-        print("Using the plot filename: ", plot_filename)
         plotting_func(
             cube_slice,
             filename=plot_filename,
