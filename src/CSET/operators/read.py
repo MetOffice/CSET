@@ -374,6 +374,7 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     _proleptic_gregorian_fix(cube)
     _lfric_time_callback(cube)
     _lfric_forecast_period_standard_name_callback(cube)
+    _normalise_ML_varname(cube)
     return cube
 
 
@@ -972,3 +973,14 @@ def _lfric_forecast_period_standard_name_callback(cube: iris.cube.Cube):
             coord.standard_name = "forecast_period"
     except iris.exceptions.CoordinateNotFoundError:
         pass
+
+
+def _normalise_ML_varname(cube: iris.cube.Cube):
+    """Fix variable names in ML models to standard names."""
+    if cube.coords("pressure"):
+        if cube.name() == "x_wind":
+            cube.long_name = "zonal_wind_at_pressure_levels"
+        if cube.name() == "y_wind":
+            cube.long_name = "meridional_wind_at_pressure_levels"
+        if cube.name() == "air_temperature":
+            cube.long_name = "temperature_at_pressure_levels"
