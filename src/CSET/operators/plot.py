@@ -557,6 +557,9 @@ def _plot_and_save_spatial_plot(
         cbar.set_ticklabels([f"{level:.2f}" for level in levels])
         if "visibility" in cube.name():
             cbar.set_ticklabels([f"{level:.3g}" for level in levels])
+        # Tick labels for rain accumulations from Nimrod radar data.
+        if "rain accumulation" in cube.name():
+            cbar.set_ticklabels([f"{level:.3g}" for level in levels])
         logging.debug("Set colorbar ticks and labels.")
 
     # Save plot.
@@ -1111,6 +1114,8 @@ def _plot_and_save_histogram_series(
 
     model_colors_map = _get_model_colors_map(cubes)
 
+    print("Using internal function _plot_and_save_histogram_series")
+
     # Set default that histograms will produce probability density function
     # at each bin (integral over range sums to 1).
     density = True
@@ -1119,7 +1124,8 @@ def _plot_and_save_histogram_series(
         # Easier to check title (where var name originates)
         # than seeing if long names exist etc.
         # Exception case, where distribution better fits log scales/bins.
-        if "surface_microphysical" in title:
+        print("hello - title is ", title)
+        if ("surface_microphysical" in title) or ("rain accumulation" in title):
             if "amount" in title:
                 # Compute histogram following Klingaman et al. (2017): ASoP
                 bin2 = np.exp(np.log(0.02) + 0.1 * np.linspace(0, 99, 100))
@@ -1157,7 +1163,9 @@ def _plot_and_save_histogram_series(
         x, y = np.histogram(cube_data_1d, bins=bins, density=density)
 
         # Compute area under curve.
-        if "surface_microphysical" in title and "amount" in title:
+        if ("surface_microphysical" in title and "amount" in title) or (
+            "rain_accumulation" in title
+        ):
             bin_mean = (bins[:-1] + bins[1:]) / 2.0
             x = x * bin_mean / x.sum()
             x = x[1:]
@@ -1173,7 +1181,9 @@ def _plot_and_save_histogram_series(
         f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}", fontsize=14
     )
     ax.set_ylabel("Normalised probability density", fontsize=14)
-    if "surface_microphysical" in title and "amount" in title:
+    if ("surface_microphysical" in title and "amount" in title) or (
+        "rain accumulation" in title
+    ):
         ax.set_ylabel(
             f"Contribution to mean ({iter_maybe(cubes)[0].units})", fontsize=14
         )
@@ -1865,12 +1875,23 @@ def _custom_colormap_probability(
 def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
     """Return a custom colourmap for the current recipe."""
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
-    if (
-        any("surface_microphysical" in name for name in varnames)
-        and "difference" not in cube.long_name
-        and "mask" not in cube.long_name
-    ):
+    #    varnames = [cube.long_name, cube.standard_name, cube.var_name]
+    print("hello - trying the rainfall test varnames is ", varnames)
+    print("hello - cube.long_name", cube.long_name)
+    print("hello - cube.standard_name", cube.standard_name)
+    print("hello - cube.var_name", cube.var_name)
+    #    if (
+    #        any("surface_microphysical" in name for name in varnames)
+    #        any(("surface_microphysical" or "hourly_rain_accumulation") in name for name in varnames)
+    #        (  (any("surface_microphysical" in name for name in varnames))
+    #        or (any("hourly_rain_accumulation" in name for name in varnames)) )
+    #        and "difference" not in cube.long_name
+    #        and "mask" not in cube.long_name
+    #    ):
+    ##    if "hourly_rain_accumulation" in cube.var_name:
+    if "rain_accumulation" in cube.long_name:
         # Define the levels and colors
+        print("hello - defining the rainfall colorbar")
         levels = [0, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
         colors = [
             "w",
@@ -1897,6 +1918,7 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
         cmap = cmap
         levels = levels
         norm = norm
+    print("hello - returning from defining rainfall colorbar")
     return cmap, levels, norm
 
 
@@ -2712,6 +2734,8 @@ def plot_histogram_series(
     if filename is None:
         filename = slugify(recipe_title)
 
+    print("Running plot_histogram_series to produce plot ", filename)
+
     # Internal plotting function.
     plotting_func = _plot_and_save_histogram_series
 
@@ -2815,6 +2839,7 @@ def plot_histogram_series(
             if np.size(coord.bounds) > 1:
                 title = f"{recipe_title}\n [{coord.units.title(coord.bounds[0][0])} to {coord.units.title(coord.bounds[0][1])}]"
         # Do the actual plotting.
+        print("Using the plot filename: ", plot_filename)
         plotting_func(
             cube_slice,
             filename=plot_filename,
