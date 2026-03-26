@@ -306,11 +306,6 @@
     "max": 1,
     "min": -1
   },
-  "y_wind": {
-    "cmap": "RdBu_r",
-    "max": -30,
-    "min": 30
-  },
   "meridional_wind_at_pressure_levels": {
     "cmap": "RdBu_r",
     "max": 40,
