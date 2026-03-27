@@ -43,7 +43,7 @@ In addition to reading the working practices, the key recommendation is early co
 
 ## Licence
 
-© Crown copyright, Met Office (2022-2025) and CSET contributors.
+© Crown copyright, Met Office (2022-2026) and CSET contributors.
 
 Licensed under the [Apache License, Version 2.0](LICENCE) (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 
