@@ -701,14 +701,14 @@ def test_pcolormesh_coastline(cube, caplog, tmp_working_dir):
 
 
 def test_pcolormesh_coastline_m(cube, caplog, tmp_working_dir):
-    """Check coastlines plotted in magenta for viridis colormap."""
+    """Check coastlines nd borderlines plotted in magenta for viridis colormap."""
     with caplog.at_level(logging.DEBUG):
         # Set cube name to unknown to trigger viridis default cmap
         cube.rename("unknown_var_name")
         plot.spatial_pcolormesh_plot(cube)
         message_match = False
         for _, _, message in caplog.record_tuples:
-            if message == "Plotting coastlines in colour magenta.":
+            if message == "Plotting coastlines and borderlines in colour magenta.":
                 message_match = True
         assert message_match
 
