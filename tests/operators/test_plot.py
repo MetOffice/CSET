@@ -701,7 +701,7 @@ def test_pcolormesh_coastline(cube, caplog, tmp_working_dir):
 
 
 def test_pcolormesh_coastline_m(cube, caplog, tmp_working_dir):
-    """Check coastlines nd borderlines plotted in magenta for viridis colormap."""
+    """Check coastlines and borderlines plotted in magenta for viridis colormap."""
     with caplog.at_level(logging.DEBUG):
         # Set cube name to unknown to trigger viridis default cmap
         cube.rename("unknown_var_name")
