@@ -17,6 +17,7 @@
 import datetime
 
 import iris
+import iris.analysis.calculus
 import iris.coords
 import iris.cube
 import iris.exceptions
@@ -407,3 +408,24 @@ def test_rename_cube_for_cubelist(cube):
     new_cubelist = misc.rename_cube(cube_list, "air_temperature_at_screen_level")
     for new in new_cubelist:
         assert new.name() == "air_temperature_at_screen_level"
+
+
+def test_differentitate(vertical_profile_cube):
+    """Test a differentitation of a vertical profile cube."""
+    expected_cube = iris.analysis.calculus.differentiate(
+        vertical_profile_cube, "pressure"
+    )
+    actual_cube = misc.differentiate(vertical_profile_cube, coordinate="pressure")
+    assert np.allclose(actual_cube.data, expected_cube.data, rtol=1e-6, atol=1e-2)
+
+
+def test_differentitate_cubelist(long_forecast):
+    """Test a differentiation of a CubeList."""
+    # Create input CubeList.
+    input_cubes = iris.cube.CubeList([long_forecast, long_forecast])
+    # Create expected cube and then convert to a CubeList
+    expectedcube = iris.analysis.calculus.differentiate(long_forecast, "time")
+    expected_cubelist = iris.cube.CubeList([expectedcube, expectedcube])
+    new_cubelist = misc.differentiate(input_cubes, "time")
+    for actual, expected in zip(new_cubelist, expected_cubelist, strict=True):
+        assert np.allclose(actual.data, expected.data, rtol=1e-6, atol=1e-2)
