@@ -1,0 +1,44 @@
+category: Daily Weather
+title: Heavy rain presence domain mean timeseries
+description: |
+  Generates a mask of whether heavy rain is present in a grid box and provides a
+  timeseries representing the chance of heavy rain anywhere within the domain.
+  Heavy rain is defined via the Forecasting Handbook as rainfall between 10 and 50 mm/h.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    constraint:
+        operator: constraints.combine_constraints
+        varname_constraint:
+            operator: constraints.generate_var_constraint
+            varname: 'surface_microphysical_rainfall_rate'
+        cell_methods_constraint:
+            operator: constraints.generate_cell_methods_constraint
+            cell_methods: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: misc.multiplication
+    multiplicand:
+        operator: filters.generate_mask
+        condition: 'ge'
+        value: 10.0
+    multiplier:
+        operator: filters.generate_mask
+        condition: 'lt'
+        value: 50.0
+
+  - operator: misc.rename_cube
+    name: "mask_for_heavy_rainfall_rate"
+
+  - operator: collapse.collapse
+    coordinate: [grid_latitude, grid_longitude]
+    method: MEAN
+
+  # Plot the data.
+  - operator: plot.plot_line_series
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

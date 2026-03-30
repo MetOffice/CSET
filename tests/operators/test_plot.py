@@ -287,6 +287,97 @@ def test_setup_spatial_map_global(cube):
     assert bounds[3] == np.max(cube.coord("latitude").points)
 
 
+def test_set_title_and_filename_filename_single_sequence(cube):
+    """Setup plot title and filename for single output, sequence input."""
+    seq_coord = cube.coord("time")
+    nplot = 1
+    plot_title, plot_filename = plot._set_title_and_filename(
+        seq_coord, nplot, "recipe", "filename"
+    )
+    assert plot_filename == "filename.png"
+    assert plot_title == "recipe\n [2022-09-21 02:30:00 to 2022-09-21 05:30:00]"
+
+
+def test_set_title_and_filename_filename_single_nosequence(cube):
+    """Setup plot title and filename for single output, no sequence."""
+    seq_coord = cube.coord("time")[0]
+    nplot = np.size(cube.coord("time").points)
+    plot_title, plot_filename = plot._set_title_and_filename(
+        seq_coord, nplot, "recipe", "filename"
+    )
+    assert plot_filename == "filename_20220921030000.png"
+    assert plot_title == "recipe\n [2022-09-21 03:00:00]"
+
+
+def test_set_title_and_filename_nofilename_single_sequence(cube):
+    """Setup plot title and filename for single output with multi-sequence."""
+    seq_coord = cube.coord("time")
+    nplot = 1
+    plot_title, plot_filename = plot._set_title_and_filename(
+        seq_coord, nplot, "recipe", None
+    )
+    assert plot_filename == "recipe_20220921023000_20220921053000.png"
+    assert plot_title == "recipe\n [2022-09-21 02:30:00 to 2022-09-21 05:30:00]"
+
+
+def test_set_title_and_filename_nofilename_single_nobounds(cube):
+    """Setup plot title and filename for single output with single sequence."""
+    seq_coord = cube.coord("time")[0]
+    seq_coord.bounds = None
+    nplot = 1
+    plot_title, plot_filename = plot._set_title_and_filename(
+        seq_coord, nplot, "recipe", None
+    )
+    assert plot_filename == "recipe.png"
+    assert plot_title == "recipe"
+
+
+def test_set_title_and_filename_nofilename_multi_sequence(cube):
+    """Setup plot title and filename for sequence output."""
+    seq_coord = cube.coord("time")[0]
+    nplot = np.size(cube.coord("time").points)
+    plot_title, plot_filename = plot._set_title_and_filename(
+        seq_coord, nplot, "recipe", None
+    )
+    assert plot_filename == "recipe_20220921030000.png"
+    assert plot_title == "recipe\n [2022-09-21 03:00:00]"
+
+
+def test_set_title_and_filename_filename_aggregated(long_forecast_multi_day):
+    """Setup plot title and filename for aggregated output with filename."""
+    collapsed_cube = collapse.collapse_by_hour_of_day(long_forecast_multi_day, "MEAN")
+    seq_coord = collapsed_cube.coord("hour")
+    nplot = 1
+    plot_title, plot_filename = plot._set_title_and_filename(
+        seq_coord, nplot, "recipe", "filename"
+    )
+    assert plot_filename == "filename.png"
+    assert plot_title == "recipe\n [0 hours to 23 hours]"
+
+
+def test_set_title_and_filename_nofilename_aggregated(long_forecast_multi_day):
+    """Setup plot title and filename for aggregated output, no filename."""
+    collapsed_cube = collapse.collapse_by_hour_of_day(long_forecast_multi_day, "MEAN")
+    seq_coord = collapsed_cube.coord("hour")
+    nplot = 1
+    plot_title, plot_filename = plot._set_title_and_filename(
+        seq_coord, nplot, "recipe", None
+    )
+    assert plot_filename == "recipe_0hours_23hours.png"
+    assert plot_title == "recipe\n [0 hours to 23 hours]"
+
+
+def test_set_title_and_filename_multidim_aggregated(long_forecast_multi_day):
+    """Setup plot title and filename for 2D time aggregated output."""
+    seq_coord = long_forecast_multi_day.coord("time")
+    nplot = 1
+    plot_title, plot_filename = plot._set_title_and_filename(
+        seq_coord, nplot, "recipe", None
+    )
+    assert plot_filename == "recipe_2cases.png"
+    assert plot_title == "recipe\n [2 cases]"
+
+
 def test_colorbar_map_mask(cube, tmp_working_dir):
     """Test to ensure axis picks up correct colormap for a mask."""
     cube.rename(f"mask_for_{cube.name()}")
@@ -462,15 +553,24 @@ def test_spatial_contour_plot(cube, tmp_working_dir):
     cube.remove_coord("realization")
     cube_2d = cube.slices_over("time").next()
     plot.spatial_contour_plot(cube_2d, filename="plot")
-    assert Path("plot_462147.0.png").is_file()
+    assert Path("plot.png").is_file()
 
 
 def test_contour_plot_sequence(cube, tmp_working_dir):
     """Plot sequence of contour plots."""
     plot.spatial_contour_plot(cube, sequence_coordinate="time")
-    assert Path("untitled_462147.0.png").is_file()
-    assert Path("untitled_462148.0.png").is_file()
-    assert Path("untitled_462149.0.png").is_file()
+    assert Path("untitled_20220921030000.png").is_file()
+    assert Path("untitled_20220921040000.png").is_file()
+    assert Path("untitled_20220921050000.png").is_file()
+
+
+def test_spatial_multi_variable_plot(cube, tmp_working_dir):
+    """Plot spatial plot with multiple input variables."""
+    # Here assume cube provides cube, overlay_cube and contour_cube.
+    plot.spatial_multi_pcolormesh_plot(cube, cube, cube, sequence_coordinate="time")
+    assert Path("untitled_20220921030000.png").is_file()
+    assert Path("untitled_20220921040000.png").is_file()
+    assert Path("untitled_20220921050000.png").is_file()
 
 
 @pytest.mark.slow
@@ -479,7 +579,7 @@ def test_vector_plot_with_filename(vector_cubes, tmp_working_dir):
     cube_u = vector_cubes[0].slices_over("time").next()
     cube_v = vector_cubes[1].slices_over("time").next()
     plot.vector_plot(cube_u, cube_v, filename="testvector")
-    assert Path("testvector_482016.0.png").is_file()
+    assert Path("testvector.png").is_file()
 
 
 @pytest.mark.slow
@@ -491,9 +591,9 @@ def test_vector_plot_sequence(vector_cubes, tmp_working_dir):
         filename="testvectorseq",
         sequence_coordinate="time",
     )
-    assert Path("testvectorseq_482016.0.png").is_file()
-    assert Path("testvectorseq_482022.0.png").is_file()
-    assert Path("testvectorseq_482028.0.png").is_file()
+    assert Path("testvectorseq.png").is_file()
+    assert Path("testvectorseq.png").is_file()
+    assert Path("testvectorseq.png").is_file()
 
 
 def test_vector_plot_check(vector_cubes, tmp_working_dir):
@@ -514,7 +614,7 @@ def test_postage_stamp_contour_plot(ensemble_cube, tmp_working_dir):
     # Get a single time step.
     ensemble_cube_3d = next(ensemble_cube.slices_over("time"))
     plot.spatial_contour_plot(ensemble_cube_3d)
-    assert Path("untitled_463858.0.png").is_file()
+    assert Path("untitled.png").is_file()
 
 
 def test_postage_stamp_contour_plot_sequence_coord_check(cube, tmp_working_dir):
@@ -531,7 +631,7 @@ def test_spatial_pcolormesh_plot(cube, tmp_working_dir):
     cube.remove_coord("realization")
     cube_2d = cube.slices_over("time").next()
     plot.spatial_pcolormesh_plot(cube_2d, filename="plot")
-    assert Path("plot_462147.0.png").is_file()
+    assert Path("plot.png").is_file()
 
 
 def test_spatial_pcolormesh_levels(cube, tmp_working_dir, caplog):
@@ -549,17 +649,17 @@ def test_spatial_pcolormesh_levels(cube, tmp_working_dir, caplog):
                 message_matchB = True
         assert message_matchA
         assert message_matchB
-    assert Path("untitled_462147.0.png").is_file()
-    assert Path("untitled_462148.0.png").is_file()
-    assert Path("untitled_462149.0.png").is_file()
+    assert Path("untitled_20220921030000.png").is_file()
+    assert Path("untitled_20220921040000.png").is_file()
+    assert Path("untitled_20220921050000.png").is_file()
 
 
 def test_pcolormesh_plot_sequence(cube, tmp_working_dir):
     """Plot sequence of pcolormesh plots."""
     plot.spatial_pcolormesh_plot(cube, sequence_coordinate="time")
-    assert Path("untitled_462147.0.png").is_file()
-    assert Path("untitled_462148.0.png").is_file()
-    assert Path("untitled_462149.0.png").is_file()
+    assert Path("untitled_20220921030000.png").is_file()
+    assert Path("untitled_20220921040000.png").is_file()
+    assert Path("untitled_20220921050000.png").is_file()
 
 
 def test_pcolormesh_plot_global(global_cube, caplog, tmp_working_dir):
@@ -578,7 +678,7 @@ def test_postage_stamp_pcolormesh_plot(ensemble_cube, tmp_working_dir):
     # Get a single time step.
     ensemble_cube_3d = next(ensemble_cube.slices_over("time"))
     plot.spatial_pcolormesh_plot(ensemble_cube_3d)
-    assert Path("untitled_463858.0.png").is_file()
+    assert Path("untitled.png").is_file()
 
 
 def test_postage_stamp_pcolormesh_plot_sequence_coord_check(cube, tmp_working_dir):
@@ -617,7 +717,7 @@ def test_plot_line_series(cube, tmp_working_dir):
     """Save a line series plot."""
     cube = collapse.collapse(cube, ["grid_latitude", "grid_longitude"], "MEAN")
     plot.plot_line_series(cube)
-    assert Path("untitled.png").is_file()
+    assert Path("untitled_20220921023000_20220921053000.png").is_file()
 
 
 def test_plot_line_series_with_filename(cube, tmp_working_dir):
@@ -685,8 +785,8 @@ def test_plot_vertical_line_series(vertical_profile_cube, tmp_working_dir):
     plot.plot_vertical_line_series(
         vertical_profile_cube, series_coordinate="pressure", sequence_coordinate="time"
     )
-    assert Path("untitled_473718.0.png").is_file()
-    assert Path("untitled_473721.0.png").is_file()
+    assert Path("untitled_20240116060000.png").is_file()
+    assert Path("untitled_20240116090000.png").is_file()
 
 
 def test_plot_vertical_line_series_with_filename(
@@ -702,8 +802,8 @@ def test_plot_vertical_line_series_with_filename(
         series_coordinate="pressure",
         sequence_coordinate="time",
     )
-    assert Path("Test_473718.0.png").is_file()
-    assert Path("Test_473721.0.png").is_file()
+    assert Path("Test_20240116060000.png").is_file()
+    assert Path("Test_20240116090000.png").is_file()
 
 
 def test_plot_vertical_line_series_no_series_coordinate(
@@ -754,8 +854,8 @@ def test_plot_vertical_line_series_ensemble(vertical_profile_cube, tmp_working_d
     plot.plot_vertical_line_series(
         cubes, series_coordinate="pressure", sequence_coordinate="time"
     )
-    assert Path("untitled_473718.0.png").is_file()
-    assert Path("untitled_473721.0.png").is_file()
+    assert Path("untitled_20240116060000.png").is_file()
+    assert Path("untitled_20240116090000.png").is_file()
 
 
 def test_plot_histogram_no_sequence_coordinate(histogram_cube, tmp_working_dir):
@@ -770,8 +870,8 @@ def test_plot_histogram_with_filename(histogram_cube, tmp_working_dir):
     plot.plot_histogram_series(
         histogram_cube, filename="test", sequence_coordinate="time"
     )
-    assert Path("test_473718.0.png").is_file()
-    assert Path("test_473721.0.png").is_file()
+    assert Path("test_20240116060000.png").is_file()
+    assert Path("test_20240116090000.png").is_file()
 
 
 def test_plot_histogram_update_vmin_vmax(histogram_cube, tmp_working_dir, caplog):
@@ -896,7 +996,7 @@ def test_plot_power_spectrum_with_filename(field2d_cube, tmp_working_dir):
     plot.plot_power_spectrum_series(
         field2d_cube, filename="test", sequence_coordinate="time"
     )
-    assert Path("test_464569.0.png").is_file()
+    assert Path("test.png").is_file()
 
 
 def test_plot_and_save_postage_stamp_power_spectrum_series(
