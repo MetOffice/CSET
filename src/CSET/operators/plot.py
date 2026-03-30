@@ -1883,7 +1883,7 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
         for key in (
             "microphysical_rainfall_rate",
             "rain_accumulation",
-            "rain_accummulation",  # keep typo variant for compatibility
+            "rain accumulation",
         )
     )
 
