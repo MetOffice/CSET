@@ -1,0 +1,42 @@
+category: Transect
+title: $MODEL_NAME Transect of $VARNAME Aggregation by lead time.
+description: |
+  Extracts a $VERTICAL_COORDINATE transect for $VARNAME between two points and
+  plots it.
+
+  Start coordinate: `$START_COORDS`
+  End coordinate: `$FINISH_COORDS`
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    constraint:
+        operator: constraints.combine_constraints
+        cell_method_constraint:
+            operator: constraints.generate_cell_methods_constraint
+            cell_methods: []
+        var_constraint:
+            operator: constraints.generate_var_constraint
+            varname: $VARNAME
+        level_constraint:
+            operator: constraints.generate_level_constraint
+            coordinate: $VERTICAL_COORDINATE
+            levels: '*'
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: aggregate.ensure_aggregatable_across_cases
+
+  - operator: collapse.collapse
+    coordinate: "forecast_reference_time"
+    method: MEAN
+
+  - operator: transect.calc_transect
+    startcoords: $START_COORDS
+    endcoords: $FINISH_COORDS
+
+  - operator: plot.spatial_contour_plot
+    sequence_coordinate: forecast_period
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
