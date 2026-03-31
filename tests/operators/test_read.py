@@ -788,7 +788,7 @@ def test_normalise_var0_varname(model_level_cube):
 def test_lfric_forecast_period_standard_name_callback(cube):
     """Ensure forecast period coordinates have a standard name."""
     cube.coord("forecast_period").standard_name = None
-    read._lfric_forecast_period_standard_name_callback(cube)
+    read._lfric_forecast_period_callback(cube)
     assert cube.coord("forecast_period").standard_name == "forecast_period"
 
 
@@ -796,7 +796,7 @@ def test_lfric_forecast_period_convert_units_callback(cube):
     """Ensure forecast period coordinates have a standard name."""
     cube.coord("forecast_period").convert_units("seconds")
     assert cube.coord("forecast_period").units == "seconds"
-    read._lfric_forecast_period_standard_name_callback(cube)
+    read._lfric_forecast_period_callback(cube)
     assert cube.coord("forecast_period").units == "hours"
 
 
