@@ -752,6 +752,37 @@ def test_plot_power_spectrum_no_sequence_coordinate(
         plot.plot_line_series(power_spectrum_cube, series_coordinate="frequency")
 
 
+def test_plot_power_spectrum_series_coord_physical_wavenumber(
+    power_spectrum_cube, tmp_working_dir
+):
+    """Testing series_coordinate."""
+    # assert power_spectrum_cube.coords("frequency")
+
+    # Get original frequency coordinate
+
+    freq = power_spectrum_cube.coord("frequency")
+    dim = power_spectrum_cube.coord_dims(freq)
+
+    # Construct a synthetic physical wavenumber (simple proportional mapping for testing)
+    k = np.linspace(0.1, 2.0, len(freq.points))
+
+    physical_wavenumber_coord = iris.coords.DimCoord(
+        points=k,
+        long_name="physical_wavenumber",
+        units="m-1",
+    )
+
+    # Add the new coordinate on the same dimension as frequency
+    # dim_index = power_spectrum_cube.coord_dims("frequency")
+    # power_spectrum_cube.add_dim_coord(physical_wavenumber_coord, dim_index)
+    power_spectrum_cube.add_aux_coord(physical_wavenumber_coord, dim)
+
+    plot.plot_line_series(
+        power_spectrum_cube, series_coordinate="physical_wavenumber", filename="test"
+    )
+    assert Path("test.png").is_file()
+
+
 def test_plot_line_series_too_many_dimensions(cube, tmp_working_dir):
     """Error when cube has more than one dimension."""
     with pytest.raises(ValueError):
