@@ -430,6 +430,9 @@ def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
     cube.attributes.pop("timeStamp", None)
     cube.attributes.pop("uuid", None)
     cube.attributes.pop("name", None)
+    cube.attributes.pop("source", None)
+    cube.attributes.pop("analysis_source", None)
+    cube.attributes.pop("history", None)
 
     # Sort STASH code list.
     stash_list = cube.attributes.get("um_stash_source")
@@ -968,6 +971,8 @@ def _lfric_forecast_period_standard_name_callback(cube: iris.cube.Cube):
     """Add forecast_period standard name if missing."""
     try:
         coord = cube.coord("forecast_period")
+        if coord.units != "hours":
+            cube.coord("forecast_period").convert_units("hours")
         if not coord.standard_name:
             coord.standard_name = "forecast_period"
     except iris.exceptions.CoordinateNotFoundError:
