@@ -373,7 +373,7 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     _fix_lfric_cloud_base_altitude(cube)
     _proleptic_gregorian_fix(cube)
     _lfric_time_callback(cube)
-    _lfric_forecast_period_standard_name_callback(cube)
+    _lfric_forecast_period_callback(cube)
     return cube
 
 
@@ -967,8 +967,8 @@ def _lfric_time_callback(cube: iris.cube.Cube):
         logging.warning("No time coordinate on cube.")
 
 
-def _lfric_forecast_period_standard_name_callback(cube: iris.cube.Cube):
-    """Add forecast_period standard name if missing."""
+def _lfric_forecast_period_callback(cube: iris.cube.Cube):
+    """Check forecast_period name and units."""
     try:
         coord = cube.coord("forecast_period")
         if coord.units != "hours":
