@@ -115,7 +115,7 @@ jobs:
           # This links to a hosted version of the HTML report.
           tar -czf coverage-report.tar.gz htmlcov/
           report_url="$(curl -sSf --user "token:${tmpweb_api_key}" --data-binary @coverage-report.tar.gz https://tmpweb.net || true)"
-          if [[ -n "${report_url}" ]] ; then
+          if [[ -z "${report_url}" ]] ; then
             echo "Could not upload report."
           else
             echo "Report hosted at $report_url"
