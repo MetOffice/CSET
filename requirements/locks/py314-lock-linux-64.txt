@@ -129,7 +129,7 @@ https://conda.anaconda.org/conda-forge/linux-64/markupsafe-3.0.3-py314h67df5f8_1
 https://conda.anaconda.org/conda-forge/linux-64/matplotlib-base-3.10.8-py314h1194b4b_0.conda#b8683e6068099b69c10dbfcf7204203f
 https://conda.anaconda.org/conda-forge/linux-64/mo_pack-0.3.1-py314hc02f841_2.conda#55ac6d85f5dd8ec5e9919e7762fcb31a
 https://conda.anaconda.org/conda-forge/linux-64/ncurses-6.5-h2d0b736_3.conda#47e340acb35de30501a76c7c799c41d7
-https://conda.anaconda.org/conda-forge/linux-64/netcdf4-1.7.4-nompi_py314h4ae7121_102.conda#cf495d9fc5e01a2ee10e0867ce957a44
+https://conda.anaconda.org/conda-forge/linux-64/netcdf4-1.7.4-nompi_py311h498b1eb_107.conda#7f5488cf61943e6221325b454c2c2e9c
 https://conda.anaconda.org/conda-forge/linux-64/numpy-2.4.3-py314h2b28147_0.conda#36f5b7eb328bdc204954a2225cf908e2
 https://conda.anaconda.org/conda-forge/linux-64/openjpeg-2.5.4-h55fea9a_0.conda#11b3379b191f63139e29c0d19dee24cd
 https://conda.anaconda.org/conda-forge/linux-64/openjph-0.26.3-h8d634f6_0.conda#792d5b6e99677177f5527a758a02bc07
@@ -258,7 +258,7 @@ https://conda.anaconda.org/conda-forge/noarch/python-dateutil-2.9.0.post0-pyhe01
 https://conda.anaconda.org/conda-forge/noarch/python-discovery-1.2.1-pyhcf101f3_0.conda#f2e88fc463b249bc1f40d9ca969d9b5e
 https://conda.anaconda.org/conda-forge/noarch/python-gil-3.14.3-h4df99d1_101.conda#235765e4ea0d0301c75965985163b5a1
 https://conda.anaconda.org/conda-forge/noarch/python_abi-3.14-8_cp314.conda#0539938c55b6b1a59b560e843ad864a4
-https://conda.anaconda.org/conda-forge/noarch/requests-2.33.0-pyhcf101f3_0.conda#bee5ed456361bfe8af502beaf5db82e2
+https://conda.anaconda.org/conda-forge/noarch/requests-2.33.1-pyhcf101f3_0.conda#10afbb4dbf06ff959ad25a92ccee6e59
 https://conda.anaconda.org/conda-forge/noarch/roman-numerals-4.1.0-pyhd8ed1ab_0.conda#0dc48b4b570931adc8641e55c6c17fe4
 https://conda.anaconda.org/conda-forge/noarch/ruamel.yaml-0.19.1-pyhcf101f3_0.conda#06ad944772941d5dae1e0d09848d8e49
 https://conda.anaconda.org/conda-forge/noarch/setuptools-82.0.1-pyh332efcf_0.conda#8e194e7b992f99a5015edbd4ebd38efd
