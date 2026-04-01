@@ -1099,6 +1099,6 @@ def test_proleptic_gregorian_fix():
 def test_normalise_ML_varname(transect_source_cube):
     """Check that pressure varname is changed."""
     cube = transect_source_cube.copy()
-    cube.name = "x_wind"
+    cube.rename = "x_wind"
     read._normalise_ML_varname(cube)
     assert cube.long_name == "zonal_wind_at_pressure_levels"
