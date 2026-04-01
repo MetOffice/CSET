@@ -55,7 +55,7 @@ def _nimrod_dictionary() -> dict:
             "weights_dir": "rainaccwt_comp_hour_1km_cutout",
             "weights_fname": "_nimrod_ng_radar_rainaccwt_comp_hour_1km_cutout_775X640_eng",
             "obs_id": "Nimrod1km",
-            "wei_id": "Nimrod2km_weights",
+            "wei_id": "Nimrod1km_weights",
             "freq": "PT1H",
         },
         "rainaccum_comp_hour_2km": {
