@@ -263,8 +263,6 @@ def regrid_to_single_point(
     grids (uniform) are supported. Warnings are raised if the selected gridpoint
     is within boundary_margin grid lengths of the domain boundary as data here
     is potentially unreliable.
-
-
     """
     # To store regridded cubes.
     regridded_cubes = iris.cube.CubeList()
