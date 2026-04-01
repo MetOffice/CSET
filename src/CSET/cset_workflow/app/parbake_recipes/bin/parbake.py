@@ -64,11 +64,15 @@ def main():
             cylc_cycle,
             "--namespace",
             "bake_aggregation_recipes" if aggregation else "bake_recipes",
+            "--comms-timeout",
+            "10",
             "--set",
             "run mode = skip",
             cylc_workflow_id,
         ]
-        subprocess.run(broadcast_command, check=True)
+        # Will fail if can't communicate with scheduler, but as this is just an
+        # optimisation continue on regardless.
+        subprocess.run(broadcast_command, check=False)
 
 
 if __name__ == "__main__":  # pragma: no cover
