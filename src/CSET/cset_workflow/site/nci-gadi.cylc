@@ -7,7 +7,7 @@
             module use /g/data/access/ngm/modules
             module load cset/26.2.0
             """
-        [[[ environment ]]] 
+        [[[ environment ]]]
             PROJECT = {{ PROJECT }}
             PYTHONPATH=/g/data/dp9/verification/sources/cset/main/CSET/src:$PYTHONPATH
 
