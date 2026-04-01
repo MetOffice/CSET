@@ -180,6 +180,18 @@ def transect_source_cube(transect_source_cube_readonly):
 
 
 @pytest.fixture(scope="session")
+def cardington_cube_readonly():
+    """Get a 3D cube to test with. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/cardington_air_temp_test.nc")
+
+
+@pytest.fixture()
+def cardington_cube(cardington_cube_readonly):
+    """Get a 3D cube to test with. It is safe to modify."""
+    return cardington_cube_readonly.copy()
+
+
+@pytest.fixture(scope="session")
 def long_forecast_read_only():
     """Get long_forecast to run tests on. It is NOT safe to modify."""
     return read.read_cube(
