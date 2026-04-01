@@ -24,30 +24,80 @@ def load(conf: Config):
     # Load a list of model detail dictionaries.
     models = get_models(conf.asdict())
 
-    # Surface (2D) fields for radar.
-    if conf.NIMROD_COMP_XKM:
-        yield RawRecipe(
-            recipe="generic_surface_spatial_plot_sequence_radar.yaml",
-            model_ids="Nimrodxkm",  # -> Becomes $INPUT_PATHS
-            variables={"VARNAME": "Hourly rain accumulation"},
-            aggregation=False,
-        )
-
+    # Nimrod radar rainfall data sources for surface (2D) fields.
+    radar_names = []
+    radar_ids = []
+    radar_flag = False
     if conf.NIMROD_COMP_1KM:
-        yield RawRecipe(
-            recipe="generic_surface_spatial_plot_sequence_radar.yaml",
-            model_ids="Nimrod1km",  # -> Becomes $INPUT_PATHS
-            variables={"VARNAME": "1km hourly rain accumulation"},
-            aggregation=False,
-        )
-
+        radar_names.append("Nimrod_1km")
+        radar_ids.append("Nimrod1km")
+        radar_flag = True
     if conf.NIMROD_COMP_2KM:
-        yield RawRecipe(
-            recipe="generic_surface_spatial_plot_sequence_radar.yaml",
-            model_ids="Nimrod2km",  # -> Becomes $INPUT_PATHS
-            variables={"VARNAME": "2km hourly rain accumulation"},
-            aggregation=False,
-        )
+        radar_names.append("Nimrod_2km")
+        radar_ids.append("Nimrod2km")
+        radar_flag = True
+    if conf.NIMROD_COMP_XKM:
+        radar_names.append("Nimrod_xkm")
+        radar_ids.append("Nimrodxkm")
+        radar_flag = True
+
+    # Surface (2D) fields for Nimrod radar rainfall.
+    # Note: The different sources of Nimrod rainfall acculumulation have
+    #       different spatial grids. So each source requires its own yaml
+    #       realisation to prevent incompatible cubes being created.
+    if radar_flag:
+        for next in range(len(radar_ids)):
+            yield RawRecipe(
+                recipe="generic_surface_spatial_plot_sequence_radar_rainfall.yaml",
+                model_ids=radar_ids[next],  # -> Becomes $INPUT_PATHS
+                variables={
+                    "VARNAME": "Hourly rain accumulation",
+                    "RADAR_NAME": radar_names[next],
+                },
+                aggregation=False,
+            )
+
+    #    if radar_flag:
+    #        yield RawRecipe(
+    #            recipe="generic_surface_spatial_plot_sequence_radar_rainfall.yaml",
+    #            model_ids=radar_ids,  # -> Becomes $INPUT_PATHS
+    #            variables={"VARNAME": "Hourly rain accumulation", "RADAR_NAME": radar_names},
+    #            aggregation=False,
+    #        )
+
+    #    # Surface (2D) fields for radar rainfall.
+    #    if conf.NIMROD_COMP_1KM:
+    #        yield RawRecipe(
+    #            recipe="generic_surface_spatial_plot_sequence_radar_rainfall.yaml",
+    #            model_ids="Nimrod1km",  # -> Becomes $INPUT_PATHS
+    #            variables={"VARNAME": "Hourly rain accumulation", "RADAR_NAME": "Nimrod_1km"},
+    #            aggregation=False,
+    #        )
+
+    # Surface (2D) fields for radar.
+    #    if conf.NIMROD_COMP_XKM:
+    #        yield RawRecipe(
+    #            recipe="generic_surface_spatial_plot_sequence_radar_test.yaml",
+    #            model_ids="Nimrodxkm",  # -> Becomes $INPUT_PATHS
+    #            variables={"VARNAME": "Hourly rain accumulation"},
+    #            aggregation=False,
+    #        )
+
+    #    if conf.NIMROD_COMP_1KM:
+    #        yield RawRecipe(
+    #            recipe="generic_surface_spatial_plot_sequence_radar_test.yaml",
+    #            model_ids="Nimrod1km",  # -> Becomes $INPUT_PATHS
+    #            variables={"VARNAME": "1km hourly rain accumulation"},
+    #            aggregation=False,
+    #        )
+
+    #    if conf.NIMROD_COMP_2KM:
+    #        yield RawRecipe(
+    #            recipe="generic_surface_spatial_plot_sequence_radar_test.yaml",
+    #            model_ids="Nimrod2km",  # -> Becomes $INPUT_PATHS
+    #            variables={"VARNAME": "2km hourly rain accumulation"},
+    #            aggregation=False,
+    #        )
 
     #    if conf.SPATIAL_SURFACE_FIELD:
     #        #        for model, field, method in itertools.product(
@@ -68,6 +118,11 @@ def load(conf: Config):
     #                },
     #                aggregation=False,
     #            )
+
+    # print(" this is the data object models: ", models)
+    # if conf.NIMROD_COMP_XKM:
+    #   model_add["id"] = "Nimrodxkm"
+    #   models.append(model_add)
 
     # Surface (2D) fields.
     if conf.SPATIAL_SURFACE_FIELD:
