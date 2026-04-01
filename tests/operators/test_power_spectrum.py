@@ -15,6 +15,7 @@
 """Test power spectrum operator."""
 
 import glob
+import logging
 
 import iris.coords
 import iris.cube
@@ -195,3 +196,48 @@ def test_power_spectrum_model_attribute_preserved():
         c.attributes["model_name"] = "TestModel"
     ps = power_spectrum.calculate_power_spectrum(cubes)
     assert ps.attributes["model_name"] == "TestModel"
+
+
+def test_power_spectrum_cube_calc_dxdy(cubes, tmp_working_dir, caplog):
+    """Check dx and dy can be calculated."""
+    # Overwrite x and y coordinates.
+
+    cube = cubes[0]
+
+    old_xcoord = cube.coord("grid_longitude")
+    old_ycoord = cube.coord("grid_latitude")
+
+    x_dims = cube.coord_dims(old_xcoord)
+    y_dims = cube.coord_dims(old_ycoord)
+
+    cube.remove_coord("grid_longitude")
+    cube.remove_coord("grid_latitude")
+
+    new_xcoord = iris.coords.DimCoord(
+        points=old_xcoord.points, standard_name="longitude", units="degrees"
+    )
+
+    new_ycoord = iris.coords.DimCoord(
+        points=old_ycoord.points, standard_name="latitude", units="degrees"
+    )
+
+    # cube.replace_coord(new_xcoord)
+    # cube.replace_coord(new_ycoord)
+
+    cube.add_dim_coord(new_xcoord, x_dims)
+    cube.add_dim_coord(new_ycoord, y_dims)
+
+    print("CUBE ", cube)
+
+    with caplog.at_level(logging.DEBUG):
+        power_spectrum.calculate_power_spectrum(cube)
+    #        message_match = False
+    #        for _, _, message in caplog.record_tuples:
+    #            if message == "Using latitude/longitude coordinates for grid spacing calculation.":
+    #                message_match = True
+    #    assert message_match
+
+    assert (
+        "Using latitude/longitude coordinates for grid spacing calculation."
+        in caplog.text
+    )
