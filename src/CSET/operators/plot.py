@@ -542,7 +542,6 @@ def _set_title_and_filename(
 
 def select_series_coord(cube, series_coordinate):
     """Determine the grid coordinates to use to calculate grid spacing."""
-    print("In select_series_coord")
     try:
         # Try the requested coordinate first
         return cube.coord(series_coordinate)
@@ -922,34 +921,6 @@ def _plot_and_save_line_power_spectrum_series(
         xcoord = select_series_coord(cube, series_coordinate)
         xname = xcoord.points
 
-        #        # Try to get the series coordinate, with fallback to alternatives
-        #        try:
-        #            xcoord = cube.coord(series_coordinate)
-        #            xname = xcoord.points
-        #        except iris.exceptions.CoordinateNotFoundError:
-        #            # Fallback logic for spectral coordinates
-        #            if series_coordinate == "frequency":
-        #                try:
-        #                    xcoord = cube.coord("physical_wavenumber")
-        #                except iris.exceptions.CoordinateNotFoundError:
-        #                    xcoord = cube.coord("wavelength")
-        #            elif series_coordinate == "physical_wavenumber":
-        #                try:
-        #                    xcoord = cube.coord("frequency")
-        #                except iris.exceptions.CoordinateNotFoundError:
-        #                    xcoord = cube.coord("wavelength")
-        #            elif series_coordinate == "wavelength":
-        #                try:
-        #                    xcoord = cube.coord("frequency")
-        #                except iris.exceptions.CoordinateNotFoundError:
-        #                    xcoord = cube.coord("physical_wavenumber")
-        #            else:
-        #                raise
-        #
-        #
-        #            xname = xcoord.points
-
-        # xname = cube.coord(xn).points  # frequency
         yfield = cube.data  # power spectrum
         label = None
         color = "black"
@@ -3079,30 +3050,6 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
         for cube in iter_maybe(member):
             xcoord = select_series_coord(cube, series_coordinate)
             xname = xcoord.points
-            #            # Try to get the series coordinate, with fallback to alternatives
-            #            try:
-            #                xcoord = cube.coord(series_coordinate)
-            #                xname = xcoord.points
-            #            except iris.exceptions.CoordinateNotFoundError:
-            #                # Fallback logic for spectral coordinates
-            #                if series_coordinate == "frequency":
-            #                    try:
-            #                        xcoord = cube.coord("physical_wavenumber")
-            #                    except iris.exceptions.CoordinateNotFoundError:
-            #                        xcoord = cube.coord("wavelength")
-            #                elif series_coordinate == "physical_wavenumber":
-            #                    try:
-            #                        xcoord = cube.coord("frequency")
-            #                    except iris.exceptions.CoordinateNotFoundError:
-            #                        xcoord = cube.coord("wavelength")
-            #                elif series_coordinate == "wavelength":
-            #                    try:
-            #                        xcoord = cube.coord("frequency")
-            #                    except iris.exceptions.CoordinateNotFoundError:
-            #                        xcoord = cube.coord("physical_wavenumber")
-            #                else:
-            #                    raise
-            #                xname = xcoord.points
 
             yfield = cube.data  # power spectrum
             label = None
@@ -3233,29 +3180,6 @@ def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
     for i, member in enumerate(cubes.slices_over(stamp_coordinate)):
         xcoord = select_series_coord(member, series_coordinate)
         xname = xcoord.points
-        #        try:
-        #            xcoord = member.coord(series_coordinate)
-        #            xname = xcoord.points
-        #        except iris.exceptions.CoordinateNotFoundError:
-        #            # Fallback logic for spectral coordinates
-        #            if series_coordinate == "frequency":
-        #                try:
-        #                    xcoord = member.coord("physical_wavenumber")
-        #                except iris.exceptions.CoordinateNotFoundError:
-        #                    xcoord = member.coord("wavelength")
-        #            elif series_coordinate == "physical_wavenumber":
-        #                try:
-        #                    xcoord = member.coord("frequency")
-        #                except iris.exceptions.CoordinateNotFoundError:
-        #                    xcoord = member.coord("wavelength")
-        #            elif series_coordinate == "wavelength":
-        #                try:
-        #                    xcoord = member.coord("frequency")
-        #                except iris.exceptions.CoordinateNotFoundError:
-        #                    xcoord = member.coord("physical_wavenumber")
-        #            else:
-        #                raise
-        #            xname = xcoord.points
 
         yfield = member.data  # power spectrum
         color = "black"
