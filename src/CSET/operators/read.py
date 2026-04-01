@@ -374,7 +374,8 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     _fix_lfric_cloud_base_altitude(cube)
     _proleptic_gregorian_fix(cube)
     _lfric_time_callback(cube)
-    _lfric_forecast_period_standard_name_callback(cube)
+    _lfric_forecast_period_callback(cube)
+    _normalise_ML_varname(cube)
     return cube
 
 
@@ -431,6 +432,9 @@ def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
     cube.attributes.pop("timeStamp", None)
     cube.attributes.pop("uuid", None)
     cube.attributes.pop("name", None)
+    cube.attributes.pop("source", None)
+    cube.attributes.pop("analysis_source", None)
+    cube.attributes.pop("history", None)
 
     # Sort STASH code list.
     stash_list = cube.attributes.get("um_stash_source")
@@ -1010,11 +1014,24 @@ def _lfric_time_callback(cube: iris.cube.Cube):
         logging.warning("No time coordinate on cube.")
 
 
-def _lfric_forecast_period_standard_name_callback(cube: iris.cube.Cube):
-    """Add forecast_period standard name if missing."""
+def _lfric_forecast_period_callback(cube: iris.cube.Cube):
+    """Check forecast_period name and units."""
     try:
         coord = cube.coord("forecast_period")
+        if coord.units != "hours":
+            cube.coord("forecast_period").convert_units("hours")
         if not coord.standard_name:
             coord.standard_name = "forecast_period"
     except iris.exceptions.CoordinateNotFoundError:
         pass
+
+
+def _normalise_ML_varname(cube: iris.cube.Cube):
+    """Fix plev variable names to standard names."""
+    if cube.coords("pressure"):
+        if cube.name() == "x_wind":
+            cube.long_name = "zonal_wind_at_pressure_levels"
+        if cube.name() == "y_wind":
+            cube.long_name = "meridional_wind_at_pressure_levels"
+        if cube.name() == "air_temperature":
+            cube.long_name = "temperature_at_pressure_levels"

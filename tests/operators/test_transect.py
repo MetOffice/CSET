@@ -145,8 +145,8 @@ def test_transect_plotasfuncoflongitude(transect_source_cube):
 def test_transect_model_level_spatial_contour_plot(load_cube_ml_out, tmp_working_dir):
     """Plot a contour plot of the transect model level data."""
     plot.spatial_contour_plot(load_cube_ml_out, filename="plot")
-    assert Path("plot_449743.0.png").is_file()
-    assert Path("plot_449744.0.png").is_file()
+    assert Path("plot_20210422070000.png").is_file()
+    assert Path("plot_20210422080000.png").is_file()
 
 
 def test_transect_model_level_spatial_pcolormesh_plot(
@@ -154,8 +154,8 @@ def test_transect_model_level_spatial_pcolormesh_plot(
 ):
     """Plot a pcolormesh plot of the transect model level data."""
     plot.spatial_pcolormesh_plot(load_cube_ml_out, filename="plot")
-    assert Path("plot_449743.0.png").is_file()
-    assert Path("plot_449744.0.png").is_file()
+    assert Path("plot_20210422070000.png").is_file()
+    assert Path("plot_20210422080000.png").is_file()
 
 
 def test_transect_pressure_spatial_contour_plot(
@@ -163,8 +163,8 @@ def test_transect_pressure_spatial_contour_plot(
 ):
     """Plot a contour plot of the transect pressure data."""
     plot.spatial_contour_plot(transect_source_cube_out, filename="plot")
-    assert Path("plot_449469.0.png").is_file()
-    assert Path("plot_449472.0.png").is_file()
+    assert Path("plot_20210410210000.png").is_file()
+    assert Path("plot_20210411000000.png").is_file()
 
 
 def test_transect_pressure_spatial_pcolormesh_plot(
@@ -172,5 +172,5 @@ def test_transect_pressure_spatial_pcolormesh_plot(
 ):
     """Plot a pcolormesh plot of the transect pressure data."""
     plot.spatial_pcolormesh_plot(transect_source_cube_out, filename="plot")
-    assert Path("plot_449469.0.png").is_file()
-    assert Path("plot_449472.0.png").is_file()
+    assert Path("plot_20210410210000.png").is_file()
+    assert Path("plot_20210411000000.png").is_file()

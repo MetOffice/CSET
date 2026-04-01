@@ -22,7 +22,7 @@ steps:
     coordinate: [time]
     method: $METHOD
 
-  - operator: plot.spatial_contour_plot
+  - operator: plot.spatial_pcolormesh_plot
     sequence_coordinate: time
 
   - operator: write.write_cube_to_nc

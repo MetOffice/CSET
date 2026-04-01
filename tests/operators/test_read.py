@@ -815,8 +815,16 @@ def test_normalise_var0_varname(model_level_cube):
 def test_lfric_forecast_period_standard_name_callback(cube):
     """Ensure forecast period coordinates have a standard name."""
     cube.coord("forecast_period").standard_name = None
-    read._lfric_forecast_period_standard_name_callback(cube)
+    read._lfric_forecast_period_callback(cube)
     assert cube.coord("forecast_period").standard_name == "forecast_period"
+
+
+def test_lfric_forecast_period_convert_units_callback(cube):
+    """Ensure forecast period coordinates have a standard name."""
+    cube.coord("forecast_period").convert_units("seconds")
+    assert cube.coord("forecast_period").units == "seconds"
+    read._lfric_forecast_period_callback(cube)
+    assert cube.coord("forecast_period").units == "hours"
 
 
 def test_read_cubes_extract_cells():
@@ -1113,3 +1121,11 @@ def test_proleptic_gregorian_fix():
     read._proleptic_gregorian_fix(cube)
     assert cube.coord("time").units.calendar == "standard"
     assert cube.coord("time").units.origin == "hours since 1970-01-01T00:00:00"
+
+
+def test_normalise_ML_varname(transect_source_cube):
+    """Check that pressure varname is changed."""
+    cube = transect_source_cube.copy()
+    cube.rename = "air_temperature"
+    read._normalise_ML_varname(cube)
+    assert cube.long_name == "temperature_at_pressure_levels"

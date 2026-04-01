@@ -233,6 +233,37 @@ def load(conf: Config):
                 },
                 aggregation=False,
             )
+
+        # Moderate rain presence.
+        if conf.MODERATE_RAIN_PRESENCE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="moderate_rain_presence_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
+        # Heavy rain presence.
+        if conf.HEAVY_RAIN_PRESENCE_SPATIAL_PLOT:
+            yield RawRecipe(
+                recipe="heavy_rain_presence_spatial_plot.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
         # Lightning presence.
         if conf.LIGHTNING_PRESENCE_SPATIAL_PLOT:
             yield RawRecipe(
@@ -479,6 +510,28 @@ def load(conf: Config):
                 recipe="aviation_colour_state_spatial_plot.yaml",
                 variables={
                     "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
+
+    if conf.SPATIAL_MULTI_VARIABLE:
+        for model, method in itertools.product(models, conf.SPATIAL_MULTI_FIELD_METHOD):
+            # Multi-variable spatial plotting.
+            yield RawRecipe(
+                recipe="multi_surface_spatial_plot_sequence.yaml",
+                variables={
+                    "VARNAME_BASE": conf.MULTI_BASE_FIELD,
+                    "VARNAME_OVER": conf.MULTI_OVERLAY_FIELD,
+                    "OVERLAY_MASK_CONDITION": conf.MULTI_OVERLAY_MASK_CONDITION,
+                    "OVERLAY_MASK_VALUE": conf.MULTI_OVERLAY_MASK_VALUE,
+                    "VARNAME_CONTOUR": conf.MULTI_CONTOUR_FIELD,
+                    "MODEL_NAME": model["name"],
+                    "METHOD": method,
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
