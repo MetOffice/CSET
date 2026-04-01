@@ -540,6 +540,43 @@ def _set_title_and_filename(
     return plot_title, plot_filename
 
 
+def select_series_coord(cube, series_coordinate):
+    """Determine the grid coordinates to use to calculate grid spacing."""
+    print("In select_series_coord")
+    try:
+        # Try the requested coordinate first
+        return cube.coord(series_coordinate)
+
+    except iris.exceptions.CoordinateNotFoundError:
+        # Fallback logic
+        if series_coordinate == "frequency":
+            fallbacks = ("physical_wavenumber", "wavelength")
+
+        elif series_coordinate == "physical_wavenumber":
+            fallbacks = ("frequency", "wavelength")
+
+        elif series_coordinate == "wavelength":
+            fallbacks = ("frequency", "physical_wavenumber")
+
+        else:
+            # Unknown coordinate type -> re-raise the original exception
+            raise
+
+        # Try the fallbacks in order
+        for fb in fallbacks:
+            try:
+                return cube.coord(fb)
+            except iris.exceptions.CoordinateNotFoundError:
+                continue
+
+        # If we get here, none of the fallback options were found
+
+        raise iris.exceptions.CoordinateNotFoundError(
+            f"No valid coordinate found for '{series_coordinate}' "
+            f"or fallback options {fallbacks}"
+        ) from None
+
+
 def _plot_and_save_spatial_plot(
     cube: iris.cube.Cube,
     filename: str,
@@ -881,30 +918,36 @@ def _plot_and_save_line_power_spectrum_series(
 
     #    for cube, coord in zip(cubes, coords, strict=True):
     for cube in iter_maybe(cubes):
-        # Try to get the series coordinate, with fallback to alternatives
-        try:
-            xcoord = cube.coord(series_coordinate)
-            xname = xcoord.points
-        except iris.exceptions.CoordinateNotFoundError:
-            # Fallback logic for spectral coordinates
-            if series_coordinate == "frequency":
-                try:
-                    xcoord = cube.coord("physical_wavenumber")
-                except iris.exceptions.CoordinateNotFoundError:
-                    xcoord = cube.coord("wavelength")
-            elif series_coordinate == "physical_wavenumber":
-                try:
-                    xcoord = cube.coord("frequency")
-                except iris.exceptions.CoordinateNotFoundError:
-                    xcoord = cube.coord("wavelength")
-            elif series_coordinate == "wavelength":
-                try:
-                    xcoord = cube.coord("frequency")
-                except iris.exceptions.CoordinateNotFoundError:
-                    xcoord = cube.coord("physical_wavenumber")
-            else:
-                raise
-            xname = xcoord.points
+        # next 2 lines replace chunk of code.
+        xcoord = select_series_coord(cube, series_coordinate)
+        xname = xcoord.points
+
+        #        # Try to get the series coordinate, with fallback to alternatives
+        #        try:
+        #            xcoord = cube.coord(series_coordinate)
+        #            xname = xcoord.points
+        #        except iris.exceptions.CoordinateNotFoundError:
+        #            # Fallback logic for spectral coordinates
+        #            if series_coordinate == "frequency":
+        #                try:
+        #                    xcoord = cube.coord("physical_wavenumber")
+        #                except iris.exceptions.CoordinateNotFoundError:
+        #                    xcoord = cube.coord("wavelength")
+        #            elif series_coordinate == "physical_wavenumber":
+        #                try:
+        #                    xcoord = cube.coord("frequency")
+        #                except iris.exceptions.CoordinateNotFoundError:
+        #                    xcoord = cube.coord("wavelength")
+        #            elif series_coordinate == "wavelength":
+        #                try:
+        #                    xcoord = cube.coord("frequency")
+        #                except iris.exceptions.CoordinateNotFoundError:
+        #                    xcoord = cube.coord("physical_wavenumber")
+        #            else:
+        #                raise
+        #
+        #
+        #            xname = xcoord.points
 
         # xname = cube.coord(xn).points  # frequency
         yfield = cube.data  # power spectrum

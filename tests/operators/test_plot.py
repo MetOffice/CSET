@@ -752,11 +752,45 @@ def test_plot_power_spectrum_no_sequence_coordinate(
         plot.plot_line_series(power_spectrum_cube, series_coordinate="frequency")
 
 
+def test_select_series_coord_frequency_fallback_wl(power_spectrum_cube):
+    """Select correct series_coordinate when wavelength."""
+    freq = power_spectrum_cube.coord("frequency")
+    dim = power_spectrum_cube.coord_dims(freq)
+
+    # remove freq
+    power_spectrum_cube.remove_coord("frequency")
+
+    # add wavelength
+    wl = iris.coords.DimCoord(freq.points, long_name="wavelength")
+    power_spectrum_cube.add_aux_coord(wl, dim)
+
+    xcoord = plot.select_series_coord(power_spectrum_cube, "frequency")
+
+    assert xcoord.name() == "wavelength"
+
+
+def test_select_series_coord_frequency_fallback_pw(power_spectrum_cube):
+    """Select correct series_coordinate when physical_wavenumber."""
+    freq = power_spectrum_cube.coord("frequency")
+    dim = power_spectrum_cube.coord_dims(freq)
+
+    # remove freq
+    power_spectrum_cube.remove_coord("frequency")
+
+    # add wavelength
+    pw = iris.coords.DimCoord(freq.points, long_name="physical_wavenumber")
+    power_spectrum_cube.add_aux_coord(pw, dim)
+
+    xcoord = plot.select_series_coord(power_spectrum_cube, "frequency")
+
+    assert xcoord.name() == "physical_wavenumber"
+
+
 def test_plot_power_spectrum_series_coord_physical_wavenumber(
     power_spectrum_cube, tmp_working_dir
 ):
     """Testing series_coordinate."""
-    # NOT SURE THIS IS CORRECT
+    # NOT SURE THIS IS CORRECT BECAUSE THE frequency DIMENSION STILL EXISTS
     # assert power_spectrum_cube.coords("frequency")
 
     # Get original frequency coordinate
@@ -777,33 +811,6 @@ def test_plot_power_spectrum_series_coord_physical_wavenumber(
     # dim_index = power_spectrum_cube.coord_dims("frequency")
     # power_spectrum_cube.add_dim_coord(physical_wavenumber_coord, dim_index)
     power_spectrum_cube.add_aux_coord(physical_wavenumber_coord, dim)
-
-    plot.plot_line_series(
-        power_spectrum_cube, series_coordinate="frequency", filename="test"
-    )
-    assert Path("test.png").is_file()
-
-
-def test_plot_power_spectrum_series_coord_wavelength(
-    power_spectrum_cube, tmp_working_dir
-):
-    """Testing series_coordinate."""
-    # Get original frequency coordinate
-
-    freq = power_spectrum_cube.coord("frequency")
-    dim = power_spectrum_cube.coord_dims(freq)
-
-    # Construct a synthetic wavelength (simple proportional mapping for testing)
-    k = np.linspace(0.1, 2.0, len(freq.points))
-
-    wavelength_coord = iris.coords.DimCoord(
-        points=k,
-        long_name="wavelength",
-        units="m-1",
-    )
-
-    # Add the new coordinate on the same dimension as frequency
-    power_spectrum_cube.add_aux_coord(wavelength_coord, dim)
 
     plot.plot_line_series(
         power_spectrum_cube, series_coordinate="frequency", filename="test"
