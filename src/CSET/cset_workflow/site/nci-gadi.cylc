@@ -11,15 +11,6 @@
             PROJECT = {{ PROJECT }}
             PYTHONPATH=/g/data/dp9/verification/sources/cset/main/CSET/src:$PYTHONPATH
 
-    [[validate_environment]]
-        platform = gadi_background
-
-    [[parbake_recipes]]
-        platform = gadi_background
-
-    [[parbake_aggregation_recipes]]
-        platform = gadi_background
-
     [[bake_recipes]]
         platform = gadi_pbs
         [[[ directives ]]]
