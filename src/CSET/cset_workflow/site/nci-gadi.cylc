@@ -36,7 +36,7 @@
         [[[ directives ]]]
             -P          = {{ PROJECT }}
             -q          = normal
-            -l ncpus    = 48 
+            -l ncpus    = 48
             -l mem      = 180gb
             -l walltime = 06:00:00
             -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22
