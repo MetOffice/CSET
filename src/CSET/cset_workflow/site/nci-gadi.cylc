@@ -9,32 +9,19 @@
             """
         [[[ environment ]]] 
             PROJECT = {{ PROJECT }}
-            PYTHONPATH=$PYTHONPATH:/g/data/dp9/verification/sources/cset/main/CSET/src
+            PYTHONPATH=/g/data/dp9/verification/sources/cset/main/CSET/src:$PYTHONPATH
 
     [[validate_environment]]
         platform = gadi_background
 
     [[parbake_recipes]]
         platform = gadi_background
-        [[[ environment ]]] 
-            PROJECT = {{ PROJECT }}
-            PYTHONPATH=$PYTHONPATH:/g/data/dp9/verification/sources/cset/main/CSET/src
 
     [[parbake_aggregation_recipes]]
         platform = gadi_background
-        [[[ environment ]]] 
-            PROJECT = {{ PROJECT }}
-            PYTHONPATH=$PYTHONPATH:/g/data/dp9/verification/sources/cset/main/CSET/src
 
     [[bake_recipes]]
         platform = gadi_pbs
-        init-script = """
-            module use /g/data/access/ngm/modules
-            module load cset/26.2.0
-            """
-        [[[ environment ]]]
-            PROJECT = {{ PROJECT }}
-            PYTHONPATH=$PYTHONPATH:/g/data/dp9/verification/sources/cset/main/CSET/src
         [[[ directives ]]]
             -P          = {{ PROJECT }}
             -q          = normal
@@ -46,13 +33,6 @@
 
     [[bake_aggregation_recipes]]
         platform = gadi_pbs
-        init-script = """
-            module use /g/data/access/ngm/modules
-            module load cset/26.2.0
-            """
-        [[[ environment ]]]
-            PROJECT = {{ PROJECT }}
-            PYTHONPATH=$PYTHONPATH:/g/data/dp9/verification/sources/cset/main/CSET/src
         [[[ directives ]]]
             -P          = {{ PROJECT }}
             -q          = normal
