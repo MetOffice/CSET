@@ -8,6 +8,17 @@ steps:
     file_paths: $INPUT_PATHS
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
+    constraint: ['$VARNAME_BASE', '$VARNAME_OVER', '$VARNAME_CONTOUR']
+
+  - operator: filters.filter_multiple_cubes
+    constraint:
+      operator: constraints.generate_cell_methods_constraint
+      cell_methods: []
+      varname: ['$VARNAME_BASE', '$VARNAME_OVER', '$VARNAME_CONTOUR']
+
+  - operator: collapse.collapse
+    coordinate: [time]
+    method: $METHOD
 
   - operator: plot.spatial_multi_pcolormesh_plot
     cube:
@@ -16,10 +27,6 @@ steps:
             operator: constraints.combine_constraints
             variable_constraint:
                 operator: constraints.generate_var_constraint
-                varname: $VARNAME_BASE
-            cell_methods_constraint:
-                operator: constraints.generate_cell_methods_constraint
-                cell_methods: []
                 varname: $VARNAME_BASE
 
     overlay_cube:
@@ -31,10 +38,6 @@ steps:
                  variable_constraint:
                      operator: constraints.generate_var_constraint
                      varname: $VARNAME_OVER
-                 cell_methods_constraint:
-                     operator: constraints.generate_cell_methods_constraint
-                     cell_methods: []
-                     varname: $VARNAME_OVER
         mask:
             operator: filters.generate_mask
             mask_field:
@@ -43,10 +46,6 @@ steps:
                  operator: constraints.combine_constraints
                  variable_constraint:
                    operator: constraints.generate_var_constraint
-                   varname: $VARNAME_OVER
-                 cell_methods_constraint:
-                   operator: constraints.generate_cell_methods_constraint
-                   cell_methods: []
                    varname: $VARNAME_OVER
             condition: $OVERLAY_MASK_CONDITION
             value: $OVERLAY_MASK_VALUE
