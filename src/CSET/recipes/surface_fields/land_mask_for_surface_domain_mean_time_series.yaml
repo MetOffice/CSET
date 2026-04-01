@@ -10,6 +10,7 @@ steps:
     model_names: $MODEL_NAME
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
+    constraint: [$VARNAME, "land_binary_mask"]
 
   - operator: filters.apply_mask
     original_field:

@@ -24,7 +24,7 @@ jobs:
 
       - name: Cache conda environment
         id: conda-env-cache
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
         with:
           key: conda|${{runner.os}}-${{runner.arch}}|${{hashFiles('requirements/locks/latest')}}
           path: |
@@ -67,7 +67,7 @@ jobs:
 
       - name: Cache conda environment
         id: conda-env-cache
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
         with:
           key: conda|${{runner.os}}-${{runner.arch}}|${{ hashFiles(format('requirements/locks/{0}-lock-linux-64.txt', matrix.py-ver)) }}
           path: |
