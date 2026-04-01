@@ -250,7 +250,8 @@ def regrid_to_single_point(
     ValueError
         If a unique x/y coordinate cannot be found; also if, for selecting a
         single gridpoint, the chosen longitude and latitude point is outside the
-        domain.
+        domain; also (currently) if the difference between the actual and target
+        points exceed 0.1 degrees.
     NotImplementedError
         If the cubes grid, or the method for regridding, is not yet supported.
 
@@ -262,7 +263,6 @@ def regrid_to_single_point(
     grids (uniform) are supported. Warnings are raised if the selected gridpoint
     is within boundary_margin grid lengths of the domain boundary as data here
     is potentially unreliable.
-
     """
     # To store regridded cubes.
     regridded_cubes = iris.cube.CubeList()
@@ -298,48 +298,67 @@ def regrid_to_single_point(
         lat_min, lon_min = lat.points.min(), lon.points.min()
         lat_max, lon_max = lat.points.max(), lon.points.max()
 
-        # Get boundaries of frame to avoid selecting gridpoint close to domain edge
-        lat_min_bound, lon_min_bound = (
-            lat.points[boundary_margin - 1],
-            lon.points[boundary_margin - 1],
-        )
-        lat_max_bound, lon_max_bound = (
-            lat.points[-boundary_margin],
-            lon.points[-boundary_margin],
-        )
+        # Use different logic for single point obs data.
+        if len(cube.coord(x_coord).points) > 1:
+            # Get boundaries of frame to avoid selecting gridpoint close to domain edge
+            lat_min_bound, lon_min_bound = (
+                lat.points[boundary_margin - 1],
+                lon.points[boundary_margin - 1],
+            )
+            lat_max_bound, lon_max_bound = (
+                lat.points[-boundary_margin],
+                lon.points[-boundary_margin],
+            )
 
-        # Check to see if selected point is outside the domain
-        if (lat_tr < lat_min) or (lat_tr > lat_max):
-            raise ValueError("Selected point is outside the domain.")
+            # Check to see if selected point is outside the domain
+            if (lat_tr < lat_min) or (lat_tr > lat_max):
+                raise ValueError("Selected point is outside the domain.")
+            else:
+                if (lon_tr < lon_min) or (lon_tr > lon_max):
+                    if (lon_tr + 360.0 >= lon_min) and (lon_tr + 360.0 <= lon_max):
+                        lon_tr += 360.0
+                    elif (lon_tr - 360.0 >= lon_min) and (lon_tr - 360.0 <= lon_max):
+                        lon_tr -= 360.0
+                    else:
+                        raise ValueError("Selected point is outside the domain.")
+
+            # Check to see if selected point is near the domain boundaries
+            if (
+                (lat_tr < lat_min_bound)
+                or (lat_tr > lat_max_bound)
+                or (lon_tr < lon_min_bound)
+                or (lon_tr > lon_max_bound)
+            ):
+                warnings.warn(
+                    f"Selected point is within {boundary_margin} gridlengths of the domain edge, data may be unreliable.",
+                    category=BoundaryWarning,
+                    stacklevel=2,
+                )
+
+            regrid_method = getattr(iris.analysis, method, None)
+            if not callable(regrid_method):
+                raise NotImplementedError(
+                    f"Does not currently support {method} regrid method"
+                )
+
+            cube_rgd = cube.interpolate(((lat, lat_tr), (lon, lon_tr)), regrid_method())
+            regridded_cubes.append(cube_rgd)
         else:
-            if (lon_tr < lon_min) or (lon_tr > lon_max):
-                if (lon_tr + 360.0 >= lon_min) and (lon_tr + 360.0 <= lon_max):
-                    lon_tr += 360.0
-                elif (lon_tr - 360.0 >= lon_min) and (lon_tr - 360.0 <= lon_max):
-                    lon_tr -= 360.0
-                else:
-                    raise ValueError("Selected point is outside the domain.")
+            if (
+                np.abs((lat_tr - lat.points[0])) > 0.1
+                or np.abs((lon_tr - lon.points[0])) > 0.1
+            ):
+                raise ValueError(
+                    "Selected point is too far from the specified coordinates. It should be within 0.1 degrees."
+                )
+            else:
+                print(
+                    "*** lat/long diffs",
+                    np.abs(lat_tr - lat_pt),
+                    np.abs(lon_tr - lon_pt),
+                )
+                regridded_cubes.append(cube)
 
-        # Check to see if selected point is near the domain boundaries
-        if (
-            (lat_tr < lat_min_bound)
-            or (lat_tr > lat_max_bound)
-            or (lon_tr < lon_min_bound)
-            or (lon_tr > lon_max_bound)
-        ):
-            warnings.warn(
-                f"Selected point is within {boundary_margin} gridlengths of the domain edge, data may be unreliable.",
-                category=BoundaryWarning,
-                stacklevel=2,
-            )
-
-        regrid_method = getattr(iris.analysis, method, None)
-        if not callable(regrid_method):
-            raise NotImplementedError(
-                f"Does not currently support {method} regrid method"
-            )
-        cube_rgd = cube.interpolate(((lat, lat_tr), (lon, lon_tr)), regrid_method())
-        regridded_cubes.append(cube_rgd)
     # Preserve returning a cube if only a cube has been supplied to regrid.
     if len(regridded_cubes) == 1:
         return regridded_cubes[0]
