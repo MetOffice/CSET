@@ -585,7 +585,6 @@ def _plot_and_save_spatial_plot(
     # Plot the field.
     if method == "contourf":
         # Filled contour plot of the field.
-        logging.info("testing!")
         plot = iplt.contourf(cube, cmap=cmap, levels=levels, norm=norm)
     elif method == "pcolormesh":
         try:
