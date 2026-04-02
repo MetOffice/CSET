@@ -25,6 +25,7 @@ import os
 from typing import Literal
 
 import cartopy.crs as ccrs
+import cartopy.feature as cfeature
 import iris
 import iris.coords
 import iris.cube
@@ -354,7 +355,7 @@ def _setup_spatial_map(
     grid_size: int | None = None,
     subplot: int | None = None,
 ):
-    """Define map projections, extent and add coastlines for spatial plots.
+    """Define map projections, extent and add coastlines and borderlines for spatial plots.
 
     For spatial map plots, a relevant map projection for rotated or non-rotated inputs
     is specified, and map extent defined based on the input data.
@@ -435,13 +436,14 @@ def _setup_spatial_map(
         else:
             axes = figure.add_subplot(projection=projection)
 
-        # Add coastlines if cube contains x and y map coordinates.
+        # Add coastlines and borderlines if cube contains x and y map coordinates.
         if cmap.name in ["viridis", "Greys"]:
             coastcol = "magenta"
         else:
             coastcol = "black"
-        logging.debug("Plotting coastlines in colour %s.", coastcol)
+        logging.debug("Plotting coastlines and borderlines in colour %s.", coastcol)
         axes.coastlines(resolution="10m", color=coastcol)
+        axes.add_feature(cfeature.BORDERS, edgecolor=coastcol)
 
         # If is lat/lon spatial map, fix extent to keep plot tight.
         # Specifying crs within set_extent helps ensure only data region is shown.
@@ -577,7 +579,7 @@ def _plot_and_save_spatial_plot(
     if contour_cube:
         cntr_cmap, cntr_levels, cntr_norm = _colorbar_map_levels(contour_cube)
 
-    # Setup plot map projection, extent and coastlines.
+    # Setup plot map projection, extent and coastlines and borderlines.
     axes = _setup_spatial_map(cube, fig, cmap)
 
     # Plot the field.
@@ -820,7 +822,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
     for member, subplot in zip(
         cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1), strict=False
     ):
-        # Setup subplot map projection, extent and coastlines.
+        # Setup subplot map projection, extent and coastlines and borderlines.
         axes = _setup_spatial_map(
             member, fig, cmap, grid_size=grid_size, subplot=subplot
         )
@@ -1253,7 +1255,7 @@ def _plot_and_save_vector_plot(
     # Specify the color bar
     cmap, levels, norm = _colorbar_map_levels(cube_vec_mag)
 
-    # Setup plot map projection, extent and coastlines.
+    # Setup plot map projection, extent and coastlines and borderlines.
     axes = _setup_spatial_map(cube_vec_mag, fig, cmap)
 
     if method == "contourf":
@@ -1584,9 +1586,10 @@ def _plot_and_save_scattermap_plot(
         edgecolors="k",
     )
 
-    # Add coastlines.
+    # Add coastlines and borderlines.
     try:
         axes.coastlines(resolution="10m")
+        axes.add_feature(cfeature.BORDERS)
     except AttributeError:
         pass
 

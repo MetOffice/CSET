@@ -254,3 +254,19 @@ def test_combine_constraints():
     )
     expected_combined_constraint = "ConstraintCombination(ConstraintCombination(AttributeConstraint({'STASH': 'm01s03i236'}), Constraint(name='test'), <built-in function and_>), Constraint(name='test_2'), <built-in function and_>)"
     assert repr(combined_constraint) == expected_combined_constraint
+
+
+def test_generate_attribute_constraint_value_none():
+    """Attribute constraint with no value."""
+    attr_constraint = constraints.generate_attribute_constraint(attribute="test")
+    expected_attr_constraint = "Constraint(cube_func=<function generate_attribute_constraint.<locals>.<lambda> at "
+    assert expected_attr_constraint in repr(attr_constraint)
+
+
+def test_generate_attribute_constraint_with_value():
+    """Attribute constraint with value."""
+    attr_constraint = constraints.generate_attribute_constraint(
+        attribute="test", value="2"
+    )
+    expected_attr_constraint = "AttributeConstraint({'test': '2'})"
+    assert expected_attr_constraint in repr(attr_constraint)
