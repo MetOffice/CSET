@@ -36,8 +36,10 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.fft as fft
+from cartopy.mpl.geoaxes import GeoAxes
 from iris.cube import Cube
 from markdown_it import MarkdownIt
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from CSET._common import (
     combine_dicts,
@@ -656,10 +658,6 @@ def _plot_and_save_spatial_plot(
         )
 
         # Inset code
-        import cartopy.feature as cfeature
-        from cartopy.mpl.geoaxes import GeoAxes
-        from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-
         axins = inset_axes(
             axes,
             width="20%",
