@@ -36,11 +36,57 @@ def test_filter_cubes_cubelist(cubes):
     assert repr(cube) == expected_cube
 
 
+def test_filter_cubes_cubelist_per_model(cube):
+    """Test filtering a CubeList with multiple models."""
+    constraint = constraints.generate_cell_methods_constraint([])
+    model1 = cube.copy()
+    model1.attributes["model_name"] = "model_1"
+    model2 = cube.copy()
+    model2.attributes["model_name"] = "model_2"
+
+    cube = filters.filter_cubes(
+        iris.cube.CubeList([model1, model2]), constraint, per_model=True
+    )
+
+    expected_cube = "<iris 'Cube' of air_temperature / (K) (time: 3; grid_latitude: 17; grid_longitude: 13)>"
+    assert [repr(c) for c in cube] == [expected_cube, expected_cube]
+
+    model1.attributes.pop("model_name")
+    with pytest.raises(ValueError):
+        filters.filter_cubes(
+            iris.cube.CubeList([model1, model2]), constraint, per_model=True
+        )
+
+
 def test_filter_cubes_cube(cube):
     """Test filtering a Cube."""
     constraint = constraints.generate_cell_methods_constraint([])
     single_cube = filters.filter_cubes(cube, constraint)
     assert repr(cube) == repr(single_cube)
+
+
+def test_filter_cubes_single_cube_per_model(cube):
+    """Test filtering a single Cube in per_model mode."""
+    constraint = constraints.generate_cell_methods_constraint([])
+    cube = cube.copy()
+    cube.attributes["model_name"] = "model_1"
+    returned_cubes = filters.filter_cubes(cube, constraint, per_model=True)
+    assert isinstance(returned_cubes, iris.cube.CubeList)
+    assert len(returned_cubes) == 1
+    assert repr(cube) == repr(returned_cubes[0])
+
+
+def test_filter_cubes_single_entry_cubelist_per_model(cube):
+    """Test filtering a CubeList with one entry in per_model mode."""
+    constraint = constraints.generate_cell_methods_constraint([])
+    cube = cube.copy()
+    cube.attributes["model_name"] = "model_1"
+    returned_cubes = filters.filter_cubes(
+        iris.cube.CubeList((cube,)), constraint, per_model=True
+    )
+    assert isinstance(returned_cubes, iris.cube.CubeList)
+    assert len(returned_cubes) == 1
+    assert repr(cube) == repr(returned_cubes[0])
 
 
 def test_filter_cubes_multiple_returned_exception(cubes):
