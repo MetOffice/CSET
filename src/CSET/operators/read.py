@@ -20,6 +20,7 @@ import functools
 import glob
 import itertools
 import logging
+import pickle
 from pathlib import Path
 from typing import Literal
 
@@ -218,12 +219,19 @@ def _load_model(
     constraint: iris.Constraint | None,
 ) -> iris.cube.CubeList:
     """Load a single model's data into a CubeList."""
-    input_files = _check_input_files(paths)
-    # If unset, a constraint of None lets everything be loaded.
-    logging.debug("Constraint: %s", constraint)
-    cubes = iris.load(input_files, constraint, callback=_loading_callback)
-    # Make the UM's winds consistent with LFRic.
-    _fix_um_winds(cubes)
+    cache_file = Path(paths, "loadcache.pickle") if isinstance(paths, str) else None
+    if cache_file and cache_file.is_file():
+        # Load from pickled cache.
+        with open(cache_file, "rb") as fp:
+            all_cubes = pickle.load(fp)
+        cubes = all_cubes.extract(constraint)
+    else:
+        input_files = _check_input_files(paths)
+        # If unset, a constraint of None lets everything be loaded.
+        logging.debug("Constraint: %s", constraint)
+        cubes = iris.load(input_files, constraint, callback=_loading_callback)
+        # Make the UM's winds consistent with LFRic.
+        _fix_um_winds(cubes)
 
     # Add model_name attribute to each cube to make it available at any further
     # step without needing to pass it as function parameter.
