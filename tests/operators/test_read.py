@@ -634,6 +634,33 @@ def test_spatial_coord_valid_bounds():
     assert cube.coord("longitude").has_bounds()
 
 
+def test_no_spatial_coords_callback_existing_spatial_coords():
+    """Check that same cube is returned when spatial coords are actually present."""
+    cube = iris.load("tests/test_data/air_temp.nc")
+    cube = cube[0]
+    assert cube == read._fix_no_spatial_coords_callback(cube)
+
+
+def test_no_spatial_coords_callback_vertical_no_geospatial_attribute():
+    """Check that same cube is returned when spatial coords are actually present."""
+    cube = iris.load_cube(
+        "tests/test_data/air_temperature_vertical_profile_as_series.nc"
+    )
+    assert cube == read._fix_no_spatial_coords_callback(cube)
+
+
+def test_no_spatial_coords_callback():
+    """Check that same cube is returned when spatial coords are actually present."""
+    cube = iris.load_cube("tests/test_data/cardington_air_temp_test.nc")
+    read._fix_no_spatial_coords_callback(cube)
+    # Assert lat and long coords are added.
+    assert isinstance(cube.coord("latitude"), iris.coords.DimCoord)
+    assert isinstance(cube.coord("longitude"), iris.coords.DimCoord)
+    # Assert coords are expected coords.
+    assert cube.coord("latitude").points[0] == 52.10438
+    assert cube.coord("longitude").points[0] == -0.42286
+
+
 def test_spatial_coord_invalid_bounds():
     """Check that spatial coord callback removes invalid bounds."""
     cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
@@ -1094,3 +1121,11 @@ def test_proleptic_gregorian_fix():
     read._proleptic_gregorian_fix(cube)
     assert cube.coord("time").units.calendar == "standard"
     assert cube.coord("time").units.origin == "hours since 1970-01-01T00:00:00"
+
+
+def test_normalise_ML_varname(transect_source_cube):
+    """Check that pressure varname is changed."""
+    cube = transect_source_cube.copy()
+    cube.rename = "air_temperature"
+    read._normalise_ML_varname(cube)
+    assert cube.long_name == "temperature_at_pressure_levels"

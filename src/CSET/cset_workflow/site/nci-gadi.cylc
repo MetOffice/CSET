@@ -1,0 +1,34 @@
+{% set PROJECT = PROJECT | default(environ['PROJECT']) %}
+
+[runtime]
+    [[root]]
+        platform = gadi_background
+        init-script = """
+            module use /g/data/access/ngm/modules
+            module load cset/26.2.0
+            """
+        [[[ environment ]]]
+            PROJECT = {{ PROJECT }}
+            PYTHONPATH=/g/data/dp9/verification/sources/cset/main/CSET/src:$PYTHONPATH
+
+    [[bake_recipes]]
+        platform = gadi_pbs
+        [[[ directives ]]]
+            -P          = {{ PROJECT }}
+            -q          = normal
+            -l ncpus    = 48
+            -l mem      = 180gb
+            -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22
+            -l walltime = 06:00:00
+            -W umask    = 0022
+
+    [[bake_aggregation_recipes]]
+        platform = gadi_pbs
+        [[[ directives ]]]
+            -P          = {{ PROJECT }}
+            -q          = normal
+            -l ncpus    = 48
+            -l mem      = 180gb
+            -l walltime = 06:00:00
+            -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22
+            -W umask    = 0022
