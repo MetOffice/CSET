@@ -664,7 +664,7 @@ def _plot_and_save_spatial_plot(
             height="20%",
             loc="upper right",
             axes_class=GeoAxes,
-            axes_kwargs=dict(map_projection=ccrs.PlateCarree()),
+            axes_kwargs={"map_projection": ccrs.PlateCarree()},
         )
 
         axins.coastlines(resolution="50m")
