@@ -24,7 +24,7 @@ def load(conf: Config):
     # Load a list of model detail dictionaries.
     models = get_models(conf.asdict())
 
-    # Pressure level fields.
+    # Transect plots
     if conf.EXTRACT_PLEVEL_TRANSECT:
         for model, field in itertools.product(
             models,
@@ -44,6 +44,31 @@ def load(conf: Config):
                     else None,
                 },
                 model_ids=model["id"],
+                aggregation=False,
+            )
+
+    # Transect difference plots
+    if conf.PLEVEL_TRANSECT_DIFFERENCE:
+        base_model = models[0]
+        for model, field in itertools.product(
+            models[1:],
+            conf.PRESSURE_LEVEL_FIELDS,
+        ):
+            yield RawRecipe(
+                recipe="transect_difference.yaml",
+                variables={
+                    "VARNAME": field,
+                    "VERTICAL_COORDINATE": "pressure",
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "START_COORDS": conf.PLEVEL_TRANSECT_STARTCOORDS,
+                    "FINISH_COORDS": conf.PLEVEL_TRANSECT_FINISHCOORDS,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
                 aggregation=False,
             )
 
@@ -71,6 +96,31 @@ def load(conf: Config):
                 model_ids=model["id"],
                 aggregation=True,
             )
+
+    # # Pressure level fields.
+    # for model, atype, field, plevel in itertools.product(
+    #     models[1:], AGGREGATION_TYPES, conf.PRESSURE_LEVEL_FIELDS, conf.PRESSURE_LEVELS
+    # ):
+    #     if conf.SPATIAL_DIFFERENCE_PLEVEL_FIELD_AGGREGATION[
+    #         AGGREGATION_TYPES.index(atype)
+    #     ]:
+    #         base_model = models[0]
+    #         yield RawRecipe(
+    #             recipe=f"level_spatial_difference_case_aggregation_mean_{atype}.yaml",
+    #             variables={
+    #                 "VARNAME": field,
+    #                 "LEVELTYPE": "pressure",
+    #                 "LEVEL": plevel,
+    #                 "BASE_MODEL": base_model["name"],
+    #                 "OTHER_MODEL": model["name"],
+    #                 "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+    #                 "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+    #                 if conf.SELECT_SUBAREA
+    #                 else None,
+    #             },
+    #             model_ids=[base_model["id"], model["id"]],
+    #             aggregation=True,
+    #         )
 
     # Model level fields
     if conf.EXTRACT_MLEVEL_TRANSECT:
