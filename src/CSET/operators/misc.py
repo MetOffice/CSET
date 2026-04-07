@@ -466,7 +466,7 @@ def rename_cube(cubes: iris.cube.Cube | iris.cube.CubeList, name: str):
     iris.cube.Cube | iris.cube.CubeList
         The renamed field.
 
-    Notes
+    Notes'air_pressure'
     -----
     This operator is designed to be used when the output field name does not
     match expectations or needs to be different to defaults in standard_name, var_name or
@@ -486,3 +486,105 @@ def rename_cube(cubes: iris.cube.Cube | iris.cube.CubeList, name: str):
         return new_cubelist[0]
     else:
         return new_cubelist
+
+
+def _slice_cube_on_common_levels(cube, coord_name, common_levels):
+    coord = cube.coord(coord_name)
+    (dim_index,) = cube.coord_dims(coord)
+
+    mask = np.isin(coord.points, common_levels)
+
+    slicer = [slice(None)] * cube.ndim
+    slicer[dim_index] = mask
+
+    return cube[tuple(slicer)]
+
+
+def extract_common_pressure_levels(cubes: iris.cube.CubeList, coordinate: str):
+    """
+    Given a CubeList containing exactly two cubes, extract the common
+    pressure levels and return a CubeList with both cubes restricted
+    to those levels only.
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        CubeList containing exactly two cubes with a pressure coordinate
+
+        coordinate! TODO
+
+    Returns
+    -------
+    iris.cube.CubeList
+        CubeList containing the two cubes sliced to common pressure levels
+    """
+
+    # --- Extract vertical coordinates ---
+    try:
+        p1 = cubes[0].coord(coordinate)
+        p2 = cubes[1].coord(coordinate)
+    except iris.exceptions.CoordinateNotFoundError:
+        raise ValueError(f"Both cubes must have an {coordinate} coordinate")
+
+    # --- Find common vertical points ---
+    common_levels = np.intersect1d(p1.points, p2.points)
+
+    if common_levels.size == 0:
+        raise ValueError("No common levels found")
+
+    # --- Extract cubes ---
+    cube0_common = _slice_cube_on_common_levels(cubes[0], coordinate, common_levels)
+    cube1_common = _slice_cube_on_common_levels(cubes[1], coordinate, common_levels)
+
+    logging.info(cubes[0])
+    logging.info(common_levels)
+    logging.info(cube0_common)
+
+    return iris.cube.CubeList([cube0_common, cube1_common])
+
+
+def ensure_increasing_coord(cubes: iris.cube.Cube | iris.cube.CubeList, coordinate):
+    """
+    Ensure the given coordinate increases monotonically.
+    If not, reverse the corresponding cube dimension.
+
+    Parameters
+    ----------
+    cube : iris.cube.Cube
+    coord_name : str
+
+    Returns
+    -------
+    iris.cube.Cube
+    """
+
+    # If function is passed a single cube, make this iterable.
+    if type(cubes) == iris.cube.Cube:
+        cubes = iris.cube.CubeList([cubes])
+
+    # To store final transects
+    output = iris.cube.CubeList()
+
+    for cube in cubes:
+        
+        coord = cube.coord(coordinate)
+        (dim_index,) = cube.coord_dims(coord)
+
+        points = coord.points
+
+        # Check monotonicity
+        if np.all(np.diff(points) > 0):
+            # Already increasing
+            output.append(cube)
+
+        if np.all(np.diff(points) < 0):
+            # Decreasing → reverse that dimension
+            slicer = [slice(None)] * cube.ndim
+            slicer[dim_index] = slice(None, None, -1)
+            output.append(cube[tuple(slicer)])
+
+    if len(output) == 1:
+        return output[0]
+    else:
+        return output
+
