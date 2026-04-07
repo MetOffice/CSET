@@ -31,6 +31,9 @@ steps:
     coordinate: time
     method: MEAN
 
+  - operator: misc.ensure_increasing_coord
+    coordinate: $VERTICAL_COORDINATE
+
   - operator: transect.calc_transect
     startcoords: $START_COORDS
     endcoords: $FINISH_COORDS
