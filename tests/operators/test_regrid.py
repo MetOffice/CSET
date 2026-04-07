@@ -403,3 +403,28 @@ def test_regrid_to_single_point_realworld_cubelist(cube):
     # Assert each cube matches expected array.
     for regrid_cube in regrid_cubes:
         assert repr(regrid_cube[0].data) == expected_array
+
+
+def test_regrid_to_single_point_failure_on_lat_distance(cardington_cube):
+    """Test error raised when model lat point is too far from obs point."""
+    with pytest.raises(
+        ValueError,
+        match="Selected point is too far from the specified coordinates. It should be within 0.1 degrees",
+    ):
+        regrid.regrid_to_single_point(cardington_cube, 52.1, -0.6, "realworld")
+
+
+def test_regrid_to_single_point_failure_on_lon_distance(cardington_cube):
+    """Test error raised when model lon point is too far from obs point."""
+    with pytest.raises(
+        ValueError,
+        match="Selected point is too far from the specified coordinates. It should be within 0.1 degrees",
+    ):
+        regrid.regrid_to_single_point(cardington_cube, 54, -0.4, "realworld")
+
+
+def test_regrid_to_single_point_returns_close_single_point_cube(cardington_cube):
+    """Test same single point cube is returned when close to obs point."""
+    test_cube = cardington_cube.copy()
+    expected_cube = regrid.regrid_to_single_point(test_cube, 52.11, -0.45, "realworld")
+    assert cardington_cube == expected_cube

@@ -690,25 +690,25 @@ def test_postage_stamp_pcolormesh_plot_sequence_coord_check(cube, tmp_working_di
 
 
 def test_pcolormesh_coastline(cube, caplog, tmp_working_dir):
-    """Check coastlines plotted in black for air_temperature colormap."""
+    """Check coastlines and borderlines plotted in black for air_temperature colormap."""
     with caplog.at_level(logging.DEBUG):
         plot.spatial_pcolormesh_plot(cube)
         message_match = False
         for _, _, message in caplog.record_tuples:
-            if message == "Plotting coastlines in colour black.":
+            if message == "Plotting coastlines and borderlines in colour black.":
                 message_match = True
         assert message_match
 
 
 def test_pcolormesh_coastline_m(cube, caplog, tmp_working_dir):
-    """Check coastlines plotted in magenta for viridis colormap."""
+    """Check coastlines and borderlines plotted in magenta for viridis colormap."""
     with caplog.at_level(logging.DEBUG):
         # Set cube name to unknown to trigger viridis default cmap
         cube.rename("unknown_var_name")
         plot.spatial_pcolormesh_plot(cube)
         message_match = False
         for _, _, message in caplog.record_tuples:
-            if message == "Plotting coastlines in colour magenta.":
+            if message == "Plotting coastlines and borderlines in colour magenta.":
                 message_match = True
         assert message_match
 

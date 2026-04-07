@@ -110,6 +110,31 @@ def test_filter_multiple_cubes_none_returned(cubes):
         filters.filter_multiple_cubes(cubes, c=constraint_none)
 
 
+def test_filter_attribute_constraint_no_value(cube):
+    """Test filtering a Cube without a value."""
+    cube2 = cube.copy()
+    cube2.attributes["test"] = "test"
+    cubelist = iris.cube.CubeList([cube, cube2])
+    attr_constraint = constraints.generate_attribute_constraint(attribute="test")
+    test_cube = filters.filter_multiple_cubes(cubelist, constraint=attr_constraint)
+    assert len(test_cube) == 1
+    assert test_cube[0] == cube2
+    assert test_cube[0].attributes["test"] is not None
+
+
+def test_filter_attribute_constraint_with_value(cube):
+    """Test filtering a Cube."""
+    cube2 = cube.copy()
+    cube2.attributes["test"] = "2"
+    cubelist = iris.cube.CubeList([cube, cube2])
+    attr_constraint = constraints.generate_attribute_constraint(
+        attribute="test", value="2"
+    )
+    test_cube = filters.filter_multiple_cubes(cubelist, constraint=attr_constraint)
+    assert test_cube[0] == cube2
+    assert test_cube[0].attributes["test"] == "2"
+
+
 # Session scope fixtures, so the test data only has to be loaded once.
 @pytest.fixture(scope="session")
 def load_vertical_coord_cubelist() -> iris.cube.CubeList:

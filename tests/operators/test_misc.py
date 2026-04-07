@@ -407,3 +407,14 @@ def test_rename_cube_for_cubelist(cube):
     new_cubelist = misc.rename_cube(cube_list, "air_temperature_at_screen_level")
     for new in new_cubelist:
         assert new.name() == "air_temperature_at_screen_level"
+
+
+def test_remove_attribute_merging_cubes(ensemble_cube):
+    """Test removing attributes from a cube and checking they merge."""
+    cube_day1 = ensemble_cube[0, :, :]
+    cube_day2 = ensemble_cube[1, :, :]
+    cube_day2.attributes["history"] = "adding attribute to remove"
+    cubelist = iris.cube.CubeList([cube_day1, cube_day2])
+    cubelist = misc.remove_attribute(cubelist, attribute="history")
+    # assert cubelist is of length 1 to show cubes have merged properly.
+    assert len(cubelist) == 1

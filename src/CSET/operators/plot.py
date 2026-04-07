@@ -25,6 +25,7 @@ import os
 from typing import Literal
 
 import cartopy.crs as ccrs
+import cartopy.feature as cfeature
 import iris
 import iris.coords
 import iris.cube
@@ -35,8 +36,10 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.fft as fft
+from cartopy.mpl.geoaxes import GeoAxes
 from iris.cube import Cube
 from markdown_it import MarkdownIt
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from CSET._common import (
     combine_dicts,
@@ -354,7 +357,7 @@ def _setup_spatial_map(
     grid_size: int | None = None,
     subplot: int | None = None,
 ):
-    """Define map projections, extent and add coastlines for spatial plots.
+    """Define map projections, extent and add coastlines and borderlines for spatial plots.
 
     For spatial map plots, a relevant map projection for rotated or non-rotated inputs
     is specified, and map extent defined based on the input data.
@@ -435,13 +438,14 @@ def _setup_spatial_map(
         else:
             axes = figure.add_subplot(projection=projection)
 
-        # Add coastlines if cube contains x and y map coordinates.
+        # Add coastlines and borderlines if cube contains x and y map coordinates.
         if cmap.name in ["viridis", "Greys"]:
             coastcol = "magenta"
         else:
             coastcol = "black"
-        logging.debug("Plotting coastlines in colour %s.", coastcol)
+        logging.debug("Plotting coastlines and borderlines in colour %s.", coastcol)
         axes.coastlines(resolution="10m", color=coastcol)
+        axes.add_feature(cfeature.BORDERS, edgecolor=coastcol)
 
         # If is lat/lon spatial map, fix extent to keep plot tight.
         # Specifying crs within set_extent helps ensure only data region is shown.
@@ -577,7 +581,7 @@ def _plot_and_save_spatial_plot(
     if contour_cube:
         cntr_cmap, cntr_levels, cntr_norm = _colorbar_map_levels(contour_cube)
 
-    # Setup plot map projection, extent and coastlines.
+    # Setup plot map projection, extent and coastlines and borderlines.
     axes = _setup_spatial_map(cube, fig, cmap)
 
     # Plot the field.
@@ -653,15 +657,75 @@ def _plot_and_save_spatial_plot(
             fontsize=16,
         )
 
+        # Inset code
+        axins = inset_axes(
+            axes,
+            width="20%",
+            height="20%",
+            loc="upper right",
+            axes_class=GeoAxes,
+            axes_kwargs={"map_projection": ccrs.PlateCarree()},
+        )
+
+        axins.coastlines(resolution="50m")
+        axins.add_feature(cfeature.BORDERS, linewidth=0.3)
+
+        SLat, SLon, ELat, ELon = (
+            float(coord) for coord in cube.attributes["transect_coords"].split("_")
+        )
+
+        # Draw line between them
+        axins.plot(
+            [SLon, ELon], [SLat, ELat], color="black", transform=ccrs.PlateCarree()
+        )
+
+        # Plot points (note: lon, lat order for Cartopy)
+        axins.plot(SLon, SLat, marker="x", color="green", transform=ccrs.PlateCarree())
+        axins.plot(ELon, ELat, marker="x", color="red", transform=ccrs.PlateCarree())
+
+        lon_min, lon_max = sorted([SLon, ELon])
+        lat_min, lat_max = sorted([SLat, ELat])
+
+        # Midpoints
+        lon_mid = (lon_min + lon_max) / 2
+        lat_mid = (lat_min + lat_max) / 2
+
+        # Maximum half-range
+        half_range = max(lon_max - lon_min, lat_max - lat_min) / 2
+        if half_range == 0:  # points identical → provide small default
+            half_range = 1
+
+        # Set square extent
+        axins.set_extent(
+            [
+                lon_mid - half_range,
+                lon_mid + half_range,
+                lat_mid - half_range,
+                lat_mid + half_range,
+            ],
+            crs=ccrs.PlateCarree(),
+        )
+
+        # Ensure square aspect
+        axins.set_aspect("equal")
+
     else:
         # Add title.
         axes.set_title(title, fontsize=16)
+
+    # Adjust padding if spatial plot or transect
+    if is_transect(cube):
+        yinfopad = -0.1
+        ycbarpad = 0.1
+    else:
+        yinfopad = -0.05
+        ycbarpad = 0.042
 
     # Add watermark with min/max/mean. Currently not user togglable.
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
     axes.annotate(
         f"Min: {np.min(cube.data):.3g} Max: {np.max(cube.data):.3g} Mean: {np.mean(cube.data):.3g}",
-        xy=(1, -0.05),
+        xy=(1, yinfopad),
         xycoords="axes fraction",
         xytext=(-5, 5),
         textcoords="offset points",
@@ -687,8 +751,9 @@ def _plot_and_save_spatial_plot(
 
     # Add main colour bar.
     cbar = fig.colorbar(
-        plot, orientation="horizontal", location="bottom", pad=0.042, shrink=0.7
+        plot, orientation="horizontal", location="bottom", pad=ycbarpad, shrink=0.7
     )
+
     cbar.set_label(label=f"{cube.name()} ({cube.units})", size=14)
     # add ticks and tick_labels for every levels if less than 20 levels exist
     if levels is not None and len(levels) < 20:
@@ -753,7 +818,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
     for member, subplot in zip(
         cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1), strict=False
     ):
-        # Setup subplot map projection, extent and coastlines.
+        # Setup subplot map projection, extent and coastlines and borderlines.
         axes = _setup_spatial_map(
             member, fig, cmap, grid_size=grid_size, subplot=subplot
         )
@@ -1186,7 +1251,7 @@ def _plot_and_save_vector_plot(
     # Specify the color bar
     cmap, levels, norm = _colorbar_map_levels(cube_vec_mag)
 
-    # Setup plot map projection, extent and coastlines.
+    # Setup plot map projection, extent and coastlines and borderlines.
     axes = _setup_spatial_map(cube_vec_mag, fig, cmap)
 
     if method == "contourf":
@@ -1517,9 +1582,10 @@ def _plot_and_save_scattermap_plot(
         edgecolors="k",
     )
 
-    # Add coastlines.
+    # Add coastlines and borderlines.
     try:
         axes.coastlines(resolution="10m")
+        axes.add_feature(cfeature.BORDERS)
     except AttributeError:
         pass
 
