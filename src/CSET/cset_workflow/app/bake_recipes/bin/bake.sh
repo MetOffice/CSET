@@ -6,7 +6,7 @@ set -euo pipefail
 cset_command=( cset bake \
     --recipe "$1" \
     --output-dir "${CYLC_WORKFLOW_SHARE_DIR}/web/plots/${CYLC_TASK_CYCLE_POINT}/$(basename "$1" .yaml)" \
-    ${COLORBAR_FILE:+"--style-file='${CYLC_WORKFLOW_SHARE_DIR}/style.json'"} \
+    ${COLORBAR_FILE:+"--style-file=${CYLC_WORKFLOW_SHARE_DIR}/style.json"} \
     ${PLOT_RESOLUTION:+"--plot-resolution=$PLOT_RESOLUTION"} \
     ${SKIP_WRITE:+"--skip-write"} )
 
