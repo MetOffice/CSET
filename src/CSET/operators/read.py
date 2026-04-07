@@ -279,7 +279,7 @@ def _check_input_files(input_paths: str | list[str]) -> list[Path]:
 def _cutout_cubes(
     cubes: iris.cube.CubeList,
     subarea_type: Literal["gridcells", "realworld", "modelrelative"] | None,
-    subarea_extent: list[float, float, float, float],
+    subarea_extent: list[float],
 ):
     """Cut out a subarea from a CubeList."""
     if subarea_type is None:
