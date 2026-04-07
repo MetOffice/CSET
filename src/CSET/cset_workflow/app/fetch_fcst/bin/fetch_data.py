@@ -112,10 +112,11 @@ class FilesystemFileRetriever(FileRetrieverABC):
         for f in file_paths:
             file = Path(f).absolute()
             try:
-                # We know file exists from glob. Save to a filename derived from
-                # the full path, to differentiate similarly named files from
-                # different directories.
-                os.symlink(file, f"{output_dir}/{str(file).replace('/', ')')}")
+                # Save to a filename derived from the full path, to
+                # differentiate similarly named files from different
+                # directories.
+                # `)` replaces `/` as it can be in file names.
+                os.symlink(file, f"{output_dir}/{')'.join(file.parts)}")
                 any_files_copied = True
             except OSError as err:
                 logging.warning("Failed to copy %s, error: %s", file, err)
