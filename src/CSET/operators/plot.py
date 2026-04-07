@@ -670,10 +670,7 @@ def _plot_and_save_spatial_plot(
         axins.coastlines(resolution="50m")
         axins.add_feature(cfeature.BORDERS, linewidth=0.3)
 
-        SLat = float(cube.attributes["transect_coords"].split("_")[0])
-        SLon = float(cube.attributes["transect_coords"].split("_")[1])
-        ELat = float(cube.attributes["transect_coords"].split("_")[2])
-        ELon = float(cube.attributes["transect_coords"].split("_")[3])
+        SLat, SLon, ELat, ELon = (float(coord) for coord in cube.attributes["transect_coords"].split("_"))
 
         # Plot points (note: lon, lat order for Cartopy)
         axins.plot(SLon, SLat, marker="x", color="green", transform=ccrs.PlateCarree())
