@@ -10,14 +10,15 @@ description: |
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
+    model_names: [$BASE_MODEL, $OTHER_MODEL]
     constraint:
         operator: constraints.combine_constraints
-        cell_method_constraint:
-            operator: constraints.generate_cell_methods_constraint
-            cell_methods: []
         var_constraint:
             operator: constraints.generate_var_constraint
             varname: $VARNAME
+        cell_method_constraint:
+            operator: constraints.generate_cell_methods_constraint
+            cell_methods: []
         level_constraint:
             operator: constraints.generate_level_constraint
             coordinate: $VERTICAL_COORDINATE
@@ -31,11 +32,17 @@ steps:
     coordinate: time
     method: MEAN
 
+  - operator: misc.extract_common_pressure_levels
+    coordinate: $VERTICAL_COORDINATE
+
+  - operator: misc.ensure_increasing_coord
+    coordinate: $VERTICAL_COORDINATE
+
+  - operator: misc.difference
+
   - operator: transect.calc_transect
     startcoords: $START_COORDS
     endcoords: $FINISH_COORDS
-
-  - operator: misc.difference
 
   - operator: plot.spatial_contour_plot
     sequence_coordinate: time
