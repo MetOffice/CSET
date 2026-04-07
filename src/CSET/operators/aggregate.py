@@ -20,6 +20,8 @@ import iris
 import iris.analysis
 import iris.coord_categorisation
 import iris.cube
+import iris.exceptions
+import iris.util
 import isodate
 
 from CSET._common import iter_maybe
@@ -166,9 +168,15 @@ def ensure_aggregatable_across_cases(
         # Create an aggregatable cube from the provided CubeList.
         to_merge = iris.cube.CubeList()
         for cube in bucket:
-            to_merge.extend(
-                cube.slices_over(["forecast_period", "forecast_reference_time"])
-            )
+            try:
+                to_merge.extend(
+                    cube.slices_over(["forecast_period", "forecast_reference_time"])
+                )
+            except iris.exceptions.CoordinateNotFoundError as err:
+                raise ValueError(
+                    "Cube should have 'forecast_period' and 'forecast_reference_time' dimension coordinates.",
+                    cube,
+                ) from err
         aggregatable_cube = to_merge.merge_cube()
 
         # Verify cube is now aggregatable.

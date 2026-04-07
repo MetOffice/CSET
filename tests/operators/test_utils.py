@@ -344,9 +344,9 @@ def test_slice_over_ensemble(long_forecast):
     )
 
 
-def test_is_time_aggregatable_False(long_forecast):
+def test_is_time_aggregatable_False(cardington_cube):
     """Check that a cube that is not time aggregatable returns False."""
-    assert not operator_utils.is_time_aggregatable(long_forecast)
+    assert not operator_utils.is_time_aggregatable(cardington_cube)
 
 
 def test_is_time_aggregatable(long_forecast_multi_day):
