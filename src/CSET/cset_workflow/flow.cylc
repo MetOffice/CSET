@@ -94,6 +94,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
 
         CONDA_PATH = {{CONDA_PATH}}
         LOGLEVEL = {{LOGLEVEL}}
+        COLORBAR_FILE = {{COLORBAR_FILE}}
         PLOT_RESOLUTION = {{PLOT_RESOLUTION|default(100)}}
         {% if SKIP_WRITE|default(False) %}
         SKIP_WRITE = True
@@ -137,7 +138,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     # consistency between the many runs.
     execution time limit = PT5M
         [[[environment]]]
-        COLORBAR_FILE = {{COLORBAR_FILE}}
         MODEL_NAMES = {{ b64json(models|map(attribute="name")|list) }}
 
     {% for model in models %}

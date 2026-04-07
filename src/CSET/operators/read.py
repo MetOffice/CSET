@@ -279,7 +279,7 @@ def _check_input_files(input_paths: str | list[str]) -> list[Path]:
 def _cutout_cubes(
     cubes: iris.cube.CubeList,
     subarea_type: Literal["gridcells", "realworld", "modelrelative"] | None,
-    subarea_extent: list[float, float, float, float],
+    subarea_extent: list[float],
 ):
     """Cut out a subarea from a CubeList."""
     if subarea_type is None:
@@ -393,9 +393,9 @@ def _realization_callback(cube, field, filename):
 
 
 @functools.lru_cache(None)
-def _warn_once(msg):
+def _log_once(msg, level=logging.WARNING):
     """Print a warning message, skipping recent duplicates."""
-    logging.warning(msg)
+    logging.log(level, msg)
 
 
 def _um_normalise_callback(cube: iris.cube.Cube, field, filename):
@@ -412,8 +412,9 @@ def _um_normalise_callback(cube: iris.cube.Cube, field, filename):
             cube.long_name = name
         except KeyError:
             # Don't change cubes with unknown stash codes.
-            _warn_once(
-                f"Unknown STASH code: {stash}. Please check file stash_to_lfric.py to update."
+            _log_once(
+                f"Unknown STASH code: {stash}. Please check file stash_to_lfric.py to update.",
+                level=logging.WARNING,
             )
 
 
@@ -809,8 +810,9 @@ def _convert_cube_units_callback(cube: iris.cube.Cube):
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if any("surface_microphysical" in name for name in varnames):
         if cube.units == "kg m-2 s-1":
-            logging.debug(
-                "Converting precipitation rate units from kg m-2 s-1 to mm hr-1"
+            _log_once(
+                "Converting precipitation rate units from kg m-2 s-1 to mm hr-1",
+                level=logging.DEBUG,
             )
             # Convert from kg m-2 s-1 to mm s-1 assuming 1kg water = 1l water = 1dm^3 water.
             # This is a 1:1 conversion, so we just change the units.
@@ -818,7 +820,10 @@ def _convert_cube_units_callback(cube: iris.cube.Cube):
             # Convert the units to per hour.
             cube.convert_units("mm hr-1")
         elif cube.units == "kg m-2":
-            logging.debug("Converting precipitation amount units from kg m-2 to mm")
+            _log_once(
+                "Converting precipitation amount units from kg m-2 to mm",
+                level=logging.DEBUG,
+            )
             # Convert from kg m-2 to mm assuming 1kg water = 1l water = 1dm^3 water.
             # This is a 1:1 conversion, so we just change the units.
             cube.units = "mm"
@@ -827,7 +832,7 @@ def _convert_cube_units_callback(cube: iris.cube.Cube):
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if any("visibility" in name for name in varnames):
         if cube.units == "m":
-            logging.debug("Converting visibility units m to km.")
+            _log_once("Converting visibility units m to km.", level=logging.DEBUG)
             # Convert the units to km.
             cube.convert_units("km")
 
