@@ -1,0 +1,50 @@
+category: Transect Difference
+title: "$VARNAME Transect Difference ($BASE_MODEL - $OTHER_MODEL) \n Aggregation over all cases"
+description: |
+  Extracts a $VERTICAL_COORDINATE transect for $VARNAME between two points and
+  plots it.
+
+  Start coordinate: `$START_COORDS`
+  End coordinate: `$FINISH_COORDS`
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: [$BASE_MODEL, $OTHER_MODEL]
+    constraint:
+        operator: constraints.combine_constraints
+        var_constraint:
+            operator: constraints.generate_var_constraint
+            varname: $VARNAME
+        cell_method_constraint:
+            operator: constraints.generate_cell_methods_constraint
+            cell_methods: []
+        level_constraint:
+            operator: constraints.generate_level_constraint
+            coordinate: $VERTICAL_COORDINATE
+            levels: '*'
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: aggregate.ensure_aggregatable_across_cases
+
+  - operator: collapse.collapse_by_validity_time
+    method: MEAN
+
+  - operator: misc.extract_common_pressure_levels
+    coordinate: $VERTICAL_COORDINATE
+
+  - operator: misc.ensure_increasing_coord
+    coordinate: $VERTICAL_COORDINATE
+
+  - operator: misc.difference
+
+  - operator: transect.calc_transect
+    startcoords: $START_COORDS
+    endcoords: $FINISH_COORDS
+
+  - operator: plot.spatial_contour_plot
+    sequence_coordinate: time
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
