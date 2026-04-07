@@ -97,30 +97,30 @@ def load(conf: Config):
                 aggregation=True,
             )
 
-    # # Pressure level fields.
-    # for model, atype, field, plevel in itertools.product(
-    #     models[1:], AGGREGATION_TYPES, conf.PRESSURE_LEVEL_FIELDS, conf.PRESSURE_LEVELS
-    # ):
-    #     if conf.SPATIAL_DIFFERENCE_PLEVEL_FIELD_AGGREGATION[
-    #         AGGREGATION_TYPES.index(atype)
-    #     ]:
-    #         base_model = models[0]
-    #         yield RawRecipe(
-    #             recipe=f"level_spatial_difference_case_aggregation_mean_{atype}.yaml",
-    #             variables={
-    #                 "VARNAME": field,
-    #                 "LEVELTYPE": "pressure",
-    #                 "LEVEL": plevel,
-    #                 "BASE_MODEL": base_model["name"],
-    #                 "OTHER_MODEL": model["name"],
-    #                 "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-    #                 "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-    #                 if conf.SELECT_SUBAREA
-    #                 else None,
-    #             },
-    #             model_ids=[base_model["id"], model["id"]],
-    #             aggregation=True,
-    #         )
+    # Transect aggregation difference
+    for model, atype, field in itertools.product(
+        models[1:], AGGREGATION_TYPES, conf.PRESSURE_LEVEL_FIELDS
+    ):
+        if conf.PLEVEL_TRANSECT_AGGREGATION_DIFFERENCE[AGGREGATION_TYPES.index(atype)][
+            AGGREGATION_TYPES.index(atype)
+        ]:
+            base_model = models[0]
+            yield RawRecipe(
+                recipe=f"transect_case_aggregation_difference_{atype}.yaml",
+                variables={
+                    "VARNAME": field,
+                    "LEVELTYPE": "pressure",
+                    "VERTICAL_COORDINATE": "model_level_number",
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=True,
+            )
 
     # Model level fields
     if conf.EXTRACT_MLEVEL_TRANSECT:
