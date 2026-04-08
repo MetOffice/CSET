@@ -1040,3 +1040,7 @@ def _normalise_ML_varname(cube: iris.cube.Cube):
             cube.long_name = "meridional_wind_at_pressure_levels"
         if cube.name() == "air_temperature":
             cube.long_name = "temperature_at_pressure_levels"
+        if cube.name() == "specific_humidity":
+            cube.long_name = (
+                "vapour_specific_humidity_at_pressure_levels_for_climate_averaging"
+            )
