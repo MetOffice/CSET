@@ -35,8 +35,6 @@ steps:
   - operator: misc.extract_common_pressure_levels
     coordinate: $VERTICAL_COORDINATE
 
-  - operator: misc.ensure_increasing_coord
-    coordinate: $VERTICAL_COORDINATE
 
   - operator: misc.difference
 

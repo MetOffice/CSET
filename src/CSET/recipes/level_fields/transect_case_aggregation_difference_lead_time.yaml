@@ -36,9 +36,6 @@ steps:
   - operator: misc.extract_common_pressure_levels
     coordinate: $VERTICAL_COORDINATE
 
-  - operator: misc.ensure_increasing_coord
-    coordinate: $VERTICAL_COORDINATE
-
   - operator: misc.difference
 
   - operator: transect.calc_transect
@@ -46,7 +43,7 @@ steps:
     endcoords: $FINISH_COORDS
 
   - operator: plot.spatial_contour_plot
-    sequence_coordinate: hour
+    sequence_coordinate: forecast_period
 
   - operator: write.write_cube_to_nc
     overwrite: True
