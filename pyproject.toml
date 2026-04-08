@@ -32,6 +32,7 @@ dependencies = [
     "iris-grib",
     "scipy",
     "scikit-image",
+    "dask",
 ]
 
 [project.urls]
