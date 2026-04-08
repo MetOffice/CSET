@@ -51,26 +51,29 @@ def load(conf: Config):
     AGGREGATION_TYPES = ["lead_time", "hour_of_day", "validity_time", "all"]
 
     # Transect aggregation
-    for model, atype, field in itertools.product(
-        models, AGGREGATION_TYPES, conf.PRESSURE_LEVEL_FIELDS
-    ):
-        if conf.PLEVEL_TRANSECT_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
-            yield RawRecipe(
-                recipe=f"transect_case_aggregation_{atype}.yaml",
-                variables={
-                    "VARNAME": field,
-                    "VERTICAL_COORDINATE": "pressure",
-                    "MODEL_NAME": model["name"],
-                    "START_COORDS": conf.PLEVEL_TRANSECT_STARTCOORDS,
-                    "FINISH_COORDS": conf.PLEVEL_TRANSECT_FINISHCOORDS,
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
-                },
-                model_ids=model["id"],
-                aggregation=True,
-            )
+    if conf.EXTRACT_PLEVEL_TRANSECT:
+        for model, atype, field in itertools.product(
+            models, AGGREGATION_TYPES, conf.PRESSURE_LEVEL_FIELDS
+        ):
+            if conf.PLEVEL_TRANSECT_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
+                yield RawRecipe(
+                    recipe=f"transect_case_aggregation_{atype}.yaml",
+                    variables={
+                        "VARNAME": field,
+                        "VERTICAL_COORDINATE": "pressure",
+                        "MODEL_NAME": model["name"],
+                        "START_COORDS": conf.PLEVEL_TRANSECT_STARTCOORDS,
+                        "FINISH_COORDS": conf.PLEVEL_TRANSECT_FINISHCOORDS,
+                        "SUBAREA_TYPE": conf.SUBAREA_TYPE
+                        if conf.SELECT_SUBAREA
+                        else None,
+                        "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                        if conf.SELECT_SUBAREA
+                        else None,
+                    },
+                    model_ids=model["id"],
+                    aggregation=True,
+                )
 
     # Model level fields
     if conf.EXTRACT_MLEVEL_TRANSECT:
