@@ -21,6 +21,8 @@
             -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22
             -l walltime = 06:00:00
             -W umask    = 0022
+        [[[ environment ]]]
+            BUNCH_POOL_SIZE = $PBS_NCPUS
 
     [[bake_aggregation_recipes]]
         platform = gadi_pbs
@@ -32,3 +34,5 @@
             -l walltime = 06:00:00
             -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22
             -W umask    = 0022
+        [[[ environment ]]]
+            BUNCH_POOL_SIZE = $PBS_NCPUS
