@@ -23,6 +23,7 @@ import logging
 from pathlib import Path
 from typing import Literal
 
+import dask
 import iris
 import iris.coord_systems
 import iris.coords
@@ -844,8 +845,7 @@ def _fix_lfric_cloud_base_altitude(cube: iris.cube.Cube):
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if any("cloud_base_altitude" in name for name in varnames):
         # Mask cube where set > 144kft to catch default 144.35695538058164
-        cube.data = np.ma.masked_array(cube.data)
-        cube.data[cube.data > 144.0] = np.ma.masked
+        cube.data = dask.array.ma.masked_greater(cube.core_data(), 144.0)
 
 
 def _fix_um_winds(cubes: iris.cube.CubeList):
@@ -897,8 +897,8 @@ def _convert_wind_true_dirn_um(cubes: iris.cube.CubeList):
     v_grids = cubes.extract(iris.AttributeConstraint(STASH="m01s03i226"))
     for u, v in zip(u_grids, v_grids, strict=True):
         true_u, true_v = rotate_winds(u, v, iris.coord_systems.GeogCS(6371229.0))
-        u.data = true_u.data
-        v.data = true_v.data
+        u.data = true_u.core_data()
+        v.data = true_v.core_data()
 
 
 def _normalise_var0_varname(cube: iris.cube.Cube):
