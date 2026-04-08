@@ -72,6 +72,12 @@ def remove_attribute(
     for cube in cubes:
         for attr in iter_maybe(attribute):
             cube.attributes.pop(attr, None)
+
+    # Combine things that can be merged due to remove removing the
+    # attributes.
+    cubes = cubes.merge()
+    # combine items that can be merged after removing unwanted attributes
+    cubes = cubes.concatenate()
     return cubes
 
 

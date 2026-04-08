@@ -17,7 +17,7 @@ fi
 export RECIPE_DIR
 
 # Determine parallelism.
-parallelism="$(nproc)"
+parallelism="${BUNCH_POOL_SIZE:-$(nproc)}"
 if [ "$CYLC_TASK_SUBMIT_NUMBER" -gt 1 ]; then
     # This is a retry; enable DEBUG logging.
     export LOGLEVEL="DEBUG"

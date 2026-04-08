@@ -251,6 +251,19 @@ def load(conf: Config):
             aggregation=False,
         )
 
+    # Heavy rain presence
+    if conf.HEAVY_RAIN_PRESENCE_DOMAIN_MEAN_TIMESERIES:
+        yield RawRecipe(
+            recipe="heavy_rain_presence_domain_mean_time_series.yaml",
+            variables={
+                "MODEL_NAME": [model["name"] for model in models],
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+            },
+            model_ids=[model["id"] for model in models],
+            aggregation=False,
+        )
+
     # Lightning presence
     if conf.LIGHTNING_PRESENCE_DOMAIN_TIME_SERIES:
         yield RawRecipe(
@@ -342,6 +355,31 @@ def load(conf: Config):
             aggregation=False,
         )
 
+    # Cardington air temperature time series.
+    if conf.CARDINGTON_AIR_TEMPERATURE_SINGLE_POINT_TIME_SERIES:
+        base_model = models[0]
+        for model in models[1:]:
+            yield RawRecipe(
+                recipe="cardington_air_temperature_single_point_time_series.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
+    # Cardington relative humidity time series.
+    if conf.CARDINGTON_RELATIVE_HUMIDITY_SINGLE_POINT_TIME_SERIES:
+        base_model = models[0]
+        for model in models[1:]:
+            yield RawRecipe(
+                recipe="cardington_relative_humidity_single_point_time_series.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
     # Surface wind gusts on Beaufort Scale
     if conf.SFC_WIND_GUSTS_BEAUFORT_SCALE_DOMAIN_MEAN_TIMESERIES:
         yield RawRecipe(

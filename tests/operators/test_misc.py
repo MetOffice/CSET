@@ -429,3 +429,14 @@ def test_differentitate_cubelist(long_forecast):
     new_cubelist = misc.differentiate(input_cubes, "time")
     for actual, expected in zip(new_cubelist, expected_cubelist, strict=True):
         assert np.allclose(actual.data, expected.data, rtol=1e-6, atol=1e-2)
+
+
+def test_remove_attribute_merging_cubes(ensemble_cube):
+    """Test removing attributes from a cube and checking they merge."""
+    cube_day1 = ensemble_cube[0, :, :]
+    cube_day2 = ensemble_cube[1, :, :]
+    cube_day2.attributes["history"] = "adding attribute to remove"
+    cubelist = iris.cube.CubeList([cube_day1, cube_day2])
+    cubelist = misc.remove_attribute(cubelist, attribute="history")
+    # assert cubelist is of length 1 to show cubes have merged properly.
+    assert len(cubelist) == 1

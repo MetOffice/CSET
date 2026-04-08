@@ -279,7 +279,7 @@ def _check_input_files(input_paths: str | list[str]) -> list[Path]:
 def _cutout_cubes(
     cubes: iris.cube.CubeList,
     subarea_type: Literal["gridcells", "realworld", "modelrelative"] | None,
-    subarea_extent: list[float, float, float, float],
+    subarea_extent: list[float],
 ):
     """Cut out a subarea from a CubeList."""
     if subarea_type is None:
@@ -364,6 +364,7 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     _lfric_normalise_callback(cube, field, filename)
     cube = _lfric_time_coord_fix_callback(cube, field, filename)
     _normalise_var0_varname(cube)
+    cube = _fix_no_spatial_coords_callback(cube)
     _fix_spatial_coords_callback(cube)
     _fix_pressure_coord_callback(cube)
     _fix_um_radtime(cube)
@@ -373,7 +374,8 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     _fix_lfric_cloud_base_altitude(cube)
     _proleptic_gregorian_fix(cube)
     _lfric_time_callback(cube)
-    _lfric_forecast_period_standard_name_callback(cube)
+    _lfric_forecast_period_callback(cube)
+    _normalise_ML_varname(cube)
     return cube
 
 
@@ -391,9 +393,9 @@ def _realization_callback(cube, field, filename):
 
 
 @functools.lru_cache(None)
-def _warn_once(msg):
+def _log_once(msg, level=logging.WARNING):
     """Print a warning message, skipping recent duplicates."""
-    logging.warning(msg)
+    logging.log(level, msg)
 
 
 def _um_normalise_callback(cube: iris.cube.Cube, field, filename):
@@ -410,8 +412,9 @@ def _um_normalise_callback(cube: iris.cube.Cube, field, filename):
             cube.long_name = name
         except KeyError:
             # Don't change cubes with unknown stash codes.
-            _warn_once(
-                f"Unknown STASH code: {stash}. Please check file stash_to_lfric.py to update."
+            _log_once(
+                f"Unknown STASH code: {stash}. Please check file stash_to_lfric.py to update.",
+                level=logging.WARNING,
             )
 
 
@@ -430,6 +433,9 @@ def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
     cube.attributes.pop("timeStamp", None)
     cube.attributes.pop("uuid", None)
     cube.attributes.pop("name", None)
+    cube.attributes.pop("source", None)
+    cube.attributes.pop("analysis_source", None)
+    cube.attributes.pop("history", None)
 
     # Sort STASH code list.
     stash_list = cube.attributes.get("um_stash_source")
@@ -507,6 +513,51 @@ def _grid_longitude_fix_callback(cube: iris.cube.Cube) -> iris.cube.Cube:
             long_coord.guess_bounds()
 
     return cube
+
+
+def _fix_no_spatial_coords_callback(cube: iris.cube.Cube):
+    import CSET.operators._utils as utils
+
+    # Don't modify spatial cubes that already have spatial dimensions
+    if utils.is_spatialdim(cube):
+        return cube
+
+    else:
+        # attempt to get lat/long from cube attributes
+        try:
+            lat_min = cube.attributes.get("geospatial_lat_min")
+            lat_max = cube.attributes.get("geospatial_lat_max")
+            lon_min = cube.attributes.get("geospatial_lon_min")
+            lon_max = cube.attributes.get("geospatial_lon_max")
+
+            lon_val = (lon_min + lon_max) / 2.0
+            lat_val = (lat_min + lat_max) / 2.0
+
+            lat_coord = iris.coords.DimCoord(
+                lat_val,
+                standard_name="latitude",
+                units="degrees_north",
+                var_name="latitude",
+                coord_system=iris.coord_systems.GeogCS(6371229.0),
+                circular=True,
+            )
+
+            lon_coord = iris.coords.DimCoord(
+                lon_val,
+                standard_name="longitude",
+                units="degrees_east",
+                var_name="longitude",
+                coord_system=iris.coord_systems.GeogCS(6371229.0),
+                circular=True,
+            )
+
+            cube.add_aux_coord(lat_coord)
+            cube.add_aux_coord(lon_coord)
+            return cube
+
+        # if lat/long are not in attributes, then return cube unchanged:
+        except TypeError:
+            return cube
 
 
 def _fix_spatial_coords_callback(cube: iris.cube.Cube):
@@ -759,8 +810,9 @@ def _convert_cube_units_callback(cube: iris.cube.Cube):
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if any("surface_microphysical" in name for name in varnames):
         if cube.units == "kg m-2 s-1":
-            logging.debug(
-                "Converting precipitation rate units from kg m-2 s-1 to mm hr-1"
+            _log_once(
+                "Converting precipitation rate units from kg m-2 s-1 to mm hr-1",
+                level=logging.DEBUG,
             )
             # Convert from kg m-2 s-1 to mm s-1 assuming 1kg water = 1l water = 1dm^3 water.
             # This is a 1:1 conversion, so we just change the units.
@@ -768,7 +820,10 @@ def _convert_cube_units_callback(cube: iris.cube.Cube):
             # Convert the units to per hour.
             cube.convert_units("mm hr-1")
         elif cube.units == "kg m-2":
-            logging.debug("Converting precipitation amount units from kg m-2 to mm")
+            _log_once(
+                "Converting precipitation amount units from kg m-2 to mm",
+                level=logging.DEBUG,
+            )
             # Convert from kg m-2 to mm assuming 1kg water = 1l water = 1dm^3 water.
             # This is a 1:1 conversion, so we just change the units.
             cube.units = "mm"
@@ -777,7 +832,7 @@ def _convert_cube_units_callback(cube: iris.cube.Cube):
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if any("visibility" in name for name in varnames):
         if cube.units == "m":
-            logging.debug("Converting visibility units m to km.")
+            _log_once("Converting visibility units m to km.", level=logging.DEBUG)
             # Convert the units to km.
             cube.convert_units("km")
 
@@ -964,11 +1019,24 @@ def _lfric_time_callback(cube: iris.cube.Cube):
         logging.warning("No time coordinate on cube.")
 
 
-def _lfric_forecast_period_standard_name_callback(cube: iris.cube.Cube):
-    """Add forecast_period standard name if missing."""
+def _lfric_forecast_period_callback(cube: iris.cube.Cube):
+    """Check forecast_period name and units."""
     try:
         coord = cube.coord("forecast_period")
+        if coord.units != "hours":
+            cube.coord("forecast_period").convert_units("hours")
         if not coord.standard_name:
             coord.standard_name = "forecast_period"
     except iris.exceptions.CoordinateNotFoundError:
         pass
+
+
+def _normalise_ML_varname(cube: iris.cube.Cube):
+    """Fix plev variable names to standard names."""
+    if cube.coords("pressure"):
+        if cube.name() == "x_wind":
+            cube.long_name = "zonal_wind_at_pressure_levels"
+        if cube.name() == "y_wind":
+            cube.long_name = "meridional_wind_at_pressure_levels"
+        if cube.name() == "air_temperature":
+            cube.long_name = "temperature_at_pressure_levels"

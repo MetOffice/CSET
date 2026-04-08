@@ -564,6 +564,15 @@ def test_contour_plot_sequence(cube, tmp_working_dir):
     assert Path("untitled_20220921050000.png").is_file()
 
 
+def test_spatial_multi_variable_plot(cube, tmp_working_dir):
+    """Plot spatial plot with multiple input variables."""
+    # Here assume cube provides cube, overlay_cube and contour_cube.
+    plot.spatial_multi_pcolormesh_plot(cube, cube, cube, sequence_coordinate="time")
+    assert Path("untitled_20220921030000.png").is_file()
+    assert Path("untitled_20220921040000.png").is_file()
+    assert Path("untitled_20220921050000.png").is_file()
+
+
 @pytest.mark.slow
 def test_vector_plot_with_filename(vector_cubes, tmp_working_dir):
     """Plot a vector plot of u10 and v10 components."""
@@ -681,25 +690,25 @@ def test_postage_stamp_pcolormesh_plot_sequence_coord_check(cube, tmp_working_di
 
 
 def test_pcolormesh_coastline(cube, caplog, tmp_working_dir):
-    """Check coastlines plotted in black for air_temperature colormap."""
+    """Check coastlines and borderlines plotted in black for air_temperature colormap."""
     with caplog.at_level(logging.DEBUG):
         plot.spatial_pcolormesh_plot(cube)
         message_match = False
         for _, _, message in caplog.record_tuples:
-            if message == "Plotting coastlines in colour black.":
+            if message == "Plotting coastlines and borderlines in colour black.":
                 message_match = True
         assert message_match
 
 
 def test_pcolormesh_coastline_m(cube, caplog, tmp_working_dir):
-    """Check coastlines plotted in magenta for viridis colormap."""
+    """Check coastlines and borderlines plotted in magenta for viridis colormap."""
     with caplog.at_level(logging.DEBUG):
         # Set cube name to unknown to trigger viridis default cmap
         cube.rename("unknown_var_name")
         plot.spatial_pcolormesh_plot(cube)
         message_match = False
         for _, _, message in caplog.record_tuples:
-            if message == "Plotting coastlines in colour magenta.":
+            if message == "Plotting coastlines and borderlines in colour magenta.":
                 message_match = True
         assert message_match
 
