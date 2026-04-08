@@ -18,7 +18,6 @@ import logging
 
 import iris
 import numpy as np
-from typing import Union
 
 from CSET.operators._utils import get_cube_yxcoordname
 
@@ -40,7 +39,9 @@ def _check_within_bounds(point: tuple[float, float], lat_coord, lon_coord):
         )
 
 
-def calc_transect(input: Union[iris.cube.Cube, iris.cube.CubeList], startcoords: tuple, endcoords: tuple):
+def calc_transect(
+    input: iris.cube.Cube | iris.cube.CubeList, startcoords: tuple, endcoords: tuple
+):
     """Compute transect between startcoords and endcoords.
 
     Computes a transect for a given cube/cubelist containing at least latitude
@@ -80,16 +81,14 @@ def calc_transect(input: Union[iris.cube.Cube, iris.cube.CubeList], startcoords:
     doesn't affect the transect plot, its purely for interpretation with some appropriate
     x axis labelling/points.
     """
-
     # If function is passed a single cube, make this iterable.
-    if type(input) == iris.cube.Cube:
+    if type(input) is iris.cube.Cube:
         input = iris.cube.CubeList([input])
 
     # To store final transects
     output = iris.cube.CubeList()
 
     for cube in input:
-
         # Find out xy coord name
         lat_name, lon_name = get_cube_yxcoordname(cube)
 
@@ -114,11 +113,15 @@ def calc_transect(input: Union[iris.cube.Cube, iris.cube.CubeList], startcoords:
         if startcoords[1] == endcoords[1]:
             # Along latitude.
             lon_pnts = np.repeat(startcoords[1], int(dist_deg / lat_min))
-            lat_pnts = np.linspace(startcoords[0], endcoords[0], int(dist_deg / lat_min))
+            lat_pnts = np.linspace(
+                startcoords[0], endcoords[0], int(dist_deg / lat_min)
+            )
             transect_coord = "latitude"
         elif startcoords[0] == endcoords[0]:
             # Along longitude.
-            lon_pnts = np.linspace(startcoords[1], endcoords[1], int(dist_deg / lon_min))
+            lon_pnts = np.linspace(
+                startcoords[1], endcoords[1], int(dist_deg / lon_min)
+            )
             lat_pnts = np.repeat(startcoords[0], int(dist_deg / lon_min))
             transect_coord = "longitude"
         else:
@@ -130,7 +133,9 @@ def calc_transect(input: Union[iris.cube.Cube, iris.cube.CubeList], startcoords:
             # If change in latitude larger than change in longitude:
             if abs(startcoords[0] - endcoords[0]) > abs(startcoords[1] - endcoords[1]):
                 transect_coord = "latitude"
-            elif abs(startcoords[0] - endcoords[0]) <= abs(startcoords[1] - endcoords[1]):
+            elif abs(startcoords[0] - endcoords[0]) <= abs(
+                startcoords[1] - endcoords[1]
+            ):
                 transect_coord = "longitude"
 
         # Create cubelist to store interpolated points along transect.
@@ -143,12 +148,18 @@ def calc_transect(input: Union[iris.cube.Cube, iris.cube.CubeList], startcoords:
 
             # Get point along transect.
             cube_slice = cube.interpolate(
-                [(lon_name, lon_pnts[i]), (lat_name, lat_pnts[i])], iris.analysis.Nearest()
+                [(lon_name, lon_pnts[i]), (lat_name, lat_pnts[i])],
+                iris.analysis.Nearest(),
             )
 
             # Remove existing coordinates ready to add one single map coordinate
             # Note latitude/longitude cubes may have additional AuxCoord to remove
-            for coord_name in ["latitude", "longitude", "grid_latitude", "grid_longitude"]:
+            for coord_name in [
+                "latitude",
+                "longitude",
+                "grid_latitude",
+                "grid_longitude",
+            ]:
                 try:
                     cube_slice.remove_coord(coord_name)
                 except iris.exceptions.CoordinateNotFoundError:
