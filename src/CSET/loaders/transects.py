@@ -51,10 +51,10 @@ def load(conf: Config):
     AGGREGATION_TYPES = ["lead_time", "hour_of_day", "validity_time", "all"]
 
     # Transect aggregation
-    for model, atype, field in itertools.product(
-        models, AGGREGATION_TYPES, conf.PRESSURE_LEVEL_FIELDS
-    ):
-        if conf.EXTRACT_PLEVEL_TRANSECT:
+    if conf.EXTRACT_PLEVEL_TRANSECT:
+        for model, atype, field in itertools.product(
+            models, AGGREGATION_TYPES, conf.PRESSURE_LEVEL_FIELDS
+        ):
             if conf.PLEVEL_TRANSECT_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
                 yield RawRecipe(
                     recipe=f"transect_case_aggregation_{atype}.yaml",
