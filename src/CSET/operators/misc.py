@@ -306,8 +306,8 @@ def difference(cubes: CubeList):
     for cube in cubes:
         try:
             if not is_increasing(cube.coord("pressure").points):
-                cube.data = np.flip(cube.data, axis=cube.coord_dims('pressure')[0])
-    
+                cube.data = np.flip(cube.data, axis=cube.coord_dims("pressure")[0])
+
         except iris.exceptions.CoordinateNotFoundError:
             pass
 
@@ -517,7 +517,6 @@ def _slice_cube_on_levels(cube: iris.cube.Cube, coord_name: str, levels: list):
     iris.cube.Cube
         The sliced cube.
     """
-
     coord = cube.coord(coord_name)
     (dim_index,) = cube.coord_dims(coord)
 
@@ -547,7 +546,6 @@ def extract_common_pressure_levels(cubes: iris.cube.CubeList, coordinate: str):
     iris.cube.CubeList
         CubeList containing the two cubes sliced to common pressure levels
     """
-
     # --- Extract vertical coordinates ---
     try:
         p1 = cubes[0].coord(coordinate)
