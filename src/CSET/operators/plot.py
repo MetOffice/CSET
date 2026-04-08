@@ -516,7 +516,7 @@ def _set_title_and_filename(
                     ncase = seq_coord.attributes["number_reference_times"]
                     sequence_title = f"\n [{ncase} cases]"
                     sequence_fname = f"_{ncase}cases"
-                except AttributeError:
+                except KeyError:
                     sequence_title = ""
                     sequence_fname = ""
             # Use sequence (e.g. time) bounds if plotting single non-sequence outputs
