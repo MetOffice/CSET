@@ -47,36 +47,37 @@ def load(conf: Config):
                 aggregation=False,
             )
 
-    # Transect difference plots
-    if conf.PLEVEL_TRANSECT_DIFFERENCE:
-        base_model = models[0]
-        for model, field in itertools.product(
-            models[1:],
-            conf.PRESSURE_LEVEL_FIELDS,
-        ):
-            yield RawRecipe(
-                recipe="transect_difference.yaml",
-                variables={
-                    "VARNAME": field,
-                    "VERTICAL_COORDINATE": "pressure",
-                    "BASE_MODEL": base_model["name"],
-                    "OTHER_MODEL": model["name"],
-                    "START_COORDS": conf.PLEVEL_TRANSECT_STARTCOORDS,
-                    "FINISH_COORDS": conf.PLEVEL_TRANSECT_FINISHCOORDS,
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
-                },
-                model_ids=[base_model["id"], model["id"]],
-                aggregation=False,
-            )
+        # Transect difference plots
+        if conf.PLEVEL_TRANSECT_DIFFERENCE:
+            base_model = models[0]
+            for model, field in itertools.product(
+                models[1:],
+                conf.PRESSURE_LEVEL_FIELDS,
+            ):
+                yield RawRecipe(
+                    recipe="transect_difference.yaml",
+                    variables={
+                        "VARNAME": field,
+                        "VERTICAL_COORDINATE": "pressure",
+                        "BASE_MODEL": base_model["name"],
+                        "OTHER_MODEL": model["name"],
+                        "START_COORDS": conf.PLEVEL_TRANSECT_STARTCOORDS,
+                        "FINISH_COORDS": conf.PLEVEL_TRANSECT_FINISHCOORDS,
+                        "SUBAREA_TYPE": conf.SUBAREA_TYPE
+                        if conf.SELECT_SUBAREA
+                        else None,
+                        "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                        if conf.SELECT_SUBAREA
+                        else None,
+                    },
+                    model_ids=[base_model["id"], model["id"]],
+                    aggregation=False,
+                )
 
-    # Create a list of case aggregation types.
-    AGGREGATION_TYPES = ["lead_time", "hour_of_day", "validity_time", "all"]
+        # Create a list of case aggregation types.
+        AGGREGATION_TYPES = ["lead_time", "hour_of_day", "validity_time", "all"]
 
-    # Transect aggregation
-    if conf.EXTRACT_PLEVEL_TRANSECT:
+        # Transect aggregation
         for model, atype, field in itertools.product(
             models, AGGREGATION_TYPES, conf.PRESSURE_LEVEL_FIELDS
         ):
@@ -100,29 +101,33 @@ def load(conf: Config):
                     aggregation=True,
                 )
 
-    # Transect aggregation difference
-    for model, atype, field in itertools.product(
-        models[1:], AGGREGATION_TYPES, conf.PRESSURE_LEVEL_FIELDS
-    ):
-        if conf.PLEVEL_TRANSECT_AGGREGATION_DIFFERENCE[AGGREGATION_TYPES.index(atype)]:
-            base_model = models[0]
-            yield RawRecipe(
-                recipe=f"transect_case_aggregation_difference_{atype}.yaml",
-                variables={
-                    "VARNAME": field,
-                    "VERTICAL_COORDINATE": "pressure",
-                    "BASE_MODEL": base_model["name"],
-                    "OTHER_MODEL": model["name"],
-                    "START_COORDS": conf.PLEVEL_TRANSECT_STARTCOORDS,
-                    "FINISH_COORDS": conf.PLEVEL_TRANSECT_FINISHCOORDS,
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
-                },
-                model_ids=[base_model["id"], model["id"]],
-                aggregation=True,
-            )
+        # Transect aggregation difference
+        for model, atype, field in itertools.product(
+            models[1:], AGGREGATION_TYPES, conf.PRESSURE_LEVEL_FIELDS
+        ):
+            if conf.PLEVEL_TRANSECT_AGGREGATION_DIFFERENCE[
+                AGGREGATION_TYPES.index(atype)
+            ]:
+                base_model = models[0]
+                yield RawRecipe(
+                    recipe=f"transect_case_aggregation_difference_{atype}.yaml",
+                    variables={
+                        "VARNAME": field,
+                        "VERTICAL_COORDINATE": "pressure",
+                        "BASE_MODEL": base_model["name"],
+                        "OTHER_MODEL": model["name"],
+                        "START_COORDS": conf.PLEVEL_TRANSECT_STARTCOORDS,
+                        "FINISH_COORDS": conf.PLEVEL_TRANSECT_FINISHCOORDS,
+                        "SUBAREA_TYPE": conf.SUBAREA_TYPE
+                        if conf.SELECT_SUBAREA
+                        else None,
+                        "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                        if conf.SELECT_SUBAREA
+                        else None,
+                    },
+                    model_ids=[base_model["id"], model["id"]],
+                    aggregation=True,
+                )
 
     # Model level fields
     if conf.EXTRACT_MLEVEL_TRANSECT:
