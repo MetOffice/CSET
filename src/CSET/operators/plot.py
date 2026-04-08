@@ -498,8 +498,9 @@ def _set_title_and_filename(
 
     # Account for case with multi-dimension sequence input (e.g. aggregation)
     if ndim > 1:
-        sequence_title = f"\n [{ndim} cases]"
-        sequence_fname = f"_{ndim}cases"
+        ncase = np.shape(seq_coord)[0]
+        sequence_title = f"\n [{ncase} cases]"
+        sequence_fname = f"_{ncase}cases"
 
     else:
         if npoints == 1:
