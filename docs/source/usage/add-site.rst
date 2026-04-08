@@ -52,6 +52,13 @@ will overwrite CSET's flow.cylc file. If you need to make additional changes
 please `open an issue on the CSET GitHub repository`_, so we can ensure your use
 case is supported directly in CSET.
 
+.. tip::
+
+    Recipes are baked in parallel with a parallel job per detected CPU. If this
+    is detected incorrectly, or you want to undersubscribe nodes for additional
+    memory headroom, you may set the number of parallel jobs with the
+    ``BUNCH_POOL_SIZE`` environment variable.
+
 Add rose edit metadata entry for site
 -------------------------------------
 
