@@ -359,10 +359,10 @@ def _cutout_cubes(
 def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.Cube:
     """Compose together the needed callbacks into a single function."""
     # Most callbacks operate in-place, but save the cube when returned!
-    _realization_callback(cube, field, filename)
-    _um_normalise_callback(cube, field, filename)
-    _lfric_normalise_callback(cube, field, filename)
-    cube = _lfric_time_coord_fix_callback(cube, field, filename)
+    _realization_callback(cube)
+    _um_normalise_callback(cube)
+    _lfric_normalise_callback(cube)
+    cube = _lfric_time_coord_fix_callback(cube)
     _normalise_var0_varname(cube)
     cube = _fix_no_spatial_coords_callback(cube)
     _fix_spatial_coords_callback(cube)
@@ -379,7 +379,7 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     return cube
 
 
-def _realization_callback(cube, field, filename):
+def _realization_callback(cube):
     """Give deterministic cubes a realization of 0.
 
     This means they can be handled in the same way as ensembles through the rest
@@ -398,7 +398,7 @@ def _log_once(msg, level=logging.WARNING):
     logging.log(level, msg)
 
 
-def _um_normalise_callback(cube: iris.cube.Cube, field, filename):
+def _um_normalise_callback(cube: iris.cube.Cube):
     """Normalise UM STASH variable long names to LFRic variable names.
 
     Note standard names will remain associated with cubes where different.
@@ -418,7 +418,7 @@ def _um_normalise_callback(cube: iris.cube.Cube, field, filename):
             )
 
 
-def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
+def _lfric_normalise_callback(cube: iris.cube.Cube):
     """Normalise attributes that prevents LFRic cube from merging.
 
     The uuid and timeStamp relate to the output file, as saved by XIOS, and has
@@ -444,9 +444,7 @@ def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
         cube.attributes["um_stash_source"] = str(sorted(ast.literal_eval(stash_list)))
 
 
-def _lfric_time_coord_fix_callback(
-    cube: iris.cube.Cube, field, filename
-) -> iris.cube.Cube:
+def _lfric_time_coord_fix_callback(cube: iris.cube.Cube) -> iris.cube.Cube:
     """Ensure the time coordinate is a DimCoord rather than an AuxCoord.
 
     The coordinate is converted and replaced if not. SLAMed LFRic data has this
