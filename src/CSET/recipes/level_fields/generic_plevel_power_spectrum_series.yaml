@@ -1,22 +1,22 @@
 category: Power Spectrum
-title: Power Spectrum $VARNAME
+title: Power Spectrum $VARNAME $LEVELTYPE $LEVEL
 description: |
-  Extracts and plots the power spectral density of surface $VARNAME
+  Extracts and plots the power spectral density of $VARNAME from a
+  file at $LEVELTYPE level $LEVEL of $MODEL_NAME.
 
   Power Spectra calculated on regional domains using Discrete Cosine Transform (DCT)
   as described in
-  [Denis_etal_2002](https://doi.org/10.1175/1520-0493(2002)130<1812:SDOTDA>2.0.CO;2). The
-  power spectra is then converted into a power spectral density to enable fair comparison
+  [Denis_etal_2002](https://doi.org/10.1175/1520-0493(2002)130<1812:SDOTDA>2.0.CO;2).
+  The power spectra is then converted into a power spectral density to enable fair comparison
   between different model resolutions, comparison with observations with different number of data points
   or comparison of models between different domain sizes, cases, run lengths.
+  In case of ensemble data choose from postage stamp plot or
+  single plot via the single_plot option in the recipe directly.
 
   Power spectra can be used to identify how the variance (energy) of a field is distributed across scales.
   The power (energy) is plotted against wavenumber, where low wavenumbers represent large-scale features
   and high numbers represent small-scale features.  Using a log-log scale for plotting allows for ease of
   interpretation and the spectra are normalised to allow for comparison between different models.
-  Alternatively the power spectral density can be plotted against wavelength (needs to be selected in recipe),
-  where low wavelengths represent small-scale features and high wavelengths represent large-scale features.
-
 
   The dominant scales of motion can be identified by peaks in the spectrum and the slope of the curve shows
   how the energy cascades across scales; the slope can be used to identify, for example, the inertial subrange
@@ -26,8 +26,8 @@ description: |
 
 steps:
   - operator: read.read_cubes
-    file_paths: $INPUT_PATHS
     model_names: $MODEL_NAME
+    file_paths: $INPUT_PATHS
     constraint:
       operator: constraints.combine_constraints
       variable_constraint:
@@ -37,10 +37,10 @@ steps:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
         varname: $VARNAME
-      pressure_level_constraint:
+      level_constraint:
         operator: constraints.generate_level_constraint
-        coordinate: pressure
-        levels: []
+        coordinate: $LEVELTYPE
+        levels: $LEVEL
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
@@ -49,8 +49,7 @@ steps:
   - operator: plot.plot_line_series
     series_coordinate: "physical_wavenumber"
     stamp_coordinate: "realization"
-    single_plot: $SPECTRUM_SURFACE_FIELD_SEQUENCE
-
+    single_plot: $SPECTRUM_PLEVEL_FIELD_SEQUENCE
 
   - operator: write.write_cube_to_nc
     overwrite: True

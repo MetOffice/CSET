@@ -720,6 +720,12 @@ def test_plot_line_series(cube, tmp_working_dir):
     assert Path("untitled_20220921023000_20220921053000.png").is_file()
 
 
+def test_plot_power_spectrum(power_spectrum_cube_readonly, tmp_working_dir):
+    """Save a power_spectrum plot using line series plot."""
+    plot.plot_line_series(power_spectrum_cube_readonly, series_coordinate="frequency")
+    assert Path("untitled.png").is_file()
+
+
 def test_plot_line_series_with_filename(cube, tmp_working_dir):
     """Save a line series plot with specific filename and series coordinate."""
     cube = collapse.collapse(cube, ["time", "grid_longitude"], "MEAN")
@@ -729,11 +735,144 @@ def test_plot_line_series_with_filename(cube, tmp_working_dir):
     assert Path("latitude_average.png").is_file()
 
 
+def test_plot_power_spectrum_with_filename(
+    power_spectrum_cube_readonly, tmp_working_dir
+):
+    """Testing power spectrum plot in plot_line_series produces file."""
+    plot.plot_line_series(
+        power_spectrum_cube_readonly, series_coordinate="frequency", filename="test"
+    )
+    assert Path("test.png").is_file()
+
+
 def test_plot_line_series_no_series_coordinate(tmp_working_dir):
     """Error when cube is missing series coordinate (time)."""
     cube = iris.cube.Cube([], var_name="nothing")
     with pytest.raises(ValueError):
         plot.plot_line_series(cube)
+
+
+def test_plot_power_spectrum_no_sequence_coordinate(
+    power_spectrum_cube, tmp_working_dir
+):
+    """Error when cube is missing sequence coordinate (time)."""
+    power_spectrum_cube.remove_coord("time")
+    with pytest.raises(ValueError, match="Cube must have a time coordinate."):
+        plot.plot_line_series(power_spectrum_cube, series_coordinate="frequency")
+
+
+def test_select_series_coord_frequency_fallback_wl(power_spectrum_cube):
+    """Select correct series_coordinate when wavelength."""
+    freq = power_spectrum_cube.coord("frequency")
+    dim = power_spectrum_cube.coord_dims(freq)
+
+    # remove freq
+    power_spectrum_cube.remove_coord("frequency")
+
+    # add wavelength
+    wl = iris.coords.DimCoord(freq.points, long_name="wavelength")
+    power_spectrum_cube.add_aux_coord(wl, dim)
+
+    xcoord = plot.select_series_coord(power_spectrum_cube, "frequency")
+
+    assert xcoord.name() == "wavelength"
+
+
+def test_select_series_coord_frequency_fallback_pw(power_spectrum_cube):
+    """Select correct series_coordinate when physical_wavenumber."""
+    freq = power_spectrum_cube.coord("frequency")
+    dim = power_spectrum_cube.coord_dims(freq)
+
+    # remove freq
+    power_spectrum_cube.remove_coord("frequency")
+
+    # add wavelength
+    pw = iris.coords.DimCoord(freq.points, long_name="physical_wavenumber")
+    power_spectrum_cube.add_aux_coord(pw, dim)
+
+    xcoord = plot.select_series_coord(power_spectrum_cube, "frequency")
+
+    assert xcoord.name() == "physical_wavenumber"
+
+
+def test_select_series_coord_physical_wavenumber_fallback_wl(power_spectrum_cube):
+    """Select correct series_coordinate when wavelength."""
+    freq = power_spectrum_cube.coord("frequency")
+    dim = power_spectrum_cube.coord_dims(freq)
+
+    # remove freq
+    power_spectrum_cube.remove_coord("frequency")
+
+    # add wavelength
+    wl = iris.coords.DimCoord(freq.points, long_name="wavelength")
+    power_spectrum_cube.add_aux_coord(wl, dim)
+
+    xcoord = plot.select_series_coord(power_spectrum_cube, "physical_wavenumber")
+
+    assert xcoord.name() == "wavelength"
+
+
+def test_select_series_coord_physical_wavenumber_fallback_freq(power_spectrum_cube):
+    """Select correct series_coordinate when wavelength."""
+    xcoord = plot.select_series_coord(power_spectrum_cube, "physical_wavenumber")
+
+    assert xcoord.name() == "frequency"
+
+
+def test_select_series_coord_wavelength_fallback_pw(power_spectrum_cube):
+    """Select correct series_coordinate when wavelength."""
+    freq = power_spectrum_cube.coord("frequency")
+    dim = power_spectrum_cube.coord_dims(freq)
+
+    # remove freq
+    power_spectrum_cube.remove_coord("frequency")
+
+    # add wavelength
+    pw = iris.coords.DimCoord(freq.points, long_name="physical_wavenumber")
+    power_spectrum_cube.add_aux_coord(pw, dim)
+
+    xcoord = plot.select_series_coord(power_spectrum_cube, "wavelength")
+
+    assert xcoord.name() == "physical_wavenumber"
+
+
+def test_select_series_coord_wavelength_fallback_freq(power_spectrum_cube):
+    """Select correct series_coordinate when wavelength."""
+    xcoord = plot.select_series_coord(power_spectrum_cube, "wavelength")
+
+    assert xcoord.name() == "frequency"
+
+
+def test_plot_power_spectrum_series_coord_physical_wavenumber(
+    power_spectrum_cube, tmp_working_dir
+):
+    """Testing series_coordinate."""
+    # NOT SURE THIS IS CORRECT BECAUSE THE frequency DIMENSION STILL EXISTS
+    # assert power_spectrum_cube.coords("frequency")
+
+    # Get original frequency coordinate
+
+    freq = power_spectrum_cube.coord("frequency")
+    dim = power_spectrum_cube.coord_dims(freq)
+
+    # Construct a synthetic physical wavenumber (simple proportional mapping for testing)
+    k = np.linspace(0.1, 2.0, len(freq.points))
+
+    physical_wavenumber_coord = iris.coords.DimCoord(
+        points=k,
+        long_name="physical_wavenumber",
+        units="m-1",
+    )
+
+    # Add the new coordinate on the same dimension as frequency
+    # dim_index = power_spectrum_cube.coord_dims("frequency")
+    # power_spectrum_cube.add_dim_coord(physical_wavenumber_coord, dim_index)
+    power_spectrum_cube.add_aux_coord(physical_wavenumber_coord, dim)
+
+    plot.plot_line_series(
+        power_spectrum_cube, series_coordinate="frequency", filename="test"
+    )
+    assert Path("test.png").is_file()
 
 
 def test_plot_line_series_too_many_dimensions(cube, tmp_working_dir):
@@ -778,6 +917,103 @@ def test_plot_line_series_ensemble(ensemble_cube, tmp_working_dir):
     )
     plot.plot_line_series(ensemble_cube, filename="ensemble_series.ext")
     assert Path("ensemble_series.png").is_file()
+
+
+def test_plot_and_save_postage_stamp_power_spectrum_series_single_member():
+    """Test plotting a postage stamp power_spectrum for single ensemble member."""
+    # Create single member 1D PSD cube
+
+    freq = iris.coords.DimCoord(np.arange(420), long_name="physical_wavenumber")
+    real = iris.coords.DimCoord([0], long_name="realization")
+    data = np.random.rand(1, 420)
+    cube = iris.cube.Cube(
+        data, dim_coords_and_dims=[(real, 0), (freq, 1)], long_name="power_spectra"
+    )
+
+    coords = cube.coords()
+
+    plot._plot_and_save_postage_stamp_power_spectrum_series(
+        cubes=cube,
+        coords=coords,
+        stamp_coordinate="realization",
+        filename="test.png",
+        title="Test",
+        series_coordinate="physical_wavenumber",
+    )
+    assert Path("test.png").is_file()
+
+
+def test_plot_and_save_postage_stamp_power_spectrum_series_multi_member():
+    """Test plotting a postage stamp power_spectrum for multiple ensemble members."""
+    # Create two-realization 1D PSD cube
+    freq = iris.coords.DimCoord(np.arange(420), long_name="physical_wavenumber")
+    real = iris.coords.DimCoord([0, 1], long_name="realization")
+    data = np.random.rand(2, 420)
+    cube = iris.cube.Cube(
+        data, dim_coords_and_dims=[(real, 0), (freq, 1)], long_name="power_spectra"
+    )
+
+    coords = cube.coords()
+
+    plot._plot_and_save_postage_stamp_power_spectrum_series(
+        cubes=cube,
+        coords=coords,
+        stamp_coordinate="realization",
+        filename="test.png",
+        title="Test",
+        series_coordinate="physical_wavenumber",
+    )
+    assert Path("test.png").is_file()
+
+
+def test_plot_and_save_postage_stamps_in_single_plot_power_spectrum_series_single_member():
+    """Test plotting a multiline power_spectrum for multiple ensemble members."""
+    # Create two-realization 1D PSD cube
+    freq = iris.coords.DimCoord(np.arange(420), long_name="physical_wavenumber")
+    real = iris.coords.DimCoord([0], long_name="realization")
+    data = np.random.rand(1, 420)
+    cube = iris.cube.Cube(
+        data, dim_coords_and_dims=[(real, 0), (freq, 1)], long_name="power_spectra"
+    )
+
+    cube.attributes["model_name"] = "UM"
+
+    coords = cube.coords()
+
+    plot._plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
+        cubes=cube,
+        coords=coords,
+        stamp_coordinate="realization",
+        filename="test.png",
+        title="Test",
+        series_coordinate="physical_wavenumber",
+    )
+    assert Path("test.png").is_file()
+
+
+def test_plot_and_save_postage_stamps_in_single_plot_power_spectrum_series_multi_member():
+    """Test plotting a multiline power_spectrum for multiple ensemble members."""
+    # Create two-realization 1D PSD cube
+    freq = iris.coords.DimCoord(np.arange(420), long_name="physical_wavenumber")
+    real = iris.coords.DimCoord([0, 1], long_name="realization")
+    data = np.random.rand(2, 420)
+    cube = iris.cube.Cube(
+        data, dim_coords_and_dims=[(real, 0), (freq, 1)], long_name="power_spectra"
+    )
+
+    cube.attributes["model_name"] = "UM"
+
+    coords = cube.coords()
+
+    plot._plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
+        cubes=cube,
+        coords=coords,
+        stamp_coordinate="realization",
+        filename="test.png",
+        title="Test",
+        series_coordinate="physical_wavenumber",
+    )
+    assert Path("test.png").is_file()
 
 
 def test_plot_vertical_line_series(vertical_profile_cube, tmp_working_dir):
@@ -989,155 +1225,6 @@ def test_plot_and_save_postage_stamps_in_single_plot_histogram_series(
         histtype="step",
     )
     assert Path("test.png").is_file()
-
-
-def test_plot_power_spectrum_with_filename(field2d_cube, tmp_working_dir):
-    """Testing power spectrum code produces file."""
-    plot.plot_power_spectrum_series(
-        field2d_cube, filename="test", sequence_coordinate="time"
-    )
-    assert Path("test.png").is_file()
-
-
-def test_plot_and_save_postage_stamp_power_spectrum_series(
-    power_spectrum_cube, tmp_working_dir
-):
-    """Test plotting a postage stamp power spectrum."""
-    plot._plot_and_save_postage_stamp_power_spectrum_series(
-        cube=power_spectrum_cube,
-        filename="test.png",
-        title="Test",
-        stamp_coordinate="realization",
-        histtype="step",
-    )
-    assert Path("test.png").is_file()
-
-
-def test_plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
-    power_spectrum_cube, tmp_working_dir
-):
-    """Test plotting a multiline power spectrum for multiple ensemble members."""
-    plot._plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
-        cube=power_spectrum_cube,
-        filename="test.png",
-        title="Test",
-        stamp_coordinate="realization",
-        histtype="step",
-    )
-    assert Path("test.png").is_file()
-
-
-def test_create_alpha_matrix_shape():
-    """Test shape of alpha matrix used in power spectrum calculation."""
-    Ny, Nx = 10, 15
-    alpha = plot._create_alpha_matrix(Ny, Nx)
-    assert alpha.shape == (Ny, Nx), "Alpha matrix shape mismatch"
-
-
-def test_create_alpha_matrix_values():
-    """Test alpha matrix contains only positive values."""
-    Ny, Nx = 4, 4
-    alpha = plot._create_alpha_matrix(Ny, Nx)
-    assert np.all(alpha >= 0), "Alpha matrix contains negative values"
-    assert np.isclose(alpha[0, 0], np.sqrt((1 / Nx) ** 2 + (1 / Ny) ** 2)), (
-        "Alpha matrix value incorrect"
-    )
-
-
-def test_dct_ps_output_shape():
-    """Test shape of power spectrum output from _DCT_ps."""
-    Nt, Ny, Nx = 5, 10, 10
-    y_3d = np.random.rand(Nt, Ny, Nx)
-    ps = plot._DCT_ps(y_3d)
-    expected_shape = (Nt, min(Nx - 1, Ny - 1))
-    assert ps.shape == expected_shape, "Power spectrum output shape mismatch"
-
-
-def test_dct_ps_non_negative():
-    """Test power spectrum only contains positive values."""
-    Nt, Ny, Nx = 3, 8, 8
-    y_3d = np.random.rand(Nt, Ny, Nx)
-    ps = plot._DCT_ps(y_3d)
-    assert np.all(ps >= 0), "Power spectrum contains negative values"
-
-
-def test_dct_ps_known_input():
-    """Test _DCT_ps produces non-zero spectrum for constant input."""
-    # Use a constant field to test expected behavior
-    Nt, Ny, Nx = 2, 4, 4
-    y_3d = np.ones((Nt, Ny, Nx))
-    ps = plot._DCT_ps(y_3d)
-    assert np.allclose(ps[:, 1:], 0, atol=1e-6), "Non-zero spectrum for constant input"
-
-
-def test_plot_power_spectrum_no_sequence_coordinate(field2d_cube, tmp_working_dir):
-    """Error when cube is missing sequence coordinate (time)."""
-    field2d_cube.remove_coord("time")
-    with pytest.raises(ValueError, match="Cube must have a time coordinate."):
-        plot.plot_power_spectrum_series(field2d_cube, series_coordinate="pressure")
-
-
-def make_test_cube_power_spectrum(shape=(1, 10, 10), time_points=None):
-    """Create test cube for use with the power spectrum tests."""
-    data = np.random.rand(*shape)
-    if time_points is None:
-        time_points = [0]
-    time_coord = iris.coords.DimCoord(
-        time_points, standard_name="time", units="hours since 1970-01-01 00:00:00"
-    )
-    y_coord = iris.coords.DimCoord(np.arange(shape[1]), long_name="y", units="1")
-    x_coord = iris.coords.DimCoord(np.arange(shape[2]), long_name="x", units="1")
-    cube = iris.cube.Cube(
-        data,
-        dim_coords_and_dims=[(time_coord, 0), (y_coord, 1), (x_coord, 2)],
-        long_name="test_data",
-    )
-    return cube
-
-
-def test_calculate_power_spectrum_raises_for_bad_dim(tmp_working_dir):
-    """Check error is raised if the cube has too many dimensions."""
-    cube_3d = make_test_cube_power_spectrum()
-
-    # Add 2 new dimensions to cube_3d to make 5D
-    new_data = cube_3d.data[np.newaxis, np.newaxis, :, :, :]
-
-    # Create dummy coordinates for the new dimensions
-    coord_0 = iris.coords.DimCoord([0], long_name="extra_dim_0")
-    coord_1 = iris.coords.DimCoord([0], long_name="extra_dim_1")
-
-    # Build dim_coords_and_dims manually
-    dim_coords_and_dims = [(coord_0, 0), (coord_1, 1)]
-    for i, coord in enumerate(cube_3d.dim_coords):
-        dim_coords_and_dims.append((coord, i + 2))  # shift by 2 for new axes
-
-    # Create the new 4D cube
-    cube_5d = iris.cube.Cube(new_data, dim_coords_and_dims=dim_coords_and_dims)
-
-    if isinstance(cube_5d, iris.cube.CubeList):
-        cube_5d = cube_5d[0]
-
-    with pytest.raises(
-        ValueError, match="Cube dimensions unsuitable for power spectra code"
-    ):
-        plot.plot_power_spectrum_series(cubes=cube_5d)
-
-
-def test_calculate_power_spectrum_raises_for_bad_dim_1D(tmp_working_dir):
-    """Check error is raised if the cube has too few dimensions."""
-    cube_3d = make_test_cube_power_spectrum()
-
-    # Make a 1D field
-
-    cube_1d = cube_3d.collapsed(["x", "y"], iris.analysis.MEAN)
-
-    if isinstance(cube_1d, iris.cube.CubeList):
-        cube_1d = cube_1d[0]
-
-    with pytest.raises(
-        ValueError, match="Cube dimensions unsuitable for power spectra code"
-    ):
-        plot.plot_power_spectrum_series(cubes=cube_1d)
 
 
 def test_scatter_plot(cube, vertical_profile_cube, tmp_working_dir):
