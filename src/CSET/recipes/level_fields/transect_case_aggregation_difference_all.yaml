@@ -1,8 +1,9 @@
 category: Transect Difference
 title: "$VARNAME Transect Difference ($BASE_MODEL - $OTHER_MODEL) \n Aggregation over all cases"
 description: |
-  Extracts a $VERTICAL_COORDINATE transect for $VARNAME between two points and
-  plots it.
+  Aggregates over all times, computes the difference between
+  $BASE_MODEL and $OTHER_MODEL, and then extracts a $VERTICAL_COORDINATE
+  transect for $VARNAME between two points and plots it.
 
   Start coordinate: `$START_COORDS`
   End coordinate: `$FINISH_COORDS`

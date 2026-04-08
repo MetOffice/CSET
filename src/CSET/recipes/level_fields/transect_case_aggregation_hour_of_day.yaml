@@ -1,8 +1,8 @@
 category: Transect
 title: $MODEL_NAME Transect of $VARNAME Aggregation by hour of day.
 description: |
-  Extracts a $VERTICAL_COORDINATE transect for $VARNAME between two points and
-  plots it.
+  Aggregates over hour of day, and then extracts a $VERTICAL_COORDINATE
+  transect for $VARNAME between two points and plots it.
 
   Start coordinate: `$START_COORDS`
   End coordinate: `$FINISH_COORDS`
