@@ -28,6 +28,7 @@ def load(conf: Config):
     radar_names = []
     radar_ids = []
     radar_flag = False
+    radar_varname = "Hourly rain accumulation"
     if conf.NIMROD_COMP_1KM:
         radar_names.append("Nimrod_1km")
         radar_ids.append("Nimrod1km")
@@ -50,7 +51,7 @@ def load(conf: Config):
             recipe="generic_surface_histogram_series.yaml",
             model_ids=radar_ids,  # -> Becomes $INPUT_PATHS
             variables={
-                "VARNAME": "Hourly rain accumulation",
+                "VARNAME": radar_varname,
                 "MODEL_NAME": radar_names,
                 "SEQUENCE": "time"
                 if conf.HISTOGRAM_SURFACE_FIELD_SEQUENCE
