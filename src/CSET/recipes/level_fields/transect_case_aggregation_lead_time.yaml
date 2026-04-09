@@ -1,8 +1,8 @@
 category: Transect
 title: $MODEL_NAME Transect of $VARNAME Aggregation by lead time.
 description: |
-  Extracts a $VERTICAL_COORDINATE transect for $VARNAME between two points and
-  plots it.
+  Aggregates over lead time, and then extracts a $VERTICAL_COORDINATE
+  transect for $VARNAME between two points and plots it.
 
   Start coordinate: `$START_COORDS`
   End coordinate: `$FINISH_COORDS`

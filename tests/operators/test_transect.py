@@ -70,6 +70,15 @@ def test_transect_ml(load_cube_ml, load_cube_ml_out):
     )
 
 
+def test_transect_multiplecubes(transect_source_cube):
+    """Test case of multiple cubes to have transect computed on."""
+    cubes = iris.cube.CubeList([transect_source_cube, transect_source_cube])
+    out = transect.calc_transect(
+        cubes, startcoords=(-10.94, 19.06), endcoords=(-10.86, 19.14)
+    )
+    assert len(out) == 2
+
+
 def test_transect_45deg(transect_source_cube, transect_source_cube_out):
     """Test case of 45 degree angle where map coordinate should be longitude."""
     with pytest.raises(iris.exceptions.CoordinateNotFoundError):

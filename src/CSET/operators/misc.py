@@ -303,6 +303,15 @@ def difference(cubes: CubeList):
         )
     )
 
+    # If cubes contain a pressure coordinate, ensure it is increasing.
+    for cube in cubes:
+        try:
+            if not is_increasing(cube.coord("pressure").points):
+                cube.data = np.flip(cube.data, axis=cube.coord_dims("pressure")[0])
+
+        except iris.exceptions.CoordinateNotFoundError:
+            pass
+
     # Get spatial coord names.
     base_lat_name, base_lon_name = get_cube_yxcoordname(base)
     other_lat_name, other_lon_name = get_cube_yxcoordname(other)
@@ -467,7 +476,7 @@ def rename_cube(cubes: iris.cube.Cube | iris.cube.CubeList, name: str):
     iris.cube.Cube | iris.cube.CubeList
         The renamed field.
 
-    Notes
+    Notes'air_pressure'
     -----
     This operator is designed to be used when the output field name does not
     match expectations or needs to be different to defaults in standard_name, var_name or
@@ -489,6 +498,84 @@ def rename_cube(cubes: iris.cube.Cube | iris.cube.CubeList, name: str):
         return new_cubelist
 
 
+def _slice_cube_on_levels(cube: iris.cube.Cube, coord_name: str, levels: list):
+    """
+    Extract levels from a cube for a given coordinate.
+
+    Arguments
+    ---------
+    cube: iris.cube.Cube
+        A Cube to be sliced.
+
+    coord_name: str
+        The coordinate name to be sliced
+
+    levels: list
+        A list containing points to be extracted from the cube.
+
+    Returns
+    -------
+    iris.cube.Cube
+        The sliced cube.
+    """
+    coord = cube.coord(coord_name)
+    (dim_index,) = cube.coord_dims(coord)
+
+    mask = np.isin(coord.points, levels)
+
+    slicer = [slice(None)] * cube.ndim
+    slicer[dim_index] = mask
+
+    return cube[tuple(slicer)]
+
+
+def extract_common_points(cubes: iris.cube.CubeList, coordinate: str):
+    """
+    Extract common points for a given coordinate between two cubes.
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        CubeList containing exactly two cubes.
+
+    coordinate: str
+        The coordinate name to be checked for common levels.
+
+    Returns
+    -------
+    iris.cube.CubeList
+        CubeList containing the two cubes sliced to common levels
+        for the given coordinate.
+    """
+    # Check type of input
+    if type(cubes) is not iris.cube.CubeList:
+        raise TypeError(f"Not a CubeList, got type {type(cubes)}")
+
+    # Check that only two cubes are passed into function.
+    if len(cubes) != 2:
+        raise ValueError(f"Maximum of two cubes allowed, received {len(cubes)}")
+
+    # Extract coordinate
+    try:
+        p1 = cubes[0].coord(coordinate)
+        p2 = cubes[1].coord(coordinate)
+    except iris.exceptions.CoordinateNotFoundError as err:
+        raise ValueError(f"Both cubes must have an {coordinate} coordinate") from err
+
+    # Find common points
+    common_points = np.intersect1d(p1.points, p2.points)
+
+    # Check that common points is more than zero.
+    if common_points.size == 0:
+        raise ValueError("No common levels found")
+
+    # Extract common points
+    cube0_common = _slice_cube_on_levels(cubes[0], coordinate, common_points)
+    cube1_common = _slice_cube_on_levels(cubes[1], coordinate, common_points)
+
+    return iris.cube.CubeList([cube0_common, cube1_common])
+  
+  
 def differentiate(
     cubes: iris.cube.Cube | iris.cube.CubeList, coordinate: str, **kwargs
 ) -> iris.cube.Cube | iris.cube.CubeList:
