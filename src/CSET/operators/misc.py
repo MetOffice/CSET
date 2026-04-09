@@ -546,6 +546,10 @@ def extract_common_points(cubes: iris.cube.CubeList, coordinate: str):
         CubeList containing the two cubes sliced to common levels
         for the given coordinate.
     """
+    # Check type of input
+    if type(cubes) is not iris.cube.CubeList:
+        raise TypeError(f"Not a CubeList, got type {type(cubes)}")
+
     # Check that only two cubes are passed into function.
     if len(cubes) != 2:
         raise ValueError(f"Maximum of two cubes allowed, received {len(cubes)}")
