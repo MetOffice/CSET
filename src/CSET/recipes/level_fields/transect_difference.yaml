@@ -26,7 +26,7 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
-  - operator: misc.extract_common_pressure_levels
+  - operator: misc.extract_common_points
     coordinate: $VERTICAL_COORDINATE
 
   - operator: misc.difference
