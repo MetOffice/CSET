@@ -23,6 +23,7 @@ import logging
 from pathlib import Path
 from typing import Literal
 
+import dask
 import iris
 import iris.coord_systems
 import iris.coords
@@ -359,10 +360,10 @@ def _cutout_cubes(
 def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.Cube:
     """Compose together the needed callbacks into a single function."""
     # Most callbacks operate in-place, but save the cube when returned!
-    _realization_callback(cube, field, filename)
-    _um_normalise_callback(cube, field, filename)
-    _lfric_normalise_callback(cube, field, filename)
-    cube = _lfric_time_coord_fix_callback(cube, field, filename)
+    _realization_callback(cube)
+    _um_normalise_callback(cube)
+    _lfric_normalise_callback(cube)
+    cube = _lfric_time_coord_fix_callback(cube)
     _normalise_var0_varname(cube)
     cube = _fix_no_spatial_coords_callback(cube)
     _fix_spatial_coords_callback(cube)
@@ -379,7 +380,7 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     return cube
 
 
-def _realization_callback(cube, field, filename):
+def _realization_callback(cube):
     """Give deterministic cubes a realization of 0.
 
     This means they can be handled in the same way as ensembles through the rest
@@ -398,7 +399,7 @@ def _log_once(msg, level=logging.WARNING):
     logging.log(level, msg)
 
 
-def _um_normalise_callback(cube: iris.cube.Cube, field, filename):
+def _um_normalise_callback(cube: iris.cube.Cube):
     """Normalise UM STASH variable long names to LFRic variable names.
 
     Note standard names will remain associated with cubes where different.
@@ -418,7 +419,7 @@ def _um_normalise_callback(cube: iris.cube.Cube, field, filename):
             )
 
 
-def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
+def _lfric_normalise_callback(cube: iris.cube.Cube):
     """Normalise attributes that prevents LFRic cube from merging.
 
     The uuid and timeStamp relate to the output file, as saved by XIOS, and has
@@ -444,9 +445,7 @@ def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
         cube.attributes["um_stash_source"] = str(sorted(ast.literal_eval(stash_list)))
 
 
-def _lfric_time_coord_fix_callback(
-    cube: iris.cube.Cube, field, filename
-) -> iris.cube.Cube:
+def _lfric_time_coord_fix_callback(cube: iris.cube.Cube) -> iris.cube.Cube:
     """Ensure the time coordinate is a DimCoord rather than an AuxCoord.
 
     The coordinate is converted and replaced if not. SLAMed LFRic data has this
@@ -844,8 +843,7 @@ def _fix_lfric_cloud_base_altitude(cube: iris.cube.Cube):
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if any("cloud_base_altitude" in name for name in varnames):
         # Mask cube where set > 144kft to catch default 144.35695538058164
-        cube.data = np.ma.masked_array(cube.data)
-        cube.data[cube.data > 144.0] = np.ma.masked
+        cube.data = dask.array.ma.masked_greater(cube.core_data(), 144.0)
 
 
 def _fix_um_winds(cubes: iris.cube.CubeList):
@@ -897,8 +895,8 @@ def _convert_wind_true_dirn_um(cubes: iris.cube.CubeList):
     v_grids = cubes.extract(iris.AttributeConstraint(STASH="m01s03i226"))
     for u, v in zip(u_grids, v_grids, strict=True):
         true_u, true_v = rotate_winds(u, v, iris.coord_systems.GeogCS(6371229.0))
-        u.data = true_u.data
-        v.data = true_v.data
+        u.data = true_u.core_data()
+        v.data = true_v.core_data()
 
 
 def _normalise_var0_varname(cube: iris.cube.Cube):
@@ -1040,3 +1038,7 @@ def _normalise_ML_varname(cube: iris.cube.Cube):
             cube.long_name = "meridional_wind_at_pressure_levels"
         if cube.name() == "air_temperature":
             cube.long_name = "temperature_at_pressure_levels"
+        if cube.name() == "specific_humidity":
+            cube.long_name = (
+                "vapour_specific_humidity_at_pressure_levels_for_climate_averaging"
+            )
