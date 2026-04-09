@@ -1,0 +1,27 @@
+category: Extreme precipitation
+title: $MODEL_NAME presence of Moist Absolutely Unstable Layers (MAULs) spatial plot
+description: |
+  Generates a mask of whether Moist Absolutely Unstable Layers (MAULs) are present
+  in a model column and provides a spatial plot. A value of one implies at least one MAUL
+  is present in a column; a value of zero implies MAULs are not present.
+  A MAUL is defined as an unstable layer (with height) based on equivalent potential
+  temperature and relative humidity of that layer exceeding 90 %.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: filters.generate_mask
+    condition: 'ge'
+    value: 50.0
+
+  - operator: misc.rename_cube
+    name: "mask_for_MAULs"
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
