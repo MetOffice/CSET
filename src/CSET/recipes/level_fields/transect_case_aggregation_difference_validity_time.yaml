@@ -32,7 +32,7 @@ steps:
   - operator: collapse.collapse_by_validity_time
     method: MEAN
 
-  - operator: misc.extract_common_pressure_levels
+  - operator: misc.extract_common_points
     coordinate: $VERTICAL_COORDINATE
 
   - operator: misc.difference

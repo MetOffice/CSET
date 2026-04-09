@@ -33,7 +33,7 @@ steps:
     coordinate: "forecast_reference_time"
     method: MEAN
 
-  - operator: misc.extract_common_pressure_levels
+  - operator: misc.extract_common_points
     coordinate: $VERTICAL_COORDINATE
 
   - operator: misc.difference
