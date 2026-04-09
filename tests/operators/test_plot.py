@@ -368,14 +368,14 @@ def test_set_title_and_filename_nofilename_aggregated(long_forecast_multi_day):
 
 
 def test_set_title_and_filename_multidim_aggregated(long_forecast_multi_day):
-    """Setup plot title and filename for 2D time aggregated output."""
+    """Setup plot title and filename for 2D time aggregated output (3 cases)."""
     seq_coord = long_forecast_multi_day.coord("time")
     nplot = 1
     plot_title, plot_filename = plot._set_title_and_filename(
         seq_coord, nplot, "recipe", None
     )
-    assert plot_filename == "recipe_2cases.png"
-    assert plot_title == "recipe\n [2 cases]"
+    assert plot_filename == "recipe_3cases.png"
+    assert plot_title == "recipe\n [3 cases]"
 
 
 def test_colorbar_map_mask(cube, tmp_working_dir):

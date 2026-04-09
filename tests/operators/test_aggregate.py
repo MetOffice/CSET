@@ -98,6 +98,20 @@ def test_ensure_aggregatable_across_cases_different_buckets(
     assert len(output) == 2
 
 
+def test_ensure_aggregatable_across_cube_coord_attribute(long_forecast_multi_day):
+    """Check that aggregatable cubes preserve information on Ncases."""
+    print(long_forecast_multi_day)
+    output_data = aggregate.ensure_aggregatable_across_cases(long_forecast_multi_day)
+    print(output_data)
+    assert output_data[0].coord("time").attributes["number_reference_times"] == 3
+
+
+def test_ensure_aggregatable_across_cases_coord_attribute(long_forecast_many_cubes):
+    """Check that aggregatable cubes preserve information on Ncases."""
+    output_data = aggregate.ensure_aggregatable_across_cases(long_forecast_many_cubes)
+    assert output_data[0].coord("time").attributes["number_reference_times"] == 3
+
+
 def test_add_hour_coordinate(long_forecast):
     """Check that a Cube has an hour coordinate added to it."""
     cube_with_hour_coordinate = aggregate.add_hour_coordinate(long_forecast)

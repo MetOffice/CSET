@@ -21,9 +21,21 @@ import iris.analysis
 import iris.coord_categorisation
 import iris.cube
 import isodate
+import numpy as np
 
 from CSET._common import iter_maybe
 from CSET.operators._utils import is_time_aggregatable
+
+
+def _add_nref(cube: iris.cube.Cube):
+    """Retain information on number of forecast_reference_time inputs.
+
+    This preserves information on number of aggregated cases that can
+    otherwise be lost on subsequent calls to collapse functions.
+    """
+    nref = np.size(cube.coord("forecast_reference_time").points)
+    cube.coord("time").attributes["number_reference_times"] = nref
+    return cube
 
 
 def time_aggregate(
@@ -160,6 +172,7 @@ def ensure_aggregatable_across_cases(
         # Single cubes that are already aggregatable won't need processing.
         if len(bucket) == 1 and is_time_aggregatable(bucket[0]):
             aggregatable_cube = bucket[0]
+            aggregatable_cube = _add_nref(aggregatable_cube)
             aggregatable_cubes.append(aggregatable_cube)
             continue
 
@@ -170,6 +183,9 @@ def ensure_aggregatable_across_cases(
                 cube.slices_over(["forecast_period", "forecast_reference_time"])
             )
         aggregatable_cube = to_merge.merge_cube()
+
+        # Add attribute on number of forecast_reference_times
+        aggregatable_cube = _add_nref(aggregatable_cube)
 
         # Verify cube is now aggregatable.
         if not is_time_aggregatable(aggregatable_cube):
