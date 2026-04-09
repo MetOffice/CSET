@@ -5,18 +5,63 @@ description: |
   in a model column and provides a spatial plot. A value of one implies at least one MAUL
   is present in a column; a value of zero implies MAULs are not present.
   A MAUL is defined as an unstable layer (with height) based on equivalent potential
-  temperature and relative humidity of that layer exceeding 90 %.
+  temperature and relative humidity of that layer exceeding 90 %. The equivalent potential
+  temperature is calculated from the model, and then a vertical differentitation occurs.
 
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
     model_names: $MODEL_NAME
+    constraints: ["air_temperature", "air_pressure", "specific_humidity", "relative_humidity"]
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
-  - operator: filters.generate_mask
-    condition: 'ge'
-    value: 50.0
+  - operator: misc.multiplication
+    multiplicand:
+        operator: filters.generate_mask
+        mask_field:
+            operator: misc.differentiate
+            cubes:
+                operator: temperature.equivalent_potential_temperature
+                temperature:
+                    operator: filter.filter_multiple_cubes
+                    constraint:
+                        operator: constraints.generate_var_constraint
+                        varname: "air_temperature"
+                relative_humidity:
+                    operator: humidity.relative_humidity_from_specific_humidity
+                    specific_humidity:
+                        operator: filter.filter_multiple_cubes
+                        constraint:
+                            operator: constraints.generate_var_constraint
+                            varname: "specific_humidity"
+                    temperature:
+                        operator: filter.filter_mutiple_cubes
+                        constraint:
+                            operator: constraints.generate_var_constraint
+                            varname: "air_temperature"
+                    pressure:
+                        operator: filter.filter_multiple_cubes
+                        constraint:
+                            operator: constraints.generate_var_constraint
+                            varname: "air_pressure"
+                pressure:
+                    operator: filter.filter_multiple_cubes
+                    constraint:
+                        operator: constraints.generate_var_constraint
+                        varname: "air_pressure"
+            coordinate: "model_level_number"
+        condition: 'lt'
+        value: 0.0
+    multiplier:
+        operator: filters.generate_mask
+        mask_field:
+            operator: filter.filter_multiple_cubes
+            constraint:
+                operator: constraints.generate_var_constraint
+                varname: "relative_humidity"
+        condition: 'gt'
+        value: 90.0
 
   - operator: misc.rename_cube
     name: "mask_for_MAULs"
