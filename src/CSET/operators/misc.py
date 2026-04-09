@@ -528,39 +528,44 @@ def _slice_cube_on_levels(cube: iris.cube.Cube, coord_name: str, levels: list):
     return cube[tuple(slicer)]
 
 
-def extract_common_pressure_levels(cubes: iris.cube.CubeList, coordinate: str):
+def extract_common_points(cubes: iris.cube.CubeList, coordinate: str):
     """
-    Given a CubeList containing exactly two cubes, extract the common
-    pressure levels and return a CubeList with both cubes restricted
-    to those levels only.
+    Extract common points for a given coordinate between two cubes.
 
     Parameters
     ----------
     cubes: iris.cube.CubeList
-        CubeList containing exactly two cubes with a pressure coordinate
+        CubeList containing exactly two cubes.
 
-        coordinate! TODO
+    coordinate: str
+        The coordinate name to be checked for common levels.
 
     Returns
     -------
     iris.cube.CubeList
-        CubeList containing the two cubes sliced to common pressure levels
+        CubeList containing the two cubes sliced to common levels
+        for the given coordinate.
     """
-    # --- Extract vertical coordinates ---
+    # Check that only two cubes are passed into function.
+    if len(cubes) != 2:
+        raise ValueError(f"Maximum of two cubes allowed, received {len(cubes)}")
+
+    # Extract coordinate
     try:
         p1 = cubes[0].coord(coordinate)
         p2 = cubes[1].coord(coordinate)
-    except iris.exceptions.CoordinateNotFoundError:
-        raise ValueError(f"Both cubes must have an {coordinate} coordinate")
+    except iris.exceptions.CoordinateNotFoundError as err:
+        raise ValueError(f"Both cubes must have an {coordinate} coordinate") from err
 
-    # --- Find common vertical points ---
-    common_levels = np.intersect1d(p1.points, p2.points)
+    # Find common points
+    common_points = np.intersect1d(p1.points, p2.points)
 
-    if common_levels.size == 0:
+    # Check that common points is more than zero.
+    if common_points.size == 0:
         raise ValueError("No common levels found")
 
-    # --- Extract cubes ---
-    cube0_common = _slice_cube_on_levels(cubes[0], coordinate, common_levels)
-    cube1_common = _slice_cube_on_levels(cubes[1], coordinate, common_levels)
+    # Extract common points
+    cube0_common = _slice_cube_on_levels(cubes[0], coordinate, common_points)
+    cube1_common = _slice_cube_on_levels(cubes[1], coordinate, common_points)
 
     return iris.cube.CubeList([cube0_common, cube1_common])
