@@ -15,6 +15,7 @@ dependencies:
   - iris-grib
   - scipy
   - scikit-image # For image processing techniques.
+  - dask
 
   # Build dependencies
   - setuptools>=64

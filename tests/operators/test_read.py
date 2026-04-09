@@ -231,7 +231,7 @@ def test_check_input_files_no_file_in_directory(tmp_path):
 
 def test_um_normalise_callback_rename_stash(cube):
     """Correctly translate from STASH to LFRic variable name."""
-    read._um_normalise_callback(cube, None, None)
+    read._um_normalise_callback(cube)
     actual = cube.long_name
     expected = "temperature_at_screen_level"
     assert actual == expected
@@ -240,7 +240,7 @@ def test_um_normalise_callback_rename_stash(cube):
 def test_um_normalise_callback_missing_entry(cube, caplog):
     """Warning when STASH dictionary doesn't contain stash."""
     cube.attributes["STASH"] = "m00s00i000"
-    read._um_normalise_callback(cube, None, None)
+    read._um_normalise_callback(cube)
     _, level, message = caplog.record_tuples[0]
     assert level == logging.WARNING
 
@@ -249,7 +249,7 @@ def test_lfric_normalise_callback_remove_attrs(cube):
     """Correctly remove unneeded attributes."""
     cube.attributes["uuid"] = "87096862-89c3-4749-9c6c-0be91c2a7954"
     cube.attributes["timeStamp"] = "2024-May-20 12:29:21 GMT"
-    read._lfric_normalise_callback(cube, None, None)
+    read._lfric_normalise_callback(cube)
     assert "uuid" not in cube.attributes
     assert "timeStamp" not in cube.attributes
 
@@ -257,7 +257,7 @@ def test_lfric_normalise_callback_remove_attrs(cube):
 def test_lfric_normalise_callback_sort_stash(cube):
     """Correctly sort STASH code lists."""
     cube.attributes["um_stash_source"] = "['m01s03i025', 'm01s00i025']"
-    read._lfric_normalise_callback(cube, None, None)
+    read._lfric_normalise_callback(cube)
     actual = cube.attributes["um_stash_source"]
     expected = "['m01s00i025', 'm01s03i025']"
     assert actual == expected
@@ -267,7 +267,7 @@ def test_lfric_time_coord_fix_callback():
     """Correctly convert time from AuxCoord to DimCoord."""
     time_coord = iris.coords.AuxCoord([0, 1, 2], standard_name="time")
     cube = iris.cube.Cube([0, 0, 0], aux_coords_and_dims=[(time_coord, 0)])
-    read._lfric_time_coord_fix_callback(cube, None, None)
+    read._lfric_time_coord_fix_callback(cube)
     assert isinstance(cube.coord("time"), iris.coords.DimCoord)
     assert cube.coord_dims("time") == (0,)
 
@@ -278,7 +278,7 @@ def test_lfric_time_coord_fix_callback_scalar_time():
     time_coord = iris.coords.AuxCoord([0], standard_name="time")
     cube = iris.cube.Cube([0, 0, 0], aux_coords_and_dims=[(length_coord, 0)])
     cube.add_aux_coord(time_coord)
-    read._lfric_time_coord_fix_callback(cube, None, None)
+    read._lfric_time_coord_fix_callback(cube)
     assert isinstance(cube.coord("time"), iris.coords.AuxCoord)
     assert cube.coord_dims("time") == ()
 
@@ -287,7 +287,7 @@ def test_lfric_time_coord_fix_callback_no_time():
     """Don't do anything if no time coordinate present."""
     length_coord = iris.coords.DimCoord([0, 1, 2], var_name="length")
     cube = iris.cube.Cube([0, 0, 0], aux_coords_and_dims=[(length_coord, 0)])
-    read._lfric_time_coord_fix_callback(cube, None, None)
+    read._lfric_time_coord_fix_callback(cube)
     assert len(cube.coords("time")) == 0
 
 

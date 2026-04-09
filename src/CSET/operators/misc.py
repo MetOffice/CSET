@@ -19,6 +19,7 @@ import logging
 from collections.abc import Iterable
 
 import iris
+import iris.analysis.calculus
 import numpy as np
 from iris.cube import Cube, CubeList
 
@@ -573,3 +574,43 @@ def extract_common_points(cubes: iris.cube.CubeList, coordinate: str):
     cube1_common = _slice_cube_on_levels(cubes[1], coordinate, common_points)
 
     return iris.cube.CubeList([cube0_common, cube1_common])
+  
+  
+def differentiate(
+    cubes: iris.cube.Cube | iris.cube.CubeList, coordinate: str, **kwargs
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Differentiate a cube on a specified coordinate.
+
+    Arguments
+    ---------
+    cubes: iris.cube.Cube | iris.cube.CubeList
+        A Cube or CubeList of a field that is to be differentiated.
+
+    coordinate: str
+        The coordinate that is to be differentiated over.
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        The differential of the cube along the specified coordinate.
+
+    Notes
+    -----
+    The differential is calculated based on a carteisan grid. This calculation
+    is then suitable for vertical and temporal derivatives. It is not sensible
+    for horizontal derivatives if they are based on spherical coordinates (e.g.
+    latitude and longitude). In essence this operator is a CSET wrapper around
+    `iris.analysis.calculus.differentiate <https://scitools-iris.readthedocs.io/en/stable/generated/api/iris.analysis.calculus.html#iris.analysis.calculus.differentiate>`_.
+
+    Examples
+    --------
+    >>> dT_dz = misc.differentiate(temperature, "altitude")
+    """
+    new_cubelist = iris.cube.CubeList([])
+    for cube in iter_maybe(cubes):
+        dcube = iris.analysis.calculus.differentiate(cube, coordinate)
+        new_cubelist.append(dcube)
+    if len(new_cubelist) == 1:
+        return new_cubelist[0]
+    else:
+        return new_cubelist
