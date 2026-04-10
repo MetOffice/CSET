@@ -81,6 +81,9 @@ def construct_index(www_content: Path):
                     "plot_resolution",
                     "plots",
                     "skip_write",
+                    "COORD_LIST",
+                    "ONE_TO_ONE",
+                    "PERCENTILES",
                     "SUBAREA_EXTENT",
                     "SUBAREA_TYPE",
                 ]
