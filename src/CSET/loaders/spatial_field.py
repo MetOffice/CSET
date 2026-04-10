@@ -24,45 +24,6 @@ def load(conf: Config):
     # Load a list of model detail dictionaries.
     models = get_models(conf.asdict())
 
-    # Nimrod radar rainfall data sources for surface (2D) fields.
-    radar_names = []
-    radar_ids = []
-    radar_flag = False
-    radar_varname = "Hourly rain accumulation"
-    if conf.NIMROD_COMP_1KM:
-        radar_names.append("Nimrod_1km")
-        radar_ids.append("Nimrod1km")
-        radar_flag = True
-    if conf.NIMROD_COMP_2KM:
-        radar_names.append("Nimrod_2km")
-        radar_ids.append("Nimrod2km")
-        radar_flag = True
-    if conf.NIMROD_COMP_XKM:
-        radar_names.append("Nimrod_xkm")
-        radar_ids.append("Nimrodxkm")
-        radar_flag = True
-
-    # Surface (2D) fields for Nimrod radar rainfall.
-    # Note: The different sources of Nimrod rainfall acculumulation have
-    #       different spatial grids. So each source requires its own yaml
-    #       realisation to prevent incompatible cubes being created.
-    if radar_flag:
-        for next in range(len(radar_ids)):
-            yield RawRecipe(
-                recipe="generic_surface_spatial_plot_sequence_radar_rainfall.yaml",
-                model_ids=radar_ids[next],  # -> Becomes $INPUT_PATHS
-                variables={
-                    "VARNAME": radar_varname,
-                    "RADAR_NAME": radar_names[next],
-                    "METHOD": "SEQ",
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
-                },
-                aggregation=False,
-            )
-
     # Surface (2D) fields.
     if conf.SPATIAL_SURFACE_FIELD:
         for model, field, method in itertools.product(
