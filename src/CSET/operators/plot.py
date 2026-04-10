@@ -560,6 +560,9 @@ def _plot_and_save_spatial_plot(
         # Tick labels for rain accumulations from Nimrod radar data.
         if "rain accumulation" in cube.name():
             cbar.set_ticklabels([f"{level:.3g}" for level in levels])
+        # Tick labels for model rainfall data.
+        if "surface_microphysical" in cube.name():
+            cbar.set_ticklabels([f"{level:.3g}" for level in levels])
         logging.debug("Set colorbar ticks and labels.")
 
     # Save plot.
@@ -1881,7 +1884,7 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
         key in name
         for name in varnames_lower
         for key in (
-            "microphysical_rainfall_rate",
+            "surface_microphysical",
             "rain_accumulation",
             "rain accumulation",
         )
