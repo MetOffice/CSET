@@ -21,6 +21,7 @@ from pathlib import Path
 
 import iris.cube
 import pytest
+import dask.array
 
 from CSET.operators import constraints, filters, read
 
@@ -31,20 +32,22 @@ def tmp_working_dir(tmp_path, monkeypatch) -> Path:
     monkeypatch.chdir(tmp_path)
     return tmp_path
 
-def read_cube_lazy(path: str) -> iris.cube.Cube:
-    c = read.read_cube(path)
+def read_cube_lazy(path: str, *args, **kwargs) -> iris.cube.Cube:
+    """Ensure reading a cube returns lazy data"""
+    c = read.read_cube(path, *args, **kwargs)
     
-    #if not c.has_lazy_data():
-    #    c.data = dask.array.from_array(c.core_data())
+    if not c.has_lazy_data():
+        c.data = dask.array.from_array(c.core_data())
 
     return c
 
-def read_cubes_lazy(path: str) -> iris.cube.CubeList:
-    cubes = read.read_cubes(path)
+def read_cubes_lazy(path: str, *args, **kwargs) -> iris.cube.CubeList:
+    """Ensure reading multiple cubes returns lazy data"""
+    cubes = read.read_cubes(path, *args, **kwargs)
     
-    #for c in cubes:
-    #    if not c.has_lazy_data():
-    #        c.data = dask.array.from_array(c.core_data())
+    for c in cubes:
+        if not c.has_lazy_data():
+            c.data = dask.array.from_array(c.core_data())
 
     return cubes
 
