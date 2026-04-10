@@ -29,9 +29,11 @@ from contextlib import contextmanager
 
 from CSET.operators import constraints, read
 
+
 @contextmanager
 def check_lazy_data(cubes: iris.cube.CubeList | iris.cube.Cube):
     """Check a cube is lazy during a callback function"""
+
     def check(cubes):
         if isinstance(cubes, iris.cube.CubeList):
             for c in cubes:
@@ -42,6 +44,7 @@ def check_lazy_data(cubes: iris.cube.CubeList | iris.cube.Cube):
     check(cubes)
     yield cubes
     check(cubes)
+
 
 def test_read_cubes():
     """Read cube and verify."""
