@@ -25,8 +25,25 @@ import iris.cube
 import numpy as np
 import pytest
 from iris.time import PartialDateTime
+from contextlib import contextmanager
 
 from CSET.operators import constraints, read
+
+
+@contextmanager
+def check_lazy_data(cubes: iris.cube.CubeList | iris.cube.Cube):
+    """Check a cube is lazy during a callback function"""
+
+    def check(cubes):
+        if isinstance(cubes, iris.cube.CubeList):
+            for c in cubes:
+                assert c.has_lazy_data()
+        else:
+            assert cubes.has_lazy_data()
+
+    check(cubes)
+    yield cubes
+    check(cubes)
 
 
 def test_read_cubes():
@@ -231,10 +248,11 @@ def test_check_input_files_no_file_in_directory(tmp_path):
 
 def test_um_normalise_callback_rename_stash(cube):
     """Correctly translate from STASH to LFRic variable name."""
-    read._um_normalise_callback(cube)
-    actual = cube.long_name
-    expected = "temperature_at_screen_level"
-    assert actual == expected
+    with check_lazy_data(cube):
+        read._um_normalise_callback(cube)
+        actual = cube.long_name
+        expected = "temperature_at_screen_level"
+        assert actual == expected
 
 
 def test_um_normalise_callback_missing_entry(cube, caplog):
