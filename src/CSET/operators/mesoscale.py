@@ -26,7 +26,7 @@ import logging
 import iris
 from scipy.ndimage import gaussian_filter, uniform_filter
 
-from CSET.operators._common import iter_maybe
+from CSET._common import iter_maybe
 from CSET.operators._utils import get_cube_yxcoordname
 
 
