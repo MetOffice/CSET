@@ -25,7 +25,7 @@ steps:
     subarea_extent: $SUBAREA_EXTENT
 
   - operator: mesoscale.spatial_perturbation_field
-    Gaussian_filter: True
+    apply_gaussian_filter: True
     filter_scale: 40
 
   - operator: collapse.collapse
