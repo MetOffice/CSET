@@ -26,20 +26,21 @@ import logging
 import iris
 from scipy.ndimage import gaussian_filter, uniform_filter
 
+from CSET.operators._common import iter_maybe
 from CSET.operators._utils import get_cube_yxcoordname
 
 
 def spatial_perturbation_field(
-    original_field: iris.cube.Cube,
+    original_field: iris.cube.Cube | iris.cube.Cubelist,
     apply_gaussian_filter: bool = True,
     filter_scale: int = 40,
-) -> iris.cube.Cube:
+) -> iris.cube.Cube | iris.cube.CubeList:
     """Calculate a spatial perturbation field.
 
     Parameters
     ----------
-    original_field: iris.cube.Cube
-        Iris cube containing data to smooth, supporting multiple dimensions
+    original_field: iris.cube.Cube | iris.cube.CubeList
+        Iris cube or cubelist containing data to smooth, supporting multiple dimensions
         (at least two spatial dimensions must be supplied, i.e. 2D).
     apply_gaussian_filter: boolean, optional
         If set to True a Gaussian filter is applied; if set to False
@@ -53,8 +54,8 @@ def spatial_perturbation_field(
 
     Returns
     -------
-    pert_field: iris.cube.Cube
-        An iris cube of the spatial perturbation field.
+    pert_field: iris.cube.Cube | iris.cube.CubeList
+        An iris cube or cubelist of the spatial perturbation field.
 
     Notes
     -----
@@ -93,25 +94,35 @@ def spatial_perturbation_field(
     >>> plt.show()
 
     """
-    pert_field = original_field.copy()
-    # find axes of spatial coordinates in field
-    coords = [coord.name() for coord in original_field.coords()]
-    # axes tuple containing latitude, longitude coordinate name.
-    axes = (
-        coords.index(get_cube_yxcoordname(original_field)[0]),
-        coords.index(get_cube_yxcoordname(original_field)[1]),
-    )
-    # apply convolution depending on type used
-    if apply_gaussian_filter:
-        filter_type = "Gaussian"
-        logging.info("Gaussian filter applied.")
-        pert_field.data -= gaussian_filter(original_field.data, filter_scale, axes=axes)
+    new_cubes = iris.cube.CubeList([])
+    for cube in iter_maybe(original_field):
+        pert_field = cube.copy()
+        # find axes of spatial coordinates in field
+        coords = [coord.name() for coord in cube.coords()]
+        # axes tuple containing latitude, longitude coordinate name.
+        axes = (
+            coords.index(get_cube_yxcoordname(cube)[0]),
+            coords.index(get_cube_yxcoordname(cube)[1]),
+        )
+        # apply convolution depending on type used
+        if apply_gaussian_filter:
+            filter_type = "Gaussian"
+            logging.info("Gaussian filter applied.")
+            pert_field.data -= gaussian_filter(
+                cube.core_data(), filter_scale, axes=axes
+            )
+        else:
+            logging.info("Uniform filter applied.")
+            filter_type = "Uniform"
+            pert_field.data -= uniform_filter(
+                original_field.core_data(), filter_scale, axes=axes
+            )
+        # provide attributes to cube to indicate spatial perturbation field
+        pert_field.attributes["perturbation_field"] = (
+            f"{filter_type}_with_{str(filter_scale)}_grid_point_filter_scale"
+        )
+        new_cubes.append(pert_field)
+    if len(new_cubes) == 1:
+        return new_cubes[0]
     else:
-        logging.info("Uniform filter applied.")
-        filter_type = "Uniform"
-        pert_field.data -= uniform_filter(original_field.data, filter_scale, axes=axes)
-    # provide attributes to cube to indicate spatial perturbation field
-    pert_field.attributes["perturbation_field"] = (
-        f"{filter_type}_with_{str(filter_scale)}_grid_point_filter_scale"
-    )
-    return pert_field
+        return new_cubes
