@@ -31,7 +31,7 @@ from CSET.operators._utils import get_cube_yxcoordname
 
 
 def spatial_perturbation_field(
-    original_field: iris.cube.Cube | iris.cube.Cubelist,
+    original_field: iris.cube.Cube | iris.cube.CubeList,
     apply_gaussian_filter: bool = True,
     filter_scale: int = 40,
 ) -> iris.cube.Cube | iris.cube.CubeList:
