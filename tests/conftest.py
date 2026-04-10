@@ -31,13 +31,30 @@ def tmp_working_dir(tmp_path, monkeypatch) -> Path:
     monkeypatch.chdir(tmp_path)
     return tmp_path
 
+def read_cube_lazy(path: str) -> iris.cube.Cube:
+    c = read.read_cube(path)
+    
+    #if not c.has_lazy_data():
+    #    c.data = dask.array.from_array(c.core_data())
+
+    return c
+
+def read_cubes_lazy(path: str) -> iris.cube.CubeList:
+    cubes = read.read_cubes(path)
+    
+    #for c in cubes:
+    #    if not c.has_lazy_data():
+    #        c.data = dask.array.from_array(c.core_data())
+
+    return cubes
+
 
 # Session scope fixtures, so the test data only has to be loaded from disk
 # once, then make an in-memory copy whenever it is reused.
 @pytest.fixture(scope="session")
 def cubes_readonly():
     """Get an iris CubeList. NOT safe to modify."""
-    return read.read_cubes("tests/test_data/air_temp.nc")
+    return read_cubes_lazy("tests/test_data/air_temp.nc")
 
 
 @pytest.fixture()
@@ -63,7 +80,7 @@ def cube(cube_readonly):
 @pytest.fixture(scope="session")
 def slammed_lfric_cube_readonly():
     """Get an iris Cube of slammed LFRic data. NOT safe to modify."""
-    return read.read_cube("tests/test_data/slammed_lfric_air_temp.nc")
+    return read_cube_lazy("tests/test_data/slammed_lfric_air_temp.nc")
 
 
 @pytest.fixture()
@@ -75,7 +92,7 @@ def slammed_lfric_cube(slammed_lfric_cube_readonly):
 @pytest.fixture(scope="session")
 def vertical_profile_cube_readonly():
     """Get a vertical profile Cube. It is NOT safe to modify."""
-    return read.read_cube(
+    return read_cube_lazy(
         "tests/test_data/air_temperature_vertical_profile_as_series.nc"
     )
 
@@ -90,7 +107,7 @@ def vertical_profile_cube(vertical_profile_cube_readonly):
 def vector_cubes_readonly():
     """Get vector plot cubes. It is NOT safe to modify."""
     # Read the input cubes.
-    in_cubes = read.read_cubes("tests/test_data/u10_v10.nc")
+    in_cubes = read_cubes_lazy("tests/test_data/u10_v10.nc")
     # Generate constraints for the u and v components of the wind.
     var_constraint_u = constraints.generate_var_constraint("eastward_wind")
     var_constraint_v = constraints.generate_var_constraint("northward_wind")
@@ -116,7 +133,7 @@ def vector_cubes(vector_cubes_readonly):
 @pytest.fixture(scope="session")
 def histogram_cube_readonly():
     """Get a histogram Cube. It is NOT safe to modify."""
-    return read.read_cube(
+    return read_cube_lazy(
         "tests/test_data/air_temperature_vertical_profile_as_series.nc"
     )
 
@@ -130,7 +147,7 @@ def histogram_cube(histogram_cube_readonly):
 @pytest.fixture(scope="session")
 def field2d_cube_readonly():
     """Get a 2D Cube for testing power spectrum code. It is NOT safe to modify."""
-    return read.read_cube("tests/test_data/air_temperature_lat_lon.nc")
+    return read_cube_lazy("tests/test_data/air_temperature_lat_lon.nc")
 
 
 @pytest.fixture()
@@ -142,7 +159,7 @@ def field2d_cube(field2d_cube_readonly):
 @pytest.fixture(scope="session")
 def power_spectrum_cube_readonly():
     """Get a Cube for testing power spectrum code. It is NOT safe to modify."""
-    return read.read_cube(
+    return read_cube_lazy(
         "tests/test_data/power_spectrum_temperature_at_pressure_levels_pressure_250_1time.nc"
     )
 
@@ -156,7 +173,7 @@ def power_spectrum_cube(power_spectrum_cube_readonly):
 @pytest.fixture(scope="session")
 def regrid_rectilinear_cube_readonly():
     """Get a cube to test with. It is NOT safe to modify."""
-    return read.read_cube(
+    return read_cube_lazy(
         "tests/test_data/regrid/regrid_rectilinearGeogCS.nc", "surface_altitude"
     )
 
@@ -170,7 +187,7 @@ def regrid_rectilinear_cube(regrid_rectilinear_cube_readonly):
 @pytest.fixture(scope="session")
 def transect_source_cube_readonly():
     """Get a 3D cube to test with. It is NOT safe to modify."""
-    return read.read_cube("tests/test_data/transect_test_umpl.nc")
+    return read_cube_lazy("tests/test_data/transect_test_umpl.nc")
 
 
 @pytest.fixture()
@@ -182,7 +199,7 @@ def transect_source_cube(transect_source_cube_readonly):
 @pytest.fixture(scope="session")
 def cardington_cube_readonly():
     """Get a 3D cube to test with. It is NOT safe to modify."""
-    return read.read_cube("tests/test_data/cardington_air_temp_test.nc")
+    return read_cube_lazy("tests/test_data/cardington_air_temp_test.nc")
 
 
 @pytest.fixture()
@@ -194,7 +211,7 @@ def cardington_cube(cardington_cube_readonly):
 @pytest.fixture(scope="session")
 def long_forecast_read_only():
     """Get long_forecast to run tests on. It is NOT safe to modify."""
-    return read.read_cube(
+    return read_cube_lazy(
         "tests/test_data/long_forecast_air_temp_fcst_1.nc", "air_temperature"
     )
 
@@ -208,7 +225,7 @@ def long_forecast(long_forecast_read_only):
 @pytest.fixture(scope="session")
 def long_forecast_multi_day_read_only():
     """Get long_forecast_multi_day to run tests on. It is NOT safe to modify."""
-    return read.read_cube(
+    return read_cube_lazy(
         "tests/test_data/long_forecast_air_temp_multi_day.nc", "air_temperature"
     )
 
@@ -222,7 +239,7 @@ def long_forecast_multi_day(long_forecast_multi_day_read_only):
 @pytest.fixture(scope="session")
 def long_forecast_many_cubes_read_only():
     """Get long_forecast_may_cubes to run tests on. It is NOT safe to modify."""
-    return read.read_cubes(
+    return read_cubes_lazy(
         "tests/test_data/long_forecast_air_temp_fcst_*.nc", "air_temperature"
     )
 
@@ -236,7 +253,7 @@ def long_forecast_many_cubes(long_forecast_many_cubes_read_only):
 @pytest.fixture(scope="session")
 def model_level_cube_read_only():
     """Get model level cube to run tests on. It is NOT safe to modify."""
-    return read.read_cube("tests/test_data/model_level_test.nc")
+    return read_cube_lazy("tests/test_data/model_level_test.nc")
 
 
 @pytest.fixture()
@@ -248,7 +265,7 @@ def model_level_cube(model_level_cube_read_only):
 @pytest.fixture(scope="session")
 def global_cube_read_only():
     """Get global cube to run tests on. It is NOT safe to modify."""
-    return read.read_cube("tests/test_data/air_temperature_global.nc")
+    return read_cube_lazy("tests/test_data/air_temperature_global.nc")
 
 
 @pytest.fixture()
@@ -260,7 +277,7 @@ def global_cube(global_cube_read_only):
 @pytest.fixture(scope="session")
 def ensemble_cube_read_only():
     """Get ensemble cube to run tests on. It is NOT safe to modify."""
-    return read.read_cube("tests/test_data/exeter_em*.nc")
+    return read_cube_lazy("tests/test_data/exeter_em*.nc")
 
 
 @pytest.fixture()
@@ -272,7 +289,7 @@ def ensemble_cube(ensemble_cube_read_only):
 @pytest.fixture(scope="session")
 def visibility_cube_read_only():
     """Get visibility cube to run tests on. It is NOT safe to modify."""
-    return read.read_cube("tests/test_data/aviation/vis_avi.nc")
+    return read_cube_lazy("tests/test_data/aviation/vis_avi.nc")
 
 
 @pytest.fixture()
@@ -284,7 +301,7 @@ def visibility_cube(visibility_cube_read_only):
 @pytest.fixture(scope="session")
 def cloud_base_cube_read_only():
     """Get cloud base altitude cube to run tests on. It is NOT safe to modify."""
-    return read.read_cube("tests/test_data/aviation/cld_base_avi.nc")
+    return read_cube_lazy("tests/test_data/aviation/cld_base_avi.nc")
 
 
 @pytest.fixture()
@@ -296,7 +313,7 @@ def cloud_base_cube(cloud_base_cube_read_only):
 @pytest.fixture(scope="session")
 def orography_cube_read_only():
     """Get orography cube to run tests on. It is NOT safe to modify."""
-    return read.read_cube("tests/test_data/aviation/Orography_2D_avi.nc")
+    return read_cube_lazy("tests/test_data/aviation/Orography_2D_avi.nc")
 
 
 @pytest.fixture()
@@ -308,7 +325,7 @@ def orography_cube(orography_cube_read_only):
 @pytest.fixture(scope="session")
 def orography_3D_cube_read_only():
     """Get 3D orography cube to run tests on. It is NOT safe to modify."""
-    return read.read_cube("tests/test_data/aviation/Orography_3D_avi.nc")
+    return read_cube_lazy("tests/test_data/aviation/Orography_3D_avi.nc")
 
 
 @pytest.fixture()
@@ -320,7 +337,7 @@ def orography_3D_cube(orography_3D_cube_read_only):
 @pytest.fixture(scope="session")
 def orography_4D_cube_read_only():
     """Get 4D orography cube to run tests on. It is NOT safe to modify."""
-    return read.read_cube("tests/test_data/aviation/Orography_4D_avi.nc")
+    return read_cube_lazy("tests/test_data/aviation/Orography_4D_avi.nc")
 
 
 @pytest.fixture()
