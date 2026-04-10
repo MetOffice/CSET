@@ -121,6 +121,15 @@ nav {
     padding: 0;
     margin: 0;
 
+    .diagnostic-cutoff-warning {
+      padding: 1em;
+      margin: 1em;
+      background-color: #fdcabb;
+      box-shadow: 0 4px 4px var(--shadow-colour);
+      text-align: center;
+      font-weight: bold;
+    }
+
     > li {
       padding: 5px 4px 3px;
       overflow-wrap: break-word;
