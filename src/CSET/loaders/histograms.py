@@ -24,44 +24,6 @@ def load(conf: Config):
     # Load a list of model detail dictionaries.
     models = get_models(conf.asdict())
 
-    # Nimrod radar rainfall data sources for surface (2D) fields.
-    radar_names = []
-    radar_ids = []
-    radar_flag = False
-    radar_varname = "Hourly rain accumulation"
-    if conf.NIMROD_COMP_1KM:
-        radar_names.append("Nimrod_1km")
-        radar_ids.append("Nimrod1km")
-        radar_flag = True
-    if conf.NIMROD_COMP_2KM:
-        radar_names.append("Nimrod_2km")
-        radar_ids.append("Nimrod2km")
-        radar_flag = True
-    if conf.NIMROD_COMP_XKM:
-        radar_names.append("Nimrod_xkm")
-        radar_ids.append("Nimrodxkm")
-        radar_flag = True
-
-    # Histograms for surface (2D) Nimrod radar rainfall.
-    # Note: To get multiple radar sources plotted on the histogram the yaml
-    #       realisation must be done by passing lists of both the model_ids
-    #       and the model_names.
-    if radar_flag:
-        yield RawRecipe(
-            recipe="generic_surface_histogram_series.yaml",
-            model_ids=radar_ids,  # -> Becomes $INPUT_PATHS
-            variables={
-                "VARNAME": radar_varname,
-                "MODEL_NAME": radar_names,
-                "SEQUENCE": "time"
-                if conf.HISTOGRAM_SURFACE_FIELD_SEQUENCE
-                else "realization",
-                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
-            },
-            aggregation=False,
-        )
-
     # Surface (2D) fields.
     if conf.HISTOGRAM_SURFACE_FIELD:
         for field in conf.SURFACE_FIELDS:
