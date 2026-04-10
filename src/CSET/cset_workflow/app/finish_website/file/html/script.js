@@ -448,8 +448,7 @@ function ensure_dual_frame() {
 }
 
 // Create a list entry element for a single diagnostic.
-// Unseen facet values are recorded in facet_values.
-function create_diagnostic_element(record, facet_values) {
+function create_diagnostic_element(record) {
   // Add entry's display name.
   const entry_title = document.createElement("h2");
   entry_title.textContent = record["title"];
@@ -466,11 +465,6 @@ function create_diagnostic_element(record, facet_values) {
       facet_node.appendChild(name);
       facet_node.appendChild(value);
       facets.appendChild(facet_node);
-      // Record facet values.
-      if (!(facet in facet_values)) {
-        facet_values[facet] = new Set();
-      }
-      facet_values[facet].add(record[facet]);
     }
   }
 
@@ -518,8 +512,19 @@ function create_diagnostic_element(record, facet_values) {
   return diagnostic_entry;
 }
 
+// Turn the given records into elements.
+function create_diagnostic_elements(records) {
+  // Turn records into DOM objects.
+  const diagnostics = document.createDocumentFragment();
+  for (const record of records) {
+    diagnostics.appendChild(create_diagnostic_element(record));
+  }
+  return diagnostics
+}
+
+// Create the facet dropdowns.
 function add_facet_dropdowns(facet_values) {
-  const facets_dropdowns = document.createDocumentFragment();
+  const facet_dropdowns = document.createDocumentFragment();
   for (const facet in facet_values) {
     const label = document.createElement("label");
     label.setAttribute("for", `facet-${facet}`);
@@ -545,11 +550,9 @@ function add_facet_dropdowns(facet_values) {
     const facet_row = document.createElement("div");
     facet_row.appendChild(label);
     facet_row.appendChild(select);
-    facets_dropdowns.appendChild(facet_row);
+    facet_dropdowns.appendChild(facet_row);
   }
-  // Add to DOM.
-  const facets_container = document.getElementById("filter-facets");
-  facets_container.appendChild(facets_dropdowns);
+  return facet_dropdowns
 }
 
 // Update query based on facet dropdown value.
@@ -575,6 +578,8 @@ function updateFacetQuery(event) {
   doSearch();
 }
 
+const diagnostic_records = new Array();
+
 // Plot selection sidebar.
 function setup_plots_sidebar() {
   // Skip if there is no sidebar on page.
@@ -592,23 +597,45 @@ function setup_plots_sidebar() {
         return;
       }
       response.text().then((data) => {
-        const diagnostics = document.createDocumentFragment();
-        const facet_values = {};
+        const facet_values = Object.create(null);
+
+        // Parse each line into a record.
         for (let line of data.split("\n")) {
           line = line.trim();
           // Skip blank lines.
           if (line.length) {
-            const diagnostic = create_diagnostic_element(
-              JSON.parse(line),
-              facet_values,
-            );
-            diagnostics.appendChild(diagnostic);
+            const record = JSON.parse(line);
+            // Normalise values to strings.
+            for (const facet in record) {
+              if (typeof record[facet] != "string") {
+                record[facet] = record[facet].toString()
+              }
+            }
+            diagnostic_records.push(record);
+
+            // Record unique facet values.
+            for (const facet in record) {
+              if (!(facet in facet_values)) {
+                facet_values[facet] = new Set();
+              }
+              facet_values[facet].add(record[facet]);
+            }
           }
         }
-        // Replace the throbber with the diagnostics.
-        const diagnostics_list = document.getElementById("diagnostics");
-        diagnostics_list.replaceChildren(diagnostics);
-        add_facet_dropdowns(facet_values);
+
+        // Remove facets that we don't want to display as dropdowns.
+        delete facet_values["title"];
+        delete facet_values["path"];
+
+        // Create the facet dropdowns.
+        const facet_dropdowns = add_facet_dropdowns(facet_values);
+        // Add to DOM.
+        const facets_container = document.getElementById("filter-facets");
+        facets_container.appendChild(facet_dropdowns);
+
+        // Perform initial search.
+        // setTimeout allows for script execution to finish first.
+        searchTimeoutID = setTimeout(doSearch, 0);
       });
     })
     .catch((err) => {
@@ -653,7 +680,7 @@ function doSearch() {
   // Update URL in address bar to match current query, deleting if blank.
   const url = new URL(document.location.href);
   query ? url.searchParams.set("q", query) : url.searchParams.delete("q");
-  // Updates the URL without reloading the page.
+  // Update the URL without reloading the page.
   history.pushState(history.state, "", url.href);
 
   console.log("Search query:", query);
@@ -670,26 +697,29 @@ function doSearch() {
   }
 
   // Filter all entries.
-  for (const entryElem of document.querySelectorAll("#diagnostics > li")) {
-    const entry = {};
-    entry["title"] = entryElem.querySelector("h2").textContent;
-    for (const facet_node of entryElem.querySelector("dl").children) {
-      const facet = facet_node.firstChild.textContent;
-      const value = facet_node.lastChild.textContent;
-      entry[facet] = value;
-    }
+  console.log(`Filtering ${diagnostic_records.length} records...`);
+  const filtered_records = diagnostic_records.filter(condition.test, condition);
+  console.log(`Filtered down to ${filtered_records.length} records.`);
 
-    // Show entries matching filter and hide entries that don't.
-    if (condition.test(entry)) {
-      entryElem.classList.remove("hidden");
-    } else {
-      entryElem.classList.add("hidden");
-    }
+  // Limit the list to the first few hundred records to keep it fast.
+  const limited_records = filtered_records.slice(0, 500);
+
+  // Convert to elements.
+  const diagnostics = create_diagnostic_elements(limited_records);
+
+  // Replace with the current diagnostics.
+  const diagnostics_list = document.getElementById("diagnostics");
+  diagnostics_list.replaceChildren(diagnostics);
+  if (filtered_records.length > 500) {
+    const cutoff_note = document.createElement("p");
+    cutoff_note.textContent = `First 500 of ${filtered_records.length} diagnostics displayed.`;
+    cutoff_note.classList.add("diagnostic-cutoff-warning");
+    diagnostics_list.appendChild(cutoff_note);
   }
 }
 
 // For performance don't search on every keystroke immediately. Instead wait
-// until quarter of a second of no typing has elapsed. To maximised perceived
+// until half of a second of no typing has elapsed. To maximised perceived
 // responsiveness immediately perform the search if a space is typed, as that
 // indicates a completed search term.
 function debounce(event) {
@@ -697,7 +727,7 @@ function debounce(event) {
   if (event.data === " ") {
     doSearch();
   } else {
-    searchTimeoutID = setTimeout(doSearch, 250);
+    searchTimeoutID = setTimeout(doSearch, 500);
   }
 }
 
@@ -707,12 +737,11 @@ function setup_search() {
   search.addEventListener("input", debounce);
   // Trigger search immediately when input is unfocused.
   search.addEventListener("change", doSearch);
-  // Do initial search if we already have a query specified in the URL.
+  // Populate search box if we already have a query specified in the URL.
   const params = new URLSearchParams(document.location.search);
   const initial_query = params.get("q");
   if (initial_query) {
     search.value = initial_query;
-    doSearch();
   }
 }
 
@@ -720,5 +749,5 @@ function setup_search() {
 setup_description_toggle_button();
 setup_clear_view_button();
 setup_clear_search_button();
-setup_plots_sidebar();
 setup_search();
+setup_plots_sidebar();
