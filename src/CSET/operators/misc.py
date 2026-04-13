@@ -306,8 +306,9 @@ def difference(cubes: CubeList):
     # If cubes contain a pressure coordinate, ensure it is increasing.
     for cube in cubes:
         try:
-            if not is_increasing(cube.coord("pressure").points):
-                cube.data = np.flip(cube.data, axis=cube.coord_dims("pressure")[0])
+            if len(cube.coord("pressure").points) > 2:
+                if not is_increasing(cube.coord("pressure").points):
+                    cube.data = np.flip(cube.data, axis=cube.coord_dims("pressure")[0])
 
         except iris.exceptions.CoordinateNotFoundError:
             pass
@@ -574,8 +575,8 @@ def extract_common_points(cubes: iris.cube.CubeList, coordinate: str):
     cube1_common = _slice_cube_on_levels(cubes[1], coordinate, common_points)
 
     return iris.cube.CubeList([cube0_common, cube1_common])
-  
-  
+
+
 def differentiate(
     cubes: iris.cube.Cube | iris.cube.CubeList, coordinate: str, **kwargs
 ) -> iris.cube.Cube | iris.cube.CubeList:
