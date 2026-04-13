@@ -313,7 +313,7 @@
   },
   "leaf_area_index": {
     "cmap": "YlGn",
-    "max": 25.0,
+    "max": 15.0,
     "min": 0.0
   },
   "low_type_cloud_area_fraction": {
