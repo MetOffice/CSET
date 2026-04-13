@@ -462,7 +462,7 @@ def _setup_spatial_map(
             x_inline=False,
             y_inline=False,
         )
-        gl.bottom_labels = False
+        gl.top_labels = False
         gl.right_labels = False
 
         # If is lat/lon spatial map, fix extent to keep plot tight.
