@@ -24,6 +24,7 @@ import re
 from datetime import timedelta
 
 import iris
+import iris.coords
 import iris.cube
 import iris.exceptions
 import iris.util
@@ -403,7 +404,7 @@ def is_time_aggregatable(cube: iris.cube.Cube) -> bool:
     """Determine whether a cube can be aggregated in time.
 
     If a cube is aggregatable it will contain both a 'forecast_reference_time'
-    and 'forecast_period' coordinate as dimensional coordinates.
+    and 'forecast_period' coordinate as dimension or scalar coordinates.
 
     Arguments
     ---------
@@ -422,8 +423,15 @@ def is_time_aggregatable(cube: iris.cube.Cube) -> bool:
     # Acceptable time coordinate names for aggregatable cube.
     TEMPORAL_COORD_NAMES = ["forecast_period", "forecast_reference_time"]
 
-    # Coordinate names for the cube.
-    coord_names = [coord.name() for coord in cube.coords(dim_coords=True)]
+    def strictly_monotonic(coord: iris.coords.Coord) -> bool:
+        """Return whether a coord is strictly monotonic, catching errors."""
+        try:
+            return coord.is_monotonic()
+        except iris.exceptions.CoordinateMultiDimError:
+            return False
+
+    # Strictly monotonic coordinate names for the cube.
+    coord_names = [coord.name() for coord in cube.coords() if strictly_monotonic(coord)]
 
     # Check which temporal coordinates we have.
     temporal_coords = [coord for coord in coord_names if coord in TEMPORAL_COORD_NAMES]
