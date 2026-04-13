@@ -514,12 +514,24 @@ function create_diagnostic_element(record) {
 
 // Turn the given records into elements.
 function create_diagnostic_elements(records) {
-  // Turn records into DOM objects.
   const diagnostics = document.createDocumentFragment();
-  for (const record of records) {
+
+  // Add note if we are going to cut off records.
+  const max_records = 500;
+  if (records.length > max_records) {
+    const cutoff_note = document.createElement("p");
+    cutoff_note.textContent = `First ${max_records} of ${records.length} diagnostics displayed.`;
+    cutoff_note.classList.add("diagnostic-cutoff-warning");
+    diagnostics.appendChild(cutoff_note);
+  }
+
+  // Turn records into DOM objects.
+  // Limit the list to the first few hundred records to keep it fast.
+  for (const record of records.slice(0, max_records)) {
     diagnostics.appendChild(create_diagnostic_element(record));
   }
-  return diagnostics
+
+  return diagnostics;
 }
 
 // Create the facet dropdowns.
@@ -552,7 +564,7 @@ function add_facet_dropdowns(facet_values) {
     facet_row.appendChild(select);
     facet_dropdowns.appendChild(facet_row);
   }
-  return facet_dropdowns
+  return facet_dropdowns;
 }
 
 // Update query based on facet dropdown value.
@@ -608,7 +620,7 @@ function setup_plots_sidebar() {
             // Normalise values to strings.
             for (const facet in record) {
               if (typeof record[facet] != "string") {
-                record[facet] = record[facet].toString()
+                record[facet] = record[facet].toString();
               }
             }
             diagnostic_records.push(record);
@@ -701,21 +713,12 @@ function doSearch() {
   const filtered_records = diagnostic_records.filter(condition.test, condition);
   console.log(`Filtered down to ${filtered_records.length} records.`);
 
-  // Limit the list to the first few hundred records to keep it fast.
-  const limited_records = filtered_records.slice(0, 500);
-
   // Convert to elements.
-  const diagnostics = create_diagnostic_elements(limited_records);
+  const diagnostics = create_diagnostic_elements(filtered_records);
 
   // Replace with the current diagnostics.
   const diagnostics_list = document.getElementById("diagnostics");
   diagnostics_list.replaceChildren(diagnostics);
-  if (filtered_records.length > 500) {
-    const cutoff_note = document.createElement("p");
-    cutoff_note.textContent = `First 500 of ${filtered_records.length} diagnostics displayed.`;
-    cutoff_note.classList.add("diagnostic-cutoff-warning");
-    diagnostics_list.appendChild(cutoff_note);
-  }
 }
 
 // For performance don't search on every keystroke immediately. Instead wait
