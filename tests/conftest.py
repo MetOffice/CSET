@@ -80,7 +80,7 @@ def vertical_profile_cube_readonly():
     )
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def vertical_profile_cube(vertical_profile_cube_readonly):
     """Get a vertical profile Cube. It is safe to modify."""
     return vertical_profile_cube_readonly.copy()
