@@ -14,6 +14,7 @@
 
 """Operators to aggregate across either 1 or 2 dimensions."""
 
+import itertools
 import logging
 
 import iris
@@ -24,6 +25,183 @@ import isodate
 
 from CSET._common import iter_maybe
 from CSET.operators._utils import is_time_aggregatable
+
+
+def _identify_unique_times(cubelist, time_coord_name):
+    times = []
+    time_unit = None
+    # Loop over cubes
+    for cube in cubelist:
+        # Extract the desired time coordinate from the cube
+        time_coord = cube.coord(time_coord_name)
+
+        # Get the units for the specified time coordinate
+        if time_unit is None:
+            time_unit = time_coord.units
+
+        # Store the time coordinate points
+        times.extend(time_coord.points)
+
+    # Construct a list of unique times...
+    times = sorted(list(set(times)))
+    # ...and store them in a new time coordinate
+    time_coord = iris.coords.DimCoord(times, units=time_unit)
+    time_coord.rename(time_coord_name)
+
+    return time_coord
+
+
+def _remove_cell_method(cube, cell_method):
+    cell_methods = [cm for cm in cube.cell_methods if cm != cell_method]
+    cube.cell_methods = ()
+    for cm in cell_methods:
+        cube.add_cell_method(cm)
+    return cube
+
+
+def _remove_duplicates(cubelist):
+    # Nothing to do if the cubelist is empty
+    if not cubelist:
+        return cubelist
+    # Build up a list of indices of the cubes to remove because they are
+    # duplicated
+    indices_to_remove = []
+    for i in range(len(cubelist) - 1):
+        cube_i = cubelist[i]
+        for j in range(i + 1, len(cubelist)):
+            cube_j = cubelist[j]
+            if cube_i == cube_j:
+                if j not in indices_to_remove:
+                    indices_to_remove.append(j)
+    # Only keep unique cubes
+    cubelist = iris.cube.CubeList(
+        [cube for index, cube in enumerate(cubelist) if index not in indices_to_remove]
+    )
+    return cubelist
+
+
+def _aggregate_without_time_dimcoords(input_params):
+    # Unpack input parameters tuple
+    cubes = input_params[0]
+    time_coord = input_params[1]
+    aggregator = input_params[2]
+    # TODO: Can we improve the handling of this with keyword arguments?
+    percentile = input_params[3]
+
+    # Check the supplied time coordinate to make sure it corresponds to a
+    # single time only
+    if len(time_coord.points) != 1:
+        raise ValueError("Time coordinate should specify a single time only")
+
+    # Remove any duplicate cubes in the input cubelist otherwise this
+    # will break the aggregation
+    cubes = _remove_duplicates(cubes)
+
+    # Name of the supplied time coordinate
+    time_coord_name = time_coord.name()
+
+    # Extract cubes matching the time specified by the supplied time coordinate.
+    # Even though the source coord might have floats for its points,
+    # the cell here will have cftime objects, such as DatetimeGregorian,
+    # so we can't just compare against the time coord's points.
+    time_constraint = iris.Constraint(
+        coord_values={time_coord_name: lambda cell: cell.point in time_coord.cells()}
+    )
+    cubes_at_time = cubes.extract(time_constraint)
+
+    # Add a temporary "number" coordinate to uniquely label the different
+    # data points at this time.
+    # An example of when there can be multiple data points at the time of
+    # interest is if the time coordinate represents the hour of day.
+    number = 0
+    numbered_cubes = iris.cube.CubeList()
+    for cube in cubes_at_time:
+        for slc in cube.slices_over(time_coord_name):
+            number_coord = iris.coords.AuxCoord(number, long_name="number")
+            slc.add_aux_coord(number_coord)
+            numbered_cubes.append(slc)
+            number += 1
+    cubes_at_time = numbered_cubes
+
+    # Merge
+    cubes_at_time = cubes_at_time.merge()
+
+    # For each cube in the cubelist, aggregate over all cases at this time
+    # using the supplied aggregator
+    aggregated_cubes = iris.cube.CubeList()
+    for cube in cubes_at_time:
+        # If there was only a single data point at this time, then "number"
+        # will be a scalar coordinate. If so, make it a dimension coordinate
+        # to allow collapsing below
+        if not cube.coord_dims("number"):
+            cube = iris.util.new_axis(cube, scalar_coord="number")
+
+        # Store the total number of data points found at this time
+        num_cases = cube.coord("number").points.size
+        num_cases_coord = iris.coords.AuxCoord(num_cases, long_name="num_cases")
+        cube.add_aux_coord(num_cases_coord)
+
+        # Do aggregation across the temporary "number" coordinate
+        if isinstance(aggregator, type(iris.analysis.PERCENTILE)):
+            cube = cube.collapsed("number", aggregator, percent=percentile)
+        else:
+            cube = cube.collapsed("number", aggregator)
+
+        # Now remove the "number" coordinate...
+        cube.remove_coord("number")
+        # ...and associated cell method
+        cell_method = iris.coords.CellMethod(aggregator.name(), coords="number")
+        cube = _remove_cell_method(cube, cell_method)
+
+        aggregated_cubes.append(cube)
+
+    return aggregated_cubes
+
+
+def create_aggregated_cube_without_dimcoords(cubes, time_coord_name):
+    """Aggregate cubes by time without requiring time DimCoords.
+
+    Identifies the unique times across a CubeList, aggregates data at each
+    time using a mean, and merges the result into a single CubeList. This is a
+    path used when ``forecast_period`` and
+    ``forecast_reference_time`` are not dimension coordinates.
+
+    Arguments
+    ---------
+    cubes: iris.cube.CubeList
+        Cubes to aggregate.
+    time_coord_name: str
+        Name of the time coordinate to aggregate over, typically "time",
+        "forecast_period".
+
+    Returns
+    -------
+    cubes: iris.cube.CubeList
+        Aggregated cubes merged across unique times.
+    """
+    times = _identify_unique_times(cubes, time_coord_name)
+
+    input_params = []
+    for time in times:
+        input_params.append((cubes, time, iris.analysis.MEAN, None))
+
+    result_list = [
+        _aggregate_without_time_dimcoords(input_param) for input_param in input_params
+    ]
+    cubes_group = iris.cube.CubeList(itertools.chain.from_iterable(result_list))
+
+    # remove bounds on time coords before merge
+    for cube in cubes_group:
+        if time_coord_name == "forecast_period":
+            cube.coord("forecast_reference_time").bounds = None
+            cube.coord("time").bounds = None
+        elif time_coord_name == "time":
+            cube.coord("forecast_reference_time").bounds = None
+            cube.coord("forecast_period").bounds = None
+
+    merged_cubes = cubes_group.merge()
+
+    return merged_cubes
 
 
 def time_aggregate(
