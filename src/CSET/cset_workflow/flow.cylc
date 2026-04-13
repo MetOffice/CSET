@@ -33,27 +33,21 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     validate_environment => assign_model_colours => setup_complete
     """
 
+    {# Calculate recurrence pattern depending on cycling mode. #}
     {% if CSET_CYCLING_MODE == "case_study" %}
-        # Runs for every forecast initiation time to process the data in parallel.
-        {% for date in CSET_CASE_DATES %}
-            R1/{{date}} = """
-            setup_complete[^] => parbake_recipes
-            setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
-            fetch_complete & parbake_recipes:start_baking? => bake_recipes
-            parbake_recipes:skip_baking? => ! bake_recipes
-            parbake_recipes:skip_baking? | bake_recipes => cycle_complete
-            """
-        {% endfor %}
+        {% set recurrences = "R1/" ~ CSET_CASE_DATES|join(",R1/") %}
     {% elif CSET_CYCLING_MODE == "trial" %}
-        # Analysis from each forecast.
-        {{CSET_TRIAL_CYCLE_PERIOD}} = """
-        setup_complete[^] => parbake_recipes
-        setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
-        fetch_complete & parbake_recipes:start_baking? => bake_recipes
-        parbake_recipes:skip_baking? => ! bake_recipes
-        parbake_recipes:skip_baking? | bake_recipes => cycle_complete
-        """
+        {% set recurrences = CSET_TRIAL_CYCLE_PERIOD %}
     {% endif %}
+
+    # Runs for every forecast initiation time to process the data in parallel.
+    {{recurrences}} = """
+    setup_complete[^] => parbake_recipes
+    setup_complete[^] => FETCH_DATA:succeed-all => fetch_complete
+    fetch_complete & parbake_recipes:start_baking? => bake_recipes
+    parbake_recipes:skip_baking? => ! bake_recipes
+    parbake_recipes:skip_baking? | bake_recipes => cycle_complete
+    """
 
     # Only runs on the final cycle.
     R1/$ = """
