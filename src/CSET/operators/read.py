@@ -376,6 +376,7 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     _proleptic_gregorian_fix(cube)
     _lfric_time_callback(cube)
     _lfric_forecast_period_callback(cube)
+    cube = _fix_no_time_coords_callback(cube)
     _normalise_ML_varname(cube)
     return cube
 
@@ -1027,6 +1028,19 @@ def _lfric_forecast_period_callback(cube: iris.cube.Cube):
             coord.standard_name = "forecast_period"
     except iris.exceptions.CoordinateNotFoundError:
         pass
+
+
+def _fix_no_time_coords_callback(cube: iris.cube.Cube):
+    """Add dummy time coord to process cubes that don't have sequence coord."""
+    # Only add if time coordinate does not exist.
+    if not cube.coords("time"):
+        cube.add_aux_coord(
+            iris.coords.DimCoord(
+                0, standard_name="time", units="hours since 1970-01-01 00:00:00"
+            )
+        )
+
+    return cube
 
 
 def _normalise_ML_varname(cube: iris.cube.Cube):

@@ -50,6 +50,7 @@ from CSET._common import (
     slugify,
 )
 from CSET.operators._utils import (
+    check_stamp_coordinate,
     fully_equalise_attributes,
     get_cube_yxcoordname,
     is_transect,
@@ -336,7 +337,10 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
             vmin, vmax = var_colorbar["min"], var_colorbar["max"]
             logging.debug("Using min and max for %s colorbar.", varname)
             # Calculate levels from range.
-            levels = np.linspace(vmin, vmax, 101)
+            if vmin == "auto" or vmax == "auto":
+                levels = None
+            else:
+                levels = np.linspace(vmin, vmax, 101)
             norm = None
 
         # Overwrite cmap, levels and norm for specific variables that
@@ -370,7 +374,7 @@ def _setup_spatial_map(
         Matplotlib Figure object holding all plot elements.
     cmap:
         Matplotlib colormap.
-    grid_size: int, optional
+    grid_size: (int,int), optional
         Size of grid for subplots if multiple spatial subplots in figure.
     subplot: int, optional
         Subplot index if multiple spatial subplots in figure.
@@ -433,7 +437,7 @@ def _setup_spatial_map(
         # Define axes for plot (or subplot) with required map projection.
         if subplot is not None:
             axes = figure.add_subplot(
-                grid_size, grid_size, subplot, projection=projection
+                grid_size[1], grid_size[0], subplot, projection=projection
             )
         else:
             axes = figure.add_subplot(projection=projection)
@@ -446,6 +450,20 @@ def _setup_spatial_map(
         logging.debug("Plotting coastlines and borderlines in colour %s.", coastcol)
         axes.coastlines(resolution="10m", color=coastcol)
         axes.add_feature(cfeature.BORDERS, edgecolor=coastcol)
+
+        if subplot is None:
+            draw_labels = True
+        else:
+            draw_labels = False
+        gl = axes.gridlines(
+            alpha=0.3,
+            draw_labels=draw_labels,
+            dms=False,
+            x_inline=False,
+            y_inline=False,
+        )
+        gl.bottom_labels = False
+        gl.right_labels = False
 
         # If is lat/lon spatial map, fix extent to keep plot tight.
         # Specifying crs within set_extent helps ensure only data region is shown.
@@ -802,9 +820,13 @@ def _plot_and_save_postage_stamp_spatial_plot(
         If the cube doesn't have the right dimensions.
     """
     # Use the smallest square grid that will fit the members.
-    grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
+    nmember = len(cube.coord(stamp_coordinate).points)
+    grid_size = int(math.ceil(math.sqrt(nmember)))
+    grid_rows = math.ceil(nmember / grid_size)
 
-    fig = plt.figure(figsize=(10, 10))
+    fig = plt.figure(
+        figsize=(10, 10 * grid_rows / grid_size), facecolor="w", edgecolor="k"
+    )
 
     # Specify the color bar
     cmap, levels, norm = _colorbar_map_levels(cube)
@@ -820,7 +842,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
     ):
         # Setup subplot map projection, extent and coastlines and borderlines.
         axes = _setup_spatial_map(
-            member, fig, cmap, grid_size=grid_size, subplot=subplot
+            member, fig, cmap, grid_size=(grid_size, grid_rows), subplot=subplot
         )
         if method == "contourf":
             # Filled contour plot of the field.
@@ -871,7 +893,9 @@ def _plot_and_save_postage_stamp_spatial_plot(
                 linestyles="--",
                 linewidths=1,
             )
-        axes.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
+        mtitle = member.coord(stamp_coordinate).name().capitalize()
+        axes.set_title(f"{mtitle} #{member.coord(stamp_coordinate).points[0]}")
+        #        axes.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
         axes.set_axis_off()
 
     # Put the shared colorbar in its own axes.
@@ -1480,9 +1504,12 @@ def _plot_and_save_postage_stamp_histogram_series(
         # Otherwise we plot xdim histograms stacked.
         member_data_1d = (member.data).flatten()
         plt.hist(member_data_1d, density=True, stacked=True)
-        ax = plt.gca()
-        ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
-        ax.set_xlim(vmin, vmax)
+        axes = plt.gca()
+
+        mtitle = member.coord(stamp_coordinate).name().capitalize()
+        axes.set_title(f"{mtitle} #{member.coord(stamp_coordinate).points[0]}")
+        #        ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
+        axes.set_xlim(vmin, vmax)
 
     # Overall figure title.
     fig.suptitle(title, fontsize=16)
@@ -1511,11 +1538,12 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
         # Flatten the member data to 1D
         member_data_1d = member.data.flatten()
         # Plot the histogram using plt.hist
+        mtitle = member.coord(stamp_coordinate).name().capitalize()
         plt.hist(
             member_data_1d,
             density=True,
             stacked=True,
-            label=f"Member #{member.coord(stamp_coordinate).points[0]}",
+            label=f"{mtitle} #{member.coord(stamp_coordinate).points[0]}",
         )
 
     # Add a legend
@@ -1744,9 +1772,11 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
 
         frequency = member.coord("frequency").points
 
-        ax = plt.gca()
-        ax.plot(frequency, member.data)
-        ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
+        axes = plt.gca()
+        axes.plot(frequency, member.data)
+        mtitle = member.coord(stamp_coordinate).name().capitalize()
+        axes.set_title(f"{mtitle} #{member.coord(stamp_coordinate).points[0]}")
+    #        ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
 
     # Overall figure title.
     fig.suptitle(title, fontsize=16)
@@ -1770,10 +1800,11 @@ def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
     # Loop over all slices along the stamp_coordinate
     for member in cube.slices_over(stamp_coordinate):
         frequency = member.coord("frequency").points
+        mtitle = member.coord(stamp_coordinate).name().capitalize()
         ax.plot(
             frequency,
             member.data,
-            label=f"Member #{member.coord(stamp_coordinate).points[0]}",
+            label=f"{mtitle} #{member.coord(stamp_coordinate).points[0]}",
         )
 
     # Add a legend
@@ -1839,6 +1870,9 @@ def _spatial_plot(
 
     # Ensure we've got a single cube.
     cube = _check_single_cube(cube)
+
+    # Test if valid stamp coordinate in cube dimensions.
+    stamp_coordinate = check_stamp_coordinate(cube)
 
     # Make postage stamp plots if stamp_coordinate exists and has more than a
     # single point.
