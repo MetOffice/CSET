@@ -122,10 +122,9 @@ nav {
     margin: 0;
 
     .diagnostic-cutoff-warning {
-      padding: 1em;
-      margin: 1em;
+      padding: 0.5em;
+      margin: 0;
       background-color: #fdcabb;
-      box-shadow: 0 4px 4px var(--shadow-colour);
       text-align: center;
       font-weight: bold;
     }
