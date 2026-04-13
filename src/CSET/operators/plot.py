@@ -499,10 +499,12 @@ def _set_title_and_filename(
     sequence_title = ""
     sequence_fname = ""
 
-    # Account for case with multi-dimension sequence input (e.g. aggregation)
+    # Account for case with multi-dimension sequence input
+    # (e.g. aggregation histogram plots)
     if ndim > 1:
-        sequence_title = f"\n [{ndim} cases]"
-        sequence_fname = f"_{ndim}cases"
+        ncase = np.shape(seq_coord)[0]
+        sequence_title = f"\n [{ncase} cases]"
+        sequence_fname = f"_{ncase}cases"
 
     else:
         if npoints == 1:
@@ -511,10 +513,15 @@ def _set_title_and_filename(
                 sequence_value = seq_coord.units.title(seq_coord.points[0])
                 sequence_title = f"\n [{sequence_value}]"
                 sequence_fname = f"_{filename_slugify(sequence_value)}"
-            elif seq_coord.has_bounds():
-                ncase = np.size(seq_coord.bounds)
-                sequence_title = f"\n [{ncase} cases]"
-                sequence_fname = f"_{ncase}cases"
+            else:
+                # Use coord aggregated attribute where input collapsed over aggregation
+                try:
+                    ncase = seq_coord.attributes["number_reference_times"]
+                    sequence_title = f"\n [{ncase} cases]"
+                    sequence_fname = f"_{ncase}cases"
+                except KeyError:
+                    sequence_title = ""
+                    sequence_fname = ""
             # Use sequence (e.g. time) bounds if plotting single non-sequence outputs
             # Take title endpoints from coord points where series input (e.g. timeseries)
         if npoints > 1:
