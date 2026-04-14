@@ -137,7 +137,7 @@ def saturation_mixing_ratio(
     .. math:: w = \epsilon \frac{e}{P - e}
 
     for w the mixing ratio, :math:`\epsilon` the ratio between the mixing ratio
-    of dry and moist air equating to 0.622, P the pressure and e the vapour
+    of dry and moist air equating to 0.62197, P the pressure and e the vapour
     pressure. To ensure that the saturation mixing ratio (:math:`w_s`) is
     calculated the vapour pressure calculated should be with the (dry-bulb)
     temperature to ensure it is the saturated vapour pressure.
@@ -188,7 +188,7 @@ def saturation_specific_humidity(
     .. math:: q = \epsilon \frac{e}{P}
 
     for q the specific humidity, :math:`\epsilon` the ratio between the mixing ratio
-    of dry and moist air equating to 0.622, P the pressure and e the vapour
+    of dry and moist air equating to 0.62197, P the pressure and e the vapour
     pressure. To ensure that the saturation specific humidity (:math:`q_{sat}`) is
     calculated the vapour pressure calculated should be with the (dry-bulb)
     temperature to ensure it is the saturated vapour pressure.
@@ -419,7 +419,7 @@ def relative_humidity_from_specific_humidity(
     saturation specific humidity. The saturation specific humidity is calculated using
     `humidity.saturation_specific_humidity`.
 
-    The RH varies predominatly between zero (completely dry) and one (saturated).
+    The RH varies predominantly between zero (completely dry) and one (saturated).
     Values larger than one are possible and imply supersaturation.
 
     All cubes must be on the same grid.
