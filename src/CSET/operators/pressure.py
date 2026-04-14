@@ -71,8 +71,8 @@ def vapour_pressure(
     v_pressure = iris.cube.CubeList([])
     for T in iter_maybe(temperature):
         es = T.copy()
-        T.convert_units("Celsius")
-        exponent = (17.502 * T) / (240.97 + T)
+        T_units = convert_units(T, "Celsius")
+        exponent = (17.502 * T_units) / (240.97 + T_units)
         es.data = E0 * np.exp(exponent.core_data())
         es.units = "hPa"
         es.rename("vapour_pressure")
