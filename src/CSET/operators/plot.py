@@ -447,6 +447,21 @@ def _setup_spatial_map(
         axes.coastlines(resolution="10m", color=coastcol)
         axes.add_feature(cfeature.BORDERS, edgecolor=coastcol)
 
+        # Add gridlines.
+        if subplot is None:
+            draw_labels = True
+        else:
+            draw_labels = False
+        gl = axes.gridlines(
+            alpha=0.3,
+            draw_labels=draw_labels,
+            dms=False,
+            x_inline=False,
+            y_inline=False,
+        )
+        gl.top_labels = False
+        gl.right_labels = False
+
         # If is lat/lon spatial map, fix extent to keep plot tight.
         # Specifying crs within set_extent helps ensure only data region is shown.
         if isinstance(coord_system, iris.coord_systems.GeogCS):
@@ -728,7 +743,7 @@ def _plot_and_save_spatial_plot(
         yinfopad = -0.1
         ycbarpad = 0.1
     else:
-        yinfopad = -0.05
+        yinfopad = 0.01
         ycbarpad = 0.042
 
     # Add watermark with min/max/mean. Currently not user togglable.
