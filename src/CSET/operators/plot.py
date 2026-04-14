@@ -451,6 +451,7 @@ def _setup_spatial_map(
         axes.coastlines(resolution="10m", color=coastcol)
         axes.add_feature(cfeature.BORDERS, edgecolor=coastcol)
 
+        # Add gridlines.
         if subplot is None:
             draw_labels = True
         else:
@@ -743,7 +744,7 @@ def _plot_and_save_spatial_plot(
         yinfopad = -0.1
         ycbarpad = 0.1
     else:
-        yinfopad = -0.05
+        yinfopad = 0.01
         ycbarpad = 0.042
 
     # Add watermark with min/max/mean. Currently not user togglable.
