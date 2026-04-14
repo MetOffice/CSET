@@ -27,42 +27,64 @@ steps:
             cubes:
                 operator: temperature.equivalent_potential_temperature
                 temperature:
-                    operator: filter.filter_multiple_cubes
+                    operator: filters.filter_multiple_cubes
                     constraint:
                         operator: constraints.generate_var_constraint
                         varname: "air_temperature"
                 relative_humidity:
                     operator: humidity.relative_humidity_from_specific_humidity
                     specific_humidity:
-                        operator: filter.filter_multiple_cubes
+                        operator: filters.filter_multiple_cubes
                         constraint:
-                            operator: constraints.generate_var_constraint
-                            varname: "specific_humidity"
+                            operator: constraints.combine_constraints
+                            constraint_1:
+                                operator: constraints.generate_var_constraint
+                                varname: "specific_humidity"
+                            constraint_2:
+                                operator: constraints.generate_remove_single_model_level_number_constraint
+                                level: 0
                     temperature:
-                        operator: filter.filter_mutiple_cubes
+                        operator: filters.filter_multiple_cubes
                         constraint:
                             operator: constraints.generate_var_constraint
                             varname: "air_temperature"
                     pressure:
-                        operator: filter.filter_multiple_cubes
+                        operator: filters.filter_multiple_cubes
                         constraint:
                             operator: constraints.generate_var_constraint
-                            varname: "air_pressure"
+                            varname: "m01s00i408"
                 pressure:
-                    operator: filter.filter_multiple_cubes
+                    operator: filters.filter_multiple_cubes
                     constraint:
                         operator: constraints.generate_var_constraint
-                        varname: "air_pressure"
-            coordinate: "model_level_number"
+                        varname: "m01s00i408"
+            coordinate: "level_height"
         condition: 'lt'
         value: 0.0
     multiplier:
         operator: filters.generate_mask
         mask_field:
-            operator: filter.filter_multiple_cubes
-            constraint:
-                operator: constraints.generate_var_constraint
-                varname: "relative_humidity"
+            operator: humidity.relative_humidity_from_specific_humidity
+            specific_humidity:
+                operator: filters.filter_multiple_cubes
+                constraint:
+                    operator: constraints.combine_constraints
+                    constraint_1:
+                        operator: constraints.generate_var_constraint
+                        varname: "specific_humidity"
+                    constraint_2:
+                        operator: constraints.generate_remove_single_model_level_number_constraint
+                        level: 0
+            temperature:
+                operator: filters.filter_multiple_cubes
+                constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: "air_temperature"
+            pressure:
+                operator: filters.filter_multiple_cubes
+                constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: "m01s00i408"
         condition: 'gt'
         value: 90.0
 
