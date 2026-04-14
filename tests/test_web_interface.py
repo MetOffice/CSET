@@ -86,7 +86,7 @@ def test_filter_title(page: Page, webserver: str):
     expect(page.get_by_role("heading", name="Model A").first).to_be_visible()
 
     # Test clearing the filter.
-    page.get_by_role("button", name="⌫ Clear search").click()
+    page.locator("id=clear-query").click()
     expect(page.get_by_role("heading", name="Model A").first).to_be_visible()
     expect(page.get_by_role("heading", name="Model B").first).to_be_visible()
 
