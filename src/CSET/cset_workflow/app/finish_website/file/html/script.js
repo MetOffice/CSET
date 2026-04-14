@@ -285,7 +285,7 @@ function evaluate_and(conditions) {
     } else if (left instanceof Condition && conditions[index] instanceof Condition) {
       const right = conditions[index];
       anded_conditions.push(left.and(right));
-      index += 2;
+      index += 1;
     } else if (conditions[index] !== Combiner.AND) {
       if (left !== null) {
         anded_conditions.push(left);
