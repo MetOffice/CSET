@@ -133,9 +133,7 @@ def calc_transect(
             # If change in latitude larger than change in longitude:
             if abs(startcoords[0] - endcoords[0]) > abs(startcoords[1] - endcoords[1]):
                 transect_coord = "latitude"
-            elif abs(startcoords[0] - endcoords[0]) <= abs(
-                startcoords[1] - endcoords[1]
-            ):
+            else:
                 transect_coord = "longitude"
 
         # Create cubelist to store interpolated points along transect.
