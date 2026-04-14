@@ -158,11 +158,12 @@ def exner_pressure(
     parameters (e.g. Temperature and Potential Temperature; [Holton13]_).
     It is calculated as
 
-    .. math:: \Pi = \left(\frac{P}{P_0}\right)^{\frac{R_d}{c_p}}
+    .. math:: \Pi = \left(\frac{P}{P_0}\right)^{\kappa}
 
     for :math:`\Pi` the Exner Pressure, P the pressure in hPa, :math:`P_0` a reference pressure
-    of 1000 hPa, :math:`R_d` the specific gas constant of dry air taken as 297 :math:`J kg^{-1} K^{-1}`,
-    :math:`c_p` the specific heat capacity at constant pressure taken as 1005.7 :math:`J kg^{-1} K^{-1}`.
+    of 1000 hPa, :math:`\kappa` the ratio between the specific gas constant of dry air
+    (287.05 :math:`J kg^{-1} K^{-1}`) and the specific heat capacity at constant pressure
+    (1005.0 :math:`J kg^{-1} K^{-1}`) equating to 0.28562.
 
     A value below one implies the pressure is higher than the reference pressure;
     values above one implies the pressure is lower than the reference pressure; a
