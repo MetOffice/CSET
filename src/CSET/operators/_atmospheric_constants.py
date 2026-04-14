@@ -23,7 +23,7 @@ RD = 287.05  # J/kg/K.
 RV = 461.52  # J/kg/K.
 
 # Specific heat capacity for dry air.
-CPD = 1005.7  # J/kg/K.
+CPD = 1005.0  # J/kg/K.
 
 # Latent heat of vaporization.
 LV = 2.501e6  # J/kg.
@@ -35,7 +35,7 @@ E0 = 6.1078  # hPa.
 T0 = 273.15  # K.
 
 # Ratio between mixing ratio of dry and moist air.
-EPSILON = 0.622
+EPSILON = 0.62197
 
 # Ratio between specific gas constant and specific heat capacity.
 KAPPA = RD / CPD
