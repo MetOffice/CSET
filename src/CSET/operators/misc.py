@@ -477,7 +477,7 @@ def rename_cube(cubes: iris.cube.Cube | iris.cube.CubeList, name: str):
     iris.cube.Cube | iris.cube.CubeList
         The renamed field.
 
-    Notes'air_pressure'
+    Notes
     -----
     This operator is designed to be used when the output field name does not
     match expectations or needs to be different to defaults in standard_name, var_name or
