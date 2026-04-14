@@ -308,6 +308,24 @@ def test_difference_different_model_types(cube):
     )
 
 
+def test_difference_flip_pressure_order(transect_source_cube_readonly):
+    """Test that pressure coord is flipped if discreasing."""
+    flipped = transect_source_cube_readonly.copy()
+    flipped_coord = flipped.coord("pressure")
+    flipped_coord.points = np.flip(flipped_coord.points)
+    flipped.data = np.flip(flipped.data, flipped_coord.cube_dims(flipped))
+    del flipped.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([transect_source_cube_readonly, flipped])
+
+    # Take difference.
+    difference_cube = misc.difference(cubes)
+
+    # If flipped correctly, difference should be zero as same cubes.
+    assert np.allclose(
+        difference_cube.data, np.zeros_like(difference_cube.data), atol=1e-9
+    )
+
+
 def test_extract_common_time_points():
     """Common times are selected."""
     coord1 = iris.coords.DimCoord(
