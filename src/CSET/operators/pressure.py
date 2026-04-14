@@ -44,16 +44,16 @@ def vapour_pressure(
     atmosphere. It is related to atmospheric temperature through the
     Clausius-Clapeyron equation. There are several different formulations based
     on empirical relations that are used to calculate the vapour pressure. Here,
-    we calculate the vapour pressure based on [Tetens30]_ equation:
+    we calculate the vapour pressure based on [Buck81]_ equation:
 
-    .. math:: e = e_0 * exp\left(17.27\frac{T - 273.16}{T - 35.86}\right)
+    .. math:: e = e_0 * exp\left(\frac{17.508 T}{240.97 + T}\right)
 
     for e the vapour pressure, :math:`e_0` the saturation vapour pressure at
-    a reference temperature of 273.15 K with a value of 6.1078 hPa, and T the
-    temperature.
+    a reference temperature of 273.15 K with a value of 6.1121 hPa, and T the
+    temperature in degrees Celsius.
 
-    The temperature is provided in Kelvin, and the vapour pressure is returned
-    in hPa.
+    The temperature is provided in Kelvin and converted to degrees Celsius;
+    the vapour pressure is returned in hPa.
 
     If the (dry-bulb) temperature is used the value given by the vapour pressure
     will be the saturation vapour pressure. On the other hand, if the dewpoint
@@ -61,8 +61,8 @@ def vapour_pressure(
 
     References
     ----------
-    .. [Tetens30] Tetens, O. (1930) "Über einige meteorologische Begriffe".
-       Z. Geophys 6: 297-309.
+    .. [Buck81] Buck, A.L. (1981) "New Equations for Computing Vapor Pressure
+       and Enhancement Factor". J. App. Meteor. Clim. 20: 1527-1532.
 
     Examples
     --------
@@ -71,7 +71,8 @@ def vapour_pressure(
     v_pressure = iris.cube.CubeList([])
     for T in iter_maybe(temperature):
         es = T.copy()
-        exponent = 17.27 * (T - 273.16) / (T - 35.86)
+        T.convert_units("Celsius")
+        exponent = (17.502 * T) / (240.97 + T)
         es.data = E0 * np.exp(exponent.core_data())
         es.units = "hPa"
         es.rename("vapour_pressure")

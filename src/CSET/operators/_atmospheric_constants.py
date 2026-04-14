@@ -29,7 +29,7 @@ CPD = 1005.0  # J/kg/K.
 LV = 2.501e6  # J/kg.
 
 # Reference vapour pressure.
-E0 = 6.1078  # hPa.
+E0 = 6.1121  # hPa.
 
 # Reference temperature.
 T0 = 273.15  # K.

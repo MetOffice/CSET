@@ -24,10 +24,9 @@ from CSET.operators import _atmospheric_constants, pressure
 def test_vapour_pressure(temperature_for_conversions_cube):
     """Test calculation of vapour pressure for a cube."""
     expected_data = temperature_for_conversions_cube.copy()
-    exponent = (
-        17.27
-        * (temperature_for_conversions_cube - 273.16)
-        / (temperature_for_conversions_cube - 35.86)
+    temperature_for_conversions_cube.convert_units("Celsius")
+    exponent = (17.502 * temperature_for_conversions_cube) / (
+        240.97 + temperature_for_conversions_cube
     )
     expected_data.data = _atmospheric_constants.E0 * np.exp(exponent.core_data())
     assert np.allclose(
