@@ -525,9 +525,9 @@ def vertical_interpolation(
     interpolated_cubes = iris.cube.CubeList([])
     for cube, cube_t in zip(iter_maybe(cubes), iter_maybe(target), strict=True):
         regrid_method = getattr(iris.analysis, method, None)
-        new_cube = cube.interpolate(
-            [(coordinate, cube_t.coord(coordinate).points)], regrid_method
-        )
+        print(regrid_method)
+        target_levels = cube_t.coord(coordinate).points
+        new_cube = cube.interpolate([(coordinate, target_levels)], regrid_method)
         interpolated_cubes.append(new_cube)
     if len(interpolated_cubes) == 1:
         return interpolated_cubes[0]
