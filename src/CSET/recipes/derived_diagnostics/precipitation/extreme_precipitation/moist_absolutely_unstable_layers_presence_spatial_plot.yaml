@@ -64,8 +64,8 @@ steps:
     multiplier:
         operator: filters.generate_mask
         mask_field:
-            operator: regrid.regrid_onto_cube
-            toregrid:
+            operator: regrid.vertical_interpolation
+            cubes:
                 operator: humidity.relative_humidity_from_specific_humidity
                 specific_humidity:
                     operator: filters.filter_multiple_cubes
@@ -87,6 +87,7 @@ steps:
                     constraint:
                         operator: constraints.generate_var_constraint
                         varname: "m01s00i408"
+            coordinate: "level_height"
             target:
                 operator: misc.differentiate
                 cubes:
