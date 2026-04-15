@@ -690,6 +690,9 @@ def _plot_and_save_spatial_plot(
             axes_kwargs={"map_projection": ccrs.PlateCarree()},
         )
 
+        # Slightly transparent to reduce plot blocking.
+        axins.patch.set_alpha(0.4)
+
         axins.coastlines(resolution="50m")
         axins.add_feature(cfeature.BORDERS, linewidth=0.3)
 
