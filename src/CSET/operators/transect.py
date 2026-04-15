@@ -158,10 +158,8 @@ def calc_transect(
                 "grid_latitude",
                 "grid_longitude",
             ]:
-                try:
+                if cube_slice.coords(coord_name):
                     cube_slice.remove_coord(coord_name)
-                except iris.exceptions.CoordinateNotFoundError:
-                    pass
 
             if transect_coord == "latitude":
                 dist_coord = iris.coords.DimCoord(
