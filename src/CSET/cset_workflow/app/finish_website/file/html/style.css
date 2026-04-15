@@ -45,6 +45,7 @@ nav {
     position: sticky;
     top: 0;
     background-color: var(--secondary-bg-colour);
+    box-shadow: 0 4px 4px var(--shadow-colour);
 
     > div {
       padding: 0 8px;
@@ -57,9 +58,16 @@ nav {
       }
     }
 
+    .diagnostic-cutoff-warning {
+      padding: 0.5em;
+      margin: 0;
+      background-color: #fdcabb;
+      text-align: center;
+      font-weight: bold;
+    }
+
     > search {
       padding: 8px;
-      box-shadow: 0 4px 4px var(--shadow-colour);
 
       > .search-box {
         display: flex;
@@ -120,14 +128,6 @@ nav {
     list-style: none;
     padding: 0;
     margin: 0;
-
-    .diagnostic-cutoff-warning {
-      padding: 0.5em;
-      margin: 0;
-      background-color: #fdcabb;
-      text-align: center;
-      font-weight: bold;
-    }
 
     > li {
       padding: 5px 4px 3px;

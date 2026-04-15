@@ -513,24 +513,13 @@ function create_diagnostic_element(record) {
 }
 
 // Turn the given records into elements.
-function create_diagnostic_elements(records) {
+function create_diagnostic_elements(records, max_records) {
   const diagnostics = document.createDocumentFragment();
-
-  // Add note if we are going to cut off records.
-  const max_records = 500;
-  if (records.length > max_records) {
-    const cutoff_note = document.createElement("p");
-    cutoff_note.textContent = `First ${max_records} of ${records.length} diagnostics displayed.`;
-    cutoff_note.classList.add("diagnostic-cutoff-warning");
-    diagnostics.appendChild(cutoff_note);
-  }
-
   // Turn records into DOM objects.
   // Limit the list to the first few hundred records to keep it fast.
   for (const record of records.slice(0, max_records)) {
     diagnostics.appendChild(create_diagnostic_element(record));
   }
-
   return diagnostics;
 }
 
@@ -713,8 +702,20 @@ function doSearch() {
   const filtered_records = diagnostic_records.filter(condition.test, condition);
   console.log(`Filtered down to ${filtered_records.length} records.`);
 
+  // Limit number of displayed records for performance.
+  const max_records = 500;
+
+  // Add note if we are going to cut off records.
+  const cutoff_warning = document.querySelector(".diagnostic-cutoff-warning");
+  if (filtered_records.length > max_records) {
+    cutoff_warning.textContent = `First ${max_records} of ${filtered_records.length} diagnostics displayed.`;
+    cutoff_warning.classList.remove("hidden");
+  } else {
+    cutoff_warning.classList.add("hidden");
+  }
+
   // Convert to elements.
-  const diagnostics = create_diagnostic_elements(filtered_records);
+  const diagnostics = create_diagnostic_elements(filtered_records, max_records);
 
   // Replace with the current diagnostics.
   const diagnostics_list = document.getElementById("diagnostics");
