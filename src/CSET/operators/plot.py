@@ -1765,16 +1765,21 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
         Coordinate that becomes different plots.
     """
     # Use the smallest square grid that will fit the members.
-    grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
+    nmember = len(cube.coord(stamp_coordinate).points)
+    grid_size = int(math.ceil(math.sqrt(nmember)))
+    grid_rows = math.ceil(nmember / grid_size)
 
-    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+    fig = plt.figure(
+        figsize=(10, 10 * grid_rows / grid_size), facecolor="w", edgecolor="k"
+    )
+
     # Make a subplot for each member.
     for member, subplot in zip(
         cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1), strict=False
     ):
         # Implicit interface is much easier here, due to needing to have the
         # cartopy GeoAxes generated.
-        plt.subplot(grid_size, grid_size, subplot)
+        plt.subplot(grid_rows, grid_size, subplot)
 
         frequency = member.coord("frequency").points
 
