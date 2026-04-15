@@ -8,14 +8,15 @@ description: |
   A MAUL is defined as an unstable layer (with height) based on equivalent potential
   temperature and relative humidity of that layer exceeding 90 %. The equivalent potential
   temperature is calculated from the model, and then a vertical differentitation occurs.
-  The mask is collapsed as a maximum in the grid column to indicate the presence of a
-  MAUL in that column.
+  The relative humidity is linearly interpolated onto the same grid as the vertical
+  derivative of the equivalent potenital temperature. The mask is collapsed as a maximum
+  in the grid column to indicate the presence of a MAUL in that column.
 
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
     model_names: $MODEL_NAME
-    constraints: ["air_temperature", "air_pressure", "specific_humidity", "relative_humidity"]
+    constraints: ["air_temperature", "air_pressure", "specific_humidity"]
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
@@ -87,7 +88,7 @@ steps:
                     constraint:
                         operator: constraints.generate_var_constraint
                         varname: "m01s00i408"
-            coordinate: "level_height"
+            coordinate: "model_level_number"
             target:
                 operator: misc.differentiate
                 cubes:
@@ -96,7 +97,6 @@ steps:
                         operator: constraints.generate_var_constraint
                         varname: "m01s00i408"
                 coordinate: "level_height"
-            method: "Linear"
         condition: 'gt'
         value: 90.0
 
