@@ -111,6 +111,14 @@ def test_transect_pl_latitude(transect_source_cube):
     )
 
 
+def test_transect_pl_removecoord(transect_source_cube):
+    """Test transect passes when iris.exceptions.CoordinateNotFoundError."""
+    transect_source_cube.remove_coord("grid_latitude")
+    transect.calc_transect(
+        transect_source_cube, startcoords=(-10.94, 19.06), endcoords=(-10.86, 19.06)
+    )
+
+
 def test_transect_coord_outofboundsLLat(transect_source_cube):
     """Test case of computing transect on coords out of range (low start lat)."""
     with pytest.raises(IndexError):
