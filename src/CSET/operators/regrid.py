@@ -493,8 +493,7 @@ def interpolate_to_point_cube(
 def vertical_interpolation(
     cubes: iris.cube.Cube | iris.cube.CubeList,
     coordinate: str,
-    target: iris.cube.Cube,
-    method: str,
+    target: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Vertical interpolation of a cube to match that off a different cube.
 
@@ -512,9 +511,6 @@ def vertical_interpolation(
         information. It will use `cube.coord(coordinate).points` to provide
         the vertical target. The number of target cubes should match the number
         of cubes used as input.
-    method: str
-        The interpolation method to use, e.g. Linear will use
-        'iris.analysis.Linear()'.
 
     Returns
     -------
@@ -524,10 +520,10 @@ def vertical_interpolation(
     """
     interpolated_cubes = iris.cube.CubeList([])
     for cube, cube_t in zip(iter_maybe(cubes), iter_maybe(target), strict=True):
-        regrid_method = getattr(iris.analysis, method, None)
-        print(regrid_method)
         target_levels = cube_t.coord(coordinate).points
-        new_cube = cube.interpolate([(coordinate, target_levels)], regrid_method)
+        new_cube = cube.interpolate(
+            [(coordinate, target_levels)], iris.analysis.Linear()
+        )
         interpolated_cubes.append(new_cube)
     if len(interpolated_cubes) == 1:
         return interpolated_cubes[0]
