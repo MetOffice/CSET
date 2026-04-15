@@ -1,7 +1,8 @@
-category: Transect
-title: $MODEL_NAME Transect of $VARNAME Aggregation by hour of day.
+category: Transect Difference
+title: "$VARNAME Transect Difference ($BASE_MODEL - $OTHER_MODEL) \n Aggregation over validity time"
 description: |
-  Aggregates over hour of day, and then extracts a $VERTICAL_COORDINATE
+  Aggregates over validity time, computes the difference between
+  $BASE_MODEL and $OTHER_MODEL, and then extracts a $VERTICAL_COORDINATE
   transect for $VARNAME between two points and plots it.
 
   Start coordinate: `$START_COORDS`
@@ -10,14 +11,15 @@ description: |
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
+    model_names: [$BASE_MODEL, $OTHER_MODEL]
     constraint:
         operator: constraints.combine_constraints
-        cell_method_constraint:
-            operator: constraints.generate_cell_methods_constraint
-            cell_methods: []
         var_constraint:
             operator: constraints.generate_var_constraint
             varname: $VARNAME
+        cell_method_constraint:
+            operator: constraints.generate_cell_methods_constraint
+            cell_methods: []
         level_constraint:
             operator: constraints.generate_level_constraint
             coordinate: $VERTICAL_COORDINATE
@@ -27,15 +29,20 @@ steps:
 
   - operator: aggregate.ensure_aggregatable_across_cases
 
-  - operator: collapse.collapse_by_hour_of_day
+  - operator: collapse.collapse_by_validity_time
     method: MEAN
+
+  - operator: misc.extract_common_points
+    coordinate: $VERTICAL_COORDINATE
+
+  - operator: misc.difference
 
   - operator: transect.calc_transect
     startcoords: $START_COORDS
     endcoords: $FINISH_COORDS
 
   - operator: plot.spatial_contour_plot
-    sequence_coordinate: hour
+    sequence_coordinate: time
 
   - operator: write.write_cube_to_nc
     overwrite: True

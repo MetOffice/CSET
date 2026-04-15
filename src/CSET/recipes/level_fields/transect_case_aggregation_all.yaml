@@ -1,8 +1,8 @@
 category: Transect
 title: $MODEL_NAME Transect of $VARNAME Aggregation over all cases.
 description: |
-  Extracts a $VERTICAL_COORDINATE transect for $VARNAME between two points and
-  plots it.
+  Aggregates over all cases, then extracts a $VERTICAL_COORDINATE transect
+  for $VARNAME between two points and plots it.
 
   Start coordinate: `$START_COORDS`
   End coordinate: `$FINISH_COORDS`
