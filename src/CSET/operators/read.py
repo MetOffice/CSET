@@ -283,7 +283,8 @@ def _merge_cubes_check_ensemble(cubes: iris.cube.CubeList):
         cubes = cubes.merge()
     except iris.exceptions.MergeError:
         for ir, cube in enumerate(cubes):
-            cube.coord("realization").points = ir + 1
+            if cube.coord("realization").points == 0:
+                cube.coord("realization").points = ir + 1
         cubes = cubes.merge()
     return cubes
 
@@ -392,9 +393,9 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
 
 
 def _realization_callback(cube):
-    """Give deterministic cubes a realization of 0.
+    """Add a realization coordinate, and initialise to 0, in all cubes if not present.
 
-    This means they can be handled in the same way as ensembles through the rest
+    This means deterministic and ensemble cubes can assume realization coordinate through the rest
     of the code.
     """
     # Only add if realization coordinate does not exist.
