@@ -9,6 +9,11 @@
   --hover-fg-colour: white;
   --hover-bg-colour: oklab(22% 0 0);
   --shadow-colour: darkgrey;
+  --warning-bg-colour: #fdcabb;
+  --button-1-colour: #b8dcfd;
+  --button-2-colour: #cae387;
+  --button-3-colour: #fdcabb;
+  --button-4-colour: #e2dd92;
 }
 
 /* Inherit fonts for inputs and buttons */
@@ -61,7 +66,7 @@ nav {
     .diagnostic-cutoff-warning {
       padding: 0.5em;
       margin: 0;
-      background-color: #fdcabb;
+      background-color: var(--warning-bg-colour);
       text-align: center;
       font-weight: bold;
     }
@@ -173,23 +178,23 @@ nav {
           width: 33%;
 
           &.left {
-            background-color: #b8dcfd;
+            background-color: var(--button-1-colour);
             border-top-left-radius: 3em;
             border-bottom-left-radius: 3em;
           }
 
           &.full {
-            background-color: #cae387;
+            background-color: var(--button-2-colour);
           }
 
           &.right {
-            background-color: #fdcabb;
+            background-color: var(--button-3-colour);
             border-top-right-radius: 3em;
             border-bottom-right-radius: 3em;
           }
 
           &.popup {
-            background-color: #e2dd92;
+            background-color: var(--button-4-colour);
             border-radius: 3em;
           }
 
