@@ -282,6 +282,10 @@ def _merge_cubes_check_ensemble(cubes: iris.cube.CubeList):
     try:
         cubes = cubes.merge()
     except iris.exceptions.MergeError:
+        _log_once(
+            "Attempt to merge input CubeList failed. Attempting to iterate realization coords to enable merge.",
+            level=logging.WARNING,
+        )
         for ir, cube in enumerate(cubes):
             if cube.coord("realization").points == 0:
                 cube.coord("realization").points = ir + 1
