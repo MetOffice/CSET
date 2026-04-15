@@ -248,6 +248,38 @@ def test_is_coordim_true(transect_source_cube):
     assert operator_utils.is_coorddim(transect_source_cube, "latitude")
 
 
+def test_valid_stamp_coord_in_cube(cube):
+    """Check that stamp coordinate remains realization as in cube."""
+    # Test that realization cube is correctly identified in cube.
+    assert operator_utils.check_stamp_coordinate(cube) == "realization"
+
+
+def test_valid_stamp_coord_not_in_cube(cube):
+    """Check that stamp coordinate defaults to realization if not in cube."""
+    cube.remove_coord("realization")
+    assert operator_utils.check_stamp_coordinate(cube) == "realization"
+
+
+def test_valid_stamp_coord_in_cube_valid(cube):
+    """Check that alternative valid stamp coordinate identified if in cube."""
+    for stamp in ["realization", "member", "pseudo_level"]:
+        foo_coord = iris.coords.DimCoord([0], var_name=stamp)
+        original = iris.cube.Cube(
+            [0], var_name="variable", dim_coords_and_dims=[(foo_coord, 0)]
+        )
+        assert operator_utils.check_stamp_coordinate(original) == stamp
+
+
+def test_valid_stamp_coord_in_cube_nonvalid(cube):
+    """Check that alternative nonvalid stamp coordinate defaults."""
+    for stamp in ["really", "memb", "pseudo"]:
+        foo_coord = iris.coords.DimCoord([0], var_name=stamp)
+        original = iris.cube.Cube(
+            [0], var_name="variable", dim_coords_and_dims=[(foo_coord, 0)]
+        )
+        assert operator_utils.check_stamp_coordinate(original) == "realization"
+
+
 def test_fully_equalise_attributes_remove_unique_attributes():
     """Check unique attributes are removed."""
     original = iris.cube.Cube(

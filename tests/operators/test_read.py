@@ -86,7 +86,7 @@ def test_read_cubes_ensemble_separate_files():
     from CSET.operators import constraints
 
     cubes = read.read_cubes(
-        "tests/test_data/exeter_em*.nc",
+        "tests/test_data/exeter_em0?.nc",
         constraint=constraints.generate_stash_constraint("m01s03i236"),
     )
     # Check ensemble members have been merged into a single cube.
@@ -98,7 +98,7 @@ def test_read_cubes_ensemble_separate_files():
 
 def test_read_cubes_ensemble_without_realization_coord():
     """Read ensemble from multiple files without realization coord in file."""
-    cubes = read.read_cubes("tests/test_data/exeter_emX?.nc")
+    cubes = read.read_cubes("tests/test_data/ensemble_emX?.nc")
     # Check ensemble members have been merged into a single cube.
     assert len(cubes) == 1
     # Check each cube has separate realization coord point.
@@ -115,8 +115,8 @@ def test_read_cubes_merge_cubes_check_nonensemble():
 
 def test_read_cubes_merge_cubes_check_ensemble():
     """Ensure merge_cubes_check_ensemble can generate merged cube from CubeList without realization coord."""
-    cube1 = read.read_cube("tests/test_data/exeter_emX1.nc")
-    cube2 = read.read_cube("tests/test_data/exeter_emX2.nc")
+    cube1 = read.read_cube("tests/test_data/ensemble_emX1.nc")
+    cube2 = read.read_cube("tests/test_data/ensemble_emX2.nc")
     cubes = iris.cube.CubeList([cube1, cube2])
     merged_cubes = read._merge_cubes_check_ensemble(cubes)
     assert cubes != merged_cubes
