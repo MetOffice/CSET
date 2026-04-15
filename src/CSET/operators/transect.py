@@ -169,7 +169,7 @@ def calc_transect(
                 )
                 cube_slice.add_aux_coord(dist_coord)
                 cube_slice = iris.util.new_axis(cube_slice, scalar_coord="latitude")
-            elif transect_coord == "longitude":
+            else:
                 dist_coord = iris.coords.DimCoord(
                     lon_pnts[i], long_name="longitude", units="degrees"
                 )
