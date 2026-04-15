@@ -194,7 +194,7 @@ def read_cubes(
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
 
     # Merge and concatenate cubes now metadata has been fixed.
-    cubes = cubes.merge()
+    cubes = _merge_cubes_check_ensemble(cubes)
     cubes = cubes.concatenate()
 
     # Squeeze single valued coordinates into scalar coordinates.
@@ -275,6 +275,17 @@ def _check_input_files(input_paths: str | list[str]) -> list[Path]:
     if len(files) == 0:
         raise FileNotFoundError(f"No files found for {input_paths}")
     return files
+
+
+def _merge_cubes_check_ensemble(cubes: iris.cube.CubeList):
+    """Attempt to merge CubeList. If unsuccessful indicates common input cube attributes, so update realization to support ensemble inputs."""
+    try:
+        cubes = cubes.merge()
+    except iris.exceptions.MergeError:
+        for ir, cube in enumerate(cubes):
+            cube.coord("realization").points = ir + 1
+        cubes = cubes.merge()
+    return cubes
 
 
 def _cutout_cubes(
