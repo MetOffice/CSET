@@ -279,7 +279,6 @@ def _check_input_files(input_paths: str | list[str]) -> list[Path]:
 
 def _merge_cubes_check_ensemble(cubes: iris.cube.CubeList):
     """Attempt to merge CubeList. If unsuccessful indicates common input cube attributes, so update realization to support ensemble inputs."""
-    print(cubes)
     try:
         cubes = cubes.merge()
     except iris.exceptions.MergeError:
