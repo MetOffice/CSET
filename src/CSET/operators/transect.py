@@ -151,8 +151,17 @@ def calc_transect(
             )
 
             # Remove existing coordinates ready to add one single map coordinate
-            cube_slice.remove_coord(lat_name)
-            cube_slice.remove_coord(lon_name)
+            # Note latitude/longitude cubes may have additional AuxCoord to remove
+            for coord_name in [
+                "latitude",
+                "longitude",
+                "grid_latitude",
+                "grid_longitude",
+            ]:
+                try:
+                    cube_slice.remove_coord(coord_name)
+                except iris.exceptions.CoordinateNotFoundError:
+                    pass
 
             if transect_coord == "latitude":
                 dist_coord = iris.coords.DimCoord(
@@ -178,7 +187,9 @@ def calc_transect(
         )
 
         # If concatenation successful, should be CubeList with one cube left.
-        assert len(interpolated_cubes) == 1
+        assert len(interpolated_cubes) == 1, (
+            f"len(interpolated_cubes) = {len(interpolated_cubes)}"
+        )
 
         # Carry over useful attributes to transect, like model identifier.
         for key, value in cube.attributes.items():
