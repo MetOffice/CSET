@@ -87,6 +87,18 @@ def test_transect_45deg(transect_source_cube, transect_source_cube_out):
         ).coord("latitude")
 
 
+def test_transect_pl_longitude(transect_source_cube):
+    """Test case of computing transect with x axis longitude."""
+    out = transect.calc_transect(
+        transect_source_cube, startcoords=(-10.9, 19.06), endcoords=(-10.9, 19.18)
+    )
+    # Check to make sure spatial coordinate is longitude
+    assert (
+        str([coord.name() for coord in out.dim_coords])
+        == "['longitude', 'time', 'pressure']"
+    )
+
+
 def test_transect_coord_outofboundsLLat(transect_source_cube):
     """Test case of computing transect on coords out of range (low start lat)."""
     with pytest.raises(IndexError):
