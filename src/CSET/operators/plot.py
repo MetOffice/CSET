@@ -355,7 +355,7 @@ def _setup_spatial_map(
     cube: iris.cube.Cube,
     figure,
     cmap,
-    grid_size: (int, int) | None = None,
+    grid_size: [int, int] | None = None,
     subplot: int | None = None,
 ):
     """Define map projections, extent and add coastlines and borderlines for spatial plots.
