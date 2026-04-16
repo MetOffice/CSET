@@ -6,11 +6,14 @@ description: |
   is present in a column; a value of zero implies MAULs are not present.
 
   A MAUL is defined as an unstable layer (with height) based on equivalent potential
-  temperature and relative humidity of that layer exceeding 90 %. The equivalent potential
-  temperature is calculated from the model, and then a vertical differentitation occurs.
+  temperature alongside the relative humidity of that layer exceeding 90 %. The equivalent
+  potential temperature is calculated using air temperature, pressure and specific humidity.
+  A vertical differentitation occurs to determine the stability (< 0 with dz implies unstable air).
   The relative humidity is linearly interpolated onto the same grid as the vertical
-  derivative of the equivalent potenital temperature. The mask is collapsed as a maximum
-  in the grid column to indicate the presence of a MAUL in that column.
+  derivative of the equivalent potenital temperature. The masks for each criterion are multiplied
+  together and then collapsed as a maximum in the grid column to indicate the presence of a MAUL
+  in that column. There is no depth filter on MAULs and as such meeting the criteria over a single
+  layer will be identified as a MAUL.
 
 steps:
   - operator: read.read_cubes
@@ -52,13 +55,23 @@ steps:
                     pressure:
                         operator: filters.filter_multiple_cubes
                         constraint:
-                            operator: constraints.generate_var_constraint
-                            varname: "m01s00i408"
+                            operator: constraints.combine_constraints
+                            constraint_1:
+                                operator: constraints.generate_var_constraint
+                                varname: "m01s00i408"
+                            constraint_2:
+                                operator: constraints.generate_remove_single_model_level_number_constraint
+                                level: 0
                 pressure:
                     operator: filters.filter_multiple_cubes
                     constraint:
-                        operator: constraints.generate_var_constraint
-                        varname: "m01s00i408"
+                            operator: constraints.combine_constraints
+                            constraint_1:
+                                operator: constraints.generate_var_constraint
+                                varname: "m01s00i408"
+                            constraint_2:
+                                operator: constraints.generate_remove_single_model_level_number_constraint
+                                level: 0
             coordinate: "level_height"
         condition: 'lt'
         value: 0.0
@@ -86,16 +99,26 @@ steps:
                 pressure:
                     operator: filters.filter_multiple_cubes
                     constraint:
-                        operator: constraints.generate_var_constraint
-                        varname: "m01s00i408"
+                        operator: constraints.combine_constraints
+                        constraint_1:
+                            operator: constraints.generate_var_constraint
+                            varname: "m01s00i408"
+                        constraint_2:
+                            operator: constraints.generate_remove_single_model_level_number_constraint
+                            level: 0
             coordinate: "model_level_number"
             target:
                 operator: misc.differentiate
                 cubes:
                     operator: filters.filter_multiple_cubes
                     constraint:
-                        operator: constraints.generate_var_constraint
-                        varname: "m01s00i408"
+                            operator: constraints.combine_constraints
+                            constraint_1:
+                                operator: constraints.generate_var_constraint
+                                varname: "m01s00i408"
+                            constraint_2:
+                                operator: constraints.generate_remove_single_model_level_number_constraint
+                                level: 0
                 coordinate: "level_height"
         condition: 'gt'
         value: 90.0
