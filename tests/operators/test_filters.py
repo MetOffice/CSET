@@ -341,7 +341,7 @@ def test_generate_single_ensemble_member_constraint_reduced_member(ensemble_cube
     assert len(filter_cube.coord("realization").points) == (
         len(ensemble_cube.coord("realization").points) - 1
     )
-    # Assert remain ensemble member is expected one.
+    # Assert remaining ensemble member is expected one.
     assert filter_cube.coord("realization").points == [2]
 
 
@@ -385,3 +385,86 @@ def test_generate_hour_constraint_hour_range(cube):
         new_cube, constraints.generate_hour_constraint(hour_start=3, hour_end=4)
     )
     assert (expected_cube.coord("hour").points == [3, 4]).all()
+
+
+def test_generate_remove_single_model_level_number_constraint(model_level_cube):
+    """Remove a single model level based on model_level_number."""
+    expected_cube = filters.filter_cubes(
+        model_level_cube,
+        constraints.generate_remove_single_model_level_number_constraint(level=1),
+    )
+    assert len(expected_cube.coord("model_level_number").points) == 69
+    assert (
+        expected_cube.coord("model_level_number").points
+        == [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            51,
+            52,
+            53,
+            54,
+            55,
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62,
+            63,
+            64,
+            65,
+            66,
+            67,
+            68,
+            69,
+            70,
+        ]
+    ).all()
