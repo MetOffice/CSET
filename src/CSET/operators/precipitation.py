@@ -20,10 +20,15 @@ import numpy as np
 from skimage.measure import label
 
 
-def column_object_identification(cube: iris.cube.Cube | iris.cube.CubeList):
+def MAUL_properties(
+    cube: iris.cube.Cube | iris.cube.CubeList, output: str
+) -> iris.cube.Cube | iris.cube.CubeList:
     """Identify objects in the vertical."""
     number_of_MAULs = cube[:, :, 0, :, :].copy()
     number_of_MAULs.data[:] = 0.0
+    maul_depth = number_of_MAULs.copy()
+    maul_base = number_of_MAULs.copy()
+    maul_top = number_of_MAULs.copy()
     ii = 0
     jj = 0
     kk = 0
@@ -34,8 +39,43 @@ def column_object_identification(cube: iris.cube.Cube | iris.cube.CubeList):
                 for column in k.slices_over("longitude"):
                     labels = label(column.core_data())
                     number_of_MAULs.data[ii, jj, kk, ll] = np.max(labels)
+                    if output != "number":
+                        maul_start = []
+                        maul_end = []
+                        maul_dep = []
+                        for maul in range(0, np.max(labels)):
+                            maul_range = np.where(labels == maul)
+                            maul_start.append(
+                                column.coord("level_height").points[maul_range[0]]
+                            )
+                            maul_end.append(
+                                column.coord("level_height").points[maul_range[0]]
+                            )
+                            maul_dep.append(maul_end - maul_start)
+                        index = np.where(maul_dep == np.max(maul_dep))
+                        maul_depth.data[ii, jj, kk, ll] = np.max(maul_dep)
+                        maul_base.data[ii, jj, kk, ll] = maul_start[index]
+                        maul_top.data[ii, jj, kk, ll] = maul_end[index]
                     ll += 1
                 kk += 1
             jj += 1
         ii += 1
-    return number_of_MAULs
+    # Units, renaming, and output.
+    if output == "number":
+        number_of_MAULs.units("1")
+        number_of_MAULs.rename("Number_of_MAULs")
+        return number_of_MAULs
+    elif output == "depth":
+        maul_depth.units("m")
+        maul_depth.rename("MAUL_depth")
+        return maul_depth
+    elif output == "base":
+        maul_base.units("m")
+        maul_base.rename("MAUL_base_height")
+        return maul_base
+    elif output == "top":
+        maul_top.units("m")
+        maul_top.rename("MAUL_top_height")
+        return maul_top
+    else:
+        raise ValueError
