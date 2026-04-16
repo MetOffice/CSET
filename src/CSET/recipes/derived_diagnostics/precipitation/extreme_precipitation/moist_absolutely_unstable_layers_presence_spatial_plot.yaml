@@ -6,7 +6,8 @@ description: |
   is present in a column; a value of zero implies MAULs are not present.
 
   A MAUL is defined as an unstable layer (with height) based on equivalent potential
-  temperature alongside the relative humidity of that layer exceeding 90 %. The equivalent
+  temperature alongside the relative humidity of that layer exceeding 90 %, following
+  [Takemi and Unuma (2020)](https://doi.org/10.2151/sola.2020-006). The equivalent
   potential temperature is calculated using air temperature, pressure and specific humidity.
   A vertical differentitation occurs to determine the stability (< 0 with dz implies unstable air).
   The relative humidity is linearly interpolated onto the same grid as the vertical
