@@ -497,7 +497,8 @@ def vertical_interpolation(
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Vertical interpolation of a cube to match that off a different cube.
 
-    Acts as a wrapper around the `cube.interpolate` functionality.
+    Acts as a wrapper around the `cube.interpolate` functionality and uses
+    linear interpolation as the method.
 
     Parameters
     ----------
