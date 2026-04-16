@@ -277,3 +277,21 @@ def test_generate_attribute_constraint_with_value():
     )
     expected_attr_constraint = "AttributeConstraint({'test': '2'})"
     assert expected_attr_constraint in repr(attr_constraint)
+
+
+def test_generate_remove_single_model_level_number_constraint():
+    """Tests constraint to remove default model_level_number of zero."""
+    remove_level_constraint = (
+        constraints.generate_remove_single_model_level_number_constraint()
+    )
+    expected_constraint = "Constraint(coord_values={'model_level_number': <function generate_remove_single_model_level_number_constraint.<locals>.<lambda> at"
+    assert expected_constraint in repr(remove_level_constraint)
+
+
+def test_generate_remove_single_model_level_number_constraint_non_default():
+    """Tests constraint to remove default model_level_number of one."""
+    remove_level_constraint = (
+        constraints.generate_remove_single_model_level_number_constraint(level=1)
+    )
+    expected_constraint = "Constraint(coord_values={'model_level_number': <function generate_remove_single_model_level_number_constraint.<locals>.<lambda> at"
+    assert expected_constraint in repr(remove_level_constraint)
