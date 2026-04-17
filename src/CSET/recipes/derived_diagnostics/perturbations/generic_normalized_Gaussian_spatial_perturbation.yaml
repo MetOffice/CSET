@@ -30,9 +30,6 @@ steps:
     apply_gaussian_filter: True
     filter_scale: 40
 
-  - operator: imageprocessing.spatial_structural_similarity_model_comparisons
-    sigma: 1.5
-
   - operator: collapse.collapse
     coordinate: [time]
     method: $METHOD
