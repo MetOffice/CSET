@@ -37,10 +37,6 @@ steps:
   - operator: imageprocessing.spatial_structural_similarity_model_comparisons
     sigma: 1.5
 
-  - operator: collapse.collapse
-    coordinate: [time]
-    method: $METHOD
-
   - operator: plot.spatial_pcolormesh_plot
     sequence_coordinate: time
 
