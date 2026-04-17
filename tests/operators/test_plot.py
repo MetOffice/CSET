@@ -1231,6 +1231,14 @@ def test_get_start_end_strings_remove_bounds(cube):
     assert fname == "_20220921030000_20220921050000"
 
 
+def test_set_ensemble_title():
+    """Test setting postage stamp title."""
+    assert plot._set_postage_stamp_title("realization") == "Member"
+    assert plot._set_postage_stamp_title("member") == "Member"
+    assert plot._set_postage_stamp_title("sample") == "Sample"
+    assert plot._set_postage_stamp_title("pseudo_level") == "Pseudo_level"
+
+
 def test_invalid_plotting_method_spatial_plot(cube, tmp_working_dir):
     """Test plotting a spatial plot with an invalid method."""
     with pytest.raises(ValueError, match="Unknown plotting method"):
