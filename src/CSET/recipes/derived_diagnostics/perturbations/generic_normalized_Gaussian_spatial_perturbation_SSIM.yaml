@@ -1,5 +1,5 @@
 category: Perturbations
-title: $MODEL_NAME Normalised Mesoscale Gaussian Filter Spatial Perturbation for $VARNAME $METHOD
+title: $MODEL_NAME Normalised Mesoscale Gaussian Filter Spatial Perturbation for 10 m gusts and screen level RH
 description: |
   Creates a spatial map of a perturbation field based on a Gaussian filter
   over a 40 grid point halfwidth. The field is normalized prior to the filter application.
@@ -12,11 +12,11 @@ steps:
       operator: constraints.combine_constraints
       varname_constraint:
         operator: constraints.generate_var_constraint
-        varname: ['$VARNAME_1', '$VARNAME_2']
+        varname: ["gust_wind_speed_at_10m", "relative_humidity_at_screen_level"]
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
-        varname: ['$VARNAME_1', '$VARNAME_2']
+        varname: ["gust_wind_speed_at_10m", "relative_humidity_at_screen_level"]
       level_constraint:
         operator: constraints.generate_level_constraint
         coordinate: "pressure"
