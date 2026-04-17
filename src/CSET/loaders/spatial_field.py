@@ -596,6 +596,63 @@ def load(conf: Config):
                 },
                 aggregation=False,
             )
+
+    if conf.NORMALIZED_SPATIAL_SURFACE_FIELD:
+        for model, field, method in itertools.product(
+            models, conf.SURFACE_FIELDS, conf.SPATIAL_SURFACE_FIELD_METHOD
+        ):
+            yield RawRecipe(
+                recipe="generic_normalized_field.yaml",
+                model_ids=model["id"],
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": model["name"],
+                    "METHOD": method,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
+    if conf.NORMALIZED_GAUSSIAN_PETRUBATION_SPATIAL_SURFACE_FIELD:
+        for model, field, method in itertools.product(
+            models, conf.SURFACE_FIELDS, conf.SPATIAL_SURFACE_FIELD_METHOD
+        ):
+            yield RawRecipe(
+                recipe="generic_normalized_Gaussian_spatial_perturbation.yaml",
+                model_ids=model["id"],
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": model["name"],
+                    "METHOD": method,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
+    if conf.NORMALIZED_GAUSSIAN_PETRUBATION_SPATIAL_SURFACE_FIELD_SSIM:
+        for model, method in itertools.product(
+            models, conf.SPATIAL_SURFACE_FIELD_METHOD
+        ):
+            yield RawRecipe(
+                recipe="generic_normalised_Gaussian_spatial_perturbation_SSIM.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "METHOD": method,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
     # Create a list of case aggregation types.
     AGGREGATION_TYPES = ["lead_time", "hour_of_day", "validity_time", "all"]
 
