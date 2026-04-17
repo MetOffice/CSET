@@ -481,6 +481,25 @@ def _get_plot_resolution() -> int:
     return get_recipe_metadata().get("plot_resolution", 100)
 
 
+def _get_start_end_strings(seq_coord: iris.coords.Coord, use_bounds: bool):
+    """Return title and filename based on start and end points or bounds."""
+    if use_bounds and seq_coord.has_bounds():
+        vals = seq_coord.bounds.flatten()
+    else:
+        vals = seq_coord.points
+    start = seq_coord.units.title(vals[0])
+    end = seq_coord.units.title(vals[-1])
+
+    if start == end:
+        sequence_title = f"\n [{start}]"
+        sequence_fname = f"_{filename_slugify(start)}"
+    else:
+        sequence_title = f"\n [{start} to {end}]"
+        sequence_fname = f"_{filename_slugify(start)}_{filename_slugify(end)}"
+
+    return sequence_title, sequence_fname
+
+
 def _set_title_and_filename(
     seq_coord: iris.coords.Coord,
     nplot: int,
@@ -512,42 +531,36 @@ def _set_title_and_filename(
     sequence_title = ""
     sequence_fname = ""
 
-    # Account for case with multi-dimension sequence input
+    # Case 1: Multiple dimension sequence input - list number of aggregated cases
     # (e.g. aggregation histogram plots)
     if ndim > 1:
         ncase = np.shape(seq_coord)[0]
         sequence_title = f"\n [{ncase} cases]"
         sequence_fname = f"_{ncase}cases"
 
+    # Case 2: Single dimension input
     else:
+        # Single sequence point
         if npoints == 1:
             if nplot > 1:
-                # Set default labels for sequence inputs
+                # Default labels for sequence inputs
                 sequence_value = seq_coord.units.title(seq_coord.points[0])
                 sequence_title = f"\n [{sequence_value}]"
                 sequence_fname = f"_{filename_slugify(sequence_value)}"
             else:
-                # Use coord aggregated attribute where input collapsed over aggregation
+                # Aggregated attribute available where input collapsed over aggregation
                 try:
                     ncase = seq_coord.attributes["number_reference_times"]
                     sequence_title = f"\n [{ncase} cases]"
                     sequence_fname = f"_{ncase}cases"
                 except KeyError:
-                    sequence_title = ""
-                    sequence_fname = ""
-            # Use sequence (e.g. time) bounds if plotting single non-sequence outputs
-            # Take title endpoints from coord points where series input (e.g. timeseries)
-        if npoints > 1:
-            if not seq_coord.has_bounds():
-                startstring = seq_coord.units.title(seq_coord.points[0])
-                endstring = seq_coord.units.title(seq_coord.points[-1])
-            else:
-                # Take title endpoint from coord bounds where single input (e.g. map)
-                startstring = seq_coord.units.title(seq_coord.bounds.flatten()[0])
-                endstring = seq_coord.units.title(seq_coord.bounds.flatten()[-1])
-            sequence_title = f"\n [{startstring} to {endstring}]"
-            sequence_fname = (
-                f"_{filename_slugify(startstring)}_{filename_slugify(endstring)}"
+                    sequence_title, sequence_fname = _get_start_end_strings(
+                        seq_coord, use_bounds=seq_coord.has_bounds()
+                    )
+        # Multiple sequence (e.g. time) points
+        else:
+            sequence_title, sequence_fname = _get_start_end_strings(
+                seq_coord, use_bounds=False
             )
 
     # Set plot title and filename
