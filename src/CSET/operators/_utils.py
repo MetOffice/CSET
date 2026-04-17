@@ -349,7 +349,7 @@ def check_stamp_coordinate(cube: iris.cube.Cube) -> str:
         Defaults to "realization" if alternative stamp coordinate not found.
     """
     # Acceptable stamp coordinate names
-    STAMP_COORD_NAMES = ["realization", "member", "pseudo_level"]
+    STAMP_COORD_NAMES = ["realization", "member", "sample", "pseudo_level"]
 
     # Check which dimension coordinates we have.
     dim_coord_names = [coord.name() for coord in cube.coords(dim_coords=True)]
@@ -362,6 +362,12 @@ def check_stamp_coordinate(cube: iris.cube.Cube) -> str:
     else:
         stamp_coordinate = "realization"
         logging.debug("Default stamp_coordinate assumed: %s", stamp_coordinate)
+
+    # Update coord long_name for ensemble plot labels
+    if stamp_coordinate == "realization":
+        cube.coord(stamp_coordinate).long_name = "member"
+    else:
+        cube.coord(stamp_coordinate).long_name = cube.coord(stamp_coordinate).name()
 
     return stamp_coordinate
 
