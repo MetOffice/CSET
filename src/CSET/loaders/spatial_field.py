@@ -636,15 +636,12 @@ def load(conf: Config):
             )
 
     if conf.NORMALIZED_GAUSSIAN_PETRUBATION_SPATIAL_SURFACE_FIELD_SSIM:
-        for model, method in itertools.product(
-            models, conf.SPATIAL_SURFACE_FIELD_METHOD
-        ):
+        for model in models:
             yield RawRecipe(
                 recipe="generic_normalised_Gaussian_spatial_perturbation_SSIM.yaml",
                 model_ids=model["id"],
                 variables={
                     "MODEL_NAME": model["name"],
-                    "METHOD": method,
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
