@@ -582,6 +582,15 @@ def _set_title_and_filename(
     return plot_title, plot_filename
 
 
+def _set_postage_stamp_title(stamp_coordinate: str) -> str:
+    """Control postage stamp plot output titles."""
+    if stamp_coordinate == "realization":
+        mtitle = "Member"
+    else:
+        mtitle = stamp_coordinate.capitalize()
+    return mtitle
+
+
 def _plot_and_save_spatial_plot(
     cube: iris.cube.Cube,
     filename: str,
@@ -845,8 +854,8 @@ def _plot_and_save_postage_stamp_spatial_plot(
     """
     # Use the smallest square grid that will fit the members.
     nmember = len(cube.coord(stamp_coordinate).points)
-    grid_size = max(int(math.ceil(math.sqrt(nmember))), 3)
-    grid_rows = math.ceil(nmember / grid_size)
+    grid_rows = int(math.sqrt(nmember))
+    grid_size = math.ceil(nmember / grid_rows)
 
     fig = plt.figure(
         figsize=(10, 10 * max(grid_rows / grid_size, 0.5)), facecolor="w", edgecolor="k"
@@ -862,7 +871,9 @@ def _plot_and_save_postage_stamp_spatial_plot(
 
     # Make a subplot for each member.
     for member, subplot in zip(
-        cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1), strict=False
+        cube.slices_over(stamp_coordinate),
+        range(1, grid_size * grid_rows + 1),
+        strict=False,
     ):
         # Setup subplot map projection, extent and coastlines and borderlines.
         axes = _setup_spatial_map(
@@ -917,12 +928,11 @@ def _plot_and_save_postage_stamp_spatial_plot(
                 linestyles="--",
                 linewidths=1,
             )
-        mtitle = member.coord(stamp_coordinate).long_name.capitalize()
+        mtitle = _set_postage_stamp_title(stamp_coordinate)
         axes.set_title(f"{mtitle} #{member.coord(stamp_coordinate).points[0]}")
-        axes.set_axis_off()
 
     # Put the shared colorbar in its own axes.
-    colorbar_axes = fig.add_axes([0.15, 0.0, 0.7, 0.03])
+    colorbar_axes = fig.add_axes([0.15, 0.05, 0.7, 0.03])
     colorbar = fig.colorbar(
         plot, colorbar_axes, orientation="horizontal", pad=0.042, shrink=0.7
     )
@@ -1514,15 +1524,17 @@ def _plot_and_save_postage_stamp_histogram_series(
     """
     # Use the smallest square grid that will fit the members.
     nmember = len(cube.coord(stamp_coordinate).points)
-    grid_size = max(int(math.ceil(math.sqrt(nmember))), 3)
-    grid_rows = math.ceil(nmember / grid_size)
+    grid_rows = int(math.sqrt(nmember))
+    grid_size = math.ceil(nmember / grid_rows)
 
     fig = plt.figure(
         figsize=(10, 10 * max(grid_rows / grid_size, 0.5)), facecolor="w", edgecolor="k"
     )
     # Make a subplot for each member.
     for member, subplot in zip(
-        cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1), strict=False
+        cube.slices_over(stamp_coordinate),
+        range(1, grid_size * grid_rows + 1),
+        strict=False,
     ):
         # Implicit interface is much easier here, due to needing to have the
         # cartopy GeoAxes generated.
@@ -1532,7 +1544,7 @@ def _plot_and_save_postage_stamp_histogram_series(
         member_data_1d = (member.data).flatten()
         plt.hist(member_data_1d, density=True, stacked=True)
         ax = plt.gca()
-        mtitle = member.coord(stamp_coordinate).long_name.capitalize()
+        mtitle = _set_postage_stamp_title(stamp_coordinate)
         ax.set_title(f"{mtitle} #{member.coord(stamp_coordinate).points[0]}")
         ax.set_xlim(vmin, vmax)
 
@@ -1563,7 +1575,7 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
         # Flatten the member data to 1D
         member_data_1d = member.data.flatten()
         # Plot the histogram using plt.hist
-        mtitle = member.coord(stamp_coordinate).long_name.capitalize()
+        mtitle = _set_postage_stamp_title(stamp_coordinate)
         plt.hist(
             member_data_1d,
             density=True,
@@ -1785,8 +1797,8 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
     """
     # Use the smallest square grid that will fit the members.
     nmember = len(cube.coord(stamp_coordinate).points)
-    grid_size = max(int(math.ceil(math.sqrt(nmember))), 3)
-    grid_rows = math.ceil(nmember / grid_size)
+    grid_rows = int(math.sqrt(nmember))
+    grid_size = math.ceil(nmember / grid_rows)
 
     fig = plt.figure(
         figsize=(10, 10 * max(grid_rows / grid_size, 0.5)), facecolor="w", edgecolor="k"
@@ -1794,7 +1806,9 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
 
     # Make a subplot for each member.
     for member, subplot in zip(
-        cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1), strict=False
+        cube.slices_over(stamp_coordinate),
+        range(1, grid_size * grid_rows + 1),
+        strict=False,
     ):
         # Implicit interface is much easier here, due to needing to have the
         # cartopy GeoAxes generated.

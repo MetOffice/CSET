@@ -363,13 +363,6 @@ def check_stamp_coordinate(cube: iris.cube.Cube) -> str:
         stamp_coordinate = "realization"
         logging.debug("Default stamp_coordinate assumed: %s", stamp_coordinate)
 
-    # Update coord long_name for ensemble plot labels
-    if cube.coords(stamp_coordinate):
-        if stamp_coordinate == "realization":
-            cube.coord(stamp_coordinate).long_name = "member"
-        else:
-            cube.coord(stamp_coordinate).long_name = cube.coord(stamp_coordinate).name()
-
     return stamp_coordinate
 
 
