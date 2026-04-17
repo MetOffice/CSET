@@ -619,7 +619,7 @@ def differentiate(
 
 def normalize(cubes: iris.cube.Cube | iris.cube.CubeList):
     """
-    Normalize a cube based on the maximum absolute value in the cube.
+    Normalize a cube based on the average value in the cube.
 
     Parameters
     ----------
@@ -634,9 +634,7 @@ def normalize(cubes: iris.cube.Cube | iris.cube.CubeList):
     normalized_cubes = iris.cube.CubeList([])
     for cube in iter_maybe(cubes):
         normalized = cube.copy()
-        normalized /= np.nanmax(
-            [np.nanmin(cube.core_data()), np.nanmax(cube.core_data())]
-        )
+        normalized /= np.nanmean(cube.core_data())
         normalized.rename(f"normalised_{cube.name()}")
         normalized_cubes.append(normalized)
     if len(normalized_cubes) == 1:
