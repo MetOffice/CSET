@@ -615,3 +615,31 @@ def differentiate(
         return new_cubelist[0]
     else:
         return new_cubelist
+
+
+def normalize(cubes: iris.cube.Cube | iris.cube.CubeList):
+    """
+    Normalize a cube based on the maximum absolute value in the cube.
+
+    Parameters
+    ----------
+    cubes: iris.cube.Cube | iris.cube.CubeList
+        The cubes to be normalized.
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        The normalized cube.
+    """
+    normalized_cubes = iris.cube.CubeList([])
+    for cube in iter_maybe(cubes):
+        normalized = cube.copy()
+        normalized /= np.nanmax(
+            [np.nanmin(cube.core_data()), np.nanmax(cube.core_data())]
+        )
+        normalized.rename(f"normalised_{cube.name()}")
+        normalized_cubes.append(normalized)
+    if len(normalized_cubes) == 1:
+        return normalized_cubes[0]
+    else:
+        return normalized_cubes
