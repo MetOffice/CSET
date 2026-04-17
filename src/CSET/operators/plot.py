@@ -449,19 +449,22 @@ def _setup_spatial_map(
         axes.add_feature(cfeature.BORDERS, edgecolor=coastcol)
 
         # Add gridlines.
-        if subplot is None:
-            draw_labels = True
-        else:
-            draw_labels = False
         gl = axes.gridlines(
             alpha=0.3,
-            draw_labels=draw_labels,
+            draw_labels=True,
             dms=False,
             x_inline=False,
             y_inline=False,
         )
         gl.top_labels = False
         gl.right_labels = False
+        if subplot:
+            gl.bottom_labels = False
+            gl.left_labels = False
+            if subplot % grid_size[1] == 1:
+                gl.left_labels = True
+            if subplot > ((grid_size[0] - 1) * grid_size[1]):
+                gl.bottom_labels = True
 
         # If is lat/lon spatial map, fix extent to keep plot tight.
         # Specifying crs within set_extent helps ensure only data region is shown.
@@ -842,11 +845,11 @@ def _plot_and_save_postage_stamp_spatial_plot(
     """
     # Use the smallest square grid that will fit the members.
     nmember = len(cube.coord(stamp_coordinate).points)
-    grid_size = int(math.ceil(math.sqrt(nmember)))
+    grid_size = max(int(math.ceil(math.sqrt(nmember))), 3)
     grid_rows = math.ceil(nmember / grid_size)
 
     fig = plt.figure(
-        figsize=(10, 10 * grid_rows / grid_size), facecolor="w", edgecolor="k"
+        figsize=(10, 10 * max(grid_rows / grid_size, 0.5)), facecolor="w", edgecolor="k"
     )
 
     # Specify the color bar
@@ -914,12 +917,12 @@ def _plot_and_save_postage_stamp_spatial_plot(
                 linestyles="--",
                 linewidths=1,
             )
-        mtitle = member.coord(stamp_coordinate).name().capitalize()
+        mtitle = member.coord(stamp_coordinate).long_name.capitalize()
         axes.set_title(f"{mtitle} #{member.coord(stamp_coordinate).points[0]}")
         axes.set_axis_off()
 
     # Put the shared colorbar in its own axes.
-    colorbar_axes = fig.add_axes([0.15, 0.07, 0.7, 0.03])
+    colorbar_axes = fig.add_axes([0.15, 0.0, 0.7, 0.03])
     colorbar = fig.colorbar(
         plot, colorbar_axes, orientation="horizontal", pad=0.042, shrink=0.7
     )
@@ -1511,11 +1514,11 @@ def _plot_and_save_postage_stamp_histogram_series(
     """
     # Use the smallest square grid that will fit the members.
     nmember = len(cube.coord(stamp_coordinate).points)
-    grid_size = int(math.ceil(math.sqrt(nmember)))
+    grid_size = max(int(math.ceil(math.sqrt(nmember))), 3)
     grid_rows = math.ceil(nmember / grid_size)
 
     fig = plt.figure(
-        figsize=(10, 10 * grid_rows / grid_size), facecolor="w", edgecolor="k"
+        figsize=(10, 10 * max(grid_rows / grid_size, 0.5)), facecolor="w", edgecolor="k"
     )
     # Make a subplot for each member.
     for member, subplot in zip(
@@ -1529,7 +1532,7 @@ def _plot_and_save_postage_stamp_histogram_series(
         member_data_1d = (member.data).flatten()
         plt.hist(member_data_1d, density=True, stacked=True)
         ax = plt.gca()
-        mtitle = member.coord(stamp_coordinate).name().capitalize()
+        mtitle = member.coord(stamp_coordinate).long_name.capitalize()
         ax.set_title(f"{mtitle} #{member.coord(stamp_coordinate).points[0]}")
         ax.set_xlim(vmin, vmax)
 
@@ -1560,7 +1563,7 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
         # Flatten the member data to 1D
         member_data_1d = member.data.flatten()
         # Plot the histogram using plt.hist
-        mtitle = member.coord(stamp_coordinate).name().capitalize()
+        mtitle = member.coord(stamp_coordinate).long_name.capitalize()
         plt.hist(
             member_data_1d,
             density=True,
@@ -1782,11 +1785,11 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
     """
     # Use the smallest square grid that will fit the members.
     nmember = len(cube.coord(stamp_coordinate).points)
-    grid_size = int(math.ceil(math.sqrt(nmember)))
+    grid_size = max(int(math.ceil(math.sqrt(nmember))), 3)
     grid_rows = math.ceil(nmember / grid_size)
 
     fig = plt.figure(
-        figsize=(10, 10 * grid_rows / grid_size), facecolor="w", edgecolor="k"
+        figsize=(10, 10 * max(grid_rows / grid_size, 0.5)), facecolor="w", edgecolor="k"
     )
 
     # Make a subplot for each member.
