@@ -447,6 +447,21 @@ def _setup_spatial_map(
         axes.coastlines(resolution="10m", color=coastcol)
         axes.add_feature(cfeature.BORDERS, edgecolor=coastcol)
 
+        # Add gridlines.
+        if subplot is None:
+            draw_labels = True
+        else:
+            draw_labels = False
+        gl = axes.gridlines(
+            alpha=0.3,
+            draw_labels=draw_labels,
+            dms=False,
+            x_inline=False,
+            y_inline=False,
+        )
+        gl.top_labels = False
+        gl.right_labels = False
+
         # If is lat/lon spatial map, fix extent to keep plot tight.
         # Specifying crs within set_extent helps ensure only data region is shown.
         if isinstance(coord_system, iris.coord_systems.GeogCS):
@@ -463,6 +478,25 @@ def _setup_spatial_map(
 def _get_plot_resolution() -> int:
     """Get resolution of rasterised plots in pixels per inch."""
     return get_recipe_metadata().get("plot_resolution", 100)
+
+
+def _get_start_end_strings(seq_coord: iris.coords.Coord, use_bounds: bool):
+    """Return title and filename based on start and end points or bounds."""
+    if use_bounds and seq_coord.has_bounds():
+        vals = seq_coord.bounds.flatten()
+    else:
+        vals = seq_coord.points
+    start = seq_coord.units.title(vals[0])
+    end = seq_coord.units.title(vals[-1])
+
+    if start == end:
+        sequence_title = f"\n [{start}]"
+        sequence_fname = f"_{filename_slugify(start)}"
+    else:
+        sequence_title = f"\n [{start} to {end}]"
+        sequence_fname = f"_{filename_slugify(start)}_{filename_slugify(end)}"
+
+    return sequence_title, sequence_fname
 
 
 def _set_title_and_filename(
@@ -496,42 +530,36 @@ def _set_title_and_filename(
     sequence_title = ""
     sequence_fname = ""
 
-    # Account for case with multi-dimension sequence input
+    # Case 1: Multiple dimension sequence input - list number of aggregated cases
     # (e.g. aggregation histogram plots)
     if ndim > 1:
         ncase = np.shape(seq_coord)[0]
         sequence_title = f"\n [{ncase} cases]"
         sequence_fname = f"_{ncase}cases"
 
+    # Case 2: Single dimension input
     else:
+        # Single sequence point
         if npoints == 1:
             if nplot > 1:
-                # Set default labels for sequence inputs
+                # Default labels for sequence inputs
                 sequence_value = seq_coord.units.title(seq_coord.points[0])
                 sequence_title = f"\n [{sequence_value}]"
                 sequence_fname = f"_{filename_slugify(sequence_value)}"
             else:
-                # Use coord aggregated attribute where input collapsed over aggregation
+                # Aggregated attribute available where input collapsed over aggregation
                 try:
                     ncase = seq_coord.attributes["number_reference_times"]
                     sequence_title = f"\n [{ncase} cases]"
                     sequence_fname = f"_{ncase}cases"
                 except KeyError:
-                    sequence_title = ""
-                    sequence_fname = ""
-            # Use sequence (e.g. time) bounds if plotting single non-sequence outputs
-            # Take title endpoints from coord points where series input (e.g. timeseries)
-        if npoints > 1:
-            if not seq_coord.has_bounds():
-                startstring = seq_coord.units.title(seq_coord.points[0])
-                endstring = seq_coord.units.title(seq_coord.points[-1])
-            else:
-                # Take title endpoint from coord bounds where single input (e.g. map)
-                startstring = seq_coord.units.title(seq_coord.bounds.flatten()[0])
-                endstring = seq_coord.units.title(seq_coord.bounds.flatten()[-1])
-            sequence_title = f"\n [{startstring} to {endstring}]"
-            sequence_fname = (
-                f"_{filename_slugify(startstring)}_{filename_slugify(endstring)}"
+                    sequence_title, sequence_fname = _get_start_end_strings(
+                        seq_coord, use_bounds=seq_coord.has_bounds()
+                    )
+        # Multiple sequence (e.g. time) points
+        else:
+            sequence_title, sequence_fname = _get_start_end_strings(
+                seq_coord, use_bounds=False
             )
 
     # Set plot title and filename
@@ -674,6 +702,9 @@ def _plot_and_save_spatial_plot(
             axes_kwargs={"map_projection": ccrs.PlateCarree()},
         )
 
+        # Slightly transparent to reduce plot blocking.
+        axins.patch.set_alpha(0.4)
+
         axins.coastlines(resolution="50m")
         axins.add_feature(cfeature.BORDERS, linewidth=0.3)
 
@@ -725,7 +756,7 @@ def _plot_and_save_spatial_plot(
         yinfopad = -0.1
         ycbarpad = 0.1
     else:
-        yinfopad = -0.05
+        yinfopad = 0.01
         ycbarpad = 0.042
 
     # Add watermark with min/max/mean. Currently not user togglable.
