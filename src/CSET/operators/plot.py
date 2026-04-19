@@ -445,7 +445,7 @@ def _setup_spatial_map(
             coastcol = "black"
         logging.debug("Plotting coastlines and borderlines in colour %s.", coastcol)
         axes.coastlines(resolution="10m", color=coastcol)
-        axes.add_feature(cfeature.BORDERS, edgecolor=coastcol)
+        #axes.add_feature(cfeature.BORDERS, edgecolor=coastcol)
 
         # Add gridlines.
         if subplot is None:
@@ -706,7 +706,7 @@ def _plot_and_save_spatial_plot(
         axins.patch.set_alpha(0.4)
 
         axins.coastlines(resolution="50m")
-        axins.add_feature(cfeature.BORDERS, linewidth=0.3)
+        #axins.add_feature(cfeature.BORDERS, linewidth=0.3)
 
         SLat, SLon, ELat, ELon = (
             float(coord) for coord in cube.attributes["transect_coords"].split("_")
@@ -1623,7 +1623,7 @@ def _plot_and_save_scattermap_plot(
     # Add coastlines and borderlines.
     try:
         axes.coastlines(resolution="10m")
-        axes.add_feature(cfeature.BORDERS)
+        #axes.add_feature(cfeature.BORDERS)
     except AttributeError:
         pass
 
