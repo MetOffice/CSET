@@ -16,9 +16,26 @@
 
 from datetime import datetime
 
+import iris.coords
+import iris.cube
+import numpy as np
 import pytest
 
 from CSET.operators import constraints
+
+
+def _cube_with_cell_methods(methods):
+    """Build a minimal ``iris.cube.Cube`` carrying the named cell methods.
+
+    Used by the ``generate_cell_methods_constraint`` tests below to exercise
+    the generated constraint's actual filtering behaviour rather than its
+    ``repr()``.
+    """
+    return iris.cube.Cube(
+        np.array([0.0]),
+        var_name="x",
+        cell_methods=[iris.coords.CellMethod(m) for m in methods],
+    )
 
 
 def test_generate_stash_constraint():
@@ -42,34 +59,43 @@ def test_generate_var_constraint_stash():
     assert repr(var_constraint) == expected_stash_constraint
 
 
-def test_generate_cell_methods_constraint():
-    """Generate iris cube constraint for cell methods."""
+def test_generate_cell_methods_constraint_mean():
+    """``cell_methods=["mean"]`` accepts only cubes with a ``mean`` cell method."""
     cell_methods_constraint = constraints.generate_cell_methods_constraint(["mean"])
-    expected_cell_methods_constraint = "Constraint(cube_func=<function generate_cell_methods_constraint.<locals>.check_cell_methods at"
-    assert expected_cell_methods_constraint in repr(cell_methods_constraint)
+    assert (
+        _cube_with_cell_methods(["mean"]).extract(cell_methods_constraint) is not None
+    )
+    assert _cube_with_cell_methods(["sum"]).extract(cell_methods_constraint) is None
+    assert _cube_with_cell_methods([]).extract(cell_methods_constraint) is None
 
 
 def test_generate_cell_methods_constraint_sum():
-    """Generate aggregate iris cube constraint for cell methods."""
+    """``cell_methods=["sum"]`` accepts only cubes with a ``sum`` cell method."""
     cell_methods_constraint = constraints.generate_cell_methods_constraint(["sum"])
-    expected_cell_methods_constraint = "Constraint(cube_func=<function generate_cell_methods_constraint.<locals>.check_cell_methods at"
-    assert expected_cell_methods_constraint in repr(cell_methods_constraint)
+    assert _cube_with_cell_methods(["sum"]).extract(cell_methods_constraint) is not None
+    assert _cube_with_cell_methods(["mean"]).extract(cell_methods_constraint) is None
+    assert _cube_with_cell_methods([]).extract(cell_methods_constraint) is None
 
 
 def test_generate_cell_methods_constraint_no_aggregation():
-    """Generate iris cube constraint for no aggregation cell methods."""
+    """Empty ``cell_methods`` means instantaneous: accept point or empty, reject aggregates."""
     cell_methods_constraint = constraints.generate_cell_methods_constraint([])
-    expected_cell_methods_constraint = "Constraint(cube_func=<function generate_cell_methods_constraint.<locals>.check_no_aggregation at"
-    assert expected_cell_methods_constraint in repr(cell_methods_constraint)
+    assert _cube_with_cell_methods([]).extract(cell_methods_constraint) is not None
+    assert (
+        _cube_with_cell_methods(["point"]).extract(cell_methods_constraint) is not None
+    )
+    assert _cube_with_cell_methods(["mean"]).extract(cell_methods_constraint) is None
+    assert _cube_with_cell_methods(["sum"]).extract(cell_methods_constraint) is None
 
 
-def test_generate_cell_methods_constraint_varname():
-    """Generate variable-dependent iris cube constraint for cell methods."""
+def test_generate_cell_methods_constraint_varname_requires_sum():
+    """For ``number_of_lightning_flashes``, only ``sum`` cell_method inputs are valid."""
     cell_methods_constraint = constraints.generate_cell_methods_constraint(
         [], "number_of_lightning_flashes"
     )
-    expected_cell_methods_constraint = "Constraint(cube_func=<function generate_cell_methods_constraint.<locals>.check_cell_sum at"
-    assert expected_cell_methods_constraint in repr(cell_methods_constraint)
+    assert _cube_with_cell_methods(["sum"]).extract(cell_methods_constraint) is not None
+    assert _cube_with_cell_methods(["mean"]).extract(cell_methods_constraint) is None
+    assert _cube_with_cell_methods([]).extract(cell_methods_constraint) is None
 
 
 def test_generate_time_constraint():
