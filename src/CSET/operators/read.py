@@ -377,6 +377,7 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     _lfric_time_callback(cube)
     _lfric_forecast_period_callback(cube)
     _normalise_ML_varname(cube)
+    _normalise_ML_grib_varname(cube)
     return cube
 
 
@@ -1042,3 +1043,26 @@ def _normalise_ML_varname(cube: iris.cube.Cube):
             cube.long_name = (
                 "vapour_specific_humidity_at_pressure_levels_for_climate_averaging"
             )
+
+
+def _normalise_ML_grib_varname(cube: iris.cube.Cube):
+    """Fix grib metadata varname and tidy attributes."""
+
+    # Lookup table for standard GRIB names
+    GRIB_LOOKUP = {
+        "GRIB2:d000c003n000": {
+            "long_name": "air_pressure",
+            "standard_name": "air_pressure",
+            "units": "Pa",
+        },
+    }
+
+    grib_param = cube.attributes.get("GRIB_PARAM")
+    if grib_param is None:
+        return  # leave cube completely untouched
+
+    elif grib_param in GRIB_LOOKUP:
+        cube.rename(GRIB_LOOKUP[grib...])
+
+    else:
+        raise('Found grib param but no match')
