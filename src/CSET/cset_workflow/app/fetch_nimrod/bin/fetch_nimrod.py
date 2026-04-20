@@ -167,14 +167,6 @@ def retrieve_nimrod():
             os.makedirs(nimrod_dir, exist_ok=True)
             logging.debug("Nimrod directory: %s", nimrod_dir)
 
-            # If required, prepare the output directory for the Nimrod weights data.
-            if nimrod_dict[nimrod_field]["wei_id"]:
-                nimrod_dir_wei = (
-                    f"{v['rose_datac']}/data/{nimrod_dict[nimrod_field]['wei_id']}"
-                )
-                os.makedirs(nimrod_dir_wei, exist_ok=True)
-                logging.debug("Nimrod weights directory: %s", nimrod_dir_wei)
-
             # Process Nimrod data between the start and end dates.
             date_use = date_start
             while date_use <= date_end:
@@ -200,6 +192,13 @@ def retrieve_nimrod():
                 # read the weighting file into an Iris cube, apply the weightings to
                 # the Nimrod rain field then save the weighting data as a NetCDF.
                 if nimrod_dict[nimrod_field]["weights_fname"]:
+                    # Prepare the output directory for the Nimrod weights data.
+                    nimrod_dir_wei = (
+                        f"{v['rose_datac']}/data/{nimrod_dict[nimrod_field]['wei_id']}"
+                    )
+                    os.makedirs(nimrod_dir_wei, exist_ok=True)
+                    logging.debug("Nimrod weights directory: %s", nimrod_dir_wei)
+
                     nimrod_weights = (
                         f"{nimrod_dict[nimrod_field]['basedir']}/"
                         f"{nimrod_dict[nimrod_field]['weights_dir']}/"
