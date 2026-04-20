@@ -295,7 +295,7 @@ def test_set_title_and_filename_filename_single_sequence(cube):
         seq_coord, nplot, "recipe", "filename"
     )
     assert plot_filename == "filename.png"
-    assert plot_title == "recipe\n [2022-09-21 02:30:00 to 2022-09-21 05:30:00]"
+    assert plot_title == "recipe\n [2022-09-21 03:00:00 to 2022-09-21 05:00:00]"
 
 
 def test_set_title_and_filename_filename_single_nosequence(cube):
@@ -316,8 +316,8 @@ def test_set_title_and_filename_nofilename_single_sequence(cube):
     plot_title, plot_filename = plot._set_title_and_filename(
         seq_coord, nplot, "recipe", None
     )
-    assert plot_filename == "recipe_20220921023000_20220921053000.png"
-    assert plot_title == "recipe\n [2022-09-21 02:30:00 to 2022-09-21 05:30:00]"
+    assert plot_filename == "recipe_20220921030000_20220921050000.png"
+    assert plot_title == "recipe\n [2022-09-21 03:00:00 to 2022-09-21 05:00:00]"
 
 
 def test_set_title_and_filename_nofilename_single_nobounds(cube):
@@ -328,8 +328,8 @@ def test_set_title_and_filename_nofilename_single_nobounds(cube):
     plot_title, plot_filename = plot._set_title_and_filename(
         seq_coord, nplot, "recipe", None
     )
-    assert plot_filename == "recipe.png"
-    assert plot_title == "recipe"
+    assert plot_filename == "recipe_20220921030000.png"
+    assert plot_title == "recipe\n [2022-09-21 03:00:00]"
 
 
 def test_set_title_and_filename_nofilename_multi_sequence(cube):
@@ -614,7 +614,7 @@ def test_postage_stamp_contour_plot(ensemble_cube, tmp_working_dir):
     # Get a single time step.
     ensemble_cube_3d = next(ensemble_cube.slices_over("time"))
     plot.spatial_contour_plot(ensemble_cube_3d)
-    assert Path("untitled.png").is_file()
+    assert Path("untitled_20221201100000.png").is_file()
 
 
 def test_postage_stamp_contour_plot_sequence_coord_check(cube, tmp_working_dir):
@@ -678,7 +678,7 @@ def test_postage_stamp_pcolormesh_plot(ensemble_cube, tmp_working_dir):
     # Get a single time step.
     ensemble_cube_3d = next(ensemble_cube.slices_over("time"))
     plot.spatial_pcolormesh_plot(ensemble_cube_3d)
-    assert Path("untitled.png").is_file()
+    assert Path("untitled_20221201100000.png").is_file()
 
 
 def test_postage_stamp_pcolormesh_plot_sequence_coord_check(cube, tmp_working_dir):
@@ -717,7 +717,7 @@ def test_plot_line_series(cube, tmp_working_dir):
     """Save a line series plot."""
     cube = collapse.collapse(cube, ["grid_latitude", "grid_longitude"], "MEAN")
     plot.plot_line_series(cube)
-    assert Path("untitled_20220921023000_20220921053000.png").is_file()
+    assert Path("untitled_20220921030000_20220921050000.png").is_file()
 
 
 def test_plot_power_spectrum(power_spectrum_cube_readonly, tmp_working_dir):
@@ -1294,6 +1294,28 @@ def test_get_plot_resolution_unset(tmp_working_dir):
     """Test getting the default plot resolution when unset."""
     resolution = plot._get_plot_resolution()
     assert resolution == 100
+
+
+def test_get_start_end_strings_nobounds(cube):
+    """Test setting (startstring, endstring) from coord points."""
+    title, fname = plot._get_start_end_strings(cube.coord("time"), use_bounds=False)
+    assert title == "\n [2022-09-21 03:00:00 to 2022-09-21 05:00:00]"
+    assert fname == "_20220921030000_20220921050000"
+
+
+def test_get_start_end_strings_bounds(cube):
+    """Test setting (startstring, endstring) from coord bounds."""
+    title, fname = plot._get_start_end_strings(cube.coord("time"), use_bounds=True)
+    assert title == "\n [2022-09-21 02:30:00 to 2022-09-21 05:30:00]"
+    assert fname == "_20220921023000_20220921053000"
+
+
+def test_get_start_end_strings_remove_bounds(cube):
+    """Test setting (startstring, endstring) from coord with no bounds."""
+    cube.coord("time").bounds = None
+    title, fname = plot._get_start_end_strings(cube.coord("time"), use_bounds=True)
+    assert title == "\n [2022-09-21 03:00:00 to 2022-09-21 05:00:00]"
+    assert fname == "_20220921030000_20220921050000"
 
 
 def test_invalid_plotting_method_spatial_plot(cube, tmp_working_dir):
