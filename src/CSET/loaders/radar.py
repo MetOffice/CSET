@@ -14,42 +14,39 @@
 
 """Load radar observation recipes."""
 
-from types import SimpleNamespace
-
 from CSET.recipes import Config, RawRecipe
 
 
-def get_radar_sources(conf) -> dict:
+def get_radar_sources(conf) -> list[dict]:
     """Load radar observation sources into a single object."""
     # Set initial values for outputs from this function.
-    radar_flag = False
-    radar_names = []
-    radar_ids = []
-    radar_varnames = []
+    radar_sources = []
 
     # Append details of required radar observations.
     if conf.NIMROD_COMP_1KM:
-        radar_names.append("Nimrod_1km")
-        radar_ids.append("Nimrod1km")
-        radar_varnames.append("Hourly rain accumulation")
-        radar_flag = True
+        radar_sources.append(
+            {
+                "name": "Nimrod_1km",
+                "id": "Nimrod1km",
+                "varname": "Hourly rain accumulation",
+            }
+        )
     if conf.NIMROD_COMP_2KM:
-        radar_names.append("Nimrod_2km")
-        radar_ids.append("Nimrod2km")
-        radar_varnames.append("Hourly rain accumulation")
-        radar_flag = True
+        radar_sources.append(
+            {
+                "name": "Nimrod_2km",
+                "id": "Nimrod2km",
+                "varname": "Hourly rain accumulation",
+            }
+        )
     if conf.NIMROD_COMP_XKM:
-        radar_names.append("Nimrod_xkm")
-        radar_ids.append("Nimrodxkm")
-        radar_varnames.append("Hourly rain accumulation")
-        radar_flag = True
-
-    radar_sources = {
-        "radar_flag": radar_flag,
-        "radar_varnames": radar_varnames,
-        "radar_names": radar_names,
-        "radar_ids": radar_ids,
-    }
+        radar_sources.append(
+            {
+                "name": "Nimrod_xkm",
+                "id": "Nimrodxkm",
+                "varname": "Hourly rain accumulation",
+            }
+        )
 
     return radar_sources
 
@@ -57,21 +54,21 @@ def get_radar_sources(conf) -> dict:
 def load(conf: Config):
     """Yield recipes from the given workflow configuration."""
     # Load the required radar observation sources.
-    radar_sources = SimpleNamespace(**get_radar_sources(conf))
+    radar_sources = get_radar_sources(conf)
 
-    # Surface (2D) fields for Nimrod radar rainfall.
-    #
-    # The different sources of Nimrod rainfall acculumulation have
-    # different spatial grids. So each source requires its own
-    # recipe to prevent incompatible cubes being created.
-    if radar_sources.radar_flag and conf.SPATIAL_SURFACE_FIELD:
-        for next in range(len(radar_sources.radar_ids)):
+    for radar in radar_sources:
+        # Surface (2D) fields for Nimrod radar rainfall.
+        #
+        # The different sources of Nimrod rainfall accumulation have
+        # different spatial grids. So each source requires its own
+        # recipe to prevent incompatible cubes being created.
+        if conf.SPATIAL_SURFACE_FIELD:
             yield RawRecipe(
                 recipe="generic_surface_spatial_plot_sequence_radar_rainfall.yaml",
-                model_ids=radar_sources.radar_ids[next],  # -> Becomes $INPUT_PATHS
+                model_ids=radar["id"],  # -> Becomes $INPUT_PATHS
                 variables={
-                    "VARNAME": radar_sources.radar_varnames[next],
-                    "RADAR_NAME": radar_sources.radar_names[next],
+                    "VARNAME": radar["varname"],
+                    "RADAR_NAME": radar["name"],
                     "METHOD": "SEQ",
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
@@ -87,13 +84,19 @@ def load(conf: Config):
     # recipe must be done by passing lists of the radar_ids and
     # the radar_names. As this is a multiline plot, all radar sources
     # share the same radar variable name.
-    if radar_sources.radar_flag and conf.HISTOGRAM_SURFACE_FIELD:
+    if conf.HISTOGRAM_SURFACE_FIELD:
+        accum_radars = [
+            radar
+            for radar in radar_sources
+            if radar["varname"] == "Hourly rain accumulation"
+        ]
         yield RawRecipe(
             recipe="generic_surface_histogram_series.yaml",
-            model_ids=radar_sources.radar_ids,  # -> Becomes $INPUT_PATHS
+            # model_ids -> Becomes $INPUT_PATHS
+            model_ids=[radar["id"] for radar in accum_radars],
             variables={
-                "VARNAME": radar_sources.radar_varnames[0],
-                "MODEL_NAME": radar_sources.radar_names,
+                "VARNAME": next(radar["varname"] for radar in accum_radars),
+                "MODEL_NAME": [radar["name"] for radar in accum_radars],
                 "SEQUENCE": "time"
                 if conf.HISTOGRAM_SURFACE_FIELD_SEQUENCE
                 else "realization",
