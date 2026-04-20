@@ -214,8 +214,14 @@ class RawRecipe:
         # Add input paths to recipe variables.
         self.variables["INPUT_PATHS"] = data_dirs
 
-        # Parbake this recipe, saving into recipe_dir.
+        # Parbake this recipe.
         recipe = parse_recipe(Path(self.recipe), self.variables)
+
+        # Add variables as extra metadata to filter on.
+        for key, value in self.variables.items():
+            # Don't overwrite existing keys.
+            if key != "INPUT_PATHS" and key not in recipe:
+                recipe[key] = value
 
         # Serialise into memory, as we use the serialised value twice.
         with StringIO() as s:
@@ -226,6 +232,7 @@ class RawRecipe:
         # with the same title.
         digest = hashlib.sha256(serialised_recipe).hexdigest()
         output_filename = recipe_dir / f"{slugify(recipe['title'])}_{digest[:12]}.yaml"
+        # Save into recipe_dir.
         with open(output_filename, "wb") as fp:
             fp.write(serialised_recipe)
 
