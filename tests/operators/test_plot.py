@@ -723,7 +723,7 @@ def test_plot_line_series(cube, tmp_working_dir):
 def test_plot_power_spectrum(power_spectrum_cube_readonly, tmp_working_dir):
     """Save a power_spectrum plot using line series plot."""
     plot.plot_line_series(power_spectrum_cube_readonly, series_coordinate="frequency")
-    assert Path("untitled.png").is_file()
+    assert Path("untitled_20220601000000.png").is_file()
 
 
 def test_plot_line_series_with_filename(cube, tmp_working_dir):
