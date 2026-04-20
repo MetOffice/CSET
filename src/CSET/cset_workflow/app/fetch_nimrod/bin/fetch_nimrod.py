@@ -28,7 +28,6 @@ def _get_needed_environment_variables_nimrod() -> dict:
         "date_type": "initiation",
         "data_time": datetime.fromisoformat(os.environ["CYLC_TASK_CYCLE_POINT"]),
         "forecast_length": isodate.parse_duration(os.environ["ANALYSIS_LENGTH"]),
-        #        "model_identifier": "Nimrod",
         "rose_datac": os.environ["ROSE_DATAC"],
     }
     logging.debug("Environment variables loaded for Nimrod: %s", variables)
@@ -118,9 +117,6 @@ def apply_radar_weights(cube_obs: iris.cube.Cube, cube_wei: iris.cube.Cube):
     cube_obs_weighted.data = np.where(
         weights < weight_min, duff_value, cube_obs_weighted.data
     )
-    # cube_obs_weighted.data = np.ma.masked_where(
-    #                         weights < weight_min,
-    #                         cube_obs_weighted.data)
 
     # Return the QC'd Nimrod data.
     return cube_obs_weighted
@@ -165,7 +161,6 @@ def retrieve_nimrod():
     for nimrod_field in v["field"]:
         if nimrod_field:
             logging.debug("Processing Nimrod field: %s", nimrod_field)
-            print("processing Nimrod field ", nimrod_field)
 
             # Prepare the output directory for the Nimrod field.
             nimrod_dir = f"{v['rose_datac']}/data/{nimrod_dict[nimrod_field]['obs_id']}"
@@ -183,7 +178,6 @@ def retrieve_nimrod():
             # Process Nimrod data between the start and end dates.
             date_use = date_start
             while date_use <= date_end:
-                # print("date is ", date_use)
 
                 # Advance the date/time counter using the time interval appropriate to the Nimrod field.
                 date_use = date_use + isodate.parse_duration(
@@ -250,8 +244,6 @@ def retrieve_nimrod():
                 )
                 filename_obs_nc = Path(filename_obs_nc).with_suffix(".nc")
                 iris.save(nimrod_cube_obs, filename_obs_nc)
-
-    return
 
 
 # Run the function that fetches the NImrod radar obs.
