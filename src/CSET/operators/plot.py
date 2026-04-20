@@ -2172,8 +2172,9 @@ def _custom_colormap_probability(
 
 def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
     """Return a custom colourmap for the current recipe."""
-    varnames = [n for n in (cube.long_name, cube.standard_name, cube.var_name) if n]
-    varnames_lower = [n.lower() for n in varnames]
+    varnames_lower = [
+        n.lower() for n in (cube.long_name, cube.standard_name, cube.var_name) if n
+    ]
 
     is_rainfall_var = any(
         key in name
