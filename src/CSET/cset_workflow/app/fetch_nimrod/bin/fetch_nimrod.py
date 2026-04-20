@@ -178,7 +178,6 @@ def retrieve_nimrod():
             # Process Nimrod data between the start and end dates.
             date_use = date_start
             while date_use <= date_end:
-
                 # Advance the date/time counter using the time interval appropriate to the Nimrod field.
                 date_use = date_use + isodate.parse_duration(
                     nimrod_dict[nimrod_field]["freq"]
@@ -186,12 +185,10 @@ def retrieve_nimrod():
 
                 # Form the file name for the Nimrod field in the archive.
                 nimrod_obs = (
-                    nimrod_dict[nimrod_field]["basedir"]
-                    + "/"
-                    + nimrod_dict[nimrod_field]["obs_dir"]
-                    + "/"
-                    + f"{date_use.year}/{date_use.strftime('%Y%m%d%H%M')}"
-                    + nimrod_dict[nimrod_field]["obs_fname"]
+                    f"{nimrod_dict[nimrod_field]['basedir']}/"
+                    f"{nimrod_dict[nimrod_field]['obs_dir']}/"
+                    f"{date_use.year}/{date_use.strftime('%Y%m%d%H%M')}"
+                    f"{nimrod_dict[nimrod_field]['obs_fname']}"
                 )
 
                 # Load the Nimrod data into an Iris cube.
@@ -204,12 +201,10 @@ def retrieve_nimrod():
                 # the Nimrod rain field then save the weighting data as a NetCDF.
                 if nimrod_dict[nimrod_field]["weights_fname"]:
                     nimrod_weights = (
-                        nimrod_dict[nimrod_field]["basedir"]
-                        + "/"
-                        + nimrod_dict[nimrod_field]["weights_dir"]
-                        + "/"
-                        + f"{date_use.year}/{date_use.strftime('%Y%m%d%H%M')}"
-                        + nimrod_dict[nimrod_field]["weights_fname"]
+                        f"{nimrod_dict[nimrod_field]['basedir']}/"
+                        f"{nimrod_dict[nimrod_field]['weights_dir']}/"
+                        f"{date_use.year}/{date_use.strftime('%Y%m%d%H%M')}"
+                        f"{nimrod_dict[nimrod_field]['weights_fname']}"
                     )
 
                     # Load the Nimrod weights into an Iris cube.
@@ -224,23 +219,16 @@ def retrieve_nimrod():
 
                     # Write the Nimrod weights to a NetCDF file.
                     filename_wei_nc = (
-                        nimrod_dir_wei
-                        + "/"
-                        + f"{date_use.strftime('%Y%m%d%H%M')}"
-                        + "_"
-                        + nimrod_dict[nimrod_field]["obs_id"]
-                        + "_weights"
+                        f"{nimrod_dir_wei}/{date_use.strftime('%Y%m%d%H%M')}"
+                        f"_{nimrod_dict[nimrod_field]['obs_id']}_weights"
                     )
                     filename_wei_nc = Path(filename_wei_nc).with_suffix(".nc")
                     iris.save(nimrod_cube_weights, filename_wei_nc)
 
                 # Write the Nimrod obs to a NetCDF file.
                 filename_obs_nc = (
-                    nimrod_dir
-                    + "/"
-                    + f"{date_use.strftime('%Y%m%d%H%M')}"
-                    + "_"
-                    + nimrod_dict[nimrod_field]["obs_id"]
+                    f"{nimrod_dir}/{date_use.strftime('%Y%m%d%H%M')}"
+                    f"_{nimrod_dict[nimrod_field]['obs_id']}"
                 )
                 filename_obs_nc = Path(filename_obs_nc).with_suffix(".nc")
                 iris.save(nimrod_cube_obs, filename_obs_nc)
