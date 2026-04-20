@@ -108,8 +108,8 @@ def apply_radar_weights(cube_obs: iris.cube.Cube, cube_wei: iris.cube.Cube):
     # Note: if the weights are packed, then the maximum value
     #       found will be 13 / 32 = 0.40625, i.e. all values < 1.
     weights = cube_wei.data
-    if np.array(cube_wei.data).max() < 1.0:
-        weights = (cube_wei.data * 32).round().astype(int)
+    if weights.max() < 1.0:
+        weights = (weights * 32).round().astype(int)
         logging.debug("Unpacked Nimrod weights file.")
 
     # Apply the weights.
