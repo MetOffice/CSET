@@ -11,7 +11,7 @@ description: |
   potential temperature is calculated using air temperature, pressure and specific humidity.
   A vertical differentitation occurs to determine the stability (< 0 with dz implies unstable air).
   The relative humidity is linearly interpolated onto the same grid as the vertical
-  derivative of the equivalent potenital temperature. The masks for each criterion are multiplied
+  derivative of the equivalent potential temperature. The masks for each criterion are multiplied
   together and then collapsed as a maximum in the grid column to indicate the presence of a MAUL
   in that column. There is no depth filter on MAULs and as such meeting the criteria over a single
   layer will be identified as a MAUL.
