@@ -1403,8 +1403,6 @@ def _plot_and_save_histogram_series(
 
     model_colors_map = _get_model_colors_map(cubes)
 
-    print("Using internal function _plot_and_save_histogram_series")
-
     # Set default that histograms will produce probability density function
     # at each bin (integral over range sums to 1).
     density = True
@@ -1413,7 +1411,6 @@ def _plot_and_save_histogram_series(
         # Easier to check title (where var name originates)
         # than seeing if long names exist etc.
         # Exception case, where distribution better fits log scales/bins.
-        print("hello - title is ", title)
         if ("surface_microphysical" in title) or ("rain accumulation" in title):
             if "amount" in title:
                 # Compute histogram following Klingaman et al. (2017): ASoP
