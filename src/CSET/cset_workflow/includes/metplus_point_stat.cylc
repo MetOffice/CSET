@@ -1,0 +1,48 @@
+{% if METPLUS_POINT_STAT|default(False) %}
+[scheduling]
+    [[graph]]
+    {% if CSET_CYCLING_MODE == "case_study" %}
+        {% for date in CSET_CASE_DATES %}
+            R1/{{date}} = """
+                metplus_ascii2nc => metplus_point_stat
+                """
+        {% endfor %}
+    {% elif CSET_CYCLING_MODE == "trial" %}
+        {{CSET_TRIAL_CYCLE_PERIOD}} = """
+               metplus_ascii2nc => metplus_point_stat
+               """
+    {% endif %}
+    R1/$ = metplus_point_stat => verpy_metloader_pointstat
+
+[runtime]
+    [[metplus_ascii2nc]]
+    # Runs METplus wrappers for ASCII to nc ingestion of obs.
+        inherit = METPLUS
+
+    [[metplus_point_stat]]
+    # Runs METplus wrappers for point stat calculations.
+        inherit = METPLUS
+        post-script = """
+        POINT_STAT_DIR=${CYLC_TASK_SHARE_CYCLE_DIR}/Point_Stat
+        mkdir -p ${CYLC_WORKFLOW_SHARE_DIR}/point_stat_${STAT}_tar
+        for STAT_TYPE in ${STAT_TYPE_LIST}; do
+            gzip ${POINT_STAT_DIR}/*_${STAT_TYPE}.txt
+            files_list=$(ls ${POINT_STAT_DIR}/*_${STAT_TYPE}.txt.gz | xargs -n 1 basename)
+            tar -cf ${CYLC_WORKFLOW_SHARE_DIR}/point_stat_${STAT}_tar/point_stat_${CYLC_TASK_CYCLE_POINT}_${STAT_TYPE}.tar -C ${POINT_STAT_DIR} $files_list
+        done
+        """
+        [[[environment]]]
+            STAT = area
+            STAT_TYPE_LIST = cnt
+
+    [[verpy_metloader_pointstat]]
+    # Runs VerPy metloader utility to create the VerPy databases
+        inherit = METPLUS
+        script = rose task-run -v --app-key=verpy_metloader
+        [[[environment]]]
+            VERPY_DIR = {{VERPY_DIR}}
+            VER_METHOD = area
+            STAT_TYPE = cnt
+            STREAM = point_stat
+            METLOADER_CONF_FILE = metloader.conf
+{% endif %}

@@ -41,6 +41,40 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+    # Surface time series: land mask.
+    if conf.TIMESERIES_SURFACE_FIELD_LAND_MASK:
+        for field in conf.SURFACE_FIELDS:
+            yield RawRecipe(
+                recipe="land_mask_for_surface_domain_mean_time_series.yaml",
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": [model["name"] for model in models],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[model["id"] for model in models],
+                aggregation=False,
+            )
+
+    # Surface time series: sea mask.
+    if conf.TIMESERIES_SURFACE_FIELD_SEA_MASK:
+        for field in conf.SURFACE_FIELDS:
+            yield RawRecipe(
+                recipe="sea_mask_for_surface_domain_mean_time_series.yaml",
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": [model["name"] for model in models],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[model["id"] for model in models],
+                aggregation=False,
+            )
+
     # Pressure level fields.
     if conf.TIMESERIES_PLEVEL_FIELD:
         for field, plevel in itertools.product(
@@ -191,6 +225,58 @@ def load(conf: Config):
             aggregation=False,
         )
 
+    # Light rain presence
+    if conf.LIGHT_RAIN_PRESENCE_DOMAIN_MEAN_TIMESERIES:
+        yield RawRecipe(
+            recipe="light_rain_presence_domain_mean_time_series.yaml",
+            variables={
+                "MODEL_NAME": [model["name"] for model in models],
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+            },
+            model_ids=[model["id"] for model in models],
+            aggregation=False,
+        )
+
+    # Moderate rain presence
+    if conf.MODERATE_RAIN_PRESENCE_DOMAIN_MEAN_TIMESERIES:
+        yield RawRecipe(
+            recipe="moderate_rain_presence_domain_mean_time_series.yaml",
+            variables={
+                "MODEL_NAME": [model["name"] for model in models],
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+            },
+            model_ids=[model["id"] for model in models],
+            aggregation=False,
+        )
+
+    # Violent rain presence
+    if conf.VIOLENT_RAIN_PRESENCE_DOMAIN_MEAN_TIMESERIES:
+        yield RawRecipe(
+            recipe="violent_rain_presence_domain_mean_time_series.yaml",
+            variables={
+                "MODEL_NAME": [model["name"] for model in models],
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+            },
+            model_ids=[model["id"] for model in models],
+            aggregation=False,
+        )
+
+    # Heavy rain presence
+    if conf.HEAVY_RAIN_PRESENCE_DOMAIN_MEAN_TIMESERIES:
+        yield RawRecipe(
+            recipe="heavy_rain_presence_domain_mean_time_series.yaml",
+            variables={
+                "MODEL_NAME": [model["name"] for model in models],
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+            },
+            model_ids=[model["id"] for model in models],
+            aggregation=False,
+        )
+
     # Lightning presence
     if conf.LIGHTNING_PRESENCE_DOMAIN_TIME_SERIES:
         yield RawRecipe(
@@ -273,6 +359,44 @@ def load(conf: Config):
     if conf.SFC_WIND_BEAUFORT_SCALE_DOMAIN_MEAN_TIMESERIES:
         yield RawRecipe(
             recipe="surface_wind_speed_on_beaufort_scale_domain_mean_time_series.yaml",
+            variables={
+                "MODEL_NAME": [model["name"] for model in models],
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+            },
+            model_ids=[model["id"] for model in models],
+            aggregation=False,
+        )
+
+    # Cardington air temperature time series.
+    if conf.CARDINGTON_AIR_TEMPERATURE_SINGLE_POINT_TIME_SERIES:
+        base_model = models[0]
+        for model in models[1:]:
+            yield RawRecipe(
+                recipe="cardington_air_temperature_single_point_time_series.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
+    # Cardington relative humidity time series.
+    if conf.CARDINGTON_RELATIVE_HUMIDITY_SINGLE_POINT_TIME_SERIES:
+        base_model = models[0]
+        for model in models[1:]:
+            yield RawRecipe(
+                recipe="cardington_relative_humidity_single_point_time_series.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+    # Surface wind gusts on Beaufort Scale
+    if conf.SFC_WIND_GUSTS_BEAUFORT_SCALE_DOMAIN_MEAN_TIMESERIES:
+        yield RawRecipe(
+            recipe="surface_wind_gusts_on_beaufort_scale_domain_mean_time_series.yaml",
             variables={
                 "MODEL_NAME": [model["name"] for model in models],
                 "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,

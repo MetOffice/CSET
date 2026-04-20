@@ -21,6 +21,7 @@ import itertools
 import logging
 import os
 import ssl
+import sys
 import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
@@ -31,7 +32,9 @@ from typing import Literal
 import isodate
 
 logging.basicConfig(
-    level=os.getenv("LOGLEVEL", "INFO"), format="%(asctime)s %(levelname)s %(message)s"
+    level=os.getenv("LOGLEVEL", "INFO"),
+    format="%(asctime)s %(levelname)s %(message)s",
+    stream=sys.stdout,
 )
 
 
@@ -107,10 +110,13 @@ class FilesystemFileRetriever(FileRetrieverABC):
             logging.warning("file_path does not match any files: %s", file_path)
         any_files_copied = False
         for f in file_paths:
-            file = Path(f)
+            file = Path(f).absolute()
             try:
-                # We know file exists from glob.
-                os.symlink(file.absolute(), f"{output_dir}/{file.name}")
+                # Save to a filename derived from the full path, to
+                # differentiate similarly named files from different
+                # directories.
+                # `)` replaces `/` as it can be in file names.
+                os.symlink(file, f"{output_dir}/{')'.join(file.parts)}")
                 any_files_copied = True
             except OSError as err:
                 logging.warning("Failed to copy %s, error: %s", file, err)

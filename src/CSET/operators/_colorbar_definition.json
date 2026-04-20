@@ -610,7 +610,7 @@
   "temperature_at_pressure_levels": {
     "cmap": "RdYlBu_r",
     "max": 320,
-    "min": 240,
+    "min": 200,
     "pressure_levels": {
       "100": {
         "max": 240,

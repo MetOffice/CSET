@@ -23,6 +23,7 @@ import logging
 from pathlib import Path
 from typing import Literal
 
+import dask
 import iris
 import iris.coord_systems
 import iris.coords
@@ -34,7 +35,11 @@ from iris.analysis.cartography import rotate_pole, rotate_winds
 
 from CSET._common import iter_maybe
 from CSET.operators._stash_to_lfric import STASH_TO_LFRIC
-from CSET.operators._utils import get_cube_yxcoordname
+from CSET.operators._utils import (
+    get_cube_coordindex,
+    get_cube_yxcoordname,
+    is_spatialdim,
+)
 
 
 class NoDataError(FileNotFoundError):
@@ -187,9 +192,13 @@ def read_cubes(
 
     # Select sub region.
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
+
     # Merge and concatenate cubes now metadata has been fixed.
     cubes = cubes.merge()
     cubes = cubes.concatenate()
+
+    # Squeeze single valued coordinates into scalar coordinates.
+    cubes = iris.cube.CubeList(iris.util.squeeze(cube) for cube in cubes)
 
     # Ensure dimension coordinates are bounded.
     for cube in cubes:
@@ -213,17 +222,9 @@ def _load_model(
     input_files = _check_input_files(paths)
     # If unset, a constraint of None lets everything be loaded.
     logging.debug("Constraint: %s", constraint)
-    cubes = iris.load(
-        input_files, constraint, callback=_create_callback(is_ensemble=False)
-    )
+    cubes = iris.load(input_files, constraint, callback=_loading_callback)
     # Make the UM's winds consistent with LFRic.
     _fix_um_winds(cubes)
-
-    # Reload with ensemble handling if needed.
-    if _is_ensemble(cubes):
-        cubes = iris.load(
-            input_files, constraint, callback=_create_callback(is_ensemble=True)
-        )
 
     # Add model_name attribute to each cube to make it available at any further
     # step without needing to pass it as function parameter.
@@ -279,7 +280,7 @@ def _check_input_files(input_paths: str | list[str]) -> list[Path]:
 def _cutout_cubes(
     cubes: iris.cube.CubeList,
     subarea_type: Literal["gridcells", "realworld", "modelrelative"] | None,
-    subarea_extent: list[float, float, float, float],
+    subarea_extent: list[float],
 ):
     """Cut out a subarea from a CubeList."""
     if subarea_type is None:
@@ -356,84 +357,30 @@ def _cutout_cubes(
     return cutout_cubes
 
 
-def _is_ensemble(cubelist: iris.cube.CubeList) -> bool:
-    """Test if a CubeList is likely to be ensemble data.
-
-    If cubes either have a realization dimension, or there are multiple files
-    for the same time-step, we can assume it is ensemble data.
-    """
-    unique_cubes = set()
-    for cube in cubelist:
-        # Ignore realization of 0, as that is given to deterministic data.
-        if cube.coords("realization") and any(cube.coord("realization").points != 0):
-            return True
-        # Compare XML representation of cube structure check for duplicates.
-        cube_content = cube.xml()
-        if cube_content in unique_cubes:
-            logging.info("Ensemble data loaded.")
-            return True
-        else:
-            unique_cubes.add(cube_content)
-    logging.info("Deterministic data loaded.")
-    return False
-
-
-def _create_callback(is_ensemble: bool) -> callable:
+def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.Cube:
     """Compose together the needed callbacks into a single function."""
-
-    def callback(cube: iris.cube.Cube, field, filename: str):
-        if is_ensemble:
-            _ensemble_callback(cube, field, filename)
-        else:
-            _deterministic_callback(cube, field, filename)
-
-        _um_normalise_callback(cube, field, filename)
-        _lfric_normalise_callback(cube, field, filename)
-        _lfric_time_coord_fix_callback(cube, field, filename)
-        _normalise_var0_varname(cube)
-        _fix_spatial_coords_callback(cube)
-        _fix_pressure_coord_callback(cube)
-        _fix_um_radtime(cube)
-        _fix_cell_methods(cube)
-        _convert_cube_units_callback(cube)
-        _grid_longitude_fix_callback(cube)
-        _fix_lfric_cloud_base_altitude(cube)
-        _proleptic_gregorian_fix(cube)
-        _lfric_time_callback(cube)
-        _lfric_forecast_period_standard_name_callback(cube)
-
-    return callback
+    # Most callbacks operate in-place, but save the cube when returned!
+    _realization_callback(cube)
+    _um_normalise_callback(cube)
+    _lfric_normalise_callback(cube)
+    cube = _lfric_time_coord_fix_callback(cube)
+    _normalise_var0_varname(cube)
+    cube = _fix_no_spatial_coords_callback(cube)
+    _fix_spatial_coords_callback(cube)
+    _fix_pressure_coord_callback(cube)
+    _fix_um_radtime(cube)
+    _fix_cell_methods(cube)
+    cube = _convert_cube_units_callback(cube)
+    cube = _grid_longitude_fix_callback(cube)
+    _fix_lfric_cloud_base_altitude(cube)
+    _proleptic_gregorian_fix(cube)
+    _lfric_time_callback(cube)
+    _lfric_forecast_period_callback(cube)
+    _normalise_ML_varname(cube)
+    return cube
 
 
-def _ensemble_callback(cube, field, filename):
-    """Add a realization coordinate to a cube.
-
-    Uses the filename to add an ensemble member ('realization') to each cube.
-    Assumes data is formatted enuk_um_0XX/enukaa_pd0HH.pp where XX is the
-    ensemble member.
-
-    Arguments
-    ---------
-    cube: Cube
-        ensemble member cube
-    field
-        Raw data variable, unused.
-    filename: str
-        filename of ensemble member data
-    """
-    if not cube.coords("realization"):
-        if "em" in filename:
-            # Assuming format is *emXX*
-            loc = filename.find("em") + 2
-            member = np.int32(filename[loc : loc + 2])
-        else:
-            # Assuming raw fields files format is enuk_um_0XX/enukaa_pd0HH
-            member = np.int32(filename[-15:-13])
-
-        cube.add_aux_coord(iris.coords.AuxCoord(member, standard_name="realization"))
-
-
-def _deterministic_callback(cube, field, filename):
+def _realization_callback(cube):
     """Give deterministic cubes a realization of 0.
 
     This means they can be handled in the same way as ensembles through the rest
@@ -442,17 +389,17 @@ def _deterministic_callback(cube, field, filename):
     # Only add if realization coordinate does not exist.
     if not cube.coords("realization"):
         cube.add_aux_coord(
-            iris.coords.AuxCoord(np.int32(0), standard_name="realization", units="1")
+            iris.coords.DimCoord(0, standard_name="realization", units="1")
         )
 
 
 @functools.lru_cache(None)
-def _warn_once(msg):
+def _log_once(msg, level=logging.WARNING):
     """Print a warning message, skipping recent duplicates."""
-    logging.warning(msg)
+    logging.log(level, msg)
 
 
-def _um_normalise_callback(cube: iris.cube.Cube, field, filename):
+def _um_normalise_callback(cube: iris.cube.Cube):
     """Normalise UM STASH variable long names to LFRic variable names.
 
     Note standard names will remain associated with cubes where different.
@@ -466,12 +413,13 @@ def _um_normalise_callback(cube: iris.cube.Cube, field, filename):
             cube.long_name = name
         except KeyError:
             # Don't change cubes with unknown stash codes.
-            _warn_once(
-                f"Unknown STASH code: {stash}. Please check file stash_to_lfric.py to update."
+            _log_once(
+                f"Unknown STASH code: {stash}. Please check file stash_to_lfric.py to update.",
+                level=logging.WARNING,
             )
 
 
-def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
+def _lfric_normalise_callback(cube: iris.cube.Cube):
     """Normalise attributes that prevents LFRic cube from merging.
 
     The uuid and timeStamp relate to the output file, as saved by XIOS, and has
@@ -486,6 +434,9 @@ def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
     cube.attributes.pop("timeStamp", None)
     cube.attributes.pop("uuid", None)
     cube.attributes.pop("name", None)
+    cube.attributes.pop("source", None)
+    cube.attributes.pop("analysis_source", None)
+    cube.attributes.pop("history", None)
 
     # Sort STASH code list.
     stash_list = cube.attributes.get("um_stash_source")
@@ -494,7 +445,7 @@ def _lfric_normalise_callback(cube: iris.cube.Cube, field, filename):
         cube.attributes["um_stash_source"] = str(sorted(ast.literal_eval(stash_list)))
 
 
-def _lfric_time_coord_fix_callback(cube: iris.cube.Cube, field, filename):
+def _lfric_time_coord_fix_callback(cube: iris.cube.Cube) -> iris.cube.Cube:
     """Ensure the time coordinate is a DimCoord rather than an AuxCoord.
 
     The coordinate is converted and replaced if not. SLAMed LFRic data has this
@@ -520,12 +471,10 @@ def _lfric_time_coord_fix_callback(cube: iris.cube.Cube, field, filename):
                         for i in range(len(time_coord.bounds))
                     ]
             iris.util.promote_aux_coord_to_dim_coord(cube, time_coord)
-
-    # Force single-valued coordinates to be scalar coordinates.
-    return iris.util.squeeze(cube)
+    return cube
 
 
-def _grid_longitude_fix_callback(cube: iris.cube.Cube):
+def _grid_longitude_fix_callback(cube: iris.cube.Cube) -> iris.cube.Cube:
     """Check grid_longitude coordinates are in the range -180 deg to 180 deg.
 
     This is necessary if comparing two models with different conventions --
@@ -535,10 +484,8 @@ def _grid_longitude_fix_callback(cube: iris.cube.Cube):
     model data bounds may not extend exactly to 0. or 360.
     Input cubes on non-rotated grid coordinates are not impacted.
     """
-    import CSET.operators._utils as utils
-
     try:
-        y, x = utils.get_cube_yxcoordname(cube)
+        y, x = get_cube_yxcoordname(cube)
     except ValueError:
         # Don't modify non-spatial cubes.
         return cube
@@ -560,11 +507,56 @@ def _grid_longitude_fix_callback(cube: iris.cube.Cube):
         long_coord.points = long_points
 
         # Update coord bounds to be consistent with wrapping.
-        if long_coord.has_bounds() and np.size(long_coord) > 1:
+        if long_coord.has_bounds():
             long_coord.bounds = None
             long_coord.guess_bounds()
 
     return cube
+
+
+def _fix_no_spatial_coords_callback(cube: iris.cube.Cube):
+    import CSET.operators._utils as utils
+
+    # Don't modify spatial cubes that already have spatial dimensions
+    if utils.is_spatialdim(cube):
+        return cube
+
+    else:
+        # attempt to get lat/long from cube attributes
+        try:
+            lat_min = cube.attributes.get("geospatial_lat_min")
+            lat_max = cube.attributes.get("geospatial_lat_max")
+            lon_min = cube.attributes.get("geospatial_lon_min")
+            lon_max = cube.attributes.get("geospatial_lon_max")
+
+            lon_val = (lon_min + lon_max) / 2.0
+            lat_val = (lat_min + lat_max) / 2.0
+
+            lat_coord = iris.coords.DimCoord(
+                lat_val,
+                standard_name="latitude",
+                units="degrees_north",
+                var_name="latitude",
+                coord_system=iris.coord_systems.GeogCS(6371229.0),
+                circular=True,
+            )
+
+            lon_coord = iris.coords.DimCoord(
+                lon_val,
+                standard_name="longitude",
+                units="degrees_east",
+                var_name="longitude",
+                coord_system=iris.coord_systems.GeogCS(6371229.0),
+                circular=True,
+            )
+
+            cube.add_aux_coord(lat_coord)
+            cube.add_aux_coord(lon_coord)
+            return cube
+
+        # if lat/long are not in attributes, then return cube unchanged:
+        except TypeError:
+            return cube
 
 
 def _fix_spatial_coords_callback(cube: iris.cube.Cube):
@@ -577,23 +569,31 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
     particularly where comparing multiple input models with differing spatial
     coordinates.
     """
-    import CSET.operators._utils as utils
-
     # Check if cube is spatial.
-    if not utils.is_spatialdim(cube):
+    if not is_spatialdim(cube):
         # Don't modify non-spatial cubes.
-        return cube
+        return
 
     # Get spatial coords and dimension index.
-    y_name, x_name = utils.get_cube_yxcoordname(cube)
-    ny = utils.get_cube_coordindex(cube, y_name)
-    nx = utils.get_cube_coordindex(cube, x_name)
+    y_name, x_name = get_cube_yxcoordname(cube)
+    ny = get_cube_coordindex(cube, y_name)
+    nx = get_cube_coordindex(cube, x_name)
+
+    # Remove spatial coords bounds if erroneous values detected.
+    # Aims to catch some errors in input coord bounds by setting
+    # invalid threshold of 10000.0
+    if cube.coord(x_name).has_bounds() and cube.coord(y_name).has_bounds():
+        bx_max = np.max(np.abs(cube.coord(x_name).bounds))
+        by_max = np.max(np.abs(cube.coord(y_name).bounds))
+        if bx_max > 10000.0 or by_max > 10000.0:
+            cube.coord(x_name).bounds = None
+            cube.coord(y_name).bounds = None
 
     # Translate [grid_latitude, grid_longitude] to an unrotated 1-d DimCoord
     # [latitude, longitude] for instances where rotated_pole=90.0
     if "grid_latitude" in [coord.name() for coord in cube.coords(dim_coords=True)]:
         coord_system = cube.coord("grid_latitude").coord_system
-        pole_lat = coord_system.grid_north_pole_latitude
+        pole_lat = getattr(coord_system, "grid_north_pole_latitude", None)
         if pole_lat == 90.0:
             lats = cube.coord("grid_latitude").points
             lons = cube.coord("grid_longitude").points
@@ -809,8 +809,9 @@ def _convert_cube_units_callback(cube: iris.cube.Cube):
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if any("surface_microphysical" in name for name in varnames):
         if cube.units == "kg m-2 s-1":
-            logging.debug(
-                "Converting precipitation rate units from kg m-2 s-1 to mm hr-1"
+            _log_once(
+                "Converting precipitation rate units from kg m-2 s-1 to mm hr-1",
+                level=logging.DEBUG,
             )
             # Convert from kg m-2 s-1 to mm s-1 assuming 1kg water = 1l water = 1dm^3 water.
             # This is a 1:1 conversion, so we just change the units.
@@ -818,7 +819,10 @@ def _convert_cube_units_callback(cube: iris.cube.Cube):
             # Convert the units to per hour.
             cube.convert_units("mm hr-1")
         elif cube.units == "kg m-2":
-            logging.debug("Converting precipitation amount units from kg m-2 to mm")
+            _log_once(
+                "Converting precipitation amount units from kg m-2 to mm",
+                level=logging.DEBUG,
+            )
             # Convert from kg m-2 to mm assuming 1kg water = 1l water = 1dm^3 water.
             # This is a 1:1 conversion, so we just change the units.
             cube.units = "mm"
@@ -827,7 +831,7 @@ def _convert_cube_units_callback(cube: iris.cube.Cube):
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if any("visibility" in name for name in varnames):
         if cube.units == "m":
-            logging.debug("Converting visibility units m to km.")
+            _log_once("Converting visibility units m to km.", level=logging.DEBUG)
             # Convert the units to km.
             cube.convert_units("km")
 
@@ -839,8 +843,7 @@ def _fix_lfric_cloud_base_altitude(cube: iris.cube.Cube):
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if any("cloud_base_altitude" in name for name in varnames):
         # Mask cube where set > 144kft to catch default 144.35695538058164
-        cube.data = np.ma.masked_array(cube.data)
-        cube.data[cube.data > 144.0] = np.ma.masked
+        cube.data = dask.array.ma.masked_greater(cube.core_data(), 144.0)
 
 
 def _fix_um_winds(cubes: iris.cube.CubeList):
@@ -888,11 +891,12 @@ def _convert_wind_true_dirn_um(cubes: iris.cube.CubeList):
     Convert from the components relative to the grid to true directions.
     This functionality only handles the simplest case.
     """
-    u_grid = cubes.extract_cube(iris.AttributeConstraint(STASH="m01s03i225"))
-    v_grid = cubes.extract_cube(iris.AttributeConstraint(STASH="m01s03i226"))
-    true_u, true_v = rotate_winds(u_grid, v_grid, iris.coord_systems.GeogCS(6371229.0))
-    u_grid.data = true_u.data
-    v_grid.data = true_v.data
+    u_grids = cubes.extract(iris.AttributeConstraint(STASH="m01s03i225"))
+    v_grids = cubes.extract(iris.AttributeConstraint(STASH="m01s03i226"))
+    for u, v in zip(u_grids, v_grids, strict=True):
+        true_u, true_v = rotate_winds(u, v, iris.coord_systems.GeogCS(6371229.0))
+        u.data = true_u.core_data()
+        v.data = true_v.core_data()
 
 
 def _normalise_var0_varname(cube: iris.cube.Cube):
@@ -1013,11 +1017,28 @@ def _lfric_time_callback(cube: iris.cube.Cube):
         logging.warning("No time coordinate on cube.")
 
 
-def _lfric_forecast_period_standard_name_callback(cube: iris.cube.Cube):
-    """Add forecast_period standard name if missing."""
+def _lfric_forecast_period_callback(cube: iris.cube.Cube):
+    """Check forecast_period name and units."""
     try:
         coord = cube.coord("forecast_period")
+        if coord.units != "hours":
+            cube.coord("forecast_period").convert_units("hours")
         if not coord.standard_name:
             coord.standard_name = "forecast_period"
     except iris.exceptions.CoordinateNotFoundError:
         pass
+
+
+def _normalise_ML_varname(cube: iris.cube.Cube):
+    """Fix plev variable names to standard names."""
+    if cube.coords("pressure"):
+        if cube.name() == "x_wind":
+            cube.long_name = "zonal_wind_at_pressure_levels"
+        if cube.name() == "y_wind":
+            cube.long_name = "meridional_wind_at_pressure_levels"
+        if cube.name() == "air_temperature":
+            cube.long_name = "temperature_at_pressure_levels"
+        if cube.name() == "specific_humidity":
+            cube.long_name = (
+                "vapour_specific_humidity_at_pressure_levels_for_climate_averaging"
+            )

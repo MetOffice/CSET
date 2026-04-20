@@ -19,6 +19,7 @@ import logging
 from collections.abc import Iterable
 
 import iris
+import iris.analysis.calculus
 import numpy as np
 from iris.cube import Cube, CubeList
 
@@ -71,6 +72,12 @@ def remove_attribute(
     for cube in cubes:
         for attr in iter_maybe(attribute):
             cube.attributes.pop(attr, None)
+
+    # Combine things that can be merged due to remove removing the
+    # attributes.
+    cubes = cubes.merge()
+    # combine items that can be merged after removing unwanted attributes
+    cubes = cubes.concatenate()
     return cubes
 
 
@@ -173,19 +180,22 @@ def division(numerator, denominator):
     return numerator / denominator
 
 
-def multiplication(multiplicand, multiplier):
+def multiplication(
+    multiplicand: Cube | CubeList, multiplier: Cube | CubeList
+) -> Cube | CubeList:
     """Multiplication of two fields.
 
     Parameters
     ----------
-    multiplicand: Cube
+    multiplicand: Cube | CubeList
         Any field to be multiplied by another field.
-    multiplier: Cube
+    multiplier: Cube | CubeList
         Any field to be multiplied to another field.
 
     Returns
     -------
-    Cube
+    Cube | CubeList
+        The result of multiplicand x multiplier.
 
     Raises
     ------
@@ -195,14 +205,25 @@ def multiplication(multiplicand, multiplier):
     Notes
     -----
     This is a simple operator designed for combination of diagnostics or
-    creating new diagnostics by using recipes.
+    creating new diagnostics by using recipes. CubeLists are multiplied
+    on a strict ordering (e.g. first cube with first cube).
 
     Examples
     --------
     >>> filtered_CAPE_ratio = misc.multiplication(CAPE_ratio, inflow_layer_properties)
 
     """
-    return multiplicand * multiplier
+    new_cubelist = iris.cube.CubeList([])
+    for cube_a, cube_b in zip(
+        iter_maybe(multiplicand), iter_maybe(multiplier), strict=True
+    ):
+        multiplied_cube = cube_a * cube_b
+        multiplied_cube.rename(f"{cube_a.name()}_x_{cube_b.name()}")
+        new_cubelist.append(multiplied_cube)
+    if len(new_cubelist) == 1:
+        return new_cubelist[0]
+    else:
+        return new_cubelist
 
 
 def combine_cubes_into_cubelist(first: Cube | CubeList, **kwargs) -> CubeList:
@@ -282,6 +303,16 @@ def difference(cubes: CubeList):
         )
     )
 
+    # If cubes contain a pressure coordinate, ensure it is increasing.
+    for cube in cubes:
+        try:
+            if len(cube.coord("pressure").points) > 2:
+                if not is_increasing(cube.coord("pressure").points):
+                    cube.data = np.flip(cube.data, axis=cube.coord_dims("pressure")[0])
+
+        except iris.exceptions.CoordinateNotFoundError:
+            pass
+
     # Get spatial coord names.
     base_lat_name, base_lon_name = get_cube_yxcoordname(base)
     other_lat_name, other_lon_name = get_cube_yxcoordname(other)
@@ -344,6 +375,8 @@ def difference(cubes: CubeList):
     ) + "_difference"
     if base.var_name:
         difference.var_name = base.var_name + "_difference"
+    elif base.standard_name:
+        difference.var_name = base.standard_name + "_difference"
 
     difference.data = base.data - other.data
     return difference
@@ -422,6 +455,162 @@ def convert_units(cubes: iris.cube.Cube | iris.cube.CubeList, units: str):
         # Convert cube units.
         cube_a.convert_units(units)
         new_cubelist.append(cube_a)
+    if len(new_cubelist) == 1:
+        return new_cubelist[0]
+    else:
+        return new_cubelist
+
+
+def rename_cube(cubes: iris.cube.Cube | iris.cube.CubeList, name: str):
+    """Rename a cube.
+
+    Arguments
+    ---------
+    cubes: iris.cube.Cube | iris.cube.CubeList
+        A Cube or CubeList of a field to be renamed.
+
+    name: str
+        The new name of the cube. It should be CF compliant.
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        The renamed field.
+
+    Notes
+    -----
+    This operator is designed to be used when the output field name does not
+    match expectations or needs to be different to defaults in standard_name, var_name or
+    long_name. For example, if combining masks
+    to create light rain you would like the field to be named "mask_for_light_rain"
+    rather than "mask_for_microphysical_precip_gt_0.0_x_mask_for_microphysical_precip_lt_2.0".
+
+    Examples
+    --------
+    >>> light_rain_mask = misc.rename_cube(light_rain_mask,"mask_for_light_rainfall"
+    """
+    new_cubelist = iris.cube.CubeList([])
+    for cube in iter_maybe(cubes):
+        cube.rename(name)
+        new_cubelist.append(cube)
+    if len(new_cubelist) == 1:
+        return new_cubelist[0]
+    else:
+        return new_cubelist
+
+
+def _slice_cube_on_levels(cube: iris.cube.Cube, coord_name: str, levels: list):
+    """
+    Extract levels from a cube for a given coordinate.
+
+    Arguments
+    ---------
+    cube: iris.cube.Cube
+        A Cube to be sliced.
+
+    coord_name: str
+        The coordinate name to be sliced
+
+    levels: list
+        A list containing points to be extracted from the cube.
+
+    Returns
+    -------
+    iris.cube.Cube
+        The sliced cube.
+    """
+    coord = cube.coord(coord_name)
+    (dim_index,) = cube.coord_dims(coord)
+
+    mask = np.isin(coord.points, levels)
+
+    slicer = [slice(None)] * cube.ndim
+    slicer[dim_index] = mask
+
+    return cube[tuple(slicer)]
+
+
+def extract_common_points(cubes: iris.cube.CubeList, coordinate: str):
+    """
+    Extract common points for a given coordinate between two cubes.
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        CubeList containing exactly two cubes.
+
+    coordinate: str
+        The coordinate name to be checked for common levels.
+
+    Returns
+    -------
+    iris.cube.CubeList
+        CubeList containing the two cubes sliced to common levels
+        for the given coordinate.
+    """
+    # Check type of input
+    if type(cubes) is not iris.cube.CubeList:
+        raise TypeError(f"Not a CubeList, got type {type(cubes)}")
+
+    # Check that only two cubes are passed into function.
+    if len(cubes) != 2:
+        raise ValueError(f"Maximum of two cubes allowed, received {len(cubes)}")
+
+    # Extract coordinate
+    try:
+        p1 = cubes[0].coord(coordinate)
+        p2 = cubes[1].coord(coordinate)
+    except iris.exceptions.CoordinateNotFoundError as err:
+        raise ValueError(f"Both cubes must have an {coordinate} coordinate") from err
+
+    # Find common points
+    common_points = np.intersect1d(p1.points, p2.points)
+
+    # Check that common points is more than zero.
+    if common_points.size == 0:
+        raise ValueError("No common levels found")
+
+    # Extract common points
+    cube0_common = _slice_cube_on_levels(cubes[0], coordinate, common_points)
+    cube1_common = _slice_cube_on_levels(cubes[1], coordinate, common_points)
+
+    return iris.cube.CubeList([cube0_common, cube1_common])
+
+
+def differentiate(
+    cubes: iris.cube.Cube | iris.cube.CubeList, coordinate: str, **kwargs
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Differentiate a cube on a specified coordinate.
+
+    Arguments
+    ---------
+    cubes: iris.cube.Cube | iris.cube.CubeList
+        A Cube or CubeList of a field that is to be differentiated.
+
+    coordinate: str
+        The coordinate that is to be differentiated over.
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        The differential of the cube along the specified coordinate.
+
+    Notes
+    -----
+    The differential is calculated based on a carteisan grid. This calculation
+    is then suitable for vertical and temporal derivatives. It is not sensible
+    for horizontal derivatives if they are based on spherical coordinates (e.g.
+    latitude and longitude). In essence this operator is a CSET wrapper around
+    `iris.analysis.calculus.differentiate <https://scitools-iris.readthedocs.io/en/stable/generated/api/iris.analysis.calculus.html#iris.analysis.calculus.differentiate>`_.
+
+    Examples
+    --------
+    >>> dT_dz = misc.differentiate(temperature, "altitude")
+    """
+    new_cubelist = iris.cube.CubeList([])
+    for cube in iter_maybe(cubes):
+        dcube = iris.analysis.calculus.differentiate(cube, coordinate)
+        new_cubelist.append(dcube)
     if len(new_cubelist) == 1:
         return new_cubelist[0]
     else:

@@ -91,9 +91,8 @@ def test_read_cubes_ensemble_separate_files():
     )
     # Check ensemble members have been merged into a single cube.
     assert len(cubes) == 1
-    cube = cubes[0]
     # Check realization is an integer.
-    for point in cube.coord("realization").points:
+    for point in cubes[0].coord("realization").points:
         assert isinstance(int(point), int)
 
 
@@ -119,14 +118,6 @@ def test_read_cubes_incorrect_number_of_model_names():
         read.read_cubes(
             "tests/test_data/air_temp.nc", model_names=["Model 1", "Model 2"]
         )
-
-
-def test_fieldsfile_ensemble_naming():
-    """Extracting the realization from the fields file naming convention."""
-    cube = iris.cube.Cube([0])
-    filename = "myfieldsfile_enuk_um_001/enukaa_pd000"
-    read._ensemble_callback(cube, None, filename)
-    assert cube.coord("realization").points[0] == 1
 
 
 def test_read_cube():
@@ -240,7 +231,7 @@ def test_check_input_files_no_file_in_directory(tmp_path):
 
 def test_um_normalise_callback_rename_stash(cube):
     """Correctly translate from STASH to LFRic variable name."""
-    read._um_normalise_callback(cube, None, None)
+    read._um_normalise_callback(cube)
     actual = cube.long_name
     expected = "temperature_at_screen_level"
     assert actual == expected
@@ -249,7 +240,7 @@ def test_um_normalise_callback_rename_stash(cube):
 def test_um_normalise_callback_missing_entry(cube, caplog):
     """Warning when STASH dictionary doesn't contain stash."""
     cube.attributes["STASH"] = "m00s00i000"
-    read._um_normalise_callback(cube, None, None)
+    read._um_normalise_callback(cube)
     _, level, message = caplog.record_tuples[0]
     assert level == logging.WARNING
 
@@ -258,7 +249,7 @@ def test_lfric_normalise_callback_remove_attrs(cube):
     """Correctly remove unneeded attributes."""
     cube.attributes["uuid"] = "87096862-89c3-4749-9c6c-0be91c2a7954"
     cube.attributes["timeStamp"] = "2024-May-20 12:29:21 GMT"
-    read._lfric_normalise_callback(cube, None, None)
+    read._lfric_normalise_callback(cube)
     assert "uuid" not in cube.attributes
     assert "timeStamp" not in cube.attributes
 
@@ -266,7 +257,7 @@ def test_lfric_normalise_callback_remove_attrs(cube):
 def test_lfric_normalise_callback_sort_stash(cube):
     """Correctly sort STASH code lists."""
     cube.attributes["um_stash_source"] = "['m01s03i025', 'm01s00i025']"
-    read._lfric_normalise_callback(cube, None, None)
+    read._lfric_normalise_callback(cube)
     actual = cube.attributes["um_stash_source"]
     expected = "['m01s00i025', 'm01s03i025']"
     assert actual == expected
@@ -276,7 +267,7 @@ def test_lfric_time_coord_fix_callback():
     """Correctly convert time from AuxCoord to DimCoord."""
     time_coord = iris.coords.AuxCoord([0, 1, 2], standard_name="time")
     cube = iris.cube.Cube([0, 0, 0], aux_coords_and_dims=[(time_coord, 0)])
-    read._lfric_time_coord_fix_callback(cube, None, None)
+    read._lfric_time_coord_fix_callback(cube)
     assert isinstance(cube.coord("time"), iris.coords.DimCoord)
     assert cube.coord_dims("time") == (0,)
 
@@ -287,7 +278,7 @@ def test_lfric_time_coord_fix_callback_scalar_time():
     time_coord = iris.coords.AuxCoord([0], standard_name="time")
     cube = iris.cube.Cube([0, 0, 0], aux_coords_and_dims=[(length_coord, 0)])
     cube.add_aux_coord(time_coord)
-    read._lfric_time_coord_fix_callback(cube, None, None)
+    read._lfric_time_coord_fix_callback(cube)
     assert isinstance(cube.coord("time"), iris.coords.AuxCoord)
     assert cube.coord_dims("time") == ()
 
@@ -296,7 +287,7 @@ def test_lfric_time_coord_fix_callback_no_time():
     """Don't do anything if no time coordinate present."""
     length_coord = iris.coords.DimCoord([0, 1, 2], var_name="length")
     cube = iris.cube.Cube([0, 0, 0], aux_coords_and_dims=[(length_coord, 0)])
-    read._lfric_time_coord_fix_callback(cube, None, None)
+    read._lfric_time_coord_fix_callback(cube)
     assert len(cube.coords("time")) == 0
 
 
@@ -631,6 +622,58 @@ def test_spatial_coord_not_exist_callback():
     )
 
 
+def test_spatial_coord_valid_bounds():
+    """Check that spatial coord callback preserves valid bounds."""
+    cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
+    cube.coord("latitude").guess_bounds()
+    cube.coord("longitude").guess_bounds()
+
+    # Ensure valid input bounds are preserved
+    read._fix_spatial_coords_callback(cube)
+    assert cube.coord("latitude").has_bounds()
+    assert cube.coord("longitude").has_bounds()
+
+
+def test_no_spatial_coords_callback_existing_spatial_coords():
+    """Check that same cube is returned when spatial coords are actually present."""
+    cube = iris.load("tests/test_data/air_temp.nc")
+    cube = cube[0]
+    assert cube == read._fix_no_spatial_coords_callback(cube)
+
+
+def test_no_spatial_coords_callback_vertical_no_geospatial_attribute():
+    """Check that same cube is returned when spatial coords are actually present."""
+    cube = iris.load_cube(
+        "tests/test_data/air_temperature_vertical_profile_as_series.nc"
+    )
+    assert cube == read._fix_no_spatial_coords_callback(cube)
+
+
+def test_no_spatial_coords_callback():
+    """Check that same cube is returned when spatial coords are actually present."""
+    cube = iris.load_cube("tests/test_data/cardington_air_temp_test.nc")
+    read._fix_no_spatial_coords_callback(cube)
+    # Assert lat and long coords are added.
+    assert isinstance(cube.coord("latitude"), iris.coords.DimCoord)
+    assert isinstance(cube.coord("longitude"), iris.coords.DimCoord)
+    # Assert coords are expected coords.
+    assert cube.coord("latitude").points[0] == 52.10438
+    assert cube.coord("longitude").points[0] == -0.42286
+
+
+def test_spatial_coord_invalid_bounds():
+    """Check that spatial coord callback removes invalid bounds."""
+    cube = iris.load_cube("tests/test_data/transect_test_umpl.nc")
+    cube.coord("latitude").guess_bounds()
+    cube.coord("longitude").guess_bounds()
+
+    # Test non-physical bounds values to ensure bounds removed
+    cube.coord("latitude").bounds = cube.coord("latitude").bounds + 50000.0
+    read._fix_spatial_coords_callback(cube)
+    assert not cube.coord("latitude").has_bounds()
+    assert not cube.coord("longitude").has_bounds()
+
+
 def test_lfric_time_callback_forecast_reference_time(slammed_lfric_cube):
     """Check that read callback creates an appropriate forecast_reference_time coord."""
     slammed_lfric_cube.remove_coord("forecast_reference_time")
@@ -772,8 +815,16 @@ def test_normalise_var0_varname(model_level_cube):
 def test_lfric_forecast_period_standard_name_callback(cube):
     """Ensure forecast period coordinates have a standard name."""
     cube.coord("forecast_period").standard_name = None
-    read._lfric_forecast_period_standard_name_callback(cube)
+    read._lfric_forecast_period_callback(cube)
     assert cube.coord("forecast_period").standard_name == "forecast_period"
+
+
+def test_lfric_forecast_period_convert_units_callback(cube):
+    """Ensure forecast period coordinates have a standard name."""
+    cube.coord("forecast_period").convert_units("seconds")
+    assert cube.coord("forecast_period").units == "seconds"
+    read._lfric_forecast_period_callback(cube)
+    assert cube.coord("forecast_period").units == "hours"
 
 
 def test_read_cubes_extract_cells():
@@ -1070,3 +1121,11 @@ def test_proleptic_gregorian_fix():
     read._proleptic_gregorian_fix(cube)
     assert cube.coord("time").units.calendar == "standard"
     assert cube.coord("time").units.origin == "hours since 1970-01-01T00:00:00"
+
+
+def test_normalise_ML_varname(transect_source_cube):
+    """Check that pressure varname is changed."""
+    cube = transect_source_cube.copy()
+    cube.rename = "air_temperature"
+    read._normalise_ML_varname(cube)
+    assert cube.long_name == "temperature_at_pressure_levels"

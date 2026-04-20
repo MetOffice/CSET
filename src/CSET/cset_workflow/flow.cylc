@@ -94,6 +94,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
 
         CONDA_PATH = {{CONDA_PATH}}
         LOGLEVEL = {{LOGLEVEL}}
+        COLORBAR_FILE = {{COLORBAR_FILE}}
         PLOT_RESOLUTION = {{PLOT_RESOLUTION|default(100)}}
         {% if SKIP_WRITE|default(False) %}
         SKIP_WRITE = True
@@ -113,15 +114,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         [[[outputs]]]
             start_baking='start baking'
             skip_baking='skip baking'
-
-    [[METPLUS]]
-        [[[environment]]]
-        {% if METPLUS_GRID_STAT|default(False) %}
-            METPLUS_ANA_DIR = {{METPLUS_ANA_DIR}}
-            METPLUS_FCST_DIR = {{METPLUS_FCST_DIR}}
-            METPLUS_OBS_DIR = {{METPLUS_OBS_DIR}}
-            ROSE_APP_OPT_CONF_KEYS = {{METPLUS_OPT_CONFIG_KEYS}}
-        {% endif %}
 
     # Noop tasks to ensure a complete/efficient workflow graph.
     [[DUMMY_TASK]]
@@ -146,7 +138,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     # consistency between the many runs.
     execution time limit = PT5M
         [[[environment]]]
-        COLORBAR_FILE = {{COLORBAR_FILE}}
         MODEL_NAMES = {{ b64json(models|map(attribute="name")|list) }}
 
     {% for model in models %}
@@ -163,7 +154,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         ANALYSIS_OFFSET = {{model["analysis_offset"]}}
     {% endfor %}
 
-    {% if SURFACE_SYNOP_OBS %}
+    {% if SURFACE_SYNOP_OBS is defined and SURFACE_SYNOP_OBS %}
     [[fetch_obs]]
     # Fetch observations from the MetDB.
     inherit = FETCH_DATA
@@ -229,6 +220,11 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         [[[environment]]]
         WEB_ADDR = {{WEB_ADDR}}
         WEB_DIR = {{WEB_DIR}}
+
+# Include files bring their own graph and runtime sections.
+{% include 'includes/metplus_common.cylc' %}
+{% include 'includes/metplus_point_stat.cylc' %}
+{% include 'includes/metplus_grid_stat.cylc' %}
 
 # Site-specific details that add to or override the core workflow definition.
 {% include 'site/' ~ SITE ~ '.cylc' %}

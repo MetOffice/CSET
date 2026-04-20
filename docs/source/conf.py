@@ -56,4 +56,6 @@ linkcheck_ignore = [
     r"https://github.com/MetOffice/CSET-restricted-files",
     # StackOverflow blocks requests.
     r"https://stackoverflow.com/.+",
+    # Sourceforge blocks requests.
+    r"https://.+\.sourceforge\.io/.+",
 ]

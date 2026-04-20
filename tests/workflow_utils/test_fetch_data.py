@@ -237,12 +237,12 @@ def test_FilesystemFileRetriever(tmp_path):
     # Correct return value.
     assert files_found
     # Symlinks created.
-    assert (tmp_path / "exeter_em01.nc").exists(follow_symlinks=False)
-    assert (tmp_path / "exeter_em02.nc").exists(follow_symlinks=False)
+    retrieved_files = sorted(tmp_path.glob("*exeter_em0?.nc"))
+    assert len(retrieved_files) == 2
     # Check symlink points to correct file.
-    with open((tmp_path / "exeter_em01.nc"), "rb") as fp:
+    with open(retrieved_files[0], "rb") as fp:
         digest = hashlib.file_digest(fp, "sha256").hexdigest()
-    assert digest == "67899970eeca75b9378f0275ce86db3d1d613f2bc7a178540912848dc8a69ca7"
+    assert digest == "23761fd2456b2dbbb18f35fa4909561569af0851ebda6e3705e70e366c86ac09"
 
 
 def test_FilesystemFileRetriever_no_files(tmp_path, caplog):

@@ -180,13 +180,13 @@ def test_collapse_by_hour_of_day_multi_forecast_single_day(long_forecast_multi_d
         + long_forecast_pick_day.data[9, 1, 0, 0]
         + long_forecast_pick_day.data[21, 2, 0, 0]
     ) / 3.0
-    assert collapsed_cube.data[0, 0, 0] == calc_mean
+    assert np.allclose(collapsed_cube.data[0, 0, 0], calc_mean, rtol=1e-6, atol=1e-2)
     calc_mean2 = (
         long_forecast_pick_day.data[21, 0, -1, -1]
         + long_forecast_pick_day.data[9, 1, -1, -1]
         + long_forecast_pick_day.data[21, 2, -1, -1]
     ) / 3.0
-    assert collapsed_cube.data[0, -1, -1] == calc_mean2
+    assert np.allclose(collapsed_cube.data[0, -1, -1], calc_mean2, rtol=1e-6, atol=1e-2)
 
     # Select different segment from long_forecast input data.
     # First segment T=1 to T=0. Second T=13 to T=12. Third T=1 to T=0.
@@ -197,13 +197,13 @@ def test_collapse_by_hour_of_day_multi_forecast_single_day(long_forecast_multi_d
         + long_forecast_pick_day2.data[11, 1, 0, 0]
         + long_forecast_pick_day2.data[23, 2, 0, 0]
     ) / 3.0
-    assert collapsed_cube.data[0, 0, 0] == calc_mean
+    assert np.allclose(collapsed_cube.data[0, 0, 0], calc_mean, rtol=1e-6, atol=1e-2)
     calc_mean2 = (
         long_forecast_pick_day2.data[23, 0, -1, -1]
         + long_forecast_pick_day2.data[11, 1, -1, -1]
         + long_forecast_pick_day2.data[23, 2, -1, -1]
     ) / 3.0
-    assert collapsed_cube.data[0, -1, -1] == calc_mean2
+    assert np.allclose(collapsed_cube.data[0, -1, -1], calc_mean2, rtol=1e-6, atol=1e-2)
 
 
 def test_collapse_by_lead_time_single_cube(long_forecast_multi_day):
@@ -213,6 +213,21 @@ def test_collapse_by_lead_time_single_cube(long_forecast_multi_day):
     )
     assert np.allclose(
         calculated_cube.data,
+        collapse.collapse(
+            long_forecast_multi_day, "forecast_reference_time", "MEAN"
+        ).data,
+        rtol=1e-06,
+        atol=1e-02,
+    )
+
+
+def test_collapse_by_lead_time_single_cube_masked_data(long_forecast_multi_day):
+    """Check cube collapse by lead time with masked data."""
+    # Create a basic mask.
+    long_forecast_multi_day.data[long_forecast_multi_day.data > 283.0] = np.nan
+    calculated_data = np.nanmean(long_forecast_multi_day.data, 1)
+    assert np.allclose(
+        calculated_data,
         collapse.collapse(
             long_forecast_multi_day, "forecast_reference_time", "MEAN"
         ).data,

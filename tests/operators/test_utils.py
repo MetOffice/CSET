@@ -238,6 +238,16 @@ def test_is_spatialdim_true(transect_source_cube):
     assert operator_utils.is_spatialdim(transect_source_cube)
 
 
+def test_is_coordim_false(transect_source_cube):
+    """Check that is coorddim test returns false if cube does not contain specified spatial coordinate."""
+    assert not operator_utils.is_coorddim(transect_source_cube, "realization")
+
+
+def test_is_coordim_true(transect_source_cube):
+    """Check that is coorddim test returns true if cube contains specified spatial coordinate."""
+    assert operator_utils.is_coorddim(transect_source_cube, "latitude")
+
+
 def test_fully_equalise_attributes_remove_unique_attributes():
     """Check unique attributes are removed."""
     original = iris.cube.Cube(
@@ -301,9 +311,42 @@ def test_fully_equalise_attributes_equalise_coords():
         assert "shared_attribute" not in cube.coord("foo").attributes
 
 
-def test_is_time_aggregatable_False(long_forecast):
+def test_slice_over_maybe_False():
+    """Check that a missing cube returns None."""
+    assert operator_utils.slice_over_maybe(None, "time", 0) is None
+
+
+def test_slice_over_deterministic(long_forecast):
+    """Check that a sliced cube is returned."""
+    assert operator_utils.slice_over_maybe(long_forecast, "time", 0) == long_forecast[0]
+    assert (
+        operator_utils.slice_over_maybe(long_forecast, "time", 10) == long_forecast[10]
+    )
+
+
+def test_slice_over_ensemble(long_forecast):
+    """Check that a slice cube is returned from multi-time ensemble inputs."""
+    ensemble_cube_em01 = long_forecast.copy()
+    ensemble_cube_em02 = long_forecast.copy()
+    ensemble_cube_em02.coord("realization").points = 1
+    ensemble_cube_4d = iris.cube.CubeList(
+        [ensemble_cube_em01, ensemble_cube_em02]
+    ).merge_cube()
+    # Attempt to extract time slice index 20 from 4D ensemble cube
+    assert (
+        operator_utils.slice_over_maybe(ensemble_cube_4d, "time", 20)
+        == ensemble_cube_4d[:, 20, :, :]
+    )
+    # Attempt to extract realization index 1 from 4D ensemble cube
+    assert (
+        operator_utils.slice_over_maybe(ensemble_cube_4d, "realization", 1)
+        == ensemble_cube_4d[1, :, :, :]
+    )
+
+
+def test_is_time_aggregatable_False(cardington_cube):
     """Check that a cube that is not time aggregatable returns False."""
-    assert not operator_utils.is_time_aggregatable(long_forecast)
+    assert not operator_utils.is_time_aggregatable(cardington_cube)
 
 
 def test_is_time_aggregatable(long_forecast_multi_day):

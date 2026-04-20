@@ -89,8 +89,6 @@ def vertical_profile_cube(vertical_profile_cube_readonly):
 @pytest.fixture(scope="session")
 def vector_cubes_readonly():
     """Get vector plot cubes. It is NOT safe to modify."""
-    from CSET.operators import read
-
     # Read the input cubes.
     in_cubes = read.read_cubes("tests/test_data/u10_v10.nc")
     # Generate constraints for the u and v components of the wind.
@@ -118,8 +116,6 @@ def vector_cubes(vector_cubes_readonly):
 @pytest.fixture(scope="session")
 def histogram_cube_readonly():
     """Get a histogram Cube. It is NOT safe to modify."""
-    from CSET.operators import read
-
     return read.read_cube(
         "tests/test_data/air_temperature_vertical_profile_as_series.nc"
     )
@@ -134,8 +130,6 @@ def histogram_cube(histogram_cube_readonly):
 @pytest.fixture(scope="session")
 def field2d_cube_readonly():
     """Get a 2D Cube for testing power spectrum code. It is NOT safe to modify."""
-    from CSET.operators import read
-
     return read.read_cube("tests/test_data/air_temperature_lat_lon.nc")
 
 
@@ -148,8 +142,6 @@ def field2d_cube(field2d_cube_readonly):
 @pytest.fixture(scope="session")
 def power_spectrum_cube_readonly():
     """Get a Cube for testing power spectrum code. It is NOT safe to modify."""
-    from CSET.operators import read
-
     return read.read_cube(
         "tests/test_data/power_spectrum_temperature_at_pressure_levels_pressure_250_1time.nc"
     )
@@ -185,6 +177,18 @@ def transect_source_cube_readonly():
 def transect_source_cube(transect_source_cube_readonly):
     """Get a 3D cube to test with. It is safe to modify."""
     return transect_source_cube_readonly.copy()
+
+
+@pytest.fixture(scope="session")
+def cardington_cube_readonly():
+    """Get a 3D cube to test with. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/cardington_air_temp_test.nc")
+
+
+@pytest.fixture()
+def cardington_cube(cardington_cube_readonly):
+    """Get a 3D cube to test with. It is safe to modify."""
+    return cardington_cube_readonly.copy()
 
 
 @pytest.fixture(scope="session")

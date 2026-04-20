@@ -450,3 +450,33 @@ def combine_constraints(
     for constr in kwargs.values():
         combined_constraint = combined_constraint & constr
     return combined_constraint
+
+
+def generate_attribute_constraint(
+    attribute: str, value: str = None, **kwargs
+) -> iris.AttributeConstraint:
+    """Generate constraint on cube attributes.
+
+    Constrains based on the presence of an attribute, and that attribute having
+    a particular value.
+
+    Arguments
+    ---------
+    attribute: str
+        Attribute to constraint on.
+
+    value: str
+        Attribute value to constrain on. If omitted the constraint merely checks
+        for the presence of an attribute.
+
+    Returns
+    -------
+    attribute_constraint: iris.Constraint
+    """
+    if value is None:
+        attribute_constraint = iris.Constraint(
+            cube_func=lambda cube: attribute in cube.attributes
+        )
+    else:
+        attribute_constraint = iris.AttributeConstraint(**{attribute: value})
+    return attribute_constraint
