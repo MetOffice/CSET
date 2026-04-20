@@ -47,6 +47,14 @@ def get_radar_sources(conf) -> list[dict]:
                 "varname": "Hourly rain accumulation",
             }
         )
+    if conf.NIMROD_COMP_5MIN:
+        radar_sources.append(
+            {
+                "name": "Nimrod_5min",
+                "id": "Nimrod5min",
+                "varname": "Rainfall rate Composite",
+            }
+        )
 
     return radar_sources
 
