@@ -57,7 +57,7 @@ def get_radar_sources(conf) -> dict:
 def load(conf: Config):
     """Yield recipes from the given workflow configuration."""
     # Load the required radar observation sources.
-    radar_sources = SimpleNamespace(get_radar_sources(conf))
+    radar_sources = SimpleNamespace(**get_radar_sources(conf))
 
     # Surface (2D) fields for Nimrod radar rainfall.
     #
