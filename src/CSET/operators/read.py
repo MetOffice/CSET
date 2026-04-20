@@ -451,6 +451,8 @@ def _nimrod_normalise_callback(cube: iris.cube.Cube):
     # Remove unwanted attributes.
     cube.attributes.pop("radar_sites", None)
     cube.attributes.pop("additional_radar_sites", None)
+    cube.attributes.pop("recursive_filter_iterations", None)
+    cube.attributes.pop("Probability methods", None)
 
 
 def _lfric_time_coord_fix_callback(cube: iris.cube.Cube) -> iris.cube.Cube:
