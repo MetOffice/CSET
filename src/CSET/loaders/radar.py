@@ -62,8 +62,8 @@ def load(conf: Config):
     # Surface (2D) fields for Nimrod radar rainfall.
     #
     # The different sources of Nimrod rainfall acculumulation have
-    # different spatial grids. So each source requires its own yaml
-    # realisation to prevent incompatible cubes being created.
+    # different spatial grids. So each source requires its own
+    # recipe to prevent incompatible cubes being created.
     if radar_sources.radar_flag and conf.SPATIAL_SURFACE_FIELD:
         for next in range(len(radar_sources.radar_ids)):
             yield RawRecipe(
@@ -83,8 +83,8 @@ def load(conf: Config):
 
     # Histograms for surface (2D) Nimrod radar rainfall.
     #
-    # To get multiple radar sources plotted on the histogram the yaml
-    # realisation must be done by passing lists of the radar_ids and
+    # To get multiple radar sources plotted on the histogram the
+    # recipe must be done by passing lists of the radar_ids and
     # the radar_names. As this is a multiline plot, all radar sources
     # share the same radar variable name.
     if radar_sources.radar_flag and conf.HISTOGRAM_SURFACE_FIELD:
