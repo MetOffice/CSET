@@ -69,14 +69,14 @@ steps:
                     pressure:
                         operator: filters.filter_multiple_cubes
                         constraint:
-                            operator: constraints.combine_constraints
-                            constraint_1:
-                                operator: constraints.generate_var_constraint
-                                varname: "m01s00i408"
-                            constraint_2:
-                                operator: constraints.generate_remove_single_level_constraint
-                                coord: "model_level_number"
-                                level: 0
+                                operator: constraints.combine_constraints
+                                constraint_1:
+                                    operator: constraints.generate_var_constraint
+                                    varname: "m01s00i408"
+                                constraint_2:
+                                    operator: constraints.generate_remove_single_level_constraint
+                                    coord: "model_level_number"
+                                    level: 0
                 coordinate: "level_height"
             condition: 'lt'
             value: 0.0
@@ -119,14 +119,14 @@ steps:
                     cubes:
                         operator: filters.filter_multiple_cubes
                         constraint:
-                            operator: constraints.combine_constraints
-                            constraint_1:
-                                operator: constraints.generate_var_constraint
-                                varname: "m01s00i408"
-                            constraint_2:
-                                operator: constraints.generate_remove_single_level_constraint
-                                coord: "model_level_number"
-                                level: 0
+                                operator: constraints.combine_constraints
+                                constraint_1:
+                                    operator: constraints.generate_var_constraint
+                                    varname: "m01s00i408"
+                                constraint_2:
+                                    operator: constraints.generate_remove_single_level_constraint
+                                    coord: "model_level_number"
+                                    level: 0
                     coordinate: "level_height"
             condition: 'gt'
             value: 90.0
