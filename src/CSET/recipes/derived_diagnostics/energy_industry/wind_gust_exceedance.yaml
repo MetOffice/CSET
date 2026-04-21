@@ -1,8 +1,8 @@
 category: Energy Industry
-title: $MODEL_NAME rate of change of wind gusts at 10 m
+title: $MODEL_NAME wind gusts at 10 m exceeding 25 m/s
 description: |
-  Extracts data required for, and calculates the time derivative of wind gusts at
-  10 m. It then plots the result as a spatial plot.
+  Extracts data required for, and calculates a mask of whether the wind gusts at
+  10 m exceed 25 m/s. It then plots the result as a spatial plot.
 
 steps:
   - operator: read.read_cubes
@@ -23,8 +23,9 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
-  - operator: misc.differentiate
-    coordinate: "time"
+  - operator: filters.generate_mask
+    condition: "gt"
+    value: 25.0
 
   - operator: plot.spatial_contour_plot
 
