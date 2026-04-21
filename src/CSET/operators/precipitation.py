@@ -19,63 +19,95 @@ import iris.cube
 import numpy as np
 from skimage.measure import label
 
+from CSET._common import iter_maybe
+
 
 def MAUL_properties(
-    cube: iris.cube.Cube | iris.cube.CubeList, output: str
+    cubes: iris.cube.Cube | iris.cube.CubeList, output: str
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Identify objects in the vertical."""
-    number_of_MAULs = cube[:, :, 0, :, :].copy()
-    number_of_MAULs.data[:] = 0.0
-    maul_depth = number_of_MAULs.copy()
-    maul_base = number_of_MAULs.copy()
-    maul_top = number_of_MAULs.copy()
-    ii = 0
-    jj = 0
-    kk = 0
-    ll = 0
-    for i in cube.slices_over("realization"):
-        for j in i.slices_over("time"):
-            for k in j.slices_over("latitude"):
-                for column in k.slices_over("longitude"):
-                    labels = label(column.core_data())
-                    number_of_MAULs.data[ii, jj, kk, ll] = np.max(labels)
-                    if output != "number":
-                        maul_start = []
-                        maul_end = []
-                        maul_dep = []
-                        for maul in range(0, np.max(labels)):
-                            maul_range = np.where(labels == maul)
-                            maul_start.append(
-                                column.coord("level_height").points[maul_range[0]]
-                            )
-                            maul_end.append(
-                                column.coord("level_height").points[maul_range[0]]
-                            )
-                            maul_dep.append(maul_end - maul_start)
-                        index = np.where(maul_dep == np.max(maul_dep))
-                        maul_depth.data[ii, jj, kk, ll] = np.max(maul_dep)
-                        maul_base.data[ii, jj, kk, ll] = maul_start[index]
-                        maul_top.data[ii, jj, kk, ll] = maul_end[index]
-                    ll += 1
-                kk += 1
-            jj += 1
-        ii += 1
-    # Units, renaming, and output.
-    if output == "number":
-        number_of_MAULs.units("1")
-        number_of_MAULs.rename("Number_of_MAULs")
-        return number_of_MAULs
-    elif output == "depth":
-        maul_depth.units("m")
-        maul_depth.rename("MAUL_depth")
-        return maul_depth
-    elif output == "base":
-        maul_base.units("m")
-        maul_base.rename("MAUL_base_height")
-        return maul_base
-    elif output == "top":
-        maul_top.units("m")
-        maul_top.rename("MAUL_top_height")
-        return maul_top
-    else:
-        raise ValueError
+    num_MAULs = iris.cube.CubeList([])
+    maul_d = iris.cube.CubeList([])
+    maul_b = iris.cube.CubeList([])
+    maul_t = iris.cube.CubeList([])
+
+    for cube in iter_maybe(cubes):
+        number_of_MAULs = cube[:, :, 0, :, :].copy()
+        number_of_MAULs.data[:] = 0.0
+        maul_depth = number_of_MAULs.copy()
+        maul_base = number_of_MAULs.copy()
+        maul_top = number_of_MAULs.copy()
+        ii = 0
+        jj = 0
+        kk = 0
+        ll = 0
+        for i in cube.slices_over("realization"):
+            for j in i.slices_over("time"):
+                for k in j.slices_over("latitude"):
+                    for column in k.slices_over("longitude"):
+                        labels = label(column.core_data())
+                        number_of_MAULs.data[ii, jj, kk, ll] = np.max(labels)
+                        if output != "number":
+                            maul_start = []
+                            maul_end = []
+                            maul_dep = []
+                            for maul in range(0, np.max(labels)):
+                                maul_range = np.where(labels == maul)
+                                maul_start.append(
+                                    column.coord("level_height").points[maul_range[0]]
+                                )
+                                maul_end.append(
+                                    column.coord("level_height").points[maul_range[0]]
+                                )
+                                maul_dep.append(maul_end - maul_start)
+                            index = np.where(maul_dep == np.max(maul_dep))
+                            maul_depth.data[ii, jj, kk, ll] = np.max(maul_dep)
+                            maul_base.data[ii, jj, kk, ll] = maul_start[index]
+                            maul_top.data[ii, jj, kk, ll] = maul_end[index]
+                        ll += 1
+                    kk += 1
+                jj += 1
+            ii += 1
+        # Units and renaming.
+        match output:
+            case "number":
+                number_of_MAULs.units("1")
+                number_of_MAULs.rename("Number_of_MAULs")
+                num_MAULs.append(number_of_MAULs)
+            case "depth":
+                maul_depth.units("m")
+                maul_depth.rename("MAUL_depth")
+                maul_d.append(maul_depth)
+            case "base":
+                maul_base.units("m")
+                maul_base.rename("MAUL_base_height")
+                maul_d.append(maul_base)
+            case "top":
+                maul_top.units("m")
+                maul_top.rename("MAUL_top_height")
+                maul_t.append(maul_top)
+            case _:
+                raise ValueError("""Unexpected value for output. Expected number,
+                                 depth, base or top. Got {output}.""")
+    # Output data.
+    match output:
+        case "number":
+            if len(num_MAULs) == 1:
+                return num_MAULs[0]
+            else:
+                return num_MAULs
+        case "depth":
+            if len(maul_d) == 1:
+                return maul_d[0]
+            else:
+                return maul_d
+        case "base":
+            if len(maul_b) == 1:
+                return maul_b[0]
+            else:
+                return maul_b
+        case "top":
+            if len(maul_t) == 1:
+                return maul_t[0]
+            else:
+                return maul_t
