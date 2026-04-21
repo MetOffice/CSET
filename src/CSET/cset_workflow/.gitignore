@@ -8,3 +8,6 @@ restricted*
 # User workflow configuration.
 /*rose-suite*
 !/rose-suite.conf.example
+
+# Testing symlink for web interface development.
+/app/finish_website/file/html/plots-CACHEBUSTER
