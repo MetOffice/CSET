@@ -29,14 +29,12 @@ def MAUL_properties(
     num_MAULs = iris.cube.CubeList([])
     maul_d = iris.cube.CubeList([])
     maul_b = iris.cube.CubeList([])
-    maul_t = iris.cube.CubeList([])
 
     for cube in iter_maybe(cubes):
         number_of_MAULs = cube[:, :, 0, :, :].copy()
         number_of_MAULs.data[:] = 0.0
         maul_depth = number_of_MAULs.copy()
         maul_base = number_of_MAULs.copy()
-        maul_top = number_of_MAULs.copy()
         ii = 0
         jj = 0
         kk = 0
@@ -63,7 +61,6 @@ def MAUL_properties(
                             index = np.where(maul_dep == np.max(maul_dep))
                             maul_depth.data[ii, jj, kk, ll] = np.max(maul_dep)
                             maul_base.data[ii, jj, kk, ll] = maul_start[index]
-                            maul_top.data[ii, jj, kk, ll] = maul_end[index]
                         ll += 1
                     kk += 1
                 jj += 1
@@ -82,10 +79,6 @@ def MAUL_properties(
                 maul_base.units("m")
                 maul_base.rename("MAUL_base_height")
                 maul_d.append(maul_base)
-            case "top":
-                maul_top.units("m")
-                maul_top.rename("MAUL_top_height")
-                maul_t.append(maul_top)
             case _:
                 raise ValueError("""Unexpected value for output. Expected number,
                                  depth, base or top. Got {output}.""")
@@ -106,8 +99,3 @@ def MAUL_properties(
                 return maul_b[0]
             else:
                 return maul_b
-        case "top":
-            if len(maul_t) == 1:
-                return maul_t[0]
-            else:
-                return maul_t
