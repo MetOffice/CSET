@@ -387,11 +387,13 @@ def test_generate_hour_constraint_hour_range(cube):
     assert (expected_cube.coord("hour").points == [3, 4]).all()
 
 
-def test_generate_remove_single_model_level_number_constraint(model_level_cube):
+def test_generate_remove_single_level_constraint(model_level_cube):
     """Remove a single model level based on model_level_number."""
     expected_cube = filters.filter_cubes(
         model_level_cube,
-        constraints.generate_remove_single_model_level_number_constraint(level=1),
+        constraints.generate_remove_single_level_constraint(
+            coord="model_level_number", level=1
+        ),
     )
     assert len(expected_cube.coord("model_level_number").points) == 69
     assert (
