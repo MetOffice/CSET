@@ -33,6 +33,8 @@ test-fast: ## Run fast local tests only.
 	pytest -vv --cov --cov-append --cov-config=pyproject.toml --numprocesses logical -m 'not slow and not network'
 
 test-full: pre-commit ## Run all tests, including slow or network reliant.
+	# Install headless chromium for playwright browser tests.
+	playwright install --only-shell chromium
 	pytest -vv --cov --cov-append --cov-config=pyproject.toml --numprocesses logical
 
 # Mark targets as 'phony' to indicate they don't actually produce a file with
