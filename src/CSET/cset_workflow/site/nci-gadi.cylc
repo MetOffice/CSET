@@ -9,7 +9,12 @@
             """
         [[[ environment ]]]
             PROJECT = {{ PROJECT }}
-            PYTHONPATH=/g/data/dp9/verification/sources/cset/main/CSET/src:$PYTHONPATH
+
+    [[METPLUS]]
+        [[[ environment ]]]
+            ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
+            # Forecast system to pull obs from (e.g. 'access_c3_dn')
+            METPLUS_OBS_SYSTEM = {{METPLUS_OBS_SYSTEM|default('access_g4')}}
 
     [[bake_recipes]]
         platform = gadi_pbs
