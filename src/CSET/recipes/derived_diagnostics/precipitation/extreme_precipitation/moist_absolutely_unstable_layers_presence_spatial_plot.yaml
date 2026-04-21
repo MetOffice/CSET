@@ -1,0 +1,143 @@
+category: Extreme precipitation
+title: $MODEL_NAME presence of Moist Absolutely Unstable Layers (MAULs) spatial plot
+description: |
+  Generates a mask of whether Moist Absolutely Unstable Layers (MAULs) are present
+  in a model column and provides a spatial plot. A value of one implies at least one MAUL
+  is present in a column; a value of zero implies MAULs are not present.
+
+  A MAUL is defined as an unstable layer (with height) based on equivalent potential
+  temperature alongside the relative humidity of that layer exceeding 90 %, following
+  [Takemi and Unuma (2020)](https://doi.org/10.2151/sola.2020-006). The equivalent
+  potential temperature is calculated using air temperature, pressure and specific humidity.
+  A vertical differentiation occurs to determine the stability (< 0 with dz implies unstable air).
+  The relative humidity is linearly interpolated onto the same grid as the vertical
+  derivative of the equivalent potential temperature. The masks for each criterion are multiplied
+  together and then collapsed as a maximum in the grid column to indicate the presence of a MAUL
+  in that column. There is no depth filter on MAULs and as such meeting the criteria over a single
+  layer will be identified as a MAUL.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    constraints: ["air_temperature", "air_pressure", "specific_humidity"]
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: misc.multiplication
+    multiplicand:
+        operator: filters.generate_mask
+        mask_field:
+            operator: misc.differentiate
+            cubes:
+                operator: temperature.equivalent_potential_temperature
+                temperature:
+                    operator: filters.filter_multiple_cubes
+                    constraint:
+                        operator: constraints.generate_var_constraint
+                        varname: "air_temperature"
+                relative_humidity:
+                    operator: humidity.relative_humidity_from_specific_humidity
+                    specific_humidity:
+                        operator: filters.filter_multiple_cubes
+                        constraint:
+                            operator: constraints.combine_constraints
+                            constraint_1:
+                                operator: constraints.generate_var_constraint
+                                varname: "specific_humidity"
+                            constraint_2:
+                                operator: constraints.generate_remove_single_level_constraint
+                                coord: "model_level_number"
+                                level: 0
+                    temperature:
+                        operator: filters.filter_multiple_cubes
+                        constraint:
+                            operator: constraints.generate_var_constraint
+                            varname: "air_temperature"
+                    pressure:
+                        operator: filters.filter_multiple_cubes
+                        constraint:
+                            operator: constraints.combine_constraints
+                            constraint_1:
+                                operator: constraints.generate_var_constraint
+                                varname: "m01s00i408"
+                            constraint_2:
+                                operator: constraints.generate_remove_single_level_constraint
+                                coord: "model_level_number"
+                                level: 0
+                pressure:
+                    operator: filters.filter_multiple_cubes
+                    constraint:
+                            operator: constraints.combine_constraints
+                            constraint_1:
+                                operator: constraints.generate_var_constraint
+                                varname: "m01s00i408"
+                            constraint_2:
+                                operator: constraints.generate_remove_single_level_constraint
+                                coord: "model_level_number"
+                                level: 0
+            coordinate: "level_height"
+        condition: 'lt'
+        value: 0.0
+    multiplier:
+        operator: filters.generate_mask
+        mask_field:
+            operator: regrid.vertical_interpolation
+            cubes:
+                operator: humidity.relative_humidity_from_specific_humidity
+                specific_humidity:
+                    operator: filters.filter_multiple_cubes
+                    constraint:
+                        operator: constraints.combine_constraints
+                        constraint_1:
+                            operator: constraints.generate_var_constraint
+                            varname: "specific_humidity"
+                        constraint_2:
+                            operator: constraints.generate_remove_single_level_constraint
+                            coord: "model_level_number"
+                            level: 0
+                temperature:
+                    operator: filters.filter_multiple_cubes
+                    constraint:
+                        operator: constraints.generate_var_constraint
+                        varname: "air_temperature"
+                pressure:
+                    operator: filters.filter_multiple_cubes
+                    constraint:
+                        operator: constraints.combine_constraints
+                        constraint_1:
+                            operator: constraints.generate_var_constraint
+                            varname: "m01s00i408"
+                        constraint_2:
+                            operator: constraints.generate_remove_single_level_constraint
+                            coord: "model_level_number"
+                            level: 0
+            coordinate: "model_level_number"
+            target:
+                operator: misc.differentiate
+                cubes:
+                    operator: filters.filter_multiple_cubes
+                    constraint:
+                            operator: constraints.combine_constraints
+                            constraint_1:
+                                operator: constraints.generate_var_constraint
+                                varname: "m01s00i408"
+                            constraint_2:
+                                operator: constraints.generate_remove_single_level_constraint
+                                coord: "model_level_number"
+                                level: 0
+                coordinate: "level_height"
+        condition: 'gt'
+        value: 90.0
+
+  - operator: collapse.collapse
+    coordinate: ["model_level_number"]
+    method: MAX
+
+  - operator: misc.rename_cube
+    name: "mask_for_MAULs"
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
