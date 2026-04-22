@@ -443,14 +443,17 @@ def _setup_spatial_map(
             axes = figure.add_subplot(projection=projection)
 
         # Add coastlines and borderlines if cube contains x and y map coordinates.
-        if cmap.name in ["viridis", "Greys"]:
-            coastcol = "magenta"
-        else:
-            coastcol = "black"
-        logging.debug("Plotting coastlines and borderlines in colour %s.", coastcol)
-        if "land_" in cube.name() or iris.util.is_masked(cube.data):
+        # Avoid adding lines for masked data or specific fixed ancillary spatial plots.
+        if iris.util.is_masked(cube.data) or any(
+            name in cube.name() for name in ["land_", "orography", "altitude"]
+        ):
             pass
         else:
+            if cmap.name in ["viridis", "Greys"]:
+                coastcol = "magenta"
+            else:
+                coastcol = "black"
+            logging.debug("Plotting coastlines and borderlines in colour %s.", coastcol)
             axes.coastlines(resolution="10m", color=coastcol)
             axes.add_feature(cfeature.BORDERS, edgecolor=coastcol)
 
