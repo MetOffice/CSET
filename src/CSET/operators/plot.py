@@ -932,9 +932,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
                 linestyles="--",
                 linewidths=1,
             )
-        mtitle = member.coord(stamp_coordinate).name().capitalize()
-        axes.set_title(f"{mtitle} #{member.coord(stamp_coordinate).points[0]}")
-        #        axes.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
+        axes.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
 
     # Put the shared colorbar in its own axes.
     colorbar_axes = fig.add_axes([0.15, 0.07, 0.7, 0.03])
@@ -1544,9 +1542,7 @@ def _plot_and_save_postage_stamp_histogram_series(
         plt.hist(member_data_1d, density=True, stacked=True)
         axes = plt.gca()
 
-        mtitle = member.coord(stamp_coordinate).name().capitalize()
-        axes.set_title(f"{mtitle} #{member.coord(stamp_coordinate).points[0]}")
-        #        ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
+        axes.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
         axes.set_xlim(vmin, vmax)
 
     # Overall figure title.
@@ -1576,12 +1572,11 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
         # Flatten the member data to 1D
         member_data_1d = member.data.flatten()
         # Plot the histogram using plt.hist
-        mtitle = member.coord(stamp_coordinate).name().capitalize()
         plt.hist(
             member_data_1d,
             density=True,
             stacked=True,
-            label=f"{mtitle} #{member.coord(stamp_coordinate).points[0]}",
+            label=f"Member #{member.coord(stamp_coordinate).points[0]}",
         )
 
     # Add a legend
@@ -1812,9 +1807,7 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
 
         axes = plt.gca()
         axes.plot(frequency, member.data)
-        mtitle = member.coord(stamp_coordinate).name().capitalize()
-        axes.set_title(f"{mtitle} #{member.coord(stamp_coordinate).points[0]}")
-    #        ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
+        axes.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
 
     # Overall figure title.
     fig.suptitle(title, fontsize=16)
@@ -1838,11 +1831,10 @@ def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
     # Loop over all slices along the stamp_coordinate
     for member in cube.slices_over(stamp_coordinate):
         frequency = member.coord("frequency").points
-        mtitle = member.coord(stamp_coordinate).name().capitalize()
         ax.plot(
             frequency,
             member.data,
-            label=f"{mtitle} #{member.coord(stamp_coordinate).points[0]}",
+            label=f"Member #{member.coord(stamp_coordinate).points[0]}",
         )
 
     # Add a legend
