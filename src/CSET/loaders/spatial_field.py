@@ -576,7 +576,7 @@ def load(conf: Config):
     if conf.MAUL_NUMBER:
         for model in models:
             yield RawRecipe(
-                recipe="number_moist_absolutely_unstable_layers_present_in_a_spatial_column.yaml",
+                recipe="number_of_moist_absolutely_unstable_layers_present_in_a_spatial_column.yaml",
                 variables={
                     "MODEL_NAME": model["name"],
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
