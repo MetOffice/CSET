@@ -374,7 +374,7 @@ def _setup_spatial_map(
         Matplotlib Figure object holding all plot elements.
     cmap:
         Matplotlib colormap.
-    grid_size: (int,int), optional
+    grid_size: int, optional
         Size of grid for subplots if multiple spatial subplots in figure.
     subplot: int, optional
         Subplot index if multiple spatial subplots in figure.
@@ -437,7 +437,7 @@ def _setup_spatial_map(
         # Define axes for plot (or subplot) with required map projection.
         if subplot is not None:
             axes = figure.add_subplot(
-                grid_size[1], grid_size[0], subplot, projection=projection
+                grid_size, grid_size, subplot, projection=projection
             )
         else:
             axes = figure.add_subplot(projection=projection)
@@ -859,13 +859,9 @@ def _plot_and_save_postage_stamp_spatial_plot(
         If the cube doesn't have the right dimensions.
     """
     # Use the smallest square grid that will fit the members.
-    nmember = len(cube.coord(stamp_coordinate).points)
-    grid_size = int(math.ceil(math.sqrt(nmember)))
-    grid_rows = math.ceil(nmember / grid_size)
+    grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
 
-    fig = plt.figure(
-        figsize=(10, 10 * grid_rows / grid_size), facecolor="w", edgecolor="k"
-    )
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
     # Specify the color bar
     cmap, levels, norm = _colorbar_map_levels(cube)
@@ -881,7 +877,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
     ):
         # Setup subplot map projection, extent and coastlines and borderlines.
         axes = _setup_spatial_map(
-            member, fig, cmap, grid_size=(grid_size, grid_rows), subplot=subplot
+            member, fig, cmap, grid_size=grid_size, subplot=subplot
         )
         if method == "contourf":
             # Filled contour plot of the field.
@@ -1541,7 +1537,6 @@ def _plot_and_save_postage_stamp_histogram_series(
         member_data_1d = (member.data).flatten()
         plt.hist(member_data_1d, density=True, stacked=True)
         axes = plt.gca()
-
         axes.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
         axes.set_xlim(vmin, vmax)
 
