@@ -448,8 +448,11 @@ def _setup_spatial_map(
         else:
             coastcol = "black"
         logging.debug("Plotting coastlines and borderlines in colour %s.", coastcol)
-        axes.coastlines(resolution="10m", color=coastcol)
-        axes.add_feature(cfeature.BORDERS, edgecolor=coastcol)
+        if "land_" in cube.name() or iris.util.is_masked(cube.data):
+            pass
+        else:
+            axes.coastlines(resolution="10m", color=coastcol)
+            axes.add_feature(cfeature.BORDERS, edgecolor=coastcol)
 
         # Add gridlines.
         if subplot is None:
@@ -499,6 +502,15 @@ def _get_start_end_strings(seq_coord: iris.coords.Coord, use_bounds: bool):
     else:
         sequence_title = f"\n [{start} to {end}]"
         sequence_fname = f"_{filename_slugify(start)}_{filename_slugify(end)}"
+
+    # Do not include time if coord set to zero.
+    if (
+        seq_coord.units == "hours since 0001-01-01 00:00:00"
+        and vals[0] == 0
+        and vals[-1] == 0
+    ):
+        sequence_title = ""
+        sequence_fname = ""
 
     return sequence_title, sequence_fname
 
@@ -767,11 +779,11 @@ def _plot_and_save_spatial_plot(
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
     axes.annotate(
         f"Min: {np.min(cube.data):.3g} Max: {np.max(cube.data):.3g} Mean: {np.mean(cube.data):.3g}",
-        xy=(1, yinfopad),
+        xy=(0.025, yinfopad),
         xycoords="axes fraction",
         xytext=(-5, 5),
         textcoords="offset points",
-        ha="right",
+        ha="left",
         va="bottom",
         size=11,
         bbox=dict(boxstyle="round", fc="#cccccc", ec="#808080", alpha=0.9),
@@ -920,7 +932,6 @@ def _plot_and_save_postage_stamp_spatial_plot(
         mtitle = member.coord(stamp_coordinate).name().capitalize()
         axes.set_title(f"{mtitle} #{member.coord(stamp_coordinate).points[0]}")
         #        axes.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
-        axes.set_axis_off()
 
     # Put the shared colorbar in its own axes.
     colorbar_axes = fig.add_axes([0.15, 0.07, 0.7, 0.03])
@@ -1350,7 +1361,7 @@ def _plot_and_save_vector_plot(
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
     axes.annotate(
         f"Min: {np.min(cube_vec_mag.data):.3g} Max: {np.max(cube_vec_mag.data):.3g} Mean: {np.mean(cube_vec_mag.data):.3g}",
-        xy=(1, -0.05),
+        xy=(0.05, -0.05),
         xycoords="axes fraction",
         xytext=(-5, 5),
         textcoords="offset points",

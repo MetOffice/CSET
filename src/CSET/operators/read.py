@@ -1036,7 +1036,7 @@ def _fix_no_time_coords_callback(cube: iris.cube.Cube):
     if not cube.coords("time"):
         cube.add_aux_coord(
             iris.coords.DimCoord(
-                0, standard_name="time", units="hours since 1970-01-01 00:00:00"
+                0, standard_name="time", units="hours since 0001-01-01 00:00:00"
             )
         )
 

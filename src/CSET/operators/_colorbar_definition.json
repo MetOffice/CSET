@@ -297,12 +297,12 @@
     "min": -1
   },
   "land_area_fraction": {
-    "cmap": "managua_r",
+    "cmap": "ocean_r",
     "max": 1,
     "min": 0
   },
   "land_binary_mask": {
-    "cmap": "managua_r",
+    "cmap": "ocean_r",
     "levels": [
       0,
       0.5,
@@ -609,17 +609,17 @@
     "min": 0.0
   },
   "soil_hydraulic_conductivity_at_saturation": {
-    "cmap": "terrain_r",
+    "cmap": "nipy_spectral_r",
     "max": 0.025,
     "min": 0.0
   },
   "soil_porosity": {
-    "cmap": "terrain_r",
+    "cmap": "nipy_spectral_r",
     "max": 0.5,
     "min": 0.0
   },
   "soil_suction_at_saturation": {
-    "cmap": "terrain_r",
+    "cmap": "nipy_spectral_r",
     "max": 0.5,
     "min": 0.0
   },
@@ -636,12 +636,12 @@
     "min": -0.5
   },
   "soil_thermal_capacity": {
-    "cmap": "terrain_r",
+    "cmap": "nipy_spectral_r",
     "max": 1500000.0,
     "min": 1000000.0
   },
   "soil_thermal_conductivity": {
-    "cmap": "terrain_r",
+    "cmap": "nipy_spectral_r",
     "max": 0.5,
     "min": 0.0
   },
@@ -1044,12 +1044,12 @@
     "min": 0.0
   },
   "volume_fraction_of_condensed_water_in_soil_at_critical_point": {
-    "cmap": "terrain_r",
+    "cmap": "nipy_spectral_r",
     "max": 0.5,
     "min": 0.0
   },
   "volume_fraction_of_condensed_water_in_soil_at_wilting_point": {
-    "cmap": "terrain_r",
+    "cmap": "nipy_spectral_r",
     "max": 0.5,
     "min": 0.0
   },
