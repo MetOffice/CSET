@@ -52,7 +52,7 @@ def get_radar_sources(conf) -> list[dict]:
             {
                 "name": "Nimrod_5min",
                 "id": "Nimrod5min",
-                "varname": "Rainfall rate Composite",
+                "varname": "Rainfall rate composite",
             }
         )
 
