@@ -18,7 +18,6 @@ from datetime import datetime
 
 import iris.coords
 import iris.cube
-import numpy as np
 import pytest
 
 from CSET.operators import constraints
@@ -32,7 +31,7 @@ def _cube_with_cell_methods(methods):
     ``repr()``.
     """
     return iris.cube.Cube(
-        np.array([0.0]),
+        shape=(1,),
         var_name="x",
         cell_methods=[iris.coords.CellMethod(m) for m in methods],
     )
