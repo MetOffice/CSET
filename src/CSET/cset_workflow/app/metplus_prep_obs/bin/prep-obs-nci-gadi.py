@@ -2,10 +2,16 @@
 
 """Process Bureau observations data stored at NCI for use by METplus."""
 
+import argparse
+import functools
+import json
+import os
 import sys
 from datetime import datetime
 
+import metomi.isodatetime.parsers
 import pandas
+import pyodc as odc
 
 if sys.version_info >= (3, 14):
     import tarfile
@@ -14,13 +20,6 @@ if sys.version_info >= (3, 14):
 else:
     from backports import zstd
     from backports.zstd import tarfile
-import argparse
-import functools
-import json
-import os
-
-import metomi.isodatetime.parsers
-import pyodc as odc
 
 # Valid bureau forecast systems
 BOM_SYSTEMS = ["access_g3", "access_g4"]
@@ -164,7 +163,7 @@ def prep_obs(obsdate: datetime, system: str) -> pandas.DataFrame:
 
 
 def main():
-    """Script CLI"""
+    """Script CLI."""
     parser = argparse.ArgumentParser("Process BOM observation data at NCI for METplus")
     parser.add_argument(
         "--system",
