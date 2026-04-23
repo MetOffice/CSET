@@ -799,6 +799,9 @@ def _plot_and_save_spatial_plot(
         cbar.set_ticklabels([f"{level:.2f}" for level in levels])
         if "rainfall" or "snowfall" or "visibility" in cube.name():
             cbar.set_ticklabels([f"{level:.3g}" for level in levels])
+        # Tick labels for rainfall rates from Nimrod radar data.
+        if "rainfall rate composite" in cube.name():
+            cbar.set_ticklabels([f"{level:.3g}" for level in levels])
         # Tick labels for rain accumulations from Nimrod radar data.
         if "rain accumulation" in cube.name():
             cbar.set_ticklabels([f"{level:.3g}" for level in levels])
@@ -1411,7 +1414,11 @@ def _plot_and_save_histogram_series(
         # Easier to check title (where var name originates)
         # than seeing if long names exist etc.
         # Exception case, where distribution better fits log scales/bins.
-        if ("surface_microphysical" in title) or ("rain accumulation" in title):
+        if (
+            ("surface_microphysical" in title)
+            or ("rain accumulation" in title)
+            or ("Nimrod_5min" in title)
+        ):
             if "amount" in title:
                 # Compute histogram following Klingaman et al. (2017): ASoP
                 bin2 = np.exp(np.log(0.02) + 0.1 * np.linspace(0, 99, 100))
@@ -1449,8 +1456,10 @@ def _plot_and_save_histogram_series(
         x, y = np.histogram(cube_data_1d, bins=bins, density=density)
 
         # Compute area under curve.
-        if ("surface_microphysical" in title and "amount" in title) or (
-            "rain_accumulation" in title
+        if (
+            ("surface_microphysical" in title and "amount" in title)
+            or ("rain_accumulation" in title)
+            or ("Nimrod_5min" in title)
         ):
             bin_mean = (bins[:-1] + bins[1:]) / 2.0
             x = x * bin_mean / x.sum()
@@ -1467,8 +1476,10 @@ def _plot_and_save_histogram_series(
         f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}", fontsize=14
     )
     ax.set_ylabel("Normalised probability density", fontsize=14)
-    if ("surface_microphysical" in title and "amount" in title) or (
-        "rain accumulation" in title
+    if (
+        ("surface_microphysical" in title and "amount" in title)
+        or ("rain accumulation" in title)
+        or ("Nimrod_5min" in title)
     ):
         ax.set_ylabel(
             f"Contribution to mean ({iter_maybe(cubes)[0].units})", fontsize=14
@@ -2178,12 +2189,16 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
         for name in varnames_lower
         for key in (
             "surface_microphysical",
+            "rainfall rate composite",
+            "nimrod5min",
+            "nimrod_5min",
             "rain_accumulation",
             "rain accumulation",
         )
     )
 
     if is_rainfall_var:
+        print("varnames_lower ", varnames_lower)
         levels = [0, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
         colors = [
             "w",
