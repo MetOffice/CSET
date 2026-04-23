@@ -142,15 +142,15 @@ def MAUL_properties(
         # Units and renaming.
         match output:
             case "number":
-                number_of_MAULs.units("1")
+                number_of_MAULs.units = "1"
                 number_of_MAULs.rename("Number_of_MAULs")
                 num_MAULs.append(number_of_MAULs)
             case "depth":
-                maul_depth.units("m")
+                maul_depth.units = "m"
                 maul_depth.rename("MAUL_depth")
                 maul_d.append(maul_depth)
             case "base":
-                maul_base.units("m")
+                maul_base.units = "m"
                 maul_base.rename("MAUL_base_height")
                 maul_d.append(maul_base)
             case _:
