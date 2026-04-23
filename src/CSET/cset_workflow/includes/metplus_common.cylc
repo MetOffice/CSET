@@ -8,6 +8,6 @@
         METPLUS_STN_DIR = {{METPLUS_STN_DIR}}
         ROSE_APP_OPT_CONF_KEYS = ({{SITE}}) {{METPLUS_OPT_CONFIG_KEYS|default("")}}
         TASK_START_TIME = $(cylc cyclepoint --template CCYYMMDDThh)
-        FORECAST_LENGTH = $(isodatetime --as-total H -- {{ANALYSIS_LENGTH}} | cut -d '.' -f 1)
+        FORECAST_LENGTH = $(isodatetime --as-total H -- {{ANALYSIS_LENGTH}} | cut -d '.' -f 1 )
         TASK_END_TIME = $(cylc cyclepoint --offset {{ANALYSIS_LENGTH}} --template CCYYMMDDThh)
 {% endif %}
