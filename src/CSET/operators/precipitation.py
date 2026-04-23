@@ -31,16 +31,19 @@ def MAUL_properties(
     maul_b = iris.cube.CubeList([])
 
     for cube in iter_maybe(cubes):
-        number_of_MAULs = next(cube.slices_over("time")).copy()
+        number_of_MAULs = next(cube.slices_over("model_level_number")).copy()
         number_of_MAULs.data[:] = 0.0
         maul_depth = number_of_MAULs.copy()
         maul_base = number_of_MAULs.copy()
-
-        for mem_number, member in enumerate(cube.slices_over("realization")):
-            for time_point, time in enumerate(member.slices_over("time")):
-                for lat_point, lat in enumerate(time.slices_over("latitude")):
-                    for lon_point, lon in enumerate(lat.slices_over("longitude")):
-                        print(lon_point, lon)
+        print(maul_base)
+        mem_number = 0
+        for member in cube.slices_over("realization"):
+            time_point = 0
+            for time in member.slices_over("time"):
+                lat_point = 0
+                for lat in time.slices_over("latitude"):
+                    lon_point = 0
+                    for lon in lat.slices_over("longitude"):
                         labels = label(lon.core_data())
                         if (
                             len(number_of_MAULs.coord("realization").points) != 1
@@ -63,15 +66,19 @@ def MAUL_properties(
                             maul_dep = []
                             for maul in range(0, np.max(labels)):
                                 maul_range = np.where(labels == maul)
-                                maul_start.append(
-                                    lon.coord("level_height").points[maul_range[0]]
-                                )
-                                maul_end.append(
-                                    lon.coord("level_height").points[maul_range[0]]
-                                )
-                                maul_dep.append(maul_end - maul_start)
+                                maul_start_point = lon.coord("level_height").points[
+                                    maul_range[0]
+                                ]
+                                maul_end_point = lon.coord("level_height").points[
+                                    maul_range[0]
+                                ]
+                                maul_dep.append(maul_end_point - maul_start_point)
+                                maul_start.append(maul_start_point)
+                                maul_end.append(maul_end_point)
                             try:
-                                index = np.where(maul_dep == np.max(maul_dep))
+                                index = int(
+                                    np.where(maul_dep == np.max(maul_dep))[0][0]
+                                )
                                 if (
                                     len(number_of_MAULs.coord("realization").points)
                                     != 1
@@ -127,6 +134,10 @@ def MAUL_properties(
                                 else:
                                     maul_depth.data[lat_point, lon_point] = np.nan
                                     maul_base.data[lat_point, lon_point] = np.nan
+                        lon_point += 1
+                    lat_point += 1
+                time_point += 1
+            mem_number += 1
 
         # Units and renaming.
         match output:
@@ -151,13 +162,11 @@ def MAUL_properties(
             return num_MAULs[0]
         case "number":
             return num_MAULs
+        case "depth" if len(maul_d) == 1:
+            return maul_d[0]
         case "depth":
-            if len(maul_d) == 1:
-                return maul_d[0]
-            else:
-                return maul_d
+            return maul_d
+        case "base" if len(maul_b) == 1:
+            return maul_b[0]
         case "base":
-            if len(maul_b) == 1:
-                return maul_b[0]
-            else:
-                return maul_b
+            return maul_b
