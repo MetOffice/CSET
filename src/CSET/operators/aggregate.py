@@ -97,10 +97,8 @@ def _aggregate_without_time_dimcoords(input_params):
     # will break the aggregation
     cubes = _remove_duplicates(cubes)
 
-    # Name of the supplied time coordinate
     time_coord_name = time_coord.name()
 
-    # Extract cubes matching the time specified by the supplied time coordinate.
     # Even though the source coord might have floats for its points,
     # the cell here will have cftime objects, such as DatetimeGregorian,
     # so we can't just compare against the time coord's points.
@@ -111,8 +109,6 @@ def _aggregate_without_time_dimcoords(input_params):
 
     # Add a temporary "number" coordinate to uniquely label the different
     # data points at this time.
-    # An example of when there can be multiple data points at the time of
-    # interest is if the time coordinate represents the hour of day.
     number = 0
     numbered_cubes = iris.cube.CubeList()
     for cube in cubes_at_time:
@@ -123,7 +119,6 @@ def _aggregate_without_time_dimcoords(input_params):
             number += 1
     cubes_at_time = numbered_cubes
 
-    # Merge
     cubes_at_time = cubes_at_time.merge()
 
     # For each cube in the cubelist, aggregate over all cases at this time
@@ -147,9 +142,8 @@ def _aggregate_without_time_dimcoords(input_params):
         else:
             cube = cube.collapsed("number", aggregator)
 
-        # Now remove the "number" coordinate...
+        # Now remove the "number" coordinate and its cell method
         cube.remove_coord("number")
-        # ...and associated cell method
         cell_method = iris.coords.CellMethod(aggregator.name(), coords="number")
         cube = _remove_cell_method(cube, cell_method)
 
