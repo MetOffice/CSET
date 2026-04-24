@@ -363,6 +363,7 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     _realization_callback(cube)
     _um_normalise_callback(cube)
     _lfric_normalise_callback(cube)
+    _nimrod_normalise_callback(cube)
     cube = _lfric_time_coord_fix_callback(cube)
     _normalise_var0_varname(cube)
     cube = _fix_no_spatial_coords_callback(cube)
@@ -443,6 +444,15 @@ def _lfric_normalise_callback(cube: iris.cube.Cube):
     if stash_list:
         # Parse the string as a list, sort, then re-encode as a string.
         cube.attributes["um_stash_source"] = str(sorted(ast.literal_eval(stash_list)))
+
+
+def _nimrod_normalise_callback(cube: iris.cube.Cube):
+    """Normalise attributes that prevents NIMROD radar cubes from merging."""
+    # Remove unwanted attributes.
+    cube.attributes.pop("radar_sites", None)
+    cube.attributes.pop("additional_radar_sites", None)
+    cube.attributes.pop("recursive_filter_iterations", None)
+    cube.attributes.pop("Probability methods", None)
 
 
 def _lfric_time_coord_fix_callback(cube: iris.cube.Cube) -> iris.cube.Cube:
