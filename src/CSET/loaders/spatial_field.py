@@ -638,7 +638,7 @@ def load(conf: Config):
     if conf.NORMALIZED_GAUSSIAN_PETRUBATION_SPATIAL_SURFACE_FIELD_SSIM:
         for model in models:
             yield RawRecipe(
-                recipe="generic_normalised_Gaussian_spatial_perturbation_SSIM.yaml",
+                recipe="generic_normalized_Gaussian_spatial_perturbation_SSIM.yaml",
                 model_ids=model["id"],
                 variables={
                     "MODEL_NAME": model["name"],
