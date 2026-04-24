@@ -14,6 +14,7 @@
 
 """Operators to aggregate across either 1 or 2 dimensions."""
 
+import itertools
 import logging
 
 import iris
@@ -26,7 +27,13 @@ import isodate
 import numpy as np
 
 from CSET._common import iter_maybe
-from CSET.operators._utils import is_time_aggregatable
+from CSET.operators._utils import (
+    identify_unique_times,
+    is_time_aggregatable,
+    is_time_aux_coord,
+    remove_cell_method,
+    remove_duplicates,
+)
 
 
 def _add_nref(cube: iris.cube.Cube):
@@ -105,40 +112,53 @@ def time_aggregate(
 
 def ensure_aggregatable_across_cases(
     cubes: iris.cube.Cube | iris.cube.CubeList,
+    time_coord_name: str,
 ) -> iris.cube.CubeList:
     """Ensure a Cube or CubeList can be aggregated across multiple cases.
 
-    The cubes are grouped into buckets of compatible cubes, then each bucket is
-    converted into a single aggregatable cube with ``forecast_period`` and
-    ``forecast_reference_time`` dimension coordinates.
+    The cubes are grouped into buckets of compatible cubes. Each bucket is then
+    processed to create aggregatable cubes. The function handles two types of
+    time coordinates:
+
+    - Dimension coordinates: Cubes with ``forecast_period`` and
+      ``forecast_reference_time`` as dimension coordinates are sliced and merged.
+    - Auxiliary coordinates: Cubes with time as an auxiliary coordinate are
+      aggregated at each unique time point and then merged.
 
     Arguments
     ---------
     cubes: iris.cube.Cube | iris.cube.CubeList
-        Each cube is checked to determine if it has the the necessary
-        dimensional coordinates to be aggregatable, being processed if needed.
+        Each cube is checked to determine if it has the necessary time
+        coordinates (either as dimension or auxiliary coordinates) to be
+        aggregatable, being processed if needed.
+    time_coord_name: str
+        Name of the time coordinate to aggregate over, typically "time" or
+        "forecast_period".
 
     Returns
     -------
     cubes: iris.cube.CubeList
-        A CubeList of time aggregatable cubes.
+        A CubeList of time aggregatable cubes. Each cube will have a
+        ``number_reference_times`` attribute on its time coordinate indicating
+        the number of forecast reference times aggregated.
 
     Raises
     ------
     ValueError
-        If any of the provided cubes cannot be made aggregatable.
+        If any of the provided cubes cannot be made aggregatable (i.e., missing
+        required time coordinates).
 
     Notes
     -----
-    This is a simple operator designed to ensure that a Cube is aggregatable
-    across cases. If a CubeList is presented it will create an aggregatable Cube
-    from that list. Its functionality is for case study (or trial) aggregation
-    to ensure that the full dataset can be loaded as a single cube. This
-    functionality is particularly useful for percentiles, Q-Q plots, and
-    histograms.
+    This operator is designed to ensure that cubes can be aggregated across
+    multiple cases (e.g., different model runs or forecast times). Its
+    functionality is particularly useful for case study or trial aggregation
+    when computing statistics such as percentiles, Q-Q plots, and histograms.
 
-    The necessary dimension coordinates for a cube to be aggregatable are
-    ``forecast_period`` and ``forecast_reference_time``.
+    For cubes to be aggregatable, they must have either:
+
+    - ``forecast_period`` and ``forecast_reference_time`` as dimension
+      or auxiliary coordinates
     """
 
     # Group compatible cubes.
@@ -178,30 +198,46 @@ def ensure_aggregatable_across_cases(
             aggregatable_cubes.append(aggregatable_cube)
             continue
 
-        # Create an aggregatable cube from the provided CubeList.
-        to_merge = iris.cube.CubeList()
         for cube in bucket:
-            try:
-                to_merge.extend(
-                    cube.slices_over(["forecast_period", "forecast_reference_time"])
+            if is_time_aggregatable(cube):
+                to_merge = iris.cube.CubeList()
+                try:
+                    to_merge.extend(
+                        cube.slices_over(["forecast_period", "forecast_reference_time"])
+                    )
+                except iris.exceptions.CoordinateNotFoundError as err:
+                    raise ValueError(
+                        "Cube should have 'forecast_period' and 'forecast_reference_time' dimension coordinates.",
+                        cube,
+                    ) from err
+                aggregatable_cube = to_merge.merge_cube()
+
+                # Add attribute on number of forecast_reference_times
+                aggregatable_cube = _add_nref(aggregatable_cube)
+
+                aggregatable_cubes.append(aggregatable_cube)
+
+            elif is_time_aux_coord(cube):
+                times = identify_unique_times(cube, time_coord_name)
+
+                aggregated_list = [
+                    _aggregate_without_time_dimcoords(
+                        cube, time, iris.analysis.MEAN, None
+                    )
+                    for time in times
+                ]
+
+                cubes_to_merge = iris.cube.CubeList(
+                    itertools.chain.from_iterable(aggregated_list)
                 )
-            except iris.exceptions.CoordinateNotFoundError as err:
+
+                aggregatable_cubes = cubes_to_merge.merge_cube()
+
+            else:
                 raise ValueError(
-                    "Cube should have 'forecast_period' and 'forecast_reference_time' dimension coordinates.",
+                    "Cube is missing required dimension or auxliary time coordinates",
                     cube,
-                ) from err
-        aggregatable_cube = to_merge.merge_cube()
-
-        # Add attribute on number of forecast_reference_times
-        aggregatable_cube = _add_nref(aggregatable_cube)
-
-        # Verify cube is now aggregatable.
-        if not is_time_aggregatable(aggregatable_cube):
-            raise ValueError(
-                "Cube should have 'forecast_period' and 'forecast_reference_time' dimension coordinates.",
-                aggregatable_cube,
-            )
-        aggregatable_cubes.append(aggregatable_cube)
+                )
 
     return aggregatable_cubes
 
@@ -282,3 +318,78 @@ def rolling_window_time_aggregation(
         return new_cubelist[0]
     else:
         return new_cubelist
+
+
+def _aggregate_without_time_dimcoords(cubes, time_coord, aggregator, percentile):
+    """Aggregate cubes at a specific time without time dimension coordinates.
+
+    Arguments
+    ---------
+    cubes: iris.cube.CubeList
+        Cubes to aggregate.
+    time_coord: iris.coords.Coord
+        Single time coordinate point to aggregate at.
+    aggregator: iris.analysis.Aggregator
+        Aggregation method (e.g., iris.analysis.MEAN).
+    percentile: float, optional
+        Percentile value if using PERCENTILE aggregator.
+    """
+    # Handle single cube input
+    if isinstance(cubes, iris.cube.Cube):
+        cubes = iris.cube.CubeList([cubes])
+
+    # Check the supplied time coordinate to make sure it corresponds to a
+    # single time only
+    if len(time_coord.points) != 1:
+        raise ValueError("Time coordinate should specify a single time only")
+
+    # Remove any duplicate cubes in the input
+    cubes = remove_duplicates(cubes)
+
+    time_coord_name = time_coord.name()
+
+    time_constraint = iris.Constraint(
+        coord_values={time_coord_name: lambda cell: cell.point in time_coord.cells()}
+    )
+    cubes_at_time = cubes.extract(time_constraint)
+
+    # Add a temporary "number" coordinate to uniquely label the different
+    # data points at this time
+    number = 0
+    numbered_cubes = iris.cube.CubeList()
+    for cube in cubes_at_time:
+        for slc in cube.slices_over(time_coord_name):
+            number_coord = iris.coords.AuxCoord(number, long_name="number")
+            slc.add_aux_coord(number_coord)
+            numbered_cubes.append(slc)
+            number += 1
+    cubes_at_time = numbered_cubes
+
+    cubes_at_time = cubes_at_time.merge()
+
+    aggregated_cubes = iris.cube.CubeList()
+    for cube in cubes_at_time:
+        # If there was only a single data point at this time, then "number"
+        # will be a scalar coordinate. If so, make it a dimension coordinate
+        # to allow collapsing
+        if not cube.coord_dims("number"):
+            cube = iris.util.new_axis(cube, scalar_coord="number")
+
+        num_cases = cube.coord("number").points.size
+        num_cases_coord = iris.coords.AuxCoord(num_cases, long_name="num_cases")
+        cube.add_aux_coord(num_cases_coord)
+
+        # Do aggregation across the temporary "number" coordinate
+        if isinstance(aggregator, type(iris.analysis.PERCENTILE)):
+            cube = cube.collapsed("number", aggregator, percent=percentile)
+        else:
+            cube = cube.collapsed("number", aggregator)
+
+        # Now remove the "number" coordinate and its cell method
+        cube.remove_coord("number")
+        cell_method = iris.coords.CellMethod(aggregator.name(), coords="number")
+        cube = remove_cell_method(cube, cell_method)
+
+        aggregated_cubes.append(cube)
+
+    return aggregated_cubes
