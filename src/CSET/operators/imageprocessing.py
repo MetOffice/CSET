@@ -324,3 +324,116 @@ def mean_structural_similarity_model_comparisons(
     ssim.long_name = "structural_similarity"
     ssim.units = "1"
     return ssim
+
+
+def spatial_structural_similarity_same_model_comparisons(
+    cube_a: iris.cube.Cube, cube_b: iris.cube.Cube, sigma: float = 1.5
+) -> iris.cube.Cube:
+    r"""Calculate the structural similarity and produces a spatial plot.
+
+    Parameters
+    ----------
+    cubes: iris.cube.Cube
+        A list of exactly two cubes. One must have the cset_comparison_base
+        attribute set to 1, and will be used as the base of the comparison.
+        The cubes must contain a time coordinate.
+    sigma: float, optional
+        The standard deviation of the Gaussian kernel to be used. The default
+        is set to 1.5 to mimic the human eye following [Wangetal2004]_.
+
+    Returns
+    -------
+    iris.cube.Cube
+
+    Raises
+    ------
+    ValueError
+        When the cubes are not compatible, or no time coordinate.
+
+    Notes
+    -----
+    This diagnostic was introduced by Wang et al. (2004) [Wangetal2004]_. It is
+    an image processing diagnostic that takes into account three factors asscoiated
+    with an image: i) luminace, ii) contrast, iii) structure. In calculation terms
+    it is a combination of the intensity, variance, and co-variance of an image. It is
+    calculated as follows:
+
+    .. math:: SSIM(x,y) = \frac{(2\mu_{x}\mu_{y} + C_{1})(2\sigma_{xy} + C_{2})}{(\mu^{2}_{x}\mu^{2}_{y} + C_{1})(\sigma^{2}_{x}\sigma^{2}_{y} + C_{2})}
+
+    for images, x and y, and small constancts C1 and C2, with the other symbols having
+    their usual statistical meaning.
+
+    The diagnostic varies between positive and negative one, on the most part.
+    However, should the data being compared lie outside of the specified data
+    range values larger or smaller can occur. Values close to or exactly 1 imply
+    a perceptably similar image; values close to or exactly -1 imply an anticorrelated
+    image; small values imply the fields are perceptably different.
+
+    The diagnostic has been setup with default values that are designed to mimic the
+    human eye and so are universally applicable irrespective of model resolution.
+    However, it should be noted that the mean structural similarity is not
+    identical to the domain mean of the structural similarity. This difference
+    occurs because the former is calculated over the mean of all the windows
+    (Gaussian kernels) rather than the mean of the grid boxes.
+
+    Further details, including caveats, can be found in Wang et al. (2004)
+    [Wangetal2004]_.
+
+    References
+    ----------
+    .. [Wangetal2004] Wang, Z., Bovik, A.C., Sheikh, H.R., Simoncelli, E.P. (2004)
+       "Image Quality Assessment: From Error Visibility to Structural Similarity."
+       IEEE Transactions on Image Processing, vol. 13, 600-612,
+       doi: 10.1109/TIP.2003.819861
+
+    Examples
+    --------
+    >>> SSIM = imageprocessing.spatial_structural_similarity_model_comparisons(
+            cubes, sigma=1.5)
+    >>> iplt.pcolormesh(SSIM[0,:], cmap=mpl.cm.bwr)
+    >>> plt.gca().coastlines('10m')
+    >>> plt.clim(-1, 1)
+    >>> plt.colorbar()
+    >>> plt.show()
+    """
+    time_coord = next(
+        map(
+            lambda coord: coord.name(),
+            filter(
+                lambda coord: coord.shape > (1,) and coord.name() in ["time", "hour"],
+                cube_a.coords(),
+            ),
+        ),
+        None,
+    )
+
+    if time_coord is None:
+        raise ValueError("Cubes should contain a time coordinate.")
+    ssim = iris.cube.CubeList()
+
+    # Loop over realization and time coordinates.
+    for base_r, other_r in zip(
+        cube_a.slices_over("realization"),
+        cube_b.slices_over("realization"),
+        strict=True,
+    ):
+        for base_t, other_t in zip(
+            base_r.slices_over(time_coord), other_r.slices_over(time_coord), strict=True
+        ):
+            # Use the full array as output will be as a 2D map.
+            ssim_map = base_t.copy()
+            _, ssim_map.data = structural_similarity(
+                base_t.data,
+                other_t.data,
+                data_range=other_t.data.max() - other_t.data.min(),
+                gaussian_weights=True,
+                sigma=sigma,
+                full=True,
+            )
+            ssim.append(ssim_map)
+    # Merge the cube slices into one cube, rename, and change units.
+    ssim = ssim.merge_cube()
+    ssim.standard_name = None
+    ssim.long_name = "structural_similarity"
+    ssim.units = "1"
+    return ssim
