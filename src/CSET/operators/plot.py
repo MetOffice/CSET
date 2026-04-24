@@ -582,7 +582,7 @@ def _set_title_and_filename(
     return plot_title, plot_filename
 
 
-def _set_postage_stamp_title(stamp_coord: iris.cube.Coord) -> str:
+def _set_postage_stamp_title(stamp_coord: iris.coords.Coord) -> str:
     """Control postage stamp plot output titles based on stamp coordinate."""
     if stamp_coord.name() == "realization":
         mtitle = "Member"
