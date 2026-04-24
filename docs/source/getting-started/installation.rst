@@ -46,7 +46,7 @@ You now have CSET installed. Go to :doc:`the next tutorial to run it
 .. note::
 
     To update to the latest release of CSET please re-run these commands and
-    the commands for :doc:`setting up the workflow<run_full_cylc_workflow>`.
+    the commands for :doc:`setting up the workflow <run_full_cylc_workflow>`.
     You can copy your ``rose-suite.conf`` file across to the latest CSET version.
 
 .. _conda: https://docs.conda.io/en/latest/
