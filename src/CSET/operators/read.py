@@ -397,7 +397,7 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
 
 
 def _realization_callback(cube):
-    """Add a realization coordinate, and initialise to 0, in all cubes if not present.
+    """Add a realization coordinate initialised to 0 if missing.
 
     This means deterministic and ensemble cubes can assume realization coordinate through the rest
     of the code.
