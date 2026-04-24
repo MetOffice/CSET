@@ -400,6 +400,41 @@ def slice_over_maybe(cube: iris.cube.Cube, coord_name, index):
     return cube[tuple(slices)]
 
 
+def is_time_aux_coord(cube: iris.cube.Cube) -> bool:
+    """Determine whether a cube has time coordinates as auxiliary coordinates.
+
+    Checks if 'forecast_period' and 'forecast_reference_time' exist as
+    auxiliary coordinates rather than dimension coordinates.
+
+    Arguments
+    ---------
+    cube: iris.cube.Cube
+        An iris cube which will be checked to see if it contains
+        'forecast_period' and 'forecast_reference_time' as auxiliary
+        coordinates.
+
+    Returns
+    -------
+    bool
+        If true, then the cube has both 'forecast_period' and
+        'forecast_reference_time' as auxiliary coordinates (not dimension
+        coordinates).
+    """
+    # Acceptable time coordinate names
+    TEMPORAL_COORD_NAMES = ["forecast_period", "forecast_reference_time"]
+
+    # Get auxiliary coordinate names (coords that are not dimension coords)
+    aux_coord_names = [coord.name() for coord in cube.aux_coords]
+
+    # Check which temporal coordinates we have as auxiliary coordinates
+    temporal_aux_coords = [
+        coord for coord in aux_coord_names if coord in TEMPORAL_COORD_NAMES
+    ]
+
+    # Return whether both coordinates are auxiliary coordinates
+    return len(temporal_aux_coords) == 2
+
+
 def is_time_aggregatable(cube: iris.cube.Cube) -> bool:
     """Determine whether a cube can be aggregated in time.
 
@@ -437,3 +472,109 @@ def is_time_aggregatable(cube: iris.cube.Cube) -> bool:
     temporal_coords = [coord for coord in coord_names if coord in TEMPORAL_COORD_NAMES]
     # Return whether both coordinates are in the temporal coordinates.
     return len(temporal_coords) == 2
+
+
+def guess_bounds(cube):
+    """
+    Guess bounds for x and y coordinates on a cube.
+
+    Arguments
+    ---------
+    cube: iris.cube.Cube
+        Input cube whose x and y coordinate bounds will be guessed if missing.
+
+    Returns
+    -------
+    iris.cube.Cube
+        The same cube with bounds added to x and y coordinates where absent.
+
+    Raises
+    ------
+    ValueError
+        If the cube uses a variable resolution grid where bounds cannot be
+        guessed reliably.
+    """
+    # Loop over spatial coordinates
+    for axis in ["x", "y"]:
+        coord = cube.coord(axis=axis)
+        try:
+            _ = iris.util.regular_step(coord)
+        except ValueError as e:
+            logging.warning(
+                "Cannot guess bounds for a variable resolution (non-regular) grid: %s",
+                e,
+            )
+        # Guess bounds if there aren't any
+        if coord.bounds is None:
+            coord.guess_bounds()
+    return cube
+
+
+def identify_unique_times(cubes, time_coord_name):
+    """Identify unique time points across a Cube or CubeList.
+
+    Arguments
+    ---------
+    cubes: iris.cube.Cube | iris.cube.CubeList
+        A single cube or CubeList to extract unique times from.
+    time_coord_name: str
+        Name of the time coordinate to extract (e.g., "time", "forecast_period").
+
+    Returns
+    -------
+    time_coord: iris.coords.DimCoord
+        A dimension coordinate containing all unique time points sorted in order.
+    """
+    # Handle single cube input
+    if isinstance(cubes, iris.cube.Cube):
+        cubes = iris.cube.CubeList([cubes])
+
+    times = []
+    time_unit = None
+    # Loop over cubes
+    for cube in cubes:
+        # Extract the desired time coordinate from the cube
+        time_coord = cube.coord(time_coord_name)
+
+        # Get the units for the specified time coordinate
+        if time_unit is None:
+            time_unit = time_coord.units
+
+        # Store the time coordinate points
+        times.extend(time_coord.points)
+
+    # Construct a list of unique times and store them in a new time coordinate
+    times = sorted(list(set(times)))
+    time_coord = iris.coords.DimCoord(times, units=time_unit)
+    time_coord.rename(time_coord_name)
+
+    return time_coord
+
+
+def remove_cell_method(cube, cell_method):
+    cell_methods = [cm for cm in cube.cell_methods if cm != cell_method]
+    cube.cell_methods = ()
+    for cm in cell_methods:
+        cube.add_cell_method(cm)
+    return cube
+
+
+def remove_duplicates(cubelist):
+    # Nothing to do if the cubelist is empty
+    if not cubelist:
+        return cubelist
+    # Build up a list of indices of the cubes to remove because they are
+    # duplicated
+    indices_to_remove = []
+    for i in range(len(cubelist) - 1):
+        cube_i = cubelist[i]
+        for j in range(i + 1, len(cubelist)):
+            cube_j = cubelist[j]
+            if cube_i == cube_j:
+                if j not in indices_to_remove:
+                    indices_to_remove.append(j)
+    # Only keep unique cubes
+    cubelist = iris.cube.CubeList(
+        [cube for index, cube in enumerate(cubelist) if index not in indices_to_remove]
+    )
+    return cubelist
