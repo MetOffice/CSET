@@ -1,5 +1,5 @@
 category: Perturbations
-title: $MODEL_NAME Normalised Mesoscale Gaussian Filter Spatial Perturbation for 10 m gusts and screen level RH
+title: $MODEL_NAME Normalised Mesoscale Gaussian Filter Spatial Perturbation SSIM for 10 m gusts and screen level RH
 description: |
   Creates a spatial map of a perturbation field based on a Gaussian filter
   over a 40 grid point halfwidth. The field is normalized prior to the filter application.
@@ -8,33 +8,52 @@ description: |
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
-    constraints: ["gust_wind_speed_at_10m", "relative_humidity_at_screen_level"]
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
-  - operator: filter.filter_multiple_cubes
-    constraint:
-      operator: constraints.combine_constraints
-      varname_constraint:
-        operator: constraints.generate_var_constraint
-        varname:
-      cell_methods_constraint:
-        operator: constraints.generate_cell_methods_constraint
-        cell_methods: []
-        varname: ["gust_wind_speed_at_10m", "relative_humidity_at_screen_level"]
-      level_constraint:
-        operator: constraints.generate_level_constraint
-        coordinate: "pressure"
-        levels: []
-
-
-  - operator: misc.normalize
-
-  - operator: mesoscale.spatial_perturbation_field
-    apply_gaussian_filter: True
-    filter_scale: 40
-
-  - operator: imageprocessing.spatial_structural_similarity_model_comparisons
+  - operator: imageprocessing.spatial_structural_similarity_same_model_comparisons
+    cube_a:
+        operator: misc.normalize
+        cubes:
+            operator: mesoscale.spatial_perturbation_field
+            original_field:
+                operator: filters.filter_multiple_cubes
+                constraint:
+                    operator: constraints.combine_constraints
+                    varname_constraint:
+                        operator: constraints.generate_var_constraint
+                        varname: "gust_of_wind_speed_at_10m"
+                    cell_methods_constraint:
+                        operator: constraints.generate_cell_methods_constraint
+                        cell_methods: []
+                        varname: "gust_of_wind_speed_at_10m"
+                    level_constraint:
+                        operator: constraints.generate_level_constraint
+                        coordinate: "pressure"
+                        levels: []
+            apply_gaussian_filter: True
+            filter_scale: 40
+    cube_b:
+        operator: misc.normalize
+        cubes:
+            operator: mesoscale.spatial_perturbation_field
+            original_field:
+                operator: filters.filter_multiple_cubes
+                constraint:
+                    operator: constraints.combine_constraints
+                    varname_constraint:
+                        operator: constraints.generate_var_constraint
+                        varname: "relative_humidity_at_screen_level"
+                    cell_methods_constraint:
+                        operator: constraints.generate_cell_methods_constraint
+                        cell_methods: []
+                        varname: "relative_humidity_at_screen_level"
+                    level_constraint:
+                        operator: constraints.generate_level_constraint
+                        coordinate: "pressure"
+                        levels: []
+            apply_gaussian_filter: True
+            filter_scale: 40
     sigma: 1.5
 
   - operator: plot.spatial_pcolormesh_plot
