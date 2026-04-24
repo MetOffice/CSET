@@ -260,7 +260,7 @@ def test_valid_stamp_coord_not_in_cube(cube):
     assert operator_utils.check_stamp_coordinate(cube) == "realization"
 
 
-def test_valid_stamp_coord_in_cube_valid(cube):
+def test_valid_stamp_coord_in_cube_valid():
     """Check that alternative valid stamp coordinate identified if in cube."""
     for stamp in ["realization", "member", "pseudo_level"]:
         foo_coord = iris.coords.DimCoord([0], var_name=stamp)
@@ -270,7 +270,7 @@ def test_valid_stamp_coord_in_cube_valid(cube):
         assert operator_utils.check_stamp_coordinate(original) == stamp
 
 
-def test_valid_stamp_coord_in_cube_nonvalid(cube):
+def test_valid_stamp_coord_in_cube_nonvalid():
     """Check that alternative nonvalid stamp coordinate defaults."""
     for stamp in ["really", "memb", "pseudo"]:
         foo_coord = iris.coords.DimCoord([0], var_name=stamp)
