@@ -278,7 +278,13 @@ def _check_input_files(input_paths: str | list[str]) -> list[Path]:
 
 
 def _merge_cubes_check_ensemble(cubes: iris.cube.CubeList):
-    """Attempt to merge CubeList. If unsuccessful indicates common input cube attributes, so update realization to support ensemble inputs."""
+    """Merge CubeList, renumbering realizations of 0 if required.
+
+    An unsuccessful merge indicates common input cube attributes, most
+    commonly from ensemble members missing an explicit realization
+    coordinate. Therefore the members are renumbered before being merged
+    again.
+    """
     try:
         cubes = cubes.merge()
     except iris.exceptions.MergeError:
