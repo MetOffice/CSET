@@ -582,12 +582,18 @@ def _set_title_and_filename(
     return plot_title, plot_filename
 
 
-def _set_postage_stamp_title(stamp_coordinate: str) -> str:
-    """Control postage stamp plot output titles."""
-    if stamp_coordinate == "realization":
+def _set_postage_stamp_title(stamp_coord: iris.cube.Coord) -> str:
+    """Control postage stamp plot output titles based on stamp coordinate."""
+    if stamp_coord.name() == "realization":
         mtitle = "Member"
     else:
-        mtitle = stamp_coordinate.capitalize()
+        mtitle = stamp_coord.name().capitalize()
+
+    if stamp_coord.name() == "time":
+        mtitle = f"{mtitle} #{stamp_coord.units.title(stamp_coord.points[0])}"
+    else:
+        mtitle = f"{mtitle} #{stamp_coord.points[0]}"
+
     return mtitle
 
 
@@ -928,8 +934,8 @@ def _plot_and_save_postage_stamp_spatial_plot(
                 linestyles="--",
                 linewidths=1,
             )
-        mtitle = _set_postage_stamp_title(stamp_coordinate)
-        axes.set_title(f"{mtitle} #{member.coord(stamp_coordinate).points[0]}")
+        mtitle = _set_postage_stamp_title(member.coord(stamp_coordinate))
+        axes.set_title(f"{mtitle}")
 
     # Put the shared colorbar in its own axes.
     colorbar_axes = fig.add_axes([0.15, 0.05, 0.7, 0.03])
@@ -1544,8 +1550,8 @@ def _plot_and_save_postage_stamp_histogram_series(
         member_data_1d = (member.data).flatten()
         plt.hist(member_data_1d, density=True, stacked=True)
         ax = plt.gca()
-        mtitle = _set_postage_stamp_title(stamp_coordinate)
-        ax.set_title(f"{mtitle} #{member.coord(stamp_coordinate).points[0]}")
+        mtitle = _set_postage_stamp_title(member.coord(stamp_coordinate))
+        ax.set_title(f"{mtitle}")
         ax.set_xlim(vmin, vmax)
 
     # Overall figure title.
@@ -1575,12 +1581,12 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
         # Flatten the member data to 1D
         member_data_1d = member.data.flatten()
         # Plot the histogram using plt.hist
-        mtitle = _set_postage_stamp_title(stamp_coordinate)
+        mtitle = _set_postage_stamp_title(member.coord(stamp_coordinate))
         plt.hist(
             member_data_1d,
             density=True,
             stacked=True,
-            label=f"{mtitle} #{member.coord(stamp_coordinate).points[0]}",
+            label=f"{mtitle}",
         )
 
     # Add a legend
@@ -1913,7 +1919,8 @@ def _spatial_plot(
     cube = _check_single_cube(cube)
 
     # Check if there is a valid stamp coordinate in cube dimensions.
-    stamp_coordinate = check_stamp_coordinate(cube)
+    if stamp_coordinate == "realization":
+        stamp_coordinate = check_stamp_coordinate(cube)
 
     # Make postage stamp plots if stamp_coordinate exists and has more than a
     # single point.
@@ -3199,7 +3206,8 @@ def plot_histogram_series(
             single_cube = cube_slice[0]
 
         # Ensure valid stamp coordinate in cube dimensions
-        stamp_coordinate = check_stamp_coordinate(single_cube)
+        if stamp_coordinate == "realization":
+            stamp_coordinate = check_stamp_coordinate(single_cube)
         # Set plot titles and filename, based on sequence coordinate
         seq_coord = single_cube.coord(sequence_coordinate)
         # Use time coordinate in title and filename if single histogram output.
@@ -3356,7 +3364,8 @@ def plot_power_spectrum_series(
             single_cube = cube_slice[0]
 
         # Set stamp coordinate
-        stamp_coordinate = check_stamp_coordinate(single_cube)
+        if stamp_coordinate == "realization":
+            stamp_coordinate = check_stamp_coordinate(single_cube)
         # Set plot title and filenames based on sequence values
         seq_coord = single_cube.coord(sequence_coordinate)
         plot_title, plot_filename = _set_title_and_filename(
