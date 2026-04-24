@@ -371,7 +371,7 @@ def _setup_spatial_map(
         Matplotlib Figure object holding all plot elements.
     cmap:
         Matplotlib colormap.
-    grid_size: (int,int) optional
+    grid_size: (int, int), optional
         Size of grid (rows, cols) for subplots if multiple spatial subplots in figure.
     subplot: int, optional
         Subplot index if multiple spatial subplots in figure.
