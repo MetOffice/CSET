@@ -534,6 +534,21 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+        # Wind gust exceeding 25 m/s
+        if conf.GUST_EXCEEDING_25_m_per_s:
+            yield RawRecipe(
+                recipe="wind_gust_exceedance.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
+
     if conf.SPATIAL_MULTI_VARIABLE:
         for model, method in itertools.product(models, conf.SPATIAL_MULTI_FIELD_METHOD):
             # Multi-variable spatial plotting.
