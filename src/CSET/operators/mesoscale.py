@@ -114,9 +114,7 @@ def spatial_perturbation_field(
         else:
             logging.info("Uniform filter applied.")
             filter_type = "Uniform"
-            pert_field.data -= uniform_filter(
-                original_field.core_data(), filter_scale, axes=axes
-            )
+            pert_field.data -= uniform_filter(cube.core_data(), filter_scale, axes=axes)
         # provide attributes to cube to indicate spatial perturbation field
         pert_field.attributes["perturbation_field"] = (
             f"{filter_type}_with_{str(filter_scale)}_grid_point_filter_scale"
