@@ -194,7 +194,7 @@ def read_cubes(
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
 
     # Merge and concatenate cubes now metadata has been fixed.
-    cubes = cubes.merge()
+    cubes = _merge_cubes_check_ensemble(cubes)
     cubes = cubes.concatenate()
 
     # Squeeze single valued coordinates into scalar coordinates.
@@ -275,6 +275,22 @@ def _check_input_files(input_paths: str | list[str]) -> list[Path]:
     if len(files) == 0:
         raise FileNotFoundError(f"No files found for {input_paths}")
     return files
+
+
+def _merge_cubes_check_ensemble(cubes: iris.cube.CubeList):
+    """Attempt to merge CubeList. If unsuccessful indicates common input cube attributes, so update realization to support ensemble inputs."""
+    try:
+        cubes = cubes.merge()
+    except iris.exceptions.MergeError:
+        _log_once(
+            "Attempt to merge input CubeList failed. Attempting to iterate realization coords to enable merge.",
+            level=logging.WARNING,
+        )
+        for ir, cube in enumerate(cubes):
+            if cube.coord("realization").points == 0:
+                cube.coord("realization").points = ir + 1
+        cubes = cubes.merge()
+    return cubes
 
 
 def _cutout_cubes(
@@ -360,6 +376,7 @@ def _cutout_cubes(
 def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.Cube:
     """Compose together the needed callbacks into a single function."""
     # Most callbacks operate in-place, but save the cube when returned!
+    _normalise_ML_grib_varname(cube)
     _realization_callback(cube)
     _um_normalise_callback(cube)
     _lfric_normalise_callback(cube)
@@ -381,9 +398,9 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
 
 
 def _realization_callback(cube):
-    """Give deterministic cubes a realization of 0.
+    """Add a realization coordinate, and initialise to 0, in all cubes if not present.
 
-    This means they can be handled in the same way as ensembles through the rest
+    This means deterministic and ensemble cubes can assume realization coordinate through the rest
     of the code.
     """
     # Only add if realization coordinate does not exist.
@@ -1042,3 +1059,32 @@ def _normalise_ML_varname(cube: iris.cube.Cube):
             cube.long_name = (
                 "vapour_specific_humidity_at_pressure_levels_for_climate_averaging"
             )
+
+
+def _normalise_ML_grib_varname(cube: iris.cube.Cube):
+    """Fix grib metadata varname and tidy attributes."""
+
+    # Lookup table for standard GRIB names
+    GRIB_LOOKUP = {
+        "GRIB2:d000c003n000": {
+            "long_name": "air_pressure_at_mean_sea_level",
+            "standard_name": "air_pressure_at_mean_sea_level",
+        },
+    }
+
+    grib_param = cube.attributes.get("GRIB_PARAM")
+    if grib_param is not None:
+        grib_param = str(grib_param)
+        if grib_param in GRIB_LOOKUP:
+            meta = GRIB_LOOKUP.get(grib_param)
+
+            cube.rename(meta["long_name"])
+            cube.standard_name = meta.get("standard_name")
+            cube.long_name = meta.get("standard_name")
+            logging.info('RENAMED')
+            logging.info(cube)
+            
+
+        cube.attributes.pop("GRIB_PARAM", None)
+        return cube
+
