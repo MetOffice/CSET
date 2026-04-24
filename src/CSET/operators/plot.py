@@ -590,7 +590,7 @@ def _set_postage_stamp_title(stamp_coord: iris.cube.Coord) -> str:
         mtitle = stamp_coord.name().capitalize()
 
     if stamp_coord.name() == "time":
-        mtitle = f"{mtitle} #{stamp_coord.units.title(stamp_coord.points[0])}"
+        mtitle = f"{stamp_coord.units.title(stamp_coord.points[0])}"
     else:
         mtitle = f"{mtitle} #{stamp_coord.points[0]}"
 

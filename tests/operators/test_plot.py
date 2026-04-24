@@ -1231,12 +1231,25 @@ def test_get_start_end_strings_remove_bounds(cube):
     assert fname == "_20220921030000_20220921050000"
 
 
-def test_set_ensemble_title():
-    """Test setting postage stamp title."""
-    assert plot._set_postage_stamp_title("realization") == "Member"
-    assert plot._set_postage_stamp_title("member") == "Member"
-    assert plot._set_postage_stamp_title("sample") == "Sample"
-    assert plot._set_postage_stamp_title("pseudo_level") == "Pseudo_level"
+def test_set_ensemble_title_realization():
+    """Test setting postage stamp title for different coord inputs."""
+    stamp_coord = iris.coords.DimCoord([1], var_name="realization")
+    assert plot._set_postage_stamp_title(stamp_coord) == "Member #1"
+
+    stamp_coord = iris.coords.DimCoord([1], var_name="member")
+    assert plot._set_postage_stamp_title(stamp_coord) == "Member #1"
+
+    stamp_coord = iris.coords.DimCoord([1], var_name="sample")
+    assert plot._set_postage_stamp_title(stamp_coord) == "Sample #1"
+
+    stamp_coord = iris.coords.DimCoord([1], var_name="pseudo_level")
+    assert plot._set_postage_stamp_title(stamp_coord) == "Pseudo_level #1"
+
+
+def test_set_ensemble_title_time(cube):
+    """Test setting postage stamp title for time stamp_coord input."""
+    stamp_coord = cube.coord("time")
+    assert plot._set_postage_stamp_title(stamp_coord) == "2022-09-21 03:00:00"
 
 
 def test_invalid_plotting_method_spatial_plot(cube, tmp_working_dir):
