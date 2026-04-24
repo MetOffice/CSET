@@ -1,5 +1,5 @@
 category: Convection
-title: "Daily occurrence of lightning at 0900 UTC\nDifference ($BASE_MODEL - $OTHER_MODEL)"
+title: "Daily occurrence of lightning at 0900 UTC\nDifference ($OTHER_MODEL - $BASE_MODEL)"
 description: |
   Extracts and plots the daily presence of lightning between 0900 UTC and 0900 UTC
   the following day and plots the difference. The presence
