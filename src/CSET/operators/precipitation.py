@@ -152,7 +152,7 @@ def MAUL_properties(
             case "base":
                 maul_base.units = "m"
                 maul_base.rename("MAUL_base_height")
-                maul_d.append(maul_base)
+                maul_b.append(maul_base)
             case _:
                 raise ValueError("""Unexpected value for output. Expected number,
                                  depth, base or top. Got {output}.""")
