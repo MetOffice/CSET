@@ -1,21 +1,24 @@
+
 {% if METPLUS_POINT_STAT|default(False) %}
 [scheduling]
     [[graph]]
+    {% macro metplus_point_stat_graph() %}
+        metplus_prep_obs => metplus_ascii2nc
+        fetch_fcst_m1 => metplus_prep_fcst_m1
+        metplus_prep_fcst_m1 => metplus_point_stat
+        metplus_prep_fcst_m1 => housekeeping
+        metplus_ascii2nc => metplus_point_stat
+    {% endmacro %}
+
     {% if CSET_CYCLING_MODE == "case_study" %}
         {% for date in CSET_CASE_DATES %}
             R1/{{date}} = """
-                metplus_prep_obs => metplus_ascii2nc
-                fetch_fcst_m1 => metplus_prep_fcst_m1
-                metplus_prep_fcst_m1 => metplus_point_stat
-                metplus_ascii2nc => metplus_point_stat
+                    {{metplus_point_stat_graph()}}
                 """
         {% endfor %}
     {% elif CSET_CYCLING_MODE == "trial" %}
         {{CSET_TRIAL_CYCLE_PERIOD}} = """
-                metplus_prep_obs => metplus_ascii2nc
-                fetch_fcst_m1 => metplus_prep_fcst_m1
-                metplus_prep_fcst_m1 => metplus_point_stat
-                metplus_ascii2nc => metplus_point_stat
+                    {{metplus_point_stat_graph()}}
                 """
     {% endif %}
     R1/$ = metplus_point_stat => verpy_metloader_pointstat
