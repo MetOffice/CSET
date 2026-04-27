@@ -1123,6 +1123,20 @@ def test_proleptic_gregorian_fix():
     assert cube.coord("time").units.origin == "hours since 1970-01-01T00:00:00"
 
 
+def test_fix_no_time_coords_callback(cube):
+    """Check that a time scalar coordinate is added to a non-time-varying input."""
+    cube = cube[0]
+    cube.remove_coord("time")
+    coord_names = [coord.name() for coord in cube.coords()]
+    assert "time" not in coord_names
+
+    cube = read._fix_no_time_coords_callback(cube)
+    coord_names = [coord.name() for coord in cube.coords()]
+    assert "time" in coord_names
+    assert len(cube.coord("time").points) == 1
+    assert cube.coord("time").units == "hours since 0001-01-01 00:00:00"
+
+
 def test_normalise_ML_varname(transect_source_cube):
     """Check that pressure varname is changed."""
     cube = transect_source_cube.copy()

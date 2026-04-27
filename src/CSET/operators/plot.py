@@ -50,6 +50,7 @@ from CSET._common import (
     slugify,
 )
 from CSET.operators._utils import (
+    check_stamp_coordinate,
     fully_equalise_attributes,
     get_cube_yxcoordname,
     is_transect,
@@ -336,7 +337,10 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
             vmin, vmax = var_colorbar["min"], var_colorbar["max"]
             logging.debug("Using min and max for %s colorbar.", varname)
             # Calculate levels from range.
-            levels = np.linspace(vmin, vmax, 101)
+            if vmin == "auto" or vmax == "auto":
+                levels = None
+            else:
+                levels = np.linspace(vmin, vmax, 101)
             norm = None
 
         # Overwrite cmap, levels and norm for specific variables that
@@ -439,13 +443,19 @@ def _setup_spatial_map(
             axes = figure.add_subplot(projection=projection)
 
         # Add coastlines and borderlines if cube contains x and y map coordinates.
-        if cmap.name in ["viridis", "Greys"]:
-            coastcol = "magenta"
+        # Avoid adding lines for masked data or specific fixed ancillary spatial plots.
+        if iris.util.is_masked(cube.data) or any(
+            name in cube.name() for name in ["land_", "orography", "altitude"]
+        ):
+            pass
         else:
-            coastcol = "black"
-        logging.debug("Plotting coastlines and borderlines in colour %s.", coastcol)
-        axes.coastlines(resolution="10m", color=coastcol)
-        axes.add_feature(cfeature.BORDERS, edgecolor=coastcol)
+            if cmap.name in ["viridis", "Greys"]:
+                coastcol = "magenta"
+            else:
+                coastcol = "black"
+            logging.debug("Plotting coastlines and borderlines in colour %s.", coastcol)
+            axes.coastlines(resolution="10m", color=coastcol)
+            axes.add_feature(cfeature.BORDERS, edgecolor=coastcol)
 
         # Add gridlines.
         if subplot is None:
@@ -495,6 +505,15 @@ def _get_start_end_strings(seq_coord: iris.coords.Coord, use_bounds: bool):
     else:
         sequence_title = f"\n [{start} to {end}]"
         sequence_fname = f"_{filename_slugify(start)}_{filename_slugify(end)}"
+
+    # Do not include time if coord set to zero.
+    if (
+        seq_coord.units == "hours since 0001-01-01 00:00:00"
+        and vals[0] == 0
+        and vals[-1] == 0
+    ):
+        sequence_title = ""
+        sequence_fname = ""
 
     return sequence_title, sequence_fname
 
@@ -763,11 +782,11 @@ def _plot_and_save_spatial_plot(
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
     axes.annotate(
         f"Min: {np.min(cube.data):.3g} Max: {np.max(cube.data):.3g} Mean: {np.mean(cube.data):.3g}",
-        xy=(1, yinfopad),
+        xy=(0.025, yinfopad),
         xycoords="axes fraction",
         xytext=(-5, 5),
         textcoords="offset points",
-        ha="right",
+        ha="left",
         va="bottom",
         size=11,
         bbox=dict(boxstyle="round", fc="#cccccc", ec="#808080", alpha=0.9),
@@ -842,7 +861,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
     # Use the smallest square grid that will fit the members.
     grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
 
-    fig = plt.figure(figsize=(10, 10))
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
     # Specify the color bar
     cmap, levels, norm = _colorbar_map_levels(cube)
@@ -910,7 +929,6 @@ def _plot_and_save_postage_stamp_spatial_plot(
                 linewidths=1,
             )
         axes.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
-        axes.set_axis_off()
 
     # Put the shared colorbar in its own axes.
     colorbar_axes = fig.add_axes([0.15, 0.07, 0.7, 0.03])
@@ -1340,7 +1358,7 @@ def _plot_and_save_vector_plot(
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
     axes.annotate(
         f"Min: {np.min(cube_vec_mag.data):.3g} Max: {np.max(cube_vec_mag.data):.3g} Mean: {np.mean(cube_vec_mag.data):.3g}",
-        xy=(1, -0.05),
+        xy=(0.05, -0.05),
         xycoords="axes fraction",
         xytext=(-5, 5),
         textcoords="offset points",
@@ -1518,9 +1536,9 @@ def _plot_and_save_postage_stamp_histogram_series(
         # Otherwise we plot xdim histograms stacked.
         member_data_1d = (member.data).flatten()
         plt.hist(member_data_1d, density=True, stacked=True)
-        ax = plt.gca()
-        ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
-        ax.set_xlim(vmin, vmax)
+        axes = plt.gca()
+        axes.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
+        axes.set_xlim(vmin, vmax)
 
     # Overall figure title.
     fig.suptitle(title, fontsize=16)
@@ -1782,9 +1800,9 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
 
         frequency = member.coord("frequency").points
 
-        ax = plt.gca()
-        ax.plot(frequency, member.data)
-        ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
+        axes = plt.gca()
+        axes.plot(frequency, member.data)
+        axes.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
 
     # Overall figure title.
     fig.suptitle(title, fontsize=16)
@@ -1877,6 +1895,9 @@ def _spatial_plot(
 
     # Ensure we've got a single cube.
     cube = _check_single_cube(cube)
+
+    # Test if valid stamp coordinate in cube dimensions.
+    stamp_coordinate = check_stamp_coordinate(cube)
 
     # Make postage stamp plots if stamp_coordinate exists and has more than a
     # single point.
