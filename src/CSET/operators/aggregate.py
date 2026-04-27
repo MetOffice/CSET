@@ -231,7 +231,9 @@ def ensure_aggregatable_across_cases(
                     itertools.chain.from_iterable(aggregated_list)
                 )
 
-                aggregatable_cubes = cubes_to_merge.merge_cube()
+                aggregatable_cube = cubes_to_merge.merge_cube()
+                aggregatable_cube = _add_nref(aggregatable_cube)
+                aggregatable_cubes.append(aggregatable_cube)
 
             else:
                 raise ValueError(
