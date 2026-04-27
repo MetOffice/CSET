@@ -378,6 +378,24 @@ def test_set_title_and_filename_multidim_aggregated(long_forecast_multi_day):
     assert plot_title == "recipe\n [3 cases]"
 
 
+def test_set_title_and_filename_year_one(cube):
+    """Ensure no time information in plot title and filename for dummy time output."""
+    # Extract first time from test cube.
+    cube = cube[0]
+    # Set time coordinate to 0001-01-01 0hrs and remove bounds.
+    cube.coord("time").units = "hours since 0001-01-01 00:00:00"
+    cube.coord("time").points = 0
+    cube.coord("time").bounds = None
+    seq_coord = cube.coord("time")
+    # Check no time information added to plot title or filename
+    nplot = 1
+    plot_title, plot_filename = plot._set_title_and_filename(
+        seq_coord, nplot, "recipe", None
+    )
+    assert plot_filename == "recipe.png"
+    assert plot_title == "recipe"
+
+
 def test_colorbar_map_mask(cube, tmp_working_dir):
     """Test to ensure axis picks up correct colormap for a mask."""
     cube.rename(f"mask_for_{cube.name()}")

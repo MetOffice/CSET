@@ -358,10 +358,8 @@ def check_stamp_coordinate(cube: iris.cube.Cube) -> str:
     stamp_coords = [coord for coord in dim_coord_names if coord in STAMP_COORD_NAMES]
     if len(stamp_coords) == 1:
         stamp_coordinate = stamp_coords[0]
-        logging.debug("Retained valid stamp_coordinate from cube: %s", stamp_coordinate)
     else:
         stamp_coordinate = "realization"
-        logging.debug("Default stamp_coordinate assumed: %s", stamp_coordinate)
 
     return stamp_coordinate
 

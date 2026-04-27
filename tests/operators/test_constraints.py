@@ -72,6 +72,13 @@ def test_generate_cell_methods_constraint_varname():
     assert expected_cell_methods_constraint in repr(cell_methods_constraint)
 
 
+def test_generate_cell_methods_mean_constraint_varname():
+    """Generate variable-dependent iris cube constrain for mean cell methods."""
+    cell_methods_constraint = constraints.generate_cell_methods_constraint([], "albedo")
+    expected_cell_methods_constraint = "Constraint(cube_func=<function generate_cell_methods_constraint.<locals>.check_cell_mean at"
+    assert expected_cell_methods_constraint in repr(cell_methods_constraint)
+
+
 def test_generate_time_constraint():
     """Generate iris cube constraint for dates."""
     # Try with str dates
