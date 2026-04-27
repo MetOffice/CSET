@@ -45,7 +45,9 @@ def test_ensure_aggregatable_across_cases_true_aggregatable_cube(
     long_forecast_multi_day,
 ):
     """Check that an aggregatable cube is returned with no changes."""
-    cubes = aggregate.ensure_aggregatable_across_cases(long_forecast_multi_day)
+    cubes = aggregate.ensure_aggregatable_across_cases(
+        long_forecast_multi_day, time_coord_name="time"
+    )
     assert len(cubes) == 1
     cube = cubes[0]
     assert np.allclose(
@@ -59,19 +61,25 @@ def test_ensure_aggregatable_across_cases_true_aggregatable_cube(
 def test_ensure_aggregatable_across_cases_false_aggregatable_cube(cardington_cube):
     """Check that a non-aggregatable cube raises an error."""
     with pytest.raises(ValueError):
-        aggregate.ensure_aggregatable_across_cases(cardington_cube)
+        aggregate.ensure_aggregatable_across_cases(
+            cardington_cube, time_coord_name="time"
+        )
 
 
 def test_ensure_aggregatable_across_cases_cubelist(
     long_forecast_many_cubes, long_forecast_multi_day
 ):
     """Check that a CubeList turns into an aggregatable Cube."""
-    output_data = aggregate.ensure_aggregatable_across_cases(long_forecast_multi_day)
+    output_data = aggregate.ensure_aggregatable_across_cases(
+        long_forecast_multi_day, time_coord_name="time"
+    )
     assert isinstance(output_data, iris.cube.CubeList)
     assert len(output_data) == 1
 
     # Check output is a Cube.
-    output_data = aggregate.ensure_aggregatable_across_cases(long_forecast_many_cubes)
+    output_data = aggregate.ensure_aggregatable_across_cases(
+        long_forecast_many_cubes, time_coord_name="time"
+    )
     assert isinstance(output_data, iris.cube.CubeList)
     assert len(output_data) == 1
     cube = output_data[0]
@@ -93,7 +101,7 @@ def test_ensure_aggregatable_across_cases_different_buckets(
     other = long_forecast_multi_day.copy()
     other.rename("other_variable")
     cubes = iris.cube.CubeList([long_forecast_multi_day, other])
-    output = aggregate.ensure_aggregatable_across_cases(cubes)
+    output = aggregate.ensure_aggregatable_across_cases(cubes, time_coord_name="time")
     assert isinstance(output, iris.cube.CubeList)
     assert len(output) == 2
 
@@ -101,15 +109,19 @@ def test_ensure_aggregatable_across_cases_different_buckets(
 def test_ensure_aggregatable_across_cube_coord_attribute(long_forecast_multi_day):
     """Check that aggregatable cubes preserve information on Ncases."""
     print(long_forecast_multi_day)
-    output_data = aggregate.ensure_aggregatable_across_cases(long_forecast_multi_day)
+    output_data = aggregate.ensure_aggregatable_across_cases(
+        long_forecast_multi_day, time_coord_name="time"
+    )
     print(output_data)
-    assert output_data[0].coord("time").attributes["number_reference_times"] == 3
+    assert output_data[0].coord("time").attributes["number_reference_times"] == 1
 
 
 def test_ensure_aggregatable_across_cases_coord_attribute(long_forecast_many_cubes):
     """Check that aggregatable cubes preserve information on Ncases."""
-    output_data = aggregate.ensure_aggregatable_across_cases(long_forecast_many_cubes)
-    assert output_data[0].coord("time").attributes["number_reference_times"] == 3
+    output_data = aggregate.ensure_aggregatable_across_cases(
+        long_forecast_many_cubes, time_coord_name="time"
+    )
+    assert output_data[0].coord("time").attributes["number_reference_times"] == 1
 
 
 def test_add_hour_coordinate(long_forecast):
