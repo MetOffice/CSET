@@ -22,11 +22,11 @@ steps:
                     operator: constraints.combine_constraints
                     varname_constraint:
                         operator: constraints.generate_var_constraint
-                        varname: "gust_of_wind_speed_at_10m"
+                        varname: "gust_wind_speed_at_10m"
                     cell_methods_constraint:
                         operator: constraints.generate_cell_methods_constraint
                         cell_methods: []
-                        varname: "gust_of_wind_speed_at_10m"
+                        varname: "gust_wind_speed_at_10m"
                     level_constraint:
                         operator: constraints.generate_level_constraint
                         coordinate: "pressure"
