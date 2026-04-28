@@ -2,6 +2,7 @@
 /site/
 /opt/
 /app/demo_pointstat/
+/app/*/opt/rose-app-*.conf
 *metdb*
 restricted*
 
