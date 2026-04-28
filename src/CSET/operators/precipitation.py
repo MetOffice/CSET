@@ -35,7 +35,6 @@ def MAUL_properties(
         number_of_MAULs.data[:] = 0.0
         maul_depth = number_of_MAULs.copy()
         maul_base = number_of_MAULs.copy()
-        print(maul_base)
         mem_number = 0
         for member in cube.slices_over("realization"):
             time_point = 0
@@ -64,13 +63,13 @@ def MAUL_properties(
                             maul_start = []
                             maul_end = []
                             maul_dep = []
-                            for maul in range(0, np.max(labels)):
+                            for maul in range(1, np.max(labels)):
                                 maul_range = np.where(labels == maul)
                                 maul_start_point = lon.coord("level_height").points[
-                                    maul_range[0]
+                                    maul_range[0][0]
                                 ]
                                 maul_end_point = lon.coord("level_height").points[
-                                    maul_range[0]
+                                    maul_range[0][-1]
                                 ]
                                 maul_dep.append(maul_end_point - maul_start_point)
                                 maul_start.append(maul_start_point)
