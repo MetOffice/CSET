@@ -360,6 +360,7 @@ def _cutout_cubes(
 def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.Cube:
     """Compose together the needed callbacks into a single function."""
     # Most callbacks operate in-place, but save the cube when returned!
+    _urbanscale_ML_all_callback(cube)
     _realization_callback(cube)
     _um_normalise_callback(cube)
     _lfric_normalise_callback(cube)
@@ -1056,3 +1057,85 @@ def _normalise_ML_varname(cube: iris.cube.Cube):
             cube.long_name = (
                 "vapour_specific_humidity_at_pressure_levels_for_climate_averaging"
             )
+
+
+def _urbanscale_ML_all_callback(cube: iris.cube.Cube):
+    """Manipulate urbanscale ML data to enable plotting."""
+    print("CUBE ", cube)
+
+    # temporary conditional statement for urbanscale ML data
+    if cube.coords("input"):
+        # 2a.1 - identify unique forecast reference times in input
+        ref_time_points = cube.coord("forecast_reference_time").units.num2date(
+            cube.coord("forecast_reference_time").points
+        )
+        rtp = np.unique(ref_time_points)
+
+        # 2a.2 - generate new cubelist of extracted cubes for each unique forecast reference time.
+        cubelist = iris.cube.CubeList()
+        for ref in rtp:
+            td = cube.extract(iris.Constraint(forecast_reference_time=ref))
+            frt = td.coord("forecast_reference_time").collapsed()
+            td.remove_coord("forecast_reference_time")
+            td.add_aux_coord(frt)
+
+            # Promote time dimension to DimCoord
+            iris.util.promote_aux_coord_to_dim_coord(td, "time")
+
+            # 2b - ensure grid_longitude within +/-180.
+            # this is done above so don't need??
+            # d = cset_read._grid_longitude_fix_callback(td)
+
+            # 2c - tidy up input dimension so more suitable for iris coord manipulations -
+            #      i.e. turn to int format, rename, and promote to DimCoord
+            inp = td.coord("input").points.astype(int)
+
+            # original code to replace input dimensione with realization
+            # td.add_dim_coord(iris.coords.DimCoord(inp, "realization"),1)
+            # td.remove_coord("input")
+            # td.coord("realization").points = td.coord("realization").points.astype(int)
+            # alternative
+            # Get the existing coord object
+            ip_coord = td.coord("input")
+
+            # Find which dimension it indexes
+            dim = td.coord_dims(ip_coord)[0]
+
+            # Build new numeric realization DimCoord
+            realization = iris.coords.DimCoord(
+                ip_coord.points.astype(int), long_name="realization"
+            )
+
+            # remove input coord
+            td.remove_coord(ip_coord)
+
+            # Then add the new realization DimCoord to the SAME dimension
+            td.add_dim_coord(realization, dim)
+
+            # 2d - merge 'realization' and 'sample' dimensions by computing a new 'sample' identifier:
+            #      Xyy: X == input identifier, yy == sample identifier
+            #      e.g. sample 101 indicating input #1, sample #1; 510 indicating input #5, sample #10 etc.
+            #      Could rename 'sample' to 'realization' if preferred.
+            #    if merge_input_sample:
+            # only allow merging option
+            real_cube = iris.cube.CubeList()
+            for inp in td.coord("realization").points:
+                tdi = td.extract(iris.Constraint(realization=inp))
+                tdi.coord("sample").points = tdi.coord("sample").points + inp * 100
+                tdi.remove_coord("realization")
+
+                # Rename sample -> realization
+                tdi.coord("sample").rename("realization")
+
+                real_cube.append(tdi)
+            real_cube = real_cube.concatenate_cube()
+            ## Now we have Cube (realization: , time:, grid_latitude:, grid_longitude: )
+            # Add cube to CubeList of unique forecast_reference_time
+            cubelist.append(real_cube)
+        cube = cubelist
+    #    else:
+    #       cubelist.append(td)
+    else:
+        pass
+
+    print("END of urbanscale callback", cubelist)
