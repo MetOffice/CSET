@@ -138,3 +138,6 @@ dmypy.json
 
 # NFS synchronisation files
 .nfs*
+
+#MacOS temp files
+.DS_Store
