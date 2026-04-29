@@ -18,7 +18,7 @@
             -q          = normal
             -l ncpus    = 1
             -l mem      = 4gb
-            -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22+gdata/ig2
+            -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22+gdata/ig2+scratch/dx2
             -W umask    = 0022
         [[[ environment ]]]
             ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
@@ -33,7 +33,7 @@
             -q          = normal
             -l ncpus    = 48
             -l mem      = 180gb
-            -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22+gdata/xp65
+            -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22+gdata/xp65+scratch/dx2
             -W umask    = 0022
         [[[ environment ]]]
             BUNCH_POOL_SIZE = $PBS_NCPUS
@@ -46,7 +46,7 @@
             -q          = normal
             -l ncpus    = 48
             -l mem      = 180gb
-            -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22+gdata/xp65
+            -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22+gdata/xp65+scratch/dx2
             -W umask    = 0022
         [[[ environment ]]]
             BUNCH_POOL_SIZE = $PBS_NCPUS
