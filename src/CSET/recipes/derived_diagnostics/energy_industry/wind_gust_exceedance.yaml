@@ -1,0 +1,33 @@
+category: Energy Industry
+title: $MODEL_NAME wind gusts at 10 m exceeding 25 m/s
+description: |
+  Extracts data required for, and calculates a mask of whether the wind gusts at
+  10 m exceed 25 m/s. It then plots the result as a spatial plot.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: "gust_wind_speed_at_10m"
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: "gust_wind_speed_at_10m"
+      level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: "pressure"
+        levels: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: filters.generate_mask
+    condition: "gt"
+    value: 25.0
+
+  - operator: plot.spatial_contour_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
