@@ -130,20 +130,10 @@ def retrieve_nimrod():
     """Fetch the observations corresponding to a model run.
 
     The following environment variables need to be set:
-    * NIMROD_FIELDs
-    #* ANALYSIS_OFFSET
-    #* ANALYSIS_LENGTH
-    #* CYLC_TASK_CYCLE_POINT
-    * DATA_PATH
-    #* DATA_PERIOD
-    #* DATE_TYPE
-    #* MODEL_IDENTIFIER
+    * NIMROD_COMP_XKM, NIMROD_COMP_1KM, NIMROD_COMP_2KM, NIMROD_COMP_5MIN
+    * CYLC_TASK_CYCLE_POINT
+    * ANALYSIS_LENGTH
     * ROSE_DATAC
-
-    Parameters
-    ----------
-    nimrod_retriever: ObsRetriever
-    ObsRetriever implementation to use. Defaults to FilesystemFileRetriever.
 
     Raises
     ------
