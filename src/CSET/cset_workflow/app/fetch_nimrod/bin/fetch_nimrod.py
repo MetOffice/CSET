@@ -17,13 +17,17 @@ iris.FUTURE.date_microseconds = True
 
 def _get_needed_environment_variables_nimrod() -> dict:
     """Load the needed variables from the environment to retrieve UK Nimrod data."""
+    radar_sources = []
+    if os.environ["NIMROD_COMP_XKM"]:
+        radar_sources.append("Nimrod_comp_xkm")
+    if os.environ["NIMROD_COMP_1KM"]:
+        radar_sources.append("Nimrod_comp_1km")
+    if os.environ["NIMROD_COMP_2KM"]:
+        radar_sources.append("Nimrod_comp_2km")
+    if os.environ["NIMROD_COMP_5MIN"]:
+        radar_sources.append("Nimrod_comp_5min")
     variables = {
-        "field": [
-            os.environ["NIMROD_COMP_XKM"],
-            os.environ["NIMROD_COMP_1KM"],
-            os.environ["NIMROD_COMP_2KM"],
-            os.environ["NIMROD_COMP_5MIN"],
-        ],
+        "field": radar_sources,
         "raw_path": "/data/users/radar/UKnimrod",
         "date_type": "initiation",
         "data_time": datetime.fromisoformat(os.environ["CYLC_TASK_CYCLE_POINT"]),
@@ -37,7 +41,7 @@ def _get_needed_environment_variables_nimrod() -> dict:
 def _nimrod_dictionary() -> dict:
     """Write the dictionary to handle Nimrod obs."""
     nimrod_dict = {
-        "rainaccum_comp_hour": {
+        "Nimrod_comp_xkm": {
             "basedir": "/data/users/radar/UKnimrod",
             "obs_dir": "rainaccum_comp_hour",
             "obs_fname": "_nimrod_ng_radar_rainaccum_comp_hour",
@@ -47,7 +51,7 @@ def _nimrod_dictionary() -> dict:
             "wei_id": "Nimrodxkm_weights",
             "freq": "PT1H",
         },
-        "rainaccum_comp_hour_1km_cutout": {
+        "Nimrod_comp_1km": {
             "basedir": "/data/users/radar/UKnimrod",
             "obs_dir": "rainaccum_comp_hour_1km_cutout",
             "obs_fname": "_nimrod_ng_radar_rainaccum_comp_hour_1km_cutout_775X640_eng",
@@ -57,7 +61,7 @@ def _nimrod_dictionary() -> dict:
             "wei_id": "Nimrod1km_weights",
             "freq": "PT1H",
         },
-        "rainaccum_comp_hour_2km": {
+        "Nimrod_comp_2km": {
             "basedir": "/data/users/radar/UKnimrod",
             "obs_dir": "rainaccum_comp_hour_2km",
             "obs_fname": "_nimrod_ng_radar_rainaccum_comp_hour_2km",
@@ -67,7 +71,7 @@ def _nimrod_dictionary() -> dict:
             "wei_id": "Nimrod2km_weights",
             "freq": "PT1H",
         },
-        "rainrate_comp_5min": {
+        "Nimrod_comp_5min": {
             "basedir": "/data/users/radar/UKnimrod",
             "obs_dir": "rainrate_comp_5min",
             "obs_fname": "_nimrod_ng_radar_rainrate_composite_1km_merged",
