@@ -18,13 +18,13 @@ iris.FUTURE.date_microseconds = True
 def _get_needed_environment_variables_nimrod() -> dict:
     """Load the needed variables from the environment to retrieve UK Nimrod data."""
     radar_sources = []
-    if os.environ["NIMROD_COMP_XKM"]:
+    if os.environ["NIMROD_COMP_XKM"] == "True":
         radar_sources.append("Nimrod_comp_xkm")
-    if os.environ["NIMROD_COMP_1KM"]:
+    if os.environ["NIMROD_COMP_1KM"] == "True":
         radar_sources.append("Nimrod_comp_1km")
-    if os.environ["NIMROD_COMP_2KM"]:
+    if os.environ["NIMROD_COMP_2KM"] == "True":
         radar_sources.append("Nimrod_comp_2km")
-    if os.environ["NIMROD_COMP_5MIN"]:
+    if os.environ["NIMROD_COMP_5MIN"] == "True":
         radar_sources.append("Nimrod_comp_5min")
     variables = {
         "field": radar_sources,
