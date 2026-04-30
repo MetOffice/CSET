@@ -47,8 +47,8 @@ def _lat_lon_identifier(original_lat, original_lon, distance, bearing):
     return new_lat, new_lon
 
 
-def curv(central, radius, num_radial_points=16, tol=0):
-    """Calculate the CURV diagnostic."""
+def global_curv(central, radius, num_radial_points=16, tol=0):
+    """Calculate the CURV diagnostic for a global model."""
     if (num_radial_points == 8) or (num_radial_points == 16):
         bearing = np.linspace(0.0, 360.0, num_radial_points + 1)[:-1]
     else:
