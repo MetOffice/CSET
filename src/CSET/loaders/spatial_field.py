@@ -572,6 +572,54 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+    # Number of Moist Absolutely Unstable Layer in a Column
+    if conf.MAUL_NUMBER:
+        for model in models:
+            yield RawRecipe(
+                recipe="number_of_moist_absolutely_unstable_layers_present_in_a_spatial_column.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
+
+    # Moist Absolutely Unstable Layer depth (of deepest)
+    if conf.MAUL_DEPTH:
+        for model in models:
+            yield RawRecipe(
+                recipe="depth_of_moist_absolutely_unstable_layers_spatial_plot.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
+
+    # Moist Absolutely Unstable Layer base height (of deepest)
+    if conf.MAUL_BASE:
+        for model in models:
+            yield RawRecipe(
+                recipe="base_of_moist_absolutely_unstable_layers_spatial_plot.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
+
     # Screen-level temperature probabilities
     for model, condition, threshold in itertools.product(
         models,
