@@ -84,7 +84,7 @@ def curv(central, radius, num_radial_points=16, tol=0):
     surroundings.merge()
     print(surroundings)
 
-    # curv = surroundings.copy()
+    # curv = surroundings[0].copy()
     # curv -= central
 
     # curv.data[curv.data > tol]=-1.0
