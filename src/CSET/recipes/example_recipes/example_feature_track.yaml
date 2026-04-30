@@ -1,0 +1,26 @@
+category: Quick Look
+title: Example running cell tracking and plotting spatial plots
+description: |
+  Uses the feature.track operator to identify and track features in a cube with "time" series coordinate, 
+  and then plots the lifetime of the identified features as a spatial plot. 
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+
+  - operator: filters.filter_cubes
+    constraint:
+      operator: constraints.generate_var_constraint
+      varname: precipitation_flux
+
+  - operator: feature.track
+    threshold: 3
+    save_data: False # Whether to save raw tracking data for further analysis 
+
+  # Filter tracking cubelist to just one of "feature_lifetime", "feature_id" or "feature_init"
+  - operator: filters.filter_cubes
+    constraint:
+      operator: constraints.generate_var_constraint
+      varname: feature_lifetime
+    
+  - operator: plot.spatial_pcolormesh_plot
