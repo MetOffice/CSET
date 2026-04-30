@@ -3074,8 +3074,8 @@ def plot_histogram_series(
             break
 
     if levels is None:
-        vmin = min(cb.data.min() for cb in cubes)
-        vmax = max(cb.data.max() for cb in cubes)
+        vmin = min(np.nanmin(cb.data) for cb in cubes)
+        vmax = max(np.nanmax(cb.data) for cb in cubes)
 
     # Make postage stamp plots if stamp_coordinate exists and has more than a
     # single point. If single_plot is True:

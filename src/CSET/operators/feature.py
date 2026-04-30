@@ -184,3 +184,147 @@ def track(
         tracking_cubelist.append(tracking_cube)
 
     return tracking_cubelist
+
+
+def cell_stats(
+    cube: iris.cube.Cube,
+    threshold: float,
+    under_threshold: bool = False,
+    min_size: int = 4,
+    save_data: bool = False,
+):
+    """Identify features in each timestep and output statistics.
+
+    Parameters
+    ----------
+    threshold: float
+        The threshold value for feature detection.
+    under_threshold: bool, optional
+        If set to True, features are identified where the data is below the threshold.
+        If set to False, features are identified where the data is above the threshold.
+        Default is False.
+    min_size: int, optional
+        The minimum number of contiguous grid points required for a feature to be tracked.
+        Default is 4.
+    save_data: bool, optional
+        If set to True, all tracking data is saved to disk for further analysis (including csv
+        and txt files containing feature properties that are not returned in output cubes).
+        Default is False.
+
+    Returns
+    -------
+    cell_stats_cubes: iris.cube.CubeList
+        An iris CubeList containing "feature_size", "feature_mean", and "feature_max" cubes.
+
+    Notes
+    -----
+    This operator uses the Simple-Track package with tracking disabled to identify features
+    in each timestep and compile cell statistics. Outputs cubes containing feature size (number
+    of grid points), mean value within features, and maximum value within features.
+
+    Links
+    ----------
+    .. https://github.com/ParaChute-UK/simple-track
+
+    Examples
+    --------
+    >>> cell_stats_cubes = feature.cell_stats(threshold=2)
+    >>> feature_size_cube = cell_stats_cubes.extract_cube("feature_size")
+    >>> plt.hist(feature_size_cube[-1])
+    >>> plt.show()
+
+    """
+    # Setup config
+    tracker_config = {
+        "FEATURE": {
+            "threshold": threshold,
+            "under_threshold": under_threshold,
+            "min_size": min_size,
+        },
+        "OUTPUT": {
+            "save_data": save_data,
+            "experiment_name": "feature_tracking",
+            "path": f"{os.getcwd()}/cell-stats_data",
+            "skip_tracking": True,
+        },
+    }
+    logging.debug(f"Tracker config: {tracker_config}")
+
+    # Get cube data into a dict to pass to Tracker
+    times = cube.coord("time").points
+    time_units = cube.coord("time").units
+    times_dt = [time_units.num2pydate(t) for t in times]
+    cube_dict = {
+        time: cube_slice.data
+        for time, cube_slice in zip(times_dt, cube.slices_over("time"), strict=True)
+    }
+
+    # Run tracking, returning Timeline object
+    timeline = Tracker(tracker_config).run(cube_dict)
+    logging.debug("Tracking completed")
+
+    # Get feature data from each frame of data, append to list of lists
+    # before conversion to numpy array (which requires knowledge of max
+    # number of features before constructing array shape)
+    size_data, mean_data, max_data = [], [], []
+    number_of_features = []
+    for time in times_dt:
+        frame = timeline.get_frame(time)
+        features = frame.features
+        size_data.append([feature.get_size() for feature in features.values()])
+        mean_data.append([feature.mean for feature in features.values()])
+        max_data.append([feature.max for feature in features.values()])
+        number_of_features.append(len(features))
+
+    # Pad data with NaNs to create arrays of consistent shape (max number of features across
+    # all timesteps)
+    arr_size = max(number_of_features)
+
+    # Size data is integer, but we need to pad with NaNs, so fill with invalid value first
+    size_data = np.array(
+        [
+            np.pad(sizes, (0, arr_size - len(sizes)), constant_values=-100)
+            for sizes in size_data
+        ],
+        dtype=float,
+    )
+    size_data[size_data == -100] = np.nan
+
+    # Mean and max data are already float, so can be padded with NaNs directly.
+    mean_data = np.array(
+        [
+            np.pad(means, (0, arr_size - len(means)), constant_values=np.nan)
+            for means in mean_data
+        ]
+    )
+    max_data = np.array(
+        [
+            np.pad(maxs, (0, arr_size - len(maxs)), constant_values=np.nan)
+            for maxs in max_data
+        ]
+    )
+
+    # Create cubes
+    time_coord = cube.coord("time").copy()
+    feature_coord = iris.coords.DimCoord(
+        np.arange(arr_size),
+        long_name="feature_number",
+        var_name="feature_number",
+        units="1",
+    )
+    coords = [time_coord, feature_coord]
+    coords_and_dims = [(coord, i) for i, coord in enumerate(coords)]
+
+    cell_stats_cubelist = iris.cube.CubeList()
+    cube_names = ["feature_size", "feature_mean", "feature_max"]
+    data_arrays = [size_data, mean_data, max_data]
+    for cube_name, data_array in zip(cube_names, data_arrays, strict=True):
+        cell_stats_cube = iris.cube.Cube(
+            data_array,
+            long_name=cube_name,
+            units="1",
+            dim_coords_and_dims=coords_and_dims,
+        )
+        cell_stats_cubelist.append(cell_stats_cube)
+
+    return cell_stats_cubelist
