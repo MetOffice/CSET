@@ -349,7 +349,7 @@ def check_stamp_coordinate(cube: iris.cube.Cube) -> str:
         Defaults to "realization" if alternative stamp coordinate not found.
     """
     # Acceptable stamp coordinate names
-    STAMP_COORD_NAMES = ["realization", "member", "pseudo_level"]
+    STAMP_COORD_NAMES = ["realization", "member", "sample", "pseudo_level"]
 
     # Check which dimension coordinates we have.
     dim_coord_names = [coord.name() for coord in cube.coords(dim_coords=True)]
