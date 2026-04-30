@@ -28,6 +28,7 @@ def _get_needed_environment_variables_nimrod() -> dict:
         radar_sources.append("Nimrod_comp_5min")
     variables = {
         "field": radar_sources,
+        "weights": os.environ["NIMROD_WEIGHTS"],
         "raw_path": "/data/users/radar/UKnimrod",
         "date_type": "initiation",
         "data_time": datetime.fromisoformat(os.environ["CYLC_TASK_CYCLE_POINT"]),
@@ -114,7 +115,8 @@ def apply_radar_weights(cube_obs: iris.cube.Cube, cube_wei: iris.cube.Cube):
     weights = cube_wei.data
     if weights.max() < 1.0:
         weights = (weights * 32).round().astype(int)
-        logging.debug("Unpacked Nimrod weights file.")
+        cube_wei.data = weights
+        logging.info("Unpacked Nimrod weights file.")
 
     # Apply the weights.
     cube_obs_weighted = cube_obs
@@ -122,8 +124,8 @@ def apply_radar_weights(cube_obs: iris.cube.Cube, cube_wei: iris.cube.Cube):
         weights < weight_min, duff_value, cube_obs_weighted.data
     )
 
-    # Return the QC'd Nimrod data.
-    return cube_obs_weighted
+    # Return the QC'd Nimrod data and the weights used.
+    return cube_obs_weighted, cube_wei
 
 
 def retrieve_nimrod():
@@ -180,12 +182,20 @@ def retrieve_nimrod():
                 # Load the Nimrod data into an Iris cube.
                 # TODO: check that the Nimrod file exists, and handle the situation
                 #       if it doesn't
-                nimrod_cube_obs = iris.load_cube(nimrod_obs)
+                nimrod_obs_exist = "False"
+                try:
+                    nimrod_cube_obs = iris.load_cube(nimrod_obs)
+                    nimrod_obs_exist = "True"
+                except Exception:
+                    logging.warning("Iris cannot load Nimrod file %s", nimrod_obs)
 
                 # Form the file name for the Nimrod field weighting file in the archive,
                 # read the weighting file into an Iris cube, apply the weightings to
                 # the Nimrod rain field then save the weighting data as a NetCDF.
-                if nimrod_dict[nimrod_field]["weights_fname"]:
+                if (
+                    nimrod_dict[nimrod_field]["weights_fname"]
+                    and nimrod_obs_exist == "True"
+                ):
                     # Prepare the output directory for the Nimrod weights data.
                     nimrod_dir_wei = (
                         f"{v['rose_datac']}/data/{nimrod_dict[nimrod_field]['wei_id']}"
@@ -206,25 +216,28 @@ def retrieve_nimrod():
                     nimrod_cube_weights = iris.load_cube(nimrod_weights)
 
                     # Apply the weights to the Nimrod obs.
-                    nimrod_cube_obs = apply_radar_weights(
+                    nimrod_cube_obs, nimrod_cube_weights = apply_radar_weights(
                         nimrod_cube_obs, nimrod_cube_weights
                     )
 
                     # Write the Nimrod weights to a NetCDF file.
-                    filename_wei_nc = (
-                        f"{nimrod_dir_wei}/{date_use.strftime('%Y%m%d%H%M')}"
-                        f"_{nimrod_dict[nimrod_field]['obs_id']}_weights"
-                    )
-                    filename_wei_nc = Path(filename_wei_nc).with_suffix(".nc")
-                    iris.save(nimrod_cube_weights, filename_wei_nc)
+                    if v["weights"] == "True":
+                        filename_wei_nc = (
+                            f"{nimrod_dir_wei}/{date_use.strftime('%Y%m%d%H%M')}"
+                            f"_{nimrod_dict[nimrod_field]['obs_id']}_weights"
+                        )
+                        filename_wei_nc = Path(filename_wei_nc).with_suffix(".nc")
+                        iris.save(nimrod_cube_weights, filename_wei_nc)
 
-                # Write the Nimrod obs to a NetCDF file.
-                filename_obs_nc = (
-                    f"{nimrod_dir}/{date_use.strftime('%Y%m%d%H%M')}"
-                    f"_{nimrod_dict[nimrod_field]['obs_id']}"
-                )
-                filename_obs_nc = Path(filename_obs_nc).with_suffix(".nc")
-                iris.save(nimrod_cube_obs, filename_obs_nc)
+                # Now that the accumulation weights have been applied if required,
+                # write the Nimrod obs to a NetCDF file.
+                if nimrod_obs_exist == "True":
+                    filename_obs_nc = (
+                        f"{nimrod_dir}/{date_use.strftime('%Y%m%d%H%M')}"
+                        f"_{nimrod_dict[nimrod_field]['obs_id']}"
+                    )
+                    filename_obs_nc = Path(filename_obs_nc).with_suffix(".nc")
+                    iris.save(nimrod_cube_obs, filename_obs_nc)
 
 
 # Run the function that fetches the NImrod radar obs.

@@ -342,6 +342,7 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
         # Overwrite cmap, levels and norm for specific variables that
         # require custom colorbar_map as these can not be defined in the
         # JSON file.
+        cmap, levels, norm = _custom_colourmap_nimrod_weights(cube, cmap, levels, norm)
         cmap, levels, norm = _custom_colourmap_precipitation(cube, cmap, levels, norm)
         cmap, levels, norm = _custom_colourmap_visibility_in_air(
             cube, cmap, levels, norm
@@ -805,9 +806,15 @@ def _plot_and_save_spatial_plot(
         # Tick labels for rain accumulations from Nimrod radar data.
         if "rain accumulation" in cube.name():
             cbar.set_ticklabels([f"{level:.3g}" for level in levels])
+        if "wts accumulation" in cube.name():
+            tick_levels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+            cbar.minorticks_off()
+            cbar.set_ticks(tick_levels)
+            cbar.set_ticklabels([f"{level:.3g}" for level in tick_levels])
         # Tick labels for model rainfall data.
         if "surface_microphysical" in cube.name():
             cbar.set_ticklabels([f"{level:.3g}" for level in levels])
+        # Tick labels for Nimrod weights data.
         logging.debug("Set colorbar ticks and labels.")
 
     # Save plot.
@@ -2257,6 +2264,64 @@ def _custom_colormap_aviation_colour_state(cube: iris.cube.Cube):
     cmap = mcolors.ListedColormap(colors)
     # Normalise the levels
     norm = mcolors.BoundaryNorm(levels, cmap.N)
+    return cmap, levels, norm
+
+
+def _custom_colourmap_nimrod_weights(cube: iris.cube.Cube, cmap, levels, norm):
+    """Return a custom colourmap for the current recipe."""
+    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    if (
+        any("wts" in name for name in varnames)
+        and "difference" not in cube.long_name
+        and "mask" not in cube.long_name
+    ):
+        # Define the levels and colors. Remember the Nimrod weights vary over the
+        # range [0,13] and should be integer values. Optimum value is 13.
+        levels = [
+            -0.5,
+            0.5,
+            1.5,
+            2.5,
+            3.5,
+            4.5,
+            5.5,
+            6.5,
+            7.5,
+            8.5,
+            9.5,
+            10.5,
+            11.5,
+            12.5,
+            13.5,
+        ]
+        # levels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+        norm = mcolors.BoundaryNorm(levels, cmap.N)
+        colours = [
+            "#d10000",
+            "purple",
+            "#8f00d6",
+            "#ff9700",
+            "pink",
+            "#ffff00",
+            "#00007f",
+            "#6c9ccd",
+            "#aae8ff",
+            "#37a648",
+            "#8edc64",
+            "#c5ffc5",
+            "#dcdcdc",
+            "#ffffff",
+        ]
+        # Create a custom colormap
+        cmap = mcolors.ListedColormap(colours)
+        # Normalize the levels
+        norm = mcolors.BoundaryNorm(levels, cmap.N)
+        logging.info("Change colormap for Nimrod weights colorbar.")
+    else:
+        # do nothing and keep existing colorbar attributes
+        cmap = cmap
+        levels = levels
+        norm = norm
     return cmap, levels, norm
 
 
