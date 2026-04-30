@@ -84,13 +84,13 @@ def curv(central, radius, num_radial_points=16, tol=0):
     surroundings.merge()
     print(surroundings)
 
-    # curv = surroundings[0].copy()
-    # curv -= central
+    curv = surroundings[0].copy()
+    curv -= central
 
-    # curv.data[curv.data > tol]=-1.0
-    # curv.data[curv.data < tol]=1.0
+    curv.data[curv.data > tol] = -1.0
+    curv.data[curv.data < tol] = 1.0
 
-    # curv.collapsed('bearing',iris.analysis.SUM)
-    # curv.rename("CURV")
-    # curv.units="1"
-    # return curv
+    curv.collapsed("bearing", iris.analysis.SUM)
+    curv.rename(f"CURV_calculated_from_{num_radial_points}_radial_points")
+    curv.units = "1"
+    return curv
