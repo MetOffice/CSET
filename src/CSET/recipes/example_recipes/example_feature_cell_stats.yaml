@@ -1,0 +1,26 @@
+category: Quick Look
+title: Example running cell_stats and plotting histograms
+description: |
+  Uses the feature.cell_stats operator to calculate cell size, mean cell values and max cell values for 
+  identified features. 
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+
+  - operator: filters.filter_cubes
+    constraint:
+      operator: constraints.generate_var_constraint
+      varname: precipitation_flux
+
+  - operator: feature.cell_stats
+    threshold: 3
+
+  # Filter tracking cubelist to one of "feature_size", "feature_mean" or "feature_max"
+  - operator: filters.filter_cubes
+    constraint:
+      operator: constraints.generate_var_constraint
+      varname: feature_max
+    
+  - operator: plot.plot_histogram_series
+
