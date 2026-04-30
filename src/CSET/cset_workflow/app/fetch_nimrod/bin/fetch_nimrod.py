@@ -186,8 +186,8 @@ def retrieve_nimrod():
                 try:
                     nimrod_cube_obs = iris.load_cube(nimrod_obs)
                     nimrod_obs_exist = "True"
-                except Exception:
-                    logging.warning("Iris cannot load Nimrod file %s", nimrod_obs)
+                except FileNotFoundError:
+                    logging.warning("Iris cannot find Nimrod file %s", nimrod_obs)
 
                 # Form the file name for the Nimrod field weighting file in the archive,
                 # read the weighting file into an Iris cube, apply the weightings to
