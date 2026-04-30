@@ -25,7 +25,7 @@ from CSET._common import iter_maybe
 def MAUL_properties(
     cubes: iris.cube.Cube | iris.cube.CubeList, output: str
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Identify objects in the vertical."""
+    """Identify properties of Moist Absolutely Unstable Layers."""
     num_MAULs = iris.cube.CubeList([])
     maul_d = iris.cube.CubeList([])
     maul_b = iris.cube.CubeList([])
@@ -154,7 +154,7 @@ def MAUL_properties(
                 maul_b.append(maul_base)
             case _:
                 raise ValueError("""Unexpected value for output. Expected number,
-                                 depth, base or top. Got {output}.""")
+                                 depth or base. Got {output}.""")
     # Output data.
     match output:
         case "number" if len(num_MAULs) == 1:
