@@ -16,6 +16,7 @@ dependencies:
   - scipy
   - scikit-image # For image processing techniques.
   - dask
+  - simple-track 
 
   # Build dependencies
   - setuptools>=64
