@@ -200,6 +200,9 @@ def retrieve_nimrod():
                             "Iris cannot find Nimrod weights file %s", nimrod_weights
                         )
 
+                    # Ensure that the weights are unitless.
+                    nimrod_cube_weights.units = "1"
+
                 # QC the the Nimrod observations using the weights field.
                 if nimrod_obs_exist == "True" and nimrod_weights_exist == "True":
                     nimrod_cube_obs, nimrod_cube_weights = apply_radar_weights(

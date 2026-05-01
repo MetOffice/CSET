@@ -811,6 +811,7 @@ def _plot_and_save_spatial_plot(
             cbar.minorticks_off()
             cbar.set_ticks(tick_levels)
             cbar.set_ticklabels([f"{level:.3g}" for level in tick_levels])
+            cbar.set_label(label=f"{cube.name()}", size=14)
         # Tick labels for model rainfall data.
         if "surface_microphysical" in cube.name():
             cbar.set_ticklabels([f"{level:.3g}" for level in levels])
