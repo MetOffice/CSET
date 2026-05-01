@@ -688,6 +688,63 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+    if conf.DOUBLE_LATITUDE_DERIVATIVE_SPATIAL_SURFACE_FIELD:
+        for model, field, method in itertools.product(
+            models, conf.SURFACE_FIELDS, conf.SPATIAL_SURFACE_FIELD_METHOD
+        ):
+            yield RawRecipe(
+                recipe="generic_latitude_nonspherical_double_derivative.yaml",
+                model_ids=model["id"],
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": model["name"],
+                    "METHOD": method,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
+    if conf.DOUBLE_LONGITUDE_DERIVATIVE_SPATIAL_SURFACE_FIELD:
+        for model, field, method in itertools.product(
+            models, conf.SURFACE_FIELDS, conf.SPATIAL_SURFACE_FIELD_METHOD
+        ):
+            yield RawRecipe(
+                recipe="generic_longitude_nonspherical_double_derivative.yaml",
+                model_ids=model["id"],
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": model["name"],
+                    "METHOD": method,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
+    if conf.LATITUDE_LONGITUDE_DERIVATIVE_SPATIAL_SURFACE_FIELD:
+        for model, field, method in itertools.product(
+            models, conf.SURFACE_FIELDS, conf.SPATIAL_SURFACE_FIELD_METHOD
+        ):
+            yield RawRecipe(
+                recipe="generic_latitude_longitdue_nonspherical_double_derivative.yaml",
+                model_ids=model["id"],
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": model["name"],
+                    "METHOD": method,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
     # Create a list of case aggregation types.
     AGGREGATION_TYPES = ["lead_time", "hour_of_day", "validity_time", "all"]
 
