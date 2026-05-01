@@ -27,7 +27,7 @@ steps:
   - operator: misc.differentiate
     coordinate: "grid_latitude"
 
-  - operator: misc.differentitate
+  - operator: misc.differentiate
     coordinate: "grid_longitude"
 
   - operator: collapse.collapse
