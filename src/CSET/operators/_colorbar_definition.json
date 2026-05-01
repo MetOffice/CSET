@@ -163,6 +163,50 @@
     "max": 1.1,
     "min": 0.5
   },
+      "feature_id": {
+        "cmap": "viridis",
+        "levels": [
+            1,
+            50,
+            100,
+            150,
+            200,
+            250,
+            300,
+            350,
+            400
+        ],
+        "ymax": 1.0,
+        "ymin": 0.0
+    },
+    "feature_lifetime": {
+        "cmap": "YlGnBu",
+        "levels": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+        ],
+        "ymax": 1.0,
+        "ymin": 0.0
+    },
+    "feature_init": {
+        "cmap": "Blues",
+        "levels": [
+            0.5,
+            1
+        ],
+        "ymax": 1.0,
+        "ymin": 0.0
+    },
   "fog_fraction_at_screen_level": {
     "cmap": "viridis",
     "max": 1,
