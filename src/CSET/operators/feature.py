@@ -288,7 +288,8 @@ def cell_stats(
     # all timesteps)
     arr_size = max(number_of_features)
 
-    # Size data is integer, but we need to pad with NaNs, so fill with invalid value first
+    # Size data is integer, but we need to pad with NaNs (which is a float), so fill
+    # with invalid value first
     size_data = np.array(
         [
             np.pad(sizes, (0, arr_size - len(sizes)), constant_values=-100)
@@ -344,6 +345,7 @@ def cell_stats(
         ][0]
         logging.debug(f"Attempting to convert to effective radius using {hzntl_coord}")
         # Convert to km if possible
+        # TODO: fall back to feature_size if this conversion fails
         hzntl_coord.convert_units("km")
         # Naive grid spacing estimate, correct for regular grids, likely wildly
         # inaccruate for LFRic/irregular grids
@@ -354,6 +356,7 @@ def cell_stats(
         cube_properties["feature_size"]["data"] = size_data
         cube_properties["feature_size"]["units"] = "km"
 
+    # Populate cubelist
     for cb_props in cube_properties.values():
         cell_stats_cube = iris.cube.Cube(
             data=cb_props["data"],
