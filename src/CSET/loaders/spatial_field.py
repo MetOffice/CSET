@@ -656,6 +656,7 @@ def load(conf: Config):
                 recipe="generic_latitude_nonspherical_derivative.yaml",
                 model_ids=model["id"],
                 variables={
+                    "VARNAME": field,
                     "MODEL_NAME": model["name"],
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
@@ -671,6 +672,7 @@ def load(conf: Config):
                 recipe="generic_longitude_nonspherical_derivative.yaml",
                 model_ids=model["id"],
                 variables={
+                    "VARNAME": field,
                     "MODEL_NAME": model["name"],
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
