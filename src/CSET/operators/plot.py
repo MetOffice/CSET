@@ -1368,7 +1368,10 @@ def _plot_and_save_histogram_series(
 
     # Set default that histograms will produce probability density function
     # at each bin (integral over range sums to 1).
-    density = True
+    if "feature" in cubes[0].long_name:
+        density = False
+    else:
+        density = True
 
     for cube in iter_maybe(cubes):
         # Easier to check title (where var name originates)
@@ -1399,6 +1402,10 @@ def _plot_and_save_histogram_series(
             np.min(bins),
             np.max(bins),
         )
+
+        if "feature" in cube.long_name:
+            ax.set_yscale("log")
+            ax.set_xscale("log")
 
         # Reshape cube data into a single array to allow for a single histogram.
         # Otherwise we plot xdim histograms stacked.
@@ -1432,6 +1439,8 @@ def _plot_and_save_histogram_series(
         ax.set_ylabel(
             f"Contribution to mean ({iter_maybe(cubes)[0].units})", fontsize=14
         )
+    if "feature" in cubes[0].long_name:
+        ax.set_ylabel("Frequency", fontsize=14)
     ax.set_xlim(vmin, vmax)
     ax.tick_params(axis="both", labelsize=12)
 
