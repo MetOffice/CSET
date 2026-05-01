@@ -1,5 +1,5 @@
 category: Derivatives
-title: $MODEL_NAME d$VARNAME\dlongitude (nonspherical) $METHOD
+title: $MODEL_NAME d$VARNAME by dlongitude (nonspherical) $METHOD
 description: |
   Creates a spatial map of the longitude derivative of $VARNAME.
   The derivative is non-spherical (so not fully accurate) of
