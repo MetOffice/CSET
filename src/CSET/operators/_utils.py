@@ -24,6 +24,7 @@ import re
 from datetime import timedelta
 
 import iris
+import iris.coords
 import iris.cube
 import iris.exceptions
 import iris.util
@@ -328,6 +329,41 @@ def is_transect(cube: iris.cube.Cube) -> bool:
     return True
 
 
+def check_stamp_coordinate(cube: iris.cube.Cube) -> str:
+    """
+    Return stamp dimension coordinate name from a given cube, if exists.
+
+    If cube contains a valid stamp coordinate as a dimension coordinate,
+    function will return name of the stamp coordinate.
+
+    Arguments
+    ---------
+    cube: iris.cube.Cube
+        An iris cube which will be checked to see if it contains coordinate
+        names that match a pre-defined list of acceptable coordinate names.
+
+    Returns
+    -------
+    str
+        If available, then return name of stamp coordinate.
+        Defaults to "realization" if alternative stamp coordinate not found.
+    """
+    # Acceptable stamp coordinate names
+    STAMP_COORD_NAMES = ["realization", "member", "sample", "pseudo_level"]
+
+    # Check which dimension coordinates we have.
+    dim_coord_names = [coord.name() for coord in cube.coords(dim_coords=True)]
+
+    # Check if any acceptable stamp coordinates are cube dimensions.
+    stamp_coords = [coord for coord in dim_coord_names if coord in STAMP_COORD_NAMES]
+    if len(stamp_coords) == 1:
+        stamp_coordinate = stamp_coords[0]
+    else:
+        stamp_coordinate = "realization"
+
+    return stamp_coordinate
+
+
 def fully_equalise_attributes(cubes: iris.cube.CubeList):
     """Remove any unique attributes between cubes or coordinates in place."""
     # Equalise cube attributes.
@@ -403,7 +439,7 @@ def is_time_aggregatable(cube: iris.cube.Cube) -> bool:
     """Determine whether a cube can be aggregated in time.
 
     If a cube is aggregatable it will contain both a 'forecast_reference_time'
-    and 'forecast_period' coordinate as dimensional coordinates.
+    and 'forecast_period' coordinate as dimension or scalar coordinates.
 
     Arguments
     ---------
@@ -422,8 +458,15 @@ def is_time_aggregatable(cube: iris.cube.Cube) -> bool:
     # Acceptable time coordinate names for aggregatable cube.
     TEMPORAL_COORD_NAMES = ["forecast_period", "forecast_reference_time"]
 
-    # Coordinate names for the cube.
-    coord_names = [coord.name() for coord in cube.coords(dim_coords=True)]
+    def strictly_monotonic(coord: iris.coords.Coord) -> bool:
+        """Return whether a coord is strictly monotonic, catching errors."""
+        try:
+            return coord.is_monotonic()
+        except iris.exceptions.CoordinateMultiDimError:
+            return False
+
+    # Strictly monotonic coordinate names for the cube.
+    coord_names = [coord.name() for coord in cube.coords() if strictly_monotonic(coord)]
 
     # Check which temporal coordinates we have.
     temporal_coords = [coord for coord in coord_names if coord in TEMPORAL_COORD_NAMES]

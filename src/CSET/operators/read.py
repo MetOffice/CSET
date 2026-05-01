@@ -194,7 +194,7 @@ def read_cubes(
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
 
     # Merge and concatenate cubes now metadata has been fixed.
-    cubes = cubes.merge()
+    cubes = _merge_cubes_check_ensemble(cubes)
     cubes = cubes.concatenate()
 
     # Squeeze single valued coordinates into scalar coordinates.
@@ -275,6 +275,28 @@ def _check_input_files(input_paths: str | list[str]) -> list[Path]:
     if len(files) == 0:
         raise FileNotFoundError(f"No files found for {input_paths}")
     return files
+
+
+def _merge_cubes_check_ensemble(cubes: iris.cube.CubeList):
+    """Merge CubeList, renumbering realizations of 0 if required.
+
+    An unsuccessful merge indicates common input cube attributes, most
+    commonly from ensemble members missing an explicit realization
+    coordinate. Therefore the members are renumbered before being merged
+    again.
+    """
+    try:
+        cubes = cubes.merge()
+    except iris.exceptions.MergeError:
+        _log_once(
+            "Attempt to merge input CubeList failed. Attempting to iterate realization coords to enable merge.",
+            level=logging.WARNING,
+        )
+        for ir, cube in enumerate(cubes):
+            if cube.coord("realization").points == 0:
+                cube.coord("realization").points = ir + 1
+        cubes = cubes.merge()
+    return cubes
 
 
 def _cutout_cubes(
@@ -376,14 +398,15 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     _proleptic_gregorian_fix(cube)
     _lfric_time_callback(cube)
     _lfric_forecast_period_callback(cube)
+    cube = _fix_no_time_coords_callback(cube)
     _normalise_ML_varname(cube)
     return cube
 
 
 def _realization_callback(cube):
-    """Give deterministic cubes a realization of 0.
+    """Add a realization coordinate initialised to 0 if missing.
 
-    This means they can be handled in the same way as ensembles through the rest
+    This means deterministic and ensemble cubes can assume realization coordinate through the rest
     of the code.
     """
     # Only add if realization coordinate does not exist.
@@ -1027,6 +1050,19 @@ def _lfric_forecast_period_callback(cube: iris.cube.Cube):
             coord.standard_name = "forecast_period"
     except iris.exceptions.CoordinateNotFoundError:
         pass
+
+
+def _fix_no_time_coords_callback(cube: iris.cube.Cube):
+    """Add dummy time coord to process cubes that don't have sequence coord."""
+    # Only add if time coordinate does not exist.
+    if not cube.coords("time"):
+        cube.add_aux_coord(
+            iris.coords.DimCoord(
+                0, standard_name="time", units="hours since 0001-01-01 00:00:00"
+            )
+        )
+
+    return cube
 
 
 def _normalise_ML_varname(cube: iris.cube.Cube):
