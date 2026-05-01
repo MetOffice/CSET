@@ -136,11 +136,6 @@ def retrieve_nimrod():
     * CYLC_TASK_CYCLE_POINT
     * ANALYSIS_LENGTH
     * ROSE_DATAC
-
-    Raises
-    ------
-    FileNotFound:
-        If no observations are available.
     """
     # Grab the environment variables required for handling Nimrod data.
     v = _get_needed_environment_variables_nimrod()
@@ -157,7 +152,6 @@ def retrieve_nimrod():
     for nimrod_field in v["field"]:
         if nimrod_field:
             logging.info("Processing Nimrod field: %s", nimrod_field)
-            print("Looking at field ", nimrod_field)
 
             # Prepare the output directory for the Nimrod field.
             nimrod_dir = f"{v['rose_datac']}/data/{nimrod_dict[nimrod_field]['obs_id']}"
@@ -175,11 +169,6 @@ def retrieve_nimrod():
             # Process Nimrod data between the start and end dates.
             date_use = date_start
             while date_use <= date_end:
-                # Advance the date/time counter using the time interval appropriate to the Nimrod field.
-                date_use = date_use + isodate.parse_duration(
-                    nimrod_dict[nimrod_field]["freq"]
-                )
-
                 # Load the Nimrod data into an Iris cube.
                 nimrod_obs_exist = "False"
                 nimrod_obs = (
@@ -236,6 +225,12 @@ def retrieve_nimrod():
                     )
                     filename_wei_nc = Path(filename_wei_nc).with_suffix(".nc")
                     iris.save(nimrod_cube_weights, filename_wei_nc)
+
+                # Advance the date/time counter using the time interval
+                # appropriate to the Nimrod field.
+                date_use = date_use + isodate.parse_duration(
+                    nimrod_dict[nimrod_field]["freq"]
+                )
 
 
 # Run the function that fetches the NImrod radar obs.
