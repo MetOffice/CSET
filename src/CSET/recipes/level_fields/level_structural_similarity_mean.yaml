@@ -1,13 +1,13 @@
 category: $LEVELTYPE Level Structural Similarity
-title: "$VARNAME $LEVEL\nMean Structural Similarity between $BASE_MODEL and $OTHER_MODEL"
+title: "$VARNAME $LEVEL\nMean Structural Similarity between $OTHER_MODEL and $BASE_MODEL"
 description: |
-  Extracts $VARNAME at $LEVELTYPE $LEVEL for $BASE_MODEL and $OTHER_MODEL.
+  Extracts $VARNAME at $LEVELTYPE $LEVEL for $OTHER_MODEL and $BASE_MODEL.
   These fields then have the
   mean structural similarity (MSSIM) calculated between them and plotted as a line plot.
 
   The structural similarity (SSIM) often varies between +/- 1, although values can
   be outside of this range if the values are outside of
-  the expected data range (maximum - minimum of $OTHER_MODEL). Values close to 1 imply the fields are similar;
+  the expected data range (maximum - minimum of $BASE_MODEL). Values close to 1 imply the fields are similar;
   values close to -1 imply the values are anticorrelated. Values close to 0 imply the
   fields differ.
 

@@ -378,7 +378,7 @@ def difference(cubes: CubeList):
     elif base.standard_name:
         difference.var_name = base.standard_name + "_difference"
 
-    difference.data = base.data - other.data
+    difference.data = other.data - base.data
     return difference
 
 

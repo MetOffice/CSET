@@ -1,5 +1,5 @@
 category: Daily Weather
-title: "Violent rain presence\nDifference ($BASE_MODEL - $OTHER_MODEL)"
+title: "Violent rain presence\nDifference ($OTHER_MODEL - $BASE_MODEL)"
 description: |
   Generates a mask of whether violent rain is present in a grid box and provides
   the difference between two datasets. Values will be positive or negative one
