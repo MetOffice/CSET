@@ -14,13 +14,15 @@ steps:
       varname: precipitation_flux
 
   - operator: feature.cell_stats
+    feature_size_unit: "feature_effective_radius"
     threshold: 3
 
-  # Filter tracking cubelist to one of "feature_size", "feature_mean" or "feature_max"
+  # Filter tracking cubelist to one of "feature_mean", "feature_max", or  
+  # "feature_size/feature_effective_radius" (depending on feature_size_unit set above), 
   - operator: filters.filter_cubes
     constraint:
       operator: constraints.generate_var_constraint
-      varname: feature_max
+      varname: feature_effective_radius
     
   - operator: plot.plot_histogram_series
 

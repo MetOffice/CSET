@@ -17,6 +17,8 @@ import logging
 import os
 
 import iris
+import iris.cube
+import iris.util
 import numpy as np
 from simpletrack.track import Tracker
 
@@ -191,6 +193,7 @@ def cell_stats(
     threshold: float,
     under_threshold: bool = False,
     min_size: int = 4,
+    feature_size_unit: str = "feature_effective_radius",
     save_data: bool = False,
 ):
     """Identify features in each timestep and output statistics.
@@ -206,6 +209,11 @@ def cell_stats(
     min_size: int, optional
         The minimum number of contiguous grid points required for a feature to be tracked.
         Default is 4.
+    feature_size_unit: str, optional
+        The unit to define feature size output. Options are "feature_effective_radius"
+        (the radius of a circle with the same area as the feature, in km) or "
+        feature_grid_points" (the number of grid points contained in the feature).
+        Default is "feature_effective_radius".
     save_data: bool, optional
         If set to True, all tracking data is saved to disk for further analysis (including csv
         and txt files containing feature properties that are not returned in output cubes).
@@ -314,15 +322,43 @@ def cell_stats(
     )
     coords = [time_coord, feature_coord]
     coords_and_dims = [(coord, i) for i, coord in enumerate(coords)]
-
     cell_stats_cubelist = iris.cube.CubeList()
-    cube_names = ["feature_size", "feature_mean", "feature_max"]
-    data_arrays = [size_data, mean_data, max_data]
-    for cube_name, data_array in zip(cube_names, data_arrays, strict=True):
+
+    # Set cube properties
+    cube_properties = {
+        "feature_size": {
+            "data": size_data,
+            "long_name": feature_size_unit,
+            "units": "1",
+        },
+        "feature_mean": {"data": mean_data, "long_name": "feature_mean", "units": 1},
+        "feature_max": {"data": max_data, "long_name": "feature_max", "units": 1},
+    }
+    if feature_size_unit == "feature_effective_radius":
+        # Conert feature size to effective radius, assuming uniform grid
+        # Guess coord representing horizontal grid (choose first available)
+        hzntl_coord = [
+            coord
+            for coord in cube.coords()
+            if iris.util.guess_coord_axis(coord) in ["X", "Y"]
+        ][0]
+        logging.debug(f"Attempting to convert to effective radius using {hzntl_coord}")
+        # Convert to km if possible
+        hzntl_coord.convert_units("km")
+        # Naive grid spacing estimate, correct for regular grids, likely wildly
+        # inaccruate for LFRic/irregular grids
+        grid_spacing = np.abs(np.diff(hzntl_coord.points).mean())
+        # Convert feature size in grid points to effective radius in km
+        size_data = np.sqrt(size_data * grid_spacing**2 / np.pi)
+        # Reset cube properties
+        cube_properties["feature_size"]["data"] = size_data
+        cube_properties["feature_size"]["units"] = "km"
+
+    for cb_props in cube_properties.values():
         cell_stats_cube = iris.cube.Cube(
-            data_array,
-            long_name=cube_name,
-            units="1",
+            data=cb_props["data"],
+            long_name=cb_props["long_name"],
+            units=cb_props["units"],
             dim_coords_and_dims=coords_and_dims,
         )
         cell_stats_cubelist.append(cell_stats_cube)
