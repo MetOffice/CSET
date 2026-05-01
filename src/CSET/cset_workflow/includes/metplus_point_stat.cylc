@@ -1,20 +1,50 @@
+
 {% if METPLUS_POINT_STAT|default(False) %}
 [scheduling]
     [[graph]]
+    {% macro metplus_point_stat_graph() %}
+        metplus_prep_obs => metplus_ascii2nc
+        fetch_fcst_m1 => metplus_prep_fcst_m1
+        metplus_prep_fcst_m1 => metplus_point_stat
+        metplus_prep_fcst_m1 => housekeeping
+        metplus_ascii2nc => metplus_point_stat => cycle_complete
+    {% endmacro %}
+
     {% if CSET_CYCLING_MODE == "case_study" %}
         {% for date in CSET_CASE_DATES %}
             R1/{{date}} = """
-                metplus_ascii2nc => metplus_point_stat => cycle_complete
+                    {{metplus_point_stat_graph()}}
                 """
         {% endfor %}
     {% elif CSET_CYCLING_MODE == "trial" %}
         {{CSET_TRIAL_CYCLE_PERIOD}} = """
-               metplus_ascii2nc => metplus_point_stat => cycle_complete
-               """
+                    {{metplus_point_stat_graph()}}
+                """
     {% endif %}
     R1/$ = cycle_complete => verpy_metloader_pointstat => verpy_plot_pointstat => finish_website
 
 [runtime]
+    [[metplus_prep_obs]]
+        inherit = METPLUS
+
+{% for model in models %}
+    [[metplus_prep_fcst_m{{model["id"]}}]]
+    # Prepares model data for use by metplus
+        inherit = METPLUS
+        [[[environment]]]
+            ROSE_TASK_APP = metplus_prep_fcst
+            MODEL_NAME = {{model["name"]}}
+            MODEL_ID = m{{model["id"]}}
+            INPUT_PATHS = $CYLC_TASK_SHARE_CYCLE_DIR/data/{{model["id"]}}
+        {% if SELECT_SUBAREA %}
+            SUBAREA_TYPE = {{SUBAREA_TYPE}}
+            SUBAREA_EXTENT = {{SUBAREA_EXTENT}}
+        {% else %}
+            SUBAREA_TYPE = None
+            SUBAREA_EXTENT = None
+        {% endif %}
+{% endfor %}
+
     [[metplus_ascii2nc]]
     # Runs METplus wrappers for ASCII to nc ingestion of obs.
         inherit = METPLUS
