@@ -651,7 +651,9 @@ def load(conf: Config):
             )
 
     if conf.LATITUDE_DERIVATIVE_SURFACE_FIELD:
-        for model in models:
+        for model, field, method in itertools.product(
+            models, conf.SURFACE_FIELDS, conf.SPATIAL_SURFACE_FIELD_METHOD
+        ):
             yield RawRecipe(
                 recipe="generic_latitude_nonspherical_derivative.yaml",
                 model_ids=model["id"],
@@ -668,7 +670,9 @@ def load(conf: Config):
             )
 
     if conf.LONGITUDE_DERIVATIVE_SPATIAL_SURFACE_FIELD:
-        for model in models:
+        for model, field, method in itertools.product(
+            models, conf.SURFACE_FIELDS, conf.SPATIAL_SURFACE_FIELD_METHOD
+        ):
             yield RawRecipe(
                 recipe="generic_longitude_nonspherical_derivative.yaml",
                 model_ids=model["id"],
