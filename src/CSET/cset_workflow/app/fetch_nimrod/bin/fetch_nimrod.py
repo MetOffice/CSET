@@ -156,12 +156,21 @@ def retrieve_nimrod():
     # accumulation composites or the 5 minute rainfall rate composites.
     for nimrod_field in v["field"]:
         if nimrod_field:
-            logging.debug("Processing Nimrod field: %s", nimrod_field)
+            logging.info("Processing Nimrod field: %s", nimrod_field)
+            print("Looking at field ", nimrod_field)
 
             # Prepare the output directory for the Nimrod field.
             nimrod_dir = f"{v['rose_datac']}/data/{nimrod_dict[nimrod_field]['obs_id']}"
             os.makedirs(nimrod_dir, exist_ok=True)
-            logging.debug("Nimrod directory: %s", nimrod_dir)
+            logging.info("Cylc-run Nimrod directory: %s", nimrod_dir)
+
+            # Prepare the output directory for the Nimrod weights field.
+            if nimrod_dict[nimrod_field]["weights_fname"]:
+                nimrod_dir_wei = (
+                    f"{v['rose_datac']}/data/{nimrod_dict[nimrod_field]['wei_id']}"
+                )
+                os.makedirs(nimrod_dir_wei, exist_ok=True)
+                logging.info("Cylc-run Nimrod weights directory: %s", nimrod_dir_wei)
 
             # Process Nimrod data between the start and end dates.
             date_use = date_start
@@ -171,63 +180,42 @@ def retrieve_nimrod():
                     nimrod_dict[nimrod_field]["freq"]
                 )
 
-                # Form the file name for the Nimrod field in the archive.
+                # Load the Nimrod data into an Iris cube.
+                nimrod_obs_exist = "False"
                 nimrod_obs = (
                     f"{nimrod_dict[nimrod_field]['basedir']}/"
                     f"{nimrod_dict[nimrod_field]['obs_dir']}/"
                     f"{date_use.year}/{date_use.strftime('%Y%m%d%H%M')}"
                     f"{nimrod_dict[nimrod_field]['obs_fname']}"
                 )
-
-                # Load the Nimrod data into an Iris cube.
-                # TODO: check that the Nimrod file exists, and handle the situation
-                #       if it doesn't
-                nimrod_obs_exist = "False"
                 try:
                     nimrod_cube_obs = iris.load_cube(nimrod_obs)
                     nimrod_obs_exist = "True"
-                except FileNotFoundError:
+                except OSError:
                     logging.warning("Iris cannot find Nimrod file %s", nimrod_obs)
 
-                # Form the file name for the Nimrod field weighting file in the archive,
-                # read the weighting file into an Iris cube, apply the weightings to
-                # the Nimrod rain field then save the weighting data as a NetCDF.
-                if (
-                    nimrod_dict[nimrod_field]["weights_fname"]
-                    and nimrod_obs_exist == "True"
-                ):
-                    # Prepare the output directory for the Nimrod weights data.
-                    nimrod_dir_wei = (
-                        f"{v['rose_datac']}/data/{nimrod_dict[nimrod_field]['wei_id']}"
-                    )
-                    os.makedirs(nimrod_dir_wei, exist_ok=True)
-                    logging.debug("Nimrod weights directory: %s", nimrod_dir_wei)
-
+                # Load the Nimrod weights into an Iris cube.
+                nimrod_weights_exist = "False"
+                if nimrod_dict[nimrod_field]["weights_fname"] != "":
                     nimrod_weights = (
                         f"{nimrod_dict[nimrod_field]['basedir']}/"
                         f"{nimrod_dict[nimrod_field]['weights_dir']}/"
                         f"{date_use.year}/{date_use.strftime('%Y%m%d%H%M')}"
                         f"{nimrod_dict[nimrod_field]['weights_fname']}"
                     )
+                    try:
+                        nimrod_cube_weights = iris.load_cube(nimrod_weights)
+                        nimrod_weights_exist = "True"
+                    except OSError:
+                        logging.warning(
+                            "Iris cannot find Nimrod weights file %s", nimrod_weights
+                        )
 
-                    # Load the Nimrod weights into an Iris cube.
-                    # TODO: check that the Nimrod weights file exists, and handle the situation
-                    #       if it doesn't
-                    nimrod_cube_weights = iris.load_cube(nimrod_weights)
-
-                    # Apply the weights to the Nimrod obs.
+                # QC the the Nimrod observations using the weights field.
+                if nimrod_obs_exist == "True" and nimrod_weights_exist == "True":
                     nimrod_cube_obs, nimrod_cube_weights = apply_radar_weights(
                         nimrod_cube_obs, nimrod_cube_weights
                     )
-
-                    # Write the Nimrod weights to a NetCDF file.
-                    if v["weights"] == "True":
-                        filename_wei_nc = (
-                            f"{nimrod_dir_wei}/{date_use.strftime('%Y%m%d%H%M')}"
-                            f"_{nimrod_dict[nimrod_field]['obs_id']}_weights"
-                        )
-                        filename_wei_nc = Path(filename_wei_nc).with_suffix(".nc")
-                        iris.save(nimrod_cube_weights, filename_wei_nc)
 
                 # Now that the accumulation weights have been applied if required,
                 # write the Nimrod obs to a NetCDF file.
@@ -238,6 +226,16 @@ def retrieve_nimrod():
                     )
                     filename_obs_nc = Path(filename_obs_nc).with_suffix(".nc")
                     iris.save(nimrod_cube_obs, filename_obs_nc)
+
+                # Write the Nimrod weights to a NetCDF file if the switch
+                # for this is set in v["weights"].
+                if v["weights"] == "True" and nimrod_weights_exist == "True":
+                    filename_wei_nc = (
+                        f"{nimrod_dir_wei}/{date_use.strftime('%Y%m%d%H%M')}"
+                        f"_{nimrod_dict[nimrod_field]['obs_id']}_weights"
+                    )
+                    filename_wei_nc = Path(filename_wei_nc).with_suffix(".nc")
+                    iris.save(nimrod_cube_weights, filename_wei_nc)
 
 
 # Run the function that fetches the NImrod radar obs.
