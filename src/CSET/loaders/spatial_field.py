@@ -722,6 +722,7 @@ def load(conf: Config):
                 variables={
                     "VARNAME": field,
                     "MODEL_NAME": model["name"],
+                    "METHOD": method,
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
@@ -738,6 +739,7 @@ def load(conf: Config):
                 variables={
                     "VARNAME": field,
                     "MODEL_NAME": model["name"],
+                    "METHOD": method,
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
