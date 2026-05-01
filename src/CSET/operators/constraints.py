@@ -63,12 +63,50 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
 
     Returns
     -------
+    An Iris constraint for either:
+      - a single UM STASH code
+      - a single variable name
+      - a list of variable names (Cardington multi-input case)
+    """
+    _STASH_RE = re.compile(r"m\d{2}s\d{2}i\d{3}$")
+
+    # ---- CASE 1: list of variable names (Cardington multi-variable) ----
+    if isinstance(varname, (list, tuple)):
+        return iris.Constraint(cube_func=lambda cube: cube.name() in varname)
+
+    # ---- CASE 2: single UM STASH code ----
+    if _STASH_RE.match(varname):
+        return iris.AttributeConstraint(STASH=varname)
+
+    # ---- CASE 3: single variable name ----
+    return iris.Constraint(name=varname)
+
+
+#  if re.match(r"m[0-9]{2}s[0-9]{2}i[0-9]{3}$", varname):
+#      varname_constraint = iris.AttributeConstraint(STASH=varname)
+#  else:
+#      varname_constraint = iris.Constraint(name=varname)
+#  return varname_constraint
+
+
+def generate_var_name_constraint(varname: str, **kwargs) -> iris.Constraint:
+    """Generate constraint from variable name (var_name).
+
+    Operator that takes a CF compliant variable name string, and generates an
+    iris constraint to be passed into the read or filter operator.
+
+    Arguments
+    ---------
+    varname: str
+        CF compliant name of variable using cube.var_name
+
+    Returns
+    -------
     varname_constraint: iris.Constraint
     """
-    if re.match(r"m[0-9]{2}s[0-9]{2}i[0-9]{3}$", varname):
-        varname_constraint = iris.AttributeConstraint(STASH=varname)
-    else:
-        varname_constraint = iris.Constraint(name=varname)
+    varname_constraint = iris.Constraint(
+        var_name=lambda v: v is not None and varname in v
+    )
     return varname_constraint
 
 

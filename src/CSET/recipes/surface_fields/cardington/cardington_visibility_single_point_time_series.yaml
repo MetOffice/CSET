@@ -1,0 +1,52 @@
+category: Time series of variables at Cardington single point
+title: "Time series of $PLOTNAME at lat_pt:52.10438, lon_pt:-0.42286 specific to Cardington gridpoint."
+description: "Plots a time series of $PLOTNAME at a selected Cardington gridpoint."
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: [$CARDINGTON_LABEL, $MODEL_NAME]
+
+  - operator: misc.combine_cubes_into_cubelist
+
+    first:      # --- Cardington ---
+      operator: misc.rename_cube
+      name: $PLOTNAME
+      var_name: $PLOTNAME
+      cubes:
+        operator: filters.filter_multiple_cubes
+        $CARDINGTON_LABEL:
+          operator: constraints.generate_var_constraint
+          varname: $VARNAME
+
+    second:     # --- UM ---
+      operator: filters.filter_multiple_cubes
+      $MODEL_NAME:
+        operator: constraints.combine_constraints
+        varname_constraint:
+          operator: constraints.generate_var_constraint
+          varname: $UM_VARNAME
+        pressure_level_constraint:
+          operator: constraints.generate_level_constraint
+          levels: []
+          coordinate: "pressure"
+        stash_constraint:
+          operator: constraints.generate_attribute_constraint
+          attribute: STASH
+
+  - operator: misc.remove_attribute
+    attribute: [ 'time_coverage_end', 'time_coverage_start', 'valid_min', 'valid_max', 'date', 'date_created' ]
+
+  - operator: misc.convert_visibility_to_km
+    units: 'km'
+
+  - operator: regrid.regrid_to_single_point
+    lat_pt: 52.10438
+    lon_pt: -0.42286
+    latlon_in_type: "realworld"
+    method: "Nearest"
+    boundary_margin: 0
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+  - operator: plot.plot_line_series

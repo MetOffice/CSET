@@ -1,0 +1,60 @@
+category: Time series of air temperature at Cardington single point
+title: "Time series of $PLOTNAME at lat_pt:52.10438, lon_pt:-0.42286 specific to Cardington gridpoint."
+description: "Plots a time series of $PLOTNAME at a selected Cardington gridpoint."
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: [$CARDINGTON_LABEL, $MODEL_NAME]
+
+  - operator: filters.filter_multiple_cubes
+
+    Cardington:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: $VARNAME
+      height_constraint:
+        operator: constraints.generate_attribute_constraint
+        attribute: 'height'
+        value: $HEIGHT
+
+    $MODEL_NAME:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $UM_VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: $UM_VARNAME
+      pressure_level_constraint:
+            operator: constraints.generate_level_constraint
+            levels: [ ]
+            coordinate: "pressure"
+      stash_constraint:
+        operator: constraints.generate_attribute_constraint
+        attribute: STASH
+
+  - operator: misc.latent_heat_units
+
+  - operator: misc.remove_attribute
+    attribute: [ 'time_coverage_end', 'time_coverage_start', 'valid_min', 'valid_max', 'date', 'date_created' ]
+
+  - operator: regrid.regrid_to_single_point
+    lat_pt: 52.10438
+    lon_pt: -0.42286
+    latlon_in_type: "realworld"
+    method: "Nearest"
+    boundary_margin: 0
+
+  # Make a single NetCDF with all the data inside it.
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+  # Plot the data.
+  - operator: plot.plot_line_series

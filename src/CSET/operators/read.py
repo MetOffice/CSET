@@ -23,7 +23,7 @@ import logging
 from pathlib import Path
 from typing import Literal
 
-import dask
+import dask.array as da
 import iris
 import iris.coord_systems
 import iris.coords
@@ -180,9 +180,11 @@ def read_cubes(
 
     # Split out first model's cubes and mark it as the base for comparisons.
     cubes = next(model_cubes)
-    for cube in cubes:
+    for i, cube in enumerate(cubes):
         # Use 1 to indicate True, as booleans can't be saved in NetCDF attributes.
         cube.attributes["cset_comparison_base"] = 1
+        # set masked data and knowingly bad data to np.nan so they aren't plotted
+        cubes[i] = _mask_fill_value(cube)  # returns a new cube into cubes
 
     # Load the rest of the models.
     cubes.extend(itertools.chain.from_iterable(model_cubes))
@@ -866,7 +868,39 @@ def _fix_lfric_cloud_base_altitude(cube: iris.cube.Cube):
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if any("cloud_base_altitude" in name for name in varnames):
         # Mask cube where set > 144kft to catch default 144.35695538058164
-        cube.data = dask.array.ma.masked_greater(cube.core_data(), 144.0)
+        cube.data = da.ma.masked_greater(cube.core_data(), 144.0)
+
+
+def _mask_fill_value(cube: iris.cube.Cube, ulp_factor=10):
+    """Force masked data using fill_value to equal np.nan.
+
+    Data previously flagged as bad and thereby ascribed as 1e11 or
+    999999 are also set to np.nan. This ensures no such values are plotted.
+
+    ulp_factor is used to scale up the float32 to float64 error to a
+    catch-all value
+    """
+    x = cube.lazy_data()
+    fill_value = x._meta.fill_value
+    fill_values = (fill_value, 1e10, 1e11, 999999)
+    data = x.map_blocks(np.ma.getdata, dtype=x.dtype)
+    m0 = x.map_blocks(np.ma.getmaskarray, dtype=bool)
+
+    data = data.astype(np.float32)
+    m_fill = da.zeros(data.shape, dtype=bool, chunks=data.chunks)
+    for fv in fill_values:
+        ulp = ulp_factor * np.spacing(np.float32(fv)).astype(np.float64)
+        m_fill = m_fill | da.isclose(data, np.float32(fv), rtol=0, atol=ulp)
+
+    has_any_masked = da.any(m0).compute()
+    has_any_sentinel = da.any(m_fill).compute()
+    if (not has_any_masked) and (not has_any_sentinel):
+        return cube  # nothing to clean, return cube unchanged
+
+    m_all = m0 | m_fill
+    y = da.where(m_all, np.nan, data)
+
+    return cube.copy(data=y)  # returns modified cube
 
 
 def _fix_um_winds(cubes: iris.cube.CubeList):

@@ -1,0 +1,86 @@
+category: Time series of variables at Cardington single point
+title: "Time series of $PLOT_VARNAME at lat_pt:52.10438, lon_pt:-0.42286 specific to Cardington gridpoint."
+description: "Plots a time series of $PLOT_VARNAME at a selected Cardington gridpoint."
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: [$CARDINGTON_LABEL, $MODEL_NAME]
+
+  - operator: misc.combine_cubes_into_cubelist
+    first:
+      operator: misc.rename_cube
+      name: $PLOT_VARNAME
+      cubes:
+        operator: filters.filter_multiple_cubes
+        constraints:
+          operator: constraints.combine_constraints
+          varname_constraint:
+            operator: constraints.generate_var_constraint
+            varname: $VARNAME
+          height_constraint:
+            operator: constraints.generate_attribute_constraint
+            attribute: height
+            value: $HEIGHT
+
+    second:
+      # --- UM: calculate vector wind from both components ---
+      operator: wind.calculate_vector_wind
+      cubes:
+        operator: filters.filter_multiple_cubes
+        u_constraint:
+          operator: constraints.combine_constraints
+          varname_constraint:
+            operator: constraints.generate_var_constraint
+            varname: $UM_U_VARNAME
+          cell_methods_constraint:
+            operator: constraints.generate_cell_methods_constraint
+            cell_methods: []
+            varname: $UM_U_VARNAME
+          pressure_level_constraint:
+            operator: constraints.generate_level_constraint
+            levels: []
+            coordinate: "pressure"
+          stash_constraint:
+            operator: constraints.generate_attribute_constraint
+            attribute: STASH
+
+        v_constraint:
+          operator: constraints.combine_constraints
+          varname_constraint:
+            operator: constraints.generate_var_constraint
+            varname: $UM_V_VARNAME
+          cell_methods_constraint:
+            operator: constraints.generate_cell_methods_constraint
+            cell_methods: []
+            varname: $UM_V_VARNAME
+          pressure_level_constraint:
+            operator: constraints.generate_level_constraint
+            levels: []
+            coordinate: "pressure"
+          stash_constraint:
+            operator: constraints.generate_attribute_constraint
+            attribute: STASH
+
+# PLOT_VARNAME is used to constrain to either speed or direction
+  - operator: filters.filter_multiple_cubes
+    to_plot:
+      operator: constraints.generate_var_constraint
+      varname: $PLOT_VARNAME
+
+  - operator: misc.remove_attribute
+    attribute: [ 'time_coverage_end', 'time_coverage_start', 'valid_min', 'valid_max', 'date', 'date_created' ]
+
+  - operator: regrid.regrid_to_single_point
+    lat_pt: 52.10438
+    lon_pt: -0.42286
+    latlon_in_type: "realworld"
+    method: "Nearest"
+    boundary_margin: 0
+
+  # Make a single NetCDF with all the data inside it.
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+  # Plot the data.
+  - operator: plot.plot_line_series
