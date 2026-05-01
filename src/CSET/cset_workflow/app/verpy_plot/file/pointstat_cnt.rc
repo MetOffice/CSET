@@ -1,0 +1,28 @@
+[VerPy_settings]
+comment: general stuff
+verbosity: 30
+
+[VerPy_sources]
+comment: data sources
+type = cnt
+truth = Surface Obs
+system = MET
+
+[VerPy_dates]
+comment: dates and times
+start: 20230127
+end: 20230707
+
+[VerPy_plot_general]
+comment = general plot details
+stats =  [7051, 7052]
+param =  [(16, 1, -0.1), 'rh']
+interp = NEAREST
+
+[VerPyPlot_plot1]
+comment = Lead Time plots
+inherit = VerPy_settings, VerPy_sources, VerPy_dates, VerPy_plot_general
+output = fcrseries
+jobid = cset_lead_times
+fcrs = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900, 3000, 3100, 3200, 3300, 3400, 3500, 3600]
+times: [0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300]
