@@ -650,6 +650,36 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+    if conf.LATITUDE_DERIVATIVE_SURFACE_FIELD:
+        for model in models:
+            yield RawRecipe(
+                recipe="generic_latitude_nonspherical_derivative.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
+    if conf.LONGITUDE_DERIVATIVE_SPATIAL_SURFACE_FIELD:
+        for model in models:
+            yield RawRecipe(
+                recipe="generic_longitude_nonspherical_derivative.yaml",
+                model_ids=model["id"],
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
     # Create a list of case aggregation types.
     AGGREGATION_TYPES = ["lead_time", "hour_of_day", "validity_time", "all"]
 
