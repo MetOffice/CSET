@@ -8,6 +8,7 @@ then runs verpy to create the plots
 """
 
 import argparse
+import json
 import os
 
 import VerPy
@@ -42,8 +43,6 @@ for options in opts_dicts:
     # TODO create a json metadata file in outdir
     json_filename = f"{args.outdir}/{options['jobid']}/meta.json"
     print(f"writing metadata to json file: {json_filename}")
+    metadata_dict = {"title": "Metplus Point Stat plots", "category": "Metplus plots"}
     with open(json_filename, "w") as jf:
-        jf.write("{\n")
-        jf.write('"title": Metplus Point Stat plots\n')
-        jf.write('"category": Metplus plots\n')
-        jf.write("}")
+        json.dump(metadata_dict, jf, indent=2)
