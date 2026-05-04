@@ -7,7 +7,7 @@
         fetch_fcst_m1 => metplus_prep_fcst_m1
         metplus_prep_fcst_m1 => metplus_point_stat
         metplus_prep_fcst_m1 => housekeeping
-        metplus_ascii2nc => metplus_point_stat
+        metplus_ascii2nc => metplus_point_stat => cycle_complete
     {% endmacro %}
 
     {% if CSET_CYCLING_MODE == "case_study" %}
@@ -21,7 +21,7 @@
                     {{metplus_point_stat_graph()}}
                 """
     {% endif %}
-    R1/$ = metplus_point_stat => verpy_metloader_pointstat
+    R1/$ = cycle_complete => verpy_metloader_pointstat => verpy_plot_pointstat => finish_website
 
 [runtime]
     [[metplus_prep_obs]]
@@ -75,4 +75,17 @@
             STAT_TYPE = cnt
             STREAM = point_stat
             METLOADER_CONF_FILE = metloader.conf
+
+    [[verpy_plot_pointstat]]
+    # Runs VerPy plotting routines
+        inherit = METPLUS
+        script = rose task-run -v --app-key=verpy_plot
+        [[[environment]]]
+            PLOT_DIR = ${CYLC_WORKFLOW_SHARE_DIR}/web/plots
+            START_DATE = $(isodatetime {{ CSET_CASE_DATES|min }} --print-format %Y%m%d)
+            END_DATE = $(isodatetime {{ CSET_CASE_DATES|max }} --offset {{ANALYSIS_LENGTH}} --print-format %Y%m%d)
+            VER_METHOD = area
+            STAT_TYPE = cnt
+            STREAM = point_stat
+
 {% endif %}
