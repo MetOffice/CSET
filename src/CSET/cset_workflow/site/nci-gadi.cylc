@@ -9,6 +9,7 @@
             """
         [[[ environment ]]]
             PROJECT = {{ PROJECT }}
+            PYTHONPATH = "{{VERPY_DIR}}"
 
     [[METPLUS]]
         platform = gadi_pbs
