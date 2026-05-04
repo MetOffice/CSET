@@ -9,9 +9,7 @@ truth = Surface Obs
 system = MET
 
 [VerPy_dates]
-comment: dates and times
-start: 20230127
-end: 20230707
+comment: dates and times. Sourced via environment variables
 
 [VerPy_plot_general]
 comment = general plot details
