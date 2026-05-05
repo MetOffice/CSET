@@ -2,6 +2,7 @@
 
 """Retrieve UK Nimrod radar observations. Specific to the Met Office."""
 
+import json
 import logging
 import os
 from datetime import datetime
@@ -11,12 +12,11 @@ import iris
 import isodate
 import numpy as np
 
-from CSET.cset_workflow.app.fetch_nimrod.bin.restricted_nimrod_data import (
-    _nimrod_dictionary,
-)
-
 iris.FUTURE.save_split_attrs = True
 iris.FUTURE.date_microseconds = True
+
+# Define the file to use when retrieving the sensitive Nimrod handling data.
+nimrod_met_office = "restricted_nimrod_met_office.json"
 
 
 def _get_needed_environment_variables_nimrod() -> dict:
@@ -96,7 +96,8 @@ def retrieve_nimrod():
     v = _get_needed_environment_variables_nimrod()
 
     # Grab the Nimrod handling dictionary.
-    nimrod_dict = _nimrod_dictionary()
+    with open(nimrod_met_office, "rt") as fp:
+        nimrod_dict = json.load(fp)
 
     # Form the Nimrod start and end dates.
     date_start = v["data_time"]
