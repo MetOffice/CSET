@@ -40,7 +40,7 @@ for options in opts_dicts:
     )
     print(f"Options Dictionary: {options}")
     VerPy.job.run(args.outdir, options)
-    # TODO create a json metadata file in outdir
+    # Create a json metadata file in outdir
     json_filename = f"{args.outdir}/{options['jobid']}/meta.json"
     print(f"writing metadata to json file: {json_filename}")
     metadata_dict = {"title": "Metplus Point Stat plots", "category": "Metplus plots"}
