@@ -555,7 +555,7 @@ def load(conf: Config):
                 model_ids=model["id"],
                 aggregation=False,
             )
-            
+
     # Equivalent potential temperature on pressure levels.
     if conf.SPATIAL_PLEVEL_THETA_E:
         for model, plevel, method in itertools.product(
@@ -642,6 +642,21 @@ def load(conf: Config):
                 },
                 model_ids=model["id"],
                 aggregation=True,
+            )
+
+    if conf.MAUL_PRESENCE:
+        for model in models:
+            yield RawRecipe(
+                recipe="presence_of_maul_spatial_plot_sequence.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
             )
 
     # Model level fields.
