@@ -11,6 +11,10 @@ import iris
 import isodate
 import numpy as np
 
+from CSET.cset_workflow.app.fetch_nimrod.bin.restricted_nimrod_data import (
+    _nimrod_dictionary,
+)
+
 iris.FUTURE.save_split_attrs = True
 iris.FUTURE.date_microseconds = True
 
@@ -29,7 +33,6 @@ def _get_needed_environment_variables_nimrod() -> dict:
     variables = {
         "field": radar_sources,
         "weights": os.environ["NIMROD_WEIGHTS"],
-        "raw_path": "/data/users/radar/UKnimrod",
         "date_type": "initiation",
         "data_time": datetime.fromisoformat(os.environ["CYLC_TASK_CYCLE_POINT"]),
         "forecast_length": isodate.parse_duration(os.environ["ANALYSIS_LENGTH"]),
@@ -37,54 +40,6 @@ def _get_needed_environment_variables_nimrod() -> dict:
     }
     logging.debug("Environment variables loaded for Nimrod: %s", variables)
     return variables
-
-
-def _nimrod_dictionary() -> dict:
-    """Write the dictionary to handle Nimrod obs."""
-    nimrod_dict = {
-        "Nimrod_comp_xkm": {
-            "basedir": "/data/users/radar/UKnimrod",
-            "obs_dir": "rainaccum_comp_hour",
-            "obs_fname": "_nimrod_ng_radar_rainaccum_comp_hour",
-            "weights_dir": "rainaccwt_comp_hour",
-            "weights_fname": "_nimrod_ng_radar_rainaccwt_comp_hour",
-            "obs_id": "Nimrodxkm",
-            "wei_id": "Nimrodxkm_weights",
-            "freq": "PT1H",
-        },
-        "Nimrod_comp_1km": {
-            "basedir": "/data/users/radar/UKnimrod",
-            "obs_dir": "rainaccum_comp_hour_1km_cutout",
-            "obs_fname": "_nimrod_ng_radar_rainaccum_comp_hour_1km_cutout_775X640_eng",
-            "weights_dir": "rainaccwt_comp_hour_1km_cutout",
-            "weights_fname": "_nimrod_ng_radar_rainaccwt_comp_hour_1km_cutout_775X640_eng",
-            "obs_id": "Nimrod1km",
-            "wei_id": "Nimrod1km_weights",
-            "freq": "PT1H",
-        },
-        "Nimrod_comp_2km": {
-            "basedir": "/data/users/radar/UKnimrod",
-            "obs_dir": "rainaccum_comp_hour_2km",
-            "obs_fname": "_nimrod_ng_radar_rainaccum_comp_hour_2km",
-            "weights_dir": "rainaccwt_comp_hour_2km",
-            "weights_fname": "_nimrod_ng_radar_rainaccwt_comp_hour_2km",
-            "obs_id": "Nimrod2km",
-            "wei_id": "Nimrod2km_weights",
-            "freq": "PT1H",
-        },
-        "Nimrod_comp_5min": {
-            "basedir": "/data/users/radar/UKnimrod",
-            "obs_dir": "rainrate_comp_5min",
-            "obs_fname": "_nimrod_ng_radar_rainrate_composite_1km_merged",
-            "weights_dir": "",
-            "weights_fname": "",
-            "obs_id": "Nimrod5min",
-            "wei_id": "",
-            "freq": "PT5M",
-        },
-    }
-
-    return nimrod_dict
 
 
 def apply_radar_weights(cube_obs: iris.cube.Cube, cube_wei: iris.cube.Cube):
