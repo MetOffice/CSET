@@ -63,7 +63,7 @@ def test_apply_radar_weights_unpack_packed_weights():
 
 # Tests for env loading and parsing logic.
 def test_get_needed_environment_variables_nimrod(monkeypatch):
-    """Test the environment variables required to fetch Nimrod data."""
+    """Test reading in the environment variables required to fetch Nimrod data."""
     monkeypatch.setenv("NIMROD_COMP_XKM", "True")
     monkeypatch.setenv("NIMROD_COMP_1KM", "False")
     monkeypatch.setenv("NIMROD_COMP_2KM", "False")
