@@ -498,12 +498,10 @@ def test_extract_common_points_ensureworking(vertical_profile_cube):
     cube1 = vertical_profile_cube.copy()
     cube2 = vertical_profile_cube.copy()
     cube1 = cube1[:, 0:3]
-    print(cube1)
     assert np.allclose(
         cube1.coord("pressure").points, [700, 850, 950], rtol=1e-6, atol=1e-2
     )
     cube2 = cube2[:, 1:]
-    print(cube2)
     assert np.allclose(
         cube2.coord("pressure").points, [850, 950, 1000], rtol=1e-6, atol=1e-2
     )
