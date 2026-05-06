@@ -193,4 +193,5 @@ def retrieve_nimrod():
 
 
 # Run the function that fetches the NImrod radar obs.
-retrieve_nimrod()
+if __name__ == "__main__":
+    retrieve_nimrod()
