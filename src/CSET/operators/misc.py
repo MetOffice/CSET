@@ -17,6 +17,7 @@
 import itertools
 import logging
 from collections.abc import Iterable
+from functools import reduce
 
 import iris
 import iris.analysis.calculus
@@ -416,7 +417,11 @@ def _extract_common_time_points(base: Cube, other: Cube) -> tuple[Cube, Cube]:
         shared_times = set.intersection(set(base_times), set(other_times))
     logging.debug("Shared times: %s", shared_times)
     time_constraint = iris.Constraint(
-        coord_values={time_coord: lambda cell: cell.point in shared_times}
+        coord_values={
+            time_coord: lambda cell, shared_times=shared_times: (
+                cell.point in shared_times
+            )
+        }
     )
     # Extract points matching the shared times.
     base = base.extract(time_constraint)
@@ -532,49 +537,47 @@ def _slice_cube_on_levels(cube: iris.cube.Cube, coord_name: str, levels: list):
 
 def extract_common_points(cubes: iris.cube.CubeList, coordinate: str):
     """
-    Extract common points for a given coordinate between two cubes.
+    Extract common points for a given coordinate between cubes in a CubeList.
 
     Parameters
     ----------
     cubes: iris.cube.CubeList
-        CubeList containing exactly two cubes.
+        CubeList containing cubes for which to extract common points.
 
     coordinate: str
-        The coordinate name to be checked for common levels.
+        The coordinate name to be checked for common points.
 
     Returns
     -------
     iris.cube.CubeList
-        CubeList containing the two cubes sliced to common levels
+        CubeList containing the two cubes sliced to common points
         for the given coordinate.
     """
     # Check type of input
     if type(cubes) is not iris.cube.CubeList:
         raise TypeError(f"Not a CubeList, got type {type(cubes)}")
 
-    # Check that only two cubes are passed into function.
-    if len(cubes) != 2:
-        raise ValueError(f"Maximum of two cubes allowed, received {len(cubes)}")
-
     # Extract coordinate
     try:
-        p1 = cubes[0].coord(coordinate)
-        p2 = cubes[1].coord(coordinate)
+        points_list = []
+        for cube in cubes:
+            points_list.append(cube.coord(coordinate).points)
     except iris.exceptions.CoordinateNotFoundError as err:
         raise ValueError(f"Both cubes must have an {coordinate} coordinate") from err
 
     # Find common points
-    common_points = np.intersect1d(p1.points, p2.points)
+    common_points = reduce(np.intersect1d, points_list)
 
     # Check that common points is more than zero.
     if common_points.size == 0:
         raise ValueError("No common levels found")
 
     # Extract common points
-    cube0_common = _slice_cube_on_levels(cubes[0], coordinate, common_points)
-    cube1_common = _slice_cube_on_levels(cubes[1], coordinate, common_points)
+    common_cubes = iris.cube.CubeList()
+    for cube in cubes:
+        common_cubes.append(_slice_cube_on_levels(cube, coordinate, common_points))
 
-    return iris.cube.CubeList([cube0_common, cube1_common])
+    return common_cubes
 
 
 def differentiate(
