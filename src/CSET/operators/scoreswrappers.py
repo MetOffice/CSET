@@ -172,7 +172,7 @@ def scores_rmse(
         scores.continuous.rmse(
             xr.DataArray.from_iris(other),
             xr.DataArray.from_iris(base),
-            preserve_coords=preserved_coordinates,
+            preserve_dims=preserved_coordinates,
         )
     )
     RMSE.rename(f"RMSE_of_{base.name()}")
