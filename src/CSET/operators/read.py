@@ -1078,3 +1078,10 @@ def _normalise_ML_varname(cube: iris.cube.Cube):
             cube.long_name = (
                 "vapour_specific_humidity_at_pressure_levels_for_climate_averaging"
             )
+
+
+def _restructure_ugrid():
+
+    """
+    TODO
+    """
