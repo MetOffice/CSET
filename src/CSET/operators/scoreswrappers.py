@@ -127,9 +127,45 @@ def _sort_cubes_for_verification(cubes: iris.cube.CubeList):
 
 
 def scores_rmse(
-    cubes: iris.cube.CubeList, preserved_coordinates: list | str | None = None
+    cubes: iris.cube.CubeList, preserved_coordinates: list[str] | str | None = None
 ):
-    """Calculate the RMSE using scores."""
+    """Calculate the Root Mean Square Error (RMSE) using scores.
+
+    Acts as a wrapper around the RMSE calculation from `scores` ([scoresa]_, [scoresb]_).
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        A CubeList containing exactly two cubes: a base and an "other" model,
+        this can be an analysis and the model.
+    preserved_coordinates: list[str] | str | None, default is None.
+        The coordinates that you wish to preserve in the calculaiton of the
+        RMSE. For example if you want a map of each time you can preserve
+        ["time","grid_latitude", "grid_longitude"] or if you want a time series
+        you can preserve ["time"], if you want to collapse to a single value
+        use `None`. The default is `None`.
+
+    Returns
+    -------
+    RMSE: iris.cube.Cube
+        A cube containing the RMSE between the base and other cube.
+
+    References
+    ----------
+    .. [scoresa] Leeuwenburg, T., Loveday, N., Ebert, E. E., Cook, H.,
+    Khanarmuei, M., Taggart, R. J., Ramanathan, N., Carroll, M., Chong, S.,
+    Griffiths, A., & Sharples, J. (2024) "scores: A Python package for
+    verifying and evaluating models and predictions with xarray". Journal
+    of Open Source Software, vol. 9, 6889. doi: 10.21105/joss.06889
+
+    .. [scoresb] Leeuwenburg, T., Loveday, N., Ramanathan, N., Chong, S.,
+    Taggart, R. J., Shrestha, D., Khanarmuei, M., Cook, H., Bluett, L., Ebert,
+    E. E., Carroll, M., Trotta, B., Bishop, S., Squire, D. T., Griffiths, A.,
+    Pagano, T. C., Fisher, A. J., Mandelbaum, T., Jinghan, F., … Smallwood, J.
+    (2026) "scores: Metrics for the verification, evaluation and optimisation of
+    forecasts, predictions or models (2.5.0)". Zenodo. doi: 10.5281/zenodo.18638494
+
+    """
     base, other = _sort_cubes_for_verification(cubes)
 
     RMSE = xr.DataArray.to_iris(
