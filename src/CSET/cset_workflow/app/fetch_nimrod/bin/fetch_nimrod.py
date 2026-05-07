@@ -96,7 +96,7 @@ def retrieve_nimrod():
     v = _get_needed_environment_variables_nimrod()
 
     # Grab the Nimrod handling dictionary.
-    with open(nimrod_met_office, "rt") as fp:
+    with open(nimrod_met_office, "rt") as fp:  # pragma: no cover
         nimrod_dict = json.load(fp)
 
     # Form the Nimrod start and end dates.
