@@ -34,7 +34,7 @@ steps:
     subarea_extent: $SUBAREA_EXTENT
 
   - operator: scoreswrappers.scores_rmse
-    preserved_coordinates: ["time", "grid_latitude", "grid_longitude"]
+    preserved_coordinates: ["time", "latitude", "longitude"]
 
   - operator: collapse.collapse
     coordinate: [time]
