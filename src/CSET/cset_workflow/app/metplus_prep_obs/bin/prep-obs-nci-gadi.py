@@ -26,22 +26,6 @@ BOM_SYSTEMS = ["access_g3", "access_g4"]
 for dm in ["ad", "bn", "dn", "nq", "ph", "sy", "vt"]:
     BOM_SYSTEMS.extend(["access_c3_" + dm, "access_c4_" + dm])
 
-# Columns to output
-ASCII_COLUMNS = [
-    "Message_Type",
-    "Station_ID",
-    "Valid_Time",
-    "Lat",
-    "Lon",
-    "Elevation",
-    "GRIB_Code",
-    "Level",
-    "Height",
-    "QC_String",
-    "Observation_Value",
-]
-
-
 def _get_c(obsdate: datetime, system: str, type: str) -> pandas.DataFrame:
     year = f"{obsdate.year}"
     month = f"{obsdate.month:02d}"
@@ -109,23 +93,6 @@ def get_obs(obsdate: datetime, system: str, type: str) -> pandas.DataFrame:
     return obs
 
 
-def odb2ascii(obs: pandas.DataFrame) -> pandas.DataFrame:
-    """Convert data from pyodc to METplus ASCII format."""
-    ascii = pandas.DataFrame(columns=ASCII_COLUMNS)
-    ascii["Station_ID"] = obs["statid@hdr"]
-    ascii["Valid_Time"] = (
-        obs["date@hdr"].astype(str) + "_" + obs["time@hdr"].astype(str).str.zfill(6)
-    )
-    ascii["Lat"] = obs["lat@hdr"]
-    ascii["Lon"] = obs["lon@hdr"]
-    ascii["Elevation"] = obs["stalt@hdr"]
-    ascii["GRIB_Code"] = obs["varno_name"]
-    ascii["Level"] = obs["vertco_reference_1@body"] // 100  # in hPa
-    ascii["Height"] = obs["stalt@hdr"]
-    ascii["QC_String"] = "NA"
-    ascii["Observation_Value"] = obs["obsvalue@body"]
-
-    return ascii
 
 
 def prep_surface_obs(obsdate: datetime, system: str) -> pandas.DataFrame:
