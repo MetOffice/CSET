@@ -714,6 +714,25 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+    if conf.BAND_PASS_FILTER_SPATIAL_SURFACE_FIELD:
+        for model, field, method in itertools.product(
+            models, conf.SURFACE_FIELDS, conf.SPATIAL_SURFACE_FIELD_METHOD
+        ):
+            yield RawRecipe(
+                recipe="generic_band_pass_filter.yaml",
+                model_ids=model["id"],
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": model["name"],
+                    "METHOD": method,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                aggregation=False,
+            )
+
     if conf.LATITUDE_DERIVATIVE_SURFACE_FIELD:
         for model, field, method in itertools.product(
             models, conf.SURFACE_FIELDS, conf.SPATIAL_SURFACE_FIELD_METHOD
