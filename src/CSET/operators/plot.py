@@ -1425,6 +1425,7 @@ def _plot_and_save_histogram_series(
         if (
             ("surface_microphysical" in title)
             or ("rain accumulation" in title)
+            or ("Rainfall rate Composite" in title)
             or ("Nimrod_5min" in title)
         ):
             if "amount" in title:
@@ -1467,6 +1468,7 @@ def _plot_and_save_histogram_series(
         if (
             ("surface_microphysical" in title and "amount" in title)
             or ("rain_accumulation" in title)
+            or ("Rainfall rate Composite" in title)
             or ("Nimrod_5min" in title)
         ):
             bin_mean = (bins[:-1] + bins[1:]) / 2.0

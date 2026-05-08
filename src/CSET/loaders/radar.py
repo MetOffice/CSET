@@ -88,13 +88,20 @@ def load(conf: Config):
     # Load the required radar observation sources.
     radar_sources = get_radar_sources(conf)
 
-    for radar in radar_sources:
-        # Surface (2D) fields for Nimrod radar rainfall.
-        #
-        # The different sources of Nimrod rainfall accumulation have
-        # different spatial grids. So each source requires its own
-        # recipe to prevent incompatible cubes being created.
-        if conf.SPATIAL_SURFACE_FIELD:
+    # Form the list of accumulated hourly rainfall radar sources.
+    accum_radars = [
+        radar
+        for radar in radar_sources
+        if radar["varname"] == "Hourly rain accumulation"
+    ]
+
+    # Surface (2D) fields for Nimrod radar rainfall.
+    #
+    # The different sources of Nimrod rainfall accumulation have
+    # different spatial grids. So each source requires its own
+    # recipe to prevent incompatible cubes being created.
+    if conf.SPATIAL_SURFACE_FIELD:
+        for radar in radar_sources:
             yield RawRecipe(
                 recipe="generic_surface_spatial_plot_sequence_radar_rainfall.yaml",
                 model_ids=radar["id"],  # -> Becomes $INPUT_PATHS
@@ -110,18 +117,13 @@ def load(conf: Config):
                 aggregation=False,
             )
 
-    # Histograms for surface (2D) Nimrod radar rainfall.
+    # Histograms for surface (2D) Nimrod radar hourly accumulated rainfall.
     #
     # To get multiple radar sources plotted on the histogram the
     # recipe must be done by passing lists of the radar_ids and
     # the radar_names. As this is a multiline plot, all radar sources
     # share the same radar variable name.
     if conf.HISTOGRAM_SURFACE_FIELD:
-        accum_radars = [
-            radar
-            for radar in radar_sources
-            if radar["varname"] == "Hourly rain accumulation"
-        ]
         yield RawRecipe(
             recipe="generic_surface_histogram_series.yaml",
             # model_ids -> Becomes $INPUT_PATHS
@@ -132,6 +134,54 @@ def load(conf: Config):
                 "SEQUENCE": "time"
                 if conf.HISTOGRAM_SURFACE_FIELD_SEQUENCE
                 else "realization",
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+            },
+            aggregation=False,
+        )
+
+    # Histograms for surface (2D) Nimrod radar 5 minute rainfall rate.
+    if conf.HISTOGRAM_SURFACE_FIELD and conf.NIMROD_COMP_5MIN:
+        yield RawRecipe(
+            recipe="generic_surface_histogram_series.yaml",
+            # model_ids -> Becomes $INPUT_PATHS
+            model_ids="Nimrod5min",
+            variables={
+                "VARNAME": "Rainfall rate Composite",
+                "MODEL_NAME": "Nimrod_5min",
+                "SEQUENCE": "time"
+                if conf.HISTOGRAM_SURFACE_FIELD_SEQUENCE
+                else "realization",
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+            },
+            aggregation=False,
+        )
+
+    # Timeseries plot of Nimrod hourly surface rainfall accumulation.
+    if conf.TIMESERIES_SURFACE_FIELD:
+        yield RawRecipe(
+            recipe="radar_mean_time_series.yaml",
+            # model_ids -> Becomes $INPUT_PATHS
+            model_ids=[radar["id"] for radar in accum_radars],
+            variables={
+                "VARNAME": next(radar["varname"] for radar in accum_radars),
+                "MODEL_NAME": [radar["name"] for radar in accum_radars],
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+            },
+            aggregation=False,
+        )
+
+    # Timeseries plot of Nimrod 5 minute rainfall rate.
+    if conf.TIMESERIES_SURFACE_FIELD and conf.NIMROD_COMP_5MIN:
+        yield RawRecipe(
+            recipe="radar_mean_time_series.yaml",
+            # model_ids -> Becomes $INPUT_PATHS
+            model_ids="Nimrod5min",
+            variables={
+                "VARNAME": "Rainfall rate Composite",
+                "MODEL_NAME": "Nimrod_5min",
                 "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                 "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
             },
