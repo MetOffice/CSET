@@ -37,15 +37,13 @@ log = logging.getLogger(__name__)
 
 COLUMN_INFO = """
 ASCII Column Info:
- 0 - Message_Type: uses PrepBUFR names where known, otherwise the ODB \
-reportype@hdr value
+ 0 - Message_Type: uses PrepBUFR names where known, otherwise the ODB reportype@hdr value
  1 - Station_ID: statid@hdr
  2 - Valid_Time: date@hdr_time@hdr
  3 - Lat: lat@hdr
  4 - Lon: lon@hdr
  5 - Elevation: stalt@hdr
- 6 - Variable_Name: uses ODB variable names from \
-https://codes.ecmwf.int/odb/varno/
+ 6 - Variable_Name: uses ODB variable names from https://codes.ecmwf.int/odb/varno/
  7 - Level: is the observation pressure level (where available)
  8 - Height: is 0 for surface observations
  9 - QC_String: unused
@@ -315,9 +313,7 @@ def valid_times_iterator(
     """Convert a list of TimePoints or TimeRecurrences into an iterable of TimePoints."""
     # Make sure times are in UTC unless specified
     TPP = metomi.isodatetime.parsers.TimePointParser(assumed_time_zone=(0, 0))
-    TRP = metomi.isodatetime.parsers.TimeRecurrenceParser(
-        timepoint_parser=TPP
-    )
+    TRP = metomi.isodatetime.parsers.TimeRecurrenceParser(timepoint_parser=TPP)
 
     if valid_times is None:
         yield None
