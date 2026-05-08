@@ -40,7 +40,7 @@ from CSET.operators._utils import (
     get_cube_yxcoordname,
     is_spatialdim,
 )
-
+from CSET.operators.regrid import restructure_ugrid
 
 class NoDataError(FileNotFoundError):
     """Error that no data has been loaded."""
@@ -225,14 +225,20 @@ def _load_model(
 
     cubes = iris.load(input_files)
 
-    cubes = _restructure_ugrid(cubes)
-    
+    # If a cube called latitude exists, chances are its unstructured.
+    # Using extract, not extract_cubes in a try as there might be more
+    # than one cube called latitude if we are aggregating.
+    if len(cubes.extract("latitude")) > 0:
+        cubes = restructure_ugrid(cubes)
+
     for cube in cubes:
         _loading_callback(cube, None, None)
 
+    iris.save(cubes, '/data/scratch/james.warner/tmp/out.nc')
+
     cubes = cubes.extract(constraint)
 
-   # cubes = iris.load(input_files, constraint, callback=_loading_callback)
+    # cubes = iris.load(input_files, constraint, callback=_loading_callback)
     # Make the UM's winds consistent with LFRic.
     _fix_um_winds(cubes)
 
@@ -1088,21 +1094,3 @@ def _normalise_ML_varname(cube: iris.cube.Cube):
             cube.long_name = (
                 "vapour_specific_humidity_at_pressure_levels_for_climate_averaging"
             )
-
-
-def _restructure_ugrid(cubes):
-
-    """
-    TODO
-    """
-    print('Running restructure ugrid')
-    
-    # Basic check to determine if unstructured.
-    try:
-        cubes.extract_cube('latitude')
-    except iris.exceptions.ConstraintMismatchError:
-        return cubes
-
-
-
-    return cubes
