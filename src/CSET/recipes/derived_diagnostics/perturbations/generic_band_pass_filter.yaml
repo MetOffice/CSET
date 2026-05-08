@@ -25,8 +25,8 @@ steps:
     subarea_extent: $SUBAREA_EXTENT
 
   - operator: imageprocessing.band_pass_filter_via_gaussians
-    low_sigma: [0,0.5,0.5]
-    high_sigma: [0,10,10]
+    low_sigma: 0.5
+    high_sigma: 10
 
   - operator: collapse.collapse
     coordinate: [time]
