@@ -222,7 +222,17 @@ def _load_model(
     input_files = _check_input_files(paths)
     # If unset, a constraint of None lets everything be loaded.
     logging.debug("Constraint: %s", constraint)
-    cubes = iris.load(input_files, constraint, callback=_loading_callback)
+
+    cubes = iris.load(input_files)
+
+    cubes = _restructure_ugrid(cubes)
+    
+    for cube in cubes:
+        _loading_callback(cube, None, None)
+
+    cubes = cubes.extract(constraint)
+
+   # cubes = iris.load(input_files, constraint, callback=_loading_callback)
     # Make the UM's winds consistent with LFRic.
     _fix_um_winds(cubes)
 
@@ -1080,8 +1090,19 @@ def _normalise_ML_varname(cube: iris.cube.Cube):
             )
 
 
-def _restructure_ugrid():
+def _restructure_ugrid(cubes):
 
     """
     TODO
     """
+    print('Running restructure ugrid')
+    
+    # Basic check to determine if unstructured.
+    try:
+        cubes.extract_cube('latitude')
+    except iris.exceptions.ConstraintMismatchError:
+        return cubes
+
+
+
+    return cubes
