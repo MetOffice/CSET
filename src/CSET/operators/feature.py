@@ -368,6 +368,7 @@ def cell_stats(
         "forecast_period",
         "forecast_reference_time",
         "model_name",
+        "cset_comparison_base",
     ]
     input_cube_coord_names = []
     for coord in cube.coords():
