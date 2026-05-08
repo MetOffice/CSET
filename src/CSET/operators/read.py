@@ -187,6 +187,9 @@ def read_cubes(
     # Load the rest of the models.
     cubes.extend(itertools.chain.from_iterable(model_cubes))
 
+    # Enable different point-based observation sources to be concatenated.
+    cubes = _check_combine_point_observations(cubes)
+
     # Unify time units so different case studies can merge.
     iris.util.unify_time_units(cubes)
 
@@ -1078,3 +1081,16 @@ def _normalise_ML_varname(cube: iris.cube.Cube):
             cube.long_name = (
                 "vapour_specific_humidity_at_pressure_levels_for_climate_averaging"
             )
+
+
+def _check_combine_point_observations(cubes: iris.cube.CubeList):
+    """Enable cubes containing different point observation sources to be concatenated."""
+    nstation = 0
+    for cube in cubes:
+        if "station" in [coord.name() for coord in cube.coords(dim_coords=True)]:
+            if "obs_source" in [coord.name() for coord in cube.coords()]:
+                cube.remove_coord("obs_source")
+            cube.coord("station").points = cube.coord("station").points + nstation
+            nstation = nstation + len(cube.coord("station").points)
+
+    return cubes
