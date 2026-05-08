@@ -346,7 +346,12 @@ def cell_stats(
         logging.debug(f"Attempting to convert to effective radius using {hzntl_coord}")
         # Convert to km if possible
         # TODO: fall back to feature_size if this conversion fails
-        hzntl_coord.convert_units("km")
+        # TODO: this will still add the name "feature_effective_radius" to the feature_size
+        # cube, even though the data is actually pixel size. Figure out elegant solution.
+        try:
+            hzntl_coord.convert_units("km")
+        except:
+            pass
         # Naive grid spacing estimate, correct for regular grids, likely wildly
         # inaccruate for LFRic/irregular grids
         grid_spacing = np.abs(np.diff(hzntl_coord.points).mean())
@@ -356,6 +361,25 @@ def cell_stats(
         cube_properties["feature_size"]["data"] = size_data
         cube_properties["feature_size"]["units"] = "km"
 
+    # Get list of coords to copy from input cube to output cubes
+    copyable_coord_names = [
+        "realization",
+        "hour",
+        "forecast_period",
+        "forecast_reference_time",
+        "model_name",
+    ]
+    input_cube_coord_names = []
+    for coord in cube.coords():
+        input_cube_coord_names.append(coord.standard_name)
+        input_cube_coord_names.append(coord.long_name)
+
+    coords_to_copy = [
+        coord_name
+        for coord_name in copyable_coord_names
+        if coord_name in input_cube_coord_names
+    ]
+
     # Populate cubelist
     for cb_props in cube_properties.values():
         cell_stats_cube = iris.cube.Cube(
@@ -364,6 +388,11 @@ def cell_stats(
             units=cb_props["units"],
             dim_coords_and_dims=coords_and_dims,
         )
+        # Add other metadata from input cube
+        for coord_name in coords_to_copy:
+            cell_stats_cube.add_aux_coord(cube.coord(coord_name).copy())
+
+        # Add to cubelist
         cell_stats_cubelist.append(cell_stats_cube)
 
     return cell_stats_cubelist
