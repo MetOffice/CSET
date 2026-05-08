@@ -19,6 +19,7 @@ import logging
 import iris
 import iris.cube
 import numpy as np
+from skimage.filters import difference_of_gaussians, window
 from skimage.metrics import structural_similarity
 
 from CSET._common import is_increasing
@@ -417,3 +418,26 @@ def spatial_structural_similarity_same_model_comparisons(
     ssim.long_name = "structural_similarity"
     ssim.units = "1"
     return ssim
+
+
+def band_pass_filter_via_gaussians(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+    low_sigma: float | list[float],
+    high_sigma: float | list[float] | None = None,
+):
+    """Calculate a filtered field."""
+    band_pass_filtered_cubes = iris.cube.CubeList([])
+    for cube in iter_maybe(cubes):
+        filtered_windowed_image = cube.copy()
+        filtered_image = difference_of_gaussians(
+            cube.core_data(), low_sigma, high_sigma
+        )
+        filtered_windowed_image.data = filtered_image * window(
+            "hann", filtered_image.shape
+        )
+        filtered_windowed_image.rename(f"Filtered_{cube.name()}")
+        band_pass_filtered_cubes.append(filtered_windowed_image)
+    if len(band_pass_filtered_cubes) == 1:
+        return band_pass_filtered_cubes[0]
+    else:
+        return band_pass_filtered_cubes
