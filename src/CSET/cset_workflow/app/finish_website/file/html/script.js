@@ -425,7 +425,7 @@ function setup_description_toggle_button() {
   });
   // Ensure the description toggle persists across changing the frame content.
   for (const plot_frame of document.querySelectorAll("iframe")) {
-    plot_frame.addEventListener("DOMContentLoaded", () => {
+    plot_frame.addEventListener("load", () => {
       enforce_description_toggle();
     });
   }
