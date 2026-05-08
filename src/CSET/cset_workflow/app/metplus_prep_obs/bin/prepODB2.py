@@ -35,7 +35,7 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
-column_info = """
+COLUMN_INFO = """
 ASCII Column Info:
  0 - Message_Type: uses PrepBUFR names where known, otherwise the ODB \
 reportype@hdr value
@@ -69,8 +69,9 @@ ASCII_COLUMNS = [
     "Observation_Value",
 ]
 
-# Local report types defined in OBS
-local_report_type = {
+# Local report types defined in OBS in case we want to map them to PrepBUFR types
+# https://code.metoffice.gov.uk/trac/ops/browser/main/trunk/src/code/ODB/sql/report_types.hh
+LOCAL_REPORT_TYPE = {
     98001: {"name": "modes", "description": "MODE-S"},
     98002: {"name": "radar_scan", "description": "Radar scan data"},
     98016: {"name": "osseaice", "description": "Ocean and Sea Ice SAF"},
@@ -192,7 +193,10 @@ def get_height(obs: pandas.DataFrame) -> pandas.Series:
 
 def get_type(obs: pandas.DataFrame) -> pandas.Series:
     """
-    Get the PrepBUFR message type for each observation.
+    Get the message type for each observation.
+
+    Where possible a PrepBUFR type is returned, otherwise it will be the ODB
+    reportype@hdr value.
 
     Valid PrepBUFR message types are listed at
     https://www.emc.ncep.noaa.gov/mmb/data_processing/prepbufr.doc/table_1.htm
@@ -255,6 +259,18 @@ def odb2ascii_dataframe(obs: pandas.DataFrame) -> pandas.DataFrame:
     return ascii
 
 
+def write_ascii(dataframe: pandas.DataFrame, output: TextIO):
+    """Write the ASCII dataframe to output."""
+    dataframe.to_csv(
+        output,
+        sep="\t",
+        date_format="%Y%m%d_%H%M",
+        na_rep="NA",
+        index=False,
+        header=False,
+    )
+
+
 def odb2ascii(
     input_pattern: Path,
     output: TextIO,
@@ -271,29 +287,26 @@ def odb2ascii(
         output: Output stream
         valid_times: Times to fill the input pattern with
     """
+    # Loop over valid times
     for time in valid_times:
         log.info("Valid time %s", time)
-        for path in glob.glob(str(fill_pattern(input_pattern, time))):
+
+        # Loop over shell globs
+        for path in glob.glob(fill_pattern(input_pattern, time)):
             log.info("Loading %s", path)
+
+            # Process the ODB file
             with open(path, "rb") as input:
                 for obs in odc.read_odb(input):
                     df = odb2ascii_dataframe(obs)
-                    df.to_csv(
-                        output,
-                        sep="\t",
-                        date_format="%Y%m%d_%H%M",
-                        na_rep="NA",
-                        index=False,
-                        header=False,
-                    )
+                    write_ascii(df, output)
 
 
-def fill_pattern(pattern: Path, time: metomi.isodatetime.data.TimePoint | None) -> Path:
+def fill_pattern(pattern: Path, time: metomi.isodatetime.data.TimePoint | None) -> str:
     """Fill in time placeholders in a path, replacing date components like strftime."""
     if time is None:
-        return pattern
-
-    return Path(time.strftime(str(pattern)))
+        return str(pattern)
+    return time.strftime(str(pattern))
 
 
 def valid_times_iterator(
@@ -302,10 +315,9 @@ def valid_times_iterator(
     """Convert a list of TimePoints or TimeRecurrences into an iterable of TimePoints."""
     # Make sure times are in UTC unless specified
     TPP = metomi.isodatetime.parsers.TimePointParser(assumed_time_zone=(0, 0))
-    TRparse = metomi.isodatetime.parsers.TimeRecurrenceParser(
+    TRP = metomi.isodatetime.parsers.TimeRecurrenceParser(
         timepoint_parser=TPP
-    ).parse
-    TPparse = TPP.parse
+    )
 
     if valid_times is None:
         yield None
@@ -313,16 +325,16 @@ def valid_times_iterator(
 
     for vt in valid_times:
         if vt.startswith("R"):
-            yield from TRparse(vt)
+            yield from TRP.parse(vt)
         else:
-            yield TPparse(vt)
+            yield TPP.parse(vt)
 
 
 def main():
     """ODB2 to ASCII CLI."""
     parser = argparse.ArgumentParser(
         description=__doc__,
-        epilog=column_info,
+        epilog=COLUMN_INFO,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
