@@ -171,8 +171,8 @@ def get_height(obs: pandas.DataFrame) -> pandas.Series:
     """
     Get the height parameter for each observation.
 
-    This is defined as height ASL, but this is matched against Z levels so for
-    surface values we set it to 0 so they can be found with 'Z0'.
+    This is matched against Z levels so for surface values we set it to 0 so
+    they can be found with 'Z0'.
 
     In the metplus config find matching values with
 
