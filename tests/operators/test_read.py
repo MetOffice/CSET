@@ -1172,3 +1172,16 @@ def test_normalise_ML_varname(transect_source_cube):
     cube.rename = "air_temperature"
     read._normalise_ML_varname(cube)
     assert cube.long_name == "temperature_at_pressure_levels"
+
+
+def test_time_bounds():
+    """Only cubes with time processing have time bounds."""
+    cubes = read.read_cubes("tests/test_data/air_temp.nc")
+    for c in cubes:
+        print(c)
+        if c.coord("time").shape == (2,):
+            # Time processed fields
+            assert c.coord("time").bounds is not None
+        else:
+            # Instantaneous field
+            assert c.coord("time").bounds is None
