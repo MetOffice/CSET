@@ -378,6 +378,24 @@ def test_set_title_and_filename_multidim_aggregated(long_forecast_multi_day):
     assert plot_title == "recipe\n [3 cases]"
 
 
+def test_set_title_and_filename_year_one(cube):
+    """Ensure no time information in plot title and filename for dummy time output."""
+    # Extract first time from test cube.
+    cube = cube[0]
+    # Set time coordinate to 0001-01-01 0hrs and remove bounds.
+    cube.coord("time").units = "hours since 0001-01-01 00:00:00"
+    cube.coord("time").points = 0
+    cube.coord("time").bounds = None
+    seq_coord = cube.coord("time")
+    # Check no time information added to plot title or filename
+    nplot = 1
+    plot_title, plot_filename = plot._set_title_and_filename(
+        seq_coord, nplot, "recipe", None
+    )
+    assert plot_filename == "recipe.png"
+    assert plot_title == "recipe"
+
+
 def test_colorbar_map_mask(cube, tmp_working_dir):
     """Test to ensure axis picks up correct colormap for a mask."""
     cube.rename(f"mask_for_{cube.name()}")
@@ -1229,6 +1247,27 @@ def test_get_start_end_strings_remove_bounds(cube):
     title, fname = plot._get_start_end_strings(cube.coord("time"), use_bounds=True)
     assert title == "\n [2022-09-21 03:00:00 to 2022-09-21 05:00:00]"
     assert fname == "_20220921030000_20220921050000"
+
+
+def test_set_ensemble_title_realization():
+    """Test setting postage stamp title for different coord inputs."""
+    stamp_coord = iris.coords.DimCoord([1], var_name="realization")
+    assert plot._set_postage_stamp_title(stamp_coord) == "Member #1"
+
+    stamp_coord = iris.coords.DimCoord([1], var_name="member")
+    assert plot._set_postage_stamp_title(stamp_coord) == "Member #1"
+
+    stamp_coord = iris.coords.DimCoord([1], var_name="sample")
+    assert plot._set_postage_stamp_title(stamp_coord) == "Sample #1"
+
+    stamp_coord = iris.coords.DimCoord([1], var_name="pseudo_level")
+    assert plot._set_postage_stamp_title(stamp_coord) == "Pseudo_level #1"
+
+
+def test_set_ensemble_title_time(cube):
+    """Test setting postage stamp title for time stamp_coord input."""
+    stamp_coord = cube.coord("time")
+    assert plot._set_postage_stamp_title(stamp_coord) == "2022-09-21 03:00:00"
 
 
 def test_invalid_plotting_method_spatial_plot(cube, tmp_working_dir):

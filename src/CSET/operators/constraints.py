@@ -166,6 +166,10 @@ def generate_cell_methods_constraint(
             """Check that any cell methods are "sum"."""
             return set(cm.method for cm in cube.cell_methods) == {"sum"}
 
+        def check_cell_mean(cube: iris.cube.Cube) -> bool:
+            """Check that any cell methods are "mean"."""
+            return set(cm.method for cm in cube.cell_methods) == {"mean"}
+
         if varname:
             # Require number_of_lightning_flashes to be "sum" cell_method input.
             # Require surface_microphyisical_rainfall_amount and surface_microphysical_snowfall_amount to be "sum" cell_method inputs.
@@ -173,6 +177,12 @@ def generate_cell_methods_constraint(
                 "surface_microphysical" in varname and "amount" in varname
             ):
                 cell_methods_constraint = iris.Constraint(cube_func=check_cell_sum)
+                return cell_methods_constraint
+            # Require climatological ancillary as time-average mean.
+            if ("albedo" in varname) or (
+                "ocean" in varname and "chlorophyll" in varname
+            ):
+                cell_methods_constraint = iris.Constraint(cube_func=check_cell_mean)
                 return cell_methods_constraint
 
         # If no variable name set, assume require instantaneous cube.

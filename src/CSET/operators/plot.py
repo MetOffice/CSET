@@ -50,6 +50,7 @@ from CSET._common import (
     slugify,
 )
 from CSET.operators._utils import (
+    check_stamp_coordinate,
     fully_equalise_attributes,
     get_cube_yxcoordname,
     is_transect,
@@ -336,7 +337,10 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
             vmin, vmax = var_colorbar["min"], var_colorbar["max"]
             logging.debug("Using min and max for %s colorbar.", varname)
             # Calculate levels from range.
-            levels = np.linspace(vmin, vmax, 101)
+            if vmin == "auto" or vmax == "auto":
+                levels = None
+            else:
+                levels = np.linspace(vmin, vmax, 101)
             norm = None
 
         # Overwrite cmap, levels and norm for specific variables that
@@ -355,7 +359,7 @@ def _setup_spatial_map(
     cube: iris.cube.Cube,
     figure,
     cmap,
-    grid_size: int | None = None,
+    grid_size: tuple[int, int] | None = None,
     subplot: int | None = None,
 ):
     """Define map projections, extent and add coastlines and borderlines for spatial plots.
@@ -371,8 +375,8 @@ def _setup_spatial_map(
         Matplotlib Figure object holding all plot elements.
     cmap:
         Matplotlib colormap.
-    grid_size: int, optional
-        Size of grid for subplots if multiple spatial subplots in figure.
+    grid_size: (int, int), optional
+        Size of grid (rows, cols) for subplots if multiple spatial subplots in figure.
     subplot: int, optional
         Subplot index if multiple spatial subplots in figure.
 
@@ -434,34 +438,43 @@ def _setup_spatial_map(
         # Define axes for plot (or subplot) with required map projection.
         if subplot is not None:
             axes = figure.add_subplot(
-                grid_size, grid_size, subplot, projection=projection
+                grid_size[0], grid_size[1], subplot, projection=projection
             )
         else:
             axes = figure.add_subplot(projection=projection)
 
         # Add coastlines and borderlines if cube contains x and y map coordinates.
-        if cmap.name in ["viridis", "Greys"]:
-            coastcol = "magenta"
+        # Avoid adding lines for masked data or specific fixed ancillary spatial plots.
+        if iris.util.is_masked(cube.data) or any(
+            name in cube.name() for name in ["land_", "orography", "altitude"]
+        ):
+            pass
         else:
-            coastcol = "black"
-        logging.debug("Plotting coastlines and borderlines in colour %s.", coastcol)
-        axes.coastlines(resolution="10m", color=coastcol)
-        axes.add_feature(cfeature.BORDERS, edgecolor=coastcol)
+            if cmap.name in ["viridis", "Greys"]:
+                coastcol = "magenta"
+            else:
+                coastcol = "black"
+            logging.debug("Plotting coastlines and borderlines in colour %s.", coastcol)
+            axes.coastlines(resolution="10m", color=coastcol)
+            axes.add_feature(cfeature.BORDERS, edgecolor=coastcol)
 
         # Add gridlines.
-        if subplot is None:
-            draw_labels = True
-        else:
-            draw_labels = False
         gl = axes.gridlines(
             alpha=0.3,
-            draw_labels=draw_labels,
+            draw_labels=True,
             dms=False,
             x_inline=False,
             y_inline=False,
         )
         gl.top_labels = False
         gl.right_labels = False
+        if subplot:
+            gl.bottom_labels = False
+            gl.left_labels = False
+            if subplot % grid_size[1] == 1:
+                gl.left_labels = True
+            if subplot > ((grid_size[0] - 1) * grid_size[1]):
+                gl.bottom_labels = True
 
         # If is lat/lon spatial map, fix extent to keep plot tight.
         # Specifying crs within set_extent helps ensure only data region is shown.
@@ -496,6 +509,15 @@ def _get_start_end_strings(seq_coord: iris.coords.Coord, use_bounds: bool):
     else:
         sequence_title = f"\n [{start} to {end}]"
         sequence_fname = f"_{filename_slugify(start)}_{filename_slugify(end)}"
+
+    # Do not include time if coord set to zero.
+    if (
+        seq_coord.units == "hours since 0001-01-01 00:00:00"
+        and vals[0] == 0
+        and vals[-1] == 0
+    ):
+        sequence_title = ""
+        sequence_fname = ""
 
     return sequence_title, sequence_fname
 
@@ -577,6 +599,21 @@ def _set_title_and_filename(
             plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
 
     return plot_title, plot_filename
+
+
+def _set_postage_stamp_title(stamp_coord: iris.coords.Coord) -> str:
+    """Control postage stamp plot output titles based on stamp coordinate."""
+    if stamp_coord.name() == "realization":
+        mtitle = "Member"
+    else:
+        mtitle = stamp_coord.name().capitalize()
+
+    if stamp_coord.name() == "time":
+        mtitle = f"{stamp_coord.units.title(stamp_coord.points[0])}"
+    else:
+        mtitle = f"{mtitle} #{stamp_coord.points[0]}"
+
+    return mtitle
 
 
 def _plot_and_save_spatial_plot(
@@ -764,11 +801,11 @@ def _plot_and_save_spatial_plot(
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
     axes.annotate(
         f"Min: {np.min(cube.data):.3g} Max: {np.max(cube.data):.3g} Mean: {np.mean(cube.data):.3g}",
-        xy=(1, yinfopad),
+        xy=(0.025, yinfopad),
         xycoords="axes fraction",
         xytext=(-5, 5),
         textcoords="offset points",
-        ha="right",
+        ha="left",
         va="bottom",
         size=11,
         bbox=dict(boxstyle="round", fc="#cccccc", ec="#808080", alpha=0.9),
@@ -857,9 +894,13 @@ def _plot_and_save_postage_stamp_spatial_plot(
         If the cube doesn't have the right dimensions.
     """
     # Use the smallest square grid that will fit the members.
-    grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
+    nmember = len(cube.coord(stamp_coordinate).points)
+    grid_rows = int(math.sqrt(nmember))
+    grid_size = math.ceil(nmember / grid_rows)
 
-    fig = plt.figure(figsize=(10, 10))
+    fig = plt.figure(
+        figsize=(10, 10 * max(grid_rows / grid_size, 0.5)), facecolor="w", edgecolor="k"
+    )
 
     # Specify the color bar
     cmap, levels, norm = _colorbar_map_levels(cube)
@@ -871,11 +912,13 @@ def _plot_and_save_postage_stamp_spatial_plot(
 
     # Make a subplot for each member.
     for member, subplot in zip(
-        cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1), strict=False
+        cube.slices_over(stamp_coordinate),
+        range(1, grid_size * grid_rows + 1),
+        strict=False,
     ):
         # Setup subplot map projection, extent and coastlines and borderlines.
         axes = _setup_spatial_map(
-            member, fig, cmap, grid_size=grid_size, subplot=subplot
+            member, fig, cmap, grid_size=(grid_rows, grid_size), subplot=subplot
         )
         if method == "contourf":
             # Filled contour plot of the field.
@@ -926,11 +969,11 @@ def _plot_and_save_postage_stamp_spatial_plot(
                 linestyles="--",
                 linewidths=1,
             )
-        axes.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
-        axes.set_axis_off()
+        mtitle = _set_postage_stamp_title(member.coord(stamp_coordinate))
+        axes.set_title(f"{mtitle}")
 
     # Put the shared colorbar in its own axes.
-    colorbar_axes = fig.add_axes([0.15, 0.07, 0.7, 0.03])
+    colorbar_axes = fig.add_axes([0.15, 0.05, 0.7, 0.03])
     colorbar = fig.colorbar(
         plot, colorbar_axes, orientation="horizontal", pad=0.042, shrink=0.7
     )
@@ -1357,7 +1400,7 @@ def _plot_and_save_vector_plot(
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
     axes.annotate(
         f"Min: {np.min(cube_vec_mag.data):.3g} Max: {np.max(cube_vec_mag.data):.3g} Mean: {np.mean(cube_vec_mag.data):.3g}",
-        xy=(1, -0.05),
+        xy=(0.05, -0.05),
         xycoords="axes fraction",
         xytext=(-5, 5),
         textcoords="offset points",
@@ -1535,23 +1578,30 @@ def _plot_and_save_postage_stamp_histogram_series(
         maximum for pdf x-axis
     """
     # Use the smallest square grid that will fit the members.
-    grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
+    nmember = len(cube.coord(stamp_coordinate).points)
+    grid_rows = int(math.sqrt(nmember))
+    grid_size = math.ceil(nmember / grid_rows)
 
-    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+    fig = plt.figure(
+        figsize=(10, 10 * max(grid_rows / grid_size, 0.5)), facecolor="w", edgecolor="k"
+    )
     # Make a subplot for each member.
     for member, subplot in zip(
-        cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1), strict=False
+        cube.slices_over(stamp_coordinate),
+        range(1, grid_size * grid_rows + 1),
+        strict=False,
     ):
         # Implicit interface is much easier here, due to needing to have the
         # cartopy GeoAxes generated.
-        plt.subplot(grid_size, grid_size, subplot)
+        plt.subplot(grid_rows, grid_size, subplot)
         # Reshape cube data into a single array to allow for a single histogram.
         # Otherwise we plot xdim histograms stacked.
         member_data_1d = (member.data).flatten()
         plt.hist(member_data_1d, density=True, stacked=True)
-        ax = plt.gca()
-        ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
-        ax.set_xlim(vmin, vmax)
+        axes = plt.gca()
+        mtitle = _set_postage_stamp_title(member.coord(stamp_coordinate))
+        axes.set_title(f"{mtitle}")
+        axes.set_xlim(vmin, vmax)
 
     # Overall figure title.
     fig.suptitle(title, fontsize=16)
@@ -1580,11 +1630,12 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
         # Flatten the member data to 1D
         member_data_1d = member.data.flatten()
         # Plot the histogram using plt.hist
+        mtitle = _set_postage_stamp_title(member.coord(stamp_coordinate))
         plt.hist(
             member_data_1d,
             density=True,
             stacked=True,
-            label=f"Member #{member.coord(stamp_coordinate).points[0]}",
+            label=f"{mtitle}",
         )
 
     # Add a legend
@@ -1800,22 +1851,29 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
         Coordinate that becomes different plots.
     """
     # Use the smallest square grid that will fit the members.
-    grid_size = int(math.ceil(math.sqrt(len(cube.coord(stamp_coordinate).points))))
+    nmember = len(cube.coord(stamp_coordinate).points)
+    grid_rows = int(math.sqrt(nmember))
+    grid_size = math.ceil(nmember / grid_rows)
 
-    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+    fig = plt.figure(
+        figsize=(10, 10 * max(grid_rows / grid_size, 0.5)), facecolor="w", edgecolor="k"
+    )
+
     # Make a subplot for each member.
     for member, subplot in zip(
-        cube.slices_over(stamp_coordinate), range(1, grid_size**2 + 1), strict=False
+        cube.slices_over(stamp_coordinate),
+        range(1, grid_size * grid_rows + 1),
+        strict=False,
     ):
         # Implicit interface is much easier here, due to needing to have the
         # cartopy GeoAxes generated.
-        plt.subplot(grid_size, grid_size, subplot)
+        plt.subplot(grid_rows, grid_size, subplot)
 
         frequency = member.coord("frequency").points
 
-        ax = plt.gca()
-        ax.plot(frequency, member.data)
-        ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
+        axes = plt.gca()
+        axes.plot(frequency, member.data)
+        axes.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
 
     # Overall figure title.
     fig.suptitle(title, fontsize=16)
@@ -1908,6 +1966,10 @@ def _spatial_plot(
 
     # Ensure we've got a single cube.
     cube = _check_single_cube(cube)
+
+    # Check if there is a valid stamp coordinate in cube dimensions.
+    if stamp_coordinate == "realization":
+        stamp_coordinate = check_stamp_coordinate(cube)
 
     # Make postage stamp plots if stamp_coordinate exists and has more than a
     # single point.
@@ -3258,6 +3320,9 @@ def plot_histogram_series(
         if isinstance(cube_slice, iris.cube.CubeList):
             single_cube = cube_slice[0]
 
+        # Ensure valid stamp coordinate in cube dimensions
+        if stamp_coordinate == "realization":
+            stamp_coordinate = check_stamp_coordinate(single_cube)
         # Set plot titles and filename, based on sequence coordinate
         seq_coord = single_cube.coord(sequence_coordinate)
         # Use time coordinate in title and filename if single histogram output.
@@ -3413,6 +3478,9 @@ def plot_power_spectrum_series(
         if isinstance(cube_slice, iris.cube.CubeList):
             single_cube = cube_slice[0]
 
+        # Set stamp coordinate
+        if stamp_coordinate == "realization":
+            stamp_coordinate = check_stamp_coordinate(single_cube)
         # Set plot title and filenames based on sequence values
         seq_coord = single_cube.coord(sequence_coordinate)
         plot_title, plot_filename = _set_title_and_filename(
