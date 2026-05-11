@@ -1178,7 +1178,6 @@ def test_time_bounds():
     """Only cubes with time processing have time bounds."""
     cubes = read.read_cubes("tests/test_data/air_temp.nc")
     for c in cubes:
-        print(c)
         if c.coord("time").shape == (2,):
             # Time processed fields
             assert c.coord("time").bounds is not None
