@@ -113,8 +113,17 @@ CSET.operators.mesoscale
 .. automodule:: CSET.operators.mesoscale
    :members:
 
+Verification Operators
+~~~~~~~~~~~~~~~~~~~~~~
+
+CSET.operators.scoreswrappers
+-----------------------------
+
+.. automodule:: CSET.operators.scoreswrappers
+   :members:
+
 Wind Operators
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
 
 CSET.operators.wind
 ------------------------
