@@ -20,7 +20,7 @@ from metomi.isodatetime.data import TimePoint
 from pandas import DataFrame
 
 try:
-    from compression import bz2, gzip, tarfile, zstd  # pyright: ignore
+    from compression import bz2, gzip, tarfile, zstd
 except ImportError:
     import bz2
     import gzip
@@ -133,12 +133,12 @@ def get_level(obs: DataFrame) -> pandas.Series:
     ODB vertical coordinate types are enumerated at
     https://code.metoffice.gov.uk/trac/ops/browser/main/trunk/src/code/ODB/sql/vertco_type.hh
     """
-    plevel = obs.loc["vertco_reference_1@body"].where(
+    plevel = obs["vertco_reference_1@body"].where(
         obs["vertco_type@body"].isin([1, 11, 15]), numpy.nan
     )
 
     accumulated_fields = ["PRATE", "TSTM", "APCP", "NCPCP", "ACPCP"]
-    if obs.loc["name@varno"].isin(accumulated_fields).any():
+    if obs["name@varno"].isin(accumulated_fields).any():
         raise NotImplementedError("Accumulated fields not implemented")
     return plevel
 
@@ -190,7 +190,7 @@ def get_type(obs: DataFrame) -> pandas.Series:
         "Upper Air Sounding": "ADPUPA",
     }
 
-    types = obs.loc["bufrtype@reporttype"].map(lambda t: odb_prepbufr_map.get(t, "NA"))
+    types = obs["bufrtype@reporttype"].map(lambda t: odb_prepbufr_map.get(t, "NA"))
     types = types.where(types != "NA", obs["reportype@hdr"])
     return types
 
@@ -219,6 +219,7 @@ def odb2ascii_dataframe(obs: DataFrame) -> DataFrame:
     ascii["Valid_Time"] = pandas.to_datetime(
         obs["date@hdr"].astype(str) + "_" + obs["time@hdr"].astype(str).str.zfill(6),
         format="%Y%m%d_%H%M%S",
+        utc=True,
     )
     ascii["Lat"] = obs["lat@hdr"]
     ascii["Lon"] = obs["lon@hdr"]
@@ -311,7 +312,7 @@ def valid_times_iterator(
 
     for vt in valid_times:
         if vt.startswith("R"):
-            yield from TRP.parse(vt)  # pyright: ignore
+            yield from TRP.parse(vt)
         else:
             yield TPP.parse(vt)
 
