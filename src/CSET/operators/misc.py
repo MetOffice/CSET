@@ -78,10 +78,192 @@ def remove_attribute(
 
     # Combine things that can be merged due to remove removing the
     # attributes.
-    cubes = cubes.merge()
+    #  cubes = cubes.merge()
     # combine items that can be merged after removing unwanted attributes
     cubes = cubes.concatenate()
     return cubes
+
+
+def remove_scalar_coords(cubes, coords):
+    """Remove scalar coordinates.
+
+    examples would be: realization, forecast_reference_time from model cubes.
+    """
+    if not isinstance(cubes, CubeList):
+        cubes = CubeList([cubes])
+
+    for cube in cubes:
+        for coord in coords:
+            if cube.coords(coord):
+                cube.remove_coord(coord)
+
+    return cubes
+
+
+def _concat_over_time_safely(model_cubes: CubeList) -> iris.cube.Cube:
+    """Concatenate cubes over time.
+
+    coping with:
+      - scalar time coords (promote to dim with new_axis)
+      - scalar realization / forecast_reference_time (remove) or singleton dims (squeeze)
+      - cases where time arrays are identical (skip concatenation).
+    """
+    fixed = CubeList()
+
+    for c in model_cubes:
+        # --- ensure time is a dimension coordinate ---
+        if c.coords("time"):
+            t = c.coord("time")
+            if c.coord_dims(t) == ():  # scalar time on this cube
+                c = iris.util.new_axis(c, t)  # IMPORTANT: reassign!
+                t = c.coord("time")
+            if t.has_bounds():
+                t.bounds = None
+
+        # --- remove/squeeze scalar coords that block concat ---
+        for name in ("realization", "forecast_reference_time"):
+            if c.coords(name):
+                dims = c.coord_dims(name)
+                if dims == ():  # scalar -> remove
+                    c.remove_coord(name)
+                else:
+                    # singleton dimension -> squeeze away
+                    dim = dims[0]
+                    if c.shape[dim] == 1:
+                        c = iris.util.squeeze(c)
+
+        fixed.append(c)
+
+    iris.util.equalise_attributes(fixed)
+    iris.util.unify_time_units(fixed)
+
+    # --- If time point arrays are identical, there is no concat axis ---
+    if fixed and fixed[0].coords("time"):
+        sigs = [tuple(c.coord("time").points) for c in fixed]
+        if len(set(sigs)) == 1:
+            return fixed[0]
+
+    # --- Try normal concatenation over time ---
+    fixed.sort(key=lambda c: c.coord("time").points.min() if c.coords("time") else 0)
+
+    try:
+        return fixed.concatenate_cube()
+    except iris.exceptions.ConcatenateError:
+        # Fallback: split into single-time slices and merge (often clearer / more robust) [2](https://engage.cloud.microsoft/main/threads/eyJfdHlwZSI6IlRocmVhZCIsImlkIjoiMTE5MTY5OTYxNSJ9)[3](https://engage.cloud.microsoft/main/threads/eyJfdHlwZSI6IlRocmVhZCIsImlkIjoiMzY5MzE0NDYyMzk5NjkyOCJ9)
+        slices = CubeList()
+        for c in fixed:
+            if c.coords("time") and c.coord_dims("time") != ():
+                slices.extend(list(c.slices_over("time")))
+            else:
+                slices.append(c)
+
+        iris.util.equalise_attributes(slices)
+        iris.util.unify_time_units(slices)
+        return slices.merge_cube()
+
+
+def merge_cardington(cubes, model_prefix="Cardington", height_coord="height"):
+    """Merge all Cardington cubes along time.
+
+    but preserve other attributes.
+    """
+    if isinstance(cubes, iris.cube.Cube):
+        cubes = CubeList([cubes])
+
+    card_cubes = CubeList(
+        c for c in cubes if c.attributes.get("model_name", "").startswith(model_prefix)
+    )
+
+    other_cubes = CubeList(c for c in cubes if c not in card_cubes)
+
+    # If zero or one Cardington cube, nothing to do
+    if len(card_cubes) <= 1:
+        return cubes
+
+    # Decide whether height_coord is consistently available
+    use_height = all(cube.coords(height_coord) for cube in card_cubes)
+    by_height = {}
+    for cube in card_cubes:
+        if use_height:
+            h = cube.coord(height_coord).points.item()
+        else:
+            h = "__no_height_split__"  # single bucket
+        by_height.setdefault(h, CubeList()).append(cube)
+
+    merged_card = CubeList()
+
+    for _h, cubes_at_height in by_height.items():
+        by_model = {}
+        for c in cubes_at_height:
+            model = c.attributes["model_name"]
+            by_model.setdefault(model, CubeList()).append(c)
+
+        for model, model_cubes in by_model.items():
+            names = {c.name() for c in model_cubes}
+            if len(names) > 1:
+                # Different physical variables (e.g. 10m vs 25m covariance) – do NOT concatenate
+                for c in model_cubes:
+                    merged_card.append(c)
+                continue
+
+            if len(model_cubes) == 1:
+                merged = model_cubes[0]
+            else:
+                iris.util.equalise_attributes(model_cubes)
+                iris.util.unify_time_units(model_cubes)
+                # ---- DE-DUPE IDENTICAL CUBES (same time series & processing) ----
+                deduped = iris.cube.CubeList()
+                seen = set()
+
+                for c in model_cubes:
+                    # time signature (full time axis)
+                    t_sig = tuple(c.coord("time").points) if c.coords("time") else None
+
+                    # processing signature (distinguish instantaneous vs max/mean/etc)
+                    cm_sig = tuple(
+                        (cm.method, cm.coord_names, cm.intervals, cm.comments)
+                        for cm in c.cell_methods
+                    )
+
+                    # stash helps disambiguate, but may be absent for Cardington obs
+                    stash = c.attributes.get("STASH", None)
+
+                    sig = (c.name(), c.var_name, stash, t_sig, cm_sig, c.units)
+
+                    if sig not in seen:
+                        seen.add(sig)
+                        deduped.append(c)
+
+                model_cubes = deduped
+                model_cubes.sort(key=lambda c: c.coord("time").points.min())
+                concatenated = model_cubes.concatenate()
+                if len(concatenated) == 1:
+                    merged = concatenated[0]
+                else:
+                    concatenated.sort(key=lambda c: c.coord("time").points.min())
+                    merged = concatenated.concatenate_cube()
+                    if len(concatenated) > 1:
+                        print(
+                            "DIFF BETWEEN GROUP 0 and 1:\n",
+                            iris.util.describe_diff(
+                                concatenated[0], concatenated[1], output_file=None
+                            ),
+                        )
+
+                # Sort final cube by time
+                tdim = merged.coord_dims("time")[0]
+                order = np.argsort(merged.coord("time").points)
+                slc = [slice(None)] * merged.ndim
+                slc[tdim] = order
+                merged = merged[tuple(slc)]
+            #    t = merged.coord("time").points
+            #    merged = merged[np.argsort(t)]
+
+            # 🔴 CRITICAL: enforce exactly one cube per model
+            merged.attributes["model_name"] = model
+            merged_card.append(merged)
+
+    return merged_card + other_cubes
 
 
 def addition(addend_1, addend_2):
@@ -205,8 +387,6 @@ def _ensure_temperature_K(temp_cube):
             sample = float(data[0])
         except Exception:
             # fallback: try first non-masked element if masked array
-            import numpy as np
-
             sample = float(np.asanyarray(data).ravel()[0])
 
         # If values look like Kelvin (e.g. 200–330), assume K; else assume °C.
@@ -222,21 +402,89 @@ def _ensure_temperature_K(temp_cube):
     return temp_K
 
 
+def _mask_fill_value(cube: iris.cube.Cube, ulp_factor=10):
+    """
+    Avoid plotting data flagged as bad/missing.
+
+    Force masked data and known sentinel values to np.nan
+    so they are not plotted.
+
+    """
+    import dask.array as da
+
+    x = cube.lazy_data()
+
+    # --- Collect possible fill values safely ---
+    fill_values = []
+
+    # 1. NetCDF-style fill value (if present)
+    try:
+        fv = getattr(x._meta, "fill_value", None)
+        if fv is not None:
+            fill_values.append(fv)
+    except AttributeError:
+        pass  # x has no _meta (plain ndarray)
+
+    # 2. Known Cardington sentinels
+    fill_values.extend([1e10, 1e11, 999999])
+
+    # --- Extract data and any existing mask ---
+    data = da.asarray(x, dtype=np.float32)
+
+    if np.ma.isMaskedArray(x):
+        m0 = da.asarray(np.ma.getmaskarray(x), dtype=bool)
+    else:
+        m0 = da.zeros(data.shape, dtype=bool, chunks=data.chunks)
+
+    # --- Build sentinel mask ---
+    m_fill = da.zeros(data.shape, dtype=bool, chunks=data.chunks)
+    for fv in fill_values:
+        ulp = ulp_factor * np.spacing(np.float32(fv))
+        m_fill |= da.isclose(data, np.float32(fv), rtol=0, atol=ulp)
+
+    if not da.any(m0 | m_fill).compute():
+        return cube  # nothing to clean
+
+    y = da.where(m0 | m_fill, np.nan, data)
+
+    return cube.copy(data=y)
+
+
+def mask_fill_values(cubes, ulp_factor=10):
+    """
+    Apply _mask_fill_value to every cube in the CubeList.
+
+    This must be run AFTER any operator that recreates data
+    (e.g. vector wind calculation, regridding).
+    """
+    if not isinstance(cubes, CubeList):
+        cubes = CubeList([cubes])
+
+    cleaned = CubeList()
+    for cube in cubes:
+        cleaned.append(_mask_fill_value(cube, ulp_factor=ulp_factor))
+
+    return cleaned
+
+
 def convert_visibility_to_km(cubes, **kwargs):
-    """Ensure visibility is converted to km if required."""
+    """Ensure visibility is converted to km if required. UM data is always in metres."""
     if isinstance(cubes, iris.cube.Cube):
         cubes = iris.cube.CubeList([cubes])
     else:
         cubes = iris.cube.CubeList(cubes)
 
     for cube in cubes:
-        model = cube.attributes.get("model_name", "")
-        if model and "Cardington" not in model:
-            # UM visibility is in metres
+        model = cube.attributes.get("model_name", "") or ""
+        if "Cardington" in model:
+            cube *= 1000
+            #  data = cube.core_data()
+            #  cube.data = np.ma.array(data * 1.0e3, copy=False)
+            cube.units = "km"
+        else:
+            # UM visibility is in metres – convert with scaling
             cube.convert_units("km")
-        if model and "Cardington" in model:
-            # UM visibility is in metres
-            cube.convert_units("m")
+
     return cubes if len(cubes) > 1 else cubes[0]
 
 
@@ -252,7 +500,6 @@ def sensible_heat_units(cubes, **kwargs):
     HEIGHT is treated as a *nominal* height (for UM selection / labelling),
     not as a measurement height for Cardington.
     """
-    import iris
     from cf_units import Unit
 
     Cp = 1004.67  # J kg-1 K-1
@@ -661,10 +908,6 @@ def rename_cube(cubes: iris.cube.Cube | iris.cube.CubeList, name: str):
     --------
     >>> light_rain_mask = misc.rename_cube(light_rain_mask,"mask_for_light_rainfall"
     """
-    #   LOG.warning(
-    #       "RENAME INPUT: %s",
-    #       [(c.var_name, c.attributes.get("model_name")) for c in cubes]
-    #   )
     print(
         "RENAME INPUT:",
         [(c.var_name, c.attributes.get("model_name")) for c in cubes],

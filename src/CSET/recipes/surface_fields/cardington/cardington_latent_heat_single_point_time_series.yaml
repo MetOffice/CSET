@@ -5,7 +5,9 @@ description: "Plots a time series of $PLOTNAME at a selected Cardington gridpoin
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
-    model_names: [$CARDINGTON_LABEL, $MODEL_NAME]
+    model_names:
+      - $CARDINGTON_30_LABEL
+      - $MODEL_NAME
 
   - operator: filters.filter_multiple_cubes
 

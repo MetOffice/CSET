@@ -5,8 +5,10 @@ steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
     model_names:
-      - Cardington
+      - $CARDINGTON_30_LABEL
       - $MODEL_NAME
+
+  - operator: misc.mask_fill_values
 
   - operator: misc.sensible_heat_units
     HEIGHT: $HEIGHT

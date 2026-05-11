@@ -1,40 +1,57 @@
 category: Time series of variables at Cardington single point
 title: "Time series of $VARNAME at lat_pt:52.10438, lon_pt:-0.42286 specific to Cardington gridpoint."
 description: "Plots a time series of $VARNAME at a selected Cardington gridpoint."
-
 steps:
+  # ------------------------------------------------------------
+  # 1. Read data
+  #    IMPORTANT:
+  #    - Constrain the UM *at read time* so Iris only ever loads
+  #      a single surface_temperature cube.
+  # ------------------------------------------------------------
+
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
-    model_names: [$CARDINGTON_LABEL, $MODEL_NAME]
+    model_names:
+      - $CARDINGTON_05_LABEL
+      - $CARDINGTON_30_LABEL
+      - $MODEL_NAME
+    constraints:
+      $MODEL_NAME:
+        operator: constraints.combine_constraints
+        stash_constraint:
+          operator: constraints.generate_attribute_constraint
+          attribute: STASH
+          values:
+            - $UM_VARNAME
+        cell_methods_constraint:
+          operator: constraints.generate_cell_methods_constraint
+          cell_methods: [ 'maximum' ]
+          coord: 'time'
+          interval: '1 hour'
+    preprocessors:
+      - operator: misc.remove_scalar_coords
+        coords:
+          - forecast_reference_time
+          - realization
 
+  - operator: misc.merge_cardington
+
+# IMPORTANT: Global temperature-only prune.
+# filter_multiple_cubes must have exactly ONE key here,
+# otherwise non-temperature cubes will survive and break convert_units.
   - operator: filters.filter_multiple_cubes
-
-    Cardington:
-      operator: constraints.combine_constraints
-      varname_constraint:
-        operator: constraints.generate_var_constraint
-        varname: $VARNAME
-      cell_methods_constraint:
-        operator: constraints.generate_cell_methods_constraint
-        cell_methods: []
-        varname: $VARNAME
-
-    $MODEL_NAME:
-      operator: constraints.combine_constraints
-      varname_constraint:
-        operator: constraints.generate_var_constraint
-        varname: $UM_VARNAME
-      cell_methods_constraint:
-        operator: constraints.generate_cell_methods_constraint
-        cell_methods: [ 'maximum' ]
-        coord: 'time'
-        interval: '1 hour'
-      stash_constraint:
-        operator: constraints.generate_attribute_constraint
-        attribute: STASH
+    temperature:
+      operator: constraints.generate_var_constraint
+      varname: $VARNAME
 
   - operator: misc.remove_attribute
-    attribute: [ 'time_coverage_end', 'time_coverage_start', 'valid_min', 'valid_max', 'date', 'date_created' ]
+    attribute:
+      - time_coverage_end
+      - time_coverage_start
+      - valid_min
+      - valid_max
+      - date
+      - date_created
 
   - operator: misc.convert_units
     units: 'Celsius'
@@ -46,9 +63,9 @@ steps:
     method: "Nearest"
     boundary_margin: 0
 
-  # Make a single NetCDF with all the data inside it.
+  - operator: misc.mask_fill_values
+
   - operator: write.write_cube_to_nc
     overwrite: True
 
-  # Plot the data.
   - operator: plot.plot_line_series

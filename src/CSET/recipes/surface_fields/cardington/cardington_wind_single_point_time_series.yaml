@@ -5,7 +5,10 @@ description: "Plots a time series of $PLOT_VARNAME at a selected Cardington grid
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
-    model_names: [$CARDINGTON_LABEL, $MODEL_NAME]
+    model_names:
+      - $CARDINGTON_05_LABEL
+      - $CARDINGTON_30_LABEL
+      - $MODEL_NAME
 
   - operator: misc.combine_cubes_into_cubelist
     first:
@@ -77,6 +80,9 @@ steps:
     latlon_in_type: "realworld"
     method: "Nearest"
     boundary_margin: 0
+
+  # RE‑MASK fill values AFTER vector wind + regrid
+  - operator: misc.mask_fill_values
 
   # Make a single NetCDF with all the data inside it.
   - operator: write.write_cube_to_nc
