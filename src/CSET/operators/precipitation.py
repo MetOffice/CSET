@@ -108,6 +108,12 @@ def MAUL_properties(
                             number_of_MAULs.data[mem_number, lat_point, lon_point] = (
                                 np.max(labels)
                             )
+                        elif len(
+                            number_of_MAULs.coord("realization").points == 1
+                        ) and len(number_of_MAULs.coord("time").points != 1):
+                            number_of_MAULs.data[time_point, lat_point, lon_point] = (
+                                np.max(labels)
+                            )
                         else:
                             number_of_MAULs.data[lat_point, lon_point] = np.max(labels)
                         if output != "number":
@@ -115,7 +121,8 @@ def MAUL_properties(
                             maul_start = []
                             maul_end = []
                             maul_dep = []
-                            for maul in range(1, np.max(labels)):
+                            # Loop over the number of MAULs (plus one to ensure only one MAUL is covered).
+                            for maul in range(1, np.max(labels) + 1):
                                 maul_range = np.where(labels == maul)
                                 maul_start_point = lon.coord("level_height").points[
                                     maul_range[0][0]
@@ -152,6 +159,15 @@ def MAUL_properties(
                                     maul_base.data[mem_number, lat_point, lon_point] = (
                                         maul_start[index]
                                     )
+                                elif len(
+                                    number_of_MAULs.coord("realization").points == 1
+                                ) and len(number_of_MAULs.coord("time").points != 1):
+                                    maul_depth.data[
+                                        time_point, lat_point, lon_point
+                                    ] = np.max(maul_dep)
+                                    maul_base.data[time_point, lat_point, lon_point] = (
+                                        maul_start[index]
+                                    )
                                 else:
                                     maul_depth.data[lat_point, lon_point] = np.max(
                                         maul_dep
@@ -182,6 +198,15 @@ def MAUL_properties(
                                         mem_number, lat_point, lon_point
                                     ] = np.nan
                                     maul_base.data[mem_number, lat_point, lon_point] = (
+                                        np.nan
+                                    )
+                                elif len(
+                                    number_of_MAULs.coord("realization").points == 1
+                                ) and len(number_of_MAULs.coord("time").points != 1):
+                                    maul_depth.data[
+                                        time_point, lat_point, lon_point
+                                    ] = np.nan
+                                    maul_base.data[time_point, lat_point, lon_point] = (
                                         np.nan
                                     )
                                 else:
