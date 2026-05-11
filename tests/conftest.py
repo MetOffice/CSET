@@ -398,7 +398,7 @@ def mixing_ratio_for_conversions_cube(
 @pytest.fixture()
 def maul_mask_read_only():
     """Get maul mask cube for precipitation tests. It is NOT safe to modify."""
-    return read.read_cube("tests/precipitation/basic_maul_mask.nc")
+    return read.read_cube("tests/test_data/precipitation/basic_maul_mask.nc")
 
 
 @pytest.fixture()
@@ -410,7 +410,7 @@ def maul_mask(maul_mask_read_only):
 @pytest.fixture()
 def maul_mask_member_read_only():
     """Get maul mask cube for precipitation tests. It is NOT safe to modify."""
-    return read.read_cube("tests/precipitation/basic_maul_mask_member.nc")
+    return read.read_cube("tests/test_data/precipitation/basic_maul_mask_member.nc")
 
 
 @pytest.fixture()
@@ -422,7 +422,7 @@ def maul_mask_member(maul_mask_member_read_only):
 @pytest.fixture()
 def maul_mask_time_read_only():
     """Get maul mask cube for precipitation tests. It is NOT safe to modify."""
-    return read.read_cube("tests/precipitation/basic_maul_mask_time.nc")
+    return read.read_cube("tests/test_data/precipitation/basic_maul_mask_time.nc")
 
 
 @pytest.fixture()
@@ -434,7 +434,7 @@ def maul_mask_time(maul_mask_time_read_only):
 @pytest.fixture()
 def maul_mask_all_read_only():
     """Get maul mask cube for precipitation tests. It is NOT safe to modify."""
-    return read.read_cube("tests/precipitation/basic_maul_mask_all.nc")
+    return read.read_cube("tests/test_data/precipitation/basic_maul_mask_all.nc")
 
 
 @pytest.fixture()
@@ -446,7 +446,7 @@ def maul_mask_all(maul_mask_all_read_only):
 @pytest.fixture()
 def precalc_maul_number_3d_read_only():
     """Get precalculated number of mauls for precipitation tests. It is NOT safe to modify."""
-    return read.read_cube("tests/precipitation/precalc_number_3d.nc")
+    return read.read_cube("tests/test_data/precipitation/precalc_number_3d.nc")
 
 
 @pytest.fixture()
@@ -458,7 +458,7 @@ def precalc_maul_number_3d(precalc_maul_number_3d_read_only):
 @pytest.fixture()
 def precalc_maul_base_3d_read_only():
     """Get precalculated base of mauls for precipitation tests. It is NOT safe to modify."""
-    return read.read_cube("tests/precipitation/precalc_base_3d.nc")
+    return read.read_cube("tests/test_data/precipitation/precalc_base_3d.nc")
 
 
 @pytest.fixture()
@@ -470,10 +470,82 @@ def precalc_maul_base_3d(precalc_maul_base_3d_read_only):
 @pytest.fixture()
 def precalc_maul_depth_3d_read_only():
     """Get precalculated depth of mauls for precipitation tests. It is NOT safe to modify."""
-    return read.read_cube("tests/precipitation/precalc_depth_3d.nc")
+    return read.read_cube("tests/test_data/precipitation/precalc_depth_3d.nc")
 
 
 @pytest.fixture()
 def precalc_maul_depth_3d(precalc_maul_depth_3d_read_only):
     """Get precalculated depth of mauls for precipitation tests. It is safe to modify."""
     return precalc_maul_depth_3d_read_only.copy()
+
+
+@pytest.fixture()
+def precalc_maul_number_4d_time_read_only():
+    """Get precalculated number for time change dimension. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/precipitation/maul_time_4d_number.nc")
+
+
+@pytest.fixture()
+def precalc_maul_number_4d_time(precalc_maul_number_4d_time_read_only):
+    """Get precalculated number for time change dimension. It is safe to modify."""
+    return precalc_maul_number_4d_time_read_only.copy()
+
+
+@pytest.fixture()
+def precalc_maul_base_4d_time_read_only():
+    """Get precalculated base for time change dimension. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/precipitation/maul_time_4d_base.nc")
+
+
+@pytest.fixture()
+def precalc_maul_base_4d_time(precalc_maul_base_4d_time_read_only):
+    """Get precalculated base for time change dimension. It is safe to modify."""
+    return precalc_maul_base_4d_time_read_only.copy()
+
+
+@pytest.fixture()
+def precalc_maul_number_4d_realization_read_only():
+    """Get precalculated number for realization change dimension. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/precipitation/maul_member_4d_number.nc")
+
+
+@pytest.fixture()
+def precalc_maul_number_4d_realization(precalc_maul_number_4d_realization_read_only):
+    """Get precalculated number for realization change dimension. It is safe to modify."""
+    return precalc_maul_number_4d_realization_read_only.copy()
+
+
+@pytest.fixture()
+def precalc_maul_base_4d_realization_read_only():
+    """Get precalculated base for realization change dimension. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/precipitation/maul_member_4d_base.nc")
+
+
+@pytest.fixture()
+def precalc_maul_base_4d_realization(precalc_maul_base_4d_realization_read_only):
+    """Get precalculated base for realization change dimension. It is safe to modify."""
+    return precalc_maul_base_4d_realization_read_only.copy()
+
+
+@pytest.fixture()
+def precalc_maul_number_5d_read_only():
+    """Get precalculated number for 5D data. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/precipitation/maul_member_5d_number.nc")
+
+
+@pytest.fixture()
+def precalc_maul_number_5d(precalc_maul_number_5d_read_only):
+    """Get precalculated number for 5D data. It is safe to modify."""
+    return precalc_maul_number_5d_read_only.copy()
+
+
+@pytest.fixture()
+def precalc_maul_depth_5d_read_only():
+    """Get precalculated depth for 5D data. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/precipitation/maul_member_5d_depth.nc")
+
+
+@pytest.fixture()
+def precalc_maul_depth_5d(precalc_maul_depth_5d_read_only):
+    """Get precalculated depth for 5D data. It is safe to modify."""
+    return precalc_maul_depth_5d_read_only.copy()

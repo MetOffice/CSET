@@ -68,6 +68,11 @@ def MAUL_properties(
     maul_d = iris.cube.CubeList([])
     maul_b = iris.cube.CubeList([])
 
+    if output not in ("number", "base", "depth"):
+        raise ValueError(
+            f"""Unexpected value for output. Expected number, depth or base. Got {output}."""
+        )
+
     for cube in iter_maybe(cubes):
         # Check for binary fields.
         if not np.array_equal(cube.data, cube.data.astype(bool)):
@@ -102,15 +107,17 @@ def MAUL_properties(
                             number_of_MAULs.data[
                                 mem_number, time_point, lat_point, lon_point
                             ] = np.max(labels)
-                        elif len(
-                            number_of_MAULs.coord("realization").points
-                        ) != 1 and len(number_of_MAULs.coord("time").points == 1):
+                        elif (
+                            len(number_of_MAULs.coord("realization").points) != 1
+                            and len(number_of_MAULs.coord("time").points) == 1
+                        ):
                             number_of_MAULs.data[mem_number, lat_point, lon_point] = (
                                 np.max(labels)
                             )
-                        elif len(
-                            number_of_MAULs.coord("realization").points == 1
-                        ) and len(number_of_MAULs.coord("time").points != 1):
+                        elif (
+                            len(number_of_MAULs.coord("time").points) != 1
+                            and len(number_of_MAULs.coord("realization").points) == 1
+                        ):
                             number_of_MAULs.data[time_point, lat_point, lon_point] = (
                                 np.max(labels)
                             )
@@ -148,10 +155,10 @@ def MAUL_properties(
                                     maul_base.data[
                                         mem_number, time_point, lat_point, lon_point
                                     ] = maul_start[index]
-                                elif len(
-                                    number_of_MAULs.coord("realization").points
-                                ) != 1 and len(
-                                    number_of_MAULs.coord("time").points == 1
+                                elif (
+                                    len(number_of_MAULs.coord("realization").points)
+                                    != 1
+                                    and len(number_of_MAULs.coord("time").points) == 1
                                 ):
                                     maul_depth.data[
                                         mem_number, lat_point, lon_point
@@ -159,9 +166,11 @@ def MAUL_properties(
                                     maul_base.data[mem_number, lat_point, lon_point] = (
                                         maul_start[index]
                                     )
-                                elif len(
-                                    number_of_MAULs.coord("realization").points == 1
-                                ) and len(number_of_MAULs.coord("time").points != 1):
+                                elif (
+                                    len(number_of_MAULs.coord("time").points) != 1
+                                    and len(number_of_MAULs.coord("realization").points)
+                                    == 1
+                                ):
                                     maul_depth.data[
                                         time_point, lat_point, lon_point
                                     ] = np.max(maul_dep)
@@ -189,10 +198,10 @@ def MAUL_properties(
                                     maul_base.data[
                                         mem_number, time_point, lat_point, lon_point
                                     ] = np.nan
-                                elif len(
-                                    number_of_MAULs.coord("realization").points
-                                ) != 1 and len(
-                                    number_of_MAULs.coord("time").points == 1
+                                elif (
+                                    len(number_of_MAULs.coord("realization").points)
+                                    != 1
+                                    and len(number_of_MAULs.coord("time").points) == 1
                                 ):
                                     maul_depth.data[
                                         mem_number, lat_point, lon_point
@@ -200,9 +209,11 @@ def MAUL_properties(
                                     maul_base.data[mem_number, lat_point, lon_point] = (
                                         np.nan
                                     )
-                                elif len(
-                                    number_of_MAULs.coord("realization").points == 1
-                                ) and len(number_of_MAULs.coord("time").points != 1):
+                                elif (
+                                    len(number_of_MAULs.coord("time").points) != 1
+                                    and len(number_of_MAULs.coord("realization").points)
+                                    == 1
+                                ):
                                     maul_depth.data[
                                         time_point, lat_point, lon_point
                                     ] = np.nan
@@ -231,9 +242,7 @@ def MAUL_properties(
                 maul_base.units = "m"
                 maul_base.rename("MAUL_base_height")
                 maul_b.append(maul_base)
-            case _:
-                raise ValueError("""Unexpected value for output. Expected number,
-                                 depth or base. Got {output}.""")
+
     # Output data.
     match output:
         case "number" if len(num_MAULs) == 1:
