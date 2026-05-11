@@ -7,6 +7,7 @@ Sites can extend the classes with their own templates.
 import functools
 import json
 import logging
+from abc import ABC, abstractmethod
 from glob import glob
 from pathlib import Path
 from typing import Iterable, TextIO
@@ -315,7 +316,7 @@ def valid_times_iterator(
             yield TPP.parse(vt)
 
 
-class PrepODB2:
+class PrepODB2(ABC):
     """
     Abstract base class for converting ODB2 data for MET.
 
@@ -328,6 +329,7 @@ class PrepODB2:
     ...    converter.odb2ascii(f, valid_times)
     """
 
+    @abstractmethod
     def read_odb(self, valid_time: TimePoint) -> Iterable[DataFrame]:
         """Read ODB2 data."""
         raise NotImplementedError
