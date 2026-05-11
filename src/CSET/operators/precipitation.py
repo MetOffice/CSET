@@ -29,33 +29,72 @@ def MAUL_properties(
 
     Parameters
     ----------
-    cubes:
-      A cube of a mask as to whether a MAUL exists.
-    output:
-      A list of string outputs
+    cubes: iris.cube.Cube | iris.cube.CubeList
+      A cube or cubelist of a mask(s) as to whether a MAUL exists.
+      This input must be a binary field.
+    output: str
+      The output is the desired property required. It can be
+      number, base, depth for the number of MAULs, base height
+      of the deepest MAUL, or the depth of the deepest MAUL,
+      respectively.
+
+    Returns
+    -------
+    cube: iris.cube.Cube | iris.cube.CubeList
+       A Cube or CubeList depending upon the output specified.
+
+    Raises
+    ------
+    ValueError: Data contains values that are not 0 or 1, only masked data should be used.
+        This error is raised when a mask field is not provided to the operator.
+    ValueError: Unexpected value for output. Expected number, depth or base. Got {output}.
+        This error is raised when the wrong output string is specified.
+
+    Notes
+    -----
+    Having been provided with a mask field for identifying whether Moist
+    Absolutely Unstable Layers (MAULs) are present, based on criteria
+    set out in a recipe. This operator applies image processing to the mask
+    to each point in turn. It uses the image processing to identify continuous
+    layers. It identifies the number, top and base of each layer. Depending
+    on output desired it will output information for the deepest MAUL.
+
+    When a MAUL is not present the output will be set to NaN for depth and base.
+    If number of MAULs is the desired output it will be set to zero.
+
+    The MAUL diagnostic is applicable anywhere in the globe and across all scales.
     """
     num_MAULs = iris.cube.CubeList([])
     maul_d = iris.cube.CubeList([])
     maul_b = iris.cube.CubeList([])
 
     for cube in iter_maybe(cubes):
+        # Check for binary fields.
         if not np.array_equal(cube.data, cube.data.astype(bool)):
             raise ValueError(
                 "Data contains values that are not 0 or 1, only masked data should be used."
             )
+        # Create dummy cubes to store the output.
         number_of_MAULs = next(cube.slices_over("model_level_number")).copy()
         number_of_MAULs.data[:] = 0.0
         maul_depth = number_of_MAULs.copy()
         maul_base = number_of_MAULs.copy()
+        # Loop over realization.
         mem_number = 0
         for member in cube.slices_over("realization"):
+            # Loop over time.
             time_point = 0
             for time in member.slices_over("time"):
+                # Loop over latitude.
                 lat_point = 0
                 for lat in time.slices_over("latitude"):
                     lon_point = 0
+                    # Loop over longitude.
                     for lon in lat.slices_over("longitude"):
+                        # Label each object in the vertical.
                         labels = label(lon.core_data())
+                        # Finds the number of MAULs present, if no MAUL is present
+                        # the value is set to zero.
                         if (
                             len(number_of_MAULs.coord("realization").points) != 1
                             and len(number_of_MAULs.coord("time").points) != 1
@@ -72,6 +111,7 @@ def MAUL_properties(
                         else:
                             number_of_MAULs.data[lat_point, lon_point] = np.max(labels)
                         if output != "number":
+                            # Find the base, top, and depth for each object using cube metadata.
                             maul_start = []
                             maul_end = []
                             maul_dep = []
@@ -119,6 +159,8 @@ def MAUL_properties(
                                     maul_base.data[lat_point, lon_point] = maul_start[
                                         index
                                     ]
+                            # Here a ValueError is raised if a MAUL is not found, however
+                            # this is a valid answer, and so output data is set to NaN.
                             except ValueError:
                                 if (
                                     len(number_of_MAULs.coord("realization").points)
