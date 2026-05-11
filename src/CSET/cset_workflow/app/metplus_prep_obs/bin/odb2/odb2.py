@@ -1,20 +1,29 @@
-from pandas import DataFrame
-import pandas
+"""
+Basic ODB2 reading class and functions.
+
+Sites can extend the classes with their own templates.
+"""
+
 import functools
-from typing import Iterable, TextIO
-from metomi.isodatetime.data import TimePoint
-import metomi.isodatetime.parsers
+import json
 import logging
-import pyodc as odc
 from glob import glob
 from pathlib import Path
-import json
+from typing import Iterable, TextIO
+
+import metomi.isodatetime.parsers
 import numpy
+import pandas
+import pyodc as odc
+from metomi.isodatetime.data import TimePoint
+from pandas import DataFrame
 
 try:
-    from compression import gzip, bz2, zlib, zstd, tarfile
+    from compression import bz2, gzip, tarfile, zstd  # pyright: ignore
 except ImportError:
-    import gzip, bz2, zlib
+    import bz2
+    import gzip
+
     from backports import zstd
     from backports.zstd import tarfile
 
@@ -78,6 +87,7 @@ LOCAL_REPORT_TYPE = {
     98068: {"name": "giirs_fy4b", "description": "GIIRS FY-4B"},
 }
 
+
 def read_odb_table(table: str, index: str) -> DataFrame:
     """
     Read ECMWF ODB tables as a dataframe.
@@ -122,12 +132,12 @@ def get_level(obs: DataFrame) -> pandas.Series:
     ODB vertical coordinate types are enumerated at
     https://code.metoffice.gov.uk/trac/ops/browser/main/trunk/src/code/ODB/sql/vertco_type.hh
     """
-    plevel = obs["vertco_reference_1@body"].where(
+    plevel = obs.loc["vertco_reference_1@body"].where(
         obs["vertco_type@body"].isin([1, 11, 15]), numpy.nan
     )
 
     accumulated_fields = ["PRATE", "TSTM", "APCP", "NCPCP", "ACPCP"]
-    if obs["name@varno"].isin(accumulated_fields).any():
+    if obs.loc["name@varno"].isin(accumulated_fields).any():
         raise NotImplementedError("Accumulated fields not implemented")
     return plevel
 
@@ -179,7 +189,7 @@ def get_type(obs: DataFrame) -> pandas.Series:
         "Upper Air Sounding": "ADPUPA",
     }
 
-    types = obs["bufrtype@reporttype"].map(lambda t: odb_prepbufr_map.get(t, "NA"))
+    types = obs.loc["bufrtype@reporttype"].map(lambda t: odb_prepbufr_map.get(t, "NA"))
     types = types.where(types != "NA", obs["reportype@hdr"])
     return types
 
@@ -195,7 +205,7 @@ def odb2ascii_dataframe(obs: DataFrame) -> DataFrame:
     https://metplus.readthedocs.io/projects/met/en/latest/Users_Guide/reformat_point.html#id9
     """
     # QC filter for only active values
-    obs = obs[(obs["report_status@hdr"] | obs["datum_status@body"]) == 1]
+    obs = obs.loc[(obs["report_status@hdr"] | obs["datum_status@body"]) == 1]
 
     # Join in extra info
     obs = obs.join(varno_table(), on="varno@body")
@@ -223,6 +233,7 @@ def odb2ascii_dataframe(obs: DataFrame) -> DataFrame:
 
     return ascii
 
+
 def write_ascii(dataframe: DataFrame, output: TextIO):
     """Write the ASCII dataframe to output."""
     dataframe.to_csv(
@@ -233,6 +244,7 @@ def write_ascii(dataframe: DataFrame, output: TextIO):
         index=False,
         header=False,
     )
+
 
 def read_tarfile(tarpath: str, path: str, valid_time: TimePoint) -> Iterable[DataFrame]:
     """
@@ -253,13 +265,14 @@ def read_tarfile(tarpath: str, path: str, valid_time: TimePoint) -> Iterable[Dat
         f = t.extractfile(path)
         yield from odc.read_odb(f)
 
+
 def read_file(pattern: str, valid_time: TimePoint) -> Iterable[DataFrame]:
     """
     Read ODB2 data from a file, decompressing if required.
 
     Paths can use strftime templates which will be replaced by valid_time
     Paths can use shell globs
-    Recognised extensions for decompression are .gz, .bz2, .xz, .zst
+    Recognised extensions for decompression are .gz, .bz2, .zst
 
     Args:
         path: path to open
@@ -269,21 +282,19 @@ def read_file(pattern: str, valid_time: TimePoint) -> Iterable[DataFrame]:
     log.info("Reading %s", path)
 
     for p in glob(path):
-        if p.endswith('.gz'):
+        if p.endswith(".gz"):
             with gzip.open(p) as f:
                 yield from odc.read_odb(f)
-        elif p.endswith('.bz2'):
+        elif p.endswith(".bz2"):
             with bz2.open(p) as f:
                 yield from odc.read_odb(f)
-        elif p.endswith('.xz'):
-            with zlib.open(p) as f:
-                yield from odc.read_odb(f)
-        elif p.endswith('.zst'):
+        elif p.endswith(".zst"):
             with zstd.open(p) as f:
                 yield from odc.read_odb(f)
         else:
             with open(p, "rb") as f:
                 yield from odc.read_odb(f)
+
 
 def valid_times_iterator(
     valid_times: list[str],
@@ -299,9 +310,10 @@ def valid_times_iterator(
 
     for vt in valid_times:
         if vt.startswith("R"):
-            yield from TRP.parse(vt)
+            yield from TRP.parse(vt)  # pyright: ignore
         else:
             yield TPP.parse(vt)
+
 
 class PrepODB2:
     """
@@ -309,7 +321,7 @@ class PrepODB2:
 
     Subclasses can replace the read_odb function to set up patterns for their
     site.
-    
+
     Usage:
     >>> converter = PrepODB2()
     >>> with open('obs.ascii', 'wt') as f:
@@ -329,10 +341,11 @@ class PrepODB2:
 
 
 class PrepODB2Pattern(PrepODB2):
+    """Prepare ODB2 data for MET, reading data using a file pattern."""
 
     def __init__(self, pattern: str):
         """
-        Prepare ODB2 data for MET, reading data using a file pattern.
+        Construct the converter.
 
         Pattern can use strftime templates which will be replaced by valid_time.
         Pattern can use shell globs.
@@ -351,8 +364,8 @@ class PrepODB2Pattern(PrepODB2):
     def read_odb(self, valid_time: TimePoint) -> Iterable[DataFrame]:
         """
         Read in the ODB2 files.
-        
+
         Args:
-            valid_time: Time to use in file patterns    
+            valid_time: Time to use in file patterns
         """
         return read_file(self.pattern, valid_time)

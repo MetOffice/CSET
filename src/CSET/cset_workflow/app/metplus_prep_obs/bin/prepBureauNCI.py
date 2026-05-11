@@ -17,11 +17,11 @@ import argparse
 import logging
 import sys
 from contextlib import nullcontext
-from pathlib import Path
 
 from odb2 import valid_times_iterator
-from odb2.bom import PrepBomNci, BOM_SYSTEMS
+from odb2.bom import BOM_SYSTEMS, PrepBomNci
 from prepODB2 import COLUMN_INFO
+
 
 def main(argv: list[str]):
     """ODB2 to ASCII CLI."""
@@ -34,10 +34,12 @@ def main(argv: list[str]):
         "--system",
         help="Bureau forecast system to load observations from (e.g. access_c4_dn)",
         required=True,
-        metavar='SYSTEM',
+        metavar="SYSTEM",
         choices=BOM_SYSTEMS,
     )
-    parser.add_argument("--output", "-o", help="output path (default stdout)", default="-")
+    parser.add_argument(
+        "--output", "-o", help="output path (default stdout)", default="-"
+    )
     parser.add_argument(
         "--valid-time",
         "-t",
@@ -55,7 +57,7 @@ def main(argv: list[str]):
         sys.tracebacklimit = 0
 
     if args.valid_time is None:
-        args.valid_time = ['00010101T0000Z']
+        args.valid_time = ["00010101T0000Z"]
 
     if args.output == "-":
         out_context = nullcontext(sys.stdout)

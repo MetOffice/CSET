@@ -16,7 +16,6 @@ import argparse
 import logging
 import sys
 from contextlib import nullcontext
-from pathlib import Path
 
 from odb2.odb2 import PrepODB2Pattern, valid_times_iterator
 
@@ -39,6 +38,7 @@ ASCII Column Info:
 https://metplus.readthedocs.io/projects/met/en/latest/Users_Guide/reformat_point.html#table-reformat-point-ascii2nc-format
 """
 
+
 def main(argv: list[str]):
     """ODB2 to ASCII CLI."""
     parser = argparse.ArgumentParser(
@@ -57,7 +57,7 @@ def main(argv: list[str]):
         "-t",
         help="valid times to load (ISO format, e.g. '20100512T1200', 'R4/20010101T0000Z/PT6H')",
         action="append",
-        default=["20010101T0000Z"]
+        default=["20010101T0000Z"],
     )
     parser.add_argument("--verbose", "-v", help="verbose", action="store_true")
     args = parser.parse_args(argv)
@@ -75,7 +75,9 @@ def main(argv: list[str]):
 
     with out_context as output:
         for pattern in args.file:
-            PrepODB2Pattern(pattern).odb2ascii(output, valid_times_iterator(args.valid_time))
+            PrepODB2Pattern(pattern).odb2ascii(
+                output, valid_times_iterator(args.valid_time)
+            )
 
 
 if __name__ == "__main__":
