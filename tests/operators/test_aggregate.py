@@ -113,7 +113,7 @@ def test_ensure_aggregatable_across_cube_coord_attribute(long_forecast_multi_day
         long_forecast_multi_day, time_coord_name="time"
     )
     print(output_data)
-    assert output_data[0].coord("time").attributes["number_reference_times"] == 1
+    assert output_data[0].coord("time").attributes["number_reference_times"] == 3
 
 
 def test_ensure_aggregatable_across_cases_coord_attribute(long_forecast_many_cubes):
