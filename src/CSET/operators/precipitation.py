@@ -25,12 +25,24 @@ from CSET._common import iter_maybe
 def MAUL_properties(
     cubes: iris.cube.Cube | iris.cube.CubeList, output: str
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Identify properties of Moist Absolutely Unstable Layers."""
+    """Identify properties of Moist Absolutely Unstable Layers.
+
+    Parameters
+    ----------
+    cubes:
+      A cube of a mask as to whether a MAUL exists.
+    output:
+      A list of string outputs
+    """
     num_MAULs = iris.cube.CubeList([])
     maul_d = iris.cube.CubeList([])
     maul_b = iris.cube.CubeList([])
 
     for cube in iter_maybe(cubes):
+        if not np.array_equal(cube.data, cube.data.astype(bool)):
+            raise ValueError(
+                "Data contains values that are not 0 or 1, only masked data should be used."
+            )
         number_of_MAULs = next(cube.slices_over("model_level_number")).copy()
         number_of_MAULs.data[:] = 0.0
         maul_depth = number_of_MAULs.copy()
