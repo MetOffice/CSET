@@ -33,7 +33,7 @@ jobs:
 
       - name: Cache conda environment
         id: conda-env-cache
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae
         with:
           key: conda|${{runner.os}}-${{runner.arch}}|${{ hashFiles(format('requirements/locks/{0}-lock-linux-64.txt', matrix.py-ver)) }}
           path: |
@@ -64,7 +64,7 @@ jobs:
           mv .coverage ".coverage.${py_ver}"
 
       - name: Upload coverage data as artifact
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: coverage-data-${{ matrix.py-ver }}
           path: .coverage.*
@@ -147,7 +147,7 @@ jobs:
           python-version: "3.x"
 
       - name: Restore pre-commit cache
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae
         with:
           key: pre-commit|${{runner.os}}-${{runner.arch}}|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
           path: ~/.cache/pre-commit
@@ -173,7 +173,7 @@ jobs:
 
       - name: Cache conda environment
         id: conda-env-cache
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae
         with:
           key: conda|${{runner.os}}-${{runner.arch}}|${{hashFiles('requirements/locks/latest')}}
           path: |
@@ -197,7 +197,7 @@ jobs:
         run: sphinx-build -b html --color "docs/source" "docs/build/html"
 
       - name: Upload documentation artifact
-        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9
         with:
           path: docs/build/html/
           retention-days: 1

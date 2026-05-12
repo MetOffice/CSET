@@ -1,5 +1,5 @@
 category: Daily Weather
-title: "Rain presence\nDifference ($BASE_MODEL - $OTHER_MODEL)"
+title: "Rain presence\nDifference ($OTHER_MODEL - $BASE_MODEL)"
 description: |
   Generates a mask of whether rain is present in a grid box and provides a
   the difference between two models. Values will be positive or negative one
