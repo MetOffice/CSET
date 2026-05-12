@@ -28,8 +28,6 @@ from CSET._common import is_increasing, iter_maybe
 from CSET.operators._utils import fully_equalise_attributes, get_cube_yxcoordname
 from CSET.operators.regrid import regrid_onto_cube
 
-LOG = logging.getLogger(__name__)
-
 
 def noop(x, **kwargs):
     """Return its input without doing anything to it.
