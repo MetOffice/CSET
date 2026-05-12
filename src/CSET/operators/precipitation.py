@@ -134,13 +134,17 @@ def MAUL_properties(
                             maul_dep = []
                             # Loop over the number of MAULs (plus one to ensure only one MAUL is covered).
                             for maul in range(1, np.max(labels) + 1):
+                                # find all vertical indices belonging to this maul
                                 maul_range = np.where(labels == maul)
+                                # height at the lowest level (bottom) of the MAUL
                                 maul_start_point = lon.coord("level_height").points[
                                     maul_range[0][0]
                                 ]
+                                # height at the highest level (top) of the MAUL
                                 maul_end_point = lon.coord("level_height").points[
                                     maul_range[0][-1]
                                 ]
+                                # calculate MAUL depth, base and top height.
                                 maul_dep.append(maul_end_point - maul_start_point)
                                 maul_start.append(maul_start_point)
                                 maul_end.append(maul_end_point)
@@ -148,17 +152,23 @@ def MAUL_properties(
                                 index = int(
                                     np.where(maul_dep == np.max(maul_dep))[0][0]
                                 )
+                                # several dimension combination checks in this try block
+                                # to work out correct indexing.
+                                # ensemble and several time points
                                 if (
                                     len(number_of_MAULs.coord("realization").points)
                                     != 1
                                     and len(number_of_MAULs.coord("time").points) != 1
                                 ):
+                                    # store the maximum (deepest) depth
                                     maul_depth.data[
                                         mem_number, time_point, lat_point, lon_point
                                     ] = np.max(maul_dep)
+                                    # store the base height of that deepest MAUL 
                                     maul_base.data[
                                         mem_number, time_point, lat_point, lon_point
                                     ] = maul_start[index]
+                                # ensemble and single time step
                                 elif (
                                     len(number_of_MAULs.coord("realization").points)
                                     != 1
@@ -170,6 +180,7 @@ def MAUL_properties(
                                     maul_base.data[mem_number, lat_point, lon_point] = (
                                         maul_start[index]
                                     )
+                                # multiple time points and single ensemble member    
                                 elif (
                                     len(number_of_MAULs.coord("time").points) != 1
                                     and len(number_of_MAULs.coord("realization").points)
@@ -181,6 +192,7 @@ def MAUL_properties(
                                     maul_base.data[time_point, lat_point, lon_point] = (
                                         maul_start[index]
                                     )
+                                # single time and single ensemble member
                                 else:
                                     maul_depth.data[lat_point, lon_point] = np.max(
                                         maul_dep
