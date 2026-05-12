@@ -738,11 +738,6 @@ def rename_cube(cubes: iris.cube.Cube | iris.cube.CubeList, name: str):
     --------
     >>> light_rain_mask = misc.rename_cube(light_rain_mask,"mask_for_light_rainfall"
     """
-    print(
-        "RENAME INPUT:",
-        [(c.var_name, c.attributes.get("model_name")) for c in cubes],
-        flush=True,
-    )
     new_cubelist = iris.cube.CubeList([])
     for cube in iter_maybe(cubes):
         cube.rename(name)
