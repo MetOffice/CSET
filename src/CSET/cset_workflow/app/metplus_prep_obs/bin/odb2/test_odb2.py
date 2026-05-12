@@ -100,7 +100,23 @@ def test_odb2ascii_dataframe():
                 "obsvalue@body": 40,
                 "vertco_type@body": 5,
                 "vertco_reference_1@body": 1,
-            }
+            },
+            # Report with no station id, should get na value
+            {
+                "reportype@hdr": 16029,
+                "report_status@hdr": 1,
+                "date@hdr": 20010101,
+                "time@hdr": 10000,
+                "datum_status@body": 1,
+                "varno@body": 111,
+                "statid@hdr": "      ",
+                "lat@hdr": 10,
+                "lon@hdr": 20,
+                "stalt@hdr": 10000,
+                "obsvalue@body": 40,
+                "vertco_type@body": 11,
+                "vertco_reference_1@body": 20000,
+            },
         ]
     )
     ascii = odb2ascii_dataframe(obs)
@@ -110,6 +126,11 @@ def test_odb2ascii_dataframe():
     assert row["Valid_Time"] == pandas.Timestamp("20010101T0100Z")
     assert row["Elevation"] == 30
     assert row["Variable_Name"] == "t2m"
+
+    row = ascii.iloc[1]
+    assert row["Message_Type"] == "AIRCFT"
+    assert row["Station_ID"] == "NA"
+    assert row["Variable_Name"] == "dd"
 
 
 def test_write_ascii():

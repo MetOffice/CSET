@@ -38,10 +38,15 @@
             -W umask    = 0022
         [[[ environment ]]]
             ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
+
+    [[metplus_prep_obs]]
+        [[[ environment ]]]
+            OBS_TIMES = R{{ANALYSIS_LENGTH | duration_as('h') | int }}/$CYLC_TASK_CYCLE_POINT/PT1H
         {% if METPLUS_OBS_SYSTEM != "custom" %}
             # Forecast system to pull obs from (e.g. 'access_c3_dn')
             METPLUS_OBS_SYSTEM = {{METPLUS_OBS_SYSTEM}}
         {% else %}
+            # Read direct from ODB2 files
             ROSE_APP_OPT_CONF_KEYS = "odb2"
             CUSTOM_ODB2_PATTERN = {{CUSTOM_ODB2_PATTERN}}
         {% endif %}

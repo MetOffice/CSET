@@ -30,6 +30,9 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
+# Marker MET uses for unavailable values
+na_value = "NA"
+
 # Columns to output
 ASCII_COLUMNS = [
     "Message_Type",
@@ -190,8 +193,8 @@ def get_type(obs: DataFrame) -> pandas.Series:
         "Upper Air Sounding": "ADPUPA",
     }
 
-    types = obs["bufrtype@reporttype"].map(lambda t: odb_prepbufr_map.get(t, "NA"))
-    types = types.where(types != "NA", obs["reportype@hdr"])
+    types = obs["bufrtype@reporttype"].map(lambda t: odb_prepbufr_map.get(t, na_value))
+    types = types.where(types != na_value, obs["reportype@hdr"])
     return types
 
 
@@ -215,7 +218,9 @@ def odb2ascii_dataframe(obs: DataFrame) -> DataFrame:
     ascii = DataFrame(columns=ASCII_COLUMNS)
 
     ascii["Message_Type"] = get_type(obs)
-    ascii["Station_ID"] = obs["statid@hdr"]
+    ascii["Station_ID"] = obs["statid@hdr"].where(
+        obs["statid@hdr"].str.strip() != "", na_value
+    )
     ascii["Valid_Time"] = pandas.to_datetime(
         obs["date@hdr"].astype(str) + "_" + obs["time@hdr"].astype(str).str.zfill(6),
         format="%Y%m%d_%H%M%S",
@@ -229,7 +234,7 @@ def odb2ascii_dataframe(obs: DataFrame) -> DataFrame:
     ascii["Level"] = get_level(obs)
     ascii["Height"] = get_height(obs)
 
-    ascii["QC_String"] = "NA"
+    ascii["QC_String"] = na_value
 
     ascii["Observation_Value"] = obs["obsvalue@body"]
 
@@ -242,7 +247,7 @@ def write_ascii(dataframe: DataFrame, output: TextIO):
         output,
         sep="\t",
         date_format="%Y%m%d_%H%M",
-        na_rep="NA",
+        na_rep=na_value,
         index=False,
         header=False,
     )
@@ -338,6 +343,7 @@ class PrepODB2(ABC):
     def odb2ascii(self, output: TextIO, valid_times: Iterable[TimePoint]):
         """Write all the observations to a MET ASCII file."""
         for t in valid_times:
+            log.info("Processing %s", t)
             for obs in self.read_odb(t):
                 ascii = odb2ascii_dataframe(obs)
                 write_ascii(ascii, output)
