@@ -56,9 +56,6 @@ def main(argv: list[str]):
         logging.basicConfig(level=logging.INFO)
         sys.tracebacklimit = 0
 
-    if args.valid_time is None:
-        args.valid_time = ["00010101T0000Z"]
-
     if args.output == "-":
         out_context = nullcontext(sys.stdout)
     else:

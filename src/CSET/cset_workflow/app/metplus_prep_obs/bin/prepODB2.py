@@ -57,7 +57,6 @@ def main(argv: list[str]):
         "-t",
         help="valid times to load (ISO format, e.g. '20100512T1200', 'R4/20010101T0000Z/PT6H')",
         action="append",
-        default=["20010101T0000Z"],
     )
     parser.add_argument("--verbose", "-v", help="verbose", action="store_true")
     args = parser.parse_args(argv)
@@ -67,6 +66,10 @@ def main(argv: list[str]):
     else:
         logging.basicConfig(level=logging.INFO)
         sys.tracebacklimit = 0
+
+    if args.valid_time is None:
+        # Valid time unset, hopefully the pattern isn't using times
+        args.valid_time = ["00010101T0000Z"]
 
     if args.output == "-":
         out_context = nullcontext(sys.stdout)
