@@ -76,7 +76,7 @@ def remove_attribute(
 
     # Combine things that can be merged due to remove removing the
     # attributes.
-    #  cubes = cubes.merge()
+    cubes = cubes.merge()
     # combine items that can be merged after removing unwanted attributes
     cubes = cubes.concatenate()
     return cubes
@@ -310,8 +310,6 @@ def convert_visibility_to_km(cubes, **kwargs):
         model = cube.attributes.get("model_name", "") or ""
         if "Cardington" in model:
             cube *= 1000
-            #  data = cube.core_data()
-            #  cube.data = np.ma.array(data * 1.0e3, copy=False)
             cube.units = "km"
         else:
             # UM visibility is in metres – convert with scaling
