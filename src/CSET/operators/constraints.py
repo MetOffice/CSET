@@ -84,13 +84,7 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
         return iris.AttributeConstraint(STASH=varname)
 
     # ---- CASE 3: single variable name ----
-    return iris.Constraint(
-        cube_func=lambda cube: (
-            cube.var_name == varname
-            or cube.standard_name == varname
-            or cube.name() == varname
-        )
-    )
+    return iris.Constraint(name=varname)
 
 
 def generate_var_name_constraint(varname: str, **kwargs) -> iris.Constraint:
