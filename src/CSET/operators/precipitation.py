@@ -97,7 +97,9 @@ def MAUL_properties(
                 for lat_point, lat in enumerate(time.slices_over("latitude")):
                     # Loop over longitude.
                     for lon_point, lon in enumerate(lat.slices_over("longitude")):
-                        # Label each object in the vertical.
+                        # Label each object in the vertical. 
+                        # Label() identifies continuous layers vertically. Each separate MAUL region
+                        # of connected 1s gets its own identifier.
                         labels = label(lon.core_data())
                         # Finds the number of MAULs present, if no MAUL is present
                         # the value is set to zero.
@@ -105,6 +107,7 @@ def MAUL_properties(
                             len(number_of_MAULs.coord("realization").points) != 1
                             and len(number_of_MAULs.coord("time").points) != 1
                         ):
+                            # np.max(labels) gives total MAUL number
                             number_of_MAULs.data[
                                 mem_number, time_point, lat_point, lon_point
                             ] = np.max(labels)
