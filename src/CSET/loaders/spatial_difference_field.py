@@ -489,10 +489,8 @@ def load(conf: Config):
         models[1:], AGGREGATION_TYPES, conf.SURFACE_FIELDS
     ):
         index = AGGREGATION_TYPES.index(atype)
-        if (
-            len(conf.SPATIAL_DIFFERENCE_SURFACE_FIELD_AGGREGATION) > index
-            and conf.SPATIAL_DIFFERENCE_SURFACE_FIELD_AGGREGATION[index]
-        ):
+        aggregations = conf.SPATIAL_DIFFERENCE_SURFACE_FIELD_AGGREGATION
+        if len(aggregations) > index and aggregations[index]:
             base_model = models[0]
             yield RawRecipe(
                 recipe=f"surface_spatial_difference_case_aggregation_mean_{atype}.yaml",
@@ -514,10 +512,8 @@ def load(conf: Config):
         models[1:], AGGREGATION_TYPES, conf.PRESSURE_LEVEL_FIELDS, conf.PRESSURE_LEVELS
     ):
         index = AGGREGATION_TYPES.index(atype)
-        if (
-            len(conf.SPATIAL_DIFFERENCE_PLEVEL_FIELD_AGGREGATION) > index
-            and conf.SPATIAL_DIFFERENCE_PLEVEL_FIELD_AGGREGATION[index]
-        ):
+        aggregations = conf.SPATIAL_DIFFERENCE_PLEVEL_FIELD_AGGREGATION
+        if len(aggregations) > index and aggregations[index]:
             base_model = models[0]
             yield RawRecipe(
                 recipe=f"level_spatial_difference_case_aggregation_mean_{atype}.yaml",
@@ -541,10 +537,8 @@ def load(conf: Config):
         models[1:], AGGREGATION_TYPES, conf.MODEL_LEVEL_FIELDS, conf.MODEL_LEVELS
     ):
         index = AGGREGATION_TYPES.index(atype)
-        if (
-            len(conf.SPATIAL_DIFFERENCE_MLEVEL_FIELD_AGGREGATION) > index
-            and conf.SPATIAL_DIFFERENCE_MLEVEL_FIELD_AGGREGATION[index]
-        ):
+        aggregations = conf.SPATIAL_DIFFERENCE_MLEVEL_FIELD_AGGREGATION
+        if len(aggregations) > index and aggregations[index]:
             base_model = models[0]
             yield RawRecipe(
                 recipe=f"level_spatial_difference_case_aggregation_mean_{atype}.yaml",

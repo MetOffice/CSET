@@ -100,10 +100,8 @@ def load(conf: Config):
     # Surface (2D) fields.
     for atype, field in itertools.product(AGGREGATION_TYPES, conf.SURFACE_FIELDS):
         index = AGGREGATION_TYPES.index(atype)
-        if (
-            len(conf.HISTOGRAM_SURFACE_FIELD_AGGREGATION) > index
-            and conf.HISTOGRAM_SURFACE_FIELD_AGGREGATION[index]
-        ):
+        aggregations = conf.HISTOGRAM_SURFACE_FIELD_AGGREGATION
+        if len(aggregations) > index and aggregations[index]:
             yield RawRecipe(
                 recipe=f"generic_surface_histogram_series_case_aggregation_{atype}.yaml",
                 variables={
@@ -123,10 +121,8 @@ def load(conf: Config):
         AGGREGATION_TYPES, conf.PRESSURE_LEVEL_FIELDS, conf.PRESSURE_LEVELS
     ):
         index = AGGREGATION_TYPES.index(atype)
-        if (
-            len(conf.HISTOGRAM_PLEVEL_FIELD_AGGREGATION) > index
-            and conf.HISTOGRAM_PLEVEL_FIELD_AGGREGATION[index]
-        ):
+        aggregations = conf.HISTOGRAM_PLEVEL_FIELD_AGGREGATION
+        if len(aggregations) > index and aggregations[index]:
             yield RawRecipe(
                 recipe=f"generic_level_histogram_series_case_aggregation_{atype}.yaml",
                 variables={
@@ -148,10 +144,8 @@ def load(conf: Config):
         AGGREGATION_TYPES, conf.MODEL_LEVEL_FIELDS, conf.MODEL_LEVELS
     ):
         index = AGGREGATION_TYPES.index(atype)
-        if (
-            len(conf.HISTOGRAM_MLEVEL_FIELD_AGGREGATION) > index
-            and conf.HISTOGRAM_MLEVEL_FIELD_AGGREGATION[index]
-        ):
+        aggregations = conf.HISTOGRAM_MLEVEL_FIELD_AGGREGATION
+        if len(aggregations) > index and aggregations[index]:
             yield RawRecipe(
                 recipe=f"generic_level_histogram_series_case_aggregation_{atype}.yaml",
                 variables={
