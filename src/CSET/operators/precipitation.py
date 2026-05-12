@@ -202,6 +202,7 @@ def MAUL_properties(
                                     ]
                             # Here a ValueError is raised if a MAUL is not found, however
                             # this is a valid answer, and so output data is set to NaN.
+                            # The dimensionality logic is identical to the try block above.
                             except ValueError:
                                 if (
                                     len(number_of_MAULs.coord("realization").points)
