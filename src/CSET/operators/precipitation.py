@@ -233,7 +233,7 @@ def MAUL_properties(
                 maul_depth.units = "m"
                 maul_depth.rename("MAUL_depth")
                 maul_d.append(maul_depth)
-            case "base":
+            case _:
                 maul_base.units = "m"
                 maul_base.rename("MAUL_base_height")
                 maul_b.append(maul_base)
@@ -250,5 +250,5 @@ def MAUL_properties(
             return maul_d
         case "base" if len(maul_b) == 1:
             return maul_b[0]
-        case "base":
+        case _:
             return maul_b
