@@ -42,6 +42,7 @@ from CSET.operators._utils import (
 )
 from CSET.operators.regrid import restructure_ugrid
 
+
 class NoDataError(FileNotFoundError):
     """Error that no data has been loaded."""
 
@@ -233,8 +234,6 @@ def _load_model(
 
     for cube in cubes:
         _loading_callback(cube, None, None)
-
-    iris.save(cubes, '/data/scratch/james.warner/tmp/out.nc')
 
     cubes = cubes.extract(constraint)
 
