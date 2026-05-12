@@ -41,6 +41,23 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+    # Single point timeseries
+    if conf.SURFACE_SINGLE_POINT_TIME_SERIES:
+        for field in conf.SURFACE_FIELDS:
+            yield RawRecipe(
+                recipe="generic_surface_single_point_time_series.yaml",
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": [model["name"] for model in models],
+                    "LATITUDE_POINT": conf.LATITUDE_POINT,
+                    "LONGITUDE_POINT": conf.LONGITUDE_POINT,
+                    "LATLON_IN_TYPE": conf.LATLON_IN_TYPE,
+                    "SINGLE_POINT_METHOD": conf.SINGLE_POINT_METHOD,
+                },
+                model_ids=[model["id"] for model in models],
+                aggregation=False,
+            )
+
     # Surface time series: land mask.
     if conf.TIMESERIES_SURFACE_FIELD_LAND_MASK:
         for field in conf.SURFACE_FIELDS:
