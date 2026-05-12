@@ -180,6 +180,17 @@ def test_maul_properties_4d_time_base(maul_mask_time, precalc_maul_base_4d_time)
     )
 
 
+def test_maul_properties_4d_time_depth(maul_mask_time, precalc_maul_depth_4d_time):
+    """Ensure correct depth of MAULs generated for 4D field varying in time."""
+    assert np.allclose(
+        precipitation.MAUL_properties(maul_mask_time, output="depth").data,
+        precalc_maul_depth_4d_time.data,
+        rtol=1e-2,
+        atol=1e-6,
+        equal_nan=True,
+    )
+
+
 def test_maul_properties_4d_realization_number(
     maul_mask_member, precalc_maul_number_4d_realization
 ):
@@ -205,6 +216,19 @@ def test_maul_properties_4D_realization_base(
     )
 
 
+def test_maul_properties_4D_realization_depth(
+    maul_mask_member, precalc_maul_depth_4d_realization
+):
+    """Ensure correct depth of MAULs generated for 4D field with varying realization."""
+    assert np.allclose(
+        precipitation.MAUL_properties(maul_mask_member, output="depth").data,
+        precalc_maul_depth_4d_realization.data,
+        rtol=1e-2,
+        atol=1e-6,
+        equal_nan=True,
+    )
+
+
 def test_maul_properties_5D_number(maul_mask_all, precalc_maul_number_5d):
     """Ensure correct number of MAULs generated for 5D field."""
     assert np.allclose(
@@ -212,6 +236,17 @@ def test_maul_properties_5D_number(maul_mask_all, precalc_maul_number_5d):
         precalc_maul_number_5d.data,
         rtol=1e-2,
         atol=1e-6,
+    )
+
+
+def test_maul_properties_5D_base(maul_mask_all, precalc_maul_base_5d):
+    """Ensure correct base of MAULs generated for 5D field."""
+    assert np.allclose(
+        precipitation.MAUL_properties(maul_mask_all, output="base").data,
+        precalc_maul_base_5d.data,
+        rtol=1e-2,
+        atol=1e-6,
+        equal_nan=True,
     )
 
 
