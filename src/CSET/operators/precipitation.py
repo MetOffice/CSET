@@ -82,7 +82,9 @@ def MAUL_properties(
             raise ValueError(
                 "Data contains values that are not 0 or 1, only masked data should be used."
             )
-        # Create dummy cubes to store the output.
+        # Create dummy cubes to store the output. The shape of the dummy cube depends
+        # upon which dimensions are present. The code tests for different combinations
+        # of these dimensions such as ensemble members present or not.
         number_of_MAULs = next(cube.slices_over("model_level_number")).copy()
         number_of_MAULs.data[:] = 0.0
         maul_depth = number_of_MAULs.copy()
