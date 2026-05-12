@@ -1444,7 +1444,7 @@ def _plot_and_save_histogram_series(
     # Set default that histograms will produce probability density function
     # at each bin (integral over range sums to 1).
     density = True
-    for cube in enumerate(iter_maybe(cubes)):
+    for cube in iter_maybe(cubes):
         # Easier to check title (where var name originates)
         # than seeing if long names exist etc.
         # Exception case, where distribution better fits log scales/bins.

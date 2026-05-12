@@ -28,8 +28,6 @@ from CSET._common import is_increasing, iter_maybe
 from CSET.operators._utils import fully_equalise_attributes, get_cube_yxcoordname
 from CSET.operators.regrid import regrid_onto_cube
 
-LOG = logging.getLogger(__name__)
-
 
 def noop(x, **kwargs):
     """Return its input without doing anything to it.
@@ -366,8 +364,6 @@ def convert_visibility_to_km(cubes, **kwargs):
         model = cube.attributes.get("model_name", "") or ""
         if "Cardington" in model:
             cube *= 1000
-            #  data = cube.core_data()
-            #  cube.data = np.ma.array(data * 1.0e3, copy=False)
             cube.units = "km"
         else:
             # UM visibility is in metres – convert with scaling
@@ -796,11 +792,6 @@ def rename_cube(cubes: iris.cube.Cube | iris.cube.CubeList, name: str):
     --------
     >>> light_rain_mask = misc.rename_cube(light_rain_mask,"mask_for_light_rainfall"
     """
-    print(
-        "RENAME INPUT:",
-        [(c.var_name, c.attributes.get("model_name")) for c in cubes],
-        flush=True,
-    )
     new_cubelist = iris.cube.CubeList([])
     for cube in iter_maybe(cubes):
         cube.rename(name)
