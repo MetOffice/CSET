@@ -57,7 +57,7 @@ def MAUL_properties(
     -----
     Having been provided with a mask field for identifying whether Moist
     Absolutely Unstable Layers (MAULs) are present, based on criteria
-    set out in a recipe. This operator applies image processing to the mask
+    set out in a recipe, this operator applies image processing to the mask
     to each point in turn. It uses the image processing to identify continuous
     layers. It identifies the number, top and base of each layer. Depending
     on output desired it will output information for the deepest MAUL.
