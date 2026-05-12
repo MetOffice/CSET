@@ -14,6 +14,8 @@
 
 """Operators to perform various kinds of image processing."""
 
+from typing import Literal
+
 import iris
 import iris.cube
 import numpy as np
@@ -23,7 +25,8 @@ from CSET._common import iter_maybe
 
 
 def MAUL_properties(
-    cubes: iris.cube.Cube | iris.cube.CubeList, output: str
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+    output: Literal["number", "base", "depth"],
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Identify properties of Moist Absolutely Unstable Layers.
 
@@ -32,7 +35,7 @@ def MAUL_properties(
     cubes: iris.cube.Cube | iris.cube.CubeList
       A cube or cubelist of a mask(s) as to whether a MAUL exists.
       This input must be a binary field.
-    output: str
+    output: Literal["number", "base", "depth"]
       The output is the desired property required. It can be
       number, base, depth for the number of MAULs, base height
       of the deepest MAUL, or the depth of the deepest MAUL,
