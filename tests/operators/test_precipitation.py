@@ -80,6 +80,22 @@ def test_maul_properties_3D_base(maul_mask, precalc_maul_base_3d):
     )
 
 
+def test_maul_properties_3D_base_name(maul_mask):
+    """Ensure correct name given to cube in maul properties for MAUL base."""
+    expected_name = "MAUL_base_height"
+    assert (
+        expected_name == precipitation.MAUL_properties(maul_mask, output="base").name()
+    )
+
+
+def test_maul_properties_3D_base_units(maul_mask):
+    """Ensure correct units given to cube in maul properties for MAUL base."""
+    expected_units = cf_units.Unit("m")
+    assert (
+        expected_units == precipitation.MAUL_properties(maul_mask, output="base").units
+    )
+
+
 def test_maul_properties_3D_depth(maul_mask, precalc_maul_depth_3d):
     """Ensure correct depth of MAULs generated for 3D field."""
     assert np.allclose(
@@ -88,6 +104,22 @@ def test_maul_properties_3D_depth(maul_mask, precalc_maul_depth_3d):
         rtol=1e-2,
         atol=1e-6,
         equal_nan=True,
+    )
+
+
+def test_maul_properties_3D_depth_name(maul_mask):
+    """Ensure correct name given to cube in maul properties for MAUL depth."""
+    expected_name = "MAUL_depth"
+    assert (
+        expected_name == precipitation.MAUL_properties(maul_mask, output="depth").name()
+    )
+
+
+def test_maul_properties_3D_depth_units(maul_mask):
+    """Ensure correct units given to cube in maul properties for MAUL depth."""
+    expected_units = cf_units.Unit("m")
+    assert (
+        expected_units == precipitation.MAUL_properties(maul_mask, output="depth").units
     )
 
 
