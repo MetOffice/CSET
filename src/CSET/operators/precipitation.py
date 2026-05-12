@@ -241,7 +241,7 @@ def MAUL_properties(
                                     maul_depth.data[lat_point, lon_point] = np.nan
                                     maul_base.data[lat_point, lon_point] = np.nan
 
-        # Units and renaming.
+        # Units and renaming for number, depth and default case.
         match output:
             case "number":
                 number_of_MAULs.units = "1"
