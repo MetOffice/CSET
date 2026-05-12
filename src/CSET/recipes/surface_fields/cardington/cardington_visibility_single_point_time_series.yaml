@@ -1,4 +1,4 @@
-category: Time series of variables at Cardington single point
+category: Time series of visibility at Cardington single point
 title: "Time series of $PLOTNAME at lat_pt:52.10438, lon_pt:-0.42286 specific to Cardington gridpoint."
 description: "Plots a time series of $PLOTNAME at a selected Cardington gridpoint."
 

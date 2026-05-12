@@ -78,8 +78,6 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
                 or cube.name() in varname
             )
         )
-    #  if isinstance(varname, (list, tuple)):
-    #      return iris.Constraint(cube_func=lambda cube: cube.name() in varname)
 
     # ---- CASE 2: single UM STASH code ----
     if _STASH_RE.match(varname):
@@ -87,20 +85,15 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
 
     # ---- CASE 3: single variable name ----
     # return iris.Constraint(name=varname)
-    return iris.Constraint(
-        cube_func=lambda cube: (
-            cube.var_name == varname
-            or cube.standard_name == varname
-            or cube.name() == varname
-        )
-    )
+    return iris.Constraint(name=varname)
 
 
-#  if re.match(r"m[0-9]{2}s[0-9]{2}i[0-9]{3}$", varname):
-#      varname_constraint = iris.AttributeConstraint(STASH=varname)
-#  else:
-#      varname_constraint = iris.Constraint(name=varname)
-#  return varname_constraint
+#      cube_func=lambda cube: (
+#          cube.var_name == varname
+#          or cube.standard_name == varname
+#          or cube.name() == varname
+#      )
+#  )
 
 
 def generate_var_name_constraint(varname: str, **kwargs) -> iris.Constraint:

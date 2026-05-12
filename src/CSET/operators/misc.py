@@ -78,7 +78,7 @@ def remove_attribute(
 
     # Combine things that can be merged due to remove removing the
     # attributes.
-    #  cubes = cubes.merge()
+    cubes = cubes.merge()
     # combine items that can be merged after removing unwanted attributes
     cubes = cubes.concatenate()
     return cubes
@@ -299,6 +299,60 @@ def mask_fill_values(cubes, ulp_factor=10):
         cleaned.append(_mask_fill_value(cube, ulp_factor=ulp_factor))
 
     return cleaned
+
+
+def convert_rainfall_amount_to_rate(cubes, **kwargs):
+    """
+    Convert Cardington rainfall from depth per time interval (mm)
+    to rainfall rate (kg m-2 s-1).
+
+    UM rainfall is already a rate and is left untouched.
+    """
+    if isinstance(cubes, iris.cube.Cube):
+        cubes = iris.cube.CubeList([cubes])
+    else:
+        cubes = iris.cube.CubeList(cubes)
+
+    for cube in cubes:
+        model = cube.attributes.get("model_name", "") or ""
+
+        # Only act on Cardington data
+        if "Cardington" not in model:
+            continue
+
+        # --- sanity checks ---
+        if not cube.coords("time"):
+            raise ValueError(
+                "Cardington rainfall cube has no time coordinate; "
+                "cannot derive interval length."
+            )
+
+        time = cube.coord("time")
+        if time.bounds is None:
+            raise ValueError(
+                "Cardington rainfall cube has no time bounds; "
+                "cannot convert accumulated rainfall to a rate."
+            )
+
+        # --- derive interval duration in seconds ---
+        # bounds shape: (ntimes, 2)
+        bounds = time.bounds
+        duration_seconds = bounds[:, 1] - bounds[:, 0]
+
+        if np.any(duration_seconds <= 0):
+            raise ValueError("Non-positive rainfall accumulation interval detected.")
+
+        # reshape for broadcasting along data dimensions
+        reshape = [1] * cube.ndim
+        reshape[cube.coord_dims("time")[0]] = -1
+        duration_seconds = duration_seconds.reshape(reshape)
+
+        # --- convert depth -> rate ---
+        # mm / s == kg m-2 s-1
+        cube.data = cube.core_data() / duration_seconds
+        cube.units = "kg m-2 s-1"
+
+    return cubes if len(cubes) > 1 else cubes[0]
 
 
 def convert_visibility_to_km(cubes, **kwargs):
