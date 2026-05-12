@@ -1185,15 +1185,19 @@ def test_time_bounds():
             # Instantaneous field
             assert c.coord("time").bounds is None
 
+
 def test_read_time_constraint_in_bounds():
     """Cubes can be selected with any time inside the bounds."""
-    cubes = read.read_cubes("tests/test_data/air_temp.nc", constraint=iris.Constraint(time=datetime.datetime(2022, 9, 21, 3, 0)))
+    cubes = read.read_cubes(
+        "tests/test_data/air_temp.nc",
+        constraint=iris.Constraint(time=datetime.datetime(2022, 9, 21, 3, 0)),
+    )
 
     for c in cubes:
         if c.coord("time").bounds is None:
             # Instantaneous field was loaded
-            assert c.coord('time').as_string_arrays().points == ['2022-09-21 03:00:00']
+            assert c.coord("time").as_string_arrays().points == ["2022-09-21 03:00:00"]
         else:
             # Time processed field was loaded even though its time doesn't match
             # since the constraint is inside time bounds
-            assert c.coord('time').as_string_arrays().points == ['2022-09-21 03:30:00']
+            assert c.coord("time").as_string_arrays().points == ["2022-09-21 03:30:00"]
