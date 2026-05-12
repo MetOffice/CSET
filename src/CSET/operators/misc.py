@@ -100,68 +100,6 @@ def remove_scalar_coords(cubes, coords):
     return cubes
 
 
-def _concat_over_time_safely(model_cubes: CubeList) -> iris.cube.Cube:
-    """Concatenate cubes over time.
-
-    coping with:
-      - scalar time coords (promote to dim with new_axis)
-      - scalar realization / forecast_reference_time (remove) or singleton dims (squeeze)
-      - cases where time arrays are identical (skip concatenation).
-    """
-    fixed = CubeList()
-
-    for c in model_cubes:
-        # --- ensure time is a dimension coordinate ---
-        if c.coords("time"):
-            t = c.coord("time")
-            if c.coord_dims(t) == ():  # scalar time on this cube
-                c = iris.util.new_axis(c, t)  # IMPORTANT: reassign!
-                t = c.coord("time")
-            if t.has_bounds():
-                t.bounds = None
-
-        # --- remove/squeeze scalar coords that block concat ---
-        for name in ("realization", "forecast_reference_time"):
-            if c.coords(name):
-                dims = c.coord_dims(name)
-                if dims == ():  # scalar -> remove
-                    c.remove_coord(name)
-                else:
-                    # singleton dimension -> squeeze away
-                    dim = dims[0]
-                    if c.shape[dim] == 1:
-                        c = iris.util.squeeze(c)
-
-        fixed.append(c)
-
-    iris.util.equalise_attributes(fixed)
-    iris.util.unify_time_units(fixed)
-
-    # --- If time point arrays are identical, there is no concat axis ---
-    if fixed and fixed[0].coords("time"):
-        sigs = [tuple(c.coord("time").points) for c in fixed]
-        if len(set(sigs)) == 1:
-            return fixed[0]
-
-    # --- Try normal concatenation over time ---
-    fixed.sort(key=lambda c: c.coord("time").points.min() if c.coords("time") else 0)
-
-    try:
-        return fixed.concatenate_cube()
-    except iris.exceptions.ConcatenateError:
-        # Fallback: split into single-time slices and merge (often clearer / more robust) [2](https://engage.cloud.microsoft/main/threads/eyJfdHlwZSI6IlRocmVhZCIsImlkIjoiMTE5MTY5OTYxNSJ9)[3](https://engage.cloud.microsoft/main/threads/eyJfdHlwZSI6IlRocmVhZCIsImlkIjoiMzY5MzE0NDYyMzk5NjkyOCJ9)
-        slices = CubeList()
-        for c in fixed:
-            if c.coords("time") and c.coord_dims("time") != ():
-                slices.extend(list(c.slices_over("time")))
-            else:
-                slices.append(c)
-
-        iris.util.equalise_attributes(slices)
-        iris.util.unify_time_units(slices)
-        return slices.merge_cube()
-
-
 def addition(addend_1, addend_2):
     """Addition of two fields.
 

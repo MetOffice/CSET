@@ -10,8 +10,6 @@ steps:
       - $CARDINGTON_30_LABEL
       - $MODEL_NAME
 
-  - operator: misc.merge_cardington
-
   - operator: filters.filter_multiple_cubes
     Cardington:
       operator: constraints.generate_var_constraint
