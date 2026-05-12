@@ -85,17 +85,13 @@ def MAUL_properties(
         maul_depth = number_of_MAULs.copy()
         maul_base = number_of_MAULs.copy()
         # Loop over realization.
-        mem_number = 0
-        for member in cube.slices_over("realization"):
+        for mem_number, member in enumerate(cube.slices_over("realization")):
             # Loop over time.
-            time_point = 0
-            for time in member.slices_over("time"):
+            for time_point, time in enumerate(member.slices_over("time")):
                 # Loop over latitude.
-                lat_point = 0
-                for lat in time.slices_over("latitude"):
-                    lon_point = 0
+                for lat_point, lat in enumerate(time.slices_over("latitude")):
                     # Loop over longitude.
-                    for lon in lat.slices_over("longitude"):
+                    for lon_point, lon in enumerate(lat.slices_over("longitude")):
                         # Label each object in the vertical.
                         labels = label(lon.core_data())
                         # Finds the number of MAULs present, if no MAUL is present
@@ -223,10 +219,6 @@ def MAUL_properties(
                                 else:
                                     maul_depth.data[lat_point, lon_point] = np.nan
                                     maul_base.data[lat_point, lon_point] = np.nan
-                        lon_point += 1
-                    lat_point += 1
-                time_point += 1
-            mem_number += 1
 
         # Units and renaming.
         match output:
