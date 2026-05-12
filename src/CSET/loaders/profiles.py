@@ -75,7 +75,11 @@ def load(conf: Config):
     for atype, field in itertools.product(
         AGGREGATION_TYPES, conf.PRESSURE_LEVEL_FIELDS
     ):
-        if conf.PROFILE_PLEVEL_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
+        index = AGGREGATION_TYPES.index(atype)
+        if (
+            len(conf.PROFILE_PLEVEL_AGGREGATION) > index
+            and conf.PROFILE_PLEVEL_AGGREGATION[index]
+        ):
             yield RawRecipe(
                 recipe=f"generic_level_domain_mean_vertical_profile_series_case_aggregation_{atype}.yaml",
                 variables={
@@ -93,7 +97,11 @@ def load(conf: Config):
 
     # Model level fields.
     for atype, field in itertools.product(AGGREGATION_TYPES, conf.MODEL_LEVEL_FIELDS):
-        if conf.PROFILE_MLEVEL_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
+        index = AGGREGATION_TYPES.index(atype)
+        if (
+            len(conf.PROFILE_MLEVEL_AGGREGATION) > index
+            and conf.PROFILE_MLEVEL_AGGREGATION[index]
+        ):
             yield RawRecipe(
                 recipe=f"generic_level_domain_mean_vertical_profile_series_case_aggregation_{atype}.yaml",
                 variables={

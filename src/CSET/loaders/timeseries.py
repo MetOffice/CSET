@@ -467,7 +467,11 @@ def load(conf: Config):
 
     # Surface (2D) fields.
     for atype, field in itertools.product(AGGREGATION_TYPES, conf.SURFACE_FIELDS):
-        if conf.TIMESERIES_SURFACE_FIELD_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
+        index = AGGREGATION_TYPES.index(atype)
+        if (
+            len(conf.TIMESERIES_SURFACE_FIELD_AGGREGATION) > index
+            and conf.TIMESERIES_SURFACE_FIELD_AGGREGATION[index]
+        ):
             yield RawRecipe(
                 recipe=f"generic_surface_domain_mean_time_series_case_aggregation_{atype}.yaml",
                 variables={
@@ -486,7 +490,11 @@ def load(conf: Config):
     for atype, field, plevel in itertools.product(
         AGGREGATION_TYPES, conf.PRESSURE_LEVEL_FIELDS, conf.PRESSURE_LEVELS
     ):
-        if conf.TIMESERIES_PLEVEL_FIELD_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
+        index = AGGREGATION_TYPES.index(atype)
+        if (
+            len(conf.TIMESERIES_PLEVEL_FIELD_AGGREGATION) > index
+            and conf.TIMESERIES_PLEVEL_FIELD_AGGREGATION[index]
+        ):
             yield RawRecipe(
                 recipe=f"generic_level_domain_mean_time_series_case_aggregation_{atype}.yaml",
                 variables={
@@ -507,7 +515,11 @@ def load(conf: Config):
     for atype, field, mlevel in itertools.product(
         AGGREGATION_TYPES, conf.MODEL_LEVEL_FIELDS, conf.MODEL_LEVELS
     ):
-        if conf.TIMESERIES_MLEVEL_FIELD_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
+        index = AGGREGATION_TYPES.index(atype)
+        if (
+            len(conf.TIMESERIES_MLEVEL_FIELD_AGGREGATION) > index
+            and conf.TIMESERIES_MLEVEL_FIELD_AGGREGATION[index]
+        ):
             yield RawRecipe(
                 recipe=f"generic_level_domain_mean_time_series_case_aggregation_{atype}.yaml",
                 variables={
