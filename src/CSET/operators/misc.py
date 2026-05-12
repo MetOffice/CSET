@@ -21,6 +21,7 @@ from collections.abc import Iterable
 import iris
 import iris.analysis.calculus
 import numpy as np
+from cf_units import Unit
 from iris.cube import Cube, CubeList
 
 from CSET._common import is_increasing, iter_maybe
@@ -615,3 +616,41 @@ def differentiate(
         return new_cubelist[0]
     else:
         return new_cubelist
+
+
+def latent_heat_units(
+    cubes: Cube | CubeList,
+    **kwargs,
+) -> Cube | CubeList:
+    """
+    Convert w'q' covariance (e.g. from Cardington surface site netCDF files) to latent heat flux (W m-2).
+
+    Note
+    ----
+    Using fixed value of latent heat of vapourisation for now; varies by about 5% between -20 and +40degC.
+    Possible future improvement.
+    """
+    REQUIRED_UNITS = Unit("kg m-2 s-1")
+    OUTPUT_UNITS = Unit("W m-2")
+
+    Lc = 2.45e6  # J kg-1
+
+    out = iris.cube.CubeList()
+
+    for cube in iter_maybe(cubes):
+        # ---- ONLY ACT ON MASS FLUXES ----
+        if cube.units is None or cube.units.is_unknown():
+            out.append(cube)
+            continue
+        if not cube.units.is_convertible(REQUIRED_UNITS):
+            # ✅ This is UM LE or some other diagnostic — leave untouched
+            out.append(cube)
+            continue
+
+        cube_a = cube.copy()
+        cube_a = cube_a * Lc
+        cube_a.units = OUTPUT_UNITS
+
+        out.append(cube_a)
+
+    return out[0] if len(out) == 1 else out
