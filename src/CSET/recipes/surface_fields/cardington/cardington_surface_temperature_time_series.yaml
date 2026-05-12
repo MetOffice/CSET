@@ -34,8 +34,6 @@ steps:
           - forecast_reference_time
           - realization
 
-  - operator: misc.merge_cardington
-
 # IMPORTANT: Global temperature-only prune.
 # filter_multiple_cubes must have exactly ONE key here,
 # otherwise non-temperature cubes will survive and break convert_units.
