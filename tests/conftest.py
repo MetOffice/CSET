@@ -504,6 +504,18 @@ def precalc_maul_base_4d_time(precalc_maul_base_4d_time_read_only):
 
 
 @pytest.fixture()
+def precalc_maul_depth_4d_time_read_only():
+    """Get precalculated depth for time change dimension. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/precipitation/maul_time_4d_depth.nc")
+
+
+@pytest.fixture()
+def precalc_maul_depth_4d_time(precalc_maul_depth_4d_time_read_only):
+    """Get precalculated depth for time change dimension. It is safe to modify."""
+    return precalc_maul_depth_4d_time_read_only.copy()
+
+
+@pytest.fixture()
 def precalc_maul_number_4d_realization_read_only():
     """Get precalculated number for realization change dimension. It is NOT safe to modify."""
     return read.read_cube("tests/test_data/precipitation/maul_member_4d_number.nc")
@@ -528,6 +540,18 @@ def precalc_maul_base_4d_realization(precalc_maul_base_4d_realization_read_only)
 
 
 @pytest.fixture()
+def precalc_maul_depth_4d_realization_read_only():
+    """Get precalculated depth for realization change dimension. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/precipitation/maul_member_4d_depth.nc")
+
+
+@pytest.fixture()
+def precalc_maul_depth_4d_realization(precalc_maul_depth_4d_realization_read_only):
+    """Get precalculated depth for realization change dimension. It is safe to modify."""
+    return precalc_maul_depth_4d_realization_read_only.copy()
+
+
+@pytest.fixture()
 def precalc_maul_number_5d_read_only():
     """Get precalculated number for 5D data. It is NOT safe to modify."""
     return read.read_cube("tests/test_data/precipitation/maul_member_5d_number.nc")
@@ -537,6 +561,18 @@ def precalc_maul_number_5d_read_only():
 def precalc_maul_number_5d(precalc_maul_number_5d_read_only):
     """Get precalculated number for 5D data. It is safe to modify."""
     return precalc_maul_number_5d_read_only.copy()
+
+
+@pytest.fixture()
+def precalc_maul_base_5d_read_only():
+    """Get precalculated base for 5D data. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/precipitation/maul_member_5d_base.nc")
+
+
+@pytest.fixture()
+def precalc_maul_base_5d(precalc_maul_base_5d_read_only):
+    """Get precalculated base for 5D data. It is safe to modify."""
+    return precalc_maul_base_5d_read_only.copy()
 
 
 @pytest.fixture()
