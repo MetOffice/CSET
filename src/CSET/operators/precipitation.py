@@ -57,10 +57,12 @@ def MAUL_properties(
     -----
     Having been provided with a mask field for identifying whether Moist
     Absolutely Unstable Layers (MAULs) are present, based on criteria
-    set out in a recipe, this operator applies image processing to the mask
-    to each point in turn. It uses the image processing to identify continuous
-    layers. It identifies the number, top and base of each layer. Depending
-    on output desired it will output information for the deepest MAUL.
+    set out in a recipe. The operator applies image processing to the mask
+    to each point in the latitude/longitude coordinates. It uses the image
+    processing to identify continuous layers (1s), and labels them.
+    It identifies the number of layesr by identifying the maximum label number,
+    and then finds the top and base of each layer. Depending on the output
+    desired it will output information for the deepest MAUL.
 
     When a MAUL is not present the output will be set to NaN for depth and base.
     If number of MAULs is the desired output it will be set to zero.
@@ -82,9 +84,8 @@ def MAUL_properties(
             raise ValueError(
                 "Data contains values that are not 0 or 1, only masked data should be used."
             )
-        # Create dummy cubes to store the output. The shape of the dummy cube depends
-        # upon which dimensions are present. The code tests for different combinations
-        # of these dimensions such as ensemble members present or not.
+        # Create dummy cubes to store the output. The shape of the dummy cube
+        # depends upon which dimensions are present in the mask cube.
         number_of_MAULs = next(cube.slices_over("model_level_number")).copy()
         number_of_MAULs.data[:] = 0.0
         maul_depth = number_of_MAULs.copy()
@@ -97,17 +98,18 @@ def MAUL_properties(
                 for lat_point, lat in enumerate(time.slices_over("latitude")):
                     # Loop over longitude.
                     for lon_point, lon in enumerate(lat.slices_over("longitude")):
-                        # Label each object in the vertical. 
-                        # Label() identifies continuous layers vertically. Each separate MAUL region
-                        # of connected 1s gets its own identifier.
+                        # Label each object in the vertical.
                         labels = label(lon.core_data())
-                        # Finds the number of MAULs present, if no MAUL is present
+                        # Finds the number of MAULs present based upon the
+                        # number of objects identified, if no MAUL is present
                         # the value is set to zero.
+                        # The code checks for whether there are multiple
+                        # realization and/or time points for correct
+                        # indexing of the output data and applies accordingly.
                         if (
                             len(number_of_MAULs.coord("realization").points) != 1
                             and len(number_of_MAULs.coord("time").points) != 1
                         ):
-                            # np.max(labels) gives total MAUL number
                             number_of_MAULs.data[
                                 mem_number, time_point, lat_point, lon_point
                             ] = np.max(labels)
@@ -128,47 +130,53 @@ def MAUL_properties(
                         else:
                             number_of_MAULs.data[lat_point, lon_point] = np.max(labels)
                         if output != "number":
-                            # Find the base, top, and depth for each object using cube metadata.
+                            # Find the base, top, and depth for each object
+                            # using cube metadata.
                             maul_start = []
                             maul_end = []
                             maul_dep = []
-                            # Loop over the number of MAULs (plus one to ensure only one MAUL is covered).
+                            # Loop over the number of MAULs (plus one to ensure
+                            # the case for only one MAUL being present).
                             for maul in range(1, np.max(labels) + 1):
-                                # find all vertical indices belonging to this maul
+                                # Find all vertical indices belonging to a MAUL.
                                 maul_range = np.where(labels == maul)
-                                # height at the lowest level (bottom) of the MAUL
+                                # Find the height at the base of the MAUL
+                                # (lowest level).
                                 maul_start_point = lon.coord("level_height").points[
                                     maul_range[0][0]
                                 ]
-                                # height at the highest level (top) of the MAUL
+                                # Find the height at the top of the MAUL
+                                # (highest level).
                                 maul_end_point = lon.coord("level_height").points[
                                     maul_range[0][-1]
                                 ]
-                                # calculate MAUL depth, base and top height.
+                                # Calculate the MAUL depth, and store
+                                # base and top heights.
                                 maul_dep.append(maul_end_point - maul_start_point)
                                 maul_start.append(maul_start_point)
                                 maul_end.append(maul_end_point)
                             try:
+                                # Idendtify where the deepest MAUL is.
                                 index = int(
                                     np.where(maul_dep == np.max(maul_dep))[0][0]
                                 )
-                                # several dimension combination checks in this try block
-                                # to work out correct indexing.
-                                # ensemble and several time points
+                                # As with number the code checks for whether
+                                # there are multiple realization and/or time
+                                # points for correct indexing of the output data
+                                # and applies accordingly.
                                 if (
                                     len(number_of_MAULs.coord("realization").points)
                                     != 1
                                     and len(number_of_MAULs.coord("time").points) != 1
                                 ):
-                                    # store the maximum (deepest) depth
+                                    # Store the deepest MAUL.
                                     maul_depth.data[
                                         mem_number, time_point, lat_point, lon_point
                                     ] = np.max(maul_dep)
-                                    # store the base height of that deepest MAUL 
+                                    # Store the base height of the deepest MAUL.
                                     maul_base.data[
                                         mem_number, time_point, lat_point, lon_point
                                     ] = maul_start[index]
-                                # ensemble and single time step
                                 elif (
                                     len(number_of_MAULs.coord("realization").points)
                                     != 1
@@ -180,7 +188,6 @@ def MAUL_properties(
                                     maul_base.data[mem_number, lat_point, lon_point] = (
                                         maul_start[index]
                                     )
-                                # multiple time points and single ensemble member    
                                 elif (
                                     len(number_of_MAULs.coord("time").points) != 1
                                     and len(number_of_MAULs.coord("realization").points)
@@ -192,7 +199,6 @@ def MAUL_properties(
                                     maul_base.data[time_point, lat_point, lon_point] = (
                                         maul_start[index]
                                     )
-                                # single time and single ensemble member
                                 else:
                                     maul_depth.data[lat_point, lon_point] = np.max(
                                         maul_dep
@@ -202,7 +208,8 @@ def MAUL_properties(
                                     ]
                             # Here a ValueError is raised if a MAUL is not found, however
                             # this is a valid answer, and so output data is set to NaN.
-                            # The dimensionality logic is identical to the try block above.
+                            # The dimensionality logic for storage is identical
+                            # to that used previously.
                             except ValueError:
                                 if (
                                     len(number_of_MAULs.coord("realization").points)
@@ -241,7 +248,7 @@ def MAUL_properties(
                                     maul_depth.data[lat_point, lon_point] = np.nan
                                     maul_base.data[lat_point, lon_point] = np.nan
 
-        # Units and renaming for number, depth and default case.
+        # Units and renaming for number, depth and base (the other case).
         match output:
             case "number":
                 number_of_MAULs.units = "1"
