@@ -45,7 +45,7 @@ been to switch the order of difference comparisons, so that now the control is
 subtracted from the experiment, rather than the other way around. This should
 make it easier to tell the direction of any bias.
 
-To view all of these nice diagnostics, the web interface produced by the
+To view all of these diagnostics, the web interface produced by the
 workflow has been overhauled, adding a search, filtering via dropdowns, and
 pop-out plot windows. Please send us your thoughts on the new web interface, so
 we can continue making it more usable!
@@ -110,6 +110,9 @@ we can continue making it more usable!
 * Add METplus support at NCI site by `@ScottWales`_ in :pr:`2068`
 * Use } as / replacement in symlink filenames by `@jfrost-mo`_ in :pr:`2092`
 * Default screen level temperature probabilities to False by `@jfrost-mo`_ in :pr:`2095`
+* Minor JavaScript cleanup by `@jfrost-mo`_ in :pr:`2108`
+* Enforce the description toggle on iframe load by `@jfrost-mo`_ in :pr:`2109`
+* Reset rose-suite.conf.example settings to avoid errors in rose edit by `@jfrost-mo`_ in :pr:`2130`
 
 📖 Documentation
 ~~~~~~~~~~~~~~~~
