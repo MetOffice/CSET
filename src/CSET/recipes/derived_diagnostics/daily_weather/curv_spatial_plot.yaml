@@ -17,8 +17,9 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
-  - operator: curvature.curv
+  - operator: curvature.global_curv_versiontwo
     radius: 1000
+    num_radial_points: 8
 
   - operator: plot.spatial_pcolormesh_plot
 
