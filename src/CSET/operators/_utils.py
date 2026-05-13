@@ -423,16 +423,39 @@ def is_time_aux_coord(cube: iris.cube.Cube) -> bool:
     # Acceptable time coordinate names
     TEMPORAL_COORD_NAMES = ["forecast_period", "forecast_reference_time"]
 
-    # Get auxiliary coordinate names (coords that are not dimension coords)
-    aux_coord_names = [coord.name() for coord in cube.aux_coords]
+    # Get dimension coordinate names
+    dim_coord_names = [coord.name() for coord in cube.dim_coords]
 
-    # Check which temporal coordinates we have as auxiliary coordinates
-    temporal_aux_coords = [
-        coord for coord in aux_coord_names if coord in TEMPORAL_COORD_NAMES
+    # Check which temporal coordinates are being used as dimension coordinates
+    temporal_dim_coords = [
+        coord for coord in dim_coord_names if coord in TEMPORAL_COORD_NAMES
     ]
 
-    # Return whether both coordinates are auxiliary coordinates
-    return len(temporal_aux_coords) == 2
+    # If both coordinates are dimension coordinates, return False
+    if len(temporal_dim_coords) == 2:
+        return False
+
+    # Check if both temporal coordinates exist in the cube
+    has_forecast_period = False
+    has_forecast_reference_time = False
+
+    try:
+        cube.coord("forecast_period")
+        has_forecast_period = True
+    except iris.exceptions.CoordinateNotFoundError:
+        pass
+
+    try:
+        cube.coord("forecast_reference_time")
+        has_forecast_reference_time = True
+    except iris.exceptions.CoordinateNotFoundError:
+        pass
+
+    # Check that both exist and are not used as dimension coordinates
+    if has_forecast_period and has_forecast_reference_time:
+        return len(temporal_dim_coords) == 0
+
+    return False
 
 
 def is_time_aggregatable(cube: iris.cube.Cube) -> bool:

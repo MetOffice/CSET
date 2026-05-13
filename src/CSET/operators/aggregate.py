@@ -14,7 +14,6 @@
 
 """Operators to aggregate across either 1 or 2 dimensions."""
 
-import itertools
 import logging
 
 import iris
@@ -198,9 +197,10 @@ def ensure_aggregatable_across_cases(
             aggregatable_cubes.append(aggregatable_cube)
             continue
 
-        for cube in bucket:
-            if is_time_aggregatable(cube):
-                to_merge = iris.cube.CubeList()
+        # Check if all cubes in bucket are time_aggregatable
+        if all(is_time_aggregatable(cube) for cube in bucket):
+            to_merge = iris.cube.CubeList()
+            for cube in bucket:
                 try:
                     to_merge.extend(
                         cube.slices_over(["forecast_period", "forecast_reference_time"])
@@ -210,36 +210,36 @@ def ensure_aggregatable_across_cases(
                         "Cube should have 'forecast_period' and 'forecast_reference_time' dimension coordinates.",
                         cube,
                     ) from err
-                aggregatable_cube = to_merge.merge_cube()
+            aggregatable_cube = to_merge.merge_cube()
 
-                # Add attribute on number of forecast_reference_times
-                aggregatable_cube = _add_nref(aggregatable_cube)
+            # Add attribute on number of forecast_reference_times
+            aggregatable_cube = _add_nref(aggregatable_cube)
 
-                aggregatable_cubes.append(aggregatable_cube)
+            aggregatable_cubes.append(aggregatable_cube)
 
-            elif is_time_aux_coord(cube):
-                times = identify_unique_times(cube, time_coord_name)
+        elif all(is_time_aux_coord(cube) for cube in bucket):
+            times = identify_unique_times(bucket, time_coord_name)
 
-                aggregated_list = [
-                    _aggregate_without_time_dimcoords(
-                        cube, time, iris.analysis.MEAN, None
+            aggregated_list = []
+            for time in times:
+                for cube in bucket:
+                    aggregated_list.extend(
+                        _aggregate_without_time_dimcoords(
+                            cube, time, iris.analysis.MEAN, None
+                        )
                     )
-                    for time in times
-                ]
 
-                cubes_to_merge = iris.cube.CubeList(
-                    itertools.chain.from_iterable(aggregated_list)
-                )
+            cubes_to_merge = iris.cube.CubeList(aggregated_list)
 
-                aggregatable_cube = cubes_to_merge.merge_cube()
-                aggregatable_cube = _add_nref(aggregatable_cube)
-                aggregatable_cubes.append(aggregatable_cube)
+            aggregatable_cube = cubes_to_merge.merge_cube()
+            aggregatable_cube = _add_nref(aggregatable_cube)
+            aggregatable_cubes.append(aggregatable_cube)
 
-            else:
-                raise ValueError(
-                    "Cube is missing required dimension or auxliary time coordinates",
-                    cube,
-                )
+        else:
+            raise ValueError(
+                "Cube is missing required dimension or auxiliary time coordinates",
+                bucket,
+            )
 
     return aggregatable_cubes
 
