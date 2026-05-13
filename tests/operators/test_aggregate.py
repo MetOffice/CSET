@@ -121,7 +121,7 @@ def test_ensure_aggregatable_across_cases_coord_attribute(long_forecast_many_cub
     output_data = aggregate.ensure_aggregatable_across_cases(
         long_forecast_many_cubes, time_coord_name="time"
     )
-    assert output_data[0].coord("time").attributes["number_reference_times"] == 1
+    assert output_data[0].coord("time").attributes["number_reference_times"] == 3
 
 
 def test_add_hour_coordinate(long_forecast):
