@@ -14,21 +14,20 @@
 
 """Operators to regrid cubes."""
 
+import logging
+import re
 import warnings
+from multiprocessing import Pool
 
 import iris
 import iris.coord_systems
 import iris.coords as icoords
 import iris.cube
 import numpy as np
+from scipy.interpolate import LinearNDInterpolator
 
 from CSET._common import iter_maybe
 from CSET.operators._utils import get_cube_yxcoordname
-from scipy.interpolate import LinearNDInterpolator
-import os
-import re
-from multiprocessing import Pool
-import logging
 
 
 class BoundaryWarning(UserWarning):
@@ -563,7 +562,6 @@ UGRID_VAR_LOOKUP = {
 
 
 def _rebuild_ugrid_meta(data, origcube, lat, lon, var_lookup=UGRID_VAR_LOOKUP):
-
     """
     Build a structured Iris cube (time, lat, lon) from regridded data,
     preserving metadata and adding a pressure auxiliary coordinate
@@ -585,7 +583,6 @@ def _rebuild_ugrid_meta(data, origcube, lat, lon, var_lookup=UGRID_VAR_LOOKUP):
     iris.cube.Cube
         New structured Iris cube
     """
-
     # --- Dimension coordinates ---
     time_coord = origcube.coord("time")
 
@@ -610,7 +607,6 @@ def _rebuild_ugrid_meta(data, origcube, lat, lon, var_lookup=UGRID_VAR_LOOKUP):
 
         # ---- Add pressure auxiliary coordinate ----
         if pressure_hpa is not None:
-
             pressure_coord = icoords.DimCoord(
                 [int(pressure_hpa)],
                 long_name="pressure",
@@ -619,16 +615,16 @@ def _rebuild_ugrid_meta(data, origcube, lat, lon, var_lookup=UGRID_VAR_LOOKUP):
 
             # --- Build the cube ---
             out_cube = iris.cube.Cube(
-                data[:,np.newaxis,:,:],
+                data[:, np.newaxis, :, :],
                 dim_coords_and_dims=[
                     (time_coord, 0),
                     (pressure_coord, 1),
                     (lat_coord, 2),
                     (lon_coord, 3),
-                ])
+                ],
+            )
 
         else:
-
             # --- Build the cube ---
             out_cube = iris.cube.Cube(
                 data,
@@ -636,7 +632,8 @@ def _rebuild_ugrid_meta(data, origcube, lat, lon, var_lookup=UGRID_VAR_LOOKUP):
                     (time_coord, 0),
                     (lat_coord, 1),
                     (lon_coord, 2),
-                ])
+                ],
+            )
 
         # ---- Rename cube using lookup dictionary ----
         meta = var_lookup.get(var_key)
@@ -659,45 +656,45 @@ def _rebuild_ugrid_meta(data, origcube, lat, lon, var_lookup=UGRID_VAR_LOOKUP):
 
         # Add forecast reference time as 'time_origin' to mimic lfric where it will reconstruct forecast_period
         # Extract the origin string from the units
-        time_origin = time_coord.units.origin  
+        time_origin = time_coord.units.origin
 
         # Strip the "seconds since " part
         time_origin = time_origin.split("since ")[1]
 
         # Add to cube attributes as str
-        out_cube.coord('time').attributes['time_origin'] = time_origin
+        out_cube.coord("time").attributes["time_origin"] = time_origin
 
         return out_cube
 
 
-def _restructure_ugrid_regrid(cube,tri,lat_grid,lon_grid,xy):
+def _restructure_ugrid_regrid(cube, tri, lat_grid, lon_grid, xy):
 
     # Don't regrid lat/lon coord!
     if cube.ndim > 1:
+        out = np.empty((cube.shape[0], lat_grid.size, lon_grid.size))
 
-        out = np.empty((cube.shape[0],lat_grid.size,lon_grid.size))
+        print("Interpolating", cube.name())
 
-        print('Interpolating',cube.name())
-        
         src_vals = cube.data.T
-            
+
         interp = LinearNDInterpolator(tri, src_vals)
 
         out_flat = interp(xy)
 
-        out = out_flat.T.reshape(
-            cube.shape[0], lat_grid.size, lon_grid.size
+        out = out_flat.T.reshape(cube.shape[0], lat_grid.size, lon_grid.size)
+
+        out_cube = _rebuild_ugrid_meta(
+            out, cube, lat_grid, lon_grid, var_lookup=UGRID_VAR_LOOKUP
         )
 
-        out_cube = _rebuild_ugrid_meta(out, cube, lat_grid, lon_grid, var_lookup=UGRID_VAR_LOOKUP)
- 
-        # Wierdly in units of dm.
-        if out_cube.long_name == 'geopotential_height':
-            out_cube.data = out_cube.data/10.
+        # Change units, geopot in m2 s-2
+        if out_cube.long_name == "geopotential_height":
+            out_cube.data = out_cube.data / 9.81
 
-        if out_cube.long_name == 'surface_microphysical_rainfall_rate':
-            out_cube.data = out_cube.data*3600.
- 
+        # Raw data in units of 6h accum in meters.
+        if out_cube.long_name == "surface_microphysical_rainfall_rate":
+            out_cube.data = (out_cube.data * 1000.0) / 6
+
         if out_cube is not None:
             out_cube.data = np.asarray(out_cube.data, dtype=np.float32)
 
@@ -706,13 +703,13 @@ def _restructure_ugrid_regrid(cube,tri,lat_grid,lon_grid,xy):
 
 def restructure_ugrid(cubes):
     """
-    TODO
+    TODO - file locking a cache?
     """
-    logging.info('Restructuring UGRID...')
+    logging.info("Restructuring UGRID...")
 
     # First, extract latitude and longitude coordinates
-    lat = cubes.extract('latitude')[0].data
-    lon = cubes.extract('longitude')[0].data
+    lat = cubes.extract("latitude")[0].data
+    lon = cubes.extract("longitude")[0].data
     points = np.column_stack((lon, lat))
 
     # Create output mesh, using standard grid ~2km resolution
@@ -734,9 +731,9 @@ def restructure_ugrid(cubes):
     with Pool(processes=1) as pool:
         results = pool.starmap(
             _restructure_ugrid_regrid,
-            [(cube, tri, lat_grid, lon_grid, xy) for cube in cubes]
+            [(cube, tri, lat_grid, lon_grid, xy) for cube in cubes],
         )
 
     fixed_cubes = iris.cube.CubeList(c for c in results if c is not None)
-            
+
     return fixed_cubes.concatenate()
