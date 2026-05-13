@@ -391,7 +391,13 @@ def cell_stats(
         )
         # Add other metadata from input cube
         for coord_name in coords_to_copy:
-            cell_stats_cube.add_aux_coord(cube.coord(coord_name).copy())
+            coord = cube.coord(coord_name).copy()
+            # Check if this coord represents a dimension of data
+            dims = cube.coord_dims(coord)
+            if len(dims) > 1:
+                cell_stats_cube.add_aux_coord(coord, dims)
+            else:
+                cell_stats_cube.add_aux_coord(coord)
 
         # Add to cubelist
         cell_stats_cubelist.append(cell_stats_cube)
