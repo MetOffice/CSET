@@ -40,6 +40,7 @@ from CSET.operators._utils import (
     get_cube_yxcoordname,
     is_spatialdim,
 )
+from CSET.operators.regrid import restructure_ugrid
 
 
 class NoDataError(FileNotFoundError):
@@ -222,7 +223,21 @@ def _load_model(
     input_files = _check_input_files(paths)
     # If unset, a constraint of None lets everything be loaded.
     logging.debug("Constraint: %s", constraint)
-    cubes = iris.load(input_files, constraint, callback=_loading_callback)
+
+    cubes = iris.load(input_files)
+
+    # If a cube called latitude exists, chances are its unstructured.
+    # Using extract, not extract_cubes in a try as there might be more
+    # than one cube called latitude if we are aggregating.
+    if len(cubes.extract("latitude")) > 0:
+        cubes = restructure_ugrid(cubes)
+
+    for cube in cubes:
+        _loading_callback(cube, None, None)
+
+    cubes = cubes.extract(constraint)
+
+    # cubes = iris.load(input_files, constraint, callback=_loading_callback)
     # Make the UM's winds consistent with LFRic.
     _fix_um_winds(cubes)
 

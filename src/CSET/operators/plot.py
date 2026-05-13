@@ -1506,7 +1506,10 @@ def _plot_and_save_histogram_series(
         ax.set_ylabel(
             f"Contribution to mean ({iter_maybe(cubes)[0].units})", fontsize=14
         )
-    ax.set_xlim(vmin, vmax)
+    try:
+        ax.set_xlim(vmin, vmax)
+    except ValueError:
+        pass
     ax.tick_params(axis="both", labelsize=12)
 
     # Overlay grid-lines onto histogram plot.
