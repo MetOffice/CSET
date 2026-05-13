@@ -703,6 +703,21 @@ def load(conf: Config):
                 model_ids=model["id"],
                 aggregation=False,
             )
+            
+    if conf.GLOBAL_CURV:
+        for model in models:
+            yield RawRecipe(
+                recipe="curv_spatial_plot.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
 
     # Directional shear across Moist Absolutely Unstable Layer (of deepest)
     if conf.DIRECTIONAL_SHEAR_ACROSS_MAUL:
