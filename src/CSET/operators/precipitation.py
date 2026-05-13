@@ -208,7 +208,7 @@ def MAUL_properties(
                                     ]
                             # Here a ValueError is raised if a MAUL is not found, however
                             # this is a valid answer, and so output data is set to NaN.
-                            # The dimensionality logic for storage is identical
+                            # The dimensionality logic for output data is identical
                             # to that used previously.
                             except ValueError:
                                 if (
