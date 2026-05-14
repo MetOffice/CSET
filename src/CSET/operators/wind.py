@@ -26,9 +26,10 @@ def calculate_vector_wind_from_list(
     *,
     u_names=("x_wind", "eastward_wind", "u", "u_wind"),
     v_names=("y_wind", "northward_wind", "v", "v_wind"),
-):
-    """
+): 
+   """
    Wrapper function for calling from recipe.
+   
    Extracts U and V component cubes from a CubeList and passes them to
    the internal _calculate_vector_wind.
     Notes
@@ -73,8 +74,7 @@ def _calculate_vector_wind(
     v_cube: iris.cube.Cube,
 ) -> iris.cube.CubeList:
     """
-    Calculate wind speed and meteorological wind direction from U, V 
-    component cubes.
+    Calculate wind speed and wind direction from U, V compt cubes.
 
     Notes
     -----
