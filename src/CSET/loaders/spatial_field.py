@@ -652,11 +652,15 @@ def load(conf: Config):
             )
 
     if conf.GLOBAL_CURV:
-        for model in models:
+        for model, points, radius in itertools.product(
+            models, conf.CURV_POINTS, conf.CURV_RADIUS
+        ):
             yield RawRecipe(
                 recipe="curv_spatial_plot.yaml",
                 variables={
                     "MODEL_NAME": model["name"],
+                    "CURV_POINTS": points,
+                    "CURV_RADIUS": radius,
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
