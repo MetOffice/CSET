@@ -176,6 +176,9 @@ def colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = N
     if any("RMSE_" in name for name in varnames):
         cmap, levels, norm = custom_colormap_scores(cube)
         return cmap, levels, norm
+    if any("CURV_" in name for name in varnames):
+        cmap, levels, norm = custom_colormap_curv(cube)
+        return cmap, levels, norm
 
     # If no valid colormap has been defined, use defaults and return.
     if not cmap:
@@ -596,4 +599,64 @@ def custom_colormap_scores(cube: iris.cube.Cube):
     cmap, levels, norm = None, None, None
     if any("RMSE_" in name for name in varnames):
         cmap = plt.get_cmap("PuRd", 51)
+    return cmap, levels, norm
+
+
+def custom_colormap_curv(cube: iris.cube.Cube):
+    """Return custom colourmap for curv.
+
+    If "CURV_" appears anywhere in the name of a cube
+    this function will be called.
+
+    Parameters
+    ----------
+    cube: Cube
+        Cube of variable for which the colorbar information is desired.
+
+    Returns
+    -------
+    cmap: Matplotlib colormap.
+    levels: List
+        List of levels to use for plotting. For continuous plots the min and max
+        should be taken as the range.
+    norm: BoundaryNorm.
+    """
+    if "8" in cube.long_name():
+        levels = [-17, -15, -13, -11, -9, -7, -5, -3, -1, 1, 3, 5, 7, 9, 11, 13, 15, 17]
+        colors = [
+            "#ff0000",
+            "#a52a2a",
+            "#dc143c",
+            "#ff4500",
+            "#f97306",
+            "#ffa500",
+            "#fac205",
+            "#ffd700",
+            "#ffffff",
+            "#7fffd4",
+            "#00ffff",
+            "#069af3",
+            "#0323df",
+            "#0000ff",
+            "#00008b",
+            "#030764",
+            "#01153e",
+        ]
+    else:
+        levels = [-9, -7, -5, -3, -1, 1, 3, 5, 7, 9]
+        colors = [
+            "#ff0000",
+            "#dc143c",
+            "#f97306",
+            "#fac205",
+            "#ffffff",
+            "#00ffff",
+            "#0323df",
+            "#00008b",
+            "#01153e",
+        ]
+        # Create a custom colormap
+        cmap = mcolors.ListedColormap(colors)
+        # Normalise the levels
+        norm = mcolors.BoundaryNorm(levels, cmap.N)
     return cmap, levels, norm
