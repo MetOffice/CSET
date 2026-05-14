@@ -2315,7 +2315,7 @@ def _custom_colormap_curv(cube: iris.cube.Cube):
         should be taken as the range.
     norm: BoundaryNorm.
     """
-    if "8" in cube.long_name:
+    if "16" in cube.long_name:
         levels = [-17, -15, -13, -11, -9, -7, -5, -3, -1, 1, 3, 5, 7, 9, 11, 13, 15, 17]
         colors = [
             "#ff0000",
@@ -2349,10 +2349,10 @@ def _custom_colormap_curv(cube: iris.cube.Cube):
             "#00008b",
             "#01153e",
         ]
-        # Create a custom colormap
-        cmap = mcolors.ListedColormap(colors)
-        # Normalise the levels
-        norm = mcolors.BoundaryNorm(levels, cmap.N)
+    # Create a custom colormap
+    cmap = mcolors.ListedColormap(colors)
+    # Normalise the levels
+    norm = mcolors.BoundaryNorm(levels, cmap.N)
     return cmap, levels, norm
 
 
