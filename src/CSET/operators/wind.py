@@ -26,18 +26,18 @@ def calculate_vector_wind_from_list(
     *,
     u_names=("x_wind", "eastward_wind", "u", "u_wind"),
     v_names=("y_wind", "northward_wind", "v", "v_wind"),
-): 
+):
     """
     Extract U and V components from CubeList.
-    
+
     Takes the U and V cubes and pass them to
     the internal _calculate_vector_wind.
-    
+
     Notes
     -----
     - Input must be a CubeList containing U and V component cubes;
     TypeError raised if not CubeList
-      
+
     Example
     --------
     >>> vector_winds = wind.calculate_vector_wind_from_list(winds)
@@ -53,20 +53,17 @@ def calculate_vector_wind_from_list(
 
     if u_cube is None or v_cube is None:
         available = [c.name() for c in cubes]
-        raise ValueError(
-            "Need both U and V cubes. "
-            f"Available cube names: {available}"
-        )
+        raise ValueError(f"Need both U and V cubes. Available cube names: {available}")
     return _calculate_vector_wind(u_cube, v_cube)
 
 
 def _find_by_name(
     cubelist: iris.cube.CubeList, names: tuple[str, ...]
-    ) -> iris.cube.Cube | None:
+) -> iris.cube.Cube | None:
     for nm in names:
         matches = cubelist.extract(iris.Constraint(name=nm))
         if matches:
-             return matches[0]
+            return matches[0]
     return None
 
 
@@ -83,7 +80,7 @@ def _calculate_vector_wind(
     - Direction is meteorological "from" direction in degrees, 0..360:
     0 = from North, 90 = from East, 180 = from South, 270 = from West
     computed as: (atan2(-u, -v) in degrees + 360) % 360
-      
+
     Returns
     -------
     Returns a CubeList containing:
