@@ -23,7 +23,7 @@ import logging
 from pathlib import Path
 from typing import Literal
 
-import dask
+import dask.array as da
 import iris
 import iris.coord_systems
 import iris.coords
@@ -180,9 +180,10 @@ def read_cubes(
 
     # Split out first model's cubes and mark it as the base for comparisons.
     cubes = next(model_cubes)
-    for cube in cubes:
+    for _i, cube in enumerate(cubes):
         # Use 1 to indicate True, as booleans can't be saved in NetCDF attributes.
         cube.attributes["cset_comparison_base"] = 1
+        # set masked data and knowingly bad data to np.nan so they aren't plotted
 
     # Load the rest of the models.
     cubes.extend(itertools.chain.from_iterable(model_cubes))
@@ -213,6 +214,23 @@ def read_cubes(
     return cubes
 
 
+def _select_surface_temperature_variant(cubes):
+    st = [c for c in cubes if str(c.attributes.get("STASH")) == "m01s00i024"]
+    if len(st) <= 1:
+        return cubes
+
+    # Prefer time-processed (max/mean/min)
+    processed = [
+        c for c in st if any(cm.coord_names == ("time",) for cm in c.cell_methods)
+    ]
+    chosen = processed[:1] if processed else st[:1]
+    out = iris.cube.CubeList(
+        c for c in cubes if str(c.attributes.get("STASH")) != "m01s00i024"
+    )
+    out.extend(chosen)
+    return out
+
+
 def _load_model(
     paths: str | list[str],
     model_name: str | None,
@@ -223,6 +241,13 @@ def _load_model(
     # If unset, a constraint of None lets everything be loaded.
     logging.debug("Constraint: %s", constraint)
     cubes = iris.load(input_files, constraint, callback=_loading_callback)
+
+    for c in cubes:
+        print(" *** SRO PRINT NAMES *** ", c.var_name, c.standard_name, c.units)
+
+    # 🔴 DISAMBIGUATE surface_temperature variants (m01s00i024)
+    cubes = _select_surface_temperature_variant(cubes)
+
     # Make the UM's winds consistent with LFRic.
     _fix_um_winds(cubes)
 
@@ -231,6 +256,7 @@ def _load_model(
     if model_name is not None:
         for cube in cubes:
             cube.attributes["model_name"] = model_name
+
     return cubes
 
 
@@ -866,7 +892,7 @@ def _fix_lfric_cloud_base_altitude(cube: iris.cube.Cube):
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if any("cloud_base_altitude" in name for name in varnames):
         # Mask cube where set > 144kft to catch default 144.35695538058164
-        cube.data = dask.array.ma.masked_greater(cube.core_data(), 144.0)
+        cube.data = da.ma.masked_greater(cube.core_data(), 144.0)
 
 
 def _fix_um_winds(cubes: iris.cube.CubeList):

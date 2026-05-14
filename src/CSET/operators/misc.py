@@ -21,6 +21,7 @@ from collections.abc import Iterable
 import iris
 import iris.analysis.calculus
 import numpy as np
+from cf_units import Unit
 from iris.cube import Cube, CubeList
 
 from CSET._common import is_increasing, iter_maybe
@@ -78,6 +79,22 @@ def remove_attribute(
     cubes = cubes.merge()
     # combine items that can be merged after removing unwanted attributes
     cubes = cubes.concatenate()
+    return cubes
+
+
+def remove_scalar_coords(cubes, coords):
+    """Remove scalar coordinates.
+
+    examples would be: realization, forecast_reference_time from model cubes.
+    """
+    if not isinstance(cubes, CubeList):
+        cubes = CubeList([cubes])
+
+    for cube in cubes:
+        for coord in coords:
+            if cube.coords(coord):
+                cube.remove_coord(coord)
+
     return cubes
 
 
@@ -178,6 +195,292 @@ def division(numerator, denominator):
 
     """
     return numerator / denominator
+
+
+def _ensure_temperature_K(temp_cube):
+    """
+    Return a copy of temp_cube with units converted to Kelvin.
+
+    If units are missing (no_unit/unknown), infer and set them.
+    """
+    temp_K = temp_cube.copy()
+
+    # Common Iris/cf_units representations of missing units
+    if (
+        temp_K.units is None
+        or temp_K.units.is_unknown()
+        or str(temp_K.units) in ("no_unit", "unknown")
+    ):
+        # Heuristic: Cardington air_temperature is almost certainly in °C or K.
+        # Use value range to distinguish (works well for near-surface air temp).
+        data = temp_K.core_data()
+        # Pull a small sample without forcing full compute
+        try:
+            sample = float(data[0])
+        except Exception:
+            # fallback: try first non-masked element if masked array
+            sample = float(np.asanyarray(data).ravel()[0])
+
+        # If values look like Kelvin (e.g. 200–330), assume K; else assume °C.
+        if 150.0 <= sample <= 350.0:
+            temp_K.units = Unit("K")
+        else:
+            temp_K.units = Unit(
+                "degC"
+            )  # or "deg_C" if you prefer; cf_units accepts degC
+
+    # Now convert (will be a no-op if already K)
+    temp_K.convert_units("K")
+    return temp_K
+
+
+def _mask_fill_value(cube: iris.cube.Cube, ulp_factor=10):
+    """
+    Avoid plotting data flagged as bad/missing.
+
+    Force masked data and known sentinel values to np.nan
+    so they are not plotted.
+
+    """
+    import dask.array as da
+
+    x = cube.lazy_data()
+
+    # --- Collect possible fill values safely ---
+    fill_values = []
+
+    # 1. NetCDF-style fill value (if present)
+    try:
+        fv = getattr(x._meta, "fill_value", None)
+        if fv is not None:
+            fill_values.append(fv)
+    except AttributeError:
+        pass  # x has no _meta (plain ndarray)
+
+    # 2. Known Cardington sentinels
+    fill_values.extend([1e10, 1e11, 999999])
+
+    # --- Extract data and any existing mask ---
+    data = da.asarray(x, dtype=np.float32)
+
+    if np.ma.isMaskedArray(x):
+        m0 = da.asarray(np.ma.getmaskarray(x), dtype=bool)
+    else:
+        m0 = da.zeros(data.shape, dtype=bool, chunks=data.chunks)
+
+    # --- Build sentinel mask ---
+    m_fill = da.zeros(data.shape, dtype=bool, chunks=data.chunks)
+    for fv in fill_values:
+        ulp = ulp_factor * np.spacing(np.float32(fv))
+        m_fill |= da.isclose(data, np.float32(fv), rtol=0, atol=ulp)
+
+    if not da.any(m0 | m_fill).compute():
+        return cube  # nothing to clean
+
+    y = da.where(m0 | m_fill, np.nan, data)
+
+    return cube.copy(data=y)
+
+
+def mask_fill_values(cubes, ulp_factor=10):
+    """
+    Apply _mask_fill_value to every cube in the CubeList.
+
+    This must be run AFTER any operator that recreates data
+    (e.g. vector wind calculation, regridding).
+    """
+    if not isinstance(cubes, CubeList):
+        cubes = CubeList([cubes])
+
+    cleaned = CubeList()
+    for cube in cubes:
+        cleaned.append(_mask_fill_value(cube, ulp_factor=ulp_factor))
+
+    return cleaned
+
+
+def convert_rainfall_amount_to_rate(cubes, **kwargs):
+    """
+    Convert Cardington rainfall from depth per time interval (mm)
+    to rainfall rate (kg m-2 s-1).
+
+    UM rainfall is already a rate and is left untouched.
+    """
+    if isinstance(cubes, iris.cube.Cube):
+        cubes = iris.cube.CubeList([cubes])
+    else:
+        cubes = iris.cube.CubeList(cubes)
+
+    for cube in cubes:
+        model = cube.attributes.get("model_name", "") or ""
+
+        # Only act on Cardington data
+        if "Cardington" not in model:
+            continue
+
+        # --- sanity checks ---
+        if not cube.coords("time"):
+            raise ValueError(
+                "Cardington rainfall cube has no time coordinate; "
+                "cannot derive interval length."
+            )
+
+        time = cube.coord("time")
+        if time.bounds is None:
+            raise ValueError(
+                "Cardington rainfall cube has no time bounds; "
+                "cannot convert accumulated rainfall to a rate."
+            )
+
+        # --- derive interval duration in seconds ---
+        # bounds shape: (ntimes, 2)
+        bounds = time.bounds
+        duration_seconds = bounds[:, 1] - bounds[:, 0]
+
+        if np.any(duration_seconds <= 0):
+            raise ValueError("Non-positive rainfall accumulation interval detected.")
+
+        # reshape for broadcasting along data dimensions
+        reshape = [1] * cube.ndim
+        reshape[cube.coord_dims("time")[0]] = -1
+        duration_seconds = duration_seconds.reshape(reshape)
+
+        # --- convert depth -> rate ---
+        # mm / s == kg m-2 s-1
+        cube.data = cube.core_data() / duration_seconds
+        cube.units = "kg m-2 s-1"
+
+    return cubes if len(cubes) > 1 else cubes[0]
+
+
+def convert_visibility_to_km(cubes, **kwargs):
+    """Ensure visibility is converted to km if required. UM data is always in metres."""
+    if isinstance(cubes, iris.cube.Cube):
+        cubes = iris.cube.CubeList([cubes])
+    else:
+        cubes = iris.cube.CubeList(cubes)
+
+    for cube in cubes:
+        model = cube.attributes.get("model_name", "") or ""
+        if "Cardington" in model:
+            cube *= 1000
+            cube.units = "km"
+        else:
+            # UM visibility is in metres – convert with scaling
+            cube.convert_units("km")
+
+    return cubes if len(cubes) > 1 else cubes[0]
+
+
+def sensible_heat_units(cubes, **kwargs):
+    """
+    Compute surface upward sensible heat flux from Cardington inputs.
+
+    EXPECTS (exactly one of each, preselected upstream):
+      - wt_covariance_2m
+      - air_temperature_rtd_1p2m
+      - barometric_pressure
+    UM cubes are passed through unchanged.
+    HEIGHT is treated as a *nominal* height (for UM selection / labelling),
+    not as a measurement height for Cardington.
+    """
+    from cf_units import Unit
+
+    Cp = 1004.67  # J kg-1 K-1
+    Rd = 287.05  # J kg-1 K-1
+    cubes = (
+        iris.cube.CubeList(cubes)
+        if not isinstance(cubes, iris.cube.CubeList)
+        else cubes
+    )
+
+    # --- Extract Cardington inputs explicitly listed upstream ---
+    if "CARDINGTON_VARNAMES" not in kwargs:
+        raise ValueError("sensible_heat_units requires CARDINGTON_VARNAMES")
+
+    wanted = set(kwargs["CARDINGTON_VARNAMES"].split(","))
+    selected = {c.var_name: c for c in cubes if c.var_name in wanted}
+    missing = wanted - set(selected)
+    if missing:
+        raise ValueError(
+            f"sensible_heat_units missing Cardington inputs: {sorted(missing)}"
+        )
+
+    wT = next(v for k, v in selected.items() if k.startswith("wt_covariance_"))
+    temp = next(v for k, v in selected.items() if k.startswith("air_temperature_rtd_"))
+    pressure = selected["pressure_barometric"]
+
+    # --- Unit handling ---
+    temp_K = temp.copy()
+    if temp_K.units is None or temp_K.units.is_unknown():
+        temp_K.units = Unit("degC")
+    temp_K.convert_units("K")
+
+    pres_Pa = pressure.copy()
+    if pres_Pa.units is None or pres_Pa.units.is_unknown():
+        pres_Pa.units = Unit("hPa")
+    pres_Pa.convert_units("Pa")
+
+    # --- Compute sensible heat flux ---
+    rho_air = pres_Pa.data / (Rd * temp_K.data)
+    shf = wT.copy()
+    shf.data = Cp * rho_air * wT.data
+    shf.units = "W m-2"
+    shf.rename("surface_upward_sensible_heat_flux_cardington")
+    shf.var_name = "surface_upward_sensible_heat_flux_cardington"
+
+    # --- Metadata: be explicit about mixed heights ---
+    shf.attributes["model_name"] = wT.attributes.get("model_name")
+    shf.attributes["cardington_measurement_heights"] = {
+        "wt_covariance": wT.var_name.split("_")[-1],
+        "air_temperature": temp.var_name.split("_")[-1],
+        "air_pressure": "1.2 m",
+    }
+    if "HEIGHT" in kwargs:
+        shf.attributes["nominal_height"] = f"{kwargs['HEIGHT']} m"
+
+    # --- Return: passthrough everything except Cardington inputs, plus SHF ---
+    out = iris.cube.CubeList(c for c in cubes if c.var_name not in wanted)
+    out.append(shf)
+    return out if len(out) > 1 else out[0]
+
+
+def latent_heat_units(
+    cubes: Cube | CubeList,
+    **kwargs,
+) -> Cube | CubeList:
+    """
+    Convert w'q' covariance (e.g. from Cardington surface site netCDF files) to latent heat flux (W m-2).
+
+    Note
+    ----
+    Using fixed value of latent heat of vapourisation for now; varies by about 5% between -20 and +40degC.
+    Possible future improvement.
+    """
+    REQUIRED_UNITS = Unit("kg m-2 s-1")
+    OUTPUT_UNITS = Unit("W m-2")
+
+    Lc = 2.45e6  # J kg-1
+
+    out = iris.cube.CubeList()
+
+    for cube in iter_maybe(cubes):
+        # ---- ONLY ACT ON MASS FLUXES ----
+        if cube.units is None or cube.units.is_unknown():
+            out.append(cube)
+            continue
+        if not cube.units.is_convertible(REQUIRED_UNITS):
+            # ✅ This is UM LE or some other diagnostic — leave untouched
+            out.append(cube)
+            continue
+
+        cube_a = cube.copy()
+        cube_a = cube_a * Lc
+        cube_a.units = OUTPUT_UNITS
+
+        out.append(cube_a)
+
+    return out[0] if len(out) == 1 else out
 
 
 def multiplication(

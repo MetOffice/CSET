@@ -273,8 +273,8 @@
     "cmap": "bwr",
     "max": 250.0,
     "min": -250.0,
-    "ymax": 250.0,
-    "ymin": -50.0
+    "ymax": "auto",
+    "ymin": "auto"
   },
   "grid_surface_upward_sensible_heat_flux_difference": {
     "cmap": "PuOr",
@@ -1030,7 +1030,7 @@
   },
   "visibility_in_air": {
     "cmap": "viridis",
-    "max": 30000.0,
+    "max": "auto",
     "min": 0.0
   },
   "visibility_in_air_difference": {
