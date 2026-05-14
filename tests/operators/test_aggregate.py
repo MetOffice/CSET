@@ -171,3 +171,143 @@ def test_rolling_window_time_aggregation_cubelist(long_forecast):
         assert cube_a.shape == cube_b.shape
         assert cube_a.shape[0] == cube_c.shape[0] - 23
         assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
+
+
+def test_aggregate_without_time_dimcoords_single_cube(cardington_cube):
+    """Check that a single cube can be aggregated at a specific time."""
+    cube_slice = cardington_cube[0]
+    time_coord = cube_slice.coord("time")
+
+    # Create a single time coordinate for aggregation
+    single_time = iris.coords.DimCoord(
+        [time_coord.points[0]], standard_name="time", units=time_coord.units
+    )
+    result = aggregate._aggregate_without_time_dimcoords(
+        cube_slice, single_time, iris.analysis.MEAN, None
+    )
+
+    assert isinstance(result, iris.cube.CubeList)
+    assert len(result) == 1
+
+    # Check that num_cases coordinate was added
+    assert result[0].coord("num_cases").points[0] == 1
+    # Check data is unchanged
+    assert np.allclose(result[0].data, cube_slice.data, rtol=1e-6, atol=1e-2)
+
+
+def test_aggregate_without_time_dimcoords_cubelist(cardington_cube):
+    """Check that a CubeList can be aggregated at a specific time."""
+    cube1 = cardington_cube[0]
+    cube2 = cardington_cube[0].copy()
+
+    # Modify cube2 data slightly to test aggregation
+    cube2.data = cube2.data * 1.5
+
+    cubelist = iris.cube.CubeList([cube1, cube2])
+
+    time_coord = cube1.coord("time")
+    single_time = iris.coords.DimCoord(
+        [time_coord.points[0]], standard_name="time", units=time_coord.units
+    )
+
+    result = aggregate._aggregate_without_time_dimcoords(
+        cubelist, single_time, iris.analysis.MEAN, None
+    )
+
+    assert isinstance(result, iris.cube.CubeList)
+    assert len(result) == 1
+
+    # Check that num_cases coordinate was added with correct value
+    assert result[0].coord("num_cases").points[0] == 2
+
+    # Check data is the mean of the two cubes
+    expected_data = (cube1.data + cube2.data) / 2
+    assert np.allclose(result[0].data, expected_data, rtol=1e-6, atol=1e-2)
+
+
+def test_aggregate_without_time_dimcoords_percentile(cardington_cube):
+    """Check that PERCENTILE aggregator works correctly."""
+    # Create three cubes with the same time but different data
+    cube1 = cardington_cube[0].copy()
+    cube2 = cardington_cube[0].copy()
+    cube3 = cardington_cube[0].copy()
+    cube1.data = np.full_like(cube1.data, 10.0)
+    cube2.data = np.full_like(cube2.data, 20.0)
+    cube3.data = np.full_like(cube3.data, 30.0)
+
+    cubelist = iris.cube.CubeList([cube1, cube2, cube3])
+
+    time_coord = cube1.coord("time")
+    single_time = iris.coords.DimCoord(
+        [time_coord.points[0]], standard_name="time", units=time_coord.units
+    )
+
+    # Aggregate at this time using 50th percentile
+    result = aggregate._aggregate_without_time_dimcoords(
+        cubelist, single_time, iris.analysis.PERCENTILE, 50
+    )
+    assert isinstance(result, iris.cube.CubeList)
+    assert len(result) == 1
+    # Check that num_cases coordinate was added
+    assert result[0].coord("num_cases").points[0] == 3
+    # Check data is the median (50th percentile) which should be 20.0
+    expected_data = np.full_like(cube1.data, 20.0)
+    assert np.allclose(result[0].data, expected_data, rtol=1e-6, atol=1e-2)
+
+
+def test_aggregate_without_time_dimcoords_multiple_time_error(cardington_cube):
+    """Check that ValueError is raised when time coordinate has multiple points."""
+    cube = cardington_cube[0]
+
+    # Create a time coordinate with multiple points (this should cause an error)
+    time_coord = cube.coord("time")
+    multiple_times = iris.coords.DimCoord(
+        [time_coord.points[0], time_coord.points[0] + 1, time_coord.points[0] + 2],
+        standard_name="time",
+        units=time_coord.units,
+    )
+
+    with pytest.raises(
+        ValueError, match="Time coordinate should specify a single time only"
+    ):
+        aggregate._aggregate_without_time_dimcoords(
+            cube, multiple_times, iris.analysis.MEAN, None
+        )
+
+
+def test_aggregate_without_time_dimcoords_removes_duplicates(cardington_cube):
+    """Check that duplicate cubes are removed before aggregation."""
+    cube1 = cardington_cube[0]
+    cube2 = cube1.copy()  # Exact duplicate
+
+    cubelist = iris.cube.CubeList([cube1, cube2])
+
+    time_coord = cube1.coord("time")
+    single_time = iris.coords.DimCoord(
+        [time_coord.points[0]], standard_name="time", units=time_coord.units
+    )
+    result = aggregate._aggregate_without_time_dimcoords(
+        cubelist, single_time, iris.analysis.MEAN, None
+    )
+
+    # Check that num_cases is 1 (duplicates removed)
+    assert result[0].coord("num_cases").points[0] == 1
+    # Check data is unchanged
+    assert np.allclose(result[0].data, cube1.data, rtol=1e-6, atol=1e-2)
+
+
+def test_aggregate_without_time_dimcoords_removes_number_coord(cardington_cube):
+    """Check that the temporary 'number' coordinate is removed from result."""
+    cube = cardington_cube[0]
+    time_coord = cube.coord("time")
+    single_time = iris.coords.DimCoord(
+        [time_coord.points[0]], standard_name="time", units=time_coord.units
+    )
+
+    result = aggregate._aggregate_without_time_dimcoords(
+        cube, single_time, iris.analysis.MEAN, None
+    )
+
+    # Check that 'number' coordinate is not in the result
+    coord_names = [coord.name() for coord in result[0].coords()]
+    assert "number" not in coord_names

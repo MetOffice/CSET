@@ -360,3 +360,68 @@ def test_get_common_time_cubes(transect_source_cube):
         [transect_source_cube[1:], transect_source_cube[:]]
     ).extract_overlapping("time")
     assert cubelist[0].coord("time").points == np.array([449472.0])
+
+
+def test_is_time_aux_coord_both_dim_coords(long_forecast_multi_day):
+    """Check that function returns False when both temporal coords are dimension coords."""
+    assert not operator_utils.is_time_aux_coord(long_forecast_multi_day)
+
+
+def test_is_time_aux_coord_neither_exists(cardington_cube):
+    """Check that function returns False when neither temporal coord exists."""
+    assert not operator_utils.is_time_aux_coord(cardington_cube)
+
+
+def test_is_time_aux_coord_both_auxiliary(long_forecast_multi_day):
+    """Check that function returns True when both temporal coords are auxiliary."""
+    # Take a slice to get scalar coordinates, then add them as auxiliary coords
+    cube = long_forecast_multi_day[0, 0].copy()
+
+    # The slicing should have made forecast_period and forecast_reference_time scalar
+    # Remove them and re-add as auxiliary coordinates
+    fp_value = cube.coord("forecast_period").points[0]
+    frt_value = cube.coord("forecast_reference_time").points[0]
+
+    cube.remove_coord("forecast_period")
+    cube.remove_coord("forecast_reference_time")
+
+    # Create auxiliary coordinates
+    forecast_period = iris.coords.AuxCoord(
+        [fp_value], standard_name="forecast_period", units=cube.coord("time").units
+    )
+    forecast_reference_time = iris.coords.AuxCoord(
+        [frt_value],
+        standard_name="forecast_reference_time",
+        units=cube.coord("time").units,
+    )
+
+    cube.add_aux_coord(forecast_period)
+    cube.add_aux_coord(forecast_reference_time)
+
+    assert operator_utils.is_time_aux_coord(cube)
+
+
+def test_is_time_aux_coord_only_forecast_period(cardington_cube):
+    """Check that function returns False when only forecast_period exists."""
+    cube = cardington_cube[0].copy()
+
+    # Add only forecast_period as auxiliary coordinate
+    forecast_period = iris.coords.AuxCoord(
+        [3600], standard_name="forecast_period", units="seconds"
+    )
+    cube.add_aux_coord(forecast_period)
+
+    assert not operator_utils.is_time_aux_coord(cube)
+
+
+def test_is_time_aux_coord_only_forecast_reference_time(cardington_cube):
+    """Check that function returns False when only forecast_reference_time exists."""
+    cube = cardington_cube[0].copy()
+
+    # Add only forecast_reference_time as auxiliary coordinate
+    forecast_reference_time = iris.coords.AuxCoord(
+        [0], standard_name="forecast_reference_time", units="seconds since 1970-01-01"
+    )
+    cube.add_aux_coord(forecast_reference_time)
+
+    assert not operator_utils.is_time_aux_coord(cube)
