@@ -28,7 +28,9 @@ def calculate_vector_wind_from_list(
     v_names=("y_wind", "northward_wind", "v", "v_wind"),
 ): 
     """
-    Extracts U and V component cubes from a CubeList and passes them to
+    Extract U and V components from CubeList.
+    
+    Takes the U and V cubes and pass them to
     the internal _calculate_vector_wind.
     
     Notes
