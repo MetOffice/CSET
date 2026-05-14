@@ -1,5 +1,5 @@
 category: Daily Weather
-title: "Daily maximum temperature at 0900 UTC\nDifference ($BASE_MODEL - $OTHER_MODEL)"
+title: "Daily maximum temperature at 0900 UTC\nDifference ($OTHER_MODEL - $BASE_MODEL)"
 description: |
   Extracts and plots the daily maximum temperature between 0900 UTC and 0900 UTC
   the following day as per observation measurements and plots the difference. The maximum
