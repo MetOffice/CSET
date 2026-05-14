@@ -27,11 +27,11 @@ def calculate_vector_wind_from_list(
     u_names=("x_wind", "eastward_wind", "u", "u_wind"),
     v_names=("y_wind", "northward_wind", "v", "v_wind"),
 ): 
-   """
-   Wrapper function for calling from recipe.
-   
-   Extracts U and V component cubes from a CubeList and passes them to
-   the internal _calculate_vector_wind.
+    """
+    Wrapper function for calling from recipe.
+    
+    Extracts U and V component cubes from a CubeList and passes them to
+    the internal _calculate_vector_wind.
     Notes
     -----
         - Input must be a CubeList containing U and V component cubes
@@ -40,7 +40,7 @@ def calculate_vector_wind_from_list(
     Example
     --------
     >>> vector_winds = wind.calculate_vector_wind_from_list(winds)
-    """    
+    """
     if not isinstance(cubes, iris.cube.CubeList):
         raise TypeError(
             "calculate_vector_wind_from_list expects an iris.cube.CubeList "
@@ -60,13 +60,13 @@ def calculate_vector_wind_from_list(
 
 
 def _find_by_name(
-        cubelist: iris.cube.CubeList, names: tuple[str, ...]
+    cubelist: iris.cube.CubeList, names: tuple[str, ...]
     ) -> iris.cube.Cube | None:
-        for nm in names:
-            matches = cubelist.extract(iris.Constraint(name=nm))
-            if matches:
-                 return matches[0]
-        return None
+    for nm in names:
+        matches = cubelist.extract(iris.Constraint(name=nm))
+        if matches:
+             return matches[0]
+    return None
 
 
 def _calculate_vector_wind(
