@@ -615,3 +615,22 @@ def differentiate(
         return new_cubelist[0]
     else:
         return new_cubelist
+
+
+def convert_visibility_to_km(cubes, **kwargs):
+    """Ensure visibility is converted to km if required. UM data is always in metres."""
+    if isinstance(cubes, iris.cube.Cube):
+        cubes = iris.cube.CubeList([cubes])
+    else:
+        cubes = iris.cube.CubeList(cubes)
+
+    for cube in cubes:
+        model = cube.attributes.get("model_name", "") or ""
+        if "Cardington" in model:
+            cube *= 1000
+            cube.units = "km"
+        else:
+            # UM visibility is in metres – convert with scaling
+            cube.convert_units("km")
+
+    return cubes if len(cubes) > 1 else cubes[0]
