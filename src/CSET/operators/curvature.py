@@ -135,7 +135,7 @@ def global_curv_versiontwo(central, radius, num_radial_points=16, tol=0.0):
             new_lon_points = new_lon[:, 0]
             surround = target_data.interpolate(
                 [("latitude", new_lat_points), ("longitude", new_lon_points)],
-                iris.analysis.Nearest(),
+                iris.analysis.Linear(),
             )
             surroundings.append(surround.data)
         surroundings = np.array(surroundings)
