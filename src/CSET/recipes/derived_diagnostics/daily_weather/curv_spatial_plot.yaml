@@ -1,7 +1,9 @@
 category: Daily Weather
-title: $MODEL_NAME CURV spatial plot
+title: $MODEL_NAME CURV spatial plot from $CURV_POINTS points and radius of $CURV_RADIUS km
 description: |
-  Generates the curvature (CURV) from MSLP and creates a spatila plot.
+  Generates the curvature (CURV) from MSLP and creates a spatial plot.
+  It uses $CURV_POINTS points and a radius of $CURV_RADIUS km.
+  +$CURV_POINTS is a full anticyclone and -$CURV_POINTS is a full cyclone.
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
@@ -18,8 +20,8 @@ steps:
     subarea_extent: $SUBAREA_EXTENT
 
   - operator: curvature.global_curv_versiontwo
-    radius: 1000
-    num_radial_points: 8
+    radius: $CURV_RADIUS
+    num_radial_points: $CURV_POINTS
 
   - operator: plot.spatial_pcolormesh_plot
 
