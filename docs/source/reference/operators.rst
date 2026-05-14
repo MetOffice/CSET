@@ -122,6 +122,15 @@ CSET.operators.mesoscale
 .. automodule:: CSET.operators.mesoscale
    :members:
 
+Precipitation Operators
+~~~~~~~~~~~~~~~~~~~~~~~
+
+CSET.operators.precipitation
+----------------------------
+
+.. automodule:: CSET.operators.precipitation
+   :members:
+
 Pressure Operators
 ~~~~~~~~~~~~~~~~~~
 
