@@ -19,7 +19,7 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
-  - operator: curvature.global_curv_versiontwo
+  - operator: curvature.global_curv
     radius: $CURV_RADIUS
     num_radial_points: $CURV_POINTS
 
