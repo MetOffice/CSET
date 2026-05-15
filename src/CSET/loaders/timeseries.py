@@ -42,6 +42,23 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+    # Single point timeseries
+    if conf.SURFACE_SINGLE_POINT_TIME_SERIES:
+        for field in conf.SURFACE_FIELDS:
+            yield RawRecipe(
+                recipe="generic_surface_single_point_time_series.yaml",
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": [model["name"] for model in models],
+                    "LATITUDE_POINT": conf.LATITUDE_POINT,
+                    "LONGITUDE_POINT": conf.LONGITUDE_POINT,
+                    "LATLON_IN_TYPE": conf.LATLON_IN_TYPE,
+                    "SINGLE_POINT_METHOD": conf.SINGLE_POINT_METHOD,
+                },
+                model_ids=[model["id"] for model in models],
+                aggregation=False,
+            )
+
     # Surface time series: land mask.
     if conf.TIMESERIES_SURFACE_FIELD_LAND_MASK:
         for field in conf.SURFACE_FIELDS:
@@ -476,7 +493,9 @@ def load(conf: Config):
 
     # Surface (2D) fields.
     for atype, field in itertools.product(AGGREGATION_TYPES, conf.SURFACE_FIELDS):
-        if conf.TIMESERIES_SURFACE_FIELD_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
+        index = AGGREGATION_TYPES.index(atype)
+        aggregations = conf.TIMESERIES_SURFACE_FIELD_AGGREGATION
+        if len(aggregations) > index and aggregations[index]:
             yield RawRecipe(
                 recipe=f"generic_surface_domain_mean_time_series_case_aggregation_{atype}.yaml",
                 variables={
@@ -496,7 +515,9 @@ def load(conf: Config):
     for atype, field, plevel in itertools.product(
         AGGREGATION_TYPES, conf.PRESSURE_LEVEL_FIELDS, conf.PRESSURE_LEVELS
     ):
-        if conf.TIMESERIES_PLEVEL_FIELD_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
+        index = AGGREGATION_TYPES.index(atype)
+        aggregations = conf.TIMESERIES_PLEVEL_FIELD_AGGREGATION
+        if len(aggregations) > index and aggregations[index]:
             yield RawRecipe(
                 recipe=f"generic_level_domain_mean_time_series_case_aggregation_{atype}.yaml",
                 variables={
@@ -518,7 +539,9 @@ def load(conf: Config):
     for atype, field, mlevel in itertools.product(
         AGGREGATION_TYPES, conf.MODEL_LEVEL_FIELDS, conf.MODEL_LEVELS
     ):
-        if conf.TIMESERIES_MLEVEL_FIELD_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
+        index = AGGREGATION_TYPES.index(atype)
+        aggregations = conf.TIMESERIES_MLEVEL_FIELD_AGGREGATION
+        if len(aggregations) > index and aggregations[index]:
             yield RawRecipe(
                 recipe=f"generic_level_domain_mean_time_series_case_aggregation_{atype}.yaml",
                 variables={

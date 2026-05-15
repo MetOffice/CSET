@@ -85,7 +85,9 @@ def load(conf: Config):
         for model, atype, field in itertools.product(
             models, AGGREGATION_TYPES, conf.PRESSURE_LEVEL_FIELDS
         ):
-            if conf.PLEVEL_TRANSECT_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
+            index = AGGREGATION_TYPES.index(atype)
+            aggregations = conf.PLEVEL_TRANSECT_AGGREGATION
+            if len(aggregations) > index and aggregations[index]:
                 yield RawRecipe(
                     recipe=f"transect_case_aggregation_{atype}.yaml",
                     variables={
@@ -112,9 +114,9 @@ def load(conf: Config):
         for model, atype, field in itertools.product(
             models[1:], AGGREGATION_TYPES, conf.PRESSURE_LEVEL_FIELDS
         ):
-            if conf.PLEVEL_TRANSECT_AGGREGATION_DIFFERENCE[
-                AGGREGATION_TYPES.index(atype)
-            ]:
+            index = AGGREGATION_TYPES.index(atype)
+            aggregations = conf.PLEVEL_TRANSECT_AGGREGATION_DIFFERENCE
+            if len(aggregations) > index and aggregations[index]:
                 base_model = models[0]
                 yield RawRecipe(
                     recipe=f"transect_case_aggregation_difference_{atype}.yaml",

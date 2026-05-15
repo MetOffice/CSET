@@ -681,7 +681,9 @@ def load(conf: Config):
     for model, atype, field in itertools.product(
         models, AGGREGATION_TYPES, conf.SURFACE_FIELDS
     ):
-        if conf.SPATIAL_SURFACE_FIELD_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
+        index = AGGREGATION_TYPES.index(atype)
+        aggregations = conf.SPATIAL_SURFACE_FIELD_AGGREGATION
+        if len(aggregations) > index and aggregations[index]:
             yield RawRecipe(
                 recipe=f"generic_surface_spatial_plot_sequence_case_aggregation_mean_{atype}.yaml",
                 variables={
@@ -701,7 +703,9 @@ def load(conf: Config):
     for model, atype, field, plevel in itertools.product(
         models, AGGREGATION_TYPES, conf.PRESSURE_LEVEL_FIELDS, conf.PRESSURE_LEVELS
     ):
-        if conf.SPATIAL_PLEVEL_FIELD_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
+        index = AGGREGATION_TYPES.index(atype)
+        aggregations = conf.SPATIAL_PLEVEL_FIELD_AGGREGATION
+        if len(aggregations) > index and aggregations[index]:
             yield RawRecipe(
                 recipe=f"generic_level_spatial_plot_sequence_case_aggregation_mean_{atype}.yaml",
                 variables={
@@ -723,7 +727,9 @@ def load(conf: Config):
     for model, atype, field, mlevel in itertools.product(
         models, AGGREGATION_TYPES, conf.MODEL_LEVEL_FIELDS, conf.MODEL_LEVELS
     ):
-        if conf.SPATIAL_MLEVEL_FIELD_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
+        index = AGGREGATION_TYPES.index(atype)
+        aggregations = conf.SPATIAL_MLEVEL_FIELD_AGGREGATION
+        if len(aggregations) > index and aggregations[index]:
             yield RawRecipe(
                 recipe=f"generic_level_spatial_plot_sequence_case_aggregation_mean_{atype}.yaml",
                 variables={
