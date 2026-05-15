@@ -698,7 +698,7 @@ def load(conf: Config):
             models, conf.SURFACE_FIELDS, conf.SPATIAL_SURFACE_FIELD_METHOD
         ):
             yield RawRecipe(
-                recipe="generic_Gaussian_spatial_perturbation_difference.yaml",
+                recipe="generic_normalized_Gaussian_spatial_perturbation_difference.yaml",
                 model_ids=model["id"],
                 variables={
                     "VARNAME": field,
