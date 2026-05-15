@@ -53,7 +53,7 @@ def calculate_vector_wind_from_list(
     except Exception as err:
         available = [c.name() for c in cubes]
         raise ValueError(
-        f"Need exactly one U and one V cube. Available cube names: {available}"
+            f"Need exactly one U and one V cube. Available cube names: {available}"
         ) from err
     
     return calculate_vector_wind(u_cube, v_cube)
