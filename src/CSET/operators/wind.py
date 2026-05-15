@@ -55,7 +55,7 @@ def calculate_vector_wind_from_list(
         raise ValueError(
             f"Need exactly one U and one V cube. Available cube names: {available}"
         ) from err
-    
+
     return calculate_vector_wind(u_cube, v_cube)
 
 
@@ -84,19 +84,19 @@ def calculate_vector_wind(
 
     direction = (np.degrees(np.arctan2(-u, -v)) + 360) % 360
     speed = np.hypot(u, v)
-    
+
     speed_cube = u_cube.copy(data=speed)
     speed_cube.rename("wind_speed")
     if u_cube.units != v_cube.units:
         raise ValueError("U and V cubes must have the same units")
-    
+
     speed_cube.units = u_cube.units
 
     direction_cube = u_cube.copy(data=direction)
     direction_cube.rename("wind_direction")
     direction_cube.units = "degrees"
     direction_cube.standard_name = "wind_from_direction"
-    
+
     return iris.cube.CubeList([speed_cube, direction_cube])
 
 
