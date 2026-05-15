@@ -14,11 +14,15 @@
 
 """Operators to calculate various forms or properties of wind."""
 
+import logging
+
 import iris
 import iris.cube
 import numpy as np
 
 from CSET._common import iter_maybe
+from CSET.operators._utils import get_cube_yxcoordname
+from CSET.operators.regrid import regrid_onto_cube
 
 
 def calculate_vector_wind_from_list(
@@ -55,6 +59,32 @@ def calculate_vector_wind_from_list(
         raise ValueError(
             f"Need exactly one U and one V cube. Available cube names: {available}"
         ) from err
+
+    # Ensure cubes to compare are on common differencing grid.
+    # This is triggered if either
+    #      i) latitude and longitude shapes are not the same. Note grid points
+    #         are not compared directly as these can differ through rounding
+    #         errors.
+    #     ii) or variables are known to often sit on different grid staggering
+    #         in different models (e.g. cell center vs cell edge), as is the case
+    #         for UM and LFRic comparisons.
+    # In future greater choice of regridding method might be applied depending
+    # on variable type. Linear regridding can in general be appropriate for smooth
+    # variables. Care should be taken with interpretation of differences
+    # given this dependency on regridding.
+
+    # Get spatial coord names.
+    u_cube_lat_name, u_cube_lon_name = get_cube_yxcoordname(u_cube)
+    v_cube_lat_name, v_cube_lon_name = get_cube_yxcoordname(v_cube)
+
+    if (
+        u_cube.coord(u_cube_lat_name).shape != v_cube.coord(v_cube_lat_name).shape
+        or u_cube.coord(u_cube_lon_name).shape != v_cube.coord(v_cube_lon_name).shape
+    ):
+        logging.debug(
+            "Linear regridding base cube to other grid to compute differences"
+        )
+        u_cube = regrid_onto_cube(u_cube, v_cube, method="Linear")
 
     return calculate_vector_wind(u_cube, v_cube)
 
