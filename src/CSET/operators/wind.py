@@ -50,11 +50,11 @@ def calculate_vector_wind_from_list(
     try:
         u_cube = cubes.extract_cube(iris.Constraint(name=u_name))
         v_cube = cubes.extract_cube(iris.Constraint(name=v_name))
-    except Exception:
+    except Exception as err:
         available = [c.name() for c in cubes]
         raise ValueError(
         f"Need exactly one U and one V cube. Available cube names: {available}"
-        )
+        ) from err
     
     return calculate_vector_wind(u_cube, v_cube)
 
