@@ -28,7 +28,7 @@ steps:
 
     second:
       # --- UM: calculate vector wind from both components ---
-      operator: wind.calculate_vector_wind_from_list
+      operator: wind.calculate_vector_wind
       cubes:
         operator: filters.filter_multiple_cubes
         u_constraint:
