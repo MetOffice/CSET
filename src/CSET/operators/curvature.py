@@ -44,12 +44,12 @@ def _lat_lon_identifier(original_lat, original_lon, distance, bearing):
 
     new_lat = np.degrees(new_lat)
     new_lon = np.degrees(new_lon)
-    new_lon = np.where(new_lon > 360.0, new_lon - 360.0, new_lon)
+    new_lon = np.where(new_lon > 180.0, new_lon - 360.0, new_lon)
 
     return new_lat, new_lon
 
 
-def global_curv(central, radius, num_radial_points=16, tol=0.0):
+def global_curv(central, radius, num_radial_points=16, tol=400.0):
     """Calculate the CURV diagnostic for a global model VERSION 2 for faster calculation speed."""
     if (num_radial_points == 8) or (num_radial_points == 16):
         bearing = np.linspace(0.0, 360.0, num_radial_points + 1)[:-1]
@@ -87,7 +87,7 @@ def global_curv(central, radius, num_radial_points=16, tol=0.0):
         curv_data = surroundings - cube.data
         curv_data_binary = np.zeros(curv_data.shape)
         curv_data_binary[curv_data > tol] = -1.0
-        curv_data_binary[curv_data < tol] = 1.0
+        curv_data_binary[curv_data < -tol] = 1.0
         curv_data_collapsed = np.sum(curv_data_binary, 0)
         curv.data = curv_data_collapsed
         curv.rename(f"CURV_calculated_from_{num_radial_points}_radial_points")
