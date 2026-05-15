@@ -1,8 +1,8 @@
 category: Perturbations
-title: $MODEL_NAME Band Pass Filter Spatial Perturbation for $VARNAME $METHOD
+title: $MODEL_NAME Normalised Mesoscale Gaussian Filter Spatial Perturbation difference for $VARNAME $METHOD
 description: |
-  Creates a spatial map of a band pass filtered filed based on Gaussians
-  with the low filter of 1 and a high filter of 12 for spatial components.
+  Creates a spatial map of a perturbation field based on a Gaussian filter
+  over a 40 grid point halfwidth. The field is normalized prior to the filter application.
   The filter is applied for $METHOD of $VARNAME from all times in $MODEL_NAME.
 
 steps:
@@ -24,9 +24,17 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
-  - operator: imageprocessing.band_pass_filter_via_gaussians
-    low_sigma: 1.0
-    high_sigma: 1.1
+  - operator: misc.normalize
+
+  - operator: misc.subtraction
+    minuend:
+        operator: mesoscale.spatial_perturbation_field
+        apply_gaussian_filter: True
+        filter_scale: 40
+    subtrahend:
+        operator: mesoscale.spatial_perturbation_field
+        apply_gaussian_filter: True
+        filter_scale: 10
 
   - operator: collapse.collapse
     coordinate: [time]
