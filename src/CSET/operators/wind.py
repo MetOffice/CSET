@@ -96,6 +96,16 @@ def calculate_vector_wind(
     """
     Calculate wind speed and wind direction from U, V component cubes.
 
+    Arguments
+    ----------
+    u_cube : iris.cube.Cube
+        Zonal wind component (eastward wind). Must have same shape,
+        coordinates, and units as `v_cube`.
+
+    v_cube : iris.cube.Cube
+        Meridional wind component (northward wind). Must have same shape,
+        coordinates, and units as `u_cube`.
+
     Notes
     -----
     - Speed = np.hypot(u, v)
