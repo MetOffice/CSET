@@ -13,7 +13,9 @@
 # limitations under the License.
 
 """Operators to calculate various forms or properties of wind."""
+
 from __future__ import annotations
+
 import logging
 
 import iris
@@ -61,7 +63,7 @@ def calculate_vector_wind(
 
     u_list = list(iter_maybe(u))
     v_list = list(iter_maybe(v))
-    
+
     if not u_list or not v_list:
         raise ValueError("Need at least one U cube and one V cube")
 
