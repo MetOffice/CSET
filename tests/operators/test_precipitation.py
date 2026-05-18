@@ -163,6 +163,7 @@ def test_maul_properties_3D_number_cubelist(
     expected_list = precipitation.MAUL_properties(
         input_list, u_list, v_list, output="number"
     )
+    print(expected_list)
     actual_list = iris.cube.CubeList([precalc_maul_number_3d, precalc_maul_number_3d])
     for cube_a, cube_b in zip(expected_list, actual_list, strict=True):
         assert np.allclose(
