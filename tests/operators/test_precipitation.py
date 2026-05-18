@@ -22,57 +22,71 @@ import pytest
 from CSET.operators import precipitation
 
 
-def test_maul_properties_wrong_output(maul_mask):
+def test_maul_properties_wrong_output(maul_mask, u_wind_maul, v_wind_maul):
     """Ensure fails if get unexpected output argument."""
     with pytest.raises(
         ValueError,
         match="Unexpected value for output. Expected number, base, depth or wind_below. Got top.",
     ):
-        precipitation.MAUL_properties(maul_mask, output="top")
+        precipitation.MAUL_properties(maul_mask, u_wind_maul, v_wind_maul, output="top")
 
 
-def test_maul_properties_not_binary_input(maul_mask):
+def test_maul_properties_not_binary_input(maul_mask, u_wind_maul, v_wind_maul):
     """Ensure fails if get non-binary input."""
     maul_mask.data += 1.0
     with pytest.raises(
         ValueError,
         match="Data contains values that are not 0 or 1, only masked data should be used.",
     ):
-        precipitation.MAUL_properties(maul_mask, output="number")
+        precipitation.MAUL_properties(
+            maul_mask, u_wind_maul, v_wind_maul, output="number"
+        )
 
 
-def test_maul_properties_3D_number(maul_mask, precalc_maul_number_3d):
+def test_maul_properties_3D_number(
+    maul_mask, u_wind_maul, v_wind_maul, precalc_maul_number_3d
+):
     """Ensure correct number of MAULs generated for 3D field."""
     assert np.allclose(
-        precipitation.MAUL_properties(maul_mask, output="number").data,
+        precipitation.MAUL_properties(
+            maul_mask, u_wind_maul, v_wind_maul, output="number"
+        ).data,
         precalc_maul_number_3d.data,
         rtol=1e-2,
         atol=1e-6,
     )
 
 
-def test_maul_properties_3D_number_name(maul_mask):
+def test_maul_properties_3D_number_name(maul_mask, u_wind_maul, v_wind_maul):
     """Ensure correct name given to cube in maul properties for number of mauls."""
     expected_name = "Number_of_MAULs"
     assert (
         expected_name
-        == precipitation.MAUL_properties(maul_mask, output="number").name()
+        == precipitation.MAUL_properties(
+            maul_mask, u_wind_maul, v_wind_maul, output="number"
+        ).name()
     )
 
 
-def test_maul_properties_3D_number_units(maul_mask):
+def test_maul_properties_3D_number_units(maul_mask, u_wind_maul, v_wind_maul):
     """Ensure correct units given to cube in maul properties for number of mauls."""
     expected_units = cf_units.Unit("1")
     assert (
         expected_units
-        == precipitation.MAUL_properties(maul_mask, output="number").units
+        == precipitation.MAUL_properties(
+            maul_mask, u_wind_maul, v_wind_maul, output="number"
+        ).units
     )
 
 
-def test_maul_properties_3D_base(maul_mask, precalc_maul_base_3d):
+def test_maul_properties_3D_base(
+    maul_mask, u_wind_maul, v_wind_maul, precalc_maul_base_3d
+):
     """Ensure correct base of MAULs generated for 3D field."""
     assert np.allclose(
-        precipitation.MAUL_properties(maul_mask, output="base").data,
+        precipitation.MAUL_properties(
+            maul_mask, u_wind_maul, v_wind_maul, output="base"
+        ).data,
         precalc_maul_base_3d.data,
         rtol=1e-2,
         atol=1e-6,
@@ -80,26 +94,36 @@ def test_maul_properties_3D_base(maul_mask, precalc_maul_base_3d):
     )
 
 
-def test_maul_properties_3D_base_name(maul_mask):
+def test_maul_properties_3D_base_name(maul_mask, u_wind_maul, v_wind_maul):
     """Ensure correct name given to cube in maul properties for MAUL base."""
     expected_name = "MAUL_base_height"
     assert (
-        expected_name == precipitation.MAUL_properties(maul_mask, output="base").name()
+        expected_name
+        == precipitation.MAUL_properties(
+            maul_mask, u_wind_maul, v_wind_maul, output="base"
+        ).name()
     )
 
 
-def test_maul_properties_3D_base_units(maul_mask):
+def test_maul_properties_3D_base_units(maul_mask, u_wind_maul, v_wind_maul):
     """Ensure correct units given to cube in maul properties for MAUL base."""
     expected_units = cf_units.Unit("m")
     assert (
-        expected_units == precipitation.MAUL_properties(maul_mask, output="base").units
+        expected_units
+        == precipitation.MAUL_properties(
+            maul_mask, u_wind_maul, v_wind_maul, output="base"
+        ).units
     )
 
 
-def test_maul_properties_3D_depth(maul_mask, precalc_maul_depth_3d):
+def test_maul_properties_3D_depth(
+    maul_mask, u_wind_maul, v_wind_maul, precalc_maul_depth_3d
+):
     """Ensure correct depth of MAULs generated for 3D field."""
     assert np.allclose(
-        precipitation.MAUL_properties(maul_mask, output="depth").data,
+        precipitation.MAUL_properties(
+            maul_mask, u_wind_maul, v_wind_maul, output="depth"
+        ).data,
         precalc_maul_depth_3d.data,
         rtol=1e-2,
         atol=1e-6,
@@ -107,26 +131,38 @@ def test_maul_properties_3D_depth(maul_mask, precalc_maul_depth_3d):
     )
 
 
-def test_maul_properties_3D_depth_name(maul_mask):
+def test_maul_properties_3D_depth_name(maul_mask, u_wind_maul, v_wind_maul):
     """Ensure correct name given to cube in maul properties for MAUL depth."""
     expected_name = "MAUL_depth"
     assert (
-        expected_name == precipitation.MAUL_properties(maul_mask, output="depth").name()
+        expected_name
+        == precipitation.MAUL_properties(
+            maul_mask, u_wind_maul, v_wind_maul, output="depth"
+        ).name()
     )
 
 
-def test_maul_properties_3D_depth_units(maul_mask):
+def test_maul_properties_3D_depth_units(maul_mask, u_wind_maul, v_wind_maul):
     """Ensure correct units given to cube in maul properties for MAUL depth."""
     expected_units = cf_units.Unit("m")
     assert (
-        expected_units == precipitation.MAUL_properties(maul_mask, output="depth").units
+        expected_units
+        == precipitation.MAUL_properties(
+            maul_mask, u_wind_maul, v_wind_maul, output="depth"
+        ).units
     )
 
 
-def test_maul_properties_3D_number_cubelist(maul_mask, precalc_maul_number_3d):
+def test_maul_properties_3D_number_cubelist(
+    maul_mask, u_wind_maul, v_wind_maul, precalc_maul_number_3d
+):
     """Ensure correct number of MAULs generated for 3D field in a cubelist."""
     input_list = iris.cube.CubeList([maul_mask, maul_mask])
-    expected_list = precipitation.MAUL_properties(input_list, output="number")
+    v_list = iris.cube.CubeList([v_wind_maul, v_wind_maul])
+    u_list = iris.cube.CubeList([u_wind_maul, u_wind_maul])
+    expected_list = precipitation.MAUL_properties(
+        input_list, u_list, v_list, output="number"
+    )
     actual_list = iris.cube.CubeList([precalc_maul_number_3d, precalc_maul_number_3d])
     for cube_a, cube_b in zip(expected_list, actual_list, strict=True):
         assert np.allclose(
@@ -137,10 +173,16 @@ def test_maul_properties_3D_number_cubelist(maul_mask, precalc_maul_number_3d):
         )
 
 
-def test_maul_properties_3D_base_cubelist(maul_mask, precalc_maul_base_3d):
+def test_maul_properties_3D_base_cubelist(
+    maul_mask, u_wind_maul, v_wind_maul, precalc_maul_base_3d
+):
     """Ensure correct base of MAULs generated for 3D field in a cubelist."""
     input_list = iris.cube.CubeList([maul_mask, maul_mask])
-    expected_list = precipitation.MAUL_properties(input_list, output="base")
+    v_list = iris.cube.CubeList([v_wind_maul, v_wind_maul])
+    u_list = iris.cube.CubeList([u_wind_maul, u_wind_maul])
+    expected_list = precipitation.MAUL_properties(
+        input_list, u_list, v_list, output="base"
+    )
     actual_list = iris.cube.CubeList([precalc_maul_base_3d, precalc_maul_base_3d])
     for cube_a, cube_b in zip(expected_list, actual_list, strict=True):
         assert np.allclose(
@@ -148,10 +190,16 @@ def test_maul_properties_3D_base_cubelist(maul_mask, precalc_maul_base_3d):
         )
 
 
-def test_maul_properties_3D_depth_cubelist(maul_mask, precalc_maul_depth_3d):
+def test_maul_properties_3D_depth_cubelist(
+    maul_mask, u_wind_maul, v_wind_maul, precalc_maul_depth_3d
+):
     """Ensure correct depth of MAULs generated for 3D field in a cubelist."""
     input_list = iris.cube.CubeList([maul_mask, maul_mask])
-    expected_list = precipitation.MAUL_properties(input_list, output="depth")
+    v_list = iris.cube.CubeList([v_wind_maul, v_wind_maul])
+    u_list = iris.cube.CubeList([u_wind_maul, u_wind_maul])
+    expected_list = precipitation.MAUL_properties(
+        input_list, u_list, v_list, output="depth"
+    )
     actual_list = iris.cube.CubeList([precalc_maul_depth_3d, precalc_maul_depth_3d])
     for cube_a, cube_b in zip(expected_list, actual_list, strict=True):
         assert np.allclose(
@@ -159,20 +207,28 @@ def test_maul_properties_3D_depth_cubelist(maul_mask, precalc_maul_depth_3d):
         )
 
 
-def test_maul_properties_4D_time_number(maul_mask_time, precalc_maul_number_4d_time):
+def test_maul_properties_4D_time_number(
+    maul_mask_time, u_wind_time, v_wind_time, precalc_maul_number_4d_time
+):
     """Ensure correct number of MAULs generated for 4D field varying in time."""
     assert np.allclose(
-        precipitation.MAUL_properties(maul_mask_time, output="number").data,
+        precipitation.MAUL_properties(
+            maul_mask_time, u_wind_time, v_wind_time, output="number"
+        ).data,
         precalc_maul_number_4d_time.data,
         rtol=1e-2,
         atol=1e-6,
     )
 
 
-def test_maul_properties_4d_time_base(maul_mask_time, precalc_maul_base_4d_time):
+def test_maul_properties_4d_time_base(
+    maul_mask_time, u_wind_time, v_wind_time, precalc_maul_base_4d_time
+):
     """Ensure correct base of MAULs generated for 4D field varying in time."""
     assert np.allclose(
-        precipitation.MAUL_properties(maul_mask_time, output="base").data,
+        precipitation.MAUL_properties(
+            maul_mask_time, u_wind_time, v_wind_time, output="base"
+        ).data,
         precalc_maul_base_4d_time.data,
         rtol=1e-2,
         atol=1e-6,
@@ -180,10 +236,14 @@ def test_maul_properties_4d_time_base(maul_mask_time, precalc_maul_base_4d_time)
     )
 
 
-def test_maul_properties_4d_time_depth(maul_mask_time, precalc_maul_depth_4d_time):
+def test_maul_properties_4d_time_depth(
+    maul_mask_time, u_wind_time, v_wind_time, precalc_maul_depth_4d_time
+):
     """Ensure correct depth of MAULs generated for 4D field varying in time."""
     assert np.allclose(
-        precipitation.MAUL_properties(maul_mask_time, output="depth").data,
+        precipitation.MAUL_properties(
+            maul_mask_time, u_wind_time, v_wind_time, output="depth"
+        ).data,
         precalc_maul_depth_4d_time.data,
         rtol=1e-2,
         atol=1e-6,
@@ -192,11 +252,13 @@ def test_maul_properties_4d_time_depth(maul_mask_time, precalc_maul_depth_4d_tim
 
 
 def test_maul_properties_4d_realization_number(
-    maul_mask_member, precalc_maul_number_4d_realization
+    maul_mask_member, u_wind_member, v_wind_member, precalc_maul_number_4d_realization
 ):
     """Ensure correct number of MAULs generated for 4D field varying with realization."""
     assert np.allclose(
-        precipitation.MAUL_properties(maul_mask_member, output="number").data,
+        precipitation.MAUL_properties(
+            maul_mask_member, u_wind_member, v_wind_member, output="number"
+        ).data,
         precalc_maul_number_4d_realization.data,
         rtol=1e-2,
         atol=1e-6,
@@ -204,11 +266,13 @@ def test_maul_properties_4d_realization_number(
 
 
 def test_maul_properties_4D_realization_base(
-    maul_mask_member, precalc_maul_base_4d_realization
+    maul_mask_member, u_wind_member, v_wind_member, precalc_maul_base_4d_realization
 ):
     """Ensure correct base of MAULs generated for 4D field with varying realization."""
     assert np.allclose(
-        precipitation.MAUL_properties(maul_mask_member, output="base").data,
+        precipitation.MAUL_properties(
+            maul_mask_member, u_wind_member, v_wind_member, output="base"
+        ).data,
         precalc_maul_base_4d_realization.data,
         rtol=1e-2,
         atol=1e-6,
@@ -217,11 +281,13 @@ def test_maul_properties_4D_realization_base(
 
 
 def test_maul_properties_4D_realization_depth(
-    maul_mask_member, precalc_maul_depth_4d_realization
+    maul_mask_member, u_wind_member, v_wind_member, precalc_maul_depth_4d_realization
 ):
     """Ensure correct depth of MAULs generated for 4D field with varying realization."""
     assert np.allclose(
-        precipitation.MAUL_properties(maul_mask_member, output="depth").data,
+        precipitation.MAUL_properties(
+            maul_mask_member, u_wind_member, v_wind_member, output="depth"
+        ).data,
         precalc_maul_depth_4d_realization.data,
         rtol=1e-2,
         atol=1e-6,
@@ -229,20 +295,28 @@ def test_maul_properties_4D_realization_depth(
     )
 
 
-def test_maul_properties_5D_number(maul_mask_all, precalc_maul_number_5d):
+def test_maul_properties_5D_number(
+    maul_mask_all, u_wind_all, v_wind_all, precalc_maul_number_5d
+):
     """Ensure correct number of MAULs generated for 5D field."""
     assert np.allclose(
-        precipitation.MAUL_properties(maul_mask_all, output="number").data,
+        precipitation.MAUL_properties(
+            maul_mask_all, u_wind_all, v_wind_all, output="number"
+        ).data,
         precalc_maul_number_5d.data,
         rtol=1e-2,
         atol=1e-6,
     )
 
 
-def test_maul_properties_5D_base(maul_mask_all, precalc_maul_base_5d):
+def test_maul_properties_5D_base(
+    maul_mask_all, u_wind_all, v_wind_all, precalc_maul_base_5d
+):
     """Ensure correct base of MAULs generated for 5D field."""
     assert np.allclose(
-        precipitation.MAUL_properties(maul_mask_all, output="base").data,
+        precipitation.MAUL_properties(
+            maul_mask_all, u_wind_all, v_wind_all, output="base"
+        ).data,
         precalc_maul_base_5d.data,
         rtol=1e-2,
         atol=1e-6,
@@ -250,10 +324,14 @@ def test_maul_properties_5D_base(maul_mask_all, precalc_maul_base_5d):
     )
 
 
-def test_maul_properties_5D_depth(maul_mask_all, precalc_maul_depth_5d):
+def test_maul_properties_5D_depth(
+    maul_mask_all, u_wind_all, v_wind_all, precalc_maul_depth_5d
+):
     """Ensure correct depth of MAULs generated for 5D field."""
     assert np.allclose(
-        precipitation.MAUL_properties(maul_mask_all, output="depth").data,
+        precipitation.MAUL_properties(
+            maul_mask_all, u_wind_all, v_wind_all, output="depth"
+        ).data,
         precalc_maul_depth_5d.data,
         rtol=1e-2,
         atol=1e-6,
