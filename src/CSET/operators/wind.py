@@ -61,11 +61,6 @@ def calculate_vector_wind(
     """
     out = iris.cube.CubeList()
 
-    u_list = list(iter_maybe(u))
-    v_list = list(iter_maybe(v))
-
-    if not u_list or not v_list:
-        raise ValueError("Need at least one U cube and one V cube")
 
     for u_cube, v_cube in zip(iter_maybe(u), iter_maybe(v), strict=True):
         # Ensure cubes to compare are on common differencing grid.
