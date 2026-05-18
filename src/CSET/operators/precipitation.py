@@ -14,6 +14,7 @@
 
 """Operators to perform various kinds of image processing."""
 
+import itertools
 from typing import Literal
 
 import iris
@@ -87,7 +88,7 @@ def MAUL_properties(
             f"""Unexpected value for output. Expected number, base, depth or wind_below. Got {output}."""
         )
 
-    for cube, u, v in zip(
+    for cube, u, v in itertools.product(
         iter_maybe(cubes), iter_maybe(u_cubes), iter_maybe(v_cubes), strict=True
     ):
         # Check for binary fields.
