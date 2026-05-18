@@ -39,6 +39,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=[model["id"] for model in models],
                 aggregation=False,
@@ -64,6 +65,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=[model["id"] for model in models],
                 aggregation=False,
@@ -89,6 +91,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=[model["id"] for model in models],
                 aggregation=False,
@@ -99,7 +102,9 @@ def load(conf: Config):
 
     # Surface (2D) fields.
     for atype, field in itertools.product(AGGREGATION_TYPES, conf.SURFACE_FIELDS):
-        if conf.HISTOGRAM_SURFACE_FIELD_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
+        index = AGGREGATION_TYPES.index(atype)
+        aggregations = conf.HISTOGRAM_SURFACE_FIELD_AGGREGATION
+        if len(aggregations) > index and aggregations[index]:
             yield RawRecipe(
                 recipe=f"generic_surface_histogram_series_case_aggregation_{atype}.yaml",
                 variables={
@@ -109,6 +114,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=[model["id"] for model in models],
                 aggregation=True,
@@ -118,7 +124,9 @@ def load(conf: Config):
     for atype, field, plevel in itertools.product(
         AGGREGATION_TYPES, conf.PRESSURE_LEVEL_FIELDS, conf.PRESSURE_LEVELS
     ):
-        if conf.HISTOGRAM_PLEVEL_FIELD_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
+        index = AGGREGATION_TYPES.index(atype)
+        aggregations = conf.HISTOGRAM_PLEVEL_FIELD_AGGREGATION
+        if len(aggregations) > index and aggregations[index]:
             yield RawRecipe(
                 recipe=f"generic_level_histogram_series_case_aggregation_{atype}.yaml",
                 variables={
@@ -130,6 +138,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=[model["id"] for model in models],
                 aggregation=True,
@@ -139,7 +148,9 @@ def load(conf: Config):
     for atype, field, mlevel in itertools.product(
         AGGREGATION_TYPES, conf.MODEL_LEVEL_FIELDS, conf.MODEL_LEVELS
     ):
-        if conf.HISTOGRAM_MLEVEL_FIELD_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
+        index = AGGREGATION_TYPES.index(atype)
+        aggregations = conf.HISTOGRAM_MLEVEL_FIELD_AGGREGATION
+        if len(aggregations) > index and aggregations[index]:
             yield RawRecipe(
                 recipe=f"generic_level_histogram_series_case_aggregation_{atype}.yaml",
                 variables={
@@ -151,6 +162,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=[model["id"] for model in models],
                 aggregation=True,

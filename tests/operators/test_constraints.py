@@ -72,6 +72,13 @@ def test_generate_cell_methods_constraint_varname():
     assert expected_cell_methods_constraint in repr(cell_methods_constraint)
 
 
+def test_generate_cell_methods_mean_constraint_varname():
+    """Generate variable-dependent iris cube constrain for mean cell methods."""
+    cell_methods_constraint = constraints.generate_cell_methods_constraint([], "albedo")
+    expected_cell_methods_constraint = "Constraint(cube_func=<function generate_cell_methods_constraint.<locals>.check_cell_mean at"
+    assert expected_cell_methods_constraint in repr(cell_methods_constraint)
+
+
 def test_generate_time_constraint():
     """Generate iris cube constraint for dates."""
     # Try with str dates
@@ -270,3 +277,21 @@ def test_generate_attribute_constraint_with_value():
     )
     expected_attr_constraint = "AttributeConstraint({'test': '2'})"
     assert expected_attr_constraint in repr(attr_constraint)
+
+
+def test_generate_remove_single_level_constraint():
+    """Tests constraint to remove default model_level_number of zero."""
+    remove_level_constraint = constraints.generate_remove_single_level_constraint(
+        coord="model_level_number"
+    )
+    expected_constraint = "Constraint(coord_values={'model_level_number': <function generate_remove_single_level_constraint.<locals>.<lambda> at"
+    assert expected_constraint in repr(remove_level_constraint)
+
+
+def test_generate_remove_single_level_constraint_non_default():
+    """Tests constraint to remove default model_level_number of one."""
+    remove_level_constraint = constraints.generate_remove_single_level_constraint(
+        coord="model_level_number", level=1
+    )
+    expected_constraint = "Constraint(coord_values={'model_level_number': <function generate_remove_single_level_constraint.<locals>.<lambda> at"
+    assert expected_constraint in repr(remove_level_constraint)

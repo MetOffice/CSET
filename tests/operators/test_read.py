@@ -82,11 +82,11 @@ def test_read_cubes_ensemble_with_realization_coord():
 
 
 def test_read_cubes_ensemble_separate_files():
-    """Read ensemble from multiple files with the member number in filename."""
+    """Read ensemble from multiple files with the realization coord in file."""
     from CSET.operators import constraints
 
     cubes = read.read_cubes(
-        "tests/test_data/exeter_em*.nc",
+        "tests/test_data/exeter_em0?.nc",
         constraint=constraints.generate_stash_constraint("m01s03i236"),
     )
     # Check ensemble members have been merged into a single cube.
@@ -94,6 +94,35 @@ def test_read_cubes_ensemble_separate_files():
     # Check realization is an integer.
     for point in cubes[0].coord("realization").points:
         assert isinstance(int(point), int)
+
+
+def test_read_cubes_ensemble_without_realization_coord():
+    """Read ensemble from multiple files without realization coord in file."""
+    cubes = read.read_cubes("tests/test_data/ensemble_emX?.nc")
+    # Check ensemble members have been merged into a single cube.
+    assert len(cubes) == 1
+    # Check each cube has separate realization coord point.
+    assert cubes[0].coord("realization").points[0] == 1
+    assert cubes[0].coord("realization").points[1] == 2
+
+
+def test_read_cubes_merge_cubes_check_nonensemble():
+    """Ensure merge_cubes_check_ensemble has no impact on non-ensemble input."""
+    cubes = read.read_cubes("tests/test_data/air_temp.nc")
+    merged_cubes = read._merge_cubes_check_ensemble(cubes)
+    assert cubes == merged_cubes
+
+
+def test_read_cubes_merge_cubes_check_ensemble():
+    """Ensure merge_cubes_check_ensemble can generate merged cube from CubeList without realization coord."""
+    cube1 = read.read_cube("tests/test_data/ensemble_emX1.nc")
+    cube2 = read.read_cube("tests/test_data/ensemble_emX2.nc")
+    cubes = iris.cube.CubeList([cube1, cube2])
+    merged_cubes = read._merge_cubes_check_ensemble(cubes)
+    assert cubes != merged_cubes
+    assert len(merged_cubes) == 1
+    assert merged_cubes[0].coord("realization").points[0] == 1
+    assert merged_cubes[0].coord("realization").points[1] == 2
 
 
 def test_read_cubes_verify_comparison_base():
@@ -1121,6 +1150,20 @@ def test_proleptic_gregorian_fix():
     read._proleptic_gregorian_fix(cube)
     assert cube.coord("time").units.calendar == "standard"
     assert cube.coord("time").units.origin == "hours since 1970-01-01T00:00:00"
+
+
+def test_fix_no_time_coords_callback(cube):
+    """Check that a time scalar coordinate is added to a non-time-varying input."""
+    cube = cube[0]
+    cube.remove_coord("time")
+    coord_names = [coord.name() for coord in cube.coords()]
+    assert "time" not in coord_names
+
+    cube = read._fix_no_time_coords_callback(cube)
+    coord_names = [coord.name() for coord in cube.coords()]
+    assert "time" in coord_names
+    assert len(cube.coord("time").points) == 1
+    assert cube.coord("time").units == "hours since 0001-01-01 00:00:00"
 
 
 def test_normalise_ML_varname(transect_source_cube):
