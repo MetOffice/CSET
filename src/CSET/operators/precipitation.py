@@ -26,7 +26,7 @@ from CSET._common import iter_maybe
 
 def MAUL_properties(
     cubes: iris.cube.Cube | iris.cube.CubeList,
-    output: Literal["number", "base", "depth"],
+    output: Literal["number", "base", "depth", "wind_below"],
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Identify properties of Moist Absolutely Unstable Layers.
 
@@ -35,11 +35,11 @@ def MAUL_properties(
     cubes: iris.cube.Cube | iris.cube.CubeList
       A cube or cubelist of a mask(s) as to whether a MAUL exists.
       This input must be a binary field.
-    output: Literal["number", "base", "depth"]
+    output: Literal["number", "base", "depth", "wind_below"]
       The output is the desired property required. It can be
       number, base, depth for the number of MAULs, base height
-      of the deepest MAUL, or the depth of the deepest MAUL,
-      respectively.
+      of the deepest MAUL, the depth of the deepest MAUL, or the
+      average windspeed below the MAUL, respectively.
 
     Returns
     -------
@@ -73,9 +73,9 @@ def MAUL_properties(
     maul_d = iris.cube.CubeList([])
     maul_b = iris.cube.CubeList([])
 
-    if output not in ("number", "base", "depth"):
+    if output not in ("number", "base", "depth", "wind_below"):
         raise ValueError(
-            f"""Unexpected value for output. Expected number, depth or base. Got {output}."""
+            f"""Unexpected value for output. Expected number, base, depth or wind_below. Got {output}."""
         )
 
     for cube in iter_maybe(cubes):

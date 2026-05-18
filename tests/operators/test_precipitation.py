@@ -26,7 +26,7 @@ def test_maul_properties_wrong_output(maul_mask):
     """Ensure fails if get unexpected output argument."""
     with pytest.raises(
         ValueError,
-        match="Unexpected value for output. Expected number, depth or base. Got top.",
+        match="Unexpected value for output. Expected number, base, depth or wind_below. Got top.",
     ):
         precipitation.MAUL_properties(maul_mask, output="top")
 
