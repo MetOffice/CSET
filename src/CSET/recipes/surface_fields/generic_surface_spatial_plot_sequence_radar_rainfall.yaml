@@ -1,0 +1,20 @@
+category: Surface Spatial Plot
+title: $RADAR_NAME $VARNAME
+description: Extracts and plots radar rainfall data.
+
+steps:
+  - operator: read.read_cube
+    file_paths: $INPUT_PATHS
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: plot.spatial_pcolormesh_plot
+    sequence_coordinate: time
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
