@@ -62,7 +62,7 @@ def calculate_vector_wind(
     out = iris.cube.CubeList()
 
     from itertools import zip_longest
-    
+
     for u_cube, v_cube in zip_longest(iter_maybe(u), iter_maybe(v), strict=True):
         # Ensure cubes to compare are on common differencing grid.
         # This is triggered if either
@@ -78,7 +78,7 @@ def calculate_vector_wind(
         # given this dependency on regridding.
         if u_cube is None or v_cube is None:
             raise ValueError("Iterables have different lengths")
-            
+
         u_lat, u_lon = get_cube_yxcoordname(u_cube)
         v_lat, v_lon = get_cube_yxcoordname(v_cube)
 
