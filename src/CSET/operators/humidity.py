@@ -501,9 +501,9 @@ def precipitable_water(
     """
     precipitable_water = iris.cube.CubeList([])
     for w in iter_maybe(mixing_ratio):
-        # Integrate the data in the vertical using np.trapz
+        # Integrate the data in the vertical using np.trapezoid
         # (following trapezoid rule).
-        pw = np.trapz(
+        pw = np.trapezoid(
             w.data,
             x=w.coord("level_height").points[:],
             axis=get_cube_coordindex(w, "level_height"),
@@ -525,7 +525,7 @@ def precipitable_water(
         # Create the data array, rename, and correct units.
         pwat.data = pw
         pwat.rename("precipitable_water")
-        pwat.units = "m"
+        pwat.units = "mm"
         precipitable_water.append(pwat)
     # Output the data.
     if len(precipitable_water) == 1:
@@ -579,10 +579,10 @@ def saturation_precipitable_water(
     for w, rh in zip(
         iter_maybe(mixing_ratio), iter_maybe(relative_humidity), strict=True
     ):
-        # Integrate the data in the vertical using np.trapz
+        # Integrate the data in the vertical using np.trapezoid
         # (following trapezoid rule).
         rh = convert_units(rh, "1")
-        spw = np.trapz(
+        spw = np.trapezoid(
             (w / rh).data,
             x=w.coord("level_height").points[:],
             axis=get_cube_coordindex(w, "level_height"),
@@ -604,7 +604,7 @@ def saturation_precipitable_water(
         # Store the data for output, rename cube, and correct units.
         satpw.data = spw
         satpw.rename("saturation_precipitable_water")
-        satpw.units = "m"
+        satpw.units = "mm"
         saturation_precipitable_water.append(satpw)
     # Output cube/cubelist.
     if len(saturation_precipitable_water) == 1:
