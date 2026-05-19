@@ -1,0 +1,21 @@
+category: Extreme precipitation
+title: $MODEL_NAME Saturation fraction spatial plot
+description: |
+  To be updated
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    constraints: ["air_temperature", "air_pressure", "specific_humidity"]
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: humidity.saturation_fraction
+    mixing_ratio:
+    relative_humidity:
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
