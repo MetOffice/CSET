@@ -48,13 +48,11 @@ def calculate_power_spectrum(cubes):
 
     if isinstance(cubes, iris.cube.CubeList):
         out = iris.cube.CubeList()
-
         for cube in cubes:
             model = cube.attributes.get("model_name")
 
             # Ensembles:
             # Check whether data has more than 1 realization coord
-
             real_coord = cube.coords("realization")
             is_ensemble = real_coord and len(real_coord[0].points) > 1
 
@@ -90,16 +88,13 @@ def calculate_power_spectrum(cubes):
                 ps.add_aux_coord(
                     iris.coords.AuxCoord(0, long_name="realization", units="1")
                 )
-
                 out.append(ps)
 
         if is_ensemble:
             # Merge the individual realization cubes into a single cube
             # for ensemble data
             merged = out.concatenate_cube()
-
             return merged
-
         else:
             return out
 
@@ -111,7 +106,6 @@ def calculate_power_spectrum(cubes):
 
     # Ensembles:
     # Check whether data has more than 1 realization coord
-
     real_coord = cube.coords("realization")
     is_ensemble = real_coord and len(real_coord[0].points) > 1
 
