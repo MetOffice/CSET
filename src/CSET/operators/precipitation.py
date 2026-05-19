@@ -368,8 +368,8 @@ def MAUL_properties(
                                             time_point,
                                             height_index,
                                             lat_point,
-                                            lon_point.data,
-                                        ]
+                                            lon_point,
+                                        ].data
                                     )
                                 elif (
                                     len(number_of_MAULs.coord("realization").points)
@@ -396,8 +396,8 @@ def MAUL_properties(
                                             mem_number,
                                             height_index,
                                             lat_point,
-                                            lon_point.data,
-                                        ]
+                                            lon_point,
+                                        ].data
                                     )
                                 elif (
                                     len(number_of_MAULs.coord("time").points) != 1
@@ -424,8 +424,8 @@ def MAUL_properties(
                                             time_point,
                                             height_index,
                                             lat_point,
-                                            lon_point.data,
-                                        ]
+                                            lon_point,
+                                        ].data
                                     )
                                 else:
                                     wind_below_maul.data[lat_point, lon_point] = (
@@ -438,8 +438,8 @@ def MAUL_properties(
                                     directional_shear.data[lat_point, lon_point] = (
                                         direction[top_index, lat_point, lon_point].data
                                         - direction[
-                                            height_index, lat_point, lon_point.data
-                                        ]
+                                            height_index, lat_point, lon_point
+                                        ].data
                                     )
 
                             # Here a ValueError is raised if a MAUL is not found, or an
