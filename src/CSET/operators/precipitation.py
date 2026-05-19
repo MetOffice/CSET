@@ -80,6 +80,14 @@ def MAUL_properties(
     be set to NaN. If number of MAULs is the desired output it will be set to zero.
 
     The MAUL diagnostic is applicable anywhere in the globe and across all scales.
+
+    Examples
+    --------
+    >>> No_MAULs = precipitation.MAUL_properties(maul_mask, u, v, output="number")
+    >>> MAUL_base = precipitation.MAUL_properties(maul_mask, u, v, output="base")
+    >>> MAUL_depth = precipitation.MAUL_properties(maul_mask, u, v, output="depth")
+    >>> Ave_windspeed_below_MAUL = precipitation.MAUL_properties(maul_mask, u, v, output="wind_below")
+    >>> Direction_shear_across_MAUL = precipitation.MAUL_properties(maul_mask, u, v, output="directional_shear")
     """
     num_MAULs = iris.cube.CubeList([])
     maul_d = iris.cube.CubeList([])
