@@ -21,6 +21,7 @@ import iris
 import iris.coord_systems
 import iris.cube
 import numpy as np
+from iris.analysis.cartography import rotate_pole
 
 from CSET._common import iter_maybe
 from CSET.operators._utils import get_cube_yxcoordname
@@ -456,13 +457,23 @@ def interpolate_to_point_cube(
         lat_name, lon_name = get_cube_yxcoordname(point_cube)
         lats = point_cube.coord(lat_name).points
         lons = point_cube.coord(lon_name).points
-        if lat_name == "latitude":
+
+        y_coord, x_coord = get_cube_yxcoordname(cube)
+        if isinstance(
+            cube.coord(x_coord).coord_system, iris.coord_systems.RotatedGeogCS
+        ):
+            lons_rp, lats_rp = rotate_pole(
+                lons,
+                lats,
+                pole_lon=cube.coord(x_coord).coord_system.grid_north_pole_longitude,
+                pole_lat=cube.coord(x_coord).coord_system.grid_north_pole_latitude,
+            )
+            sample_points = [("grid_latitude", lats_rp), ("grid_longitude", lons_rp)]
+        else:
             sample_points = [
                 ("latitude", np.array(lats)),
                 ("longitude", np.array(lons)),
             ]
-        else:
-            sample_points = [("grid_latitude", lats), ("grid_longitude", lons)]
 
         # Interpolate fld cube to required sample points
         fld_point_cube = cube.interpolate(
@@ -492,7 +503,13 @@ def interpolate_to_point_cube(
             ]:
                 fv_cube.add_aux_coord(coord.copy(), cube.coord_dims(coord))
         for coord in point_cube.coords():
-            if coord.name() not in ["time", "realization", "station"]:
+            if coord.name() not in [
+                "time",
+                "forecast_period",
+                "forecast_reference_time",
+                "realization",
+                "station",
+            ]:
                 fv_cube.add_aux_coord(coord.copy(), point_cube.coord_dims(coord))
         fv_cube.add_dim_coord(point_cube.coord("station"), od_index)
         fv_cube.attributes = cube.attributes.copy()

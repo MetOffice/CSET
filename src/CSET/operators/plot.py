@@ -202,6 +202,8 @@ def _setup_spatial_map(
 
         # Define spatial map projection.
         coord_system = cube.coord(lat_axis).coord_system
+        print(coord_system)
+        print(cube.coord(lat_axis))
         if isinstance(coord_system, iris.coord_systems.RotatedGeogCS):
             # Define rotated pole map projection for rotated pole inputs.
             projection = ccrs.RotatedPole(
@@ -230,10 +232,16 @@ def _setup_spatial_map(
                 crs = ccrs.PlateCarree()
             # Define regular map projection for non-rotated pole inputs.
             # Alternatives might include e.g. for global model outputs:
-            #    projection=ccrs.Robinson(central_longitude=X.y, globe=None)
-            # See also https://scitools.org.uk/cartopy/docs/v0.15/crs/projections.html.
             else:
-                projection = ccrs.PlateCarree(central_longitude=central_longitude)
+                projection = ccrs.Robinson(central_longitude=0.0, globe=None)
+                projection = ccrs.NearsidePerspective(
+                    central_longitude=180.0,
+                    central_latitude=0,
+                    satellite_height=35785831,
+                )
+                # See also https://scitools.org.uk/cartopy/docs/v0.15/crs/projections.html.
+                # else:
+                #    projection = ccrs.PlateCarree(central_longitude=central_longitude)
                 crs = ccrs.PlateCarree()
 
         # Define axes for plot (or subplot) with required map projection.
@@ -422,7 +430,7 @@ def _plot_and_save_spatial_plot(
     cube: iris.cube.Cube,
     filename: str,
     title: str,
-    method: Literal["contourf", "pcolormesh"],
+    method: Literal["contourf", "pcolormesh", "scatter"],
     overlay_cube: iris.cube.Cube | None = None,
     contour_cube: iris.cube.Cube | None = None,
     scatter_cube: iris.cube.Cube | None = None,
@@ -654,17 +662,18 @@ def _plot_and_save_spatial_plot(
 
     # Add watermark with min/max/mean. Currently not user togglable.
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
-    axes.annotate(
-        f"Min: {np.min(cube.data):.3g} Max: {np.max(cube.data):.3g} Mean: {np.mean(cube.data):.3g}",
-        xy=(0.025, yinfopad),
-        xycoords="axes fraction",
-        xytext=(-5, 5),
-        textcoords="offset points",
-        ha="left",
-        va="bottom",
-        size=11,
-        bbox=dict(boxstyle="round", fc="#cccccc", ec="#808080", alpha=0.9),
-    )
+    if "CTC" not in title:
+        axes.annotate(
+            f"Min: {np.min(cube.data):.3g} Max: {np.max(cube.data):.3g} Mean: {np.mean(cube.data):.3g}",
+            xy=(0.025, yinfopad),
+            xycoords="axes fraction",
+            xytext=(-5, 5),
+            textcoords="offset points",
+            ha="left",
+            va="bottom",
+            size=11,
+            bbox=dict(boxstyle="round", fc="#cccccc", ec="#808080", alpha=0.9),
+        )
 
     # Add secondary colour bar for overlay_cube field if required.
     if overlay_cube:

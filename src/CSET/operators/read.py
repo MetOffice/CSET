@@ -1086,11 +1086,16 @@ def _normalise_ML_varname(cube: iris.cube.Cube):
 def _check_combine_point_observations(cubes: iris.cube.CubeList):
     """Enable cubes containing different point observation sources to be concatenated."""
     nstation = 0
+    cset_comparison = None
     for cube in cubes:
         if "station" in [coord.name() for coord in cube.coords(dim_coords=True)]:
             if "obs_source" in [coord.name() for coord in cube.coords()]:
                 cube.remove_coord("obs_source")
             cube.coord("station").points = cube.coord("station").points + nstation
             nstation = nstation + len(cube.coord("station").points)
+        if "cset_comparison_base" in cube.attributes:
+            cset_comparison = cube.attributes["cset_comparison_base"]
+        else:
+            cube.attributes["cset_comparison_base"] = cset_comparison
 
     return cubes
