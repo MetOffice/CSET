@@ -7,6 +7,7 @@ description: |
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
 
   - operator: filters.filter_multiple_cubes
     constraint:

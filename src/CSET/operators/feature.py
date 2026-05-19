@@ -195,7 +195,6 @@ def cell_stats(
     threshold: float,
     under_threshold: bool = False,
     min_size: int = 4,
-    feature_size_unit: str = "feature_effective_radius",
     save_data: bool = False,
 ):
     """Identify features in each timestep and output statistics.
@@ -211,11 +210,11 @@ def cell_stats(
     min_size: int, optional
         The minimum number of contiguous grid points required for a feature to be tracked.
         Default is 4.
-    feature_size_unit: str, optional
-        The unit to define feature size output. Options are "feature_effective_radius"
-        (the radius of a circle with the same area as the feature, in km) or "
-        feature_grid_points" (the number of grid points contained in the feature).
-        Default is "feature_effective_radius".
+    # feature_size_unit: str, optional
+    #     The unit to define feature size output. Options are "feature_effective_radius"
+    #     (the radius of a circle with the same area as the feature, in km) or "
+    #     feature_grid_points" (the number of grid points contained in the feature).
+    #     Default is "feature_effective_radius".
     save_data: bool, optional
         If set to True, all tracking data is saved to disk for further analysis (including csv
         and txt files containing feature properties that are not returned in output cubes).
@@ -338,7 +337,7 @@ def cell_stats(
         cube_properties = {
             "feature_size": {
                 "data": size_data,
-                "long_name": feature_size_unit,
+                "long_name": "feature_size",
                 "units": "1",
             },
             "feature_mean": {
@@ -415,6 +414,9 @@ def cell_stats(
                     cell_stats_cube.add_aux_coord(coord, dims)
                 else:
                     cell_stats_cube.add_aux_coord(coord)
+
+            # Copy over attributes
+            cell_stats_cube.attributes = cube.attributes
 
             # Add to cubelist
             cell_stats_cubelist.append(cell_stats_cube)
