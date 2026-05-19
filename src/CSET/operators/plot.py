@@ -599,7 +599,7 @@ def _set_title_and_filename(
     return plot_title, plot_filename
 
 
-def select_series_coord(cube, series_coordinate):
+def _select_series_coord(cube, series_coordinate):
     """Determine the grid coordinates to use to calculate grid spacing."""
     try:
         # Try the requested coordinate first
@@ -1162,7 +1162,7 @@ def _plot_and_save_line_power_spectrum_series(
     #    for cube, coord in zip(cubes, coords, strict=True):
     for cube in iter_maybe(cubes):
         # next 2 lines replace chunk of code.
-        xcoord = select_series_coord(cube, series_coordinate)
+        xcoord = _select_series_coord(cube, series_coordinate)
         xname = xcoord.points
 
         yfield = cube.data  # power spectrum
@@ -3394,7 +3394,7 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
         line_width = 1
 
         for cube in iter_maybe(member):
-            xcoord = select_series_coord(cube, series_coordinate)
+            xcoord = _select_series_coord(cube, series_coordinate)
             xname = xcoord.points
 
             yfield = cube.data  # power spectrum
@@ -3521,7 +3521,7 @@ def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
     x_global = xcoord_global.points
 
     for i, member in enumerate(cubes.slices_over(stamp_coordinate)):
-        xcoord = select_series_coord(member, series_coordinate)
+        xcoord = _select_series_coord(member, series_coordinate)
         xname = xcoord.points
 
         yfield = member.data  # power spectrum

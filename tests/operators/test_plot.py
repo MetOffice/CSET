@@ -791,7 +791,7 @@ def test_select_series_coord_frequency_fallback_wl(power_spectrum_cube):
     wl = iris.coords.DimCoord(freq.points, long_name="wavelength")
     power_spectrum_cube.add_aux_coord(wl, dim)
 
-    xcoord = plot.select_series_coord(power_spectrum_cube, "frequency")
+    xcoord = plot._select_series_coord(power_spectrum_cube, "frequency")
 
     assert xcoord.name() == "wavelength"
 
@@ -808,7 +808,7 @@ def test_select_series_coord_frequency_fallback_pw(power_spectrum_cube):
     pw = iris.coords.DimCoord(freq.points, long_name="physical_wavenumber")
     power_spectrum_cube.add_aux_coord(pw, dim)
 
-    xcoord = plot.select_series_coord(power_spectrum_cube, "frequency")
+    xcoord = plot._select_series_coord(power_spectrum_cube, "frequency")
 
     assert xcoord.name() == "physical_wavenumber"
 
@@ -825,14 +825,14 @@ def test_select_series_coord_physical_wavenumber_fallback_wl(power_spectrum_cube
     wl = iris.coords.DimCoord(freq.points, long_name="wavelength")
     power_spectrum_cube.add_aux_coord(wl, dim)
 
-    xcoord = plot.select_series_coord(power_spectrum_cube, "physical_wavenumber")
+    xcoord = plot._select_series_coord(power_spectrum_cube, "physical_wavenumber")
 
     assert xcoord.name() == "wavelength"
 
 
 def test_select_series_coord_physical_wavenumber_fallback_freq(power_spectrum_cube):
     """Select correct series_coordinate when wavelength."""
-    xcoord = plot.select_series_coord(power_spectrum_cube, "physical_wavenumber")
+    xcoord = plot._select_series_coord(power_spectrum_cube, "physical_wavenumber")
 
     assert xcoord.name() == "frequency"
 
@@ -849,14 +849,14 @@ def test_select_series_coord_wavelength_fallback_pw(power_spectrum_cube):
     pw = iris.coords.DimCoord(freq.points, long_name="physical_wavenumber")
     power_spectrum_cube.add_aux_coord(pw, dim)
 
-    xcoord = plot.select_series_coord(power_spectrum_cube, "wavelength")
+    xcoord = plot._select_series_coord(power_spectrum_cube, "wavelength")
 
     assert xcoord.name() == "physical_wavenumber"
 
 
 def test_select_series_coord_wavelength_fallback_freq(power_spectrum_cube):
     """Select correct series_coordinate when wavelength."""
-    xcoord = plot.select_series_coord(power_spectrum_cube, "wavelength")
+    xcoord = plot._select_series_coord(power_spectrum_cube, "wavelength")
 
     assert xcoord.name() == "frequency"
 
