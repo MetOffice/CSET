@@ -15,9 +15,11 @@
 """Operators for humidity conversions."""
 
 import iris.cube
+import numpy as np
 
 from CSET._common import iter_maybe
 from CSET.operators._atmospheric_constants import EPSILON
+from CSET.operators._utils import get_cube_coordindex
 from CSET.operators.misc import convert_units
 from CSET.operators.pressure import vapour_pressure
 
@@ -443,3 +445,109 @@ def relative_humidity_from_specific_humidity(
         return RH[0]
     else:
         return RH
+
+
+def precipitable_water(
+    mixing_ratio: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Calculate the precipitable water."""
+    precipitable_water = iris.cube.CubeList([])
+    for w in iter_maybe(mixing_ratio):
+        # Integrate the data in the vertical using np.trapz
+        # (following trapezoid rule).
+        pw = np.trapz(
+            w.data,
+            x=w.coord("level_height").points[:],
+            axis=get_cube_coordindex(w, "level_height"),
+        )
+        # Determine array information of input cube to get
+        # correct cube to copy across to.
+        if len(w.coord("realization").points) != 1 and len(w.coord("time").points) != 1:
+            pwat = w[:, :, 0, :, :].copy()
+        elif (
+            len(w.coord("realization").points) != 1 and len(w.coord("time").points) == 1
+        ):
+            pwat = w[:, 0, :, :].copy()
+        elif (
+            len(w.coord("time").points) != 1 and len(w.coord("realization").points) == 1
+        ):
+            pwat = w[:, 0, :, :].copy()
+        else:
+            pwat = w[0, :, :].copy()
+        # Create the data array, rename, and correct units.
+        pwat.data = pw
+        pwat.rename("precipitable_water")
+        pwat.units = "m"
+        precipitable_water.append(pwat)
+    # Output the data.
+    if len(precipitable_water) == 1:
+        return precipitable_water[0]
+    else:
+        return precipitable_water
+
+
+def saturation_precipitable_water(
+    mixing_ratio: iris.cube.Cube | iris.cube.CubeList,
+    relative_humidity: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Calculate saturation precipitable water."""
+    saturation_precipitable_water = iris.cube.CubeList([])
+    for w, rh in zip(
+        iter_maybe(mixing_ratio), iter_maybe(relative_humidity), strict=True
+    ):
+        # Integrate the data in the vertical using np.trapz
+        # (following trapezoid rule).
+        spw = np.trapz(
+            (w / rh).data,
+            x=w.coord("level_height").points[:],
+            axis=get_cube_coordindex(w, "level_height"),
+        )
+        # Determine array information of input cube to get
+        # correct cube to copy across to.
+        if len(w.coord("realization").points) != 1 and len(w.coord("time").points) != 1:
+            satpw = w[:, :, 0, :, :].copy()
+        elif (
+            len(w.coord("realization").points) != 1 and len(w.coord("time").points) == 1
+        ):
+            satpw = w[:, 0, :, :].copy()
+        elif (
+            len(w.coord("time").points) != 1 and len(w.coord("realization").points) == 1
+        ):
+            satpw = w[:, 0, :, :].copy()
+        else:
+            satpw = w[0, :, :].copy()
+        # Store the data for output, rename cube, and correct units.
+        satpw.data = spw
+        satpw.rename("saturation_precipitable_water")
+        satpw.units = "m"
+        saturation_precipitable_water.append(satpw)
+    # Output cube/cubelist.
+    if len(saturation_precipitable_water) == 1:
+        return saturation_precipitable_water[0]
+    else:
+        return saturation_precipitable_water
+
+
+def saturation_fraction(
+    mixing_ratio: iris.cube.Cube | iris.cube.CubeList,
+    relative_humidity: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Calculate saturation fraction."""
+    saturation_fraction = iris.cube.CubeList([])
+    for w, rh in zip(
+        iter_maybe(mixing_ratio), iter_maybe(relative_humidity), strict=True
+    ):
+        # Calculate both precipitable water and saturation
+        # precipitable water.
+        pw = precipitable_water(w)
+        spw = saturation_precipitable_water(w, rh)
+        # Calculate the saturation fraction by taking the ratio.
+        sf = pw / spw
+        # Rename the cube and append to cubelist.
+        sf.rename("saturation_fraction")
+        saturation_fraction.append(sf)
+    # Output the cube/cubelist.
+    if len(saturation_fraction) == 1:
+        return saturation_fraction[0]
+    else:
+        return saturation_fraction
