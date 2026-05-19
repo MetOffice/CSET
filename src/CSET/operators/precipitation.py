@@ -68,6 +68,20 @@ def MAUL_properties(
     If number of MAULs is the desired output it will be set to zero.
 
     The MAUL diagnostic is applicable anywhere in the globe and across all scales.
+    The properties used here are based upon [Daviesetal24]_ and [Daviesetal26]_.
+
+    References
+    ----------
+    .. [Daviesetal24] Davies, P.A., Fowler, H.J, Villalobos-Herrera, R.,
+       Slingo, J., Flack, D.L.A., and Taszarek, M (2024)
+       "A New Conceptual Model for Understanding and Predicting Life-Threatening
+       Rainfall Extremes." Weather and Climate Extremes, vol. 45, 100696,
+       doi: 10.1016/j.wace.2024.100696
+    .. [Daviesetal26] Davies, P. A., Flack, D. L. A., Pirret, J., Fowler, H. J.
+       (2026) "Application of the Davies Four-Stage Conceptual Model for
+       Life-Threatening Rainfall Extremes on the April 2024 United Arab Emirates
+       and Oman Floods." Weather and Climate Extremes, vol. 51, 100846.
+       doi:10.1016/j.wace.2025.100846
     """
     num_MAULs = iris.cube.CubeList([])
     maul_d = iris.cube.CubeList([])
