@@ -58,7 +58,7 @@ def MAUL_properties(
     ------
     ValueError: Data contains values that are not 0 or 1, only masked data should be used.
         This error is raised when a mask field is not provided to the operator.
-    ValueError: Unexpected value for output. Expected number, depth or base. Got {output}.
+    ValueError: Unexpected value for output. Expected number, base, depth or wind_below. Got {output}.
         This error is raised when the wrong output string is specified.
 
     Notes
@@ -68,9 +68,10 @@ def MAUL_properties(
     set out in a recipe. The operator applies image processing to the mask
     to each point in the latitude/longitude coordinates. It uses the image
     processing to identify continuous layers (1s), and labels them.
-    It identifies the number of layesr by identifying the maximum label number,
-    and then finds the top and base of each layer. It will also raise  Depending on the output
-    desired it will output information for the deepest MAUL.
+    It identifies the number of layers by identifying the maximum label number,
+    and then finds the top and base of each layer. It will also find the average
+    windspeed below the MAUL for indications of presence of low-level jets.
+    Depending on the output desired it will output information for the deepest MAUL.
 
     When a MAUL is not present the output will be set to NaN for depth and base.
     If number of MAULs is the desired output it will be set to zero.
@@ -264,6 +265,7 @@ def MAUL_properties(
                                 else:
                                     maul_depth.data[lat_point, lon_point] = np.nan
                                     maul_base.data[lat_point, lon_point] = np.nan
+                        # Separate loop for calculating wind properties.
                         elif output not in ("number"):
                             # Find the base, top, and depth for each object
                             # using cube metadata.
