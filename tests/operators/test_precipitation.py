@@ -347,3 +347,110 @@ def test_maul_properties_5D_depth(
         atol=1e-6,
         equal_nan=True,
     )
+
+
+def test_maul_properties_wind_below(
+    maul_mask, u_wind_maul, v_wind_maul, precalc_wind_below_maul
+):
+    """Ensure correct average wind below maul."""
+    assert np.allclose(
+        precipitation.MAUL_properties(
+            maul_mask, u_wind_maul, v_wind_maul, output="wind_below"
+        ).data,
+        precalc_wind_below_maul.data,
+        rtol=1e-2,
+        atol=1e-6,
+        equal_nan=True,
+    )
+
+
+def test_maul_properties_wind_below_name(
+    maul_mask, u_wind_maul, v_wind_maul, precalc_wind_below_maul
+):
+    """Ensure correct average wind below maul name."""
+    assert (
+        precipitation.MAUL_properties(
+            maul_mask, u_wind_maul, v_wind_maul, output="wind_below"
+        ).name()
+        == "windspeed_below_MAUL"
+    )
+
+
+def test_maul_properties_wind_below_units(
+    maul_mask, u_wind_maul, v_wind_maul, precalc_wind_below_maul
+):
+    """Ensure correct average wind below maul units."""
+    assert precipitation.MAUL_properties(
+        maul_mask, u_wind_maul, v_wind_maul, output="wind_below"
+    ).units == cf_units.Unit("m s^-1")
+
+
+def test_maul_properties_wind_below_cubelist(
+    maul_mask, u_wind_maul, v_wind_maul, precalc_wind_below_maul
+):
+    """Ensure correct average wind below maul in cubelist."""
+    input_list = iris.cube.CubeList([maul_mask, maul_mask])
+    v_list = iris.cube.CubeList([v_wind_maul, v_wind_maul])
+    u_list = iris.cube.CubeList([u_wind_maul, u_wind_maul])
+    expected_list = precipitation.MAUL_properties(
+        input_list, u_list, v_list, output="wind_below"
+    )
+    actual_list = iris.cube.CubeList([precalc_wind_below_maul, precalc_wind_below_maul])
+    for cube_a, cube_b in zip(expected_list, actual_list, strict=True):
+        assert np.allclose(
+            cube_a.data, cube_b.data, rtol=1e-2, atol=1e-6, equal_nan=True
+        )
+
+
+def test_maul_properties_wind_below_4d_realization(
+    maul_mask_member,
+    u_wind_maul_member,
+    v_wind_maul_member,
+    precalc_wind_below_maul_4d_realization,
+):
+    """Ensure correct wind below MAUL generated for 4D field with varying realization."""
+    assert np.allclose(
+        precipitation.MAUL_properties(
+            maul_mask_member,
+            u_wind_maul_member,
+            v_wind_maul_member,
+            output="wind_below",
+        ).data,
+        precalc_wind_below_maul_4d_realization.data,
+        rtol=1e-2,
+        atol=1e-6,
+        equal_nan=True,
+    )
+
+
+def test_maul_properties_wind_below_4d_time(
+    maul_mask_time,
+    u_wind_maul_time,
+    v_wind_maul_time,
+    precalc_wind_below_maul_4d_time,
+):
+    """Ensure correct wind below MAUL generated for 4D field with varying time."""
+    assert np.allclose(
+        precipitation.MAUL_properties(
+            maul_mask_time, u_wind_maul_time, v_wind_maul_time, output="wind_below"
+        ).data,
+        precalc_wind_below_maul_4d_time.data,
+        rtol=1e-2,
+        atol=1e-6,
+        equal_nan=True,
+    )
+
+
+def test_maul_properties_wind_below_5d(
+    maul_mask_all, u_wind_maul_all, v_wind_maul_all, precalc_wind_below_maul_5d
+):
+    """Ensure correct wind below MAUL generated for 5D field."""
+    assert np.allclose(
+        precipitation.MAUL_properties(
+            maul_mask_all, u_wind_maul_all, v_wind_maul_all, output="wind_below"
+        ).data,
+        precalc_wind_below_maul_5d.data,
+        rtol=1e-2,
+        atol=1e-6,
+        equal_nan=True,
+    )

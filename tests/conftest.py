@@ -681,3 +681,61 @@ def v_wind_maul_read_only():
 def v_wind_maul(v_wind_maul_read_only):
     """Get v wind for 3D data. It is safe to modify."""
     return v_wind_maul_read_only.copy()
+
+
+@pytest.fixture()
+def precalc_wind_below_maul_read_only():
+    """Get precalculated wind below maul 3D data. It is NOT safe to modify."""
+    return read.read_cube(
+        "tests/test_data/precipitation/precalculated_wind_below_maul_3d.nc"
+    )
+
+
+@pytest.fixture()
+def precalc_wind_below_maul(precalc_wind_below_maul_read_only):
+    """Get precalculated wind below maul for 3D data. It is safe to modify."""
+    return precalc_wind_below_maul_read_only.copy()
+
+
+@pytest.fixture()
+def precalc_wind_below_maul_4d_time_read_only():
+    """Get precalculated wind below maul 4D data varying time. It is NOT safe to modify."""
+    return read.read_cube(
+        "tests/test_data/precipitation/precalculated_wind_below_maul_4d_time.nc"
+    )
+
+
+@pytest.fixture()
+def precalc_wind_below_maul_4d_time(precalc_wind_below_maul_4d_time_read_only):
+    """Get precalculated wind below maul for 4D data varying time. It is safe to modify."""
+    return precalc_wind_below_maul_4d_time_read_only.copy()
+
+
+@pytest.fixture()
+def precalc_wind_below_maul_4d_realization_read_only():
+    """Get precalculated wind below maul 4D data varying realization. It is NOT safe to modify."""
+    return read.read_cube(
+        "tests/test_data/precipitation/precalculated_wind_below_maul_4d_realization.nc"
+    )
+
+
+@pytest.fixture()
+def precalc_wind_below_maul_4d_realization(
+    precalc_wind_below_maul_4d_realization_read_only,
+):
+    """Get precalculated wind below maul for 4D data varying realization. It is safe to modify."""
+    return precalc_wind_below_maul_4d_realization_read_only.copy()
+
+
+@pytest.fixture()
+def precalc_wind_below_maul_5d_read_only():
+    """Get precalculated wind below maul 5D data. It is NOT safe to modify."""
+    return read.read_cube(
+        "tests/test_data/precipitation/precalculated_wind_below_maul_5d.nc"
+    )
+
+
+@pytest.fixture()
+def precalc_wind_below_maul_5d(precalc_wind_below_maul_5d_read_only):
+    """Get precalculated wind below maul for 5D data. It is safe to modify."""
+    return precalc_wind_below_maul_5d_read_only.copy()

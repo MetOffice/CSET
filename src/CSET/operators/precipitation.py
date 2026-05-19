@@ -295,6 +295,10 @@ def MAUL_properties(
                                 index = int(
                                     np.where(maul_dep == np.max(maul_dep))[0][0]
                                 )
+                                maul_base_value = maul_start[index]
+                                height_index = np.abs(
+                                    lon.coord("level_height").points - maul_base_value
+                                ).argmin()
                                 # As with number the code checks for whether
                                 # there are multiple realization and/or time
                                 # points for correct indexing of the output data
@@ -312,7 +316,7 @@ def MAUL_properties(
                                         windspeed[
                                             mem_number,
                                             time_point,
-                                            0:index,
+                                            0:height_index,
                                             lat_point,
                                             lon_point,
                                         ].data
@@ -326,7 +330,10 @@ def MAUL_properties(
                                         mem_number, lat_point, lon_point
                                     ] = np.mean(
                                         windspeed[
-                                            mem_number, 0:index, lat_point, lon_point
+                                            mem_number,
+                                            0:height_index,
+                                            lat_point,
+                                            lon_point,
                                         ].data
                                     )
                                 elif (
@@ -338,24 +345,27 @@ def MAUL_properties(
                                         time_point, lat_point, lon_point
                                     ] = np.mean(
                                         windspeed[
-                                            time_point, 0:index, lat_point, lon_point
+                                            time_point,
+                                            0:height_index,
+                                            lat_point,
+                                            lon_point,
                                         ].data
                                     )
                                 else:
                                     wind_below_maul.data[lat_point, lon_point] = (
                                         np.mean(
                                             windspeed[
-                                                0:index, lat_point, lon_point
+                                                0:height_index, lat_point, lon_point
                                             ].data
                                         )
                                     )
-                            # Here a ValueError is raised if a MAUL is not found, or if
-                            # the MAUL starts at the surface and so there is no wind
-                            # below the MAUL however these are a valid answers,
+                            # Here a ValueError is raised if a MAUL is not found, or an
+                            # IndexError if the MAUL starts at the surface and so there
+                            # is no wind below the MAUL however these are a valid answers,
                             # and so output data is set to NaN.
                             # The dimensionality logic for output data is identical
                             # to that used previously.
-                            except ValueError:
+                            except (ValueError, IndexError):
                                 if (
                                     len(number_of_MAULs.coord("realization").points)
                                     != 1
