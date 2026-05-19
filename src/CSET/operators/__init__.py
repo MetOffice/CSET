@@ -106,8 +106,6 @@ def get_operator(name: str):
         name_sections = name.split(".")
         operator = CSET.operators
         for section in name_sections:
-            logging.debug(f"operator: {operator}")
-            logging.debug(f"section: {operator}")
             operator = getattr(operator, section)
 
         if callable(operator):
