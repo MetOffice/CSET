@@ -497,6 +497,7 @@ def saturation_precipitable_water(
     ):
         # Integrate the data in the vertical using np.trapz
         # (following trapezoid rule).
+        rh = convert_units(rh, "1")
         spw = np.trapz(
             (w / rh).data,
             x=w.coord("level_height").points[:],
