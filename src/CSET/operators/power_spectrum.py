@@ -170,8 +170,8 @@ def _power_spectrum(cube: iris.cube.Cube) -> iris.cube.Cube:
         # Convert from degrees to meters. x is lat, y is lon.
         R_earth = 6371000  # meters
         lat_mid = np.mean(x_coord.points)
-        dx = dy * np.pi / 180 * R_earth * np.cos(lat_mid * np.pi / 180)
-        dy = dx * np.pi / 180 * R_earth
+        dx = dx * np.pi / 180 * R_earth * np.cos(lat_mid * np.pi / 180)
+        dy = dy * np.pi / 180 * R_earth
     domain_size_km = ((dx * cube_3d.shape[2]) + (dy * cube_3d.shape[1])) / 2 / 1000
 
     # Convert wavenumber into physically meaningful wavenumber coordinate in
