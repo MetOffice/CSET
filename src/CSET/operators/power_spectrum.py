@@ -50,111 +50,47 @@ def calculate_power_spectrum(cubes: iris.cube.Cube | iris.cube.CubeList):
     Cube | CubeList:
         CubeList of power spectra.
     """
-    # ------------------------------------------------------------
-    # Cube list
-    # ------------------------------------------------------------
-
-    if isinstance(cubes, iris.cube.CubeList):
-        out = iris.cube.CubeList()
-        for cube in cubes:
-            model = cube.attributes.get("model_name")
-
-            # Ensembles:
-            # Check whether data has more than 1 realization coord
-            real_coord = cube.coords("realization")
-            is_ensemble = real_coord and len(real_coord[0].points) > 1
-
-            if is_ensemble:
-                # Ensemble: Loop over each realization
-                for subcube in cube.slices_over("realization"):
-                    realiz = int(subcube.coord("realization").points[0])
-                    # calculate power spectrum of subcube
-                    ps = _power_spectrum(subcube)
-
-                    # Attach model name if available
-                    if model:
-                        ps.attributes["model_name"] = model
-
-                    # ADD the correct realization from the parent cube
-                    ps.add_aux_coord(
-                        iris.coords.AuxCoord(realiz, long_name="realization", units="1")
-                    )
-
-                    # PROMOTE realization coordinate to dimension
-                    ps = new_axis(ps, "realization")
-
-                    out.append(ps)
-
-            else:
-                # Not ensemble (or only 1 ensemble member)
-                ps = _power_spectrum(cube)
-                if model:
-                    ps.attributes["model_name"] = model
-
-                # ADD the correct realization from the parent cube
-                # Promotion to dimension not required.
-                ps.add_aux_coord(
-                    iris.coords.AuxCoord(0, long_name="realization", units="1")
-                )
-                out.append(ps)
-
-        if is_ensemble:
-            # Merge the individual realization cubes into a single cube
-            # for ensemble data
-            merged = out.concatenate_cube()
-            return merged
-        else:
-            return out
-
-    # ------------------------------------------------------------
-    # Single cube with realization coord
-    cube = cubes
     out = iris.cube.CubeList()
-    model = cube.attributes.get("model_name")
+    for cube in iter_maybe(cubes):
+        model = cube.attributes.get("model_name")
 
-    # Ensembles:
-    # Check whether data has more than 1 realization coord
-    real_coord = cube.coords("realization")
-    is_ensemble = real_coord and len(real_coord[0].points) > 1
+        # Check whether data has a realization coord.
+        if cube.coords("realization"):
+            members_and_realizations = [
+                (member, int(member.coord("realization").points[0]))
+                for member in cube.slices_over("realization")
+            ]
+        else:
+            members_and_realizations = [(cube, None)]
 
-    if is_ensemble:
-        # Ensemble: Loop over each realization
-        for subcube in cube.slices_over("realization"):
-            realiz = int(subcube.coord("realization").points[0])
-            ps = _power_spectrum(subcube)
-
-            # Attach model name if available
+        # Loop over each realization.
+        member_power_spectra = iris.cube.CubeList()
+        for member, realiz in members_and_realizations:
+            # Calculate power spectrum.
+            ps = _power_spectrum(member)
+            # Attach model name if available.
             if model:
                 ps.attributes["model_name"] = model
+            # Add the correct realization from the parent cube.
+            if realiz is not None:
+                ps.add_aux_coord(
+                    iris.coords.AuxCoord(realiz, long_name="realization", units="1")
+                )
+                # Promote to dimension coordinate.
+                ps = iris.util.new_axis(ps, "realization")
+            member_power_spectra.append(ps)
 
-            # ADD the correct realization from the parent cube
-            ps.add_aux_coord(
-                iris.coords.AuxCoord(realiz, long_name="realization", units="1")
-            )
+        # Merge the individual realization cubes into a single cube, then
+        # squeeze off length 1 realization coordinates.
+        combined_cube = member_power_spectra.concatenate_cube()
+        combined_cube = iris.util.squeeze(combined_cube)
+        out.append(combined_cube)
 
-            # PROMOTE to dimension
-            ps = new_axis(ps, "realization")
-
-            out.append(ps)
-
-        # Merge the individual realization cubes into a single cube
-        # for ensemble data
-        merged = out.concatenate_cube()
-
-        return merged
-
-    # ------------------------------------------------------------
-    # Single cube, no realizations
-    # ------------------------------------------------------------
-    ps = _power_spectrum(cube)
-    if model:
-        ps.attributes["model_name"] = model
-
-        # ADD the correct realization from the parent cube
-        # Promotion to dimension not required
-        ps.add_aux_coord(iris.coords.AuxCoord(0, long_name="realization", units="1"))
-
-    return iris.cube.CubeList([ps])
+    # Directly return cube if we only have one.
+    if len(out) == 1:
+        return out[0]
+    else:
+        return out
 
 
 def _power_spectrum(cube: iris.cube.Cube) -> iris.cube.Cube:
