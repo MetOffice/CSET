@@ -157,9 +157,7 @@ def calculate_power_spectrum(cubes: iris.cube.Cube | iris.cube.CubeList):
     return iris.cube.CubeList([ps])
 
 
-def _power_spectrum(
-    cube: iris.cube.Cube | iris.cube.CubeList,
-) -> iris.cube.Cube | iris.cube.CubeList:
+def _power_spectrum(cube: iris.cube.Cube) -> iris.cube.Cube:
     """Calculate power spectrum for a single cube for 1 vertical level at 1 time.
 
     Parameters
