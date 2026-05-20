@@ -181,9 +181,7 @@ def test_power_spectrum_cubelist_nonensemble():
     ps = power_spectrum.calculate_power_spectrum(cubes)
     assert isinstance(ps, CubeList)
     assert len(ps) == 2
-    assert len(ps[0].coords("realization")) == 1
-    assert ps[0].coord_dims("realization") == ()
-    assert ps[0].coord("realization").shape == (1,)
+    assert not ps[0].coords("realization")
 
 
 def test_power_spectrum_model_attribute_preserved():
