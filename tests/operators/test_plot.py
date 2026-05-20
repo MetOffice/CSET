@@ -1009,7 +1009,7 @@ def test_plot_and_save_postage_stamps_in_single_plot_power_spectrum_series_singl
     assert Path("test.png").is_file()
 
 
-def test_plot_and_save_postage_stamps_in_single_plot_power_spectrum_series_multi_member():
+def test_plot_and_save_postage_stamps_in_single_plot_power_spectrum_series_multi_member(tmp_working_dir):
     """Test plotting a multiline power_spectrum for multiple ensemble members."""
     # Create two-realization 1D PSD cube
     freq = iris.coords.DimCoord(np.arange(420), long_name="physical_wavenumber")
