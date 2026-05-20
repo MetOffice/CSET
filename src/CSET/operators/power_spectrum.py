@@ -22,7 +22,8 @@ import iris.cube
 import iris.exceptions
 import numpy as np
 import scipy.fft as fft
-from iris.util import new_axis
+
+from CSET._common import iter_maybe
 
 
 def calculate_power_spectrum(cubes: iris.cube.Cube | iris.cube.CubeList):
