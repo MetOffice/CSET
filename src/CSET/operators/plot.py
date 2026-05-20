@@ -1115,7 +1115,7 @@ def _plot_and_save_line_power_spectrum_series(
     ensemble_coord: str,
     filename: str,
     title: str,
-    series_coordinate: str = None,
+    series_coordinate: str | None = None,
     **kwargs,
 ):
     """Plot and save a 1D line series.
