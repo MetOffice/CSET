@@ -198,70 +198,43 @@ def _power_spectrum(cube: iris.cube.Cube) -> iris.cube.Cube:
     # Calculate spectrum
     ps_array = _DCT_ps(cube_3d)
 
-    # Make wavenumber comparable between models with different domain sizes and resolutions.
-    # Try to find appropriate spatial coordinates
-    try:
-        # Try projection coordinates first (most common for limited area models)
-        x_coord = cube.coord("projection_x_coordinate")
-        y_coord = cube.coord("projection_y_coordinate")
-
-        # Grid spacing already in meters for projection coordinates
-        dx = np.abs(np.diff(x_coord.points).mean())
-        dy = np.abs(np.diff(y_coord.points).mean())
-
-        logging.debug("Using projection coordinates for grid spacing calculation.")
-
-    except iris.exceptions.CoordinateNotFoundError:
+    # Make wavenumber comparable between models with different domain sizes and
+    # resolutions. Try to find appropriate spatial coordinates.
+    coord_pairs = (
+        ("projection_x_coordinate", "projection_y_coordinate"),
+        ("grid_latitude", "grid_longitude"),
+        ("latitude", "longitude"),
+    )
+    for x_coord_name, y_coord_name in coord_pairs:
         try:
-            # Try rotated pole coordinates
-            lat_coord = cube.coord("grid_latitude")
-            lon_coord = cube.coord("grid_longitude")
-
-            R_earth = 6371000  # meters
-            lat_mid = np.mean(lat_coord.points)
-
-            dx = (
-                np.abs(np.diff(lon_coord.points).mean())
-                * np.pi
-                / 180
-                * R_earth
-                * np.cos(lat_mid * np.pi / 180)
-            )
-            dy = np.abs(np.diff(lat_coord.points).mean()) * np.pi / 180 * R_earth
-
-            logging.debug(
-                "Using rotated pole coordinates for grid spacing calculation."
-            )
-
+            # Try projection coordinates first (most common for limited area models)
+            x_coord = cube.coord(x_coord_name)
+            y_coord = cube.coord(y_coord_name)
         except iris.exceptions.CoordinateNotFoundError:
-            try:
-                # Fall back to regular lat/lon coordinates
-                lat_coord = cube.coord("latitude")
-                lon_coord = cube.coord("longitude")
+            continue
+        logging.debug(
+            "Using %s and %s coordinates for grid spacing calculation.",
+            x_coord_name,
+            y_coord_name,
+        )
+        break  # Break out of loop if we found usable coords.
+    else:
+        # Raise error if no usable coords found.
+        raise ValueError(
+            "Could not find appropriate spatial coordinates. "
+            "Expected one of: 'projection_x_coordinate'/'projection_y_coordinate', "
+            "'grid_latitude'/'grid_longitude', or 'latitude'/'longitude'."
+        )
 
-                R_earth = 6371000  # meters
-                lat_mid = np.mean(lat_coord.points)
-
-                dx = (
-                    np.abs(np.diff(lon_coord.points).mean())
-                    * np.pi
-                    / 180
-                    * R_earth
-                    * np.cos(lat_mid * np.pi / 180)
-                )
-                dy = np.abs(np.diff(lat_coord.points).mean()) * np.pi / 180 * R_earth
-
-                logging.debug(
-                    "Using latitude/longitude coordinates for grid spacing calculation."
-                )
-
-            except iris.exceptions.CoordinateNotFoundError:
-                raise ValueError(
-                    "Could not find appropriate spatial coordinates. "
-                    "Expected one of: 'projection_x_coordinate'/'projection_y_coordinate', "
-                    "'grid_latitude'/'grid_longitude', or 'latitude'/'longitude'."
-                ) from None  # intentionally replacing CoordinateNotFoundError with a more informative ValueError
-
+    # Calculate grid spacing.
+    dx = np.abs(np.diff(x_coord.points).mean())
+    dy = np.abs(np.diff(y_coord.points).mean())
+    if "latitude" in x_coord.name():
+        # Convert from degrees to meters. x is lat, y is lon.
+        R_earth = 6371000  # meters
+        lat_mid = np.mean(x_coord.points)
+        dx = dy * np.pi / 180 * R_earth * np.cos(lat_mid * np.pi / 180)
+        dy = dx * np.pi / 180 * R_earth
     domain_size_km = ((dx * cube_3d.shape[2]) + (dy * cube_3d.shape[1])) / 2 / 1000
 
     # Convert wavenumber into physically meaningful wavenumber coordinate in
