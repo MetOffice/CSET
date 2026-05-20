@@ -24,7 +24,7 @@ import scipy.fft as fft
 from iris.util import new_axis
 
 
-def calculate_power_spectrum(cubes):
+def calculate_power_spectrum(cubes: iris.cube.Cube | iris.cube.CubeList):
     """Wrap power spectrum code.
 
     This function is a wrapper that handles power spectrum
