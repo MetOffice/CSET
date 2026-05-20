@@ -225,9 +225,6 @@ def test_power_spectrum_cube_projection_coords(cubes, tmp_working_dir, caplog):
         units="degrees",
     )
 
-    # cube.replace_coord(new_xcoord)
-    # cube.replace_coord(new_ycoord)
-
     cube.add_dim_coord(new_xcoord, x_dims)
     cube.add_dim_coord(new_ycoord, y_dims)
 
