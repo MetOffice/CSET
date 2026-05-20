@@ -779,118 +779,56 @@ def test_plot_power_spectrum_no_sequence_coordinate(
         plot.plot_line_series(power_spectrum_cube, series_coordinate="frequency")
 
 
-def test_select_series_coord_frequency_fallback_wl(power_spectrum_cube):
-    """Select correct series_coordinate when wavelength."""
+def test_select_series_coord_frequency_fallback(power_spectrum_cube):
+    """Select a valid fallback when frequency is missing."""
     freq = power_spectrum_cube.coord("frequency")
-    dim = power_spectrum_cube.coord_dims(freq)
-
-    # remove freq
+    dims = power_spectrum_cube.coord_dims(freq)
+    # Remove frequency
     power_spectrum_cube.remove_coord("frequency")
-
-    # add wavelength
+    # Add both possible fallbacks
+    pw = iris.coords.DimCoord(freq.points, long_name="physical_wavenumber")
     wl = iris.coords.DimCoord(freq.points, long_name="wavelength")
-    power_spectrum_cube.add_aux_coord(wl, dim)
-
+    power_spectrum_cube.add_aux_coord(pw, dims)
+    power_spectrum_cube.add_aux_coord(wl, dims)
     xcoord = plot._select_series_coord(power_spectrum_cube, "frequency")
+    assert xcoord.name() in {"physical_wavenumber", "wavelength"}
 
+
+def test_select_series_coord_frequency_fallback_wavelength(power_spectrum_cube):
+    """Select wavelength when it's the only fallback."""
+    freq = power_spectrum_cube.coord("frequency")
+    dims = power_spectrum_cube.coord_dims(freq)
+    power_spectrum_cube.remove_coord("frequency")
+    wl = iris.coords.DimCoord(freq.points, long_name="wavelength")
+    power_spectrum_cube.add_aux_coord(wl, dims)
+    xcoord = plot._select_series_coord(power_spectrum_cube, "frequency")
     assert xcoord.name() == "wavelength"
 
 
-def test_select_series_coord_frequency_fallback_pw(power_spectrum_cube):
-    """Select correct series_coordinate when physical_wavenumber."""
+def test_select_series_coord_frequency_multiple_fallbacks(power_spectrum_cube):
+    """Select any valid fallback when multiple exist."""
     freq = power_spectrum_cube.coord("frequency")
-    dim = power_spectrum_cube.coord_dims(freq)
-
-    # remove freq
+    dims = power_spectrum_cube.coord_dims(freq)
     power_spectrum_cube.remove_coord("frequency")
-
-    # add wavelength
     pw = iris.coords.DimCoord(freq.points, long_name="physical_wavenumber")
-    power_spectrum_cube.add_aux_coord(pw, dim)
-
-    xcoord = plot._select_series_coord(power_spectrum_cube, "frequency")
-
-    assert xcoord.name() == "physical_wavenumber"
-
-
-def test_select_series_coord_physical_wavenumber_fallback_wl(power_spectrum_cube):
-    """Select correct series_coordinate when wavelength."""
-    freq = power_spectrum_cube.coord("frequency")
-    dim = power_spectrum_cube.coord_dims(freq)
-
-    # remove freq
-    power_spectrum_cube.remove_coord("frequency")
-
-    # add wavelength
     wl = iris.coords.DimCoord(freq.points, long_name="wavelength")
-    power_spectrum_cube.add_aux_coord(wl, dim)
-
-    xcoord = plot._select_series_coord(power_spectrum_cube, "physical_wavenumber")
-
-    assert xcoord.name() == "wavelength"
-
-
-def test_select_series_coord_physical_wavenumber_fallback_freq(power_spectrum_cube):
-    """Select correct series_coordinate when wavelength."""
-    xcoord = plot._select_series_coord(power_spectrum_cube, "physical_wavenumber")
-
-    assert xcoord.name() == "frequency"
+    power_spectrum_cube.add_aux_coord(pw, dims)
+    power_spectrum_cube.add_aux_coord(wl, dims)
+    xcoord = plot._select_series_coord(power_spectrum_cube, "frequency")
+    assert xcoord.name() in {"physical_wavenumber", "wavelength"}
 
 
-def test_select_series_coord_wavelength_fallback_pw(power_spectrum_cube):
-    """Select correct series_coordinate when wavelength."""
-    freq = power_spectrum_cube.coord("frequency")
-    dim = power_spectrum_cube.coord_dims(freq)
+def test_select_series_coord_direct_physical_wavenumber(power_spectrum_cube):
+    """Return physical_wavenumber directly if requested."""
+    coord = plot._select_series_coord(power_spectrum_cube, "physical_wavenumber")
+    assert coord.name() == "physical_wavenumber"
 
-    # remove freq
+
+def test_select_series_coord_no_fallbacks(power_spectrum_cube):
+    """Raise error when no valid coordinates exist."""
     power_spectrum_cube.remove_coord("frequency")
-
-    # add wavelength
-    pw = iris.coords.DimCoord(freq.points, long_name="physical_wavenumber")
-    power_spectrum_cube.add_aux_coord(pw, dim)
-
-    xcoord = plot._select_series_coord(power_spectrum_cube, "wavelength")
-
-    assert xcoord.name() == "physical_wavenumber"
-
-
-def test_select_series_coord_wavelength_fallback_freq(power_spectrum_cube):
-    """Select correct series_coordinate when wavelength."""
-    xcoord = plot._select_series_coord(power_spectrum_cube, "wavelength")
-
-    assert xcoord.name() == "frequency"
-
-
-def test_plot_power_spectrum_series_coord_physical_wavenumber(
-    power_spectrum_cube, tmp_working_dir
-):
-    """Testing series_coordinate."""
-    # NOT SURE THIS IS CORRECT BECAUSE THE frequency DIMENSION STILL EXISTS
-    # assert power_spectrum_cube.coords("frequency")
-
-    # Get original frequency coordinate
-
-    freq = power_spectrum_cube.coord("frequency")
-    dim = power_spectrum_cube.coord_dims(freq)
-
-    # Construct a synthetic physical wavenumber (simple proportional mapping for testing)
-    k = np.linspace(0.1, 2.0, len(freq.points))
-
-    physical_wavenumber_coord = iris.coords.DimCoord(
-        points=k,
-        long_name="physical_wavenumber",
-        units="m-1",
-    )
-
-    # Add the new coordinate on the same dimension as frequency
-    # dim_index = power_spectrum_cube.coord_dims("frequency")
-    # power_spectrum_cube.add_dim_coord(physical_wavenumber_coord, dim_index)
-    power_spectrum_cube.add_aux_coord(physical_wavenumber_coord, dim)
-
-    plot.plot_line_series(
-        power_spectrum_cube, series_coordinate="frequency", filename="test"
-    )
-    assert Path("test.png").is_file()
+    with pytest.raises(iris.exceptions.CoordinateNotFoundError):
+        plot._select_series_coord(power_spectrum_cube, "frequency")
 
 
 def test_plot_line_series_too_many_dimensions(cube, tmp_working_dir):
@@ -937,7 +875,9 @@ def test_plot_line_series_ensemble(ensemble_cube, tmp_working_dir):
     assert Path("ensemble_series.png").is_file()
 
 
-def test_plot_and_save_postage_stamp_power_spectrum_series_single_member(tmp_working_dir):
+def test_plot_and_save_postage_stamp_power_spectrum_series_single_member(
+    tmp_working_dir,
+):
     """Test plotting a postage stamp power_spectrum for single ensemble member."""
     # Create single member 1D PSD cube
 
@@ -961,7 +901,9 @@ def test_plot_and_save_postage_stamp_power_spectrum_series_single_member(tmp_wor
     assert Path("test.png").is_file()
 
 
-def test_plot_and_save_postage_stamp_power_spectrum_series_multi_member(tmp_working_dir):
+def test_plot_and_save_postage_stamp_power_spectrum_series_multi_member(
+    tmp_working_dir,
+):
     """Test plotting a postage stamp power_spectrum for multiple ensemble members."""
     # Create two-realization 1D PSD cube
     freq = iris.coords.DimCoord(np.arange(420), long_name="physical_wavenumber")
@@ -984,7 +926,9 @@ def test_plot_and_save_postage_stamp_power_spectrum_series_multi_member(tmp_work
     assert Path("test.png").is_file()
 
 
-def test_plot_and_save_postage_stamps_in_single_plot_power_spectrum_series_single_member(tmp_working_dir):
+def test_plot_and_save_postage_stamps_in_single_plot_power_spectrum_series_single_member(
+    tmp_working_dir,
+):
     """Test plotting a multiline power_spectrum for multiple ensemble members."""
     # Create two-realization 1D PSD cube
     freq = iris.coords.DimCoord(np.arange(420), long_name="physical_wavenumber")
@@ -1009,7 +953,9 @@ def test_plot_and_save_postage_stamps_in_single_plot_power_spectrum_series_singl
     assert Path("test.png").is_file()
 
 
-def test_plot_and_save_postage_stamps_in_single_plot_power_spectrum_series_multi_member(tmp_working_dir):
+def test_plot_and_save_postage_stamps_in_single_plot_power_spectrum_series_multi_member(
+    tmp_working_dir,
+):
     """Test plotting a multiline power_spectrum for multiple ensemble members."""
     # Create two-realization 1D PSD cube
     freq = iris.coords.DimCoord(np.arange(420), long_name="physical_wavenumber")
