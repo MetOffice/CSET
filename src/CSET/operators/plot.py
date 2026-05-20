@@ -601,38 +601,26 @@ def _set_title_and_filename(
 
 def _select_series_coord(cube, series_coordinate):
     """Determine the grid coordinates to use to calculate grid spacing."""
-    try:
-        # Try the requested coordinate first
-        return cube.coord(series_coordinate)
+    spacing_coordinates = ("frequency", "physical_wavenumber", "wavelength")
+    if series_coordinate in spacing_coordinates:
+        # Try the requested coordinate first then the fallbacks in order.
+        # Using a set here avoids duplicate entries.
+        fallbacks = {series_coordinate, *spacing_coordinates}
+    else:
+        fallbacks = {series_coordinate}
 
-    except iris.exceptions.CoordinateNotFoundError:
-        # Fallback logic
-        if series_coordinate == "frequency":
-            fallbacks = ("physical_wavenumber", "wavelength")
+    # Try each possible coordinate.
+    for coord in fallbacks:
+        try:
+            return cube.coord(coord)
+        except iris.exceptions.CoordinateNotFoundError:
+            logging.debug("Coordinate %s not found.", coord.name())
 
-        elif series_coordinate == "physical_wavenumber":
-            fallbacks = ("frequency", "wavelength")
-
-        elif series_coordinate == "wavelength":
-            fallbacks = ("frequency", "physical_wavenumber")
-
-        else:
-            # Unknown coordinate type -> re-raise the original exception
-            raise
-
-        # Try the fallbacks in order
-        for fb in fallbacks:
-            try:
-                return cube.coord(fb)
-            except iris.exceptions.CoordinateNotFoundError:
-                continue
-
-        # If we get here, none of the fallback options were found
-
-        raise iris.exceptions.CoordinateNotFoundError(
-            f"No valid coordinate found for '{series_coordinate}' "
-            f"or fallback options {fallbacks}"
-        ) from None
+    # If we get here, none of the fallback options were found.
+    raise iris.exceptions.CoordinateNotFoundError(
+        f"No valid coordinate found for '{series_coordinate}' "
+        f"or fallback options {fallbacks}"
+    )
 
 
 def _set_postage_stamp_title(stamp_coord: iris.coords.Coord) -> str:
