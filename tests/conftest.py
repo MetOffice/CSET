@@ -660,3 +660,207 @@ def precalc_maul_depth_5d_read_only():
 def precalc_maul_depth_5d(precalc_maul_depth_5d_read_only):
     """Get precalculated depth for 5D data. It is safe to modify."""
     return precalc_maul_depth_5d_read_only.copy()
+
+
+@pytest.fixture()
+def mr_3d_read_only():
+    """Get mixing ratio 3D data. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/humidity/mr_basic.nc")
+
+
+@pytest.fixture()
+def mr_3d(mr_3d_read_only):
+    """Get mixing ratio 3D data. It is safe to modify."""
+    return mr_3d_read_only.copy()
+
+
+@pytest.fixture()
+def mr_time_read_only():
+    """Get mixing ratio 4D data varying in time. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/humidity/mr_time.nc")
+
+
+@pytest.fixture()
+def mr_time(mr_time_read_only):
+    """Get mixing ratio 4D data varying in time. It is safe to modify."""
+    return mr_time_read_only.copy()
+
+
+@pytest.fixture()
+def mr_member_read_only():
+    """Get mixing ratio 4D data varying in member. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/humidity/mr_member.nc")
+
+
+@pytest.fixture()
+def mr_member(mr_member_read_only):
+    """Get mixing ratio 4D data varying in member. It is safe to modify."""
+    return mr_member_read_only.copy()
+
+
+@pytest.fixture()
+def mr_5d_read_only():
+    """Get mixing ratio 5D data. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/humidity/mr_all.nc")
+
+
+@pytest.fixture()
+def mr_5d(mr_5d_read_only):
+    """Get mixing ratio 5D data. It is safe to modify."""
+    return mr_5d_read_only.copy()
+
+
+@pytest.fixture()
+def rh_3d_read_only():
+    """Get relative humidity 3D data. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/humidity/rh_basic.nc")
+
+
+@pytest.fixture()
+def rh_3d(rh_3d_read_only):
+    """Get relative humidity 3D data. It is safe to modify."""
+    return rh_3d_read_only.copy()
+
+
+@pytest.fixture()
+def rh_time_read_only():
+    """Get relative humidity 4D data varying in time. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/humidity/rh_time.nc")
+
+
+@pytest.fixture()
+def rh_time(rh_time_read_only):
+    """Get relative humidity 4D data varying in time. It is safe to modify."""
+    return rh_time_read_only.copy()
+
+
+@pytest.fixture()
+def rh_member_read_only():
+    """Get relative humidity 4D data varying in member. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/humidity/rh_member.nc")
+
+
+@pytest.fixture()
+def rh_member(rh_member_read_only):
+    """Get relative humidity 4D data varying in member. It is safe to modify."""
+    return rh_member_read_only.copy()
+
+
+@pytest.fixture()
+def rh_5d_read_only():
+    """Get relative humidity 5D data. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/humidity/rh_all.nc")
+
+
+@pytest.fixture()
+def rh_5d(rh_5d_read_only):
+    """Get relative humidity 5D data. It is safe to modify."""
+    return rh_5d_read_only.copy()
+
+
+@pytest.fixture()
+def pw_3d_read_only():
+    """Get precipitable water 3D data. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/humidity/pw_basic.nc")
+
+
+@pytest.fixture()
+def pw_3d(pw_3d_read_only):
+    """Get precipitable water 3D data. It is safe to modify."""
+    return pw_3d_read_only.copy()
+
+
+@pytest.fixture()
+def pw_time_read_only():
+    """Get precipitable water 4D data varying in time. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/humidity/pw_time.nc")
+
+
+@pytest.fixture()
+def pw_time(pw_time_read_only):
+    """Get precipitable water 4D data varying in time. It is safe to modify."""
+    return pw_time_read_only.copy()
+
+
+@pytest.fixture()
+def pw_member_read_only():
+    """Get precipitable water 4D data varying in member. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/humidity/pw_member.nc")
+
+
+@pytest.fixture()
+def pw_member(pw_member_read_only):
+    """Get precipitable water 4D data varying in member. It is safe to modify."""
+    return pw_member_read_only.copy()
+
+
+@pytest.fixture()
+def pw_5d_read_only():
+    """Get precipitable water 5D data. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/humidity/pw_all.nc")
+
+
+@pytest.fixture()
+def pw_5d(pw_5d_read_only):
+    """Get precipitable water 5D data. It is safe to modify."""
+    return pw_5d_read_only.copy()
+
+
+@pytest.fixture()
+def spw_3d_read_only():
+    """Get saturation precipitable water 3D data. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/humidity/spw_basic.nc")
+
+
+@pytest.fixture()
+def spw_3d(spw_3d_read_only):
+    """Get saturation precipitable water 3D data. It is safe to modify."""
+    return spw_3d_read_only.copy()
+
+
+@pytest.fixture()
+def spw_time_read_only():
+    """Get saturation precipitable water 4D data varying in time. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/humidity/spw_time.nc")
+
+
+@pytest.fixture()
+def spw_time(spw_time_read_only):
+    """Get saturation precipitable water 4D data varying in time. It is safe to modify."""
+    return spw_time_read_only.copy()
+
+
+@pytest.fixture()
+def spw_member_read_only():
+    """Get saturation precipitable water 4D data varying in member. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/humidity/spw_member.nc")
+
+
+@pytest.fixture()
+def spw_member(spw_member_read_only):
+    """Get saturation precipitable water 4D data varying in member. It is safe to modify."""
+    return spw_member_read_only.copy()
+
+
+@pytest.fixture()
+def spw_5d_read_only():
+    """Get saturation precipitable water 5D data. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/humidity/spw_all.nc")
+
+
+@pytest.fixture()
+def spw_5d(spw_5d_read_only):
+    """Get saturation precipitable water 5D data. It is safe to modify."""
+    return spw_5d_read_only.copy()
+
+
+@pytest.fixture()
+def sf_3d_read_only():
+    """Get saturation fraction 3D data. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/humidity/sf_basic.nc")
+
+
+@pytest.fixture()
+def sf_3d(sf_3d_read_only):
+    """Get saturation fraction 3D data. It is safe to modify."""
+    return sf_3d_read_only.copy()
