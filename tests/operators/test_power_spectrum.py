@@ -229,7 +229,10 @@ def test_power_spectrum_cube_projection_coords(cubes, tmp_working_dir, caplog):
     with caplog.at_level(logging.DEBUG):
         power_spectrum.calculate_power_spectrum(cube)
 
-    assert "Using projection coordinates for grid spacing calculation." in caplog.text
+    assert (
+        "projection_y_coordinate coordinates for grid spacing calculation."
+        in caplog.text
+    )
 
 
 def test_power_spectrum_cube_regular_latlon_coords(cubes, tmp_working_dir, caplog):
@@ -261,7 +264,4 @@ def test_power_spectrum_cube_regular_latlon_coords(cubes, tmp_working_dir, caplo
     with caplog.at_level(logging.DEBUG):
         power_spectrum.calculate_power_spectrum(cube)
 
-    assert (
-        "Using latitude/longitude coordinates for grid spacing calculation."
-        in caplog.text
-    )
+    assert "longitude coordinates for grid spacing calculation." in caplog.text

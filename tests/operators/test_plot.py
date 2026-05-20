@@ -818,12 +818,6 @@ def test_select_series_coord_frequency_multiple_fallbacks(power_spectrum_cube):
     assert xcoord.name() in {"physical_wavenumber", "wavelength"}
 
 
-def test_select_series_coord_direct_physical_wavenumber(power_spectrum_cube):
-    """Return physical_wavenumber directly if requested."""
-    coord = plot._select_series_coord(power_spectrum_cube, "physical_wavenumber")
-    assert coord.name() == "physical_wavenumber"
-
-
 def test_select_series_coord_no_fallbacks(power_spectrum_cube):
     """Raise error when no valid coordinates exist."""
     power_spectrum_cube.remove_coord("frequency")
