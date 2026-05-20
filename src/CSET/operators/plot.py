@@ -2550,7 +2550,6 @@ def plot_line_series(
     TypeError
         If the cube isn't a Cube or CubeList.
     """
-    stamp_coordinate = "realization"
     # Ensure we have a name for the plot file.
     recipe_title = get_recipe_metadata().get("title", "Untitled")
 
