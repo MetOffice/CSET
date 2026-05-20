@@ -1110,7 +1110,7 @@ def _plot_and_save_line_series(
 
 
 def _plot_and_save_line_power_spectrum_series(
-    cubes: iris.cube.CubeList,
+    cubes: iris.cube.Cube | iris.cube.CubeList,
     coords: list[iris.coords.Coord],
     ensemble_coord: str,
     filename: str,
