@@ -614,7 +614,7 @@ def _select_series_coord(cube, series_coordinate):
         try:
             return cube.coord(coord)
         except iris.exceptions.CoordinateNotFoundError:
-            logging.debug("Coordinate %s not found.", coord.name())
+            logging.debug("Coordinate %s not found.", coord)
 
     # If we get here, none of the fallback options were found.
     raise iris.exceptions.CoordinateNotFoundError(
