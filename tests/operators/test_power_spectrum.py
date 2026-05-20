@@ -262,9 +262,6 @@ def test_power_spectrum_cube_regular_latlon_coords(cubes, tmp_working_dir, caplo
         points=old_ycoord.points, standard_name="latitude", units="degrees"
     )
 
-    # cube.replace_coord(new_xcoord)
-    # cube.replace_coord(new_ycoord)
-
     cube.add_dim_coord(new_xcoord, x_dims)
     cube.add_dim_coord(new_ycoord, y_dims)
 
