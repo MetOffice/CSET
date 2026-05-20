@@ -231,8 +231,6 @@ def test_power_spectrum_cube_projection_coords(cubes, tmp_working_dir, caplog):
     cube.add_dim_coord(new_xcoord, x_dims)
     cube.add_dim_coord(new_ycoord, y_dims)
 
-    print("CUBE ", cube)
-
     with caplog.at_level(logging.DEBUG):
         power_spectrum.calculate_power_spectrum(cube)
 
