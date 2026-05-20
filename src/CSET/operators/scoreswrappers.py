@@ -123,6 +123,7 @@ def _sort_cubes_for_verification(cubes: iris.cube.CubeList):
     # Equalise attributes so we can merge.
     fully_equalise_attributes([base, other])
     logging.debug("Base: %s\nOther: %s", base, other)
+
     return base, other
 
 
@@ -178,5 +179,7 @@ def scores_rmse(
             preserve_dims=preserved_coordinates,
         )
     )
+    # need to use data rather cube, and then need to attach back to data, and then collapse in the recipe rather than in the
+    # function
     RMSE.rename(f"RMSE_of_{base.name()}")
     return RMSE
