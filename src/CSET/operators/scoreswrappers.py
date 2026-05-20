@@ -129,9 +129,12 @@ def _sort_cubes_for_verification(cubes: iris.cube.CubeList):
 def scores_rmse(
     cubes: iris.cube.CubeList, preserved_coordinates: list[str] | str | None = None
 ):
-    """Calculate the Root Mean Square Error (RMSE) using scores.
+    r"""Calculate the Root Mean Square Error (RMSE) using scores.
 
     Acts as a wrapper around the RMSE calculation from `scores` ([scoresa]_, [scoresb]_).
+    It is calculated as
+
+    .. math:: RMSE = \frac{1}{N} \Sigma(forecast - observations)^{2}
 
     Parameters
     ----------
