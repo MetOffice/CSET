@@ -470,10 +470,11 @@ def precipitable_water(
 
     It can be calculated as
 
-    .. math:: pw = \int w dz
+    .. math:: pw = frac{1}{\rho_w} \int w dz
 
-    for pw the precipitable water, w the mixing ratio, and z the height. It is
-    integrated from the surface to the top of the atmosphere.
+    for pw the precipitable water, ..math::\rho_{w} the density of water,
+    w the mixing ratio, and z the height. It is integrated from the surface
+    to the top of the atmosphere.
 
     Generally, the precipitable water is widely applicable across the globe.
     It is likely that larger precipitation totals are associated with greater
@@ -525,6 +526,7 @@ def precipitable_water(
         # Create the data array, rename, and correct units.
         pwat.data = pw
         pwat.rename("precipitable_water")
+        # Setting units to mm to account for normalization by density of water.
         pwat.units = "mm"
         precipitable_water.append(pwat)
     # Output the data.
@@ -561,11 +563,11 @@ def saturation_precipitable_water(
 
     It can be calculated as
 
-    .. math:: spw = \int \frac{w}{RH} dz
+    .. math:: spw = frac{1}{\rho_w} \int \frac{w}{RH} dz
 
-    for spw the saturated precipitable water, w the mixing ratio,
-    RH the relative humidity (as a decimal) and z the height. It is
-    integrated from the surface to the top of the atmosphere.
+    for spw the saturated precipitable water, ..math::\rho_{w} the density of water,
+    w the mixing ratio, RH the relative humidity (as a decimal) and z the height.
+    It is integrated from the surface to the top of the atmosphere.
 
     It is applicable throughout the globe and is, perhaps, best considered
     in relation to the precipitable water. A useful way to do this is
@@ -604,6 +606,7 @@ def saturation_precipitable_water(
         # Store the data for output, rename cube, and correct units.
         satpw.data = spw
         satpw.rename("saturation_precipitable_water")
+        # Setting units to mm to account for normalization by density of water.
         satpw.units = "mm"
         saturation_precipitable_water.append(satpw)
     # Output cube/cubelist.
