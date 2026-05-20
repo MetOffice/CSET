@@ -937,7 +937,7 @@ def test_plot_line_series_ensemble(ensemble_cube, tmp_working_dir):
     assert Path("ensemble_series.png").is_file()
 
 
-def test_plot_and_save_postage_stamp_power_spectrum_series_single_member():
+def test_plot_and_save_postage_stamp_power_spectrum_series_single_member(tmp_working_dir):
     """Test plotting a postage stamp power_spectrum for single ensemble member."""
     # Create single member 1D PSD cube
 
