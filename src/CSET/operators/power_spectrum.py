@@ -19,6 +19,7 @@ import logging
 import iris
 import iris.coords
 import iris.cube
+import iris.exceptions
 import numpy as np
 import scipy.fft as fft
 from iris.util import new_axis
