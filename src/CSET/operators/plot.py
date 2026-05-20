@@ -1194,7 +1194,6 @@ def _plot_and_save_line_power_spectrum_series(
     # Add some labels and tweak the style.
     # check if cubes[0] works for single cube if not CubeList
 
-    #        title = f"{title}\n [{coords.units.title(coords.points[0])}]"
     title = f"{title}"
     ax.set_title(title, fontsize=16)
 
