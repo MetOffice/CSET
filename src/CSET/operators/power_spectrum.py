@@ -39,8 +39,15 @@ def calculate_power_spectrum(cubes: iris.cube.Cube | iris.cube.CubeList):
     each cube and calculates an individual power spectrum. In case of a
     single cube (one model) it directly calculates the power spectrum.
 
-    Input: Cube OR CubeList
-    Output: CubeList of power spectra.
+    Parameters
+    ----------
+    cubes: Cube | CubeList
+        Field over which to calculate a power spectrum.
+
+    Returns
+    -------
+    Cube | CubeList:
+        CubeList of power spectra.
     """
     # ------------------------------------------------------------
     # Cube list
