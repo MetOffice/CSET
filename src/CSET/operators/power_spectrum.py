@@ -391,7 +391,9 @@ def _create_alpha_matrix(Ny, Nx):
         create the array of 2D wavenumbers. Each Ny, Nx pair is associated with a
         single-scale parameter.
 
-    Returns: alpha_matrix
+    Returns
+    -------
+    alpha_matrix:
         normalisation of 2D wavenumber axes, transforming the spectral domain into
         an elliptic coordinate system.
 
