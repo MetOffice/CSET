@@ -319,7 +319,9 @@ def _DCT_ps(y_3d):
         3 dimensional array to calculate spectrum for.
         (2D field data with 3rd dimension of time)
 
-    Returns: ps_array
+    Returns
+    -------
+    ps_array:
         Array of power spectra values calculated for input field (for each time)
 
     Method for regional domains:
