@@ -134,7 +134,7 @@ def scores_rmse(
     Acts as a wrapper around the RMSE calculation from `scores` ([scoresa]_, [scoresb]_).
     It is calculated as
 
-    .. math:: RMSE = \frac{1}{N} \Sigma(forecast - observations)^{2}
+    .. math:: RMSE = \sqrt{\frac{1}{N} \Sigma(forecast - observations)^2}
 
     Parameters
     ----------
