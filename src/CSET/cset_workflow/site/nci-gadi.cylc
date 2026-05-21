@@ -25,7 +25,7 @@
             PROJECT = {{ PROJECT }}
             PYTHONPATH = "{{VERPY_DIR}}"
 
-{% if METPLUS_GRID_STAT|default(False) or METPLUS_POINT_STAT|default(False) %}
+{% if RUN_METPLUS_GRID_STAT|default(False) or RUN_METPLUS_POINT_STAT|default(False) %}
     [[METPLUS]]
         platform = gadi_pbs
         execution time limit = PT1H

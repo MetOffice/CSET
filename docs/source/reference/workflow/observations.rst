@@ -55,7 +55,7 @@ A sample runtime for reading ODB2 format data is::
     [runtime]
         [[metplus_prep_fcst]]
             [[[environment]]]
-                ROSE_TASK_OPT_FLAGS = "odb2"
+                ROSE_APP_OPT_CONF_KEYS = "odb2"
                 CUSTOM_ODB2_PATTERN = "/path/%Y%m%dT%H%MZ/obs.odb2.gz"
                 {# Time separation between ODB2 files #}
                 {% set ODB2_OBS_FREQ = "PT3H" %}
