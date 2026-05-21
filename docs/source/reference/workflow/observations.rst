@@ -75,5 +75,5 @@ If sites have a consistent path for their ODB2 data they can set
 up preset patterns, see
 ``app/metplus_prep_fcst/bin/prepBureauNCI.py`` for an example.
 
-.. _duration_as: https://cylc.github.io/cylc-doc/latest/html/user-guide/writing-workflows/jinja2.html#cylc.flow.jinja.filters.duration_as.duration_as 
-.. _PrepBUFR names: https://www.emc.ncep.noaa.gov/mmb/data_processing/prepbufr.doc/table_1.htm 
+.. _duration_as: https://cylc.github.io/cylc-doc/latest/html/user-guide/writing-workflows/jinja2.html#cylc.flow.jinja.filters.duration_as.duration_as
+.. _PrepBUFR names: https://www.emc.ncep.noaa.gov/mmb/data_processing/prepbufr.doc/table_1.htm
