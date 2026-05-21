@@ -60,8 +60,8 @@ A sample runtime for reading ODB2 format data is::
                 {# Time separation between ODB2 files #}
                 {% set ODB2_OBS_FREQ = "PT3H" %}
                 {# Calculate the number of observations to read #}
-                {% set ODB2_OBS_R = ( 
-                        (ANALYSIS_LENGTH | duration_as('h')) / 
+                {% set ODB2_OBS_R = (
+                        (ANALYSIS_LENGTH | duration_as('h')) /
                         (ODB2_OBS_FREQ | duration_as('h'))
                     ) | int
                 %}
