@@ -604,8 +604,9 @@ def _select_series_coord(cube, series_coordinate):
     spacing_coordinates = ("frequency", "physical_wavenumber", "wavelength")
     if series_coordinate in spacing_coordinates:
         # Try the requested coordinate first then the fallbacks in order.
-        # Using a set here avoids duplicate entries.
-        fallbacks = {series_coordinate, *spacing_coordinates}
+        fallbacks = [series_coordinate] + [
+            c for c in spacing_coordinates if c != series_coordinate
+        ]
     else:
         fallbacks = {series_coordinate}
 
