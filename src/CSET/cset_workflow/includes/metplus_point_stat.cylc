@@ -7,7 +7,6 @@
         fetch_fcst_m1 => metplus_prep_fcst_m1
         metplus_prep_fcst_m1 => metplus_point_stat
         metplus_ascii2nc => metplus_point_stat => cycle_complete
-        metplus_point_stat => housekeeping
     {% endmacro %}
 
     {% if CSET_CYCLING_MODE == "case_study" %}
