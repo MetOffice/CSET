@@ -11,4 +11,5 @@ components.
     cli
     recipe-format
     operators
+    workflow/index
     internal
