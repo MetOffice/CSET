@@ -235,6 +235,7 @@ def _load_model(
     for cube in cubes:
         _loading_callback(cube, None, None)
 
+    # Extract required cubes based on constraints
     cubes = cubes.extract(constraint)
 
     # cubes = iris.load(input_files, constraint, callback=_loading_callback)
