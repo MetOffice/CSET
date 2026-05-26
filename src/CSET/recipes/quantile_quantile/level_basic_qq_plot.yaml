@@ -1,5 +1,5 @@
 category: Q-Q plots
-title: Multi-level Q-Q plot for $VARNAME between $BASE_MODEL and $OTHER_MODEL
+title: "Multi-level Q-Q plot for $VARNAME\n between $BASE_MODEL and $OTHER_MODEL $SUBAREA_NAME"
 description: Extracts $VARNAME, calculates the following quantiles $PERCENTILES collapsing the data across $COORD_LIST and $LEVELS including ensemble members and shared time points. The quantiles are then plotted as $BASE_MODEL (x-axis) against $OTHER_MODEL (y-axis).
 
 steps:
