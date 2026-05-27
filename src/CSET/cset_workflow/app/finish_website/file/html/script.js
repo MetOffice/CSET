@@ -425,7 +425,7 @@ function setup_description_toggle_button() {
   });
   // Ensure the description toggle persists across changing the frame content.
   for (const plot_frame of document.querySelectorAll("iframe")) {
-    plot_frame.addEventListener("DOMContentLoaded", () => {
+    plot_frame.addEventListener("load", () => {
       enforce_description_toggle();
     });
   }
@@ -445,6 +445,18 @@ function ensure_dual_frame() {
   const dual_frame = document.getElementById("dual-frame");
   single_frame.classList.add("hidden");
   dual_frame.classList.remove("hidden");
+}
+
+// Display a diagnostic.
+function display_diagnostic(src, pos) {
+  // Open new window for popup.
+  if (pos === "popup") {
+    window.open(src, "_blank", "popup,width=800,height=600");
+    return;
+  }
+  // Otherwise, set the appropriate frame layout and display the diagnostic.
+  pos === "full" ? ensure_single_frame() : ensure_dual_frame();
+  document.getElementById(`plot-frame-${pos}`).src = src;
 }
 
 // Create a list entry element for a single diagnostic.
@@ -487,14 +499,7 @@ function create_diagnostic_element(record) {
     // Add a callback updating the iframe when the link is clicked.
     button.addEventListener("click", (event) => {
       event.preventDefault();
-      // Open new window for popup.
-      if (position === "popup") {
-        window.open(`${PLOTS_PATH}/${path}`, "_blank", "popup,width=800,height=600");
-        return;
-      }
-      // Set the appropriate frame layout.
-      position === "full" ? ensure_single_frame() : ensure_dual_frame();
-      document.getElementById(`plot-frame-${position}`).src = `${PLOTS_PATH}/${path}`;
+      display_diagnostic(`${PLOTS_PATH}/${path}`, position);
     });
 
     // Add button to chooser.
