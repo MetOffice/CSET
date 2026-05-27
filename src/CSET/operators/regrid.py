@@ -496,8 +496,78 @@ def interpolate_to_point_cube(
             )
     return fld_point_cube
 
+<<<<<<< HEAD
 
 def _rebuild_ugrid_meta(data, origcube, lat, lon):
+=======
+UGRID_VAR_LOOKUP = {
+    "t": {
+        "standard_name": "air_temperature",
+        "long_name": "temperature_at_pressure_levels",
+        "units": "K",
+    },
+    "u": {
+        "standard_name": "eastward_wind",
+        "long_name": "zonal_wind_at_pressure_levels",
+        "units": "m s-1",
+    },
+    "v": {
+        "standard_name": "northward_wind",
+        "long_name": "meridional_wind_at_pressure_levels",
+        "units": "m s-1",
+    },
+    "w": {
+        "standard_name": "upward_air_velocity",
+        "long_name": "vertical_wind_at_pressure_levels",
+        "units": "m s-1",
+    },
+    "q": {
+        "standard_name": "specific_humidity",
+        "long_name": "vapour_specific_humidity_at_pressure_levels_for_climate_averaging",
+        "units": "kg kg-1",
+    },
+    "z": {
+        "standard_name": "geopotential_height",
+        "long_name": "geopotential_height_at_pressure_levels",
+        "units": "m",
+    },
+    "sp": {
+        "standard_name": "surface_air_pressure",
+        "long_name": "surface_air_pressure",
+        "units": "Pa",
+    },
+    "10u": {
+        "long_name": "eastward_wind_at_10m",
+        "units": "m s-1",
+    },
+    "10v": {
+        "long_name": "northward_wind_at_10m",
+        "units": "m s-1",
+    },
+    "lsm": {
+        "long_name": "land_binary_mask",
+    },
+    "2t": {
+        "long_name": "temperature_at_screen_level",
+        "units": "K",
+    },
+    "2d": {
+        "long_name": "dew_point_temperature_at_screen_level",
+        "units": "K",
+    },
+    "skt": {
+        "long_name": "grid_surface_temperature",
+        "units": "K",
+    },
+    "tp": {
+        "long_name": "surface_microphysical_rainfall_rate",
+        "units": "mm hr-1",
+    },
+}
+
+
+def _rebuild_ugrid_meta(data, origcube, lat, lon, var_lookup=UGRID_VAR_LOOKUP):
+>>>>>>> 845d6624f503bb658e5f7d9efa9480f8e98a93a0
     """
     Build a structured iris cube (time, lat, lon) from regridded data,
     preserving metadata and adding a pressure auxiliary coordinate
@@ -800,4 +870,45 @@ def restructure_ugrid(cubes):
                 logging.info("Waiting 60 seconds...")
                 time.sleep(60)
 
+
+def vertical_interpolation(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+    coordinate: str,
+    target: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Vertical interpolation of a cube to match that off a different cube.
+
+    Acts as a wrapper around the `cube.interpolate` functionality and uses
+    linear interpolation as the method.
+
+    Parameters
+    ----------
+    cubes: iris.cube.Cube | iris.cube.CubeList
+        An iris cube or cubelist of data defining field that should be
+        vertically interpolated.
+    coordinate: str
+        The coordinate the interpolation occurs over.
+    target: iris.cube.Cube | iris.cube.CubeList
+        The target cube or cubelist that provides the vertical coordinate
+        information. It will use `cube.coord(coordinate).points` to provide
+        the vertical target. The number of target cubes should match the number
+        of cubes used as input.
+
+    Returns
+    -------
+    interpolated_cubes: iris.cube.Cube | iris.cube.CubeList
+        Coordinates of the selected point on the rotated grid specified within
+        the selected cube.
+    """
+    interpolated_cubes = iris.cube.CubeList([])
+    for cube, cube_t in zip(iter_maybe(cubes), iter_maybe(target), strict=True):
+        target_levels = cube_t.coord(coordinate).points
+        new_cube = cube.interpolate(
+            [(coordinate, target_levels)], iris.analysis.Linear()
+        )
+        interpolated_cubes.append(new_cube)
+    if len(interpolated_cubes) == 1:
+        return interpolated_cubes[0]
+    else:
+        return interpolated_cubes
 

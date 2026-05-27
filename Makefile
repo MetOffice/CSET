@@ -10,15 +10,23 @@ help: ## Display this help message.
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
 	| sed -n 's/^\(.*:\) \(.*\)##\(.*\)/  \1\3/p'
 
-conda:
-	conda create -n cset-dev --file requirements/locks/latest
-	@echo "Run 'conda activate cset-dev' to use conda environment."
+# Check whether we are in the Met Office and modify lockfile if so.
+prepare-lockfiles:
+	@hostname -f | grep -qF metoffice \
+	  && echo "Running on Met Office system; updating lockfiles to use conda-forge mirror." \
+	  && sed -i "s|conda.anaconda.org|metoffice.jfrog.io/metoffice/api/conda|" requirements/locks/*.txt
+
+conda: prepare-lockfiles
+	conda create -n cset-dev --file requirements/locks/latest --yes
+	git restore requirements/locks  # Reset lockfiles in case we Met Office'd them.
 
 .git/hooks/pre-commit: conda
 	conda run -n cset-dev pre-commit install
 
+# Prevent pip from accessing the network; we have everything in our conda env.
 setup: conda .git/hooks/pre-commit ## Setup development environment.
-	conda run -n cset-dev pip install --no-deps -e .
+	conda run -n cset-dev pip install --no-deps --no-index --no-build-isolation --editable .
+	@echo "Run 'conda activate cset-dev' to use conda environment."
 
 docs: ## Build documentation.
 	make --directory=docs html
@@ -39,4 +47,4 @@ test-full: pre-commit ## Run all tests, including slow or network reliant.
 
 # Mark targets as 'phony' to indicate they don't actually produce a file with
 # the same name as their target. Basically for actions rather than files.
-.PHONY: help setup docs test test-fast test-full
+.PHONY: help setup docs test test-fast test-full prepare-lockfiles
