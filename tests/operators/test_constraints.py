@@ -285,25 +285,29 @@ def test_generate_var_constraint_multiple_names():
     """Test constraint works for multiple variable names."""
     # Create two cubes with different names
     cube1 = iris.cube.Cube(np.arange(5), long_name="temperature_long")
-    cube1.var_name = "temperature"
+    cube1.var_name = "var_temperature"
     cube2 = iris.cube.Cube(np.arange(5), standard_name="wind_speed")
     # Third cube that should NOT match
     cube3 = iris.cube.Cube(np.arange(5), long_name="surface_pressure")
     # Generate constraint with multiple names
-    constraint = constraints.generate_var_constraint(["temperature", "wind_speed"])
+    constraint = constraints.generate_var_constraint(["var_temperature", "wind_speed"])
     # Apply constraint
     cubes = iris.cube.CubeList([cube1, cube2, cube3])
     result = cubes.extract(constraint)
     # Check correct cubes are selected
-    names = [c.name() for c in result]
-    assert "air_temperature" in names
-    assert "wind_speed" in names
-    assert "surface_pressure" not in names
+    result_names = [c.name() for c in result]
 
+    assert cube1 in result
+    assert cube2 in result
+    assert cube3 not in result
+
+    assert "temperature_long" in result_names
+    assert "wind_speed" in result_names
+    assert "surface_pressure" not in result_names
     # Should only return 2 cubes
     assert len(result) == 2
 
-    
+
 def test_generate_remove_single_level_constraint():
     """Tests constraint to remove default model_level_number of zero."""
     remove_level_constraint = constraints.generate_remove_single_level_constraint(
@@ -320,4 +324,3 @@ def test_generate_remove_single_level_constraint_non_default():
     )
     expected_constraint = "Constraint(coord_values={'model_level_number': <function generate_remove_single_level_constraint.<locals>.<lambda> at"
     assert expected_constraint in repr(remove_level_constraint)
-    
