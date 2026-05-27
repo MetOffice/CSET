@@ -634,26 +634,24 @@ def convert_rainfall_amount_to_rate(cubes, **kwargs):
         # --- Only process accumulation/amount
         if not cube.units.is_convertible("kg m-2"):
             continue
-
-        # --- sanity checks ---
+            
         if not cube.coords("time"):
-            raise ValueError(
-                "Rainfall cube has no time coordinate; cannot derive interval length."
-            )
-
+            raise ValueError("No time coordinate; cannot convert rainfall.")
+        
         time = cube.coord("time")
-        if time.bounds is None:
-            raise ValueError(
-                "Rainfall cube has no time bounds; "
-                "cannot convert accumulated rainfall to a rate."
-            )
+        if time.bounds is not None:
+            bounds = time.bounds
+            duration = bounds[:, 1] - bounds[:, 0]
+        else:
+            t = time.points
+            dt = np.diff(t)
+            if len(dt) == 0:
+                raise ValueError("Cannot infer duration from single time point")
 
-        # --- derive interval duration in seconds ---
-        # bounds shape: (ntimes, 2)
-        bounds = time.bounds
-        duration_seconds = bounds[:, 1] - bounds[:, 0]
-        duration_seconds = time.units.convert(duration_seconds, "seconds")
+            dt = np.concatenate([dt, [dt[-1]]])
+            duration = dt
 
+        duration_seconds = time.units.convert(duration, "seconds") 
         if np.any(duration_seconds <= 0):
             raise ValueError("Non-positive rainfall accumulation interval detected.")
 
@@ -664,7 +662,7 @@ def convert_rainfall_amount_to_rate(cubes, **kwargs):
 
         # --- convert depth to rate
         # mm / s == kg m-2 s-1
-        cube.data = cube.core_data() / duration_seconds
+        cube.data = cube.data / duration_seconds
         cube.units = "kg m-2 s-1"
 
     return cubes if len(cubes) > 1 else cubes[0]
