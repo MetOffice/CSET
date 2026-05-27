@@ -619,7 +619,7 @@ def differentiate(
 
 def convert_rainfall_amount_to_rate(cubes, **kwargs):
     """
-    Convert Cardington rainfall from depth to rate.
+    Convert rainfall from depth to rate.
 
     To convert rainfall amount, or depth, in mm per time interval
     into a rainfall rate in mm s-1 (=kg m-2 s-1).
@@ -632,23 +632,26 @@ def convert_rainfall_amount_to_rate(cubes, **kwargs):
         cubes = iris.cube.CubeList(cubes)
 
     for cube in cubes:
-        model = cube.attributes.get("model_name", "") or ""
 
-        # Only act on Cardington data
-        if "Cardington" not in model:
+        # --- Skip if already a rate
+        if cube.units.is_convertible("kg m-2 s-1"):
+            continue
+
+        # --- Only process accumulation/amount
+        if not cube.units.is_convertible("kg m-2"):
             continue
 
         # --- sanity checks ---
         if not cube.coords("time"):
             raise ValueError(
-                "Cardington rainfall cube has no time coordinate; "
+                "Rainfall cube has no time coordinate; "
                 "cannot derive interval length."
             )
 
         time = cube.coord("time")
         if time.bounds is None:
             raise ValueError(
-                "Cardington rainfall cube has no time bounds; "
+                "Rainfall cube has no time bounds; "
                 "cannot convert accumulated rainfall to a rate."
             )
 
@@ -656,7 +659,8 @@ def convert_rainfall_amount_to_rate(cubes, **kwargs):
         # bounds shape: (ntimes, 2)
         bounds = time.bounds
         duration_seconds = bounds[:, 1] - bounds[:, 0]
-
+        duration_seconds = time.units.convert(duration_seconds, "seconds")
+        
         if np.any(duration_seconds <= 0):
             raise ValueError("Non-positive rainfall accumulation interval detected.")
 
@@ -665,7 +669,7 @@ def convert_rainfall_amount_to_rate(cubes, **kwargs):
         reshape[cube.coord_dims("time")[0]] = -1
         duration_seconds = duration_seconds.reshape(reshape)
 
-        # --- convert depth -> rate ---
+        # --- convert depth to rate
         # mm / s == kg m-2 s-1
         cube.data = cube.core_data() / duration_seconds
         cube.units = "kg m-2 s-1"
