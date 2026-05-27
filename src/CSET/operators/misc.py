@@ -632,7 +632,6 @@ def convert_rainfall_amount_to_rate(cubes, **kwargs):
         cubes = iris.cube.CubeList(cubes)
 
     for cube in cubes:
-
         # --- Skip if already a rate
         if cube.units.is_convertible("kg m-2 s-1"):
             continue
@@ -644,8 +643,7 @@ def convert_rainfall_amount_to_rate(cubes, **kwargs):
         # --- sanity checks ---
         if not cube.coords("time"):
             raise ValueError(
-                "Rainfall cube has no time coordinate; "
-                "cannot derive interval length."
+                "Rainfall cube has no time coordinate; cannot derive interval length."
             )
 
         time = cube.coord("time")
@@ -660,7 +658,7 @@ def convert_rainfall_amount_to_rate(cubes, **kwargs):
         bounds = time.bounds
         duration_seconds = bounds[:, 1] - bounds[:, 0]
         duration_seconds = time.units.convert(duration_seconds, "seconds")
-        
+
         if np.any(duration_seconds <= 0):
             raise ValueError("Non-positive rainfall accumulation interval detected.")
 
