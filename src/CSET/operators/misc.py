@@ -90,9 +90,12 @@ def remove_scalar_coords(cubes, coords):
         cubes = CubeList([cubes])
 
     for cube in cubes:
-        for coord in coords:
-            if cube.coords(coord):
-                cube.remove_coord(coord)
+        for coord_name in coords:
+            if cube.coords(coord_name):
+                coord = cube.coord(coord_name)
+                # only remove if scalar
+                if cube.coord_dims(coord) == ():
+                    cube.remove_coord(coord)
 
     return cubes
 
