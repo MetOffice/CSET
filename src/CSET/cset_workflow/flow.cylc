@@ -215,6 +215,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
 {% include 'includes/metplus_common.cylc' %}
 {% include 'includes/metplus_point_stat.cylc' %}
 {% include 'includes/metplus_grid_stat.cylc' %}
+{% include 'includes/metplus_ensemble_stat.cylc' %}
 
 # Site-specific details that add to or override the core workflow definition.
 {% include 'site/' ~ SITE ~ '.cylc' %}
