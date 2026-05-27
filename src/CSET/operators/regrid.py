@@ -17,6 +17,8 @@
 import logging
 import re
 import warnings
+import os
+import time
 from multiprocessing import Pool
 
 import iris
@@ -495,94 +497,94 @@ def interpolate_to_point_cube(
     return fld_point_cube
 
 
-UGRID_VAR_LOOKUP = {
-    "t": {
-        "standard_name": "air_temperature",
-        "long_name": "temperature_at_pressure_levels",
-        "units": "K",
-    },
-    "u": {
-        "standard_name": "eastward_wind",
-        "long_name": "zonal_wind_at_pressure_levels",
-        "units": "m s-1",
-    },
-    "v": {
-        "standard_name": "northward_wind",
-        "long_name": "meridional_wind_at_pressure_levels",
-        "units": "m s-1",
-    },
-    "w": {
-        "standard_name": "upward_air_velocity",
-        "long_name": "vertical_wind_at_pressure_levels",
-        "units": "m s-1",
-    },
-    "q": {
-        "standard_name": "specific_humidity",
-        "long_name": "vapour_specific_humidity_at_pressure_levels_for_climate_averaging",
-        "units": "kg kg-1",
-    },
-    "z": {
-        "standard_name": "geopotential_height",
-        "long_name": "geopotential_height_at_pressure_levels",
-        "units": "m",
-    },
-    "sp": {
-        "standard_name": "surface_air_pressure",
-        "long_name": "surface_air_pressure",
-        "units": "Pa",
-    },
-    "10u": {
-        "long_name": "eastward_wind_at_10m",
-        "units": "m s-1",
-    },
-    "10v": {
-        "long_name": "northward_wind_at_10m",
-        "units": "m s-1",
-    },
-    "lsm": {
-        "long_name": "land_binary_mask",
-    },
-    "2t": {
-        "long_name": "temperature_at_screen_level",
-        "units": "K",
-    },
-    "2d": {
-        "long_name": "dew_point_temperature_at_screen_level",
-        "units": "K",
-    },
-    "skt": {
-        "long_name": "grid_surface_temperature",
-        "units": "K",
-    },
-    "tp": {
-        "long_name": "surface_microphysical_rainfall_rate",
-        "units": "mm hr-1",
-    },
-}
-
-
-def _rebuild_ugrid_meta(data, origcube, lat, lon, var_lookup=UGRID_VAR_LOOKUP):
+def _rebuild_ugrid_meta(data, origcube, lat, lon):
     """
-    Build a structured Iris cube (time, lat, lon) from regridded data,
+    Build a structured iris cube (time, lat, lon) from regridded data,
     preserving metadata and adding a pressure auxiliary coordinate
     inferred from the cube name if present.
 
     Parameters
     ----------
-    out : np.ndarray
+    data : np.ndarray
         Regridded data array with shape (time, lat, lon)
-    cube : iris.cube.Cube
-        Original unstructured source cube
-    lat_grid : np.ndarray
-        1D latitude coordinate values
-    lon_grid : np.ndarray
-        1D longitude coordinate values
+    origcube : iris.cube.Cube
+        Original unstructured source cube, used for plucking metadata.
+    lat : np.ndarray
+        1D latitude coordinate values of regridded data
+    lon : np.ndarray
+        1D longitude coordinate values of regridded data
 
     Returns
     -------
     iris.cube.Cube
-        New structured Iris cube
+        A structured iris cube with appropriate metadata.
     """
+    #START HERE
+    UGRID_VAR_LOOKUP = {
+        "t": {
+            "standard_name": "air_temperature",
+            "long_name": "temperature_at_pressure_levels",
+            "units": "K",
+        },
+        "u": {
+            "standard_name": "eastward_wind",
+            "long_name": "zonal_wind_at_pressure_levels",
+            "units": "m s-1",
+        },
+        "v": {
+            "standard_name": "northward_wind",
+            "long_name": "meridional_wind_at_pressure_levels",
+            "units": "m s-1",
+        },
+        "w": {
+            "standard_name": "upward_air_velocity",
+            "long_name": "vertical_wind_at_pressure_levels",
+            "units": "m s-1",
+        },
+        "q": {
+            "standard_name": "specific_humidity",
+            "long_name": "vapour_specific_humidity_at_pressure_levels_for_climate_averaging",
+            "units": "kg kg-1",
+        },
+        "z": {
+            "standard_name": "geopotential_height",
+            "long_name": "geopotential_height_at_pressure_levels",
+            "units": "m",
+        },
+        "sp": {
+            "standard_name": "surface_air_pressure",
+            "long_name": "surface_air_pressure",
+            "units": "Pa",
+        },
+        "10u": {
+            "long_name": "eastward_wind_at_10m",
+            "units": "m s-1",
+        },
+        "10v": {
+            "long_name": "northward_wind_at_10m",
+            "units": "m s-1",
+        },
+        "lsm": {
+            "long_name": "land_binary_mask",
+        },
+        "2t": {
+            "long_name": "temperature_at_screen_level",
+            "units": "K",
+        },
+        "2d": {
+            "long_name": "dew_point_temperature_at_screen_level",
+            "units": "K",
+        },
+        "skt": {
+            "long_name": "grid_surface_temperature",
+            "units": "K",
+        },
+        "tp": {
+            "long_name": "surface_microphysical_rainfall_rate",
+            "units": "mm hr-1",
+        },
+    }
+
     # --- Dimension coordinates ---
     time_coord = origcube.coord("time")
 
@@ -636,7 +638,7 @@ def _rebuild_ugrid_meta(data, origcube, lat, lon, var_lookup=UGRID_VAR_LOOKUP):
             )
 
         # ---- Rename cube using lookup dictionary ----
-        meta = var_lookup.get(var_key)
+        meta = UGRID_VAR_LOOKUP.get(var_key)
 
         if meta is not None:
             if "standard_name" in meta:
@@ -684,8 +686,7 @@ def _restructure_ugrid_regrid(cube, tri, lat_grid, lon_grid, xy):
         out = out_flat.T.reshape(cube.shape[0], lat_grid.size, lon_grid.size)
 
         out_cube = _rebuild_ugrid_meta(
-            out, cube, lat_grid, lon_grid, var_lookup=UGRID_VAR_LOOKUP
-        )
+            out, cube, lat_grid, lon_grid)
 
         # Change units, geopot in m2 s-2
         if out_cube.long_name == "geopotential_height":
@@ -703,37 +704,100 @@ def _restructure_ugrid_regrid(cube, tri, lat_grid, lon_grid, xy):
 
 def restructure_ugrid(cubes):
     """
-    TODO - file locking a cache?
+    Restructured unstructured or flattened data onto a regular grid.
+
+    Parameters
+    ----------
+    cubes : iris.cube.CubeList
+        A cubelist containing unstructured cubes, along with cubes containing
+        latitude and longitude information.
+
+    Returns
+    -------
+    iris.cube.CubeList
+        A list of iris cubes, that have been restructured onto a regular grid,
+        with appropriate corrections to metadata.
     """
+    
+    # Setup folder containing data location to write lock/restructured data.
+    dataloc = os.environ["ROSE_DATAC"]+'/data/1/'
+
+    # If this directory doesn't exist, we are probably not running in a rose suite.
+    # Currently, command line use of restructuring is not supported, as it is not
+    # clear where a sensible location to store regridded data is.
+    if not os.path.isdir(dataloc):
+        raise NotImplementedError("Restructuring data outside a cylc workflow is not currently supported.")
+    
     logging.info("Restructuring UGRID...")
 
-    # First, extract latitude and longitude coordinates
-    lat = cubes.extract("latitude")[0].data
-    lon = cubes.extract("longitude")[0].data
-    points = np.column_stack((lon, lat))
+    # Define location of lock and done hidden file.
+    lock_path = os.path.join(dataloc, ".lock")
+    done_path = os.path.join(dataloc, ".done")
 
-    # Create output mesh, using standard grid ~2km resolution
-    # TODO: is there a way we can intelligently guess grid res?
-    lon_grid = np.arange(lon.data.min(), lon.data.max(), 0.02)
-    lat_grid = np.arange(lat.data.min(), lat.data.max(), 0.02)
-    Lon2d, Lat2d = np.meshgrid(lon_grid, lat_grid)
+    while True:
+        try:
+            # Try and create file lock in data directory. If not possible, it will
+            # raise FileExistsError and not do any data restructuring
+            fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.close(fd)
 
-    # Flatten target points
-    xy = np.column_stack((Lon2d.ravel(), Lat2d.ravel()))
+            logging.info('Running preprocess restructure...')
 
-    # Build triangulation via a dummy interpolator
-    tri_interp = LinearNDInterpolator(points, np.zeros(points.shape[0]))
-    tri = tri_interp.tri
+            # First, extract latitude and longitude coordinates
+            lat = cubes.extract("latitude")[0].data
+            lon = cubes.extract("longitude")[0].data
+            points = np.column_stack((lon, lat))
 
-    # Actually scales poorly if cpu = os.cpu_no. think some of it is parallised already.
-    # int(os.cpu_count()/2)
-    # current implementation of CSET uses one allocation for lots of jobs
-    with Pool(processes=1) as pool:
-        results = pool.starmap(
-            _restructure_ugrid_regrid,
-            [(cube, tri, lat_grid, lon_grid, xy) for cube in cubes],
-        )
+            # Create output mesh, using standard grid ~2km resolution
+            # TODO: discussions with ML developers to include metadata so
+            # we don't have to a) guess lat/lon resolution and b) know if
+            # data is truly unstructured or just flattened (where np.reshape
+            # would be substantially faster and preserve original data).
+            lon_grid = np.arange(lon.data.min(), lon.data.max(), 0.02)
+            lat_grid = np.arange(lat.data.min(), lat.data.max(), 0.02)
+            Lon2d, Lat2d = np.meshgrid(lon_grid, lat_grid)
 
-    fixed_cubes = iris.cube.CubeList(c for c in results if c is not None)
+            # Flatten target points
+            xy = np.column_stack((Lon2d.ravel(), Lat2d.ravel()))
 
-    return fixed_cubes.concatenate()
+            # Build triangulation via a dummy interpolator
+            tri_interp = LinearNDInterpolator(points, np.zeros(points.shape[0]))
+            tri = tri_interp.tri
+
+            # Utilise multiprocessing to speed up code.
+            with Pool(processes=int(os.cpu_count()/2)) as pool:
+                results = pool.starmap(
+                    _restructure_ugrid_regrid,
+                    [(cube, tri, lat_grid, lon_grid, xy) for cube in cubes],
+                )
+
+            # Filter results to only collect cubes, not None which is sometimes returned
+            # from _restructure_ugrid_regrid.
+            fixed_cubes = iris.cube.CubeList(c for c in results if c is not None)
+
+            # Save concatenated cubes to data location, for other processes to use.
+            iris.save(fixed_cubes.concatenate(), dataloc+'/restructured_cubes.nc')
+
+            # Write done file.
+            fd = os.open(done_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.close(fd)
+
+            # Return cubes as no more work to do for this process in read.
+            return fixed_cubes.concatenate()
+
+        # File lock exists, so wait for .done to appear.
+        except FileExistsError:
+            logging.info("Lock exists...")
+
+            # If the .done file exists, can proceed, and load restructured data.
+            if os.path.isfile(done_path):
+                logging.info("Done file found, proceeding")
+                
+                return iris.load(dataloc+'/restructured_cubes.nc')
+            
+            else:
+                # Otherwise, wait 60 seconds before trying again.
+                logging.info("Waiting 60 seconds...")
+                time.sleep(60)
+
+
