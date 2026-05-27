@@ -29,6 +29,9 @@ import sys
 import time
 from importlib.metadata import version
 from pathlib import Path
+import shlex
+import subprocess
+import tarfile
 
 from CSET._common import sort_dict
 
@@ -40,12 +43,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def install_website_skeleton(www_root_link: Path, www_content: Path):
+def install_website_skeleton(www_content: Path):
     """Copy static website files and create symlink from web document root."""
-    # Remove existing link to output ahead of creating new symlink.
-    logger.info("Removing any existing output link at %s.", www_root_link)
-    www_root_link.unlink(missing_ok=True)
-
     logger.info("Installing website files to %s.", www_content)
     # Create directory for web content.
     www_content.mkdir(parents=True, exist_ok=True)
@@ -55,6 +54,13 @@ def install_website_skeleton(www_root_link: Path, www_content: Path):
     # Create directory for plots.
     plot_dir = www_content / "plots"
     plot_dir.mkdir(exist_ok=True)
+
+
+def symlink_website(www_root_link: Path, www_content: Path):
+    """Create a symlink to the web root."""
+    # Remove existing link to output ahead of creating new symlink.
+    logger.info("Removing any existing output link at %s.", www_root_link)
+    www_root_link.unlink(missing_ok=True)
 
     logger.info("Linking %s to web content.", www_root_link)
     # Ensure parent directories of WEB_DIR exist.
@@ -140,6 +146,71 @@ def copy_rose_config(www_content: Path):
     shutil.copyfile(rose_suite_conf, web_conf_file)
 
 
+def tar_plots(plots_dir: Path, metadata: dict, tar: tarfile.TarFile):
+    """Add a single CSET plot directory to the tarball."""
+    # Path relative to the plots directory
+    plot_path = Path(metadata["path"])
+    # Absolute path
+    plot_fullpath = plots_dir.joinpath(plot_path)
+
+    with open(plot_fullpath / "meta.json") as f:
+        plot_meta = json.load(f)
+
+    # Add all the files to the tarball
+    def add_file(name):
+        tar.add(plot_fullpath / name, arcname=plot_path / name)
+
+    add_file("meta.json")
+    add_file("CSET.log")
+    for plot in plot_meta["plots"]:
+        add_file(plot)
+
+    # Change the path in the metadata
+    metadata["path"] = f"tarplot.html?path={metadata['path']}"
+
+
+def tar_website(www_content: Path):
+    """Tar up the website content to reduce file count."""
+    plots_dir = www_content / "plots"
+    tarpath = plots_dir / "plots.tar"
+    with (
+        open(plots_dir / "index.jsonl", encoding="UTF-8") as index_fp,
+        tarfile.open(tarpath, mode="w") as tar,
+        open(plots_dir / "index.jsonl.new", "wt", encoding="UTF-8") as new_index_fp,
+    ):
+        lines = index_fp.readlines()
+
+        # Read each directory metadata, tar up the contents, then rewrite the
+        # metadata to use the newly tarred directory
+        for line in lines:
+            metadata = json.loads(line)
+            tar_plots(plots_dir, metadata, tar)
+            json.dump(metadata, new_index_fp, separators=(",", ":"))
+            new_index_fp.write("\n")
+
+    # Create an index with the start and end location of each member
+    index = {}
+    with tarfile.open(tarpath, mode="r") as tar:
+        for member in tar.getmembers():
+            index[member.name] = [member.offset_data, member.offset_data + member.size]
+    with open(plots_dir/"tarindex.json", "w") as f:
+        json.dump(index, f)
+
+
+def rsync_website(www_root_link: Path, www_content: Path):
+    """Rsync the website content to the root directory."""
+    cmd = [
+        "rsync",
+        "--archive",
+        "--verbose",
+        "--delete",
+        str(www_content) + "/",
+        str(www_root_link),
+    ]
+    logger.info(shlex.join(cmd))
+    subprocess.run(cmd, check=True)
+
+
 def run():
     """Do the final steps to finish the website."""
     # Strip trailing slashes in case they have been added in the config.
@@ -147,11 +218,20 @@ def run():
     www_root_link = Path(os.environ["WEB_DIR"].rstrip("/"))
     www_content = Path(os.environ["CYLC_WORKFLOW_SHARE_DIR"] + "/web")
 
-    install_website_skeleton(www_root_link, www_content)
+    install_website_skeleton(www_content)
     copy_rose_config(www_content)
     construct_index(www_content)
+
+    if os.environ.get("TAR_WEB_DIR", False):
+        tar_website(www_content)
+
     bust_cache(www_content)
     update_workflow_status(www_content)
+
+    if os.environ.get("RSYNC_WEB_DIR", False):
+        rsync_website(www_root_link, www_content)
+    else:
+        symlink_website(www_root_link, www_content)
 
 
 if __name__ == "__main__":  # pragma: no cover

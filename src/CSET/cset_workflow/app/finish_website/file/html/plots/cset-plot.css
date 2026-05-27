@@ -1,0 +1,62 @@
+body {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    margin: 0;
+    font-family: sans-serif;
+}
+
+input:invalid {
+    box-shadow: 0 0 2px 2px red;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.visually-hidden {
+    position: absolute;
+    left: -9999px;
+}
+
+main {
+    flex: 30em;
+    height: 100vh;
+}
+
+main>canvas {
+    width: 100%;
+    height: calc(100% - 3em);
+    object-fit: contain;
+}
+
+#sequence_controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0.5em 0;
+    border: none;
+    padding: 0;
+}
+
+#sequence_controls input[type="number"] {
+    width: 6em;
+}
+
+#sequence_controls input[type="range"] {
+    width: min(60em, calc(100% - 16em));
+    margin: 0 1em;
+}
+
+#description-container {
+    flex: 20em;
+    max-height: calc(100vh - min(1em, 5vh));
+    max-width: 50em;
+    margin: min(1em, 5vh);
+    padding: 0 1em;
+    background-color: whitesmoke;
+    box-shadow: 4px 4px 4px grey;
+    outline: darkgrey solid 1px;
+    overflow: auto;
+}
+
