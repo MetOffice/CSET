@@ -284,12 +284,13 @@ def test_generate_attribute_constraint_with_value():
 def test_generate_var_constraint_multiple_names():
     """Test constraint works for multiple variable names."""
     # Create two cubes with different names
-    cube1 = iris.cube.Cube(np.arange(5), long_name="air_temperature")
-    cube2 = iris.cube.Cube(np.arange(5), long_name="wind_speed")
+    cube1 = iris.cube.Cube(np.arange(5), long_name="temperature_long")
+    cube1.var_name = "temperature"
+    cube2 = iris.cube.Cube(np.arange(5), standard_name="wind_speed")
     # Third cube that should NOT match
     cube3 = iris.cube.Cube(np.arange(5), long_name="surface_pressure")
     # Generate constraint with multiple names
-    constraint = constraints.generate_var_constraint(["air_temperature", "wind_speed"])
+    constraint = constraints.generate_var_constraint(["temperature", "wind_speed"])
     # Apply constraint
     cubes = iris.cube.CubeList([cube1, cube2, cube3])
     result = cubes.extract(constraint)
