@@ -73,9 +73,9 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
     if isinstance(varname, (list, tuple)):
         return iris.Constraint(
             cube_func=lambda cube: (
-                cube.var_name in varname
+                cube.long_name in varname
                 or cube.standard_name in varname
-                or cube.name() in varname
+                or cube.var_name in varname
             )
         )
 
