@@ -15,10 +15,10 @@
 """Operators to regrid cubes."""
 
 import logging
-import re
-import warnings
 import os
+import re
 import time
+import warnings
 from multiprocessing import Pool
 
 import iris
@@ -498,11 +498,11 @@ def interpolate_to_point_cube(
 
 
 def _rebuild_ugrid_meta(data, origcube, lat, lon):
-
     """
-    Build a structured iris cube (time, lat, lon) from regridded data,
-    preserving metadata and adding a pressure auxiliary coordinate
-    inferred from the cube name if present.
+    Build a structured iris cube (time, lat, lon) from regridded data.
+
+    The cube will have metadata transferred and an additional pressure auxiliary
+    coordinate inferred from the cube name if present.
 
     Parameters
     ----------
@@ -520,8 +520,7 @@ def _rebuild_ugrid_meta(data, origcube, lat, lon):
     iris.cube.Cube
         A structured iris cube with appropriate metadata.
     """
-
-    #START HERE
+    # Lookup dictionary for standard anemoi ML variable names and their translation.
     UGRID_VAR_LOOKUP = {
         "t": {
             "standard_name": "air_temperature",
@@ -583,41 +582,45 @@ def _rebuild_ugrid_meta(data, origcube, lat, lon):
         },
         "tp": {
             "long_name": "surface_microphysical_rainfall_rate",
-            "units": "mm hr-1",
+            "units": "mm 6hr-1",
         },
     }
 
-    # --- Dimension coordinates ---
+    # Get original cube time coordinate dimension.
     time_coord = origcube.coord("time")
 
+    # Create new latitude coordinate.
     lat_coord = icoords.DimCoord(
         lat,
         standard_name="latitude",
         units="degrees",
     )
 
+    # Create new longitude coordinate.
     lon_coord = icoords.DimCoord(
         lon,
         standard_name="longitude",
         units="degrees",
     )
 
-    # ---- Parse cube name ----
-    # Matches e.g. t_50, u_850, q_1000
+    # Parse cube name, to determine if it contains a likely pressure variable/level.
     m = re.match(r"^([a-zA-Z][a-zA-Z0-9]*|\d+[a-zA-Z]+)(?:_(\d+))?$", origcube.name())
 
+    # If pattern is not None
     if m:
+        # Extract variable and pressure from cube name components.
         var_key, pressure_hpa = m.group(1), m.group(2)
 
-        # ---- Add pressure auxiliary coordinate ----
+        # If there is a number in cube name that can be split.
         if pressure_hpa is not None:
+            # Create new pressure coordinate dimension.
             pressure_coord = icoords.DimCoord(
                 [int(pressure_hpa)],
                 long_name="pressure",
                 units="hPa",
             )
 
-            # --- Build the cube ---
+            # Create new cube with these dimensions.
             out_cube = iris.cube.Cube(
                 data[:, np.newaxis, :, :],
                 dim_coords_and_dims=[
@@ -629,7 +632,7 @@ def _rebuild_ugrid_meta(data, origcube, lat, lon):
             )
 
         else:
-            # --- Build the cube ---
+            # Not a pressure level variable, so only 3 dimensions.
             out_cube = iris.cube.Cube(
                 data,
                 dim_coords_and_dims=[
@@ -639,7 +642,7 @@ def _rebuild_ugrid_meta(data, origcube, lat, lon):
                 ],
             )
 
-        # ---- Rename cube using lookup dictionary ----
+        # Rename cube using lookup dictionary, if a lookup exists.
         meta = UGRID_VAR_LOOKUP.get(var_key)
 
         if meta is not None:
@@ -652,23 +655,24 @@ def _rebuild_ugrid_meta(data, origcube, lat, lon):
             if "units" in meta:
                 out_cube.units = meta["units"]
 
-            # Optional: set short name to CF standard_name
-            out_cube.rename(meta.get("long_name", origcube.name()))
+            # Also rename cube itself.
+            out_cube.rename(meta["long_name"])
         else:
-            # Fallback: keep original name but drop pressure suffix
+            # Fallback: keep original name.
             out_cube.rename(var_key)
 
-        # Add forecast reference time as 'time_origin' to mimic lfric where it will reconstruct forecast_period
+        # Add forecast reference time as 'time_origin' to mimic lfric where it will
+        # reconstruct forecast_period in a later callback.
         # Extract the origin string from the units
         time_origin = time_coord.units.origin
 
-        # Strip the "seconds since " part
+        # Strip the "seconds since " part.
         time_origin = time_origin.split("since ")[1]
 
-        # Add to cube attributes as str
+        # Add to cube attributes as str.
         out_cube.coord("time").attributes["time_origin"] = time_origin
 
-        # Change units, geopot in m2 s-2
+        # Change units, geopot in m2 s-2.
         if out_cube.long_name == "geopotential_height":
             out_cube.data = out_cube.data / 9.81
 
@@ -680,7 +684,6 @@ def _rebuild_ugrid_meta(data, origcube, lat, lon):
 
 
 def _restructure_ugrid_regrid(cube, tri, lat_grid, lon_grid, xy):
-
     """
     Restructure a flattened/unstructured cube.
 
@@ -708,11 +711,9 @@ def _restructure_ugrid_regrid(cube, tri, lat_grid, lon_grid, xy):
     every cube. This therefore assumes all cubes being restructured have the
     same flattened structure.
     """
-
     # Only process cubes that have 2 dimensions (i.e. time and space), not
     # 1 dimension (to avoid trying to restructure latitude/longitude).
     if cube.ndim > 1:
-
         # Create empty numpy array to store regridded data.
         out = np.empty((cube.shape[0], lat_grid.size, lon_grid.size))
 
@@ -731,8 +732,7 @@ def _restructure_ugrid_regrid(cube, tri, lat_grid, lon_grid, xy):
         out = out_flat.T.reshape(cube.shape[0], lat_grid.size, lon_grid.size)
 
         # Rebuild metadata using lookup table (mostly for anemoi ML models).
-        out_cube = _rebuild_ugrid_meta(
-            out, cube, lat_grid, lon_grid)
+        out_cube = _rebuild_ugrid_meta(out, cube, lat_grid, lon_grid)
 
         # Reduce precision to reduce filesize.
         if out_cube is not None:
@@ -758,16 +758,17 @@ def restructure_ugrid(cubes):
         A list of iris cubes, that have been restructured onto a regular grid,
         with appropriate corrections to metadata.
     """
-    
     # Setup folder containing data location to write lock/restructured data.
-    dataloc = os.environ["ROSE_DATAC"]+'/data/1/'
+    dataloc = os.environ["ROSE_DATAC"] + "/data/1/"
 
     # If this directory doesn't exist, we are probably not running in a rose suite.
     # Currently, command line use of restructuring is not supported, as it is not
     # clear where a sensible location to store regridded data is.
     if not os.path.isdir(dataloc):
-        raise NotImplementedError("Restructuring data outside a cylc workflow is not currently supported.")
-    
+        raise NotImplementedError(
+            "Restructuring data outside a cylc workflow is not currently supported."
+        )
+
     logging.info("Restructuring UGRID...")
 
     # Define location of lock and done hidden file.
@@ -781,7 +782,7 @@ def restructure_ugrid(cubes):
             fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
             os.close(fd)
 
-            logging.info('Running preprocess restructure...')
+            logging.info("Running preprocess restructure...")
 
             # First, extract latitude and longitude coordinates
             lat = cubes.extract("latitude")[0].data
@@ -805,7 +806,7 @@ def restructure_ugrid(cubes):
             tri = tri_interp.tri
 
             # Utilise multiprocessing to speed up code.
-            with Pool(processes=int(os.cpu_count()/2)) as pool:
+            with Pool(processes=int(os.cpu_count() / 2)) as pool:
                 results = pool.starmap(
                     _restructure_ugrid_regrid,
                     [(cube, tri, lat_grid, lon_grid, xy) for cube in cubes],
@@ -816,7 +817,7 @@ def restructure_ugrid(cubes):
             fixed_cubes = iris.cube.CubeList(c for c in results if c is not None)
 
             # Save concatenated cubes to data location, for other processes to use.
-            iris.save(fixed_cubes.concatenate(), dataloc+'/restructured_cubes.nc')
+            iris.save(fixed_cubes.concatenate(), dataloc + "/restructured_cubes.nc")
 
             # Write done file.
             fd = os.open(done_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
@@ -832,9 +833,9 @@ def restructure_ugrid(cubes):
             # If the .done file exists, can proceed, and load restructured data.
             if os.path.isfile(done_path):
                 logging.info("Done file found, proceeding")
-                
-                return iris.load(dataloc+'/restructured_cubes.nc')
-            
+
+                return iris.load(dataloc + "/restructured_cubes.nc")
+
             else:
                 # Otherwise, wait 60 seconds before trying again.
                 logging.info("Waiting 60 seconds...")
@@ -881,4 +882,3 @@ def vertical_interpolation(
         return interpolated_cubes[0]
     else:
         return interpolated_cubes
-
