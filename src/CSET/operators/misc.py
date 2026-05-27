@@ -626,12 +626,7 @@ def convert_rainfall_amount_to_rate(cubes, **kwargs):
 
     UM rainfall is already a rate and is left untouched.
     """
-    if isinstance(cubes, iris.cube.Cube):
-        cubes = iris.cube.CubeList([cubes])
-    else:
-        cubes = iris.cube.CubeList(cubes)
-
-    for cube in cubes:
+    for cube in iris.cube.CubeList(iter_maybe(cubes)):
         # --- Skip if already a rate
         if cube.units.is_convertible("kg m-2 s-1"):
             continue
