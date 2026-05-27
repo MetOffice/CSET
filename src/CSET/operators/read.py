@@ -205,7 +205,7 @@ def read_cubes(
         for dim_coord in cube.coords(dim_coords=True):
             if (dim_coord.standard_name == "time") and (
                 dim_coord.name()
-                not in itertools.chain([m.coord_names for m in cube.cell_methods])
+                not in itertools.chain.from_iterable(m.coord_names for m in cube.cell_methods)
             ):
                 # Instantaneous time coordinate
                 continue
