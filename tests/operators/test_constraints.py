@@ -301,3 +301,22 @@ def test_generate_var_constraint_multiple_names():
 
     # Should only return 2 cubes
     assert len(result) == 2
+
+    
+def test_generate_remove_single_level_constraint():
+    """Tests constraint to remove default model_level_number of zero."""
+    remove_level_constraint = constraints.generate_remove_single_level_constraint(
+        coord="model_level_number"
+    )
+    expected_constraint = "Constraint(coord_values={'model_level_number': <function generate_remove_single_level_constraint.<locals>.<lambda> at"
+    assert expected_constraint in repr(remove_level_constraint)
+
+
+def test_generate_remove_single_level_constraint_non_default():
+    """Tests constraint to remove default model_level_number of one."""
+    remove_level_constraint = constraints.generate_remove_single_level_constraint(
+        coord="model_level_number", level=1
+    )
+    expected_constraint = "Constraint(coord_values={'model_level_number': <function generate_remove_single_level_constraint.<locals>.<lambda> at"
+    assert expected_constraint in repr(remove_level_constraint)
+    
