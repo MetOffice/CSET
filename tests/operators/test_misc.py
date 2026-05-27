@@ -603,3 +603,41 @@ def test_raises_if_nonpositive_interval_from_bounds():
     cube = iris.load_cube(DATA_DIR / "bad_bounds_zero.nc")
     with pytest.raises(ValueError, match="Non-positive rainfall accumulation interval"):
         misc.convert_rainfall_amount_to_rate(cube)
+
+
+def test_remove_scalar_coord():
+    """Test that scalar coordinate be removed."""
+    # Create simple 1D cube
+    data = np.arange(5)
+    time = iris.coords.DimCoord(
+        np.arange(5), standard_name="time", units="hours since 1970-01-01"
+    )
+    cube = iris.cube.Cube(data, dim_coords_and_dims=[(time, 0)])
+    # Add a scalar coord
+    realization = iris.coords.AuxCoord(1, long_name="realization")
+    cube.add_aux_coord(realization)
+    # Check it's present and scalar
+    assert cube.coords("realization")
+    assert cube.coord_dims("realization") == ()
+    # Run function
+    out = misc.remove_scalar_coords(cube, ["realization"])
+    # Check it’s removed
+    cube_out = out[0]
+    assert not cube_out.coords("realization")
+
+
+def test_not_remove_non_scalar_coord():
+    """Test that non-scalar coordinate is not removed."""
+    # Create 1D cube
+    data = np.arange(5)
+    time = iris.coords.DimCoord(
+        np.arange(5), standard_name="time", units="hours since 1970-01-01"
+    )
+    cube = iris.cube.Cube(data, dim_coords_and_dims=[(time, 0)])
+    # Confirm it's non-scalar
+    assert cube.coord_dims("time") != ()
+    # Run function
+    out = misc.remove_scalar_coords(cube, ["time"])
+    # Check it is still present
+    cube_out = out[0]
+    assert cube_out.coords("time")
