@@ -410,7 +410,7 @@ def cell_stats(
                 coord = cube.coord(coord_name).copy()
                 # Check if this coord represents a dimension of data
                 dims = cube.coord_dims(coord)
-                if len(dims) > 1:
+                if len(dims) > 0:
                     cell_stats_cube.add_aux_coord(coord, dims)
                 else:
                     cell_stats_cube.add_aux_coord(coord)
