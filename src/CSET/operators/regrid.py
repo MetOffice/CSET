@@ -496,78 +496,9 @@ def interpolate_to_point_cube(
             )
     return fld_point_cube
 
-<<<<<<< HEAD
 
 def _rebuild_ugrid_meta(data, origcube, lat, lon):
-=======
-UGRID_VAR_LOOKUP = {
-    "t": {
-        "standard_name": "air_temperature",
-        "long_name": "temperature_at_pressure_levels",
-        "units": "K",
-    },
-    "u": {
-        "standard_name": "eastward_wind",
-        "long_name": "zonal_wind_at_pressure_levels",
-        "units": "m s-1",
-    },
-    "v": {
-        "standard_name": "northward_wind",
-        "long_name": "meridional_wind_at_pressure_levels",
-        "units": "m s-1",
-    },
-    "w": {
-        "standard_name": "upward_air_velocity",
-        "long_name": "vertical_wind_at_pressure_levels",
-        "units": "m s-1",
-    },
-    "q": {
-        "standard_name": "specific_humidity",
-        "long_name": "vapour_specific_humidity_at_pressure_levels_for_climate_averaging",
-        "units": "kg kg-1",
-    },
-    "z": {
-        "standard_name": "geopotential_height",
-        "long_name": "geopotential_height_at_pressure_levels",
-        "units": "m",
-    },
-    "sp": {
-        "standard_name": "surface_air_pressure",
-        "long_name": "surface_air_pressure",
-        "units": "Pa",
-    },
-    "10u": {
-        "long_name": "eastward_wind_at_10m",
-        "units": "m s-1",
-    },
-    "10v": {
-        "long_name": "northward_wind_at_10m",
-        "units": "m s-1",
-    },
-    "lsm": {
-        "long_name": "land_binary_mask",
-    },
-    "2t": {
-        "long_name": "temperature_at_screen_level",
-        "units": "K",
-    },
-    "2d": {
-        "long_name": "dew_point_temperature_at_screen_level",
-        "units": "K",
-    },
-    "skt": {
-        "long_name": "grid_surface_temperature",
-        "units": "K",
-    },
-    "tp": {
-        "long_name": "surface_microphysical_rainfall_rate",
-        "units": "mm hr-1",
-    },
-}
 
-
-def _rebuild_ugrid_meta(data, origcube, lat, lon, var_lookup=UGRID_VAR_LOOKUP):
->>>>>>> 845d6624f503bb658e5f7d9efa9480f8e98a93a0
     """
     Build a structured iris cube (time, lat, lon) from regridded data,
     preserving metadata and adding a pressure auxiliary coordinate
@@ -589,6 +520,7 @@ def _rebuild_ugrid_meta(data, origcube, lat, lon, var_lookup=UGRID_VAR_LOOKUP):
     iris.cube.Cube
         A structured iris cube with appropriate metadata.
     """
+
     #START HERE
     UGRID_VAR_LOOKUP = {
         "t": {
@@ -736,28 +668,6 @@ def _rebuild_ugrid_meta(data, origcube, lat, lon, var_lookup=UGRID_VAR_LOOKUP):
         # Add to cube attributes as str
         out_cube.coord("time").attributes["time_origin"] = time_origin
 
-        return out_cube
-
-
-def _restructure_ugrid_regrid(cube, tri, lat_grid, lon_grid, xy):
-
-    # Don't regrid lat/lon coord!
-    if cube.ndim > 1:
-        out = np.empty((cube.shape[0], lat_grid.size, lon_grid.size))
-
-        print("Interpolating", cube.name())
-
-        src_vals = cube.data.T
-
-        interp = LinearNDInterpolator(tri, src_vals)
-
-        out_flat = interp(xy)
-
-        out = out_flat.T.reshape(cube.shape[0], lat_grid.size, lon_grid.size)
-
-        out_cube = _rebuild_ugrid_meta(
-            out, cube, lat_grid, lon_grid)
-
         # Change units, geopot in m2 s-2
         if out_cube.long_name == "geopotential_height":
             out_cube.data = out_cube.data / 9.81
@@ -766,9 +676,69 @@ def _restructure_ugrid_regrid(cube, tri, lat_grid, lon_grid, xy):
         if out_cube.long_name == "surface_microphysical_rainfall_rate":
             out_cube.data = (out_cube.data * 1000.0) / 6
 
+        return out_cube
+
+
+def _restructure_ugrid_regrid(cube, tri, lat_grid, lon_grid, xy):
+
+    """
+    Restructure a flattened/unstructured cube.
+
+    Parameters
+    ----------
+    cube : iris.cube
+        An iris cube to restructure.
+    tri : scipy.spatial._qhull.Delaunay
+        A scipy object containing the triangulation mapping of cell points.
+    lat_grid : np.ndarray
+        1D latitude coordinate values of target grid.
+    lon_grid : np.ndarray
+        1D longitude coordinate values of target grid.
+    xy : np.ndarray
+        Meshed and flattened target grid points.
+
+    Returns
+    -------
+    iris.cube.Cube
+        A structured iris cube with appropriate metadata.
+
+    Notes
+    -----
+    This function uses a pre-calculated triangulation, to save rebuilding for
+    every cube. This therefore assumes all cubes being restructured have the
+    same flattened structure.
+    """
+
+    # Only process cubes that have 2 dimensions (i.e. time and space), not
+    # 1 dimension (to avoid trying to restructure latitude/longitude).
+    if cube.ndim > 1:
+
+        # Create empty numpy array to store regridded data.
+        out = np.empty((cube.shape[0], lat_grid.size, lon_grid.size))
+
+        logging.info("Interpolating", cube.name())
+
+        # Extract and transpose source data values.
+        src_vals = cube.data.T
+
+        # Build linear interpolator object mapping target triangulation to source values.
+        interp = LinearNDInterpolator(tri, src_vals)
+
+        # Interpolate values onto target grid using linear interpolation.
+        out_flat = interp(xy)
+
+        # Transpose, and reshape to target 2D regular lat/lon grid.
+        out = out_flat.T.reshape(cube.shape[0], lat_grid.size, lon_grid.size)
+
+        # Rebuild metadata using lookup table (mostly for anemoi ML models).
+        out_cube = _rebuild_ugrid_meta(
+            out, cube, lat_grid, lon_grid)
+
+        # Reduce precision to reduce filesize.
         if out_cube is not None:
             out_cube.data = np.asarray(out_cube.data, dtype=np.float32)
 
+        # Return restructured cube with appropriate metadata
         return out_cube
 
 
