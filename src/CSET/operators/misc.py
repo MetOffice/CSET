@@ -21,6 +21,7 @@ from collections.abc import Iterable
 import iris
 import iris.analysis.calculus
 import numpy as np
+from cf_units import Unit as CFUnit
 from iris.cube import Cube, CubeList
 
 from CSET._common import is_increasing, iter_maybe
@@ -626,6 +627,9 @@ def convert_rainfall_amount_to_rate(cubes, **kwargs):
 
     UM rainfall is already a rate and is left untouched.
     """
+    is_single = isinstance(cubes, iris.cube.Cube)
+    cubes_list = iris.cube.CubeList(iter_maybe(cubes))
+
     for cube in iris.cube.CubeList(iter_maybe(cubes)):
         # --- Skip if already a rate
         if cube.units.is_convertible("kg m-2 s-1"):
@@ -647,11 +651,15 @@ def convert_rainfall_amount_to_rate(cubes, **kwargs):
             dt = np.diff(t)
             if len(dt) == 0:
                 raise ValueError("Cannot infer duration from single time point")
-
             dt = np.concatenate([dt, [dt[-1]]])
             duration = dt
+        # Convert duration to seconds safely
+        if time.units.is_time_reference():
+            base = str(time.units).split(" since ")[0].strip()  # e.g. "hours"
+            duration = CFUnit(base).convert(duration, "seconds")
+        else:
+            duration = time.units.convert(duration, "seconds")
 
-        duration = time.units.convert(duration, "seconds")
         if np.any(duration <= 0):
             raise ValueError("Non-positive rainfall accumulation interval detected.")
 
@@ -665,4 +673,4 @@ def convert_rainfall_amount_to_rate(cubes, **kwargs):
         cube.data = cube.data / duration
         cube.units = "kg m-2 s-1"
 
-    return cubes if len(cubes) > 1 else cubes[0]
+    return cubes_list[0] if is_single else cubes_list
