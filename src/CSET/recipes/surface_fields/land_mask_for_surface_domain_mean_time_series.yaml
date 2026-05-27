@@ -1,5 +1,5 @@
 category: Surface Time Series
-title: Land mask domain mean $VARNAME time series
+title: "Land mask domain mean $VARNAME time series $SUBAREA_NAME"
 description: |
   Creates a land mask and applies it to $VARNAME. It then creates and plots
   a time series of the domain horizontal mean.
