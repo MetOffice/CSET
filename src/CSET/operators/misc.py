@@ -651,18 +651,18 @@ def convert_rainfall_amount_to_rate(cubes, **kwargs):
             dt = np.concatenate([dt, [dt[-1]]])
             duration = dt
 
-        duration_seconds = time.units.convert(duration, "seconds") 
-        if np.any(duration_seconds <= 0):
+        duration = time.units.convert(duration, "seconds") 
+        if np.any(duration <= 0):
             raise ValueError("Non-positive rainfall accumulation interval detected.")
 
         # reshape for broadcasting along data dimensions
         reshape = [1] * cube.ndim
         reshape[cube.coord_dims("time")[0]] = -1
-        duration_seconds = duration_seconds.reshape(reshape)
+        duration = duration.reshape(reshape)
 
         # --- convert depth to rate
         # mm / s == kg m-2 s-1
-        cube.data = cube.data / duration_seconds
+        cube.data = cube.data / duration
         cube.units = "kg m-2 s-1"
 
     return cubes if len(cubes) > 1 else cubes[0]
