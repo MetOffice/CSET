@@ -634,10 +634,10 @@ def convert_rainfall_amount_to_rate(cubes, **kwargs):
         # --- Only process accumulation/amount
         if not cube.units.is_convertible("kg m-2"):
             continue
-            
+
         if not cube.coords("time"):
             raise ValueError("No time coordinate; cannot convert rainfall.")
-        
+
         time = cube.coord("time")
         if time.bounds is not None:
             bounds = time.bounds
@@ -651,7 +651,7 @@ def convert_rainfall_amount_to_rate(cubes, **kwargs):
             dt = np.concatenate([dt, [dt[-1]]])
             duration = dt
 
-        duration = time.units.convert(duration, "seconds") 
+        duration = time.units.convert(duration, "seconds")
         if np.any(duration <= 0):
             raise ValueError("Non-positive rainfall accumulation interval detected.")
 
