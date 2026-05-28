@@ -24,14 +24,14 @@ web interface.
 import json
 import logging
 import os
+import shlex
 import shutil
+import subprocess
 import sys
+import tarfile
 import time
 from importlib.metadata import version
 from pathlib import Path
-import shlex
-import subprocess
-import tarfile
 
 from CSET._common import sort_dict
 
@@ -196,8 +196,8 @@ def tar_website(www_content: Path):
 
     with open(plots_dir / "index.jsonl", "w", encoding="UTF-8") as index:
         # Write out the updated index info
-        for record in new_index:
-            json.dump(metadata, record, separators=(",", ":"))
+        for metadata in new_index:
+            json.dump(metadata, index, separators=(",", ":"))
             index.write("\n")
 
     # Create an index with the start and end location of each member
