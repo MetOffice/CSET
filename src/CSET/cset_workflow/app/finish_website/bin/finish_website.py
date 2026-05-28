@@ -153,6 +153,11 @@ def tar_plots(plots_dir: Path, metadata: dict, tar: tarfile.TarFile):
     # Absolute path
     plot_fullpath = plots_dir.joinpath(plot_path)
 
+    if not (plot_fullpath / "CSET.log").exists():
+        # Not CSET output, we don't know how do deal with this yet
+        logger.warning("Unable to tar directory %s", plot_path)
+        return
+
     with open(plot_fullpath / "meta.json") as f:
         plot_meta = json.load(f)
 
@@ -168,33 +173,43 @@ def tar_plots(plots_dir: Path, metadata: dict, tar: tarfile.TarFile):
     # Change the path in the metadata
     metadata["path"] = f"tarplot.html?path={metadata['path']}"
 
+    # Remove the plot directory
+    shutil.rmtree(plot_fullpath)
+
 
 def tar_website(www_content: Path):
     """Tar up the website content to reduce file count."""
     plots_dir = www_content / "plots"
     tarpath = plots_dir / "plots.tar"
-    with (
-        open(plots_dir / "index.jsonl", encoding="UTF-8") as index_fp,
-        tarfile.open(tarpath, mode="w") as tar,
-        open(plots_dir / "index.jsonl.new", "wt", encoding="UTF-8") as new_index_fp,
-    ):
-        lines = index_fp.readlines()
+    new_index = []
 
-        # Read each directory metadata, tar up the contents, then rewrite the
-        # metadata to use the newly tarred directory
+    with (
+        open(plots_dir / "index.jsonl", encoding="UTF-8") as index,
+        tarfile.open(tarpath, mode="w") as tar,
+    ):
+        # Read each directory metadata, tar up the contents, then record the updated index information
+        lines = index.readlines()
         for line in lines:
             metadata = json.loads(line)
             tar_plots(plots_dir, metadata, tar)
-            json.dump(metadata, new_index_fp, separators=(",", ":"))
-            new_index_fp.write("\n")
+            new_index.append(metadata)
+
+    with open(plots_dir / "index.jsonl", "w", encoding="UTF-8") as index:
+        # Write out the updated index info
+        for record in new_index:
+            json.dump(metadata, record, separators=(",", ":"))
+            index.write("\n")
 
     # Create an index with the start and end location of each member
-    index = {}
+    tarindex = {}
     with tarfile.open(tarpath, mode="r") as tar:
         for member in tar.getmembers():
-            index[member.name] = [member.offset_data, member.offset_data + member.size]
-    with open(plots_dir/"tarindex.json", "w") as f:
-        json.dump(index, f)
+            tarindex[member.name] = [
+                member.offset_data,
+                member.offset_data + member.size,
+            ]
+    with open(plots_dir / "tarindex.json", "w") as f:
+        json.dump(tarindex, f)
 
 
 def rsync_website(www_root_link: Path, www_content: Path):
@@ -221,10 +236,7 @@ def run():
     install_website_skeleton(www_content)
     copy_rose_config(www_content)
     construct_index(www_content)
-
-    if os.environ.get("TAR_WEB_DIR", False):
-        tar_website(www_content)
-
+    tar_website(www_content)
     bust_cache(www_content)
     update_workflow_status(www_content)
 
