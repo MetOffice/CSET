@@ -104,7 +104,6 @@ def calculate_vector_wind(
 
         direction_cube = u_cube.copy(data=direction)
         direction_cube.long_name = "wind direction"
-        direction_cube.var_name = "wind_direction"
         direction_cube.units = "degrees"
         direction_cube.standard_name = "wind_from_direction"
 

@@ -147,7 +147,7 @@ def test_vector_wind_metadata():
     out = wind.calculate_vector_wind(u, v)
     speed, direction = out
     assert speed.name() == "wind_speed"
-    assert direction.name() == "wind_direction"
+    assert direction.name() == "wind_from_direction"
     assert direction.units == "degrees"
     assert direction.standard_name == "wind_from_direction"
 
