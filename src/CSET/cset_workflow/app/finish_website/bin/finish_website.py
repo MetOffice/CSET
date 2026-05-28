@@ -240,7 +240,7 @@ def run():
     bust_cache(www_content)
     update_workflow_status(www_content)
 
-    if os.environ.get("RSYNC_WEB_DIR", False):
+    if os.environ.get("RSYNC_WEB_DIR", "False").lower() == "true":
         rsync_website(www_root_link, www_content)
     else:
         symlink_website(www_root_link, www_content)
