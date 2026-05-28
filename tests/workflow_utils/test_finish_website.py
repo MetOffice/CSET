@@ -205,6 +205,7 @@ def test_entrypoint(monkeypatch):
     monkeypatch.setattr(finish_website, "install_website_skeleton", check_single_arg)
     monkeypatch.setattr(finish_website, "copy_rose_config", check_single_arg)
     monkeypatch.setattr(finish_website, "construct_index", check_single_arg)
+    monkeypatch.setattr(finish_website, "tar_website", check_single_arg)
     monkeypatch.setattr(finish_website, "bust_cache", check_single_arg)
     monkeypatch.setattr(finish_website, "update_workflow_status", check_single_arg)
     monkeypatch.setattr(finish_website, "symlink_website", check_args)
