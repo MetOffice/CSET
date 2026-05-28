@@ -27,6 +27,7 @@ import pytest
 from iris.time import PartialDateTime
 
 from CSET.operators import constraints, read
+
 from ..conftest import cdl_to_nc
 
 
@@ -1232,11 +1233,11 @@ def test_cell_methods_computes_time_bounds(tmp_path):
     cubes = read.read_cubes(sample)
 
     # Variables which should not have bounds
-    assert cubes.extract_cube("time_instant").coord('time').bounds is None
-    assert cubes.extract_cube("time_point").coord('time').bounds is None
-    assert cubes.extract_cube("area_mean").coord('time').bounds is None
+    assert cubes.extract_cube("time_instant").coord("time").bounds is None
+    assert cubes.extract_cube("time_point").coord("time").bounds is None
+    assert cubes.extract_cube("area_mean").coord("time").bounds is None
 
     # Variables which should have bounds
-    assert cubes.extract_cube("time_mean").coord('time').bounds is not None
-    assert cubes.extract_cube("all_mean").coord('time').bounds is not None
-    assert cubes.extract_cube("multi_mean").coord('time').bounds is not None
+    assert cubes.extract_cube("time_mean").coord("time").bounds is not None
+    assert cubes.extract_cube("all_mean").coord("time").bounds is not None
+    assert cubes.extract_cube("multi_mean").coord("time").bounds is not None
