@@ -58,4 +58,6 @@ linkcheck_ignore = [
     r"https://stackoverflow.com/.+",
     # Sourceforge blocks requests.
     r"https://.+\.sourceforge\.io/.+",
+    # Met Office internal webserver.
+    r"https://wwwspice/.+",
 ]
