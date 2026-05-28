@@ -18,11 +18,37 @@ https://docs.pytest.org/en/latest/reference/fixtures.html#conftest-py-sharing-fi
 """
 
 from pathlib import Path
+import subprocess
 
 import iris.cube
 import pytest
 
 from CSET.operators import constraints, filters, read
+
+
+def cdl_to_nc(name: str, cdl: str, outpath: Path) -> Path:
+    """
+    Convert a CDL description into a netcdf file.
+
+    Creates a file ``outpath/name.nc``
+
+    See https://docs.unidata.ucar.edu/nug/2.0-draft/cdl.html for the details of
+    CDL format.
+
+    Args:
+        name: prefix of the output file name
+        cdl: CDL description of the data
+        output: output directory
+
+    Returns:
+        Path of the created netcdf file
+    """
+    cdlpath = outpath / f"{name}.cdl"
+    ncpath = outpath / f"{name}.nc"
+    with open(cdlpath, "w") as f:
+        f.write(cdl)
+    subprocess.run(['ncgen','-k', 'nc4','-o',str(ncpath), str(cdlpath)], check=True)
+    return ncpath
 
 
 @pytest.fixture()
