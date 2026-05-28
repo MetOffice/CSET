@@ -214,4 +214,4 @@ def test_entrypoint(monkeypatch):
 
     # Check that it runs all the needed subfunctions.
     finish_website.run()
-    assert counter == 5
+    assert counter == 7
