@@ -74,15 +74,25 @@ def test_convert_to_beaufort_scale_units(xwind):
     assert expected_unit == wind.convert_to_beaufort_scale(xwind).units
 
 
-def _make_cube(data):
-    """Tiny cube generator function for wind vector tests."""
-    lat = iris.coords.DimCoord([0, 1], standard_name="latitude", units="degrees")
-    lon = iris.coords.DimCoord([0, 1], standard_name="longitude", units="degrees")
+def _make_cube(data, units="m s-1"):
+    """Make a tiny u,v cube from data."""
+    data = np.asarray(data)
+    # Your operator expects y/x coords, so keep tests 2D (lat, lon)
+    if data.ndim != 2:
+        raise ValueError(
+            f"Expected 2D (lat, lon) data for test cube, got shape {data.shape}"
+        )
+
+    ny, nx = data.shape
+    lat = iris.coords.DimCoord(np.arange(ny), standard_name="latitude", units="degrees")
+    lon = iris.coords.DimCoord(
+        np.arange(nx), standard_name="longitude", units="degrees"
+    )
 
     return iris.cube.Cube(
-        np.array(data),
+        data,
         dim_coords_and_dims=[(lat, 0), (lon, 1)],
-        units="m s-1",
+        units=units,
     )
 
 
