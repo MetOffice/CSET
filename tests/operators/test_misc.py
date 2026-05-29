@@ -603,5 +603,6 @@ def test_visibility_mixed_units_cubelist():
 def test_visibility_non_convertible_units():
     """Test for cubelist with non-convertible units."""
     cube = _make_cube([[1.0]], units="seconds")
-    with pytest.raises(ValueError):
-        misc.convert_visibility_to_km(cube)
+    out = misc.convert_visibility_to_km(cube)
+    assert out.units == "seconds"
+    assert np.allclose(out.data, [[1.0]])
