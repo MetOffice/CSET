@@ -541,3 +541,67 @@ def test_extract_common_points_nocommonpoints(vertical_profile_cube):
         misc.extract_common_points(
             cubes=iris.cube.CubeList([cube1, cube2]), coordinate="pressure"
         )
+
+
+def _make_cube(data, units="m"):
+    """Tiny cube generator."""
+    data = np.asarray(data)
+    ny, nx = data.shape
+    lat = iris.coords.DimCoord(np.arange(ny), standard_name="latitude", units="degrees")
+    lon = iris.coords.DimCoord(
+        np.arange(nx), standard_name="longitude", units="degrees"
+    )
+    return iris.cube.Cube(
+        data,
+        dim_coords_and_dims=[(lat, 0), (lon, 1)],
+        units=units,
+    )
+
+
+def test_visibility_m_to_km():
+    """Test that visibility is converted to kilometres from metres (common use)."""
+    cube = _make_cube([[1000.0]], units="m")
+    out = misc.convert_visibility_to_km(cube)
+    assert out.units == "km"
+    assert np.allclose(out.data, [[1.0]])
+
+
+def test_visibility_already_km():
+    """Test that visibility already in km is unchanged."""
+    cube = _make_cube([[1.0]], units="km")
+    out = misc.convert_visibility_to_km(cube)
+    assert out.units == "km"
+    assert np.allclose(out.data, [[1.0]])
+
+
+def test_visibility_cubelist():
+    """Test that cubelist is converted to km."""
+    cubes = [
+        _make_cube([[1000.0]], units="m"),
+        _make_cube([[2000.0]], units="m"),
+    ]
+    out = misc.convert_visibility_to_km(cubes)
+    assert isinstance(out, iris.cube.CubeList)
+    assert len(out) == 2
+    assert np.allclose(out[0].data, [[1.0]])
+    assert np.allclose(out[1].data, [[2.0]])
+    assert all(c.units == "km" for c in out)
+
+
+def test_visibility_mixed_units_cubelist():
+    """Test for cubelist with mixed units."""
+    cubes = [
+        _make_cube([[1000.0]], units="m"),
+        _make_cube([[1.0]], units="km"),
+    ]
+    out = misc.convert_visibility_to_km(cubes)
+    assert np.allclose(out[0].data, [[1.0]])
+    assert np.allclose(out[1].data, [[1.0]])
+    assert all(c.units == "km" for c in out)
+
+
+def test_visibility_non_convertible_units():
+    """Test for cubelist with non-convertible units."""
+    cube = _make_cube([[1.0]], units="seconds")
+    with pytest.raises(ValueError):
+        misc.convert_visibility_to_km(cube)
