@@ -23,6 +23,7 @@ import iris.cube
 import iris.exceptions
 import numpy as np
 import pytest
+from cf_units import Unit
 
 from CSET.operators import misc, read
 
@@ -541,3 +542,66 @@ def test_extract_common_points_nocommonpoints(vertical_profile_cube):
         misc.extract_common_points(
             cubes=iris.cube.CubeList([cube1, cube2]), coordinate="pressure"
         )
+
+
+def _make_scalar_cube(
+    value,
+    var_name,
+    units=None,
+    model_name="Cardington",
+):
+    """Make tiny 1x1 cube with var_name, units, and model_name attribute."""
+    data = np.array([[value]], dtype=np.float64)
+    lat = iris.coords.DimCoord([0.0], standard_name="latitude", units="degrees")
+    lon = iris.coords.DimCoord([0.0], standard_name="longitude", units="degrees")
+
+    cube = iris.cube.Cube(
+        data,
+        dim_coords_and_dims=[(lat, 0), (lon, 1)],
+        units=units if units is not None else Unit("unknown"),
+    )
+    cube.var_name = var_name
+    cube.attributes["model_name"] = model_name
+    return cube
+
+
+def test_latent_heat_units_conversion():
+    """Test unit conversion of latent heat units."""
+    wq = _make_scalar_cube(0.001, "wq_covariance", units=Unit("kg m-2 s-1"))
+
+    out = misc.latent_heat_units(wq)
+    arr = out.data
+    if hasattr(arr, "compute"):
+        arr = arr.compute()
+
+    expected = 2.45e6 * 0.001
+    assert np.isclose(arr[0, 0], expected)
+    assert out.units == "W m-2"
+
+
+def test_latent_heat_units_passthrough_non_convertible():
+    """Test operator returns unchanged cube if not convertible."""
+    cube = _make_scalar_cube(5.0, "not_flux", units=Unit("K"))
+    out = misc.latent_heat_units(cube)
+    # should be unchanged
+    assert out is cube
+
+
+def test_latent_heat_units_cubelist_mixed():
+    """Test operator with mixed cubelist."""
+    wq = _make_scalar_cube(0.001, "wq_covariance", units=Unit("kg m-2 s-1"))
+    other = _make_scalar_cube(10.0, "temperature", units=Unit("K"))
+    out = misc.latent_heat_units([wq, other])
+
+    assert isinstance(out, iris.cube.CubeList)
+    assert len(out) == 2
+    # check conversion happened only for first cube
+    converted = next(c for c in out if c.var_name == "wq_covariance")
+    arr = converted.data
+    if hasattr(arr, "compute"):
+        arr = arr.compute()
+
+    assert np.isclose(arr[0, 0], 2.45e6 * 0.001)
+    assert converted.units == "W m-2"
+    # check passthrough
+    assert any(c is other for c in out)

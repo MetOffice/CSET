@@ -636,21 +636,19 @@ def latent_heat_units(
     Lc = 2.45e6  # J kg-1
 
     out = iris.cube.CubeList()
-
     for cube in iter_maybe(cubes):
-        # ---- ONLY ACT ON MASS FLUXES ----
+        # ACT ON MASS FLUXES
         if cube.units is None or cube.units.is_unknown():
             out.append(cube)
             continue
         if not cube.units.is_convertible(REQUIRED_UNITS):
-            # ✅ This is UM LE or some other diagnostic — leave untouched
+            # e.g. if UM LE or some other diagnostic — leave untouched
             out.append(cube)
             continue
 
         cube_a = cube.copy()
         cube_a = cube_a * Lc
         cube_a.units = OUTPUT_UNITS
-
         out.append(cube_a)
 
     return out[0] if len(out) == 1 else out
