@@ -640,14 +640,23 @@ def _mask_fill_cube(cube: iris.cube.Cube, ulp_factor=10):
     # Known Cardington fill values
     fill_values.extend([1e10, 1e11, 999999])
 
-    # --- Extract data and any existing mask
-    data = da.asarray(x, dtype=np.float32)
     if np.ma.isMaskedArray(x):
-        m0 = da.asarray(np.ma.getmaskarray(x), dtype=bool)
+        x_data = np.ma.getdata(x)
+        x_mask = np.ma.getmaskarray(x)
+    else:
+        x_data = x
+        x_mask = None
+
+    data = da.asarray(x_data, dtype=np.float32)
+
+    if x_mask is not None:
+        m0 = da.asarray(x_mask, dtype=bool)
+        # Convert masked elements into NaN immediately
+        data = da.where(m0, np.nan, data)
     else:
         m0 = da.zeros(data.shape, dtype=bool, chunks=data.chunks)
 
-    # --- Build mask
+    # Build mask
     m_fill = da.zeros(data.shape, dtype=bool, chunks=data.chunks)
     for fv in fill_values:
         ulp = ulp_factor * np.spacing(np.float32(fv))
@@ -656,7 +665,8 @@ def _mask_fill_cube(cube: iris.cube.Cube, ulp_factor=10):
     if not da.any(m0 | m_fill).compute():
         return cube  # nothing to clean
 
-    y = da.where(m0 | m_fill, np.nan, data)
+    masked = da.ma.masked_array(data, mask=(m0 | m_fill))
+    y = da.ma.filled(masked, np.nan)
 
     return cube.copy(data=y)
 
@@ -665,8 +675,7 @@ def mask_fill_values(cubes, ulp_factor=10):
     """
     Apply _mask_fill_value to every cube in the CubeList.
 
-    This must be run AFTER any operator that recreates data
-    (e.g. vector wind calculation, regridding).
+    This must be run AFTER any operator that recreates data.
     """
     if not isinstance(cubes, CubeList):
         cubes = CubeList([cubes])

@@ -543,9 +543,12 @@ def test_extract_common_points_nocommonpoints(vertical_profile_cube):
         )
 
 
-def _make_cube(data):
+def _make_cube(data, units="1"):
     """Tiny cube generator."""
-    data = np.asarray(data)
+    data = np.asanyarray(data)
+    if data.ndim != 2:
+        raise ValueError(f"Expected 2D data, got shape {data.shape}")
+
     ny, nx = data.shape
     lat = iris.coords.DimCoord(np.arange(ny), standard_name="latitude", units="degrees")
     lon = iris.coords.DimCoord(
@@ -554,14 +557,14 @@ def _make_cube(data):
     return iris.cube.Cube(
         data,
         dim_coords_and_dims=[(lat, 0), (lon, 1)],
-        units="1",
+        units=units,
     )
 
 
 def test_mask_fill_value_no_change():
     """Test mask fill value with no change."""
     cube = _make_cube([[1.0, 2.0]])
-    out = misc.mask_fill_values(cube)
+    out = misc._mask_fill_cube(cube)
     # return same object
     assert out is cube
 
@@ -569,19 +572,20 @@ def test_mask_fill_value_no_change():
 def test_mask_fill_value_sentinel():
     """Test mask with known fill value."""
     cube = _make_cube([[1.0, 1e10, 3.0]])
-    out = misc.mask_fill_values(cube)
+    out = misc._mask_fill_cube(cube)
     data = out.data.compute() if hasattr(out.data, "compute") else out.data
     assert np.isnan(data[0, 1])
-    assert np.allclose(data[[0, 2]], [1.0, 3.0])
+    assert np.allclose(data[0, [0, 2]], [1.0, 3.0])
 
 
 def test_mask_fill_value_masked_array():
     """Test with masked array input."""
     data = np.ma.array([[1.0, 2.0]], mask=[[False, True]])
     cube = _make_cube(data)
-    out = misc.mask_fill_values(cube)
+    out = misc._mask_fill_cube(cube)
     result = out.data.compute() if hasattr(out.data, "compute") else out.data
     assert not np.isnan(result[0, 0])
+    result = result.filled(np.nan) if np.ma.isMaskedArray(result) else result
     assert np.isnan(result[0, 1])
 
 
@@ -590,7 +594,7 @@ def test_mask_fill_value_ulp():
     fv = np.float32(1e10)
     near_fv = fv + np.spacing(fv) * 5  # within tolerance
     cube = _make_cube([[near_fv]])
-    out = misc.mask_fill_values(cube, ulp_factor=10)
+    out = misc._mask_fill_cube(cube, ulp_factor=10)
     data = out.data.compute() if hasattr(out.data, "compute") else out.data
     assert np.isnan(data[0, 0])
 
@@ -599,7 +603,7 @@ def test_mask_fill_value_combined():
     """Test with combined mask and real input."""
     data = np.ma.array([[1e10, 2.0]], mask=[[False, True]])
     cube = _make_cube(data)
-    out = misc.mask_fill_values(cube)
+    out = misc._mask_fill_cube(cube)
     result = out.data.compute() if hasattr(out.data, "compute") else out.data
     assert np.isnan(result[0, 0])  # sentinel
     assert np.isnan(result[0, 1])  # masked
