@@ -617,22 +617,19 @@ def differentiate(
         return new_cubelist
 
 
-def _mask_fill_value(cube: iris.cube.Cube, ulp_factor=10):
+def _mask_fill_cube(cube: iris.cube.Cube, ulp_factor=10):
     """
     Avoid plotting data flagged as bad/missing.
 
-    Force masked data and known sentinel values to np.nan
+    Force masked data and known fill values to np.nan
     so they are not plotted.
 
     """
     import dask.array as da
 
     x = cube.lazy_data()
-
-    # --- Collect possible fill values safely ---
     fill_values = []
-
-    # 1. NetCDF-style fill value (if present)
+    # NetCDF-style fill value (if present)
     try:
         fv = getattr(x._meta, "fill_value", None)
         if fv is not None:
@@ -640,18 +637,17 @@ def _mask_fill_value(cube: iris.cube.Cube, ulp_factor=10):
     except AttributeError:
         pass  # x has no _meta (plain ndarray)
 
-    # 2. Known Cardington sentinels
+    # Known Cardington fill values
     fill_values.extend([1e10, 1e11, 999999])
 
-    # --- Extract data and any existing mask ---
+    # --- Extract data and any existing mask
     data = da.asarray(x, dtype=np.float32)
-
     if np.ma.isMaskedArray(x):
         m0 = da.asarray(np.ma.getmaskarray(x), dtype=bool)
     else:
         m0 = da.zeros(data.shape, dtype=bool, chunks=data.chunks)
 
-    # --- Build sentinel mask ---
+    # --- Build mask
     m_fill = da.zeros(data.shape, dtype=bool, chunks=data.chunks)
     for fv in fill_values:
         ulp = ulp_factor * np.spacing(np.float32(fv))
@@ -677,6 +673,6 @@ def mask_fill_values(cubes, ulp_factor=10):
 
     cleaned = CubeList()
     for cube in cubes:
-        cleaned.append(_mask_fill_value(cube, ulp_factor=ulp_factor))
+        cleaned.append(_mask_fill_cube(cube, ulp_factor=ulp_factor))
 
     return cleaned
