@@ -596,7 +596,7 @@ def test_latent_heat_units_cubelist_mixed():
     assert isinstance(out, iris.cube.CubeList)
     assert len(out) == 2
     # check conversion happened only for first cube
-    converted = next(c for c in out if c.var_name == "wq_covariance")
+    converted = next(c for c in out if c.units == "W m-2")
     arr = converted.data
     if hasattr(arr, "compute"):
         arr = arr.compute()
