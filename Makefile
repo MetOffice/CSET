@@ -14,7 +14,8 @@ help: ## Display this help message.
 prepare-lockfiles:
 	@hostname -f | grep -qF metoffice \
 	  && echo "Running on Met Office system; updating lockfiles to use conda-forge mirror." \
-	  && sed -i "s|conda.anaconda.org|metoffice.jfrog.io/metoffice/api/conda|" requirements/locks/*.txt
+	  && sed -i "s|conda.anaconda.org|metoffice.jfrog.io/metoffice/api/conda|" requirements/locks/*.txt \
+	  || true
 
 conda: prepare-lockfiles
 	conda create -n cset-dev --file requirements/locks/latest --yes
