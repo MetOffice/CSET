@@ -10,6 +10,11 @@ steps:
     subarea_extent: $SUBAREA_EXTENT
     constraint: ['observed_$VARNAME', '$VARNAME']
 
+  - operator: filters.filter_multiple_cubes
+    constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+
   - operator: misc.extract_common_points
     coordinate: time
 
@@ -35,8 +40,8 @@ steps:
                varname: observed_$VARNAME
 
   - operator: plot.plot_histogram_series
-    sequence_coordinate: station        ## separate output for each station
-      #sequence_coordinate: realization    ## all output on 1 plot
+    #sequence_coordinate: station        ## separate output for each station
+    sequence_coordinate: realization    ## all output on 1 plot
 
   - operator: write.write_cube_to_nc
     overwrite: True

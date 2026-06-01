@@ -196,6 +196,9 @@ def read_cubes(
     # Select sub region.
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
 
+    for cube in cubes:
+        print(cube)
+
     # Merge and concatenate cubes now metadata has been fixed.
     cubes = _merge_cubes_check_ensemble(cubes)
     cubes = cubes.concatenate()
@@ -1093,9 +1096,9 @@ def _check_combine_point_observations(cubes: iris.cube.CubeList):
                 cube.remove_coord("obs_source")
             cube.coord("station").points = cube.coord("station").points + nstation
             nstation = nstation + len(cube.coord("station").points)
-        if "cset_comparison_base" in cube.attributes:
-            cset_comparison = cube.attributes["cset_comparison_base"]
-        else:
-            cube.attributes["cset_comparison_base"] = cset_comparison
+            if "cset_comparison_base" in cube.attributes:
+                cset_comparison = cube.attributes["cset_comparison_base"]
+            else:
+                cube.attributes["cset_comparison_base"] = cset_comparison
 
     return cubes

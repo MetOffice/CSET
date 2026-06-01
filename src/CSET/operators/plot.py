@@ -202,8 +202,6 @@ def _setup_spatial_map(
 
         # Define spatial map projection.
         coord_system = cube.coord(lat_axis).coord_system
-        print(coord_system)
-        print(cube.coord(lat_axis))
         if isinstance(coord_system, iris.coord_systems.RotatedGeogCS):
             # Define rotated pole map projection for rotated pole inputs.
             projection = ccrs.RotatedPole(
@@ -241,7 +239,7 @@ def _setup_spatial_map(
                 )
                 # See also https://scitools.org.uk/cartopy/docs/v0.15/crs/projections.html.
                 # else:
-                #    projection = ccrs.PlateCarree(central_longitude=central_longitude)
+                projection = ccrs.PlateCarree(central_longitude=central_longitude)
                 crs = ccrs.PlateCarree()
 
         # Define axes for plot (or subplot) with required map projection.
@@ -264,8 +262,8 @@ def _setup_spatial_map(
             else:
                 coastcol = "black"
             logging.debug("Plotting coastlines and borderlines in colour %s.", coastcol)
-            axes.coastlines(resolution="10m", color=coastcol)
-            axes.add_feature(cfeature.BORDERS, edgecolor=coastcol)
+            axes.coastlines(resolution="10m", color=coastcol, alpha=0.8)
+            axes.add_feature(cfeature.BORDERS, edgecolor=coastcol, alpha=0.3)
 
         # Add gridlines.
         gl = axes.gridlines(
@@ -1511,16 +1509,52 @@ def _plot_and_save_scatter_series(
 
     model_colors_map = _get_model_colors_map(cubes)
 
-    ## TEST CUBELIST len >= 2##
+    percentiles = np.arange(0, 100, 5)
+    percentiles[0] = 1
+    percentiles[-1] = 99
+    quantiles = iris.cube.CubeList()
 
-    for cube in iter_maybe(cubes[1:]):
-        label = None
-        color = "black"
-        if model_colors_map:
-            label = cube.attributes.get("model_name")
-            color = model_colors_map[label]
+    for plottype in ["points", "quantiles"]:
+        nplot = 0
+        for cube in iter_maybe(cubes):
+            label = None
+            color = "black"
+            if model_colors_map:
+                label = cube.attributes.get("model_name")
+                color = model_colors_map[label]
 
-        iplt.scatter(cubes[0], cube, color=color, marker="o", label=label)
+            # Plot all data points
+            if plottype == "points":
+                if nplot > 1:
+                    plt.scatter(
+                        cubes[0].data.flatten(),
+                        cube.data.flatten(),
+                        color=color,
+                        marker="+",
+                        label=None,
+                        alpha=0.3,
+                    )
+
+            elif plottype == "quantiles":
+                # Construct Q-Q plot
+                quantiles.append(
+                    cube.collapsed(
+                        cube.coords(dim_coords=True),
+                        iris.analysis.PERCENTILE,
+                        percent=percentiles,
+                    )
+                )
+                if nplot > 1:
+                    iplt.scatter(
+                        quantiles[0],
+                        quantiles[-1],
+                        color=color,
+                        marker="o",
+                        label=label,
+                        edgecolors="black",
+                    )
+
+            nplot = nplot + 1
 
     # Add some labels and tweak the style.
     ax.set_title(title, fontsize=16)
@@ -2136,10 +2170,14 @@ def plot_line_series(
 
     num_models = _get_num_models(cube)
 
+    print(cube)
+    print(num_models)
+
     _validate_cube_shape(cube, num_models)
 
     # Iterate over all cubes and extract coordinate to plot.
-    cubes = iter_maybe(cube)
+    print(cube)
+    cubes = iris.cube.CubeList(iter_maybe(cube))
     coords = []
     for cube in cubes:
         try:
@@ -2161,7 +2199,10 @@ def plot_line_series(
     # Do the actual plotting.
 
     # Treat cubes with station coordinate as point observation timeseries, looping over available points
-    if "station" in [c.name() for c in cubes[0].coords()]:
+    if (
+        "station" in [c.name() for c in cubes[0].coords()]
+        and len(cubes[0].coord("station").points) > 1
+    ):
         for station in cubes[0].coord("station").points:
             station_cubes = cubes.extract(iris.Constraint(station=station))
             station_name = station_cubes[0].coord("Station identifier").points[0]
@@ -2905,6 +2946,8 @@ def plot_scatter_series(
     _check_sequence(cubes, sequence_coordinate)
 
     vmin, vmax = _set_axis_range(cubes)
+
+    ### TO DO: MAKE SCATTER SINGLE/POSTAGE (OR RATIONALISE LOGIC BELOW)
 
     # Make postage stamp plots if stamp_coordinate exists and has more than a
     # single point. If single_plot is True:

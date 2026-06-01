@@ -114,19 +114,22 @@ def addition(addend_1, addend_2):
     return addend_1 + addend_2
 
 
-def subtraction(minuend, subtrahend):
+def subtraction(
+    minuend: Cube | CubeList, subtrahend: Cube | CubeList
+) -> Cube | CubeList:
     """Subtraction of two fields.
 
     Parameters
     ----------
-    minuend: Cube
+    minuend: Cube | CubeList
         Any field to have another field subtracted from it.
-    subtrahend: Cube
+    subtrahend: Cube | CubeList
         Any field to be subtracted from to another field.
 
     Returns
     -------
-    Cube
+    Cube | CubeList
+        The result of minuend - subtrahend
 
     Raises
     ------
@@ -145,7 +148,36 @@ def subtraction(minuend, subtrahend):
     >>> model_diff = misc.subtraction(temperature_model_A, temperature_model_B)
 
     """
-    return minuend - subtrahend
+
+    def subtract_preserve_attributes(a, b):
+        result = a - b
+        result.attributes.update(a.attributes)
+        return result
+
+    # Case where both inputs are single cubes
+    if isinstance(minuend, iris.cube.Cube) and isinstance(subtrahend, iris.cube.Cube):
+        return subtract_preserve_attributes(minuend, subtrahend)
+
+    # Check if minuend is iterable
+    cubes_a = iter_maybe(minuend)
+
+    # Case: subtrahend also iterable
+    if isinstance(subtrahend, iris.cube.CubeList):
+        cubes_b = iter_maybe(subtrahend)
+        result = iris.cube.CubeList(
+            [
+                subtract_preserve_attributes(a, b)
+                for a, b in zip(cubes_a, cubes_b, strict=True)
+            ]
+        )
+    else:
+        # Case: subtract single cube from each minuend
+        result = iris.cube.CubeList(
+            [subtract_preserve_attributes(a, subtrahend) for a in cubes_a]
+        )
+
+    # Return single cube if only one result, else return CubeList
+    return result[0] if len(result) == 1 else result
 
 
 def division(numerator, denominator):
@@ -561,7 +593,9 @@ def extract_common_points(cubes: iris.cube.CubeList, coordinate: str):
     try:
         points_list = []
         for cube in cubes:
+            print(cube)
             points_list.append(cube.coord(coordinate).points)
+            print(cube.coord(coordinate))
     except iris.exceptions.CoordinateNotFoundError as err:
         raise ValueError(f"Both cubes must have an {coordinate} coordinate") from err
 
