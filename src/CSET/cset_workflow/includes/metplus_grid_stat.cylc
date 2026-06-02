@@ -1,12 +1,38 @@
 {% if RUN_METPLUS_GRID_STAT|default(False) %}
 [scheduling]
     [[graph]]
-    {{CSET_CYCLE_PERIOD}} = """
-    metplus_grid_stat => housekeeping_full
-    """
+    {% macro metplus_point_stat_graph() %}
+        {% for model in models %}
+            fetch_fcst_m{{model["id"]}} => metplus_prep_fcst_m{{model["id"]}}
+            metplus_prep_fcst_m{{model["id"]}} => metplus_grid_stat_m{{model["id"]}}
+        {% endfor %}
+        METPLUS_GRID_STAT:succeed-all => grid_stat_plot
+        grid_stat_plot => cycle_complete
+    {% endmacro %}
+    {% if CSET_CYCLING_MODE == "case_study" %}
+        {% for date in CSET_CASE_DATES %}
+            R1/{{date}} = """
+                    {{metplus_point_stat_graph()}}
+                """
+        {% endfor %}
+    {% elif CSET_CYCLING_MODE == "trial" %}
+        {{CSET_TRIAL_CYCLE_PERIOD}} = """
+                    {{metplus_point_stat_graph()}}
+                """
+    {% endif %}
 
 [runtime]
-    [[metplus_grid_stat]]
+    [[METPLUS_GRID_STAT]]
     # Runs METplus wrappers for point stat calculations.
         inherit = METPLUS
+        [[[environment]]]
+            ROSE_TASK_APP = metplus_grid_stat
+
+{% for model in models %}
+    [[metplus_grid_stat_m{{model["id"]}}]]
+        inherit = METPLUS_GRID_STAT, METPLUS_M{{model["id"]}}
+{% endfor %}
+
+    [[grid_stat_plot]]
+
 {% endif %}

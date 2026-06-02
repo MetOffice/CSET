@@ -35,24 +35,6 @@
     [[metplus_prep_obs]]
         inherit = METPLUS
 
-{% for model in models %}
-    [[metplus_prep_fcst_m{{model["id"]}}]]
-    # Prepares model data for use by metplus
-        inherit = METPLUS
-        [[[environment]]]
-            ROSE_TASK_APP = metplus_prep_fcst
-            MODEL_NAME = {{model["name"]}}
-            MODEL_ID = m{{model["id"]}}
-            INPUT_PATHS = $CYLC_TASK_SHARE_CYCLE_DIR/data/{{model["id"]}}
-        {% if SELECT_SUBAREA %}
-            SUBAREA_TYPE = {{SUBAREA_TYPE}}
-            SUBAREA_EXTENT = {{SUBAREA_EXTENT}}
-        {% else %}
-            SUBAREA_TYPE = None
-            SUBAREA_EXTENT = None
-        {% endif %}
-{% endfor %}
-
     [[metplus_ascii2nc]]
     # Runs METplus wrappers for ASCII to nc ingestion of obs.
         inherit = METPLUS
@@ -80,10 +62,7 @@
 {% for model in models %}
     [[metplus_point_stat_m{{model["id"]}}]]
     # Runs METplus wrappers for point stat calculations.
-        inherit = METPLUS_POINT_STAT
-        [[[environment]]]
-            MODEL_NAME = {{model["name"]}}
-            model_name = {{model["name"] | lower}}
+        inherit = METPLUS_POINT_STAT, METPLUS_M{{model["id"]}}
 
     [[metplus_point_stat_postproc_m{{model["id"]}}]]
     # Archives point stat results in tar files ready for verpy loading.
