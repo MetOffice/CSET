@@ -27,6 +27,7 @@
         inherit = METPLUS
         [[[environment]]]
             ROSE_TASK_APP = metplus_grid_stat
+            GRID_STAT_OBS = {{METPLUS_GRID_STAT_OBS|join(" ")}}
 
 {% for model in models %}
     [[metplus_grid_stat_m{{model["id"]}}]]
