@@ -95,6 +95,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         {% if SKIP_WRITE|default(False) %}
         SKIP_WRITE = True
         {% endif %}
+        SITE = {{SITE}}
 
     [[FETCH_DATA]]
     execution time limit = PT1H
