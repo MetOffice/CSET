@@ -499,7 +499,7 @@ function create_diagnostic_element(record) {
     // Add a callback updating the iframe when the link is clicked.
     button.addEventListener("click", (event) => {
       event.preventDefault();
-      display_diagnostic(`${PLOTS_PATH}/${path}`, position);
+      display_diagnostic(path, position);
     });
 
     // Add button to chooser.
@@ -592,8 +592,8 @@ function setup_plots_sidebar() {
   if (!document.getElementById("plot-selector")) {
     return;
   }
-  // Loading of plot index file, and adding them to the sidebar.
-  fetch(`${PLOTS_PATH}/index.jsonl`)
+  // Load plot index file, ensuring it is up-to-date.
+  fetch("index.jsonl", { cache: "no-cache" })
     .then((response) => {
       // Display a message and stop if the fetch fails.
       if (!response.ok) {
