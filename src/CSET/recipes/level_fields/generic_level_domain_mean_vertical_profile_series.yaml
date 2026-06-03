@@ -1,5 +1,5 @@
 category: Profiles
-title: Domain mean $VARNAME vertical profile $METHOD
+title: Domain mean $VARNAME vertical profile $METHOD $SUBAREA_NAME
 description: Plots the $METHOD of vertical profiles for the domain horizontal mean
   $VARNAME using a $LEVELTYPE coordinate. For ensembles, the control
   member (assumed realization 0) is a thicker line with circles, the perturbed
@@ -27,7 +27,7 @@ steps:
 
   # If required, collapse data using specified time analysis method (or sequence)
   - operator: collapse.collapse
-    coordinate: [time]
+    coordinate: time
     method: $METHOD
 
   # Plot the vertical line series.
