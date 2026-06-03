@@ -1144,6 +1144,7 @@ def _plot_and_save_vertical_line_series(
                     marker="o",
                     ls="-",
                     lw=3,
+                    alpha=0.85,
                     label=f"{label} (control)"
                     if len(cube.coord(ensemble_coord).points) > 1
                     else label,
@@ -1443,7 +1444,6 @@ def _plot_and_save_histogram_series(
     # Set default that histograms will produce probability density function
     # at each bin (integral over range sums to 1).
     density = True
-
     for cube in iter_maybe(cubes):
         # Easier to check title (where var name originates)
         # than seeing if long names exist etc.
@@ -1473,7 +1473,6 @@ def _plot_and_save_histogram_series(
             np.min(bins),
             np.max(bins),
         )
-
         # Reshape cube data into a single array to allow for a single histogram.
         # Otherwise we plot xdim histograms stacked.
         cube_data_1d = (cube.data).flatten()
@@ -1493,7 +1492,14 @@ def _plot_and_save_histogram_series(
             y = y[1:]
 
         ax.plot(
-            y[:-1], x, color=color, linewidth=3, marker="o", markersize=6, label=label
+            y[:-1],
+            x,
+            color=color,
+            linewidth=3,
+            linestyle="-",
+            marker="o",
+            markersize=6,
+            label=label,
         )
 
     # Add some labels and tweak the style.
