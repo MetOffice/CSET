@@ -593,9 +593,7 @@ def extract_common_points(cubes: iris.cube.CubeList, coordinate: str):
     try:
         points_list = []
         for cube in cubes:
-            print(cube)
             points_list.append(cube.coord(coordinate).points)
-            print(cube.coord(coordinate))
     except iris.exceptions.CoordinateNotFoundError as err:
         raise ValueError(f"Both cubes must have an {coordinate} coordinate") from err
 

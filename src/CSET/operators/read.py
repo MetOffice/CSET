@@ -196,9 +196,6 @@ def read_cubes(
     # Select sub region.
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
 
-    for cube in cubes:
-        print(cube)
-
     # Merge and concatenate cubes now metadata has been fixed.
     cubes = _merge_cubes_check_ensemble(cubes)
     cubes = cubes.concatenate()
