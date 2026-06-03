@@ -126,6 +126,36 @@ def generate_level_constraint(
         return iris.Constraint(**{coordinate: levels})
 
 
+def generate_remove_single_level_constraint(
+    coord: str, level: int = 0, **kwargs
+) -> iris.Constraint:
+    """
+    Generate a constraint to remove a single model level number.
+
+    Operator that returns a constraint to remove the given level. By
+    default the first level is removed (assumed to be
+    level zero). However, any level can be removed.
+
+    Arguments
+    ---------
+    coord: str
+        The coordinate for which the level is to be removed.
+    level: int
+        Default is 0. The model level number to remove.
+
+    Returns
+    -------
+        iris.Constraint
+
+    Notes
+    -----
+    This operator is primarily used to ensure the levels are consistent
+    as some level sets (e.g. specific humidity) will be on the same level set
+    but have a different number of levels (e.g 71 instead of expected 70).
+    """
+    return iris.Constraint(**{coord: lambda m: m.point != level})
+
+
 def generate_cell_methods_constraint(
     cell_methods: list,
     varname: str | None = None,

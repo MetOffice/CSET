@@ -42,7 +42,7 @@ def convert_to_beaufort_scale(
     The relationship used to convert the windspeed from m/s to the Beaufort
     Scale is an empirical relationship (e.g., [Beer96]_):
 
-    .. math:: F = (\frac{v}{0.836})^{2/3}
+    .. math:: F = \left(\frac{v}{0.836}\right)^{2/3}
 
     for F the Beaufort Force, and v the windspeed at 10 m in m/s.
 

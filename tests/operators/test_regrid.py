@@ -20,7 +20,7 @@ import iris.cube
 import numpy as np
 import pytest
 
-from CSET.operators import _utils, read, regrid
+from CSET.operators import _utils, misc, read, regrid
 
 
 # Session scope fixtures, so the test data only has to be loaded once.
@@ -428,3 +428,58 @@ def test_regrid_to_single_point_returns_close_single_point_cube(cardington_cube)
     test_cube = cardington_cube.copy()
     expected_cube = regrid.regrid_to_single_point(test_cube, 52.11, -0.45, "realworld")
     assert cardington_cube == expected_cube
+
+
+def test_vertical_interpolation(model_level_cube):
+    """Test cube is vertically interpolated to a different level set."""
+    # Create a target cube.
+    target_cube = misc.differentiate(model_level_cube, "model_level_number")
+    # Calculate the interpolation outside of the operator.
+    expected_cube = model_level_cube.copy()
+    expected_cube = expected_cube.interpolate(
+        [("model_level_number", target_cube.coord("model_level_number").points)],
+        iris.analysis.Linear(),
+    )
+    # Check that the operator is transformed onto the same vertical level set and the data matches.
+    assert (
+        regrid.vertical_interpolation(
+            model_level_cube, coordinate="model_level_number", target=target_cube
+        )
+        .coord("model_level_number")
+        .points
+        == expected_cube.coord("model_level_number").points
+    ).all()
+    assert np.allclose(
+        regrid.vertical_interpolation(
+            model_level_cube, coordinate="model_level_number", target=target_cube
+        ).data,
+        expected_cube.data,
+        rtol=1e-06,
+        atol=1e-02,
+    )
+
+
+def test_vertical_interpolation_cubelist(model_level_cube):
+    """Test CubeList is vertically interpolated to a different level set."""
+    # Create a CubeList by using repeat data.
+    input_list = iris.cube.CubeList([model_level_cube, model_level_cube])
+    # Create the target CubeList.
+    target_list = misc.differentiate(input_list, "model_level_number")
+    # Use the operator to create an actual CubeList to check.
+    actual_cubelist = regrid.vertical_interpolation(
+        input_list, coordinate="model_level_number", target=target_list
+    )
+    # Create and expected results CubeList outside of the function.
+    expected_cube = model_level_cube.copy()
+    expected_cube = expected_cube.interpolate(
+        [("model_level_number", target_list[0].coord("model_level_number").points)],
+        iris.analysis.Linear(),
+    )
+    expected_cubelist = iris.cube.CubeList([expected_cube, expected_cube])
+    # Check that the cubes in the CubeList have the same vertical interpolation applied correctly.
+    for cube_a, cube_b in zip(actual_cubelist, expected_cubelist, strict=True):
+        assert (
+            cube_a.coord("model_level_number").points
+            == cube_b.coord("model_level_number").points
+        ).all()
+        assert np.allclose(cube_a.data, cube_b.data, rtol=1e-06, atol=1e-02)
