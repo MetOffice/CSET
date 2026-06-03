@@ -49,6 +49,15 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     parbake_recipes:skip_baking? | bake_recipes => cycle_complete
     """
 
+    # Make sure all cycles are complete before housekeeping
+    {% if CSET_CYCLING_MODE == "case_study" %}
+        {% for i in range(1, CSET_CASE_DATES | length) %}
+        R1/{{CSET_CASE_DATES[i]}} = """cycle_complete[{{CSET_CASE_DATES[i-1]}}] => cycle_complete"""
+        {% endfor %}
+    {% elif CSET_CYCLING_MODE == "trial" %}
+        {{CSET_TRIAL_CYCLE_PERIOD}} = """cycle_complete[-{{CSET_TRIAL_CYCLE_PERIOD}}] => cycle_complete"""
+    {% endif %}
+
     # Only runs on the final cycle.
     R1/$ = """
     # Run aggregation recipes.
