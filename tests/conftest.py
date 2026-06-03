@@ -180,6 +180,32 @@ def transect_source_cube(transect_source_cube_readonly):
 
 
 @pytest.fixture(scope="session")
+def ugridml_plev_cubes_readonly():
+    """Get a unstructured cubelist to test with. It is NOT safe to modify."""
+    return read.read_cubes("tests/test_data/regrid/ml_ugrid/ugrid_multilev_geopot.nc")
+
+
+@pytest.fixture()
+def ugridml_plev_cubes(ugridml_plev_cubes_readonly):
+    """Get a unstructured cubelist to test with. It is safe to modify."""
+    return ugridml_plev_cubes_readonly.copy()
+
+
+@pytest.fixture(scope="session")
+def ugridml_surf_cubes_readonly():
+    """Get a unstructured cubelist to test with. It is NOT safe to modify."""
+    return read.read_cubes(
+        "tests/test_data/regrid/ml_ugrid/ugrid_singlevartime_precip.nc"
+    )
+
+
+@pytest.fixture()
+def ugridml_surf_cubes(ugridml_surf_cubes_readonly):
+    """Get a unstructured cubelist to test with. It is safe to modify."""
+    return ugridml_surf_cubes_readonly.copy()
+
+
+@pytest.fixture(scope="session")
 def cardington_cube_readonly():
     """Get a 3D cube to test with. It is NOT safe to modify."""
     return read.read_cube("tests/test_data/cardington_air_temp_test.nc")
