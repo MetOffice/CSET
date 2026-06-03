@@ -182,7 +182,7 @@ def transect_source_cube(transect_source_cube_readonly):
 @pytest.fixture(scope="session")
 def ugridml_plev_cubes_readonly():
     """Get a unstructured cubelist to test with. It is NOT safe to modify."""
-    return read.read_cubes("tests/test_data/regrid/ml_ugrid/ugrid_multilev_geopot.nc")
+    return read.read_cubes("tests/test_data/regrid/ugrid_multilev_geopot.nc")
 
 
 @pytest.fixture()
@@ -194,9 +194,7 @@ def ugridml_plev_cubes(ugridml_plev_cubes_readonly):
 @pytest.fixture(scope="session")
 def ugridml_surf_cubes_readonly():
     """Get a unstructured cubelist to test with. It is NOT safe to modify."""
-    return read.read_cubes(
-        "tests/test_data/regrid/ml_ugrid/ugrid_singlevartime_precip.nc"
-    )
+    return read.read_cubes("tests/test_data/regrid/ugrid_singlevartime_precip.nc")
 
 
 @pytest.fixture()
