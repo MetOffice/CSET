@@ -39,6 +39,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=[model["id"] for model in models],
                 aggregation=False,
@@ -64,6 +65,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=[model["id"] for model in models],
                 aggregation=False,
@@ -89,6 +91,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=[model["id"] for model in models],
                 aggregation=False,
