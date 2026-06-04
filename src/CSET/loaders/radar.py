@@ -95,6 +95,13 @@ def load(conf: Config):
         if radar["varname"] == "Hourly rain accumulation"
     ]
 
+    # Form the list of accumulated hourly weights for Nimrod radar sources.
+    wts_radars = [
+        radar
+        for radar in radar_sources
+        if radar["varname"] == "Hourly wts accumulation"
+    ]
+
     # Surface (2D) fields for Nimrod radar rainfall.
     #
     # The different sources of Nimrod rainfall accumulation have
@@ -131,6 +138,40 @@ def load(conf: Config):
             variables={
                 "VARNAME": next(radar["varname"] for radar in accum_radars),
                 "MODEL_NAME": [radar["name"] for radar in accum_radars],
+                "SEQUENCE": "time"
+                if conf.HISTOGRAM_SURFACE_FIELD_SEQUENCE
+                else "realization",
+                "SUBAREA_NAME": "",
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+            },
+            aggregation=False,
+        )
+
+    # Histograms for surface (2D) Nimrod radar hourly accumulated rainfall.
+    #
+    # The histograms are produced after the rainfall obs have been masked using
+    # the associated Nimrod weights file.
+    #
+    # To get multiple radar sources plotted on the histogram the
+    # recipe must be done by passing lists of the radar_ids and
+    # the radar_names. As this is a multiline plot, all radar sources
+    # share the same radar variable name.
+    radar_obs_ids = [radar["id"] for radar in accum_radars]
+    radar_wts_ids = [radar["id"] for radar in wts_radars]
+    combined_ids = radar_obs_ids + radar_wts_ids
+    print(" combined_ids: ", combined_ids)
+    if conf.HISTOGRAM_SURFACE_FIELD:
+        yield RawRecipe(
+            recipe="radar_dev3.yaml",
+            # model_ids -> Becomes $INPUT_PATHS
+            # model_ids=[ radar_obs_ids, radar_wts_ids],
+            model_ids=combined_ids,
+            variables={
+                "VARNAME": next(radar["varname"] for radar in accum_radars),
+                "ALL_NAME": combined_ids,
+                "RADAR_NAME": [radar["id"] for radar in accum_radars],
+                "WEIGHTS_NAME": [radar["id"] for radar in wts_radars],
                 "SEQUENCE": "time"
                 if conf.HISTOGRAM_SURFACE_FIELD_SEQUENCE
                 else "realization",
