@@ -742,7 +742,66 @@ def _restructure_ugrid_regrid(cube, tri, lat_grid, lon_grid, xy):
         return out_cube
 
 
-def restructure_ugrid(cubes):
+def restructure_ugrid(cubes, dataloc):
+    """
+    Restructure ugrid cubes using parallel processing.
+
+    Parameters
+    ----------
+    cubes : iris.cube.CubeList
+        A cubelist containing unstructured cubes, along with cubes containing
+        latitude and longitude information.
+
+    dataloc: str | None
+        Path to location to store saved restructured data to, if cylc workflow.
+        If None, then return restructured cubes only.
+
+    Returns
+    -------
+    iris.cube.CubeList
+        A list of iris cubes, that have been restructured onto a regular grid,
+        with appropriate corrections to metadata.
+    """
+    # First, extract latitude and longitude coordinates
+    lat = cubes.extract("latitude")[0].data
+    lon = cubes.extract("longitude")[0].data
+    points = np.column_stack((lon, lat))
+
+    # Create output mesh, using standard grid ~2km resolution
+    # TODO: discussions with ML developers to include metadata so
+    # we don't have to a) guess lat/lon resolution and b) know if
+    # data is truly unstructured or just flattened (where np.reshape
+    # would be substantially faster and preserve original data).
+    lon_grid = np.arange(lon.data.min(), lon.data.max(), 0.02)
+    lat_grid = np.arange(lat.data.min(), lat.data.max(), 0.02)
+    Lon2d, Lat2d = np.meshgrid(lon_grid, lat_grid)
+
+    # Flatten target points
+    xy = np.column_stack((Lon2d.ravel(), Lat2d.ravel()))
+
+    # Build triangulation via a dummy interpolator
+    tri_interp = LinearNDInterpolator(points, np.zeros(points.shape[0]))
+    tri = tri_interp.tri
+
+    # Utilise multiprocessing to speed up code.
+    with Pool(processes=int(os.cpu_count() / 2)) as pool:
+        results = pool.starmap(
+            _restructure_ugrid_regrid,
+            [(cube, tri, lat_grid, lon_grid, xy) for cube in cubes],
+        )
+
+    # Filter results to only collect cubes, not None which is sometimes returned
+    # from _restructure_ugrid_regrid.
+    fixed_cubes = iris.cube.CubeList(c for c in results if c is not None)
+
+    # Save concatenated cubes to data location, for other processes to use if cylc.
+    if dataloc:
+        iris.save(fixed_cubes.concatenate(), dataloc + "/restructured_cubes.nc")
+    else:
+        return fixed_cubes.concatenate()
+
+
+def restructure_wrapper(cubes):
     """
     Restructured unstructured or flattened data onto a regular grid.
 
@@ -758,88 +817,63 @@ def restructure_ugrid(cubes):
         A list of iris cubes, that have been restructured onto a regular grid,
         with appropriate corrections to metadata.
     """
-    # Setup folder containing data location to write lock/restructured data.
-    dataloc = os.environ["ROSE_DATAC"] + "/data/1/"
+    # Determine whether we are running in a CYLC workflow or if this is a command
+    # line bake
+    try:
+        dataloc = os.environ["ROSE_DATAC"] + "/data/1/"
+        cylc = True
+    except KeyError:
+        cylc = False
 
     # If this directory doesn't exist, we are probably not running in a rose suite.
-    # Currently, command line use of restructuring is not supported, as it is not
-    # clear where a sensible location to store regridded data is.
     if not os.path.isdir(dataloc):
-        raise NotImplementedError(
-            "Restructuring data outside a cylc workflow is not currently supported."
-        )
+        raise FileNotFoundError(f"Assuming cylc workflow, but no dir {dataloc}")
 
     logging.info("Restructuring UGRID...")
 
-    # Define location of lock and done hidden file.
-    lock_path = os.path.join(dataloc, ".lock")
-    done_path = os.path.join(dataloc, ".done")
+    if cylc:
+        # Define location of lock and done hidden file.
+        lock_path = os.path.join(dataloc, ".lock")
+        done_path = os.path.join(dataloc, ".done")
 
-    while True:
-        try:
-            # Try and create file lock in data directory. If not possible, it will
-            # raise FileExistsError and not do any data restructuring
-            fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-            os.close(fd)
+        while True:
+            try:
+                # Try and create file lock in data directory. If not possible, it will
+                # raise FileExistsError and not do any data restructuring
+                fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+                os.close(fd)
 
-            logging.info("Running preprocess restructure...")
+                logging.info("Running preprocess restructure...")
+                fixed_cubes = restructure_ugrid(cubes, dataloc)
 
-            # First, extract latitude and longitude coordinates
-            lat = cubes.extract("latitude")[0].data
-            lon = cubes.extract("longitude")[0].data
-            points = np.column_stack((lon, lat))
+                # Write done file.
+                fd = os.open(done_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+                os.close(fd)
 
-            # Create output mesh, using standard grid ~2km resolution
-            # TODO: discussions with ML developers to include metadata so
-            # we don't have to a) guess lat/lon resolution and b) know if
-            # data is truly unstructured or just flattened (where np.reshape
-            # would be substantially faster and preserve original data).
-            lon_grid = np.arange(lon.data.min(), lon.data.max(), 0.02)
-            lat_grid = np.arange(lat.data.min(), lat.data.max(), 0.02)
-            Lon2d, Lat2d = np.meshgrid(lon_grid, lat_grid)
+                # Return cubes as no more work to do for this process in read.
+                return fixed_cubes
 
-            # Flatten target points
-            xy = np.column_stack((Lon2d.ravel(), Lat2d.ravel()))
+            # File lock exists, so wait for .done to appear.
+            except FileExistsError:
+                logging.info("Lock exists...")
 
-            # Build triangulation via a dummy interpolator
-            tri_interp = LinearNDInterpolator(points, np.zeros(points.shape[0]))
-            tri = tri_interp.tri
+                # If the .done file exists, can proceed, and load restructured data.
+                if os.path.isfile(done_path):
+                    logging.info("Done file found, proceeding")
 
-            # Utilise multiprocessing to speed up code.
-            with Pool(processes=int(os.cpu_count() / 2)) as pool:
-                results = pool.starmap(
-                    _restructure_ugrid_regrid,
-                    [(cube, tri, lat_grid, lon_grid, xy) for cube in cubes],
-                )
+                    return iris.load(dataloc + "/restructured_cubes.nc")
 
-            # Filter results to only collect cubes, not None which is sometimes returned
-            # from _restructure_ugrid_regrid.
-            fixed_cubes = iris.cube.CubeList(c for c in results if c is not None)
+                else:
+                    # Otherwise, wait 60 seconds before trying again.
+                    logging.info("Waiting 60 seconds...")
+                    time.sleep(60)
 
-            # Save concatenated cubes to data location, for other processes to use.
-            iris.save(fixed_cubes.concatenate(), dataloc + "/restructured_cubes.nc")
+    else:
+        # Not cylc, so only one process needed with no intermediate caching of data.
+        logging.info("Running preprocess restructure...")
+        fixed_cubes = restructure_ugrid(cubes, dataloc=None)
 
-            # Write done file.
-            fd = os.open(done_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-            os.close(fd)
-
-            # Return cubes as no more work to do for this process in read.
-            return fixed_cubes.concatenate()
-
-        # File lock exists, so wait for .done to appear.
-        except FileExistsError:
-            logging.info("Lock exists...")
-
-            # If the .done file exists, can proceed, and load restructured data.
-            if os.path.isfile(done_path):
-                logging.info("Done file found, proceeding")
-
-                return iris.load(dataloc + "/restructured_cubes.nc")
-
-            else:
-                # Otherwise, wait 60 seconds before trying again.
-                logging.info("Waiting 60 seconds...")
-                time.sleep(60)
+        return fixed_cubes
 
 
 def vertical_interpolation(
