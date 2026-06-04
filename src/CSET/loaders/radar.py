@@ -157,11 +157,11 @@ def load(conf: Config):
     # recipe must be done by passing lists of the radar_ids and
     # the radar_names. As this is a multiline plot, all radar sources
     # share the same radar variable name.
-    radar_obs_ids = [radar["id"] for radar in accum_radars]
-    radar_wts_ids = [radar["id"] for radar in wts_radars]
-    combined_ids = radar_obs_ids + radar_wts_ids
-    print(" combined_ids: ", combined_ids)
     if conf.HISTOGRAM_SURFACE_FIELD:
+        radar_obs_ids = [radar["id"] for radar in accum_radars]
+        radar_wts_ids = [radar["id"] for radar in wts_radars]
+        combined_ids = radar_obs_ids + radar_wts_ids
+        print(" combined_ids: ", combined_ids)
         yield RawRecipe(
             recipe="radar_dev3.yaml",
             # model_ids -> Becomes $INPUT_PATHS
@@ -193,6 +193,40 @@ def load(conf: Config):
                 "SEQUENCE": "time"
                 if conf.HISTOGRAM_SURFACE_FIELD_SEQUENCE
                 else "realization",
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+            },
+            aggregation=False,
+        )
+
+    # Timeseries for surface (2D) Nimrod radar hourly accumulated rainfall.
+    #
+    # The timeseries are produced after the rainfall obs have been masked using
+    # the associated Nimrod weights file.
+    #
+    # To get multiple radar sources plotted on the histogram the
+    # recipe must be done by passing lists of the radar_ids and
+    # the radar_names. As this is a multiline plot, all radar sources
+    # share the same radar variable name.
+    if conf.TIMESERIES_SURFACE_FIELD:
+        radar_obs_ids = [radar["id"] for radar in accum_radars]
+        radar_wts_ids = [radar["id"] for radar in wts_radars]
+        combined_ids = radar_obs_ids + radar_wts_ids
+        print(" combined_ids: ", combined_ids)
+        yield RawRecipe(
+            recipe="radar_masked_mean_time_series.yaml",
+            # model_ids -> Becomes $INPUT_PATHS
+            # model_ids=[ radar_obs_ids, radar_wts_ids],
+            model_ids=combined_ids,
+            variables={
+                "VARNAME": next(radar["varname"] for radar in accum_radars),
+                "ALL_NAME": combined_ids,
+                "RADAR_NAME": [radar["id"] for radar in accum_radars],
+                "WEIGHTS_NAME": [radar["id"] for radar in wts_radars],
+                "SEQUENCE": "realisation",
+                #                "SEQUENCE": "time"
+                #                if conf.HISTOGRAM_SURFACE_FIELD_SEQUENCE
+                #                else "realization",
                 "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                 "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
             },
