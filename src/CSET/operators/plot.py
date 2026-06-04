@@ -2270,7 +2270,6 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
     )
 
     if is_rainfall_var:
-        print("varnames_lower ", varnames_lower)
         levels = [0, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
         colors = [
             "w",
@@ -2362,6 +2361,8 @@ def _custom_colourmap_nimrod_weights(cube: iris.cube.Cube, cmap, levels, norm):
         # levels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
         norm = mcolors.BoundaryNorm(levels, cmap.N)
         colours = [
+            "#dcdcdc",
+            #            "darkgray",
             "#d10000",
             "purple",
             "#8f00d6",
@@ -2374,7 +2375,6 @@ def _custom_colourmap_nimrod_weights(cube: iris.cube.Cube, cmap, levels, norm):
             "#37a648",
             "#8edc64",
             "#c5ffc5",
-            "#dcdcdc",
             "#ffffff",
         ]
         # Create a custom colormap
