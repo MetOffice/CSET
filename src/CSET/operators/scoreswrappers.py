@@ -17,10 +17,10 @@
 import logging
 
 import iris
-import numpy as np
 import scores
 import xarray as xr
 from iris.cube import Cube
+from iris.util import reverse
 
 from CSET._common import is_increasing
 from CSET.operators._utils import fully_equalise_attributes, get_cube_yxcoordname
@@ -69,7 +69,7 @@ def _sort_cubes_for_verification(cubes: iris.cube.CubeList):
         try:
             if len(cube.coord("pressure").points) > 2:
                 if not is_increasing(cube.coord("pressure").points):
-                    cube.data = np.flip(cube.data, axis=cube.coord_dims("pressure")[0])
+                    reverse(cube, "pressure")
 
         except iris.exceptions.CoordinateNotFoundError:
             pass
@@ -115,7 +115,7 @@ def _sort_cubes_for_verification(cubes: iris.cube.CubeList):
     base_lat_direction = is_increasing(base.coord(base_lat_name).points)
     other_lat_direction = is_increasing(other.coord(other_lat_name).points)
     if base_lat_direction != other_lat_direction:
-        other.data = np.flip(other.data, other.coord(other_lat_name).cube_dims(other))
+        reverse(other, other_lat_name)
 
     # Extract just common time points.
     base, other = _extract_common_time_points(base, other)
@@ -179,7 +179,5 @@ def scores_rmse(
             preserve_dims=preserved_coordinates,
         )
     )
-    # need to use data rather cube, and then need to attach back to data, and then collapse in the recipe rather than in the
-    # function
     RMSE.rename(f"RMSE_of_{base.name()}")
     return RMSE
