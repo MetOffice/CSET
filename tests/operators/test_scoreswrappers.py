@@ -23,8 +23,9 @@ import iris.cube
 import iris.exceptions
 import numpy as np
 import pytest
+from iris.util import reverse
 
-from CSET.operators import misc, scoreswrappers
+from CSET.operators import scoreswrappers
 
 
 def test_scores_rmse(cube: iris.cube.Cube):
@@ -119,35 +120,28 @@ def test_rmse_grid_staggering_regrid(cube):
 def test_difference_different_model_types(cube):
     """Other cube is flipped when model types differ."""
     flipped = cube.copy()
-    flipped_coord = flipped.coord("grid_latitude")
-    flipped_coord.points = np.flip(flipped_coord.points)
-    flipped.data = np.flip(flipped.data, flipped_coord.cube_dims(flipped))
+    reverse(flipped, "grid_latitude")
     del flipped.attributes["cset_comparison_base"]
     cubes = iris.cube.CubeList([cube, flipped])
 
-    # Take difference.
-    difference_cube = misc.difference(cubes)
+    # Take rmse.
+    rmse_cube = scoreswrappers.scores_rmse(cubes)
 
-    assert isinstance(difference_cube, iris.cube.Cube)
+    assert isinstance(rmse_cube, iris.cube.Cube)
     # As both cubes use the same data, check the difference is zero.
-    assert np.allclose(
-        difference_cube.data, np.zeros_like(difference_cube.data), atol=1e-9
-    )
+    assert np.allclose(rmse_cube.data, np.zeros_like(rmse_cube.data), atol=1e-9)
 
 
 def test_difference_flip_pressure_order(transect_source_cube_readonly):
     """Test that pressure coord is flipped if discreasing."""
     flipped = transect_source_cube_readonly.copy()
-    flipped_coord = flipped.coord("pressure")
-    flipped_coord.points = np.flip(flipped_coord.points)
-    flipped.data = np.flip(flipped.data, flipped_coord.cube_dims(flipped))
+    reverse(flipped, "pressure")
     del flipped.attributes["cset_comparison_base"]
     cubes = iris.cube.CubeList([transect_source_cube_readonly, flipped])
 
-    # Take difference.
-    difference_cube = misc.difference(cubes)
+    # Take rmse.
+    rmse_cube = scoreswrappers.scores_rmse(cubes)
 
-    # If flipped correctly, difference should be zero as same cubes.
-    assert np.allclose(
-        difference_cube.data, np.zeros_like(difference_cube.data), atol=1e-9
-    )
+    assert isinstance(rmse_cube, iris.cube.Cube)
+    # As both cubes use the same data, check the difference is zero.
+    assert np.allclose(rmse_cube.data, np.zeros_like(rmse_cube.data), atol=1e-9)
