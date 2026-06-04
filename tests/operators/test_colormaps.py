@@ -404,6 +404,7 @@ def test_colorbar_map_nimrod_wts(cube):
     cube.rename("Hourly wts accumulation")
     expected_levels = np.arange(-0.5, 14.5, 1.0)
     expected_colors = [
+        "#dcdcdc",
         "#d10000",
         "purple",
         "#8f00d6",
@@ -416,7 +417,6 @@ def test_colorbar_map_nimrod_wts(cube):
         "#37a648",
         "#8edc64",
         "#c5ffc5",
-        "#dcdcdc",
         "#ffffff",
     ]
     expected_cmap = mpl.colors.ListedColormap(expected_colors)

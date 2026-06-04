@@ -544,6 +544,7 @@ def custom_colourmap_nimrod_weights(cube: iris.cube.Cube, cmap, levels, norm):
         ]
         norm = mcolors.BoundaryNorm(levels, cmap.N)
         colours = [
+            "#dcdcdc",
             "#d10000",
             "purple",
             "#8f00d6",
@@ -556,7 +557,6 @@ def custom_colourmap_nimrod_weights(cube: iris.cube.Cube, cmap, levels, norm):
             "#37a648",
             "#8edc64",
             "#c5ffc5",
-            "#dcdcdc",
             "#ffffff",
         ]
         # Create a custom colormap.
