@@ -1,0 +1,49 @@
+category: Histogram
+title: "Histogram masked Nimrod $VARNAME\n$RADAR_NAME"
+description: Histograms of Nimrod radar observations
+#  Extracts and plots the probability density of surface `$VARNAME`. It uses
+#  [`plt.hist`](https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.hist.html).
+#
+#  The default method generates a probability density so that the area under the histogram
+#  normalized to 1.
+#  Histograms of rainfall or snowfall rate are plotted using a logarithmic scale.
+#  Histograms of rainfall or snowfall amount are based on the
+#  [Klingaman et al. 2017](https://gmd.copernicus.org/articles/10/57/2017/gmd-10-57-2017.html)
+#  ASoP method, where histograms show the fractional contributions from each precipitation bin
+#  to the total precipitation. The area under the histogram shows the total precipitation.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+#    model_names: [$RADAR_NAME, $WEIGHTS_NAME]
+    model_names: $ALL_NAME
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+    constraint:
+      operator: constraints.combine_constraints
+#      variable_constraint:
+#        operator: constraints.generate_var_constraint
+#        varname: "Hourly rain accumulation"
+#      variable_constraint:
+#        operator: constraints.generate_var_constraint
+#        varname: "Hourly wts accumulation"
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: $VARNAME
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: pressure
+        levels: []
+#    constraint: ["Hourly rain accumulation", "Hourly wts accumulation"]
+
+
+  - operator: radar_filter.mask_by_weights
+    model_names: $RADAR_NAME
+    weights_names: $WEIGHTS_NAME
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+  - operator: plot.plot_histogram_series
+    sequence_coordinate: $SEQUENCE
