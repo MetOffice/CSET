@@ -2,7 +2,7 @@ category: Perturbations
 title: $MODEL_NAME Band Pass Filter Spatial Perturbation for $VARNAME $METHOD
 description: |
   Creates a spatial map of a band pass filtered filed based on Gaussians
-  with the low filter of 1 and a high filter of 12 for spatial components.
+  with the low filter of 1 and a high filter of 1.1 for spatial components.
   The filter is applied for $METHOD of $VARNAME from all times in $MODEL_NAME.
 
 steps:
