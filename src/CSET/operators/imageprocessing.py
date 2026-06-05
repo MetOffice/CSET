@@ -453,9 +453,14 @@ def band_pass_filter_via_gaussians(
             filtered_image = difference_of_gaussians(
                 time.core_data(), low_sigma, high_sigma
             )
-            filtered_windowed_image.data[t, :] = filtered_image * window(
-                "hann", filtered_image.shape
-            )
+            if filtered_windowed_image.data.ndim == 2:
+                filtered_windowed_image.data[:] = filtered_image * window(
+                    "hann", filtered_image.shape
+                )
+            else:
+                filtered_windowed_image.data[t, :] = filtered_image * window(
+                    "hann", filtered_image.shape
+                )
         filtered_windowed_image.rename(f"Filtered_{cube.name()}")
         band_pass_filtered_cubes.append(filtered_windowed_image)
     if len(band_pass_filtered_cubes) == 1:
