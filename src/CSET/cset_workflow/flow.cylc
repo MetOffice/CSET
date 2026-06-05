@@ -23,8 +23,10 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
 {% endif %}
 
     [[special tasks]]
-    # cycle_complete depends on its previous instance. We then don't need to
-    # know the offset between the cycles.
+    # Sequential tasks depends on their previous instance.
+    # This ensures:
+    #  * All fetches are complete before baking aggregation recipes.
+    #  * All cycles are complete before housekeeping.
     sequential = fetch_complete, cycle_complete
 
     [[graph]]
