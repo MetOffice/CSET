@@ -1,0 +1,127 @@
+
+{% if RUN_METPLUS_ENSEMBLE_STAT|default(False) %}
+[scheduling]
+    [[graph]]
+    {% macro metplus_ensemble_stat_graph() %}
+        metplus_prep_obs => metplus_ascii2nc
+        {% for model in models %}
+            fetch_fcst_m{{model["id"]}} => metplus_prep_fcst_m{{model["id"]}}
+            metplus_prep_fcst_m{{model["id"]}} => metplus_ensemble_stat_m{{model["id"]}}
+            metplus_ascii2nc => metplus_ensemble_stat_m{{model["id"]}}
+            metplus_ensemble_stat_m{{model["id"]}} => metplus_ensemble_stat_postproc_m{{model["id"]}}
+        {% endfor %}
+        METPLUS_ENSEMBLE_STAT_POSTPROC:succeed-all => cycle_complete
+    {% endmacro %}
+
+    {% if CSET_CYCLING_MODE == "case_study" %}
+        {% for date in CSET_CASE_DATES %}
+            R1/{{date}} = """
+                    {{metplus_point_stat_graph()}}
+                """
+        {% endfor %}
+    {% elif CSET_CYCLING_MODE == "trial" %}
+        {{CSET_TRIAL_CYCLE_PERIOD}} = """
+                    {{metplus_point_stat_graph()}}
+                """
+    {% endif %}
+    R1/$ = """
+        {% for model in models %}
+            cycle_complete => verpy_metloader_ensemblestat_m{{model["id"]}}
+        {% endfor %}
+        VERPY_METLOADER:succeed-all => verpy_plot_ensemblestat => finish_website
+        """
+
+[runtime]
+    [[metplus_prep_obs]]
+        inherit = METPLUS
+
+{% for model in models %}
+    [[metplus_prep_fcst_m{{model["id"]}}]]
+    # Prepares model data for use by metplus
+        inherit = METPLUS
+        [[[environment]]]
+            ROSE_TASK_APP = metplus_prep_fcst
+            MODEL_NAME = {{model["name"]}}
+            MODEL_ID = m{{model["id"]}}
+            INPUT_PATHS = $CYLC_TASK_SHARE_CYCLE_DIR/data/{{model["id"]}}
+        {% if SELECT_SUBAREA %}
+            SUBAREA_TYPE = {{SUBAREA_TYPE}}
+            SUBAREA_EXTENT = {{SUBAREA_EXTENT}}
+        {% else %}
+            SUBAREA_TYPE = None
+            SUBAREA_EXTENT = None
+        {% endif %}
+{% endfor %}
+
+    [[metplus_ascii2nc]]
+    # Runs METplus wrappers for ASCII to nc ingestion of obs.
+        inherit = METPLUS
+
+    [[METPLUS_ENSEMBLE_STAT]]
+    # Family grouping metplus_point_stat tasks for all models"
+        inherit = METPLUS
+        [[[environment]]]
+            ROSE_TASK_APP = metplus_ensemble_stat
+            STAT = area??
+            STAT_TYPE_LIST = cnt??
+
+    [[METPLUS_ENSEMBLE_STAT_POSTPROC]]
+    # Family grouping all metplus Post-processing
+    inherit = METPLUS
+        [[[environment]]]
+            STAT = area??
+            STAT_TYPE_LIST = cnt??
+
+    [[VERPY_METLOADER]]
+    # Family grouping for all VerPy metloader tasks
+        inherit = METPLUS
+        script = rose task-run -v --app-key=verpy_metloader
+
+{% for model in models %}
+    [[metplus_ensemble_stat_m{{model["id"]}}]]
+    # Runs METplus wrappers for ensemble stat calculations.
+        inherit = METPLUS_POINT_STAT
+        [[[environment]]]
+            MODEL_NAME = {{model["name"]}}
+            model_name = {{model["name"] | lower}}
+
+    [[metplus_ensemble_stat_postproc_m{{model["id"]}}]]
+    # Archives point stat results in tar files ready for verpy loading.
+        inherit = METPLUS_ENSEMBLE_STAT_POSTPROC
+        script = """
+            MODEL_NAME={{model["name"]}}
+            ENSEMBLE_STAT_DIR=${CYLC_TASK_SHARE_CYCLE_DIR}/Ensemble_Stat_${MODEL_NAME}
+            mkdir -p ${CYLC_WORKFLOW_SHARE_DIR}/${MODEL_NAME}_point_stat_${STAT}_tar
+            for STAT_TYPE in ${STAT_TYPE_LIST}; do
+                gzip ${ENSEMBLE_STAT_DIR}/*_${STAT_TYPE}.txt
+                files_list=$(ls ${ENSEMBLE_STAT_DIR}/*_${STAT_TYPE}.txt.gz | xargs -n 1 basename)
+                tar -rf ${CYLC_WORKFLOW_SHARE_DIR}/${MODEL_NAME}_ensemble_stat_${STAT}_tar/ensemble_stat_${CYLC_TASK_CYCLE_POINT}_${STAT_TYPE}.tar -C ${ENSEMBLE_STAT_DIR} $files_list
+            done
+        """
+
+    [[verpy_metloader_ensemblestat_m{{model["id"]}}]]
+    # Runs VerPy metloader utility to create the VerPy databases
+        inherit = VERPY_METLOADER
+        [[[environment]]]
+            VERPY_DIR = {{VERPY_DIR}}
+            VER_METHOD = area??
+            STAT_TYPE = cnt??
+            STREAM = ensemble_stat
+            MODEL_NAME = {{model["name"]}}
+            METLOADER_CONF_FILE = metloader.conf
+{% endfor %}
+
+    [[verpy_plot_ensemblestat]]
+    # Runs VerPy plotting routines
+        inherit = METPLUS
+        script = rose task-run -v --app-key=verpy_plot
+        [[[environment]]]
+            PLOT_DIR = ${CYLC_WORKFLOW_SHARE_DIR}/web/plots
+            START_DATE = $(isodatetime {{ CSET_CASE_DATES|min }} --print-format %Y%m%d)
+            END_DATE = $(isodatetime {{ CSET_CASE_DATES|max }} --offset {{ANALYSIS_LENGTH}} --print-format %Y%m%d)
+            VER_METHOD = area??
+            STAT_TYPE = cnt??
+            STREAM = ensemble_stat
+            MODEL_NAMES = {{ models | map(attribute='name') | join(' ') }}
+
+{% endif %}
