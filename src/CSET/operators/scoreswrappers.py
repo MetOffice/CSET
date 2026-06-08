@@ -50,9 +50,9 @@ def _sort_cubes_for_verification(cubes: iris.cube.CubeList):
 
     Notes
     -----
-    This operators is used for sorting the data into the correct format. It
+    This operator is used for sorting the data into the correct format. It
     is likely going to need to be refactored out of CSET and perhaps moved into
-    `CSET._utils` given common code between here and `misc.differenece`.
+    `CSET._utils` given common code between here and `misc.difference`.
     """
     # Set cubes into correct format using code from difference operator
     if len(cubes) != 2:
