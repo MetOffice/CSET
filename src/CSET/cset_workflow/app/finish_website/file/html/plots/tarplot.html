@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title id="title"></title>
+        <link href="cset-plot.css" rel="stylesheet"/>
+        <script src="tarplot.js"></script>
+    </head>
+    <body>
+        <main>
+            <fieldset id="sequence_controls" class="hidden">
+                <label for="sequence_range">Select plot:</label>
+                <label class="visually-hidden" for="sequence_number">Select plot</label>
+                <input type="range" id="sequence_range" value="1" min="1" max="1">
+                <input type="number" id="sequence_number" value="1" min="1" max="1">
+            </fieldset>
+            <canvas id="plot" alt="plot">
+        </main>
+        <aside id="description-container">
+            <h1 id="desc-title"></h1>
+            <p id="desc-description"></p>
+            <hr>
+        </aside>
+    </body>
+</html>

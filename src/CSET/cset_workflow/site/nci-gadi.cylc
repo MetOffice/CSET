@@ -11,6 +11,9 @@
 #                       # 'access_c3_dn' or 'custom'
 #   CUSTOM_ODB2_PATTERN # Path to custom ODB2 files if using
 #                       # 'custom' system
+#   RSYNC_WEB_DIR       # Set to True if you want to use the /g/data/vx53
+#                       # webserver with e.g.
+#                       #     WEB_DIR="/g/data/vx53/$USER/$CYLC_WORKFLOW_NAME"
 #
 # Leave METPLUS_FCST_DIR and METPLUS_OBS_DIR unset
 
