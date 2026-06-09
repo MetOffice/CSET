@@ -28,8 +28,6 @@ from iris.time import PartialDateTime
 
 from CSET.operators import constraints, read
 
-from ..conftest import cdl_to_nc
-
 
 def test_read_cubes():
     """Read cube and verify."""
@@ -1193,7 +1191,7 @@ def test_read_time_constraint_in_bounds():
             assert c.coord("time").as_string_arrays().points == ["2022-09-21 03:30:00"]
 
 
-def test_cell_methods_computes_time_bounds(tmp_path):
+def test_cell_methods_computes_time_bounds(cdl_to_cubes):
     """Only cubes with time processing have time bounds."""
     # NC file with missing time bounds and various methods
     cdl = """
@@ -1229,8 +1227,7 @@ def test_cell_methods_computes_time_bounds(tmp_path):
         lon_bnds = 0.5, 1.5, 1.5, 2.5;
     }
     """
-    sample = cdl_to_nc("cell_methods_sample", cdl, tmp_path)
-    cubes = read.read_cubes(sample)
+    cubes = cdl_to_cubes(cdl)
 
     # Variables which should not have bounds
     assert cubes.extract_cube("time_instant").coord("time").bounds is None
