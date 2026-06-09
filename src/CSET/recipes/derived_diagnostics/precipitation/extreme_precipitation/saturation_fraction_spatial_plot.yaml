@@ -8,7 +8,7 @@ description: |
   precipitable water are derived, before their ratios are taken for the
   saturation fraction.
 
-  A saturation fraction close to one implies that the atmopshere is fully
+  A saturation fraction close to one implies that the atmosphere is fully
   saturated throughout the column. Smaller values imply the atmosphere is dry.
   Traditionally for precipitation the saturation fraction is greater than 0.6.
   The saturation fraction is applicable throughout the globe.
