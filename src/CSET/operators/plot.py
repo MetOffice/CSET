@@ -1487,6 +1487,7 @@ def _plot_and_save_scatter_series(
     title: str,
     vmin: float,
     vmax: float,
+    hexbin: bool,
     **kwargs,
 ):
     """Plot and save a scatter plot series.
@@ -1525,15 +1526,24 @@ def _plot_and_save_scatter_series(
 
             # Plot all data points
             if plottype == "points":
-                if nplot > 1:
-                    plt.scatter(
-                        cubes[0].data.flatten(),
-                        cube.data.flatten(),
-                        color=color,
-                        marker="+",
-                        label=None,
-                        alpha=0.3,
-                    )
+                if nplot > 0:
+                    if hexbin:
+                        hb = plt.hexbin(
+                            cubes[0].data.flatten(),
+                            cube.data.flatten(),
+                            alpha=0.3,
+                            gridsize=100,
+                            mincnt=1,
+                        )
+                    else:
+                        plt.scatter(
+                            cubes[0].data.flatten(),
+                            cube.data.flatten(),
+                            color=color,
+                            marker="+",
+                            label=None,
+                            alpha=0.3,
+                        )
 
             elif plottype == "quantiles":
                 # Construct Q-Q plot
@@ -1544,7 +1554,7 @@ def _plot_and_save_scatter_series(
                         percent=percentiles,
                     )
                 )
-                if nplot > 1:
+                if nplot > 0:
                     iplt.scatter(
                         quantiles[0],
                         quantiles[-1],
@@ -1576,10 +1586,17 @@ def _plot_and_save_scatter_series(
     ax.set_xlim(lims)
     ax.set_ylim(lims)
 
-    # Overlay grid-lines onto histogram plot.
+    # Overlay grid-lines onto scatter plot.
     ax.grid(linestyle="--", color="grey", linewidth=1)
     if model_colors_map:
         ax.legend(loc="upper left", ncol=1, frameon=True, fontsize=16)
+
+    # Add colorbar if hexbin output
+    if hexbin:
+        cb = plt.colorbar(
+            hb, orientation="horizontal", location="bottom", pad=0.08, shrink=0.7
+        )
+        cb.set_label("Number of data points", size=12)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -2170,13 +2187,9 @@ def plot_line_series(
 
     num_models = _get_num_models(cube)
 
-    print(cube)
-    print(num_models)
-
     _validate_cube_shape(cube, num_models)
 
     # Iterate over all cubes and extract coordinate to plot.
-    print(cube)
     cubes = iris.cube.CubeList(iter_maybe(cube))
     coords = []
     for cube in cubes:
@@ -2205,7 +2218,7 @@ def plot_line_series(
     ):
         for station in cubes[0].coord("station").points:
             station_cubes = cubes.extract(iris.Constraint(station=station))
-            station_name = station_cubes[0].coord("Station identifier").points[0]
+            station_name = station_cubes[0].coord("Station_Name").points[0]
             _plot_and_save_line_series(
                 station_cubes,
                 coords,
@@ -2853,7 +2866,7 @@ def plot_histogram_series(
             seq_coord = single_cube.coord("time")
         # Use station name in title and filename if model vs obs comparison
         if sequence_coordinate == "station":
-            seq_coord = single_cube.coord("Station identifier")
+            seq_coord = single_cube.coord("Station_Name")
 
         plot_title, plot_filename = _set_title_and_filename(
             seq_coord, nplot, recipe_title, filename
@@ -2884,8 +2897,7 @@ def plot_scatter_series(
     filename: str = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
-    single_plot: bool = False,
-    scatter: bool = False,
+    hexbin: bool = False,
     **kwargs,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Plot a scatter plot for each sequence coordinate provided.
@@ -2914,10 +2926,9 @@ def plot_scatter_series(
     stamp_coordinate: str, optional
         Coordinate about which to plot postage stamp plots. Defaults to
         ``"realization"``.
-    single_plot: bool, optional
-        If True, all postage stamp plots will be plotted in a single plot. If
-        False, each postage stamp plot will be plotted separately. Is only valid
-        if stamp_coordinate exists and has more than a single point.
+    hexbin: bool, optional
+        If True, generate hexbin comparison plot.
+        If False, generate point-by-point scatter plot.
 
     Returns
     -------
@@ -2947,28 +2958,13 @@ def plot_scatter_series(
 
     vmin, vmax = _set_axis_range(cubes)
 
-    ### TO DO: MAKE SCATTER SINGLE/POSTAGE (OR RATIONALISE LOGIC BELOW)
-
-    # Make postage stamp plots if stamp_coordinate exists and has more than a
-    # single point. If single_plot is True:
-    # -- all postage stamp plots will be plotted in a single plot instead of
-    # separate postage stamp plots.
-    # -- model names (hidden in cube attrs) are ignored, that is stamp plots are
-    # produced per single model only
-    if num_models == 1:
-        if (
-            stamp_coordinate in [c.name() for c in cubes[0].coords()]
-            and cubes[0].coord(stamp_coordinate).shape[0] > 1
-        ):
-            if single_plot:
-                plotting_func = (
-                    _plot_and_save_postage_stamps_in_single_plot_histogram_series
-                )
-            else:
-                plotting_func = _plot_and_save_postage_stamp_histogram_series
-        cube_iterables = cubes[0].slices_over(sequence_coordinate)
-    else:
+    # Require >1 models to compare on scatter plot
+    if num_models > 1:
         cube_iterables = _find_matched_slices(cubes, sequence_coordinate)
+    else:
+        raise ValueError(
+            "Scatter plot series requires multiple number of models in input data."
+        )
 
     plot_index = []
     nplot = np.size(cubes[0].coord(sequence_coordinate).points)
@@ -2992,7 +2988,7 @@ def plot_scatter_series(
             seq_coord = single_cube.coord("time")
         # Use station name in title and filename if model vs obs comparison
         if sequence_coordinate == "station":
-            seq_coord = single_cube.coord("Station identifier")
+            seq_coord = single_cube.coord("Station_Name")
 
         plot_title, plot_filename = _set_title_and_filename(
             seq_coord, nplot, recipe_title, filename
@@ -3006,6 +3002,7 @@ def plot_scatter_series(
             title=plot_title,
             vmin=vmin,
             vmax=vmax,
+            hexbin=hexbin,
         )
         plot_index.append(plot_filename)
 

@@ -11,6 +11,11 @@ steps:
     subarea_extent: $SUBAREA_EXTENT
     constraint: ['observed_$VARNAME', '$VARNAME']
 
+  - operator: filters.filter_multiple_cubes
+    constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+
   - operator: misc.extract_common_points
     coordinate: time
 

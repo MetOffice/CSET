@@ -157,7 +157,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         ANALYSIS_OFFSET = {{model["analysis_offset"]}}
     {% endfor %}
 
-    {% if SURFACE_SYNOP_OBS is defined and SURFACE_SYNOP_OBS %}
+    {% if POINT_OBS_TYPES is defined and POINT_OBS %}
     [[fetch_obs]]
     # Fetch observations from the MetDB.
     inherit = FETCH_DATA
@@ -165,12 +165,12 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         [[[environment]]]
         MODEL_IDENTIFIER = "OBS"
         ROSE_APP_COMMAND_KEY = "metdb"
-        SURFACE_SYNOP_FIELDS = {{SURFACE_SYNOP_FIELDS}}
-        SURFACE_SYNOP_INTERVAL = {{SURFACE_SYNOP_INTERVAL}}
-        SURFACE_SYNOP_OFFSET = {{SURFACE_SYNOP_OFFSET}}
-        WMO_BLOCK_STTN_NMBRS = {{WMO_BLOCK_STTN_NMBRS | default("")}}
+        SURFACE_SYNOP_FIELDS = {{SURFACE_FIELDS}}
+        SURFACE_SYNOP_INTERVAL = {{POINT_OBS_SYNOP_INTERVAL}}
+        SURFACE_SYNOP_OFFSET = {{POINT_OBS_SYNOP_OFFSET}}
+        WMO_BLOCK_STTN_NMBRS = {{POINT_OBS_WMO_BLOCK_STTN_NMBRS | default("")}}
         SUBAREA_EXTENT = {{SUBAREA_EXTENT | default("")}}
-        OBS_SUBTYPE = "LNDSYB"
+        OBS_SUBTYPE = {{POINT_OBS_TYPES}}
     {% endif %}
 
     [[parbake_recipes]]

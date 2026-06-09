@@ -40,8 +40,8 @@ steps:
                varname: observed_$VARNAME
 
   - operator: plot.plot_histogram_series
-    #sequence_coordinate: station        ## separate output for each station
-    sequence_coordinate: realization    ## all output on 1 plot
+    # Set SEQUENCE to "station" for separate plot for each station, else "realization" for combined plot.
+    sequence_coordinate: $SEQUENCE
 
   - operator: write.write_cube_to_nc
     overwrite: True

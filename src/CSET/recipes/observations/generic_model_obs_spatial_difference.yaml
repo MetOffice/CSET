@@ -6,10 +6,15 @@ description: Extracts and plot the difference in $METHOD of $VARNAME between mod
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
-    model_names: ['OBS', $MODEL_NAME]
+    model_names: ['OBS', '$MODEL_NAME']
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
     constraint: ['observed_$VARNAME', '$VARNAME']
+
+  - operator: filters.filter_multiple_cubes
+    constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
 
   - operator: misc.extract_common_points
     coordinate: time
@@ -44,7 +49,6 @@ steps:
 
   - operator: plot.spatial_contour_plot
     sequence_coordinate: time
-    projection: $PLOTTING_PROJECTION
 
   - operator: write.write_cube_to_nc
     overwrite: True

@@ -1,7 +1,7 @@
 category: Surface Spatial Observation Plot
-title: $OBSVARNAME $METHOD $SUBAREA_NAME
+title: $VARNAME $METHOD $SUBAREA_NAME
 description: |
-    Plots the $METHOD of $OBSVARNAME as points at observation locations.
+    Plots the $METHOD of $VARNAME as points at observation locations.
 
 steps:
   - operator: read.read_cubes
@@ -10,11 +10,11 @@ steps:
         operator: constraints.combine_constraints
         variable_constraint:
             operator: constraints.generate_var_constraint
-            varname: $OBSVARNAME
+            varname: observed_$VARNAME
         cell_methods_constraint:
             operator: constraints.generate_cell_methods_constraint
             cell_methods: []
-            varname: $OBSVARNAME
+            varname: observed_$VARNAME
         level_constraint:
              operator: constraints.generate_level_constraint
              coordinate: "pressure"
