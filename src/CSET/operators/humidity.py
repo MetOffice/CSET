@@ -650,7 +650,7 @@ def saturation_fraction(
 
     and can be used throughout the globe with the same interpretation.
 
-    For a recent, example, [Daviesetal2026]_ have applied the concept to their
+    For a recent example, [Daviesetal2026]_ have applied the concept to their
     conceptual model for extreme rainfall. Thus it is a potentially useful diagnostic
     to consider for extreme events, and is thought of as more reliable than
     using precipitable water on its own.
