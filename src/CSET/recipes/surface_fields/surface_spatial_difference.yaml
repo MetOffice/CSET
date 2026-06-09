@@ -29,8 +29,6 @@ steps:
     method: $METHOD
 
   - operator: plot.spatial_pcolormesh_plot
-    #sequence_coordinate: realization
-    #stamp_coordinate: time
 
   - operator: write.write_cube_to_nc
     overwrite: True
