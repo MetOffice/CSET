@@ -21,7 +21,6 @@ from collections.abc import Iterable
 import iris
 import iris.analysis.calculus
 import numpy as np
-from cf_units import Unit as CFUnit
 from iris.cube import Cube, CubeList
 
 from CSET._common import is_increasing, iter_maybe
@@ -616,61 +615,3 @@ def differentiate(
         return new_cubelist[0]
     else:
         return new_cubelist
-
-
-def convert_rainfall_amount_to_rate(cubes, **kwargs):
-    """
-    Convert rainfall from depth to rate.
-
-    To convert rainfall amount, or depth, in mm per time interval
-    into a rainfall rate in mm s-1 (=kg m-2 s-1).
-
-    UM rainfall is already a rate and is left untouched.
-    """
-    is_single = isinstance(cubes, iris.cube.Cube)
-    cubes_list = iris.cube.CubeList(iter_maybe(cubes))
-
-    for cube in iris.cube.CubeList(iter_maybe(cubes)):
-        # --- Skip if already a rate
-        if cube.units.is_convertible("kg m-2 s-1"):
-            continue
-
-        # --- Only process accumulation/amount
-        if not cube.units.is_convertible("kg m-2"):
-            continue
-
-        if not cube.coords("time"):
-            raise ValueError("No time coordinate; cannot convert rainfall.")
-
-        time = cube.coord("time")
-        if time.bounds is not None:
-            bounds = time.bounds
-            duration = bounds[:, 1] - bounds[:, 0]
-        else:
-            t = time.points
-            dt = np.diff(t)
-            if len(dt) == 0:
-                raise ValueError("Cannot infer duration from single time point")
-            dt = np.concatenate([dt, [dt[-1]]])
-            duration = dt
-        # Convert duration to seconds safely
-        if time.units.is_time_reference():
-            base = str(time.units).split(" since ")[0].strip()  # e.g. "hours"
-            duration = CFUnit(base).convert(duration, "seconds")
-        else:
-            duration = time.units.convert(duration, "seconds")
-
-        if np.any(duration <= 0):
-            raise ValueError("Non-positive rainfall accumulation interval detected.")
-
-        # reshape for broadcasting along data dimensions
-        reshape = [1] * cube.ndim
-        reshape[cube.coord_dims("time")[0]] = -1
-        duration = duration.reshape(reshape)
-
-        # --- convert depth to rate
-        # mm / s == kg m-2 s-1
-        cube.data = cube.data / duration
-        cube.units = "kg m-2 s-1"
-
-    return cubes_list[0] if is_single else cubes_list
