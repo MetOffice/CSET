@@ -1,5 +1,5 @@
 category: $LEVELTYPE Level Structural Similarity
-title: "$VARNAME $LEVEL\nMean Structural Similarity between $OTHER_MODEL and $BASE_MODEL"
+title: "$VARNAME $LEVEL $SUBAREA_NAME\nMean Structural Similarity between $OTHER_MODEL and $BASE_MODEL"
 description: |
   Extracts $VARNAME at $LEVELTYPE $LEVEL for $OTHER_MODEL and $BASE_MODEL.
   These fields then have the
