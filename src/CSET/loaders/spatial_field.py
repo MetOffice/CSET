@@ -40,6 +40,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 aggregation=False,
             )
@@ -64,6 +65,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=model["id"],
                 aggregation=False,
@@ -89,6 +91,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=model["id"],
                 aggregation=False,
@@ -111,6 +114,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=[base_model["id"], model["id"]],
                 aggregation=False,
@@ -138,6 +142,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=[base_model["id"], model["id"]],
                 aggregation=False,
@@ -165,6 +170,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=[base_model["id"], model["id"]],
                 aggregation=False,
@@ -185,6 +191,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 aggregation=False,
             )
@@ -200,6 +207,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 aggregation=False,
             )
@@ -215,6 +223,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 aggregation=False,
             )
@@ -230,6 +239,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 aggregation=False,
             )
@@ -245,6 +255,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 aggregation=False,
             )
@@ -260,6 +271,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 aggregation=False,
             )
@@ -275,6 +287,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 aggregation=False,
             )
@@ -290,6 +303,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 aggregation=False,
             )
@@ -305,6 +319,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 aggregation=False,
             )
@@ -320,6 +335,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 aggregation=False,
             )
@@ -335,6 +351,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 aggregation=False,
             )
@@ -350,6 +367,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 aggregation=False,
             )
@@ -365,6 +383,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 aggregation=False,
             )
@@ -380,6 +399,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 aggregation=False,
             )
@@ -395,6 +415,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 aggregation=False,
             )
@@ -410,6 +431,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 aggregation=False,
             )
@@ -425,6 +447,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 aggregation=False,
             )
@@ -440,6 +463,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 aggregation=False,
             )
@@ -455,6 +479,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 aggregation=False,
             )
@@ -469,6 +494,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=model["id"],
                 aggregation=False,
@@ -484,6 +510,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=model["id"],
                 aggregation=False,
@@ -499,6 +526,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=model["id"],
                 aggregation=False,
@@ -514,6 +542,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=model["id"],
                 aggregation=False,
@@ -529,6 +558,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=model["id"],
                 aggregation=False,
@@ -551,6 +581,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=model["id"],
                 aggregation=False,
@@ -561,6 +592,54 @@ def load(conf: Config):
         for model in models:
             yield RawRecipe(
                 recipe="moist_absolutely_unstable_layers_presence_spatial_plot.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
+
+    # Number of Moist Absolutely Unstable Layer in a Column
+    if conf.MAUL_NUMBER:
+        for model in models:
+            yield RawRecipe(
+                recipe="number_of_moist_absolutely_unstable_layers_present_in_a_spatial_column.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
+
+    # Moist Absolutely Unstable Layer depth (of deepest)
+    if conf.MAUL_DEPTH:
+        for model in models:
+            yield RawRecipe(
+                recipe="depth_of_moist_absolutely_unstable_layers_spatial_plot.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
+
+    # Moist Absolutely Unstable Layer base height (of deepest)
+    if conf.MAUL_BASE:
+        for model in models:
+            yield RawRecipe(
+                recipe="base_of_moist_absolutely_unstable_layers_spatial_plot.yaml",
                 variables={
                     "MODEL_NAME": model["name"],
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
@@ -589,6 +668,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=model["id"],
                 aggregation=False,
@@ -601,7 +681,9 @@ def load(conf: Config):
     for model, atype, field in itertools.product(
         models, AGGREGATION_TYPES, conf.SURFACE_FIELDS
     ):
-        if conf.SPATIAL_SURFACE_FIELD_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
+        index = AGGREGATION_TYPES.index(atype)
+        aggregations = conf.SPATIAL_SURFACE_FIELD_AGGREGATION
+        if len(aggregations) > index and aggregations[index]:
             yield RawRecipe(
                 recipe=f"generic_surface_spatial_plot_sequence_case_aggregation_mean_{atype}.yaml",
                 variables={
@@ -611,6 +693,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=model["id"],
                 aggregation=True,
@@ -620,7 +703,9 @@ def load(conf: Config):
     for model, atype, field, plevel in itertools.product(
         models, AGGREGATION_TYPES, conf.PRESSURE_LEVEL_FIELDS, conf.PRESSURE_LEVELS
     ):
-        if conf.SPATIAL_PLEVEL_FIELD_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
+        index = AGGREGATION_TYPES.index(atype)
+        aggregations = conf.SPATIAL_PLEVEL_FIELD_AGGREGATION
+        if len(aggregations) > index and aggregations[index]:
             yield RawRecipe(
                 recipe=f"generic_level_spatial_plot_sequence_case_aggregation_mean_{atype}.yaml",
                 variables={
@@ -632,6 +717,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=model["id"],
                 aggregation=True,
@@ -641,7 +727,9 @@ def load(conf: Config):
     for model, atype, field, mlevel in itertools.product(
         models, AGGREGATION_TYPES, conf.MODEL_LEVEL_FIELDS, conf.MODEL_LEVELS
     ):
-        if conf.SPATIAL_MLEVEL_FIELD_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
+        index = AGGREGATION_TYPES.index(atype)
+        aggregations = conf.SPATIAL_MLEVEL_FIELD_AGGREGATION
+        if len(aggregations) > index and aggregations[index]:
             yield RawRecipe(
                 recipe=f"generic_level_spatial_plot_sequence_case_aggregation_mean_{atype}.yaml",
                 variables={
@@ -653,6 +741,7 @@ def load(conf: Config):
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=model["id"],
                 aggregation=True,
