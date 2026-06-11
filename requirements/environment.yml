@@ -17,6 +17,7 @@ dependencies:
   - scikit-image # For image processing techniques.
   - dask-core # Dask with minimal dependencies.
   - proj = 9.7.1 # Newer versions break plotting, see issue #2052.
+  - simple-track # For feature tracking and cell stats operators
 
   # Build dependencies
   - setuptools>=64

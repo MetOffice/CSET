@@ -33,6 +33,7 @@ from CSET.operators import (
     constraints,
     convection,
     ensembles,
+    feature,
     filters,
     humidity,
     imageprocessing,
@@ -59,6 +60,7 @@ __all__ = [
     "convection",
     "ensembles",
     "execute_recipe",
+    "feature",
     "filters",
     "humidity",
     "get_operator",
@@ -113,6 +115,7 @@ def get_operator(name: str):
         operator = CSET.operators
         for section in name_sections:
             operator = getattr(operator, section)
+
         if callable(operator):
             return operator
         else:

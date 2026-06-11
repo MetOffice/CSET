@@ -33,6 +33,7 @@ dependencies = [
     "scipy",
     "scikit-image",
     "dask",
+    "simple-track",
 ]
 
 [project.urls]
