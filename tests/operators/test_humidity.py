@@ -722,3 +722,148 @@ def test_relative_humidity_from_specific_humidity_cubelist(
     )
     for cube_a, cube_b in zip(expected_list, actual_cubelist, strict=True):
         assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
+
+
+def test_precipitable_water(mr_3d, pw_3d):
+    """Test calculation of precipitable water for 3D data."""
+    assert np.allclose(
+        pw_3d.data, humidity.precipitable_water(mr_3d).data, rtol=1e-6, atol=1e-2
+    )
+
+
+def test_precipitable_water_cubelist(mr_3d, pw_3d):
+    """Test calculation of precipitable water in a cubelist."""
+    input_cube = iris.cube.CubeList([mr_3d, mr_3d])
+    actual_cubelist = humidity.precipitable_water(input_cube)
+    expected_cubelist = iris.cube.CubeList([pw_3d, pw_3d])
+    for cube_a, cube_b in zip(expected_cubelist, actual_cubelist, strict=True):
+        assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
+
+
+def test_precipitable_water_name(mr_3d):
+    """Test name of precipitable water cube."""
+    assert humidity.precipitable_water(mr_3d).name() == "precipitable_water"
+
+
+def test_precipitable_water_units(mr_3d):
+    """Test units of precipitable water cube."""
+    assert humidity.precipitable_water(mr_3d).units == cf_units.Unit("mm")
+
+
+def test_precipitable_water_time(mr_time, pw_time):
+    """Test precipitable water for cube varying in time."""
+    assert np.allclose(
+        pw_time.data, humidity.precipitable_water(mr_time).data, rtol=1e-6, atol=1e-2
+    )
+
+
+def test_precipitable_water_member(mr_member, pw_member):
+    """Test precipitable water for cube varying in member."""
+    assert np.allclose(
+        pw_member.data,
+        humidity.precipitable_water(mr_member).data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
+def test_precipitable_water_5d(mr_5d, pw_5d):
+    """Test precipitable water for 5D data."""
+    assert np.allclose(
+        pw_5d.data, humidity.precipitable_water(mr_5d).data, rtol=1e-6, atol=1e-2
+    )
+
+
+def test_saturation_precipitable_water(mr_3d, rh_3d, spw_3d):
+    """Test calculation of saturation precipitable water for 3D data."""
+    assert np.allclose(
+        spw_3d.data,
+        humidity.saturation_precipitable_water(mr_3d, rh_3d).data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
+def test_saturation_precipitable_water_cubelist(mr_3d, rh_3d, spw_3d):
+    """Test calculation of saturation precipitable water in a cubelist."""
+    input_cube = iris.cube.CubeList([mr_3d, mr_3d])
+    input_rh = iris.cube.CubeList([rh_3d, rh_3d])
+    actual_cubelist = humidity.saturation_precipitable_water(input_cube, input_rh)
+    expected_cubelist = iris.cube.CubeList([spw_3d, spw_3d])
+    for cube_a, cube_b in zip(expected_cubelist, actual_cubelist, strict=True):
+        assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
+
+
+def test_saturation_precipitable_water_name(mr_3d, rh_3d):
+    """Test name of saturation precipitable water cube."""
+    assert (
+        humidity.saturation_precipitable_water(mr_3d, rh_3d).name()
+        == "saturation_precipitable_water"
+    )
+
+
+def test_saturation_precipitable_water_units(mr_3d, rh_3d):
+    """Test units of saturation precipitable water cube."""
+    assert humidity.saturation_precipitable_water(mr_3d, rh_3d).units == cf_units.Unit(
+        "mm"
+    )
+
+
+def test_saturation_precipitable_water_time(mr_time, rh_time, spw_time):
+    """Test saturation precipitable water for cube varying in time."""
+    assert np.allclose(
+        spw_time.data,
+        humidity.saturation_precipitable_water(mr_time, rh_time).data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
+def test_saturation_precipitable_water_member(mr_member, rh_member, spw_member):
+    """Test saturation precipitable water for cube varying in member."""
+    assert np.allclose(
+        spw_member.data,
+        humidity.saturation_precipitable_water(mr_member, rh_member).data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
+def test_saturation_precipitable_water_5d(mr_5d, rh_5d, spw_5d):
+    """Test saturation precipitable water for 5D data."""
+    assert np.allclose(
+        spw_5d.data,
+        humidity.saturation_precipitable_water(mr_5d, rh_5d).data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
+def test_saturation_fraction(mr_3d, rh_3d, sf_3d):
+    """Test calculation of saturation fraction for 3D data."""
+    assert np.allclose(
+        sf_3d.data,
+        humidity.saturation_fraction(mr_3d, rh_3d).data,
+        rtol=1e-6,
+        atol=1e-2,
+    )
+
+
+def test_saturation_fraction_cubelist(mr_3d, rh_3d, sf_3d):
+    """Test calculation of saturation fraction in a cubelist."""
+    input_cube = iris.cube.CubeList([mr_3d, mr_3d])
+    input_rh = iris.cube.CubeList([rh_3d, rh_3d])
+    actual_cubelist = humidity.saturation_fraction(input_cube, input_rh)
+    expected_cubelist = iris.cube.CubeList([sf_3d, sf_3d])
+    for cube_a, cube_b in zip(expected_cubelist, actual_cubelist, strict=True):
+        assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
+
+
+def test_saturation_fraction_name(mr_3d, rh_3d):
+    """Test name of saturation fraction cube."""
+    assert humidity.saturation_fraction(mr_3d, rh_3d).name() == "saturation_fraction"
+
+
+def test_saturation_fraction_units(mr_3d, rh_3d):
+    """Test units of saturation fraction cube."""
+    assert humidity.saturation_fraction(mr_3d, rh_3d).units == cf_units.Unit("1")

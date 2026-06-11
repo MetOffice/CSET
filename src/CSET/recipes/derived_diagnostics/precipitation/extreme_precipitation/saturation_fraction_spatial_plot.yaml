@@ -1,0 +1,71 @@
+category: Extreme precipitation
+title: $MODEL_NAME Saturation fraction spatial plot
+description: |
+  Generates a spatial plot of the saturation fraction. The saturation fraction
+  is calculated from the specific humidity converted to a mixing ratio, and the
+  specific humidity, temperature, and air pressure to calculate the relative
+  humidity. From these diagnostics the precipitable water and saturation
+  precipitable water are derived, before their ratios are taken for the
+  saturation fraction.
+
+  A saturation fraction close to one implies that the atmosphere is fully
+  saturated throughout the column. Smaller values imply the atmosphere is dry.
+  Traditionally for precipitation the saturation fraction is greater than 0.6.
+  The saturation fraction is applicable throughout the globe.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    constraints: ["air_temperature", "air_pressure", "specific_humidity"]
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: humidity.saturation_fraction
+    mixing_ratio:
+        operator: humidity.mixing_ratio_from_specific_humidity
+        specific_humidity:
+            operator: filters.filter_multiple_cubes
+            constraint:
+                operator: constraints.combine_constraints
+                constraint_1:
+                    operator: constraints.generate_var_constraint
+                    varname: "specific_humidity"
+                constraint_2:
+                    operator: constraints.generate_remove_single_level_constraint
+                    coord: "model_level_number"
+                    level: 0
+    relative_humidity:
+        operator: humidity.relative_humidity_from_specific_humidity
+        specific_humidity:
+            operator: filters.filter_multiple_cubes
+            constraint:
+                operator: constraints.combine_constraints
+                constraint_1:
+                    operator: constraints.generate_var_constraint
+                    varname: "specific_humidity"
+                constraint_2:
+                    operator: constraints.generate_remove_single_level_constraint
+                    coord: "model_level_number"
+                    level: 0
+        temperature:
+            operator: filters.filter_multiple_cubes
+            constraint:
+                operator: constraints.generate_var_constraint
+                varname: "air_temperature"
+        pressure:
+            operator: filters.filter_multiple_cubes
+            constraint:
+                operator: constraints.combine_constraints
+                constraint_1:
+                    operator: constraints.generate_var_constraint
+                    varname: "m01s00i408"
+                constraint_2:
+                    operator: constraints.generate_remove_single_level_constraint
+                    coord: "model_level_number"
+                    level: 0
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
