@@ -343,7 +343,6 @@ def convert_rainfall_depth_to_rate(cubes, **kwargs):
     from cf_units import (
         Unit as CFUnit,  # if needed elsewhere; not strictly needed below
     )
-
     cubes_list = iris.cube.CubeList(iter_maybe(cubes))
 
     for cube in cubes_list:
@@ -362,28 +361,29 @@ def convert_rainfall_depth_to_rate(cubes, **kwargs):
 
         # Time coordinate is required for rainfall accumulations
         try:
-            time = cube.coord("time")
+            time_coord = cube.coord("time")
         except iris.exceptions.CoordinateNotFoundError as exc:
             raise ValueError("No time coordinate; cannot convert rainfall.") from exc
 
         # Get accumulation duration
-        if time.bounds is not None:
-            bounds = time.bounds
-            duration = bounds[:, 1] - bounds[:, 0]
+        if time_coord.bounds is not None:
+            duration = time_coord.bounds[:, 1] - time_coord.bounds[:, 0]
         else:
-            t = time.points
+            t = time_coord.points
+        
+            if t.size < 2:
+                raise ValueError("Cannot infer duration from a single time point")
+        
             dt = np.diff(t)
-            if len(dt) == 0:
-                raise ValueError("Cannot infer duration from single time point")
-            dt = np.concatenate([dt, [dt[-1]]])
-            duration = dt
-
+            duration = np.concatenate([dt, dt[-1:]]) # assume last interval repeats
+        
         # Convert duration to seconds
-        if time.units.is_time_reference():
-            base = str(time.units).split(" since ")[0].strip()
-            duration = CFUnit(base).convert(duration, "seconds")
+        units = time_coord.units
+        if units.is_time_reference():
+            base_unit = str(units).split(" since ")[0].strip()
+            duration = CFUnit(base_unit).convert(duration, "seconds")
         else:
-            duration = time.units.convert(duration, "seconds")
+            duration = units.convert(duration, "seconds")
 
         if np.any(duration <= 0):
             raise ValueError("Non-positive rainfall accumulation interval detected.")
