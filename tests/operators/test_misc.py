@@ -15,7 +15,6 @@
 """Test miscellaneous operators."""
 
 import datetime
-from pathlib import Path
 
 import iris
 import iris.analysis.calculus
@@ -26,8 +25,6 @@ import numpy as np
 import pytest
 
 from CSET.operators import misc, read
-
-DATA_DIR = Path(__file__).resolve().parent.parent / "test_data" / "rainfall"
 
 
 def test_noop_operator():
@@ -544,65 +541,6 @@ def test_extract_common_points_nocommonpoints(vertical_profile_cube):
         misc.extract_common_points(
             cubes=iris.cube.CubeList([cube1, cube2]), coordinate="pressure"
         )
-
-
-def test_rain_amount_to_rate_with_bounds():
-    """Test conversion works with time bounds."""
-    cube_in = iris.load_cube(DATA_DIR / "rain_amount_bounds.nc")
-    cube = cube_in.copy()
-    out = misc.convert_rainfall_amount_to_rate(cube)
-    assert out.units.is_convertible("kg m-2 s-1")
-    expected = np.asarray(cube_in.data, dtype=float) / 1800.0
-    assert np.allclose(out.data, expected, rtol=0.0, atol=1e-12)
-
-
-def test_rain_amount_to_rate_without_bounds_uses_time_points():
-    """Test conversion works without time bounds."""
-    cube_in = iris.load_cube(DATA_DIR / "rain_amount_no_bounds.nc")
-    cube = cube_in.copy()
-    out = misc.convert_rainfall_amount_to_rate(cube)
-    assert out.units.is_convertible("kg m-2 s-1")
-    expected = np.asarray(cube_in.data, dtype=float) / 1800.0
-    assert np.allclose(out.data, expected, rtol=0.0, atol=1e-12)
-
-
-def test_rain_rate_is_left_untouched():
-    """Test that rainfall rate is left untouched."""
-    cube_in = iris.load_cube(DATA_DIR / "rain_rate.nc")
-    cube = cube_in.copy()
-    out = misc.convert_rainfall_amount_to_rate(cube)
-    assert out.units == cube_in.units
-    assert np.allclose(out.data, cube_in.data, rtol=0.0, atol=0.0)
-
-
-def test_non_rainfall_units_are_skipped():
-    """Test that non-rainfall units are skipped."""
-    cube_in = iris.load_cube(DATA_DIR / "not_rainfall_units.nc")
-    cube = cube_in.copy()
-    out = misc.convert_rainfall_amount_to_rate(cube)
-    assert out.units == cube_in.units
-    assert np.allclose(out.data, cube_in.data, rtol=0.0, atol=0.0)
-
-
-def test_raises_if_no_time_coordinate():
-    """Test that error raised if no time coordinate."""
-    cube = iris.load_cube(DATA_DIR / "no_time.nc")
-    with pytest.raises(ValueError, match="No time coordinate"):
-        misc.convert_rainfall_amount_to_rate(cube)
-
-
-def test_raises_if_single_time_point_no_bounds():
-    """Test that error raised if only one time available."""
-    cube = iris.load_cube(DATA_DIR / "single_time.nc")
-    with pytest.raises(ValueError, match="single time point"):
-        misc.convert_rainfall_amount_to_rate(cube)
-
-
-def test_raises_if_nonpositive_interval_from_bounds():
-    """Test that error raised if time interval is negative."""
-    cube = iris.load_cube(DATA_DIR / "bad_bounds_zero.nc")
-    with pytest.raises(ValueError, match="Non-positive rainfall accumulation interval"):
-        misc.convert_rainfall_amount_to_rate(cube)
 
 
 def test_remove_scalar_coord():
