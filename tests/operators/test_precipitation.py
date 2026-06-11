@@ -307,3 +307,31 @@ def test_raises_without_time():
     cube = iris.cube.Cube(np.array([1.0, 2.0]), units="mm")
     with pytest.raises(ValueError):
         precipitation.convert_rainfall_depth_to_rate(cube)
+
+
+def test_convert_without_bounds_infers_duration():
+    """Duration inferred correctly when bounds missing."""
+    time = _make_time_coord([0, 1, 3])  # hours
+    cube = _make_cube([1.0, 2.0, 3.0], "mm", time)
+    result = precipitation.convert_rainfall_depth_to_rate(cube)
+    # dt = [1, 2] → extended → [1, 2, 2] hours
+    expected = np.array([1.0 / 3600.0, 2.0 / 7200.0, 3.0 / 7200.0])
+    np.testing.assert_allclose(result.data, expected)
+    assert str(result.units) == "kg m-2 s-1"
+
+
+def test_raises_single_time_point_no_bounds():
+    """Error if only one time point and no bounds."""
+    time = _make_time_coord([0])
+    cube = _make_cube([1.0], "mm", time)
+    with pytest.raises(ValueError):
+        precipitation.convert_rainfall_depth_to_rate(cube)
+
+
+def test_raises_non_positive_duration():
+    """Error if duration is zero or negative."""
+    bounds = np.array([[1, 0], [2, 3]])  # first interval negative
+    time = _make_time_coord([0.5, 2.5], bounds=bounds)
+    cube = _make_cube([1.0, 2.0], "mm", time)
+    with pytest.raises(ValueError):
+        precipitation.convert_rainfall_depth_to_rate(cube)
