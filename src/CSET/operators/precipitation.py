@@ -279,21 +279,72 @@ def MAUL_properties(
             return maul_b
 
 
-def convert_rainfall_amount_to_rate(cubes, **kwargs):
-    """
-    Convert rainfall from depth to rate.
+def convert_rainfall_depth_to_rate(cubes, **kwargs):
+    """Convert rainfall depth to rate.
 
-    To convert rainfall amount, or depth, in mm per time interval
-    into a rainfall rate in mm s-1 (=kg m-2 s-1).
+    Convert rainfall depth (e.g. mm or kg m-2)
+    over a time interval into a rainfall rate (kg m-2 s-1).
 
-    UM rainfall is already a rate and is left untouched.
+    The conversion uses the duration associated with the time coordinate:
+    - If time bounds are present, the bounds define the accumulation interval
+    - Otherwise, the interval is inferred from differences between time points
+
+    Arguments
+    ---------
+    cubes: iris.cube.Cube | iris.cube.CubeList
+        Cube(s) containing rainfall accumulation (depth), with units convertible
+        to kg m-2 (equivalent to mm of water).
+
+        Each cube must include a time coordinate, optionally with bounds.
+
+    kwargs:
+        Additional keyword arguments (currently unused, present for API compatibility).
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        Cube(s) with rainfall expressed as a rate in kg m-2 s-1.
+
+        The returned object matches the type of the input:
+        - single Cube → single Cube
+        - CubeList → CubeList
+
+    Raises
+    ------
+    ValueError
+        - If no time coordinate is present
+        - If only a single time point is available without bounds
+        - If any inferred duration is non-positive
+
+    Notes
+    -----
+    - Conversion relies on the equivalence:
+      1 mm of rainfall ≡ 1 kg m-2
+
+    - Unit handling:
+        * Cubes already in rate units (convertible to kg m-2 s-1) are left unchanged
+        * Cubes not representing accumulation (not convertible to kg m-2) are skipped
+
+    - Time handling:
+        * If units are time-reference units (e.g. "hours since ..."),
+          only the base unit (e.g. hours) is used for duration conversion
+
+    - Broadcasting:
+        The duration array is reshaped to match the time dimension of the cube
+        before division.
+
+    - The operation is applied in-place to cube data.
+
+    Examples
+    --------
+    >>> rate = precipitation.convert_rainfall_depth_to_rate(cube)
+    >>> rate_list = precipitation.convert_rainfall_depth_to_rate(cube_list)
     """
     from cf_units import Unit as CFUnit
 
-    is_single = isinstance(cubes, iris.cube.Cube)
     cubes_list = iris.cube.CubeList(iter_maybe(cubes))
 
-    for cube in iris.cube.CubeList(iter_maybe(cubes)):
+    for cube in cubes_list:
         # --- Skip if already a rate
         if cube.units.is_convertible("kg m-2 s-1"):
             continue
@@ -336,4 +387,4 @@ def convert_rainfall_amount_to_rate(cubes, **kwargs):
         cube.data = cube.data / duration
         cube.units = "kg m-2 s-1"
 
-    return cubes_list[0] if is_single else cubes_list
+    return cubes_list[0] if isinstance(cubes, iris.cube.Cube) else cubes_list

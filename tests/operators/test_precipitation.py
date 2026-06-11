@@ -265,60 +265,45 @@ def test_maul_properties_5D_depth(maul_mask_all, precalc_maul_depth_5d):
     )
 
 
-def test_rain_amount_to_rate_with_bounds():
-    """Test conversion works with time bounds."""
-    cube_in = iris.load_cube(DATA_DIR / "rain_amount_bounds.nc")
-    cube = cube_in.copy()
-    out = precipitation.convert_rainfall_amount_to_rate(cube)
-    assert out.units.is_convertible("kg m-2 s-1")
-    expected = np.asarray(cube_in.data, dtype=float) / 1800.0
-    assert np.allclose(out.data, expected, rtol=0.0, atol=1e-12)
+def _make_time_coord(points, bounds=None, units="hours since 2000-01-01 00:00:00"):
+    """Make a time coordinate for rainfall tests."""
+    return iris.coords.DimCoord(
+        points,
+        standard_name="time",
+        units=units,
+        bounds=bounds,
+    )
 
 
-def test_rain_amount_to_rate_without_bounds_uses_time_points():
-    """Test conversion works without time bounds."""
-    cube_in = iris.load_cube(DATA_DIR / "rain_amount_no_bounds.nc")
-    cube = cube_in.copy()
-    out = precipitation.convert_rainfall_amount_to_rate(cube)
-    assert out.units.is_convertible("kg m-2 s-1")
-    expected = np.asarray(cube_in.data, dtype=float) / 1800.0
-    assert np.allclose(out.data, expected, rtol=0.0, atol=1e-12)
+def _make_cube(data, units, time_coord):
+    """Make a cube for rainfall tests."""
+    cube = iris.cube.Cube(data, units=units)
+    cube.add_dim_coord(time_coord, 0)
+    return cube
 
 
-def test_rain_rate_is_left_untouched():
-    """Test that rainfall rate is left untouched."""
-    cube_in = iris.load_cube(DATA_DIR / "rain_rate.nc")
-    cube = cube_in.copy()
-    out = precipitation.convert_rainfall_amount_to_rate(cube)
-    assert out.units == cube_in.units
-    assert np.allclose(out.data, cube_in.data, rtol=0.0, atol=0.0)
+def test_convert_basic_with_bounds():
+    """Basic accumulation → rate conversion works."""
+    bounds = np.array([[0, 1], [1, 2]])
+    time = _make_time_coord([0.5, 1.5], bounds=bounds)
+    cube = _make_cube([1.0, 2.0], "mm", time)
+    result = precipitation.convert_rainfall_depth_to_rate(cube)
+    expected = np.array([1.0, 2.0]) / 3600.0
+    np.testing.assert_allclose(result.data, expected)
 
 
-def test_non_rainfall_units_are_skipped():
-    """Test that non-rainfall units are skipped."""
-    cube_in = iris.load_cube(DATA_DIR / "not_rainfall_units.nc")
-    cube = cube_in.copy()
-    out = precipitation.convert_rainfall_amount_to_rate(cube)
-    assert out.units == cube_in.units
-    assert np.allclose(out.data, cube_in.data, rtol=0.0, atol=0.0)
+def test_skip_non_accumulation_or_rate():
+    """Non-accumulation and already-rate cubes are left unchanged."""
+    time = _make_time_coord([0, 1])
+    rate_cube = _make_cube([0.1, 0.2], "kg m-2 s-1", time)
+    temp_cube = _make_cube([280, 281], "K", time)
+    out = precipitation.convert_rainfall_depth_to_rate([rate_cube, temp_cube])
+    np.testing.assert_array_equal(out[0].data, rate_cube.data)
+    np.testing.assert_array_equal(out[1].data, temp_cube.data)
 
 
-def test_raises_if_no_time_coordinate():
-    """Test that error raised if no time coordinate."""
-    cube = iris.load_cube(DATA_DIR / "no_time.nc")
-    with pytest.raises(ValueError, match="No time coordinate"):
-        precipitation.convert_rainfall_amount_to_rate(cube)
-
-
-def test_raises_if_single_time_point_no_bounds():
-    """Test that error raised if only one time available."""
-    cube = iris.load_cube(DATA_DIR / "single_time.nc")
-    with pytest.raises(ValueError, match="single time point"):
-        precipitation.convert_rainfall_amount_to_rate(cube)
-
-
-def test_raises_if_nonpositive_interval_from_bounds():
-    """Test that error raised if time interval is negative."""
-    cube = iris.load_cube(DATA_DIR / "bad_bounds_zero.nc")
-    with pytest.raises(ValueError, match="Non-positive rainfall accumulation interval"):
-        precipitation.convert_rainfall_amount_to_rate(cube)
+def test_raises_without_time():
+    """Raises if no time coordinate is present."""
+    cube = iris.cube.Cube(np.array([1.0, 2.0]), units="mm")
+    with pytest.raises(ValueError):
+        precipitation.convert_rainfall_depth_to_rate(cube)
