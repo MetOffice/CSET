@@ -343,6 +343,7 @@ def convert_rainfall_depth_to_rate(cubes, **kwargs):
     from cf_units import (
         Unit as CFUnit,  # if needed elsewhere; not strictly needed below
     )
+
     cubes_list = iris.cube.CubeList(iter_maybe(cubes))
 
     for cube in cubes_list:
@@ -370,13 +371,13 @@ def convert_rainfall_depth_to_rate(cubes, **kwargs):
             duration = time_coord.bounds[:, 1] - time_coord.bounds[:, 0]
         else:
             t = time_coord.points
-        
+
             if t.size < 2:
                 raise ValueError("Cannot infer duration from a single time point")
-        
+
             dt = np.diff(t)
-            duration = np.concatenate([dt, dt[-1:]]) # assume last interval repeats
-        
+            duration = np.concatenate([dt, dt[-1:]])  # assume last interval repeats
+
         # Convert duration to seconds
         units = time_coord.units
         if units.is_time_reference():
