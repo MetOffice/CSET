@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from CSET.operators import collapse, misc, plot, read
+from CSET.operators import _plot_colormaps, collapse, misc, plot, read
 
 
 def test_check_single_cube():
@@ -44,7 +44,7 @@ def test_check_single_cube():
 
 def test_load_colorbar_map():
     """Colorbar is loaded correctly."""
-    colorbar = plot._load_colorbar_map()
+    colorbar = _plot_colormaps._load_colorbar_map()
     assert isinstance(colorbar, dict)
     # Check we can find an example definition.
     assert colorbar["temperature_at_screen_level"] == {
@@ -64,7 +64,7 @@ def test_load_colorbar_map_override(tmp_path):
     with open(user_colorbar_file, "wt") as fp:
         json.dump(user_definition, fp)
 
-    colorbar = plot._load_colorbar_map(user_colorbar_file)
+    colorbar = _plot_colormaps._load_colorbar_map(user_colorbar_file)
 
     assert isinstance(colorbar, dict)
     # Check definition is updated.
@@ -86,14 +86,14 @@ def test_load_colorbar_map_override(tmp_path):
 def test_load_colorbar_map_override_file_not_found(tmp_path):
     """Colorbar overridden by the user definition in non-existent file."""
     user_colorbar_file = tmp_path / "colorbar.json"
-    colorbar = plot._load_colorbar_map(user_colorbar_file)
+    colorbar = _plot_colormaps._load_colorbar_map(user_colorbar_file)
     # Check it still returns the built-in one.
     assert isinstance(colorbar, dict)
 
 
 def test_colorbar_map_levels(cube, tmp_working_dir):
     """Colorbar definition is found for cube."""
-    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    cmap, levels, norm = _plot_colormaps._colorbar_map_levels(cube)
     assert cmap == mpl.pyplot.get_cmap("RdYlBu_r", 51)
     assert (levels == np.linspace(263, 323, 101)).all()
     assert norm is None
@@ -102,7 +102,7 @@ def test_colorbar_map_levels(cube, tmp_working_dir):
 def test_colorbar_map_levels_xaxis(cube, tmp_working_dir):
     """Set levels for based on xmin, xmax."""
     cube = iris.cube.Cube(np.arange(10), long_name="zonal_wind_at_pressure_levels")
-    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="x")
+    cmap, levels, norm = _plot_colormaps._colorbar_map_levels(cube, axis="x")
     assert cmap is None
     assert levels == [-25, 25]
     assert norm is None
@@ -113,7 +113,7 @@ def test_colorbar_map_levels_xaxis_default(cube, tmp_working_dir):
     cube = iris.cube.Cube(
         np.arange(10), long_name="zonal_wind_at_pressure_levels_difference"
     )
-    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="x")
+    cmap, levels, norm = _plot_colormaps._colorbar_map_levels(cube, axis="x")
     assert cmap is None
     assert levels == [-20, 20]
     assert norm is None
@@ -122,7 +122,7 @@ def test_colorbar_map_levels_xaxis_default(cube, tmp_working_dir):
 def test_colorbar_map_levels_yaxis(cube, tmp_working_dir):
     """Set levels for based on ymin, ymax."""
     cube = iris.cube.Cube(np.arange(10), long_name="toa_upward_shortwave_flux")
-    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="y")
+    cmap, levels, norm = _plot_colormaps._colorbar_map_levels(cube, axis="y")
     assert cmap is None
     assert levels == [0, 500]
     assert norm is None
@@ -133,7 +133,7 @@ def test_colorbar_map_levels_yaxis_default(cube, tmp_working_dir):
     cube = iris.cube.Cube(
         np.arange(10), long_name="toa_upward_shortwave_flux_difference"
     )
-    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="y")
+    cmap, levels, norm = _plot_colormaps._colorbar_map_levels(cube, axis="y")
     assert cmap is None
     assert levels == [-100, 100]
     assert norm is None
@@ -141,7 +141,7 @@ def test_colorbar_map_levels_yaxis_default(cube, tmp_working_dir):
 
 def test_colorbar_map_levels_yaxis_auto(cube, tmp_working_dir):
     """Set levels for based on ymin, ymax set to auto."""
-    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="y")
+    cmap, levels, norm = _plot_colormaps._colorbar_map_levels(cube, axis="y")
     assert cmap is None
     assert levels is None
     assert norm is None
@@ -152,7 +152,7 @@ def test_colorbar_map_levels_def_on_levels(cube, tmp_working_dir):
     cube = iris.cube.Cube(
         np.arange(10), long_name="surface_microphysical_rainfall_rate"
     )
-    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    cmap, levels, norm = _plot_colormaps._colorbar_map_levels(cube)
     assert levels == [0, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
 
 
@@ -161,7 +161,7 @@ def test_colorbar_map_levels_def_on_levels_test_visibility_in_air(
 ):
     """Colorbar definition that uses levels is found for cube."""
     cube = iris.cube.Cube(np.arange(10), long_name="visibility_in_air")
-    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    cmap, levels, norm = _plot_colormaps._colorbar_map_levels(cube)
     assert levels == [
         0,
         0.05,
@@ -182,7 +182,7 @@ def test_colorbar_map_levels_def_on_levels_test_visibility_in_air(
 def test_colorbar_map_levels_name_fallback(cube, tmp_working_dir):
     """Colorbar definition is found for cube after checking its other names."""
     cube.standard_name = None
-    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    cmap, levels, norm = _plot_colormaps._colorbar_map_levels(cube)
     assert cmap == mpl.pyplot.get_cmap("RdYlBu_r", 51)
     assert (levels == np.linspace(263, 323, 101)).all()
     assert norm is None
@@ -193,7 +193,7 @@ def test_colorbar_map_levels_unknown_variable_fallback(cube, tmp_working_dir):
     cube.standard_name = None
     cube.long_name = None
     cube.var_name = "unknown"
-    cmap, levels, norm = plot._colorbar_map_levels(cube)
+    cmap, levels, norm = _plot_colormaps._colorbar_map_levels(cube)
     assert cmap == mpl.pyplot.get_cmap("viridis")
     assert levels is None
     assert norm is None
@@ -202,7 +202,7 @@ def test_colorbar_map_levels_unknown_variable_fallback(cube, tmp_working_dir):
 def test_colorbar_map_levels_pressure_level(transect_source_cube, tmp_working_dir):
     """Pressure level specific colorbar definition is picked up."""
     cube_250hPa = transect_source_cube.extract(iris.Constraint(pressure=250))
-    cmap, levels, norm = plot._colorbar_map_levels(cube_250hPa)
+    cmap, levels, norm = _plot_colormaps._colorbar_map_levels(cube_250hPa)
     assert cmap == mpl.pyplot.get_cmap("RdYlBu_r", 51)
     assert (levels == np.linspace(200, 240, 101)).all()
     assert norm is None
@@ -214,7 +214,7 @@ def test_colorbar_map_levels_pressure_level_yaxis(
     """Pressure level specific colorbar definition is picked up."""
     cube_250hPa = transect_source_cube.extract(iris.Constraint(pressure=250))
     cube_250hPa.rename("zonal_wind_at_pressure_levels")
-    cmap, levels, norm = plot._colorbar_map_levels(cube_250hPa, axis="y")
+    cmap, levels, norm = _plot_colormaps._colorbar_map_levels(cube_250hPa, axis="y")
     assert cmap is None
     assert levels == [-20, 20]
     assert norm is None
@@ -226,9 +226,9 @@ def test_colorbar_map_levels_missing_pressure_level(
     """Pressure level specific colorbar definition is not defined."""
     cube_288hPa = transect_source_cube.extract(iris.Constraint(pressure=250))
     cube_288hPa.coord("pressure").points = 288.0
-    cmap, levels, norm = plot._colorbar_map_levels(cube_288hPa)
+    cmap, levels, norm = _plot_colormaps._colorbar_map_levels(cube_288hPa)
     with caplog.at_level(logging.DEBUG):
-        cmap, levels, norm = plot._colorbar_map_levels(cube_288hPa)
+        cmap, levels, norm = _plot_colormaps._colorbar_map_levels(cube_288hPa)
         assert caplog.record_tuples == [
             (
                 "root",
@@ -503,7 +503,7 @@ def test_colorbar_map_celsius(cube, tmp_working_dir):
     cmap = mpl.cm.RdYlBu
     norm = None
     levels = [273, 373]
-    cmap, levels, norm = plot._custom_colormap_celsius(
+    cmap, levels, norm = _plot_colormaps._custom_colormap_celsius(
         cube, cmap=cmap, levels=levels, norm=norm
     )
     assert cmap == mpl.cm.RdYlBu
@@ -558,7 +558,7 @@ def test_colorbar_map_aviation_colour_state(cube, tmp_working_dir):
         "#fe3620",
     ]
     expected_cmap = mpl.colors.ListedColormap(expected_colors)
-    cmap, levels, norm = plot._custom_colormap_aviation_colour_state(cube)
+    cmap, levels, norm = _plot_colormaps._custom_colormap_aviation_colour_state(cube)
     assert cmap == expected_cmap
     assert levels == expected_levels
     assert isinstance(norm, mpl.colors.BoundaryNorm)

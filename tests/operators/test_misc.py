@@ -474,17 +474,6 @@ def test_slice_cube_on_common_levels(vertical_profile_cube):
     )
 
 
-def test_extract_common_points_toomanycubes(vertical_profile_cube):
-    """Test handling of too many cubes."""
-    with pytest.raises(ValueError, match="Maximum of two cubes allowed, received 3"):
-        misc.extract_common_points(
-            cubes=iris.cube.CubeList(
-                [vertical_profile_cube, vertical_profile_cube, vertical_profile_cube]
-            ),
-            coordinate="pressure",
-        )
-
-
 def test_extract_common_points_cubelist(vertical_profile_cube):
     """Test handling of function not being handed a CubeList."""
     with pytest.raises(

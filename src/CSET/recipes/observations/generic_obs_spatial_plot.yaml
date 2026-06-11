@@ -1,0 +1,33 @@
+category: Surface Spatial Observation Plot
+title: $VARNAME $METHOD $SUBAREA_NAME
+description: |
+    Plots the $METHOD of $VARNAME as points at observation locations.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    constraint:
+        operator: constraints.combine_constraints
+        variable_constraint:
+            operator: constraints.generate_var_constraint
+            varname: observed_$VARNAME
+        cell_methods_constraint:
+            operator: constraints.generate_cell_methods_constraint
+            cell_methods: []
+            varname: observed_$VARNAME
+        level_constraint:
+             operator: constraints.generate_level_constraint
+             coordinate: "pressure"
+             levels: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: collapse.collapse
+    coordinate: [time]
+    method: $METHOD
+
+  - operator: plot.spatial_contour_plot
+    sequence_coordinate: time
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
