@@ -243,6 +243,18 @@ def test_colorbar_map_levels_missing_pressure_level(
         ]
 
 
+def test_colorbar_map_scores_rmse(cube, tmp_working_dir):
+    """Colorbar definition is found for cube."""
+    cube.rename(f"RMSE_{cube.name()}")
+    levels = None
+    norm = None
+    cmap = None
+    cmap, levels, norm = plot._custom_colormap_scores(cube, cmap, levels, norm)
+    assert cmap == plt.get_cmap("cividis", 51)
+    assert levels is None
+    assert norm is None
+
+
 def test_setup_spatial_map(cube):
     """Setup spatial map."""
     # Test setup map function returns GeoAxes instance.
