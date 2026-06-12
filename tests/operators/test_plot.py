@@ -244,7 +244,7 @@ def test_colorbar_map_levels_missing_pressure_level(
 
 
 def test_colorbar_map_scores_rmse(cube, tmp_working_dir):
-    """Colorbar definition is found for cube."""
+    """Colorbar definition is found for a rmse cube calculated via scores."""
     cube.rename(f"RMSE_{cube.name()}")
     levels = None
     norm = None

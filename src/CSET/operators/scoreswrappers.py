@@ -171,7 +171,8 @@ def scores_rmse(
 
     """
     base, other = _sort_cubes_for_verification(cubes)
-
+    # Scores operators on xarray data arrays, so we transform the iris cube into an array,
+    # apply scores, and then transform it back.
     RMSE = xr.DataArray.to_iris(
         scores.continuous.rmse(
             xr.DataArray.from_iris(other),

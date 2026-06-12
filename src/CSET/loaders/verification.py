@@ -25,7 +25,7 @@ def load(conf: Config):
     models = get_models(conf.asdict())
     # Models are listed in order, so model 1 is the first element.
 
-    if conf.SPATIAL_SCORES_RMSE:
+    if conf.SCORES_RMSE_SPATIAL:
         base_model = models[0]
         for model, field, method in itertools.product(
             models[1:], conf.SURFACE_FIELDS, conf.SPATIAL_SURFACE_FIELD_METHOD
@@ -46,7 +46,7 @@ def load(conf: Config):
                 aggregation=False,
             )
 
-    if conf.TIMESERIES_SCORES_RMSE:
+    if conf.SCORES_RMSE_TIMESERIES:
         base_model = models[0]
         for model, field in itertools.product(models[1:], conf.SURFACE_FIELDS):
             yield RawRecipe(
