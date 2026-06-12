@@ -285,7 +285,12 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
     if any("aviation_colour_state" in name for name in varnames):
         cmap, levels, norm = _custom_colormap_aviation_colour_state(cube)
         return cmap, levels, norm
-
+    if any("RMSE_" in name for name in varnames):
+        # Variables levels and norm set to None to use specific colorbar routine.
+        levels = None
+        norm = None
+        cmap, levels, norm = _custom_colormap_scores(cube, cmap, levels, norm)
+        return cmap, levels, norm
     # If no valid colormap has been defined, use defaults and return.
     if not cmap:
         logging.warning("No colorbar definition exists for %s.", cube.name())
@@ -351,7 +356,6 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
             cube, cmap, levels, norm
         )
         cmap, levels, norm = _custom_colormap_celsius(cube, cmap, levels, norm)
-        cmap, levels, norm = _custom_colormap_scores(cube, cmap, levels, norm)
         return cmap, levels, norm
 
 
