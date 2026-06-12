@@ -31,6 +31,8 @@ jobs:
         with:
           persist-credentials: false
 
+      - uses: mamba-org/setup-micromamba@d7c9bd84e824b79d2af72a2d4196c7f4300d3476
+
       - name: Cache conda environment
         id: conda-env-cache
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae
@@ -47,7 +49,7 @@ jobs:
         run: |
           # Check cache hasn't pulled a partial key match.
           test ! -e "${HOME}/conda-env"
-          conda create --prefix="${HOME}/conda-env" --file=requirements/locks/${py_ver}-lock-linux-64.txt
+          micromamba create --prefix="${HOME}/conda-env" --file=requirements/locks/${py_ver}-lock-linux-64.txt
 
       - name: Add conda environment to PATH
         run: echo "${HOME}/conda-env/bin" >> $GITHUB_PATH
@@ -171,6 +173,8 @@ jobs:
         with:
           persist-credentials: false
 
+      - uses: mamba-org/setup-micromamba@d7c9bd84e824b79d2af72a2d4196c7f4300d3476
+
       - name: Cache conda environment
         id: conda-env-cache
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae
@@ -185,7 +189,7 @@ jobs:
         run: |
           # Check cache hasn't pulled a partial key match.
           test ! -e "${HOME}/conda-env"
-          conda create --prefix="${HOME}/conda-env" --file=requirements/locks/latest
+          micromamba create --prefix="${HOME}/conda-env" --file=requirements/locks/latest
 
       - name: Add conda environment to PATH
         run: echo "${HOME}/conda-env/bin" >> $GITHUB_PATH
