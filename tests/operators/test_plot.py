@@ -250,7 +250,7 @@ def test_colorbar_map_scores_rmse(cube, tmp_working_dir):
     norm = None
     cmap = None
     cmap, levels, norm = plot._colorbar_map_levels(cube)
-    assert cmap == plt.get_cmap("cividis", 51)
+    assert cmap == plt.get_cmap("PuRd", 51)
     assert levels is None
     assert norm is None
 

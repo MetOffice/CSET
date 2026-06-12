@@ -43,6 +43,8 @@ def test_scores_rmse(cube: iris.cube.Cube):
     assert np.allclose(rmse_cube.data, np.zeros_like(rmse_cube.data), atol=1e-9)
     assert rmse_cube.standard_name is None
     assert rmse_cube.long_name == "RMSE_of_air_temperature"
+
+
 def test_scores_rmse_nonzero(cube: iris.cube.Cube):
     """Test taking the rmse between two different cubes."""
     # Data preparation.

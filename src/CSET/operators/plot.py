@@ -382,7 +382,7 @@ def _custom_colormap_scores(cube: iris.cube.Cube, cmap, levels, norm):
     """
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if any("RMSE_" in name for name in varnames):
-        cmap = plt.get_cmap("cividis", 51)
+        cmap = plt.get_cmap("PuRd", 51)
     return cmap, levels, norm
 
 
