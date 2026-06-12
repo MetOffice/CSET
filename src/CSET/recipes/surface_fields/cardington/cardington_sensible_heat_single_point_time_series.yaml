@@ -1,0 +1,45 @@
+category: Time series of sensible heat flux at Cardington single point
+title: "Time series of $PLOTNAME at lat_pt:52.10438, lon_pt:-0.42286 specific to Cardington gridpoint."
+description: "Plots a time series of $PLOTNAME at a selected Cardington gridpoint."
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names:
+      - $CARDINGTON_30_LABEL
+      - $MODEL_NAME
+
+  - operator: misc.mask_fill_values
+
+  - operator: misc.sensible_heat_units
+    HEIGHT: $HEIGHT
+    CARDINGTON_VARNAMES: $WT_VARNAMES
+
+  - operator: filters.filter_multiple_cubes
+    Cardington:
+      operator: constraints.generate_var_constraint
+      varname: surface_upward_sensible_heat_flux
+
+    $MODEL_NAME:
+      operator: constraints.generate_var_constraint
+      varname: surface_upward_sensible_heat_flux
+
+  - operator: misc.remove_attribute
+    attribute:
+      - time_coverage_end
+      - time_coverage_start
+      - valid_min
+      - valid_max
+      - date
+      - date_created
+
+  - operator: regrid.regrid_to_single_point
+    lat_pt: 52.10438
+    lon_pt: -0.42286
+    latlon_in_type: "realworld"
+    method: "Nearest"
+    boundary_margin: 0
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+  - operator: plot.plot_line_series

@@ -1,0 +1,69 @@
+category: Time series of surface temperature at Cardington single point
+title: "Time series of $VARNAME at lat_pt:52.10438, lon_pt:-0.42286 specific to Cardington gridpoint."
+description: "Plots a time series of $VARNAME at a selected Cardington gridpoint."
+steps:
+  # ------------------------------------------------------------
+  # 1. Read data
+  #    IMPORTANT:
+  #    - Constrain the UM *at read time* so Iris only ever loads
+  #      a single surface_temperature cube.
+  # ------------------------------------------------------------
+
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names:
+      - $CARDINGTON_05_LABEL
+      - $CARDINGTON_30_LABEL
+      - $MODEL_NAME
+    constraints:
+      $MODEL_NAME:
+        operator: constraints.combine_constraints
+        stash_constraint:
+          operator: constraints.generate_attribute_constraint
+          attribute: STASH
+          values:
+            - $UM_VARNAME
+        cell_methods_constraint:
+          operator: constraints.generate_cell_methods_constraint
+          cell_methods: [ 'maximum' ]
+          coord: 'time'
+          interval: '1 hour'
+    preprocessors:
+      - operator: misc.remove_scalar_coords
+        coords:
+          - forecast_reference_time
+          - realization
+
+# IMPORTANT: Global temperature-only prune.
+# filter_multiple_cubes must have exactly ONE key here,
+# otherwise non-temperature cubes will survive and break convert_units.
+  - operator: filters.filter_multiple_cubes
+    temperature:
+      operator: constraints.generate_var_constraint
+      varname: $VARNAME
+
+  - operator: misc.remove_attribute
+    attribute:
+      - time_coverage_end
+      - time_coverage_start
+      - valid_min
+      - valid_max
+      - date
+      - date_created
+
+  - operator: misc.convert_units
+    units: 'Celsius'
+
+  - operator: regrid.regrid_to_single_point
+    lat_pt: 52.10438
+    lon_pt: -0.42286
+    latlon_in_type: "realworld"
+    method: "Nearest"
+    boundary_margin: 0
+
+  - operator: misc.mask_fill_values
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+  - operator: plot.plot_line_series
