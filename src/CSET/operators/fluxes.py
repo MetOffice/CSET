@@ -175,8 +175,8 @@ def sensible_heat_flux_from_covariance(cubes, **kwargs):
     """
     from cf_units import Unit
 
-    Cp = 1004.67  # J kg-1 K-1
-    Rd = 287.05  # J kg-1 K-1
+    from CSET.operators._atmospheric_constants import CPD as Cp
+    from CSET.operators._atmospheric_constants import RD as Rd
 
     cubes = (
         iris.cube.CubeList(cubes)
@@ -281,7 +281,7 @@ def latent_heat_units(
     Notes
     -----
     - The conversion uses a fixed latent heat of vaporisation:
-          Lc = 2.45 × 10^6 J kg-1
+          Lc = 2.5 × 10^6 J kg-1
     - In reality, Lc varies with temperature (~5% variation between -20 °C
       and +40 °C). This dependency is currently neglected but could be
       included in future improvements.
@@ -290,7 +290,7 @@ def latent_heat_units(
     """
     REQUIRED_UNITS = Unit("kg m-2 s-1")
     OUTPUT_UNITS = Unit("W m-2")
-    Lc = 2.45e6  # J kg-1
+    from CSET.operators._atmospheric_constants import LV as Lc
 
     out = iris.cube.CubeList()
     for cube in iter_maybe(cubes):
