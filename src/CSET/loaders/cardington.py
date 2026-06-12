@@ -214,7 +214,7 @@ def load(conf: Config):
                             "UM_VARNAME": model_field,  # m01s03i217 (unchanged)
                             "HEIGHT": ht,
                             "PLOTNAME": plot_field,
-                            WT_VARNAMES": ",".join(card_varnames),
+                            "WT_VARNAMES": ",".join(card_varnames),
                         },
                         model_ids=[cardington_models[1]["id"], um_model["id"]],
                         aggregation=False,
