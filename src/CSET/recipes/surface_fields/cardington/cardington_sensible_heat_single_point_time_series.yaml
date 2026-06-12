@@ -12,12 +12,12 @@ steps:
 
   - operator: misc.sensible_heat_units
     HEIGHT: $HEIGHT
-    CARDINGTON_VARNAMES: $CARDINGTON_VARNAMES
+    CARDINGTON_VARNAMES: $WT_VARNAMES
 
   - operator: filters.filter_multiple_cubes
     Cardington:
       operator: constraints.generate_var_constraint
-      varname: surface_upward_sensible_heat_flux_cardington
+      varname: surface_upward_sensible_heat_flux
 
     $MODEL_NAME:
       operator: constraints.generate_var_constraint
