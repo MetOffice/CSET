@@ -1,5 +1,5 @@
 category: Power Spectrum
-title: Power Spectrum $VARNAME $LEVELTYPE $LEVEL
+title: Power Spectrum $VARNAME $LEVELTYPE $LEVEL $SUBAREA_NAME
 description: |
   Extracts and plots the power spectrum of $VARNAME from a
   file at $LEVELTYPE level $LEVEL of $MODEL_NAME.
