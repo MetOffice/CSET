@@ -22,119 +22,164 @@ from iris.cube import Cube, CubeList
 from CSET._common import iter_maybe
 
 
+def _exactly_one(matches, role):
+    if len(matches) == 0:
+        raise ValueError(f"sensible_heat_units could not identify a unique {role} cube")
+    if len(matches) > 1:
+        names = [getattr(c, "var_name", None) or c.name() for c in matches]
+        raise ValueError(
+            f"sensible_heat_units found multiple possible {role} cubes: {names}"
+        )
+    return matches[0]
+
+
+def _is_p_cube(cube):
+    return (
+        cube.units is not None
+        and not cube.units.is_unknown()
+        and cube.units.is_convertible(Unit("Pa"))
+    )
+
+
+def _is_T_cube(cube):
+    if cube.units is None or cube.units.is_unknown():
+        return False
+    return cube.units.is_convertible(Unit("K")) or cube.units.is_convertible(
+        Unit("degC")
+    )
+
+
+def _is_wt_covar_cube(cube):
+    if cube.units is None or cube.units.is_unknown():
+        return False
+    # turbulence covariance may be recorded either as K m s-1
+    # or degC m s-1; these are equivalent
+    return cube.units.is_convertible(Unit("K m s-1")) or cube.units.is_convertible(
+        Unit("degC m s-1")
+    )
+
+
+def _score_T_cube(cube):
+    score = 0
+    if cube.standard_name == "air_temperature":
+        score += 3
+    if cube.var_name and "temp" in cube.var_name.lower():
+        score += 2
+    if "temperature" in cube.name().lower():
+        score += 1
+    return score
+
+
+def _score_p_cube(cube):
+    score = 0
+    if cube.standard_name == "air_pressure":
+        score += 3
+    if cube.var_name:
+        v = cube.var_name.lower()
+        if v == "barometric_pressure":
+            score += 3
+        elif "press" in v:
+            score += 2
+    if cube.name() and "pressure" in cube.name().lower():
+        score += 1
+
+    return score
+
+
+def _score_covar_cube(cube):
+    score = 0
+    text = " ".join(
+        str(x).lower()
+        for x in [cube.var_name, cube.standard_name, cube.long_name, cube.name()]
+        if x
+    )
+    if "cov" in text:
+        score += 2
+    if "wt" in text or "w't" in text:
+        score += 2
+    return score
+
+
 def sensible_heat_units(cubes, **kwargs):
     """
-    Convert covariance measurements into surface upward sensible heat flux.
+    Convert turbulent temperature covariance into sensible heat flux.
 
-    This operator computes sensible heat flux (SHF) from turbulent covariance
-    measurements using:
-        SHF = ρ * Cp * (w'T')
-    where:
-        ρ   = air density (derived from pressure and temperature)
-        Cp  = specific heat capacity of dry air
-        w'T' = vertical wind–temperature covariance
+    This operator identifies:
+      - one covariance cube with units compatible with temperature × velocity
+      - one air temperature cube
+      - one pressure cube
 
-    Parameters
-    ----------
-    cubes : iris.cube.Cube or iterable of Cube
-        Collection of input cubes. Must include exactly one cube for each of:
-            - wt_covariance_*
-            - air_temperature_rtd_*
-            - pressure_barometric
-        Other cubes are passed through unchanged.
+    It then computes:
+        SHF = rho * Cp * (w'T')
 
-    kwargs : dict
-        Must contain:
-            WT_VARNAMES : str
-                Comma-separated list of variable names to extract from `cubes`.
-                Expected to include the three required inputs.
-        Optional:
-            HEIGHT : float or int
-                Nominal height used for metadata tagging only (not used in computations).
+    using air density derived from pressure and temperature.
 
-    Returns
-    -------
-    iris.cube.Cube or iris.cube.CubeList
-        Output cubes with:
-            - All non-WT related cubes passed through unchanged
-            - One additional cube:
-                surface_upward_sensible_heat_flux[W m-2]
-
-        Returns a single Cube if input was a single Cube, otherwise a CubeList.
-
-    Assumptions and Notes
-    ---------------------
-    - Input cubes must be preselected so that exactly one of each required variable
-      is present. No disambiguation is performed within this function.
-    - Measurement heights of inputs may differ; these are recorded in output metadata.
-    - The `HEIGHT` kwarg is treated as a nominal reporting height only and does not
-      affect the calculation.
-    - Units are normalised internally:
-        - Temperature → K (defaults to degC if unknown)
-        - Pressure → Pa (defaults to hPa if unknown)
-
-    Raises
-    ------
-    ValueError
-        If required inputs are missing or WT_VARNAMES is not provided.
+    Cubes not used in the calculation are passed through unchanged.
     """
     from cf_units import Unit
 
     Cp = 1004.67  # J kg-1 K-1
     Rd = 287.05  # J kg-1 K-1
+
     cubes = (
         iris.cube.CubeList(cubes)
         if not isinstance(cubes, iris.cube.CubeList)
         else cubes
     )
 
-    # --- Extract inputs explicitly listed upstream ---
-    if "WT_VARNAMES" not in kwargs:
-        raise ValueError("sensible_heat_units requires WT_VARNAMES")
+    p_cand = [c for c in cubes if _is_p_cube(c)]
+    T_cand = [c for c in cubes if _is_T_cube(c)]
+    covar_cand = [c for c in cubes if _is_wt_covar_cube(c)]
 
-    wanted = set(kwargs["WT_VARNAMES"].split(","))
-    selected = {c.var_name: c for c in cubes if c.var_name in wanted}
-    missing = wanted - set(selected)
-    if missing:
-        raise ValueError(f"sensible_heat_units missing inputs: {sorted(missing)}")
+    # Optional: use scoring if more than one candidate exists
+    if len(p_cand) > 1:
+        p_cand = sorted(p_cand, key=_score_p_cube, reverse=True)
+        if len(p_cand) > 1 and _score_p_cube(p_cand[0]) == _score_p_cube(p_cand[1]):
+            raise ValueError("Multiple plausible pressure cubes found")
 
-    wT = next(v for k, v in selected.items() if k.startswith("wt_covariance_"))
-    temp = next(v for k, v in selected.items() if k.startswith("air_temperature_rtd_"))
-    pressure = selected["pressure_barometric"]
+    if len(T_cand) > 1:
+        T_cand = sorted(T_cand, key=_score_T_cube, reverse=True)
+        if len(T_cand) > 1 and _score_T_cube(T_cand[0]) == _score_T_cube(T_cand[1]):
+            raise ValueError("Multiple plausible temperature cubes found")
 
-    # --- Unit handling ---
+    if len(covar_cand) > 1:
+        covar_cand = sorted(covar_cand, key=_score_covar_cube, reverse=True)
+        if len(covar_cand) > 1 and _score_covar_cube(
+            covar_cand[0]
+        ) == _score_covar_cube(covar_cand[1]):
+            raise ValueError("Multiple plausible covariance cubes found")
+
+    pressure = _exactly_one(p_cand[:1], "pressure")
+    temp = _exactly_one(T_cand[:1], "temperature")
+    wT = _exactly_one(covar_cand[:1], "w'T' covariance")
+
     temp_K = temp.copy()
-    if temp_K.units is None or temp_K.units.is_unknown():
-        temp_K.units = Unit("degC")
-    temp_K.convert_units("K")
+    if temp_K.units.is_convertible(Unit("degC")):
+        temp_K.convert_units("K")
 
     pres_Pa = pressure.copy()
-    if pres_Pa.units is None or pres_Pa.units.is_unknown():
-        pres_Pa.units = Unit("hPa")
     pres_Pa.convert_units("Pa")
 
-    # --- Compute sensible heat flux ---
+    # Treat degC covariance numerically as K covariance for fluctuations
+    wT_cov = wT.copy()
+    if str(wT_cov.units) == "degC m s-1":
+        wT_cov.units = Unit("K m s-1")
+
     rho_air = pres_Pa.data / (Rd * temp_K.data)
-    shf = wT.copy()
-    shf.data = Cp * rho_air * wT.data
-    shf.units = "W m-2"
+
+    shf = wT_cov.copy()
+    shf.data = Cp * rho_air * wT_cov.data
+    shf.units = Unit("W m-2")
     shf.rename("surface_upward_sensible_heat_flux")
     shf.var_name = "surface_upward_sensible_heat_flux"
-
-    # --- Metadata: be explicit about mixed heights ---
-    shf.attributes["model_name"] = wT.attributes.get("model_name")
-    shf.attributes["measurement_heights"] = {
-        "wt_covariance": wT.var_name.split("_")[-1],
-        "air_temperature": temp.var_name.split("_")[-1],
-        "air_pressure": "1.2 m",
-    }
     if "HEIGHT" in kwargs:
         shf.attributes["nominal_height"] = f"{kwargs['HEIGHT']} m"
 
-    # --- Return: passthrough everything except inputs, plus SHF ---
-    out = iris.cube.CubeList(c for c in cubes if c.var_name not in wanted)
+    used_ids = {id(wT), id(temp), id(pressure)}
+    out = iris.cube.CubeList(c for c in cubes if id(c) not in used_ids)
     out.append(shf)
-    return out if len(out) > 1 else out[0]
+
+    return out[0] if len(out) == 1 else out
 
 
 def latent_heat_units(
