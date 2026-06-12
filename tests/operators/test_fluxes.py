@@ -63,7 +63,7 @@ def test_sensible_heat_units_missing_required_inputs():
     )
     # pressure missing
     with pytest.raises(ValueError, match="pressure"):
-        fluxes.sensible_heat_units([wT, temp])
+        fluxes.sensible_heat_flux_from_covariance([wT, temp])
 
 
 def test_sensible_heat_units_core_calculation():
@@ -87,7 +87,7 @@ def test_sensible_heat_units_core_calculation():
         long_name="barometric pressure",
     )
 
-    out = fluxes.sensible_heat_units([wT, temp, press])
+    out = fluxes.sensible_heat_flux_from_covariance([wT, temp, press])
     arr = out.data
     if hasattr(arr, "compute"):
         arr = arr.compute()
@@ -124,7 +124,7 @@ def test_sensible_heat_units_returns_cube_when_only_shf_remains():
         long_name="barometric pressure",
     )
 
-    out = fluxes.sensible_heat_units([wT, temp, press])
+    out = fluxes.sensible_heat_flux_from_covariance([wT, temp, press])
     assert isinstance(out, iris.cube.Cube)
     assert out.var_name == "surface_upward_sensible_heat_flux"
     assert out.units == Unit("W m-2")
@@ -156,7 +156,7 @@ def test_sensible_heat_units_passthrough_and_filtering():
         units=Unit("1"),
     )
 
-    out = fluxes.sensible_heat_units([wT, temp, press, extra])
+    out = fluxes.sensible_heat_flux_from_covariance([wT, temp, press, extra])
     assert isinstance(out, iris.cube.CubeList)
     varnames = [c.var_name for c in out]
     # input variables removed
@@ -189,7 +189,7 @@ def test_sensible_heat_units_adds_nominal_height_metadata():
         units=Unit("hPa"),
         long_name="barometric pressure",
     )
-    out = fluxes.sensible_heat_units([wT, temp, press], HEIGHT=2)
+    out = fluxes.sensible_heat_flux_from_covariance([wT, temp, press], HEIGHT=2)
     assert out.attributes["nominal_height"] == "2 m"
 
 
@@ -216,7 +216,7 @@ def test_sensible_heat_units_prefers_barometric_pressure():
         "surface_pressure",
         units=Unit("hPa"),
     )
-    out = fluxes.sensible_heat_units([wT, temp, press1, press2])
+    out = fluxes.sensible_heat_flux_from_covariance([wT, temp, press1, press2])
 
     # extract SHF cube
     shf = next(c for c in out if c.var_name == "surface_upward_sensible_heat_flux")

@@ -100,21 +100,78 @@ def _score_covar_cube(cube):
     return score
 
 
-def sensible_heat_units(cubes, **kwargs):
+def sensible_heat_flux_from_covariance(cubes, **kwargs):
     """
     Convert turbulent temperature covariance into sensible heat flux.
 
-    This operator identifies:
+    This operator computes surface upward sensible heat flux (SHF) from
+    turbulent temperature covariance using:
+        SHF = ρ * Cp * (w'T')
+    where:
+        ρ   = air density (derived from pressure and temperature)
+        Cp  = specific heat capacity of dry air
+        w'T' = covariance between vertical wind and temperature fluctuations
+    The operator identifies the required input cubes from a collection
+    based on their physical units, with optional use of metadata (e.g.
+    standard names, variable names, long names) to resolve ambiguities.
+
+    Specifically, it attempts to identify:
       - one covariance cube with units compatible with temperature × velocity
-      - one air temperature cube
-      - one pressure cube
+        (e.g. "K m s-1" or "degC m s-1")
+      - one air temperature cube (units convertible to "K" or "degC")
+      - one pressure cube (units convertible to "Pa")
 
-    It then computes:
-        SHF = rho * Cp * (w'T')
+    If multiple plausible candidates exist for a given role, a scoring
+    system based on metadata is used to select the most likely match.
+    If ambiguity remains after scoring, a ValueError is raised.
 
-    using air density derived from pressure and temperature.
+    Parameters
+    ----------
+    cubes : iris.cube.Cube or iterable of Cube
+        Collection of input cubes. Must contain exactly one physically
+        plausible cube for each of:
+            - temperature covariance (w'T')
+            - air temperature
+            - air pressure
+        Additional cubes are passed through unchanged.
 
-    Cubes not used in the calculation are passed through unchanged.
+    **kwargs : dict, optional
+        Optional keyword arguments.
+        HEIGHT : float or int
+            Nominal measurement height (in metres), used only for
+            metadata annotation of the output cube.
+
+    Returns
+    -------
+    iris.cube.Cube or iris.cube.CubeList
+        Output cubes where:
+        - Input cubes used in the SHF calculation are removed
+        - A new cube is added:
+            surface_upward_sensible_heat_flux [W m-2]
+        - All other input cubes are passed through unchanged
+
+        If only the SHF cube remains, a single Cube is returned.
+        Otherwise, a CubeList is returned.
+
+    Assumptions and Notes
+    ---------------------
+    - Input cubes are assumed to be on a consistent grid; no spatial
+      alignment or regridding is performed.
+    - Temperature is internally converted to Kelvin; pressure is converted
+      to Pascals.
+    - Temperature covariance may be expressed in either "degC m s-1" or
+      "K m s-1". These are treated as numerically equivalent for turbulent
+      fluctuations (i.e. offsets cancel in fluctuations).
+    - No attempt is made to distinguish between resolved and turbulent
+      flux components beyond unit consistency.
+    - Identification of cubes is primarily unit-based; metadata is used
+      only to resolve ambiguity between multiple candidates.
+
+    Raises
+    ------
+    ValueError
+        If required inputs (pressure, temperature, or covariance) cannot
+        be uniquely identified from the provided cubes.
     """
     from cf_units import Unit
 
