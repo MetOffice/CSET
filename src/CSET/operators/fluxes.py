@@ -20,6 +20,7 @@ from cf_units import Unit
 from iris.cube import Cube, CubeList
 
 from CSET._common import iter_maybe
+from CSET.operators._atmospheric_constants import CPD, LV, RD
 
 
 def _exactly_one(matches, role):
@@ -106,10 +107,10 @@ def sensible_heat_flux_from_covariance(cubes, **kwargs):
 
     This operator computes surface upward sensible heat flux (SHF) from
     turbulent temperature covariance using:
-        SHF = ρ * Cp * (w'T')
+        SHF = ρ * CPD * (w'T')
     where:
         ρ   = air density (derived from pressure and temperature)
-        Cp  = specific heat capacity of dry air
+        CPD  = specific heat capacity of dry air
         w'T' = covariance between vertical wind and temperature fluctuations
     The operator identifies the required input cubes from a collection
     based on their physical units, with optional use of metadata (e.g.
@@ -175,9 +176,6 @@ def sensible_heat_flux_from_covariance(cubes, **kwargs):
     """
     from cf_units import Unit
 
-    from CSET.operators._atmospheric_constants import CPD as Cp
-    from CSET.operators._atmospheric_constants import RD as Rd
-
     cubes = (
         iris.cube.CubeList(cubes)
         if not isinstance(cubes, iris.cube.CubeList)
@@ -222,15 +220,13 @@ def sensible_heat_flux_from_covariance(cubes, **kwargs):
     if str(wT_cov.units) == "degC m s-1":
         wT_cov.units = Unit("K m s-1")
 
-    rho_air = pres_Pa.data / (Rd * temp_K.data)
+    rho_air = pres_Pa.data / (RD * temp_K.data)
 
     shf = wT_cov.copy()
-    shf.data = Cp * rho_air * wT_cov.data
+    shf.data = CPD * rho_air * wT_cov.data
     shf.units = Unit("W m-2")
     shf.rename("surface_upward_sensible_heat_flux")
     shf.var_name = "surface_upward_sensible_heat_flux"
-    if "HEIGHT" in kwargs:
-        shf.attributes["nominal_height"] = f"{kwargs['HEIGHT']} m"
 
     used_ids = {id(wT), id(temp), id(pressure)}
     out = iris.cube.CubeList(c for c in cubes if id(c) not in used_ids)
@@ -281,7 +277,7 @@ def latent_heat_units(
     Notes
     -----
     - The conversion uses a fixed latent heat of vaporisation:
-          Lc = 2.5 × 10^6 J kg-1
+          LV = 2.5 × 10^6 J kg-1
     - In reality, Lc varies with temperature (~5% variation between -20 °C
       and +40 °C). This dependency is currently neglected but could be
       included in future improvements.
@@ -290,7 +286,6 @@ def latent_heat_units(
     """
     REQUIRED_UNITS = Unit("kg m-2 s-1")
     OUTPUT_UNITS = Unit("W m-2")
-    from CSET.operators._atmospheric_constants import LV as Lc
 
     out = iris.cube.CubeList()
     for cube in iter_maybe(cubes):
@@ -304,7 +299,7 @@ def latent_heat_units(
             continue
 
         cube_a = cube.copy()
-        cube_a = cube_a * Lc
+        cube_a = cube_a * LV
         cube_a.units = cube.units * Unit("J kg-1")
         cube_a.convert_units(OUTPUT_UNITS)
         out.append(cube_a)

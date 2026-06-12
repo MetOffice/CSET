@@ -22,6 +22,7 @@ import pytest
 from cf_units import Unit
 
 from CSET.operators import fluxes
+from CSET.operators._atmospheric_constants import CPD, LV, RD
 
 
 def _make_scalar_cube(
@@ -92,12 +93,10 @@ def test_sensible_heat_units_core_calculation():
     if hasattr(arr, "compute"):
         arr = arr.compute()
 
-    Cp = 1004.67
-    Rd = 287.05
     T = 20.0 + 273.15
     pPa = 1000.0 * 100.0
-    rho = pPa / (Rd * T)
-    expected = Cp * rho * 0.1
+    rho = pPa / (RD * T)
+    expected = CPD * rho * 0.1
     assert np.isclose(arr[0, 0], expected)
     assert out.var_name == "surface_upward_sensible_heat_flux"
     assert out.units == Unit("W m-2")
@@ -169,30 +168,6 @@ def test_sensible_heat_units_passthrough_and_filtering():
     assert "surface_upward_sensible_heat_flux" in varnames
 
 
-def test_sensible_heat_units_adds_nominal_height_metadata():
-    """Attach nominal_height metadata when HEIGHT is provided."""
-    wT = _make_scalar_cube(
-        0.1,
-        "wt_covariance_2m",
-        units=Unit("K m s-1"),
-        long_name="vertical wind-temperature covariance",
-    )
-    temp = _make_scalar_cube(
-        20.0,
-        "air_temperature_rtd_1p2m",
-        units=Unit("degC"),
-        standard_name="air_temperature",
-    )
-    press = _make_scalar_cube(
-        1000.0,
-        "barometric_pressure",
-        units=Unit("hPa"),
-        long_name="barometric pressure",
-    )
-    out = fluxes.sensible_heat_flux_from_covariance([wT, temp, press], HEIGHT=2)
-    assert out.attributes["nominal_height"] == "2 m"
-
-
 def test_sensible_heat_units_prefers_barometric_pressure():
     """Prefer the strongest-scoring pressure cube."""
     wT = _make_scalar_cube(
@@ -224,12 +199,10 @@ def test_sensible_heat_units_prefers_barometric_pressure():
     if hasattr(arr, "compute"):
         arr = arr.compute()
 
-    Cp = 1004.67
-    Rd = 287.05
     T = 20.0 + 273.15
     pPa = 1000.0 * 100.0  # should use barometric_pressure
-    rho = pPa / (Rd * T)
-    expected = Cp * rho * 0.1
+    rho = pPa / (RD * T)
+    expected = CPD * rho * 0.1
 
     assert np.isclose(arr[0, 0], expected)
 
@@ -262,7 +235,7 @@ def test_latent_heat_units_conversion():
     if hasattr(arr, "compute"):
         arr = arr.compute()
 
-    expected = 2.45e6 * 0.001
+    expected = LV * 0.001
     assert np.isclose(arr[0, 0], expected)
     assert out.units == Unit("W m-2")
 
@@ -292,7 +265,7 @@ def test_latent_heat_units_cubelist_mixed():
     if hasattr(arr, "compute"):
         arr = arr.compute()
 
-    assert np.isclose(arr[0, 0], 2.45e6 * 0.001)
+    assert np.isclose(arr[0, 0], LV * 0.001)
     assert converted.units == "W m-2"
     # check passthrough
     assert any(c is other for c in out)
