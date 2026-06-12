@@ -144,8 +144,14 @@ def latent_heat_units(
     """
     Convert covariance into latent heat flux units.
 
-    This operator converts the covariance of vertical wind and
-    specific humidity (w'q') from mass flux units to latent heat flux (W m-2).
+    This operator converts any cube with units convertible to kg m-2 s-1
+    (i.e. water mass flux) into latent heat flux (W m-2) by multiplying
+    by a constant latent heat of vaporisation.
+
+    No attempt is made to distinguish between turbulent fluxes (e.g. w'q')
+    and other water mass fluxes. This generalisation seems reasonable
+    given that interpreting rainfall or dewfall, for example, as an
+    equivalent heat flux is physically meaningful.
 
     This function operates on one or more Iris cubes. Any cube with
     units convertible to mass flux (kg m-2 s-1) is multiplied by a
@@ -197,7 +203,8 @@ def latent_heat_units(
 
         cube_a = cube.copy()
         cube_a = cube_a * Lc
-        cube_a.units = OUTPUT_UNITS
+        cube_a.units = cube.units * Unit("J kg-1")
+        cube_a.convert_units(OUTPUT_UNITS)
         out.append(cube_a)
 
     return out[0] if len(out) == 1 else out

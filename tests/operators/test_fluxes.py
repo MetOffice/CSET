@@ -138,7 +138,7 @@ def test_latent_heat_units_conversion():
 
     expected = 2.45e6 * 0.001
     assert np.isclose(arr[0, 0], expected)
-    assert out.units == "W m-2"
+    assert out.units == Unit("W m-2")
 
 
 def test_latent_heat_units_passthrough_non_convertible():
@@ -146,7 +146,8 @@ def test_latent_heat_units_passthrough_non_convertible():
     cube = _make_scalar_cube(5.0, "not_flux", units=Unit("K"))
     out = fluxes.latent_heat_units(cube)
     # should be unchanged
-    assert out is cube
+    assert out == cube
+    assert out.units == cube.units
 
 
 def test_latent_heat_units_cubelist_mixed():
@@ -158,7 +159,9 @@ def test_latent_heat_units_cubelist_mixed():
     assert isinstance(out, iris.cube.CubeList)
     assert len(out) == 2
     # check conversion happened only for first cube
-    converted = next(c for c in out if c.units == "W m-2")
+    converted = [c for c in out if c.units.is_convertible("W m-2")]
+    assert len(converted) == 1
+    converted = converted[0]
     arr = converted.data
     if hasattr(arr, "compute"):
         arr = arr.compute()
@@ -167,3 +170,10 @@ def test_latent_heat_units_cubelist_mixed():
     assert converted.units == "W m-2"
     # check passthrough
     assert any(c is other for c in out)
+
+
+def test_latent_heat_units_unknown_units_passthrough():
+    """Test operator if units unknown."""
+    cube = _make_scalar_cube(1.0, "unknown", units=None)
+    out = fluxes.latent_heat_units(cube)
+    assert out is cube
