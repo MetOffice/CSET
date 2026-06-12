@@ -28,9 +28,8 @@ def _make_scalar_cube(
     value,
     var_name,
     units=None,
-    model_name="Cardington",
 ):
-    """Make tiny 1x1 cube with var_name, units, and model_name attribute."""
+    """Make tiny 1x1 cube with var_name and units."""
     data = np.array([[value]], dtype=np.float64)
     lat = iris.coords.DimCoord([0.0], standard_name="latitude", units="degrees")
     lon = iris.coords.DimCoord([0.0], standard_name="longitude", units="degrees")
@@ -41,28 +40,27 @@ def _make_scalar_cube(
         units=units if units is not None else Unit("unknown"),
     )
     cube.var_name = var_name
-    cube.attributes["model_name"] = model_name
     return cube
 
 
-def test_sensible_heat_units_requires_cardington_varnames():
-    """Must provide CARDINGTON_VARNAMES kwarg."""
+def test_sensible_heat_units_requires_WT_Varnames():
+    """Must provide WT_VARNAMES kwarg."""
     wT = _make_scalar_cube(0.1, "wt_covariance_2m", units=Unit("K m s-1"))
     t = _make_scalar_cube(20.0, "air_temperature_rtd_1p2m", units=Unit("degC"))
     p = _make_scalar_cube(1000.0, "pressure_barometric", units=Unit("hPa"))
-    with pytest.raises(ValueError, match="requires CARDINGTON_VARNAMES"):
+    with pytest.raises(ValueError, match="requires WT_VARNAMES"):
         fluxes.sensible_heat_units([wT, t, p])
 
 
 def test_sensible_heat_units_missing_required_inputs():
-    """If any of the specified Cardington inputs are missing, raise."""
+    """If any of the specified inputs are missing, raise."""
     wT = _make_scalar_cube(0.1, "wt_covariance_2m", units=Unit("K m s-1"))
     t = _make_scalar_cube(20.0, "air_temperature_rtd_1p2m", units=Unit("degC"))
     # pressure missing
     kwargs = {
-        "CARDINGTON_VARNAMES": "wt_covariance_2m,air_temperature_rtd_1p2m,pressure_barometric"
+        "WT_VARNAMES": "wt_covariance_2m,air_temperature_rtd_1p2m,pressure_barometric"
     }
-    with pytest.raises(ValueError, match="missing Cardington inputs"):
+    with pytest.raises(ValueError, match="missing inputs"):
         fluxes.sensible_heat_units([wT, t], **kwargs)
 
 
@@ -73,7 +71,7 @@ def test_sensible_heat_units():
     press = _make_scalar_cube(1000.0, "pressure_barometric", units=Unit("hPa"))
 
     kwargs = {
-        "CARDINGTON_VARNAMES": "wt_covariance_2m,air_temperature_rtd_1p2m,pressure_barometric",
+        "WT_VARNAMES": "wt_covariance_2m,air_temperature_rtd_1p2m,pressure_barometric",
     }
     out = fluxes.sensible_heat_units([wT, temp, press], **kwargs)
     arr = out.data
@@ -96,12 +94,12 @@ def test_sensible_heat_units_returns_cube_when_only_shf_remains():
     press = _make_scalar_cube(1000.0, "pressure_barometric", units=Unit("hPa"))
 
     kwargs = {
-        "CARDINGTON_VARNAMES": "wt_covariance_2m,air_temperature_rtd_1p2m,pressure_barometric"
+        "WT_VARNAMES": "wt_covariance_2m,air_temperature_rtd_1p2m,pressure_barometric"
     }
 
     out = fluxes.sensible_heat_units([wT, temp, press], **kwargs)
     assert isinstance(out, iris.cube.Cube)
-    assert out.var_name == "surface_upward_sensible_heat_flux_cardington"
+    assert out.var_name == "surface_upward_sensible_heat_flux"
     assert out.units == "W m-2"
 
 
@@ -112,7 +110,7 @@ def test_sensible_heat_units_passthrough_and_filtering():
     press = _make_scalar_cube(1000.0, "pressure_barometric")
     extra = _make_scalar_cube(5.0, "other_var")
     kwargs = {
-        "CARDINGTON_VARNAMES": "wt_covariance_2m,air_temperature_rtd_1p2m,pressure_barometric",
+        "WT_VARNAMES": "wt_covariance_2m,air_temperature_rtd_1p2m,pressure_barometric",
     }
 
     out = fluxes.sensible_heat_units([wT, temp, press, extra], **kwargs)
@@ -126,4 +124,4 @@ def test_sensible_heat_units_passthrough_and_filtering():
     # extra retained
     assert "other_var" in varnames
     # SHF added
-    assert "surface_upward_sensible_heat_flux_cardington" in varnames
+    assert "surface_upward_sensible_heat_flux" in varnames
