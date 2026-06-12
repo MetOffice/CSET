@@ -125,3 +125,45 @@ def test_sensible_heat_units_passthrough_and_filtering():
     assert "other_var" in varnames
     # SHF added
     assert "surface_upward_sensible_heat_flux" in varnames
+
+
+def test_latent_heat_units_conversion():
+    """Test unit conversion of latent heat units."""
+    wq = _make_scalar_cube(0.001, "wq_covariance", units=Unit("kg m-2 s-1"))
+
+    out = fluxes.latent_heat_units(wq)
+    arr = out.data
+    if hasattr(arr, "compute"):
+        arr = arr.compute()
+
+    expected = 2.45e6 * 0.001
+    assert np.isclose(arr[0, 0], expected)
+    assert out.units == "W m-2"
+
+
+def test_latent_heat_units_passthrough_non_convertible():
+    """Test operator returns unchanged cube if not convertible."""
+    cube = _make_scalar_cube(5.0, "not_flux", units=Unit("K"))
+    out = fluxes.latent_heat_units(cube)
+    # should be unchanged
+    assert out is cube
+
+
+def test_latent_heat_units_cubelist_mixed():
+    """Test operator with mixed cubelist."""
+    wq = _make_scalar_cube(0.001, "wq_covariance", units=Unit("kg m-2 s-1"))
+    other = _make_scalar_cube(10.0, "temperature", units=Unit("K"))
+    out = fluxes.latent_heat_units([wq, other])
+
+    assert isinstance(out, iris.cube.CubeList)
+    assert len(out) == 2
+    # check conversion happened only for first cube
+    converted = next(c for c in out if c.units == "W m-2")
+    arr = converted.data
+    if hasattr(arr, "compute"):
+        arr = arr.compute()
+
+    assert np.isclose(arr[0, 0], 2.45e6 * 0.001)
+    assert converted.units == "W m-2"
+    # check passthrough
+    assert any(c is other for c in out)

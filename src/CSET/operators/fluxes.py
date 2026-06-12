@@ -16,6 +16,10 @@
 
 import iris
 import iris.cube
+from cf_units import Unit
+from iris.cube import Cube, CubeList
+
+from CSET._common import iter_maybe
 
 
 def sensible_heat_units(cubes, **kwargs):
@@ -131,3 +135,69 @@ def sensible_heat_units(cubes, **kwargs):
     out = iris.cube.CubeList(c for c in cubes if c.var_name not in wanted)
     out.append(shf)
     return out if len(out) > 1 else out[0]
+
+
+def latent_heat_units(
+    cubes: Cube | CubeList,
+    **kwargs,
+) -> Cube | CubeList:
+    """
+    Convert covariance into latent heat flux units.
+
+    This operator converts the covariance of vertical wind and
+    specific humidity (w'q') from mass flux units to latent heat flux (W m-2).
+
+    This function operates on one or more Iris cubes. Any cube with
+    units convertible to mass flux (kg m-2 s-1) is multiplied by a
+    constant latent heat of vaporisation to produce a latent heat flux.
+    Cubes with incompatible, missing, or unknown units are passed through
+    unchanged.
+
+    Parameters
+    ----------
+    cubes : Cube or CubeList
+        Input cube(s), typically containing w'q' covariance or other flux-like
+        quantities.
+
+    **kwargs : dict
+        Unused; accepted for interface consistency with other operators.
+
+    Returns
+    -------
+    Cube or CubeList
+        Output cube(s) where:
+        - Cubes with units convertible to kg m-2 s-1 are converted to W m-2.
+        - All other cubes are returned unchanged.
+        - The return type matches the input type (single Cube or CubeList).
+
+    Notes
+    -----
+    - The conversion uses a fixed latent heat of vaporisation:
+          Lc = 2.45 × 10^6 J kg-1
+    - In reality, Lc varies with temperature (~5% variation between -20 °C
+      and +40 °C). This dependency is currently neglected but could be
+      included in future improvements.
+    - This function does not attempt to identify specific variables; it relies
+      solely on unit convertibility to determine applicability.
+    """
+    REQUIRED_UNITS = Unit("kg m-2 s-1")
+    OUTPUT_UNITS = Unit("W m-2")
+    Lc = 2.45e6  # J kg-1
+
+    out = iris.cube.CubeList()
+    for cube in iter_maybe(cubes):
+        # ACT ON MASS FLUXES
+        if cube.units is None or cube.units.is_unknown():
+            out.append(cube)
+            continue
+        if not cube.units.is_convertible(REQUIRED_UNITS):
+            # e.g. if UM LE or some other diagnostic — leave untouched
+            out.append(cube)
+            continue
+
+        cube_a = cube.copy()
+        cube_a = cube_a * Lc
+        cube_a.units = OUTPUT_UNITS
+        out.append(cube_a)
+
+    return out[0] if len(out) == 1 else out
