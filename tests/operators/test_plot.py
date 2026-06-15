@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from CSET.operators import collapse, misc, plot, read
+from CSET.operators import collapse, constraints, filters, misc, plot, read
 
 
 def test_check_single_cube():
@@ -1246,16 +1246,23 @@ def test_get_start_end_strings_nobounds(cube):
     assert fname == "_20220921030000_20220921050000"
 
 
-def test_get_start_end_strings_bounds(cube):
+def test_get_start_end_strings_bounds(cubes):
     """Test setting (startstring, endstring) from coord bounds."""
+    # Get a field with time bounds
+    cube = filters.filter_cubes(
+        cubes,
+        constraints.generate_cell_methods_constraint(
+            ["minimum"], coord="time", interval="1 hour"
+        ),
+    )
+
     title, fname = plot._get_start_end_strings(cube.coord("time"), use_bounds=True)
-    assert title == "\n [2022-09-21 02:30:00 to 2022-09-21 05:30:00]"
-    assert fname == "_20220921023000_20220921053000"
+    assert title == "\n [2022-09-21 03:00:00 to 2022-09-21 05:00:00]"
+    assert fname == "_20220921030000_20220921050000"
 
 
 def test_get_start_end_strings_remove_bounds(cube):
     """Test setting (startstring, endstring) from coord with no bounds."""
-    cube.coord("time").bounds = None
     title, fname = plot._get_start_end_strings(cube.coord("time"), use_bounds=True)
     assert title == "\n [2022-09-21 03:00:00 to 2022-09-21 05:00:00]"
     assert fname == "_20220921030000_20220921050000"
