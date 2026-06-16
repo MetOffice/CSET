@@ -1,6 +1,6 @@
 category: Surface Observation Time Series
 title: "$VARNAME time series for observation points $SUBAREA_NAME"
-description: Extracts and plot a time series of $VARNAME for all times.
+description: Extracts and plot a time series of $VARNAME for all times based on mean of matched model and observation points.
 
 steps:
   - operator: read.read_cubes

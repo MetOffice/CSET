@@ -2203,6 +2203,7 @@ def plot_line_series(
             raise ValueError("Cube must be 1D or 2D with a realization coordinate.")
 
     # Format the title and filename using plotted series coordinate
+    plot_index = []
     nplot = 1
     seq_coord = coords[0]
     plot_title, plot_filename = _set_title_and_filename(
@@ -2219,25 +2220,30 @@ def plot_line_series(
         for station in cubes[0].coord("station").points:
             station_cubes = cubes.extract(iris.Constraint(station=station))
             station_name = station_cubes[0].coord("Station_Name").points[0]
+            station_plotname = plot_filename.replace(
+                ".png", "_" + station_name + ".png"
+            )
             _plot_and_save_line_series(
                 station_cubes,
                 coords,
                 "realization",
-                plot_filename.replace(".png", "_" + station_name + ".png"),
+                station_plotname,
                 f"{plot_title} {station_name}",
             )
+            plot_index.append(station_plotname)
 
     # Default line plotting
     else:
         _plot_and_save_line_series(
             cubes, coords, "realization", plot_filename, plot_title
         )
+        plot_index.append(plot_filename)
 
     # Add list of plots to plot metadata.
-    plot_index = _append_to_plot_index([plot_filename])
+    complete_plot_index = _append_to_plot_index(plot_index)
 
     # Make a page to display the plots.
-    _make_plot_html_page(plot_index)
+    _make_plot_html_page(complete_plot_index)
 
     return cube
 

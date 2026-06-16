@@ -1,6 +1,6 @@
-category: Surface Observation Time Series
+category: Surface Observation Time Series Points
 title: "$VARNAME time series $SUBAREA_NAME"
-description: Extracts and plot a time series of $VARNAME for all times.
+description: Extracts and plot a time series of $VARNAME for all times at specific observation points.
 
 steps:
   - operator: read.read_cubes
@@ -38,11 +38,6 @@ steps:
            constraint:
                operator: constraints.generate_var_constraint
                varname: observed_$VARNAME
-
-## Add in more 'rules' on matchups (e.g. X% in common, continuous record etc) -- put this in METDB retrieval code, or in check common??
-
-## Add in some stats in 'grey box' - compute with scores vs easy RMSE/BIAS
-## Suitable in N > 1 models?? Color-code writing text to align with model color??
 
   - operator: plot.plot_line_series
 

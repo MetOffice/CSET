@@ -1,6 +1,6 @@
-category: Surface Observation Time Series
+category: Surface Observation Time Series Bias
 title: "$VARNAME bias time series for observation points $SUBAREA_NAME"
-description: Extracts and plot a time series of $VARNAME for all times.
+description: Extracts and plot a time series of $VARNAME bias relative to observation points for all times.
 
 steps:
   - operator: read.read_cubes
