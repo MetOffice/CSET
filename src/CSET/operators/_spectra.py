@@ -48,7 +48,7 @@ def DCT_ps(y_3d):
     Nmin = min(Nx - 1, Ny - 1)
 
     # Create alpha matrix (of wavenumbers)
-    alpha_matrix = _create_alpha_matrix(Ny, Nx)
+    alpha_matrix = create_alpha_matrix(Ny, Nx)
 
     # Prepare output array
     ps_array = np.zeros((Nt, Nmin))

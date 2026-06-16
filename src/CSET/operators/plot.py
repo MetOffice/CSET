@@ -45,6 +45,11 @@ from CSET._common import (
     render_file,
     slugify,
 )
+from CSET.operators._colormaps import (
+    colorbar_map_levels,
+    get_model_colors_map,
+)
+from CSET.operators._spectra import DCT_ps
 from CSET.operators._utils import (
     check_sequence_coordinate,
     check_single_cube,
@@ -58,13 +63,8 @@ from CSET.operators._utils import (
     validate_cubes_coords,
 )
 from CSET.operators.collapse import collapse
-from CSET.operators.colormaps import (
-    _colorbar_map_levels,
-    _get_model_colors_map,
-)
 from CSET.operators.misc import _extract_common_time_points
 from CSET.operators.regrid import regrid_onto_cube
-from CSET.operators.spectra import _DCT_ps
 
 # Use a non-interactive plotting backend.
 mpl.use("agg")
@@ -392,12 +392,12 @@ def _set_axis_range(cubes):
     for cube in cubes:
         # First check if user-specified "auto" range variable.
         # This maintains the value of levels as None, so proceed.
-        _, levels, _ = _colorbar_map_levels(cube, axis="y")
+        _, levels, _ = colorbar_map_levels(cube, axis="y")
         if levels is None:
             break
         # If levels is changed, recheck to use the vmin,vmax or
         # levels-based ranges for histogram plots.
-        _, levels, _ = _colorbar_map_levels(cube)
+        _, levels, _ = colorbar_map_levels(cube)
         logging.debug("levels: %s", levels)
         if levels is not None:
             vmin = min(levels)
@@ -472,13 +472,13 @@ def _plot_and_save_spatial_plot(
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
     # Specify the color bar
-    cmap, levels, norm = _colorbar_map_levels(cube)
+    cmap, levels, norm = colorbar_map_levels(cube)
 
     # If overplotting, set required colorbars
     if overlay_cube:
-        over_cmap, over_levels, over_norm = _colorbar_map_levels(overlay_cube)
+        over_cmap, over_levels, over_norm = colorbar_map_levels(overlay_cube)
     if contour_cube:
-        cntr_cmap, cntr_levels, cntr_norm = _colorbar_map_levels(contour_cube)
+        cntr_cmap, cntr_levels, cntr_norm = colorbar_map_levels(contour_cube)
 
     # Setup plot map projection, extent and coastlines and borderlines.
     axes = _setup_spatial_map(cube, fig, cmap)
@@ -713,12 +713,12 @@ def _plot_and_save_postage_stamp_spatial_plot(
     )
 
     # Specify the color bar
-    cmap, levels, norm = _colorbar_map_levels(cube)
+    cmap, levels, norm = colorbar_map_levels(cube)
     # If overplotting, set required colorbars
     if overlay_cube:
-        over_cmap, over_levels, over_norm = _colorbar_map_levels(overlay_cube)
+        over_cmap, over_levels, over_norm = colorbar_map_levels(overlay_cube)
     if contour_cube:
-        cntr_cmap, cntr_levels, cntr_norm = _colorbar_map_levels(contour_cube)
+        cntr_cmap, cntr_levels, cntr_norm = colorbar_map_levels(contour_cube)
 
     # Make a subplot for each member.
     for member, subplot in zip(
@@ -822,7 +822,7 @@ def _plot_and_save_line_series(
     """
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
-    model_colors_map = _get_model_colors_map(cubes)
+    model_colors_map = get_model_colors_map(cubes)
 
     # Store min/max ranges.
     y_levels = []
@@ -863,7 +863,7 @@ def _plot_and_save_line_series(
                 )
 
         # Calculate the global min/max if multiple cubes are given.
-        _, levels, _ = _colorbar_map_levels(cube, axis="y")
+        _, levels, _ = colorbar_map_levels(cube, axis="y")
         if levels is not None:
             y_levels.append(min(levels))
             y_levels.append(max(levels))
@@ -948,7 +948,7 @@ def _plot_and_save_vertical_line_series(
     # plot the vertical pressure axis using log scale
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
-    model_colors_map = _get_model_colors_map(cubes)
+    model_colors_map = get_model_colors_map(cubes)
 
     # Check match-up across sequence coords gives consistent sizes
     validate_cubes_coords(cubes, coords)
@@ -1157,7 +1157,7 @@ def _plot_and_save_vector_plot(
     cube_vec_mag.rename(f"{cube_u.name()}_{cube_v.name()}_magnitude")
 
     # Specify the color bar
-    cmap, levels, norm = _colorbar_map_levels(cube_vec_mag)
+    cmap, levels, norm = colorbar_map_levels(cube_vec_mag)
 
     # Setup plot map projection, extent and coastlines and borderlines.
     axes = _setup_spatial_map(cube_vec_mag, fig, cmap)
@@ -1265,7 +1265,7 @@ def _plot_and_save_histogram_series(
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     ax = plt.gca()
 
-    model_colors_map = _get_model_colors_map(cubes)
+    model_colors_map = get_model_colors_map(cubes)
 
     # Set default that histograms will produce probability density function
     # at each bin (integral over range sums to 1).
@@ -1538,7 +1538,7 @@ def _plot_and_save_power_spectrum_series(
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     ax = plt.gca()
 
-    model_colors_map = _get_model_colors_map(cubes)
+    model_colors_map = get_model_colors_map(cubes)
 
     for cube in iter_maybe(cubes):
         # Calculate power spectrum
@@ -1569,7 +1569,7 @@ def _plot_and_save_power_spectrum_series(
             )
 
         # Calculate spectra
-        ps_array = _DCT_ps(cube_3d)
+        ps_array = DCT_ps(cube_3d)
 
         ps_cube = iris.cube.Cube(
             ps_array,
@@ -2161,7 +2161,7 @@ def plot_vertical_line_series(
             ) from err
 
         # Get minimum and maximum from levels information.
-        _, levels, _ = _colorbar_map_levels(cube, axis="x")
+        _, levels, _ = colorbar_map_levels(cube, axis="x")
         if levels is not None:
             x_levels.append(min(levels))
             x_levels.append(max(levels))

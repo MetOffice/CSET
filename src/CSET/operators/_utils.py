@@ -502,7 +502,7 @@ def check_single_cube(cube: iris.cube.Cube | iris.cube.CubeList) -> iris.cube.Cu
     if isinstance(cube, iris.cube.CubeList):
         if len(cube) == 1:
             return cube[0]
-    raise TypeError("Must have a single cube", cube)
+    raise ValueError("Must have a single cube", cube)
 
 
 def check_sequence_coordinate(cubes, sequence_coordinate):
@@ -519,12 +519,8 @@ def check_sequence_coordinate(cubes, sequence_coordinate):
 
 def get_num_models(cube: iris.cube.Cube | iris.cube.CubeList) -> int:
     """Return number of models based on cube attributes."""
-    model_names = list(
-        filter(
-            lambda x: x is not None,
-            {cb.attributes.get("model_name", None) for cb in iter_maybe(cube)},
-        )
-    )
+    model_names = {cb.attributes.get("model_name") for cb in iter_maybe(cube)}
+
     if not model_names:
         logging.debug("Missing model names. Will assume single model.")
         return 1

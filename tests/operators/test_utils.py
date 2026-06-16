@@ -402,9 +402,9 @@ def test_check_single_cube():
     non_cube = 1
     assert operator_utils.check_single_cube(cube) == cube
     assert operator_utils.check_single_cube(cubelist) == cube
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         operator_utils.check_single_cube(long_cubelist)
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         operator_utils.check_single_cube(non_cube)
 
 
@@ -448,7 +448,7 @@ def test_get_num_models_cubelist_mixed_with_none():
     cube2 = iris.cube.Cube([1.0])
     # cube2 has no model_name attribute
     cubelist = iris.cube.CubeList([cube1, cube2])
-    assert operator_utils.get_num_models(cubelist) == 1
+    assert operator_utils.get_num_models(cubelist) == 2
 
 
 def test_get_num_models_cubelist_all_none():

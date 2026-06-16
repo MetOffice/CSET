@@ -37,7 +37,7 @@ DEFAULT_DISCRETE_COLORS = mpl.colormaps["tab10"].colors + mpl.colormaps["Accent"
 
 
 @functools.cache
-def _load_colorbar_map(user_colorbar_file: str = None) -> dict:
+def load_colorbar_map(user_colorbar_file: str = None) -> dict:
     """Load the colorbar definitions from a file.
 
     This is a separate function to make it cacheable.
@@ -60,7 +60,7 @@ def _load_colorbar_map(user_colorbar_file: str = None) -> dict:
     return colorbar
 
 
-def _get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
+def get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
     """Get an appropriate colors for model lines in line plots.
 
     For each model in the list of cubes colors either from user provided
@@ -78,7 +78,7 @@ def _get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
         Dictionary mapping model_name attribute to colors
     """
     user_colorbar_file = get_recipe_metadata().get("style_file_path", None)
-    colorbar = _load_colorbar_map(user_colorbar_file)
+    colorbar = load_colorbar_map(user_colorbar_file)
     model_names = sorted(
         filter(
             lambda x: x is not None,
@@ -95,7 +95,7 @@ def _get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
     return {mname: color for mname, color in zip(model_names, color_list, strict=False)}
 
 
-def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = None):
+def colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = None):
     """Get an appropriate colorbar for the given cube.
 
     For the given variable the appropriate colorbar is looked up from a
@@ -131,7 +131,7 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
     """
     # Grab the colorbar file from the recipe global metadata.
     user_colorbar_file = get_recipe_metadata().get("style_file_path", None)
-    colorbar = _load_colorbar_map(user_colorbar_file)
+    colorbar = load_colorbar_map(user_colorbar_file)
     cmap = None
 
     try:
@@ -158,23 +158,23 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
 
     # Get colormap if it is a mask.
     if any("mask_for_" in name for name in varnames):
-        cmap, levels, norm = _custom_colormap_mask(cube, axis=axis)
+        cmap, levels, norm = custom_colormap_mask(cube, axis=axis)
         return cmap, levels, norm
     # If winds on Beaufort Scale use custom colorbar and levels
     if any("Beaufort_Scale" in name for name in varnames):
-        cmap, levels, norm = _custom_beaufort_scale(cube, axis=axis)
+        cmap, levels, norm = custom_beaufort_scale(cube, axis=axis)
         return cmap, levels, norm
     # If probability is plotted use custom colorbar and levels
     if any("probability_of_" in name for name in varnames):
-        cmap, levels, norm = _custom_colormap_probability(cube, axis=axis)
+        cmap, levels, norm = custom_colormap_probability(cube, axis=axis)
         return cmap, levels, norm
     # If aviation colour state use custom colorbar and levels
     if any("aviation_colour_state" in name for name in varnames):
-        cmap, levels, norm = _custom_colormap_aviation_colour_state(cube)
+        cmap, levels, norm = custom_colormap_aviation_colour_state(cube)
         return cmap, levels, norm
     # If verification scores use custom colorbar
     if any("RMSE_" in name for name in varnames):
-        cmap, levels, norm = _custom_colormap_scores(cube)
+        cmap, levels, norm = custom_colormap_scores(cube)
         return cmap, levels, norm
 
     # If no valid colormap has been defined, use defaults and return.
@@ -237,16 +237,14 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
         # Overwrite cmap, levels and norm for specific variables that
         # require custom colorbar_map as these can not be defined in the
         # JSON file.
-        cmap, levels, norm = _custom_colourmap_precipitation(cube, cmap, levels, norm)
-        cmap, levels, norm = _custom_colourmap_visibility_in_air(
-            cube, cmap, levels, norm
-        )
-        cmap, levels, norm = _custom_colormap_celsius(cube, cmap, levels, norm)
+        cmap, levels, norm = custom_colormap_precipitation(cube, cmap, levels, norm)
+        cmap, levels, norm = custom_colormap_visibility_in_air(cube, cmap, levels, norm)
+        cmap, levels, norm = custom_colormap_celsius(cube, cmap, levels, norm)
         return cmap, levels, norm
 
 
-def _custom_colormap_mask(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = None):
-    """Get colourmap for mask.
+def custom_colormap_mask(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = None):
+    """Get colormap for mask.
 
     If "mask_for_" appears anywhere in the name of a cube this function will be called
     regardless of the name of the variable to ensure a consistent plot.
@@ -286,7 +284,7 @@ def _custom_colormap_mask(cube: iris.cube.Cube, axis: Literal["x", "y"] | None =
             cmap = mcolors.ListedColormap(colors)
             # Normalize the levels.
             norm = mcolors.BoundaryNorm(levels, cmap.N)
-            logging.debug("Colourmap for %s.", cube.long_name)
+            logging.debug("Colormap for %s.", cube.long_name)
             return cmap, levels, norm
     else:
         if axis:
@@ -299,11 +297,11 @@ def _custom_colormap_mask(cube: iris.cube.Cube, axis: Literal["x", "y"] | None =
             colors = ["goldenrod", "white", "teal"]
             cmap = mcolors.ListedColormap(colors)
             norm = mcolors.BoundaryNorm(levels, cmap.N)
-            logging.debug("Colourmap for %s.", cube.long_name)
+            logging.debug("Colormap for %s.", cube.long_name)
             return cmap, levels, norm
 
 
-def _custom_beaufort_scale(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = None):
+def custom_beaufort_scale(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = None):
     """Get a custom colorbar for a cube in the Beaufort Scale.
 
     Specific variable ranges can be separately set in user-supplied definition
@@ -376,8 +374,8 @@ def _custom_beaufort_scale(cube: iris.cube.Cube, axis: Literal["x", "y"] | None 
             return cmap, levels, norm
 
 
-def _custom_colormap_celsius(cube: iris.cube.Cube, cmap, levels, norm):
-    """Return altered colourmap for temperature with change in units to Celsius.
+def custom_colormap_celsius(cube: iris.cube.Cube, cmap, levels, norm):
+    """Return altered colormap for temperature with change in units to Celsius.
 
     If "Celsius" appears anywhere in the name of a cube this function will be called.
 
@@ -412,7 +410,7 @@ def _custom_colormap_celsius(cube: iris.cube.Cube, cmap, levels, norm):
     return cmap, levels, norm
 
 
-def _custom_colormap_probability(
+def custom_colormap_probability(
     cube: iris.cube.Cube, axis: Literal["x", "y"] | None = None
 ):
     """Get a custom colorbar for a probability cube.
@@ -466,8 +464,8 @@ def _custom_colormap_probability(
         return cmap, levels, norm
 
 
-def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
-    """Return a custom colourmap for the current recipe."""
+def custom_colormap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
+    """Return a custom colormap for the current recipe."""
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if (
         any("surface_microphysical" in name for name in varnames)
@@ -504,8 +502,8 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
     return cmap, levels, norm
 
 
-def _custom_colormap_aviation_colour_state(cube: iris.cube.Cube):
-    """Return custom colourmap for aviation colour state.
+def custom_colormap_aviation_colour_state(cube: iris.cube.Cube):
+    """Return custom colormap for aviation colour state.
 
     If "aviation_colour_state" appears anywhere in the name of a cube
     this function will be called.
@@ -540,8 +538,8 @@ def _custom_colormap_aviation_colour_state(cube: iris.cube.Cube):
     return cmap, levels, norm
 
 
-def _custom_colourmap_visibility_in_air(cube: iris.cube.Cube, cmap, levels, norm):
-    """Return a custom colourmap for the current recipe."""
+def custom_colormap_visibility_in_air(cube: iris.cube.Cube, cmap, levels, norm):
+    """Return a custom colormap for the current recipe."""
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if (
         any("visibility_in_air" in name for name in varnames)
@@ -578,8 +576,8 @@ def _custom_colourmap_visibility_in_air(cube: iris.cube.Cube, cmap, levels, norm
     return cmap, levels, norm
 
 
-def _custom_colormap_scores(cube: iris.cube.Cube):
-    """Return altered colourmap for statistical metrics.
+def custom_colormap_scores(cube: iris.cube.Cube):
+    """Return altered colormap for statistical metrics.
 
     Parameters
     ----------
