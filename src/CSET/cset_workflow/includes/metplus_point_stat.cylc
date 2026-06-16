@@ -117,8 +117,8 @@
         script = rose task-run -v --app-key=verpy_plot
         [[[environment]]]
             PLOT_DIR = ${CYLC_WORKFLOW_SHARE_DIR}/web/plots
-            START_DATE = $(isodatetime {{ CSET_CASE_DATES|min }} --print-format %Y%m%d)
-            END_DATE = $(isodatetime {{ CSET_CASE_DATES|max }} --offset {{ANALYSIS_LENGTH}} --print-format %Y%m%d)
+            START_DATE = $(isodatetime $CYLC_WORKFLOW_INITIAL_CYCLE_POINT --print-format %Y%m%d)
+            END_DATE = $(isodatetime $CYLC_WORKFLOW_FINAL_CYCLE_POINT --offset {{ANALYSIS_LENGTH}} --print-format %Y%m%d)
             VER_METHOD = area
             STAT_TYPE = cnt
             STREAM = point_stat
