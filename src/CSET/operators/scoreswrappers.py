@@ -17,9 +17,11 @@
 import logging
 
 import iris
+import iris.exceptions
 import scores
+import scores.continuous
 import xarray as xr
-from iris.cube import Cube
+from iris.cube import Cube, CubeList
 from iris.util import reverse
 
 from CSET._common import is_increasing
@@ -28,7 +30,7 @@ from CSET.operators.misc import _extract_common_time_points
 from CSET.operators.regrid import regrid_onto_cube
 
 
-def _sort_cubes_for_verification(cubes: iris.cube.CubeList):
+def _sort_cubes_for_verification(cubes: CubeList):
     """Prepare cubes ready for verification in scores.
 
     Parameters
@@ -121,15 +123,13 @@ def _sort_cubes_for_verification(cubes: iris.cube.CubeList):
     base, other = _extract_common_time_points(base, other)
 
     # Equalise attributes so we can merge.
-    fully_equalise_attributes([base, other])
+    fully_equalise_attributes(CubeList([base, other]))
     logging.debug("Base: %s\nOther: %s", base, other)
 
     return base, other
 
 
-def scores_rmse(
-    cubes: iris.cube.CubeList, preserved_coordinates: list[str] | str | None = None
-):
+def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None = None):
     r"""Calculate the Root Mean Square Error (RMSE) using scores.
 
     Acts as a wrapper around the RMSE calculation from `scores` ([scoresa]_, [scoresb]_).
