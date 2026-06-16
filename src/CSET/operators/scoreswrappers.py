@@ -132,7 +132,7 @@ def scores_rmse(
 ):
     r"""Calculate the Root Mean Square Error (RMSE) using scores.
 
-    Acts as a wrapper around the RMSE calculation from `scores` ([scoresa]_, [scoresb]_).
+    Acts as a wrapper around the RMSE calculation from ``scores`` ([scoresa]_, [scoresb]_).
     It is calculated as
 
     .. math:: RMSE = \sqrt{\frac{1}{N} \Sigma(forecast - observations)^2}
@@ -157,18 +157,17 @@ def scores_rmse(
     References
     ----------
     .. [scoresa] Leeuwenburg, T., Loveday, N., Ebert, E. E., Cook, H.,
-    Khanarmuei, M., Taggart, R. J., Ramanathan, N., Carroll, M., Chong, S.,
-    Griffiths, A., & Sharples, J. (2024) "scores: A Python package for
-    verifying and evaluating models and predictions with xarray". Journal
-    of Open Source Software, vol. 9, 6889. doi: 10.21105/joss.06889
+        Khanarmuei, M., Taggart, R. J., Ramanathan, N., Carroll, M., Chong, S.,
+        Griffiths, A., & Sharples, J. (2024) "scores: A Python package for
+        verifying and evaluating models and predictions with xarray". Journal
+        of Open Source Software, vol. 9, 6889. doi: 10.21105/joss.06889
 
     .. [scoresb] Leeuwenburg, T., Loveday, N., Ramanathan, N., Chong, S.,
-    Taggart, R. J., Shrestha, D., Khanarmuei, M., Cook, H., Bluett, L., Ebert,
-    E. E., Carroll, M., Trotta, B., Bishop, S., Squire, D. T., Griffiths, A.,
-    Pagano, T. C., Fisher, A. J., Mandelbaum, T., Jinghan, F., … Smallwood, J.
-    (2026) "scores: Metrics for the verification, evaluation and optimisation of
-    forecasts, predictions or models (2.5.0)". Zenodo. doi: 10.5281/zenodo.18638494
-
+        Taggart, R. J., Shrestha, D., Khanarmuei, M., Cook, H., Bluett, L., Ebert,
+        E. E., Carroll, M., Trotta, B., Bishop, S., Squire, D. T., Griffiths, A.,
+        Pagano, T. C., Fisher, A. J., Mandelbaum, T., Jinghan, F., … Smallwood, J.
+        (2026) "scores: Metrics for the verification, evaluation and optimisation of
+        forecasts, predictions or models (2.5.0)". Zenodo. doi: 10.5281/zenodo.18638494
     """
     base, other = _sort_cubes_for_verification(cubes)
     # Scores operators on xarray data arrays, so we transform the iris cube into an array,
