@@ -641,7 +641,6 @@ def test_validate_cubes_coords_error_message_includes_advice():
         operator_utils.validate_cubes_coords(cubes, coords)
 
 
-
 def test_valid_sequence_coord_in_cube(cube):
     """Check that sequence coordinate found in cube in cube."""
     # Test that realization cube is correctly identified in cube.
