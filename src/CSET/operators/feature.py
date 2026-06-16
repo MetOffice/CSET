@@ -210,11 +210,6 @@ def cell_stats(
     min_size: int, optional
         The minimum number of contiguous grid points required for a feature to be tracked.
         Default is 4.
-    # feature_size_unit: str, optional
-    #     The unit to define feature size output. Options are "feature_effective_radius"
-    #     (the radius of a circle with the same area as the feature, in km) or "
-    #     feature_grid_points" (the number of grid points contained in the feature).
-    #     Default is "feature_effective_radius".
     save_data: bool, optional
         If set to True, all tracking data is saved to disk for further analysis (including csv
         and txt files containing feature properties that are not returned in output cubes).
@@ -223,13 +218,15 @@ def cell_stats(
     Returns
     -------
     cell_stats_cubes: iris.cube.CubeList
-        An iris CubeList containing "feature_size", "feature_mean", and "feature_max" cubes.
+        An iris CubeList containing "feature_size", "feature_effective_radius", "feature_mean",
+        and "feature_max" cubes.
 
     Notes
     -----
     This operator uses the Simple-Track package with tracking disabled to identify features
     in each timestep and compile cell statistics. Outputs cubes containing feature size (number
-    of grid points), mean value within features, and maximum value within features.
+    of grid points), effective radius (in km), mean value within features, and maximum
+    value within features.
 
     Links
     ----------
@@ -308,6 +305,11 @@ def cell_stats(
         )
         size_data[size_data == -100] = np.nan
 
+        # Get effective radius from feature size, using horizontal coordinate of input cube to estimate grid spacing
+        effective_radius_data = _get_effective_radius_from_feature_size(
+            size_data=size_data, cube_with_hzntl_coord=cube
+        )
+
         # Mean and max data are already float, so can be padded with NaNs directly.
         mean_data = np.array(
             [
@@ -322,17 +324,6 @@ def cell_stats(
             ]
         )
 
-        # Create cubes
-        time_coord = cube.coord("time").copy()
-        feature_coord = iris.coords.DimCoord(
-            np.arange(arr_size),
-            long_name="feature_number",
-            var_name="feature_number",
-            units="1",
-        )
-        coords = [time_coord, feature_coord]
-        coords_and_dims = [(coord, i) for i, coord in enumerate(coords)]
-
         # Set cube properties
         cube_properties = {
             "feature_size": {
@@ -346,36 +337,23 @@ def cell_stats(
                 "units": 1,
             },
             "feature_max": {"data": max_data, "long_name": "feature_max", "units": 1},
+            "feature_effective_radius": {
+                "data": effective_radius_data,
+                "long_name": "feature_effective_radius",
+                "units": "km",
+            },
         }
-        # TODO: need to consider better implementation which doesn't overwrite feature_size cube
-        # TODO: consider iris.analysis.cartography.area_weights() or hzntl_coord.is_regular()
-        # to check for regular spacing
-        # TODO: Check for hzntl_coords is empty list and handle elegantly
-        # if feature_size_unit == "feature_effective_radius":
-        #     # Convert feature size to effective radius, assuming uniform grid
-        #     # Guess coord representing horizontal grid (choose first available)
-        #     hzntl_coord = [
-        #         coord
-        #         for coord in cube.coords()
-        #         if iris.util.guess_coord_axis(coord) in ["X", "Y"]
-        #     ][0]
-        #     logging.debug(f"Attempting to convert to effective radius using {hzntl_coord}")
-        #     # Convert to km if possible
-        #     # TODO: fall back to feature_size if this conversion fails
-        #     # TODO: this will still add the name "feature_effective_radius" to the feature_size
-        #     # cube, even though the data is actually pixel size. Figure out elegant solution.
-        #     try:
-        #         hzntl_coord.convert_units("km")
-        #     except:
-        #         pass
-        #     # Naive grid spacing estimate, correct for regular grids, likely wildly
-        #     # inaccruate for LFRic/irregular grids
-        #     grid_spacing = np.abs(np.diff(hzntl_coord.points).mean())
-        #     # Convert feature size in grid points to effective radius in km
-        #     size_data = np.sqrt(size_data * grid_spacing**2 / np.pi)
-        #     # Reset cube properties
-        #     cube_properties["feature_size"]["data"] = size_data
-        #     cube_properties["feature_size"]["units"] = "km"
+
+        # Create cubes
+        time_coord = cube.coord("time").copy()
+        feature_coord = iris.coords.DimCoord(
+            np.arange(arr_size),
+            long_name="feature_number",
+            var_name="feature_number",
+            units="1",
+        )
+        coords = [time_coord, feature_coord]
+        coords_and_dims = [(coord, i) for i, coord in enumerate(coords)]
 
         # Get list of coords to copy from input cube to output cubes
         copyable_coord_names = [
@@ -422,3 +400,50 @@ def cell_stats(
             cell_stats_cubelist.append(cell_stats_cube)
 
     return cell_stats_cubelist
+
+
+def _get_effective_radius_from_feature_size(
+    size_data: np.ndarray, cube_with_hzntl_coord: iris.cube.Cube
+) -> np.ndarray:
+    """Convert feature size in grid points to effective radius in km.
+
+    Parameters
+    ----------
+    size_data: np.ndarray
+        An array containing "feature_size" data, in units of grid points.
+    cube_with_hzntl_coord: iris.cube.Cube
+        An iris cube containing a horizontal coordinate, which is used to
+        estimate the grid spacing for the effective radius calculation.
+
+    Returns
+    -------
+    effective_radii_data: np.ndarray
+        An array containing "feature_effective_radius" data, in units of km.
+
+    Notes
+    -----
+    This function assumes that the input cube has a horizontal coordinate system that is regular and
+    that the grid spacing can be estimated from the horizontal coordinates. The effective radius is
+    calculated as the radius of a circle with the same area as the feature size in grid points.
+
+    """
+    # Guess coord representing horizontal grid (choose first available)
+    hzntl_coord = [
+        coord
+        for coord in cube_with_hzntl_coord.coords()
+        if iris.util.guess_coord_axis(coord) in ["X", "Y"]
+    ][0]
+    logging.debug(f"Attempting to convert to effective radius using {hzntl_coord}")
+
+    # Check coordinate is regular, but only warn if not, this is a naive estimate
+    # and will be inaccurate for irregular grids
+    if not iris.util.is_regular(hzntl_coord):
+        logging.warning(
+            f"Horizontal coordinate {hzntl_coord} is not regular. "
+            "Effective radius calculation may be inaccurate."
+        )
+
+    grid_spacing = np.abs(np.mean(np.diff(hzntl_coord.points)))
+    effective_radii_data = np.sqrt(size_data * grid_spacing**2 / np.pi)
+
+    return effective_radii_data
