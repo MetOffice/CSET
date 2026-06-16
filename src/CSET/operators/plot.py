@@ -387,7 +387,7 @@ def _set_postage_stamp_title(stamp_coord: iris.coords.Coord) -> str:
 
 
 def _set_axis_range(cubes):
-    # Get minimum and maximum from levels information.
+    """Get minimum and maximum from levels information."""
     levels = None
     for cube in cubes:
         # First check if user-specified "auto" range variable.
@@ -413,9 +413,10 @@ def _set_axis_range(cubes):
 
 
 def _find_matched_slices(cubes, sequence_coordinate):
-    # Identify matched cubes in CubeList by sequence_coordinate values.
-    # Ensures common points are compared for multiple cube inputs.
+    """Identify matched cubes in CubeList by sequence_coordinate values.
 
+    Ensures common points are compared for multiple cube inputs.
+    """
     all_points = sorted(
         set(
             itertools.chain.from_iterable(

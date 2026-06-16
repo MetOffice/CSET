@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2025) and CSET contributors.
+# © Crown copyright, Met Office (2022-2026) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ import numpy as np
 import scipy.fft as fft
 
 
-def _DCT_ps(y_3d):
+def DCT_ps(y_3d):
     """Calculate power spectra for regional domains.
 
     Parameters
@@ -82,7 +82,7 @@ def _DCT_ps(y_3d):
     return ps_array
 
 
-def _create_alpha_matrix(Ny, Nx):
+def create_alpha_matrix(Ny, Nx):
     """Construct an array of 2D wavenumbers from 2D wavenumber pair.
 
     Parameters

@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2025) and CSET contributors.
+# © Crown copyright, Met Office (2022-2026) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -595,8 +595,7 @@ def _custom_colormap_scores(cube: iris.cube.Cube):
     norm: BoundaryNorm.
     """
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    cmap, levels, norm = None, None, None
     if any("RMSE_" in name for name in varnames):
         cmap = plt.get_cmap("PuRd", 51)
-        levels = None
-        norm = None
     return cmap, levels, norm

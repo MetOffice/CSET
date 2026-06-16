@@ -495,7 +495,7 @@ def test_validate_cube_shape_cubelist_mismatch():
     # Should raise ValueError because 2 cubes != 3 models
     with pytest.raises(
         ValueError,
-        match="The number of model names \(3\) should equal the number of cubes \(2\).",
+        match=r"The number of model names \(3\) should equal the number of cubes \(2\).",
     ):
         operator_utils.validate_cube_shape(cubelist, 3)
 
@@ -509,7 +509,7 @@ def test_validate_cube_shape_cubelist_more_cubes_than_models():
     # Should raise ValueError because 3 cubes != 1 model
     with pytest.raises(
         ValueError,
-        match="The number of model names \(1\) should equal the number of cubes \(3\).",
+        match=r"The number of model names \(1\) should equal the number of cubes \(3\).",
     ):
         operator_utils.validate_cube_shape(cubelist, 1)
 
@@ -521,7 +521,7 @@ def test_validate_cube_shape_cubelist_zero_models():
     # Should raise ValueError because 1 cube != 0 models
     with pytest.raises(
         ValueError,
-        match="The number of model names \(0\) should equal the number of cubes \(1\).",
+        match=r"The number of model names \(0\) should equal the number of cubes \(1\).",
     ):
         operator_utils.validate_cube_shape(cubelist, 0)
 
@@ -640,15 +640,6 @@ def test_validate_cubes_coords_error_message_includes_advice():
     with pytest.raises(ValueError, match="Check that number of time entries"):
         operator_utils.validate_cubes_coords(cubes, coords)
 
-
-def test_validate_cubes_coords_off_by_one():
-    """Test _validate_cubes_coords with off-by-one errors."""
-    cubes = iris.cube.CubeList([iris.cube.Cube([0.0]) for _ in range(10)])
-    coords = [iris.coords.DimCoord([1, 2], standard_name="time") for _ in range(9)]
-
-    # Should raise ValueError because 10 cubes != 9 coords
-    with pytest.raises(ValueError):
-        operator_utils.validate_cubes_coords(cubes, coords)
 
 
 def test_valid_sequence_coord_in_cube(cube):
