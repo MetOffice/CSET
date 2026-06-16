@@ -394,3 +394,12 @@ def test_colorbar_map_aviation_colour_state(cube, tmp_working_dir):
     assert levels == expected_levels
     assert isinstance(norm, mpl.colors.BoundaryNorm)
     assert (norm.boundaries == levels).all()
+
+
+def test_colorbar_map_scores_rmse(cube, tmp_working_dir):
+    """Colorbar definition is found for a rmse cube calculated via scores."""
+    cube.rename(f"RMSE_{cube.name()}")
+    cmap, levels, norm = colormaps._colorbar_map_levels(cube)
+    assert cmap == plt.get_cmap("PuRd", 51)
+    assert levels is None
+    assert norm is None

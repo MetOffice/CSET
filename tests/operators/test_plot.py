@@ -24,19 +24,7 @@ import matplotlib as mpl
 import numpy as np
 import pytest
 
-from CSET.operators import collapse, plot, read
-
-
-def test_colorbar_map_scores_rmse(cube, tmp_working_dir):
-    """Colorbar definition is found for a rmse cube calculated via scores."""
-    cube.rename(f"RMSE_{cube.name()}")
-    levels = None
-    norm = None
-    cmap = None
-    cmap, levels, norm = plot._colorbar_map_levels(cube)
-    assert cmap == plt.get_cmap("PuRd", 51)
-    assert levels is None
-    assert norm is None
+from CSET.operators import collapse, constraints, filters, plot, read
 
 
 def test_setup_spatial_map(cube):

@@ -125,41 +125,6 @@ def _make_plot_html_page(plots: list):
         fp.write(html)
 
 
-#### UPDATE in colormaps.py
-    if any("RMSE_" in name for name in varnames):
-        # Variables levels and norm set to None to use specific colorbar routine.
-        levels = None
-        norm = None
-        cmap, levels, norm = _custom_colormap_scores(cube, cmap, levels, norm)
-        return cmap, levels, norm
-
-    def _custom_colormap_scores(cube: iris.cube.Cube, cmap, levels, norm):
-    """Return altered colourmap for statistical metrics.
-
-    Parameters
-    ----------
-    cube: Cube
-        Cube of variable for which the colorbar information is desired.
-    cmap: Matplotlib colormap.
-    levels: List
-        List of levels to use for plotting. For continuous plots the min and max
-        should be taken as the range.
-    norm: BoundaryNorm.
-
-    Returns
-    -------
-    cmap: Matplotlib colormap.
-    levels: List
-        List of levels to use for plotting. For continuous plots the min and max
-        should be taken as the range.
-    norm: BoundaryNorm.
-    """
-    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
-    if any("RMSE_" in name for name in varnames):
-        cmap = plt.get_cmap("PuRd", 51)
-    return cmap, levels, norm
-
-  
 def _setup_spatial_map(
     cube: iris.cube.Cube,
     figure,

@@ -172,6 +172,10 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
     if any("aviation_colour_state" in name for name in varnames):
         cmap, levels, norm = _custom_colormap_aviation_colour_state(cube)
         return cmap, levels, norm
+    # If verification scores use custom colorbar
+    if any("RMSE_" in name for name in varnames):
+        cmap, levels, norm = _custom_colormap_scores(cube)
+        return cmap, levels, norm
 
     # If no valid colormap has been defined, use defaults and return.
     if not cmap:
@@ -571,4 +575,28 @@ def _custom_colourmap_visibility_in_air(cube: iris.cube.Cube, cmap, levels, norm
         cmap = cmap
         levels = levels
         norm = norm
+    return cmap, levels, norm
+
+
+def _custom_colormap_scores(cube: iris.cube.Cube):
+    """Return altered colourmap for statistical metrics.
+
+    Parameters
+    ----------
+    cube: Cube
+        Cube of variable for which the colorbar information is desired.
+
+    Returns
+    -------
+    cmap: Matplotlib colormap.
+    levels: List
+        List of levels to use for plotting. For continuous plots the min and max
+        should be taken as the range.
+    norm: BoundaryNorm.
+    """
+    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    if any("RMSE_" in name for name in varnames):
+        cmap = plt.get_cmap("PuRd", 51)
+        levels = None
+        norm = None
     return cmap, levels, norm
