@@ -220,10 +220,10 @@ def sensible_heat_flux_from_covariance(cubes, **kwargs):
     if str(wT_cov.units) == "degC m s-1":
         wT_cov.units = Unit("K m s-1")
 
-    rho_air = pres_Pa / (RD * temp_K)
+    rho_air = pres_Pa.data / (RD * temp_K.data)
 
     shf = wT_cov.copy()
-    shf = CPD * rho_air * wT_cov
+    shf.data = CPD * rho_air * wT_cov.data
     shf.units = Unit("W m-2")
     shf.rename("surface_upward_sensible_heat_flux")
     shf.var_name = "surface_upward_sensible_heat_flux"
