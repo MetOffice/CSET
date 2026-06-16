@@ -20,6 +20,7 @@ import iris
 import iris.cube
 import iris.util
 import numpy as np
+from simpletrack.frame import Timeline
 from simpletrack.track import Tracker
 
 from CSET._common import iter_maybe
@@ -274,62 +275,24 @@ def cell_stats(
 
         # Run tracking, returning Timeline object
         timeline = Tracker(tracker_config).run(cube_dict)
-
         logging.debug(f"Tracking completed for {model_name}")
 
-        # Get feature data from each frame of data, append to list of lists
-        # before conversion to numpy array (which requires knowledge of max
-        # number of features before constructing array shape)
-        size_data, mean_data, max_data = [], [], []
-        number_of_features = []
-        for time in times_dt:
-            frame = timeline.get_frame(time)
-            features = frame.features
-            size_data.append([feature.get_size() for feature in features.values()])
-            mean_data.append([feature.mean for feature in features.values()])
-            max_data.append([feature.max for feature in features.values()])
-            number_of_features.append(len(features))
-
-        # Pad data with NaNs to create arrays of consistent shape (max number of features across
-        # all timesteps)
-        arr_size = max(number_of_features)
-
-        # Size data is integer, but we need to pad with NaNs (which is a float), so fill
-        # with invalid value first
-        size_data = np.array(
-            [
-                np.pad(sizes, (0, arr_size - len(sizes)), constant_values=-100)
-                for sizes in size_data
-            ],
-            dtype=float,
+        # Get feature data from each frame of data
+        size_data, mean_data, max_data = _get_cell_stats_arrays_from_timeline(
+            timeline=timeline, expected_frame_times=times_dt
         )
-        size_data[size_data == -100] = np.nan
 
         # Get effective radius from feature size, using horizontal coordinate of input cube to estimate grid spacing
         effective_radius_data = _get_effective_radius_from_feature_size(
             size_data=size_data, cube_with_hzntl_coord=cube
         )
 
-        # Mean and max data are already float, so can be padded with NaNs directly.
-        mean_data = np.array(
-            [
-                np.pad(means, (0, arr_size - len(means)), constant_values=np.nan)
-                for means in mean_data
-            ]
-        )
-        max_data = np.array(
-            [
-                np.pad(maxs, (0, arr_size - len(maxs)), constant_values=np.nan)
-                for maxs in max_data
-            ]
-        )
-
-        # Set cube properties
+        # Set output cube properties
         cube_properties = {
             "feature_size": {
                 "data": size_data,
                 "long_name": "feature_size",
-                "units": "1",
+                "units": 1,
             },
             "feature_mean": {
                 "data": mean_data,
@@ -344,62 +307,75 @@ def cell_stats(
             },
         }
 
-        # Create cubes
-        time_coord = cube.coord("time").copy()
-        feature_coord = iris.coords.DimCoord(
-            np.arange(arr_size),
-            long_name="feature_number",
-            var_name="feature_number",
-            units="1",
-        )
-        coords = [time_coord, feature_coord]
-        coords_and_dims = [(coord, i) for i, coord in enumerate(coords)]
-
-        # Get list of coords to copy from input cube to output cubes
-        copyable_coord_names = [
-            "realization",
-            "hour",
-            "forecast_period",
-            "forecast_reference_time",
-            "model_name",
-            "cset_comparison_base",
-        ]
-        input_cube_coord_names = []
-        for coord in cube.coords():
-            input_cube_coord_names.append(coord.standard_name)
-            input_cube_coord_names.append(coord.long_name)
-
-        coords_to_copy = [
-            coord_name
-            for coord_name in copyable_coord_names
-            if coord_name in input_cube_coord_names
-        ]
-
-        # Populate cubelist
-        for cb_props in cube_properties.values():
-            cell_stats_cube = iris.cube.Cube(
-                data=cb_props["data"],
-                long_name=cb_props["long_name"],
-                units=cb_props["units"],
-                dim_coords_and_dims=coords_and_dims,
+        # Create cubes, add to existing cubelist
+        cell_stats_cubelist.extend(
+            _add_cell_stats_data_to_cubes(
+                data_and_metadata_dict=cube_properties, template_cube=cube
             )
-            # Add other metadata from input cube
-            for coord_name in coords_to_copy:
-                coord = cube.coord(coord_name).copy()
-                # Check if this coord represents a dimension of data
-                dims = cube.coord_dims(coord)
-                if len(dims) > 0:
-                    cell_stats_cube.add_aux_coord(coord, dims)
-                else:
-                    cell_stats_cube.add_aux_coord(coord)
-
-            # Copy over attributes
-            cell_stats_cube.attributes = cube.attributes
-
-            # Add to cubelist
-            cell_stats_cubelist.append(cell_stats_cube)
+        )
 
     return cell_stats_cubelist
+
+
+def _get_cell_stats_arrays_from_timeline(
+    timeline: Timeline, expected_frame_times: list
+) -> list[np.ndarray]:
+    """Extract cell statistics data from a Simple-Track Timeline object.
+
+    Parameters
+    ----------
+    timeline: Timeline
+        A Simple-Track Timeline object containing tracked features.
+
+    Returns
+    -------
+    size_data: np.ndarray
+        A numpy array containing the size of each feature in grid points.
+    mean_data: np.ndarray
+        A numpy array containing the mean value of each feature.
+    max_data: np.ndarray
+        A numpy array containing the maximum value of each feature.
+    """
+    size_data, mean_data, max_data = [], [], []
+    number_of_features = []
+    for time in expected_frame_times:
+        frame = timeline.get_frame(time)
+        features = frame.features
+        size_data.append([feature.get_size() for feature in features.values()])
+        mean_data.append([feature.mean for feature in features.values()])
+        max_data.append([feature.max for feature in features.values()])
+        number_of_features.append(len(features))
+
+    # Pad data with NaNs to create arrays of consistent shape (max number of features across
+    # all timesteps)
+    arr_size = max(number_of_features)
+
+    # Size data is integer, but we need to pad with NaNs (which is a float), so fill
+    # with invalid value first
+    size_data = np.array(
+        [
+            np.pad(sizes, (0, arr_size - len(sizes)), constant_values=-100)
+            for sizes in size_data
+        ],
+        dtype=float,
+    )
+    size_data[size_data == -100] = np.nan
+
+    # Mean and max data are already float, so can be padded with NaNs directly.
+    mean_data = np.array(
+        [
+            np.pad(means, (0, arr_size - len(means)), constant_values=np.nan)
+            for means in mean_data
+        ]
+    )
+    max_data = np.array(
+        [
+            np.pad(maxs, (0, arr_size - len(maxs)), constant_values=np.nan)
+            for maxs in max_data
+        ]
+    )
+
+    return size_data, mean_data, max_data
 
 
 def _get_effective_radius_from_feature_size(
@@ -447,3 +423,89 @@ def _get_effective_radius_from_feature_size(
     effective_radii_data = np.sqrt(size_data * grid_spacing**2 / np.pi)
 
     return effective_radii_data
+
+
+def _add_cell_stats_data_to_cubes(
+    data_and_metadata_dict: dict, template_cube: iris.cube.Cube
+) -> iris.cube.CubeList:
+    """Add data to cubes, using template cube for metadata.
+
+    Parameters
+    ----------
+    data_and_metadata_dict: dict
+        A dictionary containing data and metadata for each cube to be created.
+        The keys are the long names of the cubes, and the values are dictionaries
+        containing the data and units for each cube.
+
+    template_cube: iris.cube.Cube
+        An iris cube to use as a template for the new cubes. The new cubes will
+        have the same attributes as the template cube.
+
+    Returns
+    -------
+    cubelist: iris.cube.CubeList
+        A list of iris cubes containing the added data.
+
+    """
+    cubelist = iris.cube.CubeList()
+
+    # Construct coordinates for new cubes
+    time_coord = template_cube.coord("time").copy()
+    # To construct feature coordinate, look at the size of dimension 1 for each data
+    arr_size = max(
+        [data_and_metadata_dict[cb]["data"].shape[1] for cb in data_and_metadata_dict]
+    )
+    feature_coord = iris.coords.DimCoord(
+        np.arange(arr_size),
+        long_name="feature_number",
+        var_name="feature_number",
+        units="1",
+    )
+    coords = [time_coord, feature_coord]
+    coords_and_dims = [(coord, i) for i, coord in enumerate(coords)]
+
+    # Get list of coords to copy from input cube to output cubes
+    copyable_coord_names = [
+        "realization",
+        "hour",
+        "forecast_period",
+        "forecast_reference_time",
+        "model_name",
+        "cset_comparison_base",
+    ]
+    input_cube_coord_names = []
+    for coord in template_cube.coords():
+        input_cube_coord_names.append(coord.standard_name)
+        input_cube_coord_names.append(coord.long_name)
+
+    coords_to_copy = [
+        coord_name
+        for coord_name in copyable_coord_names
+        if coord_name in input_cube_coord_names
+    ]
+
+    # Populate cubelist
+    for cb_props in data_and_metadata_dict.values():
+        cell_stats_cube = iris.cube.Cube(
+            data=cb_props["data"],
+            long_name=cb_props["long_name"],
+            units=cb_props["units"],
+            dim_coords_and_dims=coords_and_dims,
+        )
+        # Add other metadata from input cube
+        for coord_name in coords_to_copy:
+            coord = template_cube.coord(coord_name).copy()
+            # Check if this coord represents a dimension of data
+            dims = template_cube.coord_dims(coord)
+            if len(dims) > 0:
+                cell_stats_cube.add_aux_coord(coord, dims)
+            else:
+                cell_stats_cube.add_aux_coord(coord)
+
+        # Copy over attributes
+        cell_stats_cube.attributes = template_cube.attributes
+
+        # Add to cubelist
+        cubelist.append(cell_stats_cube)
+
+    return cubelist
