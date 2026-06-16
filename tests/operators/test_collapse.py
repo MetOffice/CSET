@@ -285,8 +285,8 @@ def test_collapse_by_validity_time_no_time_coordinate(long_forecast_multi_day):
 
 def test_collapse_by_validity_time_no_common_points(cube):
     """Test exception when there are no common time points between cubes."""
-    c1 = cube.extract(iris.Constraint(time=datetime.datetime(2022, 9, 21, 2, 30)))
-    c2 = cube.extract(iris.Constraint(time=datetime.datetime(2022, 9, 21, 4, 30)))
+    c1 = cube.extract(iris.Constraint(time=datetime.datetime(2022, 9, 21, 3, 0)))
+    c2 = cube.extract(iris.Constraint(time=datetime.datetime(2022, 9, 21, 5, 0)))
     cubes = iris.cube.CubeList([c1, c2])
     with pytest.raises(
         ValueError,

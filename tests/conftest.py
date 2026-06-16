@@ -17,12 +17,87 @@
 https://docs.pytest.org/en/latest/reference/fixtures.html#conftest-py-sharing-fixtures-across-multiple-files
 """
 
+import subprocess
+from collections.abc import Callable
 from pathlib import Path
+from uuid import uuid4
 
+import iris
 import iris.cube
 import pytest
 
 from CSET.operators import constraints, filters, read
+
+
+@pytest.fixture
+def cdl_to_nc_path(tmp_path) -> Callable[[str], Path]:
+    """Get a callback that will create a temporary NetCDF file based on a CDL definition."""
+
+    def cdl_to_nc(cdl: str) -> Path:
+        """
+        Convert a CDL description into a netcdf file.
+
+        Parameters
+        ----------
+        name
+            prefix of the output file name
+        cdl
+            CDL description of the data
+        output
+            output directory
+
+        Returns
+        -------
+            Path of the created netcdf file (``{outdir}/{name}.nc``)
+
+        Notes
+        -----
+        See https://docs.unidata.ucar.edu/nug/2.0-draft/cdl.html for the details of
+        CDL format.
+        """
+        # Random UUID
+        name = uuid4()
+
+        cdl_path = tmp_path / f"{name}.cdl"
+        nc_path = tmp_path / f"{name}.nc"
+        with open(cdl_path, "w") as f:
+            f.write(cdl)
+        subprocess.run(
+            ["ncgen", "-k", "nc4", "-o", str(nc_path), str(cdl_path)], check=True
+        )
+        return nc_path
+
+    return cdl_to_nc
+
+
+@pytest.fixture
+def cdl_to_cubes(
+    cdl_to_nc_path,
+) -> Callable[[str, str | iris.Constraint | None], iris.cube.CubeList]:
+    """Get a callback that will create CSET cubes based on a CDL definition."""
+
+    def callback(
+        cdl: str, constraint: str | iris.Constraint | None = None
+    ) -> iris.cube.CubeList:
+        path = cdl_to_nc_path(cdl)
+        return read.read_cubes(path, constraint)  # noqa
+
+    return callback
+
+
+@pytest.fixture
+def cdl_to_cube(
+    cdl_to_nc_path,
+) -> Callable[[str, str | iris.Constraint | None], iris.cube.Cube]:
+    """Get a callback that will create a CSET cube based on a CDL definition."""
+
+    def callback(
+        cdl: str, constraint: str | iris.Constraint | None = None
+    ) -> iris.cube.Cube:
+        path = cdl_to_nc_path(cdl)
+        return read.read_cube(path, constraint)  # noqa
+
+    return callback
 
 
 @pytest.fixture()
