@@ -63,14 +63,14 @@
         [[[environment]]]
             ROSE_TASK_APP = metplus_point_stat
             STAT = area
-            STAT_TYPE_LIST = cnt
+            STAT_TYPE_LIST = cnt mpr
 
     [[METPLUS_POINT_STAT_POSTPROC]]
     # Family grouping all metplus Post-processing
     inherit = METPLUS
         [[[environment]]]
             STAT = area
-            STAT_TYPE_LIST = cnt
+            STAT_TYPE_LIST = cnt mpr
 
     [[VERPY_METLOADER]]
     # Family grouping for all VerPy metloader tasks
