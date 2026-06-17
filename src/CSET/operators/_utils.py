@@ -502,7 +502,11 @@ def check_single_cube(cube: iris.cube.Cube | iris.cube.CubeList) -> iris.cube.Cu
     if isinstance(cube, iris.cube.CubeList):
         if len(cube) == 1:
             return cube[0]
-    raise ValueError("Must have a single cube", cube)
+        else:
+            raise ValueError("CubeList did not contain a single cube.", cube)
+    raise TypeError(
+        "check_single_cube requires a Cube or CubeList of a single cube.", cube
+    )
 
 
 def check_sequence_coordinate(cubes, sequence_coordinate):

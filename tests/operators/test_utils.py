@@ -402,9 +402,12 @@ def test_check_single_cube():
     non_cube = 1
     assert operator_utils.check_single_cube(cube) == cube
     assert operator_utils.check_single_cube(cubelist) == cube
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="CubeList did not contain a single cube."):
         operator_utils.check_single_cube(long_cubelist)
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        TypeError,
+        match="check_single_cube requires a Cube or CubeList of a single cube.",
+    ):
         operator_utils.check_single_cube(non_cube)
 
 
