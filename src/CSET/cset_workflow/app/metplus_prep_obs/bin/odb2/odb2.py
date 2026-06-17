@@ -11,6 +11,8 @@ from abc import ABC, abstractmethod
 from glob import glob
 from pathlib import Path
 from typing import Iterable, TextIO
+import sys
+from contextlib import nullcontext
 
 import metomi.isodatetime.parsers
 import numpy
@@ -340,13 +342,26 @@ class PrepODB2(ABC):
         """Read ODB2 data."""
         raise NotImplementedError
 
-    def odb2ascii(self, output: TextIO, valid_times: Iterable[TimePoint]):
-        """Write all the observations to a MET ASCII file."""
+    def odb2ascii(self, output_pattern: str, valid_times: Iterable[TimePoint]):
+        """
+        Write all the observations to a MET ASCII file.
+        
+        If output_pattern contains a strftime-style pattern then the valid time
+        will be used to replace the pattern.
+        """
         for t in valid_times:
+            output = t.strftime(output_pattern)
+
+            if output == '-':
+                out_context = nullcontext(sys.stdout)
+            else:
+                out_context = open(output, "wt")
+
             log.info("Processing %s", t)
-            for obs in self.read_odb(t):
-                ascii = odb2ascii_dataframe(obs)
-                write_ascii(ascii, output)
+            with out_context as f:
+                for obs in self.read_odb(t):
+                    ascii = odb2ascii_dataframe(obs)
+                    write_ascii(ascii, f)
 
 
 class PrepODB2Pattern(PrepODB2):

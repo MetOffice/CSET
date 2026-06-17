@@ -9,7 +9,7 @@ Valid times can be either ISO timepoints or recurrences, and are used to replace
     ./prepODB2.py /path/to/%Y/%m/%Y%m%dT%H%MZ/*.odb \
             --valid-time 20010101T0000Z \
             --valid-time R4/20010102T0000Z/PT6H \
-            --output obs.ascii
+            --output obs.%Y%m%dT%H%MZ.ascii
 """
 
 import argparse
@@ -71,16 +71,10 @@ def main(argv: list[str]):
         # Valid time unset, hopefully the pattern isn't using times
         args.valid_time = ["00010101T0000Z"]
 
-    if args.output == "-":
-        out_context = nullcontext(sys.stdout)
-    else:
-        out_context = open(args.output, "wt")
-
-    with out_context as output:
-        for pattern in args.file:
-            PrepODB2Pattern(pattern).odb2ascii(
-                output, valid_times_iterator(args.valid_time)
-            )
+    for pattern in args.file:
+        PrepODB2Pattern(pattern).odb2ascii(
+            args.output, valid_times_iterator(args.valid_time)
+        )
 
 
 if __name__ == "__main__":

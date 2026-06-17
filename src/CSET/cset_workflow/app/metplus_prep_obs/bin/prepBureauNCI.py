@@ -6,17 +6,16 @@ Convert Bureau ODB2 data at NCI to MET ASCII format.
 Valid times can be either ISO timepoints or recurrences, and are used to replace any strftime patterns.
 Data is sourced from the mirror in the ig2 project, not all times are available.
 
-    ./prepODB2.py \
+    ./prepBureauNCI.py \
             --system access-c3-dn \
             --valid-time 20010101T0000Z \
             --valid-time R4/20010102T0000Z/PT6H \
-            --output obs.ascii
+            --output obs.%Y%m%dT%H%MZ.ascii
 """
 
 import argparse
 import logging
 import sys
-from contextlib import nullcontext
 
 from odb2 import valid_times_iterator
 from odb2.bom import BOM_SYSTEMS, PrepBomNci
@@ -56,13 +55,7 @@ def main(argv: list[str]):
         logging.basicConfig(level=logging.INFO)
         sys.tracebacklimit = 0
 
-    if args.output == "-":
-        out_context = nullcontext(sys.stdout)
-    else:
-        out_context = open(args.output, "wt")
-
-    with out_context as output:
-        PrepBomNci(args.system).odb2ascii(output, valid_times_iterator(args.valid_time))
+    PrepBomNci(args.system).odb2ascii(args.output, valid_times_iterator(args.valid_time))
 
 
 if __name__ == "__main__":
