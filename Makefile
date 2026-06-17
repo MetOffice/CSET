@@ -30,7 +30,7 @@ conda: prepare-lockfiles
 # Prevent pip from accessing the network; we have everything in our conda env.
 setup: conda .git/hooks/pre-commit ## Setup development environment.
 	${CONDA_EXE} run -n cset-dev pip install --no-deps --no-index --no-build-isolation --editable .
-	@echo "Run 'conda activate cset-dev' to use conda environment."
+	@echo "Run '${CONDA_EXE} activate cset-dev' to use conda environment."
 
 docs: ## Build documentation.
 	make --directory=docs html
