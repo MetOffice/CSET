@@ -27,7 +27,7 @@ steps:
   - operator: curvature.global_curv
     radius: $CURV_RADIUS
     num_radial_points: $CURV_POINTS
-    tol: 400.0
+    tol: 200.0
 
   - operator: plot.spatial_pcolormesh_plot
 
