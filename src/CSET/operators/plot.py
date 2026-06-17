@@ -704,18 +704,17 @@ def _plot_and_save_spatial_plot(
 
     # Add watermark with min/max/mean. Currently not user togglable.
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
-    if "CTC" not in title:
-        axes.annotate(
-            f"Min: {np.min(cube.data):.3g} Max: {np.max(cube.data):.3g} Mean: {np.mean(cube.data):.3g}",
-            xy=(0.025, yinfopad),
-            xycoords="axes fraction",
-            xytext=(-5, 5),
-            textcoords="offset points",
-            ha="left",
-            va="bottom",
-            size=11,
-            bbox=dict(boxstyle="round", fc="#cccccc", ec="#808080", alpha=0.9),
-        )
+    axes.annotate(
+        f"Min: {np.min(cube.data):.3g} Max: {np.max(cube.data):.3g} Mean: {np.mean(cube.data):.3g}",
+        xy=(0.025, yinfopad),
+        xycoords="axes fraction",
+        xytext=(-5, 5),
+        textcoords="offset points",
+        ha="left",
+        va="bottom",
+        size=11,
+        bbox=dict(boxstyle="round", fc="#cccccc", ec="#808080", alpha=0.9),
+    )
 
     # Add secondary colour bar for overlay_cube field if required.
     if overlay_cube:
