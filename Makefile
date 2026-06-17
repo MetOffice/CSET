@@ -6,7 +6,7 @@
 # the target/prerequisites with ##.
 
 # Use micromamba if available, else fall back to conda.
-CONDA_EXE := $(shell command -v micromamba >/dev/null && echo "micromamba" || echo "conda")
+CONDA_EXE := $(shell command -v micromamba || echo "conda")
 
 help: ## Display this help message.
 	@echo "Please provide a target from:"
