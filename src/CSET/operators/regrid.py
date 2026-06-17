@@ -490,9 +490,9 @@ def interpolate_to_point_cube(
         )
         # Copy all non-lat/lon coordinates and cube attributes
         if "time" in [coord.name() for coord in fld_point_cube.coords(dim_coords=True)]:
-            fv_cube.add_dim_coord(point_cube.coord("time"), 0)
-        else:
-            fv_cube.add_aux_coord(point_cube.coord("time"), od_index)
+            fv_cube.add_dim_coord(
+                point_cube.coord("time"), point_cube.coord_dims("time")[0]
+            )
         for coord in cube.coords():
             if coord.name() not in [
                 "time",
@@ -523,7 +523,7 @@ def interpolate_to_point_cube(
     else:
         return regridded_cubes
 
-      
+
 def vertical_interpolation(
     cubes: iris.cube.Cube | iris.cube.CubeList,
     coordinate: str,

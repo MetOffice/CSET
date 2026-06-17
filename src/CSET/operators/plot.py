@@ -1552,7 +1552,7 @@ def _plot_and_save_scatter_series(
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     ax = plt.gca()
 
-    model_colors_map = _get_model_colors_map(cubes)
+    model_colors_map = get_model_colors_map(cubes)
 
     percentiles = np.arange(0, 100, 5)
     percentiles[0] = 1
@@ -2681,30 +2681,18 @@ def vector_plot(
     return iris.cube.CubeList([cube_u, cube_v])
 
 
-def _check_sequence(cubes, sequence_coordinate):
-    # If several histograms are plotted with time as sequence_coordinate for the
-    # time slider option.
-    for cube in cubes:
-        try:
-            cube.coord(sequence_coordinate)
-        except iris.exceptions.CoordinateNotFoundError as err:
-            raise ValueError(
-                f"Cube must have a {sequence_coordinate} coordinate."
-            ) from err
-
-
 def _set_axis_range(cubes):
     # Get minimum and maximum from levels information.
     levels = None
     for cube in cubes:
         # First check if user-specified "auto" range variable.
         # This maintains the value of levels as None, so proceed.
-        _, levels, _ = _colorbar_map_levels(cube, axis="y")
+        _, levels, _ = colorbar_map_levels(cube, axis="y")
         if levels is None:
             break
         # If levels is changed, recheck to use the vmin,vmax or
         # levels-based ranges for histogram plots.
-        _, levels, _ = _colorbar_map_levels(cube)
+        _, levels, _ = colorbar_map_levels(cube)
         logging.debug("levels: %s", levels)
         if levels is not None:
             vmin = min(levels)
@@ -2943,11 +2931,11 @@ def plot_scatter_series(
     # Internal plotting function.
     plotting_func = _plot_and_save_scatter_series
 
-    num_models = _get_num_models(cubes)
+    num_models = get_num_models(cubes)
 
-    _validate_cube_shape(cubes, num_models)
+    validate_cube_shape(cubes, num_models)
 
-    _check_sequence(cubes, sequence_coordinate)
+    check_sequence_coordinate(cubes, sequence_coordinate)
 
     vmin, vmax = _set_axis_range(cubes)
 
