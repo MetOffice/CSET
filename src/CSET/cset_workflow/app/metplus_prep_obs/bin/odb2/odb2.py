@@ -7,12 +7,12 @@ Sites can extend the classes with their own templates.
 import functools
 import json
 import logging
+import sys
 from abc import ABC, abstractmethod
+from contextlib import nullcontext
 from glob import glob
 from pathlib import Path
 from typing import Iterable, TextIO
-import sys
-from contextlib import nullcontext
 
 import metomi.isodatetime.parsers
 import numpy
@@ -345,14 +345,14 @@ class PrepODB2(ABC):
     def odb2ascii(self, output_pattern: str, valid_times: Iterable[TimePoint]):
         """
         Write all the observations to a MET ASCII file.
-        
+
         If output_pattern contains a strftime-style pattern then the valid time
         will be used to replace the pattern.
         """
         for t in valid_times:
             output = t.strftime(output_pattern)
 
-            if output == '-':
+            if output == "-":
                 out_context = nullcontext(sys.stdout)
             else:
                 out_context = open(output, "wt")

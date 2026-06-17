@@ -15,7 +15,6 @@ Valid times can be either ISO timepoints or recurrences, and are used to replace
 import argparse
 import logging
 import sys
-from contextlib import nullcontext
 
 from odb2.odb2 import PrepODB2Pattern, valid_times_iterator
 
