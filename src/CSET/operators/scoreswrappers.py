@@ -117,7 +117,8 @@ def _sort_cubes_for_verification(cubes: CubeList):
     base_lat_direction = is_increasing(base.coord(base_lat_name).points)
     other_lat_direction = is_increasing(other.coord(other_lat_name).points)
     if base_lat_direction != other_lat_direction:
-        reverse(other, other_lat_name)
+        # Regrid the data onto the same grid (this should only flip the array and not alter the data).
+        other = other.regrid(base, iris.analysis.Linear())
 
     # Extract just common time points.
     base, other = _extract_common_time_points(base, other)
