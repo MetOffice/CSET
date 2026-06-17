@@ -1,0 +1,45 @@
+category: Scores
+title: "$METHOD $VARNAME\nRMSE between $OTHER_MODEL and $BASE_MODEL"
+description: |
+  Extracts and plots the Root Mean Square Error in $METHOD of $VARNAME
+  for all times. The RMSE is calculated based on that used in the
+  package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.rmse). This recipe preserves the time, latitude and longitude coordinates.
+  This means a sequence of spatial plots of the RMSE can be produced.
+
+  A larger RMSE implies a greater error than a smaller RMSE. An
+  RMSE of zero implies the two field match. The RMSE is calculated
+  on the grid point and thus a spatial view of the RMSE provides useful
+  information about where the differences are, or if placement errors
+  are domininating the score (usually indicated by dipoles).
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: [$BASE_MODEL, $OTHER_MODEL]
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: $VARNAME
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: "pressure"
+        levels: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: scoreswrappers.scores_rmse
+    preserved_coordinates: ["time", "grid_latitude", "grid_longitude"]
+
+  - operator: collapse.collapse
+    coordinate: ["time"]
+    method: $METHOD
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

@@ -33,7 +33,6 @@ import iris.plot as iplt
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy.fft as fft
 from cartopy.mpl.geoaxes import GeoAxes
 from iris.cube import Cube
 from markdown_it import MarkdownIt
@@ -46,16 +45,22 @@ from CSET._common import (
     render_file,
     slugify,
 )
-from CSET.operators._plot_colormaps import (
-    _colorbar_map_levels,
-    _get_model_colors_map,
+from CSET.operators._colormaps import (
+    colorbar_map_levels,
+    get_model_colors_map,
 )
+from CSET.operators._spectra import DCT_ps
 from CSET.operators._utils import (
+    check_sequence_coordinate,
+    check_single_cube,
     check_stamp_coordinate,
     fully_equalise_attributes,
     get_cube_yxcoordname,
+    get_num_models,
     is_transect,
     slice_over_maybe,
+    validate_cube_shape,
+    validate_cubes_coords,
 )
 from CSET.operators.collapse import collapse
 from CSET.operators.misc import _extract_common_time_points
@@ -63,6 +68,7 @@ from CSET.operators.regrid import regrid_onto_cube
 
 # Use a non-interactive plotting backend.
 mpl.use("agg")
+
 
 ############################
 # Private helper functions #
@@ -86,35 +92,6 @@ def _append_to_plot_index(plot_index: list) -> list:
         fp.truncate()
         json.dump(meta, fp, indent=2)
     return complete_plot_index
-
-
-def _check_single_cube(cube: iris.cube.Cube | iris.cube.CubeList) -> iris.cube.Cube:
-    """Ensure a single cube is given.
-
-    If a CubeList of length one is given that the contained cube is returned,
-    otherwise an error is raised.
-
-    Parameters
-    ----------
-    cube: Cube | CubeList
-        The cube to check.
-
-    Returns
-    -------
-    cube: Cube
-        The checked cube.
-
-    Raises
-    ------
-    TypeError
-        If the input cube is not a Cube or CubeList of a single Cube.
-    """
-    if isinstance(cube, iris.cube.Cube):
-        return cube
-    if isinstance(cube, iris.cube.CubeList):
-        if len(cube) == 1:
-            return cube[0]
-    raise TypeError("Must have a single cube", cube)
 
 
 def _make_plot_html_page(plots: list):
@@ -424,6 +401,62 @@ def _set_postage_stamp_title(stamp_coord: iris.coords.Coord) -> str:
     return mtitle
 
 
+def _set_axis_range(cubes):
+    """Get minimum and maximum from levels information."""
+    levels = None
+    for cube in cubes:
+        # First check if user-specified "auto" range variable.
+        # This maintains the value of levels as None, so proceed.
+        _, levels, _ = colorbar_map_levels(cube, axis="y")
+        if levels is None:
+            break
+        # If levels is changed, recheck to use the vmin,vmax or
+        # levels-based ranges for histogram plots.
+        _, levels, _ = colorbar_map_levels(cube)
+        logging.debug("levels: %s", levels)
+        if levels is not None:
+            vmin = min(levels)
+            vmax = max(levels)
+            logging.debug("Updated vmin, vmax: %s, %s", vmin, vmax)
+            break
+
+    if levels is None:
+        vmin = min(cb.data.min() for cb in cubes)
+        vmax = max(cb.data.max() for cb in cubes)
+
+    return vmin, vmax
+
+
+def _find_matched_slices(cubes, sequence_coordinate):
+    """Identify matched cubes in CubeList by sequence_coordinate values.
+
+    Ensures common points are compared for multiple cube inputs.
+    """
+    all_points = sorted(
+        set(
+            itertools.chain.from_iterable(
+                cb.coord(sequence_coordinate).points for cb in cubes
+            )
+        )
+    )
+    all_slices = list(
+        itertools.chain.from_iterable(
+            cb.slices_over(sequence_coordinate) for cb in cubes
+        )
+    )
+    # Matched slices (matched by seq coord point; it may happen that
+    # evaluated models do not cover the same seq coord range, hence matching
+    # necessary)
+    cube_iterables = [
+        iris.cube.CubeList(
+            s for s in all_slices if s.coord(sequence_coordinate).points[0] == point
+        )
+        for point in all_points
+    ]
+
+    return cube_iterables
+
+
 def _plot_and_save_spatial_plot(
     cube: iris.cube.Cube,
     filename: str,
@@ -457,16 +490,28 @@ def _plot_and_save_spatial_plot(
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
     # Specify the color bar
-    cmap, levels, norm = _colorbar_map_levels(cube)
+    cmap, levels, norm = colorbar_map_levels(cube)
 
     # If overplotting, set required colorbars
     if overlay_cube:
-        over_cmap, over_levels, over_norm = _colorbar_map_levels(overlay_cube)
+        over_cmap, over_levels, over_norm = colorbar_map_levels(overlay_cube)
     if contour_cube:
-        cntr_cmap, cntr_levels, cntr_norm = _colorbar_map_levels(contour_cube)
+        cntr_cmap, cntr_levels, cntr_norm = colorbar_map_levels(contour_cube)
 
     # Setup plot map projection, extent and coastlines and borderlines.
     axes = _setup_spatial_map(cube, fig, cmap)
+
+    # Set colorscale bounds
+    try:
+        vmin = min(levels)
+        vmax = max(levels)
+    except TypeError:
+        vmin, vmax = None, None
+    # Ensure to use norm and not vmin/vmax if levels are defined.
+    if norm is not None:
+        vmin = None
+        vmax = None
+        logging.debug("Plotting using defined levels.")
 
     # Plot the field.
     try:
@@ -480,7 +525,6 @@ def _plot_and_save_spatial_plot(
         vmax = None
         logging.debug("Plotting using defined levels.")
     if method == "contourf":
-        # Filled contour plot of the field.
         plot = iplt.contourf(cube, cmap=cmap, levels=levels, norm=norm)
     elif method == "pcolormesh":
         plot = iplt.pcolormesh(cube, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax)
@@ -749,12 +793,12 @@ def _plot_and_save_postage_stamp_spatial_plot(
     )
 
     # Specify the color bar
-    cmap, levels, norm = _colorbar_map_levels(cube)
+    cmap, levels, norm = colorbar_map_levels(cube)
     # If overplotting, set required colorbars
     if overlay_cube:
-        over_cmap, over_levels, over_norm = _colorbar_map_levels(overlay_cube)
+        over_cmap, over_levels, over_norm = colorbar_map_levels(overlay_cube)
     if contour_cube:
-        cntr_cmap, cntr_levels, cntr_norm = _colorbar_map_levels(contour_cube)
+        cntr_cmap, cntr_levels, cntr_norm = colorbar_map_levels(contour_cube)
 
     # Make a subplot for each member.
     for member, subplot in zip(
@@ -858,13 +902,13 @@ def _plot_and_save_line_series(
     """
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
-    model_colors_map = _get_model_colors_map(cubes)
+    model_colors_map = get_model_colors_map(cubes)
 
     # Store min/max ranges.
     y_levels = []
 
     # Check match-up across sequence coords gives consistent sizes
-    _validate_cubes_coords(cubes, coords)
+    validate_cubes_coords(cubes, coords)
 
     for cube, coord in zip(cubes, coords, strict=True):
         label = None
@@ -899,7 +943,7 @@ def _plot_and_save_line_series(
                 )
 
         # Calculate the global min/max if multiple cubes are given.
-        _, levels, _ = _colorbar_map_levels(cube, axis="y")
+        _, levels, _ = colorbar_map_levels(cube, axis="y")
         if levels is not None:
             y_levels.append(min(levels))
             y_levels.append(max(levels))
@@ -984,10 +1028,10 @@ def _plot_and_save_vertical_line_series(
     # plot the vertical pressure axis using log scale
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
-    model_colors_map = _get_model_colors_map(cubes)
+    model_colors_map = get_model_colors_map(cubes)
 
     # Check match-up across sequence coords gives consistent sizes
-    _validate_cubes_coords(cubes, coords)
+    validate_cubes_coords(cubes, coords)
 
     for cube, coord in zip(cubes, coords, strict=True):
         label = None
@@ -1193,7 +1237,7 @@ def _plot_and_save_vector_plot(
     cube_vec_mag.rename(f"{cube_u.name()}_{cube_v.name()}_magnitude")
 
     # Specify the color bar
-    cmap, levels, norm = _colorbar_map_levels(cube_vec_mag)
+    cmap, levels, norm = colorbar_map_levels(cube_vec_mag)
 
     # Setup plot map projection, extent and coastlines and borderlines.
     axes = _setup_spatial_map(cube_vec_mag, fig, cmap)
@@ -1301,7 +1345,7 @@ def _plot_and_save_histogram_series(
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     ax = plt.gca()
 
-    model_colors_map = _get_model_colors_map(cubes)
+    model_colors_map = get_model_colors_map(cubes)
 
     # Set default that histograms will produce probability density function
     # at each bin (integral over range sums to 1).
@@ -1624,7 +1668,7 @@ def _plot_and_save_power_spectrum_series(
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     ax = plt.gca()
 
-    model_colors_map = _get_model_colors_map(cubes)
+    model_colors_map = get_model_colors_map(cubes)
 
     for cube in iter_maybe(cubes):
         # Calculate power spectrum
@@ -1655,7 +1699,7 @@ def _plot_and_save_power_spectrum_series(
             )
 
         # Calculate spectra
-        ps_array = _DCT_ps(cube_3d)
+        ps_array = DCT_ps(cube_3d)
 
         ps_cube = iris.cube.Cube(
             ps_array,
@@ -1850,7 +1894,7 @@ def _spatial_plot(
     recipe_title = get_recipe_metadata().get("title", "Untitled")
 
     # Ensure we've got a single cube.
-    cube = _check_single_cube(cube)
+    cube = check_single_cube(cube)
 
     # Check if there is a valid stamp coordinate in cube dimensions.
     if stamp_coordinate == "realization":
@@ -1915,45 +1959,6 @@ def _spatial_plot(
 
     # Make a page to display the plots.
     _make_plot_html_page(complete_plot_index)
-
-
-def _get_num_models(cube: iris.cube.Cube | iris.cube.CubeList) -> int:
-    """Return number of models based on cube attributes."""
-    model_names = list(
-        filter(
-            lambda x: x is not None,
-            {cb.attributes.get("model_name", None) for cb in iter_maybe(cube)},
-        )
-    )
-    if not model_names:
-        logging.debug("Missing model names. Will assume single model.")
-        return 1
-    else:
-        return len(model_names)
-
-
-def _validate_cube_shape(
-    cube: iris.cube.Cube | iris.cube.CubeList, num_models: int
-) -> None:
-    """Check all cubes have a model name."""
-    if isinstance(cube, iris.cube.CubeList) and len(cube) != num_models:
-        raise ValueError(
-            f"The number of model names ({num_models}) should equal the number "
-            f"of cubes ({len(cube)})."
-        )
-
-
-def _validate_cubes_coords(
-    cubes: iris.cube.CubeList, coords: list[iris.coords.Coord]
-) -> None:
-    """Check same number of cubes as sequence coordinate for zip functions."""
-    if len(cubes) != len(coords):
-        raise ValueError(
-            f"The number of CubeList entries ({len(cubes)}) should equal the number "
-            f"of sequence coordinates ({len(coords)})."
-            f"Check that number of time entries in input data are consistent if "
-            f"performing time-averaging steps prior to plotting outputs."
-        )
 
 
 ####################
@@ -2185,9 +2190,9 @@ def plot_line_series(
     # Ensure we have a name for the plot file.
     recipe_title = get_recipe_metadata().get("title", "Untitled")
 
-    num_models = _get_num_models(cube)
+    num_models = get_num_models(cube)
 
-    _validate_cube_shape(cube, num_models)
+    validate_cube_shape(cube, num_models)
 
     # Iterate over all cubes and extract coordinate to plot.
     cubes = iris.cube.CubeList(iter_maybe(cube))
@@ -2304,9 +2309,9 @@ def plot_vertical_line_series(
     # Store min/max ranges for x range.
     x_levels = []
 
-    num_models = _get_num_models(cubes)
+    num_models = get_num_models(cubes)
 
-    _validate_cube_shape(cubes, num_models)
+    validate_cube_shape(cubes, num_models)
 
     # Iterate over all cubes in cube or CubeList and plot.
     coords = []
@@ -2328,7 +2333,7 @@ def plot_vertical_line_series(
             ) from err
 
         # Get minimum and maximum from levels information.
-        _, levels, _ = _colorbar_map_levels(cube, axis="x")
+        _, levels, _ = colorbar_map_levels(cube, axis="x")
         if levels is not None:
             x_levels.append(min(levels))
             x_levels.append(max(levels))
@@ -2351,28 +2356,7 @@ def plot_vertical_line_series(
     # Matching the slices (matching by seq coord point; it may happen that
     # evaluated models do not cover the same seq coord range, hence matching
     # necessary)
-    def filter_cube_iterables(cube_iterables) -> bool:
-        return len(cube_iterables) == len(coords)
-
-    cube_iterables = filter(
-        filter_cube_iterables,
-        (
-            iris.cube.CubeList(
-                s
-                for s in itertools.chain.from_iterable(
-                    cb.slices_over(sequence_coordinate) for cb in cubes
-                )
-                if s.coord(sequence_coordinate).points[0] == point
-            )
-            for point in sorted(
-                set(
-                    itertools.chain.from_iterable(
-                        cb.coord(sequence_coordinate).points for cb in cubes
-                    )
-                )
-            )
-        ),
-    )
+    cube_iterables = _find_matched_slices(cubes, sequence_coordinate)
 
     # Create a plot for each value of the sequence coordinate.
     # Allowing for multiple cubes in a CubeList to be plotted in the same plot for
@@ -2611,14 +2595,14 @@ def scatter_plot(
     # Iterate over all cubes in cube or CubeList and plot.
     for cube_iter in iter_maybe(cube_x):
         # Check cubes are correct shape.
-        cube_iter = _check_single_cube(cube_iter)
+        cube_iter = check_single_cube(cube_iter)
         if cube_iter.ndim > 1:
             raise ValueError("cube_x must be 1D.")
 
     # Iterate over all cubes in cube or CubeList and plot.
     for cube_iter in iter_maybe(cube_y):
         # Check cubes are correct shape.
-        cube_iter = _check_single_cube(cube_iter)
+        cube_iter = check_single_cube(cube_iter)
         if cube_iter.ndim > 1:
             raise ValueError("cube_y must be 1D.")
 
@@ -2821,12 +2805,15 @@ def plot_histogram_series(
     # Internal plotting function.
     plotting_func = _plot_and_save_histogram_series
 
-    num_models = _get_num_models(cubes)
+    num_models = get_num_models(cubes)
 
-    _validate_cube_shape(cubes, num_models)
+    validate_cube_shape(cubes, num_models)
 
-    _check_sequence(cubes, sequence_coordinate)
+    # If several histograms are plotted, check sequence_coordinate
+    check_sequence_coordinate(cubes, sequence_coordinate)
 
+    # Get axis minimum and maximum from levels information.
+    # If no levels set, derive minima and maxima from data in CubeList.
     vmin, vmax = _set_axis_range(cubes)
 
     # Make postage stamp plots if stamp_coordinate exists and has more than a
@@ -3080,11 +3067,12 @@ def plot_power_spectrum_series(
     # Internal plotting function.
     plotting_func = _plot_and_save_power_spectrum_series
 
-    num_models = _get_num_models(cubes)
+    num_models = get_num_models(cubes)
 
-    _validate_cube_shape(cubes, num_models)
+    validate_cube_shape(cubes, num_models)
 
-    _check_sequence(cubes, sequence_coordinate)
+    # If several power spectra are plotted, check sequence_coordinate
+    check_sequence_coordinate(cubes, sequence_coordinate)
 
     # Make postage stamp plots if stamp_coordinate exists and has more than a
     # single point. If single_plot is True:
@@ -3144,94 +3132,3 @@ def plot_power_spectrum_series(
     _make_plot_html_page(complete_plot_index)
 
     return cubes
-
-
-def _DCT_ps(y_3d):
-    """Calculate power spectra for regional domains.
-
-    Parameters
-    ----------
-    y_3d: 3D array
-        3 dimensional array to calculate spectrum for.
-        (2D field data with 3rd dimension of time)
-
-    Returns: ps_array
-        Array of power spectra values calculated for input field (for each time)
-
-    Method for regional domains:
-    Calculate power spectra over limited area domain using Discrete Cosine Transform (DCT)
-    as described in Denis et al 2002 [Denis_etal_2002]_.
-
-    References
-    ----------
-    .. [Denis_etal_2002] Bertrand Denis, Jean Côté and René Laprise (2002)
-        "Spectral Decomposition of Two-Dimensional Atmospheric Fields on
-        Limited-Area Domains Using the Discrete Cosine Transform (DCT)"
-        Monthly Weather Review, Vol. 130, 1812-1828
-        doi: https://doi.org/10.1175/1520-0493(2002)130<1812:SDOTDA>2.0.CO;2
-    """
-    Nt, Ny, Nx = y_3d.shape
-
-    # Max coefficient
-    Nmin = min(Nx - 1, Ny - 1)
-
-    # Create alpha matrix (of wavenumbers)
-    alpha_matrix = _create_alpha_matrix(Ny, Nx)
-
-    # Prepare output array
-    ps_array = np.zeros((Nt, Nmin))
-
-    # Loop over time to get spectrum for each time.
-    for t in range(Nt):
-        y_2d = y_3d[t]
-
-        # Apply 2D DCT to transform y_3d[t] from physical space to spectral space.
-        # fkk is a 2D array of DCT coefficients, representing the amplitudes of
-        # cosine basis functions at different spatial frequencies.
-
-        # normalise spectrum to allow comparison between models.
-        fkk = fft.dctn(y_2d, norm="ortho")
-
-        # Normalise fkk
-        fkk = fkk / np.sqrt(Ny * Nx)
-
-        # calculate variance of spectral coefficient
-        sigma_2 = fkk**2 / Nx / Ny
-
-        # Group ellipses of alphas into the same wavenumber k/Nmin
-        for k in range(1, Nmin + 1):
-            alpha = k / Nmin
-            alpha_p1 = (k + 1) / Nmin
-
-            # Sum up elements matching k
-            mask_k = np.where((alpha_matrix >= alpha) & (alpha_matrix < alpha_p1))
-            ps_array[t, k - 1] = np.sum(sigma_2[mask_k])
-
-    return ps_array
-
-
-def _create_alpha_matrix(Ny, Nx):
-    """Construct an array of 2D wavenumbers from 2D wavenumber pair.
-
-    Parameters
-    ----------
-    Ny, Nx:
-        Dimensions of the 2D field for which the power spectra is calculated. Used to
-        create the array of 2D wavenumbers. Each Ny, Nx pair is associated with a
-        single-scale parameter.
-
-    Returns: alpha_matrix
-        normalisation of 2D wavenumber axes, transforming the spectral domain into
-        an elliptic coordinate system.
-
-    """
-    # Create x_indices: each row is [1, 2, ..., Nx]
-    x_indices = np.tile(np.arange(1, Nx + 1), (Ny, 1))
-
-    # Create y_indices: each column is [1, 2, ..., Ny]
-    y_indices = np.tile(np.arange(1, Ny + 1).reshape(Ny, 1), (1, Nx))
-
-    # Compute alpha_matrix
-    alpha_matrix = np.sqrt((x_indices**2) / Nx**2 + (y_indices**2) / Ny**2)
-
-    return alpha_matrix
