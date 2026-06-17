@@ -18,6 +18,7 @@ import logging
 
 import iris
 import iris.exceptions
+import numpy as np
 import scores
 import scores.continuous
 import xarray as xr
@@ -76,6 +77,9 @@ def _sort_cubes_for_verification(cubes: CubeList):
         except iris.exceptions.CoordinateNotFoundError:
             pass
 
+    # Extract just common time points.
+    base, other = _extract_common_time_points(base, other)
+
     # Get spatial coord names.
     base_lat_name, base_lon_name = get_cube_yxcoordname(base)
     other_lat_name, other_lon_name = get_cube_yxcoordname(other)
@@ -117,11 +121,17 @@ def _sort_cubes_for_verification(cubes: CubeList):
     base_lat_direction = is_increasing(base.coord(base_lat_name).points)
     other_lat_direction = is_increasing(other.coord(other_lat_name).points)
     if base_lat_direction != other_lat_direction:
-        # Regrid the data onto the same grid (this should only flip the array and not alter the data).
-        other = other.regrid(base, iris.analysis.Linear())
-
-    # Extract just common time points.
-    base, other = _extract_common_time_points(base, other)
+        # Copy base cube for correct coordinate information.
+        other_tmp = base.copy()
+        # Flip the data and place in the copied cube.
+        other_tmp.data = np.flip(
+            other.data, other.coord(other_lat_name).cube_dims(other)
+        )
+        # Use original name and units from the other cube.
+        other_tmp.rename(other.name())
+        other_tmp.units = other.units
+        # Replace the cube.
+        other = other_tmp
 
     # Equalise attributes so we can merge.
     fully_equalise_attributes(CubeList([base, other]))
