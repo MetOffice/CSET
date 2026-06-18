@@ -1,5 +1,4 @@
 category: Histogram
-#title: "Histogram masked Nimrod $VARNAME\n$RADAR_NAME"
 title: "Masked Nimrod mean times series $VARNAME\n$RADAR_NAME"
 description: Timeseries of masked Nimrod radar observations.
 
