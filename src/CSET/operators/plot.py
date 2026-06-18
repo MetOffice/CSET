@@ -800,7 +800,7 @@ def _plot_and_save_spatial_plot(
     # Add watermark with min/max/mean. Currently not user togglable.
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
     axes.annotate(
-        f"Min: {np.min(cube.data):.3g} Max: {np.max(cube.data):.3g} Mean: {np.mean(cube.data):.3g}",
+        f"Min: {np.nanmin(cube.data):.3g} Max: {np.nanmax(cube.data):.3g} Mean: {np.nanmean(cube.data):.3g}",
         xy=(0.025, yinfopad),
         xycoords="axes fraction",
         xytext=(-5, 5),
