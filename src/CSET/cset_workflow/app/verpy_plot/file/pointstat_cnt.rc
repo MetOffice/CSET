@@ -14,7 +14,7 @@ comment: dates and times. Sourced via environment variables
 [VerPy_plot_general]
 comment = general plot details
 stats =  [7051, 7052]
-param =  [(16, 1, -0.1), 'rh']
+param =  [(16, 1, -1.0), 'rh']
 interp = NEAREST
 
 [VerPyPlot_plot1]

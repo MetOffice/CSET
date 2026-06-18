@@ -155,11 +155,20 @@ CSET.operators.temperature
 .. automodule:: CSET.operators.temperature
    :members:
 
+Verification Operators
+~~~~~~~~~~~~~~~~~~~~~~
+
+CSET.operators.scoreswrappers
+-----------------------------
+
+.. automodule:: CSET.operators.scoreswrappers
+   :members:
+
 Wind Operators
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
 
 CSET.operators.wind
-------------------------
+-------------------
 
 .. automodule:: CSET.operators.wind
    :members:
