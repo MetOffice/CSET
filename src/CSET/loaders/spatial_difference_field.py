@@ -77,7 +77,7 @@ def load(conf: Config):
             )
 
     # Model level fields.
-    if conf.SPATIAL_MLEVEL_DIFFERENCE:
+    if conf.SPATIAL_DIFFERENCE_MLEVEL_FIELD:
         base_model = models[0]
         for model, field, mlevel, method in itertools.product(
             models[1:],
