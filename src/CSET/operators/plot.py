@@ -346,6 +346,9 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
         # Overwrite cmap, levels and norm for specific variables that
         # require custom colorbar_map as these can not be defined in the
         # JSON file.
+        cmap, levels, norm = _custom_colourmap_cloud_top_altitude(
+            cube, cmap, levels, norm
+        )
         cmap, levels, norm = _custom_colourmap_precipitation(cube, cmap, levels, norm)
         cmap, levels, norm = _custom_colourmap_visibility_in_air(
             cube, cmap, levels, norm
@@ -443,6 +446,11 @@ def _setup_spatial_map(
             axes = figure.add_subplot(projection=projection)
 
         # Add coastlines and borderlines if cube contains x and y map coordinates.
+        # add coastlines if cloud top altitude
+        if "cloud_top_altitude" in cube.name():
+            coastcol = "white"
+            axes.coastlines(resolution="10m", color=coastcol)
+
         # Avoid adding lines for masked data or specific fixed ancillary spatial plots.
         if iris.util.is_masked(cube.data) or any(
             name in cube.name() for name in ["land_", "orography", "altitude"]
@@ -818,8 +826,61 @@ def _plot_and_save_spatial_plot(
         cbar.set_ticklabels([f"{level:.2f}" for level in levels])
         if "rainfall" or "snowfall" or "visibility" in cube.name():
             cbar.set_ticklabels([f"{level:.3g}" for level in levels])
-        logging.debug("Set colorbar ticks and labels.")
 
+        logging.debug("Set colorbar ticks and labels.")
+    # if "cloud_top_altitude" in cube.name():
+    if (
+        "cloud_top_altitude" in cube.name() and "difference" not in cube.long_name
+        # and "mask" not in cube.long_name
+    ):
+        cbar.set_ticks(
+            [
+                0.001,
+                0.5,
+                1.0000,
+                1.500,
+                2.000,
+                3.000,
+                4.000,
+                5.000,
+                6.000,
+                7.000,
+                8.000,
+                9.000,
+                10.000,
+                15.000,
+                20.000,
+                25.000,
+                30.000,
+                35.000,
+                40.000,
+            ]
+        )
+        cbar.set_ticklabels(
+            [
+                "1",
+                "500",
+                "1000",
+                "1500",
+                "2000",
+                "3000",
+                "4000",
+                "5000",
+                "6000",
+                "7000",
+                "8000",
+                "9000",
+                "10kft",
+                "15kft",
+                "20kft",
+                "25kft",
+                "30kft",
+                "35kft",
+                "40kft",
+            ],
+            size=6,
+        )
+        cbar.set_label(label=f"{cube.name()}", size=14)
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
     logging.info("Saved spatial plot to %s", filename)
@@ -2176,6 +2237,73 @@ def _custom_colormap_probability(
         levels = [0.0, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
         norm = mcolors.BoundaryNorm(levels, cmap.N)
         return cmap, levels, norm
+
+
+def _custom_colourmap_cloud_top_altitude(cube: iris.cube.Cube, cmap, levels, norm):
+    """Return a custom colourmap for the current recipe."""
+    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    if (
+        any("cloud_top_altitude" in name for name in varnames)
+        and "difference" not in cube.long_name
+        and "mask" not in cube.long_name
+    ):
+        levels = [
+            0,
+            0.001,
+            0.500,
+            1,
+            1.5,
+            2.0,
+            3.0,
+            4.0,
+            5.0,
+            6.0,
+            7.0,
+            8.0,
+            9.0,
+            10.0,
+            15.0,
+            20.0,
+            25.0,
+            30.0,
+            35.0,
+            40.0,
+            45.0,
+        ]
+        colors = [
+            "#000000",  # 0–1
+            "#ff1a1a",  # 1–500
+            "#ff7f00",  # 500–1000
+            "#f0b67a",  # 1000–1500
+            "#e6e67a",  # 1500–2000
+            "#8c008c",  # 2000–3000
+            "#ff00ff",  # 3000–4000
+            "#d9a3d9",  # 4000–5000
+            "#00e673",  # 5000–6000
+            "#66ff00",  # 6000–7000
+            "#7fbf00",  # 7000–8000
+            "#808000",  # 8000–9000
+            "#008000",  # 9000–10000
+            "#8c4b00",  # 10–15kft
+            "#0b3d91",  # 15–20kft
+            "#1a00ff",  # 20–25kft
+            "#4aa3d9",  # 25–30kft
+            "#1fd1d1",  # 30–35kft
+            "#bfbfbf",  # 35–40kft
+            "#ffffff",  # 40k+
+        ]
+        # Create a custom colormap
+        cmap = mcolors.ListedColormap(colors)
+        # Normalize the levels
+        norm = mcolors.BoundaryNorm(levels, cmap.N)
+        cmap.set_bad("black")
+        logging.info("change colormap for cloud_top_altitude variable colorbar.")
+    else:
+        # do nothing and keep existing colorbar attributes
+        cmap = cmap
+        levels = levels
+        norm = norm
+    return cmap, levels, norm
 
 
 def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):

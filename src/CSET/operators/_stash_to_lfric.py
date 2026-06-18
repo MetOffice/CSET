@@ -7,6 +7,11 @@ Please update the original code source as well as this file if changes required.
 # Set up UM STASH code to cube name mapping
 # Form of entry is <stashcode>: (<long_name>, <grid>)
 STASH_TO_LFRIC = {
+    "m01s00i075": ("number_concentration_of_cloud_droplets_after_microphysics", "face"),
+    "m01s00i076": ("number_concentration_of_rain_after_microphysics", "face"),
+    "m01s00i078": ("number_concentration_of_cloud_ice_after_microphysics", "face"),
+    "m01s00i079": ("number_concentration_of_snow_after_microphysics", "face"),
+    "m01s00i081": ("number_concentration_of_graupel_after_microphysics", "face"),
     "m01s00i002": ("eastward_wind_at_cell_centres", "face"),
     "m01s00i003": ("northward_wind_at_cell_centres", "face"),
     "m01s00i004": ("air_potential_temperature", "face"),
@@ -320,6 +325,7 @@ STASH_TO_LFRIC = {
         "ceilometer_filtered_combined_cloud_amount_maximum_random_overlap",
         "face",
     ),
+    "m01s09i240": ("cloud_top_altitude", "face"),
     "m01s10i185": ("eastward_wind_increment_from_solver", "face"),
     "m01s10i186": ("northward_wind_increment_from_solver", "face"),
     "m01s10i187": ("vertical_air_velocity_increment_from_solver", "face"),
@@ -522,6 +528,7 @@ RAL3_LFRic_mods = {
     "m01s09i204": ("medium_type_cloud_area_fraction", "face"),
     "m01s09i205": ("high_type_cloud_area_fraction", "face"),
     "m01s09i210": ("cloud_base_altitude", "face"),
+    "m01s09i240": ("cloud_top_altitude", "face"),
     "m01s09i218": ("cloud_fraction_below_1000feet_asl", "face"),
     "m01s09i231": ("combined_cloud_amount", "face"),
     "m01s15i229": ("potential_vorticity_at_pressure_levels", "face"),

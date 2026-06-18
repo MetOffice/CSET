@@ -373,6 +373,7 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     cube = _convert_cube_units_callback(cube)
     cube = _grid_longitude_fix_callback(cube)
     _fix_lfric_cloud_base_altitude(cube)
+    _fix_lfric_cloud_top_altitude(cube)
     _proleptic_gregorian_fix(cube)
     _lfric_time_callback(cube)
     _lfric_forecast_period_callback(cube)
@@ -845,6 +846,14 @@ def _fix_lfric_cloud_base_altitude(cube: iris.cube.Cube):
     if any("cloud_base_altitude" in name for name in varnames):
         # Mask cube where set > 144kft to catch default 144.35695538058164
         cube.data = dask.array.ma.masked_greater(cube.core_data(), 144.0)
+
+
+def _fix_lfric_cloud_top_altitude(cube: iris.cube.Cube):
+    """Mask cloud_top_altitude diagnostic in regions with no cloud."""
+    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    if any("cloud_top_altitude" in name for name in varnames):
+        # Mask cube where set < 0 to catch default negative numbers
+        cube.data = dask.array.ma.masked_less(cube.core_data(), 0)
 
 
 def _fix_um_winds(cubes: iris.cube.CubeList):
