@@ -18,6 +18,7 @@ import json
 import logging
 from pathlib import Path
 
+import cartopy.crs as ccrs
 import iris.coords
 import iris.cube
 import matplotlib as mpl
@@ -69,6 +70,52 @@ def test_setup_spatial_map_global(cube):
     assert bounds[1] == np.max(cube.coord("longitude").points) - 180.0
     assert bounds[2] == np.min(cube.coord("latitude").points)
     assert bounds[3] == np.max(cube.coord("latitude").points)
+
+
+def test_setup_spatial_map_npole():
+    """Setup spatial map for Arctic example."""
+    cube = iris.cube.Cube(
+        np.random.rand(5, 36), standard_name="air_temperature", units="K"
+    )
+    cube.add_dim_coord(
+        iris.coords.DimCoord(
+            np.arange(50, 100, 10), standard_name="latitude", units="degrees"
+        ),
+        0,
+    )
+    cube.add_dim_coord(
+        iris.coords.DimCoord(
+            np.arange(0, 360, 10), standard_name="longitude", units="degrees"
+        ),
+        1,
+    )
+    figure = mpl.figure.Figure()
+    axes_gl = plot._setup_spatial_map(cube, figure, mpl.colormaps["viridis"])
+    assert axes_gl == figure.gca()
+    assert axes_gl.projection == ccrs.NorthPolarStereo(central_longitude=0.0)
+
+
+def test_setup_spatial_map_spole():
+    """Setup spatial map for Antarctic example."""
+    cube = iris.cube.Cube(
+        np.random.rand(4, 36), standard_name="air_temperature", units="K"
+    )
+    cube.add_dim_coord(
+        iris.coords.DimCoord(
+            np.arange(-90, -50, 10), standard_name="latitude", units="degrees"
+        ),
+        0,
+    )
+    cube.add_dim_coord(
+        iris.coords.DimCoord(
+            np.arange(-180, 180, 10), standard_name="longitude", units="degrees"
+        ),
+        1,
+    )
+    figure = mpl.figure.Figure()
+    axes_gl = plot._setup_spatial_map(cube, figure, mpl.colormaps["viridis"])
+    assert axes_gl == figure.gca()
+    assert axes_gl.projection == ccrs.SouthPolarStereo(central_longitude=0.0)
 
 
 def test_set_title_and_filename_filename_single_sequence(cube):
@@ -178,6 +225,37 @@ def test_set_title_and_filename_year_one(cube):
     )
     assert plot_filename == "recipe.png"
     assert plot_title == "recipe"
+
+
+def test_set_axis_range_single_cube(cube):
+    """Test _set_axis_range with a single cube, without levels set."""
+    cubes = iris.cube.CubeList([cube])
+
+    vmin, vmax = plot._set_axis_range(cubes)
+
+    assert vmin == cube.data.min()
+    assert vmax == cube.data.max()
+
+
+def test_set_axis_range_cubelist(cube):
+    """Test _set_axis_range with a cubelist, without levels set."""
+    cubes = iris.cube.CubeList([cube, 2.0 * cube])
+
+    vmin, vmax = plot._set_axis_range(cubes)
+
+    assert vmin == cube.data.min()
+    assert vmax == 2.0 * cube.data.max()
+
+
+def test_set_axis_range_levels(cube):
+    """Test _set_axis_range with a single cube, for variable with levels set."""
+    cube.rename("land_binary_mask")
+    cubes = iris.cube.CubeList([cube])
+
+    vmin, vmax = plot._set_axis_range(cubes)
+
+    assert vmin == 0.0
+    assert vmax == 1.0
 
 
 def test_spatial_contour_plot(cube, tmp_working_dir):
@@ -304,6 +382,15 @@ def test_pcolormesh_plot_global(global_cube, caplog, tmp_working_dir):
             if message == "Adjusting plot bounds to fit global extent.":
                 message_match = True
     assert message_match
+
+
+def test_spatial_scatter(cube, tmp_working_dir):
+    """Save a spatial plot with scatter of cube points."""
+    cube.coord("grid_latitude").rename("station")
+    plot.spatial_pcolormesh_plot(cube, sequence_coordinate="time")
+    assert Path("untitled_20220921030000.png").is_file()
+    assert Path("untitled_20220921040000.png").is_file()
+    assert Path("untitled_20220921050000.png").is_file()
 
 
 def test_postage_stamp_pcolormesh_plot(ensemble_cube, tmp_working_dir):
@@ -622,6 +709,30 @@ def test_plot_and_save_postage_stamps_in_single_plot_histogram_series(
         histtype="step",
     )
     assert Path("test.png").is_file()
+
+
+def test_plot_scatter_series(cube, tmp_working_dir):
+    """Testing scatter series code produces file."""
+    cube1 = cube.copy()
+    cube1.attributes["model_name"] = "model1"
+    cube2 = cube.copy()
+    cube2.attributes["model_name"] = "model2"
+    plot.plot_scatter_series(
+        [cube1, cube2], filename="test.png", sequence_coordinate="time"
+    )
+    assert Path("test_20220921030000.png").is_file()
+    assert Path("test_20220921040000.png").is_file()
+    assert Path("test_20220921050000.png").is_file()
+
+
+def test_plot_scatter_series_insufficient_models(cube, tmp_working_dir):
+    """Test error raised for scatter plot with insufficient number of models."""
+    # cube = collapse.collapse(cube, ["grid_latitude", "grid_longitude"], "MEAN")
+    with pytest.raises(
+        ValueError,
+        match="Scatter plot series requires multiple number of models in input data.",
+    ):
+        plot.plot_scatter_series([cube, cube])
 
 
 def test_plot_power_spectrum_with_filename(field2d_cube, tmp_working_dir):
