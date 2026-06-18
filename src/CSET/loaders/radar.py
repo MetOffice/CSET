@@ -85,6 +85,9 @@ def get_radar_sources(conf) -> list[dict]:
 
 def load(conf: Config):
     """Yield recipes from the given workflow configuration."""
+    # Load a list of model detail dictionaries.
+    # models = get_models(conf.asdict())
+
     # Load the required radar observation sources.
     radar_sources = get_radar_sources(conf)
 
@@ -101,6 +104,91 @@ def load(conf: Config):
         for radar in radar_sources
         if radar["varname"] == "Hourly wts accumulation"
     ]
+
+    #    # Radar masking based on sea mask.
+    #    if conf.SPATIAL_SURFACE_FIELD:
+    #        for field in conf.SURFACE_FIELDS:
+    #            yield RawRecipe(
+    #                recipe="sea_mask_for_surface_domain_mean_time_series.yaml",
+    #                variables={
+    #                    "VARNAME": field,
+    #                    "MODEL_NAME": [model["name"] for model in models],
+    #                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+    #                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+    #                    if conf.SELECT_SUBAREA
+    #                    else None,
+    #                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+    #                },
+    #                model_ids=[model["id"] for model in models],
+    #                aggregation=False,
+    #            )
+
+    # Radar masking of radar obs based on sea mask.
+    if conf.SPATIAL_SURFACE_FIELD:
+        field = "Hourly rain accumulation"
+        yield RawRecipe(
+            recipe="radar_mask_model.yaml",
+            variables={
+                "VARNAME": field,
+                "MODEL_LABEL": "Nimrod2km",
+                "MASK_LABEL": "Nimrod2km",
+                "METHOD": "SEQ",
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+                "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+            },
+            model_ids=["Nimrod2km", "Nimrod2km_weights"],
+            aggregation=False,
+        )
+
+    # Radar masking of model rainfall based on sea mask.
+    if conf.SPATIAL_SURFACE_FIELD:
+        field = "surface_microphysical_rainfall_rate"
+        yield RawRecipe(
+            recipe="radar_mask_model.yaml",
+            variables={
+                "VARNAME": field,
+                "MODEL_LABEL": "ModelA",
+                "MASK_LABEL": "Nimrod2km",
+                "METHOD": "SEQ",
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+                "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+            },
+            model_ids=["1", "Nimrod2km_weights"],
+            aggregation=False,
+        )
+
+    # Surface (2D) fields for model rainfall masked by Nimrod radar.
+    #
+    # The different sources of Nimrod rainfall accumulation have
+    # different spatial grids. So each source requires its own
+    # recipe to prevent incompatible cubes being created.
+    #    if conf.SPATIAL_SURFACE_FIELD:
+    #        radar_source = ["Nimrod_2km"]
+    #        for radar in radar_source:
+    #            model_labels = [model["id"] for model in models]
+    #            radar_label = ["Nimrod2km_weights"]
+    #            combined_ids = [model_labels[0]] + radar_label
+    #            print("Combined ids is: ", combined_ids)
+    #            yield RawRecipe(
+    #                recipe="radar_plot_sequence_rainfall.yaml",
+    ##                model_ids=radar["id"],  # -> Becomes $INPUT_PATHS
+    #                model_ids=combined_ids,
+    #                variables={
+    ##                    "VARNAME": radar["varname"],
+    ##                    "RADAR_NAME": radar["name"],
+    #                    "RADAR_NAME": "Nimrod_2km_weights",
+    ##                    "MODEL_NAME": [model["name"] for model in models],
+    #                    "MODEL_NAME": "ModelA",
+    #                    "METHOD": "SEQ",
+    #                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+    #                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+    #                    if conf.SELECT_SUBAREA
+    #                    else None,
+    #                },
+    #                aggregation=False,
+    #            )
 
     # Surface (2D) fields for Nimrod radar rainfall.
     #
