@@ -12,7 +12,7 @@ steps:
         operator: constraints.combine_constraints
         varname_constraint:
             operator: constraints.generate_var_constraint
-            varname: air_pressure_at_mean_sea_level
+            varname: air_pressure_at_sea_level
         cell_methods_constraint:
             operator: constraints.generate_cell_methods_constraint
             cell_methods: []
