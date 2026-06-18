@@ -14,12 +14,9 @@
 
 """Operators to perform various kind of filtering."""
 
-import logging
-
 import iris
 import iris.cube
 import iris.exceptions
-import numpy as np
 
 from CSET._common import iter_maybe
 from CSET.operators.filters import apply_mask, generate_mask
@@ -230,115 +227,30 @@ def radar_apply_mask(
 
     Examples
     --------
-    >>> land_points_only = apply_mask(temperature, land_mask)
+    >>> land_points_only = radar_apply_mask( surface_microphysical_rainfall_rate, Nimrod2km)
     """
-    print("original_field cube: ", original_field)
-    print("mask cube", mask)
-
     # Create an empty cubelist to hold the filtered fields.
     masked_fields = iris.cube.CubeList([])
 
     # Loop over the input mask and field cubes.
     for M, F in zip(iter_maybe(mask), iter_maybe(original_field), strict=True):
-        # Ensure mask data are floats and only 1s or NaNs.
-        print(" type(M.data)", type(M.data))
-        M.data = np.float64(M.data)
-        M.data[M.data == 0.0] = np.nan
-        M.data[~np.isnan(M.data)] = 1.0
-        print(" type(M.data) v2", type(M.data))
-        print("---> M[0][300][:].data ", M[0][300][:].data)
-        print(
-            "---> max(M) ", max(M[0][300][:].data), " min(M) ", min(M[0][300][:].data)
-        )
-        logging.info(
-            "Mask set to 1 or 0s, if addition of multiple masks results"
-            "in values > 1 these are set to 1."
-        )
-
-        print("")
-        print("---> here is F[0]")
-        print(F[0])
-        print("")
-
-        print("")
-        print("---> here is F[1]")
-        print(F[1])
-        print("")
-
-        #        print("")
-        #        print("---> here is F[24]")
-        #        print(F[24])
-        #        print("")
-
-        # Apply the mask
         masked_field = F.copy()
-        print(" M.shape is ", M.shape)
-        print(" masked_field.shape is ", masked_field.shape)
-        print(" M[0].shape is ", M[0].shape)
-        print(" masked_field[0].shape is ", masked_field[0].shape)
 
-        # If the field and mask on on different grids, then regrid the field.
+        # If the field and mask are on different grids, then regrid the field.
         if M[0].shape != masked_field[0].shape:
-            regridded_cube = masked_field.regrid(M, iris.analysis.Linear())
-            masked_field = regridded_cube
+            masked_field = masked_field.regrid(M, iris.analysis.Linear())
 
-            print(" ---> Have regridded the field")
+        # Apply the mask.
+        min_timesteps = min(M.shape[0], masked_field.shape[0])
+        masked_field = apply_mask(masked_field[0:min_timesteps], M[0:min_timesteps])
 
-            print("")
-            print("---> here is masked_field[0]")
-            print(masked_field[0])
-            print("")
+        # Attach and attribute to the masked field detailing the mask used.
+        masked_field.attributes["mask"] = f"mask_of_{F.name()}"
 
-            print(" M.shape is ", M.shape)
-            print(" masked_field.shape is ", masked_field.shape)
-            print(" M[0].shape is ", M[0].shape)
-            print(" masked_field[0].shape is ", masked_field[0].shape)
+        # Append the masked field to the output list of masked fields.
+        masked_fields.append(masked_field)
 
-        print("")
-        print("---> check how many time instances there are of both field and mask")
-        print("---> masked_field.shape[0] ", masked_field.shape[0])
-        print("---> M.shape[0] ", M.shape[0])
-
-        print("")
-        # print("---> max(M)", max(list(M.data)))
-
-        loop_i = min(M.shape[0], masked_field.shape[0])
-        for i in range(loop_i):
-            print("  i is ", i)
-            # print("---> max(M[i]) ", max(M[i].data), " min(M[i]) ", min(M[i].data))
-            # print("---> max(M[i]) ", max(list(M[i].data)), " min(M[i]) ", min(list(M[i].data)))
-            # masked_field[i].data *= M[i].data
-            # masked_field[i] = apply_mask(masked_field[i], M[i])
-            # mask_array = M[i][:][:].data.filled(np.array)
-            mask_array = M[i].data.filled(np.array)
-            print(" type(M.data)", type(M.data))
-            print(" type(mask_array)", type(mask_array))
-            masked_field[i][:][:].data *= mask_array
-            # masked_field[i][:][:].data *= M[i][:][:].data
-            # print("---> max(mask_array) ", max(mask_array), " min(mask_array ) ", min(mask_array) )
-            print(
-                "---> max(M[i][300]) ",
-                max(M[i][300].data),
-                " min(M[i][300]) ",
-                min(M[i][300].data),
-            )
-            print(
-                "---> max(F[i][300]) ",
-                max(masked_field[i][300].data),
-                " min(F[i][300]) ",
-                min(masked_field[i][300].data),
-            )
-            # print("  check 1 ")
-            masked_field[i].attributes["mask"] = f"mask_of_{F.name()}"
-            # print("  check 2 ")
-            masked_fields.append(masked_field[i])
-
-    #        if M[0].shape == F[0].shape:
-    #          masked_field.data *= M.data
-    #        masked_field.attributes["mask"] = f"mask_of_{F.name()}"
-    #        masked_fields.append(masked_field)
-
-    print(" len(masked_fields) ", len(masked_fields))
+    # Return either a single cube or a cubelist.
     if len(masked_fields) == 1:
         return masked_fields[0]
     else:
