@@ -63,13 +63,28 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
 
     Returns
     -------
-    varname_constraint: iris.Constraint
+    An Iris constraint for either:
+      - a single UM STASH code
+      - a single variable name
+      - a list of variable names (Cardington multi-input case)
     """
-    if re.match(r"m[0-9]{2}s[0-9]{2}i[0-9]{3}$", varname):
-        varname_constraint = iris.AttributeConstraint(STASH=varname)
-    else:
-        varname_constraint = iris.Constraint(name=varname)
-    return varname_constraint
+    _STASH_RE = re.compile(r"m\d{2}s\d{2}i\d{3}$")
+    # ---- CASE 1: list of variable names (e.g. Cardington multi-variable) ----
+    if isinstance(varname, (list, tuple)):
+        return iris.Constraint(
+            cube_func=lambda cube: (
+                cube.long_name in varname
+                or cube.standard_name in varname
+                or cube.var_name in varname
+            )
+        )
+
+    # ---- CASE 2: single UM STASH code ----
+    if _STASH_RE.match(varname):
+        return iris.AttributeConstraint(STASH=varname)
+
+    # ---- CASE 3: single variable name ----
+    return iris.Constraint(name=varname)
 
 
 def generate_level_constraint(

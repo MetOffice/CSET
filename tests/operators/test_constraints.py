@@ -16,6 +16,8 @@
 
 from datetime import datetime
 
+import iris
+import numpy as np
 import pytest
 
 from CSET.operators import constraints
@@ -277,6 +279,33 @@ def test_generate_attribute_constraint_with_value():
     )
     expected_attr_constraint = "AttributeConstraint({'test': '2'})"
     assert expected_attr_constraint in repr(attr_constraint)
+
+
+def test_generate_var_constraint_multiple_names():
+    """Test constraint works for multiple variable names."""
+    # Create two cubes with different names
+    cube1 = iris.cube.Cube(np.arange(5), long_name="temperature_long")
+    cube1.var_name = "var_temperature"
+    cube2 = iris.cube.Cube(np.arange(5), standard_name="wind_speed")
+    # Third cube that should NOT match
+    cube3 = iris.cube.Cube(np.arange(5), long_name="surface_pressure")
+    # Generate constraint with multiple names
+    constraint = constraints.generate_var_constraint(["var_temperature", "wind_speed"])
+    # Apply constraint
+    cubes = iris.cube.CubeList([cube1, cube2, cube3])
+    result = cubes.extract(constraint)
+    # Check correct cubes are selected
+    result_names = [c.name() for c in result]
+
+    assert cube1 in result
+    assert cube2 in result
+    assert cube3 not in result
+
+    assert "temperature_long" in result_names
+    assert "wind_speed" in result_names
+    assert "surface_pressure" not in result_names
+    # Should only return 2 cubes
+    assert len(result) == 2
 
 
 def test_generate_remove_single_level_constraint():
