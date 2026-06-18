@@ -49,6 +49,9 @@ test-full: pre-commit ## Run all tests, including slow or network reliant.
 	playwright install --only-shell chromium
 	pytest -vv --cov --cov-append --cov-config=pyproject.toml --numprocesses logical
 
+update-dev-deps:  ## Update pre-commit hooks and conda lock files for the development environment.
+	scripts/update-developer-dependencies.sh
+
 # Mark targets as 'phony' to indicate they don't actually produce a file with
 # the same name as their target. Basically for actions rather than files.
-.PHONY: help setup docs test test-fast test-full prepare-lockfiles conda
+.PHONY: help setup docs test test-fast test-full prepare-lockfiles conda update-dev-deps
