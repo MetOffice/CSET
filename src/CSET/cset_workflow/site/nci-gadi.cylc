@@ -30,7 +30,7 @@
         platform = gadi_background
         [[[ environment ]]]
             PROJECT = {{ PROJECT }}
-            PYTHONPATH = {{VERPY_DIR}}{% if CSET_DIR is defined %}:{{CSET_DIR}}{% endif %}
+            PYTHONPATH = {{VERPY_DIR}}{% if CSET_DIR is defined %}:{{CSET_DIR}}/src{% endif %}
 
 {% if RUN_METPLUS_GRID_STAT|default(False) or RUN_METPLUS_POINT_STAT|default(False) %}
     [[METPLUS]]
