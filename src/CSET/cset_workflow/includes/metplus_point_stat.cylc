@@ -1,3 +1,5 @@
+{# METplus point_stat stat types to run #}
+{% set POINT_STAT_TYPES = ["cnt", "mpr"] %}
 
 {% if RUN_METPLUS_POINT_STAT|default(False) %}
 [scheduling]
@@ -25,9 +27,9 @@
                 """
     {% endif %}
     R1/$ = """
-        {% for model in models %}
-            cycle_complete => verpy_metloader_pointstat_m{{model["id"]}}
-        {% endfor %}
+    {% for STAT_TYPE in POINT_STAT_TYPES %}
+        cycle_complete => verpy_metloader_pointstat_{{STAT_TYPE}}
+    {% endfor %}
         VERPY_METLOADER:succeed-all => verpy_plot_pointstat => finish_website
         """
 
@@ -45,14 +47,14 @@
         [[[environment]]]
             ROSE_TASK_APP = metplus_point_stat
             STAT = area
-            STAT_TYPE_LIST = cnt
+            STAT_TYPE_LIST = {{ POINT_STAT_TYPES | join(' ') }}
 
     [[METPLUS_POINT_STAT_POSTPROC]]
     # Family grouping all metplus Post-processing
     inherit = METPLUS
         [[[environment]]]
             STAT = area
-            STAT_TYPE_LIST = cnt
+            STAT_TYPE_LIST = {{ POINT_STAT_TYPES | join(' ') }}
 
     [[VERPY_METLOADER]]
     # Family grouping for all VerPy metloader tasks
@@ -70,24 +72,25 @@
         script = """
             MODEL_NAME={{model["name"]}}
             POINT_STAT_DIR=${CYLC_TASK_SHARE_CYCLE_DIR}/Point_Stat_${MODEL_NAME}
-            mkdir -p ${CYLC_WORKFLOW_SHARE_DIR}/${MODEL_NAME}_point_stat_${STAT}_tar
+            mkdir -p ${CYLC_WORKFLOW_SHARE_DIR}/point_stat_${STAT}_tar
             for STAT_TYPE in ${STAT_TYPE_LIST}; do
-                gzip ${POINT_STAT_DIR}/*_${STAT_TYPE}.txt
+                gzip ${POINT_STAT_DIR}/*_${STAT_TYPE}.txt || true
                 files_list=$(ls ${POINT_STAT_DIR}/*_${STAT_TYPE}.txt.gz | xargs -n 1 basename)
-                tar -rf ${CYLC_WORKFLOW_SHARE_DIR}/${MODEL_NAME}_point_stat_${STAT}_tar/point_stat_${CYLC_TASK_CYCLE_POINT}_${STAT_TYPE}.tar -C ${POINT_STAT_DIR} $files_list
+                tar -rf ${CYLC_WORKFLOW_SHARE_DIR}/point_stat_${STAT}_tar/${MODEL_NAME}_${CYLC_TASK_CYCLE_POINT}_${STAT_TYPE}.tar -C ${POINT_STAT_DIR} $files_list
             done
         """
+{% endfor %}
 
-    [[verpy_metloader_pointstat_m{{model["id"]}}]]
+{% for STAT_TYPE in POINT_STAT_TYPES %}
+    [[verpy_metloader_pointstat_{{STAT_TYPE}}]]
     # Runs VerPy metloader utility to create the VerPy databases
         inherit = VERPY_METLOADER
         [[[environment]]]
             VERPY_DIR = {{VERPY_DIR}}
-            VER_METHOD = area
-            STAT_TYPE = cnt
-            STREAM = point_stat
-            MODEL_NAME = {{model["name"]}}
             METLOADER_CONF_FILE = metloader.conf
+            VER_METHOD = area
+            STAT_TYPE = {{STAT_TYPE}}
+            STREAM = point_stat
 {% endfor %}
 
     [[verpy_plot_pointstat]]
