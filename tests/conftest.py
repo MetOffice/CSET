@@ -25,7 +25,7 @@ import pytest
 from CSET.operators import constraints, filters, read
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def tmp_working_dir(tmp_path, monkeypatch) -> Path:
     """Change the working directory for a test."""
     monkeypatch.chdir(tmp_path)
@@ -179,28 +179,28 @@ def transect_source_cube(transect_source_cube_readonly):
     return transect_source_cube_readonly.copy()
 
 
-@pytest.fixture(scope="session")
-def ugridml_plev_cubes_readonly():
-    """Get a unstructured cubelist to test with. It is NOT safe to modify."""
-    return read.read_cubes("tests/test_data/regrid/ugrid_multilev_geopot.nc")
+# @pytest.fixture(scope="session")
+# def ugridml_plev_cubes_readonly():
+#     """Get a unstructured cubelist to test with. It is NOT safe to modify."""
+#     return iris.load("tests/test_data/regrid/ugrid_multilev_geopot.nc")
 
 
-@pytest.fixture()
-def ugridml_plev_cubes(ugridml_plev_cubes_readonly):
-    """Get a unstructured cubelist to test with. It is safe to modify."""
-    return ugridml_plev_cubes_readonly.copy()
+# @pytest.fixture()
+# def ugridml_plev_cubes(ugridml_plev_cubes_readonly):
+#     """Get a unstructured cubelist to test with. It is safe to modify."""
+#     return ugridml_plev_cubes_readonly.copy()
 
 
-@pytest.fixture(scope="session")
-def ugridml_surf_cubes_readonly():
-    """Get a unstructured cubelist to test with. It is NOT safe to modify."""
-    return read.read_cubes("tests/test_data/regrid/ugrid_singlevartime_precip.nc")
+# @pytest.fixture(scope="session")
+# def ugridml_surf_cubes_readonly():
+#     """Get a unstructured cubelist to test with. It is NOT safe to modify."""
+#     return iris.load("tests/test_data/regrid/ugrid_singlevartime_precip.nc")
 
 
-@pytest.fixture()
-def ugridml_surf_cubes(ugridml_surf_cubes_readonly):
-    """Get a unstructured cubelist to test with. It is safe to modify."""
-    return ugridml_surf_cubes_readonly.copy()
+# @pytest.fixture()
+# def ugridml_surf_cubes(ugridml_surf_cubes_readonly):
+#     """Get a unstructured cubelist to test with. It is safe to modify."""
+#     return ugridml_surf_cubes_readonly.copy()
 
 
 @pytest.fixture(scope="session")
