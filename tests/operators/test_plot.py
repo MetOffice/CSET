@@ -118,6 +118,14 @@ def test_setup_spatial_map_spole():
     assert axes_gl.projection == ccrs.SouthPolarStereo(central_longitude=0.0)
 
 
+def test_setup_spatial_map_nocoast(cube):
+    """Setup spatial map without coastline default."""
+    cube.rename("surface_altitude")
+    figure = mpl.figure.Figure()
+    axes_gl = plot._setup_spatial_map(cube, figure, mpl.colormaps["viridis"])
+    assert axes_gl == figure.gca()
+
+
 def test_set_title_and_filename_filename_single_sequence(cube):
     """Setup plot title and filename for single output, sequence input."""
     seq_coord = cube.coord("time")
@@ -207,6 +215,18 @@ def test_set_title_and_filename_multidim_aggregated(long_forecast_multi_day):
     )
     assert plot_filename == "recipe_3cases.png"
     assert plot_title == "recipe\n [3 cases]"
+
+
+def test_set_title_and_filename_reference_time(cube):
+    """Setup plot title and filename for single input with reference time attribute."""
+    cube.coord("time").attributes["number_reference_times"] = 10
+    seq_coord = cube.coord("time")[0]
+    nplot = 1
+    plot_title, plot_filename = plot._set_title_and_filename(
+        seq_coord, nplot, "recipe", None
+    )
+    assert plot_filename == "recipe_10cases.png"
+    assert plot_title == "recipe\n [10 cases]"
 
 
 def test_set_title_and_filename_year_one(cube):
@@ -500,6 +520,23 @@ def test_plot_line_series_ensemble(ensemble_cube, tmp_working_dir):
     assert Path("ensemble_series.png").is_file()
 
 
+def test_plot_line_series_stations(cube):
+    """Save a line series plot with 1d station points."""
+    cube = collapse.collapse(cube, ["grid_longitude"], "MEAN")
+    cube.coord("grid_latitude").rename("station")
+    cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            np.arange(len(cube.coord("station").points)).astype(str),
+            var_name="Station_Name",
+        ),
+        1,
+    )
+    plot.plot_line_series(cube[0:2], filename="station_series.png")
+    assert Path("station_series_0.png").is_file()
+    assert Path("station_series_1.png").is_file()
+    assert Path("station_series_2.png").is_file()
+
+
 def test_plot_vertical_line_series(vertical_profile_cube, tmp_working_dir):
     """Save a vertical line series plot."""
     plot.plot_vertical_line_series(
@@ -618,6 +655,25 @@ def test_plot_histogram_update_vmin_vmax(histogram_cube, tmp_working_dir, caplog
         assert message_matchB
 
 
+def test_plot_histogram_single_plot(histogram_cube, tmp_working_dir):
+    """Plot sequence of contour plots."""
+    plot.plot_histogram_series(
+        histogram_cube, filename="test", sequence_coordinate="time", single_plot=True
+    )
+    assert Path("test_20240116060000.png").is_file()
+
+
+def test_plot_histogram_series_multi_model(histogram_cube):
+    """Test histogram plotting with multiple model inputs."""
+    c1 = histogram_cube.copy()
+    c1.attributes["model_name"] = "model_1"
+    c2 = histogram_cube.copy()
+    c2.attributes["model_name"] = "model_2"
+    plot.plot_histogram_series([c1, c2], filename="test", sequence_coordinate="time")
+    assert Path("test_20240116060000.png").is_file()
+    assert Path("test_20240116090000.png").is_file()
+
+
 def test_plot_and_save_histogram_series_bins(histogram_cube, tmp_working_dir, caplog):
     """Test plotting a postage stamp histogram."""
     with caplog.at_level(logging.DEBUG):
@@ -642,6 +698,29 @@ def test_plot_and_save_histogram_series_bins_precip(
 ):
     """Test plotting a rainfall rate histogram."""
     histogram_cube.rename("surface_microphysical_rainfall_flux")
+    histogram_cube.units = "kg m-2 s-1"
+    with caplog.at_level(logging.DEBUG):
+        plot._plot_and_save_histogram_series(
+            cubes=histogram_cube,
+            filename="test.png",
+            title="Test surface_microphysical",
+            vmin=0,
+            vmax=0,
+            histtype="step",
+        )
+        message_match = False
+        for _, _, message in caplog.record_tuples:
+            if message == "Plotting histogram with 38 bins 0.0 - 398.1071705534973.":
+                message_match = True
+        assert message_match
+    assert Path("test.png").is_file()
+
+
+def test_plot_and_save_histogram_series_bins_precip_amount(
+    histogram_cube, tmp_working_dir, caplog
+):
+    """Test plotting a rainfall amount histogram."""
+    histogram_cube.rename("surface_microphysical_rainfall_amount")
     histogram_cube.units = "kg m-2 s-1"
     with caplog.at_level(logging.DEBUG):
         plot._plot_and_save_histogram_series(
@@ -733,6 +812,53 @@ def test_plot_scatter_series_insufficient_models(cube, tmp_working_dir):
         match="Scatter plot series requires multiple number of models in input data.",
     ):
         plot.plot_scatter_series([cube, cube])
+
+
+def test_plot_scatter_series_hexbin(cube, tmp_working_dir):
+    """Testing scatter series code produces file with hexbin true."""
+    cube1 = cube.copy()
+    cube1.attributes["model_name"] = "model1"
+    cube2 = cube.copy()
+    cube2.attributes["model_name"] = "model2"
+    plot._plot_and_save_scatter_series(
+        [cube1, cube2], "test.png", "title", 0.0, 10.0, hexbin=True
+    )
+    assert Path("test.png").is_file()
+
+
+def test_plot_scatter_series_seq_coord(cube, tmp_working_dir):
+    """Testing scatter series code produces file."""
+    cube1 = cube.copy()
+    cube1.attributes["model_name"] = "model1"
+    cube2 = cube.copy()
+    cube2.attributes["model_name"] = "model2"
+    plot.plot_scatter_series(
+        [cube1, cube2], filename="test.png", sequence_coordinate="realization"
+    )
+    assert Path("test.png").is_file()
+
+
+def test_plot_scatter_series_station(cube, tmp_working_dir):
+    """Testing scatter series code with station coord dim."""
+    cube = collapse.collapse(cube, ["grid_longitude"], "MEAN")
+    cube.coord("grid_latitude").rename("station")
+    cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            np.arange(len(cube.coord("station").points)).astype(str),
+            var_name="Station_Name",
+        ),
+        1,
+    )
+    cube1 = cube[0:3].copy()
+    cube1.attributes["model_name"] = "model1"
+    cube2 = cube[0:3].copy()
+    cube2.attributes["model_name"] = "model2"
+    plot.plot_scatter_series(
+        [cube1, cube2], filename="test.png", sequence_coordinate="station"
+    )
+    assert Path("test_0.png").is_file()
+    assert Path("test_1.png").is_file()
+    assert Path("test_2.png").is_file()
 
 
 def test_plot_power_spectrum_with_filename(field2d_cube, tmp_working_dir):

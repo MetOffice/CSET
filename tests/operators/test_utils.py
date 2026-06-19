@@ -376,6 +376,17 @@ def test_slice_over_ensemble(long_forecast):
     )
 
 
+def test_slice_over_non_coorddim():
+    """Check that slice over without coordinate dimension leaves input unaffected."""
+    foo_coord = iris.coords.AuxCoord(
+        [0], var_name="foo", attributes={"shared_attribute": 1}
+    )
+    cube = iris.cube.Cube(
+        [0], var_name="variable", aux_coords_and_dims=[(foo_coord, 0)]
+    )
+    assert operator_utils.slice_over_maybe(cube, "foo", 0) == cube
+
+
 def test_is_time_aggregatable_False(cardington_cube):
     """Check that a cube that is not time aggregatable returns False."""
     assert not operator_utils.is_time_aggregatable(cardington_cube)

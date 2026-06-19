@@ -20,7 +20,7 @@ import iris.cube
 import numpy as np
 import pytest
 
-from CSET.operators import _utils, misc, read, regrid
+from CSET.operators import _utils, collapse, misc, read, regrid
 
 
 # Session scope fixtures, so the test data only has to be loaded once.
@@ -428,6 +428,67 @@ def test_regrid_to_single_point_returns_close_single_point_cube(cardington_cube)
     test_cube = cardington_cube.copy()
     expected_cube = regrid.regrid_to_single_point(test_cube, 52.11, -0.45, "realworld")
     assert cardington_cube == expected_cube
+
+
+def test_regrid_to_point_cube(cube):
+    """Test regridding 2D Cube to 1D Cube of points."""
+    point_cube = collapse.collapse(cube, ["grid_latitude"], "MEAN")
+    point_cube.remove_coord("grid_latitude")
+    point_cube.coord("grid_longitude").rename("station")
+    point_cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            np.arange(len(point_cube.coord("station").points)).astype(str),
+            var_name="Station_Name",
+        ),
+        1,
+    )
+    point_cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            cube.coord("grid_latitude").points[0:13], var_name="latitude"
+        ),
+        1,
+    )
+    point_cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            cube.coord("grid_longitude").points[0:13], var_name="longitude"
+        ),
+        1,
+    )
+    regrid_cube = regrid.interpolate_to_point_cube(cube, point_cube)
+    # Assert regridded cube has shape of point_cube.
+    assert isinstance(regrid_cube, iris.cube.Cube)
+    assert regrid_cube.shape == point_cube.shape
+
+
+def test_regrid_to_point_cubelist(cube):
+    """Test regridding CubeList of 2D Cubes to 1D Cube of points."""
+    point_cube = collapse.collapse(cube, ["grid_latitude"], "MEAN")
+    point_cube.remove_coord("grid_latitude")
+    point_cube.coord("grid_longitude").rename("station")
+    point_cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            np.arange(len(point_cube.coord("station").points)).astype(str),
+            var_name="Station_Name",
+        ),
+        1,
+    )
+    point_cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            cube.coord("grid_latitude").points[0:13], var_name="latitude"
+        ),
+        1,
+    )
+    point_cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            cube.coord("grid_longitude").points[0:13], var_name="longitude"
+        ),
+        1,
+    )
+    regrid_cube = regrid.interpolate_to_point_cube([cube, cube], point_cube)
+    # Assert regridded cube has shape of point_cube.
+    assert isinstance(regrid_cube, iris.cube.CubeList)
+    assert regrid_cube[0].shape == point_cube.shape
+    assert regrid_cube[1].shape == point_cube.shape
 
 
 def test_vertical_interpolation(model_level_cube):

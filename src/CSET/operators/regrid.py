@@ -500,7 +500,7 @@ def interpolate_to_point_cube(
                 "longitude",
                 "grid_latitude",
                 "grid_longitude",
-            ]:
+            ] and coord.name() not in [coord.name() for coord in fv_cube.coords()]:
                 fv_cube.add_aux_coord(coord.copy(), cube.coord_dims(coord))
         for coord in point_cube.coords():
             if coord.name() not in [
@@ -509,7 +509,7 @@ def interpolate_to_point_cube(
                 "forecast_reference_time",
                 "realization",
                 "station",
-            ]:
+            ] and coord.name() not in [coord.name() for coord in fv_cube.coords()]:
                 fv_cube.add_aux_coord(coord.copy(), point_cube.coord_dims(coord))
         fv_cube.add_dim_coord(point_cube.coord("station"), od_index)
         fv_cube.attributes = cube.attributes.copy()
