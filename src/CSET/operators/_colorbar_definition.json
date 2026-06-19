@@ -558,6 +558,11 @@
     "max": 1e-05,
     "min": -1e-05
   },
+  "precipitation_flux": {
+    "cmap": "cividis",
+    "max": 50.0,
+    "min": 0.0
+  },
   "radar_reflectivity_at_1km_above_the_surface": {
     "cmap": "cubehelix_r",
     "max": 70.0,
@@ -654,6 +659,16 @@
     "cmap": "viridis",
     "max": 6.0,
     "min": 0.0
+  },
+  "stratiform_rainfall_flux": {
+    "cmap": "cividis",
+    "max": 50.0,
+    "min": 0.0
+  },
+  "stratiform_rainfall_flux_difference": {
+    "cmap": "BrBG",
+    "max": 50.0,
+    "min": -50.0
   },
   "structural_similarity": {
     "cmap": "afmhot",
