@@ -40,7 +40,7 @@ from CSET.operators._utils import (
     get_cube_yxcoordname,
     is_spatialdim,
 )
-from CSET.operators.regrid import restructure_ugrid
+from CSET.operators.regrid import restructure_wrapper
 
 
 class NoDataError(FileNotFoundError):
@@ -230,12 +230,12 @@ def _load_model(
     # Using extract, not extract_cubes in a try as there might be more
     # than one cube called latitude if we are aggregating.
     if len(cubes.extract("latitude")) > 0:
-        cubes = restructure_ugrid(cubes)
+        cubes = restructure_wrapper(cubes)
 
     for cube in cubes:
         _loading_callback(cube, None, None)
 
-    # Extract required cubes based on constraints
+    # Extract required cubes based on constraint
     cubes = cubes.extract(constraint)
 
     # cubes = iris.load(input_files, constraint, callback=_loading_callback)
