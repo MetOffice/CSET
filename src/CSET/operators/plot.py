@@ -2680,59 +2680,6 @@ def vector_plot(
     return iris.cube.CubeList([cube_u, cube_v])
 
 
-def _set_axis_range(cubes):
-    # Get minimum and maximum from levels information.
-    levels = None
-    for cube in cubes:
-        # First check if user-specified "auto" range variable.
-        # This maintains the value of levels as None, so proceed.
-        _, levels, _ = colorbar_map_levels(cube, axis="y")
-        if levels is None:
-            break
-        # If levels is changed, recheck to use the vmin,vmax or
-        # levels-based ranges for histogram plots.
-        _, levels, _ = colorbar_map_levels(cube)
-        logging.debug("levels: %s", levels)
-        if levels is not None:
-            vmin = min(levels)
-            vmax = max(levels)
-            logging.debug("Updated vmin, vmax: %s, %s", vmin, vmax)
-            break
-
-    if levels is None:
-        vmin = min(cb.data.min() for cb in cubes)
-        vmax = max(cb.data.max() for cb in cubes)
-
-    return vmin, vmax
-
-
-def _find_matched_slices(cubes, sequence_coordinate):
-
-    all_points = sorted(
-        set(
-            itertools.chain.from_iterable(
-                cb.coord(sequence_coordinate).points for cb in cubes
-            )
-        )
-    )
-    all_slices = list(
-        itertools.chain.from_iterable(
-            cb.slices_over(sequence_coordinate) for cb in cubes
-        )
-    )
-    # Matched slices (matched by seq coord point; it may happen that
-    # evaluated models do not cover the same seq coord range, hence matching
-    # necessary)
-    cube_iterables = [
-        iris.cube.CubeList(
-            s for s in all_slices if s.coord(sequence_coordinate).points[0] == point
-        )
-        for point in all_points
-    ]
-
-    return cube_iterables
-
-
 def plot_histogram_series(
     cubes: iris.cube.Cube | iris.cube.CubeList,
     filename: str = None,
