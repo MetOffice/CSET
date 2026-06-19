@@ -2292,6 +2292,9 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
         norm = mcolors.BoundaryNorm(levels, cmap.N)
         logging.info("Using custom rainfall colourmap.")
 
+        # Set any Nan values to be plotted a light grey.
+        cmap.set_bad("#dcdcdc")
+
     return cmap, levels, norm
 
 
