@@ -10,6 +10,7 @@ permissions: {}
 
 jobs:
   check-documentation-hyperlinks:
+    if: "github.repository == 'MetOffice/CSET'"  # Skip on forks.
     name: Check documentation hyperlinks
     runs-on: ubuntu-latest
     # Give plenty of time as link checking third-party sites might be slow.
@@ -43,6 +44,7 @@ jobs:
         run: sphinx-build -b linkcheck --color -W --keep-going "docs/source" "docs/build/linkcheck"
 
   full-tests:
+    if: "github.repository == 'MetOffice/CSET'"  # Skip on forks.
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
