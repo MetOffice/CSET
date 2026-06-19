@@ -2,10 +2,14 @@
 
 # Site configuration for NCI Gadi
 #
+# Using the opt file 'nci-gadi' is recommended to ensure the CSET module is
+# loaded correctly
+#
 # Important rose-suite.conf settings:
 #   SITE = "nci-gadi"   # Enable the site
 #   PROJECT             # NCI project code
 #   VERPY_DIR           # Path to Verpy source code
+#   NCI_STORAGE         # List of NCI storage locations to use
 #   METPLUS_OBS_SYSTEM  # Where to source obs from
 #                       # Can be a Bureau forecast system e.g.
 #                       # 'access_c3_dn' or 'custom'
@@ -17,16 +21,19 @@
 #
 # Leave METPLUS_FCST_DIR and METPLUS_OBS_DIR unset
 
+{% set STORAGE = [
+    'scratch/'~PROJECT,
+    'gdata/'~PROJECT,
+    'gdata/access',
+    'gdata/hr22',
+] + (NCI_STORAGE | default([])) %}
+
 [runtime]
     [[root]]
         platform = gadi_background
-        init-script = """
-            module use /g/data/access/ngm/modules
-            module load cset/26.4.0
-            """
         [[[ environment ]]]
             PROJECT = {{ PROJECT }}
-            PYTHONPATH = "{{VERPY_DIR}}"
+            PYTHONPATH = {{VERPY_DIR}}{% if CSET_DIR is defined %}:{{CSET_DIR}}/src{% endif %}
 
 {% if RUN_METPLUS_GRID_STAT|default(False) or RUN_METPLUS_POINT_STAT|default(False) %}
     [[METPLUS]]
@@ -37,14 +44,14 @@
             -q          = normal
             -l ncpus    = 1
             -l mem      = 4gb
-            -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22+gdata/ig2+scratch/dx2
+            -l storage  = {{ STORAGE | join('+') }}+gdata/ig2
             -W umask    = 0022
         [[[ environment ]]]
             ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
 
     [[metplus_prep_obs]]
         [[[ environment ]]]
-            OBS_TIMES = R{{ANALYSIS_LENGTH | duration_as('h') | int }}/$CYLC_TASK_CYCLE_POINT/PT1H
+            OBS_TIMES = R{{(ANALYSIS_LENGTH | duration_as('h') | int) + 1}}/$CYLC_TASK_CYCLE_POINT/PT1H
         {% if METPLUS_OBS_SYSTEM != "custom" %}
             # Forecast system to pull obs from (e.g. 'access_c3_dn')
             METPLUS_OBS_SYSTEM = {{METPLUS_OBS_SYSTEM}}
@@ -63,7 +70,7 @@
             -q          = normal
             -l ncpus    = 48
             -l mem      = 180gb
-            -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22+gdata/xp65+scratch/dx2
+            -l storage  = {{ STORAGE | join('+') }}
             -W umask    = 0022
         [[[ environment ]]]
             BUNCH_POOL_SIZE = $PBS_NCPUS
@@ -76,7 +83,7 @@
             -q          = normal
             -l ncpus    = 48
             -l mem      = 180gb
-            -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22+gdata/xp65+scratch/dx2
+            -l storage  = {{ STORAGE | join('+') }}
             -W umask    = 0022
         [[[ environment ]]]
             BUNCH_POOL_SIZE = $PBS_NCPUS
