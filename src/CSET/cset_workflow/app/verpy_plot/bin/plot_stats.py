@@ -15,6 +15,13 @@ import VerPy
 import VerPy.conf2opts
 
 
+def AddOdb2Names():
+    from VerPy.parameter import get_param_by_code
+
+    param = get_param_by_code(88,1,-1)
+    param['short'].append('rh2m')
+
+
 def main():
     """
     Produce Verpy Plots.
@@ -35,6 +42,8 @@ def main():
     parser.add_argument("--expids", required=True, nargs="+")
 
     args = parser.parse_args()
+
+    AddOdb2Names()
 
     opts_dicts, scard_dict = VerPy.conf2opts.conf2opts(args.conf)
 
