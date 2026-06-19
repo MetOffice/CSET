@@ -1172,3 +1172,21 @@ def test_normalise_ML_varname(transect_source_cube):
     cube.rename = "air_temperature"
     read._normalise_ML_varname(cube)
     assert cube.long_name == "temperature_at_pressure_levels"
+
+    
+
+import os
+import importlib
+def test_ugridml_fix_plev_multitime(monkeypatch, tmp_path):
+    """Check that read invokes the regrid."""
+
+    cubes = iris.load("tests/test_data/regrid/ugrid_multilev_geopot.nc")
+
+    monkeypatch.setenv("ROSE_DATAC", str(tmp_path))
+    os.makedirs(str(tmp_path)+"/data/1/")
+ #   importlib.reload(CSET.operators.regrid)
+    print("ROSE_DATAC =", os.environ.get("ROSE_DATAC"))
+
+#
+# 
+    assert read.read_cubes("tests/test_data/regrid/ugrid_multilev_geopot.nc") == 'blah'
