@@ -46,6 +46,15 @@
         [[[ environment ]]]
             ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
 
+    [[METPLUS_POINT_STAT_POSTPROC]]
+        platform = gadi_background
+
+    [[VERPY_METLOADER]]
+        platform = gadi_background
+
+    [[verpy_plot_pointstat]]
+        platform = gadi_background
+
     [[metplus_prep_obs]]
         [[[ environment ]]]
             OBS_TIMES = R{{(ANALYSIS_LENGTH | duration_as('h') | int) + 1}}/$CYLC_TASK_CYCLE_POINT/PT1H
