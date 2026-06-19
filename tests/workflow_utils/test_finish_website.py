@@ -27,11 +27,13 @@ def test_install_website_skeleton(monkeypatch, tmp_path):
     www_content = tmp_path / "web"
     www_root_link = tmp_path / "www/CSET"
     monkeypatch.chdir("src/CSET/cset_workflow/app/finish_website/file")
-    finish_website.install_website_skeleton(www_root_link, www_content)
+    finish_website.install_website_skeleton(www_content)
     assert www_content.is_dir()
     assert (www_content / "index.html").is_file()
     assert (www_content / "script.js").is_file()
     assert (www_content / "plots").is_dir()
+
+    finish_website.symlink_website(www_root_link, www_content)
     assert www_root_link.is_symlink()
     assert www_root_link.resolve() == www_content.resolve()
 
@@ -200,14 +202,16 @@ def test_entrypoint(monkeypatch):
         assert www_content == Path("/share/web")
         increment_counter()
 
-    monkeypatch.setattr(finish_website, "install_website_skeleton", check_args)
+    monkeypatch.setattr(finish_website, "install_website_skeleton", check_single_arg)
     monkeypatch.setattr(finish_website, "copy_rose_config", check_single_arg)
     monkeypatch.setattr(finish_website, "construct_index", check_single_arg)
+    monkeypatch.setattr(finish_website, "tar_website", check_single_arg)
     monkeypatch.setattr(finish_website, "bust_cache", check_single_arg)
     monkeypatch.setattr(finish_website, "update_workflow_status", check_single_arg)
+    monkeypatch.setattr(finish_website, "symlink_website", check_args)
     monkeypatch.setenv("WEB_DIR", "/var/www/cset")
     monkeypatch.setenv("CYLC_WORKFLOW_SHARE_DIR", "/share")
 
     # Check that it runs all the needed subfunctions.
     finish_website.run()
-    assert counter == 5
+    assert counter == 7
