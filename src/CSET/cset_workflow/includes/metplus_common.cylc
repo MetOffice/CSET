@@ -10,4 +10,38 @@
         TASK_START_TIME = $(cylc cyclepoint --template CCYYMMDDThh)
         FORECAST_LENGTH = $(isodatetime --as-total H -- {{ANALYSIS_LENGTH}} | cut -d '.' -f 1 )
         TASK_END_TIME = $(cylc cyclepoint --offset {{ANALYSIS_LENGTH}} --template CCYYMMDDThh)
+
+    {% for model in models %}
+    [[METPLUS_M{{model["id"]}}]]
+        [[[environment]]]
+            MODEL_NAME = {{model["name"]}}
+            model_name = {{model["name"]|lower}}
+            MODEL_ID = m{{model["id"]}}
+            # Lead times to analyse as a comma separated list
+            # https://metplus.readthedocs.io/en/latest/Users_Guide/systemconfiguration.html#lead-seq
+            # Default is hourly from mN_analysis_offset to ANALYSIS_LENGTH
+            LEAD_SEQ = "{{
+                range(
+                    model["analysis_offset"]|duration_as('h')|int,
+                    ANALYSIS_LENGTH|duration_as('h')|int,
+                    1,
+                ) | join(',')
+            }}"
+    {% endfor %}
+
+    {% for model in models %}
+    [[metplus_prep_fcst_m{{model["id"]}}]]
+    # Prepares model data for use by metplus
+        inherit = METPLUS, METPLUS_M{{model["id"]}}
+        [[[environment]]]
+            ROSE_TASK_APP = metplus_prep_fcst
+            INPUT_PATHS = $CYLC_TASK_SHARE_CYCLE_DIR/data/{{model["id"]}}
+        {% if SELECT_SUBAREA %}
+            SUBAREA_TYPE = {{SUBAREA_TYPE}}
+            SUBAREA_EXTENT = {{SUBAREA_EXTENT}}
+        {% else %}
+            SUBAREA_TYPE = None
+            SUBAREA_EXTENT = None
+        {% endif %}
+    {% endfor %}
 {% endif %}
