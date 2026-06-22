@@ -14,6 +14,8 @@
 
 """Tests regrid operator."""
 
+import os
+
 import iris
 import iris.coord_systems
 import iris.cube
@@ -483,3 +485,14 @@ def test_vertical_interpolation_cubelist(model_level_cube):
             == cube_b.coord("model_level_number").points
         ).all()
         assert np.allclose(cube_a.data, cube_b.data, rtol=1e-06, atol=1e-02)
+
+
+def test_ugridml_fix_plev_multitime(monkeypatch, tmp_path):
+    """Check that read invokes the regrid."""
+    # cubes = iris.load("tests/test_data/regrid/ugrid_multilev_geopot.nc")
+
+    monkeypatch.setenv("ROSE_DATAC", str(tmp_path))
+    os.makedirs(str(tmp_path) + "/data/1/")
+    print("ROSE_DATAC =", os.environ.get("ROSE_DATAC"))
+
+    assert read.read_cubes("tests/test_data/regrid/ugrid_multilev_geopot.nc") == "blah"
