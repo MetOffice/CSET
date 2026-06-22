@@ -797,8 +797,8 @@ def restructure_ugrid(cubes, dataloc):
     # Save concatenated cubes to data location, for other processes to use if cylc.
     if dataloc:
         iris.save(fixed_cubes.concatenate(), dataloc + "/restructured_cubes.nc")
-    else:
-        return fixed_cubes.concatenate()
+
+    return fixed_cubes.concatenate()
 
 
 def restructure_wrapper(cubes):
@@ -819,15 +819,11 @@ def restructure_wrapper(cubes):
     """
     # Determine whether we are running in a CYLC workflow or if this is a command
     # line bake
-    try:
-        dataloc = os.environ["ROSE_DATAC"] + "/data/1/"
+    dataloc = os.environ["ROSE_DATAC"] + "/data/1/"
+    if os.path.isdir(dataloc):
         cylc = True
-    except KeyError:
+    else:
         cylc = False
-
-    # If this directory doesn't exist, we are probably not running in a rose suite.
-    if not os.path.isdir(dataloc):
-        raise FileNotFoundError(f"Assuming cylc workflow, but no dir {dataloc}")
 
     logging.info("Restructuring UGRID...")
 
