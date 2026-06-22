@@ -1173,20 +1173,68 @@ def test_normalise_ML_varname(transect_source_cube):
     read._normalise_ML_varname(cube)
     assert cube.long_name == "temperature_at_pressure_levels"
 
-    
 
-import os
-import importlib
-def test_ugridml_fix_plev_multitime(monkeypatch, tmp_path):
-    """Check that read invokes the regrid."""
+def test_read_time_constraint_in_bounds():
+    """Cubes can be selected with any time inside the bounds."""
+    cubes = read.read_cubes(
+        "tests/test_data/air_temp.nc",
+        constraint=iris.Constraint(time=datetime.datetime(2022, 9, 21, 3, 0)),
+    )
 
-    cubes = iris.load("tests/test_data/regrid/ugrid_multilev_geopot.nc")
+    for c in cubes:
+        if c.coord("time").bounds is None:
+            # Instantaneous field was loaded
+            assert c.coord("time").as_string_arrays().points == ["2022-09-21 03:00:00"]
+        else:
+            # Time processed field was loaded even though its time doesn't match
+            # since the constraint is inside time bounds
+            assert c.coord("time").as_string_arrays().points == ["2022-09-21 03:30:00"]
 
-    monkeypatch.setenv("ROSE_DATAC", str(tmp_path))
-    os.makedirs(str(tmp_path)+"/data/1/")
- #   importlib.reload(CSET.operators.regrid)
-    print("ROSE_DATAC =", os.environ.get("ROSE_DATAC"))
 
-#
-# 
-    assert read.read_cubes("tests/test_data/regrid/ugrid_multilev_geopot.nc") == 'blah'
+def test_cell_methods_computes_time_bounds(cdl_to_cubes):
+    """Only cubes with time processing have time bounds."""
+    # NC file with missing time bounds and various methods
+    cdl = """
+    netcdf cell_methods_sample {
+    dimensions:
+        lat = 2, lon = 2, time = 2; bnds = 2;
+    variables:
+        float lat(lat), lon(lon), time(time);
+        float lat_bnds(lat, bnds), lon_bnds(lon, bnds);
+            lat:standard_name = "latitude";
+            lat:bounds = "lat_bnds";
+            lon:standard_name = "longitude";
+            lon:bounds = "lon_bnds";
+            time:standard_name = "time";
+            time:units = "days since 2001-01-01";
+
+        float time_instant(time, lat, lon);
+        float time_point(time, lat, lon);
+            time_point:cell_methods = "time: point";
+        float time_mean(time, lat, lon);
+            time_mean:cell_methods = "time: mean";
+        float area_mean(time, lat, lon);
+            area_mean:cell_methods = "area: mean";
+        float all_mean(time, lat, lon);
+            all_mean:cell_methods = "area: mean time: mean";
+        float multi_mean(time, lat, lon);
+            multi_mean:cell_methods = "area: time: mean";
+    data:
+        time = 1, 2;
+        lat = 1, 2;
+        lon = 1, 2;
+        lat_bnds = 0.5, 1.5, 1.5, 2.5;
+        lon_bnds = 0.5, 1.5, 1.5, 2.5;
+    }
+    """
+    cubes = cdl_to_cubes(cdl)
+
+    # Variables which should not have bounds
+    assert cubes.extract_cube("time_instant").coord("time").bounds is None
+    assert cubes.extract_cube("time_point").coord("time").bounds is None
+    assert cubes.extract_cube("area_mean").coord("time").bounds is None
+
+    # Variables which should have bounds
+    assert cubes.extract_cube("time_mean").coord("time").bounds is not None
+    assert cubes.extract_cube("all_mean").coord("time").bounds is not None
+    assert cubes.extract_cube("multi_mean").coord("time").bounds is not None
