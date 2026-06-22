@@ -61,6 +61,7 @@ filterwarnings = [
 markers = [
     "network: test uses external network resources",
     "slow: test is slow to run",
+    "cylc: test requires cylc and rose to be set up",
 ]
 minversion = "7"
 pythonpath = ["src"]

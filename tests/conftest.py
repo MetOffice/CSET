@@ -17,6 +17,7 @@
 https://docs.pytest.org/en/latest/reference/fixtures.html#conftest-py-sharing-fixtures-across-multiple-files
 """
 
+import shutil
 import subprocess
 from collections.abc import Callable
 from pathlib import Path
@@ -105,6 +106,18 @@ def tmp_working_dir(tmp_path, monkeypatch) -> Path:
     """Change the working directory for a test."""
     monkeypatch.chdir(tmp_path)
     return tmp_path
+
+
+@pytest.fixture()
+def workflow(tmp_path) -> Path:
+    """Extract a fresh workflow."""
+    subprocess.run(["cset", "extract-workflow", str(tmp_path)], check=True)
+    workflow_dir: Path = next(tmp_path.glob("cset-workflow-v*"))
+    # Copy example configuration into place.
+    shutil.copyfile(
+        workflow_dir / "rose-suite.conf.example", workflow_dir / "rose-suite.conf"
+    )
+    return workflow_dir
 
 
 # Session scope fixtures, so the test data only has to be loaded from disk
