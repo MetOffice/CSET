@@ -47,3 +47,6 @@ steps:
             variable_constraint:
                 operator: constraints.generate_var_constraint
                 varname: observed_$VARNAME
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
