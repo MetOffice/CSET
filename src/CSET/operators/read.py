@@ -20,6 +20,7 @@ import functools
 import glob
 import itertools
 import logging
+import os
 from pathlib import Path
 from typing import Literal
 
@@ -231,6 +232,9 @@ def _load_model(
     input_files = _check_input_files(paths)
     # If unset, a constraint of None lets everything be loaded.
     logging.debug("Constraint: %s", constraint)
+
+    # Dont try and load lock files!
+    input_files = [f for f in input_files if not os.path.basename(f).startswith(".")]
 
     cubes = iris.load(input_files)
 
