@@ -499,7 +499,11 @@ def _plot_and_save_spatial_plot(
     if method == "contourf":
         plot = iplt.contourf(cube, cmap=cmap, levels=levels, norm=norm)
     elif method == "pcolormesh":
-        plot = iplt.pcolormesh(cube, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax)
+
+        lat_coord = cube.coord("latitude").points
+        lon_coord = cube.coord("longitude").points
+
+        plot = plt.pcolormesh(lon_coord, lat_coord, cube.data, transform=ccrs.PlateCarree(), cmap=cmap, norm=norm)
     else:
         raise ValueError(f"Unknown plotting method: {method}")
 
@@ -626,7 +630,7 @@ def _plot_and_save_spatial_plot(
     # Add watermark with min/max/mean. Currently not user togglable.
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
     axes.annotate(
-        f"Min: {np.nanmin(cube.data):.3g} Max: {np.nanmax(cube.data):.3g} Mean: {np.nanmean(cube.data):.3g}",
+        f"Min: {np.nanmin(np.asarray(cube.data)):.3g} Max: {np.nanmax(np.asarray(cube.data)):.3g} Mean: {np.nanmean(np.asarray(cube.data)):.3g}",
         xy=(0.025, yinfopad),
         xycoords="axes fraction",
         xytext=(-5, 5),
@@ -1209,7 +1213,7 @@ def _plot_and_save_vector_plot(
     # Add watermark with min/max/mean. Currently not user togglable.
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
     axes.annotate(
-        f"Min: {np.nanmin(cube_vec_mag.data):.3g} Max: {np.nanmax(cube_vec_mag.data):.3g} Mean: {np.nanmean(cube_vec_mag.data):.3g}",
+        f"Min: {np.nanmin(np.asarray(cube_vec_mag.data)):.3g} Max: {np.nanmax(np.asarray(cube_vec_mag.data)):.3g} Mean: {np.nanmean(np.asarray(cube_vec_mag.data)):.3g}",
         xy=(0.05, -0.05),
         xycoords="axes fraction",
         xytext=(-5, 5),
