@@ -32,6 +32,7 @@ from CSET.operators import (
     collapse,
     constraints,
     convection,
+    dfss,
     ensembles,
     filters,
     humidity,
@@ -74,6 +75,7 @@ __all__ = [
     "transect",
     "wind",
     "write",
+    "dfss",
 ]
 
 # Stop iris giving a warning whenever it loads something.

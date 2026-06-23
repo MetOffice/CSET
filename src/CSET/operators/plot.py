@@ -285,8 +285,17 @@ def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
     if any("aviation_colour_state" in name for name in varnames):
         cmap, levels, norm = _custom_colormap_aviation_colour_state(cube)
         return cmap, levels, norm
+    if any("dfss" or "efss" in name for name in varnames):
+        cmap = plt.colormaps["viridis"]
+        levels = np.linspace(0, 1, 11)
+        norm = None
+        return cmap, levels, norm
 
-    # If no valid colormap has been defined, use defaults and return.
+    # TODO if hourly precipitation ...
+    if any("hourly_precipitation" in name for name in varnames):
+        cmap, levels, norm = _custom_colourmap_precipitation(cube, cmap, [], [])
+        return cmap, levels, norm
+
     if not cmap:
         logging.warning("No colorbar definition exists for %s.", cube.name())
         cmap, levels, norm = mpl.colormaps["viridis"], None, None
@@ -911,7 +920,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
                 vmin = min(levels)
                 vmax = max(levels)
             else:
-                raise TypeError("Unknown vmin and vmax range.")
+                logging.warning("Unknown vmin and vmax range.")
                 vmin, vmax = None, None
             # pcolormesh plot of the field and ensure to use norm and not vmin/vmax
             # if levels are defined.
@@ -1011,28 +1020,41 @@ def _plot_and_save_line_series(
             color = model_colors_map.get(label)
         for cube_slice in cube.slices_over(ensemble_coord):
             # Label with (control) if part of an ensemble or not otherwise.
-            if cube_slice.coord(ensemble_coord).points == [0]:
+            if ensemble_coord == "realization":
+                if cube_slice.coord(ensemble_coord).points == [0]:
+                    iplt.plot(
+                        coord,
+                        cube_slice,
+                        color=color,
+                        marker="o",
+                        ls="-",
+                        lw=3,
+                        label=f"{label} (control)"
+                        if len(cube.coord(ensemble_coord).points) > 1
+                        else label,
+                    )
+                    # Label with (perturbed) if part of an ensemble and not the control.
+                else:
+                    iplt.plot(
+                        coord,
+                        cube_slice,
+                        color=color,
+                        ls="-",
+                        lw=1.5,
+                        alpha=0.75,
+                        label=f"{label} (member)",
+                    )
+            else:
                 iplt.plot(
                     coord,
                     cube_slice,
                     color=color,
                     marker="o",
                     ls="-",
-                    lw=3,
-                    label=f"{label} (control)"
+                    lw=1.5,
+                    label="something"
                     if len(cube.coord(ensemble_coord).points) > 1
                     else label,
-                )
-                # Label with (perturbed) if part of an ensemble and not the control.
-            else:
-                iplt.plot(
-                    coord,
-                    cube_slice,
-                    color=color,
-                    ls="-",
-                    lw=1.5,
-                    alpha=0.75,
-                    label=f"{label} (member)",
                 )
 
         # Calculate the global min/max if multiple cubes are given.
@@ -1049,8 +1071,16 @@ def _plot_and_save_line_series(
     if coords[0].name() == "time":
         ax.set_xlabel(f"{coords[0].name()}", fontsize=14)
     else:
-        ax.set_xlabel(f"{coords[0].name()} / {coords[0].units}", fontsize=14)
-    ax.set_ylabel(f"{cubes[0].name()} / {cubes[0].units}", fontsize=14)
+        if coords[0].units == "unknown":
+            ax.set_xlabel(f"{coords[0].name()}", fontsize=14)
+        else:
+            ax.set_xlabel(f"{coords[0].name()} / {coords[0].units}", fontsize=14)
+
+    if cubes[0].units == "unknown":
+        ax.set_ylabel(f"{cubes[0].name()}", fontsize=14)
+    else:
+        ax.set_ylabel(f"{cubes[0].name()} / {cubes[0].units}", fontsize=14)
+
     ax.set_title(title, fontsize=16)
 
     ax.ticklabel_format(axis="y", useOffset=False)
@@ -2223,7 +2253,10 @@ def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
     """Return a custom colourmap for the current recipe."""
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if (
-        any("surface_microphysical" in name for name in varnames)
+        any(
+            "surface_microphysical" in name or "hourly_precipitation" in name
+            for name in varnames
+        )
         and "difference" not in cube.long_name
         and "mask" not in cube.long_name
     ):
@@ -2554,7 +2587,7 @@ def plot_line_series(
     cube: iris.cube.Cube | iris.cube.CubeList,
     filename: str = None,
     series_coordinate: str = "time",
-    # line_coordinate: str = "realization",
+    line_coordinate: str = "realization",
     **kwargs,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Plot a line plot for the specified coordinate.
@@ -2604,8 +2637,10 @@ def plot_line_series(
             raise ValueError(
                 f"Cube must have a {series_coordinate} coordinate."
             ) from err
-        if cube.ndim > 2 or not cube.coords("realization"):
-            raise ValueError("Cube must be 1D or 2D with a realization coordinate.")
+        if cube.ndim > 2 or not cube.coords(line_coordinate):
+            raise ValueError(
+                f"Cube must be 1D or 2D with a {line_coordinate} coordinate."
+            )
 
     # Format the title and filename using plotted series coordinate
     nplot = 1
@@ -2613,9 +2648,36 @@ def plot_line_series(
     plot_title, plot_filename = _set_title_and_filename(
         seq_coord, nplot, recipe_title, filename
     )
+    # Do the actual plotting
+    for i, cubes in enumerate(cube.slices_over(line_coordinate)):
+        time_str = cubes.coords("time")[0].units.title(
+            cubes.coords("time")[0].points[0]
+        )
 
-    # Do the actual plotting.
-    _plot_and_save_line_series(cubes, coords, "realization", plot_filename, plot_title)
+        plot_filename_with_time = (
+            line_coordinate + "_point_" + str(i) + "_" + plot_filename
+        )
+
+        plot_title_with_time = (
+            cubes.name()
+            + " vs "
+            + series_coordinate
+            + " ("
+            + line_coordinate
+            + ": "
+            + time_str
+            + ")"
+        )
+
+        cubes_in = iter_maybe(cubes)
+
+        _plot_and_save_line_series(
+            cubes_in,
+            coords,
+            line_coordinate,
+            plot_filename_with_time,
+            plot_title_with_time,
+        )
 
     # Add list of plots to plot metadata.
     plot_index = _append_to_plot_index([plot_filename])
@@ -2626,12 +2688,102 @@ def plot_line_series(
     return cube
 
 
+def plot_line_series_sequence(
+    cube: iris.cube.Cube | iris.cube.CubeList,
+    filename: str = None,
+    variable: str = None,
+    series_coordinate: str = "time",
+    sequence_coordinate: str = "realization",
+    **kwargs,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Plot a line plot."""
+    cube_copy = cube
+    if type(cube) is iris.cube.CubeList:
+        if not variable:
+            logging.Warning(
+                "CubeList given, but variable not specified.  Defaulting to first cube."
+            )
+            cube = cube[0]
+        else:
+            cube = cube.extract(variable)
+
+    recipe_title = get_recipe_metadata().get("title", "Untitled")
+
+    num_models = _get_num_models(cube)
+
+    _validate_cube_shape(cube, num_models)
+
+    # Iterate over all cubes and extract coordinate to plot.
+    cubes = iter_maybe(cube)
+
+    coords = []
+    for cube in cubes:
+        try:
+            coords.append(cube.coord(series_coordinate))
+        except iris.exceptions.CoordinateNotFoundError as err:
+            raise ValueError(
+                f"Cube must have a {series_coordinate} coordinate."
+            ) from err
+        if cube.ndim > 2 or not cube.coords(sequence_coordinate):
+            raise ValueError(
+                f"Cube must be 1D or 2D with a {sequence_coordinate} coordinate."
+            )
+
+    # Format the title and filename using plotted series coordinate
+    nplot = 1
+    seq_coord = coords[0]
+    plot_title, plot_filename = _set_title_and_filename(
+        seq_coord, nplot, recipe_title, filename
+    )
+    # Do the actual plotting
+
+    for i, cubes in enumerate(cube.slices_over(sequence_coordinate)):
+        time_str = cubes.coords("time")[0].units.title(
+            cubes.coords("time")[0].points[0]
+        )
+        plot_filename_with_sequence_coord = (
+            cube.name()
+            + "_"
+            + sequence_coordinate
+            + "_point_"
+            + str(i)
+            + "_"
+            + plot_filename
+        )
+        plot_title_with_time = (
+            cubes.name()
+            + " vs "
+            + series_coordinate
+            + " ("
+            + sequence_coordinate
+            + ": "
+            + time_str
+            + ")"
+        )
+        cubes_in = iter_maybe(cubes)
+        _plot_and_save_line_series(
+            cubes_in,
+            coords,
+            sequence_coordinate,
+            plot_filename_with_sequence_coord,
+            plot_title_with_time,
+        )
+
+        # Add list of plots to plot metadata.
+        plot_index = _append_to_plot_index([plot_filename_with_sequence_coord])
+
+        # Make a page to display the plots.
+        _make_plot_html_page(plot_index)
+
+    return cube_copy
+
+
 def plot_vertical_line_series(
     cubes: iris.cube.Cube | iris.cube.CubeList,
     filename: str = None,
     series_coordinate: str = "model_level_number",
     sequence_coordinate: str = "time",
-    # line_coordinate: str = "realization",
+    line_coordinate: str = "realization",
     **kwargs,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Plot a line plot against a type of vertical coordinate.
@@ -2698,7 +2850,7 @@ def plot_vertical_line_series(
             ) from err
 
         try:
-            if cube.ndim > 1 or not cube.coords("realization"):
+            if cube.ndim > 1 or not cube.coords(line_coordinate):
                 cube.coord(sequence_coordinate)
         except iris.exceptions.CoordinateNotFoundError as err:
             raise ValueError(
@@ -3073,6 +3225,94 @@ def vector_plot(
     _make_plot_html_page(complete_plot_index)
 
     return iris.cube.CubeList([cube_u, cube_v])
+
+
+def plot_dfss_contour(
+    cube: iris.cube.Cube | iris.cube.CubeList,
+    filename: str = None,
+    variable: str = None,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Plot a scatter plot between two variables.
+
+    Both cubes must be 1D.
+
+    Parameters
+    ----------
+    cube: Cube | CubeList
+        1 dimensional Cube of the data to plot on y-axis.
+    filename: str, optional
+        Filename of the plot to write.
+    variable: str, optional
+        which cube variable to plot
+
+    Returns
+    -------
+    cubes: Cube
+        Cube of the original cubes for further processing.
+
+    Notes
+    -----
+    Makes a filled contour plot for dFSS/eFSS with neighbourhood lengths on the y-axis
+    and forecast lead time on the x-axis.
+
+    Adds a countour line at the 0.5 contour.
+    """
+    cube_copy = cube
+    if type(cube) is iris.cube.CubeList:
+        if not variable:
+            logging.Warning(
+                "CubeList given, but variable not specified.  Defaulting to first cube."
+            )
+            cube = cube[0]
+        else:
+            cube = cube.extract(variable)[0]
+
+    recipe_title = get_recipe_metadata().get("title", "Untitled")
+
+    title = cube.name()
+    filename = cube.name()
+    plot_title = recipe_title + "\n" + title
+
+    cmap = plt.colormaps["viridis"]
+    levels = np.linspace(0, 1, 11)
+
+    # set the contour colour for the 0.5 contour line
+    colors = ["white"]
+    cmap_0p5_contour = mcolors.ListedColormap(colors)
+    norm = mcolors.BoundaryNorm(levels, cmap.N)
+
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+
+    plot = iplt.contourf(cube, cmap=cmap, norm=norm, levels=levels)
+    iplt.contour(
+        cube, cmap=cmap_0p5_contour, norm=norm, levels=[0.5], linestyles="dashed"
+    )
+
+    plt.xlabel(cube.dim_coords[0].name(), fontsize=14)
+    plt.ylabel(cube.dim_coords[1].name(), fontsize=14)
+
+    cbar = fig.colorbar(
+        plot, orientation="horizontal", location="bottom", pad=0.1, shrink=0.7
+    )
+
+    cbar.set_label(label=f"{cube.name()}", size=14)
+
+    # Overall figure title.
+
+    fig.suptitle(plot_title, fontsize=16)
+
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+
+    logging.info("Saved contour plot", filename)
+    plt.close(fig)
+
+    # Add list of plots to plot metadata.
+    plot_index = _append_to_plot_index([filename])
+
+    # Make a page to display the plots.
+    _make_plot_html_page(plot_index)
+
+    return cube_copy
 
 
 def plot_histogram_series(
