@@ -503,6 +503,9 @@ def _plot_and_save_spatial_plot(
         lat_coord = cube.coord("latitude").points
         lon_coord = cube.coord("longitude").points
 
+        lon_coord[lon_coord < -180.0] += 360
+        lon_coord[lon_coord > 180.0] -= 360
+     
         plot = plt.pcolormesh(lon_coord, lat_coord, cube.data, transform=ccrs.PlateCarree(), cmap=cmap, norm=norm)
     else:
         raise ValueError(f"Unknown plotting method: {method}")
