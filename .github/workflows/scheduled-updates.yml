@@ -10,6 +10,7 @@ permissions: {}
 
 jobs:
   scheduled-updates:
+    if: "github.repository == 'MetOffice/CSET'"  # Skip on forks.
     name: Regular conda and pre-commit updates
     runs-on: ubuntu-latest
     timeout-minutes: 20
