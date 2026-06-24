@@ -29,3 +29,10 @@ def test_minimal_workflow_validation(workflow):
     # Validate using the test_validate optional config.
     cmd = ("cylc", "validate", str(workflow), "--opt-conf-key", "test_validate")
     subprocess.run(cmd, check=True)
+
+
+@pytest.mark.cylc
+def test_rose_metadata(workflow):
+    """Check that the rose metadata is well-formed."""
+    cmd = ("rose", "metadata-check", "--config", str(workflow / "meta"))
+    subprocess.run(cmd, check=True)
