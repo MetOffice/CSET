@@ -192,3 +192,46 @@ def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None =
     )
     RMSE.rename(f"RMSE_of_{base.name()}")
     return RMSE
+
+
+def scores_pearsonr(
+    cubes: CubeList, preserved_coordinates: list[str] | str | None = None
+):
+    """Calculate Pearson's correlation coefficient using scores.
+
+    Acts as a wrapper around the pearsonr calculation from ``scores`` ([scoresa]_, [scoresb]_).
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        A CubeList containing exactly two cubes: a base and an "other" model,
+        this can be an analysis and the model.
+    preserved_coordinates: list[str] | str | None, default is None.
+        The coordinates that you wish to preserve in the calculaiton of the
+        RMSE. For example if you want a map of each time you can preserve
+        ["time","grid_latitude", "grid_longitude"] or if you want a time series
+        you can preserve ["time"], if you want to collapse to a single value
+        use `None`. The default is `None`.
+
+    Returns
+    -------
+    pearsonr: iris.cube.Cube
+        A cube containing the Pearson correlation coefficient between the base and other cube.
+
+    References
+    ----------
+    add references here
+    """
+    base, other = _sort_cubes_for_verification(cubes)
+    # Scores operators on xarray data arrays, so we transform the iris cube into an array,
+    # apply scores, and then transform it back.
+
+    pearsonr = xr.DataArray.to_iris(
+        scores.continuous.correlation.pearsonr(
+            xr.DataArray.from_iris(other),
+            xr.DataArray.from_iris(base),
+            preserve_dims=preserved_coordinates,
+        )
+    )
+    pearsonr.rename(f"Pearsonr_of_{base.name()}")
+    return pearsonr
