@@ -1,0 +1,52 @@
+category: Surface Observation Time Series Bias
+title: "$VARNAME bias time series for observation points $SUBAREA_NAME"
+description: Extracts and plot a time series of $VARNAME bias relative to observation points for all times.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+    constraint: ['observed_$VARNAME', '$VARNAME']
+
+  - operator: filters.filter_multiple_cubes
+    constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+
+  - operator: misc.extract_common_points
+    coordinate: time
+
+  - operator: misc.subtraction
+    minuend:
+        operator: regrid.interpolate_to_point_cube
+        fld:
+            operator: filters.filter_multiple_cubes
+            constraint:
+                operator: constraints.combine_constraints
+                var_constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: $VARNAME
+        point_cube:
+            operator: filters.filter_cubes
+            constraint:
+                operator: constraints.generate_var_constraint
+                varname: observed_$VARNAME
+    subtrahend:
+        operator: filters.filter_cubes
+        constraint:
+            operator: constraints.generate_var_constraint
+            varname: observed_$VARNAME
+
+  - operator: misc.rename_cube
+    name: $VARNAME_difference
+
+  - operator: collapse.collapse
+    coordinate: [latitude, longitude]
+    method: MEAN
+
+  - operator: plot.plot_line_series
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

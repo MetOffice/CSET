@@ -62,6 +62,18 @@ def test_collapse_cubelist(cube):
         assert repr(collapsed_cube) == expected_cube
 
 
+def test_collapse_nomethod(cube):
+    """Return unchanged cube if no method specified."""
+    collapsed_cube = collapse.collapse(cube, ["grid_latitude", "grid_longitude"], "")
+    assert collapsed_cube == cube
+
+
+def test_collapse_seq(cube):
+    """Return unchanged cube if SEQ method specified."""
+    collapsed_cube = collapse.collapse(cube, ["grid_latitude", "grid_longitude"], "SEQ")
+    assert collapsed_cube == cube
+
+
 def test_collapse_percentile(cube):
     """Reduce dimension of a cube with a PERCENTILE aggregation."""
     with pytest.raises(ValueError, match="Must specify additional_percent"):
@@ -73,6 +85,16 @@ def test_collapse_percentile(cube):
     )
     expected_cube = (
         "<iris 'Cube' of air_temperature / (K) (grid_latitude: 17; grid_longitude: 13)>"
+    )
+    assert repr(collapsed_cube) == expected_cube
+
+
+def test_collapse_range(cube):
+    """Reduce dimension of a cube with a RANGE aggregation."""
+    # Test collapsing a single coordinate.
+    collapsed_cube = collapse.collapse(cube, "time", "RANGE")
+    expected_cube = (
+        "<iris 'Cube' of unknown / (K) (grid_latitude: 17; grid_longitude: 13)>"
     )
     assert repr(collapsed_cube) == expected_cube
 
