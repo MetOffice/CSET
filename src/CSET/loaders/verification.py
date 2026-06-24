@@ -25,6 +25,70 @@ def load(conf: Config):
     models = get_models(conf.asdict())
     # Models are listed in order, so model 1 is the first element.
 
+    if any(conf.SCORES_SPATIAL_DIFFERENCE):
+        base_model = models[0]
+        difference_methods = []
+        if conf.SCORES_SPATIAL_DIFFERENCE[0]:
+            difference_methods.append("RMSE")
+        if conf.SCORES_SPATIAL_DIFFERENCE[1]:
+            difference_methods.append("additive_bias")
+        if conf.SCORES_SPATIAL_DIFFERENCE[2]:
+            difference_methods.append("MAE")
+        # if conf.SCORES_SPATIAL_DIFFERENCE[3]:
+        #   difference_methods.append("correlation_pearsonr")
+        for model, field, method, difference_method in itertools.product(
+            models[1:],
+            conf.SURFACE_FIELDS,
+            conf.SPATIAL_SURFACE_FIELD_METHOD,
+            difference_methods,
+        ):
+            yield RawRecipe(
+                recipe="surface_difference_scores.yaml",
+                variables={
+                    "VARNAME": field,
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "METHOD": method,
+                    "DIFFERENCE_METHOD": difference_method,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
+    if any(conf.SCORES_DIFFERENCE_TIMESERIES):
+        base_model = models[0]
+        difference_methods = []
+        if conf.SCORES_DIFFERENCE_TIMESERIES[0]:
+            difference_methods.append("RMSE")
+        if conf.SCORES_DIFFERENCE_TIMESERIES[1]:
+            difference_methods.append("additive_bias")
+        if conf.SCORES_DIFFERENCE_TIMESERIES[2]:
+            difference_methods.append("MAE")
+        if conf.SCORES_DIFFERENCE_TIMESERIES[3]:
+            difference_methods.append("correlation_pearsonr")
+        for model, field, difference_method in itertools.product(
+            models[1:], conf.SURFACE_FIELDS, difference_methods
+        ):
+            yield RawRecipe(
+                recipe="timeseries_surface_difference_scores.yaml",
+                variables={
+                    "VARNAME": field,
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "DIFFERENCE_METHOD": difference_method,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
     if conf.SCORES_RMSE_SPATIAL:
         base_model = models[0]
         for model, field, method in itertools.product(
