@@ -4,8 +4,9 @@ description: |
   Extracts and plots the Root Mean Square Error (RMSE) of $VARNAME
   as a vertical profile on pressure levels. The RMSE is calculated
   pairwise between $BASE_MODEL and $OTHER_MODEL at each grid point
-  and level, then aggregated over all time and horizontal grid points
-  to produce one RMSE value per pressure level.
+  over time on each vertical level, then aggregated over all time and horizontal grid points
+  to produce one RMSE value per pressure level. The RMSE is calculated in
+  a single operation for each level that includes the time dimension.
 
   A larger RMSE implies a greater error than a smaller RMSE. An
   RMSE of zero implies the two fields match exactly.
@@ -27,10 +28,11 @@ steps:
     subarea_extent: $SUBAREA_EXTENT
 
   - operator: scoreswrappers.scores_rmse
-    preserved_coordinates: ["pressure"]
+    preserved_coordinates: ["time","pressure"]
 
   - operator: plot.plot_vertical_line_series
     series_coordinate: pressure
+    sequence_coordinate: time
 
   - operator: write.write_cube_to_nc
     overwrite: True
