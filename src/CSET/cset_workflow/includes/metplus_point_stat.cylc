@@ -103,7 +103,7 @@
     # Runs VerPy metloader utility to create the VerPy databases
         inherit = VERPY_METLOADER
         [[[environment]]]
-            VERPY_DIR = {{VERPY_DIR}}
+            VERPY_DIR = {{VERPY_DIR|default("")}}
             VER_METHOD = area
             STAT_TYPE = cnt
             STREAM = point_stat
