@@ -13,8 +13,6 @@ from improver.nbhood.nbhood import NeighbourhoodProcessing
 from iris import coord_systems
 from scipy import ndimage, signal
 
-# from .neighbourhooding import SquareNeighbourhood
-
 """A module containing the dFSS diagnostic
 """
 
