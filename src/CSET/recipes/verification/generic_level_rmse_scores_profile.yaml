@@ -1,0 +1,36 @@
+category: Scores
+title: "$VARNAME\nRMSE vertical profile between $OTHER_MODEL and $BASE_MODEL"
+description: |
+  Extracts and plots the Root Mean Square Error (RMSE) of $VARNAME
+  as a vertical profile on pressure levels. The RMSE is calculated
+  pairwise between $BASE_MODEL and $OTHER_MODEL at each grid point
+  and level, then aggregated over all time and horizontal grid points
+  to produce one RMSE value per pressure level.
+
+  A larger RMSE implies a greater error than a smaller RMSE. An
+  RMSE of zero implies the two fields match exactly.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: [$BASE_MODEL, $OTHER_MODEL]
+    constraint:
+      operator: constraints.combine_constraints
+      variable_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: pressure
+        levels: "*"
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: scoreswrappers.scores_rmse
+    preserved_coordinates: ["pressure"]
+
+  - operator: plot.plot_vertical_line_series
+    series_coordinate: pressure
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
