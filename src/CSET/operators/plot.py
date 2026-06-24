@@ -31,6 +31,7 @@ import iris.cube
 import iris.exceptions
 import iris.plot as iplt
 import matplotlib as mpl
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 from cartopy.mpl.geoaxes import GeoAxes
@@ -669,6 +670,94 @@ def _plot_and_save_spatial_plot(
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
     logging.info("Saved spatial plot to %s", filename)
     plt.close(fig)
+
+
+def plot_dfss_contour(
+    cube: iris.cube.Cube | iris.cube.CubeList,
+    filename: str = None,
+    variable: str = None,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Plot a scatter plot between two variables.
+
+    Both cubes must be 1D.
+
+    Parameters
+    ----------
+    cube: Cube | CubeList
+        1 dimensional Cube of the data to plot on y-axis.
+    filename: str, optional
+        Filename of the plot to write.
+    variable: str, optional
+        which cube variable to plot
+
+    Returns
+    -------
+    cubes: Cube
+        Cube of the original cubes for further processing.
+
+    Notes
+    -----
+    Makes a filled contour plot for dFSS/eFSS with neighbourhood lengths on the y-axis
+    and forecast lead time on the x-axis.
+
+    Adds a contour line at the 0.5 contour.
+    """
+    cube_copy = cube
+    if type(cube) is iris.cube.CubeList:
+        if not variable:
+            logging.Warning(
+                "CubeList given, but variable not specified.  Defaulting to first cube."
+            )
+            cube = cube[0]
+        else:
+            cube = cube.extract(variable)[0]
+
+    recipe_title = get_recipe_metadata().get("title", "Untitled")
+
+    title = cube.name()
+    filename = cube.name()
+    plot_title = recipe_title + "\n" + title
+
+    cmap = plt.colormaps["viridis"]
+    levels = np.linspace(0, 1, 11)
+
+    # set the contour colour for the 0.5 contour line
+    colors = ["white"]
+    cmap_0p5_contour = mcolors.ListedColormap(colors)
+    norm = mcolors.BoundaryNorm(levels, cmap.N)
+
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+
+    plot = iplt.contourf(cube, cmap=cmap, norm=norm, levels=levels)
+    iplt.contour(
+        cube, cmap=cmap_0p5_contour, norm=norm, levels=[0.5], linestyles="dashed"
+    )
+
+    plt.xlabel(cube.dim_coords[0].name(), fontsize=14)
+    plt.ylabel(cube.dim_coords[1].name(), fontsize=14)
+
+    cbar = fig.colorbar(
+        plot, orientation="horizontal", location="bottom", pad=0.1, shrink=0.7
+    )
+
+    cbar.set_label(label=f"{cube.name()}", size=14)
+
+    # Overall figure title.
+
+    fig.suptitle(plot_title, fontsize=16)
+
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+
+    logging.info("Saved contour plot", filename)
+    plt.close(fig)
+
+    # Add list of plots to plot metadata.
+    plot_index = _append_to_plot_index([filename])
+
+    # Make a page to display the plots.
+    _make_plot_html_page(plot_index)
+
+    return cube_copy
 
 
 def _plot_and_save_postage_stamp_spatial_plot(
@@ -2079,6 +2168,96 @@ def plot_line_series(
     _make_plot_html_page(plot_index)
 
     return cube
+
+
+def plot_line_series_sequence(
+    cube: iris.cube.Cube | iris.cube.CubeList,
+    filename: str = None,
+    variable: str = None,
+    series_coordinate: str = "time",
+    sequence_coordinate: str = "realization",
+    **kwargs,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Plot a line plot."""
+    cube_copy = cube
+    if type(cube) is iris.cube.CubeList:
+        if not variable:
+            logging.Warning(
+                "CubeList given, but variable not specified.  Defaulting to first cube."
+            )
+            cube = cube[0]
+        else:
+            cube = cube.extract(variable)
+
+    recipe_title = get_recipe_metadata().get("title", "Untitled")
+
+    num_models = get_num_models(cube)
+
+    validate_cube_shape(cube, num_models)
+
+    # Iterate over all cubes and extract coordinate to plot.
+    cubes = iter_maybe(cube)
+
+    coords = []
+    for cube in cubes:
+        try:
+            coords.append(cube.coord(series_coordinate))
+        except iris.exceptions.CoordinateNotFoundError as err:
+            raise ValueError(
+                f"Cube must have a {series_coordinate} coordinate."
+            ) from err
+        if cube.ndim > 2 or not cube.coords(sequence_coordinate):
+            raise ValueError(
+                f"Cube must be 1D or 2D with a {sequence_coordinate} coordinate."
+            )
+
+    # Format the title and filename using plotted series coordinate
+    nplot = 1
+    seq_coord = coords[0]
+    plot_title, plot_filename = _set_title_and_filename(
+        seq_coord, nplot, recipe_title, filename
+    )
+    # Do the actual plotting
+
+    for i, cubes in enumerate(cube.slices_over(sequence_coordinate)):
+        time_str = cubes.coords("time")[0].units.title(
+            cubes.coords("time")[0].points[0]
+        )
+        plot_filename_with_sequence_coord = (
+            cube.name()
+            + "_"
+            + sequence_coordinate
+            + "_point_"
+            + str(i)
+            + "_"
+            + plot_filename
+        )
+        plot_title_with_time = (
+            cubes.name()
+            + " vs "
+            + series_coordinate
+            + " ("
+            + sequence_coordinate
+            + ": "
+            + time_str
+            + ")"
+        )
+        cubes_in = iter_maybe(cubes)
+        _plot_and_save_line_series(
+            cubes_in,
+            coords,
+            sequence_coordinate,
+            plot_filename_with_sequence_coord,
+            plot_title_with_time,
+        )
+
+        # Add list of plots to plot metadata.
+        plot_index = _append_to_plot_index([plot_filename_with_sequence_coord])
+
+        # Make a page to display the plots.
+        _make_plot_html_page(plot_index)
+
+    return cube_copy
 
 
 def plot_vertical_line_series(
