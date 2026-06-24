@@ -36,3 +36,16 @@ def test_rose_metadata(workflow):
     """Check that the rose metadata is well-formed."""
     cmd = ("rose", "metadata-check", "--config", str(workflow / "meta"))
     subprocess.run(cmd, check=True)
+
+
+@pytest.mark.cylc
+def test_rose_macro_validation(workflow):
+    """Check the rose configuration matches its metadata."""
+    # Populate SITE setting.
+    with open(workflow / "rose-suite.conf", "rt") as fp:
+        conf = fp.read().replace("SITE=", 'SITE="localhost"')
+    with open(workflow / "rose-suite.conf", "wt") as fp:
+        fp.write(conf)
+    # Validate the configuration against the metadata.
+    cmd = ("rose", "macro", "--validate", "--config", str(workflow))
+    subprocess.run(cmd, check=True)
