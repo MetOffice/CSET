@@ -140,6 +140,53 @@ def _sort_cubes_for_verification(cubes: CubeList):
     return base, other
 
 
+def _resolve_preserve_dims(
+    cube: Cube,
+    data_array: xr.DataArray,
+    preserved_coordinates: list[str] | str | None,
+) -> list[str] | None:
+    """Resolve preserve coordinates to xarray dimension names.
+
+    The ``scores`` package expects preserve dimensions to match xarray
+    dimension names. In Iris data, commonly used coordinates such as ``time``
+    may be auxiliary coordinates attached to a differently named dimension
+    (e.g. ``dim0``). This helper maps coordinate names to their underlying
+    dimension names.
+    """
+    if preserved_coordinates is None:
+        return None
+
+    coord_names = (
+        [preserved_coordinates]
+        if isinstance(preserved_coordinates, str)
+        else preserved_coordinates
+    )
+    preserve_dims: list[str] = []
+
+    for coord_name in coord_names:
+        # Already an xarray dimension name.
+        if coord_name in data_array.dims:
+            if coord_name not in preserve_dims:
+                preserve_dims.append(coord_name)
+            continue
+
+        # Otherwise, map coordinate name to dimension index/indices.
+        try:
+            dim_indices = cube.coord_dims(coord_name)
+        except iris.exceptions.CoordinateNotFoundError:
+            # Keep original name so scores raises a clear error for unknown keys.
+            if coord_name not in preserve_dims:
+                preserve_dims.append(coord_name)
+            continue
+
+        for dim_index in dim_indices:
+            dim_name = data_array.dims[dim_index]
+            if dim_name not in preserve_dims:
+                preserve_dims.append(dim_name)
+
+    return preserve_dims
+
+
 def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None = None):
     r"""Calculate the Root Mean Square Error (RMSE) using scores.
 
@@ -154,7 +201,7 @@ def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None =
         A CubeList containing exactly two cubes: a base and an "other" model,
         this can be an analysis and the model.
     preserved_coordinates: list[str] | str | None, default is None.
-        The coordinates that you wish to preserve in the calculaiton of the
+        The coordinates (or xarray dimension names) that you wish to preserve in the calculaiton of the
         RMSE. For example if you want a map of each time you can preserve
         ["time","grid_latitude", "grid_longitude"] or if you want a time series
         you can preserve ["time"], if you want to collapse to a single value
@@ -181,13 +228,18 @@ def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None =
         forecasts, predictions or models (2.5.0)". Zenodo. doi: 10.5281/zenodo.18638494
     """
     base, other = _sort_cubes_for_verification(cubes)
+
+    other_xr = xr.DataArray.from_iris(other)
+    base_xr = xr.DataArray.from_iris(base)
+    preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
+
     # Scores operators on xarray data arrays, so we transform the iris cube into an array,
     # apply scores, and then transform it back.
     RMSE = xr.DataArray.to_iris(
         scores.continuous.rmse(
-            xr.DataArray.from_iris(other),
-            xr.DataArray.from_iris(base),
-            preserve_dims=preserved_coordinates,
+            other_xr,
+            base_xr,
+            preserve_dims=preserve_dims,
         )
     )
     RMSE.rename(f"RMSE_of_{base.name()}")
