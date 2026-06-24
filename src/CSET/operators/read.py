@@ -203,6 +203,14 @@ def read_cubes(
     # Ensure dimension coordinates are bounded.
     for cube in cubes:
         for dim_coord in cube.coords(dim_coords=True):
+            if (dim_coord.standard_name == "time") and (
+                dim_coord.name()
+                not in itertools.chain.from_iterable(
+                    m.coord_names for m in cube.cell_methods if m.method != "point"
+                )
+            ):
+                # Instantaneous time coordinate
+                continue
             # Iris can't guess the bounds of a scalar coordinate.
             if not dim_coord.has_bounds() and dim_coord.shape[0] > 1:
                 dim_coord.guess_bounds()

@@ -125,13 +125,14 @@ def test_setup_logging():
 
 
 def test_setup_logging_mpl_font_logs_filtered(caplog):
-    """Test matplotlib log messages about fonts are filtered out."""
+    """Test matplotlib DEBUG/INFO log messages are filtered out."""
     CSET.setup_logging(2)
     logger = logging.getLogger("matplotlib.font_manager")
     logger.debug("findfont: message")
     logger.debug("other message")
+    logger.warning("Important!")
     assert len(caplog.records) == 1
-    assert caplog.records[0].getMessage() == "other message"
+    assert caplog.records[0].getMessage() == "Important!"
 
 
 def test_main_no_subparser(capsys):
