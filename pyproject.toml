@@ -74,7 +74,7 @@ source = ["src"]
 omit = ["__main__.py", "src/CSET/loaders/*.py", "_netCDF4.pyx"]
 
 [tool.codespell]
-ignore-words-list = "lazyness,meaned,runn"
+ignore-words-list = "lazyness,meaned,runn,PRES"
 skip = "build,*.css,*.ipynb,*.js,*.html,*.svg,*.xml,.git"
 
 [tool.ruff]
