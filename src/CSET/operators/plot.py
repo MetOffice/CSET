@@ -2379,6 +2379,168 @@ def qq_plot(
     return iris.cube.CubeList([base, other])
 
 
+def hinton_plot(
+    change,
+    signif,
+    lead_times,
+    variables,
+    magnitude=None):
+    
+    """
+    Triangle matrix with thin text rows and guaranteed no triangle overlap.
+    """
+
+    color_pos="#7CAE00",
+    color_neg="#7B68EE"
+
+    figsize=None,
+    cell_size_in=0.35,
+    text_row_ratio=0.25,
+    
+    change = np.asarray(change)
+    signif = np.asarray(signif).astype(bool)
+    if magnitude is not None:
+        magnitude = np.asarray(magnitude)
+
+    ny, nx = change.shape
+
+    # -----------------------------------
+    # Build non-uniform y coordinates
+    # -----------------------------------
+    tri_height = 1.0
+    txt_height = text_row_ratio
+
+    tri_y = []
+    txt_y = []
+    y_edges = [0.0]
+
+    y = 0.0
+    for j in range(ny):
+        tri_y.append(y + tri_height / 2)
+        y += tri_height
+        y_edges.append(y)
+
+        txt_y.append(y + txt_height / 2)
+        y += txt_height
+        y_edges.append(y)
+
+    total_height = y
+
+    # -----------------------------------
+    # Dynamic figure size
+    # -----------------------------------
+    if figsize is None:
+        width = nx * cell_size_in
+        height = total_height * cell_size_in + 2
+        figsize = (width, height)
+
+    fig, ax = plt.subplots(figsize=figsize)
+
+    ax.set_aspect('equal', adjustable='box')
+
+    # -----------------------------------
+    # Axes + grid
+    # -----------------------------------
+    ax.set_xlim(-0.5, nx - 0.5)
+    ax.set_ylim(0, total_height)
+
+    ax.set_xticks(np.arange(nx))
+    ax.set_xticklabels(lead_times, rotation=90)
+
+    ax.set_yticks(tri_y)
+    ax.set_yticklabels(variables)
+
+    ax.set_xticks(np.arange(-0.5, nx, 1), minor=True)
+    ax.set_yticks(y_edges, minor=True)
+
+    ax.set_axisbelow(True)
+    ax.grid(which="minor", linestyle=":", linewidth=0.3, color="0.7")
+    ax.grid(False, which="major")
+    ax.tick_params(which="minor", length=0)
+
+    ax.invert_yaxis()
+
+    # -----------------------------------
+    # Compute marker scaling (fixed overlap)
+    # -----------------------------------
+    fig.canvas.draw()
+
+    bbox = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+    width_in, height_in = bbox.width, bbox.height
+
+    cell_w = (width_in * fig.dpi) / nx
+    cell_h = (height_in * fig.dpi) / total_height
+    cell_pixels = min(cell_w, cell_h)
+
+    # 🔑 reduced scale prevents overflow
+    max_marker_size = (0.6 * cell_pixels) ** 2
+
+    text_fontsize = cell_pixels * 0.15
+
+    # -----------------------------------
+    # Plot triangles + text
+    # -----------------------------------
+    for j in range(ny):
+        for i in range(nx):
+
+            val = change[j, i]
+            if np.isnan(val):
+                continue
+
+            if abs(val) < 0.01:
+                continue
+
+            sig = signif[j, i]
+            size = max_marker_size * abs(val)
+
+            # Triangle style
+            if val >= 0:
+                marker = "^"
+                color = color_pos
+            else:
+                marker = "v"
+                color = color_neg
+
+            if sig:
+                edgecolor = "black"
+                linewidth = 0.6   # thinner prevents spill
+            else:
+                edgecolor = "none"
+                linewidth = 0.0
+
+            # Triangle
+            ax.scatter(
+                i,
+                tri_y[j],
+                s=size,
+                marker=marker,
+                c=color,
+                edgecolors=edgecolor,
+                linewidths=linewidth,
+                zorder=3,
+                clip_on=True   # ensures no rendering bleed
+            )
+
+            # Text row
+            if magnitude is not None:
+                mag_val = magnitude[j, i]
+
+                if not np.isnan(mag_val):
+                    ax.text(
+                        i,
+                        txt_y[j],
+                        f"{mag_val:.1f}",
+                        ha="center",
+                        va="center",
+                        fontsize=text_fontsize,
+                        color="black",
+                        zorder=4
+                    )
+
+    plt.tight_layout()
+    return fig, ax
+
+
 def scatter_plot(
     cube_x: iris.cube.Cube | iris.cube.CubeList,
     cube_y: iris.cube.Cube | iris.cube.CubeList,
