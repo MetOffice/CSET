@@ -69,6 +69,15 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
         varname_constraint = iris.AttributeConstraint(STASH=varname)
     else:
         varname_constraint = iris.Constraint(name=varname)
+
+    if varname == "wind_speed_at_10m":
+        varname_constraint = iris.Constraint(
+            cube_func=lambda cube: (
+                cube.long_name
+                in ["wind_at_10m", "eastward_wind_at_10m", "northward_wind_at_10m"]
+            )
+        )
+
     return varname_constraint
 
 
@@ -207,6 +216,10 @@ def generate_cell_methods_constraint(
                 "surface_microphysical" in varname and "amount" in varname
             ):
                 cell_methods_constraint = iris.Constraint(cube_func=check_cell_sum)
+                return cell_methods_constraint
+            ## SEA FIX ##
+            if "surface_microphysical" in varname and "rate" in varname:
+                cell_methods_constraint = iris.Constraint(cube_func=check_cell_mean)
                 return cell_methods_constraint
             # Require climatological ancillary as time-average mean.
             if ("albedo" in varname) or (
