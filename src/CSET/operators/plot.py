@@ -474,6 +474,9 @@ def _plot_and_save_spatial_plot(
     # Specify the color bar
     cmap, levels, norm = colorbar_map_levels(cube)
 
+    if "feature" in cube.long_name:
+        cmap.set_under("white")
+
     # If overplotting, set required colorbars
     if overlay_cube:
         over_cmap, over_levels, over_norm = colorbar_map_levels(overlay_cube)

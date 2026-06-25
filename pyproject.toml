@@ -34,6 +34,7 @@ dependencies = [
     "scikit-image",
     "scores",
     "dask",
+    "simple-track",
     "xarray",
 ]
 
