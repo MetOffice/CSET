@@ -63,3 +63,20 @@ def load(conf: Config):
                 model_ids=[base_model["id"], model["id"]],
                 aggregation=False,
             )
+    if conf.SCORES_RMSE_VERTICAL_PROFILES:
+        base_model = models[0]
+        for model, field in itertools.product(models[1:], conf.PRESSURE_LEVEL_FIELDS):
+            yield RawRecipe(
+                recipe="generic_level_rmse_scores_profile.yaml",
+                variables={
+                    "VARNAME": field,
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
