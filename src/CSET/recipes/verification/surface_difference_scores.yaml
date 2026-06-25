@@ -1,5 +1,5 @@
 category: Scores
-title: "bmc $METHOD $VARNAME\nScores $DIFFERENCE_METHOD between $OTHER_MODEL and $BASE_MODEL"
+title: "bmc $METHOD $VARNAME\nScores $SCORES_METHOD between $OTHER_MODEL and $BASE_MODEL"
 description: |
   Extracts and plots the Root Mean Square Error in $METHOD of $VARNAME
   for all times. The RMSE is calculated based on that used in the
@@ -32,9 +32,9 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
-  - operator: scoreswrappers.scores_difference
+  - operator: scoreswrappers.scores_metrics
     preserved_coordinates: ["time", "grid_latitude", "grid_longitude"]
-    difference_method: $DIFFERENCE_METHOD
+    scores_method: $SCORES_METHOD
 
   - operator: collapse.collapse
     coordinate: ["time"]
