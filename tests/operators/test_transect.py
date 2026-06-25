@@ -70,12 +70,53 @@ def test_transect_ml(load_cube_ml, load_cube_ml_out):
     )
 
 
+def test_transect_multiplecubes(transect_source_cube):
+    """Test case of multiple cubes to have transect computed on."""
+    cubes = iris.cube.CubeList([transect_source_cube, transect_source_cube])
+    out = transect.calc_transect(
+        cubes, startcoords=(-10.94, 19.06), endcoords=(-10.86, 19.14)
+    )
+    assert len(out) == 2
+
+
 def test_transect_45deg(transect_source_cube, transect_source_cube_out):
     """Test case of 45 degree angle where map coordinate should be longitude."""
     with pytest.raises(iris.exceptions.CoordinateNotFoundError):
         transect.calc_transect(
             transect_source_cube, startcoords=(-10.94, 19.06), endcoords=(-10.86, 19.14)
         ).coord("latitude")
+
+
+def test_transect_pl_longitude(transect_source_cube):
+    """Test case of computing transect with x axis longitude."""
+    out = transect.calc_transect(
+        transect_source_cube, startcoords=(-10.9, 19.06), endcoords=(-10.9, 19.18)
+    )
+    # Check to make sure spatial coordinate is longitude
+    assert (
+        str([coord.name() for coord in out.dim_coords])
+        == "['longitude', 'time', 'pressure']"
+    )
+
+
+def test_transect_pl_latitude(transect_source_cube):
+    """Test case of computing transect with x axis longitude."""
+    out = transect.calc_transect(
+        transect_source_cube, startcoords=(-10.94, 19.06), endcoords=(-10.86, 19.06)
+    )
+    # Check to make sure spatial coordinate is latitude
+    assert (
+        str([coord.name() for coord in out.dim_coords])
+        == "['latitude', 'time', 'pressure']"
+    )
+
+
+def test_transect_pl_removecoord(transect_source_cube):
+    """Test transect passes when iris.exceptions.CoordinateNotFoundError."""
+    transect_source_cube.remove_coord("grid_latitude")
+    transect.calc_transect(
+        transect_source_cube, startcoords=(-10.94, 19.06), endcoords=(-10.86, 19.06)
+    )
 
 
 def test_transect_coord_outofboundsLLat(transect_source_cube):

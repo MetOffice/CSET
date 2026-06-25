@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2026) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,12 +35,17 @@ from CSET.operators import (
     ensembles,
     feature,
     filters,
+    humidity,
     imageprocessing,
     mesoscale,
     misc,
     plot,
+    precipitation,
+    pressure,
     read,
     regrid,
+    scoreswrappers,
+    temperature,
     transect,
     wind,
     write,
@@ -58,13 +63,18 @@ __all__ = [
     "execute_recipe",
     "feature",
     "filters",
+    "humidity",
     "get_operator",
     "imageprocessing",
     "mesoscale",
     "misc",
     "plot",
+    "precipitation",
+    "pressure",
     "read",
     "regrid",
+    "temperature",
+    "scoreswrappers",
     "transect",
     "wind",
     "write",
@@ -106,8 +116,6 @@ def get_operator(name: str):
         name_sections = name.split(".")
         operator = CSET.operators
         for section in name_sections:
-            logging.debug(f"operator: {operator}")
-            logging.debug(f"section: {operator}")
             operator = getattr(operator, section)
 
         if callable(operator):

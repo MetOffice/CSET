@@ -56,10 +56,10 @@ def test_ensure_aggregatable_across_cases_true_aggregatable_cube(
     )
 
 
-def test_ensure_aggregatable_across_cases_false_aggregatable_cube(long_forecast):
+def test_ensure_aggregatable_across_cases_false_aggregatable_cube(cardington_cube):
     """Check that a non-aggregatable cube raises an error."""
     with pytest.raises(ValueError):
-        aggregate.ensure_aggregatable_across_cases(long_forecast)
+        aggregate.ensure_aggregatable_across_cases(cardington_cube)
 
 
 def test_ensure_aggregatable_across_cases_cubelist(

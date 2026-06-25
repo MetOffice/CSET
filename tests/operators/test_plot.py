@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2024) and CSET contributors.
+# © Crown copyright, Met Office (2022-2026) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,226 +21,10 @@ from pathlib import Path
 import iris.coords
 import iris.cube
 import matplotlib as mpl
-import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from CSET.operators import collapse, misc, plot, read
-
-
-def test_check_single_cube():
-    """Conversion to a single cube, and rejection where not possible."""
-    cube = iris.cube.Cube([0.0])
-    cubelist = iris.cube.CubeList([cube])
-    long_cubelist = iris.cube.CubeList([cube, cube])
-    non_cube = 1
-    assert plot._check_single_cube(cube) == cube
-    assert plot._check_single_cube(cubelist) == cube
-    with pytest.raises(TypeError):
-        plot._check_single_cube(long_cubelist)
-    with pytest.raises(TypeError):
-        plot._check_single_cube(non_cube)
-
-
-def test_load_colorbar_map():
-    """Colorbar is loaded correctly."""
-    colorbar = plot._load_colorbar_map()
-    assert isinstance(colorbar, dict)
-    # Check we can find an example definition.
-    assert colorbar["temperature_at_screen_level"] == {
-        "cmap": "RdYlBu_r",
-        "max": 323,
-        "min": 263,
-        "ymax": "auto",
-        "ymin": "auto",
-    }
-
-
-def test_load_colorbar_map_override(tmp_path):
-    """Colorbar is loaded correctly and overridden by the user definition."""
-    # Setup a user provided colorbar override.
-    user_definition = {"temperature_at_screen_level": {"max": 1000, "min": 0}}
-    user_colorbar_file = tmp_path / "colorbar.json"
-    with open(user_colorbar_file, "wt") as fp:
-        json.dump(user_definition, fp)
-
-    colorbar = plot._load_colorbar_map(user_colorbar_file)
-
-    assert isinstance(colorbar, dict)
-    # Check definition is updated.
-    assert colorbar["temperature_at_screen_level"] == {
-        "cmap": "RdYlBu_r",
-        "max": 1000,
-        "min": 0,
-        "ymax": "auto",
-        "ymin": "auto",
-    }
-    # Check we can still see unchanged definitions.
-    assert colorbar["temperature_at_screen_level_difference"] == {
-        "cmap": "bwr",
-        "max": 10,
-        "min": -10,
-    }
-
-
-def test_load_colorbar_map_override_file_not_found(tmp_path):
-    """Colorbar overridden by the user definition in non-existent file."""
-    user_colorbar_file = tmp_path / "colorbar.json"
-    colorbar = plot._load_colorbar_map(user_colorbar_file)
-    # Check it still returns the built-in one.
-    assert isinstance(colorbar, dict)
-
-
-def test_colorbar_map_levels(cube, tmp_working_dir):
-    """Colorbar definition is found for cube."""
-    cmap, levels, norm = plot._colorbar_map_levels(cube)
-    assert cmap == mpl.pyplot.get_cmap("RdYlBu_r", 51)
-    assert (levels == np.linspace(263, 323, 101)).all()
-    assert norm is None
-
-
-def test_colorbar_map_levels_xaxis(cube, tmp_working_dir):
-    """Set levels for based on xmin, xmax."""
-    cube = iris.cube.Cube(np.arange(10), long_name="zonal_wind_at_pressure_levels")
-    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="x")
-    assert cmap is None
-    assert levels == [-25, 25]
-    assert norm is None
-
-
-def test_colorbar_map_levels_xaxis_default(cube, tmp_working_dir):
-    """Test for variable without xmin, xmax."""
-    cube = iris.cube.Cube(
-        np.arange(10), long_name="zonal_wind_at_pressure_levels_difference"
-    )
-    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="x")
-    assert cmap is None
-    assert levels == [-20, 20]
-    assert norm is None
-
-
-def test_colorbar_map_levels_yaxis(cube, tmp_working_dir):
-    """Set levels for based on ymin, ymax."""
-    cube = iris.cube.Cube(np.arange(10), long_name="toa_upward_shortwave_flux")
-    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="y")
-    assert cmap is None
-    assert levels == [0, 500]
-    assert norm is None
-
-
-def test_colorbar_map_levels_yaxis_default(cube, tmp_working_dir):
-    """Test for variable without ymin, ymax."""
-    cube = iris.cube.Cube(
-        np.arange(10), long_name="toa_upward_shortwave_flux_difference"
-    )
-    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="y")
-    assert cmap is None
-    assert levels == [-100, 100]
-    assert norm is None
-
-
-def test_colorbar_map_levels_yaxis_auto(cube, tmp_working_dir):
-    """Set levels for based on ymin, ymax set to auto."""
-    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="y")
-    assert cmap is None
-    assert levels is None
-    assert norm is None
-
-
-def test_colorbar_map_levels_def_on_levels(cube, tmp_working_dir):
-    """Colorbar definition that uses levels is found for cube."""
-    cube = iris.cube.Cube(
-        np.arange(10), long_name="surface_microphysical_rainfall_rate"
-    )
-    cmap, levels, norm = plot._colorbar_map_levels(cube)
-    assert levels == [0, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
-
-
-def test_colorbar_map_levels_def_on_levels_test_visibility_in_air(
-    cube, tmp_working_dir
-):
-    """Colorbar definition that uses levels is found for cube."""
-    cube = iris.cube.Cube(np.arange(10), long_name="visibility_in_air")
-    cmap, levels, norm = plot._colorbar_map_levels(cube)
-    assert levels == [
-        0,
-        0.05,
-        0.1,
-        0.2,
-        1.0,
-        2.0,
-        5.0,
-        10.0,
-        20.0,
-        30.0,
-        50.0,
-        70.0,
-        100.0,
-    ]
-
-
-def test_colorbar_map_levels_name_fallback(cube, tmp_working_dir):
-    """Colorbar definition is found for cube after checking its other names."""
-    cube.standard_name = None
-    cmap, levels, norm = plot._colorbar_map_levels(cube)
-    assert cmap == mpl.pyplot.get_cmap("RdYlBu_r", 51)
-    assert (levels == np.linspace(263, 323, 101)).all()
-    assert norm is None
-
-
-def test_colorbar_map_levels_unknown_variable_fallback(cube, tmp_working_dir):
-    """Colorbar definition doesn't exist for cube."""
-    cube.standard_name = None
-    cube.long_name = None
-    cube.var_name = "unknown"
-    cmap, levels, norm = plot._colorbar_map_levels(cube)
-    assert cmap == mpl.pyplot.get_cmap("viridis")
-    assert levels is None
-    assert norm is None
-
-
-def test_colorbar_map_levels_pressure_level(transect_source_cube, tmp_working_dir):
-    """Pressure level specific colorbar definition is picked up."""
-    cube_250hPa = transect_source_cube.extract(iris.Constraint(pressure=250))
-    cmap, levels, norm = plot._colorbar_map_levels(cube_250hPa)
-    assert cmap == mpl.pyplot.get_cmap("RdYlBu_r", 51)
-    assert (levels == np.linspace(200, 240, 101)).all()
-    assert norm is None
-
-
-def test_colorbar_map_levels_pressure_level_yaxis(
-    transect_source_cube, tmp_working_dir
-):
-    """Pressure level specific colorbar definition is picked up."""
-    cube_250hPa = transect_source_cube.extract(iris.Constraint(pressure=250))
-    cube_250hPa.rename("zonal_wind_at_pressure_levels")
-    cmap, levels, norm = plot._colorbar_map_levels(cube_250hPa, axis="y")
-    assert cmap is None
-    assert levels == [-20, 20]
-    assert norm is None
-
-
-def test_colorbar_map_levels_missing_pressure_level(
-    transect_source_cube, tmp_working_dir, caplog
-):
-    """Pressure level specific colorbar definition is not defined."""
-    cube_288hPa = transect_source_cube.extract(iris.Constraint(pressure=250))
-    cube_288hPa.coord("pressure").points = 288.0
-    cmap, levels, norm = plot._colorbar_map_levels(cube_288hPa)
-    with caplog.at_level(logging.DEBUG):
-        cmap, levels, norm = plot._colorbar_map_levels(cube_288hPa)
-        assert caplog.record_tuples == [
-            (
-                "root",
-                logging.DEBUG,
-                "temperature_at_pressure_levels has no colorbar definition for pressure level 288.",
-            ),
-            (
-                "root",
-                logging.DEBUG,
-                "Using min and max for temperature_at_pressure_levels colorbar.",
-            ),
-        ]
+from CSET.operators import collapse, constraints, filters, plot, read
 
 
 def test_setup_spatial_map(cube):
@@ -295,7 +79,7 @@ def test_set_title_and_filename_filename_single_sequence(cube):
         seq_coord, nplot, "recipe", "filename"
     )
     assert plot_filename == "filename.png"
-    assert plot_title == "recipe\n [2022-09-21 02:30:00 to 2022-09-21 05:30:00]"
+    assert plot_title == "recipe\n [2022-09-21 03:00:00 to 2022-09-21 05:00:00]"
 
 
 def test_set_title_and_filename_filename_single_nosequence(cube):
@@ -316,8 +100,8 @@ def test_set_title_and_filename_nofilename_single_sequence(cube):
     plot_title, plot_filename = plot._set_title_and_filename(
         seq_coord, nplot, "recipe", None
     )
-    assert plot_filename == "recipe_20220921023000_20220921053000.png"
-    assert plot_title == "recipe\n [2022-09-21 02:30:00 to 2022-09-21 05:30:00]"
+    assert plot_filename == "recipe_20220921030000_20220921050000.png"
+    assert plot_title == "recipe\n [2022-09-21 03:00:00 to 2022-09-21 05:00:00]"
 
 
 def test_set_title_and_filename_nofilename_single_nobounds(cube):
@@ -328,8 +112,8 @@ def test_set_title_and_filename_nofilename_single_nobounds(cube):
     plot_title, plot_filename = plot._set_title_and_filename(
         seq_coord, nplot, "recipe", None
     )
-    assert plot_filename == "recipe.png"
-    assert plot_title == "recipe"
+    assert plot_filename == "recipe_20220921030000.png"
+    assert plot_title == "recipe\n [2022-09-21 03:00:00]"
 
 
 def test_set_title_and_filename_nofilename_multi_sequence(cube):
@@ -378,173 +162,22 @@ def test_set_title_and_filename_multidim_aggregated(long_forecast_multi_day):
     assert plot_title == "recipe\n [3 cases]"
 
 
-def test_colorbar_map_mask(cube, tmp_working_dir):
-    """Test to ensure axis picks up correct colormap for a mask."""
-    cube.rename(f"mask_for_{cube.name()}")
-    cmap, levels, norm = plot._colorbar_map_levels(cube)
-    assert cmap == mpl.colors.ListedColormap(["w", "dodgerblue"])
-    assert levels == [0, 1, 2]
-    assert isinstance(norm, mpl.colors.BoundaryNorm)
-    assert (norm.boundaries == levels).all()
-
-
-def test_colorbar_map_beaufort_scale(cube, tmp_working_dir):
-    """Test to ensure picks up correct colormap for a cube in Beaufort Scale."""
-    cube.rename("wind_speed_at_10m_on_Beaufort_Scale")
-    cmap, levels, norm = plot._colorbar_map_levels(cube)
-    assert cmap == mpl.colors.ListedColormap(
-        [
-            "black",
-            (0, 0, 0.6),
-            "blue",
-            "cyan",
-            "green",
-            "yellow",
-            (1, 0.5, 0),
-            "red",
-            "pink",
-            "magenta",
-            "purple",
-            "maroon",
-            "white",
-        ]
+def test_set_title_and_filename_year_one(cube):
+    """Ensure no time information in plot title and filename for dummy time output."""
+    # Extract first time from test cube.
+    cube = cube[0]
+    # Set time coordinate to 0001-01-01 0hrs and remove bounds.
+    cube.coord("time").units = "hours since 0001-01-01 00:00:00"
+    cube.coord("time").points = 0
+    cube.coord("time").bounds = None
+    seq_coord = cube.coord("time")
+    # Check no time information added to plot title or filename
+    nplot = 1
+    plot_title, plot_filename = plot._set_title_and_filename(
+        seq_coord, nplot, "recipe", None
     )
-    assert levels == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
-    assert isinstance(norm, mpl.colors.BoundaryNorm)
-    assert (norm.boundaries == levels).all()
-
-
-def test_colorbar_map_mask_difference(cube, tmp_working_dir):
-    """Test to ensure axis picks up correct colormap for a mask difference."""
-    cube.rename(f"mask_for_{cube.name()}_difference")
-    cmap, levels, norm = plot._colorbar_map_levels(cube)
-    assert cmap == mpl.colors.ListedColormap(["goldenrod", "w", "teal"])
-    assert levels == [-2, -0.5, 0.5, 2]
-    assert isinstance(norm, mpl.colors.BoundaryNorm)
-    assert (norm.boundaries == levels).all()
-
-
-def test_colorbar_map_beaufort_scale_difference(cube, tmp_working_dir):
-    """Test to ensure picks up correct colormap for Beaufort Scale difference."""
-    cube.rename("wind_speed_at_10m_on_Beaufort_Scale_difference")
-    cmap, levels, norm = plot._colorbar_map_levels(cube)
-    assert cmap == plt.get_cmap("bwr", 8)
-    assert levels == [
-        -3.5,
-        -2.5,
-        -1.5,
-        -0.5,
-        0.5,
-        1.5,
-        2.5,
-        3.5,
-    ]
-    assert isinstance(norm, mpl.colors.BoundaryNorm)
-    assert (norm.boundaries == levels).all()
-
-
-def test_colorbar_map_axis_mask(cube, tmp_working_dir):
-    """Test to ensure axis picks up correct levels when mask defined."""
-    cube.rename(f"mask_for_{cube.name()}")
-    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="y")
-    assert cmap is None
-    assert levels == [0, 1]
-    assert norm is None
-
-
-def test_colorbar_map_axis_mask_difference(cube, tmp_working_dir):
-    """Test to ensure axis picks up correct levels when mask difference defined."""
-    cube.rename(f"mask_for_{cube.name()}_difference")
-    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="x")
-    assert cmap is None
-    assert levels == [-1, 1]
-    assert norm is None
-
-
-def test_colorbar_map_beaufort_scale_axis(cube, tmp_working_dir):
-    """Test to ensure axis picks up correct levels for a cube in Beaufort Scale."""
-    cube.rename("wind_speed_at_10m_on_Beaufort_Scale")
-    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="y")
-    assert cmap is None
-    assert levels == [0, 12]
-    assert norm is None
-
-
-def test_colorbar_map_beaufort_scale_axis_difference(cube, tmp_working_dir):
-    """Test to ensure axis picks up correct levels for a cube in Beaufort Scale difference."""
-    cube.rename("wind_speed_at_10m_on_Beaufort_Scale_difference")
-    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="x")
-    assert cmap is None
-    assert levels == [-4, 4]
-    assert norm is None
-
-
-def test_colorbar_map_celsius(cube, tmp_working_dir):
-    """Test to ensure color bar is changed for temperature in Celsius."""
-    cube = misc.convert_units(cube, "Celsius")
-    cmap = mpl.cm.RdYlBu
-    norm = None
-    levels = [273, 373]
-    cmap, levels, norm = plot._custom_colormap_celsius(
-        cube, cmap=cmap, levels=levels, norm=norm
-    )
-    assert cmap == mpl.cm.RdYlBu
-    assert norm is None
-    assert levels == [0, 100]
-
-
-def test_colorbar_map_probabilities_axis(cube, tmp_working_dir):
-    """Test to ensure axis picks up correct levels for a cube of probabilities."""
-    cube.rename("probability_of_temperature_>_276")
-    cmap, levels, norm = plot._colorbar_map_levels(cube, axis="x")
-    assert cmap is None
-    assert levels == [0, 1]
-    assert norm is None
-
-
-def test_colorbar_map_probabilities(cube, tmp_working_dir):
-    """Test to ensure colorbar picks up correct maap for cube of probabilities."""
-    cube.rename("probability_of_temperature_>_276")
-    cmap, levels, norm = plot._colorbar_map_levels(cube)
-    assert cmap == mpl.colors.ListedColormap(
-        [
-            "#FFFFFF",
-            "#636363",
-            "#e1dada",
-            "#B5CAFF",
-            "#8FB3FF",
-            "#7F97FF",
-            "#ABCF63",
-            "#E8F59E",
-            "#FFFA14",
-            "#FFD121",
-            "#FFA30A",
-        ]
-    )
-    assert levels == [0.0, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-    assert isinstance(norm, mpl.colors.BoundaryNorm)
-    assert (norm.boundaries == levels).all()
-
-
-def test_colorbar_map_aviation_colour_state(cube, tmp_working_dir):
-    """Test to ensure color bar is change for aviation colour states."""
-    cube.rename("aviation_colour_state")
-    expected_levels = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5]
-    expected_colors = [
-        "#87ceeb",
-        "#ffffff",
-        "#8ced69",
-        "#ffff00",
-        "#ffd700",
-        "#ffa500",
-        "#fe3620",
-    ]
-    expected_cmap = mpl.colors.ListedColormap(expected_colors)
-    cmap, levels, norm = plot._custom_colormap_aviation_colour_state(cube)
-    assert cmap == expected_cmap
-    assert levels == expected_levels
-    assert isinstance(norm, mpl.colors.BoundaryNorm)
-    assert (norm.boundaries == levels).all()
+    assert plot_filename == "recipe.png"
+    assert plot_title == "recipe"
 
 
 def test_spatial_contour_plot(cube, tmp_working_dir):
@@ -614,7 +247,7 @@ def test_postage_stamp_contour_plot(ensemble_cube, tmp_working_dir):
     # Get a single time step.
     ensemble_cube_3d = next(ensemble_cube.slices_over("time"))
     plot.spatial_contour_plot(ensemble_cube_3d)
-    assert Path("untitled.png").is_file()
+    assert Path("untitled_20221201100000.png").is_file()
 
 
 def test_postage_stamp_contour_plot_sequence_coord_check(cube, tmp_working_dir):
@@ -678,7 +311,7 @@ def test_postage_stamp_pcolormesh_plot(ensemble_cube, tmp_working_dir):
     # Get a single time step.
     ensemble_cube_3d = next(ensemble_cube.slices_over("time"))
     plot.spatial_pcolormesh_plot(ensemble_cube_3d)
-    assert Path("untitled.png").is_file()
+    assert Path("untitled_20221201100000.png").is_file()
 
 
 def test_postage_stamp_pcolormesh_plot_sequence_coord_check(cube, tmp_working_dir):
@@ -717,7 +350,7 @@ def test_plot_line_series(cube, tmp_working_dir):
     """Save a line series plot."""
     cube = collapse.collapse(cube, ["grid_latitude", "grid_longitude"], "MEAN")
     plot.plot_line_series(cube)
-    assert Path("untitled_20220921023000_20220921053000.png").is_file()
+    assert Path("untitled_20220921030000_20220921050000.png").is_file()
 
 
 def test_plot_line_series_with_filename(cube, tmp_working_dir):
@@ -1027,49 +660,6 @@ def test_plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
     assert Path("test.png").is_file()
 
 
-def test_create_alpha_matrix_shape():
-    """Test shape of alpha matrix used in power spectrum calculation."""
-    Ny, Nx = 10, 15
-    alpha = plot._create_alpha_matrix(Ny, Nx)
-    assert alpha.shape == (Ny, Nx), "Alpha matrix shape mismatch"
-
-
-def test_create_alpha_matrix_values():
-    """Test alpha matrix contains only positive values."""
-    Ny, Nx = 4, 4
-    alpha = plot._create_alpha_matrix(Ny, Nx)
-    assert np.all(alpha >= 0), "Alpha matrix contains negative values"
-    assert np.isclose(alpha[0, 0], np.sqrt((1 / Nx) ** 2 + (1 / Ny) ** 2)), (
-        "Alpha matrix value incorrect"
-    )
-
-
-def test_dct_ps_output_shape():
-    """Test shape of power spectrum output from _DCT_ps."""
-    Nt, Ny, Nx = 5, 10, 10
-    y_3d = np.random.rand(Nt, Ny, Nx)
-    ps = plot._DCT_ps(y_3d)
-    expected_shape = (Nt, min(Nx - 1, Ny - 1))
-    assert ps.shape == expected_shape, "Power spectrum output shape mismatch"
-
-
-def test_dct_ps_non_negative():
-    """Test power spectrum only contains positive values."""
-    Nt, Ny, Nx = 3, 8, 8
-    y_3d = np.random.rand(Nt, Ny, Nx)
-    ps = plot._DCT_ps(y_3d)
-    assert np.all(ps >= 0), "Power spectrum contains negative values"
-
-
-def test_dct_ps_known_input():
-    """Test _DCT_ps produces non-zero spectrum for constant input."""
-    # Use a constant field to test expected behavior
-    Nt, Ny, Nx = 2, 4, 4
-    y_3d = np.ones((Nt, Ny, Nx))
-    ps = plot._DCT_ps(y_3d)
-    assert np.allclose(ps[:, 1:], 0, atol=1e-6), "Non-zero spectrum for constant input"
-
-
 def test_plot_power_spectrum_no_sequence_coordinate(field2d_cube, tmp_working_dir):
     """Error when cube is missing sequence coordinate (time)."""
     field2d_cube.remove_coord("time")
@@ -1207,6 +797,56 @@ def test_get_plot_resolution_unset(tmp_working_dir):
     """Test getting the default plot resolution when unset."""
     resolution = plot._get_plot_resolution()
     assert resolution == 100
+
+
+def test_get_start_end_strings_nobounds(cube):
+    """Test setting (startstring, endstring) from coord points."""
+    title, fname = plot._get_start_end_strings(cube.coord("time"), use_bounds=False)
+    assert title == "\n [2022-09-21 03:00:00 to 2022-09-21 05:00:00]"
+    assert fname == "_20220921030000_20220921050000"
+
+
+def test_get_start_end_strings_bounds(cubes):
+    """Test setting (startstring, endstring) from coord bounds."""
+    # Get a field with time bounds
+    cube = filters.filter_cubes(
+        cubes,
+        constraints.generate_cell_methods_constraint(
+            ["minimum"], coord="time", interval="1 hour"
+        ),
+    )
+
+    title, fname = plot._get_start_end_strings(cube.coord("time"), use_bounds=True)
+    assert title == "\n [2022-09-21 03:00:00 to 2022-09-21 05:00:00]"
+    assert fname == "_20220921030000_20220921050000"
+
+
+def test_get_start_end_strings_remove_bounds(cube):
+    """Test setting (startstring, endstring) from coord with no bounds."""
+    title, fname = plot._get_start_end_strings(cube.coord("time"), use_bounds=True)
+    assert title == "\n [2022-09-21 03:00:00 to 2022-09-21 05:00:00]"
+    assert fname == "_20220921030000_20220921050000"
+
+
+def test_set_ensemble_title_realization():
+    """Test setting postage stamp title for different coord inputs."""
+    stamp_coord = iris.coords.DimCoord([1], var_name="realization")
+    assert plot._set_postage_stamp_title(stamp_coord) == "Member #1"
+
+    stamp_coord = iris.coords.DimCoord([1], var_name="member")
+    assert plot._set_postage_stamp_title(stamp_coord) == "Member #1"
+
+    stamp_coord = iris.coords.DimCoord([1], var_name="sample")
+    assert plot._set_postage_stamp_title(stamp_coord) == "Sample #1"
+
+    stamp_coord = iris.coords.DimCoord([1], var_name="pseudo_level")
+    assert plot._set_postage_stamp_title(stamp_coord) == "Pseudo_level #1"
+
+
+def test_set_ensemble_title_time(cube):
+    """Test setting postage stamp title for time stamp_coord input."""
+    stamp_coord = cube.coord("time")
+    assert plot._set_postage_stamp_title(stamp_coord) == "2022-09-21 03:00:00"
 
 
 def test_invalid_plotting_method_spatial_plot(cube, tmp_working_dir):

@@ -488,3 +488,45 @@ def interpolate_to_point_cube(
                 ]
             )
     return fld_point_cube
+
+
+def vertical_interpolation(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+    coordinate: str,
+    target: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Vertical interpolation of a cube to match that off a different cube.
+
+    Acts as a wrapper around the `cube.interpolate` functionality and uses
+    linear interpolation as the method.
+
+    Parameters
+    ----------
+    cubes: iris.cube.Cube | iris.cube.CubeList
+        An iris cube or cubelist of data defining field that should be
+        vertically interpolated.
+    coordinate: str
+        The coordinate the interpolation occurs over.
+    target: iris.cube.Cube | iris.cube.CubeList
+        The target cube or cubelist that provides the vertical coordinate
+        information. It will use `cube.coord(coordinate).points` to provide
+        the vertical target. The number of target cubes should match the number
+        of cubes used as input.
+
+    Returns
+    -------
+    interpolated_cubes: iris.cube.Cube | iris.cube.CubeList
+        Coordinates of the selected point on the rotated grid specified within
+        the selected cube.
+    """
+    interpolated_cubes = iris.cube.CubeList([])
+    for cube, cube_t in zip(iter_maybe(cubes), iter_maybe(target), strict=True):
+        target_levels = cube_t.coord(coordinate).points
+        new_cube = cube.interpolate(
+            [(coordinate, target_levels)], iris.analysis.Linear()
+        )
+        interpolated_cubes.append(new_cube)
+    if len(interpolated_cubes) == 1:
+        return interpolated_cubes[0]
+    else:
+        return interpolated_cubes

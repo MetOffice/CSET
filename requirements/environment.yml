@@ -15,8 +15,11 @@ dependencies:
   - iris-grib
   - scipy
   - scikit-image # For image processing techniques.
-  - dask
-  - simple-track 
+  - scores # For verification.
+  - xarray # Required for scores verification now as used.
+  - dask-core # Dask with minimal dependencies.
+  - proj = 9.7.1 # Newer versions break plotting, see issue #2052.
+  - simple-track # For feature tracking and cell stats operators
 
   # Build dependencies
   - setuptools>=64
@@ -31,6 +34,8 @@ dependencies:
   - pytest >= 7.0
   - pytest-cov
   - pytest-xdist
+  - pytest-playwright
+  - libnetcdf
 
   # Documentation dependencies
   - sphinx >= 6.0

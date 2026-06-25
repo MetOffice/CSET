@@ -82,11 +82,11 @@ def test_read_cubes_ensemble_with_realization_coord():
 
 
 def test_read_cubes_ensemble_separate_files():
-    """Read ensemble from multiple files with the member number in filename."""
+    """Read ensemble from multiple files with the realization coord in file."""
     from CSET.operators import constraints
 
     cubes = read.read_cubes(
-        "tests/test_data/exeter_em*.nc",
+        "tests/test_data/exeter_em0?.nc",
         constraint=constraints.generate_stash_constraint("m01s03i236"),
     )
     # Check ensemble members have been merged into a single cube.
@@ -94,6 +94,35 @@ def test_read_cubes_ensemble_separate_files():
     # Check realization is an integer.
     for point in cubes[0].coord("realization").points:
         assert isinstance(int(point), int)
+
+
+def test_read_cubes_ensemble_without_realization_coord():
+    """Read ensemble from multiple files without realization coord in file."""
+    cubes = read.read_cubes("tests/test_data/ensemble_emX?.nc")
+    # Check ensemble members have been merged into a single cube.
+    assert len(cubes) == 1
+    # Check each cube has separate realization coord point.
+    assert cubes[0].coord("realization").points[0] == 1
+    assert cubes[0].coord("realization").points[1] == 2
+
+
+def test_read_cubes_merge_cubes_check_nonensemble():
+    """Ensure merge_cubes_check_ensemble has no impact on non-ensemble input."""
+    cubes = read.read_cubes("tests/test_data/air_temp.nc")
+    merged_cubes = read._merge_cubes_check_ensemble(cubes)
+    assert cubes == merged_cubes
+
+
+def test_read_cubes_merge_cubes_check_ensemble():
+    """Ensure merge_cubes_check_ensemble can generate merged cube from CubeList without realization coord."""
+    cube1 = read.read_cube("tests/test_data/ensemble_emX1.nc")
+    cube2 = read.read_cube("tests/test_data/ensemble_emX2.nc")
+    cubes = iris.cube.CubeList([cube1, cube2])
+    merged_cubes = read._merge_cubes_check_ensemble(cubes)
+    assert cubes != merged_cubes
+    assert len(merged_cubes) == 1
+    assert merged_cubes[0].coord("realization").points[0] == 1
+    assert merged_cubes[0].coord("realization").points[1] == 2
 
 
 def test_read_cubes_verify_comparison_base():
@@ -1123,9 +1152,89 @@ def test_proleptic_gregorian_fix():
     assert cube.coord("time").units.origin == "hours since 1970-01-01T00:00:00"
 
 
+def test_fix_no_time_coords_callback(cube):
+    """Check that a time scalar coordinate is added to a non-time-varying input."""
+    cube = cube[0]
+    cube.remove_coord("time")
+    coord_names = [coord.name() for coord in cube.coords()]
+    assert "time" not in coord_names
+
+    cube = read._fix_no_time_coords_callback(cube)
+    coord_names = [coord.name() for coord in cube.coords()]
+    assert "time" in coord_names
+    assert len(cube.coord("time").points) == 1
+    assert cube.coord("time").units == "hours since 0001-01-01 00:00:00"
+
+
 def test_normalise_ML_varname(transect_source_cube):
     """Check that pressure varname is changed."""
     cube = transect_source_cube.copy()
     cube.rename = "air_temperature"
     read._normalise_ML_varname(cube)
     assert cube.long_name == "temperature_at_pressure_levels"
+
+
+def test_read_time_constraint_in_bounds():
+    """Cubes can be selected with any time inside the bounds."""
+    cubes = read.read_cubes(
+        "tests/test_data/air_temp.nc",
+        constraint=iris.Constraint(time=datetime.datetime(2022, 9, 21, 3, 0)),
+    )
+
+    for c in cubes:
+        if c.coord("time").bounds is None:
+            # Instantaneous field was loaded
+            assert c.coord("time").as_string_arrays().points == ["2022-09-21 03:00:00"]
+        else:
+            # Time processed field was loaded even though its time doesn't match
+            # since the constraint is inside time bounds
+            assert c.coord("time").as_string_arrays().points == ["2022-09-21 03:30:00"]
+
+
+def test_cell_methods_computes_time_bounds(cdl_to_cubes):
+    """Only cubes with time processing have time bounds."""
+    # NC file with missing time bounds and various methods
+    cdl = """
+    netcdf cell_methods_sample {
+    dimensions:
+        lat = 2, lon = 2, time = 2; bnds = 2;
+    variables:
+        float lat(lat), lon(lon), time(time);
+        float lat_bnds(lat, bnds), lon_bnds(lon, bnds);
+            lat:standard_name = "latitude";
+            lat:bounds = "lat_bnds";
+            lon:standard_name = "longitude";
+            lon:bounds = "lon_bnds";
+            time:standard_name = "time";
+            time:units = "days since 2001-01-01";
+
+        float time_instant(time, lat, lon);
+        float time_point(time, lat, lon);
+            time_point:cell_methods = "time: point";
+        float time_mean(time, lat, lon);
+            time_mean:cell_methods = "time: mean";
+        float area_mean(time, lat, lon);
+            area_mean:cell_methods = "area: mean";
+        float all_mean(time, lat, lon);
+            all_mean:cell_methods = "area: mean time: mean";
+        float multi_mean(time, lat, lon);
+            multi_mean:cell_methods = "area: time: mean";
+    data:
+        time = 1, 2;
+        lat = 1, 2;
+        lon = 1, 2;
+        lat_bnds = 0.5, 1.5, 1.5, 2.5;
+        lon_bnds = 0.5, 1.5, 1.5, 2.5;
+    }
+    """
+    cubes = cdl_to_cubes(cdl)
+
+    # Variables which should not have bounds
+    assert cubes.extract_cube("time_instant").coord("time").bounds is None
+    assert cubes.extract_cube("time_point").coord("time").bounds is None
+    assert cubes.extract_cube("area_mean").coord("time").bounds is None
+
+    # Variables which should have bounds
+    assert cubes.extract_cube("time_mean").coord("time").bounds is not None
+    assert cubes.extract_cube("all_mean").coord("time").bounds is not None
+    assert cubes.extract_cube("multi_mean").coord("time").bounds is not None

@@ -223,7 +223,7 @@ def test_difference_no_var_name_fallback(cube: iris.cube.Cube):
 
 def test_difference_no_time_coord(cube):
     """Difference of cubes with no time coordinate."""
-    c1 = cube.extract(iris.Constraint(time=datetime.datetime(2022, 9, 21, 3, 30)))
+    c1 = cube.extract(iris.Constraint(time=datetime.datetime(2022, 9, 21, 3, 0)))
     c1.remove_coord("time")
     c2 = c1.copy()
     del c2.attributes["cset_comparison_base"]
@@ -303,6 +303,24 @@ def test_difference_different_model_types(cube):
 
     assert isinstance(difference_cube, iris.cube.Cube)
     # As both cubes use the same data, check the difference is zero.
+    assert np.allclose(
+        difference_cube.data, np.zeros_like(difference_cube.data), atol=1e-9
+    )
+
+
+def test_difference_flip_pressure_order(transect_source_cube_readonly):
+    """Test that pressure coord is flipped if discreasing."""
+    flipped = transect_source_cube_readonly.copy()
+    flipped_coord = flipped.coord("pressure")
+    flipped_coord.points = np.flip(flipped_coord.points)
+    flipped.data = np.flip(flipped.data, flipped_coord.cube_dims(flipped))
+    del flipped.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([transect_source_cube_readonly, flipped])
+
+    # Take difference.
+    difference_cube = misc.difference(cubes)
+
+    # If flipped correctly, difference should be zero as same cubes.
     assert np.allclose(
         difference_cube.data, np.zeros_like(difference_cube.data), atol=1e-9
     )
@@ -440,3 +458,86 @@ def test_remove_attribute_merging_cubes(ensemble_cube):
     cubelist = misc.remove_attribute(cubelist, attribute="history")
     # assert cubelist is of length 1 to show cubes have merged properly.
     assert len(cubelist) == 1
+
+
+def test_slice_cube_on_common_levels(vertical_profile_cube):
+    """Test that cube has points extracted."""
+    assert np.allclose(
+        vertical_profile_cube.coord("pressure").points,
+        [700, 850, 950, 1000],
+        rtol=1e-6,
+        atol=1e-2,
+    )
+    output = misc._slice_cube_on_levels(vertical_profile_cube, "pressure", [700, 950])
+    assert np.allclose(
+        output.coord("pressure").points, [700, 950], rtol=1e-6, atol=1e-2
+    )
+
+
+def test_extract_common_points_toomanycubes(vertical_profile_cube):
+    """Test handling of too many cubes."""
+    with pytest.raises(ValueError, match="Maximum of two cubes allowed, received 3"):
+        misc.extract_common_points(
+            cubes=iris.cube.CubeList(
+                [vertical_profile_cube, vertical_profile_cube, vertical_profile_cube]
+            ),
+            coordinate="pressure",
+        )
+
+
+def test_extract_common_points_cubelist(vertical_profile_cube):
+    """Test handling of function not being handed a CubeList."""
+    with pytest.raises(
+        TypeError, match="Not a CubeList, got type <class 'iris.cube.Cube'>"
+    ):
+        misc.extract_common_points(cubes=vertical_profile_cube, coordinate="pressure")
+
+
+def test_extract_common_points_nocoord(vertical_profile_cube):
+    """Test handling of no coordinate exists."""
+    with pytest.raises(
+        ValueError, match="Both cubes must have an notacoord coordinate"
+    ):
+        misc.extract_common_points(
+            cubes=iris.cube.CubeList([vertical_profile_cube, vertical_profile_cube]),
+            coordinate="notacoord",
+        )
+
+
+def test_extract_common_points_ensureworking(vertical_profile_cube):
+    """Test that correct common points returned."""
+    cube1 = vertical_profile_cube.copy()
+    cube2 = vertical_profile_cube.copy()
+    cube1 = cube1[:, 0:3]
+    assert np.allclose(
+        cube1.coord("pressure").points, [700, 850, 950], rtol=1e-6, atol=1e-2
+    )
+    cube2 = cube2[:, 1:]
+    assert np.allclose(
+        cube2.coord("pressure").points, [850, 950, 1000], rtol=1e-6, atol=1e-2
+    )
+    output = misc.extract_common_points(
+        cubes=iris.cube.CubeList([cube1, cube2]), coordinate="pressure"
+    )
+    assert np.allclose(
+        output[0].coord("pressure").points, [850, 950], rtol=1e-6, atol=1e-2
+    )
+    assert np.allclose(
+        output[1].coord("pressure").points, [850, 950], rtol=1e-6, atol=1e-2
+    )
+
+
+def test_extract_common_points_nocommonpoints(vertical_profile_cube):
+    """Test handling if no common points."""
+    cube1 = vertical_profile_cube.copy()
+    cube2 = vertical_profile_cube.copy()
+    cube1 = cube1[:, 0:2]
+    assert np.allclose(cube1.coord("pressure").points, [700, 850], rtol=1e-6, atol=1e-2)
+    cube2 = cube2[:, 2:]
+    assert np.allclose(
+        cube2.coord("pressure").points, [950, 1000], rtol=1e-6, atol=1e-2
+    )
+    with pytest.raises(ValueError, match="No common levels found"):
+        misc.extract_common_points(
+            cubes=iris.cube.CubeList([cube1, cube2]), coordinate="pressure"
+        )
