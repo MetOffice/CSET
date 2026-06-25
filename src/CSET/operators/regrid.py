@@ -838,7 +838,6 @@ def _rebuild_ugrid_meta(data, origcube, lat, lon):
     return out_cube
 
 
-
 def _restructure_ugrid_regrid(cube, tri, lat_grid, lon_grid, xy):
     """
     Restructure a flattened/unstructured cube.
@@ -873,7 +872,7 @@ def _restructure_ugrid_regrid(cube, tri, lat_grid, lon_grid, xy):
         # Create empty numpy array to store regridded data.
         out = np.empty((cube.shape[0], lat_grid.size, lon_grid.size))
 
-        logging.info(f"Interpolating {cube.name()}")
+        logging.debug(f"Interpolating {cube.name()}")
 
         # Extract and transpose source data values.
         src_vals = cube.data.T
@@ -894,7 +893,46 @@ def _restructure_ugrid_regrid(cube, tri, lat_grid, lon_grid, xy):
         return out_cube
 
 
-def restructure_ugrid(cubes):
+def filter_names(cubes, name):
+
+    # Lookup dictionary 
+    UGRID_VAR_LOOKUP = {
+        "t": {"long_name": "temperature_at_pressure_levels", "units": "K"},
+        "u": {"long_name": "zonal_wind_at_pressure_levels", "units": "m s-1"},
+        "v": {"long_name": "meridional_wind_at_pressure_levels", "units": "m s-1"},
+        "w": {"long_name": "vertical_wind_at_pressure_levels", "units": "m s-1"},
+        "q": {"long_name": "vapour_specific_humidity_at_pressure_levels_for_climate_averaging", "units": "kg kg-1"},
+        "z": {"long_name": "geopotential_height_at_pressure_levels", "units": "m"},
+        "sp": {"long_name": "surface_air_pressure", "units": "Pa"},
+        "10u": {"long_name": "eastward_wind_at_10m", "units": "m s-1"},
+        "10v": {"long_name": "northward_wind_at_10m", "units": "m s-1"},
+        "lsm": {"long_name": "land_binary_mask"},
+        "2t": {"long_name": "temperature_at_screen_level", "units": "K"},
+        "2d": {"long_name": "dew_point_temperature_at_screen_level", "units": "K"},
+        "skt": {"long_name": "grid_surface_temperature", "units": "K"},
+        "tp": {"long_name": "surface_microphysical_rainfall_rate", "units": "mm 6hr-1"},
+        "latitude": {"long_name": "latitude", "units": "degrees"},
+        "longitude": {"long_name": "longitude", "units": "degrees"},
+    }
+
+    filtered_cubes = iris.cube.CubeList()
+    filtered_cubes.append(cubes.extract("latitude")[0])
+    filtered_cubes.append(cubes.extract("longitude")[0])
+
+    for cube in cubes:
+        m = re.match(r"^([a-zA-Z][a-zA-Z0-9]*|\d+[a-zA-Z]+)(?:_(\d+))?$", cube.name())
+        var_key, pressure_hpa = m.group(1), m.group(2)
+        
+        lookup = UGRID_VAR_LOOKUP.get(var_key)
+        for n in name:
+            if lookup and lookup.get("long_name") == n:
+                filtered_cubes.append(cube)
+
+    return filtered_cubes
+
+
+
+def restructure_ugrid(cubes, name):
     """
     Restructure ugrid cubes using parallel processing.
 
@@ -911,38 +949,33 @@ def restructure_ugrid(cubes):
         with appropriate corrections to metadata.
     """
 
+    # First, parse all cubes and fix their standard name/units, so we only
+    # regrid the cubes that are required to reduce total compute.
+    cubes = filter_names(cubes, name)
+
     # First, extract latitude and longitude coordinates
     lat = cubes.extract("latitude")[0].data
     lon = cubes.extract("longitude")[0].data
     points = np.column_stack((lon, lat))
 
-    if len(lat) == 501768:
+    # Create output mesh, using standard grid ~2km resolution
+    # TODO: discussions with ML developers to include metadata so
+    # we don't have to a) guess lat/lon resolution and b) know if
+    # data is truly unstructured or just flattened (where np.reshape
+    # would be substantially faster and preserve original data). The
+    # issue with this is that structured data could be curvilinear, so
+    # may be best to regrid as standard, and use an attribute in the cube
+    # which determines the appropriate resolution.
+    lon_grid = np.arange(lon.data.min(), lon.data.max(), 0.02)
+    lat_grid = np.arange(lat.data.min(), lat.data.max(), 0.02)
+    Lon2d, Lat2d = np.meshgrid(lon_grid, lat_grid)
 
-        fixed_cubes = iris.cube.CubeList()
-        for cube in cubes:
-            if cube.ndim > 1:
-                lat = np.reshape(lat, (808,621))
-                lon = np.reshape(lon, (808,621))
-                arr = np.asarray(cube.data).copy().reshape(cube.data.shape[0], 808, 621)
-                result = _rebuild_ugrid_meta(arr, cube, lat, lon)
-                fixed_cubes.append(result)       
+    # Flatten target points
+    xy = np.column_stack((Lon2d.ravel(), Lat2d.ravel()))
 
-    else:
-        # Create output mesh, using standard grid ~2km resolution
-        # TODO: discussions with ML developers to include metadata so
-        # we don't have to a) guess lat/lon resolution and b) know if
-        # data is truly unstructured or just flattened (where np.reshape
-        # would be substantially faster and preserve original data).
-        lon_grid = np.arange(lon.data.min(), lon.data.max(), 0.02)
-        lat_grid = np.arange(lat.data.min(), lat.data.max(), 0.02)
-        Lon2d, Lat2d = np.meshgrid(lon_grid, lat_grid)
-
-        # Flatten target points
-        xy = np.column_stack((Lon2d.ravel(), Lat2d.ravel()))
-
-        # Build triangulation via a dummy interpolator
-        tri_interp = LinearNDInterpolator(points, np.zeros(points.shape[0]))
-        tri = tri_interp.tri
+    # Build triangulation via a dummy interpolator
+    tri_interp = LinearNDInterpolator(points, np.zeros(points.shape[0]))
+    tri = tri_interp.tri
 
         # # Utilise multiprocessing to speed up code.
         # with Pool(processes=int(os.cpu_count() / 2)) as pool:
@@ -951,14 +984,14 @@ def restructure_ugrid(cubes):
         #         [(cube, tri, lat_grid, lon_grid, xy) for cube in cubes],
         #     )
 
-        results = []
-        for cube in cubes:
-            result = _restructure_ugrid_regrid(cube, tri, lat_grid, lon_grid, xy)
-            results.append(result)
+    results = []
+    for cube in cubes:
+        result = _restructure_ugrid_regrid(cube, tri, lat_grid, lon_grid, xy)
+        results.append(result)
 
-        # Filter results to only collect cubes, not None which is sometimes returned
-        # from _restructure_ugrid_regrid.
-        fixed_cubes = iris.cube.CubeList(c for c in results if c is not None)
+    # Filter results to only collect cubes, not None which is sometimes returned
+    # from _restructure_ugrid_regrid.
+    fixed_cubes = iris.cube.CubeList(c for c in results if c is not None)
 
     return fixed_cubes.concatenate()
 
