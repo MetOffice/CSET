@@ -19,29 +19,47 @@ import itertools
 from CSET.recipes import Config, RawRecipe, get_models
 
 
+def _get_scores_spatial_methods(conf):
+    """Compile of list of the required scores spatial plots."""
+    scores_spatial_methods = []
+    if conf.SCORES_SPATIAL_RMSE:
+        scores_spatial_methods.append("RMSE")
+    if conf.SCORES_SPATIAL_AB:
+        scores_spatial_methods.append("additive_bias")
+    if conf.SCORES_SPATIAL_MAE:
+        scores_spatial_methods.append("MAE")
+    return scores_spatial_methods
+
+
+def _get_scores_timeseries_methods(conf):
+    """Compile of list of the required scores timeseries plots."""
+    scores_timeseries_methods = []
+    if conf.SCORES_TIMESERIES_RMSE:
+        scores_timeseries_methods.append("RMSE")
+    if conf.SCORES_TIMESERIES_AB:
+        scores_timeseries_methods.append("additive_bias")
+    if conf.SCORES_TIMESERIES_MAE:
+        scores_timeseries_methods.append("MAE")
+    # if conf.SCORES_SPATIAL_DIFFERENCE[3]:
+    #   scores_methods.append("correlation_pearsonr")
+    return scores_timeseries_methods
+
+
 def load(conf: Config):
     """Yield recipes from the given workflow configuration."""
     # Load a list of model detail dictionaries.
     models = get_models(conf.asdict())
     # Models are listed in order, so model 1 is the first element.
 
-    if any(conf.SCORES_SPATIAL_DIFFERENCE):
-        """Produce 2-d spatial plots of scorers metrics."""
+    scores_spatial_methods = _get_scores_spatial_methods(conf)
+    if scores_spatial_methods:
+        """Produce 2-d spatial plots of scores metrics."""
         base_model = models[0]
-        scores_methods = []
-        if conf.SCORES_SPATIAL_RMSE:
-            scores_methods.append("RMSE")
-        if conf.SCORES_SPATIAL_AB:
-            scores_methods.append("additive_bias")
-        if conf.SCORES_SPATIAL_MAE:
-            scores_methods.append("MAE")
-        # if conf.SCORES_SPATIAL_DIFFERENCE[3]:
-        #   scores_methods.append("correlation_pearsonr")
         for model, field, method, scores_method in itertools.product(
             models[1:],
             conf.SURFACE_FIELDS,
             conf.SPATIAL_SURFACE_FIELD_METHOD,
-            scores_methods,
+            scores_spatial_methods,
         ):
             yield RawRecipe(
                 recipe="surface_difference_scores.yaml",
@@ -60,20 +78,12 @@ def load(conf: Config):
                 aggregation=False,
             )
 
-    if any(conf.SCORES_DIFFERENCE_TIMESERIES):
-        """Produce timeseries plots of scorers metrics averaged over the domain."""
+    scores_timeseries_methods = _get_scores_timeseries_methods(conf)
+    if scores_timeseries_methods:
+        """Produce timeseries plots of scores metrics averaged over the domain."""
         base_model = models[0]
-        scores_methods = []
-        if conf.SCORES_TIMESERIES_RMSE:
-            scores_methods.append("RMSE")
-        if conf.SCORES_TIMESERIES_AB:
-            scores_methods.append("additive_bias")
-        if conf.SCORES_TIMESERIES_MAE:
-            scores_methods.append("MAE")
-        # if conf.SCORES_DIFFERENCE_TIMESERIES[3]:
-        #    scores_methods.append("correlation_pearsonr")
         for model, field, scores_method in itertools.product(
-            models[1:], conf.SURFACE_FIELDS, scores_methods
+            models[1:], conf.SURFACE_FIELDS, scores_timeseries_methods
         ):
             yield RawRecipe(
                 recipe="timeseries_surface_difference_scores.yaml",
