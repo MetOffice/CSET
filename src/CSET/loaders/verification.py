@@ -20,7 +20,7 @@ from CSET.recipes import Config, RawRecipe, get_models
 
 
 def _get_scores_spatial_methods(conf):
-    """Compile of list of the required scores spatial plots."""
+    """Compile list of the required scores spatial plots."""
     scores_spatial_methods = []
     if conf.SCORES_SPATIAL_RMSE:
         scores_spatial_methods.append("RMSE")
@@ -32,7 +32,7 @@ def _get_scores_spatial_methods(conf):
 
 
 def _get_scores_timeseries_methods(conf):
-    """Compile of list of the required scores timeseries plots."""
+    """Compile list of the required scores timeseries plots."""
     scores_timeseries_methods = []
     if conf.SCORES_TIMESERIES_RMSE:
         scores_timeseries_methods.append("RMSE")
@@ -40,8 +40,8 @@ def _get_scores_timeseries_methods(conf):
         scores_timeseries_methods.append("additive_bias")
     if conf.SCORES_TIMESERIES_MAE:
         scores_timeseries_methods.append("MAE")
-    # if conf.SCORES_SPATIAL_DIFFERENCE[3]:
-    #   scores_methods.append("correlation_pearsonr")
+    if conf.SCORES_TIMESERIES_PC:
+        scores_timeseries_methods.append("correlation_pearsonr")
     return scores_timeseries_methods
 
 
