@@ -223,6 +223,46 @@ def read_cubes(
     return cubes
 
 
+def extract_constraint_names(obj, seen=None):
+    if seen is None:
+        seen = set()
+
+    names = []
+
+    if id(obj) in seen:
+        return names
+    seen.add(id(obj))
+
+    # Check for name fields (both public and private)
+    for attr in ("name", "_name"):
+        if hasattr(obj, attr):
+            value = getattr(obj, attr)
+            if isinstance(value, str):
+                names.append(value)
+
+    # Traverse all attributes of the object
+    for attr in dir(obj):
+        if attr.startswith("__"):
+            continue
+        try:
+            value = getattr(obj, attr)
+        except Exception:
+            continue
+
+        # Only recurse into likely objects (not primitives)
+        if isinstance(value, (str, int, float, type(None))):
+            continue
+
+        # Recurse into lists/tuples
+        if isinstance(value, (list, tuple)):
+            for item in value:
+                names.extend(extract_constraint_names(item, seen))
+        else:
+            names.extend(extract_constraint_names(value, seen))
+
+    return names
+
+
 def _load_model(
     paths: str | list[str],
     model_name: str | None,
@@ -242,7 +282,8 @@ def _load_model(
     # Using extract, not extract_cubes in a try as there might be more
     # than one cube called latitude if we are aggregating.
     if len(cubes.extract("latitude")) > 0:
-        cubes = restructure_ugrid(cubes)
+        name = extract_constraint_names(constraint)
+        cubes = restructure_ugrid(cubes, name)
 
     for cube in cubes:
         _loading_callback(cube, None, None)
