@@ -29,11 +29,11 @@ def load(conf: Config):
         """Produce 2-d spatial plots of scorers metrics."""
         base_model = models[0]
         scores_methods = []
-        if conf.SCORES_SPATIAL_DIFFERENCE[0]:
+        if conf.SCORES_SPATIAL_RMSE:
             scores_methods.append("RMSE")
-        if conf.SCORES_SPATIAL_DIFFERENCE[1]:
+        if conf.SCORES_SPATIAL_AB:
             scores_methods.append("additive_bias")
-        if conf.SCORES_SPATIAL_DIFFERENCE[2]:
+        if conf.SCORES_SPATIAL_MAE:
             scores_methods.append("MAE")
         # if conf.SCORES_SPATIAL_DIFFERENCE[3]:
         #   scores_methods.append("correlation_pearsonr")
@@ -64,11 +64,11 @@ def load(conf: Config):
         """Produce timeseries plots of scorers metrics averaged over the domain."""
         base_model = models[0]
         scores_methods = []
-        if conf.SCORES_DIFFERENCE_TIMESERIES[0]:
+        if conf.SCORES_TIMESERIES_RMSE:
             scores_methods.append("RMSE")
-        if conf.SCORES_DIFFERENCE_TIMESERIES[1]:
+        if conf.SCORES_TIMESERIES_AB:
             scores_methods.append("additive_bias")
-        if conf.SCORES_DIFFERENCE_TIMESERIES[2]:
+        if conf.SCORES_TIMESERIES_MAE:
             scores_methods.append("MAE")
         # if conf.SCORES_DIFFERENCE_TIMESERIES[3]:
         #    scores_methods.append("correlation_pearsonr")
