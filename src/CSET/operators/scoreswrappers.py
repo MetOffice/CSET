@@ -260,7 +260,7 @@ def scores_metrics(
         cubes_output.append(scores_rmse(cubes, preserved_coordinates))
 
     if scores_method == "additive_bias":
-        # Use the MAE method
+        # Use the Additive Bias (aka mean error) method
         cubes_output.append(scores_additive_bias(cubes, preserved_coordinates))
 
     if scores_method == "MAE":
@@ -268,7 +268,7 @@ def scores_metrics(
         cubes_output.append(scores_mae(cubes, preserved_coordinates))
 
     if scores_method == "correlation_pearsonr":
-        # Use the MAE method
+        # Use the Pearson's Correlation method
         cubes_output.append(scores_correlation_pearsonr(cubes, preserved_coordinates))
 
     return cubes_output
