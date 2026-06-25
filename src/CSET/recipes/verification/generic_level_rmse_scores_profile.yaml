@@ -4,9 +4,8 @@ description: |
   Extracts and plots the Root Mean Square Error (RMSE) of $VARNAME
   as a vertical profile on pressure levels. The RMSE is calculated
   pairwise between $BASE_MODEL and $OTHER_MODEL at each grid point
-  over time on each vertical level, then aggregated over all time and horizontal grid points
-  to produce one RMSE value per pressure level. The RMSE is calculated in
-  a single operation for each level that includes the time dimension.
+  and vertical level, then aggregated over all time and horizontal grid points
+  to produce one RMSE value per pressure level.
 
   A larger RMSE implies a greater error than a smaller RMSE. An
   RMSE of zero implies the two fields match exactly.
