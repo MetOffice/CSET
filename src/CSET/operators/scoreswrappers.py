@@ -242,5 +242,34 @@ def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None =
             preserve_dims=preserve_dims,
         )
     )
+
+    # If time is aggregated out, attach a scalar time coordinate with bounds
+    # so plotting can display the aggregated period in the title.
+    try:
+        if not RMSE.coords("time"):
+            base_time = base.coord("time")
+            time_vals = (
+                base_time.bounds.flatten()
+                if base_time.has_bounds()
+                else base_time.points
+            )
+            t_start = float(time_vals[0])
+            t_end = float(time_vals[-1])
+            t_mid = 0.5 * (t_start + t_end)
+
+            RMSE.add_aux_coord(
+                iris.coords.AuxCoord(
+                    t_mid,
+                    standard_name=base_time.standard_name,
+                    long_name=base_time.long_name,
+                    var_name=base_time.var_name,
+                    units=base_time.units,
+                    bounds=np.array([t_start, t_end]),
+                    attributes=base_time.attributes.copy(),
+                )
+            )
+    except iris.exceptions.CoordinateNotFoundError:
+        pass
+
     RMSE.rename(f"RMSE_of_{base.name()}")
     return RMSE

@@ -2183,7 +2183,17 @@ def plot_vertical_line_series(
 
     # Check if the cube has a sequence coordinate (e.g. time). If not, plot
     # a single profile directly without iterating over a sequence.
-    has_sequence_coord = all(cube.coords(sequence_coordinate) for cube in cubes)
+    sequence_coords = [
+        cube.coord(sequence_coordinate)
+        for cube in cubes
+        if cube.coords(sequence_coordinate)
+    ]
+    has_sequence_coord = len(sequence_coords) == len(cubes) and all(
+        np.size(coord.points) > 1 for coord in sequence_coords
+    )
+    has_scalar_sequence_coord = len(sequence_coords) == len(cubes) and all(
+        np.size(coord.points) == 1 for coord in sequence_coords
+    )
 
     plot_index = []
     if has_sequence_coord:
@@ -2211,6 +2221,24 @@ def plot_vertical_line_series(
                 vmax=vmax,
             )
             plot_index.append(plot_filename)
+    elif has_scalar_sequence_coord:
+        # Scalar sequence coordinate (typically aggregated time bounds):
+        # make one plot and include sequence period in title/filename.
+        plot_title, plot_filename = _set_title_and_filename(
+            sequence_coords[0], 1, recipe_title, filename
+        )
+
+        _plot_and_save_vertical_line_series(
+            cubes,
+            coords,
+            "realization",
+            plot_filename,
+            series_coordinate,
+            title=plot_title,
+            vmin=vmin,
+            vmax=vmax,
+        )
+        plot_index.append(plot_filename)
     else:
         # 1D case: no sequence coordinate, plot a single profile.
         plot_title = recipe_title
