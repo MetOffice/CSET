@@ -1,11 +1,14 @@
 category: Scores
-title: "$VARNAME\nRMSE vertical profile between $OTHER_MODEL and $BASE_MODEL"
+title: "$VARNAME\nRMSE vertical profile ($AGGREGATION_MODE) between $OTHER_MODEL and $BASE_MODEL"
 description: |
   Extracts and plots the Root Mean Square Error (RMSE) of $VARNAME
   as a vertical profile on pressure levels. The RMSE is calculated
   pairwise between $BASE_MODEL and $OTHER_MODEL at each grid point
-  and vertical level, then aggregated over all time and horizontal grid points
-  to produce one RMSE value per pressure level.
+  and vertical level, then aggregated over horizontal grid points.
+
+  Aggregation mode:
+  - pressure: Aggregates over the entire time period, producing one RMSE profile
+  - timeseries: Preserves time, producing one RMSE profile per time step
 
   A larger RMSE implies a greater error than a smaller RMSE. An
   RMSE of zero implies the two fields match exactly.
@@ -27,7 +30,7 @@ steps:
     subarea_extent: $SUBAREA_EXTENT
 
   - operator: scoreswrappers.scores_rmse
-    preserved_coordinates: ["pressure"]
+    preserved_coordinates: $PRESERVED_COORDS
 
   - operator: plot.plot_vertical_line_series
     series_coordinate: pressure
