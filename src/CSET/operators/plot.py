@@ -2181,28 +2181,74 @@ def plot_vertical_line_series(
         vmin = min(x_levels)
         vmax = max(x_levels)
 
-    # Matching the slices (matching by seq coord point; it may happen that
-    # evaluated models do not cover the same seq coord range, hence matching
-    # necessary)
-    cube_iterables = _find_matched_slices(cubes, sequence_coordinate)
+    # Check if the cube has a sequence coordinate (e.g. time). If not, plot
+    # a single profile directly without iterating over a sequence.
+    sequence_coords = [
+        cube.coord(sequence_coordinate)
+        for cube in cubes
+        if cube.coords(sequence_coordinate)
+    ]
+    has_sequence_coord = len(sequence_coords) == len(cubes) and all(
+        np.size(coord.points) > 1 for coord in sequence_coords
+    )
+    has_scalar_sequence_coord = len(sequence_coords) == len(cubes) and all(
+        np.size(coord.points) == 1 for coord in sequence_coords
+    )
 
-    # Create a plot for each value of the sequence coordinate.
-    # Allowing for multiple cubes in a CubeList to be plotted in the same plot for
-    # similar sequence values. Passing a CubeList into the internal plotting function
-    # for similar values of the sequence coordinate. cube_slice can be an iris.cube.Cube
-    # or an iris.cube.CubeList.
     plot_index = []
-    nplot = np.size(cubes[0].coord(sequence_coordinate).points)
-    for cubes_slice in cube_iterables:
-        # Format the coordinate value in a unit appropriate way.
-        seq_coord = cubes_slice[0].coord(sequence_coordinate)
+    if has_sequence_coord:
+        # Matching the slices (matching by seq coord point; it may happen that
+        # evaluated models do not cover the same seq coord range, hence matching
+        # necessary)
+        cube_iterables = _find_matched_slices(cubes, sequence_coordinate)
+        nplot = np.size(cubes[0].coord(sequence_coordinate).points)
+        for cubes_slice in cube_iterables:
+            # Format the coordinate value in a unit appropriate way.
+            seq_coord = cubes_slice[0].coord(sequence_coordinate)
+            plot_title, plot_filename = _set_title_and_filename(
+                seq_coord, nplot, recipe_title, filename
+            )
+
+            # Do the actual plotting.
+            _plot_and_save_vertical_line_series(
+                cubes_slice,
+                coords,
+                "realization",
+                plot_filename,
+                series_coordinate,
+                title=plot_title,
+                vmin=vmin,
+                vmax=vmax,
+            )
+            plot_index.append(plot_filename)
+    elif has_scalar_sequence_coord:
+        # Scalar sequence coordinate (typically aggregated time bounds):
+        # make one plot and include sequence period in title/filename.
         plot_title, plot_filename = _set_title_and_filename(
-            seq_coord, nplot, recipe_title, filename
+            sequence_coords[0], 1, recipe_title, filename
         )
 
-        # Do the actual plotting.
         _plot_and_save_vertical_line_series(
-            cubes_slice,
+            cubes,
+            coords,
+            "realization",
+            plot_filename,
+            series_coordinate,
+            title=plot_title,
+            vmin=vmin,
+            vmax=vmax,
+        )
+        plot_index.append(plot_filename)
+    else:
+        # 1D case: no sequence coordinate, plot a single profile.
+        plot_title = recipe_title
+        if filename:
+            plot_filename = filename
+        else:
+            plot_filename = f"{slugify(plot_title)}.png"
+
+        _plot_and_save_vertical_line_series(
+            cubes,
             coords,
             "realization",
             plot_filename,
