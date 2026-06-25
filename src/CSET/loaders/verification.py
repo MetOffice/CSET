@@ -26,21 +26,22 @@ def load(conf: Config):
     # Models are listed in order, so model 1 is the first element.
 
     if any(conf.SCORES_SPATIAL_DIFFERENCE):
+        """Produce 2-d spatial plots of scorers metrics."""
         base_model = models[0]
-        difference_methods = []
+        scores_methods = []
         if conf.SCORES_SPATIAL_DIFFERENCE[0]:
-            difference_methods.append("RMSE")
+            scores_methods.append("RMSE")
         if conf.SCORES_SPATIAL_DIFFERENCE[1]:
-            difference_methods.append("additive_bias")
+            scores_methods.append("additive_bias")
         if conf.SCORES_SPATIAL_DIFFERENCE[2]:
-            difference_methods.append("MAE")
+            scores_methods.append("MAE")
         # if conf.SCORES_SPATIAL_DIFFERENCE[3]:
-        #   difference_methods.append("correlation_pearsonr")
-        for model, field, method, difference_method in itertools.product(
+        #   scores_methods.append("correlation_pearsonr")
+        for model, field, method, scores_method in itertools.product(
             models[1:],
             conf.SURFACE_FIELDS,
             conf.SPATIAL_SURFACE_FIELD_METHOD,
-            difference_methods,
+            scores_methods,
         ):
             yield RawRecipe(
                 recipe="surface_difference_scores.yaml",
@@ -49,7 +50,7 @@ def load(conf: Config):
                     "BASE_MODEL": base_model["name"],
                     "OTHER_MODEL": model["name"],
                     "METHOD": method,
-                    "DIFFERENCE_METHOD": difference_method,
+                    "SCORES_METHOD": scores_method,
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
@@ -60,18 +61,19 @@ def load(conf: Config):
             )
 
     if any(conf.SCORES_DIFFERENCE_TIMESERIES):
+        """Produce timeseries plots of scorers metrics averaged over the domain."""
         base_model = models[0]
-        difference_methods = []
+        scores_methods = []
         if conf.SCORES_DIFFERENCE_TIMESERIES[0]:
-            difference_methods.append("RMSE")
+            scores_methods.append("RMSE")
         if conf.SCORES_DIFFERENCE_TIMESERIES[1]:
-            difference_methods.append("additive_bias")
+            scores_methods.append("additive_bias")
         if conf.SCORES_DIFFERENCE_TIMESERIES[2]:
-            difference_methods.append("MAE")
-        if conf.SCORES_DIFFERENCE_TIMESERIES[3]:
-            difference_methods.append("correlation_pearsonr")
-        for model, field, difference_method in itertools.product(
-            models[1:], conf.SURFACE_FIELDS, difference_methods
+            scores_methods.append("MAE")
+        # if conf.SCORES_DIFFERENCE_TIMESERIES[3]:
+        #    scores_methods.append("correlation_pearsonr")
+        for model, field, scores_method in itertools.product(
+            models[1:], conf.SURFACE_FIELDS, scores_methods
         ):
             yield RawRecipe(
                 recipe="timeseries_surface_difference_scores.yaml",
@@ -79,7 +81,7 @@ def load(conf: Config):
                     "VARNAME": field,
                     "BASE_MODEL": base_model["name"],
                     "OTHER_MODEL": model["name"],
-                    "DIFFERENCE_METHOD": difference_method,
+                    "SCORES_METHOD": scores_method,
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
