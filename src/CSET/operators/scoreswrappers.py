@@ -162,7 +162,7 @@ def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None =
 
     Returns
     -------
-    RMSE: iris.cube.Cube
+    scores_cube: iris.cube.Cube
         A cube containing the RMSE between the base and other cube.
 
     References
@@ -246,28 +246,28 @@ def scores_correlation_pearsonr(
     return scores_cube
 
 
-def scores_difference(
+def scores_metrics(
     cubes: CubeList,
     preserved_coordinates: list[str] | str | None = None,
-    difference_method: str | None = None,
+    scores_method: str | None = None,
 ):
     """Select which scores metric to use."""
     # initialise the output cubelist
     cubes_output = iris.cube.CubeList([])
 
-    if difference_method == "RMSE":
+    if scores_method == "RMSE":
         # Use the RMSE method
         cubes_output.append(scores_rmse(cubes, preserved_coordinates))
 
-    if difference_method == "additive_bias":
+    if scores_method == "additive_bias":
         # Use the MAE method
         cubes_output.append(scores_additive_bias(cubes, preserved_coordinates))
 
-    if difference_method == "MAE":
+    if scores_method == "MAE":
         # Use the MAE method
         cubes_output.append(scores_mae(cubes, preserved_coordinates))
 
-    if difference_method == "correlation_pearsonr":
+    if scores_method == "correlation_pearsonr":
         # Use the MAE method
         cubes_output.append(scores_correlation_pearsonr(cubes, preserved_coordinates))
 
