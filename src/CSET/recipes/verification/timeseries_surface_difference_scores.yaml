@@ -1,5 +1,5 @@
 category: Scores
-title: "bmc $VARNAME\nScores $SCORES_METHOD timeseries between $OTHER_MODEL and $BASE_MODEL"
+title: "$VARNAME\nScores $SCORES_METHOD timeseries between $OTHER_MODEL and $BASE_MODEL"
 description: |
   Extracts and plots the Root Mean Square Error in $VARNAME
   for all times. The RMSE is calculated based on that used in the
