@@ -32,6 +32,147 @@ Changelog
 .. Highlight any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+26.5.1 (2026-06-10)
+-------------------
+
+A small patch release fixing a couple of issues and adding support for several
+new sites.
+
+* Adds diagnostics to identify properties of the MAUL by `@daflack`_ in :pr:`2058`
+* Improve ODB2 format support by `@ScottWales`_ in :pr:`2115`
+* Fixed issue in the docs with a missing line in the recipe by `@JMP-MO`_ in :pr:`2117`. This was their first contribution 🎉
+* Add single point timeseries loader and fix indexing into aggregation type by `@refszkentla`_ in :pr:`2118`
+* Add SUBAREA_NAME variable to recipes to enable tracking of different subregions by `@ukmo-huw-lewis`_ in :pr:`2131`
+* Install from conda-forge mirror on Met Office systems by `@jfrost-mo`_ in :pr:`2136`
+* Add NCMRWF config to metadata by `@JorgeBornemann`_ in :pr:`2138`
+* Reduce matplotlib logging verbosity by `@jfrost-mo`_ in :pr:`2141`
+* Ensure `make setup` doesn't fail outside the Met Office by `@jfrost-mo`_ in :pr:`2144`
+* Improve workflow housekeeping with multiple cycles by `@ScottWales`_ in :pr:`2151`
+* Support multiple models in METplus by `@JorgeBornemann`_ in :pr:`2153`
+* Ignore wwwspice links from linkchecking by `@jfrost-mo`_ in :pr:`2162`
+* Remove unneeded cycle complete graphing and improve inline documentation for sequential tasks by `@jfrost-mo`_ in :pr:`2170`
+* Gitignore workflow conda environment symlink by `@jfrost-mo`_ in :pr:`2175`
+* Add site configuration for the Met Office Monsoon collaboration supercomputer by `@jfrost-mo`_ in :pr:`2176`
+
+New Contributors:
+
+* `@JMP-MO`_ made their first contribution in :pr:`2117`
+
+.. _@JMP-MO: https://github.com/JMP-MO
+
+26.5.0 (2026-05-05)
+-------------------
+
+This release brings a host of new diagnostics, such as impact-based diagnostics
+for wind and rain, and plotting of observations from the Cardington observation
+site.
+
+Existing diagnostics have been improved, with ML and ensemble data now loading
+more reliably, and plots have had various visual enhancements. A big change has
+been to switch the order of difference comparisons, so that now the control is
+subtracted from the experiment, rather than the other way around. This should
+make it easier to tell the direction of any bias.
+
+To view all of these diagnostics, the web interface produced by the
+workflow has been overhauled, adding a search, filtering via dropdowns, and
+pop-out plot windows. Please send us your thoughts on the new web interface, so
+we can continue making it more usable!
+
+⚙️ Operators
+~~~~~~~~~~~~
+
+* Introduce multi-variable map plotting by `@ukmo-huw-lewis`_ in :pr:`1828`
+* Adds Beaufort Scale for wind gusts diagnostic by `@daflack`_ in :pr:`1947`
+* Improved formatting for precipitation map plots by `@ukmo-huw-lewis`_ in :pr:`1949`
+* Additional check for use of standard_name in difference cube naming by `@ukmo-huw-lewis`_ in :pr:`1951`
+* Update read operator to catch erroneous grid bounds inputs by `@ukmo-huw-lewis`_ in :pr:`1953`
+* Implement more intuitive output filename labelling by `@ukmo-huw-lewis`_ in :pr:`1955`
+* Adds light rain diagnostic for spatial plots, difference and timeseries by `@daflack`_ in :pr:`1957`
+* Adds diagnostics for moderate rain: timeseries, spatial plot, spatial difference by `@daflack`_ in :pr:`1971`
+* Adds presence of heavy rain diagnostic: timeseries, spatial difference, and spatial plot by `@daflack`_ in :pr:`1976`
+* Adds violent rain diagnostic: timeseries, spatial plot, and spatial difference by `@daflack`_ in :pr:`1977`
+* Adds differentiation operator by `@daflack`_ in :pr:`1979`
+* Ensures callbacks do not realise data by `@daflack`_ in :pr:`1985`
+* Various improvements to transect capability by `@jwarner8`_ in :pr:`1992`
+* Add borderlines by `@refszkentla`_ in :pr:`1995`
+* Add time-processed multi-var plotting by `@ukmo-huw-lewis`_ in :pr:`1999`
+* Small changes to support ML FastNet and Pangu by `@jwarner8`_ in :pr:`2006`
+* Fix ML varname on pressure levels and ensure pcolormesh used by `@jwarner8`_ in :pr:`2014`
+* Support transect difference plotting and aggregation by `@jwarner8`_ in :pr:`2026`
+* Correctly handle scalar coords in aggregated cubes by `@jfrost-mo`_ in :pr:`2027`
+* Reduce duplicate logging to make log files more readable by `@jfrost-mo`_ in :pr:`2028`
+* Update method for determining number of cases in aggregated plot titles by `@ukmo-huw-lewis`_ in :pr:`2030`
+* Support specific humidity in ML and fix small bug with pressure difference aggregation by `@jwarner8`_ in :pr:`2035`
+* Cleanup unneeded callback arguments by `@jfrost-mo`_ in :pr:`2038`
+* Implement ancillary file support in CSET by `@ukmo-huw-lewis`_ in :pr:`2045`
+* Reorder difference so CSET does $OTHER - $BASE by `@jwarner8`_ in :pr:`2047`
+* Add gridlines and lat/lon labels to map plots by `@ukmo-huw-lewis`_ in :pr:`2049`
+* Bugfix title and filename time processing by `@ukmo-huw-lewis`_ in :pr:`2051`
+* Ensemble read and plot updates by `@ukmo-huw-lewis`_ in :pr:`2056`
+
+🥣 Recipes
+~~~~~~~~~~
+
+* Creating diagnostic for reading observation from Cardington single point location by `@mo-jbrooke`_ in :pr:`1890`
+* Subarea cutouts missing in some recipes by `@jwarner8`_ in :pr:`1966`
+* Switch pressure level plots to use pcolormesh by `@jwarner8`_ in :pr:`1967`
+* Updates recipes to add in extra constraining for speed by `@daflack`_ in :pr:`1986`
+
+🔄 Workflow
+~~~~~~~~~~~
+
+* Add faceted type-ahead search capability to CSET web interface by `@jfrost-mo`_ in :pr:`1713`
+* ASCII2NC converge configs between Met Office and NIWA by `@JorgeBornemann`_ in :pr:`1926`
+* Add metplus pointstat capability for Met Office by `@RachelNorth`_ in :pr:`1930`
+* Adds missing entries in rose-suite.conf.example by `@daflack`_ in :pr:`1946`
+* Add a variable for explicitly defining pool-size in bake_recipes by `@ScottWales`_ in :pr:`1989`
+* Updates to workflow GUI layout and ordering by `@ukmo-huw-lewis`_ in :pr:`2001`
+* Site configurations for NCI-Gadi, Australia by `@vinodk-bom`_ in :pr:`2013`
+* Revert "Skip rather than suicide bake task when there are no recipes" by `@jfrost-mo`_ in :pr:`2019`
+* Include full path in filename for linked filesystem files by `@jfrost-mo`_ in :pr:`2022`
+* Fix custom style file support in workflow by `@jfrost-mo`_ in :pr:`2029`
+* Parbake fails if transect options are turned off by `@jwarner8`_ in :pr:`2031`
+* UI performance enhancements by `@Fraetor`_ in :pr:`2041`
+* Improve graph definition in flow.cylc to avoid duplication by `@jfrost-mo`_ in :pr:`2048`
+* Add VerPy metloader capability to CSET workflow by `@JorgeBornemann`_ in :pr:`2062`
+* Add METplus support at NCI site by `@ScottWales`_ in :pr:`2068`
+* Use } as / replacement in symlink filenames by `@jfrost-mo`_ in :pr:`2092`
+* Default screen level temperature probabilities to False by `@jfrost-mo`_ in :pr:`2095`
+* Minor JavaScript cleanup by `@jfrost-mo`_ in :pr:`2108`
+* Enforce the description toggle on iframe load by `@jfrost-mo`_ in :pr:`2109`
+* Reset rose-suite.conf.example settings to avoid errors in rose edit by `@jfrost-mo`_ in :pr:`2130`
+
+📖 Documentation
+~~~~~~~~~~~~~~~~
+
+* Trim whitespace in changelog.rst by `@Sylviabohnenstengel`_ in :pr:`1937`
+* Update copyright in README file by `@daflack`_ in :pr:`1997`
+* Adds documentation for updating to the latest release by `@daflack`_ in :pr:`2080`
+* Correct file_paths in tutorial recipe by `@jfrost-mo`_ in :pr:`2096`
+
+🏗️ Infrastructure
+~~~~~~~~~~~~~~~~~
+
+* Remove `opt/` from workflow .gitignore by `@jfrost-mo`_ in :pr:`1924`
+* Gitignore NFS synchronisation files by `@jfrost-mo`_ in :pr:`1925`
+* Add relative gitignores for site specific files in workflow by `@jfrost-mo`_ in :pr:`1927`
+* Fix GitHub Actions failing on new user hyperlink by `@Sylviabohnenstengel`_ in :pr:`1936`
+* Work around coverage issue with netcdf4 library by `@jfrost-mo`_ in :pr:`2009`
+* Ignore failures to upload coverage report by `@jfrost-mo`_ in :pr:`2011`
+* Invert test condition by `@jfrost-mo`_ in :pr:`2012`
+* Exclude sourceforge pages from link checking by `@jfrost-mo`_ in :pr:`2034`
+* Depend on dask-core rather than dask by `@jfrost-mo`_ in :pr:`2043`
+* Pin PROJ to 9.7.1 by `@jfrost-mo`_ in :pr:`2053`
+
+👷 New Contributors
+~~~~~~~~~~~~~~~~~~~
+
+* `@vinodk-bom`_ made their first contribution in :pr:`2013`
+* `@ScottWales`_ made their first contribution in :pr:`1989`
+
+.. _@vinodk-bom: https://github.com/vinodk-bom
+.. _@ScottWales: https://github.com/ScottWales
+
 26.2.0 (2026-02-23)
 -------------------
 

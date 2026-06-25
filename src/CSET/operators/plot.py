@@ -15,7 +15,6 @@
 """Operators to produce various kinds of plots."""
 
 import fcntl
-import functools
 import importlib.resources
 import itertools
 import json
@@ -32,29 +31,36 @@ import iris.cube
 import iris.exceptions
 import iris.plot as iplt
 import matplotlib as mpl
-import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy.fft as fft
 from cartopy.mpl.geoaxes import GeoAxes
 from iris.cube import Cube
 from markdown_it import MarkdownIt
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from CSET._common import (
-    combine_dicts,
     filename_slugify,
     get_recipe_metadata,
     iter_maybe,
     render_file,
     slugify,
 )
+from CSET.operators._colormaps import (
+    colorbar_map_levels,
+    get_model_colors_map,
+)
+from CSET.operators._spectra import DCT_ps
 from CSET.operators._utils import (
+    check_sequence_coordinate,
+    check_single_cube,
     check_stamp_coordinate,
     fully_equalise_attributes,
     get_cube_yxcoordname,
+    get_num_models,
     is_transect,
     slice_over_maybe,
+    validate_cube_shape,
+    validate_cubes_coords,
 )
 from CSET.operators.collapse import collapse
 from CSET.operators.misc import _extract_common_time_points
@@ -63,7 +69,6 @@ from CSET.operators.regrid import regrid_onto_cube
 # Use a non-interactive plotting backend.
 mpl.use("agg")
 
-DEFAULT_DISCRETE_COLORS = mpl.colormaps["tab10"].colors + mpl.colormaps["Accent"].colors
 
 ############################
 # Private helper functions #
@@ -87,35 +92,6 @@ def _append_to_plot_index(plot_index: list) -> list:
         fp.truncate()
         json.dump(meta, fp, indent=2)
     return complete_plot_index
-
-
-def _check_single_cube(cube: iris.cube.Cube | iris.cube.CubeList) -> iris.cube.Cube:
-    """Ensure a single cube is given.
-
-    If a CubeList of length one is given that the contained cube is returned,
-    otherwise an error is raised.
-
-    Parameters
-    ----------
-    cube: Cube | CubeList
-        The cube to check.
-
-    Returns
-    -------
-    cube: Cube
-        The checked cube.
-
-    Raises
-    ------
-    TypeError
-        If the input cube is not a Cube or CubeList of a single Cube.
-    """
-    if isinstance(cube, iris.cube.Cube):
-        return cube
-    if isinstance(cube, iris.cube.CubeList):
-        if len(cube) == 1:
-            return cube[0]
-    raise TypeError("Must have a single cube", cube)
 
 
 def _make_plot_html_page(plots: list):
@@ -147,211 +123,6 @@ def _make_plot_html_page(plots: list):
     # Save completed HTML.
     with open("index.html", "wt", encoding="UTF-8") as fp:
         fp.write(html)
-
-
-@functools.cache
-def _load_colorbar_map(user_colorbar_file: str = None) -> dict:
-    """Load the colorbar definitions from a file.
-
-    This is a separate function to make it cacheable.
-    """
-    colorbar_file = importlib.resources.files().joinpath("_colorbar_definition.json")
-    with open(colorbar_file, "rt", encoding="UTF-8") as fp:
-        colorbar = json.load(fp)
-
-    logging.debug("User colour bar file: %s", user_colorbar_file)
-    override_colorbar = {}
-    if user_colorbar_file:
-        try:
-            with open(user_colorbar_file, "rt", encoding="UTF-8") as fp:
-                override_colorbar = json.load(fp)
-        except FileNotFoundError:
-            logging.warning("Colorbar file does not exist. Using default values.")
-
-    # Overwrite values with the user supplied colorbar definition.
-    colorbar = combine_dicts(colorbar, override_colorbar)
-    return colorbar
-
-
-def _get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
-    """Get an appropriate colors for model lines in line plots.
-
-    For each model in the list of cubes colors either from user provided
-    color definition file (so-called style file) or from default colors are mapped
-    to model_name attribute.
-
-    Parameters
-    ----------
-    cubes: CubeList or Cube
-        Cubes with model_name attribute
-
-    Returns
-    -------
-    model_colors_map:
-        Dictionary mapping model_name attribute to colors
-    """
-    user_colorbar_file = get_recipe_metadata().get("style_file_path", None)
-    colorbar = _load_colorbar_map(user_colorbar_file)
-    model_names = sorted(
-        filter(
-            lambda x: x is not None,
-            (cube.attributes.get("model_name", None) for cube in iter_maybe(cubes)),
-        )
-    )
-    if not model_names:
-        return {}
-    use_user_colors = all(mname in colorbar.keys() for mname in model_names)
-    if use_user_colors:
-        return {mname: colorbar[mname] for mname in model_names}
-
-    color_list = itertools.cycle(DEFAULT_DISCRETE_COLORS)
-    return {mname: color for mname, color in zip(model_names, color_list, strict=False)}
-
-
-def _colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = None):
-    """Get an appropriate colorbar for the given cube.
-
-    For the given variable the appropriate colorbar is looked up from a
-    combination of the built-in CSET colorbar definitions, and any user supplied
-    definitions. As well as varying on variables, these definitions may also
-    exist for specific pressure levels to account for variables with
-    significantly different ranges at different heights. The colorbars also exist
-    for masks and mask differences for considering variable presence diagnostics.
-    Specific variable ranges can be separately set in user-supplied definition
-    for x- or y-axis limits, or indicate where automated range preferred.
-
-    Parameters
-    ----------
-    cube: Cube
-        Cube of variable for which the colorbar information is desired.
-    axis: "x", "y", optional
-        Select the levels for just this axis of a line plot. The min and max
-        can be set by xmin/xmax or ymin/ymax respectively. For variables where
-        setting a universal range is not desirable (e.g. temperature), users
-        can set ymin/ymax values to "auto" in the colorbar definitions file.
-        Where no additional xmin/xmax or ymin/ymax values are provided, the
-        axis bounds default to use the vmin/vmax values provided.
-
-    Returns
-    -------
-    cmap:
-        Matplotlib colormap.
-    levels:
-        List of levels to use for plotting. For continuous plots the min and max
-        should be taken as the range.
-    norm:
-        BoundaryNorm information.
-    """
-    # Grab the colorbar file from the recipe global metadata.
-    user_colorbar_file = get_recipe_metadata().get("style_file_path", None)
-    colorbar = _load_colorbar_map(user_colorbar_file)
-    cmap = None
-
-    try:
-        # We assume that pressure is a scalar coordinate here.
-        pressure_level_raw = cube.coord("pressure").points[0]
-        # Ensure pressure_level is a string, as it is used as a JSON key.
-        pressure_level = str(int(pressure_level_raw))
-    except iris.exceptions.CoordinateNotFoundError:
-        pressure_level = None
-
-    # First try long name, then standard name, then var name. This order is used
-    # as long name is the one we correct between models, so it most likely to be
-    # consistent.
-    varnames = list(filter(None, [cube.long_name, cube.standard_name, cube.var_name]))
-    for varname in varnames:
-        # Get the colormap for this variable.
-        try:
-            var_colorbar = colorbar[varname]
-            cmap = plt.get_cmap(colorbar[varname]["cmap"], 51)
-            varname_key = varname
-            break
-        except KeyError:
-            logging.debug("Cube name %s has no colorbar definition.", varname)
-
-    # Get colormap if it is a mask.
-    if any("mask_for_" in name for name in varnames):
-        cmap, levels, norm = _custom_colormap_mask(cube, axis=axis)
-        return cmap, levels, norm
-    # If winds on Beaufort Scale use custom colorbar and levels
-    if any("Beaufort_Scale" in name for name in varnames):
-        cmap, levels, norm = _custom_beaufort_scale(cube, axis=axis)
-        return cmap, levels, norm
-    # If probability is plotted use custom colorbar and levels
-    if any("probability_of_" in name for name in varnames):
-        cmap, levels, norm = _custom_colormap_probability(cube, axis=axis)
-        return cmap, levels, norm
-    # If aviation colour state use custom colorbar and levels
-    if any("aviation_colour_state" in name for name in varnames):
-        cmap, levels, norm = _custom_colormap_aviation_colour_state(cube)
-        return cmap, levels, norm
-
-    # If no valid colormap has been defined, use defaults and return.
-    if not cmap:
-        logging.warning("No colorbar definition exists for %s.", cube.name())
-        cmap, levels, norm = mpl.colormaps["viridis"], None, None
-        return cmap, levels, norm
-
-    # Test if pressure-level specific settings are provided for cube.
-    if pressure_level:
-        try:
-            var_colorbar = colorbar[varname_key]["pressure_levels"][pressure_level]
-        except KeyError:
-            logging.debug(
-                "%s has no colorbar definition for pressure level %s.",
-                varname,
-                pressure_level,
-            )
-
-    # Check for availability of x-axis or y-axis user-specific overrides
-    # for setting level bounds for line plot types and return just levels.
-    # Line plots do not need a colormap, and just use the data range.
-    if axis:
-        if axis == "x":
-            try:
-                vmin, vmax = var_colorbar["xmin"], var_colorbar["xmax"]
-            except KeyError:
-                vmin, vmax = var_colorbar["min"], var_colorbar["max"]
-        if axis == "y":
-            try:
-                vmin, vmax = var_colorbar["ymin"], var_colorbar["ymax"]
-            except KeyError:
-                vmin, vmax = var_colorbar["min"], var_colorbar["max"]
-        # Check if user-specified auto-scaling for this variable
-        if vmin == "auto" or vmax == "auto":
-            levels = None
-        else:
-            levels = [vmin, vmax]
-        return None, levels, None
-    # Get and use the colorbar levels for this variable if spatial or histogram.
-    else:
-        try:
-            levels = var_colorbar["levels"]
-            # Use discrete bins when levels are specified, rather
-            # than a smooth range.
-            norm = mpl.colors.BoundaryNorm(levels, ncolors=cmap.N)
-            logging.debug("Using levels for %s colorbar.", varname)
-            logging.info("Using levels: %s", levels)
-        except KeyError:
-            # Get the range for this variable.
-            vmin, vmax = var_colorbar["min"], var_colorbar["max"]
-            logging.debug("Using min and max for %s colorbar.", varname)
-            # Calculate levels from range.
-            if vmin == "auto" or vmax == "auto":
-                levels = None
-            else:
-                levels = np.linspace(vmin, vmax, 101)
-            norm = None
-
-        # Overwrite cmap, levels and norm for specific variables that
-        # require custom colorbar_map as these can not be defined in the
-        # JSON file.
-        cmap, levels, norm = _custom_colourmap_precipitation(cube, cmap, levels, norm)
-        cmap, levels, norm = _custom_colourmap_visibility_in_air(
-            cube, cmap, levels, norm
-        )
-        cmap, levels, norm = _custom_colormap_celsius(cube, cmap, levels, norm)
-        return cmap, levels, norm
 
 
 def _setup_spatial_map(
@@ -615,6 +386,62 @@ def _set_postage_stamp_title(stamp_coord: iris.coords.Coord) -> str:
     return mtitle
 
 
+def _set_axis_range(cubes):
+    """Get minimum and maximum from levels information."""
+    levels = None
+    for cube in cubes:
+        # First check if user-specified "auto" range variable.
+        # This maintains the value of levels as None, so proceed.
+        _, levels, _ = colorbar_map_levels(cube, axis="y")
+        if levels is None:
+            break
+        # If levels is changed, recheck to use the vmin,vmax or
+        # levels-based ranges for histogram plots.
+        _, levels, _ = colorbar_map_levels(cube)
+        logging.debug("levels: %s", levels)
+        if levels is not None:
+            vmin = min(levels)
+            vmax = max(levels)
+            logging.debug("Updated vmin, vmax: %s, %s", vmin, vmax)
+            break
+
+    if levels is None:
+        vmin = min(cb.data.min() for cb in cubes)
+        vmax = max(cb.data.max() for cb in cubes)
+
+    return vmin, vmax
+
+
+def _find_matched_slices(cubes, sequence_coordinate):
+    """Identify matched cubes in CubeList by sequence_coordinate values.
+
+    Ensures common points are compared for multiple cube inputs.
+    """
+    all_points = sorted(
+        set(
+            itertools.chain.from_iterable(
+                cb.coord(sequence_coordinate).points for cb in cubes
+            )
+        )
+    )
+    all_slices = list(
+        itertools.chain.from_iterable(
+            cb.slices_over(sequence_coordinate) for cb in cubes
+        )
+    )
+    # Matched slices (matched by seq coord point; it may happen that
+    # evaluated models do not cover the same seq coord range, hence matching
+    # necessary)
+    cube_iterables = [
+        iris.cube.CubeList(
+            s for s in all_slices if s.coord(sequence_coordinate).points[0] == point
+        )
+        for point in all_points
+    ]
+
+    return cube_iterables
+
+
 def _plot_and_save_spatial_plot(
     cube: iris.cube.Cube,
     filename: str,
@@ -645,36 +472,36 @@ def _plot_and_save_spatial_plot(
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
     # Specify the color bar
-    cmap, levels, norm = _colorbar_map_levels(cube)
+    cmap, levels, norm = colorbar_map_levels(cube)
 
     if "feature" in cube.long_name:
         cmap.set_under("white")
 
     # If overplotting, set required colorbars
     if overlay_cube:
-        over_cmap, over_levels, over_norm = _colorbar_map_levels(overlay_cube)
+        over_cmap, over_levels, over_norm = colorbar_map_levels(overlay_cube)
     if contour_cube:
-        cntr_cmap, cntr_levels, cntr_norm = _colorbar_map_levels(contour_cube)
+        cntr_cmap, cntr_levels, cntr_norm = colorbar_map_levels(contour_cube)
 
     # Setup plot map projection, extent and coastlines and borderlines.
     axes = _setup_spatial_map(cube, fig, cmap)
 
+    # Set colorscale bounds
+    try:
+        vmin = min(levels)
+        vmax = max(levels)
+    except TypeError:
+        vmin, vmax = None, None
+    # Ensure to use norm and not vmin/vmax if levels are defined.
+    if norm is not None:
+        vmin = None
+        vmax = None
+        logging.debug("Plotting using defined levels.")
+
     # Plot the field.
     if method == "contourf":
-        # Filled contour plot of the field.
         plot = iplt.contourf(cube, cmap=cmap, levels=levels, norm=norm)
     elif method == "pcolormesh":
-        try:
-            vmin = min(levels)
-            vmax = max(levels)
-        except TypeError:
-            vmin, vmax = None, None
-        # pcolormesh plot of the field and ensure to use norm and not vmin/vmax
-        # if levels are defined.
-        if norm is not None:
-            vmin = None
-            vmax = None
-            logging.debug("Plotting using defined levels.")
         plot = iplt.pcolormesh(cube, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax)
     else:
         raise ValueError(f"Unknown plotting method: {method}")
@@ -889,12 +716,12 @@ def _plot_and_save_postage_stamp_spatial_plot(
     )
 
     # Specify the color bar
-    cmap, levels, norm = _colorbar_map_levels(cube)
+    cmap, levels, norm = colorbar_map_levels(cube)
     # If overplotting, set required colorbars
     if overlay_cube:
-        over_cmap, over_levels, over_norm = _colorbar_map_levels(overlay_cube)
+        over_cmap, over_levels, over_norm = colorbar_map_levels(overlay_cube)
     if contour_cube:
-        cntr_cmap, cntr_levels, cntr_norm = _colorbar_map_levels(contour_cube)
+        cntr_cmap, cntr_levels, cntr_norm = colorbar_map_levels(contour_cube)
 
     # Make a subplot for each member.
     for member, subplot in zip(
@@ -998,13 +825,13 @@ def _plot_and_save_line_series(
     """
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
-    model_colors_map = _get_model_colors_map(cubes)
+    model_colors_map = get_model_colors_map(cubes)
 
     # Store min/max ranges.
     y_levels = []
 
     # Check match-up across sequence coords gives consistent sizes
-    _validate_cubes_coords(cubes, coords)
+    validate_cubes_coords(cubes, coords)
 
     for cube, coord in zip(cubes, coords, strict=True):
         label = None
@@ -1039,7 +866,7 @@ def _plot_and_save_line_series(
                 )
 
         # Calculate the global min/max if multiple cubes are given.
-        _, levels, _ = _colorbar_map_levels(cube, axis="y")
+        _, levels, _ = colorbar_map_levels(cube, axis="y")
         if levels is not None:
             y_levels.append(min(levels))
             y_levels.append(max(levels))
@@ -1124,10 +951,10 @@ def _plot_and_save_vertical_line_series(
     # plot the vertical pressure axis using log scale
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
-    model_colors_map = _get_model_colors_map(cubes)
+    model_colors_map = get_model_colors_map(cubes)
 
     # Check match-up across sequence coords gives consistent sizes
-    _validate_cubes_coords(cubes, coords)
+    validate_cubes_coords(cubes, coords)
 
     for cube, coord in zip(cubes, coords, strict=True):
         label = None
@@ -1333,7 +1160,7 @@ def _plot_and_save_vector_plot(
     cube_vec_mag.rename(f"{cube_u.name()}_{cube_v.name()}_magnitude")
 
     # Specify the color bar
-    cmap, levels, norm = _colorbar_map_levels(cube_vec_mag)
+    cmap, levels, norm = colorbar_map_levels(cube_vec_mag)
 
     # Setup plot map projection, extent and coastlines and borderlines.
     axes = _setup_spatial_map(cube_vec_mag, fig, cmap)
@@ -1441,7 +1268,7 @@ def _plot_and_save_histogram_series(
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     ax = plt.gca()
 
-    model_colors_map = _get_model_colors_map(cubes)
+    model_colors_map = get_model_colors_map(cubes)
 
     # Set default that histograms will produce probability density function
     # at each bin (integral over range sums to 1).
@@ -1714,7 +1541,7 @@ def _plot_and_save_power_spectrum_series(
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     ax = plt.gca()
 
-    model_colors_map = _get_model_colors_map(cubes)
+    model_colors_map = get_model_colors_map(cubes)
 
     for cube in iter_maybe(cubes):
         # Calculate power spectrum
@@ -1745,7 +1572,7 @@ def _plot_and_save_power_spectrum_series(
             )
 
         # Calculate spectra
-        ps_array = _DCT_ps(cube_3d)
+        ps_array = DCT_ps(cube_3d)
 
         ps_cube = iris.cube.Cube(
             ps_array,
@@ -1937,7 +1764,7 @@ def _spatial_plot(
     recipe_title = get_recipe_metadata().get("title", "Untitled")
 
     # Ensure we've got a single cube.
-    cube = _check_single_cube(cube)
+    cube = check_single_cube(cube)
 
     # Check if there is a valid stamp coordinate in cube dimensions.
     if stamp_coordinate == "realization":
@@ -1999,378 +1826,6 @@ def _spatial_plot(
 
     # Make a page to display the plots.
     _make_plot_html_page(complete_plot_index)
-
-
-def _custom_colormap_mask(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = None):
-    """Get colourmap for mask.
-
-    If "mask_for_" appears anywhere in the name of a cube this function will be called
-    regardless of the name of the variable to ensure a consistent plot.
-
-    Parameters
-    ----------
-    cube: Cube
-        Cube of variable for which the colorbar information is desired.
-    axis: "x", "y", optional
-        Select the levels for just this axis of a line plot. The min and max
-        can be set by xmin/xmax or ymin/ymax respectively. For variables where
-        setting a universal range is not desirable (e.g. temperature), users
-        can set ymin/ymax values to "auto" in the colorbar definitions file.
-        Where no additional xmin/xmax or ymin/ymax values are provided, the
-        axis bounds default to use the vmin/vmax values provided.
-
-    Returns
-    -------
-    cmap:
-        Matplotlib colormap.
-    levels:
-        List of levels to use for plotting. For continuous plots the min and max
-        should be taken as the range.
-    norm:
-        BoundaryNorm information.
-    """
-    if "difference" not in cube.long_name:
-        if axis:
-            levels = [0, 1]
-            # Complete settings based on levels.
-            return None, levels, None
-        else:
-            # Define the levels and colors.
-            levels = [0, 1, 2]
-            colors = ["white", "dodgerblue"]
-            # Create a custom color map.
-            cmap = mcolors.ListedColormap(colors)
-            # Normalize the levels.
-            norm = mcolors.BoundaryNorm(levels, cmap.N)
-            logging.debug("Colourmap for %s.", cube.long_name)
-            return cmap, levels, norm
-    else:
-        if axis:
-            levels = [-1, 1]
-            return None, levels, None
-        else:
-            # Search for if mask difference, set to +/- 0.5 as values plotted <
-            # not <=.
-            levels = [-2, -0.5, 0.5, 2]
-            colors = ["goldenrod", "white", "teal"]
-            cmap = mcolors.ListedColormap(colors)
-            norm = mcolors.BoundaryNorm(levels, cmap.N)
-            logging.debug("Colourmap for %s.", cube.long_name)
-            return cmap, levels, norm
-
-
-def _custom_beaufort_scale(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = None):
-    """Get a custom colorbar for a cube in the Beaufort Scale.
-
-    Specific variable ranges can be separately set in user-supplied definition
-    for x- or y-axis limits, or indicate where automated range preferred.
-
-    Parameters
-    ----------
-    cube: Cube
-        Cube of variable with Beaufort Scale in name.
-    axis: "x", "y", optional
-        Select the levels for just this axis of a line plot. The min and max
-        can be set by xmin/xmax or ymin/ymax respectively. For variables where
-        setting a universal range is not desirable (e.g. temperature), users
-        can set ymin/ymax values to "auto" in the colorbar definitions file.
-        Where no additional xmin/xmax or ymin/ymax values are provided, the
-        axis bounds default to use the vmin/vmax values provided.
-
-    Returns
-    -------
-    cmap:
-        Matplotlib colormap.
-    levels:
-        List of levels to use for plotting. For continuous plots the min and max
-        should be taken as the range.
-    norm:
-        BoundaryNorm information.
-    """
-    if "difference" not in cube.long_name:
-        if axis:
-            levels = [0, 12]
-            return None, levels, None
-        else:
-            levels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
-            colors = [
-                "black",
-                (0, 0, 0.6),
-                "blue",
-                "cyan",
-                "green",
-                "yellow",
-                (1, 0.5, 0),
-                "red",
-                "pink",
-                "magenta",
-                "purple",
-                "maroon",
-                "white",
-            ]
-            cmap = mcolors.ListedColormap(colors)
-            norm = mcolors.BoundaryNorm(levels, cmap.N)
-            logging.info("change colormap for Beaufort Scale colorbar.")
-            return cmap, levels, norm
-    else:
-        if axis:
-            levels = [-4, 4]
-            return None, levels, None
-        else:
-            levels = [
-                -3.5,
-                -2.5,
-                -1.5,
-                -0.5,
-                0.5,
-                1.5,
-                2.5,
-                3.5,
-            ]
-            cmap = plt.get_cmap("bwr", 8)
-            norm = mcolors.BoundaryNorm(levels, cmap.N)
-            return cmap, levels, norm
-
-
-def _custom_colormap_celsius(cube: iris.cube.Cube, cmap, levels, norm):
-    """Return altered colourmap for temperature with change in units to Celsius.
-
-    If "Celsius" appears anywhere in the name of a cube this function will be called.
-
-    Parameters
-    ----------
-    cube: Cube
-        Cube of variable for which the colorbar information is desired.
-    cmap: Matplotlib colormap.
-    levels: List
-        List of levels to use for plotting. For continuous plots the min and max
-        should be taken as the range.
-    norm: BoundaryNorm.
-
-    Returns
-    -------
-    cmap: Matplotlib colormap.
-    levels: List
-        List of levels to use for plotting. For continuous plots the min and max
-        should be taken as the range.
-    norm: BoundaryNorm.
-    """
-    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
-    if any("temperature" in name for name in varnames) and "Celsius" == cube.units:
-        levels = np.array(levels)
-        levels -= 273
-        levels = levels.tolist()
-    else:
-        # Do nothing keep the existing colourbar attributes
-        levels = levels
-    cmap = cmap
-    norm = norm
-    return cmap, levels, norm
-
-
-def _custom_colormap_probability(
-    cube: iris.cube.Cube, axis: Literal["x", "y"] | None = None
-):
-    """Get a custom colorbar for a probability cube.
-
-    Specific variable ranges can be separately set in user-supplied definition
-    for x- or y-axis limits, or indicate where automated range preferred.
-
-    Parameters
-    ----------
-    cube: Cube
-        Cube of variable with probability in name.
-    axis: "x", "y", optional
-        Select the levels for just this axis of a line plot. The min and max
-        can be set by xmin/xmax or ymin/ymax respectively. For variables where
-        setting a universal range is not desirable (e.g. temperature), users
-        can set ymin/ymax values to "auto" in the colorbar definitions file.
-        Where no additional xmin/xmax or ymin/ymax values are provided, the
-        axis bounds default to use the vmin/vmax values provided.
-
-    Returns
-    -------
-    cmap:
-        Matplotlib colormap.
-    levels:
-        List of levels to use for plotting. For continuous plots the min and max
-        should be taken as the range.
-    norm:
-        BoundaryNorm information.
-    """
-    if axis:
-        levels = [0, 1]
-        return None, levels, None
-    else:
-        cmap = mcolors.ListedColormap(
-            [
-                "#FFFFFF",
-                "#636363",
-                "#e1dada",
-                "#B5CAFF",
-                "#8FB3FF",
-                "#7F97FF",
-                "#ABCF63",
-                "#E8F59E",
-                "#FFFA14",
-                "#FFD121",
-                "#FFA30A",
-            ]
-        )
-        levels = [0.0, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-        norm = mcolors.BoundaryNorm(levels, cmap.N)
-        return cmap, levels, norm
-
-
-def _custom_colourmap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
-    """Return a custom colourmap for the current recipe."""
-    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
-    if (
-        any("surface_microphysical" in name for name in varnames)
-        and "difference" not in cube.long_name
-        and "mask" not in cube.long_name
-    ):
-        # Define the levels and colors
-        levels = [0, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
-        colors = [
-            "w",
-            (0, 0, 0.6),
-            "b",
-            "c",
-            "g",
-            "y",
-            (1, 0.5, 0),
-            "r",
-            "pink",
-            "m",
-            "purple",
-            "maroon",
-            "gray",
-        ]
-        # Create a custom colormap
-        cmap = mcolors.ListedColormap(colors)
-        # Normalize the levels
-        norm = mcolors.BoundaryNorm(levels, cmap.N)
-        logging.info("change colormap for surface_microphysical variable colorbar.")
-    else:
-        # do nothing and keep existing colorbar attributes
-        cmap = cmap
-        levels = levels
-        norm = norm
-    return cmap, levels, norm
-
-
-def _custom_colormap_aviation_colour_state(cube: iris.cube.Cube):
-    """Return custom colourmap for aviation colour state.
-
-    If "aviation_colour_state" appears anywhere in the name of a cube
-    this function will be called.
-
-    Parameters
-    ----------
-    cube: Cube
-        Cube of variable for which the colorbar information is desired.
-
-    Returns
-    -------
-    cmap: Matplotlib colormap.
-    levels: List
-        List of levels to use for plotting. For continuous plots the min and max
-        should be taken as the range.
-    norm: BoundaryNorm.
-    """
-    levels = [-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5]
-    colors = [
-        "#87ceeb",
-        "#ffffff",
-        "#8ced69",
-        "#ffff00",
-        "#ffd700",
-        "#ffa500",
-        "#fe3620",
-    ]
-    # Create a custom colormap
-    cmap = mcolors.ListedColormap(colors)
-    # Normalise the levels
-    norm = mcolors.BoundaryNorm(levels, cmap.N)
-    return cmap, levels, norm
-
-
-def _custom_colourmap_visibility_in_air(cube: iris.cube.Cube, cmap, levels, norm):
-    """Return a custom colourmap for the current recipe."""
-    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
-    if (
-        any("visibility_in_air" in name for name in varnames)
-        and "difference" not in cube.long_name
-        and "mask" not in cube.long_name
-    ):
-        # Define the levels and colors (in km)
-        levels = [0, 0.05, 0.1, 0.2, 1.0, 2.0, 5.0, 10.0, 20.0, 30.0, 50.0, 70.0, 100.0]
-        norm = mcolors.BoundaryNorm(levels, cmap.N)
-        colours = [
-            "#8f00d6",
-            "#d10000",
-            "#ff9700",
-            "#ffff00",
-            "#00007f",
-            "#6c9ccd",
-            "#aae8ff",
-            "#37a648",
-            "#8edc64",
-            "#c5ffc5",
-            "#dcdcdc",
-            "#ffffff",
-        ]
-        # Create a custom colormap
-        cmap = mcolors.ListedColormap(colours)
-        # Normalize the levels
-        norm = mcolors.BoundaryNorm(levels, cmap.N)
-        logging.info("change colormap for visibility_in_air variable colorbar.")
-    else:
-        # do nothing and keep existing colorbar attributes
-        cmap = cmap
-        levels = levels
-        norm = norm
-    return cmap, levels, norm
-
-
-def _get_num_models(cube: iris.cube.Cube | iris.cube.CubeList) -> int:
-    """Return number of models based on cube attributes."""
-    model_names = list(
-        filter(
-            lambda x: x is not None,
-            {cb.attributes.get("model_name", None) for cb in iter_maybe(cube)},
-        )
-    )
-    if not model_names:
-        logging.debug("Missing model names. Will assume single model.")
-        return 1
-    else:
-        return len(model_names)
-
-
-def _validate_cube_shape(
-    cube: iris.cube.Cube | iris.cube.CubeList, num_models: int
-) -> None:
-    """Check all cubes have a model name."""
-    if isinstance(cube, iris.cube.CubeList) and len(cube) != num_models:
-        raise ValueError(
-            f"The number of model names ({num_models}) should equal the number "
-            f"of cubes ({len(cube)})."
-        )
-
-
-def _validate_cubes_coords(
-    cubes: iris.cube.CubeList, coords: list[iris.coords.Coord]
-) -> None:
-    """Check same number of cubes as sequence coordinate for zip functions."""
-    if len(cubes) != len(coords):
-        raise ValueError(
-            f"The number of CubeList entries ({len(cubes)}) should equal the number "
-            f"of sequence coordinates ({len(coords)})."
-            f"Check that number of time entries in input data are consistent if "
-            f"performing time-averaging steps prior to plotting outputs."
-        )
 
 
 ####################
@@ -2593,9 +2048,9 @@ def plot_line_series(
     # Ensure we have a name for the plot file.
     recipe_title = get_recipe_metadata().get("title", "Untitled")
 
-    num_models = _get_num_models(cube)
+    num_models = get_num_models(cube)
 
-    _validate_cube_shape(cube, num_models)
+    validate_cube_shape(cube, num_models)
 
     # Iterate over all cubes and extract coordinate to plot.
     cubes = iter_maybe(cube)
@@ -2685,9 +2140,9 @@ def plot_vertical_line_series(
     # Store min/max ranges for x range.
     x_levels = []
 
-    num_models = _get_num_models(cubes)
+    num_models = get_num_models(cubes)
 
-    _validate_cube_shape(cubes, num_models)
+    validate_cube_shape(cubes, num_models)
 
     # Iterate over all cubes in cube or CubeList and plot.
     coords = []
@@ -2709,7 +2164,7 @@ def plot_vertical_line_series(
             ) from err
 
         # Get minimum and maximum from levels information.
-        _, levels, _ = _colorbar_map_levels(cube, axis="x")
+        _, levels, _ = colorbar_map_levels(cube, axis="x")
         if levels is not None:
             x_levels.append(min(levels))
             x_levels.append(max(levels))
@@ -2732,28 +2187,7 @@ def plot_vertical_line_series(
     # Matching the slices (matching by seq coord point; it may happen that
     # evaluated models do not cover the same seq coord range, hence matching
     # necessary)
-    def filter_cube_iterables(cube_iterables) -> bool:
-        return len(cube_iterables) == len(coords)
-
-    cube_iterables = filter(
-        filter_cube_iterables,
-        (
-            iris.cube.CubeList(
-                s
-                for s in itertools.chain.from_iterable(
-                    cb.slices_over(sequence_coordinate) for cb in cubes
-                )
-                if s.coord(sequence_coordinate).points[0] == point
-            )
-            for point in sorted(
-                set(
-                    itertools.chain.from_iterable(
-                        cb.coord(sequence_coordinate).points for cb in cubes
-                    )
-                )
-            )
-        ),
-    )
+    cube_iterables = _find_matched_slices(cubes, sequence_coordinate)
 
     # Create a plot for each value of the sequence coordinate.
     # Allowing for multiple cubes in a CubeList to be plotted in the same plot for
@@ -2992,14 +2426,14 @@ def scatter_plot(
     # Iterate over all cubes in cube or CubeList and plot.
     for cube_iter in iter_maybe(cube_x):
         # Check cubes are correct shape.
-        cube_iter = _check_single_cube(cube_iter)
+        cube_iter = check_single_cube(cube_iter)
         if cube_iter.ndim > 1:
             raise ValueError("cube_x must be 1D.")
 
     # Iterate over all cubes in cube or CubeList and plot.
     for cube_iter in iter_maybe(cube_y):
         # Check cubes are correct shape.
-        cube_iter = _check_single_cube(cube_iter)
+        cube_iter = check_single_cube(cube_iter)
         if cube_iter.ndim > 1:
             raise ValueError("cube_y must be 1D.")
 
@@ -3137,41 +2571,16 @@ def plot_histogram_series(
     # Internal plotting function.
     plotting_func = _plot_and_save_histogram_series
 
-    num_models = _get_num_models(cubes)
+    num_models = get_num_models(cubes)
 
-    _validate_cube_shape(cubes, num_models)
+    validate_cube_shape(cubes, num_models)
 
-    # If several histograms are plotted with time as sequence_coordinate for the
-    # time slider option.
-    for cube in cubes:
-        try:
-            cube.coord(sequence_coordinate)
-        except iris.exceptions.CoordinateNotFoundError as err:
-            raise ValueError(
-                f"Cube must have a {sequence_coordinate} coordinate."
-            ) from err
+    # If several histograms are plotted, check sequence_coordinate
+    check_sequence_coordinate(cubes, sequence_coordinate)
 
-    # Get minimum and maximum from levels information.
-    levels = None
-    for cube in cubes:
-        # First check if user-specified "auto" range variable.
-        # This maintains the value of levels as None, so proceed.
-        _, levels, _ = _colorbar_map_levels(cube, axis="y")
-        if levels is None:
-            break
-        # If levels is changed, recheck to use the vmin,vmax or
-        # levels-based ranges for histogram plots.
-        _, levels, _ = _colorbar_map_levels(cube)
-        logging.debug("levels: %s", levels)
-        if levels is not None:
-            vmin = min(levels)
-            vmax = max(levels)
-            logging.debug("Updated vmin, vmax: %s, %s", vmin, vmax)
-            break
-
-    if levels is None:
-        vmin = min(cb.data.min() for cb in cubes)
-        vmax = max(cb.data.max() for cb in cubes)
+    # Get axis minimum and maximum from levels information.
+    # If no levels set, derive minima and maxima from data in CubeList.
+    vmin, vmax = _set_axis_range(cubes)
 
     # Make postage stamp plots if stamp_coordinate exists and has more than a
     # single point. If single_plot is True:
@@ -3192,30 +2601,10 @@ def plot_histogram_series(
                 plotting_func = _plot_and_save_postage_stamp_histogram_series
         cube_iterables = cubes[0].slices_over(sequence_coordinate)
     else:
-        all_points = sorted(
-            set(
-                itertools.chain.from_iterable(
-                    cb.coord(sequence_coordinate).points for cb in cubes
-                )
-            )
-        )
-        all_slices = list(
-            itertools.chain.from_iterable(
-                cb.slices_over(sequence_coordinate) for cb in cubes
-            )
-        )
-        # Matched slices (matched by seq coord point; it may happen that
-        # evaluated models do not cover the same seq coord range, hence matching
-        # necessary)
-        cube_iterables = [
-            iris.cube.CubeList(
-                s for s in all_slices if s.coord(sequence_coordinate).points[0] == point
-            )
-            for point in all_points
-        ]
+        cube_iterables = _find_matched_slices(cubes, sequence_coordinate)
 
     plot_index = []
-    nplot = np.size(cube.coord(sequence_coordinate).points)
+    nplot = np.size(cubes[0].coord(sequence_coordinate).points)
     # Create a plot for each value of the sequence coordinate. Allowing for
     # multiple cubes in a CubeList to be plotted in the same plot for similar
     # sequence values. Passing a CubeList into the internal plotting function
@@ -3317,19 +2706,12 @@ def plot_power_spectrum_series(
     # Internal plotting function.
     plotting_func = _plot_and_save_power_spectrum_series
 
-    num_models = _get_num_models(cubes)
+    num_models = get_num_models(cubes)
 
-    _validate_cube_shape(cubes, num_models)
+    validate_cube_shape(cubes, num_models)
 
-    # If several power spectra are plotted with time as sequence_coordinate for the
-    # time slider option.
-    for cube in cubes:
-        try:
-            cube.coord(sequence_coordinate)
-        except iris.exceptions.CoordinateNotFoundError as err:
-            raise ValueError(
-                f"Cube must have a {sequence_coordinate} coordinate."
-            ) from err
+    # If several power spectra are plotted, check sequence_coordinate
+    check_sequence_coordinate(cubes, sequence_coordinate)
 
     # Make postage stamp plots if stamp_coordinate exists and has more than a
     # single point. If single_plot is True:
@@ -3350,30 +2732,10 @@ def plot_power_spectrum_series(
                 plotting_func = _plot_and_save_postage_stamp_power_spectrum_series
         cube_iterables = cubes[0].slices_over(sequence_coordinate)
     else:
-        all_points = sorted(
-            set(
-                itertools.chain.from_iterable(
-                    cb.coord(sequence_coordinate).points for cb in cubes
-                )
-            )
-        )
-        all_slices = list(
-            itertools.chain.from_iterable(
-                cb.slices_over(sequence_coordinate) for cb in cubes
-            )
-        )
-        # Matched slices (matched by seq coord point; it may happen that
-        # evaluated models do not cover the same seq coord range, hence matching
-        # necessary)
-        cube_iterables = [
-            iris.cube.CubeList(
-                s for s in all_slices if s.coord(sequence_coordinate).points[0] == point
-            )
-            for point in all_points
-        ]
+        cube_iterables = _find_matched_slices(cubes, sequence_coordinate)
 
     plot_index = []
-    nplot = np.size(cube.coord(sequence_coordinate).points)
+    nplot = np.size(cubes[0].coord(sequence_coordinate).points)
     # Create a plot for each value of the sequence coordinate. Allowing for
     # multiple cubes in a CubeList to be plotted in the same plot for similar
     # sequence values. Passing a CubeList into the internal plotting function
@@ -3409,94 +2771,3 @@ def plot_power_spectrum_series(
     _make_plot_html_page(complete_plot_index)
 
     return cubes
-
-
-def _DCT_ps(y_3d):
-    """Calculate power spectra for regional domains.
-
-    Parameters
-    ----------
-    y_3d: 3D array
-        3 dimensional array to calculate spectrum for.
-        (2D field data with 3rd dimension of time)
-
-    Returns: ps_array
-        Array of power spectra values calculated for input field (for each time)
-
-    Method for regional domains:
-    Calculate power spectra over limited area domain using Discrete Cosine Transform (DCT)
-    as described in Denis et al 2002 [Denis_etal_2002]_.
-
-    References
-    ----------
-    .. [Denis_etal_2002] Bertrand Denis, Jean Côté and René Laprise (2002)
-        "Spectral Decomposition of Two-Dimensional Atmospheric Fields on
-        Limited-Area Domains Using the Discrete Cosine Transform (DCT)"
-        Monthly Weather Review, Vol. 130, 1812-1828
-        doi: https://doi.org/10.1175/1520-0493(2002)130<1812:SDOTDA>2.0.CO;2
-    """
-    Nt, Ny, Nx = y_3d.shape
-
-    # Max coefficient
-    Nmin = min(Nx - 1, Ny - 1)
-
-    # Create alpha matrix (of wavenumbers)
-    alpha_matrix = _create_alpha_matrix(Ny, Nx)
-
-    # Prepare output array
-    ps_array = np.zeros((Nt, Nmin))
-
-    # Loop over time to get spectrum for each time.
-    for t in range(Nt):
-        y_2d = y_3d[t]
-
-        # Apply 2D DCT to transform y_3d[t] from physical space to spectral space.
-        # fkk is a 2D array of DCT coefficients, representing the amplitudes of
-        # cosine basis functions at different spatial frequencies.
-
-        # normalise spectrum to allow comparison between models.
-        fkk = fft.dctn(y_2d, norm="ortho")
-
-        # Normalise fkk
-        fkk = fkk / np.sqrt(Ny * Nx)
-
-        # calculate variance of spectral coefficient
-        sigma_2 = fkk**2 / Nx / Ny
-
-        # Group ellipses of alphas into the same wavenumber k/Nmin
-        for k in range(1, Nmin + 1):
-            alpha = k / Nmin
-            alpha_p1 = (k + 1) / Nmin
-
-            # Sum up elements matching k
-            mask_k = np.where((alpha_matrix >= alpha) & (alpha_matrix < alpha_p1))
-            ps_array[t, k - 1] = np.sum(sigma_2[mask_k])
-
-    return ps_array
-
-
-def _create_alpha_matrix(Ny, Nx):
-    """Construct an array of 2D wavenumbers from 2D wavenumber pair.
-
-    Parameters
-    ----------
-    Ny, Nx:
-        Dimensions of the 2D field for which the power spectra is calculated. Used to
-        create the array of 2D wavenumbers. Each Ny, Nx pair is associated with a
-        single-scale parameter.
-
-    Returns: alpha_matrix
-        normalisation of 2D wavenumber axes, transforming the spectral domain into
-        an elliptic coordinate system.
-
-    """
-    # Create x_indices: each row is [1, 2, ..., Nx]
-    x_indices = np.tile(np.arange(1, Nx + 1), (Ny, 1))
-
-    # Create y_indices: each column is [1, 2, ..., Ny]
-    y_indices = np.tile(np.arange(1, Ny + 1).reshape(Ny, 1), (1, Nx))
-
-    # Compute alpha_matrix
-    alpha_matrix = np.sqrt((x_indices**2) / Nx**2 + (y_indices**2) / Ny**2)
-
-    return alpha_matrix
