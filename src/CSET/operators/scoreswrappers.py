@@ -248,7 +248,7 @@ def scores_crps_for_ensemble(
     if control_member != 0:
         logging.WARNING("control member is usual 0")
 
-    if control_member not in cubes.coords("realization")[0].points[0]:
+    if control_member not in cubes.coords("realization")[0].points:
         new_control_member = cubes.coords("realization")[0].points[0]
         logging.WARNING(
             f"control member value {control_member} out of bounds, defaulting to control member={new_control_member}"
