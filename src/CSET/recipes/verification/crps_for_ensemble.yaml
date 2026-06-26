@@ -21,6 +21,7 @@ steps:
 
 
   - operator: scoreswrappers.scores_crps_for_ensemble
+    method: $METHOD
 
   - operator: plot.plot_line_series
     series_coordinate: time

@@ -63,12 +63,14 @@ def load(conf: Config):
                 model_ids=[base_model["id"], model["id"]],
                 aggregation=False,
             )
+
     if conf.SCORES_CRPS_FOR_ENSEMBLE:
         for model, field in itertools.product(models, conf.SURFACE_FIELDS):
             yield RawRecipe(
                 recipe="crps_for_ensemble.yaml",
                 variables={
                     "VARNAME": field,
+                    "METHOD": conf.METHOD_FOR_CRPS,
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
