@@ -223,9 +223,36 @@ def read_cubes(
     return cubes
 
 
-def extract_constraint_names(obj, seen=None):
-    if seen is None:
-        seen = set()
+def extract_constraint_names(obj):
+    """
+    Recursively extract all string-based constraint names from an object and its attributes.
+
+    This function searches for attributes named ``name`` or ``_name`` within the given
+    object and collects their string values. It then traverses attributes
+    of the object recursively (including elements of lists and tuples), gathering any
+    additional names found. A set of visited object IDs is maintained to prevent infinite
+    recursion caused by cyclic references.
+
+    Parameters
+    ----------
+    obj: Any
+        The object to inspect for constraint names. This can be any Python object,
+        including nested structures containing other objects.
+
+    Returns
+    -------
+    names: list
+        A list of extracted constraint names found in the object and its nested
+        attributes. Duplicate names may appear if they are encountered multiple times.
+
+    Notes
+    -----
+    - Only attributes named ``name`` or ``_name`` are considered as potential sources
+      of constraint names.
+    """
+    # A set of object IDs that have already been visited during recursion.
+    # This is used internally to avoid infinite loops.
+    seen = set()
 
     names = []
 
@@ -278,12 +305,11 @@ def _load_model(
 
     cubes = iris.load(input_files)
 
-    # If a cube called latitude exists, chances are its unstructured/flattened.
-    # Using extract, not extract_cubes in a try as there might be more
-    # than one cube called latitude if we are aggregating.
+    # If a cube called latitude exists, chances are its unstructured/flattened. If
+    # so, then pass through restructure_ugrid to make rectilinear.
     if len(cubes.extract("latitude")) > 0:
-        name = extract_constraint_names(constraint)
-        cubes = restructure_ugrid(cubes, name)
+        vname = extract_constraint_names(constraint)
+        cubes = restructure_ugrid(cubes, vname)
 
     for cube in cubes:
         _loading_callback(cube, None, None)
