@@ -228,9 +228,11 @@ def scores_crps_for_ensemble(cubes: Cube | CubeList):
     """
     ctrl = cubes[np.where(cubes.coord("realization").points[:] == 1)[0][0], :]
     ens_mem = cubes[np.where(cubes.coord("realization").points[:] != 1)[0][:], :]
+    # Realising the data in advance provides a large speedup
 
-    ctrl.data
-    ens_mem.data
+    _ = ctrl.data
+    _ = ens_mem.data
+    del _
 
     ctrl = xr.DataArray.from_iris(ctrl)
     ens_mem = xr.DataArray.from_iris(ens_mem)
