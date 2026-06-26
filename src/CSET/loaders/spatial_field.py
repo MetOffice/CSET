@@ -651,6 +651,26 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+    if conf.GLOBAL_CURV:
+        for model, points, radius, tol in itertools.product(
+            models, conf.CURV_POINTS, conf.CURV_RADIUS, conf.CURV_TOLERANCE
+        ):
+            yield RawRecipe(
+                recipe="curv_spatial_plot.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "CURV_POINTS": points,
+                    "CURV_RADIUS": radius,
+                    "CURV_TOLERANCE": tol,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
+
     # Screen-level temperature probabilities
     for model, condition, threshold in itertools.product(
         models,
