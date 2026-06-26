@@ -1,0 +1,65 @@
+
+category: Scores
+title: "Time series of difference between $OTHER_MODEL RMS difference from $OBS_PLACEHOLDER and $BASE_MODEL RMS difference from $OBS_PLACEHOLDER"
+description: |
+  Extracts and plots the difference in Root Mean Square Error in $VARNAME
+  for all times.
+  This requires at least two models and an additional model acting as "truth".
+  The RMSE is calculated based on that used in the
+  package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.rmse).
+  This recipe allows the preservation of the time coordinate to produce a timeseries. Therefore, the RMSE is
+  collapsed over all other coordinates in the cube and calculated for every timestep.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: [$OBS_PLACEHOLDER, $BASE_MODEL, $OTHER_MODEL]
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: $VARNAME
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: "pressure"
+        levels: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: misc.subtraction
+    minuend:
+      operator: scoreswrappers.scores_rmse
+      cubes:
+        operator: filters.filter_multiple_cubes
+        constraint:
+          operator: constraints.generate_attribute_constraint
+          attribute: model_name
+          value: $OBS_PLACEHOLDER
+        constraint2:
+          operator: constraints.generate_attribute_constraint
+          attribute: model_name
+          value: $OTHER_MODEL
+      preserved_coordinates: ["time"]
+    subtrahend:
+      operator: scoreswrappers.scores_rmse
+      cubes:
+        operator: filters.filter_multiple_cubes
+        constraint:
+          operator: constraints.generate_attribute_constraint
+          attribute: model_name
+          value: $OBS_PLACEHOLDER
+        constraint2:
+          operator: constraints.generate_attribute_constraint
+          attribute: model_name
+          value: $BASE_MODEL
+      preserved_coordinates: ["time"]
+
+  - operator: plot.plot_line_series
+    series_coordinate: time
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
