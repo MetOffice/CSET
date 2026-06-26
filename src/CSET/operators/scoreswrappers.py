@@ -201,11 +201,19 @@ def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None =
 
 
 def scores_crps_for_ensemble(
-    cubes: Cube | CubeList, method: str = "ecdf"
+    cubes: Cube | CubeList, method: str = "ecdf", control_member: int = 0
 ) -> iris.Constraint:
     r"""Calculate the CRPS for an ensemble.
 
     Acts as a wrapper around the crps_for_ensemble from ``scores`` ([scores_a]_, [scores_b]_).
+
+    Lower CRPS values are better (implies experiment distribution is closer to control distribution/observations),
+    larger values are worse (implies distributions are dissimilar).
+    It is applicable across time and spatial scales as the focus is on the distribution of the values.
+    Default method is ecdf.  ecdf is exact value from the empirical distributions,
+    whereas fair produces an approximated value based on a random sample of the underlying distribution.
+
+    See [CRPS] for further information.
 
     Parameters
     ----------
@@ -231,9 +239,26 @@ def scores_crps_for_ensemble(
         Pagano, T. C., Fisher, A. J., Mandelbaum, T., Jinghan, F., … Smallwood, J.
         (2026) "scores: Metrics for the verification, evaluation and optimisation of
         forecasts, predictions or models (2.5.0)". Zenodo. doi: 10.5281/zenodo.18638494
+
+    .. [CRPS]
+        Hersbach, H., 2000: Decomposition of the Continuous Ranked
+        Probability Score for Ensemble Prediction Systems. Wea.
+        Forecasting, 15, 559–570, https://doi.org/10.1175/1520-0434(2000)015<0559:DOTCRP>2.0.CO;2.
     """
-    ctrl = cubes.extract(generate_realization_constraint([1]))
-    ens_mem = cubes.extract(generate_remove_single_ensemble_member_constraint(1))
+    if control_member != 0:
+        logging.WARNING("control member is usual 0")
+
+    if control_member not in cubes.coords("realization")[0].points[0]:
+        new_control_member = cubes.coords("realization")[0].points[0]
+        logging.WARNING(
+            f"control member value {control_member} out of bounds, defaulting to control member={new_control_member}"
+        )
+        control_member = new_control_member
+
+    ctrl = cubes.extract(generate_realization_constraint([control_member]))
+    ens_mem = cubes.extract(
+        generate_remove_single_ensemble_member_constraint(control_member)
+    )
 
     # Realising the data in advance provides a large speedup
     _ = ctrl.data

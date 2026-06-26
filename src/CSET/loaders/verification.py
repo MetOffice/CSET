@@ -70,6 +70,7 @@ def load(conf: Config):
                 recipe="crps_for_ensemble.yaml",
                 variables={
                     "VARNAME": field,
+                    "CONTROL_MEMBER": conf.CONTROL_MEMBER,
                     "METHOD": conf.METHOD_FOR_CRPS,
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
