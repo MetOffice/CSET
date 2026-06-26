@@ -504,7 +504,7 @@ UGRID_VAR_LOOKUP = {
         "long_name": "vapour_specific_humidity_at_pressure_levels_for_climate_averaging",
         "units": "kg kg-1",
     },
-    "z": {"long_name": "geopotential_height_at_pressure_levels", "units": "lm"},
+    "z": {"long_name": "geopotential_height_at_pressure_levels", "units": "m"},
     "sp": {"long_name": "surface_air_pressure", "units": "Pa"},
     "10u": {"long_name": "eastward_wind_at_10m", "units": "m s-1"},
     "10v": {"long_name": "northward_wind_at_10m", "units": "m s-1"},
@@ -518,19 +518,17 @@ UGRID_VAR_LOOKUP = {
 }
 
 
-def _rebuild_ugrid_meta(data, origcube, lat, lon):
+def _rebuild_ugrid_meta(cube):
     """
-    Build a structured iris cube (time, lat, lon) from regridded data.
+    Rebuild iris cube metadata.
 
-    The cube will have metadata transferred and an additional pressure auxiliary
+    The cube will have metadata within its name and an additional pressure auxiliary
     coordinate inferred from the cube name if present.
 
     Parameters
     ----------
-    data : np.ndarray
-        Regridded data array with shape (time, lat, lon)
-    origcube : iris.cube.Cube
-        Original unstructured source cube, used for plucking metadata.
+    cube : iris.cube.Cube
+        Original unstructured source cube, used for fixing metadata.
     lat : np.ndarray
         1D latitude coordinate values of regridded data
     lon : np.ndarray
@@ -541,25 +539,21 @@ def _rebuild_ugrid_meta(data, origcube, lat, lon):
     iris.cube.Cube
         A structured iris cube with appropriate metadata.
     """
+
+    # Latitude, Longitude does not need fixing, so return.
+    if cube.ndim == 1:
+        return cube
+    
     # Get original cube time coordinate dimension.
-    time_coord = origcube.coord("time")
+    time_coord = cube.coord("time")
 
-    # Create new latitude coordinate.
-    lat_coord = icoords.DimCoord(
-        lat,
-        standard_name="latitude",
-        units="degrees",
-    )
-
-    # Create new longitude coordinate.
-    lon_coord = icoords.DimCoord(
-        lon,
-        standard_name="longitude",
-        units="degrees",
+    # Create new ugrid coordinate placeholder.
+    ugrid_coord = icoords.DimCoord(
+        np.arange(cube.shape[1])
     )
 
     # Parse cube name, to determine if it contains a likely pressure variable/level.
-    m = re.match(r"^([a-zA-Z][a-zA-Z0-9]*|\d+[a-zA-Z]+)(?:_(\d+))?$", origcube.name())
+    m = re.match(r"^([a-zA-Z][a-zA-Z0-9]*|\d+[a-zA-Z]+)(?:_(\d+))?$", cube.name())
 
     # If pattern is not None
     if m:
@@ -577,23 +571,21 @@ def _rebuild_ugrid_meta(data, origcube, lat, lon):
 
             # Create new cube with these dimensions.
             out_cube = iris.cube.Cube(
-                data[:, np.newaxis, :, :],
+                cube.data[:, np.newaxis, :],
                 dim_coords_and_dims=[
                     (time_coord, 0),
                     (pressure_coord, 1),
-                    (lat_coord, 2),
-                    (lon_coord, 3),
+                    (ugrid_coord, 2),
                 ],
             )
 
         else:
             # Not a pressure level variable, so only 3 dimensions.
             out_cube = iris.cube.Cube(
-                data,
+                cube.data,
                 dim_coords_and_dims=[
                     (time_coord, 0),
-                    (lat_coord, 1),
-                    (lon_coord, 2),
+                    (ugrid_coord, 1),
                 ],
             )
 
@@ -636,6 +628,79 @@ def _rebuild_ugrid_meta(data, origcube, lat, lon):
             out_cube.data = (out_cube.data * 1000.0) / 6
 
         return out_cube
+
+
+def _rebuild_ugrid_meta_coords(cube, arr, lat, lon):
+    """
+    Rebuild iris cube metadata.
+
+    The cube will have metadata within its name and an additional pressure auxiliary
+    coordinate inferred from the cube name if present.
+
+    Parameters
+    ----------
+    cube : iris.cube.Cube
+        Original unstructured source cube, used for fixing metadata.
+    lat : np.ndarray
+        1D latitude coordinate values of regridded data
+    lon : np.ndarray
+        1D longitude coordinate values of regridded data
+
+    Returns
+    -------
+    iris.cube.Cube
+        A structured iris cube with appropriate metadata.
+    """
+    
+   # Create new latitude coordinate.
+    lat_coord = icoords.DimCoord(
+        lat,
+        standard_name="latitude",
+        units="degrees",
+    )
+
+    # Create new longitude coordinate.
+    lon_coord = icoords.DimCoord(
+        lon,
+        standard_name="longitude",
+        units="degrees",
+    )
+
+    if cube.ndim == 1:
+        return cube
+    
+    # Get original cube time coordinate dimension.
+    time_coord = cube.coord("time")
+
+    try:
+        pressure_coord = cube.coord("pressure")
+    except:
+        pressure_coord = None
+
+    if pressure_coord is not None:
+
+        # Create new cube with these dimensions.
+        out_cube = iris.cube.Cube(
+            arr,
+            dim_coords_and_dims=[
+                (time_coord, 0),
+                (pressure_coord, 1),
+                (lat_coord, 2),
+                (lon_coord, 3),
+            ],
+        )
+
+    else:
+        out_cube = iris.cube.Cube(
+            arr,
+            dim_coords_and_dims=[
+                (time_coord, 0),
+                (lat_coord, 1),
+                (lon_coord, 2),
+            ],
+        )
+
+    return out_cube
 
 
 def _restructure_ugrid_regrid(cube, tri, lat_grid, lon_grid, xy):
@@ -687,19 +752,19 @@ def _restructure_ugrid_regrid(cube, tri, lat_grid, lon_grid, xy):
         out = out_flat.T.reshape(cube.shape[0], lat_grid.size, lon_grid.size)
 
         # Rebuild metadata using lookup table (mostly for anemoi ML models).
-        out_cube = _rebuild_ugrid_meta(out, cube, lat_grid, lon_grid)
+        out_cube = _rebuild_ugrid_meta_coords(out, cube, lat_grid, lon_grid)
 
         # Return restructured cube with appropriate metadata
         return out_cube
 
 
-def prefilter_names(cubes, vname):
+def prefilter_fix_metadata(cubes, constraint):
     """
     Pre-filter cubes prior to regridding to reduce excess compute.
 
     Parse cubes and filter for required variable, alongside latitude and
     longitude, for further processing. This reduces compute overhead on
-    variables that we don't require.
+    variables that we don't require. This also cleans metadata prior to filtering.
 
     Parameters
     ----------
@@ -707,15 +772,20 @@ def prefilter_names(cubes, vname):
         A cubelist containing unstructured cubes, along with cubes containing
         latitude and longitude information.
 
-    vname : str
-        Extracted variable name string to look for and translate in UGRID cubelist.
+    constraint : iris.constraint
+        Constraint in order to extract required variable.
 
     Returns
     -------
     filterd_cubes : iris.cube.CubeList
-        A cubelist containing the required cube that matches the varname, along
+        A cubelist containing the required cube that matches the constraint, along
         with latitude and longitude cubes.
     """
+
+    sanitised_cubes = iris.cube.CubeList()
+    for cube in cubes:
+        sanitised_cubes.append(_rebuild_ugrid_meta(cube))
+
     # Create empty cubelist.
     filtered_cubes = iris.cube.CubeList()
 
@@ -723,16 +793,8 @@ def prefilter_names(cubes, vname):
     filtered_cubes.append(cubes.extract("latitude")[0])
     filtered_cubes.append(cubes.extract("longitude")[0])
 
-    for cube in cubes:
-        # Parse cube names and split based on Anemoi naming conventions.
-        m = re.match(r"^([a-zA-Z][a-zA-Z0-9]*|\d+[a-zA-Z]+)(?:_(\d+))?$", cube.name())
-        var_key, _ = m.group(1), m.group(2)
-
-        # Look-up var_key to see if there is a match
-        lookup = UGRID_VAR_LOOKUP.get(var_key)
-        for n in vname:
-            if lookup and lookup.get("long_name") == n:
-                filtered_cubes.append(cube)
+    for c in sanitised_cubes.extract(constraint):
+        filtered_cubes.append(c)
 
     # Ensure we have found more than just latitude/longitude cubes
     if len(filtered_cubes) < 3:
@@ -741,7 +803,7 @@ def prefilter_names(cubes, vname):
     return filtered_cubes
 
 
-def restructure_ugrid(cubes, vname):
+def restructure_ugrid(cubes, constraint):
     """
     Restructure ugrid cubes using parallel processing.
 
@@ -757,9 +819,9 @@ def restructure_ugrid(cubes, vname):
         A list of iris cubes, that have been restructured onto a regular grid,
         with appropriate corrections to metadata.
     """
-    # First, parse all cubes and fix their standard name/units, so we only
-    # regrid the cubes that are required to reduce total compute.
-    cubes = prefilter_names(cubes, vname)
+    # First, parse all cubes and fix their metadata (apart from latitude/longitude,
+    # which we do later after regridding), and extract required variable from constraint.
+    cubes = prefilter_fix_metadata(cubes, constraint)
 
     # First, extract latitude and longitude coordinates
     lat = cubes.extract("latitude")[0].data
@@ -782,14 +844,13 @@ def restructure_ugrid(cubes, vname):
     tri_interp = LinearNDInterpolator(points, np.zeros(points.shape[0]))
     tri = tri_interp.tri
 
-    results = []
+    fixed_cubes = iris.cube.CubeList()
+    print(cubes)
     for cube in cubes:
-        result = _restructure_ugrid_regrid(cube, tri, lat_grid, lon_grid, xy)
-        results.append(result)
-
-    # Filter results to only collect cubes, not None which is sometimes returned
-    # from _restructure_ugrid_regrid.
-    fixed_cubes = iris.cube.CubeList(c for c in results if c is not None)
+        result_arr = _restructure_ugrid_regrid(cube, tri, lat_grid, lon_grid, xy)
+        
+     #cube_out = _rebuild_ugrid_meta_coords(cube, result_arr, lat_grid, lon_grid)
+        fixed_cubes.append(result_arr)
 
     return fixed_cubes.concatenate()
 

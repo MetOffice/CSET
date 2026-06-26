@@ -223,71 +223,81 @@ def read_cubes(
     return cubes
 
 
-def extract_constraint_names(obj):
-    """
-    Recursively extract all string-based constraint names from an object and its attributes.
+# def extract_constraint_names(obj, seen=None):
+#     """
+#     Recursively extract all string-based constraint names from an object and its attributes.
 
-    This function searches for attributes named ``name`` or ``_name`` within the given
-    object and collects their string values. It then traverses attributes
-    of the object recursively (including elements of lists and tuples), gathering any
-    additional names found. A set of visited object IDs is maintained to prevent infinite
-    recursion caused by cyclic references.
+#     This function searches for attributes named ``name`` or ``_name`` within the given
+#     object and collects their string values. It then traverses attributes
+#     of the object recursively (including elements of lists and tuples), gathering any
+#     additional names found. A set of visited object IDs is maintained to prevent infinite
+#     recursion caused by cyclic references.
 
-    Parameters
-    ----------
-    obj: Any
-        The object to inspect for constraint names. This can be any Python object,
-        including nested structures containing other objects.
+#     Parameters
+#     ----------
+#     obj: Any
+#         The object to inspect for constraint names. This can be any Python object,
+#         including nested structures containing other objects.
 
-    Returns
-    -------
-    names: list
-        A list of extracted constraint names found in the object and its nested
-        attributes. Duplicate names may appear if they are encountered multiple times.
+#     Returns
+#     -------
+#     names: list
+#         A list of extracted constraint names found in the object and its nested
+#         attributes. Duplicate names may appear if they are encountered multiple times.
 
-    Notes
-    -----
-    - Only attributes named ``name`` or ``_name`` are considered as potential sources
-      of constraint names.
-    """
-    # A set of object IDs that have already been visited during recursion.
-    # This is used internally to avoid infinite loops.
-    seen = set()
+#     Notes
+#     -----
+#     - Only attributes named ``name`` or ``_name`` are considered as potential sources
+#       of constraint names.
+#     """
+#     # A set of object IDs that have already been visited during recursion.
+#     # This is used internally to avoid infinite loops.
+    
+#     if seen is None:
+#         seen = set()
 
-    names = []
+#     names = []
 
-    if id(obj) in seen:
-        return names
-    seen.add(id(obj))
+#     if id(obj) in seen:
+#         return names
+#     seen.add(id(obj))
 
-    # Check for name fields (both public and private)
-    for attr in ("name", "_name"):
-        if hasattr(obj, attr):
-            value = getattr(obj, attr)
-            if isinstance(value, str):
-                names.append(value)
+#     # Handle dictionaries
+#     if isinstance(obj, dict):
+#         for key, value in obj.items():
+#             if "name" in str(key).lower() and isinstance(value, str):
+#                 names.append(value)
+#             names.extend(extract_constraint_names(value, seen))
+#         return names
 
-    # Traverse all attributes of the object
-    for attr in dir(obj):
-        if attr.startswith("__"):
-            continue
-        try:
-            value = getattr(obj, attr)
-        except Exception:
-            continue
+#     # Check for name fields (both public and private)
+#     for attr in ("name", "_name", "standard_name", "long_name"):
+#         if hasattr(obj, attr):
+#             value = getattr(obj, attr)
+#             if isinstance(value, str):
+#                 names.append(value)
 
-        # Only recurse into likely objects (not primitives)
-        if isinstance(value, (str, int, float, type(None))):
-            continue
+#     # Traverse all attributes of the object
+#     for attr in dir(obj):
+#         if attr.startswith("__"):
+#             continue
+#         try:
+#             value = getattr(obj, attr)
+#         except Exception:
+#             continue
 
-        # Recurse into lists/tuples
-        if isinstance(value, (list, tuple)):
-            for item in value:
-                names.extend(extract_constraint_names(item, seen))
-        else:
-            names.extend(extract_constraint_names(value, seen))
+#         # Only recurse into likely objects (not primitives)
+#         if isinstance(value, (str, int, float, type(None))):
+#             continue
 
-    return names
+#         # Recurse into lists/tuples
+#         if isinstance(value, (list, tuple)):
+#             for item in value:
+#                 names.extend(extract_constraint_names(item, seen))
+#         else:
+#             names.extend(extract_constraint_names(value, seen))
+
+#     return names
 
 
 def _load_model(
@@ -308,8 +318,8 @@ def _load_model(
     # If a cube called latitude exists, chances are its unstructured/flattened. If
     # so, then pass through restructure_ugrid to make rectilinear.
     if len(cubes.extract("latitude")) > 0:
-        vname = extract_constraint_names(constraint)
-        cubes = restructure_ugrid(cubes, vname)
+     #   vname = extract_constraint_names(constraint)
+        cubes = restructure_ugrid(cubes, constraint)
 
     for cube in cubes:
         _loading_callback(cube, None, None)

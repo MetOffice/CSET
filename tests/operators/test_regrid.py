@@ -495,4 +495,10 @@ def test_ugridml_fix_plev_multitime(monkeypatch, tmp_path):
     os.makedirs(str(tmp_path) + "/data/1/")
     print("ROSE_DATAC =", os.environ.get("ROSE_DATAC"))
 
-    assert read.read_cubes("tests/test_data/regrid/ugrid_multilev_geopot.nc") == "blah"
+    assert str(read.read_cubes("tests/test_data/regrid/ugrid_multilev_geopot.nc",constraint=iris.Constraint(name='geopotential_height_at_pressure_levels'))) == "blah"
+
+
+
+
+
+
