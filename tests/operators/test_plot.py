@@ -206,6 +206,31 @@ def test_spatial_multi_variable_plot(cube, tmp_working_dir):
     assert Path("untitled_20220921050000.png").is_file()
 
 
+def test_spatial_multi_variable_plot_nolayers(cube, tmp_working_dir):
+    """Plot spatial plot with single input cube only."""
+    # Call spatial_multi_pcolormesh_plot with only cube as input.
+    plot.spatial_multi_pcolormesh_plot(cube[0], sequence_coordinate="time")
+    assert Path("untitled_20220921030000.png").is_file()
+
+
+def test_spatial_multi_variable_plot_overlay_only(cube, tmp_working_dir):
+    """Plot spatial plot with based and overlay cube only."""
+    # Call spatial_multi_pcolormesh_plot with only cube and overlay_cube.
+    plot.spatial_multi_pcolormesh_plot(
+        cube[0], overlay_cube=cube[0], sequence_coordinate="time"
+    )
+    assert Path("untitled_20220921030000.png").is_file()
+
+
+def test_spatial_multi_variable_plot_contour_only(cube, tmp_working_dir):
+    """Plot spatial plot with based and contour cube only."""
+    # Call spatial_multi_pcolormesh_plot with only cube and contour_cube.
+    plot.spatial_multi_pcolormesh_plot(
+        cube[0], contour_cube=cube[0], sequence_coordinate="time"
+    )
+    assert Path("untitled_20220921030000.png").is_file()
+
+
 @pytest.mark.slow
 def test_vector_plot_with_filename(vector_cubes, tmp_working_dir):
     """Plot a vector plot of u10 and v10 components."""
