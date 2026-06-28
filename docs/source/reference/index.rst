@@ -8,6 +8,7 @@ components.
     :maxdepth: 1
 
     glossary
+    cset_gallery/index
     cli
     recipe-format
     operators

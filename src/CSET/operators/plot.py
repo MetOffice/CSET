@@ -21,6 +21,7 @@ import json
 import logging
 import math
 import os
+import sys
 from typing import Literal
 
 import cartopy.crs as ccrs
@@ -72,6 +73,11 @@ mpl.use("agg")
 ############################
 # Private helper functions #
 ############################
+
+
+def in_sphinx_gallery():
+    """Test if running plot code in sphinx-gallery context."""
+    return "sphinx_gallery" in sys.modules
 
 
 def _append_to_plot_index(plot_index: list) -> list:
@@ -773,9 +779,10 @@ def _plot_and_save_spatial_plot(
         logging.debug("Set colorbar ticks and labels.")
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved spatial plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved spatial plot to %s", filename)
+        plt.close(fig)
 
 
 def _plot_and_save_postage_stamp_spatial_plot(
@@ -1140,9 +1147,10 @@ def _plot_and_save_line_power_spectrum_series(
     ax.legend(handles=handles, loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved line plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved line plot to %s", filename)
+        plt.close(fig)
 
 
 def _plot_and_save_vertical_line_series(
@@ -1926,7 +1934,7 @@ def spatial_multi_pcolormesh_plot(
     overlay_cube: iris.cube.Cube | None = None,
     contour_cube: iris.cube.Cube | None = None,
     point_cube: iris.cube.Cube | None = None,
-    filename: str = None,
+    filename: str | None = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
     **kwargs,
@@ -2945,7 +2953,7 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
     stamp_coordinate: str,
     filename: str,
     title: str,
-    series_coordinate: str = None,
+    series_coordinate: str | None = None,
     **kwargs,
 ):
     """Plot and save postage (ensemble members) stamps for a power spectrum series.
