@@ -1,5 +1,5 @@
-CLI Usage
-=========
+Command Line Usage (CLI)
+========================
 
 .. _cset-bake-command:
 
