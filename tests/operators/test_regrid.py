@@ -489,16 +489,17 @@ def test_vertical_interpolation_cubelist(model_level_cube):
 
 def test_ugridml_fix_plev_multitime(monkeypatch, tmp_path):
     """Check that read invokes the regrid."""
-    # cubes = iris.load("tests/test_data/regrid/ugrid_multilev_geopot.nc")
-
     monkeypatch.setenv("ROSE_DATAC", str(tmp_path))
     os.makedirs(str(tmp_path) + "/data/1/")
     print("ROSE_DATAC =", os.environ.get("ROSE_DATAC"))
-
-    assert str(read.read_cubes("tests/test_data/regrid/ugrid_multilev_geopot.nc",constraint=iris.Constraint(name='geopotential_height_at_pressure_levels'))) == "blah"
-
-
-
-
-
-
+    assert (
+        repr(
+            read.read_cubes(
+                "tests/test_data/regrid/ugrid_multilev_geopot.nc",
+                constraint=iris.Constraint(
+                    name="geopotential_height_at_pressure_levels"
+                ),
+            )
+        )
+        == "[<iris 'Cube' of geopotential_height_at_pressure_levels / (m) (time: 2; pressure: 2; latitude: 559; longitude: 818)>]"
+    )

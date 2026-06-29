@@ -252,7 +252,7 @@ def read_cubes(
 #     """
 #     # A set of object IDs that have already been visited during recursion.
 #     # This is used internally to avoid infinite loops.
-    
+
 #     if seen is None:
 #         seen = set()
 
@@ -318,7 +318,6 @@ def _load_model(
     # If a cube called latitude exists, chances are its unstructured/flattened. If
     # so, then pass through restructure_ugrid to make rectilinear.
     if len(cubes.extract("latitude")) > 0:
-     #   vname = extract_constraint_names(constraint)
         cubes = restructure_ugrid(cubes, constraint)
 
     for cube in cubes:
