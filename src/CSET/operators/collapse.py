@@ -28,7 +28,10 @@ import iris.util
 import numpy as np
 
 from CSET._common import iter_maybe
-from CSET.operators.aggregate import add_hour_coordinate
+from CSET.operators.aggregate import (
+    add_hour_coordinate,
+    rolling_window_time_aggregation,
+)
 
 
 def collapse(
@@ -136,10 +139,8 @@ def collapse(
                         f"Window of {window_hours} hours is too small for timestep {dt_hours}."
                     )
                 # Create rolling window along time
-                rolled = cube.rolling_window_time_aggregation(
-                    coord="time",
-                    window=window_len,
-                    aggregator=iris.analysis.MEAN,
+                rolled = rolling_window_time_aggregation(
+                    cube, "MEAN", window=window_len
                 )
                 # Collapse over the window dimension
                 collapsed_cubes.append(rolled)
