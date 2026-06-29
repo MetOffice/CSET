@@ -8,7 +8,7 @@ description: |
   collapsed over all other coordinates in the cube and calculated for every timestep.
 
   A larger RMSE implies a greater error than a smaller RMSE. An
-  RMSE of zero implies the two fields match. The RMSE is calculated
+  RMSE of zero indicates the two fields match. The RMSE is calculated
   on the grid point and thus a spatial view of the RMSE provides useful
   information about where the differences are, or if placement errors
   are domininating the score (usually indicated by dipoles).
