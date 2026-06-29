@@ -19,8 +19,8 @@ A) Using *cset bake* on the command line
 .. code-block::
 
     cset cookbook generic_surface_domain_mean_time_series
-    cset bake -i "input_data_path" ["input_data_path2" "input_data_path3" "..."] -o "my_output_path"
-              -r generic_surface_domain_mean_time_series
+    cset -v bake -i "input_data_path" ["input_data_path2" "input_data_path3" "..."] -o "my_output_path"
+              -r generic_surface_domain_mean_time_series.yaml
               --VARNAME="temperature_at_screen_level"
               --MODEL_NAME="my_model_label" "my_model_label2" "my_model_label3" "..."
               --SUBAREA_TYPE='None' --SUBAREA_EXTENT='None' --SUBAREA_NAME='None'
@@ -49,10 +49,15 @@ import CSET.operators.plot as cset_plot
 import CSET.operators.read as cset_read
 
 # Set path to input data
-file_paths = "../../../../../../tests/test_data/long_forecast_air_temp_fcst_1.nc"
+file_paths = [
+    "../../../../../../tests/test_data/long_forecast_air_temp_fcst_1.nc",
+    "../../../../../../tests/test_data/long_forecast_air_temp_fcst_a.nc",
+]
 
 # Read selected variable(s) of interest
-cubes = cset_read.read_cubes(file_paths, ["temperature_at_screen_level"])
+cubes = cset_read.read_cubes(
+    file_paths, ["temperature_at_screen_level"], model_names=["model_1", "model_a"]
+)
 
 # Collapse input data over selected dimensions
 collapsed_cubes = cset_collapse.collapse(
