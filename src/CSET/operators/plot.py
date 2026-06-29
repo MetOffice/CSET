@@ -960,7 +960,7 @@ def _plot_and_save_line_power_spectrum_series(
         Filename of the plot to write.
     title: str
         Plot title.
-    series_coordinate: str, optional
+    series_coordinate: str
         Coordinate being plotted on x-axis. In case of spectra frequency, physical_wavenumber, or wavelength.
     """
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
