@@ -53,7 +53,7 @@ def load(conf: Config):
 
     scores_spatial_methods = _get_scores_spatial_methods(conf)
     if scores_spatial_methods:
-        """Produce 2-d spatial plots of scores metrics."""
+        # Produce 2D spatial plots of scores metrics.
         base_model = models[0]
         for model, field, method, scores_method in itertools.product(
             models[1:],
