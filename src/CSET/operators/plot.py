@@ -3074,9 +3074,10 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
         ax = plt.gca()
         ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
 
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved histogram postage stamp plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved power spectrum histogram plot to %s", filename)
+        plt.close(fig)
 
 
 def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
@@ -3205,7 +3206,7 @@ def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
     ax.set_title(title, fontsize=16)
 
     # Save the figure to a file
-    plt.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-
-    # Close the figure
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved power spectrum plot to %s", filename)
+        plt.close(fig)
