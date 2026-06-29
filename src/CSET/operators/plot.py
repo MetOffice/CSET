@@ -973,7 +973,6 @@ def _plot_and_save_line_power_spectrum_series(
     line_marker = None
     line_width = 1
 
-    #    for cube, coord in zip(cubes, coords, strict=True):
     for cube in iter_maybe(cubes):
         # next 2 lines replace chunk of code.
         xcoord = _select_series_coord(cube, series_coordinate)
