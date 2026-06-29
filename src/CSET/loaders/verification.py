@@ -24,9 +24,9 @@ def load(conf: Config):
     # Load a list of model detail dictionaries.
     models = get_models(conf.asdict())
     # Models are listed in order, so model 1 is the first element.
+    base_model = models[0]
 
     if conf.SCORES_RMSE_SPATIAL:
-        base_model = models[0]
         for model, field, method in itertools.product(
             models[1:], conf.SURFACE_FIELDS, conf.SPATIAL_SURFACE_FIELD_METHOD
         ):
@@ -47,7 +47,6 @@ def load(conf: Config):
             )
 
     if conf.SCORES_RMSE_TIMESERIES:
-        base_model = models[0]
         for model, field in itertools.product(models[1:], conf.SURFACE_FIELDS):
             yield RawRecipe(
                 recipe="timeseries_surface_rmse_scores.yaml",
@@ -63,24 +62,36 @@ def load(conf: Config):
                 model_ids=[base_model["id"], model["id"]],
                 aggregation=False,
             )
-    if conf.SCORES_RMSE_VERTICAL_PROFILES:
-        base_model = models[0]
-        # List of aggregation modes to generate recipes for
-        agg_modes = [("pressure", ["pressure"])]
-        if conf.SCORES_RMSE_VERTICAL_PROFILES_TIMESERIES:
-            agg_modes.append(("timeseries", ["time", "pressure"]))
 
-        for (mode_name, preserved_coords), (model, field) in itertools.product(
-            agg_modes, itertools.product(models[1:], conf.PRESSURE_LEVEL_FIELDS)
-        ):
+    if conf.SCORES_RMSE_VERTICAL_PROFILES:
+        for model, field in itertools.product(models[1:], conf.PRESSURE_LEVEL_FIELDS):
             yield RawRecipe(
                 recipe="generic_level_rmse_scores_profile.yaml",
                 variables={
                     "VARNAME": field,
                     "BASE_MODEL": base_model["name"],
                     "OTHER_MODEL": model["name"],
-                    "PRESERVED_COORDS": preserved_coords,
-                    "AGGREGATION_MODE": mode_name,
+                    "PRESERVED_COORDS": ["pressure"],
+                    "AGGREGATION_MODE": "pressure",
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
+    if conf.SCORES_RMSE_VERTICAL_PROFILES_TIMESERIES:
+        for model, field in itertools.product(models[1:], conf.PRESSURE_LEVEL_FIELDS):
+            yield RawRecipe(
+                recipe="generic_level_rmse_scores_profile.yaml",
+                variables={
+                    "VARNAME": field,
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "PRESERVED_COORDS": ["time", "pressure"],
+                    "AGGREGATION_MODE": "timeseries",
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
