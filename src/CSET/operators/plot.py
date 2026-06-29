@@ -963,8 +963,6 @@ def _plot_and_save_line_power_spectrum_series(
     series_coordinate: str, optional
         Coordinate being plotted on x-axis. In case of spectra frequency, physical_wavenumber, or wavelength.
     """
-    # xn = coords[0].name()  # x-axis (e.g. frequency)
-
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     model_colors_map = get_model_colors_map(cubes)
     ax = plt.gca()
