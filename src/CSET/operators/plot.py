@@ -1350,9 +1350,10 @@ def _plot_and_save_histogram_series(
         ax.legend(loc="best", ncol=1, frameon=False, fontsize=16)
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved histogram plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved histogram plot to %s", filename)
+        plt.close(fig)
 
 
 def _plot_and_save_postage_stamp_histogram_series(
