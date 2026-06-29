@@ -518,7 +518,7 @@ UGRID_VAR_LOOKUP = {
 }
 
 
-def _rebuild_ugrid_meta(cube):
+def _rebuild_ugrid_meta_firstfix(cube):
     """
     Rebuild iris cube metadata.
 
@@ -535,24 +535,29 @@ def _rebuild_ugrid_meta(cube):
     iris.cube.Cube
         A structured iris cube with appropriate metadata.
     """
-    # Latitude, Longitude does not need fixing, so return.
-    if cube.ndim == 1:
-        return cube
-
     # Get original cube time coordinate dimension.
-    time_coord = cube.coord("time")
+    try:
+        time_coord = cube.coord("time")
+    except iris.exceptions.CoordinateNotFoundError:
+        return None
 
     # Create new ugrid coordinate placeholder.
-    ugrid_coord = icoords.DimCoord(np.arange(cube.shape[1]))
+    #  ugrid_coord = icoords.DimCoord(np.arange(cube.shape[1]))
 
     # Parse cube name, to determine if it contains a likely pressure variable/level.
+    # If it can't parse this pattern, returns None
     m = re.match(r"^([a-zA-Z][a-zA-Z0-9]*|\d+[a-zA-Z]+)(?:_(\d+))?$", cube.name())
 
-    # If pattern is not None
-    if m:
-        # Extract variable and pressure from cube name components.
-        var_key, pressure_hpa = m.group(1), m.group(2)
+    # Extract variable and pressure from cube name components.
+    # If it can't find, returns None.
+    var_key, pressure_hpa = m.group(1), m.group(2)
 
+    # Rename cube using lookup dictionary, if a lookup exists.
+    meta = UGRID_VAR_LOOKUP.get(var_key)
+
+    if meta is None:
+        return cube
+    else:
         # If there is a number in cube name that can be split.
         if pressure_hpa is not None:
             # Create new pressure coordinate dimension.
@@ -562,44 +567,41 @@ def _rebuild_ugrid_meta(cube):
                 units="hPa",
             )
 
-            # Create new cube with these dimensions.
+            # If ndim = 1, a single 2D timeslice with pressure and time.
+            if cube.ndim == 1:
+                arr = cube.core_data()[np.newaxis, np.newaxis, :]
+            else:
+                arr = cube.core_data()[:, np.newaxis, :]
+
             out_cube = iris.cube.Cube(
-                cube.data[:, np.newaxis, :],
+                arr,
                 dim_coords_and_dims=[
                     (time_coord, 0),
                     (pressure_coord, 1),
-                    (ugrid_coord, 2),
+                    (icoords.DimCoord(np.arange(arr.shape[-1])), 2),
                 ],
             )
 
         else:
             # Not a pressure level variable, so only 3 dimensions.
+            # If ndim = 1, a single 2D timeslice withd time.
+            if cube.ndim == 1:
+                arr = cube.core_data()[np.newaxis, :]
+            else:
+                arr = cube.core_data()
+
             out_cube = iris.cube.Cube(
-                cube.data,
+                arr,
                 dim_coords_and_dims=[
                     (time_coord, 0),
-                    (ugrid_coord, 1),
+                    (icoords.DimCoord(np.arange(arr.shape[-1])), 1),
                 ],
             )
 
-        # Rename cube using lookup dictionary, if a lookup exists.
-        meta = UGRID_VAR_LOOKUP.get(var_key)
-
-        if meta is not None:
-            if "standard_name" in meta:
-                out_cube.standard_name = meta["standard_name"]
-
-            if "long_name" in meta:
-                out_cube.long_name = meta["long_name"]
-
-            if "units" in meta:
-                out_cube.units = meta["units"]
-
-            # Also rename cube itself.
-            out_cube.rename(meta["long_name"])
-        else:
-            # Fallback: keep original name.
-            out_cube.rename(var_key)
+        # Fix cube metadata
+        out_cube.long_name = meta["long_name"]
+        out_cube.units = meta["units"]
+        out_cube.rename(meta["long_name"])
 
         # Add forecast reference time as 'time_origin' to mimic lfric where it will
         # reconstruct forecast_period in a later callback.
@@ -612,18 +614,10 @@ def _rebuild_ugrid_meta(cube):
         # Add to cube attributes as str.
         out_cube.coord("time").attributes["time_origin"] = time_origin
 
-        # Change units, geopot in m2 s-2.
-        if out_cube.long_name == "geopotential_height_at_pressure_levels":
-            out_cube.data = out_cube.data / 9.81
-
-        # Raw data in units of 6h accum in meters.
-        if out_cube.long_name == "surface_microphysical_rainfall_rate":
-            out_cube.data = (out_cube.data * 1000.0) / 6
-
-        return out_cube
+    return out_cube
 
 
-def _rebuild_ugrid_meta_coords(cube, arr, lat, lon):
+def _rebuild_ugrid_meta(cube, arr, lat, lon):
     """
     Rebuild iris cube metadata.
 
@@ -649,14 +643,14 @@ def _rebuild_ugrid_meta_coords(cube, arr, lat, lon):
     # Create new latitude coordinate.
     lat_coord = icoords.DimCoord(
         lat,
-        standard_name="latitude",
+        standard_name="grid_latitude",
         units="degrees",
     )
 
     # Create new longitude coordinate.
     lon_coord = icoords.DimCoord(
         lon,
-        standard_name="longitude",
+        standard_name="grid_longitude",
         units="degrees",
     )
 
@@ -700,6 +694,14 @@ def _rebuild_ugrid_meta_coords(cube, arr, lat, lon):
 
     # Copy attributes.
     out_cube.attributes = cube.attributes.copy()
+
+    # Change units, geopot in m2 s-2.
+    if out_cube.long_name == "geopotential_height_at_pressure_levels":
+        out_cube.data = out_cube.data / 9.81
+
+    # Raw data in units of 6h accum in meters.
+    if out_cube.long_name == "surface_microphysical_rainfall_rate":
+        out_cube.data = (out_cube.data * 1000.0) / 6
 
     return out_cube
 
@@ -750,7 +752,7 @@ def _restructure_ugrid_regrid(cube, tri, lat_grid, lon_grid, xy):
     out = out_flat.T.reshape(cube.shape[0], lat_grid.size, lon_grid.size)
 
     # Rebuild metadata using lookup table (mostly for anemoi ML models).
-    out_cube = _rebuild_ugrid_meta_coords(cube, out, lat_grid, lon_grid)
+    out_cube = _rebuild_ugrid_meta(cube, out, lat_grid, lon_grid)
 
     # Return restructured cube with appropriate metadata
     return out_cube
@@ -779,10 +781,12 @@ def prefilter_fix_metadata(cubes, constraint):
         A cubelist containing the required cube that matches the constraint, along
         with latitude and longitude cubes.
     """
-    # Add metadata
+    # Add metadata to variables, if appropriate
     sanitised_cubes = iris.cube.CubeList()
     for cube in cubes:
-        sanitised_cubes.append(_rebuild_ugrid_meta(cube))
+        out = _rebuild_ugrid_meta_firstfix(cube)
+        if out is not None:
+            sanitised_cubes.append(out)
 
     # Create empty cubelist.
     filtered_cubes = iris.cube.CubeList()

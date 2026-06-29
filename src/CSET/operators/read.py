@@ -504,6 +504,7 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     _lfric_forecast_period_callback(cube)
     cube = _fix_no_time_coords_callback(cube)
     _normalise_ML_varname(cube)
+    _normalise_grid_name(cube)
     return cube
 
 
@@ -1182,3 +1183,12 @@ def _normalise_ML_varname(cube: iris.cube.Cube):
             cube.long_name = (
                 "vapour_specific_humidity_at_pressure_levels_for_climate_averaging"
             )
+
+
+def _normalise_grid_name(cube: iris.cube.Cube):
+
+    for coord in cube.dim_coords:
+        if coord.name() in ["latitude"]:
+            coord.rename("grid_latitude")
+        if coord.name() in ["longitude"]:
+            coord.rename("grid_longitude")

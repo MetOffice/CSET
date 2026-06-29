@@ -491,7 +491,6 @@ def test_ugridml_fix_plev_multitime(monkeypatch, tmp_path):
     """Check that read invokes the regrid."""
     monkeypatch.setenv("ROSE_DATAC", str(tmp_path))
     os.makedirs(str(tmp_path) + "/data/1/")
-    print("ROSE_DATAC =", os.environ.get("ROSE_DATAC"))
     assert (
         repr(
             read.read_cubes(
@@ -501,5 +500,31 @@ def test_ugridml_fix_plev_multitime(monkeypatch, tmp_path):
                 ),
             )
         )
-        == "[<iris 'Cube' of geopotential_height_at_pressure_levels / (m) (time: 2; pressure: 2; latitude: 559; longitude: 818)>]"
+        == "[<iris 'Cube' of geopotential_height_at_pressure_levels / (m) (time: 2; pressure: 2; grid_latitude: 559; grid_longitude: 818)>]"
     )
+
+
+def test_ugridml_fix_surf_multitime(monkeypatch, tmp_path):
+    """Check that read invokes the regrid for surface variable."""
+    monkeypatch.setenv("ROSE_DATAC", str(tmp_path))
+    os.makedirs(str(tmp_path) + "/data/1/")
+    assert (
+        repr(
+            read.read_cubes(
+                "tests/test_data/regrid/ugrid_singlevartime_precip.nc",
+                constraint=iris.Constraint(name="surface_microphysical_rainfall_rate"),
+            )
+        )
+        == "[<iris 'Cube' of surface_microphysical_rainfall_rate / (mm 6hr-1) (grid_latitude: 559; grid_longitude: 818)>]"
+    )
+
+
+# def test_ugridml_nonsupported_var(monkeypatch, tmp_path):
+#     """Check that _rebuild_ugrid_meta returns unchanged cube if variable not found in lookup table"""
+#     cube = iris.load("tests/test_data/regrid/ugrid_multilev_geopot.nc")
+#     cube.name = "blah"
+#     assert repr(regrid._rebuild_ugrid_meta(cube)) == "sameascube"
+
+
+# check geopotential height data is /9.81
+# check microphysical rain rate units corrected.
