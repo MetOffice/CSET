@@ -62,7 +62,7 @@ def load(conf: Config):
             scores_spatial_methods,
         ):
             yield RawRecipe(
-                recipe="surface_difference_scores.yaml",
+                recipe=f"surface_difference_scores_{scores_method}.yaml",
                 variables={
                     "VARNAME": field,
                     "BASE_MODEL": base_model["name"],
@@ -86,7 +86,7 @@ def load(conf: Config):
             models[1:], conf.SURFACE_FIELDS, scores_timeseries_methods
         ):
             yield RawRecipe(
-                recipe="timeseries_surface_difference_scores.yaml",
+                recipe=f"timeseries_surface_difference_scores_{scores_method}.yaml",
                 variables={
                     "VARNAME": field,
                     "BASE_MODEL": base_model["name"],
