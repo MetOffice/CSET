@@ -1065,9 +1065,10 @@ def _plot_and_save_line_power_spectrum_series(
     ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved line plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved line plot to %s", filename)
+        plt.close(fig)
 
 
 def _plot_and_save_vertical_line_series(
@@ -1678,200 +1679,6 @@ def _plot_and_save_scattermap_plot(
         fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
         logging.info("Saved geographical scatter plot to %s", filename)
         plt.close(fig)
-
-
-def _plot_and_save_power_spectrum_series(
-    cubes: iris.cube.Cube | iris.cube.CubeList,
-    filename: str,
-    title: str,
-    **kwargs,
-):
-    """Plot and save a power spectrum series.
-
-    Parameters
-    ----------
-    cubes: Cube or CubeList
-        2 dimensional Cube or CubeList of the data to plot as power spectrum.
-    filename: str
-        Filename of the plot to write.
-    title: str
-        Plot title.
-    """
-    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
-    ax = plt.gca()
-
-    model_colors_map = get_model_colors_map(cubes)
-
-    for cube in iter_maybe(cubes):
-        # Calculate power spectrum
-
-        # Extract time coordinate and convert to datetime
-        time_coord = cube.coord("time")
-        time_points = time_coord.units.num2date(time_coord.points)
-
-        # Choose one time point (e.g., the first one)
-        target_time = time_points[0]
-
-        # Bind target_time inside the lambda using a default argument
-        time_constraint = iris.Constraint(
-            time=lambda cell, target_time=target_time: cell.point == target_time
-        )
-
-        cube = cube.extract(time_constraint)
-
-        if cube.ndim == 2:
-            cube_3d = cube.data[np.newaxis, :, :]
-            logging.debug("Adding in new axis for a 2 dimensional cube.")
-        elif cube.ndim == 3:
-            cube_3d = cube.data
-        else:
-            raise ValueError("Cube dimensions unsuitable for power spectra code")
-            raise ValueError(
-                f"Cube is {cube.ndim} dimensional. Cube should be 2 or 3 dimensional."
-            )
-
-        # Calculate spectra
-        ps_array = DCT_ps(cube_3d)
-
-        ps_cube = iris.cube.Cube(
-            ps_array,
-            long_name="power_spectra",
-        )
-
-        ps_cube.attributes["model_name"] = cube.attributes.get("model_name")
-
-        # Create a frequency/wavelength array for coordinate
-        ps_len = ps_cube.data.shape[1]
-        freqs = np.arange(1, ps_len + 1)
-        freq_coord = iris.coords.DimCoord(freqs, long_name="frequency", units="1")
-
-        # Convert datetime to numeric time using original units
-        numeric_time = time_coord.units.date2num(time_points)
-        # Create a new DimCoord with numeric time
-        new_time_coord = iris.coords.DimCoord(
-            numeric_time, standard_name="time", units=time_coord.units
-        )
-
-        # Add time and frequency coordinate to spectra cube.
-        ps_cube.add_dim_coord(new_time_coord.copy(), 0)
-        ps_cube.add_dim_coord(freq_coord.copy(), 1)
-
-        # Extract data from the cube
-        frequency = ps_cube.coord("frequency").points
-        power_spectrum = ps_cube.data
-
-        label = None
-        color = "black"
-        if model_colors_map:
-            label = ps_cube.attributes.get("model_name")
-            color = model_colors_map[label]
-        ax.plot(frequency, power_spectrum[0], color=color, label=label)
-
-    # Add some labels and tweak the style.
-    ax.set_title(title, fontsize=16)
-    ax.set_xlabel("Wavenumber", fontsize=14)
-    ax.set_ylabel("Power", fontsize=14)
-    ax.tick_params(axis="both", labelsize=12)
-
-    # Set log-log scale
-    ax.set_xscale("log")
-    ax.set_yscale("log")
-
-    # Overlay grid-lines onto power spectrum plot.
-    ax.grid(linestyle="--", color="grey", linewidth=1)
-    if model_colors_map:
-        ax.legend(loc="best", ncol=1, frameon=False, fontsize=16)
-
-    # Save plot.
-    if not in_sphinx_gallery():
-        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-        logging.info("Saved power spectrum plot to %s", filename)
-        plt.close(fig)
-
-
-def _plot_and_save_postage_stamp_power_spectrum_series(
-    cube: iris.cube.Cube,
-    filename: str,
-    title: str,
-    stamp_coordinate: str,
-    **kwargs,
-):
-    """Plot and save postage (ensemble members) stamps for a power spectrum series.
-
-    Parameters
-    ----------
-    cube: Cube
-        2 dimensional Cube of the data to plot as power spectrum.
-    filename: str
-        Filename of the plot to write.
-    title: str
-        Plot title.
-    stamp_coordinate: str
-        Coordinate that becomes different plots.
-    """
-    # Use the smallest square grid that will fit the members.
-    nmember = len(cube.coord(stamp_coordinate).points)
-    grid_rows = int(math.sqrt(nmember))
-    grid_size = math.ceil(nmember / grid_rows)
-
-    fig = plt.figure(
-        figsize=(10, 10 * max(grid_rows / grid_size, 0.5)), facecolor="w", edgecolor="k"
-    )
-
-    # Make a subplot for each member.
-    for member, subplot in zip(
-        cube.slices_over(stamp_coordinate),
-        range(1, grid_size * grid_rows + 1),
-        strict=False,
-    ):
-        # Implicit interface is much easier here, due to needing to have the
-        # cartopy GeoAxes generated.
-        plt.subplot(grid_rows, grid_size, subplot)
-
-        frequency = member.coord("frequency").points
-
-        axes = plt.gca()
-        axes.plot(frequency, member.data)
-        axes.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
-
-    # Overall figure title.
-    fig.suptitle(title, fontsize=16)
-
-    if not in_sphinx_gallery():
-        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-        logging.info("Saved power spectra postage stamp plot to %s", filename)
-        plt.close(fig)
-
-
-def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
-    cube: iris.cube.Cube,
-    filename: str,
-    title: str,
-    stamp_coordinate: str,
-    **kwargs,
-):
-    fig, ax = plt.subplots(figsize=(10, 10), facecolor="w", edgecolor="k")
-    ax.set_title(title, fontsize=16)
-    ax.set_xlabel(f"{cube.name()} / {cube.units}", fontsize=14)
-    ax.set_ylabel("Power", fontsize=14)
-    # Loop over all slices along the stamp_coordinate
-    for member in cube.slices_over(stamp_coordinate):
-        frequency = member.coord("frequency").points
-        ax.plot(
-            frequency,
-            member.data,
-            label=f"Member #{member.coord(stamp_coordinate).points[0]}",
-        )
-
-    # Add a legend
-    ax.legend(fontsize=16)
-
-    # Save the figure to a file
-    plt.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved power spectra plot to %s", filename)
-
-    # Close the figure
-    plt.close(fig)
 
 
 def _spatial_plot(
@@ -2955,7 +2762,6 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
         Coordinate being plotted on x-axis. In case of spectra frequency, physical_wavenumber, or wavelength.
 
     """
-    recipe_title = get_recipe_metadata().get("title", "Power spectrum")
     # Use the smallest square grid that will fit the members.
     grid_size = int(math.ceil(math.sqrt(len(cubes.coord(stamp_coordinate).points))))
 

@@ -298,7 +298,7 @@ def long_forecast_multi_day(long_forecast_multi_day_read_only):
 def long_forecast_many_cubes_read_only():
     """Get long_forecast_may_cubes to run tests on. It is NOT safe to modify."""
     return read.read_cubes(
-        "tests/test_data/long_forecast_air_temp_fcst_*.nc", "air_temperature"
+        "tests/test_data/long_forecast_air_temp_fcst_[123].nc", "air_temperature"
     )
 
 
