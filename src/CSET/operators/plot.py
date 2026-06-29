@@ -1017,7 +1017,6 @@ def _plot_and_save_line_power_spectrum_series(
             y_levels.append(max(levels))
 
     # Add some labels and tweak the style.
-    # check if cubes[0] works for single cube if not CubeList
 
     title = f"{title}"
     ax.set_title(title, fontsize=16)
