@@ -22,11 +22,11 @@ from CSET.recipes import Config, RawRecipe, get_models
 def _get_scores_spatial_methods(conf):
     """Compile list of the required scores spatial plots."""
     scores_spatial_methods = []
-    if conf.SCORES_SPATIAL_RMSE:
+    if conf.SCORES_SPATIAL_RMSE or conf.SCORES_ALL:
         scores_spatial_methods.append("RMSE")
-    if conf.SCORES_SPATIAL_AB:
+    if conf.SCORES_SPATIAL_AB or conf.SCORES_ALL:
         scores_spatial_methods.append("additive_bias")
-    if conf.SCORES_SPATIAL_MAE:
+    if conf.SCORES_SPATIAL_MAE or conf.SCORES_ALL:
         scores_spatial_methods.append("MAE")
     return scores_spatial_methods
 
@@ -34,13 +34,13 @@ def _get_scores_spatial_methods(conf):
 def _get_scores_timeseries_methods(conf):
     """Compile list of the required scores timeseries plots."""
     scores_timeseries_methods = []
-    if conf.SCORES_TIMESERIES_RMSE:
+    if conf.SCORES_TIMESERIES_RMSE or conf.SCORES_ALL:
         scores_timeseries_methods.append("RMSE")
-    if conf.SCORES_TIMESERIES_AB:
+    if conf.SCORES_TIMESERIES_AB or conf.SCORES_ALL:
         scores_timeseries_methods.append("additive_bias")
-    if conf.SCORES_TIMESERIES_MAE:
+    if conf.SCORES_TIMESERIES_MAE or conf.SCORES_ALL:
         scores_timeseries_methods.append("MAE")
-    if conf.SCORES_TIMESERIES_PC:
+    if conf.SCORES_TIMESERIES_PC or conf.SCORES_ALL:
         scores_timeseries_methods.append("correlation_pearsonr")
     return scores_timeseries_methods
 
