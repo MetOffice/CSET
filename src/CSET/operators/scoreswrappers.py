@@ -255,20 +255,24 @@ def scores_metrics(
     # initialise the output cubelist
     cubes_output = iris.cube.CubeList([])
 
-    if scores_method == "RMSE":
-        # Use the RMSE method
-        cubes_output.append(scores_rmse(cubes, preserved_coordinates))
+    match scores_method:
+        case "RMSE":
+            # Use the RMSE method
+            return scores_rmse(cubes, preserved_coordinates)
 
-    if scores_method == "additive_bias":
-        # Use the Additive Bias (aka mean error) method
-        cubes_output.append(scores_additive_bias(cubes, preserved_coordinates))
+        case "additive_bias":
+            # Use the Additive Bias (aka mean error) method
+            return scores_additive_bias(cubes, preserved_coordinates)
 
-    if scores_method == "MAE":
-        # Use the MAE method
-        cubes_output.append(scores_mae(cubes, preserved_coordinates))
+        case "MAE":
+            # Use the MAE method
+            return scores_mae(cubes, preserved_coordinates)
 
-    if scores_method == "correlation_pearsonr":
-        # Use the Pearson's Correlation method
-        cubes_output.append(scores_correlation_pearsonr(cubes, preserved_coordinates))
+        case "correlation_pearsonr":
+            # Use the Pearson's Correlation method
+            return scores_correlation_pearsonr(cubes, preserved_coordinates)
+
+        case _:
+            raise ValueError(f"No such scores metric: {scores_method}")
 
     return cubes_output
