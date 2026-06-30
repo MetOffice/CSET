@@ -519,6 +519,21 @@ def test_ugridml_fix_surf(monkeypatch, tmp_path):
     )
 
 
+def test_ugridml_fix_surf_multitime(monkeypatch, tmp_path):
+    """Check that read invokes the regrid for surface variable."""
+    monkeypatch.setenv("ROSE_DATAC", str(tmp_path))
+    os.makedirs(str(tmp_path) + "/data/1/")
+    assert (
+        repr(
+            read.read_cubes(
+                "tests/test_data/regrid/ugrid_multivartime_precip.nc",
+                constraint=iris.Constraint(name="surface_microphysical_rainfall_rate"),
+            )
+        )
+        == "[<iris 'Cube' of surface_microphysical_rainfall_rate / (mm 6hr-1) (time: 2; grid_latitude: 550; grid_longitude: 750)>]"
+    )
+
+
 def test_ugridml_nonsupported_var(monkeypatch, tmp_path):
     """TODO."""
     cube = iris.load_cube("tests/test_data/regrid/ugrid_multilev_geopot.nc", "z_250")
