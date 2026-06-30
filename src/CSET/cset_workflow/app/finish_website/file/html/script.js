@@ -592,7 +592,7 @@ function setup_plots_sidebar() {
   if (!document.getElementById("plot-selector")) {
     return;
   }
-  // Load plot index file, ensuring it is up-to-date.
+  // Load plot index file, ensuring it is up-to-date via a conditional request.
   fetch("index.jsonl", { cache: "no-cache" })
     .then((response) => {
       // Display a message and stop if the fetch fails.
