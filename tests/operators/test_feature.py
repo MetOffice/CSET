@@ -30,9 +30,9 @@ from CSET.operators import feature
 def feature_cube() -> iris.cube.Cube:
     """Set up three timesteps of data and place into cube."""
     data_arr = np.zeros((3, 10, 10))
-    data_arr[0, 2:6, 2:6] = 1
-    data_arr[1, 3:7, 3:7] = 1
-    data_arr[2, 4:8, 4:8] = 1
+    data_arr[0, 2:6, 2:6] = 5
+    data_arr[1, 3:7, 3:7] = 10
+    data_arr[2, 4:8, 4:8] = 20
 
     time_units = cf_units.Unit("days since 2000-01-01 00:00:00", calendar="gregorian")
     time_start = dt.datetime(2010, 1, 1, 0, 0, 0)
@@ -127,3 +127,38 @@ def test_save_data(feature_cube, tmp_path) -> None:
     # Check expected csv file is created in output directory
     expected_file = f"{output_directory}/frame_20100101_0000.csv"
     assert os.path.isfile(expected_file)
+
+
+def test_cell_stats_operator(feature_cube):
+    """
+    Test the cell_stats operator returns expected size, mean, and max values.
+
+    The expected values are based on the feature_cube data and the threshold of 0.5.
+    """
+    threshold = 0.5
+    min_size = 1
+    cubelist = feature.cell_stats(
+        cubes=feature_cube, threshold=threshold, min_size=min_size
+    )
+
+    # Extract data from cubelist, squeeze since there is only one feature per timestep
+    # in this test case
+    size_data = np.squeeze(cubelist.extract_cube("feature_size").data)
+    mean_data = np.squeeze(cubelist.extract_cube("feature_mean").data)
+    max_data = np.squeeze(cubelist.extract_cube("feature_max").data)
+    effective_radius_data = np.squeeze(
+        cubelist.extract_cube("feature_effective_radius").data
+    )
+
+    # Expected values based on the feature_cube data
+    expected_size_data = np.array([16, 16, 16])  # Each feature is a 4x4 square
+    expected_mean_data = np.array([5.0, 10.0, 20.0])  # Mean values of each feature
+    expected_max_data = np.array([5.0, 10.0, 20.0])  # Max values of each feature
+
+    grid_spacing = 10  # Assuming grid spacing is 10 meters from test setup
+    expected_radius_data = np.sqrt(expected_size_data * grid_spacing**2 / np.pi)
+
+    np.testing.assert_array_equal(size_data, expected_size_data)
+    np.testing.assert_array_equal(mean_data, expected_mean_data)
+    np.testing.assert_array_equal(max_data, expected_max_data)
+    np.testing.assert_array_equal(effective_radius_data, expected_radius_data)
