@@ -2455,6 +2455,179 @@ def qq_plot(
     return iris.cube.CubeList([base, other])
 
 
+def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
+    """
+    Plot a Hinton style triangle/scorecard plot.
+
+    This plot type can be useful for summarising high level information, such as comparing
+    how 'skillful' two models are when verified against observations for a variety of metrics,
+    as a function of lead-time. A few parameters of the plot style are fixed in function rather
+    than customisable by the user as input arguments; many have been designed to automatically
+    scale the plot depending on the number of x and y components.
+
+    Parameters
+    ----------
+    change: np.ndarray
+        A 2d numpy array containing the values (scaled to 1 to -1) that determine the triangle
+        size/direction.
+    signif: np.ndarray
+        A 2d numpy array containing 0s and 1s to determine if triangle is significant or not.
+    xaxis_labels: list
+        List of labels for the xaxis (must match the second dimension length of signif and change,
+        along with magnitude if not None).
+    yaxis_labels: list
+        List of labels for the yaxis (must match the first dimension length of signif and change,
+        along with magnitude if not None).
+    magnitude: np.ndarray | None
+        Optional 2D array, matching the shape of change, signif, which contains numerical values
+        the user wishes to display under each respective triangle.
+
+    Returns
+    -------
+    matplotlib axes object to either display or do further modifications to.
+    """
+    # Setup colors of triangles
+    color_pos = "#7CAE00"
+    color_neg = "#7B68EE"
+
+    # Setup cell/text size ratios
+    figsize = None
+    cell_size_in = 0.35
+    text_row_ratio = 0.25
+
+    # Ensure arrays, and change to bool for sig.
+    change = np.asarray(change)
+    signif = np.asarray(signif).astype(bool)
+    if magnitude is not None:
+        magnitude = np.asarray(magnitude)
+
+    # Get the number of x and y elements
+    ny, nx = change.shape
+
+    # Build non-uniform y coordinates
+    tri_height = 1.0
+    txt_height = text_row_ratio
+
+    tri_y = []
+    txt_y = []
+    y_edges = [0.0]
+
+    y = 0.0
+    for _j in range(ny):
+        tri_y.append(y + tri_height / 2)
+        y += tri_height
+        y_edges.append(y)
+
+        txt_y.append(y + txt_height / 2)
+        y += txt_height
+        y_edges.append(y)
+
+    total_height = y
+
+    # Dynamic figure size
+    if figsize is None:
+        width = nx * cell_size_in
+        height = total_height * cell_size_in + 2
+        figsize = (width, height)
+
+    fig, ax = plt.subplots(figsize=figsize)
+
+    # Setup axes and grid.
+    ax.set_aspect("equal", adjustable="box")
+    ax.set_xlim(-0.5, nx - 0.5)
+    ax.set_ylim(0, total_height)
+
+    ax.set_xticks(np.arange(nx))
+    ax.set_xticklabels(xaxis_labels, rotation=90)
+
+    ax.set_yticks(tri_y)
+    ax.set_yticklabels(yaxis_labels)
+
+    ax.set_xticks(np.arange(-0.5, nx, 1), minor=True)
+    ax.set_yticks(y_edges, minor=True)
+
+    ax.set_axisbelow(True)
+    ax.grid(which="minor", linestyle=":", linewidth=0.3, color="0.7")
+    ax.grid(False, which="major")
+    ax.tick_params(which="minor", length=0)
+
+    ax.invert_yaxis()
+
+    # Compute marker scaling (fixed overlap)
+    fig.canvas.draw()
+
+    bbox = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+    width_in, height_in = bbox.width, bbox.height
+
+    cell_w = (width_in * fig.dpi) / nx
+    cell_h = (height_in * fig.dpi) / total_height
+    cell_pixels = min(cell_w, cell_h)
+
+    max_marker_size = (0.6 * cell_pixels) ** 2
+
+    text_fontsize = cell_pixels * 0.15
+
+    # Plot triangles + text
+    for j in range(ny):
+        for i in range(nx):
+            val = change[j, i]
+            if np.isnan(val):
+                continue
+
+            if abs(val) < 0.01:
+                continue
+
+            sig = signif[j, i]
+            size = max_marker_size * abs(val)
+
+            # Triangle style
+            if val >= 0:
+                marker = "^"
+                color = color_pos
+            else:
+                marker = "v"
+                color = color_neg
+
+            if sig:
+                edgecolor = "black"
+                linewidth = 0.6
+            else:
+                edgecolor = "none"
+                linewidth = 0.0
+
+            # Triangle
+            ax.scatter(
+                i,
+                tri_y[j],
+                s=size,
+                marker=marker,
+                c=color,
+                edgecolors=edgecolor,
+                linewidths=linewidth,
+                zorder=3,
+                clip_on=True,  # ensures no rendering bleed
+            )
+
+            # Text row
+            if magnitude is not None:
+                mag_val = magnitude[j, i]
+
+                if not np.isnan(mag_val):
+                    ax.text(
+                        i,
+                        txt_y[j],
+                        f"{mag_val:.1f}",
+                        ha="center",
+                        va="center",
+                        fontsize=text_fontsize,
+                        color="black",
+                        zorder=4,
+                    )
+
+    plt.tight_layout()
+    return fig, ax
+
+
 def scatter_plot(
     cube_x: iris.cube.Cube | iris.cube.CubeList,
     cube_y: iris.cube.Cube | iris.cube.CubeList,
