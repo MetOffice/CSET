@@ -251,19 +251,7 @@ def cell_stats(
 
     # Require inputs to have horizontal coordinates of xy type, not latitude/longitude
     for cube in cubes:
-        hzntl_coords = [
-            coord
-            for coord in cube.coords()
-            if iris.util.guess_coord_axis(coord) in ["X", "Y"]
-        ]
-        invalid_coord_names = ["latitude", "longitude"]
-        for coord in hzntl_coords:
-            if coord.name() in invalid_coord_names:
-                raise ValueError(
-                    f"Input cube {cube} has horizontal coordinate {coord}, "
-                    "which is not of xy type. Please provide a cube with horizontal "
-                    "coordinates of xy type."
-                )
+        _check_xy_coords(cube)
 
     # Setup containing cube list
     cell_stats_cubelist = iris.cube.CubeList()
@@ -338,6 +326,34 @@ def cell_stats(
         )
 
     return cell_stats_cubelist
+
+
+def _check_xy_coords(cube: iris.cube.Cube) -> None:
+    """Check that the input cube has horizontal coordinates of xy type, not latitude/longitude.
+
+    Parameters
+    ----------
+    cube: iris.cube.Cube
+        An iris cube containing 2D data to be analysed.
+
+    Raises
+    ------
+    ValueError
+        If the input cube has horizontal coordinates of latitude/longitude type.
+    """
+    hzntl_coords = [
+        coord
+        for coord in cube.coords()
+        if iris.util.guess_coord_axis(coord) in ["X", "Y"]
+    ]
+    invalid_coord_names = ["latitude", "longitude", "grid_latitude", "grid_longitude"]
+    for coord in hzntl_coords:
+        if coord.name() in invalid_coord_names:
+            raise ValueError(
+                f"Input cube {cube} has horizontal coordinate {coord}, "
+                "which is not of xy type. Please provide a cube with horizontal "
+                "coordinates of xy type."
+            )
 
 
 def _get_cell_stats_arrays_from_timeline(
