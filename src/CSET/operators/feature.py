@@ -202,6 +202,11 @@ def cell_stats(
 
     Parameters
     ----------
+    cubes: iris.cube.Cube | iris.cube.CubeList
+        An iris cube (single model) or cubelist (multiple models) containing 2D data to be
+        analysed. Cube must have horizontal coordinates of xy type, not latitude/longitude.
+        The cube must also have a time coordinate, which is used to identify features in
+        each timestep.
     threshold: float
         The threshold value for feature detection.
     under_threshold: bool, optional
@@ -243,6 +248,24 @@ def cell_stats(
     """
     # Check inputs
     cubes = iter_maybe(cubes)
+
+    # Require inputs to have horizontal coordinates of xy type, not latitude/longitude
+    for cube in cubes:
+        hzntl_coords = [
+            coord
+            for coord in cube.coords()
+            if iris.util.guess_coord_axis(coord) in ["X", "Y"]
+        ]
+        invalid_coord_names = ["latitude", "longitude"]
+        for coord in hzntl_coords:
+            if coord.name() in invalid_coord_names:
+                raise ValueError(
+                    f"Input cube {cube} has horizontal coordinate {coord}, "
+                    "which is not of xy type. Please provide a cube with horizontal "
+                    "coordinates of xy type."
+                )
+
+    # Setup containing cube list
     cell_stats_cubelist = iris.cube.CubeList()
 
     # Run tracking on all input data
