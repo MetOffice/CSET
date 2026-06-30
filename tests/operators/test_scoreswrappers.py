@@ -28,6 +28,29 @@ from iris.util import reverse
 from CSET.operators import scoreswrappers
 
 
+def test_scores_correlation_pearsonr(cube: iris.cube.Cube):
+    """Test taking the Pearson correlation between two cubes."""
+    # Data preparation.
+    other_cube = cube.copy()
+    del other_cube.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([cube, other_cube])
+
+    # Take difference.
+    correlation_pearsonr_cube = scoreswrappers.scores_correlation_pearsonr(cubes)
+
+    # As both cubes use the same data, check the Pearson correlation is one.
+    assert isinstance(correlation_pearsonr_cube, iris.cube.Cube)
+    assert np.allclose(
+        correlation_pearsonr_cube.data - 1.0,
+        np.zeros_like(correlation_pearsonr_cube.data),
+        atol=1e-9,
+    )
+    assert correlation_pearsonr_cube.standard_name is None
+    assert (
+        correlation_pearsonr_cube.long_name == "correlation_pearsonr_of_air_temperature"
+    )
+
+
 def test_scores_additive_bias(cube: iris.cube.Cube):
     """Test taking the additive bias between two cubes."""
     # Data preparation.
