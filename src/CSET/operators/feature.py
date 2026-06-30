@@ -38,7 +38,7 @@ def track(
     Parameters
     ----------
     cube: iris.cube.Cube
-        An iris cube containing 2D data to be analysed. The cube must have a time coordinate
+        The cube to identify features in. The cube must be 3D and contain a time coordinate
         and horizontal coordinates of xy type (not latitude/longitude).
     threshold: float
         The threshold value for feature detection.
@@ -200,7 +200,7 @@ def _check_xy_coords(cube: iris.cube.Cube) -> None:
     Parameters
     ----------
     cube: iris.cube.Cube
-        An iris cube containing 2D data to be analysed.
+        An iris cube containing horizontal coordinates.
 
     Raises
     ------
