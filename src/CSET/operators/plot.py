@@ -21,6 +21,7 @@ import json
 import logging
 import math
 import os
+import sys
 from typing import Literal
 
 import cartopy.crs as ccrs
@@ -72,6 +73,11 @@ mpl.use("agg")
 ############################
 # Private helper functions #
 ############################
+
+
+def in_sphinx_gallery():
+    """Test if running plot code in sphinx-gallery context."""
+    return "sphinx_gallery" in sys.modules
 
 
 def _append_to_plot_index(plot_index: list) -> list:
@@ -690,9 +696,10 @@ def _plot_and_save_spatial_plot(
         logging.debug("Set colorbar ticks and labels.")
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved spatial plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved spatial plot to %s", filename)
+        plt.close(fig)
 
 
 def _plot_and_save_postage_stamp_spatial_plot(
@@ -815,10 +822,10 @@ def _plot_and_save_postage_stamp_spatial_plot(
 
     # Overall figure title.
     fig.suptitle(title, fontsize=16)
-
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved contour postage stamp plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved contour postage stamp plot to %s", filename)
+        plt.close(fig)
 
 
 def _plot_and_save_line_series(
@@ -932,9 +939,10 @@ def _plot_and_save_line_series(
     ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved line plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved line plot to %s", filename)
+        plt.close(fig)
 
 
 def _plot_and_save_line_power_spectrum_series(
@@ -1057,9 +1065,10 @@ def _plot_and_save_line_power_spectrum_series(
     ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved line plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved line plot to %s", filename)
+        plt.close(fig)
 
 
 def _plot_and_save_vertical_line_series(
@@ -1199,9 +1208,10 @@ def _plot_and_save_vertical_line_series(
     ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved line plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved line plot to %s", filename)
+        plt.close(fig)
 
 
 def _plot_and_save_scatter_plot(
@@ -1273,9 +1283,10 @@ def _plot_and_save_scatter_plot(
     ax.autoscale()
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved scatter plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved scatter plot to %s", filename)
+        plt.close(fig)
 
 
 def _plot_and_save_vector_plot(
@@ -1386,9 +1397,10 @@ def _plot_and_save_vector_plot(
     iplt.quiver(cube_u[::step, ::step], cube_v[::step, ::step], pivot="middle")
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved vector plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved vector plot to %s", filename)
+        plt.close(fig)
 
 
 def _plot_and_save_histogram_series(
@@ -1494,9 +1506,10 @@ def _plot_and_save_histogram_series(
         ax.legend(loc="best", ncol=1, frameon=False, fontsize=16)
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved histogram plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved histogram plot to %s", filename)
+        plt.close(fig)
 
 
 def _plot_and_save_postage_stamp_histogram_series(
@@ -1553,10 +1566,10 @@ def _plot_and_save_postage_stamp_histogram_series(
 
     # Overall figure title.
     fig.suptitle(title, fontsize=16)
-
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved histogram postage stamp plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved histogram postage stamp plot to %s", filename)
+        plt.close(fig)
 
 
 def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
@@ -1665,9 +1678,10 @@ def _plot_and_save_scattermap_plot(
     cbar.set_label(label=f"{cube.name()} ({cube.units})", size=20)
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved geographical scatter plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved geographical scatter plot to %s", filename)
+        plt.close(fig)
 
 
 def _spatial_plot(
@@ -1718,7 +1732,7 @@ def _spatial_plot(
     TypeError
         If the cube isn't a single cube.
     """
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", cube.name())
 
     # Ensure we've got a single cube.
     cube = check_single_cube(cube)
@@ -1890,8 +1904,8 @@ def spatial_pcolormesh_plot(
 
 def spatial_multi_pcolormesh_plot(
     cube: iris.cube.Cube,
-    overlay_cube: iris.cube.Cube,
-    contour_cube: iris.cube.Cube,
+    overlay_cube: iris.cube.Cube | None = None,
+    contour_cube: iris.cube.Cube | None = None,
     filename: str = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
@@ -1919,14 +1933,15 @@ def spatial_multi_pcolormesh_plot(
         Iris cube of the data to plot. It should have two spatial dimensions,
         such as lat and lon, and may also have a another two dimension to be
         plotted sequentially and/or as postage stamp plots.
-    overlay_cube: Cube
+    overlay_cube: Cube, optional
         Iris cube of the data to plot as an overlay on top of basis cube. It should have two spatial dimensions,
         such as lat and lon, and may also have a another two dimension to be
         plotted sequentially and/or as postage stamp plots. This is likely to be a masked cube in order not to hide the underlying basis cube.
-    contour_cube: Cube
+        If not provided, output plot generated without overlay cube.
+    contour_cube: Cube, optional
         Iris cube of the data to plot as a contour overlay on top of basis cube and overlay_cube. It should have two spatial dimensions,
         such as lat and lon, and may also have a another two dimension to be
-        plotted sequentially and/or as postage stamp plots.
+        plotted sequentially and/or as postage stamp plots. If not provided, output plot generated without contours.
     filename: str, optional
         Name of the plot to write, used as a prefix for plot sequences. Defaults
         to the recipe name.
@@ -2006,7 +2021,7 @@ def plot_line_series(
         If the cube isn't a Cube or CubeList.
     """
     # Ensure we have a name for the plot file.
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", iter_maybe(cube)[0].name())
 
     num_models = get_num_models(cube)
 
@@ -2204,7 +2219,7 @@ def plot_vertical_line_series(
         If the cube isn't a Cube or CubeList.
     """
     # Ensure we have a name for the plot file.
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", iter_maybe(cubes)[0].name())
 
     cubes = iter_maybe(cubes)
     # Initialise empty list to hold all data from all cubes in a CubeList
@@ -2432,7 +2447,7 @@ def qq_plot(
     )
 
     # Ensure we have a name for the plot file.
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", "qq")
     title = f"{recipe_title}"
 
     if filename is None:
@@ -2511,7 +2526,7 @@ def scatter_plot(
             raise ValueError("cube_y must be 1D.")
 
     # Ensure we have a name for the plot file.
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", "Scatter")
     title = f"{recipe_title}"
 
     if filename is None:
@@ -2540,7 +2555,7 @@ def vector_plot(
     **kwargs,
 ) -> iris.cube.CubeList:
     """Plot a vector plot based on the input u and v components."""
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", "Vector_plot")
 
     # Cubes must have a matching sequence coordinate.
     try:
@@ -2637,7 +2652,7 @@ def plot_histogram_series(
     TypeError
         If the cube isn't a Cube or CubeList.
     """
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", "Histogram")
 
     cubes = iter_maybe(cubes)
     # Ensure we have a name for the plot file.

@@ -85,6 +85,7 @@ src = ["src", "test"]
 
 [tool.ruff.lint]
 extend-select = ["B", "D", "I"]
+per-file-ignores = {"docs/source/reference/cset_gallery/examples/**/*.py" = ["D"]}
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"

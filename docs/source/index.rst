@@ -26,6 +26,9 @@ Useful links
 
 `Source Code`_ | `Issue Tracker`_ | Releases_ | `Discussion Forum`_
 
+
+For examples of CSET outputs, see :doc:`reference/cset_gallery/index`.
+
 For information on how to use CSET, see :doc:`getting-started/index`.
 
 For information on getting involved as a developer, see
