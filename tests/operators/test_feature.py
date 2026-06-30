@@ -120,10 +120,10 @@ def test_save_data(feature_cube, tmp_path) -> None:
         save_data=True,
     )
     # Check expected lifetime field is created in output directory
-    output_directory = f"{tmp_path}/tracking_data"
-    expected_file = f"{output_directory}/lifetime_20100101_0000.field"
-    assert os.path.isfile(expected_file)
+    output_directory = tmp_path / "tracking_data"
+    expected_file = output_directory / "lifetime_20100101_0000.field"
+    assert expected_file.is_file()
 
     # Check expected csv file is created in output directory
-    expected_file = f"{output_directory}/frame_20100101_0000.csv"
-    assert os.path.isfile(expected_file)
+    expected_file = output_directory / "frame_20100101_0000.csv"
+    assert expected_file.is_file()
