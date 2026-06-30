@@ -17,6 +17,8 @@ import logging
 import os
 
 import iris
+import iris.cube
+import iris.util
 import numpy as np
 from simpletrack.track import Tracker
 
@@ -35,6 +37,9 @@ def track(
 
     Parameters
     ----------
+    cube: iris.cube.Cube
+        An iris cube containing 2D data to be analysed. The cube must have a time coordinate
+        and horizontal coordinates of xy type (not latitude/longitude).
     threshold: float
         The threshold value for feature detection.
     under_threshold: bool, optional
@@ -65,7 +70,7 @@ def track(
     Returns
     -------
     tracking_cubes: iris.cube.CubeList
-        A list of iris cubes containing tracking data, including feauture ID, lifetime,
+        A list of iris cubes containing tracking data, including feature ID, lifetime,
         and locations of initiating features.
 
     Notes
@@ -90,7 +95,7 @@ def track(
         "feature_init":
             A 2D binary field indicating the location of newly initiated features at each timestep.
             These features are identified as having a lifetime of 1 AND have initiated sufficiently
-            far from other, existing features that they are not considered to have spawed from them.
+            far from other, existing features that they are not considered to have spawned from them.
 
     Links
     ----------
@@ -110,6 +115,9 @@ def track(
     >>> plt.show()
 
     """
+    # Check that the input cube has horizontal coordinates of xy type, not latitude/longitude
+    _check_xy_coords(cube)
+
     # Setup config
     tracker_config = {
         "FEATURE": {
@@ -184,3 +192,31 @@ def track(
         tracking_cubelist.append(tracking_cube)
 
     return tracking_cubelist
+
+
+def _check_xy_coords(cube: iris.cube.Cube) -> None:
+    """Check that the input cube has horizontal coordinates of xy type, not latitude/longitude.
+
+    Parameters
+    ----------
+    cube: iris.cube.Cube
+        An iris cube containing 2D data to be analysed.
+
+    Raises
+    ------
+    ValueError
+        If the input cube has horizontal coordinates of latitude/longitude type.
+    """
+    hzntl_coords = [
+        coord
+        for coord in cube.coords()
+        if iris.util.guess_coord_axis(coord) in ["X", "Y"]
+    ]
+    invalid_coord_names = ["latitude", "longitude", "grid_latitude", "grid_longitude"]
+    for coord in hzntl_coords:
+        if coord.name() in invalid_coord_names:
+            raise ValueError(
+                f"Input cube {cube} has horizontal coordinate {coord}, "
+                "which is not of xy type. Please provide a cube with horizontal "
+                "coordinates of xy type."
+            )
