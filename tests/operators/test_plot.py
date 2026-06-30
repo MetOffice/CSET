@@ -1065,3 +1065,19 @@ def test_qq_plot_grid_staggering_regrid(cube, tmp_working_dir):
         model_names=["a", "b"],
     )
     assert Path("untitled.png").is_file()
+
+
+def test_hinton_returns_figure_and_axes():
+    """Test that hinton plot returns valid fig and ax objects."""
+    change = np.array([[0.5, -0.5]])
+    signif = np.array([[1, 0]])
+
+    fig, ax = plot.hinton_plot(
+        change,
+        signif,
+        xaxis_labels=["A", "B"],
+        yaxis_labels=["Metric"],
+    )
+
+    assert fig is not None
+    assert ax is not None

@@ -2465,7 +2465,6 @@ def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
     than customisable by the user as input arguments; many have been designed to automatically
     scale the plot depending on the number of x and y components.
 
-
     Parameters
     ----------
     change: np.ndarray
@@ -2488,13 +2487,13 @@ def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
     matplotlib axes object to either display or do further modifications to.
     """
     # Setup colors of triangles
-    color_pos = ("#7CAE00",)
+    color_pos = "#7CAE00"
     color_neg = "#7B68EE"
 
     # Setup cell/text size ratios
-    figsize = (None,)
-    cell_size_in = (0.35,)
-    text_row_ratio = (0.25,)
+    figsize = None
+    cell_size_in = 0.35
+    text_row_ratio = 0.25
 
     # Ensure arrays, and change to bool for sig.
     change = np.asarray(change)
