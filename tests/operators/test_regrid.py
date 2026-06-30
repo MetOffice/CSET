@@ -542,5 +542,44 @@ def test_ugridml_nonsupported_var(monkeypatch, tmp_path):
     assert regrid._rebuild_ugrid_meta_firstfix(cube) is None
 
 
-# check geopotential height data is /9.81
-# check microphysical rain rate units corrected.
+def test_ugridml_notimedim(monkeypatch, tmp_path):
+    """TODO."""
+    cube = iris.load_cube("tests/test_data/regrid/ugrid_multilev_geopot.nc", "z_250")
+    cube = cube[0, :]
+
+    assert (
+        repr(regrid._rebuild_ugrid_meta_firstfix(cube))
+        == "<iris 'Cube' of geopotential_height_at_pressure_levels / (m) (time: 1; pressure: 1; unknown: 501768)>"
+    )
+
+
+def test_ugridml_convertgeopotunits(monkeypatch, tmp_path):
+    """TODO."""
+    monkeypatch.setenv("ROSE_DATAC", str(tmp_path))
+    os.makedirs(str(tmp_path) + "/data/1/")
+    pre_cubes = iris.load_cube(
+        "tests/test_data/regrid/ugrid_multilev_geopot.nc", "z_250"
+    )
+    post_cubes = read.read_cubes(
+        "tests/test_data/regrid/ugrid_multilev_geopot.nc",
+        constraint=iris.Constraint(name="geopotential_height_at_pressure_levels"),
+    )
+
+    nanmean = iris.analysis.Aggregator("nanmean", np.nanmean)
+    pre_avg_cubes = np.nanmean(pre_cubes.data, axis=1) / 9.81
+    post_avg_cubes = (
+        post_cubes[0]
+        .collapsed("grid_latitude", nanmean)
+        .collapsed("grid_longitude", nanmean)
+        .data
+    )
+
+    ratio = post_avg_cubes / pre_avg_cubes
+    ratio = ratio[0, 0]
+
+    assert np.allclose(
+        ratio,
+        1,
+        rtol=1e-2,
+        atol=1e-2,
+    )

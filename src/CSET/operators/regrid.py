@@ -701,7 +701,7 @@ def _rebuild_ugrid_meta(cube, arr, lat, lon):
 
     # Raw data in units of 6h accum in meters.
     if out_cube.long_name == "surface_microphysical_rainfall_rate":
-        out_cube.data = (out_cube.data * 1000.0) / 6
+        out_cube.data = out_cube.data * 1000.0
 
     return out_cube
 
@@ -798,10 +798,6 @@ def prefilter_fix_metadata(cubes, constraint):
     # Extract required cube based on constraint.
     for c in sanitised_cubes.extract(constraint):
         filtered_cubes.append(c)
-
-    # Ensure we have found more than just latitude/longitude cubes
-    if len(filtered_cubes) < 3:
-        raise ValueError(f"Only found 2 or less cubes {filtered_cubes}")
 
     return filtered_cubes
 
