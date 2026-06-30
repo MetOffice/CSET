@@ -488,7 +488,7 @@ def test_vertical_interpolation_cubelist(model_level_cube):
 
 
 def test_ugridml_fix_plev_multitime(monkeypatch, tmp_path):
-    """Check that read invokes the regrid."""
+    """Check that read invokes the regrid and regrids cubes."""
     monkeypatch.setenv("ROSE_DATAC", str(tmp_path))
     os.makedirs(str(tmp_path) + "/data/1/")
     assert (
@@ -505,7 +505,7 @@ def test_ugridml_fix_plev_multitime(monkeypatch, tmp_path):
 
 
 def test_ugridml_fix_surf(monkeypatch, tmp_path):
-    """Check that read invokes the regrid for surface variable."""
+    """Check that read invokes the regrid and regrids for surface variable without time dim."""
     monkeypatch.setenv("ROSE_DATAC", str(tmp_path))
     os.makedirs(str(tmp_path) + "/data/1/")
     assert (
@@ -535,15 +535,14 @@ def test_ugridml_fix_surf_multitime(monkeypatch, tmp_path):
 
 
 def test_ugridml_nonsupported_var(monkeypatch, tmp_path):
-    """TODO."""
+    """Check that None is returned if cube metadata not found in lookup."""
     cube = iris.load_cube("tests/test_data/regrid/ugrid_multilev_geopot.nc", "z_250")
-
     cube.rename("foo")
     assert regrid._rebuild_ugrid_meta_firstfix(cube) is None
 
 
 def test_ugridml_notimedim(monkeypatch, tmp_path):
-    """TODO."""
+    """Check that regrid handles multiple pressure level but no time."""
     cube = iris.load_cube("tests/test_data/regrid/ugrid_multilev_geopot.nc", "z_250")
     cube = cube[0, :]
 
@@ -554,7 +553,7 @@ def test_ugridml_notimedim(monkeypatch, tmp_path):
 
 
 def test_ugridml_convertgeopotunits(monkeypatch, tmp_path):
-    """TODO."""
+    """Check that geopotential height converted to correct units and value."""
     monkeypatch.setenv("ROSE_DATAC", str(tmp_path))
     os.makedirs(str(tmp_path) + "/data/1/")
     pre_cubes = iris.load_cube(
@@ -583,3 +582,4 @@ def test_ugridml_convertgeopotunits(monkeypatch, tmp_path):
         rtol=1e-2,
         atol=1e-2,
     )
+    assert repr(post_cubes[0].units) == "Unit('m')"

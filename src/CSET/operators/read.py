@@ -20,7 +20,6 @@ import functools
 import glob
 import itertools
 import logging
-import os
 from pathlib import Path
 from typing import Literal
 
@@ -223,83 +222,6 @@ def read_cubes(
     return cubes
 
 
-# def extract_constraint_names(obj, seen=None):
-#     """
-#     Recursively extract all string-based constraint names from an object and its attributes.
-
-#     This function searches for attributes named ``name`` or ``_name`` within the given
-#     object and collects their string values. It then traverses attributes
-#     of the object recursively (including elements of lists and tuples), gathering any
-#     additional names found. A set of visited object IDs is maintained to prevent infinite
-#     recursion caused by cyclic references.
-
-#     Parameters
-#     ----------
-#     obj: Any
-#         The object to inspect for constraint names. This can be any Python object,
-#         including nested structures containing other objects.
-
-#     Returns
-#     -------
-#     names: list
-#         A list of extracted constraint names found in the object and its nested
-#         attributes. Duplicate names may appear if they are encountered multiple times.
-
-#     Notes
-#     -----
-#     - Only attributes named ``name`` or ``_name`` are considered as potential sources
-#       of constraint names.
-#     """
-#     # A set of object IDs that have already been visited during recursion.
-#     # This is used internally to avoid infinite loops.
-
-#     if seen is None:
-#         seen = set()
-
-#     names = []
-
-#     if id(obj) in seen:
-#         return names
-#     seen.add(id(obj))
-
-#     # Handle dictionaries
-#     if isinstance(obj, dict):
-#         for key, value in obj.items():
-#             if "name" in str(key).lower() and isinstance(value, str):
-#                 names.append(value)
-#             names.extend(extract_constraint_names(value, seen))
-#         return names
-
-#     # Check for name fields (both public and private)
-#     for attr in ("name", "_name", "standard_name", "long_name"):
-#         if hasattr(obj, attr):
-#             value = getattr(obj, attr)
-#             if isinstance(value, str):
-#                 names.append(value)
-
-#     # Traverse all attributes of the object
-#     for attr in dir(obj):
-#         if attr.startswith("__"):
-#             continue
-#         try:
-#             value = getattr(obj, attr)
-#         except Exception:
-#             continue
-
-#         # Only recurse into likely objects (not primitives)
-#         if isinstance(value, (str, int, float, type(None))):
-#             continue
-
-#         # Recurse into lists/tuples
-#         if isinstance(value, (list, tuple)):
-#             for item in value:
-#                 names.extend(extract_constraint_names(item, seen))
-#         else:
-#             names.extend(extract_constraint_names(value, seen))
-
-#     return names
-
-
 def _load_model(
     paths: str | list[str],
     model_name: str | None,
@@ -309,9 +231,6 @@ def _load_model(
     input_files = _check_input_files(paths)
     # If unset, a constraint of None lets everything be loaded.
     logging.debug("Constraint: %s", constraint)
-
-    # Dont try and load lock files!
-    input_files = [f for f in input_files if not os.path.basename(f).startswith(".")]
 
     cubes = iris.load(input_files)
 
@@ -504,7 +423,6 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     _lfric_forecast_period_callback(cube)
     cube = _fix_no_time_coords_callback(cube)
     _normalise_ML_varname(cube)
-    _normalise_grid_name(cube)
     return cube
 
 
@@ -1192,12 +1110,3 @@ def _normalise_ML_varname(cube: iris.cube.Cube):
             cube.long_name = (
                 "vapour_specific_humidity_at_pressure_levels_for_climate_averaging"
             )
-
-
-def _normalise_grid_name(cube: iris.cube.Cube):
-
-    for coord in cube.dim_coords:
-        if coord.name() in ["latitude"]:
-            coord.rename("grid_latitude")
-        if coord.name() in ["longitude"]:
-            coord.rename("grid_longitude")
