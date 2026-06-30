@@ -1300,10 +1300,13 @@ def _plot_and_save_vector_plot(
         Plot title.
     """
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
-
     # Create a cube containing the magnitude of the vector field.
     cube_vec_mag = (cube_u**2 + cube_v**2) ** 0.5
-    cube_vec_mag.rename(f"{cube_u.name()}_{cube_v.name()}_magnitude")
+    cube_vec_mag.rename(f"{cube_u.long_name}_{cube_v.long_name}_magnitude")
+    if "eastward_wind" in cube_u.long_name and "northward_wind" in cube_v.long_name:
+        cube_vec_mag.rename(
+            "wind_speed" + cube_u.long_name.replace("eastward_wind", "")
+        )
 
     # Specify the color bar
     cmap, levels, norm = colorbar_map_levels(cube_vec_mag)
@@ -2569,7 +2572,7 @@ def vector_plot(
             cube_v_slice,
             filename=plot_filename,
             title=plot_title,
-            method="contourf",
+            method="pcolormesh",
         )
         plot_index.append(plot_filename)
 
