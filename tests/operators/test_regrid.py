@@ -504,7 +504,7 @@ def test_ugridml_fix_plev_multitime(monkeypatch, tmp_path):
     )
 
 
-def test_ugridml_fix_surf_multitime(monkeypatch, tmp_path):
+def test_ugridml_fix_surf(monkeypatch, tmp_path):
     """Check that read invokes the regrid for surface variable."""
     monkeypatch.setenv("ROSE_DATAC", str(tmp_path))
     os.makedirs(str(tmp_path) + "/data/1/")
@@ -519,11 +519,12 @@ def test_ugridml_fix_surf_multitime(monkeypatch, tmp_path):
     )
 
 
-# def test_ugridml_nonsupported_var(monkeypatch, tmp_path):
-#     """Check that _rebuild_ugrid_meta returns unchanged cube if variable not found in lookup table"""
-#     cube = iris.load("tests/test_data/regrid/ugrid_multilev_geopot.nc")
-#     cube.name = "blah"
-#     assert repr(regrid._rebuild_ugrid_meta(cube)) == "sameascube"
+def test_ugridml_nonsupported_var(monkeypatch, tmp_path):
+    """TODO."""
+    cube = iris.load_cube("tests/test_data/regrid/ugrid_multilev_geopot.nc", "z_250")
+
+    cube.rename("foo")
+    assert regrid._rebuild_ugrid_meta_firstfix(cube) is None
 
 
 # check geopotential height data is /9.81
