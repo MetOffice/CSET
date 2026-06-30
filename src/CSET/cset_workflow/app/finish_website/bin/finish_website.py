@@ -94,7 +94,7 @@ def construct_index(www_content: Path):
     with open(www_content / "index.jsonl", "wt", encoding="UTF-8") as index_fp:
         # Loop over all diagnostics and append to index. The glob is sorted to
         # ensure a consistent ordering.
-        for metadata_file in sorted(www_content.glob("**/*/meta.json")):
+        for metadata_file in sorted(www_content.glob("**/*.json")):
             try:
                 with open(metadata_file, "rt", encoding="UTF-8") as plot_fp:
                     plot_metadata = json.load(plot_fp)
