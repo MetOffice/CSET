@@ -1,9 +1,10 @@
 """
-Regional spatial plot
-=====================
+Spatial difference plot
+=======================
 
 Generate spatial map of a 2D field difference (regional data example).
 
+Differences are calculated using the CSET operator :py:mod:`CSET.operators.misc.difference`.
 Spatial maps are generated using either CSET operators :py:mod:`CSET.operators.plot.spatial_pcolormesh_plot` or :py:mod:`CSET.operators.plot.spatial_contour_plot`.
 
 General functionality is provided using :doc:`CSET recipe </usage/operator-recipes>` ``generic_surface_spatial_difference.yaml``
@@ -71,4 +72,4 @@ cubes = cset_read.read_cubes(file_path, constraint=both_constraints)
 diff = cset_misc.difference(cubes)
 
 # Plot single example frame (final time output only, using spatial_contour_plot)
-cset_plot.spatial_contour_plot(diff)
+cset_plot.spatial_contour_plot(diff[-1])
