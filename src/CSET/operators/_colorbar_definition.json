@@ -178,50 +178,29 @@
     "max": 1.1,
     "min": 0.5
   },
-      "feature_id": {
-        "cmap": "viridis",
-        "levels": [
-            1,
-            50,
-            100,
-            150,
-            200,
-            250,
-            300,
-            350,
-            400
-        ],
-        "ymax": 1.0,
-        "ymin": 0.0
-    },
-    "feature_lifetime": {
-        "cmap": "YlGnBu",
-        "levels": [
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8,
-            9,
-            10,
-            11,
-            12
-        ],
-        "ymax": 1.0,
-        "ymin": 0.0
-    },
-    "feature_init": {
-        "cmap": "Blues",
-        "levels": [
-            0.5,
-            1
-        ],
-        "ymax": 1.0,
-        "ymin": 0.0
-    },
+  "feature_id": {
+    "cmap": "viridis",
+    "max": 4000,
+    "min": 1,
+    "ymax": 1.0,
+    "ymin": 0.0
+  },
+  "feature_init": {
+    "cmap": "Blues",
+    "levels": [
+      0.5,
+      1
+    ],
+    "ymax": 1.0,
+    "ymin": 0.0
+  },
+  "feature_lifetime": {
+    "cmap": "YlGnBu",
+    "max": 150,
+    "min": 1,
+    "ymax": 1.0,
+    "ymin": 0.0
+  },
   "fog_fraction_at_screen_level": {
     "cmap": "viridis",
     "max": 1,
@@ -601,6 +580,26 @@
     "cmap": "bwr",
     "max": 1e-05,
     "min": -1e-05
+  },
+  "precipitation_flux": {
+    "cmap": "cividis",
+    "levels": [
+      0,
+      0.125,
+      0.25,
+      0.5,
+      1,
+      2,
+      4,
+      8,
+      16,
+      32,
+      64,
+      128,
+      256
+    ],
+    "ymax": 1.0,
+    "ymin": 0.0
   },
   "radar_reflectivity_at_1km_above_the_surface": {
     "cmap": "cubehelix_r",
