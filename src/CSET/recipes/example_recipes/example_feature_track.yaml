@@ -1,5 +1,5 @@
 category: Quick Look
-title: Example running cell tracking and plotting spatial plots
+title: Precipitation flux feature lifetime spatial plot
 description: |
   Uses the feature.track operator to identify and track features in a cube with "time" series coordinate, 
   and then plots the lifetime of the identified features as a spatial plot. 
