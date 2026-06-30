@@ -556,7 +556,7 @@ def _rebuild_ugrid_meta_firstfix(cube):
     meta = UGRID_VAR_LOOKUP.get(var_key)
 
     if meta is None:
-        return cube
+        return
     else:
         # If there is a number in cube name that can be split.
         if pressure_hpa is not None:
