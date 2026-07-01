@@ -158,5 +158,5 @@ def test_vector_wind_zero_wind():
     v = _make_cube([[0]])
 
     _, direction = wind.calculate_vector_wind(u, v)
-    # direction is undefined, but your formula gives 180deg
+    # Direction is undefined, but your formula gives 180 deg.
     assert np.isfinite(direction.data)
