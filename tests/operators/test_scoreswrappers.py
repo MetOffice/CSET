@@ -87,6 +87,27 @@ def test_scores_mae(cube: iris.cube.Cube):
     assert mae_cube.long_name == "MAE_of_air_temperature"
 
 
+def test_scores_metrics_mae(cube: iris.cube.Cube):
+    """Test taking the mae between two cubes using the metric selector."""
+    # Data preparation.
+    other_cube = cube.copy()
+    del other_cube.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([cube, other_cube])
+
+    # Take difference.
+    mae_cube = scoreswrappers.scores_metrics(
+        cubes,
+        preserved_coordinates=["time", "grid_latitude", "grid_longitude"],
+        scores_method="MAE",
+    )
+
+    # As both cubes use the same data, check the mae is zero.
+    assert isinstance(mae_cube, iris.cube.Cube)
+    assert np.allclose(mae_cube.data, np.zeros_like(mae_cube.data), atol=1e-9)
+    assert mae_cube.standard_name is None
+    assert mae_cube.long_name == "MAE_of_air_temperature"
+
+
 def test_scores_rmse(cube: iris.cube.Cube):
     """Test taking the rmse between two cubes."""
     # Data preparation.
