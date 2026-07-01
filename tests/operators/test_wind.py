@@ -106,7 +106,7 @@ def test_vector_wind():
     # speed
     expected_speed = np.hypot(u.data, v.data)
     assert np.allclose(speed.data, expected_speed)
-    # direction
+    # Direction.
     expected_direction = (np.degrees(np.arctan2(-u.data, -v.data)) + 360) % 360
     assert np.allclose(direction.data, expected_direction)
 
