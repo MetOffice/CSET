@@ -564,33 +564,34 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+    # Multi-variable spatial plotting
     if conf.SPATIAL_MULTI_VARIABLE:
         for model, method in itertools.product(models, conf.SPATIAL_MULTI_FIELD_METHOD):
-            for index, _ in enumerate(conf.MULTI_BASE_FIELD):
+            # Loop over all potential variable combinations, using zip to ensure inputs for all plots requested.
+            for base, overlay, mask_condition, mask_value, contour in zip(
+                conf.MULTI_BASE_FIELDS,
+                conf.MULTI_OVERLAY_FIELDS,
+                conf.MULTI_OVERLAY_MASK_CONDITIONS,
+                conf.MULTI_OVERLAY_MASK_VALUES,
+                conf.MULTI_CONTOUR_FIELDS,
+                strict=True,
+            ):
                 # Set recipe by selected input variable combinations
                 multi_recipe = "multi_surface_spatial_plot_sequence.yaml"
-                if (
-                    not conf.MULTI_CONTOUR_FIELD[index]
-                    or conf.MULTI_CONTOUR_FIELD[index].lower() == "none"
-                ):
+                if not contour or contour.lower() == "none":
                     multi_recipe = "multi_overlay_spatial_plot_sequence.yaml"
-                if (
-                    not conf.MULTI_OVERLAY_FIELD[index]
-                    or conf.MULTI_OVERLAY_FIELD[index].lower() == "none"
-                ):
+                if not overlay or overlay.lower() == "none":
                     multi_recipe = "multi_contour_spatial_plot_sequence.yaml"
 
                 # Multi-variable spatial plotting - set same inputs for all recipes.
                 yield RawRecipe(
                     recipe=multi_recipe,
                     variables={
-                        "VARNAME_BASE": conf.MULTI_BASE_FIELD[index],
-                        "VARNAME_OVER": conf.MULTI_OVERLAY_FIELD[index],
-                        "OVERLAY_MASK_CONDITION": conf.MULTI_OVERLAY_MASK_CONDITION[
-                            index
-                        ],
-                        "OVERLAY_MASK_VALUE": conf.MULTI_OVERLAY_MASK_VALUE[index],
-                        "VARNAME_CONTOUR": conf.MULTI_CONTOUR_FIELD[index],
+                        "VARNAME_BASE": base,
+                        "VARNAME_OVER": overlay,
+                        "OVERLAY_MASK_CONDITION": mask_condition,
+                        "OVERLAY_MASK_VALUE": mask_value,
+                        "VARNAME_CONTOUR": contour,
                         "MODEL_NAME": model["name"],
                         "METHOD": method,
                         "SUBAREA_TYPE": conf.SUBAREA_TYPE
