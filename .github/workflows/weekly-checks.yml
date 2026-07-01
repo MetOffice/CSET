@@ -10,6 +10,7 @@ permissions: {}
 
 jobs:
   check-documentation-hyperlinks:
+    if: "github.repository == 'MetOffice/CSET'"  # Skip on forks.
     name: Check documentation hyperlinks
     runs-on: ubuntu-latest
     # Give plenty of time as link checking third-party sites might be slow.
@@ -22,35 +23,28 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Cache conda environment
-        id: conda-env-cache
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae
+      - name: Setup conda environment
+        uses: mamba-org/setup-micromamba@d7c9bd84e824b79d2af72a2d4196c7f4300d3476
         with:
-          key: conda|${{runner.os}}-${{runner.arch}}|${{hashFiles('requirements/locks/latest')}}
-          path: |
-            ~/conda-env
-            ~/.local/share/cartopy
+          environment-name: cset-dev
+          environment-file: requirements/locks/latest
+          cache-environment: true
+          init-shell: "none"
 
-      - name: Create conda environment
-        if: steps.conda-env-cache.outputs.cache-hit != 'true'
-        run: |
-          # Check cache hasn't pulled a partial key match.
-          test ! -e "${HOME}/conda-env"
-          conda create --prefix="${HOME}/conda-env" --file=requirements/locks/latest
-
-      - name: Add conda environment to PATH
-        run: echo "${HOME}/conda-env/bin" >> $GITHUB_PATH
-
-      - name: Install package so it can be imported during docs generation
+      - name: Install local package
+        shell: micromamba-shell {0}
         run: pip install --no-deps .
 
       - name: Build documentation with Sphinx
+        shell: micromamba-shell {0}
         run: sphinx-build -b html --color "docs/source" "docs/build/html"
 
       - name: Check for broken hyperlinks
+        shell: micromamba-shell {0}
         run: sphinx-build -b linkcheck --color -W --keep-going "docs/source" "docs/build/linkcheck"
 
   full-tests:
+    if: "github.repository == 'MetOffice/CSET'"  # Skip on forks.
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -65,31 +59,26 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Cache conda environment
-        id: conda-env-cache
+      - name: Setup conda environment
+        uses: mamba-org/setup-micromamba@d7c9bd84e824b79d2af72a2d4196c7f4300d3476
+        with:
+          environment-name: cset-dev
+          environment-file: requirements/locks/${{ matrix.py-ver }}-lock-linux-64.txt
+          cache-environment: true
+          init-shell: "none"
+
+      - name: Cache downloaded cartopy shapefiles
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae
         with:
-          key: conda|${{runner.os}}-${{runner.arch}}|${{ hashFiles(format('requirements/locks/{0}-lock-linux-64.txt', matrix.py-ver)) }}
-          path: |
-            ~/conda-env
-            ~/.local/share/cartopy
-
-      - name: Create conda environment
-        if: steps.conda-env-cache.outputs.cache-hit != 'true'
-        env:
-          py_ver: ${{ matrix.py-ver }}
-        run: |
-          # Check cache hasn't pulled a partial key match.
-          test ! -e "${HOME}/conda-env"
-          conda create --prefix="${HOME}/conda-env" --file=requirements/locks/${py_ver}-lock-linux-64.txt
-
-      - name: Add conda environment to PATH
-        run: echo "${HOME}/conda-env/bin" >> $GITHUB_PATH
+          key: cartopy-shapefiles
+          path: ~/.local/share/cartopy
 
       - name: Install local package
+        shell: micromamba-shell {0}
         run: pip install --no-deps .
 
       - name: Run full test suite
+        shell: micromamba-shell {0}
         env:
           PY_COLORS: "1"
         run: make test-full
