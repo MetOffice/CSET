@@ -77,7 +77,7 @@ def test_convert_to_beaufort_scale_units(xwind):
 def _make_cube(data, units="m s-1"):
     """Make a tiny u,v cube from data."""
     data = np.asarray(data)
-    # Your operator expects y/x coords, so keep tests 2D (lat, lon)
+    # Your operator expects y/x coords, so keep tests 2D (lat, lon).
     if data.ndim != 2:
         raise ValueError(
             f"Expected 2D (lat, lon) data for test cube, got shape {data.shape}."
