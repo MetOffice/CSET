@@ -125,6 +125,27 @@ def test_scores_rmse(cube: iris.cube.Cube):
     assert rmse_cube.long_name == "RMSE_of_air_temperature"
 
 
+def test_scores_metrics_rmse(cube: iris.cube.Cube):
+    """Test taking the rmse between two cubes."""
+    # Data preparation.
+    other_cube = cube.copy()
+    del other_cube.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([cube, other_cube])
+
+    # Take difference.
+    rmse_cube = scoreswrappers.scores_metrics(
+        cubes,
+        preserved_coordinates=["time", "grid_latitude", "grid_longitude"],
+        scores_method="RMSE",
+    )
+
+    # As both cubes use the same data, check the rmse is zero.
+    assert isinstance(rmse_cube, iris.cube.Cube)
+    assert np.allclose(rmse_cube.data, np.zeros_like(rmse_cube.data), atol=1e-9)
+    assert rmse_cube.standard_name is None
+    assert rmse_cube.long_name == "RMSE_of_air_temperature"
+
+
 def test_scores_rmse_nonzero(cube: iris.cube.Cube):
     """Test taking the rmse between two different cubes."""
     # Data preparation.
