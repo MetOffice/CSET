@@ -127,7 +127,7 @@ def test_vector_wind_cubelist():
     u_list = iris.cube.CubeList([_make_cube([[1, 1]]), _make_cube([[2, 2]])])
     v_list = iris.cube.CubeList([_make_cube([[0, 0]]), _make_cube([[0, 0]])])
     out = wind.calculate_vector_wind(u_list, v_list)
-    # 2 input pairs → 4 output cubes
+    # 2 input pairs → 4 output cubes.
     assert len(out) == 4
 
 
