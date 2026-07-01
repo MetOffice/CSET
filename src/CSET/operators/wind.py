@@ -87,7 +87,7 @@ def calculate_vector_wind(
             )
             u_cube = regrid_onto_cube(u_cube, v_cube, method="Linear")
 
-        # --- optional: sanity check units ---
+        #  Check units.
         if u_cube.units != v_cube.units:
             raise ValueError("U and V cubes must have the same units")
 
