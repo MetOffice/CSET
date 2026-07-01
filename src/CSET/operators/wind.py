@@ -53,11 +53,11 @@ def calculate_vector_wind(
 
     Notes
     -----
-    - Pairs U and V cubes using zip(..., strict=True)
-    - Regrids U onto V grid if coordinate shapes differ
-    - Speed = np.hypot(u, v)
+    - Pairs U and V cubes using zip(..., strict=True).
+    - Regrids U onto V grid if coordinate shapes differ.
+    - Speed = np.hypot(u, v).
     - Direction is meteorological "from" direction:
-        (atan2(-u, -v) + 360) % 360
+        (atan2(-u, -v) + 360) % 360.
     """
     out = iris.cube.CubeList()
 
