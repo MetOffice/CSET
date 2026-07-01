@@ -91,7 +91,7 @@ def calculate_vector_wind(
         if u_cube.units != v_cube.units:
             raise ValueError("U and V cubes must have the same units")
 
-        # --- compute vector wind ---
+        # Compute vector wind.
         u_data = u_cube.data
         v_data = v_cube.data
 
