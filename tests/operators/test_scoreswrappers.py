@@ -70,6 +70,30 @@ def test_scores_additive_bias(cube: iris.cube.Cube):
     assert additive_bias_cube.long_name == "additive_bias_of_air_temperature"
 
 
+def test_scores_metrics_additive_bias(cube: iris.cube.Cube):
+    """Test taking the additive bias between two cubes."""
+    # Data preparation.
+    other_cube = cube.copy()
+    del other_cube.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([cube, other_cube])
+
+    # Take difference.
+    additive_bias_cube = scoreswrappers.scores_metrics(
+        cubes,
+        preserved_coordinates=["time", "grid_latitude", "grid_longitude"],
+        scores_method="additive_bias",
+    )
+    additive_bias_cube = scoreswrappers.scores_additive_bias(cubes)
+
+    # As both cubes use the same data, check the additive bias is zero.
+    assert isinstance(additive_bias_cube, iris.cube.Cube)
+    assert np.allclose(
+        additive_bias_cube.data, np.zeros_like(additive_bias_cube.data), atol=1e-9
+    )
+    assert additive_bias_cube.standard_name is None
+    assert additive_bias_cube.long_name == "additive_bias_of_air_temperature"
+
+
 def test_scores_mae(cube: iris.cube.Cube):
     """Test taking the mae between two cubes."""
     # Data preparation.
