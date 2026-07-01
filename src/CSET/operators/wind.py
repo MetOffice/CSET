@@ -83,7 +83,7 @@ def calculate_vector_wind(
             or u_cube.coord(u_lon).shape != v_cube.coord(v_lon).shape
         ):
             logging.debug(
-                "Regridding U cube onto V cube grid for vector wind calculation"
+                "Regridding U cube onto V cube grid for vector wind calculation."
             )
             u_cube = regrid_onto_cube(u_cube, v_cube, method="Linear")
 
