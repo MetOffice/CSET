@@ -52,7 +52,7 @@ def test_scores_correlation_pearsonr(cube: iris.cube.Cube):
 
 
 def test_scores_metrics_correlation_pearsonr(cube: iris.cube.Cube):
-    """Test taking the Pearson correlation between two cubes."""
+    """Test taking the Pearson correlation between two cubes using the metric selector."""
     # Data preparation.
     other_cube = cube.copy()
     del other_cube.attributes["cset_comparison_base"]
@@ -99,7 +99,7 @@ def test_scores_additive_bias(cube: iris.cube.Cube):
 
 
 def test_scores_metrics_additive_bias(cube: iris.cube.Cube):
-    """Test taking the additive bias between two cubes."""
+    """Test taking the additive bias between two cubes using the metric selector."""
     # Data preparation.
     other_cube = cube.copy()
     del other_cube.attributes["cset_comparison_base"]
@@ -178,7 +178,7 @@ def test_scores_rmse(cube: iris.cube.Cube):
 
 
 def test_scores_metrics_rmse(cube: iris.cube.Cube):
-    """Test taking the rmse between two cubes."""
+    """Test taking the rmse between two cubes using the metric selector."""
     # Data preparation.
     other_cube = cube.copy()
     del other_cube.attributes["cset_comparison_base"]
@@ -196,6 +196,27 @@ def test_scores_metrics_rmse(cube: iris.cube.Cube):
     assert np.allclose(rmse_cube.data, np.zeros_like(rmse_cube.data), atol=1e-9)
     assert rmse_cube.standard_name is None
     assert rmse_cube.long_name == "RMSE_of_air_temperature"
+
+
+def test_scores_metrics_unknown(cube: iris.cube.Cube):
+    """Test calling scores_metrics with an unknown metric."""
+    # Data preparation.
+    other_cube = cube.copy()
+    del other_cube.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([cube, other_cube])
+
+    # Create an empty cubelist.
+    cubes_empty = iris.cube.CubeList([])
+
+    # Call the metric selector.
+    unknown_cube = scoreswrappers.scores_metrics(
+        cubes,
+        preserved_coordinates=["time", "grid_latitude", "grid_longitude"],
+        scores_method="Unknown",
+    )
+
+    # As the metric is unknown, the selector should return an empty cubelist.
+    assert unknown_cube == cubes_empty
 
 
 def test_scores_rmse_nonzero(cube: iris.cube.Cube):
