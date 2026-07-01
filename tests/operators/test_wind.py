@@ -80,7 +80,7 @@ def _make_cube(data, units="m s-1"):
     # Your operator expects y/x coords, so keep tests 2D (lat, lon)
     if data.ndim != 2:
         raise ValueError(
-            f"Expected 2D (lat, lon) data for test cube, got shape {data.shape}"
+            f"Expected 2D (lat, lon) data for test cube, got shape {data.shape}."
         )
 
     ny, nx = data.shape
