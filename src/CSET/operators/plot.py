@@ -1890,8 +1890,8 @@ def spatial_pcolormesh_plot(
 
 def spatial_multi_pcolormesh_plot(
     cube: iris.cube.Cube,
-    overlay_cube: iris.cube.Cube,
-    contour_cube: iris.cube.Cube,
+    overlay_cube: iris.cube.Cube | None = None,
+    contour_cube: iris.cube.Cube | None = None,
     filename: str = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
@@ -1919,14 +1919,15 @@ def spatial_multi_pcolormesh_plot(
         Iris cube of the data to plot. It should have two spatial dimensions,
         such as lat and lon, and may also have a another two dimension to be
         plotted sequentially and/or as postage stamp plots.
-    overlay_cube: Cube
+    overlay_cube: Cube, optional
         Iris cube of the data to plot as an overlay on top of basis cube. It should have two spatial dimensions,
         such as lat and lon, and may also have a another two dimension to be
         plotted sequentially and/or as postage stamp plots. This is likely to be a masked cube in order not to hide the underlying basis cube.
-    contour_cube: Cube
+        If not provided, output plot generated without overlay cube.
+    contour_cube: Cube, optional
         Iris cube of the data to plot as a contour overlay on top of basis cube and overlay_cube. It should have two spatial dimensions,
         such as lat and lon, and may also have a another two dimension to be
-        plotted sequentially and/or as postage stamp plots.
+        plotted sequentially and/or as postage stamp plots. If not provided, output plot generated without contours.
     filename: str, optional
         Name of the plot to write, used as a prefix for plot sequences. Defaults
         to the recipe name.
