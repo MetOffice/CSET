@@ -8,6 +8,5 @@ Aim to have all relevant checks ticked off before merging. See the [developer's 
 - [ ] New code has tests, and affected old tests have been updated.
 - [ ] All tests and CI checks pass.
 - [ ] Ensured the pull request title is descriptive.
-- [ ] Ensure `rose-suite.conf.example` has been updated if new diagnostic added.
 - [ ] Attributed any Generative AI, such as GitHub Copilot, used in this PR.
 - [ ] Marked the PR as ready to review.
