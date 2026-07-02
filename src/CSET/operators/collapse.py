@@ -28,10 +28,7 @@ import iris.util
 import numpy as np
 
 from CSET._common import iter_maybe
-from CSET.operators.aggregate import (
-    add_hour_coordinate,
-    rolling_window_time_aggregation,
-)
+from CSET.operators.aggregate import add_hour_coordinate
 
 
 def collapse(
@@ -39,7 +36,6 @@ def collapse(
     coordinate: str | list[str],
     method: str,
     additional_percent: float = None,
-    window_hours: float = None,
     **kwargs,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Collapse coordinate(s) of a single cube or of every cube in a cube list.
@@ -58,14 +54,10 @@ def collapse(
         be given.
     method: str
         Type of collapse i.e. method: 'MEAN', 'MAX', 'MIN', 'MEDIAN',
-        'PERCENTILE', 'ROLLING_MEAN' getattr creates iris.analysis.MEAN, etc.
-        For PERCENTILE YAML file requires i.e. method: 'PERCENTILE' additional_percent: 90.
-        For ROLLING_MEAN YAML file requires method: 'ROLLING_MEAN' and window_hours specified
-        or set in gui through $WINDOW_LEN_SURFACE
+        'PERCENTILE' getattr creates iris.analysis.MEAN, etc. For PERCENTILE YAML
+        file requires i.e. method: 'PERCENTILE' additional_percent: 90.
     additional_percent: float, optional
         Required for the PERCENTILE method. This is a number between 0 and 100.
-    window_hours: float
-        number of hours used for rolling mean (ROLLING_MEAN)
 
     Returns
     -------
@@ -87,12 +79,30 @@ def collapse(
         logging.debug(
             "Extracting common time points as multiple model inputs detected."
         )
-        for cube in cubes:
-            cube.coord("forecast_reference_time").bounds = None
-            cube.coord("forecast_period").bounds = None
-        cubes = cubes.extract_overlapping(
-            ["forecast_reference_time", "forecast_period"]
+        is_power_spectrum = any(
+            cubes[0].coords(coord)
+            for coord in ["frequency", "physical_wavenumber", "wavelength"]
         )
+        if is_power_spectrum:
+            for cube in cubes:
+                cube.coord("time").bounds = None
+            cubes = cubes.extract_overlapping(["time"])
+
+            for cube in cubes:
+                t = cube.coord("time")
+                t.points = t.points.astype(np.float64)
+
+                if t.bounds is not None:
+                    t.bounds = t.bounds.astype(np.float64)
+
+        else:
+            for cube in cubes:
+                cube.coord("forecast_reference_time").bounds = None
+                cube.coord("forecast_period").bounds = None
+            cubes = cubes.extract_overlapping(
+                ["forecast_reference_time", "forecast_period"]
+            )
+
         if len(cubes) == 0:
             raise ValueError("No overlapping times detected in input cubes.")
 
@@ -104,6 +114,7 @@ def collapse(
         warnings.filterwarnings(
             "ignore", "Collapsing spatial coordinate.+without weighting", UserWarning
         )
+
         for cube in iter_maybe(cubes):
             # Apply a mask to check for invalid data, this will allow NaNs to
             # be ignored.
@@ -120,34 +131,11 @@ def collapse(
                 cube_max = cube.collapsed(coordinate, iris.analysis.MAX)
                 cube_min = cube.collapsed(coordinate, iris.analysis.MIN)
                 collapsed_cubes.append(cube_max - cube_min)
-            elif method == "ROLLING_MEAN":
-                # Rolling mean over window length based on specified window_hours
-                if window_hours is None:
-                    raise ValueError("ROLLING_MEAN requires kwarg: window_hours=<int>")
-                # Determine number of steps based on time spacing
-                time_coord = cube.coord("time")
-                points = time_coord.units.num2date(time_coord.points)
-                if len(points) < 2:
-                    raise ValueError("Not enough time points for rolling window.")
-                # Time step in hours:
-                dt_hours = (points[1] - points[0]).total_seconds() / 3600.0
-                if dt_hours <= 0:
-                    raise ValueError("Time coordinate must be increasing.")
-                window_len = int(round(window_hours / dt_hours))
-                if window_len < 1:
-                    raise ValueError(
-                        f"Window of {window_hours} hours is too small for timestep {dt_hours}."
-                    )
-                # Create rolling window along time
-                rolled = rolling_window_time_aggregation(
-                    cube, "MEAN", window=window_len
-                )
-                # Collapse over the window dimension
-                collapsed_cubes.append(rolled)
             else:
                 collapsed_cubes.append(
                     cube.collapsed(coordinate, getattr(iris.analysis, method))
                 )
+
     if len(collapsed_cubes) == 1:
         return collapsed_cubes[0]
     else:

@@ -111,10 +111,15 @@ def load(conf: Config):
                 variables={
                     "VARNAME": field,
                     "MODEL_NAME": [model["name"] for model in models],
+                    "SEQUENCE": "time"
+                    if conf.SPECTRUM_SURFACE_FIELD_SEQUENCE
+                    else "realization",
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                    "SPECTRUM_SURFACE_FIELD_SEQUENCE": conf.SPECTRUM_SURFACE_FIELD_SEQUENCE,
                     "WINDOW_LEN_SURFACE": conf.WINDOW_LEN_SURFACE
                     if atype == "rolling"
                     else None,
@@ -134,8 +139,13 @@ def load(conf: Config):
                 "LEVELTYPE": "pressure",
                 "LEVEL": [plevel],
                 "MODEL_NAME": [model["name"] for model in models],
+                "SEQUENCE": "time"
+                if conf.SPECTRUM_PLEVEL_FIELD_SEQUENCE
+                else "realization",
                 "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                 "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+                "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                "SPECTRUM_PLEVEL_FIELD_SEQUENCE": conf.SPECTRUM_PLEVEL_FIELD_SEQUENCE,
             }
 
             # Add WINDOW_LEN_PLEVEL *only if* rolling
@@ -162,8 +172,13 @@ def load(conf: Config):
                 "LEVELTYPE": "model_level_number",
                 "LEVEL": [mlevel],
                 "MODEL_NAME": [model["name"] for model in models],
+                "SEQUENCE": "time"
+                if conf.SPECTRUM_MLEVEL_FIELD_SEQUENCE
+                else "realization",
                 "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                 "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+                "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                "SPECTRUM_MLEVEL_FIELD_SEQUENCE": conf.SPECTRUM_MLEVEL_FIELD_SEQUENCE,
             }
 
             # Add WINDOW_LEN_MLEVEL *only if* rolling
