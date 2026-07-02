@@ -1133,7 +1133,7 @@ def south_polar_cube() -> iris.cube.Cube:
 
 @pytest.fixture()
 def precalc_direction_shear_read_only():
-    """Get precalculated directional shear across maul 3D data. It is NOT safe to modify."""
+    """Get precalculated directional shear across maul for 3D data. It is NOT safe to modify."""
     return read.read_cube("tests/test_data/precipitation/precalc_dir_shear.nc")
 
 
@@ -1145,7 +1145,7 @@ def precalc_direction_shear(precalc_direction_shear_read_only):
 
 @pytest.fixture()
 def precalc_direction_shear_4d_time_read_only():
-    """Get precalculated directional shear across maul 4D data varying time. It is NOT safe to modify."""
+    """Get precalculated directional shear across maul for 4D data varying time. It is NOT safe to modify."""
     return read.read_cube("tests/test_data/precipitation/precalc_dir_shear_time.nc")
 
 
@@ -1157,7 +1157,7 @@ def precalc_direction_shear_4d_time(precalc_direction_shear_4d_time_read_only):
 
 @pytest.fixture()
 def precalc_direction_shear_4d_realization_read_only():
-    """Get precalculated directional shear across maul 4D data varying realization. It is NOT safe to modify."""
+    """Get precalculated directional shear across maul for 4D data varying realization. It is NOT safe to modify."""
     return read.read_cube(
         "tests/test_data/precipitation/precalc_dir_shear_realization.nc"
     )
@@ -1173,7 +1173,7 @@ def precalc_direction_shear_4d_realization(
 
 @pytest.fixture()
 def precalc_direction_shear_5d_read_only():
-    """Get precalculated directional_shear_across maul 5D data. It is NOT safe to modify."""
+    """Get precalculated directional_shear_across maul for 5D data. It is NOT safe to modify."""
     return read.read_cube("tests/test_data/precipitation/precalc_dir_shear_5d.nc")
 
 
