@@ -29,7 +29,7 @@ def MAUL_properties(
     cubes: iris.cube.Cube | iris.cube.CubeList,
     u_cubes: iris.cube.Cube | iris.cube.CubeList,
     v_cubes: iris.cube.Cube | iris.cube.CubeList,
-    output: Literal["number", "base", "depth", "wind_below"],
+    output: Literal["number", "base", "depth", "wind_below", "directional_shear"],
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Identify properties of Moist Absolutely Unstable Layers.
 
@@ -42,11 +42,12 @@ def MAUL_properties(
       A cube or cubelist of the wind in the u direction.
     v_cubes: iris.cube.Cube | iris.cube.CubeList
       A cube or cubelist of the wind in the v direction.
-    output: Literal["number", "base", "depth", "wind_below"]
+    output: Literal["number", "base", "depth", "wind_below", "directional_shear"]
       The output is the desired property required. It can be
       number, base, depth for the number of MAULs, base height
-      of the deepest MAUL, the depth of the deepest MAUL, or the
-      average windspeed below the MAUL, respectively.
+      of the deepest MAUL, the depth of the deepest MAUL, the
+      average windspeed below the MAUL, or the difference in
+      wind direction across the MAUL, respectively.
 
 
     Returns
@@ -58,7 +59,7 @@ def MAUL_properties(
     ------
     ValueError: Data contains values that are not 0 or 1, only masked data should be used.
         This error is raised when a mask field is not provided to the operator.
-    ValueError: Unexpected value for output. Expected number, base, depth or wind_below. Got {output}.
+    ValueError: Unexpected value for output. Expected number, base, depth, wind_below or directional_shear. Got {output}.
         This error is raised when the wrong output string is specified.
 
     Notes
@@ -70,22 +71,32 @@ def MAUL_properties(
     processing to identify continuous layers (1s), and labels them.
     It identifies the number of layers by identifying the maximum label number,
     and then finds the top and base of each layer. It will also find the average
-    windspeed below the MAUL for indications of presence of low-level jets.
+    windspeed below the MAUL for indications of presence of low-level jets. The
+    change in wind direction across the MAUL (top - base) is also calculated.
     Depending on the output desired it will output information for the deepest MAUL.
 
-    When a MAUL is not present the output will be set to NaN for depth and base.
-    If number of MAULs is the desired output it will be set to zero.
+    When a MAUL is not present the output will be set to NaN for depth, base, wind below
+    and directional shear. Should the MAUL start at the surface the wind below will also
+    be set to NaN. If number of MAULs is the desired output it will be set to zero.
 
     The MAUL diagnostic is applicable anywhere in the globe and across all scales.
+
+    Examples
+    --------
+    >>> No_MAULs = precipitation.MAUL_properties(maul_mask, u, v, output="number")
+    >>> MAUL_base = precipitation.MAUL_properties(maul_mask, u, v, output="base")
+    >>> MAUL_depth = precipitation.MAUL_properties(maul_mask, u, v, output="depth")
+    >>> Ave_windspeed_below_MAUL = precipitation.MAUL_properties(maul_mask, u, v, output="wind_below")
+    >>> Direction_shear_across_MAUL = precipitation.MAUL_properties(maul_mask, u, v, output="directional_shear")
     """
     num_MAULs = iris.cube.CubeList([])
     maul_d = iris.cube.CubeList([])
     maul_b = iris.cube.CubeList([])
     windspeed_below_MAUL = iris.cube.CubeList([])
-
-    if output not in ("number", "base", "depth", "wind_below"):
+    directional_shear_across_MAUL = iris.cube.CubeList([])
+    if output not in ("number", "base", "depth", "wind_below", "directional_shear"):
         raise ValueError(
-            f"""Unexpected value for output. Expected number, base, depth or wind_below. Got {output}."""
+            f"""Unexpected value for output. Expected number, base, depth, wind_below or directional_shear. Got {output}."""
         )
 
     for cube, u, v in zip(
@@ -103,11 +114,16 @@ def MAUL_properties(
         maul_depth = number_of_MAULs.copy()
         maul_base = number_of_MAULs.copy()
         wind_below_maul = number_of_MAULs.copy()
+        directional_shear = number_of_MAULs.copy()
         # Calculate windspeed and direction.
         windspeed_and_direction = calculate_vector_wind(u, v)
         # Select windspeed, hard coded as always in same position from output
         # of calculate_vector_wind.
         windspeed = windspeed_and_direction[0]
+        # As above but for wind direction.
+        direction = windspeed_and_direction[1]
+        # Ensure direction in range +/- 180 for difference calculations.
+        direction.data[direction.data > 180.0] -= 360.0
         # Loop over realization.
         for mem_number, member in enumerate(cube.slices_over("realization")):
             # Loop over time.
@@ -147,7 +163,7 @@ def MAUL_properties(
                             )
                         else:
                             number_of_MAULs.data[lat_point, lon_point] = np.max(labels)
-                        if output not in ("number", "wind_below"):
+                        if output not in ("number", "wind_below", "directional_shear"):
                             # Find the base, top, and depth for each object
                             # using cube metadata.
                             maul_start = []
@@ -298,8 +314,12 @@ def MAUL_properties(
                                     np.where(maul_dep == np.max(maul_dep))[0][0]
                                 )
                                 maul_base_value = maul_start[index]
+                                maul_top_value = maul_end[index]
                                 height_index = np.abs(
                                     lon.coord("level_height").points - maul_base_value
+                                ).argmin()
+                                top_index = np.abs(
+                                    lon.coord("level_height").points - maul_top_value
                                 ).argmin()
                                 # As with number the code checks for whether
                                 # there are multiple realization and/or time
@@ -323,6 +343,26 @@ def MAUL_properties(
                                             lon_point,
                                         ].data
                                     )
+                                    # Store and calculate the directional wind shear (difference)
+                                    # across the deepest MAUL.
+                                    directional_shear.data[
+                                        mem_number, time_point, lat_point, lon_point
+                                    ] = (
+                                        direction[
+                                            mem_number,
+                                            time_point,
+                                            top_index,
+                                            lat_point,
+                                            lon_point,
+                                        ].data
+                                        - direction[
+                                            mem_number,
+                                            time_point,
+                                            height_index,
+                                            lat_point,
+                                            lon_point,
+                                        ].data
+                                    )
                                 elif (
                                     len(number_of_MAULs.coord("realization").points)
                                     != 1
@@ -334,6 +374,19 @@ def MAUL_properties(
                                         windspeed[
                                             mem_number,
                                             0:height_index,
+                                            lat_point,
+                                            lon_point,
+                                        ].data
+                                    )
+                                    directional_shear.data[
+                                        mem_number, lat_point, lon_point
+                                    ] = (
+                                        direction[
+                                            mem_number, top_index, lat_point, lon_point
+                                        ].data
+                                        - direction[
+                                            mem_number,
+                                            height_index,
                                             lat_point,
                                             lon_point,
                                         ].data
@@ -353,6 +406,19 @@ def MAUL_properties(
                                             lon_point,
                                         ].data
                                     )
+                                    directional_shear.data[
+                                        time_point, lat_point, lon_point
+                                    ] = (
+                                        direction[
+                                            time_point, top_index, lat_point, lon_point
+                                        ].data
+                                        - direction[
+                                            time_point,
+                                            height_index,
+                                            lat_point,
+                                            lon_point,
+                                        ].data
+                                    )
                                 else:
                                     wind_below_maul.data[lat_point, lon_point] = (
                                         np.mean(
@@ -361,6 +427,13 @@ def MAUL_properties(
                                             ].data
                                         )
                                     )
+                                    directional_shear.data[lat_point, lon_point] = (
+                                        direction[top_index, lat_point, lon_point].data
+                                        - direction[
+                                            height_index, lat_point, lon_point
+                                        ].data
+                                    )
+
                             # Here a ValueError is raised if a MAUL is not found, or an
                             # IndexError if the MAUL starts at the surface and so there
                             # is no wind below the MAUL however these are a valid answers,
@@ -376,12 +449,18 @@ def MAUL_properties(
                                     wind_below_maul.data[
                                         mem_number, time_point, lat_point, lon_point
                                     ] = np.nan
+                                    directional_shear.data[
+                                        mem_number, time_point, lat_point, lon_point
+                                    ] = np.nan
                                 elif (
                                     len(number_of_MAULs.coord("realization").points)
                                     != 1
                                     and len(number_of_MAULs.coord("time").points) == 1
                                 ):
                                     wind_below_maul.data[
+                                        mem_number, lat_point, lon_point
+                                    ] = np.nan
+                                    directional_shear.data[
                                         mem_number, lat_point, lon_point
                                     ] = np.nan
                                 elif (
@@ -392,8 +471,18 @@ def MAUL_properties(
                                     wind_below_maul.data[
                                         time_point, lat_point, lon_point
                                     ] = np.nan
+                                    directional_shear.data[
+                                        time_point, lat_point, lon_point
+                                    ] = np.nan
                                 else:
                                     wind_below_maul.data[lat_point, lon_point] = np.nan
+                                    directional_shear.data[lat_point, lon_point] = (
+                                        np.nan
+                                    )
+
+        # Ensure directional shear differences are in range +/- 180 degrees.
+        directional_shear.data[directional_shear.data > 180.0] -= 360.0
+        directional_shear.data[directional_shear.data < -180.0] += 360.0
 
         # Units and renaming for number, depth and base (the other case).
         match output:
@@ -409,10 +498,14 @@ def MAUL_properties(
                 maul_base.units = "m"
                 maul_base.rename("MAUL_base_height")
                 maul_b.append(maul_base)
-            case _:
+            case "wind_below":
                 wind_below_maul.units = "m s^-1"
                 wind_below_maul.rename("windspeed_below_MAUL")
                 windspeed_below_MAUL.append(wind_below_maul)
+            case _:
+                directional_shear.units = "degrees"
+                directional_shear.rename("directional_shear_across_MAUL")
+                directional_shear_across_MAUL.append(directional_shear)
 
     # Output data.
     match output:
@@ -430,5 +523,9 @@ def MAUL_properties(
             return maul_b
         case "wind_below" if len(windspeed_below_MAUL) == 1:
             return windspeed_below_MAUL[0]
-        case _:
+        case "wind_below":
             return windspeed_below_MAUL
+        case "directional_shear" if len(directional_shear_across_MAUL) == 1:
+            return directional_shear_across_MAUL[0]
+        case _:
+            return directional_shear_across_MAUL

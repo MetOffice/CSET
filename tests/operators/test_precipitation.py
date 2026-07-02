@@ -26,7 +26,7 @@ def test_maul_properties_wrong_output(maul_mask, u_wind_maul, v_wind_maul):
     """Ensure fails if get unexpected output argument."""
     with pytest.raises(
         ValueError,
-        match="Unexpected value for output. Expected number, base, depth or wind_below. Got top.",
+        match="Unexpected value for output. Expected number, base, depth, wind_below or directional_shear. Got top.",
     ):
         precipitation.MAUL_properties(maul_mask, u_wind_maul, v_wind_maul, output="top")
 
@@ -450,6 +450,116 @@ def test_maul_properties_wind_below_5d(
             maul_mask_all, u_wind_maul_all, v_wind_maul_all, output="wind_below"
         ).data,
         precalc_wind_below_maul_5d.data,
+        rtol=1e-2,
+        atol=1e-6,
+        equal_nan=True,
+    )
+
+
+def test_maul_properties_direction_shear(
+    maul_mask, u_wind_maul, v_wind_maul, precalc_direction_shear
+):
+    """Ensure correct directional shear across maul."""
+    assert np.allclose(
+        precipitation.MAUL_properties(
+            maul_mask, u_wind_maul, v_wind_maul, output="directional_shear"
+        ).data,
+        precalc_direction_shear.data,
+        rtol=1e-2,
+        atol=1e-6,
+        equal_nan=True,
+    )
+
+
+def test_maul_properties_direction_shear_name(
+    maul_mask, u_wind_maul, v_wind_maul, precalc_direction_shear
+):
+    """Ensure correct directional shear across maul name."""
+    assert (
+        precipitation.MAUL_properties(
+            maul_mask, u_wind_maul, v_wind_maul, output="directional_shear"
+        ).name()
+        == "directional_shear_across_MAUL"
+    )
+
+
+def test_maul_properties_direction_shear_units(
+    maul_mask, u_wind_maul, v_wind_maul, precalc_direction_shear
+):
+    """Ensure correct directional shear across maul units."""
+    assert precipitation.MAUL_properties(
+        maul_mask, u_wind_maul, v_wind_maul, output="directional_shear"
+    ).units == cf_units.Unit("degrees")
+
+
+def test_maul_properties_direction_shear_cubelist(
+    maul_mask, u_wind_maul, v_wind_maul, precalc_direction_shear
+):
+    """Ensure correct directional shear across maul in cubelist."""
+    input_list = iris.cube.CubeList([maul_mask, maul_mask])
+    v_list = iris.cube.CubeList([v_wind_maul, v_wind_maul])
+    u_list = iris.cube.CubeList([u_wind_maul, u_wind_maul])
+    expected_list = precipitation.MAUL_properties(
+        input_list, u_list, v_list, output="directional_shear"
+    )
+    actual_list = iris.cube.CubeList([precalc_direction_shear, precalc_direction_shear])
+    for cube_a, cube_b in zip(expected_list, actual_list, strict=True):
+        assert np.allclose(
+            cube_a.data, cube_b.data, rtol=1e-2, atol=1e-6, equal_nan=True
+        )
+
+
+def test_maul_properties_direction_shear_4d_realization(
+    maul_mask_member,
+    u_wind_maul_member,
+    v_wind_maul_member,
+    precalc_direction_shear_4d_realization,
+):
+    """Ensure correct directional shear across MAUL generated for 4D field with varying realization."""
+    assert np.allclose(
+        precipitation.MAUL_properties(
+            maul_mask_member,
+            u_wind_maul_member,
+            v_wind_maul_member,
+            output="directional_shear",
+        ).data,
+        precalc_direction_shear_4d_realization.data,
+        rtol=1e-2,
+        atol=1e-6,
+        equal_nan=True,
+    )
+
+
+def test_maul_properties_direction_shear_4d_time(
+    maul_mask_time,
+    u_wind_maul_time,
+    v_wind_maul_time,
+    precalc_direction_shear_4d_time,
+):
+    """Ensure correct direction shear across MAUL generated for 4D field with varying time."""
+    assert np.allclose(
+        precipitation.MAUL_properties(
+            maul_mask_time,
+            u_wind_maul_time,
+            v_wind_maul_time,
+            output="directional_shear",
+        ).data,
+        precalc_direction_shear_4d_time.data,
+        rtol=1e-2,
+        atol=1e-6,
+        equal_nan=True,
+    )
+
+
+def test_maul_properties_direction_shear_5d(
+    maul_mask_all, u_wind_maul_all, v_wind_maul_all, precalc_direction_shear_5d
+):
+    """Ensure correct direction shear across MAUL generated for 5D field."""
+    assert np.allclose(
+        precipitation.MAUL_properties(
+            maul_mask_all, u_wind_maul_all, v_wind_maul_all, output="directional_shear"
+        ).data,
+        precalc_direction_shear_5d.data,
         rtol=1e-2,
         atol=1e-6,
         equal_nan=True,
