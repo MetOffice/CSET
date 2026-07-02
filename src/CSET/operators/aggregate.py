@@ -242,7 +242,7 @@ def add_hour_coordinate(
 
 
 def rolling_window_time_aggregation(
-    cubes: iris.cube.Cube | iris.cube.CubeList, method: str, window: int
+    cubes: iris.cube.Cube | iris.cube.CubeList, method: str, window_hours: int
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Aggregate a cube along the time dimension using a rolling window.
 
@@ -273,8 +273,28 @@ def rolling_window_time_aggregation(
     for cube in iter_maybe(cubes):
         # Use a rolling window in time to applied specified aggregation method
         # over a specified window length.
+        # Input window length in hours and convert to number of time points in
+        # the window.
+        # Add catches
+        if window_hours is None:
+            raise ValueError("ROLLING_MEAN requires kwarg: window_hours=<int>")
+        # Determine number of steps based on time spacing
+        time_coord = cube.coord("time")
+        points = time_coord.units.num2date(time_coord.points)
+        if len(points) < 2:
+            raise ValueError("Not enough time points for rolling window.")
+        # Time step in hours:
+        dt_hours = (points[1] - points[0]).total_seconds() / 3600.0
+        if dt_hours <= 0:
+            raise ValueError("Time coordinate must be increasing.")
+        window_len = int(round(window_hours / dt_hours))
+        if window_len < 1:
+            raise ValueError(
+                f"Window of {window_hours} hours is too small for timestep {dt_hours}."
+            )
+
         window_cube = cube.rolling_window(
-            "time", getattr(iris.analysis, method), window
+            "time", getattr(iris.analysis, method), window_len
         )
         new_cubelist.append(window_cube)
 

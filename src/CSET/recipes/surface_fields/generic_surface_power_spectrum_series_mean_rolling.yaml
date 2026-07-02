@@ -47,8 +47,8 @@ steps:
   - operator: power_spectrum.calculate_power_spectrum
 
   - operator: aggregate.rolling_window_time_aggregation
-    method: ROLLING_MEAN
-    window: $WINDOW_LEN_SURFACE
+    method: MEAN
+    window_hours: $WINDOW_LEN_SURFACE
 
   - operator: plot.plot_line_series
     series_coordinate: "physical_wavenumber"
