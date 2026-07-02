@@ -14,11 +14,104 @@
 
 """Operators to calculate various forms or properties of wind."""
 
+from __future__ import annotations
+
+import logging
+
 import iris
-import iris.cube
 import numpy as np
 
 from CSET._common import iter_maybe
+from CSET.operators._utils import get_cube_yxcoordname
+from CSET.operators.regrid import regrid_onto_cube
+
+
+def calculate_vector_wind(
+    u: iris.cube.Cube | iris.cube.CubeList,
+    v: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.CubeList:
+    """
+
+    Calculate wind speed and wind-from direction from U and V components.
+
+    Parameters
+    ----------
+    u : iris.cube.Cube or iris.cube.CubeList
+        Zonal (eastward) wind component(s). If a CubeList is provided,
+        it must contain one cube per model.
+
+    v : iris.cube.Cube or iris.cube.CubeList
+        Meridional (northward) wind component(s). Must correspond
+        one-to-one with `u`.
+
+    Returns
+    -------
+    iris.cube.CubeList
+        CubeList containing, for each (u, v) pair:
+        - wind_speed cube
+        - wind_direction cube
+
+    Notes
+    -----
+    - Pairs U and V cubes using zip(..., strict=True).
+    - Regrids U onto V grid if coordinate shapes differ.
+    - Speed = np.hypot(u, v).
+    - Direction is meteorological "from" direction:
+        (atan2(-u, -v) + 360) % 360.
+    """
+    out = iris.cube.CubeList()
+
+    for u_cube, v_cube in zip(iter_maybe(u), iter_maybe(v), strict=True):
+        # Ensure cubes to compare are on common differencing grid.
+        # This is triggered if either
+        #      i) latitude and longitude shapes are not the same. Note grid points
+        #         are not compared directly as these can differ through rounding
+        #         errors.
+        #     ii) or variables are known to often sit on different grid staggering
+        #         in different models (e.g. cell center vs cell edge), as is the case
+        #         for UM and LFRic comparisons.
+        # In future greater choice of regridding method might be applied depending
+        # on variable type. Linear regridding can in general be appropriate for smooth
+        # variables. Care should be taken with interpretation of differences
+        # given this dependency on regridding.
+
+        u_lat, u_lon = get_cube_yxcoordname(u_cube)
+        v_lat, v_lon = get_cube_yxcoordname(v_cube)
+
+        if (
+            u_cube.coord(u_lat).shape != v_cube.coord(v_lat).shape
+            or u_cube.coord(u_lon).shape != v_cube.coord(v_lon).shape
+        ):
+            logging.debug(
+                "Regridding U cube onto V cube grid for vector wind calculation."
+            )
+            u_cube = regrid_onto_cube(u_cube, v_cube, method="Linear")
+
+        #  Check units.
+        if u_cube.units != v_cube.units:
+            raise ValueError("U and V cubes must have the same units.")
+
+        # Compute vector wind.
+        u_data = u_cube.data
+        v_data = v_cube.data
+
+        speed = np.hypot(u_data, v_data)
+        direction = (np.degrees(np.arctan2(-u_data, -v_data)) + 360) % 360
+
+        speed_cube = u_cube.copy(data=speed)
+        speed_cube.rename("wind_speed")
+        speed_cube.units = u_cube.units
+        direction_cube = u_cube.copy(data=direction)
+        direction_cube.standard_name = None
+        direction_cube.long_name = None
+
+        direction_cube.standard_name = "wind_from_direction"
+        direction_cube.units = "degrees"
+        direction_cube.long_name = "wind direction"
+
+        out.extend([speed_cube, direction_cube])
+
+    return out
 
 
 def convert_to_beaufort_scale(

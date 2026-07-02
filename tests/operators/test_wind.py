@@ -72,3 +72,91 @@ def test_convert_to_beaufort_scale_units(xwind):
     """Test unit conversion of beaufort scale cube."""
     expected_unit = cf_units.Unit("1")
     assert expected_unit == wind.convert_to_beaufort_scale(xwind).units
+
+
+def _make_cube(data, units="m s-1"):
+    """Make a tiny u,v cube from data."""
+    data = np.asarray(data)
+    # Your operator expects y/x coords, so keep tests 2D (lat, lon).
+    if data.ndim != 2:
+        raise ValueError(
+            f"Expected 2D (lat, lon) data for test cube, got shape {data.shape}."
+        )
+
+    ny, nx = data.shape
+    lat = iris.coords.DimCoord(np.arange(ny), standard_name="latitude", units="degrees")
+    lon = iris.coords.DimCoord(
+        np.arange(nx), standard_name="longitude", units="degrees"
+    )
+
+    return iris.cube.Cube(
+        data,
+        dim_coords_and_dims=[(lat, 0), (lon, 1)],
+        units=units,
+    )
+
+
+def test_vector_wind():
+    """Test wind speed operator."""
+    u = _make_cube([[3.0, 0.0], [0.0, -3.0]])
+    v = _make_cube([[4.0, 0.0], [0.0, 4.0]])
+
+    out = wind.calculate_vector_wind(u, v)
+    speed, direction = out
+    # Speed.
+    expected_speed = np.hypot(u.data, v.data)
+    assert np.allclose(speed.data, expected_speed)
+    # Direction.
+    expected_direction = (np.degrees(np.arctan2(-u.data, -v.data)) + 360) % 360
+    assert np.allclose(direction.data, expected_direction)
+
+
+def test_vector_wind_directions():
+    """Test wind direction operator."""
+    u = _make_cube([[0, -1, 0, 1]])
+    v = _make_cube([[-1, 0, 1, 0]])
+    out = wind.calculate_vector_wind(u, v)
+    _, direction = out
+
+    expected = np.array([[0, 90, 180, 270]])
+    assert np.allclose(direction.data, expected)
+
+
+def test_vector_wind_cubelist():
+    """Test wind operator with cubelist."""
+    u_list = iris.cube.CubeList([_make_cube([[1, 1]]), _make_cube([[2, 2]])])
+    v_list = iris.cube.CubeList([_make_cube([[0, 0]]), _make_cube([[0, 0]])])
+    out = wind.calculate_vector_wind(u_list, v_list)
+    # 2 input pairs → 4 output cubes.
+    assert len(out) == 4
+
+
+def test_vector_wind_mismatched_lengths():
+    """Test wind operator with mismatched lengths."""
+    u_list = iris.cube.CubeList([_make_cube([[1]])])
+    v_list = iris.cube.CubeList([_make_cube([[1]]), _make_cube([[2]])])
+    with pytest.raises(ValueError):
+        wind.calculate_vector_wind(u_list, v_list)
+
+
+def test_vector_wind_metadata():
+    """Test wind operator with metadata."""
+    u = _make_cube([[1]])
+    v = _make_cube([[1]])
+
+    out = wind.calculate_vector_wind(u, v)
+    speed, direction = out
+    assert speed.name() == "wind_speed"
+    assert direction.name() == "wind_from_direction"
+    assert direction.units == "degrees"
+    assert direction.standard_name == "wind_from_direction"
+
+
+def test_vector_wind_zero_wind():
+    """Test wind operator with zero wind."""
+    u = _make_cube([[0]])
+    v = _make_cube([[0]])
+
+    _, direction = wind.calculate_vector_wind(u, v)
+    # Direction is undefined, but your formula gives 180 deg.
+    assert np.isfinite(direction.data)
