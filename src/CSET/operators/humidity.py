@@ -468,7 +468,7 @@ def precipitable_water(
     The precipitable water is the total depth of liquid water produced by
     condensing all of the moisture in a column of the atmopshere.
 
-    It can be calculated as
+    It can be calculated following [Stull2000]_ as
 
     .. math:: pw = frac{1}{\rho_w} \int w dz
 
@@ -482,6 +482,11 @@ def precipitable_water(
     lower precipitable water values with large precipitaiton amounts
     (e.g. [Daviesetal24]_). Therefore, caution is needed with its interpretation.
     A diagnostic such as saturation fraction maybe more beneficial (e.g. [Daviesetal26]_).
+
+    Currently, it is assumed that a cube is given with dimensions of the order
+    [realization, time, height, latitude, longitude] for a five dimension cube,
+    and derivatives thereof for 4 and 3 Dimension cubes (i.e., remove realization,
+    and time as appropriate).
 
     Examples
     --------
@@ -499,6 +504,8 @@ def precipitable_water(
        Life-Threatening Rainfall Extremes on the April 2024 United Arab Emirates
        and Oman Floods." Weather and Climate Extremes, vol. 51, 100846.
        doi:10.1016/j.wace.2025.100846
+    .. [Stull2000] Stull, R.B., (2000) "Meteorology for Scientists and Engineers",
+       2nd Edition, Brooks/Cole, California, USA, 502 pp.
     """
     precipitable_water = iris.cube.CubeList([])
     for w in iter_maybe(mixing_ratio):
@@ -561,7 +568,7 @@ def saturation_precipitable_water(
     The saturation precipitable water is equivalent to the precipitable
     water assuming that the atmosphere was fully saturated.
 
-    It can be calculated as
+    It can be calculated following [Raymondetal2009]_ as
 
     .. math:: spw = frac{1}{\rho_w} \int \frac{w}{RH} dz
 
@@ -573,9 +580,20 @@ def saturation_precipitable_water(
     in relation to the precipitable water. A useful way to do this is
     via the saturation fraction.
 
+    Currently, it is assumed that a cube is given with dimensions of the order
+    [realization, time, height, latitude, longitude] for a five dimension cube,
+    and derivatives thereof for 4 and 3 Dimension cubes (i.e., remove realization,
+    and time as appropriate).
+
     Examples
     --------
     >>> sat_pwat = humidity.saturated_precipitable_water(mixing_ratio, RH)
+
+    References
+    ----------
+    .. [Raymondetal2009] Raymond, D.J., Sessions, S.L., Sobel, A.H.,  Fuchs, Z.
+       (2009) "The Mechanics of Gross Moist Stability" Journal of Advances in
+       Modelling Earth Systems, vol. 1, 20 pp. doi: 10.3894/JAMES.2009.1.9
     """
     saturation_precipitable_water = iris.cube.CubeList([])
     for w, rh in zip(
@@ -644,7 +662,7 @@ def saturation_fraction(
     drier throughout the column. It is based around ideas of specific entropy
     ([Zengetal05]_) but can be simplified to an approximation following [Daviesetal2026]_.
 
-    It can be approximated as
+    It can be approximated following [Raymondetal09]_ as
 
     .. math:: saturation_fraction = \frac{precipitable_water}{saturation_precipitable_water}
 
@@ -654,6 +672,11 @@ def saturation_fraction(
     conceptual model for extreme rainfall. Thus it is a potentially useful diagnostic
     to consider for extreme events, and is thought of as more reliable than
     using precipitable water on its own.
+
+    Currently, it is assumed that a cube is given with dimensions of the order
+    [realization, time, height, latitude, longitude] for a five dimension cube,
+    and derivatives thereof for 4 and 3 Dimension cubes (i.e., remove realization,
+    and time as appropriate).
 
     Examples
     --------
@@ -666,6 +689,9 @@ def saturation_fraction(
        Life-Threatening Rainfall Extremes on the April 2024 United Arab Emirates
        and Oman Floods." Weather and Climate Extremes, vol. 51, 100846.
        doi:10.1016/j.wace.2025.100846
+    .. [Raymondetal09] Raymond, D.J., Sessions, S.L., Sobel, A.H.,  Fuchs, Z.
+       (2009) "The Mechanics of Gross Moist Stability" Journal of Advances in
+       Modelling Earth Systems, vol. 1, 20 pp. doi: 10.3894/JAMES.2009.1.9
     .. [Zengetal05] Zeng, X., Tao, W-K, and Simpson, J. (2005) "An Equation for Moist
        Entropy in a Precipitating and Icy Atmosphere" Journal of the Atmospheric Sciences,
        vol. 2, 4293-4309, doi: 10.1175/JAS3570.1
