@@ -293,7 +293,7 @@ def MAUL_properties(
                                 maul_start.append(maul_start_point)
                                 maul_end.append(maul_end_point)
                             try:
-                                # Idendtify where the deepest MAUL is.
+                                # Identify where the deepest MAUL is.
                                 index = int(
                                     np.where(maul_dep == np.max(maul_dep))[0][0]
                                 )
