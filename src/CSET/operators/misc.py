@@ -615,3 +615,22 @@ def differentiate(
         return new_cubelist[0]
     else:
         return new_cubelist
+
+
+def remove_scalar_coords(cubes, coords):
+    """Remove scalar coordinates.
+
+    examples would be: realization, forecast_reference_time from model cubes.
+    """
+    if not isinstance(cubes, CubeList):
+        cubes = CubeList([cubes])
+
+    for cube in cubes:
+        for coord_name in coords:
+            if cube.coords(coord_name):
+                coord = cube.coord(coord_name)
+                # only remove if scalar
+                if cube.coord_dims(coord) == ():
+                    cube.remove_coord(coord)
+
+    return cubes
