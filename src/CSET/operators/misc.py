@@ -615,3 +615,47 @@ def differentiate(
         return new_cubelist[0]
     else:
         return new_cubelist
+
+
+def convert_visibility_to_km(cubes, **kwargs):
+    """Ensure visibility is expressed in kilometres.
+
+    Arguments
+    ---------
+    cubes : iris.cube.Cube | iris.cube.CubeList
+        A Cube or CubeList containing visibility data. Each cube must
+        have units that are either already in kilometres or convertible
+        to kilometres (e.g. metres).
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        The input cube(s) with visibility expressed in kilometres.
+        If the input is a single Cube, a Cube is returned. If the input
+        is an iterable of cubes, a CubeList is returned.
+
+    Notes
+    -----
+    - If a cube has units of metres ("m"), it is converted to kilometres
+      using ``cube.convert_units("km")``.
+    - If a cube is already in kilometres, it is left unchanged.
+    - Any units that are convertible to kilometres will be converted
+      using Iris unit handling.
+    - This operator applies the conversion in-place on each cube.
+
+    Examples
+    --------
+    >>> vis_km = convert_visibility_to_km(visibility_cube)
+
+    >>> vis_list_km = convert_visibility_to_km([cube1, cube2])
+    """
+    if isinstance(cubes, iris.cube.Cube):
+        cubes = iris.cube.CubeList([cubes])
+    else:
+        cubes = iris.cube.CubeList(cubes)
+
+    for cube in cubes:
+        if cube.units.is_convertible("km") and str(cube.units) != "km":
+            cube.convert_units("km")
+
+    return cubes if len(cubes) > 1 else cubes[0]
