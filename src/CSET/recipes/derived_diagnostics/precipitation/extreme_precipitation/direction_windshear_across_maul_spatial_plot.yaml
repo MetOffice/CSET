@@ -9,9 +9,9 @@ description: |
   temperature alongside the relative humidity of that layer exceeding 90 %, following
   [Takemi and Unuma (2020)](https://doi.org/10.2151/sola.2020-006). The equivalent
   potential temperature is calculated using air temperature, pressure and specific humidity.
-  A vertical differentitation occurs to determine the stability (< 0 with dz implies unstable air).
+  A vertical differentiation occurs to determine the stability (< 0 with dz implies unstable air).
   The relative humidity is linearly interpolated onto the same grid as the vertical
-  derivative of the equivalent potenital temperature. The masks for each criterion are multiplied
+  derivative of the equivalent potential temperature. The masks for each criterion are multiplied
   together and then image processing is used to identify the number of objects (values of
   ones that are connected) the depth of each object is found the deepest MAUL is used. The
   wind direction is calculated and identified at the top and base of the MAUL. The
