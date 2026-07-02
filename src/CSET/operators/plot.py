@@ -650,7 +650,7 @@ def _plot_and_save_spatial_plot(
     # Add watermark with min/max/mean. Currently not user togglable.
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
     axes.annotate(
-        f"Min: {np.min(cube.data):.3g} Max: {np.max(cube.data):.3g} Mean: {np.mean(cube.data):.3g}",
+        f"Min: {np.nanmin(np.asarray(cube.data)):.3g} Max: {np.nanmax(np.asarray(cube.data)):.3g} Mean: {np.nanmean(np.asarray(cube.data)):.3g}",
         xy=(0.025, yinfopad),
         xycoords="axes fraction",
         xytext=(-5, 5),
@@ -1361,7 +1361,7 @@ def _plot_and_save_vector_plot(
     # Add watermark with min/max/mean. Currently not user togglable.
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
     axes.annotate(
-        f"Min: {np.min(cube_vec_mag.data):.3g} Max: {np.max(cube_vec_mag.data):.3g} Mean: {np.mean(cube_vec_mag.data):.3g}",
+        f"Min: {np.nanmin(np.asarray(cube_vec_mag.data)):.3g} Max: {np.nanmax(np.asarray(cube_vec_mag.data)):.3g} Mean: {np.nanmean(np.asarray(cube_vec_mag.data)):.3g}",
         xy=(0.05, -0.05),
         xycoords="axes fraction",
         xytext=(-5, 5),
@@ -1485,7 +1485,10 @@ def _plot_and_save_histogram_series(
         ax.set_ylabel(
             f"Contribution to mean ({iter_maybe(cubes)[0].units})", fontsize=14
         )
-    ax.set_xlim(vmin, vmax)
+    try:
+        ax.set_xlim(vmin, vmax)
+    except ValueError:
+        pass
     ax.tick_params(axis="both", labelsize=12)
 
     # Overlay grid-lines onto histogram plot.
