@@ -1,12 +1,12 @@
-{% if METPLUS_GRID_STAT|default(False) or METPLUS_POINT_STAT|default(False) %}
+{% if RUN_METPLUS_GRID_STAT|default(False) or RUN_METPLUS_POINT_STAT|default(False) %}
     [[METPLUS]]
         [[[environment]]]
         METPLUS_ANA_DIR = {{METPLUS_ANA_DIR}}
-        METPLUS_FCST_DIR = {{METPLUS_FCST_DIR}}
-        METPLUS_OBS_DIR = {{METPLUS_OBS_DIR}}
+        METPLUS_FCST_DIR = {{METPLUS_FCST_DIR|default("$CYLC_TASK_SHARE_CYCLE_DIR/metplus_fcst")}}
+        METPLUS_OBS_DIR = {{METPLUS_OBS_DIR|default("$CYLC_TASK_SHARE_CYCLE_DIR/metplus_obs")}}
         METPLUS_AREA_DIR = {{METPLUS_AREA_DIR}}
         METPLUS_STN_DIR = {{METPLUS_STN_DIR}}
-        ROSE_APP_OPT_CONF_KEYS = {{METPLUS_OPT_CONFIG_KEYS}}
+        ROSE_APP_OPT_CONF_KEYS = ({{SITE}}) {{METPLUS_OPT_CONFIG_KEYS|default("")}}
         TASK_START_TIME = $(cylc cyclepoint --template CCYYMMDDThh)
         FORECAST_LENGTH = $(isodatetime --as-total H -- {{ANALYSIS_LENGTH}} | cut -d '.' -f 1 )
         TASK_END_TIME = $(cylc cyclepoint --offset {{ANALYSIS_LENGTH}} --template CCYYMMDDThh)

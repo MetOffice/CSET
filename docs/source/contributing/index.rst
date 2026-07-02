@@ -64,16 +64,6 @@ The pull request title can be edited by clicking the "Edit" button to its right.
 If you need more text to describe what the pull request does, please add it in
 the description.
 
-Conda lock files have been updated if dependencies changed
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-If you have changed the dependencies of CSET you will need to regenerate the
-conda dependency lock files. This can be done by running the `update conda lock
-files workflow`_ from your branch, then merging the PR it creates into your own
-branch. (Not the default ``main`` branch!)
-
-.. _update conda lock files workflow: https://github.com/MetOffice/CSET/actions/workflows/conda-lock.yml
-
 Attributed any Generative AI, such as GitHub Copilot, used in this PR
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -30,6 +30,8 @@ import iris.exceptions
 import iris.util
 from iris.time import PartialDateTime
 
+from CSET._common import iter_maybe
+
 
 def pdt_fromisoformat(
     datestring,
@@ -349,7 +351,7 @@ def check_stamp_coordinate(cube: iris.cube.Cube) -> str:
         Defaults to "realization" if alternative stamp coordinate not found.
     """
     # Acceptable stamp coordinate names
-    STAMP_COORD_NAMES = ["realization", "member", "pseudo_level"]
+    STAMP_COORD_NAMES = ["realization", "member", "sample", "pseudo_level"]
 
     # Check which dimension coordinates we have.
     dim_coord_names = [coord.name() for coord in cube.coords(dim_coords=True)]
@@ -358,10 +360,8 @@ def check_stamp_coordinate(cube: iris.cube.Cube) -> str:
     stamp_coords = [coord for coord in dim_coord_names if coord in STAMP_COORD_NAMES]
     if len(stamp_coords) == 1:
         stamp_coordinate = stamp_coords[0]
-        logging.debug("Retained valid stamp_coordinate from cube: %s", stamp_coordinate)
     else:
         stamp_coordinate = "realization"
-        logging.debug("Default stamp_coordinate assumed: %s", stamp_coordinate)
 
     return stamp_coordinate
 
@@ -474,3 +474,83 @@ def is_time_aggregatable(cube: iris.cube.Cube) -> bool:
     temporal_coords = [coord for coord in coord_names if coord in TEMPORAL_COORD_NAMES]
     # Return whether both coordinates are in the temporal coordinates.
     return len(temporal_coords) == 2
+
+
+def check_single_cube(cube: iris.cube.Cube | iris.cube.CubeList) -> iris.cube.Cube:
+    """Ensure a single cube is given.
+
+    If a CubeList of length one is given that the contained cube is returned,
+    otherwise an error is raised.
+
+    Parameters
+    ----------
+    cube: Cube | CubeList
+        The cube to check.
+
+    Returns
+    -------
+    cube: Cube
+        The checked cube.
+
+    Raises
+    ------
+    TypeError
+        If the input cube is not a Cube or CubeList of a single Cube.
+    """
+    if isinstance(cube, iris.cube.Cube):
+        return cube
+    if isinstance(cube, iris.cube.CubeList):
+        if len(cube) == 1:
+            return cube[0]
+        else:
+            raise ValueError("CubeList did not contain a single cube.", cube)
+    raise TypeError(
+        "check_single_cube requires a Cube or CubeList of a single cube.", cube
+    )
+
+
+def check_sequence_coordinate(cubes, sequence_coordinate):
+    # If several histograms are plotted with time as sequence_coordinate for the
+    # time slider option.
+    for cube in iter_maybe(cubes):
+        try:
+            cube.coord(sequence_coordinate)
+        except iris.exceptions.CoordinateNotFoundError as err:
+            raise ValueError(
+                f"Cube must have a {sequence_coordinate} coordinate."
+            ) from err
+
+
+def get_num_models(cube: iris.cube.Cube | iris.cube.CubeList) -> int:
+    """Return number of models based on cube attributes."""
+    model_names = {cb.attributes.get("model_name") for cb in iter_maybe(cube)}
+
+    if not model_names:
+        logging.debug("Missing model names. Will assume single model.")
+        return 1
+    else:
+        return len(model_names)
+
+
+def validate_cube_shape(
+    cube: iris.cube.Cube | iris.cube.CubeList, num_models: int
+) -> None:
+    """Check all cubes have a model name."""
+    if isinstance(cube, iris.cube.CubeList) and len(cube) != num_models:
+        raise ValueError(
+            f"The number of model names ({num_models}) should equal the number "
+            f"of cubes ({len(cube)})."
+        )
+
+
+def validate_cubes_coords(
+    cubes: iris.cube.CubeList, coords: list[iris.coords.Coord]
+) -> None:
+    """Check same number of cubes as sequence coordinate for zip functions."""
+    if len(cubes) != len(coords):
+        raise ValueError(
+            f"The number of CubeList entries ({len(cubes)}) should equal the number "
+            f"of sequence coordinates ({len(coords)})."
+            f"Check that number of time entries in input data are consistent if "
+            f"performing time-averaging steps prior to plotting outputs."
+        )

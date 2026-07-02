@@ -1,5 +1,5 @@
 category: Daily Weather
-title: "Surface wind gusts on Beaufort Scale\nDifference ($BASE_MODEL - $OTHER_MODEL)"
+title: "Surface wind gusts on Beaufort Scale\nDifference ($OTHER_MODEL - $BASE_MODEL)"
 description: |
   Generates the surface wind gusts converted onto the Beaufort Scale and takes the
   difference between two datasets. The Beaufort Scale can be found on the [Met Office website](https://weather.metoffice.gov.uk/guides/coast-and-sea/beaufort-scale). It allows human-understandable names to be given to wind bins.
