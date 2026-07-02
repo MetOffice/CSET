@@ -28,7 +28,10 @@ import iris.util
 import numpy as np
 
 from CSET._common import iter_maybe
-from CSET.operators.aggregate import add_hour_coordinate
+from CSET.operators.aggregate import (
+    add_hour_coordinate,
+    rolling_window_time_aggregation,
+)
 
 
 def collapse(
@@ -36,6 +39,7 @@ def collapse(
     coordinate: str | list[str],
     method: str,
     additional_percent: float = None,
+    window_hours: float = None,
     **kwargs,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Collapse coordinate(s) of a single cube or of every cube in a cube list.
@@ -54,10 +58,14 @@ def collapse(
         be given.
     method: str
         Type of collapse i.e. method: 'MEAN', 'MAX', 'MIN', 'MEDIAN',
-        'PERCENTILE' getattr creates iris.analysis.MEAN, etc. For PERCENTILE YAML
-        file requires i.e. method: 'PERCENTILE' additional_percent: 90.
+        'PERCENTILE', 'ROLLING_MEAN' getattr creates iris.analysis.MEAN, etc.
+        For PERCENTILE YAML file requires i.e. method: 'PERCENTILE' additional_percent: 90.
+        For ROLLING_MEAN YAML file requires method: 'ROLLING_MEAN' and window_hours specified
+        or set in gui through $WINDOW_LEN_SURFACE
     additional_percent: float, optional
         Required for the PERCENTILE method. This is a number between 0 and 100.
+    window_hours: float
+        number of hours used for rolling mean (ROLLING_MEAN)
 
     Returns
     -------
@@ -112,6 +120,30 @@ def collapse(
                 cube_max = cube.collapsed(coordinate, iris.analysis.MAX)
                 cube_min = cube.collapsed(coordinate, iris.analysis.MIN)
                 collapsed_cubes.append(cube_max - cube_min)
+            elif method == "ROLLING_MEAN":
+                # Rolling mean over window length based on specified window_hours
+                if window_hours is None:
+                    raise ValueError("ROLLING_MEAN requires kwarg: window_hours=<int>")
+                # Determine number of steps based on time spacing
+                time_coord = cube.coord("time")
+                points = time_coord.units.num2date(time_coord.points)
+                if len(points) < 2:
+                    raise ValueError("Not enough time points for rolling window.")
+                # Time step in hours:
+                dt_hours = (points[1] - points[0]).total_seconds() / 3600.0
+                if dt_hours <= 0:
+                    raise ValueError("Time coordinate must be increasing.")
+                window_len = int(round(window_hours / dt_hours))
+                if window_len < 1:
+                    raise ValueError(
+                        f"Window of {window_hours} hours is too small for timestep {dt_hours}."
+                    )
+                # Create rolling window along time
+                rolled = rolling_window_time_aggregation(
+                    cube, "MEAN", window=window_len
+                )
+                # Collapse over the window dimension
+                collapsed_cubes.append(rolled)
             else:
                 collapsed_cubes.append(
                     cube.collapsed(coordinate, getattr(iris.analysis, method))
