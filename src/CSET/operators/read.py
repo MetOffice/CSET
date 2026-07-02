@@ -390,6 +390,7 @@ def _cutout_cubes(
 def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.Cube:
     """Compose together the needed callbacks into a single function."""
     # Most callbacks operate in-place, but save the cube when returned!
+    _normalise_ML_grib_varname(cube)
     _realization_callback(cube)
     _um_normalise_callback(cube)
     _lfric_normalise_callback(cube)
@@ -1095,3 +1096,32 @@ def _normalise_ML_varname(cube: iris.cube.Cube):
             cube.long_name = (
                 "vapour_specific_humidity_at_pressure_levels_for_climate_averaging"
             )
+
+
+def _normalise_ML_grib_varname(cube: iris.cube.Cube):
+    """Fix grib metadata varname and tidy attributes."""
+
+    # Lookup table for standard GRIB names
+    GRIB_LOOKUP = {
+        "GRIB2:d000c003n000": {
+            "long_name": "air_pressure_at_mean_sea_level",
+            "standard_name": "air_pressure_at_mean_sea_level",
+        },
+    }
+
+    grib_param = cube.attributes.get("GRIB_PARAM")
+    if grib_param is not None:
+        grib_param = str(grib_param)
+        if grib_param in GRIB_LOOKUP:
+            meta = GRIB_LOOKUP.get(grib_param)
+
+            cube.rename(meta["long_name"])
+            cube.standard_name = meta.get("standard_name")
+            cube.long_name = meta.get("standard_name")
+            logging.info('RENAMED')
+            logging.info(cube)
+            
+
+        cube.attributes.pop("GRIB_PARAM", None)
+        return cube
+
