@@ -162,7 +162,7 @@ def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None =
 
     Returns
     -------
-    RMSE: iris.cube.Cube
+    scores_cube: iris.cube.Cube
         A cube containing the RMSE between the base and other cube.
 
     References
@@ -183,12 +183,96 @@ def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None =
     base, other = _sort_cubes_for_verification(cubes)
     # Scores operators on xarray data arrays, so we transform the iris cube into an array,
     # apply scores, and then transform it back.
-    RMSE = xr.DataArray.to_iris(
+    scores_cube = xr.DataArray.to_iris(
         scores.continuous.rmse(
             xr.DataArray.from_iris(other),
             xr.DataArray.from_iris(base),
             preserve_dims=preserved_coordinates,
         )
     )
-    RMSE.rename(f"RMSE_of_{base.name()}")
-    return RMSE
+    scores_cube.rename(f"RMSE_of_{base.name()}")
+    return scores_cube
+
+
+def scores_mae(cubes: CubeList, preserved_coordinates: list[str] | str | None = None):
+    """Calculate the Mean Absolute Error (MAE) using scores."""
+    base, other = _sort_cubes_for_verification(cubes)
+    # Scores operators on xarray data arrays, so we transform the iris cube into an array,
+    # apply scores, and then transform it back.
+    scores_cube = xr.DataArray.to_iris(
+        scores.continuous.mae(
+            xr.DataArray.from_iris(other),
+            xr.DataArray.from_iris(base),
+            preserve_dims=preserved_coordinates,
+        )
+    )
+    scores_cube.rename(f"MAE_of_{base.name()}")
+    return scores_cube
+
+
+def scores_additive_bias(
+    cubes: CubeList, preserved_coordinates: list[str] | str | None = None
+):
+    """Calculate the Additive Bias (Mean Error) using scores."""
+    base, other = _sort_cubes_for_verification(cubes)
+    # Scores operators on xarray data arrays, so we transform the iris cube into an array,
+    # apply scores, and then transform it back.
+    scores_cube = xr.DataArray.to_iris(
+        scores.continuous.additive_bias(
+            xr.DataArray.from_iris(other),
+            xr.DataArray.from_iris(base),
+            preserve_dims=preserved_coordinates,
+        )
+    )
+    scores_cube.rename(f"Additive_Bias_of_{base.name()}")
+    return scores_cube
+
+
+def scores_correlation_pearsonr(
+    cubes: CubeList, preserved_coordinates: list[str] | str | None = None
+):
+    """Calculate the Pearson's Correlation using scores."""
+    base, other = _sort_cubes_for_verification(cubes)
+    # Scores operators on xarray data arrays, so we transform the iris cube into an array,
+    # apply scores, and then transform it back.
+    scores_cube = xr.DataArray.to_iris(
+        scores.continuous.correlation.pearsonr(
+            xr.DataArray.from_iris(other),
+            xr.DataArray.from_iris(base),
+            preserve_dims=preserved_coordinates,
+        )
+    )
+    scores_cube.rename(f"Pearson_Correlation_of_{base.name()}")
+    return scores_cube
+
+
+def scores_metrics(
+    cubes: CubeList,
+    preserved_coordinates: list[str] | str | None = None,
+    scores_method: str | None = None,
+):
+    """Select which scores metric to use."""
+    # initialise the output cubelist
+    cubes_output = iris.cube.CubeList([])
+
+    match scores_method:
+        case "RMSE":
+            # Use the RMSE method
+            return scores_rmse(cubes, preserved_coordinates)
+
+        case "additive_bias":
+            # Use the Additive Bias (aka mean error) method
+            return scores_additive_bias(cubes, preserved_coordinates)
+
+        case "MAE":
+            # Use the MAE method
+            return scores_mae(cubes, preserved_coordinates)
+
+        case "correlation_pearsonr":
+            # Use the Pearson's Correlation method
+            return scores_correlation_pearsonr(cubes, preserved_coordinates)
+
+        case _:
+            raise ValueError(f"No such scores metric: {scores_method}")
+
+    return cubes_output
