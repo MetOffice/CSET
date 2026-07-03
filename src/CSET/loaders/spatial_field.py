@@ -703,7 +703,7 @@ def load(conf: Config):
                 model_ids=model["id"],
                 aggregation=False,
             )
-            
+
     if conf.GLOBAL_CURV:
         for model, points, radius, tol in itertools.product(
             models, conf.CURV_POINTS, conf.CURV_RADIUS, conf.CURV_TOLERANCE
