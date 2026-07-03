@@ -29,7 +29,7 @@ steps:
             operator: filters.filter_multiple_cubes
             constraint:
                 operator: constraints.generate_var_constraint
-                varname: m01s20i110
+                varname: atmosphere_convective_available_potential_energy
         condition: gt
         value: 100
 
