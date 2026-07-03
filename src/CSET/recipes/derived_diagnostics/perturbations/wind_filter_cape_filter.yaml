@@ -1,0 +1,45 @@
+category: Perturbations
+title: $MODEL_NAME Band Pass Filter Spatial Perturbation for wind gusts filtered by CAPE
+description: |
+  Creates a spatial map of a band pass filtered filed based on Gaussians
+  with the low filter of 1 and a high filter of 1.1 for spatial components for
+  the wind_speed_from_gust field. It then applies a filter based on the MLCAPE
+  field to narrow down this region to the propsed SCZ.
+  The filter is applied for $METHOD from all times in $MODEL_NAME.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    constraints: ["wind_speed_of_gust","m01s20i110"]
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: misc.multiplication
+    multiplicand:
+        operator: imageprocessing.band_pass_filter_via_gaussians
+        cubes:
+            operator: filters.filter_multiple_cubes
+            constraint:
+                operator: constraints.generate_var_constraint
+                varname: wind_speed_of_gust
+        low_sigma: 1.0
+        high_sigma: 1.1
+    multiplier:
+        operator: filters.generate_mask
+        mask_field:
+            operator: filters.filter_multiple_cubes
+            constraint:
+                operator: constraints.generate_var_constraint
+                varname: m01s20i110
+            condition: gt
+            value: 100
+
+  - operator: collapse.collapse
+    coordinate: [time]
+    method: $METHOD
+
+  - operator: plot.spatial_pcolormesh_plot
+    sequence_coordinate: time
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
