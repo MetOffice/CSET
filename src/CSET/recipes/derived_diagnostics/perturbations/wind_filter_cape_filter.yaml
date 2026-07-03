@@ -10,7 +10,6 @@ description: |
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
-    constraints: ["wind_speed_of_gust","m01s20i110"]
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
@@ -31,8 +30,8 @@ steps:
             constraint:
                 operator: constraints.generate_var_constraint
                 varname: m01s20i110
-            condition: gt
-            value: 100
+        condition: gt
+        value: 100
 
   - operator: collapse.collapse
     coordinate: [time]
