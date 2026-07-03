@@ -30,6 +30,9 @@ import iris.coords
 import iris.cube
 import iris.exceptions
 import iris.util
+from iris.exceptions import TranslationError
+from iris_grib.message import GribMessage
+from iris_grib import load_pairs_from_fields
 import numpy as np
 from iris.analysis.cartography import rotate_pole, rotate_winds
 
@@ -230,7 +233,20 @@ def _load_model(
     input_files = _check_input_files(paths)
     # If unset, a constraint of None lets everything be loaded.
     logging.debug("Constraint: %s", constraint)
-    cubes = iris.load(input_files, constraint, callback=_loading_callback)
+
+    cubes = iris.load(input_files)
+
+
+    for cube in cubes:
+        _loading_callback(cube, None, None)
+
+    # Extract required cubes based on constraint
+    cubes = cubes.extract(constraint)
+
+    print(cubes[0])
+    print(cubes[1])
+    quit()
+
     # Make the UM's winds consistent with LFRic.
     cubes = _fix_um_winds(cubes)
 
@@ -715,7 +731,7 @@ def _fix_pressure_coord_callback(cube: iris.cube.Cube):
     Additionally, set the units of pressure to be hPa to be consistent with the UM,
     and approach the coordinates in a unified way.
     """
-    for coord in cube.dim_coords:
+    for coord in cube.coords():
         if coord.name() in ["pressure_level", "pressure_levels"]:
             coord.rename("pressure")
 
