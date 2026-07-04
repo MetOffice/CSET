@@ -896,11 +896,17 @@ def _fix_um_winds(cubes: iris.cube.CubeList):
     speed_constr = iris.AttributeConstraint(STASH="m01s03i227")
     try:
         if cubes.extract(u_constr) and cubes.extract(v_constr):
+            if len(cubes) == 2:
+                wind_only = True
+            else:
+                wind_only = False
             if len(cubes.extract(u_constr)) == 1 and not cubes.extract(speed_constr):
                 _add_wind_speed_um(cubes)
             # Convert winds in the UM to be relative to true east and true north.
             _convert_wind_true_dirn_um(cubes)
-            cubes = cubes.extract(speed_constr)
+            # Return only wind_speed cube
+            if wind_only:
+                cubes = cubes.extract(speed_constr)
     except (KeyError, AttributeError):
         pass
 

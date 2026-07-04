@@ -42,13 +42,19 @@ test: pre-commit ## Run linting and unit tests.
 	pytest -vv -m 'not slow'
 
 test-fast: ## Run fast local tests only.
-	pytest -vv --cov --cov-append --cov-config=pyproject.toml --numprocesses logical -m 'not slow and not network'
+	pytest -vv --cov --cov-append --cov-config=pyproject.toml --numprocesses logical -m 'not slow and not network and not cylc'
+
+test-workflow: ## Run workflow tests that require cylc.
+	pytest -vv -m 'cylc'
 
 test-full: pre-commit ## Run all tests, including slow or network reliant.
 	# Install headless chromium for playwright browser tests.
 	playwright install --only-shell chromium
 	pytest -vv --cov --cov-append --cov-config=pyproject.toml --numprocesses logical
 
+update-dev-deps:  ## Update pre-commit hooks and conda lock files for the development environment.
+	scripts/update-developer-dependencies.sh
+
 # Mark targets as 'phony' to indicate they don't actually produce a file with
 # the same name as their target. Basically for actions rather than files.
-.PHONY: help setup docs test test-fast test-full prepare-lockfiles conda
+.PHONY: help setup docs test test-fast test-workflow test-full prepare-lockfiles conda update-dev-deps

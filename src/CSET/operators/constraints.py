@@ -70,6 +70,7 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
     else:
         varname_constraint = iris.Constraint(name=varname)
 
+    # Ensure access to variable vector components for computed fields
     if varname == "wind_speed_at_10m":
         varname_constraint = iris.Constraint(
             cube_func=lambda cube: (

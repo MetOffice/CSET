@@ -50,6 +50,12 @@ CSET.operators.plot
 .. automodule:: CSET.operators.plot
    :members:
 
+CSET.operators.power_spectrum
+-----------------------------
+
+.. automodule:: CSET.operators.power_spectrum
+   :members:
+
 CSET.operators.read
 -------------------
 

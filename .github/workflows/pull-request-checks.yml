@@ -27,7 +27,7 @@ jobs:
         py-ver: ["py312", "py313", "py314"]
     steps:
       - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           persist-credentials: false
 
@@ -40,7 +40,7 @@ jobs:
           init-shell: "none"
 
       - name: Cache downloaded cartopy shapefiles
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           key: cartopy-shapefiles
           path: ~/.local/share/cartopy
@@ -66,6 +66,46 @@ jobs:
           retention-days: 1
           include-hidden-files: true
 
+  test-workflow:
+    name: Test cylc workflow
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Setup conda environment
+        uses: mamba-org/setup-micromamba@d7c9bd84e824b79d2af72a2d4196c7f4300d3476
+        with:
+          environment-name: cset-dev
+          environment-file: requirements/locks/latest
+          cache-environment: true
+
+      - name: Cache downloaded cartopy shapefiles
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae
+        with:
+          key: cartopy-shapefiles
+          path: ~/.local/share/cartopy
+
+      - name: Install local package
+        shell: micromamba-shell {0}
+        run: pip install --no-deps .
+
+      - name: Setup rose and cylc
+        uses: cylc/setup-cylc@813acd1873cef608f14e354cec57e2de5a7eb3bf
+        with:
+          cylc_rose: true
+
+      - name: Run workflow tests
+        shell: micromamba-shell {0}
+        env:
+          PY_COLORS: "1"
+        run: make test-workflow
+
   coverage-report:
     if: github.event_name == 'pull_request'
     name: Produce coverage report
@@ -77,12 +117,12 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           persist-credentials: false
 
       - name: Setup python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
           python-version: "3.x"
 
@@ -107,20 +147,35 @@ jobs:
           repository: ${{ github.repository }}
           head_ref: ${{ github.head_ref }}
         run: |
-          # This links to a hosted version of the HTML report.
+          # Host the HTML report.
           tar -czf coverage-report.tar.gz htmlcov/
           report_url="$(curl -sSf --user "token:${tmpweb_api_key}" --data-binary @coverage-report.tar.gz https://tmpweb.net || true)"
           if [[ -z "${report_url}" ]] ; then
             echo "Could not upload report."
+            report_html=""
           else
-            echo "Report hosted at $report_url"
-            badge_options="$(coverage json --fail-under=0 -qo - | jq -r .totals.percent_covered_display)%25-blue?style=for-the-badge"
-            echo "[![Coverage](https://img.shields.io/badge/coverage-${badge_options})](${report_url})" >> cov-report.md
-            # Edit last comment if it exists, else create new one.
-            if ! gh pr comment --repo "${repository}" --edit-last --create-if-none "${head_ref}" --body-file cov-report.md ; then
-              echo "Failed to post comment. This is likely due to this being a PR from a fork."
-            fi
+            echo "Report hosted at ${report_url}"
+            report_html="(<a href=\"${report_url}\">HTML report</a>)"
           fi
+          percent_coverage="$(coverage json --fail-under=0 -qo - | jq -r .totals.percent_covered_display)"
+          # Write coverage report.
+          cat <<- EOF > cov-report.md
+          <details>
+          <summary>
+            Total coverage: <strong>${percent_coverage}%</strong>
+            ${report_html}
+          </summary>
+          <pre>
+          $(coverage report)
+          </pre>
+          </details>
+          EOF
+          # Edit last comment if it exists, else create new one.
+          if ! gh pr comment --repo "${repository}" --edit-last --create-if-none "${head_ref}" --body-file cov-report.md ; then
+            echo "Failed to post comment. This is likely due to this being a PR from a fork."
+          fi
+          # Add report as job summary.
+          cat cov-report.md > "${GITHUB_STEP_SUMMARY}"
 
       - name: Check 90% minimum coverage
         run: coverage report --fail-under=90
@@ -132,17 +187,17 @@ jobs:
       contents: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
           python-version: "3.x"
 
       - name: Restore pre-commit cache
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           key: pre-commit|${{runner.os}}-${{runner.arch}}|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
           path: ~/.cache/pre-commit
@@ -162,7 +217,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           persist-credentials: false
 
