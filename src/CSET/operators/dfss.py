@@ -165,6 +165,10 @@ def calculate_dfss(
             cube with dfss standard deviation variable
 
     """
+    # force serial run if running in workflow
+    if "CYLC_RUN_DIR" in os.environ:
+        run_parallel = False
+
     if run_parallel:
         out_cube_list = _parallel_calculate_dfss(
             cube_xy, neighbourhood_lengths, centile_or_threshold, centile, threshold
