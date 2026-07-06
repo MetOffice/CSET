@@ -32,6 +32,34 @@ Changelog
 .. Highlight any user facing changes. E.g:
 .. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
 
+26.5.1 (2026-06-10)
+-------------------
+
+A small patch release fixing a couple of issues and adding support for several
+new sites.
+
+* Adds diagnostics to identify properties of the MAUL by `@daflack`_ in :pr:`2058`
+* Improve ODB2 format support by `@ScottWales`_ in :pr:`2115`
+* Fixed issue in the docs with a missing line in the recipe by `@JMP-MO`_ in :pr:`2117`. This was their first contribution 🎉
+* Add single point timeseries loader and fix indexing into aggregation type by `@refszkentla`_ in :pr:`2118`
+* Add SUBAREA_NAME variable to recipes to enable tracking of different subregions by `@ukmo-huw-lewis`_ in :pr:`2131`
+* Install from conda-forge mirror on Met Office systems by `@jfrost-mo`_ in :pr:`2136`
+* Add NCMRWF config to metadata by `@JorgeBornemann`_ in :pr:`2138`
+* Reduce matplotlib logging verbosity by `@jfrost-mo`_ in :pr:`2141`
+* Ensure `make setup` doesn't fail outside the Met Office by `@jfrost-mo`_ in :pr:`2144`
+* Improve workflow housekeeping with multiple cycles by `@ScottWales`_ in :pr:`2151`
+* Support multiple models in METplus by `@JorgeBornemann`_ in :pr:`2153`
+* Ignore wwwspice links from linkchecking by `@jfrost-mo`_ in :pr:`2162`
+* Remove unneeded cycle complete graphing and improve inline documentation for sequential tasks by `@jfrost-mo`_ in :pr:`2170`
+* Gitignore workflow conda environment symlink by `@jfrost-mo`_ in :pr:`2175`
+* Add site configuration for the Met Office Monsoon collaboration supercomputer by `@jfrost-mo`_ in :pr:`2176`
+
+New Contributors:
+
+* `@JMP-MO`_ made their first contribution in :pr:`2117`
+
+.. _@JMP-MO: https://github.com/JMP-MO
+
 26.5.0 (2026-05-05)
 -------------------
 
