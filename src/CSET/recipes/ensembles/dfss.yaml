@@ -1,0 +1,44 @@
+category: Ensemble
+title: dFSS
+description: |
+  calculate the dFSS and standard deviation of dFSS.  plot line plots and  contour plots.
+
+steps:
+  - operator: read.read_cube
+    file_paths: $INPUT_PATHS
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+
+
+  - operator: filters.filter_cubes
+    constraint:
+      operator: constraints.generate_remove_single_ensemble_member_constraint
+      ensemble_member: 0
+
+  - operator: dfss.calculate_dfss
+    neighbourhood_lengths: $NEIGHBOURHOOD_LENGTHS
+    centile_or_threshold: $CENTILE_OR_THRESHOLD
+    centile: $CENTILE
+    trheshold: $THRESHOLD
+
+  - operator: plot.plot_line_series_sequence
+    variable: dfss
+    series_coordinate: "neighbourhoods"
+    sequence_coordinate: "time"
+
+  - operator: plot.plot_line_series_sequence
+    variable: dfss_stdev
+    series_coordinate: "neighbourhoods"
+    sequence_coordinate: "time"
+
+  - operator: plot.plot_dfss_contour
+    variable: "dfss"
+
+  - operator: plot.plot_dfss_contour
+    variable: "dfss_stdev"
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
