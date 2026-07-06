@@ -164,7 +164,7 @@ def load(conf: Config):
                 aggregation=False,
             )
 
-    if conf.SCORES_RMSE_VERTICAL_PROFILES_TIMESERIES:
+    if conf.SCORES_RMSE_VERTICAL_PROFILES_SEQUENCE:
         for model, field in itertools.product(models[1:], conf.PRESSURE_LEVEL_FIELDS):
             yield RawRecipe(
                 recipe="generic_level_rmse_scores_profile.yaml",
