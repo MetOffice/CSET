@@ -62,11 +62,10 @@ filterwarnings = [
 markers = [
     "network: test uses external network resources",
     "slow: test is slow to run",
-    "cylc: test requires cylc and rose to be set up",
 ]
 minversion = "7"
 pythonpath = ["src"]
-testpaths = ["tests", "utils"]
+testpaths = ["tests"]
 
 [tool.coverage.run]
 branch = true
@@ -78,19 +77,15 @@ source = ["src"]
 omit = ["__main__.py", "src/CSET/loaders/*.py", "_netCDF4.pyx"]
 
 [tool.codespell]
-ignore-words-list = "lazyness,meaned,runn,PRES"
+ignore-words-list = "lazyness,meaned,runn"
 skip = "build,*.css,*.ipynb,*.js,*.html,*.svg,*.xml,.git"
 
 [tool.ruff]
 line-length = 88
-src = ["src", "test", "utils"]
+src = ["src", "test"]
 
 [tool.ruff.lint]
-extend-select = ["B", "D"]
-ignore = ["N999", "DTZ", "RUF059"]
-
-[tool.ruff.lint.per-file-ignores]
-"docs/source/reference/gallery/examples/**/*.py" = ["D"]
+extend-select = ["B", "D", "I"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"

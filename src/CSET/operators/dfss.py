@@ -1,3 +1,19 @@
+# © Crown copyright, Met Office (2022-2026) and CSET contributors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""A module containing the dFSS diagnostic."""
+
 import multiprocessing as mp
 import os
 from functools import partial
@@ -9,87 +25,24 @@ import iris.coords as icoords
 import iris.cube
 import numpy as np
 import numpy.ma as ma
-from improver.nbhood.nbhood import NeighbourhoodProcessing
 from iris import coord_systems
-from scipy import ndimage, signal
 
-"""A module containing the dFSS diagnostic
-"""
-
-
-def _get_neighbourhood_data(
-    cube: iris.cube.Cube,
-    max_or_mean: str,
-    neighbourhood_length: int,
-):
-
-    if type(neighbourhood_length) is not int:
-        raise TypeError(
-            "neighbourhood_length expected to be an int, got {}".format(
-                type(neighbourhood_length).__name__
-            )
-        )
-
-    if max_or_mean not in ["mean", "max"]:
-        raise ValueError(
-            "Key word for neighbourhood processing should be 'max' or 'mean'"
-        )
-
-    kernel = np.ones((neighbourhood_length, neighbourhood_length))
-
-    if max_or_mean == "mean":
-        neighbourhood_data = (
-            signal.convolve2d(cube.data, kernel, boundary="wrap", mode="same")
-            / kernel.sum()
-        )
-    elif max_or_mean == "max":
-        neighbourhood_data = ndimage.maximum_filter(
-            cube.data, footprint=kernel, mode="wrap"
-        )
-
-        neighbourhood_data = ndimage.uniform_filter(
-            neighbourhood_data.data, size=neighbourhood_length, mode="constant"
-        )
-
-    return neighbourhood_data
-
-
-def neighbourhood(
-    cube: iris.cube.Cube, neighbourhood_length: int, max_or_mean: str = "mean"
-) -> iris.cube.Cube:
-
-    cube_list = iris.cube.CubeList()
-    if cube.coord("realization") and cube.coord("realization").points.size > 1:
-        for cb in cube.slices_over("realization"):
-            neighbourhood_data = _get_neighbourhood_data(
-                cb, max_or_mean, neighbourhood_length
-            )
-            cb_new = cb.copy(data=neighbourhood_data)
-            cube_list.append(cb_new)
-
-        cube_list.append(cube_list.merge_cube())
-    else:
-        neighbourhood_data = _get_neighbourhood_data(
-            cube, max_or_mean, neighbourhood_length
-        )
-        return cube.copy(data=neighbourhood_data)
-
-    return cube_list.merge_cube()
+from .improver.nbhood import NeighbourhoodProcessing
 
 
 def init_worker():
+    """Set env vars to ensure no over subscription."""
     os.environ["OMP_NUM_THREADS"] = "1"
     os.environ["MKL_NUM_THREADS"] = "1"
     os.environ["OPENBLAS_NUM_THREADS"] = "1"
 
 
-def dfss_on_slice(
+def _dfss_on_slice(
     slice,
     neighbourhood_lengths,
     centile_or_threshold,
     centile,
     threshold,
-    max_or_mean="mean",
 ):
     time_point = slice.coord("time")
     dfss_cube, dfss_stdev_cube = _calc_dfss(
@@ -116,14 +69,13 @@ def _parallel_calculate_dfss(
 
     with mp.Pool(initializer=init_worker) as pool:
         worker = partial(
-            dfss_on_slice,
+            _dfss_on_slice,
             neighbourhood_lengths=neighbourhood_lengths,
             centile_or_threshold=centile_or_threshold,
             centile=centile,
             threshold=threshold,
-            max_or_mean="mean",
         )
-        dfss_cubes, dfss_stdev_cubes = zip(*pool.imap(worker, time_slices))
+        dfss_cubes, dfss_stdev_cubes = zip(*pool.imap(worker, time_slices), strict=True)
 
     cube_list_dfss = iris.cube.CubeList(dfss_cubes)
     cube_list_dfss_stdev = iris.cube.CubeList(dfss_stdev_cubes)
@@ -193,7 +145,26 @@ def calculate_dfss(
     threshold: Union[float, int] = None,
     run_parallel: bool = True,
 ):
+    """Do the dfss calculation.
 
+     Args:
+        cube_xy:
+            Original xy cube
+        neighbourhood_lengths: list of neighbourhood lengths
+        centile_or_threshold: centile or threshold method
+        centile: centile value
+        threshold: threshold value
+        run_parallel: run the multiple time points in parallel
+
+
+    Returns
+    -------
+        dfss_cube
+            cube with dfss variable
+        dfss_stdev_cube
+            cube with dfss standard deviation variable
+
+    """
     if run_parallel:
         out_cube_list = _parallel_calculate_dfss(
             cube_xy, neighbourhood_lengths, centile_or_threshold, centile, threshold
@@ -213,7 +184,10 @@ def _calc_dfss(
     centile: Union[float, int] = None,
     threshold: Union[float, int] = None,
 ):
-    cube_xy.data  # NOTE: without realising the data, dask is very slow to run this code
+    _ = (
+        cube_xy.data
+    )  # NOTE: without realising the data, dask is very slow to run this code
+    del _
     ens_members = cube_xy.coord("realization").points
     number_of_members = len(ens_members)
     dfss = np.zeros(len(neighbourhood_lengths))
@@ -321,8 +295,6 @@ def _calc_fss(
 
     fraction_fields_a = nbhooder.process(cube_a)
     fraction_fields_b = nbhooder.process(cube_b)
-    field_a = neighbourhood(cube_a, neighbourhood_length)
-    field_b = neighbourhood(cube_b, neighbourhood_length)
 
     field_a = fraction_fields_a.data
     field_b = fraction_fields_b.data
@@ -357,14 +329,15 @@ def _calc_fss_two_fields(field_a, field_b):
 
 
 def get_spatial_coords(cube):
-    """Returns the x, y coordinates of an input :class:`iris.cube.Cube`."""
+    """Return the x, y coordinates of an input :class:`iris.cube.Cube`."""
     x_coord = cube.coord(axis="x")
     y_coord = cube.coord(axis="y")
     return [x_coord, y_coord]
 
 
 def regrid_lat_lon_cube_to_xy_cube(cube_latlon):
-    """
+    """Regrid a lat-lon cube to xy.
+
     Takes a cube specified on a lat-lon grid and re-grids
     it to an x-y grid
 
@@ -390,7 +363,7 @@ def regrid_lat_lon_cube_to_xy_cube(cube_latlon):
     lats = [np.min(y_coord.points), np.max(y_coord.points)]
 
     x, y = [], []
-    for lon, lat in zip(lons, lats):
+    for lon, lat in zip(lons, lats, strict=True):
         x_trg, y_trg = trg_crs.transform_point(lon, lat, src_crs)
         x.append(x_trg)
         y.append(y_trg)
