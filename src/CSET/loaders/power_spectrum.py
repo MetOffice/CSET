@@ -40,6 +40,7 @@ def load(conf: Config):
                     if conf.SELECT_SUBAREA
                     else None,
                     "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                    "SPECTRUM_SURFACE_FIELD_SEQUENCE": conf.SPECTRUM_SURFACE_FIELD_SEQUENCE,
                 },
                 model_ids=[model["id"] for model in models],
                 aggregation=False,
@@ -52,7 +53,7 @@ def load(conf: Config):
             conf.PRESSURE_LEVELS,
         ):
             yield RawRecipe(
-                recipe="generic_level_power_spectrum_series.yaml",
+                recipe="generic_plevel_power_spectrum_series.yaml",
                 variables={
                     "VARNAME": field,
                     "LEVELTYPE": "pressure",
@@ -66,6 +67,7 @@ def load(conf: Config):
                     if conf.SELECT_SUBAREA
                     else None,
                     "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                    "SPECTRUM_PLEVEL_FIELD_SEQUENCE": conf.SPECTRUM_PLEVEL_FIELD_SEQUENCE,
                 },
                 model_ids=[model["id"] for model in models],
                 aggregation=False,
@@ -78,7 +80,7 @@ def load(conf: Config):
             conf.MODEL_LEVELS,
         ):
             yield RawRecipe(
-                recipe="generic_level_power_spectrum_series.yaml",
+                recipe="generic_mlevel_power_spectrum_series.yaml",
                 variables={
                     "VARNAME": field,
                     "LEVELTYPE": "model_level_number",
@@ -92,6 +94,7 @@ def load(conf: Config):
                     if conf.SELECT_SUBAREA
                     else None,
                     "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                    "SPECTRUM_MLEVEL_FIELD_SEQUENCE": conf.SPECTRUM_MLEVEL_FIELD_SEQUENCE,
                 },
                 model_ids=[model["id"] for model in models],
                 aggregation=False,
