@@ -42,7 +42,7 @@ steps:
         operator: constraints.generate_attribute_constraint
         attribute: STASH
 
-  - operator: misc.latent_heat_units
+  - operator: fluxes.latent_heat_units
 
   - operator: misc.remove_attribute
     attribute: [ 'time_coverage_end', 'time_coverage_start', 'valid_min', 'valid_max', 'date', 'date_created' ]

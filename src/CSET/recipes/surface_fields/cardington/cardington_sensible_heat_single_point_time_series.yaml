@@ -10,7 +10,7 @@ steps:
 
   - operator: misc.mask_fill_values
 
-  - operator: misc.sensible_heat_units
+  - operator: fluxes.sensible_heat_flux_from_covariance
     HEIGHT: $HEIGHT
     CARDINGTON_VARNAMES: $WT_VARNAMES
 
