@@ -392,3 +392,265 @@ def test_get_common_time_cubes(transect_source_cube):
         [transect_source_cube[1:], transect_source_cube[:]]
     ).extract_overlapping("time")
     assert cubelist[0].coord("time").points == np.array([449472.0])
+
+
+def test_check_single_cube():
+    """Conversion to a single cube, and rejection where not possible."""
+    cube = iris.cube.Cube([0.0])
+    cubelist = iris.cube.CubeList([cube])
+    long_cubelist = iris.cube.CubeList([cube, cube])
+    non_cube = 1
+    assert operator_utils.check_single_cube(cube) == cube
+    assert operator_utils.check_single_cube(cubelist) == cube
+    with pytest.raises(ValueError, match="CubeList did not contain a single cube."):
+        operator_utils.check_single_cube(long_cubelist)
+    with pytest.raises(
+        TypeError,
+        match="check_single_cube requires a Cube or CubeList of a single cube.",
+    ):
+        operator_utils.check_single_cube(non_cube)
+
+
+def test_get_num_models_single_cube_with_model_name():
+    """Test get_num_models with a single cube containing a model name."""
+    cube = iris.cube.Cube([0.0])
+    cube.attributes["model_name"] = "model_1"
+    assert operator_utils.get_num_models(cube) == 1
+
+
+def test_get_num_models_single_cube_without_model_name():
+    """Test get_num_models with a single cube without a model name."""
+    cube = iris.cube.Cube([0.0])
+    assert operator_utils.get_num_models(cube) == 1
+
+
+def test_get_num_models_cubelist_multiple_models():
+    """Test get_num_models with a CubeList containing multiple models."""
+    cube1 = iris.cube.Cube([0.0])
+    cube1.attributes["model_name"] = "model_1"
+    cube2 = iris.cube.Cube([1.0])
+    cube2.attributes["model_name"] = "model_2"
+    cubelist = iris.cube.CubeList([cube1, cube2])
+    assert operator_utils.get_num_models(cubelist) == 2
+
+
+def test_get_num_models_cubelist_duplicate_model_names():
+    """Test get_num_models with a CubeList containing duplicate model names."""
+    cube1 = iris.cube.Cube([0.0])
+    cube1.attributes["model_name"] = "model_1"
+    cube2 = iris.cube.Cube([1.0])
+    cube2.attributes["model_name"] = "model_1"
+    cubelist = iris.cube.CubeList([cube1, cube2])
+    assert operator_utils.get_num_models(cubelist) == 1
+
+
+def test_get_num_models_cubelist_mixed_with_none():
+    """Test get_num_models with a CubeList where some cubes lack model names."""
+    cube1 = iris.cube.Cube([0.0])
+    cube1.attributes["model_name"] = "model_1"
+    cube2 = iris.cube.Cube([1.0])
+    # cube2 has no model_name attribute
+    cubelist = iris.cube.CubeList([cube1, cube2])
+    assert operator_utils.get_num_models(cubelist) == 2
+
+
+def test_get_num_models_cubelist_all_none():
+    """Test get_num_models with a CubeList where no cubes have model names."""
+    cube1 = iris.cube.Cube([0.0])
+    cube2 = iris.cube.Cube([1.0])
+    cubelist = iris.cube.CubeList([cube1, cube2])
+    assert operator_utils.get_num_models(cubelist) == 1
+
+
+def test_get_num_models_cubelist_three_models():
+    """Test get_num_models with a CubeList containing three different models."""
+    cube1 = iris.cube.Cube([0.0])
+    cube1.attributes["model_name"] = "model_A"
+    cube2 = iris.cube.Cube([1.0])
+    cube2.attributes["model_name"] = "model_B"
+    cube3 = iris.cube.Cube([2.0])
+    cube3.attributes["model_name"] = "model_C"
+    cubelist = iris.cube.CubeList([cube1, cube2, cube3])
+    assert operator_utils.get_num_models(cubelist) == 3
+
+
+def test_validate_cube_shape_single_cube_matches():
+    """Test _validate_cube_shape when a single cube matches num_models=1."""
+    cube = iris.cube.Cube([0.0])
+    # Should not raise any exception
+    operator_utils.validate_cube_shape(cube, 1)
+
+
+def test_validate_cube_shape_cubelist_matches():
+    """Test _validate_cube_shape when CubeList length matches num_models."""
+    cube1 = iris.cube.Cube([0.0])
+    cube2 = iris.cube.Cube([1.0])
+    cubelist = iris.cube.CubeList([cube1, cube2])
+    # Should not raise any exception
+    operator_utils.validate_cube_shape(cubelist, 2)
+
+
+def test_validate_cube_shape_cubelist_mismatch():
+    """Test _validate_cube_shape when CubeList length does not match num_models."""
+    cube1 = iris.cube.Cube([0.0])
+    cube2 = iris.cube.Cube([1.0])
+    cubelist = iris.cube.CubeList([cube1, cube2])
+    # Should raise ValueError because 2 cubes != 3 models
+    with pytest.raises(
+        ValueError,
+        match=r"The number of model names \(3\) should equal the number of cubes \(2\).",
+    ):
+        operator_utils.validate_cube_shape(cubelist, 3)
+
+
+def test_validate_cube_shape_cubelist_more_cubes_than_models():
+    """Test _validate_cube_shape when CubeList has more cubes than models."""
+    cube1 = iris.cube.Cube([0.0])
+    cube2 = iris.cube.Cube([1.0])
+    cube3 = iris.cube.Cube([2.0])
+    cubelist = iris.cube.CubeList([cube1, cube2, cube3])
+    # Should raise ValueError because 3 cubes != 1 model
+    with pytest.raises(
+        ValueError,
+        match=r"The number of model names \(1\) should equal the number of cubes \(3\).",
+    ):
+        operator_utils.validate_cube_shape(cubelist, 1)
+
+
+def test_validate_cube_shape_cubelist_zero_models():
+    """Test _validate_cube_shape when num_models is zero."""
+    cube1 = iris.cube.Cube([0.0])
+    cubelist = iris.cube.CubeList([cube1])
+    # Should raise ValueError because 1 cube != 0 models
+    with pytest.raises(
+        ValueError,
+        match=r"The number of model names \(0\) should equal the number of cubes \(1\).",
+    ):
+        operator_utils.validate_cube_shape(cubelist, 0)
+
+
+def test_validate_cubes_coords_matching_lengths():
+    """Test _validate_cubes_coords when number of cubes matches number of coords."""
+    cube1 = iris.cube.Cube([0.0])
+    cube2 = iris.cube.Cube([1.0])
+    cubes = iris.cube.CubeList([cube1, cube2])
+
+    coord1 = iris.coords.DimCoord([1, 2, 3], standard_name="time")
+    coord2 = iris.coords.DimCoord([4, 5, 6], standard_name="time")
+    coords = [coord1, coord2]
+
+    # Should not raise any exception
+    operator_utils.validate_cubes_coords(cubes, coords)
+
+
+def test_validate_cubes_coords_mismatch_more_cubes():
+    """Test _validate_cubes_coords when there are more cubes than coords."""
+    cube1 = iris.cube.Cube([0.0])
+    cube2 = iris.cube.Cube([1.0])
+    cube3 = iris.cube.Cube([2.0])
+    cubes = iris.cube.CubeList([cube1, cube2, cube3])
+
+    coord1 = iris.coords.DimCoord([1, 2, 3], standard_name="time")
+    coord2 = iris.coords.DimCoord([4, 5, 6], standard_name="time")
+    coords = [coord1, coord2]
+
+    # Should raise ValueError because 3 cubes != 2 coords
+    with pytest.raises(ValueError, match="should equal the number"):
+        operator_utils.validate_cubes_coords(cubes, coords)
+
+
+def test_validate_cubes_coords_mismatch_more_coords():
+    """Test _validate_cubes_coords when there are more coords than cubes."""
+    cube1 = iris.cube.Cube([0.0])
+    cube2 = iris.cube.Cube([1.0])
+    cubes = iris.cube.CubeList([cube1, cube2])
+
+    coord1 = iris.coords.DimCoord([1, 2, 3], standard_name="time")
+    coord2 = iris.coords.DimCoord([4, 5, 6], standard_name="time")
+    coord3 = iris.coords.DimCoord([7, 8, 9], standard_name="time")
+    coords = [coord1, coord2, coord3]
+
+    # Should raise ValueError because 2 cubes != 3 coords
+    with pytest.raises(ValueError, match="should equal the number"):
+        operator_utils.validate_cubes_coords(cubes, coords)
+
+
+def test_validate_cubes_coords_single_cube_single_coord():
+    """Test _validate_cubes_coords with a single cube and single coord."""
+    cube = iris.cube.Cube([0.0])
+    cubes = iris.cube.CubeList([cube])
+
+    coord = iris.coords.DimCoord([1, 2, 3], standard_name="time")
+    coords = [coord]
+
+    # Should not raise any exception
+    operator_utils.validate_cubes_coords(cubes, coords)
+
+
+def test_validate_cubes_coords_empty_lists():
+    """Test _validate_cubes_coords with empty lists."""
+    cubes = iris.cube.CubeList([])
+    coords = []
+
+    # Should not raise any exception
+    operator_utils.validate_cubes_coords(cubes, coords)
+
+
+def test_validate_cubes_coords_large_matching_lists():
+    """Test _validate_cubes_coords with larger matching lists."""
+    cubes = iris.cube.CubeList([iris.cube.Cube([float(i)]) for i in range(5)])
+    coords = [
+        iris.coords.DimCoord([1, 2, 3], standard_name="time"),
+        iris.coords.DimCoord([4, 5, 6], standard_name="time"),
+        iris.coords.DimCoord([7, 8, 9], standard_name="time"),
+        iris.coords.DimCoord([10, 11, 12], standard_name="time"),
+        iris.coords.DimCoord([13, 14, 15], standard_name="time"),
+    ]
+
+    # Should not raise any exception
+    operator_utils.validate_cubes_coords(cubes, coords)
+
+
+def test_validate_cubes_coords_error_message_format():
+    """Test that _validate_cubes_coords error message contains correct counts."""
+    cube1 = iris.cube.Cube([0.0])
+    cube2 = iris.cube.Cube([1.0])
+    cubes = iris.cube.CubeList([cube1, cube2])
+
+    coord = iris.coords.DimCoord([1, 2, 3], standard_name="time")
+    coords = [coord]
+
+    # Check error message contains both counts
+    with pytest.raises(
+        ValueError,
+        match=r"The number of CubeList entries \(2\) should equal the number of sequence coordinates \(1\)",
+    ):
+        operator_utils.validate_cubes_coords(cubes, coords)
+
+
+def test_validate_cubes_coords_error_message_includes_advice():
+    """Test that error message includes advice about time averaging."""
+    cube1 = iris.cube.Cube([0.0])
+    cube2 = iris.cube.Cube([1.0])
+    cube3 = iris.cube.Cube([2.0])
+    cubes = iris.cube.CubeList([cube1, cube2, cube3])
+
+    coord1 = iris.coords.DimCoord([1, 2, 3], standard_name="time")
+    coord2 = iris.coords.DimCoord([4, 5, 6], standard_name="time")
+    coords = [coord1, coord2]
+
+    # Check error message includes advice about time entries
+    with pytest.raises(ValueError, match="Check that number of time entries"):
+        operator_utils.validate_cubes_coords(cubes, coords)
+
+
+def test_valid_sequence_coord_in_cube(cube):
+    """Check that sequence coordinate found in cube in cube."""
+    # Test that realization cube is correctly identified in cube.
+    operator_utils.check_sequence_coordinate(cube, "time")
+
+
+def test_valid_sequence_coord_not_in_cube(cube):
+    """Check that error raised if sequence coordinate not in cube."""
+    with pytest.raises(ValueError, match="Cube must have a dummy coordinate"):
+        operator_utils.check_sequence_coordinate(cube, "dummy")
