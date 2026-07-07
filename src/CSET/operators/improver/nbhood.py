@@ -13,7 +13,7 @@ from typing import Any, Optional, Tuple, Union
 import numpy as np
 from iris.cube import Cube, CubeList
 from numpy import ndarray
-from scipy.ndimage.filters import correlate
+from scipy.ndimage import correlate
 
 
 def pad_boxsum(

@@ -109,7 +109,6 @@ def _serial_calculate_dfss(
 
     for time_slice in cube_xy.slices_over("time"):
         time_point = time_slice.coord("time")
-        print("time_point = " + str(time_point.points))
         dfss_cube, dfss_stdev_cube = _calc_dfss(
             time_slice,
             neighbourhood_lengths,
@@ -117,12 +116,11 @@ def _serial_calculate_dfss(
             centile_or_threshold,
             centile,
             threshold,
-        )  #
+        )
         cube_list_dfss.append(dfss_cube)
         cube_list_dfss_stdev.append(dfss_stdev_cube)
 
     forecast_period = cube_xy.coord("forecast_period")
-
     merged_cube_dfss = cube_list_dfss.merge_cube()
     merged_cube_dfss_stdev = cube_list_dfss_stdev.merge_cube()
 
@@ -165,6 +163,9 @@ def calculate_dfss(
             cube with dfss standard deviation variable
 
     """
+    if len(cube_xy.coord("realization").points) == 1:
+        raise ValueError("dFSS is only valid for an ensemble")
+
     # force serial run if running in workflow
     if "CYLC_RUN_DIR" in os.environ:
         run_parallel = False
@@ -225,7 +226,7 @@ def _calc_dfss(
         dfss[i] = (ma.masked_invalid(fss_array)).mean()
         dfss_stdev[i] = (ma.masked_invalid(fss_array)).std()
     neighbourhood_coord = icoords.DimCoord(
-        neighbourhood_lengths, var_name="neighbourhood_lengths", units="grid_points"
+        neighbourhood_lengths, var_name="neighbourhoods"
     )
 
     dfss_cube = iris.cube.Cube(
@@ -293,8 +294,8 @@ def _calc_fss(
         neighbourhood_method="square", radii=neighbourhood_length
     )
 
-    cube_a = regrid_lat_lon_cube_to_xy_cube(cube_a)
-    cube_b = regrid_lat_lon_cube_to_xy_cube(cube_b)
+    cube_a = _regrid_lat_lon_cube_to_xy_cube(cube_a)
+    cube_b = _regrid_lat_lon_cube_to_xy_cube(cube_b)
 
     fraction_fields_a = nbhooder.process(cube_a)
     fraction_fields_b = nbhooder.process(cube_b)
@@ -320,14 +321,14 @@ def _calc_fss_two_fields(field_a, field_b):
     return fss
 
 
-def get_spatial_coords(cube):
+def _get_spatial_coords(cube):
     """Return the x, y coordinates of an input :class:`iris.cube.Cube`."""
     x_coord = cube.coord(axis="x")
     y_coord = cube.coord(axis="y")
     return [x_coord, y_coord]
 
 
-def regrid_lat_lon_cube_to_xy_cube(cube_latlon):
+def _regrid_lat_lon_cube_to_xy_cube(cube_latlon):
     """Regrid a lat-lon cube to xy.
 
     Takes a cube specified on a lat-lon grid and re-grids
@@ -343,7 +344,7 @@ def regrid_lat_lon_cube_to_xy_cube(cube_latlon):
             Original cube regridded onto an x-y grid
 
     """
-    x_coord, y_coord = get_spatial_coords(cube_latlon)
+    x_coord, y_coord = _get_spatial_coords(cube_latlon)
 
     # Transform max and min lon and lat points to set new x,y array on
     # new coordinate system
