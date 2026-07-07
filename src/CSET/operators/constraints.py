@@ -65,19 +65,32 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
     -------
     varname_constraint: iris.Constraint
     """
-    if re.match(r"m[0-9]{2}s[0-9]{2}i[0-9]{3}$", varname):
-        varname_constraint = iris.AttributeConstraint(STASH=varname)
-    else:
-        varname_constraint = iris.Constraint(name=varname)
+    _STASH_RE = re.compile(r"^m\d{2}s\d{2}i\d{3}$")
 
-    # Ensure access to variable vector components for computed fields
-    if varname == "wind_speed_at_10m":
+    if isinstance(varname, str) and _STASH_RE.match(varname):
+        return iris.AttributeConstraint(STASH=varname)
+
+    else:
+        # Set varname to list
+        if isinstance(varname, str):
+            varname = [varname]
+
+        # Ensure access to variable vector components for computed fields
+        if "wind_speed_at_10m" in varname:
+            varname.extend(["eastward_wind_at_10m", "northward_wind_at_10m"])
+
+    # Case 2: Multiple varnames
+    if isinstance(varname, (list, tuple)):
         varname_constraint = iris.Constraint(
             cube_func=lambda cube: (
-                cube.long_name
-                in ["wind_at_10m", "eastward_wind_at_10m", "northward_wind_at_10m"]
+                cube.long_name in varname
+                or cube.standard_name in varname
+                or cube.var_name in varname
             )
         )
+
+    else:
+        varname_constraint = iris.Constraint(name=varname)
 
     return varname_constraint
 

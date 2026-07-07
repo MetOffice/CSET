@@ -9,7 +9,9 @@ steps:
     model_names: ['OBS', '$MODEL_NAME']
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
-    constraint: ['observed_$VARNAME', '$VARNAME']
+    constraint:
+      operator: constraints.generate_var_constraint
+      varname: ['observed_$VARNAME', '$VARNAME']
 
   - operator: filters.filter_multiple_cubes
     constraint:
