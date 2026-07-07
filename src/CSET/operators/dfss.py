@@ -224,9 +224,8 @@ def _calc_dfss(
 
         dfss[i] = (ma.masked_invalid(fss_array)).mean()
         dfss_stdev[i] = (ma.masked_invalid(fss_array)).std()
-
     neighbourhood_coord = icoords.DimCoord(
-        neighbourhood_lengths, var_name="neighbourhoods"
+        neighbourhood_lengths, var_name="neighbourhood_lengths", units="grid points"
     )
 
     dfss_cube = iris.cube.Cube(
@@ -304,17 +303,6 @@ def _calc_fss(
     field_b = fraction_fields_b.data
 
     fss = _calc_fss_two_fields(field_a.data, field_b.data)
-
-    # nbhooder = SquareNeighbourhood(sum_or_fraction="fraction")
-    # radius_grid_point = int((neighbourhood_length - 1) / 2)
-    # fraction_fields_a = nbhooder.run(cube_a, radius_grid_point, radius_grid_point)
-    # fraction_fields_b = nbhooder.run(cube_b, radius_grid_point, radius_grid_point)
-
-    # Calculate the FSS between the two fields
-    # field_a = fraction_fields_a.data
-    # field_b = fraction_fields_b.data
-
-    # fss = _calc_fss_two_fields(field_a, field_b)
 
     return fss
 
