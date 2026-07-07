@@ -35,6 +35,15 @@ def test_generate_var_constraint():
     assert repr(var_constraint) == expected_var_constraint
 
 
+def test_generate_var_constraint_wind():
+    """Generate iris cube constraint for wind speed."""
+    var_constraint = constraints.generate_var_constraint("wind_speed_at_10m")
+    expected_var_constraint = (
+        "Constraint(cube_func=<function generate_var_constraint.<locals>.<lambda>"
+    )
+    assert expected_var_constraint in repr(var_constraint)
+
+
 def test_generate_var_constraint_stash():
     """Generate iris cube constraint for UM STASH code with var constraint."""
     var_constraint = constraints.generate_var_constraint("m01s03i236")

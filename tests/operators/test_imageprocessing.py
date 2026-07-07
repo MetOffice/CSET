@@ -139,7 +139,7 @@ def test_SSIM_incorrect_number_of_cubes(cube: iris.cube.Cube):
 
 def test_SSIM_no_time_coord(cube: iris.cube.Cube):
     """Test SSIM fails with no time coordinate."""
-    c1 = cube.extract(iris.Constraint(time=datetime.datetime(2022, 9, 21, 3, 30)))
+    c1 = cube.extract(iris.Constraint(time=datetime.datetime(2022, 9, 21, 3, 0)))
     c1.remove_coord("time")
     c2 = c1.copy()
     del c2.attributes["cset_comparison_base"]

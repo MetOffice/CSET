@@ -203,12 +203,8 @@ def setup_logging(verbosity: int):
     # Set logging level.
     logger.setLevel(loglevel)
 
-    # Hide matplotlib's many font messages.
-    class NoFontMessageFilter(logging.Filter):
-        def filter(self, record):
-            return not record.getMessage().startswith("findfont:")
-
-    logging.getLogger("matplotlib.font_manager").addFilter(NoFontMessageFilter())
+    # Suppress matplotlib's verbose debug output.
+    logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
     stderr_log = logging.StreamHandler(stream=sys.stdout)
     stderr_log.setFormatter(

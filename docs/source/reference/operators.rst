@@ -50,6 +50,12 @@ CSET.operators.plot
 .. automodule:: CSET.operators.plot
    :members:
 
+CSET.operators.power_spectrum
+-----------------------------
+
+.. automodule:: CSET.operators.power_spectrum
+   :members:
+
 CSET.operators.read
 -------------------
 
@@ -149,11 +155,20 @@ CSET.operators.temperature
 .. automodule:: CSET.operators.temperature
    :members:
 
+Verification Operators
+~~~~~~~~~~~~~~~~~~~~~~
+
+CSET.operators.scoreswrappers
+-----------------------------
+
+.. automodule:: CSET.operators.scoreswrappers
+   :members:
+
 Wind Operators
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
 
 CSET.operators.wind
-------------------------
+-------------------
 
 .. automodule:: CSET.operators.wind
    :members:

@@ -1,0 +1,26 @@
+# Site configuration for Met Office Monsoon collaboration system.
+[runtime]
+    [[root]]
+        platform = ex-bg
+        execution time limit = PT15M
+        [[[directives]]]
+          -q         = collabshared
+	[[[environment]]]
+          # Use pre-downloaded shapefiles.
+          CARTOPY_DATA_DIR = /common/share/scitools/environments/default-2025_11_26/share/cartopy
+
+    [[bake_recipes]]
+        platform = ex
+        execution time limit = PT3H
+        [[[directives]]]
+          -q          = collabshared
+          -l ncpus    = 16
+          -l mem      = 64gb
+
+    [[bake_aggregation_recipes]]
+        platform = ex
+        execution time limit = PT3H
+        [[[ directives ]]]
+          -q          = collabshared
+          -l ncpus    = 8
+          -l mem      = 64gb
