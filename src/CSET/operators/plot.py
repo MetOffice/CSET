@@ -965,8 +965,16 @@ def _plot_and_save_line_series(
     if coords[0].name() == "time":
         ax.set_xlabel(f"{coords[0].name()}", fontsize=14)
     else:
-        ax.set_xlabel(f"{coords[0].name()} / {coords[0].units}", fontsize=14)
-    ax.set_ylabel(f"{cubes[0].name()} / {cubes[0].units}", fontsize=14)
+        if coords[0].units != "unknown":
+            ax.set_xlabel(f"{coords[0].name()} / {coords[0].units}", fontsize=14)
+        else:
+            ax.set_xlabel(f"{coords[0].name()}", fontsize=14)
+
+    if cubes[0].units != "unknown":
+        ax.set_ylabel(f"{cubes[0].name()} / {cubes[0].units}", fontsize=14)
+    else:
+        ax.set_ylabel(f"{cubes[0].name()}", fontsize=14)
+
     ax.set_title(title, fontsize=16)
 
     ax.ticklabel_format(axis="y", useOffset=False)
