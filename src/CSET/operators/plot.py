@@ -674,7 +674,6 @@ def _plot_and_save_spatial_plot(
 
 def plot_dfss_contour(
     cube: iris.cube.Cube | iris.cube.CubeList,
-    filename: str = None,
     variable: str = None,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Plot a scatter plot between two variables.
@@ -965,15 +964,15 @@ def _plot_and_save_line_series(
     if coords[0].name() == "time":
         ax.set_xlabel(f"{coords[0].name()}", fontsize=14)
     else:
-        if coords[0].units != "unknown":
-            ax.set_xlabel(f"{coords[0].name()} / {coords[0].units}", fontsize=14)
-        else:
+        if coords[0].units == "unknown":
             ax.set_xlabel(f"{coords[0].name()}", fontsize=14)
+        else:
+            ax.set_xlabel(f"{coords[0].name()} / {coords[0].units}", fontsize=14)
 
-    if cubes[0].units != "unknown":
-        ax.set_ylabel(f"{cubes[0].name()} / {cubes[0].units}", fontsize=14)
-    else:
+    if cubes[0].units == "unknown":
         ax.set_ylabel(f"{cubes[0].name()}", fontsize=14)
+    else:
+        ax.set_ylabel(f"{cubes[0].name()} / {cubes[0].units}", fontsize=14)
 
     ax.set_title(title, fontsize=16)
 
