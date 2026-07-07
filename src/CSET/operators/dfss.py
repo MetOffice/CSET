@@ -163,6 +163,7 @@ def calculate_dfss(
             cube with dfss standard deviation variable
 
     """
+    breakpoint()
     if len(cube_xy.coord("realization").points) == 1:
         raise ValueError("dFSS is only valid for an ensemble")
 

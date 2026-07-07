@@ -817,7 +817,6 @@ def _plot_and_save_spatial_plot(
 
 def plot_dfss_contour(
     cube: iris.cube.Cube | iris.cube.CubeList,
-    filename: str = None,
     variable: str = None,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Plot a scatter plot between two variables.
