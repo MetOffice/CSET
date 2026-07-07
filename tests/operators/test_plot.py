@@ -632,7 +632,7 @@ def test_plot_line_series_stations(cube):
     assert Path("station_series_1.png").is_file()
     assert Path("station_series_2.png").is_file()
 
-    
+
 def test_plot_and_save_postage_stamps_in_single_plot_power_spectrum_series_single_member(
     tmp_working_dir,
 ):

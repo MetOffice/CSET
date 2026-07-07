@@ -2168,7 +2168,7 @@ def plot_line_series(
                 f"Cube must have a {series_coordinate} coordinate."
             ) from err
 
-    # Add list of plots to plot metadata.
+        # Add list of plots to plot metadata.
         if cube.coords("realization"):
             if cube.ndim > 3:
                 raise ValueError("Cube must be 1D or 2D with a realization coordinate.")
@@ -2288,7 +2288,7 @@ def plot_line_series(
         plot_title, plot_filename = _set_title_and_filename(
             seq_coord, nplot, recipe_title, filename
         )
-        
+
         # Treat cubes with station coordinate as point observation timeseries, looping over available points
         if (
             "station" in [c.name() for c in cubes[0].coords()]
@@ -2308,9 +2308,9 @@ def plot_line_series(
                     f"{plot_title} {station_name}",
                 )
                 plot_index.append(station_plotname)
-        
+
         else:
-        # Do the actual plotting for all other series coordinate options.
+            # Do the actual plotting for all other series coordinate options.
             _plot_and_save_line_series(
                 cubes, coords, stamp_coordinate, plot_filename, plot_title
             )
