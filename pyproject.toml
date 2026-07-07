@@ -35,6 +35,7 @@ dependencies = [
     "scores",
     "dask",
     "xarray",
+    "simple-track",
 ]
 
 [project.urls]
