@@ -102,18 +102,23 @@ def load(conf: Config):
 
     # Create a list of case aggregation types.
     AGGREGATION_TYPES = ["all", "rolling"]
+    print("In ps loader ", AGGREGATION_TYPES, conf.SURFACE_FIELDS)
 
     # Surface (2D) fields.
     for atype, field in itertools.product(AGGREGATION_TYPES, conf.SURFACE_FIELDS):
-        if conf.SPECTRUM_SURFACE_FIELD_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
+        #        if conf.SPECTRUM_SURFACE_FIELD_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
+        index = AGGREGATION_TYPES.index(atype)
+        aggregations = conf.SPECTRUM_SURFACE_FIELD_AGGREGATION
+        print("ALL INFO ", atype, index, aggregations)
+        if len(aggregations) > index and aggregations[index]:
             yield RawRecipe(
                 recipe=f"generic_surface_power_spectrum_series_mean_{atype}.yaml",
                 variables={
                     "VARNAME": field,
                     "MODEL_NAME": [model["name"] for model in models],
-                    "SEQUENCE": "time"
-                    if conf.SPECTRUM_SURFACE_FIELD_SEQUENCE
-                    else "realization",
+                    #                    "SEQUENCE": "time"
+                    #                    if conf.SPECTRUM_SURFACE_FIELD_SEQUENCE
+                    #                    else "realization",
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
