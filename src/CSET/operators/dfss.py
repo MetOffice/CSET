@@ -225,7 +225,7 @@ def _calc_dfss(
         dfss[i] = (ma.masked_invalid(fss_array)).mean()
         dfss_stdev[i] = (ma.masked_invalid(fss_array)).std()
     neighbourhood_coord = icoords.DimCoord(
-        neighbourhood_lengths, var_name="neighbourhood_lengths", units="grid points"
+        neighbourhood_lengths, var_name="neighbourhood_lengths", units="grid_points"
     )
 
     dfss_cube = iris.cube.Cube(
