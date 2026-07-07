@@ -22,7 +22,7 @@ def load(conf: Config):
     # Load a list of model detail dictionaries.
     models = get_models(conf.asdict())
 
-    # Surface timeseries
+    # dfss
     if conf.DFSS:
         for field in conf.SURFACE_FIELDS:
             yield RawRecipe(
@@ -32,6 +32,7 @@ def load(conf: Config):
                     "CENTILE_OR_THRESHOLD": conf.CENTILE_OR_THRESHOLD,
                     "CENTILE": conf.CENTILE,
                     "THRESHOLD": conf.THRESHOLD,
+                    "$NEIGHBOURHOOD_LENGTHS": conf.NEIGHBOURHOOD_LENGTHS,
                 },
                 model_ids=[model["id"] for model in models],
                 aggregation=False,
