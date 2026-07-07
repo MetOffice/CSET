@@ -454,7 +454,7 @@ def test_colorbar_map_scores_rmse(cube, tmp_working_dir):
     assert levels is None
     assert norm is None
 
-    
+
 def test_colorbar_map_auto(cube):
     """Set colorbar for variables with auto scaling set."""
     cube.rename("surface_altitude")
@@ -462,8 +462,8 @@ def test_colorbar_map_auto(cube):
     assert cmap == plt.get_cmap("terrain", 51)
     assert levels is None
     assert norm is None
-    
-    
+
+
 def test_colorbar_feature_tracking_id_cube(cube):
     """Colorbar definition is found for a feature id cube."""
     cube.rename("feature_id")
