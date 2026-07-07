@@ -16,12 +16,12 @@
     {% if CSET_CYCLING_MODE == "case_study" %}
         {% for date in CSET_CASE_DATES %}
             R1/{{date}} = """
-                    {{metplus_point_stat_graph()}}
+                    {{metplus_ensemble_stat_graph()}}
                 """
         {% endfor %}
     {% elif CSET_CYCLING_MODE == "trial" %}
         {{CSET_TRIAL_CYCLE_PERIOD}} = """
-                    {{metplus_point_stat_graph()}}
+                    {{metplus_ensemble_stat_graph()}}
                 """
     {% endif %}
     R1/$ = """
@@ -56,21 +56,23 @@
     [[metplus_ascii2nc]]
     # Runs METplus wrappers for ASCII to nc ingestion of obs.
         inherit = METPLUS
+        [[[environment]]]
+            ROSE_APP_OPT_CONF_KEYS = {{SITE}}_ens
 
     [[METPLUS_ENSEMBLE_STAT]]
     # Family grouping metplus_point_stat tasks for all models"
         inherit = METPLUS
         [[[environment]]]
             ROSE_TASK_APP = metplus_ensemble_stat
-            STAT = area??
-            STAT_TYPE_LIST = cnt??
+            #STAT = area??
+            #STAT_TYPE_LIST = cnt??
 
     [[METPLUS_ENSEMBLE_STAT_POSTPROC]]
     # Family grouping all metplus Post-processing
     inherit = METPLUS
         [[[environment]]]
-            STAT = area??
-            STAT_TYPE_LIST = cnt??
+            STAT = area
+            STAT_TYPE_LIST = "ecnt rhist rps pct"
 
     [[VERPY_METLOADER]]
     # Family grouping for all VerPy metloader tasks
@@ -80,7 +82,7 @@
 {% for model in models %}
     [[metplus_ensemble_stat_m{{model["id"]}}]]
     # Runs METplus wrappers for ensemble stat calculations.
-        inherit = METPLUS_POINT_STAT
+        inherit = METPLUS_ENSEMBLE_STAT
         [[[environment]]]
             MODEL_NAME = {{model["name"]}}
             model_name = {{model["name"] | lower}}
@@ -91,7 +93,7 @@
         script = """
             MODEL_NAME={{model["name"]}}
             ENSEMBLE_STAT_DIR=${CYLC_TASK_SHARE_CYCLE_DIR}/Ensemble_Stat_${MODEL_NAME}
-            mkdir -p ${CYLC_WORKFLOW_SHARE_DIR}/${MODEL_NAME}_point_stat_${STAT}_tar
+            mkdir -p ${CYLC_WORKFLOW_SHARE_DIR}/${MODEL_NAME}_ensemble_stat_${STAT}_tar
             for STAT_TYPE in ${STAT_TYPE_LIST}; do
                 gzip ${ENSEMBLE_STAT_DIR}/*_${STAT_TYPE}.txt
                 files_list=$(ls ${ENSEMBLE_STAT_DIR}/*_${STAT_TYPE}.txt.gz | xargs -n 1 basename)
@@ -104,9 +106,11 @@
         inherit = VERPY_METLOADER
         [[[environment]]]
             VERPY_DIR = {{VERPY_DIR}}
-            VER_METHOD = area??
-            STAT_TYPE = cnt??
+            VER_METHOD = area
+            STAT_TYPE = ecnt
             STREAM = ensemble_stat
+            TABLE_NAME=${STREAM}_table
+            DB_NAME=${STAT_TYPE}_${STAT_TYPE}.db
             MODEL_NAME = {{model["name"]}}
             METLOADER_CONF_FILE = metloader.conf
 {% endfor %}
@@ -119,9 +123,11 @@
             PLOT_DIR = ${CYLC_WORKFLOW_SHARE_DIR}/web/plots
             START_DATE = $(isodatetime {{ CSET_CASE_DATES|min }} --print-format %Y%m%d)
             END_DATE = $(isodatetime {{ CSET_CASE_DATES|max }} --offset {{ANALYSIS_LENGTH}} --print-format %Y%m%d)
-            VER_METHOD = area??
-            STAT_TYPE = cnt??
+            STAT_TYPE = ecnt
             STREAM = ensemble_stat
+            VER_METHOD = area
+            TABLE_NAME=${STREAM}_table
+            DB_NAME=${STAT_TYPE}_${STAT_TYPE}.db
             MODEL_NAMES = {{ models | map(attribute='name') | join(' ') }}
 
 {% endif %}
