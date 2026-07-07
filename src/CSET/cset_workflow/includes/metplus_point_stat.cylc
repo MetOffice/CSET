@@ -107,8 +107,6 @@
             VER_METHOD = area
             STAT_TYPE = cnt
             STREAM = point_stat
-            TABLE_NAME=${STREAM}_table
-            DB_NAME=${STAT_TYPE}_${STAT_TYPE}.db
             MODEL_NAME = {{model["name"]}}
             METLOADER_CONF_FILE = metloader.conf
 {% endfor %}
@@ -124,8 +122,6 @@
             VER_METHOD = area
             STAT_TYPE = cnt
             STREAM = point_stat
-            TABLE_NAME=${STREAM}_table
-            DB_NAME=${STAT_TYPE}_${STAT_TYPE}.db
             MODEL_NAMES = {{ models | map(attribute='name') | join(' ') }}
 
 {% endif %}
