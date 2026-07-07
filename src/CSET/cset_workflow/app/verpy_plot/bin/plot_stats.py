@@ -9,9 +9,17 @@ Small utility to produce plots from METPlus results.
 import argparse
 import json
 import os
+import os.path
 
 import VerPy
 import VerPy.conf2opts
+
+
+def AddOdb2Names():
+    from VerPy.parameter import get_param_by_code
+
+    param = get_param_by_code(88,1,-1)
+    param['short'].append('rh2m')
 
 
 def main():
@@ -35,15 +43,15 @@ def main():
 
     args = parser.parse_args()
 
+    AddOdb2Names()
+
     opts_dicts, scard_dict = VerPy.conf2opts.conf2opts(args.conf)
 
     for options in opts_dicts:
         options["start"] = args.start
         options["end"] = args.end
         options["expids"] = args.expids
-        options["source"] = (
-            f"{os.getenv('TABLENAME')}@{os.getenv('DB_DIR')}/{os.getenv('DB_NAME')}"
-        )
+        options["source"] = os.path.expandvars(options["source"])
         print(f"Options Dictionary: {options}")
         VerPy.job.run(args.outdir, options)
 
@@ -51,7 +59,7 @@ def main():
         json_filename = f"{args.outdir}/{options['jobid']}/meta.json"
         print(f"writing metadata to json file: {json_filename}")
         metadata_dict = {
-            "title": "Metplus Point Stat plots",
+            "title": f"{options['system']} {options['type']} {options['output']}",
             "category": "Metplus plots",
         }
         with open(json_filename, "w") as jf:
