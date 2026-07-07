@@ -715,7 +715,7 @@ def plot_dfss_contour(
     recipe_title = get_recipe_metadata().get("title", "Untitled")
 
     title = cube.name()
-    filename = cube.name()
+    filename = f"{cube.name()}.png"
     plot_title = recipe_title + "\n" + title
 
     cmap = plt.colormaps["viridis"]
