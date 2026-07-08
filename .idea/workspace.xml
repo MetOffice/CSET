@@ -6,7 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="df6206a7-601b-4491-b0f1-fe2ee2d337e7" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/recipes/hourly_precipitation_dfss.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/recipes/dfss.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/CSET/operators/plot.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/operators/plot.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
