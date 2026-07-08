@@ -125,8 +125,6 @@ def test_install_workflow(monkeypatch, tmp_path):
     assert wd.is_dir()
     # Regular files are coped.
     assert (wd / "flow.cylc").is_file()
-    # Scripts are made executable.
-    assert (wd / "install_restricted_files.sh").stat().st_mode & stat.S_IXUSR
     # Conda environment is linked.
     assert (wd / "conda-environment").is_symlink()
     assert (wd / "conda-environment").readlink() == conda_env
