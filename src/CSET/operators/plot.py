@@ -888,9 +888,10 @@ def _plot_and_save_postage_stamp_spatial_plot(
 def _plot_and_save_line_series(
     cubes: iris.cube.CubeList,
     coords: list[iris.coords.Coord],
-    ensemble_coord: str,
     filename: str,
     title: str,
+    ensemble_coord: str = None,
+    sequence_coord: str = None,
     **kwargs,
 ):
     """Plot and save a 1D line series.
@@ -903,11 +904,18 @@ def _plot_and_save_line_series(
         Coordinates to plot on the x-axis, one per cube.
     ensemble_coord: str
         Ensemble coordinate in the cube.
+    sequence_coord str
+        sequence coordinate for plotting, needed only if not an ensemble.
     filename: str
         Filename of the plot to write.
     title: str
         Plot title.
     """
+    if (ensemble_coord is None) == (sequence_coord is None):
+        raise ValueError(
+            "Exactly one of ensemble_coord and sequence_coord must be provided"
+        )
+
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
     model_colors_map = get_model_colors_map(cubes)
@@ -924,31 +932,35 @@ def _plot_and_save_line_series(
         if model_colors_map:
             label = cube.attributes.get("model_name")
             color = model_colors_map.get(label)
-        for cube_slice in cube.slices_over(ensemble_coord):
-            # Label with (control) if part of an ensemble or not otherwise.
-            if cube_slice.coord(ensemble_coord).points == [0]:
-                iplt.plot(
-                    coord,
-                    cube_slice,
-                    color=color,
-                    marker="o",
-                    ls="-",
-                    lw=3,
-                    label=f"{label} (control)"
-                    if len(cube.coord(ensemble_coord).points) > 1
-                    else label,
-                )
-                # Label with (perturbed) if part of an ensemble and not the control.
-            else:
-                iplt.plot(
-                    coord,
-                    cube_slice,
-                    color=color,
-                    ls="-",
-                    lw=1.5,
-                    alpha=0.75,
-                    label=f"{label} (member)",
-                )
+        if ensemble_coord is not None:
+            for cube_slice in cube.slices_over(ensemble_coord):
+                # Label with (control) if part of an ensemble or not otherwise.
+                if cube_slice.coord(ensemble_coord).points == [0]:
+                    iplt.plot(
+                        coord,
+                        cube_slice,
+                        color=color,
+                        marker="o",
+                        ls="-",
+                        lw=3,
+                        label=f"{label} (control)"
+                        if len(cube.coord(ensemble_coord).points) > 1
+                        else label,
+                    )
+                    # Label with (perturbed) if part of an ensemble and not the control.
+                else:
+                    iplt.plot(
+                        coord,
+                        cube_slice,
+                        color=color,
+                        ls="-",
+                        lw=1.5,
+                        alpha=0.75,
+                        label=f"{label} (member)",
+                    )
+        if sequence_coord is not None:
+            for cube_slice in cube.slices_over(sequence_coord):
+                iplt.plot(coord, cube_slice, color=color, ls="-", lw=1.5, alpha=0.75)
 
         # Calculate the global min/max if multiple cubes are given.
         _, levels, _ = colorbar_map_levels(cube, axis="y")
@@ -2166,7 +2178,9 @@ def plot_line_series(
     )
 
     # Do the actual plotting.
-    _plot_and_save_line_series(cubes, coords, "realization", plot_filename, plot_title)
+    _plot_and_save_line_series(
+        cubes, coords, plot_filename, plot_title, ensemble_coord="realization"
+    )
 
     # Add list of plots to plot metadata.
     plot_index = _append_to_plot_index([plot_filename])
@@ -2244,9 +2258,9 @@ def plot_line_series_sequence(
         _plot_and_save_line_series(
             cubes_in,
             coords,
-            sequence_coordinate,
             plot_filename_with_sequence_coord,
             plot_title_with_time,
+            sequence_coord=sequence_coordinate,
         )
 
         # Add list of plots to plot metadata.
