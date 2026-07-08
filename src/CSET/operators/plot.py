@@ -2227,28 +2227,19 @@ def plot_line_series_sequence(
     # Do the actual plotting
 
     for i, cubes in enumerate(cube.slices_over(sequence_coordinate)):
-        time_str = cubes.coords("time")[0].units.title(
-            cubes.coords("time")[0].points[0]
-        )
+        if cubes.coord(sequence_coordinate).units == "unknown":
+            sequence_point = cubes.coord(sequence_coordinate).points[0]
+        else:
+            sequence_point = cubes.coord(sequence_coordinate).units.title(
+                cubes.coord(sequence_coordinate).points[0]
+            )
+
         plot_filename_with_sequence_coord = (
-            cube.name()
-            + "_"
-            + sequence_coordinate
-            + "_point_"
-            + str(i)
-            + "_"
-            + plot_filename
+            f"{cube.name()}_{sequence_coordinate}_point_{str(i)}_{plot_filename}"
         )
-        plot_title_with_time = (
-            cubes.name()
-            + " vs "
-            + series_coordinate
-            + " ("
-            + sequence_coordinate
-            + ": "
-            + time_str
-            + ")"
-        )
+
+        plot_title_with_time = f"{cubes.name()} vs {series_coordinate} ({sequence_coordinate}: {sequence_point})"
+
         cubes_in = iter_maybe(cubes)
         _plot_and_save_line_series(
             cubes_in,
