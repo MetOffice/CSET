@@ -623,7 +623,7 @@ def _mask_fill_cube(
 ) -> iris.cube.Cube:
     """
     Replace masked and fill-value data with NaNs.
-    
+
     Parameters
     ----------
     cube : iris.cube.Cube
@@ -661,14 +661,14 @@ def _mask_fill_cube(
     except AttributeError:
         pass  # x has no _meta (plain ndarray)
 
-    # Known fill values 
+    # Known fill values
     # - 1e10 observed as NetCDF _FillValue in some archived variables.
     # - 1e11 documented as the data value for missing/bad core data flags.
     fill_values.extend([1e10, 1e11])
-    
+
     # Defensive fallback: other NumPy masked-array default fill values.
-    fill_values.append([999999, -999999])
-    
+    fill_values.extend([999999, -999999])
+
     if np.ma.isMaskedArray(x):
         x_data = np.ma.getdata(x)
         x_mask = np.ma.getmaskarray(x)
