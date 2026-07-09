@@ -614,7 +614,12 @@ function setup_plots_sidebar() {
             // Normalise values to strings.
             for (const facet in record) {
               if (typeof record[facet] != "string") {
-                record[facet] = record[facet].toString();
+                try {
+                  record[facet] = record[facet].toString();
+                } catch {
+                  console.log("Facet value could not be cast to string.");
+                  delete record[facet];
+                }
               }
             }
             diagnostic_records.push(record);
