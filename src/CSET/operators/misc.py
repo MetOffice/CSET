@@ -617,13 +617,35 @@ def differentiate(
         return new_cubelist
 
 
-def _mask_fill_cube(cube: iris.cube.Cube, ulp_factor=10):
+def _mask_fill_cube(
+    cube: iris.cube.Cube,
+    ulp_factor: int = 10,
+) -> iris.cube.Cube:
     """
-    Avoid plotting data flagged as bad/missing.
+    Parameters
+    ----------
+    cube : iris.cube.Cube
+        Input cube to clean.
 
-    Force masked data and known fill values to np.nan
-    so they are not plotted.
+    ulp_factor : int, optional
+        Number of floating-point ULPs (units in the last place) used when
+        comparing values against known fill values. Larger values are more
+        tolerant of floating-point rounding differences. Default is 10.
 
+    Returns
+    -------
+    iris.cube.Cube
+        Cube with masked and fill-value points replaced by ``NaN``.
+
+    Notes
+    -----
+     The returned cube preserves metadata and coordinates.
+     Data are processed lazily using Dask where possible.
+     If no masked or fill values are detected, the original cube is
+      returned unchanged.
+     Genuine NetCDF ``_FillValue`` handling is normally performed by Iris
+      during file loading, but this routine additionally converts masked
+      points to NaNs and handles known sentinel values.
     """
     import dask.array as da
 
@@ -637,9 +659,14 @@ def _mask_fill_cube(cube: iris.cube.Cube, ulp_factor=10):
     except AttributeError:
         pass  # x has no _meta (plain ndarray)
 
-    # Known Cardington fill values
-    fill_values.extend([1e10, 1e11, 999999])
-
+    # Known fill values 
+    # - 1e10 observed as NetCDF _FillValue in some archived variables.
+    # - 1e11 documented as the data value for missing/bad core data flags.
+    fill_values.extend([1e10, 1e11])
+    
+    # Defensive fallback: other NumPy masked-array default fill values.
+    fill_values.append([999999, -999999])
+    
     if np.ma.isMaskedArray(x):
         x_data = np.ma.getdata(x)
         x_mask = np.ma.getmaskarray(x)
@@ -659,7 +686,7 @@ def _mask_fill_cube(cube: iris.cube.Cube, ulp_factor=10):
     # Build mask
     m_fill = da.zeros(data.shape, dtype=bool, chunks=data.chunks)
     for fv in fill_values:
-        ulp = ulp_factor * np.spacing(np.float32(fv))
+        ulp = ulp_factor * abs(np.spacing(np.float32(fv)))
         m_fill |= da.isclose(data, np.float32(fv), rtol=0, atol=ulp)
 
     if not da.any(m0 | m_fill).compute():
@@ -670,12 +697,42 @@ def _mask_fill_cube(cube: iris.cube.Cube, ulp_factor=10):
 
     return cube.copy(data=y)
 
-
-def mask_fill_values(cubes, ulp_factor=10):
+def mask_fill_values(
+    cubes: iris.cube.Cube | CubeList,
+    ulp_factor: int = 10,
+) -> CubeList:
     """
-    Apply _mask_fill_value to every cube in the CubeList.
+    Replace masked and fill-value data with NaNs in one or more cubes.
 
-    This must be run AFTER any operator that recreates data.
+    Applies :func:`_mask_fill_cube` to every cube in the supplied
+    CubeList. This is primarily intended for observational
+    datasets where a combination of NetCDF ``_FillValue`` masking and
+    dataset-specific sentinel values are used to represent missing or
+    unusable data.
+
+    Parameters
+    ----------
+    cubes : iris.cube.Cube or iris.cube.CubeList
+        Cube or CubeList to clean.
+
+    ulp_factor : int, optional
+        Number of floating-point ULPs used when comparing values against
+        known fill values. Passed directly to
+        :func:`_mask_fill_cube`. Default is 10.
+
+    Returns
+    -------
+    iris.cube.CubeList
+        CubeList containing cleaned cubes.
+
+    Notes
+    -----
+    This operator should generally be applied after reading observational
+    data and before plotting.
+
+    It may also be useful after operators that recreate or transform data,
+    where masked values could otherwise propagate into derived diagnostics
+    and appear as spurious spikes or extrema in plots.
     """
     if not isinstance(cubes, CubeList):
         cubes = CubeList([cubes])
