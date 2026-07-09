@@ -34,6 +34,11 @@ def load(conf: Config):
                     "PLOTTING_PROJECTION": conf.PLOTTING_PROJECTION
                     if conf.PLOTTING_PROJECTION
                     else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids="OBS",
                 aggregation=False,
@@ -59,6 +64,11 @@ def load(conf: Config):
                     "PLOTTING_PROJECTION": conf.PLOTTING_PROJECTION
                     if conf.PLOTTING_PROJECTION
                     else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
                 model_ids=[model["id"], "OBS"],
                 aggregation=False,
