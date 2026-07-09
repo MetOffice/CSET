@@ -281,6 +281,11 @@ def _get_start_end_strings(seq_coord: iris.coords.Coord, use_bounds: bool):
         sequence_title = f"\n [{start} to {end}]"
         sequence_fname = f"_{filename_slugify(start)}_{filename_slugify(end)}"
 
+    if seq_coord.units == "unknown":
+        # remove the "unknown" in title and filename strings if unit is unknown
+        sequence_title = sequence_title.replace("unknown", "")
+        sequence_fname = sequence_fname.replace("unknown", "")
+
     # Do not include time if coord set to zero.
     if (
         seq_coord.units == "hours since 0001-01-01 00:00:00"
@@ -2191,12 +2196,12 @@ def plot_line_series(
     return cube
 
 
-def plot_line_series_sequence(
+def plot_dfss_line_series_sequence(
     cube: iris.cube.Cube | iris.cube.CubeList,
     filename: str = None,
     variable: str = None,
-    series_coordinate: str = "time",
-    sequence_coordinate: str = "realization",
+    series_coordinate: str = None,
+    sequence_coordinate: str = None,
     **kwargs,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Plot a line plot."""
