@@ -178,6 +178,14 @@ def calculate_dfss(
         out_cube_list = _serial_calculate_dfss(
             cube_xy, neighbourhood_lengths, centile_or_threshold, centile, threshold
         )
+
+    for cubes in out_cube_list:
+        cubes.attributes["method"] = centile_or_threshold
+        if centile_or_threshold == "centile":
+            cubes.attributes["centile"] = centile
+        if centile_or_threshold == "threshold":
+            cubes.attributes["threshold"] = threshold
+
     return out_cube_list
 
 
@@ -225,8 +233,10 @@ def _calc_dfss(
 
         dfss[i] = (ma.masked_invalid(fss_array)).mean()
         dfss_stdev[i] = (ma.masked_invalid(fss_array)).std()
+
     neighbourhood_coord = icoords.DimCoord(
-        neighbourhood_lengths, var_name="neighbourhoods"
+        neighbourhood_lengths,
+        var_name="neighbourhoods",
     )
 
     dfss_cube = iris.cube.Cube(
