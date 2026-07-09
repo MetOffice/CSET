@@ -719,8 +719,20 @@ def plot_dfss_contour(
     recipe_title = get_recipe_metadata().get("title", "Untitled")
 
     title = cube.name()
-    filename = f"{cube.name()}.png"
-    plot_title = recipe_title + "\n" + title
+
+    if cube.attributes.locals["method"] == "centile":
+        method = cube.attributes.locals["method"]
+        centile = cube.attributes.locals["centile"]
+        filename = f"{cube.name()}_{method}_{centile}.png"
+        plot_title = f"{recipe_title} \n {title} \n method={method} | centile={centile}"
+
+    elif cube.attributes.locals["method"] == "threshold":
+        method = cube.attributes.locals["method"]
+        threshold = cube.attributes.locals["threshold"]
+        filename = f"{cube.name()}_{method}_{threshold}.png"
+        plot_title = (
+            f"{recipe_title} \n {title} \n method={method} | threshold={threshold}"
+        )
 
     cmap = plt.colormaps["viridis"]
     levels = np.linspace(0, 1, 11)
@@ -2253,11 +2265,16 @@ def plot_dfss_line_series_sequence(
                 cubes.coord(sequence_coordinate).points[0]
             )
 
-        plot_filename_with_sequence_coord = (
-            f"{cube.name()}_{sequence_coordinate}_point_{str(i)}_{plot_filename}"
-        )
-
-        plot_title_with_time = f"{cubes.name()} vs {series_coordinate} ({sequence_coordinate}: {sequence_point})"
+        if cube.attributes.locals["method"] == "centile":
+            method = cube.attributes.locals["method"]
+            centile = cube.attributes.locals["centile"]
+            plot_filename_with_sequence_coord = f"{cube.name()}_{sequence_coordinate}_point_{str(i)}_{method}_{centile}_{plot_filename}"
+            plot_title_with_time = f"{cubes.name()} vs {series_coordinate} ({sequence_coordinate}: {sequence_point}) \n method: Centile | centile: {centile}"
+        elif cube.attributes.locals["method"] == "threshold":
+            method = cube.attributes.locals["method"]
+            threshold = cube.attributes.locals["threshold"]
+            plot_filename_with_sequence_coord = f"{cube.name()}_{sequence_coordinate}_point_{str(i)}_{method}_{threshold}_{plot_filename}"
+            plot_title_with_time = f"{cubes.name()} vs {series_coordinate} ({sequence_coordinate}: {sequence_point}) \n method: Threshold | threshold: {threshold}"
 
         cubes_in = iter_maybe(cubes)
         _plot_and_save_line_series(
