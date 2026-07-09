@@ -1,7 +1,13 @@
 category: Ensemble
-title: hourly Precipitation
+title: dFSS
 description: |
-  stuff
+  runs the dFSS calculation then creates:
+  1) line plots with dfss vs neighbourhoods for each time coordinate
+  2) line plots with dfss_stdev vs neighbourhoods for each time coordinate
+  3) contour plot of dfss
+  4) contour plot of dfss_stdev
+
+
 
 steps:
   - operator: read.read_cube
@@ -10,7 +16,7 @@ steps:
       operator: constraints.combine_constraints
       varname_constraint:
         operator: constraints.generate_var_constraint
-        varname: 'hourly_precipitation'
+        varname: $VARNAME
 
 
   - operator: filters.filter_cubes
@@ -19,19 +25,26 @@ steps:
       ensemble_member: 0
 
   - operator: dfss.calculate_dfss
-    neighbourhood_lengths: [1,2,3]
-    centile: 90
-    threshold: 10
+    neighbourhood_lengths: $NEIGHBOURHOOD_LENGTHS
+    centile_or_threshold: $CENTILE_OR_THRESHOLD
+    centile: $CENTILE
+    threshold: $THRESHOLD
 
-  - operator: plot.plot_line_series_sequence
+  - operator: plot.plot_dfss_line_series_sequence
     variable: dfss
     series_coordinate: "neighbourhoods"
     sequence_coordinate: "time"
 
-  - operator: plot.plot_line_series_sequence
+  - operator: plot.plot_dfss_line_series_sequence
     variable: dfss_stdev
     series_coordinate: "neighbourhoods"
     sequence_coordinate: "time"
+
+  - operator: plot.plot_dfss_contour
+    variable: "dfss"
+
+  - operator: plot.plot_dfss_contour
+    variable: "dfss_stdev"
 
   - operator: write.write_cube_to_nc
     overwrite: True
