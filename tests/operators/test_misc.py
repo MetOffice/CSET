@@ -566,26 +566,35 @@ def test_mask_fill_value_no_change():
     cube = _make_cube([[1.0, 2.0]])
     out = misc._mask_fill_cube(cube)
     # return same object
+
     assert out is cube
 
 
-def test_mask_fill_value_sentinel():
-    """Test mask with known fill value."""
-    cube = _make_cube([[1.0, 1e10, 3.0]])
+@pytest.mark.parametrize(
+    "sentinel",
+    [1e10, 1e11, 999999, -999999],
+)
+def test_mask_fill_value_sentinels(sentinel):
+    """Test known sentinel values are converted to NaN."""
+    cube = _make_cube([[1.0, sentinel, 3.0]])
+
     out = misc._mask_fill_cube(cube)
+
     data = out.data.compute() if hasattr(out.data, "compute") else out.data
+
     assert np.isnan(data[0, 1])
     assert np.allclose(data[0, [0, 2]], [1.0, 3.0])
 
 
 def test_mask_fill_value_masked_array():
-    """Test with masked array input."""
+    """Masked values should become NaNs."""
     data = np.ma.array([[1.0, 2.0]], mask=[[False, True]])
     cube = _make_cube(data)
     out = misc._mask_fill_cube(cube)
     result = out.data.compute() if hasattr(out.data, "compute") else out.data
-    assert not np.isnan(result[0, 0])
-    result = result.filled(np.nan) if np.ma.isMaskedArray(result) else result
+    result = np.ma.filled(result, np.nan)
+
+    assert result[0, 0] == 1.0
     assert np.isnan(result[0, 1])
 
 
@@ -596,6 +605,7 @@ def test_mask_fill_value_ulp():
     cube = _make_cube([[near_fv]])
     out = misc._mask_fill_cube(cube, ulp_factor=10)
     data = out.data.compute() if hasattr(out.data, "compute") else out.data
+
     assert np.isnan(data[0, 0])
 
 
@@ -605,6 +615,7 @@ def test_mask_fill_value_combined():
     cube = _make_cube(data)
     out = misc._mask_fill_cube(cube)
     result = out.data.compute() if hasattr(out.data, "compute") else out.data
+
     assert np.isnan(result[0, 0])  # sentinel
     assert np.isnan(result[0, 1])  # masked
 
@@ -613,8 +624,10 @@ def test_mask_fill_values_cubelist():
     """Test with cubelist input."""
     cubes = iris.cube.CubeList([_make_cube([[1e10]]), _make_cube([[2.0]])])
     out = misc.mask_fill_values(cubes)
+
     assert isinstance(out, iris.cube.CubeList)
     data0 = out[0].data.compute() if hasattr(out[0].data, "compute") else out[0].data
     data1 = out[1].data.compute() if hasattr(out[1].data, "compute") else out[1].data
+
     assert np.isnan(data0[0, 0])
     assert np.allclose(data1[0, 0], 2.0)
