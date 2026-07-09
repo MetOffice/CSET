@@ -61,8 +61,8 @@ def _parallel_calculate_dfss(
     cube_xy: iris.cube.Cube,
     neighbourhood_lengths: List[int],
     centile_or_threshold: str = "centile",
-    centile: Union[float, int] = None,
-    threshold: Union[float, int] = None,
+    centile: float = None,
+    threshold: float = None,
 ):
 
     time_slices = list(cube_xy.slices_over("time"))
@@ -100,8 +100,8 @@ def _serial_calculate_dfss(
     cube_xy: iris.cube.Cube,
     neighbourhood_lengths: List[int],
     centile_or_threshold: str = "centile",
-    centile: Union[float, int] = None,
-    threshold: Union[float, int] = None,
+    centile: float = None,
+    threshold: float = None,
 ):
 
     cube_list_dfss = iris.cube.CubeList()
@@ -139,8 +139,8 @@ def calculate_dfss(
     cube_xy: iris.cube.Cube,
     neighbourhood_lengths: List[int],
     centile_or_threshold: str = "centile",
-    centile: Union[float, int] = None,
-    threshold: Union[float, int] = None,
+    centile: float = None,
+    threshold: float = None,
     run_parallel: bool = True,
 ):
     """Do the dfss calculation.
@@ -194,8 +194,8 @@ def _calc_dfss(
     neighbourhood_lengths: Union[List[int]],
     time_point,
     centile_or_threshold: str = "centile",
-    centile: Union[float, int] = None,
-    threshold: Union[float, int] = None,
+    centile: float = None,
+    threshold: float = None,
 ):
     _ = (
         cube_xy.data

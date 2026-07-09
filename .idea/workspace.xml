@@ -6,7 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="df6206a7-601b-4491-b0f1-fe2ee2d337e7" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/cset_workflow/meta/verification/rose-meta.conf" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/cset_workflow/meta/verification/rose-meta.conf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/CSET/operators/dfss.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/operators/dfss.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/CSET/recipes/dfss.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/recipes/dfss.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
