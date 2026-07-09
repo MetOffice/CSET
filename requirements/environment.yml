@@ -19,6 +19,8 @@ dependencies:
   - xarray # Required for scores verification now as used.
   - dask-core # Dask with minimal dependencies.
   - proj = 9.7.1 # Newer versions break plotting, see issue #2052.
+  - matplotlib-base = 3.10.9 # Newer versions break plotting, see issue #2205.
+  - simple-track # For feature tracking and cell stats operators
 
   # Build dependencies
   - setuptools>=64

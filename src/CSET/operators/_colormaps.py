@@ -240,6 +240,7 @@ def colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = N
         cmap, levels, norm = custom_colormap_precipitation(cube, cmap, levels, norm)
         cmap, levels, norm = custom_colormap_visibility_in_air(cube, cmap, levels, norm)
         cmap, levels, norm = custom_colormap_celsius(cube, cmap, levels, norm)
+        cmap, levels, norm = custom_colormap_feature_tracking(cube, cmap, levels, norm)
         return cmap, levels, norm
 
 
@@ -596,4 +597,68 @@ def custom_colormap_scores(cube: iris.cube.Cube):
     cmap, levels, norm = None, None, None
     if any("RMSE_" in name for name in varnames):
         cmap = plt.get_cmap("PuRd", 51)
+    return cmap, levels, norm
+
+
+def custom_colormap_feature_tracking(cube: iris.cube.Cube, cmap, levels, norm):
+    """Return altered colormap for feature tracking.
+
+    Parameters
+    ----------
+    cube: Cube
+        Cube of variable for which the colorbar information is desired.
+
+    Returns
+    -------
+    cmap: Matplotlib colormap.
+    levels: List
+        List of levels to use for plotting. For continuous plots the min and max
+        should be taken as the range.
+    norm: BoundaryNorm.
+    """
+    varnames = list(filter(None, [cube.long_name, cube.standard_name, cube.var_name]))
+    if (
+        any("feature_id" in name for name in varnames)
+        and "difference" not in cube.long_name
+        and "mask" not in cube.long_name
+    ):
+        # Define the levels and colors
+        levels = np.linspace(1, np.ma.max(cube.data), 10)
+        cmap = plt.get_cmap("viridis")
+        # Normalize the levels
+        norm = mcolors.BoundaryNorm(levels, cmap.N)
+        logging.info("change colormap for feature id variable colorbar.")
+    elif (
+        any("feature_lifetime" in name for name in varnames)
+        and "difference" not in cube.long_name
+        and "mask" not in cube.long_name
+    ):
+        # Define the levels and colors
+        levels = np.linspace(1, np.ma.max(cube.data), 10)
+        cmap = plt.get_cmap("YlGnBu")
+        # Normalize the levels
+        norm = mcolors.BoundaryNorm(levels, cmap.N)
+        logging.info("change colormap for feature lifetime variable colorbar.")
+    elif (
+        any("feature_init" in name for name in varnames)
+        and "difference" not in cube.long_name
+        and "mask" not in cube.long_name
+    ):
+        # Define the levels and colors
+        levels = np.array([0.5, 1])
+        cmap = plt.get_cmap("Blues")
+        # Normalize the levels
+        norm = mcolors.BoundaryNorm(levels, cmap.N)
+        logging.info("change colormap for feature init variable colorbar.")
+
+    else:
+        # do nothing and keep existing colorbar attributes
+        cmap = cmap
+        levels = levels
+        norm = norm
+
+    # Set all non-feature data to white
+    if any("feature" in name for name in varnames):
+        cmap.with_extremes(under="white")
+
     return cmap, levels, norm

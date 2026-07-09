@@ -192,7 +192,7 @@ def setup_logging(verbosity: int):
 
     # Level from $LOGLEVEL environment variable.
     env_loglevel = logging.getLevelNamesMapping().get(
-        os.getenv("LOGLEVEL"), logging.ERROR
+        os.getenv("LOGLEVEL", ""), logging.ERROR
     )
 
     # Logging verbosity is the most verbose of CLI and environment setting.
