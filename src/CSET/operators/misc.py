@@ -622,6 +622,8 @@ def _mask_fill_cube(
     ulp_factor: int = 10,
 ) -> iris.cube.Cube:
     """
+    Replace masked and fill-value data with NaNs.
+    
     Parameters
     ----------
     cube : iris.cube.Cube
