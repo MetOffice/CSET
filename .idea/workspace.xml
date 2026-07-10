@@ -4,90 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="df6206a7-601b-4491-b0f1-fe2ee2d337e7" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/CSET/cset_workflow/app/metplus_ascii2nc/file/ncmrwf/python/read_ascii_point_ncmrwf.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/CSET/cset_workflow/app/metplus_ascii2nc/opt/rose-app-ncmrwf.conf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/CSET/cset_workflow/app/metplus_prep_obs/opt/rose-app-ncmrwf.conf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/CSET/cset_workflow/opt/rose-suite-test_validate.conf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/CSET/operators/feature.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/CSET/operators/fluxes.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/CSET/operators/power_spectrum.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/CSET/recipes/derived_diagnostics/precipitation/extreme_precipitation/saturation_fraction_spatial_plot.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/CSET/recipes/example_recipes/example_feature_track.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/CSET/recipes/level_fields/generic_plevel_power_spectrum_series.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/CSET/recipes/surface_fields/multi_contour_spatial_plot_sequence.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/CSET/recipes/surface_fields/multi_overlay_spatial_plot_sequence.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/operators/test_feature.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/operators/test_fluxes.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/operators/test_power_spectrum.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_data/humidity/mr_all.nc" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_data/humidity/mr_basic.nc" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_data/humidity/mr_member.nc" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_data/humidity/mr_time.nc" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_data/humidity/pw_all.nc" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_data/humidity/pw_basic.nc" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_data/humidity/pw_member.nc" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_data/humidity/pw_time.nc" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_data/humidity/rh_all.nc" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_data/humidity/rh_basic.nc" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_data/humidity/rh_member.nc" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_data/humidity/rh_time.nc" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_data/humidity/sf_basic.nc" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_data/humidity/spw_all.nc" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_data/humidity/spw_basic.nc" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_data/humidity/spw_member.nc" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/test_data/humidity/spw_time.nc" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/workflow/test_workflow_validation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/pull_request_template.md" beforeDir="false" afterPath="$PROJECT_DIR$/.github/pull_request_template.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/workflows/pull-request-checks.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/pull-request-checks.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/workflows/release.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/release.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/workflows/scheduled-updates.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/scheduled-updates.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.github/workflows/weekly-checks.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/weekly-checks.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+    <list default="true" id="bd3d1720-a976-4d56-802c-a3b7f0ee2ccb" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.pre-commit-config.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/.pre-commit-config.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/Makefile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/source/reference/operators.rst" beforeDir="false" afterPath="$PROJECT_DIR$/docs/source/reference/operators.rst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements/environment.yml" beforeDir="false" afterPath="$PROJECT_DIR$/requirements/environment.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements/locks/py312-lock-linux-64.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements/locks/py312-lock-linux-64.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements/locks/py313-lock-linux-64.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements/locks/py313-lock-linux-64.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements/locks/py314-lock-linux-64.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements/locks/py314-lock-linux-64.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements/locks/sources" beforeDir="false" afterPath="$PROJECT_DIR$/requirements/locks/sources" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/cset_workflow/app/finish_website/file/html/script.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/cset_workflow/app/finish_website/file/html/script.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/cset_workflow/bin/app_env_wrapper" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/cset_workflow/bin/app_env_wrapper" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/cset_workflow/includes/basic_qq_plot.cylc" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/cset_workflow/meta/diagnostics/rose-meta.conf" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/cset_workflow/meta/diagnostics/rose-meta.conf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/cset_workflow/meta/rose-meta.conf" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/cset_workflow/meta/rose-meta.conf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/cset_workflow/meta/rose-meta.conf.jinja2" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/cset_workflow/meta/rose-meta.conf.jinja2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/cset_workflow/meta/verification/rose-meta.conf" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/cset_workflow/meta/verification/rose-meta.conf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/cset_workflow/opt/rose-suite-RAL3LFRIC.conf" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/cset_workflow/opt/rose-suite-RAL3LFRIC.conf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/cset_workflow/opt/rose-suite-nci_ral3lfric.conf" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/cset_workflow/opt/rose-suite-nci_ral3lfric.conf" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/cset_workflow/rose-suite.conf.example" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/cset_workflow/rose-suite.conf.example" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/loaders/power_spectrum.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/loaders/power_spectrum.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/loaders/spatial_field.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/loaders/spatial_field.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/loaders/verification.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/loaders/verification.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/operators/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/operators/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/operators/_colorbar_definition.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/operators/_colorbar_definition.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/operators/_colormaps.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/operators/_colormaps.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/operators/_spectra.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/operators/constraints.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/operators/constraints.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/operators/humidity.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/operators/humidity.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/CSET/operators/plot.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/operators/plot.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/operators/precipitation.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/operators/precipitation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/operators/read.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/operators/read.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/operators/wind.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/operators/wind.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/recipes/level_fields/generic_level_power_spectrum_series.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/recipes/level_fields/generic_mlevel_power_spectrum_series.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/recipes/surface_fields/generic_surface_power_spectrum_series.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/recipes/surface_fields/generic_surface_power_spectrum_series.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/CSET/recipes/surface_fields/multi_surface_spatial_plot_sequence.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/src/CSET/recipes/surface_fields/multi_surface_spatial_plot_sequence.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/conftest.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/conftest.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/operators/test_colormaps.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/operators/test_colormaps.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/operators/test_constraints.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/operators/test_constraints.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/operators/test_humidity.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/operators/test_humidity.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/operators/test_plot.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/operators/test_plot.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/operators/test_spectra.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/operators/test_wind.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/operators/test_wind.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -104,24 +23,30 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "customColor": "",
-  "associatedIndex": 8
-}]]></component>
-  <component name="ProjectId" id="3GGdAZTj7T6lP61Bd9pfsDjvUdd" />
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8
+}</component>
+  <component name="ProjectId" id="3DydCjfR771roXtuDpRGbYKz6oB" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "Merging 2164-add-dfss-operator-and-plots"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.precipitation.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;2164-add-dfss-operator-and-plots&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/users/james.ross/CSET/src/CSET/operators&quot;
   }
-}]]></component>
+}</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/CSET/operators" />
+    </key>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -131,21 +56,47 @@
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="df6206a7-601b-4491-b0f1-fe2ee2d337e7" name="Changes" comment="" />
-      <created>1783601705900</created>
+      <changelist id="bd3d1720-a976-4d56-802c-a3b7f0ee2ccb" name="Changes" comment="" />
+      <created>1779258117822</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1783601705900</updated>
+      <updated>1779258117822</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/tests/operators/test_convection.py</url>
+          <url>file://$PROJECT_DIR$/src/CSET/operators/precipitation.py</url>
           <line>16</line>
-          <option name="timeStamp" value="6" />
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/CSET/operators/misc.py</url>
+          <line>16</line>
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/CSET/operators/temperature.py</url>
+          <line>16</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/CSET/operators/plot.py</url>
+          <line>16</line>
+          <option name="timeStamp" value="5" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

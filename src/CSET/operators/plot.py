@@ -760,16 +760,18 @@ def plot_dfss_contour(
 
     cmap = plt.colormaps["viridis"]
     levels = np.linspace(0, 1, 11)
+    norm = mcolors.BoundaryNorm(levels, cmap.N)
 
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
     # set the contour colour for the 0.5 contour line for dfss only
+
+    plot = iplt.contourf(cube, cmap=cmap, norm=norm, levels=levels)
+
     if cube.name() == "dfss":
         colors = ["white"]
         cmap_0p5_contour = mcolors.ListedColormap(colors)
-        norm = mcolors.BoundaryNorm(levels, cmap.N)
 
-        plot = iplt.contourf(cube, cmap=cmap, norm=norm, levels=levels)
         iplt.contour(
             cube, cmap=cmap_0p5_contour, norm=norm, levels=[0.5], linestyles="dashed"
         )
