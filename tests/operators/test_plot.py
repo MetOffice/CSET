@@ -1117,6 +1117,7 @@ def test_plot_dfss_line_series_sequence(dfss_cube):
     assert Path(
         "dfss_neighbourhoods_point_1_centile_0p9_untitled_20100101000000_20100101001000.png"
     ).is_file()
+
     assert Path(
         "dfss_neighbourhoods_point_2_centile_0p9_untitled_20100101000000_20100101001000.png"
     ).is_file()
