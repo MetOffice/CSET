@@ -747,13 +747,15 @@ def plot_dfss_contour(
     if cube.attributes.locals["method"] == "centile":
         method = cube.attributes.locals["method"]
         centile = cube.attributes.locals["centile"]
-        filename = f"{cube.name()}_{method}_{centile}.png"
+        centile_str = str(centile).replace(".", "p")
+        filename = slugify(f"{cube.name()}_{method}_{centile_str}.png")
         plot_title = f"{recipe_title} \n {title} \n method={method} | centile={centile}"
 
     elif cube.attributes.locals["method"] == "threshold":
         method = cube.attributes.locals["method"]
         threshold = cube.attributes.locals["threshold"]
-        filename = f"{cube.name()}_{method}_{threshold}.png"
+        threshold_str = str(threshold).replace(".", "p")
+        filename = slugify(f"{cube.name()}_{method}_{threshold_str}.png")
         plot_title = (
             f"{recipe_title} \n {title} \n method={method} | threshold={threshold}"
         )
@@ -2294,8 +2296,8 @@ def plot_dfss_line_series_sequence(
     cube: iris.cube.Cube | iris.cube.CubeList,
     filename: str = None,
     variable: str = None,
-    series_coordinate: str = None,
-    sequence_coordinate: str = None,
+    series_coordinate: str = "time",
+    sequence_coordinate: str = "neighbourhoods",
     **kwargs,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Plot a line plot."""
@@ -2350,12 +2352,14 @@ def plot_dfss_line_series_sequence(
         if cube.attributes.locals["method"] == "centile":
             method = cube.attributes.locals["method"]
             centile = cube.attributes.locals["centile"]
-            plot_filename_with_sequence_coord = f"{cube.name()}_{sequence_coordinate}_point_{str(i)}_{method}_{centile}_{plot_filename}"
+            centile_str = str(centile).replace(".", "p")
+            plot_filename_with_sequence_coord = f"{cube.name()}_{sequence_coordinate}_point_{str(i)}_{method}_{centile_str}_{plot_filename}"
             plot_title_with_time = f"{cubes.name()} vs {series_coordinate} ({sequence_coordinate}: {sequence_point}) \n method: Centile | centile: {centile}"
         elif cube.attributes.locals["method"] == "threshold":
             method = cube.attributes.locals["method"]
             threshold = cube.attributes.locals["threshold"]
-            plot_filename_with_sequence_coord = f"{cube.name()}_{sequence_coordinate}_point_{str(i)}_{method}_{threshold}_{plot_filename}"
+            threshold_str = str(threshold).replace(".", "p")
+            plot_filename_with_sequence_coord = f"{cube.name()}_{sequence_coordinate}_point_{str(i)}_{method}_{threshold_str}_{plot_filename}"
             plot_title_with_time = f"{cubes.name()} vs {series_coordinate} ({sequence_coordinate}: {sequence_point}) \n method: Threshold | threshold: {threshold}"
 
         cubes_in = iter_maybe(cubes)

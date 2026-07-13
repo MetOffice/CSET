@@ -1090,3 +1090,46 @@ def test_qq_plot_grid_staggering_regrid(cube, tmp_working_dir):
         model_names=["a", "b"],
     )
     assert Path("untitled.png").is_file()
+
+
+def test_dfss_contour(dfss_cube):
+    """Test dfss_contour."""
+    dfss_cube.attributes["method"] = "centile"
+    dfss_cube.attributes["centile"] = 0.9
+    plot.plot_dfss_contour(dfss_cube)
+    assert Path("dfss_centile_0p9.png").is_file()
+
+    dfss_cube.attributes["method"] = "threshold"
+    dfss_cube.attributes["threshold"] = 2
+
+    plot.plot_dfss_contour(dfss_cube)
+    assert Path("dfss_threshold_2.png").is_file()
+
+
+def test_plot_dfss_line_series_sequence(dfss_cube):
+    """Test plot_dfss_line_series_sequence."""
+    dfss_cube.attributes["method"] = "centile"
+    dfss_cube.attributes["centile"] = 0.9
+    plot.plot_dfss_line_series_sequence(dfss_cube)
+    assert Path(
+        "dfss_neighbourhoods_point_0_centile_0p9_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+    assert Path(
+        "dfss_neighbourhoods_point_1_centile_0p9_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+    assert Path(
+        "dfss_neighbourhoods_point_2_centile_0p9_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+
+    dfss_cube.attributes["method"] = "threshold"
+    dfss_cube.attributes["threshold"] = 2
+    plot.plot_dfss_line_series_sequence(dfss_cube)
+    assert Path(
+        "dfss_neighbourhoods_point_0_threshold_2_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+    assert Path(
+        "dfss_neighbourhoods_point_1_threshold_2_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+    assert Path(
+        "dfss_neighbourhoods_point_2_threshold_2_untitled_20100101000000_20100101001000.png"
+    ).is_file()
