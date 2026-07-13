@@ -62,3 +62,14 @@ def test_calc_fss(dfss_ensemble_cube):
     cube_b_in = dfss_ensemble_cube[2, :, :, :]
     fss = dfss._calc_fss(cube_a_in, cube_b_in, neighbourhood_length=2, centile=95)
     assert type(fss) is float
+
+
+def test_calc_dfss(dfss_ensemble_cube):
+    """Test calc_dfss function."""
+    for time_slice in dfss_ensemble_cube.slices_over("time"):
+        time_point = time_slice.coord("time")
+        dfss_cube, dfss_stdev_cube = dfss._calc_dfss(
+            time_slice, [1], time_point, centile=95
+        )
+        assert type(dfss_cube) is iris.cube.Cube
+        assert type(dfss_stdev_cube) is iris.cube.Cube
