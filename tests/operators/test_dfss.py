@@ -73,3 +73,19 @@ def test_calc_dfss(dfss_ensemble_cube):
         )
         assert type(dfss_cube) is iris.cube.Cube
         assert type(dfss_stdev_cube) is iris.cube.Cube
+
+
+def test_serial_calculate_dfss(dfss_ensemble_cube):
+    """Test serial_calculate_dfss function."""
+    outlist = dfss._serial_calculate_dfss(dfss_ensemble_cube, [1], centile=95)
+    assert type(outlist) is iris.cube.CubeList
+    assert type(outlist[0]) is iris.cube.Cube
+    assert type(outlist[1]) is iris.cube.Cube
+
+
+def test_parallel_calculate_dfss(dfss_ensemble_cube):
+    """Test parallel_calculate_dfss function."""
+    outlist = dfss._parallel_calculate_dfss(dfss_ensemble_cube, [1], centile=95)
+    assert type(outlist) is iris.cube.CubeList
+    assert type(outlist[0]) is iris.cube.Cube
+    assert type(outlist[1]) is iris.cube.Cube
