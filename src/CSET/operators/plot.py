@@ -866,13 +866,15 @@ def plot_dfss_contour(
     if cube.attributes.locals["method"] == "centile":
         method = cube.attributes.locals["method"]
         centile = cube.attributes.locals["centile"]
-        filename = f"{cube.name()}_{method}_{centile}.png"
+        centile_str = str(centile).replace(".", "p")
+        filename = slugify(f"{cube.name()}_{method}_{centile_str}.png")
         plot_title = f"{recipe_title} \n {title} \n method={method} | centile={centile}"
 
     elif cube.attributes.locals["method"] == "threshold":
         method = cube.attributes.locals["method"]
         threshold = cube.attributes.locals["threshold"]
-        filename = f"{cube.name()}_{method}_{threshold}.png"
+        threshold_str = str(threshold).replace(".", "p")
+        filename = slugify(f"{cube.name()}_{method}_{threshold_str}.png")
         plot_title = (
             f"{recipe_title} \n {title} \n method={method} | threshold={threshold}"
         )
@@ -1093,19 +1095,19 @@ def _plot_and_save_line_series(
             for cube_slice in cube.slices_over(ensemble_coord):
                 # Label with (control) if part of an ensemble or not otherwise.
                 if ensemble_coord == "realization":
-                if cube_slice.coord(ensemble_coord).points == [0]:
-                    iplt.plot(
-                        coord,
-                        cube_slice,
-                        color=color,
-                        marker="o",
-                        ls="-",
-                        lw=3,
-                        label=f"{label} (control)"
-                        if len(cube.coord(ensemble_coord).points) > 1
-                        else label,
-                    )
-                    # Label with (perturbed) if part of an ensemble and not the control.
+                    if cube_slice.coord(ensemble_coord).points == [0]:
+                        iplt.plot(
+                            coord,
+                            cube_slice,
+                            color=color,
+                            marker="o",
+                            ls="-",
+                            lw=3,
+                            label=f"{label} (control)"
+                            if len(cube.coord(ensemble_coord).points) > 1
+                            else label,
+                        )
+                        # Label with (perturbed) if part of an ensemble and not the control.
                 else:
                     iplt.plot(
                         coord,
@@ -2583,7 +2585,7 @@ def plot_line_series(
             plot_title_with_time,
         )
 
-            plot_index.append(plot_filename)
+        plot_index.append(plot_filename)
 
     # append plot to list of plots
     complete_plot_index = _append_to_plot_index(plot_index)
@@ -2615,9 +2617,9 @@ def plot_line_series_sequence(
 
     recipe_title = get_recipe_metadata().get("title", "Untitled")
 
-    num_models = _get_num_models(cube)
+    num_models = get_num_models(cube)
 
-    _validate_cube_shape(cube, num_models)
+    validate_cube_shape(cube, num_models)
 
     # Iterate over all cubes and extract coordinate to plot.
     cubes = iter_maybe(cube)
@@ -2688,8 +2690,8 @@ def plot_dfss_line_series_sequence(
     cube: iris.cube.Cube | iris.cube.CubeList,
     filename: str = None,
     variable: str = None,
-    series_coordinate: str = None,
-    sequence_coordinate: str = None,
+    series_coordinate: str = "time",
+    sequence_coordinate: str = "neighbourhoods",
     **kwargs,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Plot a line plot."""
@@ -2744,12 +2746,14 @@ def plot_dfss_line_series_sequence(
         if cube.attributes.locals["method"] == "centile":
             method = cube.attributes.locals["method"]
             centile = cube.attributes.locals["centile"]
-            plot_filename_with_sequence_coord = f"{cube.name()}_{sequence_coordinate}_point_{str(i)}_{method}_{centile}_{plot_filename}"
+            centile_str = str(centile).replace(".", "p")
+            plot_filename_with_sequence_coord = f"{cube.name()}_{sequence_coordinate}_point_{str(i)}_{method}_{centile_str}_{plot_filename}"
             plot_title_with_time = f"{cubes.name()} vs {series_coordinate} ({sequence_coordinate}: {sequence_point}) \n method: Centile | centile: {centile}"
         elif cube.attributes.locals["method"] == "threshold":
             method = cube.attributes.locals["method"]
             threshold = cube.attributes.locals["threshold"]
-            plot_filename_with_sequence_coord = f"{cube.name()}_{sequence_coordinate}_point_{str(i)}_{method}_{threshold}_{plot_filename}"
+            threshold_str = str(threshold).replace(".", "p")
+            plot_filename_with_sequence_coord = f"{cube.name()}_{sequence_coordinate}_point_{str(i)}_{method}_{threshold_str}_{plot_filename}"
             plot_title_with_time = f"{cubes.name()} vs {series_coordinate} ({sequence_coordinate}: {sequence_point}) \n method: Threshold | threshold: {threshold}"
 
         cubes_in = iter_maybe(cubes)
