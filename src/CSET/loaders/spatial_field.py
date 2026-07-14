@@ -703,7 +703,7 @@ def load(conf: Config):
                 model_ids=model["id"],
                 aggregation=False,
             )
-            
+
     # Directional shear across Moist Absolutely Unstable Layer (of deepest)
     if conf.DIRECTIONAL_SHEAR_ACROSS_MAUL:
         for model in models:
