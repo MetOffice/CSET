@@ -360,7 +360,7 @@ def MAUL_properties(
                                         ].data
                                     )
                                     # Store and calculate the directional wind shear (difference)
-                                    # across the deepest MAUL.
+                                    # across the deepest MAUL from the top to the bottom.
                                     directional_shear.data[
                                         mem_number, time_point, lat_point, lon_point
                                     ] = (
