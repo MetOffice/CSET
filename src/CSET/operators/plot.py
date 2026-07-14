@@ -733,7 +733,7 @@ def plot_dfss_contour(
     cube_copy = cube
     if type(cube) is iris.cube.CubeList:
         if not variable:
-            logging.Warning(
+            logging.warning(
                 "CubeList given, but variable not specified.  Defaulting to first cube."
             )
             cube = cube[0]
@@ -2304,9 +2304,10 @@ def plot_dfss_line_series_sequence(
     cube_copy = cube
     if type(cube) is iris.cube.CubeList:
         if not variable:
-            logging.Warning(
+            logging.warning(
                 "CubeList given, but variable not specified.  Defaulting to first cube."
             )
+
             cube = cube[0]
         else:
             cube = cube.extract(variable)

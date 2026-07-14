@@ -911,6 +911,34 @@ def dfss_cube() -> iris.cube.Cube:
 
 
 @pytest.fixture
+def dfss_stdev_cube() -> iris.cube.Cube:
+    """Set up three timesteps and three realizations of data and place into cube."""
+    data_arr = np.zeros((3, 3))
+    data_arr[:, :] = 1
+
+    neighbourhoods = iris.coords.DimCoord(points=[0, 1, 2], long_name="neighbourhoods")
+    time_units = cf_units.Unit("days since 2000-01-01 00:00:00", calendar="gregorian")
+    time_start = datetime.datetime(2010, 1, 1, 0, 0, 0)
+    time_dt_points = [
+        time_start + datetime.timedelta(minutes=5 * idx) for idx in range(3)
+    ]
+    time_points = [time_units.date2num(time_point) for time_point in time_dt_points]
+    time_coord = iris.coords.DimCoord(
+        points=time_points, standard_name="time", units=time_units
+    )
+
+    coords = (neighbourhoods, time_coord)
+    dim_coords_and_dims = [(coord, dim) for dim, coord in enumerate(coords)]
+    cube = iris.cube.Cube(
+        data=data_arr,
+        dim_coords_and_dims=dim_coords_and_dims,
+        long_name="dfss_stdev",
+    )
+
+    return cube
+
+
+@pytest.fixture
 def dfss_ensemble_cube() -> iris.cube.Cube:
     """Set up three timesteps and three realizations of data and place into cube."""
     data_arr = np.zeros((3, 3, 10, 10))
