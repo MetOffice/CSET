@@ -41,6 +41,20 @@ def test_dfss_basic_functioning(dfss_ensemble_cube):
         np.size(neighbourhood_lengths),
     )
 
+    dfss_cube, dfss_stdev_cube = dfss.calculate_dfss(
+        dfss_ensemble_cube,
+        neighbourhood_lengths=neighbourhood_lengths,
+        centile_or_threshold="threshold",
+        threshold=1,
+        run_parallel=False,
+    )
+
+    assert dfss_cube.data.shape == (fc_time_npoints, np.size(neighbourhood_lengths))
+    assert dfss_stdev_cube.data.shape == (
+        fc_time_npoints,
+        np.size(neighbourhood_lengths),
+    )
+
 
 def test_dfss_one_realisation_exception(dfss_ensemble_cube):
     """Test handling of non-ensemble data."""
