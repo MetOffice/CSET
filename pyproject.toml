@@ -75,7 +75,7 @@ source = ["src"]
 # TODO: Figure out how to test loaders. This will likely involve having some
 # example configurations and may be part of the effort to test the workflow.
 # Omit _netCDF4.pyx to work around https://github.com/conda-forge/netcdf4-feedstock/issues/188
-omit = ["__main__.py", "src/CSET/loaders/*.py", "_netCDF4.pyx", "src/CSET/operators/imporver/*.py"]
+omit = ["__main__.py", "src/CSET/loaders/*.py", "_netCDF4.pyx", "src/CSET/operators/improver/*.py"]
 
 [tool.codespell]
 ignore-words-list = "lazyness,meaned,runn,PRES"
