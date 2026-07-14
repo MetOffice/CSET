@@ -1038,7 +1038,7 @@ def precalc_wind_below_maul_5d(precalc_wind_below_maul_5d_read_only):
 
 @pytest.fixture
 def dfss_cube() -> iris.cube.Cube:
-    """Set up three timesteps and three realizations of data and place into cube."""
+    """Set up three timesteps and three neighbourhoods of data and place into cube."""
     data_arr = np.zeros((3, 3))
     data_arr[:, :] = 1
 
@@ -1066,7 +1066,7 @@ def dfss_cube() -> iris.cube.Cube:
 
 @pytest.fixture
 def dfss_stdev_cube() -> iris.cube.Cube:
-    """Set up three timesteps and three realizations of data and place into cube."""
+    """Set up three timesteps and three neighbourhoods of data and place into cube."""
     data_arr = np.zeros((3, 3))
     data_arr[:, :] = 1
 
@@ -1145,4 +1145,55 @@ def dfss_ensemble_cube() -> iris.cube.Cube:
         long_name="dfss test",
     )
     cube.add_aux_coord(forecast_period, data_dims=[0])
+    return cube
+
+
+@pytest.fixture
+def dfss_cube_no_time() -> iris.cube.Cube:
+    """Set up bad dfss cube."""
+    data_arr = np.zeros((3, 3))
+    data_arr[:, :] = 1
+
+    neighbourhoods = iris.coords.DimCoord(points=[0, 1, 2], long_name="neighbourhoods")
+
+    not_time_coord = iris.coords.DimCoord(points=[0, 1, 2], long_name="not_time")
+
+    coords = (neighbourhoods, not_time_coord)
+    dim_coords_and_dims = [(coord, dim) for dim, coord in enumerate(coords)]
+    cube = iris.cube.Cube(
+        data=data_arr,
+        dim_coords_and_dims=dim_coords_and_dims,
+        long_name="dfss",
+    )
+
+    return cube
+
+
+@pytest.fixture
+def dfss_cube_no_neighbourhoods() -> iris.cube.Cube:
+    """Set up bad dfss cube."""
+    data_arr = np.zeros((3, 3))
+    data_arr[:, :] = 1
+
+    not_neighbourhoods = iris.coords.DimCoord(
+        points=[0, 1, 2], long_name="not_neighbourhoods"
+    )
+    time_units = cf_units.Unit("days since 2000-01-01 00:00:00", calendar="gregorian")
+    time_start = datetime.datetime(2010, 1, 1, 0, 0, 0)
+    time_dt_points = [
+        time_start + datetime.timedelta(minutes=5 * idx) for idx in range(3)
+    ]
+    time_points = [time_units.date2num(time_point) for time_point in time_dt_points]
+    time_coord = iris.coords.DimCoord(
+        points=time_points, standard_name="time", units=time_units
+    )
+
+    coords = (not_neighbourhoods, time_coord)
+    dim_coords_and_dims = [(coord, dim) for dim, coord in enumerate(coords)]
+    cube = iris.cube.Cube(
+        data=data_arr,
+        dim_coords_and_dims=dim_coords_and_dims,
+        long_name="dfss",
+    )
+
     return cube
