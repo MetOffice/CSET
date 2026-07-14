@@ -55,6 +55,20 @@ def test_dfss_basic_functioning(dfss_ensemble_cube):
         np.size(neighbourhood_lengths),
     )
 
+    dfss_cube, dfss_stdev_cube = dfss.calculate_dfss(
+        dfss_ensemble_cube,
+        neighbourhood_lengths=neighbourhood_lengths,
+        centile_or_threshold="threshold",
+        threshold=1,
+        run_parallel=True,
+    )
+
+    assert dfss_cube.data.shape == (fc_time_npoints, np.size(neighbourhood_lengths))
+    assert dfss_stdev_cube.data.shape == (
+        fc_time_npoints,
+        np.size(neighbourhood_lengths),
+    )
+
 
 def test_dfss_one_realisation_exception(dfss_ensemble_cube):
     """Test handling of non-ensemble data."""
@@ -78,6 +92,7 @@ def test_calc_fss(dfss_ensemble_cube):
     assert type(fss) is float
 
 
+@pytest.mark.filterwarnings("ignore: Warning")
 def test_calc_dfss(dfss_ensemble_cube):
     """Test calc_dfss function."""
     for time_slice in dfss_ensemble_cube.slices_over("time"):
@@ -89,6 +104,7 @@ def test_calc_dfss(dfss_ensemble_cube):
         assert type(dfss_stdev_cube) is iris.cube.Cube
 
 
+@pytest.mark.filterwarnings("ignore: Warning")
 def test_serial_calculate_dfss(dfss_ensemble_cube):
     """Test serial_calculate_dfss function."""
     outlist = dfss._serial_calculate_dfss(dfss_ensemble_cube, [1], centile=95)
@@ -97,6 +113,7 @@ def test_serial_calculate_dfss(dfss_ensemble_cube):
     assert type(outlist[1]) is iris.cube.Cube
 
 
+@pytest.mark.filterwarnings("ignore: Warning")
 def test_parallel_calculate_dfss(dfss_ensemble_cube):
     """Test parallel_calculate_dfss function."""
     outlist_centile = dfss._parallel_calculate_dfss(dfss_ensemble_cube, [1], centile=95)
@@ -111,6 +128,7 @@ def test_parallel_calculate_dfss(dfss_ensemble_cube):
     assert type(outlist_threshold[1]) is iris.cube.Cube
 
 
+@pytest.mark.filterwarnings("ignore: Warning")
 def test_dfss_on_slice(dfss_ensemble_cube):
     """Test dfss_on_slice."""
     for time_slice in dfss_ensemble_cube.slices_over("time"):
