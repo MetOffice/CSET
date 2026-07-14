@@ -121,3 +121,14 @@ def test_calc_fss_two_fields():
 
     fss = dfss._calc_fss_two_fields(data_arr1, data_arr2)
     assert fss == pytest.approx(0.1773628938156359)
+
+
+def test_get_spatial_coords(dfss_ensemble_cube):
+    """Test get_spatial_coords."""
+    x, y = dfss._get_spatial_coords(dfss_ensemble_cube)
+    assert x.name() == "projection_x_coordinate"
+    assert y.name() == "projection_y_coordinate"
+    assert x.shape == (10,)
+    assert y.shape == (10,)
+    assert x.units.name == "meter"
+    assert y.units.name == "meter"
