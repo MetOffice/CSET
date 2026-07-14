@@ -13,7 +13,7 @@ description: |
   The relative humidity is linearly interpolated onto the same grid as the vertical
   derivative of the equivalent potential temperature. The masks for each criterion are multiplied
   together and then image processing is used to identify the number of objects (values of
-  ones that are connected) the depth of each object is found the deepest MAUL is used. The
+  ones that are connected) where the depth of each object is found the deepest MAUL is used. The
   wind direction is calculated and identified at the top and base of the MAUL. The
   difference between these wind directions are used as a proxy for the directional
   wind shear. When there is no MAUL present the value is set to NaN. A larger windshear
