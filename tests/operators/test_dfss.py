@@ -93,6 +93,15 @@ def test_calc_fss(dfss_ensemble_cube):
     fss = dfss._calc_fss(cube_a_in, cube_b_in, neighbourhood_length=2, centile=95)
     assert type(fss) is float
 
+    fss = dfss._calc_fss(
+        cube_a_in,
+        cube_b_in,
+        neighbourhood_length=2,
+        centile_or_threshold="threshold",
+        threshold=1,
+    )
+    assert type(fss) is float
+
 
 @pytest.mark.filterwarnings("ignore: Warning")
 def test_calc_dfss(dfss_ensemble_cube):
@@ -117,10 +126,16 @@ def test_calc_dfss(dfss_ensemble_cube):
 @pytest.mark.filterwarnings("ignore: Warning")
 def test_serial_calculate_dfss(dfss_ensemble_cube):
     """Test serial_calculate_dfss function."""
-    outlist = dfss._serial_calculate_dfss(dfss_ensemble_cube, [1], centile=95)
-    assert type(outlist) is iris.cube.CubeList
-    assert type(outlist[0]) is iris.cube.Cube
-    assert type(outlist[1]) is iris.cube.Cube
+    outlist_centile = dfss._serial_calculate_dfss(dfss_ensemble_cube, [1], centile=95)
+    assert type(outlist_centile) is iris.cube.CubeList
+    assert type(outlist_centile[0]) is iris.cube.Cube
+    assert type(outlist_centile[1]) is iris.cube.Cube
+    outlist_threshold = dfss._serial_calculate_dfss(
+        dfss_ensemble_cube, [1], centile_or_threshold="threshold", threshold=2
+    )
+    assert type(outlist_threshold) is iris.cube.CubeList
+    assert type(outlist_threshold[0]) is iris.cube.Cube
+    assert type(outlist_threshold[1]) is iris.cube.Cube
 
 
 @pytest.mark.filterwarnings("ignore: Warning")
