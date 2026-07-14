@@ -152,3 +152,9 @@ def test_get_spatial_coords(dfss_ensemble_cube):
     assert y.shape == (10,)
     assert x.units.name == "meter"
     assert y.units.name == "meter"
+
+
+def test_regrid_lat_lon_cube_to_xy_cube(dfss_ensemble_cube):
+    """Test regrid_lat_lon_cube_to_xy_cube."""
+    cube = dfss._regrid_lat_lon_cube_to_xy_cube(dfss_ensemble_cube)
+    assert type(cube) is iris.cube.Cube
