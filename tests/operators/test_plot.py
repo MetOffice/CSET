@@ -1425,7 +1425,7 @@ def test_hinton_returns_figure_and_axes():
     assert ax is not None
 
 
-def test_dfss_contour(dfss_cube):
+def test_dfss_contour(dfss_cube, dfss_stdev_cube, tmp_working_dir):
     """Test dfss_contour."""
     dfss_cube.attributes["method"] = "centile"
     dfss_cube.attributes["centile"] = 0.9
@@ -1439,7 +1439,7 @@ def test_dfss_contour(dfss_cube):
     assert Path("dfss_threshold_2.png").is_file()
 
 
-def test_plot_dfss_line_series_sequence(dfss_cube):
+def test_plot_dfss_line_series_sequence(dfss_cube, tmp_working_dir):
     """Test plot_dfss_line_series_sequence."""
     dfss_cube.attributes["method"] = "centile"
     dfss_cube.attributes["centile"] = 0.9
@@ -1466,4 +1466,104 @@ def test_plot_dfss_line_series_sequence(dfss_cube):
     ).is_file()
     assert Path(
         "dfss_neighbourhoods_point_2_threshold_2_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+
+
+def test_plot_dfss_contour_cube_list_no_variable(
+    dfss_cube, dfss_stdev_cube, tmp_working_dir
+):
+    """Test plot_dfss_contour with a cubelist without specifying a variable."""
+    dfss_cube.attributes["method"] = "centile"
+    dfss_cube.attributes["centile"] = 0.5
+
+    dfss_stdev_cube.attributes["method"] = "centile"
+    dfss_stdev_cube.attributes["centile"] = 0.5
+
+    cubes = iris.cube.CubeList([dfss_cube, dfss_stdev_cube])
+
+    plot.plot_dfss_contour(cubes)
+
+    assert Path("dfss_centile_0p5.png").is_file()
+
+
+def test_plot_dfss_contour_cube_list_with_variable(
+    dfss_cube, dfss_stdev_cube, tmp_working_dir
+):
+    """Test plot_dfss_contour with a cubelist with specific variable."""
+    dfss_cube.attributes["method"] = "centile"
+    dfss_cube.attributes["centile"] = 0.5
+
+    dfss_stdev_cube.attributes["method"] = "centile"
+    dfss_stdev_cube.attributes["centile"] = 0.5
+
+    cubes = iris.cube.CubeList([dfss_cube, dfss_stdev_cube])
+
+    plot.plot_dfss_contour(cubes, "dfss")
+
+    assert Path("dfss_centile_0p5.png").is_file()
+
+    plot.plot_dfss_contour(cubes, "dfss_stdev")
+
+    assert Path("dfss_stdev_centile_0p5.png").is_file()
+
+
+def test_plot_dfss_line_series_sequence_cube_list_no_variable(
+    dfss_cube, dfss_stdev_cube, tmp_working_dir
+):
+    """Test plot_dfss_line_series_sequence with cube list but not given a specific variable."""
+    dfss_cube.attributes["method"] = "centile"
+    dfss_cube.attributes["centile"] = 0.5
+
+    dfss_stdev_cube.attributes["method"] = "centile"
+    dfss_stdev_cube.attributes["centile"] = 0.5
+
+    cubes = iris.cube.CubeList([dfss_cube, dfss_stdev_cube])
+
+    plot.plot_dfss_line_series_sequence(cubes)
+    assert Path(
+        "dfss_neighbourhoods_point_0_centile_0p5_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+    assert Path(
+        "dfss_neighbourhoods_point_1_centile_0p5_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+
+    assert Path(
+        "dfss_neighbourhoods_point_2_centile_0p5_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+
+
+def test_plot_dfss_line_series_sequence_cube_list_with_variable(
+    dfss_cube, dfss_stdev_cube, tmp_working_dir
+):
+    """Test plot_dfss_line_series_sequence with cube list given a specific variable."""
+    dfss_cube.attributes["method"] = "centile"
+    dfss_cube.attributes["centile"] = 0.5
+
+    dfss_stdev_cube.attributes["method"] = "centile"
+    dfss_stdev_cube.attributes["centile"] = 0.5
+
+    cubes = iris.cube.CubeList([dfss_cube, dfss_stdev_cube])
+
+    plot.plot_dfss_line_series_sequence(cubes, "dfss")
+    assert Path(
+        "dfss_neighbourhoods_point_0_centile_0p5_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+    assert Path(
+        "dfss_neighbourhoods_point_1_centile_0p5_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+
+    assert Path(
+        "dfss_neighbourhoods_point_2_centile_0p5_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+
+    plot.plot_dfss_line_series_sequence(cubes, "dfss_stdev")
+    assert Path(
+        "dfss_stdev_neighbourhoods_point_0_centile_0p5_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+    assert Path(
+        "dfss_stdev_neighbourhoods_point_1_centile_0p5_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+
+    assert Path(
+        "dfss_stdev_neighbourhoods_point_2_centile_0p5_untitled_20100101000000_20100101001000.png"
     ).is_file()
