@@ -14,6 +14,8 @@
 
 """Tests for the dFSS operator."""
 
+import os
+
 import iris
 import iris.cube
 import numpy as np
@@ -103,6 +105,14 @@ def test_calc_dfss(dfss_ensemble_cube):
         assert type(dfss_cube) is iris.cube.Cube
         assert type(dfss_stdev_cube) is iris.cube.Cube
 
+    for time_slice in dfss_ensemble_cube.slices_over("time"):
+        time_point = time_slice.coord("time")
+        dfss_cube, dfss_stdev_cube = dfss._calc_dfss(
+            time_slice, [1], time_point, centile_or_threshold="threshold", threshold=2
+        )
+        assert type(dfss_cube) is iris.cube.Cube
+        assert type(dfss_stdev_cube) is iris.cube.Cube
+
 
 @pytest.mark.filterwarnings("ignore: Warning")
 def test_serial_calculate_dfss(dfss_ensemble_cube):
@@ -176,3 +186,11 @@ def test_regrid_lat_lon_cube_to_xy_cube(dfss_ensemble_cube):
     """Test regrid_lat_lon_cube_to_xy_cube."""
     cube = dfss._regrid_lat_lon_cube_to_xy_cube(dfss_ensemble_cube)
     assert type(cube) is iris.cube.Cube
+
+
+def test_init_worker():
+    """Test init_worker."""
+    dfss.init_worker()
+    assert os.environ["OMP_NUM_THREADS"] == "1"
+    assert os.environ["MKL_NUM_THREADS"] == "1"
+    assert os.environ["OPENBLAS_NUM_THREADS"] == "1"
