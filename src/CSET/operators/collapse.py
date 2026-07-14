@@ -31,6 +31,150 @@ from CSET._common import iter_maybe
 from CSET.operators.aggregate import add_hour_coordinate
 
 
+def _coord_is_effectively_scalar(coord):
+    """True if coordinate is scalar or all points have the same value."""
+    points = np.asarray(coord.points)
+
+    if points.size <= 1:
+        return True
+
+    return np.all(points == points.flat[0])
+
+
+def _fix_analysis_forecasttime(cubes: iris.cube.CubeList):
+
+
+    analysis_cubes = iris.cube.CubeList()
+    forecast_cubes = iris.cube.CubeList()
+
+    for cube in cubes:
+        fp = cube.coord("forecast_period")
+
+        if fp.points.max() == 0:
+            analysis_cubes.append(cube)
+        else:
+            forecast_cubes.append(cube)
+
+
+    longest_forecast_period = max(
+        cube.coord("forecast_period").points.max()
+        for cube in forecast_cubes
+    )
+
+    frts = {
+        cube.coord("forecast_reference_time").points[0]
+        for cube in forecast_cubes
+    }
+
+    if len(frts) > 1:
+        raise ValueError(
+            "Forecast cubes have different forecast_reference_times"
+        )
+    
+    frt_coord = forecast_cubes[0].coord("forecast_reference_time")
+
+    forecast_reference_time = frt_coord.units.num2date(
+        frt_coord.points[0]
+)
+
+    longest_cube = max(
+        forecast_cubes,
+        key=lambda c: c.coord("forecast_period").points.max()
+    )
+
+    forecast_reference_time = (
+        longest_cube.coord("forecast_reference_time")
+        .units.num2date(
+            longest_cube.coord("forecast_reference_time").points[0]
+        )
+    )
+
+    forecast_end_time = (
+        longest_cube.coord("time")
+        .units.num2date(
+            longest_cube.coord("time").points.max()
+        )
+    )
+
+    time_constraint = iris.Constraint(
+        time=lambda cell: (
+            forecast_reference_time <= cell.point <= forecast_end_time
+        )
+    )
+
+    # manually slicing needed rather than just assigning cube = cube.extract...
+    for i, cube in enumerate(analysis_cubes):
+        analysis_cubes[i] = cube.extract(time_constraint)
+
+    import cf_units
+
+    fixed_cubes = iris.cube.CubeList()
+
+    for cube in forecast_cubes:
+        fixed_cubes.append(cube)
+
+    print(analysis_cubes)
+    print(analysis_cubes[0])
+    print(analysis_cubes[0].coord('time'))
+    print(analysis_cubes[0].coord('forecast_reference_time'))
+    print(analysis_cubes[0].coord('forecast_period'))
+    print('pre')
+
+    for cube in analysis_cubes:
+        # Get coords
+        time_coord = cube.coord("time")
+        frt_coord = cube.coord("forecast_reference_time")
+        fp_coord = cube.coord("forecast_period")
+
+
+        if (_coord_is_effectively_scalar(frt_coord)
+                and _coord_is_effectively_scalar(fp_coord)):
+            print("forecast_reference_time and forecast_period already static")
+            return cube
+
+
+        # 
+        frt0_hours = frt_coord.points[0] 
+
+        fp_hours = time_coord.points - frt0_hours
+
+
+        # Remove old coords
+        cube.remove_coord("forecast_reference_time")
+        cube.remove_coord("forecast_period")
+
+        # Add constant FRT back as scalar
+        new_frt = iris.coords.AuxCoord(
+            frt0_hours,
+            standard_name="forecast_reference_time",
+            units=time_coord.units,
+        )
+        cube.add_aux_coord(new_frt)
+
+        # Add forecast period varying along time dimension
+        time_dim = cube.coord_dims("time")[0]
+
+        new_fp = iris.coords.AuxCoord(
+            fp_hours,
+            standard_name="forecast_period",
+            units="hours",
+        )
+
+        cube.add_aux_coord(new_fp, data_dims=(time_dim,))
+
+        fixed_cubes.append(cube)
+
+    print(fixed_cubes)
+    print(fixed_cubes[0])
+    print(fixed_cubes[0].coord('time'))
+    print(fixed_cubes[0].coord('forecast_reference_time'))
+    print(fixed_cubes[0].coord('forecast_period'))
+
+    #something to check we are matching input, i.e. if cube, only return cube, not cubelist.
+
+    return fixed_cubes
+
+
 def collapse(
     cubes: iris.cube.Cube | iris.cube.CubeList,
     coordinate: str | list[str],
@@ -75,6 +219,9 @@ def collapse(
         raise ValueError("Must specify additional_percent")
 
     # Retain only common time points between different models if multiple model inputs.
+
+    cubes = _fix_analysis_forecasttime(cubes)
+
     if isinstance(cubes, iris.cube.CubeList) and len(cubes) > 1:
         logging.debug(
             "Extracting common time points as multiple model inputs detected."
