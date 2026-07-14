@@ -1226,7 +1226,6 @@ def test_plot_dfss_line_series_sequence_cube_list_with_variable(
     dfss_stdev_cube.attributes["centile"] = 0.5
 
     cubes = iris.cube.CubeList([dfss_cube, dfss_stdev_cube])
-    breakpoint()
     plot.plot_dfss_line_series_sequence(cubes, variable="dfss")
     assert Path(
         "dfss_neighbourhoods_point_0_centile_0p5_untitled_20100101000000_20100101001000.png"
