@@ -202,8 +202,6 @@ def _setup_spatial_map(
 
         # Define spatial map projection.
         coord_system = cube.coord(lat_axis).coord_system
-        print(coord_system)
-        print(cube.coord(lat_axis))
         if isinstance(coord_system, iris.coord_systems.RotatedGeogCS):
             # Define rotated pole map projection for rotated pole inputs.
             projection = ccrs.RotatedPole(
