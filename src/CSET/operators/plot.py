@@ -1772,14 +1772,15 @@ def _plot_and_save_scatter_series(
     ax.tick_params(axis="both", labelsize=12)
     ax.autoscale()
 
-    lims = [
-        np.min([ax.get_xlim(), ax.get_ylim()]),  # min of both axes
-        np.max([ax.get_xlim(), ax.get_ylim()]),  # max of both axes
-    ]
-    ax.plot(lims, lims, "k-", alpha=0.75, zorder=0)
-    ax.set_aspect("equal")
-    ax.set_xlim(lims)
-    ax.set_ylim(lims)
+    if iter_maybe(cubes)[0].name() == iter_maybe(cubes)[1].name():
+        lims = [
+            np.min([ax.get_xlim(), ax.get_ylim()]),  # min of both axes
+            np.max([ax.get_xlim(), ax.get_ylim()]),  # max of both axes
+        ]
+        ax.plot(lims, lims, "k-", alpha=0.75, zorder=0)
+        ax.set_aspect("equal")
+        ax.set_xlim(lims)
+        ax.set_ylim(lims)
 
     # Overlay grid-lines onto scatter plot.
     ax.grid(linestyle="--", color="grey", linewidth=1)
