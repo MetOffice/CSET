@@ -487,13 +487,19 @@ def test_maul_properties_direction_shear_cubelist(
     maul_mask, u_wind_maul, v_wind_maul, precalc_direction_shear
 ):
     """Ensure correct directional shear across maul in cubelist."""
+    # Initiate a cubelist by repeating the cubes.
     input_list = iris.cube.CubeList([maul_mask, maul_mask])
     v_list = iris.cube.CubeList([v_wind_maul, v_wind_maul])
     u_list = iris.cube.CubeList([u_wind_maul, u_wind_maul])
+    # Create an expected cube list from the function taking cubelists
+    # as input.
     expected_list = precipitation.MAUL_properties(
         input_list, u_list, v_list, output="directional_shear"
     )
+    # Create a cubelist from the actual cube.
     actual_list = iris.cube.CubeList([precalc_direction_shear, precalc_direction_shear])
+    # Check for each cube in the expected and actual cubelists that the
+    # results match.
     for cube_a, cube_b in zip(expected_list, actual_list, strict=True):
         assert np.allclose(
             cube_a.data, cube_b.data, rtol=1e-2, atol=1e-6, equal_nan=True
@@ -506,7 +512,7 @@ def test_maul_properties_direction_shear_4d_realization(
     v_wind_maul_member,
     precalc_direction_shear_4d_realization,
 ):
-    """Ensure correct directional shear across MAUL generated for 4D field with varying realization."""
+    """Ensure correct directional shear across MAUL generated for 4D field for multiple realizations."""
     assert np.allclose(
         precipitation.MAUL_properties(
             maul_mask_member,
@@ -545,7 +551,7 @@ def test_maul_properties_direction_shear_4d_time(
 def test_maul_properties_direction_shear_5d(
     maul_mask_all, u_wind_maul_all, v_wind_maul_all, precalc_direction_shear_5d
 ):
-    """Ensure correct direction shear across MAUL generated for 5D field."""
+    """Ensure correct direction shear across MAUL generated for 5D field of realization, time, height, latitude and longitude."""
     assert np.allclose(
         precipitation.MAUL_properties(
             maul_mask_all, u_wind_maul_all, v_wind_maul_all, output="directional_shear"
