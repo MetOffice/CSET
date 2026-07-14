@@ -89,3 +89,35 @@ def test_parallel_calculate_dfss(dfss_ensemble_cube):
     assert type(outlist) is iris.cube.CubeList
     assert type(outlist[0]) is iris.cube.Cube
     assert type(outlist[1]) is iris.cube.Cube
+
+
+def test_dfss_on_slice(dfss_ensemble_cube):
+    """Test dfss_on_slice."""
+    for time_slice in dfss_ensemble_cube.slices_over("time"):
+        dfss_cube, dfss_stdev_cube = dfss._dfss_on_slice(
+            time_slice, [1], "centile", 95, None
+        )
+        assert type(dfss_cube) is iris.cube.Cube
+        assert type(dfss_stdev_cube) is iris.cube.Cube
+    for time_slice in dfss_ensemble_cube.slices_over("time"):
+        dfss_cube, dfss_stdev_cube = dfss._dfss_on_slice(
+            time_slice, [1], "threshold", None, 2
+        )
+        assert type(dfss_cube) is iris.cube.Cube
+        assert type(dfss_stdev_cube) is iris.cube.Cube
+
+
+def test_calc_fss_two_fields():
+    """Test calc_fss_two_fields."""
+    data_arr1 = np.zeros((3, 3, 10, 10))
+    data_arr1[2:6, 2:6] = 9
+    data_arr1[3:7, 3:7] = 3
+    data_arr1[4:8, 4:8] = 6
+
+    data_arr2 = np.zeros((10, 10))
+    data_arr2[2:6, 2:6] = 3
+    data_arr2[3:7, 3:7] = 5
+    data_arr2[4:8, 4:8] = 6
+
+    fss = dfss._calc_fss_two_fields(data_arr1, data_arr2)
+    assert fss == pytest.approx(0.1773628938156359)
