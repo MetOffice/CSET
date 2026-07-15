@@ -1,6 +1,6 @@
 category: Time series of surface temperature at Cardington single point
-title: "Time series of $VARNAME at lat_pt:52.10438, lon_pt:-0.42286 specific to Cardington gridpoint."
-description: "Plots a time series of $VARNAME at a selected Cardington gridpoint."
+title: "Time series of $PLOT_VARNAME at lat_pt:52.10438, lon_pt:-0.42286 specific to Cardington gridpoint."
+description: "Plots a time series of $PLOT_VARNAME at a selected Cardington gridpoint."
 steps:
   # ------------------------------------------------------------
   # 1. Read data
@@ -12,9 +12,11 @@ steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
     model_names:
-      - $CARDINGTON_05_LABEL
-      - $CARDINGTON_30_LABEL
+      - Cardington 05min
+      - Cardington 30min
       - $MODEL_NAME
+    constraint: ['$VARNAME', '$UM_VARNAME']
+
     constraints:
       $MODEL_NAME:
         operator: constraints.combine_constraints

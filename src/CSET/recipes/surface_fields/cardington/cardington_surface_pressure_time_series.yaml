@@ -1,14 +1,15 @@
 category: Time series of pressure at Cardington single point
-title: "Time series of $PLOTNAME at lat_pt:52.10438, lon_pt:-0.42286 specific to Cardington gridpoint."
-description: "Plots a time series of $PLOTNAME at a selected Cardington gridpoint."
+title: "Time series of $PLOT_VARNAME at lat_pt:52.10438, lon_pt:-0.42286 specific to Cardington gridpoint."
+description: "Plots a time series of $PLOT_VARNAME at a selected Cardington gridpoint."
 
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
     model_names:
-      - $CARDINGTON_05_LABEL
-      - $CARDINGTON_30_LABEL
+      - Cardington 05min
+      - Cardington 30min
       - $MODEL_NAME
+    constraint: ['$VARNAME', '$UM_VARNAME']
 
   - operator: filters.filter_multiple_cubes
 

@@ -6,9 +6,10 @@ steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
     model_names:
-      - $CARDINGTON_05_LABEL
-      - $CARDINGTON_30_LABEL
+      - Cardington 05min
+      - Cardington 30min
       - $MODEL_NAME
+    constraint: ['$VARNAME', '$UM_U_VARNAME', '$UM_V_VARNAME']
 
   - operator: misc.combine_cubes_into_cubelist
     first:
