@@ -65,7 +65,7 @@ def test_setup_spatial_map_global(cube):
     assert axes_gl == figure.gca()
     # Test map bounds based on cube-relative calculation of KGO values.
     bounds = axes_gl.get_extent()
-    assert bounds[0] == np.min(cube.coord("longitude").points) - 160.0
+    assert bounds[0] == np.min(cube.coord("longitude").points) - 180.0
     assert bounds[1] == np.max(cube.coord("longitude").points) - 180.0
     assert bounds[2] == np.min(cube.coord("latitude").points)
     assert bounds[3] == np.max(cube.coord("latitude").points)
