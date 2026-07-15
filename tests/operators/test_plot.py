@@ -471,6 +471,34 @@ def test_plot_line_series_too_many_dimensions(cube, tmp_working_dir):
         plot.plot_line_series(cube)
 
 
+def test_plot_and_save_line_series(dfss_cube):
+    """Test plot_and_save_line_series with dfss cube."""
+    coords = []
+    coords.append(dfss_cube.coord("time"))
+    coords.append(dfss_cube.coord("neighbourhoods"))
+
+    with pytest.raises(
+        ValueError,
+        match="Exactly one of ensemble_coord and sequence_coord must be provided",
+    ):
+        plot._plot_and_save_line_series(
+            dfss_cube,
+            coords,
+            "test_filename",
+            "test_plot_title",
+            sequence_coord="time",
+            ensemble_coord="realization",
+        )
+
+    with pytest.raises(
+        ValueError,
+        match="Exactly one of ensemble_coord and sequence_coord must be provided",
+    ):
+        plot._plot_and_save_line_series(
+            dfss_cube, coords, "test_filename", "test_plot_title"
+        )
+
+
 def test_plot_line_series_different_coord_lengths(tmp_working_dir):
     """Save a line series plot with specific filename and series coordinate."""
     ens_coord = iris.coords.DimCoord(0, standard_name="realization", units="1")
