@@ -290,25 +290,25 @@ def test_spatial_contour_plot(cube, tmp_working_dir):
 def test_contour_plot_sequence(cube, tmp_working_dir):
     """Plot sequence of contour plots."""
     plot.spatial_contour_plot(cube, sequence_coordinate="time")
-    assert Path("untitled_20220921030000.png").is_file()
-    assert Path("untitled_20220921040000.png").is_file()
-    assert Path("untitled_20220921050000.png").is_file()
+    assert Path("air_temperature_20220921030000.png").is_file()
+    assert Path("air_temperature_20220921040000.png").is_file()
+    assert Path("air_temperature_20220921050000.png").is_file()
 
 
 def test_spatial_multi_variable_plot(cube, tmp_working_dir):
     """Plot spatial plot with multiple input variables."""
     # Here assume cube provides cube, overlay_cube and contour_cube.
     plot.spatial_multi_pcolormesh_plot(cube, cube, cube, sequence_coordinate="time")
-    assert Path("untitled_20220921030000.png").is_file()
-    assert Path("untitled_20220921040000.png").is_file()
-    assert Path("untitled_20220921050000.png").is_file()
+    assert Path("air_temperature_20220921030000.png").is_file()
+    assert Path("air_temperature_20220921040000.png").is_file()
+    assert Path("air_temperature_20220921050000.png").is_file()
 
 
 def test_spatial_multi_variable_plot_nolayers(cube, tmp_working_dir):
     """Plot spatial plot with single input cube only."""
     # Call spatial_multi_pcolormesh_plot with only cube as input.
     plot.spatial_multi_pcolormesh_plot(cube[0], sequence_coordinate="time")
-    assert Path("untitled_20220921030000.png").is_file()
+    assert Path("air_temperature_20220921030000.png").is_file()
 
 
 def test_spatial_multi_variable_plot_overlay_only(cube, tmp_working_dir):
@@ -317,7 +317,7 @@ def test_spatial_multi_variable_plot_overlay_only(cube, tmp_working_dir):
     plot.spatial_multi_pcolormesh_plot(
         cube[0], overlay_cube=cube[0], sequence_coordinate="time"
     )
-    assert Path("untitled_20220921030000.png").is_file()
+    assert Path("air_temperature_20220921030000.png").is_file()
 
 
 def test_spatial_multi_variable_plot_contour_only(cube, tmp_working_dir):
@@ -326,7 +326,7 @@ def test_spatial_multi_variable_plot_contour_only(cube, tmp_working_dir):
     plot.spatial_multi_pcolormesh_plot(
         cube[0], contour_cube=cube[0], sequence_coordinate="time"
     )
-    assert Path("untitled_20220921030000.png").is_file()
+    assert Path("air_temperature_20220921030000.png").is_file()
 
 
 @pytest.mark.slow
@@ -370,7 +370,7 @@ def test_postage_stamp_contour_plot(ensemble_cube, tmp_working_dir):
     # Get a single time step.
     ensemble_cube_3d = next(ensemble_cube.slices_over("time"))
     plot.spatial_contour_plot(ensemble_cube_3d)
-    assert Path("untitled_20221201100000.png").is_file()
+    assert Path("air_temperature_20221201100000.png").is_file()
 
 
 def test_postage_stamp_contour_plot_sequence_coord_check(cube, tmp_working_dir):
@@ -405,17 +405,17 @@ def test_spatial_pcolormesh_levels(cube, tmp_working_dir, caplog):
                 message_matchB = True
         assert message_matchA
         assert message_matchB
-    assert Path("untitled_20220921030000.png").is_file()
-    assert Path("untitled_20220921040000.png").is_file()
-    assert Path("untitled_20220921050000.png").is_file()
+    assert Path("surface_microphysical_rainfall_rate_20220921030000.png").is_file()
+    assert Path("surface_microphysical_rainfall_rate_20220921040000.png").is_file()
+    assert Path("surface_microphysical_rainfall_rate_20220921050000.png").is_file()
 
 
 def test_pcolormesh_plot_sequence(cube, tmp_working_dir):
     """Plot sequence of pcolormesh plots."""
     plot.spatial_pcolormesh_plot(cube, sequence_coordinate="time")
-    assert Path("untitled_20220921030000.png").is_file()
-    assert Path("untitled_20220921040000.png").is_file()
-    assert Path("untitled_20220921050000.png").is_file()
+    assert Path("air_temperature_20220921030000.png").is_file()
+    assert Path("air_temperature_20220921040000.png").is_file()
+    assert Path("air_temperature_20220921050000.png").is_file()
 
 
 def test_pcolormesh_plot_global(global_cube, caplog, tmp_working_dir):
@@ -443,7 +443,7 @@ def test_postage_stamp_pcolormesh_plot(ensemble_cube, tmp_working_dir):
     # Get a single time step.
     ensemble_cube_3d = next(ensemble_cube.slices_over("time"))
     plot.spatial_pcolormesh_plot(ensemble_cube_3d)
-    assert Path("untitled_20221201100000.png").is_file()
+    assert Path("air_temperature_20221201100000.png").is_file()
 
 
 def test_postage_stamp_pcolormesh_plot_sequence_coord_check(cube, tmp_working_dir):
@@ -482,13 +482,13 @@ def test_plot_line_series(cube, tmp_working_dir):
     """Save a line series plot."""
     cube = collapse.collapse(cube, ["grid_latitude", "grid_longitude"], "MEAN")
     plot.plot_line_series(cube)
-    assert Path("untitled_20220921030000_20220921050000.png").is_file()
+    assert Path("air_temperature_20220921030000_20220921050000.png").is_file()
 
 
 def test_plot_power_spectrum(power_spectrum_cube_readonly, tmp_working_dir):
     """Save a power_spectrum plot using line series plot."""
     plot.plot_line_series(power_spectrum_cube_readonly, series_coordinate="frequency")
-    assert Path("untitled_20220601000000.png").is_file()
+    assert Path("power_spectra_20220601000000.png").is_file()
 
 
 def test_plot_line_series_with_filename(cube, tmp_working_dir):
@@ -692,8 +692,8 @@ def test_plot_vertical_line_series(vertical_profile_cube, tmp_working_dir):
     plot.plot_vertical_line_series(
         vertical_profile_cube, series_coordinate="pressure", sequence_coordinate="time"
     )
-    assert Path("untitled_20240116060000.png").is_file()
-    assert Path("untitled_20240116090000.png").is_file()
+    assert Path("air_temperature_20240116060000.png").is_file()
+    assert Path("air_temperature_20240116090000.png").is_file()
 
 
 def test_plot_vertical_line_series_with_filename(
@@ -761,8 +761,8 @@ def test_plot_vertical_line_series_ensemble(vertical_profile_cube, tmp_working_d
     plot.plot_vertical_line_series(
         cubes, series_coordinate="pressure", sequence_coordinate="time"
     )
-    assert Path("untitled_20240116060000.png").is_file()
-    assert Path("untitled_20240116090000.png").is_file()
+    assert Path("air_temperature_20240116060000.png").is_file()
+    assert Path("air_temperature_20240116090000.png").is_file()
 
 
 def test_plot_histogram_no_sequence_coordinate(histogram_cube, tmp_working_dir):
@@ -1019,7 +1019,7 @@ def test_scatter_plot(cube, vertical_profile_cube, tmp_working_dir):
         cube_y,
         cube_x,
     )
-    assert Path("untitled.png").is_file()
+    assert Path("scatter_plot.png").is_file()
 
 
 def test_scatter_plot_with_filename(cube, vertical_profile_cube, tmp_working_dir):
@@ -1043,7 +1043,7 @@ def test_scatter_plot_no_one_to_one_line(cube, vertical_profile_cube, tmp_workin
         cube_x,
         one_to_one=False,
     )
-    assert Path("untitled.png").is_file()
+    assert Path("scatter_plot.png").is_file()
 
 
 def test_scatter_plot_too_many_x_dimensions(
@@ -1195,7 +1195,7 @@ def test_qq_plot(cube, tmp_working_dir):
         percentiles=[0, 50, 100],
         model_names=["a", "b"],
     )
-    assert Path("untitled.png").is_file()
+    assert Path("qq_plot.png").is_file()
 
 
 def test_qq_plot_named(cube, tmp_working_dir):
@@ -1260,7 +1260,7 @@ def test_qq_plot_different_data_shape_regrid(cube, tmp_working_dir):
         percentiles=[0, 50, 100],
         model_names=["a", "b"],
     )
-    assert Path("untitled.png").is_file()
+    assert Path("qq_plot.png").is_file()
 
 
 def test_qq_plot_grid_staggering_regrid(cube, tmp_working_dir):
@@ -1275,4 +1275,4 @@ def test_qq_plot_grid_staggering_regrid(cube, tmp_working_dir):
         percentiles=[0, 50, 100],
         model_names=["a", "b"],
     )
-    assert Path("untitled.png").is_file()
+    assert Path("qq_plot.png").is_file()

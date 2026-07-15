@@ -157,21 +157,21 @@ def _setup_spatial_map(
     # Identify min/max plot bounds.
     try:
         lat_axis, lon_axis = get_cube_yxcoordname(cube)
-        x1 = np.nanmin(cube.coord(lon_axis).points)
-        x2 = np.nanmax(cube.coord(lon_axis).points)
-        y1 = np.nanmin(cube.coord(lat_axis).points)
-        y2 = np.nanmax(cube.coord(lat_axis).points)
+        xmin = np.nanmin(cube.coord(lon_axis).points)
+        xmax = np.nanmax(cube.coord(lon_axis).points)
+        ymin = np.nanmin(cube.coord(lat_axis).points)
+        ymax = np.nanmax(cube.coord(lat_axis).points)
 
         # Adjust bounds within +/- 180.0 if x dimension extends beyond half-globe.
-        if np.abs(x2 - x1) > 180.0:
-            x1 = x1 - 180.0
-            x2 = x2 - 180.0
+        if np.abs(xmax - xmin) > 180.0:
+            xmin = xmin - 180.0
+            xmax = xmax - 180.0
             logging.debug("Adjusting plot bounds to fit global extent.")
 
         # Consider map projection orientation.
         # Adapting orientation enables plotting across international dateline.
         # Users can adapt the default central_longitude if alternative projections views.
-        if x2 > 180.0 or x1 < -180.0:
+        if xmax > 180.0 or xmin < -180.0:
             central_longitude = 180.0
         else:
             central_longitude = 0.0
@@ -198,25 +198,22 @@ def _setup_spatial_map(
             crs = projection
         else:
             # Assume polar projection for regional grids encompassing N. Pole
-            if y1 > 20.0 and y2 > 80.0:
+            if ymin > 20.0 and ymax > 80.0:
                 projection = ccrs.NorthPolarStereo(central_longitude=0.0)
-                crs = ccrs.PlateCarree()
-            elif y1 < -80.0 and y2 < -20.0:
-                projection = ccrs.SouthPolarStereo(central_longitude=0.0)
-                crs = ccrs.PlateCarree()
+            elif ymin < -80.0 and ymax < -20.0:
+                projection = ccrs.SouthPolarStereo(central_longitude=central_longitude)
             # Define regular map projection for non-rotated pole inputs.
             # Alternatives might include e.g. for global model outputs:
+            #    projection=ccrs.Robinson(central_longitude=X.y, globe=None)
+            #    projection = ccrs.NearsidePerspective(
+            #        central_longitude=180.0,
+            #        central_latitude=0,
+            #        satellite_height=35785831,
+            #    )
+            # See also https://scitools.org.uk/cartopy/docs/v0.15/crs/projections.html.
             else:
-                projection = ccrs.Robinson(central_longitude=0.0, globe=None)
-                projection = ccrs.NearsidePerspective(
-                    central_longitude=180.0,
-                    central_latitude=0,
-                    satellite_height=35785831,
-                )
-                # See also https://scitools.org.uk/cartopy/docs/v0.15/crs/projections.html.
-                # else:
                 projection = ccrs.PlateCarree(central_longitude=central_longitude)
-                crs = ccrs.PlateCarree()
+            crs = ccrs.PlateCarree()
 
         # Define axes for plot (or subplot) with required map projection.
         if subplot is not None:
@@ -262,7 +259,7 @@ def _setup_spatial_map(
         # If is lat/lon spatial map, fix extent to keep plot tight.
         # Specifying crs within set_extent helps ensure only data region is shown.
         if isinstance(coord_system, iris.coord_systems.GeogCS):
-            axes.set_extent([x1, x2, y1, y2], crs=crs)
+            axes.set_extent([xmin, xmax, ymin, ymax], crs=crs)
 
     except ValueError:
         # Skip if not both x and y map coordinates.
@@ -1133,7 +1130,7 @@ def _plot_and_save_line_power_spectrum_series(
             for (handle, label) in zip(*ax.get_legend_handles_labels(), strict=True)
         }.values()
     )
-    ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
+    ax.legend(handles=handles, loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -1851,10 +1848,11 @@ def _spatial_plot(
     TypeError
         If the cube isn't a single cube.
     """
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
-
     # Ensure we've got a single cube.
     cube = check_single_cube(cube)
+
+    # Set title based on recipe metadata or use cube name
+    recipe_title = get_recipe_metadata().get("title", cube.name())
 
     # Check if there is a valid stamp coordinate in cube dimensions.
     if stamp_coordinate == "realization":
@@ -2152,7 +2150,7 @@ def plot_line_series(
         If the cube isn't a Cube or CubeList.
     """
     # Ensure we have a name for the plot file.
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", iter_maybe(cube)[0].name())
 
     num_models = get_num_models(cube)
 
@@ -2374,7 +2372,7 @@ def plot_vertical_line_series(
         If the cube isn't a Cube or CubeList.
     """
     # Ensure we have a name for the plot file.
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", iter_maybe(cubes)[0].name())
 
     cubes = iter_maybe(cubes)
     # Initialise empty list to hold all data from all cubes in a CubeList
@@ -2602,7 +2600,7 @@ def qq_plot(
     )
 
     # Ensure we have a name for the plot file.
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", "QQ_plot")
     title = f"{recipe_title}"
 
     if filename is None:
@@ -2681,7 +2679,7 @@ def scatter_plot(
             raise ValueError("cube_y must be 1D.")
 
     # Ensure we have a name for the plot file.
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", "Scatter_plot")
     title = f"{recipe_title}"
 
     if filename is None:
@@ -2710,7 +2708,7 @@ def vector_plot(
     **kwargs,
 ) -> iris.cube.CubeList:
     """Plot a vector plot based on the input u and v components."""
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", "Vector_plot")
 
     # Cubes must have a matching sequence coordinate.
     try:
@@ -2807,7 +2805,7 @@ def plot_histogram_series(
     TypeError
         If the cube isn't a Cube or CubeList.
     """
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", "Histogram")
 
     cubes = iter_maybe(cubes)
     # Ensure we have a name for the plot file.
@@ -3141,7 +3139,7 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
                 for (handle, label) in zip(*ax.get_legend_handles_labels(), strict=True)
             }.values()
         )
-        ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
+        ax.legend(handles=handles, loc="best", ncol=1, frameon=True, fontsize=16)
 
         ax = plt.gca()
         ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
@@ -3271,10 +3269,7 @@ def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
             for (handle, label) in zip(*ax.get_legend_handles_labels(), strict=True)
         }.values()
     )
-    ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
-
-    # Add a legend
-    ax.legend(fontsize=16)
+    ax.legend(handles=handles, loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Figure title.
     ax.set_title(title, fontsize=16)

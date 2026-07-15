@@ -1,9 +1,9 @@
 category: Extreme precipitation
-title: $MODEL_NAME number of Moist Absolutely Unstable Layers (MAULs) spatial plot
+title: $MODEL_NAME average windspeed below Moist Absolutely Unstable Layers (MAULs) spatial plot
 description: |
   Generates a mask of whether Moist Absolutely Unstable Layers (MAULs) are present
-  in a model column and counts the number of MAULs (of any depth) in a column and
-  creates a spatial plot.
+  in a model column and then averages the windspeed below the deepest MAULs in a
+  column and creates a spatial plot.
 
   A MAUL is defined as an unstable layer (with height) based on equivalent potential
   temperature alongside the relative humidity of that layer exceeding 90 %, following
@@ -11,11 +11,11 @@ description: |
   potential temperature is calculated using air temperature, pressure and specific humidity.
   A vertical differentitation occurs to determine the stability (< 0 with dz implies unstable air).
   The relative humidity is linearly interpolated onto the same grid as the vertical
-  derivative of the equivalent potenital temperature. The masks for each criterion are multiplied
+  derivative of the equivalent potential temperature. The masks for each criterion are multiplied
   together and then image processing is used to identify the number of objects (values of
-  ones that are connected) and the maximum value is taken in the grid column to indicate
-  the number of a MAULs in that column. There is no depth filter on MAULs and as such meeting
-  the criteria over a single layer will be identified as a MAUL.
+  ones that are connected) the depth of each object is found the deepest MAUL is used. The
+  windspeed is then averaged from the base of the MAUL to the surface. Should there be
+  no MAUL present, or the MAUL begins at the surface the value will be set to NaN.
 
 steps:
   - operator: read.read_cubes
@@ -154,7 +154,7 @@ steps:
                 operator: constraints.generate_remove_single_level_constraint
                 coord: "model_level_number"
                 level: "*"
-    output: "number"
+    output: "wind_below"
 
   - operator: plot.spatial_pcolormesh_plot
 

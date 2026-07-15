@@ -688,6 +688,22 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+    # Wind Below Moist Absolutely Unstable Layer (of deepest)
+    if conf.AVERAGE_WIND_BELOW_MAUL:
+        for model in models:
+            yield RawRecipe(
+                recipe="average_windspeed_below_maul_spatial_plot.yaml",
+                variables={
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=model["id"],
+                aggregation=False,
+            )
+
     # Screen-level temperature probabilities
     for model, condition, threshold in itertools.product(
         models,
