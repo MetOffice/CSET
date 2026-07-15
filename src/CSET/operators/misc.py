@@ -81,6 +81,47 @@ def remove_attribute(
     return cubes
 
 
+def remove_scalar_coords(
+    cubes: Cube | CubeList, coords: str | Iterable[str]
+) -> CubeList:
+    """Remove scalar coordinates from one or more cubes.
+
+    Coordinates are only removed if they exist on the cube and are
+    scalar coordinates (i.e. have no associated dimensions). Examples
+    include ``realization`` and ``forecast_reference_time`` on model
+    data cubes. Dimensional and non-scalar auxiliary coordinates are
+    left unchanged.
+
+    Arguments
+    ---------
+    cubes: Cube | CubeList
+        One or more cubes from which scalar coordinates will be removed.
+    coords: str | Iterable
+        Name of a coordinate (or Iterable of coordinate names) to remove.
+
+    Returns
+    -------
+    cubes: CubeList
+        CubeList of cube(s) with the requested scalar coordinates
+        removed where present.
+    """
+    if not isinstance(cubes, CubeList):
+        cubes = CubeList(iter_maybe(cubes))
+
+    if isinstance(coords, str):
+        coords = [coords]
+
+    for cube in cubes:
+        for coord_name in iter_maybe(coords):
+            if cube.coords(coord_name):
+                coord = cube.coord(coord_name)
+                # only remove if scalar
+                if cube.coord_dims(coord) == ():
+                    cube.remove_coord(coord)
+
+    return cubes
+
+
 def addition(addend_1, addend_2):
     """Addition of two fields.
 
