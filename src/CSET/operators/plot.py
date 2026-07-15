@@ -157,21 +157,21 @@ def _setup_spatial_map(
     # Identify min/max plot bounds.
     try:
         lat_axis, lon_axis = get_cube_yxcoordname(cube)
-        x1 = np.min(cube.coord(lon_axis).points)
-        x2 = np.max(cube.coord(lon_axis).points)
-        y1 = np.min(cube.coord(lat_axis).points)
-        y2 = np.max(cube.coord(lat_axis).points)
+        xmin = np.nanmin(cube.coord(lon_axis).points)
+        xmax = np.nanmax(cube.coord(lon_axis).points)
+        ymin = np.nanmin(cube.coord(lat_axis).points)
+        ymax = np.nanmax(cube.coord(lat_axis).points)
 
         # Adjust bounds within +/- 180.0 if x dimension extends beyond half-globe.
-        if np.abs(x2 - x1) > 180.0:
-            x1 = x1 - 180.0
-            x2 = x2 - 180.0
+        if np.abs(xmax - xmin) > 180.0:
+            xmin = xmin - 180.0
+            xmax = xmax - 180.0
             logging.debug("Adjusting plot bounds to fit global extent.")
 
         # Consider map projection orientation.
         # Adapting orientation enables plotting across international dateline.
         # Users can adapt the default central_longitude if alternative projections views.
-        if x2 > 180.0 or x1 < -180.0:
+        if xmax > 180.0 or xmin < -180.0:
             central_longitude = 180.0
         else:
             central_longitude = 0.0
@@ -197,11 +197,22 @@ def _setup_spatial_map(
             )
             crs = projection
         else:
+            # Assume polar projection for regional grids encompassing N. Pole
+            if ymin > 20.0 and ymax > 80.0:
+                projection = ccrs.NorthPolarStereo(central_longitude=0.0)
+            elif ymin < -80.0 and ymax < -20.0:
+                projection = ccrs.SouthPolarStereo(central_longitude=central_longitude)
             # Define regular map projection for non-rotated pole inputs.
             # Alternatives might include e.g. for global model outputs:
             #    projection=ccrs.Robinson(central_longitude=X.y, globe=None)
+            #    projection = ccrs.NearsidePerspective(
+            #        central_longitude=180.0,
+            #        central_latitude=0,
+            #        satellite_height=35785831,
+            #    )
             # See also https://scitools.org.uk/cartopy/docs/v0.15/crs/projections.html.
-            projection = ccrs.PlateCarree(central_longitude=central_longitude)
+            else:
+                projection = ccrs.PlateCarree(central_longitude=central_longitude)
             crs = ccrs.PlateCarree()
 
         # Define axes for plot (or subplot) with required map projection.
@@ -213,8 +224,8 @@ def _setup_spatial_map(
             axes = figure.add_subplot(projection=projection)
 
         # Add coastlines and borderlines if cube contains x and y map coordinates.
-        # Avoid adding lines for masked data or specific fixed ancillary spatial plots.
-        if iris.util.is_masked(cube.data) or any(
+        # Avoid adding lines for 2D masked data or specific fixed ancillary spatial plots.
+        if (cube.ndim > 1 and iris.util.is_masked(cube.data)) or any(
             name in cube.name() for name in ["land_", "orography", "altitude"]
         ):
             pass
@@ -224,8 +235,8 @@ def _setup_spatial_map(
             else:
                 coastcol = "black"
             logging.debug("Plotting coastlines and borderlines in colour %s.", coastcol)
-            axes.coastlines(resolution="10m", color=coastcol)
-            axes.add_feature(cfeature.BORDERS, edgecolor=coastcol)
+            axes.coastlines(resolution="10m", color=coastcol, alpha=0.8)
+            axes.add_feature(cfeature.BORDERS, edgecolor=coastcol, alpha=0.3)
 
         # Add gridlines.
         gl = axes.gridlines(
@@ -248,7 +259,7 @@ def _setup_spatial_map(
         # If is lat/lon spatial map, fix extent to keep plot tight.
         # Specifying crs within set_extent helps ensure only data region is shown.
         if isinstance(coord_system, iris.coord_systems.GeogCS):
-            axes.set_extent([x1, x2, y1, y2], crs=crs)
+            axes.set_extent([xmin, xmax, ymin, ymax], crs=crs)
 
     except ValueError:
         # Skip if not both x and y map coordinates.
@@ -929,7 +940,7 @@ def _plot_and_save_line_series(
             for (handle, label) in zip(*ax.get_legend_handles_labels(), strict=True)
         }.values()
     )
-    ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
+    ax.legend(handles=handles, loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -1054,7 +1065,7 @@ def _plot_and_save_line_power_spectrum_series(
             for (handle, label) in zip(*ax.get_legend_handles_labels(), strict=True)
         }.values()
     )
-    ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
+    ax.legend(handles=handles, loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -1196,7 +1207,7 @@ def _plot_and_save_vertical_line_series(
             for (handle, label) in zip(*ax.get_legend_handles_labels(), strict=True)
         }.values()
     )
-    ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
+    ax.legend(handles=handles, loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -1491,7 +1502,7 @@ def _plot_and_save_histogram_series(
     # Overlay grid-lines onto histogram plot.
     ax.grid(linestyle="--", color="grey", linewidth=1)
     if model_colors_map:
-        ax.legend(loc="best", ncol=1, frameon=False, fontsize=16)
+        ax.legend(loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -1718,10 +1729,11 @@ def _spatial_plot(
     TypeError
         If the cube isn't a single cube.
     """
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
-
     # Ensure we've got a single cube.
     cube = check_single_cube(cube)
+
+    # Set title based on recipe metadata or use cube name
+    recipe_title = get_recipe_metadata().get("title", cube.name())
 
     # Check if there is a valid stamp coordinate in cube dimensions.
     if stamp_coordinate == "realization":
@@ -2007,7 +2019,7 @@ def plot_line_series(
         If the cube isn't a Cube or CubeList.
     """
     # Ensure we have a name for the plot file.
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", iter_maybe(cube)[0].name())
 
     num_models = get_num_models(cube)
 
@@ -2205,7 +2217,7 @@ def plot_vertical_line_series(
         If the cube isn't a Cube or CubeList.
     """
     # Ensure we have a name for the plot file.
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", iter_maybe(cubes)[0].name())
 
     cubes = iter_maybe(cubes)
     # Initialise empty list to hold all data from all cubes in a CubeList
@@ -2433,7 +2445,7 @@ def qq_plot(
     )
 
     # Ensure we have a name for the plot file.
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", "QQ_plot")
     title = f"{recipe_title}"
 
     if filename is None:
@@ -2454,6 +2466,180 @@ def qq_plot(
     _make_plot_html_page(plot_index)
 
     return iris.cube.CubeList([base, other])
+
+
+def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
+    """
+    Plot a Hinton style triangle/scorecard plot.
+
+    This plot type can be useful for summarising high level information, such as comparing
+    how 'skillful' two models are when verified against observations for a variety of metrics,
+    as a function of lead-time. A few parameters of the plot style are fixed in function rather
+    than customisable by the user as input arguments; many have been designed to automatically
+    scale the plot depending on the number of x and y components.
+
+    Parameters
+    ----------
+    change: np.ndarray
+        A 2d numpy array containing the values (scaled to 1 to -1) that determine the triangle
+        size/direction.
+    signif: np.ndarray
+        A 2d numpy array containing 0s and 1s to determine if triangle is significant or not.
+    xaxis_labels: list
+        List of labels for the xaxis (must match the second dimension length of signif and change,
+        along with magnitude if not None).
+    yaxis_labels: list
+        List of labels for the yaxis (must match the first dimension length of signif and change,
+        along with magnitude if not None).
+    magnitude: np.ndarray | None
+        Optional 2D array, matching the shape of change, signif, which contains numerical values
+        the user wishes to display under each respective triangle.
+
+    Returns
+    -------
+    matplotlib axes object to either display or do further modifications to.
+    """
+    # Setup colors of triangles
+    color_pos = "#7CAE00"
+    color_neg = "#7B68EE"
+
+    # Setup cell/text size ratios
+    figsize = None
+    cell_size_in = 0.35
+    text_row_ratio = 0.25
+
+    # Ensure arrays, and change to bool for sig.
+    change = np.asarray(change)
+    signif = np.asarray(signif).astype(bool)
+    if magnitude is not None:
+        magnitude = np.asarray(magnitude)
+
+    # Get the number of x and y elements
+    ny, nx = change.shape
+
+    # Build non-uniform y coordinates
+    tri_height = 1.0
+    txt_height = text_row_ratio
+
+    tri_y = []
+    txt_y = []
+    y_edges = [0.0]
+
+    y = 0.0
+    for _j in range(ny):
+        tri_y.append(y + tri_height / 2)
+        y += tri_height
+        y_edges.append(y)
+
+        if magnitude is not None:
+            txt_y.append(y + txt_height / 2)
+            y += txt_height
+            y_edges.append(y)
+
+    total_height = y
+
+    # Dynamic figure size
+    if figsize is None:
+        width = nx * cell_size_in
+        height = total_height * cell_size_in + 2
+        figsize = (width, height)
+
+    fig, ax = plt.subplots(figsize=figsize)
+
+    # Setup axes and grid.
+    ax.set_aspect("equal", adjustable="box")
+    ax.set_xlim(-0.5, nx - 0.5)
+    ax.set_ylim(0, total_height)
+
+    ax.set_xticks(np.arange(nx))
+    ax.set_xticklabels(xaxis_labels, rotation=90)
+
+    ax.set_yticks(tri_y)
+    ax.set_yticklabels(yaxis_labels)
+
+    ax.set_xticks(np.arange(-0.5, nx, 1), minor=True)
+    ax.set_yticks(y_edges, minor=True)
+
+    ax.set_axisbelow(True)
+    ax.grid(which="minor", linestyle=":", linewidth=0.3, color="0.7")
+    ax.grid(False, which="major")
+    ax.tick_params(which="minor", length=0)
+
+    ax.invert_yaxis()
+
+    # Compute marker scaling (fixed overlap)
+    fig.canvas.draw()
+
+    bbox = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+    width_in, height_in = bbox.width, bbox.height
+
+    cell_w = (width_in * fig.dpi) / nx
+    cell_h = (height_in * fig.dpi) / total_height
+    cell_pixels = min(cell_w, cell_h)
+
+    max_marker_size = (0.6 * cell_pixels) ** 2
+
+    text_fontsize = cell_pixels * 0.15
+
+    # Plot triangles + text
+    for j in range(ny):
+        for i in range(nx):
+            val = change[j, i]
+            if np.isnan(val):
+                continue
+
+            if abs(val) < 0.01:
+                continue
+
+            sig = signif[j, i]
+            size = max_marker_size * abs(val)
+
+            # Triangle style
+            if val >= 0:
+                marker = "^"
+                color = color_pos
+            else:
+                marker = "v"
+                color = color_neg
+
+            if sig:
+                edgecolor = "black"
+                linewidth = 0.6
+            else:
+                edgecolor = "none"
+                linewidth = 0.0
+
+            # Triangle
+            ax.scatter(
+                i,
+                tri_y[j],
+                s=size,
+                marker=marker,
+                c=color,
+                edgecolors=edgecolor,
+                linewidths=linewidth,
+                zorder=3,
+                clip_on=True,  # ensures no rendering bleed
+            )
+
+            # Text row
+            if magnitude is not None:
+                mag_val = magnitude[j, i]
+
+                if not np.isnan(mag_val):
+                    ax.text(
+                        i,
+                        txt_y[j],
+                        f"{mag_val:.1f}",
+                        ha="center",
+                        va="center",
+                        fontsize=text_fontsize,
+                        color="black",
+                        zorder=4,
+                    )
+
+    plt.tight_layout()
+    return fig, ax
 
 
 def scatter_plot(
@@ -2512,7 +2698,7 @@ def scatter_plot(
             raise ValueError("cube_y must be 1D.")
 
     # Ensure we have a name for the plot file.
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", "Scatter_plot")
     title = f"{recipe_title}"
 
     if filename is None:
@@ -2541,7 +2727,7 @@ def vector_plot(
     **kwargs,
 ) -> iris.cube.CubeList:
     """Plot a vector plot based on the input u and v components."""
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", "Vector_plot")
 
     # Cubes must have a matching sequence coordinate.
     try:
@@ -2638,7 +2824,7 @@ def plot_histogram_series(
     TypeError
         If the cube isn't a Cube or CubeList.
     """
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", "Histogram")
 
     cubes = iter_maybe(cubes)
     # Ensure we have a name for the plot file.
@@ -2845,7 +3031,7 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
                 for (handle, label) in zip(*ax.get_legend_handles_labels(), strict=True)
             }.values()
         )
-        ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
+        ax.legend(handles=handles, loc="best", ncol=1, frameon=True, fontsize=16)
 
         ax = plt.gca()
         ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
@@ -2975,10 +3161,7 @@ def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
             for (handle, label) in zip(*ax.get_legend_handles_labels(), strict=True)
         }.values()
     )
-    ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
-
-    # Add a legend
-    ax.legend(fontsize=16)
+    ax.legend(handles=handles, loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Figure title.
     ax.set_title(title, fontsize=16)
