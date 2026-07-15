@@ -2187,6 +2187,7 @@ def plot_line_series(
 
         if num_models == 1:
             # check for ensembles
+
             if (
                 stamp_coordinate in [c.name() for c in cubes[0].coords()]
                 and cubes[0].coord(stamp_coordinate).shape[0] > 1
@@ -2198,6 +2199,7 @@ def plot_line_series(
                     # Plot postage stamps
                     plotting_func = _plot_and_save_postage_stamp_power_spectrum_series
             cube_iterables = cubes[0].slices_over(sequence_coordinate)
+
         else:
             all_points = sorted(
                 set(
@@ -2268,16 +2270,20 @@ def plot_line_series(
     else:
         # Format the title and filename using plotted series coordinate
         nplot = 1
+
         seq_coord = coords[0]
+
         plot_title, plot_filename = _set_title_and_filename(
             seq_coord, nplot, recipe_title, filename
         )
+
         # Do the actual plotting for all other series coordinate options.
         _plot_and_save_line_series(
-            cubes, coords, stamp_coordinate, plot_filename, plot_title
+            cubes, coords, plot_filename, plot_title, ensemble_coord=stamp_coordinate
         )
 
         plot_index.append(plot_filename)
+
     # Do the actual plotting.
     _plot_and_save_line_series(
         cubes, coords, plot_filename, plot_title, ensemble_coord="realization"
