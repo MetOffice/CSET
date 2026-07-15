@@ -194,6 +194,14 @@ def _resolve_preserve_dims(
     return preserve_dims
 
 
+def _collapse_ensemble_mean(data_array: xr.DataArray) -> xr.DataArray:
+    """Collapse a realization dimension to its mean when present."""
+    if "realization" in data_array.dims:
+        return data_array.mean(dim="realization", keep_attrs=True)
+
+    return data_array
+
+
 def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None = None):
     r"""Calculate the Root Mean Square Error (RMSE) using scores.
 
@@ -213,6 +221,8 @@ def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None =
         ["time","grid_latitude", "grid_longitude"] or if you want a time series
         you can preserve ["time"], if you want to collapse to a single value
         use `None`. The default is `None`.
+        If an ensemble realization dimension is present, it is collapsed to the
+        ensemble mean before the RMSE is calculated.
 
     Returns
     -------
@@ -236,9 +246,13 @@ def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None =
     """
     base, other = _sort_cubes_for_verification(cubes)
 
-    # Copy the coordinates of the input cubes.
-    other_xr = xr.DataArray.from_iris(other)
-    base_xr = xr.DataArray.from_iris(base)
+    is_ensemble_mean = (
+        "realization" in xr.DataArray.from_iris(base).dims
+        or "realization" in xr.DataArray.from_iris(other).dims
+    )
+
+    other_xr = _collapse_ensemble_mean(xr.DataArray.from_iris(other))
+    base_xr = _collapse_ensemble_mean(xr.DataArray.from_iris(base))
     preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
 
     # Scores operates on xarray data arrays, so we transform the iris cube into an array,
@@ -278,10 +292,13 @@ def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None =
             )
     except iris.exceptions.CoordinateNotFoundError:
         pass
-
     scores_cube.rename(f"RMSE_of_{base.name()}")
     # if preserved_coordinates == ["grid_latitude", "grid_longitude"]:
     #   scores_cube.add_aux_coord(time_coord)
+
+    # if ensemble add ensemble attribute
+    if is_ensemble_mean:
+        scores_cube.attributes["cset_ensemble_mean"] = "true"
     return scores_cube
 
 

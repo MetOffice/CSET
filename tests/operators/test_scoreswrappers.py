@@ -17,6 +17,8 @@
 import datetime
 
 import iris
+import iris.analysis
+import iris.analysis.calculus
 import iris.coords
 import numpy as np
 import pytest
@@ -155,6 +157,20 @@ def test_scores_rmse_no_common_points(cube):
     cubes = CubeList([cube, other_cube])
     with pytest.raises(ValueError, match="No common time points found!"):
         scoreswrappers.scores_rmse(cubes)
+
+
+def test_scores_rmse_ensemble_mean(ensemble_cube):
+    """Test RMSE collapses realization to the ensemble mean."""
+    base_cube = ensemble_cube.copy()
+    base_cube.attributes["cset_comparison_base"] = 1
+
+    mean_cube = ensemble_cube.collapsed("realization", iris.analysis.MEAN)
+    cubes = iris.cube.CubeList([base_cube, mean_cube])
+
+    rmse_cube = scoreswrappers.scores_rmse(cubes)
+
+    assert isinstance(rmse_cube, iris.cube.Cube)
+    assert np.allclose(rmse_cube.data, np.zeros_like(rmse_cube.data), atol=1e-9)
 
 
 def test_scores_rmse_incorrect_number_of_cubes(cube):
