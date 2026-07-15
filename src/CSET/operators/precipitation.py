@@ -444,7 +444,137 @@ def MAUL_properties(
             return maul_b[0]
         case "base":
             return maul_b
-        case "wind_below" if len(windspeed_below_MAUL) == 1:
-            return windspeed_below_MAUL[0]
-        case _:
-            return windspeed_below_MAUL
+
+
+def convert_rainfall_depth_to_rate(cubes, **kwargs):
+    """Convert rainfall depth to rate.
+
+    Convert rainfall depth (e.g. mm or kg m-2)
+    over a time interval into a rainfall rate (kg m-2 s-1).
+
+    The conversion uses the duration associated with the time coordinate:
+    - If time bounds are present, the bounds define the accumulation interval
+    - Otherwise, the interval is inferred from differences between time points
+
+    Arguments
+    ---------
+    cubes: iris.cube.Cube | iris.cube.CubeList
+        Cube(s) containing rainfall accumulation (depth), with units convertible
+        to kg m-2 (equivalent to mm of water).
+
+        Each cube must include a time coordinate, optionally with bounds.
+
+    kwargs:
+        Additional keyword arguments (currently unused, present for API compatibility).
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        Cube(s) with rainfall expressed as a rate in kg m-2 s-1.
+
+        The returned object matches the type of the input:
+        - single Cube → single Cube
+        - CubeList → CubeList
+
+    Raises
+    ------
+    ValueError
+        - If no time coordinate is present
+        - If only a single time point is available without bounds
+        - If any inferred duration is non-positive
+
+    Notes
+    -----
+    - Conversion relies on the equivalence:
+         1 mm of rainfall ≡ 1 kg m-2
+    - iris does not know that mm = kg m-2
+
+    - Unit handling:
+        * Cubes already in rate units (convertible to kg m-2 s-1) are left unchanged
+        * Cubes not representing accumulation (not convertible to kg m-2) are skipped
+
+    - Time handling:
+        * If units are time-reference units (e.g. "hours since ..."),
+          only the base unit (e.g. hours) is used for duration conversion
+
+    - Broadcasting:
+        The duration array is reshaped to match the time dimension of the cube
+        before division.
+
+    Examples
+    --------
+    >>> rate = precipitation.convert_rainfall_depth_to_rate(cube)
+    >>> rate_list = precipitation.convert_rainfall_depth_to_rate(cube_list)
+    """
+    from cf_units import Unit
+
+    cubes_list = iris.cube.CubeList(iter_maybe(cubes))
+    output = iris.cube.CubeList()
+    for cube in cubes_list:
+        # Identify input type
+        is_rate = cube.units.is_convertible("kg m-2 s-1") or cube.units.is_convertible(
+            "mm s-1"
+        )
+        is_mass_accum = cube.units.is_convertible("kg m-2")
+        is_depth_accum = cube.units.is_convertible("mm")
+
+        # Skip rates and unrelated variables
+        if is_rate or not (is_mass_accum or is_depth_accum):
+            output.append(cube)
+            continue
+
+        # Time coordinate is required for rainfall accumulations
+        try:
+            time_coord = cube.coord("time")
+        except iris.exceptions.CoordinateNotFoundError as exc:
+            raise ValueError("No time coordinate; cannot convert rainfall.") from exc
+
+        # Get accumulation duration
+        if time_coord.bounds is not None:
+            duration = time_coord.bounds[:, 1] - time_coord.bounds[:, 0]
+        else:
+            t = time_coord.points
+
+            if t.size < 2:
+                raise ValueError("Cannot infer duration from a single time point")
+
+            dt = np.diff(t)
+            duration = np.concatenate([dt, dt[-1:]])  # assume last interval repeats
+
+        # Convert duration to seconds
+        units = time_coord.units
+        if units.is_time_reference():
+            base_unit = str(units).split(" since ")[0].strip()
+            duration = Unit(base_unit).convert(duration, "seconds")
+        else:
+            duration = units.convert(duration, "seconds")
+
+        if np.any(duration <= 0):
+            raise ValueError("Non-positive rainfall accumulation interval detected.")
+
+        # Normalise rainfall accumulation units before dividing
+        # e.g. if rainfall amount is in cm, then the conversion will still work
+
+        data = cube.lazy_data()
+
+        if is_depth_accum:
+            factor = cube.units.convert(1.0, "mm")
+            data = data * factor
+        else:
+            factor = cube.units.convert(1.0, "kg m-2")
+            data = data * factor
+
+        # Reshape duration for broadcasting along time dimension
+        reshape = [1] * cube.ndim
+        time_dim = cube.coord_dims("time")[0]
+        reshape[time_dim] = -1
+        duration = duration.reshape(reshape)
+
+        # Convert depth(amount) to rate
+        # Numerically: mm s-1 == kg m-2 s-1
+        data = data / duration
+        new_cube = cube.copy(data=data)
+        new_cube.units = "kg m-2 s-1"
+        output.append(new_cube)
+
+    return output[0] if isinstance(cubes, iris.cube.Cube) else output

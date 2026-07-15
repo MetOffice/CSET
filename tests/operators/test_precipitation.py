@@ -348,108 +348,95 @@ def test_maul_properties_5D_depth(
     )
 
 
-def test_maul_properties_wind_below(
-    maul_mask, u_wind_maul, v_wind_maul, precalc_wind_below_maul
-):
-    """Ensure correct average wind below maul."""
-    assert np.allclose(
-        precipitation.MAUL_properties(
-            maul_mask, u_wind_maul, v_wind_maul, output="wind_below"
-        ).data,
-        precalc_wind_below_maul.data,
-        rtol=1e-2,
-        atol=1e-6,
-        equal_nan=True,
+def _make_time_coord(points, bounds=None, units="hours since 2000-01-01 00:00:00"):
+    """Make a time coordinate for rainfall tests."""
+    return iris.coords.DimCoord(
+        points,
+        standard_name="time",
+        units=units,
+        bounds=bounds,
     )
 
 
-def test_maul_properties_wind_below_name(
-    maul_mask, u_wind_maul, v_wind_maul, precalc_wind_below_maul
-):
-    """Ensure correct average wind below maul name."""
-    assert (
-        precipitation.MAUL_properties(
-            maul_mask, u_wind_maul, v_wind_maul, output="wind_below"
-        ).name()
-        == "windspeed_below_MAUL"
-    )
+def _make_cube(data, units, time_coord):
+    """Make a cube for rainfall tests."""
+    cube = iris.cube.Cube(data, units=units)
+    cube.add_dim_coord(time_coord, 0)
+    return cube
 
 
-def test_maul_properties_wind_below_units(
-    maul_mask, u_wind_maul, v_wind_maul, precalc_wind_below_maul
-):
-    """Ensure correct average wind below maul units."""
-    assert precipitation.MAUL_properties(
-        maul_mask, u_wind_maul, v_wind_maul, output="wind_below"
-    ).units == cf_units.Unit("m s^-1")
+def test_convert_mass_accumulation():
+    """Kg m-2 accumulations convert correctly."""
+    bounds = np.array([[0, 1], [1, 2]])
+    time = _make_time_coord([0.5, 1.5], bounds=bounds)
+    cube = _make_cube([1.0, 2.0], "kg m-2", time)
+    result = precipitation.convert_rainfall_depth_to_rate(cube)
+    expected = np.array([1.0, 2.0]) / 3600.0
+
+    np.testing.assert_allclose(result.data, expected)
+    assert str(result.units) == "kg m-2 s-1"
 
 
-def test_maul_properties_wind_below_cubelist(
-    maul_mask, u_wind_maul, v_wind_maul, precalc_wind_below_maul
-):
-    """Ensure correct average wind below maul in cubelist."""
-    input_list = iris.cube.CubeList([maul_mask, maul_mask])
-    v_list = iris.cube.CubeList([v_wind_maul, v_wind_maul])
-    u_list = iris.cube.CubeList([u_wind_maul, u_wind_maul])
-    expected_list = precipitation.MAUL_properties(
-        input_list, u_list, v_list, output="wind_below"
-    )
-    actual_list = iris.cube.CubeList([precalc_wind_below_maul, precalc_wind_below_maul])
-    for cube_a, cube_b in zip(expected_list, actual_list, strict=True):
-        assert np.allclose(
-            cube_a.data, cube_b.data, rtol=1e-2, atol=1e-6, equal_nan=True
-        )
+def test_convert_basic_with_bounds():
+    """Basic accumulation → rate conversion works."""
+    bounds = np.array([[0, 1], [1, 2]])
+    time = _make_time_coord([0.5, 1.5], bounds=bounds)
+    cube = _make_cube([1.0, 2.0], "mm", time)
+    result = precipitation.convert_rainfall_depth_to_rate(cube)
+    expected = np.array([1.0, 2.0]) / 3600.0
+    np.testing.assert_allclose(result.data, expected)
 
 
-def test_maul_properties_wind_below_4d_realization(
-    maul_mask_member,
-    u_wind_maul_member,
-    v_wind_maul_member,
-    precalc_wind_below_maul_4d_realization,
-):
-    """Ensure correct wind below MAUL generated for 4D field with varying realization."""
-    assert np.allclose(
-        precipitation.MAUL_properties(
-            maul_mask_member,
-            u_wind_maul_member,
-            v_wind_maul_member,
-            output="wind_below",
-        ).data,
-        precalc_wind_below_maul_4d_realization.data,
-        rtol=1e-2,
-        atol=1e-6,
-        equal_nan=True,
-    )
+def test_convert_cm_accumulation():
+    """Centimetre rainfall accumulations are scaled correctly."""
+    bounds = np.array([[0, 1]])
+    time = _make_time_coord([0.5], bounds=bounds)
+    cube = _make_cube([1.0], "cm", time)
+    result = precipitation.convert_rainfall_depth_to_rate(cube)
+    expected = np.array([10.0]) / 3600.0  # 1 cm = 10 mm
+    np.testing.assert_allclose(result.data, expected)
 
 
-def test_maul_properties_wind_below_4d_time(
-    maul_mask_time,
-    u_wind_maul_time,
-    v_wind_maul_time,
-    precalc_wind_below_maul_4d_time,
-):
-    """Ensure correct wind below MAUL generated for 4D field with varying time."""
-    assert np.allclose(
-        precipitation.MAUL_properties(
-            maul_mask_time, u_wind_maul_time, v_wind_maul_time, output="wind_below"
-        ).data,
-        precalc_wind_below_maul_4d_time.data,
-        rtol=1e-2,
-        atol=1e-6,
-        equal_nan=True,
-    )
+def test_skip_non_accumulation_or_rate():
+    """Non-accumulation and already-rate cubes are left unchanged."""
+    time = _make_time_coord([0, 1])
+    rate_cube = _make_cube([0.1, 0.2], "kg m-2 s-1", time)
+    temp_cube = _make_cube([280, 281], "K", time)
+    out = precipitation.convert_rainfall_depth_to_rate([rate_cube, temp_cube])
+    np.testing.assert_array_equal(out[0].data, rate_cube.data)
+    np.testing.assert_array_equal(out[1].data, temp_cube.data)
 
 
-def test_maul_properties_wind_below_5d(
-    maul_mask_all, u_wind_maul_all, v_wind_maul_all, precalc_wind_below_maul_5d
-):
-    """Ensure correct wind below MAUL generated for 5D field."""
-    assert np.allclose(
-        precipitation.MAUL_properties(
-            maul_mask_all, u_wind_maul_all, v_wind_maul_all, output="wind_below"
-        ).data,
-        precalc_wind_below_maul_5d.data,
-        rtol=1e-2,
-        atol=1e-6,
-        equal_nan=True,
-    )
+def test_raises_without_time():
+    """Raises if no time coordinate is present."""
+    cube = iris.cube.Cube(np.array([1.0, 2.0]), units="mm")
+    with pytest.raises(ValueError):
+        precipitation.convert_rainfall_depth_to_rate(cube)
+
+
+def test_convert_without_bounds_infers_duration():
+    """Duration inferred correctly when bounds missing."""
+    time = _make_time_coord([0, 1, 3])  # hours
+    cube = _make_cube([1.0, 2.0, 3.0], "mm", time)
+    result = precipitation.convert_rainfall_depth_to_rate(cube)
+    # dt = [1, 2] → extended → [1, 2, 2] hours
+    expected = np.array([1.0 / 3600.0, 2.0 / 7200.0, 3.0 / 7200.0])
+    np.testing.assert_allclose(result.data, expected)
+    assert str(result.units) == "kg m-2 s-1"
+
+
+def test_raises_single_time_point_no_bounds():
+    """Error if only one time point and no bounds."""
+    time = _make_time_coord([0])
+    cube = _make_cube([1.0], "mm", time)
+    with pytest.raises(ValueError):
+        precipitation.convert_rainfall_depth_to_rate(cube)
+
+
+def test_raises_non_positive_duration():
+    """Error if duration is zero or negative."""
+    bounds = np.array([[1, 0], [2, 3]])  # first interval negative
+    time = _make_time_coord([0.5, 2.5], bounds=bounds)
+    cube = _make_cube([1.0, 2.0], "mm", time)
+    with pytest.raises(ValueError):
+        precipitation.convert_rainfall_depth_to_rate(cube)
