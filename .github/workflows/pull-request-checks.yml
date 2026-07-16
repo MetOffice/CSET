@@ -66,14 +66,6 @@ jobs:
           retention-days: 1
           include-hidden-files: true
 
-      - name: Report
-        uses: dorny/test-reporter@v1
-        if: always()
-        with:
-          name: Maven Tests
-          path: target/surefire-reports/*.xml
-          reporter: java-junit
-          fail-on-error: true
 
   test-workflow:
     name: Test cylc workflow
