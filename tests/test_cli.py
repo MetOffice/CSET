@@ -335,3 +335,8 @@ def test_extract_workflow_command(monkeypatch, tmp_path):
     )
     CSET.main(["cset", "extract-workflow", str(tmp_path)])
     assert ran
+
+
+def test_tests():
+    """Test tests are correctly failing."""
+    assert False  # noqa: B011
