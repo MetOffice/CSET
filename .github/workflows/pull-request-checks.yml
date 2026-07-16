@@ -18,7 +18,7 @@ permissions: {}
 defaults:
   run:
     # Use a login shell to pickup conda/micromamba initialisation.
-    shell: bash -leuo pipefail {0}
+    shell: bash -leo pipefail {0}
 
 jobs:
   tests:
