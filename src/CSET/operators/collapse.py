@@ -65,6 +65,9 @@ def _fix_analysis_forecasttime(cubes: iris.cube.CubeList):
     if len(forecast_cubes) > 1:
         print(forecast_cubes)
         raise ValueError
+    if len(analysis_cubes) == 0:
+        return cubes #i.e. no reanalysis so ignore this function
+
     
     analysis_cube = analysis_cubes[0]
     forecast_cube = forecast_cubes[0]
