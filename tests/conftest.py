@@ -1088,7 +1088,7 @@ def feature_cube() -> iris.cube.Cube:
 
 
 @pytest.fixture()
-def north_polar_cube() -> iris.cube.Cube:
+def north_polar_cube() -> iris.cubeCube:
     """Set up dummy cube with coords spanning regional north polar coords."""
     cube = iris.cube.Cube(
         np.random.rand(5, 36), standard_name="air_temperature", units="K"
