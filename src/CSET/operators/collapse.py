@@ -26,6 +26,7 @@ import iris.cube
 import iris.exceptions
 import iris.util
 import numpy as np
+import datetime as dt
 
 from CSET._common import iter_maybe
 from CSET.operators.aggregate import add_hour_coordinate
@@ -43,6 +44,7 @@ def _coord_is_effectively_scalar(coord):
 
 def _fix_analysis_forecasttime(cubes: iris.cube.CubeList):
 
+    # Partition out forecast and analysis cubes based on forecast_period.
     analysis_cubes = iris.cube.CubeList()
     forecast_cubes = iris.cube.CubeList()
 
@@ -54,106 +56,196 @@ def _fix_analysis_forecasttime(cubes: iris.cube.CubeList):
         else:
             forecast_cubes.append(cube)
 
-    longest_forecast_period = max(
-        cube.coord("forecast_period").points.max() for cube in forecast_cubes
+    if len(analysis_cubes) > 1:
+        raise ValueError
+    if len(forecast_cubes) > 1:
+        raise ValueError
+    
+    analysis_cube = analysis_cubes[0]
+    forecast_cube = forecast_cubes[0]
+
+    # Analysis cube will think it has multiple realizations cause it duplicates
+    analysis_cube = analysis_cube.extract(iris.Constraint(realization = analysis_cube.coord('realization').points[0]))
+
+    # Get forecast_reference_time
+    frt_coord = forecast_cube.coord("forecast_reference_time")
+
+    # Get forecast length
+    fc_length = forecast_cube.coord("forecast_period").points[-1]
+
+    # Work out minimum, maximum valid times in analysis
+    an_min = analysis_cube.coord("time").units.num2date(analysis_cube.coord("time").points[0])
+    an_max = analysis_cube.coord("time").units.num2date(analysis_cube.coord("time").points[-1])
+
+    fixed_analysis_cubes = iris.cube.CubeList()
+
+    for t in frt_coord.points:
+        time = frt_coord.units.num2date(t)
+
+        if time < an_min or (time+dt.timedelta(hours=fc_length)) > an_max:
+            print("analysis time range ",an_min, an_max)
+            print("forecast spans",time, time+dt.timedelta(hours=fc_length))
+            print('analysis does not cover full forecast')
+    
+        time_constraint = iris.Constraint(
+        time=lambda cell: time <= cell.point <= time+dt.timedelta(hours=fc_length)
     )
 
-    frts = {cube.coord("forecast_reference_time").points[0] for cube in forecast_cubes}
+        analysis_slice = analysis_cube.extract(time_constraint)
 
-    # We might have multiple cubes, with different reference times,
-    # so we need to go through all possibilities and ensure analysis
-    # matches all of these. Maybe a list of forecast reference times and leadtimes
-    # to construct the appropriate cubes?
-    if len(frts) > 1:
-        raise ValueError("Forecast cubes have different forecast_reference_times")
+        print(analysis_slice)
 
-    frt_coord = forecast_cubes[0].coord("forecast_reference_time")
-
-    forecast_reference_time = frt_coord.units.num2date(frt_coord.points[0])
-
-    longest_cube = max(
-        forecast_cubes, key=lambda c: c.coord("forecast_period").points.max()
-    )
-
-    forecast_reference_time = longest_cube.coord(
-        "forecast_reference_time"
-    ).units.num2date(longest_cube.coord("forecast_reference_time").points[0])
-
-    forecast_end_time = longest_cube.coord("time").units.num2date(
-        longest_cube.coord("time").points.max()
-    )
-
-    time_constraint = iris.Constraint(
-        time=lambda cell: forecast_reference_time <= cell.point <= forecast_end_time
-    )
-
-    # manually slicing needed rather than just assigning cube = cube.extract...
-    for i, cube in enumerate(analysis_cubes):
-        analysis_cubes[i] = cube.extract(time_constraint)
-
-    fixed_cubes = iris.cube.CubeList()
-
-    for cube in forecast_cubes:
-        fixed_cubes.append(cube)
-
-    print(analysis_cubes)
-    print(analysis_cubes[0])
-    print(analysis_cubes[0].coord("time"))
-    print(analysis_cubes[0].coord("forecast_reference_time"))
-    print(analysis_cubes[0].coord("forecast_period"))
-    print("pre")
-
-    for cube in analysis_cubes:
-        # Get coords
-        time_coord = cube.coord("time")
-        frt_coord = cube.coord("forecast_reference_time")
-        fp_coord = cube.coord("forecast_period")
-
-        if _coord_is_effectively_scalar(frt_coord) and _coord_is_effectively_scalar(
-            fp_coord
-        ):
-            print("forecast_reference_time and forecast_period already static")
-            return cube
-
-        #
-        frt0_hours = frt_coord.points[0]
-
-        fp_hours = time_coord.points - frt0_hours
-
-        # Remove old coords
-        cube.remove_coord("forecast_reference_time")
-        cube.remove_coord("forecast_period")
+       # Remove old coords
+        analysis_slice.remove_coord("forecast_reference_time")
+        analysis_slice.remove_coord("forecast_period")
 
         # Add constant FRT back as scalar
         new_frt = iris.coords.AuxCoord(
-            frt0_hours,
+            t,
             standard_name="forecast_reference_time",
-            units=time_coord.units,
+            units=frt_coord.units,
         )
-        cube.add_aux_coord(new_frt)
+        analysis_slice.add_aux_coord(new_frt)
 
         # Add forecast period varying along time dimension
         time_dim = cube.coord_dims("time")[0]
 
         new_fp = iris.coords.AuxCoord(
-            fp_hours,
+            analysis_slice.coord('time').points - analysis_slice.coord('time').points[0],
             standard_name="forecast_period",
             units="hours",
         )
 
-        cube.add_aux_coord(new_fp, data_dims=(time_dim,))
+        print(time_dim) #producing value of 1, yet time dim should be zero, hence failing below
+        # when trying to link forecast period to the latitude dimension rather than time.
+        quit()
 
-        fixed_cubes.append(cube)
+        analysis_slice.add_aux_coord(new_fp, data_dims=(time_dim,))
 
-    print(fixed_cubes)
-    print(fixed_cubes[0])
-    print(fixed_cubes[0].coord("time"))
-    print(fixed_cubes[0].coord("forecast_reference_time"))
-    print(fixed_cubes[0].coord("forecast_period"))
+        fixed_analysis_cubes.append(analysis_slice)
 
-    # something to check we are matching input, i.e. if cube, only return cube, not cubelist.
+    fixed_analysis_cubes = fixed_analysis_cubes.merge()
 
-    return fixed_cubes
+    print(fixed_analysis_cubes)
+    for cube in fixed_analysis_cubes:
+        print(cube)
+    quit()
+
+    # frt_coord = forecast_cubes[0].coord("forecast_reference_time")
+
+    # forecast_reference_time = frt_coord.units.num2date(frt_coord.points[0])
+
+    # # Get all forecast reference times from forecast_cubes
+    # frt_coord = forecast_cubes.coord("forecast_reference_time").points
+
+
+
+  
+
+    # anaysis will be double loaded and givena  realisation time if aggregation, so
+    # we'll need to extract the zero'th member. Need to check if that is the case if
+    # no aggregation.
+
+    # longest_forecast_period = max(
+    #     cube.coord("forecast_period").points.max() for cube in forecast_cubes
+    # )
+
+    # frts = {cube.coord("forecast_reference_time").points[0] for cube in forecast_cubes}
+
+    # # We might have multiple cubes, with different reference times,
+    # # so we need to go through all possibilities and ensure analysis
+    # # matches all of these. Maybe a list of forecast reference times and leadtimes
+    # # to construct the appropriate cubes?
+    # if len(frts) > 1:
+    #     raise ValueError("Forecast cubes have different forecast_reference_times")
+
+    # frt_coord = forecast_cubes[0].coord("forecast_reference_time")
+
+    # forecast_reference_time = frt_coord.units.num2date(frt_coord.points[0])
+
+    # longest_cube = max(
+    #     forecast_cubes, key=lambda c: c.coord("forecast_period").points.max()
+    # )
+
+    # forecast_reference_time = longest_cube.coord(
+    #     "forecast_reference_time"
+    # ).units.num2date(longest_cube.coord("forecast_reference_time").points[0])
+
+    # forecast_end_time = longest_cube.coord("time").units.num2date(
+    #     longest_cube.coord("time").points.max()
+    # )
+
+    # time_constraint = iris.Constraint(
+    #     time=lambda cell: forecast_reference_time <= cell.point <= forecast_end_time
+    # )
+
+    # # manually slicing needed rather than just assigning cube = cube.extract...
+    # for i, cube in enumerate(analysis_cubes):
+    #     analysis_cubes[i] = cube.extract(time_constraint)
+
+    # fixed_cubes = iris.cube.CubeList()
+
+    # for cube in forecast_cubes:
+    #     fixed_cubes.append(cube)
+
+    # # print(analysis_cubes)
+    # # print(analysis_cubes[0])
+    # # print(analysis_cubes[0].coord("time"))
+    # # print(analysis_cubes[0].coord("forecast_reference_time"))
+    # # print(analysis_cubes[0].coord("forecast_period"))
+    # # print("pre")
+
+    # for cube in analysis_cubes:
+    #     # Get coords
+    #     time_coord = cube.coord("time")
+    #     frt_coord = cube.coord("forecast_reference_time")
+    #     fp_coord = cube.coord("forecast_period")
+
+    #     if _coord_is_effectively_scalar(frt_coord) and _coord_is_effectively_scalar(
+    #         fp_coord
+    #     ):
+    #         print("forecast_reference_time and forecast_period already static")
+    #         return cube
+
+    #     #
+    #     frt0_hours = frt_coord.points[0]
+
+    #     fp_hours = time_coord.points - frt0_hours
+
+    #     # Remove old coords
+    #     cube.remove_coord("forecast_reference_time")
+    #     cube.remove_coord("forecast_period")
+
+    #     # Add constant FRT back as scalar
+    #     new_frt = iris.coords.AuxCoord(
+    #         frt0_hours,
+    #         standard_name="forecast_reference_time",
+    #         units=time_coord.units,
+    #     )
+    #     cube.add_aux_coord(new_frt)
+
+    #     # Add forecast period varying along time dimension
+    #     time_dim = cube.coord_dims("time")[0]
+
+    #     new_fp = iris.coords.AuxCoord(
+    #         fp_hours,
+    #         standard_name="forecast_period",
+    #         units="hours",
+    #     )
+
+    #     cube.add_aux_coord(new_fp, data_dims=(time_dim,))
+
+    #     fixed_cubes.append(cube)
+
+    # # print(fixed_cubes)
+    # # print(fixed_cubes[0])
+    # # print(fixed_cubes[0].coord("time"))
+    # # print(fixed_cubes[0].coord("forecast_reference_time"))
+    # # print(fixed_cubes[0].coord("forecast_period"))
+
+    # # something to check we are matching input, i.e. if cube, only return cube, not cubelist.
+
+    # return fixed_cubes
 
 
 def collapse(
