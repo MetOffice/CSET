@@ -431,7 +431,8 @@ def test_raises_non_positive_duration():
     cube = _make_cube([1.0, 2.0], "mm", time)
     with pytest.raises(ValueError):
         precipitation.convert_rainfall_depth_to_rate(cube)
-        
+
+
 def test_maul_properties_wind_below_5d(
     maul_mask_all, u_wind_maul_all, v_wind_maul_all, precalc_wind_below_maul_5d
 ):
