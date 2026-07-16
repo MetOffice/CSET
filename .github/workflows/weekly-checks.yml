@@ -8,6 +8,11 @@ on:
 # Minimise default GITHUB_TOKEN permissions.
 permissions: {}
 
+defaults:
+  run:
+    # Use a login shell to pickup conda/micromamba initialisation.
+    shell: bash -leuo pipefail {0}
+
 jobs:
   check-documentation-hyperlinks:
     if: "github.repository == 'MetOffice/CSET'"  # Skip on forks.
@@ -32,15 +37,12 @@ jobs:
           init-shell: "none"
 
       - name: Install local package
-        shell: micromamba-shell {0}
         run: pip install --no-deps .
 
       - name: Build documentation with Sphinx
-        shell: micromamba-shell {0}
         run: sphinx-build -b html --color "docs/source" "docs/build/html"
 
       - name: Check for broken hyperlinks
-        shell: micromamba-shell {0}
         run: sphinx-build -b linkcheck --color -W --keep-going "docs/source" "docs/build/linkcheck"
 
   full-tests:
@@ -74,11 +76,9 @@ jobs:
           path: ~/.local/share/cartopy
 
       - name: Install local package
-        shell: micromamba-shell {0}
         run: pip install --no-deps .
 
       - name: Run full test suite
-        shell: micromamba-shell {0}
         env:
           PY_COLORS: "1"
         run: make test-full
