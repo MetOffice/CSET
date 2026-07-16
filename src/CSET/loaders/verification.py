@@ -145,6 +145,7 @@ def load(conf: Config):
         if conf.SCORES_RMSE_VERTICAL_PROFILES_TIMESERIES:
             agg_modes.append(("timeseries", ["time", "pressure"]))
 
+    # including AGGREGATION_MODE in the variables dictionary to allow for clearer labeling of plots.
     if conf.SCORES_RMSE_VERTICAL_PROFILES:
         for model, field in itertools.product(models[1:], conf.PRESSURE_LEVEL_FIELDS):
             yield RawRecipe(
@@ -154,7 +155,7 @@ def load(conf: Config):
                     "BASE_MODEL": base_model["name"],
                     "OTHER_MODEL": model["name"],
                     "PRESERVED_COORDS": ["pressure"],
-                    "AGGREGATION_MODE": "pressure",
+                    "AGGREGATION_MODE": "Case-study RMSE",
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
@@ -164,6 +165,7 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+    # including AGGREGATION_MODE in the variables dictionary to allow for clearer labeling of plots.
     if conf.SCORES_RMSE_VERTICAL_PROFILES_SEQUENCE:
         for model, field in itertools.product(models[1:], conf.PRESSURE_LEVEL_FIELDS):
             yield RawRecipe(
@@ -173,7 +175,7 @@ def load(conf: Config):
                     "BASE_MODEL": base_model["name"],
                     "OTHER_MODEL": model["name"],
                     "PRESERVED_COORDS": ["time", "pressure"],
-                    "AGGREGATION_MODE": "timeseries",
+                    "AGGREGATION_MODE": "Time-step RMSE",
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
