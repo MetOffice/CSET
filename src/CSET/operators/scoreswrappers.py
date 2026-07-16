@@ -21,13 +21,19 @@ import iris.exceptions
 import numpy as np
 import scores
 import scores.continuous
+import scores.probability
 import xarray as xr
 from iris.cube import Cube, CubeList
 from iris.util import reverse
 
 from CSET._common import is_increasing
 from CSET.operators._utils import fully_equalise_attributes, get_cube_yxcoordname
+from CSET.operators.constraints import (
+    generate_realization_constraint,
+    generate_remove_single_ensemble_member_constraint,
+)
 from CSET.operators.misc import _extract_common_time_points
+from CSET.operators.read import _realization_callback
 from CSET.operators.regrid import regrid_onto_cube
 
 
@@ -192,3 +198,92 @@ def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None =
     )
     RMSE.rename(f"RMSE_of_{base.name()}")
     return RMSE
+
+
+def scores_crps_for_ensemble(
+    cubes: Cube | CubeList, method: str = "ecdf", control_member: int = 0
+) -> iris.Constraint:
+    r"""Calculate the CRPS for an ensemble.
+
+    Acts as a wrapper around the crps_for_ensemble from ``scores`` ([scores_a]_, [scores_b]_).
+
+    Lower CRPS values are better (implies experiment distribution is closer to control distribution/observations),
+    larger values are worse (implies distributions are dissimilar).
+    It is applicable across time and spatial scales as the focus is on the distribution of the values.
+    Default method is ecdf.  ecdf is exact value from the empirical distributions,
+    whereas fair produces an approximated value based on a random sample of the underlying distribution.
+
+    See [CRPS] for further information.
+
+    Parameters
+    ----------
+    cubes: iris.cube.Cube
+        A Cube containing ensembles data
+
+    Returns
+    -------
+    crps: iris.cube.Cube
+        A cube containing the crps between the ensemble members and the control
+
+    References
+    ----------
+    .. [scores_a] Leeuwenburg, T., Loveday, N., Ebert, E. E., Cook, H.,
+        Khanarmuei, M., Taggart, R. J., Ramanathan, N., Carroll, M., Chong, S.,
+        Griffiths, A., & Sharples, J. (2024) "scores: A Python package for
+        verifying and evaluating models and predictions with xarray". Journal
+        of Open Source Software, vol. 9, 6889. doi: 10.21105/joss.06889
+
+    .. [scores_b] Leeuwenburg, T., Loveday, N., Ramanathan, N., Chong, S.,
+        Taggart, R. J., Shrestha, D., Khanarmuei, M., Cook, H., Bluett, L., Ebert,
+        E. E., Carroll, M., Trotta, B., Bishop, S., Squire, D. T., Griffiths, A.,
+        Pagano, T. C., Fisher, A. J., Mandelbaum, T., Jinghan, F., … Smallwood, J.
+        (2026) "scores: Metrics for the verification, evaluation and optimisation of
+        forecasts, predictions or models (2.5.0)". Zenodo. doi: 10.5281/zenodo.18638494
+
+    .. [CRPS]
+        Hersbach, H., 2000: Decomposition of the Continuous Ranked
+        Probability Score for Ensemble Prediction Systems. Wea.
+        Forecasting, 15, 559–570, https://doi.org/10.1175/1520-0434(2000)015<0559:DOTCRP>2.0.CO;2.
+    """
+    if control_member != 0:
+        logging.warning("control member is usual 0")
+
+    if control_member not in cubes.coords("realization")[0].points:
+        new_control_member = cubes.coords("realization")[0].points[0]
+        logging.warning(
+            f"control member value {control_member} out of bounds, defaulting to control member={new_control_member}"
+        )
+        control_member = new_control_member
+
+    if cubes.coord("time").shape[0] == 1:
+        raise ValueError("Cube has only one time point.")
+
+    if cubes.coord("realization").shape[0] < 3:
+        raise ValueError("Cube should have one control member and at least two members")
+
+    ctrl = cubes.extract(generate_realization_constraint([control_member]))
+    ens_mem = cubes.extract(
+        generate_remove_single_ensemble_member_constraint(control_member)
+    )
+
+    # Realising the data in advance provides a large speedup
+    _ = ctrl.data
+    _ = ens_mem.data
+    del _
+
+    ctrl = xr.DataArray.from_iris(ctrl)
+    ens_mem = xr.DataArray.from_iris(ens_mem)
+
+    crps = xr.DataArray.to_iris(
+        scores.probability.crps_for_ensemble(
+            ens_mem,
+            ctrl,
+            ensemble_member_dim="realization",
+            method=method,
+            preserve_dims="time",
+        )
+    )
+
+    crps.rename(f"CRPS_of_{cubes[0].name()}")
+    _realization_callback(crps)
+    return crps

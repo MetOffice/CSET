@@ -23,9 +23,17 @@ import iris.cube
 import iris.exceptions
 import numpy as np
 import pytest
+import scores
+import scores.continuous
+import scores.probability
+import xarray as xr
 from iris.util import reverse
 
 from CSET.operators import scoreswrappers
+from CSET.operators.constraints import (
+    generate_realization_constraint,
+    generate_remove_single_ensemble_member_constraint,
+)
 
 
 def test_scores_rmse(cube: iris.cube.Cube):
@@ -176,3 +184,71 @@ def test_difference_flip_pressure_order(transect_source_cube_readonly):
     assert isinstance(rmse_cube, iris.cube.Cube)
     # As both cubes use the same data, check the difference is zero.
     assert np.allclose(rmse_cube.data, np.zeros_like(rmse_cube.data), atol=1e-9)
+
+
+def test_crps(feature_cube):
+    """Test basic crps functionality.
+
+     Ensure wrapper gets same result as
+    scores operator.
+    """
+    crps_cube_erps = scoreswrappers.scores_crps_for_ensemble(feature_cube)
+    crps_cube_fair = scoreswrappers.scores_crps_for_ensemble(
+        feature_cube, method="fair"
+    )
+
+    ctrl = feature_cube.extract(generate_realization_constraint([0]))
+    ens_mem = feature_cube.extract(generate_remove_single_ensemble_member_constraint(0))
+
+    ctrl = xr.DataArray.from_iris(ctrl)
+    ens_mem = xr.DataArray.from_iris(ens_mem)
+    scores_crps_erps = xr.DataArray.to_iris(
+        scores.probability.crps_for_ensemble(
+            ens_mem,
+            ctrl,
+            ensemble_member_dim="realization",
+            method="ecdf",
+            preserve_dims="time",
+        )
+    )
+
+    scores_crps_fair = xr.DataArray.to_iris(
+        scores.probability.crps_for_ensemble(
+            ens_mem,
+            ctrl,
+            ensemble_member_dim="realization",
+            method="fair",
+            preserve_dims="time",
+        )
+    )
+
+    assert isinstance(crps_cube_erps, iris.cube.Cube)
+    assert feature_cube.coord("time").shape == crps_cube_erps.coord("time").shape
+
+    assert isinstance(crps_cube_fair, iris.cube.Cube)
+    assert feature_cube.coord("time").shape == crps_cube_fair.coord("time").shape
+
+    assert np.allclose(crps_cube_erps.data, scores_crps_erps.data, atol=1e-2, rtol=1e-6)
+    assert np.allclose(crps_cube_fair.data, scores_crps_fair.data, atol=1e-2, rtol=1e-6)
+
+
+def test_crps_control_member_out_of_bounds(feature_cube):
+    """Test handling of out of bounds control member value."""
+    scoreswrappers.scores_crps_for_ensemble(feature_cube, control_member=1000)
+
+
+def test_crps_one_time_coord(feature_cube):
+    """Test handling of only one time point in cube provided."""
+    feature_cube_one_time = feature_cube[:, 0, :, :]
+    with pytest.raises(ValueError, match=r"Cube has only one time point."):
+        scoreswrappers.scores_crps_for_ensemble(feature_cube_one_time)
+
+
+def test_crps_less_than_3_realizations(feature_cube):
+    """Test handling of less than 3 realizations in cube provided."""
+    feature_cube_one_realization = feature_cube[0:1, :, :, :]
+    with pytest.raises(
+        ValueError,
+        match=r"Cube should have one control member and at least two members",
+    ):
+        scoreswrappers.scores_crps_for_ensemble(feature_cube_one_realization)
