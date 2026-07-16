@@ -227,7 +227,6 @@ jobs:
           environment-name: cset-dev
           environment-file: requirements/locks/latest
           cache-environment: true
-          init-shell: "none"
 
       - name: Install local package
         run: pip install --no-deps .

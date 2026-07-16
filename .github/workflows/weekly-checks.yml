@@ -34,7 +34,6 @@ jobs:
           environment-name: cset-dev
           environment-file: requirements/locks/latest
           cache-environment: true
-          init-shell: "none"
 
       - name: Install local package
         run: pip install --no-deps .
@@ -67,7 +66,6 @@ jobs:
           environment-name: cset-dev
           environment-file: requirements/locks/${{ matrix.py-ver }}-lock-linux-64.txt
           cache-environment: true
-          init-shell: "none"
 
       - name: Cache downloaded cartopy shapefiles
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
