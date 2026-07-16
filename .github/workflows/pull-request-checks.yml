@@ -65,7 +65,13 @@ jobs:
           path: .coverage.*
           retention-days: 1
           include-hidden-files: true
-
+      - name: Test Report
+        uses: dorny/test-reporter@v3
+        if: ${{ !cancelled() }}
+        with:
+          name: JEST Tests
+          path: reports/jest-*.xml
+          reporter: jest-junit
 
   test-workflow:
     name: Test cylc workflow
