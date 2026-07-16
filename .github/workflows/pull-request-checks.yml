@@ -22,7 +22,7 @@ jobs:
     permissions:
       contents: read
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         py-ver: ["py312", "py313", "py314"]
     steps:
