@@ -3,11 +3,11 @@
 [scheduling]
     [[graph]]
     {% macro metplus_ensemble_stat_graph() %}
-        metplus_prep_obs => metplus_ascii2nc
+        metplus_prep_obs => metplus_ascii2nc_ens
         {% for model in models %}
             fetch_fcst_m{{model["id"]}} => metplus_prep_fcst_m{{model["id"]}}
             metplus_prep_fcst_m{{model["id"]}} => metplus_ensemble_stat_m{{model["id"]}}
-            metplus_ascii2nc => metplus_ensemble_stat_m{{model["id"]}}
+            metplus_ascii2nc_ens => metplus_ensemble_stat_m{{model["id"]}}
             metplus_ensemble_stat_m{{model["id"]}} => metplus_ensemble_stat_postproc_m{{model["id"]}}
         {% endfor %}
         METPLUS_ENSEMBLE_STAT_POSTPROC:succeed-all => cycle_complete
@@ -35,10 +35,11 @@
     [[metplus_prep_obs]]
         inherit = METPLUS
 
-    [[metplus_ascii2nc]]
+    [[metplus_ascii2nc_ens]]
     # Runs METplus wrappers for ASCII to nc ingestion of obs.
         inherit = METPLUS
         [[[environment]]]
+            ROSE_TASK_APP = metplus_ascii2nc
             ROSE_APP_OPT_CONF_KEYS = {{SITE}}_ens
 
     [[METPLUS_ENSEMBLE_STAT]]
