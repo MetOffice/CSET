@@ -66,6 +66,15 @@ jobs:
           retention-days: 1
           include-hidden-files: true
 
+      - name: Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Maven Tests
+          path: target/surefire-reports/*.xml
+          reporter: java-junit
+          fail-on-error: true
+
   test-workflow:
     name: Test cylc workflow
     runs-on: ubuntu-latest
@@ -105,15 +114,6 @@ jobs:
         env:
           PY_COLORS: "1"
         run: make test-workflow
-
-      - name: Report
-        uses: dorny/test-reporter@v1
-        if: always()
-        with:
-          name: Maven Tests
-          path: target/surefire-reports/*.xml
-          reporter: java-junit
-          fail-on-error: true
 
   coverage-report:
     if: github.event_name == 'pull_request'
