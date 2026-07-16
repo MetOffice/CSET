@@ -26,7 +26,7 @@ import numpy as np
 import pytest
 from iris.time import PartialDateTime
 
-from CSET.operators import constraints, read
+from CSET.operators import collapse, constraints, read
 
 
 def test_read_cubes():
@@ -1238,3 +1238,76 @@ def test_cell_methods_computes_time_bounds(cdl_to_cubes):
     assert cubes.extract_cube("time_mean").coord("time").bounds is not None
     assert cubes.extract_cube("all_mean").coord("time").bounds is not None
     assert cubes.extract_cube("multi_mean").coord("time").bounds is not None
+
+
+def test_check_combine_point_observations_noobs(cube):
+    """Ensure _check_combine_point_observations has no effect for non-observation cube."""
+    c1 = iris.cube.CubeList([cube])
+    c2 = read._check_combine_point_observations(c1)
+    assert c2 == iris.cube.CubeList([cube])
+    assert c2[0].data.all() == c1[0].data.all()
+
+
+def test_check_combine_point_observations_single_obs(cube):
+    """Ensure _check_combine_point_observations handles single observation source."""
+    cube = collapse.collapse(cube, ["grid_longitude"], "MEAN")
+    cube.coord("grid_latitude").rename("station")
+    cube.coord("station").points = np.arange(len(cube.coord("station").points))
+    cube.add_aux_coord(
+        iris.coords.AuxCoord(cube.coord("station").points, var_name="obs_source"), 1
+    )
+    c1 = iris.cube.CubeList([cube])
+    c2 = read._check_combine_point_observations(c1)
+    assert c2 == iris.cube.CubeList([cube])
+    assert all(
+        [
+            x == y
+            for x, y in zip(
+                c2[0].coord("station").points,
+                np.arange(len(cube.coord("station").points)),
+                strict=True,
+            )
+        ]
+    )
+    assert "obs_source" not in [coord.name() for coord in cube.coords()]
+
+
+def test_check_combine_point_observations_multiple_obs(cube):
+    """Ensure _check_combine_point_observations handles single observation source."""
+    cube = collapse.collapse(cube, ["grid_longitude"], "MEAN")
+    cube.coord("grid_latitude").rename("station")
+    cube.coord("station").points = np.arange(len(cube.coord("station").points))
+    cube2 = cube.copy()
+    c1 = iris.cube.CubeList([cube, cube2])
+    c2 = read._check_combine_point_observations(c1)
+    assert c2 == iris.cube.CubeList([cube, cube2])
+    assert all(
+        [
+            x == y
+            for x, y in zip(
+                c2[0].coord("station").points,
+                np.arange(len(cube.coord("station").points)),
+                strict=True,
+            )
+        ]
+    )
+    assert all(
+        [
+            x != y
+            for x, y in zip(
+                c2[1].coord("station").points,
+                np.arange(len(cube.coord("station").points)),
+                strict=True,
+            )
+        ]
+    )
+    assert all(
+        [
+            x == y
+            for x, y in zip(
+                c2[1].coord("station").points,
+                np.arange(len(cube.coord("station").points)) + 17,
+                strict=True,
+            )
+        ]
+    )

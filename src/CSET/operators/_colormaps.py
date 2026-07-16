@@ -146,6 +146,8 @@ def colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = N
     # as long name is the one we correct between models, so it most likely to be
     # consistent.
     varnames = list(filter(None, [cube.long_name, cube.standard_name, cube.var_name]))
+    # Treat observation-labelled var names consistently with model var names.
+    varnames = [varname.replace("observed_", "") for varname in varnames]
     for varname in varnames:
         # Get the colormap for this variable.
         try:

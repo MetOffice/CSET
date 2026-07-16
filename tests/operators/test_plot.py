@@ -331,6 +331,15 @@ def test_pcolormesh_plot_global(global_cube, caplog, tmp_working_dir):
     assert message_match
 
 
+def test_spatial_scatter(cube, tmp_working_dir):
+    """Save a spatial plot with scatter of cube points."""
+    cube.coord("grid_latitude").rename("station")
+    plot.spatial_pcolormesh_plot(cube, sequence_coordinate="time")
+    assert Path("air_temperature_20220921030000.png").is_file()
+    assert Path("air_temperature_20220921040000.png").is_file()
+    assert Path("air_temperature_20220921050000.png").is_file()
+
+
 def test_postage_stamp_pcolormesh_plot(ensemble_cube, tmp_working_dir):
     """Plot postage stamp plots of ensemble data."""
     # Get a single time step.
