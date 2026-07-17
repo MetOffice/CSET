@@ -47,8 +47,15 @@ def restricted_git_repo() -> Generator[str]:
             ("git", "-C", repo, "branch", "releases/v1.0"),
             ("git", "-C", repo, "tag", "-am", "Version 1.0", "v1.0.0", "releases/v1.0"),
         ]
+        # Explicitly set author/committer identities in case they are not
+        # configured, such as on GitHub Actions runners.
+        env = os.environ
+        env["GIT_AUTHOR_NAME"] = "name"
+        env["GIT_AUTHOR_EMAIL"] = "name@example.com"
+        env["GIT_COMMITTER_NAME"] = "name"
+        env["GIT_COMMITTER_EMAIL"] = "name@example.com"
         for command in commands:
-            subprocess.run(command, check=True)
+            subprocess.run(command, check=True, env=env)
 
         # Yield path to repo. This will be cleaned up after the tests finish.
         yield repo
