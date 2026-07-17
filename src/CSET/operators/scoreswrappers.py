@@ -216,7 +216,7 @@ def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None =
         A CubeList containing exactly two cubes: a base and an "other" model,
         this can be an analysis and the model.
     preserved_coordinates: list[str] | str | None, default is None.
-        The coordinates (or xarray dimension names) that you wish to preserve in the calculaiton of the
+        The coordinates (or xarray dimension names) that you wish to preserve in the calculation of the
         RMSE. For example if you want a map of each time you can preserve
         ["time","grid_latitude", "grid_longitude"] or if you want a time series
         you can preserve ["time"], if you want to collapse to a single value
@@ -251,6 +251,7 @@ def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None =
         or "realization" in xr.DataArray.from_iris(other).dims
     )
 
+    # if ensemble data then calculate the ensemble mean first before calculating the RMSE
     other_xr = _collapse_ensemble_mean(xr.DataArray.from_iris(other))
     base_xr = _collapse_ensemble_mean(xr.DataArray.from_iris(base))
     preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
@@ -383,7 +384,6 @@ def scores_mae(cubes: CubeList, preserved_coordinates: list[str] | str | None = 
             )
     except iris.exceptions.CoordinateNotFoundError:
         pass
-
     scores_cube.rename(f"MAE_of_{base.name()}")
     return scores_cube
 

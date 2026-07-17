@@ -165,6 +165,11 @@ def test_scores_rmse_ensemble_mean(ensemble_cube):
     base_cube.attributes["cset_comparison_base"] = 1
 
     mean_cube = ensemble_cube.collapsed("realization", iris.analysis.MEAN)
+    # remove the cset_comparison_base attribute from the mean_cube to avoid having it
+    # in both the ensemble mean and the ensemble base cube, which would cause an error in the RMSE calculation.
+    # this function  only expects a single cube with cset_comparison_base attribute to be present in the cubes list
+    # to identify the base cube for comparison plots against "other" model.
+    mean_cube.attributes.pop("cset_comparison_base", None)
     cubes = iris.cube.CubeList([base_cube, mean_cube])
 
     rmse_cube = scoreswrappers.scores_rmse(cubes)
