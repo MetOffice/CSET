@@ -1792,9 +1792,10 @@ def _plot_and_save_scatter_series(
     ax.tick_params(axis="both", labelsize=12)
     ax.autoscale()
 
-    if iter_maybe(cubes)[0].long_name.replace("observed_", "") == iter_maybe(cubes)[
-        1
-    ].long_name.replace("observed_", ""):
+    # Set 1:1 line and equal axes if scatter plot of common cube names
+    nameA = iter_maybe(cubes)[0].name()
+    nameB = iter_maybe(cubes)[1].name()
+    if any(part in nameB.split("_") for part in nameA.split("_")):
         lims = [
             np.min([ax.get_xlim(), ax.get_ylim()]),  # min of both axes
             np.max([ax.get_xlim(), ax.get_ylim()]),  # max of both axes
