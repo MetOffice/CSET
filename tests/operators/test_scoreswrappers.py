@@ -17,13 +17,10 @@
 import datetime
 
 import iris
-import iris.analysis.calculus
 import iris.coords
-import iris.exceptions
 import numpy as np
 import pytest
 import scores
-import scores.continuous
 import scores.probability
 import xarray as xr
 from iris.cube import Cube, CubeList
