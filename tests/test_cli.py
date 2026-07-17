@@ -377,3 +377,21 @@ def test_extract_workflow_restricted(monkeypatch, tmp_path):
     )
     assert ran_install
     assert ran_restricted
+
+
+def test_install_restricted_files(monkeypatch):
+    """Install restricted files into an existing workflow."""
+    ran_restricted = False
+    location = "/path/to/workflow"
+
+    def dummy_restricted(workflow_dir: Path, alternative_url: str | None = None):
+        nonlocal ran_restricted
+        ran_restricted = True
+        assert workflow_dir == Path(location)
+        assert alternative_url is None
+
+    monkeypatch.setattr(
+        CSET.extract_workflow, "install_restricted_files", dummy_restricted
+    )
+    CSET.main(["cset", "install-restricted-files", location])
+    assert ran_restricted
