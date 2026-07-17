@@ -223,7 +223,7 @@ def test_difference_different_model_types(cube):
 
 
 def test_difference_flip_pressure_order(transect_source_cube_readonly):
-    """Test that pressure coord is flipped if discreasing."""
+    """Test that pressure coord is flipped if decreasing."""
     flipped = transect_source_cube_readonly.copy()
     reverse(flipped, "pressure")
     del flipped.attributes["cset_comparison_base"]
@@ -240,8 +240,7 @@ def test_difference_flip_pressure_order(transect_source_cube_readonly):
 def test_crps(feature_cube):
     """Test basic crps functionality.
 
-     Ensure wrapper gets same result as
-    scores operator.
+    Ensure wrapper gets same result as scores operator.
     """
     crps_cube_erps = scoreswrappers.scores_crps_for_ensemble(feature_cube)
     crps_cube_fair = scoreswrappers.scores_crps_for_ensemble(
