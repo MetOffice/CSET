@@ -90,6 +90,41 @@ def test_get_model_colors_map_noname(cube):
     assert model_colors_map == {}
 
 
+def test_get_model_colors_map_user_obs(cube):
+    """Generate OBS model_colors_map if model name includes OBS."""
+    cube.attributes["model_name"] = "my_obs"
+    model_colors_map = _colormaps.get_model_colors_map(cube)
+    assert model_colors_map == {
+        "my_obs": (0.4117647058823529, 0.4117647058823529, 0.4117647058823529)
+    }
+
+
+def test_get_model_colors_map_user_obs_cubelist(cube):
+    """Generate model_colors_map if cubelist input of model names."""
+    cube1 = cube.copy()
+    cube1.attributes["model_name"] = "my_obs"
+    cube2 = cube.copy()
+    cube2.attributes["model_name"] = "model_1"
+    model_colors_map = _colormaps.get_model_colors_map([cube1, cube2])
+    assert model_colors_map == {
+        "my_obs": (0.4117647058823529, 0.4117647058823529, 0.4117647058823529),
+        "model_1": (0.12156862745098039, 0.4666666666666667, 0.7058823529411765),
+    }
+
+
+def test_get_model_colors_map_user_obs_cubelist_reorder(cube):
+    """Re-order OBS plotting in model_colors_map if model name includes OBS."""
+    cube1 = cube.copy()
+    cube1.attributes["model_name"] = "model_1"
+    cube2 = cube.copy()
+    cube2.attributes["model_name"] = "my_obs"
+    model_colors_map = _colormaps.get_model_colors_map([cube1, cube2])
+    assert model_colors_map == {
+        "my_obs": (0.4117647058823529, 0.4117647058823529, 0.4117647058823529),
+        "model_1": (0.12156862745098039, 0.4666666666666667, 0.7058823529411765),
+    }
+
+
 def test_colorbar_map_levels(cube, tmp_working_dir):
     """Colorbar definition is found for cube."""
     cmap, levels, norm = _colormaps.colorbar_map_levels(cube)

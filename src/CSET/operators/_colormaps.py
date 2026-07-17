@@ -91,7 +91,17 @@ def get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
     if use_user_colors:
         return {mname: colorbar[mname] for mname in model_names}
 
-    color_list = itertools.cycle(DEFAULT_DISCRETE_COLORS)
+    # Update to always plot observations as first item with dimgray color
+    if any("OBS" in name.upper() for name in model_names):
+        colors = list(DEFAULT_DISCRETE_COLORS).copy()
+        colors.insert(0, mcolors.to_rgb("dimgray"))
+        ob_name = [name for name in model_names if "OBS" in name.upper()][0]
+        model_names.remove(ob_name)
+        model_names.insert(0, ob_name)
+    else:
+        colors = DEFAULT_DISCRETE_COLORS
+
+    color_list = itertools.cycle(colors)
     return {mname: color for mname, color in zip(model_names, color_list, strict=False)}
 
 

@@ -347,6 +347,7 @@ def _set_title_and_filename(
             if nplot > 1:
                 # Default labels for sequence inputs
                 sequence_value = seq_coord.units.title(seq_coord.points[0])
+                sequence_value = sequence_value.replace(" unknown", "")
                 sequence_title = f"\n [{sequence_value}]"
                 sequence_fname = f"_{filename_slugify(sequence_value)}"
             else:
@@ -994,9 +995,6 @@ def _plot_and_save_line_series(
     # Set y limits to global min and max, autoscale if colorbar doesn't exist.
     if y_levels:
         ax.set_ylim(min(y_levels), max(y_levels))
-        # Add zero line.
-        if min(y_levels) < 0.0 and max(y_levels) > 0.0:
-            ax.axhline(y=0, xmin=0, xmax=1, ls="-", color="grey", lw=2)
         logging.debug(
             "Line plot with y-axis limits %s-%s", min(y_levels), max(y_levels)
         )
@@ -1005,7 +1003,11 @@ def _plot_and_save_line_series(
 
     # Add gridlines
     ax.grid(linestyle="--", color="grey", linewidth=1)
-    # Ientify unique labels for legend
+    # Add zero line
+    ymin, ymax = ax.get_ylim()
+    if ymin < 0.0 and ymax > 0.0:
+        ax.axhline(y=0, xmin=0, xmax=1, ls="-", color="grey", lw=2)
+    # Identify unique labels for legend
     handles = list(
         {
             label: handle
@@ -1694,6 +1696,132 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
     plt.close(fig)
 
 
+def _plot_and_save_scatter_series(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+    filename: str,
+    title: str,
+    vmin: float,
+    vmax: float,
+    hexbin: bool,
+    **kwargs,
+):
+    """Plot and save a scatter plot series.
+
+    Parameters
+    ----------
+    cubes: Cube or CubeList
+        2 dimensional Cube or CubeList of the data to plot as scatter.
+    filename: str
+        Filename of the plot to write.
+    title: str
+        Plot title.
+    vmin: float
+        minimum for colorbar
+    vmax: float
+        maximum for colorbar
+    """
+    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
+    ax = plt.gca()
+
+    model_colors_map = get_model_colors_map(cubes)
+
+    percentiles = np.arange(0, 100, 5)
+    percentiles[0] = 1
+    percentiles[-1] = 99
+    quantiles = iris.cube.CubeList()
+
+    for plottype in ["points", "quantiles"]:
+        nplot = 0
+        for cube in iter_maybe(cubes):
+            label = None
+            color = "black"
+            if model_colors_map:
+                label = cube.attributes.get("model_name")
+                color = model_colors_map[label]
+
+            # Plot all data points
+            if plottype == "points":
+                if nplot > 0:
+                    if hexbin:
+                        hb = plt.hexbin(
+                            cubes[0].data.flatten(),
+                            cube.data.flatten(),
+                            alpha=0.3,
+                            gridsize=100,
+                            mincnt=1,
+                        )
+                    else:
+                        plt.scatter(
+                            cubes[0].data.flatten(),
+                            cube.data.flatten(),
+                            color=color,
+                            marker="+",
+                            label=None,
+                            alpha=0.3,
+                        )
+
+            elif plottype == "quantiles":
+                # Construct Q-Q plot
+                quantiles.append(
+                    cube.collapsed(
+                        cube.coords(dim_coords=True),
+                        iris.analysis.PERCENTILE,
+                        percent=percentiles,
+                    )
+                )
+                if nplot > 0:
+                    iplt.scatter(
+                        quantiles[0],
+                        quantiles[-1],
+                        color=color,
+                        marker="o",
+                        label=label,
+                        edgecolors="black",
+                    )
+
+            nplot = nplot + 1
+
+    # Add some labels and tweak the style.
+    ax.set_title(title, fontsize=16)
+    ax.set_xlabel(
+        f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}", fontsize=14
+    )
+    ax.set_ylabel(
+        f"{iter_maybe(cubes)[1].name()} / {iter_maybe(cubes)[1].units}", fontsize=14
+    )
+    ax.tick_params(axis="both", labelsize=12)
+    ax.autoscale()
+
+    if iter_maybe(cubes)[0].long_name.replace("observed_", "") == iter_maybe(cubes)[
+        1
+    ].long_name.replace("observed_", ""):
+        lims = [
+            np.min([ax.get_xlim(), ax.get_ylim()]),  # min of both axes
+            np.max([ax.get_xlim(), ax.get_ylim()]),  # max of both axes
+        ]
+        ax.plot(lims, lims, "k-", alpha=0.75, zorder=0)
+        ax.set_aspect("equal")
+        ax.set_xlim(lims)
+        ax.set_ylim(lims)
+
+    # Overlay grid-lines onto scatter plot.
+    ax.grid(linestyle="--", color="grey", linewidth=1)
+    if model_colors_map:
+        ax.legend(loc="upper left", ncol=1, frameon=True, fontsize=16)
+
+    # Add colorbar if hexbin output
+    if hexbin:
+        cb = plt.colorbar(
+            hb, orientation="horizontal", location="bottom", pad=0.08, shrink=0.7
+        )
+        cb.set_label("Number of data points", size=12)
+
+    # Save plot.
+    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+    logging.info("Saved scatter plot to %s", filename)
+    plt.close(fig)
+
+
 def _spatial_plot(
     method: Literal["contourf", "pcolormesh", "scatter"],
     cube: iris.cube.Cube,
@@ -2055,7 +2183,7 @@ def plot_line_series(
     validate_cube_shape(cube, num_models)
 
     # Iterate over all cubes and extract coordinate to plot.
-    cubes = iter_maybe(cube)
+    cubes = iris.cube.CubeList(iter_maybe(cube))
     coords = []
     for cube in cubes:
         try:
@@ -2183,12 +2311,34 @@ def plot_line_series(
         plot_title, plot_filename = _set_title_and_filename(
             seq_coord, nplot, recipe_title, filename
         )
-        # Do the actual plotting for all other series coordinate options.
-        _plot_and_save_line_series(
-            cubes, coords, stamp_coordinate, plot_filename, plot_title
-        )
 
-        plot_index.append(plot_filename)
+        # Treat cubes with station coordinate as point observation timeseries, looping over available points
+        if (
+            "station" in [c.name() for c in cubes[0].coords()]
+            and len(cubes[0].coord("station").points) > 1
+        ):
+            for station in cubes[0].coord("station").points:
+                station_cubes = cubes.extract(iris.Constraint(station=station))
+                station_name = station_cubes[0].coord("Station_Name").points[0]
+                station_plotname = plot_filename.replace(
+                    ".png", "_" + station_name + ".png"
+                )
+                _plot_and_save_line_series(
+                    station_cubes,
+                    coords,
+                    "realization",
+                    station_plotname,
+                    f"{plot_title} {station_name}",
+                )
+                plot_index.append(station_plotname)
+
+        else:
+            # Do the actual plotting for all other series coordinate options.
+            _plot_and_save_line_series(
+                cubes, coords, stamp_coordinate, plot_filename, plot_title
+            )
+
+            plot_index.append(plot_filename)
 
     # append plot to list of plots
     complete_plot_index = _append_to_plot_index(plot_index)
@@ -2856,9 +3006,6 @@ def plot_histogram_series(
     recipe_title = get_recipe_metadata().get("title", "Histogram")
 
     cubes = iter_maybe(cubes)
-    # Ensure we have a name for the plot file.
-    if filename is None:
-        filename = slugify(recipe_title)
 
     # Internal plotting function.
     plotting_func = _plot_and_save_histogram_series
@@ -2915,6 +3062,10 @@ def plot_histogram_series(
         # Use time coordinate in title and filename if single histogram output.
         if sequence_coordinate == "realization" and nplot == 1:
             seq_coord = single_cube.coord("time")
+        # Use station name in title and filename if model vs obs comparison
+        if sequence_coordinate == "station":
+            seq_coord = single_cube.coord("Station_Name")
+
         plot_title, plot_filename = _set_title_and_filename(
             seq_coord, nplot, recipe_title, filename
         )
@@ -2927,6 +3078,129 @@ def plot_histogram_series(
             title=plot_title,
             vmin=vmin,
             vmax=vmax,
+        )
+        plot_index.append(plot_filename)
+
+    # Add list of plots to plot metadata.
+    complete_plot_index = _append_to_plot_index(plot_index)
+
+    # Make a page to display the plots.
+    _make_plot_html_page(complete_plot_index)
+
+    return cubes
+
+
+def plot_scatter_series(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+    filename: str = None,
+    sequence_coordinate: str = "time",
+    stamp_coordinate: str = "realization",
+    hexbin: bool = False,
+    **kwargs,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Plot a scatter plot for each sequence coordinate provided.
+
+    A scatter plot can be plotted, but if the sequence_coordinate (i.e. time)
+    is present then a sequence of plots will be produced using the time slider
+    functionality to scroll through scatter against time. If a
+    stamp_coordinate is present then postage stamp plots will be produced. If
+    stamp_coordinate and single_plot is True, all postage stamp plots will be
+    plotted in a single plot instead of separate postage stamp plots.
+
+    Parameters
+    ----------
+    cubes: Cube | iris.cube.CubeList
+        Iris cube or CubeList of the data to plot. It should have a single dimension other
+        than the stamp coordinate.
+        The cubes should cover the same phenomenon i.e. all cubes contain temperature data.
+        We do not support different data such as temperature and humidity in the same CubeList for plotting.
+    filename: str, optional
+        Name of the plot to write, used as a prefix for plot sequences. Defaults
+        to the recipe name.
+    sequence_coordinate: str, optional
+        Coordinate about which to make a plot sequence. Defaults to ``"time"``.
+        This coordinate must exist in the cube and will be used for the time
+        slider.
+    stamp_coordinate: str, optional
+        Coordinate about which to plot postage stamp plots. Defaults to
+        ``"realization"``.
+    hexbin: bool, optional
+        If True, generate hexbin comparison plot.
+        If False, generate point-by-point scatter plot.
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        The original Cube or CubeList (so further operations can be applied).
+        Plotted data.
+
+    Raises
+    ------
+    ValueError
+        If the cube doesn't have the right dimensions.
+    TypeError
+        If the cube isn't a Cube or CubeList.
+    """
+    recipe_title = get_recipe_metadata().get("title", "Scatter")
+
+    cubes = iter_maybe(cubes)
+
+    # Internal plotting function.
+    plotting_func = _plot_and_save_scatter_series
+
+    num_models = get_num_models(cubes)
+
+    validate_cube_shape(cubes, num_models)
+
+    check_sequence_coordinate(cubes, sequence_coordinate)
+
+    vmin, vmax = _set_axis_range(cubes)
+
+    # Require >1 models to compare on scatter plot
+    if num_models > 1:
+        cube_iterables = _find_matched_slices(cubes, sequence_coordinate)
+    else:
+        raise ValueError(
+            "Scatter plot series requires multiple number of models in input data."
+        )
+
+    plot_index = []
+    nplot = np.size(cubes[0].coord(sequence_coordinate).points)
+    # Create a plot for each value of the sequence coordinate. Allowing for
+    # multiple cubes in a CubeList to be plotted in the same plot for similar
+    # sequence values. Passing a CubeList into the internal plotting function
+    # for similar values of the sequence coordinate. cube_slice can be an
+    # iris.cube.Cube or an iris.cube.CubeList.
+    for cube_slice in cube_iterables:
+        single_cube = cube_slice
+        if isinstance(cube_slice, iris.cube.CubeList):
+            single_cube = cube_slice[0]
+
+        # Ensure valid stamp coordinate in cube dimensions
+        if stamp_coordinate == "realization":
+            stamp_coordinate = check_stamp_coordinate(single_cube)
+        # Set plot titles and filename, based on sequence coordinate
+        seq_coord = single_cube.coord(sequence_coordinate)
+        # Use time coordinate in title and filename if single histogram output.
+        if sequence_coordinate == "realization" and nplot == 1:
+            seq_coord = single_cube.coord("time")
+        # Use station name in title and filename if model vs obs comparison
+        if sequence_coordinate == "station":
+            seq_coord = single_cube.coord("Station_Name")
+
+        plot_title, plot_filename = _set_title_and_filename(
+            seq_coord, nplot, recipe_title, filename
+        )
+
+        # Do the actual plotting.
+        plotting_func(
+            cube_slice,
+            filename=plot_filename,
+            stamp_coordinate=stamp_coordinate,
+            title=plot_title,
+            vmin=vmin,
+            vmax=vmax,
+            hexbin=hexbin,
         )
         plot_index.append(plot_filename)
 

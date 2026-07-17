@@ -590,6 +590,23 @@ def test_plot_line_series_ensemble(ensemble_cube, tmp_working_dir):
     assert Path("ensemble_series.png").is_file()
 
 
+def test_plot_line_series_stations(cube, tmp_working_dir):
+    """Save a line series plot with 1d station points."""
+    cube = collapse.collapse(cube, ["grid_longitude"], "MEAN")
+    cube.coord("grid_latitude").rename("station")
+    cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            np.arange(len(cube.coord("station").points)).astype(str),
+            var_name="Station_Name",
+        ),
+        1,
+    )
+    plot.plot_line_series(cube[0:2], filename="station_series.png")
+    assert Path("station_series_0.png").is_file()
+    assert Path("station_series_1.png").is_file()
+    assert Path("station_series_2.png").is_file()
+
+
 def test_plot_and_save_postage_stamp_power_spectrum_series_single_member(
     tmp_working_dir,
 ):
@@ -946,6 +963,77 @@ def test_plot_and_save_postage_stamps_in_single_plot_histogram_series(
         histtype="step",
     )
     assert Path("test.png").is_file()
+
+
+def test_plot_scatter_series(cube, tmp_working_dir):
+    """Testing scatter series code produces file."""
+    cube1 = cube.copy()
+    cube1.attributes["model_name"] = "model1"
+    cube2 = cube.copy()
+    cube2.attributes["model_name"] = "model2"
+    plot.plot_scatter_series(
+        [cube1, cube2], filename="test.png", sequence_coordinate="time"
+    )
+    assert Path("test_20220921030000.png").is_file()
+    assert Path("test_20220921040000.png").is_file()
+    assert Path("test_20220921050000.png").is_file()
+
+
+def test_plot_scatter_series_insufficient_models(cube, tmp_working_dir):
+    """Test error raised for scatter plot with insufficient number of models."""
+    # cube = collapse.collapse(cube, ["grid_latitude", "grid_longitude"], "MEAN")
+    with pytest.raises(
+        ValueError,
+        match="Scatter plot series requires multiple number of models in input data.",
+    ):
+        plot.plot_scatter_series([cube, cube])
+
+
+def test_plot_scatter_series_hexbin(cube, tmp_working_dir):
+    """Testing scatter series code produces file with hexbin true."""
+    cube1 = cube.copy()
+    cube1.attributes["model_name"] = "model1"
+    cube2 = cube.copy()
+    cube2.attributes["model_name"] = "model2"
+    plot._plot_and_save_scatter_series(
+        [cube1, cube2], "test.png", "title", 0.0, 10.0, hexbin=True
+    )
+    assert Path("test.png").is_file()
+
+
+def test_plot_scatter_series_seq_coord(cube, tmp_working_dir):
+    """Testing scatter series code produces file."""
+    cube1 = cube.copy()
+    cube1.attributes["model_name"] = "model1"
+    cube2 = cube.copy()
+    cube2.attributes["model_name"] = "model2"
+    plot.plot_scatter_series(
+        [cube1, cube2], filename="test.png", sequence_coordinate="realization"
+    )
+    assert Path("test.png").is_file()
+
+
+def test_plot_scatter_series_station(cube, tmp_working_dir):
+    """Testing scatter series code with station coord dim."""
+    cube = collapse.collapse(cube, ["grid_longitude"], "MEAN")
+    cube.coord("grid_latitude").rename("station")
+    cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            np.arange(len(cube.coord("station").points)).astype(str),
+            var_name="Station_Name",
+        ),
+        1,
+    )
+    cube1 = cube[0:3].copy()
+    cube1.attributes["model_name"] = "model1"
+    cube2 = cube[0:3].copy()
+    cube2.attributes["model_name"] = "model2"
+    plot.plot_scatter_series(
+        [cube1, cube2], filename="test.png", sequence_coordinate="station"
+    )
+    assert Path("test_0.png").is_file()
+    assert Path("test_1.png").is_file()
+    assert Path("test_2.png").is_file()
 
 
 def test_scatter_plot(cube, vertical_profile_cube, tmp_working_dir):
