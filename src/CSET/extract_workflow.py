@@ -138,7 +138,9 @@ def clone_ref(ref: str, url: str, location: str):
     try:
         subprocess.run(cmd, env=env, check=True, capture_output=True)
     except subprocess.CalledProcessError as err:
-        raise ValueError(f"Cannot access Git repository at {url}") from err
+        raise ValueError(
+            f"Cannot access ref {ref} from Git repository at {url}"
+        ) from err
 
 
 def install_restricted_files(workflow_dir: Path, alternative_url: str | None = None):
