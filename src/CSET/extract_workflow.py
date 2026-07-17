@@ -54,11 +54,16 @@ def make_script_executable(p: Path):
 def install_workflow(location: Path):
     """Install the workflow's files and link the conda environment.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     location: Path
         A directory where the workflow files are to be installed to. A
         sub-directory named "cset-workflow-vX.Y.Z" will be created under here.
+
+    Returns
+    -------
+    workflow_dir: Path
+        Path to newly created workflow directory.
     """
     # Check location's parents exist.
     if not location.is_dir():
