@@ -36,6 +36,7 @@ def restricted_git_repo() -> Generator[str]:
         # Create some content.
         repo_location.mkdir()
         (repo_location / "README.md").write_text("# Test restricted repository\n")
+        (repo_location / ".hidden").write_text("hidden file\n")
         (repo_location / "restricted_file.txt").write_text("restricted data\n")
 
         # Git commands for creating a minimal repository of the right structure.
@@ -228,3 +229,35 @@ def test_clone_ref_no_such_ref(tmp_path: Path, restricted_git_repo: str):
     location = str(tmp_path)
     with pytest.raises(ValueError, match="Cannot access Git repository"):
         extract_workflow.clone_ref(ref, url, location)
+
+
+def test_install_restricted_files(tmp_path: Path, restricted_git_repo: str):
+    """Install restricted files from a Git repository."""
+    # Make into cylc workflow.
+    (tmp_path / "flow.cylc").touch()
+
+    # Install restricted files.
+    extract_workflow.install_restricted_files(tmp_path, restricted_git_repo)
+
+    # README.md not copied.
+    assert not (tmp_path / "README.md").exists()
+    # Hidden files not copied.
+    assert not (tmp_path / ".hidden").exists()
+    # Other files are copied.
+    assert (tmp_path / "restricted_file.txt").exists()
+    # Existing files are untouched.
+    assert (tmp_path / "flow.cylc").exists()
+
+
+def test_install_restricted_files_not_workflow(tmp_path: Path):
+    """Exception raised when target location is not a cylc workflow."""
+    with pytest.raises(ValueError, match="should be a CSET workflow directory"):
+        extract_workflow.install_restricted_files(tmp_path)
+
+
+def test_install_restricted_files_no_repo_access(tmp_path: Path):
+    """Exception raised when repositories cannot be accessed."""
+    # Make into cylc workflow.
+    (tmp_path / "flow.cylc").touch()
+    with pytest.raises(ValueError, match="Could not read from restricted repository"):
+        extract_workflow.install_restricted_files(tmp_path, alternative_url="/dev/null")
