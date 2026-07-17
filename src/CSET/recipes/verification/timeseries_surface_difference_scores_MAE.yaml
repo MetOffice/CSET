@@ -1,0 +1,44 @@
+category: Scores
+title: "$VARNAME\nScores Mean Absolute Error timeseries between $OTHER_MODEL and $BASE_MODEL $SUBAREA_NAME"
+description: |
+  Extracts and plots the Mean Absolute Error in $VARNAME
+  computed over the domain for each timestep. The MAE is calculated based on that used in the
+  package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.mae).
+  This recipe allows the preservation of the time coordinate to produce a timeseries. Therefore, the MAE is
+  collapsed over all other coordinates in the cube and calculated for every timestep.
+
+  A larger MAE implies a greater error than a smaller MAE. An
+  MAE of zero indicates the two fields most likely match. The MAE is calculated
+  on the grid point and thus a spatial view of the MAE provides useful
+  information about where the differences are, or if placement errors
+  are domininating the score (usually indicated by dipoles). MAE is a fair
+  measure of error when forecasting the median and is not sensitive to outliers.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: [$BASE_MODEL, $OTHER_MODEL]
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: $VARNAME
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: "pressure"
+        levels: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: scoreswrappers.scores_mae
+    preserved_coordinates: ["time"]
+
+  - operator: plot.plot_line_series
+    series_coordinate: time
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
