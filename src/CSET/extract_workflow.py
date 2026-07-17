@@ -212,7 +212,7 @@ def install_restricted_files(workflow_dir: Path, alternative_url: str | None = N
         clone_ref(ref, url, tempdir)
 
         # Delete unwanted top-level README.
-        os.unlink(f"{tempdir}/README.md")
+        (Path(tempdir) / "README.md").unlink(missing_ok=True)
 
         # Copy remaining files, skipping hidden files.
         shutil.copytree(
