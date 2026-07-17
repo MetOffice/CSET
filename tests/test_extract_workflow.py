@@ -49,7 +49,7 @@ def restricted_git_repo() -> Generator[str]:
         ]
         # Explicitly set author/committer identities in case they are not
         # configured, such as on GitHub Actions runners.
-        env = os.environ
+        env = os.environ.copy()
         env["GIT_AUTHOR_NAME"] = "name"
         env["GIT_AUTHOR_EMAIL"] = "name@example.com"
         env["GIT_COMMITTER_NAME"] = "name"
