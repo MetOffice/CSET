@@ -16,10 +16,41 @@
 
 import os
 import stat
+import subprocess
+import tempfile
+from collections.abc import Generator
+from pathlib import Path
 
 import pytest
 
 import CSET.extract_workflow as extract_workflow
+
+
+@pytest.fixture(scope="session")
+def restricted_git_repo() -> Generator[str]:
+    """Return the path to a local git repository."""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        repo_location = Path(tmp_dir) / "restricted-git-repo"
+        repo = str(repo_location.absolute())
+
+        # Create some content.
+        repo_location.mkdir()
+        (repo_location / "README.md").write_text("# Test restricted repository\n")
+        (repo_location / "restricted_file.txt").write_text("restricted data\n")
+
+        # Git commands for creating a minimal repository of the right structure.
+        commands = [
+            ("git", "init", "-b", "main", repo),
+            ("git", "-C", repo, "add", "."),
+            ("git", "-C", repo, "commit", "-m", "Add stuff"),
+            ("git", "-C", repo, "branch", "releases/v1.0"),
+            ("git", "-C", repo, "tag", "-am", "Version 1.0", "v1.0.0", "releases/v1.0"),
+        ]
+        for command in commands:
+            subprocess.run(command, check=True)
+
+        # Yield path to repo. This will be cleaned up after the tests finish.
+        yield repo
 
 
 def test_make_script_executable_script(tmp_path):
@@ -155,3 +186,45 @@ def test_install_workflow_dir_already_exists(tmp_path):
         FileExistsError, match=f"Refusing to overwrite {tmp_path}/cset-workflow-v"
     ):
         extract_workflow.install_workflow(tmp_path)
+
+
+def test_list_refs(restricted_git_repo: str):
+    """Test listing release references."""
+    refs = extract_workflow.list_refs(restricted_git_repo)
+    assert isinstance(refs, list)
+    assert len(refs) == 2
+    assert set(refs) == {"releases/v1.0", "v1.0.0"}
+
+
+def test_list_refs_no_repo_access():
+    """Exception raised when listed repository does not exist."""
+    with pytest.raises(ValueError, match="Cannot access Git repository"):
+        extract_workflow.list_refs("/non-existent/git/repo")
+
+
+def test_clone_ref(tmp_path: Path, restricted_git_repo: str):
+    """Clone a ref from a repository."""
+    ref = "v1.0.0"
+    url = restricted_git_repo
+    location = str(tmp_path)
+    extract_workflow.clone_ref(ref, url, location)
+    assert (tmp_path / "README.md").exists()
+    assert (tmp_path / "restricted_file.txt").exists()
+
+
+def test_clone_ref_no_repo_access(tmp_path: Path):
+    """Exception raised when cloned repository does not exist."""
+    ref = "v1.0.0"
+    url = "/non-existent/git/repo"
+    location = str(tmp_path)
+    with pytest.raises(ValueError, match="Cannot access Git repository"):
+        extract_workflow.clone_ref(ref, url, location)
+
+
+def test_clone_ref_no_such_ref(tmp_path: Path, restricted_git_repo: str):
+    """Exception raised when ref does not exist in target repository."""
+    ref = "refs/tags/does-not-exist"
+    url = restricted_git_repo
+    location = str(tmp_path)
+    with pytest.raises(ValueError, match="Cannot access Git repository"):
+        extract_workflow.clone_ref(ref, url, location)
