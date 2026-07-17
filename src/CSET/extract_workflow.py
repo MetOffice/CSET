@@ -148,7 +148,7 @@ def install_restricted_files(workflow_dir: Path, alternative_url: str | None = N
 
     Parameters
     ----------
-    workflow_dir: str
+    workflow_dir: Path
         The workflow directory into which the restricted files will be copied.
     alternative_url: str, optional
         Alternative Git URL to fetch the restricted files from. If omitted,
