@@ -225,7 +225,7 @@ def test_clone_ref_no_repo_access(tmp_path: Path):
     ref = "v1.0.0"
     url = "/non-existent/git/repo"
     location = str(tmp_path)
-    with pytest.raises(ValueError, match="Cannot access Git repository"):
+    with pytest.raises(ValueError, match="Cannot access ref .+ from Git repository at"):
         extract_workflow.clone_ref(ref, url, location)
 
 
@@ -234,7 +234,7 @@ def test_clone_ref_no_such_ref(tmp_path: Path, restricted_git_repo: str):
     ref = "refs/tags/does-not-exist"
     url = restricted_git_repo
     location = str(tmp_path)
-    with pytest.raises(ValueError, match="Cannot access Git repository"):
+    with pytest.raises(ValueError, match="Cannot access ref .+ from Git repository at"):
         extract_workflow.clone_ref(ref, url, location)
 
 
