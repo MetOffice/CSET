@@ -114,27 +114,19 @@ def test_scores_rmse(cube: Cube):
 
 def test_scores_rmse_nonzero():
     """Test taking the rmse between two different cubes."""
-    # Data preparation.
     cube = Cube(
-        np.ones((2, 2)),
-        dim_coords_and_dims=[
-            (iris.coords.DimCoord([1, 2], var_name="x"), 0),
-            (iris.coords.DimCoord([1, 2], var_name="y"), 1),
-        ],
-        var_name="test",
-        attributes={"cset_comparison_base": 1},
-    )
-    other_cube = Cube(
         np.zeros((2, 2)),
-        dim_coords_and_dims=[
+        dim_coords_and_dims=(
             (iris.coords.DimCoord([1, 2], var_name="x"), 0),
             (iris.coords.DimCoord([1, 2], var_name="y"), 1),
-        ],
+        ),
         var_name="test",
     )
-    cubes = CubeList([cube, other_cube])
+    other_cube = cube.copy(data=np.ones((2, 2)))
+    cube.attributes["cset_comparison_base"] = 1
+    different_cubes = CubeList((cube, other_cube))
     # Take difference.
-    rmse_cube = scoreswrappers.scores_rmse(cubes)
+    rmse_cube = scoreswrappers.scores_rmse(different_cubes)
 
     # As both cubes use the same data, check the rmse is zero.
     assert isinstance(rmse_cube, Cube)
