@@ -19,7 +19,6 @@ import datetime
 import iris
 import iris.analysis.calculus
 import iris.coords
-import iris.cube
 import iris.exceptions
 import numpy as np
 import pytest
@@ -27,6 +26,7 @@ import scores
 import scores.continuous
 import scores.probability
 import xarray as xr
+from iris.cube import Cube, CubeList
 from iris.util import reverse
 
 from CSET.operators import scoreswrappers
@@ -36,18 +36,18 @@ from CSET.operators.constraints import (
 )
 
 
-def test_scores_correlation_pearsonr(cube: iris.cube.Cube):
+def test_scores_correlation_pearsonr(cube: Cube):
     """Test taking the Pearson correlation between two cubes."""
     # Data preparation.
     other_cube = cube.copy()
     del other_cube.attributes["cset_comparison_base"]
-    cubes = iris.cube.CubeList([cube, other_cube])
+    cubes = CubeList([cube, other_cube])
 
     # Take difference.
     correlation_pearsonr_cube = scoreswrappers.scores_correlation_pearsonr(cubes)
 
     # As both cubes use the same data, check the Pearson correlation is one.
-    assert isinstance(correlation_pearsonr_cube, iris.cube.Cube)
+    assert isinstance(correlation_pearsonr_cube, Cube)
     assert np.allclose(
         correlation_pearsonr_cube.data,
         np.ones_like(correlation_pearsonr_cube.data),
@@ -59,18 +59,18 @@ def test_scores_correlation_pearsonr(cube: iris.cube.Cube):
     )
 
 
-def test_scores_additive_bias(cube: iris.cube.Cube):
+def test_scores_additive_bias(cube: Cube):
     """Test taking the additive bias between two cubes."""
     # Data preparation.
     other_cube = cube.copy()
     del other_cube.attributes["cset_comparison_base"]
-    cubes = iris.cube.CubeList([cube, other_cube])
+    cubes = CubeList([cube, other_cube])
 
     # Take difference.
     additive_bias_cube = scoreswrappers.scores_additive_bias(cubes)
 
     # As both cubes use the same data, check the additive bias is zero.
-    assert isinstance(additive_bias_cube, iris.cube.Cube)
+    assert isinstance(additive_bias_cube, Cube)
     assert np.allclose(
         additive_bias_cube.data, np.zeros_like(additive_bias_cube.data), atol=1e-9
     )
@@ -78,35 +78,35 @@ def test_scores_additive_bias(cube: iris.cube.Cube):
     assert additive_bias_cube.long_name == "Additive_Bias_of_air_temperature"
 
 
-def test_scores_mae(cube: iris.cube.Cube):
+def test_scores_mae(cube: Cube):
     """Test taking the mae between two cubes."""
     # Data preparation.
     other_cube = cube.copy()
     del other_cube.attributes["cset_comparison_base"]
-    cubes = iris.cube.CubeList([cube, other_cube])
+    cubes = CubeList([cube, other_cube])
 
     # Take difference.
     mae_cube = scoreswrappers.scores_mae(cubes)
 
     # As both cubes use the same data, check the mae is zero.
-    assert isinstance(mae_cube, iris.cube.Cube)
+    assert isinstance(mae_cube, Cube)
     assert np.allclose(mae_cube.data, np.zeros_like(mae_cube.data), atol=1e-9)
     assert mae_cube.standard_name is None
     assert mae_cube.long_name == "MAE_of_air_temperature"
 
 
-def test_scores_rmse(cube: iris.cube.Cube):
+def test_scores_rmse(cube: Cube):
     """Test taking the rmse between two cubes."""
     # Data preparation.
     other_cube = cube.copy()
     del other_cube.attributes["cset_comparison_base"]
-    cubes = iris.cube.CubeList([cube, other_cube])
+    cubes = CubeList([cube, other_cube])
 
     # Take difference.
     rmse_cube = scoreswrappers.scores_rmse(cubes)
 
     # As both cubes use the same data, check the rmse is zero.
-    assert isinstance(rmse_cube, iris.cube.Cube)
+    assert isinstance(rmse_cube, Cube)
     assert np.allclose(rmse_cube.data, np.zeros_like(rmse_cube.data), atol=1e-9)
     assert rmse_cube.standard_name is None
     assert rmse_cube.long_name == "RMSE_of_air_temperature"
@@ -115,7 +115,7 @@ def test_scores_rmse(cube: iris.cube.Cube):
 def test_scores_rmse_nonzero():
     """Test taking the rmse between two different cubes."""
     # Data preparation.
-    cube = iris.cube.Cube(
+    cube = Cube(
         np.ones((2, 2)),
         dim_coords_and_dims=[
             (iris.coords.DimCoord([1, 2], var_name="x"), 0),
@@ -124,7 +124,7 @@ def test_scores_rmse_nonzero():
         var_name="test",
         attributes={"cset_comparison_base": 1},
     )
-    other_cube = iris.cube.Cube(
+    other_cube = Cube(
         np.zeros((2, 2)),
         dim_coords_and_dims=[
             (iris.coords.DimCoord([1, 2], var_name="x"), 0),
@@ -132,12 +132,12 @@ def test_scores_rmse_nonzero():
         ],
         var_name="test",
     )
-    cubes = iris.cube.CubeList([cube, other_cube])
+    cubes = CubeList([cube, other_cube])
     # Take difference.
     rmse_cube = scoreswrappers.scores_rmse(cubes)
 
     # As both cubes use the same data, check the rmse is zero.
-    assert isinstance(rmse_cube, iris.cube.Cube)
+    assert isinstance(rmse_cube, Cube)
     assert np.allclose(rmse_cube.data, 1.0, atol=1e-9)
     assert rmse_cube.standard_name is None
     assert rmse_cube.long_name == "RMSE_of_test"
@@ -149,9 +149,9 @@ def test_scores_rmse_no_time_coord(cube):
     c1.remove_coord("time")
     c2 = c1.copy()
     del c2.attributes["cset_comparison_base"]
-    cubes = iris.cube.CubeList([c1, c2])
+    cubes = CubeList([c1, c2])
     rmse_cube = scoreswrappers.scores_rmse(cubes)
-    assert isinstance(rmse_cube, iris.cube.Cube)
+    assert isinstance(rmse_cube, Cube)
     assert np.allclose(rmse_cube.data, np.zeros_like(rmse_cube.data), atol=1e-9)
 
 
@@ -163,22 +163,22 @@ def test_scores_rmse_no_common_points(cube):
     new_times += 6
     other_cube.coord("time").points = new_times
     del other_cube.attributes["cset_comparison_base"]
-    cubes = iris.cube.CubeList([cube, other_cube])
+    cubes = CubeList([cube, other_cube])
     with pytest.raises(ValueError, match="No common time points found!"):
         scoreswrappers.scores_rmse(cubes)
 
 
 def test_scores_rmse_incorrect_number_of_cubes(cube):
     """Test exception when incorrect number of cubes provided."""
-    no_cubes = iris.cube.CubeList([])
+    no_cubes = CubeList([])
     with pytest.raises(ValueError, match="cubes should contain exactly 2 cubes."):
         scoreswrappers.scores_rmse(no_cubes)
 
-    one_cube = iris.cube.CubeList([cube])
+    one_cube = CubeList([cube])
     with pytest.raises(ValueError, match="cubes should contain exactly 2 cubes."):
         scoreswrappers.scores_rmse(one_cube)
 
-    three_cubes = iris.cube.CubeList([cube, cube, cube])
+    three_cubes = CubeList([cube, cube, cube])
     with pytest.raises(ValueError, match="cubes should contain exactly 2 cubes."):
         scoreswrappers.scores_rmse(three_cubes)
 
@@ -191,12 +191,12 @@ def test_scores_rmse_different_data_shape_regrid(cube):
     rearranged_cube = cube.copy()
     rearranged_cube = rearranged_cube[:, :, 1:]
     del cube.attributes["cset_comparison_base"]
-    cubes = iris.cube.CubeList([rearranged_cube, cube])
+    cubes = CubeList([rearranged_cube, cube])
     # Need to preserve coordinates to test shape.
     rmse = scoreswrappers.scores_rmse(
         cubes, preserved_coordinates=["time", "grid_latitude", "grid_longitude"]
     )
-    assert isinstance(rmse, iris.cube.Cube)
+    assert isinstance(rmse, Cube)
     assert rmse.shape == cube.shape
     assert rmse.shape != rearranged_cube.shape
 
@@ -206,12 +206,12 @@ def test_rmse_grid_staggering_regrid(cube):
     rearranged_cube = cube.copy()
     rearranged_cube.rename("eastward_wind_at_10m")
     del cube.attributes["cset_comparison_base"]
-    cubes = iris.cube.CubeList([rearranged_cube, cube])
+    cubes = CubeList([rearranged_cube, cube])
     # Need to preserve coordinates to test shape.
     rmse = scoreswrappers.scores_rmse(
         cubes, preserved_coordinates=["time", "grid_latitude", "grid_longitude"]
     )
-    assert isinstance(rmse, iris.cube.Cube)
+    assert isinstance(rmse, Cube)
     assert rmse.shape == cube.shape
 
 
@@ -220,12 +220,12 @@ def test_difference_different_model_types(cube):
     flipped = cube.copy()
     reverse(flipped, "grid_latitude")
     del flipped.attributes["cset_comparison_base"]
-    cubes = iris.cube.CubeList([cube, flipped])
+    cubes = CubeList([cube, flipped])
 
     # Take rmse.
     rmse_cube = scoreswrappers.scores_rmse(cubes)
 
-    assert isinstance(rmse_cube, iris.cube.Cube)
+    assert isinstance(rmse_cube, Cube)
     # As both cubes use the same data, check the difference is zero.
     assert np.allclose(rmse_cube.data, np.zeros_like(rmse_cube.data), atol=1e-9)
 
@@ -235,12 +235,12 @@ def test_difference_flip_pressure_order(transect_source_cube_readonly):
     flipped = transect_source_cube_readonly.copy()
     reverse(flipped, "pressure")
     del flipped.attributes["cset_comparison_base"]
-    cubes = iris.cube.CubeList([transect_source_cube_readonly, flipped])
+    cubes = CubeList([transect_source_cube_readonly, flipped])
 
     # Take rmse.
     rmse_cube = scoreswrappers.scores_rmse(cubes)
 
-    assert isinstance(rmse_cube, iris.cube.Cube)
+    assert isinstance(rmse_cube, Cube)
     # As both cubes use the same data, check the difference is zero.
     assert np.allclose(rmse_cube.data, np.zeros_like(rmse_cube.data), atol=1e-9)
 
@@ -281,10 +281,10 @@ def test_crps(feature_cube):
         )
     )
 
-    assert isinstance(crps_cube_erps, iris.cube.Cube)
+    assert isinstance(crps_cube_erps, Cube)
     assert feature_cube.coord("time").shape == crps_cube_erps.coord("time").shape
 
-    assert isinstance(crps_cube_fair, iris.cube.Cube)
+    assert isinstance(crps_cube_fair, Cube)
     assert feature_cube.coord("time").shape == crps_cube_fair.coord("time").shape
 
     assert np.allclose(crps_cube_erps.data, scores_crps_erps.data, atol=1e-2, rtol=1e-6)
