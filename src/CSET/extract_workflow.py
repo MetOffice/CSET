@@ -167,10 +167,10 @@ def install_restricted_files(workflow_dir: Path, alternative_url: str | None = N
     version_tag = f"v{importlib.metadata.version('CSET')}"
     logger.debug("Running for CSET %s", version_tag)
     m = re.match(r"v\d+\.\d+", version_tag)
+    base_version = m.group(0) if m else version_tag
     if m is None:
-        logger.error("Unknown CSET version: %s", version_tag)
-        m = [version_tag]
-    release_branch = f"releases/{m[0]}"
+        logger.warning("Cannot determine major version from %s", version_tag)
+    release_branch = f"releases/{base_version}"
 
     # Default URLs to try in order, or use alternative if provided.
     urls = (
