@@ -914,7 +914,6 @@ def _compute_winds(cubes: iris.cube.CubeList):
                 wind_only = True
             else:
                 wind_only = False
-            print(wind_only)
             if len(cubes.extract(u_constr)) == 1 and not cubes.extract(speed_constr):
                 _add_wind_speed_um(cubes)
             # Convert winds in the UM to be relative to true east and true north.
