@@ -936,7 +936,7 @@ def _add_wind_speed_um(cubes: iris.cube.CubeList):
     wspd10.attributes["STASH"] = "m01s03i227"
     wspd10.standard_name = "wind_speed"
     wspd10.long_name = "wind_speed_at_10m"
-    wspd10.units = "m s-1"
+    wspd10.units = "ms-1"
     cubes.append(wspd10)
 
 
