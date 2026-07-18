@@ -222,4 +222,4 @@ def install_restricted_files(workflow_dir: Path, alternative_url: str | None = N
             symlinks=True,
             dirs_exist_ok=True,
         )
-        logger.info("Installation complete.")
+        print(f"Installed site-specific restricted files into {workflow_dir}.")
