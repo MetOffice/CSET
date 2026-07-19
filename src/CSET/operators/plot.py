@@ -1898,7 +1898,9 @@ def _spatial_plot(
     # Produce a geographical scatter plot if the data have a
     # dimension called observation or model_obs_error
     if any(
-        crd.var_name == "station" or crd.var_name == "model_obs_error"
+        crd.var_name == "station"
+        or crd.var_name == "Station_Name"
+        or crd.var_name == "model_obs_error"
         for crd in cube.coords()
     ):
         plotting_func = _plot_and_save_spatial_plot

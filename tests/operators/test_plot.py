@@ -303,6 +303,28 @@ def test_spatial_multi_variable_plot_contour_only(cube, tmp_working_dir):
     assert Path("air_temperature_20220921030000.png").is_file()
 
 
+def test_spatial_multi_variable_plot_point_only(cube, point_cube, tmp_working_dir):
+    """Plot spatial plot with based and point cube only."""
+    # Call spatial_multi_pcolormesh_plot with only cube and point_cube.
+    plot.spatial_multi_pcolormesh_plot(
+        cube, point_cube=point_cube, sequence_coordinate="time"
+    )
+    assert Path("air_temperature_20220921030000.png").is_file()
+    assert Path("air_temperature_20220921040000.png").is_file()
+    assert Path("air_temperature_20220921050000.png").is_file()
+
+
+def test_spatial_multi_variable_plot_all_layers(cube, point_cube, tmp_working_dir):
+    """Plot spatial plot with all supported input variables."""
+    # Here assume cube provides cube, overlay_cube and contour_cube.
+    plot.spatial_multi_pcolormesh_plot(
+        cube, cube, cube, point_cube, sequence_coordinate="time"
+    )
+    assert Path("air_temperature_20220921030000.png").is_file()
+    assert Path("air_temperature_20220921040000.png").is_file()
+    assert Path("air_temperature_20220921050000.png").is_file()
+
+
 @pytest.mark.slow
 def test_vector_plot_with_filename(vector_cubes, tmp_working_dir):
     """Plot a vector plot of u10 and v10 components."""
@@ -403,10 +425,9 @@ def test_pcolormesh_plot_global(global_cube, caplog, tmp_working_dir):
     assert message_match
 
 
-def test_spatial_scatter(cube, tmp_working_dir):
-    """Save a spatial plot with scatter of cube points."""
-    cube.coord("grid_latitude").rename("station")
-    plot.spatial_pcolormesh_plot(cube, sequence_coordinate="time")
+def test_spatial_point_cube(point_cube, tmp_working_dir):
+    """Save a spatial plot as scatter of 1d cube points."""
+    plot.spatial_pcolormesh_plot(point_cube, sequence_coordinate="time")
     assert Path("air_temperature_20220921030000.png").is_file()
     assert Path("air_temperature_20220921040000.png").is_file()
     assert Path("air_temperature_20220921050000.png").is_file()
@@ -590,18 +611,10 @@ def test_plot_line_series_ensemble(ensemble_cube, tmp_working_dir):
     assert Path("ensemble_series.png").is_file()
 
 
-def test_plot_line_series_stations(cube, tmp_working_dir):
+def test_plot_line_series_stations(point_cube, tmp_working_dir):
     """Save a line series plot with 1d station points."""
-    cube = collapse.collapse(cube, ["grid_longitude"], "MEAN")
-    cube.coord("grid_latitude").rename("station")
-    cube.add_aux_coord(
-        iris.coords.AuxCoord(
-            np.arange(len(cube.coord("station").points)).astype(str),
-            var_name="Station_Name",
-        ),
-        1,
-    )
-    plot.plot_line_series(cube[0:2], filename="station_series.png")
+    # Plot first 3 station points only
+    plot.plot_line_series(point_cube[0:2], filename="station_series.png")
     assert Path("station_series_0.png").is_file()
     assert Path("station_series_1.png").is_file()
     assert Path("station_series_2.png").is_file()
@@ -901,14 +914,14 @@ def test_plot_and_save_histogram_series_bins_precip_amount(
         plot._plot_and_save_histogram_series(
             cubes=histogram_cube,
             filename="test.png",
-            title="Test surface_microphysical",
+            title="Test surface_microphysical_amount",
             vmin=0,
             vmax=0,
             histtype="step",
         )
         message_match = False
         for _, _, message in caplog.record_tuples:
-            if message == "Plotting histogram with 38 bins 0.0 - 398.1071705534973.":
+            if message == "Plotting histogram with 101 bins 0.0 - 398.6074087646058.":
                 message_match = True
         assert message_match
     assert Path("test.png").is_file()
@@ -1013,20 +1026,11 @@ def test_plot_scatter_series_seq_coord(cube, tmp_working_dir):
     assert Path("test.png").is_file()
 
 
-def test_plot_scatter_series_station(cube, tmp_working_dir):
+def test_plot_scatter_series_station(point_cube, tmp_working_dir):
     """Testing scatter series code with station coord dim."""
-    cube = collapse.collapse(cube, ["grid_longitude"], "MEAN")
-    cube.coord("grid_latitude").rename("station")
-    cube.add_aux_coord(
-        iris.coords.AuxCoord(
-            np.arange(len(cube.coord("station").points)).astype(str),
-            var_name="Station_Name",
-        ),
-        1,
-    )
-    cube1 = cube[0:3].copy()
+    cube1 = point_cube[0:3].copy()
     cube1.attributes["model_name"] = "model1"
-    cube2 = cube[0:3].copy()
+    cube2 = point_cube[0:3].copy()
     cube2.attributes["model_name"] = "model2"
     plot.plot_scatter_series(
         [cube1, cube2], filename="test.png", sequence_coordinate="station"
