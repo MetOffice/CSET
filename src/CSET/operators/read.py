@@ -929,7 +929,7 @@ def _compute_winds(cubes: iris.cube.CubeList):
 
 
 def _add_wind_speed_um(cubes: iris.cube.CubeList):
-    """Add windspeeds to cubes with comp."""
+    """Add windspeeds to cubes from components."""
     u_wind = cubes.extract_cube(iris.Constraint("eastward_wind_at_10m"))
     v_wind = cubes.extract_cube(iris.Constraint("northward_wind_at_10m"))
     wspd10 = (u_wind**2 + v_wind**2) ** 0.5
