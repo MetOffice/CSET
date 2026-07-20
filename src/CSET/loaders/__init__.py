@@ -21,7 +21,6 @@ __all__ below.
 
 from CSET.loaders import (
     aoa,
-    dfss,
     histograms,
     observations,
     power_spectrum,
@@ -50,5 +49,4 @@ __all__ = [
     "timeseries",
     "transects",
     "verification",
-    "dfss",
 ]
