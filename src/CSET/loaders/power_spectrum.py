@@ -101,7 +101,7 @@ def load(conf: Config):
             )
 
     # Create a list of case aggregation types.
-    AGGREGATION_TYPES = ["all", "rolling"]
+    AGGREGATION_TYPES = ["all"]
     print("In ps loader ", AGGREGATION_TYPES, conf.SURFACE_FIELDS)
 
     # Surface (2D) fields.
@@ -125,9 +125,6 @@ def load(conf: Config):
                     else None,
                     "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                     "SPECTRUM_SURFACE_FIELD_SEQUENCE": conf.SPECTRUM_SURFACE_FIELD_SEQUENCE,
-                    "WINDOW_LEN_SURFACE": conf.WINDOW_LEN_SURFACE
-                    if atype == "rolling"
-                    else None,
                 },
                 model_ids=[model["id"] for model in models],
                 aggregation=True,
@@ -152,12 +149,6 @@ def load(conf: Config):
                 "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 "SPECTRUM_PLEVEL_FIELD_SEQUENCE": conf.SPECTRUM_PLEVEL_FIELD_SEQUENCE,
             }
-
-            # Add WINDOW_LEN_PLEVEL *only if* rolling
-            if atype == "rolling":
-                variables["WINDOW_LEN_PLEVEL"] = conf.WINDOW_LEN_PLEVEL
-            else:
-                variables["WINDOW_LEN_PLEVEL"] = None
 
             yield RawRecipe(
                 recipe=f"generic_level_power_spectrum_series_plevel_mean_{atype}.yaml",
@@ -185,12 +176,6 @@ def load(conf: Config):
                 "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 "SPECTRUM_MLEVEL_FIELD_SEQUENCE": conf.SPECTRUM_MLEVEL_FIELD_SEQUENCE,
             }
-
-            # Add WINDOW_LEN_MLEVEL *only if* rolling
-            if atype == "rolling":
-                variables["WINDOW_LEN_MLEVEL"] = conf.WINDOW_LEN_MLEVEL
-            else:
-                variables["WINDOW_LEN_MLEVEL"] = None
 
             yield RawRecipe(
                 recipe=f"generic_level_power_spectrum_series_mlevel_mean_{atype}.yaml",
