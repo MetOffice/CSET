@@ -36,6 +36,65 @@ from CSET.operators.constraints import (
 )
 
 
+def test_scores_correlation_pearsonr(cube: iris.cube.Cube):
+    """Test taking the Pearson correlation between two cubes."""
+    # Data preparation.
+    other_cube = cube.copy()
+    del other_cube.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([cube, other_cube])
+
+    # Take difference.
+    correlation_pearsonr_cube = scoreswrappers.scores_correlation_pearsonr(cubes)
+
+    # As both cubes use the same data, check the Pearson correlation is one.
+    assert isinstance(correlation_pearsonr_cube, iris.cube.Cube)
+    assert np.allclose(
+        correlation_pearsonr_cube.data,
+        np.ones_like(correlation_pearsonr_cube.data),
+        atol=1e-9,
+    )
+    assert correlation_pearsonr_cube.standard_name is None
+    assert (
+        correlation_pearsonr_cube.long_name == "Pearson_Correlation_of_air_temperature"
+    )
+
+
+def test_scores_additive_bias(cube: iris.cube.Cube):
+    """Test taking the additive bias between two cubes."""
+    # Data preparation.
+    other_cube = cube.copy()
+    del other_cube.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([cube, other_cube])
+
+    # Take difference.
+    additive_bias_cube = scoreswrappers.scores_additive_bias(cubes)
+
+    # As both cubes use the same data, check the additive bias is zero.
+    assert isinstance(additive_bias_cube, iris.cube.Cube)
+    assert np.allclose(
+        additive_bias_cube.data, np.zeros_like(additive_bias_cube.data), atol=1e-9
+    )
+    assert additive_bias_cube.standard_name is None
+    assert additive_bias_cube.long_name == "Additive_Bias_of_air_temperature"
+
+
+def test_scores_mae(cube: iris.cube.Cube):
+    """Test taking the mae between two cubes."""
+    # Data preparation.
+    other_cube = cube.copy()
+    del other_cube.attributes["cset_comparison_base"]
+    cubes = iris.cube.CubeList([cube, other_cube])
+
+    # Take difference.
+    mae_cube = scoreswrappers.scores_mae(cubes)
+
+    # As both cubes use the same data, check the mae is zero.
+    assert isinstance(mae_cube, iris.cube.Cube)
+    assert np.allclose(mae_cube.data, np.zeros_like(mae_cube.data), atol=1e-9)
+    assert mae_cube.standard_name is None
+    assert mae_cube.long_name == "MAE_of_air_temperature"
+
+
 def test_scores_rmse(cube: iris.cube.Cube):
     """Test taking the rmse between two cubes."""
     # Data preparation.
@@ -53,7 +112,7 @@ def test_scores_rmse(cube: iris.cube.Cube):
     assert rmse_cube.long_name == "RMSE_of_air_temperature"
 
 
-def test_scores_rmse_nonzero(cube: iris.cube.Cube):
+def test_scores_rmse_nonzero():
     """Test taking the rmse between two different cubes."""
     # Data preparation.
     cube = iris.cube.Cube(

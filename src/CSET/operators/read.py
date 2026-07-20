@@ -187,6 +187,9 @@ def read_cubes(
     # Load the rest of the models.
     cubes.extend(itertools.chain.from_iterable(model_cubes))
 
+    # Enable different point-based observation sources to be concatenated.
+    cubes = _check_combine_point_observations(cubes)
+
     # Unify time units so different case studies can merge.
     iris.util.unify_time_units(cubes)
 
@@ -393,6 +396,7 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     _realization_callback(cube)
     _um_normalise_callback(cube)
     _lfric_normalise_callback(cube)
+    _nimrod_normalise_callback(cube)
     cube = _lfric_time_coord_fix_callback(cube)
     _normalise_var0_varname(cube)
     cube = _fix_no_spatial_coords_callback(cube)
@@ -474,6 +478,15 @@ def _lfric_normalise_callback(cube: iris.cube.Cube):
     if stash_list:
         # Parse the string as a list, sort, then re-encode as a string.
         cube.attributes["um_stash_source"] = str(sorted(ast.literal_eval(stash_list)))
+
+
+def _nimrod_normalise_callback(cube: iris.cube.Cube):
+    """Normalise attributes that prevents NIMROD radar cubes from merging."""
+    # Remove unwanted attributes.
+    cube.attributes.pop("radar_sites", None)
+    cube.attributes.pop("additional_radar_sites", None)
+    cube.attributes.pop("recursive_filter_iterations", None)
+    cube.attributes.pop("Probability methods", None)
 
 
 def _lfric_time_coord_fix_callback(cube: iris.cube.Cube) -> iris.cube.Cube:
@@ -915,13 +928,13 @@ def _fix_um_winds(cubes: iris.cube.CubeList):
 
 def _add_wind_speed_um(cubes: iris.cube.CubeList):
     """Add windspeeds to cubes from the UM."""
-    wspd10 = (
-        cubes.extract_cube(iris.AttributeConstraint(STASH="m01s03i225")) ** 2
-        + cubes.extract_cube(iris.AttributeConstraint(STASH="m01s03i226")) ** 2
-    ) ** 0.5
+    u_wind = cubes.extract_cube(iris.AttributeConstraint(STASH="m01s03i225"))
+    v_wind = cubes.extract_cube(iris.AttributeConstraint(STASH="m01s03i226"))
+    wspd10 = (u_wind**2 + v_wind**2) ** 0.5
     wspd10.attributes["STASH"] = "m01s03i227"
     wspd10.standard_name = "wind_speed"
     wspd10.long_name = "wind_speed_at_10m"
+    wspd10.units = u_wind.units
     cubes.append(wspd10)
 
 
@@ -1095,3 +1108,16 @@ def _normalise_ML_varname(cube: iris.cube.Cube):
             cube.long_name = (
                 "vapour_specific_humidity_at_pressure_levels_for_climate_averaging"
             )
+
+
+def _check_combine_point_observations(cubes: iris.cube.CubeList):
+    """Enable cubes containing different point observation sources to be concatenated."""
+    nstation = 0
+    for cube in cubes:
+        if "station" in [coord.name() for coord in cube.coords(dim_coords=True)]:
+            if "obs_source" in [coord.name() for coord in cube.coords()]:
+                cube.remove_coord("obs_source")
+            cube.coord("station").points = cube.coord("station").points + nstation
+            nstation = nstation + len(cube.coord("station").points)
+
+    return cubes

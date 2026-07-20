@@ -18,6 +18,7 @@ import json
 import logging
 from pathlib import Path
 
+import cartopy.crs as ccrs
 import iris.coords
 import iris.cube
 import matplotlib as mpl
@@ -69,6 +70,34 @@ def test_setup_spatial_map_global(cube):
     assert bounds[1] == np.max(cube.coord("longitude").points) - 180.0
     assert bounds[2] == np.min(cube.coord("latitude").points)
     assert bounds[3] == np.max(cube.coord("latitude").points)
+
+
+def test_setup_spatial_map_npole(north_polar_cube):
+    """Setup spatial map for Arctic example."""
+    figure = mpl.figure.Figure()
+    axes_gl = plot._setup_spatial_map(
+        north_polar_cube, figure, mpl.colormaps["viridis"]
+    )
+    assert axes_gl == figure.gca()
+    assert axes_gl.projection == ccrs.NorthPolarStereo(central_longitude=0.0)
+
+
+def test_setup_spatial_map_spole(south_polar_cube):
+    """Setup spatial map for Antarctic example."""
+    figure = mpl.figure.Figure()
+    axes_gl = plot._setup_spatial_map(
+        south_polar_cube, figure, mpl.colormaps["viridis"]
+    )
+    assert axes_gl == figure.gca()
+    assert axes_gl.projection == ccrs.SouthPolarStereo(central_longitude=180.0)
+
+
+def test_setup_spatial_map_nocoast(cube):
+    """Setup spatial map without coastline default."""
+    cube.rename("surface_altitude")
+    figure = mpl.figure.Figure()
+    axes_gl = plot._setup_spatial_map(cube, figure, mpl.colormaps["viridis"])
+    assert axes_gl == figure.gca()
 
 
 def test_set_title_and_filename_filename_single_sequence(cube):
@@ -162,6 +191,18 @@ def test_set_title_and_filename_multidim_aggregated(long_forecast_multi_day):
     assert plot_title == "recipe\n [3 cases]"
 
 
+def test_set_title_and_filename_reference_time(cube):
+    """Setup plot title and filename for single input with reference time attribute."""
+    cube.coord("time").attributes["number_reference_times"] = 10
+    seq_coord = cube.coord("time")[0]
+    nplot = 1
+    plot_title, plot_filename = plot._set_title_and_filename(
+        seq_coord, nplot, "recipe", None
+    )
+    assert plot_filename == "recipe_10cases.png"
+    assert plot_title == "recipe\n [10 cases]"
+
+
 def test_set_title_and_filename_year_one(cube):
     """Ensure no time information in plot title and filename for dummy time output."""
     # Extract first time from test cube.
@@ -178,6 +219,37 @@ def test_set_title_and_filename_year_one(cube):
     )
     assert plot_filename == "recipe.png"
     assert plot_title == "recipe"
+
+
+def test_set_axis_range_single_cube(cube, tmp_working_dir):
+    """Test _set_axis_range with a single cube, without levels set."""
+    cubes = iris.cube.CubeList([cube])
+
+    vmin, vmax = plot._set_axis_range(cubes)
+
+    assert vmin == cube.data.min()
+    assert vmax == cube.data.max()
+
+
+def test_set_axis_range_cubelist(cube, tmp_working_dir):
+    """Test _set_axis_range with a cubelist, without levels set."""
+    cubes = iris.cube.CubeList([cube, 2.0 * cube])
+
+    vmin, vmax = plot._set_axis_range(cubes)
+
+    assert vmin == cube.data.min()
+    assert vmax == 2.0 * cube.data.max()
+
+
+def test_set_axis_range_levels(cube, tmp_working_dir):
+    """Test _set_axis_range with a single cube, for variable with levels set."""
+    cube.rename("land_binary_mask")
+    cubes = iris.cube.CubeList([cube])
+
+    vmin, vmax = plot._set_axis_range(cubes)
+
+    assert vmin == 0.0
+    assert vmax == 1.0
 
 
 def test_spatial_contour_plot(cube, tmp_working_dir):
@@ -329,6 +401,15 @@ def test_pcolormesh_plot_global(global_cube, caplog, tmp_working_dir):
             if message == "Adjusting plot bounds to fit global extent.":
                 message_match = True
     assert message_match
+
+
+def test_spatial_scatter(cube, tmp_working_dir):
+    """Save a spatial plot with scatter of cube points."""
+    cube.coord("grid_latitude").rename("station")
+    plot.spatial_pcolormesh_plot(cube, sequence_coordinate="time")
+    assert Path("air_temperature_20220921030000.png").is_file()
+    assert Path("air_temperature_20220921040000.png").is_file()
+    assert Path("air_temperature_20220921050000.png").is_file()
 
 
 def test_postage_stamp_pcolormesh_plot(ensemble_cube, tmp_working_dir):
@@ -760,6 +841,25 @@ def test_plot_histogram_update_vmin_vmax(histogram_cube, tmp_working_dir, caplog
         assert message_matchB
 
 
+def test_plot_histogram_single_plot(histogram_cube, tmp_working_dir):
+    """Plot sequence of contour plots."""
+    plot.plot_histogram_series(
+        histogram_cube, filename="test", sequence_coordinate="time", single_plot=True
+    )
+    assert Path("test_20240116060000.png").is_file()
+
+
+def test_plot_histogram_series_multi_model(histogram_cube, tmp_working_dir):
+    """Test histogram plotting with multiple model inputs."""
+    c1 = histogram_cube.copy()
+    c1.attributes["model_name"] = "model_1"
+    c2 = histogram_cube.copy()
+    c2.attributes["model_name"] = "model_2"
+    plot.plot_histogram_series([c1, c2], filename="test", sequence_coordinate="time")
+    assert Path("test_20240116060000.png").is_file()
+    assert Path("test_20240116090000.png").is_file()
+
+
 def test_plot_and_save_histogram_series_bins(histogram_cube, tmp_working_dir, caplog):
     """Test plotting a postage stamp histogram."""
     with caplog.at_level(logging.DEBUG):
@@ -784,6 +884,29 @@ def test_plot_and_save_histogram_series_bins_precip(
 ):
     """Test plotting a rainfall rate histogram."""
     histogram_cube.rename("surface_microphysical_rainfall_flux")
+    histogram_cube.units = "kg m-2 s-1"
+    with caplog.at_level(logging.DEBUG):
+        plot._plot_and_save_histogram_series(
+            cubes=histogram_cube,
+            filename="test.png",
+            title="Test surface_microphysical",
+            vmin=0,
+            vmax=0,
+            histtype="step",
+        )
+        message_match = False
+        for _, _, message in caplog.record_tuples:
+            if message == "Plotting histogram with 38 bins 0.0 - 398.1071705534973.":
+                message_match = True
+        assert message_match
+    assert Path("test.png").is_file()
+
+
+def test_plot_and_save_histogram_series_bins_precip_amount(
+    histogram_cube, tmp_working_dir, caplog
+):
+    """Test plotting a rainfall amount histogram."""
+    histogram_cube.rename("surface_microphysical_rainfall_amount")
     histogram_cube.units = "kg m-2 s-1"
     with caplog.at_level(logging.DEBUG):
         plot._plot_and_save_histogram_series(

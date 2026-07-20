@@ -26,6 +26,8 @@ from uuid import uuid4
 
 import cf_units
 import iris
+import iris.coord_systems
+import iris.coords
 import iris.cube
 import numpy as np
 import pytest
@@ -1083,6 +1085,48 @@ def feature_cube() -> iris.cube.Cube:
         data=data_arr,
         dim_coords_and_dims=dim_coords_and_dims,
         long_name="crps test",
+    )
+    return cube
+
+
+@pytest.fixture()
+def north_polar_cube() -> iris.cube.Cube:
+    """Set up dummy cube with coords spanning regional north polar coords."""
+    cube = iris.cube.Cube(
+        np.random.rand(5, 36), standard_name="air_temperature", units="K"
+    )
+    cube.add_dim_coord(
+        iris.coords.DimCoord(
+            np.arange(50, 100, 10), standard_name="latitude", units="degrees"
+        ),
+        0,
+    )
+    cube.add_dim_coord(
+        iris.coords.DimCoord(
+            np.arange(0, 360, 10), standard_name="longitude", units="degrees"
+        ),
+        1,
+    )
+    return cube
+
+
+@pytest.fixture()
+def south_polar_cube() -> iris.cube.Cube:
+    """Set up dummy cube with coords spanning regional south polar coords."""
+    cube = iris.cube.Cube(
+        np.random.rand(4, 36), standard_name="air_temperature", units="K"
+    )
+    cube.add_dim_coord(
+        iris.coords.DimCoord(
+            np.arange(-90, -50, 10), standard_name="latitude", units="degrees"
+        ),
+        0,
+    )
+    cube.add_dim_coord(
+        iris.coords.DimCoord(
+            np.arange(-180, 180, 10), standard_name="longitude", units="degrees"
+        ),
+        1,
     )
     return cube
 

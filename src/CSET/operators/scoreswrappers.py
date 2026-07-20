@@ -146,6 +146,53 @@ def _sort_cubes_for_verification(cubes: CubeList):
     return base, other
 
 
+def _resolve_preserve_dims(
+    cube: Cube,
+    data_array: xr.DataArray,
+    preserved_coordinates: list[str] | str | None,
+) -> list[str] | None:
+    """Resolve preserve coordinates to xarray dimension names.
+
+    The ``scores`` package expects preserve dimensions to match xarray
+    dimension names. In Iris data, commonly used coordinates such as ``time``
+    may be auxiliary coordinates attached to a differently named dimension
+    (e.g. ``dim0``). This helper maps coordinate names to their underlying
+    dimension names and helps to convert from iris to xarray coordinate dimension names.
+    """
+    if preserved_coordinates is None:
+        return None
+
+    coord_names = (
+        [preserved_coordinates]
+        if isinstance(preserved_coordinates, str)
+        else preserved_coordinates
+    )
+    preserve_dims: list[str] = []
+
+    for coord_name in coord_names:
+        # Already an xarray dimension name.
+        if coord_name in data_array.dims:
+            if coord_name not in preserve_dims:
+                preserve_dims.append(coord_name)
+            continue
+
+        # Otherwise, map coordinate name to dimension index/indices.
+        try:
+            dim_indices = cube.coord_dims(coord_name)
+        except iris.exceptions.CoordinateNotFoundError:
+            # Keep original name so scores raises a clear error for unknown keys.
+            if coord_name not in preserve_dims:
+                preserve_dims.append(coord_name)
+            continue
+
+        for dim_index in dim_indices:
+            dim_name = data_array.dims[dim_index]
+            if dim_name not in preserve_dims:
+                preserve_dims.append(dim_name)
+
+    return preserve_dims
+
+
 def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None = None):
     r"""Calculate the Root Mean Square Error (RMSE) using scores.
 
@@ -168,7 +215,7 @@ def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None =
 
     Returns
     -------
-    RMSE: iris.cube.Cube
+    scores_cube: iris.cube.Cube
         A cube containing the RMSE between the base and other cube.
 
     References
@@ -187,17 +234,315 @@ def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None =
         forecasts, predictions or models (2.5.0)". Zenodo. doi: 10.5281/zenodo.18638494
     """
     base, other = _sort_cubes_for_verification(cubes)
-    # Scores operators on xarray data arrays, so we transform the iris cube into an array,
+
+    # Copy the coordinates of the input cubes.
+    other_xr = xr.DataArray.from_iris(other)
+    base_xr = xr.DataArray.from_iris(base)
+    preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
+
+    # Scores operates on xarray data arrays, so we transform the iris cube into an array,
     # apply scores, and then transform it back.
-    RMSE = xr.DataArray.to_iris(
+    scores_cube = xr.DataArray.to_iris(
         scores.continuous.rmse(
-            xr.DataArray.from_iris(other),
-            xr.DataArray.from_iris(base),
-            preserve_dims=preserved_coordinates,
+            other_xr,
+            base_xr,
+            preserve_dims=preserve_dims,
         )
     )
-    RMSE.rename(f"RMSE_of_{base.name()}")
-    return RMSE
+
+    # If time is aggregated out, attach a scalar time coordinate with bounds
+    # so plotting can display the aggregated period in the title.
+    try:
+        if not scores_cube.coords("time"):
+            base_time = base.coord("time")
+            time_vals = (
+                base_time.bounds.flatten()
+                if base_time.has_bounds()
+                else base_time.points
+            )
+            t_start = float(time_vals[0])
+            t_end = float(time_vals[-1])
+            t_mid = 0.5 * (t_start + t_end)
+
+            scores_cube.add_aux_coord(
+                iris.coords.AuxCoord(
+                    t_mid,
+                    standard_name=base_time.standard_name,
+                    long_name=base_time.long_name,
+                    var_name=base_time.var_name,
+                    units=base_time.units,
+                    bounds=np.array([t_start, t_end]),
+                    attributes=base_time.attributes.copy(),
+                )
+            )
+    except iris.exceptions.CoordinateNotFoundError:
+        pass
+
+    scores_cube.rename(f"RMSE_of_{base.name()}")
+    # if preserved_coordinates == ["grid_latitude", "grid_longitude"]:
+    #   scores_cube.add_aux_coord(time_coord)
+    return scores_cube
+
+
+def scores_mae(cubes: CubeList, preserved_coordinates: list[str] | str | None = None):
+    r"""Calculate the Mean Absolute Error (MAE) using scores.
+
+    Acts as a wrapper around the MAE calculation from ``scores`` ([scoresa]_, [scoresb]_).
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        A CubeList containing exactly two cubes: a base and an "other" model,
+        this can be an analysis and the model.
+    preserved_coordinates: list[str] | str | None, default is None.
+        The coordinates that you wish to preserve in the calculaiton of the
+        MAE. For example if you want a map of each time you can preserve
+        ["time","grid_latitude", "grid_longitude"] or if you want a time series
+        you can preserve ["time"], if you want to collapse to a single value
+        use `None`. The default is `None`.
+
+    Returns
+    -------
+    scores_cube: iris.cube.Cube
+        A cube containing the MAE between the base and other cube.
+
+    References
+    ----------
+    .. [scoresa] Leeuwenburg, T., Loveday, N., Ebert, E. E., Cook, H.,
+        Khanarmuei, M., Taggart, R. J., Ramanathan, N., Carroll, M., Chong, S.,
+        Griffiths, A., & Sharples, J. (2024) "scores: A Python package for
+        verifying and evaluating models and predictions with xarray". Journal
+        of Open Source Software, vol. 9, 6889. doi: 10.21105/joss.06889
+
+    .. [scoresb] Leeuwenburg, T., Loveday, N., Ramanathan, N., Chong, S.,
+        Taggart, R. J., Shrestha, D., Khanarmuei, M., Cook, H., Bluett, L., Ebert,
+        E. E., Carroll, M., Trotta, B., Bishop, S., Squire, D. T., Griffiths, A.,
+        Pagano, T. C., Fisher, A. J., Mandelbaum, T., Jinghan, F., … Smallwood, J.
+        (2026) "scores: Metrics for the verification, evaluation and optimisation of
+        forecasts, predictions or models (2.5.0)". Zenodo. doi: 10.5281/zenodo.18638494
+    """
+    base, other = _sort_cubes_for_verification(cubes)
+
+    # Copy the coordinates of the input cubes.
+    other_xr = xr.DataArray.from_iris(other)
+    base_xr = xr.DataArray.from_iris(base)
+    preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
+
+    # Scores operates on xarray data arrays, so we transform the iris cube into an array,
+    # apply scores, and then transform it back.
+    scores_cube = xr.DataArray.to_iris(
+        scores.continuous.mae(
+            other_xr,
+            base_xr,
+            preserve_dims=preserve_dims,
+        )
+    )
+
+    # If time is aggregated out, attach a scalar time coordinate with bounds
+    # so plotting can display the aggregated period in the title.
+    try:
+        if not scores_cube.coords("time"):
+            base_time = base.coord("time")
+            time_vals = (
+                base_time.bounds.flatten()
+                if base_time.has_bounds()
+                else base_time.points
+            )
+            t_start = float(time_vals[0])
+            t_end = float(time_vals[-1])
+            t_mid = 0.5 * (t_start + t_end)
+
+            scores_cube.add_aux_coord(
+                iris.coords.AuxCoord(
+                    t_mid,
+                    standard_name=base_time.standard_name,
+                    long_name=base_time.long_name,
+                    var_name=base_time.var_name,
+                    units=base_time.units,
+                    bounds=np.array([t_start, t_end]),
+                    attributes=base_time.attributes.copy(),
+                )
+            )
+    except iris.exceptions.CoordinateNotFoundError:
+        pass
+
+    scores_cube.rename(f"MAE_of_{base.name()}")
+    return scores_cube
+
+
+def scores_additive_bias(
+    cubes: CubeList, preserved_coordinates: list[str] | str | None = None
+):
+    r"""Calculate the Additive Bias (Mean Error) using scores.
+
+    Acts as a wrapper around the ME calculation from ``scores`` ([scoresa]_, [scoresb]_).
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        A CubeList containing exactly two cubes: a base and an "other" model,
+        this can be an analysis and the model.
+    preserved_coordinates: list[str] | str | None, default is None.
+        The coordinates that you wish to preserve in the calculaiton of the
+        ME. For example if you want a map of each time you can preserve
+        ["time","grid_latitude", "grid_longitude"] or if you want a time series
+        you can preserve ["time"], if you want to collapse to a single value
+        use `None`. The default is `None`.
+
+    Returns
+    -------
+    scores_cube: iris.cube.Cube
+        A cube containing the ME between the base and other cube.
+
+    References
+    ----------
+    .. [scoresa] Leeuwenburg, T., Loveday, N., Ebert, E. E., Cook, H.,
+        Khanarmuei, M., Taggart, R. J., Ramanathan, N., Carroll, M., Chong, S.,
+        Griffiths, A., & Sharples, J. (2024) "scores: A Python package for
+        verifying and evaluating models and predictions with xarray". Journal
+        of Open Source Software, vol. 9, 6889. doi: 10.21105/joss.06889
+
+    .. [scoresb] Leeuwenburg, T., Loveday, N., Ramanathan, N., Chong, S.,
+        Taggart, R. J., Shrestha, D., Khanarmuei, M., Cook, H., Bluett, L., Ebert,
+        E. E., Carroll, M., Trotta, B., Bishop, S., Squire, D. T., Griffiths, A.,
+        Pagano, T. C., Fisher, A. J., Mandelbaum, T., Jinghan, F., … Smallwood, J.
+        (2026) "scores: Metrics for the verification, evaluation and optimisation of
+        forecasts, predictions or models (2.5.0)". Zenodo. doi: 10.5281/zenodo.18638494
+    """
+    base, other = _sort_cubes_for_verification(cubes)
+
+    # Copy the coordinates of the input cubes.
+    other_xr = xr.DataArray.from_iris(other)
+    base_xr = xr.DataArray.from_iris(base)
+    preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
+
+    # Scores operates on xarray data arrays, so we transform the iris cube into an array,
+    # apply scores, and then transform it back.
+    scores_cube = xr.DataArray.to_iris(
+        scores.continuous.additive_bias(
+            other_xr,
+            base_xr,
+            preserve_dims=preserve_dims,
+        )
+    )
+
+    # If time is aggregated out, attach a scalar time coordinate with bounds
+    # so plotting can display the aggregated period in the title.
+    try:
+        if not scores_cube.coords("time"):
+            base_time = base.coord("time")
+            time_vals = (
+                base_time.bounds.flatten()
+                if base_time.has_bounds()
+                else base_time.points
+            )
+            t_start = float(time_vals[0])
+            t_end = float(time_vals[-1])
+            t_mid = 0.5 * (t_start + t_end)
+
+            scores_cube.add_aux_coord(
+                iris.coords.AuxCoord(
+                    t_mid,
+                    standard_name=base_time.standard_name,
+                    long_name=base_time.long_name,
+                    var_name=base_time.var_name,
+                    units=base_time.units,
+                    bounds=np.array([t_start, t_end]),
+                    attributes=base_time.attributes.copy(),
+                )
+            )
+    except iris.exceptions.CoordinateNotFoundError:
+        pass
+    scores_cube.rename(f"Additive_Bias_of_{base.name()}")
+    return scores_cube
+
+
+def scores_correlation_pearsonr(
+    cubes: CubeList, preserved_coordinates: list[str] | str | None = None
+):
+    r"""Calculate the Pearson's Correlation (PC) coefficient using scores.
+
+    Acts as a wrapper around the PC calculation from ``scores`` ([scoresa]_, [scoresb]_).
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        A CubeList containing exactly two cubes: a base and an "other" model,
+        this can be an analysis and the model.
+    preserved_coordinates: list[str] | str | None, default is None.
+        The coordinates that you wish to preserve in the calculaiton of the
+        PC. For example if you want a map of each time you can preserve
+        ["time","grid_latitude", "grid_longitude"] or if you want a time series
+        you can preserve ["time"], if you want to collapse to a single value
+        use `None`. The default is `None`.
+
+    Returns
+    -------
+    scores_cube: iris.cube.Cube
+        A cube containing the PC between the base and other cube.
+
+    References
+    ----------
+    .. [scoresa] Leeuwenburg, T., Loveday, N., Ebert, E. E., Cook, H.,
+        Khanarmuei, M., Taggart, R. J., Ramanathan, N., Carroll, M., Chong, S.,
+        Griffiths, A., & Sharples, J. (2024) "scores: A Python package for
+        verifying and evaluating models and predictions with xarray". Journal
+        of Open Source Software, vol. 9, 6889. doi: 10.21105/joss.06889
+
+    .. [scoresb] Leeuwenburg, T., Loveday, N., Ramanathan, N., Chong, S.,
+        Taggart, R. J., Shrestha, D., Khanarmuei, M., Cook, H., Bluett, L., Ebert,
+        E. E., Carroll, M., Trotta, B., Bishop, S., Squire, D. T., Griffiths, A.,
+        Pagano, T. C., Fisher, A. J., Mandelbaum, T., Jinghan, F., … Smallwood, J.
+        (2026) "scores: Metrics for the verification, evaluation and optimisation of
+        forecasts, predictions or models (2.5.0)". Zenodo. doi: 10.5281/zenodo.18638494
+    """
+    base, other = _sort_cubes_for_verification(cubes)
+
+    # Copy the coordinates of the input cubes.
+    other_xr = xr.DataArray.from_iris(other)
+    base_xr = xr.DataArray.from_iris(base)
+    preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
+
+    # Scores operates on xarray data arrays, so we transform the iris cube into an array,
+    # apply scores, and then transform it back.
+    scores_cube = xr.DataArray.to_iris(
+        scores.continuous.correlation.pearsonr(
+            other_xr,
+            base_xr,
+            preserve_dims=preserve_dims,
+        )
+    )
+
+    # If time is aggregated out, attach a scalar time coordinate with bounds
+    # so plotting can display the aggregated period in the title.
+    try:
+        if not scores_cube.coords("time"):
+            base_time = base.coord("time")
+            time_vals = (
+                base_time.bounds.flatten()
+                if base_time.has_bounds()
+                else base_time.points
+            )
+            t_start = float(time_vals[0])
+            t_end = float(time_vals[-1])
+            t_mid = 0.5 * (t_start + t_end)
+
+            scores_cube.add_aux_coord(
+                iris.coords.AuxCoord(
+                    t_mid,
+                    standard_name=base_time.standard_name,
+                    long_name=base_time.long_name,
+                    var_name=base_time.var_name,
+                    units=base_time.units,
+                    bounds=np.array([t_start, t_end]),
+                    attributes=base_time.attributes.copy(),
+                )
+            )
+    except iris.exceptions.CoordinateNotFoundError:
+        pass
+
+    scores_cube.rename(f"Pearson_Correlation_of_{base.name()}")
+    return scores_cube
 
 
 def scores_crps_for_ensemble(
