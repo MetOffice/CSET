@@ -26,6 +26,8 @@ from uuid import uuid4
 
 import cf_units
 import iris
+import iris.coord_systems
+import iris.coords
 import iris.cube
 import numpy as np
 import pytest
