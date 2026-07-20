@@ -238,7 +238,8 @@ def radar_apply_mask(
 
         # If the field and mask are on different grids, then regrid the field.
         if M[0].shape != masked_field[0].shape:
-            masked_field = masked_field.regrid(M, iris.analysis.Linear())
+            scheme = iris.analysis.Linear(extrapolation_mode="nan")
+            masked_field = masked_field.regrid(M, scheme)
 
         # Apply the mask.
         min_timesteps = min(M.shape[0], masked_field.shape[0])
