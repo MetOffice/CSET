@@ -399,6 +399,34 @@ def test_colorbar_map_probabilities(cube, tmp_working_dir):
     assert (norm.boundaries == levels).all()
 
 
+def test_colorbar_map_nimrod_wts(cube):
+    """Set colorbar for nimrod weights variable."""
+    cube.rename("Hourly wts accumulation")
+    expected_levels = np.arange(-0.5, 14.5, 1.0)
+    expected_colors = [
+        "#d10000",
+        "purple",
+        "#8f00d6",
+        "#ff9700",
+        "pink",
+        "#ffff00",
+        "#00007f",
+        "#6c9ccd",
+        "#aae8ff",
+        "#37a648",
+        "#8edc64",
+        "#c5ffc5",
+        "#dcdcdc",
+        "#ffffff",
+    ]
+    expected_cmap = mpl.colors.ListedColormap(expected_colors)
+    cmap, levels, norm = _colormaps.colorbar_map_levels(cube)
+    assert cmap == expected_cmap
+    assert (levels == expected_levels).all()
+    assert isinstance(norm, mpl.colors.BoundaryNorm)
+    assert (norm.boundaries == levels).all()
+
+
 def test_colorbar_map_aviation_colour_state(cube, tmp_working_dir):
     """Test to ensure color bar is change for aviation colour states."""
     cube.rename("aviation_colour_state")
