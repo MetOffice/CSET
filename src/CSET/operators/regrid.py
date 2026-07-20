@@ -14,12 +14,14 @@
 
 """Operators to regrid cubes."""
 
+import logging
 import warnings
 
 import iris
 import iris.coord_systems
 import iris.cube
 import numpy as np
+from iris.analysis.cartography import rotate_pole
 
 from CSET._common import iter_maybe
 from CSET.operators._utils import get_cube_yxcoordname
@@ -405,89 +407,131 @@ def transform_lat_long_points(lon, lat, cube):
 def interpolate_to_point_cube(
     fld: iris.cube.Cube | iris.cube.CubeList, point_cube: iris.cube.Cube, **kwargs
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Interpolate from a 2D field to a set of points.
+    """Interpolate a 2D field in cube or CubeList to a set of points.
 
-    Interpolate the 2D field in fld to the set of points
-    specified in point_cube.
+    Regrid cube(s) to set of sample points specified by point_cube.
+    Ensures only matching times between input and point_cube are included.
 
     Parameters
     ----------
-    fld: Cube
-        An iris cube containing a two-dimensional field.
+    fld: Cube | CubeList
+        An iris cube or CubeList containing a two-dimensional field(s).
     point_cube: Cube
-        An iris cube specifying the point to which the data
+        An iris cube specifying the coord point(s) to which the data
         will be interpolated.
 
     Returns
     -------
-    fld_point_cube: Cube
-        An iris cube containing interpolated values at the points
-        specified by the point cube.
-
+    fld_point_cube: Cube | CubeList
+        An iris cube or CubeList containing interpolated values at the
+        points specified by the point cube for matching times common to
+        both fld and point_cube.
     """
-    #
-    # As a basis, create a copy of the point cube.
-    fld_point_cube = point_cube.copy()
-    # Get indices of positional coordinates. We assume that the
-    # point cube is unrotated.
-    klon = None
-    klat = None
-    for kc in range(len(fld_point_cube.aux_coords)):
-        if fld_point_cube.aux_coords[kc].standard_name == "latitude":
-            klat = kc
-        elif fld_point_cube.aux_coords[kc].standard_name == "longitude":
-            klon = kc
-    #
-    # The input may have a rotated coordinate system.
-    if len(fld.coords("grid_latitude")) > 0:
-        # Interpolate in rotated coordinates.
-        rot_csyst = fld.coords("grid_latitude")[0].coord_system
-        rotpt = iris.analysis.cartography.rotate_pole(
-            fld_point_cube.aux_coords[klon].points,
-            fld_point_cube.aux_coords[klat].points,
-            rot_csyst.grid_north_pole_longitude,
-            rot_csyst.grid_north_pole_latitude,
+    # Empty CubeList To store regridded cubes.
+    regridded_cubes = iris.cube.CubeList()
+
+    # Iterate over all cubes and regrid.
+    for cube in iter_maybe(fld):
+        # Ensure matching times in fld cube and point_cube
+        base_time_coord = point_cube.coord("time")
+        other_time_coord = cube.coord("time")
+        base_times = base_time_coord.units.num2date(base_time_coord.points)
+        other_times = other_time_coord.units.num2date(other_time_coord.points)
+        shared_times = set.intersection(set(base_times), set(other_times))
+        logging.debug("Shared times: %s", shared_times)
+        time_constraint = iris.Constraint(
+            coord_values={
+                "time": lambda cell, shared_times=shared_times: (
+                    cell.point in shared_times
+                )
+            }
         )
-        # Add other interpolation options later.
-        fld_interpolator = iris.analysis.Linear(extrapolation_mode="mask").interpolator(
-            fld, ["time", "grid_latitude", "grid_longitude"]
-        )
-        for jt in range(len(fld_point_cube.coords("time")[0].points)):
-            fld_point_cube.data[jt, :] = np.ma.masked_invalid(
-                [
-                    fld_interpolator(
-                        [
-                            fld_point_cube.coord("time").points[jt],
-                            rotpt[1][k],
-                            rotpt[0][k],
-                        ]
-                    ).data
-                    if ~point_cube.data.mask[jt][k]
-                    else np.nan
-                    for k in range(len(rotpt[0]))
-                ]
+
+        # Extract points matching the shared times.
+        cube = cube.extract(time_constraint)
+        point_cube = point_cube.extract(time_constraint)
+        if cube is None or point_cube is None:
+            raise ValueError("No common time points found!")
+
+        # Generate array of point cube lat and lon points.
+        point_lat_name, point_lon_name = get_cube_yxcoordname(point_cube)
+        point_lats = point_cube.coord(point_lat_name).points
+        point_lons = point_cube.coord(point_lon_name).points
+
+        y_coord, x_coord = get_cube_yxcoordname(cube)
+
+        # Rotate point_cube coords if required to match model coord rotation.
+        if (
+            isinstance(
+                cube.coord(x_coord).coord_system, iris.coord_systems.RotatedGeogCS
             )
+            and point_lat_name == "latitude"
+            and point_lon_name == "longitude"
+        ):
+            point_lons_rp, point_lats_rp = rotate_pole(
+                point_lons,
+                point_lats,
+                pole_lon=cube.coord(x_coord).coord_system.grid_north_pole_longitude,
+                pole_lat=cube.coord(x_coord).coord_system.grid_north_pole_latitude,
+            )
+            sample_points = [
+                ("grid_latitude", point_lats_rp),
+                ("grid_longitude", point_lons_rp),
+            ]
+        # Default, sample points based on point cube dimensions
+        else:
+            sample_points = [
+                (point_lat_name, np.array(point_lats)),
+                (point_lon_name, np.array(point_lons)),
+            ]
+
+        # Interpolate fld cube to required sample points
+        fld_point_cube = cube.interpolate(
+            sample_points, iris.analysis.Linear(extrapolation_mode="mask")
+        )
+
+        # Retain only diagonal elements of 2D interpolated cube to vector points
+        od_index = point_cube.coord_dims("station")[0]
+        fv_cube = iris.cube.Cube(
+            fld_point_cube.data.diagonal(axis1=od_index, axis2=od_index + 1),
+            standard_name=cube.standard_name,
+            long_name=cube.long_name,
+            units=cube.units,
+        )
+        # Copy all non-lat/lon coordinates and cube attributes
+        if "time" in [coord.name() for coord in fld_point_cube.coords(dim_coords=True)]:
+            fv_cube.add_dim_coord(
+                point_cube.coord("time"), point_cube.coord_dims("time")[0]
+            )
+        for coord in cube.coords():
+            if coord.name() not in [
+                "time",
+                "latitude",
+                "longitude",
+                "grid_latitude",
+                "grid_longitude",
+            ] and coord.name() not in [coord.name() for coord in fv_cube.coords()]:
+                fv_cube.add_aux_coord(coord.copy(), cube.coord_dims(coord))
+        for coord in point_cube.coords():
+            if coord.name() not in [
+                "time",
+                "forecast_period",
+                "forecast_reference_time",
+                "realization",
+                "station",
+            ] and coord.name() not in [coord.name() for coord in fv_cube.coords()]:
+                fv_cube.add_aux_coord(coord.copy(), point_cube.coord_dims(coord))
+        fv_cube.add_dim_coord(point_cube.coord("station"), od_index)
+        fv_cube.attributes = cube.attributes.copy()
+        fv_cube.cell_methods = cube.cell_methods
+        fv_cube.units = cube.units
+        regridded_cubes.append(fv_cube)
+
+    # Preserve returning a cube if only a cube has been supplied to regrid.
+    if len(regridded_cubes) == 1:
+        return regridded_cubes[0]
     else:
-        # Add other interpolation options later.
-        fld_interpolator = iris.analysis.Linear(extrapolation_mode="mask").interpolator(
-            fld, ["time", "latitude", "longitude"]
-        )
-        for jt in range(len(fld_point_cube.coords("time")[0].points)):
-            fld_point_cube.data[jt, :] = np.ma.masked_invalid(
-                [
-                    fld_interpolator(
-                        [
-                            fld_point_cube.coords("time")[0].points[jt],
-                            fld_point_cube.coord("latitude").points[k],
-                            fld_point_cube.coord("longitude").points[k],
-                        ]
-                    ).data
-                    if ~point_cube.data.mask[jt][k]
-                    else np.nan
-                    for k in range(fld_point_cube.coord("latitude").points)
-                ]
-            )
-    return fld_point_cube
+        return regridded_cubes
 
 
 def vertical_interpolation(

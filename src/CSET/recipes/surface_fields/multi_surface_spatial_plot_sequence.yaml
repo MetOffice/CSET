@@ -1,5 +1,5 @@
 category: Multivar Spatial Plot
-title: "$MODEL_NAME multi-variable $VARNAME_BASE $METHOD $SUBAREA_NAME"
+title: "$MODEL_NAME $VARNAME_BASE $METHOD $SUBAREA_NAME\n(overlay: $VARNAME_OVER $OVERLAY_MASK_CONDITION $OVERLAY_MASK_VALUE)\n(contour: $VARNAME_CONTOUR)"
 description: Extracts and overplots the $METHOD of $VARNAME_BASE, $VARNAME_OVER and $VARNAME_CONTOUR from all times in $MODEL_NAME.
 
 steps:

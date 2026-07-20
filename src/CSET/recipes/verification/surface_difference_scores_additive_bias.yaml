@@ -1,0 +1,58 @@
+category: Scores
+title: "$METHOD $VARNAME\nScores Mean Error between $OTHER_MODEL and $BASE_MODEL $SUBAREA_NAME"
+description: |
+  Extracts and plots the Mean Error (also known as the Additive Bias) in $METHOD of $VARNAME.
+  The ME is calculated based on that used in the
+  package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.mean_error).
+  This recipe preserves the time, latitude and longitude coordinates.
+  This means a sequence of spatial plots of the ME can be produced.
+  Currently only working for deterministic models.
+
+  This recipe can preserve the time, latitude and longitude coordinates, in which case
+  a sequence of spatial plots of the ME are produced according to the averaging
+  method i.e. SEQ, MAX and MIN.
+
+  Alternatively, the ME can be computed over all time points in the case study, i.e.
+  preserving just the latitude and longitude coordinates by selecting the method CASE.
+  This will produce a single output plot of the total ME.
+
+  A larger ME implies a greater error than a smaller ME. Although a near zero ME could be indicative
+  of a good match between two fields, this could also arise if there are large compensating
+  positive and negative  errors. The ME is calculated on the grid point and thus a spatial view of
+  the ME provides useful information about whether a field has a bias for over or under-forecasting.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: [$BASE_MODEL, $OTHER_MODEL]
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: $VARNAME
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: "pressure"
+        levels: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+    # The preserved coordinates specifies whether or not the
+    # ME is to be computed over the entire case study.
+  - operator: scoreswrappers.scores_additive_bias
+    preserved_coordinates: $PRESERVED_COORDS
+
+    # This collapse is relevant only if the ME has not been
+    # computed across the entire case study.
+  - operator: collapse.collapse
+    coordinate: ["time"]
+    method: $METHOD
+
+  - operator: plot.spatial_pcolormesh_plot
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

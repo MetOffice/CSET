@@ -132,9 +132,13 @@ dmypy.json
 
 # Code Editors
 .vscode/
+.idea/
 
 # Ruff
 .ruff_cache/
 
 # NFS synchronisation files
 .nfs*
+
+# MacOS temp files
+.DS_Store

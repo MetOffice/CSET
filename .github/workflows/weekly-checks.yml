@@ -8,6 +8,11 @@ on:
 # Minimise default GITHUB_TOKEN permissions.
 permissions: {}
 
+defaults:
+  run:
+    # Use a login shell to pickup conda/micromamba initialisation.
+    shell: bash -leo pipefail {0}
+
 jobs:
   check-documentation-hyperlinks:
     if: "github.repository == 'MetOffice/CSET'"  # Skip on forks.
@@ -19,7 +24,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           persist-credentials: false
 
@@ -29,18 +34,14 @@ jobs:
           environment-name: cset-dev
           environment-file: requirements/locks/latest
           cache-environment: true
-          init-shell: "none"
 
       - name: Install local package
-        shell: micromamba-shell {0}
         run: pip install --no-deps .
 
       - name: Build documentation with Sphinx
-        shell: micromamba-shell {0}
         run: sphinx-build -b html --color "docs/source" "docs/build/html"
 
       - name: Check for broken hyperlinks
-        shell: micromamba-shell {0}
         run: sphinx-build -b linkcheck --color -W --keep-going "docs/source" "docs/build/linkcheck"
 
   full-tests:
@@ -55,7 +56,7 @@ jobs:
         py-ver: ["py312", "py313", "py314"]
     steps:
       - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           persist-credentials: false
 
@@ -65,20 +66,17 @@ jobs:
           environment-name: cset-dev
           environment-file: requirements/locks/${{ matrix.py-ver }}-lock-linux-64.txt
           cache-environment: true
-          init-shell: "none"
 
       - name: Cache downloaded cartopy shapefiles
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           key: cartopy-shapefiles
           path: ~/.local/share/cartopy
 
       - name: Install local package
-        shell: micromamba-shell {0}
         run: pip install --no-deps .
 
       - name: Run full test suite
-        shell: micromamba-shell {0}
         env:
           PY_COLORS: "1"
         run: make test-full

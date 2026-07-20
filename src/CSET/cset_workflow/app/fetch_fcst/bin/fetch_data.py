@@ -187,7 +187,7 @@ def _get_needed_environment_variables() -> dict:
 def _get_needed_environment_variables_obs() -> dict:
     """Load the needed variables from the environment."""
     variables = {
-        "subtype": os.environ["OBS_SUBTYPE"],
+        "subtype": ast.literal_eval(os.environ.get("OBS_SUBTYPE")),
         "data_time": datetime.fromisoformat(os.environ["CYLC_TASK_CYCLE_POINT"]),
         "forecast_length": isodate.parse_duration(os.environ["ANALYSIS_LENGTH"]),
         "obs_fields": ast.literal_eval(os.environ["SURFACE_SYNOP_FIELDS"]),
@@ -331,40 +331,40 @@ def fetch_obs(obs_retriever: FileRetrieverABC):
     os.makedirs(cycle_obs_dir, exist_ok=True)
     logging.debug("Output directory: %s", cycle_obs_dir)
 
-    # We will get just one file for now, but follow the templating
-    # syntax for the model for consistency.
-    obs_base_path = (
-        v["subtype"]
-        + "_"
-        + "%Y%m%dT%H%MZ_dt_"
-        + str(int(v["forecast_length"].total_seconds() // 3600)).zfill(3)
-        + ".nc"
-    )
-    paths = _template_file_path(
-        obs_base_path,
-        "initiation",
-        v["data_time"],
-        v["forecast_length"],
-        timedelta(seconds=0),
-        v["obs_interval"],
-    )
-    logging.info("Retrieving paths:\n%s", "\n".join(paths))
-
-    # Use obs retriever to transfer data with multiple threads.
-    # We shouldn't need to iterate as we do for the forecast data
-    # because these files will be smaller.
-    try:
-        obs_retriever.get_file(
-            paths[0],
-            v["subtype"],
-            v["obs_fields"],
-            v["data_time"],
-            v["obs_offset"],
-            v["forecast_length"],
-            v["obs_interval"],
-            cycle_obs_dir,
-            wmo_nmbrs=v["wmo_nmbrs"],
-            subarea_extent=v["subarea_extent"],
+    # Loop over requested obs subtypes.
+    for subtype in v["subtype"]:
+        obs_base_path = (
+            subtype
+            + "_"
+            + "%Y%m%dT%H%MZ_dt_"
+            + str(int(v["forecast_length"].total_seconds() // 3600)).zfill(3)
+            + ".nc"
         )
-    except Exception as exc:
-        raise ValueError("No observations available.") from exc
+        paths = _template_file_path(
+            obs_base_path,
+            "initiation",
+            v["data_time"],
+            v["forecast_length"],
+            timedelta(seconds=0),
+            v["obs_interval"],
+        )
+        logging.info("Retrieving paths:\n%s", "\n".join(paths))
+
+        # Use obs retriever to transfer data with multiple threads.
+        # We shouldn't need to iterate as we do for the forecast data
+        # because these files will be smaller.
+        try:
+            obs_retriever.get_file(
+                paths[0],
+                subtype,
+                v["obs_fields"],
+                v["data_time"],
+                v["obs_offset"],
+                v["forecast_length"],
+                v["obs_interval"],
+                cycle_obs_dir,
+                wmo_nmbrs=v["wmo_nmbrs"],
+                subarea_extent=v["subarea_extent"],
+            )
+        except Exception as exc:
+            raise ValueError("No observations available.") from exc

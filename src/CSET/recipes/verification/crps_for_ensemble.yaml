@@ -1,0 +1,42 @@
+category: Scores
+title: "$VARNAME\nCRPS timeseries between ensemble members and control"
+description: |
+  Extracts and plots the  Continuous Ranked Probability Score (CRPS) for Ensembles in $VARNAME
+  for all times. The CRPS is calculated based on that used in the
+  package [`scores`](https://scores.readthedocs.io/en/stable/tutorials/CRPS_for_Ensembles.html).
+
+  Lower CRPS values are better (implies experiment distribution is closer to control distribution/observations),
+  larger values are worse (implies distributions are dissimilar).
+  It is applicable across time and spatial scales as the focus is on the distribution of the values.
+  Default method is ecdf.  ecdf is exact value from the empirical distributions,
+  whereas fair produces an approximated value based on a random sample of the underlying distribution.
+
+
+
+
+
+
+steps:
+  - operator: read.read_cube
+    file_paths: $INPUT_PATHS
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: $VARNAME
+
+
+  - operator: scoreswrappers.scores_crps_for_ensemble
+    method: $METHOD
+    control_member: $CONTROL_MEMBER
+
+  - operator: plot.plot_line_series
+    series_coordinate: time
+
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

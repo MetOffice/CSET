@@ -5,6 +5,14 @@
 *metdb*
 restricted*
 
+# Public site and opt files.
+!/opt/rose-suite-RAL3LFRIC.conf
+!/opt/rose-suite-nci_ral3lfric.conf
+!/opt/rose-suite-test_validate.conf
+!/site/localhost.cylc
+!/site/monsoon.cylc
+!/site/nci-gadi.cylc
+
 # User workflow configuration.
 /*rose-suite*
 !/rose-suite.conf.example
