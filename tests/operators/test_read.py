@@ -1339,6 +1339,7 @@ def test_compute_winds_nocomponents(cube, tmp_working_dir):
 
 def test_compute_winds_multi_vars(cube, vector_cubes, tmp_working_dir):
     """Ensure _compute_winds extends multiple input variable cubelist."""
+    # Add cube of air_temperature to CubeList containing wind components.
     assert len(vector_cubes) == 2
     vector_cubes[0].rename("eastward_wind_at_10m")
     vector_cubes[1].rename("northward_wind_at_10m")
@@ -1350,6 +1351,7 @@ def test_compute_winds_multi_vars(cube, vector_cubes, tmp_working_dir):
     assert output_cubes.extract(iris.Constraint("eastward_wind_at_10m"))
     assert output_cubes.extract(iris.Constraint("northward_wind_at_10m"))
     assert output_cubes.extract(iris.Constraint("wind_speed_at_10m"))
+    # Ensure non-wind cube retained in output following wind_speed calculation.
     assert output_cubes.extract(iris.Constraint("air_temperature"))
 
     u = vector_cubes[0].data
