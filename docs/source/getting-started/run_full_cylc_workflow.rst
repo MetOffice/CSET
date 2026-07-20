@@ -80,9 +80,9 @@ you should also include the ``--restricted`` flag to install them.
     mkdir -p ~/cylc-src
 
     # Extract the workflow from CSET into the chosen directory.
-    cset extract-workflow ~/cylc-src
     # Alternatively install the restricted site-specific files at Momentum sites.
-    # cset extract-workflow --restricted ~/cylc-src
+    cset extract-workflow --restricted ~/cylc-src  # Momentum Partners.
+    cset extract-workflow ~/cylc-src               # Everyone else.
 
     # Change into the freshly unpacked workflow directory.
     cd ~/cylc-src/cset-workflow-vX.Y.Z
