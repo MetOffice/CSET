@@ -39,7 +39,7 @@ def webserver():
     shutil.copy("tests/test_data/index.jsonl", web_dir)
 
     class HTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
-        """Serve files from the temporary directory."""
+        """Serve files from the web directory."""
 
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs, directory=web_dir)
