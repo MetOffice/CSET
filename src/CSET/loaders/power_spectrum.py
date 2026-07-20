@@ -108,9 +108,8 @@ def load(conf: Config):
     for atype, field in itertools.product(AGGREGATION_TYPES, conf.SURFACE_FIELDS):
         #        if conf.SPECTRUM_SURFACE_FIELD_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
         index = AGGREGATION_TYPES.index(atype)
-        aggregations = conf.SPECTRUM_SURFACE_FIELD_AGGREGATION
-        print("ALL INFO ", atype, index, aggregations)
-        if len(aggregations) > index and aggregations[index]:
+        print("ALL INFO ", atype, index, AGGREGATION_TYPES)
+        if len(AGGREGATION_TYPES) > index and AGGREGATION_TYPES[index]:
             yield RawRecipe(
                 recipe=f"generic_surface_power_spectrum_series_mean_{atype}.yaml",
                 variables={
