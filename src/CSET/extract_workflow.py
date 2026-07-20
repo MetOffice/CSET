@@ -191,8 +191,13 @@ def install_restricted_files(workflow_dir: Path, alternative_url: str | None = N
         except ValueError:
             continue
     else:
+        url = (
+            alternative_url
+            if alternative_url is not None
+            else "https://github.com/MetOffice/CSET-restricted-files.git"
+        )
         raise ValueError(
-            "Could not read from restricted repository. Have you got access?"
+            f"Could not read from restricted repository. Have you got access to {url}"
         )
 
     # Use most specific ref, falling back to main.
