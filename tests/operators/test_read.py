@@ -1311,3 +1311,51 @@ def test_check_combine_point_observations_multiple_obs(cube):
             )
         ]
     )
+
+
+def test_compute_winds(vector_cubes, tmp_working_dir):
+    """Ensure _compute_winds calculates wind_speed from component inputs."""
+    assert len(vector_cubes) == 2
+    vector_cubes[0].rename("eastward_wind_at_10m")
+    vector_cubes[1].rename("northward_wind_at_10m")
+    output_cubes = read._compute_winds(vector_cubes)
+    assert len(vector_cubes) == 3
+    assert len(output_cubes) == 1
+    assert output_cubes.extract(iris.Constraint("wind_speed_at_10m"))
+    assert output_cubes.extract(iris.Constraint("wind_speed_at_10m"))[0].units == "ms-1"
+
+    u = vector_cubes[0].data
+    v = vector_cubes[1].data
+    expected_wind = (u**2 + v**2) ** 0.5
+    assert np.allclose(output_cubes[0].data, expected_wind, rtol=1e-6, atol=1e-2)
+
+
+def test_compute_winds_nocomponents(cube, tmp_working_dir):
+    """Ensure _compute_winds does not impact non-wind inputs."""
+    output_cubes = read._compute_winds([cube, cube])
+    assert len(output_cubes) == 2
+    assert np.allclose(output_cubes[0].data, cube.data, rtol=1e-6, atol=1e-2)
+
+
+def test_compute_winds_multi_vars(cube, vector_cubes, tmp_working_dir):
+    """Ensure _compute_winds extends multiple input variable cubelist."""
+    # Add cube of air_temperature to CubeList containing wind components.
+    assert len(vector_cubes) == 2
+    vector_cubes[0].rename("eastward_wind_at_10m")
+    vector_cubes[1].rename("northward_wind_at_10m")
+    output_cubes = read._compute_winds(
+        iris.cube.CubeList([cube, vector_cubes[0], vector_cubes[1]])
+    )
+    assert len(vector_cubes) == 2
+    assert len(output_cubes) == 4
+    assert output_cubes.extract(iris.Constraint("eastward_wind_at_10m"))
+    assert output_cubes.extract(iris.Constraint("northward_wind_at_10m"))
+    assert output_cubes.extract(iris.Constraint("wind_speed_at_10m"))
+    # Ensure non-wind cube retained in output following wind_speed calculation.
+    assert output_cubes.extract(iris.Constraint("air_temperature"))
+
+    u = vector_cubes[0].data
+    v = vector_cubes[1].data
+    expected_wind = (u**2 + v**2) ** 0.5
+    output_wind = output_cubes.extract(iris.Constraint("wind_speed_at_10m"))[0]
+    assert np.allclose(output_wind.data, expected_wind, rtol=1e-6, atol=1e-2)

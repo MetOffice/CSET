@@ -234,8 +234,8 @@ def _load_model(
     # If unset, a constraint of None lets everything be loaded.
     logging.debug("Constraint: %s", constraint)
     cubes = iris.load(input_files, constraint, callback=_loading_callback)
-    # Make the UM's winds consistent with LFRic.
-    cubes = _fix_um_winds(cubes)
+    # If required, compute wind_speed from components.
+    cubes = _compute_winds(cubes)
 
     # Add model_name attribute to each cube to make it available at any further
     # step without needing to pass it as function parameter.
@@ -890,23 +890,24 @@ def _fix_lfric_cloud_base_altitude(cube: iris.cube.Cube):
         cube.data = dask.array.ma.masked_greater(cube.core_data(), 144.0)
 
 
-def _fix_um_winds(cubes: iris.cube.CubeList):
-    """To make winds from the UM consistent with those from LFRic.
+def _compute_winds(cubes: iris.cube.CubeList):
+    """To compute wind_speed from vector components if not available as diagnostic.
 
-    Diagnostics of wind are not always consistent between the UM
-    and LFric. Here, winds from the UM are adjusted to make them i
+    Diagnostics of wind are also not always consistent between the UM
+    and LFRic. Here, winds from the UM are adjusted to make them
     consistent with LFRic.
     """
-    # Check whether we have components of the wind identified by STASH,
-    # (so this will apply only to cubes from the UM), but not the
-    # wind speed and calculate it if it is missing. Note that
+    # Check whether we have components of the wind identified by varname
+    # but not the wind speed and calculate it if it is missing. Note that
     # this will be biased low in general because the components will mostly
     # be time averages. For simplicity, we do this only if there is just one
     # cube of a component. A more complicated approach would be to consider
     # the cell methods, but it may not be warranted.
-    u_constr = iris.AttributeConstraint(STASH="m01s03i225")
-    v_constr = iris.AttributeConstraint(STASH="m01s03i226")
-    speed_constr = iris.AttributeConstraint(STASH="m01s03i227")
+    #
+    # A check on UM STASH attributes is also conducted to adjust directions.
+    u_constr = iris.Constraint("eastward_wind_at_10m")
+    v_constr = iris.Constraint("northward_wind_at_10m")
+    speed_constr = iris.Constraint("wind_speed_at_10m")
     try:
         if cubes.extract(u_constr) and cubes.extract(v_constr):
             if len(cubes) == 2:
@@ -916,7 +917,8 @@ def _fix_um_winds(cubes: iris.cube.CubeList):
             if len(cubes.extract(u_constr)) == 1 and not cubes.extract(speed_constr):
                 _add_wind_speed_um(cubes)
             # Convert winds in the UM to be relative to true east and true north.
-            _convert_wind_true_dirn_um(cubes)
+            if cubes.extract(u_constr) and cubes.extract(v_constr):
+                _convert_wind_true_dirn_um(cubes)
             # Return only wind_speed cube
             if wind_only:
                 cubes = cubes.extract(speed_constr)
@@ -927,14 +929,14 @@ def _fix_um_winds(cubes: iris.cube.CubeList):
 
 
 def _add_wind_speed_um(cubes: iris.cube.CubeList):
-    """Add windspeeds to cubes from the UM."""
-    u_wind = cubes.extract_cube(iris.AttributeConstraint(STASH="m01s03i225"))
-    v_wind = cubes.extract_cube(iris.AttributeConstraint(STASH="m01s03i226"))
+    """Add windspeeds to cubes from components."""
+    u_wind = cubes.extract_cube(iris.Constraint("eastward_wind_at_10m"))
+    v_wind = cubes.extract_cube(iris.Constraint("northward_wind_at_10m"))
     wspd10 = (u_wind**2 + v_wind**2) ** 0.5
     wspd10.attributes["STASH"] = "m01s03i227"
     wspd10.standard_name = "wind_speed"
     wspd10.long_name = "wind_speed_at_10m"
-    wspd10.units = u_wind.units
+    wspd10.units = "ms-1"
     cubes.append(wspd10)
 
 
@@ -943,6 +945,7 @@ def _convert_wind_true_dirn_um(cubes: iris.cube.CubeList):
 
     Convert from the components relative to the grid to true directions.
     This functionality only handles the simplest case.
+    Constrains using STASH code only to ensure applied to UM outputs only.
     """
     u_grids = cubes.extract(iris.AttributeConstraint(STASH="m01s03i225"))
     v_grids = cubes.extract(iris.AttributeConstraint(STASH="m01s03i226"))
@@ -1108,6 +1111,11 @@ def _normalise_ML_varname(cube: iris.cube.Cube):
             cube.long_name = (
                 "vapour_specific_humidity_at_pressure_levels_for_climate_averaging"
             )
+    else:
+        if cube.name() == "x_wind" and cube.var_name == "u_wind_at_10m":
+            cube.long_name = "eastward_wind_at_10m"
+        if cube.name() == "y_wind" and cube.var_name == "v_wind_at_10m":
+            cube.long_name = "northward_wind_at_10m"
 
 
 def _check_combine_point_observations(cubes: iris.cube.CubeList):
