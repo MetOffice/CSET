@@ -35,6 +35,15 @@ import pytest
 from CSET.operators import constraints, filters, read
 
 
+# Special function that is run after all the tests finish.
+def pytest_sessionfinish(session, exitstatus):
+    """Check we didn't leak any plotting files during testing."""
+    assert not (Path.cwd() / "meta.json").exists(), (
+        "meta.json in top level directory. This usually indicates a test "
+        "is not using the `tmp_working_dir` fixture when it should."
+    )
+
+
 @pytest.fixture
 def cdl_to_nc_path(tmp_path) -> Callable[[str], Path]:
     """Get a callback that will create a temporary NetCDF file based on a CDL definition."""
