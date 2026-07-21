@@ -17,7 +17,6 @@
 import json
 import logging
 
-import iris.coords
 import iris.cube
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -93,7 +92,7 @@ def test_get_model_colors_map_noname(cube):
 def test_colorbar_map_levels(cube, tmp_working_dir):
     """Colorbar definition is found for cube."""
     cmap, levels, norm = _colormaps.colorbar_map_levels(cube)
-    assert cmap == mpl.pyplot.get_cmap("RdYlBu_r", 51)
+    assert cmap == plt.get_cmap("RdYlBu_r", 51)
     assert (levels == np.linspace(263, 323, 101)).all()
     assert norm is None
 
@@ -182,7 +181,7 @@ def test_colorbar_map_levels_name_fallback(cube, tmp_working_dir):
     """Colorbar definition is found for cube after checking its other names."""
     cube.standard_name = None
     cmap, levels, norm = _colormaps.colorbar_map_levels(cube)
-    assert cmap == mpl.pyplot.get_cmap("RdYlBu_r", 51)
+    assert cmap == plt.get_cmap("RdYlBu_r", 51)
     assert (levels == np.linspace(263, 323, 101)).all()
     assert norm is None
 
@@ -193,7 +192,7 @@ def test_colorbar_map_levels_unknown_variable_fallback(cube, tmp_working_dir):
     cube.long_name = None
     cube.var_name = "unknown"
     cmap, levels, norm = _colormaps.colorbar_map_levels(cube)
-    assert cmap == mpl.pyplot.get_cmap("viridis")
+    assert cmap == plt.get_cmap("viridis")
     assert levels is None
     assert norm is None
 
@@ -202,7 +201,7 @@ def test_colorbar_map_levels_name_observed(cube, tmp_working_dir):
     """Colorbar definition is found for cube with 'observed_' preceding known names."""
     cube.var_name = "observed_temperature_at_screen_level"
     cmap, levels, norm = _colormaps.colorbar_map_levels(cube)
-    assert cmap == mpl.pyplot.get_cmap("RdYlBu_r", 51)
+    assert cmap == plt.get_cmap("RdYlBu_r", 51)
     assert (levels == np.linspace(263, 323, 101)).all()
     assert norm is None
 
@@ -211,7 +210,7 @@ def test_colorbar_map_levels_pressure_level(transect_source_cube, tmp_working_di
     """Pressure level specific colorbar definition is picked up."""
     cube_250hPa = transect_source_cube.extract(iris.Constraint(pressure=250))
     cmap, levels, norm = _colormaps.colorbar_map_levels(cube_250hPa)
-    assert cmap == mpl.pyplot.get_cmap("RdYlBu_r", 51)
+    assert cmap == plt.get_cmap("RdYlBu_r", 51)
     assert (levels == np.linspace(200, 240, 101)).all()
     assert norm is None
 
