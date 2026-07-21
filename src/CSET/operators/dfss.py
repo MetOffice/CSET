@@ -21,11 +21,12 @@ from typing import List, Union
 
 import cartopy.crs as ccrs
 import iris
-import iris.coords as icoords
 import iris.cube
 import numpy as np
 import numpy.ma as ma
 from iris import coord_systems
+from iris.coords import DimCoord
+from iris.cube import Cube, CubeList
 
 from .improver.nbhood import NeighbourhoodProcessing
 
@@ -39,11 +40,11 @@ def init_worker():
 
 def _dfss_on_slice(
     slice,
-    neighbourhood_lengths,
-    centile_or_threshold,
-    centile,
-    threshold,
-):
+    neighbourhood_lengths: List[int],
+    centile_or_threshold: str,
+    centile: float,
+    threshold: float,
+) -> tuple(Cube, Cube):
     time_point = slice.coord("time")
     dfss_cube, dfss_stdev_cube = _calc_dfss(
         slice,
@@ -58,12 +59,12 @@ def _dfss_on_slice(
 
 
 def _parallel_calculate_dfss(
-    cube_xy: iris.cube.Cube,
+    cube_xy: Cube,
     neighbourhood_lengths: List[int],
     centile_or_threshold: str = "centile",
     centile: float = None,
     threshold: float = None,
-):
+) -> CubeList:
 
     time_slices = list(cube_xy.slices_over("time"))
 
@@ -77,8 +78,8 @@ def _parallel_calculate_dfss(
         )
         dfss_cubes, dfss_stdev_cubes = zip(*pool.imap(worker, time_slices), strict=True)
 
-    cube_list_dfss = iris.cube.CubeList(dfss_cubes)
-    cube_list_dfss_stdev = iris.cube.CubeList(dfss_stdev_cubes)
+    cube_list_dfss = CubeList(dfss_cubes)
+    cube_list_dfss_stdev = CubeList(dfss_stdev_cubes)
 
     forecast_period = cube_xy.coord("forecast_period")
     merged_cube_dfss = cube_list_dfss.merge_cube()
@@ -88,7 +89,7 @@ def _parallel_calculate_dfss(
     merged_cube_dfss.add_aux_coord(forecast_period, data_dims=(0))
     merged_cube_dfss_stdev.add_aux_coord(forecast_period, data_dims=(0))
 
-    out_cube_list = iris.cube.CubeList()
+    out_cube_list = CubeList()
 
     out_cube_list.append(merged_cube_dfss)
     out_cube_list.append(merged_cube_dfss_stdev)
@@ -97,15 +98,15 @@ def _parallel_calculate_dfss(
 
 
 def _serial_calculate_dfss(
-    cube_xy: iris.cube.Cube,
+    cube_xy: Cube,
     neighbourhood_lengths: List[int],
     centile_or_threshold: str = "centile",
     centile: float = None,
     threshold: float = None,
-):
+) -> CubeList:
 
-    cube_list_dfss = iris.cube.CubeList()
-    cube_list_dfss_stdev = iris.cube.CubeList()
+    cube_list_dfss = CubeList()
+    cube_list_dfss_stdev = CubeList()
 
     for time_slice in cube_xy.slices_over("time"):
         time_point = time_slice.coord("time")
@@ -127,7 +128,7 @@ def _serial_calculate_dfss(
     merged_cube_dfss.add_aux_coord(forecast_period, data_dims=(0))
     merged_cube_dfss_stdev.add_aux_coord(forecast_period, data_dims=(0))
 
-    out_cube_list = iris.cube.CubeList()
+    out_cube_list = CubeList()
 
     out_cube_list.append(merged_cube_dfss)
     out_cube_list.append(merged_cube_dfss_stdev)
@@ -136,13 +137,13 @@ def _serial_calculate_dfss(
 
 
 def calculate_dfss(
-    cube_xy: iris.cube.Cube,
+    cube_xy: Cube,
     neighbourhood_lengths: List[int],
     centile_or_threshold: str = "centile",
     centile: float = None,
     threshold: float = None,
     run_parallel: bool = True,
-):
+) -> CubeList:
     """Do the dfss calculation.
 
      Args:
@@ -190,13 +191,13 @@ def calculate_dfss(
 
 
 def _calc_dfss(
-    cube_xy: iris.cube.Cube,
+    cube_xy: Cube,
     neighbourhood_lengths: Union[List[int]],
     time_point,
     centile_or_threshold: str = "centile",
     centile: float = None,
     threshold: float = None,
-):
+) -> tuple(Cube, Cube):
     _ = (
         cube_xy.data
     )  # NOTE: without realising the data, dask is very slow to run this code
@@ -234,16 +235,16 @@ def _calc_dfss(
         dfss[i] = (ma.masked_invalid(fss_array)).mean()
         dfss_stdev[i] = (ma.masked_invalid(fss_array)).std()
 
-    neighbourhood_coord = icoords.DimCoord(
+    neighbourhood_coord = DimCoord(
         neighbourhood_lengths,
         var_name="neighbourhoods",
     )
 
-    dfss_cube = iris.cube.Cube(
+    dfss_cube = Cube(
         dfss, long_name="dfss", dim_coords_and_dims=[(neighbourhood_coord, 0)]
     )
     dfss_cube.add_aux_coord(time_point)
-    dfss_stdev_cube = iris.cube.Cube(
+    dfss_stdev_cube = Cube(
         dfss_stdev,
         long_name="dfss_stdev",
         dim_coords_and_dims=[(neighbourhood_coord, 0)],
@@ -253,13 +254,13 @@ def _calc_dfss(
 
 
 def _calc_fss(
-    cube_a_in: iris.cube.Cube,
-    cube_b_in: iris.cube.Cube,
+    cube_a_in: Cube,
+    cube_b_in: Cube,
     neighbourhood_length: int,
     centile_or_threshold: str = "centile",
     centile: float = None,
     threshold: float = None,
-):
+) -> float:
     # Set the threshold of interest
 
     cube_a = cube_a_in.copy()
@@ -318,7 +319,9 @@ def _calc_fss(
     return fss
 
 
-def _calc_fss_two_fields(field_a, field_b):
+def _calc_fss_two_fields(
+    field_a: np.ndarray[float], field_b: np.ndarray[float]
+) -> float:
     field_diff = field_a - field_b
     mse = np.sum(np.sum(field_diff**2))
     abs_val = field_a**2 + field_b**2
@@ -331,14 +334,14 @@ def _calc_fss_two_fields(field_a, field_b):
     return fss
 
 
-def _get_spatial_coords(cube):
-    """Return the x, y coordinates of an input :class:`iris.cube.Cube`."""
+def _get_spatial_coords(cube: Cube) -> tuple(DimCoord, DimCoord):
+    """Return the x, y coordinates of an input :class:`Cube`."""
     x_coord = cube.coord(axis="x")
     y_coord = cube.coord(axis="y")
-    return [x_coord, y_coord]
+    return (x_coord, y_coord)
 
 
-def _regrid_lat_lon_cube_to_xy_cube(cube_latlon):
+def _regrid_lat_lon_cube_to_xy_cube(cube_latlon: Cube) -> Cube:
     """Regrid a lat-lon cube to xy.
 
     Takes a cube specified on a lat-lon grid and re-grids
@@ -375,21 +378,21 @@ def _regrid_lat_lon_cube_to_xy_cube(cube_latlon):
     numb_y_points = np.size(y_coord.points)
     total_numb_points = numb_x_points * numb_y_points
 
-    new_x = icoords.DimCoord(
+    new_x = DimCoord(
         np.linspace(x[0], x[1], numb_x_points),
         standard_name="projection_x_coordinate",
         units="m",
         coord_system=trg_crs_iris,
     )
 
-    new_y = icoords.DimCoord(
+    new_y = DimCoord(
         np.linspace(y[0], y[1], numb_y_points),
         standard_name="projection_y_coordinate",
         units="m",
         coord_system=trg_crs_iris,
     )
 
-    new_ens = icoords.DimCoord(
+    new_ens = DimCoord(
         cube_latlon.coord("realization").points, standard_name="realization"
     )
 
@@ -399,7 +402,7 @@ def _regrid_lat_lon_cube_to_xy_cube(cube_latlon):
     )
 
     # Create blank cube in new coordinate system
-    new_cube = iris.cube.Cube(
+    new_cube = Cube(
         new_data,
         long_name=cube_latlon.name(),
         dim_coords_and_dims=[(new_ens, 0), (new_y, 1), (new_x, 2)],
