@@ -44,7 +44,7 @@ def _dfss_on_slice(
     centile_or_threshold: str,
     centile: float,
     threshold: float,
-) -> tuple(Cube, Cube):
+) -> tuple[Cube, Cube]:
     time_point = slice.coord("time")
     dfss_cube, dfss_stdev_cube = _calc_dfss(
         slice,
@@ -197,7 +197,7 @@ def _calc_dfss(
     centile_or_threshold: str = "centile",
     centile: float = None,
     threshold: float = None,
-) -> tuple(Cube, Cube):
+) -> tuple[Cube, Cube]:
     _ = (
         cube_xy.data
     )  # NOTE: without realising the data, dask is very slow to run this code
@@ -334,7 +334,7 @@ def _calc_fss_two_fields(
     return fss
 
 
-def _get_spatial_coords(cube: Cube) -> tuple(DimCoord, DimCoord):
+def _get_spatial_coords(cube: Cube) -> tuple[DimCoord, DimCoord]:
     """Return the x, y coordinates of an input :class:`Cube`."""
     x_coord = cube.coord(axis="x")
     y_coord = cube.coord(axis="y")
