@@ -1,5 +1,5 @@
 category: Transect Difference
-title: $VARNAME Transect Difference ($BASE_MODEL - $OTHER_MODEL)
+title: "$VARNAME Transect\nDifference ($BASE_MODEL - $OTHER_MODEL) $SUBAREA_NAME"
 description: |
   Extracts a $VERTICAL_COORDINATE transect for $VARNAME between two points and
   plots it, computing the difference between $BASE_MODEL and $OTHER_MODEL

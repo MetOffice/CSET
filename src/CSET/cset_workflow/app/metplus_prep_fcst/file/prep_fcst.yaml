@@ -1,0 +1,19 @@
+description: Prepare $MODEL_NAME for metplus
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    constraint: $VARNAME
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+    # Force surface fields
+  - operator: filters.filter_multiple_cubes
+    constraint:
+      operator: constraints.generate_level_constraint
+      coordinate: "pressure"
+      levels: []
+
+  - operator: write.write_cube_to_nc
+    filename: $FILENAME
+    overwrite: True

@@ -93,6 +93,8 @@ to the input data as its implicit input.
 
     steps:
       - operator: read.read_cubes
+        file_paths: "$INPUT_PATHS"
+
 
 Once we have read the data, we need to filter them down to the data we require
 for our computations. ``filter.filter_cubes`` is the operator for that. It also
@@ -157,6 +159,7 @@ After following this far your recipe should look like this:
 
     steps:
       - operator: read.read_cubes
+        file_paths: "$INPUT_PATHS"
 
       - operator: filters.filter_cubes
         constraint:

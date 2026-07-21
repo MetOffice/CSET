@@ -1,38 +1,79 @@
 {% set PROJECT = PROJECT | default(environ['PROJECT']) %}
 
+# Site configuration for NCI Gadi
+#
+# Important rose-suite.conf settings:
+#   SITE = "nci-gadi"   # Enable the site
+#   PROJECT             # NCI project code
+#   VERPY_DIR           # Path to Verpy source code
+#   METPLUS_OBS_SYSTEM  # Where to source obs from
+#                       # Can be a Bureau forecast system e.g.
+#                       # 'access_c3_dn' or 'custom'
+#   CUSTOM_ODB2_PATTERN # Path to custom ODB2 files if using
+#                       # 'custom' system
+#
+# Leave METPLUS_FCST_DIR and METPLUS_OBS_DIR unset
+
 [runtime]
     [[root]]
         platform = gadi_background
         init-script = """
             module use /g/data/access/ngm/modules
-            module load cset/26.2.0
+            module load cset/26.4.0
             """
         [[[ environment ]]]
             PROJECT = {{ PROJECT }}
-            PYTHONPATH=/g/data/dp9/verification/sources/cset/main/CSET/src:$PYTHONPATH
+            PYTHONPATH = "{{VERPY_DIR}}"
+
+{% if RUN_METPLUS_GRID_STAT|default(False) or RUN_METPLUS_POINT_STAT|default(False) %}
+    [[METPLUS]]
+        platform = gadi_pbs
+        execution time limit = PT1H
+        [[[ directives ]]]
+            -P          = {{ PROJECT }}
+            -q          = normal
+            -l ncpus    = 1
+            -l mem      = 4gb
+            -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22+gdata/ig2+scratch/dx2
+            -W umask    = 0022
+        [[[ environment ]]]
+            ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
+
+    [[metplus_prep_obs]]
+        [[[ environment ]]]
+            OBS_TIMES = R{{ANALYSIS_LENGTH | duration_as('h') | int }}/$CYLC_TASK_CYCLE_POINT/PT1H
+        {% if METPLUS_OBS_SYSTEM != "custom" %}
+            # Forecast system to pull obs from (e.g. 'access_c3_dn')
+            METPLUS_OBS_SYSTEM = {{METPLUS_OBS_SYSTEM}}
+        {% else %}
+            # Read direct from ODB2 files
+            ROSE_APP_OPT_CONF_KEYS = "odb2"
+            CUSTOM_ODB2_PATTERN = {{CUSTOM_ODB2_PATTERN}}
+        {% endif %}
+{% endif %}
 
     [[bake_recipes]]
         platform = gadi_pbs
+        execution time limit = PT6H
         [[[ directives ]]]
             -P          = {{ PROJECT }}
             -q          = normal
             -l ncpus    = 48
             -l mem      = 180gb
-            -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22
-            -l walltime = 06:00:00
+            -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22+gdata/xp65+scratch/dx2
             -W umask    = 0022
         [[[ environment ]]]
             BUNCH_POOL_SIZE = $PBS_NCPUS
 
     [[bake_aggregation_recipes]]
         platform = gadi_pbs
+        execution time limit = PT6H
         [[[ directives ]]]
             -P          = {{ PROJECT }}
             -q          = normal
             -l ncpus    = 48
             -l mem      = 180gb
-            -l walltime = 06:00:00
-            -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22
+            -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22+gdata/xp65+scratch/dx2
             -W umask    = 0022
         [[[ environment ]]]
             BUNCH_POOL_SIZE = $PBS_NCPUS

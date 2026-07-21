@@ -1,5 +1,5 @@
 category: Profiles
-title: "Domain mean $VARNAME vertical profile\n Aggregation by hour of day"
+title: "Domain mean $VARNAME vertical profile\n Aggregation by hour of day $SUBAREA_NAME"
 description: |
   Plots a time series of vertical profiles for the domain horizontal mean $VARNAME using a
   $LEVELTYPE coordinate. Multiple cases are aggregated together keeping the

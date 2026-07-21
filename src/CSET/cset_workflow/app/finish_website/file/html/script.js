@@ -425,7 +425,7 @@ function setup_description_toggle_button() {
   });
   // Ensure the description toggle persists across changing the frame content.
   for (const plot_frame of document.querySelectorAll("iframe")) {
-    plot_frame.addEventListener("DOMContentLoaded", () => {
+    plot_frame.addEventListener("load", () => {
       enforce_description_toggle();
     });
   }
@@ -445,6 +445,18 @@ function ensure_dual_frame() {
   const dual_frame = document.getElementById("dual-frame");
   single_frame.classList.add("hidden");
   dual_frame.classList.remove("hidden");
+}
+
+// Display a diagnostic.
+function display_diagnostic(src, pos) {
+  // Open new window for popup.
+  if (pos === "popup") {
+    window.open(src, "_blank", "popup,width=800,height=600");
+    return;
+  }
+  // Otherwise, set the appropriate frame layout and display the diagnostic.
+  pos === "full" ? ensure_single_frame() : ensure_dual_frame();
+  document.getElementById(`plot-frame-${pos}`).src = src;
 }
 
 // Create a list entry element for a single diagnostic.
@@ -487,14 +499,7 @@ function create_diagnostic_element(record) {
     // Add a callback updating the iframe when the link is clicked.
     button.addEventListener("click", (event) => {
       event.preventDefault();
-      // Open new window for popup.
-      if (position === "popup") {
-        window.open(`${PLOTS_PATH}/${path}`, "_blank", "popup,width=800,height=600");
-        return;
-      }
-      // Set the appropriate frame layout.
-      position === "full" ? ensure_single_frame() : ensure_dual_frame();
-      document.getElementById(`plot-frame-${position}`).src = `${PLOTS_PATH}/${path}`;
+      display_diagnostic(path, position);
     });
 
     // Add button to chooser.
@@ -587,8 +592,8 @@ function setup_plots_sidebar() {
   if (!document.getElementById("plot-selector")) {
     return;
   }
-  // Loading of plot index file, and adding them to the sidebar.
-  fetch(`${PLOTS_PATH}/index.jsonl`)
+  // Load plot index file, ensuring it is up-to-date via a conditional request.
+  fetch("index.jsonl", { cache: "no-cache" })
     .then((response) => {
       // Display a message and stop if the fetch fails.
       if (!response.ok) {
@@ -609,7 +614,12 @@ function setup_plots_sidebar() {
             // Normalise values to strings.
             for (const facet in record) {
               if (typeof record[facet] != "string") {
-                record[facet] = record[facet].toString();
+                try {
+                  record[facet] = record[facet].toString();
+                } catch {
+                  console.log("Facet value could not be cast to string.");
+                  delete record[facet];
+                }
               }
             }
             diagnostic_records.push(record);

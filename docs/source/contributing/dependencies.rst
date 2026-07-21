@@ -9,6 +9,7 @@ requirements that must be installed separately.
 * conda - Used for managing the conda environment. Alternatively mamba or micromamba can be used.
 * cylc 8 - Used for running the workflow. As it typically requires significant site integration it is not installed with CSET.
 * GNU find - We use the ``-printf`` option that is GNU specific.
+* Git - Used for installing the restricted files, but not needed during runtime.
 
 Requirements of a new dependency
 --------------------------------
@@ -33,12 +34,15 @@ Specifically it needs to be added to the ``pyproject.toml`` under the
 "dependencies" key, and ``requirements/environment.yaml`` under the appropriate
 dependencies section.
 
-After updating those two files and making a pull request, you'll need to rerun
-the conda lockfile generation action. In `Actions > Update conda lock files >
-Run workflow`_ select your branch, then run the workflow. A new PR will be
-created to update the lockfiles, which you can merge into your own branch.
+After updating those two files and making a pull request, you'll need to
+regenerate the conda lockfiles.
 
-.. _Actions > Update conda lock files > Run workflow: https://github.com/MetOffice/CSET/actions/workflows/conda-lock.yml
+.. code-block:: bash
+
+    # Regenerate the lock files.
+    make update-dev-deps
+    # Commit them to your branch.
+    git commit -m "Update conda lockfiles" requirements/
 
 Updating the conda-forge package
 --------------------------------

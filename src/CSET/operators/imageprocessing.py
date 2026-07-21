@@ -212,9 +212,9 @@ def spatial_structural_similarity_model_comparisons(
             # Use the full array as output will be as a 2D map.
             ssim_map = base_t.copy()
             _, ssim_map.data = structural_similarity(
-                base_t.data,
                 other_t.data,
-                data_range=other_t.data.max() - other_t.data.min(),
+                base_t.data,
+                data_range=base_t.data.max() - base_t.data.min(),
                 gaussian_weights=True,
                 sigma=sigma,
                 full=True,
@@ -311,9 +311,9 @@ def mean_structural_similarity_model_comparisons(
             # point in the domain to keep cube consistency.
             mssim = base_t[0, 0].copy()
             mssim.data = structural_similarity(
-                base_t.data,
                 other_t.data,
-                data_range=other_t.data.max() - other_t.data.min(),
+                base_t.data,
+                data_range=base_t.data.max() - base_t.data.min(),
                 gaussian_weights=True,
                 sigma=sigma,
             )

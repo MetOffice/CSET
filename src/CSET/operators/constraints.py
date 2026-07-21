@@ -26,6 +26,9 @@ import iris.cube
 import CSET.operators._utils as operator_utils
 from CSET._common import iter_maybe
 
+# STASH code pattern: mXXsXXiXXX where X is a digit
+_STASH_RE = re.compile(r"^m\d{2}s\d{2}i\d{3}$")
+
 
 def generate_stash_constraint(stash: str, **kwargs) -> iris.AttributeConstraint:
     """Generate constraint from STASH code.
@@ -52,23 +55,46 @@ def generate_stash_constraint(stash: str, **kwargs) -> iris.AttributeConstraint:
 def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
     """Generate constraint from variable name or STASH code.
 
-    Operator that takes a CF compliant variable name string, and generates an
+    Operator that takes a CF compliant variable name string or list of names, and generates an
     iris constraint to be passed into the read or filter operator. Can also be
     passed a STASH code to generate a STASH constraint.
 
     Arguments
     ---------
-    varname: str
-        CF compliant name of variable, or a UM STASH code such as "m01s03i236".
+    varname: str | list[str]
+        CF compliant name(s) of variable, or a UM STASH code such as "m01s03i236".
 
     Returns
     -------
     varname_constraint: iris.Constraint
+        If a single UM STASHcode is requested, varname constraint is by STASHcode
+        If a single variable name is requested, constraint by varname
+        If multiple variable names are requested, constrain by list of variables.
     """
-    if re.match(r"m[0-9]{2}s[0-9]{2}i[0-9]{3}$", varname):
-        varname_constraint = iris.AttributeConstraint(STASH=varname)
+    # Case 1: UM STASHcode input
+    if isinstance(varname, str) and _STASH_RE.match(varname):
+        return iris.AttributeConstraint(STASH=varname)
+
+    # Ensure access to variable vector components for computed fields
+    if "wind_speed_at_10m" in iter_maybe(varname):
+        if isinstance(varname, str):
+            varname = [varname]
+        varname.extend(["eastward_wind_at_10m", "northward_wind_at_10m"])
+        varname.extend(["u_wind_at_10m", "v_wind_at_10m"])
+
+    # Case 2: Multiple varnames
+    if isinstance(varname, (list, tuple)):
+        varname_constraint = iris.Constraint(
+            cube_func=lambda cube: (
+                cube.long_name in varname
+                or cube.standard_name in varname
+                or cube.var_name in varname
+            )
+        )
+
     else:
         varname_constraint = iris.Constraint(name=varname)
+
     return varname_constraint
 
 
@@ -126,6 +152,36 @@ def generate_level_constraint(
         return iris.Constraint(**{coordinate: levels})
 
 
+def generate_remove_single_level_constraint(
+    coord: str, level: int = 0, **kwargs
+) -> iris.Constraint:
+    """
+    Generate a constraint to remove a single model level number.
+
+    Operator that returns a constraint to remove the given level. By
+    default the first level is removed (assumed to be
+    level zero). However, any level can be removed.
+
+    Arguments
+    ---------
+    coord: str
+        The coordinate for which the level is to be removed.
+    level: int
+        Default is 0. The model level number to remove.
+
+    Returns
+    -------
+        iris.Constraint
+
+    Notes
+    -----
+    This operator is primarily used to ensure the levels are consistent
+    as some level sets (e.g. specific humidity) will be on the same level set
+    but have a different number of levels (e.g 71 instead of expected 70).
+    """
+    return iris.Constraint(**{coord: lambda m: m.point != level})
+
+
 def generate_cell_methods_constraint(
     cell_methods: list,
     varname: str | None = None,
@@ -166,6 +222,10 @@ def generate_cell_methods_constraint(
             """Check that any cell methods are "sum"."""
             return set(cm.method for cm in cube.cell_methods) == {"sum"}
 
+        def check_cell_mean(cube: iris.cube.Cube) -> bool:
+            """Check that any cell methods are "mean"."""
+            return set(cm.method for cm in cube.cell_methods) == {"mean"}
+
         if varname:
             # Require number_of_lightning_flashes to be "sum" cell_method input.
             # Require surface_microphyisical_rainfall_amount and surface_microphysical_snowfall_amount to be "sum" cell_method inputs.
@@ -173,6 +233,12 @@ def generate_cell_methods_constraint(
                 "surface_microphysical" in varname and "amount" in varname
             ):
                 cell_methods_constraint = iris.Constraint(cube_func=check_cell_sum)
+                return cell_methods_constraint
+            # Require climatological ancillary as time-average mean.
+            if ("albedo" in varname) or (
+                "ocean" in varname and "chlorophyll" in varname
+            ):
+                cell_methods_constraint = iris.Constraint(cube_func=check_cell_mean)
                 return cell_methods_constraint
 
         # If no variable name set, assume require instantaneous cube.

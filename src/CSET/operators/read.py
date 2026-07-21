@@ -187,6 +187,9 @@ def read_cubes(
     # Load the rest of the models.
     cubes.extend(itertools.chain.from_iterable(model_cubes))
 
+    # Enable different point-based observation sources to be concatenated.
+    cubes = _check_combine_point_observations(cubes)
+
     # Unify time units so different case studies can merge.
     iris.util.unify_time_units(cubes)
 
@@ -194,7 +197,7 @@ def read_cubes(
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
 
     # Merge and concatenate cubes now metadata has been fixed.
-    cubes = cubes.merge()
+    cubes = _merge_cubes_check_ensemble(cubes)
     cubes = cubes.concatenate()
 
     # Squeeze single valued coordinates into scalar coordinates.
@@ -203,6 +206,14 @@ def read_cubes(
     # Ensure dimension coordinates are bounded.
     for cube in cubes:
         for dim_coord in cube.coords(dim_coords=True):
+            if (dim_coord.standard_name == "time") and (
+                dim_coord.name()
+                not in itertools.chain.from_iterable(
+                    m.coord_names for m in cube.cell_methods if m.method != "point"
+                )
+            ):
+                # Instantaneous time coordinate
+                continue
             # Iris can't guess the bounds of a scalar coordinate.
             if not dim_coord.has_bounds() and dim_coord.shape[0] > 1:
                 dim_coord.guess_bounds()
@@ -223,8 +234,8 @@ def _load_model(
     # If unset, a constraint of None lets everything be loaded.
     logging.debug("Constraint: %s", constraint)
     cubes = iris.load(input_files, constraint, callback=_loading_callback)
-    # Make the UM's winds consistent with LFRic.
-    _fix_um_winds(cubes)
+    # If required, compute wind_speed from components.
+    cubes = _compute_winds(cubes)
 
     # Add model_name attribute to each cube to make it available at any further
     # step without needing to pass it as function parameter.
@@ -275,6 +286,28 @@ def _check_input_files(input_paths: str | list[str]) -> list[Path]:
     if len(files) == 0:
         raise FileNotFoundError(f"No files found for {input_paths}")
     return files
+
+
+def _merge_cubes_check_ensemble(cubes: iris.cube.CubeList):
+    """Merge CubeList, renumbering realizations of 0 if required.
+
+    An unsuccessful merge indicates common input cube attributes, most
+    commonly from ensemble members missing an explicit realization
+    coordinate. Therefore the members are renumbered before being merged
+    again.
+    """
+    try:
+        cubes = cubes.merge()
+    except iris.exceptions.MergeError:
+        _log_once(
+            "Attempt to merge input CubeList failed. Attempting to iterate realization coords to enable merge.",
+            level=logging.WARNING,
+        )
+        for ir, cube in enumerate(cubes):
+            if cube.coord("realization").points == 0:
+                cube.coord("realization").points = ir + 1
+        cubes = cubes.merge()
+    return cubes
 
 
 def _cutout_cubes(
@@ -363,6 +396,7 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     _realization_callback(cube)
     _um_normalise_callback(cube)
     _lfric_normalise_callback(cube)
+    _nimrod_normalise_callback(cube)
     cube = _lfric_time_coord_fix_callback(cube)
     _normalise_var0_varname(cube)
     cube = _fix_no_spatial_coords_callback(cube)
@@ -376,14 +410,15 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     _proleptic_gregorian_fix(cube)
     _lfric_time_callback(cube)
     _lfric_forecast_period_callback(cube)
+    cube = _fix_no_time_coords_callback(cube)
     _normalise_ML_varname(cube)
     return cube
 
 
 def _realization_callback(cube):
-    """Give deterministic cubes a realization of 0.
+    """Add a realization coordinate initialised to 0 if missing.
 
-    This means they can be handled in the same way as ensembles through the rest
+    This means deterministic and ensemble cubes can assume realization coordinate through the rest
     of the code.
     """
     # Only add if realization coordinate does not exist.
@@ -443,6 +478,15 @@ def _lfric_normalise_callback(cube: iris.cube.Cube):
     if stash_list:
         # Parse the string as a list, sort, then re-encode as a string.
         cube.attributes["um_stash_source"] = str(sorted(ast.literal_eval(stash_list)))
+
+
+def _nimrod_normalise_callback(cube: iris.cube.Cube):
+    """Normalise attributes that prevents NIMROD radar cubes from merging."""
+    # Remove unwanted attributes.
+    cube.attributes.pop("radar_sites", None)
+    cube.attributes.pop("additional_radar_sites", None)
+    cube.attributes.pop("recursive_filter_iterations", None)
+    cube.attributes.pop("Probability methods", None)
 
 
 def _lfric_time_coord_fix_callback(cube: iris.cube.Cube) -> iris.cube.Cube:
@@ -846,42 +890,53 @@ def _fix_lfric_cloud_base_altitude(cube: iris.cube.Cube):
         cube.data = dask.array.ma.masked_greater(cube.core_data(), 144.0)
 
 
-def _fix_um_winds(cubes: iris.cube.CubeList):
-    """To make winds from the UM consistent with those from LFRic.
+def _compute_winds(cubes: iris.cube.CubeList):
+    """To compute wind_speed from vector components if not available as diagnostic.
 
-    Diagnostics of wind are not always consistent between the UM
-    and LFric. Here, winds from the UM are adjusted to make them i
+    Diagnostics of wind are also not always consistent between the UM
+    and LFRic. Here, winds from the UM are adjusted to make them
     consistent with LFRic.
     """
-    # Check whether we have components of the wind identified by STASH,
-    # (so this will apply only to cubes from the UM), but not the
-    # wind speed and calculate it if it is missing. Note that
+    # Check whether we have components of the wind identified by varname
+    # but not the wind speed and calculate it if it is missing. Note that
     # this will be biased low in general because the components will mostly
     # be time averages. For simplicity, we do this only if there is just one
     # cube of a component. A more complicated approach would be to consider
     # the cell methods, but it may not be warranted.
-    u_constr = iris.AttributeConstraint(STASH="m01s03i225")
-    v_constr = iris.AttributeConstraint(STASH="m01s03i226")
-    speed_constr = iris.AttributeConstraint(STASH="m01s03i227")
+    #
+    # A check on UM STASH attributes is also conducted to adjust directions.
+    u_constr = iris.Constraint("eastward_wind_at_10m")
+    v_constr = iris.Constraint("northward_wind_at_10m")
+    speed_constr = iris.Constraint("wind_speed_at_10m")
     try:
         if cubes.extract(u_constr) and cubes.extract(v_constr):
+            if len(cubes) == 2:
+                wind_only = True
+            else:
+                wind_only = False
             if len(cubes.extract(u_constr)) == 1 and not cubes.extract(speed_constr):
                 _add_wind_speed_um(cubes)
             # Convert winds in the UM to be relative to true east and true north.
-            _convert_wind_true_dirn_um(cubes)
+            if cubes.extract(u_constr) and cubes.extract(v_constr):
+                _convert_wind_true_dirn_um(cubes)
+            # Return only wind_speed cube
+            if wind_only:
+                cubes = cubes.extract(speed_constr)
     except (KeyError, AttributeError):
         pass
 
+    return cubes
+
 
 def _add_wind_speed_um(cubes: iris.cube.CubeList):
-    """Add windspeeds to cubes from the UM."""
-    wspd10 = (
-        cubes.extract_cube(iris.AttributeConstraint(STASH="m01s03i225"))[0] ** 2
-        + cubes.extract_cube(iris.AttributeConstraint(STASH="m01s03i226"))[0] ** 2
-    ) ** 0.5
+    """Add windspeeds to cubes from components."""
+    u_wind = cubes.extract_cube(iris.Constraint("eastward_wind_at_10m"))
+    v_wind = cubes.extract_cube(iris.Constraint("northward_wind_at_10m"))
+    wspd10 = (u_wind**2 + v_wind**2) ** 0.5
     wspd10.attributes["STASH"] = "m01s03i227"
     wspd10.standard_name = "wind_speed"
     wspd10.long_name = "wind_speed_at_10m"
+    wspd10.units = "ms-1"
     cubes.append(wspd10)
 
 
@@ -890,6 +945,7 @@ def _convert_wind_true_dirn_um(cubes: iris.cube.CubeList):
 
     Convert from the components relative to the grid to true directions.
     This functionality only handles the simplest case.
+    Constrains using STASH code only to ensure applied to UM outputs only.
     """
     u_grids = cubes.extract(iris.AttributeConstraint(STASH="m01s03i225"))
     v_grids = cubes.extract(iris.AttributeConstraint(STASH="m01s03i226"))
@@ -1029,6 +1085,19 @@ def _lfric_forecast_period_callback(cube: iris.cube.Cube):
         pass
 
 
+def _fix_no_time_coords_callback(cube: iris.cube.Cube):
+    """Add dummy time coord to process cubes that don't have sequence coord."""
+    # Only add if time coordinate does not exist.
+    if not cube.coords("time"):
+        cube.add_aux_coord(
+            iris.coords.DimCoord(
+                0, standard_name="time", units="hours since 0001-01-01 00:00:00"
+            )
+        )
+
+    return cube
+
+
 def _normalise_ML_varname(cube: iris.cube.Cube):
     """Fix plev variable names to standard names."""
     if cube.coords("pressure"):
@@ -1042,3 +1111,21 @@ def _normalise_ML_varname(cube: iris.cube.Cube):
             cube.long_name = (
                 "vapour_specific_humidity_at_pressure_levels_for_climate_averaging"
             )
+    else:
+        if cube.name() == "x_wind" and cube.var_name == "u_wind_at_10m":
+            cube.long_name = "eastward_wind_at_10m"
+        if cube.name() == "y_wind" and cube.var_name == "v_wind_at_10m":
+            cube.long_name = "northward_wind_at_10m"
+
+
+def _check_combine_point_observations(cubes: iris.cube.CubeList):
+    """Enable cubes containing different point observation sources to be concatenated."""
+    nstation = 0
+    for cube in cubes:
+        if "station" in [coord.name() for coord in cube.coords(dim_coords=True)]:
+            if "obs_source" in [coord.name() for coord in cube.coords()]:
+                cube.remove_coord("obs_source")
+            cube.coord("station").points = cube.coord("station").points + nstation
+            nstation = nstation + len(cube.coord("station").points)
+
+    return cubes

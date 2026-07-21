@@ -125,13 +125,14 @@ def test_setup_logging():
 
 
 def test_setup_logging_mpl_font_logs_filtered(caplog):
-    """Test matplotlib log messages about fonts are filtered out."""
+    """Test matplotlib DEBUG/INFO log messages are filtered out."""
     CSET.setup_logging(2)
     logger = logging.getLogger("matplotlib.font_manager")
     logger.debug("findfont: message")
     logger.debug("other message")
+    logger.warning("Important!")
     assert len(caplog.records) == 1
-    assert caplog.records[0].getMessage() == "other message"
+    assert caplog.records[0].getMessage() == "Important!"
 
 
 def test_main_no_subparser(capsys):
@@ -322,15 +323,75 @@ def test_cookbook_non_existent_recipe(tmp_path):
 
 def test_extract_workflow_command(monkeypatch, tmp_path):
     """Extract workflow command correctly calls install_workflow function."""
-    ran = False
+    ran_install = False
 
-    def dummy_install_workflow(location: Path):
-        nonlocal ran
-        ran = True
+    def dummy_install(location: Path) -> Path:
+        nonlocal ran_install
+        ran_install = True
         assert location == tmp_path
+        return location / "workflow"
 
+    def dummy_restricted(*args):
+        # Shouldn't be run, so assert False if we get here.
+        assert False, "Restricted files not wanted."  # noqa: B011
+
+    monkeypatch.setattr(CSET.extract_workflow, "install_workflow", dummy_install)
     monkeypatch.setattr(
-        CSET.extract_workflow, "install_workflow", dummy_install_workflow
+        CSET.extract_workflow, "install_restricted_files", dummy_restricted
     )
     CSET.main(["cset", "extract-workflow", str(tmp_path)])
-    assert ran
+    assert ran_install
+
+
+def test_extract_workflow_restricted(monkeypatch, tmp_path):
+    """Extract workflow command installs restricted files with option."""
+    ran_install = False
+    ran_restricted = False
+    git_url = "git@example.com:my/repo.git"
+
+    def dummy_install(location: Path) -> Path:
+        nonlocal ran_install
+        ran_install = True
+        assert location == tmp_path
+        return location / "workflow"
+
+    def dummy_restricted(workflow_dir: Path, alternative_url: str | None = None):
+        nonlocal ran_restricted
+        ran_restricted = True
+        assert workflow_dir == tmp_path / "workflow"
+        assert alternative_url == git_url
+
+    monkeypatch.setattr(CSET.extract_workflow, "install_workflow", dummy_install)
+    monkeypatch.setattr(
+        CSET.extract_workflow, "install_restricted_files", dummy_restricted
+    )
+    CSET.main(
+        [
+            "cset",
+            "extract-workflow",
+            "--restricted",
+            "--restricted-url",
+            git_url,
+            str(tmp_path),
+        ]
+    )
+    assert ran_install
+    assert ran_restricted
+
+
+def test_install_restricted_files(monkeypatch):
+    """Install restricted files into an existing workflow."""
+    ran_restricted = False
+    location = "/path/to/workflow"
+
+    def dummy_restricted(workflow_dir: Path, alternative_url: str | None = None):
+        nonlocal ran_restricted
+        ran_restricted = True
+        assert workflow_dir == Path(location)
+        assert alternative_url is None
+
+    monkeypatch.setattr(
+        CSET.extract_workflow, "install_restricted_files", dummy_restricted
+    )
+    CSET.main(["cset", "install-restricted-files", location])
+    assert ran_restricted

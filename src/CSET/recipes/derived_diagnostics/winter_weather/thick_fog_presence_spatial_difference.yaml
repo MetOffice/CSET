@@ -1,5 +1,5 @@
 category: Winter Weather
-title: "Thick fog presence\nDifference ($BASE_MODEL - $OTHER_MODEL)"
+title: "Thick fog presence\nDifference ($OTHER_MODEL - $BASE_MODEL)"
 description:
   Generates a mask of whether thick fog is present in a grid box and provides a
   the difference between two models. Values will be positive or negative one

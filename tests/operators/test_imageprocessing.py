@@ -139,7 +139,7 @@ def test_SSIM_incorrect_number_of_cubes(cube: iris.cube.Cube):
 
 def test_SSIM_no_time_coord(cube: iris.cube.Cube):
     """Test SSIM fails with no time coordinate."""
-    c1 = cube.extract(iris.Constraint(time=datetime.datetime(2022, 9, 21, 3, 30)))
+    c1 = cube.extract(iris.Constraint(time=datetime.datetime(2022, 9, 21, 3, 0)))
     c1.remove_coord("time")
     c2 = c1.copy()
     del c2.attributes["cset_comparison_base"]
@@ -259,9 +259,9 @@ def test_structural_similarity_model_comparisons_MSSIM_different_sigma_not_one(
             # Use the full array as output will be as a 2D map.
             ssim_map = base_t[0, 0].copy()
             ssim_map.data = structural_similarity(
-                base_t.data,
                 other_t.data,
-                data_range=other_t.data.max() - other_t.data.min(),
+                base_t.data,
+                data_range=base_t.data.max() - base_t.data.min(),
                 gaussian_weights=True,
                 sigma=0.5,
             )
@@ -307,9 +307,9 @@ def test_structural_similarity_model_comparisons_SSIM_different_sigma_not_one(
             # Use the full array as output will be as a 2D map.
             ssim_map = base_t.copy()
             _, ssim_map.data = structural_similarity(
-                base_t.data,
                 other_t.data,
-                data_range=other_t.data.max() - other_t.data.min(),
+                base_t.data,
+                data_range=base_t.data.max() - base_t.data.min(),
                 gaussian_weights=True,
                 sigma=0.5,
                 full=True,

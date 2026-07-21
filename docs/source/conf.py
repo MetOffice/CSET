@@ -8,7 +8,7 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "CSET"
-copyright = "Crown copyright, Met Office (2022-2025) and CSET contributors."
+copyright = "Crown copyright, Met Office (2022-2026) and CSET contributors."
 author = "Met Office and Partners"
 
 # -- General configuration ---------------------------------------------------
@@ -58,4 +58,6 @@ linkcheck_ignore = [
     r"https://stackoverflow.com/.+",
     # Sourceforge blocks requests.
     r"https://.+\.sourceforge\.io/.+",
+    # Met Office internal webserver.
+    r"https://wwwspice/.+",
 ]

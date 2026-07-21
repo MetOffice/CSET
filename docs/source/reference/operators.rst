@@ -50,6 +50,12 @@ CSET.operators.plot
 .. automodule:: CSET.operators.plot
    :members:
 
+CSET.operators.power_spectrum
+-----------------------------
+
+.. automodule:: CSET.operators.power_spectrum
+   :members:
+
 CSET.operators.read
 -------------------
 
@@ -95,6 +101,15 @@ CSET.operators.ensembles
 .. automodule:: CSET.operators.ensembles
    :members:
 
+Humidity Operators
+~~~~~~~~~~~~~~~~~~
+
+CSET.operators.humidity
+-----------------------
+
+.. automodule:: CSET.operators.humidity
+   :members:
+
 Image Processing Operators
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -113,11 +128,47 @@ CSET.operators.mesoscale
 .. automodule:: CSET.operators.mesoscale
    :members:
 
+Precipitation Operators
+~~~~~~~~~~~~~~~~~~~~~~~
+
+CSET.operators.precipitation
+----------------------------
+
+.. automodule:: CSET.operators.precipitation
+   :members:
+
+Pressure Operators
+~~~~~~~~~~~~~~~~~~
+
+CSET.operators.pressure
+-----------------------
+
+.. automodule:: CSET.operators.pressure
+   :members:
+
+Temperature Operators
+~~~~~~~~~~~~~~~~~~~~~
+
+CSET.operators.temperature
+--------------------------
+
+.. automodule:: CSET.operators.temperature
+   :members:
+
+Verification Operators
+~~~~~~~~~~~~~~~~~~~~~~
+
+CSET.operators.scoreswrappers
+-----------------------------
+
+.. automodule:: CSET.operators.scoreswrappers
+   :members:
+
 Wind Operators
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
 
 CSET.operators.wind
-------------------------
+-------------------
 
 .. automodule:: CSET.operators.wind
    :members:

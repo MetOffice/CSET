@@ -1,5 +1,5 @@
 category: Aviation
-title: "Cloud base height less than 50 m \nDifference ($BASE_MODEL - $OTHER_MODEL)"
+title: "Cloud base height less than 50 m \nDifference ($OTHER_MODEL - $BASE_MODEL)"
 description: |
   Generates a mask of whether the cloud base height is less than 50 m in a grid box and provides
   the difference between the two models. Values will either be positive or negative one
