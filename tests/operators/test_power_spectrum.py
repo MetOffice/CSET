@@ -110,7 +110,9 @@ def test_calculate_power_spectrum_raises_for_bad_dim(tmp_working_dir):
         cube_5d = cube_5d[0]
 
     with pytest.raises(ValueError, match="Cube should be 2 or 3 dimensional"):
-        power_spectrum.calculate_power_spectrum(cube_5d)
+        power_spectrum._power_spectrum(
+            cube_5d, x_coord="grid_longitude", y_coord="grid_latitude"
+        )
 
 
 def test_calculate_power_spectrum_raises_for_bad_dim_1D(tmp_working_dir):
@@ -125,7 +127,7 @@ def test_calculate_power_spectrum_raises_for_bad_dim_1D(tmp_working_dir):
         cube_1d = cube_1d[0]
 
     with pytest.raises(ValueError, match="Cube should be 2 or 3 dimensional"):
-        power_spectrum.calculate_power_spectrum(cube_1d)
+        power_spectrum._power_spectrum(cube_1d)
 
 
 def test_calculate_power_spectrum_raises_for_missing_horiz_coords(tmp_working_dir):
