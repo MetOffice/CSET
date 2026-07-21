@@ -508,7 +508,7 @@ UGRID_VAR_LOOKUP = {
     "sp": {"long_name": "surface_air_pressure", "units": "Pa"},
     "10u": {"long_name": "eastward_wind_at_10m", "units": "m s-1"},
     "10v": {"long_name": "northward_wind_at_10m", "units": "m s-1"},
-    "lsm": {"long_name": "land_binary_mask"},
+    "lsm": {"long_name": "land_binary_mask", "units": "1"},
     "2t": {"long_name": "temperature_at_screen_level", "units": "K"},
     "2d": {"long_name": "dew_point_temperature_at_screen_level", "units": "K"},
     "skt": {"long_name": "grid_surface_temperature", "units": "K"},
