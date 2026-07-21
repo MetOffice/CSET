@@ -52,49 +52,87 @@ def calculate_power_spectrum(cubes: iris.cube.Cube | iris.cube.CubeList):
         CubeList of power spectra.
     """
     out = iris.cube.CubeList()
+
     for cube in iter_maybe(cubes):
         model = cube.attributes.get("model_name")
 
-        # Check whether data has a realization coord.
-        if cube.coords("realization"):
-            members_and_realizations = [
-                (member, int(member.coord("realization").points[0]))
-                for member in cube.slices_over("realization")
-            ]
+        #  Try to find appropriate spatial coordinates.
+        #  For use in _power_spectrum to make wavenumber comparable between models
+        #  with different domain sizes and resolutions.
+        coord_pairs = (
+            ("projection_x_coordinate", "projection_y_coordinate"),
+            ("grid_latitude", "grid_longitude"),
+            ("latitude", "longitude"),
+        )
+        for x_coord_name, y_coord_name in coord_pairs:
+            try:
+                # Try projection coordinates first (most common for limited area models)
+                x_coord = cube.coord(x_coord_name)
+                y_coord = cube.coord(y_coord_name)
+            except iris.exceptions.CoordinateNotFoundError:
+                continue
+            logging.debug(
+                "Using %s and %s coordinates for grid spacing calculation.",
+                x_coord_name,
+                y_coord_name,
+            )
+            break  # Break out of loop if we found usable coords.
         else:
-            members_and_realizations = [(cube, None)]
+            # Raise error if no usable coords found.
+            raise ValueError(
+                "Could not find appropriate spatial coordinates. "
+                "Expected one of: 'projection_x_coordinate'/'projection_y_coordinate', "
+                "'grid_latitude'/'grid_longitude', or 'latitude'/'longitude'."
+            )
 
-        # Loop over each realization.
+        # Generate 2D spatial slices
+        members = cube.slices([y_coord_name, x_coord_name])
+
         member_power_spectra = iris.cube.CubeList()
-        for member, realiz in members_and_realizations:
-            # Calculate power spectrum.
-            ps = _power_spectrum(member)
-            # Attach model name if available.
+
+        #        for member in cube.slices([y_coord_name, x_coord_name]):
+        for member in members:
+            ps = _power_spectrum(
+                member,
+                x_coord=x_coord,
+                y_coord=y_coord,
+            )
+
             if model:
                 ps.attributes["model_name"] = model
-            # Add the correct realization from the parent cube.
-            if realiz is not None:
-                ps.add_aux_coord(
-                    iris.coords.AuxCoord(realiz, long_name="realization", units="1")
-                )
-                # Promote to dimension coordinate.
-                ps = iris.util.new_axis(ps, "realization")
+
+            # Copy collapsed scalar coordinates back onto the spectrum.
+            # Do NOT promote them using new_axis here.
+            for coord_name in [
+                "forecast_period",
+                "realization",
+                "time",
+                "forecast_reference_time",
+            ]:
+                if member.coords(coord_name) and not ps.coords(coord_name):
+                    coord = member.coord(coord_name).copy()
+                    ps.add_aux_coord(coord)
+
+            # Remove any length-1 dimensions such as
+            # realization: 1, forecast_period: 1, time: 1.
+            # This leaves them as scalar coordinates, which merge_cube can combine.
+            ps = iris.util.squeeze(ps)
+
             member_power_spectra.append(ps)
 
-        # Merge the individual realization cubes into a single cube, then
-        # squeeze off length 1 realization coordinates.
-        combined_cube = member_power_spectra.concatenate_cube()
+        # Use merge_cube, not concatenate_cube.
+        combined_cube = member_power_spectra.merge_cube()
         combined_cube = iris.util.squeeze(combined_cube)
         out.append(combined_cube)
 
-    # Directly return cube if we only have one.
-    if len(out) == 1:
-        return out[0]
-    else:
-        return out
+    return out[0] if len(out) == 1 else out
 
 
-def _power_spectrum(cube: iris.cube.Cube) -> iris.cube.Cube:
+def _power_spectrum(
+    cube: iris.cube.Cube | iris.cube.CubeList,
+    x_coord: str = "projection_x_coordinate",
+    y_coord: str = "projection_y_coordinate",
+):
     """Calculate power spectrum for a single cube for 1 vertical level at 1 time.
 
     Parameters
@@ -104,6 +142,10 @@ def _power_spectrum(cube: iris.cube.Cube) -> iris.cube.Cube:
         The cubes should cover the same phenomenon i.e. all cubes contain temperature data.
         We do not support different data such as temperature and humidity in the same CubeList
         for plotting.
+    x_coord: str, optional
+        Spatial coordinate in x-direction.  Determined in calculate_power_spectrum
+    y_coord: str, optional
+        Spatial coordinate in y-direction.  Determined in calculate_power_spectrum
 
     Returns
     -------
@@ -118,7 +160,7 @@ def _power_spectrum(cube: iris.cube.Cube) -> iris.cube.Cube:
     TypeError
         If the cube isn't a Cube.
     """
-    # Extract time coordinate and convert to datetime
+    # Extract time coordinates and convert to datetime
     time_coord = cube.coord("time")
     time_points = time_coord.units.num2date(time_coord.points)
 
@@ -134,34 +176,6 @@ def _power_spectrum(cube: iris.cube.Cube) -> iris.cube.Cube:
 
     # Calculate spectrum
     ps_array = _DCT_ps(cube_3d)
-
-    # Make wavenumber comparable between models with different domain sizes and
-    # resolutions. Try to find appropriate spatial coordinates.
-    coord_pairs = (
-        ("projection_x_coordinate", "projection_y_coordinate"),
-        ("grid_latitude", "grid_longitude"),
-        ("latitude", "longitude"),
-    )
-    for x_coord_name, y_coord_name in coord_pairs:
-        try:
-            # Try projection coordinates first (most common for limited area models)
-            x_coord = cube.coord(x_coord_name)
-            y_coord = cube.coord(y_coord_name)
-        except iris.exceptions.CoordinateNotFoundError:
-            continue
-        logging.debug(
-            "Using %s and %s coordinates for grid spacing calculation.",
-            x_coord_name,
-            y_coord_name,
-        )
-        break  # Break out of loop if we found usable coords.
-    else:
-        # Raise error if no usable coords found.
-        raise ValueError(
-            "Could not find appropriate spatial coordinates. "
-            "Expected one of: 'projection_x_coordinate'/'projection_y_coordinate', "
-            "'grid_latitude'/'grid_longitude', or 'latitude'/'longitude'."
-        )
 
     # Calculate grid spacing.
     dx = np.abs(np.diff(x_coord.points).mean())
