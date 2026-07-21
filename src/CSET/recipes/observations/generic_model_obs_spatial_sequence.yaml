@@ -1,0 +1,53 @@
+category: Surface Spatial Plot Observation Model
+title: $MODEL_NAME $VARNAME $METHOD $SUBAREA_NAME
+description: Extracts and plots the $METHOD of $VARNAME from all times in $MODEL_NAME. Overplots equivalent surface observations.
+
+steps:
+
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: ['OBS', '$MODEL_NAME']
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+    constraint:
+      operator: constraints.generate_var_constraint
+      varname: ['observed_$VARNAME', '$VARNAME']
+
+  - operator: filters.filter_multiple_cubes
+    constraint:
+      operator: constraints.combine_constraints
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: $VARNAME
+      level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: "pressure"
+        levels: []
+
+  - operator: misc.extract_common_points
+    coordinate: time
+
+  - operator: collapse.collapse
+    coordinate: [time]
+    method: $METHOD
+
+  - operator: plot.spatial_multi_pcolormesh_plot
+    cube:
+        operator: filters.filter_cubes
+        constraint:
+            operator: constraints.combine_constraints
+            variable_constraint:
+                operator: constraints.generate_var_constraint
+                varname: $VARNAME
+
+    point_cube:
+        operator: filters.filter_cubes
+        constraint:
+            operator: constraints.combine_constraints
+            variable_constraint:
+                operator: constraints.generate_var_constraint
+                varname: observed_$VARNAME
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

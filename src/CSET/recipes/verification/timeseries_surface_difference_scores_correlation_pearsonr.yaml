@@ -1,0 +1,42 @@
+category: Scores
+title: "$VARNAME\nScores Pearson's Correlation timeseries between $OTHER_MODEL and $BASE_MODEL $SUBAREA_NAME"
+description: |
+  Extracts and plots the Pearson's Correlation coefficient in $VARNAME
+  computed over the domain for each timestep. The PC is calculated based on that used in the
+  package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.correlation.pearsonr).
+  This recipe allows the preservation of the time coordinate to produce a timeseries. Therefore, the PC is
+  collapsed over all other coordinates in the cube and calculated for every timestep.
+
+  The PC coefficient provides information on the linear relationship between two fields.
+  Perfectly correlated fields would yield a PC coefficient of 1, whereas perfectly anti-correlated
+  fields would yield a PC coefficient of -1. A value of 0 would indicate that the fields are non-correlated.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: [$BASE_MODEL, $OTHER_MODEL]
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: $VARNAME
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: "pressure"
+        levels: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: scoreswrappers.scores_correlation_pearsonr
+    preserved_coordinates: ["time"]
+
+    # Plot a timeseries of the Pearson Correlation
+  - operator: plot.plot_line_series
+    series_coordinate: time
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

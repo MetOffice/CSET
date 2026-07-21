@@ -9,6 +9,7 @@ requirements that must be installed separately.
 * conda - Used for managing the conda environment. Alternatively mamba or micromamba can be used.
 * cylc 8 - Used for running the workflow. As it typically requires significant site integration it is not installed with CSET.
 * GNU find - We use the ``-printf`` option that is GNU specific.
+* Git - Used for installing the restricted files, but not needed during runtime.
 
 Requirements of a new dependency
 --------------------------------
