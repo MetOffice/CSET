@@ -74,7 +74,7 @@ def test_load_colorbar_map_override_file_not_found(tmp_path):
     assert isinstance(colorbar, dict)
 
 
-def test_get_model_colors_map(cube):
+def test_get_model_colors_map(cube, tmp_working_dir):
     """Generate model_colors_map if model name provided."""
     cube.attributes["model_name"] = "model_1"
     model_colors_map = _colormaps.get_model_colors_map(cube)
@@ -83,7 +83,7 @@ def test_get_model_colors_map(cube):
     }
 
 
-def test_get_model_colors_map_noname(cube):
+def test_get_model_colors_map_noname(cube, tmp_working_dir):
     """Empty model_colors_map if no model name provided."""
     model_colors_map = _colormaps.get_model_colors_map(cube)
     assert model_colors_map == {}
@@ -398,7 +398,7 @@ def test_colorbar_map_probabilities(cube, tmp_working_dir):
     assert (norm.boundaries == levels).all()
 
 
-def test_colorbar_map_nimrod_wts(cube):
+def test_colorbar_map_nimrod_wts(cube, tmp_working_dir):
     """Set colorbar for nimrod weights variable."""
     cube.rename("Hourly wts accumulation")
     expected_levels = np.arange(-0.5, 14.5, 1.0)
@@ -456,7 +456,7 @@ def test_colorbar_map_scores_rmse(cube, tmp_working_dir):
     assert norm is None
 
 
-def test_colorbar_map_auto(cube):
+def test_colorbar_map_auto(cube, tmp_working_dir):
     """Set colorbar for variables with auto scaling set."""
     cube.rename("surface_altitude")
     cmap, levels, norm = _colormaps.colorbar_map_levels(cube)
