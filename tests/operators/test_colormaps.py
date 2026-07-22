@@ -89,7 +89,7 @@ def test_get_model_colors_map_noname(cube, tmp_working_dir):
     assert model_colors_map == {}
 
 
-def test_get_model_colors_map_user_obs(cube):
+def test_get_model_colors_map_user_obs(cube, tmp_working_dir):
     """Generate OBS model_colors_map if model name includes OBS."""
     cube.attributes["model_name"] = "my_obs"
     model_colors_map = _colormaps.get_model_colors_map(cube)
@@ -98,7 +98,7 @@ def test_get_model_colors_map_user_obs(cube):
     }
 
 
-def test_get_model_colors_map_user_obs_cubelist(cube):
+def test_get_model_colors_map_user_obs_cubelist(cube, tmp_working_dir):
     """Generate model_colors_map if cubelist input of model names."""
     cube1 = cube.copy()
     cube1.attributes["model_name"] = "my_obs"
@@ -111,7 +111,7 @@ def test_get_model_colors_map_user_obs_cubelist(cube):
     }
 
 
-def test_get_model_colors_map_user_obs_cubelist_reorder(cube):
+def test_get_model_colors_map_user_obs_cubelist_reorder(cube, tmp_working_dir):
     """Re-order OBS plotting in model_colors_map if model name includes OBS."""
     cube1 = cube.copy()
     cube1.attributes["model_name"] = "model_1"
