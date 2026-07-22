@@ -11,11 +11,11 @@ steps:
       operator: constraints.combine_constraints
       varname_constraint:
         operator: constraints.generate_var_constraint
-        varname: "gust_wind_speed_at_10m"
+        varname: "wind_speed_of_gust"
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
-        varname: "gust_wind_speed_at_10m"
+        varname: "wind_speed_of_gust"
       level_constraint:
         operator: constraints.generate_level_constraint
         coordinate: "pressure"
@@ -27,7 +27,7 @@ steps:
     condition: "gt"
     value: 25.0
 
-  - operator: plot.spatial_contour_plot
+  - operator: plot.spatial_pcolormesh_plot
 
   - operator: write.write_cube_to_nc
     overwrite: True
