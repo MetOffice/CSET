@@ -1732,6 +1732,8 @@ def _plot_and_save_scatter_series(
     percentiles[-1] = 99
     quantiles = iris.cube.CubeList()
 
+    # Loop through all output cubes for both data points and overplotting quantiles.
+    # Set indexing of nplot to avoid plotting 1:1 scatter of cubes[0] vs cubes[0]
     for plottype in ["points", "quantiles"]:
         nplot = 0
         for cube in iter_maybe(cubes):
