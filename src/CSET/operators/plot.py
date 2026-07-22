@@ -258,7 +258,7 @@ def _setup_spatial_map(
 
         # If is lat/lon spatial map, fix extent to keep plot tight.
         # Specifying crs within set_extent helps ensure only data region is shown.
-        if isinstance(coord_system, iris.coord_systems.GeogCS):
+        if isinstance(coord_system, (iris.coord_systems.GeogCS, iris.coord_systems.RotatedGeogCS)):
             axes.set_extent([xmin, xmax, ymin, ymax], crs=crs)
 
     except ValueError:
