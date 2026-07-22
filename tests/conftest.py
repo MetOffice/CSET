@@ -1168,8 +1168,8 @@ def point_cube(cube) -> iris.cube.Cube:
     point_cube = regrid.interpolate_to_point_cube(cube, sample_cube)
 
     return point_cube
-  
-  
+
+
 def precalc_direction_shear_read_only():
     """Get precalculated directional shear across maul for 3D data. It is NOT safe to modify."""
     return read.read_cube("tests/test_data/precipitation/precalc_dir_shear.nc")
