@@ -35,6 +35,15 @@ import pytest
 from CSET.operators import collapse, constraints, filters, read, regrid
 
 
+# Special function that is run after all the tests finish.
+def pytest_sessionfinish(session, exitstatus):
+    """Check we didn't leak any plotting files during testing."""
+    assert not (Path.cwd() / "meta.json").exists(), (
+        "meta.json in top level directory. This usually indicates a test "
+        "is not using the `tmp_working_dir` fixture when it should."
+    )
+
+
 @pytest.fixture
 def cdl_to_nc_path(tmp_path) -> Callable[[str], Path]:
     """Get a callback that will create a temporary NetCDF file based on a CDL definition."""
@@ -1159,3 +1168,54 @@ def point_cube(cube) -> iris.cube.Cube:
     point_cube = regrid.interpolate_to_point_cube(cube, sample_cube)
 
     return point_cube
+  
+  
+def precalc_direction_shear_read_only():
+    """Get precalculated directional shear across maul for 3D data. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/precipitation/precalc_dir_shear.nc")
+
+
+@pytest.fixture()
+def precalc_direction_shear(precalc_direction_shear_read_only):
+    """Get precalculated directional shear across maul for 3D data. It is safe to modify."""
+    return precalc_direction_shear_read_only.copy()
+
+
+@pytest.fixture()
+def precalc_direction_shear_4d_time_read_only():
+    """Get precalculated directional shear across maul for 4D data varying time. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/precipitation/precalc_dir_shear_time.nc")
+
+
+@pytest.fixture()
+def precalc_direction_shear_4d_time(precalc_direction_shear_4d_time_read_only):
+    """Get precalculated directional shear across maul for 4D data varying time. It is safe to modify."""
+    return precalc_direction_shear_4d_time_read_only.copy()
+
+
+@pytest.fixture()
+def precalc_direction_shear_4d_realization_read_only():
+    """Get precalculated directional shear across maul for 4D data varying realization. It is NOT safe to modify."""
+    return read.read_cube(
+        "tests/test_data/precipitation/precalc_dir_shear_realization.nc"
+    )
+
+
+@pytest.fixture()
+def precalc_direction_shear_4d_realization(
+    precalc_direction_shear_4d_realization_read_only,
+):
+    """Get precalculated directional shear across maul for 4D data varying realization. It is safe to modify."""
+    return precalc_direction_shear_4d_realization_read_only.copy()
+
+
+@pytest.fixture()
+def precalc_direction_shear_5d_read_only():
+    """Get precalculated directional_shear_across maul for 5D data. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/precipitation/precalc_dir_shear_5d.nc")
+
+
+@pytest.fixture()
+def precalc_direction_shear_5d(precalc_direction_shear_5d_read_only):
+    """Get precalculated directional shear across maul for 5D data. It is safe to modify."""
+    return precalc_direction_shear_5d_read_only.copy()

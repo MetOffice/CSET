@@ -17,7 +17,6 @@
 import json
 import logging
 
-import iris.coords
 import iris.cube
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -75,7 +74,7 @@ def test_load_colorbar_map_override_file_not_found(tmp_path):
     assert isinstance(colorbar, dict)
 
 
-def test_get_model_colors_map(cube):
+def test_get_model_colors_map(cube, tmp_working_dir):
     """Generate model_colors_map if model name provided."""
     cube.attributes["model_name"] = "model_1"
     model_colors_map = _colormaps.get_model_colors_map(cube)
@@ -84,7 +83,7 @@ def test_get_model_colors_map(cube):
     }
 
 
-def test_get_model_colors_map_noname(cube):
+def test_get_model_colors_map_noname(cube, tmp_working_dir):
     """Empty model_colors_map if no model name provided."""
     model_colors_map = _colormaps.get_model_colors_map(cube)
     assert model_colors_map == {}
@@ -128,7 +127,7 @@ def test_get_model_colors_map_user_obs_cubelist_reorder(cube):
 def test_colorbar_map_levels(cube, tmp_working_dir):
     """Colorbar definition is found for cube."""
     cmap, levels, norm = _colormaps.colorbar_map_levels(cube)
-    assert cmap == mpl.pyplot.get_cmap("RdYlBu_r", 51)
+    assert cmap == plt.get_cmap("RdYlBu_r", 51)
     assert (levels == np.linspace(263, 323, 101)).all()
     assert norm is None
 
@@ -217,7 +216,7 @@ def test_colorbar_map_levels_name_fallback(cube, tmp_working_dir):
     """Colorbar definition is found for cube after checking its other names."""
     cube.standard_name = None
     cmap, levels, norm = _colormaps.colorbar_map_levels(cube)
-    assert cmap == mpl.pyplot.get_cmap("RdYlBu_r", 51)
+    assert cmap == plt.get_cmap("RdYlBu_r", 51)
     assert (levels == np.linspace(263, 323, 101)).all()
     assert norm is None
 
@@ -228,7 +227,7 @@ def test_colorbar_map_levels_unknown_variable_fallback(cube, tmp_working_dir):
     cube.long_name = None
     cube.var_name = "unknown"
     cmap, levels, norm = _colormaps.colorbar_map_levels(cube)
-    assert cmap == mpl.pyplot.get_cmap("viridis")
+    assert cmap == plt.get_cmap("viridis")
     assert levels is None
     assert norm is None
 
@@ -237,7 +236,7 @@ def test_colorbar_map_levels_name_observed(cube, tmp_working_dir):
     """Colorbar definition is found for cube with 'observed_' preceding known names."""
     cube.var_name = "observed_temperature_at_screen_level"
     cmap, levels, norm = _colormaps.colorbar_map_levels(cube)
-    assert cmap == mpl.pyplot.get_cmap("RdYlBu_r", 51)
+    assert cmap == plt.get_cmap("RdYlBu_r", 51)
     assert (levels == np.linspace(263, 323, 101)).all()
     assert norm is None
 
@@ -246,7 +245,7 @@ def test_colorbar_map_levels_pressure_level(transect_source_cube, tmp_working_di
     """Pressure level specific colorbar definition is picked up."""
     cube_250hPa = transect_source_cube.extract(iris.Constraint(pressure=250))
     cmap, levels, norm = _colormaps.colorbar_map_levels(cube_250hPa)
-    assert cmap == mpl.pyplot.get_cmap("RdYlBu_r", 51)
+    assert cmap == plt.get_cmap("RdYlBu_r", 51)
     assert (levels == np.linspace(200, 240, 101)).all()
     assert norm is None
 
@@ -434,6 +433,34 @@ def test_colorbar_map_probabilities(cube, tmp_working_dir):
     assert (norm.boundaries == levels).all()
 
 
+def test_colorbar_map_nimrod_wts(cube, tmp_working_dir):
+    """Set colorbar for nimrod weights variable."""
+    cube.rename("Hourly wts accumulation")
+    expected_levels = np.arange(-0.5, 14.5, 1.0)
+    expected_colors = [
+        "#d10000",
+        "purple",
+        "#8f00d6",
+        "#ff9700",
+        "pink",
+        "#ffff00",
+        "#00007f",
+        "#6c9ccd",
+        "#aae8ff",
+        "#37a648",
+        "#8edc64",
+        "#c5ffc5",
+        "#dcdcdc",
+        "#ffffff",
+    ]
+    expected_cmap = mpl.colors.ListedColormap(expected_colors)
+    cmap, levels, norm = _colormaps.colorbar_map_levels(cube)
+    assert cmap == expected_cmap
+    assert (levels == expected_levels).all()
+    assert isinstance(norm, mpl.colors.BoundaryNorm)
+    assert (norm.boundaries == levels).all()
+
+
 def test_colorbar_map_aviation_colour_state(cube, tmp_working_dir):
     """Test to ensure color bar is change for aviation colour states."""
     cube.rename("aviation_colour_state")
@@ -464,7 +491,7 @@ def test_colorbar_map_scores_rmse(cube, tmp_working_dir):
     assert norm is None
 
 
-def test_colorbar_map_auto(cube):
+def test_colorbar_map_auto(cube, tmp_working_dir):
     """Set colorbar for variables with auto scaling set."""
     cube.rename("surface_altitude")
     cmap, levels, norm = _colormaps.colorbar_map_levels(cube)
