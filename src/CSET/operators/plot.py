@@ -1720,7 +1720,7 @@ def _plot_and_save_scatter_series(
     vmax: float
         maximum for colorbar
     hexbin: bool
-        Flag to set output scatter genereated as a hexbin frequency distribution plot, else scatter of all points.
+        Flag to set output scatter generated as a hexbin frequency distribution plot, else scatter of all points.
     """
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     ax = plt.gca()
