@@ -984,12 +984,22 @@ def test_plot_scatter_series(cube, tmp_working_dir):
     cube1.attributes["model_name"] = "model1"
     cube2 = cube.copy()
     cube2.attributes["model_name"] = "model2"
-    plot.plot_scatter_series(
-        [cube1, cube2], filename="test.png", sequence_coordinate="time"
-    )
-    assert Path("test_20220921030000.png").is_file()
-    assert Path("test_20220921040000.png").is_file()
-    assert Path("test_20220921050000.png").is_file()
+    plot.plot_scatter_series([cube1, cube2], sequence_coordinate="time")
+    assert Path("scatter_20220921030000.png").is_file()
+    assert Path("scatter_20220921040000.png").is_file()
+    assert Path("scatter_20220921050000.png").is_file()
+
+
+def test_plot_hexbin_series(cube, tmp_working_dir):
+    """Testing scatter series code produces file."""
+    cube1 = cube.copy()
+    cube1.attributes["model_name"] = "model1"
+    cube2 = cube.copy()
+    cube2.attributes["model_name"] = "model2"
+    plot.plot_scatter_series([cube1, cube2], sequence_coordinate="time", hexbin=True)
+    assert Path("hexbin_20220921030000.png").is_file()
+    assert Path("hexbin_20220921040000.png").is_file()
+    assert Path("hexbin_20220921050000.png").is_file()
 
 
 def test_plot_scatter_series_insufficient_models(cube, tmp_working_dir):
@@ -1012,6 +1022,17 @@ def test_plot_scatter_series_hexbin(cube, tmp_working_dir):
         [cube1, cube2], "test.png", "title", 0.0, 10.0, hexbin=True
     )
     assert Path("test.png").is_file()
+
+
+def test_plot_hexbin_incorrect_number_of_cubes(cube, tmp_working_dir):
+    """Test exception when incorrect number of cubes provided."""
+    no_cubes = iris.cube.CubeList([])
+    with pytest.raises(
+        ValueError, match="Cubes should contain exactly 2 cubes for hexbin plotting."
+    ):
+        plot._plot_and_save_scatter_series(
+            no_cubes, "test.png", "title", 0.0, 10.0, hexbin=True
+        )
 
 
 def test_plot_scatter_series_seq_coord(cube, tmp_working_dir):

@@ -1,8 +1,8 @@
 category: Point observation scatter plot
-title: "Scatter $VARNAME $SUBAREA_NAME"
+title: "$MODEL_NAME scatter $VARNAME $SUBAREA_NAME"
 description: Extracts and plot scatter plot of $VARNAME.
              Scatter plots generated either showing all points, or as matplotlib hexbin 2D hexagonal binning plot of points.
-             Quantile-Quantile distribution of included scatter points are shown as filled circles, with points at [1%, 5%, 10%, 20%, ...., 80%, 90%, 95%, 99%].
+             Quantile-Quantile distribution of included scatter points are shown as filled circles, with points every 5% along with 1% and 99%.
 
 steps:
   - operator: read.read_cubes

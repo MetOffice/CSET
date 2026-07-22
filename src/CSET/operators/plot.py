@@ -1720,8 +1720,18 @@ def _plot_and_save_scatter_series(
     vmax: float
         maximum for colorbar
     hexbin: bool
-        Flag to set output scatter generated as a hexbin frequency distribution plot, else scatter of all points.
+        Flag to set output scatter generated as a hexbin frequency distribution plot of 2 cubes on single plot.
+        Else scatter of all points, with potential to overplot many comparisons on same plot.
     """
+    if hexbin:
+        # Check cubes using same functionality as the difference operator.
+        if len(cubes) != 2:
+            raise ValueError(
+                "Cubes should contain exactly 2 cubes for hexbin plotting."
+            )
+        title = title.replace("scatter", "hexbin")
+        filename = filename.replace("scatter", "hexbin")
+
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     ax = plt.gca()
 
