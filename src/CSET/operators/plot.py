@@ -21,6 +21,7 @@ import json
 import logging
 import math
 import os
+import sys
 from typing import Literal
 
 import cartopy.crs as ccrs
@@ -72,6 +73,11 @@ mpl.use("agg")
 ############################
 # Private helper functions #
 ############################
+
+
+def in_sphinx_gallery():
+    """Test if running plot code in sphinx-gallery context."""
+    return "sphinx_gallery" in sys.modules
 
 
 def _append_to_plot_index(plot_index: list) -> list:
@@ -773,9 +779,10 @@ def _plot_and_save_spatial_plot(
         logging.debug("Set colorbar ticks and labels.")
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved spatial plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved spatial plot to %s", filename)
+        plt.close(fig)
 
 
 def _plot_and_save_postage_stamp_spatial_plot(
@@ -898,10 +905,10 @@ def _plot_and_save_postage_stamp_spatial_plot(
 
     # Overall figure title.
     fig.suptitle(title, fontsize=16)
-
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved contour postage stamp plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved contour postage stamp plot to %s", filename)
+        plt.close(fig)
 
 
 def _plot_and_save_line_series(
@@ -1015,9 +1022,10 @@ def _plot_and_save_line_series(
     ax.legend(handles=handles, loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved line plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved line plot to %s", filename)
+        plt.close(fig)
 
 
 def _plot_and_save_line_power_spectrum_series(
@@ -1140,9 +1148,10 @@ def _plot_and_save_line_power_spectrum_series(
     ax.legend(handles=handles, loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved line plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved line plot to %s", filename)
+        plt.close(fig)
 
 
 def _plot_and_save_vertical_line_series(
@@ -1282,9 +1291,10 @@ def _plot_and_save_vertical_line_series(
     ax.legend(handles=handles, loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved line plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved line plot to %s", filename)
+        plt.close(fig)
 
 
 def _plot_and_save_scatter_plot(
@@ -1356,9 +1366,10 @@ def _plot_and_save_scatter_plot(
     ax.autoscale()
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved scatter plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved scatter plot to %s", filename)
+        plt.close(fig)
 
 
 def _plot_and_save_vector_plot(
@@ -1469,9 +1480,10 @@ def _plot_and_save_vector_plot(
     iplt.quiver(cube_u[::step, ::step], cube_v[::step, ::step], pivot="middle")
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved vector plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved vector plot to %s", filename)
+        plt.close(fig)
 
 
 def _plot_and_save_histogram_series(
@@ -1591,9 +1603,10 @@ def _plot_and_save_histogram_series(
         ax.legend(loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved histogram plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved histogram plot to %s", filename)
+        plt.close(fig)
 
 
 def _plot_and_save_postage_stamp_histogram_series(
@@ -1650,10 +1663,10 @@ def _plot_and_save_postage_stamp_histogram_series(
 
     # Overall figure title.
     fig.suptitle(title, fontsize=16)
-
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved histogram postage stamp plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved histogram postage stamp plot to %s", filename)
+        plt.close(fig)
 
 
 def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
@@ -1926,7 +1939,7 @@ def spatial_multi_pcolormesh_plot(
     overlay_cube: iris.cube.Cube | None = None,
     contour_cube: iris.cube.Cube | None = None,
     point_cube: iris.cube.Cube | None = None,
-    filename: str = None,
+    filename: str | None = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
     **kwargs,
@@ -2945,7 +2958,7 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
     stamp_coordinate: str,
     filename: str,
     title: str,
-    series_coordinate: str = None,
+    series_coordinate: str | None = None,
     **kwargs,
 ):
     """Plot and save postage (ensemble members) stamps for a power spectrum series.
@@ -3065,9 +3078,10 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
         ax = plt.gca()
         ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
 
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved histogram postage stamp plot to %s", filename)
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved power spectrum histogram plot to %s", filename)
+        plt.close(fig)
 
 
 def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
@@ -3196,7 +3210,7 @@ def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
     ax.set_title(title, fontsize=16)
 
     # Save the figure to a file
-    plt.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-
-    # Close the figure
-    plt.close(fig)
+    if not in_sphinx_gallery():
+        fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logging.info("Saved power spectrum plot to %s", filename)
+        plt.close(fig)

@@ -1,0 +1,4 @@
+.. orphan
+
+Spatial plots
+=============

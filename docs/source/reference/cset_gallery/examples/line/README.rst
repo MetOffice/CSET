@@ -1,0 +1,4 @@
+.. orphan
+
+Line plots
+==========

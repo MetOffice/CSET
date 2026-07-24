@@ -4,6 +4,8 @@ For the full list of built-in configuration values, see the documentation:
 https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
+from sphinx_gallery.sorting import ExplicitOrder
+
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
@@ -20,6 +22,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.doctest",
     "sphinx.ext.extlinks",
+    "sphinx_gallery.gen_gallery",
 ]
 
 # -- Options for HTML output -------------------------------------------------
@@ -60,4 +63,29 @@ linkcheck_ignore = [
     r"https://.+\.sourceforge\.io/.+",
     # Met Office internal webserver.
     r"https://wwwspice/.+",
+]
+
+# -- Sphinx gallery config ----------------------------------------------------
+
+sphinx_gallery_conf = {
+    "plot_gallery": True,
+    "examples_dirs": "reference/cset_gallery/examples",  # input scripts
+    "gallery_dirs": "reference/cset_gallery/generated",  # output pages
+    "filename_pattern": r"\.py$",
+    "image_scrapers": ("matplotlib",),
+    "thumbnail_size": (800, 600),
+    "capture_repr": (),  # disable capture of printed / returned output
+    "nested_sections": False,
+    "subsection_order": ExplicitOrder(
+        [
+            "reference/cset_gallery/examples/spatial",
+            "reference/cset_gallery/examples/line",
+            "reference/cset_gallery/examples/custom",
+        ]
+    ),
+}
+
+suppress_warnings = [
+    "toc.not_included",
+    "toc.excluded",
 ]
