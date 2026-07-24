@@ -76,6 +76,11 @@ jobs:
       - name: Install local package
         run: pip install --no-deps .
 
+      - name: Setup rose and cylc
+        uses: cylc/setup-cylc@813acd1873cef608f14e354cec57e2de5a7eb3bf
+        with:
+          cylc_rose: true
+
       - name: Run full test suite
         env:
           PY_COLORS: "1"
