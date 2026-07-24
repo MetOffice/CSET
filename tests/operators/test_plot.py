@@ -34,12 +34,11 @@ def test_setup_spatial_map(cube):
     figure = mpl.figure.Figure()
     axes = plot._setup_spatial_map(cube, figure, mpl.colormaps["viridis"])
     assert axes == figure.gca()
-    # Test bounds - set as global as rotated pole input.
+
+    # Check spatial map bounds cut out the correct area (around Exeter).
     bounds = axes.get_extent()
-    assert bounds[0] == -180.0
-    assert bounds[1] == 180.0
-    assert bounds[2] == -90.0
-    assert bounds[3] == 90.0
+    expected_bounds = (-5.0, 3.0, -3.75, 7.0)
+    assert np.allclose(bounds, expected_bounds, atol=0.1)
 
 
 def test_setup_spatial_map_dateline(cube):
