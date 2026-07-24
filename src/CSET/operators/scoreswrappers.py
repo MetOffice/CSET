@@ -558,7 +558,7 @@ def scores_crps_for_ensemble(
     Default method is ecdf.  ecdf is exact value from the empirical distributions,
     whereas fair produces an approximated value based on a random sample of the underlying distribution.
 
-    See [CRPS] for further information.
+    See [CRPS]_ for further information.
 
     Parameters
     ----------
@@ -588,7 +588,7 @@ def scores_crps_for_ensemble(
     .. [CRPS]
         Hersbach, H., 2000: Decomposition of the Continuous Ranked
         Probability Score for Ensemble Prediction Systems. Wea.
-        Forecasting, 15, 559–570, https://doi.org/10.1175/1520-0434(2000)015<0559:DOTCRP>2.0.CO;2.
+        Forecasting, 15, 559–570, https://doi.org/10.1175/1520-0434(2000)015%3C0559:DOTCRP%3E2.0.CO;2
     """
     if control_member != 0:
         logging.warning("control member is usual 0")
