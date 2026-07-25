@@ -1446,7 +1446,7 @@ def _plot_and_save_vector_plot(
     # Add watermark with min/max/mean. Currently not user togglable.
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
     axes.annotate(
-        f"Min: {np.min(cube_vec_mag.data):.3g} Max: {np.max(cube_vec_mag.data):.3g} Mean: {np.mean(cube_vec_mag.data):.3g}",
+        f"Min: {np.min(cube_vec_mag.data):.3f} Max: {np.max(cube_vec_mag.data):.3f} Mean: {np.mean(cube_vec_mag.data):.3f}",
         xy=(0.05, -0.05),
         xycoords="axes fraction",
         xytext=(-5, 5),
