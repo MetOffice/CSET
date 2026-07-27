@@ -20,8 +20,10 @@ operator, and will be used across multiple operators.
 """
 
 import logging
+import os
 import re
 from datetime import timedelta
+from pathlib import Path
 
 import iris
 import iris.coords
@@ -554,3 +556,27 @@ def validate_cubes_coords(
             f"Check that number of time entries in input data are consistent if "
             f"performing time-averaging steps prior to plotting outputs."
         )
+
+
+def check_if_cylc_workflow() -> Path | None:
+    """Determine if we are running in a Cylc workflow.
+
+    If running in a Cylc workflow, the ROSE_DATAC environment variable
+    will be set.
+
+    Returns
+    -------
+    Path | None:
+        If ROSE_DATAC is set, and the path exists, return a Path object
+        containing the path. Otherwise, return None.
+    """
+    # Standard location of ROSE_DATAC data dir in CSET.
+    try:
+        dataloc = Path(os.environ["ROSE_DATAC"])
+        if dataloc.exists():
+            return dataloc
+    except KeyError:
+        pass
+
+    # If ROSE_DATAC unset or its path does not exist, return None
+    return None

@@ -15,9 +15,11 @@
 """Operators for humidity conversions."""
 
 import iris.cube
+import numpy as np
 
 from CSET._common import iter_maybe
 from CSET.operators._atmospheric_constants import EPSILON
+from CSET.operators._utils import get_cube_coordindex
 from CSET.operators.misc import convert_units
 from CSET.operators.pressure import vapour_pressure
 
@@ -443,3 +445,272 @@ def relative_humidity_from_specific_humidity(
         return RH[0]
     else:
         return RH
+
+
+def precipitable_water(
+    mixing_ratio: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    r"""Calculate the precipitable water.
+
+    Arguments
+    ---------
+    mixing_ratio: iris.cube.Cube | iris.cube.CubeList
+        A cube or cubelist of the mixing ratio. It can be
+        calculated within a recipe or a direct model output.
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        A cube or cubelist of the precipitable water.
+
+    Notes
+    -----
+    The precipitable water is the total depth of liquid water produced by
+    condensing all of the moisture in a column of the atmopshere.
+
+    It can be calculated following [Stull2000]_ as
+
+    .. math:: pw = frac{1}{\rho_w} \int w dz
+
+    for pw the precipitable water, ..math::\rho_{w} the density of water,
+    w the mixing ratio, and z the height. It is integrated from the surface
+    to the top of the atmosphere.
+
+    Generally, the precipitable water is widely applicable across the globe.
+    It is likely that larger precipitation totals are associated with greater
+    precipitable water. However, this is not strictly the case and you can get
+    lower precipitable water values with large precipitaiton amounts
+    (e.g. [Daviesetal24]_). Therefore, caution is needed with its interpretation.
+    A diagnostic such as saturation fraction maybe more beneficial (e.g. [Daviesetal26]_).
+
+    Currently, it is assumed that a cube is given with dimensions of the order
+    [realization, time, height, latitude, longitude] for a five dimension cube,
+    and derivatives thereof for 4 and 3 Dimension cubes (i.e., remove realization,
+    and time as appropriate).
+
+    Examples
+    --------
+    >>> pwat = humidity.precipitable_water(mixing_ratio)
+
+    References
+    ----------
+    .. [Daviesetal24] Davies, P.A., Fowler, H.J, Villalobos-Herrera, R.,
+       Slingo, J., Flack, D.L.A., and Taszarek, M (2024)
+       "A New Conceptual Model for Understanding and Predicting Life-Threatening
+       Rainfall Extremes." Weather and Climate Extremes, vol. 45, 100696,
+       doi: 10.1016/j.wace.2024.100696
+    .. [Daviesetal26] Davies, P. A., Flack, D. L. A., Pirret, J., Fowler, H. J.
+       (2026) "Application of the Davies Four-Stage Conceptual Model for
+       Life-Threatening Rainfall Extremes on the April 2024 United Arab Emirates
+       and Oman Floods." Weather and Climate Extremes, vol. 51, 100846.
+       doi:10.1016/j.wace.2025.100846
+    .. [Stull2000] Stull, R.B., (2000) "Meteorology for Scientists and Engineers",
+       2nd Edition, Brooks/Cole, California, USA, 502 pp.
+    """
+    precipitable_water = iris.cube.CubeList([])
+    for w in iter_maybe(mixing_ratio):
+        # Integrate the data in the vertical using np.trapezoid
+        # (following trapezoid rule).
+        pw = np.trapezoid(
+            w.data,
+            x=w.coord("level_height").points[:],
+            axis=get_cube_coordindex(w, "level_height"),
+        )
+        # Determine array information of input cube to get
+        # correct cube to copy across to.
+        if len(w.coord("realization").points) != 1 and len(w.coord("time").points) != 1:
+            pwat = w[:, :, 0, :, :].copy()
+        elif (
+            len(w.coord("realization").points) != 1 and len(w.coord("time").points) == 1
+        ):
+            pwat = w[:, 0, :, :].copy()
+        elif (
+            len(w.coord("time").points) != 1 and len(w.coord("realization").points) == 1
+        ):
+            pwat = w[:, 0, :, :].copy()
+        else:
+            pwat = w[0, :, :].copy()
+        # Create the data array, rename, and correct units.
+        pwat.data = pw
+        pwat.rename("precipitable_water")
+        # Setting units to mm to account for normalization by density of water.
+        pwat.units = "mm"
+        precipitable_water.append(pwat)
+    # Output the data.
+    if len(precipitable_water) == 1:
+        return precipitable_water[0]
+    else:
+        return precipitable_water
+
+
+def saturation_precipitable_water(
+    mixing_ratio: iris.cube.Cube | iris.cube.CubeList,
+    relative_humidity: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    r"""Calculate saturation precipitable water.
+
+    Arguments
+    ---------
+    mixing_ratio: iris.cube.Cube | iris.cube.CubeList
+        A cube or cubelist of the mixing ratio. It can be
+        calculated within a recipe or a direct model output.
+    relative_humidity: iris.cube.Cube | iris.cube.CubeList
+        A cube or cubelist of the relative humidity. It can
+        either be calculated or used as model output.
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        A cube or cubelist of the saturation precipitable water.
+
+    Notes
+    -----
+    The saturation precipitable water is equivalent to the precipitable
+    water assuming that the atmosphere was fully saturated.
+
+    It can be calculated following [Raymondetal2009]_ as
+
+    .. math:: spw = frac{1}{\rho_w} \int \frac{w}{RH} dz
+
+    for spw the saturated precipitable water, ..math::\rho_{w} the density of water,
+    w the mixing ratio, RH the relative humidity (as a decimal) and z the height.
+    It is integrated from the surface to the top of the atmosphere.
+
+    It is applicable throughout the globe and is, perhaps, best considered
+    in relation to the precipitable water. A useful way to do this is
+    via the saturation fraction.
+
+    Currently, it is assumed that a cube is given with dimensions of the order
+    [realization, time, height, latitude, longitude] for a five dimension cube,
+    and derivatives thereof for 4 and 3 Dimension cubes (i.e., remove realization,
+    and time as appropriate).
+
+    Examples
+    --------
+    >>> sat_pwat = humidity.saturated_precipitable_water(mixing_ratio, RH)
+
+    References
+    ----------
+    .. [Raymondetal2009] Raymond, D.J., Sessions, S.L., Sobel, A.H.,  Fuchs, Z.
+       (2009) "The Mechanics of Gross Moist Stability" Journal of Advances in
+       Modelling Earth Systems, vol. 1, 20 pp. doi: 10.3894/JAMES.2009.1.9
+    """
+    saturation_precipitable_water = iris.cube.CubeList([])
+    for w, rh in zip(
+        iter_maybe(mixing_ratio), iter_maybe(relative_humidity), strict=True
+    ):
+        # Integrate the data in the vertical using np.trapezoid
+        # (following trapezoid rule).
+        rh = convert_units(rh, "1")
+        spw = np.trapezoid(
+            (w / rh).data,
+            x=w.coord("level_height").points[:],
+            axis=get_cube_coordindex(w, "level_height"),
+        )
+        # Determine array information of input cube to get
+        # correct cube to copy across to.
+        if len(w.coord("realization").points) != 1 and len(w.coord("time").points) != 1:
+            satpw = w[:, :, 0, :, :].copy()
+        elif (
+            len(w.coord("realization").points) != 1 and len(w.coord("time").points) == 1
+        ):
+            satpw = w[:, 0, :, :].copy()
+        elif (
+            len(w.coord("time").points) != 1 and len(w.coord("realization").points) == 1
+        ):
+            satpw = w[:, 0, :, :].copy()
+        else:
+            satpw = w[0, :, :].copy()
+        # Store the data for output, rename cube, and correct units.
+        satpw.data = spw
+        satpw.rename("saturation_precipitable_water")
+        # Setting units to mm to account for normalization by density of water.
+        satpw.units = "mm"
+        saturation_precipitable_water.append(satpw)
+    # Output cube/cubelist.
+    if len(saturation_precipitable_water) == 1:
+        return saturation_precipitable_water[0]
+    else:
+        return saturation_precipitable_water
+
+
+def saturation_fraction(
+    mixing_ratio: iris.cube.Cube | iris.cube.CubeList,
+    relative_humidity: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    r"""Calculate saturation fraction.
+
+    Arguments
+    ---------
+    mixing_ratio: iris.cube.Cube | iris.cube.CubeList
+        A cube or cubelist of the mixing ratio. It can be
+        calculated within a recipe or a direct model output.
+    relative_humidity: iris.cube.Cube | iris.cube.CubeList
+        A cube or cubelist of the relative humidity. It can be
+        calculated within a recipe or used as a direct model output.
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        A cube or cubelist of the saturation fraction.
+
+    Notes
+    -----
+    The saturation fraction indicates how moist a column of the atmosphere
+    is. A value close to one implies that the atmosphere is fully saturated
+    throughout the entire column. Smaller values imply the atmosphere is
+    drier throughout the column. It is based around ideas of specific entropy
+    ([Zengetal05]_) but can be simplified to an approximation following [Daviesetal2026]_.
+
+    It can be approximated following [Raymondetal09]_ as
+
+    .. math:: saturation_fraction = \frac{precipitable_water}{saturation_precipitable_water}
+
+    and can be used throughout the globe with the same interpretation.
+
+    For a recent example, [Daviesetal2026]_ have applied the concept to their
+    conceptual model for extreme rainfall. Thus it is a potentially useful diagnostic
+    to consider for extreme events, and is thought of as more reliable than
+    using precipitable water on its own.
+
+    Currently, it is assumed that a cube is given with dimensions of the order
+    [realization, time, height, latitude, longitude] for a five dimension cube,
+    and derivatives thereof for 4 and 3 Dimension cubes (i.e., remove realization,
+    and time as appropriate).
+
+    Examples
+    --------
+    >>> sf = humidity.saturation_fraction(mixing_ratio, relative_humidity)
+
+    References
+    ----------
+    .. [Daviesetal2026] Davies, P. A., Flack, D. L. A., Pirret, J., Fowler, H. J.
+       (2026) "Application of the Davies Four-Stage Conceptual Model for
+       Life-Threatening Rainfall Extremes on the April 2024 United Arab Emirates
+       and Oman Floods." Weather and Climate Extremes, vol. 51, 100846.
+       doi:10.1016/j.wace.2025.100846
+    .. [Raymondetal09] Raymond, D.J., Sessions, S.L., Sobel, A.H.,  Fuchs, Z.
+       (2009) "The Mechanics of Gross Moist Stability" Journal of Advances in
+       Modelling Earth Systems, vol. 1, 20 pp. doi: 10.3894/JAMES.2009.1.9
+    .. [Zengetal05] Zeng, X., Tao, W-K, and Simpson, J. (2005) "An Equation for Moist
+       Entropy in a Precipitating and Icy Atmosphere" Journal of the Atmospheric Sciences,
+       vol. 2, 4293-4309, doi: 10.1175/JAS3570.1
+    """
+    saturation_fraction = iris.cube.CubeList([])
+    for w, rh in zip(
+        iter_maybe(mixing_ratio), iter_maybe(relative_humidity), strict=True
+    ):
+        # Calculate both precipitable water and saturation
+        # precipitable water.
+        pw = precipitable_water(w)
+        spw = saturation_precipitable_water(w, rh)
+        # Calculate the saturation fraction by taking the ratio.
+        sf = pw / spw
+        # Rename the cube and append to cubelist.
+        sf.rename("saturation_fraction")
+        saturation_fraction.append(sf)
+    # Output the cube/cubelist.
+    if len(saturation_fraction) == 1:
+        return saturation_fraction[0]
+    else:
+        return saturation_fraction

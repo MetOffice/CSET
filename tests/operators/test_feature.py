@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2025) and CSET contributors.
+# © Crown copyright, Met Office (2022-2026) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,6 @@
 """Tests for feature operators."""
 
 import datetime as dt
-import os
 
 import cf_units
 import iris
@@ -108,9 +107,8 @@ def test_tracking_lifetime_values(feature_cube) -> None:
         np.testing.assert_array_equal(actual_lifetime_field, expected_lifetime_field)
 
 
-def test_save_data(feature_cube, tmp_path) -> None:
+def test_save_data(feature_cube, tmp_working_dir) -> None:
     """Test that tracking data is saved when save_data is True."""
-    os.chdir(tmp_path)
     test_threshold = 0.5
     min_size = 1
     feature.track(
@@ -162,3 +160,48 @@ def test_cell_stats_operator(feature_cube):
     np.testing.assert_array_equal(mean_data, expected_mean_data)
     np.testing.assert_array_equal(max_data, expected_max_data)
     np.testing.assert_array_equal(effective_radius_data, expected_radius_data)
+    output_directory = tmp_working_dir / "tracking_data"
+    expected_file = output_directory / "lifetime_20100101_0000.field"
+    assert expected_file.is_file()
+
+    # Check expected csv file is created in output directory
+    expected_file = output_directory / "frame_20100101_0000.csv"
+    assert expected_file.is_file()
+
+
+def test_check_xy_coords_valid(feature_cube) -> None:
+    """Test that _check_xy_coords does not raise an error for valid xy coordinates."""
+    try:
+        feature._check_xy_coords(feature_cube)
+    except ValueError:
+        pytest.fail("Unexpected ValueError raised for valid xy coordinates.")
+
+
+def test_check_xy_coords_invalid() -> None:
+    """Test that _check_xy_coords raises a ValueError for invalid latitude/longitude coordinates."""
+    # Create a cube with latitude and longitude coordinates
+    data_arr = np.zeros((10, 10))
+
+    lat_coord = iris.coords.DimCoord(
+        points=np.linspace(-90, 90, 10),
+        standard_name="latitude",
+        var_name="latitude",
+        units="degrees",
+    )
+    lon_coord = iris.coords.DimCoord(
+        points=np.linspace(-180, 180, 10),
+        standard_name="longitude",
+        var_name="longitude",
+        units="degrees",
+    )
+
+    coords = (lat_coord, lon_coord)
+    dim_coords_and_dims = [(coord, dim) for dim, coord in enumerate(coords)]
+    cube = iris.cube.Cube(
+        data=data_arr,
+        dim_coords_and_dims=dim_coords_and_dims,
+        long_name="Precipitation test",
+    )
+
+    with pytest.raises(ValueError):
+        feature._check_xy_coords(cube)

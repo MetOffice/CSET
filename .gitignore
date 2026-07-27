@@ -132,6 +132,7 @@ dmypy.json
 
 # Code Editors
 .vscode/
+.idea/
 
 # Ruff
 .ruff_cache/
@@ -139,5 +140,10 @@ dmypy.json
 # NFS synchronisation files
 .nfs*
 
-#MacOS temp files
+# MacOS temp files
 .DS_Store
+
+# Plot files written by CSET that can sometimes leak from the tests.
+/meta.json
+/*.html
+/*.png

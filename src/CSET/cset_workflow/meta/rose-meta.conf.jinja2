@@ -19,8 +19,8 @@ help=The site-specific configuration should live in a file under site/
 
     Localhost does not use any site-specific settings, and should work on any
     cylc installation. It will however run on the scheduler server.
-values="localhost", "metoffice", "ncmrwf", "niwa", "nci-gadi", "monsoon"
-value-titles=Localhost, Met Office, NCMRWF, NIWA, NCI-Gadi, Monsoon
+values="localhost", "metoffice", "ncmrwf", "niwa", "nci-gadi", "monsoon", "icm-hpc"
+value-titles=Localhost, Met Office, NCMRWF, NIWA, NCI-Gadi, Monsoon, ICM-HPC
 compulsory=true
 sort-key=setup-a-site
 
@@ -157,17 +157,6 @@ help=This will be a JSON file with a colorbar definition inside. See
 type=quoted
 compulsory=true
 sort-key=setup-h-out2
-
-[template variables=PLOTTING_PROJECTION]
-ns=Setup
-title=Projection for the plots
-description=Geographical projection of plots
-help=This is is the projection used for the final plots, specified as a string.
-    If no value is given, native latitudes and longitudes are used.
-compulsory=true
-values="", "NP_Stereo"
-value-titles="", "North polar stereographic"
-sort-key=setup-h-out3a
 
 [template variables=PLOT_RESOLUTION]
 ns=Setup

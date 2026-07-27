@@ -1,13 +1,14 @@
 category: Scores
-title: "$METHOD $VARNAME\nRMSE between $OTHER_MODEL and $BASE_MODEL"
+title: "$VARNAME\nScores RMSE timeseries between $OTHER_MODEL and $BASE_MODEL $SUBAREA_NAME"
 description: |
-  Extracts and plots the Root Mean Square Error in $METHOD of $VARNAME
-  for all times. The RMSE is calculated based on that used in the
-  package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.rmse). This recipe preserves the time, latitude and longitude coordinates.
-  This means a sequence of spatial plots of the RMSE can be produced.
+  Extracts and plots the Root Mean Square Error in $VARNAME
+  computed over the domain for each timestep. The RMSE is calculated based on that used in the
+  package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.rmse).
+  This recipe allows the preservation of the time coordinate to produce a timeseries. Therefore, the RMSE is
+  collapsed over all other coordinates in the cube and calculated for every timestep.
 
   A larger RMSE implies a greater error than a smaller RMSE. An
-  RMSE of zero implies the two field match. The RMSE is calculated
+  RMSE of zero indicates the two fields match. The RMSE is calculated
   on the grid point and thus a spatial view of the RMSE provides useful
   information about where the differences are, or if placement errors
   are domininating the score (usually indicated by dipoles).
@@ -33,13 +34,10 @@ steps:
     subarea_extent: $SUBAREA_EXTENT
 
   - operator: scoreswrappers.scores_rmse
-    preserved_coordinates: ["time", "grid_latitude", "grid_longitude"]
+    preserved_coordinates: ["time"]
 
-  - operator: collapse.collapse
-    coordinate: ["time"]
-    method: $METHOD
-
-  - operator: plot.spatial_pcolormesh_plot
+  - operator: plot.plot_line_series
+    series_coordinate: time
 
   - operator: write.write_cube_to_nc
     overwrite: True
