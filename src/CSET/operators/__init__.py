@@ -124,7 +124,7 @@ def get_operator(name: str):
         if callable(operator):
             return operator
         else:
-            raise AttributeError
+            raise TypeError
     except (AttributeError, TypeError) as err:
         raise ValueError(f"Unknown operator: {name}") from err
 
