@@ -2310,9 +2310,8 @@ def plot_line_series(
             title = f"{recipe_title}\n [{seq_coord.units.title(seq_coord.points[0])}]"
 
             # Use sequence (e.g. time) bounds if plotting single non-sequence outputs
-            if nplot == 1 and seq_coord.has_bounds:
-                if np.size(seq_coord.bounds) > 1:
-                    title = f"{recipe_title}\n [{seq_coord.units.title(seq_coord.bounds[0][0])} to {seq_coord.units.title(seq_coord.bounds[0][1])}]"
+            if nplot == 1 and seq_coord.has_bounds and np.size(seq_coord.bounds) > 1:
+                title = f"{recipe_title}\n [{seq_coord.units.title(seq_coord.bounds[0][0])} to {seq_coord.units.title(seq_coord.bounds[0][1])}]"
 
             # Do the actual plotting.
             plotting_func(

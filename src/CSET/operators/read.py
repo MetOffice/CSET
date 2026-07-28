@@ -505,15 +505,17 @@ def _lfric_time_coord_fix_callback(cube: iris.cube.Cube) -> iris.cube.Cube:
             and len(cube.coord_dims(time_coord)) == 1
         ):
             # Fudge the bounds to foil checking for strict monotonicity.
-            if time_coord.has_bounds():
-                if (time_coord.bounds[-1][0] - time_coord.bounds[0][0]) < 1.0e-8:
-                    time_coord.bounds = [
-                        [
-                            time_coord.bounds[i][0] + 1.0e-8 * float(i),
-                            time_coord.bounds[i][1],
-                        ]
-                        for i in range(len(time_coord.bounds))
+            if (
+                time_coord.has_bounds()
+                and (time_coord.bounds[-1][0] - time_coord.bounds[0][0]) < 1.0e-8
+            ):
+                time_coord.bounds = [
+                    [
+                        time_coord.bounds[i][0] + 1.0e-8 * float(i),
+                        time_coord.bounds[i][1],
                     ]
+                    for i in range(len(time_coord.bounds))
+                ]
             iris.util.promote_aux_coord_to_dim_coord(cube, time_coord)
     return cube
 
@@ -731,9 +733,8 @@ def _fix_pressure_coord_callback(cube: iris.cube.Cube):
         if coord.name() in ["pressure_level", "pressure_levels"]:
             coord.rename("pressure")
 
-        if coord.name() == "pressure":
-            if str(cube.coord("pressure").units) != "hPa":
-                cube.coord("pressure").convert_units("hPa")
+        if coord.name() == "pressure" and str(cube.coord("pressure").units) != "hPa":
+            cube.coord("pressure").convert_units("hPa")
 
 
 def _fix_um_radtime(cube: iris.cube.Cube):
@@ -818,26 +819,24 @@ def _fix_cell_methods(cube: iris.cube.Cube):
         "m01s04i202",
         "m01s05i201",
         "m01s05i202",
-    ]:
-        # Check if input cell_method contains "mean" time-processing.
-        if {cm.method for cm in cube.cell_methods} == {"mean"}:
-            # Retrieve interval and any comment information.
-            for cell_method in cube.cell_methods:
-                interval_str = cell_method.intervals
-                comment_str = cell_method.comments
+    ] and {cm.method for cm in cube.cell_methods} == {"mean"}:
+        # Retrieve interval and any comment information.
+        for cell_method in cube.cell_methods:
+            interval_str = cell_method.intervals
+            comment_str = cell_method.comments
 
-            # Remove input aggregation method.
-            cube.cell_methods = ()
+        # Remove input aggregation method.
+        cube.cell_methods = ()
 
-            # Replace "mean" with "sum" cell_method to indicate aggregation.
-            cube.add_cell_method(
-                iris.coords.CellMethod(
-                    method="sum",
-                    coords="time",
-                    intervals=interval_str,
-                    comments=comment_str,
-                )
+        # Replace "mean" with "sum" cell_method to indicate aggregation.
+        cube.add_cell_method(
+            iris.coords.CellMethod(
+                method="sum",
+                coords="time",
+                intervals=interval_str,
+                comments=comment_str,
             )
+        )
 
 
 def _convert_cube_units_callback(cube: iris.cube.Cube):

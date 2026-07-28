@@ -76,9 +76,10 @@ def _sort_cubes_for_verification(cubes: CubeList):
     # If cubes contain a pressure coordinate, ensure it is increasing.
     for cube in cubes:
         try:
-            if len(cube.coord("pressure").points) > 2:
-                if not is_increasing(cube.coord("pressure").points):
-                    reverse(cube, "pressure")
+            if len(cube.coord("pressure").points) > 2 and not is_increasing(
+                cube.coord("pressure").points
+            ):
+                reverse(cube, "pressure")
 
         except iris.exceptions.CoordinateNotFoundError:
             pass

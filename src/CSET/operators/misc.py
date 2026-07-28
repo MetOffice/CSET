@@ -391,9 +391,10 @@ def difference(cubes: CubeList):
     # If cubes contain a pressure coordinate, ensure it is increasing.
     for cube in cubes:
         try:
-            if len(cube.coord("pressure").points) > 2:
-                if not is_increasing(cube.coord("pressure").points):
-                    cube.data = np.flip(cube.data, axis=cube.coord_dims("pressure")[0])
+            if len(cube.coord("pressure").points) > 2 and not is_increasing(
+                cube.coord("pressure").points
+            ):
+                cube.data = np.flip(cube.data, axis=cube.coord_dims("pressure")[0])
 
         except iris.exceptions.CoordinateNotFoundError:
             pass
