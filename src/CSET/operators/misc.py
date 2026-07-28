@@ -28,6 +28,8 @@ from CSET._common import is_increasing, iter_maybe
 from CSET.operators._utils import fully_equalise_attributes, get_cube_yxcoordname
 from CSET.operators.regrid import regrid_onto_cube
 
+logger = logging.getLogger(__name__)
+
 
 def noop(x, **kwargs):
     """Return its input without doing anything to it.
@@ -431,9 +433,7 @@ def difference(cubes: CubeList):
             "vapour_specific_humidity_at_pressure_levels_for_climate_averaging",
         ]
     ):
-        logging.debug(
-            "Linear regridding base cube to other grid to compute differences"
-        )
+        logger.debug("Linear regridding base cube to other grid to compute differences")
         base = regrid_onto_cube(base, other, method="Linear")
 
     # Figure out if we are comparing between UM and LFRic; flip array if so.
@@ -447,7 +447,7 @@ def difference(cubes: CubeList):
 
     # Equalise attributes so we can merge.
     fully_equalise_attributes([base, other])
-    logging.debug("Base: %s\nOther: %s", base, other)
+    logger.debug("Base: %s\nOther: %s", base, other)
 
     # This currently relies on the cubes having the same underlying data layout.
     difference = base.copy()
@@ -482,11 +482,11 @@ def _extract_common_time_points(base: Cube, other: Cube) -> tuple[Cube, Cube]:
         None,
     )
     if not time_coord:
-        logging.debug("No time coord, skipping equalisation.")
+        logger.debug("No time coord, skipping equalisation.")
         return (base, other)
     base_time_coord = base.coord(time_coord)
     other_time_coord = other.coord(time_coord)
-    logging.debug("Base: %s\nOther: %s", base_time_coord, other_time_coord)
+    logger.debug("Base: %s\nOther: %s", base_time_coord, other_time_coord)
     if time_coord == "hour":
         # We directly compare points when comparing coordinates with
         # non-absolute units, such as hour. We can't just check the units are
@@ -500,7 +500,7 @@ def _extract_common_time_points(base: Cube, other: Cube) -> tuple[Cube, Cube]:
         base_times = base_time_coord.units.num2date(base_time_coord.points)
         other_times = other_time_coord.units.num2date(other_time_coord.points)
         shared_times = set.intersection(set(base_times), set(other_times))
-    logging.debug("Shared times: %s", shared_times)
+    logger.debug("Shared times: %s", shared_times)
     time_constraint = iris.Constraint(
         coord_values={
             time_coord: lambda cell, shared_times=shared_times: (

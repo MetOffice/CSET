@@ -36,6 +36,8 @@ from CSET.operators.misc import _extract_common_time_points
 from CSET.operators.read import _realization_callback
 from CSET.operators.regrid import regrid_onto_cube
 
+logger = logging.getLogger(__name__)
+
 
 def _sort_cubes_for_verification(cubes: CubeList):
     """Prepare cubes ready for verification in scores.
@@ -119,9 +121,7 @@ def _sort_cubes_for_verification(cubes: CubeList):
             "vapour_specific_humidity_at_pressure_levels_for_climate_averaging",
         ]
     ):
-        logging.debug(
-            "Linear regridding base cube to other grid to compute differences"
-        )
+        logger.debug("Linear regridding base cube to other grid to compute differences")
         base = regrid_onto_cube(base, other, method="Linear")
 
     # Figure out if we are comparing between UM and LFRic; flip array if so.
@@ -142,7 +142,7 @@ def _sort_cubes_for_verification(cubes: CubeList):
 
     # Equalise attributes so we can merge.
     fully_equalise_attributes(CubeList([base, other]))
-    logging.debug("Base: %s\nOther: %s", base, other)
+    logger.debug("Base: %s\nOther: %s", base, other)
 
     return base, other
 
@@ -592,11 +592,11 @@ def scores_crps_for_ensemble(
         Forecasting, 15, 559–570, https://doi.org/10.1175/1520-0434(2000)015<0559:DOTCRP>2.0.CO;2.
     """
     if control_member != 0:
-        logging.warning("control member is usual 0")
+        logger.warning("control member is usual 0")
 
     if control_member not in cubes.coords("realization")[0].points:
         new_control_member = cubes.coords("realization")[0].points[0]
-        logging.warning(
+        logger.warning(
             f"control member value {control_member} out of bounds, defaulting to control member={new_control_member}"
         )
         control_member = new_control_member

@@ -34,6 +34,8 @@ from iris.time import PartialDateTime
 
 from CSET._common import iter_maybe
 
+logger = logging.getLogger(__name__)
+
 
 def pdt_fromisoformat(
     datestring,
@@ -373,7 +375,7 @@ def fully_equalise_attributes(cubes: iris.cube.CubeList):
     """Remove any unique attributes between cubes or coordinates in place."""
     # Equalise cube attributes.
     removed = iris.util.equalise_attributes(cubes)
-    logging.debug("Removed attributes from cube: %s", removed)
+    logger.debug("Removed attributes from cube: %s", removed)
 
     # Equalise coordinate attributes.
     coord_sets = [{coord.name() for coord in cube.coords()} for cube in cubes]
@@ -382,21 +384,21 @@ def fully_equalise_attributes(cubes: iris.cube.CubeList):
     coords_to_equalise = set.intersection(*coord_sets)
     coords_to_remove = set.difference(all_coords, coords_to_equalise)
 
-    logging.debug("All coordinates: %s", all_coords)
-    logging.debug("Coordinates to remove: %s", coords_to_remove)
-    logging.debug("Coordinates to equalise: %s", coords_to_equalise)
+    logger.debug("All coordinates: %s", all_coords)
+    logger.debug("Coordinates to remove: %s", coords_to_remove)
+    logger.debug("Coordinates to equalise: %s", coords_to_equalise)
 
     for coord in coords_to_remove:
         for cube in cubes:
             try:
                 cube.remove_coord(coord)
-                logging.debug("Removed coordinate %s from %s cube.", coord, cube.name())
+                logger.debug("Removed coordinate %s from %s cube.", coord, cube.name())
             except iris.exceptions.CoordinateNotFoundError:
                 pass
 
     for coord in coords_to_equalise:
         removed = iris.util.equalise_attributes([cube.coord(coord) for cube in cubes])
-        logging.debug("Removed attributes from coordinate %s: %s", coord, removed)
+        logger.debug("Removed attributes from coordinate %s: %s", coord, removed)
 
     return cubes
 
@@ -529,7 +531,7 @@ def get_num_models(cube: iris.cube.Cube | iris.cube.CubeList) -> int:
     model_names = {cb.attributes.get("model_name") for cb in iter_maybe(cube)}
 
     if not model_names:
-        logging.debug("Missing model names. Will assume single model.")
+        logger.debug("Missing model names. Will assume single model.")
         return 1
     else:
         return len(model_names)

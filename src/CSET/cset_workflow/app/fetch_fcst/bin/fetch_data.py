@@ -36,6 +36,7 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(message)s",
     stream=sys.stdout,
 )
+logger = logging.getLogger(__name__)
 
 
 class FileRetrieverABC(abc.ABC):
@@ -52,12 +53,12 @@ class FileRetrieverABC(abc.ABC):
 
     def __enter__(self) -> Self:
         """Initialise the file retriever."""
-        logging.debug("Initialising FileRetriever.")
+        logger.debug("Initialising FileRetriever.")
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         """Clean up the file retriever."""
-        logging.debug("Tearing down FileRetriever.")
+        logger.debug("Tearing down FileRetriever.")
 
     @abc.abstractmethod
     def get_file(self, file_path: str, output_dir: str) -> bool:  # pragma: no cover
@@ -105,9 +106,9 @@ class FilesystemFileRetriever(FileRetrieverABC):
             True if files were transferred, otherwise False.
         """
         file_paths = glob.glob(os.path.expanduser(file_path))
-        logging.debug("Copying files:\n%s", "\n".join(file_paths))
+        logger.debug("Copying files:\n%s", "\n".join(file_paths))
         if not file_paths:
-            logging.warning("file_path does not match any files: %s", file_path)
+            logger.warning("file_path does not match any files: %s", file_path)
         any_files_copied = False
         for f in file_paths:
             file = Path(f).absolute()
@@ -119,7 +120,7 @@ class FilesystemFileRetriever(FileRetrieverABC):
                 os.symlink(file, f"{output_dir}/{'}'.join(file.parts)}")
                 any_files_copied = True
             except OSError as err:
-                logging.warning("Failed to copy %s, error: %s", file, err)
+                logger.warning("Failed to copy %s, error: %s", file, err)
         return any_files_copied
 
 
@@ -158,7 +159,7 @@ class HTTPFileRetriever(FileRetrieverABC):
                         fp.write(data)
                 any_files_copied = True
         except OSError as err:
-            logging.warning("Failed to retrieve %s, error: %s", file_path, err)
+            logger.warning("Failed to retrieve %s, error: %s", file_path, err)
         return any_files_copied
 
 
@@ -180,7 +181,7 @@ def _get_needed_environment_variables() -> dict:
         if variables["date_type"] != "initiation":
             raise
         variables["data_period"] = None
-    logging.debug("Environment variables loaded: %s", variables)
+    logger.debug("Environment variables loaded: %s", variables)
     return variables
 
 
@@ -202,7 +203,7 @@ def _get_needed_environment_variables_obs() -> dict:
         "obs_offset": isodate.parse_duration(os.environ["SURFACE_SYNOP_OFFSET"]),
         "rose_datac": os.environ["ROSE_DATAC"],
     }
-    logging.debug("Environment variables loaded: %s", variables)
+    logger.debug("Environment variables loaded: %s", variables)
     return variables
 
 
@@ -276,7 +277,7 @@ def fetch_data(file_retriever: FileRetrieverABC):
     # Prepare output directory.
     cycle_data_dir = f"{v['rose_datac']}/data/{v['model_identifier']}"
     os.makedirs(cycle_data_dir, exist_ok=True)
-    logging.debug("Output directory: %s", cycle_data_dir)
+    logger.debug("Output directory: %s", cycle_data_dir)
 
     # Get file paths.
     paths = _template_file_path(
@@ -287,7 +288,7 @@ def fetch_data(file_retriever: FileRetrieverABC):
         v["forecast_offset"],
         v["data_period"],
     )
-    logging.info("Retrieving paths:\n%s", "\n".join(paths))
+    logger.info("Retrieving paths:\n%s", "\n".join(paths))
 
     # Use file retriever to transfer data with multiple threads.
     with file_retriever() as retriever, ThreadPoolExecutor() as executor:
@@ -329,7 +330,7 @@ def fetch_obs(obs_retriever: FileRetrieverABC):
     # Prepare output directory.
     cycle_obs_dir = f"{v['rose_datac']}/data/OBS"
     os.makedirs(cycle_obs_dir, exist_ok=True)
-    logging.debug("Output directory: %s", cycle_obs_dir)
+    logger.debug("Output directory: %s", cycle_obs_dir)
 
     # Loop over requested obs subtypes.
     for subtype in v["subtype"]:
@@ -348,7 +349,7 @@ def fetch_obs(obs_retriever: FileRetrieverABC):
             timedelta(seconds=0),
             v["obs_interval"],
         )
-        logging.info("Retrieving paths:\n%s", "\n".join(paths))
+        logger.info("Retrieving paths:\n%s", "\n".join(paths))
 
         # Use obs retriever to transfer data with multiple threads.
         # We shouldn't need to iterate as we do for the forecast data

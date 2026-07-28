@@ -26,6 +26,8 @@ from typing import Any
 
 import ruamel.yaml
 
+logger = logging.getLogger(__name__)
+
 
 class ArgumentError(ValueError):
     """Provided arguments are not understood."""
@@ -75,14 +77,14 @@ def parse_recipe(recipe_yaml: Path | str, variables: dict | None = None) -> dict
         except ruamel.yaml.parser.ParserError as err:
             raise ValueError("ParserError: Invalid YAML") from err
 
-    logging.debug("Recipe before templating:\n%s", recipe)
+    logger.debug("Recipe before templating:\n%s", recipe)
     check_recipe_has_steps(recipe)
 
     if variables is not None:
-        logging.debug("Recipe variables: %s", variables)
+        logger.debug("Recipe variables: %s", variables)
         recipe = template_variables(recipe, variables)
 
-    logging.debug("Recipe after templating:\n%s", recipe)
+    logger.debug("Recipe after templating:\n%s", recipe)
     return recipe
 
 

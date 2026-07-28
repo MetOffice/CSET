@@ -21,6 +21,8 @@ import numpy as np
 
 from CSET.operators._utils import get_cube_yxcoordname
 
+logger = logging.getLogger(__name__)
+
 
 def _check_within_bounds(point: tuple[float, float], lat_coord, lon_coord):
     """Check if the point (lat, lon) is within the bounds of the data."""
@@ -142,7 +144,7 @@ def calc_transect(
         # Iterate over all points along transect, lon_pnts will be the same shape as
         # lat_pnts so we can use either to iterate over.
         for i in range(lon_pnts.shape[0]):
-            logging.info("%s/%s", i + 1, lon_pnts.shape[0])
+            logger.info("%s/%s", i + 1, lon_pnts.shape[0])
 
             # Get point along transect.
             cube_slice = cube.interpolate(

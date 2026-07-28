@@ -25,6 +25,8 @@ import pygraphviz
 
 from CSET._common import parse_recipe
 
+logger = logging.getLogger(__name__)
+
 
 def save_graph(
     recipe_file: Path | str,
@@ -60,13 +62,13 @@ def save_graph(
 
     def step_parser(step: dict, prev_node: str) -> str:
         """Parse recipe to add nodes to graph and link them with edges."""
-        logging.debug("Executing step: %s", step)
+        logger.debug("Executing step: %s", step)
         node = str(uuid4())
         graph.add_node(node, label=step["operator"])
         kwargs = {}
         for key, value in step.items():
             if isinstance(value, dict) and "operator" in value:
-                logging.debug("Recursing into argument: %s", key)
+                logger.debug("Recursing into argument: %s", key)
                 sub_node = step_parser(value, prev_node)
                 graph.add_edge(sub_node, node)
             elif key != "operator":

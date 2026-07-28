@@ -23,6 +23,8 @@ import numpy as np
 
 from CSET._common import iter_maybe
 
+logger = logging.getLogger(__name__)
+
 
 def apply_mask(
     original_field: iris.cube.Cube | iris.cube.CubeList,
@@ -60,7 +62,7 @@ def apply_mask(
         M.data = np.float64(M.data)
         M.data[M.data == 0.0] = np.nan
         M.data[~np.isnan(M.data)] = 1.0
-        logging.info(
+        logger.info(
             "Mask set to 1 or 0s, if addition of multiple masks results"
             "in values > 1 these are set to 1."
         )

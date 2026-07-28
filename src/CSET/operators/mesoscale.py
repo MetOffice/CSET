@@ -28,6 +28,8 @@ from scipy.ndimage import gaussian_filter, uniform_filter
 
 from CSET.operators._utils import get_cube_yxcoordname
 
+logger = logging.getLogger(__name__)
+
 
 def spatial_perturbation_field(
     original_field: iris.cube.Cube,
@@ -104,10 +106,10 @@ def spatial_perturbation_field(
     # apply convolution depending on type used
     if apply_gaussian_filter:
         filter_type = "Gaussian"
-        logging.info("Gaussian filter applied.")
+        logger.info("Gaussian filter applied.")
         pert_field.data -= gaussian_filter(original_field.data, filter_scale, axes=axes)
     else:
-        logging.info("Uniform filter applied.")
+        logger.info("Uniform filter applied.")
         filter_type = "Uniform"
         pert_field.data -= uniform_filter(original_field.data, filter_scale, axes=axes)
     # provide attributes to cube to indicate spatial perturbation field

@@ -43,6 +43,8 @@ from scipy.ndimage import gaussian_filter
 
 from CSET.operators._utils import get_cube_yxcoordname
 
+logger = logging.getLogger(__name__)
+
 
 def _calc_dist(coord_1, coord_2):
     """Calculate distance between two coordinate tuples.
@@ -134,7 +136,7 @@ def _aoa_core(
     """
     # Initialise empty array to store age of air for this latitude strip.
     ageofair_local = np.zeros((x_arr.shape[0], x_arr.shape[2]))
-    logging.debug("Working on %s", lon_pnt)
+    logger.debug("Working on %s", lon_pnt)
 
     # Ignore leadtime 0 as this is trivial.
     for leadtime in range(1, x_arr.shape[0]):
@@ -292,7 +294,7 @@ def compute_ageofair(
     """
     # Set up temporary directory to store intermediate age of air slices.
     tmpdir = tempfile.TemporaryDirectory(dir=os.getenv("CYLC_TASK_WORK_DIR"))
-    logging.info("Made tmpdir %s", tmpdir.name)
+    logger.info("Made tmpdir %s", tmpdir.name)
 
     # Check that all cubes are of same size (will catch different dimension orders too).
     if not XWIND.shape == YWIND.shape == WWIND.shape == GEOPOT.shape:
@@ -305,7 +307,7 @@ def compute_ageofair(
         raise NotImplementedError("Unsupported time base")
 
     # Make data non-lazy to speed up code.
-    logging.info("Making data non-lazy...")
+    logger.info("Making data non-lazy...")
     x_arr = XWIND.data
     y_arr = YWIND.data
     z_arr = WWIND.data
@@ -351,7 +353,7 @@ def compute_ageofair(
             )
 
     # Smooth vertical velocity to 2sigma (standard for 0.5 degree).
-    logging.info("Smoothing vertical velocity...")
+    logger.info("Smoothing vertical velocity...")
     if ensemble_mode:
         z_arr = gaussian_filter(z_arr, 2, mode="nearest", axes=(3, 4))
     else:
@@ -406,13 +408,13 @@ def compute_ageofair(
         mp_context = multiprocessing.get_context("spawn")
         pool = mp_context.Pool(num_usable_cores)
 
-    logging.info("STARTING AOA DIAG...")
+    logger.info("STARTING AOA DIAG...")
     start = datetime.datetime.now()
 
     # Main call for calculating age of air diagnostic
     if ensemble_mode:
         for e in range(len(XWIND.coord("realization").points)):
-            logging.info(f"Working on member {e}")
+            logger.info(f"Working on member {e}")
 
             # Multiprocessing on each longitude slice
             func = partial(
@@ -471,7 +473,7 @@ def compute_ageofair(
         pool.join()
 
     # Verbose for time taken to run, and collate tmp ndarrays into final cube, and return
-    logging.info(
+    logger.info(
         "AOA DIAG DONE, took %s s",
         (datetime.datetime.now() - start).total_seconds(),
     )
