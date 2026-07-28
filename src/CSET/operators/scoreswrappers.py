@@ -470,7 +470,7 @@ def scores_correlation_pearsonr(
         A CubeList containing exactly two cubes: a base and an "other" model,
         this can be an analysis and the model.
     preserved_coordinates: list[str] | str | None, default is None.
-        The coordinates that you wish to preserve in the calculaiton of the
+        The coordinates that you wish to preserve in the calculation of the
         PC. For example if you want a map of each time you can preserve
         ["time","grid_latitude", "grid_longitude"] or if you want a time series
         you can preserve ["time"], if you want to collapse to a single value
