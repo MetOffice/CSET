@@ -22,6 +22,7 @@ import logging
 from typing import Literal
 
 import iris
+import iris.cube
 import matplotlib as mpl
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
@@ -685,8 +686,8 @@ def custom_colormap_feature_tracking(cube: iris.cube.Cube, cmap, levels, norm):
     varnames = list(filter(None, [cube.long_name, cube.standard_name, cube.var_name]))
     if (
         any("feature_id" in name for name in varnames)
-        and "difference" not in cube.long_name
-        and "mask" not in cube.long_name
+        and any("difference" not in name for name in varnames)
+        and any("mask" not in name for name in varnames)
     ):
         # Define the levels and colors
         levels = np.linspace(1, np.ma.max(cube.data), 10)
@@ -696,8 +697,8 @@ def custom_colormap_feature_tracking(cube: iris.cube.Cube, cmap, levels, norm):
         logger.info("change colormap for feature id variable colorbar.")
     elif (
         any("feature_lifetime" in name for name in varnames)
-        and "difference" not in cube.long_name
-        and "mask" not in cube.long_name
+        and any("difference" not in name for name in varnames)
+        and any("mask" not in name for name in varnames)
     ):
         # Define the levels and colors
         levels = np.linspace(1, np.ma.max(cube.data), 10)
@@ -707,8 +708,8 @@ def custom_colormap_feature_tracking(cube: iris.cube.Cube, cmap, levels, norm):
         logger.info("change colormap for feature lifetime variable colorbar.")
     elif (
         any("feature_init" in name for name in varnames)
-        and "difference" not in cube.long_name
-        and "mask" not in cube.long_name
+        and any("difference" not in name for name in varnames)
+        and any("mask" not in name for name in varnames)
     ):
         # Define the levels and colors
         levels = np.array([0.5, 1])
