@@ -18,6 +18,7 @@ import json
 import logging
 from pathlib import Path
 
+import cartopy.crs as ccrs
 import iris.coords
 import iris.cube
 import matplotlib as mpl
@@ -33,12 +34,11 @@ def test_setup_spatial_map(cube):
     figure = mpl.figure.Figure()
     axes = plot._setup_spatial_map(cube, figure, mpl.colormaps["viridis"])
     assert axes == figure.gca()
-    # Test bounds - set as global as rotated pole input.
+
+    # Check spatial map bounds cut out the correct area (around Exeter).
     bounds = axes.get_extent()
-    assert bounds[0] == -180.0
-    assert bounds[1] == 180.0
-    assert bounds[2] == -90.0
-    assert bounds[3] == 90.0
+    expected_bounds = (-5.0, 3.0, -3.75, 7.0)
+    assert np.allclose(bounds, expected_bounds, atol=0.1)
 
 
 def test_setup_spatial_map_dateline(cube):
@@ -69,6 +69,34 @@ def test_setup_spatial_map_global(cube):
     assert bounds[1] == np.max(cube.coord("longitude").points) - 180.0
     assert bounds[2] == np.min(cube.coord("latitude").points)
     assert bounds[3] == np.max(cube.coord("latitude").points)
+
+
+def test_setup_spatial_map_npole(north_polar_cube):
+    """Setup spatial map for Arctic example."""
+    figure = mpl.figure.Figure()
+    axes_gl = plot._setup_spatial_map(
+        north_polar_cube, figure, mpl.colormaps["viridis"]
+    )
+    assert axes_gl == figure.gca()
+    assert axes_gl.projection == ccrs.NorthPolarStereo(central_longitude=0.0)
+
+
+def test_setup_spatial_map_spole(south_polar_cube):
+    """Setup spatial map for Antarctic example."""
+    figure = mpl.figure.Figure()
+    axes_gl = plot._setup_spatial_map(
+        south_polar_cube, figure, mpl.colormaps["viridis"]
+    )
+    assert axes_gl == figure.gca()
+    assert axes_gl.projection == ccrs.SouthPolarStereo(central_longitude=180.0)
+
+
+def test_setup_spatial_map_nocoast(cube):
+    """Setup spatial map without coastline default."""
+    cube.rename("surface_altitude")
+    figure = mpl.figure.Figure()
+    axes_gl = plot._setup_spatial_map(cube, figure, mpl.colormaps["viridis"])
+    assert axes_gl == figure.gca()
 
 
 def test_set_title_and_filename_filename_single_sequence(cube):
@@ -162,6 +190,18 @@ def test_set_title_and_filename_multidim_aggregated(long_forecast_multi_day):
     assert plot_title == "recipe\n [3 cases]"
 
 
+def test_set_title_and_filename_reference_time(cube):
+    """Setup plot title and filename for single input with reference time attribute."""
+    cube.coord("time").attributes["number_reference_times"] = 10
+    seq_coord = cube.coord("time")[0]
+    nplot = 1
+    plot_title, plot_filename = plot._set_title_and_filename(
+        seq_coord, nplot, "recipe", None
+    )
+    assert plot_filename == "recipe_10cases.png"
+    assert plot_title == "recipe\n [10 cases]"
+
+
 def test_set_title_and_filename_year_one(cube):
     """Ensure no time information in plot title and filename for dummy time output."""
     # Extract first time from test cube.
@@ -180,6 +220,37 @@ def test_set_title_and_filename_year_one(cube):
     assert plot_title == "recipe"
 
 
+def test_set_axis_range_single_cube(cube, tmp_working_dir):
+    """Test _set_axis_range with a single cube, without levels set."""
+    cubes = iris.cube.CubeList([cube])
+
+    vmin, vmax = plot._set_axis_range(cubes)
+
+    assert vmin == cube.data.min()
+    assert vmax == cube.data.max()
+
+
+def test_set_axis_range_cubelist(cube, tmp_working_dir):
+    """Test _set_axis_range with a cubelist, without levels set."""
+    cubes = iris.cube.CubeList([cube, 2.0 * cube])
+
+    vmin, vmax = plot._set_axis_range(cubes)
+
+    assert vmin == cube.data.min()
+    assert vmax == 2.0 * cube.data.max()
+
+
+def test_set_axis_range_levels(cube, tmp_working_dir):
+    """Test _set_axis_range with a single cube, for variable with levels set."""
+    cube.rename("land_binary_mask")
+    cubes = iris.cube.CubeList([cube])
+
+    vmin, vmax = plot._set_axis_range(cubes)
+
+    assert vmin == 0.0
+    assert vmax == 1.0
+
+
 def test_spatial_contour_plot(cube, tmp_working_dir):
     """Plot spatial contour plot of instant air temp."""
     # Remove realization coord to increase coverage, and as its not needed.
@@ -192,25 +263,25 @@ def test_spatial_contour_plot(cube, tmp_working_dir):
 def test_contour_plot_sequence(cube, tmp_working_dir):
     """Plot sequence of contour plots."""
     plot.spatial_contour_plot(cube, sequence_coordinate="time")
-    assert Path("untitled_20220921030000.png").is_file()
-    assert Path("untitled_20220921040000.png").is_file()
-    assert Path("untitled_20220921050000.png").is_file()
+    assert Path("air_temperature_20220921030000.png").is_file()
+    assert Path("air_temperature_20220921040000.png").is_file()
+    assert Path("air_temperature_20220921050000.png").is_file()
 
 
 def test_spatial_multi_variable_plot(cube, tmp_working_dir):
     """Plot spatial plot with multiple input variables."""
     # Here assume cube provides cube, overlay_cube and contour_cube.
     plot.spatial_multi_pcolormesh_plot(cube, cube, cube, sequence_coordinate="time")
-    assert Path("untitled_20220921030000.png").is_file()
-    assert Path("untitled_20220921040000.png").is_file()
-    assert Path("untitled_20220921050000.png").is_file()
+    assert Path("air_temperature_20220921030000.png").is_file()
+    assert Path("air_temperature_20220921040000.png").is_file()
+    assert Path("air_temperature_20220921050000.png").is_file()
 
 
 def test_spatial_multi_variable_plot_nolayers(cube, tmp_working_dir):
     """Plot spatial plot with single input cube only."""
     # Call spatial_multi_pcolormesh_plot with only cube as input.
     plot.spatial_multi_pcolormesh_plot(cube[0], sequence_coordinate="time")
-    assert Path("untitled_20220921030000.png").is_file()
+    assert Path("air_temperature_20220921030000.png").is_file()
 
 
 def test_spatial_multi_variable_plot_overlay_only(cube, tmp_working_dir):
@@ -219,7 +290,7 @@ def test_spatial_multi_variable_plot_overlay_only(cube, tmp_working_dir):
     plot.spatial_multi_pcolormesh_plot(
         cube[0], overlay_cube=cube[0], sequence_coordinate="time"
     )
-    assert Path("untitled_20220921030000.png").is_file()
+    assert Path("air_temperature_20220921030000.png").is_file()
 
 
 def test_spatial_multi_variable_plot_contour_only(cube, tmp_working_dir):
@@ -228,7 +299,7 @@ def test_spatial_multi_variable_plot_contour_only(cube, tmp_working_dir):
     plot.spatial_multi_pcolormesh_plot(
         cube[0], contour_cube=cube[0], sequence_coordinate="time"
     )
-    assert Path("untitled_20220921030000.png").is_file()
+    assert Path("air_temperature_20220921030000.png").is_file()
 
 
 @pytest.mark.slow
@@ -272,7 +343,7 @@ def test_postage_stamp_contour_plot(ensemble_cube, tmp_working_dir):
     # Get a single time step.
     ensemble_cube_3d = next(ensemble_cube.slices_over("time"))
     plot.spatial_contour_plot(ensemble_cube_3d)
-    assert Path("untitled_20221201100000.png").is_file()
+    assert Path("air_temperature_20221201100000.png").is_file()
 
 
 def test_postage_stamp_contour_plot_sequence_coord_check(cube, tmp_working_dir):
@@ -307,17 +378,17 @@ def test_spatial_pcolormesh_levels(cube, tmp_working_dir, caplog):
                 message_matchB = True
         assert message_matchA
         assert message_matchB
-    assert Path("untitled_20220921030000.png").is_file()
-    assert Path("untitled_20220921040000.png").is_file()
-    assert Path("untitled_20220921050000.png").is_file()
+    assert Path("surface_microphysical_rainfall_rate_20220921030000.png").is_file()
+    assert Path("surface_microphysical_rainfall_rate_20220921040000.png").is_file()
+    assert Path("surface_microphysical_rainfall_rate_20220921050000.png").is_file()
 
 
 def test_pcolormesh_plot_sequence(cube, tmp_working_dir):
     """Plot sequence of pcolormesh plots."""
     plot.spatial_pcolormesh_plot(cube, sequence_coordinate="time")
-    assert Path("untitled_20220921030000.png").is_file()
-    assert Path("untitled_20220921040000.png").is_file()
-    assert Path("untitled_20220921050000.png").is_file()
+    assert Path("air_temperature_20220921030000.png").is_file()
+    assert Path("air_temperature_20220921040000.png").is_file()
+    assert Path("air_temperature_20220921050000.png").is_file()
 
 
 def test_pcolormesh_plot_global(global_cube, caplog, tmp_working_dir):
@@ -331,12 +402,21 @@ def test_pcolormesh_plot_global(global_cube, caplog, tmp_working_dir):
     assert message_match
 
 
+def test_spatial_scatter(cube, tmp_working_dir):
+    """Save a spatial plot with scatter of cube points."""
+    cube.coord("grid_latitude").rename("station")
+    plot.spatial_pcolormesh_plot(cube, sequence_coordinate="time")
+    assert Path("air_temperature_20220921030000.png").is_file()
+    assert Path("air_temperature_20220921040000.png").is_file()
+    assert Path("air_temperature_20220921050000.png").is_file()
+
+
 def test_postage_stamp_pcolormesh_plot(ensemble_cube, tmp_working_dir):
     """Plot postage stamp plots of ensemble data."""
     # Get a single time step.
     ensemble_cube_3d = next(ensemble_cube.slices_over("time"))
     plot.spatial_pcolormesh_plot(ensemble_cube_3d)
-    assert Path("untitled_20221201100000.png").is_file()
+    assert Path("air_temperature_20221201100000.png").is_file()
 
 
 def test_postage_stamp_pcolormesh_plot_sequence_coord_check(cube, tmp_working_dir):
@@ -375,13 +455,13 @@ def test_plot_line_series(cube, tmp_working_dir):
     """Save a line series plot."""
     cube = collapse.collapse(cube, ["grid_latitude", "grid_longitude"], "MEAN")
     plot.plot_line_series(cube)
-    assert Path("untitled_20220921030000_20220921050000.png").is_file()
+    assert Path("air_temperature_20220921030000_20220921050000.png").is_file()
 
 
 def test_plot_power_spectrum(power_spectrum_cube_readonly, tmp_working_dir):
     """Save a power_spectrum plot using line series plot."""
     plot.plot_line_series(power_spectrum_cube_readonly, series_coordinate="frequency")
-    assert Path("untitled_20220601000000.png").is_file()
+    assert Path("power_spectra_20220601000000.png").is_file()
 
 
 def test_plot_line_series_with_filename(cube, tmp_working_dir):
@@ -619,8 +699,8 @@ def test_plot_vertical_line_series(vertical_profile_cube, tmp_working_dir):
     plot.plot_vertical_line_series(
         vertical_profile_cube, series_coordinate="pressure", sequence_coordinate="time"
     )
-    assert Path("untitled_20240116060000.png").is_file()
-    assert Path("untitled_20240116090000.png").is_file()
+    assert Path("air_temperature_20240116060000.png").is_file()
+    assert Path("air_temperature_20240116090000.png").is_file()
 
 
 def test_plot_vertical_line_series_with_filename(
@@ -688,8 +768,8 @@ def test_plot_vertical_line_series_ensemble(vertical_profile_cube, tmp_working_d
     plot.plot_vertical_line_series(
         cubes, series_coordinate="pressure", sequence_coordinate="time"
     )
-    assert Path("untitled_20240116060000.png").is_file()
-    assert Path("untitled_20240116090000.png").is_file()
+    assert Path("air_temperature_20240116060000.png").is_file()
+    assert Path("air_temperature_20240116090000.png").is_file()
 
 
 def test_plot_histogram_no_sequence_coordinate(histogram_cube, tmp_working_dir):
@@ -732,6 +812,25 @@ def test_plot_histogram_update_vmin_vmax(histogram_cube, tmp_working_dir, caplog
         assert message_matchB
 
 
+def test_plot_histogram_single_plot(histogram_cube, tmp_working_dir):
+    """Plot sequence of contour plots."""
+    plot.plot_histogram_series(
+        histogram_cube, filename="test", sequence_coordinate="time", single_plot=True
+    )
+    assert Path("test_20240116060000.png").is_file()
+
+
+def test_plot_histogram_series_multi_model(histogram_cube, tmp_working_dir):
+    """Test histogram plotting with multiple model inputs."""
+    c1 = histogram_cube.copy()
+    c1.attributes["model_name"] = "model_1"
+    c2 = histogram_cube.copy()
+    c2.attributes["model_name"] = "model_2"
+    plot.plot_histogram_series([c1, c2], filename="test", sequence_coordinate="time")
+    assert Path("test_20240116060000.png").is_file()
+    assert Path("test_20240116090000.png").is_file()
+
+
 def test_plot_and_save_histogram_series_bins(histogram_cube, tmp_working_dir, caplog):
     """Test plotting a postage stamp histogram."""
     with caplog.at_level(logging.DEBUG):
@@ -756,6 +855,29 @@ def test_plot_and_save_histogram_series_bins_precip(
 ):
     """Test plotting a rainfall rate histogram."""
     histogram_cube.rename("surface_microphysical_rainfall_flux")
+    histogram_cube.units = "kg m-2 s-1"
+    with caplog.at_level(logging.DEBUG):
+        plot._plot_and_save_histogram_series(
+            cubes=histogram_cube,
+            filename="test.png",
+            title="Test surface_microphysical",
+            vmin=0,
+            vmax=0,
+            histtype="step",
+        )
+        message_match = False
+        for _, _, message in caplog.record_tuples:
+            if message == "Plotting histogram with 38 bins 0.0 - 398.1071705534973.":
+                message_match = True
+        assert message_match
+    assert Path("test.png").is_file()
+
+
+def test_plot_and_save_histogram_series_bins_precip_amount(
+    histogram_cube, tmp_working_dir, caplog
+):
+    """Test plotting a rainfall amount histogram."""
+    histogram_cube.rename("surface_microphysical_rainfall_amount")
     histogram_cube.units = "kg m-2 s-1"
     with caplog.at_level(logging.DEBUG):
         plot._plot_and_save_histogram_series(
@@ -833,7 +955,7 @@ def test_scatter_plot(cube, vertical_profile_cube, tmp_working_dir):
         cube_y,
         cube_x,
     )
-    assert Path("untitled.png").is_file()
+    assert Path("scatter_plot.png").is_file()
 
 
 def test_scatter_plot_with_filename(cube, vertical_profile_cube, tmp_working_dir):
@@ -857,7 +979,7 @@ def test_scatter_plot_no_one_to_one_line(cube, vertical_profile_cube, tmp_workin
         cube_x,
         one_to_one=False,
     )
-    assert Path("untitled.png").is_file()
+    assert Path("scatter_plot.png").is_file()
 
 
 def test_scatter_plot_too_many_x_dimensions(
@@ -1009,7 +1131,7 @@ def test_qq_plot(cube, tmp_working_dir):
         percentiles=[0, 50, 100],
         model_names=["a", "b"],
     )
-    assert Path("untitled.png").is_file()
+    assert Path("qq_plot.png").is_file()
 
 
 def test_qq_plot_named(cube, tmp_working_dir):
@@ -1074,7 +1196,7 @@ def test_qq_plot_different_data_shape_regrid(cube, tmp_working_dir):
         percentiles=[0, 50, 100],
         model_names=["a", "b"],
     )
-    assert Path("untitled.png").is_file()
+    assert Path("qq_plot.png").is_file()
 
 
 def test_qq_plot_grid_staggering_regrid(cube, tmp_working_dir):
@@ -1089,4 +1211,19 @@ def test_qq_plot_grid_staggering_regrid(cube, tmp_working_dir):
         percentiles=[0, 50, 100],
         model_names=["a", "b"],
     )
-    assert Path("untitled.png").is_file()
+    assert Path("qq_plot.png").is_file()
+
+
+def test_hinton_returns_figure_and_axes():
+    """Test that hinton plot returns valid fig and ax objects."""
+    change = np.array([[0.5, -0.5]])
+    signif = np.array([[1, 0]])
+
+    fig, ax = plot.hinton_plot(
+        change,
+        signif,
+        xaxis_labels=["A", "B"],
+        yaxis_labels=["Metric"],
+    )
+    assert fig is not None
+    assert ax is not None

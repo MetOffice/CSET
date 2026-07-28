@@ -17,16 +17,31 @@
 https://docs.pytest.org/en/latest/reference/fixtures.html#conftest-py-sharing-fixtures-across-multiple-files
 """
 
+import datetime
+import shutil
 import subprocess
 from collections.abc import Callable
 from pathlib import Path
 from uuid import uuid4
 
+import cf_units
 import iris
+import iris.coord_systems
+import iris.coords
 import iris.cube
+import numpy as np
 import pytest
 
 from CSET.operators import constraints, filters, read
+
+
+# Special function that is run after all the tests finish.
+def pytest_sessionfinish(session, exitstatus):
+    """Check we didn't leak any plotting files during testing."""
+    assert not (Path.cwd() / "meta.json").exists(), (
+        "meta.json in top level directory. This usually indicates a test "
+        "is not using the `tmp_working_dir` fixture when it should."
+    )
 
 
 @pytest.fixture
@@ -105,6 +120,18 @@ def tmp_working_dir(tmp_path, monkeypatch) -> Path:
     """Change the working directory for a test."""
     monkeypatch.chdir(tmp_path)
     return tmp_path
+
+
+@pytest.fixture()
+def workflow(tmp_path) -> Path:
+    """Extract a fresh workflow."""
+    subprocess.run(["cset", "extract-workflow", str(tmp_path)], check=True)
+    workflow_dir: Path = next(tmp_path.glob("cset-workflow-v*"))
+    # Copy example configuration into place.
+    shutil.copyfile(
+        workflow_dir / "rose-suite.conf.example", workflow_dir / "rose-suite.conf"
+    )
+    return workflow_dir
 
 
 # Session scope fixtures, so the test data only has to be loaded from disk
@@ -864,3 +891,302 @@ def sf_3d_read_only():
 def sf_3d(sf_3d_read_only):
     """Get saturation fraction 3D data. It is safe to modify."""
     return sf_3d_read_only.copy()
+
+
+@pytest.fixture()
+def u_wind_maul_all_read_only():
+    """Get u wind for 5D data. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/precipitation/u_wind_all.nc")
+
+
+@pytest.fixture()
+def u_wind_maul_all(u_wind_maul_all_read_only):
+    """Get u wind for 5D data. It is safe to modify."""
+    return u_wind_maul_all_read_only.copy()
+
+
+@pytest.fixture()
+def u_wind_maul_time_read_only():
+    """Get u wind for 4D data varying in time. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/precipitation/u_wind_time.nc")
+
+
+@pytest.fixture()
+def u_wind_maul_time(u_wind_maul_time_read_only):
+    """Get v wind for 4D data varying in time. It is safe to modify."""
+    return u_wind_maul_time_read_only.copy()
+
+
+@pytest.fixture()
+def u_wind_maul_member_read_only():
+    """Get u wind for 4D data varying in realization. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/precipitation/u_wind_member.nc")
+
+
+@pytest.fixture()
+def u_wind_maul_member(u_wind_maul_member_read_only):
+    """Get u wind for 4D data varying in realization. It is safe to modify."""
+    return u_wind_maul_member_read_only.copy()
+
+
+@pytest.fixture()
+def u_wind_maul_read_only():
+    """Get u wind for 3D data. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/precipitation/u_wind_basic.nc")
+
+
+@pytest.fixture()
+def u_wind_maul(u_wind_maul_read_only):
+    """Get u wind for 3D data. It is safe to modify."""
+    return u_wind_maul_read_only.copy()
+
+
+@pytest.fixture()
+def v_wind_maul_all_read_only():
+    """Get v wind for 5D data. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/precipitation/v_wind_all.nc")
+
+
+@pytest.fixture()
+def v_wind_maul_all(v_wind_maul_all_read_only):
+    """Get pv wind for 5D data. It is safe to modify."""
+    return v_wind_maul_all_read_only.copy()
+
+
+@pytest.fixture()
+def v_wind_maul_time_read_only():
+    """Get v wind for 4D data varying in time. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/precipitation/u_wind_time.nc")
+
+
+@pytest.fixture()
+def v_wind_maul_time(v_wind_maul_time_read_only):
+    """Get v wind for 4D data varying in time. It is safe to modify."""
+    return v_wind_maul_time_read_only.copy()
+
+
+@pytest.fixture()
+def v_wind_maul_member_read_only():
+    """Get u wind for 4D data varying in realization. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/precipitation/v_wind_member.nc")
+
+
+@pytest.fixture()
+def v_wind_maul_member(v_wind_maul_member_read_only):
+    """Get v wind for 4D data varying in realization. It is safe to modify."""
+    return v_wind_maul_member_read_only.copy()
+
+
+@pytest.fixture()
+def v_wind_maul_read_only():
+    """Get u wind for 3D data. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/precipitation/v_wind_basic.nc")
+
+
+@pytest.fixture()
+def v_wind_maul(v_wind_maul_read_only):
+    """Get v wind for 3D data. It is safe to modify."""
+    return v_wind_maul_read_only.copy()
+
+
+@pytest.fixture()
+def precalc_wind_below_maul_read_only():
+    """Get precalculated wind below maul 3D data. It is NOT safe to modify."""
+    return read.read_cube(
+        "tests/test_data/precipitation/precalculated_wind_below_maul_3d.nc"
+    )
+
+
+@pytest.fixture()
+def precalc_wind_below_maul(precalc_wind_below_maul_read_only):
+    """Get precalculated wind below maul for 3D data. It is safe to modify."""
+    return precalc_wind_below_maul_read_only.copy()
+
+
+@pytest.fixture()
+def precalc_wind_below_maul_4d_time_read_only():
+    """Get precalculated wind below maul 4D data varying time. It is NOT safe to modify."""
+    return read.read_cube(
+        "tests/test_data/precipitation/precalculated_wind_below_maul_4d_time.nc"
+    )
+
+
+@pytest.fixture()
+def precalc_wind_below_maul_4d_time(precalc_wind_below_maul_4d_time_read_only):
+    """Get precalculated wind below maul for 4D data varying time. It is safe to modify."""
+    return precalc_wind_below_maul_4d_time_read_only.copy()
+
+
+@pytest.fixture()
+def precalc_wind_below_maul_4d_realization_read_only():
+    """Get precalculated wind below maul 4D data varying realization. It is NOT safe to modify."""
+    return read.read_cube(
+        "tests/test_data/precipitation/precalculated_wind_below_maul_4d_realization.nc"
+    )
+
+
+@pytest.fixture()
+def precalc_wind_below_maul_4d_realization(
+    precalc_wind_below_maul_4d_realization_read_only,
+):
+    """Get precalculated wind below maul for 4D data varying realization. It is safe to modify."""
+    return precalc_wind_below_maul_4d_realization_read_only.copy()
+
+
+@pytest.fixture()
+def precalc_wind_below_maul_5d_read_only():
+    """Get precalculated wind below maul 5D data. It is NOT safe to modify."""
+    return read.read_cube(
+        "tests/test_data/precipitation/precalculated_wind_below_maul_5d.nc"
+    )
+
+
+@pytest.fixture()
+def precalc_wind_below_maul_5d(precalc_wind_below_maul_5d_read_only):
+    """Get precalculated wind below maul for 5D data. It is safe to modify."""
+    return precalc_wind_below_maul_5d_read_only.copy()
+
+
+@pytest.fixture
+def feature_cube() -> iris.cube.Cube:
+    """Set up three timesteps and three realizations of data and place into cube."""
+    data_arr = np.zeros((3, 3, 10, 10))
+    data_arr[0:2, 0, 2:6, 2:6] = 1
+    data_arr[0:2, 1, 3:7, 3:7] = 1
+    data_arr[0:2, 2, 4:8, 4:8] = 1
+
+    realization = iris.coords.DimCoord(points=[0, 1, 2], standard_name="realization")
+    time_units = cf_units.Unit("days since 2000-01-01 00:00:00", calendar="gregorian")
+    time_start = datetime.datetime(2010, 1, 1, 0, 0, 0)
+    time_dt_points = [
+        time_start + datetime.timedelta(minutes=5 * idx) for idx in range(3)
+    ]
+    time_points = [time_units.date2num(time_point) for time_point in time_dt_points]
+    time_coord = iris.coords.DimCoord(
+        points=time_points, standard_name="time", units=time_units
+    )
+
+    coord_system = iris.coord_systems.TransverseMercator(
+        latitude_of_projection_origin=55, longitude_of_central_meridian=0
+    )
+    coord_range = np.arange(0, 100, 10)
+    proj_y_coord = iris.coords.DimCoord(
+        points=coord_range,
+        standard_name="projection_y_coordinate",
+        var_name="projection_y_coordinate",
+        units="m",
+        coord_system=coord_system,
+    )
+    proj_x_coord = iris.coords.DimCoord(
+        points=coord_range,
+        standard_name="projection_x_coordinate",
+        var_name="projection_x_coordinate",
+        units="m",
+        coord_system=coord_system,
+    )
+
+    proj_y_coord.guess_bounds()
+    proj_x_coord.guess_bounds()
+
+    coords = (realization, time_coord, proj_y_coord, proj_x_coord)
+    dim_coords_and_dims = [(coord, dim) for dim, coord in enumerate(coords)]
+    cube = iris.cube.Cube(
+        data=data_arr,
+        dim_coords_and_dims=dim_coords_and_dims,
+        long_name="crps test",
+    )
+    return cube
+
+
+@pytest.fixture()
+def north_polar_cube() -> iris.cube.Cube:
+    """Set up dummy cube with coords spanning regional north polar coords."""
+    cube = iris.cube.Cube(
+        np.random.rand(5, 36), standard_name="air_temperature", units="K"
+    )
+    cube.add_dim_coord(
+        iris.coords.DimCoord(
+            np.arange(50, 100, 10), standard_name="latitude", units="degrees"
+        ),
+        0,
+    )
+    cube.add_dim_coord(
+        iris.coords.DimCoord(
+            np.arange(0, 360, 10), standard_name="longitude", units="degrees"
+        ),
+        1,
+    )
+    return cube
+
+
+@pytest.fixture()
+def south_polar_cube() -> iris.cube.Cube:
+    """Set up dummy cube with coords spanning regional south polar coords."""
+    cube = iris.cube.Cube(
+        np.random.rand(4, 36), standard_name="air_temperature", units="K"
+    )
+    cube.add_dim_coord(
+        iris.coords.DimCoord(
+            np.arange(-90, -50, 10), standard_name="latitude", units="degrees"
+        ),
+        0,
+    )
+    cube.add_dim_coord(
+        iris.coords.DimCoord(
+            np.arange(-180, 180, 10), standard_name="longitude", units="degrees"
+        ),
+        1,
+    )
+    return cube
+
+
+@pytest.fixture()
+def precalc_direction_shear_read_only():
+    """Get precalculated directional shear across maul for 3D data. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/precipitation/precalc_dir_shear.nc")
+
+
+@pytest.fixture()
+def precalc_direction_shear(precalc_direction_shear_read_only):
+    """Get precalculated directional shear across maul for 3D data. It is safe to modify."""
+    return precalc_direction_shear_read_only.copy()
+
+
+@pytest.fixture()
+def precalc_direction_shear_4d_time_read_only():
+    """Get precalculated directional shear across maul for 4D data varying time. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/precipitation/precalc_dir_shear_time.nc")
+
+
+@pytest.fixture()
+def precalc_direction_shear_4d_time(precalc_direction_shear_4d_time_read_only):
+    """Get precalculated directional shear across maul for 4D data varying time. It is safe to modify."""
+    return precalc_direction_shear_4d_time_read_only.copy()
+
+
+@pytest.fixture()
+def precalc_direction_shear_4d_realization_read_only():
+    """Get precalculated directional shear across maul for 4D data varying realization. It is NOT safe to modify."""
+    return read.read_cube(
+        "tests/test_data/precipitation/precalc_dir_shear_realization.nc"
+    )
+
+
+@pytest.fixture()
+def precalc_direction_shear_4d_realization(
+    precalc_direction_shear_4d_realization_read_only,
+):
+    """Get precalculated directional shear across maul for 4D data varying realization. It is safe to modify."""
+    return precalc_direction_shear_4d_realization_read_only.copy()
+
+
+@pytest.fixture()
+def precalc_direction_shear_5d_read_only():
+    """Get precalculated directional_shear_across maul for 5D data. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/precipitation/precalc_dir_shear_5d.nc")
+
+
+@pytest.fixture()
+def precalc_direction_shear_5d(precalc_direction_shear_5d_read_only):
+    """Get precalculated directional shear across maul for 5D data. It is safe to modify."""
+    return precalc_direction_shear_5d_read_only.copy()

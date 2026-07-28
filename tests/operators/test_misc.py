@@ -78,6 +78,41 @@ def test_subtraction_failure(cube):
         misc.subtraction(cube, a)
 
 
+def test_subtraction_cubelist(cube):
+    """Subtracts one cubelist from another."""
+    a = iris.cube.CubeList([cube, cube])
+    b = misc.subtraction(a, a)
+    assert isinstance(b, iris.cube.CubeList)
+    assert np.allclose(b[0].data, 0.0, atol=1e-5, equal_nan=True)
+    assert np.allclose(b[1].data, 0.0, atol=1e-5, equal_nan=True)
+
+
+def test_subtraction_cubelist_cube(cube):
+    """Subtracts a cube from a cubelist."""
+    a = iris.cube.CubeList([cube, cube])
+    b = misc.subtraction(a, cube)
+    assert isinstance(b, iris.cube.CubeList)
+    assert np.allclose(b[0].data, 0.0, atol=1e-5, equal_nan=True)
+    assert np.allclose(b[1].data, 0.0, atol=1e-5, equal_nan=True)
+
+
+def test_subtraction_single_cubelist_cube(cube):
+    """Subtracts a cube from a cubelist with single entry."""
+    a = iris.cube.CubeList([cube])
+    b = misc.subtraction(a, cube)
+    assert isinstance(b, iris.cube.Cube)
+    assert np.allclose(b.data, 0.0, atol=1e-5, equal_nan=True)
+
+
+def test_subtraction_cubelist_from_cube(cube):
+    """Subtracts a cubelist from a cube."""
+    a = iris.cube.CubeList([cube, cube])
+    b = misc.subtraction(cube, a)
+    assert isinstance(b, iris.cube.CubeList)
+    assert np.allclose(b[0].data, 0.0, atol=1e-5, equal_nan=True)
+    assert np.allclose(b[1].data, 0.0, atol=1e-5, equal_nan=True)
+
+
 def test_division(cube):
     """Divides one object by another."""
     a = cube / cube
@@ -474,17 +509,6 @@ def test_slice_cube_on_common_levels(vertical_profile_cube):
     )
 
 
-def test_extract_common_points_toomanycubes(vertical_profile_cube):
-    """Test handling of too many cubes."""
-    with pytest.raises(ValueError, match="Maximum of two cubes allowed, received 3"):
-        misc.extract_common_points(
-            cubes=iris.cube.CubeList(
-                [vertical_profile_cube, vertical_profile_cube, vertical_profile_cube]
-            ),
-            coordinate="pressure",
-        )
-
-
 def test_extract_common_points_cubelist(vertical_profile_cube):
     """Test handling of function not being handed a CubeList."""
     with pytest.raises(
@@ -541,3 +565,41 @@ def test_extract_common_points_nocommonpoints(vertical_profile_cube):
         misc.extract_common_points(
             cubes=iris.cube.CubeList([cube1, cube2]), coordinate="pressure"
         )
+
+
+def test_remove_scalar_coord():
+    """Test that scalar coordinate be removed."""
+    # Create simple 1D cube
+    data = np.arange(5)
+    time = iris.coords.DimCoord(
+        np.arange(5), standard_name="time", units="hours since 1970-01-01"
+    )
+    cube = iris.cube.Cube(data, dim_coords_and_dims=[(time, 0)])
+    # Add a scalar coord
+    realization = iris.coords.AuxCoord(1, long_name="realization")
+    cube.add_aux_coord(realization)
+    # Check it's present and scalar
+    assert cube.coords("realization")
+    assert cube.coord_dims("realization") == ()
+    # Run function
+    out = misc.remove_scalar_coords(cube, ["realization"])
+    # Check it’s removed
+    cube_out = out[0]
+    assert not cube_out.coords("realization")
+
+
+def test_not_remove_non_scalar_coord():
+    """Test that non-scalar coordinate is not removed."""
+    # Create 1D cube
+    data = np.arange(5)
+    time = iris.coords.DimCoord(
+        np.arange(5), standard_name="time", units="hours since 1970-01-01"
+    )
+    cube = iris.cube.Cube(data, dim_coords_and_dims=[(time, 0)])
+    # Confirm it's non-scalar
+    assert cube.coord_dims("time") != ()
+    # Run function
+    out = misc.remove_scalar_coords(cube, ["time"])
+    # Check it is still present
+    cube_out = out[0]
+    assert cube_out.coords("time")

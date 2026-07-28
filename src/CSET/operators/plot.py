@@ -157,21 +157,21 @@ def _setup_spatial_map(
     # Identify min/max plot bounds.
     try:
         lat_axis, lon_axis = get_cube_yxcoordname(cube)
-        x1 = np.min(cube.coord(lon_axis).points)
-        x2 = np.max(cube.coord(lon_axis).points)
-        y1 = np.min(cube.coord(lat_axis).points)
-        y2 = np.max(cube.coord(lat_axis).points)
+        xmin = np.nanmin(cube.coord(lon_axis).points)
+        xmax = np.nanmax(cube.coord(lon_axis).points)
+        ymin = np.nanmin(cube.coord(lat_axis).points)
+        ymax = np.nanmax(cube.coord(lat_axis).points)
 
         # Adjust bounds within +/- 180.0 if x dimension extends beyond half-globe.
-        if np.abs(x2 - x1) > 180.0:
-            x1 = x1 - 180.0
-            x2 = x2 - 180.0
+        if np.abs(xmax - xmin) > 180.0:
+            xmin = xmin - 180.0
+            xmax = xmax - 180.0
             logging.debug("Adjusting plot bounds to fit global extent.")
 
         # Consider map projection orientation.
         # Adapting orientation enables plotting across international dateline.
         # Users can adapt the default central_longitude if alternative projections views.
-        if x2 > 180.0 or x1 < -180.0:
+        if xmax > 180.0 or xmin < -180.0:
             central_longitude = 180.0
         else:
             central_longitude = 0.0
@@ -197,11 +197,22 @@ def _setup_spatial_map(
             )
             crs = projection
         else:
+            # Assume polar projection for regional grids encompassing N. Pole
+            if ymin > 20.0 and ymax > 80.0:
+                projection = ccrs.NorthPolarStereo(central_longitude=0.0)
+            elif ymin < -80.0 and ymax < -20.0:
+                projection = ccrs.SouthPolarStereo(central_longitude=central_longitude)
             # Define regular map projection for non-rotated pole inputs.
             # Alternatives might include e.g. for global model outputs:
             #    projection=ccrs.Robinson(central_longitude=X.y, globe=None)
+            #    projection = ccrs.NearsidePerspective(
+            #        central_longitude=180.0,
+            #        central_latitude=0,
+            #        satellite_height=35785831,
+            #    )
             # See also https://scitools.org.uk/cartopy/docs/v0.15/crs/projections.html.
-            projection = ccrs.PlateCarree(central_longitude=central_longitude)
+            else:
+                projection = ccrs.PlateCarree(central_longitude=central_longitude)
             crs = ccrs.PlateCarree()
 
         # Define axes for plot (or subplot) with required map projection.
@@ -213,8 +224,8 @@ def _setup_spatial_map(
             axes = figure.add_subplot(projection=projection)
 
         # Add coastlines and borderlines if cube contains x and y map coordinates.
-        # Avoid adding lines for masked data or specific fixed ancillary spatial plots.
-        if iris.util.is_masked(cube.data) or any(
+        # Avoid adding lines for 2D masked data or specific fixed ancillary spatial plots.
+        if (cube.ndim > 1 and iris.util.is_masked(cube.data)) or any(
             name in cube.name() for name in ["land_", "orography", "altitude"]
         ):
             pass
@@ -224,8 +235,8 @@ def _setup_spatial_map(
             else:
                 coastcol = "black"
             logging.debug("Plotting coastlines and borderlines in colour %s.", coastcol)
-            axes.coastlines(resolution="10m", color=coastcol)
-            axes.add_feature(cfeature.BORDERS, edgecolor=coastcol)
+            axes.coastlines(resolution="10m", color=coastcol, alpha=0.8)
+            axes.add_feature(cfeature.BORDERS, edgecolor=coastcol, alpha=0.3)
 
         # Add gridlines.
         gl = axes.gridlines(
@@ -247,8 +258,10 @@ def _setup_spatial_map(
 
         # If is lat/lon spatial map, fix extent to keep plot tight.
         # Specifying crs within set_extent helps ensure only data region is shown.
-        if isinstance(coord_system, iris.coord_systems.GeogCS):
-            axes.set_extent([x1, x2, y1, y2], crs=crs)
+        if isinstance(
+            coord_system, (iris.coord_systems.GeogCS, iris.coord_systems.RotatedGeogCS)
+        ):
+            axes.set_extent([xmin, xmax, ymin, ymax], crs=crs)
 
     except ValueError:
         # Skip if not both x and y map coordinates.
@@ -470,9 +483,10 @@ def _plot_and_save_spatial_plot(
     cube: iris.cube.Cube,
     filename: str,
     title: str,
-    method: Literal["contourf", "pcolormesh"],
+    method: Literal["contourf", "pcolormesh", "scatter"],
     overlay_cube: iris.cube.Cube | None = None,
     contour_cube: iris.cube.Cube | None = None,
+    point_cube: iris.cube.Cube | None = None,
     **kwargs,
 ):
     """Plot and save a spatial plot.
@@ -485,12 +499,15 @@ def _plot_and_save_spatial_plot(
         Filename of the plot to write.
     title: str
         Plot title.
-    method: "contourf" | "pcolormesh"
-        The plotting method to use.
+    method: "contourf" | "pcolormesh" | "scatter"
+        The plotting method to use
+        Select choice of "contourf" or "pcolormesh" for gridded data. Use "scatter" for point-based data.
     overlay_cube: Cube, optional
         Optional 2 dimensional (lat and lon) Cube of data to overplot on top of base cube
     contour_cube: Cube, optional
         Optional 2 dimensional (lat and lon) Cube of data to overplot as contours over base cube
+    point_cube: Cube, optional
+        Optional 1 dimensional (e.g. list of points) or 2 dimensional (lat and lon) Cube of data to overplot as map of scatter points over base cube
     """
     # Setup plot details, size, resolution, etc.
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
@@ -524,6 +541,27 @@ def _plot_and_save_spatial_plot(
         plot = iplt.contourf(cube, cmap=cmap, levels=levels, norm=norm)
     elif method == "pcolormesh":
         plot = iplt.pcolormesh(cube, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax)
+    elif method == "scatter":
+        # Scatter plot of the field. The marker size is chosen to give
+        # symbols that decrease in size as the number of data points
+        # increases, although the fraction of the figure covered by
+        # symbols increases roughly as N^(1/2), disregarding overlaps,
+        # and has been selected for the default figure size of (10, 10).
+        # Should this be changed, the marker size should be adjusted in
+        # proportion to the area of the figure.
+        mrk_size = int(np.sqrt(2500000.0 / len(cube.data)))
+        lat_axis, lon_axis = get_cube_yxcoordname(cube)
+        plot = iplt.scatter(
+            cube.coord(lon_axis),
+            cube.coord(lat_axis),
+            c=cube.data[:],
+            s=mrk_size,
+            cmap=cmap,
+            edgecolors="k",
+            norm=norm,
+            vmin=vmin,
+            vmax=vmax,
+        )
     else:
         raise ValueError(f"Unknown plotting method: {method}")
 
@@ -557,6 +595,37 @@ def _plot_and_save_spatial_plot(
             linewidths=1,
         )
         plt.clabel(contour)
+    # Overplot valid elements of point-based field, if required.
+    # Check for non-masked points only to avoid plotting missing data.
+    if point_cube:
+        mrk_size = int(np.sqrt(2500000.0 / len(point_cube.data)))
+        lat_axis, lon_axis = get_cube_yxcoordname(point_cube)
+        lon_coord = point_cube.coord(lon_axis)
+        lat_coord = point_cube.coord(lat_axis)
+        valid = ~point_cube.data.mask
+        valid_lon = iris.coords.AuxCoord(
+            lon_coord.points[valid],
+            standard_name=lon_coord.standard_name,
+            units=lon_coord.units,
+            coord_system=lon_coord.coord_system,
+        )
+        valid_lat = iris.coords.AuxCoord(
+            lat_coord.points[valid],
+            standard_name=lat_coord.standard_name,
+            units=lat_coord.units,
+            coord_system=lat_coord.coord_system,
+        )
+        iplt.scatter(
+            valid_lon,
+            valid_lat,
+            c=point_cube.data[valid],
+            s=mrk_size,
+            cmap=cmap,
+            edgecolors="k",
+            norm=norm,
+            vmin=vmin,
+            vmax=vmax,
+        )
 
     # Check to see if transect, and if so, adjust y axis.
     if is_transect(cube):
@@ -687,6 +756,22 @@ def _plot_and_save_spatial_plot(
         cbar.set_ticklabels([f"{level:.2f}" for level in levels])
         if "rainfall" or "snowfall" or "visibility" in cube.name():
             cbar.set_ticklabels([f"{level:.3g}" for level in levels])
+        # Tick labels for rainfall rates from Nimrod radar data.
+        if "rainfall rate composite" in cube.name():
+            cbar.set_ticklabels([f"{level:.3g}" for level in levels])
+        # Tick labels for rain accumulations from Nimrod radar data.
+        if "rain accumulation" in cube.name():
+            cbar.set_ticklabels([f"{level:.3g}" for level in levels])
+        if "wts accumulation" in cube.name():
+            tick_levels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+            cbar.minorticks_off()
+            cbar.set_ticks(tick_levels)
+            cbar.set_ticklabels([f"{level:.3g}" for level in tick_levels])
+            cbar.set_label(label=f"{cube.name()}", size=14)
+        # Tick labels for model rainfall data.
+        if "surface_microphysical" in cube.name():
+            cbar.set_ticklabels([f"{level:.3g}" for level in levels])
+        # Tick labels for Nimrod weights data.
         logging.debug("Set colorbar ticks and labels.")
 
     # Save plot.
@@ -929,7 +1014,7 @@ def _plot_and_save_line_series(
             for (handle, label) in zip(*ax.get_legend_handles_labels(), strict=True)
         }.values()
     )
-    ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
+    ax.legend(handles=handles, loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -1054,7 +1139,7 @@ def _plot_and_save_line_power_spectrum_series(
             for (handle, label) in zip(*ax.get_legend_handles_labels(), strict=True)
         }.values()
     )
-    ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
+    ax.legend(handles=handles, loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -1196,7 +1281,7 @@ def _plot_and_save_vertical_line_series(
             for (handle, label) in zip(*ax.get_legend_handles_labels(), strict=True)
         }.values()
     )
-    ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
+    ax.legend(handles=handles, loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -1427,7 +1512,12 @@ def _plot_and_save_histogram_series(
         # Easier to check title (where var name originates)
         # than seeing if long names exist etc.
         # Exception case, where distribution better fits log scales/bins.
-        if "surface_microphysical" in title:
+        if (
+            ("surface_microphysical" in title)
+            or ("rain accumulation" in title)
+            or ("Rainfall rate Composite" in title)
+            or ("Nimrod_5min" in title)
+        ):
             if "amount" in title:
                 # Compute histogram following Klingaman et al. (2017): ASoP
                 bin2 = np.exp(np.log(0.02) + 0.1 * np.linspace(0, 99, 100))
@@ -1465,7 +1555,12 @@ def _plot_and_save_histogram_series(
         x, y = np.histogram(cube_data_1d, bins=bins, density=density)
 
         # Compute area under curve.
-        if "surface_microphysical" in title and "amount" in title:
+        if (
+            ("surface_microphysical" in title and "amount" in title)
+            or ("rain_accumulation" in title)
+            or ("Rainfall rate Composite" in title)
+            or ("Nimrod_5min" in title)
+        ):
             bin_mean = (bins[:-1] + bins[1:]) / 2.0
             x = x * bin_mean / x.sum()
             x = x[1:]
@@ -1481,7 +1576,11 @@ def _plot_and_save_histogram_series(
         f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}", fontsize=14
     )
     ax.set_ylabel("Normalised probability density", fontsize=14)
-    if "surface_microphysical" in title and "amount" in title:
+    if (
+        ("surface_microphysical" in title and "amount" in title)
+        or ("rain accumulation" in title)
+        or ("Nimrod_5min" in title)
+    ):
         ax.set_ylabel(
             f"Contribution to mean ({iter_maybe(cubes)[0].units})", fontsize=14
         )
@@ -1491,7 +1590,7 @@ def _plot_and_save_histogram_series(
     # Overlay grid-lines onto histogram plot.
     ax.grid(linestyle="--", color="grey", linewidth=1)
     if model_colors_map:
-        ax.legend(loc="best", ncol=1, frameon=False, fontsize=16)
+        ax.legend(loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
@@ -1597,87 +1696,15 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
     plt.close(fig)
 
 
-def _plot_and_save_scattermap_plot(
-    cube: iris.cube.Cube, filename: str, title: str, projection=None, **kwargs
-):
-    """Plot and save a geographical scatter plot.
-
-    Parameters
-    ----------
-    cube: Cube
-        1 dimensional Cube of the data points with auxiliary latitude and
-        longitude coordinates,
-    filename: str
-        Filename of the plot to write.
-    title: str
-        Plot title.
-    projection: str
-        Mapping projection to be used by cartopy.
-    """
-    # Setup plot details, size, resolution, etc.
-    fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
-    if projection is not None:
-        # Apart from the default, the only projection we currently support is
-        # a stereographic projection over the North Pole.
-        if projection == "NP_Stereo":
-            axes = plt.axes(projection=ccrs.NorthPolarStereo(central_longitude=0.0))
-        else:
-            raise ValueError(f"Unknown projection: {projection}")
-    else:
-        axes = plt.axes(projection=ccrs.PlateCarree())
-
-    # Scatter plot of the field. The marker size is chosen to give
-    # symbols that decrease in size as the number of observations
-    # increases, although the fraction of the figure covered by
-    # symbols increases roughly as N^(1/2), disregarding overlaps,
-    # and has been selected for the default figure size of (10, 10).
-    # Should this be changed, the marker size should be adjusted in
-    # proportion to the area of the figure.
-    mrk_size = int(np.sqrt(2500000.0 / len(cube.data)))
-    klon = None
-    klat = None
-    for kc in range(len(cube.aux_coords)):
-        if cube.aux_coords[kc].standard_name == "latitude":
-            klat = kc
-        elif cube.aux_coords[kc].standard_name == "longitude":
-            klon = kc
-    scatter_map = iplt.scatter(
-        cube.aux_coords[klon],
-        cube.aux_coords[klat],
-        c=cube.data[:],
-        s=mrk_size,
-        cmap="jet",
-        edgecolors="k",
-    )
-
-    # Add coastlines and borderlines.
-    try:
-        axes.coastlines(resolution="10m")
-        axes.add_feature(cfeature.BORDERS)
-    except AttributeError:
-        pass
-
-    # Add title.
-    axes.set_title(title, fontsize=16)
-
-    # Add colour bar.
-    cbar = fig.colorbar(scatter_map)
-    cbar.set_label(label=f"{cube.name()} ({cube.units})", size=20)
-
-    # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved geographical scatter plot to %s", filename)
-    plt.close(fig)
-
-
 def _spatial_plot(
-    method: Literal["contourf", "pcolormesh"],
+    method: Literal["contourf", "pcolormesh", "scatter"],
     cube: iris.cube.Cube,
     filename: str | None,
     sequence_coordinate: str,
     stamp_coordinate: str,
     overlay_cube: iris.cube.Cube | None = None,
     contour_cube: iris.cube.Cube | None = None,
+    point_cube: iris.cube.Cube | None = None,
     **kwargs,
 ):
     """Plot a spatial variable onto a map from a 2D, 3D, or 4D cube.
@@ -1686,13 +1713,15 @@ def _spatial_plot(
     then a sequence of plots will be produced. Similarly if the stamp_coordinate
     is present then postage stamp plots will be produced.
 
-    If an overlay_cube and/or contour_cube are specified, multiple variables can
+    If any optional overlay_cube, contour_cube or point_cube are specified, multiple data layers can
     be overplotted on the same figure.
 
     Parameters
     ----------
-    method: "contourf" | "pcolormesh"
+    method: "contourf" | "pcolormesh" | "scatter"
         The plotting method to use.
+        Select choice of "contourf" or "pcolormesh" for gridded data.
+        Use "scatter" for point-based data.
     cube: Cube
         Iris cube of the data to plot. It should have two spatial dimensions,
         such as lat and lon, and may also have a another two dimension to be
@@ -1710,6 +1739,8 @@ def _spatial_plot(
         Optional 2 dimensional (lat and lon) Cube of data to overplot on top of base cube
     contour_cube: Cube | None, optional
         Optional 2 dimensional (lat and lon) Cube of data to overplot as contours over base cube
+    point_cube: Cube | None, optional
+        Optional 1 dimensional (e.g. list of points) or 2 dimensional (lat and lon) Cube of data to overplot as map of scatter points over base cube
 
     Raises
     ------
@@ -1718,10 +1749,11 @@ def _spatial_plot(
     TypeError
         If the cube isn't a single cube.
     """
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
-
     # Ensure we've got a single cube.
     cube = check_single_cube(cube)
+
+    # Set title based on recipe metadata or use cube name
+    recipe_title = get_recipe_metadata().get("title", cube.name())
 
     # Check if there is a valid stamp coordinate in cube dimensions.
     if stamp_coordinate == "realization":
@@ -1742,7 +1774,8 @@ def _spatial_plot(
         crd.var_name == "station" or crd.var_name == "model_obs_error"
         for crd in cube.coords()
     ):
-        plotting_func = _plot_and_save_scattermap_plot
+        plotting_func = _plot_and_save_spatial_plot
+        method = "scatter"
 
     # Must have a sequence coordinate.
     try:
@@ -1761,9 +1794,10 @@ def _spatial_plot(
             seq_coord, nplot, recipe_title, filename
         )
 
-        # Extract sequence slice for overlay_cube and contour_cube if required.
+        # Extract sequence slice for overlay_cube, contour_cube and point_cube if required.
         overlay_slice = slice_over_maybe(overlay_cube, sequence_coordinate, iseq)
         contour_slice = slice_over_maybe(contour_cube, sequence_coordinate, iseq)
+        point_slice = slice_over_maybe(point_cube, sequence_coordinate, iseq)
 
         # Do the actual plotting.
         plotting_func(
@@ -1774,6 +1808,7 @@ def _spatial_plot(
             method=method,
             overlay_cube=overlay_slice,
             contour_cube=contour_slice,
+            point_cube=point_slice,
             **kwargs,
         )
         plot_index.append(plot_filename)
@@ -1892,6 +1927,7 @@ def spatial_multi_pcolormesh_plot(
     cube: iris.cube.Cube,
     overlay_cube: iris.cube.Cube | None = None,
     contour_cube: iris.cube.Cube | None = None,
+    point_cube: iris.cube.Cube | None = None,
     filename: str = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
@@ -1907,6 +1943,8 @@ def spatial_multi_pcolormesh_plot(
 
     If specified, contours of a contour_cube can be overplotted on top of those.
 
+    If specified, a spatial scatter map of point_cube can be overplotted.
+
     For single-variable equivalent of this routine, use spatial_pcolormesh_plot.
 
     This function is significantly faster than ``spatial_contour_plot``,
@@ -1917,17 +1955,22 @@ def spatial_multi_pcolormesh_plot(
     ----------
     cube: Cube
         Iris cube of the data to plot. It should have two spatial dimensions,
-        such as lat and lon, and may also have a another two dimension to be
+        such as lat and lon, and may also have two additional dimensions to be
         plotted sequentially and/or as postage stamp plots.
     overlay_cube: Cube, optional
         Iris cube of the data to plot as an overlay on top of basis cube. It should have two spatial dimensions,
-        such as lat and lon, and may also have a another two dimension to be
+        such as lat and lon, and may also have two additional dimensions to be
         plotted sequentially and/or as postage stamp plots. This is likely to be a masked cube in order not to hide the underlying basis cube.
         If not provided, output plot generated without overlay cube.
     contour_cube: Cube, optional
-        Iris cube of the data to plot as a contour overlay on top of basis cube and overlay_cube. It should have two spatial dimensions,
-        such as lat and lon, and may also have a another two dimension to be
+        Iris cube of the data to plot as a contour overlay on top of basis cube (and overlay_cube). It should have two spatial dimensions,
+        such as lat and lon, and may also have two additional dimensions to be
         plotted sequentially and/or as postage stamp plots. If not provided, output plot generated without contours.
+    point_cube: Cube, optional
+        Iris cube of the data to plot as a scatter map overlay on top of basis cube (overlay_cube and/or contour_cube). It should have two
+        spatial dimensions, such as lat and lon, but these can describe a 1-D cube (e.g. list of
+        observation stations with lat/lon coordinates) and may also have two additional dimensions to be plotted sequentially and/or as
+        postage stamp plots. If not provided, output plot generated without point-based layer.
     filename: str, optional
         Name of the plot to write, used as a prefix for plot sequences. Defaults
         to the recipe name.
@@ -1958,8 +2001,9 @@ def spatial_multi_pcolormesh_plot(
         stamp_coordinate,
         overlay_cube=overlay_cube,
         contour_cube=contour_cube,
+        point_cube=point_cube,
     )
-    return cube, overlay_cube, contour_cube
+    return cube, overlay_cube, contour_cube, point_cube
 
 
 # TODO: Expand function to handle ensemble data.
@@ -1997,7 +2041,6 @@ def plot_line_series(
     -------
     iris.cube.Cube | iris.cube.CubeList
         The original Cube or CubeList (so further operations can be applied).
-        plotted data.
 
     Raises
     ------
@@ -2007,7 +2050,7 @@ def plot_line_series(
         If the cube isn't a Cube or CubeList.
     """
     # Ensure we have a name for the plot file.
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", iter_maybe(cube)[0].name())
 
     num_models = get_num_models(cube)
 
@@ -2205,7 +2248,7 @@ def plot_vertical_line_series(
         If the cube isn't a Cube or CubeList.
     """
     # Ensure we have a name for the plot file.
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", iter_maybe(cubes)[0].name())
 
     cubes = iter_maybe(cubes)
     # Initialise empty list to hold all data from all cubes in a CubeList
@@ -2433,7 +2476,7 @@ def qq_plot(
     )
 
     # Ensure we have a name for the plot file.
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", "QQ_plot")
     title = f"{recipe_title}"
 
     if filename is None:
@@ -2454,6 +2497,180 @@ def qq_plot(
     _make_plot_html_page(plot_index)
 
     return iris.cube.CubeList([base, other])
+
+
+def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
+    """
+    Plot a Hinton style triangle/scorecard plot.
+
+    This plot type can be useful for summarising high level information, such as comparing
+    how 'skillful' two models are when verified against observations for a variety of metrics,
+    as a function of lead-time. A few parameters of the plot style are fixed in function rather
+    than customisable by the user as input arguments; many have been designed to automatically
+    scale the plot depending on the number of x and y components.
+
+    Parameters
+    ----------
+    change: np.ndarray
+        A 2d numpy array containing the values (scaled to 1 to -1) that determine the triangle
+        size/direction.
+    signif: np.ndarray
+        A 2d numpy array containing 0s and 1s to determine if triangle is significant or not.
+    xaxis_labels: list
+        List of labels for the xaxis (must match the second dimension length of signif and change,
+        along with magnitude if not None).
+    yaxis_labels: list
+        List of labels for the yaxis (must match the first dimension length of signif and change,
+        along with magnitude if not None).
+    magnitude: np.ndarray | None
+        Optional 2D array, matching the shape of change, signif, which contains numerical values
+        the user wishes to display under each respective triangle.
+
+    Returns
+    -------
+    matplotlib axes object to either display or do further modifications to.
+    """
+    # Setup colors of triangles
+    color_pos = "#7CAE00"
+    color_neg = "#7B68EE"
+
+    # Setup cell/text size ratios
+    figsize = None
+    cell_size_in = 0.35
+    text_row_ratio = 0.25
+
+    # Ensure arrays, and change to bool for sig.
+    change = np.asarray(change)
+    signif = np.asarray(signif).astype(bool)
+    if magnitude is not None:
+        magnitude = np.asarray(magnitude)
+
+    # Get the number of x and y elements
+    ny, nx = change.shape
+
+    # Build non-uniform y coordinates
+    tri_height = 1.0
+    txt_height = text_row_ratio
+
+    tri_y = []
+    txt_y = []
+    y_edges = [0.0]
+
+    y = 0.0
+    for _j in range(ny):
+        tri_y.append(y + tri_height / 2)
+        y += tri_height
+        y_edges.append(y)
+
+        if magnitude is not None:
+            txt_y.append(y + txt_height / 2)
+            y += txt_height
+            y_edges.append(y)
+
+    total_height = y
+
+    # Dynamic figure size
+    if figsize is None:
+        width = nx * cell_size_in
+        height = total_height * cell_size_in + 2
+        figsize = (width, height)
+
+    fig, ax = plt.subplots(figsize=figsize)
+
+    # Setup axes and grid.
+    ax.set_aspect("equal", adjustable="box")
+    ax.set_xlim(-0.5, nx - 0.5)
+    ax.set_ylim(0, total_height)
+
+    ax.set_xticks(np.arange(nx))
+    ax.set_xticklabels(xaxis_labels, rotation=90)
+
+    ax.set_yticks(tri_y)
+    ax.set_yticklabels(yaxis_labels)
+
+    ax.set_xticks(np.arange(-0.5, nx, 1), minor=True)
+    ax.set_yticks(y_edges, minor=True)
+
+    ax.set_axisbelow(True)
+    ax.grid(which="minor", linestyle=":", linewidth=0.3, color="0.7")
+    ax.grid(False, which="major")
+    ax.tick_params(which="minor", length=0)
+
+    ax.invert_yaxis()
+
+    # Compute marker scaling (fixed overlap)
+    fig.canvas.draw()
+
+    bbox = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+    width_in, height_in = bbox.width, bbox.height
+
+    cell_w = (width_in * fig.dpi) / nx
+    cell_h = (height_in * fig.dpi) / total_height
+    cell_pixels = min(cell_w, cell_h)
+
+    max_marker_size = (0.6 * cell_pixels) ** 2
+
+    text_fontsize = cell_pixels * 0.15
+
+    # Plot triangles + text
+    for j in range(ny):
+        for i in range(nx):
+            val = change[j, i]
+            if np.isnan(val):
+                continue
+
+            if abs(val) < 0.01:
+                continue
+
+            sig = signif[j, i]
+            size = max_marker_size * abs(val)
+
+            # Triangle style
+            if val >= 0:
+                marker = "^"
+                color = color_pos
+            else:
+                marker = "v"
+                color = color_neg
+
+            if sig:
+                edgecolor = "black"
+                linewidth = 0.6
+            else:
+                edgecolor = "none"
+                linewidth = 0.0
+
+            # Triangle
+            ax.scatter(
+                i,
+                tri_y[j],
+                s=size,
+                marker=marker,
+                c=color,
+                edgecolors=edgecolor,
+                linewidths=linewidth,
+                zorder=3,
+                clip_on=True,  # ensures no rendering bleed
+            )
+
+            # Text row
+            if magnitude is not None:
+                mag_val = magnitude[j, i]
+
+                if not np.isnan(mag_val):
+                    ax.text(
+                        i,
+                        txt_y[j],
+                        f"{mag_val:.1f}",
+                        ha="center",
+                        va="center",
+                        fontsize=text_fontsize,
+                        color="black",
+                        zorder=4,
+                    )
+
+    plt.tight_layout()
+    return fig, ax
 
 
 def scatter_plot(
@@ -2512,7 +2729,7 @@ def scatter_plot(
             raise ValueError("cube_y must be 1D.")
 
     # Ensure we have a name for the plot file.
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", "Scatter_plot")
     title = f"{recipe_title}"
 
     if filename is None:
@@ -2541,7 +2758,7 @@ def vector_plot(
     **kwargs,
 ) -> iris.cube.CubeList:
     """Plot a vector plot based on the input u and v components."""
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", "Vector_plot")
 
     # Cubes must have a matching sequence coordinate.
     try:
@@ -2638,7 +2855,7 @@ def plot_histogram_series(
     TypeError
         If the cube isn't a Cube or CubeList.
     """
-    recipe_title = get_recipe_metadata().get("title", "Untitled")
+    recipe_title = get_recipe_metadata().get("title", "Histogram")
 
     cubes = iter_maybe(cubes)
     # Ensure we have a name for the plot file.
@@ -2845,7 +3062,7 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
                 for (handle, label) in zip(*ax.get_legend_handles_labels(), strict=True)
             }.values()
         )
-        ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
+        ax.legend(handles=handles, loc="best", ncol=1, frameon=True, fontsize=16)
 
         ax = plt.gca()
         ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
@@ -2975,10 +3192,7 @@ def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
             for (handle, label) in zip(*ax.get_legend_handles_labels(), strict=True)
         }.values()
     )
-    ax.legend(handles=handles, loc="best", ncol=1, frameon=False, fontsize=16)
-
-    # Add a legend
-    ax.legend(fontsize=16)
+    ax.legend(handles=handles, loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Figure title.
     ax.set_title(title, fontsize=16)

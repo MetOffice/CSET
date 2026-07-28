@@ -17,6 +17,7 @@
 import itertools
 import logging
 from collections.abc import Iterable
+from functools import reduce
 
 import iris
 import iris.analysis.calculus
@@ -81,6 +82,47 @@ def remove_attribute(
     return cubes
 
 
+def remove_scalar_coords(
+    cubes: Cube | CubeList, coords: str | Iterable[str]
+) -> CubeList:
+    """Remove scalar coordinates from one or more cubes.
+
+    Coordinates are only removed if they exist on the cube and are
+    scalar coordinates (i.e. have no associated dimensions). Examples
+    include ``realization`` and ``forecast_reference_time`` on model
+    data cubes. Dimensional and non-scalar auxiliary coordinates are
+    left unchanged.
+
+    Arguments
+    ---------
+    cubes: Cube | CubeList
+        One or more cubes from which scalar coordinates will be removed.
+    coords: str | Iterable
+        Name of a coordinate (or Iterable of coordinate names) to remove.
+
+    Returns
+    -------
+    cubes: CubeList
+        CubeList of cube(s) with the requested scalar coordinates
+        removed where present.
+    """
+    if not isinstance(cubes, CubeList):
+        cubes = CubeList(iter_maybe(cubes))
+
+    if isinstance(coords, str):
+        coords = [coords]
+
+    for cube in cubes:
+        for coord_name in iter_maybe(coords):
+            if cube.coords(coord_name):
+                coord = cube.coord(coord_name)
+                # only remove if scalar
+                if cube.coord_dims(coord) == ():
+                    cube.remove_coord(coord)
+
+    return cubes
+
+
 def addition(addend_1, addend_2):
     """Addition of two fields.
 
@@ -113,19 +155,21 @@ def addition(addend_1, addend_2):
     return addend_1 + addend_2
 
 
-def subtraction(minuend, subtrahend):
+def subtraction(
+    minuend: Cube | CubeList, subtrahend: Cube | CubeList
+) -> Cube | CubeList:
     """Subtraction of two fields.
 
     Parameters
     ----------
-    minuend: Cube
-        Any field to have another field subtracted from it.
-    subtrahend: Cube
-        Any field to be subtracted from to another field.
+    minuend: Cube | CubeList
+        Any field(s) to have another field subtracted from it.
+    subtrahend: Cube | CubeList
+        Any field(s) to be subtracted from to another field.
 
     Returns
     -------
-    Cube
+    Cube | CubeList
 
     Raises
     ------
@@ -139,12 +183,53 @@ def subtraction(minuend, subtrahend):
     differences to allow for comparisons between the same field in different
     models or model configurations.
 
+    If called with 2 Cubes as input, will return a difference cube.
+    If called with 2 CubeLists as input, with return a CubeList of differences.
+    If called with CubeList as minuend and Cube as subtrahend, will return CubeList of differences subtracting Cube from each element of input CubeList.
+    If called with Cube as minuend and CubeList as subtrahend, will return CubeList of differences subtracting each element on CubeList from input Cube.
+
     Examples
     --------
     >>> model_diff = misc.subtraction(temperature_model_A, temperature_model_B)
 
     """
-    return minuend - subtrahend
+
+    def subtract_preserve_attributes(cube_a: Cube, cube_b: Cube) -> Cube:
+        result = cube_a - cube_b
+        result.attributes.update(cube_a.attributes)
+        return result
+
+    # Case where both inputs are single cubes
+    if isinstance(minuend, iris.cube.Cube) and isinstance(subtrahend, iris.cube.Cube):
+        return subtract_preserve_attributes(minuend, subtrahend)
+
+    # Check if minuend is iterable
+    cubes_a = iter_maybe(minuend)
+
+    # Case: subtrahend also iterable
+    if isinstance(subtrahend, iris.cube.CubeList):
+        cubes_b = iter_maybe(subtrahend)
+        if isinstance(minuend, iris.cube.CubeList):
+            # Case: subtract cubelist from cubelist - assume both same sizes
+            result = iris.cube.CubeList(
+                [
+                    subtract_preserve_attributes(cube_a, cube_b)
+                    for cube_a, cube_b in zip(cubes_a, cubes_b, strict=True)
+                ]
+            )
+        else:
+            # Case: subtract each element of subtrahend from single cube
+            result = iris.cube.CubeList(
+                [subtract_preserve_attributes(minuend, cube_b) for cube_b in cubes_b]
+            )
+    else:
+        # Case: subtract single cube from each minuend
+        result = iris.cube.CubeList(
+            [subtract_preserve_attributes(cube_a, subtrahend) for cube_a in cubes_a]
+        )
+
+    # Return single cube if only one result, else return CubeList
+    return result[0] if len(result) == 1 else result
 
 
 def division(numerator, denominator):
@@ -416,7 +501,11 @@ def _extract_common_time_points(base: Cube, other: Cube) -> tuple[Cube, Cube]:
         shared_times = set.intersection(set(base_times), set(other_times))
     logging.debug("Shared times: %s", shared_times)
     time_constraint = iris.Constraint(
-        coord_values={time_coord: lambda cell: cell.point in shared_times}
+        coord_values={
+            time_coord: lambda cell, shared_times=shared_times: (
+                cell.point in shared_times
+            )
+        }
     )
     # Extract points matching the shared times.
     base = base.extract(time_constraint)
@@ -532,49 +621,47 @@ def _slice_cube_on_levels(cube: iris.cube.Cube, coord_name: str, levels: list):
 
 def extract_common_points(cubes: iris.cube.CubeList, coordinate: str):
     """
-    Extract common points for a given coordinate between two cubes.
+    Extract common points for a given coordinate between cubes in a CubeList.
 
     Parameters
     ----------
     cubes: iris.cube.CubeList
-        CubeList containing exactly two cubes.
+        CubeList containing cubes for which to extract common points.
 
     coordinate: str
-        The coordinate name to be checked for common levels.
+        The coordinate name to be checked for common points.
 
     Returns
     -------
     iris.cube.CubeList
-        CubeList containing the two cubes sliced to common levels
+        CubeList containing the two cubes sliced to common points
         for the given coordinate.
     """
     # Check type of input
     if type(cubes) is not iris.cube.CubeList:
         raise TypeError(f"Not a CubeList, got type {type(cubes)}")
 
-    # Check that only two cubes are passed into function.
-    if len(cubes) != 2:
-        raise ValueError(f"Maximum of two cubes allowed, received {len(cubes)}")
-
     # Extract coordinate
     try:
-        p1 = cubes[0].coord(coordinate)
-        p2 = cubes[1].coord(coordinate)
+        points_list = []
+        for cube in cubes:
+            points_list.append(cube.coord(coordinate).points)
     except iris.exceptions.CoordinateNotFoundError as err:
         raise ValueError(f"Both cubes must have an {coordinate} coordinate") from err
 
     # Find common points
-    common_points = np.intersect1d(p1.points, p2.points)
+    common_points = reduce(np.intersect1d, points_list)
 
     # Check that common points is more than zero.
     if common_points.size == 0:
         raise ValueError("No common levels found")
 
     # Extract common points
-    cube0_common = _slice_cube_on_levels(cubes[0], coordinate, common_points)
-    cube1_common = _slice_cube_on_levels(cubes[1], coordinate, common_points)
+    common_cubes = iris.cube.CubeList()
+    for cube in cubes:
+        common_cubes.append(_slice_cube_on_levels(cube, coordinate, common_points))
 
-    return iris.cube.CubeList([cube0_common, cube1_common])
+    return common_cubes
 
 
 def differentiate(
