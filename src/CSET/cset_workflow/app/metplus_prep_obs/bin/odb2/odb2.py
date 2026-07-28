@@ -13,10 +13,11 @@ import subprocess
 import sys
 import tempfile
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 from contextlib import nullcontext
 from glob import glob
 from pathlib import Path
-from typing import BinaryIO, Iterable, TextIO
+from typing import BinaryIO, TextIO
 
 import metomi.isodatetime.parsers
 import numpy
@@ -321,23 +322,25 @@ class PrepODB2(ABC):
     ...    converter.odb2ascii(f, valid_times)
     """
 
-    # ODB2 columns to read for each observation
-    odb_columns = [
-        "vertco_type@body",
-        "vertco_reference_1@body",
-        "varno@body",
-        "statid@hdr",
-        "date@hdr",
-        "time@hdr",
-        "lat@hdr",
-        "lon@hdr",
-        "stalt@hdr",
-        "obsvalue@body",
-        "reportype@hdr",
-    ]
+    def __init__(self, odb_where: str | None = None):
+        """Construct the converter."""
+        # ODB2 columns to read for each observation
+        self.odb_columns = [
+            "vertco_type@body",
+            "vertco_reference_1@body",
+            "varno@body",
+            "statid@hdr",
+            "date@hdr",
+            "time@hdr",
+            "lat@hdr",
+            "lon@hdr",
+            "stalt@hdr",
+            "obsvalue@body",
+            "reportype@hdr",
+        ]
 
-    # Optional SQL-like filter to apply to the data for QC filtering
-    odb_where = "report_status@hdr = 1 AND datum_status@body = 1"
+        # Optional SQL-like filter to apply to the data for QC filtering
+        self.odb_where = odb_where or "report_status@hdr = 1 AND datum_status@body = 1"
 
     def read_tarfile(
         self, tarpath: str, path: str, valid_time: TimePoint

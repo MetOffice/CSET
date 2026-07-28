@@ -5,6 +5,7 @@ Internal BOM systems use PrepBom as a base class and fill in the internal
 patterns.
 """
 
+from abc import abstractmethod
 from typing import Iterable
 
 from metomi.isodatetime.data import TimePoint
@@ -32,23 +33,28 @@ class PrepBom(PrepODB2):
         Args:
             system: BOM system to source observations from (e.g. 'access_c3_dn')
         """
+        super().__init__()
         self.system = system
 
         # Filter out observations rejected by OPS
         self.odb_where += " AND ops_report_flags@hdr = 0 AND ops_datum_flags.b0@body = 0"
 
+    @abstractmethod
     def read_c3_type(self, type: str, valid_time: TimePoint) -> Iterable[DataFrame]:
         """Read C3 data pattern."""
         raise NotImplementedError
 
+    @abstractmethod
     def read_c4_type(self, type: str, valid_time: TimePoint) -> Iterable[DataFrame]:
         """Read C4 data pattern."""
         raise NotImplementedError
 
+    @abstractmethod
     def read_g3_type(self, type: str, valid_time: TimePoint) -> Iterable[DataFrame]:
         """Read G3 data pattern."""
         raise NotImplementedError
 
+    @abstractmethod
     def read_g4_type(self, type: str, valid_time: TimePoint) -> Iterable[DataFrame]:
         """Read G4 data pattern."""
         raise NotImplementedError
