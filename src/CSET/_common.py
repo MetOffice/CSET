@@ -330,7 +330,7 @@ def render(template: str, /, **variables) -> str:
             value = str(variables[name])
         except KeyError as err:
             raise TemplateError("Placeholder missing value", name) from err
-        pattern = r"{{\s*%s\s*}}" % re.escape(name)
+        pattern = r"{{\s*%s\s*}}" % re.escape(name)  # noqa: UP031 Braces get ugly within f-string.
         return re.sub(pattern, value, template)
 
     for name in extract_placeholders():

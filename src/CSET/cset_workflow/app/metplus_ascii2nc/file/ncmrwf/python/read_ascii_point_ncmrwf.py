@@ -132,13 +132,13 @@ try:
         },
     )
     p1["vld"] = pd.to_datetime(
-        dict(
-            year=p1["YR"],
-            month=p1["MN"],
-            day=p1["DY"],
-            hour=p1["HR"],
-            minute=p1["MI"],
-        )
+        {
+            "year": p1["YR"],
+            "month": p1["MN"],
+            "day": p1["DY"],
+            "hour": p1["HR"],
+            "minute": p1["MI"],
+        }
     ).dt.strftime("%Y%m%d_%H%M%S")
     p1.drop(["YR", "MN", "DY", "HR", "MI"], axis=1, inplace=True)
 

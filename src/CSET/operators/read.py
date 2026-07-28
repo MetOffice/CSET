@@ -50,8 +50,8 @@ def read_cube(
     file_paths: list[str] | str,
     constraint: iris.Constraint = None,
     model_names: list[str] | str | None = None,
-    subarea_type: str = None,
-    subarea_extent: list[float] = None,
+    subarea_type: str | None = None,
+    subarea_extent: list[float] | None = None,
     **kwargs,
 ) -> iris.cube.Cube:
     """Read a single cube from files.
@@ -115,8 +115,8 @@ def read_cubes(
     file_paths: list[str] | str,
     constraint: iris.Constraint | None = None,
     model_names: str | list[str] | None = None,
-    subarea_type: str = None,
-    subarea_extent: list = None,
+    subarea_type: str | None = None,
+    subarea_extent: list | None = None,
     **kwargs,
 ) -> iris.cube.CubeList:
     """Read cubes from files.
@@ -820,7 +820,7 @@ def _fix_cell_methods(cube: iris.cube.Cube):
         "m01s05i202",
     ]:
         # Check if input cell_method contains "mean" time-processing.
-        if set(cm.method for cm in cube.cell_methods) == {"mean"}:
+        if {cm.method for cm in cube.cell_methods} == {"mean"}:
             # Retrieve interval and any comment information.
             for cell_method in cube.cell_methods:
                 interval_str = cell_method.intervals
@@ -873,11 +873,10 @@ def _convert_cube_units_callback(cube: iris.cube.Cube):
 
     # Convert visibility diagnostic units if required.
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
-    if any("visibility" in name for name in varnames):
-        if cube.units == "m":
-            _log_once("Converting visibility units m to km.", level=logging.DEBUG)
-            # Convert the units to km.
-            cube.convert_units("km")
+    if any("visibility" in name for name in varnames) and cube.units == "m":
+        _log_once("Converting visibility units m to km.", level=logging.DEBUG)
+        # Convert the units to km.
+        cube.convert_units("km")
 
     return cube
 

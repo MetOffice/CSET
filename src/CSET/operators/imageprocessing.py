@@ -111,12 +111,12 @@ def _SSIM_cube_preparation(
 
     # Get the name of the first non-scalar time coordinate.
     time_coord = next(
-        map(
-            lambda coord: coord.name(),
-            filter(
+        (
+            coord.name()
+            for coord in filter(
                 lambda coord: coord.shape > (1,) and coord.name() in ["time", "hour"],
                 base.coords(),
-            ),
+            )
         ),
         None,
     )

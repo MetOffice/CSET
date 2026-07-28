@@ -111,7 +111,14 @@ def pdt_fromisoformat(
     month = int(date[5:7])
     day = int(date[8:10])
 
-    kwargs = dict(year=year, month=month, day=day, hour=0, minute=0, second=0)
+    kwargs = {
+        "year": year,
+        "month": month,
+        "day": day,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+    }
 
     # Normalise the time parts into standard format
     if re.fullmatch(r"\d{4}", time):
@@ -246,10 +253,7 @@ def is_spatialdim(cube: iris.cube.Cube) -> bool:
     y_coords = [coord for coord in coord_names if coord in Y_COORD_NAMES]
 
     # If there is one coordinate for both x and y direction return True.
-    if len(x_coords) == 1 and len(y_coords) == 1:
-        return True
-    else:
-        return False
+    return len(x_coords) == 1 and len(y_coords) == 1
 
 
 def is_coorddim(cube: iris.cube.Cube, coord_name) -> bool:
@@ -274,10 +278,7 @@ def is_coorddim(cube: iris.cube.Cube, coord_name) -> bool:
     coord_names = [coord.name() for coord in cube.coords(dim_coords=True)]
 
     # Check if requested dimension is found in cube and get index
-    if coord_name in coord_names:
-        return True
-    else:
-        return False
+    return coord_name in coord_names
 
 
 def is_transect(cube: iris.cube.Cube) -> bool:

@@ -727,7 +727,7 @@ def _plot_and_save_spatial_plot(
         ha="left",
         va="bottom",
         size=11,
-        bbox=dict(boxstyle="round", fc="#cccccc", ec="#808080", alpha=0.9),
+        bbox={"boxstyle": "round", "fc": "#cccccc", "ec": "#808080", "alpha": 0.9},
     )
 
     # Add secondary colour bar for overlay_cube field if required.
@@ -740,7 +740,10 @@ def _plot_and_save_spatial_plot(
         if over_levels is not None and len(over_levels) < 20:
             cbarB.set_ticks(over_levels)
             cbarB.set_ticklabels([f"{level:.2f}" for level in over_levels])
-            if "rainfall" or "snowfall" or "visibility" in overlay_cube.name():
+            if any(
+                var in overlay_cube.name()
+                for var in ("rainfall", "snowfall", "visibility")
+            ):
                 cbarB.set_ticklabels([f"{level:.3g}" for level in over_levels])
             logging.debug("Set secondary colorbar ticks and labels.")
 
@@ -754,7 +757,7 @@ def _plot_and_save_spatial_plot(
     if levels is not None and len(levels) < 20:
         cbar.set_ticks(levels)
         cbar.set_ticklabels([f"{level:.2f}" for level in levels])
-        if "rainfall" or "snowfall" or "visibility" in cube.name():
+        if any(var in cube.name() for var in ("rainfall", "snowfall", "visibility")):
             cbar.set_ticklabels([f"{level:.3g}" for level in levels])
         # Tick labels for rainfall rates from Nimrod radar data.
         if "rainfall rate composite" in cube.name():
@@ -1296,7 +1299,7 @@ def _plot_and_save_scatter_plot(
     filename: str,
     title: str,
     one_to_one: bool,
-    model_names: list[str] = None,
+    model_names: list[str] | None = None,
     **kwargs,
 ):
     """Plot and save a 2D scatter plot.
@@ -1455,7 +1458,7 @@ def _plot_and_save_vector_plot(
         ha="right",
         va="bottom",
         size=11,
-        bbox=dict(boxstyle="round", fc="#cccccc", ec="#808080", alpha=0.9),
+        bbox={"boxstyle": "round", "fc": "#cccccc", "ec": "#808080", "alpha": 0.9},
     )
 
     # Add colour bar.
@@ -1971,7 +1974,7 @@ def _spatial_plot(
 
 def spatial_contour_plot(
     cube: iris.cube.Cube,
-    filename: str = None,
+    filename: str | None = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
     **kwargs,
@@ -2018,7 +2021,7 @@ def spatial_contour_plot(
 
 def spatial_pcolormesh_plot(
     cube: iris.cube.Cube,
-    filename: str = None,
+    filename: str | None = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
     **kwargs,
@@ -2072,7 +2075,7 @@ def spatial_multi_pcolormesh_plot(
     overlay_cube: iris.cube.Cube | None = None,
     contour_cube: iris.cube.Cube | None = None,
     point_cube: iris.cube.Cube | None = None,
-    filename: str = None,
+    filename: str | None = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
     **kwargs,
@@ -2156,7 +2159,7 @@ def spatial_multi_pcolormesh_plot(
 #     ``"realization"``.
 def plot_line_series(
     cube: iris.cube.Cube | iris.cube.CubeList,
-    filename: str = None,
+    filename: str | None = None,
     series_coordinate: str = "time",
     sequence_coordinate: str = "time",
     # add the following for ensembles
@@ -2369,7 +2372,7 @@ def plot_line_series(
 
 def plot_vertical_line_series(
     cubes: iris.cube.Cube | iris.cube.CubeList,
-    filename: str = None,
+    filename: str | None = None,
     series_coordinate: str = "model_level_number",
     sequence_coordinate: str = "time",
     # line_coordinate: str = "realization",
@@ -2513,7 +2516,7 @@ def qq_plot(
     coordinates: list[str],
     percentiles: list[float],
     model_names: list[str],
-    filename: str = None,
+    filename: str | None = None,
     one_to_one: bool = True,
     **kwargs,
 ) -> iris.cube.CubeList:
@@ -2842,7 +2845,7 @@ def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
 def scatter_plot(
     cube_x: iris.cube.Cube | iris.cube.CubeList,
     cube_y: iris.cube.Cube | iris.cube.CubeList,
-    filename: str = None,
+    filename: str | None = None,
     one_to_one: bool = True,
     **kwargs,
 ) -> iris.cube.CubeList:
@@ -2919,7 +2922,7 @@ def scatter_plot(
 def vector_plot(
     cube_u: iris.cube.Cube,
     cube_v: iris.cube.Cube,
-    filename: str = None,
+    filename: str | None = None,
     sequence_coordinate: str = "time",
     **kwargs,
 ) -> iris.cube.CubeList:
@@ -2971,7 +2974,7 @@ def vector_plot(
 
 def plot_histogram_series(
     cubes: iris.cube.Cube | iris.cube.CubeList,
-    filename: str = None,
+    filename: str | None = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
     single_plot: bool = False,
@@ -3237,7 +3240,7 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
     stamp_coordinate: str,
     filename: str,
     title: str,
-    series_coordinate: str = None,
+    series_coordinate: str | None = None,
     **kwargs,
 ):
     """Plot and save postage (ensemble members) stamps for a power spectrum series.
@@ -3259,7 +3262,7 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
 
     """
     # Use the smallest square grid that will fit the members.
-    grid_size = int(math.ceil(math.sqrt(len(cubes.coord(stamp_coordinate).points))))
+    grid_size = math.ceil(math.sqrt(len(cubes.coord(stamp_coordinate).points)))
 
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     model_colors_map = get_model_colors_map(cubes)
@@ -3368,7 +3371,7 @@ def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
     stamp_coordinate: str,
     filename: str,
     title: str,
-    series_coordinate: str = None,
+    series_coordinate: str | None = None,
     **kwargs,
 ):
     """Plot and save power spectra for ensemble members in single plot.

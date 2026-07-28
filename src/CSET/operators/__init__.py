@@ -186,9 +186,9 @@ def create_diagnostic_archive():
 def execute_recipe(
     recipe: dict,
     output_directory: Path,
-    style_file: Path = None,
-    plot_resolution: int = None,
-    skip_write: bool = None,
+    style_file: Path | None = None,
+    plot_resolution: int | None = None,
+    skip_write: bool | None = None,
 ) -> None:
     """Parse and executes the steps from a recipe file.
 
@@ -219,9 +219,9 @@ def execute_recipe(
     # Create output directory.
     try:
         output_directory.mkdir(parents=True, exist_ok=True)
-    except (FileExistsError, NotADirectoryError) as err:
+    except (FileExistsError, NotADirectoryError):
         logging.error("Output directory is a file. %s", output_directory)
-        raise err
+        raise
     steps = recipe["steps"]
 
     # Execute the steps in a recipe.

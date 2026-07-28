@@ -471,12 +471,12 @@ def _extract_common_time_points(base: Cube, other: Cube) -> tuple[Cube, Cube]:
     """Extract common time points from cubes to allow comparison."""
     # Get the name of the first non-scalar time coordinate.
     time_coord = next(
-        map(
-            lambda coord: coord.name(),
-            filter(
+        (
+            coord.name()
+            for coord in filter(
                 lambda coord: coord.shape > (1,) and coord.name() in ["time", "hour"],
                 base.coords(),
-            ),
+            )
         ),
         None,
     )

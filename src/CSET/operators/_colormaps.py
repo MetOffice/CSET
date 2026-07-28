@@ -37,7 +37,7 @@ DEFAULT_DISCRETE_COLORS = mpl.colormaps["tab10"].colors + mpl.colormaps["Accent"
 
 
 @functools.cache
-def load_colorbar_map(user_colorbar_file: str = None) -> dict:
+def load_colorbar_map(user_colorbar_file: str | None = None) -> dict:
     """Load the colorbar definitions from a file.
 
     This is a separate function to make it cacheable.
@@ -87,7 +87,7 @@ def get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
     )
     if not model_names:
         return {}
-    use_user_colors = all(mname in colorbar.keys() for mname in model_names)
+    use_user_colors = all(mname in colorbar for mname in model_names)
     if use_user_colors:
         return {mname: colorbar[mname] for mname in model_names}
 

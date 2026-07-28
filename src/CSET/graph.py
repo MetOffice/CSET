@@ -28,7 +28,7 @@ from CSET._common import parse_recipe
 
 def save_graph(
     recipe_file: Path | str,
-    save_path: Path = None,
+    save_path: Path | None = None,
     auto_open: bool = False,
     detailed: bool = False,
 ):

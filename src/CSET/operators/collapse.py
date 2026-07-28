@@ -35,7 +35,7 @@ def collapse(
     cubes: iris.cube.Cube | iris.cube.CubeList,
     coordinate: str | list[str],
     method: str,
-    additional_percent: float = None,
+    additional_percent: float | None = None,
     **kwargs,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Collapse coordinate(s) of a single cube or of every cube in a cube list.
@@ -125,7 +125,7 @@ def collapse(
 def collapse_by_hour_of_day(
     cubes: iris.cube.Cube | iris.cube.CubeList,
     method: str,
-    additional_percent: float = None,
+    additional_percent: float | None = None,
     **kwargs,
 ) -> iris.cube.Cube:
     """Collapse a cube by hour of the day.
@@ -251,7 +251,7 @@ def collapse_by_hour_of_day(
 def collapse_by_validity_time(
     cubes: iris.cube.Cube | iris.cube.CubeList,
     method: str,
-    additional_percent: float = None,
+    additional_percent: float | None = None,
     **kwargs,
 ) -> iris.cube.Cube:
     """Collapse a cube around validity time for multiple cases.

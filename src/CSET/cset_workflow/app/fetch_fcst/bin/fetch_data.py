@@ -27,7 +27,7 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Self
 
 import isodate
 
@@ -50,7 +50,7 @@ class FileRetrieverABC(abc.ABC):
     method is called for each file path.
     """
 
-    def __enter__(self) -> "FileRetrieverABC":
+    def __enter__(self) -> Self:
         """Initialise the file retriever."""
         logging.debug("Initialising FileRetriever.")
         return self
