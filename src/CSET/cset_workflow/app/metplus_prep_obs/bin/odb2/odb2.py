@@ -147,7 +147,7 @@ def get_level(obs: DataFrame) -> pandas.Series:
     plevel = obs["vertco_reference_1@body"].where(
         obs["vertco_type@body"].isin([1, 11, 15]), numpy.nan
     )
-    plevel = plevel / 100 # Convert to hPa
+    plevel = plevel / 100  # Convert to hPa
 
     accumulated_fields = ["PRATE", "TSTM", "APCP", "NCPCP", "ACPCP"]
     if obs["name@varno"].isin(accumulated_fields).any():
@@ -285,7 +285,7 @@ def read_odb_sql(
     stream = io.StringIO(r.stdout)
 
     df = pandas.read_csv(stream, sep="\t", skipinitialspace=True)
-    df['statid@hdr'] = df['statid@hdr'].str.strip("'").str.strip()
+    df["statid@hdr"] = df["statid@hdr"].str.strip("'").str.strip()
 
     return df
 
