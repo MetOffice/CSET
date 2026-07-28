@@ -1140,6 +1140,169 @@ def south_polar_cube() -> iris.cube.Cube:
     return cube
 
 
+@pytest.fixture
+def dfss_cube() -> iris.cube.Cube:
+    """Set up three timesteps and three neighbourhoods of data and place into cube."""
+    data_arr = np.zeros((3, 3))
+    data_arr[:, :] = 1
+
+    neighbourhoods = iris.coords.DimCoord(points=[0, 1, 2], long_name="neighbourhoods")
+    time_units = cf_units.Unit("days since 2000-01-01 00:00:00", calendar="gregorian")
+    time_start = datetime.datetime(2010, 1, 1, 0, 0, 0)
+    time_dt_points = [
+        time_start + datetime.timedelta(minutes=5 * idx) for idx in range(3)
+    ]
+    time_points = [time_units.date2num(time_point) for time_point in time_dt_points]
+    time_coord = iris.coords.DimCoord(
+        points=time_points, standard_name="time", units=time_units
+    )
+
+    coords = (neighbourhoods, time_coord)
+    dim_coords_and_dims = [(coord, dim) for dim, coord in enumerate(coords)]
+    cube = iris.cube.Cube(
+        data=data_arr,
+        dim_coords_and_dims=dim_coords_and_dims,
+        long_name="dfss",
+    )
+
+    return cube
+
+
+@pytest.fixture
+def dfss_stdev_cube() -> iris.cube.Cube:
+    """Set up three timesteps and three neighbourhoods of data and place into cube."""
+    data_arr = np.zeros((3, 3))
+    data_arr[:, :] = 1
+
+    neighbourhoods = iris.coords.DimCoord(points=[0, 1, 2], long_name="neighbourhoods")
+    time_units = cf_units.Unit("days since 2000-01-01 00:00:00", calendar="gregorian")
+    time_start = datetime.datetime(2010, 1, 1, 0, 0, 0)
+    time_dt_points = [
+        time_start + datetime.timedelta(minutes=5 * idx) for idx in range(3)
+    ]
+    time_points = [time_units.date2num(time_point) for time_point in time_dt_points]
+    time_coord = iris.coords.DimCoord(
+        points=time_points, standard_name="time", units=time_units
+    )
+
+    coords = (neighbourhoods, time_coord)
+    dim_coords_and_dims = [(coord, dim) for dim, coord in enumerate(coords)]
+    cube = iris.cube.Cube(
+        data=data_arr,
+        dim_coords_and_dims=dim_coords_and_dims,
+        long_name="dfss_stdev",
+    )
+
+    return cube
+
+
+@pytest.fixture
+def dfss_ensemble_cube() -> iris.cube.Cube:
+    """Set up three timesteps and three realizations of data and place into cube."""
+    data_arr = np.zeros((3, 3, 10, 10))
+    data_arr[0:2, 0, 2:6, 2:6] = 1
+    data_arr[0:2, 1, 3:7, 3:7] = 1
+    data_arr[0:2, 2, 4:8, 4:8] = 1
+
+    realization = iris.coords.DimCoord(points=[0, 1, 2], standard_name="realization")
+    time_units = cf_units.Unit("days since 2000-01-01 00:00:00", calendar="gregorian")
+    time_start = datetime.datetime(2010, 1, 1, 0, 0, 0)
+    time_dt_points = [
+        time_start + datetime.timedelta(minutes=5 * idx) for idx in range(3)
+    ]
+    time_points = [time_units.date2num(time_point) for time_point in time_dt_points]
+    time_coord = iris.coords.DimCoord(
+        points=time_points, standard_name="time", units=time_units
+    )
+
+    forecast_period = iris.coords.AuxCoord(
+        points=[0, 5, 10], standard_name="forecast_period", units="minutes"
+    )
+
+    coord_system = iris.coord_systems.TransverseMercator(
+        latitude_of_projection_origin=55, longitude_of_central_meridian=0
+    )
+    coord_range = np.arange(0, 100, 10)
+    proj_y_coord = iris.coords.DimCoord(
+        points=coord_range,
+        standard_name="projection_y_coordinate",
+        var_name="projection_y_coordinate",
+        units="m",
+        coord_system=coord_system,
+    )
+    proj_x_coord = iris.coords.DimCoord(
+        points=coord_range,
+        standard_name="projection_x_coordinate",
+        var_name="projection_x_coordinate",
+        units="m",
+        coord_system=coord_system,
+    )
+
+    proj_y_coord.guess_bounds()
+    proj_x_coord.guess_bounds()
+
+    coords = (realization, time_coord, proj_y_coord, proj_x_coord)
+    dim_coords_and_dims = [(coord, dim) for dim, coord in enumerate(coords)]
+    cube = iris.cube.Cube(
+        data=data_arr,
+        dim_coords_and_dims=dim_coords_and_dims,
+        long_name="dfss test",
+    )
+    cube.add_aux_coord(forecast_period, data_dims=[0])
+    return cube
+
+
+@pytest.fixture
+def dfss_cube_no_time() -> iris.cube.Cube:
+    """Set up bad dfss cube."""
+    data_arr = np.zeros((3, 3))
+    data_arr[:, :] = 1
+
+    neighbourhoods = iris.coords.DimCoord(points=[0, 1, 2], long_name="neighbourhoods")
+
+    not_time_coord = iris.coords.DimCoord(points=[0, 1, 2], long_name="not_time")
+
+    coords = (neighbourhoods, not_time_coord)
+    dim_coords_and_dims = [(coord, dim) for dim, coord in enumerate(coords)]
+    cube = iris.cube.Cube(
+        data=data_arr,
+        dim_coords_and_dims=dim_coords_and_dims,
+        long_name="dfss",
+    )
+
+    return cube
+
+
+@pytest.fixture
+def dfss_cube_no_neighbourhoods() -> iris.cube.Cube:
+    """Set up bad dfss cube."""
+    data_arr = np.zeros((3, 3))
+    data_arr[:, :] = 1
+
+    not_neighbourhoods = iris.coords.DimCoord(
+        points=[0, 1, 2], long_name="not_neighbourhoods"
+    )
+    time_units = cf_units.Unit("days since 2000-01-01 00:00:00", calendar="gregorian")
+    time_start = datetime.datetime(2010, 1, 1, 0, 0, 0)
+    time_dt_points = [
+        time_start + datetime.timedelta(minutes=5 * idx) for idx in range(3)
+    ]
+    time_points = [time_units.date2num(time_point) for time_point in time_dt_points]
+    time_coord = iris.coords.DimCoord(
+        points=time_points, standard_name="time", units=time_units
+    )
+
+    coords = (not_neighbourhoods, time_coord)
+    dim_coords_and_dims = [(coord, dim) for dim, coord in enumerate(coords)]
+    cube = iris.cube.Cube(
+        data=data_arr,
+        dim_coords_and_dims=dim_coords_and_dims,
+        long_name="dfss",
+    )
+
+    return cube
+
+
 @pytest.fixture()
 def precalc_direction_shear_read_only():
     """Get precalculated directional shear across maul for 3D data. It is NOT safe to modify."""

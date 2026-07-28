@@ -551,6 +551,34 @@ def test_plot_line_series_too_many_dimensions(cube, tmp_working_dir):
         plot.plot_line_series(cube)
 
 
+def test_plot_and_save_line_series(dfss_cube):
+    """Test plot_and_save_line_series with dfss cube."""
+    coords = []
+    coords.append(dfss_cube.coord("time"))
+    coords.append(dfss_cube.coord("neighbourhoods"))
+
+    with pytest.raises(
+        ValueError,
+        match="Exactly one of ensemble_coord and sequence_coord must be provided",
+    ):
+        plot._plot_and_save_line_series(
+            dfss_cube,
+            coords,
+            "test_filename",
+            "test_plot_title",
+            sequence_coord="time",
+            ensemble_coord="realization",
+        )
+
+    with pytest.raises(
+        ValueError,
+        match="Exactly one of ensemble_coord and sequence_coord must be provided",
+    ):
+        plot._plot_and_save_line_series(
+            dfss_cube, coords, "test_filename", "test_plot_title"
+        )
+
+
 def test_plot_line_series_different_coord_lengths(tmp_working_dir):
     """Save a line series plot with specific filename and series coordinate."""
     ens_coord = iris.coords.DimCoord(0, standard_name="realization", units="1")
@@ -1227,3 +1255,162 @@ def test_hinton_returns_figure_and_axes():
     )
     assert fig is not None
     assert ax is not None
+
+
+def test_dfss_contour(dfss_cube, dfss_stdev_cube, tmp_working_dir):
+    """Test dfss_contour."""
+    dfss_cube.attributes["method"] = "centile"
+    dfss_cube.attributes["centile"] = 0.9
+    plot.plot_dfss_contour(dfss_cube)
+    assert Path("dfss_centile_0p9.png").is_file()
+
+    dfss_cube.attributes["method"] = "threshold"
+    dfss_cube.attributes["threshold"] = 2
+
+    plot.plot_dfss_contour(dfss_cube)
+    assert Path("dfss_threshold_2.png").is_file()
+
+
+def test_plot_dfss_line_series_sequence(dfss_cube, tmp_working_dir):
+    """Test plot_dfss_line_series_sequence."""
+    dfss_cube.attributes["method"] = "centile"
+    dfss_cube.attributes["centile"] = 0.9
+    plot.plot_dfss_line_series_sequence(dfss_cube)
+    assert Path(
+        "dfss_neighbourhoods_point_0_centile_0p9_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+    assert Path(
+        "dfss_neighbourhoods_point_1_centile_0p9_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+
+    assert Path(
+        "dfss_neighbourhoods_point_2_centile_0p9_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+
+    dfss_cube.attributes["method"] = "threshold"
+    dfss_cube.attributes["threshold"] = 2
+    plot.plot_dfss_line_series_sequence(dfss_cube)
+    assert Path(
+        "dfss_neighbourhoods_point_0_threshold_2_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+    assert Path(
+        "dfss_neighbourhoods_point_1_threshold_2_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+    assert Path(
+        "dfss_neighbourhoods_point_2_threshold_2_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+
+
+def test_plot_dfss_line_series_sequence_bad_cubes(
+    dfss_cube_no_time, dfss_cube_no_neighbourhoods, tmp_working_dir
+):
+    """Test plot_dfss_line_series_sequence."""
+    dfss_cube_no_time.attributes["method"] = "centile"
+    dfss_cube_no_time.attributes["centile"] = 0.5
+
+    with pytest.raises(ValueError, match="Cube must have a time coordinate."):
+        plot.plot_dfss_line_series_sequence(dfss_cube_no_time)
+
+    with pytest.raises(
+        ValueError, match="Cube must be 1D or 2D with a neighbourhoods coordinate."
+    ):
+        plot.plot_dfss_line_series_sequence(dfss_cube_no_neighbourhoods)
+
+
+def test_plot_dfss_contour_cube_list_no_variable(
+    dfss_cube, dfss_stdev_cube, tmp_working_dir
+):
+    """Test plot_dfss_contour with a cubelist without specifying a variable."""
+    dfss_cube.attributes["method"] = "centile"
+    dfss_cube.attributes["centile"] = 0.5
+
+    dfss_stdev_cube.attributes["method"] = "centile"
+    dfss_stdev_cube.attributes["centile"] = 0.5
+
+    cubes = iris.cube.CubeList([dfss_cube, dfss_stdev_cube])
+
+    plot.plot_dfss_contour(cubes)
+
+    assert Path("dfss_centile_0p5.png").is_file()
+
+
+def test_plot_dfss_contour_cube_list_with_variable(
+    dfss_cube, dfss_stdev_cube, tmp_working_dir
+):
+    """Test plot_dfss_contour with a cubelist with specific variable."""
+    dfss_cube.attributes["method"] = "centile"
+    dfss_cube.attributes["centile"] = 0.5
+
+    dfss_stdev_cube.attributes["method"] = "centile"
+    dfss_stdev_cube.attributes["centile"] = 0.5
+
+    cubes = iris.cube.CubeList([dfss_cube, dfss_stdev_cube])
+
+    plot.plot_dfss_contour(cubes, "dfss")
+
+    assert Path("dfss_centile_0p5.png").is_file()
+
+    plot.plot_dfss_contour(cubes, "dfss_stdev")
+
+    assert Path("dfss_stdev_centile_0p5.png").is_file()
+
+
+def test_plot_dfss_line_series_sequence_cube_list_no_variable(
+    dfss_cube, dfss_stdev_cube, tmp_working_dir
+):
+    """Test plot_dfss_line_series_sequence with cube list but not given a specific variable."""
+    dfss_cube.attributes["method"] = "centile"
+    dfss_cube.attributes["centile"] = 0.5
+
+    dfss_stdev_cube.attributes["method"] = "centile"
+    dfss_stdev_cube.attributes["centile"] = 0.5
+
+    cubes = iris.cube.CubeList([dfss_cube, dfss_stdev_cube])
+
+    plot.plot_dfss_line_series_sequence(cubes)
+    assert Path(
+        "dfss_neighbourhoods_point_0_centile_0p5_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+    assert Path(
+        "dfss_neighbourhoods_point_1_centile_0p5_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+
+    assert Path(
+        "dfss_neighbourhoods_point_2_centile_0p5_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+
+
+def test_plot_dfss_line_series_sequence_cube_list_with_variable(
+    dfss_cube, dfss_stdev_cube, tmp_working_dir
+):
+    """Test plot_dfss_line_series_sequence with cube list given a specific variable."""
+    dfss_cube.attributes["method"] = "centile"
+    dfss_cube.attributes["centile"] = 0.5
+
+    dfss_stdev_cube.attributes["method"] = "centile"
+    dfss_stdev_cube.attributes["centile"] = 0.5
+
+    cubes = iris.cube.CubeList([dfss_cube, dfss_stdev_cube])
+    plot.plot_dfss_line_series_sequence(cubes, variable="dfss")
+    assert Path(
+        "dfss_neighbourhoods_point_0_centile_0p5_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+    assert Path(
+        "dfss_neighbourhoods_point_1_centile_0p5_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+
+    assert Path(
+        "dfss_neighbourhoods_point_2_centile_0p5_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+
+    plot.plot_dfss_line_series_sequence(cubes, variable="dfss_stdev")
+    assert Path(
+        "dfss_stdev_neighbourhoods_point_0_centile_0p5_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+    assert Path(
+        "dfss_stdev_neighbourhoods_point_1_centile_0p5_untitled_20100101000000_20100101001000.png"
+    ).is_file()
+
+    assert Path(
+        "dfss_stdev_neighbourhoods_point_2_centile_0p5_untitled_20100101000000_20100101001000.png"
+    ).is_file()
