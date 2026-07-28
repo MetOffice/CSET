@@ -66,8 +66,8 @@ __all__ = [
     "feature",
     "filters",
     "fluxes",
-    "humidity",
     "get_operator",
+    "humidity",
     "imageprocessing",
     "mesoscale",
     "misc",
@@ -77,8 +77,8 @@ __all__ = [
     "pressure",
     "read",
     "regrid",
-    "temperature",
     "scoreswrappers",
+    "temperature",
     "transect",
     "wind",
     "write",
@@ -147,7 +147,7 @@ def _step_parser(step: dict, step_input: any) -> str:
     """Execute a recipe step, recursively executing any sub-steps."""
     logging.debug("Executing step: %s", step)
     kwargs = {}
-    for key in step.keys():
+    for key in step:
         if key == "operator":
             operator = get_operator(step["operator"])
             logging.info("operator: %s", step["operator"])

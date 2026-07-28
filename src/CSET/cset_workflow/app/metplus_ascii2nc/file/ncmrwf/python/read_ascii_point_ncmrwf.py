@@ -142,7 +142,7 @@ try:
     ).dt.strftime("%Y%m%d_%H%M%S")
     p1.drop(["YR", "MN", "DY", "HR", "MI"], axis=1, inplace=True)
 
-    all_dataframes = [retrieve_vble(p1, vble_name) for vble_name in vbles.keys()]
+    all_dataframes = [retrieve_vble(p1, vble_name) for vble_name in vbles]
 
     p2 = pd.concat(all_dataframes).drop_duplicates(
         subset=["typ", "sid", "vld", "lat", "lon", "var", "lvl", "elv"], keep="last"

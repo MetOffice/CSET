@@ -95,7 +95,7 @@ def cdl_to_cubes(
         cdl: str, constraint: str | iris.Constraint | None = None
     ) -> iris.cube.CubeList:
         path = cdl_to_nc_path(cdl)
-        return read.read_cubes(path, constraint)  # noqa
+        return read.read_cubes(path, constraint)
 
     return callback
 
@@ -110,7 +110,7 @@ def cdl_to_cube(
         cdl: str, constraint: str | iris.Constraint | None = None
     ) -> iris.cube.Cube:
         path = cdl_to_nc_path(cdl)
-        return read.read_cube(path, constraint)  # noqa
+        return read.read_cube(path, constraint)
 
     return callback
 

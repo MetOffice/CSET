@@ -347,8 +347,8 @@ def regrid_to_single_point(
             regridded_cubes.append(cube_rgd)
         else:
             if (
-                np.abs((lat_tr - lat.points[0])) > 0.1
-                or np.abs((lon_tr - lon.points[0])) > 0.1
+                np.abs(lat_tr - lat.points[0]) > 0.1
+                or np.abs(lon_tr - lon.points[0]) > 0.1
             ):
                 raise ValueError(
                     "Selected point is too far from the specified coordinates. It should be within 0.1 degrees."

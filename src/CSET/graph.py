@@ -64,7 +64,7 @@ def save_graph(
         node = str(uuid4())
         graph.add_node(node, label=step["operator"])
         kwargs = {}
-        for key in step.keys():
+        for key in step:
             if isinstance(step[key], dict) and "operator" in step[key]:
                 logging.debug("Recursing into argument: %s", key)
                 sub_node = step_parser(step[key], prev_node)

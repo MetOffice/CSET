@@ -266,7 +266,6 @@ def _setup_spatial_map(
     except ValueError:
         # Skip if not both x and y map coordinates.
         axes = figure.gca()
-        pass
 
     return axes
 

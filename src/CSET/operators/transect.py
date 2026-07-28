@@ -141,7 +141,7 @@ def calc_transect(
 
         # Iterate over all points along transect, lon_pnts will be the same shape as
         # lat_pnts so we can use either to iterate over.
-        for i in range(0, lon_pnts.shape[0]):
+        for i in range(lon_pnts.shape[0]):
             logging.info("%s/%s", i + 1, lon_pnts.shape[0])
 
             # Get point along transect.

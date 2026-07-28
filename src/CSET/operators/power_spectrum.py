@@ -21,7 +21,7 @@ import iris.coords
 import iris.cube
 import iris.exceptions
 import numpy as np
-import scipy.fft as fft
+from scipy import fft
 
 from CSET._common import iter_maybe
 
