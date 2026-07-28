@@ -12,11 +12,13 @@ Bibliography
     E. E., Carroll, M., Trotta, B., Bishop, S., Squire, D. T., Griffiths, A.,
     Pagano, T. C., Fisher, A. J., Mandelbaum, T., Jinghan, F., … Smallwood, J.
     (2026) "scores: Metrics for the verification, evaluation and optimisation of
-    forecasts, predictions or models (2.5.0)". Zenodo. doi: 10.5281/zenodo.18638494
+    forecasts, predictions or models (2.5.0)". Zenodo,
+    doi: 10.5281/zenodo.18638494
 
 .. [CRPS] Hersbach, H., 2000: Decomposition of the Continuous Ranked
     Probability Score for Ensemble Prediction Systems. Wea.
-    Forecasting, 15, 559–570, https://doi.org/10.1175/1520-0434(2000)015<0559:DOTCRP>2.0.CO;2.
+    Forecasting, 15, 559-570,
+    doi: 10.1175/1520-0434(2000)015<0559:DOTCRP>2.0.CO;2
 
 .. [Daviesetal24] Davies, P.A., Fowler, H.J, Villalobos-Herrera, R.,
     Slingo, J., Flack, D.L.A., and Taszarek, M (2024)
