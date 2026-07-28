@@ -418,11 +418,6 @@ def custom_colormap_celsius(cube: iris.cube.Cube, cmap, levels, norm):
         levels = np.array(levels)
         levels -= 273
         levels = levels.tolist()
-    else:
-        # Do nothing keep the existing colourbar attributes
-        levels = levels
-    cmap = cmap
-    norm = norm
     return cmap, levels, norm
 
 
@@ -576,11 +571,6 @@ def custom_colourmap_nimrod_weights(cube: iris.cube.Cube, cmap, levels, norm):
         # Normalize the levels.
         norm = mcolors.BoundaryNorm(levels, cmap.N)
         logger.info("Change colormap for Nimrod weights colorbar.")
-    else:
-        # Do nothing and keep existing colorbar attributes.
-        cmap = cmap
-        levels = levels
-        norm = norm
     return cmap, levels, norm
 
 
@@ -650,11 +640,6 @@ def custom_colormap_visibility_in_air(cube: iris.cube.Cube, cmap, levels, norm):
         # Normalize the levels
         norm = mcolors.BoundaryNorm(levels, cmap.N)
         logger.info("change colormap for visibility_in_air variable colorbar.")
-    else:
-        # do nothing and keep existing colorbar attributes
-        cmap = cmap
-        levels = levels
-        norm = norm
     return cmap, levels, norm
 
 
@@ -732,13 +717,7 @@ def custom_colormap_feature_tracking(cube: iris.cube.Cube, cmap, levels, norm):
         norm = mcolors.BoundaryNorm(levels, cmap.N)
         logger.info("change colormap for feature init variable colorbar.")
 
-    else:
-        # do nothing and keep existing colorbar attributes
-        cmap = cmap
-        levels = levels
-        norm = norm
-
-    # Set all non-feature data to white
+    # Set all non-feature data to white.
     if any("feature" in name for name in varnames):
         cmap.with_extremes(under="white")
 
