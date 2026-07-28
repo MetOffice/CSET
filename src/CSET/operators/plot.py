@@ -2208,15 +2208,15 @@ def plot_line_series(
     # Iterate over all cubes and extract coordinate to plot.
     cubes = iris.cube.CubeList(iter_maybe(cube))
     coords = []
-    for cube in cubes:
+    for model_cube in cubes:
         try:
-            coords.append(cube.coord(series_coordinate))
+            coords.append(model_cube.coord(series_coordinate))
         except iris.exceptions.CoordinateNotFoundError as err:
             raise ValueError(
                 f"Cube must have a {series_coordinate} coordinate."
             ) from err
-        if cube.coords("realization"):
-            if cube.ndim > 3:
+        if model_cube.coords("realization"):
+            if model_cube.ndim > 3:
                 raise ValueError("Cube must be 1D or 2D with a realization coordinate.")
         else:
             raise ValueError("Cube must have a realization coordinate.")
@@ -2239,9 +2239,9 @@ def plot_line_series(
         # Internal plotting function.
         plotting_func = _plot_and_save_line_power_spectrum_series
 
-        for cube in cubes:
+        for model_cube in cubes:
             try:
-                cube.coord(sequence_coordinate)
+                model_cube.coord(sequence_coordinate)
             except iris.exceptions.CoordinateNotFoundError as err:
                 raise ValueError(
                     f"Cube must have a {sequence_coordinate} coordinate."
