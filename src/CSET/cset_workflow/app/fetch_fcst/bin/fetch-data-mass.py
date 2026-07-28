@@ -29,7 +29,7 @@ class MASSFileRetriever(FileRetrieverABC):
         """
         moo_command = ["moo", "get", "--force", file_path, output_dir]
         logging.debug(f"Fetching from MASS with:\n{' '.join(moo_command)}")
-        p = subprocess.run(moo_command)
+        p = subprocess.run(moo_command, check=False)
         if p.returncode > 0:
             logging.info("moo get exited with non-zero code %s.", p.returncode)
             return False
