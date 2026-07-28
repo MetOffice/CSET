@@ -64,13 +64,13 @@ def save_graph(
         node = str(uuid4())
         graph.add_node(node, label=step["operator"])
         kwargs = {}
-        for key in step:
-            if isinstance(step[key], dict) and "operator" in step[key]:
+        for key, value in step.items():
+            if isinstance(value, dict) and "operator" in value:
                 logging.debug("Recursing into argument: %s", key)
-                sub_node = step_parser(step[key], prev_node)
+                sub_node = step_parser(value, prev_node)
                 graph.add_edge(sub_node, node)
             elif key != "operator":
-                kwargs[key] = step[key]
+                kwargs[key] = value
         graph.add_edge(prev_node, node)
 
         if detailed:

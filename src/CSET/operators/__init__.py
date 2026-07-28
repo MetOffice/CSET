@@ -147,15 +147,15 @@ def _step_parser(step: dict, step_input: any) -> str:
     """Execute a recipe step, recursively executing any sub-steps."""
     logging.debug("Executing step: %s", step)
     kwargs = {}
-    for key in step:
+    for key, value in step.items():
         if key == "operator":
-            operator = get_operator(step["operator"])
-            logging.info("operator: %s", step["operator"])
-        elif isinstance(step[key], dict) and "operator" in step[key]:
+            operator = get_operator(value)
+            logging.info("operator: %s", value)
+        elif isinstance(value, dict) and "operator" in value:
             logging.debug("Recursing into argument: %s", key)
-            kwargs[key] = _step_parser(step[key], step_input)
+            kwargs[key] = _step_parser(value, step_input)
         else:
-            kwargs[key] = step[key]
+            kwargs[key] = value
     logging.debug("args: %s", kwargs)
     logging.debug("step_input: %s", step_input)
     # If first argument of operator is explicitly defined, use that rather
