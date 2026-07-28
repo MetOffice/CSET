@@ -1001,9 +1001,7 @@ def _plot_and_save_line_series(
     # Set y limits to global min and max, autoscale if colorbar doesn't exist.
     if y_levels:
         ax.set_ylim(min(y_levels), max(y_levels))
-        logger.debug(
-            "Line plot with y-axis limits %s-%s", min(y_levels), max(y_levels)
-        )
+        logger.debug("Line plot with y-axis limits %s-%s", min(y_levels), max(y_levels))
     else:
         ax.autoscale()
 
@@ -1839,7 +1837,7 @@ def _plot_and_save_scatter_series(
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved scatter plot to %s", filename)
+    logger.info("Saved scatter plot to %s", filename)
     plt.close(fig)
 
 
@@ -3112,7 +3110,7 @@ def plot_histogram_series(
 
 def plot_scatter_series(
     cubes: iris.cube.Cube | iris.cube.CubeList,
-    filename: str = None,
+    filename: str | None = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
     hexbin: bool = False,

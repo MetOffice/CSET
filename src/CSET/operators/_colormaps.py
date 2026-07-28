@@ -98,7 +98,7 @@ def get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
     if any("OBS" in name.upper() for name in model_names):
         colors = list(DEFAULT_DISCRETE_COLORS).copy()
         colors.insert(0, mcolors.to_rgb("dimgray"))
-        ob_name = [name for name in model_names if "OBS" in name.upper()][0]
+        ob_name = next(name for name in model_names if "OBS" in name.upper())
         model_names.remove(ob_name)
         model_names.insert(0, ob_name)
     else:
