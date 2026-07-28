@@ -327,7 +327,7 @@ def is_transect(cube: iris.cube.Cube) -> bool:
 
     # Check which vertical coordinates we have.
     vertical_coords = [coord for coord in coord_names if coord in VERTICAL_COORD_NAMES]
-    if len(vertical_coords) != 1:
+    if len(vertical_coords) != 1:  # noqa: SIM103 Clearer to keep separate.
         return False
 
     # Passed criteria so return True
