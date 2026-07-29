@@ -1,7 +1,10 @@
 """
-Some code
+Code that restructures reanalysis data to give it an effective forecast_period, so it can
+be directly compared to model forecasts in CSET.
+The code base currently supports UM and ERA5, and does not perform any additional metadata
+correction beyond time axis and removing some surplus coords/attributes.
 
-MAINTAINER: james.warner@metoffice.gov.uk / jwarner8
+Please see README for futher information on how to run the script.
 """
 
 import iris
@@ -136,7 +139,13 @@ def _identify_number_of_cycles_required(cyclestart, cycleend, cyclefreq):
     return forecast_initialisations
 
 
-def main():
+def main() -> None:
+    """Generate forecast-like datasets from reanalysis data.
+
+    Parse command-line arguments, create forecast initialisation times,
+    process the input reanalysis data, and write the resulting forecast
+    files to disk.
+    """
 
     parser = argparse.ArgumentParser(description="Process forecast data.")
 
