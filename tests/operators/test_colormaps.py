@@ -273,12 +273,12 @@ def test_colorbar_map_levels_missing_pressure_level(
         cmap, levels, norm = _colormaps.colorbar_map_levels(cube_288hPa)
         assert caplog.record_tuples == [
             (
-                "root",
+                "CSET.operators._colormaps",
                 logging.DEBUG,
                 "temperature_at_pressure_levels has no colorbar definition for pressure level 288.",
             ),
             (
-                "root",
+                "CSET.operators._colormaps",
                 logging.DEBUG,
                 "Using min and max for temperature_at_pressure_levels colorbar.",
             ),

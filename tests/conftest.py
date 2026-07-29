@@ -95,7 +95,7 @@ def cdl_to_cubes(
         cdl: str, constraint: str | iris.Constraint | None = None
     ) -> iris.cube.CubeList:
         path = cdl_to_nc_path(cdl)
-        return read.read_cubes(path, constraint)  # noqa
+        return read.read_cubes(path, constraint)
 
     return callback
 
@@ -110,7 +110,7 @@ def cdl_to_cube(
         cdl: str, constraint: str | iris.Constraint | None = None
     ) -> iris.cube.Cube:
         path = cdl_to_nc_path(cdl)
-        return read.read_cube(path, constraint)  # noqa
+        return read.read_cube(path, constraint)
 
     return callback
 
@@ -1057,7 +1057,7 @@ def feature_cube() -> iris.cube.Cube:
 
     realization = iris.coords.DimCoord(points=[0, 1, 2], standard_name="realization")
     time_units = cf_units.Unit("days since 2000-01-01 00:00:00", calendar="gregorian")
-    time_start = datetime.datetime(2010, 1, 1, 0, 0, 0)
+    time_start = datetime.datetime(2010, 1, 1, 0, 0, 0, tzinfo=datetime.UTC)
     time_dt_points = [
         time_start + datetime.timedelta(minutes=5 * idx) for idx in range(3)
     ]

@@ -41,6 +41,8 @@ from CSET.operators._utils import (
     is_spatialdim,
 )
 
+logger = logging.getLogger(__name__)
+
 
 class NoDataError(FileNotFoundError):
     """Error that no data has been loaded."""
@@ -50,8 +52,8 @@ def read_cube(
     file_paths: list[str] | str,
     constraint: iris.Constraint = None,
     model_names: list[str] | str | None = None,
-    subarea_type: str = None,
-    subarea_extent: list[float] = None,
+    subarea_type: str | None = None,
+    subarea_extent: list[float] | None = None,
     **kwargs,
 ) -> iris.cube.Cube:
     """Read a single cube from files.
@@ -115,8 +117,8 @@ def read_cubes(
     file_paths: list[str] | str,
     constraint: iris.Constraint | None = None,
     model_names: str | list[str] | None = None,
-    subarea_type: str = None,
-    subarea_extent: list = None,
+    subarea_type: str | None = None,
+    subarea_extent: list | None = None,
     **kwargs,
 ) -> iris.cube.CubeList:
     """Read cubes from files.
@@ -218,7 +220,7 @@ def read_cubes(
             if not dim_coord.has_bounds() and dim_coord.shape[0] > 1:
                 dim_coord.guess_bounds()
 
-    logging.info("Loaded cubes: %s", cubes)
+    logger.info("Loaded cubes: %s", cubes)
     if len(cubes) == 0:
         raise NoDataError("No cubes loaded, check your constraints!")
     return cubes
@@ -232,7 +234,7 @@ def _load_model(
     """Load a single model's data into a CubeList."""
     input_files = _check_input_files(paths)
     # If unset, a constraint of None lets everything be loaded.
-    logging.debug("Constraint: %s", constraint)
+    logger.debug("Constraint: %s", constraint)
     cubes = iris.load(input_files, constraint, callback=_loading_callback)
     # If required, compute wind_speed from components.
     cubes = _compute_winds(cubes)
@@ -276,13 +278,13 @@ def _check_input_files(input_paths: str | list[str]) -> list[Path]:
                 input_path = Path(input_path)
                 # Get the list of files in the directory, or use it directly.
                 if input_path.is_dir():
-                    logging.debug("Checking directory '%s' for files", input_path)
+                    logger.debug("Checking directory '%s' for files", input_path)
                     files.extend(p for p in input_path.iterdir() if p.is_file())
                 else:
                     files.append(input_path)
 
     files.sort()
-    logging.info("Loading files:\n%s", "\n".join(str(path) for path in files))
+    logger.info("Loading files:\n%s", "\n".join(str(path) for path in files))
     if len(files) == 0:
         raise FileNotFoundError(f"No files found for {input_paths}")
     return files
@@ -317,7 +319,7 @@ def _cutout_cubes(
 ):
     """Cut out a subarea from a CubeList."""
     if subarea_type is None:
-        logging.debug("Subarea selection is disabled.")
+        logger.debug("Subarea selection is disabled.")
         return cubes
 
     # If selected, cutout according to number of grid cells to trim from each edge.
@@ -329,7 +331,7 @@ def _cutout_cubes(
 
         # Compute cutout based on number of cells to trim from edges.
         if subarea_type == "gridcells":
-            logging.debug(
+            logger.debug(
                 "User requested LowerTrim: %s LeftTrim: %s UpperTrim: %s RightTrim: %s",
                 subarea_extent[0],
                 subarea_extent[1],
@@ -345,7 +347,7 @@ def _cutout_cubes(
         # Compute cutout based on specified coordinate values.
         elif subarea_type == "realworld" or subarea_type == "modelrelative":
             # If not gridcells, cutout by requested geographic area,
-            logging.debug(
+            logger.debug(
                 "User requested LLat: %s ULat: %s LLon: %s ULon: %s",
                 subarea_extent[0],
                 subarea_extent[1],
@@ -377,7 +379,7 @@ def _cutout_cubes(
 
         # Do cutout and add to cutout_cubes.
         intersection_args = {lat_name: lats, lon_name: lons}
-        logging.debug("Cutting out coords: %s", intersection_args)
+        logger.debug("Cutting out coords: %s", intersection_args)
         try:
             cutout_cubes.append(cube.intersection(**intersection_args))
         except IndexError as err:
@@ -431,7 +433,7 @@ def _realization_callback(cube):
 @functools.lru_cache(None)
 def _log_once(msg, level=logging.WARNING):
     """Print a warning message, skipping recent duplicates."""
-    logging.log(level, msg)
+    logger.log(level, msg)
 
 
 def _um_normalise_callback(cube: iris.cube.Cube):
@@ -505,15 +507,17 @@ def _lfric_time_coord_fix_callback(cube: iris.cube.Cube) -> iris.cube.Cube:
             and len(cube.coord_dims(time_coord)) == 1
         ):
             # Fudge the bounds to foil checking for strict monotonicity.
-            if time_coord.has_bounds():
-                if (time_coord.bounds[-1][0] - time_coord.bounds[0][0]) < 1.0e-8:
-                    time_coord.bounds = [
-                        [
-                            time_coord.bounds[i][0] + 1.0e-8 * float(i),
-                            time_coord.bounds[i][1],
-                        ]
-                        for i in range(len(time_coord.bounds))
+            if (
+                time_coord.has_bounds()
+                and (time_coord.bounds[-1][0] - time_coord.bounds[0][0]) < 1.0e-8
+            ):
+                time_coord.bounds = [
+                    [
+                        time_coord.bounds[i][0] + 1.0e-8 * float(i),
+                        time_coord.bounds[i][1],
                     ]
+                    for i in range(len(time_coord.bounds))
+                ]
             iris.util.promote_aux_coord_to_dim_coord(cube, time_coord)
     return cube
 
@@ -731,9 +735,8 @@ def _fix_pressure_coord_callback(cube: iris.cube.Cube):
         if coord.name() in ["pressure_level", "pressure_levels"]:
             coord.rename("pressure")
 
-        if coord.name() == "pressure":
-            if str(cube.coord("pressure").units) != "hPa":
-                cube.coord("pressure").convert_units("hPa")
+        if coord.name() == "pressure" and str(cube.coord("pressure").units) != "hPa":
+            cube.coord("pressure").convert_units("hPa")
 
 
 def _fix_um_radtime(cube: iris.cube.Cube):
@@ -818,26 +821,24 @@ def _fix_cell_methods(cube: iris.cube.Cube):
         "m01s04i202",
         "m01s05i201",
         "m01s05i202",
-    ]:
-        # Check if input cell_method contains "mean" time-processing.
-        if set(cm.method for cm in cube.cell_methods) == {"mean"}:
-            # Retrieve interval and any comment information.
-            for cell_method in cube.cell_methods:
-                interval_str = cell_method.intervals
-                comment_str = cell_method.comments
+    ] and {cm.method for cm in cube.cell_methods} == {"mean"}:
+        # Retrieve interval and any comment information.
+        for cell_method in cube.cell_methods:
+            interval_str = cell_method.intervals
+            comment_str = cell_method.comments
 
-            # Remove input aggregation method.
-            cube.cell_methods = ()
+        # Remove input aggregation method.
+        cube.cell_methods = ()
 
-            # Replace "mean" with "sum" cell_method to indicate aggregation.
-            cube.add_cell_method(
-                iris.coords.CellMethod(
-                    method="sum",
-                    coords="time",
-                    intervals=interval_str,
-                    comments=comment_str,
-                )
+        # Replace "mean" with "sum" cell_method to indicate aggregation.
+        cube.add_cell_method(
+            iris.coords.CellMethod(
+                method="sum",
+                coords="time",
+                intervals=interval_str,
+                comments=comment_str,
             )
+        )
 
 
 def _convert_cube_units_callback(cube: iris.cube.Cube):
@@ -873,11 +874,10 @@ def _convert_cube_units_callback(cube: iris.cube.Cube):
 
     # Convert visibility diagnostic units if required.
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
-    if any("visibility" in name for name in varnames):
-        if cube.units == "m":
-            _log_once("Converting visibility units m to km.", level=logging.DEBUG)
-            # Convert the units to km.
-            cube.convert_units("km")
+    if any("visibility" in name for name in varnames) and cube.units == "m":
+        _log_once("Converting visibility units m to km.", level=logging.DEBUG)
+        # Convert the units to km.
+        cube.convert_units("km")
 
     return cube
 
@@ -982,7 +982,7 @@ def _proleptic_gregorian_fix(cube: iris.cube.Cube):
     try:
         time_coord = cube.coord("time")
         if time_coord.units.calendar == "proleptic_gregorian":
-            logging.debug(
+            logger.debug(
                 "Changing proleptic Gregorian calendar to standard calendar for %s",
                 repr(time_coord.units),
             )
@@ -1012,7 +1012,7 @@ def _lfric_time_callback(cube: iris.cube.Cube):
         try:
             tcoord.convert_units("hours since 1970-01-01 00:00:00")
         except ValueError:
-            logging.warning("Unrecognised base time unit: %s", tcoord.units)
+            logger.warning("Unrecognised base time unit: %s", tcoord.units)
 
         if not cube.coords("forecast_reference_time"):
             try:
@@ -1028,7 +1028,7 @@ def _lfric_time_callback(cube: iris.cube.Cube):
                 )
                 cube.add_aux_coord(frt_coord)
             except KeyError:
-                logging.warning(
+                logger.warning(
                     "Cannot find forecast_reference_time, but no `time_origin` attribute to construct it from."
                 )
 
@@ -1066,11 +1066,11 @@ def _lfric_time_callback(cube: iris.cube.Cube):
                 # Associate lead time coordinate with time dimension.
                 cube.add_aux_coord(lead_time_coord, cube.coord_dims("time"))
             except iris.exceptions.CoordinateNotFoundError:
-                logging.warning(
+                logger.warning(
                     "Cube does not have both time and forecast_reference_time coordinate, so cannot construct forecast_period"
                 )
     except iris.exceptions.CoordinateNotFoundError:
-        logging.warning("No time coordinate on cube.")
+        logger.warning("No time coordinate on cube.")
 
 
 def _lfric_forecast_period_callback(cube: iris.cube.Cube):

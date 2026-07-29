@@ -65,6 +65,8 @@ from CSET.operators.collapse import collapse
 from CSET.operators.misc import _extract_common_time_points
 from CSET.operators.regrid import regrid_onto_cube
 
+logger = logging.getLogger(__name__)
+
 # Use a non-interactive plotting backend.
 mpl.use("agg")
 
@@ -166,7 +168,7 @@ def _setup_spatial_map(
         if np.abs(xmax - xmin) > 180.0:
             xmin = xmin - 180.0
             xmax = xmax - 180.0
-            logging.debug("Adjusting plot bounds to fit global extent.")
+            logger.debug("Adjusting plot bounds to fit global extent.")
 
         # Consider map projection orientation.
         # Adapting orientation enables plotting across international dateline.
@@ -234,7 +236,7 @@ def _setup_spatial_map(
                 coastcol = "magenta"
             else:
                 coastcol = "black"
-            logging.debug("Plotting coastlines and borderlines in colour %s.", coastcol)
+            logger.debug("Plotting coastlines and borderlines in colour %s.", coastcol)
             axes.coastlines(resolution="10m", color=coastcol, alpha=0.8)
             axes.add_feature(cfeature.BORDERS, edgecolor=coastcol, alpha=0.3)
 
@@ -266,7 +268,6 @@ def _setup_spatial_map(
     except ValueError:
         # Skip if not both x and y map coordinates.
         axes = figure.gca()
-        pass
 
     return axes
 
@@ -400,7 +401,7 @@ def _select_series_coord(cube, series_coordinate):
         try:
             return cube.coord(coord)
         except iris.exceptions.CoordinateNotFoundError:
-            logging.debug("Coordinate %s not found.", coord)
+            logger.debug("Coordinate %s not found.", coord)
 
     # If we get here, none of the fallback options were found.
     raise iris.exceptions.CoordinateNotFoundError(
@@ -436,11 +437,11 @@ def _set_axis_range(cubes):
         # If levels is changed, recheck to use the vmin,vmax or
         # levels-based ranges for histogram plots.
         _, levels, _ = colorbar_map_levels(cube)
-        logging.debug("levels: %s", levels)
+        logger.debug("levels: %s", levels)
         if levels is not None:
             vmin = min(levels)
             vmax = max(levels)
-            logging.debug("Updated vmin, vmax: %s, %s", vmin, vmax)
+            logger.debug("Updated vmin, vmax: %s, %s", vmin, vmax)
             break
 
     if levels is None:
@@ -535,7 +536,7 @@ def _plot_and_save_spatial_plot(
     if norm is not None:
         vmin = None
         vmax = None
-        logging.debug("Plotting using defined levels.")
+        logger.debug("Plotting using defined levels.")
 
     # Plot the field.
     if method == "contourf":
@@ -728,7 +729,7 @@ def _plot_and_save_spatial_plot(
         ha="left",
         va="bottom",
         size=11,
-        bbox=dict(boxstyle="round", fc="#cccccc", ec="#808080", alpha=0.9),
+        bbox={"boxstyle": "round", "fc": "#cccccc", "ec": "#808080", "alpha": 0.9},
     )
 
     # Add secondary colour bar for overlay_cube field if required.
@@ -741,9 +742,12 @@ def _plot_and_save_spatial_plot(
         if over_levels is not None and len(over_levels) < 20:
             cbarB.set_ticks(over_levels)
             cbarB.set_ticklabels([f"{level:.2f}" for level in over_levels])
-            if "rainfall" or "snowfall" or "visibility" in overlay_cube.name():
+            if any(
+                var in overlay_cube.name()
+                for var in ("rainfall", "snowfall", "visibility")
+            ):
                 cbarB.set_ticklabels([f"{level:.3g}" for level in over_levels])
-            logging.debug("Set secondary colorbar ticks and labels.")
+            logger.debug("Set secondary colorbar ticks and labels.")
 
     # Add main colour bar.
     cbar = fig.colorbar(
@@ -755,7 +759,7 @@ def _plot_and_save_spatial_plot(
     if levels is not None and len(levels) < 20:
         cbar.set_ticks(levels)
         cbar.set_ticklabels([f"{level:.2f}" for level in levels])
-        if "rainfall" or "snowfall" or "visibility" in cube.name():
+        if any(var in cube.name() for var in ("rainfall", "snowfall", "visibility")):
             cbar.set_ticklabels([f"{level:.3g}" for level in levels])
         # Tick labels for rainfall rates from Nimrod radar data.
         if "rainfall rate composite" in cube.name():
@@ -773,11 +777,11 @@ def _plot_and_save_spatial_plot(
         if "surface_microphysical" in cube.name():
             cbar.set_ticklabels([f"{level:.3g}" for level in levels])
         # Tick labels for Nimrod weights data.
-        logging.debug("Set colorbar ticks and labels.")
+        logger.debug("Set colorbar ticks and labels.")
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved spatial plot to %s", filename)
+    logger.info("Saved spatial plot to %s", filename)
     plt.close(fig)
 
 
@@ -903,7 +907,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
     fig.suptitle(title, fontsize=16)
 
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved contour postage stamp plot to %s", filename)
+    logger.info("Saved contour postage stamp plot to %s", filename)
     plt.close(fig)
 
 
@@ -997,9 +1001,7 @@ def _plot_and_save_line_series(
     # Set y limits to global min and max, autoscale if colorbar doesn't exist.
     if y_levels:
         ax.set_ylim(min(y_levels), max(y_levels))
-        logging.debug(
-            "Line plot with y-axis limits %s-%s", min(y_levels), max(y_levels)
-        )
+        logger.debug("Line plot with y-axis limits %s-%s", min(y_levels), max(y_levels))
     else:
         ax.autoscale()
 
@@ -1020,7 +1022,7 @@ def _plot_and_save_line_series(
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved line plot to %s", filename)
+    logger.info("Saved line plot to %s", filename)
     plt.close(fig)
 
 
@@ -1145,7 +1147,7 @@ def _plot_and_save_line_power_spectrum_series(
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved line plot to %s", filename)
+    logger.info("Saved line plot to %s", filename)
     plt.close(fig)
 
 
@@ -1287,7 +1289,7 @@ def _plot_and_save_vertical_line_series(
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved line plot to %s", filename)
+    logger.info("Saved line plot to %s", filename)
     plt.close(fig)
 
 
@@ -1297,7 +1299,7 @@ def _plot_and_save_scatter_plot(
     filename: str,
     title: str,
     one_to_one: bool,
-    model_names: list[str] = None,
+    model_names: list[str] | None = None,
     **kwargs,
 ):
     """Plot and save a 2D scatter plot.
@@ -1361,7 +1363,7 @@ def _plot_and_save_scatter_plot(
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved scatter plot to %s", filename)
+    logger.info("Saved scatter plot to %s", filename)
     plt.close(fig)
 
 
@@ -1456,7 +1458,7 @@ def _plot_and_save_vector_plot(
         ha="right",
         va="bottom",
         size=11,
-        bbox=dict(boxstyle="round", fc="#cccccc", ec="#808080", alpha=0.9),
+        bbox={"boxstyle": "round", "fc": "#cccccc", "ec": "#808080", "alpha": 0.9},
     )
 
     # Add colour bar.
@@ -1474,7 +1476,7 @@ def _plot_and_save_vector_plot(
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved vector plot to %s", filename)
+    logger.info("Saved vector plot to %s", filename)
     plt.close(fig)
 
 
@@ -1538,7 +1540,7 @@ def _plot_and_save_histogram_series(
             bins = [0, 1, 2, 3, 4, 5]
         else:
             bins = np.linspace(vmin, vmax, 51)
-        logging.debug(
+        logger.debug(
             "Plotting histogram with %s bins %s - %s.",
             np.size(bins),
             np.min(bins),
@@ -1596,7 +1598,7 @@ def _plot_and_save_histogram_series(
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved histogram plot to %s", filename)
+    logger.info("Saved histogram plot to %s", filename)
     plt.close(fig)
 
 
@@ -1656,7 +1658,7 @@ def _plot_and_save_postage_stamp_histogram_series(
     fig.suptitle(title, fontsize=16)
 
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved histogram postage stamp plot to %s", filename)
+    logger.info("Saved histogram postage stamp plot to %s", filename)
     plt.close(fig)
 
 
@@ -1692,7 +1694,7 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
 
     # Save the figure to a file
     plt.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved histogram postage stamp plot to %s", filename)
+    logger.info("Saved histogram postage stamp plot to %s", filename)
 
     # Close the figure
     plt.close(fig)
@@ -1835,7 +1837,7 @@ def _plot_and_save_scatter_series(
 
     # Save plot.
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved scatter plot to %s", filename)
+    logger.info("Saved scatter plot to %s", filename)
     plt.close(fig)
 
 
@@ -1972,7 +1974,7 @@ def _spatial_plot(
 
 def spatial_contour_plot(
     cube: iris.cube.Cube,
-    filename: str = None,
+    filename: str | None = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
     **kwargs,
@@ -2019,7 +2021,7 @@ def spatial_contour_plot(
 
 def spatial_pcolormesh_plot(
     cube: iris.cube.Cube,
-    filename: str = None,
+    filename: str | None = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
     **kwargs,
@@ -2073,7 +2075,7 @@ def spatial_multi_pcolormesh_plot(
     overlay_cube: iris.cube.Cube | None = None,
     contour_cube: iris.cube.Cube | None = None,
     point_cube: iris.cube.Cube | None = None,
-    filename: str = None,
+    filename: str | None = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
     **kwargs,
@@ -2157,7 +2159,7 @@ def spatial_multi_pcolormesh_plot(
 #     ``"realization"``.
 def plot_line_series(
     cube: iris.cube.Cube | iris.cube.CubeList,
-    filename: str = None,
+    filename: str | None = None,
     series_coordinate: str = "time",
     sequence_coordinate: str = "time",
     # add the following for ensembles
@@ -2204,15 +2206,15 @@ def plot_line_series(
     # Iterate over all cubes and extract coordinate to plot.
     cubes = iris.cube.CubeList(iter_maybe(cube))
     coords = []
-    for cube in cubes:
+    for model_cube in cubes:
         try:
-            coords.append(cube.coord(series_coordinate))
+            coords.append(model_cube.coord(series_coordinate))
         except iris.exceptions.CoordinateNotFoundError as err:
             raise ValueError(
                 f"Cube must have a {series_coordinate} coordinate."
             ) from err
-        if cube.coords("realization"):
-            if cube.ndim > 3:
+        if model_cube.coords("realization"):
+            if model_cube.ndim > 3:
                 raise ValueError("Cube must be 1D or 2D with a realization coordinate.")
         else:
             raise ValueError("Cube must have a realization coordinate.")
@@ -2235,9 +2237,9 @@ def plot_line_series(
         # Internal plotting function.
         plotting_func = _plot_and_save_line_power_spectrum_series
 
-        for cube in cubes:
+        for model_cube in cubes:
             try:
-                cube.coord(sequence_coordinate)
+                model_cube.coord(sequence_coordinate)
             except iris.exceptions.CoordinateNotFoundError as err:
                 raise ValueError(
                     f"Cube must have a {sequence_coordinate} coordinate."
@@ -2308,9 +2310,8 @@ def plot_line_series(
             title = f"{recipe_title}\n [{seq_coord.units.title(seq_coord.points[0])}]"
 
             # Use sequence (e.g. time) bounds if plotting single non-sequence outputs
-            if nplot == 1 and seq_coord.has_bounds:
-                if np.size(seq_coord.bounds) > 1:
-                    title = f"{recipe_title}\n [{seq_coord.units.title(seq_coord.bounds[0][0])} to {seq_coord.units.title(seq_coord.bounds[0][1])}]"
+            if nplot == 1 and seq_coord.has_bounds and np.size(seq_coord.bounds) > 1:
+                title = f"{recipe_title}\n [{seq_coord.units.title(seq_coord.bounds[0][0])} to {seq_coord.units.title(seq_coord.bounds[0][1])}]"
 
             # Do the actual plotting.
             plotting_func(
@@ -2370,7 +2371,7 @@ def plot_line_series(
 
 def plot_vertical_line_series(
     cubes: iris.cube.Cube | iris.cube.CubeList,
-    filename: str = None,
+    filename: str | None = None,
     series_coordinate: str = "model_level_number",
     sequence_coordinate: str = "time",
     # line_coordinate: str = "realization",
@@ -2514,7 +2515,7 @@ def qq_plot(
     coordinates: list[str],
     percentiles: list[float],
     model_names: list[str],
-    filename: str = None,
+    filename: str | None = None,
     one_to_one: bool = True,
     **kwargs,
 ) -> iris.cube.CubeList:
@@ -2616,9 +2617,7 @@ def qq_plot(
             "vapour_specific_humidity_at_pressure_levels_for_climate_averaging",
         ]
     ):
-        logging.debug(
-            "Linear regridding base cube to other grid to compute differences"
-        )
+        logger.debug("Linear regridding base cube to other grid to compute differences")
         base = regrid_onto_cube(base, other, method="Linear")
 
     # Extract just common time points.
@@ -2626,7 +2625,7 @@ def qq_plot(
 
     # Equalise attributes so we can merge.
     fully_equalise_attributes([base, other])
-    logging.debug("Base: %s\nOther: %s", base, other)
+    logger.debug("Base: %s\nOther: %s", base, other)
 
     # Collapse cubes.
     base = collapse(
@@ -2843,7 +2842,7 @@ def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
 def scatter_plot(
     cube_x: iris.cube.Cube | iris.cube.CubeList,
     cube_y: iris.cube.Cube | iris.cube.CubeList,
-    filename: str = None,
+    filename: str | None = None,
     one_to_one: bool = True,
     **kwargs,
 ) -> iris.cube.CubeList:
@@ -2920,7 +2919,7 @@ def scatter_plot(
 def vector_plot(
     cube_u: iris.cube.Cube,
     cube_v: iris.cube.Cube,
-    filename: str = None,
+    filename: str | None = None,
     sequence_coordinate: str = "time",
     **kwargs,
 ) -> iris.cube.CubeList:
@@ -2972,7 +2971,7 @@ def vector_plot(
 
 def plot_histogram_series(
     cubes: iris.cube.Cube | iris.cube.CubeList,
-    filename: str = None,
+    filename: str | None = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
     single_plot: bool = False,
@@ -3111,7 +3110,7 @@ def plot_histogram_series(
 
 def plot_scatter_series(
     cubes: iris.cube.Cube | iris.cube.CubeList,
-    filename: str = None,
+    filename: str | None = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
     hexbin: bool = False,
@@ -3238,7 +3237,7 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
     stamp_coordinate: str,
     filename: str,
     title: str,
-    series_coordinate: str = None,
+    series_coordinate: str | None = None,
     **kwargs,
 ):
     """Plot and save postage (ensemble members) stamps for a power spectrum series.
@@ -3260,7 +3259,7 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
 
     """
     # Use the smallest square grid that will fit the members.
-    grid_size = int(math.ceil(math.sqrt(len(cubes.coord(stamp_coordinate).points))))
+    grid_size = math.ceil(math.sqrt(len(cubes.coord(stamp_coordinate).points)))
 
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     model_colors_map = get_model_colors_map(cubes)
@@ -3359,7 +3358,7 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
         ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
 
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logging.info("Saved histogram postage stamp plot to %s", filename)
+    logger.info("Saved histogram postage stamp plot to %s", filename)
     plt.close(fig)
 
 
@@ -3369,7 +3368,7 @@ def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
     stamp_coordinate: str,
     filename: str,
     title: str,
-    series_coordinate: str = None,
+    series_coordinate: str | None = None,
     **kwargs,
 ):
     """Plot and save power spectra for ensemble members in single plot.

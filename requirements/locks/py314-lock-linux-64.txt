@@ -160,7 +160,7 @@ https://conda.anaconda.org/conda-forge/linux-64/qhull-2020.2-h434a139_5.conda#35
 https://conda.anaconda.org/conda-forge/linux-64/rav1e-0.8.1-h1fbca29_0.conda#d83958768626b3c8471ce032e28afcd3
 https://conda.anaconda.org/conda-forge/linux-64/readline-8.3-h853b02a_0.conda#d7d95fc8287ea7bf33e0e7116d2b95ec
 https://conda.anaconda.org/conda-forge/linux-64/ruamel.yaml.clib-0.2.15-py314h0f05182_1.conda#4f35ae1228a6c5d9df593367ffe8dda1
-https://conda.anaconda.org/conda-forge/linux-64/ruff-0.15.22-h462bb3b_0.conda#ad7d8b2d37a1098a04ddd8b34b962481
+https://conda.anaconda.org/conda-forge/linux-64/ruff-0.16.0-h462bb3b_0.conda#2e2d6ede086818186c313dad438ccea5
 https://conda.anaconda.org/conda-forge/linux-64/s2n-1.7.5-h7e3ee7f_1.conda#fa1c00d999e83ec20173c9775f71a1f1
 https://conda.anaconda.org/conda-forge/linux-64/scikit-image-0.26.0-np2py314hda1ea4c_0.conda#50d6faa367ca045c438d3bb25315b476
 https://conda.anaconda.org/conda-forge/linux-64/scipy-1.18.0-py314hf07bd8e_0.conda#62c390c1f8f51240f1ebc7ba782669ad

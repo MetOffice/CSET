@@ -12,6 +12,8 @@ import iris
 import isodate
 import numpy as np
 
+logger = logging.getLogger(__name__)
+
 iris.FUTURE.save_split_attrs = True
 iris.FUTURE.date_microseconds = True
 
@@ -38,7 +40,7 @@ def _get_needed_environment_variables_nimrod() -> dict:
         "forecast_length": isodate.parse_duration(os.environ["ANALYSIS_LENGTH"]),
         "rose_datac": os.environ["ROSE_DATAC"],
     }
-    logging.debug("Environment variables loaded for Nimrod: %s", variables)
+    logger.debug("Environment variables loaded for Nimrod: %s", variables)
     return variables
 
 
@@ -71,7 +73,7 @@ def apply_radar_weights(cube_obs: iris.cube.Cube, cube_wei: iris.cube.Cube):
     if weights.max() < 1.0:
         weights = (weights * 32).round().astype(int)
         cube_wei.data = weights
-        logging.info("Unpacked Nimrod weights file.")
+        logger.info("Unpacked Nimrod weights file.")
 
     # Apply the weights.
     cube_obs_weighted = cube_obs
@@ -107,12 +109,12 @@ def retrieve_nimrod():
     # accumulation composites or the 5 minute rainfall rate composites.
     for nimrod_field in v["field"]:
         if nimrod_field:
-            logging.info("Processing Nimrod field: %s", nimrod_field)
+            logger.info("Processing Nimrod field: %s", nimrod_field)
 
             # Prepare the output directory for the Nimrod field.
             nimrod_dir = f"{v['rose_datac']}/data/{nimrod_dict[nimrod_field]['obs_id']}"
             os.makedirs(nimrod_dir, exist_ok=True)
-            logging.info("Cylc-run Nimrod directory: %s", nimrod_dir)
+            logger.info("Cylc-run Nimrod directory: %s", nimrod_dir)
 
             # Prepare the output directory for the Nimrod weights field.
             if nimrod_dict[nimrod_field]["weights_fname"]:
@@ -120,7 +122,7 @@ def retrieve_nimrod():
                     f"{v['rose_datac']}/data/{nimrod_dict[nimrod_field]['wei_id']}"
                 )
                 os.makedirs(nimrod_dir_wei, exist_ok=True)
-                logging.info("Cylc-run Nimrod weights directory: %s", nimrod_dir_wei)
+                logger.info("Cylc-run Nimrod weights directory: %s", nimrod_dir_wei)
 
             # Process Nimrod data between the start and end dates.
             date_use = date_start
@@ -137,7 +139,7 @@ def retrieve_nimrod():
                     nimrod_cube_obs = iris.load_cube(nimrod_obs)
                     nimrod_obs_exist = "True"
                 except OSError:
-                    logging.warning("Iris cannot find Nimrod file %s", nimrod_obs)
+                    logger.warning("Iris cannot find Nimrod file %s", nimrod_obs)
 
                 # Load the Nimrod weights into an Iris cube.
                 nimrod_weights_exist = "False"
@@ -152,7 +154,7 @@ def retrieve_nimrod():
                         nimrod_cube_weights = iris.load_cube(nimrod_weights)
                         nimrod_weights_exist = "True"
                     except OSError:
-                        logging.warning(
+                        logger.warning(
                             "Iris cannot find Nimrod weights file %s", nimrod_weights
                         )
 

@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-import CSET.extract_workflow as extract_workflow
+from CSET import extract_workflow
 
 
 @pytest.fixture(scope="session")
