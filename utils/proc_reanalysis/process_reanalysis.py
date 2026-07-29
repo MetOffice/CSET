@@ -4,190 +4,196 @@ Some code
 MAINTAINER: james.warner@metoffice.gov.uk / jwarner8
 """
 
-
 import iris
+import iris.cube
 
-def _coord_is_effectively_scalar(coord):
-    """True if coordinate is scalar or all points have the same value."""
-    points = np.asarray(coord.points)
-
-    if points.size <= 1:
-        return True
-
-    return np.all(points == points.flat[0])
+iris.FUTURE.date_microseconds = True
+iris.FUTURE.save_split_attrs = True
+import argparse
+from datetime import datetime, timedelta
 
 
-def _fix_analysis_forecasttime(cubes: iris.cube.CubeList):
-
+def _create_forecasts(reanalysis, forecast_initialisations, forecastlength, outpath):
     """
     TODO - in progress
     """
+    for forecast in forecast_initialisations:
+        print(f"Working on forecast initialisation {forecast} out to {forecastlength}H")
 
-    # Partition out forecast and analysis cubes based on forecast_period.
-    analysis_cubes = iris.cube.CubeList()
-    forecast_cubes = iris.cube.CubeList()
+        start = forecast
+        end = forecast + timedelta(hours=forecastlength)
 
-    for cube in cubes:
-        fp = cube.coord("forecast_period")
+        cutouts = iris.cube.CubeList()
 
-        if fp.points.max() == 0:
-            analysis_cubes.append(cube)
-        else:
-            forecast_cubes.append(cube)
+        for cube in reanalysis:
+            print(f"{cube.name()}...")
 
-    if len(analysis_cubes) > 1:
-        raise ValueError
-    if len(forecast_cubes) > 1:
-        print(forecast_cubes)
-        raise ValueError
-    if len(analysis_cubes) == 0:
-        return cubes #i.e. no reanalysis so ignore this function
+            # Work out minimum, maximum valid times in analysis
+            an_min = cube.coord("time").units.num2date(cube.coord("time").points[0])
+            an_max = cube.coord("time").units.num2date(cube.coord("time").points[-1])
 
-    
-    analysis_cube = analysis_cubes[0]
-    forecast_cube = forecast_cubes[0]
+            if start < an_min or end > an_max:
+                print("WARNING!! SOMEthING...")
+            else:
+                time_constraint = iris.Constraint(
+                    time=lambda cell: start <= cell.point <= end
+                )
 
-    # Analysis cube will think it has multiple realizations cause it duplicates
-    analysis_cube = analysis_cube.extract(iris.Constraint(realization = analysis_cube.coord('realization').points[0]))
+                cube_slice = cube.extract(time_constraint)
 
-    # Get forecast_reference_time and period information
-    frt_coord = forecast_cube.coord("forecast_reference_time")
+                # Remove unnecessary coords and attributes
+                coords_attrs_to_remove = [
+                    "forecast_period",
+                    "forecast_reference_time",
+                    "originating_centre",
+                    "source",
+                    "um_version",
+                ]
+                for item in coords_attrs_to_remove:
+                    if cube_slice.coords(item):
+                        cube_slice.remove_coord(item)
+                    if item in cube_slice.attributes:
+                        del cube_slice.attributes[item]
 
-    fc_period_coord = forecast_cube.coord("forecast_period")
-    fc_periods = fc_period_coord.points
-    fc_length = fc_periods[-1]
+                time_coord = cube_slice.coord("time")
+                time_dim = cube_slice.coord_dims("time")[0]
 
-    # Work out minimum, maximum valid times in analysis
-    an_min = analysis_cube.coord("time").units.num2date(analysis_cube.coord("time").points[0])
-    an_max = analysis_cube.coord("time").units.num2date(analysis_cube.coord("time").points[-1])
+                # Forecast periods relative to this FRT.
+                fp_points = time_coord.points - time_coord.points[0]
 
-    fixed_analysis_cubes = iris.cube.CubeList()
+                units_str = str(time_coord.units)
 
-    # Iterate over all forecast reference times
-    for t in frt_coord.points:
-        frt = frt_coord.units.num2date(t)
+                if units_str.startswith("seconds since"):
+                    fp_points = fp_points / 3600.0
+                    fp_units = "hours"
+                elif units_str.startswith("minutes since"):
+                    fp_points = fp_points / 60.0
+                    fp_units = "hours"
+                elif units_str.startswith("hours since"):
+                    fp_units = "hours"
+                else:
+                    raise ValueError(f"Unhandled time units: {time_coord.units}")
 
-        if frt < an_min or (
-            frt + dt.timedelta(hours=float(fc_length))
-        ) > an_max:
+                fp_coord = iris.coords.DimCoord(
+                    fp_points,
+                    standard_name="forecast_period",
+                    units=fp_units,
+                )
 
-            raise ValueError(
-                f"Analysis does not cover forecast span "
-                f"{frt} -> "
-                f"{frt + dt.timedelta(hours=float(fc_length))}")
-            
-    
-        time_constraint = iris.Constraint(
-        time=lambda cell: frt <= cell.point <= frt+dt.timedelta(hours=fc_length)
+                cube_slice.remove_coord("time")
+                cube_slice.add_dim_coord(fp_coord, time_dim)
+
+                cube_slice.add_aux_coord(
+                    iris.coords.AuxCoord(
+                        time_coord.units.date2num(start),
+                        standard_name="forecast_reference_time",
+                        units=time_coord.units,
+                    )
+                )
+
+                time_points = (
+                    cube_slice.coord("forecast_reference_time").points[0]
+                    + fp_coord.points
+                )
+
+                new_time_coord = iris.coords.AuxCoord(
+                    time_points,
+                    standard_name="time",
+                    units=time_coord.units,
+                )
+
+                cube_slice.add_aux_coord(
+                    new_time_coord,
+                    data_dims=(cube_slice.coord_dims("forecast_period")[0],),
+                )
+
+                print(cube_slice)
+                quit()
+
+                cutouts.append(cube_slice)
+                print(f"{cube.name()}...done.")
+
+        print(f"Saving {outpath + '/reanalysis_' + start.strftime('%Y%m%dT%H%MZ')}.nc")
+        iris.save(
+            cutouts, outpath + "/reanalysis_" + start.strftime("%Y%m%dT%H%MZ") + ".nc"
+        )
+
+
+def _identify_number_of_cycles_required(cyclestart, cycleend, cyclefreq):
+    """
+    TODO
+    """
+    start_dt = datetime.strptime(cyclestart, "%Y%m%dT%H%MZ")
+    end_dt = datetime.strptime(cycleend, "%Y%m%dT%H%MZ")
+
+    forecast_initialisations = []
+    current = start_dt
+
+    while current <= end_dt:
+        forecast_initialisations.append(current)
+        current += timedelta(hours=cyclefreq)
+
+    return forecast_initialisations
+
+
+def main():
+
+    parser = argparse.ArgumentParser(description="Process forecast data.")
+
+    parser.add_argument("--filepath", required=True, help="Path to file(s)")
+    parser.add_argument(
+        "--cyclestart", type=str, required=True, help="First forecast initiation/cycle"
+    )
+    parser.add_argument(
+        "--cycleend", type=str, required=True, help="Final forecast initiation/cycle"
+    )
+    parser.add_argument(
+        "--cyclefreq",
+        type=int,
+        required=True,
+        help="Time between forecast initiationss/cycles",
+    )
+    parser.add_argument(
+        "--forecastlength",
+        type=int,
+        required=True,
+        help="Forecast length in SI units i.e. PT48H",
+    )
+    parser.add_argument(
+        "--outpath", type=str, required=True, help="Where to write output data"
     )
 
-        analysis_slice = analysis_cube.extract(time_constraint)
+    args = parser.parse_args()
 
-       # Remove old coords
-        analysis_slice.remove_coord("forecast_reference_time")
-        analysis_slice.remove_coord("forecast_period")
+    # Populate required variables
+    filepath = args.filepath
+    cyclestart = args.cyclestart
+    cycleend = args.cycleend
+    cyclefreq = args.cyclefreq
+    forecastlength = args.forecastlength
+    outpath = args.outpath
+
+    print("")
+    print("Starting process_reanalysis.py...")
+
+    # Get all forecast initiations
+    forecast_initialisations = _identify_number_of_cycles_required(
+        cyclestart, cycleend, cyclefreq
+    )
+
+    # Load all reanalysis supplied
+    print(f"Loading reanalysis from {filepath}")
+    reanalysis = iris.load(filepath)
+    print("")
+    print("Found the following cubes...")
+    print(reanalysis)
+
+    print("")
+    print("Creating postprocessed files...")
+    _create_forecasts(reanalysis, forecast_initialisations, forecastlength, outpath)
+
+    print("Done")
 
 
-        time_coord = analysis_slice.coord("time")
-        time_dim = analysis_slice.coord_dims("time")[0]
-
-        # Forecast periods relative to this FRT.
-        #
-        fp_points = (
-            time_coord.points - time_coord.points[0]
-        )
-
-        fp_coord = iris.coords.DimCoord(
-            fp_points,
-            standard_name="forecast_period",
-            units='hours',
-        )
-
-        # Replace time dimension coord with forecast_period.
-        #
-        analysis_slice.remove_coord("time")
-        analysis_slice.add_dim_coord(fp_coord, time_dim)
-
-        # Add FRT scalar coordinate.
-        #
-        analysis_slice.add_aux_coord(
-            iris.coords.AuxCoord(
-                t,
-                standard_name="forecast_reference_time",
-                units=frt_coord.units,
-            )
-        )
-
-        fixed_analysis_cubes.append(
-            analysis_slice
-        )
-
-    if len(fixed_analysis_cubes) == 1:
-
-        cube = fixed_analysis_cubes[0]
-
-        fp_coord = cube.coord("forecast_period")
-
-        time_points = (
-            cube.coord(
-                "forecast_reference_time"
-            ).points[0]
-            + fp_coord.points
-        )
-
-        time_coord = iris.coords.AuxCoord(
-            time_points,
-            standard_name="time",
-            units=frt_coord.units,
-        )
-
-        cube.add_aux_coord(
-            time_coord,
-            data_dims=(
-                cube.coord_dims(
-                    "forecast_period"
-                )[0],
-            ),
-        )
-
-    else:
-        # multiple FRTs
-        #
-        cube = fixed_analysis_cubes.merge_cube()
-
-        fp_dim = cube.coord_dims(
-            "forecast_period"
-        )[0]
-
-        frt_dim = cube.coord_dims(
-            "forecast_reference_time"
-        )[0]
-
-        fp_points = cube.coord(
-            "forecast_period"
-        ).points
-
-        frt_points = cube.coord(
-            "forecast_reference_time"
-        ).points
-
-        time_points = (
-            fp_points[:, None]
-            + frt_points[None, :]
-        )
-
-        time_coord = iris.coords.AuxCoord(
-            time_points,
-            standard_name="time",
-            units=frt_coord.units,
-        )
-
-        cube.add_aux_coord(
-            time_coord,
-            data_dims=(fp_dim, frt_dim),
-        )
-
-        fixed_analysis_cubes = iris.cube.CubeList()
-        fixed_analysis_cubes.append(cube)
-
-    return iris.cube.CubeList([cube, forecast_cube])
+if __name__ == "__main__":
+    main()
