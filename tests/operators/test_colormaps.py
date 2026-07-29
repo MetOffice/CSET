@@ -507,7 +507,7 @@ def test_colorbar_feature_tracking_id_cube(cube):
     expected_levels = None
     assert cmap.name == "viridis"
     assert cmap.get_under() is not None
-    assert (levels == expected_levels).all()
+    assert levels == expected_levels
 
 
 def test_colorbar_feature_tracking_lifetime_cube(cube):
@@ -517,7 +517,7 @@ def test_colorbar_feature_tracking_lifetime_cube(cube):
     expected_levels = None
     assert cmap.name == "YlGnBu"
     assert cmap.get_under() is not None
-    assert (levels == expected_levels).all()
+    assert levels == expected_levels
 
 
 def test_colorbar_feature_tracking_init_cube(cube):
