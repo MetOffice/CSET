@@ -16,18 +16,54 @@ import argparse
 from datetime import datetime, timedelta
 
 
-def _create_forecasts(reanalysis, forecast_initialisations, forecastlength, outpath):
+from datetime import datetime
+from pathlib import Path
+
+import iris
+
+
+def _create_forecasts(
+    reanalysis: iris.cube.CubeList,
+    forecast_initialisations: list,
+    forecastlength: int,
+    outpath: str,
+) -> None:
+    """Create forecast files from reanalysis data.
+
+    For each forecast initialisation time, extract the corresponding
+    analysis period from each input cube and convert it into a
+    forecast-style representation. This includes generating
+    forecast-period and forecast-reference-time coordinates and
+    writing the resulting cubes to disk.
+
+    Parameters
+    ----------
+    reanalysis: iris.cube.CubeList
+        Collection of reanalysis cubes from which forecast periods
+        will be extracted.
+    forecast_initialisations: list
+        Forecast initialisation times to process.
+    forecastlength: int
+        Forecast length in hours.
+    outpath: str
+        Directory to which the generated forecast files will be saved.
+
+    Returns
+    -------
+    None
     """
-    TODO - in progress
-    """
+
+    # Iterate over all forecast initialisations sequentially.
     for forecast in forecast_initialisations:
         print(f"Working on forecast initialisation {forecast} out to {forecastlength}H")
 
+        # Work out start and end time
         start = forecast
         end = forecast + timedelta(hours=forecastlength)
 
         cutouts = iris.cube.CubeList()
 
+        # For each cube (variable) loaded
         for cube in reanalysis:
             print(f"{cube.name()}...")
 
@@ -35,13 +71,17 @@ def _create_forecasts(reanalysis, forecast_initialisations, forecastlength, outp
             an_min = cube.coord("time").units.num2date(cube.coord("time").points[0])
             an_max = cube.coord("time").units.num2date(cube.coord("time").points[-1])
 
+            # Check reanalysis spans what we are looking for time wise, otherwise ignore
             if start < an_min or end > an_max:
-                print("WARNING!! SOMEthING...")
+                print(f"Warning: Required time {start} {end} outside that found in analysis {an_min} {an_max}")
             else:
+
+                # Generate time constraint object inclusive of time bounds.
                 time_constraint = iris.Constraint(
                     time=lambda cell: start <= cell.point <= end
                 )
 
+                # Extract required timeslice.
                 cube_slice = cube.extract(time_constraint)
 
                 # Remove unnecessary coords and attributes
@@ -58,12 +98,15 @@ def _create_forecasts(reanalysis, forecast_initialisations, forecastlength, outp
                     if item in cube_slice.attributes:
                         del cube_slice.attributes[item]
 
+                # Get a copy of time coord, and dimension this corresponds to.
                 time_coord = cube_slice.coord("time")
+                time_coord_points = time_coord.points.copy()
                 time_dim = cube_slice.coord_dims("time")[0]
 
-                # Forecast periods relative to this FRT.
+                # Forecast periods relative to initialisation.
                 fp_points = time_coord.points - time_coord.points[0]
 
+                # Work out units of forecast_period and adjust if necessary.
                 units_str = str(time_coord.units)
 
                 if units_str.startswith("seconds since"):
@@ -77,15 +120,18 @@ def _create_forecasts(reanalysis, forecast_initialisations, forecastlength, outp
                 else:
                     raise ValueError(f"Unhandled time units: {time_coord.units}")
 
+                # Create forecast period dimension
                 fp_coord = iris.coords.DimCoord(
                     fp_points,
                     standard_name="forecast_period",
                     units=fp_units,
                 )
 
+                # Remove time dimension temporarily, as forecast_period will be lead dimension
                 cube_slice.remove_coord("time")
                 cube_slice.add_dim_coord(fp_coord, time_dim)
 
+                # Add auxiliary forecast initialisation dimension
                 cube_slice.add_aux_coord(
                     iris.coords.AuxCoord(
                         time_coord.units.date2num(start),
@@ -94,28 +140,24 @@ def _create_forecasts(reanalysis, forecast_initialisations, forecastlength, outp
                     )
                 )
 
-                time_points = (
-                    cube_slice.coord("forecast_reference_time").points[0]
-                    + fp_coord.points
-                )
-
+                # Create auxiliary time dimension of valid time.
                 new_time_coord = iris.coords.AuxCoord(
-                    time_points,
+                    time_coord_points,
                     standard_name="time",
                     units=time_coord.units,
                 )
 
+                # Add this dimsnion to the cube, tied to the forecast_period dimension.
                 cube_slice.add_aux_coord(
                     new_time_coord,
                     data_dims=(cube_slice.coord_dims("forecast_period")[0],),
                 )
 
-                print(cube_slice)
-                quit()
-
+                # Append slice to cutout list, ready for saving.
                 cutouts.append(cube_slice)
                 print(f"{cube.name()}...done.")
 
+        # Once all cubes processed, save to disk.
         print(f"Saving {outpath + '/reanalysis_' + start.strftime('%Y%m%dT%H%MZ')}.nc")
         iris.save(
             cutouts, outpath + "/reanalysis_" + start.strftime("%Y%m%dT%H%MZ") + ".nc"
