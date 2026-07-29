@@ -122,16 +122,35 @@ def _create_forecasts(reanalysis, forecast_initialisations, forecastlength, outp
         )
 
 
-def _identify_number_of_cycles_required(cyclestart, cycleend, cyclefreq):
+def _identify_number_of_cycles_required(
+    cyclestart: str, cycleend: str, cyclefreq: str
+) -> list:
+    """Generate forecast initialisation datetimes between two cycle bounds.
+
+    Parameters
+    ----------
+    cyclestart : str
+        First forecast cycle in YYYYMMDDTHHMMZ format.
+    cycleend : str
+        Last forecast cycle in YYYYMMDDTHHMMZ format.
+    cyclefreq : int
+        Frequency between forecast cycles in hours.
+
+    Returns
+    -------
+    forecast_initialisations: list
+        Forecast initialisation datetimes from cyclestart to cycleend,
+        inclusive, separated by cyclefreq hours.
     """
-    TODO
-    """
+    # Identify the start and end times, and create datetime objects for these
     start_dt = datetime.strptime(cyclestart, "%Y%m%dT%H%MZ")
     end_dt = datetime.strptime(cycleend, "%Y%m%dT%H%MZ")
 
+    # To store initialisation times
     forecast_initialisations = []
     current = start_dt
 
+    # Iterate over all initiations within the bounds, using the cyclefreq to determine interval.
     while current <= end_dt:
         forecast_initialisations.append(current)
         current += timedelta(hours=cyclefreq)
@@ -146,7 +165,6 @@ def main() -> None:
     process the input reanalysis data, and write the resulting forecast
     files to disk.
     """
-
     parser = argparse.ArgumentParser(description="Process forecast data.")
 
     parser.add_argument("--filepath", required=True, help="Path to file(s)")
@@ -182,7 +200,7 @@ def main() -> None:
     forecastlength = args.forecastlength
     outpath = args.outpath
 
-    print("")
+    print()
     print("Starting process_reanalysis.py...")
 
     # Get all forecast initiations
@@ -193,11 +211,11 @@ def main() -> None:
     # Load all reanalysis supplied
     print(f"Loading reanalysis from {filepath}")
     reanalysis = iris.load(filepath)
-    print("")
+    print()
     print("Found the following cubes...")
     print(reanalysis)
 
-    print("")
+    print()
     print("Creating postprocessed files...")
     _create_forecasts(reanalysis, forecast_initialisations, forecastlength, outpath)
 
