@@ -142,3 +142,8 @@ dmypy.json
 
 # MacOS temp files
 .DS_Store
+
+# Plot files written by CSET that can sometimes leak from the tests.
+/meta.json
+/*.html
+/*.png

@@ -15,6 +15,11 @@ concurrency:
 # Minimise default GITHUB_TOKEN permissions.
 permissions: {}
 
+defaults:
+  run:
+    # Use a login shell to pickup conda/micromamba initialisation.
+    shell: bash -leo pipefail {0}
+
 jobs:
   tests:
     runs-on: ubuntu-latest
@@ -37,7 +42,6 @@ jobs:
           environment-name: cset-dev
           environment-file: requirements/locks/${{ matrix.py-ver }}-lock-linux-64.txt
           cache-environment: true
-          init-shell: "none"
 
       - name: Cache downloaded cartopy shapefiles
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
@@ -46,11 +50,9 @@ jobs:
           path: ~/.local/share/cartopy
 
       - name: Install local package
-        shell: micromamba-shell {0}
         run: pip install --no-deps .
 
       - name: Run fast tests
-        shell: micromamba-shell {0}
         env:
           PY_COLORS: "1"
           py_ver: ${{ matrix.py-ver }}
@@ -92,7 +94,6 @@ jobs:
           path: ~/.local/share/cartopy
 
       - name: Install local package
-        shell: micromamba-shell {0}
         run: pip install --no-deps .
 
       - name: Setup rose and cylc
@@ -101,7 +102,6 @@ jobs:
           cylc_rose: true
 
       - name: Run workflow tests
-        shell: micromamba-shell {0}
         env:
           PY_COLORS: "1"
         run: make test-workflow
@@ -227,14 +227,11 @@ jobs:
           environment-name: cset-dev
           environment-file: requirements/locks/latest
           cache-environment: true
-          init-shell: "none"
 
       - name: Install local package
-        shell: micromamba-shell {0}
         run: pip install --no-deps .
 
       - name: Build documentation with Sphinx
-        shell: micromamba-shell {0}
         run: make docs
 
       - name: Upload documentation artifact

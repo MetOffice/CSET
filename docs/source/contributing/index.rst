@@ -16,6 +16,7 @@ need to get started, and the links below go into more detail on specific topics.
     dependencies
     releases
     architecture
+    community-utils
 
 Contributing checklist
 ----------------------
