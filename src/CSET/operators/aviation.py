@@ -193,7 +193,7 @@ def aviation_colour_state_visibility(
 
 def aviation_colour_state_cloud_base(
     cloud_base: iris.cube.Cube | iris.cube.CubeList,
-    orography: iris.cube.CubeList = None,
+    orography: iris.cube.Cube | iris.cube.CubeList | None = None,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Aviation colour state due to cloud base.
 
