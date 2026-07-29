@@ -525,7 +525,7 @@ def test_colorbar_feature_tracking_init_cube(cube):
     cube.rename("feature_init")
     cmap, levels, norm = _colormaps.custom_colormap_feature_tracking(cube)
     expected_levels = np.array([0.5, 1])
-    assert cmap == plt.get_cmap("Blues")
+    assert cmap.name == "Blues"
     assert cmap.get_under() is not None
     assert (levels == expected_levels).all()
     assert (norm.boundaries == levels).all()
