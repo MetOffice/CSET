@@ -11,7 +11,7 @@ set -euo pipefail
 if [[ $CSET_ENV_USE_MODULES == True ]]; then
   IFS_SAVE=$IFS
   IFS=' '
-  if [[ "$MODULES_PURGE" ]]; then
+  if [[ "$MODULES_PURGE" == True ]]; then
     module purge
   fi
   for module in $MODULES_LIST; do
