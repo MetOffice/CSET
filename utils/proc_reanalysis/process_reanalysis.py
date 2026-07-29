@@ -1,10 +1,11 @@
 """
-Code that restructures reanalysis data to give it an effective forecast_period, so it can
-be directly compared to model forecasts in CSET.
+Code that restructures reanalysis data to give it an effective forecast_period.
+
+As a result, reanalysis can be directly compared to model forecasts in CSET and treated as another model.
 The code base currently supports UM and ERA5, and does not perform any additional metadata
 correction beyond time axis and removing some surplus coords/attributes.
 
-Please see README for futher information on how to run the script.
+Please see README for further information on how to run the script.
 """
 
 import iris
@@ -14,10 +15,6 @@ iris.FUTURE.date_microseconds = True
 iris.FUTURE.save_split_attrs = True
 import argparse
 from datetime import datetime, timedelta
-
-
-from datetime import datetime
-from pathlib import Path
 
 import iris
 
@@ -52,7 +49,6 @@ def _create_forecasts(
     -------
     None
     """
-
     # Iterate over all forecast initialisations sequentially.
     for forecast in forecast_initialisations:
         print(f"Working on forecast initialisation {forecast} out to {forecastlength}H")
@@ -73,12 +69,13 @@ def _create_forecasts(
 
             # Check reanalysis spans what we are looking for time wise, otherwise ignore
             if start < an_min or end > an_max:
-                print(f"Warning: Required time {start} {end} outside that found in analysis {an_min} {an_max}")
+                print(
+                    f"Warning: Required time {start} {end} outside that found in analysis {an_min} {an_max}"
+                )
             else:
-
                 # Generate time constraint object inclusive of time bounds.
                 time_constraint = iris.Constraint(
-                    time=lambda cell: start <= cell.point <= end
+                    time=lambda cell, start=start, end=end: start <= cell.point <= end
                 )
 
                 # Extract required timeslice.
