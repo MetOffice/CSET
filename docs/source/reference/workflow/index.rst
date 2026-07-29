@@ -7,3 +7,4 @@ Reference information for the CSET workflow
     :maxdepth: 1
 
     observations
+    grid_stat
