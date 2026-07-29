@@ -1,16 +1,19 @@
 """Tests for ODB2 to MET ASCII conversion."""
 
 import io
+from unittest.mock import patch
 
 import numpy
 import pandas
 
 from .odb2 import (
     ASCII_COLUMNS,
+    PrepODB2Pattern,
     get_height,
     get_level,
     get_type,
     odb2ascii_dataframe,
+    read_odb_sql,
     write_ascii,
 )
 
@@ -157,3 +160,56 @@ def test_write_ascii():
     write_ascii(ascii, output)
     expect = "ADPSFC\tDUMMY\t20010101_0100\t10\t20\t30\tt2m\tNA\t0\tNA\t40\n"
     assert output.getvalue() == expect
+
+
+def test_read_odb():
+    """Test read_odb."""
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value.stdout = (
+            "name@varno\tvertco_type@body\tvertco_reference_1@body\n"
+        )
+        mock_run.return_value.returncode = 0
+        df = read_odb_sql(
+            io.BytesIO(), ["name@varno", "vertco_type@body", "vertco_reference_1@body"]
+        )
+        assert isinstance(df, pandas.DataFrame)
+        assert list(df.columns) == [
+            "name@varno",
+            "vertco_type@body",
+            "vertco_reference_1@body",
+        ]
+
+
+def test_PrepODB_read(tmp_path):
+    """Check the prepODB2 read_odb method returns a DataFrame with the expected columns."""
+    obs = pandas.DataFrame(
+        [
+            {
+                "reportype@hdr": 16001,
+                "report_status@hdr": 1,
+                "date@hdr": 20010101,
+                "time@hdr": 10000,
+                "datum_status@body": 1,
+                "varno@body": 39,
+                "statid@hdr": "DUMMY",
+                "lat@hdr": 10,
+                "lon@hdr": 20,
+                "stalt@hdr": 30,
+                "obsvalue@body": 40,
+                "vertco_type@body": 5,
+                "vertco_reference_1@body": 1,
+            },
+        ]
+    )
+
+    (tmp_path / "test.odb2").write_text("")
+    pattern = str(tmp_path / "test.odb2")
+
+    with patch("odb2.odb2.read_odb_sql") as mock_read_odb_sql:
+        mock_read_odb_sql.return_value = obs
+
+        prep = PrepODB2Pattern(pattern)
+        df = next(prep.read_odb(pandas.Timestamp("20010101T0100Z")))
+        assert isinstance(df, pandas.DataFrame)
+
+        assert df["reportype@hdr"].iloc[0] == 16001

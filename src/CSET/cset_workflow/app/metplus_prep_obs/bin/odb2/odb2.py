@@ -5,22 +5,30 @@ Sites can extend the classes with their own templates.
 """
 
 import functools
+import io
 import json
 import logging
+import shlex
+import subprocess
+import sys
+import tempfile
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
+from contextlib import nullcontext
 from glob import glob
 from pathlib import Path
-from typing import Iterable, TextIO
+from typing import BinaryIO, TextIO
 
 import metomi.isodatetime.parsers
 import numpy
 import pandas
-import pyodc as odc
 from metomi.isodatetime.data import TimePoint
 from pandas import DataFrame
 
 try:
-    from compression import bz2, gzip, tarfile, zstd
+    import tarfile
+
+    from compression import bz2, gzip, zstd
 except ImportError:
     import bz2
     import gzip
@@ -139,6 +147,7 @@ def get_level(obs: DataFrame) -> pandas.Series:
     plevel = obs["vertco_reference_1@body"].where(
         obs["vertco_type@body"].isin([1, 11, 15]), numpy.nan
     )
+    plevel = plevel / 100  # Convert to hPa
 
     accumulated_fields = ["PRATE", "TSTM", "APCP", "NCPCP", "ACPCP"]
     if obs["name@varno"].isin(accumulated_fields).any():
@@ -200,17 +209,14 @@ def get_type(obs: DataFrame) -> pandas.Series:
 
 def odb2ascii_dataframe(obs: DataFrame) -> DataFrame:
     """
-    Convert a DataFrame from pyodc to MET ASCII format.
+    Convert a DataFrame from ODB2 to MET ASCII format.
 
     args:
-        obs: ODB2 data loaded with pyodb
+        obs: ODB2 dataframe to convert
 
     Output format is described at
     https://metplus.readthedocs.io/projects/met/en/latest/Users_Guide/reformat_point.html#id9
     """
-    # QC filter for only active values
-    obs = obs.loc[(obs["report_status@hdr"] | obs["datum_status@body"]) == 1]
-
     # Join in extra info
     obs = obs.join(varno_table(), on="varno@body")
     obs = obs.join(reporttype_table(), on="reportype@hdr")
@@ -253,54 +259,35 @@ def write_ascii(dataframe: DataFrame, output: TextIO):
     )
 
 
-def read_tarfile(tarpath: str, path: str, valid_time: TimePoint) -> Iterable[DataFrame]:
+def read_odb_sql(
+    stream: BinaryIO, columns: list[str], where: str | None = None
+) -> DataFrame:
     """
-    Read ODB2 data from a tarfile.
-
-    Paths can use strftime templates which will be replaced by valid_time
+    Read ODB2 data using ODC CLI.
 
     Args:
-        tarpath: path of the tarfile
-        path: path inside the tarfile
-        valid_time: used for pattern replacement
+        stream: Binary stream containing the ODB2 data
+        columns: List of columns to select
+        where: Optional SQL-like filter to apply to the data
     """
-    tarpath = valid_time.strftime(tarpath)
-    path = valid_time.strftime(path)
-    log.info("Reading %s:%s", tarpath, path)
+    sql = f"SELECT {', '.join(columns)}"
+    if where is not None:
+        sql += f" WHERE {where}"
 
-    with tarfile.open(tarpath, "r") as t:
-        f = t.extractfile(path)
-        yield from odc.read_odb(f)
+    with tempfile.NamedTemporaryFile(suffix=".odb2") as f:
+        f.write(stream.read())
+        f.flush()
 
+        cmd = ["odc", "sql", "-i", f.name, sql]
+        log.info("Running command: %s", shlex.join(cmd))
+        r = subprocess.run(cmd, stdout=subprocess.PIPE, text=True, check=True)
 
-def read_file(pattern: str, valid_time: TimePoint) -> Iterable[DataFrame]:
-    """
-    Read ODB2 data from a file, decompressing if required.
+    stream = io.StringIO(r.stdout)
 
-    Paths can use strftime templates which will be replaced by valid_time
-    Paths can use shell globs
-    Recognised extensions for decompression are .gz, .bz2, .zst
+    df = pandas.read_csv(stream, sep="\t", skipinitialspace=True)
+    df["statid@hdr"] = df["statid@hdr"].str.strip("'").str.strip()
 
-    Args:
-        path: path to open
-        valid_time: used for pattern replacement
-    """
-    path = valid_time.strftime(pattern)
-    log.info("Reading %s", path)
-
-    for p in glob(path):
-        if p.endswith(".gz"):
-            with gzip.open(p) as f:
-                yield from odc.read_odb(f)
-        elif p.endswith(".bz2"):
-            with bz2.open(p) as f:
-                yield from odc.read_odb(f)
-        elif p.endswith(".zst"):
-            with zstd.open(p) as f:
-                yield from odc.read_odb(f)
-        else:
-            with open(p, "rb") as f:
-                yield from odc.read_odb(f)
+    return df
 
 
 def valid_times_iterator(
@@ -335,18 +322,105 @@ class PrepODB2(ABC):
     ...    converter.odb2ascii(f, valid_times)
     """
 
+    def __init__(self, odb_where: str | None = None):
+        """Construct the converter."""
+        # ODB2 columns to read for each observation
+        self.odb_columns = [
+            "vertco_type@body",
+            "vertco_reference_1@body",
+            "varno@body",
+            "statid@hdr",
+            "date@hdr",
+            "time@hdr",
+            "lat@hdr",
+            "lon@hdr",
+            "stalt@hdr",
+            "obsvalue@body",
+            "reportype@hdr",
+        ]
+
+        # Optional SQL-like filter to apply to the data for QC filtering
+        self.odb_where = odb_where or "report_status@hdr = 1 AND datum_status@body = 1"
+
+    def read_tarfile(
+        self, tarpath: str, path: str, valid_time: TimePoint
+    ) -> Iterable[DataFrame]:
+        """
+        Read ODB2 data from a tarfile.
+
+        Paths can use strftime templates which will be replaced by valid_time
+
+        Args:
+            tarpath: path of the tarfile
+            path: path inside the tarfile
+            valid_time: used for pattern replacement
+        """
+        tarpath = valid_time.strftime(tarpath)
+        path = valid_time.strftime(path)
+        log.info("Reading %s:%s", tarpath, path)
+
+        with tarfile.open(tarpath, "r") as t:
+            f = t.extractfile(path)
+            yield read_odb_sql(f, self.odb_columns, self.odb_where)
+
+    def read_file(self, pattern: str, valid_time: TimePoint) -> Iterable[DataFrame]:
+        """
+        Read ODB2 data from a file, decompressing if required.
+
+        Paths can use strftime templates which will be replaced by valid_time
+        Paths can use shell globs
+        Recognised extensions for decompression are .gz, .bz2, .zst
+
+        Args:
+            pattern: path pattern to open
+            valid_time: used for pattern replacement
+        """
+        path = valid_time.strftime(pattern)
+        log.info("Reading %s", path)
+
+        for p in glob(path):
+            if p.endswith(".gz"):
+                with gzip.open(p) as f:
+                    yield read_odb_sql(f, self.odb_columns, self.odb_where)
+            elif p.endswith(".bz2"):
+                with bz2.open(p) as f:
+                    yield read_odb_sql(f, self.odb_columns, self.odb_where)
+            elif p.endswith(".zst"):
+                with zstd.open(p) as f:
+                    yield read_odb_sql(f, self.odb_columns, self.odb_where)
+            else:
+                with open(p, "rb") as f:
+                    yield read_odb_sql(f, self.odb_columns, self.odb_where)
+
     @abstractmethod
     def read_odb(self, valid_time: TimePoint) -> Iterable[DataFrame]:
-        """Read ODB2 data."""
+        """
+        Read ODB2 data.
+
+        Subclasses should implement this method to read ODB2 data for the given valid_time and return an iterable of DataFrames.
+        """
         raise NotImplementedError
 
-    def odb2ascii(self, output: TextIO, valid_times: Iterable[TimePoint]):
-        """Write all the observations to a MET ASCII file."""
+    def odb2ascii(self, output_pattern: str, valid_times: Iterable[TimePoint]):
+        """
+        Write all the observations to a MET ASCII file.
+
+        If output_pattern contains a strftime-style pattern then the valid time
+        will be used to replace the pattern.
+        """
         for t in valid_times:
+            output = t.strftime(output_pattern)
+
+            if output == "-":
+                out_context = nullcontext(sys.stdout)
+            else:
+                out_context = open(output, "wt")
+
             log.info("Processing %s", t)
-            for obs in self.read_odb(t):
-                ascii = odb2ascii_dataframe(obs)
-                write_ascii(ascii, output)
+            with out_context as f:
+                for obs in self.read_odb(t):
+                    ascii = odb2ascii_dataframe(obs)
+                    write_ascii(ascii, f)
 
 
 class PrepODB2Pattern(PrepODB2):
@@ -377,4 +451,4 @@ class PrepODB2Pattern(PrepODB2):
         Args:
             valid_time: Time to use in file patterns
         """
-        return read_file(self.pattern, valid_time)
+        return self.read_file(self.pattern, valid_time)
