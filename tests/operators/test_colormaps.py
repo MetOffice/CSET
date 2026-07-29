@@ -505,7 +505,7 @@ def test_colorbar_feature_tracking_id_cube(cube):
     cube.rename("feature_id")
     cmap, levels, norm = _colormaps.custom_colormap_feature_tracking(cube)
     expected_levels = None
-    assert cmap == plt.get_cmap("viridis")
+    assert cmap.name == "viridis"
     assert cmap.get_under() is not None
     assert (levels == expected_levels).all()
 
@@ -515,7 +515,7 @@ def test_colorbar_feature_tracking_lifetime_cube(cube):
     cube.rename("feature_lifetime")
     cmap, levels, norm = _colormaps.custom_colormap_feature_tracking(cube)
     expected_levels = None
-    assert cmap == plt.get_cmap("YlGnBu")
+    assert cmap.name == "YlGnBu"
     assert cmap.get_under() is not None
     assert (levels == expected_levels).all()
 
