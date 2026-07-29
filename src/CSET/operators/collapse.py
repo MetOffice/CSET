@@ -79,12 +79,30 @@ def collapse(
         logging.debug(
             "Extracting common time points as multiple model inputs detected."
         )
-        for cube in cubes:
-            cube.coord("forecast_reference_time").bounds = None
-            cube.coord("forecast_period").bounds = None
-        cubes = cubes.extract_overlapping(
-            ["forecast_reference_time", "forecast_period"]
+        is_power_spectrum = any(
+            cubes[0].coords(coord)
+            for coord in ["frequency", "physical_wavenumber", "wavelength"]
         )
+        if is_power_spectrum:
+            for cube in cubes:
+                cube.coord("time").bounds = None
+            cubes = cubes.extract_overlapping(["time"])
+
+            for cube in cubes:
+                t = cube.coord("time")
+                t.points = t.points.astype(np.float64)
+
+                if t.bounds is not None:
+                    t.bounds = t.bounds.astype(np.float64)
+
+        else:
+            for cube in cubes:
+                cube.coord("forecast_reference_time").bounds = None
+                cube.coord("forecast_period").bounds = None
+            cubes = cubes.extract_overlapping(
+                ["forecast_reference_time", "forecast_period"]
+            )
+
         if len(cubes) == 0:
             raise ValueError("No overlapping times detected in input cubes.")
 
@@ -96,6 +114,7 @@ def collapse(
         warnings.filterwarnings(
             "ignore", "Collapsing spatial coordinate.+without weighting", UserWarning
         )
+
         for cube in iter_maybe(cubes):
             # Apply a mask to check for invalid data, this will allow NaNs to
             # be ignored.
@@ -116,6 +135,7 @@ def collapse(
                 collapsed_cubes.append(
                     cube.collapsed(coordinate, getattr(iris.analysis, method))
                 )
+
     if len(collapsed_cubes) == 1:
         return collapsed_cubes[0]
     else:

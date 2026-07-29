@@ -2197,6 +2197,7 @@ def plot_line_series(
     # Ensure we have a name for the plot file.
     recipe_title = get_recipe_metadata().get("title", iter_maybe(cube)[0].name())
 
+    print("RECIPE TITLE ", recipe_title)
     num_models = get_num_models(cube)
 
     validate_cube_shape(cube, num_models)
@@ -2311,6 +2312,8 @@ def plot_line_series(
             if nplot == 1 and seq_coord.has_bounds:
                 if np.size(seq_coord.bounds) > 1:
                     title = f"{recipe_title}\n [{seq_coord.units.title(seq_coord.bounds[0][0])} to {seq_coord.units.title(seq_coord.bounds[0][1])}]"
+
+            print("TITLE ", title)
 
             # Do the actual plotting.
             plotting_func(

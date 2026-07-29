@@ -99,3 +99,86 @@ def load(conf: Config):
                 model_ids=[model["id"] for model in models],
                 aggregation=False,
             )
+
+    # Create a list of case aggregation types.
+    AGGREGATION_TYPES = ["all"]
+    print("In ps loader ", AGGREGATION_TYPES, conf.SURFACE_FIELDS)
+
+    # Surface (2D) fields.
+    for atype, field in itertools.product(AGGREGATION_TYPES, conf.SURFACE_FIELDS):
+        #        if conf.SPECTRUM_SURFACE_FIELD_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
+        index = AGGREGATION_TYPES.index(atype)
+        print("ALL INFO ", atype, index, AGGREGATION_TYPES)
+        if len(AGGREGATION_TYPES) > index and AGGREGATION_TYPES[index]:
+            yield RawRecipe(
+                recipe=f"generic_surface_power_spectrum_series_mean_{atype}.yaml",
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": [model["name"] for model in models],
+                    #                    "SEQUENCE": "time"
+                    #                    if conf.SPECTRUM_SURFACE_FIELD_SEQUENCE
+                    #                    else "realization",
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                    "SPECTRUM_SURFACE_FIELD_SEQUENCE": conf.SPECTRUM_SURFACE_FIELD_SEQUENCE,
+                },
+                model_ids=[model["id"] for model in models],
+                aggregation=True,
+            )
+
+    # Pressure level fields.
+    for atype, field, plevel in itertools.product(
+        AGGREGATION_TYPES, conf.PRESSURE_LEVEL_FIELDS, conf.PRESSURE_LEVELS
+    ):
+        if conf.SPECTRUM_PLEVEL_FIELD_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
+            # Build the variables dict *without* WINDOW_LEN_PLEVEL first
+            variables = {
+                "VARNAME": field,
+                "LEVELTYPE": "pressure",
+                "LEVEL": [plevel],
+                "MODEL_NAME": [model["name"] for model in models],
+                "SEQUENCE": "time"
+                if conf.SPECTRUM_PLEVEL_FIELD_SEQUENCE
+                else "realization",
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+                "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                "SPECTRUM_PLEVEL_FIELD_SEQUENCE": conf.SPECTRUM_PLEVEL_FIELD_SEQUENCE,
+            }
+
+            yield RawRecipe(
+                recipe=f"generic_level_power_spectrum_series_plevel_mean_{atype}.yaml",
+                variables=variables,
+                model_ids=[model["id"] for model in models],
+                aggregation=True,
+            )
+
+    # Model level fields.
+    for atype, field, mlevel in itertools.product(
+        AGGREGATION_TYPES, conf.MODEL_LEVEL_FIELDS, conf.MODEL_LEVELS
+    ):
+        if conf.POWER_SPECTRUM_MLEVEL_FIELD_AGGREGATION[AGGREGATION_TYPES.index(atype)]:
+            # Build the variables dict *without* WINDOW_LEN_MLEVEL first
+            variables = {
+                "VARNAME": field,
+                "LEVELTYPE": "model_level_number",
+                "LEVEL": [mlevel],
+                "MODEL_NAME": [model["name"] for model in models],
+                "SEQUENCE": "time"
+                if conf.SPECTRUM_MLEVEL_FIELD_SEQUENCE
+                else "realization",
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+                "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                "SPECTRUM_MLEVEL_FIELD_SEQUENCE": conf.SPECTRUM_MLEVEL_FIELD_SEQUENCE,
+            }
+
+            yield RawRecipe(
+                recipe=f"generic_level_power_spectrum_series_mlevel_mean_{atype}.yaml",
+                variables=variables,
+                model_ids=[model["id"] for model in models],
+                aggregation=True,
+            )
