@@ -30,6 +30,9 @@ For each requested forecast cycle, for each variable the script:
 5. Preserves the original valid time information.
 6. Saves the result as a forecast-style NetCDF file.
 
+> [!TIP]
+> This script does not download reanalysis data - a user must fetch this first from archive.
+
 ## Usage
 
 The python script requires the Iris package to be present within the python install.
@@ -50,15 +53,48 @@ Required Arguments:
 
 `--filepath`: Path to the input reanalysis data. This can be a single file or wildcard expression understood by Iris.
 `--cyclestart`: First forecast initialisation time that you want the reanalysis to simulate, in format <year><month><day>T<hour><minute>Z.
---cycleend: Final forecast initialisation time, inclusive, that you want the reanalysis to simulate, in format <year><month><day>T<hour><minute>Z.
+`--cycleend`: Final forecast initialisation time, inclusive, that you want the reanalysis to simulate, in format <year><month><day>T<hour><minute>Z.
+`--cyclefreq`: Frequency between forecast cycles, in hours, as an integer.
+`--forecastlength`: Length of the forecast you want the reanalysis to simulate, in hours, as an integer.
+`--outpath`: Path of where to store the output data. The code will write a file per forecast initialisation, in the format of `reanalysis_%Y%m%dT%H%MZ_.nc`.
 
-[ncgen-docs]: https://docs.unidata.ucar.edu/nug/current/netcdf_utilities_guide.html
+## Examples
+
+1. A single forecast that goes out to 48h, initialised on the 1st January 2024 at 00Z.
+
+```
+python process_reanalysis.py \
+    --filepath "/data/era5/*.nc" \
+    --cyclestart 20240101T0000Z \
+    --cycleend 20240101T0000Z \
+    --cyclefreq 6 \
+    --forecastlength 48 \
+    --outpath /my/output/path/
+```
+Producing one file `my/output/path/reanalysis_20240101T0000Z.nc`
+
+2. Produce 6-hourly analysis across one day.
+
+```
+python process_reanalysis.py \
+    --filepath "/data/era5/*.nc" \
+    --cyclestart 20240101T0000Z \
+    --cycleend 20240101T1800Z \
+    --cyclefreq 6 \
+    --forecastlength 48 \
+    --outpath /my/output/path/
+```
+Produces
+
+```
+/my/output/path/reanalysis_20240101T0000Z.nc
+/my/output/path/reanalysis_20240101T0600Z.nc
+/my/output/path/reanalysis_20240101T1200Z.nc
+/my/output/path/reanalysis_20240101T1800Z.nc
+```
 
 ## Owners
 
-> [!TIP]
-> Utilities must have at least one named owner.
-
 The following people should be contacted for queries or issues with this utility:
 
-* [@jfrost-mo](https://github.com/jfrost-mo)
+* [@jwarner8](https://github.com/jwarner8)
