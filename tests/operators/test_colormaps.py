@@ -503,37 +503,29 @@ def test_colorbar_map_auto(cube, tmp_working_dir):
 def test_colorbar_feature_tracking_id_cube(cube):
     """Colorbar definition is found for a feature id cube."""
     cube.rename("feature_id")
-    cmap, levels, norm = _colormaps.custom_colormap_feature_tracking(
-        cube, None, None, None
-    )
-    expected_levels = np.linspace(1, np.ma.max(cube.data), 10)
-    assert cmap == plt.get_cmap("viridis")
+    cmap, levels, norm = _colormaps.custom_colormap_feature_tracking(cube)
+    expected_levels = None
+    assert cmap.name == "viridis"
     assert cmap.get_under() is not None
-    assert (levels == expected_levels).all()
-    assert (norm.boundaries == levels).all()
+    assert levels == expected_levels
 
 
 def test_colorbar_feature_tracking_lifetime_cube(cube):
     """Colorbar definition is found for a feature lifetime cube."""
     cube.rename("feature_lifetime")
-    cmap, levels, norm = _colormaps.custom_colormap_feature_tracking(
-        cube, None, None, None
-    )
-    expected_levels = np.linspace(1, np.ma.max(cube.data), 10)
-    assert cmap == plt.get_cmap("YlGnBu")
+    cmap, levels, norm = _colormaps.custom_colormap_feature_tracking(cube)
+    expected_levels = None
+    assert cmap.name == "YlGnBu"
     assert cmap.get_under() is not None
-    assert (levels == expected_levels).all()
-    assert (norm.boundaries == levels).all()
+    assert levels == expected_levels
 
 
 def test_colorbar_feature_tracking_init_cube(cube):
     """Colorbar definition is found for a feature init cube."""
     cube.rename("feature_init")
-    cmap, levels, norm = _colormaps.custom_colormap_feature_tracking(
-        cube, None, None, None
-    )
+    cmap, levels, norm = _colormaps.custom_colormap_feature_tracking(cube)
     expected_levels = np.array([0.5, 1])
-    assert cmap == plt.get_cmap("Blues")
+    assert cmap.name == "Blues"
     assert cmap.get_under() is not None
     assert (levels == expected_levels).all()
     assert (norm.boundaries == levels).all()

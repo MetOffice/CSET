@@ -302,6 +302,11 @@
     "max": 80.0,
     "min": -80.0
   },
+  "gust_wind_speed_at_10m": {
+    "cmap": "jet",
+    "max": 40,
+    "min": 0
+  },
   "half_peak_to_trough_height_orography": {
     "cmap": "terrain",
     "max": "auto",
@@ -1125,6 +1130,11 @@
     "cmap": "bwr",
     "max": 5,
     "min": -5
+  },
+  "wind_speed_of_gust": {
+    "cmap": "jet",
+    "max": 40,
+    "min": 0
   },
   "zonal_wind_at_pressure_levels": {
     "cmap": "RdBu_r",
