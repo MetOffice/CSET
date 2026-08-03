@@ -46,6 +46,10 @@ python process_reanalysis.py \
     --outpath "<output_directory>"
 ```
 
+Required Arguments:
+
+--filepath: Path to the input reanalysis data. This can be a single file or wildcard expression understood by Iris.
+
 [ncgen-docs]: https://docs.unidata.ucar.edu/nug/current/netcdf_utilities_guide.html
 
 ## Owners
