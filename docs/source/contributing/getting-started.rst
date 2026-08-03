@@ -21,7 +21,7 @@ PR title.
 
 .. _issue tracker on GitHub: https://github.com/MetOffice/CSET/issues
 .. _working practices: https://metoffice.github.io/CSET/contributing/
-.. _draft pull request functionality of GitHub: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests#draft-pull-requests
+.. _draft pull request functionality of GitHub: https://docs.github.com/en/pull-requests/reference/pull-requests#draft-pull-requests
 
 Before you get to coding, there are a few steps you need to do to setup the
 development environment.
@@ -51,7 +51,7 @@ This will download a copy of the repository (where the code is stored), and all
 of its history onto your computer. From there we need to setup a few things
 before we can develop.
 
-.. note::
+.. tip::
 
     If you have previously cloned the repository you can update it with the
     latest changes. Ensure all changes are committed, then run ``git pull``.
@@ -72,7 +72,15 @@ environment.
 To use the software environment run ``conda activate cset-dev``. You will have
 to rerun this command for every new terminal.
 
-If you don't have make, you can use the following equivalent commands which,
+.. admonition:: Met Office only
+
+    When run on Met Office computers,
+    ``make setup`` will automatically use the Met Office Artifactory conda-forge mirror.
+    Make sure you have `setup authentication to Artifactory`_ in advance.
+
+    Non-Met Office computers install directly from conda-forge and require no extra setup.
+
+If you don't have ``make``, you can use the following equivalent commands which,
 when run from within the CSET directory, will setup a conda environment for you
 to use.
 
@@ -89,6 +97,7 @@ to use.
 
 .. _conda: https://docs.conda.io/en/latest/
 .. _GNU make: https://www.gnu.org/software/make/
+.. _setup authentication to Artifactory: https://wwwspice/~avd/sci/software_stack/conda_initial_how_to.html
 
 Updating tooling
 ----------------

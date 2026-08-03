@@ -25,6 +25,8 @@ import warnings
 
 import numpy as np
 
+logger = logging.getLogger(__name__)
+
 
 def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
     r"""Ratio of two fields, one filtered to allow physical values to be output.
@@ -228,10 +230,10 @@ def inflow_layer_properties(EIB, BLheight, Orography):
     # Check dimensions for Orography cube and replace with 2D array if not 2D.
     if Orography.ndim == 3:
         Orography = Orography.slices_over("realization").next()
-        logging.warning("Orography assumed not to vary with ensemble member")
+        logger.warning("Orography assumed not to vary with ensemble member")
     elif Orography.ndim == 4:
         Orography = Orography.slices_over(("time", "realization")).next()
-        logging.warning("Orography assumed not to vary with time or ensemble member. ")
+        logger.warning("Orography assumed not to vary with time or ensemble member. ")
     # Masked arrays are not respected, so convert masked values into NaNs.
     if isinstance(EIB.data, np.ma.MaskedArray):
         EIB.data = EIB.data.filled(np.nan)

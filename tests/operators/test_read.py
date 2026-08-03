@@ -26,7 +26,7 @@ import numpy as np
 import pytest
 from iris.time import PartialDateTime
 
-from CSET.operators import constraints, read
+from CSET.operators import collapse, constraints, read
 
 
 def test_read_cubes():
@@ -1172,3 +1172,182 @@ def test_normalise_ML_varname(transect_source_cube):
     cube.rename = "air_temperature"
     read._normalise_ML_varname(cube)
     assert cube.long_name == "temperature_at_pressure_levels"
+
+
+def test_read_time_constraint_in_bounds():
+    """Cubes can be selected with any time inside the bounds."""
+    cubes = read.read_cubes(
+        "tests/test_data/air_temp.nc",
+        constraint=iris.Constraint(time=datetime.datetime(2022, 9, 21, 3, 0)),
+    )
+
+    for c in cubes:
+        if c.coord("time").bounds is None:
+            # Instantaneous field was loaded
+            assert c.coord("time").as_string_arrays().points == ["2022-09-21 03:00:00"]
+        else:
+            # Time processed field was loaded even though its time doesn't match
+            # since the constraint is inside time bounds
+            assert c.coord("time").as_string_arrays().points == ["2022-09-21 03:30:00"]
+
+
+def test_cell_methods_computes_time_bounds(cdl_to_cubes):
+    """Only cubes with time processing have time bounds."""
+    # NC file with missing time bounds and various methods
+    cdl = """
+    netcdf cell_methods_sample {
+    dimensions:
+        lat = 2, lon = 2, time = 2; bnds = 2;
+    variables:
+        float lat(lat), lon(lon), time(time);
+        float lat_bnds(lat, bnds), lon_bnds(lon, bnds);
+            lat:standard_name = "latitude";
+            lat:bounds = "lat_bnds";
+            lon:standard_name = "longitude";
+            lon:bounds = "lon_bnds";
+            time:standard_name = "time";
+            time:units = "days since 2001-01-01";
+
+        float time_instant(time, lat, lon);
+        float time_point(time, lat, lon);
+            time_point:cell_methods = "time: point";
+        float time_mean(time, lat, lon);
+            time_mean:cell_methods = "time: mean";
+        float area_mean(time, lat, lon);
+            area_mean:cell_methods = "area: mean";
+        float all_mean(time, lat, lon);
+            all_mean:cell_methods = "area: mean time: mean";
+        float multi_mean(time, lat, lon);
+            multi_mean:cell_methods = "area: time: mean";
+    data:
+        time = 1, 2;
+        lat = 1, 2;
+        lon = 1, 2;
+        lat_bnds = 0.5, 1.5, 1.5, 2.5;
+        lon_bnds = 0.5, 1.5, 1.5, 2.5;
+    }
+    """
+    cubes = cdl_to_cubes(cdl)
+
+    # Variables which should not have bounds
+    assert cubes.extract_cube("time_instant").coord("time").bounds is None
+    assert cubes.extract_cube("time_point").coord("time").bounds is None
+    assert cubes.extract_cube("area_mean").coord("time").bounds is None
+
+    # Variables which should have bounds
+    assert cubes.extract_cube("time_mean").coord("time").bounds is not None
+    assert cubes.extract_cube("all_mean").coord("time").bounds is not None
+    assert cubes.extract_cube("multi_mean").coord("time").bounds is not None
+
+
+def test_check_combine_point_observations_noobs(cube):
+    """Ensure _check_combine_point_observations has no effect for non-observation cube."""
+    c1 = iris.cube.CubeList([cube])
+    c2 = read._check_combine_point_observations(c1)
+    assert c2 == iris.cube.CubeList([cube])
+    assert c2[0].data.all() == c1[0].data.all()
+
+
+def test_check_combine_point_observations_single_obs(cube):
+    """Ensure _check_combine_point_observations handles single observation source."""
+    cube = collapse.collapse(cube, ["grid_longitude"], "MEAN")
+    cube.coord("grid_latitude").rename("station")
+    cube.coord("station").points = np.arange(len(cube.coord("station").points))
+    cube.add_aux_coord(
+        iris.coords.AuxCoord(cube.coord("station").points, var_name="obs_source"), 1
+    )
+    c1 = iris.cube.CubeList([cube])
+    c2 = read._check_combine_point_observations(c1)
+    assert c2 == iris.cube.CubeList([cube])
+    assert all(
+        x == y
+        for x, y in zip(
+            c2[0].coord("station").points,
+            np.arange(len(cube.coord("station").points)),
+            strict=True,
+        )
+    )
+    assert "obs_source" not in [coord.name() for coord in cube.coords()]
+
+
+def test_check_combine_point_observations_multiple_obs(cube):
+    """Ensure _check_combine_point_observations handles single observation source."""
+    cube = collapse.collapse(cube, ["grid_longitude"], "MEAN")
+    cube.coord("grid_latitude").rename("station")
+    cube.coord("station").points = np.arange(len(cube.coord("station").points))
+    cube2 = cube.copy()
+    c1 = iris.cube.CubeList([cube, cube2])
+    c2 = read._check_combine_point_observations(c1)
+    assert c2 == iris.cube.CubeList([cube, cube2])
+    assert all(
+        x == y
+        for x, y in zip(
+            c2[0].coord("station").points,
+            np.arange(len(cube.coord("station").points)),
+            strict=True,
+        )
+    )
+    assert all(
+        x != y
+        for x, y in zip(
+            c2[1].coord("station").points,
+            np.arange(len(cube.coord("station").points)),
+            strict=True,
+        )
+    )
+    assert all(
+        x == y
+        for x, y in zip(
+            c2[1].coord("station").points,
+            np.arange(len(cube.coord("station").points)) + 17,
+            strict=True,
+        )
+    )
+
+
+def test_compute_winds(vector_cubes, tmp_working_dir):
+    """Ensure _compute_winds calculates wind_speed from component inputs."""
+    assert len(vector_cubes) == 2
+    vector_cubes[0].rename("eastward_wind_at_10m")
+    vector_cubes[1].rename("northward_wind_at_10m")
+    output_cubes = read._compute_winds(vector_cubes)
+    assert len(vector_cubes) == 3
+    assert len(output_cubes) == 1
+    assert output_cubes.extract(iris.Constraint("wind_speed_at_10m"))
+    assert output_cubes.extract(iris.Constraint("wind_speed_at_10m"))[0].units == "ms-1"
+
+    u = vector_cubes[0].data
+    v = vector_cubes[1].data
+    expected_wind = (u**2 + v**2) ** 0.5
+    assert np.allclose(output_cubes[0].data, expected_wind, rtol=1e-6, atol=1e-2)
+
+
+def test_compute_winds_nocomponents(cube, tmp_working_dir):
+    """Ensure _compute_winds does not impact non-wind inputs."""
+    output_cubes = read._compute_winds([cube, cube])
+    assert len(output_cubes) == 2
+    assert np.allclose(output_cubes[0].data, cube.data, rtol=1e-6, atol=1e-2)
+
+
+def test_compute_winds_multi_vars(cube, vector_cubes, tmp_working_dir):
+    """Ensure _compute_winds extends multiple input variable cubelist."""
+    # Add cube of air_temperature to CubeList containing wind components.
+    assert len(vector_cubes) == 2
+    vector_cubes[0].rename("eastward_wind_at_10m")
+    vector_cubes[1].rename("northward_wind_at_10m")
+    output_cubes = read._compute_winds(
+        iris.cube.CubeList([cube, vector_cubes[0], vector_cubes[1]])
+    )
+    assert len(vector_cubes) == 2
+    assert len(output_cubes) == 4
+    assert output_cubes.extract(iris.Constraint("eastward_wind_at_10m"))
+    assert output_cubes.extract(iris.Constraint("northward_wind_at_10m"))
+    assert output_cubes.extract(iris.Constraint("wind_speed_at_10m"))
+    # Ensure non-wind cube retained in output following wind_speed calculation.
+    assert output_cubes.extract(iris.Constraint("air_temperature"))
+
+    u = vector_cubes[0].data
+    v = vector_cubes[1].data
+    expected_wind = (u**2 + v**2) ** 0.5
+    output_wind = output_cubes.extract(iris.Constraint("wind_speed_at_10m"))[0]
+    assert np.allclose(output_wind.data, expected_wind, rtol=1e-6, atol=1e-2)

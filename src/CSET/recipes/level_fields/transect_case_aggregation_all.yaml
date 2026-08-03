@@ -1,7 +1,7 @@
 category: Transect
-title: $MODEL_NAME Transect of $VARNAME Aggregation over all cases.
+title: "$MODEL_NAME Transect of $VARNAME\n Aggregation over all cases $SUBAREA_NAME"
 description: |
-  Aggregates over all cases, then extracts a $VERTICAL_COORDINATE transect
+  Aggregates over all cases then extracts a $VERTICAL_COORDINATE transect
   for $VARNAME between two points and plots it.
 
   Start coordinate: `$START_COORDS`

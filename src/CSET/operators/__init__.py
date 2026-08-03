@@ -33,16 +33,20 @@ from CSET.operators import (
     constraints,
     convection,
     ensembles,
+    feature,
     filters,
+    fluxes,
     humidity,
     imageprocessing,
     mesoscale,
     misc,
     plot,
+    power_spectrum,
     precipitation,
     pressure,
     read,
     regrid,
+    scoreswrappers,
     temperature,
     transect,
     wind,
@@ -59,22 +63,28 @@ __all__ = [
     "convection",
     "ensembles",
     "execute_recipe",
+    "feature",
     "filters",
-    "humidity",
+    "fluxes",
     "get_operator",
+    "humidity",
     "imageprocessing",
     "mesoscale",
     "misc",
     "plot",
+    "power_spectrum",
     "precipitation",
     "pressure",
     "read",
     "regrid",
+    "scoreswrappers",
     "temperature",
     "transect",
     "wind",
     "write",
 ]
+
+logger = logging.getLogger(__name__)
 
 # Stop iris giving a warning whenever it loads something.
 FUTURE.datum_support = True
@@ -107,7 +117,7 @@ def get_operator(name: str):
     >>> CSET.operators.get_operator("read.read_cubes")
     <function read_cubes at 0x7fcf9353c8b0>
     """
-    logging.debug("get_operator(%s)", name)
+    logger.debug("get_operator(%s)", name)
     try:
         name_sections = name.split(".")
         operator = CSET.operators
@@ -116,7 +126,7 @@ def get_operator(name: str):
         if callable(operator):
             return operator
         else:
-            raise AttributeError
+            raise TypeError
     except (AttributeError, TypeError) as err:
         raise ValueError(f"Unknown operator: {name}") from err
 
@@ -137,28 +147,28 @@ def _write_metadata(recipe: dict):
 
 def _step_parser(step: dict, step_input: any) -> str:
     """Execute a recipe step, recursively executing any sub-steps."""
-    logging.debug("Executing step: %s", step)
+    logger.debug("Executing step: %s", step)
     kwargs = {}
-    for key in step.keys():
+    for key, value in step.items():
         if key == "operator":
-            operator = get_operator(step["operator"])
-            logging.info("operator: %s", step["operator"])
-        elif isinstance(step[key], dict) and "operator" in step[key]:
-            logging.debug("Recursing into argument: %s", key)
-            kwargs[key] = _step_parser(step[key], step_input)
+            operator = get_operator(value)
+            logger.info("operator: %s", value)
+        elif isinstance(value, dict) and "operator" in value:
+            logger.debug("Recursing into argument: %s", key)
+            kwargs[key] = _step_parser(value, step_input)
         else:
-            kwargs[key] = step[key]
-    logging.debug("args: %s", kwargs)
-    logging.debug("step_input: %s", step_input)
+            kwargs[key] = value
+    logger.debug("args: %s", kwargs)
+    logger.debug("step_input: %s", step_input)
     # If first argument of operator is explicitly defined, use that rather
     # than step_input. This is known through introspection of the operator.
     first_arg = next(iter(inspect.signature(operator).parameters.keys()))
-    logging.debug("first_arg: %s", first_arg)
+    logger.debug("first_arg: %s", first_arg)
     if first_arg not in kwargs:
-        logging.debug("first_arg not in kwargs, using step_input.")
+        logger.debug("first_arg not in kwargs, using step_input.")
         return operator(step_input, **kwargs)
     else:
-        logging.debug("first_arg in kwargs.")
+        logger.debug("first_arg in kwargs.")
         return operator(**kwargs)
 
 
@@ -178,9 +188,9 @@ def create_diagnostic_archive():
 def execute_recipe(
     recipe: dict,
     output_directory: Path,
-    style_file: Path = None,
-    plot_resolution: int = None,
-    skip_write: bool = None,
+    style_file: Path | None = None,
+    plot_resolution: int | None = None,
+    skip_write: bool | None = None,
 ) -> None:
     """Parse and executes the steps from a recipe file.
 
@@ -211,16 +221,15 @@ def execute_recipe(
     # Create output directory.
     try:
         output_directory.mkdir(parents=True, exist_ok=True)
-    except (FileExistsError, NotADirectoryError) as err:
-        logging.error("Output directory is a file. %s", output_directory)
-        raise err
+    except (FileExistsError, NotADirectoryError):
+        logger.error("Output directory is a file. %s", output_directory)
+        raise
     steps = recipe["steps"]
 
     # Execute the steps in a recipe.
     original_working_directory = Path.cwd()
     try:
         os.chdir(output_directory)
-        logger = logging.getLogger(__name__)
         diagnostic_log = logging.FileHandler(
             filename="CSET.log", mode="w", encoding="UTF-8"
         )

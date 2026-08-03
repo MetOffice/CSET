@@ -26,11 +26,13 @@ from CSET.loaders import (
     power_spectrum,
     profiles,
     qq,
+    radar,
     spatial_difference_field,
     spatial_field,
     test,
     timeseries,
     transects,
+    verification,
 )
 
 __all__ = [
@@ -40,9 +42,11 @@ __all__ = [
     "power_spectrum",
     "profiles",
     "qq",
+    "radar",
     "spatial_difference_field",
     "spatial_field",
     "test",
     "timeseries",
     "transects",
+    "verification",
 ]

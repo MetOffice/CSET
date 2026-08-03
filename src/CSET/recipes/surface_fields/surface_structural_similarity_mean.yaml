@@ -1,5 +1,5 @@
 category: Surface Structural Similarity
-title: "$VARNAME\nMean Structural Similarity between $OTHER_MODEL and $BASE_MODEL"
+title: "$VARNAME\nMean Structural Similarity between $OTHER_MODEL and $BASE_MODEL $SUBAREA_NAME"
 description: |
   Extracts $VARNAME for $OTHER_MODEL and $BASE_MODEL. These fields then have the
   mean structural similarity (MSSIM) calculated between them and plotted as a line plot.

@@ -1,5 +1,5 @@
 category: Surface Structural Similarity
-title: "$METHOD $VARNAME\nStructural Similarity between $OTHER_MODEL and $BASE_MODEL"
+title: "$METHOD $VARNAME\nStructural Similarity between $OTHER_MODEL and $BASE_MODEL $SUBAREA_NAME"
 description: |
   Extracts $VARNAME for $OTHER_MODEL and $BASE_MODEL. These fields then have the
   structural similarity (SSIM) calculated between them. The $METHOD is applied to the

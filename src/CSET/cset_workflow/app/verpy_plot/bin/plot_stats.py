@@ -31,7 +31,7 @@ def main():
     parser.add_argument("--outdir", required=True)
     parser.add_argument("--start", required=True)
     parser.add_argument("--end", required=True)
-    parser.add_argument("--expid", required=True)
+    parser.add_argument("--expids", required=True, nargs="+")
 
     args = parser.parse_args()
 
@@ -40,7 +40,7 @@ def main():
     for options in opts_dicts:
         options["start"] = args.start
         options["end"] = args.end
-        options["expid"] = args.expid
+        options["expids"] = args.expids
         options["source"] = (
             f"{os.getenv('TABLENAME')}@{os.getenv('DB_DIR')}/{os.getenv('DB_NAME')}"
         )

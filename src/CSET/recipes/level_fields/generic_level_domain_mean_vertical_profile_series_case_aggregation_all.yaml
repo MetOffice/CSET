@@ -1,5 +1,5 @@
 category: Profiles
-title: "Domain mean $VARNAME vertical profile\n Aggregation over all cases"
+title: "Domain mean $VARNAME vertical profile\n Aggregation over all cases $SUBAREA_NAME"
 description: |
   Plots a vertical profile for the domain horizontal mean $VARNAME using a
   $LEVELTYPE coordinate. Multiple cases are aggregated together for all available times.
@@ -29,7 +29,7 @@ steps:
     method: MEAN
 
   - operator: collapse.collapse
-    coordinate: [time]
+    coordinate: time
     method: MEAN
 
   # Plot the vertical line series.

@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2025) and CSET contributors.
+# © Crown copyright, Met Office (2022-2026) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -169,7 +169,39 @@ def setup_argument_parser() -> argparse.ArgumentParser:
     parser_extract_workflow.add_argument(
         "location", type=Path, help="directory to save workflow into"
     )
+    parser_extract_workflow.add_argument(
+        "--restricted",
+        action="store_true",
+        help="install restricted site-specific files during extraction",
+    )
+    parser_extract_workflow.add_argument(
+        "--restricted-url",
+        type=str,
+        help=(
+            "Alternative Git URL to fetch the restricted files from. "
+            "If omitted, defaults to trying to clone first from "
+            "'localmirrors:', then from GitHub via SSH and HTTPS."
+        ),
+    )
     parser_extract_workflow.set_defaults(func=_extract_workflow_command)
+
+    parser_install_restricted_files = subparsers.add_parser(
+        "install-restricted-files",
+        help="download and install restricted site-specific files for the CSET cylc workflow",
+    )
+    parser_install_restricted_files.add_argument(
+        "location", type=Path, help="directory containing workflow"
+    )
+    parser_install_restricted_files.add_argument(
+        "--restricted-url",
+        type=str,
+        help=(
+            "Alternative Git URL to fetch the restricted files from. "
+            "If omitted, defaults to trying to clone first from "
+            "'localmirrors:', then from GitHub via SSH and HTTPS."
+        ),
+    )
+    parser_install_restricted_files.set_defaults(func=_install_restricted_files_command)
 
     return parser
 
@@ -192,7 +224,7 @@ def setup_logging(verbosity: int):
 
     # Level from $LOGLEVEL environment variable.
     env_loglevel = logging.getLevelNamesMapping().get(
-        os.getenv("LOGLEVEL"), logging.ERROR
+        os.getenv("LOGLEVEL", ""), logging.ERROR
     )
 
     # Logging verbosity is the most verbose of CLI and environment setting.
@@ -203,12 +235,8 @@ def setup_logging(verbosity: int):
     # Set logging level.
     logger.setLevel(loglevel)
 
-    # Hide matplotlib's many font messages.
-    class NoFontMessageFilter(logging.Filter):
-        def filter(self, record):
-            return not record.getMessage().startswith("findfont:")
-
-    logging.getLogger("matplotlib.font_manager").addFilter(NoFontMessageFilter())
+    # Suppress matplotlib's verbose debug output.
+    logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
     stderr_log = logging.StreamHandler(stream=sys.stdout)
     stderr_log.setFormatter(
@@ -260,6 +288,14 @@ def _cookbook_command(args, unparsed_args):
 
 
 def _extract_workflow_command(args, unparsed_args):
-    from CSET.extract_workflow import install_workflow
+    from CSET.extract_workflow import install_restricted_files, install_workflow
 
-    install_workflow(args.location)
+    workflow_dir = install_workflow(args.location)
+    if args.restricted:
+        install_restricted_files(workflow_dir, args.restricted_url)
+
+
+def _install_restricted_files_command(args, unparsed_args):
+    from CSET.extract_workflow import install_restricted_files
+
+    install_restricted_files(args.location, args.restricted_url)

@@ -1,5 +1,5 @@
 category: Surface Spatial Plot Difference
-title: "$VARNAME\nDifference ($OTHER_MODEL - $BASE_MODEL)\nAggregation over all cases"
+title: "$VARNAME\nDifference ($OTHER_MODEL - $BASE_MODEL)\nAggregation over all cases $SUBAREA_NAME"
 description: |
   Extracts and plot the mean difference $VARNAME for all times. The cases
   are aggregated over all times available.

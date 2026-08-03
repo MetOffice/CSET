@@ -1,5 +1,5 @@
-Technical Reference
-===================
+Reference
+=========
 
 This section contains comprehensive descriptions of CSET, and its various
 components.
@@ -11,4 +11,5 @@ components.
     cli
     recipe-format
     operators
+    workflow/index
     internal

@@ -1,5 +1,5 @@
 category: Transect Difference
-title: "$VARNAME Transect Difference ($BASE_MODEL - $OTHER_MODEL) \n Aggregation over lead time"
+title: "$VARNAME Transect Difference ($BASE_MODEL - $OTHER_MODEL)\n Aggregation over lead time $SUBAREA_NAME"
 description: |
   Aggregates over lead time, computes the difference between
   $BASE_MODEL and $OTHER_MODEL, and then extracts a $VERTICAL_COORDINATE

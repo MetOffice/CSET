@@ -1,5 +1,5 @@
 category: $LEVELTYPE Level Structural Similarity
-title: "$METHOD $VARNAME $LEVEL\nStructural Similarity between $OTHER_MODEL and $BASE_MODEL"
+title: "$METHOD $VARNAME $LEVEL $SUBAREA_NAME\nStructural Similarity between $OTHER_MODEL and $BASE_MODEL"
 description: |
   Extracts $VARNAME at $LEVELTYPE $LEVEL for $OTHER_MODEL and $BASE_MODEL.
   These fields then have the
@@ -41,7 +41,7 @@ steps:
     sigma: 1.5
 
   - operator: collapse.collapse
-    coordinate: ["time"]
+    coordinate: time
     method: $METHOD
 
   - operator: plot.spatial_pcolormesh_plot

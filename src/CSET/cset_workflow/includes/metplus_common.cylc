@@ -1,4 +1,6 @@
-{% if METPLUS_GRID_STAT|default(False) or METPLUS_POINT_STAT|default(False) %}
+{% if RUN_METPLUS_GRID_STAT|default(False) or RUN_METPLUS_POINT_STAT|default(False) or RUN_METPLUS_ENSEMBLE_STAT|default(False)%}
+[runtime]
+
     [[METPLUS]]
         [[[environment]]]
         METPLUS_ANA_DIR = {{METPLUS_ANA_DIR}}
@@ -10,4 +12,28 @@
         TASK_START_TIME = $(cylc cyclepoint --template CCYYMMDDThh)
         FORECAST_LENGTH = $(isodatetime --as-total H -- {{ANALYSIS_LENGTH}} | cut -d '.' -f 1 )
         TASK_END_TIME = $(cylc cyclepoint --offset {{ANALYSIS_LENGTH}} --template CCYYMMDDThh)
+
+    [[VERPY_METLOADER]]
+    # Family grouping for all VerPy metloader tasks
+        inherit = METPLUS
+        script = rose task-run -v --app-key=verpy_metloader
+
+{% for model in models %}
+    [[metplus_prep_fcst_m{{model["id"]}}]]
+    # Prepares model data for use by metplus
+        inherit = METPLUS
+        [[[environment]]]
+            ROSE_TASK_APP = metplus_prep_fcst
+            MODEL_NAME = {{model["name"]}}
+            MODEL_ID = m{{model["id"]}}
+            INPUT_PATHS = $CYLC_TASK_SHARE_CYCLE_DIR/data/{{model["id"]}}
+        {% if SELECT_SUBAREA %}
+            SUBAREA_TYPE = {{SUBAREA_TYPE}}
+            SUBAREA_EXTENT = {{SUBAREA_EXTENT}}
+        {% else %}
+            SUBAREA_TYPE = None
+            SUBAREA_EXTENT = None
+        {% endif %}
+{% endfor %}
+
 {% endif %}
