@@ -17,6 +17,7 @@ import logging
 import os
 
 import iris
+import iris.coords
 import iris.cube
 import iris.util
 import numpy as np
@@ -191,6 +192,8 @@ def track(
         tracking_cube.standard_name = None
         tracking_cube.var_name = None
         tracking_cube.units = "1"
+        # Add maximum value of the data to the cube attributes for use in colormap scaling
+        tracking_cube.attributes["max_value"] = np.ma.max(tracking_data)
         tracking_cubelist.append(tracking_cube)
 
     return tracking_cubelist
@@ -216,9 +219,11 @@ def _check_xy_coords(cube: iris.cube.Cube) -> None:
     ]
     invalid_coord_names = ["latitude", "longitude", "grid_latitude", "grid_longitude"]
     for coord in hzntl_coords:
-        if coord.name() in invalid_coord_names:
+        if coord.name() in invalid_coord_names and isinstance(
+            coord, iris.coords.DimCoord
+        ):
             raise ValueError(
-                f"Input cube {cube} has horizontal coordinate {coord}, "
-                "which is not of xy type. Please provide a cube with horizontal "
+                f"Input cube has horizontal coordinate {coord.name()} ({coord.units}), "
+                "which is a DimCoord not of xy type. Please provide a cube with horizontal "
                 "coordinates of xy type."
             )

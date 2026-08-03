@@ -191,6 +191,10 @@ def colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = N
     if any("RMSE_" in name for name in varnames):
         cmap, levels, norm = custom_colormap_scores(cube)
         return cmap, levels, norm
+    # If feature tracking use custom colorbar and levels
+    if any("feature_" in name for name in varnames):
+        cmap, levels, norm = custom_colormap_feature_tracking(cube)
+        return cmap, levels, norm
 
     # If no valid colormap has been defined, use defaults and return.
     if not cmap:
@@ -256,7 +260,6 @@ def colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = N
         cmap, levels, norm = custom_colourmap_nimrod_weights(cube, cmap, levels, norm)
         cmap, levels, norm = custom_colormap_visibility_in_air(cube, cmap, levels, norm)
         cmap, levels, norm = custom_colormap_celsius(cube, cmap, levels, norm)
-        cmap, levels, norm = custom_colormap_feature_tracking(cube, cmap, levels, norm)
         return cmap, levels, norm
 
 
@@ -667,7 +670,7 @@ def custom_colormap_scores(cube: iris.cube.Cube):
     return cmap, levels, norm
 
 
-def custom_colormap_feature_tracking(cube: iris.cube.Cube, cmap, levels, norm):
+def custom_colormap_feature_tracking(cube: iris.cube.Cube):
     """Return altered colormap for feature tracking.
 
     Parameters
@@ -684,42 +687,31 @@ def custom_colormap_feature_tracking(cube: iris.cube.Cube, cmap, levels, norm):
     norm: BoundaryNorm.
     """
     varnames = list(filter(None, [cube.long_name, cube.standard_name, cube.var_name]))
-    if (
-        any("feature_id" in name for name in varnames)
-        and any("difference" not in name for name in varnames)
-        and any("mask" not in name for name in varnames)
-    ):
-        # Define the levels and colors
-        levels = np.linspace(1, np.ma.max(cube.data), 10)
+
+    if any("feature_id" in name for name in varnames):
+        # Get max lifetime from cube attributes if available, otherwise use max of data
+        max_id = cube.attributes.get("max_value", np.ma.max(cube.data))
+        levels = None
         cmap = plt.get_cmap("viridis")
-        # Normalize the levels
-        norm = mcolors.BoundaryNorm(levels, cmap.N)
+        norm = mcolors.Normalize(vmin=1, vmax=max_id, clip=False)
         logger.info("change colormap for feature id variable colorbar.")
-    elif (
-        any("feature_lifetime" in name for name in varnames)
-        and any("difference" not in name for name in varnames)
-        and any("mask" not in name for name in varnames)
-    ):
-        # Define the levels and colors
-        levels = np.linspace(1, np.ma.max(cube.data), 10)
+
+    elif any("feature_lifetime" in name for name in varnames):
+        # Get max lifetime from cube attributes if available, otherwise use max of data
+        max_lifetime = cube.attributes.get("max_value", np.ma.max(cube.data))
+        levels = None
         cmap = plt.get_cmap("YlGnBu")
-        # Normalize the levels
-        norm = mcolors.BoundaryNorm(levels, cmap.N)
+        norm = mcolors.Normalize(vmin=1, vmax=max_lifetime, clip=False)
         logger.info("change colormap for feature lifetime variable colorbar.")
-    elif (
-        any("feature_init" in name for name in varnames)
-        and any("difference" not in name for name in varnames)
-        and any("mask" not in name for name in varnames)
-    ):
+
+    elif any("feature_init" in name for name in varnames):
         # Define the levels and colors
         levels = np.array([0.5, 1])
         cmap = plt.get_cmap("Blues")
-        # Normalize the levels
         norm = mcolors.BoundaryNorm(levels, cmap.N)
         logger.info("change colormap for feature init variable colorbar.")
 
     # Set all non-feature data to white.
-    if any("feature" in name for name in varnames):
-        cmap.with_extremes(under="white")
+    cmap = cmap.with_extremes(under="white")
 
     return cmap, levels, norm
