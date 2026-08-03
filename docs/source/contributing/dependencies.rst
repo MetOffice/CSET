@@ -97,6 +97,6 @@ it, and soon after your updated package will be published on conda-forge.
 .. _github.com/conda-forge/cset-feedstock: https://github.com/conda-forge/cset-feedstock
 .. _recipe/recipe.yaml: https://github.com/conda-forge/cset-feedstock/blob/main/recipe/recipe.yaml
 .. _Lines 27 to 37 in commit 805148a: https://github.com/conda-forge/cset-feedstock/blob/805148a2191e1256667fb74f8e5b051f6339af56/recipe/recipe.yaml#L27-L37
-.. _fork of the repository: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo
+.. _fork of the repository: https://docs.github.com/en/pull-requests/how-tos/work-with-forks/fork-a-repo
 .. _build number: https://github.com/conda-forge/cset-feedstock/blob/805148a2191e1256667fb74f8e5b051f6339af56/recipe/recipe.yaml#L14
 .. _feedstock maintainer: https://github.com/conda-forge/cset-feedstock?tab=readme-ov-file#feedstock-maintainers

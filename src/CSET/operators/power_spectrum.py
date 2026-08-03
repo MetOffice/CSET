@@ -21,9 +21,11 @@ import iris.coords
 import iris.cube
 import iris.exceptions
 import numpy as np
-import scipy.fft as fft
+from scipy import fft
 
 from CSET._common import iter_maybe
+
+logger = logging.getLogger(__name__)
 
 
 def calculate_power_spectrum(cubes: iris.cube.Cube | iris.cube.CubeList):
@@ -124,7 +126,7 @@ def _power_spectrum(cube: iris.cube.Cube) -> iris.cube.Cube:
 
     if cube.ndim == 2:
         cube_3d = cube.data[np.newaxis, :, :]
-        logging.debug("Adding in new axis for a 2 dimensional cube.")
+        logger.debug("Adding in new axis for a 2 dimensional cube.")
     elif cube.ndim == 3:
         cube_3d = cube.data
     else:
@@ -149,7 +151,7 @@ def _power_spectrum(cube: iris.cube.Cube) -> iris.cube.Cube:
             y_coord = cube.coord(y_coord_name)
         except iris.exceptions.CoordinateNotFoundError:
             continue
-        logging.debug(
+        logger.debug(
             "Using %s and %s coordinates for grid spacing calculation.",
             x_coord_name,
             y_coord_name,

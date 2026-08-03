@@ -32,7 +32,7 @@ import iris.cube
 import numpy as np
 import pytest
 
-from CSET.operators import constraints, filters, read
+from CSET.operators import collapse, constraints, filters, read, regrid
 
 
 # Special function that is run after all the tests finish.
@@ -95,7 +95,7 @@ def cdl_to_cubes(
         cdl: str, constraint: str | iris.Constraint | None = None
     ) -> iris.cube.CubeList:
         path = cdl_to_nc_path(cdl)
-        return read.read_cubes(path, constraint)  # noqa
+        return read.read_cubes(path, constraint)
 
     return callback
 
@@ -110,7 +110,7 @@ def cdl_to_cube(
         cdl: str, constraint: str | iris.Constraint | None = None
     ) -> iris.cube.Cube:
         path = cdl_to_nc_path(cdl)
-        return read.read_cube(path, constraint)  # noqa
+        return read.read_cube(path, constraint)
 
     return callback
 
@@ -1057,7 +1057,7 @@ def feature_cube() -> iris.cube.Cube:
 
     realization = iris.coords.DimCoord(points=[0, 1, 2], standard_name="realization")
     time_units = cf_units.Unit("days since 2000-01-01 00:00:00", calendar="gregorian")
-    time_start = datetime.datetime(2010, 1, 1, 0, 0, 0)
+    time_start = datetime.datetime(2010, 1, 1, 0, 0, 0, tzinfo=datetime.UTC)
     time_dt_points = [
         time_start + datetime.timedelta(minutes=5 * idx) for idx in range(3)
     ]
@@ -1138,6 +1138,36 @@ def south_polar_cube() -> iris.cube.Cube:
         1,
     )
     return cube
+
+
+@pytest.fixture()
+def point_cube(cube) -> iris.cube.Cube:
+    """Set up example point_cube."""
+    sample_cube = collapse.collapse(cube, ["grid_latitude"], "MEAN")
+    sample_cube.remove_coord("grid_latitude")
+    sample_cube.coord("grid_longitude").rename("station")
+    sample_cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            np.arange(len(sample_cube.coord("station").points)).astype(str),
+            var_name="Station_Name",
+        ),
+        1,
+    )
+    sample_cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            cube.coord("grid_latitude").points[0:13], var_name="grid_latitude"
+        ),
+        1,
+    )
+    sample_cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            cube.coord("grid_longitude").points[0:13], var_name="grid_longitude"
+        ),
+        1,
+    )
+    point_cube = regrid.interpolate_to_point_cube(cube, sample_cube)
+
+    return point_cube
 
 
 @pytest.fixture()

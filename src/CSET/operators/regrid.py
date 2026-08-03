@@ -26,6 +26,8 @@ from iris.analysis.cartography import rotate_pole
 from CSET._common import iter_maybe
 from CSET.operators._utils import get_cube_yxcoordname
 
+logger = logging.getLogger(__name__)
+
 
 class BoundaryWarning(UserWarning):
     """Selected gridpoint is close to the domain edge.
@@ -347,8 +349,8 @@ def regrid_to_single_point(
             regridded_cubes.append(cube_rgd)
         else:
             if (
-                np.abs((lat_tr - lat.points[0])) > 0.1
-                or np.abs((lon_tr - lon.points[0])) > 0.1
+                np.abs(lat_tr - lat.points[0]) > 0.1
+                or np.abs(lon_tr - lon.points[0]) > 0.1
             ):
                 raise ValueError(
                     "Selected point is too far from the specified coordinates. It should be within 0.1 degrees."
@@ -438,7 +440,7 @@ def interpolate_to_point_cube(
         base_times = base_time_coord.units.num2date(base_time_coord.points)
         other_times = other_time_coord.units.num2date(other_time_coord.points)
         shared_times = set.intersection(set(base_times), set(other_times))
-        logging.debug("Shared times: %s", shared_times)
+        logger.debug("Shared times: %s", shared_times)
         time_constraint = iris.Constraint(
             coord_values={
                 "time": lambda cell, shared_times=shared_times: (
