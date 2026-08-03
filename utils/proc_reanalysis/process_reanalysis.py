@@ -16,8 +16,6 @@ iris.FUTURE.save_split_attrs = True
 import argparse
 from datetime import datetime, timedelta
 
-import iris
-
 
 def _create_forecasts(
     reanalysis: iris.cube.CubeList,
@@ -97,14 +95,12 @@ def _create_forecasts(
 
                 # Get a copy of time coord, and dimension this corresponds to.
                 time_coord = cube_slice.coord("time")
-                time_coord_points = time_coord.points.copy()
-                time_dim = cube_slice.coord_dims("time")[0]
-
-                # Forecast periods relative to initialisation.
-                fp_points = time_coord.points - time_coord.points[0]
 
                 # Work out units of forecast_period and adjust if necessary.
                 units_str = str(time_coord.units)
+
+                # Forecast periods relative to initialisation.
+                fp_points = time_coord.points - time_coord.points[0]
 
                 if units_str.startswith("seconds since"):
                     fp_points = fp_points / 3600.0
@@ -116,6 +112,10 @@ def _create_forecasts(
                     fp_units = "hours"
                 else:
                     raise ValueError(f"Unhandled time units: {time_coord.units}")
+
+                # Get copy of time coordinate
+                time_coord_points = time_coord.points.copy()
+                time_dim = cube_slice.coord_dims("time")[0]
 
                 # Create forecast period dimension
                 fp_coord = iris.coords.DimCoord(
@@ -155,10 +155,16 @@ def _create_forecasts(
                 print(f"{cube.name()}...done.")
 
         # Once all cubes processed, save to disk.
-        print(f"Saving {outpath + '/reanalysis_' + start.strftime('%Y%m%dT%H%MZ')}.nc")
-        iris.save(
-            cutouts, outpath + "/reanalysis_" + start.strftime("%Y%m%dT%H%MZ") + ".nc"
-        )
+        if len(cutouts) > 0:
+            print(
+                f"Saving {outpath + '/reanalysis_' + start.strftime('%Y%m%dT%H%MZ')}.nc"
+            )
+            iris.save(
+                cutouts,
+                outpath + "/reanalysis_" + start.strftime("%Y%m%dT%H%MZ") + ".nc",
+            )
+        else:
+            raise ValueError("No suitable cubes found for saving!")
 
 
 def _identify_number_of_cycles_required(
