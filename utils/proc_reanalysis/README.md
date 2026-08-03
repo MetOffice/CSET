@@ -49,6 +49,8 @@ python process_reanalysis.py \
 Required Arguments:
 
 `--filepath`: Path to the input reanalysis data. This can be a single file or wildcard expression understood by Iris.
+`--cyclestart`: First forecast initialisation time that you want the reanalysis to simulate, in format <year><month><day>T<hour><minute>Z.
+--cycleend: Final forecast initialisation time, inclusive, that you want the reanalysis to simulate, in format <year><month><day>T<hour><minute>Z.
 
 [ncgen-docs]: https://docs.unidata.ucar.edu/nug/current/netcdf_utilities_guide.html
 
