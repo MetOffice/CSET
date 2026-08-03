@@ -51,12 +51,12 @@ python process_reanalysis.py \
 
 Required Arguments:
 
-`--filepath`: Path to the input reanalysis data. This can be a single file or wildcard expression understood by Iris.
-`--cyclestart`: First forecast initialisation time that you want the reanalysis to simulate, in format <year><month><day>T<hour><minute>Z.
-`--cycleend`: Final forecast initialisation time, inclusive, that you want the reanalysis to simulate, in format <year><month><day>T<hour><minute>Z.
-`--cyclefreq`: Frequency between forecast cycles, in hours, as an integer.
-`--forecastlength`: Length of the forecast you want the reanalysis to simulate, in hours, as an integer.
-`--outpath`: Path of where to store the output data. The code will write a file per forecast initialisation, in the format of `reanalysis_%Y%m%dT%H%MZ_.nc`.
+- `--filepath`: Path to the input reanalysis data. This can be a single file or wildcard expression understood by Iris.
+- `--cyclestart`: First forecast initialisation time that you want the reanalysis to simulate, in format <year><month><day>T<hour><minute>Z.
+- `--cycleend`: Final forecast initialisation time, inclusive, that you want the reanalysis to simulate, in format <year><month><day>T<hour><minute>Z.
+- `--cyclefreq`: Frequency between forecast cycles, in hours, as an integer.
+- `--forecastlength`: Length of the forecast you want the reanalysis to simulate, in hours, as an integer.
+- `--outpath`: Path of where to store the output data. The code will write a file per forecast initialisation, in the format of `reanalysis_%Y%m%dT%H%MZ_.nc`.
 
 ## Examples
 
