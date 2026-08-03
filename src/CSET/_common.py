@@ -26,6 +26,8 @@ from typing import Any
 
 import ruamel.yaml
 
+logger = logging.getLogger(__name__)
+
 
 class ArgumentError(ValueError):
     """Provided arguments are not understood."""
@@ -75,14 +77,14 @@ def parse_recipe(recipe_yaml: Path | str, variables: dict | None = None) -> dict
         except ruamel.yaml.parser.ParserError as err:
             raise ValueError("ParserError: Invalid YAML") from err
 
-    logging.debug("Recipe before templating:\n%s", recipe)
+    logger.debug("Recipe before templating:\n%s", recipe)
     check_recipe_has_steps(recipe)
 
     if variables is not None:
-        logging.debug("Recipe variables: %s", variables)
+        logger.debug("Recipe variables: %s", variables)
         recipe = template_variables(recipe, variables)
 
-    logging.debug("Recipe after templating:\n%s", recipe)
+    logger.debug("Recipe after templating:\n%s", recipe)
     return recipe
 
 
@@ -330,7 +332,7 @@ def render(template: str, /, **variables) -> str:
             value = str(variables[name])
         except KeyError as err:
             raise TemplateError("Placeholder missing value", name) from err
-        pattern = r"{{\s*%s\s*}}" % re.escape(name)
+        pattern = r"{{\s*%s\s*}}" % re.escape(name)  # noqa: UP031 Braces get ugly within f-string.
         return re.sub(pattern, value, template)
 
     for name in extract_placeholders():

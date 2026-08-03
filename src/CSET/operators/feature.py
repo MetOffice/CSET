@@ -22,6 +22,8 @@ import iris.util
 import numpy as np
 from simpletrack.track import Tracker
 
+logger = logging.getLogger(__name__)
+
 
 def track(
     cube: iris.cube.Cube,
@@ -136,7 +138,7 @@ def track(
             "path": f"{os.getcwd()}/tracking_data",
         },
     }
-    logging.debug(f"Tracker config: {tracker_config}")
+    logger.debug(f"Tracker config: {tracker_config}")
 
     # Get cube data into a dict to pass to Tracker
     times = cube.coord("time").points
@@ -149,7 +151,7 @@ def track(
 
     # Run tracking, returning Timeline object
     timeline = Tracker(tracker_config).run(cube_dict)
-    logging.debug("Tracking completed")
+    logger.debug("Tracking completed")
 
     # Use input cube as template to make returned cube
     # By iterating over all cube times, this will ensure all data is present

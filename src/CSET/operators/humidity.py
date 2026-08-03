@@ -522,9 +522,7 @@ def precipitable_water(
             pwat = w[:, :, 0, :, :].copy()
         elif (
             len(w.coord("realization").points) != 1 and len(w.coord("time").points) == 1
-        ):
-            pwat = w[:, 0, :, :].copy()
-        elif (
+        ) or (
             len(w.coord("time").points) != 1 and len(w.coord("realization").points) == 1
         ):
             pwat = w[:, 0, :, :].copy()
@@ -613,9 +611,7 @@ def saturation_precipitable_water(
             satpw = w[:, :, 0, :, :].copy()
         elif (
             len(w.coord("realization").points) != 1 and len(w.coord("time").points) == 1
-        ):
-            satpw = w[:, 0, :, :].copy()
-        elif (
+        ) or (
             len(w.coord("time").points) != 1 and len(w.coord("realization").points) == 1
         ):
             satpw = w[:, 0, :, :].copy()
