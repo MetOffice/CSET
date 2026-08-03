@@ -18,23 +18,15 @@ temp_dir="$2/obstore"
 mkdir -p "$temp_dir"
 
 # Extract tar files to temporary directory
-if [[ "$1" == *.tar || "$1" == *.tar.* ]]; then
+if [[ "$1" == *.tar || "$1" == *.tar.* || "$1" == *.tgz ]]; then
     tar -xf "$1" -C "$temp_dir"
 else
     # Not a tar file, ignore
     echo "no .tar files in $1, ignoring.."
 fi
 
-# Extract .tgz files (contracted .tar.gz) to temporary directory
-if [[ "$1" == *.tgz ]]; then
-    tar -xzf "$1" -C "$temp_dir"
-else
-    # Not a tgz file, ignore
-    echo "no .tgz files in $1, ignoring.."
-fi
-
 # Gunzip files only if .gz files exist
-if [ -z "$(find "$1" -type f -iname '*.gz' -print -quit)" ]; then
+if [ -z "$(find "${temp_dir}" -type f -iname '*.gz' -print -quit)" ]; then
     gunzip "$temp_dir"/*.gz
 else
     echo "no .gz files in $temp_dir, ignoring.."
