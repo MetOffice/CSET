@@ -1,19 +1,19 @@
-"""
-Unit tests - some formed from GitHub copilot for attribution purposes
-"""
+"""Unit tests."""
 # conftest.py or in test module
 
-import numpy as np
+from datetime import datetime
+
 import iris
+import numpy as np
+import process_reanalysis as proc_reanalysis
+import pytest
 from iris.coords import DimCoord
 from iris.cube import Cube
-import pytest
-from datetime import datetime
 
 
 def test_single_cycle():
     """Assert single datetime returned if one initialisation."""
-    result = _identify_number_of_cycles_required(
+    result = proc_reanalysis._identify_number_of_cycles_required(
         "20240101T0000Z",
         "20240101T0000Z",
         6,
@@ -24,7 +24,7 @@ def test_single_cycle():
 
 def test_multiple_cycles():
     """Test handling of multiple cycles identified."""
-    result = _identify_number_of_cycles_required(
+    result = proc_reanalysis._identify_number_of_cycles_required(
         "20240101T0000Z",
         "20240101T1200Z",
         6,
@@ -39,7 +39,7 @@ def test_multiple_cycles():
 
 def test_non_divisible_interval():
     """Check end point is not exceeded."""
-    result = _identify_number_of_cycles_required(
+    result = proc_reanalysis._identify_number_of_cycles_required(
         "20240101T0000Z",
         "20240101T1000Z",
         6,
@@ -54,7 +54,7 @@ def test_non_divisible_interval():
 def test_invalid_date_format():
     """Raise problem with input."""
     with pytest.raises(ValueError):
-        _identify_number_of_cycles_required(
+        proc_reanalysis._identify_number_of_cycles_required(
             "2024-01-01",
             "20240101T1200Z",
             6,
@@ -66,7 +66,6 @@ def make_cube(
     units="hours since 2024-01-01 00:00:00",
 ):
     """Create a minimal synthetic reanalysis cube."""
-
     time = DimCoord(
         np.arange(5),
         standard_name="time",
@@ -95,7 +94,7 @@ def test_forecast_period_created(tmp_path):
     """Check forecast period constructed correctly."""
     cube = make_cube()
 
-    _create_forecasts(
+    proc_reanalysis._create_forecasts(
         iris.cube.CubeList([cube]),
         [datetime(2024, 1, 1, 0)],
         forecastlength=4,
@@ -116,22 +115,18 @@ def test_forecast_period_created(tmp_path):
 
 def test_seconds_converted_to_hours(tmp_path):
     """Check conversion from seconds to hours in forecast period."""
-    cube = make_cube(
-        time_units="seconds since 2024-01-01 00:00:00"
-    )
+    cube = make_cube(time_units="seconds since 2024-01-01 00:00:00")
 
     cube.coord("time").points = [0, 3600, 7200]
 
-    _create_forecasts(
+    proc_reanalysis._create_forecasts(
         iris.cube.CubeList([cube]),
         [datetime(2024, 1, 1)],
         forecastlength=2,
         outpath=str(tmp_path),
     )
 
-    cubes = iris.load(
-        str(tmp_path / "reanalysis_20240101T0000Z.nc")
-    )
+    cubes = iris.load(str(tmp_path / "reanalysis_20240101T0000Z.nc"))
 
     fp = cubes[0].coord("forecast_period")
 
@@ -140,22 +135,18 @@ def test_seconds_converted_to_hours(tmp_path):
 
 def test_minutes_converted_to_hours(tmp_path):
     """Check conversion from minutes to hours in forecast period."""
-    cube = make_cube(
-        time_units="minutes since 2024-01-01 00:00:00"
-    )
+    cube = make_cube(time_units="minutes since 2024-01-01 00:00:00")
 
     cube.coord("time").points = [0, 60, 120]
 
-    _create_forecasts(
+    proc_reanalysis._create_forecasts(
         iris.cube.CubeList([cube]),
         [datetime(2024, 1, 1)],
         forecastlength=2,
         outpath=str(tmp_path),
     )
 
-    cubes = iris.load(
-        str(tmp_path / "reanalysis_20240101T0000Z.nc")
-    )
+    cubes = iris.load(str(tmp_path / "reanalysis_20240101T0000Z.nc"))
 
     fp = cubes[0].coord("forecast_period")
 
@@ -164,12 +155,10 @@ def test_minutes_converted_to_hours(tmp_path):
 
 def test_unknown_time_units_raise(tmp_path):
     """Check that error raised if time units unhandled."""
-    cube = make_cube(
-        time_units="foobars since 2024-01-01 00:00:00"
-    )
+    cube = make_cube(time_units="foobars since 2024-01-01 00:00:00")
 
     with pytest.raises(ValueError, match="Unhandled time units"):
-        _create_forecasts(
+        proc_reanalysis._create_forecasts(
             iris.cube.CubeList([cube]),
             [datetime(2024, 1, 1)],
             forecastlength=1,
@@ -183,16 +172,14 @@ def test_forecast_reference_time_created(tmp_path):
 
     cube = make_cube()
 
-    _create_forecasts(
+    proc_reanalysis.create_forecasts(
         iris.cube.CubeList([cube]),
         [init_time],
         forecastlength=4,
         outpath=str(tmp_path),
     )
 
-    cubes = iris.load(
-        str(tmp_path / "reanalysis_20240101T0000Z.nc")
-    )
+    cubes = iris.load(str(tmp_path / "reanalysis_20240101T0000Z.nc"))
 
     frt = cubes[0].coord("forecast_reference_time")
 
@@ -208,16 +195,14 @@ def test_forecast_attributes_removed(tmp_path):
     cube.attributes["source"] = "ERA5"
     cube.attributes["um_version"] = "13.0"
 
-    _create_forecasts(
+    proc_reanalysis._create_forecasts(
         iris.cube.CubeList([cube]),
         [datetime(2024, 1, 1)],
         forecastlength=4,
         outpath=str(tmp_path),
     )
 
-    cubes = iris.load(
-        str(tmp_path / "reanalysis_20240101T0000Z.nc")
-    )
+    cubes = iris.load(str(tmp_path / "reanalysis_20240101T0000Z.nc"))
 
     attrs = cubes[0].attributes
 
@@ -229,16 +214,14 @@ def test_cube_skipped_if_insufficient_data(tmp_path):
     """Check that nothing returned if analysis doesn't overlap with target forecast."""
     cube = make_cube()
 
-    _create_forecasts(
+    proc_reanalysis._create_forecasts(
         iris.cube.CubeList([cube]),
         [datetime(2024, 1, 1)],
         forecastlength=10,
         outpath=str(tmp_path),
     )
 
-    cubes = iris.load(
-        str(tmp_path / "reanalysis_20240101T0000Z.nc")
-    )
+    cubes = iris.load(str(tmp_path / "reanalysis_20240101T0000Z.nc"))
 
     assert len(cubes) == 0
 
@@ -248,15 +231,13 @@ def test_multiple_cubes_processed(tmp_path):
     cube1 = make_cube("air_temperature")
     cube2 = make_cube("air_pressure")
 
-    _create_forecasts(
+    proc_reanalysis._create_forecasts(
         iris.cube.CubeList([cube1, cube2]),
         [datetime(2024, 1, 1)],
         forecastlength=4,
         outpath=str(tmp_path),
     )
 
-    cubes = iris.load(
-        str(tmp_path / "reanalysis_20240101T0000Z.nc")
-    )
+    cubes = iris.load(str(tmp_path / "reanalysis_20240101T0000Z.nc"))
 
     assert len(cubes) == 2
