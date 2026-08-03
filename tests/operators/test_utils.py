@@ -468,6 +468,8 @@ def test_is_time_aux_coord_only_forecast_reference_time(cardington_cube):
     cube.add_aux_coord(forecast_reference_time)
 
     assert not operator_utils.is_time_aux_coord(cube)
+
+
 def test_check_single_cube():
     """Conversion to a single cube, and rejection where not possible."""
     cube = iris.cube.Cube([0.0])
