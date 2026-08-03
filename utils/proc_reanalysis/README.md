@@ -10,9 +10,9 @@ The primary motivation for this tool is to be able to analyse reanalysis alongsi
 - `forecast_period`
 - `time`
 
-Reanalysis datasets typically only contain valid time `time`, and are a series of files where the `forecast_reference_time` changes every 6 hours, and the `forecast_period` is always zero.
+Reanalysis datasets typically only contain valid time `time`, and is a series of files where the `forecast_reference_time` changes every 6 hours, and the `forecast_period` is zero.
 
-This script resolves this issue by transforming reanalysis data into an effective forecast representation. Rather than treating reanalysis as a special data source in CSET, the transformed output can be ingested directly into the CSET workflow. This allows reanalysis to be treated as another "model" within verification systems such as CSET.
+This script resolves this issue by transforming reanalysis data into an effective forecast representation. Rather than treating reanalysis as a special data source in CSET, the transformed output can be ingested directly into the CSET workflow. This allows reanalysis to be treated as another "model" within CSET.
 
 The script currently supports datasets that can be loaded by Iris and has primarily been developed and tested using:
 
@@ -22,7 +22,7 @@ The script currently supports datasets that can be loaded by Iris and has primar
 Other model analyses may work, as only the time dimensions are manipulated, but this has not been tested.
 No scientific changes are made to the meteorological fields themselves.
 
-For each requested forecast cycle, for each variable the script:
+For each requested forecast cycle, for each variable found in the reanalysis the script:
 1. Extracts the required period of time from reanalysis data.
 2. Treats the start of that extraction as a forecast initialisation.
 3. Generates a forecast period coordinate.
@@ -31,11 +31,11 @@ For each requested forecast cycle, for each variable the script:
 6. Saves the result as a forecast-style NetCDF file.
 
 > [!TIP]
-> This script does not download reanalysis data - a user must fetch this first from archive.
+> This script does not download reanalysis data - a user must fetch this first from archive/api.
 
 ## Usage
 
-The python script requires the Iris package to be present within the python install.
+The python script requires the Iris package to be installed and available to python.
 
 Run it with:
 
@@ -51,7 +51,7 @@ python process_reanalysis.py \
 
 Required Arguments:
 
-- `--filepath`: Path to the input reanalysis data. This can be a single file or wildcard expression understood by Iris.
+- `--filepath`: Path to the input reanalysis data. This can be a single file or wildcard expression understood by Iris. If a wildcard is used, then quote the input to prevent the shell expanding the filelist as arguments to python.
 - `--cyclestart`: First forecast initialisation time that you want the reanalysis to simulate, in format <year><month><day>T<hour><minute>Z.
 - `--cycleend`: Final forecast initialisation time, inclusive, that you want the reanalysis to simulate, in format <year><month><day>T<hour><minute>Z.
 - `--cyclefreq`: Frequency between forecast cycles, in hours, as an integer.
