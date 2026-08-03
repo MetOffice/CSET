@@ -565,7 +565,7 @@ def guess_bounds(cube):
         try:
             _ = iris.util.regular_step(coord)
         except ValueError as e:
-            logging.warning(
+            logger.warning(
                 "Cannot guess bounds for a variable resolution (non-regular) grid: %s",
                 e,
             )
@@ -609,7 +609,7 @@ def identify_unique_times(cubes, time_coord_name):
         times.extend(time_coord.points)
 
     # Construct a list of unique times and store them in a new time coordinate
-    times = sorted(list(set(times)))
+    times = sorted(set(times))
     time_coord = iris.coords.DimCoord(times, units=time_unit)
     time_coord.rename(time_coord_name)
 
@@ -635,14 +635,15 @@ def remove_duplicates(cubelist):
         cube_i = cubelist[i]
         for j in range(i + 1, len(cubelist)):
             cube_j = cubelist[j]
-            if cube_i == cube_j:
-                if j not in indices_to_remove:
-                    indices_to_remove.append(j)
+            if cube_i == cube_j and j not in indices_to_remove:
+                indices_to_remove.append(j)
     # Only keep unique cubes
     cubelist = iris.cube.CubeList(
         [cube for index, cube in enumerate(cubelist) if index not in indices_to_remove]
     )
     return cubelist
+
+
 def check_single_cube(cube: iris.cube.Cube | iris.cube.CubeList) -> iris.cube.Cube:
     """Ensure a single cube is given.
 
