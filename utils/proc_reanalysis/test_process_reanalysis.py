@@ -1,5 +1,4 @@
-"""Unit tests."""
-# conftest.py or in test module
+"""Unit tests for process_reanalysis.py."""
 
 from datetime import datetime
 
@@ -115,9 +114,9 @@ def test_forecast_period_created(tmp_path):
 
 def test_seconds_converted_to_hours(tmp_path):
     """Check conversion from seconds to hours in forecast period."""
-    cube = make_cube(time_units="seconds since 2024-01-01 00:00:00")
+    cube = make_cube(units="seconds since 2024-01-01 00:00:00")
 
-    cube.coord("time").points = [0, 3600, 7200]
+    cube.coord("time").points = [0, 3600, 7200, 10800, 14400]
 
     proc_reanalysis._create_forecasts(
         iris.cube.CubeList([cube]),
@@ -135,9 +134,9 @@ def test_seconds_converted_to_hours(tmp_path):
 
 def test_minutes_converted_to_hours(tmp_path):
     """Check conversion from minutes to hours in forecast period."""
-    cube = make_cube(time_units="minutes since 2024-01-01 00:00:00")
+    cube = make_cube(units="minutes since 2024-01-01 00:00:00")
 
-    cube.coord("time").points = [0, 60, 120]
+    cube.coord("time").points = [0, 60, 120, 180, 240]
 
     proc_reanalysis._create_forecasts(
         iris.cube.CubeList([cube]),
@@ -155,7 +154,7 @@ def test_minutes_converted_to_hours(tmp_path):
 
 def test_unknown_time_units_raise(tmp_path):
     """Check that error raised if time units unhandled."""
-    cube = make_cube(time_units="foobars since 2024-01-01 00:00:00")
+    cube = make_cube(units="days since 2024-01-01 00:00:00")
 
     with pytest.raises(ValueError, match="Unhandled time units"):
         proc_reanalysis._create_forecasts(
@@ -172,7 +171,7 @@ def test_forecast_reference_time_created(tmp_path):
 
     cube = make_cube()
 
-    proc_reanalysis.create_forecasts(
+    proc_reanalysis._create_forecasts(
         iris.cube.CubeList([cube]),
         [init_time],
         forecastlength=4,
@@ -185,7 +184,7 @@ def test_forecast_reference_time_created(tmp_path):
 
     recovered = frt.units.num2date(frt.points[0])
 
-    assert recovered.replace(tzinfo=None) == init_time
+    assert str(recovered) == "2024-01-01 00:00:00"
 
 
 def test_forecast_attributes_removed(tmp_path):
@@ -211,19 +210,16 @@ def test_forecast_attributes_removed(tmp_path):
 
 
 def test_cube_skipped_if_insufficient_data(tmp_path):
-    """Check that nothing returned if analysis doesn't overlap with target forecast."""
+    """Check that nothing save if analysis doesn't overlap with target forecast."""
     cube = make_cube()
 
-    proc_reanalysis._create_forecasts(
-        iris.cube.CubeList([cube]),
-        [datetime(2024, 1, 1)],
-        forecastlength=10,
-        outpath=str(tmp_path),
-    )
-
-    cubes = iris.load(str(tmp_path / "reanalysis_20240101T0000Z.nc"))
-
-    assert len(cubes) == 0
+    with pytest.raises(ValueError, match="No suitable cubes found for saving!"):
+        proc_reanalysis._create_forecasts(
+            iris.cube.CubeList([cube]),
+            [datetime(2024, 1, 1)],
+            forecastlength=10,
+            outpath=str(tmp_path),
+        )
 
 
 def test_multiple_cubes_processed(tmp_path):
