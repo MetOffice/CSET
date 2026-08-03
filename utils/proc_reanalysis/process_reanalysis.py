@@ -17,6 +17,42 @@ import argparse
 from datetime import datetime, timedelta
 
 
+def _identify_number_of_cycles_required(
+    cyclestart: str, cycleend: str, cyclefreq: str
+) -> list:
+    """Generate forecast initialisation datetimes between two cycle bounds.
+
+    Parameters
+    ----------
+    cyclestart : str
+        First forecast cycle in YYYYMMDDTHHMMZ format.
+    cycleend : str
+        Last forecast cycle in YYYYMMDDTHHMMZ format.
+    cyclefreq : int
+        Frequency between forecast cycles in hours.
+
+    Returns
+    -------
+    forecast_initialisations: list
+        Forecast initialisation datetimes from cyclestart to cycleend,
+        inclusive, separated by cyclefreq hours.
+    """
+    # Identify the start and end times, and create datetime objects for these
+    start_dt = datetime.strptime(cyclestart, "%Y%m%dT%H%MZ")
+    end_dt = datetime.strptime(cycleend, "%Y%m%dT%H%MZ")
+
+    # To store initialisation times
+    forecast_initialisations = []
+    current = start_dt
+
+    # Iterate over all initiations within the bounds, using the cyclefreq to determine interval.
+    while current <= end_dt:
+        forecast_initialisations.append(current)
+        current += timedelta(hours=cyclefreq)
+
+    return forecast_initialisations
+
+
 def _create_forecasts(
     reanalysis: iris.cube.CubeList,
     forecast_initialisations: list,
@@ -167,42 +203,6 @@ def _create_forecasts(
             raise ValueError("No suitable cubes found for saving!")
 
 
-def _identify_number_of_cycles_required(
-    cyclestart: str, cycleend: str, cyclefreq: str
-) -> list:
-    """Generate forecast initialisation datetimes between two cycle bounds.
-
-    Parameters
-    ----------
-    cyclestart : str
-        First forecast cycle in YYYYMMDDTHHMMZ format.
-    cycleend : str
-        Last forecast cycle in YYYYMMDDTHHMMZ format.
-    cyclefreq : int
-        Frequency between forecast cycles in hours.
-
-    Returns
-    -------
-    forecast_initialisations: list
-        Forecast initialisation datetimes from cyclestart to cycleend,
-        inclusive, separated by cyclefreq hours.
-    """
-    # Identify the start and end times, and create datetime objects for these
-    start_dt = datetime.strptime(cyclestart, "%Y%m%dT%H%MZ")
-    end_dt = datetime.strptime(cycleend, "%Y%m%dT%H%MZ")
-
-    # To store initialisation times
-    forecast_initialisations = []
-    current = start_dt
-
-    # Iterate over all initiations within the bounds, using the cyclefreq to determine interval.
-    while current <= end_dt:
-        forecast_initialisations.append(current)
-        current += timedelta(hours=cyclefreq)
-
-    return forecast_initialisations
-
-
 def main() -> None:
     """Generate forecast-like datasets from reanalysis data.
 
@@ -210,7 +210,7 @@ def main() -> None:
     process the input reanalysis data, and write the resulting forecast
     files to disk.
     """
-    parser = argparse.ArgumentParser(description="Process forecast data.")
+    parser = argparse.ArgumentParser(description="Process arguments.")
 
     parser.add_argument("--filepath", required=True, help="Path to file(s)")
     parser.add_argument(
