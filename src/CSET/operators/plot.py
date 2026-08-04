@@ -2258,6 +2258,7 @@ def plot_line_series(
                     # Plot postage stamps
                     plotting_func = _plot_and_save_postage_stamp_power_spectrum_series
             cube_iterables = cubes[0].slices_over(sequence_coordinate)
+            nplot = np.size(cubes[0].coord(sequence_coordinate).points)
         else:
             all_points = sorted(
                 set(
@@ -2282,8 +2283,7 @@ def plot_line_series(
                 )
                 for point in all_points
             ]
-
-        nplot = np.size(cube.coord(sequence_coordinate).points)
+            nplot = len(all_points)
 
         # Create a plot for each value of the sequence coordinate. Allowing for
         # multiple cubes in a CubeList to be plotted in the same plot for similar
