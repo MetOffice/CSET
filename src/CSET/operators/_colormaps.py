@@ -95,7 +95,7 @@ def get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
         return {mname: colorbar[mname] for mname in model_names}
 
     is_reference = lambda name: (
-        "OBS" in name.upper() or name.upper() == "ERA5" or name.upper() == "UMANALYSIS"
+        "OBS" in name.upper() or name.upper() == "ERA5" or name.upper() == "UM_ANALYSIS"
     )
 
     ref_models = [name for name in model_names if is_reference(name)]
@@ -110,7 +110,7 @@ def get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
         for name in reversed(ref_models):
             if "OBS" in name.upper():
                 colors.insert(0, mcolors.to_rgb("dimgray"))
-            else:  # ERA5 or UMANALYSIS
+            else:  # ERA5 or UM_ANALYSIS
                 colors.insert(0, mcolors.to_rgb("black"))
     else:
         colors = DEFAULT_DISCRETE_COLORS
