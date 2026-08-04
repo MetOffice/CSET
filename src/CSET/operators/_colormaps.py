@@ -94,9 +94,10 @@ def get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
     if use_user_colors:
         return {mname: colorbar[mname] for mname in model_names}
 
-    is_reference = lambda name: (
-        "OBS" in name.upper() or name.upper() == "ERA5" or name.upper() == "UM_ANALYSIS"
-    )
+    # Supported analysis names
+    ANALYSIS_NAMES = {"ERA5", "UM_ANALYSIS"}
+
+    is_reference = lambda name: "OBS" in name.upper() or name.upper() in ANALYSIS_NAMES
 
     ref_models = [name for name in model_names if is_reference(name)]
 
