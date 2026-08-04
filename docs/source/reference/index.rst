@@ -1,5 +1,5 @@
-Technical Reference
-===================
+Reference
+=========
 
 This section contains comprehensive descriptions of CSET, and its various
 components.

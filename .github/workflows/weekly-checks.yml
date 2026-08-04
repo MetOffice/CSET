@@ -8,6 +8,11 @@ on:
 # Minimise default GITHUB_TOKEN permissions.
 permissions: {}
 
+defaults:
+  run:
+    # Use a login shell to pickup conda/micromamba initialisation.
+    shell: bash -leo pipefail {0}
+
 jobs:
   check-documentation-hyperlinks:
     if: "github.repository == 'MetOffice/CSET'"  # Skip on forks.
@@ -19,28 +24,24 @@ jobs:
       contents: read
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
 
       - name: Setup conda environment
-        uses: mamba-org/setup-micromamba@d7c9bd84e824b79d2af72a2d4196c7f4300d3476
+        uses: mamba-org/setup-micromamba@ce51e99f4bb8a82ab7158c4dc59ef4634c59c4f9
         with:
           environment-name: cset-dev
           environment-file: requirements/locks/latest
           cache-environment: true
-          init-shell: "none"
 
       - name: Install local package
-        shell: micromamba-shell {0}
         run: pip install --no-deps .
 
       - name: Build documentation with Sphinx
-        shell: micromamba-shell {0}
         run: sphinx-build -b html --color "docs/source" "docs/build/html"
 
       - name: Check for broken hyperlinks
-        shell: micromamba-shell {0}
         run: sphinx-build -b linkcheck --color -W --keep-going "docs/source" "docs/build/linkcheck"
 
   full-tests:
@@ -55,17 +56,16 @@ jobs:
         py-ver: ["py312", "py313", "py314"]
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
 
       - name: Setup conda environment
-        uses: mamba-org/setup-micromamba@d7c9bd84e824b79d2af72a2d4196c7f4300d3476
+        uses: mamba-org/setup-micromamba@ce51e99f4bb8a82ab7158c4dc59ef4634c59c4f9
         with:
           environment-name: cset-dev
           environment-file: requirements/locks/${{ matrix.py-ver }}-lock-linux-64.txt
           cache-environment: true
-          init-shell: "none"
 
       - name: Cache downloaded cartopy shapefiles
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
@@ -74,11 +74,14 @@ jobs:
           path: ~/.local/share/cartopy
 
       - name: Install local package
-        shell: micromamba-shell {0}
         run: pip install --no-deps .
 
+      - name: Setup rose and cylc
+        uses: cylc/setup-cylc@813acd1873cef608f14e354cec57e2de5a7eb3bf
+        with:
+          cylc_rose: true
+
       - name: Run full test suite
-        shell: micromamba-shell {0}
         env:
           PY_COLORS: "1"
         run: make test-full

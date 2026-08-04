@@ -28,21 +28,19 @@ from playwright.sync_api import Page, expect
 def webserver():
     """Run a simple webserver serving static files. Its URL is returned."""
     # Prepare the static files in a temporary directory.
-    tmp_path = Path(tempfile.mkdtemp())
+    web_dir = Path(tempfile.mkdtemp())
     shutil.copytree(
         "src/CSET/cset_workflow/app/finish_website/file/html",
-        tmp_path,
+        web_dir,
         dirs_exist_ok=True,
     )
-    plot_dir = tmp_path / "plots-CACHEBUSTER"
-    plot_dir.mkdir(exist_ok=True)
-    shutil.copy("tests/test_data/index.jsonl", plot_dir)
+    shutil.copy("tests/test_data/index.jsonl", web_dir)
 
     class HTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
-        """Serve files from the temporary directory."""
+        """Serve files from the web directory."""
 
         def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs, directory=tmp_path)
+            super().__init__(*args, **kwargs, directory=web_dir)
 
     # Try ports until we find one, up to 100 tries.
     port = 8000

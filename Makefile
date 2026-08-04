@@ -30,6 +30,7 @@ conda: prepare-lockfiles
 # Prevent pip from accessing the network; we have everything in our conda env.
 setup: conda .git/hooks/pre-commit ## Setup development environment.
 	${CONDA_EXE} run -n cset-dev pip install --no-deps --no-index --no-build-isolation --editable .
+	${CONDA_EXE} run -n cset-dev cset install-restricted-files src/CSET/cset_workflow || true
 	@echo "Run '${CONDA_EXE} activate cset-dev' to use conda environment."
 
 docs: ## Build documentation.
@@ -42,7 +43,10 @@ test: pre-commit ## Run linting and unit tests.
 	pytest -vv -m 'not slow'
 
 test-fast: ## Run fast local tests only.
-	pytest -vv --cov --cov-append --cov-config=pyproject.toml --numprocesses logical -m 'not slow and not network'
+	pytest -vv --cov --cov-append --cov-config=pyproject.toml --numprocesses logical -m 'not slow and not network and not cylc'
+
+test-workflow: ## Run workflow tests that require cylc.
+	pytest -vv -m 'cylc'
 
 test-full: pre-commit ## Run all tests, including slow or network reliant.
 	# Install headless chromium for playwright browser tests.
@@ -54,4 +58,4 @@ update-dev-deps:  ## Update pre-commit hooks and conda lock files for the develo
 
 # Mark targets as 'phony' to indicate they don't actually produce a file with
 # the same name as their target. Basically for actions rather than files.
-.PHONY: help setup docs test test-fast test-full prepare-lockfiles conda update-dev-deps
+.PHONY: help setup docs test test-fast test-workflow test-full prepare-lockfiles conda update-dev-deps
