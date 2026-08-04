@@ -230,7 +230,7 @@ def _load_model(
     input_files = _check_input_files(paths)
     # If unset, a constraint of None lets everything be loaded.
     logging.debug("Constraint: %s", constraint)
-
+    cubes = iris.load(input_files, constraint, callback=_loading_callback)
     # Make the UM's winds consistent with LFRic.
     cubes = _fix_um_winds(cubes)
 
