@@ -208,7 +208,7 @@ def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None =
         A CubeList containing exactly two cubes: a base and an "other" model,
         this can be an analysis and the model.
     preserved_coordinates: list[str] | str | None, default is None.
-        The coordinates that you wish to preserve in the calculaiton of the
+        The coordinates (or xarray dimension names) that you wish to preserve in the calculaiton of the
         RMSE. For example if you want a map of each time you can preserve
         ["time","grid_latitude", "grid_longitude"] or if you want a time series
         you can preserve ["time"], if you want to collapse to a single value
