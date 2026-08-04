@@ -30,9 +30,6 @@ import iris.coords
 import iris.cube
 import iris.exceptions
 import iris.util
-from iris.exceptions import TranslationError
-from iris_grib.message import GribMessage
-from iris_grib import load_pairs_from_fields
 import numpy as np
 from iris.analysis.cartography import rotate_pole, rotate_winds
 
@@ -234,19 +231,6 @@ def _load_model(
     # If unset, a constraint of None lets everything be loaded.
     logging.debug("Constraint: %s", constraint)
 
-    cubes = iris.load(input_files)
-
-
-    for cube in cubes:
-        _loading_callback(cube, None, None)
-
-    # Extract required cubes based on constraint
-    cubes = cubes.extract(constraint)
-
-    print(cubes[0])
-    print(cubes[1])
-    quit()
-
     # Make the UM's winds consistent with LFRic.
     cubes = _fix_um_winds(cubes)
 
@@ -406,7 +390,6 @@ def _cutout_cubes(
 def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.Cube:
     """Compose together the needed callbacks into a single function."""
     # Most callbacks operate in-place, but save the cube when returned!
-    _normalise_ML_grib_varname(cube)
     _realization_callback(cube)
     _um_normalise_callback(cube)
     _lfric_normalise_callback(cube)
@@ -731,7 +714,7 @@ def _fix_pressure_coord_callback(cube: iris.cube.Cube):
     Additionally, set the units of pressure to be hPa to be consistent with the UM,
     and approach the coordinates in a unified way.
     """
-    for coord in cube.coords():
+    for coord in cube.dim_coords:
         if coord.name() in ["pressure_level", "pressure_levels"]:
             coord.rename("pressure")
 
@@ -1112,32 +1095,3 @@ def _normalise_ML_varname(cube: iris.cube.Cube):
             cube.long_name = (
                 "vapour_specific_humidity_at_pressure_levels_for_climate_averaging"
             )
-
-
-def _normalise_ML_grib_varname(cube: iris.cube.Cube):
-    """Fix grib metadata varname and tidy attributes."""
-
-    # Lookup table for standard GRIB names
-    GRIB_LOOKUP = {
-        "GRIB2:d000c003n000": {
-            "long_name": "air_pressure_at_mean_sea_level",
-            "standard_name": "air_pressure_at_mean_sea_level",
-        },
-    }
-
-    grib_param = cube.attributes.get("GRIB_PARAM")
-    if grib_param is not None:
-        grib_param = str(grib_param)
-        if grib_param in GRIB_LOOKUP:
-            meta = GRIB_LOOKUP.get(grib_param)
-
-            cube.rename(meta["long_name"])
-            cube.standard_name = meta.get("standard_name")
-            cube.long_name = meta.get("standard_name")
-            logging.info('RENAMED')
-            logging.info(cube)
-            
-
-        cube.attributes.pop("GRIB_PARAM", None)
-        return cube
-
