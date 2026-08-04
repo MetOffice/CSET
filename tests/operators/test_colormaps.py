@@ -124,6 +124,31 @@ def test_get_model_colors_map_user_obs_cubelist_reorder(cube, tmp_working_dir):
     }
 
 
+def test_get_model_colors_map_user_reanalysis_cubelist(cube, tmp_working_dir):
+    """Generate model_colors_map including reanalysis."""
+    cube1 = cube.copy()
+    cube1.attributes["model_name"] = "model_1"
+    cube2 = cube.copy()
+    cube2.attributes["model_name"] = "ERA5"
+    model_colors_map = _colormaps.get_model_colors_map([cube1, cube2])
+
+    # Ensure ERA5 reordered as first model, and black (RBG 0's).
+    assert model_colors_map == {
+        "ERA5": (0, 0, 0),
+        "model_1": (0.12156862745098039, 0.4666666666666667, 0.7058823529411765),
+    }
+
+    cube2 = cube.copy()
+    cube2.attributes["model_name"] = "UM_ANALYSIS"
+    model_colors_map = _colormaps.get_model_colors_map([cube1, cube2])
+
+    # Ensure UM Analysis reordered as first model, and black (RBG 0's).
+    assert model_colors_map == {
+        "UM_ANALYSIS": (0, 0, 0),
+        "model_1": (0.12156862745098039, 0.4666666666666667, 0.7058823529411765),
+    }
+
+
 def test_colorbar_map_levels(cube, tmp_working_dir):
     """Colorbar definition is found for cube."""
     cmap, levels, norm = _colormaps.colorbar_map_levels(cube)
