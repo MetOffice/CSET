@@ -139,12 +139,6 @@ def load(conf: Config):
                 aggregation=False,
             )
 
-    if conf.SCORES_RMSE_VERTICAL_PROFILES:
-        # List of aggregation modes to generate recipes for
-        agg_modes = [("pressure", ["pressure"])]
-        if conf.SCORES_RMSE_VERTICAL_PROFILES_TIMESERIES:
-            agg_modes.append(("timeseries", ["time", "pressure"]))
-
     # including AGGREGATION_MODE in the variables dictionary to allow for clearer labeling of plots.
     if conf.SCORES_RMSE_VERTICAL_PROFILES:
         for model, field in itertools.product(models[1:], conf.PRESSURE_LEVEL_FIELDS):
