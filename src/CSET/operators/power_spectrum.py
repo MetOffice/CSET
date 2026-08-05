@@ -124,6 +124,8 @@ def _power_spectrum(cube: iris.cube.Cube) -> iris.cube.Cube:
     time_coord = cube.coord("time")
     time_points = time_coord.units.num2date(time_coord.points)
 
+    print("CUBE in _power_spectrum ", cube)
+
     if cube.ndim == 2:
         cube_3d = cube.data[np.newaxis, :, :]
         logger.debug("Adding in new axis for a 2 dimensional cube.")
