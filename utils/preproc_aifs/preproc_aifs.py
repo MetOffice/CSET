@@ -12,7 +12,21 @@ from iris.cube import CubeList
 
 
 def fix_name_and_units(cube):
-    """Fix AIFS name and units, where relevant."""
+    """Fix AIFS name and units, where relevant.
+    
+    Parameters
+    ----------
+    cube: iris.Cube
+        An iris cube to have its metadata modified.
+
+    Returns
+    -------
+    cube: iris.Cube
+        An iris cube that has updated names and units that CSET can understand.
+    """
+
+    # Lookup dictionary for AIFS names to be convered to LFRic long names, and unit change,
+    # where necessary.
     aifs_to_lfric_dict = {
         "2 metre dewpoint temperature": ["dew_point_temperature_at_screen_level", None],
         "Skin temperature": ["grid_surface_temperature", None],
@@ -44,17 +58,21 @@ def fix_name_and_units(cube):
         ],
     }
 
+    # Get cube long name.
     long_name = cube.long_name
 
+    # If cube long name in dict, then get new name/units.
     if long_name in aifs_to_lfric_dict:
         new_name, new_units = aifs_to_lfric_dict[long_name]
 
-        # Update long_name
+        # Update long_name and cube name (ignore standard_name as this is not used).
         cube.long_name = new_name
         cube.rename(new_name)
 
-        # Convert units if required
+        # Convert units if required.
         if new_units is not None:
+
+            # Exception for geopotential height, as iris cannot directly convert.
             if str(cube.units) == "m**2 s**-2" and str(new_units) == "m":
                 cube = cube.copy(data=cube.lazy_data() / 9.80665)
                 cube.units = "m"
@@ -66,9 +84,24 @@ def fix_name_and_units(cube):
 
 def fix_ensemble_cubes(cubes):
     """
-    Convert control and perturbed ensemble cubes into a common
-    realization dimension and concatenate into a single cube per variable.
+    Fix ensemble dimension in cube list.
+
+    The ensemble dimension is present in some cubes, as an auxilliary coordinate, where the
+    control members do not have this dimension. This function ensures each cube has a
+    realization coordinate, where the control member is member 0, so the cubes can be concatenated.
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList()
+        A cubelist containing all cubes loaded from the AIFS ensemble.
+
+    Returns
+    -------
+    processed: iris.cube.CubeList()
+        A cubelist containing the corrected cubes.
+
     """
+    # Cubelist to store corrected cubes.
     processed = CubeList()
 
     for cube in cubes:
@@ -77,9 +110,11 @@ def fix_ensemble_cubes(cubes):
         # Remove attributes that prevent concatenation
         cube.attributes.pop("history", None)
 
+        # Correction for cubes that contain a pressure_level coord that is not DimCoord.
         if cube.coords("pressure_level"):
             pressure_coord = cube.coord("pressure_level")
 
+            # If a pressure_level coordinate does not exist as a DimCoord, create it, ensure ordered monotonically.
             if not isinstance(pressure_coord, DimCoord):
                 pressure_dim = cube.coord_dims(pressure_coord)[0]
 
@@ -105,12 +140,13 @@ def fix_ensemble_cubes(cubes):
                     pressure_dim,
                 )
 
-        # Perturbed members
+        # Perturbed members have an ensemble_member coord.
         if cube.coords("ensemble_member"):
             ensemble_coord = cube.coord("ensemble_member")
 
             cube.remove_coord("ensemble_member")
 
+            # Hard coded, as AIFS supported has 50 perturbed members.
             realization_coord = DimCoord(
                 np.arange(1, 51),
                 standard_name="realization",
@@ -125,13 +161,14 @@ def fix_ensemble_cubes(cubes):
             # Add a new dimension of length 1
             cube = iris.util.new_axis(cube)
 
+            # Create new realization coordinate
             realization_coord = DimCoord(
                 [0],
                 standard_name="realization",
                 units="1",
             )
 
-            # new_axis inserts the dimension at position 0
+            # new_axis inserts the dimension at position 0 as standard.
             cube.add_dim_coord(realization_coord, 0)
 
             # Always move realization after time
@@ -141,12 +178,25 @@ def fix_ensemble_cubes(cubes):
 
         processed.append(cube)
 
+    # Combine control and perturbed cubes now that they share a common realization axis.
     processed = processed.concatenate()
 
     return processed
 
 
 def fix_time_and_meta(cubes):
+    """
+    Fix time coordinates and adjust metadata such as names and units.
+
+    Make the data CSET compliant by creating a forecast_period dimension,
+    and adding valid time as a time auxilliary coordinate, and a forecast_reference_time
+    as a scalar coordinate.
+
+    Parameters
+    ----------
+
+    
+    """
 
     done_cubes = iris.cube.CubeList()
 
