@@ -1115,6 +1115,18 @@ def test_scatter_plot_too_many_y_dimensions(
         plot.scatter_plot(cube_x, cube_y)
 
 
+def test_save_close_figure(tmp_working_dir, caplog):
+    """Test saving and closing figure file."""
+    fig = mpl.pyplot.figure()
+    message_match = False
+    with caplog.at_level(logging.INFO):
+        plot._save_close_figure(fig, "my test", "test_filename.png")
+        for _, _, message in caplog.record_tuples:
+            if message == "Saved my test plot to test_filename.png":
+                message_match = True
+        assert message_match
+
+
 def test_get_plot_resolution(tmp_working_dir):
     """Test getting the plot resolution."""
     with open("meta.json", "wt", encoding="UTF-8") as fp:
