@@ -132,11 +132,7 @@ def _make_plot_html_page(plots: list):
         fp.write(html)
 
 
-def _save_close_figure(
-    figure,
-    plot_type: str,
-    filename: str,
-):
+def _save_close_figure(figure, plot_type: str, filename: str):
     """Save generated plot figure file and close figure.
 
     If running documentation gallery generation, avoid saving to file.
