@@ -1,7 +1,7 @@
 :orphan:
 
-CSET Gallery
-============
+Gallery
+=======
 
 This gallery demonstrates example CSET functionality.
 
