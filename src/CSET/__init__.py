@@ -22,6 +22,7 @@ from importlib.metadata import version
 from pathlib import Path
 
 from CSET._common import ArgumentError
+from CSET._common import sample_data_path as sample_data_path
 
 logger = logging.getLogger(__name__)
 

@@ -51,7 +51,7 @@ Example python code
 -------------------
 """
 
-from CSET._common import sample_data_path
+from CSET import sample_data_path
 from CSET.operators import plot, read
 
 # Set path to input data

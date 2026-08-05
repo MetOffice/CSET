@@ -85,3 +85,8 @@ sphinx_gallery_conf = {
         ]
     ),
 }
+
+suppress_warnings = [
+    "toc.not_included",
+    "toc.excluded",
+]
