@@ -1125,6 +1125,7 @@ def test_save_close_figure(tmp_working_dir, caplog):
             if message == "Saved my test plot to test_filename.png":
                 message_match = True
         assert message_match
+    assert (tmp_working_dir / "test_filename.png").is_file()
 
 
 def test_get_plot_resolution(tmp_working_dir):
