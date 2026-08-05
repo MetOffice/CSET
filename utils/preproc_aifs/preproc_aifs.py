@@ -92,12 +92,12 @@ def fix_ensemble_cubes(cubes):
 
     Parameters
     ----------
-    cubes: iris.cube.CubeList()
+    cubes: iris.cube.CubeList
         A cubelist containing all cubes loaded from the AIFS ensemble.
 
     Returns
     -------
-    processed: iris.cube.CubeList()
+    processed: iris.cube.CubeList
         A cubelist containing the corrected cubes.
 
     """
@@ -194,21 +194,30 @@ def fix_time_and_meta(cubes):
 
     Parameters
     ----------
+    cubes: iris.cube.CubeList
+        A cubelist of cubes to fix time and metadata.
 
-    
+    Returns
+    -------
+    done_cubes: iris.cube.CubeList
+        A cubelist of cubes that have been fixed.
     """
 
+    # Create empty cubelist to store fixed cubes
     done_cubes = iris.cube.CubeList()
 
     for cube in cubes:
-        # Get a copy of time coord, and dimension this corresponds to.
+        # Get a copy of time coord
         time_coord = cube.coord("time")
 
-        # Work out units of forecast_period and adjust if necessary.
-        units_str = str(time_coord.units)
-
-        # Forecast periods relative to initialisation.
+        # Forecast periods relative to initialisation, which is taken as
+        # the first time in the file. We have to make this assumption, as AIFS
+        # grib has no information on model initialisation (or at least is lost
+        # in the netCDF translation step).
         fp_points = time_coord.points - time_coord.points[0]
+
+        # Work out units of forecast_period and adjust if necessary below.
+        units_str = str(time_coord.units)
 
         if units_str.startswith("seconds since"):
             fp_points = fp_points / 3600.0
@@ -221,7 +230,7 @@ def fix_time_and_meta(cubes):
         else:
             raise ValueError(f"Unhandled time units: {time_coord.units}")
 
-        # Get copy of time coordinate
+        # Get copy of time coordinate, and dimension axis corresponding to time.
         time_coord_points = time_coord.points.copy()
         time_dim = cube.coord_dims("time")[0]
 
@@ -258,20 +267,15 @@ def fix_time_and_meta(cubes):
             data_dims=(cube.coord_dims("forecast_period")[0],),
         )
 
+        # Fix cube long_name, name and units.
         cube = fix_name_and_units(cube)
 
-        # Append slice to cutout list, ready for saving.
+        # Append slice to cutout list.
         done_cubes.append(cube)
+
         print(f"{cube.name}...done.")
 
     return done_cubes
-
-
-# orig = iris.load(os.environ['DATADIR']+'/CSET_testdata/aifs/test/*.nc')
-# #print(orig)
-# cubes = combine_ensemble_cubes(orig)
-
-# print(cubes)
 
 
 def run_in_shell_grib_tools(inputpath, outpath):
