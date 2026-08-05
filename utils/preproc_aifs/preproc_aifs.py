@@ -1,4 +1,7 @@
-"""do something"""
+"""Script to process AIFS grib data to netCDF for CSET.
+
+Please see README.md for more information how to run this script.
+"""
 
 import argparse
 import os
@@ -13,7 +16,7 @@ from iris.cube import CubeList
 
 def fix_name_and_units(cube):
     """Fix AIFS name and units, where relevant.
-    
+
     Parameters
     ----------
     cube: iris.Cube
@@ -24,8 +27,7 @@ def fix_name_and_units(cube):
     cube: iris.Cube
         An iris cube that has updated names and units that CSET can understand.
     """
-
-    # Lookup dictionary for AIFS names to be convered to LFRic long names, and unit change,
+    # Lookup dictionary for AIFS names to be converted to LFRic long names, and unit change,
     # where necessary.
     aifs_to_lfric_dict = {
         "2 metre dewpoint temperature": ["dew_point_temperature_at_screen_level", None],
@@ -71,7 +73,6 @@ def fix_name_and_units(cube):
 
         # Convert units if required.
         if new_units is not None:
-
             # Exception for geopotential height, as iris cannot directly convert.
             if str(cube.units) == "m**2 s**-2" and str(new_units) == "m":
                 cube = cube.copy(data=cube.lazy_data() / 9.80665)
@@ -86,7 +87,7 @@ def fix_ensemble_cubes(cubes):
     """
     Fix ensemble dimension in cube list.
 
-    The ensemble dimension is present in some cubes, as an auxilliary coordinate, where the
+    The ensemble dimension is present in some cubes, as an auxiliary coordinate, where the
     control members do not have this dimension. This function ensures each cube has a
     realization coordinate, where the control member is member 0, so the cubes can be concatenated.
 
@@ -142,8 +143,6 @@ def fix_ensemble_cubes(cubes):
 
         # Perturbed members have an ensemble_member coord.
         if cube.coords("ensemble_member"):
-            ensemble_coord = cube.coord("ensemble_member")
-
             cube.remove_coord("ensemble_member")
 
             # Hard coded, as AIFS supported has 50 perturbed members.
@@ -189,7 +188,7 @@ def fix_time_and_meta(cubes):
     Fix time coordinates and adjust metadata such as names and units.
 
     Make the data CSET compliant by creating a forecast_period dimension,
-    and adding valid time as a time auxilliary coordinate, and a forecast_reference_time
+    and adding valid time as a time auxiliary coordinate, and a forecast_reference_time
     as a scalar coordinate.
 
     Parameters
@@ -202,7 +201,6 @@ def fix_time_and_meta(cubes):
     done_cubes: iris.cube.CubeList
         A cubelist of cubes that have been fixed.
     """
-
     # Create empty cubelist to store fixed cubes
     done_cubes = iris.cube.CubeList()
 
@@ -261,7 +259,7 @@ def fix_time_and_meta(cubes):
             units=time_coord.units,
         )
 
-        # Add this dimsnion to the cube, tied to the forecast_period dimension.
+        # Add this dimension to the cube, tied to the forecast_period dimension.
         cube.add_aux_coord(
             new_time_coord,
             data_dims=(cube.coord_dims("forecast_period")[0],),
@@ -280,14 +278,25 @@ def fix_time_and_meta(cubes):
 
 def run_in_shell_grib_tools(inputpath, outpath):
     """
-    Calls to shell grib tools
+    Split out grib messages into streams and convert to netCDF.
 
-    need to split out levels first, as
+    This is required, as iris cannot load the grib data directly due to issues with
+    some of the variables (fixed levels). ECCODES also produces an error if grib_to_netcdf
+    is called on the file without splitting level types first. Here, we write to a hidden
+    file in the output directory prior to iris metadata processing.
 
-    ECCODES ERROR   :  Cannot handle fields for different levtypes.
+    Parameters
+    ----------
+    inputpath: str
+        String input path, which can be globbed if wildcards are used.
+    outpath: str
+        Directory to write output.
 
-    ECCODES ERROR   :  Please split input data into different files. Exiting!
+    Returns
+    -------
+    None
     """
+    # Iterate over all files supplied using glob
     for file in glob(inputpath):
         for typeOfLevel in [
             "isobaricInhPa",
@@ -298,8 +307,10 @@ def run_in_shell_grib_tools(inputpath, outpath):
         ]:
             print(f"proc file {file} for typeOfLevel {typeOfLevel}")
 
+            # Get file name by splitting directory and extension.
             name = os.path.splitext(os.path.basename(file))[0]
 
+            # Initial step to extract particular level type.
             subprocess.check_output(
                 [
                     "grib_copy",
@@ -309,6 +320,8 @@ def run_in_shell_grib_tools(inputpath, outpath):
                     outpath + "." + name + "_extract_" + typeOfLevel + ".grib2",
                 ]
             )
+
+            # Next step to convert to netCDF.
             subprocess.check_output(
                 [
                     "grib_to_netcdf",
@@ -317,22 +330,20 @@ def run_in_shell_grib_tools(inputpath, outpath):
                     outpath + "." + name + "_extract_" + typeOfLevel + ".nc",
                 ]
             )
+
+            # Remove old grib file extracted as no longer needed.
             subprocess.check_output(
                 ["rm", outpath + "." + name + "_extract_" + typeOfLevel + ".grib2"]
             )
 
 
 def main():
-    """TODO"""
-    # Args
-    # Path to data, as a glob.
-    # Date of forecast, for use in filename.
-    # Path to output data.
+    """
+    Run processing on AIFS grib data.
 
-    """TODO
+    Process produces CSET-ready netCDF files for loading.
     """
     parser = argparse.ArgumentParser(description="Process arguments.")
-
     parser.add_argument("--inputpath", required=True, help="Path to file(s) to load.")
     parser.add_argument(
         "--forecastinit",
@@ -366,6 +377,8 @@ def main():
     iris.save(cubes, outpath + "/AIFS_" + forecastinit + ".nc")
     for f in glob(outpath + "/.*.nc"):
         os.remove(f)
+
+    print("Done!")
 
 
 if __name__ == "__main__":
