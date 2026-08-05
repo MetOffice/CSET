@@ -1128,6 +1128,15 @@ def test_save_close_figure(tmp_working_dir, caplog):
     assert (tmp_working_dir / "test_filename.png").is_file()
 
 
+def test_save_close_figure_in_gallery(tmp_working_dir, monkeypatch):
+    """Figure is not saved when running under sphinx_gallery."""
+    fig = mpl.pyplot.figure()
+    with monkeypatch.context() as mp:
+        mp.setattr("sys.modules", {"sphinx_gallery": None})
+        plot._save_close_figure(fig, "my test", "test_filename.png")
+    assert not (tmp_working_dir / "test_filename.png").exists()
+
+
 def test_get_plot_resolution(tmp_working_dir):
     """Test getting the plot resolution."""
     with open("meta.json", "wt", encoding="UTF-8") as fp:
