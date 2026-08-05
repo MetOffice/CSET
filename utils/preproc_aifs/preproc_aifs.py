@@ -5,6 +5,7 @@ Please see README.md for more information how to run this script.
 
 import argparse
 import os
+import re
 import subprocess
 from glob import glob
 
@@ -374,7 +375,14 @@ def main():
     cubes = fix_ensemble_cubes(iris.load(outpath + "/.*.nc"))
     cubes = fix_time_and_meta(cubes)
 
-    iris.save(cubes, outpath + "/AIFS_" + forecastinit + ".nc")
+    # Save each variable, otherwise end up with huge 100GBs files.
+    for cube in cubes:
+        # Sanitise name in case not corrected to LFRic.
+        safe_name = cube.name().replace(" ", "_")
+        safe_name = re.sub(r"[()]", "", safe_name)
+
+        iris.save(cube, outpath + "/AIFS_" + forecastinit + "_" + safe_name + ".nc")
+
     for f in glob(outpath + "/.*.nc"):
         os.remove(f)
 
