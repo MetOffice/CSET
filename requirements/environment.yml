@@ -40,4 +40,5 @@ dependencies:
 
   # Documentation dependencies
   - sphinx >= 6.0
+  - sphinx-gallery
   - furo >= 2024.8.6
