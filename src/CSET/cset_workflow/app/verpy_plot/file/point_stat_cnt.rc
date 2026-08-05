@@ -1,0 +1,24 @@
+[VerPy_settings]
+comment: general stuff
+verbosity: 30
+
+[VerPy_sources]
+comment: data sources
+type = cnt
+truth = Surface Obs
+system = MET
+
+[VerPy_dates]
+comment: dates and times. Sourced via environment variables
+
+[VerPy_plot_general]
+comment = general plot details
+stats =  [7051, 7052]
+param =  [(16, 1, -1.0), 'rh']
+interp = NEAREST
+
+[VerPyPlot_plot1]
+comment = Lead Time plots
+inherit = VerPy_settings, VerPy_sources, VerPy_dates, VerPy_plot_general
+output = fcrseries
+jobid = cset_lead_times

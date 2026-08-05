@@ -158,17 +158,6 @@ type=quoted
 compulsory=true
 sort-key=setup-h-out2
 
-[template variables=PLOTTING_PROJECTION]
-ns=Setup
-title=Projection for the plots
-description=Geographical projection of plots
-help=This is is the projection used for the final plots, specified as a string.
-    If no value is given, native latitudes and longitudes are used.
-compulsory=true
-values="", "NP_Stereo"
-value-titles="", "North polar stereographic"
-sort-key=setup-h-out3a
-
 [template variables=PLOT_RESOLUTION]
 ns=Setup
 title=Plot resolution
@@ -382,6 +371,8 @@ description=A concise, friendly name for the model.
 help=A recognisable name for this particular model. This is carried through to
      the output webpage, and identifies the model. As it is only used for
      display purposes it can be any short string.
+     If using reanalysis, such as ERA5 or UM_ANALYSIS, use these names to ensure
+     they are plotted first in line series plots, in black.
 type=quoted
 compulsory=true
 sort-key=a0

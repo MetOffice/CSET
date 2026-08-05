@@ -21,7 +21,7 @@ PR title.
 
 .. _issue tracker on GitHub: https://github.com/MetOffice/CSET/issues
 .. _working practices: https://metoffice.github.io/CSET/contributing/
-.. _draft pull request functionality of GitHub: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests#draft-pull-requests
+.. _draft pull request functionality of GitHub: https://docs.github.com/en/pull-requests/reference/pull-requests#draft-pull-requests
 
 Before you get to coding, there are a few steps you need to do to setup the
 development environment.

@@ -19,8 +19,8 @@ from pathlib import Path
 
 import pytest
 
-import CSET.cset_workflow.app.parbake_recipes.bin.parbake as parbake
 import CSET.recipes
+from CSET.cset_workflow.app.parbake_recipes.bin import parbake
 
 
 def test_main(monkeypatch):
