@@ -950,31 +950,35 @@ def _plot_and_save_line_series(
         if model_colors_map:
             label = cube.attributes.get("model_name")
             color = model_colors_map.get(label)
-        for cube_slice in cube.slices_over(ensemble_coord):
-            # Label with (control) if part of an ensemble or not otherwise.
-            if cube_slice.coord(ensemble_coord).points == [0]:
-                iplt.plot(
-                    coord,
-                    cube_slice,
-                    color=color,
-                    marker="o",
-                    ls="-",
-                    lw=3,
-                    label=f"{label} (control)"
-                    if len(cube.coord(ensemble_coord).points) > 1
-                    else label,
-                )
-                # Label with (perturbed) if part of an ensemble and not the control.
-            else:
-                iplt.plot(
-                    coord,
-                    cube_slice,
-                    color=color,
-                    ls="-",
-                    lw=1.5,
-                    alpha=0.75,
-                    label=f"{label} (member)",
-                )
+        if not cube.coords(ensemble_coord):
+            # No ensemble coordinate — plot the cube directly as a single line.
+            iplt.plot(coord, cube, color=color, marker="o", ls="-", lw=3, label=label)
+        else:
+            for cube_slice in cube.slices_over(ensemble_coord):
+                # Label with (control) if part of an ensemble or not otherwise.
+                if cube_slice.coord(ensemble_coord).points == [0]:
+                    iplt.plot(
+                        coord,
+                        cube_slice,
+                        color=color,
+                        marker="o",
+                        ls="-",
+                        lw=3,
+                        label=f"{label} (control)"
+                        if len(cube.coord(ensemble_coord).points) > 1
+                        else label,
+                    )
+                    # Label with (perturbed) if part of an ensemble and not the control.
+                else:
+                    iplt.plot(
+                        coord,
+                        cube_slice,
+                        color=color,
+                        ls="-",
+                        lw=1.5,
+                        alpha=0.75,
+                        label=f"{label} (member)",
+                    )
 
         # Calculate the global min/max if multiple cubes are given.
         _, levels, _ = colorbar_map_levels(cube, axis="y")
@@ -2216,11 +2220,8 @@ def plot_line_series(
             raise ValueError(
                 f"Cube must have a {series_coordinate} coordinate."
             ) from err
-        if model_cube.coords("realization"):
-            if model_cube.ndim > 3:
-                raise ValueError("Cube must be 1D or 2D with a realization coordinate.")
-        else:
-            raise ValueError("Cube must have a realization coordinate.")
+        if model_cube.coords("realization") and model_cube.ndim > 2:
+            raise ValueError("Cube must be 1D or 2D with a realization coordinate.")
 
     plot_index = []
 
