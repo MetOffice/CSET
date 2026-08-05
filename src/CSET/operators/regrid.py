@@ -688,14 +688,14 @@ def _rebuild_ugrid_meta(cube, arr, lat, lon):
     # Create new latitude coordinate.
     lat_coord = icoords.DimCoord(
         lat,
-        standard_name="grid_latitude",
+        standard_name="latitude",
         units="degrees",
     )
 
     # Create new longitude coordinate.
     lon_coord = icoords.DimCoord(
         lon,
-        standard_name="grid_longitude",
+        standard_name="longitude",
         units="degrees",
     )
 
