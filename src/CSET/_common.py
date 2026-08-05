@@ -28,9 +28,16 @@ import ruamel.yaml
 
 logger = logging.getLogger(__name__)
 
+_SAMPLE_DATA_DIR = Path(__file__).resolve().parent.parent / "../tests/test_data"
+
 
 class ArgumentError(ValueError):
     """Provided arguments are not understood."""
+
+
+def sample_data_path(*parts):
+    """Return absolute path to sample data file."""
+    return str(_SAMPLE_DATA_DIR.joinpath(*parts))
 
 
 def parse_recipe(recipe_yaml: Path | str, variables: dict | None = None) -> dict:
