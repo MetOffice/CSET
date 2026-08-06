@@ -15,6 +15,7 @@
 """Common functionality used across CSET."""
 
 import ast
+import glob
 import io
 import json
 import logging
@@ -35,8 +36,41 @@ class ArgumentError(ValueError):
 
 
 def sample_data_path(name):
-    """Return absolute path to sample data file."""
-    return str(files("CSET.sample_data").joinpath(name))
+    """Return absolute path to sample data file.
+
+    Given the name of requested sample data resource, returns the full
+    path to the file.
+
+    Note this function is only for locating files in the sample_data
+    collection of files, used for generating documentation. It is not
+    needed for general file access.
+
+    Parameters
+    ----------
+    name: str
+        The name of requested sample_data file.
+
+    Returns
+    -------
+    target: str
+        The full directory path to the requested file.
+
+    Raises
+    ------
+    ValueError
+        If the requested sample data is not found.
+    """
+    target = str(files("CSET.sample_data").joinpath(name))
+
+    if not glob.glob(target):
+        raise ValueError(
+            f"Sample data file(s) at {target!r} not found.\n"
+            "NB This function is only for locating files in the "
+            "CSET sample_data collection. It is not needed or "
+            "appropriate for general file access."
+        )
+
+    return target
 
 
 def parse_recipe(recipe_yaml: Path | str, variables: dict | None = None) -> dict:
