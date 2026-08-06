@@ -38,7 +38,7 @@ def fix_name_and_units(cube):
             "surface_downward_clear_longwave_flux_radiative_timestep",
             None,
         ],
-        "Total Cloud Cover": ["area_cloud_fraction", None],
+        "Total Cloud Cover": ["area_cloud_fraction", 1],
         "Total Precipitation": ["surface_precipitation_amount", None],
         "Total column water": ["atmosphere_mass_content_of_water_vapor", None],
         "Mean sea level pressure": ["air_pressure_at_mean_sea_level", None],
@@ -78,6 +78,9 @@ def fix_name_and_units(cube):
             if str(cube.units) == "m**2 s**-2" and str(new_units) == "m":
                 cube = cube.copy(data=cube.lazy_data() / 9.80665)
                 cube.units = "m"
+            if str(cube.units) == "%" and str(new_units) == "1":
+                cube = cube.copy(data=cube.lazy_data() / 100.0)
+                cube.units = "1"
             else:
                 cube.convert_units(new_units)
 
