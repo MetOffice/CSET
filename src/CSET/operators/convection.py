@@ -87,18 +87,6 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
     has occurred, not before as is the usual interpretation of CAPE related
     diagnostics.
 
-    References
-    ----------
-    .. [Clarketal2012] Clark, A. J., Kain J. S., Marsh P. T., Correia J., Xue
-       M., and Kong F., (2012) "Forecasting tornado pathlengths using a
-       three-dimensional object identification algorithm applied to
-       convection-allowing forecasts." Weather and Forecasting, vol. 27,
-       1090–1113, doi: 10.1175/WAF-D-11-00147.1
-    .. [FlackCAPE2023] Flack, D.L.A., Lehnert, M., Lean, H.W., and Willington,
-       S. (2023) "Characteristics of Diagnostics for Identifying Elevated
-       Convection over the British Isles in a Convection-Allowing Model."
-       Weather and Forecasting, vol. 30, 1079-1094, doi: 10.1175/WAF-D-22-0219.1
-
     Examples
     --------
     >>> CAPE_ratios=convection.cape_ratio(
@@ -203,17 +191,6 @@ def inflow_layer_properties(EIB, BLheight, Orography):
     and ensemble member.`` these warnings are expected when the orography files
     are not 2-dimensional, and do not cause any problems unless ordering is not
     as expected.
-
-    References
-    ----------
-    .. [Thompsonetal2007] Thompson, R. L. Mead, C. M., and Edwards, R., (2007)
-       "Effective Storm-Relative Helicity and Bulk Shear in Supercell
-       Thunderstorm Environments." Weather and Forecasting, vol. 22, 102-115,
-       doi: 10.1175/WAF969.1
-    .. [Flackinf2023] Flack, D.L.A., Lehnert, M., Lean, H.W., and Willington, S.
-       (2023) "Characteristics of Diagnostics for Identifying Elevated
-       Convection over the British Isles in a Convection-Allowing Model."
-       Weather and Forecasting, vol. 30, 1079-1094, doi: 10.1175/WAF-D-22-0219.1
 
     Examples
     --------

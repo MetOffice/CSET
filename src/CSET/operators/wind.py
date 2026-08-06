@@ -230,13 +230,6 @@ def convert_to_beaufort_scale(
     can reach above 12 in this diagnostic. However, these are not referred to
     in the table as anything above F12 is labelled as Hurricane force.
 
-    References
-    ----------
-    .. [Beer96] Beer, T. (1996) Environmental Oceanography, CRC Marince Science,
-       Vol. 11, 2nd Edition, CRC Press, 402 pp.
-    .. [Berryetal45] Berry, F. A., Jr., E. Bollay, and N. R. Beers, (1945) Handbook
-       of Meteorology. McGraw Hill, 1068 pp.
-
     Examples
     --------
     >>> Beaufort_Scale=wind.convert_to_Beaufort_scale(winds)
