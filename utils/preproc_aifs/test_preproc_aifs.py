@@ -67,6 +67,21 @@ def test_fix_name_and_units_geopotential_conversion():
     np.allclose(result.data, [10.0], rtol=1e-5, atol=1e-2)
 
 
+def test_fix_name_and_units_area_cloud_fraction():
+    """Test that cloud fraction name fixed and units corrected."""
+    cube = Cube(
+        np.array([95]),
+        long_name="Total Cloud Cover",
+        units="%",
+    )
+
+    result = fix_name_and_units(cube)
+
+    assert result.long_name == "area_cloud_fraction"
+    assert str(result.units) == "1"
+    np.allclose(result.data, [0.95], rtol=1e-5, atol=1e-2)
+
+
 def test_fix_name_and_units_unmapped_cube_unchanged():
     """Test if match unknown, then cube is left unchanged."""
     cube = Cube(
