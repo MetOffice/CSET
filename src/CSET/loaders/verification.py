@@ -45,6 +45,35 @@ def _get_scores_timeseries_methods(conf):
     return scores_timeseries_methods
 
 
+def _get_scores_timeseries_methods_model_vs_obs(conf):
+    """Compile list of the required scores model vs observations timeseries plots."""
+    scores_timeseries_methods_model_vs_obs = []
+
+    if conf.SCORES_TIMESERIES_RMSE_MODEL_VS_OBS or conf.SCORES_ALL_MODEL_VS_OBS:
+        scores_timeseries_methods_model_vs_obs.append("RMSE")
+    # TODO: uncomment remainder when backend code has been written
+    # if conf.SCORES_TIMESERIES_AB_MODEL_VS_OBS or conf.SCORES_ALL_MODEL_VS_OBS:
+    #    scores_timeseries_methods_model_vs_obs.append("additive_bias")
+    # if conf.SCORES_TIMESERIES_MAE_MODEL_VS_OBS or conf.SCORES_ALL_MODEL_VS_OBS:
+    #    scores_timeseries_methods_model_vs_obs.append("MAE")
+    # if conf.SCORES_TIMESERIES_PC_MODEL_VS_OBS or conf.SCORES_ALL_MODEL_VS_OBS:
+    #    scores_timeseries_methods_model_vs_obs.append("correlation_pearsonr")
+    return scores_timeseries_methods_model_vs_obs
+
+
+def _get_scores_spatial_methods_model_vs_obs(conf):
+    """Compile list of the required scores spatial plots."""
+    scores_spatial_methods_model_vs_obs = []
+    if conf.SCORES_SPATIAL_RMSE_MODEL_VS_OBS or conf.SCORES_ALL_MODEL_VS_OBS:
+        scores_spatial_methods_model_vs_obs.append("RMSE")
+    # TODO: uncomment remainder when backend code has been written
+    # if conf.SCORES_SPATIAL_AB_MODEL_VS_OBS or conf.SCORES_ALL_MODEL_VS_OBS:
+    # scores_spatial_methods_model_vs_obs.append("additive_bias")
+    # if conf.SCORES_SPATIAL_MAE_MODEL_VS_OBS or conf.SCORES_ALL_MODEL_VS_OBS:
+    # scores_spatial_methods_model_vs_obs.append("MAE")
+    return scores_spatial_methods_model_vs_obs
+
+
 def load(conf: Config):
     """Yield recipes from the given workflow configuration."""
     # Load a list of model detail dictionaries.
@@ -129,6 +158,49 @@ def load(conf: Config):
                     "VARNAME": field,
                     "CONTROL_MEMBER": conf.CONTROL_MEMBER,
                     "METHOD": conf.METHOD_FOR_CRPS,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[model["id"]],
+                aggregation=False,
+            )
+    scores_timeseries_methods_model_vs_obs = (
+        _get_scores_timeseries_methods_model_vs_obs(conf)
+    )
+    if scores_timeseries_methods_model_vs_obs:
+        # Produce model vs observation timeseries plots of scores metrics averaged over the domain for each case study.
+        for model, field, scores_method in itertools.product(
+            models, conf.SURFACE_FIELDS, scores_timeseries_methods_model_vs_obs
+        ):
+            yield RawRecipe(
+                recipe=f"timeseries_surface_difference_scores_model_vs_obs_{scores_method}.yaml",
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAMES": models,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[model["id"]],
+                aggregation=False,
+            )
+
+    scores_spatial_methods_model_vs_obs = _get_scores_spatial_methods_model_vs_obs(conf)
+    if scores_spatial_methods_model_vs_obs:
+        # Produce model vs observation timeseries plots of scores metrics averaged over the domain for each case study.
+        for model, field, scores_method in itertools.product(
+            models, conf.SURFACE_FIELDS, scores_spatial_methods_model_vs_obs
+        ):
+            yield RawRecipe(
+                recipe=f"spatial_surface_difference_scores_model_vs_obs_{scores_method}.yaml",
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAMES": models,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
