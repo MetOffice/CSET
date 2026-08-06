@@ -1,5 +1,5 @@
 category: Power Spectrum
-title: "Power Spectrum $VARNAME\n Mean over the case $SUBAREA_NAME"
+title: "Power Spectrum $VARNAME\n $SUBAREA_NAME Mean over the case"
 description: |
   Extracts and plots the mean power spectral density of surface $VARNAME over whole run
 
