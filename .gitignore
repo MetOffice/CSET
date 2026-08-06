@@ -147,3 +147,9 @@ dmypy.json
 /meta.json
 /*.html
 /*.png
+
+# Sphinx Gallery generated documentation files.
+/docs/source/sg_execution_times.rst
+/docs/source/reference/gallery/generated/
+/docs/source/reference/gallery/examples/**/*.html
+/docs/source/reference/gallery/examples/**/*.json
