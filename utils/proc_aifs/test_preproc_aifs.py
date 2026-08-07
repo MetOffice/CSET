@@ -4,11 +4,7 @@ import numpy as np
 import pytest
 from iris.coords import AuxCoord, DimCoord
 from iris.cube import Cube, CubeList
-from preproc_aifs import (
-    fix_ensemble_cubes,
-    fix_name_and_units,
-    fix_time_and_meta,
-)
+from utils.proc_aifs import preproc_aifs
 
 
 @pytest.fixture
@@ -45,7 +41,7 @@ def test_fix_name_and_units_renames_cube():
         units="K",
     )
 
-    result = fix_name_and_units(cube)
+    result = preproc_aifs.fix_name_and_units(cube)
 
     assert result.long_name == "temperature_at_screen_level"
     assert result.name() == "temperature_at_screen_level"
@@ -60,7 +56,7 @@ def test_fix_name_and_units_geopotential_conversion():
         units="m**2 s**-2",
     )
 
-    result = fix_name_and_units(cube)
+    result = preproc_aifs.fix_name_and_units(cube)
 
     assert result.long_name == "geopotential_height_at_pressure_levels"
     assert str(result.units) == "m"
@@ -75,7 +71,7 @@ def test_fix_name_and_units_area_cloud_fraction():
         units="%",
     )
 
-    result = fix_name_and_units(cube)
+    result = preproc_aifs.fix_name_and_units(cube)
 
     assert result.long_name == "area_cloud_fraction"
     assert str(result.units) == "1"
@@ -90,7 +86,7 @@ def test_fix_name_and_units_unmapped_cube_unchanged():
         units="K",
     )
 
-    result = fix_name_and_units(cube)
+    result = preproc_aifs.fix_name_and_units(cube)
 
     assert result.long_name == "foo_bar"
     assert str(result.units) == "K"
@@ -112,7 +108,7 @@ def test_fix_ensemble_cubes_adds_realization_to_control_member():
         0,
     )
 
-    result = fix_ensemble_cubes(CubeList([cube]))
+    result = preproc_aifs.fix_ensemble_cubes(CubeList([cube]))
 
     assert len(result) == 1
 
@@ -148,7 +144,7 @@ def test_fix_ensemble_cubes_replaces_ensemble_member():
         data_dims=(1,),
     )
 
-    result = fix_ensemble_cubes(CubeList([cube]))
+    result = preproc_aifs.fix_ensemble_cubes(CubeList([cube]))
     processed = result[0]
     realization = processed.coord("realization")
 
@@ -179,7 +175,7 @@ def test_fix_ensemble_cubes_converts_pressure_auxcoord_to_dimcoord():
     )
 
     cube.add_aux_coord(pressure_aux, data_dims=(1,))
-    result = fix_ensemble_cubes(CubeList([cube]))
+    result = preproc_aifs.fix_ensemble_cubes(CubeList([cube]))
     processed = result[0]
     pressure = processed.coord("pressure_level")
 
@@ -189,7 +185,7 @@ def test_fix_ensemble_cubes_converts_pressure_auxcoord_to_dimcoord():
 
 def test_fix_time_and_meta_creates_forecast_period(simple_cube):
     """Test that forecast_period created."""
-    result = fix_time_and_meta(CubeList([simple_cube]))
+    result = preproc_aifs.fix_time_and_meta(CubeList([simple_cube]))
 
     cube = result[0]
 
@@ -201,7 +197,7 @@ def test_fix_time_and_meta_creates_forecast_period(simple_cube):
 
 def test_fix_time_and_meta_adds_forecast_reference_time(simple_cube):
     """Test that forecast_reference_time created."""
-    result = fix_time_and_meta(CubeList([simple_cube]))
+    result = preproc_aifs.fix_time_and_meta(CubeList([simple_cube]))
 
     cube = result[0]
     frt = cube.coord("forecast_reference_time")
@@ -211,7 +207,7 @@ def test_fix_time_and_meta_adds_forecast_reference_time(simple_cube):
 
 def test_fix_time_and_meta_adds_aux_time(simple_cube):
     """Check that time is a coordinate."""
-    result = fix_time_and_meta(CubeList([simple_cube]))
+    result = preproc_aifs.fix_time_and_meta(CubeList([simple_cube]))
 
     cube = result[0]
     time_coord = cube.coord("time")
@@ -235,7 +231,7 @@ def test_fix_time_and_meta_converts_minutes_to_hours():
         0,
     )
 
-    result = fix_time_and_meta(CubeList([cube]))
+    result = preproc_aifs.fix_time_and_meta(CubeList([cube]))
 
     fp = result[0].coord("forecast_period")
 
@@ -259,7 +255,7 @@ def test_fix_time_and_meta_converts_seconds_to_hours():
         0,
     )
 
-    result = fix_time_and_meta(CubeList([cube]))
+    result = preproc_aifs.fix_time_and_meta(CubeList([cube]))
 
     fp = result[0].coord("forecast_period")
 
@@ -283,4 +279,4 @@ def test_fix_time_and_meta_raises_for_unknown_units():
     )
 
     with pytest.raises(ValueError, match="Unhandled time units"):
-        fix_time_and_meta(CubeList([cube]))
+        preproc_aifs.fix_time_and_meta(CubeList([cube]))
