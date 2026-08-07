@@ -282,15 +282,6 @@ def compute_ageofair(
     the impact of new data assimilation techniques. A further paper is currently in review ([Warneretal2024]_)
     which applies the diagnostic more widely to the Australian ACCESS convection-permitting models.
 
-    References
-    ----------
-    .. [Warneretal2023] Warner, J.L., Petch, J., Short, C., Bain, C., 2023. Assessing the impact of an NWP warm-start
-        system on model spin-up over tropical Africa. QJ, 149( 751), pp.621-636. doi:10.1002/qj.4429
-    .. [Warneretal2024] Diagnosing lateral boundary spin-up in regional models using an age of air diagnostic
-        James L. Warner, Charmaine N. Franklin, Belinda Roux, Shaun Cooper, Susan Rennie, Vinod
-        Kumar.
-        Submitted for Quarterly Journal of the Royal Meteorological Society.
-
     """
     # Set up temporary directory to store intermediate age of air slices.
     tmpdir = tempfile.TemporaryDirectory(dir=os.getenv("CYLC_TASK_WORK_DIR"))
