@@ -341,7 +341,7 @@ def restructure_ugrid(cubes):
     """
     # First, parse all cubes and fix their metadata (apart from latitude/longitude,
     # which we do later after regridding), and extract required variable from constraint.
-    cubes = fix_metadata(cubes, constraint)
+    cubes = fix_metadata(cubes)
 
     # First, extract latitude and longitude coordinates
     lat = cubes.extract("latitude")[0].data
@@ -351,6 +351,7 @@ def restructure_ugrid(cubes):
     # Create output mesh, using standard grid ~2km resolution
     # TODO: discussions with ML developers to include metadata so
     # we don't have to guess target lat/lon resolution.
+    # Need some attributes to capture what is required in terms of resolution.
     # For now, we assume data no higher resolution than 2p2km.
     # This will have impacts on PDFs.
     lon_grid = np.arange(lon.data.min(), lon.data.max(), 0.02)
