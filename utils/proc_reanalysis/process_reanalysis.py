@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 
 
 def _identify_number_of_cycles_required(
-    start_dt: datetime, end_dt: datetime, cyclefreq: timedelta
+    cyclestart: datetime, cycleend: datetime, cyclefreq: timedelta
 ) -> list:
     """Generate forecast initialisation datetimes between two cycle bounds.
 
@@ -39,10 +39,10 @@ def _identify_number_of_cycles_required(
     """
     # To store initialisation times
     forecast_initialisations = []
-    current = start_dt
+    current = cyclestart
 
     # Iterate over all initiations within the bounds, using the cyclefreq to determine interval.
-    while current <= end_dt:
+    while current <= cycleend:
         forecast_initialisations.append(current)
         current += timedelta(hours=cyclefreq)
 
@@ -210,16 +210,22 @@ def main() -> None:
 
     parser.add_argument("--filepath", required=True, help="Path to file(s)")
     parser.add_argument(
-        "--cyclestart", type=str, required=True, help="First forecast initiation/cycle"
+        "--cyclestart",
+        type=datetime.fromisoformat,
+        required=True,
+        help="First forecast initiation/cycle, in format %Y%m%dT%H%MZ",
     )
     parser.add_argument(
-        "--cycleend", type=str, required=True, help="Final forecast initiation/cycle"
+        "--cycleend",
+        type=datetime.fromisoformat,
+        required=True,
+        help="Final forecast initiation/cycle, in format %Y%m%dT%H%MZ",
     )
     parser.add_argument(
         "--cyclefreq",
         type=int,
         required=True,
-        help="Time between forecast initiationss/cycles",
+        help="Time between forecast initiations/cycles",
     )
     parser.add_argument(
         "--forecastlength",
@@ -245,13 +251,11 @@ def main() -> None:
     print("Starting process_reanalysis.py...")
 
     # Identify the start and end times, and create datetime objects for these
-    start_dt = datetime.fromisoformat(cyclestart)
-    end_dt = datetime.fromisoformat(cycleend)
     cyclefreq = timedelta(cyclefreq)
 
     # Get all forecast initiations
     forecast_initialisations = _identify_number_of_cycles_required(
-        start_dt, end_dt, cyclefreq
+        cyclestart, cycleend, cyclefreq
     )
 
     # Load all reanalysis supplied
