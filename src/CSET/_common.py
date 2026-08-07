@@ -15,7 +15,6 @@
 """Common functionality used across CSET."""
 
 import ast
-import glob
 import io
 import json
 import logging
@@ -60,17 +59,15 @@ def sample_data_path(name):
     ValueError
         If the requested sample data is not found.
     """
-    target = str(files("CSET.sample_data").joinpath(name))
-
-    if not glob.glob(target):
+    target = files("CSET.sample_data").joinpath(name)
+    if not target.is_file():
         raise ValueError(
-            f"Sample data file(s) at {target!r} not found.\n"
+            f"Sample data file {name!r} not found.\n"
             "NB This function is only for locating files in the "
             "CSET sample_data collection. It is not needed or "
             "appropriate for general file access."
         )
-
-    return target
+    return str(target)
 
 
 def parse_recipe(recipe_yaml: Path | str, variables: dict | None = None) -> dict:
