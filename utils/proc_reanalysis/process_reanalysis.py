@@ -44,7 +44,7 @@ def identify_number_of_cycles_required(
     # Iterate over all initiations within the bounds, using the cyclefreq to determine interval.
     while current <= cycleend:
         forecast_initialisations.append(current)
-        current += timedelta(hours=cyclefreq)
+        current += cyclefreq
 
     return forecast_initialisations
 
@@ -188,7 +188,7 @@ def create_forecasts(
 
         # Once all cubes processed, save to disk.
         if len(cutouts) > 0:
-            filename = f"{outpath}/reanalysis_{start.strftime('%Y%m%dT%H%MZ').nc}"
+            filename = f"{outpath}/reanalysis_{start.strftime('%Y%m%dT%H%MZ')}.nc"
             print(f"Saving {filename}")
             iris.save(cutouts, filename)
         else:
@@ -204,18 +204,18 @@ def main() -> None:
     """
     parser = argparse.ArgumentParser(description="Process arguments.")
 
-    parser.add_argument("--filepath", required=True, help="Path to file(s)")
+    parser.add_argument("--filepath", required=True, help="Path to file(s) quoted")
     parser.add_argument(
         "--cyclestart",
         type=datetime.fromisoformat,
         required=True,
-        help="First forecast initiation/cycle, in format %Y%m%dT%H%MZ",
+        help="First forecast initiation/cycle, in format YYYY-MM-DD HH:MM:SS, quoted",
     )
     parser.add_argument(
         "--cycleend",
         type=datetime.fromisoformat,
         required=True,
-        help="Final forecast initiation/cycle, in format %Y%m%dT%H%MZ",
+        help="Final forecast initiation/cycle, in format YYYY-MM-DD HH:MM:SS, quoted",
     )
     parser.add_argument(
         "--cyclefreq",
