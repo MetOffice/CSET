@@ -38,8 +38,8 @@ def _identify_number_of_cycles_required(
         inclusive, separated by cyclefreq hours.
     """
     # Identify the start and end times, and create datetime objects for these
-    start_dt = datetime.strptime(cyclestart, "%Y%m%dT%H%MZ")
-    end_dt = datetime.strptime(cycleend, "%Y%m%dT%H%MZ")
+    start_dt = datetime.fromisoformat(cyclestart)
+    end_dt = datetime.fromisoformat(cycleend)
 
     # To store initialisation times
     forecast_initialisations = []
