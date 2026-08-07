@@ -876,7 +876,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
                 vmin = min(levels)
                 vmax = max(levels)
             else:
-                raise TypeError("Unknown vmin and vmax range.")
+                logger.info("Unknown vmin and vmax range.")
                 vmin, vmax = None, None
             # pcolormesh plot of the field and ensure to use norm and not vmin/vmax
             # if levels are defined.
@@ -1911,6 +1911,9 @@ def _spatial_plot(
     # Check if there is a valid stamp coordinate in cube dimensions.
     if stamp_coordinate == "realization":
         stamp_coordinate = check_stamp_coordinate(cube)
+
+    # # Check if there is a valid stamp coordinate in cube dimensions.
+    # stamp_coordinate = check_stamp_coordinate(cube)
 
     # Make postage stamp plots if stamp_coordinate exists and has more than a
     # single point.

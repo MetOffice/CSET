@@ -1215,15 +1215,6 @@ def test_invalid_plotting_method_postage_stamp_spatial_plot(cube, tmp_working_di
         )
 
 
-def test_levels_postage_stamp_spatial_plot(ensemble_cube, tmp_working_dir):
-    """Test no levels raises TypeError for pcolormesh with no levels."""
-    with pytest.raises(TypeError, match="Unknown vmin and vmax range."):
-        ensemble_cube.rename("unknown")
-        plot._plot_and_save_postage_stamp_spatial_plot(
-            ensemble_cube[0], "filename", "realization", "title", "pcolormesh"
-        )
-
-
 def test_append_to_plot_index(monkeypatch, tmp_working_dir):
     """Ensure the datetime is written along with the plot index."""
     # Setup environment and required file.
