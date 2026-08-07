@@ -959,6 +959,10 @@ def _plot_and_save_line_series(
     """
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
+    title_suffix = ""
+    if cubes and cubes[0].attributes.get("cset_ensemble_mean") == "true":
+        title_suffix = " (ensemble mean)"
+
     model_colors_map = get_model_colors_map(cubes)
 
     # Store min/max ranges.
@@ -974,7 +978,8 @@ def _plot_and_save_line_series(
             label = cube.attributes.get("model_name")
             color = model_colors_map.get(label)
         if not cube.coords(ensemble_coord):
-            # No ensemble coordinate — plot the cube directly as a single line.
+            # No ensemble coordinate (e.g. after ensemble-mean collapse): plot
+            # the cube as a single deterministic line.
             iplt.plot(coord, cube, color=color, marker="o", ls="-", lw=3, label=label)
         else:
             for cube_slice in cube.slices_over(ensemble_coord):
@@ -1019,7 +1024,7 @@ def _plot_and_save_line_series(
     else:
         ax.set_xlabel(f"{coords[0].name()} / {coords[0].units}", fontsize=14)
     ax.set_ylabel(f"{cubes[0].name()} / {cubes[0].units}", fontsize=14)
-    ax.set_title(title, fontsize=16)
+    ax.set_title(f"{title}{title_suffix}", fontsize=16)
 
     ax.ticklabel_format(axis="y", useOffset=False)
     ax.tick_params(axis="x", labelrotation=15)
@@ -1209,6 +1214,10 @@ def _plot_and_save_vertical_line_series(
     # plot the vertical pressure axis using log scale
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
+    title_suffix = ""
+    if cubes and cubes[0].attributes.get("cset_ensemble_mean") == "true":
+        title_suffix = " (ensemble mean)"
+
     model_colors_map = get_model_colors_map(cubes)
 
     # Check match-up across sequence coords gives consistent sizes
@@ -1221,32 +1230,37 @@ def _plot_and_save_vertical_line_series(
             label = cube.attributes.get("model_name")
             color = model_colors_map.get(label)
 
-        for cube_slice in cube.slices_over(ensemble_coord):
-            # If ensemble data given plot control member with (control)
-            # unless single forecast.
-            if cube_slice.coord(ensemble_coord).points == [0]:
-                iplt.plot(
-                    cube_slice,
-                    coord,
-                    color=color,
-                    marker="o",
-                    ls="-",
-                    lw=3,
-                    label=f"{label} (control)"
-                    if len(cube.coord(ensemble_coord).points) > 1
-                    else label,
-                )
-            # If ensemble data given plot perturbed members with (perturbed).
-            else:
-                iplt.plot(
-                    cube_slice,
-                    coord,
-                    color=color,
-                    ls="-",
-                    lw=1.5,
-                    alpha=0.75,
-                    label=f"{label} (member)",
-                )
+        if not cube.coords(ensemble_coord):
+            # No ensemble coordinate (e.g. after ensemble-mean RMSE): plot
+            # the cube as a single deterministic line.
+            iplt.plot(cube, coord, color=color, marker="o", ls="-", lw=3, label=label)
+        else:
+            for cube_slice in cube.slices_over(ensemble_coord):
+                # If ensemble data given plot control member with (control)
+                # unless single forecast.
+                if cube_slice.coord(ensemble_coord).points == [0]:
+                    iplt.plot(
+                        cube_slice,
+                        coord,
+                        color=color,
+                        marker="o",
+                        ls="-",
+                        lw=3,
+                        label=f"{label} (control)"
+                        if len(cube.coord(ensemble_coord).points) > 1
+                        else label,
+                    )
+                # If ensemble data given plot perturbed members with (perturbed).
+                else:
+                    iplt.plot(
+                        cube_slice,
+                        coord,
+                        color=color,
+                        ls="-",
+                        lw=1.5,
+                        alpha=0.75,
+                        label=f"{label} (member)",
+                    )
 
     # Get the current axis
     ax = plt.gca()
@@ -1294,7 +1308,7 @@ def _plot_and_save_vertical_line_series(
     ax.set_xlabel(
         f"{iter_maybe(cubes)[0].name()} / {iter_maybe(cubes)[0].units}", fontsize=14
     )
-    ax.set_title(title, fontsize=16)
+    ax.set_title(f"{title}{title_suffix}", fontsize=16)
     ax.ticklabel_format(axis="x")
     ax.tick_params(axis="y")
     ax.tick_params(axis="both", labelsize=12)
