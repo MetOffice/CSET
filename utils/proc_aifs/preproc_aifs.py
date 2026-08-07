@@ -15,7 +15,7 @@ from iris.coords import DimCoord
 from iris.cube import CubeList
 
 
-def fix_name_and_units(cube):
+def fix_name_and_units(cube: iris.cube) -> iris.cube:
     """Fix AIFS name and units, where relevant.
 
     Parameters
@@ -87,7 +87,7 @@ def fix_name_and_units(cube):
     return cube
 
 
-def fix_ensemble_cubes(cubes):
+def fix_ensemble_cubes(cubes: iris.cube.CubeList) -> iris.cube.CubeList:
     """
     Fix ensemble dimension in cube list.
 
@@ -187,7 +187,7 @@ def fix_ensemble_cubes(cubes):
     return processed
 
 
-def fix_time_and_meta(cubes):
+def fix_time_and_meta(cubes: iris.cube.CubeList) -> iris.cube.CubeList:
     """
     Fix time coordinates and adjust metadata such as names and units.
 
@@ -280,7 +280,7 @@ def fix_time_and_meta(cubes):
     return done_cubes
 
 
-def run_in_shell_grib_tools(inputpath, outpath):
+def run_in_shell_grib_tools(inputpath: str, outpath: str) -> None:
     """
     Split out grib messages into streams and convert to netCDF.
 
@@ -341,7 +341,7 @@ def run_in_shell_grib_tools(inputpath, outpath):
             )
 
 
-def main():
+def main() -> None:
     """
     Run processing on AIFS grib data.
 
