@@ -176,7 +176,7 @@ def _create_forecasts(
                     units=time_coord.units,
                 )
 
-                # Add this dimsnion to the cube, tied to the forecast_period dimension.
+                # Add this dimension to the cube, tied to the forecast_period dimension.
                 cube_slice.add_aux_coord(
                     new_time_coord,
                     data_dims=(cube_slice.coord_dims("forecast_period")[0],),
@@ -188,13 +188,9 @@ def _create_forecasts(
 
         # Once all cubes processed, save to disk.
         if len(cutouts) > 0:
-            print(
-                f"Saving {outpath + '/reanalysis_' + start.strftime('%Y%m%dT%H%MZ')}.nc"
-            )
-            iris.save(
-                cutouts,
-                outpath + "/reanalysis_" + start.strftime("%Y%m%dT%H%MZ") + ".nc",
-            )
+            filename = f"{outpath}/reanalysis_{start.strftime('%Y%m%dT%H%MZ').nc}"
+            print(f"Saving {filename}")
+            iris.save(cutouts, filename)
         else:
             raise ValueError("No suitable cubes found for saving!")
 
