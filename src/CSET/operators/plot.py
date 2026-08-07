@@ -1093,6 +1093,8 @@ def _plot_and_save_line_power_spectrum_series(
         xname = xcoord.points
 
         yfield = cube.data  # power spectrum
+        if np.all(np.isnan(yfield)):
+            yfield = np.zeros_like(yfield)
         label = None
         color = "black"
         if model_colors_map:
