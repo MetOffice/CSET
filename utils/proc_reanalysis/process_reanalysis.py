@@ -17,7 +17,7 @@ import argparse
 from datetime import datetime, timedelta
 
 
-def _identify_number_of_cycles_required(
+def identify_number_of_cycles_required(
     cyclestart: datetime, cycleend: datetime, cyclefreq: timedelta
 ) -> list:
     """Generate forecast initialisation datetimes between two cycle bounds.
@@ -49,7 +49,7 @@ def _identify_number_of_cycles_required(
     return forecast_initialisations
 
 
-def _create_forecasts(
+def create_forecasts(
     reanalysis: iris.cube.CubeList,
     forecast_initialisations: list,
     forecastlength: int,
@@ -125,7 +125,7 @@ def _create_forecasts(
                     if item in cube_slice.attributes:
                         del cube_slice.attributes[item]
 
-                # Get a copy of time coord, and dimension this corresponds to.
+                # Get a copy of time coord
                 time_coord = cube_slice.coord("time")
 
                 # Work out units of forecast_period and adjust if necessary.
@@ -145,8 +145,8 @@ def _create_forecasts(
                 else:
                     raise ValueError(f"Unhandled time units: {time_coord.units}")
 
-                # Get copy of time coordinate
-                time_coord_points = time_coord.points.copy()
+                # Get time points and dimension that time corresponds to.
+                time_coord_points = time_coord.points
                 time_dim = cube_slice.coord_dims("time")[0]
 
                 # Create forecast period dimension
@@ -247,7 +247,7 @@ def main() -> None:
     print("Starting process_reanalysis.py...")
 
     # Get all forecast initiations
-    forecast_initialisations = _identify_number_of_cycles_required(
+    forecast_initialisations = identify_number_of_cycles_required(
         cyclestart, cycleend, cyclefreq
     )
 
@@ -260,7 +260,7 @@ def main() -> None:
 
     print()
     print("Creating postprocessed files...")
-    _create_forecasts(reanalysis, forecast_initialisations, forecastlength, outpath)
+    create_forecasts(reanalysis, forecast_initialisations, forecastlength, outpath)
 
     print("Done")
 
