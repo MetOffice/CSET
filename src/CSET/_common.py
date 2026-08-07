@@ -19,7 +19,7 @@ import io
 import json
 import logging
 import re
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from pathlib import Path
 from textwrap import dedent
 from typing import Any
@@ -150,7 +150,7 @@ def get_recipe_metadata() -> dict:
 
 
 def parse_variable_options(
-    arguments: list[str], input_dir: str | list[str] | None = None
+    arguments: Sequence[str], input_dir: str | Sequence[str] | None = None
 ) -> dict:
     """Parse a list of arguments into a dictionary of variables.
 

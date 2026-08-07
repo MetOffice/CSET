@@ -305,7 +305,7 @@ def test_improper_template_type_exception():
     """Exception raised if template isn't a string."""
     template = 3.14159265
     with pytest.raises(TypeError):
-        common.render(template)
+        common.render(template)  # type: ignore
 
 
 def test_render_file():
