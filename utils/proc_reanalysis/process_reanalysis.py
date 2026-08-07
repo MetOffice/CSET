@@ -18,29 +18,25 @@ from datetime import datetime, timedelta
 
 
 def _identify_number_of_cycles_required(
-    cyclestart: str, cycleend: str, cyclefreq: str
+    start_dt: datetime, end_dt: datetime, cyclefreq: timedelta
 ) -> list:
     """Generate forecast initialisation datetimes between two cycle bounds.
 
     Parameters
     ----------
-    cyclestart : str
-        First forecast cycle in YYYYMMDDTHHMMZ format.
-    cycleend : str
-        Last forecast cycle in YYYYMMDDTHHMMZ format.
-    cyclefreq : int
+    cyclestart : datetime
+        First forecast cycle time.
+    cycleend : datetime
+        Last forecast cycle time.
+    cyclefreq : timedelta
         Frequency between forecast cycles in hours.
 
     Returns
     -------
     forecast_initialisations: list
-        Forecast initialisation datetimes from cyclestart to cycleend,
+        Forecast initialisation datetimes from start_dt to end_dt,
         inclusive, separated by cyclefreq hours.
     """
-    # Identify the start and end times, and create datetime objects for these
-    start_dt = datetime.fromisoformat(cyclestart)
-    end_dt = datetime.fromisoformat(cycleend)
-
     # To store initialisation times
     forecast_initialisations = []
     current = start_dt
@@ -248,9 +244,14 @@ def main() -> None:
     print()
     print("Starting process_reanalysis.py...")
 
+    # Identify the start and end times, and create datetime objects for these
+    start_dt = datetime.fromisoformat(cyclestart)
+    end_dt = datetime.fromisoformat(cycleend)
+    cyclefreq = timedelta(cyclefreq)
+
     # Get all forecast initiations
     forecast_initialisations = _identify_number_of_cycles_required(
-        cyclestart, cycleend, cyclefreq
+        start_dt, end_dt, cyclefreq
     )
 
     # Load all reanalysis supplied
