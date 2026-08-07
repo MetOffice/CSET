@@ -78,6 +78,8 @@ def fix_name_and_units(cube: iris.cube) -> iris.cube:
             if str(cube.units) == "m**2 s**-2" and str(new_units) == "m":
                 cube = cube.copy(data=cube.lazy_data() / 9.80665)
                 cube.units = "m"
+            # Exception for cloud area fraction, as converting from percentage to fraction not possible
+            # with convert_units.
             if str(cube.units) == "%" and str(new_units) == "1":
                 cube = cube.copy(data=cube.lazy_data() / 100.0)
                 cube.units = "1"
@@ -232,8 +234,8 @@ def fix_time_and_meta(cubes: iris.cube.CubeList) -> iris.cube.CubeList:
         else:
             raise ValueError(f"Unhandled time units: {time_coord.units}")
 
-        # Get copy of time coordinate, and dimension axis corresponding to time.
-        time_coord_points = time_coord.points.copy()
+        # Get time coordinate points, and dimension axis corresponding to time.
+        time_coord_points = time_coord.points
         time_dim = cube.coord_dims("time")[0]
 
         # Create forecast period dimension
