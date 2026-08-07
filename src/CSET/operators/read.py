@@ -40,6 +40,7 @@ from CSET.operators._utils import (
     get_cube_yxcoordname,
     is_spatialdim,
 )
+from CSET.operators.regrid import restructure_ugrid
 
 logger = logging.getLogger(__name__)
 
@@ -234,9 +235,24 @@ def _load_model(
     """Load a single model's data into a CubeList."""
     input_files = _check_input_files(paths)
     # If unset, a constraint of None lets everything be loaded.
-    logger.debug("Constraint: %s", constraint)
-    cubes = iris.load(input_files, constraint, callback=_loading_callback)
-    # If required, compute wind_speed from components.
+
+    logging.debug("Constraint: %s", constraint)
+
+    cubes = iris.load(input_files)
+
+    # If a cube called latitude exists, chances are its unstructured/flattened. If
+    # so, then pass through restructure_ugrid to make rectilinear.
+    if len(cubes.extract("latitude")) > 0:
+        cubes = restructure_ugrid(cubes, constraint)
+
+    for cube in cubes:
+        _loading_callback(cube, None, None)
+
+    # Extract required cubes based on constraint
+    cubes = cubes.extract(constraint)
+
+    # cubes = iris.load(input_files, constraint, callback=_loading_callback)
+    # Make the UM's winds consistent with LFRic.
     cubes = _compute_winds(cubes)
 
     # Add model_name attribute to each cube to make it available at any further
