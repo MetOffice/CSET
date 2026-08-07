@@ -252,10 +252,8 @@ def _setup_spatial_map(
             axes = figure.add_subplot(projection=projection)
 
         # Add coastlines and borderlines if cube contains x and y map coordinates.
-        # Avoid adding lines for 2D masked data or specific fixed ancillary spatial plots.
-        if (cube.ndim > 1 and iris.util.is_masked(cube.data)) or any(
-            name in cube.name() for name in ["land_", "orography", "altitude"]
-        ):
+        # Avoid adding lines for specific fixed ancillary spatial plots
+        if any(name in cube.name() for name in ("land_", "orography", "altitude")):
             pass
         else:
             if cmap.name in ["viridis", "Greys"]:
