@@ -21,7 +21,7 @@ Using *cset bake* on the command line
 * Example to generate full-domain spatial maps of ``VARNAME`` for all output times::
 
     cset cookbook generic_surface_spatial_plot_sequence.yaml
-    cset -v bake -i "input_data_path" -o "my_output_path" \\
+    cset -v bake -i "/path/to/input/data" -o "./output_path" \\
                  -r generic_surface_spatial_plot_sequence.yaml \\
                  --VARNAME="temperature_at_screen_level" \\
                  --MODEL_NAME="my_model_label" \\
