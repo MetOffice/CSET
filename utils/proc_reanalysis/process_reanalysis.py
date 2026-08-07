@@ -243,15 +243,12 @@ def main() -> None:
     filepath = args.filepath
     cyclestart = args.cyclestart
     cycleend = args.cycleend
-    cyclefreq = args.cyclefreq
+    cyclefreq = timedelta(hours=args.cyclefreq)
     forecastlength = args.forecastlength
     outpath = args.outpath
 
     print()
     print("Starting process_reanalysis.py...")
-
-    # Identify the start and end times, and create datetime objects for these
-    cyclefreq = timedelta(cyclefreq)
 
     # Get all forecast initiations
     forecast_initialisations = _identify_number_of_cycles_required(
