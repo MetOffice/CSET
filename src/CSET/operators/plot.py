@@ -253,7 +253,7 @@ def _setup_spatial_map(
 
         # Add coastlines and borderlines if cube contains x and y map coordinates.
         # Avoid adding lines for 2D masked data or specific fixed ancillary spatial plots.
-        if (cube.ndim > 1 and iris.util.is_masked(cube.data)) or any(
+        if cube.ndim > 1 and any(
             name in cube.name() for name in ["land_", "orography", "altitude"]
         ):
             pass
