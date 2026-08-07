@@ -43,6 +43,10 @@ def calculate_power_spectrum(cubes: iris.cube.Cube | iris.cube.CubeList):
     each cube and calculates an individual power spectrum. In case of a
     single cube (one model) it directly calculates the power spectrum.
 
+    Method for regional domains:
+    Calculate power spectra over limited area domain using Discrete Cosine Transform (DCT)
+    as described in Denis et al 2002 [Denis_etal_2002]_.
+
     Parameters
     ----------
     cubes: Cube | CubeList
@@ -241,18 +245,6 @@ def _DCT_ps(y_3d):
     -------
     ps_array:
         Array of power spectra values calculated for input field (for each time)
-
-    Method for regional domains:
-    Calculate power spectra over limited area domain using Discrete Cosine Transform (DCT)
-    as described in Denis et al 2002 [Denis_etal_2002]_.
-
-    References
-    ----------
-    .. [Denis_etal_2002] Bertrand Denis, Jean Côté and René Laprise (2002)
-        "Spectral Decomposition of Two-Dimensional Atmospheric Fields on
-        Limited-Area Domains Using the Discrete Cosine Transform (DCT)"
-        Monthly Weather Review, Vol. 130, 1812-1828
-        doi: https://doi.org/10.1175/1520-0493(2002)130<1812:SDOTDA>2.0.CO;2
     """
     Nt, Ny, Nx = y_3d.shape
 

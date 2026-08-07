@@ -208,7 +208,7 @@ def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None =
         A CubeList containing exactly two cubes: a base and an "other" model,
         this can be an analysis and the model.
     preserved_coordinates: list[str] | str | None, default is None.
-        The coordinates that you wish to preserve in the calculaiton of the
+        The coordinates (or xarray dimension names) that you wish to preserve in the calculaiton of the
         RMSE. For example if you want a map of each time you can preserve
         ["time","grid_latitude", "grid_longitude"] or if you want a time series
         you can preserve ["time"], if you want to collapse to a single value
@@ -218,21 +218,6 @@ def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None =
     -------
     scores_cube: iris.cube.Cube
         A cube containing the RMSE between the base and other cube.
-
-    References
-    ----------
-    .. [scoresa] Leeuwenburg, T., Loveday, N., Ebert, E. E., Cook, H.,
-        Khanarmuei, M., Taggart, R. J., Ramanathan, N., Carroll, M., Chong, S.,
-        Griffiths, A., & Sharples, J. (2024) "scores: A Python package for
-        verifying and evaluating models and predictions with xarray". Journal
-        of Open Source Software, vol. 9, 6889. doi: 10.21105/joss.06889
-
-    .. [scoresb] Leeuwenburg, T., Loveday, N., Ramanathan, N., Chong, S.,
-        Taggart, R. J., Shrestha, D., Khanarmuei, M., Cook, H., Bluett, L., Ebert,
-        E. E., Carroll, M., Trotta, B., Bishop, S., Squire, D. T., Griffiths, A.,
-        Pagano, T. C., Fisher, A. J., Mandelbaum, T., Jinghan, F., … Smallwood, J.
-        (2026) "scores: Metrics for the verification, evaluation and optimisation of
-        forecasts, predictions or models (2.5.0)". Zenodo. doi: 10.5281/zenodo.18638494
     """
     base, other = _sort_cubes_for_verification(cubes)
 
@@ -306,21 +291,6 @@ def scores_mae(cubes: CubeList, preserved_coordinates: list[str] | str | None = 
     -------
     scores_cube: iris.cube.Cube
         A cube containing the MAE between the base and other cube.
-
-    References
-    ----------
-    .. [scoresa] Leeuwenburg, T., Loveday, N., Ebert, E. E., Cook, H.,
-        Khanarmuei, M., Taggart, R. J., Ramanathan, N., Carroll, M., Chong, S.,
-        Griffiths, A., & Sharples, J. (2024) "scores: A Python package for
-        verifying and evaluating models and predictions with xarray". Journal
-        of Open Source Software, vol. 9, 6889. doi: 10.21105/joss.06889
-
-    .. [scoresb] Leeuwenburg, T., Loveday, N., Ramanathan, N., Chong, S.,
-        Taggart, R. J., Shrestha, D., Khanarmuei, M., Cook, H., Bluett, L., Ebert,
-        E. E., Carroll, M., Trotta, B., Bishop, S., Squire, D. T., Griffiths, A.,
-        Pagano, T. C., Fisher, A. J., Mandelbaum, T., Jinghan, F., … Smallwood, J.
-        (2026) "scores: Metrics for the verification, evaluation and optimisation of
-        forecasts, predictions or models (2.5.0)". Zenodo. doi: 10.5281/zenodo.18638494
     """
     base, other = _sort_cubes_for_verification(cubes)
 
@@ -394,21 +364,6 @@ def scores_additive_bias(
     -------
     scores_cube: iris.cube.Cube
         A cube containing the ME between the base and other cube.
-
-    References
-    ----------
-    .. [scoresa] Leeuwenburg, T., Loveday, N., Ebert, E. E., Cook, H.,
-        Khanarmuei, M., Taggart, R. J., Ramanathan, N., Carroll, M., Chong, S.,
-        Griffiths, A., & Sharples, J. (2024) "scores: A Python package for
-        verifying and evaluating models and predictions with xarray". Journal
-        of Open Source Software, vol. 9, 6889. doi: 10.21105/joss.06889
-
-    .. [scoresb] Leeuwenburg, T., Loveday, N., Ramanathan, N., Chong, S.,
-        Taggart, R. J., Shrestha, D., Khanarmuei, M., Cook, H., Bluett, L., Ebert,
-        E. E., Carroll, M., Trotta, B., Bishop, S., Squire, D. T., Griffiths, A.,
-        Pagano, T. C., Fisher, A. J., Mandelbaum, T., Jinghan, F., … Smallwood, J.
-        (2026) "scores: Metrics for the verification, evaluation and optimisation of
-        forecasts, predictions or models (2.5.0)". Zenodo. doi: 10.5281/zenodo.18638494
     """
     base, other = _sort_cubes_for_verification(cubes)
 
@@ -481,21 +436,6 @@ def scores_correlation_pearsonr(
     -------
     scores_cube: iris.cube.Cube
         A cube containing the PC between the base and other cube.
-
-    References
-    ----------
-    .. [scoresa] Leeuwenburg, T., Loveday, N., Ebert, E. E., Cook, H.,
-        Khanarmuei, M., Taggart, R. J., Ramanathan, N., Carroll, M., Chong, S.,
-        Griffiths, A., & Sharples, J. (2024) "scores: A Python package for
-        verifying and evaluating models and predictions with xarray". Journal
-        of Open Source Software, vol. 9, 6889. doi: 10.21105/joss.06889
-
-    .. [scoresb] Leeuwenburg, T., Loveday, N., Ramanathan, N., Chong, S.,
-        Taggart, R. J., Shrestha, D., Khanarmuei, M., Cook, H., Bluett, L., Ebert,
-        E. E., Carroll, M., Trotta, B., Bishop, S., Squire, D. T., Griffiths, A.,
-        Pagano, T. C., Fisher, A. J., Mandelbaum, T., Jinghan, F., … Smallwood, J.
-        (2026) "scores: Metrics for the verification, evaluation and optimisation of
-        forecasts, predictions or models (2.5.0)". Zenodo. doi: 10.5281/zenodo.18638494
     """
     base, other = _sort_cubes_for_verification(cubes)
 
@@ -551,7 +491,7 @@ def scores_crps_for_ensemble(
 ) -> iris.Constraint:
     r"""Calculate the CRPS for an ensemble.
 
-    Acts as a wrapper around the crps_for_ensemble from ``scores`` ([scores_a]_, [scores_b]_).
+    Acts as a wrapper around the crps_for_ensemble from ``scores`` ([scoresa]_, [scoresb]_).
 
     Lower CRPS values are better (implies experiment distribution is closer to control distribution/observations),
     larger values are worse (implies distributions are dissimilar).
@@ -559,7 +499,7 @@ def scores_crps_for_ensemble(
     Default method is ecdf.  ecdf is exact value from the empirical distributions,
     whereas fair produces an approximated value based on a random sample of the underlying distribution.
 
-    See [CRPS] for further information.
+    See [CRPS]_ for further information.
 
     Parameters
     ----------
@@ -570,26 +510,6 @@ def scores_crps_for_ensemble(
     -------
     crps: iris.cube.Cube
         A cube containing the crps between the ensemble members and the control
-
-    References
-    ----------
-    .. [scores_a] Leeuwenburg, T., Loveday, N., Ebert, E. E., Cook, H.,
-        Khanarmuei, M., Taggart, R. J., Ramanathan, N., Carroll, M., Chong, S.,
-        Griffiths, A., & Sharples, J. (2024) "scores: A Python package for
-        verifying and evaluating models and predictions with xarray". Journal
-        of Open Source Software, vol. 9, 6889. doi: 10.21105/joss.06889
-
-    .. [scores_b] Leeuwenburg, T., Loveday, N., Ramanathan, N., Chong, S.,
-        Taggart, R. J., Shrestha, D., Khanarmuei, M., Cook, H., Bluett, L., Ebert,
-        E. E., Carroll, M., Trotta, B., Bishop, S., Squire, D. T., Griffiths, A.,
-        Pagano, T. C., Fisher, A. J., Mandelbaum, T., Jinghan, F., … Smallwood, J.
-        (2026) "scores: Metrics for the verification, evaluation and optimisation of
-        forecasts, predictions or models (2.5.0)". Zenodo. doi: 10.5281/zenodo.18638494
-
-    .. [CRPS]
-        Hersbach, H., 2000: Decomposition of the Continuous Ranked
-        Probability Score for Ensemble Prediction Systems. Wea.
-        Forecasting, 15, 559–570, https://doi.org/10.1175/1520-0434(2000)015<0559:DOTCRP>2.0.CO;2.
     """
     if control_member != 0:
         logger.warning("control member is usual 0")
