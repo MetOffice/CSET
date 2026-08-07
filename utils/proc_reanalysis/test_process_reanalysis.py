@@ -4,10 +4,10 @@ from datetime import datetime, timedelta
 
 import iris
 import numpy as np
-import process_reanalysis as proc_reanalysis
 import pytest
 from iris.coords import DimCoord
 from iris.cube import Cube
+from utils.proc_reanalysis import process_reanalysis as proc_reanalysis
 
 
 def test_single_cycle():
