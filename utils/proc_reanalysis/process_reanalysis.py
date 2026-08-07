@@ -225,7 +225,7 @@ def main() -> None:
         "--cyclefreq",
         type=int,
         required=True,
-        help="Time between forecast initiations/cycles",
+        help="Hours between forecast initiations/cycles",
     )
     parser.add_argument(
         "--forecastlength",
