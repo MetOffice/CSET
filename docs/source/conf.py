@@ -86,7 +86,6 @@ sphinx_gallery_conf = {
     ),
 }
 
-suppress_warnings = [
-    "toc.not_included",
-    "toc.excluded",
+exclude_patterns = [
+    "**/GALLERY_HEADER.rst",
 ]
