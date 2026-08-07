@@ -2624,10 +2624,6 @@ def qq_plot(
     closer values/values further apart at the tails imply poor representation of
     the extremes.
 
-    References
-    ----------
-    .. [Wilks2011] Wilks, D.S., (2011) "Statistical Methods in the Atmospheric
-       Sciences" Third Edition, vol. 100, Academic Press, Oxford, UK, 676 pp.
     """
     # Check cubes using same functionality as the difference operator.
     if len(cubes) != 2:

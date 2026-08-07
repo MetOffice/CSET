@@ -14,3 +14,4 @@ components.
     operators
     workflow/index
     internal
+    bibliography
