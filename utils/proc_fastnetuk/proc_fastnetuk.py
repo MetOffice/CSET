@@ -7,6 +7,8 @@ import iris.cube
 import numpy as np
 from scipy.interpolate import LinearNDInterpolator
 from iris.analysis.cartography import rotate_pole
+import argparse
+from glob import glob
 
 
 # Lookup dictionary to translate to LFRic long_names.
@@ -274,7 +276,51 @@ def _restructure_ugrid_regrid(cube, tri, lat_grid, lon_grid, xy):
     return out_cube
 
 
-def restructure_ugrid(cubes, constraint):
+def fix_metadata(cubes, constraint):
+    """
+    Pre-filter cubes prior to regridding to reduce excess compute.
+
+    Parse cubes and filter for required variable, alongside latitude and
+    longitude, for further processing. This reduces compute overhead on
+    variables that we don't require. This also cleans metadata prior to filtering.
+
+    Parameters
+    ----------
+    cubes : iris.cube.CubeList
+        A cubelist containing unstructured cubes, along with cubes containing
+        latitude and longitude information.
+
+    constraint : iris.constraint
+        Constraint in order to extract required variable.
+
+    Returns
+    -------
+    filterd_cubes : iris.cube.CubeList
+        A cubelist containing the required cube that matches the constraint, along
+        with latitude and longitude cubes.
+    """
+    # Add metadata to variables, if appropriate
+    sanitised_cubes = iris.cube.CubeList()
+    for cube in cubes:
+        out = _rebuild_ugrid_meta_firstfix(cube)
+        if out is not None:
+            sanitised_cubes.append(out)
+
+    # Create empty cubelist.
+    filtered_cubes = iris.cube.CubeList()
+
+    # Extract latitude and longitude cubes, and append these to filtered_cubes.
+    filtered_cubes.append(cubes.extract("latitude")[0])
+    filtered_cubes.append(cubes.extract("longitude")[0])
+
+    # Extract required cube based on constraint.
+    for c in sanitised_cubes.extract(constraint):
+        filtered_cubes.append(c)
+
+    return filtered_cubes
+
+
+def restructure_ugrid(cubes):
     """
     Restructure ugrid cubes using parallel processing.
 
@@ -295,7 +341,7 @@ def restructure_ugrid(cubes, constraint):
     """
     # First, parse all cubes and fix their metadata (apart from latitude/longitude,
     # which we do later after regridding), and extract required variable from constraint.
-    cubes = prefilter_fix_metadata(cubes, constraint)
+    cubes = fix_metadata(cubes, constraint)
 
     # First, extract latitude and longitude coordinates
     lat = cubes.extract("latitude")[0].data
@@ -328,3 +374,31 @@ def restructure_ugrid(cubes, constraint):
             fixed_cubes.append(result_arr)
 
     return fixed_cubes.concatenate()
+
+
+def main() -> None:
+    """
+    Run processing on FastNetUK data.
+
+    Process produces CSET-ready netCDF files for loading.
+    """
+    parser = argparse.ArgumentParser(description="Process arguments.")
+    parser.add_argument("--inputpath", required=True, help="Path to file(s) to load.")
+    parser.add_argument(
+        "--outputpath",
+        type=str,
+        required=True,
+        help="Path to save final output data.",
+    )
+
+    args = parser.parse_args()
+
+    inputpath = args.inputpath
+    outputpath = args.outpath + "/"
+
+    for file in glob(inputpath):
+        print(f"Running script on {file}")
+
+        # Func1: Load all cubes, get lat, lon
+        cubes = iris.load(file)
+        cubes = restructure_ugrid(cubes)
