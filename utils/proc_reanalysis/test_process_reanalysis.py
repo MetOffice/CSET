@@ -1,6 +1,6 @@
 """Unit tests for process_reanalysis.py."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import iris
 import numpy as np
@@ -13,9 +13,9 @@ from iris.cube import Cube
 def test_single_cycle():
     """Assert single datetime returned if one initialisation."""
     result = proc_reanalysis.identify_number_of_cycles_required(
-        "20240101T0000Z",
-        "20240101T0000Z",
-        6,
+        datetime.fromisoformat("2024-01-01 00:00:00"),
+        datetime.fromisoformat("2024-01-01 00:00:00"),
+        timedelta(hours=6),
     )
 
     assert result == [datetime(2024, 1, 1, 0, 0)]
@@ -24,9 +24,9 @@ def test_single_cycle():
 def test_multiple_cycles():
     """Test handling of multiple cycles identified."""
     result = proc_reanalysis.identify_number_of_cycles_required(
-        "20240101T0000Z",
-        "20240101T1200Z",
-        6,
+        datetime.fromisoformat("2024-01-01 00:00:00"),
+        datetime.fromisoformat("2024-01-01 12:00:00"),
+        timedelta(hours=6),
     )
 
     assert result == [
@@ -39,25 +39,15 @@ def test_multiple_cycles():
 def test_non_divisible_interval():
     """Check end point is not exceeded."""
     result = proc_reanalysis.identify_number_of_cycles_required(
-        "20240101T0000Z",
-        "20240101T1000Z",
-        6,
+        datetime.fromisoformat("2024-01-01 00:00:00"),
+        datetime.fromisoformat("2024-01-01 10:00:00"),
+        timedelta(hours=6),
     )
 
     assert result == [
         datetime(2024, 1, 1, 0),
         datetime(2024, 1, 1, 6),
     ]
-
-
-def test_invalid_date_format():
-    """Raise problem with input."""
-    with pytest.raises(ValueError):
-        proc_reanalysis.identify_number_of_cycles_required(
-            "2024-01-01",
-            "20240101T1200Z",
-            6,
-        )
 
 
 def make_cube(
@@ -118,7 +108,7 @@ def test_seconds_converted_to_hours(tmp_path):
 
     cube.coord("time").points = [0, 3600, 7200, 10800, 14400]
 
-    proc_reanalysis._create_forecasts(
+    proc_reanalysis.create_forecasts(
         iris.cube.CubeList([cube]),
         [datetime(2024, 1, 1)],
         forecastlength=2,
