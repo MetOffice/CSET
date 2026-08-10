@@ -58,7 +58,6 @@ def calculate_power_spectrum(cubes: iris.cube.Cube | iris.cube.CubeList):
         CubeList of power spectra.
     """
     out = iris.cube.CubeList()
-
     for cube in iter_maybe(cubes):
         model = cube.attributes.get("model_name")
 
@@ -125,7 +124,6 @@ def calculate_power_spectrum(cubes: iris.cube.Cube | iris.cube.CubeList):
 
         combined_cube = member_power_spectra.concatenate_cube()
         combined_cube = iris.util.squeeze(combined_cube)
-
         out.append(combined_cube)
 
     if len(out) == 1:
