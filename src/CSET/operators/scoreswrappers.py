@@ -194,7 +194,60 @@ def _resolve_preserve_dims(
     return preserve_dims
 
 
-def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None = None):
+def scores_rmse_model_obs(
+    cubes: CubeList, preserved_coordinates: list[str] | str | None = None
+):
+    r"""Calculate the Root Mean Square Error (RMSE) using scores.
+
+    Acts as a wrapper around the RMSE calculation from ``scores`` ([scoresa]_, [scoresb]_).
+    It is calculated as
+
+    .. math:: RMSE = \sqrt{\frac{1}{N} \Sigma(forecast - observations)^2}
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        A CubeList containing exactly multiple cubes: an observation cube and multiple model cubes.
+    preserved_coordinates: list[str] | str | None, default is None.
+        The coordinates that you wish to preserve in the calculaiton of the
+        RMSE. For example if you want a map of each time you can preserve
+        ["time","grid_latitude", "grid_longitude"] or if you want a time series
+        you can preserve ["time"], if you want to collapse to a single value
+        use `None`. The default is `None`.
+
+    Returns
+    -------
+    scores_cube: iris.cube.Cube
+        A cube containing the RMSE between the models and observation cube.
+    """
+    rmse_cubes = CubeList()
+    model_list = CubeList()
+
+    for cb in cubes:
+        if "observed" in cb.long_name:
+            observed = cb
+        else:
+            model_list.append(cb)
+
+    for model in model_list:
+        input_cubelist = CubeList()
+        input_cubelist.append(observed)
+        input_cubelist.append(model)
+        rmse = scores_rmse(
+            input_cubelist, preserved_coordinates, obs_model_comparison=True
+        )
+        model_name = model.attributes["model_name"]
+        rmse.attributes["model_name"] = model_name
+        rmse_cubes.append(rmse)
+
+    return rmse_cubes
+
+
+def scores_rmse(
+    cubes: CubeList,
+    preserved_coordinates: list[str] | str | None = None,
+    obs_model_comparison: bool = False,
+):
     r"""Calculate the Root Mean Square Error (RMSE) using scores.
 
     Acts as a wrapper around the RMSE calculation from ``scores`` ([scoresa]_, [scoresb]_).
@@ -219,7 +272,14 @@ def scores_rmse(cubes: CubeList, preserved_coordinates: list[str] | str | None =
     scores_cube: iris.cube.Cube
         A cube containing the RMSE between the base and other cube.
     """
-    base, other = _sort_cubes_for_verification(cubes)
+    if obs_model_comparison:
+        for cb in cubes:
+            if "observed" in cb.long_name:
+                base = cb
+            else:
+                other = cb
+    else:
+        base, other = _sort_cubes_for_verification(cubes)
 
     # Copy the coordinates of the input cubes.
     other_xr = xr.DataArray.from_iris(other)

@@ -336,6 +336,7 @@ def _set_title_and_filename(
     nplot: int,
     recipe_title: str,
     filename: str,
+    model_name: str | None = None,
 ):
     """Set plot title and filename based on cube coordinate.
 
@@ -407,6 +408,10 @@ def _set_title_and_filename(
             plot_filename = f"{filename.rsplit('.', 1)[0]}{sequence_fname}.png"
         else:
             plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
+
+    if model_name:
+        plot_filename = f"{model_name}_{plot_filename}"
+        plot_title = f"{model_name}_{plot_title}"
 
     return plot_title, plot_filename
 
@@ -1945,8 +1950,14 @@ def _spatial_plot(
     for iseq, cube_slice in enumerate(cube.slices_over(sequence_coordinate)):
         # Set plot titles and filename
         seq_coord = cube_slice.coord(sequence_coordinate)
+
+        if "model_name" in cube.attributes:
+            model_name = cube.attributes["model_name"]
+        else:
+            model_name = None
+
         plot_title, plot_filename = _set_title_and_filename(
-            seq_coord, nplot, recipe_title, filename
+            seq_coord, nplot, recipe_title, filename, model_name=model_name
         )
 
         # Extract sequence slice for overlay_cube, contour_cube and point_cube if required.
@@ -2025,6 +2036,34 @@ def spatial_contour_plot(
         "contourf", cube, filename, sequence_coordinate, stamp_coordinate, **kwargs
     )
     return cube
+
+
+def spatial_pcolormesh_plot_multi_model(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Plot a spatial variable onto a map from a cubelist with multiple models of 2D, 3D, or 4D cubes.
+
+    Parameters
+    ----------
+    cubes: CubeList
+        Iris cubelist of model cubes with the data to plot. Each cube should have two spatial dimensions,
+        such as lat and lon, and may also have a another two dimension to be
+        plotted sequentially and/or as postage stamp plots.
+
+    Returns
+    -------
+    CubeList
+        The original cube list (so further operations can be applied).
+
+    Raises
+    ------
+    ValueError
+        If the cubes don't have the right dimensions.
+    """
+    for model_cube in cubes:
+        spatial_pcolormesh_plot(model_cube)
+
+    return cubes
 
 
 def spatial_pcolormesh_plot(
