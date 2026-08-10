@@ -89,5 +89,8 @@ src = ["src", "test"]
 extend-select = ["B", "D"]
 ignore = ["N999", "DTZ", "RUF059"]
 
+[tool.ruff.lint.per-file-ignores]
+"docs/source/reference/gallery/examples/**/*.py" = ["D"]
+
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"

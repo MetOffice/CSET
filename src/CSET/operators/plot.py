@@ -21,6 +21,7 @@ import json
 import logging
 import math
 import os
+import sys
 from typing import Literal
 
 import cartopy.crs as ccrs
@@ -76,6 +77,11 @@ mpl.use("agg")
 ############################
 
 
+def in_sphinx_gallery():
+    """Test if running plot code in sphinx-gallery context."""
+    return "sphinx_gallery" in sys.modules
+
+
 def _append_to_plot_index(plot_index: list) -> list:
     """Add plots into the plot index, returning the complete plot index."""
     with open("meta.json", "r+t", encoding="UTF-8") as fp:
@@ -124,6 +130,26 @@ def _make_plot_html_page(plots: list):
     # Save completed HTML.
     with open("index.html", "wt", encoding="UTF-8") as fp:
         fp.write(html)
+
+
+def _save_close_figure(figure, plot_type: str, filename: str):
+    """Save generated plot figure file and close figure.
+
+    If running documentation gallery generation, avoid saving to file.
+
+    Parameters
+    ----------
+    figure:
+        Matplotlib Figure object holding all plot elements.
+    plot_type: str
+        String identifier for plot type for logging information.
+    filename: str
+        Filename for saved figure.
+    """
+    if not in_sphinx_gallery():
+        figure.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logger.info("Saved %s plot to %s", plot_type, filename)
+        plt.close(figure)
 
 
 def _setup_spatial_map(
@@ -780,9 +806,7 @@ def _plot_and_save_spatial_plot(
         logger.debug("Set colorbar ticks and labels.")
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logger.info("Saved spatial plot to %s", filename)
-    plt.close(fig)
+    _save_close_figure(fig, "spatial", filename)
 
 
 def _plot_and_save_postage_stamp_spatial_plot(
@@ -906,9 +930,8 @@ def _plot_and_save_postage_stamp_spatial_plot(
     # Overall figure title.
     fig.suptitle(title, fontsize=16)
 
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logger.info("Saved contour postage stamp plot to %s", filename)
-    plt.close(fig)
+    # Save plot.
+    _save_close_figure(fig, "contour postate stamp", filename)
 
 
 def _plot_and_save_line_series(
@@ -950,31 +973,35 @@ def _plot_and_save_line_series(
         if model_colors_map:
             label = cube.attributes.get("model_name")
             color = model_colors_map.get(label)
-        for cube_slice in cube.slices_over(ensemble_coord):
-            # Label with (control) if part of an ensemble or not otherwise.
-            if cube_slice.coord(ensemble_coord).points == [0]:
-                iplt.plot(
-                    coord,
-                    cube_slice,
-                    color=color,
-                    marker="o",
-                    ls="-",
-                    lw=3,
-                    label=f"{label} (control)"
-                    if len(cube.coord(ensemble_coord).points) > 1
-                    else label,
-                )
-                # Label with (perturbed) if part of an ensemble and not the control.
-            else:
-                iplt.plot(
-                    coord,
-                    cube_slice,
-                    color=color,
-                    ls="-",
-                    lw=1.5,
-                    alpha=0.75,
-                    label=f"{label} (member)",
-                )
+        if not cube.coords(ensemble_coord):
+            # No ensemble coordinate — plot the cube directly as a single line.
+            iplt.plot(coord, cube, color=color, marker="o", ls="-", lw=3, label=label)
+        else:
+            for cube_slice in cube.slices_over(ensemble_coord):
+                # Label with (control) if part of an ensemble or not otherwise.
+                if cube_slice.coord(ensemble_coord).points == [0]:
+                    iplt.plot(
+                        coord,
+                        cube_slice,
+                        color=color,
+                        marker="o",
+                        ls="-",
+                        lw=3,
+                        label=f"{label} (control)"
+                        if len(cube.coord(ensemble_coord).points) > 1
+                        else label,
+                    )
+                    # Label with (perturbed) if part of an ensemble and not the control.
+                else:
+                    iplt.plot(
+                        coord,
+                        cube_slice,
+                        color=color,
+                        ls="-",
+                        lw=1.5,
+                        alpha=0.75,
+                        label=f"{label} (member)",
+                    )
 
         # Calculate the global min/max if multiple cubes are given.
         _, levels, _ = colorbar_map_levels(cube, axis="y")
@@ -1021,9 +1048,7 @@ def _plot_and_save_line_series(
     ax.legend(handles=handles, loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logger.info("Saved line plot to %s", filename)
-    plt.close(fig)
+    _save_close_figure(fig, "line", filename)
 
 
 def _plot_and_save_line_power_spectrum_series(
@@ -1146,9 +1171,7 @@ def _plot_and_save_line_power_spectrum_series(
     ax.legend(handles=handles, loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logger.info("Saved line plot to %s", filename)
-    plt.close(fig)
+    _save_close_figure(fig, "line power spectrum", filename)
 
 
 def _plot_and_save_vertical_line_series(
@@ -1288,9 +1311,7 @@ def _plot_and_save_vertical_line_series(
     ax.legend(handles=handles, loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logger.info("Saved line plot to %s", filename)
-    plt.close(fig)
+    _save_close_figure(fig, "vertical line", filename)
 
 
 def _plot_and_save_scatter_plot(
@@ -1362,9 +1383,7 @@ def _plot_and_save_scatter_plot(
     ax.autoscale()
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logger.info("Saved scatter plot to %s", filename)
-    plt.close(fig)
+    _save_close_figure(fig, "scatter", filename)
 
 
 def _plot_and_save_vector_plot(
@@ -1475,9 +1494,7 @@ def _plot_and_save_vector_plot(
     iplt.quiver(cube_u[::step, ::step], cube_v[::step, ::step], pivot="middle")
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logger.info("Saved vector plot to %s", filename)
-    plt.close(fig)
+    _save_close_figure(fig, "vector", filename)
 
 
 def _plot_and_save_histogram_series(
@@ -1597,9 +1614,7 @@ def _plot_and_save_histogram_series(
         ax.legend(loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logger.info("Saved histogram plot to %s", filename)
-    plt.close(fig)
+    _save_close_figure(fig, "histogram", filename)
 
 
 def _plot_and_save_postage_stamp_histogram_series(
@@ -1657,9 +1672,8 @@ def _plot_and_save_postage_stamp_histogram_series(
     # Overall figure title.
     fig.suptitle(title, fontsize=16)
 
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logger.info("Saved histogram postage stamp plot to %s", filename)
-    plt.close(fig)
+    # Save plot.
+    _save_close_figure(fig, "histogram postage stamp", filename)
 
 
 def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
@@ -1692,12 +1706,8 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
     # Add a legend
     ax.legend(fontsize=16)
 
-    # Save the figure to a file
-    plt.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logger.info("Saved histogram postage stamp plot to %s", filename)
-
-    # Close the figure
-    plt.close(fig)
+    # Save plot.
+    _save_close_figure(fig, "histogram postage stamp", filename)
 
 
 def _plot_and_save_scatter_series(
@@ -1836,9 +1846,7 @@ def _plot_and_save_scatter_series(
         cb.set_label("Number of data points", size=12)
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logger.info("Saved scatter plot to %s", filename)
-    plt.close(fig)
+    _save_close_figure(fig, "scatter", filename)
 
 
 def _spatial_plot(
@@ -2213,11 +2221,8 @@ def plot_line_series(
             raise ValueError(
                 f"Cube must have a {series_coordinate} coordinate."
             ) from err
-        if model_cube.coords("realization"):
-            if model_cube.ndim > 3:
-                raise ValueError("Cube must be 1D or 2D with a realization coordinate.")
-        else:
-            raise ValueError("Cube must have a realization coordinate.")
+        if model_cube.coords("realization") and model_cube.ndim > 2:
+            raise ValueError("Cube must be 1D or 2D with a realization coordinate.")
 
     plot_index = []
 
@@ -2616,10 +2621,6 @@ def qq_plot(
     closer values/values further apart at the tails imply poor representation of
     the extremes.
 
-    References
-    ----------
-    .. [Wilks2011] Wilks, D.S., (2011) "Statistical Methods in the Atmospheric
-       Sciences" Third Edition, vol. 100, Academic Press, Oxford, UK, 676 pp.
     """
     # Check cubes using same functionality as the difference operator.
     if len(cubes) != 2:
@@ -3403,9 +3404,8 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
         ax = plt.gca()
         ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
 
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logger.info("Saved histogram postage stamp plot to %s", filename)
-    plt.close(fig)
+    # Save plot.
+    _save_close_figure(fig, "histogram postage stamp", filename)
 
 
 def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
@@ -3533,8 +3533,5 @@ def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
     # Figure title.
     ax.set_title(title, fontsize=16)
 
-    # Save the figure to a file
-    plt.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-
-    # Close the figure
-    plt.close(fig)
+    # Save plot.
+    _save_close_figure(fig, "power spectra postage stamp", filename)
