@@ -54,42 +54,76 @@ def calculate_power_spectrum(cubes: iris.cube.Cube | iris.cube.CubeList):
         CubeList of power spectra.
     """
     out = iris.cube.CubeList()
+
     for cube in iter_maybe(cubes):
         model = cube.attributes.get("model_name")
 
-        # Check whether data has a realization coord.
-        if cube.coords("realization"):
-            members_and_realizations = [
-                (member, int(member.coord("realization").points[0]))
-                for member in cube.slices_over("realization")
-            ]
-        else:
-            members_and_realizations = [(cube, None)]
+        if cube.coords("realization") and cube.coord_dims("forecast_reference_time"):
+            members = []
 
-        # Loop over each realization.
+            for frt_cube in cube.slices_over("forecast_reference_time"):
+                frt = frt_cube.coord("forecast_reference_time").points[0]
+
+                for member in frt_cube.slices_over("realization"):
+                    realiz = member.coord("realization").points[0]
+                    members.append((member, realiz, frt))
+
+        elif cube.coords("realization"):
+            members = []
+
+            for member in cube.slices_over("realization"):
+                realiz = member.coord("realization").points[0]
+                members.append((member, realiz, None))
+
+        elif cube.coords("forecast_reference_time"):
+            members = []
+
+            for frt_cube in cube.slices_over("forecast_reference_time"):
+                frt = frt_cube.coord("forecast_reference_time").points[0]
+                members.append((frt_cube, None, frt))
+
+        else:
+            members = [(cube, None, None)]
+
         member_power_spectra = iris.cube.CubeList()
-        for member, realiz in members_and_realizations:
-            # Calculate power spectrum.
+
+        for member, realiz, frt in members:
             ps = _power_spectrum(member)
-            # Attach model name if available.
+
             if model:
                 ps.attributes["model_name"] = model
-            # Add the correct realization from the parent cube.
+
             if realiz is not None:
                 ps.add_aux_coord(
-                    iris.coords.AuxCoord(realiz, long_name="realization", units="1")
+                    iris.coords.AuxCoord(
+                        realiz,
+                        long_name="realization",
+                        units="1",
+                    )
                 )
-                # Promote to dimension coordinate.
                 ps = iris.util.new_axis(ps, "realization")
+
+            if frt is not None:
+                # attach forecast_reference_time to the time dimension
+
+                time_dim = ps.coord_dims("time")[0]
+
+                ps.add_aux_coord(
+                    iris.coords.AuxCoord(
+                        frt,
+                        long_name="forecast_reference_time",
+                        units=member.coord("forecast_reference_time").units,
+                    ),
+                    data_dims=(time_dim,),
+                )
+
             member_power_spectra.append(ps)
 
-        # Merge the individual realization cubes into a single cube, then
-        # squeeze off length 1 realization coordinates.
         combined_cube = member_power_spectra.concatenate_cube()
         combined_cube = iris.util.squeeze(combined_cube)
+
         out.append(combined_cube)
 
-    # Directly return cube if we only have one.
     if len(out) == 1:
         return out[0]
     else:
