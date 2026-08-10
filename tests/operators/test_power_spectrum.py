@@ -269,8 +269,10 @@ def test_power_spectrum_cube_regular_latlon_coords(cubes, tmp_working_dir, caplo
 
 def test_calculate_power_spectrum_multiple_realizations_and_forecast_reference_times():
     """Check power spectrum can be calculated for multiple forecast reference times and realizations."""
+    # Create a cube with multiple realizations and forecast reference times.
     data = np.random.rand(2, 3, 10, 10)
 
+    # Define coordinates to add to cube
     realization_coord = iris.coords.DimCoord(
         [0, 1],
         long_name="realization",
@@ -295,6 +297,7 @@ def test_calculate_power_spectrum_multiple_realizations_and_forecast_reference_t
         units="degrees",
     )
 
+    # Create cube for testing power spectrum code
     cube = iris.cube.Cube(
         data,
         dim_coords_and_dims=[
@@ -317,5 +320,7 @@ def test_calculate_power_spectrum_multiple_realizations_and_forecast_reference_t
 
     result = power_spectrum.calculate_power_spectrum(cube)
 
+    # Check the power spectrum code works by testing the shape of the
+    # power spectrum code is as expected.
     assert result.coord("realization").shape == (2,)
     assert result.coord("forecast_reference_time").shape == (3,)
