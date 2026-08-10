@@ -44,6 +44,9 @@ steps:
   - operator: scoreswrappers.scores_rmse_model_obs
     preserved_coordinates: ["longitude", "latitude"]
 
+  - operator: collapse.collapse
+    coordinate: ["time"]
+    method: $METHOD
 
   - operator: plot.spatial_pcolormesh_plot_multi_model
 
