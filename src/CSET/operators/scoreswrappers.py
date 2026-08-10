@@ -573,35 +573,60 @@ def scores_pod_model_obs(cubes: CubeList, preserved_coordinates: list[str] | str
 
     op = ops[op_func]
 
-    for cube in (base, other):
-        data = cube.data
-
-        # Convert masked values to NaN
-        if np.ma.isMaskedArray(data):
-            data = data.filled(np.nan)
-
-        # Create binary output, preserving NaNs
-        cube.data = np.where(
-            np.isnan(data),
-            np.nan,
-            op(data, threshold).astype(float)
-        )
-
-        cube.units = '1'
 
     # Copy the coordinates of the input cubes.
     other_xr = xr.DataArray.from_iris(other)
     base_xr = xr.DataArray.from_iris(base)
     preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
 
-    scores_cube = xr.DataArray.to_iris(
-    scores.categorical.probability_of_detection(
-        other_xr,
-        base_xr,
-        preserve_dims=preserve_dims,
-    )
-)
+
+    event_operator = scores.categorical.ThresholdEventOperator(default_event_threshold=threshold, default_op_fn=op)
+
+    forecast_binary, observed_binary = event_operator.make_event_tables(other_xr, base_xr)
+
+    contingency_manager = scores.categorical.BinaryContingencyManager(forecast_binary, observed_binary).transform(preserve_dims=preserve_dims)
+    #contingency_manager.format_table() 
+    scores_cube = xr.DataArray.to_iris(contingency_manager.probability_of_detection())
 
     scores_cube.rename(f"Probability_Of_Detection_{op_func}_{threshold}_{base.name()}")
-
+    scores_cube.units = '1'
     return scores_cube
+    
+
+
+#     for cube in (base, other):
+#         data = cube.data
+
+#         # Convert masked values to NaN
+#         if np.ma.isMaskedArray(data):
+#             data = data.filled(np.nan)
+
+#         # Create binary output, preserving NaNs
+#         cube.data = np.where(
+#             np.isnan(data),
+#             np.nan,
+#             op(data, threshold).astype(float)
+#         )
+
+#         cube.units = '1'
+
+#     # Copy the coordinates of the input cubes.
+#     other_xr = xr.DataArray.from_iris(other)
+#     base_xr = xr.DataArray.from_iris(base)
+#     preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
+
+#     scores_cube = xr.DataArray.to_iris(
+#     scores.categorical.probability_of_detection(
+#         other_xr,
+#         base_xr,
+#         preserve_dims=preserve_dims,
+#     )
+# )
+
+#     
+
+#     print('first')
+#     print(result)
+#     print('second')
+#     print(scores_cube.data)
+#     return scores_cube
