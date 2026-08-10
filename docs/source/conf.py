@@ -85,3 +85,7 @@ sphinx_gallery_conf = {
         ]
     ),
 }
+
+exclude_patterns = [
+    "**/GALLERY_HEADER.rst",
+]

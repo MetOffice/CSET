@@ -110,6 +110,17 @@ def test_parse_recipe_exception_non_dict():
         common.parse_recipe("[]")
 
 
+def test_sample_data_path():
+    """Ensure sample_data_path returns path to requested sample file."""
+    assert Path(common.sample_data_path("air_temperature.nc")).is_file()
+
+
+def test_sample_data_path_missing_file():
+    """Ensure sample_data_path returns error when file does not exist."""
+    with pytest.raises(ValueError):
+        common.sample_data_path("dummy_file.nc")
+
+
 def test_slugify():
     """Slugify removes special characters."""
     assert common.slugify("Test") == "test"
@@ -305,7 +316,7 @@ def test_improper_template_type_exception():
     """Exception raised if template isn't a string."""
     template = 3.14159265
     with pytest.raises(TypeError):
-        common.render(template)
+        common.render(template)  # type: ignore
 
 
 def test_render_file():
