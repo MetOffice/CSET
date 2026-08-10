@@ -180,7 +180,7 @@ def load(conf: Config):
                 recipe=f"timeseries_surface_difference_scores_model_vs_obs_{scores_method}.yaml",
                 variables={
                     "VARNAME": field,
-                    "MODEL_NAMES": models,
+                    "MODEL_NAME": models,
                     "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
@@ -221,11 +221,10 @@ def load(conf: Config):
                 preserved_coords = scores_coords_case
                 method = method_null
             yield RawRecipe(
-                recipe=f"surface_difference_scores_{scores_method}.yaml",
+                recipe=f"surface_difference_scores_model_vs_obs_{scores_method}.yaml",
                 variables={
                     "VARNAME": field,
-                    "BASE_MODEL": base_model["name"],
-                    "OTHER_MODEL": model["name"],
+                    "MODEL_NAME": models,
                     "METHOD": method,
                     "PRESERVED_COORDS": preserved_coords,
                     "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
