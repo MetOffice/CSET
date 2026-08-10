@@ -20,8 +20,10 @@ import iris
 import iris.exceptions
 import numpy as np
 import scores
+import operator
 import scores.continuous
 import scores.probability
+import scores.categorical
 import xarray as xr
 from iris.cube import Cube, CubeList
 from iris.util import reverse
@@ -553,3 +555,53 @@ def scores_crps_for_ensemble(
     crps.rename(f"CRPS_of_{cubes[0].name()}")
     _realization_callback(crps)
     return crps
+
+
+def scores_pod_model_obs(cubes: CubeList, preserved_coordinates: list[str] | str | None, threshold: float, op_func: str):
+    """
+    TODO
+
+    threshold = thing to threshold on
+    op_func = either 'lt' less than or 'gt' greater than.
+    """
+    base, other = _sort_cubes_for_verification(cubes)
+
+    ops = {
+        'gt': operator.gt,
+        'lt': operator.lt,
+    }
+
+    op = ops[op_func]
+
+    for cube in (base, other):
+        data = cube.data
+
+        # Convert masked values to NaN
+        if np.ma.isMaskedArray(data):
+            data = data.filled(np.nan)
+
+        # Create binary output, preserving NaNs
+        cube.data = np.where(
+            np.isnan(data),
+            np.nan,
+            op(data, threshold).astype(float)
+        )
+
+        cube.units = '1'
+
+    # Copy the coordinates of the input cubes.
+    other_xr = xr.DataArray.from_iris(other)
+    base_xr = xr.DataArray.from_iris(base)
+    preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
+
+    scores_cube = xr.DataArray.to_iris(
+    scores.categorical.probability_of_detection(
+        other_xr,
+        base_xr,
+        preserve_dims=preserve_dims,
+    )
+)
+
+    scores_cube.rename(f"Probability_Of_Detection_{op_func}_{threshold}_{base.name()}")
+
+    return scores_cube
