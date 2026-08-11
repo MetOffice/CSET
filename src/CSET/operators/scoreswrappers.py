@@ -15,15 +15,15 @@
 """A module containing wrappers for the scores module."""
 
 import logging
+import operator
 
 import iris
 import iris.exceptions
 import numpy as np
 import scores
-import operator
+import scores.categorical
 import scores.continuous
 import scores.probability
-import scores.categorical
 import xarray as xr
 from iris.cube import Cube, CubeList
 from iris.util import reverse
@@ -557,42 +557,82 @@ def scores_crps_for_ensemble(
     return crps
 
 
-def scores_pod_model_obs(cubes: CubeList, preserved_coordinates: list[str] | str | None, threshold: float, op_func: str):
-    """
+def scores_pod_model_obs(
+    cubes: CubeList,
+    preserved_coordinates: list[str] | str | None,
+    threshold: float,
+    op_func: str,
+):
+    r"""
     Compute the Probability of Detection (POD) score using Scores.
 
     Parameters
     ----------
+    cubes: iris.cube.CubeList
+        An iris cubelist containing a model and an observation cube.
+    preserved_coordinates: list | str | None
+        An object containing which coordinates to preserve in the computation. For example, if cubes contain shape time, point location,
+        then preserving coordinate 'time' will produce a probability of detection score for each timeslice (shape time). If None,
+        then it will return a single value score for all times/point locations.
+    threshold: float
+        A float containing the threshold to use to generate the binary masks.
+    op_func: str
+        A string either containing 'lt' for less than or 'gt for greater than, to determine how the threshold is applied to the data
+        to generate the mask.
 
-    threshold = thing to threshold on
-    op_func = either 'lt' less than or 'gt' greater than.
+    Returns
+    -------
+    cube: iris.cube
+        An iris cube, containing the probability of detection score for further plotting.
+
+    Notes
+    -----
+    The probability of detection calculates the proportion of observed events that meet a threshold that were correctly forecast by the model.
+    For example, if threshold is 290K and op_func is gt (greater than), and at some station a temperature was recorded as 292K and the model produced
+    295k, that would be a positive hit. It does not take into account how far above/below a threshold a model forecasts.
+
+    It is calculated as .. math:: POD = \frac{true positives}{true positives + false negatives}
+
+    It is equivalent to the hit rate. Note if there are no events that meet the threshold in model and observations, a POD of zero is returned.
+
+    POD produces a range of 0 to 1, where 1 is a perfect score.
     """
+    # Separate out base (obs) and other (model).
     base, other = _sort_cubes_for_verification(cubes)
 
+    # Setup operators greater than, less than.
     ops = {
-        'gt': operator.gt,
-        'lt': operator.lt,
+        "gt": operator.gt,
+        "lt": operator.lt,
     }
 
     op = ops[op_func]
 
-
-    # Copy the coordinates of the input cubes.
+    # Convert cubes to xarray and resolve presenved dimensions.
     other_xr = xr.DataArray.from_iris(other)
     base_xr = xr.DataArray.from_iris(base)
     preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
 
+    # Create event operator object using threshold and operator direction.
+    event_operator = scores.categorical.ThresholdEventOperator(
+        default_event_threshold=threshold, default_op_fn=op
+    )
 
-    event_operator = scores.categorical.ThresholdEventOperator(default_event_threshold=threshold, default_op_fn=op)
+    # Generate binary fields using the event operator.
+    forecast_binary, observed_binary = event_operator.make_event_tables(
+        other_xr, base_xr
+    )
 
-    forecast_binary, observed_binary = event_operator.make_event_tables(other_xr, base_xr)
+    # Create binary contigency manager, as per Scores API, using transform to preserve preserve_dims
+    contingency_manager = scores.categorical.BinaryContingencyManager(
+        forecast_binary, observed_binary
+    ).transform(preserve_dims=preserve_dims)
 
-    contingency_manager = scores.categorical.BinaryContingencyManager(forecast_binary, observed_binary).transform(preserve_dims=preserve_dims)
-    #contingency_manager.format_table() 
+    # Get POD from the contigency manager, and convert back to an iris cube.
     scores_cube = xr.DataArray.to_iris(contingency_manager.probability_of_detection())
 
+    # Rename cube so it plots correctly alongside correcting cube units.
     scores_cube.rename(f"Probability_Of_Detection_{op_func}_{threshold}_{base.name()}")
-    scores_cube.units = '1'
-    return scores_cube
-    
+    scores_cube.units = "1"
 
+    return scores_cube
