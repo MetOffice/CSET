@@ -559,7 +559,10 @@ def scores_crps_for_ensemble(
 
 def scores_pod_model_obs(cubes: CubeList, preserved_coordinates: list[str] | str | None, threshold: float, op_func: str):
     """
-    TODO
+    Compute the Probability of Detection (POD) score using Scores.
+
+    Parameters
+    ----------
 
     threshold = thing to threshold on
     op_func = either 'lt' less than or 'gt' greater than.
@@ -593,40 +596,3 @@ def scores_pod_model_obs(cubes: CubeList, preserved_coordinates: list[str] | str
     return scores_cube
     
 
-
-#     for cube in (base, other):
-#         data = cube.data
-
-#         # Convert masked values to NaN
-#         if np.ma.isMaskedArray(data):
-#             data = data.filled(np.nan)
-
-#         # Create binary output, preserving NaNs
-#         cube.data = np.where(
-#             np.isnan(data),
-#             np.nan,
-#             op(data, threshold).astype(float)
-#         )
-
-#         cube.units = '1'
-
-#     # Copy the coordinates of the input cubes.
-#     other_xr = xr.DataArray.from_iris(other)
-#     base_xr = xr.DataArray.from_iris(base)
-#     preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
-
-#     scores_cube = xr.DataArray.to_iris(
-#     scores.categorical.probability_of_detection(
-#         other_xr,
-#         base_xr,
-#         preserve_dims=preserve_dims,
-#     )
-# )
-
-#     
-
-#     print('first')
-#     print(result)
-#     print('second')
-#     print(scores_cube.data)
-#     return scores_cube
