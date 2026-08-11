@@ -569,7 +569,7 @@ def scores_pod_model_obs(
     Parameters
     ----------
     cubes: iris.cube.CubeList
-        An iris cubelist containing a model and an observation cube.
+        An iris cubelist containing model(s) and an observation cube.
     preserved_coordinates: list | str | None
         An object containing which coordinates to preserve in the computation. For example, if cubes contain shape time, point location,
         then preserving coordinate 'time' will produce a probability of detection score for each timeslice (shape time). If None,
@@ -597,8 +597,16 @@ def scores_pod_model_obs(
 
     POD produces a range of 0 to 1, where 1 is a perfect score.
     """
-    # Separate out base (obs) and other (model).
-    base, other = _sort_cubes_for_verification(cubes)
+    # Split out model(s) and obs
+    models = CubeList()
+    for c in cubes:
+        if "observed" in c.long_name:
+            observed = c
+        else:
+            models.append(c)
+
+    # Setup cubelist to store results
+    scores_results = iris.cube.CubeList()
 
     # Setup operators greater than, less than.
     ops = {
@@ -608,31 +616,43 @@ def scores_pod_model_obs(
 
     op = ops[op_func]
 
-    # Convert cubes to xarray and resolve presenved dimensions.
-    other_xr = xr.DataArray.from_iris(other)
-    base_xr = xr.DataArray.from_iris(base)
-    preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
+    for model in models:
+        # Separate out base (obs) and other (model).
+        base, other = _sort_cubes_for_verification(
+            iris.cube.CubeList([observed, model])
+        )
 
-    # Create event operator object using threshold and operator direction.
-    event_operator = scores.categorical.ThresholdEventOperator(
-        default_event_threshold=threshold, default_op_fn=op
-    )
+        # Convert obs cubes to xarray and resolve presenved dimensions.
+        other_xr = xr.DataArray.from_iris(other)
+        base_xr = xr.DataArray.from_iris(base)
+        preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
 
-    # Generate binary fields using the event operator.
-    forecast_binary, observed_binary = event_operator.make_event_tables(
-        other_xr, base_xr
-    )
+        # Create event operator object using threshold and operator direction.
+        event_operator = scores.categorical.ThresholdEventOperator(
+            default_event_threshold=threshold, default_op_fn=op
+        )
 
-    # Create binary contigency manager, as per Scores API, using transform to preserve preserve_dims
-    contingency_manager = scores.categorical.BinaryContingencyManager(
-        forecast_binary, observed_binary
-    ).transform(preserve_dims=preserve_dims)
+        # Generate binary fields using the event operator.
+        forecast_binary, observed_binary = event_operator.make_event_tables(
+            other_xr, base_xr
+        )
 
-    # Get POD from the contigency manager, and convert back to an iris cube.
-    scores_cube = xr.DataArray.to_iris(contingency_manager.probability_of_detection())
+        # Create binary contigency manager, as per Scores API, using transform to preserve preserve_dims
+        contingency_manager = scores.categorical.BinaryContingencyManager(
+            forecast_binary, observed_binary
+        ).transform(preserve_dims=preserve_dims)
 
-    # Rename cube so it plots correctly alongside correcting cube units.
-    scores_cube.rename(f"Probability_Of_Detection_{op_func}_{threshold}_{base.name()}")
-    scores_cube.units = "1"
+        # Get POD from the contigency manager, and convert back to an iris cube.
+        scores_cube = xr.DataArray.to_iris(
+            contingency_manager.probability_of_detection()
+        )
 
-    return scores_cube
+        # Rename cube so it plots correctly alongside correcting cube units.
+        scores_cube.rename(
+            f"Probability_Of_Detection_{op_func}_{threshold}_{base.name()}"
+        )
+        scores_cube.units = "1"
+
+        scores_results.append(scores_cube)
+
+    return scores_results
