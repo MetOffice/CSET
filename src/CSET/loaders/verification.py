@@ -201,10 +201,10 @@ def load(conf: Config):
             conf.SPATIAL_SCORES_FIELD_METHOD_MODEL_VS_OBS,
             scores_spatial_methods_model_vs_obs,
         ):
-            preserved_coords = ["time", "grid_latitude", "grid_longitude"]
+            preserved_coords = ["time", "latitude", "longitude"]
             method_null = ""
             scores_method_case = "CASE"
-            scores_coords_case = ["grid_latitude", "grid_longitude"]
+            scores_coords_case = ["latitude", "longitude"]
             if scores_method == "RMSE" and method == scores_method_case:
                 # Set the preserved coords and collapse method required
                 # to produce RMSE spatial plot over an entire case study.

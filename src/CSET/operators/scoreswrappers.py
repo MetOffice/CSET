@@ -240,6 +240,7 @@ def scores_rmse_model_obs(
         rmse.attributes["model_name"] = model_name
         rmse_cubes.append(rmse)
 
+    print(rmse_cubes)
     return rmse_cubes
 
 
