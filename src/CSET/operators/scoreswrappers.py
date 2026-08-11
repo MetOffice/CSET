@@ -560,7 +560,7 @@ def scores_crps_for_ensemble(
 def scores_pod_model_obs(
     cubes: CubeList,
     preserved_coordinates: list[str] | str | None,
-    threshold: float,
+    threshold: str,
     op_func: str,
 ):
     r"""
@@ -574,8 +574,8 @@ def scores_pod_model_obs(
         An object containing which coordinates to preserve in the computation. For example, if cubes contain shape time, point location,
         then preserving coordinate 'time' will produce a probability of detection score for each timeslice (shape time). If None,
         then it will return a single value score for all times/point locations.
-    threshold: float
-        A float containing the threshold to use to generate the binary masks.
+    threshold: str
+        A str containing the threshold to use to generate the binary masks, which subsequently gets turned to a float (but passed as str around the recipe templating).
     op_func: str
         A string either containing 'lt' for less than or 'gt for greater than, to determine how the threshold is applied to the data
         to generate the mask.
@@ -629,7 +629,7 @@ def scores_pod_model_obs(
 
         # Create event operator object using threshold and operator direction.
         event_operator = scores.categorical.ThresholdEventOperator(
-            default_event_threshold=threshold, default_op_fn=op
+            default_event_threshold=float(threshold), default_op_fn=op
         )
 
         # Generate binary fields using the event operator.
