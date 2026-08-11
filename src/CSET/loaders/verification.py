@@ -173,21 +173,21 @@ def load(conf: Config):
 
     if scores_timeseries_methods_model_vs_obs:
         # Produce model vs observation timeseries plots of scores metrics averaged over the domain for each case study.
-        for model, field, scores_method in itertools.product(
-            models, conf.SURFACE_FIELDS, scores_timeseries_methods_model_vs_obs
+        for field, scores_method in itertools.product(
+            conf.POINT_OBS_FIELDS, scores_timeseries_methods_model_vs_obs
         ):
             yield RawRecipe(
                 recipe=f"timeseries_surface_difference_scores_model_vs_obs_{scores_method}.yaml",
                 variables={
                     "VARNAME": field,
-                    "MODEL_NAME": models,
+                    "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
                     "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
                 },
-                model_ids=[model["id"]],
+                model_ids=["OBS"] + [model["id"] for model in models],
                 aggregation=False,
             )
 
@@ -195,9 +195,9 @@ def load(conf: Config):
     if scores_spatial_methods_model_vs_obs:
         # Produce 2D spatial plots of scores metrics.
 
-        for model, field, method, scores_method in itertools.product(
+        for field, model, method, scores_method in itertools.product(
+            conf.POINT_OBS_FIELDS,
             models,
-            conf.SURFACE_FIELDS_MODEL,
             conf.SPATIAL_SCORES_FIELD_METHOD_MODEL_VS_OBS,
             scores_spatial_methods_model_vs_obs,
         ):
@@ -210,21 +210,23 @@ def load(conf: Config):
                 # to produce RMSE spatial plot over an entire case study.
                 preserved_coords = scores_coords_case
                 method = method_null
-            if scores_method == "MAE" and method == scores_method_case:
-                # Set the preserved coords and collapse method required
-                # to produce MAE spatial plot over an entire case study.
-                preserved_coords = scores_coords_case
-                method = method_null
-            if scores_method == "additive_bias" and method == scores_method_case:
-                # Set the preserved coords and collapse method required
-                # to produce ME additive bias spatial plot over an entire case study.
-                preserved_coords = scores_coords_case
-                method = method_null
+            # TODO include these when backend code is added
+            # if scores_method == "MAE" and method == scores_method_case:
+            # Set the preserved coords and collapse method required
+            # to produce MAE spatial plot over an entire case study.
+            #   preserved_coords = scores_coords_case
+            #  method = method_null
+            # if scores_method == "additive_bias" and method == scores_method_case:
+            # Set the preserved coords and collapse method required
+            # to produce ME additive bias spatial plot over an entire case study.
+            #   preserved_coords = scores_coords_case
+            #   method = method_null
+
             yield RawRecipe(
                 recipe=f"surface_difference_scores_model_vs_obs_{scores_method}.yaml",
                 variables={
                     "VARNAME": field,
-                    "MODEL_NAME": models,
+                    "MODEL_NAME": ["OBS"] + [model["name"]],
                     "METHOD": method,
                     "PRESERVED_COORDS": preserved_coords,
                     "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
@@ -233,7 +235,7 @@ def load(conf: Config):
                     if conf.SELECT_SUBAREA
                     else None,
                 },
-                model_ids=[base_model["id"], model["id"]],
+                model_ids=["OBS"] + [model["id"]],
                 aggregation=False,
             )
 
