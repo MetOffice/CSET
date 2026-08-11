@@ -178,3 +178,32 @@ def load(conf: Config):
                 model_ids=[base_model["id"], model["id"]],
                 aggregation=False,
             )
+
+    # Scores categorical metrics
+    if conf.SCORES_CATEGORICAL_POD:
+        # Produce timeseries plots of scores categorical metrics for each model.
+        for model in models[1:]:
+            for field_and_method in conf.SCORES_CATEGORICAL_POD_ENTRIES:
+                var, op, value = field_and_method.split(",")
+
+                yield RawRecipe(
+                    recipe="surface_categorical_model_obs_pod.yaml",
+                    variables={
+                        "VARNAME": var,
+                        "BASE_MODEL": base_model["name"],
+                        "OTHER_MODEL": model["name"],
+                        "POD_THRESHOLD": value,
+                        "POD_OPERATOR": op,
+                        "SUBAREA_NAME": conf.SUBAREA_NAME
+                        if conf.SELECT_SUBAREA
+                        else "",
+                        "SUBAREA_TYPE": conf.SUBAREA_TYPE
+                        if conf.SELECT_SUBAREA
+                        else None,
+                        "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                        if conf.SELECT_SUBAREA
+                        else None,
+                    },
+                    model_ids=[model["id"] for model in models],
+                    aggregation=False,
+                )
