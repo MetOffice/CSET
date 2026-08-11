@@ -2226,8 +2226,20 @@ def plot_line_series(
             raise ValueError(
                 f"Cube must have a {series_coordinate} coordinate."
             ) from err
-        if model_cube.coords("realization") and model_cube.ndim > 2:
-            raise ValueError("Cube must be 1D or 2D with a realization coordinate.")
+        # Count dimensions excluding realization
+        ndim = model_cube.ndim
+
+        if model_cube.coords("realization"):
+            realization_dims = model_cube.coord_dims("realization")
+
+            # Only subtract if realization is a dimension coordinate
+            if realization_dims:
+                ndim -= len(realization_dims)
+
+        if ndim > 2:
+            raise ValueError(
+                "Cube must be 1D or 2D (excluding any realization dimension)."
+            )
 
     plot_index = []
 
