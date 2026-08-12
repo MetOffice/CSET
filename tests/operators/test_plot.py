@@ -572,8 +572,6 @@ def test_plot_line_series_extra_dimension_failure(tmp_working_dir):
         3,
     )
 
-    print("CUBE ", cube, cube.ndim)
-
     with pytest.raises(
         ValueError,
         match="Cube must be 1D or 2D",
