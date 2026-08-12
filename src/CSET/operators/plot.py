@@ -252,10 +252,8 @@ def _setup_spatial_map(
             axes = figure.add_subplot(projection=projection)
 
         # Add coastlines and borderlines if cube contains x and y map coordinates.
-        # Avoid adding lines for 2D masked data or specific fixed ancillary spatial plots.
-        if (cube.ndim > 1 and iris.util.is_masked(cube.data)) or any(
-            name in cube.name() for name in ["land_", "orography", "altitude"]
-        ):
+        # Avoid adding lines for specific fixed ancillary spatial plots
+        if any(name in cube.name() for name in ("land_", "orography", "altitude")):
             pass
         else:
             if cmap.name in ["viridis", "Greys"]:
@@ -2228,8 +2226,20 @@ def plot_line_series(
             raise ValueError(
                 f"Cube must have a {series_coordinate} coordinate."
             ) from err
-        if model_cube.coords("realization") and model_cube.ndim > 2:
-            raise ValueError("Cube must be 1D or 2D with a realization coordinate.")
+        # Count dimensions excluding realization
+        ndim = model_cube.ndim
+
+        if model_cube.coords("realization"):
+            realization_dims = model_cube.coord_dims("realization")
+
+            # Only subtract if realization is a dimension coordinate
+            if realization_dims:
+                ndim -= len(realization_dims)
+
+        if ndim > 2:
+            raise ValueError(
+                "Cube must be 1D or 2D (excluding any realization dimension)."
+            )
 
     plot_index = []
 
