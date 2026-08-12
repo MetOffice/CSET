@@ -614,19 +614,23 @@ def scores_pod_model_obs(
         "lt": operator.lt,
     }
 
-    # some raise here if not found. KeY Error
-    op = ops[op_func]
+    try:
+        op = ops[op_func]
+    except KeyError as err:
+        raise ValueError(f"Operator {op_func} not supported.") from err
 
     for model in models:
         # Separate out base (obs) and other (model).
-        base, other = _sort_cubes_for_verification(
-            iris.cube.CubeList([observed, model])
-        )
+        # base, other = _sort_cubes_for_verification(
+        #     iris.cube.CubeList([observed, model])
+        # )
 
-        # Convert obs cubes to xarray and resolve presenved dimensions.
-        other_xr = xr.DataArray.from_iris(other)
-        base_xr = xr.DataArray.from_iris(base)
-        preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
+        # Convert obs cubes to xarray and resolve preserved dimensions.
+        other_xr = xr.DataArray.from_iris(model)
+        base_xr = xr.DataArray.from_iris(observed)
+        preserve_dims = _resolve_preserve_dims(
+            observed, other_xr, preserved_coordinates
+        )
 
         # Create event operator object using threshold and operator direction.
         event_operator = scores.categorical.ThresholdEventOperator(
@@ -650,9 +654,10 @@ def scores_pod_model_obs(
 
         # Rename cube so it plots correctly alongside correcting cube units.
         scores_cube.rename(
-            f"Probability_Of_Detection_{op_func}_{threshold}_{base.name()}"
+            f"Probability_Of_Detection_{op_func}_{threshold}_{observed.name()}"
         )
         scores_cube.units = "1"
+        print(model)
         scores_cube.attributes["model_name"] = model.attributes["model_name"]
 
         scores_results.append(scores_cube)
