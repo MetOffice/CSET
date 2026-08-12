@@ -300,10 +300,12 @@ def test_crps_less_than_3_realizations(feature_cube):
     ):
         scoreswrappers.scores_crps_for_ensemble(feature_cube_one_realization)
 
+
 ###################
 
+
 def _make_cube_categorical_testing(data, long_name, model_name=None):
-    "Create basic 2D iris cube for testing functionality."
+    """Create basic 2D iris cube for testing functionality."""
     cube = Cube(
         np.array(data, dtype=float),
         long_name=long_name,
@@ -319,19 +321,16 @@ def _make_cube_categorical_testing(data, long_name, model_name=None):
 
 
 def test_pod_gt_2x2_manual_case():
-    """Test basic 2x2 case for manual validation.
-    """
+    """Test basic 2x2 case for manual validation."""
     obs = _make_cube_categorical_testing(
-        [[12, 5],
-         [15, 8]],
+        [[12, 5], [15, 8]],
         long_name="observed_temperature",
         model_name="obs",
     )
     obs.attributes["cset_comparison_base"] = 1
 
     model = _make_cube_categorical_testing(
-        [[14, 20],
-         [7, 4]],
+        [[14, 20], [7, 4]],
         long_name="temperature",
         model_name="test_model",
     )
@@ -347,7 +346,7 @@ def test_pod_gt_2x2_manual_case():
     assert len(result) == 1
 
     # Hits should be [[1,1],[0,0]] so hit rate of 0.5.
-    assert np.allclose(result[0].data,0.5,  atol=1e-2, rtol=1e-6)
+    assert np.allclose(result[0].data, 0.5, atol=1e-2, rtol=1e-6)
 
 
 # def test_pod_returns_one_when_all_events_perfect():
