@@ -485,6 +485,16 @@ def test_plot_power_spectrum(power_spectrum_cube_readonly, tmp_working_dir):
     assert Path("power_spectra_20220601000000.png").is_file()
 
 
+def test_plot_power_spectrum_nans(power_spectrum_cube, tmp_working_dir):
+    """Save a power_spectrum plot using line series plot when data is nan."""
+    # Set all values to np.nan
+    power_spectrum_cube.data[:] = np.nan
+
+    # See if it still produces a plot
+    plot.plot_line_series(power_spectrum_cube, series_coordinate="frequency")
+    assert Path("power_spectra_20220601000000.png").is_file()
+
+
 def test_plot_line_series_with_filename(cube, tmp_working_dir):
     """Save a line series plot with specific filename and series coordinate."""
     cube = collapse.collapse(cube, ["time", "grid_longitude"], "MEAN")
