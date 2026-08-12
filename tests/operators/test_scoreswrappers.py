@@ -299,3 +299,208 @@ def test_crps_less_than_3_realizations(feature_cube):
         match=r"Cube should have one control member and at least two members",
     ):
         scoreswrappers.scores_crps_for_ensemble(feature_cube_one_realization)
+
+###################
+
+def _make_cube_categorical_testing(data, long_name, model_name=None):
+    "Create basic 2D iris cube for testing functionality."
+    cube = Cube(
+        np.array(data, dtype=float),
+        long_name=long_name,
+        dim_coords_and_dims=[
+            (iris.coords.DimCoord([0, 1], long_name="latitude"), 0),
+            (iris.coords.DimCoord([0, 1], long_name="longitude"), 1),
+        ],
+    )
+
+    cube.attributes["model_name"] = model_name
+
+    return cube
+
+
+def test_pod_gt_2x2_manual_case():
+    """Test basic 2x2 case for manual validation.
+    """
+    obs = _make_cube_categorical_testing(
+        [[12, 5],
+         [15, 8]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
+    obs.attributes["cset_comparison_base"] = 1
+
+    model = _make_cube_categorical_testing(
+        [[14, 20],
+         [7, 4]],
+        long_name="temperature",
+        model_name="test_model",
+    )
+
+    result = scoreswrappers.scores_pod_model_obs(
+        CubeList([model, obs]),
+        preserved_coordinates=None,
+        threshold="10",
+        op_func="gt",
+    )
+
+    # Ensure 1 cube returned.
+    assert len(result) == 1
+
+    # Hits should be [[1,1],[0,0]] so hit rate of 0.5.
+    assert np.allclose(result[0].data,0.5,  atol=1e-2, rtol=1e-6)
+
+
+# def test_pod_returns_one_when_all_events_perfect():
+#     obs = _make_cube(
+#         [[12, 5],
+#          [15, 8]],
+#         long_name="observed_temperature",
+#     )
+
+#     model = _make_cube(
+#         [[1, 1],
+#          [1, 1]],
+#         long_name="model_temperature",
+#         model_name="test_model",
+#     )
+
+#     result = scores_pod_model_obs(
+#         CubeList([model, obs]),
+#         preserved_coordinates=None,
+#         threshold="10",
+#         op_func="gt",
+#     )
+
+#     assert result[0].data == pytest.approx(0.0)
+
+
+# def test_pod_returns_zero_when_all_events_missed():
+#     obs = _make_cube(
+#         [[12, 5],
+#          [15, 8]],
+#         long_name="observed_temperature",
+#     )
+
+#     model = _make_cube(
+#         [[1, 1],
+#          [1, 1]],
+#         long_name="model_temperature",
+#         model_name="test_model",
+#     )
+
+#     result = scores_pod_model_obs(
+#         CubeList([model, obs]),
+#         preserved_coordinates=None,
+#         threshold="10",
+#         op_func="gt",
+#     )
+
+#     assert result[0].data == pytest.approx(0.0)
+
+
+# def test_pod_preserve_time_dimension():
+#     obs = _make_cube_time(
+#         [
+#             [12, 15],  # POD=1
+#             [12, 15],  # POD=0
+#         ],
+#         long_name="observed_temperature",
+#     )
+
+#     model = _make_cube_time(
+#         [
+#             [20, 20],
+#             [1, 1],
+#         ],
+#         long_name="model_temperature",
+#         model_name="test_model",
+#     )
+
+#     result = scores_pod_model_obs(
+#         CubeList([model, obs]),
+#         preserved_coordinates=["time"],
+#         threshold="10",
+#         op_func="gt",
+#     )
+
+#     np.testing.assert_allclose(
+#         result[0].data,
+#         np.array([1.0, 0.0]),
+#     )
+
+
+# def test_returns_one_score_per_model():
+#     obs = _make_cube(
+#         [[12, 5],
+#          [15, 8]],
+#         long_name="observed_temperature",
+#     )
+
+#     model_a = _make_cube(
+#         [[20, 1],
+#          [20, 1]],
+#         long_name="model_a",
+#         model_name="A",
+#     )
+
+#     model_b = _make_cube(
+#         [[1, 1],
+#          [1, 1]],
+#         long_name="model_b",
+#         model_name="B",
+#     )
+
+#     result = scores_pod_model_obs(
+#         CubeList([model_a, model_b, obs]),
+#         preserved_coordinates=None,
+#         threshold="10",
+#         op_func="gt",
+#     )
+
+#     assert len(result) == 2
+#     assert result[0].attributes["model_name"] == "A"
+#     assert result[1].attributes["model_name"] == "B"
+
+
+# def test_output_metadata():
+#     obs = _make_cube([[12]], long_name="observed_temperature")
+
+#     model = _make_cube(
+#         [[12]],
+#         long_name="model_temperature",
+#         model_name="ukv",
+#     )
+
+#     result = scores_pod_model_obs(
+#         CubeList([model, obs]),
+#         preserved_coordinates=None,
+#         threshold="10",
+#         op_func="gt",
+#     )
+
+#     cube = result[0]
+
+#     assert cube.units == "1"
+#     assert cube.attributes["model_name"] == "ukv"
+
+#     assert (
+#         cube.name()
+#         == "Probability_Of_Detection_gt_10_observed_temperature"
+#     )
+
+# def test_invalid_operator_raises():
+#     obs = _make_cube([[1]], long_name="observed_temperature")
+
+#     model = _make_cube(
+#         [[1]],
+#         long_name="model_temperature",
+#         model_name="test",
+#     )
+
+#     with pytest.raises(Exception):
+#         scores_pod_model_obs(
+#             CubeList([model, obs]),
+#             preserved_coordinates=None,
+#             threshold="10",
+#             op_func="gte",
+#         )
