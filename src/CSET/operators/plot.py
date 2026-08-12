@@ -443,8 +443,8 @@ def _set_axis_range(cubes):
             break
 
     if levels is None:
-        vmin = min(cb.data.min() for cb in cubes)
-        vmax = max(cb.data.max() for cb in cubes)
+        vmin = min(np.nanmin(cb.data) for cb in cubes)
+        vmax = max(np.nanmax(cb.data) for cb in cubes)
 
     return vmin, vmax
 
