@@ -471,7 +471,7 @@ def _um_normalise_callback(cube: iris.cube.Cube):
                 level=logging.WARNING,
             )
     if cube.standard_name == "lwe_thickness_of_precipitation_amount":
-        cube.long_name = 'surface_microphysical_rainfall_rate'
+        cube.long_name = "surface_microphysical_rainfall_rate"
 
 
 def _lfric_normalise_callback(cube: iris.cube.Cube):
