@@ -653,7 +653,7 @@ def scores_pod_model_obs(
             f"Probability_Of_Detection_{op_func}_{threshold}_{base.name()}"
         )
         scores_cube.units = "1"
-        scores_cube.attributes["model_name"] = other.attributes["model_name"]
+        scores_cube.attributes["model_name"] = model.attributes["model_name"]
 
         scores_results.append(scores_cube)
 
