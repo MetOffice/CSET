@@ -530,6 +530,57 @@ def test_plot_power_spectrum_no_sequence_coordinate(
         plot.plot_line_series(power_spectrum_cube, series_coordinate="frequency")
 
 
+def test_plot_line_series_extra_dimension_failure(tmp_working_dir):
+    """Error with three non-realization dimensions."""
+    data = np.random.rand(2, 3, 4, 10)
+
+    cube = iris.cube.Cube(
+        data,
+        long_name="power_spectral_density",
+    )
+
+    # Add a realization coord plus 3 other coordinates
+    cube.add_dim_coord(
+        iris.coords.DimCoord(
+            np.arange(2),
+            standard_name="realization",
+        ),
+        0,
+    )
+
+    cube.add_dim_coord(
+        iris.coords.DimCoord(
+            np.arange(3),
+            long_name="forecast_reference_time",
+        ),
+        1,
+    )
+
+    cube.add_dim_coord(
+        iris.coords.DimCoord(
+            np.arange(4),
+            standard_name="time",
+        ),
+        2,
+    )
+
+    cube.add_dim_coord(
+        iris.coords.DimCoord(
+            np.arange(10),
+            long_name="physical_wavenumber",
+        ),
+        3,
+    )
+
+    print("CUBE ", cube, cube.ndim)
+
+    with pytest.raises(
+        ValueError,
+        match="Cube must be 1D or 2D",
+    ):
+        plot.plot_line_series(cube, filename="test_extra_dim", series_coordinate="time")
+
+
 def test_select_series_coord_frequency_fallback(power_spectrum_cube):
     """Select a valid fallback when frequency is missing."""
     freq = power_spectrum_cube.coord("frequency")
