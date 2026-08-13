@@ -349,28 +349,29 @@ def test_pod_gt_2x2_manual_case():
     assert np.allclose(result[0].data, 0.5, atol=1e-2, rtol=1e-6)
 
 
-# def test_pod_returns_one_when_all_events_perfect():
-#     obs = _make_cube(
-#         [[12, 5],
-#          [15, 8]],
-#         long_name="observed_temperature",
-#     )
+def test_pod_returns_one_when_all_events_perfect():
+    """Test basic 2x2 case when all correct hits."""
+    obs = _make_cube_categorical_testing(
+        [[1, 1], [1, 1]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
 
-#     model = _make_cube(
-#         [[1, 1],
-#          [1, 1]],
-#         long_name="model_temperature",
-#         model_name="test_model",
-#     )
+    model = _make_cube_categorical_testing(
+        [[2, 2], [2, 2]],
+        long_name="temperature",
+        model_name="test_model",
+    )
 
-#     result = scores_pod_model_obs(
-#         CubeList([model, obs]),
-#         preserved_coordinates=None,
-#         threshold="10",
-#         op_func="gt",
-#     )
+    result = scoreswrappers.scores_pod_model_obs(
+        CubeList([model, obs]),
+        preserved_coordinates=None,
+        threshold="0",
+        op_func="gt",
+    )
 
-#     assert result[0].data == pytest.approx(0.0)
+    # Hits should be [[1,1],[1,1]] so hit rate of 1.
+    assert np.allclose(result[0].data, 1, atol=1e-2, rtol=1e-6)
 
 
 # def test_pod_returns_zero_when_all_events_missed():
