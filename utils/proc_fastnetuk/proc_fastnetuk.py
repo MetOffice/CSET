@@ -12,6 +12,7 @@ import iris.coord_systems
 import iris.coords as icoords
 import iris.cube
 import numpy as np
+from cf_units import Unit
 from scipy.interpolate import LinearNDInterpolator
 
 # Lookup dictionary to translate to LFRic long_names.
@@ -93,12 +94,17 @@ def rebuild_metadata(cube, arr, lat, lon):
     )
 
     # Create time dimensions, including forecast_period and forecast_reference_time.
-    time_coord = cube.coord("time").copy()
+    time_coord = cube.coord("time")
 
-    forecast_reference_time = icoords.AuxCoord(
-        time_coord.points[0],
+    base_time_units = Unit("hours since 1970-01-01 00:00:00")
+    frt_point = base_time_units.date2num(
+        time_coord.units.num2date(time_coord.points[0])
+    )
+
+    forecast_reference_time = icoords.DimCoord(
+        [frt_point],
         standard_name="forecast_reference_time",
-        units=time_coord.units,
+        units=base_time_units,
     )
 
     forecast_period = icoords.DimCoord(
@@ -109,7 +115,8 @@ def rebuild_metadata(cube, arr, lat, lon):
 
     # Start with coordinates of just forecast_period.
     coords = [
-        (forecast_period, 0),
+        (forecast_reference_time, 0),
+        (forecast_period, 1),
     ]
 
     # If pressure exists, create additional size 1 dimension for future concatenation.
@@ -120,22 +127,23 @@ def rebuild_metadata(cube, arr, lat, lon):
             units="hPa",
         )
 
-        arr = arr[:, np.newaxis, :, :]
+        arr = arr[np.newaxis, :, np.newaxis, :, :]
 
         coords.extend(
             [
-                (pressure_coord, 1),
-                (lat_coord, 2),
-                (lon_coord, 3),
+                (pressure_coord, 2),
+                (lat_coord, 3),
+                (lon_coord, 4),
             ]
         )
 
     # If pressure doesn't exist, just use latitude/longitude in addition to time.
     else:
+        arr = arr[np.newaxis, :, :, :]
         coords.extend(
             [
-                (lat_coord, 1),
-                (lon_coord, 2),
+                (lat_coord, 2),
+                (lon_coord, 3),
             ]
         )
 
@@ -145,9 +153,17 @@ def rebuild_metadata(cube, arr, lat, lon):
         dim_coords_and_dims=coords,
     )
 
-    # Add scalar time coordinates
-    out_cube.add_aux_coord(forecast_reference_time)
-    out_cube.add_aux_coord(time_coord, data_dims=(0,))
+    # Add auxcoord time coordinate that varies with forecast_period and forecast_reference_time.
+    time_data = base_time_units.date2num(time_coord.units.num2date(time_coord.points))
+    time_data = time_data[np.newaxis, :]
+    out_cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            time_data,
+            standard_name="time",
+            units=base_time_units,
+        ),
+        data_dims=(0, 1),
+    )
 
     # Add metadata for long name, units, and preserve other attributes.
     out_cube.rename(meta["long_name"])
@@ -155,6 +171,9 @@ def rebuild_metadata(cube, arr, lat, lon):
     out_cube.units = meta["units"]
 
     out_cube.attributes = cube.attributes.copy()
+
+    # Delete fill value attribute, as this tends to be np.float64(nan), which causes iris merge/concat issues.
+    del out_cube.attributes["fill_value"]
 
     # Some unit corrections for specific variables.
     if out_cube.long_name == "geopotential_height_at_pressure_levels":
@@ -245,6 +264,8 @@ def fix_cubes(cubes):
     # Create output mesh, using standard grid ~2km resolution
     # TODO: discussions with ML developers to include metadata so
     # we don't have to guess target lat/lon resolution.
+
+    # Regrid to UKV native grid..
     lon_grid = np.arange(lon.data.min(), lon.data.max(), 0.02)
     lat_grid = np.arange(lat.data.min(), lat.data.max(), 0.02)
     Lon2d, Lat2d = np.meshgrid(lon_grid, lat_grid)
