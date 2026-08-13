@@ -2038,36 +2038,8 @@ def spatial_contour_plot(
     return cube
 
 
-def spatial_pcolormesh_plot_multi_model(
-    cubes: iris.cube.Cube | iris.cube.CubeList,
-) -> iris.cube.Cube | iris.cube.CubeList:
-    """Plot a spatial variable onto a map from a cubelist with multiple models of 2D, 3D, or 4D cubes.
-
-    Parameters
-    ----------
-    cubes: CubeList
-        Iris cubelist of model cubes with the data to plot. Each cube should have two spatial dimensions,
-        such as lat and lon, and may also have a another two dimension to be
-        plotted sequentially and/or as postage stamp plots.
-
-    Returns
-    -------
-    CubeList
-        The original cube list (so further operations can be applied).
-
-    Raises
-    ------
-    ValueError
-        If the cubes don't have the right dimensions.
-    """
-    for model_cube in cubes:
-        spatial_pcolormesh_plot(model_cube)
-
-    return cubes
-
-
 def spatial_pcolormesh_plot(
-    cube: iris.cube.Cube,
+    cubes: iris.cube.Cube | iris.cube.CubeList,
     filename: str | None = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
@@ -2085,8 +2057,8 @@ def spatial_pcolormesh_plot(
 
     Parameters
     ----------
-    cube: Cube
-        Iris cube of the data to plot. It should have two spatial dimensions,
+    cube: Cubes
+        Iris cube or cubelist of the data to plot. Each cube should have two spatial dimensions,
         such as lat and lon, and may also have a another two dimension to be
         plotted sequentially and/or as postage stamp plots.
     filename: str, optional
@@ -2101,20 +2073,34 @@ def spatial_pcolormesh_plot(
 
     Returns
     -------
-    Cube
-        The original cube (so further operations can be applied).
+    Cubes
+        The original cube/cubelist (so further operations can be applied).
 
     Raises
     ------
     ValueError
         If the cube doesn't have the right dimensions.
-    TypeError
-        If the cube isn't a single cube.
     """
-    _spatial_plot(
-        "pcolormesh", cube, filename, sequence_coordinate, stamp_coordinate, **kwargs
-    )
-    return cube
+    if isinstance(cubes, iris.cube.CubeList):
+        for model_cube in cubes:
+            _spatial_plot(
+                "pcolormesh",
+                model_cube,
+                filename,
+                sequence_coordinate,
+                stamp_coordinate,
+                **kwargs,
+            )
+    elif isinstance(cubes, iris.cube.Cube):
+        _spatial_plot(
+            "pcolormesh",
+            cubes,
+            filename,
+            sequence_coordinate,
+            stamp_coordinate,
+            **kwargs,
+        )
+    return cubes
 
 
 def spatial_multi_pcolormesh_plot(

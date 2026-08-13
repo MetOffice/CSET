@@ -177,7 +177,7 @@ def load(conf: Config):
             conf.POINT_OBS_FIELDS, scores_timeseries_methods_model_vs_obs
         ):
             yield RawRecipe(
-                recipe=f"timeseries_surface_difference_scores_model_vs_obs_{scores_method}.yaml",
+                recipe=f"timeseries_surface_scores_model_vs_obs_{scores_method}.yaml",
                 variables={
                     "VARNAME": field,
                     "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
@@ -219,7 +219,7 @@ def load(conf: Config):
             #   method = method_null
 
             yield RawRecipe(
-                recipe=f"surface_difference_scores_model_vs_obs_{scores_method}.yaml",
+                recipe=f"surface_scores_model_vs_obs_{scores_method}.yaml",
                 variables={
                     "VARNAME": field,
                     "MODEL_NAME": ["OBS"] + [model["name"]],
