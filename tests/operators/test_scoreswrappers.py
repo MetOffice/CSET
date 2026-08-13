@@ -374,59 +374,78 @@ def test_pod_returns_one_when_all_events_perfect():
     assert np.allclose(result[0].data, 1, atol=1e-2, rtol=1e-6)
 
 
-# def test_pod_returns_zero_when_all_events_missed():
-#     obs = _make_cube(
-#         [[12, 5],
-#          [15, 8]],
-#         long_name="observed_temperature",
-#     )
+def test_pod_returns_zero_when_all_events_missed():
+    """Test basic 2x2 case when all events missed."""
+    obs = _make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
 
-#     model = _make_cube(
-#         [[1, 1],
-#          [1, 1]],
-#         long_name="model_temperature",
-#         model_name="test_model",
-#     )
+    model = _make_cube_categorical_testing(
+        [[1, 1], [1, 1]],
+        long_name="temperature",
+        model_name="test_model",
+    )
 
-#     result = scores_pod_model_obs(
-#         CubeList([model, obs]),
-#         preserved_coordinates=None,
-#         threshold="10",
-#         op_func="gt",
-#     )
+    result = scoreswrappers.scores_pod_model_obs(
+        CubeList([model, obs]),
+        preserved_coordinates=None,
+        threshold="10",
+        op_func="gt",
+    )
 
-#     assert result[0].data == pytest.approx(0.0)
+    # Hits will be [[0,0],[0,0]] so hit rate of zero.
+    assert np.allclose(result[0].data, 0, atol=1e-2, rtol=1e-6)
 
 
-# def test_pod_preserve_time_dimension():
-#     obs = _make_cube_time(
-#         [
-#             [12, 15],  # POD=1
-#             [12, 15],  # POD=0
-#         ],
-#         long_name="observed_temperature",
-#     )
+def _make_cube_categorical_testing_with_time(data, long_name, model_name=None):
+    """Create basic 2D iris cube for testing functionality."""
+    cube = Cube(
+        np.array(data, dtype=float),
+        long_name=long_name,
+        dim_coords_and_dims=[
+            (iris.coords.DimCoord([0, 1, 2], long_name="time"), 0),
+            (iris.coords.DimCoord([0, 1], long_name="latitude"), 1),
+            (iris.coords.DimCoord([0, 1], long_name="longitude"), 2),
+        ],
+    )
 
-#     model = _make_cube_time(
-#         [
-#             [20, 20],
-#             [1, 1],
-#         ],
-#         long_name="model_temperature",
-#         model_name="test_model",
-#     )
+    cube.attributes["model_name"] = model_name
 
-#     result = scores_pod_model_obs(
-#         CubeList([model, obs]),
-#         preserved_coordinates=["time"],
-#         threshold="10",
-#         op_func="gt",
-#     )
+    return cube
 
-#     np.testing.assert_allclose(
-#         result[0].data,
-#         np.array([1.0, 0.0]),
-#     )
+
+def test_pod_preserve_time_dimension():
+    """Ensure time dimension preserved when passed to function."""
+    obs = _make_cube_categorical_testing_with_time(
+        [
+            [[1, 1], [1, 1]],
+            [[1, 1], [1, 1]],
+            [[1, 1], [1, 1]],
+        ],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
+
+    model = _make_cube_categorical_testing_with_time(
+        [
+            [[2, 2], [2, 2]],
+            [[0, 0], [0, 0]],
+            [[0, 0], [0, 0]],
+        ],
+        long_name="temperature",
+        model_name="test_model",
+    )
+
+    result = scoreswrappers.scores_pod_model_obs(
+        CubeList([model, obs]),
+        preserved_coordinates=["time"],
+        threshold="0.5",
+        op_func="gt",
+    )
+
+    assert np.allclose(result[0].data, np.array([1.0, 0.0, 0.0]), atol=1e-2, rtol=1e-6)
 
 
 # def test_returns_one_score_per_model():
