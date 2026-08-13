@@ -620,11 +620,6 @@ def scores_pod_model_obs(
         raise ValueError(f"Operator {op_func} not supported.") from err
 
     for model in models:
-        # Separate out base (obs) and other (model).
-        # base, other = _sort_cubes_for_verification(
-        #     iris.cube.CubeList([observed, model])
-        # )
-
         # Convert obs cubes to xarray and resolve preserved dimensions.
         other_xr = xr.DataArray.from_iris(model)
         base_xr = xr.DataArray.from_iris(observed)
@@ -657,7 +652,6 @@ def scores_pod_model_obs(
             f"Probability_Of_Detection_{op_func}_{threshold}_{observed.name()}"
         )
         scores_cube.units = "1"
-        print(model)
         scores_cube.attributes["model_name"] = model.attributes["model_name"]
 
         scores_results.append(scores_cube)
