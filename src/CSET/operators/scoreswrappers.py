@@ -207,7 +207,7 @@ def scores_rmse_model_obs(
     Parameters
     ----------
     cubes: iris.cube.CubeList
-        A CubeList containing exactly multiple cubes: an observation cube and multiple model cubes.
+        A CubeList containing an observation cube and at least one model cube.
     preserved_coordinates: list[str] | str | None, default is None.
         The coordinates that you wish to preserve in the calculaiton of the
         RMSE. For example if you want a map of each time you can preserve
@@ -240,7 +240,6 @@ def scores_rmse_model_obs(
         rmse.attributes["model_name"] = model_name
         rmse_cubes.append(rmse)
 
-    print(rmse_cubes)
     return rmse_cubes
 
 
