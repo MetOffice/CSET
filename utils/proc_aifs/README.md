@@ -1,7 +1,5 @@
 # preproc_aifs
 
-# preproc_aifs
-
 ## About
 
 The script `preproc_aifs.py` is a utility for converting ECMWF Artificial Intelligence Forecasting System (AIFS) GRIB data into CSET-compatible NetCDF files.
@@ -22,11 +20,8 @@ This script performs several preprocessing steps to make the data suitable for v
 
 No scientific modifications are made to the meteorological fields beyond unit conversions where required for consistency with CSET conventions.
 
-
 > [!TIP]
 > This script requires the ecCodes command-line utilities `grib_copy` and `grib_to_netcdf` to be installed and available on the system path. Otherwise, `iris` and `subprocess` are required in the python environment.
-
-
 
 ## Usage
 
@@ -46,7 +41,7 @@ python preproc_aifs.py \
     --outpath "<output_directory>"
 ```
 > [!TIP]
-> This script requires an workspace with at least 25GB of memory.
+> This script requires an workspace with at least 25GB of memory. The process can take a long time for each forecast (1-2 hours).
 
 ### Required Arguments
 
@@ -86,7 +81,6 @@ Perturbed forecasts are assigned:
 ```text
 realization = 1-50
 ```
-
 The resulting cubes are concatenated onto a common realization dimension for compatibility with CSET workflows.
 
 ### Forecast Coordinates
@@ -104,22 +98,11 @@ while preserving the original valid times as:
 
 ### Variable Renaming
 
-Several AIFS variables are renamed to match CSET/LFRic conventions. Examples include:
-
-| AIFS Name | Output Name |
-|-----------|-------------|
-| 2 metre temperature | temperature_at_screen_level |
-| 2 metre dewpoint temperature | dew_point_temperature_at_screen_level |
-| Mean sea level pressure | air_pressure_at_mean_sea_level |
-| Total Cloud Cover | area_cloud_fraction |
-| U component of wind | zonal_wind_at_pressure_levels |
-| V component of wind | meridional_wind_at_pressure_levels |
-
-Additional variables supported within the script are renamed automatically during processing.
+Several AIFS variables are renamed to match CSET/LFRic conventions.
 
 ### Unit Conversion
 
-Some variables require unit conversion before output.
+Some variables are unit converted before output.
 
 Examples include:
 
@@ -136,7 +119,6 @@ python preproc_aifs.py \
     --forecastinit "20240101T0000Z" \
     --outpath "/my/output/path"
 ```
-
 Example output:
 
 ```text
@@ -145,26 +127,24 @@ Example output:
 /my/output/path/AIFS_20240101T0000Z_area_cloud_fraction.nc
 ...
 ```
-
 ### 2. Process multiple GRIB files
 
 ```bash
 python preproc_aifs.py \
     --inputpath "/data/aifs/*.grib2" \
-    --forecastinit "2024*101T0000Z" \
-    --outpath "/my/ou*put/path"
+    --forecastinit "2024101T0000Z" \
+    --outpath "/my/output/path"
 ```
-
 All matching files will be processed and converted into individual CSET-ready NetCDF outputs.
 
 ## Notes
 
-- The script writes temporary hidden NetCDF files to the output directo*y during GRIB processing.
-- Temporary files are automatically removed*once processing is complete.
+- The script writes temporary hidden NetCDF files to the output directory during GRIB processing.
+- Temporary files are automatically removed once processing is complete.
 - Output is produced as one NetCDF file per variable to avoid creating excessively large combined files.
 - The script assumes the first valid time in the input data corresponds to forecast lead time zero, as forecast initialisation information is not available after GRIB-to-NetCDF conversion.
 
 ## Owners
 The following people should be contacted for queries or issues with this utility:
 
-* [@jwarner8](https://github.com/jwarner8)
+[@jwarner8](https://github.com/jwarner8)
