@@ -202,14 +202,10 @@ def load(conf: Config):
             scores_spatial_methods_model_vs_obs,
         ):
             preserved_coords = ["time", "latitude", "longitude"]
-            method_null = ""
-            scores_method_case = "CASE"
-            scores_coords_case = ["latitude", "longitude"]
-            if scores_method == "RMSE" and method == scores_method_case:
-                # Set the preserved coords and collapse method required
-                # to produce RMSE spatial plot over an entire case study.
-                preserved_coords = scores_coords_case
-                method = method_null
+            recipe_method = method
+            if scores_method == "RMSE" and method == "CASE":
+                preserved_coords = ["latitude", "longitude"]
+                recipe_method = ""
             # TODO include these when backend code is added
             # if scores_method == "MAE" and method == scores_method_case:
             # Set the preserved coords and collapse method required
@@ -227,7 +223,7 @@ def load(conf: Config):
                 variables={
                     "VARNAME": field,
                     "MODEL_NAME": ["OBS"] + [model["name"]],
-                    "METHOD": method,
+                    "METHOD": recipe_method,
                     "PRESERVED_COORDS": preserved_coords,
                     "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
