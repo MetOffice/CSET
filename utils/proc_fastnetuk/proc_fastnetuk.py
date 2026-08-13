@@ -1,15 +1,15 @@
 """TODO"""
 
+import argparse
+import re
+from glob import glob
+
 import iris
 import iris.coord_systems
 import iris.coords as icoords
 import iris.cube
 import numpy as np
 from scipy.interpolate import LinearNDInterpolator
-from iris.analysis.cartography import rotate_pole
-import argparse
-from glob import glob
-import re
 
 # Lookup dictionary to translate to LFRic long_names.
 UGRID_VAR_LOOKUP = {
@@ -132,7 +132,6 @@ def _rebuild_ugrid_meta_firstfix(cube):
         out_cube.coord("time").attributes["time_origin"] = time_origin
 
     return out_cube
-
 
 
 def _rebuild_ugrid_meta(cube, arr, lat, lon):
@@ -395,10 +394,10 @@ def main() -> None:
         cubes = iris.load(file)
         cubes = restructure_ugrid(cubes)
 
-        print(f"Saving restructured cubes")
-        iris.save(cubes, f"{outputpath}/fixed_{file.split("/")[-1]}")
+        print("Saving restructured cubes")
+        iris.save(cubes, f"{outputpath}/fixed_{file.split('/')[-1]}")
         print(f"Done file {file}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
