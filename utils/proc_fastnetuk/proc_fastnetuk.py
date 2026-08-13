@@ -277,21 +277,17 @@ def _restructure_ugrid_regrid(cube, tri, lat_grid, lon_grid, xy):
 
 def fix_metadata(cubes):
     """
-    Pre-filter cubes prior to regridding to reduce excess compute.
-
-    Parse cubes and filter for required variable, alongside latitude and
-    longitude, for further processing. This reduces compute overhead on
-    variables that we don't require. This also cleans metadata prior to filtering.
+    Pre-filter cubes prior to regridding.
 
     Parameters
     ----------
-    cubes : iris.cube.CubeList
+    cubes: iris.cube.CubeList
         A cubelist containing unstructured cubes, along with cubes containing
         latitude and longitude information.
 
     Returns
     -------
-    filterd_cubes : iris.cube.CubeList
+    sanitised_cubes: iris.cube.CubeList
         A cubelist containing the required cube that matches the constraint, along
         with latitude and longitude cubes.
     """
@@ -311,7 +307,10 @@ def fix_metadata(cubes):
 
 def restructure_ugrid(cubes):
     """
-    Restructure ugrid cubes using parallel processing.
+    Restructure ugrid cubes.
+
+    First, fixes cube metadata names as a first fix, and then regrids, and then
+    finally adds metadata associated with new coordinates.
 
     Parameters
     ----------
@@ -319,14 +318,17 @@ def restructure_ugrid(cubes):
         A cubelist containing unstructured cubes, along with cubes containing
         latitude and longitude information.
 
-    constraint: iris.Constraint
-        An iris constraint (or combined constraint) to filter cubes on.
-
     Returns
     -------
     fixed_cubes: iris.cube.CubeList
         A list of iris cubes, that have been restructured onto a regular grid,
         with appropriate corrections to metadata.
+
+    Notes
+    -----
+    Currently, data is regridded to a 0.02 rectilinear grid. This is because
+    there is no metada in the source file that describes the target resolution
+    of what it should be unpacked to. 
     """
     # First, parse all cubes and fix their metadata (apart from latitude/longitude,
     # which we do later after regridding).
@@ -340,9 +342,6 @@ def restructure_ugrid(cubes):
     # Create output mesh, using standard grid ~2km resolution
     # TODO: discussions with ML developers to include metadata so
     # we don't have to guess target lat/lon resolution.
-    # Need some attributes to capture what is required in terms of resolution.
-    # For now, we assume data no higher resolution than 2p2km.
-    # This will have impacts on PDFs.
     lon_grid = np.arange(lon.data.min(), lon.data.max(), 0.02)
     lat_grid = np.arange(lat.data.min(), lat.data.max(), 0.02)
     Lon2d, Lat2d = np.meshgrid(lon_grid, lat_grid)
@@ -390,7 +389,7 @@ def main() -> None:
     for file in glob(inputpath):
         print(f"Running script on {file}")
 
-        # Func1: Load all cubes, get lat, lon
+        # Load data and restructure.
         cubes = iris.load(file)
         cubes = restructure_ugrid(cubes)
 
