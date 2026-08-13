@@ -13,7 +13,6 @@ import iris.coords as icoords
 import iris.cube
 import numpy as np
 from cf_units import Unit
-from scipy.interpolate import LinearNDInterpolator
 
 # Lookup dictionary to translate to LFRic long_names.
 UGRID_VAR_LOOKUP = {
@@ -39,7 +38,7 @@ UGRID_VAR_LOOKUP = {
 }
 
 
-def rebuild_metadata(cube, arr, lat, lon):
+def rebuild_metadata(cube, grid):
     """
     Rebuild iris cube metadata.
 
@@ -50,12 +49,7 @@ def rebuild_metadata(cube, arr, lat, lon):
     ----------
     cube : iris.cube.Cube
         Original unstructured source cube, used for fixing metadata.
-    arr : np.ndarray
-        Numpy array of restructured (2D) data.
-    lat : np.ndarray
-        1D latitude coordinate values of regridded data
-    lon : np.ndarray
-        1D longitude coordinate values of regridded data
+    grid:::
 
     Returns
     -------
@@ -80,18 +74,9 @@ def rebuild_metadata(cube, arr, lat, lon):
     if meta is None:
         return None
 
-    # Create latitude, longitude coordinate objects.
-    lat_coord = icoords.DimCoord(
-        lat,
-        standard_name="latitude",
-        units="degrees",
-    )
-
-    lon_coord = icoords.DimCoord(
-        lon,
-        standard_name="longitude",
-        units="degrees",
-    )
+    # Get latitude, longitude coordinate objects.
+    lat_coord = grid.coord("grid_latitude")
+    lon_coord = grid.coord("grid_longitude")
 
     # Create time dimensions, including forecast_period and forecast_reference_time.
     time_coord = cube.coord("time")
@@ -119,6 +104,9 @@ def rebuild_metadata(cube, arr, lat, lon):
         (forecast_period, 1),
     ]
 
+    # Reshape cube ADD CHECK IF NOT CORRECT SIZE
+    cube_data = cube.data.reshape(cube.shape[0], 808, 621)
+
     # If pressure exists, create additional size 1 dimension for future concatenation.
     if pressure_hpa is not None:
         pressure_coord = icoords.DimCoord(
@@ -127,7 +115,7 @@ def rebuild_metadata(cube, arr, lat, lon):
             units="hPa",
         )
 
-        arr = arr[np.newaxis, :, np.newaxis, :, :]
+        cube_data = cube_data[np.newaxis, :, np.newaxis, :, :]
 
         coords.extend(
             [
@@ -139,7 +127,7 @@ def rebuild_metadata(cube, arr, lat, lon):
 
     # If pressure doesn't exist, just use latitude/longitude in addition to time.
     else:
-        arr = arr[np.newaxis, :, :, :]
+        cube_data = cube_data[np.newaxis, :, :, :]
         coords.extend(
             [
                 (lat_coord, 2),
@@ -149,7 +137,7 @@ def rebuild_metadata(cube, arr, lat, lon):
 
     # Create cube with coordinates
     out_cube = iris.cube.Cube(
-        arr,
+        cube_data,
         dim_coords_and_dims=coords,
     )
 
@@ -185,113 +173,6 @@ def rebuild_metadata(cube, arr, lat, lon):
     return out_cube
 
 
-def ugrid_transform(arr, tri, lat_grid, lon_grid, xy):
-    """
-    Restructure a flattened/unstructured cube.
-
-    Parameters
-    ----------
-    arr : arrayy
-        An iris cube to restructure.
-    tri : scipy.spatial._qhull.Delaunay
-        A scipy object containing the triangulation mapping of cell points.
-    lat_grid : np.ndarray
-        1D latitude coordinate values of target grid.
-    lon_grid : np.ndarray
-        1D longitude coordinate values of target grid.
-    xy : np.ndarray
-        Meshed and flattened target grid points.
-
-    Returns
-    -------
-    iris.cube.Cube
-        A structured iris cube with appropriate metadata.
-
-    Notes
-    -----
-    This function uses a pre-calculated triangulation, to save rebuilding for
-    every cube. This therefore assumes all cubes being restructured have the
-    same flattened structure.
-    """
-    # Create empty numpy array to store regridded data.
-    out = np.empty((arr.shape[0], lat_grid.size, lon_grid.size))
-
-    # Extract and transpose source data values.
-    src_vals = arr.T
-
-    # Build linear interpolator object mapping target triangulation to source values.
-    interp = LinearNDInterpolator(tri, src_vals)
-
-    # Interpolate values onto target grid using linear interpolation.
-    out_flat = interp(xy)
-
-    # Transpose, and reshape to target 2D regular lat/lon grid.
-    out = out_flat.T.reshape(arr.shape[0], lat_grid.size, lon_grid.size)
-
-    return out
-
-
-def fix_cubes(cubes):
-    """
-    Restructure ugrid cubes and then fix metadata.
-
-    First, fixes cube metadata names as a first fix, and then regrids, and then
-    finally adds metadata associated with new coordinates.
-
-    Parameters
-    ----------
-    cubes : iris.cube.CubeList
-        A cubelist containing unstructured cubes, along with cubes containing
-        latitude and longitude information.
-
-    Returns
-    -------
-    fixed_cubes: iris.cube.CubeList
-        A list of iris cubes, that have been restructured onto a regular grid,
-        with appropriate corrections to metadata.
-
-    Notes
-    -----
-    Currently, data is regridded to a 0.02degree rectilinear grid. This is because
-    there is no metada in the source file that describes the target resolution
-    of what it should be regridded to.
-    """
-    # First, extract latitude and longitude coordinates
-    lat = cubes.extract("latitude")[0].data
-    lon = cubes.extract("longitude")[0].data
-    points = np.column_stack((lon, lat))
-
-    # Create output mesh, using standard grid ~2km resolution
-    # TODO: discussions with ML developers to include metadata so
-    # we don't have to guess target lat/lon resolution.
-
-    # Regrid to UKV native grid..
-    lon_grid = np.arange(lon.data.min(), lon.data.max(), 0.02)
-    lat_grid = np.arange(lat.data.min(), lat.data.max(), 0.02)
-    Lon2d, Lat2d = np.meshgrid(lon_grid, lat_grid)
-
-    # Flatten target points
-    xy = np.column_stack((Lon2d.ravel(), Lat2d.ravel()))
-
-    # Build triangulation via a dummy interpolator
-    tri_interp = LinearNDInterpolator(points, np.zeros(points.shape[0]))
-    tri = tri_interp.tri
-
-    fixed_cubes = iris.cube.CubeList()
-
-    # For each cube, where ndim > 1 (excluding latitude/longitude array), do regridding
-    # on array, and correct metadata.
-    for cube in cubes:
-        if cube.ndim > 1:
-            print(f"Fixing {cube.name()}")
-            result_arr = ugrid_transform(cube.data, tri, lat_grid, lon_grid, xy)
-            cube = rebuild_metadata(cube, result_arr, lat_grid, lon_grid)
-            if cube:
-                fixed_cubes.append(cube)
-
-    return fixed_cubes.concatenate()
-
-
 def main() -> None:
     """
     Run processing on FastNetUK data.
@@ -313,15 +194,29 @@ def main() -> None:
     inputpath = args.inputpath
     outputpath = args.outputpath + "/"
 
+    # Load mask containing lat/lon to project onto.
+    ukv_mask = iris.load_cube("/data/scratch/james.warner/1308_tmpfastnet/ukv_mesh.nc")
+
     for file in glob(inputpath):
         print(f"Running script on {file}")
 
         # Load data and restructure.
         cubes = iris.load(file)
-        cubes = fix_cubes(cubes)
+
+        fixed_cubes = iris.cube.CubeList()
+        # For each cube, where ndim > 1 (excluding latitude/longitude array), do regridding
+        # on array, and correct metadata.
+        for cube in cubes:
+            if cube.ndim > 1:
+                print(f"Fixing {cube.name()}")
+                cube = rebuild_metadata(cube, ukv_mask)
+                if cube:
+                    fixed_cubes.append(cube)
 
         print("Saving restructured cubes")
-        iris.save(cubes, f"{outputpath}/fixed_{file.split('/')[-1]}")
+        iris.save(
+            fixed_cubes.concatenate(), f"{outputpath}/fixed_{file.split('/')[-1]}"
+        )
         print(f"Done file {file}")
 
 
