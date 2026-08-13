@@ -9,7 +9,7 @@ from scipy.interpolate import LinearNDInterpolator
 from iris.analysis.cartography import rotate_pole
 import argparse
 from glob import glob
-
+import re
 
 # Lookup dictionary to translate to LFRic long_names.
 UGRID_VAR_LOOKUP = {
@@ -73,7 +73,7 @@ def _rebuild_ugrid_meta_firstfix(cube):
     meta = UGRID_VAR_LOOKUP.get(var_key)
 
     if meta is None:
-        return
+        return None
     else:
         # If there is a number in cube name that can be split.
         if pressure_hpa is not None:
@@ -255,7 +255,7 @@ def _restructure_ugrid_regrid(cube, tri, lat_grid, lon_grid, xy):
     # Create empty numpy array to store regridded data.
     out = np.empty((cube.shape[0], lat_grid.size, lon_grid.size))
 
-    logging.debug(f"Interpolating {cube.name()}")
+    print(f"Interpolating: {cube}")
 
     # Extract and transpose source data values.
     src_vals = cube.data.T
@@ -276,7 +276,7 @@ def _restructure_ugrid_regrid(cube, tri, lat_grid, lon_grid, xy):
     return out_cube
 
 
-def fix_metadata(cubes, constraint):
+def fix_metadata(cubes):
     """
     Pre-filter cubes prior to regridding to reduce excess compute.
 
@@ -289,9 +289,6 @@ def fix_metadata(cubes, constraint):
     cubes : iris.cube.CubeList
         A cubelist containing unstructured cubes, along with cubes containing
         latitude and longitude information.
-
-    constraint : iris.constraint
-        Constraint in order to extract required variable.
 
     Returns
     -------
@@ -306,18 +303,11 @@ def fix_metadata(cubes, constraint):
         if out is not None:
             sanitised_cubes.append(out)
 
-    # Create empty cubelist.
-    filtered_cubes = iris.cube.CubeList()
-
     # Extract latitude and longitude cubes, and append these to filtered_cubes.
-    filtered_cubes.append(cubes.extract("latitude")[0])
-    filtered_cubes.append(cubes.extract("longitude")[0])
+    sanitised_cubes.append(cubes.extract("latitude")[0])
+    sanitised_cubes.append(cubes.extract("longitude")[0])
 
-    # Extract required cube based on constraint.
-    for c in sanitised_cubes.extract(constraint):
-        filtered_cubes.append(c)
-
-    return filtered_cubes
+    return sanitised_cubes
 
 
 def restructure_ugrid(cubes):
@@ -340,7 +330,7 @@ def restructure_ugrid(cubes):
         with appropriate corrections to metadata.
     """
     # First, parse all cubes and fix their metadata (apart from latitude/longitude,
-    # which we do later after regridding), and extract required variable from constraint.
+    # which we do later after regridding).
     cubes = fix_metadata(cubes)
 
     # First, extract latitude and longitude coordinates
@@ -394,8 +384,9 @@ def main() -> None:
 
     args = parser.parse_args()
 
+    # Get file paths
     inputpath = args.inputpath
-    outputpath = args.outpath + "/"
+    outputpath = args.outputpath + "/"
 
     for file in glob(inputpath):
         print(f"Running script on {file}")
@@ -403,3 +394,11 @@ def main() -> None:
         # Func1: Load all cubes, get lat, lon
         cubes = iris.load(file)
         cubes = restructure_ugrid(cubes)
+
+        print(f"Saving restructured cubes")
+        iris.save(cubes, f"{outputpath}/fixed_{file.split("/")[-1]}")
+        print(f"Done file {file}")
+
+
+if __name__ == '__main__':
+    main()
