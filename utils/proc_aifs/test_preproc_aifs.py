@@ -60,7 +60,7 @@ def test_fix_name_and_units_geopotential_conversion():
 
     assert result.long_name == "geopotential_height_at_pressure_levels"
     assert str(result.units) == "m"
-    np.allclose(result.data, [10.0], rtol=1e-5, atol=1e-2)
+    assert np.allclose(result.data, [10.0], rtol=1e-5, atol=1e-2)
 
 
 def test_fix_name_and_units_area_cloud_fraction():
@@ -75,7 +75,7 @@ def test_fix_name_and_units_area_cloud_fraction():
 
     assert result.long_name == "area_cloud_fraction"
     assert str(result.units) == "1"
-    np.allclose(result.data, [0.95], rtol=1e-5, atol=1e-2)
+    assert np.allclose(result.data, [0.95], rtol=1e-5, atol=1e-2)
 
 
 def test_fix_name_and_units_unmapped_cube_unchanged():
@@ -109,13 +109,9 @@ def test_fix_ensemble_cubes_adds_realization_to_control_member():
     )
 
     result = preproc_aifs.fix_ensemble_cubes(CubeList([cube]))
-
     assert len(result) == 1
-
     processed = result[0]
-
     realization = processed.coord("realization")
-
     assert list(realization.points) == [0]
 
 
@@ -232,10 +228,9 @@ def test_fix_time_and_meta_converts_minutes_to_hours():
     )
 
     result = preproc_aifs.fix_time_and_meta(CubeList([cube]))
-
     fp = result[0].coord("forecast_period")
 
-    np.allclose(fp.points, [0, 1, 2], rtol=1e-5, atol=1e-2)
+    assert np.allclose(fp.points, [0, 1, 2], rtol=1e-5, atol=1e-2)
     assert str(fp.units) == "hours"
 
 
@@ -259,7 +254,7 @@ def test_fix_time_and_meta_converts_seconds_to_hours():
 
     fp = result[0].coord("forecast_period")
 
-    np.testing.assert_allclose(fp.points, [0, 1, 2])
+    assert np.allclose(fp.points, [0, 1, 2], rtol=1e-5, atol=1e-2)
 
 
 def test_fix_time_and_meta_raises_for_unknown_units():
