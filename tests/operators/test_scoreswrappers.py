@@ -448,78 +448,88 @@ def test_pod_preserve_time_dimension():
     assert np.allclose(result[0].data, np.array([1.0, 0.0, 0.0]), atol=1e-2, rtol=1e-6)
 
 
-# def test_returns_one_score_per_model():
-#     obs = _make_cube(
-#         [[12, 5],
-#          [15, 8]],
-#         long_name="observed_temperature",
-#     )
+def test_returns_one_score_per_model():
+    """Test POD for multiple models and return two results."""
+    obs = _make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
 
-#     model_a = _make_cube(
-#         [[20, 1],
-#          [20, 1]],
-#         long_name="model_a",
-#         model_name="A",
-#     )
+    model_a = _make_cube_categorical_testing(
+        [[20, 1], [20, 1]],
+        long_name="temperature",
+        model_name="test_modelA",
+    )
 
-#     model_b = _make_cube(
-#         [[1, 1],
-#          [1, 1]],
-#         long_name="model_b",
-#         model_name="B",
-#     )
+    model_b = _make_cube_categorical_testing(
+        [[1, 1], [1, 1]],
+        long_name="temperature",
+        model_name="test_modelB",
+    )
 
-#     result = scores_pod_model_obs(
-#         CubeList([model_a, model_b, obs]),
-#         preserved_coordinates=None,
-#         threshold="10",
-#         op_func="gt",
-#     )
+    result = scoreswrappers.scores_pod_model_obs(
+        CubeList([model_a, model_b, obs]),
+        preserved_coordinates=None,
+        threshold="10",
+        op_func="gt",
+    )
 
-#     assert len(result) == 2
-#     assert result[0].attributes["model_name"] == "A"
-#     assert result[1].attributes["model_name"] == "B"
+    assert len(result) == 2
+    assert result[0].attributes["model_name"] == "test_modelA"
+    assert result[1].attributes["model_name"] == "test_modelB"
 
 
-# def test_output_metadata():
-#     obs = _make_cube([[12]], long_name="observed_temperature")
+def test_output_metadata():
+    """Test that cube has appropriate metadata preserved."""
+    obs = _make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
 
-#     model = _make_cube(
-#         [[12]],
-#         long_name="model_temperature",
-#         model_name="ukv",
-#     )
+    model = _make_cube_categorical_testing(
+        [[1, 1], [1, 1]],
+        long_name="temperature",
+        model_name="test_model",
+    )
 
-#     result = scores_pod_model_obs(
-#         CubeList([model, obs]),
-#         preserved_coordinates=None,
-#         threshold="10",
-#         op_func="gt",
-#     )
+    result = scoreswrappers.scores_pod_model_obs(
+        CubeList([model, obs]),
+        preserved_coordinates=None,
+        threshold="10",
+        op_func="gt",
+    )
 
-#     cube = result[0]
+    cube = result[0]
 
-#     assert cube.units == "1"
-#     assert cube.attributes["model_name"] == "ukv"
+    assert cube.units == "1"
+    assert cube.attributes["model_name"] == "test_model"
 
-#     assert (
-#         cube.name()
-#         == "Probability_Of_Detection_gt_10_observed_temperature"
-#     )
+    assert cube.name() == "Probability_Of_Detection_gt_10_observed_temperature"
 
-# def test_invalid_operator_raises():
-#     obs = _make_cube([[1]], long_name="observed_temperature")
 
-#     model = _make_cube(
-#         [[1]],
-#         long_name="model_temperature",
-#         model_name="test",
-#     )
+def test_invalid_operator_raises():
+    """Check that code raises exception if unsupported operator."""
+    obs = _make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
 
-#     with pytest.raises(Exception):
-#         scores_pod_model_obs(
-#             CubeList([model, obs]),
-#             preserved_coordinates=None,
-#             threshold="10",
-#             op_func="gte",
-#         )
+    model = _make_cube_categorical_testing(
+        [[1, 1], [1, 1]],
+        long_name="temperature",
+        model_name="test_model",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=r"Operator gte not supported.",
+    ):
+        scoreswrappers.scores_pod_model_obs(
+            CubeList([model, obs]),
+            preserved_coordinates=None,
+            threshold="10",
+            op_func="gte",
+        )
