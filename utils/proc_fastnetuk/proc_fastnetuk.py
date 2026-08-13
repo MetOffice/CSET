@@ -106,6 +106,7 @@ def rebuild_metadata(cube, grid):
 
     # Reshape cube ADD CHECK IF NOT CORRECT SIZE
     cube_data = cube.data.reshape(cube.shape[0], 808, 621)
+    cube_data = cube_data.filled(np.nan)  # stop it being masked
 
     # If pressure exists, create additional size 1 dimension for future concatenation.
     if pressure_hpa is not None:
