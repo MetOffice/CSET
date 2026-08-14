@@ -564,7 +564,7 @@ def scores_pod_model_obs(
     op_func: str,
 ):
     r"""
-    Compute the Probability of Detection (POD) score using Scores.
+    Compute the Probability of Detection (POD) score using Scores ([scoresa]_ [scoresb]_).
 
     Parameters
     ----------
