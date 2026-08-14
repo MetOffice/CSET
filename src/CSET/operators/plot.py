@@ -1543,8 +1543,10 @@ def _plot_and_save_histogram_series(
         elif "feature_size" in cube.long_name:
             bins = np.linspace(0, 500, 51)
         elif "feature_effective_radius" in cube.long_name:
-            # From RMED toolbox
-            bins = 10 ** (np.arange(0.0, 3.12, 0.12))
+            # TODO: use grid_spacing attribute in cubes to find min bin size
+            # for effective radius, rather than being hard coded
+            # Modified from RMED toolbox
+            bins = 10 ** (np.arange(0, 5.28, 0.12))
             bins = np.insert(bins, 0, 0)
             vmin = bins[1]
             vmax = bins[-1]

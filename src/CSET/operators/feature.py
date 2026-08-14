@@ -300,9 +300,13 @@ def cell_stats(
         )
 
         # Get effective radius from feature size, using horizontal coordinate of input cube to estimate grid spacing
-        effective_radius_data = _get_effective_radius_from_feature_size(
+        effective_radius_data, grid_spacing = _get_effective_radius_from_feature_size(
             size_data=size_data, cube_with_hzntl_coord=cube
         )
+
+        # Add grid_spacing as an attribute to the template_cube, so it is copied to
+        # output cubes in following function
+        cube.attributes["grid_spacing"] = grid_spacing
 
         # Set output cube properties
         cube_properties = {
@@ -441,6 +445,9 @@ def _get_effective_radius_from_feature_size(
     effective_radii_data: np.ndarray
         An array containing "feature_effective_radius" data, in units of km.
 
+    grid_spacing: float
+        The estimated grid spacing in m, calculated from the horizontal coordinate of the input cube.
+
     Notes
     -----
     This function assumes that the input cube has a horizontal coordinate system that is regular and
@@ -467,7 +474,7 @@ def _get_effective_radius_from_feature_size(
     grid_spacing = np.abs(np.mean(np.diff(hzntl_coord.points)))
     effective_radii_data = np.sqrt(size_data * grid_spacing**2 / np.pi)
 
-    return effective_radii_data
+    return effective_radii_data, grid_spacing
 
 
 def _add_cell_stats_data_to_cubes(
