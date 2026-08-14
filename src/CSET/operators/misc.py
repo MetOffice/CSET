@@ -702,3 +702,65 @@ def differentiate(
         return new_cubelist[0]
     else:
         return new_cubelist
+
+
+def flatten(
+    cubes: iris.cube.Cube | iris.cube.CubeList, remove_nans: bool = False
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Flatten a cube or cubelist along all dimensions.
+
+    Flattened cube contains a single dimension coordinate named "flattened_index".
+
+    Parameters
+    ----------
+    cubes : iris.cube.Cube or iris.cube.CubeList
+        The input Cube or CubeList to flatten.
+    remove_nans : bool, optional
+        If True, remove NaN values from the flattened data. Default is True.
+
+    Returns
+    -------
+    iris.cube.Cube or iris.cube.CubeList
+        The flattened cube or cubelist.
+    """
+    if isinstance(cubes, iris.cube.Cube):
+        cubes = iris.cube.CubeList([cubes])
+
+    if not isinstance(cubes, iris.cube.CubeList):
+        raise TypeError("Input must be an iris.cube.Cube or iris.cube.CubeList.")
+
+    flattened_cubes = iris.cube.CubeList()
+    for cube in cubes:
+        # Remove NaN if required
+        cube_data = cube.data
+        if remove_nans:
+            cube_data = cube_data[~np.isnan(cube_data)]
+
+        # Flatten the data
+        flattened_data = cube_data.flatten()
+
+        # Create a new cube with the flattened data and the remaining coordinates
+        flat_coord = iris.coords.DimCoord(
+            np.arange(flattened_data.size), long_name="flattened_index", units="1"
+        )
+        flattened_cube = iris.cube.Cube(
+            flattened_data,
+            standard_name=cube.standard_name,
+            long_name=cube.long_name,
+            var_name=cube.var_name,
+            units=cube.units,
+            attributes=cube.attributes,
+            dim_coords_and_dims=[(flat_coord, 0)],
+        )
+
+        # Add single time point as a scalar coord if it exists
+        if cube.coords("time"):
+            time_coord = cube.coord("time")
+            flattened_cube.add_aux_coord(time_coord[0])
+
+        flattened_cubes.append(flattened_cube)
+
+    if len(flattened_cubes) == 1:
+        return flattened_cubes[0]
+    else:
+        return flattened_cubes

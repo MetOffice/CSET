@@ -75,18 +75,24 @@ def collapse(
         raise ValueError("Must specify additional_percent")
 
     # Retain only common time points between different models if multiple model inputs.
+    # Do this only if "forecast_reference_time" and "forecast_period" are present in the cubes.
     if isinstance(cubes, iris.cube.CubeList) and len(cubes) > 1:
-        logging.debug(
-            "Extracting common time points as multiple model inputs detected."
+        fcst_ref_time_check = all(
+            "forecast_reference_time" in cube.coords() for cube in cubes
         )
-        for cube in cubes:
-            cube.coord("forecast_reference_time").bounds = None
-            cube.coord("forecast_period").bounds = None
-        cubes = cubes.extract_overlapping(
-            ["forecast_reference_time", "forecast_period"]
-        )
-        if len(cubes) == 0:
-            raise ValueError("No overlapping times detected in input cubes.")
+        fcst_period_check = all("forecast_period" in cube.coords() for cube in cubes)
+        if fcst_ref_time_check and fcst_period_check:
+            logging.debug(
+                "Extracting common time points as multiple model inputs detected."
+            )
+            for cube in cubes:
+                cube.coord("forecast_reference_time").bounds = None
+                cube.coord("forecast_period").bounds = None
+            cubes = cubes.extract_overlapping(
+                ["forecast_reference_time", "forecast_period"]
+            )
+            if len(cubes) == 0:
+                raise ValueError("No overlapping times detected in input cubes.")
 
     collapsed_cubes = iris.cube.CubeList([])
     with warnings.catch_warnings():

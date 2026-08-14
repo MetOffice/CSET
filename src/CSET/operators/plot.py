@@ -1540,6 +1540,20 @@ def _plot_and_save_histogram_series(
             ax.set_xscale("log")
         elif "lightning" in title:
             bins = [0, 1, 2, 3, 4, 5]
+        elif "feature_size" in cube.long_name:
+            bins = np.linspace(0, 500, 51)
+        elif "feature_effective_radius" in cube.long_name:
+            # From RMED toolbox
+            bins = 10 ** (np.arange(0.0, 3.12, 0.12))
+            bins = np.insert(bins, 0, 0)
+            vmin = bins[1]
+            vmax = bins[-1]
+        elif "feature_mean" in cube.long_name or "feature_max" in cube.long_name:
+            # From RMED toolbox
+            bins = 10 ** (np.arange(-1, 2.7, 0.12))
+            bins = np.insert(bins, 0, 0)
+            vmin = bins[1]
+            vmax = bins[-1]
         else:
             bins = np.linspace(vmin, vmax, 51)
         logging.debug(
