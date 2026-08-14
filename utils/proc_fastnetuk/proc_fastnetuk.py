@@ -170,9 +170,6 @@ def rebuild_metadata(cube, grid):
     elif out_cube.long_name == "surface_microphysical_rainfall_rate":
         out_cube.data *= 1000.0
 
-    # Fill any np.nan, as issues with read-only arrays in plotting.
-    out_cube.data = np.array(out_cube.data.filled(np.nan), copy=True)
-
     return out_cube
 
 
