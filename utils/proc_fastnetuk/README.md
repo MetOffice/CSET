@@ -4,7 +4,7 @@
 
 The script `proc_fastnetuk.py` converts FastNetUK inference output into CSET-compatible NetCDF files.
 
-FastNetUK output contains limited metadata and uses variable naming conventions that do not match those expected by CSET. Although the source files are described as UGRID data, the forecast fields are stored as flattened arrays representing a regular grid. This utility reconstructs the missing metadata and reshapes the flattened fields back onto a structured latitude-longitude grid.
+FastNetUK output contains limited metadata and uses variable naming conventions that do not match those expected by CSET. Although the source files are described as UGRID data, the forecast fields are stored as flattened arrays representing a regular grid. This utility reshapes the flattened fields back onto a structured latitude-longitude grid.
 
 The script performs the following preprocessing steps:
 
@@ -179,7 +179,6 @@ rainfall *= 1000.0
 - Pressure levels are inferred solely from variable names.
 - The latitude-longitude grid is reconstructed by reshaping flattened fields and not by interpolation.
 - The first valid time is assumed to be forecast lead time zero.
-- Missing values are converted to `NaN` before output generation.
 
 ---
 
