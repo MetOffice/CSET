@@ -251,7 +251,7 @@ def load(conf: Config):
                 variables={
                     "VARNAME": field,
                     "BASE_MODEL": base_model["name"],
-                    "OTHER_MODEL": model["name"],
+                    "OTHER_MODELS": model["name"],
                     "PRESERVED_COORDS": ["pressure"],
                     "AGGREGATION_MODE": "Case-study RMSE",
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,

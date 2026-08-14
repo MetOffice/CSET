@@ -1,5 +1,5 @@
 category: Scores
-title: "$VARNAME\nRMSE vertical profile between $OTHER_MODEL and $BASE_MODEL ($AGGREGATION_MODE)"
+title: "$VARNAME\nRMSE vertical profile between $OTHER_MODELS and $BASE_MODEL ($AGGREGATION_MODE)"
 description: |
   Extracts and plots the Root Mean Square Error (RMSE) of $VARNAME
   as a vertical profile on pressure levels. The RMSE is calculated
@@ -24,7 +24,7 @@ description: |
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
-    model_names: [$BASE_MODEL, $OTHER_MODEL]
+    model_names: [$BASE_MODEL, $OTHER_MODELS]
     constraint:
       operator: constraints.combine_constraints
       variable_constraint:
