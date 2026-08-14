@@ -277,7 +277,7 @@ def fix_time_and_meta(cubes: iris.cube.CubeList) -> iris.cube.CubeList:
         # Append slice to cutout list.
         done_cubes.append(cube)
 
-        print(f"{cube.name}...done.")
+        print(f"{cube.name()}...done.")
 
     return done_cubes
 
