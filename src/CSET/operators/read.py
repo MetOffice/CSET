@@ -32,7 +32,6 @@ import iris.exceptions
 import iris.util
 import numpy as np
 from iris.analysis.cartography import rotate_pole, rotate_winds
-from shapely.measurement import length
 
 from CSET._common import iter_maybe
 from CSET.operators._stash_to_lfric import STASH_TO_LFRIC
@@ -164,13 +163,13 @@ def read_cubes(
     FileNotFoundError
         If the provided path does not exist
     """
+    # flattens if any element is a list
+    model_names = list(itertools.chain.from_iterable(model_names))
+
     # Get iterable of paths. Each path corresponds to 1 model.
+
     paths = iter_maybe(file_paths)
     model_names = iter_maybe(model_names)
-
-    # flattens if second element is a list
-    if length(model_names) == 2 and isinstance(model_names[1], list):
-        model_names = [model_names[0]] + model_names[1]
 
     # Check we have appropriate number of model names.
 
