@@ -386,11 +386,11 @@ def scores_rmse(
 
     Returns
     -------
-    scores_cube: iris.cube.Cube
-        A cube containing the RMSE between the base and other cube.
+    scores_cubelist: iris.cube.CubeList
+        A cubelist containing the RMSE between the base and other cube.
     """
     base, others = _sort_cube_into_base_and_other(cubes)
-    rmse_cubelist = CubeList()
+    scores_cubelist = CubeList()
     for other in others:
         base, other = _process_cubes_for_verification(base, other)
     if obs_model_comparison:
@@ -446,12 +446,12 @@ def scores_rmse(
             pass
 
         scores_cube.rename(f"RMSE_of_{base.name()}")
-        rmse_cubelist.append(scores_cube)
+        scores_cubelist.append(scores_cube)
 
         model_name = other.attributes["model_name"]
         scores_cube.attributes["model_name"] = model_name
 
-    return rmse_cubelist
+    return scores_cubelist
 
 
 def scores_mae(cubes: CubeList, preserved_coordinates: list[str] | str | None = None):
@@ -473,56 +473,63 @@ def scores_mae(cubes: CubeList, preserved_coordinates: list[str] | str | None = 
 
     Returns
     -------
-    scores_cube: iris.cube.Cube
-        A cube containing the MAE between the base and other cube.
+    scores_cubelist: iris.cube.CubeList
+        A cubelist containing the MAE between the base and other cubes.
     """
-    base, other = _sort_cubes_for_verification(cubes)
+    base, others = _sort_cube_into_base_and_other(cubes)
+    scores_cubelist = CubeList()
+    for other in others:
+        base, other = _process_cubes_for_verification(base, other)
 
-    # Copy the coordinates of the input cubes.
-    other_xr = xr.DataArray.from_iris(other)
-    base_xr = xr.DataArray.from_iris(base)
-    preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
+        # Copy the coordinates of the input cubes.
+        other_xr = xr.DataArray.from_iris(other)
+        base_xr = xr.DataArray.from_iris(base)
+        preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
 
-    # Scores operates on xarray data arrays, so we transform the iris cube into an array,
-    # apply scores, and then transform it back.
-    scores_cube = xr.DataArray.to_iris(
-        scores.continuous.mae(
-            other_xr,
-            base_xr,
-            preserve_dims=preserve_dims,
+        # Scores operates on xarray data arrays, so we transform the iris cube into an array,
+        # apply scores, and then transform it back.
+        scores_cube = xr.DataArray.to_iris(
+            scores.continuous.mae(
+                other_xr,
+                base_xr,
+                preserve_dims=preserve_dims,
+            )
         )
-    )
 
-    # If time is aggregated out, attach a scalar time coordinate with bounds
-    # so plotting can display the aggregated period in the title.
-    try:
-        if not scores_cube.coords("time"):
-            base_time = base.coord("time")
-            time_vals = (
-                base_time.bounds.flatten()
-                if base_time.has_bounds()
-                else base_time.points
-            )
-            t_start = float(time_vals[0])
-            t_end = float(time_vals[-1])
-            t_mid = 0.5 * (t_start + t_end)
-
-            scores_cube.add_aux_coord(
-                iris.coords.AuxCoord(
-                    t_mid,
-                    standard_name=base_time.standard_name,
-                    long_name=base_time.long_name,
-                    var_name=base_time.var_name,
-                    units=base_time.units,
-                    bounds=np.array([t_start, t_end]),
-                    attributes=base_time.attributes.copy(),
+        # If time is aggregated out, attach a scalar time coordinate with bounds
+        # so plotting can display the aggregated period in the title.
+        try:
+            if not scores_cube.coords("time"):
+                base_time = base.coord("time")
+                time_vals = (
+                    base_time.bounds.flatten()
+                    if base_time.has_bounds()
+                    else base_time.points
                 )
-            )
-    except iris.exceptions.CoordinateNotFoundError:
-        pass
+                t_start = float(time_vals[0])
+                t_end = float(time_vals[-1])
+                t_mid = 0.5 * (t_start + t_end)
 
-    scores_cube.rename(f"MAE_of_{base.name()}")
-    return scores_cube
+                scores_cube.add_aux_coord(
+                    iris.coords.AuxCoord(
+                        t_mid,
+                        standard_name=base_time.standard_name,
+                        long_name=base_time.long_name,
+                        var_name=base_time.var_name,
+                        units=base_time.units,
+                        bounds=np.array([t_start, t_end]),
+                        attributes=base_time.attributes.copy(),
+                    )
+                )
+        except iris.exceptions.CoordinateNotFoundError:
+            pass
+
+        scores_cube.rename(f"MAE_of_{base.name()}")
+        scores_cubelist.append(scores_cube)
+        model_name = other.attributes["model_name"]
+        scores_cube.attributes["model_name"] = model_name
+
+    return scores_cubelist
 
 
 def scores_additive_bias(
@@ -546,55 +553,62 @@ def scores_additive_bias(
 
     Returns
     -------
-    scores_cube: iris.cube.Cube
-        A cube containing the ME between the base and other cube.
+    scores_cubelist: iris.cube.CubeList
+        A cubelist containing the ME between the base and other cube.
     """
-    base, other = _sort_cubes_for_verification(cubes)
+    base, others = _sort_cube_into_base_and_other(cubes)
+    scores_cubelist = CubeList()
+    for other in others:
+        base, other = _process_cubes_for_verification(base, other)
 
-    # Copy the coordinates of the input cubes.
-    other_xr = xr.DataArray.from_iris(other)
-    base_xr = xr.DataArray.from_iris(base)
-    preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
+        # Copy the coordinates of the input cubes.
+        other_xr = xr.DataArray.from_iris(other)
+        base_xr = xr.DataArray.from_iris(base)
+        preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
 
-    # Scores operates on xarray data arrays, so we transform the iris cube into an array,
-    # apply scores, and then transform it back.
-    scores_cube = xr.DataArray.to_iris(
-        scores.continuous.additive_bias(
-            other_xr,
-            base_xr,
-            preserve_dims=preserve_dims,
+        # Scores operates on xarray data arrays, so we transform the iris cube into an array,
+        # apply scores, and then transform it back.
+        scores_cube = xr.DataArray.to_iris(
+            scores.continuous.additive_bias(
+                other_xr,
+                base_xr,
+                preserve_dims=preserve_dims,
+            )
         )
-    )
 
-    # If time is aggregated out, attach a scalar time coordinate with bounds
-    # so plotting can display the aggregated period in the title.
-    try:
-        if not scores_cube.coords("time"):
-            base_time = base.coord("time")
-            time_vals = (
-                base_time.bounds.flatten()
-                if base_time.has_bounds()
-                else base_time.points
-            )
-            t_start = float(time_vals[0])
-            t_end = float(time_vals[-1])
-            t_mid = 0.5 * (t_start + t_end)
-
-            scores_cube.add_aux_coord(
-                iris.coords.AuxCoord(
-                    t_mid,
-                    standard_name=base_time.standard_name,
-                    long_name=base_time.long_name,
-                    var_name=base_time.var_name,
-                    units=base_time.units,
-                    bounds=np.array([t_start, t_end]),
-                    attributes=base_time.attributes.copy(),
+        # If time is aggregated out, attach a scalar time coordinate with bounds
+        # so plotting can display the aggregated period in the title.
+        try:
+            if not scores_cube.coords("time"):
+                base_time = base.coord("time")
+                time_vals = (
+                    base_time.bounds.flatten()
+                    if base_time.has_bounds()
+                    else base_time.points
                 )
-            )
-    except iris.exceptions.CoordinateNotFoundError:
-        pass
-    scores_cube.rename(f"Additive_Bias_of_{base.name()}")
-    return scores_cube
+                t_start = float(time_vals[0])
+                t_end = float(time_vals[-1])
+                t_mid = 0.5 * (t_start + t_end)
+
+                scores_cube.add_aux_coord(
+                    iris.coords.AuxCoord(
+                        t_mid,
+                        standard_name=base_time.standard_name,
+                        long_name=base_time.long_name,
+                        var_name=base_time.var_name,
+                        units=base_time.units,
+                        bounds=np.array([t_start, t_end]),
+                        attributes=base_time.attributes.copy(),
+                    )
+                )
+        except iris.exceptions.CoordinateNotFoundError:
+            pass
+        scores_cube.rename(f"Additive_Bias_of_{base.name()}")
+        scores_cubelist.append(scores_cube)
+        model_name = other.attributes["model_name"]
+        scores_cube.attributes["model_name"] = model_name
+
+    return scores_cubelist
 
 
 def scores_correlation_pearsonr(
@@ -621,53 +635,59 @@ def scores_correlation_pearsonr(
     scores_cube: iris.cube.Cube
         A cube containing the PC between the base and other cube.
     """
-    base, other = _sort_cubes_for_verification(cubes)
+    base, others = _sort_cube_into_base_and_other(cubes)
+    scores_cubelist = CubeList()
+    for other in others:
+        base, other = _process_cubes_for_verification(base, other)
 
-    # Copy the coordinates of the input cubes.
-    other_xr = xr.DataArray.from_iris(other)
-    base_xr = xr.DataArray.from_iris(base)
-    preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
+        # Copy the coordinates of the input cubes.
+        other_xr = xr.DataArray.from_iris(other)
+        base_xr = xr.DataArray.from_iris(base)
+        preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
 
-    # Scores operates on xarray data arrays, so we transform the iris cube into an array,
-    # apply scores, and then transform it back.
-    scores_cube = xr.DataArray.to_iris(
-        scores.continuous.correlation.pearsonr(
-            other_xr,
-            base_xr,
-            preserve_dims=preserve_dims,
+        # Scores operates on xarray data arrays, so we transform the iris cube into an array,
+        # apply scores, and then transform it back.
+        scores_cube = xr.DataArray.to_iris(
+            scores.continuous.correlation.pearsonr(
+                other_xr,
+                base_xr,
+                preserve_dims=preserve_dims,
+            )
         )
-    )
 
-    # If time is aggregated out, attach a scalar time coordinate with bounds
-    # so plotting can display the aggregated period in the title.
-    try:
-        if not scores_cube.coords("time"):
-            base_time = base.coord("time")
-            time_vals = (
-                base_time.bounds.flatten()
-                if base_time.has_bounds()
-                else base_time.points
-            )
-            t_start = float(time_vals[0])
-            t_end = float(time_vals[-1])
-            t_mid = 0.5 * (t_start + t_end)
-
-            scores_cube.add_aux_coord(
-                iris.coords.AuxCoord(
-                    t_mid,
-                    standard_name=base_time.standard_name,
-                    long_name=base_time.long_name,
-                    var_name=base_time.var_name,
-                    units=base_time.units,
-                    bounds=np.array([t_start, t_end]),
-                    attributes=base_time.attributes.copy(),
+        # If time is aggregated out, attach a scalar time coordinate with bounds
+        # so plotting can display the aggregated period in the title.
+        try:
+            if not scores_cube.coords("time"):
+                base_time = base.coord("time")
+                time_vals = (
+                    base_time.bounds.flatten()
+                    if base_time.has_bounds()
+                    else base_time.points
                 )
-            )
-    except iris.exceptions.CoordinateNotFoundError:
-        pass
+                t_start = float(time_vals[0])
+                t_end = float(time_vals[-1])
+                t_mid = 0.5 * (t_start + t_end)
 
-    scores_cube.rename(f"Pearson_Correlation_of_{base.name()}")
-    return scores_cube
+                scores_cube.add_aux_coord(
+                    iris.coords.AuxCoord(
+                        t_mid,
+                        standard_name=base_time.standard_name,
+                        long_name=base_time.long_name,
+                        var_name=base_time.var_name,
+                        units=base_time.units,
+                        bounds=np.array([t_start, t_end]),
+                        attributes=base_time.attributes.copy(),
+                    )
+                )
+        except iris.exceptions.CoordinateNotFoundError:
+            pass
+
+        scores_cube.rename(f"Pearson_Correlation_of_{base.name()}")
+        scores_cubelist.append(scores_cube)
+        model_name = other.attributes["model_name"]
+        scores_cube.attributes["model_name"] = model_name
+    return scores_cubelist
 
 
 def scores_crps_for_ensemble(

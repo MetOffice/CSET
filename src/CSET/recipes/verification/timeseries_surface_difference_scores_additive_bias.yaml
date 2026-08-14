@@ -1,5 +1,5 @@
 category: Scores
-title: "$VARNAME\nScores Mean Error timeseries between $OTHER_MODEL and $BASE_MODEL $SUBAREA_NAME"
+title: "$VARNAME\nScores Mean Error timeseries between $OTHER_MODELS and $BASE_MODEL $SUBAREA_NAME"
 description: |
   Extracts and plots the Mean Error (also known as the Additive Bias) in $VARNAME
   computed over the domain for each timestep. The ME is calculated based on that used in the
@@ -15,7 +15,7 @@ description: |
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
-    model_names: [$BASE_MODEL, $OTHER_MODEL]
+    model_names: [$BASE_MODEL, $OTHER_MODELS]
     constraint:
       operator: constraints.combine_constraints
       varname_constraint:

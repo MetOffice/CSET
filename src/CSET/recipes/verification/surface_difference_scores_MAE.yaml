@@ -29,7 +29,7 @@ description: |
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
-    model_names: [$BASE_MODEL, $OTHER_MODEL]
+    model_names: [$BASE_MODEL, $OTHER_MODELS]
     constraint:
       operator: constraints.combine_constraints
       varname_constraint:
