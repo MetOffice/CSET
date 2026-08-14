@@ -106,7 +106,6 @@ def rebuild_metadata(cube, grid):
 
     # Reshape cube ADD CHECK IF NOT CORRECT SIZE
     cube_data = cube.data.reshape(cube.shape[0], 808, 621)
-    cube_data = cube_data.filled(np.nan)  # stop it being masked
 
     # If pressure exists, create additional size 1 dimension for future concatenation.
     if pressure_hpa is not None:
@@ -170,6 +169,9 @@ def rebuild_metadata(cube, grid):
 
     elif out_cube.long_name == "surface_microphysical_rainfall_rate":
         out_cube.data *= 1000.0
+
+    # Fill any np.nan, as issues with read-only arrays in plotting.
+    out_cube.data = np.array(out_cube.data.filled(np.nan), copy=True)
 
     return out_cube
 
