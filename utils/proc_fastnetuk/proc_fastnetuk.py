@@ -198,7 +198,7 @@ def main() -> None:
     outputpath = args.outputpath + "/"
 
     # Load mask containing lat/lon to project onto.
-    ukv_mask = iris.load_cube("/data/scratch/james.warner/1308_tmpfastnet/ukv_mesh.nc")
+    ukv_mask = iris.load_cube("ukv_mesh.nc")
 
     for file in glob(inputpath):
         print(f"Running script on {file}")
