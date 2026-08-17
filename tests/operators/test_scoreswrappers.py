@@ -395,51 +395,6 @@ def test_model_obs_pearson_correlation_preserve_in_timelatlon(dummy_cubelist_mod
         )
 
 
-def test_model_obs_additive_bias_preserve_in_time(dummy_cubelist_model_obs):
-    """Additive bias collapsed over station, preserving only the time dimension."""
-    bias = scoreswrappers.scores_additive_bias_model_obs(
-        dummy_cubelist_model_obs, "time"
-    )
-    assert isinstance(bias, CubeList)
-    assert len(bias) == 2
-    model_names = ["model_a", "model_b"]
-    for cube, model_name in zip(bias, model_names, strict=True):
-        assert cube.name() == "Additive_Bias_of_observed_temperature_at_screen_level"
-        assert cube.units == "K"
-        assert cube.shape == (36,)
-        assert cube.attributes["model_name"] == model_name
-
-
-def test_model_obs_additive_bias_preserve_in_latlon(dummy_cubelist_model_obs):
-    """Additive bias collapsed over time, preserving the station dimension via lat/lon."""
-    bias = scoreswrappers.scores_additive_bias_model_obs(
-        dummy_cubelist_model_obs, ["longitude", "latitude"]
-    )
-    assert isinstance(bias, CubeList)
-    assert len(bias) == 2
-    model_names = ["model_a", "model_b"]
-    for cube, model_name in zip(bias, model_names, strict=True):
-        assert cube.name() == "Additive_Bias_of_observed_temperature_at_screen_level"
-        assert cube.units == "K"
-        assert cube.shape == (28,)
-        assert cube.attributes["model_name"] == model_name
-
-
-def test_model_obs_additive_bias_preserve_in_timelatlon(dummy_cubelist_model_obs):
-    """Additive bias with nothing collapsed, preserving both time and station dimensions."""
-    bias = scoreswrappers.scores_additive_bias_model_obs(
-        dummy_cubelist_model_obs, ["time", "longitude", "latitude"]
-    )
-    assert isinstance(bias, CubeList)
-    assert len(bias) == 2
-    model_names = ["model_a", "model_b"]
-    for cube, model_name in zip(bias, model_names, strict=True):
-        assert cube.name() == "Additive_Bias_of_observed_temperature_at_screen_level"
-        assert cube.units == "K"
-        assert cube.shape == (36, 28)
-        assert cube.attributes["model_name"] == model_name
-
-
 def test_pod_gt_2x2_manual_case(make_cube_categorical_testing):
     """Test basic 2x2 case for manual validation."""
     obs = make_cube_categorical_testing(

@@ -347,8 +347,8 @@ def scores_correlation_pearsonr_model_obs(
 
     Returns
     -------
-    scores_cube: iris.cube.Cube
-        A cube containing the PC between the models and observation cube.
+    scores_cube: iris.cube.CubeList
+        A cube list containing the PC between the models and observation cube.
     """
     pearsonr_cubes = CubeList()
     model_list = CubeList()
