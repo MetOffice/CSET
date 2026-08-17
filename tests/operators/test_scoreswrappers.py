@@ -301,6 +301,49 @@ def test_crps_less_than_3_realizations(feature_cube):
         scoreswrappers.scores_crps_for_ensemble(feature_cube_one_realization)
 
 
+def test_model_obs_rmse_preserve_in_time(dummy_cubelist_model_obs):
+    """RMSE collapsed over station, preserving only the time dimension."""
+    rmse = scoreswrappers.scores_rmse_model_obs(dummy_cubelist_model_obs, "time")
+    assert isinstance(rmse, CubeList)
+    assert len(rmse) == 2
+    model_names = ["model_a", "model_b"]
+    for cube, model_name in zip(rmse, model_names, strict=True):
+        assert cube.name() == "RMSE_of_observed_temperature_at_screen_level"
+        assert cube.units == "K"
+        assert cube.shape == (36,)
+        assert cube.attributes["model_name"] == model_name
+
+
+def test_model_obs_rmse_preserve_in_latlon(dummy_cubelist_model_obs):
+    """RMSE collapsed over time, preserving the station dimension via lat/lon."""
+    rmse = scoreswrappers.scores_rmse_model_obs(
+        dummy_cubelist_model_obs, ["longitude", "latitude"]
+    )
+    assert isinstance(rmse, CubeList)
+    assert len(rmse) == 2
+    model_names = ["model_a", "model_b"]
+    for cube, model_name in zip(rmse, model_names, strict=True):
+        assert cube.name() == "RMSE_of_observed_temperature_at_screen_level"
+        assert cube.units == "K"
+        assert cube.shape == (28,)
+        assert cube.attributes["model_name"] == model_name
+
+
+def test_model_obs_rmse_preserve_in_timelatlon(dummy_cubelist_model_obs):
+    """RMSE with nothing collapsed, preserving both time and station dimensions."""
+    rmse = scoreswrappers.scores_rmse_model_obs(
+        dummy_cubelist_model_obs, ["time", "longitude", "latitude"]
+    )
+    assert isinstance(rmse, CubeList)
+    assert len(rmse) == 2
+    model_names = ["model_a", "model_b"]
+    for cube, model_name in zip(rmse, model_names, strict=True):
+        assert cube.name() == "RMSE_of_observed_temperature_at_screen_level"
+        assert cube.units == "K"
+        assert cube.shape == (36, 28)
+        assert cube.attributes["model_name"] == model_name
+
+
 def test_pod_gt_2x2_manual_case(make_cube_categorical_testing):
     """Test basic 2x2 case for manual validation."""
     obs = make_cube_categorical_testing(
