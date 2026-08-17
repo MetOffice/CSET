@@ -1220,3 +1220,48 @@ def precalc_direction_shear_5d_read_only():
 def precalc_direction_shear_5d(precalc_direction_shear_5d_read_only):
     """Get precalculated directional shear across maul for 5D data. It is safe to modify."""
     return precalc_direction_shear_5d_read_only.copy()
+
+
+@pytest.fixture()
+def make_cube_categorical_testing() -> iris.cube.Cube:
+    """Create test cube."""
+
+    def _make_cube(data, long_name, model_name=None):
+        """Create basic 2D iris cube for testing functionality."""
+        cube = iris.cube.Cube(
+            np.array(data, dtype=float),
+            long_name=long_name,
+            dim_coords_and_dims=[
+                (iris.coords.DimCoord([0, 1], long_name="latitude"), 0),
+                (iris.coords.DimCoord([0, 1], long_name="longitude"), 1),
+            ],
+        )
+
+        cube.attributes["model_name"] = model_name
+
+        return cube
+
+    return _make_cube
+
+
+@pytest.fixture()
+def make_cube_categorical_testing_with_time() -> iris.cube.Cube:
+    """Create test cube."""
+
+    def _make_cube(data, long_name, model_name=None):
+        """Create basic 2D iris cube for testing functionality."""
+        cube = iris.cube.Cube(
+            np.array(data, dtype=float),
+            long_name=long_name,
+            dim_coords_and_dims=[
+                (iris.coords.DimCoord([0, 1, 2], long_name="time"), 0),
+                (iris.coords.DimCoord([0, 1], long_name="latitude"), 1),
+                (iris.coords.DimCoord([0, 1], long_name="longitude"), 2),
+            ],
+        )
+
+        cube.attributes["model_name"] = model_name
+
+        return cube
+
+    return _make_cube
