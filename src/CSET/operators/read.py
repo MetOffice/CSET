@@ -168,17 +168,16 @@ def read_cubes(
     model_names = iter_maybe(model_names)
 
     # flattens model_names if needed
-
-    flat = []
-    for item in model_names:
-        if isinstance(item, list):
-            flat.extend(item)
-        else:
-            flat.append(item)
-    model_names = flat
+    if model_names != (None,):
+        flat = []
+        for item in model_names:
+            if isinstance(item, list):
+                flat.extend(item)
+            else:
+                flat.append(item)
+        model_names = flat
 
     # Check we have appropriate number of model names.
-
     if model_names != (None,) and len(model_names) != len(paths):
         raise ValueError(
             f"The number of model names ({len(model_names)}) should equal "
