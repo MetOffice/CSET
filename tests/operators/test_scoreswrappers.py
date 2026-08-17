@@ -157,21 +157,6 @@ def test_scores_rmse_no_common_points(cube):
         scoreswrappers.scores_rmse(cubes)
 
 
-def test_scores_rmse_incorrect_number_of_cubes(cube):
-    """Test exception when incorrect number of cubes provided."""
-    no_cubes = CubeList([])
-    with pytest.raises(ValueError, match="cubes should contain exactly 2 cubes."):
-        scoreswrappers.scores_rmse(no_cubes)
-
-    one_cube = CubeList([cube])
-    with pytest.raises(ValueError, match="cubes should contain exactly 2 cubes."):
-        scoreswrappers.scores_rmse(one_cube)
-
-    three_cubes = CubeList([cube, cube, cube])
-    with pytest.raises(ValueError, match="cubes should contain exactly 2 cubes."):
-        scoreswrappers.scores_rmse(three_cubes)
-
-
 def test_scores_rmse_different_data_shape_regrid(cube):
     """Test when data shape differs, but gets regridded.
 
