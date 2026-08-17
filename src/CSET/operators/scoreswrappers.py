@@ -93,7 +93,11 @@ def _process_cubes_for_verification(base: Cube, other: Cube):
     # Set cubes into correct format using code from difference operator
 
     # Extract just common time points.
-    other_model_name = other.attributes["model_name"]
+
+    if "model_name" in other.attributes:
+        other_model_name = other.attributes["model_name"]
+    else:
+        other_model_name = "modelname"
     base, other = _extract_common_time_points(base, other)
 
     # Get spatial coord names.
@@ -343,7 +347,7 @@ def scores_rmse(
         model_name = other.attributes["model_name"]
         scores_cube.attributes["model_name"] = model_name
 
-    return scores_cubelist
+    return scores_cubelist[0] if len(scores_cubelist) == 1 else scores_cubelist
 
 
 def scores_mae(cubes: CubeList, preserved_coordinates: list[str] | str | None = None):
@@ -421,7 +425,7 @@ def scores_mae(cubes: CubeList, preserved_coordinates: list[str] | str | None = 
         model_name = other.attributes["model_name"]
         scores_cube.attributes["model_name"] = model_name
 
-    return scores_cubelist
+    return scores_cubelist[0] if len(scores_cubelist) == 1 else scores_cubelist
 
 
 def scores_additive_bias(
@@ -500,7 +504,7 @@ def scores_additive_bias(
         model_name = other.attributes["model_name"]
         scores_cube.attributes["model_name"] = model_name
 
-    return scores_cubelist
+    return scores_cubelist[0] if len(scores_cubelist) == 1 else scores_cubelist
 
 
 def scores_correlation_pearsonr(
@@ -579,7 +583,7 @@ def scores_correlation_pearsonr(
         scores_cubelist.append(scores_cube)
         model_name = other.attributes["model_name"]
         scores_cube.attributes["model_name"] = model_name
-    return scores_cubelist
+    return scores_cubelist[0] if len(scores_cubelist) == 1 else scores_cubelist
 
 
 def scores_crps_for_ensemble(

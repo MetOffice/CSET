@@ -168,6 +168,7 @@ def read_cubes(
     model_names = iter_maybe(model_names)
 
     # flattens model_names if needed
+
     flat = []
     for item in model_names:
         if isinstance(item, list):
