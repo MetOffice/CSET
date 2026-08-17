@@ -301,35 +301,16 @@ def test_crps_less_than_3_realizations(feature_cube):
         scoreswrappers.scores_crps_for_ensemble(feature_cube_one_realization)
 
 
-###################
-
-
-def _make_cube_categorical_testing(data, long_name, model_name=None):
-    """Create basic 2D iris cube for testing functionality."""
-    cube = Cube(
-        np.array(data, dtype=float),
-        long_name=long_name,
-        dim_coords_and_dims=[
-            (iris.coords.DimCoord([0, 1], long_name="latitude"), 0),
-            (iris.coords.DimCoord([0, 1], long_name="longitude"), 1),
-        ],
-    )
-
-    cube.attributes["model_name"] = model_name
-
-    return cube
-
-
-def test_pod_gt_2x2_manual_case():
+def test_pod_gt_2x2_manual_case(make_cube_categorical_testing):
     """Test basic 2x2 case for manual validation."""
-    obs = _make_cube_categorical_testing(
+    obs = make_cube_categorical_testing(
         [[12, 5], [15, 8]],
         long_name="observed_temperature",
         model_name="obs",
     )
     obs.attributes["cset_comparison_base"] = 1
 
-    model = _make_cube_categorical_testing(
+    model = make_cube_categorical_testing(
         [[14, 20], [7, 4]],
         long_name="temperature",
         model_name="test_model",
@@ -349,15 +330,15 @@ def test_pod_gt_2x2_manual_case():
     assert np.allclose(result[0].data, 0.5, atol=1e-2, rtol=1e-6)
 
 
-def test_pod_returns_one_when_all_events_perfect():
+def test_pod_returns_one_when_all_events_perfect(make_cube_categorical_testing):
     """Test basic 2x2 case when all correct hits."""
-    obs = _make_cube_categorical_testing(
+    obs = make_cube_categorical_testing(
         [[1, 1], [1, 1]],
         long_name="observed_temperature",
         model_name="obs",
     )
 
-    model = _make_cube_categorical_testing(
+    model = make_cube_categorical_testing(
         [[2, 2], [2, 2]],
         long_name="temperature",
         model_name="test_model",
@@ -374,15 +355,15 @@ def test_pod_returns_one_when_all_events_perfect():
     assert np.allclose(result[0].data, 1, atol=1e-2, rtol=1e-6)
 
 
-def test_pod_returns_zero_when_all_events_missed():
+def test_pod_returns_zero_when_all_events_missed(make_cube_categorical_testing):
     """Test basic 2x2 case when all events missed."""
-    obs = _make_cube_categorical_testing(
+    obs = make_cube_categorical_testing(
         [[12, 5], [15, 8]],
         long_name="observed_temperature",
         model_name="obs",
     )
 
-    model = _make_cube_categorical_testing(
+    model = make_cube_categorical_testing(
         [[1, 1], [1, 1]],
         long_name="temperature",
         model_name="test_model",
@@ -399,26 +380,9 @@ def test_pod_returns_zero_when_all_events_missed():
     assert np.allclose(result[0].data, 0, atol=1e-2, rtol=1e-6)
 
 
-def _make_cube_categorical_testing_with_time(data, long_name, model_name=None):
-    """Create basic 2D iris cube for testing functionality."""
-    cube = Cube(
-        np.array(data, dtype=float),
-        long_name=long_name,
-        dim_coords_and_dims=[
-            (iris.coords.DimCoord([0, 1, 2], long_name="time"), 0),
-            (iris.coords.DimCoord([0, 1], long_name="latitude"), 1),
-            (iris.coords.DimCoord([0, 1], long_name="longitude"), 2),
-        ],
-    )
-
-    cube.attributes["model_name"] = model_name
-
-    return cube
-
-
-def test_pod_preserve_time_dimension():
+def test_pod_preserve_time_dimension(make_cube_categorical_testing_with_time):
     """Ensure time dimension preserved when passed to function."""
-    obs = _make_cube_categorical_testing_with_time(
+    obs = make_cube_categorical_testing_with_time(
         [
             [[1, 1], [1, 1]],
             [[1, 1], [1, 1]],
@@ -428,7 +392,7 @@ def test_pod_preserve_time_dimension():
         model_name="obs",
     )
 
-    model = _make_cube_categorical_testing_with_time(
+    model = make_cube_categorical_testing_with_time(
         [
             [[2, 2], [2, 2]],
             [[0, 0], [0, 0]],
@@ -448,21 +412,21 @@ def test_pod_preserve_time_dimension():
     assert np.allclose(result[0].data, np.array([1.0, 0.0, 0.0]), atol=1e-2, rtol=1e-6)
 
 
-def test_returns_one_score_per_model():
+def test_returns_one_score_per_model(make_cube_categorical_testing):
     """Test POD for multiple models and return two results."""
-    obs = _make_cube_categorical_testing(
+    obs = make_cube_categorical_testing(
         [[12, 5], [15, 8]],
         long_name="observed_temperature",
         model_name="obs",
     )
 
-    model_a = _make_cube_categorical_testing(
+    model_a = make_cube_categorical_testing(
         [[20, 1], [20, 1]],
         long_name="temperature",
         model_name="test_modelA",
     )
 
-    model_b = _make_cube_categorical_testing(
+    model_b = make_cube_categorical_testing(
         [[1, 1], [1, 1]],
         long_name="temperature",
         model_name="test_modelB",
@@ -480,15 +444,15 @@ def test_returns_one_score_per_model():
     assert result[1].attributes["model_name"] == "test_modelB"
 
 
-def test_output_metadata():
+def test_output_metadata(make_cube_categorical_testing):
     """Test that cube has appropriate metadata preserved."""
-    obs = _make_cube_categorical_testing(
+    obs = make_cube_categorical_testing(
         [[12, 5], [15, 8]],
         long_name="observed_temperature",
         model_name="obs",
     )
 
-    model = _make_cube_categorical_testing(
+    model = make_cube_categorical_testing(
         [[1, 1], [1, 1]],
         long_name="temperature",
         model_name="test_model",
@@ -509,15 +473,15 @@ def test_output_metadata():
     assert cube.name() == "Probability_Of_Detection_gt_10_observed_temperature"
 
 
-def test_invalid_operator_raises():
+def test_invalid_operator_raises(make_cube_categorical_testing):
     """Check that code raises exception if unsupported operator."""
-    obs = _make_cube_categorical_testing(
+    obs = make_cube_categorical_testing(
         [[12, 5], [15, 8]],
         long_name="observed_temperature",
         model_name="obs",
     )
 
-    model = _make_cube_categorical_testing(
+    model = make_cube_categorical_testing(
         [[1, 1], [1, 1]],
         long_name="temperature",
         model_name="test_model",
