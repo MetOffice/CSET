@@ -61,6 +61,14 @@ def _get_scores_timeseries_methods_model_vs_obs(conf):
     return scores_timeseries_methods_model_vs_obs
 
 
+def _get_scores_timeseries_categorical(conf):
+    """List of categorical scores metrics, all model vs obs."""
+    scores_timeseries_categorical = []
+    if conf.SCORES_CATEGORICAL_POD or conf.SCORES_ALL:
+        scores_timeseries_categorical.append("pod")
+    return scores_timeseries_categorical
+
+
 def _get_scores_spatial_methods_model_vs_obs(conf):
     """Compile list of the required scores spatial plots."""
     scores_spatial_methods_model_vs_obs = []
@@ -272,5 +280,31 @@ def load(conf: Config):
                     else None,
                 },
                 model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )
+
+    # Scores categorical metrics
+    scores_timeseries_categorical = _get_scores_timeseries_categorical(conf)
+    if scores_timeseries_categorical:
+        # Produce timeseries plots of scores categorical metrics for each model.
+        for field_and_method, scores_method in itertools.product(
+            conf.SCORES_CATEGORICAL_POD_ENTRIES, scores_timeseries_categorical
+        ):
+            var, op, value = field_and_method.split(",")
+
+            yield RawRecipe(
+                recipe=f"surface_categorical_model_obs_{scores_method}.yaml",
+                variables={
+                    "VARNAME": var,
+                    "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
+                    "POD_THRESHOLD": value,
+                    "POD_OPERATOR": op,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=["OBS"] + [model["id"] for model in models],
                 aggregation=False,
             )
