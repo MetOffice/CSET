@@ -1,5 +1,5 @@
 category: Scores Categorical
-title: Timeseries of POD for "$VARNAME over $SUBAREA_NAME, using threshold $POD_OPERATOR $POD_THRESHOLD"
+title: Timeseries of POD for "$VARNAME over $SUBAREA_NAME, using threshold $OPERATOR $THRESHOLD"
 description: |
 
   Create a timeseries of the probability of detection.
@@ -62,8 +62,8 @@ steps:
 
   - operator: scoreswrappers.scores_pod_model_obs
     preserved_coordinates: "time"
-    threshold: $POD_THRESHOLD
-    op_func: $POD_OPERATOR
+    threshold: $THRESHOLD
+    op_func: $OPERATOR
 
   - operator: plot.plot_line_series
 
