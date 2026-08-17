@@ -485,6 +485,16 @@ def test_plot_power_spectrum(power_spectrum_cube_readonly, tmp_working_dir):
     assert Path("power_spectra_20220601000000.png").is_file()
 
 
+def test_plot_power_spectrum_nans(power_spectrum_cube, tmp_working_dir):
+    """Save a power_spectrum plot using line series plot when data is nan."""
+    # Set all values to np.nan
+    power_spectrum_cube.data[:] = np.nan
+
+    # See if it still produces a plot
+    plot.plot_line_series(power_spectrum_cube, series_coordinate="frequency")
+    assert Path("power_spectra_20220601000000.png").is_file()
+
+
 def test_plot_line_series_with_filename(cube, tmp_working_dir):
     """Save a line series plot with specific filename and series coordinate."""
     cube = collapse.collapse(cube, ["time", "grid_longitude"], "MEAN")
@@ -518,6 +528,55 @@ def test_plot_power_spectrum_no_sequence_coordinate(
     power_spectrum_cube.remove_coord("time")
     with pytest.raises(ValueError, match="Cube must have a time coordinate."):
         plot.plot_line_series(power_spectrum_cube, series_coordinate="frequency")
+
+
+def test_plot_line_series_extra_dimension_failure(tmp_working_dir):
+    """Error with three non-realization dimensions."""
+    data = np.random.rand(2, 3, 4, 10)
+
+    cube = iris.cube.Cube(
+        data,
+        long_name="power_spectral_density",
+    )
+
+    # Add a realization coord plus 3 other coordinates
+    cube.add_dim_coord(
+        iris.coords.DimCoord(
+            np.arange(2),
+            standard_name="realization",
+        ),
+        0,
+    )
+
+    cube.add_dim_coord(
+        iris.coords.DimCoord(
+            np.arange(3),
+            long_name="forecast_reference_time",
+        ),
+        1,
+    )
+
+    cube.add_dim_coord(
+        iris.coords.DimCoord(
+            np.arange(4),
+            standard_name="time",
+        ),
+        2,
+    )
+
+    cube.add_dim_coord(
+        iris.coords.DimCoord(
+            np.arange(10),
+            long_name="physical_wavenumber",
+        ),
+        3,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Cube must be 1D or 2D",
+    ):
+        plot.plot_line_series(cube, filename="test_extra_dim", series_coordinate="time")
 
 
 def test_select_series_coord_frequency_fallback(power_spectrum_cube):
