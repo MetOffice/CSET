@@ -16,6 +16,11 @@ description: |
     ETS = \frac{hits - hits_{random}}
     {hits + misses + false\ alarms - hits_{random}}
 
+
+    where
+
+    hits_{random} = \frac{(hits + misses)(hits + false\ alarms)}{total count}
+
     ETS ranges from -1/3 to 1, where 1 indicates a perfect forecast, 0 indicates no skill beyond random chance, and negative values indicate worse than
     random chance.
 
