@@ -299,8 +299,8 @@ def load(conf: Config):
                 variables={
                     "VARNAME": var,
                     "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
-                    "POD_THRESHOLD": value,
-                    "POD_OPERATOR": op,
+                    "THRESHOLD": value,
+                    "OPERATOR": op,
                     "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
