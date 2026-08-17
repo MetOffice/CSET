@@ -66,6 +66,8 @@ def _get_scores_timeseries_categorical(conf):
     scores_timeseries_categorical = []
     if conf.SCORES_CATEGORICAL_POD or conf.SCORES_ALL:
         scores_timeseries_categorical.append("pod")
+    if conf.SCORES_CATEGORICAL_ETS or conf.SCORES_ALL:
+        scores_timeseries_categorical.append("ets")
     return scores_timeseries_categorical
 
 
@@ -288,7 +290,7 @@ def load(conf: Config):
     if scores_timeseries_categorical:
         # Produce timeseries plots of scores categorical metrics for each model.
         for field_and_method, scores_method in itertools.product(
-            conf.SCORES_CATEGORICAL_POD_ENTRIES, scores_timeseries_categorical
+            conf.SCORES_CATEGORICAL_ENTRIES, scores_timeseries_categorical
         ):
             var, op, value = field_and_method.split(",")
 
