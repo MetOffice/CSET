@@ -879,7 +879,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
                 vmin = min(levels)
                 vmax = max(levels)
             else:
-                raise TypeError("Unknown vmin and vmax range.")
+                logger.info("Unknown vmin and vmax range.")
                 vmin, vmax = None, None
             # pcolormesh plot of the field and ensure to use norm and not vmin/vmax
             # if levels are defined.
