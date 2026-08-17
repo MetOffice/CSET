@@ -13,6 +13,8 @@ description: |
   https://scores.readthedocs.io/en/stable/
   https://scores.readthedocs.io/en/stable/api.html#scores.continuous.rmse
 
+  In case of ensemble data the RMSE is calculated between the ensemble mean
+  of $BASE_MODEL and the ensemble mean of $OTHER_MODEL.
 
   Aggregation mode:
   - Case-study RMSE: Single RMSE profile calculated using all time points in the case study.
