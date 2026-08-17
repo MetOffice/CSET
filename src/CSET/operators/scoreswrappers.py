@@ -300,8 +300,8 @@ def scores_additive_bias_model_obs(
 
     Returns
     -------
-    scores_cube: iris.cube.Cube
-        A cube containing the ME between the models and observation cube.
+    scores_cube: iris.cube.CubeList
+        A cube list containing the ME between the models and observation cube.
     """
     additive_bias_cubes = CubeList()
     model_list = CubeList()
