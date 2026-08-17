@@ -1,0 +1,76 @@
+category: Scores Categorical
+title: Timeseries of ETS for "$VARNAME over $SUBAREA_NAME, using threshold $OPERATOR $THRESHOLD"
+description: |
+
+    The Equitable Threat Score (ETS) evaluates the accuracy of forecasts for events that meet a specified threshold,
+    hile accounting for correct forecasts that could occur purely by chance. Unlike the Probability of Detection (POD),
+    ETS considers hits, misses, and false alarms, providing a more balanced assessment of forecast skill.
+
+    For example, if the threshold is 290 K and op_func is gt (greater than), an observation of 292 K and a forecast of 295 K
+    would be counted as a hit. ETS adjusts the total number of hits by removing the number of hits expected due to random chance.
+
+    It is calculated as:
+
+    .. math::
+
+    ETS = \frac{hits - hits_{random}}
+    {hits + misses + false\ alarms - hits_{random}}
+
+    ETS ranges from -1/3 to 1, where 1 indicates a perfect forecast, 0 indicates no skill beyond random chance, and negative values indicate worse than
+    random chance.
+
+    References
+    https://scores.readthedocs.io/en/stable/api.html#scores.categorical.BasicContingencyManager.equitable_threat_score
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: ['observed_$VARNAME', '$VARNAME']
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: "pressure"
+        levels: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: misc.extract_common_points
+    coordinate: time
+
+  - operator: misc.combine_cubes_into_cubelist
+    first:
+        operator: filters.filter_cubes
+        constraint:
+            operator: constraints.generate_var_constraint
+            varname: observed_$VARNAME
+    second:
+       operator: regrid.interpolate_to_point_cube
+       fld:
+           operator: filters.filter_multiple_cubes
+           constraint:
+               operator: constraints.combine_constraints
+               var_constraint:
+                   operator: constraints.generate_var_constraint
+                   varname: $VARNAME
+       point_cube:
+           operator: filters.filter_cubes
+           constraint:
+               operator: constraints.generate_var_constraint
+               varname: observed_$VARNAME
+
+  - operator: scoreswrappers.scores_ets_model_obs
+    preserved_coordinates: "time"
+    threshold: $THRESHOLD
+    op_func: $OPERATOR
+
+  - operator: plot.plot_line_series
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
