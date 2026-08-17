@@ -61,7 +61,7 @@ def calculate_power_spectrum(cubes: iris.cube.Cube | iris.cube.CubeList):
     for cube in iter_maybe(cubes):
         model = cube.attributes.get("model_name")
 
-        if cube.coords("realization") and cube.coord_dims("forecast_reference_time"):
+        if cube.coords("realization") and cube.coords("forecast_reference_time"):
             members = []
 
             for frt_cube in cube.slices_over("forecast_reference_time"):
