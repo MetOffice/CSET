@@ -1,6 +1,7 @@
 category: Surface Model vs Observation
 title: "$VARNAME scores rmse spatial plot for model vs observation points $SUBAREA_NAME"
-description: Extracts and plot a spatial plot of the RMSE of $VARNAME for all times based on mean of matched model and observation points.
+description: |
+Extracts and plot a spatial plot of the RMSE of $VARNAME for all times based on mean of matched model and observation points.
 
  The RMSE is calculated based on that used in the
   package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.rmse).
