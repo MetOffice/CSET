@@ -77,11 +77,28 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
         return iris.AttributeConstraint(STASH=varname)
 
     # Ensure access to variable vector components for computed fields
+
+    varname_copy = (
+        list(varname)
+        if isinstance(varname, Iterable) and not isinstance(varname, str)
+        else [varname]
+    )
     if "wind_speed_at_10m" in iter_maybe(varname):
         if isinstance(varname, str):
             varname = [varname]
         varname.extend(["eastward_wind_at_10m", "northward_wind_at_10m"])
         varname.extend(["u_wind_at_10m", "v_wind_at_10m"])
+        varname.extend(["WIND_SPEED_REQUESTED"])
+
+    if "eastward_wind_at_10m" in iter_maybe(varname_copy):
+        if isinstance(varname, str):
+            varname = [varname]
+        varname.extend(["EASTWARD_WIND_SPEED_REQUESTED"])
+
+    if "northward_wind_at_10m" in iter_maybe(varname_copy):
+        if isinstance(varname, str):
+            varname = [varname]
+        varname.extend(["NORTHWARD_WIND_SPEED_REQUESTED"])
 
     # Case 2: Multiple varnames
     if isinstance(varname, (list, tuple)):
