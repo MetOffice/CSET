@@ -951,7 +951,7 @@ def _compute_winds(
     except (KeyError, AttributeError):
         pass
 
-    if filter_windspeed and "observed" not in cubes[0].name():
+    if filter_windspeed:
         filter_windspeed_constraint = iris.Constraint(
             cube_func=lambda cube: (
                 cube.long_name in filter_windspeed
