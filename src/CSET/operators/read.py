@@ -942,7 +942,6 @@ def _compute_winds(
                 wind_only = False
             if len(cubes.extract(u_constr)) == 1 and not cubes.extract(speed_constr):
                 _add_wind_speed_um(cubes)
-
             # Convert winds in the UM to be relative to true east and true north.
             _convert_wind_true_dirn_um(cubes)
             # Return only wind_speed cube
