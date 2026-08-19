@@ -413,7 +413,7 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     _lfric_time_callback(cube)
     _lfric_forecast_period_callback(cube)
     cube = _fix_no_time_coords_callback(cube)
-    _normalise_ML_varname(cube)
+    _normalise_longname(cube)
     return cube
 
 
@@ -1098,8 +1098,8 @@ def _fix_no_time_coords_callback(cube: iris.cube.Cube):
     return cube
 
 
-def _normalise_ML_varname(cube: iris.cube.Cube):
-    """Fix plev variable names to standard names."""
+def _normalise_longname(cube: iris.cube.Cube):
+    """Normalise long_name to the LFRic standard list."""
     if cube.coords("pressure"):
         if cube.name() == "x_wind":
             cube.long_name = "zonal_wind_at_pressure_levels"
@@ -1116,6 +1116,8 @@ def _normalise_ML_varname(cube: iris.cube.Cube):
             cube.long_name = "eastward_wind_at_10m"
         if cube.name() == "y_wind" and cube.var_name == "v_wind_at_10m":
             cube.long_name = "northward_wind_at_10m"
+    if cube.name() == "air_pressure_at_sea_level":
+        cube.long_name = "air_pressure_at_mean_sea_level"
 
 
 def _check_combine_point_observations(cubes: iris.cube.CubeList):
