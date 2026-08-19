@@ -165,7 +165,7 @@ def rebuild_metadata(cube, grid):
     if "fill_value" in out_cube.attributes:
         del out_cube.attributes["fill_value"]
 
-    # Some unit corrections for specific variables.
+    # Some data corrections for specific variables with certain units.
     if out_cube.long_name == "geopotential_height_at_pressure_levels":
         out_cube.data /= 9.81
 
