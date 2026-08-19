@@ -41,7 +41,7 @@ Run it with:
 
 ```
 python process_reanalysis.py \
-    --filepath "<input_files>" \
+    --files "<input_files>" \
     --cyclestart "YYYY-MM-DD HH:MM:SS" \
     --cycleend "YYYY-MM-DD HH:MM:SS" \
     --cyclefreq <hours> \
@@ -51,7 +51,7 @@ python process_reanalysis.py \
 
 Required Arguments:
 
-- `--filepath`: Path to the input reanalysis data. This can be a single file or wildcard expression understood by Iris. If a wildcard is used, then quote the input to prevent the shell expanding the filelist as arguments to python.
+- `--files`: Path to the input reanalysis data. This can be a single file or wildcard expression understood by Iris. If a wildcard is used, then quote the input to prevent the shell expanding the filelist as arguments to python.
 - `--cyclestart`: First forecast initialisation time that you want the reanalysis to simulate, in format <year><month><day>T<hour><minute>Z.
 - `--cycleend`: Final forecast initialisation time, inclusive, that you want the reanalysis to simulate, in format <year><month><day>T<hour><minute>Z.
 - `--cyclefreq`: Frequency between forecast cycles, in hours, as an integer.
@@ -64,7 +64,7 @@ Required Arguments:
 
 ```
 python process_reanalysis.py \
-    --filepath "/data/era5/*.nc" \
+    --files "/data/era5/*.nc" \
     --cyclestart "2024-01-01 00:00:00" \
     --cycleend "2024-01-01 00:00:00" \
     --cyclefreq 6 \
@@ -77,7 +77,7 @@ Producing one file `my/output/path/reanalysis_20240101T0000Z.nc`
 
 ```
 python process_reanalysis.py \
-    --filepath "/data/era5/*.nc" \
+    --files "/data/era5/*.nc" \
     --cyclestart "2024-01-01 00:00:00" \
     --cycleend "2024-01-01 18:00:00" \
     --cyclefreq 6 \
