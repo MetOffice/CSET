@@ -231,7 +231,7 @@ def main() -> None:
         "--forecastlength",
         type=int,
         required=True,
-        help="Forecast length in SI units i.e. PT48H",
+        help="Forecast length in hours, i.e. 48",
     )
     parser.add_argument(
         "--outpath", type=str, required=True, help="Where to write output data"
