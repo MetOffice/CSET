@@ -299,3 +299,244 @@ def test_crps_less_than_3_realizations(feature_cube):
         match=r"Cube should have one control member and at least two members",
     ):
         scoreswrappers.scores_crps_for_ensemble(feature_cube_one_realization)
+
+
+def test_model_obs_rmse_preserve_in_time(dummy_cubelist_model_obs):
+    """RMSE collapsed over station, preserving only the time dimension."""
+    rmse = scoreswrappers.scores_rmse_model_obs(dummy_cubelist_model_obs, "time")
+    assert isinstance(rmse, CubeList)
+    assert len(rmse) == 2
+    model_names = ["model_a", "model_b"]
+    for cube, model_name in zip(rmse, model_names, strict=True):
+        assert cube.name() == "RMSE_of_observed_temperature_at_screen_level"
+        assert cube.units == "K"
+        assert cube.shape == (36,)
+        assert cube.attributes["model_name"] == model_name
+
+
+def test_model_obs_rmse_preserve_in_latlon(dummy_cubelist_model_obs):
+    """RMSE collapsed over time, preserving the station dimension via lat/lon."""
+    rmse = scoreswrappers.scores_rmse_model_obs(
+        dummy_cubelist_model_obs, ["longitude", "latitude"]
+    )
+    assert isinstance(rmse, CubeList)
+    assert len(rmse) == 2
+    model_names = ["model_a", "model_b"]
+    for cube, model_name in zip(rmse, model_names, strict=True):
+        assert cube.name() == "RMSE_of_observed_temperature_at_screen_level"
+        assert cube.units == "K"
+        assert cube.shape == (28,)
+        assert cube.attributes["model_name"] == model_name
+
+
+def test_model_obs_rmse_preserve_in_timelatlon(dummy_cubelist_model_obs):
+    """RMSE with nothing collapsed, preserving both time and station dimensions."""
+    rmse = scoreswrappers.scores_rmse_model_obs(
+        dummy_cubelist_model_obs, ["time", "longitude", "latitude"]
+    )
+    assert isinstance(rmse, CubeList)
+    assert len(rmse) == 2
+    model_names = ["model_a", "model_b"]
+    for cube, model_name in zip(rmse, model_names, strict=True):
+        assert cube.name() == "RMSE_of_observed_temperature_at_screen_level"
+        assert cube.units == "K"
+        assert cube.shape == (36, 28)
+        assert cube.attributes["model_name"] == model_name
+
+
+def test_pod_gt_2x2_manual_case(make_cube_categorical_testing):
+    """Test basic 2x2 case for manual validation."""
+    obs = make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
+    obs.attributes["cset_comparison_base"] = 1
+
+    model = make_cube_categorical_testing(
+        [[14, 20], [7, 4]],
+        long_name="temperature",
+        model_name="test_model",
+    )
+
+    result = scoreswrappers.scores_pod_model_obs(
+        CubeList([model, obs]),
+        preserved_coordinates=None,
+        threshold="10",
+        op_func="gt",
+    )
+
+    # Ensure 1 cube returned.
+    assert len(result) == 1
+
+    # Hits should be [[1,1],[0,0]] so hit rate of 0.5.
+    assert np.allclose(result[0].data, 0.5, atol=1e-2, rtol=1e-6)
+
+
+def test_pod_returns_one_when_all_events_perfect(make_cube_categorical_testing):
+    """Test basic 2x2 case when all correct hits."""
+    obs = make_cube_categorical_testing(
+        [[1, 1], [1, 1]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
+
+    model = make_cube_categorical_testing(
+        [[2, 2], [2, 2]],
+        long_name="temperature",
+        model_name="test_model",
+    )
+
+    result = scoreswrappers.scores_pod_model_obs(
+        CubeList([model, obs]),
+        preserved_coordinates=None,
+        threshold="0",
+        op_func="gt",
+    )
+
+    # Hits should be [[1,1],[1,1]] so hit rate of 1.
+    assert np.allclose(result[0].data, 1, atol=1e-2, rtol=1e-6)
+
+
+def test_pod_returns_zero_when_all_events_missed(make_cube_categorical_testing):
+    """Test basic 2x2 case when all events missed."""
+    obs = make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
+
+    model = make_cube_categorical_testing(
+        [[1, 1], [1, 1]],
+        long_name="temperature",
+        model_name="test_model",
+    )
+
+    result = scoreswrappers.scores_pod_model_obs(
+        CubeList([model, obs]),
+        preserved_coordinates=None,
+        threshold="10",
+        op_func="gt",
+    )
+
+    # Hits will be [[0,0],[0,0]] so hit rate of zero.
+    assert np.allclose(result[0].data, 0, atol=1e-2, rtol=1e-6)
+
+
+def test_pod_preserve_time_dimension(make_cube_categorical_testing_with_time):
+    """Ensure time dimension preserved when passed to function."""
+    obs = make_cube_categorical_testing_with_time(
+        [
+            [[1, 1], [1, 1]],
+            [[1, 1], [1, 1]],
+            [[1, 1], [1, 1]],
+        ],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
+
+    model = make_cube_categorical_testing_with_time(
+        [
+            [[2, 2], [2, 2]],
+            [[0, 0], [0, 0]],
+            [[0, 0], [0, 0]],
+        ],
+        long_name="temperature",
+        model_name="test_model",
+    )
+
+    result = scoreswrappers.scores_pod_model_obs(
+        CubeList([model, obs]),
+        preserved_coordinates=["time"],
+        threshold="0.5",
+        op_func="gt",
+    )
+
+    assert np.allclose(result[0].data, np.array([1.0, 0.0, 0.0]), atol=1e-2, rtol=1e-6)
+
+
+def test_returns_one_score_per_model(make_cube_categorical_testing):
+    """Test POD for multiple models and return two results."""
+    obs = make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
+
+    model_a = make_cube_categorical_testing(
+        [[20, 1], [20, 1]],
+        long_name="temperature",
+        model_name="test_modelA",
+    )
+
+    model_b = make_cube_categorical_testing(
+        [[1, 1], [1, 1]],
+        long_name="temperature",
+        model_name="test_modelB",
+    )
+
+    result = scoreswrappers.scores_pod_model_obs(
+        CubeList([model_a, model_b, obs]),
+        preserved_coordinates=None,
+        threshold="10",
+        op_func="gt",
+    )
+
+    assert len(result) == 2
+    assert result[0].attributes["model_name"] == "test_modelA"
+    assert result[1].attributes["model_name"] == "test_modelB"
+
+
+def test_output_metadata(make_cube_categorical_testing):
+    """Test that cube has appropriate metadata preserved."""
+    obs = make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
+
+    model = make_cube_categorical_testing(
+        [[1, 1], [1, 1]],
+        long_name="temperature",
+        model_name="test_model",
+    )
+
+    result = scoreswrappers.scores_pod_model_obs(
+        CubeList([model, obs]),
+        preserved_coordinates=None,
+        threshold="10",
+        op_func="gt",
+    )
+
+    cube = result[0]
+
+    assert cube.units == "1"
+    assert cube.attributes["model_name"] == "test_model"
+
+    assert cube.name() == "Probability_Of_Detection_gt_10_observed_temperature"
+
+
+def test_invalid_operator_raises(make_cube_categorical_testing):
+    """Check that code raises exception if unsupported operator."""
+    obs = make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
+
+    model = make_cube_categorical_testing(
+        [[1, 1], [1, 1]],
+        long_name="temperature",
+        model_name="test_model",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=r"Operator gte not supported.",
+    ):
+        scoreswrappers.scores_pod_model_obs(
+            CubeList([model, obs]),
+            preserved_coordinates=None,
+            threshold="10",
+            op_func="gte",
+        )

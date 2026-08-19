@@ -252,10 +252,8 @@ def _setup_spatial_map(
             axes = figure.add_subplot(projection=projection)
 
         # Add coastlines and borderlines if cube contains x and y map coordinates.
-        # Avoid adding lines for 2D masked data or specific fixed ancillary spatial plots.
-        if (cube.ndim > 1 and iris.util.is_masked(cube.data)) or any(
-            name in cube.name() for name in ["land_", "orography", "altitude"]
-        ):
+        # Avoid adding lines for specific fixed ancillary spatial plots
+        if any(name in cube.name() for name in ("land_", "orography", "altitude")):
             pass
         else:
             if cmap.name in ["viridis", "Greys"]:
@@ -336,6 +334,7 @@ def _set_title_and_filename(
     nplot: int,
     recipe_title: str,
     filename: str,
+    model_name: str | None = None,
 ):
     """Set plot title and filename based on cube coordinate.
 
@@ -407,6 +406,10 @@ def _set_title_and_filename(
             plot_filename = f"{filename.rsplit('.', 1)[0]}{sequence_fname}.png"
         else:
             plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
+
+    if model_name:
+        plot_filename = f"{model_name}_{plot_filename}"
+        plot_title = f"{model_name}_{plot_title}"
 
     return plot_title, plot_filename
 
@@ -1093,6 +1096,13 @@ def _plot_and_save_line_power_spectrum_series(
         xname = xcoord.points
 
         yfield = cube.data  # power spectrum
+
+        # If data from power spectra is all np.nans (like T+0h rainfall field which
+        # might be full of zeros), then set yfield to zeros so it doesn't crash the
+        # plotting.
+        if np.all(np.isnan(yfield)):
+            yfield = np.zeros_like(yfield)
+
         label = None
         color = "black"
         if model_colors_map:
@@ -1945,8 +1955,14 @@ def _spatial_plot(
     for iseq, cube_slice in enumerate(cube.slices_over(sequence_coordinate)):
         # Set plot titles and filename
         seq_coord = cube_slice.coord(sequence_coordinate)
+
+        if "model_name" in cube.attributes:
+            model_name = cube.attributes["model_name"]
+        else:
+            model_name = None
+
         plot_title, plot_filename = _set_title_and_filename(
-            seq_coord, nplot, recipe_title, filename
+            seq_coord, nplot, recipe_title, filename, model_name=model_name
         )
 
         # Extract sequence slice for overlay_cube, contour_cube and point_cube if required.
@@ -2028,7 +2044,7 @@ def spatial_contour_plot(
 
 
 def spatial_pcolormesh_plot(
-    cube: iris.cube.Cube,
+    cubes: iris.cube.Cube | iris.cube.CubeList,
     filename: str | None = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
@@ -2046,8 +2062,8 @@ def spatial_pcolormesh_plot(
 
     Parameters
     ----------
-    cube: Cube
-        Iris cube of the data to plot. It should have two spatial dimensions,
+    cube: Cubes
+        Iris cube or cubelist of the data to plot. Each cube should have two spatial dimensions,
         such as lat and lon, and may also have a another two dimension to be
         plotted sequentially and/or as postage stamp plots.
     filename: str, optional
@@ -2062,20 +2078,34 @@ def spatial_pcolormesh_plot(
 
     Returns
     -------
-    Cube
-        The original cube (so further operations can be applied).
+    Cubes
+        The original cube/cubelist (so further operations can be applied).
 
     Raises
     ------
     ValueError
         If the cube doesn't have the right dimensions.
-    TypeError
-        If the cube isn't a single cube.
     """
-    _spatial_plot(
-        "pcolormesh", cube, filename, sequence_coordinate, stamp_coordinate, **kwargs
-    )
-    return cube
+    if isinstance(cubes, iris.cube.CubeList):
+        for model_cube in cubes:
+            _spatial_plot(
+                "pcolormesh",
+                model_cube,
+                filename,
+                sequence_coordinate,
+                stamp_coordinate,
+                **kwargs,
+            )
+    elif isinstance(cubes, iris.cube.Cube):
+        _spatial_plot(
+            "pcolormesh",
+            cubes,
+            filename,
+            sequence_coordinate,
+            stamp_coordinate,
+            **kwargs,
+        )
+    return cubes
 
 
 def spatial_multi_pcolormesh_plot(
@@ -2221,8 +2251,20 @@ def plot_line_series(
             raise ValueError(
                 f"Cube must have a {series_coordinate} coordinate."
             ) from err
-        if model_cube.coords("realization") and model_cube.ndim > 2:
-            raise ValueError("Cube must be 1D or 2D with a realization coordinate.")
+        # Count dimensions excluding realization
+        ndim = model_cube.ndim
+
+        if model_cube.coords("realization"):
+            realization_dims = model_cube.coord_dims("realization")
+
+            # Only subtract if realization is a dimension coordinate
+            if realization_dims:
+                ndim -= len(realization_dims)
+
+        if ndim > 2:
+            raise ValueError(
+                "Cube must be 1D or 2D (excluding any realization dimension)."
+            )
 
     plot_index = []
 
