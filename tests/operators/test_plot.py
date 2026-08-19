@@ -540,6 +540,8 @@ def test_plot_line_series_extra_dimension_failure(tmp_working_dir):
     )
 
     # Add a realization coord plus 3 other coordinates
+    # Realization and forecast_reference_time coord are ignored
+    # when counting dimensions, other coords are not ignored.
     cube.add_dim_coord(
         iris.coords.DimCoord(
             np.arange(2),
@@ -551,7 +553,7 @@ def test_plot_line_series_extra_dimension_failure(tmp_working_dir):
     cube.add_dim_coord(
         iris.coords.DimCoord(
             np.arange(3),
-            long_name="forecast_reference_time",
+            long_name="dummy",
         ),
         1,
     )
