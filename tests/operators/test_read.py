@@ -159,7 +159,6 @@ def test_read_cube():
         constraint=constraints.generate_cell_methods_constraint([]),
     )
     assert isinstance(cube, iris.cube.Cube)
-
     # Global [latitude, longitude] example file
     cube = read.read_cube(
         "tests/test_data/air_temperature_global.nc",

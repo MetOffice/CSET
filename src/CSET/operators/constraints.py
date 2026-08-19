@@ -88,17 +88,6 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
             varname = [varname]
         varname.extend(["eastward_wind_at_10m", "northward_wind_at_10m"])
         varname.extend(["u_wind_at_10m", "v_wind_at_10m"])
-        varname.extend(["WIND_SPEED_REQUESTED"])
-
-    if "eastward_wind_at_10m" in iter_maybe(varname_copy):
-        if isinstance(varname, str):
-            varname = [varname]
-        varname.extend(["EASTWARD_WIND_SPEED_REQUESTED"])
-
-    if "northward_wind_at_10m" in iter_maybe(varname_copy):
-        if isinstance(varname, str):
-            varname = [varname]
-        varname.extend(["NORTHWARD_WIND_SPEED_REQUESTED"])
 
     # Case 2: Multiple varnames
     if isinstance(varname, (list, tuple)):
@@ -112,6 +101,8 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
 
     else:
         varname_constraint = iris.Constraint(name=varname)
+
+    varname_constraint.varname = varname_copy
 
     return varname_constraint
 
