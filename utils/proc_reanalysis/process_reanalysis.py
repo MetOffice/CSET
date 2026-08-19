@@ -208,7 +208,7 @@ def main() -> None:
     """
     parser = argparse.ArgumentParser(description="Process arguments.")
 
-    parser.add_argument("--filepath", required=True, help="Path to file(s) quoted")
+    parser.add_argument("--files", required=True, help="Path to file(s) quoted")
     parser.add_argument(
         "--cyclestart",
         type=datetime.fromisoformat,
@@ -240,7 +240,7 @@ def main() -> None:
     args = parser.parse_args()
 
     # Populate required variables
-    filepath = args.filepath
+    filepath = args.files
     cyclestart = args.cyclestart
     cycleend = args.cycleend
     cyclefreq = timedelta(hours=args.cyclefreq)
