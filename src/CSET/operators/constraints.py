@@ -78,12 +78,8 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
 
     # Ensure access to variable vector components for computed fields
 
-    varname_copy = (
-        list(varname)
-        if isinstance(varname, Iterable) and not isinstance(varname, str)
-        else [varname]
-    )
-    if "wind_speed_at_10m" in iter_maybe(varname):
+    varname_copy = iter_maybe(varname)
+    if "wind_speed_at_10m" in varname_copy:
         if isinstance(varname, str):
             varname = [varname]
         varname.extend(["eastward_wind_at_10m", "northward_wind_at_10m"])
