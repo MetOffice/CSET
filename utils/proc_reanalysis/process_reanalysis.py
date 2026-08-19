@@ -54,7 +54,7 @@ def identify_number_of_cycles_required(
 def create_forecasts(
     reanalysis: iris.cube.CubeList,
     forecast_initialisations: list,
-    forecastlength: int,
+    forecastlength: datetime.timedelta,
     outpath: str,
 ) -> None:
     """Create forecast files from reanalysis data.
@@ -72,7 +72,7 @@ def create_forecasts(
         will be extracted.
     forecast_initialisations: list
         Forecast initialisation times to process.
-    forecastlength: int
+    forecastlength: datetime.timedelta
         Forecast length in hours.
     outpath: str
         Directory to which the generated forecast files will be saved.
@@ -83,11 +83,13 @@ def create_forecasts(
     """
     # Iterate over all forecast initialisations sequentially.
     for forecast in forecast_initialisations:
-        print(f"Working on forecast initialisation {forecast} out to {forecastlength}H")
+        print(
+            f"Working on forecast initialisation {forecast} out to {forecastlength.total_seconds() / 3600}H"
+        )
 
         # Work out start and end time
         start = forecast
-        end = forecast + timedelta(hours=forecastlength)
+        end = forecast + forecastlength
 
         cutouts = iris.cube.CubeList()
 
@@ -242,7 +244,7 @@ def main() -> None:
     cyclestart = args.cyclestart
     cycleend = args.cycleend
     cyclefreq = timedelta(hours=args.cyclefreq)
-    forecastlength = args.forecastlength
+    forecastlength = timedelta(hours=args.forecastlength)
     outpath = args.outpath
 
     print()
