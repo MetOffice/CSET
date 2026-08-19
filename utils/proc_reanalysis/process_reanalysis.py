@@ -54,7 +54,7 @@ def identify_number_of_cycles_required(
 def create_forecasts(
     reanalysis: iris.cube.CubeList,
     forecast_initialisations: list,
-    forecastlength: datetime.timedelta,
+    forecastlength: timedelta,
     outpath: str,
 ) -> None:
     """Create forecast files from reanalysis data.
@@ -72,7 +72,7 @@ def create_forecasts(
         will be extracted.
     forecast_initialisations: list
         Forecast initialisation times to process.
-    forecastlength: datetime.timedelta
+    forecastlength: timedelta
         Forecast length in hours.
     outpath: str
         Directory to which the generated forecast files will be saved.
