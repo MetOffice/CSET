@@ -86,7 +86,7 @@ def test_forecast_period_created(tmp_path):
     proc_reanalysis.create_forecasts(
         iris.cube.CubeList([cube]),
         [datetime(2024, 1, 1, 0)],
-        forecastlength=4,
+        forecastlength=timedelta(hours=4),
         outpath=str(tmp_path),
     )
 
@@ -111,7 +111,7 @@ def test_seconds_converted_to_hours(tmp_path):
     proc_reanalysis.create_forecasts(
         iris.cube.CubeList([cube]),
         [datetime(2024, 1, 1)],
-        forecastlength=2,
+        forecastlength=timedelta(hours=2),
         outpath=str(tmp_path),
     )
 
@@ -131,7 +131,7 @@ def test_minutes_converted_to_hours(tmp_path):
     proc_reanalysis.create_forecasts(
         iris.cube.CubeList([cube]),
         [datetime(2024, 1, 1)],
-        forecastlength=2,
+        forecastlength=timedelta(hours=2),
         outpath=str(tmp_path),
     )
 
@@ -150,7 +150,7 @@ def test_unknown_time_units_raise(tmp_path):
         proc_reanalysis.create_forecasts(
             iris.cube.CubeList([cube]),
             [datetime(2024, 1, 1)],
-            forecastlength=1,
+            forecastlength=timedelta(hours=1),
             outpath=str(tmp_path),
         )
 
@@ -164,7 +164,7 @@ def test_forecast_reference_time_created(tmp_path):
     proc_reanalysis.create_forecasts(
         iris.cube.CubeList([cube]),
         [init_time],
-        forecastlength=4,
+        forecastlength=timedelta(hours=4),
         outpath=str(tmp_path),
     )
 
@@ -187,7 +187,7 @@ def test_forecast_attributes_removed(tmp_path):
     proc_reanalysis.create_forecasts(
         iris.cube.CubeList([cube]),
         [datetime(2024, 1, 1)],
-        forecastlength=4,
+        forecastlength=timedelta(hours=4),
         outpath=str(tmp_path),
     )
 
@@ -207,7 +207,7 @@ def test_cube_skipped_if_insufficient_data(tmp_path):
         proc_reanalysis.create_forecasts(
             iris.cube.CubeList([cube]),
             [datetime(2024, 1, 1)],
-            forecastlength=10,
+            forecastlength=timedelta(hours=10),
             outpath=str(tmp_path),
         )
 
@@ -220,7 +220,7 @@ def test_multiple_cubes_processed(tmp_path):
     proc_reanalysis.create_forecasts(
         iris.cube.CubeList([cube1, cube2]),
         [datetime(2024, 1, 1)],
-        forecastlength=4,
+        forecastlength=timedelta(hours=4),
         outpath=str(tmp_path),
     )
 
