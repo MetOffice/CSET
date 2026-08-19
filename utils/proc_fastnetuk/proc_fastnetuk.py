@@ -98,13 +98,14 @@ def rebuild_metadata(cube, grid):
         units="hours",
     )
 
-    # Start with coordinates of just forecast_period.
+    # Start with coordinates of forecast_reference_time and forecast_period.
     coords = [
         (forecast_reference_time, 0),
         (forecast_period, 1),
     ]
 
-    # Reshape cube ADD CHECK IF NOT CORRECT SIZE
+    # Reshape cube to standard UKV. This is hard-coded, as this script only
+    # supports UKV data.
     cube_data = cube.data.reshape(cube.shape[0], 808, 621)
 
     # If pressure exists, create additional size 1 dimension for future concatenation.
@@ -160,8 +161,9 @@ def rebuild_metadata(cube, grid):
 
     out_cube.attributes = cube.attributes.copy()
 
-    # Delete fill value attribute, as this tends to be np.float64(nan), which causes iris merge/concat issues.
-    del out_cube.attributes["fill_value"]
+    # Delete fill value attribute if exists, as this tends to be np.float64(nan), which causes iris merge/concat issues.
+    if "fill_value" in out_cube.attributes:
+        del out_cube.attributes["fill_value"]
 
     # Some unit corrections for specific variables.
     if out_cube.long_name == "geopotential_height_at_pressure_levels":
