@@ -42,8 +42,8 @@ Run it with:
 ```
 python process_reanalysis.py \
     --files "<input_files>" \
-    --cyclestart "YYYY-MM-DD HH:MM:SS" \
-    --cycleend "YYYY-MM-DD HH:MM:SS" \
+    --cyclestart YYYYMMDDTHHMMZ" \
+    --cycleend YYYYMMDDTHHMMZ" \
     --cyclefreq <hours> \
     --forecastlength <hours> \
     --outpath "<output_directory>"
@@ -65,8 +65,8 @@ Required Arguments:
 ```
 python process_reanalysis.py \
     --files "/data/era5/*.nc" \
-    --cyclestart "2024-01-01 00:00:00" \
-    --cycleend "2024-01-01 00:00:00" \
+    --cyclestart "20240101T0000Z" \
+    --cycleend "20240101T0000Z" \
     --cyclefreq 6 \
     --forecastlength 48 \
     --outpath /my/output/path/
@@ -78,8 +78,8 @@ Producing one file `my/output/path/reanalysis_20240101T0000Z.nc`
 ```
 python process_reanalysis.py \
     --files "/data/era5/*.nc" \
-    --cyclestart "2024-01-01 00:00:00" \
-    --cycleend "2024-01-01 18:00:00" \
+    --cyclestart "20240101T0000Z" \
+    --cycleend "20240101T1800Z" \
     --cyclefreq 6 \
     --forecastlength 48 \
     --outpath /my/output/path/

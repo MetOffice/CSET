@@ -213,13 +213,13 @@ def main() -> None:
         "--cyclestart",
         type=datetime.fromisoformat,
         required=True,
-        help="First forecast initiation/cycle, in format YYYY-MM-DD HH:MM:SS, quoted",
+        help="First forecast initiation/cycle, in format YYYYMMDDTHHMMZ",
     )
     parser.add_argument(
         "--cycleend",
         type=datetime.fromisoformat,
         required=True,
-        help="Final forecast initiation/cycle, in format YYYY-MM-DD HH:MM:SS, quoted",
+        help="Final forecast initiation/cycle, in format YYYYMMDDTHHMMZ",
     )
     parser.add_argument(
         "--cyclefreq",
