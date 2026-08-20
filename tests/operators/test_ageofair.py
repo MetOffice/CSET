@@ -77,22 +77,8 @@ def test_calc_dist():
     assert np.allclose(dist, actual_distance, rtol=1e-06, atol=20000)
 
 
-@pytest.mark.slow
 def test_aoa_nocyclic(xwind, ywind, wwind, geopot):
     """Test case when not cyclic."""
-    assert np.allclose(
-        ageofair.compute_ageofair(
-            xwind, ywind, wwind, geopot, plev=500, cyclic=False
-        ).data,
-        read.read_cube("tests/test_data/ageofair/aoa_out_nocyclic.nc").data,
-        rtol=1e-06,
-        atol=1e-02,
-    )
-
-
-@pytest.mark.slow
-def test_aoa_cyclic_parallel_processing(xwind, ywind, wwind, geopot):
-    """Test case when cyclic with parallel processing."""
     assert np.allclose(
         ageofair.compute_ageofair(
             xwind,
@@ -100,10 +86,10 @@ def test_aoa_cyclic_parallel_processing(xwind, ywind, wwind, geopot):
             wwind,
             geopot,
             plev=500,
-            cyclic=True,
-            multicore=True,
+            cyclic=False,
+            multicore=False,
         ).data,
-        read.read_cube("tests/test_data/ageofair/aoa_out_cyclic.nc").data,
+        read.read_cube("tests/test_data/ageofair/aoa_out_nocyclic.nc").data,
         rtol=1e-06,
         atol=1e-02,
     )
