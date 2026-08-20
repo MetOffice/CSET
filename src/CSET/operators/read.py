@@ -167,6 +167,16 @@ def read_cubes(
     paths = iter_maybe(file_paths)
     model_names = iter_maybe(model_names)
 
+    # flattens model_names if needed into one dimensional list.
+    if model_names != (None,):
+        flat = []
+        for item in model_names:
+            if isinstance(item, list):
+                flat.extend(item)
+            else:
+                flat.append(item)
+        model_names = flat
+
     # Check we have appropriate number of model names.
     if model_names != (None,) and len(model_names) != len(paths):
         raise ValueError(
