@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 """Fix FastNetUK inference data on UGRID with limited metadata.
 
 For more information on this script and how to use it, see the README.md
