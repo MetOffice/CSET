@@ -2,7 +2,10 @@ category: Scores Categorical
 title: Timeseries of ETS for "$VARNAME over $SUBAREA_NAME, using threshold $OPERATOR $THRESHOLD"
 description: |
 
-    The Equitable Threat Score (ETS) evaluates the accuracy of forecasts for events that meet a specified threshold,
+    Extracts and plots the ETS for $VARNAME for each model against observations as a timeseries.
+
+    The Equitable Threat Score (ETS) in [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.categorical.BasicContingencyManager.equitable_threat_score)
+    evaluates the accuracy of forecasts for events that meet a specified threshold,
     hile accounting for correct forecasts that could occur purely by chance. Unlike the Probability of Detection (POD),
     ETS considers hits, misses, and false alarms, providing a more balanced assessment of forecast skill.
 

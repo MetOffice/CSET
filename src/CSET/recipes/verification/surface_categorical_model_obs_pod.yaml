@@ -2,9 +2,10 @@ category: Scores Categorical
 title: Timeseries of POD for "$VARNAME over $SUBAREA_NAME, using threshold $OPERATOR $THRESHOLD"
 description: |
 
-  Create a timeseries of the probability of detection.
+  Extracts and plots the POD for $VARNAME for each model against observations as a timeseries.
 
-  The probability of detection calculates the proportion of observed events that meet a threshold that were correctly forecast by the model.
+  The probability of detection (POD)  in [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.categorical.BasicContingencyManager.probability_of_detection)
+  calculates the proportion of observed events that meet a threshold that were correctly forecast by the model.
   For example, if threshold is 290K and op_func is gt (greater than), and at some station a temperature was recorded as 292K and the model produced
   295k, that would be a positive hit. It does not take into account how far above/below a threshold a model forecasts.
 
