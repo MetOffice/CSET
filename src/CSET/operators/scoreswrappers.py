@@ -303,6 +303,8 @@ def scores_rmse(
         ["time","grid_latitude", "grid_longitude"] or if you want a time series
         you can preserve ["time"], if you want to collapse to a single value
         use `None`. The default is `None`.
+    obs_model_comparison: bool, default False
+    Set true if doing model-obs comparison.
 
     Returns
     -------
