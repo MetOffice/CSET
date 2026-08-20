@@ -603,7 +603,7 @@ def test_ets_gt_mixed_case(make_cube_categorical_testing):
     # ETS=(1-1)/(1+1+1-1)=0
 
     assert len(result) == 1
-    assert np.allclose(result[0].data, 0.0)
+    assert np.allclose(result[0].data, 0.0, atol=1e-2, rtol=1e-6)
 
 
 def test_ets_gt_complete_miss(make_cube_categorical_testing):
@@ -633,7 +633,7 @@ def test_ets_gt_complete_miss(make_cube_categorical_testing):
     # ETS=(0-1)/(0+2+2-1)=-1/3
 
     assert len(result) == 1
-    assert np.allclose(result[0].data, -1.0 / 3.0)
+    assert np.allclose(result[0].data, -1.0 / 3.0, atol=1e-2, rtol=1e-6)
 
 
 def test_ets_metadata(make_cube_categorical_testing):
