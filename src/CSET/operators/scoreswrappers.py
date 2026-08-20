@@ -42,6 +42,21 @@ logger = logging.getLogger(__name__)
 
 
 def _sort_cube_into_base_and_other(cubes):
+    """Sorts cube into base and other models.
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        A CubeList of multiple cubes.  One base cube and other model cubes.
+
+    Returns
+    -------
+    base: iris.cube.Cube
+        The cube from the "analysis" in the same format as the other model.
+    others: iris.cube.CubeList
+        The cube list of containing the cube(s) from the model in the same format as the base model.
+
+    """
     base: Cube = cubes.extract_cube(iris.AttributeConstraint(cset_comparison_base=1))
     others: CubeList = cubes.extract(
         iris.Constraint(
@@ -53,6 +68,18 @@ def _sort_cube_into_base_and_other(cubes):
 
 
 def _ensure_increasing_pressure_coordinates(cubes):
+    """Ensure the pressure coordinate is increasing.
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        A CubeList of n cubes
+
+    Returns
+    -------
+    Cubes: iris.cube.CubeList
+        The original cube list but where each cube is ensured to have an increasing pressure coordinate.
+    """
     for cube in cubes:
         try:
             if len(cube.coord("pressure").points) > 2 and not is_increasing(
