@@ -49,9 +49,11 @@ def rebuild_metadata(cube, grid):
 
     Parameters
     ----------
-    cube : iris.cube.Cube
+    cube: iris.cube.Cube
         Original unstructured source cube, used for fixing metadata.
-    grid:::
+    grid: iris.cube.Cube
+        An iris cube, containing latitude/longitude coordinates of the
+        UKV mesh.
 
     Returns
     -------
