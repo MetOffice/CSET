@@ -254,8 +254,8 @@ def scores_rmse_model_obs(
 
     Returns
     -------
-    scores_cube: iris.cube.Cube
-        A cube containing the RMSE between the models and observation cube.
+    scores_cubelist: iris.cube.CubeList
+        A cubelist containing the RMSE between the models and observation cube(s).
     """
     rmse_cubes = CubeList()
     model_list = CubeList()
@@ -394,7 +394,7 @@ def scores_mae(cubes: CubeList, preserved_coordinates: list[str] | str | None = 
     Returns
     -------
     scores_cubelist: iris.cube.CubeList
-        A cubelist containing the MAE between the base and other cubes.
+        A cubelist containing the MAE between the base and other cube(s).
     """
     base, others = _sort_cube_into_base_and_other(cubes)
     scores_cubelist = CubeList()
@@ -474,7 +474,7 @@ def scores_additive_bias(
     Returns
     -------
     scores_cubelist: iris.cube.CubeList
-        A cubelist containing the ME between the base and other cube.
+        A cubelist containing the ME between the base and other cube(s).
     """
     base, others = _sort_cube_into_base_and_other(cubes)
     scores_cubelist = CubeList()
@@ -552,8 +552,8 @@ def scores_correlation_pearsonr(
 
     Returns
     -------
-    scores_cube: iris.cube.Cube
-        A cube containing the PC between the base and other cube.
+    scores_cubelist: iris.cube.CubeList
+        A cubelist containing the PC between the base and other cube(s).
     """
     base, others = _sort_cube_into_base_and_other(cubes)
     scores_cubelist = CubeList()
