@@ -93,11 +93,8 @@ def _process_cubes_for_verification(base: Cube, other: Cube):
     # Set cubes into correct format using code from difference operator
 
     # Extract just common time points.
+    other_model_name = other.attributes["model_name"]
 
-    if "model_name" in other.attributes:
-        other_model_name = other.attributes["model_name"]
-    else:
-        other_model_name = "modelname"
     base, other = _extract_common_time_points(base, other)
 
     # Get spatial coord names.

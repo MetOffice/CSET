@@ -38,6 +38,8 @@ def test_scores_correlation_pearsonr(cube: Cube):
     # Data preparation.
     other_cube = cube.copy()
     del other_cube.attributes["cset_comparison_base"]
+    cube.attributes["model_name"] = "model1"
+    other_cube.attributes["model_name"] = "model2"
     cubes = CubeList([cube, other_cube])
 
     # Take difference.
@@ -61,6 +63,8 @@ def test_scores_additive_bias(cube: Cube):
     # Data preparation.
     other_cube = cube.copy()
     del other_cube.attributes["cset_comparison_base"]
+    cube.attributes["model_name"] = "model1"
+    other_cube.attributes["model_name"] = "model2"
     cubes = CubeList([cube, other_cube])
 
     # Take difference.
@@ -80,6 +84,8 @@ def test_scores_mae(cube: Cube):
     # Data preparation.
     other_cube = cube.copy()
     del other_cube.attributes["cset_comparison_base"]
+    cube.attributes["model_name"] = "model1"
+    other_cube.attributes["model_name"] = "model2"
     cubes = CubeList([cube, other_cube])
 
     # Take difference.
@@ -97,6 +103,8 @@ def test_scores_rmse(cube: Cube):
     # Data preparation.
     other_cube = cube.copy()
     del other_cube.attributes["cset_comparison_base"]
+    cube.attributes["model_name"] = "model1"
+    other_cube.attributes["model_name"] = "model2"
     cubes = CubeList([cube, other_cube])
 
     # Take difference.
@@ -121,6 +129,8 @@ def test_scores_rmse_nonzero():
     )
     other_cube = cube.copy(data=np.ones((2, 2)))
     cube.attributes["cset_comparison_base"] = 1
+    cube.attributes["model_name"] = "model1"
+    other_cube.attributes["model_name"] = "model2"
     different_cubes = CubeList((cube, other_cube))
     # Take difference.
     rmse_cube = scoreswrappers.scores_rmse(different_cubes)
@@ -138,6 +148,8 @@ def test_scores_rmse_no_time_coord(cube):
     c1.remove_coord("time")
     c2 = c1.copy()
     del c2.attributes["cset_comparison_base"]
+    c1.attributes["model_name"] = "model1"
+    c2.attributes["model_name"] = "model2"
     cubes = CubeList([c1, c2])
     rmse_cube = scoreswrappers.scores_rmse(cubes)
     assert isinstance(rmse_cube, Cube)
@@ -152,6 +164,8 @@ def test_scores_rmse_no_common_points(cube):
     new_times += 6
     other_cube.coord("time").points = new_times
     del other_cube.attributes["cset_comparison_base"]
+    cube.attributes["model_name"] = "model1"
+    other_cube.attributes["model_name"] = "model2"
     cubes = CubeList([cube, other_cube])
     with pytest.raises(ValueError, match="No common time points found!"):
         scoreswrappers.scores_rmse(cubes)
@@ -165,6 +179,8 @@ def test_scores_rmse_different_data_shape_regrid(cube):
     rearranged_cube = cube.copy()
     rearranged_cube = rearranged_cube[:, :, 1:]
     del cube.attributes["cset_comparison_base"]
+    rearranged_cube.attributes["model_name"] = "model1"
+    cube.attributes["model_name"] = "model2"
     cubes = CubeList([rearranged_cube, cube])
     # Need to preserve coordinates to test shape.
     rmse = scoreswrappers.scores_rmse(
@@ -180,6 +196,8 @@ def test_rmse_grid_staggering_regrid(cube):
     rearranged_cube = cube.copy()
     rearranged_cube.rename("eastward_wind_at_10m")
     del cube.attributes["cset_comparison_base"]
+    rearranged_cube.attributes["model_name"] = "model1"
+    cube.attributes["model_name"] = "model2"
     cubes = CubeList([rearranged_cube, cube])
     # Need to preserve coordinates to test shape.
     rmse = scoreswrappers.scores_rmse(
@@ -194,6 +212,8 @@ def test_difference_different_model_types(cube):
     flipped = cube.copy()
     reverse(flipped, "grid_latitude")
     del flipped.attributes["cset_comparison_base"]
+    flipped.attributes["model_name"] = "model1"
+    cube.attributes["model_name"] = "model2"
     cubes = CubeList([cube, flipped])
 
     # Take rmse.
@@ -209,6 +229,8 @@ def test_difference_flip_pressure_order(transect_source_cube_readonly):
     flipped = transect_source_cube_readonly.copy()
     reverse(flipped, "pressure")
     del flipped.attributes["cset_comparison_base"]
+    flipped.attributes["model_name"] = "model1"
+    transect_source_cube_readonly.attributes["model_name"] = "model2"
     cubes = CubeList([transect_source_cube_readonly, flipped])
 
     # Take rmse.

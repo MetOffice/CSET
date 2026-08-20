@@ -2360,6 +2360,7 @@ def plot_line_series(
             if nplot == 1 and seq_coord.has_bounds and np.size(seq_coord.bounds) > 1:
                 title = f"{recipe_title}\n [{seq_coord.units.title(seq_coord.bounds[0][0])} to {seq_coord.units.title(seq_coord.bounds[0][1])}]"
 
+            print(plot_filename)
             # Do the actual plotting.
             plotting_func(
                 cube_slice,
