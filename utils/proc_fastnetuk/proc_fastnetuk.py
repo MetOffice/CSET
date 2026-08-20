@@ -183,6 +183,8 @@ def rebuild_metadata(cube, grid):
 
 def main() -> None:
     """
+    Define and parse input and output path arguments.
+
     Run processing on FastNetUK data.
 
     Process produces CSET-ready netCDF files for loading.
