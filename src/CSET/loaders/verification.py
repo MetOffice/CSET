@@ -15,8 +15,11 @@
 """Load verification recipes."""
 
 import itertools
+import logging
 
 from CSET.recipes import Config, RawRecipe, get_models
+
+logger = logging.getLogger(__name__)
 
 
 def _get_scores_spatial_methods(conf):
@@ -290,7 +293,15 @@ def load(conf: Config):
         for field_and_method, scores_method in itertools.product(
             conf.SCORES_CATEGORICAL_POD_ENTRIES, scores_timeseries_categorical
         ):
-            var, op, value = field_and_method.split(",")
+            try:
+                var, op, value = field_and_method.split(",")
+            except ValueError as err:
+                logger.exception(
+                    f"Invalid value in SCORES_CATEGORICAL_POD_ENTRIES: {field_and_method}",
+                    exc_info=err,
+                )
+                # Skip invalid entry.
+                continue
 
             yield RawRecipe(
                 recipe=f"surface_categorical_model_obs_{scores_method}.yaml",
