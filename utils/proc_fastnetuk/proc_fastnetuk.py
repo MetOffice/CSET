@@ -172,7 +172,9 @@ def rebuild_metadata(cube, grid):
     # Some data corrections for specific variables with certain units.
     if out_cube.long_name == "geopotential_height_at_pressure_levels":
         out_cube.data /= 9.81
+        out_cube.units = "m"
 
+    # Convert meters to mm.
     elif out_cube.long_name == "surface_microphysical_rainfall_rate":
         out_cube.data *= 1000.0
 
