@@ -127,7 +127,7 @@ def load(conf: Config):
                 variables={
                     "VARNAME": field,
                     "BASE_MODEL": base_model["name"],
-                    "OTHER_MODEL": model["name"],
+                    "OTHER_MODELS": model["name"],
                     "METHOD": method,
                     "PRESERVED_COORDS": preserved_coords,
                     "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
@@ -143,22 +143,22 @@ def load(conf: Config):
     scores_timeseries_methods = _get_scores_timeseries_methods(conf)
     if scores_timeseries_methods:
         # Produce timeseries plots of scores metrics averaged over the domain for each case study.
-        for model, field, scores_method in itertools.product(
-            models[1:], conf.SURFACE_FIELDS, scores_timeseries_methods
+        for field, scores_method in itertools.product(
+            conf.SURFACE_FIELDS, scores_timeseries_methods
         ):
             yield RawRecipe(
                 recipe=f"timeseries_surface_difference_scores_{scores_method}.yaml",
                 variables={
                     "VARNAME": field,
                     "BASE_MODEL": base_model["name"],
-                    "OTHER_MODEL": model["name"],
+                    "OTHER_MODELS": [model["name"] for model in models[1:]],
                     "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
                 },
-                model_ids=[base_model["id"], model["id"]],
+                model_ids=[base_model["id"]] + [model["id"] for model in models[1:]],
                 aggregation=False,
             )
 
@@ -254,7 +254,7 @@ def load(conf: Config):
                 variables={
                     "VARNAME": field,
                     "BASE_MODEL": base_model["name"],
-                    "OTHER_MODEL": model["name"],
+                    "OTHER_MODELS": model["name"],
                     "PRESERVED_COORDS": ["pressure"],
                     "AGGREGATION_MODE": "Case-study RMSE",
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
