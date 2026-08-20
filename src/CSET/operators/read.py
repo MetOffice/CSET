@@ -246,7 +246,6 @@ def _load_model(
     logger.debug("Constraint: %s", constraint)
     cubes = iris.load(input_files, constraint, callback=_loading_callback)
     # If required, compute wind_speed from components.
-
     cubes = _compute_winds(cubes, constraint)
 
     # Add model_name attribute to each cube to make it available at any further
@@ -925,29 +924,26 @@ def _compute_winds(
     # the cell methods, but it may not be warranted.
     #
     # A check on UM STASH attributes is also conducted to adjust directions.
-    if isinstance(constraint, iris.Constraint):
-        filter_windspeed = get_filter_windspeed(constraint)
-    else:
-        filter_windspeed = None
+
+    if constraint is None:
+        return cubes
+
+    filter_windspeed = get_filter_windspeed(constraint)
 
     u_constr = iris.Constraint("eastward_wind_at_10m")
     v_constr = iris.Constraint("northward_wind_at_10m")
-    speed_constr = iris.Constraint("wind_speed_at_10m")
+    sp_constr = iris.Constraint("wind_speed_at_10m")
 
     try:
-        if cubes.extract(u_constr) and cubes.extract(v_constr):
-            if len(cubes) == 2:
-                wind_only = True
-            else:
-                wind_only = False
-            if len(cubes.extract(u_constr)) == 1 and not cubes.extract(speed_constr):
+        if (
+            cubes.extract(u_constr)
+            and cubes.extract(v_constr)
+            and not cubes.extract(sp_constr)
+        ):
+            if "wind_speed_at_10m" in constraint.varname:
                 _add_wind_speed_um(cubes)
             # Convert winds in the UM to be relative to true east and true north.
             _convert_wind_true_dirn_um(cubes)
-            # Return only wind_speed cube
-            if wind_only:
-                cubes = cubes.extract(speed_constr)
-
     except (KeyError, AttributeError):
         pass
 
@@ -960,7 +956,6 @@ def _compute_winds(
             )
         )
         cubes = cubes.extract(filter_windspeed_constraint)
-
     return cubes
 
 

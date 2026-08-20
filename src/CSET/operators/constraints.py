@@ -52,7 +52,7 @@ def generate_stash_constraint(stash: str, **kwargs) -> iris.AttributeConstraint:
     return stash_constraint
 
 
-def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
+def generate_var_constraint(varname: str | list[str], **kwargs) -> iris.Constraint:
     """Generate constraint from variable name or STASH code.
 
     Operator that takes a CF compliant variable name string or list of names, and generates an
