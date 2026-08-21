@@ -280,6 +280,52 @@ def scores_rmse_model_obs(
     return rmse_cubes
 
 
+def scores_additive_bias_model_obs(
+    cubes: CubeList, preserved_coordinates: list[str] | str | None = None
+):
+    r"""Calculate the Additive Bias (Mean Error) using scores.
+
+    Acts as a wrapper around the ME calculation from ``scores`` ([scoresa]_, [scoresb]_).
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        A CubeList containing an observation cube and at least one model cube.
+    preserved_coordinates: list[str] | str | None, default is None.
+        The coordinates that you wish to preserve in the calculaiton of the
+        ME. For example if you want a map of each time you can preserve
+        ["time","latitude", "longitude"] or if you want a time series
+        you can preserve ["time"], if you want to collapse to a single value
+        use `None`. The default is `None`.
+
+    Returns
+    -------
+    scores_cube: iris.cube.CubeList
+        A cube list containing the ME between the models and observation cube.
+    """
+    additive_bias_cubes = CubeList()
+    model_list = CubeList()
+
+    for cb in cubes:
+        if "observed" in cb.long_name:
+            observed = cb
+        else:
+            model_list.append(cb)
+
+    for model in model_list:
+        input_cubelist = CubeList()
+        input_cubelist.append(observed)
+        input_cubelist.append(model)
+        additive_bias = scores_additive_bias(
+            input_cubelist, preserved_coordinates, obs_model_comparison=True
+        )
+        model_name = model.attributes["model_name"]
+        additive_bias.attributes["model_name"] = model_name
+        additive_bias_cubes.append(additive_bias)
+
+    return additive_bias_cubes
+
+
 def scores_rmse(
     cubes: CubeList,
     preserved_coordinates: list[str] | str | None = None,
@@ -455,7 +501,9 @@ def scores_mae(cubes: CubeList, preserved_coordinates: list[str] | str | None = 
 
 
 def scores_additive_bias(
-    cubes: CubeList, preserved_coordinates: list[str] | str | None = None
+    cubes: CubeList,
+    preserved_coordinates: list[str] | str | None = None,
+    obs_model_comparison: bool = False,
 ):
     r"""Calculate the Additive Bias (Mean Error) using scores.
 
@@ -478,8 +526,16 @@ def scores_additive_bias(
     scores_cubelist: iris.cube.CubeList
         A cubelist containing the ME between the base and other cube(s).
     """
-    base, others = _sort_cube_into_base_and_other(cubes)
     scores_cubelist = CubeList()
+    if obs_model_comparison:
+        for cb in cubes:
+            if "observed" in cb.long_name:
+                base = cb
+            else:
+                others = [cb]
+    else:
+        base, others = _sort_cube_into_base_and_other(cubes)
+
     for other in others:
         base, other = _process_cubes_for_verification(base, other)
 
