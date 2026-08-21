@@ -8,7 +8,7 @@ description: |
   This means a sequence of spatial plots of the ME can be produced.
   Currently only working for deterministic models.
 
-  This recipe can preserve the time, latitude and longitude coordinates, in which case
+  This recipe preserves time, latitude and longitude coordinates, in which case
   a sequence of spatial plots of the ME are produced according to the averaging
   method i.e. SEQ, MAX and MIN.
 
