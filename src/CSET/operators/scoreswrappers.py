@@ -541,15 +541,16 @@ def scores_mae(
     scores_cubelist: iris.cube.CubeList
         A cubelist containing the MAE between the base and other cube(s).
     """
+    scores_cubelist = CubeList()
     if obs_model_comparison:
         for cb in cubes:
             if "observed" in cb.long_name:
                 base = cb
             else:
-                other = cb
+                others = [cb]
     else:
         base, others = _sort_cube_into_base_and_other(cubes)
-    scores_cubelist = CubeList()
+
     for other in others:
         base, other = _process_cubes_for_verification(base, other)
 
