@@ -10,9 +10,6 @@ description: |
   This means a sequence of spatial plots of the MAE are produced according to the averaging
   method i.e. SEQ, MAX and MIN.
 
-  Alternatively, the MAE can be computed over all time points in the case study, i.e.
-  preserving just the latitude and longitude coordinates by selecting the method CASE.
-  This will produce a single output plot of the total MAE.
 
   A larger MAE implies a greater error than a smaller MAE. An
   MAE of zero indicates the two fields most likely match. The MAE is calculated
