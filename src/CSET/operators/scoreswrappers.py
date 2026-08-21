@@ -781,3 +781,114 @@ def scores_pod_model_obs(
         scores_results.append(scores_cube)
 
     return scores_results
+
+
+def scores_ets_model_obs(
+    cubes: CubeList,
+    preserved_coordinates: list[str] | str | None,
+    threshold: str,
+    op_func: str,
+):
+    r"""
+    Compute the Equitable Threat Score (ETS) score using Scores ([scoresa]_ [scoresb]_).
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        An iris cubelist containing model(s) and an observation cube.
+    preserved_coordinates: list | str | None
+        An object containing which coordinates to preserve in the computation. For example, if cubes contain shape time, point location,
+        then preserving coordinate 'time' will produce the equitable threat score for each timeslice (shape time). If None,
+        then it will return a single value score for all times/point locations.
+    threshold: str
+        A str containing the threshold to use to generate the binary masks, which subsequently gets turned to a float (but passed as str around the recipe templating).
+    op_func: str
+        A string either containing 'lt' for less than or 'gt for greater than, to determine how the threshold is applied to the data
+        to generate the mask.
+
+    Returns
+    -------
+    cube: iris.cube
+        An iris cube, containing the probability of detection score for further plotting.
+
+    Notes
+    -----
+    The Equitable Threat Score (ETS) evaluates the accuracy of forecasts for events that meet a specified threshold,
+    hile accounting for correct forecasts that could occur purely by chance. Unlike the Probability of Detection (POD),
+    ETS considers hits, misses, and false alarms, providing a more balanced assessment of forecast skill.
+
+    For example, if the threshold is 290 K and op_func is gt (greater than), an observation of 292 K and a forecast of 295 K
+    would be counted as a hit. ETS adjusts the total number of hits by removing the number of hits expected due to random chance.
+
+    It is calculated as:
+
+    .. math::
+
+    ETS = \frac{hits - hits_{random}}
+    {hits + misses + false\ alarms - hits_{random}}
+
+    where
+
+    hits_{random} = \frac{(hits + misses)(hits + false\ alarms)}{total count}
+
+    ETS ranges from -1/3 to 1, where 1 indicates a perfect forecast, 0 indicates no skill beyond random chance, and negative values indicate worse than
+    random chance.
+    """
+    # Split out model(s) and obs
+    models = CubeList()
+    for c in cubes:
+        if "observed" in c.long_name:
+            observed = c
+        else:
+            models.append(c)
+
+    # Setup cubelist to store results
+    scores_results = iris.cube.CubeList()
+
+    # Setup operators greater than, less than.
+    ops = {
+        "gt": operator.gt,
+        "lt": operator.lt,
+    }
+
+    try:
+        op = ops[op_func]
+    except KeyError as err:
+        raise ValueError(f"Operator {op_func} not supported.") from err
+
+    for model in models:
+        # Convert obs cubes to xarray and resolve preserved dimensions.
+        other_xr = xr.DataArray.from_iris(model)
+        base_xr = xr.DataArray.from_iris(observed)
+        preserve_dims = _resolve_preserve_dims(
+            observed, other_xr, preserved_coordinates
+        )
+
+        # Create event operator object using threshold and operator direction.
+        event_operator = scores.categorical.ThresholdEventOperator(
+            default_event_threshold=float(threshold), default_op_fn=op
+        )
+
+        # Generate binary fields using the event operator.
+        forecast_binary, observed_binary = event_operator.make_event_tables(
+            other_xr, base_xr
+        )
+
+        # Create binary contigency manager, as per Scores API, using transform to preserve preserve_dims
+        contingency_manager = scores.categorical.BinaryContingencyManager(
+            forecast_binary, observed_binary
+        ).transform(preserve_dims=preserve_dims)
+
+        # Get ETS from the contigency manager, and convert back to an iris cube.
+        scores_cube = xr.DataArray.to_iris(contingency_manager.equitable_threat_score())
+
+        # Rename cube so it plots correctly alongside correcting cube units.
+        scores_cube.rename(
+            f"Equitable_Threat_Score_{op_func}_{threshold}_{observed.name()}"
+        )
+        scores_cube.units = "1"
+        scores_cube.attributes["model_name"] = model.attributes["model_name"]
+
+        scores_results.append(scores_cube)
+
+    return scores_results
