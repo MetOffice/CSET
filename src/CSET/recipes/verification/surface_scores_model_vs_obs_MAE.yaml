@@ -7,10 +7,7 @@ description: |
   The MAE is calculated based on that used in the
   package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.mae).
   This recipe preserves the time, latitude and longitude coordinates.
-  This means a sequence of spatial plots of the MAE can be produced.
-
-  This recipe can preserve the time, latitude and longitude coordinates, in which case
-  a sequence of spatial plots of the MAE are produced according to the averaging
+  This means a sequence of spatial plots of the MAE are produced according to the averaging
   method i.e. SEQ, MAX and MIN.
 
   Alternatively, the MAE can be computed over all time points in the case study, i.e.
