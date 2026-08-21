@@ -20,16 +20,16 @@ Using *cset bake* on the command line
 * Access recipe file using ``cset cookbook``.
 * Set required recipe inputs on command line.
 
-Example to generate time series plot of domain averaged ``temperature_at_screen_level`` for all models::
+Example to generate time series plot of domain averaged ``temperature_at_screen_level`` for any number of input models::
 
     cset cookbook generic_surface_domain_mean_time_series.yaml
-    cset -v bake -i "/path/to/input/data" ["/path/to/input/data2" "..."]
+    cset -v bake -i "/path/to/input/data1" "..." "/path/to/input/dataN" \\
                  -o "./output_path" \\
                  -r generic_surface_domain_mean_time_series.yaml \\
                  --VARNAME="temperature_at_screen_level" \\
-                 --MODEL_NAME="my_model_label" ["my_model_label2" "..."] \\
+                 --MODEL_NAME="['my_model_label1' '...' 'my_model_labelN']" \\
                  --METHOD="SEQ" \\
-                 --SUBAREA_TYPE='None' --SUBAREA_EXTENT='None' --SUBAREA_NAME='None'
+                 --SUBAREA_TYPE='None' --SUBAREA_EXTENT='None' --SUBAREA_NAME=''
 
 Configuring the *cset_workflow*
 -------------------------------
