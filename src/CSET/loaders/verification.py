@@ -321,3 +321,24 @@ def load(conf: Config):
                 model_ids=["OBS"] + [model["id"] for model in models],
                 aggregation=False,
             )
+
+
+    if conf.HINTON_RMSE:
+        # Produce model vs observation timeseries plots of scores metrics averaged over the domain for each case study.
+        for field in itertools.product(
+            conf.POINT_OBS_FIELDS
+        ):
+            yield RawRecipe(
+                recipe=f"hinton_rmse_agg_test.yaml",
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=["OBS"] + [model["id"] for model in models],
+                aggregation=True,
+            )

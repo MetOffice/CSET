@@ -165,6 +165,7 @@ def read_cubes(
     """
     # Get iterable of paths. Each path corresponds to 1 model.
     paths = iter_maybe(file_paths)
+
     model_names = iter_maybe(model_names)
 
     # flattens model_names if needed into one dimensional list.
@@ -245,6 +246,7 @@ def _load_model(
     input_files = _check_input_files(paths)
     # If unset, a constraint of None lets everything be loaded.
     logger.debug("Constraint: %s", constraint)
+
     cubes = iris.load(input_files, constraint, callback=_loading_callback)
     # If required, compute wind_speed from components.
     cubes = _compute_winds(cubes)
