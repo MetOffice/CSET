@@ -11,6 +11,7 @@ Generate time series of region-averaged field.
    The following CSET operators are used:
 
    * :py:mod:`CSET.operators.read.read_cubes`
+   * :py:mod:`CSET.operators.collapse.collapse`:
    * :py:mod:`CSET.operators.plot.plot_line_series`.
 
 Using *cset bake* on the command line
