@@ -21,7 +21,7 @@ description: |
   are domininating the score (usually indicated by dipoles). MAE is a fair
   measure of error when forecasting the median and is not sensitive to outliers.
 
-  For MAE values computed across an entire casse study, the computation
+  For MAE values computed across an entire case study, the computation
   is done within the scores MAE module, rather than trying to mean across
   each timestep. This preserves the nonlinear nature of the MAE metric.
 
