@@ -1395,3 +1395,15 @@ def wind_cubelist_lfric():
     )
 
     return wind_cubelist
+
+
+@pytest.fixture()
+def wind_cubelist_observed():
+    """Observed wind cube list."""
+    wind_cubelist = CubeList()
+
+    wind_cubelist.append(
+        Cube(3.5, long_name="observed_wind_speed_at_10m", units="m s-1")
+    )
+
+    return wind_cubelist

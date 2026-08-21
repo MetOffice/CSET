@@ -422,7 +422,7 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     _lfric_time_callback(cube)
     _lfric_forecast_period_callback(cube)
     cube = _fix_no_time_coords_callback(cube)
-    _normalise_ML_varname(cube)
+    _normalise_longname(cube)
     return cube
 
 
@@ -1129,7 +1129,7 @@ def _fix_no_time_coords_callback(cube: iris.cube.Cube):
     return cube
 
 
-def _normalise_ML_varname(cube: iris.cube.Cube):
+def _normalise_longname(cube: iris.cube.Cube):
     """Fix plev variable names to standard names."""
     if cube.coords("pressure"):
         if cube.name() == "x_wind":
