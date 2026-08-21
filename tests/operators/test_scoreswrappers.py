@@ -351,6 +351,138 @@ def test_model_obs_rmse_preserve_in_timelatlon(dummy_cubelist_model_obs):
         assert cube.attributes["model_name"] == model_name
 
 
+def test_model_obs_mae_preserve_in_time(dummy_cubelist_model_obs):
+    """MAE collapsed over station, preserving only the time dimension."""
+    mae = scoreswrappers.scores_mae_model_obs(dummy_cubelist_model_obs, "time")
+    assert isinstance(mae, CubeList)
+    assert len(mae) == 2
+    model_names = ["model_a", "model_b"]
+    for cube, model_name in zip(mae, model_names, strict=True):
+        assert cube.name() == "MAE_of_observed_temperature_at_screen_level"
+        assert cube.units == "K"
+        assert cube.shape == (36,)
+        assert cube.attributes["model_name"] == model_name
+
+
+def test_model_obs_mae_preserve_in_latlon(dummy_cubelist_model_obs):
+    """MAE collapsed over time, preserving the station dimension via lat/lon."""
+    mae = scoreswrappers.scores_mae_model_obs(
+        dummy_cubelist_model_obs, ["longitude", "latitude"]
+    )
+    assert isinstance(mae, CubeList)
+    assert len(mae) == 2
+    model_names = ["model_a", "model_b"]
+    for cube, model_name in zip(mae, model_names, strict=True):
+        assert cube.name() == "MAE_of_observed_temperature_at_screen_level"
+        assert cube.units == "K"
+        assert cube.shape == (28,)
+        assert cube.attributes["model_name"] == model_name
+
+
+def test_model_obs_mae_preserve_in_timelatlon(dummy_cubelist_model_obs):
+    """MAE with nothing collapsed, preserving both time and station dimensions."""
+    mae = scoreswrappers.scores_mae_model_obs(
+        dummy_cubelist_model_obs, ["time", "longitude", "latitude"]
+    )
+    assert isinstance(mae, CubeList)
+    assert len(mae) == 2
+    model_names = ["model_a", "model_b"]
+    for cube, model_name in zip(mae, model_names, strict=True):
+        assert cube.name() == "MAE_of_observed_temperature_at_screen_level"
+        assert cube.units == "K"
+        assert cube.shape == (36, 28)
+        assert cube.attributes["model_name"] == model_name
+
+
+def test_model_obs_pearson_correlation_preserve_in_time(dummy_cubelist_model_obs):
+    """Pearson correlation collapsed over station, preserving only the time dimension."""
+    corr = scoreswrappers.scores_correlation_pearsonr_model_obs(
+        dummy_cubelist_model_obs, "time"
+    )
+    assert isinstance(corr, CubeList)
+    assert len(corr) == 2
+    model_names = ["model_a", "model_b"]
+    for cube, model_name in zip(corr, model_names, strict=True):
+        assert (
+            cube.name() == "Pearson_Correlation_of_observed_temperature_at_screen_level"
+        )
+        assert cube.units == "K"
+        assert cube.shape == (36,)
+        assert cube.attributes["model_name"] == model_name
+
+
+def test_model_obs_pearson_correlation_preserve_in_latlon(dummy_cubelist_model_obs):
+    """Pearson correlation collapsed over time, preserving the station dimension via lat/lon."""
+    corr = scoreswrappers.scores_correlation_pearsonr_model_obs(
+        dummy_cubelist_model_obs, ["longitude", "latitude"]
+    )
+    assert isinstance(corr, CubeList)
+    assert len(corr) == 2
+    model_names = ["model_a", "model_b"]
+    for cube, model_name in zip(corr, model_names, strict=True):
+        assert (
+            cube.name() == "Pearson_Correlation_of_observed_temperature_at_screen_level"
+        )
+        assert cube.units == "K"
+        assert cube.shape == (28,)
+        assert cube.attributes["model_name"] == model_name
+
+
+def test_model_obs_pearson_correlation_preserve_in_timelatlon(dummy_cubelist_model_obs):
+    """Pearson correlation with nothing collapsed, preserving both time and station dimensions."""
+    with pytest.raises(
+        ValueError, match="You cannot preserve all dimensions with pearsonr."
+    ):
+        scoreswrappers.scores_correlation_pearsonr_model_obs(
+            dummy_cubelist_model_obs, ["time", "longitude", "latitude"]
+        )
+
+
+def test_model_obs_additive_bias_preserve_in_time(dummy_cubelist_model_obs):
+    """Additive bias collapsed over station, preserving only the time dimension."""
+    bias = scoreswrappers.scores_additive_bias_model_obs(
+        dummy_cubelist_model_obs, "time"
+    )
+    assert isinstance(bias, CubeList)
+    assert len(bias) == 2
+    model_names = ["model_a", "model_b"]
+    for cube, model_name in zip(bias, model_names, strict=True):
+        assert cube.name() == "Additive_Bias_of_observed_temperature_at_screen_level"
+        assert cube.units == "K"
+        assert cube.shape == (36,)
+        assert cube.attributes["model_name"] == model_name
+
+
+def test_model_obs_additive_bias_preserve_in_latlon(dummy_cubelist_model_obs):
+    """Additive bias collapsed over time, preserving the station dimension via lat/lon."""
+    bias = scoreswrappers.scores_additive_bias_model_obs(
+        dummy_cubelist_model_obs, ["longitude", "latitude"]
+    )
+    assert isinstance(bias, CubeList)
+    assert len(bias) == 2
+    model_names = ["model_a", "model_b"]
+    for cube, model_name in zip(bias, model_names, strict=True):
+        assert cube.name() == "Additive_Bias_of_observed_temperature_at_screen_level"
+        assert cube.units == "K"
+        assert cube.shape == (28,)
+        assert cube.attributes["model_name"] == model_name
+
+
+def test_model_obs_additive_bias_preserve_in_timelatlon(dummy_cubelist_model_obs):
+    """Additive bias with nothing collapsed, preserving both time and station dimensions."""
+    bias = scoreswrappers.scores_additive_bias_model_obs(
+        dummy_cubelist_model_obs, ["time", "longitude", "latitude"]
+    )
+    assert isinstance(bias, CubeList)
+    assert len(bias) == 2
+    model_names = ["model_a", "model_b"]
+    for cube, model_name in zip(bias, model_names, strict=True):
+        assert cube.name() == "Additive_Bias_of_observed_temperature_at_screen_level"
+        assert cube.units == "K"
+        assert cube.shape == (36, 28)
+        assert cube.attributes["model_name"] == model_name
+
+
 def test_pod_gt_2x2_manual_case(make_cube_categorical_testing):
     """Test basic 2x2 case for manual validation."""
     obs = make_cube_categorical_testing(
