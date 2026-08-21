@@ -5,12 +5,8 @@ description: |
   The ME is calculated based on that used in the
   package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.mean_error).
   This recipe preserves the time, latitude and longitude coordinates.
-  This means a sequence of spatial plots of the ME can be produced.
+  This means a sequence of spatial plots of the ME are produced according to the averaging method i.e. SEQ, MAX and MIN.
   Currently only working for deterministic models.
-
-  This recipe preserves time, latitude and longitude coordinates, in which case
-  a sequence of spatial plots of the ME are produced according to the averaging
-  method i.e. SEQ, MAX and MIN.
 
   Alternatively, the ME can be computed over all time points in the case study, i.e.
   preserving just the latitude and longitude coordinates by selecting the method CASE.
