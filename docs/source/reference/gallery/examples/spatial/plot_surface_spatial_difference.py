@@ -6,7 +6,7 @@ Generate spatial map of a 2D field difference (regional data example).
 
 .. admonition:: References
 
-   General functionality is provided using :doc:`CSET recipe </usage/operator-recipes>` ``generic_surface_spatial_difference.yaml``
+   General functionality is provided using :doc:`CSET recipe </usage/operator-recipes>` ``surface_spatial_difference.yaml``
 
    The following CSET operators are used:
 
@@ -22,15 +22,15 @@ Using *cset bake* on the command line
 
 Example to generate full-domain spatial difference maps of ``temperature_at_screen_level`` between 2 input model files for all output times::
 
-    cset cookbook generic_surface_spatial_plot_sequence.yaml
+    cset cookbook surface_spatial_difference.yaml
     cset -v bake -i "/path/to/input/data_1" "/path/to/input/data_2" \\
                  -o "./output_path" \\
-                 -r generic_surface_spatial_difference.yaml \\
+                 -r surface_spatial_difference.yaml \\
                  --VARNAME="temperature_at_screen_level" \\
                  --BASE_MODEL="my_model_1_label" \\
                  --OTHER_MODEL="my_model_2_label" \\
                  --METHOD="SEQ" \\
-                 --SUBAREA_TYPE='None' --SUBAREA_EXTENT='None' --SUBAREA_NAME='None'
+                 --SUBAREA_TYPE='None' --SUBAREA_EXTENT='None' --SUBAREA_NAME=''
 
 Configuring the *cset_workflow*
 -------------------------------
