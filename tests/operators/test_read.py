@@ -1485,3 +1485,15 @@ def test_wind_lfric_all(wind_cubelist_lfric):
     assert speed.var_name == "wspd10m"
     assert eastward.var_name == "u10m"
     assert northward.var_name == "v10m"
+
+
+def test_wind_observed(wind_cubelist_observed):
+    """Observed cubes filtered to speed."""
+    cubes = wind_cubelist_observed.copy()
+    constraint = constraints.generate_var_constraint(
+        ["observed_wind_speed_at_10m", "wind_speed_at_10m"]
+    )
+    cubes = read._compute_winds(cubes, constraint=constraint)
+    assert len(cubes) == 1
+    observed_speed = cubes.extract_cube(iris.Constraint("observed_wind_speed_at_10m"))
+    assert observed_speed
