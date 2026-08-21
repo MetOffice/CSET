@@ -27,7 +27,7 @@ Example to generate full-domain spatial maps of ``temperature_at_screen_level`` 
                  --VARNAME="temperature_at_screen_level" \\
                  --MODEL_NAME="my_model_label" \\
                  --METHOD="SEQ" \\
-                 --SUBAREA_TYPE='None' --SUBAREA_EXTENT='None' --SUBAREA_NAME='None'
+                 --SUBAREA_TYPE='None' --SUBAREA_EXTENT='None' --SUBAREA_NAME=''
 
 Configuring the *cset_workflow*
 -------------------------------
