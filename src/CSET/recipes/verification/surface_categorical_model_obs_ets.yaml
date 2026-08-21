@@ -1,22 +1,32 @@
 category: Scores Categorical
-title: Timeseries of POD for "$VARNAME over $SUBAREA_NAME, using threshold $OPERATOR $THRESHOLD"
+title: Timeseries of ETS for "$VARNAME over $SUBAREA_NAME, using threshold $OPERATOR $THRESHOLD"
 description: |
 
-  Extracts and plots the POD for $VARNAME for each model against observations as a timeseries.
+    Extracts and plots the ETS for $VARNAME for each model against observations as a timeseries.
 
-  The probability of detection (POD)  in [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.categorical.BasicContingencyManager.probability_of_detection)
-  calculates the proportion of observed events that meet a threshold that were correctly forecast by the model.
-  For example, if threshold is 290K and op_func is gt (greater than), and at some station a temperature was recorded as 292K and the model produced
-  295k, that would be a positive hit. It does not take into account how far above/below a threshold a model forecasts.
+    The Equitable Threat Score (ETS) in [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.categorical.BasicContingencyManager.equitable_threat_score)
+    evaluates the accuracy of forecasts for events that meet a specified threshold,
+    hile accounting for correct forecasts that could occur purely by chance. Unlike the Probability of Detection (POD),
+    ETS considers hits, misses, and false alarms, providing a more balanced assessment of forecast skill.
 
-  It is calculated as (true positives)/(true positives + false negatives)
+    For example, if the threshold is 290 K and op_func is gt (greater than), an observation of 292 K and a forecast of 295 K
+    would be counted as a hit. ETS adjusts the total number of hits by removing the number of hits expected due to random chance.
 
-  It is equivalent to the hit rate. Note if there are no events that meet the threshold in model and observations, a POD of zero is returned.
+    It is calculated as:
 
-  POD produces a range of 0 to 1, where 1 is a perfect score.
+    ETS = frac{hits - hits_{random}}
+    {hits + misses + false\ alarms - hits_{random}}
 
-  References
-  https://scores.readthedocs.io/en/stable/api.html#scores.categorical.BasicContingencyManager.probability_of_detection
+
+    where
+
+    hits_{random} = frac{(hits + misses)(hits + false\ alarms)}{total count}
+
+    ETS ranges from -1/3 to 1, where 1 indicates a perfect forecast, 0 indicates no skill beyond random chance, and negative values indicate worse than
+    random chance.
+
+    References
+    https://scores.readthedocs.io/en/stable/api.html#scores.categorical.BasicContingencyManager.equitable_threat_score
 
 steps:
   - operator: read.read_cubes
@@ -61,7 +71,7 @@ steps:
                operator: constraints.generate_var_constraint
                varname: observed_$VARNAME
 
-  - operator: scoreswrappers.scores_pod_model_obs
+  - operator: scoreswrappers.scores_ets_model_obs
     preserved_coordinates: "time"
     threshold: $THRESHOLD
     op_func: $OPERATOR
