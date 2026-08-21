@@ -547,3 +547,126 @@ def test_invalid_operator_raises(make_cube_categorical_testing):
             threshold="10",
             op_func="gte",
         )
+
+
+def test_ets_gt_perfect_forecast(make_cube_categorical_testing):
+    """Perfect forecast should give ETS=1."""
+    obs = make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
+    obs.attributes["cset_comparison_base"] = 1
+
+    model = make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="temperature",
+        model_name="test_model",
+    )
+
+    result = scoreswrappers.scores_ets_model_obs(
+        CubeList([model, obs]),
+        preserved_coordinates=None,
+        threshold="10",
+        op_func="gt",
+    )
+
+    assert len(result) == 1
+    assert np.allclose(result[0].data, 1.0, atol=1e-2, rtol=1e-6)
+
+
+def test_ets_gt_mixed_case(make_cube_categorical_testing):
+    """Manual ETS calculation for a mixed forecast."""
+    obs = make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
+    obs.attributes["cset_comparison_base"] = 1
+
+    model = make_cube_categorical_testing(
+        [[14, 20], [7, 4]],
+        long_name="temperature",
+        model_name="test_model",
+    )
+
+    result = scoreswrappers.scores_ets_model_obs(
+        CubeList([model, obs]),
+        preserved_coordinates=None,
+        threshold="10",
+        op_func="gt",
+    )
+
+    # Binary fields:
+    #
+    # Obs    = [[1,0],
+    #           [1,0]]
+    #
+    # Model  = [[1,1],
+    #           [0,0]]
+    #
+    # H=1, M=1, F=1, N=4
+    # Hr=(2*2)/4=1
+    # ETS=(1-1)/(1+1+1-1)=0
+
+    assert len(result) == 1
+    assert np.allclose(result[0].data, 0.0, atol=1e-2, rtol=1e-6)
+
+
+def test_ets_gt_complete_miss(make_cube_categorical_testing):
+    """No hits, all events misplaced."""
+    obs = make_cube_categorical_testing(
+        [[12, 12], [5, 5]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
+    obs.attributes["cset_comparison_base"] = 1
+
+    model = make_cube_categorical_testing(
+        [[5, 5], [12, 12]],
+        long_name="temperature",
+        model_name="test_model",
+    )
+
+    result = scoreswrappers.scores_ets_model_obs(
+        CubeList([model, obs]),
+        preserved_coordinates=None,
+        threshold="10",
+        op_func="gt",
+    )
+
+    # H=0, M=2, F=2, N=4
+    # Hr=(2*2)/4=1
+    # ETS=(0-1)/(0+2+2-1)=-1/3
+
+    assert len(result) == 1
+    assert np.allclose(result[0].data, -1.0 / 3.0, atol=1e-2, rtol=1e-6)
+
+
+def test_ets_metadata(make_cube_categorical_testing):
+    """Check output cube metadata."""
+    obs = make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
+    obs.attributes["cset_comparison_base"] = 1
+
+    model = make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="temperature",
+        model_name="ukv",
+    )
+
+    result = scoreswrappers.scores_ets_model_obs(
+        CubeList([model, obs]),
+        preserved_coordinates=None,
+        threshold="10",
+        op_func="gt",
+    )
+
+    cube = result[0]
+
+    assert cube.units == "1"
+    assert cube.attributes["model_name"] == "ukv"
+    assert cube.name() == "Equitable_Threat_Score_gt_10_observed_temperature"
