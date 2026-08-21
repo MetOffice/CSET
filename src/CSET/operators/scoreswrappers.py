@@ -280,6 +280,52 @@ def scores_rmse_model_obs(
     return rmse_cubes
 
 
+def scores_mae_model_obs(
+    cubes: CubeList, preserved_coordinates: list[str] | str | None = None
+):
+    r"""Calculate the Mean Absolute Error (MAE) using scores.
+
+    Acts as a wrapper around the MAE calculation from ``scores`` ([scoresa]_, [scoresb]_).
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        A CubeList containing an observation cube and at least one model cube.
+    preserved_coordinates: list[str] | str | None, default is None.
+        The coordinates that you wish to preserve in the calculaiton of the
+        MAE. For example if you want a map of each time you can preserve
+        ["time","latitude", "longitude"] or if you want a time series
+        you can preserve ["time"], if you want to collapse to a single value
+        use `None`. The default is `None`.
+
+    Returns
+    -------
+    scores_cube: iris.cube.Cube
+        A cube containing the MAE between the models and observation cube.
+    """
+    mae_cubes = CubeList()
+    model_list = CubeList()
+
+    for cb in cubes:
+        if "observed" in cb.long_name:
+            observed = cb
+        else:
+            model_list.append(cb)
+
+    for model in model_list:
+        input_cubelist = CubeList()
+        input_cubelist.append(observed)
+        input_cubelist.append(model)
+        mae = scores_mae(
+            input_cubelist, preserved_coordinates, obs_model_comparison=True
+        )
+        model_name = model.attributes["model_name"]
+        mae.attributes["model_name"] = model_name
+        mae_cubes.append(mae)
+
+    return mae_cubes
+
+
 def scores_additive_bias_model_obs(
     cubes: CubeList, preserved_coordinates: list[str] | str | None = None
 ):
@@ -469,7 +515,11 @@ def scores_rmse(
     return scores_cubelist[0] if len(scores_cubelist) == 1 else scores_cubelist
 
 
-def scores_mae(cubes: CubeList, preserved_coordinates: list[str] | str | None = None):
+def scores_mae(
+    cubes: CubeList,
+    preserved_coordinates: list[str] | str | None = None,
+    obs_model_comparison: bool = False,
+):
     r"""Calculate the Mean Absolute Error (MAE) using scores.
 
     Acts as a wrapper around the MAE calculation from ``scores`` ([scoresa]_, [scoresb]_).
@@ -491,8 +541,16 @@ def scores_mae(cubes: CubeList, preserved_coordinates: list[str] | str | None = 
     scores_cubelist: iris.cube.CubeList
         A cubelist containing the MAE between the base and other cube(s).
     """
-    base, others = _sort_cube_into_base_and_other(cubes)
     scores_cubelist = CubeList()
+    if obs_model_comparison:
+        for cb in cubes:
+            if "observed" in cb.long_name:
+                base = cb
+            else:
+                others = [cb]
+    else:
+        base, others = _sort_cube_into_base_and_other(cubes)
+
     for other in others:
         base, other = _process_cubes_for_verification(base, other)
 
