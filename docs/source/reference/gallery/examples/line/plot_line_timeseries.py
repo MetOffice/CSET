@@ -20,7 +20,7 @@ Using *cset bake* on the command line
 * Access recipe file using ``cset cookbook``.
 * Set required recipe inputs on command line.
 
-Example to generate full-domain spatial maps of ``temperature_at_screen_level`` for all output times::
+Example to generate time series plot of domain averaged ``temperature_at_screen_level`` for all models::
 
     cset cookbook generic_surface_domain_mean_time_series.yaml
     cset -v bake -i "/path/to/input/data" ["/path/to/input/data2" "..."]
