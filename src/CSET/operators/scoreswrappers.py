@@ -231,192 +231,75 @@ def _resolve_preserve_dims(
     return preserve_dims
 
 
-def scores_rmse_model_obs(
-    cubes: CubeList, preserved_coordinates: list[str] | str | None = None
-):
-    r"""Calculate the Root Mean Square Error (RMSE) using scores.
+def _attach_scaler_time_coord_maybe(scores_cube, base):
+    # If time is aggregated out, attach a scalar time coordinate with bounds
+    # so plotting can display the aggregated period in the title.
+    try:
+        if not scores_cube.coords("time"):
+            base_time = base.coord("time")
+            time_vals = (
+                base_time.bounds.flatten()
+                if base_time.has_bounds()
+                else base_time.points
+            )
+            t_start = float(time_vals[0])
+            t_end = float(time_vals[-1])
+            t_mid = 0.5 * (t_start + t_end)
 
-    Acts as a wrapper around the RMSE calculation from ``scores`` ([scoresa]_, [scoresb]_).
-    It is calculated as
+            scores_cube.add_aux_coord(
+                iris.coords.AuxCoord(
+                    t_mid,
+                    standard_name=base_time.standard_name,
+                    long_name=base_time.long_name,
+                    var_name=base_time.var_name,
+                    units=base_time.units,
+                    bounds=np.array([t_start, t_end]),
+                    attributes=base_time.attributes.copy(),
+                )
+            )
+    except iris.exceptions.CoordinateNotFoundError:
+        pass
 
-    .. math:: RMSE = \sqrt{\frac{1}{N} \Sigma(forecast - observations)^2}
 
-    Parameters
-    ----------
-    cubes: iris.cube.CubeList
-        A CubeList containing an observation cube and at least one model cube.
-    preserved_coordinates: list[str] | str | None, default is None.
-        The coordinates that you wish to preserve in the calculaiton of the
-        RMSE. For example if you want a map of each time you can preserve
-        ["time","grid_latitude", "grid_longitude"] or if you want a time series
-        you can preserve ["time"], if you want to collapse to a single value
-        use `None`. The default is `None`.
+def _make_scores_cube(base, other, metric: str, preserved_coordinates):
+    """Make the scores cube."""
+    other_xr = xr.DataArray.from_iris(other)
+    base_xr = xr.DataArray.from_iris(base)
+    preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
 
-    Returns
-    -------
-    scores_cubelist: iris.cube.CubeList
-        A cubelist containing the RMSE between the models and observation cube(s).
-    """
-    rmse_cubes = CubeList()
-    model_list = CubeList()
-
-    for cb in cubes:
-        if "observed" in cb.long_name:
-            observed = cb
-        else:
-            model_list.append(cb)
-
-    for model in model_list:
-        input_cubelist = CubeList()
-        input_cubelist.append(observed)
-        input_cubelist.append(model)
-        rmse = scores_rmse(
-            input_cubelist, preserved_coordinates, obs_model_comparison=True
+    # Scores operates on xarray data arrays, so we transform the iris cube into an array,
+    # apply scores, and then transform it back.
+    if metric == "rmse":
+        scores_cube = xr.DataArray.to_iris(
+            scores.continuous.rmse(other_xr, base_xr, preserve_dims=preserve_dims)
         )
-        model_name = model.attributes["model_name"]
-        rmse.attributes["model_name"] = model_name
-        rmse_cubes.append(rmse)
-
-    return rmse_cubes
-
-
-def scores_mae_model_obs(
-    cubes: CubeList, preserved_coordinates: list[str] | str | None = None
-):
-    r"""Calculate the Mean Absolute Error (MAE) using scores.
-
-    Acts as a wrapper around the MAE calculation from ``scores`` ([scoresa]_, [scoresb]_).
-
-    Parameters
-    ----------
-    cubes: iris.cube.CubeList
-        A CubeList containing an observation cube and at least one model cube.
-    preserved_coordinates: list[str] | str | None, default is None.
-        The coordinates that you wish to preserve in the calculaiton of the
-        MAE. For example if you want a map of each time you can preserve
-        ["time","latitude", "longitude"] or if you want a time series
-        you can preserve ["time"], if you want to collapse to a single value
-        use `None`. The default is `None`.
-
-    Returns
-    -------
-    scores_cube: iris.cube.Cube
-        A cube containing the MAE between the models and observation cube.
-    """
-    mae_cubes = CubeList()
-    model_list = CubeList()
-
-    for cb in cubes:
-        if "observed" in cb.long_name:
-            observed = cb
-        else:
-            model_list.append(cb)
-
-    for model in model_list:
-        input_cubelist = CubeList()
-        input_cubelist.append(observed)
-        input_cubelist.append(model)
-        mae = scores_mae(
-            input_cubelist, preserved_coordinates, obs_model_comparison=True
+        scores_cube.rename(f"RMSE_of_{base.name()}")
+    elif metric == "mae":
+        scores_cube = xr.DataArray.to_iris(
+            scores.continuous.mae(other_xr, base_xr, preserve_dims=preserve_dims)
         )
-        model_name = model.attributes["model_name"]
-        mae.attributes["model_name"] = model_name
-        mae_cubes.append(mae)
-
-    return mae_cubes
-
-
-def scores_additive_bias_model_obs(
-    cubes: CubeList, preserved_coordinates: list[str] | str | None = None
-):
-    r"""Calculate the Additive Bias (Mean Error) using scores.
-
-    Acts as a wrapper around the ME calculation from ``scores`` ([scoresa]_, [scoresb]_).
-
-    Parameters
-    ----------
-    cubes: iris.cube.CubeList
-        A CubeList containing an observation cube and at least one model cube.
-    preserved_coordinates: list[str] | str | None, default is None.
-        The coordinates that you wish to preserve in the calculaiton of the
-        ME. For example if you want a map of each time you can preserve
-        ["time","latitude", "longitude"] or if you want a time series
-        you can preserve ["time"], if you want to collapse to a single value
-        use `None`. The default is `None`.
-
-    Returns
-    -------
-    scores_cube: iris.cube.CubeList
-        A cube list containing the ME between the models and observation cube.
-    """
-    additive_bias_cubes = CubeList()
-    model_list = CubeList()
-
-    for cb in cubes:
-        if "observed" in cb.long_name:
-            observed = cb
-        else:
-            model_list.append(cb)
-
-    for model in model_list:
-        input_cubelist = CubeList()
-        input_cubelist.append(observed)
-        input_cubelist.append(model)
-        additive_bias = scores_additive_bias(
-            input_cubelist, preserved_coordinates, obs_model_comparison=True
+        scores_cube.rename(f"MAE_of_{base.name()}")
+    elif metric == "additive_bias":
+        scores_cube = xr.DataArray.to_iris(
+            scores.continuous.additive_bias(
+                other_xr, base_xr, preserve_dims=preserve_dims
+            )
         )
-        model_name = model.attributes["model_name"]
-        additive_bias.attributes["model_name"] = model_name
-        additive_bias_cubes.append(additive_bias)
-
-    return additive_bias_cubes
-
-
-def scores_correlation_pearsonr_model_obs(
-    cubes: CubeList, preserved_coordinates: list[str] | str | None = None
-):
-    r"""Calculate the Pearson's Correlation (PC) coefficient using scores.
-
-    Acts as a wrapper around the PC calculation from ``scores`` ([scoresa]_, [scoresb]_).
-
-    Parameters
-    ----------
-    cubes: iris.cube.CubeList
-        A CubeList containing exactly two cubes: a base and an "other" model,
-        this can be an analysis and the model.
-    preserved_coordinates: list[str] | str | None, default is None.
-        The coordinates that you wish to preserve in the calculation of the
-        PC. For example if you want a map of each time you can preserve
-        ["time","latitude", "longitude"] or if you want a time series
-        you can preserve ["time"], if you want to collapse to a single value
-        use `None`. The default is `None`.
-
-    Returns
-    -------
-    scores_cube: iris.cube.CubeList
-        A cube list containing the PC between the models and observation cube.
-    """
-    pearsonr_cubes = CubeList()
-    model_list = CubeList()
-
-    for cb in cubes:
-        if "observed" in cb.long_name:
-            observed = cb
-        else:
-            model_list.append(cb)
-
-    for model in model_list:
-        input_cubelist = CubeList()
-        input_cubelist.append(observed)
-        input_cubelist.append(model)
-        pearsonr = scores_correlation_pearsonr(
-            input_cubelist, preserved_coordinates, obs_model_comparison=True
+        scores_cube.rename(f"Additive_Bias_of_{base.name()}")
+    elif metric == "pearson_correlation":
+        scores_cube = xr.DataArray.to_iris(
+            scores.continuous.correlation.pearsonr(
+                other_xr, base_xr, preserve_dims=preserve_dims
+            )
         )
-        model_name = model.attributes["model_name"]
-        pearsonr.attributes["model_name"] = model_name
-        pearsonr_cubes.append(pearsonr)
+        scores_cube.rename(f"Pearson_Correlation_of_{base.name()}")
+    else:
+        raise ValueError(f"Scores Unknown metric: {metric}")
 
-    return pearsonr_cubes
+    _attach_scaler_time_coord_maybe(scores_cube, base)
+    model_name = other.attributes["model_name"]
+    scores_cube.attributes["model_name"] = model_name
+    return scores_cube
 
 
 def scores_rmse(
@@ -451,66 +334,24 @@ def scores_rmse(
         A cubelist containing the RMSE between the base and other cube.
     """
     scores_cubelist = CubeList()
-    if obs_model_comparison:
+
+    if any("observed" in (cb.long_name or "") for cb in cubes):
+        others = CubeList()
         for cb in cubes:
             if "observed" in cb.long_name:
                 base = cb
             else:
-                others = [cb]
+                others.append(cb)
     else:
         base, others = _sort_cube_into_base_and_other(cubes)
 
     for other in others:
         base, other = _process_cubes_for_verification(base, other)
 
-        # Copy the coordinates of the input cubes.
-        other_xr = xr.DataArray.from_iris(other)
-        base_xr = xr.DataArray.from_iris(base)
-        preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
-
-        # Scores operates on xarray data arrays, so we transform the iris cube into an array,
-        # apply scores, and then transform it back.
-        scores_cube = xr.DataArray.to_iris(
-            scores.continuous.rmse(
-                other_xr,
-                base_xr,
-                preserve_dims=preserve_dims,
-            )
-        )
-
-        # If time is aggregated out, attach a scalar time coordinate with bounds
-        # so plotting can display the aggregated period in the title.
-        try:
-            if not scores_cube.coords("time"):
-                base_time = base.coord("time")
-                time_vals = (
-                    base_time.bounds.flatten()
-                    if base_time.has_bounds()
-                    else base_time.points
-                )
-                t_start = float(time_vals[0])
-                t_end = float(time_vals[-1])
-                t_mid = 0.5 * (t_start + t_end)
-
-                scores_cube.add_aux_coord(
-                    iris.coords.AuxCoord(
-                        t_mid,
-                        standard_name=base_time.standard_name,
-                        long_name=base_time.long_name,
-                        var_name=base_time.var_name,
-                        units=base_time.units,
-                        bounds=np.array([t_start, t_end]),
-                        attributes=base_time.attributes.copy(),
-                    )
-                )
-        except iris.exceptions.CoordinateNotFoundError:
-            pass
+        scores_cube = _make_scores_cube(base, other, "rmse", preserved_coordinates)
 
         scores_cube.rename(f"RMSE_of_{base.name()}")
         scores_cubelist.append(scores_cube)
-
-        model_name = other.attributes["model_name"]
-        scores_cube.attributes["model_name"] = model_name
 
     return scores_cubelist[0] if len(scores_cubelist) == 1 else scores_cubelist
 
@@ -542,60 +383,20 @@ def scores_mae(
         A cubelist containing the MAE between the base and other cube(s).
     """
     scores_cubelist = CubeList()
-    if obs_model_comparison:
+    if any("observed" in (cb.long_name or "") for cb in cubes):
+        others = CubeList()
         for cb in cubes:
             if "observed" in cb.long_name:
                 base = cb
             else:
-                others = [cb]
+                others.append(cb)
     else:
         base, others = _sort_cube_into_base_and_other(cubes)
 
     for other in others:
         base, other = _process_cubes_for_verification(base, other)
 
-        # Copy the coordinates of the input cubes.
-        other_xr = xr.DataArray.from_iris(other)
-        base_xr = xr.DataArray.from_iris(base)
-        preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
-
-        # Scores operates on xarray data arrays, so we transform the iris cube into an array,
-        # apply scores, and then transform it back.
-        scores_cube = xr.DataArray.to_iris(
-            scores.continuous.mae(
-                other_xr,
-                base_xr,
-                preserve_dims=preserve_dims,
-            )
-        )
-
-        # If time is aggregated out, attach a scalar time coordinate with bounds
-        # so plotting can display the aggregated period in the title.
-        try:
-            if not scores_cube.coords("time"):
-                base_time = base.coord("time")
-                time_vals = (
-                    base_time.bounds.flatten()
-                    if base_time.has_bounds()
-                    else base_time.points
-                )
-                t_start = float(time_vals[0])
-                t_end = float(time_vals[-1])
-                t_mid = 0.5 * (t_start + t_end)
-
-                scores_cube.add_aux_coord(
-                    iris.coords.AuxCoord(
-                        t_mid,
-                        standard_name=base_time.standard_name,
-                        long_name=base_time.long_name,
-                        var_name=base_time.var_name,
-                        units=base_time.units,
-                        bounds=np.array([t_start, t_end]),
-                        attributes=base_time.attributes.copy(),
-                    )
-                )
-        except iris.exceptions.CoordinateNotFoundError:
-            pass
+        scores_cube = _make_scores_cube(base, other, "mae", preserved_coordinates)
 
         scores_cube.rename(f"MAE_of_{base.name()}")
         scores_cubelist.append(scores_cube)
@@ -632,64 +433,24 @@ def scores_additive_bias(
         A cubelist containing the ME between the base and other cube(s).
     """
     scores_cubelist = CubeList()
-    if obs_model_comparison:
+    if any("observed" in (cb.long_name or "") for cb in cubes):
+        others = CubeList()
         for cb in cubes:
             if "observed" in cb.long_name:
                 base = cb
             else:
-                others = [cb]
+                others.append(cb)
     else:
         base, others = _sort_cube_into_base_and_other(cubes)
 
     for other in others:
         base, other = _process_cubes_for_verification(base, other)
 
-        # Copy the coordinates of the input cubes.
-        other_xr = xr.DataArray.from_iris(other)
-        base_xr = xr.DataArray.from_iris(base)
-        preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
-
-        # Scores operates on xarray data arrays, so we transform the iris cube into an array,
-        # apply scores, and then transform it back.
-        scores_cube = xr.DataArray.to_iris(
-            scores.continuous.additive_bias(
-                other_xr,
-                base_xr,
-                preserve_dims=preserve_dims,
-            )
+        scores_cube = _make_scores_cube(
+            base, other, "additive_bias", preserved_coordinates
         )
 
-        # If time is aggregated out, attach a scalar time coordinate with bounds
-        # so plotting can display the aggregated period in the title.
-        try:
-            if not scores_cube.coords("time"):
-                base_time = base.coord("time")
-                time_vals = (
-                    base_time.bounds.flatten()
-                    if base_time.has_bounds()
-                    else base_time.points
-                )
-                t_start = float(time_vals[0])
-                t_end = float(time_vals[-1])
-                t_mid = 0.5 * (t_start + t_end)
-
-                scores_cube.add_aux_coord(
-                    iris.coords.AuxCoord(
-                        t_mid,
-                        standard_name=base_time.standard_name,
-                        long_name=base_time.long_name,
-                        var_name=base_time.var_name,
-                        units=base_time.units,
-                        bounds=np.array([t_start, t_end]),
-                        attributes=base_time.attributes.copy(),
-                    )
-                )
-        except iris.exceptions.CoordinateNotFoundError:
-            pass
-        scores_cube.rename(f"Additive_Bias_of_{base.name()}")
         scores_cubelist.append(scores_cube)
-        model_name = other.attributes["model_name"]
-        scores_cube.attributes["model_name"] = model_name
 
     return scores_cubelist[0] if len(scores_cubelist) == 1 else scores_cubelist
 
@@ -721,65 +482,25 @@ def scores_correlation_pearsonr(
         A cubelist containing the PC between the base and other cube(s).
     """
     scores_cubelist = CubeList()
-    if obs_model_comparison:
+    if any("observed" in (cb.long_name or "") for cb in cubes):
+        others = CubeList()
         for cb in cubes:
             if "observed" in cb.long_name:
                 base = cb
             else:
-                others = [cb]
+                others.append(cb)
     else:
         base, others = _sort_cube_into_base_and_other(cubes)
 
     for other in others:
         base, other = _process_cubes_for_verification(base, other)
 
-        # Copy the coordinates of the input cubes.
-        other_xr = xr.DataArray.from_iris(other)
-        base_xr = xr.DataArray.from_iris(base)
-        preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
-
-        # Scores operates on xarray data arrays, so we transform the iris cube into an array,
-        # apply scores, and then transform it back.
-        scores_cube = xr.DataArray.to_iris(
-            scores.continuous.correlation.pearsonr(
-                other_xr,
-                base_xr,
-                preserve_dims=preserve_dims,
-            )
+        scores_cube = _make_scores_cube(
+            base, other, "pearson_correlation", preserved_coordinates
         )
 
-        # If time is aggregated out, attach a scalar time coordinate with bounds
-        # so plotting can display the aggregated period in the title.
-        try:
-            if not scores_cube.coords("time"):
-                base_time = base.coord("time")
-                time_vals = (
-                    base_time.bounds.flatten()
-                    if base_time.has_bounds()
-                    else base_time.points
-                )
-                t_start = float(time_vals[0])
-                t_end = float(time_vals[-1])
-                t_mid = 0.5 * (t_start + t_end)
-
-                scores_cube.add_aux_coord(
-                    iris.coords.AuxCoord(
-                        t_mid,
-                        standard_name=base_time.standard_name,
-                        long_name=base_time.long_name,
-                        var_name=base_time.var_name,
-                        units=base_time.units,
-                        bounds=np.array([t_start, t_end]),
-                        attributes=base_time.attributes.copy(),
-                    )
-                )
-        except iris.exceptions.CoordinateNotFoundError:
-            pass
-
-        scores_cube.rename(f"Pearson_Correlation_of_{base.name()}")
         scores_cubelist.append(scores_cube)
-        model_name = other.attributes["model_name"]
-        scores_cube.attributes["model_name"] = model_name
+
     return scores_cubelist[0] if len(scores_cubelist) == 1 else scores_cubelist
 
 
