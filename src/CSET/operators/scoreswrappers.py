@@ -260,6 +260,7 @@ def scores_rmse_model_obs(
     rmse_cubes = CubeList()
     model_list = CubeList()
 
+    # Separate observations and models
     for cb in cubes:
         if "observed" in cb.long_name:
             observed = cb
@@ -267,17 +268,83 @@ def scores_rmse_model_obs(
             model_list.append(cb)
 
     for model in model_list:
-        input_cubelist = CubeList()
-        input_cubelist.append(observed)
-        input_cubelist.append(model)
-        rmse = scores_rmse(
-            input_cubelist, preserved_coordinates, obs_model_comparison=True
-        )
-        model_name = model.attributes["model_name"]
-        rmse.attributes["model_name"] = model_name
-        rmse_cubes.append(rmse)
 
-    return rmse_cubes
+        frt_coord = model.coord("forecast_reference_time")
+
+        # Multiple forecast reference times
+        if (
+            model.coord_dims("forecast_reference_time")
+            and frt_coord.shape[0] > 1
+        ):
+
+            obs_slices = list(
+                observed.slices_over("forecast_reference_time")
+            )
+
+            model_slices = list(
+                model.slices_over("forecast_reference_time")
+            )
+
+            for obs_slice, model_slice in zip(
+                obs_slices,
+                model_slices,
+                strict=True,
+            ):
+
+                input_cubelist = CubeList([
+                    obs_slice,
+                    model_slice,
+                ])
+
+                rmse = scores_rmse(
+                    input_cubelist,
+                    preserved_coordinates,
+                    obs_model_comparison=True,
+                )
+
+                rmse.attributes["model_name"] = (
+                    model.attributes["model_name"]
+                )
+
+                # Preserve the forecast_reference_time value
+                if not rmse.coords("forecast_reference_time"):
+                    rmse.add_aux_coord(
+                        model_slice.coord(
+                            "forecast_reference_time"
+                        ).copy()
+                    )
+
+                if rmse.coords("time"):
+                    for coord in rmse.coords("time"):
+                        rmse.remove_coord(coord)
+
+                rmse_cubes.append(rmse)
+
+        # Single forecast reference time
+        else:
+
+            input_cubelist = CubeList([
+                observed,
+                model,
+            ])
+
+            rmse = scores_rmse(
+                input_cubelist,
+                preserved_coordinates,
+                obs_model_comparison=True,
+            )
+
+            rmse.attributes["model_name"] = (
+                model.attributes["model_name"]
+            )
+
+            rmse_cubes.append(rmse)
+
+
+    if len(rmse_cubes) > 1:
+        return rmse_cubes.merge()
+    else:
+        return rmse_cubes
 
 
 def scores_rmse(

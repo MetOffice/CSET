@@ -247,21 +247,44 @@ def combine_obs_across_forecasts(cubes):
         raise ValueError("Need at least two cubes")
 
     # --------------------------------------------------------------
-    # Find common stations
+    # Find stations common to all cubes with complete data
     # --------------------------------------------------------------
 
-    station_sets = []
+    valid_station_sets = []
 
     for cube in cubes:
-        station_sets.append(
-            set(cube.coord("Station_Name").points)
+
+        names = cube.coord("Station_Name").points
+
+        data = cube.data
+
+        # Handle masked and unmasked arrays
+        if np.ma.isMaskedArray(data):
+            mask = np.ma.getmaskarray(data)
+            station_valid = (
+                ~np.any(mask, axis=0)
+                & np.all(np.isfinite(data.filled(np.nan)), axis=0)
+            )
+        else:
+            station_valid = np.all(np.isfinite(data), axis=0)
+
+        valid_station_sets.append(
+            set(names[station_valid])
         )
 
-    common_stations = sorted(set.intersection(*station_sets))
+    common_stations = sorted(
+        set.intersection(*valid_station_sets)
+    )
+
+    logger.info(
+    "Retaining %s/%s stations with complete observations",
+    len(common_stations),
+    cube.shape[1],
+    ) 
 
     if not common_stations:
         raise ValueError(
-            "No stations common to all forecast_reference_times"
+            "No stations with complete data in all forecast_reference_times"
         )
 
     # --------------------------------------------------------------

@@ -2754,7 +2754,7 @@ def qq_plot(
     return iris.cube.CubeList([base, other])
 
 
-def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
+def hinton_plot(cubes, base, other, vars, magnitude=False):
     """
     Plot a Hinton style triangle/scorecard plot.
 
@@ -2771,20 +2771,42 @@ def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
         size/direction.
     signif: np.ndarray
         A 2d numpy array containing 0s and 1s to determine if triangle is significant or not.
-    xaxis_labels: list
-        List of labels for the xaxis (must match the second dimension length of signif and change,
-        along with magnitude if not None).
-    yaxis_labels: list
-        List of labels for the yaxis (must match the first dimension length of signif and change,
-        along with magnitude if not None).
-    magnitude: np.ndarray | None
-        Optional 2D array, matching the shape of change, signif, which contains numerical values
-        the user wishes to display under each respective triangle.
+
 
     Returns
     -------
     matplotlib axes object to either display or do further modifications to.
     """
+
+    print('Creating hinton plot...')
+    
+    # All cubes should have the same shape and be 1D.
+    delta = np.zeros((len(vars),cubes[0].shape[0]))
+    delta_scaled = np.zeros((len(vars),cubes[0].shape[0]))
+    
+    for n,name in enumerate(vars):
+
+        # Compute percentage change.
+        base_cube = next(
+            cube for cube in cubes
+            if cube.attributes.get("model_name") == base and cube.long_name == "RMSE_of_observed_"+name
+        )
+
+        other_cube = next(
+            cube for cube in cubes
+            if cube.attributes.get("model_name") == other and cube.long_name == "RMSE_of_observed_"+name
+        )
+
+        delta[n,:] = other_cube.data - base_cube.data
+
+        # Scaled so between -1 and 1.
+        delta_scaled[n,:] = delta[n,:] / np.max(np.abs(delta[n,:])) #test for divide zero!
+
+
+    # Some code that looks for a significance cube, if not, set to None
+    signif = None
+    
+
     # Setup colors of triangles
     color_pos = "#7CAE00"
     color_neg = "#7B68EE"
@@ -2794,14 +2816,11 @@ def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
     cell_size_in = 0.35
     text_row_ratio = 0.25
 
-    # Ensure arrays, and change to bool for sig.
-    change = np.asarray(change)
-    signif = np.asarray(signif).astype(bool)
-    if magnitude is not None:
-        magnitude = np.asarray(magnitude)
+    # # Ensure significance array is bool.
+    # signif = np.asarray(signif).astype(bool)
 
     # Get the number of x and y elements
-    ny, nx = change.shape
+    ny, nx = delta_scaled.shape
 
     # Build non-uniform y coordinates
     tri_height = 1.0
@@ -2817,7 +2836,7 @@ def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
         y += tri_height
         y_edges.append(y)
 
-        if magnitude is not None:
+        if magnitude:
             txt_y.append(y + txt_height / 2)
             y += txt_height
             y_edges.append(y)
@@ -2838,10 +2857,10 @@ def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
     ax.set_ylim(0, total_height)
 
     ax.set_xticks(np.arange(nx))
-    ax.set_xticklabels(xaxis_labels, rotation=90)
+    ax.set_xticklabels(cubes[0].coord('forecast_period').points, rotation=90)
 
     ax.set_yticks(tri_y)
-    ax.set_yticklabels(yaxis_labels)
+    ax.set_yticklabels(vars)
 
     ax.set_xticks(np.arange(-0.5, nx, 1), minor=True)
     ax.set_yticks(y_edges, minor=True)
@@ -2870,14 +2889,13 @@ def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
     # Plot triangles + text
     for j in range(ny):
         for i in range(nx):
-            val = change[j, i]
+            val = delta_scaled[j, i]
             if np.isnan(val):
                 continue
 
             if abs(val) < 0.01:
                 continue
-
-            sig = signif[j, i]
+        
             size = max_marker_size * abs(val)
 
             # Triangle style
@@ -2888,7 +2906,8 @@ def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
                 marker = "v"
                 color = color_neg
 
-            if sig:
+            if signif:
+                sig = signif[j, i]
                 edgecolor = "black"
                 linewidth = 0.6
             else:
@@ -2909,8 +2928,8 @@ def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
             )
 
             # Text row
-            if magnitude is not None:
-                mag_val = magnitude[j, i]
+            if magnitude:
+                mag_val = delta[j, i]
 
                 if not np.isnan(mag_val):
                     ax.text(
@@ -2925,6 +2944,8 @@ def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
                     )
 
     plt.tight_layout()
+
+    plt.savefig('out.png')
     return fig, ax
 
 
