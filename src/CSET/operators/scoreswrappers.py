@@ -476,15 +476,7 @@ def scores_correlation_pearsonr(
         A cubelist containing the PC between the base and other cube(s).
     """
     scores_cubelist = CubeList()
-    if any("observed" in (cb.long_name or "") for cb in cubes):
-        others = CubeList()
-        for cb in cubes:
-            if "observed" in cb.long_name:
-                base = cb
-            else:
-                others.append(cb)
-    else:
-        base, others = _sort_cube_into_base_and_other(cubes)
+    base, others = _split_base_and_other(cubes)
 
     for other in others:
         base, other = _process_cubes_for_verification(base, other)
@@ -572,7 +564,7 @@ def scores_pod_model_obs(
     preserved_coordinates: list[str] | str | None,
     threshold: str,
     op_func: str,
-) -> Cube:
+) -> CubeList:
     r"""
     Compute the Probability of Detection (POD) score using Scores ([scoresa]_ [scoresb]_).
 
@@ -592,8 +584,8 @@ def scores_pod_model_obs(
 
     Returns
     -------
-    cube: iris.cube.Cube
-        An iris cube, containing the probability of detection score for further plotting.
+    cube: iris.cube.CubeList
+        An iris cubelist, containing the probability of detection score for further plotting.
 
     Notes
     -----
@@ -674,7 +666,7 @@ def scores_ets_model_obs(
     preserved_coordinates: list[str] | str | None,
     threshold: str,
     op_func: str,
-) -> Cube:
+) -> CubeList:
     r"""
     Compute the Equitable Threat Score (ETS) score using Scores ([scoresa]_ [scoresb]_).
 
@@ -694,8 +686,8 @@ def scores_ets_model_obs(
 
     Returns
     -------
-    cube: iris.cube
-        An iris cube, containing the probability of detection score for further plotting.
+    cube: iris.CubeList
+        An iris cubelist, containing the probability of detection score for further plotting.
 
     Notes
     -----
