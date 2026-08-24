@@ -41,7 +41,7 @@ from CSET.operators.regrid import regrid_onto_cube
 logger = logging.getLogger(__name__)
 
 
-def _sort_cube_into_base_and_other(cubes):
+def _sort_cube_into_base_and_other(cubes: CubeList) -> tuple[Cube, CubeList]:
     """Sorts cube into base and other models.
 
     Parameters
@@ -67,7 +67,7 @@ def _sort_cube_into_base_and_other(cubes):
     return base, others
 
 
-def _ensure_increasing_pressure_coordinates(cubes):
+def _ensure_increasing_pressure_coordinates(cubes: CubeList) -> CubeList:
     """Ensure the pressure coordinate is increasing.
 
     Parameters
@@ -91,7 +91,7 @@ def _ensure_increasing_pressure_coordinates(cubes):
             pass
 
 
-def _process_cubes_for_verification(base: Cube, other: Cube):
+def _process_cubes_for_verification(base: Cube, other: Cube) -> tuple[Cube, Cube]:
     """Prepare cubes ready for verification in scores.
 
     Parameters
@@ -231,7 +231,7 @@ def _resolve_preserve_dims(
     return preserve_dims
 
 
-def _attach_scaler_time_coord_maybe(scores_cube, base):
+def _attach_scaler_time_coord_maybe(scores_cube: Cube, base: Cube):
     # If time is aggregated out, attach a scalar time coordinate with bounds
     # so plotting can display the aggregated period in the title.
     try:
@@ -261,7 +261,9 @@ def _attach_scaler_time_coord_maybe(scores_cube, base):
         pass
 
 
-def _make_scores_cube(base, other, metric: str, preserved_coordinates):
+def _make_scores_cube(
+    base: Cube, other: Cube, metric: str, preserved_coordinates: list[str]
+) -> Cube:
     """Make the scores cube."""
     other_xr = xr.DataArray.from_iris(other)
     base_xr = xr.DataArray.from_iris(base)
@@ -305,8 +307,7 @@ def _make_scores_cube(base, other, metric: str, preserved_coordinates):
 def scores_rmse(
     cubes: CubeList,
     preserved_coordinates: list[str] | str | None = None,
-    obs_model_comparison: bool = False,
-):
+) -> CubeList:
     r"""Calculate the Root Mean Square Error (RMSE) using scores.
 
     Acts as a wrapper around the RMSE calculation from ``scores`` ([scoresa]_, [scoresb]_).
@@ -325,8 +326,6 @@ def scores_rmse(
         ["time","grid_latitude", "grid_longitude"] or if you want a time series
         you can preserve ["time"], if you want to collapse to a single value
         use `None`. The default is `None`.
-    obs_model_comparison: bool, default False
-    Set true if doing model-obs comparison.
 
     Returns
     -------
@@ -335,15 +334,7 @@ def scores_rmse(
     """
     scores_cubelist = CubeList()
 
-    if any("observed" in (cb.long_name or "") for cb in cubes):
-        others = CubeList()
-        for cb in cubes:
-            if "observed" in cb.long_name:
-                base = cb
-            else:
-                others.append(cb)
-    else:
-        base, others = _sort_cube_into_base_and_other(cubes)
+    base, others = _split_base_and_other(cubes)
 
     for other in others:
         base, other = _process_cubes_for_verification(base, other)
@@ -359,8 +350,7 @@ def scores_rmse(
 def scores_mae(
     cubes: CubeList,
     preserved_coordinates: list[str] | str | None = None,
-    obs_model_comparison: bool = False,
-):
+) -> CubeList:
     r"""Calculate the Mean Absolute Error (MAE) using scores.
 
     Acts as a wrapper around the MAE calculation from ``scores`` ([scoresa]_, [scoresb]_).
@@ -383,15 +373,7 @@ def scores_mae(
         A cubelist containing the MAE between the base and other cube(s).
     """
     scores_cubelist = CubeList()
-    if any("observed" in (cb.long_name or "") for cb in cubes):
-        others = CubeList()
-        for cb in cubes:
-            if "observed" in cb.long_name:
-                base = cb
-            else:
-                others.append(cb)
-    else:
-        base, others = _sort_cube_into_base_and_other(cubes)
+    base, others = _split_base_and_other(cubes)
 
     for other in others:
         base, other = _process_cubes_for_verification(base, other)
@@ -406,11 +388,32 @@ def scores_mae(
     return scores_cubelist[0] if len(scores_cubelist) == 1 else scores_cubelist
 
 
+def _split_base_and_other(cubes: CubeList):
+    r"""Split the cube into base and other cubes.
+
+    Split depends on whether there
+    is an observed cube in the cubes.  If there is an observed cube,
+    then 'bsse' is the observed cube, if not then 'base' is the comparison
+    model cube.
+
+    """
+    obs_cube = [cb for cb in cubes if "observed" in (cb.long_name or "")]
+    if obs_cube:
+        if len(obs_cube) > 1:
+            raise ValueError(
+                f"Expected exactly one 'observed' cube, found {len(obs_cube)}"
+            )
+        base = obs_cube[0]
+        others = CubeList(cb for cb in cubes if cb is not base)
+        return base, others
+
+    return _sort_cube_into_base_and_other(cubes)
+
+
 def scores_additive_bias(
     cubes: CubeList,
     preserved_coordinates: list[str] | str | None = None,
-    obs_model_comparison: bool = False,
-):
+) -> CubeList:
     r"""Calculate the Additive Bias (Mean Error) using scores.
 
     Acts as a wrapper around the ME calculation from ``scores`` ([scoresa]_, [scoresb]_).
@@ -433,15 +436,7 @@ def scores_additive_bias(
         A cubelist containing the ME between the base and other cube(s).
     """
     scores_cubelist = CubeList()
-    if any("observed" in (cb.long_name or "") for cb in cubes):
-        others = CubeList()
-        for cb in cubes:
-            if "observed" in cb.long_name:
-                base = cb
-            else:
-                others.append(cb)
-    else:
-        base, others = _sort_cube_into_base_and_other(cubes)
+    base, others = _split_base_and_other(cubes)
 
     for other in others:
         base, other = _process_cubes_for_verification(base, other)
@@ -458,8 +453,7 @@ def scores_additive_bias(
 def scores_correlation_pearsonr(
     cubes: CubeList,
     preserved_coordinates: list[str] | str | None = None,
-    obs_model_comparison: bool = False,
-):
+) -> CubeList:
     r"""Calculate the Pearson's Correlation (PC) coefficient using scores.
 
     Acts as a wrapper around the PC calculation from ``scores`` ([scoresa]_, [scoresb]_).
@@ -506,7 +500,7 @@ def scores_correlation_pearsonr(
 
 def scores_crps_for_ensemble(
     cubes: Cube | CubeList, method: str = "ecdf", control_member: int = 0
-) -> iris.Constraint:
+) -> Cube:
     r"""Calculate the CRPS for an ensemble.
 
     Acts as a wrapper around the crps_for_ensemble from ``scores`` ([scoresa]_, [scoresb]_).
@@ -578,7 +572,7 @@ def scores_pod_model_obs(
     preserved_coordinates: list[str] | str | None,
     threshold: str,
     op_func: str,
-):
+) -> Cube:
     r"""
     Compute the Probability of Detection (POD) score using Scores ([scoresa]_ [scoresb]_).
 
@@ -598,7 +592,7 @@ def scores_pod_model_obs(
 
     Returns
     -------
-    cube: iris.cube
+    cube: iris.cube.Cube
         An iris cube, containing the probability of detection score for further plotting.
 
     Notes
@@ -680,7 +674,7 @@ def scores_ets_model_obs(
     preserved_coordinates: list[str] | str | None,
     threshold: str,
     op_func: str,
-):
+) -> Cube:
     r"""
     Compute the Equitable Threat Score (ETS) score using Scores ([scoresa]_ [scoresb]_).
 
