@@ -71,6 +71,8 @@ def _get_scores_timeseries_categorical(conf):
         scores_timeseries_categorical.append("pod")
     if conf.SCORES_CATEGORICAL_ETS or conf.SCORES_ALL:
         scores_timeseries_categorical.append("ets")
+    if conf.SCORES_CATEGORICAL_FB or conf.SCORES_ALL:
+        scores_timeseries_categorical.append("fb")
     return scores_timeseries_categorical
 
 
