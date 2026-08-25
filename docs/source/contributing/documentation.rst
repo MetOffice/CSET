@@ -97,11 +97,9 @@ Each gallery page follows a similar structure:
   The python code auto-generates an image file that is captured in the gallery output via `Sphinx-Gallery`_.
   Python codes make use of sample data files.
 
-To add a *new gallery page*, copy any of the existing pages available in a relevant section, and update all details based on the copied template. Examples are available in the following path:
+To add a *new gallery page*, copy any of the existing pages available in a relevant section, and update all details based on the copied template. Examples are available in the following path::
 
-.. code-block:: text
-
- docs/source/reference/gallery/examples/<name_of_section>/<name_of_example>.py
+    docs/source/reference/gallery/examples/<name_of_section>/<name_of_example>.py
 
 If the new gallery page should sit in a *new section*, also complete the following steps:
 
@@ -111,12 +109,10 @@ If the new gallery page should sit in a *new section*, also complete the followi
 * Update the new ``<name_of_example>.py`` documentation file with relevant details and example working python code
 * Add ``"reference/gallery/examples/<name_of_section>",`` to the list of gallery subsections in file ``source/conf.py``.
 
+Where possible, reuse any of the existing ``sample_data`` files for new gallery pages.
+If needing to generate *new sample_data* to support a new gallery example, add the required file(s) to the following path::
 
-Where possible, build new gallery pages that use any of the existing ``sample_data`` files provided. If needing to generate *new sample_data* to support a new gallery example, add the required file(s) to the following path:
-
-.. code-block:: text
-
-  src/CSET/sample_data
+    src/CSET/sample_data
 
 Note that only small (~10kB) test data files should be added to minimise the overall size of the CSET distribution.
 
