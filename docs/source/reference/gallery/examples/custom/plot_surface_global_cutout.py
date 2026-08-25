@@ -1,8 +1,8 @@
 """
-Trim edge gridcells
-===================
+Select lat-lon subarea
+======================
 
-Generate spatial map of a 2D field with specified number of grid cells at domain edges trimmed.
+Generate spatial map of a 2D field over selected sub-region of data.
 
 .. admonition:: References
 
@@ -16,8 +16,8 @@ Generate spatial map of a 2D field with specified number of grid cells at domain
 Using *cset bake* on the command line
 -------------------------------------
 
-* See :doc:`/reference/gallery/generated/spatial/plot_surface_spatial` for general settings.
-* Set ``SUBAREA_TYPE`` to ``gridcells`` and ``SUBAREA_EXTENT`` to select edge trim widths [lower, upper, left, right].
+* See :doc:`/reference/gallery/generated/spatial/plot_surface_spatial` or :doc:`/reference/gallery/generated/spatial/plot_surface_spatial_global` for general settings.
+* Set ``SUBAREA_TYPE`` to ``realworld`` or ``modelrelative`` and ``SUBAREA_EXTENT`` to select edge trim widths [lower_lat, upper_lat, lower_lon, upper_lon].
 * Use ``SUBAREA_NAME`` to add a plot label if required, or leave blank.
 
 Example to generate spatial maps of ``temperature_at_screen_level`` for a selected sub-area all output times::
@@ -28,21 +28,22 @@ Example to generate spatial maps of ``temperature_at_screen_level`` for a select
                  --VARNAME="temperature_at_screen_level" \\
                  --MODEL_NAME="my_model_label" \\
                  --METHOD="SEQ" \\
-                 --SUBAREA_TYPE='gridcells' --SUBAREA_EXTENT='[3, 2, 3, 1]' --SUBAREA_NAME=''
+                 --SUBAREA_TYPE='realworld' --SUBAREA_EXTENT='[-40.0, 40.0, -20.0, 55.0]' \\
+                 --SUBAREA_NAME='Africa'
 
 Configuring the *cset_workflow*
 -------------------------------
 
 * Update workflow configuration settings via ``rose edit`` GUI or in ``rose-suite.conf`` file.
 * Complete ``General setup options`` and ``Cycling and Model options`` details - see :doc:`/usage/workflow-configure`.
-* Set ``SELECT_SUBAREA`` to ``True``, set ``SUBAREA_TYPE`` to ``gridcells`` and set ``SUBAREA_EXTENT`` and ``SUBAREA_NAME`` on panel ``Cycling and Model options``.
+* Set ``SELECT_SUBAREA`` to ``True``, choose ``SUBAREA_TYPE`` and set ``SUBAREA_EXTENT`` and ``SUBAREA_NAME`` on panel ``Cycling and Model options``.
 * Set other required configuration options on ``Diagnostics / Surface (2D) fields`` panel::
 
     SELECT_SUBAREA = True
     SPATIAL_SURFACE_FIELD = True
-    SUBAREA_TYPE = 'gridcells'
-    SUBAREA_EXTENT = [3, 2, 3, 1]
-    SUBAREA_NAME = ''
+    SUBAREA_TYPE = 'realworld'
+    SUBAREA_EXTENT = [-40.0, 40.0, -20.0, 55.0]
+    SUBAREA_NAME = 'Africa'
     SURFACE_FIELDS = ["temperature_at_screen_level", ...]
 
 
@@ -54,15 +55,15 @@ from CSET import sample_data_path
 from CSET.operators import plot, read
 
 # Set path to input data
-filename = sample_data_path("air_temperature.nc")
+filename = sample_data_path("air_temperature_global.nc")
 
 # Read selected variable(s) of interest
 cube = read.read_cube(
     filename,
     ["temperature_at_screen_level"],
-    subarea_type="gridcells",
-    subarea_extent=[3, 2, 3, 1],
+    subarea_type="realworld",
+    subarea_extent=[-40.0, 40.0, -20.0, 55.0],
 )
 
 # Plot single time using spatial_contour_plot
-plot.spatial_contour_plot(cube[-1])
+plot.spatial_contour_plot(cube)
