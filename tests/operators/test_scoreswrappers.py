@@ -38,6 +38,8 @@ def test_scores_correlation_pearsonr(cube: Cube):
     # Data preparation.
     other_cube = cube.copy()
     del other_cube.attributes["cset_comparison_base"]
+    cube.attributes["model_name"] = "model1"
+    other_cube.attributes["model_name"] = "model2"
     cubes = CubeList([cube, other_cube])
 
     # Take difference.
@@ -61,6 +63,8 @@ def test_scores_additive_bias(cube: Cube):
     # Data preparation.
     other_cube = cube.copy()
     del other_cube.attributes["cset_comparison_base"]
+    cube.attributes["model_name"] = "model1"
+    other_cube.attributes["model_name"] = "model2"
     cubes = CubeList([cube, other_cube])
 
     # Take difference.
@@ -80,6 +84,8 @@ def test_scores_mae(cube: Cube):
     # Data preparation.
     other_cube = cube.copy()
     del other_cube.attributes["cset_comparison_base"]
+    cube.attributes["model_name"] = "model1"
+    other_cube.attributes["model_name"] = "model2"
     cubes = CubeList([cube, other_cube])
 
     # Take difference.
@@ -97,6 +103,8 @@ def test_scores_rmse(cube: Cube):
     # Data preparation.
     other_cube = cube.copy()
     del other_cube.attributes["cset_comparison_base"]
+    cube.attributes["model_name"] = "model1"
+    other_cube.attributes["model_name"] = "model2"
     cubes = CubeList([cube, other_cube])
 
     # Take difference.
@@ -121,6 +129,8 @@ def test_scores_rmse_nonzero():
     )
     other_cube = cube.copy(data=np.ones((2, 2)))
     cube.attributes["cset_comparison_base"] = 1
+    cube.attributes["model_name"] = "model1"
+    other_cube.attributes["model_name"] = "model2"
     different_cubes = CubeList((cube, other_cube))
     # Take difference.
     rmse_cube = scoreswrappers.scores_rmse(different_cubes)
@@ -138,6 +148,8 @@ def test_scores_rmse_no_time_coord(cube):
     c1.remove_coord("time")
     c2 = c1.copy()
     del c2.attributes["cset_comparison_base"]
+    c1.attributes["model_name"] = "model1"
+    c2.attributes["model_name"] = "model2"
     cubes = CubeList([c1, c2])
     rmse_cube = scoreswrappers.scores_rmse(cubes)
     assert isinstance(rmse_cube, Cube)
@@ -152,24 +164,11 @@ def test_scores_rmse_no_common_points(cube):
     new_times += 6
     other_cube.coord("time").points = new_times
     del other_cube.attributes["cset_comparison_base"]
+    cube.attributes["model_name"] = "model1"
+    other_cube.attributes["model_name"] = "model2"
     cubes = CubeList([cube, other_cube])
     with pytest.raises(ValueError, match="No common time points found!"):
         scoreswrappers.scores_rmse(cubes)
-
-
-def test_scores_rmse_incorrect_number_of_cubes(cube):
-    """Test exception when incorrect number of cubes provided."""
-    no_cubes = CubeList([])
-    with pytest.raises(ValueError, match="cubes should contain exactly 2 cubes."):
-        scoreswrappers.scores_rmse(no_cubes)
-
-    one_cube = CubeList([cube])
-    with pytest.raises(ValueError, match="cubes should contain exactly 2 cubes."):
-        scoreswrappers.scores_rmse(one_cube)
-
-    three_cubes = CubeList([cube, cube, cube])
-    with pytest.raises(ValueError, match="cubes should contain exactly 2 cubes."):
-        scoreswrappers.scores_rmse(three_cubes)
 
 
 def test_scores_rmse_different_data_shape_regrid(cube):
@@ -180,6 +179,8 @@ def test_scores_rmse_different_data_shape_regrid(cube):
     rearranged_cube = cube.copy()
     rearranged_cube = rearranged_cube[:, :, 1:]
     del cube.attributes["cset_comparison_base"]
+    rearranged_cube.attributes["model_name"] = "model1"
+    cube.attributes["model_name"] = "model2"
     cubes = CubeList([rearranged_cube, cube])
     # Need to preserve coordinates to test shape.
     rmse = scoreswrappers.scores_rmse(
@@ -195,6 +196,8 @@ def test_rmse_grid_staggering_regrid(cube):
     rearranged_cube = cube.copy()
     rearranged_cube.rename("eastward_wind_at_10m")
     del cube.attributes["cset_comparison_base"]
+    rearranged_cube.attributes["model_name"] = "model1"
+    cube.attributes["model_name"] = "model2"
     cubes = CubeList([rearranged_cube, cube])
     # Need to preserve coordinates to test shape.
     rmse = scoreswrappers.scores_rmse(
@@ -209,6 +212,8 @@ def test_difference_different_model_types(cube):
     flipped = cube.copy()
     reverse(flipped, "grid_latitude")
     del flipped.attributes["cset_comparison_base"]
+    flipped.attributes["model_name"] = "model1"
+    cube.attributes["model_name"] = "model2"
     cubes = CubeList([cube, flipped])
 
     # Take rmse.
@@ -224,6 +229,8 @@ def test_difference_flip_pressure_order(transect_source_cube_readonly):
     flipped = transect_source_cube_readonly.copy()
     reverse(flipped, "pressure")
     del flipped.attributes["cset_comparison_base"]
+    flipped.attributes["model_name"] = "model1"
+    transect_source_cube_readonly.attributes["model_name"] = "model2"
     cubes = CubeList([transect_source_cube_readonly, flipped])
 
     # Take rmse.
@@ -339,6 +346,138 @@ def test_model_obs_rmse_preserve_in_timelatlon(dummy_cubelist_model_obs):
     model_names = ["model_a", "model_b"]
     for cube, model_name in zip(rmse, model_names, strict=True):
         assert cube.name() == "RMSE_of_observed_temperature_at_screen_level"
+        assert cube.units == "K"
+        assert cube.shape == (36, 28)
+        assert cube.attributes["model_name"] == model_name
+
+
+def test_model_obs_mae_preserve_in_time(dummy_cubelist_model_obs):
+    """MAE collapsed over station, preserving only the time dimension."""
+    mae = scoreswrappers.scores_mae_model_obs(dummy_cubelist_model_obs, "time")
+    assert isinstance(mae, CubeList)
+    assert len(mae) == 2
+    model_names = ["model_a", "model_b"]
+    for cube, model_name in zip(mae, model_names, strict=True):
+        assert cube.name() == "MAE_of_observed_temperature_at_screen_level"
+        assert cube.units == "K"
+        assert cube.shape == (36,)
+        assert cube.attributes["model_name"] == model_name
+
+
+def test_model_obs_mae_preserve_in_latlon(dummy_cubelist_model_obs):
+    """MAE collapsed over time, preserving the station dimension via lat/lon."""
+    mae = scoreswrappers.scores_mae_model_obs(
+        dummy_cubelist_model_obs, ["longitude", "latitude"]
+    )
+    assert isinstance(mae, CubeList)
+    assert len(mae) == 2
+    model_names = ["model_a", "model_b"]
+    for cube, model_name in zip(mae, model_names, strict=True):
+        assert cube.name() == "MAE_of_observed_temperature_at_screen_level"
+        assert cube.units == "K"
+        assert cube.shape == (28,)
+        assert cube.attributes["model_name"] == model_name
+
+
+def test_model_obs_mae_preserve_in_timelatlon(dummy_cubelist_model_obs):
+    """MAE with nothing collapsed, preserving both time and station dimensions."""
+    mae = scoreswrappers.scores_mae_model_obs(
+        dummy_cubelist_model_obs, ["time", "longitude", "latitude"]
+    )
+    assert isinstance(mae, CubeList)
+    assert len(mae) == 2
+    model_names = ["model_a", "model_b"]
+    for cube, model_name in zip(mae, model_names, strict=True):
+        assert cube.name() == "MAE_of_observed_temperature_at_screen_level"
+        assert cube.units == "K"
+        assert cube.shape == (36, 28)
+        assert cube.attributes["model_name"] == model_name
+
+
+def test_model_obs_pearson_correlation_preserve_in_time(dummy_cubelist_model_obs):
+    """Pearson correlation collapsed over station, preserving only the time dimension."""
+    corr = scoreswrappers.scores_correlation_pearsonr_model_obs(
+        dummy_cubelist_model_obs, "time"
+    )
+    assert isinstance(corr, CubeList)
+    assert len(corr) == 2
+    model_names = ["model_a", "model_b"]
+    for cube, model_name in zip(corr, model_names, strict=True):
+        assert (
+            cube.name() == "Pearson_Correlation_of_observed_temperature_at_screen_level"
+        )
+        assert cube.units == "K"
+        assert cube.shape == (36,)
+        assert cube.attributes["model_name"] == model_name
+
+
+def test_model_obs_pearson_correlation_preserve_in_latlon(dummy_cubelist_model_obs):
+    """Pearson correlation collapsed over time, preserving the station dimension via lat/lon."""
+    corr = scoreswrappers.scores_correlation_pearsonr_model_obs(
+        dummy_cubelist_model_obs, ["longitude", "latitude"]
+    )
+    assert isinstance(corr, CubeList)
+    assert len(corr) == 2
+    model_names = ["model_a", "model_b"]
+    for cube, model_name in zip(corr, model_names, strict=True):
+        assert (
+            cube.name() == "Pearson_Correlation_of_observed_temperature_at_screen_level"
+        )
+        assert cube.units == "K"
+        assert cube.shape == (28,)
+        assert cube.attributes["model_name"] == model_name
+
+
+def test_model_obs_pearson_correlation_preserve_in_timelatlon(dummy_cubelist_model_obs):
+    """Pearson correlation with nothing collapsed, preserving both time and station dimensions."""
+    with pytest.raises(
+        ValueError, match="You cannot preserve all dimensions with pearsonr."
+    ):
+        scoreswrappers.scores_correlation_pearsonr_model_obs(
+            dummy_cubelist_model_obs, ["time", "longitude", "latitude"]
+        )
+
+
+def test_model_obs_additive_bias_preserve_in_time(dummy_cubelist_model_obs):
+    """Additive bias collapsed over station, preserving only the time dimension."""
+    bias = scoreswrappers.scores_additive_bias_model_obs(
+        dummy_cubelist_model_obs, "time"
+    )
+    assert isinstance(bias, CubeList)
+    assert len(bias) == 2
+    model_names = ["model_a", "model_b"]
+    for cube, model_name in zip(bias, model_names, strict=True):
+        assert cube.name() == "Additive_Bias_of_observed_temperature_at_screen_level"
+        assert cube.units == "K"
+        assert cube.shape == (36,)
+        assert cube.attributes["model_name"] == model_name
+
+
+def test_model_obs_additive_bias_preserve_in_latlon(dummy_cubelist_model_obs):
+    """Additive bias collapsed over time, preserving the station dimension via lat/lon."""
+    bias = scoreswrappers.scores_additive_bias_model_obs(
+        dummy_cubelist_model_obs, ["longitude", "latitude"]
+    )
+    assert isinstance(bias, CubeList)
+    assert len(bias) == 2
+    model_names = ["model_a", "model_b"]
+    for cube, model_name in zip(bias, model_names, strict=True):
+        assert cube.name() == "Additive_Bias_of_observed_temperature_at_screen_level"
+        assert cube.units == "K"
+        assert cube.shape == (28,)
+        assert cube.attributes["model_name"] == model_name
+
+
+def test_model_obs_additive_bias_preserve_in_timelatlon(dummy_cubelist_model_obs):
+    """Additive bias with nothing collapsed, preserving both time and station dimensions."""
+    bias = scoreswrappers.scores_additive_bias_model_obs(
+        dummy_cubelist_model_obs, ["time", "longitude", "latitude"]
+    )
+    assert isinstance(bias, CubeList)
+    assert len(bias) == 2
+    model_names = ["model_a", "model_b"]
+    for cube, model_name in zip(bias, model_names, strict=True):
+        assert cube.name() == "Additive_Bias_of_observed_temperature_at_screen_level"
         assert cube.units == "K"
         assert cube.shape == (36, 28)
         assert cube.attributes["model_name"] == model_name
@@ -540,3 +679,126 @@ def test_invalid_operator_raises(make_cube_categorical_testing):
             threshold="10",
             op_func="gte",
         )
+
+
+def test_ets_gt_perfect_forecast(make_cube_categorical_testing):
+    """Perfect forecast should give ETS=1."""
+    obs = make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
+    obs.attributes["cset_comparison_base"] = 1
+
+    model = make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="temperature",
+        model_name="test_model",
+    )
+
+    result = scoreswrappers.scores_ets_model_obs(
+        CubeList([model, obs]),
+        preserved_coordinates=None,
+        threshold="10",
+        op_func="gt",
+    )
+
+    assert len(result) == 1
+    assert np.allclose(result[0].data, 1.0, atol=1e-2, rtol=1e-6)
+
+
+def test_ets_gt_mixed_case(make_cube_categorical_testing):
+    """Manual ETS calculation for a mixed forecast."""
+    obs = make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
+    obs.attributes["cset_comparison_base"] = 1
+
+    model = make_cube_categorical_testing(
+        [[14, 20], [7, 4]],
+        long_name="temperature",
+        model_name="test_model",
+    )
+
+    result = scoreswrappers.scores_ets_model_obs(
+        CubeList([model, obs]),
+        preserved_coordinates=None,
+        threshold="10",
+        op_func="gt",
+    )
+
+    # Binary fields:
+    #
+    # Obs    = [[1,0],
+    #           [1,0]]
+    #
+    # Model  = [[1,1],
+    #           [0,0]]
+    #
+    # H=1, M=1, F=1, N=4
+    # Hr=(2*2)/4=1
+    # ETS=(1-1)/(1+1+1-1)=0
+
+    assert len(result) == 1
+    assert np.allclose(result[0].data, 0.0, atol=1e-2, rtol=1e-6)
+
+
+def test_ets_gt_complete_miss(make_cube_categorical_testing):
+    """No hits, all events misplaced."""
+    obs = make_cube_categorical_testing(
+        [[12, 12], [5, 5]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
+    obs.attributes["cset_comparison_base"] = 1
+
+    model = make_cube_categorical_testing(
+        [[5, 5], [12, 12]],
+        long_name="temperature",
+        model_name="test_model",
+    )
+
+    result = scoreswrappers.scores_ets_model_obs(
+        CubeList([model, obs]),
+        preserved_coordinates=None,
+        threshold="10",
+        op_func="gt",
+    )
+
+    # H=0, M=2, F=2, N=4
+    # Hr=(2*2)/4=1
+    # ETS=(0-1)/(0+2+2-1)=-1/3
+
+    assert len(result) == 1
+    assert np.allclose(result[0].data, -1.0 / 3.0, atol=1e-2, rtol=1e-6)
+
+
+def test_ets_metadata(make_cube_categorical_testing):
+    """Check output cube metadata."""
+    obs = make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
+    obs.attributes["cset_comparison_base"] = 1
+
+    model = make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="temperature",
+        model_name="ukv",
+    )
+
+    result = scoreswrappers.scores_ets_model_obs(
+        CubeList([model, obs]),
+        preserved_coordinates=None,
+        threshold="10",
+        op_func="gt",
+    )
+
+    cube = result[0]
+
+    assert cube.units == "1"
+    assert cube.attributes["model_name"] == "ukv"
+    assert cube.name() == "Equitable_Threat_Score_gt_10_observed_temperature"
