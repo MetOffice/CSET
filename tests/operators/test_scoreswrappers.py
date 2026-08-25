@@ -626,7 +626,7 @@ def test_returns_one_score_per_model(make_cube_categorical_testing):
         model_name="test_modelB",
     )
 
-    result = scoreswrappers.scores_categorical_metric(
+    result = scoreswrappers._scores_categorical_metric(
         CubeList([model_a, model_b, obs]),
         preserved_coordinates=None,
         threshold="10",
@@ -653,7 +653,7 @@ def test_output_metadata(make_cube_categorical_testing):
         model_name="test_model",
     )
 
-    result = scoreswrappers.scores_categorical_metric(
+    result = scoreswrappers._scores_categorical_metric(
         CubeList([model, obs]),
         preserved_coordinates=None,
         threshold="10",
@@ -687,7 +687,7 @@ def test_invalid_operator_raises(make_cube_categorical_testing):
         ValueError,
         match=r"Operator gte not supported.",
     ):
-        scoreswrappers.scores_categorical_metric(
+        scoreswrappers._scores_categorical_metric(
             CubeList([model, obs]),
             preserved_coordinates=None,
             threshold="10",
@@ -711,7 +711,7 @@ def test_ets_gt_perfect_forecast(make_cube_categorical_testing):
         model_name="test_model",
     )
 
-    result = scoreswrappers.scores_categorical_metric(
+    result = scoreswrappers._scores_categorical_metric(
         CubeList([model, obs]),
         preserved_coordinates=None,
         threshold="10",
@@ -738,11 +738,12 @@ def test_ets_gt_mixed_case(make_cube_categorical_testing):
         model_name="test_model",
     )
 
-    result = scoreswrappers.scores_ets_model_obs(
+    result = scoreswrappers._scores_categorical_metric(
         CubeList([model, obs]),
         preserved_coordinates=None,
         threshold="10",
         op_func="gt",
+        metric="ets",
     )
 
     # Binary fields:
@@ -776,11 +777,12 @@ def test_ets_gt_complete_miss(make_cube_categorical_testing):
         model_name="test_model",
     )
 
-    result = scoreswrappers.scores_ets_model_obs(
+    result = scoreswrappers._scores_categorical_metric(
         CubeList([model, obs]),
         preserved_coordinates=None,
         threshold="10",
         op_func="gt",
+        metric="ets",
     )
 
     # H=0, M=2, F=2, N=4
@@ -789,32 +791,3 @@ def test_ets_gt_complete_miss(make_cube_categorical_testing):
 
     assert len(result) == 1
     assert np.allclose(result[0].data, -1.0 / 3.0, atol=1e-2, rtol=1e-6)
-
-
-def test_ets_metadata(make_cube_categorical_testing):
-    """Check output cube metadata."""
-    obs = make_cube_categorical_testing(
-        [[12, 5], [15, 8]],
-        long_name="observed_temperature",
-        model_name="obs",
-    )
-    obs.attributes["cset_comparison_base"] = 1
-
-    model = make_cube_categorical_testing(
-        [[12, 5], [15, 8]],
-        long_name="temperature",
-        model_name="ukv",
-    )
-
-    result = scoreswrappers.scores_ets_model_obs(
-        CubeList([model, obs]),
-        preserved_coordinates=None,
-        threshold="10",
-        op_func="gt",
-    )
-
-    cube = result[0]
-
-    assert cube.units == "1"
-    assert cube.attributes["model_name"] == "ukv"
-    assert cube.name() == "Equitable_Threat_Score_gt_10_observed_temperature"
