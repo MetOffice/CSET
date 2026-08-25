@@ -89,11 +89,13 @@ The `CSET gallery`_ is generated using the `Sphinx-Gallery`_ extension.
 
 Each gallery page follows a similar structure:
 
-* Title and purpose of example,
-* Reference section listing the :doc:`recipe </usage/operator-recipes>` used to provide functionality and links to relevant :py:mod:`CSET.operators`,
-* Example of requirements for running recipe using ``cset bake`` to generate outputs on the command-line,
-* List of configuration options required to enable relevant output via the ``cset_workflow``,
-* Minimal python example code to replicate output of ``cset bake`` or workflow settings by directly calling CSET operators inline. The python code auto-generates an image file that is captured in the gallery output via `Sphinx-Gallery`_. Python codes make use of sample data files.
+* Title and purpose of example.
+* Reference section listing the :term:`recipe` used to provide functionality and links to relevant :term:`operator` in :doc:`/reference/operators`.
+* Example of requirements for running recipe using ``cset bake`` to generate outputs on the command-line.
+* List of configuration options required to enable relevant output via the ``cset_workflow``.
+* Minimal python example code to replicate output of ``cset bake`` or workflow settings by directly calling CSET operators inline.
+  The python code auto-generates an image file that is captured in the gallery output via `Sphinx-Gallery`_.
+  Python codes make use of sample data files.
 
 To add a *new gallery page*, copy any of the existing pages available in a relevant section, and update all details based on the copied template. Examples are available in the following path:
 
