@@ -210,10 +210,10 @@ def calculate_power_spectrum(
 
                         time_dims = frt_cube.coord_dims("time")
 
-                        if len(time_dims) != 1:
-                            raise ValueError(
-                                "Expected time to be a one-dimensional coordinate."
-                            )
+                        #                        if len(time_dims) != 1:
+                        #                            raise ValueError(
+                        #                                "Expected time to be a one-dimensional coordinate."
+                        #                            )
 
                         time_dim = time_dims[0]
 
@@ -511,3 +511,13 @@ def _create_alpha_matrix(Ny, Nx):
     alpha_matrix = np.sqrt((x_indices**2) / Nx**2 + (y_indices**2) / Ny**2)
 
     return alpha_matrix
+
+
+def _coord_dimension(cube, coord_name):
+    """Return the single dimension associated with a coordinate."""
+    coord_dims = cube.coord_dims(coord_name)
+
+    if len(coord_dims) != 1:
+        raise ValueError(f"Expected {coord_name} to be a one-dimensional coordinate.")
+
+    return coord_dims[0]
