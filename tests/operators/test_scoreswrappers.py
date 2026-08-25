@@ -947,7 +947,7 @@ def test_pfd_gt_mixed_case(make_cube_categorical_testing):
     #           [0,0]]
     #
     # H=1, M=1, F=1, TN=1
-    # POFD=F/(F+TN)=1/(1+1)=0.5
+    # PFD=F/(F+TN)=1/(1+1)=0.5
 
     assert len(result) == 1
     assert np.allclose(result[0].data, 0.5, atol=1e-2, rtol=1e-6)
@@ -977,7 +977,7 @@ def test_pfd_gt_complete_miss(make_cube_categorical_testing):
     )
 
     # H=0, M=2, F=2, TN=0
-    # POFD=F/(F+TN)=2/(2+0)=1
+    # PFD=F/(F+TN)=2/(2+0)=1
 
     assert len(result) == 1
     assert np.allclose(result[0].data, 1.0, atol=1e-2, rtol=1e-6)
