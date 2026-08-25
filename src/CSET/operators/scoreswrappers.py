@@ -18,6 +18,7 @@ import logging
 import operator
 
 import iris
+import iris.coords
 import iris.exceptions
 import numpy as np
 import scores
