@@ -196,6 +196,22 @@ def _resolve_preserve_dims(
     may be auxiliary coordinates attached to a differently named dimension
     (e.g. ``dim0``). This helper maps coordinate names to their underlying
     dimension names and helps to convert from iris to xarray coordinate dimension names.
+
+    Parameters
+    ----------
+    cube: iris.cube.Cube
+        The ccomparison model cube.
+    data_array: xr.DataArray
+        The comparison model cube, but in xarray format.
+    preserved_coordinates: list[str]
+        The list of preserved coordinates given by a user.
+
+
+    Returns
+    -------
+    preserved_dims : list[str]
+        List of preserved dimension names in xarray convention.
+
     """
     if preserved_coordinates is None:
         return None
@@ -231,9 +247,24 @@ def _resolve_preserve_dims(
     return preserve_dims
 
 
-def _attach_scaler_time_coord_maybe(scores_cube: Cube, base: Cube):
-    # If time is aggregated out, attach a scalar time coordinate with bounds
-    # so plotting can display the aggregated period in the title.
+def _attach_scaler_time_coord_maybe(scores_cube: Cube, base: Cube) -> None:
+    """Attaches scaler time coordinate if time is aggregated out.
+
+    In place function that attaches a scaler time coordinate to scores_cube
+    if time is aggregated out so plotting can display the aggregated period in the title.
+
+    Parameters
+    ----------
+    scores_cube: iris.cube.Cube
+        The calculated scores cube.
+    base: iris.cube.Cube
+        The base comparison cube.  Either the base model cube, or the observed cube.
+
+    Returns
+    -------
+    None
+
+    """
     try:
         if not scores_cube.coords("time"):
             base_time = base.coord("time")
@@ -264,6 +295,28 @@ def _attach_scaler_time_coord_maybe(scores_cube: Cube, base: Cube):
 def _make_scores_cube(
     base: Cube, other: Cube, metric: str, preserved_coordinates: list[str]
 ) -> Cube:
+    """Make the scores cube using the given scores metric.
+
+    Parameters
+    ----------
+    base: iris.cube.Cube
+        The base comparison cube.  Either the base model cube, or the observed cube.
+    other: iris.cube.Cube
+        The model cubes used for comparison against the base cube.
+
+    metric: str
+        The scores metric to compute.
+
+    preserved_coordinates: list[str]
+        The list of preserved coordinates given by a user.
+
+    Returns
+    -------
+    scores_cube: iris.cube.Cube
+        The cube containing the calculated scores metric.
+
+
+    """
     """Make the scores cube."""
     other_xr = xr.DataArray.from_iris(other)
     base_xr = xr.DataArray.from_iris(base)
@@ -393,7 +446,7 @@ def _split_base_and_other(cubes: CubeList):
 
     Split depends on whether there
     is an observed cube in the cubes.  If there is an observed cube,
-    then 'bsse' is the observed cube, if not then 'base' is the comparison
+    then 'base' is the observed cube, if not then 'base' is the comparison
     model cube.
 
     """
@@ -509,6 +562,12 @@ def scores_crps_for_ensemble(
     ----------
     cubes: iris.cube.Cube
         A Cube containing ensembles data
+
+    method: str ["ecfd" or "fair"]
+        Determines the method to use for calculating the CRPS.  Defaults to "ecdf".
+
+    control_member: int
+        What the realisation the control member of the ensemble is.  Defaults to 0. Sometimes this is 1.
 
     Returns
     -------
