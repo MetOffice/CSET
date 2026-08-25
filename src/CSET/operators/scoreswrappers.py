@@ -96,8 +96,10 @@ def _process_cubes_for_verification(base: Cube, other: Cube) -> tuple[Cube, Cube
 
     Parameters
     ----------
-    cubes: iris.cube.CubeList
-        A CubeList of exact 2 cubes, one from each model.
+    base: iris.cube.Cube
+        The cube from the "analysis" in the same format as the other model.
+    other: iris.cube.Cube
+        The cube from the model in the same format as the base model.
 
     Returns
     -------
@@ -105,11 +107,6 @@ def _process_cubes_for_verification(base: Cube, other: Cube) -> tuple[Cube, Cube
         The cube from the "analysis" in the same format as the other model.
     other: iris.cube.Cube
         The cube from the model in the same format as the base model.
-
-    Raises
-    ------
-    ValueError: "cubes should contain exactly 2 cubes."
-        If any other number of cubes are present.
 
     Notes
     -----
