@@ -1063,3 +1063,150 @@ def scores_ets(
         op_func,
         "ets",
     )
+
+
+def scores_pofd(
+    cubes: CubeList,
+    preserved_coordinates: list[str] | str | None,
+    threshold: str,
+    op_func: str,
+):
+    r"""
+    Compute the Probability of False Detection (POFD) score using Scores ([scoresa]_ [scoresb]_).
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        An iris cubelist containing model(s) and an observation cube.
+    preserved_coordinates: list | str | None
+        An object containing which coordinates to preserve in the computation. For example, if cubes contain shape time, point location,
+        then preserving coordinate 'time' will produce the probability of false detection score for each timeslice (shape time). If None,
+        then it will return a single value score for all times/point locations.
+    threshold: str
+        A str containing the threshold to use to generate the binary masks, which subsequently gets turned to a float (but passed as str around the recipe templating).
+    op_func: str
+        A string either containing 'lt' for less than or 'gt' for greater than, to determine how the threshold is applied to the data
+        to generate the mask.
+
+    Returns
+    -------
+    cube: iris.cube
+        An iris cube, containing the probability of false detection score for further plotting.
+
+    Notes
+    -----
+    The Probability of False Detection (POFD) measures the proportion of observed non-events
+    that were incorrectly forecast as events. It is a measure of the false alarm rate and
+    provides information on how often a forecast system predicts threshold exceedances when
+    none actually occurred.
+
+    For example, if the threshold is 290 K and op_func is gt (greater than), an observation
+    of 288 K and a forecast of 295 K would be considered a false alarm, since the model
+    predicted an event but the observed value did not exceed the threshold.
+
+    It is calculated as:
+
+    .. math::
+
+    POFD = \frac{false\ alarms}
+                 {false\ alarms + true\ negatives}
+
+    where
+
+    false alarms
+        Number of occasions where an event was forecast but did not occur.
+
+    true negatives
+        Number of occasions where neither the forecast nor the observations
+        indicated an event.
+
+    POFD ranges from 0 to 1, where 0 indicates a perfect score with no false alarms,
+    and 1 indicates that every observed non-event was incorrectly forecast as an event.
+
+    Lower values are therefore better.
+    """
+    return _scores_categorical_metric(
+        cubes,
+        preserved_coordinates,
+        threshold,
+        op_func,
+        "pofd",
+    )
+
+
+def scores_frequency_bias(
+    cubes: CubeList,
+    preserved_coordinates: list[str] | str | None,
+    threshold: str,
+    op_func: str,
+):
+    r"""
+    Compute the Frequency Bias (FB) score using Scores ([scoresa]_ [scoresb]_).
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        An iris cubelist containing model(s) and an observation cube.
+    preserved_coordinates: list | str | None
+        An object containing which coordinates to preserve in the computation. For example, if cubes contain shape time, point location,
+        then preserving coordinate 'time' will produce the frequency bias score for each timeslice (shape time). If None,
+        then it will return a single value score for all times/point locations.
+    threshold: str
+        A str containing the threshold to use to generate the binary masks, which subsequently gets turned to a float (but passed as str around the recipe templating).
+    op_func: str
+        A string either containing 'lt' for less than or 'gt' for greater than, to determine how the threshold is applied to the data
+        to generate the mask.
+
+    Returns
+    -------
+    cube: iris.cube
+        An iris cube, containing the frequency bias score for further plotting.
+
+    Notes
+    -----
+    The Frequency Bias (FB) measures whether a forecasting system predicts an
+    event too frequently or too infrequently compared to observations. Unlike
+    metrics such as the Probability of Detection (POD) or Equitable Threat Score (ETS),
+    Frequency Bias does not assess the accuracy of forecast locations or timings,
+    only the overall frequency with which events are forecast.
+
+    For example, if the threshold is 290 K and op_func is gt (greater than), and
+    events exceeding this threshold are forecast twice as often as they are observed,
+    the frequency bias would be approximately 2. Conversely, if events are forecast
+    only half as often as they occur, the frequency bias would be approximately 0.5.
+
+    It is calculated as:
+
+    .. math::
+
+    Frequency\ Bias = \frac{hits + false\ alarms}
+                            {hits + misses}
+
+    where
+
+    hits
+        Number of occasions where an event was forecast and observed.
+
+    false alarms
+        Number of occasions where an event was forecast but not observed.
+
+    misses
+        Number of occasions where an event was observed but not forecast.
+
+    Frequency Bias ranges from 0 to infinity, where:
+
+    * 1 indicates the forecast predicts events at the correct frequency.
+    * Greater than 1 indicates overforecasting of events.
+    * Less than 1 indicates underforecasting of events.
+
+    A perfect frequency bias score is therefore 1, although a value of 1 does not
+    necessarily imply a skillful forecast, as hits and false alarms may compensate
+    for one another.
+    """
+    return _scores_categorical_metric(
+        cubes,
+        preserved_coordinates,
+        threshold,
+        op_func,
+        "fb",
+    )
