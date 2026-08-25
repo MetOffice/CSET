@@ -52,7 +52,7 @@ def _sort_cube_into_base_and_other(cubes: CubeList) -> tuple[Cube, CubeList]:
     Returns
     -------
     base: iris.cube.Cube
-        The cube from the "analysis" in the same format as the other model.
+        The cube from the "analysis" or observed cube in the same format as the other model.
     others: iris.cube.CubeList
         The cube list of containing the cube(s) from the model in the same format as the base model.
 
@@ -97,14 +97,14 @@ def _process_cubes_for_verification(base: Cube, other: Cube) -> tuple[Cube, Cube
     Parameters
     ----------
     base: iris.cube.Cube
-        The cube from the "analysis" in the same format as the other model.
+        The cube from the "analysis" or observed cube.
     other: iris.cube.Cube
-        The cube from the model in the same format as the base model.
+        The cube from the model.
 
     Returns
     -------
     base: iris.cube.Cube
-        The cube from the "analysis" in the same format as the other model.
+        The cube from the "analysis" or observed cube in the same format as the other model.
     other: iris.cube.Cube
         The cube from the model in the same format as the base model.
 
@@ -255,7 +255,7 @@ def _attach_scaler_time_coord_maybe(scores_cube: Cube, base: Cube) -> None:
     scores_cube: iris.cube.Cube
         The calculated scores cube.
     base: iris.cube.Cube
-        The base comparison cube.  Either the base model cube, or the observed cube.
+        The cube from the "analysis" or observed cube.
 
     Returns
     -------
@@ -297,9 +297,9 @@ def _make_scores_cube(
     Parameters
     ----------
     base: iris.cube.Cube
-        The base comparison cube.  Either the base model cube, or the observed cube.
+        The cube from the "analysis" or observed cube.
     other: iris.cube.Cube
-        The model cubes used for comparison against the base cube.
+        The cube from the model.
 
     metric: str
         The scores metric to compute.
