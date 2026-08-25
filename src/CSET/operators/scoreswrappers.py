@@ -941,6 +941,10 @@ def _scores_categorical_metric(
             result = contingency_manager.frequency_bias()
             name = "Frequency_Bias"
 
+        elif metric == "pofd":
+            result = contingency_manager.probability_of_false_detection()
+            name = "Probability_Of_False_Detection"
+
         else:
             raise ValueError(f"Unknown metric {metric}")
 
