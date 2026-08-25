@@ -2,35 +2,10 @@ Changelog
 =========
 
 .. Each release has its own section structured as follows:
-    Title: version (release date)
-    Short prose summary of most important changes.
-    List of changes with who made them and a link to the PR.
-    Arrange the changes under the following headings:
-
-    ⚙️ Operators
-    ~~~~~~~~~~~~
-
-    🥣 Recipes
-    ~~~~~~~~~~
-
-    🔄 Workflow
-    ~~~~~~~~~~~
-
-    📖 Documentation
-    ~~~~~~~~~~~~~~~~
-
-    🏗️ Infrastructure
-    ~~~~~~~~~~~~~~~~~
-
-    👷 New Contributors
-    ~~~~~~~~~~~~~~~~~~~
-
-.. Unreleased
-.. ----------
-
-.. Add changes here, probably taken from GitHub release notes.
-.. Highlight any user facing changes. E.g:
-.. "* `@gh-user`_ did foo to bar in :pr:`9999`. This enables baz."
+    Title: "version (release date)"
+    Prose summary of most important/user facing changes.
+    Full list of changes with who made them and a link to the PR.
+    See contributing/releases.rst for more information.
 
 26.5.1 (2026-06-10)
 -------------------
