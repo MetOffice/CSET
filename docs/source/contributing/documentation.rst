@@ -10,8 +10,6 @@ maintain documentation within the version control system, and keep it up to
 date. The `Sphinx website`_ has a useful primer to using reStructuredText for
 documentation.
 
-The :ref:`Gallery <gallery>` is generated using `Sphinx-gallery`_.
-
 The documentation is organised into sections following the `Diátaxis
 documentation system`_.
 
@@ -85,7 +83,7 @@ below.
 Gallery
 -------
 
-The `CSET gallery`_ is generated using the `Sphinx-Gallery`_ extension.
+The :doc:`/reference/gallery/index` is generated using the `Sphinx-Gallery`_ extension.
 
 Each gallery page follows a similar structure:
 
@@ -122,5 +120,4 @@ If needing to generate *new sample_data* to support a new gallery example, add t
 .. _reStructuredText: https://docutils.sourceforge.io/docs/user/rst/quickref.html
 .. _Sphinx website: https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
 .. _NumPy docstring style: https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard
-.. _CSET gallery: https://metoffice.github.io/CSET/reference/gallery/index.html
 .. _Sphinx-Gallery: https://sphinx-gallery.github.io/stable/index.html
