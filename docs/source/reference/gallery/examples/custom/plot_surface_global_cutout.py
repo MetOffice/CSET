@@ -16,7 +16,7 @@ Generate spatial map of a 2D field over selected sub-region of data.
 Using *cset bake* on the command line
 -------------------------------------
 
-* See :doc:`/reference/gallery/generated/spatial/plot_surface_spatial` for general settings.
+* See :doc:`/reference/gallery/generated/spatial/plot_surface_spatial` or :doc:`/reference/gallery/generated/spatial/plot_surface_spatial_global` for general settings.
 * Set ``SUBAREA_TYPE`` to ``realworld`` or ``modelrelative`` and ``SUBAREA_EXTENT`` to select edge trim widths [lower_lat, upper_lat, lower_lon, upper_lon].
 * Use ``SUBAREA_NAME`` to add a plot label if required, or leave blank.
 
