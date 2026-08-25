@@ -888,8 +888,8 @@ def test_frequency_bias_gt_complete_miss(make_cube_categorical_testing):
     assert np.allclose(result[0].data, 1.0, atol=1e-2, rtol=1e-6)
 
 
-def test_pofd_gt_perfect_forecast(make_cube_categorical_testing):
-    """Perfect forecast should give POFD=0."""
+def test_pfd_gt_perfect_forecast(make_cube_categorical_testing):
+    """Perfect forecast should give PFD=0."""
     obs = make_cube_categorical_testing(
         [[12, 5], [15, 8]],
         long_name="observed_temperature",
@@ -908,15 +908,15 @@ def test_pofd_gt_perfect_forecast(make_cube_categorical_testing):
         preserved_coordinates=None,
         threshold="10",
         op_func="gt",
-        metric="pofd",
+        metric="pfd",
     )
 
     assert len(result) == 1
     assert np.allclose(result[0].data, 0.0, atol=1e-2, rtol=1e-6)
 
 
-def test_pofd_gt_mixed_case(make_cube_categorical_testing):
-    """Manual POFD calculation for a mixed forecast."""
+def test_pfd_gt_mixed_case(make_cube_categorical_testing):
+    """Manual PFD calculation for a mixed forecast."""
     obs = make_cube_categorical_testing(
         [[12, 5], [15, 8]],
         long_name="observed_temperature",
@@ -935,7 +935,7 @@ def test_pofd_gt_mixed_case(make_cube_categorical_testing):
         preserved_coordinates=None,
         threshold="10",
         op_func="gt",
-        metric="pofd",
+        metric="pfd",
     )
 
     # Binary fields:
@@ -953,7 +953,7 @@ def test_pofd_gt_mixed_case(make_cube_categorical_testing):
     assert np.allclose(result[0].data, 0.5, atol=1e-2, rtol=1e-6)
 
 
-def test_pofd_gt_complete_miss(make_cube_categorical_testing):
+def test_pfd_gt_complete_miss(make_cube_categorical_testing):
     """No hits, all events misplaced."""
     obs = make_cube_categorical_testing(
         [[12, 12], [5, 5]],
@@ -973,7 +973,7 @@ def test_pofd_gt_complete_miss(make_cube_categorical_testing):
         preserved_coordinates=None,
         threshold="10",
         op_func="gt",
-        metric="pofd",
+        metric="pfd",
     )
 
     # H=0, M=2, F=2, TN=0
