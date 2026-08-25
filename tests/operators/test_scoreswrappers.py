@@ -791,3 +791,193 @@ def test_ets_gt_complete_miss(make_cube_categorical_testing):
 
     assert len(result) == 1
     assert np.allclose(result[0].data, -1.0 / 3.0, atol=1e-2, rtol=1e-6)
+
+
+def test_frequency_bias_gt_perfect_forecast(make_cube_categorical_testing):
+    """Perfect forecast should give FB=1."""
+    obs = make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
+    obs.attributes["cset_comparison_base"] = 1
+
+    model = make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="temperature",
+        model_name="test_model",
+    )
+
+    result = scoreswrappers._scores_categorical_metric(
+        CubeList([model, obs]),
+        preserved_coordinates=None,
+        threshold="10",
+        op_func="gt",
+        metric="fb",
+    )
+
+    assert len(result) == 1
+    assert np.allclose(result[0].data, 1.0, atol=1e-2, rtol=1e-6)
+
+
+def test_frequency_bias_gt_mixed_case(make_cube_categorical_testing):
+    """Manual FB calculation for a mixed forecast."""
+    obs = make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
+    obs.attributes["cset_comparison_base"] = 1
+
+    model = make_cube_categorical_testing(
+        [[14, 20], [7, 4]],
+        long_name="temperature",
+        model_name="test_model",
+    )
+
+    result = scoreswrappers._scores_categorical_metric(
+        CubeList([model, obs]),
+        preserved_coordinates=None,
+        threshold="10",
+        op_func="gt",
+        metric="fb",
+    )
+
+    # Binary fields:
+    #
+    # Obs    = [[1,0],
+    #           [1,0]]
+    #
+    # Model  = [[1,1],
+    #           [0,0]]
+    #
+    # H=1, M=1, F=1
+    # FB=(H+F)/(H+M)=2/2=1
+
+    assert len(result) == 1
+    assert np.allclose(result[0].data, 1.0, atol=1e-2, rtol=1e-6)
+
+
+def test_frequency_bias_gt_complete_miss(make_cube_categorical_testing):
+    """No hits, all events misplaced."""
+    obs = make_cube_categorical_testing(
+        [[12, 12], [5, 5]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
+    obs.attributes["cset_comparison_base"] = 1
+
+    model = make_cube_categorical_testing(
+        [[5, 5], [12, 12]],
+        long_name="temperature",
+        model_name="test_model",
+    )
+
+    result = scoreswrappers._scores_categorical_metric(
+        CubeList([model, obs]),
+        preserved_coordinates=None,
+        threshold="10",
+        op_func="gt",
+        metric="fb",
+    )
+
+    # H=0, M=2, F=2
+    # FB=(H+F)/(H+M)=2/2=1
+
+    assert len(result) == 1
+    assert np.allclose(result[0].data, 1.0, atol=1e-2, rtol=1e-6)
+
+
+def test_pofd_gt_perfect_forecast(make_cube_categorical_testing):
+    """Perfect forecast should give POFD=0."""
+    obs = make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
+    obs.attributes["cset_comparison_base"] = 1
+
+    model = make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="temperature",
+        model_name="test_model",
+    )
+
+    result = scoreswrappers._scores_categorical_metric(
+        CubeList([model, obs]),
+        preserved_coordinates=None,
+        threshold="10",
+        op_func="gt",
+        metric="pofd",
+    )
+
+    assert len(result) == 1
+    assert np.allclose(result[0].data, 0.0, atol=1e-2, rtol=1e-6)
+
+
+def test_pofd_gt_mixed_case(make_cube_categorical_testing):
+    """Manual POFD calculation for a mixed forecast."""
+    obs = make_cube_categorical_testing(
+        [[12, 5], [15, 8]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
+    obs.attributes["cset_comparison_base"] = 1
+
+    model = make_cube_categorical_testing(
+        [[14, 20], [7, 4]],
+        long_name="temperature",
+        model_name="test_model",
+    )
+
+    result = scoreswrappers._scores_categorical_metric(
+        CubeList([model, obs]),
+        preserved_coordinates=None,
+        threshold="10",
+        op_func="gt",
+        metric="pofd",
+    )
+
+    # Binary fields:
+    #
+    # Obs    = [[1,0],
+    #           [1,0]]
+    #
+    # Model  = [[1,1],
+    #           [0,0]]
+    #
+    # H=1, M=1, F=1, TN=1
+    # POFD=F/(F+TN)=1/(1+1)=0.5
+
+    assert len(result) == 1
+    assert np.allclose(result[0].data, 0.5, atol=1e-2, rtol=1e-6)
+
+
+def test_pofd_gt_complete_miss(make_cube_categorical_testing):
+    """No hits, all events misplaced."""
+    obs = make_cube_categorical_testing(
+        [[12, 12], [5, 5]],
+        long_name="observed_temperature",
+        model_name="obs",
+    )
+    obs.attributes["cset_comparison_base"] = 1
+
+    model = make_cube_categorical_testing(
+        [[5, 5], [12, 12]],
+        long_name="temperature",
+        model_name="test_model",
+    )
+
+    result = scoreswrappers._scores_categorical_metric(
+        CubeList([model, obs]),
+        preserved_coordinates=None,
+        threshold="10",
+        op_func="gt",
+        metric="pofd",
+    )
+
+    # H=0, M=2, F=2, TN=0
+    # POFD=F/(F+TN)=2/(2+0)=1
+
+    assert len(result) == 1
+    assert np.allclose(result[0].data, 1.0, atol=1e-2, rtol=1e-6)
