@@ -27,7 +27,7 @@ Example to generate vertical profile plot of domain averaged ``air_temperature``
                  -o "./output_path" \\
                  -r generic_level_domain_mean_vertical_profile_series.yaml \\
                  --VARNAME="air_temperature" \\
-                 --MODEL_NAME="['my_model_label1' '...' 'my_model_labelN']" \\
+                 --MODEL_NAME="['my_model_label1', '...', 'my_model_labelN']" \\
                  --LEVELTYPE="pressure" \\
                  --METHOD="SEQ" \\
                  --SUBAREA_TYPE='None' --SUBAREA_EXTENT='None' --SUBAREA_NAME=''
