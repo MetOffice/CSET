@@ -852,14 +852,15 @@ def scores_crps_for_ensemble(
     return crps
 
 
-def scores_pod_model_obs(
+def _scores_categorical_metric(
     cubes: CubeList,
     preserved_coordinates: list[str] | str | None,
     threshold: str,
     op_func: str,
-):
-    r"""
-    Compute the Probability of Detection (POD) score using Scores ([scoresa]_ [scoresb]_).
+    metric: str,
+) -> iris.Cube:
+    """
+    Prepare cubes for computing categorical metrics using Scores.
 
     Parameters
     ----------
@@ -874,25 +875,16 @@ def scores_pod_model_obs(
     op_func: str
         A string either containing 'lt' for less than or 'gt for greater than, to determine how the threshold is applied to the data
         to generate the mask.
+    metric: str
+        The scores metric to compute.
 
     Returns
     -------
     cube: iris.cube
-        An iris cube, containing the probability of detection score for further plotting.
+        An iris cube, containing the scores metric for further plotting.
 
-    Notes
-    -----
-    The probability of detection calculates the proportion of observed events that meet a threshold that were correctly forecast by the model.
-    For example, if threshold is 290K and op_func is gt (greater than), and at some station a temperature was recorded as 292K and the model produced
-    295k, that would be a positive hit. It does not take into account how far above/below a threshold a model forecasts.
-
-    It is calculated as .. math:: POD = \frac{true positives}{true positives + false negatives}
-
-    It is equivalent to the hit rate. Note if there are no events that meet the threshold in model and observations, a POD of zero is returned.
-
-    POD produces a range of 0 to 1, where 1 is a perfect score.
     """
-    # Split out model(s) and obs
+    # Split obs/models
     models = CubeList()
     for c in cubes:
         if "observed" in c.long_name:
@@ -900,19 +892,18 @@ def scores_pod_model_obs(
         else:
             models.append(c)
 
-    # Setup cubelist to store results
-    scores_results = iris.cube.CubeList()
-
-    # Setup operators greater than, less than.
     ops = {
         "gt": operator.gt,
         "lt": operator.lt,
     }
 
+    # Check if this exists.
     try:
         op = ops[op_func]
     except KeyError as err:
         raise ValueError(f"Operator {op_func} not supported.") from err
+
+    scores_results = CubeList()
 
     for model in models:
         # Convert obs cubes to xarray and resolve preserved dimensions.
@@ -937,15 +928,25 @@ def scores_pod_model_obs(
             forecast_binary, observed_binary
         ).transform(preserve_dims=preserve_dims)
 
-        # Get POD from the contigency manager, and convert back to an iris cube.
-        scores_cube = xr.DataArray.to_iris(
-            contingency_manager.probability_of_detection()
-        )
+        # Compute required categorical score.
+        if metric == "pod":
+            result = contingency_manager.probability_of_detection()
+            name = "Probability_Of_Detection"
 
-        # Rename cube so it plots correctly alongside correcting cube units.
-        scores_cube.rename(
-            f"Probability_Of_Detection_{op_func}_{threshold}_{observed.name()}"
-        )
+        elif metric == "ets":
+            result = contingency_manager.equitable_threat_score()
+            name = "Equitable_Threat_Score"
+
+        elif metric == "fb":
+            result = contingency_manager.frequency_bias()
+            name = "Frequency_Bias"
+
+        else:
+            raise ValueError(f"Unknown metric {metric}")
+
+        scores_cube = xr.DataArray.to_iris(result)
+
+        scores_cube.rename(f"{name}_{op_func}_{threshold}_{observed.name()}")
         scores_cube.units = "1"
         scores_cube.attributes["model_name"] = model.attributes["model_name"]
 
@@ -954,7 +955,57 @@ def scores_pod_model_obs(
     return scores_results
 
 
-def scores_ets_model_obs(
+def scores_pod(
+    cubes,
+    preserved_coordinates,
+    threshold,
+    op_func,
+):
+    r"""
+    Compute the Probability of Detection (POD) score using Scores ([scoresa]_ [scoresb]_).
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        An iris cubelist containing model(s) and an observation cube.
+    preserved_coordinates: list | str | None
+        An object containing which coordinates to preserve in the computation. For example, if cubes contain shape time, point location,
+        then preserving coordinate 'time' will produce the equitable threat score for each timeslice (shape time). If None,
+        then it will return a single value score for all times/point locations.
+    threshold: str
+        A str containing the threshold to use to generate the binary masks, which subsequently gets turned to a float (but passed as str around the recipe templating).
+    op_func: str
+        A string either containing 'lt' for less than or 'gt for greater than, to determine how the threshold is applied to the data
+        to generate the mask.
+
+    Returns
+    -------
+    cube: iris.cube
+        An iris cube, containing the probability of detection score for further plotting.
+
+
+    Notes
+    -----
+    The probability of detection calculates the proportion of observed events that meet a threshold that were correctly forecast by the model.
+    For example, if threshold is 290K and op_func is gt (greater than), and at some station a temperature was recorded as 292K and the model produced
+    295k, that would be a positive hit. It does not take into account how far above/below a threshold a model forecasts.
+
+    It is calculated as .. math:: POD = \frac{true positives}{true positives + false negatives}
+
+    It is equivalent to the hit rate. Note if there are no events that meet the threshold in model and observations, a POD of zero is returned.
+
+    POD produces a range of 0 to 1, where 1 is a perfect score.
+    """
+    return _scores_categorical_metric(
+        cubes,
+        preserved_coordinates,
+        threshold,
+        op_func,
+        "pod",
+    )
+
+
+def scores_ets(
     cubes: CubeList,
     preserved_coordinates: list[str] | str | None,
     threshold: str,
@@ -1005,61 +1056,10 @@ def scores_ets_model_obs(
     ETS ranges from -1/3 to 1, where 1 indicates a perfect forecast, 0 indicates no skill beyond random chance, and negative values indicate worse than
     random chance.
     """
-    # Split out model(s) and obs
-    models = CubeList()
-    for c in cubes:
-        if "observed" in c.long_name:
-            observed = c
-        else:
-            models.append(c)
-
-    # Setup cubelist to store results
-    scores_results = iris.cube.CubeList()
-
-    # Setup operators greater than, less than.
-    ops = {
-        "gt": operator.gt,
-        "lt": operator.lt,
-    }
-
-    try:
-        op = ops[op_func]
-    except KeyError as err:
-        raise ValueError(f"Operator {op_func} not supported.") from err
-
-    for model in models:
-        # Convert obs cubes to xarray and resolve preserved dimensions.
-        other_xr = xr.DataArray.from_iris(model)
-        base_xr = xr.DataArray.from_iris(observed)
-        preserve_dims = _resolve_preserve_dims(
-            observed, other_xr, preserved_coordinates
-        )
-
-        # Create event operator object using threshold and operator direction.
-        event_operator = scores.categorical.ThresholdEventOperator(
-            default_event_threshold=float(threshold), default_op_fn=op
-        )
-
-        # Generate binary fields using the event operator.
-        forecast_binary, observed_binary = event_operator.make_event_tables(
-            other_xr, base_xr
-        )
-
-        # Create binary contigency manager, as per Scores API, using transform to preserve preserve_dims
-        contingency_manager = scores.categorical.BinaryContingencyManager(
-            forecast_binary, observed_binary
-        ).transform(preserve_dims=preserve_dims)
-
-        # Get ETS from the contigency manager, and convert back to an iris cube.
-        scores_cube = xr.DataArray.to_iris(contingency_manager.equitable_threat_score())
-
-        # Rename cube so it plots correctly alongside correcting cube units.
-        scores_cube.rename(
-            f"Equitable_Threat_Score_{op_func}_{threshold}_{observed.name()}"
-        )
-        scores_cube.units = "1"
-        scores_cube.attributes["model_name"] = model.attributes["model_name"]
-
-        scores_results.append(scores_cube)
-
-    return scores_results
+    return _scores_categorical_metric(
+        cubes,
+        preserved_coordinates,
+        threshold,
+        op_func,
+        "ets",
+    )
