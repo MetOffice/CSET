@@ -114,10 +114,9 @@ If needing to generate *new sample_data* to support a new gallery example, add t
 
     src/CSET/sample_data
 
-Note that only small (~10kB) test data files should be added to minimise the overall size of the CSET distribution.
+.. note::
 
-
-
+    Only small (~10kB) test data files should be added to minimise the overall size of the CSET distribution.
 
 .. _Sphinx documentation build system: https://www.sphinx-doc.org/
 .. _reStructuredText: https://docutils.sourceforge.io/docs/user/rst/quickref.html
