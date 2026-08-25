@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 
 
 def _sort_cube_into_base_and_other(cubes: CubeList) -> tuple[Cube, CubeList]:
-    """Sorts cube into base and other models.
+    r"""Sorts cube into base and other models.
 
     Parameters
     ----------
@@ -69,7 +69,7 @@ def _sort_cube_into_base_and_other(cubes: CubeList) -> tuple[Cube, CubeList]:
 
 
 def _ensure_increasing_pressure_coordinates(cubes: CubeList) -> CubeList:
-    """Ensure the pressure coordinate is increasing.
+    r"""Ensure the pressure coordinate is increasing.
 
     Parameters
     ----------
@@ -93,7 +93,7 @@ def _ensure_increasing_pressure_coordinates(cubes: CubeList) -> CubeList:
 
 
 def _process_cubes_for_verification(base: Cube, other: Cube) -> tuple[Cube, Cube]:
-    """Prepare cubes ready for verification in scores.
+    r"""Prepare cubes ready for verification in scores.
 
     Parameters
     ----------
@@ -187,7 +187,7 @@ def _resolve_preserve_dims(
     data_array: xr.DataArray,
     preserved_coordinates: list[str] | str | None,
 ) -> list[str] | None:
-    """Resolve preserve coordinates to xarray dimension names.
+    r"""Resolve preserve coordinates to xarray dimension names.
 
     The ``scores`` package expects preserve dimensions to match xarray
     dimension names. In Iris data, commonly used coordinates such as ``time``
@@ -246,7 +246,7 @@ def _resolve_preserve_dims(
 
 
 def _attach_scaler_time_coord_maybe(scores_cube: Cube, base: Cube) -> None:
-    """Attaches scaler time coordinate if time is aggregated out.
+    r"""Attaches scaler time coordinate if time is aggregated out.
 
     In place function that attaches a scaler time coordinate to scores_cube
     if time is aggregated out so plotting can display the aggregated period in the title.
@@ -293,7 +293,7 @@ def _attach_scaler_time_coord_maybe(scores_cube: Cube, base: Cube) -> None:
 def _make_scores_cube(
     base: Cube, other: Cube, metric: str, preserved_coordinates: list[str]
 ) -> Cube:
-    """Make the scores cube using the given scores metric.
+    r"""Make the scores cube using the given scores metric.
 
     Parameters
     ----------
