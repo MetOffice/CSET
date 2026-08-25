@@ -85,7 +85,7 @@ below.
 Gallery
 -------
 
-The `CSET gallery`_ is generated using `Sphinx-gallery`_.
+The `CSET gallery`_ is generated using the `Sphinx-Gallery`_ extension.
 
 Each gallery page follows a similar structure:
 
@@ -93,7 +93,7 @@ Each gallery page follows a similar structure:
 * Reference section listing the :doc:`recipe </usage/operator-recipes>` used to provide functionality and links to relevant :py:mod:`CSET.operators`,
 * Example of requirements for running recipe using ``cset bake`` to generate outputs on the command-line,
 * List of configuration options required to enable relevant output via the ``cset_workflow``,
-* Minimal python example code to replicate output of ``cset bake`` or workflow settings by directly calling CSET operators inline. The python code auto-generates an image file that is captured in the gallery output via `Sphinx-gallery`_. Python codes make use of sample data files.
+* Minimal python example code to replicate output of ``cset bake`` or workflow settings by directly calling CSET operators inline. The python code auto-generates an image file that is captured in the gallery output via `Sphinx-Gallery`_. Python codes make use of sample data files.
 
 To add a *new gallery page*, copy any of the existing pages available in a relevant section, and update all details based on the copied template. Examples are available in the following path:
 
@@ -126,4 +126,4 @@ Note that only small (~10kB) test data files should be added to minimise the ove
 .. _Sphinx website: https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
 .. _NumPy docstring style: https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard
 .. _CSET gallery: https://metoffice.github.io/CSET/reference/gallery/index.html
-.. _Sphinx-gallery: https://sphinx-gallery.github.io/stable/index.html
+.. _Sphinx-Gallery: https://sphinx-gallery.github.io/stable/index.html
