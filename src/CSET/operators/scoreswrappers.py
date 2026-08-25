@@ -941,7 +941,7 @@ def _scores_categorical_metric(
             result = contingency_manager.frequency_bias()
             name = "Frequency_Bias"
 
-        elif metric == "pofd":
+        elif metric == "pfd":
             result = contingency_manager.probability_of_false_detection()
             name = "Probability_Of_False_Detection"
 
@@ -1069,14 +1069,14 @@ def scores_ets(
     )
 
 
-def scores_pofd(
+def scores_pfd(
     cubes: CubeList,
     preserved_coordinates: list[str] | str | None,
     threshold: str,
     op_func: str,
 ) -> iris.cube.Cube:
     r"""
-    Compute the Probability of False Detection (POFD) score using Scores ([scoresa]_ [scoresb]_).
+    Compute the Probability of False Detection (PFD) score using Scores ([scoresa]_ [scoresb]_).
 
     Parameters
     ----------
@@ -1099,7 +1099,7 @@ def scores_pofd(
 
     Notes
     -----
-    The Probability of False Detection (POFD) measures the proportion of observed non-events
+    The Probability of False Detection (PFD) measures the proportion of observed non-events
     that were incorrectly forecast as events. It is a measure of the false alarm rate and
     provides information on how often a forecast system predicts threshold exceedances when
     none actually occurred.
@@ -1124,7 +1124,7 @@ def scores_pofd(
         Number of occasions where neither the forecast nor the observations
         indicated an event.
 
-    POFD ranges from 0 to 1, where 0 indicates a perfect score with no false alarms,
+    PFD ranges from 0 to 1, where 0 indicates a perfect score with no false alarms,
     and 1 indicates that every observed non-event was incorrectly forecast as an event.
 
     Lower values are therefore better.
@@ -1134,7 +1134,7 @@ def scores_pofd(
         preserved_coordinates,
         threshold,
         op_func,
-        "pofd",
+        "pfd",
     )
 
 
