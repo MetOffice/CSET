@@ -1166,11 +1166,11 @@ def test_fix_no_time_coords_callback(cube):
     assert cube.coord("time").units == "hours since 0001-01-01 00:00:00"
 
 
-def test_normalise_ML_varname(transect_source_cube):
+def test_normalise_longname(transect_source_cube):
     """Check that pressure varname is changed."""
     cube = transect_source_cube.copy()
     cube.rename = "air_temperature"
-    read._normalise_ML_varname(cube)
+    read._normalise_longname(cube)
     assert cube.long_name == "temperature_at_pressure_levels"
 
 
