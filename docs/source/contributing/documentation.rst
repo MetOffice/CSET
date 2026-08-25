@@ -103,11 +103,11 @@ To add a *new gallery page*, copy any of the existing pages available in a relev
 
 If the new gallery page should sit in a *new section*, also complete the following steps:
 
-* Create a new directory ``docs/source/reference/gallery/examples/<name_of_section>``
-* Add a new file ``docs/source/reference/gallery/examples/<name_of_section>/GALLERY_HEADER.rst`` containing only the title of the section (see existing sections for template)
-* Add new gallery page ``docs/source/reference/gallery/examples/<name_of_section>/<name_of_example>.py``
-* Update the new ``<name_of_example>.py`` documentation file with relevant details and example working python code
-* Add ``"reference/gallery/examples/<name_of_section>",`` to the list of gallery subsections in file ``source/conf.py``.
+1. Create a new directory ``docs/source/reference/gallery/examples/<name_of_section>``.
+2. Add a new file ``docs/source/reference/gallery/examples/<name_of_section>/GALLERY_HEADER.rst`` containing only the title of the section (see existing sections for template).
+3. Add new gallery page ``docs/source/reference/gallery/examples/<name_of_section>/<name_of_example>.py``.
+4. Update the new ``<name_of_example>.py`` documentation file with relevant details and example working python code.
+5. Add ``"reference/gallery/examples/<name_of_section>",`` to the list of gallery subsections in file ``source/conf.py``.
 
 Where possible, reuse any of the existing ``sample_data`` files for new gallery pages.
 If needing to generate *new sample_data* to support a new gallery example, add the required file(s) to the following path::
