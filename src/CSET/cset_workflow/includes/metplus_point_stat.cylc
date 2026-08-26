@@ -57,10 +57,7 @@
 {% for model in models %}
     [[metplus_point_stat_m{{model["id"]}}]]
     # Runs METplus wrappers for point stat calculations.
-        inherit = METPLUS_POINT_STAT
-        [[[environment]]]
-            MODEL_NAME = {{model["name"]}}
-            model_name = {{model["name"] | lower}}
+        inherit = METPLUS_POINT_STAT, METPLUS_M{{model["id"]}}
 
     [[metplus_point_stat_postproc_m{{model["id"]}}]]
     # Archives point stat results in tar files ready for verpy loading.
