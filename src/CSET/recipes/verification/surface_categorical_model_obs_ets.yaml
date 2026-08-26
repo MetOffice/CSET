@@ -71,7 +71,7 @@ steps:
                operator: constraints.generate_var_constraint
                varname: observed_$VARNAME
 
-  - operator: scoreswrappers.scores_ets_model_obs
+  - operator: scoreswrappers.scores_ets
     preserved_coordinates: "time"
     threshold: $THRESHOLD
     op_func: $OPERATOR
