@@ -4,7 +4,7 @@ description: |
 
     Extracts and plots the FB for $VARNAME for each model against observations as a timeseries.
 
-    The Frequency Bias (FB) measures whether a forecasting system predicts an
+    The Frequency Bias (FB) in [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.categorical.BasicContingencyManager.frequency_bias) measures whether a forecasting system predicts an
     event too frequently or too infrequently compared to observations. Unlike
     metrics such as the Probability of Detection (POD) or Equitable Threat Score (ETS),
     Frequency Bias does not assess the accuracy of forecast locations or timings,
