@@ -287,7 +287,7 @@ def _scores_categorical_metric(
     threshold: str,
     op_func: str,
     metric: str,
-) -> iris.cube.CubeList:
+) -> CubeList:
     """
     Prepare cubes for computing categorical metrics using Scores.
 
@@ -393,7 +393,7 @@ def scores_pod(
     preserved_coordinates,
     threshold,
     op_func,
-) -> iris.cube.CubeList:
+) -> CubeList:
     r"""
     Compute the Probability of Detection (POD) score using Scores ([scoresa]_ [scoresb]_).
 
@@ -443,7 +443,7 @@ def scores_ets(
     preserved_coordinates: list[str] | str | None,
     threshold: str,
     op_func: str,
-) -> iris.cube.CubeList:
+) -> CubeList:
     r"""
     Compute the Equitable Threat Score (ETS) score using Scores ([scoresa]_ [scoresb]_).
 
@@ -503,7 +503,7 @@ def scores_pfd(
     preserved_coordinates: list[str] | str | None,
     threshold: str,
     op_func: str,
-) -> iris.cube.CubeList:
+) -> CubeList:
     r"""
     Compute the Probability of False Detection (PFD) score using Scores ([scoresa]_ [scoresb]_).
 
@@ -572,7 +572,7 @@ def scores_frequency_bias(
     preserved_coordinates: list[str] | str | None,
     threshold: str,
     op_func: str,
-) -> iris.cube.CubeList:
+) -> CubeList:
     r"""
     Compute the Frequency Bias (FB) score using Scores ([scoresa]_ [scoresb]_).
 
