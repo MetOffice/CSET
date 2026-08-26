@@ -360,3 +360,24 @@ def load(conf: Config):
                 model_ids=["OBS"] + [model["id"] for model in models],
                 aggregation=True,
             )
+
+
+#    if conf.SCORES_TIMESERIES_RMSE_MODEL_VS_OBS_AGGREGATION:
+
+# for field, scores_method in itertools.product(
+#     conf.POINT_OBS_FIELDS, scores_timeseries_methods_model_vs_obs
+# ):
+#     yield RawRecipe(
+#         recipe=f"timeseries_surface_scores_model_vs_obs_{scores_method}.yaml",
+#         variables={
+#             "VARNAME": field,
+#             "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
+#             "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+#             "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+#             "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+#             if conf.SELECT_SUBAREA
+#             else None,
+#         },
+#         model_ids=["OBS"] + [model["id"] for model in models],
+#         aggregation=False,
+#     )
