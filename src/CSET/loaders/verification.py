@@ -327,28 +327,36 @@ def load(conf: Config):
             )
 
     if conf.HINTON_RMSE:
-        # Get base model, which is always the first model. This is what the Hinton relative change (triangles)
-        # will be based against.
         base_model = models[0]
 
-        # Expand out variable names, with observed_ copies to filter on obs.
-        varnames = []
-        for v in conf.HINTON_VARIABLES:
-            varnames.extend([v, f"observed_{v}"])
+        hinton_opts = [
+            conf.HINTON_VAR1,
+            conf.HINTON_VAR2,
+            conf.HINTON_VAR3,
+            conf.HINTON_VAR4,
+            conf.HINTON_VAR5,
+        ]
 
-        # Create recipe for each new model other than base.
         for model in models[1:]:
+            variables = {
+                "MODEL_NAME": ["OBS"] + [model["id"] for model in models],
+                "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": (
+                    conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None
+                ),
+            }
+
+            for i, item in enumerate(hinton_opts, start=1):
+                varname, method, timefreq = item.split("/")
+
+                variables[f"VARNAME{i}"] = varname
+                variables[f"METHOD{i}"] = method
+                variables[f"TIMEFREQ{i}"] = timefreq
+
             yield RawRecipe(
                 recipe="hinton_rmse.yaml",
-                variables={
-                    "VARNAME": varnames,
-                    "MODEL_NAME": ["OBS"] + [model["id"] for model in models],
-                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
-                },
+                variables=variables,
                 model_ids=["OBS"] + [model["id"] for model in models],
                 aggregation=True,
             )
