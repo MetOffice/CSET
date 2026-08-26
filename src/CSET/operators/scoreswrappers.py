@@ -858,7 +858,7 @@ def _scores_categorical_metric(
     threshold: str,
     op_func: str,
     metric: str,
-) -> iris.cube.Cube:
+) -> iris.cube.CubeList:
     """
     Prepare cubes for computing categorical metrics using Scores.
 
@@ -880,8 +880,8 @@ def _scores_categorical_metric(
 
     Returns
     -------
-    cube: iris.cube
-        An iris cube, containing the scores metric for further plotting.
+    scores_results: iris.cube.CubeList
+        An iris cubelist, containing the scores metric for each model for further plotting.
 
     """
     # Split obs/models
@@ -964,7 +964,7 @@ def scores_pod(
     preserved_coordinates,
     threshold,
     op_func,
-) -> iris.cube.Cube:
+) -> iris.cube.CubeList:
     r"""
     Compute the Probability of Detection (POD) score using Scores ([scoresa]_ [scoresb]_).
 
@@ -984,8 +984,8 @@ def scores_pod(
 
     Returns
     -------
-    cube: iris.cube
-        An iris cube, containing the probability of detection score for further plotting.
+    iris.cube.CubeList
+        An iris cubelist, containing the probability of detection score for each model for further plotting.
 
 
     Notes
@@ -1014,7 +1014,7 @@ def scores_ets(
     preserved_coordinates: list[str] | str | None,
     threshold: str,
     op_func: str,
-) -> iris.cube.Cube:
+) -> iris.cube.CubeList:
     r"""
     Compute the Equitable Threat Score (ETS) score using Scores ([scoresa]_ [scoresb]_).
 
@@ -1034,8 +1034,8 @@ def scores_ets(
 
     Returns
     -------
-    cube: iris.cube
-        An iris cube, containing the probability of detection score for further plotting.
+    iris.cube.CubeList
+        An iris cubelist, containing the probability of detection score for each model for further plotting.
 
     Notes
     -----
@@ -1074,7 +1074,7 @@ def scores_pfd(
     preserved_coordinates: list[str] | str | None,
     threshold: str,
     op_func: str,
-) -> iris.cube.Cube:
+) -> iris.cube.CubeList:
     r"""
     Compute the Probability of False Detection (PFD) score using Scores ([scoresa]_ [scoresb]_).
 
@@ -1094,8 +1094,8 @@ def scores_pfd(
 
     Returns
     -------
-    cube: iris.cube
-        An iris cube, containing the probability of false detection score for further plotting.
+    iris.cube.CubeList
+        An iris cubelist, containing the probability of false detection score for each model for further plotting.
 
     Notes
     -----
@@ -1143,7 +1143,7 @@ def scores_frequency_bias(
     preserved_coordinates: list[str] | str | None,
     threshold: str,
     op_func: str,
-) -> iris.cube.Cube:
+) -> iris.cube.CubeList:
     r"""
     Compute the Frequency Bias (FB) score using Scores ([scoresa]_ [scoresb]_).
 
@@ -1163,8 +1163,8 @@ def scores_frequency_bias(
 
     Returns
     -------
-    cube: iris.cube
-        An iris cube, containing the frequency bias score for further plotting.
+    iris.cube.CubeList
+        An iris cube, containing the frequency bias score for each model for further plotting.
 
     Notes
     -----
