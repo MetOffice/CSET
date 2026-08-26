@@ -1,0 +1,100 @@
+category: Scores Categorical
+title: Timeseries of FB for "$VARNAME over $SUBAREA_NAME, using threshold $OPERATOR $THRESHOLD"
+description: |
+
+    Extracts and plots the FB for $VARNAME for each model against observations as a timeseries.
+
+    The Frequency Bias (FB) in [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.categorical.BasicContingencyManager.frequency_bias) measures whether a forecasting system predicts an
+    event too frequently or too infrequently compared to observations. Unlike
+    metrics such as the Probability of Detection (POD) or Equitable Threat Score (ETS),
+    Frequency Bias does not assess the accuracy of forecast locations or timings,
+    only the overall frequency with which events are forecast.
+
+    For example, if the threshold is 290 K and op_func is gt (greater than), and
+    events exceeding this threshold are forecast twice as often as they are observed,
+    the frequency bias would be approximately 2. Conversely, if events are forecast
+    only half as often as they occur, the frequency bias would be approximately 0.5.
+
+    It is calculated as:
+
+    .. math::
+
+    Frequency\ Bias = \frac{hits + false\ alarms}
+                            {hits + misses}
+
+    where
+
+    hits
+        Number of occasions where an event was forecast and observed.
+
+    false alarms
+        Number of occasions where an event was forecast but not observed.
+
+    misses
+        Number of occasions where an event was observed but not forecast.
+
+    Frequency Bias ranges from 0 to infinity, where:
+
+    * 1 indicates the forecast predicts events at the correct frequency.
+    * Greater than 1 indicates overforecasting of events.
+    * Less than 1 indicates underforecasting of events.
+
+    A perfect frequency bias score is therefore 1, although a value of 1 does not
+    necessarily imply a skillful forecast, as hits and false alarms may compensate
+    for one another.
+
+    References
+    https://scores.readthedocs.io/en/stable/api.html#scores.categorical.BasicContingencyManager.frequency_bias
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: ['observed_$VARNAME', '$VARNAME']
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: "pressure"
+        levels: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: misc.extract_common_points
+    coordinate: time
+
+  - operator: misc.combine_cubes_into_cubelist
+    first:
+        operator: filters.filter_cubes
+        constraint:
+            operator: constraints.generate_var_constraint
+            varname: observed_$VARNAME
+    second:
+       operator: regrid.interpolate_to_point_cube
+       fld:
+           operator: filters.filter_multiple_cubes
+           constraint:
+               operator: constraints.combine_constraints
+               var_constraint:
+                   operator: constraints.generate_var_constraint
+                   varname: $VARNAME
+       point_cube:
+           operator: filters.filter_cubes
+           constraint:
+               operator: constraints.generate_var_constraint
+               varname: observed_$VARNAME
+
+  - operator: scoreswrappers.scores_frequency_bias
+    preserved_coordinates: "time"
+    threshold: $THRESHOLD
+    op_func: $OPERATOR
+
+  - operator: plot.plot_line_series
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

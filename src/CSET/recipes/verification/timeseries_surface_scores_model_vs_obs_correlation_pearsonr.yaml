@@ -1,23 +1,16 @@
 category: Surface Model verus Observation Time Series
-title: "$VARNAME scores rmse time series for model vs observation points $SUBAREA_NAME"
-description: Extracts and plot a time series of $VARNAME for all times based on RMSE between given models and observation points.
+title: "$VARNAME scores pearson correlation time series for model vs observation points $SUBAREA_NAME"
+description: |
 
- The RMSE is calculated based on that used in the
-  package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.rmse).
-
-  This recipe allows the preservation of the time coordinate to produce a timeseries. Therefore, the RMSE is
+  Extracts and plots the Pearson's Correlation coefficient in $VARNAME
+  computed over the domain for each timestep. The PC is calculated based on that used in the
+  package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.correlation.pearsonr).
+  This recipe allows the preservation of the time coordinate to produce a timeseries. Therefore, the PC is
   collapsed over all other coordinates in the cube and calculated for every timestep.
 
-
-  A larger RMSE implies a greater error than a smaller RMSE. An
-  RMSE of zero indicates the two fields match. The RMSE is calculated
-  on the grid point and thus a spatial view of the RMSE provides useful
-  information about where the differences are, or if placement errors
-  are domininating the score (usually indicated by dipoles).
-
-  For RMSE values computed across an entire casse study, the computation
-  is done within the scores RMSE module, rather than trying to mean across
-  each timestep. This preserves the nonlinear nature of the RMSE metric.
+  The PC coefficient provides information on the linear relationship between two fields.
+  Perfectly correlated fields would yield a PC coefficient of 1, whereas perfectly anti-correlated
+  fields would yield a PC coefficient of -1. A value of 0 would indicate that the fields are non-correlated.
 
 steps:
   - operator: read.read_cubes
@@ -58,7 +51,7 @@ steps:
                operator: constraints.generate_var_constraint
                varname: observed_$VARNAME
 
-  - operator: scoreswrappers.scores_rmse
+  - operator: scoreswrappers.scores_correlation_pearsonr
     preserved_coordinates: "time"
 
   - operator: plot.plot_line_series
