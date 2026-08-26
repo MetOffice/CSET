@@ -39,7 +39,7 @@ description: |
   complete assessment of forecast performance.
 
   References
-  https://scores.readthedocs.io/en/stable/
+https://scores.readthedocs.io/en/stable/api.html#scores.categorical.BasicContingencyManager.probability_of_false_detection
 
 steps:
   - operator: read.read_cubes
