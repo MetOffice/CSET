@@ -43,6 +43,8 @@ description: |
     necessarily imply a skillful forecast, as hits and false alarms may compensate
     for one another.
 
+References
+https://scores.readthedocs.io/en/stable/api.html#scores.categorical.BasicContingencyManager.frequency_bias
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
