@@ -209,10 +209,7 @@ def load(conf: Config):
     scores_spatial_methods_model_vs_obs = _get_scores_spatial_methods_model_vs_obs(conf)
     if scores_spatial_methods_model_vs_obs:
         # Produce 2D spatial plots of scores metrics.
-        preserved_coords = ["time", "grid_latitude", "grid_longitude"]
-        method_null = ""
-        scores_method_case = "CASE"
-        scores_coords_case = ["grid_latitude", "grid_longitude"]
+
         for field, model, method, scores_method in itertools.product(
             conf.POINT_OBS_FIELDS,
             models,
@@ -220,20 +217,22 @@ def load(conf: Config):
             scores_spatial_methods_model_vs_obs,
         ):
             preserved_coords = ["time", "latitude", "longitude"]
-            recipe_method = method
-            if scores_method == "RMSE" and method == "CASE":
+            scores_method_case = "CASE"
+            scores_coords_case = ["latitude", "longitude"]
+
+            if scores_method == "RMSE" and method == scores_method_case:
                 preserved_coords = ["latitude", "longitude"]
                 recipe_method = ""
             if scores_method == "MAE" and method == scores_method_case:
                 # Set the preserved coords and collapse method required
                 # to produce MAE spatial plot over an entire case study.
                 preserved_coords = scores_coords_case
-                method = method_null
+                recipe_method = ""
             if scores_method == "additive_bias" and method == scores_method_case:
                 # Set the preserved coords and collapse method required
                 # to produce ME additive bias spatial plot over an entire case study.
                 preserved_coords = scores_coords_case
-                method = method_null
+                recipe_method = ""
 
             yield RawRecipe(
                 recipe=f"surface_scores_model_vs_obs_{scores_method}.yaml",
