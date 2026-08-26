@@ -519,7 +519,6 @@ def _make_scores_cube(
 
 
     """
-    """Make the scores cube."""
     other_xr = xr.DataArray.from_iris(other)
     base_xr = xr.DataArray.from_iris(base)
     preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
