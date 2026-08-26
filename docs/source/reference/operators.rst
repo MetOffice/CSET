@@ -92,6 +92,15 @@ CSET.operators.convection
 .. automodule:: CSET.operators.convection
    :members:
 
+Curvature Operators
+~~~~~~~~~~~~~~~~~~~
+
+CSET.operators.curvature
+------------------------
+
+.. automodule:: CSET.operators.curvature
+   :members:
+
 Ensemble Operators
 ~~~~~~~~~~~~~~~~~~
 
