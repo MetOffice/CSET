@@ -813,6 +813,17 @@ def _split_base_and_other(cubes: CubeList):
     is an observed cube in the cubes.  If there is an observed cube,
     then 'base' is the observed cube, if not then 'base' is the comparison
     model cube.
+    
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        Cubes to split into base and other cubes.
+        
+     Returns
+     -------
+  
+      tuple
+          A tuple containing a base cube, and other cube/cubelist.
 
     """
     obs_cube = [cb for cb in cubes if "observed" in (cb.long_name or "")]
