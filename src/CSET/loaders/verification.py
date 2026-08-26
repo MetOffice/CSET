@@ -326,17 +326,23 @@ def load(conf: Config):
                 aggregation=False,
             )
 
-
     if conf.HINTON_RMSE:
-        # Produce model vs observation timeseries plots of scores metrics averaged over the domain for each case study.
-        for field in itertools.product(
-            conf.POINT_OBS_FIELDS
-        ):
+        # Get base model, which is always the first model. This is what the Hinton relative change (triangles)
+        # will be based against.
+        base_model = models[0]
+
+        # Expand out variable names, with observed_ copies to filter on obs.
+        varnames = []
+        for v in conf.HINTON_VARIABLES:
+            varnames.extend([v, f"observed_{v}"])
+
+        # Create recipe for each new model other than base.
+        for model in models[1:]:
             yield RawRecipe(
-                recipe=f"hinton_rmse_agg_test.yaml",
+                recipe="hinton_rmse.yaml",
                 variables={
-                    "VARNAME": field,
-                    "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
+                    "VARNAME": varnames,
+                    "MODEL_NAME": ["OBS"] + [model["id"] for model in models],
                     "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                     "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
