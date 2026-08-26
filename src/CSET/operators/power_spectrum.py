@@ -210,11 +210,6 @@ def calculate_power_spectrum(
 
                         time_dims = frt_cube.coord_dims("time")
 
-                        #                        if len(time_dims) != 1:
-                        #                            raise ValueError(
-                        #                                "Expected time to be a one-dimensional coordinate."
-                        #                            )
-
                         time_dim = time_dims[0]
 
                         # Select the only point on the time
