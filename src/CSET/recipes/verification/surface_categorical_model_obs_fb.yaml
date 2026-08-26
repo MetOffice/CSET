@@ -4,7 +4,44 @@ description: |
 
     Extracts and plots the FB for $VARNAME for each model against observations as a timeseries.
 
-    Update me :)
+    The Frequency Bias (FB) measures whether a forecasting system predicts an
+    event too frequently or too infrequently compared to observations. Unlike
+    metrics such as the Probability of Detection (POD) or Equitable Threat Score (ETS),
+    Frequency Bias does not assess the accuracy of forecast locations or timings,
+    only the overall frequency with which events are forecast.
+
+    For example, if the threshold is 290 K and op_func is gt (greater than), and
+    events exceeding this threshold are forecast twice as often as they are observed,
+    the frequency bias would be approximately 2. Conversely, if events are forecast
+    only half as often as they occur, the frequency bias would be approximately 0.5.
+
+    It is calculated as:
+
+    .. math::
+
+    Frequency\ Bias = \frac{hits + false\ alarms}
+                            {hits + misses}
+
+    where
+
+    hits
+        Number of occasions where an event was forecast and observed.
+
+    false alarms
+        Number of occasions where an event was forecast but not observed.
+
+    misses
+        Number of occasions where an event was observed but not forecast.
+
+    Frequency Bias ranges from 0 to infinity, where:
+
+    * 1 indicates the forecast predicts events at the correct frequency.
+    * Greater than 1 indicates overforecasting of events.
+    * Less than 1 indicates underforecasting of events.
+
+    A perfect frequency bias score is therefore 1, although a value of 1 does not
+    necessarily imply a skillful forecast, as hits and false alarms may compensate
+    for one another.
 
 steps:
   - operator: read.read_cubes
