@@ -310,7 +310,7 @@ def test_crps_less_than_3_realizations(feature_cube):
 
 def test_model_obs_rmse_preserve_in_time(dummy_cubelist_model_obs):
     """RMSE collapsed over station, preserving only the time dimension."""
-    rmse = scoreswrappers.scores_rmse_model_obs(dummy_cubelist_model_obs, "time")
+    rmse = scoreswrappers.scores_rmse(dummy_cubelist_model_obs, "time")
     assert isinstance(rmse, CubeList)
     assert len(rmse) == 2
     model_names = ["model_a", "model_b"]
@@ -323,7 +323,7 @@ def test_model_obs_rmse_preserve_in_time(dummy_cubelist_model_obs):
 
 def test_model_obs_rmse_preserve_in_latlon(dummy_cubelist_model_obs):
     """RMSE collapsed over time, preserving the station dimension via lat/lon."""
-    rmse = scoreswrappers.scores_rmse_model_obs(
+    rmse = scoreswrappers.scores_rmse(
         dummy_cubelist_model_obs, ["longitude", "latitude"]
     )
     assert isinstance(rmse, CubeList)
@@ -338,7 +338,7 @@ def test_model_obs_rmse_preserve_in_latlon(dummy_cubelist_model_obs):
 
 def test_model_obs_rmse_preserve_in_timelatlon(dummy_cubelist_model_obs):
     """RMSE with nothing collapsed, preserving both time and station dimensions."""
-    rmse = scoreswrappers.scores_rmse_model_obs(
+    rmse = scoreswrappers.scores_rmse(
         dummy_cubelist_model_obs, ["time", "longitude", "latitude"]
     )
     assert isinstance(rmse, CubeList)
@@ -353,7 +353,7 @@ def test_model_obs_rmse_preserve_in_timelatlon(dummy_cubelist_model_obs):
 
 def test_model_obs_mae_preserve_in_time(dummy_cubelist_model_obs):
     """MAE collapsed over station, preserving only the time dimension."""
-    mae = scoreswrappers.scores_mae_model_obs(dummy_cubelist_model_obs, "time")
+    mae = scoreswrappers.scores_mae(dummy_cubelist_model_obs, "time")
     assert isinstance(mae, CubeList)
     assert len(mae) == 2
     model_names = ["model_a", "model_b"]
@@ -366,9 +366,7 @@ def test_model_obs_mae_preserve_in_time(dummy_cubelist_model_obs):
 
 def test_model_obs_mae_preserve_in_latlon(dummy_cubelist_model_obs):
     """MAE collapsed over time, preserving the station dimension via lat/lon."""
-    mae = scoreswrappers.scores_mae_model_obs(
-        dummy_cubelist_model_obs, ["longitude", "latitude"]
-    )
+    mae = scoreswrappers.scores_mae(dummy_cubelist_model_obs, ["longitude", "latitude"])
     assert isinstance(mae, CubeList)
     assert len(mae) == 2
     model_names = ["model_a", "model_b"]
@@ -381,7 +379,7 @@ def test_model_obs_mae_preserve_in_latlon(dummy_cubelist_model_obs):
 
 def test_model_obs_mae_preserve_in_timelatlon(dummy_cubelist_model_obs):
     """MAE with nothing collapsed, preserving both time and station dimensions."""
-    mae = scoreswrappers.scores_mae_model_obs(
+    mae = scoreswrappers.scores_mae(
         dummy_cubelist_model_obs, ["time", "longitude", "latitude"]
     )
     assert isinstance(mae, CubeList)
@@ -396,9 +394,7 @@ def test_model_obs_mae_preserve_in_timelatlon(dummy_cubelist_model_obs):
 
 def test_model_obs_pearson_correlation_preserve_in_time(dummy_cubelist_model_obs):
     """Pearson correlation collapsed over station, preserving only the time dimension."""
-    corr = scoreswrappers.scores_correlation_pearsonr_model_obs(
-        dummy_cubelist_model_obs, "time"
-    )
+    corr = scoreswrappers.scores_correlation_pearsonr(dummy_cubelist_model_obs, "time")
     assert isinstance(corr, CubeList)
     assert len(corr) == 2
     model_names = ["model_a", "model_b"]
@@ -413,7 +409,7 @@ def test_model_obs_pearson_correlation_preserve_in_time(dummy_cubelist_model_obs
 
 def test_model_obs_pearson_correlation_preserve_in_latlon(dummy_cubelist_model_obs):
     """Pearson correlation collapsed over time, preserving the station dimension via lat/lon."""
-    corr = scoreswrappers.scores_correlation_pearsonr_model_obs(
+    corr = scoreswrappers.scores_correlation_pearsonr(
         dummy_cubelist_model_obs, ["longitude", "latitude"]
     )
     assert isinstance(corr, CubeList)
@@ -433,16 +429,14 @@ def test_model_obs_pearson_correlation_preserve_in_timelatlon(dummy_cubelist_mod
     with pytest.raises(
         ValueError, match="You cannot preserve all dimensions with pearsonr."
     ):
-        scoreswrappers.scores_correlation_pearsonr_model_obs(
+        scoreswrappers.scores_correlation_pearsonr(
             dummy_cubelist_model_obs, ["time", "longitude", "latitude"]
         )
 
 
 def test_model_obs_additive_bias_preserve_in_time(dummy_cubelist_model_obs):
     """Additive bias collapsed over station, preserving only the time dimension."""
-    bias = scoreswrappers.scores_additive_bias_model_obs(
-        dummy_cubelist_model_obs, "time"
-    )
+    bias = scoreswrappers.scores_additive_bias(dummy_cubelist_model_obs, "time")
     assert isinstance(bias, CubeList)
     assert len(bias) == 2
     model_names = ["model_a", "model_b"]
@@ -455,7 +449,7 @@ def test_model_obs_additive_bias_preserve_in_time(dummy_cubelist_model_obs):
 
 def test_model_obs_additive_bias_preserve_in_latlon(dummy_cubelist_model_obs):
     """Additive bias collapsed over time, preserving the station dimension via lat/lon."""
-    bias = scoreswrappers.scores_additive_bias_model_obs(
+    bias = scoreswrappers.scores_additive_bias(
         dummy_cubelist_model_obs, ["longitude", "latitude"]
     )
     assert isinstance(bias, CubeList)
@@ -470,7 +464,7 @@ def test_model_obs_additive_bias_preserve_in_latlon(dummy_cubelist_model_obs):
 
 def test_model_obs_additive_bias_preserve_in_timelatlon(dummy_cubelist_model_obs):
     """Additive bias with nothing collapsed, preserving both time and station dimensions."""
-    bias = scoreswrappers.scores_additive_bias_model_obs(
+    bias = scoreswrappers.scores_additive_bias(
         dummy_cubelist_model_obs, ["time", "longitude", "latitude"]
     )
     assert isinstance(bias, CubeList)
