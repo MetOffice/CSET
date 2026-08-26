@@ -294,7 +294,7 @@ def combine_obs_across_forecasts(cubes):
     "Retaining %s/%s stations with complete observations",
     len(common_stations),
     cube.shape[1],
-    ) 
+    )
 
     if not common_stations:
         raise ValueError(
