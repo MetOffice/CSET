@@ -73,6 +73,8 @@ def _get_scores_timeseries_categorical(conf):
         scores_timeseries_categorical.append("ets")
     if conf.SCORES_CATEGORICAL_FB or conf.SCORES_ALL:
         scores_timeseries_categorical.append("fb")
+    if conf.SCORES_CATEGORICAL_PFD or conf.SCORES_ALL:
+        scores_timeseries_categorical.append("pfd")
     return scores_timeseries_categorical
 
 
