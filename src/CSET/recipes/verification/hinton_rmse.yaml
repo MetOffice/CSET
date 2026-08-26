@@ -36,7 +36,7 @@ steps:
            constraint:
                operator: constraints.generate_var_constraint
                varname: observed_$VARNAME
-               
+
 
   - operator: misc.extract_common_points
     coordinate: time
