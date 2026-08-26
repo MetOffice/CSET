@@ -1,0 +1,77 @@
+category: Surface Model versus Observation Time Series Aggregation
+title: "$VARNAME scores rmse time series for model vs observation points $SUBAREA_NAME aggregation"
+description: Extracts and plot a time series of $VARNAME for all times based on RMSE between given models and observation points.
+
+ The RMSE is calculated based on that used in the
+  package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.rmse).
+
+  This recipe allows the preservation of the time coordinate to produce a timeseries. Therefore, the RMSE is
+  collapsed over all other coordinates in the cube and calculated for every timestep.
+
+
+  A larger RMSE implies a greater error than a smaller RMSE. An
+  RMSE of zero indicates the two fields match. The RMSE is calculated
+  on the grid point and thus a spatial view of the RMSE provides useful
+  information about where the differences are, or if placement errors
+  are domininating the score (usually indicated by dipoles).
+
+  For RMSE values computed across an entire casse study, the computation
+  is done within the scores RMSE module, rather than trying to mean across
+  each timestep. This preserves the nonlinear nature of the RMSE metric.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+    constraint:
+      operator: constraints.generate_var_constraint
+      varname: ['observed_$VARNAME', '$VARNAME']
+
+  - operator: filters.filter_multiple_cubes
+    constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+
+  - operator: misc.combine_cubes_into_cubelist
+    first:
+      operator: aggregate.combine_obs_across_forecasts
+      cubes:
+        operator: filters.filter_multiple_cubes
+        constraint:
+          operator: constraints.generate_var_constraint
+          varname: observed_$VARNAME
+    second:
+      operator: regrid.interpolate_to_point_cube
+      fld:
+        operator: aggregate.ensure_aggregatable_across_cases
+        cubes:
+          operator: filters.filter_multiple_cubes
+          constraint:
+            operator: constraints.generate_var_constraint
+            varname: $VARNAME
+
+      point_cube:
+        operator: aggregate.combine_obs_across_forecasts
+        cubes:
+          operator: filters.filter_multiple_cubes
+          constraint:
+            operator: constraints.generate_var_constraint
+            varname: observed_$VARNAME
+
+  - operator: scoreswrappers.scores_rmse_model_obs
+    preserved_coordinates: [forecast_period]
+
+  - operator: collapse.collapse
+    coordinate: "forecast_reference_time"
+    method: MEAN
+
+  - operator: plot.plot_line_series
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+
+
+#Run with cset -vv bake --recipe test_hinton.yaml --output-dir $DATADIR/2408_csettesting --plot-resolution=100 --DATADIR=$DATADIR
