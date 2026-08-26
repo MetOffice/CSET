@@ -3,27 +3,17 @@ title: Full RMSE Hinton for something
 description: TODO experimental
 steps:
   - operator: read.read_cubes
-    file_paths:
-      - $DATADIR/CSET_testdata/UM_LFRic_OBS/*.nc
-      - $DATADIR/CSET_testdata/UM_LFRic_OBS/um/*
-      - $DATADIR/CSET_testdata/UM_LFRic_OBS/lf/*
-    model_names:
-      - OBS
-      - UM
-      - LF
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
     constraint:
       operator: constraints.combine_constraints
       varname_constraint:
         operator: constraints.generate_var_constraint
-        varname:
-          - temperature_at_screen_level
-          - observed_temperature_at_screen_level
-          - air_pressure_at_mean_sea_level
-          - observed_air_pressure_at_mean_sea_level
-          - wind_speed_at_10m
-          - observed_wind_speed_at_10m
-          - visibility_in_air
-          - observed_visibility_in_air
+        varname: [$VARNAME1, observed_$VARNAME1,
+                  $VARNAME2, observed_$VARNAME2,
+                  $VARNAME3, observed_$VARNAME3,
+                  $VARNAME4, observed_$VARNAME4,
+                  $VARNAME5, observed_$VARNAME5]
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
@@ -31,12 +21,10 @@ steps:
         operator: constraints.generate_level_constraint
         coordinate: pressure
         levels: []
-    subarea_type: realworld
-    subarea_extent:
-      - 50
-      - 55
-      - -6
-      - 2
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+
 
   - operator: misc.combine_cubes_into_cubelist
     first:
@@ -47,30 +35,34 @@ steps:
         operator: scoreswrappers.scores_rmse_model_obs
         preserved_coordinates: [forecast_period]
         cubes:
-          operator: misc.combine_cubes_into_cubelist
-          first:
-            operator: aggregate.combine_obs_across_forecasts
-            cubes:
-              operator: filters.filter_multiple_cubes
-              constraint:
-                operator: constraints.generate_var_constraint
-                varname: observed_temperature_at_screen_level
-          second:
-            operator: regrid.interpolate_to_point_cube
-            fld:
-              operator: aggregate.ensure_aggregatable_across_cases
-              cubes:
-                operator: filters.filter_multiple_cubes
-                constraint:
-                  operator: constraints.generate_var_constraint
-                  varname: temperature_at_screen_level
-            point_cube:
+          operator: aggregate.time_aggregate
+          method: $METHOD1
+          interval_iso: $TIMEFREQ1
+          cubes:
+            operator: misc.combine_cubes_into_cubelist
+            first:
               operator: aggregate.combine_obs_across_forecasts
               cubes:
                 operator: filters.filter_multiple_cubes
                 constraint:
                   operator: constraints.generate_var_constraint
-                  varname: observed_temperature_at_screen_level
+                  varname: observed_$VARNAME1
+            second:
+              operator: regrid.interpolate_to_point_cube
+              fld:
+                operator: aggregate.ensure_aggregatable_across_cases
+                cubes:
+                  operator: filters.filter_multiple_cubes
+                  constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: $VARNAME1
+              point_cube:
+                operator: aggregate.combine_obs_across_forecasts
+                cubes:
+                  operator: filters.filter_multiple_cubes
+                  constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: observed_$VARNAME1
 
     second:
       operator: collapse.collapse
@@ -80,30 +72,34 @@ steps:
         operator: scoreswrappers.scores_rmse_model_obs
         preserved_coordinates: [forecast_period]
         cubes:
-          operator: misc.combine_cubes_into_cubelist
-          first:
-            operator: aggregate.combine_obs_across_forecasts
-            cubes:
-              operator: filters.filter_multiple_cubes
-              constraint:
-                operator: constraints.generate_var_constraint
-                varname: observed_air_pressure_at_mean_sea_level
-          second:
-            operator: regrid.interpolate_to_point_cube
-            fld:
-              operator: aggregate.ensure_aggregatable_across_cases
-              cubes:
-                operator: filters.filter_multiple_cubes
-                constraint:
-                  operator: constraints.generate_var_constraint
-                  varname: air_pressure_at_mean_sea_level
-            point_cube:
+          operator: aggregate.time_aggregate
+          method: $METHOD2
+          interval_iso: $TIMEFREQ2
+          cubes:
+            operator: misc.combine_cubes_into_cubelist
+            first:
               operator: aggregate.combine_obs_across_forecasts
               cubes:
                 operator: filters.filter_multiple_cubes
                 constraint:
                   operator: constraints.generate_var_constraint
-                  varname: observed_air_pressure_at_mean_sea_level
+                  varname: observed_$VARNAME2
+            second:
+              operator: regrid.interpolate_to_point_cube
+              fld:
+                operator: aggregate.ensure_aggregatable_across_cases
+                cubes:
+                  operator: filters.filter_multiple_cubes
+                  constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: $VARNAME2
+              point_cube:
+                operator: aggregate.combine_obs_across_forecasts
+                cubes:
+                  operator: filters.filter_multiple_cubes
+                  constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: observed_$VARNAME2
 
     third:
       operator: collapse.collapse
@@ -113,37 +109,113 @@ steps:
         operator: scoreswrappers.scores_rmse_model_obs
         preserved_coordinates: [forecast_period]
         cubes:
-          operator: misc.combine_cubes_into_cubelist
-          first:
-            operator: aggregate.combine_obs_across_forecasts
-            cubes:
-              operator: filters.filter_multiple_cubes
-              constraint:
-                operator: constraints.generate_var_constraint
-                varname: observed_visibility_in_air
-          second:
-            operator: regrid.interpolate_to_point_cube
-            fld:
-              operator: aggregate.ensure_aggregatable_across_cases
-              cubes:
-                operator: filters.filter_multiple_cubes
-                constraint:
-                  operator: constraints.generate_var_constraint
-                  varname: visibility_in_air
-            point_cube:
+          operator: aggregate.time_aggregate
+          method: $METHOD3
+          interval_iso: $TIMEFREQ3
+          cubes:
+            operator: misc.combine_cubes_into_cubelist
+            first:
               operator: aggregate.combine_obs_across_forecasts
               cubes:
                 operator: filters.filter_multiple_cubes
                 constraint:
                   operator: constraints.generate_var_constraint
-                  varname: observed_visibility_in_air
+                  varname: observed_$VARNAME3
+            second:
+              operator: regrid.interpolate_to_point_cube
+              fld:
+                operator: aggregate.ensure_aggregatable_across_cases
+                cubes:
+                  operator: filters.filter_multiple_cubes
+                  constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: $VARNAME3
+              point_cube:
+                operator: aggregate.combine_obs_across_forecasts
+                cubes:
+                  operator: filters.filter_multiple_cubes
+                  constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: observed_$VARNAME3
+
+    fourth:
+      operator: collapse.collapse
+      coordinate: forecast_reference_time
+      method: MEAN
+      cubes:
+        operator: scoreswrappers.scores_rmse_model_obs
+        preserved_coordinates: [forecast_period]
+        cubes:
+          operator: aggregate.time_aggregate
+          method: $METHOD4
+          interval_iso: $TIMEFREQ4
+          cubes:
+            operator: misc.combine_cubes_into_cubelist
+            first:
+              operator: aggregate.combine_obs_across_forecasts
+              cubes:
+                operator: filters.filter_multiple_cubes
+                constraint:
+                  operator: constraints.generate_var_constraint
+                  varname: observed_$VARNAME4
+            second:
+              operator: regrid.interpolate_to_point_cube
+              fld:
+                operator: aggregate.ensure_aggregatable_across_cases
+                cubes:
+                  operator: filters.filter_multiple_cubes
+                  constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: $VARNAME4
+              point_cube:
+                operator: aggregate.combine_obs_across_forecasts
+                cubes:
+                  operator: filters.filter_multiple_cubes
+                  constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: observed_$VARNAME4
+
+
+    fifth:
+      operator: collapse.collapse
+      coordinate: forecast_reference_time
+      method: MEAN
+      cubes:
+        operator: scoreswrappers.scores_rmse_model_obs
+        preserved_coordinates: [forecast_period]
+        cubes:
+          operator: aggregate.time_aggregate
+          method: $METHOD5
+          interval_iso: $TIMEFREQ5
+          cubes:
+            operator: misc.combine_cubes_into_cubelist
+            first:
+              operator: aggregate.combine_obs_across_forecasts
+              cubes:
+                operator: filters.filter_multiple_cubes
+                constraint:
+                  operator: constraints.generate_var_constraint
+                  varname: observed_$VARNAME5
+            second:
+              operator: regrid.interpolate_to_point_cube
+              fld:
+                operator: aggregate.ensure_aggregatable_across_cases
+                cubes:
+                  operator: filters.filter_multiple_cubes
+                  constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: $VARNAME5
+              point_cube:
+                operator: aggregate.combine_obs_across_forecasts
+                cubes:
+                  operator: filters.filter_multiple_cubes
+                  constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: observed_$VARNAME5
 
 
     # Plot the data.
   - operator: plot.hinton_plot
-    base: UM
-    other: LF
-    vars: ["temperature_at_screen_level","air_pressure_at_mean_sea_level","visibility_in_air"]
     magnitude: True
 
 
