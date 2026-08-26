@@ -56,7 +56,7 @@ steps:
                operator: constraints.generate_var_constraint
                varname: observed_$VARNAME
 
-  - operator: scoreswrappers.scores_mae_model_obs
+  - operator: scoreswrappers.scores_mae
     preserved_coordinates: "time"
 
   - operator: plot.plot_line_series
