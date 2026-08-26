@@ -4,8 +4,7 @@ description: |
 
   Extracts and plots the Probability of False Detection (POFD) for $VARNAME for each model against observations as a timeseries.
 
-  The Probability of False Detection (POFD) in `scores`
-  (https://scores.readthedocs.io/en/stable/)
+  The Probability of False Detection (POFD) in [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.categorical.BasicContingencyManager.probability_of_false_detection)
   measures the proportion of observed non-events that were incorrectly forecast as events.
   It is a useful metric for assessing how often a forecasting system generates false alarms.
 
