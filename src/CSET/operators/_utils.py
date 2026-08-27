@@ -30,6 +30,7 @@ import iris.coords
 import iris.cube
 import iris.exceptions
 import iris.util
+import numpy as np
 from iris.time import PartialDateTime
 
 from CSET._common import iter_maybe
@@ -583,3 +584,26 @@ def check_if_cylc_workflow() -> Path | None:
 
     # If ROSE_DATAC unset or its path does not exist, return None
     return None
+
+
+def calc_array_stats(
+    array: np.ndarray | np.ma.MaskedArray,
+) -> tuple[float, float, float]:
+    """Calculate the min, max, and mean of an array.
+
+    NaNs/Masked data is ignored.
+
+    Returns
+    -------
+    stats:
+        A tuple of (min, max, mean).
+    """
+    if np.ma.isMaskedArray(array):
+        array_min = array.min()
+        array_max = array.max()
+        array_mean = array.mean()
+    else:
+        array_min = np.nanmin(array)
+        array_max = np.nanmax(array)
+        array_mean = np.nanmean(array)
+    return array_min, array_max, array_mean
