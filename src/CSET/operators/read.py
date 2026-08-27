@@ -50,7 +50,7 @@ class NoDataError(FileNotFoundError):
 
 def read_cube(
     file_paths: list[str] | str,
-    constraint: iris.Constraint = None,
+    constraint: iris.Constraint | None = None,
     model_names: list[str] | str | None = None,
     subarea_type: str | None = None,
     subarea_extent: list[float] | None = None,
