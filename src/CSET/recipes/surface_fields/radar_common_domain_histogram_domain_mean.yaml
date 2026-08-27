@@ -53,11 +53,12 @@ steps:
   - operator: radar_filter.match_varname_and_units
 
   - operator: collapse.collapse
-    coordinate: [projection_y_coordinate, projection_x_coordinate]
+    #coordinate: [projection_y_coordinate, projection_x_coordinate]
+    coordinate: [time]
     method: MEAN
 
   - operator: write.write_cube_to_nc
     overwrite: True
 
   - operator: plot.plot_histogram_series
-    sequence_coordinate: $SEQUENCE
+    #sequence_coordinate: $SEQUENCE
