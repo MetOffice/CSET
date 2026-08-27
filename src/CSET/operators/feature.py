@@ -482,12 +482,15 @@ def _get_effective_radius_from_feature_size(
     """
     # Guess coord representing horizontal grid (choose first available)
     hzntl_coord = next(
-        [
-            coord
-            for coord in cube_with_hzntl_coord.coords()
-            if iris.util.guess_coord_axis(coord) in ["X", "Y"]
-        ]
+        iter(
+            [
+                coord
+                for coord in cube_with_hzntl_coord.coords()
+                if iris.util.guess_coord_axis(coord) in ["X", "Y"]
+            ]
+        )
     )
+
     logger.debug(f"Attempting to convert to effective radius using {hzntl_coord}")
 
     # Check coordinate is regular, but only warn if not, this is a naive estimate
