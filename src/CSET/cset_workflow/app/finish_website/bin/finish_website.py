@@ -121,7 +121,7 @@ def construct_index(www_content: Path):
                 json.dump(plot_metadata, index_fp, separators=(",", ":"))
                 index_fp.write("\n")
             except (json.JSONDecodeError, KeyError, TypeError) as err:
-                logging.error("%s is invalid, skipping.\n%s", metadata_file, err)
+                logger.error("%s is invalid, skipping.\n%s", metadata_file, err)
                 continue
 
 

@@ -16,7 +16,7 @@ description: |
   This will produce a single output plot of the total MAE.
 
   A larger MAE implies a greater error than a smaller MAE. An
-  RMSE of zero indicates the two fields most likely match. The MAE is calculated
+  MAE of zero indicates the two fields most likely match. The MAE is calculated
   on the grid point and thus a spatial view of the MAE provides useful
   information about where the differences are, or if placement errors
   are domininating the score (usually indicated by dipoles). MAE is a fair
@@ -29,7 +29,7 @@ description: |
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
-    model_names: [$BASE_MODEL, $OTHER_MODEL]
+    model_names: [$BASE_MODEL, $OTHER_MODELS]
     constraint:
       operator: constraints.combine_constraints
       varname_constraint:

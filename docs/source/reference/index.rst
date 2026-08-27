@@ -8,8 +8,10 @@ components.
     :maxdepth: 1
 
     glossary
+    gallery/index
     cli
     recipe-format
     operators
     workflow/index
     internal
+    bibliography

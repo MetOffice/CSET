@@ -89,6 +89,66 @@ def test_get_model_colors_map_noname(cube, tmp_working_dir):
     assert model_colors_map == {}
 
 
+def test_get_model_colors_map_user_obs(cube, tmp_working_dir):
+    """Generate OBS model_colors_map if model name includes OBS."""
+    cube.attributes["model_name"] = "my_obs"
+    model_colors_map = _colormaps.get_model_colors_map(cube)
+    assert model_colors_map == {
+        "my_obs": (0.4117647058823529, 0.4117647058823529, 0.4117647058823529)
+    }
+
+
+def test_get_model_colors_map_user_obs_cubelist(cube, tmp_working_dir):
+    """Generate model_colors_map if cubelist input of model names."""
+    cube1 = cube.copy()
+    cube1.attributes["model_name"] = "my_obs"
+    cube2 = cube.copy()
+    cube2.attributes["model_name"] = "model_1"
+    model_colors_map = _colormaps.get_model_colors_map([cube1, cube2])
+    assert model_colors_map == {
+        "my_obs": (0.4117647058823529, 0.4117647058823529, 0.4117647058823529),
+        "model_1": (0.12156862745098039, 0.4666666666666667, 0.7058823529411765),
+    }
+
+
+def test_get_model_colors_map_user_obs_cubelist_reorder(cube, tmp_working_dir):
+    """Re-order OBS plotting in model_colors_map if model name includes OBS."""
+    cube1 = cube.copy()
+    cube1.attributes["model_name"] = "model_1"
+    cube2 = cube.copy()
+    cube2.attributes["model_name"] = "my_obs"
+    model_colors_map = _colormaps.get_model_colors_map([cube1, cube2])
+    assert model_colors_map == {
+        "my_obs": (0.4117647058823529, 0.4117647058823529, 0.4117647058823529),
+        "model_1": (0.12156862745098039, 0.4666666666666667, 0.7058823529411765),
+    }
+
+
+def test_get_model_colors_map_user_reanalysis_cubelist(cube, tmp_working_dir):
+    """Generate model_colors_map including reanalysis."""
+    cube1 = cube.copy()
+    cube1.attributes["model_name"] = "model_1"
+    cube2 = cube.copy()
+    cube2.attributes["model_name"] = "ERA5"
+    model_colors_map = _colormaps.get_model_colors_map([cube1, cube2])
+
+    # Ensure ERA5 reordered as first model, and black (RBG 0's).
+    assert model_colors_map == {
+        "ERA5": (0, 0, 0),
+        "model_1": (0.12156862745098039, 0.4666666666666667, 0.7058823529411765),
+    }
+
+    cube2 = cube.copy()
+    cube2.attributes["model_name"] = "UM_ANALYSIS"
+    model_colors_map = _colormaps.get_model_colors_map([cube1, cube2])
+
+    # Ensure UM Analysis reordered as first model, and black (RBG 0's).
+    assert model_colors_map == {
+        "UM_ANALYSIS": (0, 0, 0),
+        "model_1": (0.12156862745098039, 0.4666666666666667, 0.7058823529411765),
+    }
+
+
 def test_colorbar_map_levels(cube, tmp_working_dir):
     """Colorbar definition is found for cube."""
     cmap, levels, norm = _colormaps.colorbar_map_levels(cube)
@@ -238,12 +298,12 @@ def test_colorbar_map_levels_missing_pressure_level(
         cmap, levels, norm = _colormaps.colorbar_map_levels(cube_288hPa)
         assert caplog.record_tuples == [
             (
-                "root",
+                "CSET.operators._colormaps",
                 logging.DEBUG,
                 "temperature_at_pressure_levels has no colorbar definition for pressure level 288.",
             ),
             (
-                "root",
+                "CSET.operators._colormaps",
                 logging.DEBUG,
                 "Using min and max for temperature_at_pressure_levels colorbar.",
             ),
@@ -468,37 +528,29 @@ def test_colorbar_map_auto(cube, tmp_working_dir):
 def test_colorbar_feature_tracking_id_cube(cube):
     """Colorbar definition is found for a feature id cube."""
     cube.rename("feature_id")
-    cmap, levels, norm = _colormaps.custom_colormap_feature_tracking(
-        cube, None, None, None
-    )
-    expected_levels = np.linspace(1, np.ma.max(cube.data), 10)
-    assert cmap == plt.get_cmap("viridis")
+    cmap, levels, norm = _colormaps.custom_colormap_feature_tracking(cube)
+    expected_levels = None
+    assert cmap.name == "viridis"
     assert cmap.get_under() is not None
-    assert (levels == expected_levels).all()
-    assert (norm.boundaries == levels).all()
+    assert levels == expected_levels
 
 
 def test_colorbar_feature_tracking_lifetime_cube(cube):
     """Colorbar definition is found for a feature lifetime cube."""
     cube.rename("feature_lifetime")
-    cmap, levels, norm = _colormaps.custom_colormap_feature_tracking(
-        cube, None, None, None
-    )
-    expected_levels = np.linspace(1, np.ma.max(cube.data), 10)
-    assert cmap == plt.get_cmap("YlGnBu")
+    cmap, levels, norm = _colormaps.custom_colormap_feature_tracking(cube)
+    expected_levels = None
+    assert cmap.name == "YlGnBu"
     assert cmap.get_under() is not None
-    assert (levels == expected_levels).all()
-    assert (norm.boundaries == levels).all()
+    assert levels == expected_levels
 
 
 def test_colorbar_feature_tracking_init_cube(cube):
     """Colorbar definition is found for a feature init cube."""
     cube.rename("feature_init")
-    cmap, levels, norm = _colormaps.custom_colormap_feature_tracking(
-        cube, None, None, None
-    )
+    cmap, levels, norm = _colormaps.custom_colormap_feature_tracking(cube)
     expected_levels = np.array([0.5, 1])
-    assert cmap == plt.get_cmap("Blues")
+    assert cmap.name == "Blues"
     assert cmap.get_under() is not None
     assert (levels == expected_levels).all()
     assert (norm.boundaries == levels).all()

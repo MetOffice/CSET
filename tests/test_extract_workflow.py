@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-import CSET.extract_workflow as extract_workflow
+from CSET import extract_workflow
 
 
 @pytest.fixture(scope="session")
@@ -254,6 +254,78 @@ def test_install_restricted_files(tmp_path: Path, restricted_git_repo: str):
     assert (tmp_path / "restricted_file.txt").exists()
     # Existing files are untouched.
     assert (tmp_path / "flow.cylc").exists()
+
+
+def test_install_restricted_files_version_tag(
+    tmp_path: Path, restricted_git_repo: str, monkeypatch
+):
+    """Correct ref installed when version tag is matched exactly."""
+
+    def mock_version(_: str):
+        return "1.0.0"
+
+    def mock_clone_ref(ref: str, url: str, location: str):
+        """Check correct ref is supplied."""
+        assert ref == "v1.0.0"
+        # Write out a file to test against.
+        (Path(location) / "test").touch()
+
+    # Make into cylc workflow.
+    (tmp_path / "flow.cylc").touch()
+
+    # Install restricted files.
+    monkeypatch.setattr(extract_workflow, "clone_ref", mock_clone_ref)
+    monkeypatch.setattr("importlib.metadata.version", mock_version)
+    extract_workflow.install_restricted_files(tmp_path, restricted_git_repo)
+    assert (tmp_path / "test").exists(), "Ref was not cloned."
+
+
+def test_install_restricted_files_release_branch(
+    tmp_path: Path, restricted_git_repo: str, monkeypatch
+):
+    """Correct ref installed when version tag is matches a release branch."""
+
+    def mock_version(_: str):
+        return "1.0.1"
+
+    def mock_clone_ref(ref: str, url: str, location: str):
+        """Check correct ref is supplied."""
+        assert ref == "releases/v1.0"
+        # Write out a file to test against.
+        (Path(location) / "test").touch()
+
+    # Make into cylc workflow.
+    (tmp_path / "flow.cylc").touch()
+
+    # Install restricted files.
+    monkeypatch.setattr(extract_workflow, "clone_ref", mock_clone_ref)
+    monkeypatch.setattr("importlib.metadata.version", mock_version)
+    extract_workflow.install_restricted_files(tmp_path, restricted_git_repo)
+    assert (tmp_path / "test").exists(), "Ref was not cloned."
+
+
+def test_install_restricted_files_dev_version(
+    tmp_path: Path, restricted_git_repo: str, monkeypatch
+):
+    """Development versions install from the main branch."""
+
+    def mock_version(_: str):
+        return "1.0.1.dev1"
+
+    def mock_clone_ref(ref: str, url: str, location: str):
+        """Check correct ref is supplied."""
+        assert ref == "main"
+        # Write out a file to test against.
+        (Path(location) / "test").touch()
+
+    # Make into cylc workflow.
+    (tmp_path / "flow.cylc").touch()
+
+    # Install restricted files.
+    monkeypatch.setattr(extract_workflow, "clone_ref", mock_clone_ref)
+    monkeypatch.setattr("importlib.metadata.version", mock_version)
+    extract_workflow.install_restricted_files(tmp_path, restricted_git_repo)
+    assert (tmp_path / "test").exists(), "Ref was not cloned."
 
 
 def test_install_restricted_files_not_workflow(tmp_path: Path):

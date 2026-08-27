@@ -31,8 +31,10 @@ import iris.coords
 import iris.cube
 import numpy as np
 import pytest
+from iris.coords import AuxCoord, DimCoord
+from iris.cube import Cube, CubeList
 
-from CSET.operators import constraints, filters, read
+from CSET.operators import collapse, constraints, filters, read, regrid
 
 
 # Special function that is run after all the tests finish.
@@ -95,7 +97,7 @@ def cdl_to_cubes(
         cdl: str, constraint: str | iris.Constraint | None = None
     ) -> iris.cube.CubeList:
         path = cdl_to_nc_path(cdl)
-        return read.read_cubes(path, constraint)  # noqa
+        return read.read_cubes(path, constraint)
 
     return callback
 
@@ -110,7 +112,7 @@ def cdl_to_cube(
         cdl: str, constraint: str | iris.Constraint | None = None
     ) -> iris.cube.Cube:
         path = cdl_to_nc_path(cdl)
-        return read.read_cube(path, constraint)  # noqa
+        return read.read_cube(path, constraint)
 
     return callback
 
@@ -160,6 +162,12 @@ def cube_readonly(cubes_readonly):
 def cube(cube_readonly):
     """Get an iris Cube. Safe to modify."""
     return cube_readonly.copy()
+
+
+@pytest.fixture()
+def model_obs_cubes(cubes_readonly):
+    """Get an iris Cube. Safe to modify."""
+    return cubes_readonly.copy()
 
 
 @pytest.fixture(scope="session")
@@ -1057,7 +1065,7 @@ def feature_cube() -> iris.cube.Cube:
 
     realization = iris.coords.DimCoord(points=[0, 1, 2], standard_name="realization")
     time_units = cf_units.Unit("days since 2000-01-01 00:00:00", calendar="gregorian")
-    time_start = datetime.datetime(2010, 1, 1, 0, 0, 0)
+    time_start = datetime.datetime(2010, 1, 1, 0, 0, 0, tzinfo=datetime.UTC)
     time_dt_points = [
         time_start + datetime.timedelta(minutes=5 * idx) for idx in range(3)
     ]
@@ -1141,6 +1149,36 @@ def south_polar_cube() -> iris.cube.Cube:
 
 
 @pytest.fixture()
+def point_cube(cube) -> iris.cube.Cube:
+    """Set up example point_cube."""
+    sample_cube = collapse.collapse(cube, ["grid_latitude"], "MEAN")
+    sample_cube.remove_coord("grid_latitude")
+    sample_cube.coord("grid_longitude").rename("station")
+    sample_cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            np.arange(len(sample_cube.coord("station").points)).astype(str),
+            var_name="Station_Name",
+        ),
+        1,
+    )
+    sample_cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            cube.coord("grid_latitude").points[0:13], var_name="grid_latitude"
+        ),
+        1,
+    )
+    sample_cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            cube.coord("grid_longitude").points[0:13], var_name="grid_longitude"
+        ),
+        1,
+    )
+    point_cube = regrid.interpolate_to_point_cube(cube, sample_cube)
+
+    return point_cube
+
+
+@pytest.fixture()
 def precalc_direction_shear_read_only():
     """Get precalculated directional shear across maul for 3D data. It is NOT safe to modify."""
     return read.read_cube("tests/test_data/precipitation/precalc_dir_shear.nc")
@@ -1190,3 +1228,130 @@ def precalc_direction_shear_5d_read_only():
 def precalc_direction_shear_5d(precalc_direction_shear_5d_read_only):
     """Get precalculated directional shear across maul for 5D data. It is safe to modify."""
     return precalc_direction_shear_5d_read_only.copy()
+
+
+@pytest.fixture
+def dummy_cubelist_model_obs():
+    """Set up the model-obv testing cubelist."""
+    N_TIME = 36
+    N_STATION = 28
+
+    rng = np.random.default_rng(42)
+
+    def make_cube(name, model_name, extra_coords=()):
+        data = rng.normal(loc=285.0, scale=5.0, size=(N_TIME, N_STATION)).astype(
+            np.float32
+        )
+        cube = Cube(data, units="K", attributes={"model_name": model_name})
+
+        cube.long_name = name
+        cube.add_dim_coord(
+            DimCoord(
+                np.arange(N_TIME, dtype=np.int64) * 3,
+                standard_name="time",
+                units="hours since 1970-01-01 00:00:00",
+            ),
+            0,
+        )
+        cube.add_dim_coord(
+            DimCoord(
+                np.arange(N_STATION, dtype=np.int32), long_name="station", units="1"
+            ),
+            1,
+        )
+        cube.add_aux_coord(
+            AuxCoord(
+                np.arange(N_TIME, dtype=np.float32) * 3,
+                standard_name="forecast_period",
+                units="hours",
+            ),
+            0,
+        )
+        cube.add_aux_coord(
+            AuxCoord(
+                np.array([f"STN{i:03d}" for i in range(N_STATION)]),
+                long_name="Station_Name",
+                units="unknown",
+            ),
+            1,
+        )
+        cube.add_aux_coord(
+            AuxCoord(
+                np.linspace(49.9, 58.6, N_STATION).astype(np.float32),
+                standard_name="latitude",
+                units="degrees",
+            ),
+            1,
+        )
+        cube.add_aux_coord(
+            AuxCoord(
+                np.linspace(-7.5, 1.7, N_STATION).astype(np.float32),
+                standard_name="longitude",
+                units="degrees",
+            ),
+            1,
+        )
+        cube.add_aux_coord(AuxCoord(np.array([0]), standard_name="realization"))
+        for coord in extra_coords:
+            cube.add_aux_coord(coord)
+
+        return cube
+
+    obs = make_cube("observed_temperature_at_screen_level", model_name="OBS")
+    model_1 = make_cube(
+        "air_temperature",
+        model_name="model_a",
+        extra_coords=[AuxCoord(np.array([1.5]), long_name="height", units="m")],
+    )
+    model_2 = make_cube(
+        "air_temperature",
+        model_name="model_b",
+        extra_coords=[AuxCoord(np.array([1.5]), long_name="height", units="m")],
+    )
+
+    return CubeList([obs, model_1, model_2])
+
+
+@pytest.fixture()
+def make_cube_categorical_testing() -> iris.cube.Cube:
+    """Create test cube."""
+
+    def _make_cube(data, long_name, model_name=None):
+        """Create basic 2D iris cube for testing functionality."""
+        cube = iris.cube.Cube(
+            np.array(data, dtype=float),
+            long_name=long_name,
+            dim_coords_and_dims=[
+                (iris.coords.DimCoord([0, 1], long_name="latitude"), 0),
+                (iris.coords.DimCoord([0, 1], long_name="longitude"), 1),
+            ],
+        )
+
+        cube.attributes["model_name"] = model_name
+
+        return cube
+
+    return _make_cube
+
+
+@pytest.fixture()
+def make_cube_categorical_testing_with_time() -> iris.cube.Cube:
+    """Create test cube."""
+
+    def _make_cube(data, long_name, model_name=None):
+        """Create basic 2D iris cube for testing functionality."""
+        cube = iris.cube.Cube(
+            np.array(data, dtype=float),
+            long_name=long_name,
+            dim_coords_and_dims=[
+                (iris.coords.DimCoord([0, 1, 2], long_name="time"), 0),
+                (iris.coords.DimCoord([0, 1], long_name="latitude"), 1),
+                (iris.coords.DimCoord([0, 1], long_name="longitude"), 2),
+            ],
+        )
+
+        cube.attributes["model_name"] = model_name
+
+        return cube
+
+    return _make_cube

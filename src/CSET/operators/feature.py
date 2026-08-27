@@ -17,6 +17,7 @@ import logging
 import os
 
 import iris
+import iris.coords
 import iris.cube
 import iris.util
 import numpy as np
@@ -24,6 +25,8 @@ from simpletrack.frame import Timeline
 from simpletrack.track import Tracker
 
 from CSET._common import iter_maybe
+
+logger = logging.getLogger(__name__)
 
 
 def track(
@@ -136,7 +139,7 @@ def track(
             "path": f"{os.getcwd()}/tracking_data",
         },
     }
-    logging.debug(f"Tracker config: {tracker_config}")
+    logger.debug(f"Tracker config: {tracker_config}")
 
     # Get cube data into a dict to pass to Tracker
     times = cube.coord("time").points
@@ -149,7 +152,7 @@ def track(
 
     # Run tracking, returning Timeline object
     timeline = Tracker(tracker_config).run(cube_dict)
-    logging.debug("Tracking completed")
+    logger.debug("Tracking completed")
 
     # Use input cube as template to make returned cube
     # By iterating over all cube times, this will ensure all data is present
@@ -189,6 +192,8 @@ def track(
         tracking_cube.standard_name = None
         tracking_cube.var_name = None
         tracking_cube.units = "1"
+        # Add maximum value of the data to the cube attributes for use in colormap scaling
+        tracking_cube.attributes["max_value"] = np.ma.max(tracking_data)
         tracking_cubelist.append(tracking_cube)
 
     return tracking_cubelist
@@ -289,7 +294,7 @@ def cell_stats(
                 "skip_tracking": True,
             },
         }
-        logging.debug(f"Tracker config: {tracker_config}")
+        logger.debug(f"Tracker config: {tracker_config}")
 
         # Get cube data into a dict to pass to Tracker
         times = cube.coord("time").points
@@ -302,7 +307,7 @@ def cell_stats(
 
         # Run tracking, returning Timeline object
         timeline = Tracker(tracker_config).run(cube_dict)
-        logging.debug(f"Tracking completed for {model_name}")
+        logger.debug(f"Tracking completed for {model_name}")
 
         # Get feature data from each frame of data
         size_data, mean_data, max_data = _get_cell_stats_arrays_from_timeline(
@@ -380,7 +385,7 @@ def _check_uniform_grid(cube: iris.cube.Cube) -> bool:
                 f"Horizontal coordinate {coord} is not regular. "
                 "Feature statistics calculation may be inaccurate."
             )
-            logging.warning(warning_msg)
+            logger.warning(warning_msg)
             print(warning_msg)
             return False
     return True
@@ -476,17 +481,19 @@ def _get_effective_radius_from_feature_size(
 
     """
     # Guess coord representing horizontal grid (choose first available)
-    hzntl_coord = [
-        coord
-        for coord in cube_with_hzntl_coord.coords()
-        if iris.util.guess_coord_axis(coord) in ["X", "Y"]
-    ][0]
-    logging.debug(f"Attempting to convert to effective radius using {hzntl_coord}")
+    hzntl_coord = next(
+        [
+            coord
+            for coord in cube_with_hzntl_coord.coords()
+            if iris.util.guess_coord_axis(coord) in ["X", "Y"]
+        ]
+    )
+    logger.debug(f"Attempting to convert to effective radius using {hzntl_coord}")
 
     # Check coordinate is regular, but only warn if not, this is a naive estimate
     # and will be inaccurate for irregular grids
     if not iris.util.is_regular(hzntl_coord):
-        logging.warning(
+        logger.warning(
             f"Horizontal coordinate {hzntl_coord} is not regular. "
             "Effective radius calculation may be inaccurate."
         )
@@ -516,7 +523,7 @@ def _get_effective_radius_from_feature_size(
         if lat_coord_for_conversion is not None:
             mean_latitude = np.mean(lat_coord_for_conversion.points)
         else:
-            logging.warning(
+            logger.warning(
                 "No latitude coordinate found for conversion to km. "
                 "Using naive conversion factor of 111 km per degree."
             )

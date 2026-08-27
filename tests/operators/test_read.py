@@ -1166,11 +1166,11 @@ def test_fix_no_time_coords_callback(cube):
     assert cube.coord("time").units == "hours since 0001-01-01 00:00:00"
 
 
-def test_normalise_ML_varname(transect_source_cube):
+def test_normalise_longname(transect_source_cube):
     """Check that pressure varname is changed."""
     cube = transect_source_cube.copy()
     cube.rename = "air_temperature"
-    read._normalise_ML_varname(cube)
+    read._normalise_longname(cube)
     assert cube.long_name == "temperature_at_pressure_levels"
 
 
@@ -1260,14 +1260,12 @@ def test_check_combine_point_observations_single_obs(cube):
     c2 = read._check_combine_point_observations(c1)
     assert c2 == iris.cube.CubeList([cube])
     assert all(
-        [
-            x == y
-            for x, y in zip(
-                c2[0].coord("station").points,
-                np.arange(len(cube.coord("station").points)),
-                strict=True,
-            )
-        ]
+        x == y
+        for x, y in zip(
+            c2[0].coord("station").points,
+            np.arange(len(cube.coord("station").points)),
+            strict=True,
+        )
     )
     assert "obs_source" not in [coord.name() for coord in cube.coords()]
 
@@ -1282,34 +1280,28 @@ def test_check_combine_point_observations_multiple_obs(cube):
     c2 = read._check_combine_point_observations(c1)
     assert c2 == iris.cube.CubeList([cube, cube2])
     assert all(
-        [
-            x == y
-            for x, y in zip(
-                c2[0].coord("station").points,
-                np.arange(len(cube.coord("station").points)),
-                strict=True,
-            )
-        ]
+        x == y
+        for x, y in zip(
+            c2[0].coord("station").points,
+            np.arange(len(cube.coord("station").points)),
+            strict=True,
+        )
     )
     assert all(
-        [
-            x != y
-            for x, y in zip(
-                c2[1].coord("station").points,
-                np.arange(len(cube.coord("station").points)),
-                strict=True,
-            )
-        ]
+        x != y
+        for x, y in zip(
+            c2[1].coord("station").points,
+            np.arange(len(cube.coord("station").points)),
+            strict=True,
+        )
     )
     assert all(
-        [
-            x == y
-            for x, y in zip(
-                c2[1].coord("station").points,
-                np.arange(len(cube.coord("station").points)) + 17,
-                strict=True,
-            )
-        ]
+        x == y
+        for x, y in zip(
+            c2[1].coord("station").points,
+            np.arange(len(cube.coord("station").points)) + 17,
+            strict=True,
+        )
     )
 
 

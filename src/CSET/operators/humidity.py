@@ -491,21 +491,6 @@ def precipitable_water(
     Examples
     --------
     >>> pwat = humidity.precipitable_water(mixing_ratio)
-
-    References
-    ----------
-    .. [Daviesetal24] Davies, P.A., Fowler, H.J, Villalobos-Herrera, R.,
-       Slingo, J., Flack, D.L.A., and Taszarek, M (2024)
-       "A New Conceptual Model for Understanding and Predicting Life-Threatening
-       Rainfall Extremes." Weather and Climate Extremes, vol. 45, 100696,
-       doi: 10.1016/j.wace.2024.100696
-    .. [Daviesetal26] Davies, P. A., Flack, D. L. A., Pirret, J., Fowler, H. J.
-       (2026) "Application of the Davies Four-Stage Conceptual Model for
-       Life-Threatening Rainfall Extremes on the April 2024 United Arab Emirates
-       and Oman Floods." Weather and Climate Extremes, vol. 51, 100846.
-       doi:10.1016/j.wace.2025.100846
-    .. [Stull2000] Stull, R.B., (2000) "Meteorology for Scientists and Engineers",
-       2nd Edition, Brooks/Cole, California, USA, 502 pp.
     """
     precipitable_water = iris.cube.CubeList([])
     for w in iter_maybe(mixing_ratio):
@@ -522,9 +507,7 @@ def precipitable_water(
             pwat = w[:, :, 0, :, :].copy()
         elif (
             len(w.coord("realization").points) != 1 and len(w.coord("time").points) == 1
-        ):
-            pwat = w[:, 0, :, :].copy()
-        elif (
+        ) or (
             len(w.coord("time").points) != 1 and len(w.coord("realization").points) == 1
         ):
             pwat = w[:, 0, :, :].copy()
@@ -588,12 +571,6 @@ def saturation_precipitable_water(
     Examples
     --------
     >>> sat_pwat = humidity.saturated_precipitable_water(mixing_ratio, RH)
-
-    References
-    ----------
-    .. [Raymondetal2009] Raymond, D.J., Sessions, S.L., Sobel, A.H.,  Fuchs, Z.
-       (2009) "The Mechanics of Gross Moist Stability" Journal of Advances in
-       Modelling Earth Systems, vol. 1, 20 pp. doi: 10.3894/JAMES.2009.1.9
     """
     saturation_precipitable_water = iris.cube.CubeList([])
     for w, rh in zip(
@@ -613,9 +590,7 @@ def saturation_precipitable_water(
             satpw = w[:, :, 0, :, :].copy()
         elif (
             len(w.coord("realization").points) != 1 and len(w.coord("time").points) == 1
-        ):
-            satpw = w[:, 0, :, :].copy()
-        elif (
+        ) or (
             len(w.coord("time").points) != 1 and len(w.coord("realization").points) == 1
         ):
             satpw = w[:, 0, :, :].copy()
@@ -660,7 +635,7 @@ def saturation_fraction(
     is. A value close to one implies that the atmosphere is fully saturated
     throughout the entire column. Smaller values imply the atmosphere is
     drier throughout the column. It is based around ideas of specific entropy
-    ([Zengetal05]_) but can be simplified to an approximation following [Daviesetal2026]_.
+    ([Zengetal05]_) but can be simplified to an approximation following [Daviesetal26]_.
 
     It can be approximated following [Raymondetal09]_ as
 
@@ -668,7 +643,7 @@ def saturation_fraction(
 
     and can be used throughout the globe with the same interpretation.
 
-    For a recent example, [Daviesetal2026]_ have applied the concept to their
+    For a recent example, [Daviesetal26]_ have applied the concept to their
     conceptual model for extreme rainfall. Thus it is a potentially useful diagnostic
     to consider for extreme events, and is thought of as more reliable than
     using precipitable water on its own.
@@ -681,20 +656,6 @@ def saturation_fraction(
     Examples
     --------
     >>> sf = humidity.saturation_fraction(mixing_ratio, relative_humidity)
-
-    References
-    ----------
-    .. [Daviesetal2026] Davies, P. A., Flack, D. L. A., Pirret, J., Fowler, H. J.
-       (2026) "Application of the Davies Four-Stage Conceptual Model for
-       Life-Threatening Rainfall Extremes on the April 2024 United Arab Emirates
-       and Oman Floods." Weather and Climate Extremes, vol. 51, 100846.
-       doi:10.1016/j.wace.2025.100846
-    .. [Raymondetal09] Raymond, D.J., Sessions, S.L., Sobel, A.H.,  Fuchs, Z.
-       (2009) "The Mechanics of Gross Moist Stability" Journal of Advances in
-       Modelling Earth Systems, vol. 1, 20 pp. doi: 10.3894/JAMES.2009.1.9
-    .. [Zengetal05] Zeng, X., Tao, W-K, and Simpson, J. (2005) "An Equation for Moist
-       Entropy in a Precipitating and Icy Atmosphere" Journal of the Atmospheric Sciences,
-       vol. 2, 4293-4309, doi: 10.1175/JAS3570.1
     """
     saturation_fraction = iris.cube.CubeList([])
     for w, rh in zip(

@@ -199,50 +199,50 @@
     "max": 1.1,
     "min": 0.5
   },
-      "feature_id": {
-        "cmap": "viridis",
-        "levels": [
-            1,
-            50,
-            100,
-            150,
-            200,
-            250,
-            300,
-            350,
-            400
-        ],
-        "ymax": 1.0,
-        "ymin": 0.0
-    },
-    "feature_lifetime": {
-        "cmap": "YlGnBu",
-        "levels": [
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8,
-            9,
-            10,
-            11,
-            12
-        ],
-        "ymax": 1.0,
-        "ymin": 0.0
-    },
-    "feature_init": {
-        "cmap": "Blues",
-        "levels": [
-            0.5,
-            1
-        ],
-        "ymax": 1.0,
-        "ymin": 0.0
-    },
+  "feature_id": {
+    "cmap": "viridis",
+    "levels": [
+      1,
+      50,
+      100,
+      150,
+      200,
+      250,
+      300,
+      350,
+      400
+    ],
+    "ymax": 1.0,
+    "ymin": 0.0
+  },
+  "feature_init": {
+    "cmap": "Blues",
+    "levels": [
+      0.5,
+      1
+    ],
+    "ymax": 1.0,
+    "ymin": 0.0
+  },
+  "feature_lifetime": {
+    "cmap": "YlGnBu",
+    "levels": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "ymax": 1.0,
+    "ymin": 0.0
+  },
   "fog_fraction_at_screen_level": {
     "cmap": "viridis",
     "max": 1,
@@ -345,6 +345,11 @@
     "cmap": "PuOr",
     "max": 80.0,
     "min": -80.0
+  },
+  "gust_wind_speed_at_10m": {
+    "cmap": "jet",
+    "max": 40,
+    "min": 0
   },
   "half_peak_to_trough_height_orography": {
     "cmap": "terrain",
@@ -893,6 +898,8 @@
       "100": {
         "max": 240,
         "min": 200,
+        "xmax": 310,
+        "xmin": 190,
         "ymax": "auto",
         "ymin": "auto"
       },
@@ -1169,6 +1176,11 @@
     "cmap": "bwr",
     "max": 5,
     "min": -5
+  },
+  "wind_speed_of_gust": {
+    "cmap": "jet",
+    "max": 40,
+    "min": 0
   },
   "zonal_wind_at_pressure_levels": {
     "cmap": "RdBu_r",

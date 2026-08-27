@@ -302,6 +302,28 @@ def test_spatial_multi_variable_plot_contour_only(cube, tmp_working_dir):
     assert Path("air_temperature_20220921030000.png").is_file()
 
 
+def test_spatial_multi_variable_plot_point_only(cube, point_cube, tmp_working_dir):
+    """Plot spatial plot with based and point cube only."""
+    # Call spatial_multi_pcolormesh_plot with only cube and point_cube.
+    plot.spatial_multi_pcolormesh_plot(
+        cube, point_cube=point_cube, sequence_coordinate="time"
+    )
+    assert Path("air_temperature_20220921030000.png").is_file()
+    assert Path("air_temperature_20220921040000.png").is_file()
+    assert Path("air_temperature_20220921050000.png").is_file()
+
+
+def test_spatial_multi_variable_plot_all_layers(cube, point_cube, tmp_working_dir):
+    """Plot spatial plot with all supported input variables."""
+    # Here assume cube provides cube, overlay_cube and contour_cube.
+    plot.spatial_multi_pcolormesh_plot(
+        cube, cube, cube, point_cube, sequence_coordinate="time"
+    )
+    assert Path("air_temperature_20220921030000.png").is_file()
+    assert Path("air_temperature_20220921040000.png").is_file()
+    assert Path("air_temperature_20220921050000.png").is_file()
+
+
 @pytest.mark.slow
 def test_vector_plot_with_filename(vector_cubes, tmp_working_dir):
     """Plot a vector plot of u10 and v10 components."""
@@ -402,10 +424,9 @@ def test_pcolormesh_plot_global(global_cube, caplog, tmp_working_dir):
     assert message_match
 
 
-def test_spatial_scatter(cube, tmp_working_dir):
-    """Save a spatial plot with scatter of cube points."""
-    cube.coord("grid_latitude").rename("station")
-    plot.spatial_pcolormesh_plot(cube, sequence_coordinate="time")
+def test_spatial_point_cube(point_cube, tmp_working_dir):
+    """Save a spatial plot as scatter of 1d cube points."""
+    plot.spatial_pcolormesh_plot(point_cube, sequence_coordinate="time")
     assert Path("air_temperature_20220921030000.png").is_file()
     assert Path("air_temperature_20220921040000.png").is_file()
     assert Path("air_temperature_20220921050000.png").is_file()
@@ -464,6 +485,16 @@ def test_plot_power_spectrum(power_spectrum_cube_readonly, tmp_working_dir):
     assert Path("power_spectra_20220601000000.png").is_file()
 
 
+def test_plot_power_spectrum_nans(power_spectrum_cube, tmp_working_dir):
+    """Save a power_spectrum plot using line series plot when data is nan."""
+    # Set all values to np.nan
+    power_spectrum_cube.data[:] = np.nan
+
+    # See if it still produces a plot
+    plot.plot_line_series(power_spectrum_cube, series_coordinate="frequency")
+    assert Path("power_spectra_20220601000000.png").is_file()
+
+
 def test_plot_line_series_with_filename(cube, tmp_working_dir):
     """Save a line series plot with specific filename and series coordinate."""
     cube = collapse.collapse(cube, ["time", "grid_longitude"], "MEAN")
@@ -497,6 +528,55 @@ def test_plot_power_spectrum_no_sequence_coordinate(
     power_spectrum_cube.remove_coord("time")
     with pytest.raises(ValueError, match="Cube must have a time coordinate."):
         plot.plot_line_series(power_spectrum_cube, series_coordinate="frequency")
+
+
+def test_plot_line_series_extra_dimension_failure(tmp_working_dir):
+    """Error with three non-realization dimensions."""
+    data = np.random.rand(2, 3, 4, 10)
+
+    cube = iris.cube.Cube(
+        data,
+        long_name="power_spectral_density",
+    )
+
+    # Add a realization coord plus 3 other coordinates
+    cube.add_dim_coord(
+        iris.coords.DimCoord(
+            np.arange(2),
+            standard_name="realization",
+        ),
+        0,
+    )
+
+    cube.add_dim_coord(
+        iris.coords.DimCoord(
+            np.arange(3),
+            long_name="forecast_reference_time",
+        ),
+        1,
+    )
+
+    cube.add_dim_coord(
+        iris.coords.DimCoord(
+            np.arange(4),
+            standard_name="time",
+        ),
+        2,
+    )
+
+    cube.add_dim_coord(
+        iris.coords.DimCoord(
+            np.arange(10),
+            long_name="physical_wavenumber",
+        ),
+        3,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Cube must be 1D or 2D",
+    ):
+        plot.plot_line_series(cube, filename="test_extra_dim", series_coordinate="time")
 
 
 def test_select_series_coord_frequency_fallback(power_spectrum_cube):
@@ -587,6 +667,15 @@ def test_plot_line_series_ensemble(ensemble_cube, tmp_working_dir):
     )
     plot.plot_line_series(ensemble_cube, filename="ensemble_series.ext")
     assert Path("ensemble_series.png").is_file()
+
+
+def test_plot_line_series_stations(point_cube, tmp_working_dir):
+    """Save a line series plot with 1d station points."""
+    # Plot first 3 station points only
+    plot.plot_line_series(point_cube[0:2], filename="station_series.png")
+    assert Path("station_series_0.png").is_file()
+    assert Path("station_series_1.png").is_file()
+    assert Path("station_series_2.png").is_file()
 
 
 def test_plot_and_save_postage_stamp_power_spectrum_series_single_member(
@@ -883,14 +972,14 @@ def test_plot_and_save_histogram_series_bins_precip_amount(
         plot._plot_and_save_histogram_series(
             cubes=histogram_cube,
             filename="test.png",
-            title="Test surface_microphysical",
+            title="Test surface_microphysical_amount",
             vmin=0,
             vmax=0,
             histtype="step",
         )
         message_match = False
         for _, _, message in caplog.record_tuples:
-            if message == "Plotting histogram with 38 bins 0.0 - 398.1071705534973.":
+            if message == "Plotting histogram with 101 bins 0.0 - 398.6074087646058.":
                 message_match = True
         assert message_match
     assert Path("test.png").is_file()
@@ -947,6 +1036,89 @@ def test_plot_and_save_postage_stamps_in_single_plot_histogram_series(
     assert Path("test.png").is_file()
 
 
+def test_plot_scatter_series(cube, tmp_working_dir):
+    """Testing scatter series code produces file."""
+    cube1 = cube.copy()
+    cube1.attributes["model_name"] = "model1"
+    cube2 = cube.copy()
+    cube2.attributes["model_name"] = "model2"
+    plot.plot_scatter_series([cube1, cube2], sequence_coordinate="time")
+    assert Path("scatter_20220921030000.png").is_file()
+    assert Path("scatter_20220921040000.png").is_file()
+    assert Path("scatter_20220921050000.png").is_file()
+
+
+def test_plot_hexbin_series(cube, tmp_working_dir):
+    """Testing scatter series code produces file."""
+    cube1 = cube.copy()
+    cube1.attributes["model_name"] = "model1"
+    cube2 = cube.copy()
+    cube2.attributes["model_name"] = "model2"
+    plot.plot_scatter_series([cube1, cube2], sequence_coordinate="time", hexbin=True)
+    assert Path("hexbin_20220921030000.png").is_file()
+    assert Path("hexbin_20220921040000.png").is_file()
+    assert Path("hexbin_20220921050000.png").is_file()
+
+
+def test_plot_scatter_series_insufficient_models(cube, tmp_working_dir):
+    """Test error raised for scatter plot with insufficient number of models."""
+    # cube = collapse.collapse(cube, ["grid_latitude", "grid_longitude"], "MEAN")
+    with pytest.raises(
+        ValueError,
+        match="Scatter plot series requires multiple number of models in input data.",
+    ):
+        plot.plot_scatter_series([cube, cube])
+
+
+def test_plot_scatter_series_hexbin(cube, tmp_working_dir):
+    """Testing scatter series code produces file with hexbin true."""
+    cube1 = cube.copy()
+    cube1.attributes["model_name"] = "model1"
+    cube2 = cube.copy()
+    cube2.attributes["model_name"] = "model2"
+    plot._plot_and_save_scatter_series(
+        [cube1, cube2], "test.png", "title", 0.0, 10.0, hexbin=True
+    )
+    assert Path("test.png").is_file()
+
+
+def test_plot_hexbin_incorrect_number_of_cubes(cube, tmp_working_dir):
+    """Test exception when incorrect number of cubes provided."""
+    no_cubes = iris.cube.CubeList([])
+    with pytest.raises(
+        ValueError, match="Cubes should contain exactly 2 cubes for hexbin plotting."
+    ):
+        plot._plot_and_save_scatter_series(
+            no_cubes, "test.png", "title", 0.0, 10.0, hexbin=True
+        )
+
+
+def test_plot_scatter_series_seq_coord(cube, tmp_working_dir):
+    """Testing scatter series code produces file."""
+    cube1 = cube.copy()
+    cube1.attributes["model_name"] = "model1"
+    cube2 = cube.copy()
+    cube2.attributes["model_name"] = "model2"
+    plot.plot_scatter_series(
+        [cube1, cube2], filename="test.png", sequence_coordinate="realization"
+    )
+    assert Path("test.png").is_file()
+
+
+def test_plot_scatter_series_station(point_cube, tmp_working_dir):
+    """Testing scatter series code with station coord dim."""
+    cube1 = point_cube[0:3].copy()
+    cube1.attributes["model_name"] = "model1"
+    cube2 = point_cube[0:3].copy()
+    cube2.attributes["model_name"] = "model2"
+    plot.plot_scatter_series(
+        [cube1, cube2], filename="test.png", sequence_coordinate="station"
+    )
+    assert Path("test_0.png").is_file()
+    assert Path("test_1.png").is_file()
+    assert Path("test_2.png").is_file()
+
+
 def test_scatter_plot(cube, vertical_profile_cube, tmp_working_dir):
     """Save a scatter plot."""
     cube_y = collapse.collapse(cube, ["time", "grid_longitude"], "MEAN")[0:4]
@@ -1000,6 +1172,28 @@ def test_scatter_plot_too_many_y_dimensions(
     cube_x = collapse.collapse(vertical_profile_cube, ["time"], "MEAN")[0:4]
     with pytest.raises(ValueError):
         plot.scatter_plot(cube_x, cube_y)
+
+
+def test_save_close_figure(tmp_working_dir, caplog):
+    """Test saving and closing figure file."""
+    fig = mpl.pyplot.figure()
+    message_match = False
+    with caplog.at_level(logging.INFO):
+        plot._save_close_figure(fig, "my test", "test_filename.png")
+        for _, _, message in caplog.record_tuples:
+            if message == "Saved my test plot to test_filename.png":
+                message_match = True
+        assert message_match
+    assert (tmp_working_dir / "test_filename.png").is_file()
+
+
+def test_save_close_figure_in_gallery(tmp_working_dir, monkeypatch):
+    """Figure is not saved when running under sphinx_gallery."""
+    fig = mpl.pyplot.figure()
+    with monkeypatch.context() as mp:
+        mp.setattr("sys.modules", {"sphinx_gallery": None})
+        plot._save_close_figure(fig, "my test", "test_filename.png")
+    assert not (tmp_working_dir / "test_filename.png").exists()
 
 
 def test_get_plot_resolution(tmp_working_dir):
