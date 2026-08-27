@@ -14,7 +14,20 @@
 
 """Load radar observation recipes."""
 
-from CSET.recipes import Config, RawRecipe
+from CSET.recipes import Config, RawRecipe, get_models
+
+
+def select_radar_source(input_source_list):
+    """Select the preferred radar source from a list of sources."""
+    # Preference list for Nimrod sources, with most preferred heading the list.
+    nimrod_preference = ["Nimrod2km", "Nimrodxkm", "Nimrod1km"]
+
+    empty_string = ""
+    preferred_nimrod = empty_string
+    for prefer in reversed(nimrod_preference):
+        if any(prefer in source for source in input_source_list):
+            preferred_nimrod = prefer
+    return preferred_nimrod
 
 
 def get_radar_sources(conf) -> list[dict]:
@@ -86,7 +99,7 @@ def get_radar_sources(conf) -> list[dict]:
 def load(conf: Config):
     """Yield recipes from the given workflow configuration."""
     # Load a list of model detail dictionaries.
-    # models = get_models(conf.asdict())
+    models = get_models(conf.asdict())
 
     # Load the required radar observation sources.
     radar_sources = get_radar_sources(conf)
@@ -123,8 +136,171 @@ def load(conf: Config):
     #                aggregation=False,
     #            )
 
+    # Common domain between model and radar observations.
+    # if conf.SPATIAL_SURFACE_FIELD:
+    if False:
+        # field = "Hourly rain accumulation"
+        field = "surface_microphysical_rainfall_rate"
+        yield RawRecipe(
+            recipe="radar_mask.yaml",
+            variables={
+                "VARNAME": field,
+                "MODEL_LABEL": "ModelA",
+                "NIMROD_LABEL": "Nimrod2km",
+                "MASK_LABEL": "Nimrod2km_wts",
+                "SEQUENCE": "time",
+                "OUTPUTS": "all",
+                "METHOD": "SEQ",
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+                "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+            },
+            model_ids=["1", "Nimrod2km", "Nimrod2km_weights"],
+            aggregation=False,
+        )
+
+    # Histogram sequence using common domain between
+    # model rainfall and radar observations.
+    if conf.HISTOGRAM_SURFACE_FIELD and conf.NIMROD_RADAR_OBS:
+        # Select the radar source to use.
+        radar_source = select_radar_source([source["id"] for source in accum_radars])
+        radar_obs_ids = [radar_source]
+        radar_wts_ids = [radar_source + "_weights"]
+        model_names_list = [model["name"] for model in models]
+        model_ids_list = [model["id"] for model in models]
+        combined_names = model_names_list + radar_obs_ids + radar_wts_ids
+        combined_ids = model_ids_list + radar_obs_ids + radar_wts_ids
+        yield RawRecipe(
+            recipe="radar_common_domain_histogram_sequence.yaml",
+            variables={
+                "VARNAME": "surface_microphysical_rainfall_rate",
+                "ALL_LABEL": combined_names,
+                "MODEL_LABEL": model_names_list,
+                "NIMROD_LABEL": radar_source,
+                "SEQUENCE": "time",
+                "OUTPUTS": "all",
+                "METHOD": "SEQ",
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+                "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+            },
+            model_ids=combined_ids,
+            aggregation=False,
+        )
+
+    # Histogram domain mean using common domain between
+    # model rainfall and radar observations.
+    # if conf.HISTOGRAM_SURFACE_FIELD and conf.NIMROD_RADAR_OBS:
+    if False:
+        # Select the radar source to use.
+        radar_source = select_radar_source([source["id"] for source in accum_radars])
+        radar_obs_ids = [radar_source]
+        radar_wts_ids = [radar_source + "_weights"]
+        model_names_list = [model["name"] for model in models]
+        model_ids_list = [model["id"] for model in models]
+        combined_names = model_names_list + radar_obs_ids + radar_wts_ids
+        combined_ids = model_ids_list + radar_obs_ids + radar_wts_ids
+        yield RawRecipe(
+            recipe="radar_common_domain_histogram_domain_mean.yaml",
+            variables={
+                "VARNAME": "surface_microphysical_rainfall_rate",
+                "ALL_LABEL": combined_names,
+                "MODEL_LABEL": model_names_list,
+                "NIMROD_LABEL": radar_source,
+                "SEQUENCE": "time",
+                "OUTPUTS": "all",
+                "METHOD": "SEQ",
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+                "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+            },
+            model_ids=combined_ids,
+            aggregation=False,
+        )
+
+    # Domain mean timeseries using common domain between
+    # model rainfall and radar observations.
+    if False:
+        # if conf.HISTOGRAM_SURFACE_FIELD and conf.NIMROD_RADAR_OBS:
+        # Select the radar source to use.
+        radar_source = select_radar_source([source["id"] for source in accum_radars])
+        radar_obs_ids = [radar_source]
+        radar_wts_ids = [radar_source + "_weights"]
+        model_names_list = [model["name"] for model in models]
+        model_ids_list = [model["id"] for model in models]
+        combined_names = model_names_list + radar_obs_ids + radar_wts_ids
+        combined_ids = model_ids_list + radar_obs_ids + radar_wts_ids
+        yield RawRecipe(
+            recipe="radar_common_domain_timeseries_domain_mean.yaml",
+            variables={
+                "VARNAME": "surface_microphysical_rainfall_rate",
+                "ALL_LABEL": combined_names,
+                "MODEL_LABEL": model_names_list,
+                "NIMROD_LABEL": radar_source,
+                "SEQUENCE": "time",
+                "OUTPUTS": "all",
+                "METHOD": "SEQ",
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+                "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+            },
+            model_ids=combined_ids,
+            aggregation=False,
+        )
+
+    # Domain timeseries sequence using common domain between
+    # model rainfall and radar observations.
+    # if False:
+    if conf.HISTOGRAM_SURFACE_FIELD and conf.NIMROD_RADAR_OBS:
+        # Select the radar source to use.
+        radar_source = select_radar_source([source["id"] for source in accum_radars])
+        radar_obs_ids = [radar_source]
+        radar_wts_ids = [radar_source + "_weights"]
+        model_names_list = [model["name"] for model in models]
+        model_ids_list = [model["id"] for model in models]
+        combined_names = model_names_list + radar_obs_ids + radar_wts_ids
+        combined_ids = model_ids_list + radar_obs_ids + radar_wts_ids
+        yield RawRecipe(
+            recipe="radar_common_domain_timeseries_sequence.yaml",
+            variables={
+                "VARNAME": "surface_microphysical_rainfall_rate",
+                "ALL_LABEL": combined_names,
+                "MODEL_LABEL": model_names_list,
+                "NIMROD_LABEL": radar_source,
+                "SEQUENCE": "time",
+                "OUTPUTS": "all",
+                "METHOD": "SEQ",
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+                "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+            },
+            model_ids=combined_ids,
+            aggregation=False,
+        )
+
     # Radar masking of radar obs based on sea mask.
     if conf.SPATIAL_SURFACE_FIELD:
+        # field = "Hourly rain accumulation"
+        field = "surface_microphysical_rainfall_rate"
+        yield RawRecipe(
+            recipe="radar_mask_model_obs.yaml",
+            variables={
+                "VARNAME": field,
+                "MODEL_LABEL": "ModelA",
+                "NIMROD_LABEL": "Nimrod2km",
+                "MASK_LABEL": "Nimrod2km_wts",
+                "METHOD": "SEQ",
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+                "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+            },
+            model_ids=["1", "Nimrod2km", "Nimrod2km_weights"],
+            aggregation=False,
+        )
+
+    # Radar masking of radar obs based on sea mask.
+    # if conf.SPATIAL_SURFACE_FIELD:
+    if False:
         field = "Hourly rain accumulation"
         yield RawRecipe(
             recipe="radar_mask_model.yaml",
