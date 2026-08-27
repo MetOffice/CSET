@@ -401,6 +401,9 @@ def _get_cell_stats_arrays_from_timeline(
     timeline: Timeline
         A Simple-Track Timeline object containing tracked features.
 
+    expected_frame_times: list
+        A list of expected frame times to extract data for.
+
     Returns
     -------
     size_data: np.ndarray
