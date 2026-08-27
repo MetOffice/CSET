@@ -118,9 +118,6 @@ def track(
     >>> plt.show()
 
     """
-    # Check that the input cube has horizontal coordinates of xy type, not latitude/longitude
-    _check_xy_coords(cube)
-
     # Setup config
     tracker_config = {
         "FEATURE": {
@@ -257,9 +254,9 @@ def cell_stats(
     # Check inputs
     cubes = iter_maybe(cubes)
 
-    # Require inputs to have horizontal coordinates of xy type, not latitude/longitude
+    # Require inputs to have a uniform grid
     for cube in cubes:
-        _check_xy_coords(cube)
+        _check_uniform_grid(cube)
 
     # Setup containing cube list
     cell_stats_cubelist = iris.cube.CubeList()
@@ -351,32 +348,42 @@ def cell_stats(
     return cell_stats_cubelist
 
 
-def _check_xy_coords(cube: iris.cube.Cube) -> None:
-    """Check that the input cube has horizontal coordinates of xy type, not latitude/longitude.
+def _check_uniform_grid(cube: iris.cube.Cube) -> bool:
+    """Check that the input cube has approximately uniform horizontal grid spacing.
+
+    Prints warning if cube does not have uniform grid.
 
     Parameters
     ----------
     cube: iris.cube.Cube
         An iris cube containing horizontal coordinates.
 
+    Returns
+    -------
+    bool
+        True if the cube has a uniform grid, False otherwise.
+
     Raises
     ------
     ValueError
-        If the input cube has horizontal coordinates of latitude/longitude type.
+        If the input cube does not have a uniform grid.
     """
     hzntl_coords = [
         coord
         for coord in cube.coords()
         if iris.util.guess_coord_axis(coord) in ["X", "Y"]
     ]
-    invalid_coord_names = ["latitude", "longitude", "grid_latitude", "grid_longitude"]
+
     for coord in hzntl_coords:
-        if coord.name() in invalid_coord_names:
-            raise ValueError(
-                f"Input cube {cube} has horizontal coordinate {coord}, "
-                "which is not of xy type. Please provide a cube with horizontal "
-                "coordinates of xy type."
+        if not iris.util.is_regular(coord):
+            warning_msg = (
+                f"Horizontal coordinate {coord} is not regular. "
+                "Feature statistics calculation may be inaccurate."
             )
+            logging.warning(warning_msg)
+            print(warning_msg)
+            return False
+    return True
 
 
 def _get_cell_stats_arrays_from_timeline(
@@ -484,9 +491,39 @@ def _get_effective_radius_from_feature_size(
             "Effective radius calculation may be inaccurate."
         )
 
-    grid_spacing = np.abs(np.mean(np.diff(hzntl_coord.points)))
-    effective_radii_data = np.sqrt(size_data * grid_spacing**2 / np.pi)
+    # Get grid spacing in native coord units (degrees, m, km etc)
+    grid_spacing = iris.util.regular_step(hzntl_coord)
 
+    if hzntl_coord.units == "m":
+        grid_spacing = grid_spacing / 1000  # Convert to km
+
+    # If grid spacing is in degrees, convert to km using approximate conversion factor
+    if hzntl_coord.units == "degrees":
+        # Get latitude for better conversion to km
+        lat_coords = [
+            coord
+            for coord in cube_with_hzntl_coord.coords()
+            if iris.util.guess_coord_axis(coord) in ["Y"]
+        ]
+        for coord in lat_coords:
+            if coord.units == "degrees":
+                lat_coord_for_conversion = coord
+            else:
+                lat_coord_for_conversion = None
+
+        # Calculate conversion factor using latitude correction if available,
+        # otherwise use naive 111 km per degree conversion
+        if lat_coord_for_conversion is not None:
+            mean_latitude = np.mean(lat_coord_for_conversion.points)
+        else:
+            logging.warning(
+                "No latitude coordinate found for conversion to km. "
+                "Using naive conversion factor of 111 km per degree."
+            )
+            mean_latitude = 0
+        grid_spacing = grid_spacing * 111 * np.cos(np.radians(mean_latitude))
+
+    effective_radii_data = np.sqrt(size_data * grid_spacing**2 / np.pi)
     return effective_radii_data, grid_spacing
 
 

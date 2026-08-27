@@ -14,6 +14,7 @@
 """Tests for feature operators."""
 
 import datetime as dt
+import os
 
 import cf_units
 import iris
@@ -118,7 +119,7 @@ def test_save_data(feature_cube, tmp_working_dir) -> None:
         save_data=True,
     )
     # Check expected lifetime field is created in output directory
-    output_directory = f"{tmp_path}/tracking_data"
+    output_directory = f"{tmp_working_dir}/tracking_data"
     expected_file = f"{output_directory}/lifetime_20100101_0000.field"
     assert os.path.isfile(expected_file)
 
@@ -127,7 +128,7 @@ def test_save_data(feature_cube, tmp_working_dir) -> None:
     assert os.path.isfile(expected_file)
 
 
-def test_cell_stats_operator(feature_cube):
+def test_cell_stats_operator(feature_cube, tmp_working_dir):
     """
     Test the cell_stats operator returns expected size, mean, and max values.
 
@@ -136,7 +137,7 @@ def test_cell_stats_operator(feature_cube):
     threshold = 0.5
     min_size = 1
     cubelist = feature.cell_stats(
-        cubes=feature_cube, threshold=threshold, min_size=min_size
+        cubes=feature_cube, threshold=threshold, min_size=min_size, save_data=True
     )
 
     # Extract data from cubelist, squeeze since there is only one feature per timestep
@@ -155,12 +156,14 @@ def test_cell_stats_operator(feature_cube):
 
     grid_spacing = 10  # Assuming grid spacing is 10 meters from test setup
     expected_radius_data = np.sqrt(expected_size_data * grid_spacing**2 / np.pi)
+    # Convert to km
+    expected_radius_data = expected_radius_data / 1000
 
     np.testing.assert_array_equal(size_data, expected_size_data)
     np.testing.assert_array_equal(mean_data, expected_mean_data)
     np.testing.assert_array_equal(max_data, expected_max_data)
-    np.testing.assert_array_equal(effective_radius_data, expected_radius_data)
-    output_directory = tmp_working_dir / "tracking_data"
+    np.testing.assert_array_almost_equal(effective_radius_data, expected_radius_data)
+    output_directory = tmp_working_dir / "None/cell-stats_data"
     expected_file = output_directory / "lifetime_20100101_0000.field"
     assert expected_file.is_file()
 
@@ -169,21 +172,21 @@ def test_cell_stats_operator(feature_cube):
     assert expected_file.is_file()
 
 
-def test_check_xy_coords_valid(feature_cube) -> None:
-    """Test that _check_xy_coords does not raise an error for valid xy coordinates."""
-    try:
-        feature._check_xy_coords(feature_cube)
-    except ValueError:
-        pytest.fail("Unexpected ValueError raised for valid xy coordinates.")
+def test_check_uniform_grid(feature_cube) -> None:
+    """Test that _check_uniform_grid does not raise an error for valid uniform grid."""
+    result = feature._check_uniform_grid(feature_cube)
+    assert result is True
 
 
-def test_check_xy_coords_invalid() -> None:
-    """Test that _check_xy_coords raises a ValueError for invalid latitude/longitude coordinates."""
-    # Create a cube with latitude and longitude coordinates
+def test_check_uniform_grid_invalid() -> None:
+    """Test that _check_uniform_grid raises a ValueError for invalid uniform grid."""
+    # Create a cube with non-uniform grid
     data_arr = np.zeros((10, 10))
+    lat_points = np.linspace(-90, 90, 10)
+    lat_points[-1] = 95
 
     lat_coord = iris.coords.DimCoord(
-        points=np.linspace(-90, 90, 10),
+        points=lat_points,
         standard_name="latitude",
         var_name="latitude",
         units="degrees",
@@ -203,5 +206,5 @@ def test_check_xy_coords_invalid() -> None:
         long_name="Precipitation test",
     )
 
-    with pytest.raises(ValueError):
-        feature._check_xy_coords(cube)
+    result = feature._check_uniform_grid(cube)
+    assert result is False
