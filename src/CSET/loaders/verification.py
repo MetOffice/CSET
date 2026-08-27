@@ -219,7 +219,7 @@ def load(conf: Config):
             preserved_coords = ["time", "latitude", "longitude"]
             scores_method_case = "CASE"
             scores_coords_case = ["latitude", "longitude"]
-
+            recipe_method = method
             if scores_method == "RMSE" and method == scores_method_case:
                 preserved_coords = ["latitude", "longitude"]
                 recipe_method = ""
