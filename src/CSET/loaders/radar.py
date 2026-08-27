@@ -190,8 +190,8 @@ def load(conf: Config):
 
     # Histogram domain mean using common domain between
     # model rainfall and radar observations.
-    # if conf.HISTOGRAM_SURFACE_FIELD and conf.NIMROD_RADAR_OBS:
-    if False:
+    if conf.HISTOGRAM_SURFACE_FIELD and conf.NIMROD_RADAR_OBS:
+        # if False:
         # Select the radar source to use.
         radar_source = select_radar_source([source["id"] for source in accum_radars])
         radar_obs_ids = [radar_source]
@@ -207,9 +207,10 @@ def load(conf: Config):
                 "ALL_LABEL": combined_names,
                 "MODEL_LABEL": model_names_list,
                 "NIMROD_LABEL": radar_source,
-                "SEQUENCE": "time",
+                #                "SEQUENCE": "time",
                 "OUTPUTS": "all",
-                "METHOD": "SEQ",
+                #                "METHOD": "SEQ",
+                "METHOD": "MEAN",
                 "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                 "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
                 "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
@@ -220,8 +221,8 @@ def load(conf: Config):
 
     # Domain mean timeseries using common domain between
     # model rainfall and radar observations.
+    # if conf.HISTOGRAM_SURFACE_FIELD and conf.NIMROD_RADAR_OBS:
     if False:
-        # if conf.HISTOGRAM_SURFACE_FIELD and conf.NIMROD_RADAR_OBS:
         # Select the radar source to use.
         radar_source = select_radar_source([source["id"] for source in accum_radars])
         radar_obs_ids = [radar_source]
@@ -250,8 +251,8 @@ def load(conf: Config):
 
     # Domain timeseries sequence using common domain between
     # model rainfall and radar observations.
-    # if False:
-    if conf.HISTOGRAM_SURFACE_FIELD and conf.NIMROD_RADAR_OBS:
+    # if conf.HISTOGRAM_SURFACE_FIELD and conf.NIMROD_RADAR_OBS:
+    if False:
         # Select the radar source to use.
         radar_source = select_radar_source([source["id"] for source in accum_radars])
         radar_obs_ids = [radar_source]
