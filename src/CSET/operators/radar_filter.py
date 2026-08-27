@@ -17,6 +17,7 @@
 import iris
 import iris.cube
 import iris.exceptions
+import numpy as np
 
 from CSET._common import iter_maybe
 from CSET.operators.filters import apply_mask, generate_mask
@@ -56,7 +57,7 @@ def mask_list(model_names: list[str]) -> list[str]:
 
     Examples
     --------
-     >>> list_weights = make_list( ["UM_model", "Nimrod1km", "Nimrod2km"] )
+     >>> list_weights = mask_list( ["UM_model", "Nimrod1km", "Nimrod2km"] )
      >>> print(list_weights)
      ["Nimrod2km_weights", "Nimrod1km_weights", "Nimrod2km_weights"]
 
@@ -202,6 +203,7 @@ def mask_by_weights(
 def radar_apply_mask(
     original_field: iris.cube.Cube | iris.cube.CubeList,
     mask: iris.cube.Cube | iris.cube.CubeList,
+    boundary_margin: int = 8,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Apply a mask to given data as a masked array.
 
@@ -211,6 +213,9 @@ def radar_apply_mask(
         The field(s) to be masked.
     mask: iris.cube.Cube | iris.cube.CubeList
         The mask(s) being applied to the original field(s).
+    boundary_margin: int, optional
+        Number of grid points from the domain boundary considered "unreliable".
+        Defaults to 8.
 
     Returns
     -------
@@ -236,6 +241,28 @@ def radar_apply_mask(
     for M, F in zip(iter_maybe(mask), iter_maybe(original_field), strict=True):
         masked_field = F.copy()
 
+        # TODO set the model perimeter to NaN as these gridpoints contain no data.
+        # c.f. boundary_margin in regrid.py
+        # Get bounds
+        # Get axis
+        # lat, lon = M.coord(y_coord), M.coord(x_coord)
+        # lat_min, lon_min = lat.points.min(), lon.points.min()
+        # lat_max, lon_max = lat.points.max(), lon.points.max()
+        margin_width = boundary_margin
+        if margin_width > 0:
+            masked_field.data[:, -margin_width - 1 :, :] = np.nan
+            masked_field.data[:, :, -margin_width - 1 :] = np.nan
+            masked_field.data[:, :, 0:margin_width] = np.nan
+            masked_field.data[:, 0:margin_width, :] = np.nan
+        # masked_field.data[:, -margin_width-1:-1, :] = 3.0
+        # masked_field.data[:, :, -margin_width-1:-1] = 1.5
+        # masked_field.data[:, :, 0:margin_width] = 50.0
+        # masked_field.data[:, 0:margin_width, :] = 30.0
+        # masked_field.data[ masked_field.data < 0.01 ] = 200.0
+        # masked_field.data[ masked_field.data == np.nan ] = 20.0
+
+        # TODO must mask the radar obs using the model domain
+
         # If the field and mask are on different grids, then regrid the field.
         if M[0].shape != masked_field[0].shape:
             scheme = iris.analysis.Linear(extrapolation_mode="nan")
@@ -257,3 +284,196 @@ def radar_apply_mask(
     else:
         # return masked_fields
         return masked_fields.merge()
+
+
+def radar_mask(
+    model_field: iris.cube.Cube | iris.cube.CubeList,
+    nimrod_field: iris.cube.Cube | iris.cube.CubeList,
+    nimrod_mask: iris.cube.Cube | iris.cube.CubeList,
+    boundary_margin: int = 8,
+    outputs: str = "Nimrod",
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Apply a mask to given data as a masked array."""
+    # Create an empty cubelist to hold the filtered fields.
+    filtered_fields = iris.cube.CubeList([])
+    filtered_radar = iris.cube.CubeList([])
+    filtered_model = iris.cube.CubeList([])
+
+    # ensure the three inputs to this function are model_field, nimrod_field, nimrod_mask
+
+    for M, F, N in zip(
+        iter_maybe(nimrod_mask),
+        iter_maybe(model_field),
+        iter_maybe(nimrod_field),
+        strict=True,
+    ):
+        #        masked_field = F.copy()
+
+        # apply the function radar_apply_mask to generate the re-gridded and masked model_field
+        # i.e. generate masked_model_field
+        masked_model_field = radar_apply_mask(F, M, boundary_margin=boundary_margin)
+
+        # use the model_field as the mask for the nimrod_field - note: no re-gridding required
+        # i.e. generate masked_nimrod_field
+
+        min_timesteps = min(N.shape[0], masked_model_field.shape[0])
+
+        temp_mask = masked_model_field[0:min_timesteps].copy()
+        # temp_mask.data[ temp_mask.data != np.nan ] = 1.0
+        temp_mask.data[~np.isnan(temp_mask.data)] = 1.0
+
+        masked_nimrod_field = N[0:min_timesteps].copy()
+        # masked_nimrod_field.data = N[0:min_timesteps].data * temp_mask[0:min_timesteps].data
+        masked_nimrod_field.data *= temp_mask.data
+
+        # Append the masked field to the output list of masked fields.
+        filtered_model.append(masked_model_field)
+        filtered_radar.append(masked_nimrod_field)
+
+    # return masked_model_field and masked_nimrod_field --> these can then be passed to either
+    # the histogram or time series plotting operators.
+
+    print(" test point bmc1")
+    if outputs == "Nimrod":
+        filtered_fields.append(filtered_radar.merge_cube())
+    print(" test point bmc2")
+    if outputs == "model":
+        filtered_fields.append(filtered_model.merge_cube())
+    print(" test point bmc3")
+    if outputs == "all":
+        print(" test point bmc4")
+        filtered_fields.append(filtered_model.merge_cube())
+        print(" test point bmc5")
+        filtered_fields.append(filtered_radar.merge_cube())
+
+    print("+++++++++++++++++++++++++++++")
+    print(filtered_fields)
+    print("+++++++++++++++++++++++++++++")
+    # Return either a single cube or a cubelist.
+    print(" test point bmc6")
+    if len(filtered_fields) == 1:
+        print(" test point bmc7a")
+        return filtered_fields[0]
+    else:
+        # return masked_fields
+        # return filtered_fields.merge()
+        print(" test point bmc7")
+        return filtered_fields
+
+
+def radar_mask_loop(
+    model_field: iris.cube.Cube | iris.cube.CubeList,
+    nimrod_field: iris.cube.Cube | iris.cube.CubeList,
+    nimrod_mask: iris.cube.Cube | iris.cube.CubeList,
+    boundary_margin: int = 8,
+    outputs: str = "Nimrod",
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Find common domains between a list of models and radar observations."""
+    # Create an empty cubelist to hold the filtered fields.
+    filtered_cubes = iris.cube.CubeList([])
+
+    # if len(nimrod_field) > 1:
+    # use_nimrod_field = nimrod_field[0]
+    # use_nimrod_mask = nimrod_mask[0]
+    # else:
+    print("-----> len(nimrod_field) ", len(nimrod_field))
+    use_nimrod_field = nimrod_field
+    use_nimrod_mask = nimrod_mask
+
+    # Loop over the models.
+    for model in model_field:
+        print("-------> using model ", model)
+        filtered_model = radar_mask(
+            model,
+            use_nimrod_field,
+            use_nimrod_mask,
+            boundary_margin=boundary_margin,
+            outputs="model",
+        )
+        filtered_cubes.append(filtered_model)
+
+    # Grab the filtered radar observations.
+    print("-----> len(model_field) ", len(model_field))
+    if len(model_field) == 1:
+        filtered_radar = radar_mask(
+            model_field[0],
+            use_nimrod_field,
+            use_nimrod_mask,
+            boundary_margin=boundary_margin,
+            outputs="Nimrod",
+        )
+    else:
+        filtered_radar = radar_mask(
+            model_field[0],
+            use_nimrod_field,
+            use_nimrod_mask,
+            boundary_margin=boundary_margin,
+            outputs="Nimrod",
+        )
+
+    filtered_cubes.append(filtered_radar)
+
+    print("-----------------> returning from radar_mask_loop")
+    return filtered_cubes
+
+
+def match_varname_and_units(cubes: iris.cube.Cube | iris.cube.CubeList):
+    """Match the varname and units of a cube list.
+
+    Arguments
+    ---------
+    cubes: iris.cube.Cube | iris.cube.CubeList
+        A Cube or CubeList of a field to be matched.
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        The matched cubes.
+
+
+    Notes
+    -----
+    This function converts the names and units of a cube list to match
+    the first cube in the list. If just one cube is input, then this is
+    returned.
+    """
+    # If just one cube, then no need to match so return.
+    if len(cubes) == 1:
+        return cubes
+
+    print("@@@@@@@@@@@@@@@@@@@@@ cubes[0] @@@@@@@@@@@@")
+    print(cubes[0])
+    print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+
+    # Initialise the list of matched cubes.
+    new_cubelist = iris.cube.CubeList([])
+    new_cubelist.append(cubes[0])
+
+    # Loop the cubes to match to the first cube.
+    base_cube = cubes[0]
+    print("@@@@@@@@@@@@@@@@@@@@@ base_cube @@@@@@@@@@@@")
+    print("base_cube.name          : ", base_cube.name)
+    print("base_cube.standard_name : ", base_cube.standard_name)
+    print("base_cube.long_name     : ", base_cube.long_name)
+    print("base_cube.var_name      : ", base_cube.var_name)
+    print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+    for cube in cubes[1:]:
+        print("@@@@@@@@@@@@@@@ raw @@@@@@@@@@@@@@@@@@")
+        print(cube)
+        print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+        new_cube = cube.copy()
+        new_cube.rename(base_cube.long_name)
+        new_cube.long_name = base_cube.long_name
+        new_cube.units = base_cube.units
+        print("@@@@@@@@@@@@@@@ matched @@@@@@@@@@@@@@@@@@")
+        print("new_cube.name          : ", new_cube.name)
+        print("new_cube.standard_name : ", new_cube.standard_name)
+        print("new_cube.long_name     : ", new_cube.long_name)
+        print("new_cube.var_name      : ", new_cube.var_name)
+        print(new_cube)
+        print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+
+        # Append the matched cube to the output cube list.
+        new_cubelist.append(new_cube)
+
+    return new_cubelist
