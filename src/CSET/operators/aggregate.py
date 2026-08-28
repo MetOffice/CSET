@@ -87,14 +87,12 @@ def time_aggregate(
     ValueError
         If the constraint doesn't produce a single cube containing a field.
     """
-
-    if timedelta == '0':
+    if timedelta == "0":
         return cubes
 
     resampled_cubes = iris.cube.CubeList()
 
     for cube in cubes:
-
         # Duration of ISO timedelta.
         timedelta = isodate.parse_duration(interval_iso)
 
@@ -115,7 +113,7 @@ def time_aggregate(
 
     if len(resampled_cubes) == 1:
         return resampled_cubes[0]
-    else
+    else:
         return resampled_cubes
 
 
@@ -223,8 +221,6 @@ def ensure_aggregatable_across_cases(
 
 
 import iris
-import numpy as np
-
 from iris.coords import AuxCoord, DimCoord
 from iris.cube import Cube
 
@@ -256,7 +252,6 @@ def combine_obs_across_forecasts(cubes):
     Only stations present in every forecast are retained.
     All station metadata coordinates are preserved.
     """
-
     if len(cubes) < 2:
         raise ValueError("Need at least two cubes")
 
@@ -267,7 +262,6 @@ def combine_obs_across_forecasts(cubes):
     valid_station_sets = []
 
     for cube in cubes:
-
         names = cube.coord("Station_Name").points
 
         data = cube.data
@@ -275,25 +269,20 @@ def combine_obs_across_forecasts(cubes):
         # Handle masked and unmasked arrays
         if np.ma.isMaskedArray(data):
             mask = np.ma.getmaskarray(data)
-            station_valid = (
-                ~np.any(mask, axis=0)
-                & np.all(np.isfinite(data.filled(np.nan)), axis=0)
+            station_valid = ~np.any(mask, axis=0) & np.all(
+                np.isfinite(data.filled(np.nan)), axis=0
             )
         else:
             station_valid = np.all(np.isfinite(data), axis=0)
 
-        valid_station_sets.append(
-            set(names[station_valid])
-        )
+        valid_station_sets.append(set(names[station_valid]))
 
-    common_stations = sorted(
-        set.intersection(*valid_station_sets)
-    )
+    common_stations = sorted(set.intersection(*valid_station_sets))
 
     logger.info(
-    "Retaining %s/%s stations with complete observations",
-    len(common_stations),
-    cube.shape[1],
+        "Retaining %s/%s stations with complete observations",
+        len(common_stations),
+        cube.shape[1],
     )
 
     if not common_stations:
@@ -310,30 +299,19 @@ def combine_obs_across_forecasts(cubes):
     time_points = []
 
     for cube in cubes:
-
         names = cube.coord("Station_Name").points
 
-        lookup = {
-            name: idx
-            for idx, name in enumerate(names)
-        }
+        lookup = {name: idx for idx, name in enumerate(names)}
 
-        station_indices = [
-            lookup[name]
-            for name in common_stations
-        ]
+        station_indices = [lookup[name] for name in common_stations]
 
         subcube = cube[:, station_indices]
 
         subset_data.append(subcube.data)
 
-        frt_points.append(
-            cube.coord("forecast_reference_time").points[0]
-        )
+        frt_points.append(cube.coord("forecast_reference_time").points[0])
 
-        time_points.append(
-            cube.coord("time").points
-        )
+        time_points.append(cube.coord("time").points)
 
     # --------------------------------------------------------------
     # Check all cubes have same time axis length
@@ -343,9 +321,7 @@ def combine_obs_across_forecasts(cubes):
 
     for t in time_points[1:]:
         if len(t) != ntime:
-            raise ValueError(
-                "Forecasts have different numbers of lead times"
-            )
+            raise ValueError("Forecasts have different numbers of lead times")
 
     # --------------------------------------------------------------
     # Generate forecast period
@@ -354,18 +330,12 @@ def combine_obs_across_forecasts(cubes):
     time_coord = cubes[0].coord("time")
     frt_coord = cubes[0].coord("forecast_reference_time")
 
-    frt_date = frt_coord.units.num2date(
-        frt_coord.points[0]
-    )
+    frt_date = frt_coord.units.num2date(frt_coord.points[0])
 
     fp_hours = []
 
-    for dt in time_coord.units.num2date(
-        time_coord.points
-    ):
-        fp_hours.append(
-            (dt - frt_date).total_seconds() / 3600
-        )
+    for dt in time_coord.units.num2date(time_coord.points):
+        fp_hours.append((dt - frt_date).total_seconds() / 3600)
 
     fp_hours = np.asarray(fp_hours)
 
@@ -388,9 +358,7 @@ def combine_obs_across_forecasts(cubes):
     frt_out = DimCoord(
         frt_points,
         standard_name="forecast_reference_time",
-        units=cubes[0].coord(
-            "forecast_reference_time"
-        ).units,
+        units=cubes[0].coord("forecast_reference_time").units,
     )
 
     fp_out = DimCoord(
@@ -426,19 +394,12 @@ def combine_obs_across_forecasts(cubes):
 
     ref_names = ref_cube.coord("Station_Name").points
 
-    ref_lookup = {
-        name: idx
-        for idx, name in enumerate(ref_names)
-    }
+    ref_lookup = {name: idx for idx, name in enumerate(ref_names)}
 
-    common_idx = [
-        ref_lookup[name]
-        for name in common_stations
-    ]
+    common_idx = [ref_lookup[name] for name in common_stations]
 
     # skip coords as we have awkward station and station_0 arbritary monotonic arrays.
     for coord in ref_cube.aux_coords:
-
         try:
             dims = ref_cube.coord_dims(coord)
         except Exception:
@@ -452,33 +413,19 @@ def combine_obs_across_forecasts(cubes):
 
         # verify same in every cube
         for cube in cubes[1:]:
+            cube_names = cube.coord("Station_Name").points
 
-            cube_names = cube.coord(
-                "Station_Name"
-            ).points
+            cube_lookup = {name: idx for idx, name in enumerate(cube_names)}
 
-            cube_lookup = {
-                name: idx
-                for idx, name in enumerate(cube_names)
-            }
+            idx = [cube_lookup[name] for name in common_stations]
 
-            idx = [
-                cube_lookup[name]
-                for name in common_stations
-            ]
-
-            other_values = cube.coord(
-                coord.name()
-            ).points[idx]
+            other_values = cube.coord(coord.name()).points[idx]
 
             if not np.array_equal(
                 values,
                 other_values,
             ):
-                raise ValueError(
-                    f"Station metadata differs for "
-                    f"coord '{coord.name()}'"
-                )
+                raise ValueError(f"Station metadata differs for coord '{coord.name()}'")
 
         aux = AuxCoord(
             values,
