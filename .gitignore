@@ -132,6 +132,7 @@ dmypy.json
 
 # Code Editors
 .vscode/
+.idea/
 
 # Ruff
 .ruff_cache/
@@ -141,3 +142,14 @@ dmypy.json
 
 # MacOS temp files
 .DS_Store
+
+# Plot files written by CSET that can sometimes leak from the tests.
+/meta.json
+/*.html
+/*.png
+
+# Sphinx Gallery generated documentation files.
+/docs/source/sg_execution_times.rst
+/docs/source/reference/gallery/generated/
+/docs/source/reference/gallery/examples/**/*.html
+/docs/source/reference/gallery/examples/**/*.json

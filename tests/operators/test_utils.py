@@ -376,6 +376,17 @@ def test_slice_over_ensemble(long_forecast):
     )
 
 
+def test_slice_over_non_coorddim():
+    """Check that slice over without coordinate dimension leaves input unaffected."""
+    foo_coord = iris.coords.AuxCoord(
+        [0], var_name="foo", attributes={"shared_attribute": 1}
+    )
+    cube = iris.cube.Cube(
+        [0], var_name="variable", aux_coords_and_dims=[(foo_coord, 0)]
+    )
+    assert operator_utils.slice_over_maybe(cube, "foo", 0) == cube
+
+
 def test_is_time_aggregatable_False(cardington_cube):
     """Check that a cube that is not time aggregatable returns False."""
     assert not operator_utils.is_time_aggregatable(cardington_cube)
@@ -654,3 +665,51 @@ def test_valid_sequence_coord_not_in_cube(cube):
     """Check that error raised if sequence coordinate not in cube."""
     with pytest.raises(ValueError, match="Cube must have a dummy coordinate"):
         operator_utils.check_sequence_coordinate(cube, "dummy")
+
+
+def test_check_if_cylc_workflow_true(monkeypatch, tmp_path):
+    """Check that running in Cylc returns True and Path."""
+    # Create mock environment variable
+    monkeypatch.setenv("ROSE_DATAC", str(tmp_path))
+
+    assert operator_utils.check_if_cylc_workflow() == tmp_path
+
+
+def test_check_if_cylc_workflow_no_dir(monkeypatch, tmp_path):
+    """Test ROSE_DATAC present but no dir."""
+    # Create mock environment variable
+    monkeypatch.setenv("ROSE_DATAC", str(tmp_path) + "/foo/")
+
+    assert operator_utils.check_if_cylc_workflow() is None
+
+
+def test_check_if_cylc_workflow_false(monkeypatch, tmp_path):
+    """Test no ROSE_DATAC present."""
+    assert operator_utils.check_if_cylc_workflow() is None
+
+
+def test_calc_array_stats():
+    """Array stats are calculated for a normal array."""
+    array = np.array((1.0, 2.0, 3.0))
+    array_min, array_max, array_mean = operator_utils.calc_array_stats(array)
+    assert array_min == 1.0
+    assert array_max == 3.0
+    assert array_mean == 2.0
+
+
+def test_calc_array_stats_nans():
+    """Array stats are calculated for an array containing NaNs."""
+    array = np.array((1.0, np.nan, 3.0))
+    array_min, array_max, array_mean = operator_utils.calc_array_stats(array)
+    assert array_min == 1.0
+    assert array_max == 3.0
+    assert array_mean == 2.0
+
+
+def test_calc_array_stats_masked_array():
+    """Array stats are calculated for a masked array."""
+    array = np.ma.MaskedArray((1.0, -9999, 3.0), mask=(False, True, False))
+    array_min, array_max, array_mean = operator_utils.calc_array_stats(array)
+    assert array_min == 1.0
+    assert array_max == 3.0
+    assert array_mean == 2.0
