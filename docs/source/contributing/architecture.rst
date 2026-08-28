@@ -185,7 +185,6 @@ src/CSET/cset_workflow
     ├── site                         # Site-specific cylc configuration.
     │   └── localhost.cylc
     ├── flow.cylc                    # Workflow definition detailing how tasks are run.
-    ├── install_restricted_files.sh  # Script for installing site-specific files.
     ├── README.md
     ├── rose-suite.conf              # User configuration of workflow and diagnostics.
     └── rose-suite.conf.example      # Blank user configuration to be copied.

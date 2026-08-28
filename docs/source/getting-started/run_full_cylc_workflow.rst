@@ -71,13 +71,19 @@ With the newly created conda environment activated, run the ``cset
 extract-workflow`` command to unpack the workflow from inside the CSET package
 into a directory of your choosing. A sensible choice is ``~/cylc-src``, which is
 the default location where cylc will search for workflows.
+If you are at a Momentum® Partnership site with restricted site specific files
+you should also include the ``--restricted`` flag to install them.
 
 .. code-block:: bash
 
     # Create the cylc-src directory if it doesn't exist.
     mkdir -p ~/cylc-src
+
     # Extract the workflow from CSET into the chosen directory.
-    cset extract-workflow ~/cylc-src
+    # Alternatively install the restricted site-specific files at Momentum sites.
+    cset extract-workflow --restricted ~/cylc-src  # Momentum Partners.
+    cset extract-workflow ~/cylc-src               # Everyone else.
+
     # Change into the freshly unpacked workflow directory.
     cd ~/cylc-src/cset-workflow-vX.Y.Z
 
@@ -86,18 +92,19 @@ Your directory should look like this:
 .. code-block:: bash
 
     $ ls
-    app  conda-environment  includes                     lib   opt        rose-suite.conf.example
-    bin  flow.cylc          install_restricted_files.sh  meta  README.md  site
+    app  conda-environment  includes  meta  README.md                site
+    bin  flow.cylc          lib       opt   rose-suite.conf.example
 
 If you are at a site with specific CSET integration, such as the Met Office or
-Momentum Partnership, you will want to install the site specific configuration
+Momentum Partnership, and did not use the ``--restricted`` option to ``cset
+extract-workflow`` you will want to install the site specific configuration
 files that specify where cylc will run the tasks. This is done by running the
-``install_restricted_files.sh`` script. For other users, you can skip this step
-and use the ``localhost`` site instead.
+``cset install-restricted-files`` command. For other users, you can skip this
+step and use the ``localhost`` site instead.
 
 .. code-block:: bash
 
-    ./install_restricted_files.sh
+    cset install-restricted-files /path/to/workflow
 
 You have now installed the CSET workflow and are ready to use it.
 

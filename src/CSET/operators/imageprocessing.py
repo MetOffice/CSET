@@ -26,6 +26,8 @@ from CSET.operators._utils import fully_equalise_attributes, get_cube_yxcoordnam
 from CSET.operators.misc import _extract_common_time_points
 from CSET.operators.regrid import regrid_onto_cube
 
+logger = logging.getLogger(__name__)
+
 
 def _SSIM_cube_preparation(
     cubes: iris.cube.CubeList,
@@ -91,9 +93,7 @@ def _SSIM_cube_preparation(
             "vapour_specific_humidity_at_pressure_levels_for_climate_averaging",
         ]
     ):
-        logging.debug(
-            "Linear regridding base cube to other grid to compute differences"
-        )
+        logger.debug("Linear regridding base cube to other grid to compute differences")
         base = regrid_onto_cube(base, other, method="Linear")
 
     # Figure out if we are comparing between UM and LFRic; flip array if so.
@@ -107,16 +107,16 @@ def _SSIM_cube_preparation(
 
     # Equalise attributes so we can merge.
     fully_equalise_attributes([base, other])
-    logging.debug("Base: %s\nOther: %s", base, other)
+    logger.debug("Base: %s\nOther: %s", base, other)
 
     # Get the name of the first non-scalar time coordinate.
     time_coord = next(
-        map(
-            lambda coord: coord.name(),
-            filter(
+        (
+            coord.name()
+            for coord in filter(
                 lambda coord: coord.shape > (1,) and coord.name() in ["time", "hour"],
                 base.coords(),
-            ),
+            )
         ),
         None,
     )
@@ -179,13 +179,6 @@ def spatial_structural_similarity_model_comparisons(
 
     Further details, including caveats, can be found in Wang et al. (2004)
     [Wangetal2004]_.
-
-    References
-    ----------
-    .. [Wangetal2004] Wang, Z., Bovik, A.C., Sheikh, H.R., Simoncelli, E.P. (2004)
-       "Image Quality Assessment: From Error Visibility to Structural Similarity."
-       IEEE Transactions on Image Processing, vol. 13, 600-612,
-       doi: 10.1109/TIP.2003.819861
 
     Examples
     --------
@@ -280,13 +273,6 @@ def mean_structural_similarity_model_comparisons(
 
     Further details, including caveats, can be found in Wang et al. (2004)
     [Wangetal2004a]_.
-
-    References
-    ----------
-    .. [Wangetal2004a] Wang, Z., Bovik, A.C., Sheikh, H.R., Simoncelli, E.P. (2004)
-       "Image Quality Assessment: From Error Visibility to Structural Similarity."
-       IEEE Transactions on Image Processing, vol. 13, 600-612,
-       doi: 10.1109/TIP.2003.819861
 
     Examples
     --------

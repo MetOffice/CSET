@@ -17,7 +17,7 @@
 import numpy as np
 from scipy.ndimage import gaussian_filter, uniform_filter
 
-import CSET.operators.mesoscale as mesoscale
+from CSET.operators import mesoscale
 from CSET.operators._utils import get_cube_yxcoordname
 
 
