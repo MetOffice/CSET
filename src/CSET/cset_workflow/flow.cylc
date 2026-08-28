@@ -154,6 +154,8 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     [[fetch_obs]]
     # Fetch observations from the MetDB.
     inherit = FETCH_DATA
+    execution time limit = PT3M
+    submission retry delays = PT30S, PT1M, PT2M, PT5M, PT10M
     script = rose task-run -v --app-key=fetch_obs
         [[[environment]]]
         MODEL_IDENTIFIER = "OBS"
