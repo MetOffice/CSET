@@ -1,22 +1,23 @@
 category: Scores
-title: "$VARNAME\nRMSE timeseries between $OTHER_MODEL and $BASE_MODEL"
+title: "$VARNAME\nScores Mean Absolute Error timeseries between models and $BASE_MODEL $SUBAREA_NAME"
 description: |
-  Extracts and plots the Root Mean Square Error in $VARNAME
-  for all times. The RMSE is calculated based on that used in the
-  package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.rmse).
-  This recipe allows the preservation of the time coordinate to produce a timeseries. Therefore, the RMSE is
+  Extracts and plots the Mean Absolute Error in $VARNAME
+  computed over the domain for each timestep. The MAE is calculated based on that used in the
+  package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.mae).
+  This recipe allows the preservation of the time coordinate to produce a timeseries. Therefore, the MAE is
   collapsed over all other coordinates in the cube and calculated for every timestep.
 
-  A larger RMSE implies a greater error than a smaller RMSE. An
-  RMSE of zero implies the two fields match. The RMSE is calculated
-  on the grid point and thus a spatial view of the RMSE provides useful
+  A larger MAE implies a greater error than a smaller MAE. An
+  MAE of zero indicates the two fields most likely match. The MAE is calculated
+  on the grid point and thus a spatial view of the MAE provides useful
   information about where the differences are, or if placement errors
-  are domininating the score (usually indicated by dipoles).
+  are domininating the score (usually indicated by dipoles). MAE is a fair
+  measure of error when forecasting the median and is not sensitive to outliers.
 
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
-    model_names: [$BASE_MODEL, $OTHER_MODEL]
+    model_names: [$BASE_MODEL, $OTHER_MODELS]
     constraint:
       operator: constraints.combine_constraints
       varname_constraint:
@@ -33,7 +34,7 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
-  - operator: scoreswrappers.scores_rmse
+  - operator: scoreswrappers.scores_mae
     preserved_coordinates: ["time"]
 
   - operator: plot.plot_line_series
