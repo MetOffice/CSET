@@ -50,7 +50,7 @@ class NoDataError(FileNotFoundError):
 
 def read_cube(
     file_paths: list[str] | str,
-    constraint: iris.Constraint = None,
+    constraint: iris.Constraint | None = None,
     model_names: list[str] | str | None = None,
     subarea_type: str | None = None,
     subarea_extent: list[float] | None = None,
@@ -405,6 +405,7 @@ def _cutout_cubes(
 def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.Cube:
     """Compose together the needed callbacks into a single function."""
     # Most callbacks operate in-place, but save the cube when returned!
+    _remove_cset_comparison_base_attribute_callback(cube)
     _realization_callback(cube)
     _um_normalise_callback(cube)
     _lfric_normalise_callback(cube)
@@ -425,6 +426,14 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     cube = _fix_no_time_coords_callback(cube)
     _normalise_longname(cube)
     return cube
+
+
+def _remove_cset_comparison_base_attribute_callback(cube):
+    """Remove ``cset_comparison_base`` attribute if present.
+
+    This allows for reprocessing output previously saved by CSET.
+    """
+    cube.attributes.pop("cset_comparison_base", None)
 
 
 def _realization_callback(cube):
