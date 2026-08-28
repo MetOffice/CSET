@@ -21,9 +21,11 @@ import iris.coords
 import iris.cube
 import iris.exceptions
 import numpy as np
-import scipy.fft as fft
+from scipy import fft
 
 from CSET._common import iter_maybe
+
+logger = logging.getLogger(__name__)
 
 
 def calculate_power_spectrum(cubes: iris.cube.Cube | iris.cube.CubeList):
@@ -40,6 +42,10 @@ def calculate_power_spectrum(cubes: iris.cube.Cube | iris.cube.CubeList):
     In case of a CubeList (Multiple models and ensembles): It iterates through
     each cube and calculates an individual power spectrum. In case of a
     single cube (one model) it directly calculates the power spectrum.
+
+    Method for regional domains:
+    Calculate power spectra over limited area domain using Discrete Cosine Transform (DCT)
+    as described in Denis et al 2002 [Denis_etal_2002]_.
 
     Parameters
     ----------
@@ -124,7 +130,7 @@ def _power_spectrum(cube: iris.cube.Cube) -> iris.cube.Cube:
 
     if cube.ndim == 2:
         cube_3d = cube.data[np.newaxis, :, :]
-        logging.debug("Adding in new axis for a 2 dimensional cube.")
+        logger.debug("Adding in new axis for a 2 dimensional cube.")
     elif cube.ndim == 3:
         cube_3d = cube.data
     else:
@@ -149,7 +155,7 @@ def _power_spectrum(cube: iris.cube.Cube) -> iris.cube.Cube:
             y_coord = cube.coord(y_coord_name)
         except iris.exceptions.CoordinateNotFoundError:
             continue
-        logging.debug(
+        logger.debug(
             "Using %s and %s coordinates for grid spacing calculation.",
             x_coord_name,
             y_coord_name,
@@ -239,18 +245,6 @@ def _DCT_ps(y_3d):
     -------
     ps_array:
         Array of power spectra values calculated for input field (for each time)
-
-    Method for regional domains:
-    Calculate power spectra over limited area domain using Discrete Cosine Transform (DCT)
-    as described in Denis et al 2002 [Denis_etal_2002]_.
-
-    References
-    ----------
-    .. [Denis_etal_2002] Bertrand Denis, Jean Côté and René Laprise (2002)
-        "Spectral Decomposition of Two-Dimensional Atmospheric Fields on
-        Limited-Area Domains Using the Discrete Cosine Transform (DCT)"
-        Monthly Weather Review, Vol. 130, 1812-1828
-        doi: https://doi.org/10.1175/1520-0493(2002)130<1812:SDOTDA>2.0.CO;2
     """
     Nt, Ny, Nx = y_3d.shape
 

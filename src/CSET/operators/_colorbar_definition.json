@@ -1,4 +1,25 @@
 {
+  "Hourly rain accumulation": {
+    "cmap": "cividis",
+    "max": 256,
+    "min": 0,
+    "ymax": 1.0,
+    "ymin": 0.0
+  },
+  "Hourly wts accumulation": {
+    "cmap": "cividis",
+    "max": 13,
+    "min": 0,
+    "ymax": 1.0,
+    "ymin": 0.0
+  },
+  "Rainfall rate Composite": {
+    "cmap": "cividis",
+    "max": 256,
+    "min": 0,
+    "ymax": 1.0,
+    "ymin": 0.0
+  },
   "air_potential_temperature": {
     "cmap": "RdYlBu_r",
     "max": 350,
@@ -280,6 +301,11 @@
     "cmap": "PuOr",
     "max": 80.0,
     "min": -80.0
+  },
+  "gust_wind_speed_at_10m": {
+    "cmap": "jet",
+    "max": 40,
+    "min": 0
   },
   "half_peak_to_trough_height_orography": {
     "cmap": "terrain",
@@ -828,6 +854,8 @@
       "100": {
         "max": 240,
         "min": 200,
+        "xmax": 310,
+        "xmin": 190,
         "ymax": "auto",
         "ymin": "auto"
       },
@@ -1104,6 +1132,11 @@
     "cmap": "bwr",
     "max": 5,
     "min": -5
+  },
+  "wind_speed_of_gust": {
+    "cmap": "jet",
+    "max": 40,
+    "min": 0
   },
   "zonal_wind_at_pressure_levels": {
     "cmap": "RdBu_r",

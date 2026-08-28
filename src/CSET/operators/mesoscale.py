@@ -28,6 +28,8 @@ from scipy.ndimage import gaussian_filter, uniform_filter
 
 from CSET.operators._utils import get_cube_yxcoordname
 
+logger = logging.getLogger(__name__)
+
 
 def spatial_perturbation_field(
     original_field: iris.cube.Cube,
@@ -75,13 +77,6 @@ def spatial_perturbation_field(
     Caution should be applied to boundaries, particularly if the domain is of
     variable resolution, as some numerical artifacts could be introduced.
 
-    References
-    ----------
-    .. [Flacketal2016] Flack, D.L.A., Plant, R.S., Gray, S.L., Lean, H.W.,
-       Keil, C. and Craig, G.C. (2016) "Characterisation of Convective
-       Regimes over the British Isles." Quarterly Journal of the Royal
-       Meteorological Society, vol. 142, 1541-1553. doi:10.1002/qj.2758
-
     Examples
     --------
     >>> Temperature_perturbation = meso.spatial_perturbation_fields(Temp,
@@ -104,14 +99,14 @@ def spatial_perturbation_field(
     # apply convolution depending on type used
     if apply_gaussian_filter:
         filter_type = "Gaussian"
-        logging.info("Gaussian filter applied.")
+        logger.info("Gaussian filter applied.")
         pert_field.data -= gaussian_filter(original_field.data, filter_scale, axes=axes)
     else:
-        logging.info("Uniform filter applied.")
+        logger.info("Uniform filter applied.")
         filter_type = "Uniform"
         pert_field.data -= uniform_filter(original_field.data, filter_scale, axes=axes)
     # provide attributes to cube to indicate spatial perturbation field
     pert_field.attributes["perturbation_field"] = (
-        f"{filter_type}_with_{str(filter_scale)}_grid_point_filter_scale"
+        f"{filter_type}_with_{filter_scale}_grid_point_filter_scale"
     )
     return pert_field

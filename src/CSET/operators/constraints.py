@@ -72,13 +72,16 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
         If multiple variable names are requested, constrain by list of variables.
     """
     # Case 1: UM STASHcode input
+
     if isinstance(varname, str) and _STASH_RE.match(varname):
         return iris.AttributeConstraint(STASH=varname)
 
     # Ensure access to variable vector components for computed fields
     if "wind_speed_at_10m" in iter_maybe(varname):
-        varname = [varname]
+        if isinstance(varname, str):
+            varname = [varname]
         varname.extend(["eastward_wind_at_10m", "northward_wind_at_10m"])
+        varname.extend(["u_wind_at_10m", "v_wind_at_10m"])
 
     # Case 2: Multiple varnames
     if isinstance(varname, (list, tuple)):
@@ -214,15 +217,15 @@ def generate_cell_methods_constraint(
 
         def check_no_aggregation(cube: iris.cube.Cube) -> bool:
             """Check that any cell methods are "point", meaning no aggregation."""
-            return set(cm.method for cm in cube.cell_methods) <= {"point"}
+            return {cm.method for cm in cube.cell_methods} <= {"point"}
 
         def check_cell_sum(cube: iris.cube.Cube) -> bool:
             """Check that any cell methods are "sum"."""
-            return set(cm.method for cm in cube.cell_methods) == {"sum"}
+            return {cm.method for cm in cube.cell_methods} == {"sum"}
 
         def check_cell_mean(cube: iris.cube.Cube) -> bool:
             """Check that any cell methods are "mean"."""
-            return set(cm.method for cm in cube.cell_methods) == {"mean"}
+            return {cm.method for cm in cube.cell_methods} == {"mean"}
 
         if varname:
             # Require number_of_lightning_flashes to be "sum" cell_method input.
@@ -259,7 +262,7 @@ def generate_cell_methods_constraint(
 
 
 def generate_time_constraint(
-    time_start: str, time_end: str = None, **kwargs
+    time_start: str, time_end: str | None = None, **kwargs
 ) -> iris.Constraint:
     """Generate constraint between times.
 
@@ -436,7 +439,7 @@ def generate_realization_constraint(
 
 def generate_hour_constraint(
     hour_start: int,
-    hour_end: int = None,
+    hour_end: int | None = None,
     **kwargs,
 ) -> iris.Constraint:
     """Generate an hour constraint between hour of day limits.
@@ -517,7 +520,7 @@ def combine_constraints(
 
 
 def generate_attribute_constraint(
-    attribute: str, value: str = None, **kwargs
+    attribute: str, value: str | None = None, **kwargs
 ) -> iris.AttributeConstraint:
     """Generate constraint on cube attributes.
 

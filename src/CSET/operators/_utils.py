@@ -20,17 +20,22 @@ operator, and will be used across multiple operators.
 """
 
 import logging
+import os
 import re
 from datetime import timedelta
+from pathlib import Path
 
 import iris
 import iris.coords
 import iris.cube
 import iris.exceptions
 import iris.util
+import numpy as np
 from iris.time import PartialDateTime
 
 from CSET._common import iter_maybe
+
+logger = logging.getLogger(__name__)
 
 
 def pdt_fromisoformat(
@@ -109,7 +114,14 @@ def pdt_fromisoformat(
     month = int(date[5:7])
     day = int(date[8:10])
 
-    kwargs = dict(year=year, month=month, day=day, hour=0, minute=0, second=0)
+    kwargs = {
+        "year": year,
+        "month": month,
+        "day": day,
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+    }
 
     # Normalise the time parts into standard format
     if re.fullmatch(r"\d{4}", time):
@@ -244,10 +256,7 @@ def is_spatialdim(cube: iris.cube.Cube) -> bool:
     y_coords = [coord for coord in coord_names if coord in Y_COORD_NAMES]
 
     # If there is one coordinate for both x and y direction return True.
-    if len(x_coords) == 1 and len(y_coords) == 1:
-        return True
-    else:
-        return False
+    return len(x_coords) == 1 and len(y_coords) == 1
 
 
 def is_coorddim(cube: iris.cube.Cube, coord_name) -> bool:
@@ -272,10 +281,7 @@ def is_coorddim(cube: iris.cube.Cube, coord_name) -> bool:
     coord_names = [coord.name() for coord in cube.coords(dim_coords=True)]
 
     # Check if requested dimension is found in cube and get index
-    if coord_name in coord_names:
-        return True
-    else:
-        return False
+    return coord_name in coord_names
 
 
 def is_transect(cube: iris.cube.Cube) -> bool:
@@ -324,7 +330,7 @@ def is_transect(cube: iris.cube.Cube) -> bool:
 
     # Check which vertical coordinates we have.
     vertical_coords = [coord for coord in coord_names if coord in VERTICAL_COORD_NAMES]
-    if len(vertical_coords) != 1:
+    if len(vertical_coords) != 1:  # noqa: SIM103 Clearer to keep separate.
         return False
 
     # Passed criteria so return True
@@ -370,7 +376,7 @@ def fully_equalise_attributes(cubes: iris.cube.CubeList):
     """Remove any unique attributes between cubes or coordinates in place."""
     # Equalise cube attributes.
     removed = iris.util.equalise_attributes(cubes)
-    logging.debug("Removed attributes from cube: %s", removed)
+    logger.debug("Removed attributes from cube: %s", removed)
 
     # Equalise coordinate attributes.
     coord_sets = [{coord.name() for coord in cube.coords()} for cube in cubes]
@@ -379,21 +385,21 @@ def fully_equalise_attributes(cubes: iris.cube.CubeList):
     coords_to_equalise = set.intersection(*coord_sets)
     coords_to_remove = set.difference(all_coords, coords_to_equalise)
 
-    logging.debug("All coordinates: %s", all_coords)
-    logging.debug("Coordinates to remove: %s", coords_to_remove)
-    logging.debug("Coordinates to equalise: %s", coords_to_equalise)
+    logger.debug("All coordinates: %s", all_coords)
+    logger.debug("Coordinates to remove: %s", coords_to_remove)
+    logger.debug("Coordinates to equalise: %s", coords_to_equalise)
 
     for coord in coords_to_remove:
         for cube in cubes:
             try:
                 cube.remove_coord(coord)
-                logging.debug("Removed coordinate %s from %s cube.", coord, cube.name())
+                logger.debug("Removed coordinate %s from %s cube.", coord, cube.name())
             except iris.exceptions.CoordinateNotFoundError:
                 pass
 
     for coord in coords_to_equalise:
         removed = iris.util.equalise_attributes([cube.coord(coord) for cube in cubes])
-        logging.debug("Removed attributes from coordinate %s: %s", coord, removed)
+        logger.debug("Removed attributes from coordinate %s: %s", coord, removed)
 
     return cubes
 
@@ -526,7 +532,7 @@ def get_num_models(cube: iris.cube.Cube | iris.cube.CubeList) -> int:
     model_names = {cb.attributes.get("model_name") for cb in iter_maybe(cube)}
 
     if not model_names:
-        logging.debug("Missing model names. Will assume single model.")
+        logger.debug("Missing model names. Will assume single model.")
         return 1
     else:
         return len(model_names)
@@ -554,3 +560,50 @@ def validate_cubes_coords(
             f"Check that number of time entries in input data are consistent if "
             f"performing time-averaging steps prior to plotting outputs."
         )
+
+
+def check_if_cylc_workflow() -> Path | None:
+    """Determine if we are running in a Cylc workflow.
+
+    If running in a Cylc workflow, the ROSE_DATAC environment variable
+    will be set.
+
+    Returns
+    -------
+    Path | None:
+        If ROSE_DATAC is set, and the path exists, return a Path object
+        containing the path. Otherwise, return None.
+    """
+    # Standard location of ROSE_DATAC data dir in CSET.
+    try:
+        dataloc = Path(os.environ["ROSE_DATAC"])
+        if dataloc.exists():
+            return dataloc
+    except KeyError:
+        pass
+
+    # If ROSE_DATAC unset or its path does not exist, return None
+    return None
+
+
+def calc_array_stats(
+    array: np.ndarray | np.ma.MaskedArray,
+) -> tuple[float, float, float]:
+    """Calculate the min, max, and mean of an array.
+
+    NaNs/Masked data is ignored.
+
+    Returns
+    -------
+    stats:
+        A tuple of (min, max, mean).
+    """
+    if np.ma.isMaskedArray(array):
+        array_min = array.min()
+        array_max = array.max()
+        array_mean = array.mean()
+    else:
+        array_min = np.nanmin(array)
+        array_max = np.nanmax(array)
+        array_mean = np.nanmean(array)
+    return array_min, array_max, array_mean

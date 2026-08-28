@@ -1,0 +1,72 @@
+category: Scores Categorical
+title: Timeseries of POD for "$VARNAME over $SUBAREA_NAME, using threshold $OPERATOR $THRESHOLD"
+description: |
+
+  Extracts and plots the POD for $VARNAME for each model against observations as a timeseries.
+
+  The probability of detection (POD)  in [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.categorical.BasicContingencyManager.probability_of_detection)
+  calculates the proportion of observed events that meet a threshold that were correctly forecast by the model.
+  For example, if threshold is 290K and op_func is gt (greater than), and at some station a temperature was recorded as 292K and the model produced
+  295k, that would be a positive hit. It does not take into account how far above/below a threshold a model forecasts.
+
+  It is calculated as (true positives)/(true positives + false negatives)
+
+  It is equivalent to the hit rate. Note if there are no events that meet the threshold in model and observations, a POD of zero is returned.
+
+  POD produces a range of 0 to 1, where 1 is a perfect score.
+
+  References
+  https://scores.readthedocs.io/en/stable/api.html#scores.categorical.BasicContingencyManager.probability_of_detection
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: ['observed_$VARNAME', '$VARNAME']
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: "pressure"
+        levels: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: misc.extract_common_points
+    coordinate: time
+
+  - operator: misc.combine_cubes_into_cubelist
+    first:
+        operator: filters.filter_cubes
+        constraint:
+            operator: constraints.generate_var_constraint
+            varname: observed_$VARNAME
+    second:
+       operator: regrid.interpolate_to_point_cube
+       fld:
+           operator: filters.filter_multiple_cubes
+           constraint:
+               operator: constraints.combine_constraints
+               var_constraint:
+                   operator: constraints.generate_var_constraint
+                   varname: $VARNAME
+       point_cube:
+           operator: filters.filter_cubes
+           constraint:
+               operator: constraints.generate_var_constraint
+               varname: observed_$VARNAME
+
+  - operator: scoreswrappers.scores_pod
+    preserved_coordinates: "time"
+    threshold: $THRESHOLD
+    op_func: $OPERATOR
+
+  - operator: plot.plot_line_series
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

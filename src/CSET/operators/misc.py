@@ -17,6 +17,7 @@
 import itertools
 import logging
 from collections.abc import Iterable
+from functools import reduce
 
 import iris
 import iris.analysis.calculus
@@ -26,6 +27,8 @@ from iris.cube import Cube, CubeList
 from CSET._common import is_increasing, iter_maybe
 from CSET.operators._utils import fully_equalise_attributes, get_cube_yxcoordname
 from CSET.operators.regrid import regrid_onto_cube
+
+logger = logging.getLogger(__name__)
 
 
 def noop(x, **kwargs):
@@ -154,19 +157,21 @@ def addition(addend_1, addend_2):
     return addend_1 + addend_2
 
 
-def subtraction(minuend, subtrahend):
+def subtraction(
+    minuend: Cube | CubeList, subtrahend: Cube | CubeList
+) -> Cube | CubeList:
     """Subtraction of two fields.
 
     Parameters
     ----------
-    minuend: Cube
-        Any field to have another field subtracted from it.
-    subtrahend: Cube
-        Any field to be subtracted from to another field.
+    minuend: Cube | CubeList
+        Any field(s) to have another field subtracted from it.
+    subtrahend: Cube | CubeList
+        Any field(s) to be subtracted from to another field.
 
     Returns
     -------
-    Cube
+    Cube | CubeList
 
     Raises
     ------
@@ -180,12 +185,53 @@ def subtraction(minuend, subtrahend):
     differences to allow for comparisons between the same field in different
     models or model configurations.
 
+    If called with 2 Cubes as input, will return a difference cube.
+    If called with 2 CubeLists as input, with return a CubeList of differences.
+    If called with CubeList as minuend and Cube as subtrahend, will return CubeList of differences subtracting Cube from each element of input CubeList.
+    If called with Cube as minuend and CubeList as subtrahend, will return CubeList of differences subtracting each element on CubeList from input Cube.
+
     Examples
     --------
     >>> model_diff = misc.subtraction(temperature_model_A, temperature_model_B)
 
     """
-    return minuend - subtrahend
+
+    def subtract_preserve_attributes(cube_a: Cube, cube_b: Cube) -> Cube:
+        result = cube_a - cube_b
+        result.attributes.update(cube_a.attributes)
+        return result
+
+    # Case where both inputs are single cubes
+    if isinstance(minuend, iris.cube.Cube) and isinstance(subtrahend, iris.cube.Cube):
+        return subtract_preserve_attributes(minuend, subtrahend)
+
+    # Check if minuend is iterable
+    cubes_a = iter_maybe(minuend)
+
+    # Case: subtrahend also iterable
+    if isinstance(subtrahend, iris.cube.CubeList):
+        cubes_b = iter_maybe(subtrahend)
+        if isinstance(minuend, iris.cube.CubeList):
+            # Case: subtract cubelist from cubelist - assume both same sizes
+            result = iris.cube.CubeList(
+                [
+                    subtract_preserve_attributes(cube_a, cube_b)
+                    for cube_a, cube_b in zip(cubes_a, cubes_b, strict=True)
+                ]
+            )
+        else:
+            # Case: subtract each element of subtrahend from single cube
+            result = iris.cube.CubeList(
+                [subtract_preserve_attributes(minuend, cube_b) for cube_b in cubes_b]
+            )
+    else:
+        # Case: subtract single cube from each minuend
+        result = iris.cube.CubeList(
+            [subtract_preserve_attributes(cube_a, subtrahend) for cube_a in cubes_a]
+        )
+
+    # Return single cube if only one result, else return CubeList
+    return result[0] if len(result) == 1 else result
 
 
 def division(numerator, denominator):
@@ -347,9 +393,10 @@ def difference(cubes: CubeList):
     # If cubes contain a pressure coordinate, ensure it is increasing.
     for cube in cubes:
         try:
-            if len(cube.coord("pressure").points) > 2:
-                if not is_increasing(cube.coord("pressure").points):
-                    cube.data = np.flip(cube.data, axis=cube.coord_dims("pressure")[0])
+            if len(cube.coord("pressure").points) > 2 and not is_increasing(
+                cube.coord("pressure").points
+            ):
+                cube.data = np.flip(cube.data, axis=cube.coord_dims("pressure")[0])
 
         except iris.exceptions.CoordinateNotFoundError:
             pass
@@ -386,9 +433,7 @@ def difference(cubes: CubeList):
             "vapour_specific_humidity_at_pressure_levels_for_climate_averaging",
         ]
     ):
-        logging.debug(
-            "Linear regridding base cube to other grid to compute differences"
-        )
+        logger.debug("Linear regridding base cube to other grid to compute differences")
         base = regrid_onto_cube(base, other, method="Linear")
 
     # Figure out if we are comparing between UM and LFRic; flip array if so.
@@ -402,7 +447,7 @@ def difference(cubes: CubeList):
 
     # Equalise attributes so we can merge.
     fully_equalise_attributes([base, other])
-    logging.debug("Base: %s\nOther: %s", base, other)
+    logger.debug("Base: %s\nOther: %s", base, other)
 
     # This currently relies on the cubes having the same underlying data layout.
     difference = base.copy()
@@ -427,21 +472,21 @@ def _extract_common_time_points(base: Cube, other: Cube) -> tuple[Cube, Cube]:
     """Extract common time points from cubes to allow comparison."""
     # Get the name of the first non-scalar time coordinate.
     time_coord = next(
-        map(
-            lambda coord: coord.name(),
-            filter(
+        (
+            coord.name()
+            for coord in filter(
                 lambda coord: coord.shape > (1,) and coord.name() in ["time", "hour"],
                 base.coords(),
-            ),
+            )
         ),
         None,
     )
     if not time_coord:
-        logging.debug("No time coord, skipping equalisation.")
+        logger.debug("No time coord, skipping equalisation.")
         return (base, other)
     base_time_coord = base.coord(time_coord)
     other_time_coord = other.coord(time_coord)
-    logging.debug("Base: %s\nOther: %s", base_time_coord, other_time_coord)
+    logger.debug("Base: %s\nOther: %s", base_time_coord, other_time_coord)
     if time_coord == "hour":
         # We directly compare points when comparing coordinates with
         # non-absolute units, such as hour. We can't just check the units are
@@ -455,9 +500,13 @@ def _extract_common_time_points(base: Cube, other: Cube) -> tuple[Cube, Cube]:
         base_times = base_time_coord.units.num2date(base_time_coord.points)
         other_times = other_time_coord.units.num2date(other_time_coord.points)
         shared_times = set.intersection(set(base_times), set(other_times))
-    logging.debug("Shared times: %s", shared_times)
+    logger.debug("Shared times: %s", shared_times)
     time_constraint = iris.Constraint(
-        coord_values={time_coord: lambda cell: cell.point in shared_times}
+        coord_values={
+            time_coord: lambda cell, shared_times=shared_times: (
+                cell.point in shared_times
+            )
+        }
     )
     # Extract points matching the shared times.
     base = base.extract(time_constraint)
@@ -573,49 +622,47 @@ def _slice_cube_on_levels(cube: iris.cube.Cube, coord_name: str, levels: list):
 
 def extract_common_points(cubes: iris.cube.CubeList, coordinate: str):
     """
-    Extract common points for a given coordinate between two cubes.
+    Extract common points for a given coordinate between cubes in a CubeList.
 
     Parameters
     ----------
     cubes: iris.cube.CubeList
-        CubeList containing exactly two cubes.
+        CubeList containing cubes for which to extract common points.
 
     coordinate: str
-        The coordinate name to be checked for common levels.
+        The coordinate name to be checked for common points.
 
     Returns
     -------
     iris.cube.CubeList
-        CubeList containing the two cubes sliced to common levels
+        CubeList containing the two cubes sliced to common points
         for the given coordinate.
     """
     # Check type of input
     if type(cubes) is not iris.cube.CubeList:
         raise TypeError(f"Not a CubeList, got type {type(cubes)}")
 
-    # Check that only two cubes are passed into function.
-    if len(cubes) != 2:
-        raise ValueError(f"Maximum of two cubes allowed, received {len(cubes)}")
-
     # Extract coordinate
     try:
-        p1 = cubes[0].coord(coordinate)
-        p2 = cubes[1].coord(coordinate)
+        points_list = []
+        for cube in cubes:
+            points_list.append(cube.coord(coordinate).points)
     except iris.exceptions.CoordinateNotFoundError as err:
         raise ValueError(f"Both cubes must have an {coordinate} coordinate") from err
 
     # Find common points
-    common_points = np.intersect1d(p1.points, p2.points)
+    common_points = reduce(np.intersect1d, points_list)
 
     # Check that common points is more than zero.
     if common_points.size == 0:
         raise ValueError("No common levels found")
 
     # Extract common points
-    cube0_common = _slice_cube_on_levels(cubes[0], coordinate, common_points)
-    cube1_common = _slice_cube_on_levels(cubes[1], coordinate, common_points)
+    common_cubes = iris.cube.CubeList()
+    for cube in cubes:
+        common_cubes.append(_slice_cube_on_levels(cube, coordinate, common_points))
 
-    return iris.cube.CubeList([cube0_common, cube1_common])
+    return common_cubes
 
 
 def differentiate(

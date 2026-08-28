@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2025) and CSET contributors.
+# © Crown copyright, Met Office (2022-2026) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,8 +18,11 @@ import importlib.metadata
 import importlib.resources
 import logging
 import os
+import re
 import shutil
 import stat
+import subprocess
+import tempfile
 from pathlib import Path
 
 import CSET.cset_workflow
@@ -51,14 +54,19 @@ def make_script_executable(p: Path):
             p.chmod(mode)
 
 
-def install_workflow(location: Path):
+def install_workflow(location: Path) -> Path:
     """Install the workflow's files and link the conda environment.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     location: Path
         A directory where the workflow files are to be installed to. A
         sub-directory named "cset-workflow-vX.Y.Z" will be created under here.
+
+    Returns
+    -------
+    workflow_dir: Path
+        Path to newly created workflow directory.
     """
     # Check location's parents exist.
     if not location.is_dir():
@@ -89,3 +97,134 @@ def install_workflow(location: Path):
         logger.warning("CONDA_PREFIX not defined. Skipping linking environment.")
 
     print(f"Workflow written to {workflow_dir}")
+    return workflow_dir
+
+
+def list_refs(url: str) -> list[str]:
+    """List release refs for the repository.
+
+    This serves both as an access check and to find an appropriate ref.
+    """
+    # Disable interactively asking for authentication.
+    env = os.environ.copy()
+    env["GIT_TERMINAL_PROMPT"] = "false"
+
+    # List release references.
+    cmd = ("git", "ls-remote", "--quiet", "--refs", url, "releases/**", "v*")
+    logger.debug("Running %s", " ".join(cmd))
+    try:
+        p = subprocess.run(cmd, env=env, check=True, capture_output=True, text=True)
+    except subprocess.CalledProcessError as err:
+        raise ValueError(f"Cannot access Git repository at {url}") from err
+
+    # Reduce to just ref names.
+    release_refs = [
+        line.split(maxsplit=1)[-1]
+        .removeprefix("refs/heads/")
+        .removeprefix("refs/tags/")
+        for line in p.stdout.splitlines()
+    ]
+    return release_refs
+
+
+def clone_ref(ref: str, url: str, location: str):
+    """Clone the specified ref."""
+    # Disable interactively asking for authentication.
+    env = os.environ.copy()
+    env["GIT_TERMINAL_PROMPT"] = "false"
+
+    cmd = ("git", "clone", "--quiet", "--depth", "1", "--branch", ref, url, location)
+    logger.debug("Running %s", " ".join(cmd))
+    try:
+        subprocess.run(cmd, env=env, check=True, capture_output=True)
+    except subprocess.CalledProcessError as err:
+        raise ValueError(
+            f"Cannot access ref {ref} from Git repository at {url}"
+        ) from err
+
+
+def install_restricted_files(workflow_dir: Path, alternative_url: str | None = None):
+    """Install restricted site-specific restricted files into CSET workflow.
+
+    Parameters
+    ----------
+    workflow_dir: Path
+        The workflow directory into which the restricted files will be copied.
+    alternative_url: str, optional
+        Alternative Git URL to fetch the restricted files from. If omitted,
+        defaults to trying to clone first from 'localmirrors:', then from GitHub
+        via SSH and HTTPS.
+
+    Notes
+    -----
+    Requires Git to be installed to function.
+    """
+    # Basic check workflow_dir is correct.
+    if not (workflow_dir / "flow.cylc").is_file():
+        raise ValueError(f"{workflow_dir} should be a CSET workflow directory.")
+
+    # Determine target tag/branch from version.
+    version_tag = f"v{importlib.metadata.version('CSET')}"
+    logger.debug("Running for CSET %s", version_tag)
+    m = re.match(r"v\d+\.\d+", version_tag)
+    base_version = m.group(0) if m and "dev" not in version_tag else version_tag
+    if m is None:
+        logger.warning("Cannot determine major version from %s", version_tag)
+    release_branch = f"releases/{base_version}"
+
+    # Default URLs to try in order, or use alternative if provided.
+    urls = (
+        (
+            "localmirrors:MetOffice/CSET-restricted-files.git",
+            "git@github.com:MetOffice/CSET-restricted-files.git",
+            "https://github.com/MetOffice/CSET-restricted-files.git",
+        )
+        if alternative_url is None
+        else (alternative_url,)
+    )
+
+    # Find first working URL and list its refs.
+    for url in urls:
+        try:
+            refs = list_refs(url)
+            break
+        except ValueError:
+            continue
+    else:
+        url = (
+            alternative_url
+            if alternative_url is not None
+            else "https://github.com/MetOffice/CSET-restricted-files.git"
+        )
+        raise ValueError(
+            f"Could not read from restricted repository. Have you got access to {url}"
+        )
+
+    # Use most specific ref, falling back to main.
+    logger.debug("Release refs: %s", refs)
+    if version_tag in refs:
+        ref = version_tag
+    elif release_branch in refs:
+        ref = release_branch
+    else:
+        ref = "main"
+    logger.info("Fetching restricted files from ref %s of %s", ref, url)
+
+    # Checkout git repository to temporary location.
+    with tempfile.TemporaryDirectory() as tempdir:
+        # Clone restrict file repository.
+        logger.debug("Cloning to %s", tempdir)
+        clone_ref(ref, url, tempdir)
+
+        # Delete unwanted top-level README.
+        (Path(tempdir) / "README.md").unlink(missing_ok=True)
+
+        # Copy remaining files, skipping hidden files.
+        shutil.copytree(
+            tempdir,
+            workflow_dir,
+            ignore=shutil.ignore_patterns(".*"),
+            symlinks=True,
+            dirs_exist_ok=True,
+        )
+        print(f"Installed site-specific restricted files into {workflow_dir}.")

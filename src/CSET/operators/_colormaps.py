@@ -22,6 +22,7 @@ import logging
 from typing import Literal
 
 import iris
+import iris.cube
 import matplotlib as mpl
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
@@ -33,11 +34,13 @@ from CSET._common import (
     iter_maybe,
 )
 
+logger = logging.getLogger(__name__)
+
 DEFAULT_DISCRETE_COLORS = mpl.colormaps["tab10"].colors + mpl.colormaps["Accent"].colors
 
 
 @functools.cache
-def load_colorbar_map(user_colorbar_file: str = None) -> dict:
+def load_colorbar_map(user_colorbar_file: str | None = None) -> dict:
     """Load the colorbar definitions from a file.
 
     This is a separate function to make it cacheable.
@@ -46,14 +49,14 @@ def load_colorbar_map(user_colorbar_file: str = None) -> dict:
     with open(colorbar_file, "rt", encoding="UTF-8") as fp:
         colorbar = json.load(fp)
 
-    logging.debug("User colour bar file: %s", user_colorbar_file)
+    logger.debug("User colour bar file: %s", user_colorbar_file)
     override_colorbar = {}
     if user_colorbar_file:
         try:
             with open(user_colorbar_file, "rt", encoding="UTF-8") as fp:
                 override_colorbar = json.load(fp)
         except FileNotFoundError:
-            logging.warning("Colorbar file does not exist. Using default values.")
+            logger.warning("Colorbar file does not exist. Using default values.")
 
     # Overwrite values with the user supplied colorbar definition.
     colorbar = combine_dicts(colorbar, override_colorbar)
@@ -87,11 +90,33 @@ def get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
     )
     if not model_names:
         return {}
-    use_user_colors = all(mname in colorbar.keys() for mname in model_names)
+    use_user_colors = all(mname in colorbar for mname in model_names)
     if use_user_colors:
         return {mname: colorbar[mname] for mname in model_names}
 
-    color_list = itertools.cycle(DEFAULT_DISCRETE_COLORS)
+    # Supported analysis names
+    ANALYSIS_NAMES = {"ERA5", "UM_ANALYSIS"}
+
+    is_reference = lambda name: "OBS" in name.upper() or name.upper() in ANALYSIS_NAMES
+
+    ref_models = [name for name in model_names if is_reference(name)]
+
+    if ref_models:
+        colors = list(DEFAULT_DISCRETE_COLORS).copy()
+
+        for name in reversed(ref_models):
+            model_names.remove(name)
+            model_names.insert(0, name)
+
+        for name in reversed(ref_models):
+            if "OBS" in name.upper():
+                colors.insert(0, mcolors.to_rgb("dimgray"))
+            else:  # ERA5 or UM_ANALYSIS
+                colors.insert(0, mcolors.to_rgb("black"))
+    else:
+        colors = DEFAULT_DISCRETE_COLORS
+
+    color_list = itertools.cycle(colors)
     return {mname: color for mname, color in zip(model_names, color_list, strict=False)}
 
 
@@ -146,6 +171,8 @@ def colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = N
     # as long name is the one we correct between models, so it most likely to be
     # consistent.
     varnames = list(filter(None, [cube.long_name, cube.standard_name, cube.var_name]))
+    # Treat observation-labelled var names consistently with model var names.
+    varnames = [varname.replace("observed_", "") for varname in varnames]
     for varname in varnames:
         # Get the colormap for this variable.
         try:
@@ -154,7 +181,7 @@ def colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = N
             varname_key = varname
             break
         except KeyError:
-            logging.debug("Cube name %s has no colorbar definition.", varname)
+            logger.debug("Cube name %s has no colorbar definition.", varname)
 
     # Get colormap if it is a mask.
     if any("mask_for_" in name for name in varnames):
@@ -176,10 +203,14 @@ def colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = N
     if any("RMSE_" in name for name in varnames):
         cmap, levels, norm = custom_colormap_scores(cube)
         return cmap, levels, norm
+    # If feature tracking use custom colorbar and levels
+    if any("feature_" in name for name in varnames):
+        cmap, levels, norm = custom_colormap_feature_tracking(cube)
+        return cmap, levels, norm
 
     # If no valid colormap has been defined, use defaults and return.
     if not cmap:
-        logging.warning("No colorbar definition exists for %s.", cube.name())
+        logger.warning("No colorbar definition exists for %s.", cube.name())
         cmap, levels, norm = mpl.colormaps["viridis"], None, None
         return cmap, levels, norm
 
@@ -188,7 +219,7 @@ def colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = N
         try:
             var_colorbar = colorbar[varname_key]["pressure_levels"][pressure_level]
         except KeyError:
-            logging.debug(
+            logger.debug(
                 "%s has no colorbar definition for pressure level %s.",
                 varname,
                 pressure_level,
@@ -221,12 +252,12 @@ def colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = N
             # Use discrete bins when levels are specified, rather
             # than a smooth range.
             norm = mpl.colors.BoundaryNorm(levels, ncolors=cmap.N)
-            logging.debug("Using levels for %s colorbar.", varname)
-            logging.info("Using levels: %s", levels)
+            logger.debug("Using levels for %s colorbar.", varname)
+            logger.info("Using levels: %s", levels)
         except KeyError:
             # Get the range for this variable.
             vmin, vmax = var_colorbar["min"], var_colorbar["max"]
-            logging.debug("Using min and max for %s colorbar.", varname)
+            logger.debug("Using min and max for %s colorbar.", varname)
             # Calculate levels from range.
             if vmin == "auto" or vmax == "auto":
                 levels = None
@@ -238,9 +269,9 @@ def colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = N
         # require custom colorbar_map as these can not be defined in the
         # JSON file.
         cmap, levels, norm = custom_colormap_precipitation(cube, cmap, levels, norm)
+        cmap, levels, norm = custom_colourmap_nimrod_weights(cube, cmap, levels, norm)
         cmap, levels, norm = custom_colormap_visibility_in_air(cube, cmap, levels, norm)
         cmap, levels, norm = custom_colormap_celsius(cube, cmap, levels, norm)
-        cmap, levels, norm = custom_colormap_feature_tracking(cube, cmap, levels, norm)
         return cmap, levels, norm
 
 
@@ -285,7 +316,7 @@ def custom_colormap_mask(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
             cmap = mcolors.ListedColormap(colors)
             # Normalize the levels.
             norm = mcolors.BoundaryNorm(levels, cmap.N)
-            logging.debug("Colormap for %s.", cube.long_name)
+            logger.debug("Colormap for %s.", cube.long_name)
             return cmap, levels, norm
     else:
         if axis:
@@ -298,7 +329,7 @@ def custom_colormap_mask(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = 
             colors = ["goldenrod", "white", "teal"]
             cmap = mcolors.ListedColormap(colors)
             norm = mcolors.BoundaryNorm(levels, cmap.N)
-            logging.debug("Colormap for %s.", cube.long_name)
+            logger.debug("Colormap for %s.", cube.long_name)
             return cmap, levels, norm
 
 
@@ -353,7 +384,7 @@ def custom_beaufort_scale(cube: iris.cube.Cube, axis: Literal["x", "y"] | None =
             ]
             cmap = mcolors.ListedColormap(colors)
             norm = mcolors.BoundaryNorm(levels, cmap.N)
-            logging.info("change colormap for Beaufort Scale colorbar.")
+            logger.info("change colormap for Beaufort Scale colorbar.")
             return cmap, levels, norm
     else:
         if axis:
@@ -403,11 +434,6 @@ def custom_colormap_celsius(cube: iris.cube.Cube, cmap, levels, norm):
         levels = np.array(levels)
         levels -= 273
         levels = levels.tolist()
-    else:
-        # Do nothing keep the existing colourbar attributes
-        levels = levels
-    cmap = cmap
-    norm = norm
     return cmap, levels, norm
 
 
@@ -467,13 +493,27 @@ def custom_colormap_probability(
 
 def custom_colormap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
     """Return a custom colormap for the current recipe."""
-    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
-    if (
-        any("surface_microphysical" in name for name in varnames)
-        and "difference" not in cube.long_name
-        and "mask" not in cube.long_name
-    ):
-        # Define the levels and colors
+    varnames_lower = [
+        n.lower() for n in (cube.long_name, cube.standard_name, cube.var_name) if n
+    ]
+
+    is_rainfall_var = any(
+        key in name
+        for name in varnames_lower
+        for key in (
+            "surface_microphysical",
+            "rainfall rate composite",
+            "nimrod5min",
+            "nimrod_5min",
+            "rain_accumulation",
+            "rain accumulation",
+        )
+    )
+
+    if is_rainfall_var:
+        logger.debug(
+            "Using custom precipitation colourmap due to varnames: %s", varnames_lower
+        )
         levels = [0, 0.125, 0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256]
         colors = [
             "w",
@@ -494,12 +534,59 @@ def custom_colormap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
         cmap = mcolors.ListedColormap(colors)
         # Normalize the levels
         norm = mcolors.BoundaryNorm(levels, cmap.N)
-        logging.info("change colormap for surface_microphysical variable colorbar.")
-    else:
-        # do nothing and keep existing colorbar attributes
-        cmap = cmap
-        levels = levels
-        norm = norm
+        logger.info("Using custom rainfall colourmap.")
+    return cmap, levels, norm
+
+
+def custom_colourmap_nimrod_weights(cube: iris.cube.Cube, cmap, levels, norm):
+    """Return a custom colourmap for the current recipe."""
+    varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
+    if (
+        any("wts" in name for name in varnames)
+        and "difference" not in cube.long_name
+        and "mask" not in cube.long_name
+    ):
+        # Define the levels and colors. Remember the Nimrod weights vary over
+        # the range [0,13] and should be integer values. Optimum value is 13.
+        levels = [
+            -0.5,
+            0.5,
+            1.5,
+            2.5,
+            3.5,
+            4.5,
+            5.5,
+            6.5,
+            7.5,
+            8.5,
+            9.5,
+            10.5,
+            11.5,
+            12.5,
+            13.5,
+        ]
+        norm = mcolors.BoundaryNorm(levels, cmap.N)
+        colours = [
+            "#d10000",
+            "purple",
+            "#8f00d6",
+            "#ff9700",
+            "pink",
+            "#ffff00",
+            "#00007f",
+            "#6c9ccd",
+            "#aae8ff",
+            "#37a648",
+            "#8edc64",
+            "#c5ffc5",
+            "#dcdcdc",
+            "#ffffff",
+        ]
+        # Create a custom colormap.
+        cmap = mcolors.ListedColormap(colours)
+        # Normalize the levels.
+        norm = mcolors.BoundaryNorm(levels, cmap.N)
+        logger.info("Change colormap for Nimrod weights colorbar.")
     return cmap, levels, norm
 
 
@@ -568,12 +655,7 @@ def custom_colormap_visibility_in_air(cube: iris.cube.Cube, cmap, levels, norm):
         cmap = mcolors.ListedColormap(colours)
         # Normalize the levels
         norm = mcolors.BoundaryNorm(levels, cmap.N)
-        logging.info("change colormap for visibility_in_air variable colorbar.")
-    else:
-        # do nothing and keep existing colorbar attributes
-        cmap = cmap
-        levels = levels
-        norm = norm
+        logger.info("change colormap for visibility_in_air variable colorbar.")
     return cmap, levels, norm
 
 
@@ -600,7 +682,7 @@ def custom_colormap_scores(cube: iris.cube.Cube):
     return cmap, levels, norm
 
 
-def custom_colormap_feature_tracking(cube: iris.cube.Cube, cmap, levels, norm):
+def custom_colormap_feature_tracking(cube: iris.cube.Cube):
     """Return altered colormap for feature tracking.
 
     Parameters
@@ -617,48 +699,31 @@ def custom_colormap_feature_tracking(cube: iris.cube.Cube, cmap, levels, norm):
     norm: BoundaryNorm.
     """
     varnames = list(filter(None, [cube.long_name, cube.standard_name, cube.var_name]))
-    if (
-        any("feature_id" in name for name in varnames)
-        and "difference" not in cube.long_name
-        and "mask" not in cube.long_name
-    ):
-        # Define the levels and colors
-        levels = np.linspace(1, np.ma.max(cube.data), 10)
+
+    if any("feature_id" in name for name in varnames):
+        # Get max lifetime from cube attributes if available, otherwise use max of data
+        max_id = cube.attributes.get("max_value", np.ma.max(cube.data))
+        levels = None
         cmap = plt.get_cmap("viridis")
-        # Normalize the levels
-        norm = mcolors.BoundaryNorm(levels, cmap.N)
-        logging.info("change colormap for feature id variable colorbar.")
-    elif (
-        any("feature_lifetime" in name for name in varnames)
-        and "difference" not in cube.long_name
-        and "mask" not in cube.long_name
-    ):
-        # Define the levels and colors
-        levels = np.linspace(1, np.ma.max(cube.data), 10)
+        norm = mcolors.Normalize(vmin=1, vmax=max_id, clip=False)
+        logger.info("change colormap for feature id variable colorbar.")
+
+    elif any("feature_lifetime" in name for name in varnames):
+        # Get max lifetime from cube attributes if available, otherwise use max of data
+        max_lifetime = cube.attributes.get("max_value", np.ma.max(cube.data))
+        levels = None
         cmap = plt.get_cmap("YlGnBu")
-        # Normalize the levels
-        norm = mcolors.BoundaryNorm(levels, cmap.N)
-        logging.info("change colormap for feature lifetime variable colorbar.")
-    elif (
-        any("feature_init" in name for name in varnames)
-        and "difference" not in cube.long_name
-        and "mask" not in cube.long_name
-    ):
+        norm = mcolors.Normalize(vmin=1, vmax=max_lifetime, clip=False)
+        logger.info("change colormap for feature lifetime variable colorbar.")
+
+    elif any("feature_init" in name for name in varnames):
         # Define the levels and colors
         levels = np.array([0.5, 1])
         cmap = plt.get_cmap("Blues")
-        # Normalize the levels
         norm = mcolors.BoundaryNorm(levels, cmap.N)
-        logging.info("change colormap for feature init variable colorbar.")
+        logger.info("change colormap for feature init variable colorbar.")
 
-    else:
-        # do nothing and keep existing colorbar attributes
-        cmap = cmap
-        levels = levels
-        norm = norm
-
-    # Set all non-feature data to white
-    if any("feature" in name for name in varnames):
-        cmap.with_extremes(under="white")
+    # Set all non-feature data to white.
+    cmap = cmap.with_extremes(under="white")
 
     return cmap, levels, norm
