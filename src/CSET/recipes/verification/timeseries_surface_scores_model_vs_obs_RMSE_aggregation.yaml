@@ -68,10 +68,7 @@ steps:
     method: MEAN
 
   - operator: plot.plot_line_series
+    series_coordinate: forecast_period
 
   - operator: write.write_cube_to_nc
     overwrite: True
-
-
-
-#Run with cset -vv bake --recipe test_hinton.yaml --output-dir $DATADIR/2408_csettesting --plot-resolution=100 --DATADIR=$DATADIR
