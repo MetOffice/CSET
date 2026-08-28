@@ -1,16 +1,16 @@
 """
-Overlay plots
-=============
+Multi-layer spatial plots
+=========================
 
-Generate spatial map with overlays of multiple 2D fields.
+Generate spatial map with multiple layers of 2D fields.
 
 .. admonition:: References
 
    General functionality is provided using the following :doc:`CSET recipes </usage/operator-recipes>`:
 
    * ``multi_surface_spatial_plot_sequence.yaml`` for 3-layer plots (base layer, masked overlay layer, contour layer)
-   * ``multi_overlay_spatial_plot_sequence.yaml`` for base-layer with masked pcolormesh overlay
-   * ``multi_contour_spatial_plot_sequence.yaml`` for base-layer with contour overlay
+   * ``multi_overlay_spatial_plot_sequence.yaml`` for base-layer pcolormesh with masked overlay layer pcolormesh
+   * ``multi_contour_spatial_plot_sequence.yaml`` for base-layer pcolormesh with contour layer
 
    The following CSET operators are used:
 
@@ -25,7 +25,7 @@ Using *cset bake* on the command line
 * Access recipe file using ``cset cookbook``.
 * Set required recipe inputs on command line.
 
-Example to generate 3-layer full-domain spatial maps of ``temperature_at_screen_level``, with overlay of ``microphysical_surface_rainfall_rate`` masked to show only values greater than or equal to 0.05, and overlay of contours of ``air_pressure_at_sea_level`` for all output times::
+Example to generate 3-layer full-domain spatial maps of ``temperature_at_screen_level``, with masked overlay of ``microphysical_surface_rainfall_rate`` showing only values greater than or equal to 0.05, and additional contour layer of ``air_pressure_at_sea_level`` for all output times::
 
     cset cookbook multi_surface_spatial_plot_sequence.yaml
     cset -v bake -i "/path/to/input/data" -o "./output_path" \\
@@ -39,9 +39,9 @@ Example to generate 3-layer full-domain spatial maps of ``temperature_at_screen_
                  --METHOD="SEQ" \\
                  --SUBAREA_TYPE='None' --SUBAREA_EXTENT='None' --SUBAREA_NAME='None'
 
-Similar examples can be generated using recipe ``multi_overlay_spatial_plot_sequence.yaml`` for outputs with only ``VARNAME_BASE`` and ``VARNAME_OVER`` shown.
+Similar 2-layer (base, overlay) examples can be generated using recipe ``multi_overlay_spatial_plot_sequence.yaml`` for outputs with only ``VARNAME_BASE`` and ``VARNAME_OVER`` shown.
 
-Alternatively, examples can be generated using recipe ``multi_contour_spatial_plot_sequence.yaml`` for outputs with only ``VARNAME_BASE`` and ``VARNAME_CONTOUR`` shown.
+Alternatively, 2-layer (base, contour) examples can be generated using recipe ``multi_contour_spatial_plot_sequence.yaml`` for outputs with only ``VARNAME_BASE`` and ``VARNAME_CONTOUR`` shown.
 
 
 Configuring the *cset_workflow*
@@ -51,7 +51,7 @@ Configuring the *cset_workflow*
 * Complete ``General setup options`` and ``Cycling and Model options`` details - see :doc:`/usage/workflow-configure`.
 * Set required configuration options on ``Diagnostics / Multi-variable plots`` panel
 * A list of different variables can be specified as python lists to generate multiple different output plot combinations using the same workflow run.
-* If all variables are set, 3-layer overlay plots are generated. If either ``OVERLAY`` or ``CONTOUR`` variables are not set, the relevant 2-layer outputs are generated.
+* If all variables are set, 3-layer plots are generated. If either ``OVERLAY`` or ``CONTOUR`` variables are not set, the relevant 2-layer outputs are generated.
 ::
 
     SPATIAL_MULTI_VARIABLE = True
