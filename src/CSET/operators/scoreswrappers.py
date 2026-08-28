@@ -989,117 +989,115 @@ def _split_base_and_other(cubes: CubeList):
     return _sort_cube_into_base_and_other(cubes)
 
 
-# def scores_rmse_model_obs(
-#     cubes: CubeList, preserved_coordinates: list[str] | str | None = None
-# ):
-#     r"""Calculate the Root Mean Square Error (RMSE) using scores.
+def scores_rmse_model_obs(
+    cubes: CubeList, preserved_coordinates: list[str] | str | None = None
+):
+    r"""Calculate the Root Mean Square Error (RMSE) using scores.
 
-#     Acts as a wrapper around the RMSE calculation from ``scores`` ([scoresa]_, [scoresb]_).
-#     It is calculated as
+    Acts as a wrapper around the RMSE calculation from ``scores`` ([scoresa]_, [scoresb]_).
+    It is calculated as
 
-#     .. math:: RMSE = \sqrt{\frac{1}{N} \Sigma(forecast - observations)^2}
+    .. math:: RMSE = \sqrt{\frac{1}{N} \Sigma(forecast - observations)^2}
 
-#     Parameters
-#     ----------
-#     cubes: iris.cube.CubeList
-#         A CubeList containing an observation cube and at least one model cube.
-#     preserved_coordinates: list[str] | str | None, default is None.
-#         The coordinates that you wish to preserve in the calculaiton of the
-#         RMSE. For example if you want a map of each time you can preserve
-#         ["time","grid_latitude", "grid_longitude"] or if you want a time series
-#         you can preserve ["time"], if you want to collapse to a single value
-#         use `None`. The default is `None`.
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        A CubeList containing an observation cube and at least one model cube.
+    preserved_coordinates: list[str] | str | None, default is None.
+        The coordinates that you wish to preserve in the calculaiton of the
+        RMSE. For example if you want a map of each time you can preserve
+        ["time","grid_latitude", "grid_longitude"] or if you want a time series
+        you can preserve ["time"], if you want to collapse to a single value
+        use `None`. The default is `None`.
 
-#     Returns
-#     -------
-#     scores_cubelist: iris.cube.CubeList
-#         A cubelist containing the RMSE between the models and observation cube(s).
-#     """
-#     rmse_cubes = CubeList()
-#     model_list = CubeList()
+    Returns
+    -------
+    scores_cubelist: iris.cube.CubeList
+        A cubelist containing the RMSE between the models and observation cube(s).
+    """
+    rmse_cubes = CubeList()
+    model_list = CubeList()
 
-#     # Separate observations and models
-#     for cb in cubes:
-#         if "observed" in cb.long_name:
-#             observed = cb
-#         else:
-#             model_list.append(cb)
+    # Separate observations and models
+    for cb in cubes:
+        if "observed" in cb.long_name:
+            observed = cb
+        else:
+            model_list.append(cb)
 
-#     for model in model_list:
+    for model in model_list:
 
-#         frt_coord = model.coord("forecast_reference_time")
+        frt_coord = model.coord("forecast_reference_time")
 
-#         # Multiple forecast reference times
-#         if (
-#             model.coord_dims("forecast_reference_time")
-#             and frt_coord.shape[0] > 1
-#         ):
+        # Multiple forecast reference times
+        if (
+            model.coord_dims("forecast_reference_time")
+            and frt_coord.shape[0] > 1
+        ):
 
-#             obs_slices = list(
-#                 observed.slices_over("forecast_reference_time")
-#             )
+            obs_slices = list(
+                observed.slices_over("forecast_reference_time")
+            )
 
-#             model_slices = list(
-#                 model.slices_over("forecast_reference_time")
-#             )
+            model_slices = list(
+                model.slices_over("forecast_reference_time")
+            )
 
-#             for obs_slice, model_slice in zip(
-#                 obs_slices,
-#                 model_slices,
-#                 strict=True,
-#             ):
+            for obs_slice, model_slice in zip(
+                obs_slices,
+                model_slices,
+                strict=True,
+            ):
 
-#                 input_cubelist = CubeList([
-#                     obs_slice,
-#                     model_slice,
-#                 ])
+                input_cubelist = CubeList([
+                    obs_slice,
+                    model_slice,
+                ])
 
-#                 rmse = scores_rmse(
-#                     input_cubelist,
-#                     preserved_coordinates,
-#                     obs_model_comparison=True,
-#                 )
+                rmse = scores_rmse(
+                    input_cubelist,
+                    preserved_coordinates,
+                )
 
-#                 rmse.attributes["model_name"] = (
-#                     model.attributes["model_name"]
-#                 )
+                rmse.attributes["model_name"] = (
+                    model.attributes["model_name"]
+                )
 
-#                 # Preserve the forecast_reference_time value
-#                 if not rmse.coords("forecast_reference_time"):
-#                     rmse.add_aux_coord(
-#                         model_slice.coord(
-#                             "forecast_reference_time"
-#                         ).copy()
-#                     )
+                # Preserve the forecast_reference_time value
+                if not rmse.coords("forecast_reference_time"):
+                    rmse.add_aux_coord(
+                        model_slice.coord(
+                            "forecast_reference_time"
+                        ).copy()
+                    )
 
-#                 if rmse.coords("time"):
-#                     for coord in rmse.coords("time"):
-#                         rmse.remove_coord(coord)
+                if rmse.coords("time"):
+                    for coord in rmse.coords("time"):
+                        rmse.remove_coord(coord)
 
-#                 rmse_cubes.append(rmse)
+                rmse_cubes.append(rmse)
 
-#         # Single forecast reference time
-#         else:
+        # Single forecast reference time
+        else:
 
-#             input_cubelist = CubeList([
-#                 observed,
-#                 model,
-#             ])
+            input_cubelist = CubeList([
+                observed,
+                model,
+            ])
 
-#             rmse = scores_rmse(
-#                 input_cubelist,
-#                 preserved_coordinates,
-#                 obs_model_comparison=True,
-#             )
+            rmse = scores_rmse(
+                input_cubelist,
+                preserved_coordinates,
+            )
 
-#             rmse.attributes["model_name"] = (
-#                 model.attributes["model_name"]
-#             )
+            rmse.attributes["model_name"] = (
+                model.attributes["model_name"]
+            )
 
-#             rmse_cubes.append(rmse)
+            rmse_cubes.append(rmse)
 
 
-#     if len(rmse_cubes) > 1:
-#         return rmse_cubes.merge()
-#     else:
-#         return rmse_cubes
+    if len(rmse_cubes) > 1:
+        return rmse_cubes.merge()
+    else:
+        return rmse_cubes
