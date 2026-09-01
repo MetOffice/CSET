@@ -2787,7 +2787,55 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
         triangle.
     """
 
-    print(cubes)
+    base_cubes = iris.cube.CubeList()
+    other_cubes = iris.cube.CubeList()
+    for c in cubes:
+        if c.attributes["model_name"] == base_name:
+            base_cubes.append(c)
+        elif c.attributes["model_name"] == other_name:
+            other_cubes.append(c)
+
+    base_vars = {cube.long_name for cube in base_cubes if cube.long_name is not None}
+    other_vars = {cube.long_name for cube in other_cubes if cube.long_name is not None}
+    common_vars = sorted(base_vars & other_vars)
+
+    # Setup arrays to store plot data
+    abs_change = np.zeros((len(common_vars),base_cubes[0].shape[0]))
+    rel_change = np.zeros((len(common_vars),base_cubes[0].shape[0]))
+    signif     = np.zeros((len(common_vars),base_cubes[0].shape[0]))
+
+    # Need to check they are all same shape!.
+
+    for var in common_vars:
+
+        # Determine if there is a corresponding significance cube for plotting.
+        sig_cube = next(
+        (cube for cube in cubes if cube.long_name == f"significance_{var}"),
+        None)
+
+        
+
+
+    # WItearte over each var and see if sig cube in existinsg cubielist.
+
+
+
+
+    # change: np.ndarray
+    #     A 2d numpy array containing the values (scaled to 1 to -1) that determine the triangle
+    #     size/direction.
+    # signif: np.ndarray
+    #     A 2d numpy array containing 0s and 1s to determine if triangle is significant or not.
+    # xaxis_labels: list
+    #     List of labels for the xaxis (must match the second dimension length of signif and change,
+    #     along with magnitude if not None).
+    # yaxis_labels: list
+    #     List of labels for the yaxis (must match the first dimension length of signif and change,
+    #     along with magnitude if not None).
+    # magnitude: np.ndarray | None
+    #     Optional 2D array, matching the shape of change, signif, which contains numerical values
+    #     the user wishes to display under each respective triangle.
+
 
 
 
@@ -2800,6 +2848,7 @@ def make_test_cubes():
              [[1.1,3,4,3,4,6,7.5,8.9],'air_temperature_at_screen_level','LF'],
              [[1,2,3,4,5,6,7,8],'relative_humidity_at_screen_level','UM'],
              [[1.1,1.9,3,2.5,4.5,6.6,7.1,7.9],'relative_humidity_at_screen_level','LF'],
+             [[1,0,0,0,1,1,1,0],'significance_relative_humidity_at_screen_level','None'],             
              ]:   
         
         cube = iris.cube.Cube(
