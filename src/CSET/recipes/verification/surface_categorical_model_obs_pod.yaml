@@ -61,7 +61,7 @@ steps:
                operator: constraints.generate_var_constraint
                varname: observed_$VARNAME
 
-  - operator: scoreswrappers.scores_pod_model_obs
+  - operator: scoreswrappers.scores_pod
     preserved_coordinates: "time"
     threshold: $THRESHOLD
     op_func: $OPERATOR

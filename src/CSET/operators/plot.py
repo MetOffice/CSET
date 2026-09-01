@@ -51,6 +51,7 @@ from CSET.operators._colormaps import (
     get_model_colors_map,
 )
 from CSET.operators._utils import (
+    calc_array_stats,
     check_sequence_coordinate,
     check_single_cube,
     check_stamp_coordinate,
@@ -749,8 +750,9 @@ def _plot_and_save_spatial_plot(
 
     # Add watermark with min/max/mean. Currently not user togglable.
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
+    cube_min, cube_max, cube_mean = calc_array_stats(cube.data)
     axes.annotate(
-        f"Min: {np.nanmin(cube.data.filled(np.nan)):.3g} Max: {np.nanmax(cube.data.filled(np.nan)):.3g} Mean: {np.nanmean(cube.data.filled(np.nan)):.3g}",
+        f"Min: {cube_min:.3g} Max: {cube_max:.3g} Mean: {cube_mean:.3g}",
         xy=(0.025, yinfopad),
         xycoords="axes fraction",
         xytext=(-5, 5),
@@ -1478,8 +1480,9 @@ def _plot_and_save_vector_plot(
 
     # Add watermark with min/max/mean. Currently not user togglable.
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
+    cube_min, cube_max, cube_mean = calc_array_stats(cube_vec_mag.data)
     axes.annotate(
-        f"Min: {np.nanmin(cube_vec_mag.data.filled(np.nan)):.3g} Max: {np.nanmax(cube_vec_mag.data.filled(np.nan)):.3g} Mean: {np.nanmean(cube_vec_mag.data.filled(np.nan)):.3g}",
+        f"Min: {cube_min:.3g} Max: {cube_max:.3g} Mean: {cube_mean:.3g}",
         xy=(0.05, -0.05),
         xycoords="axes fraction",
         xytext=(-5, 5),
