@@ -2787,29 +2787,38 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
         triangle.
     """
 
+    print(cubes)
 
 
 
 
-def make_cube():
+def make_test_cubes():
     """Create basic 2D iris cube for testing functionality."""
-    cube = iris.cube.Cube(
-        np.array([1,2,3,4,5], dtype=float),
-        long_name="air_temperature_at_screen_level",
-        dim_coords_and_dims=[
-            (iris.coords.DimCoord([1,2,3,4,5], long_name="forecast_period"), 0),
-        ],
-    )
+    cubes=iris.cube.CubeList()
+    for c in [
+             [[1,2,3,4,5,6,7,8],'air_temperature_at_screen_level','UM'],
+             [[1.1,3,4,3,4,6,7.5,8.9],'air_temperature_at_screen_level','LF'],
+             [[1,2,3,4,5,6,7,8],'relative_humidity_at_screen_level','UM'],
+             [[1.1,1.9,3,2.5,4.5,6.6,7.1,7.9],'relative_humidity_at_screen_level','LF'],
+             ]:   
+        
+        cube = iris.cube.Cube(
+            np.array(c[0], dtype=float),
+            long_name=c[1],
+            dim_coords_and_dims=[
+                (iris.coords.DimCoord(range(0,len(c[0])), long_name="forecast_period"), 0),
+            ],
+        )
+        cube.attributes["model_name"] = c[2]
 
-    cube.attributes["model_name"] ='UM'
+        cubes.append(cube)
 
-    return cube
+    return cubes
 
-cube = make_cube()
-print(cube.data)
+cubes = make_test_cubes()
+hinton_plot(cubes, base_name='UM',other_name='LF',magnitude=None)
+
 quit()
-
-
 
 
 
