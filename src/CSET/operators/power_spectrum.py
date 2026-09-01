@@ -521,8 +521,8 @@ def _coord_dimension(cube, coord_name):
     ValueError
         Raised if the coordinate is not associated with exactly one
         dimension.
-    """    
- 
+
+    """
     coord_dims = cube.coord_dims(coord_name)
 
     if len(coord_dims) != 1:
