@@ -2275,7 +2275,7 @@ def plot_line_series(
 
         if ndim > 2:
             raise ValueError(
-                "Cube must be 1D or 2D (excluding any realization or frt dimensions)."
+                "Cube must be 1D or 2D (excluding any realization or forecast_reference_time dimensions)."
             )
 
     plot_index = []
