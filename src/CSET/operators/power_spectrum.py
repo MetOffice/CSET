@@ -28,76 +28,256 @@ from CSET._common import iter_maybe
 logger = logging.getLogger(__name__)
 
 
-def calculate_power_spectrum(cubes: iris.cube.Cube | iris.cube.CubeList):
+def calculate_power_spectrum(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+):
     """Wrap power spectrum code.
 
     This function is a wrapper that handles power spectrum
-    calculations for both single cubes and cube lists and includes ensembles.
+    calculations for both single cubes and cube lists and includes
+    ensembles.
 
-    The input cube is split up into a cube for each model,
-    time and realization and a power spectrum calculated for each before
-    combining into one cube ahead of plotting.  This is done to retain the
-    model_name attribute correctly for different models.
+    The input cube is split into a cube for each model, time,
+    forecast_reference_time and realization. A power spectrum is
+    calculated for each before combining them into one cube ahead of
+    plotting. Attributes (model_name, realization,
+    forecast_reference_time) are retained from original cube.
 
-    In case of a CubeList (Multiple models and ensembles): It iterates through
-    each cube and calculates an individual power spectrum. In case of a
-    single cube (one model) it directly calculates the power spectrum.
+    In the case of a CubeList containing multiple models, multiple
+    cases or ensembles, the function iterates through each cube and
+    calculates an individual power spectrum.
 
-    Method for regional domains:
-    Calculate power spectra over limited area domain using Discrete Cosine Transform (DCT)
-    as described in Denis et al 2002 [Denis_etal_2002]_.
+    In the case of a single cube, it directly calculates the power
+    spectrum.
 
     Parameters
     ----------
-    cubes: Cube | CubeList
+    cubes : iris.cube.Cube | iris.cube.CubeList
         Field over which to calculate a power spectrum.
 
     Returns
     -------
-    Cube | CubeList:
-        CubeList of power spectra.
+    iris.cube.Cube | iris.cube.CubeList
+        Power-spectrum cube, or a CubeList for multiple models.
     """
     out = iris.cube.CubeList()
-    for cube in iter_maybe(cubes):
-        model = cube.attributes.get("model_name")
 
-        # Check whether data has a realization coord.
-        if cube.coords("realization"):
-            members_and_realizations = [
-                (member, int(member.coord("realization").points[0]))
-                for member in cube.slices_over("realization")
-            ]
+    for input_cube in iter_maybe(cubes):
+        model = input_cube.attributes.get("model_name")
+
+        # Check whether data has realization and/or
+        # forecast_reference_time coordinates
+        has_realization = bool(input_cube.coords("realization"))
+        has_frt = bool(input_cube.coords("forecast_reference_time"))
+
+        # Build a list containing:
+        # (cube_slice, realization_value, frt_value)
+        #
+        # Retain realization and frt values and restore to
+        # power-spectrum cubes later.
+        if has_realization and has_frt:
+            # Both realization and forecast_reference_time coords
+            members = []
+
+            for frt_cube in input_cube.slices_over("forecast_reference_time"):
+                frt = frt_cube.coord("forecast_reference_time").points[0]
+
+                for member in frt_cube.slices_over("realization"):
+                    realiz = member.coord("realization").points[0]
+
+                    members.append((member, realiz, frt))
+
+        elif has_realization:
+            # Only realization coord
+            members = []
+
+            for member in input_cube.slices_over("realization"):
+                realiz = member.coord("realization").points[0]
+
+                members.append((member, realiz, None))
+
+        elif has_frt:
+            # Only forecast_reference_time coord.
+            members = []
+
+            for frt_cube in input_cube.slices_over("forecast_reference_time"):
+                frt = frt_cube.coord("forecast_reference_time").points[0]
+
+                members.append((frt_cube, None, frt))
+
         else:
-            members_and_realizations = [(cube, None)]
+            # Neither realization nor forecast_reference_time coords.
+            members = [(input_cube, None, None)]
 
-        # Loop over each realization.
         member_power_spectra = iris.cube.CubeList()
-        for member, realiz in members_and_realizations:
-            # Calculate power spectrum.
+
+        # Calculate the spectrum separately for every member/FRT
+        # combination.
+        for member, realiz, frt in members:
+            # Calculate power spectrum
             ps = _power_spectrum(member)
-            # Attach model name if available.
+
+            # Attach model name if available
             if model:
                 ps.attributes["model_name"] = model
+
             # Add the correct realization from the parent cube.
             if realiz is not None:
                 ps.add_aux_coord(
-                    iris.coords.AuxCoord(realiz, long_name="realization", units="1")
+                    iris.coords.AuxCoord(
+                        realiz,
+                        long_name="realization",
+                        units="1",
+                    )
                 )
+
+                ps = iris.util.new_axis(
+                    ps,
+                    "realization",
+                )
+
+            # Add the forecast_reference_time from the parent cube.
+            if frt is not None:
+                ps.add_aux_coord(
+                    iris.coords.AuxCoord(
+                        frt,
+                        standard_name=("forecast_reference_time"),
+                        units=member.coord("forecast_reference_time").units,
+                    )
+                )
+
                 # Promote to dimension coordinate.
-                ps = iris.util.new_axis(ps, "realization")
+                ps = iris.util.new_axis(
+                    ps,
+                    "forecast_reference_time",
+                )
+
             member_power_spectra.append(ps)
 
-        # Merge the individual realization cubes into a single cube, then
-        # squeeze off length 1 realization coordinates.
-        combined_cube = member_power_spectra.concatenate_cube()
+        # If both realization and FRT vary. Concatenate in stages:
+        #
+        # 1. Concatenate realizations within each FRT.
+        # 2. Concatenate the resulting cubes over FRT.
+        if has_realization and has_frt:
+            # Both realization and forecast_reference_time coords
+            frt_power_spectra = iris.cube.CubeList()
+
+            frt_values = np.unique(
+                [
+                    ps_cube.coord("forecast_reference_time").points[0]
+                    for ps_cube in member_power_spectra
+                ]
+            )
+
+            for frt in frt_values:
+                cubes_for_frt = iris.cube.CubeList(
+                    [
+                        ps_cube
+                        for ps_cube in member_power_spectra
+                        if (ps_cube.coord("forecast_reference_time").points[0] == frt)
+                    ]
+                )
+
+                # Within one FRT, realization is the coordinate
+                # that varies.
+                frt_cube = cubes_for_frt.concatenate_cube()
+
+                frt_power_spectra.append(frt_cube)
+
+            # If there is only one FRT, no second concatenation is
+            # required.
+            if len(frt_power_spectra) == 1:
+                combined_cube = frt_power_spectra[0]
+
+            else:
+                # There are multiple FRTs.
+                #
+                # If every FRT has one time point, time and FRT vary
+                # together. Make time an AuxCoord attached to the FRT
+                # dimension so Iris has one concatenation dimension.
+                one_time_per_frt = all(
+                    frt_cube.coord("time").shape == (1,)
+                    for frt_cube in frt_power_spectra
+                )
+
+                if one_time_per_frt:
+                    cubes_for_frt_concat = iris.cube.CubeList()
+
+                    for frt_cube in frt_power_spectra:
+                        frt_cube = frt_cube.copy()
+
+                        time_coord = frt_cube.coord("time").copy()
+
+                        time_dims = frt_cube.coord_dims("time")
+
+                        time_dim = time_dims[0]
+
+                        # Select the only point on the time
+                        # dimension. This removes that dimension but
+                        # initially leaves time as a scalar coord.
+                        index = [slice(None)] * frt_cube.ndim
+                        index[time_dim] = 0
+
+                        frt_cube = frt_cube[tuple(index)]
+
+                        frt_cube.remove_coord("time")
+
+                        frt_dims = frt_cube.coord_dims("forecast_reference_time")
+
+                        frt_dim = frt_dims[0]
+
+                        # Attach the one time point to the FRT
+                        # dimension.
+                        frt_cube.add_aux_coord(
+                            time_coord,
+                            data_dims=(frt_dim,),
+                        )
+
+                        cubes_for_frt_concat.append(frt_cube)
+
+                    combined_cube = cubes_for_frt_concat.concatenate_cube()
+
+                else:
+                    # If all FRT cubes have the same time coordinate,
+                    # only FRT varies and normal concatenation should
+                    # work.
+                    first_time = frt_power_spectra[0].coord("time")
+
+                    matching_times = all(
+                        frt_cube.coord("time") == first_time
+                        for frt_cube in frt_power_spectra[1:]
+                    )
+
+                    if not matching_times:
+                        raise ValueError(
+                            "Cannot combine power spectra: "
+                            "multiple forecast reference times "
+                            "have different multi-point time "
+                            "coordinates."
+                        )
+
+                    # Combine individual cubes into single cube.
+                    combined_cube = frt_power_spectra.concatenate_cube()
+
+        else:
+            # Only one of realization or FRT varies, or neither
+            # exists. In those cases only one concatenation axis is
+            # required.
+            # Combine individual cubes into single cube.
+            if len(member_power_spectra) == 1:
+                combined_cube = member_power_spectra[0]
+            else:
+                combined_cube = member_power_spectra.concatenate_cube()
+
         combined_cube = iris.util.squeeze(combined_cube)
+
         out.append(combined_cube)
 
-    # Directly return cube if we only have one.
+    # Directly return cube if only one.
     if len(out) == 1:
         return out[0]
-    else:
-        return out
+
+    return out
 
 
 def _power_spectrum(cube: iris.cube.Cube) -> iris.cube.Cube:
@@ -318,3 +498,34 @@ def _create_alpha_matrix(Ny, Nx):
     alpha_matrix = np.sqrt((x_indices**2) / Nx**2 + (y_indices**2) / Ny**2)
 
     return alpha_matrix
+
+
+def _coord_dimension(cube, coord_name):
+    """Return the single dimension associated with a coordinate.
+
+    Parameters
+    ----------
+    cube : iris.cube.Cube
+        Cube containing the coordinate.
+    coord_name : str
+        Name of the coordinate for which to retrieve the associated
+        dimension.
+
+    Returns
+    -------
+    int
+        Index of the dimension associated with the coordinate.
+
+    Raises
+    ------
+    ValueError
+        Raised if the coordinate is not associated with exactly one
+        dimension.
+
+    """
+    coord_dims = cube.coord_dims(coord_name)
+
+    if len(coord_dims) != 1:
+        raise ValueError(f"Expected {coord_name} to be a one-dimensional coordinate.")
+
+    return coord_dims[0]
