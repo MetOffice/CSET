@@ -224,14 +224,6 @@ def calculate_power_spectrum(
 
                         frt_dims = frt_cube.coord_dims("forecast_reference_time")
 
-                        if len(frt_dims) != 1:
-                            raise ValueError(
-                                "Expected "
-                                "forecast_reference_time to "
-                                "be a one-dimensional "
-                                "coordinate."
-                            )
-
                         frt_dim = frt_dims[0]
 
                         # Attach the one time point to the FRT
