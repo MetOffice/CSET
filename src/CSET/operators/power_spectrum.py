@@ -501,7 +501,28 @@ def _create_alpha_matrix(Ny, Nx):
 
 
 def _coord_dimension(cube, coord_name):
-    """Return the single dimension associated with a coordinate."""
+    """Return the single dimension associated with a coordinate.
+
+    Parameters
+    ----------
+    cube : iris.cube.Cube
+        Cube containing the coordinate.
+    coord_name : str
+        Name of the coordinate for which to retrieve the associated
+        dimension.
+
+    Returns
+    -------
+    int
+        Index of the dimension associated with the coordinate.
+
+    Raises
+    ------
+    ValueError
+        Raised if the coordinate is not associated with exactly one
+        dimension.
+    """    
+ 
     coord_dims = cube.coord_dims(coord_name)
 
     if len(coord_dims) != 1:
