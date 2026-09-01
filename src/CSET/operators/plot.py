@@ -2259,6 +2259,7 @@ def plot_line_series(
         ndim = model_cube.ndim
 
         if model_cube.coords("realization"):
+            # returns coord dimension
             realization_dims = model_cube.coord_dims("realization")
 
             # Only subtract if realization is a dimension coordinate
