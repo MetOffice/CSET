@@ -2760,7 +2760,7 @@ def qq_plot(
     return iris.cube.CubeList([base, other])
 
 
-def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
+def hinton_plot(cubes, xaxis_labels, yaxis_labels, magnitude=None):
     """
     Plot a Hinton style triangle/scorecard plot.
 
@@ -2770,7 +2770,7 @@ def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
     than customisable by the user as input arguments; many have been designed to automatically
     scale the plot depending on the number of x and y components.
 
-    Parameters
+    Parameters TODO
     ----------
     change: np.ndarray
         A 2d numpy array containing the values (scaled to 1 to -1) that determine the triangle
