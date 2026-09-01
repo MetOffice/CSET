@@ -2760,7 +2760,65 @@ def qq_plot(
     return iris.cube.CubeList([base, other])
 
 
-def hinton_plot(cubes, xaxis_labels, yaxis_labels, magnitude=None):
+def hinton_plot(cubes, base_name, other_name, magnitude=None):
+    """
+    Plot a Hinton style triangle/scorecard plot.
+
+    This plot type can be useful for summarising high level information, such as comparing
+    how 'skillful' two models are when verified against observations for a variety of metrics,
+    as a function of lead-time. A few parameters of the plot style are fixed in function rather
+    than customisable by the user as input arguments; many have been designed to automatically
+    scale the plot depending on the number of x and y components.
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        A iris cubelist, containing at least two cubes for two models/one variable to plot. Can
+        include multiple variables, in which the plot will automatically scale for, up to a maximum
+        of 8 (before redering starts to look problematic). If cubes containing significance_<var> 
+        exist, containing a bool array, then it will also plot whether each triangle is significant
+        by using a thick black outline. Each cube should be 1D, with forecast_period as the dimension.
+    base_name: str
+        The name of the base model to use as the control in the Hinton plot, as a string.
+    other_name: str
+        The name of the other model to use as the test in the Hinton plot, as a string.
+    magnitude: bool
+        Option bool when if True, then plot the numerical value difference in two values under each
+        triangle.
+    """
+
+
+
+
+
+def make_cube():
+    """Create basic 2D iris cube for testing functionality."""
+    cube = iris.cube.Cube(
+        np.array([1,2,3,4,5], dtype=float),
+        long_name="air_temperature_at_screen_level",
+        dim_coords_and_dims=[
+            (iris.coords.DimCoord([1,2,3,4,5], long_name="forecast_period"), 0),
+        ],
+    )
+
+    cube.attributes["model_name"] ='UM'
+
+    return cube
+
+cube = make_cube()
+print(cube.data)
+quit()
+
+
+
+
+
+
+
+
+
+
+def _create_hinton_plot(cubes, plot_filename, title, magnitude=None):
     """
     Plot a Hinton style triangle/scorecard plot.
 
