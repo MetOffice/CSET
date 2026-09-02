@@ -50,6 +50,8 @@ def calculate_power_spectrum(
     In the case of a single cube, it directly calculates the power
     spectrum.
 
+    [Denis_etal_2002]_
+
     Parameters
     ----------
     cubes : iris.cube.Cube | iris.cube.CubeList
