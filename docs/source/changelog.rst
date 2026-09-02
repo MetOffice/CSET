@@ -19,6 +19,8 @@ A feature release with major new features including:
 * Added CSET gallery in documentation
 * CSET now installs version appropriate site specific restricted files with the new ``cset install-restricted-files``
 
+List of full changes:
+
 * Support UK radar data by `@BernardClaxton`_ in :pr:`1825`
 * Calculate power spectra using a separate operator power_spectrum by `@cehalliwell`_ in :pr:`1872`
 * Adds a wrapper for RMSE calculated using the scores package by `@daflack`_ in :pr:`2107`
