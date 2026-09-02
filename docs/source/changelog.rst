@@ -143,7 +143,7 @@ A feature release with major new features including:
 * Remove `cset_comparison_base` attribute when loading data by `@jfrost-mo`_ in :pr:`2437`
 * Handle non-masked data in spatial plotting by `@jfrost-mo`_ in :pr:`2439`
 * Add restricted files branch creation step to release documentation by `@jfrost-mo`_ in :pr:`2455`
-
+* Add release notes for version 26.9.0 by `@james-a-f-ross`_ in :pr:`2457`
 
 New Contributors:
 
