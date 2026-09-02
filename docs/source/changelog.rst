@@ -156,12 +156,12 @@ New Contributors:
 * `@mo-tomosevans`_ made their first contribution in :pr:`2308`
 * `@CGenie`_ made their first contribution in :pr:`2315`
 
-.. _@CGenie: https://github.com/CGenie
-.. _@mo-tomosevans: https://github.com/mo-tomosevans
-.. _@james-a-f-ross: https://github.com/james-a-f-ross
-.. _@mo-khanley: https://github.com/mo-khanley
 .. _@A-Gainford: https://github.com/A-Gainford
 .. _@ezhils19: https://github.com/ezhils19
+.. _@mo-khanley: https://github.com/mo-khanley
+.. _@james-a-f-ross: https://github.com/james-a-f-ross
+.. _@mo-tomosevans: https://github.com/mo-tomosevans
+.. _@CGenie: https://github.com/CGenie
 
 26.5.1 (2026-06-10)
 -------------------
