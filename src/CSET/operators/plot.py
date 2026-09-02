@@ -3013,47 +3013,6 @@ hinton_plot(cubes, base_name='UM',other_name='LF',magnitude=True)
 quit()
 
 
-
-
-
-
-
-
-def _create_hinton_plot(cubes, plot_filename, title, magnitude=None):
-    """
-    Plot a Hinton style triangle/scorecard plot.
-
-    This plot type can be useful for summarising high level information, such as comparing
-    how 'skillful' two models are when verified against observations for a variety of metrics,
-    as a function of lead-time. A few parameters of the plot style are fixed in function rather
-    than customisable by the user as input arguments; many have been designed to automatically
-    scale the plot depending on the number of x and y components.
-
-    Parameters TODO
-    ----------
-    change: np.ndarray
-        A 2d numpy array containing the values (scaled to 1 to -1) that determine the triangle
-        size/direction.
-    signif: np.ndarray
-        A 2d numpy array containing 0s and 1s to determine if triangle is significant or not.
-    xaxis_labels: list
-        List of labels for the xaxis (must match the second dimension length of signif and change,
-        along with magnitude if not None).
-    yaxis_labels: list
-        List of labels for the yaxis (must match the first dimension length of signif and change,
-        along with magnitude if not None).
-    magnitude: np.ndarray | None
-        Optional 2D array, matching the shape of change, signif, which contains numerical values
-        the user wishes to display under each respective triangle.
-
-    Returns
-    -------
-    matplotlib axes object to either display or do further modifications to.
-    """
-
-    return fig, ax
-
-
 def scatter_plot(
     cube_x: iris.cube.Cube | iris.cube.CubeList,
     cube_y: iris.cube.Cube | iris.cube.CubeList,
