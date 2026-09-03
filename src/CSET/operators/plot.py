@@ -2775,7 +2775,7 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
     cubes: iris.cube.CubeList
         A iris cubelist, containing at least two cubes for two models/one variable to plot. Can
         include multiple variables, in which the plot will automatically scale for, up to a maximum
-        of 8 (before redering starts to look problematic). If cubes containing significance_<var> 
+        of 8 (before redering starts to look problematic). If cubes containing significance_<var>
         exist, containing a bool array, then it will also plot whether each triangle is significant
         by using a thick black outline. Each cube should be 1D, with forecast_period as the dimension.
     base_name: str
@@ -2792,7 +2792,6 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
 
     filename = slugify(recipe_title)
 
-
     base_cubes = iris.cube.CubeList()
     other_cubes = iris.cube.CubeList()
     for c in cubes:
@@ -2805,30 +2804,55 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
     other_vars = {cube.long_name for cube in other_cubes if cube.long_name is not None}
     common_vars = sorted(base_vars & other_vars)
 
-    # Setup arrays to store plot data
-    abs_change = np.zeros((len(common_vars),base_cubes[0].shape[0]))
-    signif     = np.zeros((len(common_vars),base_cubes[0].shape[0]))
+    rows = []
 
-    # Need to check they are all same shape!.
+    for var in common_vars:
+        base_cube = next(
+            (c for c in base_cubes if c.long_name == var),
+            None,
+        )
 
-    for v,var in enumerate(common_vars):
+        other_cube = next(
+            (c for c in other_cubes if c.long_name == var),
+            None,
+        )
 
-        base_cube  = next((c for c in base_cubes if c.long_name == f"{var}"),None)
-        other_cube = next((c for c in other_cubes if c.long_name == f"{var}"),None)
+        if base_cube is None or other_cube is None:
+            continue
 
-        abs_change[v,:] = other_cube.data - base_cube.data
+        diff = other_cube.data - base_cube.data
 
-        # Determine if there is a corresponding significance cube for plotting in any cubes
         sig_cube = next(
-        (cube for cube in cubes if cube.long_name == f"significance_{var}"),
-        None)
+            (cube for cube in cubes if cube.long_name == f"significance_{var}"),
+            None,
+        )
 
-        if sig_cube is not None:
-            signif[v, :] = sig_cube.data.astype(bool)
+        rows.append(
+            {
+                "name": var,
+                "forecast_periods": base_cube.coord("forecast_period").points,
+                "change": diff,
+                "significance": sig_cube.data.astype(bool)
+                if sig_cube is not None
+                else None,
+            }
+        )
 
     # anomalies relative to row mean
-    anoms = abs_change - abs_change.mean(axis=1, keepdims=True) 
-    scaled_anoms = anoms / np.max(np.abs(anoms), axis=1, keepdims=True)
+    for row in rows:
+        change = np.asarray(row["change"])
+
+        anoms = change - np.mean(change)
+
+        scale = np.max(np.abs(anoms))
+
+        if scale > 0:
+            scaled = anoms / scale
+        else:
+            scaled = np.zeros_like(anoms)
+
+        row["anoms"] = anoms
+        row["scaled"] = scaled
 
     # Setup colors of triangles
     color_pos = "#7CAE00"
@@ -2839,9 +2863,9 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
     cell_size_in = 1.5
     text_row_ratio = 0.25
 
-
     # Get the number of x and y elements
-    ny, nx = scaled_anoms.shape
+    ny = len(rows)
+    nx = max(len(row["forecast_periods"]) for row in rows)
 
     # Build non-uniform y coordinates
     tri_height = 1.0
@@ -2857,7 +2881,7 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
         y += tri_height
         y_edges.append(y)
 
-        if magnitude is not None:
+        if magnitude:
             txt_y.append(y + txt_height / 2)
             y += txt_height
             y_edges.append(y)
@@ -2877,11 +2901,16 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
     ax.set_xlim(-0.5, nx - 0.5)
     ax.set_ylim(0, total_height)
 
+    longest_row = max(rows, key=lambda row: len(row["forecast_periods"]))
+
     ax.set_xticks(np.arange(nx))
-    ax.set_xticklabels(base_cube.coord('forecast_period').points, rotation=90)
+    ax.set_xticklabels(
+        longest_row["forecast_periods"],
+        rotation=90,
+    )
 
     ax.set_yticks(tri_y)
-    ax.set_yticklabels(common_vars)
+    ax.set_yticklabels([row["name"] for row in rows])
 
     ax.set_xticks(np.arange(-0.5, nx, 1), minor=True)
     ax.set_yticks(y_edges, minor=True)
@@ -2908,21 +2937,22 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
     text_fontsize = cell_pixels * 0.15
 
     # Plot triangles + text
-    for j in range(ny):
-        for i in range(nx):
-            val = scaled_anoms[j, i]
+    for j, row in enumerate(rows):
+        scaled = row["scaled"]
+        anoms = row["anoms"]
+        signif = row["significance"]
+
+        for i in range(len(scaled)):
+            val = scaled[i]
+
             if np.isnan(val):
                 continue
 
             if abs(val) < 0.01:
                 continue
 
-            if sig_cube:
-                sig = signif[j, i]
-
             size = max_marker_size * abs(val)
 
-            # Triangle style
             if val >= 0:
                 marker = "^"
                 color = color_pos
@@ -2930,14 +2960,14 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
                 marker = "v"
                 color = color_neg
 
-            if sig:
-                edgecolor = "black"
-                linewidth = 0.6
+            if signif is not None:
+                sig = bool(signif[i])
+                edgecolor = "black" if sig else "none"
+                linewidth = 0.6 if sig else 0.0
             else:
                 edgecolor = "none"
                 linewidth = 0.0
 
-            # Triangle
             ax.scatter(
                 i,
                 tri_y[j],
@@ -2947,12 +2977,12 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
                 edgecolors=edgecolor,
                 linewidths=linewidth,
                 zorder=3,
-                clip_on=True,  # ensures no rendering bleed
+                clip_on=True,
             )
 
             # Text row
-            if magnitude is not None:
-                mag_val = anoms[j, i]
+            if magnitude:
+                mag_val = anoms[i]
 
                 if not np.isnan(mag_val):
                     ax.text(
@@ -2980,37 +3010,6 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
 
     # Make a page to display the plots.
     _make_plot_html_page(plot_index)
-
-
-
-def make_test_cubes():
-    """Create basic 2D iris cube for testing functionality."""
-    cubes=iris.cube.CubeList()
-    for c in [
-             [[1,2,3,4,5,6,7,8],'air_temperature_at_screen_level','UM'],
-             [[1.1,3,4,3,4,6,7.5,8.9],'air_temperature_at_screen_level','LF'],
-             [[1,2,3,4,5,6,7,8],'relative_humidity_at_screen_level','UM'],
-             [[1.1,1.9,3,2.5,4.5,6.6,7.1,7.9],'relative_humidity_at_screen_level','LF'],
-             [[1,0,0,0,1,1,1,0],'significance_relative_humidity_at_screen_level','None'],             
-             ]:   
-        
-        cube = iris.cube.Cube(
-            np.array(c[0], dtype=float),
-            long_name=c[1],
-            dim_coords_and_dims=[
-                (iris.coords.DimCoord(range(0,len(c[0])), long_name="forecast_period"), 0),
-            ],
-        )
-        cube.attributes["model_name"] = c[2]
-
-        cubes.append(cube)
-
-    return cubes
-
-cubes = make_test_cubes()
-hinton_plot(cubes, base_name='UM',other_name='LF',magnitude=True)
-
-quit()
 
 
 def scatter_plot(
