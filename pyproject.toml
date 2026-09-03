@@ -65,7 +65,7 @@ markers = [
     "cylc: test requires cylc and rose to be set up",
 ]
 minversion = "7"
-pythonpath = ["src"]
+pythonpath = ["src", "utils"]
 testpaths = ["tests"]
 
 [tool.coverage.run]
@@ -75,7 +75,7 @@ source = ["src"]
 # TODO: Figure out how to test loaders. This will likely involve having some
 # example configurations and may be part of the effort to test the workflow.
 # Omit _netCDF4.pyx to work around https://github.com/conda-forge/netcdf4-feedstock/issues/188
-omit = ["__main__.py", "src/CSET/loaders/*.py", "_netCDF4.pyx", "src/CSET/operators/improver/*.py"]
+omit = ["__main__.py", "src/CSET/loaders/*.py", "_netCDF4.pyx", "utils/CSET/operators/improver/*.py"]
 
 [tool.codespell]
 ignore-words-list = "lazyness,meaned,runn,PRES"
@@ -84,7 +84,7 @@ skip = "build,*.css,*.ipynb,*.js,*.html,*.svg,*.xml,.git"
 [tool.ruff]
 line-length = 88
 src = ["src", "test"]
-exclude = ["src/CSET/operators/improver/*"]
+exclude = ["utils/**"]
 
 [tool.ruff.lint]
 extend-select = ["B", "D", "I"]

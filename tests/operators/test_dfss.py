@@ -28,22 +28,22 @@ from CSET.operators import dfss
 def test_dfss_basic_functioning(dfss_ensemble_cube):
     """Test basic functionality of the main dfss function."""
     fc_time_npoints = dfss_ensemble_cube.shape[1]
-    neighbourhood_lengths = [1, 2, 3]
+    neighbourhood_lengths = [3, 5, 7]
 
-    dfss_cube, dfss_stdev_cube = dfss.calculate_dfss(
+    dfss_cb, dfss_stdev_cb = dfss.calculate_dfss(
         dfss_ensemble_cube,
         neighbourhood_lengths=neighbourhood_lengths,
         centile=95,
         run_parallel=False,
     )
 
-    assert dfss_cube.data.shape == (fc_time_npoints, np.size(neighbourhood_lengths))
-    assert dfss_stdev_cube.data.shape == (
+    assert dfss_cb.data.shape == (fc_time_npoints, np.size(neighbourhood_lengths))
+    assert dfss_stdev_cb.data.shape == (
         fc_time_npoints,
         np.size(neighbourhood_lengths),
     )
 
-    dfss_cube, dfss_stdev_cube = dfss.calculate_dfss(
+    dfss_cb, dfss_stdev_cb = dfss.calculate_dfss(
         dfss_ensemble_cube,
         neighbourhood_lengths=neighbourhood_lengths,
         centile_or_threshold="threshold",
@@ -51,13 +51,13 @@ def test_dfss_basic_functioning(dfss_ensemble_cube):
         run_parallel=False,
     )
 
-    assert dfss_cube.data.shape == (fc_time_npoints, np.size(neighbourhood_lengths))
-    assert dfss_stdev_cube.data.shape == (
+    assert dfss_cb.data.shape == (fc_time_npoints, np.size(neighbourhood_lengths))
+    assert dfss_stdev_cb.data.shape == (
         fc_time_npoints,
         np.size(neighbourhood_lengths),
     )
 
-    dfss_cube, dfss_stdev_cube = dfss.calculate_dfss(
+    dfss_cb, dfss_stdev_cb = dfss.calculate_dfss(
         dfss_ensemble_cube,
         neighbourhood_lengths=neighbourhood_lengths,
         centile_or_threshold="threshold",
@@ -65,11 +65,26 @@ def test_dfss_basic_functioning(dfss_ensemble_cube):
         run_parallel=True,
     )
 
-    assert dfss_cube.data.shape == (fc_time_npoints, np.size(neighbourhood_lengths))
-    assert dfss_stdev_cube.data.shape == (
+    assert dfss_cb.data.shape == (fc_time_npoints, np.size(neighbourhood_lengths))
+    assert dfss_stdev_cb.data.shape == (
         fc_time_npoints,
         np.size(neighbourhood_lengths),
     )
+
+
+def test_dfss_bad_neighbourhoods(dfss_ensemble_cube):
+    """Test basic functionality of the main dfss function."""
+    neighbourhood_lengths = [1, 2, 4, 7]
+    with pytest.raises(
+        ValueError,
+        match="neighbourhood_lengths must all be greater than 1 and odd, got invalid values: 1, 2, 4",
+    ):
+        dfss.calculate_dfss(
+            dfss_ensemble_cube,
+            neighbourhood_lengths=neighbourhood_lengths,
+            centile=95,
+            run_parallel=False,
+        )
 
 
 def test_dfss_one_realisation_exception(dfss_ensemble_cube):
@@ -80,7 +95,7 @@ def test_dfss_one_realisation_exception(dfss_ensemble_cube):
     with pytest.raises(ValueError, match=r"dFSS is only valid for an ensemble"):
         dfss.calculate_dfss(
             one_realisation_dfss_ensemble_cube,
-            neighbourhood_lengths=[0, 1, 2],
+            neighbourhood_lengths=[3, 5, 7],
             centile=95,
             run_parallel=False,
         )
@@ -96,7 +111,7 @@ def test_calc_fss(dfss_ensemble_cube):
     fss = dfss._calc_fss(
         cube_a_in,
         cube_b_in,
-        neighbourhood_length=2,
+        neighbourhood_length=3,
         centile_or_threshold="threshold",
         threshold=1,
     )
@@ -109,7 +124,7 @@ def test_calc_dfss(dfss_ensemble_cube):
     for time_slice in dfss_ensemble_cube.slices_over("time"):
         time_point = time_slice.coord("time")
         dfss_cube, dfss_stdev_cube = dfss._calc_dfss(
-            time_slice, [1], time_point, centile=95
+            time_slice, [3], time_point, centile=95
         )
         assert type(dfss_cube) is iris.cube.Cube
         assert type(dfss_stdev_cube) is iris.cube.Cube
@@ -117,21 +132,34 @@ def test_calc_dfss(dfss_ensemble_cube):
     for time_slice in dfss_ensemble_cube.slices_over("time"):
         time_point = time_slice.coord("time")
         dfss_cube, dfss_stdev_cube = dfss._calc_dfss(
-            time_slice, [1], time_point, centile_or_threshold="threshold", threshold=2
+            time_slice, [3], time_point, centile_or_threshold="threshold", threshold=2
         )
         assert type(dfss_cube) is iris.cube.Cube
         assert type(dfss_stdev_cube) is iris.cube.Cube
 
 
-@pytest.mark.filterwarnings("ignore: Warning")
+def test_serial_calculate_dfss_bad_neighbourhood_length_1(dfss_ensemble_cube):
+    """Test serial_calculate_dfss function."""
+    with pytest.raises(ValueError, match="must be greater than 1 and odd, got 1"):
+        dfss._serial_calculate_dfss(dfss_ensemble_cube, [1], centile=95)
+
+
+def test_serial_calculate_dfss_bad_neighbourhood_length_4(dfss_ensemble_cube):
+    """Test serial_calculate_dfss function."""
+    with pytest.raises(ValueError, match="must be greater than 1 and odd, got 4"):
+        dfss._serial_calculate_dfss(dfss_ensemble_cube, [4], centile=95)
+
+
 def test_serial_calculate_dfss(dfss_ensemble_cube):
     """Test serial_calculate_dfss function."""
-    outlist_centile = dfss._serial_calculate_dfss(dfss_ensemble_cube, [1], centile=95)
+    outlist_centile = dfss._serial_calculate_dfss(
+        dfss_ensemble_cube, [3, 5, 7], centile=95
+    )
     assert type(outlist_centile) is iris.cube.CubeList
     assert type(outlist_centile[0]) is iris.cube.Cube
     assert type(outlist_centile[1]) is iris.cube.Cube
     outlist_threshold = dfss._serial_calculate_dfss(
-        dfss_ensemble_cube, [1], centile_or_threshold="threshold", threshold=2
+        dfss_ensemble_cube, [3, 5, 7], centile_or_threshold="threshold", threshold=2
     )
     assert type(outlist_threshold) is iris.cube.CubeList
     assert type(outlist_threshold[0]) is iris.cube.Cube
@@ -146,7 +174,7 @@ def test_parallel_calculate_dfss(dfss_ensemble_cube):
     assert type(outlist_centile[0]) is iris.cube.Cube
     assert type(outlist_centile[1]) is iris.cube.Cube
     outlist_threshold = dfss._parallel_calculate_dfss(
-        dfss_ensemble_cube, [1], centile_or_threshold="threshold", threshold=2
+        dfss_ensemble_cube, [3], centile_or_threshold="threshold", threshold=2
     )
     assert type(outlist_threshold) is iris.cube.CubeList
     assert type(outlist_threshold[0]) is iris.cube.Cube
@@ -158,13 +186,13 @@ def test_dfss_on_slice(dfss_ensemble_cube):
     """Test dfss_on_slice."""
     for time_slice in dfss_ensemble_cube.slices_over("time"):
         dfss_cube, dfss_stdev_cube = dfss._dfss_on_slice(
-            time_slice, [1], "centile", 95, None
+            time_slice, [3], "centile", 95, None
         )
         assert type(dfss_cube) is iris.cube.Cube
         assert type(dfss_stdev_cube) is iris.cube.Cube
     for time_slice in dfss_ensemble_cube.slices_over("time"):
         dfss_cube, dfss_stdev_cube = dfss._dfss_on_slice(
-            time_slice, [1], "threshold", None, 2
+            time_slice, [3], "threshold", None, 2
         )
         assert type(dfss_cube) is iris.cube.Cube
         assert type(dfss_stdev_cube) is iris.cube.Cube

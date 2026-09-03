@@ -17,18 +17,17 @@
 import multiprocessing as mp
 import os
 from functools import partial
-from typing import List, Union
+from typing import List
 
 import cartopy.crs as ccrs
 import iris
 import iris.cube
 import numpy as np
 import numpy.ma as ma
+from improver.nbhood import NeighbourhoodProcessing
 from iris import coord_systems
 from iris.coords import DimCoord
 from iris.cube import Cube, CubeList
-
-from .improver.nbhood import NeighbourhoodProcessing
 
 
 def init_worker():
@@ -167,6 +166,15 @@ def calculate_dfss(
     if len(cube_xy.coord("realization").points) == 1:
         raise ValueError("dFSS is only valid for an ensemble")
 
+    invalid_neighbourhood_lengths = [
+        v for v in neighbourhood_lengths if not (v > 1 and v % 2 == 1)
+    ]
+    if invalid_neighbourhood_lengths:
+        raise ValueError(
+            f"neighbourhood_lengths must all be greater than 1 and odd, "
+            f"got invalid values: {', '.join(str(v) for v in invalid_neighbourhood_lengths)}"
+        )
+
     # force serial run if running in workflow
     if "CYLC_RUN_DIR" in os.environ:
         run_parallel = False
@@ -192,7 +200,7 @@ def calculate_dfss(
 
 def _calc_dfss(
     cube_xy: Cube,
-    neighbourhood_lengths: Union[List[int]],
+    neighbourhood_lengths: List[int],
     time_point,
     centile_or_threshold: str = "centile",
     centile: float = None,
@@ -217,7 +225,6 @@ def _calc_dfss(
             for i_b, memb_b in enumerate(ens_members):
                 if not np.isnan(fss_array[i_a, i_b]):
                     ens_member_b = cube_xy.extract(iris.Constraint(realization=memb_b))
-
                     fss_array[i_a, i_b] = _calc_fss(
                         ens_member_a,
                         ens_member_b,
@@ -262,7 +269,6 @@ def _calc_fss(
     threshold: float = None,
 ) -> float:
     # Set the threshold of interest
-
     cube_a = cube_a_in.copy()
     cube_b = cube_b_in.copy()
 
@@ -286,7 +292,6 @@ def _calc_fss(
             "of [centile, threshold]"
         )
         raise UserWarning(msg)
-
     cube_a.data = np.ma.where(cube_a.data > threshold_a, 1, 0)
     cube_b.data = np.ma.where(cube_b.data > threshold_b, 1, 0)
 
@@ -302,7 +307,7 @@ def _calc_fss(
         return fss
 
     nbhooder = NeighbourhoodProcessing(
-        neighbourhood_method="square", radii=neighbourhood_length
+        neighbourhood_method="square", neighbourhood_length=neighbourhood_length
     )
 
     cube_a = _regrid_lat_lon_cube_to_xy_cube(cube_a)
