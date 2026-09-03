@@ -3,7 +3,7 @@
 # This file is part of 'IMPROVER' and is released under the BSD 3-Clause license.
 # See LICENSE in the root of the repository for full licensing details.
 """Module containing plugin base class."""
-
+import warnings
 # This code is borrowed from https://github.com/metoppv/improver/ with some modifications.
 
 from abc import ABC, abstractmethod
@@ -13,6 +13,7 @@ from typing import Any, Optional, Tuple, Union
 import numpy as np
 from iris.cube import Cube, CubeList
 from numpy import ndarray
+from cf_units import Unit
 from scipy.ndimage import correlate
 
 
@@ -253,11 +254,13 @@ class NeighbourhoodProcessing(PostProcessingPlugin):
     def __init__(
         self,
         neighbourhood_method: str,
-        radii: float,
+        neighbourhood_length: int,
         weighted_mode: bool = False,
         sum_only: bool = False,
         re_mask: bool = True,
     ) -> None:
+
+
         """
         Initialise class.
 
@@ -265,11 +268,8 @@ class NeighbourhoodProcessing(PostProcessingPlugin):
             neighbourhood_method:
                 Name of the neighbourhood method to use. Options: 'circular',
                 'square'.
-            radii:
-                The radii in grid points of the neighbourhood to apply.
-                Rounded up to convert into integer number of grid
-                points east and north, based on the characteristic spacing
-                at the zero indices of the cube projection-x and y coords.
+            neighbourhood_length: int
+                size of the neighbourhood to use.  Odd valued.
             weighted_mode:
                 If True, use a circle for neighbourhood kernel with
                 weighting decreasing with radius.
@@ -291,7 +291,12 @@ class NeighbourhoodProcessing(PostProcessingPlugin):
             ValueError: If the weighted_mode is used with a
                         neighbourhood_method that is not "circular".
         """
-        self.radius = float(radii)
+
+        if not (neighbourhood_length> 1 and neighbourhood_length % 2 == 1):
+            raise ValueError(f"value must be greater than 1 and odd, got {neighbourhood_length}")
+
+        self.neighbourhood_length = neighbourhood_length
+        self.grid_cells = int((neighbourhood_length - 1)/2)
 
         if neighbourhood_method in ["square", "circular"]:
             self.neighbourhood_method = neighbourhood_method
@@ -511,20 +516,14 @@ class NeighbourhoodProcessing(PostProcessingPlugin):
         if np.isnan(cube.data).any():
             raise ValueError("Error: NaN detected in input cube data")
 
-        # check_if_grid_is_equal_area(cube)
-
         # If the data is masked, the mask will be processed as well as the
         # original_data * mask array.
-        # check_radius_against_distance(cube, self.radius)
-
-        # grid_cells = distance_to_number_of_grid_cells(cube, self.radius)
-        grid_cells = int(self.radius)
 
         if self.neighbourhood_method == "circular":
-            self.kernel = circular_kernel(grid_cells, self.weighted_mode)
+            self.kernel = circular_kernel(self.grid_cells, self.weighted_mode)
             self.nb_size = max(self.kernel.shape)
         else:
-            self.nb_size = grid_cells
+            self.nb_size = self.neighbourhood_length
 
         try:
             mask_cube_data = mask_cube.data
@@ -538,5 +537,4 @@ class NeighbourhoodProcessing(PostProcessingPlugin):
             )
             result_slices.append(cube_slice)
         neighbourhood_averaged_cube = result_slices.merge_cube()
-
         return neighbourhood_averaged_cube
