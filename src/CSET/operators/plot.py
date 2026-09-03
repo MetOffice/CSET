@@ -788,7 +788,7 @@ def plot_dfss_contour(
     cube: iris.cube.Cube | iris.cube.CubeList,
     variable: str = None,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Plot a scatter plot between two variables.
+    """Create a contour plot between two variables.
 
     Both cubes must be 1D.
 
