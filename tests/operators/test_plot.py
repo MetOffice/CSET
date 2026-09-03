@@ -1421,3 +1421,42 @@ def test_hinton_returns_figure_and_axes():
     )
     assert fig is not None
     assert ax is not None
+
+
+def make_test_cubes():
+    """Create basic 2D iris cube for testing functionality."""
+    cubes = iris.cube.CubeList()
+    for c in [
+        [[1, 2, 3, 4, 5, 6, 7, 8], "air_temperature_at_screen_level", "UM"],
+        [[1.1, 3, 4, 3, 4, 6, 7.5, 8.9], "air_temperature_at_screen_level", "LF"],
+        [[1, 2, 3, 4, 5, 6, 7, 8], "relative_humidity_at_screen_level", "UM"],
+        [
+            [1.1, 1.9, 3, 2.5, 4.5, 6.6, 7.1, 7.9],
+            "relative_humidity_at_screen_level",
+            "LF",
+        ],
+        [
+            [1, 0, 0, 0, 1, 1, 1, 0],
+            "significance_relative_humidity_at_screen_level",
+            "None",
+        ],
+    ]:
+        cube = iris.cube.Cube(
+            np.array(c[0], dtype=float),
+            long_name=c[1],
+            dim_coords_and_dims=[
+                (
+                    iris.coords.DimCoord(range(len(c[0])), long_name="forecast_period"),
+                    0,
+                ),
+            ],
+        )
+        cube.attributes["model_name"] = c[2]
+
+        cubes.append(cube)
+
+    return cubes
+
+
+cubes = make_test_cubes()
+hinton_plot(cubes, base_name="UM", other_name="LF", magnitude=True)
