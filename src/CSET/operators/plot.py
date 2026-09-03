@@ -2800,6 +2800,12 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
         elif c.attributes["model_name"] == other_name:
             other_cubes.append(c)
 
+    # base cubes should be the same length as other cubes, otherwise one is missing a variable.
+    if len(base_cubes) != len(other_cubes):
+        raise ValueError(
+            f"base cubes {base_cubes} are not same number as {other_cubes}"
+        )
+
     base_vars = {cube.long_name for cube in base_cubes if cube.long_name is not None}
     other_vars = {cube.long_name for cube in other_cubes if cube.long_name is not None}
     common_vars = sorted(base_vars & other_vars)
