@@ -28,7 +28,9 @@ steps:
 
     # Plot the data.
   - operator: plot.hinton_plot
-    magnitude: True
+    base_name: $BASE_MODEL
+    other_name: $MODEL_NAME
+    magnitude: False
 
   - operator: write.write_cube_to_nc
     overwrite: true

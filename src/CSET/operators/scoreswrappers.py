@@ -1114,7 +1114,7 @@ from CSET.operators.misc import combine_cubes_into_cubelist
 from CSET.operators.misc import _extract_common_time_points_multiplecubes
 
 def hinton_rmse_model_vs_baseline(
-    cubes,
+    source_cubes,
     entries,
 ):
     """
@@ -1139,7 +1139,7 @@ def hinton_rmse_model_vs_baseline(
 
         obs_cube = combine_obs_across_forecasts(
             cubes=filter_multiple_cubes(
-                cubes,
+                source_cubes,
                 constraint=generate_var_constraint(
                     obs_varname
                 ),
@@ -1149,7 +1149,7 @@ def hinton_rmse_model_vs_baseline(
         model_cubes = interpolate_to_point_cube(
             fld=ensure_aggregatable_across_cases(
                 cubes=filter_multiple_cubes(
-                    cubes,
+                    source_cubes,
                     constraint=generate_var_constraint(
                         varname
                     ),
@@ -1181,7 +1181,7 @@ def hinton_rmse_model_vs_baseline(
             method="MEAN",
         )
 
-
-        output.append(rmse)
+        for c in rmse:
+            output.append(c)
 
     return output
