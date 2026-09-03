@@ -723,7 +723,11 @@ def custom_colormap_feature_tracking(cube: iris.cube.Cube):
         norm = mcolors.BoundaryNorm(levels, cmap.N)
         logger.info("change colormap for feature init variable colorbar.")
 
-    # Set all non-feature data to white.
-    cmap = cmap.with_extremes(under="white")
+    else:
+        cmap, levels, norm = None, None, None
+
+    # Set all non-feature data to white
+    if cmap:
+        cmap = cmap.with_extremes(under="white")
 
     return cmap, levels, norm
