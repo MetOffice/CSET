@@ -74,6 +74,30 @@ def collapse(
     if method == "PERCENTILE" and additional_percent is None:
         raise ValueError("Must specify additional_percent")
 
+    print("bmcline77 starting collapse.collapse and value of method is ", method)
+
+    cube_number = 0
+    for new_cube in cubes:
+        print(
+            "@@@@ collapse.collapse @@@@@@@ cube number ",
+            cube_number,
+            "@@@@@@@@@@@@@@@@@@",
+        )
+        print("new_cube.name          : ", new_cube.name)
+        print("new_cube.standard_name : ", new_cube.standard_name)
+        print("new_cube.long_name     : ", new_cube.long_name)
+        print("new_cube.var_name      : ", new_cube.var_name)
+        print("new_cube.coords(time)  : ", new_cube.coord("time"))
+        print(
+            "new_cube.coords(forecast_reference_time : ",
+            new_cube.coord("forecast_reference_time"),
+        )
+        print("new_cube.coords(forecast_period) : ", new_cube.coord("forecast_period"))
+        print(new_cube)
+        print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+        cube_number = cube_number + 1
+    # print(bmc_halt_this)
+
     # Retain only common time points between different models if multiple model inputs.
     if isinstance(cubes, iris.cube.CubeList) and len(cubes) > 1:
         logging.debug(
@@ -87,6 +111,8 @@ def collapse(
         )
         if len(cubes) == 0:
             raise ValueError("No overlapping times detected in input cubes.")
+
+    print("bmcline92 collapse.collapse after common time points section")
 
     collapsed_cubes = iris.cube.CubeList([])
     with warnings.catch_warnings():
@@ -116,6 +142,7 @@ def collapse(
                 collapsed_cubes.append(
                     cube.collapsed(coordinate, getattr(iris.analysis, method))
                 )
+    print("bmcline123 exiting collapse.collapse and value of method is ", method)
     if len(collapsed_cubes) == 1:
         return collapsed_cubes[0]
     else:
