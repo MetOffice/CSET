@@ -4,16 +4,15 @@ description: TODO experimental
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
-    model_names: $MODEL_NAME
+    model_names:
+    - OBS
+    - $BASE_MODEL
+    - $MODEL_NAME
     constraint:
       operator: constraints.combine_constraints
       varname_constraint:
         operator: constraints.generate_var_constraint
-        varname: [$VARNAME1, observed_$VARNAME1,
-                  $VARNAME2, observed_$VARNAME2,
-                  $VARNAME3, observed_$VARNAME3,
-                  $VARNAME4, observed_$VARNAME4,
-                  $VARNAME5, observed_$VARNAME5]
+        varname: $HINTON_VARNAMES
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
@@ -24,200 +23,12 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
-
-
-  - operator: misc.combine_cubes_into_cubelist
-    first:
-      operator: collapse.collapse
-      coordinate: forecast_reference_time
-      method: MEAN
-      cubes:
-        operator: scoreswrappers.scores_rmse_model_obs
-        preserved_coordinates: [forecast_period]
-        cubes:
-          operator: aggregate.time_aggregate
-          method: $METHOD1
-          interval_iso: $TIMEFREQ1
-          cubes:
-            operator: misc.combine_cubes_into_cubelist
-            first:
-              operator: aggregate.combine_obs_across_forecasts
-              cubes:
-                operator: filters.filter_multiple_cubes
-                constraint:
-                  operator: constraints.generate_var_constraint
-                  varname: observed_$VARNAME1
-            second:
-              operator: regrid.interpolate_to_point_cube
-              fld:
-                operator: aggregate.ensure_aggregatable_across_cases
-                cubes:
-                  operator: filters.filter_multiple_cubes
-                  constraint:
-                    operator: constraints.generate_var_constraint
-                    varname: $VARNAME1
-              point_cube:
-                operator: aggregate.combine_obs_across_forecasts
-                cubes:
-                  operator: filters.filter_multiple_cubes
-                  constraint:
-                    operator: constraints.generate_var_constraint
-                    varname: observed_$VARNAME1
-
-    second:
-      operator: collapse.collapse
-      coordinate: forecast_reference_time
-      method: MEAN
-      cubes:
-        operator: scoreswrappers.scores_rmse_model_obs
-        preserved_coordinates: [forecast_period]
-        cubes:
-          operator: aggregate.time_aggregate
-          method: $METHOD2
-          interval_iso: $TIMEFREQ2
-          cubes:
-            operator: misc.combine_cubes_into_cubelist
-            first:
-              operator: aggregate.combine_obs_across_forecasts
-              cubes:
-                operator: filters.filter_multiple_cubes
-                constraint:
-                  operator: constraints.generate_var_constraint
-                  varname: observed_$VARNAME2
-            second:
-              operator: regrid.interpolate_to_point_cube
-              fld:
-                operator: aggregate.ensure_aggregatable_across_cases
-                cubes:
-                  operator: filters.filter_multiple_cubes
-                  constraint:
-                    operator: constraints.generate_var_constraint
-                    varname: $VARNAME2
-              point_cube:
-                operator: aggregate.combine_obs_across_forecasts
-                cubes:
-                  operator: filters.filter_multiple_cubes
-                  constraint:
-                    operator: constraints.generate_var_constraint
-                    varname: observed_$VARNAME2
-
-    third:
-      operator: collapse.collapse
-      coordinate: forecast_reference_time
-      method: MEAN
-      cubes:
-        operator: scoreswrappers.scores_rmse_model_obs
-        preserved_coordinates: [forecast_period]
-        cubes:
-          operator: aggregate.time_aggregate
-          method: $METHOD3
-          interval_iso: $TIMEFREQ3
-          cubes:
-            operator: misc.combine_cubes_into_cubelist
-            first:
-              operator: aggregate.combine_obs_across_forecasts
-              cubes:
-                operator: filters.filter_multiple_cubes
-                constraint:
-                  operator: constraints.generate_var_constraint
-                  varname: observed_$VARNAME3
-            second:
-              operator: regrid.interpolate_to_point_cube
-              fld:
-                operator: aggregate.ensure_aggregatable_across_cases
-                cubes:
-                  operator: filters.filter_multiple_cubes
-                  constraint:
-                    operator: constraints.generate_var_constraint
-                    varname: $VARNAME3
-              point_cube:
-                operator: aggregate.combine_obs_across_forecasts
-                cubes:
-                  operator: filters.filter_multiple_cubes
-                  constraint:
-                    operator: constraints.generate_var_constraint
-                    varname: observed_$VARNAME3
-
-    fourth:
-      operator: collapse.collapse
-      coordinate: forecast_reference_time
-      method: MEAN
-      cubes:
-        operator: scoreswrappers.scores_rmse_model_obs
-        preserved_coordinates: [forecast_period]
-        cubes:
-          operator: aggregate.time_aggregate
-          method: $METHOD4
-          interval_iso: $TIMEFREQ4
-          cubes:
-            operator: misc.combine_cubes_into_cubelist
-            first:
-              operator: aggregate.combine_obs_across_forecasts
-              cubes:
-                operator: filters.filter_multiple_cubes
-                constraint:
-                  operator: constraints.generate_var_constraint
-                  varname: observed_$VARNAME4
-            second:
-              operator: regrid.interpolate_to_point_cube
-              fld:
-                operator: aggregate.ensure_aggregatable_across_cases
-                cubes:
-                  operator: filters.filter_multiple_cubes
-                  constraint:
-                    operator: constraints.generate_var_constraint
-                    varname: $VARNAME4
-              point_cube:
-                operator: aggregate.combine_obs_across_forecasts
-                cubes:
-                  operator: filters.filter_multiple_cubes
-                  constraint:
-                    operator: constraints.generate_var_constraint
-                    varname: observed_$VARNAME4
-
-
-    fifth:
-      operator: collapse.collapse
-      coordinate: forecast_reference_time
-      method: MEAN
-      cubes:
-        operator: scoreswrappers.scores_rmse_model_obs
-        preserved_coordinates: [forecast_period]
-        cubes:
-          operator: aggregate.time_aggregate
-          method: $METHOD5
-          interval_iso: $TIMEFREQ5
-          cubes:
-            operator: misc.combine_cubes_into_cubelist
-            first:
-              operator: aggregate.combine_obs_across_forecasts
-              cubes:
-                operator: filters.filter_multiple_cubes
-                constraint:
-                  operator: constraints.generate_var_constraint
-                  varname: observed_$VARNAME5
-            second:
-              operator: regrid.interpolate_to_point_cube
-              fld:
-                operator: aggregate.ensure_aggregatable_across_cases
-                cubes:
-                  operator: filters.filter_multiple_cubes
-                  constraint:
-                    operator: constraints.generate_var_constraint
-                    varname: $VARNAME5
-              point_cube:
-                operator: aggregate.combine_obs_across_forecasts
-                cubes:
-                  operator: filters.filter_multiple_cubes
-                  constraint:
-                    operator: constraints.generate_var_constraint
-                    varname: observed_$VARNAME5
-
+  - operator: scoreswrappers.hinton_rmse_model_vs_baseline
+    entries: $HINTON_OPTS
 
     # Plot the data.
   - operator: plot.hinton_plot
     magnitude: True
 
-
-  # - operator: write.write_cube_to_nc
-  #   overwrite: true
+  - operator: write.write_cube_to_nc
+    overwrite: true

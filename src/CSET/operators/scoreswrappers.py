@@ -1101,3 +1101,87 @@ def scores_rmse_model_obs(
         return rmse_cubes.merge()
     else:
         return rmse_cubes
+
+
+from CSET.operators.aggregate import combine_obs_across_forecasts
+from CSET.operators.aggregate import time_aggregate
+from CSET.operators.aggregate import ensure_aggregatable_across_cases
+from CSET.operators.collapse import collapse
+from CSET.operators.constraints import generate_var_constraint
+from CSET.operators.filters import filter_multiple_cubes
+from CSET.operators.regrid import interpolate_to_point_cube
+from CSET.operators.misc import combine_cubes_into_cubelist
+from CSET.operators.misc import _extract_common_time_points_multiplecubes
+
+def hinton_rmse_model_vs_baseline(
+    cubes,
+    entries,
+):
+    """
+    Parameters
+    ----------
+    cubes : CubeList
+    entries : list[str]
+        e.g.
+        [
+            "temperature_at_screen_level/mean/6",
+            "air_pressure_at_mean_sea_level/mean/6",
+        ]
+    """
+
+    output = iris.cube.CubeList()
+
+    for entry in entries:
+
+        varname, method, timefreq = entry.split("/")
+
+        obs_varname = f"observed_{varname}"
+
+        obs_cube = combine_obs_across_forecasts(
+            cubes=filter_multiple_cubes(
+                cubes,
+                constraint=generate_var_constraint(
+                    obs_varname
+                ),
+            )
+        )
+
+        model_cubes = interpolate_to_point_cube(
+            fld=ensure_aggregatable_across_cases(
+                cubes=filter_multiple_cubes(
+                    cubes,
+                    constraint=generate_var_constraint(
+                        varname
+                    ),
+                )
+            ),
+            point_cube=obs_cube,
+        )
+
+        cubes = combine_cubes_into_cubelist(first=obs_cube, second=model_cubes)
+
+        cubes = _extract_common_time_points_multiplecubes(cubes)
+
+        cubes = time_aggregate(
+            cubes=cubes,
+            method=method,
+            interval_iso=timefreq,
+            coordinate='forecast_period'
+        )
+
+
+        rmse = scores_rmse_model_obs(
+            cubes=cubes,
+            preserved_coordinates=["forecast_period","forecast_reference_time"],
+        )
+
+        rmse = collapse(
+            cubes=rmse,
+            coordinate="forecast_reference_time",
+            method="MEAN",
+        )
+
+
+        output.append(rmse)
+
+    return output

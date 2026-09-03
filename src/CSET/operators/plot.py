@@ -2757,7 +2757,7 @@ def qq_plot(
     return iris.cube.CubeList([base, other])
 
 
-def hinton_plot(cubes, base, other, vars, magnitude=False):
+def hinton_plot(cubes):
     """
     Plot a Hinton style triangle/scorecard plot.
 
@@ -2780,6 +2780,9 @@ def hinton_plot(cubes, base, other, vars, magnitude=False):
     -------
     matplotlib axes object to either display or do further modifications to.
     """
+
+    print(cubes)
+    quit()
 
     print('Creating hinton plot...')
     

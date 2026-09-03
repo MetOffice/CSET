@@ -42,79 +42,163 @@ def _add_nref(cube: iris.cube.Cube):
     return cube
 
 
+# def time_aggregate(
+#     cubes: iris.cube.Cube | iris.cube.CubeList,
+#     method: str,
+#     interval_iso: str,
+#     **kwargs,
+# ) -> iris.cube.Cube:
+#     """Aggregate cube by its time coordinate.
+
+#     Aggregates similar (stash) fields in a cube for the specified coordinate and
+#     using the method supplied. The aggregated cube will keep the coordinate and
+#     add a further coordinate with the aggregated end time points.
+
+#     Examples are: 1. Generating hourly or 6-hourly precipitation accumulations
+#     given an interval for the new time coordinate.
+
+#     We use the isodate class to convert ISO 8601 durations into time intervals
+#     for creating a new time coordinate for aggregation.
+
+#     We use the lambda function to pass coord and interval into the callable
+#     category function in add_categorised to allow users to define their own
+#     sub-daily intervals for the new time coordinate.
+
+#     Arguments
+#     ---------
+#     cubes: iris.cube.Cube | iris.cube.CubeList
+#         Cube or CubeList to aggregate and iterate over one dimension
+#     coordinate: str
+#         Coordinate to aggregate over i.e. 'time', 'longitude',
+#         'latitude','model_level_number'.
+#     method: str
+#         Type of aggregate i.e. method: 'SUM', getattr creates
+#         iris.analysis.SUM, etc.
+#     interval_iso: isodate timedelta ISO 8601 object i.e PT6H (6 hours), PT30M (30 mins)
+#         Interval to aggregate over.
+
+#     Returns
+#     -------
+#     cube: iris.cube.Cube
+#         Single variable but several methods of aggregation
+
+#     Raises
+#     ------
+#     ValueError
+#         If the constraint doesn't produce a single cube containing a field.
+#     """
+#     if interval_iso == "0":
+#         return cubes
+
+#     resampled_cubes = iris.cube.CubeList()
+
+#     for cube in cubes:
+#         # Duration of ISO timedelta.
+#         timedelta = isodate.parse_duration(interval_iso)
+
+#         # Convert interval format to whole hours.
+#         interval = int(timedelta.total_seconds() / 3600)
+
+#         # Add time categorisation overwriting hourly increment via lambda coord.
+#         # https://scitools-iris.readthedocs.io/en/latest/_modules/iris/coord_categorisation.html
+#         iris.coord_categorisation.add_categorised_coord(
+#             cube, "interval", "time", lambda coord, cell: cell // interval * interval
+#         )
+
+#         # Aggregate cube using supplied method.
+#         aggregated_cube = cube.aggregated_by("interval", getattr(iris.analysis, method))
+#         aggregated_cube.remove_coord("interval")
+
+#         resampled_cubes.append(aggregated_cube)
+
+#     if len(resampled_cubes) == 1:
+#         return resampled_cubes[0]
+#     else:
+#         return resampled_cubes
+
+
 def time_aggregate(
     cubes: iris.cube.Cube | iris.cube.CubeList,
     method: str,
     interval_iso: str,
     **kwargs,
-) -> iris.cube.Cube:
-    """Aggregate cube by its time coordinate.
+) -> iris.cube.Cube | iris.cube.CubeList:
 
-    Aggregates similar (stash) fields in a cube for the specified coordinate and
-    using the method supplied. The aggregated cube will keep the coordinate and
-    add a further coordinate with the aggregated end time points.
-
-    Examples are: 1. Generating hourly or 6-hourly precipitation accumulations
-    given an interval for the new time coordinate.
-
-    We use the isodate class to convert ISO 8601 durations into time intervals
-    for creating a new time coordinate for aggregation.
-
-    We use the lambda function to pass coord and interval into the callable
-    category function in add_categorised to allow users to define their own
-    sub-daily intervals for the new time coordinate.
-
-    Arguments
-    ---------
-    cubes: iris.cube.Cube | iris.cube.CubeList
-        Cube or CubeList to aggregate and iterate over one dimension
-    coordinate: str
-        Coordinate to aggregate over i.e. 'time', 'longitude',
-        'latitude','model_level_number'.
-    method: str
-        Type of aggregate i.e. method: 'SUM', getattr creates
-        iris.analysis.SUM, etc.
-    interval_iso: isodate timedelta ISO 8601 object i.e PT6H (6 hours), PT30M (30 mins)
-        Interval to aggregate over.
-
-    Returns
-    -------
-    cube: iris.cube.Cube
-        Single variable but several methods of aggregation
-
-    Raises
-    ------
-    ValueError
-        If the constraint doesn't produce a single cube containing a field.
-    """
-    if timedelta == "0":
+    if interval_iso == "0":
         return cubes
+
+    if isinstance(cubes, iris.cube.Cube):
+        cubes = iris.cube.CubeList([cubes])
 
     resampled_cubes = iris.cube.CubeList()
 
+    timedelta = isodate.parse_duration(interval_iso)
+    interval = int(timedelta.total_seconds() / 3600)
+
     for cube in cubes:
-        # Duration of ISO timedelta.
-        timedelta = isodate.parse_duration(interval_iso)
 
-        # Convert interval format to whole hours.
-        interval = int(timedelta.total_seconds() / 3600)
+        # Handle cubes with multiple forecast cycles.
+        if cube.coord("forecast_reference_time").shape[0] > 1:
 
-        # Add time categorisation overwriting hourly increment via lambda coord.
-        # https://scitools-iris.readthedocs.io/en/latest/_modules/iris/coord_categorisation.html
-        iris.coord_categorisation.add_categorised_coord(
-            cube, "interval", "time", lambda coord, cell: cell // interval * interval
-        )
+            aggregated_cycles = iris.cube.CubeList()
 
-        # Aggregate cube using supplied method.
-        aggregated_cube = cube.aggregated_by("interval", getattr(iris.analysis, method))
-        aggregated_cube.remove_coord("interval")
+            for frt_cube in cube.slices_over("forecast_reference_time"):
+
+                iris.coord_categorisation.add_categorised_coord(
+                    frt_cube,
+                    "interval",
+                    "time",
+                    lambda coord, cell: (
+                        cell // interval * interval
+                    ),
+                )
+
+                agg = frt_cube.aggregated_by(
+                    "interval",
+                    getattr(iris.analysis, method),
+                )
+
+                agg.remove_coord("interval")
+
+                agg = iris.util.new_axis(
+                    agg,
+                    agg.coord("forecast_reference_time"),
+                    )
+
+                aggregated_cycles.append(agg)
+
+            #2d auxtime causes issues concatenating. Solution is to nuke it. Do we need it downstream?
+            # as we can construct it if needed.
+            for cube in aggregated_cycles:
+                cube.remove_coord("time")
+
+            aggregated_cube = aggregated_cycles.concatenate_cube()
+
+
+        else:
+
+            iris.coord_categorisation.add_categorised_coord(
+                cube,
+                "interval",
+                "time",
+                lambda coord, cell: (
+                    cell // interval * interval
+                ),
+            )
+
+            aggregated_cube = cube.aggregated_by(
+                "interval",
+                getattr(iris.analysis, method),
+            )
+
+            aggregated_cube.remove_coord("interval")
 
         resampled_cubes.append(aggregated_cube)
 
     if len(resampled_cubes) == 1:
         return resampled_cubes[0]
-    else:
-        return resampled_cubes
+
+    return resampled_cubes
 
 
 def ensure_aggregatable_across_cases(
