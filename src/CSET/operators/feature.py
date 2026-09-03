@@ -45,7 +45,6 @@ def track(
     ----------
     cube: iris.cube.Cube
         The cube to identify features in. The cube must be 3D and contain a time coordinate
-        and horizontal coordinates of xy type (not latitude/longitude).
     threshold: float
         The threshold value for feature detection.
     under_threshold: bool, optional
@@ -212,7 +211,7 @@ def cell_stats(
     ----------
     cubes: iris.cube.Cube | iris.cube.CubeList
         An iris cube (single model) or cubelist (multiple models) containing 2D data to be
-        analysed. Cube must have horizontal coordinates of xy type, not latitude/longitude.
+        analysed. Cube must have horizontal coordinates on a regular grid.
         The cube must also have a time coordinate, which is used to identify features in
         each timestep.
     threshold: float | list[float]
@@ -233,7 +232,7 @@ def cell_stats(
 
     Returns
     -------
-    cell_stats_cubes: iris.cube.CubeList
+    cell_stats_cubelist: iris.cube.CubeList
         An iris CubeList containing "feature_size", "feature_effective_radius", "feature_mean",
         and "feature_max" cubes.
 
