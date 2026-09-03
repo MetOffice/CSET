@@ -75,7 +75,6 @@ def scores_rmse(
     base, others = _split_base_and_other(cubes)
 
     for other in others:
-
         scores_cube = _make_scores_cube(base, other, "rmse", preserved_coordinates)
 
         scores_cube.rename(f"RMSE_of_{base.name()}")
@@ -113,7 +112,6 @@ def scores_mae(
     base, others = _split_base_and_other(cubes)
 
     for other in others:
-
         scores_cube = _make_scores_cube(base, other, "mae", preserved_coordinates)
 
         scores_cube.rename(f"MAE_of_{base.name()}")
@@ -153,7 +151,6 @@ def scores_additive_bias(
     base, others = _split_base_and_other(cubes)
 
     for other in others:
-
         scores_cube = _make_scores_cube(
             base, other, "additive_bias", preserved_coordinates
         )
@@ -192,7 +189,6 @@ def scores_correlation_pearsonr(
     base, others = _split_base_and_other(cubes)
 
     for other in others:
-
         scores_cube = _make_scores_cube(
             base, other, "pearson_correlation", preserved_coordinates
         )
@@ -666,8 +662,7 @@ def _make_scores_cube(
 
 
     """
-
-    #base, other = _process_cubes_for_verification(base, other)
+    # base, other = _process_cubes_for_verification(base, other)
 
     other_xr = xr.DataArray.from_iris(other)
     base_xr = xr.DataArray.from_iris(base)
@@ -756,6 +751,7 @@ def _ensure_increasing_pressure_coordinates(cubes: CubeList) -> CubeList:
 
         except iris.exceptions.CoordinateNotFoundError:
             pass
+
 
 def _process_cubes_for_verification(base: Cube, other: Cube) -> tuple[Cube, Cube]:
     r"""Prepare cubes ready for verification in scores.
@@ -1024,49 +1020,37 @@ def scores_rmse_model_obs(
             model_list.append(cb)
 
     for model in model_list:
-
         frt_coord = model.coord("forecast_reference_time")
 
         # Multiple forecast reference times
-        if (
-            model.coord_dims("forecast_reference_time")
-            and frt_coord.shape[0] > 1
-        ):
+        if model.coord_dims("forecast_reference_time") and frt_coord.shape[0] > 1:
+            obs_slices = list(observed.slices_over("forecast_reference_time"))
 
-            obs_slices = list(
-                observed.slices_over("forecast_reference_time")
-            )
-
-            model_slices = list(
-                model.slices_over("forecast_reference_time")
-            )
+            model_slices = list(model.slices_over("forecast_reference_time"))
 
             for obs_slice, model_slice in zip(
                 obs_slices,
                 model_slices,
                 strict=True,
             ):
-
-                input_cubelist = CubeList([
-                    obs_slice,
-                    model_slice,
-                ])
+                input_cubelist = CubeList(
+                    [
+                        obs_slice,
+                        model_slice,
+                    ]
+                )
 
                 rmse = scores_rmse(
                     input_cubelist,
                     preserved_coordinates,
                 )
 
-                rmse.attributes["model_name"] = (
-                    model.attributes["model_name"]
-                )
+                rmse.attributes["model_name"] = model.attributes["model_name"]
 
                 # Preserve the forecast_reference_time value
                 if not rmse.coords("forecast_reference_time"):
                     rmse.add_aux_coord(
-                        model_slice.coord(
-                            "forecast_reference_time"
-                        ).copy()
+                        model_slice.coord("forecast_reference_time").copy()
                     )
 
                 if rmse.coords("time"):
@@ -1077,23 +1061,21 @@ def scores_rmse_model_obs(
 
         # Single forecast reference time
         else:
-
-            input_cubelist = CubeList([
-                observed,
-                model,
-            ])
+            input_cubelist = CubeList(
+                [
+                    observed,
+                    model,
+                ]
+            )
 
             rmse = scores_rmse(
                 input_cubelist,
                 preserved_coordinates,
             )
 
-            rmse.attributes["model_name"] = (
-                model.attributes["model_name"]
-            )
+            rmse.attributes["model_name"] = model.attributes["model_name"]
 
             rmse_cubes.append(rmse)
-
 
     if len(rmse_cubes) > 1:
         return rmse_cubes.merge()

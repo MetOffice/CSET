@@ -976,6 +976,7 @@ def test_pfd_gt_complete_miss(make_cube_categorical_testing):
     assert len(result) == 1
     assert np.allclose(result[0].data, 1.0, atol=1e-2, rtol=1e-6)
 
+
 def test_rmse_multiple_forecasts(dummy_cubelist_model_obs_multiple_forecasts):
     """Make test cubes."""
     input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
