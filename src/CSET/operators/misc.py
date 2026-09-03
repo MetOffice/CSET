@@ -610,6 +610,7 @@ def _slice_cube_on_levels(cube: iris.cube.Cube, coord_name: str, levels: list):
         The sliced cube.
     """
     coord = cube.coord(coord_name)
+    breakpoint()
     (dim_index,) = cube.coord_dims(coord)
 
     mask = np.isin(coord.points, levels)

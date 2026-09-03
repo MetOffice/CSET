@@ -1407,3 +1407,55 @@ def wind_cubelist_observed():
     )
 
     return wind_cubelist
+
+
+import pytest
+
+
+def _make_test_cube(
+    shape: tuple[int, int, int],
+    seed: int,
+    long_name: str,
+    standard_name: str | None = None,
+):
+    rng = np.random.default_rng(seed)
+
+    frt = DimCoord(
+        np.arange(shape[0]),
+        standard_name="forecast_reference_time",
+        units="hours since 1970-01-01",
+    )
+    fp = DimCoord(
+        np.arange(shape[1]),
+        standard_name="forecast_period",
+        units="hours",
+    )
+    station = DimCoord(
+        np.arange(shape[2]),
+        long_name="station",
+        units="no_unit",
+    )
+
+    data = rng.normal(loc=280, scale=5, size=shape)
+
+    return Cube(
+        data,
+        long_name=long_name,
+        standard_name=standard_name,
+        units="K",
+        dim_coords_and_dims=[(frt, 0), (fp, 1), (station, 2)],
+    )
+
+
+@pytest.fixture
+def dummy_cubelist_model_obs_multiple_forecasts():
+    """CubeList of [obs_cube, model_cube], both shaped
+    (forecast_reference_time: 2, forecast_period: 49, station: 174).
+    """
+    obs_cube = _make_test_cube(
+        shape=(2, 49, 174), seed=1, long_name="observed_temperature_at_screen_level"
+    )
+    model_cube = _make_test_cube(
+        shape=(2, 49, 174), seed=2, long_name="temperature_at_screen_level"
+    )
+    return CubeList([obs_cube, model_cube])
