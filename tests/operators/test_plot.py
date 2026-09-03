@@ -1458,5 +1458,123 @@ def make_test_cubes():
     return cubes
 
 
-cubes = make_test_cubes()
-hinton_plot(cubes, base_name="UM", other_name="LF", magnitude=True)
+def test_hinton_plot_raises_when_models_have_different_variable_counts():
+    cubes = make_test_cubes()
+
+    # Remove one LF cube
+    cubes = iris.cube.CubeList(
+        [
+            cube
+            for cube in cubes
+            if cube.long_name != "relative_humidity_at_screen_level"
+            or cube.attributes["model_name"] != "LF"
+        ]
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="base cubes .* are not same number as",
+    ):
+        plot.hinton_plot(
+            cubes,
+            base_name="UM",
+            other_name="LF",
+        )
+
+
+def test_hinton_plot_runs(tmp_path):
+    cubes = make_test_cubes()
+
+    plot.hinton_plot(
+        cubes,
+        base_name="UM",
+        other_name="LF",
+        magnitude=True,
+    )
+
+    assert Path("test-hinton.png").is_file()
+
+
+def test_hinton_plot_without_significance_cube():
+    """success=no exception"""
+    cubes = iris.cube.CubeList(
+        [
+            cube
+            for cube in make_test_cubes()
+            if not cube.long_name.startswith("significance_")
+        ]
+    )
+
+    plot.hinton_plot(
+        cubes,
+        base_name="UM",
+        other_name="LF",
+    )
+
+
+def test_hinton_plot_different_forecast_lengths():
+    cubes = make_test_cubes()
+
+    new_cubes = iris.cube.CubeList()
+
+    for cube in cubes:
+        if (
+            cube.long_name == "relative_humidity_at_screen_level"
+            and cube.attributes["model_name"] in ("UM", "LF")
+        ):
+            new_cubes.append(cube[:5])
+        else:
+            new_cubes.append(cube)
+
+    plot.hinton_plot(
+        new_cubes,
+        base_name="UM",
+        other_name="LF",
+    )
+
+
+def test_hinton_plot_single_variable():
+    cubes = iris.cube.CubeList(
+        [
+            cube
+            for cube in make_test_cubes()
+            if cube.long_name == "air_temperature_at_screen_level"
+        ]
+    )
+
+    plot.hinton_plot(
+        cubes,
+        base_name="UM",
+        other_name="LF",
+    )
+
+
+def test_hinton_plot_with_nan_values():
+    cubes = make_test_cubes()
+
+    for cube in cubes:
+        if (
+            cube.long_name == "air_temperature_at_screen_level"
+            and cube.attributes["model_name"] == "LF"
+        ):
+            cube.data[0] = np.nan
+
+    plot.hinton_plot(
+        cubes,
+        base_name="UM",
+        other_name="LF",
+    )
+
+def test_hinton_plot_constant_difference():
+    "to test scaling"
+    cubes = make_test_cubes()
+
+    for cube in cubes:
+        if cube.attributes["model_name"] == "LF":
+            cube.data = cube.data + 1.0
+
+    plot.hinton_plot(
+        cubes,
+        base_name="UM",
+        other_name="LF",
+    )
