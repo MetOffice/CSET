@@ -1,0 +1,36 @@
+category: Hinton
+title: Full RMSE Hinton for something
+description: TODO experimental
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names:
+    - OBS
+    - $BASE_MODEL
+    - $MODEL_NAME
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $HINTON_VARNAMES
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: pressure
+        levels: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: scoreswrappers.hinton_rmse_model_vs_baseline
+    entries: $HINTON_OPTS
+
+    # Plot the data.
+  - operator: plot.hinton_plot
+    base_name: $BASE_MODEL
+    other_name: $MODEL_NAME
+    magnitude: False
+
+  - operator: write.write_cube_to_nc
+    overwrite: true

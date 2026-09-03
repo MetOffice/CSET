@@ -52,7 +52,7 @@ def generate_stash_constraint(stash: str, **kwargs) -> iris.AttributeConstraint:
     return stash_constraint
 
 
-def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
+def generate_var_constraint(varname: str | list[str], **kwargs) -> iris.Constraint:
     """Generate constraint from variable name or STASH code.
 
     Operator that takes a CF compliant variable name string or list of names, and generates an
@@ -77,12 +77,13 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
         return iris.AttributeConstraint(STASH=varname)
 
     # Ensure access to variable vector components for computed fields
-    if "wind_speed_at_10m" in iter_maybe(varname):
+    varname_copy = iter_maybe(varname)[:]
+
+    if "wind_speed_at_10m" in varname_copy:
         if isinstance(varname, str):
             varname = [varname]
         varname.extend(["eastward_wind_at_10m", "northward_wind_at_10m"])
         varname.extend(["u_wind_at_10m", "v_wind_at_10m"])
-
     # Case 2: Multiple varnames
     if isinstance(varname, (list, tuple)):
         varname_constraint = iris.Constraint(
@@ -95,6 +96,8 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
 
     else:
         varname_constraint = iris.Constraint(name=varname)
+
+    varname_constraint.varname = varname_copy
 
     return varname_constraint
 

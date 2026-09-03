@@ -324,3 +324,51 @@ def load(conf: Config):
                 model_ids=["OBS"] + [model["id"] for model in models],
                 aggregation=False,
             )
+
+    if conf.HINTON_RMSE:
+
+        hinton_varnames = []
+
+        for item in conf.HINTON_ENTRIES:
+            varname, method, timefreq = item.split("/")
+
+            hinton_varnames.extend([
+                varname,
+                f"observed_{varname}",
+            ])
+
+        for model in models[1:]:
+
+            yield RawRecipe(
+                recipe="hinton_rmse.yaml",
+                variables={
+                    "HINTON_OPTS" : conf.HINTON_ENTRIES,
+                    "HINTON_VARNAMES": hinton_varnames,
+                    "BASE_MODEL" : models[0]["name"],
+                    "MODEL_NAME": model["name"],
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=["OBS",models[0]["id"], model["id"]],
+                aggregation=True)
+
+
+    if conf.SCORES_TIMESERIES_RMSE_MODEL_VS_OBS_AGGREGATION:
+        for field in conf.POINT_OBS_FIELDS:
+            yield RawRecipe(
+                recipe="timeseries_surface_scores_model_vs_obs_RMSE_aggregation.yaml",
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=["OBS"] + [model["id"] for model in models],
+                aggregation=True,
+            )

@@ -516,6 +516,67 @@ def _extract_common_time_points(base: Cube, other: Cube) -> tuple[Cube, Cube]:
     return (base, other)
 
 
+from iris.cube import CubeList
+
+
+def _extract_common_time_points_multiplecubes(cubes: CubeList) -> CubeList:
+    """Equalise time points across all cubes."""
+
+    if len(cubes) < 2:
+        return cubes
+
+    # Check all cubes have identical FRTs.
+    reference_frts = cubes[0].coord("forecast_reference_time").points
+
+    for cube in cubes[1:]:
+        cube_frts = cube.coord("forecast_reference_time").points
+
+        if not np.array_equal(reference_frts, cube_frts):
+            raise ValueError(
+                "Cubes do not share the same "
+                "forecast_reference_time values."
+            )
+        
+    # Start from the first cube's forecast periods.
+    shared_periods = set(
+        cubes[0].coord("forecast_period").points
+    )
+
+    # Find intersection across all cubes.
+    for cube in cubes[1:]:
+        shared_periods &= set(
+            cube.coord("forecast_period").points
+        )
+
+    if not shared_periods:
+        raise ValueError("No common forecast periods found.")
+
+    logger.debug(
+        "Common forecast periods: %s",
+        sorted(shared_periods),
+    )
+
+    constraint = iris.Constraint(
+        forecast_period=lambda cell, shared_periods=shared_periods: (
+            cell.point in shared_periods
+        )
+    )
+
+    output = iris.cube.CubeList()
+
+    for cube in cubes:
+        extracted = cube.extract(constraint)
+
+        if extracted is None:
+            raise ValueError(
+                f"No common forecast periods remain for {cube.name()}"
+            )
+
+        output.append(extracted)
+
+    return output
+
+
 def convert_units(cubes: iris.cube.Cube | iris.cube.CubeList, units: str):
     """Convert the units of a cube.
 
@@ -638,6 +699,7 @@ def extract_common_points(cubes: iris.cube.CubeList, coordinate: str):
         CubeList containing the two cubes sliced to common points
         for the given coordinate.
     """
+
     # Check type of input
     if type(cubes) is not iris.cube.CubeList:
         raise TypeError(f"Not a CubeList, got type {type(cubes)}")
