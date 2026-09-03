@@ -441,13 +441,16 @@ def match_varname_and_units(cubes: iris.cube.Cube | iris.cube.CubeList):
     if len(cubes) == 1:
         return cubes
 
-    print("@@@@@@@@@@@@@@@@@@@@@ cubes[0] @@@@@@@@@@@@")
+    print("@@@@@@@@@@@@@@@@@@@@@ base cubes[0] @@@@@@@@@@@@")
     print(cubes[0])
     print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+
+    # TODO when testing completed remove the chop [2:25] [3:46]
 
     # Initialise the list of matched cubes.
     new_cubelist = iris.cube.CubeList([])
     new_cubelist.append(cubes[0])
+    #    new_cubelist.append(cubes[0][2:45])
 
     # Loop the cubes to match to the first cube.
     base_cube = cubes[0]
@@ -456,24 +459,76 @@ def match_varname_and_units(cubes: iris.cube.Cube | iris.cube.CubeList):
     print("base_cube.standard_name : ", base_cube.standard_name)
     print("base_cube.long_name     : ", base_cube.long_name)
     print("base_cube.var_name      : ", base_cube.var_name)
+    print("base_cube.coords(time)  : ", base_cube.coord("time"))
+    print("base_cube.coords(forecast_period) : ", base_cube.coord("forecast_period"))
+    # print("------- base cube below -----------")
+    # print(base_cube)
     print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     for cube in cubes[1:]:
         print("@@@@@@@@@@@@@@@ raw @@@@@@@@@@@@@@@@@@")
         print(cube)
         print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
         new_cube = cube.copy()
+        #        if new_cube.attributes["model_name"] == "Nimrod2km":
+        #           new_cube = new_cube[3:46]
+        #        else:
+        #           new_cube = new_cube[2:45]
+
+        # Match the cube varname.
         new_cube.rename(base_cube.long_name)
         new_cube.long_name = base_cube.long_name
+        new_cube.var_name = base_cube.var_name
+
+        # Match the cube units.
         new_cube.units = base_cube.units
+
+        # Match the cube forecast_reference_time, a single value e.g. 2023-11-12 00:00:00.
+        # TODO move this to the read function for radar
+        forecast_reference_time_use = base_cube.coord("forecast_reference_time")
+        new_cube.remove_coord("forecast_reference_time")
+        new_cube.add_aux_coord(forecast_reference_time_use)
+        # new_cube.replace_coord(base_cube.coord('forecast_reference_time'))
+
+        # Match the cube forecast_period.
+        # forecast_period_use = base_cube.coord('forecast_period')
+        # new_cube.remove_coord("forecast_period")
+        # new_cube.replace_coord(forecast_period_use, data_dims=1)
+
+        # coord_dims = base_cube.coord_dims('forecast_period')
+        # print("---> coord_dims", coord_dims)
+        # dim_index = coord_dims[0] if coord_dims else 0
+        # print("---> dim_index", dim_index)
+        # new_coord = base_cube.coord('forecast_period')
+        # print("---> new_coord", new_coord)
+        # new_cube.remove_coord("forecast_period")
+        # new_cube.add_dim_coord(new_coord, dim_index)
+
+        # Match the cube forecast_period - an array points: [ 1.,  2., ..., 47., 48.].
+        # TODO move this to the read function for radar
+        coord_dims = base_cube.coord_dims("forecast_period")
+        print("---> coord_dims", coord_dims)
+        new_coord = base_cube.coord("forecast_period")
+        print("---> new_coord", new_coord)
+        if new_cube.coords("forecast_period"):
+            new_cube.remove_coord("forecast_period")
+        new_cube.add_aux_coord(new_coord, coord_dims)
+
         print("@@@@@@@@@@@@@@@ matched @@@@@@@@@@@@@@@@@@")
         print("new_cube.name          : ", new_cube.name)
         print("new_cube.standard_name : ", new_cube.standard_name)
         print("new_cube.long_name     : ", new_cube.long_name)
         print("new_cube.var_name      : ", new_cube.var_name)
+        print("new_cube.coords(time)  : ", new_cube.coord("time"))
+        print("new_cube.coords(forecast_period) : ", new_cube.coord("forecast_period"))
         print(new_cube)
         print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
         # Append the matched cube to the output cube list.
         new_cubelist.append(new_cube)
 
+    print(
+        "---------------->bmc exiting radar_filter.match_varname_and_units len(cubes) is ",
+        len(cubes),
+    )
+    # print(bmc_halt_this)
     return new_cubelist
