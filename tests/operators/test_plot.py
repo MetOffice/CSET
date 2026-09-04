@@ -1634,5 +1634,3 @@ def test_hinton_plot_raises_for_wrong_dimension_name():
             other_name="LF",
         )
 `
-
-
