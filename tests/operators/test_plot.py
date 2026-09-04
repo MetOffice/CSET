@@ -1481,7 +1481,7 @@ def test_hinton_plot_runs(tmp_working_dir):
         magnitude=True,
     )
 
-    assert Path("test-hinton.png").is_file()
+    assert Path("hinton.png").is_file()
 
 
 def test_hinton_plot_without_significance_cube(tmp_working_dir):
