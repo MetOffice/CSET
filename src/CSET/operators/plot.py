@@ -2802,7 +2802,6 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None) -> None:
 
     # Check that all cubes only have one dimension called forecast_period
     for cube in cubes:
-        print(cube.dim_coords[0].name())
         if len(cube.dim_coords) > 1:
             raise ValueError(f"Should only have one dimension coord, {cube}")
         if cube.dim_coords[0].name() != "forecast_period":
