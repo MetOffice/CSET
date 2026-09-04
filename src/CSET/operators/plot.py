@@ -2798,9 +2798,19 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
     # Ensure we have a name for the plot file.
     recipe_title = get_recipe_metadata().get("title", "Hinton")
     title = f"{recipe_title}"
-
     filename = slugify(recipe_title)
 
+    # Check that all cubes only have one dimension called forecast_period
+    for cube in cubes:
+        print(cube.dim_coords[0].name())
+        if len(cube.dim_coords) > 1:
+            raise ValueError(f"Should only have one dimension coord, {cube}")
+        if cube.dim_coords[0].name() != "forecast_period":
+            raise ValueError(
+                f"Single coord should be forecast_period, not {cube.dimcoords[0].name()}"
+            )
+
+    # Separate out base cubes and other cubes.
     base_cubes = iris.cube.CubeList()
     other_cubes = iris.cube.CubeList()
     for c in cubes:
@@ -2815,13 +2825,15 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
             f"base cubes {base_cubes} are not same number as {other_cubes}"
         )
 
+    # Find common variable names in the two groups.
     base_vars = {cube.long_name for cube in base_cubes if cube.long_name is not None}
     other_vars = {cube.long_name for cube in other_cubes if cube.long_name is not None}
     common_vars = sorted(base_vars & other_vars)
 
+    # Iterate over each variable (row)
     rows = []
-
     for var in common_vars:
+        # Extract cube with matching variable name
         base_cube = next(
             (c for c in base_cubes if c.long_name == var),
             None,
@@ -2832,16 +2844,22 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
             None,
         )
 
+        # If we can't find a variable in both cubes, then skip
         if base_cube is None or other_cube is None:
             continue
 
+        # Compute difference (1D array)
+        # We can already make assumption both on same forecast_periods as checked
+        # prior to computing metric.
         diff = other_cube.data - base_cube.data
 
+        # See if there is a significance cube present, if not, set as None.
         sig_cube = next(
             (cube for cube in cubes if cube.long_name == f"significance_{var}"),
             None,
         )
 
+        # Append row information.
         rows.append(
             {
                 "name": var,
@@ -2853,7 +2871,7 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
             }
         )
 
-    # anomalies relative to row mean
+    # For each row, compute standardised anomalies
     for row in rows:
         change = np.asarray(row["change"])
 
