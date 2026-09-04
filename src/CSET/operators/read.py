@@ -195,7 +195,6 @@ def read_cubes(
     for cube in cubes:
         # Use 1 to indicate True, as booleans can't be saved in NetCDF attributes.
         cube.attributes["cset_comparison_base"] = 1
-
     # Load the rest of the models.
     cubes.extend(itertools.chain.from_iterable(model_cubes))
 
@@ -247,7 +246,7 @@ def _load_model(
     logger.debug("Constraint: %s", constraint)
     cubes = iris.load(input_files, constraint, callback=_loading_callback)
     # If required, compute wind_speed from components.
-    cubes = _compute_winds(cubes)
+    cubes = _compute_winds(cubes, constraint)
 
     # Add model_name attribute to each cube to make it available at any further
     # step without needing to pass it as function parameter.
@@ -909,7 +908,17 @@ def _fix_lfric_cloud_base_altitude(cube: iris.cube.Cube):
         cube.data = dask.array.ma.masked_greater(cube.core_data(), 144.0)
 
 
-def _compute_winds(cubes: iris.cube.CubeList):
+def get_filter_windspeed(constraint: iris.Constraint):
+    """Get the windspeed filter by using the hijacked constraint."""
+    if hasattr(constraint, "varname"):
+        return constraint.varname
+    else:
+        return None
+
+
+def _compute_winds(
+    cubes: iris.cube.CubeList, constraint: iris.Constraint | None = None
+):
     """To compute wind_speed from vector components if not available as diagnostic.
 
     Diagnostics of wind are also not always consistent between the UM
@@ -924,26 +933,38 @@ def _compute_winds(cubes: iris.cube.CubeList):
     # the cell methods, but it may not be warranted.
     #
     # A check on UM STASH attributes is also conducted to adjust directions.
+
+    if constraint is None:
+        return cubes
+
+    filter_windspeed = get_filter_windspeed(constraint)
+
     u_constr = iris.Constraint("eastward_wind_at_10m")
     v_constr = iris.Constraint("northward_wind_at_10m")
-    speed_constr = iris.Constraint("wind_speed_at_10m")
+    sp_constr = iris.Constraint("wind_speed_at_10m")
+
     try:
-        if cubes.extract(u_constr) and cubes.extract(v_constr):
-            if len(cubes) == 2:
-                wind_only = True
-            else:
-                wind_only = False
-            if len(cubes.extract(u_constr)) == 1 and not cubes.extract(speed_constr):
+        if (
+            cubes.extract(u_constr)
+            and cubes.extract(v_constr)
+            and not cubes.extract(sp_constr)
+        ):
+            if "wind_speed_at_10m" in constraint.varname:
                 _add_wind_speed_um(cubes)
             # Convert winds in the UM to be relative to true east and true north.
-            if cubes.extract(u_constr) and cubes.extract(v_constr):
-                _convert_wind_true_dirn_um(cubes)
-            # Return only wind_speed cube
-            if wind_only:
-                cubes = cubes.extract(speed_constr)
+            _convert_wind_true_dirn_um(cubes)
     except (KeyError, AttributeError):
         pass
 
+    if filter_windspeed:
+        filter_windspeed_constraint = iris.Constraint(
+            cube_func=lambda cube: (
+                cube.long_name in filter_windspeed
+                or cube.standard_name in filter_windspeed
+                or cube.var_name in filter_windspeed
+            )
+        )
+        cubes = cubes.extract(filter_windspeed_constraint)
     return cubes
 
 
@@ -1118,7 +1139,7 @@ def _fix_no_time_coords_callback(cube: iris.cube.Cube):
 
 
 def _normalise_longname(cube: iris.cube.Cube):
-    """Normalise long_name to the LFRic standard list."""
+    """Fix plev variable names to standard names."""
     if cube.coords("pressure"):
         if cube.name() == "x_wind":
             cube.long_name = "zonal_wind_at_pressure_levels"
@@ -1135,8 +1156,6 @@ def _normalise_longname(cube: iris.cube.Cube):
             cube.long_name = "eastward_wind_at_10m"
         if cube.name() == "y_wind" and cube.var_name == "v_wind_at_10m":
             cube.long_name = "northward_wind_at_10m"
-    if cube.name() == "air_pressure_at_sea_level":
-        cube.long_name = "air_pressure_at_mean_sea_level"
 
 
 def _check_combine_point_observations(cubes: iris.cube.CubeList):
