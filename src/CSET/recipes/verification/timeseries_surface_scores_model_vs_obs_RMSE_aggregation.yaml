@@ -1,8 +1,9 @@
 category: Surface Model versus Observation Time Series Aggregation
-title: "$VARNAME scores rmse time series for model vs observation points $SUBAREA_NAME aggregation"
-description: Extracts and plot a time series of $VARNAME for all times based on RMSE between given models and observation points.
+title: "$VARNAME\nscores rmse time series for model vs observation points $SUBAREA_NAME aggregation by $AGGREGATION_METHOD"
+description: |
+  Extracts and plot a time series of $VARNAME for all times based on RMSE between given models and observation points.
 
- The RMSE is calculated based on that used in the
+  The RMSE is calculated based on that used in the
   package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.rmse).
 
   This recipe allows the preservation of the time coordinate to produce a timeseries. Therefore, the RMSE is
@@ -61,14 +62,10 @@ steps:
             varname: observed_$VARNAME
 
   - operator: scoreswrappers.scores_rmse
-    preserved_coordinates: forecast_reference_time
-
-  - operator: collapse.collapse
-    coordinate: "forecast_reference_time"
-    method: MEAN
+    preserved_coordinates: $AGGREGATION_METHOD
 
   - operator: plot.plot_line_series
-    series_coordinate: forecast_period
+    series_coordinate: $AGGREGATION_METHOD
 
   - operator: write.write_cube_to_nc
     overwrite: True

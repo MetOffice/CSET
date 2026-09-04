@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 def scores_rmse(
     cubes: CubeList,
     preserved_coordinates: list[str] | str | None = None,
-) -> CubeList:
+) -> CubeList | Cube:
     r"""Calculate the Root Mean Square Error (RMSE) using scores.
 
     Acts as a wrapper around the RMSE calculation from ``scores`` ([scoresa]_, [scoresb]_).
@@ -71,7 +71,6 @@ def scores_rmse(
         A cubelist containing the RMSE between the base and other cube.
     """
     scores_cubelist = CubeList()
-
     base, others = _split_base_and_other(cubes)
 
     for other in others:
@@ -662,7 +661,8 @@ def _make_scores_cube(
 
 
     """
-    # base, other = _process_cubes_for_verification(base, other)
+    if not "observed" in base.long_name:
+        base, other = _process_cubes_for_verification(base, other)
 
     other_xr = xr.DataArray.from_iris(other)
     base_xr = xr.DataArray.from_iris(base)
@@ -670,6 +670,7 @@ def _make_scores_cube(
 
     # Scores operates on xarray data arrays, so we transform the iris cube into an array,
     # apply scores, and then transform it back.
+
     if metric == "rmse":
         scores_cube = xr.DataArray.to_iris(
             scores.continuous.rmse(other_xr, base_xr, preserve_dims=preserve_dims)
@@ -696,7 +697,7 @@ def _make_scores_cube(
         scores_cube.rename(f"Pearson_Correlation_of_{base.name()}")
     else:
         raise ValueError(f"Scores Unknown metric: {metric}")
-    breakpoint()
+
     _attach_scaler_time_coord_maybe(scores_cube, base)
     model_name = other.attributes["model_name"]
     scores_cube.attributes["model_name"] = model_name
@@ -799,6 +800,7 @@ def _process_cubes_for_verification(base: Cube, other: Cube) -> tuple[Cube, Cube
     # on variable type. Linear regridding can in general be appropriate for smooth
     # variables. Care should be taken with interpretation of differences
     # given this dependency on regridding.
+
     if (
         base.coord(base_lat_name).shape != other.coord(other_lat_name).shape
         or base.coord(base_lon_name).shape != other.coord(other_lon_name).shape
@@ -925,7 +927,7 @@ def _attach_scaler_time_coord_maybe(scores_cube: Cube, base: Cube) -> None:
 
     """
     try:
-        if not scores_cube.coords("time"):
+        if not scores_cube.coords("time") and not scores_cube.coords("forecast_period"):
             base_time = base.coord("time")
             time_vals = (
                 base_time.bounds.flatten()
@@ -947,8 +949,13 @@ def _attach_scaler_time_coord_maybe(scores_cube: Cube, base: Cube) -> None:
                     attributes=base_time.attributes.copy(),
                 )
             )
+
     except iris.exceptions.CoordinateNotFoundError:
         pass
+
+
+def _get_obs_cube(cubes: CubeList):
+    return [cb for cb in cubes if "observed" in (cb.long_name or "")]
 
 
 def _split_base_and_other(cubes: CubeList):
@@ -970,7 +977,7 @@ def _split_base_and_other(cubes: CubeList):
         A tuple containing a base cube, and other cube/cubelist.
 
     """
-    obs_cube = [cb for cb in cubes if "observed" in (cb.long_name or "")]
+    obs_cube = _get_obs_cube(cubes)
     if obs_cube:
         if len(obs_cube) > 1:
             raise ValueError(
@@ -981,103 +988,3 @@ def _split_base_and_other(cubes: CubeList):
         return base, others
 
     return _sort_cube_into_base_and_other(cubes)
-
-
-def scores_rmse_model_obs(
-    cubes: CubeList, preserved_coordinates: list[str] | str | None = None
-):
-    r"""Calculate the Root Mean Square Error (RMSE) using scores.
-
-    Acts as a wrapper around the RMSE calculation from ``scores`` ([scoresa]_, [scoresb]_).
-    It is calculated as
-
-    .. math:: RMSE = \sqrt{\frac{1}{N} \Sigma(forecast - observations)^2}
-
-    Parameters
-    ----------
-    cubes: iris.cube.CubeList
-        A CubeList containing an observation cube and at least one model cube.
-    preserved_coordinates: list[str] | str | None, default is None.
-        The coordinates that you wish to preserve in the calculaiton of the
-        RMSE. For example if you want a map of each time you can preserve
-        ["time","grid_latitude", "grid_longitude"] or if you want a time series
-        you can preserve ["time"], if you want to collapse to a single value
-        use `None`. The default is `None`.
-
-    Returns
-    -------
-    scores_cubelist: iris.cube.CubeList
-        A cubelist containing the RMSE between the models and observation cube(s).
-    """
-    rmse_cubes = CubeList()
-    model_list = CubeList()
-
-    # Separate observations and models
-    for cb in cubes:
-        if "observed" in cb.long_name:
-            observed = cb
-        else:
-            model_list.append(cb)
-
-    for model in model_list:
-        frt_coord = model.coord("forecast_reference_time")
-
-        # Multiple forecast reference times
-        if model.coord_dims("forecast_reference_time") and frt_coord.shape[0] > 1:
-            obs_slices = list(observed.slices_over("forecast_reference_time"))
-
-            model_slices = list(model.slices_over("forecast_reference_time"))
-
-            for obs_slice, model_slice in zip(
-                obs_slices,
-                model_slices,
-                strict=True,
-            ):
-                input_cubelist = CubeList(
-                    [
-                        obs_slice,
-                        model_slice,
-                    ]
-                )
-
-                rmse = scores_rmse(
-                    input_cubelist,
-                    preserved_coordinates,
-                )
-
-                rmse.attributes["model_name"] = model.attributes["model_name"]
-
-                # Preserve the forecast_reference_time value
-                if not rmse.coords("forecast_reference_time"):
-                    rmse.add_aux_coord(
-                        model_slice.coord("forecast_reference_time").copy()
-                    )
-
-                if rmse.coords("time"):
-                    for coord in rmse.coords("time"):
-                        rmse.remove_coord(coord)
-
-                rmse_cubes.append(rmse)
-
-        # Single forecast reference time
-        else:
-            input_cubelist = CubeList(
-                [
-                    observed,
-                    model,
-                ]
-            )
-
-            rmse = scores_rmse(
-                input_cubelist,
-                preserved_coordinates,
-            )
-
-            rmse.attributes["model_name"] = model.attributes["model_name"]
-
-            rmse_cubes.append(rmse)
-
-    if len(rmse_cubes) > 1:
-        return rmse_cubes.merge()
-    else:
-        return rmse_cubes
