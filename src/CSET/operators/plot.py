@@ -2769,7 +2769,7 @@ def qq_plot(
     return iris.cube.CubeList([base, other])
 
 
-def hinton_plot(cubes, base_name, other_name, magnitude=None):
+def hinton_plot(cubes, base_name, other_name, magnitude=None) -> None:
     """
     Plot a Hinton style triangle/scorecard plot.
 
