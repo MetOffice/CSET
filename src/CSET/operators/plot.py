@@ -825,7 +825,7 @@ def plot_dfss_contour(
 
     recipe_title = get_recipe_metadata().get("title", "Untitled")
 
-    title = cube.name()
+    title, filename = _set_title_and_filename
 
     if cube.attributes.locals["method"] == "centile":
         method = cube.attributes.locals["method"]
@@ -849,7 +849,7 @@ def plot_dfss_contour(
 
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
 
-    # set the contour colour for the 0.5 contour line for dfss only
+    # set the contour colour for the 0.5 contour line for dfss and efss only
 
     plot = iplt.contourf(cube, cmap=cmap, norm=norm, levels=levels)
 
@@ -1135,7 +1135,7 @@ def _plot_and_save_line_series(
 
     # Add gridlines
     ax.grid(linestyle="--", color="grey", linewidth=1)
-    # Ientify unique labels for legend
+    # Identify unique labels for legend
     handles = list(
         {
             label: handle
