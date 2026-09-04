@@ -1410,20 +1410,6 @@ def test_qq_plot_grid_staggering_regrid(cube, tmp_working_dir):
     assert Path("qq_plot.png").is_file()
 
 
-def test_hinton_returns_figure_and_axes():
-    """Test that hinton plot returns valid fig and ax objects."""
-    change = np.array([[0.5, -0.5]])
-    signif = np.array([[1, 0]])
-
-    fig, ax = plot.hinton_plot(
-        change,
-        signif,
-        xaxis_labels=["A", "B"],
-        yaxis_labels=["Metric"],
-    )
-    assert fig is not None
-    assert ax is not None
-
 
 def make_test_cubes():
     """Create basic 2D iris cube for testing functionality."""
@@ -1484,7 +1470,7 @@ def test_hinton_plot_raises_when_models_have_different_variable_counts():
         )
 
 
-def test_hinton_plot_runs(tmp_path):
+def test_hinton_plot_runs(tmp_working_dir):
     cubes = make_test_cubes()
 
     plot.hinton_plot(
@@ -1580,3 +1566,73 @@ def test_hinton_plot_constant_difference():
         base_name="UM",
         other_name="LF",
     )
+
+
+def test_hinton_plot_raises_for_multiple_dimension_coords():
+    cubes = make_test_cubes()
+
+    bad_cube = iris.cube.Cube(
+        np.zeros((3, 4)),
+        long_name="bad_variable",
+        dim_coords_and_dims=[
+            (
+                iris.coords.DimCoord(
+                    np.arange(3),
+                    long_name="forecast_period",
+                ),
+                0,
+            ),
+            (
+                iris.coords.DimCoord(
+                    np.arange(4),
+                    long_name="height",
+                ),
+                1,
+            ),
+        ],
+    )
+    bad_cube.attributes["model_name"] = "UM"
+
+    cubes.append(bad_cube)
+
+    with pytest.raises(
+        ValueError,
+        match="Should only have one dimension coord",
+    ):
+        plot.hinton_plot(
+            cubes,
+            base_name="UM",
+            other_name="LF",
+        )
+
+
+def test_hinton_plot_raises_for_wrong_dimension_name():
+    cubes = make_test_cubes()
+
+    cubes[0] = iris.cube.Cube(
+        cubes[0].data,
+        long_name=cubes[0].long_name,
+        dim_coords_and_dims=[
+            (
+                iris.coords.DimCoord(
+                    np.arange(len(cubes[0].data)),
+                    long_name="time",
+                ),
+                0,
+            ),
+        ],
+    )
+    cubes[0].attributes["model_name"] = "UM"
+
+    with pytest.raises(
+        ValueError,
+        match="Single coord should be forecast_period",
+    ):
+        plot.hinton_plot(
+            cubes,
+            base_name="UM",
+            other_name="LF",
+        )
+`
+
+
