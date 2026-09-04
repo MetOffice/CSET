@@ -2782,11 +2782,11 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
     Parameters
     ----------
     cubes: iris.cube.CubeList
-        A iris cubelist, containing at least two cubes for two models/one variable to plot. Can
-        include multiple variables, in which the plot will automatically scale for, up to a maximum
-        of 8 (before redering starts to look problematic). If cubes containing significance_<var>
-        exist, containing a bool array, then it will also plot whether each triangle is significant
-        by using a thick black outline. Each cube should be 1D, with forecast_period as the dimension.
+        A iris cubelist, containing at least two cubes of a skill metric to plot (model vs obs). Can
+        include multiple variables, in which the plot will automatically scale for. If cubes containing
+        a name significance_<var> exist, containing a bool array, then it will also plot whether each
+        triangle is significant by using a thick black outline. Each cube should be 1D, with
+        forecast_period as the only dimension.
     base_name: str
         The name of the base model to use as the control in the Hinton plot, as a string.
     other_name: str
