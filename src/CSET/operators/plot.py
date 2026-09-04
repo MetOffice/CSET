@@ -2807,7 +2807,7 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
             raise ValueError(f"Should only have one dimension coord, {cube}")
         if cube.dim_coords[0].name() != "forecast_period":
             raise ValueError(
-                f"Single coord should be forecast_period, not {cube.dimcoords[0].name()}"
+                f"Single coord should be forecast_period, not {cube.dim_coords[0].name()}"
             )
 
     # Separate out base cubes and other cubes.
