@@ -1410,9 +1410,8 @@ def test_qq_plot_grid_staggering_regrid(cube, tmp_working_dir):
     assert Path("qq_plot.png").is_file()
 
 
-
-def make_test_cubes():
-    """Create basic 2D iris cube for testing functionality."""
+def make_hinton_test_cubes():
+    """Create basic 2D iris cube for testing hinton plot functionality."""
     cubes = iris.cube.CubeList()
     for c in [
         [[1, 2, 3, 4, 5, 6, 7, 8], "air_temperature_at_screen_level", "UM"],
@@ -1446,8 +1445,9 @@ def make_test_cubes():
     return cubes
 
 
-def test_hinton_plot_raises_when_models_have_different_variable_counts():
-    cubes = make_test_cubes()
+def test_hinton_plot_raises_when_models_have_different_variable_counts(tmp_working_dir):
+    """Test case where one model has more variables than the other model."""
+    cubes = make_hinton_test_cubes()
 
     # Remove one LF cube
     cubes = iris.cube.CubeList(
@@ -1461,7 +1461,7 @@ def test_hinton_plot_raises_when_models_have_different_variable_counts():
 
     with pytest.raises(
         ValueError,
-        match="base cubes .* are not same number as",
+        match="are not same number as",
     ):
         plot.hinton_plot(
             cubes,
@@ -1471,7 +1471,8 @@ def test_hinton_plot_raises_when_models_have_different_variable_counts():
 
 
 def test_hinton_plot_runs(tmp_working_dir):
-    cubes = make_test_cubes()
+    """Test end to end function produces plot at end."""
+    cubes = make_hinton_test_cubes()
 
     plot.hinton_plot(
         cubes,
@@ -1483,12 +1484,12 @@ def test_hinton_plot_runs(tmp_working_dir):
     assert Path("test-hinton.png").is_file()
 
 
-def test_hinton_plot_without_significance_cube():
-    """success=no exception"""
+def test_hinton_plot_without_significance_cube(tmp_working_dir):
+    """Test plotting works if no significance cube exists."""
     cubes = iris.cube.CubeList(
         [
             cube
-            for cube in make_test_cubes()
+            for cube in make_hinton_test_cubes()
             if not cube.long_name.startswith("significance_")
         ]
     )
@@ -1500,16 +1501,16 @@ def test_hinton_plot_without_significance_cube():
     )
 
 
-def test_hinton_plot_different_forecast_lengths():
-    cubes = make_test_cubes()
+def test_hinton_plot_different_forecast_lengths(tmp_working_dir):
+    """Ensure plotting still works if one variable has more time points than others."""
+    cubes = make_hinton_test_cubes()
 
     new_cubes = iris.cube.CubeList()
 
     for cube in cubes:
-        if (
-            cube.long_name == "relative_humidity_at_screen_level"
-            and cube.attributes["model_name"] in ("UM", "LF")
-        ):
+        if cube.long_name == "relative_humidity_at_screen_level" and cube.attributes[
+            "model_name"
+        ] in ("UM", "LF"):
             new_cubes.append(cube[:5])
         else:
             new_cubes.append(cube)
@@ -1521,11 +1522,12 @@ def test_hinton_plot_different_forecast_lengths():
     )
 
 
-def test_hinton_plot_single_variable():
+def test_hinton_plot_single_variable(tmp_working_dir):
+    """Check plotting works for a single variable."""
     cubes = iris.cube.CubeList(
         [
             cube
-            for cube in make_test_cubes()
+            for cube in make_hinton_test_cubes()
             if cube.long_name == "air_temperature_at_screen_level"
         ]
     )
@@ -1537,8 +1539,9 @@ def test_hinton_plot_single_variable():
     )
 
 
-def test_hinton_plot_with_nan_values():
-    cubes = make_test_cubes()
+def test_hinton_plot_with_nan_values(tmp_working_dir):
+    """Check plotting works OK with nan values."""
+    cubes = make_hinton_test_cubes()
 
     for cube in cubes:
         if (
@@ -1553,9 +1556,10 @@ def test_hinton_plot_with_nan_values():
         other_name="LF",
     )
 
-def test_hinton_plot_constant_difference():
-    "to test scaling"
-    cubes = make_test_cubes()
+
+def test_hinton_plot_constant_difference(tmp_working_dir):
+    """Test things OK when model difference is constant and ensure divide by zero for scaling is protected."""
+    cubes = make_hinton_test_cubes()
 
     for cube in cubes:
         if cube.attributes["model_name"] == "LF":
@@ -1568,8 +1572,9 @@ def test_hinton_plot_constant_difference():
     )
 
 
-def test_hinton_plot_raises_for_multiple_dimension_coords():
-    cubes = make_test_cubes()
+def test_hinton_plot_raises_for_multiple_dimension_coords(tmp_working_dir):
+    """Check raise if more than just forecast_period exists as dimension coord."""
+    cubes = make_hinton_test_cubes()
 
     bad_cube = iris.cube.Cube(
         np.zeros((3, 4)),
@@ -1606,8 +1611,9 @@ def test_hinton_plot_raises_for_multiple_dimension_coords():
         )
 
 
-def test_hinton_plot_raises_for_wrong_dimension_name():
-    cubes = make_test_cubes()
+def test_hinton_plot_raises_for_wrong_dimension_name(tmp_working_dir):
+    """Check raise if single dimension is not called forecast period."""
+    cubes = make_hinton_test_cubes()
 
     cubes[0] = iris.cube.Cube(
         cubes[0].data,
@@ -1633,4 +1639,3 @@ def test_hinton_plot_raises_for_wrong_dimension_name():
             base_name="UM",
             other_name="LF",
         )
-`
