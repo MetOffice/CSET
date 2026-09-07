@@ -1358,66 +1358,6 @@ def make_cube_categorical_testing_with_time() -> iris.cube.Cube:
     return _make_cube
 
 
-def _make_test_cube_multi_forecasts(
-    shape: tuple[int, int, int],
-    seed: int,
-    long_name: str,
-    standard_name: str | None = None,
-    model_name: str | None = None,
-):
-    rng = np.random.default_rng(seed)
-
-    frt = DimCoord(
-        np.arange(shape[0]),
-        standard_name="forecast_reference_time",
-        units="hours since 1970-01-01",
-    )
-    fp = DimCoord(
-        np.arange(shape[1]),
-        standard_name="forecast_period",
-        units="hours",
-    )
-    station = DimCoord(
-        np.arange(shape[2]),
-        long_name="station",
-        units="no_unit",
-    )
-
-    station_name_coord = iris.coords.AuxCoord(
-        points=np.array([f"st{i}" for i in range(shape[2])]),
-        long_name="Station_Name",
-        units="unknown",
-    )
-
-    latitude_coord = iris.coords.AuxCoord(
-        points=rng.uniform(50.0, 55.0, size=shape[2]),
-        standard_name="latitude",
-        units="degrees",
-    )
-
-    longitude_coord = iris.coords.AuxCoord(
-        points=rng.uniform(-5.0, -2.0, size=shape[2]),
-        standard_name="longitude",
-        units="degrees",
-    )
-
-    data = rng.normal(loc=280, scale=5, size=shape)
-
-    return Cube(
-        data,
-        long_name=long_name,
-        standard_name=standard_name,
-        units="K",
-        dim_coords_and_dims=[(frt, 0), (fp, 1), (station, 2)],
-        attributes={"model_name": model_name},
-        aux_coords_and_dims=[
-            (station_name_coord, 2),
-            (latitude_coord, 2),
-            (longitude_coord, 2),
-        ],
-    )
-
-
 def _make_test_cube_stations(
     shape: tuple[int, int],
     seed: int,
@@ -1445,13 +1385,13 @@ def _make_test_cube_stations(
     )
 
     latitude_coord = iris.coords.AuxCoord(
-        points=rng.uniform(50.0, 55.0, size=shape[1]),
+        points=50 + (0.5 * np.arange(shape[1])),
         standard_name="latitude",
         units="degrees",
     )
 
     longitude_coord = iris.coords.AuxCoord(
-        points=rng.uniform(-5.0, -2.0, size=shape[1]),
+        points=-5 + (0.2 * np.arange(shape[1])),
         standard_name="longitude",
         units="degrees",
     )
@@ -1474,19 +1414,22 @@ def _make_test_cube_stations(
 
 @pytest.fixture
 def dummy_cubelist_obs_3_common_stations():
-    """CubeList of [obs_cube1, obs_cube2] with time and forecast reference time coords."""
+    """CubeList of [obs_cube1, obs_cube2] with time (per-row) and scalar forecast reference time coords."""
     time_units = cf_units.Unit("hours since 1970-01-01", calendar="360_day")
 
-    def add_time_coords(cube, time_dt, frt_dt=None):
-        """Add scalar time and forecast_reference_time coords to a cube, in place."""
-        frt_dt = frt_dt or time_dt
-
+    def add_time_coords(cube, time_start, frt_dt, hour_step=1):
+        """Add a per-row time coord (data_dims=0) and scalar frt coord to a cube, in place."""
+        n_times = cube.shape[0]
+        time_datetimes = [
+            time_start + datetime.timedelta(hours=hour_step * i) for i in range(n_times)
+        ]
         cube.add_aux_coord(
             AuxCoord(
-                points=time_units.date2num(time_dt),
+                points=time_units.date2num(time_datetimes),
                 standard_name="time",
                 units=time_units,
-            )
+            ),
+            data_dims=0,
         )
         cube.add_aux_coord(
             AuxCoord(
@@ -1501,15 +1444,15 @@ def dummy_cubelist_obs_3_common_stations():
         _make_test_cube_stations(
             shape=(10, 3), seed=1, long_name="observed_temperature_at_screen_level"
         ),
+        time_start=cftime.datetime(2024, 1, 1, 6, 0, calendar="360_day"),
         frt_dt=cftime.datetime(2024, 1, 1, 0, 0, calendar="360_day"),
-        time_dt=cftime.datetime(2024, 1, 1, 6, 0, calendar="360_day"),
     )
     obs_cube2 = add_time_coords(
         _make_test_cube_stations(
             shape=(10, 5), seed=1, long_name="observed_temperature_at_screen_level"
         ),
+        time_start=cftime.datetime(2024, 1, 2, 6, 0, calendar="360_day"),
         frt_dt=cftime.datetime(2024, 1, 2, 0, 0, calendar="360_day"),
-        time_dt=cftime.datetime(2024, 1, 2, 6, 0, calendar="360_day"),
     )
 
     return CubeList([obs_cube1, obs_cube2])
