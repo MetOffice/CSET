@@ -19,6 +19,7 @@ import iris.cube
 import isodate
 import numpy as np
 import pytest
+from iris.cube import CubeList
 
 from CSET.operators import aggregate
 
@@ -217,6 +218,16 @@ def test_get_common_stations(dummy_cubelist_obs_3_common_stations):
     assert common_stations == ["st0", "st1", "st2"]
 
 
+def test_get_common_stations_one_cube_fail(dummy_cubelist_obs_3_common_stations):
+    """Test _get_common_stations basic functionality."""
+    with pytest.raises(
+        ValueError, match="Need at least two cubes to find common stations, but got 1"
+    ):
+        aggregate._get_common_stations(
+            CubeList([dummy_cubelist_obs_3_common_stations[0]])
+        )
+
+
 def test_build_station_lookup(dummy_cubelist_obs_3_common_stations):
     """Test _build_station_lookup basic functionality."""
     common_stations = aggregate._get_common_stations(
@@ -226,8 +237,8 @@ def test_build_station_lookup(dummy_cubelist_obs_3_common_stations):
         dummy_cubelist_obs_3_common_stations, common_stations
     )
     assert np.shape(station_lookup.subset_data) == (2, 10, 3)
-    assert station_lookup.frt_points == [466560, 466566]
-    assert station_lookup.time_points == [466560, 466566]
+    assert station_lookup.frt_points == [466560, 466584]
+    assert station_lookup.time_points == [466566, 466590]
 
 
 def test_generate_forecast_period(dummy_cubelist_obs_3_common_stations):

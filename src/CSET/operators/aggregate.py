@@ -97,6 +97,8 @@ def time_aggregate(
     # Convert interval format to whole hours.
     interval = int(timedelta.total_seconds() / 3600)
 
+    cubes = iter_maybe(cubes)
+
     for cube in cubes:
         # Add time categorisation overwriting hourly increment via lambda coord.
         # https://scitools-iris.readthedocs.io/en/latest/_modules/iris/coord_categorisation.html
