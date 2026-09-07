@@ -74,12 +74,9 @@ def scores_rmse(
         A cubelist containing the RMSE between the base and other cube.
     """
     scores_cubelist = CubeList()
-
     base, others = _split_base_and_other(cubes)
 
     for other in others:
-        base, other = _process_cubes_for_verification(base, other)
-
         scores_cube = _make_scores_cube(base, other, "rmse", preserved_coordinates)
 
         scores_cubelist.append(scores_cube)
@@ -116,7 +113,6 @@ def scores_mae(
     base, others = _split_base_and_other(cubes)
 
     for other in others:
-        base, other = _process_cubes_for_verification(base, other)
         scores_cube = _make_scores_cube(base, other, "mae", preserved_coordinates)
         scores_cubelist.append(scores_cube)
 
@@ -152,8 +148,6 @@ def scores_additive_bias(
     base, others = _split_base_and_other(cubes)
 
     for other in others:
-        base, other = _process_cubes_for_verification(base, other)
-
         scores_cube = _make_scores_cube(
             base, other, "additive_bias", preserved_coordinates
         )
@@ -192,8 +186,6 @@ def scores_correlation_pearsonr(
     base, others = _split_base_and_other(cubes)
 
     for other in others:
-        base, other = _process_cubes_for_verification(base, other)
-
         scores_cube = _make_scores_cube(
             base, other, "pearson_correlation", preserved_coordinates
         )
@@ -667,12 +659,16 @@ def _make_scores_cube(
 
 
     """
+    if not "observed" in base.long_name:
+        base, other = _process_cubes_for_verification(base, other)
+
     other_xr = xr.DataArray.from_iris(other)
     base_xr = xr.DataArray.from_iris(base)
     preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
 
     # Scores operates on xarray data arrays, so we transform the iris cube into an array,
     # apply scores, and then transform it back.
+
     if metric == "rmse":
         scores_cube = xr.DataArray.to_iris(
             scores.continuous.rmse(other_xr, base_xr, preserve_dims=preserve_dims)
@@ -856,6 +852,7 @@ def _process_cubes_for_verification(base: Cube, other: Cube) -> tuple[Cube, Cube
     # on variable type. Linear regridding can in general be appropriate for smooth
     # variables. Care should be taken with interpretation of differences
     # given this dependency on regridding.
+
     if (
         base.coord(base_lat_name).shape != other.coord(other_lat_name).shape
         or base.coord(base_lon_name).shape != other.coord(other_lon_name).shape
@@ -982,7 +979,7 @@ def _attach_scaler_time_coord_maybe(scores_cube: Cube, base: Cube) -> None:
 
     """
     try:
-        if not scores_cube.coords("time"):
+        if not scores_cube.coords("time") and not scores_cube.coords("forecast_period"):
             base_time = base.coord("time")
             time_vals = (
                 base_time.bounds.flatten()
@@ -1004,5 +1001,42 @@ def _attach_scaler_time_coord_maybe(scores_cube: Cube, base: Cube) -> None:
                     attributes=base_time.attributes.copy(),
                 )
             )
+
     except iris.exceptions.CoordinateNotFoundError:
         pass
+
+
+def _get_obs_cube(cubes: CubeList):
+    return [cb for cb in cubes if "observed" in (cb.long_name or "")]
+
+
+def _split_base_and_other(cubes: CubeList):
+    r"""Split the cube into base and other cubes.
+
+    Split depends on whether there
+    is an observed cube in the cubes.  If there is an observed cube,
+    then 'base' is the observed cube, if not then 'base' is the comparison
+    model cube.
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        Cubes to split into base and other cubes.
+
+    Returns
+    -------
+    tuple
+        A tuple containing a base cube, and other cube/cubelist.
+
+    """
+    obs_cube = _get_obs_cube(cubes)
+    if obs_cube:
+        if len(obs_cube) > 1:
+            raise ValueError(
+                f"Expected exactly one 'observed' cube, found {len(obs_cube)}"
+            )
+        base = obs_cube[0]
+        others = CubeList(cb for cb in cubes if cb is not base)
+        return base, others
+
+    return _sort_cube_into_base_and_other(cubes)
