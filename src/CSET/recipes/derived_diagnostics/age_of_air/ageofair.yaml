@@ -28,7 +28,7 @@ steps:
                 operator: constraints.combine_constraints
                 variable_constraint:
                     operator: constraints.generate_var_constraint
-                    varname: x_wind
+                    varname: zonal_wind_at_pressure_levels
                 pressure_level_constraint:
                     operator: constraints.generate_level_constraint
                     coordinate: pressure
@@ -44,7 +44,7 @@ steps:
                 operator: constraints.combine_constraints
                 variable_constraint:
                     operator: constraints.generate_var_constraint
-                    varname: y_wind
+                    varname: meridional_wind_at_pressure_levels
                 pressure_level_constraint:
                     operator: constraints.generate_level_constraint
                     coordinate: pressure
@@ -60,7 +60,7 @@ steps:
                 operator: constraints.combine_constraints
                 variable_constraint:
                     operator: constraints.generate_var_constraint
-                    varname: upward_air_velocity
+                    varname: vertical_wind_at_pressure_levels
                 pressure_level_constraint:
                     operator: constraints.generate_level_constraint
                     coordinate: pressure
@@ -76,7 +76,7 @@ steps:
                 operator: constraints.combine_constraints
                 variable_constraint:
                     operator: constraints.generate_var_constraint
-                    varname: geopotential_height
+                    varname: geopotential_height_at_pressure_levels
                 pressure_level_constraint:
                     operator: constraints.generate_level_constraint
                     coordinate: pressure

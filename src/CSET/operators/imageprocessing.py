@@ -180,13 +180,6 @@ def spatial_structural_similarity_model_comparisons(
     Further details, including caveats, can be found in Wang et al. (2004)
     [Wangetal2004]_.
 
-    References
-    ----------
-    .. [Wangetal2004] Wang, Z., Bovik, A.C., Sheikh, H.R., Simoncelli, E.P. (2004)
-       "Image Quality Assessment: From Error Visibility to Structural Similarity."
-       IEEE Transactions on Image Processing, vol. 13, 600-612,
-       doi: 10.1109/TIP.2003.819861
-
     Examples
     --------
     >>> SSIM = imageprocessing.spatial_structural_similarity_model_comparisons(
@@ -280,13 +273,6 @@ def mean_structural_similarity_model_comparisons(
 
     Further details, including caveats, can be found in Wang et al. (2004)
     [Wangetal2004a]_.
-
-    References
-    ----------
-    .. [Wangetal2004a] Wang, Z., Bovik, A.C., Sheikh, H.R., Simoncelli, E.P. (2004)
-       "Image Quality Assessment: From Error Visibility to Structural Similarity."
-       IEEE Transactions on Image Processing, vol. 13, 600-612,
-       doi: 10.1109/TIP.2003.819861
 
     Examples
     --------

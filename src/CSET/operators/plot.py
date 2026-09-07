@@ -21,6 +21,7 @@ import json
 import logging
 import math
 import os
+import sys
 from typing import Literal
 
 import cartopy.crs as ccrs
@@ -50,6 +51,7 @@ from CSET.operators._colormaps import (
     get_model_colors_map,
 )
 from CSET.operators._utils import (
+    calc_array_stats,
     check_sequence_coordinate,
     check_single_cube,
     check_stamp_coordinate,
@@ -74,6 +76,11 @@ mpl.use("agg")
 ############################
 # Private helper functions #
 ############################
+
+
+def in_sphinx_gallery():
+    """Test if running plot code in sphinx-gallery context."""
+    return "sphinx_gallery" in sys.modules
 
 
 def _append_to_plot_index(plot_index: list) -> list:
@@ -124,6 +131,26 @@ def _make_plot_html_page(plots: list):
     # Save completed HTML.
     with open("index.html", "wt", encoding="UTF-8") as fp:
         fp.write(html)
+
+
+def _save_close_figure(figure, plot_type: str, filename: str):
+    """Save generated plot figure file and close figure.
+
+    If running documentation gallery generation, avoid saving to file.
+
+    Parameters
+    ----------
+    figure:
+        Matplotlib Figure object holding all plot elements.
+    plot_type: str
+        String identifier for plot type for logging information.
+    filename: str
+        Filename for saved figure.
+    """
+    if not in_sphinx_gallery():
+        figure.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+        logger.info("Saved %s plot to %s", plot_type, filename)
+        plt.close(figure)
 
 
 def _setup_spatial_map(
@@ -226,10 +253,8 @@ def _setup_spatial_map(
             axes = figure.add_subplot(projection=projection)
 
         # Add coastlines and borderlines if cube contains x and y map coordinates.
-        # Avoid adding lines for 2D masked data or specific fixed ancillary spatial plots.
-        if (cube.ndim > 1 and iris.util.is_masked(cube.data)) or any(
-            name in cube.name() for name in ["land_", "orography", "altitude"]
-        ):
+        # Avoid adding lines for specific fixed ancillary spatial plots
+        if any(name in cube.name() for name in ("land_", "orography", "altitude")):
             pass
         else:
             if cmap.name in ["viridis", "Greys"]:
@@ -310,6 +335,7 @@ def _set_title_and_filename(
     nplot: int,
     recipe_title: str,
     filename: str,
+    model_name: str | None = None,
 ):
     """Set plot title and filename based on cube coordinate.
 
@@ -381,6 +407,10 @@ def _set_title_and_filename(
             plot_filename = f"{filename.rsplit('.', 1)[0]}{sequence_fname}.png"
         else:
             plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
+
+    if model_name:
+        plot_filename = f"{model_name}_{plot_filename}"
+        plot_title = f"{model_name}_{plot_title}"
 
     return plot_title, plot_filename
 
@@ -720,8 +750,9 @@ def _plot_and_save_spatial_plot(
 
     # Add watermark with min/max/mean. Currently not user togglable.
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
+    cube_min, cube_max, cube_mean = calc_array_stats(cube.data)
     axes.annotate(
-        f"Min: {np.min(cube.data):.3g} Max: {np.max(cube.data):.3g} Mean: {np.mean(cube.data):.3g}",
+        f"Min: {cube_min:.3g} Max: {cube_max:.3g} Mean: {cube_mean:.3g}",
         xy=(0.025, yinfopad),
         xycoords="axes fraction",
         xytext=(-5, 5),
@@ -780,9 +811,7 @@ def _plot_and_save_spatial_plot(
         logger.debug("Set colorbar ticks and labels.")
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logger.info("Saved spatial plot to %s", filename)
-    plt.close(fig)
+    _save_close_figure(fig, "spatial", filename)
 
 
 def _plot_and_save_postage_stamp_spatial_plot(
@@ -906,9 +935,8 @@ def _plot_and_save_postage_stamp_spatial_plot(
     # Overall figure title.
     fig.suptitle(title, fontsize=16)
 
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logger.info("Saved contour postage stamp plot to %s", filename)
-    plt.close(fig)
+    # Save plot.
+    _save_close_figure(fig, "contour postate stamp", filename)
 
 
 def _plot_and_save_line_series(
@@ -1025,9 +1053,7 @@ def _plot_and_save_line_series(
     ax.legend(handles=handles, loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logger.info("Saved line plot to %s", filename)
-    plt.close(fig)
+    _save_close_figure(fig, "line", filename)
 
 
 def _plot_and_save_line_power_spectrum_series(
@@ -1072,6 +1098,13 @@ def _plot_and_save_line_power_spectrum_series(
         xname = xcoord.points
 
         yfield = cube.data  # power spectrum
+
+        # If data from power spectra is all np.nans (like T+0h rainfall field which
+        # might be full of zeros), then set yfield to zeros so it doesn't crash the
+        # plotting.
+        if np.all(np.isnan(yfield)):
+            yfield = np.zeros_like(yfield)
+
         label = None
         color = "black"
         if model_colors_map:
@@ -1150,9 +1183,7 @@ def _plot_and_save_line_power_spectrum_series(
     ax.legend(handles=handles, loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logger.info("Saved line plot to %s", filename)
-    plt.close(fig)
+    _save_close_figure(fig, "line power spectrum", filename)
 
 
 def _plot_and_save_vertical_line_series(
@@ -1292,9 +1323,7 @@ def _plot_and_save_vertical_line_series(
     ax.legend(handles=handles, loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logger.info("Saved line plot to %s", filename)
-    plt.close(fig)
+    _save_close_figure(fig, "vertical line", filename)
 
 
 def _plot_and_save_scatter_plot(
@@ -1366,9 +1395,7 @@ def _plot_and_save_scatter_plot(
     ax.autoscale()
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logger.info("Saved scatter plot to %s", filename)
-    plt.close(fig)
+    _save_close_figure(fig, "scatter", filename)
 
 
 def _plot_and_save_vector_plot(
@@ -1453,8 +1480,9 @@ def _plot_and_save_vector_plot(
 
     # Add watermark with min/max/mean. Currently not user togglable.
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
+    cube_min, cube_max, cube_mean = calc_array_stats(cube_vec_mag.data)
     axes.annotate(
-        f"Min: {np.min(cube_vec_mag.data):.3g} Max: {np.max(cube_vec_mag.data):.3g} Mean: {np.mean(cube_vec_mag.data):.3g}",
+        f"Min: {cube_min:.3g} Max: {cube_max:.3g} Mean: {cube_mean:.3g}",
         xy=(0.05, -0.05),
         xycoords="axes fraction",
         xytext=(-5, 5),
@@ -1479,9 +1507,7 @@ def _plot_and_save_vector_plot(
     iplt.quiver(cube_u[::step, ::step], cube_v[::step, ::step], pivot="middle")
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logger.info("Saved vector plot to %s", filename)
-    plt.close(fig)
+    _save_close_figure(fig, "vector", filename)
 
 
 def _plot_and_save_histogram_series(
@@ -1592,7 +1618,10 @@ def _plot_and_save_histogram_series(
         ax.set_ylabel(
             f"Contribution to mean ({iter_maybe(cubes)[0].units})", fontsize=14
         )
-    ax.set_xlim(vmin, vmax)
+    try:
+        ax.set_xlim(vmin, vmax)
+    except ValueError:
+        pass
     ax.tick_params(axis="both", labelsize=12)
 
     # Overlay grid-lines onto histogram plot.
@@ -1601,9 +1630,7 @@ def _plot_and_save_histogram_series(
         ax.legend(loc="best", ncol=1, frameon=True, fontsize=16)
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logger.info("Saved histogram plot to %s", filename)
-    plt.close(fig)
+    _save_close_figure(fig, "histogram", filename)
 
 
 def _plot_and_save_postage_stamp_histogram_series(
@@ -1661,9 +1688,8 @@ def _plot_and_save_postage_stamp_histogram_series(
     # Overall figure title.
     fig.suptitle(title, fontsize=16)
 
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logger.info("Saved histogram postage stamp plot to %s", filename)
-    plt.close(fig)
+    # Save plot.
+    _save_close_figure(fig, "histogram postage stamp", filename)
 
 
 def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
@@ -1696,12 +1722,8 @@ def _plot_and_save_postage_stamps_in_single_plot_histogram_series(
     # Add a legend
     ax.legend(fontsize=16)
 
-    # Save the figure to a file
-    plt.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logger.info("Saved histogram postage stamp plot to %s", filename)
-
-    # Close the figure
-    plt.close(fig)
+    # Save plot.
+    _save_close_figure(fig, "histogram postage stamp", filename)
 
 
 def _plot_and_save_scatter_series(
@@ -1840,9 +1862,7 @@ def _plot_and_save_scatter_series(
         cb.set_label("Number of data points", size=12)
 
     # Save plot.
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logger.info("Saved scatter plot to %s", filename)
-    plt.close(fig)
+    _save_close_figure(fig, "scatter", filename)
 
 
 def _spatial_plot(
@@ -1941,8 +1961,14 @@ def _spatial_plot(
     for iseq, cube_slice in enumerate(cube.slices_over(sequence_coordinate)):
         # Set plot titles and filename
         seq_coord = cube_slice.coord(sequence_coordinate)
+
+        if "model_name" in cube.attributes:
+            model_name = cube.attributes["model_name"]
+        else:
+            model_name = None
+
         plot_title, plot_filename = _set_title_and_filename(
-            seq_coord, nplot, recipe_title, filename
+            seq_coord, nplot, recipe_title, filename, model_name=model_name
         )
 
         # Extract sequence slice for overlay_cube, contour_cube and point_cube if required.
@@ -2024,7 +2050,7 @@ def spatial_contour_plot(
 
 
 def spatial_pcolormesh_plot(
-    cube: iris.cube.Cube,
+    cubes: iris.cube.Cube | iris.cube.CubeList,
     filename: str | None = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
@@ -2042,8 +2068,8 @@ def spatial_pcolormesh_plot(
 
     Parameters
     ----------
-    cube: Cube
-        Iris cube of the data to plot. It should have two spatial dimensions,
+    cube: Cubes
+        Iris cube or cubelist of the data to plot. Each cube should have two spatial dimensions,
         such as lat and lon, and may also have a another two dimension to be
         plotted sequentially and/or as postage stamp plots.
     filename: str, optional
@@ -2058,20 +2084,34 @@ def spatial_pcolormesh_plot(
 
     Returns
     -------
-    Cube
-        The original cube (so further operations can be applied).
+    Cubes
+        The original cube/cubelist (so further operations can be applied).
 
     Raises
     ------
     ValueError
         If the cube doesn't have the right dimensions.
-    TypeError
-        If the cube isn't a single cube.
     """
-    _spatial_plot(
-        "pcolormesh", cube, filename, sequence_coordinate, stamp_coordinate, **kwargs
-    )
-    return cube
+    if isinstance(cubes, iris.cube.CubeList):
+        for model_cube in cubes:
+            _spatial_plot(
+                "pcolormesh",
+                model_cube,
+                filename,
+                sequence_coordinate,
+                stamp_coordinate,
+                **kwargs,
+            )
+    elif isinstance(cubes, iris.cube.Cube):
+        _spatial_plot(
+            "pcolormesh",
+            cubes,
+            filename,
+            sequence_coordinate,
+            stamp_coordinate,
+            **kwargs,
+        )
+    return cubes
 
 
 def spatial_multi_pcolormesh_plot(
@@ -2220,8 +2260,29 @@ def plot_line_series(
             raise ValueError(
                 f"Cube must have a {series_coordinate} coordinate."
             ) from err
-        if model_cube.coords("realization") and model_cube.ndim > 2:
-            raise ValueError("Cube must be 1D or 2D with a realization coordinate.")
+        # Count cube dimensions and exclude realization and
+        # forecast_reference_time if they exist.
+        ndim = model_cube.ndim
+
+        if model_cube.coords("realization"):
+            # returns coord dimension
+            realization_dims = model_cube.coord_dims("realization")
+
+            # Only subtract if realization is a dimension coordinate
+            if realization_dims:
+                ndim -= len(realization_dims)
+
+        if model_cube.coords("forecast_reference_time"):
+            frt_dims = model_cube.coord_dims("forecast_reference_time")
+
+            # Only subtract if frt is a dimension coordinate
+            if frt_dims:
+                ndim -= len(frt_dims)
+
+        if ndim > 2:
+            raise ValueError(
+                "Cube must be 1D or 2D (excluding any realization or forecast_reference_time dimensions)."
+            )
 
     plot_index = []
 
@@ -2620,10 +2681,6 @@ def qq_plot(
     closer values/values further apart at the tails imply poor representation of
     the extremes.
 
-    References
-    ----------
-    .. [Wilks2011] Wilks, D.S., (2011) "Statistical Methods in the Atmospheric
-       Sciences" Third Edition, vol. 100, Academic Press, Oxford, UK, 676 pp.
     """
     # Check cubes using same functionality as the difference operator.
     if len(cubes) != 2:
@@ -3407,9 +3464,8 @@ def _plot_and_save_postage_stamp_power_spectrum_series(
         ax = plt.gca()
         ax.set_title(f"Member #{member.coord(stamp_coordinate).points[0]}")
 
-    fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-    logger.info("Saved histogram postage stamp plot to %s", filename)
-    plt.close(fig)
+    # Save plot.
+    _save_close_figure(fig, "histogram postage stamp", filename)
 
 
 def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
@@ -3537,8 +3593,5 @@ def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
     # Figure title.
     ax.set_title(title, fontsize=16)
 
-    # Save the figure to a file
-    plt.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-
-    # Close the figure
-    plt.close(fig)
+    # Save plot.
+    _save_close_figure(fig, "power spectra postage stamp", filename)

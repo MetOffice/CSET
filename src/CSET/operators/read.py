@@ -50,7 +50,7 @@ class NoDataError(FileNotFoundError):
 
 def read_cube(
     file_paths: list[str] | str,
-    constraint: iris.Constraint = None,
+    constraint: iris.Constraint | None = None,
     model_names: list[str] | str | None = None,
     subarea_type: str | None = None,
     subarea_extent: list[float] | None = None,
@@ -166,6 +166,16 @@ def read_cubes(
     # Get iterable of paths. Each path corresponds to 1 model.
     paths = iter_maybe(file_paths)
     model_names = iter_maybe(model_names)
+
+    # flattens model_names if needed into one dimensional list.
+    if model_names != (None,):
+        flat = []
+        for item in model_names:
+            if isinstance(item, list):
+                flat.extend(item)
+            else:
+                flat.append(item)
+        model_names = flat
 
     # Check we have appropriate number of model names.
     if model_names != (None,) and len(model_names) != len(paths):
@@ -395,6 +405,7 @@ def _cutout_cubes(
 def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.Cube:
     """Compose together the needed callbacks into a single function."""
     # Most callbacks operate in-place, but save the cube when returned!
+    _remove_cset_comparison_base_attribute_callback(cube)
     _realization_callback(cube)
     _um_normalise_callback(cube)
     _lfric_normalise_callback(cube)
@@ -413,8 +424,16 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     _lfric_time_callback(cube)
     _lfric_forecast_period_callback(cube)
     cube = _fix_no_time_coords_callback(cube)
-    _normalise_ML_varname(cube)
+    _normalise_longname(cube)
     return cube
+
+
+def _remove_cset_comparison_base_attribute_callback(cube):
+    """Remove ``cset_comparison_base`` attribute if present.
+
+    This allows for reprocessing output previously saved by CSET.
+    """
+    cube.attributes.pop("cset_comparison_base", None)
 
 
 def _realization_callback(cube):
@@ -1098,8 +1117,8 @@ def _fix_no_time_coords_callback(cube: iris.cube.Cube):
     return cube
 
 
-def _normalise_ML_varname(cube: iris.cube.Cube):
-    """Fix plev variable names to standard names."""
+def _normalise_longname(cube: iris.cube.Cube):
+    """Normalise long_name to the LFRic standard list."""
     if cube.coords("pressure"):
         if cube.name() == "x_wind":
             cube.long_name = "zonal_wind_at_pressure_levels"
@@ -1116,6 +1135,8 @@ def _normalise_ML_varname(cube: iris.cube.Cube):
             cube.long_name = "eastward_wind_at_10m"
         if cube.name() == "y_wind" and cube.var_name == "v_wind_at_10m":
             cube.long_name = "northward_wind_at_10m"
+    if cube.name() == "air_pressure_at_sea_level":
+        cube.long_name = "air_pressure_at_mean_sea_level"
 
 
 def _check_combine_point_observations(cubes: iris.cube.CubeList):

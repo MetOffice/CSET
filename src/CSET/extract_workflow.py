@@ -167,7 +167,7 @@ def install_restricted_files(workflow_dir: Path, alternative_url: str | None = N
     version_tag = f"v{importlib.metadata.version('CSET')}"
     logger.debug("Running for CSET %s", version_tag)
     m = re.match(r"v\d+\.\d+", version_tag)
-    base_version = m.group(0) if m else version_tag
+    base_version = m.group(0) if m and "dev" not in version_tag else version_tag
     if m is None:
         logger.warning("Cannot determine major version from %s", version_tag)
     release_branch = f"releases/{base_version}"
@@ -219,6 +219,10 @@ def install_restricted_files(workflow_dir: Path, alternative_url: str | None = N
         # Delete unwanted top-level README.
         (Path(tempdir) / "README.md").unlink(missing_ok=True)
 
+        # HACK: This prevents copystat (as used inside copytree) from
+        # overwriting permission of the target directory.
+        _original_copystat = shutil.copystat
+        shutil.copystat = lambda *args, **kwargs: None
         # Copy remaining files, skipping hidden files.
         shutil.copytree(
             tempdir,
@@ -227,4 +231,8 @@ def install_restricted_files(workflow_dir: Path, alternative_url: str | None = N
             symlinks=True,
             dirs_exist_ok=True,
         )
+        # Put copystat back so we don't break other code.
+        # This is by no means threadsafe.
+        shutil.copystat = _original_copystat
+
         print(f"Installed site-specific restricted files into {workflow_dir}.")

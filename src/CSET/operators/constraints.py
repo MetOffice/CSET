@@ -72,6 +72,7 @@ def generate_var_constraint(varname: str, **kwargs) -> iris.Constraint:
         If multiple variable names are requested, constrain by list of variables.
     """
     # Case 1: UM STASHcode input
+
     if isinstance(varname, str) and _STASH_RE.match(varname):
         return iris.AttributeConstraint(STASH=varname)
 

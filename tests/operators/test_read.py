@@ -856,6 +856,13 @@ def test_lfric_forecast_period_convert_units_callback(cube):
     assert cube.coord("forecast_period").units == "hours"
 
 
+def test_remove_cset_comparison_base_attribute_callback():
+    """Ensure ``cset_comparison_base`` attribute is removed."""
+    cube = iris.cube.Cube(shape=(1,), attributes={"cset_comparison_base": 1})
+    read._remove_cset_comparison_base_attribute_callback(cube)
+    assert "cset_comparison_base" not in cube.attributes
+
+
 def test_read_cubes_extract_cells():
     """Read cube and ensure appropriate number of cells are trimmed from domain edges."""
     cube = read.read_cubes(
@@ -1166,11 +1173,11 @@ def test_fix_no_time_coords_callback(cube):
     assert cube.coord("time").units == "hours since 0001-01-01 00:00:00"
 
 
-def test_normalise_ML_varname(transect_source_cube):
+def test_normalise_longname(transect_source_cube):
     """Check that pressure varname is changed."""
     cube = transect_source_cube.copy()
     cube.rename = "air_temperature"
-    read._normalise_ML_varname(cube)
+    read._normalise_longname(cube)
     assert cube.long_name == "temperature_at_pressure_levels"
 
 

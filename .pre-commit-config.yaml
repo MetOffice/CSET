@@ -11,14 +11,14 @@ repos:
         exclude: src/CSET/cset_workflow/app/metplus_point_stat/file/metoffice/PointStat_METplus_UKV.conf
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 39d9ac5938dadb73df0564a45f163e25ff9fa6e2  # frozen: v0.16.1
+    rev: 1f1e8bf348ff38fc88619a38d3ca4d9c56abea49  # frozen: v0.16.5
     hooks:
       - id: ruff-check
         args: [--fix, --show-fixes, --exit-non-zero-on-fix]
       - id: ruff-format
 
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: 745eface02aef23e168a8afb6b5737818efbea95  # frozen: v0.11.0.1
+    rev: a6564f5d57444e123433a5c9af733e3975c77229  # frozen: v0.11.0.1-1
     hooks:
       - id: shellcheck
 

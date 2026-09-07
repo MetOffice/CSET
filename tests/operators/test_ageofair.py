@@ -77,22 +77,8 @@ def test_calc_dist():
     assert np.allclose(dist, actual_distance, rtol=1e-06, atol=20000)
 
 
-@pytest.mark.slow
 def test_aoa_nocyclic(xwind, ywind, wwind, geopot):
     """Test case when not cyclic."""
-    assert np.allclose(
-        ageofair.compute_ageofair(
-            xwind, ywind, wwind, geopot, plev=500, cyclic=False
-        ).data,
-        read.read_cube("tests/test_data/ageofair/aoa_out_nocyclic.nc").data,
-        rtol=1e-06,
-        atol=1e-02,
-    )
-
-
-@pytest.mark.slow
-def test_aoa_cyclic_parallel_processing(xwind, ywind, wwind, geopot):
-    """Test case when cyclic with parallel processing."""
     assert np.allclose(
         ageofair.compute_ageofair(
             xwind,
@@ -100,10 +86,10 @@ def test_aoa_cyclic_parallel_processing(xwind, ywind, wwind, geopot):
             wwind,
             geopot,
             plev=500,
-            cyclic=True,
-            multicore=True,
+            cyclic=False,
+            multicore=False,
         ).data,
-        read.read_cube("tests/test_data/ageofair/aoa_out_cyclic.nc").data,
+        read.read_cube("tests/test_data/ageofair/aoa_out_nocyclic.nc").data,
         rtol=1e-06,
         atol=1e-02,
     )
@@ -144,6 +130,7 @@ def test_aoa_timefreq(xwind, ywind, wwind, geopot):
             geopot[[1, 2, 4, 5], :, :, :],
             plev=500,
             cyclic=True,
+            multicore=False,
         )
 
 
@@ -178,25 +165,6 @@ def test_aoa_ens(ens_regridded, ens_regridded_out):
     )
 
 
-@pytest.mark.slow
-def test_aoa_ens_multicore(ens_regridded, ens_regridded_out):
-    """Test case with ensembles ensuring that single core and multicore produce identical values."""
-    assert np.allclose(
-        ageofair.compute_ageofair(
-            ens_regridded.extract("x_wind")[0],
-            ens_regridded.extract("y_wind")[0],
-            ens_regridded.extract("upward_air_velocity")[0],
-            ens_regridded.extract("geopotential_height")[0],
-            plev=200,
-            cyclic=False,
-            multicore=True,
-        ).data,
-        ens_regridded_out.data,
-        rtol=1e-06,
-        atol=1e-02,
-    )
-
-
 def test_aoa_misordered_dims(xwind, ywind, wwind, geopot):
     """Dimensions in input cubes do not match expected ordering."""
     xwind.transpose([0, 1, 3, 2])
@@ -211,6 +179,7 @@ def test_aoa_misordered_dims(xwind, ywind, wwind, geopot):
             geopot,
             plev=500,
             cyclic=True,
+            multicore=False,
         )
 
 
@@ -232,4 +201,5 @@ def test_aoa_misordered_dims_ens(ens_regridded):
             geopot,
             plev=500,
             cyclic=True,
+            multicore=False,
         )

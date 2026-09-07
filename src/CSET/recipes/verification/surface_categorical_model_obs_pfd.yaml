@@ -1,0 +1,95 @@
+category: Scores Categorical
+title: Timeseries of PFD for "$VARNAME over $SUBAREA_NAME, using threshold $OPERATOR $THRESHOLD"
+description: |
+
+  Extracts and plots the Probability of False Detection (POFD) for $VARNAME for each model against observations as a timeseries.
+
+  The Probability of False Detection (POFD) in [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.categorical.BasicContingencyManager.probability_of_false_detection)
+  measures the proportion of observed non-events that were incorrectly forecast as events.
+  It is a useful metric for assessing how often a forecasting system generates false alarms.
+
+  For example, if the threshold is 290 K and op_func is gt (greater than), an observation
+  of 288 K and a forecast of 295 K would be considered a false alarm, since the event
+  was forecast but did not occur. POFD quantifies the frequency of such false detections
+  relative to all occasions when the event was actually absent.
+
+  It is calculated as:
+
+  POFD = \frac{false\ alarms}
+                {false\ alarms + true\ negatives}
+
+  where
+
+  false alarms
+      Number of cases where the forecast predicted an event but none occurred.
+
+  true negatives
+      Number of cases where neither the forecast nor the observations indicated an event.
+
+  POFD ranges from 0 to 1, where:
+
+  * 0 indicates a perfect score with no false alarms.
+  * 1 indicates every non-event was incorrectly forecast as an event.
+
+  Lower values are therefore better.
+
+  POFD is commonly considered alongside the Probability of Detection (POD). A forecasting
+  system may achieve a high POD by forecasting many events, but this can also increase the
+  POFD through additional false alarms. Examining both measures together provides a more
+  complete assessment of forecast performance.
+
+  References
+  https://scores.readthedocs.io/en/stable/api.html#scores.categorical.BasicContingencyManager.probability_of_false_detection
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: ['observed_$VARNAME', '$VARNAME']
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: "pressure"
+        levels: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: misc.extract_common_points
+    coordinate: time
+
+  - operator: misc.combine_cubes_into_cubelist
+    first:
+        operator: filters.filter_cubes
+        constraint:
+            operator: constraints.generate_var_constraint
+            varname: observed_$VARNAME
+    second:
+       operator: regrid.interpolate_to_point_cube
+       fld:
+           operator: filters.filter_multiple_cubes
+           constraint:
+               operator: constraints.combine_constraints
+               var_constraint:
+                   operator: constraints.generate_var_constraint
+                   varname: $VARNAME
+       point_cube:
+           operator: filters.filter_cubes
+           constraint:
+               operator: constraints.generate_var_constraint
+               varname: observed_$VARNAME
+
+  - operator: scoreswrappers.scores_pfd
+    preserved_coordinates: "time"
+    threshold: $THRESHOLD
+    op_func: $OPERATOR
+
+  - operator: plot.plot_line_series
+
+  - operator: write.write_cube_to_nc
+    overwrite: True

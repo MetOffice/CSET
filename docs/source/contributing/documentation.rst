@@ -77,7 +77,47 @@ below.
     """
     return n + 1
 
+
+.. _gallery:
+
+Gallery
+-------
+
+The :doc:`/reference/gallery/index` is generated using the `Sphinx-Gallery`_ extension.
+
+Each gallery page follows a similar structure:
+
+* Title and purpose of example.
+* Reference section listing the :term:`recipe` used to provide functionality and links to relevant :term:`operator` in :doc:`/reference/operators`.
+* Example of requirements for running recipe using ``cset bake`` to generate outputs on the command-line.
+* List of configuration options required to enable relevant output via the ``cset_workflow``.
+* Minimal python example code to replicate output of ``cset bake`` or workflow settings by directly calling CSET operators inline.
+  The python code auto-generates an image file that is captured in the gallery output via `Sphinx-Gallery`_.
+  Python codes make use of sample data files.
+
+To add a *new gallery page*, copy any of the existing pages available in a relevant section, and update all details based on the copied template. Examples are available in the following path::
+
+    docs/source/reference/gallery/examples/<name_of_section>/<name_of_example>.py
+
+If the new gallery page should sit in a *new section*, also complete the following steps:
+
+1. Create a new directory ``docs/source/reference/gallery/examples/<name_of_section>``.
+2. Add a new file ``docs/source/reference/gallery/examples/<name_of_section>/GALLERY_HEADER.rst`` containing only the title of the section (see existing sections for template).
+3. Add new gallery page ``docs/source/reference/gallery/examples/<name_of_section>/<name_of_example>.py``.
+4. Update the new ``<name_of_example>.py`` documentation file with relevant details and example working python code.
+5. Add ``"reference/gallery/examples/<name_of_section>",`` to the list of gallery subsections in file ``source/conf.py``.
+
+Where possible, reuse any of the existing ``sample_data`` files for new gallery pages.
+If needing to generate *new sample_data* to support a new gallery example, add the required file(s) to the following path::
+
+    src/CSET/sample_data
+
+.. note::
+
+    Only small (~10kB) test data files should be added to minimise the overall size of the CSET distribution.
+
 .. _Sphinx documentation build system: https://www.sphinx-doc.org/
 .. _reStructuredText: https://docutils.sourceforge.io/docs/user/rst/quickref.html
 .. _Sphinx website: https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
 .. _NumPy docstring style: https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard
+.. _Sphinx-Gallery: https://sphinx-gallery.github.io/stable/index.html

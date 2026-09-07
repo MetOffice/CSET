@@ -69,13 +69,6 @@ def DKE(u: iris.cube.Cube, v: iris.cube.Cube) -> iris.cube.Cube:
     presence of upscale error growth or the dominant scales of error growth. It
     is often plotted on a logarithmic scale.
 
-    References
-    ----------
-    .. [Zhangetal2002] Zhang, F., Snyder, C., and Rotunno, R., (2002)
-       "Mesoscale Predictability of the 'Surprise' Snowstorm of 24-25 January
-       2000." Monthly Weather Review, vol. 130, 1617-1632,
-       doi: 10.1175/1520-0493(2002)130<1617:MPOTSS>2.0.CO;2
-
     Examples
     --------
     >>> DKE = ensembles.DKE(u, v)

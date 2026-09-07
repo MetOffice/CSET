@@ -29,7 +29,8 @@ Documentation has been updated to reflect change
 
 If you've added a new function check whether it has been documented? If you
 changed the name of a setting have you changed it everywhere in the
-documentation?
+documentation? If adding new capability, should you demonstrate it's application
+via a new :ref:`Gallery <gallery>` page?
 
 New code has tests, and affected old tests have been updated
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

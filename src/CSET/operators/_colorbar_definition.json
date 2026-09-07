@@ -854,6 +854,8 @@
       "100": {
         "max": 240,
         "min": 200,
+        "xmax": 310,
+        "xmin": 190,
         "ymax": "auto",
         "ymin": "auto"
       },
