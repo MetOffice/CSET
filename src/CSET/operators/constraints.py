@@ -77,7 +77,7 @@ def generate_var_constraint(varname: str | list[str], **kwargs) -> iris.Constrai
         return iris.AttributeConstraint(STASH=varname)
 
     # Ensure access to variable vector components for computed fields
-    varname_copy = iter_maybe(varname)[:]
+    varname_copy = tuple(iter_maybe(varname))
 
     if "wind_speed_at_10m" in varname_copy:
         if isinstance(varname, str):
