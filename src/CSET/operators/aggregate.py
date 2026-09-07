@@ -446,6 +446,7 @@ def _make_aggregated_obs_cube(
     # --------------------------------------------------------------
     # Stack data
     # --------------------------------------------------------------
+
     data = np.stack(station_lookup.subset_data, axis=0)
 
     # shape:

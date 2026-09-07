@@ -189,9 +189,19 @@ def test_build_station_lookup(dummy_cubelist_obs_3_common_stations):
     station_lookup = aggregate._build_station_lookup(
         dummy_cubelist_obs_3_common_stations, common_stations
     )
+
     assert np.shape(station_lookup.subset_data) == (2, 10, 3)
-    assert station_lookup.frt_points == [466560, 466584]
-    assert station_lookup.time_points == [466566, 466590]
+
+    expected_frt_points = [
+        cb.coord("forecast_reference_time").points.item()
+        for cb in dummy_cubelist_obs_3_common_stations
+    ]
+    assert station_lookup.frt_points == expected_frt_points
+
+    expected_time_points = [
+        cb.coord("time").points for cb in dummy_cubelist_obs_3_common_stations
+    ]
+    np.testing.assert_array_equal(station_lookup.time_points, expected_time_points)
 
 
 def test_generate_forecast_period(dummy_cubelist_obs_3_common_stations):
@@ -199,4 +209,27 @@ def test_generate_forecast_period(dummy_cubelist_obs_3_common_stations):
     forecast_period = aggregate._generate_forecast_period(
         dummy_cubelist_obs_3_common_stations
     )
-    assert forecast_period == [6]
+
+    expected = np.array([6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0])
+    np.testing.assert_allclose(forecast_period, expected)
+
+
+def test_make_aggregated_obs_cube(dummy_cubelist_obs_3_common_stations):
+    """Test _make_aggregated_obs_cube basic functionality."""
+    common_stations = aggregate._get_common_stations(
+        dummy_cubelist_obs_3_common_stations
+    )
+    station_lookup = aggregate._build_station_lookup(
+        dummy_cubelist_obs_3_common_stations, common_stations
+    )
+    forecast_period = aggregate._generate_forecast_period(
+        dummy_cubelist_obs_3_common_stations
+    )
+
+    agg_obs_cube = aggregate._make_aggregated_obs_cube(
+        dummy_cubelist_obs_3_common_stations,
+        station_lookup,
+        common_stations,
+        forecast_period,
+    )
+    assert agg_obs_cube.shape == (2, 10, 3)
