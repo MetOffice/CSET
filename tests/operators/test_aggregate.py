@@ -159,3 +159,33 @@ def test_rolling_window_time_aggregation_cubelist(long_forecast):
         assert cube_a.shape == cube_b.shape
         assert cube_a.shape[0] == cube_c.shape[0] - 23
         assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
+
+
+def test_get_common_stations(dummy_cubelist_obs_3_common_stations):
+    """Test _get_common_stations basic functionality."""
+    common_stations = aggregate._get_common_stations(
+        dummy_cubelist_obs_3_common_stations
+    )
+    assert len(common_stations) == 3
+    assert common_stations == ["st0", "st1", "st2"]
+
+
+def test_build_station_lookup(dummy_cubelist_obs_3_common_stations):
+    """Test _build_station_lookup basic functionality."""
+    common_stations = aggregate._get_common_stations(
+        dummy_cubelist_obs_3_common_stations
+    )
+    station_lookup = aggregate._build_station_lookup(
+        dummy_cubelist_obs_3_common_stations, common_stations
+    )
+    assert np.shape(station_lookup.subset_data) == (2, 10, 3)
+    assert station_lookup.frt_points == [466560, 466566]
+    assert station_lookup.time_points == [466560, 466566]
+
+
+def test_generate_forecast_period(dummy_cubelist_obs_3_common_stations):
+    """Test _generate_forecast_period basic functionality."""
+    forecast_period = aggregate._generate_forecast_period(
+        dummy_cubelist_obs_3_common_stations
+    )
+    assert forecast_period == [6]
