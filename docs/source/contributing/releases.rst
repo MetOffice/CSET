@@ -71,10 +71,10 @@ work.
 With that tested we are happy with the content of our release and it is time to
 document it by writing our changelog.
 
-1. Within the ``docs/source/changelog.rst`` file create a new heading for the release
+#. Within the ``docs/source/changelog.rst`` file create a new heading for the release
    containing the release number and the date.
 
-2. Create the list of changes since the last release. This can be automatically
+#. Create the list of changes since the last release. This can be automatically
    generated from pull request titles by running the following script::
 
       # Print out merged PRs since last release in correct format.
@@ -88,7 +88,7 @@ document it by writing our changelog.
    Once generated go through this list and improve any titles that are missing
    details or are not formatted sensibly.
 
-3. If any new contributors have joined add a "New Contributors" section after
+#. If any new contributors have joined add a "New Contributors" section after
    the list of pull requests calling them out and link their GitHub username.
    New contributors will be flagged as warnings when you build the
    documentation. The new contributor section should look like this::
@@ -99,33 +99,33 @@ document it by writing our changelog.
 
       .. _@example: https://github.com/example
 
-4. Finally write a few paragraphs highlighting the most important user-facing
+#. Finally write a few paragraphs highlighting the most important user-facing
    changes in the release. It is especially important to highlight any changes
    that might break backwards compatibility. These paragraphs should be placed
    before the list of pull requests.
 
-Once finished the changelog entry should look something like this::
+   Once finished the changelog entry should look something like this::
 
-    YY.M.N (20YY-MM-DD)
-    -------------------
+      YY.M.N (20YY-MM-DD)
+      -------------------
 
-    A few paragraphs summarising the most important changes in the release.
+      A few paragraphs summarising the most important changes in the release.
 
-    * Fix an annoying bug by `@example`_ in :pr:`1`
-    * Add a cool new feature by `@example`_ in :pr:`2`
+      * Fix an annoying bug by `@example`_ in :pr:`1`
+      * Add a cool new feature by `@example`_ in :pr:`2`
 
-    New Contributors:
+      New Contributors:
 
-    * `@example`_ made their first contribution in :pr:`1`
+      * `@example`_ made their first contribution in :pr:`1`
 
-    .. _@example: https://github.com/example
+      .. _@example: https://github.com/example
 
-5. Commit the release notes into a new pull request and get it reviewed and
+#. Commit the release notes into a new pull request and get it reviewed and
    merged into the ``main`` branch. No other pull requests should be merged
    before this one, as otherwise you will have to update the release notes
    again.
 
-6. Now create a draft release on GitHub. To create a release you should use the
+#. Now create a draft release on GitHub. To create a release you should use the
    GitHub web UI. Go to the `Releases`_ page and press `Draft a new release`_.
 
    .. image:: release_page.png
@@ -153,15 +153,23 @@ Once finished the changelog entry should look something like this::
 
    Then press "Save draft" to save this release as a draft.
 
-7. Check over your draft release. Especially **ensure you check the tag and
+#. Go to the `CSET-restricted-files repository`_ and create a new branch from
+   ``main`` named ``releases/vXX.Y``, matching the first two numbers of the tag.
+   For example, CSET v24.2.3 should have a restricted branch named
+   ``releases/v24.2``.
+
+   This branch is picked up by ``cset install-restricted-files`` and prevents
+   new changes to the restricted files from breaking older versions of CSET.
+
+#. Check over your draft release. Especially **ensure you check the tag and
    target branch are correct**, as they cannot be changed after the release is
    published.
 
-8. Once checked, press "Publish release" to create the immutable release. This
+#. Once checked, press "Publish release" to create the immutable release. This
    triggers a release GitHub Action which will automatically build and upload
    the package to PyPI.
 
-9. Finally we need to update the `conda-forge cset feedstock`_ to publish an
+#. Finally we need to update the `conda-forge cset feedstock`_ to publish an
    updated conda package. This should be done from an up-to-date fork of the
    feedstock repository, per the `conda-forge maintaining packages
    documentation`_.
@@ -176,14 +184,15 @@ Once finished the changelog entry should look something like this::
    feedstock repository it can take up to an hour for the updated package to
    become visible via the conda-forge CDN, but no further action is required.
 
-10. Once the release is available you should communicate it to users so the know
-    they can use it. This include on internal channels as well as via public
-    ones.
+#. Once the release is available you should communicate it to users so the know
+   they can use it. This include on internal channels as well as via public
+   ones.
 
 .. _CalVer: https://calver.org/
 .. _Releases: https://github.com/MetOffice/CSET/releases
 .. _Draft a new release: https://github.com/MetOffice/CSET/releases/new
 .. _setuptools_scm: https://setuptools-scm.readthedocs.io/en/latest/
+.. _CSET-restricted-files repository: https://github.com/MetOffice/CSET-restricted-files
 .. _conda-forge cset feedstock: https://github.com/conda-forge/cset-feedstock
 .. _PyPI release page: https://pypi.org/project/CSET/
 .. _update conda lock files GitHub Action: https://github.com/MetOffice/CSET/actions/workflows/conda-lock.yml
