@@ -6,7 +6,7 @@ steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
     model_names:
-      - Cardington 30min
+      - Obs (30min)
       - $MODEL_NAME
     constraint: ['$VARNAME', '$UM_VARNAME']
 
