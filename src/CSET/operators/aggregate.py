@@ -356,7 +356,6 @@ def _get_common_stations(cubes: CubeList) -> list[str]:
             )
         else:
             station_valid = np.all(np.isfinite(data), axis=0)
-
         valid_station_sets.append(set(names[station_valid]))
 
     common_stations = sorted(set.intersection(*valid_station_sets))
@@ -422,7 +421,6 @@ def _generate_forecast_period(cubes) -> np.ndarray:
     frt_date = frt_coord.units.num2date(frt_coord.points[0])
 
     fp_hours = []
-
     for dt in time_coord.units.num2date(time_coord.points):
         fp_hours.append((dt - frt_date).total_seconds() / 3600)
 
@@ -442,7 +440,6 @@ def _make_aggregated_obs_cube(
     # --------------------------------------------------------------
     # Stack data
     # --------------------------------------------------------------
-
     data = np.stack(station_lookup.subset_data, axis=0)
 
     # shape:
