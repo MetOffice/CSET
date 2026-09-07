@@ -899,14 +899,6 @@ def _fix_lfric_cloud_base_altitude(cube: iris.cube.Cube):
         cube.data = dask.array.ma.masked_greater(cube.core_data(), 144.0)
 
 
-def get_filter_windspeed(constraint: iris.Constraint):
-    """Get the windspeed filter by using the hijacked constraint."""
-    if hasattr(constraint, "varname"):
-        return constraint.varname
-    else:
-        return None
-
-
 def _compute_winds(
     cubes: iris.cube.CubeList, constraint: iris.Constraint | None = None
 ):
