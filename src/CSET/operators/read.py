@@ -928,7 +928,7 @@ def _compute_winds(
     if constraint is None:
         return cubes
 
-    filter_windspeed = get_filter_windspeed(constraint)
+    filter_windspeed = getattr(constraint, "varname", None)
 
     u_constr = iris.Constraint("eastward_wind_at_10m")
     v_constr = iris.Constraint("northward_wind_at_10m")
