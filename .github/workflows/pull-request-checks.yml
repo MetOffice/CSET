@@ -37,7 +37,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup conda environment
-        uses: mamba-org/setup-micromamba@ce51e99f4bb8a82ab7158c4dc59ef4634c59c4f9
+        uses: mamba-org/setup-micromamba@f457c30a868e4760d3a6fcea5f25dc655b8edf39
         with:
           environment-name: cset-dev
           environment-file: requirements/locks/${{ matrix.py-ver }}-lock-linux-64.txt
@@ -81,7 +81,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup conda environment
-        uses: mamba-org/setup-micromamba@ce51e99f4bb8a82ab7158c4dc59ef4634c59c4f9
+        uses: mamba-org/setup-micromamba@f457c30a868e4760d3a6fcea5f25dc655b8edf39
         with:
           environment-name: cset-dev
           environment-file: requirements/locks/latest
@@ -97,7 +97,7 @@ jobs:
         run: pip install --no-deps .
 
       - name: Setup rose and cylc
-        uses: cylc/setup-cylc@813acd1873cef608f14e354cec57e2de5a7eb3bf
+        uses: cylc/setup-cylc@cd387ca4e79cec97f0945a160cda73e868e2e764
         with:
           cylc_rose: true
 
@@ -222,7 +222,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup conda environment
-        uses: mamba-org/setup-micromamba@ce51e99f4bb8a82ab7158c4dc59ef4634c59c4f9
+        uses: mamba-org/setup-micromamba@f457c30a868e4760d3a6fcea5f25dc655b8edf39
         with:
           environment-name: cset-dev
           environment-file: requirements/locks/latest
