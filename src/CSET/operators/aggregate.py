@@ -50,7 +50,7 @@ def time_aggregate(
     method: str,
     interval_iso: str,
     **kwargs,
-) -> iris.cube.Cube:
+) -> iris.cube.Cube | iris.cube.CubeList:
     """Aggregate cube by its time coordinate.
 
     Aggregates similar (stash) fields in a cube for the specified coordinate and
@@ -100,6 +100,8 @@ def time_aggregate(
 
     # Convert interval format to whole hours.
     interval = int(timedelta.total_seconds() / 3600)
+
+    cubes = iter_maybe(cubes)
 
     for cube in cubes:
         # Add time categorisation overwriting hourly increment via lambda coord.
