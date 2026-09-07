@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 def scores_rmse(
     cubes: CubeList,
     preserved_coordinates: list[str] | str | None = None,
-) -> CubeList:
+) -> CubeList | Cube:
     r"""Calculate the Root Mean Square Error (RMSE) using scores.
 
     Acts as a wrapper around the RMSE calculation from ``scores`` ([scoresa]_, [scoresb]_).
@@ -71,12 +71,9 @@ def scores_rmse(
         A cubelist containing the RMSE between the base and other cube.
     """
     scores_cubelist = CubeList()
-
     base, others = _split_base_and_other(cubes)
 
     for other in others:
-        base, other = _process_cubes_for_verification(base, other)
-
         scores_cube = _make_scores_cube(base, other, "rmse", preserved_coordinates)
 
         scores_cube.rename(f"RMSE_of_{base.name()}")
@@ -114,8 +111,6 @@ def scores_mae(
     base, others = _split_base_and_other(cubes)
 
     for other in others:
-        base, other = _process_cubes_for_verification(base, other)
-
         scores_cube = _make_scores_cube(base, other, "mae", preserved_coordinates)
 
         scores_cube.rename(f"MAE_of_{base.name()}")
@@ -155,8 +150,6 @@ def scores_additive_bias(
     base, others = _split_base_and_other(cubes)
 
     for other in others:
-        base, other = _process_cubes_for_verification(base, other)
-
         scores_cube = _make_scores_cube(
             base, other, "additive_bias", preserved_coordinates
         )
@@ -195,8 +188,6 @@ def scores_correlation_pearsonr(
     base, others = _split_base_and_other(cubes)
 
     for other in others:
-        base, other = _process_cubes_for_verification(base, other)
-
         scores_cube = _make_scores_cube(
             base, other, "pearson_correlation", preserved_coordinates
         )
@@ -670,12 +661,16 @@ def _make_scores_cube(
 
 
     """
+    if not "observed" in base.long_name:
+        base, other = _process_cubes_for_verification(base, other)
+
     other_xr = xr.DataArray.from_iris(other)
     base_xr = xr.DataArray.from_iris(base)
     preserve_dims = _resolve_preserve_dims(other, other_xr, preserved_coordinates)
 
     # Scores operates on xarray data arrays, so we transform the iris cube into an array,
     # apply scores, and then transform it back.
+
     if metric == "rmse":
         scores_cube = xr.DataArray.to_iris(
             scores.continuous.rmse(other_xr, base_xr, preserve_dims=preserve_dims)
@@ -805,6 +800,7 @@ def _process_cubes_for_verification(base: Cube, other: Cube) -> tuple[Cube, Cube
     # on variable type. Linear regridding can in general be appropriate for smooth
     # variables. Care should be taken with interpretation of differences
     # given this dependency on regridding.
+
     if (
         base.coord(base_lat_name).shape != other.coord(other_lat_name).shape
         or base.coord(base_lon_name).shape != other.coord(other_lon_name).shape
@@ -931,7 +927,7 @@ def _attach_scaler_time_coord_maybe(scores_cube: Cube, base: Cube) -> None:
 
     """
     try:
-        if not scores_cube.coords("time"):
+        if not scores_cube.coords("time") and not scores_cube.coords("forecast_period"):
             base_time = base.coord("time")
             time_vals = (
                 base_time.bounds.flatten()
@@ -953,8 +949,13 @@ def _attach_scaler_time_coord_maybe(scores_cube: Cube, base: Cube) -> None:
                     attributes=base_time.attributes.copy(),
                 )
             )
+
     except iris.exceptions.CoordinateNotFoundError:
         pass
+
+
+def _get_obs_cube(cubes: CubeList):
+    return [cb for cb in cubes if "observed" in (cb.long_name or "")]
 
 
 def _split_base_and_other(cubes: CubeList):
@@ -976,7 +977,7 @@ def _split_base_and_other(cubes: CubeList):
         A tuple containing a base cube, and other cube/cubelist.
 
     """
-    obs_cube = [cb for cb in cubes if "observed" in (cb.long_name or "")]
+    obs_cube = _get_obs_cube(cubes)
     if obs_cube:
         if len(obs_cube) > 1:
             raise ValueError(
