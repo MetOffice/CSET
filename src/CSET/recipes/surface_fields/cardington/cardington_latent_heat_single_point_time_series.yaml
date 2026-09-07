@@ -10,6 +10,8 @@ steps:
       - $MODEL_NAME
     constraint: ['$OBS_VARNAME', '$VARNAME']
 
+  - operator: misc.mask_fill_values
+
   - operator: filters.filter_multiple_cubes
 
     Cardington:
