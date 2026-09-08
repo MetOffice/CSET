@@ -1,0 +1,64 @@
+category: Surface Model versus Observation Time Series Aggregation
+title: "$VARNAME\nscores additive bias time series for model vs observation points $SUBAREA_NAME aggregation by $AGGREGATION_METHOD"
+description: |
+  Extracts and plots the Mean Error (also known as the Additive Bias) in $VARNAME
+  computed over the domain for each timestep. The ME is calculated based on that used in the
+  package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.mean_error).
+  This recipe allows the preservation of the time coordinate to produce a timeseries. Therefore, the ME is
+  collapsed over all other coordinates in the cube and calculated for every timestep.
+
+  A larger ME implies a greater error than a smaller ME. Although a near zero ME could be indicative
+  of a good match between two fields, this could also arise if there are large compensating positive and
+  negative  errors. The ME is calculated on the grid point and thus a spatial view of the ME provides useful
+  information about whether a field has a bias for over or under-forecasting.
+
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+    constraint:
+      operator: constraints.generate_var_constraint
+      varname: ['observed_$VARNAME', '$VARNAME']
+
+  - operator: filters.filter_multiple_cubes
+    constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+
+  - operator: misc.combine_cubes_into_cubelist
+    first:
+      operator: aggregate.combine_obs_across_forecasts
+      cubes:
+        operator: filters.filter_multiple_cubes
+        constraint:
+          operator: constraints.generate_var_constraint
+          varname: observed_$VARNAME
+    second:
+      operator: regrid.interpolate_to_point_cube
+      fld:
+        operator: aggregate.ensure_aggregatable_across_cases
+        cubes:
+          operator: filters.filter_multiple_cubes
+          constraint:
+            operator: constraints.generate_var_constraint
+            varname: $VARNAME
+
+      point_cube:
+        operator: aggregate.combine_obs_across_forecasts
+        cubes:
+          operator: filters.filter_multiple_cubes
+          constraint:
+            operator: constraints.generate_var_constraint
+            varname: observed_$VARNAME
+
+  - operator: scoreswrappers.scores_additive_bias
+    preserved_coordinates: $AGGREGATION_METHOD
+
+  - operator: plot.plot_line_series
+    series_coordinate: $AGGREGATION_METHOD
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
