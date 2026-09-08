@@ -123,6 +123,7 @@ def get_operator(name: str):
         operator = CSET.operators
         for section in name_sections:
             operator = getattr(operator, section)
+
         if callable(operator):
             return operator
         else:

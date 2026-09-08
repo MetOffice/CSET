@@ -475,8 +475,8 @@ def _set_axis_range(cubes):
             break
 
     if levels is None:
-        vmin = min(cb.data.min() for cb in cubes)
-        vmax = max(cb.data.max() for cb in cubes)
+        vmin = min(np.nanmin(cb.data) for cb in cubes)
+        vmax = max(np.nanmax(cb.data) for cb in cubes)
 
     return vmin, vmax
 
@@ -546,6 +546,9 @@ def _plot_and_save_spatial_plot(
 
     # Specify the color bar
     cmap, levels, norm = colorbar_map_levels(cube)
+
+    if "feature" in cube.long_name:
+        cmap.set_under("white")
 
     # If overplotting, set required colorbars
     if overlay_cube:
@@ -1540,7 +1543,10 @@ def _plot_and_save_histogram_series(
 
     # Set default that histograms will produce probability density function
     # at each bin (integral over range sums to 1).
-    density = True
+    if "feature" in cubes[0].long_name:
+        density = False
+    else:
+        density = True
 
     for cube in iter_maybe(cubes):
         # Easier to check title (where var name originates)
@@ -1568,6 +1574,22 @@ def _plot_and_save_histogram_series(
             ax.set_xscale("log")
         elif "lightning" in title:
             bins = [0, 1, 2, 3, 4, 5]
+        elif "feature_size" in cube.long_name:
+            bins = np.linspace(0, 500, 51)
+        elif "feature_effective_radius" in cube.long_name:
+            # TODO: use grid_spacing attribute in cubes to find min bin size
+            # for effective radius, rather than being hard coded
+            # Modified from RMED toolbox
+            bins = 10 ** (np.arange(0, 5.28, 0.12))
+            bins = np.insert(bins, 0, 0)
+            vmin = bins[1]
+            vmax = bins[-1]
+        elif "feature_mean" in cube.long_name or "feature_max" in cube.long_name:
+            # From RMED toolbox
+            bins = 10 ** (np.arange(-1, 2.7, 0.12))
+            bins = np.insert(bins, 0, 0)
+            vmin = bins[1]
+            vmax = bins[-1]
         else:
             bins = np.linspace(vmin, vmax, 51)
         logger.debug(
@@ -1576,6 +1598,10 @@ def _plot_and_save_histogram_series(
             np.min(bins),
             np.max(bins),
         )
+
+        if "feature" in cube.long_name:
+            ax.set_yscale("log")
+            ax.set_xscale("log")
 
         # Reshape cube data into a single array to allow for a single histogram.
         # Otherwise we plot xdim histograms stacked.
@@ -1618,6 +1644,9 @@ def _plot_and_save_histogram_series(
         ax.set_ylabel(
             f"Contribution to mean ({iter_maybe(cubes)[0].units})", fontsize=14
         )
+    if "feature" in cubes[0].long_name:
+        ax.set_ylabel("Frequency", fontsize=14)
+
     try:
         ax.set_xlim(vmin, vmax)
     except ValueError:
