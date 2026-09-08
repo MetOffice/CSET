@@ -1112,10 +1112,9 @@ def test_mae_multiple_forecasts_preserve_lat_lon(
 
     calculate_mae = []
     for i in range(obs.coord("station").shape[0]):
-        calculate_mae.append(np.sqrt(np.abs(data_obs[:, :, i] - data_model[:, :, i])))
+        calculate_mae.append(np.mean(np.abs(data_obs[:, :, i] - data_model[:, :, i])))
 
     mae_scores = scoreswrappers.scores_mae(
         input_cubelist, preserved_coordinates=["latitude", "longitude"]
     )
-
     assert np.allclose(mae_scores.data, calculate_mae, atol=1e-2, rtol=1e-6)
