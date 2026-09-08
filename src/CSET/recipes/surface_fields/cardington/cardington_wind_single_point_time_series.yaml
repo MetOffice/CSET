@@ -9,7 +9,7 @@ steps:
       - Cardington 05min
       - Cardington 30min
       - $MODEL_NAME
-    constraint: ['$VARNAME', '$UM_U_VARNAME', '$UM_V_VARNAME']
+    constraint: ['$OBS_VARNAME', '$UM_U_VARNAME', '$UM_V_VARNAME']
 
   - operator: misc.combine_cubes_into_cubelist
     first:
@@ -21,7 +21,7 @@ steps:
           operator: constraints.combine_constraints
           varname_constraint:
             operator: constraints.generate_var_constraint
-            varname: $VARNAME
+            varname: $OBS_VARNAME
           height_constraint:
             operator: constraints.generate_attribute_constraint
             attribute: height

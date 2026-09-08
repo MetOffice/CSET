@@ -17,22 +17,22 @@ steps:
       operator: constraints.combine_constraints
       varname_constraint:
         operator: constraints.generate_var_constraint
-        varname: $VARNAME
+        varname: $OBS_VARNAME
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
-        varname: $VARNAME
+        varname: $OBS_VARNAME
 
 
     $MODEL_NAME:
       operator: constraints.combine_constraints
       varname_constraint:
         operator: constraints.generate_var_constraint
-        varname: $UM_VARNAME
+        varname: $VARNAME
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
-        varname: $UM_VARNAME
+        varname: $VARNAME
       pressure_level_constraint:
         operator: constraints.generate_level_constraint
         levels: []

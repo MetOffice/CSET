@@ -15,7 +15,7 @@ steps:
       - Cardington 05min
       - Cardington 30min
       - $MODEL_NAME
-    constraint: ['$VARNAME', '$UM_VARNAME']
+    constraint: ['$OBS_VARNAME', '$VARNAME']
 
     constraints:
       $MODEL_NAME:
@@ -24,7 +24,7 @@ steps:
           operator: constraints.generate_attribute_constraint
           attribute: STASH
           values:
-            - $UM_VARNAME
+            - $VARNAME
         cell_methods_constraint:
           operator: constraints.generate_cell_methods_constraint
           cell_methods: [ 'maximum' ]
@@ -42,7 +42,7 @@ steps:
   - operator: filters.filter_multiple_cubes
     temperature:
       operator: constraints.generate_var_constraint
-      varname: $VARNAME
+      varname: $OBS_VARNAME
 
   - operator: misc.remove_attribute
     attribute:

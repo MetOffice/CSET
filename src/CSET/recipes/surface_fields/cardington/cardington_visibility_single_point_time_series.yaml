@@ -13,13 +13,13 @@ steps:
   - operator: filters.filter_multiple_cubes
     Cardington:
       operator: constraints.generate_var_constraint
-      varname: $VARNAME
+      varname: $OBS_VARNAME
 
     $MODEL_NAME:
       operator: constraints.combine_constraints
       varname_constraint:
         operator: constraints.generate_var_constraint
-        varname: $UM_VARNAME
+        varname: $VARNAME
       pressure_level_constraint:
         operator: constraints.generate_level_constraint
         levels: []
