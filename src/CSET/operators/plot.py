@@ -3623,6 +3623,7 @@ def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
 def plot_dfss_contour(
     cube: iris.cube.Cube | iris.cube.CubeList,
     variable: str = None,
+    filename: str = None,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Create a contour plot between two variables.
 
@@ -3661,7 +3662,8 @@ def plot_dfss_contour(
 
     recipe_title = get_recipe_metadata().get("title", "Untitled")
     nplot = 1
-    seq_coord = coords[0]
+    breakpoint()
+    seq_coord = cube[0].coords[0]
     title, filename = _set_title_and_filename(seq_coord, nplot, recipe_title, filename)
 
     if cube.attributes.locals["method"] == "centile":
