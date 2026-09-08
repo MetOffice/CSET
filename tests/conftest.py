@@ -1412,37 +1412,34 @@ def _make_test_cube_stations(
     )
 
 
-def add_time_coords(cube, time_start, frt_dt, hour_step=1):
-    """Add time coordate to cube."""
-    time_units = cf_units.Unit("hours since 1970-01-01", calendar="360_day")
-    time_units = cf_units.Unit("hours since 1970-01-01", calendar="360_day")
-
-    """Add a per-row time coord (data_dims=0) and scalar frt coord to a cube, in place."""
-    n_times = cube.shape[0]
-    time_datetimes = [
-        time_start + datetime.timedelta(hours=hour_step * i) for i in range(n_times)
-    ]
-    cube.add_aux_coord(
-        AuxCoord(
-            points=time_units.date2num(time_datetimes),
-            standard_name="time",
-            units=time_units,
-        ),
-        data_dims=0,
-    )
-    cube.add_aux_coord(
-        AuxCoord(
-            points=time_units.date2num(frt_dt),
-            standard_name="forecast_reference_time",
-            units=time_units,
-        )
-    )
-    return cube
-
-
 @pytest.fixture
 def dummy_cubelist_obs_3_common_stations():
     """CubeList of [obs_cube1, obs_cube2] with time (per-row) and scalar forecast reference time coords."""
+    time_units = cf_units.Unit("hours since 1970-01-01", calendar="360_day")
+
+    def add_time_coords(cube, time_start, frt_dt, hour_step=1):
+        """Add a per-row time coord (data_dims=0) and scalar frt coord to a cube, in place."""
+        n_times = cube.shape[0]
+        time_datetimes = [
+            time_start + datetime.timedelta(hours=hour_step * i) for i in range(n_times)
+        ]
+        cube.add_aux_coord(
+            AuxCoord(
+                points=time_units.date2num(time_datetimes),
+                standard_name="time",
+                units=time_units,
+            ),
+            data_dims=0,
+        )
+        cube.add_aux_coord(
+            AuxCoord(
+                points=time_units.date2num(frt_dt),
+                standard_name="forecast_reference_time",
+                units=time_units,
+            )
+        )
+        return cube
+
     obs_cube1 = add_time_coords(
         _make_test_cube_stations(
             shape=(10, 3), seed=1, long_name="observed_temperature_at_screen_level"
@@ -1459,105 +1456,3 @@ def dummy_cubelist_obs_3_common_stations():
     )
 
     return CubeList([obs_cube1, obs_cube2])
-
-
-@pytest.fixture
-def dummy_cube_1_station():
-    """Cube with 1 station, 5 lead times."""
-    obs_cube = add_time_coords(
-        _make_test_cube_stations(
-            shape=(5, 3), seed=1, long_name="observed_temperature_at_screen_level"
-        ),
-        time_start=cftime.datetime(2024, 1, 1, 6, 0, calendar="360_day"),
-        frt_dt=cftime.datetime(2024, 1, 1, 0, 0, calendar="360_day"),
-    )
-
-    return obs_cube
-
-
-@pytest.fixture()
-def make_hinton_test_cubes() -> iris.cube.CubeList:
-    """Create basic 2D iris cubes for testing hinton plot functionality."""
-    cubes = iris.cube.CubeList()
-    for c in [
-        [[1, 2, 3, 4, 5, 6, 7, 8], "air_temperature_at_screen_level", "UM"],
-        [[1.1, 3, 4, 3, 4, 6, 7.5, 8.9], "air_temperature_at_screen_level", "LF"],
-        [[1, 2, 3, 4, 5, 6, 7, 8], "relative_humidity_at_screen_level", "UM"],
-        [
-            [1.1, 1.9, 3, 2.5, 4.5, 6.6, 7.1, 7.9],
-            "relative_humidity_at_screen_level",
-            "LF",
-        ],
-        [
-            [1, 0, 0, 0, 1, 1, 1, 0],
-            "significance_relative_humidity_at_screen_level",
-            "None",
-        ],
-    ]:
-        cube = iris.cube.Cube(
-            np.array(c[0], dtype=float),
-            long_name=c[1],
-            dim_coords_and_dims=[
-                (
-                    iris.coords.DimCoord(range(len(c[0])), long_name="forecast_period"),
-                    0,
-                ),
-            ],
-        )
-        cube.attributes["model_name"] = c[2]
-
-        cubes.append(cube)
-
-    return cubes
-
-
-@pytest.fixture()
-def wind_cubelist_um():
-    """UM wind cube list."""
-    wind_cubelist = CubeList()
-
-    wind_cubelist.append(
-        Cube(
-            3.5, standard_name="x_wind", long_name="eastward_wind_at_10m", units="m s-1"
-        )
-    )
-    wind_cubelist.append(
-        Cube(
-            3.5,
-            standard_name="y_wind",
-            long_name="northward_wind_at_10m",
-            units="m s-1",
-        )
-    )
-
-    return wind_cubelist
-
-
-@pytest.fixture()
-def wind_cubelist_lfric():
-    """LFRic wind cube list."""
-    wind_cubelist = CubeList()
-
-    wind_cubelist.append(
-        Cube(3.5, var_name="wspd10m", long_name="wind_speed_at_10m", units="m s-1")
-    )
-    wind_cubelist.append(
-        Cube(3.5, var_name="u10m", long_name="eastward_wind_at_10m", units="m s-1")
-    )
-    wind_cubelist.append(
-        Cube(3.5, var_name="v10m", long_name="northward_wind_at_10m", units="m s-1")
-    )
-
-    return wind_cubelist
-
-
-@pytest.fixture()
-def wind_cubelist_observed():
-    """Observed wind cube list."""
-    wind_cubelist = CubeList()
-
-    wind_cubelist.append(
-        Cube(3.5, long_name="observed_wind_speed_at_10m", units="m s-1")
-    )
-
-    return wind_cubelist

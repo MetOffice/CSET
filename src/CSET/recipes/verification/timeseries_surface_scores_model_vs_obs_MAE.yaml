@@ -2,7 +2,7 @@ category: Surface Model verus Observation Time Series
 title: "$VARNAME scores mae time series for model vs observation points $SUBAREA_NAME"
 description: Extracts and plot a time series of $VARNAME for all times based on RMSE between given models and observation points.
 
- The RMSE is calculated based on that used in the
+  The MAE is calculated based on that used in the
   package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.mae).
 
   This recipe allows the preservation of the time coordinate to produce a timeseries. Therefore, the MAE is
