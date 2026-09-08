@@ -661,7 +661,7 @@ def _make_scores_cube(
 
 
     """
-    if not "observed" in base.long_name:
+    if not base.long_name or not "observed" in base.long_name:
         base, other = _process_cubes_for_verification(base, other)
 
     other_xr = xr.DataArray.from_iris(other)

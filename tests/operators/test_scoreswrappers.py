@@ -980,7 +980,7 @@ def test_pfd_gt_complete_miss(make_cube_categorical_testing):
 def test_rmse_multiple_forecasts_preserve_forecast_reference_time(
     dummy_cubelist_model_obs_multiple_forecasts,
 ):
-    """Make test cubes."""
+    """Testing RMSE aggregated by frt."""
     input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
     obs, model = input_cubelist
     data_obs = obs.data
@@ -999,7 +999,7 @@ def test_rmse_multiple_forecasts_preserve_forecast_reference_time(
 def test_rmse_multiple_forecasts_preserve_forecast_period(
     dummy_cubelist_model_obs_multiple_forecasts,
 ):
-    """Make test cubes."""
+    """Test RMSE aggregated by forecast period."""
     input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
     obs, model = input_cubelist
     data_obs = obs.data
@@ -1018,7 +1018,7 @@ def test_rmse_multiple_forecasts_preserve_forecast_period(
 def test_rmse_multiple_forecasts_preserve_none(
     dummy_cubelist_model_obs_multiple_forecasts,
 ):
-    """Make test cubes."""
+    """Test RMSE preserving no coordinates."""
     input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
     obs, model = input_cubelist
     data_obs = obs.data
@@ -1033,7 +1033,7 @@ def test_rmse_multiple_forecasts_preserve_none(
 def test_rmse_multiple_forecasts_preserve_lat_lon(
     dummy_cubelist_model_obs_multiple_forecasts,
 ):
-    """Make test cubes."""
+    """Test RMSE preserving lat/lon coordinates."""
     input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
     obs, model = input_cubelist
     data_obs = obs.data
@@ -1050,3 +1050,72 @@ def test_rmse_multiple_forecasts_preserve_lat_lon(
     )
 
     assert np.allclose(rmse_scores.data, calculate_rmse, atol=1e-2, rtol=1e-6)
+
+
+def test_mae_multiple_forecasts_preserve_forecast_reference_time(
+    dummy_cubelist_model_obs_multiple_forecasts,
+):
+    """Testing MAE aggregated by frt."""
+    input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
+    obs, model = input_cubelist
+    data_obs = obs.data
+    data_model = model.data
+
+    calculate_mae = []
+    for i in range(obs.coord("forecast_reference_time").shape[0]):
+        calculate_mae.append(np.mean(np.abs(data_obs[i, :, :] - data_model[i, :, :])))
+
+    mae_scores = scoreswrappers.scores_mae(input_cubelist, "forecast_reference_time")
+    np.allclose(mae_scores.data, calculate_mae, atol=1e-2, rtol=1e-6)
+
+
+def test_mae_multiple_forecasts_preserve_forecast_period(
+    dummy_cubelist_model_obs_multiple_forecasts,
+):
+    """Test MAE aggregated by forecast period."""
+    input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
+    obs, model = input_cubelist
+    data_obs = obs.data
+    data_model = model.data
+
+    calculate_mae = []
+    for i in range(obs.coord("forecast_period").shape[0]):
+        calculate_mae.append(np.mean(np.abs(data_obs[:, i, :] - data_model[:, i, :])))
+
+    mae_scores = scoreswrappers.scores_mae(input_cubelist, "forecast_period")
+    assert np.allclose(mae_scores.data, calculate_mae, atol=1e-2, rtol=1e-6)
+
+
+def test_mae_multiple_forecasts_preserve_none(
+    dummy_cubelist_model_obs_multiple_forecasts,
+):
+    """Test MAE preserving no coordinates."""
+    input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
+    obs, model = input_cubelist
+    data_obs = obs.data
+    data_model = model.data
+
+    calculate_mae = np.mean(np.abs(data_obs[:, :, :] - data_model[:, :, :]))
+
+    mae_scores = scoreswrappers.scores_mae(input_cubelist)
+    assert np.allclose(mae_scores.data, calculate_mae, atol=1e-2, rtol=1e-6)
+
+
+def test_mae_multiple_forecasts_preserve_lat_lon(
+    dummy_cubelist_model_obs_multiple_forecasts,
+):
+    """Test mae preserving lat/lon coordinates."""
+    input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
+    obs, model = input_cubelist
+    data_obs = obs.data
+    data_model = model.data
+
+    calculate_mae = []
+    for i in range(obs.coord("station").shape[0]):
+        calculate_mae.append(np.sqrt(np.abs(data_obs[:, :, i] - data_model[:, :, i])))
+
+    mae_scores = scoreswrappers.scores_mae(
+        input_cubelist, preserved_coordinates=["latitude", "longitude"]
+    )
+
+    assert np.allclose(mae_scores.data, calculate_mae, atol=1e-2, rtol=1e-6)
