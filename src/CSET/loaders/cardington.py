@@ -56,10 +56,10 @@ def load(conf: Config):
                         recipe="cardington_visibility_single_point_time_series.yaml",
                         variables={
                             "MODEL_NAME": um_model["name"],
-                            "VARNAME": varname,
+                            "OBS_VARNAME": varname,
                             "CARDINGTON_30_LABEL": card_label_30,
                             "CARDINGTON_05_LABEL": card_label_05,
-                            "UM_VARNAME": model_field,
+                            "VARNAME": model_field,
                             "HEIGHT": ht,
                             "PLOTNAME": plot_field,
                         },
@@ -78,10 +78,10 @@ def load(conf: Config):
             recipe="cardington_surface_temperature_time_series.yaml",
             variables={
                 "MODEL_NAME": um_model["name"],
-                "VARNAME": field,
+                "OBS_VARNAME": field,
                 "CARDINGTON_30_LABEL": card_label_30,
                 "CARDINGTON_05_LABEL": card_label_05,
-                "UM_VARNAME": "m01s00i024",
+                "VARNAME": "m01s00i024",
                 "PLOTNAME": field,
             },
             model_ids=[
@@ -100,10 +100,10 @@ def load(conf: Config):
                 recipe="cardington_surface_pressure_time_series.yaml",
                 variables={
                     "MODEL_NAME": um_model["name"],
-                    "VARNAME": card_field,
+                    "OBS_VARNAME": card_field,
                     "CARDINGTON_30_LABEL": card_label_30,
                     "CARDINGTON_05_LABEL": card_label_05,
-                    "UM_VARNAME": model_field,
+                    "VARNAME": model_field,
                     "PLOTNAME": card_field,
                 },
                 model_ids=[
@@ -126,7 +126,7 @@ def load(conf: Config):
                     recipe="cardington_wind_single_point_time_series.yaml",
                     variables={
                         "MODEL_NAME": um_model["name"],
-                        "VARNAME": f"{card_field}_{height_token(ht)}",
+                        "OBS_VARNAME": f"{card_field}_{height_token(ht)}",
                         "CARDINGTON_30_LABEL": card_label_30,
                         "CARDINGTON_05_LABEL": card_label_05,
                         "UM_U_VARNAME": "x_wind",
@@ -182,9 +182,9 @@ def load(conf: Config):
                         recipe="cardington_latent_heat_single_point_time_series.yaml",
                         variables={
                             "MODEL_NAME": um_model["name"],
-                            "VARNAME": varname,
+                            "OBS_VARNAME": varname,
                             "CARDINGTON_30_LABEL": card_label_30,
-                            "UM_VARNAME": model_field,
+                            "VARNAME": model_field,
                             "HEIGHT": ht,
                             "PLOTNAME": plot_field,
                         },
@@ -211,7 +211,7 @@ def load(conf: Config):
                         variables={
                             "MODEL_NAME": um_model["name"],
                             "CARDINGTON_30_LABEL": card_label_30,
-                            "UM_VARNAME": model_field,  # m01s03i217 (unchanged)
+                            "VARNAME": model_field,  # m01s03i217 (unchanged)
                             "HEIGHT": ht,
                             "PLOTNAME": plot_field,
                             "WT_VARNAMES": ",".join(card_varnames),
@@ -224,10 +224,10 @@ def load(conf: Config):
                         recipe="cardington_temperature_single_point_time_series.yaml",
                         variables={
                             "MODEL_NAME": um_model["name"],
-                            "VARNAME": varname,
+                            "OBS_VARNAME": varname,
                             "CARDINGTON_30_LABEL": card_label_30,
                             "CARDINGTON_05_LABEL": card_label_05,
-                            "UM_VARNAME": model_field,
+                            "VARNAME": model_field,
                             "HEIGHT": ht,
                             "PLOTNAME": plot_field,
                         },
@@ -243,10 +243,10 @@ def load(conf: Config):
                         recipe="cardington_wind_gust_single_point_time_series.yaml",
                         variables={
                             "MODEL_NAME": um_model["name"],
-                            "VARNAME": varname,
+                            "OBS_VARNAME": varname,
                             "CARDINGTON_30_LABEL": card_label_30,
                             "CARDINGTON_05_LABEL": card_label_05,
-                            "UM_VARNAME": model_field,
+                            "VARNAME": model_field,
                             "HEIGHT": ht,
                             "PLOTNAME": plot_field,
                         },
