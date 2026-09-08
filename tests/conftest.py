@@ -1456,3 +1456,78 @@ def dummy_cubelist_obs_3_common_stations():
     )
 
     return CubeList([obs_cube1, obs_cube2])
+
+
+def _make_test_cube_multi_forecasts(
+    shape: tuple[int, int, int],
+    seed: int,
+    long_name: str,
+    standard_name: str | None = None,
+    model_name: str | None = None,
+):
+    rng = np.random.default_rng(seed)
+
+    frt = DimCoord(
+        np.arange(shape[0]),
+        standard_name="forecast_reference_time",
+        units="hours since 1970-01-01",
+    )
+    fp = DimCoord(
+        np.arange(shape[1]),
+        standard_name="forecast_period",
+        units="hours",
+    )
+    station = DimCoord(
+        np.arange(shape[2]),
+        long_name="station",
+        units="no_unit",
+    )
+
+    station_name_coord = iris.coords.AuxCoord(
+        points=np.array([f"st{i}" for i in range(shape[2])]),
+        long_name="Station_Name",
+        units="unknown",
+    )
+
+    latitude_coord = iris.coords.AuxCoord(
+        points=rng.uniform(50.0, 55.0, size=shape[2]),
+        standard_name="latitude",
+        units="degrees",
+    )
+
+    longitude_coord = iris.coords.AuxCoord(
+        points=rng.uniform(-5.0, -2.0, size=shape[2]),
+        standard_name="longitude",
+        units="degrees",
+    )
+
+    data = rng.normal(loc=280, scale=5, size=shape)
+
+    return Cube(
+        data,
+        long_name=long_name,
+        standard_name=standard_name,
+        units="K",
+        dim_coords_and_dims=[(frt, 0), (fp, 1), (station, 2)],
+        attributes={"model_name": model_name},
+        aux_coords_and_dims=[
+            (station_name_coord, 2),
+            (latitude_coord, 2),
+            (longitude_coord, 2),
+        ],
+    )
+
+
+@pytest.fixture
+def dummy_cubelist_model_obs_multiple_forecasts():
+    """CubeList of [obs_cube, model_cube] with forecast reference time."""
+    obs_cube = _make_test_cube_multi_forecasts(
+        shape=(2, 10, 12), seed=1, long_name="observed_temperature_at_screen_level"
+    )
+    model_cube = _make_test_cube_multi_forecasts(
+        shape=(2, 10, 12),
+        seed=2,
+        long_name="temperature_at_screen_level",
+        model_name="model_a",
+    )
+    return CubeList([obs_cube, model_cube])
