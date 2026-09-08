@@ -1,7 +1,6 @@
-category: Surface Model verus Observation Time Series
-title: "$VARNAME scores mae time series for model vs observation points $SUBAREA_NAME"
-description: Extracts and plot a time series of $VARNAME for all times based on RMSE between given models and observation points.
-
+category: Surface Model versus Observation Time Series Aggregation
+title: "$VARNAME\nscores MAE time series for model vs observation points $SUBAREA_NAME aggregation by $AGGREGATION_METHOD"
+description: |
   The MAE is calculated based on that used in the
   package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.mae).
 
@@ -15,7 +14,6 @@ description: Extracts and plot a time series of $VARNAME for all times based on 
   information about where the differences are, or if placement errors
   are domininating the score (usually indicated by dipoles). MAE is a fair
   measure of error when forecasting the median and is not sensitive to outliers.
-
 
 steps:
   - operator: read.read_cubes
@@ -32,34 +30,37 @@ steps:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
 
-  - operator: misc.extract_common_points
-    coordinate: time
-
   - operator: misc.combine_cubes_into_cubelist
     first:
-        operator: filters.filter_cubes
+      operator: aggregate.combine_obs_across_forecasts
+      cubes:
+        operator: filters.filter_multiple_cubes
         constraint:
+          operator: constraints.generate_var_constraint
+          varname: observed_$VARNAME
+    second:
+      operator: regrid.interpolate_to_point_cube
+      fld:
+        operator: aggregate.ensure_aggregatable_across_cases
+        cubes:
+          operator: filters.filter_multiple_cubes
+          constraint:
+            operator: constraints.generate_var_constraint
+            varname: $VARNAME
+
+      point_cube:
+        operator: aggregate.combine_obs_across_forecasts
+        cubes:
+          operator: filters.filter_multiple_cubes
+          constraint:
             operator: constraints.generate_var_constraint
             varname: observed_$VARNAME
-    second:
-       operator: regrid.interpolate_to_point_cube
-       fld:
-           operator: filters.filter_multiple_cubes
-           constraint:
-               operator: constraints.combine_constraints
-               var_constraint:
-                   operator: constraints.generate_var_constraint
-                   varname: $VARNAME
-       point_cube:
-           operator: filters.filter_cubes
-           constraint:
-               operator: constraints.generate_var_constraint
-               varname: observed_$VARNAME
 
   - operator: scoreswrappers.scores_mae
-    preserved_coordinates: "time"
+    preserved_coordinates: $AGGREGATION_METHOD
 
   - operator: plot.plot_line_series
+    series_coordinate: $AGGREGATION_METHOD
 
   - operator: write.write_cube_to_nc
     overwrite: True
