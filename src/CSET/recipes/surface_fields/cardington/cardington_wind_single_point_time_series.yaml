@@ -1,6 +1,6 @@
 category: Time series of variables at Cardington single point
-title: "Time series of $PLOT_VARNAME at lat_pt:52.10438, lon_pt:-0.42286 specific to Cardington gridpoint."
-description: "Plots a time series of $PLOT_VARNAME at a selected Cardington gridpoint."
+title: "Time series of mean wind at Cardington [52.10438N, -0.42286E]"
+description: "Plots a time series of mean wind at gridpoint nearest to Cardington."
 
 steps:
   - operator: read.read_cubes
