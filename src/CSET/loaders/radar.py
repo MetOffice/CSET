@@ -207,7 +207,9 @@ def load(conf: Config):
                 "ALL_LABEL": combined_names,
                 "MODEL_LABEL": model_names_list,
                 "NIMROD_LABEL": radar_source,
-                #                "SEQUENCE": "time",
+                "SEQUENCE": "time"
+                if conf.HISTOGRAM_SURFACE_FIELD_SEQUENCE
+                else "realization",
                 "OUTPUTS": "all",
                 #                "METHOD": "SEQ",
                 "METHOD": "MEAN",
