@@ -35,6 +35,11 @@ steps:
     series_coordinate: "neighbourhoods"
     sequence_coordinate: "time"
 
+  - operator: plot.plot_dfss_line_series_sequence
+    variable: dfss
+    series_coordinate: "time"
+    sequence_coordinate: "neighbourhoods"
+
   - operator: plot.plot_dfss_contour
     variable: "dfss"
 
