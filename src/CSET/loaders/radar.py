@@ -280,7 +280,7 @@ def load(conf: Config):
         )
 
     # Radar masking of radar obs based on sea mask.
-    if conf.SPATIAL_SURFACE_FIELD:
+    if conf.SPATIAL_SURFACE_FIELD and conf.NIMROD_RADAR_OBS:
         # field = "Hourly rain accumulation"
         field = "surface_microphysical_rainfall_rate"
         yield RawRecipe(
@@ -300,7 +300,7 @@ def load(conf: Config):
         )
 
     # Radar masking of radar obs based on sea mask.
-    # if conf.SPATIAL_SURFACE_FIELD:
+    # if conf.SPATIAL_SURFACE_FIELD and conf.NIMROD_RADAR_OBS:
     if False:
         field = "Hourly rain accumulation"
         yield RawRecipe(
