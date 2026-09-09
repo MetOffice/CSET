@@ -35,16 +35,8 @@ steps:
     series_coordinate: "neighbourhoods"
     sequence_coordinate: "time"
 
-  - operator: plot.plot_dfss_line_series_sequence
-    variable: dfss_stdev
-    series_coordinate: "neighbourhoods"
-    sequence_coordinate: "time"
-
   - operator: plot.plot_dfss_contour
     variable: "dfss"
-
-  - operator: plot.plot_dfss_contour
-    variable: "dfss_stdev"
 
   - operator: write.write_cube_to_nc
     overwrite: True
