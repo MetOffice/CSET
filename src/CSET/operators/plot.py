@@ -985,7 +985,7 @@ def _plot_and_save_line_series(
     y_levels = []
 
     # Check match-up across sequence coords gives consistent sizes
-    #validate_cubes_coords(cubes, coords)
+    # validate_cubes_coords(cubes, coords)
     for cube, coord in zip(cubes, coords, strict=True):
         label = None
         color = "black"
@@ -1034,7 +1034,13 @@ def _plot_and_save_line_series(
     if stdev is not None:
         for std, coord in zip(stdev, coords, strict=True):
             breakpoint()
-            plt.fill_between(coord.points, cube.data - std.data, cube.data + std.data, color=color, alpha=0.2)
+            plt.fill_between(
+                coord.points,
+                cube.data - std.data,
+                cube.data + std.data,
+                color=color,
+                alpha=0.2,
+            )
 
     # Get the current axes.
     ax = plt.gca()
@@ -3735,27 +3741,17 @@ def plot_dfss_contour(
 def plot_dfss_line_series_sequence(
     cubes: iris.cube.Cube | iris.cube.CubeList,
     filename: str = None,
-    variable: str = None,
     series_coordinate: str = "time",
     sequence_coordinate: str = "neighbourhoods",
     **kwargs,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Plot a line plot."""
-    cube_copy = cubes
-
-
     recipe_title = get_recipe_metadata().get("title", "Untitled")
-    num_models = get_num_models(cubes)
 
-    #validate_cube_shape(cubes, num_models)
-
-    # Iterate over all cubes and extract coordinate to plot.
-
-    coords = []
+    # Validate every cube has the required coordinates and dimensionality.
     for cube in cubes:
         try:
-            coords.append(cube.coord(series_coordinate))
-            coords.append(cube.coord(sequence_coordinate))
+            cube.coord(series_coordinate)
         except iris.exceptions.CoordinateNotFoundError as err:
             raise ValueError(
                 f"Cube must have a {series_coordinate} coordinate."
@@ -3765,53 +3761,59 @@ def plot_dfss_line_series_sequence(
                 f"Cube must be 1D or 2D with a {sequence_coordinate} coordinate."
             )
 
-    # Format the title and filename using plotted series coordinate
-    nplot = 1
     seq_coord = cubes[0].coord(sequence_coordinate)
     series_coord = cubes[0].coord(series_coordinate)
     plot_title, plot_filename = _set_title_and_filename(
-        seq_coord, nplot, recipe_title, filename
+        seq_coord, 1, recipe_title, filename
     )
-    # Do the actual plotting
+
     dfss_cubes = cubes.extract_cube(iris.Constraint(name="dfss"))
     dfss_stdev_cubes = cubes.extract_cube(iris.Constraint(name="dfss_stdev"))
-    for i, (dfss_cube, dfss_stdev_cube) in enumerate(zip(dfss_cubes.slices_over(sequence_coordinate),dfss_stdev_cubes.slices_over(sequence_coordinate),strict=True)):
-        if dfss_cube.coord(sequence_coordinate).units == "unknown":
-            sequence_point = dfss_cube.coord(sequence_coordinate).points[0]
-        else:
-            sequence_point = dfss_cube.coord(sequence_coordinate).units.title(
-                dfss_cube.coord(sequence_coordinate).points[0]
-            )
-        if dfss_cube.attributes.locals["method"] == "centile":
-            method = dfss_cube.attributes.locals["method"]
-            centile = dfss_cube.attributes.locals["centile"]
-            centile_str = str(centile).replace(".", "p")
-            plot_filename_with_sequence_coord = f"{dfss_cube.name()}_{sequence_coordinate}_point_{i!s}_{method}_{centile_str}_{plot_filename}"
-            plot_title_with_time = f"{dfss_cube.name()} vs {series_coordinate} ({sequence_coordinate}: {sequence_point}) \n method: Centile | centile: {centile}"
-        elif dfss_cube.attributes.locals["method"] == "threshold":
-            method = dfss_cube.attributes.locals["method"]
-            threshold = dfss_cube.attributes.locals["threshold"]
-            threshold_str = str(threshold).replace(".", "p")
-            plot_filename_with_sequence_coord = f"{dfss_cube.name()}_{sequence_coordinate}_point_{i!s}_{method}_{threshold_str}_{plot_filename}"
-            plot_title_with_time = f"{dfss_cube.name()} vs {series_coordinate} ({sequence_coordinate}: {sequence_point}) \n method: Threshold | threshold: {threshold}"
 
-        dfss_cubes_in = iter_maybe(dfss_cube)
-        dfss_stdev_cubes_in = iter_maybe(dfss_stdev_cube)
-        coord = iter_maybe(series_coord)
+    for i, (dfss_cube, dfss_stdev_cube) in enumerate(
+        zip(
+            dfss_cubes.slices_over(sequence_coordinate),
+            dfss_stdev_cubes.slices_over(sequence_coordinate),
+            strict=True,
+        )
+    ):
+        seq_coord_i = dfss_cube.coord(sequence_coordinate)
+        sequence_point = (
+            seq_coord_i.points[0]
+            if seq_coord_i.units == "unknown"
+            else seq_coord_i.units.title(seq_coord_i.points[0])
+        )
+
+        method = dfss_cube.attributes.locals["method"]
+        if method == "centile":
+            centile = dfss_cube.attributes.locals["centile"]
+            method_tag = f"centile_{str(centile).replace('.', 'p')}"
+            method_label = f"method: Centile | centile: {centile}"
+        elif method == "threshold":
+            threshold = dfss_cube.attributes.locals["threshold"]
+            method_tag = f"threshold_{str(threshold).replace('.', 'p')}"
+            method_label = f"method: Threshold | threshold: {threshold}"
+        else:
+            raise ValueError(f"Unknown dFSS method: {method!r}")
+
+        plot_filename_with_sequence_coord = (
+            f"{dfss_cube.name()}_{sequence_coordinate}_point_{i!s}_{method_tag}_{plot_filename}"
+        )
+        plot_title_with_time = (
+            f"{dfss_cube.name()} vs {series_coordinate} "
+            f"({sequence_coordinate}: {sequence_point}) \n {method_label}"
+        )
 
         _plot_and_save_line_series(
-            dfss_cubes_in,
-            coord,
+            iter_maybe(dfss_cube),
+            iter_maybe(series_coord),
             plot_filename_with_sequence_coord,
             plot_title_with_time,
             sequence_coord=sequence_coordinate,
-            stdev = dfss_stdev_cubes_in
+            stdev=iter_maybe(dfss_stdev_cube),
         )
 
-        # Add list of plots to plot metadata.
         plot_index = _append_to_plot_index([plot_filename_with_sequence_coord])
-
-        # Make a page to display the plots.
         _make_plot_html_page(plot_index)
 
-    return cube_copy
+    return cubes
