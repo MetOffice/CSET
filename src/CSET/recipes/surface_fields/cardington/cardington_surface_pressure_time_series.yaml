@@ -9,7 +9,7 @@ steps:
       - Cardington 05min
       - Cardington 30min
       - $MODEL_NAME
-    constraint: ['$VARNAME', '$UM_VARNAME']
+    constraint: ['$OBS_VARNAME', '$VARNAME']
 
   - operator: filters.filter_multiple_cubes
 
