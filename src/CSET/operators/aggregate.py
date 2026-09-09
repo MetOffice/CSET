@@ -96,7 +96,7 @@ def time_aggregate(
         else:
             aggregated_cube = _aggregate_by_interval(cube, method, interval)
 
-    resampled_cubes.append(aggregated_cube)
+        resampled_cubes.append(aggregated_cube)
     if len(resampled_cubes) == 1:
         return resampled_cubes[0]
     return resampled_cubes
@@ -338,4 +338,5 @@ def _aggregate_by_interval(cube: iris.cube.Cube, method: str, interval: int):
         "interval",
         getattr(iris.analysis, method),
     )
-    return aggregated_cube.remove_coord("interval")
+    aggregated_cube.remove_coord("interval")
+    return aggregated_cube
