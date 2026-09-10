@@ -1,5 +1,5 @@
 category: Surface Spatial Plot
-title: "bmc9b Histogram $MODEL_VARNAME\n $TITLE_STRING common domain model and Nimrod radar"
+title: "Histogram $MODEL_VARNAME\n $TITLE_STRING common domain model and Nimrod radar"
 description: |
   Creates histograms of the model rainfall rate and
   the observed radar rainfall rate. The model field is regridded onto
